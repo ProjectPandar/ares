@@ -1,17 +1,14 @@
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-#[repr(u8)]
 pub(super) enum StagedApplyStatus {
-    Unchanged = 0,
-    Changed = 1,
-    Invalidated = 2,
+    Unchanged,
+    Changed,
+    Invalidated,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) enum StagedPrintDiffConfigInvalidationEvent {
     LockStateMutex,
     InvalidateStateByConfigOptions {
-        receiver: &'static str,
-        config_source: &'static str,
         print_diff: Vec<&'static str>,
         invalidated: bool,
     },
@@ -43,8 +40,6 @@ pub(super) fn staged_apply_print_diff_config_invalidation(
     if !print_diff.is_empty() {
         events.push(
             StagedPrintDiffConfigInvalidationEvent::InvalidateStateByConfigOptions {
-                receiver: "this",
-                config_source: "new_full_config",
                 print_diff: print_diff.to_vec(),
                 invalidated: invalidation_result,
             },

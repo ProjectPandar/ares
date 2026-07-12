@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[repr(u8)]
 pub(super) enum StagedPrintObjectApplyStatus {
     Unknown,
     Deleted,

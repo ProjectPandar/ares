@@ -1,17 +1,6 @@
 use super::super::apply_extruder_count_change_state::staged_apply_extruder_count_change;
 
 #[test]
-fn apply_extruder_count_change_records_source_identities() {
-    let staged = staged_apply_extruder_count_change(2, 3);
-
-    assert_eq!(staged.previous_count_name, "num_extruders");
-    assert_eq!(
-        staged.current_count_source,
-        "m_config.filament_diameter.size()"
-    );
-}
-
-#[test]
 fn apply_extruder_count_change_skips_assignment_when_counts_match() {
     let staged = staged_apply_extruder_count_change(3, 3);
 

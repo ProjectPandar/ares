@@ -40,8 +40,6 @@ fn apply_print_diff_config_invalidation_records_call_for_non_empty_diff() {
         [
             StagedPrintDiffConfigInvalidationEvent::LockStateMutex,
             StagedPrintDiffConfigInvalidationEvent::InvalidateStateByConfigOptions {
-                receiver: "this",
-                config_source: "new_full_config",
                 print_diff: vec!["support_material", "filament_map"],
                 invalidated: false,
             },

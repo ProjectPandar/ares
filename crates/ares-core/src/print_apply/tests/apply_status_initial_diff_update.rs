@@ -66,10 +66,3 @@ fn apply_status_initial_diff_update_helper_does_not_downgrade_invalidated() {
 
     assert_eq!(status, StagedApplyStatus::Invalidated);
 }
-
-#[test]
-fn apply_status_initial_diff_update_discriminants_preserve_max_order() {
-    assert_eq!(StagedApplyStatus::Unchanged as u8, 0);
-    assert_eq!(StagedApplyStatus::Changed as u8, 1);
-    assert_eq!(StagedApplyStatus::Invalidated as u8, 2);
-}

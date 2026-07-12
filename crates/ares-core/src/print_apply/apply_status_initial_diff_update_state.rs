@@ -1,9 +1,8 @@
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-#[repr(u8)]
 pub(super) enum StagedApplyStatus {
-    Unchanged = 0,
-    Changed = 1,
-    Invalidated = 2,
+    Unchanged,
+    Changed,
+    Invalidated,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

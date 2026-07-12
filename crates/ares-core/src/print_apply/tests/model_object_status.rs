@@ -36,19 +36,17 @@ fn model_object_status_stores_each_apply_status_variant() {
 }
 
 #[test]
-fn model_object_status_variants_preserve_upstream_source_order() {
-    assert_eq!(StagedModelObjectApplyStatus::Unknown as u8, 0);
-    assert_eq!(StagedModelObjectApplyStatus::Old as u8, 1);
-    assert_eq!(StagedModelObjectApplyStatus::New as u8, 2);
-    assert_eq!(StagedModelObjectApplyStatus::Moved as u8, 3);
-    assert_eq!(StagedModelObjectApplyStatus::Deleted as u8, 4);
-}
+fn model_object_status_stores_each_regions_status_variant() {
+    for variant in [
+        StagedPrintObjectRegionsStatus::Invalid,
+        StagedPrintObjectRegionsStatus::Valid,
+        StagedPrintObjectRegionsStatus::PartiallyValid,
+    ] {
+        let mut status = StagedModelObjectStatus::new(7);
+        status.print_object_regions_status = variant;
 
-#[test]
-fn print_object_regions_status_variants_preserve_upstream_source_order() {
-    assert_eq!(StagedPrintObjectRegionsStatus::Invalid as u8, 0);
-    assert_eq!(StagedPrintObjectRegionsStatus::Valid as u8, 1);
-    assert_eq!(StagedPrintObjectRegionsStatus::PartiallyValid as u8, 2);
+        assert_eq!(status.print_object_regions_status, variant);
+    }
 }
 
 #[test]

@@ -101,11 +101,9 @@ fn exposes_public_option_definition_lookup() {
     let definition = crate::option_definition("bridge_speed").unwrap();
 
     assert_eq!(definition.kind, crate::OptionValueKind::Float);
-    assert!(definition.source.contains("PrintConfig.cpp:1572"));
 
     let printable_area = crate::option_definition("printable_area").unwrap();
     assert_eq!(printable_area.kind, crate::OptionValueKind::Points);
-    assert!(printable_area.source.contains("PrintConfig.cpp:684"));
 
     let bed_model = crate::option_definition("bed_custom_model").unwrap();
     assert_eq!(bed_model.kind, crate::OptionValueKind::String);

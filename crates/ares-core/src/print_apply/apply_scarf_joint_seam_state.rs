@@ -1,6 +1,3 @@
-const SEAM_SLOPE_TYPE_KEY: &str = "seam_slope_type";
-const HAS_SCARF_JOINT_SEAM_KEY: &str = "has_scarf_joint_seam";
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum StagedSeamScarfType {
     None,
@@ -51,15 +48,10 @@ impl StagedApplyScarfJointSeamObject {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct StagedApplyScarfJointSeamSet {
-    key: &'static str,
     value: bool,
 }
 
 impl StagedApplyScarfJointSeamSet {
-    pub(super) fn key(&self) -> &'static str {
-        self.key
-    }
-
     pub(super) fn value(&self) -> bool {
         self.value
     }
@@ -67,16 +59,11 @@ impl StagedApplyScarfJointSeamSet {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct StagedApplyScarfJointSeamResult {
-    queried_key: &'static str,
     has_scarf_joint_seam: bool,
     config_set: Option<StagedApplyScarfJointSeamSet>,
 }
 
 impl StagedApplyScarfJointSeamResult {
-    pub(super) fn queried_key(&self) -> &'static str {
-        self.queried_key
-    }
-
     pub(super) fn has_scarf_joint_seam(&self) -> bool {
         self.has_scarf_joint_seam
     }
@@ -92,13 +79,10 @@ pub(super) fn staged_apply_scarf_joint_seam(
     let has_scarf_joint_seam = objects
         .iter()
         .any(StagedApplyScarfJointSeamObject::has_scarf_joint_seam);
-    let config_set = has_scarf_joint_seam.then_some(StagedApplyScarfJointSeamSet {
-        key: HAS_SCARF_JOINT_SEAM_KEY,
-        value: true,
-    });
+    let config_set =
+        has_scarf_joint_seam.then_some(StagedApplyScarfJointSeamSet { value: true });
 
     StagedApplyScarfJointSeamResult {
-        queried_key: SEAM_SLOPE_TYPE_KEY,
         has_scarf_joint_seam,
         config_set,
     }

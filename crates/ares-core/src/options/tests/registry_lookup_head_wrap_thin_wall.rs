@@ -1,25 +1,20 @@
 #[test]
 fn exposes_head_wrap_thin_wall_option_definition_lookup() {
-    for (key, kind, default_value, source_fragments) in [
+    for (key, kind, default_value) in [
         (
             "head_wrap_detect_zone",
             crate::OptionValueKind::Points,
             "0x0",
-            &["PrintConfig.hpp:1485", "PrintConfig.cpp:6503-6506"][..],
         ),
         (
             "detect_thin_wall",
             crate::OptionValueKind::Bool,
             "false",
-            &["PrintConfig.hpp:1165", "PrintConfig.cpp:6508-6514"][..],
         ),
     ] {
         let definition = crate::option_definition(key).unwrap();
         assert_eq!(definition.kind, kind);
         assert_eq!(definition.default_value, default_value);
-        for fragment in source_fragments {
-            assert!(definition.source.contains(fragment));
-        }
     }
 }
 

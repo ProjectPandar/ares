@@ -30,14 +30,6 @@ fn print_object_status_stores_each_status_variant() {
 }
 
 #[test]
-fn print_object_status_variants_preserve_upstream_source_order() {
-    assert_eq!(StagedPrintObjectApplyStatus::Unknown as u8, 0);
-    assert_eq!(StagedPrintObjectApplyStatus::Deleted as u8, 1);
-    assert_eq!(StagedPrintObjectApplyStatus::Reused as u8, 2);
-    assert_eq!(StagedPrintObjectApplyStatus::New as u8, 3);
-}
-
-#[test]
 fn print_object_status_ordering_uses_id_only() {
     let deleted = StagedPrintObjectStatus::with_status(9, StagedPrintObjectApplyStatus::Deleted);
     let reused = StagedPrintObjectStatus::with_status(9, StagedPrintObjectApplyStatus::Reused);

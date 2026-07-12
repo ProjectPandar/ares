@@ -10,18 +10,8 @@ fn object(seam: StagedSeamScarfType) -> StagedApplyScarfJointSeamObject {
 fn apply_scarf_joint_seam_empty_objects_stays_false_without_set() {
     let result = staged_apply_scarf_joint_seam(&[]);
 
-    assert_eq!(result.queried_key(), "seam_slope_type");
     assert!(!result.has_scarf_joint_seam());
     assert!(result.config_set().is_none());
-}
-
-#[test]
-fn apply_scarf_joint_seam_records_source_keys() {
-    let result = staged_apply_scarf_joint_seam(&[object(StagedSeamScarfType::External)]);
-
-    assert_eq!(result.queried_key(), "seam_slope_type");
-    assert_eq!(result.config_set().unwrap().key(), "has_scarf_joint_seam");
-    assert!(result.config_set().unwrap().value());
 }
 
 #[test]
@@ -29,7 +19,7 @@ fn apply_scarf_joint_seam_object_external_sets_true() {
     let result = staged_apply_scarf_joint_seam(&[object(StagedSeamScarfType::External)]);
 
     assert!(result.has_scarf_joint_seam());
-    assert!(result.config_set().is_some());
+    assert!(result.config_set().unwrap().value());
 }
 
 #[test]

@@ -1,348 +1,289 @@
 #[test]
 fn exposes_fan_and_filament_color_note_option_definition_lookup() {
-    for (key, kind, default_value, source_fragments) in [
+    for (key, kind, default_value) in [
         (
             "default_filament_colour",
             crate::OptionValueKind::Strings,
             "",
-            &["PrintConfig.hpp:1331", "PrintConfig.cpp:2359-2365"][..],
         ),
         (
             "fan_cooling_layer_time",
             crate::OptionValueKind::Floats,
             "60",
-            &["PrintConfig.hpp:1521", "PrintConfig.cpp:2349-2357"][..],
         ),
         (
             "filament_adaptive_volumetric_speed",
             crate::OptionValueKind::BoolsNullable,
             "false",
-            &["PrintConfig.hpp:1318", "PrintConfig.cpp:2557-2565"][..],
         ),
         (
             "filament_adhesiveness_category",
             crate::OptionValueKind::Ints,
             "0",
-            &["PrintConfig.hpp:1320", "PrintConfig.cpp:2596-2601"][..],
         ),
         (
             "filament_change_length",
             crate::OptionValueKind::Floats,
             "10",
-            &["PrintConfig.hpp:1329", "PrintConfig.cpp:2804-2810"][..],
         ),
         (
             "filament_colour",
             crate::OptionValueKind::Strings,
             "#F2754E",
-            &["PrintConfig.hpp:1325", "PrintConfig.cpp:2367-2372"][..],
         ),
         (
             "filament_colour_type",
             crate::OptionValueKind::Strings,
             "1",
-            &["PrintConfig.cpp:2389-2390"][..],
         ),
         (
             "filament_cooling_before_tower",
             crate::OptionValueKind::FloatsNullable,
             "10",
-            &["PrintConfig.hpp:1444", "PrintConfig.cpp:2689-2695"][..],
         ),
         (
             "filament_cooling_final_speed",
             crate::OptionValueKind::Floats,
             "3.4",
-            &["PrintConfig.hpp:1450", "PrintConfig.cpp:2737-2743"][..],
         ),
         (
             "filament_cooling_initial_speed",
             crate::OptionValueKind::Floats,
             "2.2",
-            &["PrintConfig.hpp:1442", "PrintConfig.cpp:2670-2676"][..],
         ),
         (
             "filament_cooling_moves",
             crate::OptionValueKind::Ints,
             "4",
-            &["PrintConfig.hpp:1441", "PrintConfig.cpp:2646-2653"][..],
         ),
         (
             "filament_cost",
             crate::OptionValueKind::Floats,
             "0",
-            &["PrintConfig.hpp:1330", "PrintConfig.cpp:2837-2843"][..],
         ),
         (
             "filament_density",
             crate::OptionValueKind::Floats,
             "0",
-            &["PrintConfig.hpp:1321", "PrintConfig.cpp:2776-2782"][..],
         ),
         (
             "filament_flush_temp",
             crate::OptionValueKind::IntsNullable,
             "0",
-            &["PrintConfig.hpp:1344", "PrintConfig.cpp:2442-2450"][..],
         ),
         (
             "filament_flush_volumetric_speed",
             crate::OptionValueKind::FloatsNullable,
             "0",
-            &["PrintConfig.hpp:1343", "PrintConfig.cpp:2452-2460"][..],
         ),
         (
             "filament_ids",
             crate::OptionValueKind::Strings,
             "",
-            &["PrintConfig.hpp:1324", "PrintConfig.cpp:2850-2852"][..],
         ),
         (
             "filament_ironing_flow",
             crate::OptionValueKind::PercentsNullable,
             "nil",
-            &["PrintConfig.hpp:1148", "PrintConfig.cpp:3372-3383"][..],
         ),
         (
             "filament_ironing_inset",
             crate::OptionValueKind::FloatsNullable,
             "nil",
-            &["PrintConfig.hpp:1150", "PrintConfig.cpp:3397-3407"][..],
         ),
         (
             "filament_ironing_spacing",
             crate::OptionValueKind::FloatsNullable,
             "nil",
-            &["PrintConfig.hpp:1149", "PrintConfig.cpp:3385-3395"][..],
         ),
         (
             "filament_ironing_speed",
             crate::OptionValueKind::FloatsNullable,
             "nil",
-            &["PrintConfig.hpp:1151", "PrintConfig.cpp:3409-3418"][..],
         ),
         (
             "filament_is_support",
             crate::OptionValueKind::Bools,
             "false",
-            &["PrintConfig.hpp:1327", "PrintConfig.cpp:2812-2816"][..],
         ),
         (
             "filament_loading_speed",
             crate::OptionValueKind::Floats,
             "28",
-            &["PrintConfig.hpp:1436", "PrintConfig.cpp:2603-2609"][..],
         ),
         (
             "filament_loading_speed_start",
             crate::OptionValueKind::Floats,
             "3",
-            &["PrintConfig.hpp:1437", "PrintConfig.cpp:2611-2617"][..],
         ),
         (
             "filament_diameter",
             crate::OptionValueKind::Floats,
             "1.75",
-            &["PrintConfig.hpp:1317", "PrintConfig.cpp:2518-2523"][..],
         ),
         (
             "filament_map",
             crate::OptionValueKind::Ints,
             "1",
-            &["PrintConfig.hpp:1336", "PrintConfig.cpp:2401-2405"][..],
         ),
         (
             "filament_map_mode",
             crate::OptionValueKind::Enum,
             "Auto For Flush",
-            &["PrintConfig.hpp:1335", "PrintConfig.cpp:2414-2428"][..],
         ),
         (
             "filament_max_volumetric_speed",
             crate::OptionValueKind::Floats,
             "2",
-            &["PrintConfig.hpp:1333", "PrintConfig.cpp:2462-2470"][..],
         ),
         (
             "filament_minimal_purge_on_wipe_tower",
             crate::OptionValueKind::Floats,
             "15",
-            &["PrintConfig.hpp:1443", "PrintConfig.cpp:2678-2687"][..],
         ),
         (
             "filament_multi_colour",
             crate::OptionValueKind::Strings,
             "",
-            &["PrintConfig.cpp:2385-2386"][..],
         ),
         (
             "filament_multitool_ramming",
             crate::OptionValueKind::Bools,
             "false",
-            &["PrintConfig.hpp:1452", "PrintConfig.cpp:2752-2758"][..],
         ),
         (
             "filament_multitool_ramming_flow",
             crate::OptionValueKind::Floats,
             "10",
-            &["PrintConfig.hpp:1454", "PrintConfig.cpp:2768-2774"][..],
         ),
         (
             "filament_multitool_ramming_volume",
             crate::OptionValueKind::Floats,
             "10",
-            &["PrintConfig.hpp:1453", "PrintConfig.cpp:2760-2766"][..],
         ),
         (
             "filament_notes",
             crate::OptionValueKind::Strings,
             "",
-            &["PrintConfig.hpp:1632", "PrintConfig.cpp:2375-2382"][..],
         ),
         (
             "filament_printable",
             crate::OptionValueKind::Ints,
             "3",
-            &["PrintConfig.hpp:1328", "PrintConfig.cpp:2818-2826"][..],
         ),
         (
             "filament_ramming_parameters",
             crate::OptionValueKind::Strings,
             "120 100 6.6 6.8 7.2 7.6 7.9 8.2 8.7 9.4 9.9 10.0| 0.05 6.6 0.45 6.8 0.95 7.8 1.45 8.3 1.95 9.7 2.45 10 2.95 7.6 3.45 7.6 3.95 7.6 4.45 7.6 4.95 7.6",
-            &["PrintConfig.hpp:1451", "PrintConfig.cpp:2745-2750"][..],
         ),
         (
             "filament_settings_id",
             crate::OptionValueKind::Strings,
             "",
-            &["PrintConfig.cpp:2845-2849"][..],
         ),
         (
             "filament_shrink",
             crate::OptionValueKind::Percents,
             "100",
-            &["PrintConfig.hpp:1621", "PrintConfig.cpp:2571-2582"][..],
         ),
         (
             "filament_shrinkage_compensation_z",
             crate::OptionValueKind::Percents,
             "100",
-            &["PrintConfig.hpp:1622", "PrintConfig.cpp:2584-2594"][..],
         ),
         (
             "filament_soluble",
             crate::OptionValueKind::Bools,
             "false",
-            &["PrintConfig.hpp:1323", "PrintConfig.cpp:2798-2802"][..],
         ),
         (
             "filament_stamping_distance",
             crate::OptionValueKind::Floats,
             "0",
-            &["PrintConfig.hpp:1456", "PrintConfig.cpp:2662-2668"][..],
         ),
         (
             "filament_stamping_loading_speed",
             crate::OptionValueKind::Floats,
             "0",
-            &["PrintConfig.hpp:1455", "PrintConfig.cpp:2655-2660"][..],
         ),
         (
             "filament_toolchange_delay",
             crate::OptionValueKind::Floats,
             "0",
-            &["PrintConfig.hpp:1440", "PrintConfig.cpp:2636-2644"][..],
         ),
         (
             "filament_tower_interface_pre_extrusion_dist",
             crate::OptionValueKind::Floats,
             "10",
-            &["PrintConfig.hpp:1445", "PrintConfig.cpp:2697-2703"][..],
         ),
         (
             "filament_tower_interface_pre_extrusion_length",
             crate::OptionValueKind::Floats,
             "0",
-            &["PrintConfig.hpp:1446", "PrintConfig.cpp:2705-2711"][..],
         ),
         (
             "filament_tower_interface_print_temp",
             crate::OptionValueKind::Ints,
             "-1",
-            &["PrintConfig.hpp:1449", "PrintConfig.cpp:2729-2735"][..],
         ),
         (
             "filament_tower_interface_purge_volume",
             crate::OptionValueKind::Floats,
             "20",
-            &["PrintConfig.hpp:1448", "PrintConfig.cpp:2721-2727"][..],
         ),
         (
             "filament_tower_ironing_area",
             crate::OptionValueKind::Floats,
             "4",
-            &["PrintConfig.hpp:1447", "PrintConfig.cpp:2713-2719"][..],
         ),
         (
             "filament_type",
             crate::OptionValueKind::Strings,
             "PLA",
-            &["PrintConfig.hpp:1322", "PrintConfig.cpp:2784-2796"][..],
         ),
         (
             "filament_unloading_speed",
             crate::OptionValueKind::Floats,
             "90",
-            &["PrintConfig.hpp:1438", "PrintConfig.cpp:2619-2626"][..],
         ),
         (
             "filament_unloading_speed_start",
             crate::OptionValueKind::Floats,
             "100",
-            &["PrintConfig.hpp:1439", "PrintConfig.cpp:2628-2634"][..],
         ),
         (
             "filament_vendor",
             crate::OptionValueKind::Strings,
             "(Undefined)",
-            &["PrintConfig.hpp:1326", "PrintConfig.cpp:2854-2859"][..],
         ),
         (
             "temperature_vitrification",
             crate::OptionValueKind::Ints,
             "100",
-            &["PrintConfig.hpp:1332", "PrintConfig.cpp:2828-2835"][..],
         ),
         (
             "enable_filament_dynamic_map",
             crate::OptionValueKind::Bool,
             "false",
-            &["PrintConfig.cpp:2430-2434"][..],
         ),
         (
             "has_filament_switcher",
             crate::OptionValueKind::Bool,
             "false",
-            &["PrintConfig.cpp:2436-2440"][..],
         ),
         (
             "physical_extruder_map",
             crate::OptionValueKind::Ints,
             "0",
-            &["PrintConfig.hpp:1341", "PrintConfig.cpp:2407-2412"][..],
         ),
         (
             "required_nozzle_HRC",
             crate::OptionValueKind::Ints,
             "0",
-            &["PrintConfig.hpp:1334", "PrintConfig.cpp:2393-2399"][..],
         ),
     ] {
         let definition = crate::option_definition(key).unwrap();
         assert_eq!(definition.kind, kind);
         assert_eq!(definition.default_value, default_value);
-        for fragment in source_fragments {
-            assert!(definition.source.contains(fragment));
-        }
     }
 }

@@ -52,13 +52,12 @@ updates this roadmap with completed and deferred behavior, passes the specified
 local/Tier-1 verification, and is committed and pushed before its dependent
 increment starts.
 
-One-source-line `PrintConfig.hpp` and `PrintConfig.cpp` milestones, their
-raw-line metadata modules, pinning tests, and milestone documents have been
-removed. Staged `PrintApply` milestones remain superseded and may not create
-new raw-line metadata modules, source-boundary pinning tests, or roadmap
-entries. Functional runtime work from earlier milestones remains subject to
-replacement or reuse according to the exact destination map in the approved
-parity spec.
+One-source-line `PrintConfig.hpp`, `PrintConfig.cpp`, and staged `PrintApply`
+milestones, their raw-line/token metadata, pinning tests, and milestone
+documents have been removed. New work may not create raw-line metadata
+modules, source-boundary pinning tests, or source-line-only roadmap entries.
+Functional runtime work from earlier milestones remains subject to replacement
+or reuse according to the exact destination map in the approved parity spec.
 
 ### 2026-07-10 Establish Tier-1 parity verification
 
@@ -105,6 +104,34 @@ nextest tests with clean rustfmt, warning-denying clippy, and both WASM checks.
 Project import, concrete typed options, slicing, G-code generation and
 post-processing, baseline migration to empty, and final byte parity remain
 deferred to their planned increments.
+
+### 2026-07-12 Remove PrintConfig source-line pinning
+
+Task 1D removes the non-runtime `OptionDefinition.source` field, the source
+argument from all 736 option definitions, and the associated
+`PrintConfig.hpp`/`PrintConfig.cpp` line-fragment assertions. The ordered
+registry key, kind, and default-value tuples are unchanged, and the mixed
+registry tests continue to verify those runtime contracts. The former
+`print_config_hpp_modules` aggregate and its registrations remain absent.
+Focused verification passes 1,302 Option tests and the 22-test syntax-aware
+dynamic-value audit; independent Codex and OpenCode reviews both approve the
+final tree. Typed option structs, removal of the 743-entry dynamic-value
+baseline, embedded 3MF option composition, and end-to-end project slicing
+remain deferred to their planned increments.
+
+### 2026-07-12 Remove staged PrintApply source-token pinning
+
+Task 1E removes copied C++ receiver/source/comment/action metadata, commented
+non-actions, queried-key mirrors, and numeric-discriminant-only assertions from
+mixed `PrintApply.cpp::Print::apply` state modules. It retains observable
+filament-map branching and pruning, count changes, normalization, status
+precedence, invalidation ordering, transforms, volume caches, regions, and
+geometry behavior. Declarations and tests remain one-to-one for 37 production
+state modules and 53 test modules. Focused verification passes 404 PrintApply
+tests and the 22-test syntax-aware dynamic-value audit; independent Codex and
+OpenCode reviews both approve the final tree. Public project wiring, concrete
+typed `PrintApply` config ownership, replacement of the remaining staged
+compatibility shell, and complete slicing/G-code parity remain deferred.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

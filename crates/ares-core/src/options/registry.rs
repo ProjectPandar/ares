@@ -28,7 +28,6 @@ pub struct OptionDefinition {
     pub key: &'static str,
     pub kind: OptionValueKind,
     pub default_value: &'static str,
-    pub source: &'static str,
 }
 
 mod definitions;

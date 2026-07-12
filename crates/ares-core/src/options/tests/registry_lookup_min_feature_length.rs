@@ -1,25 +1,20 @@
 #[test]
 fn exposes_min_feature_length_option_definition_lookup() {
-    for (key, kind, default_value, source_fragments) in [
+    for (key, kind, default_value) in [
         (
             "min_feature_size",
             crate::OptionValueKind::Percent,
             "25",
-            &["PrintConfig.hpp:1025", "PrintConfig.cpp:7051-7060"][..],
         ),
         (
             "min_length_factor",
             crate::OptionValueKind::Float,
             "0.5",
-            &["PrintConfig.hpp:1039", "PrintConfig.cpp:7062-7074"][..],
         ),
     ] {
         let definition = crate::option_definition(key).unwrap();
         assert_eq!(definition.kind, kind);
         assert_eq!(definition.default_value, default_value);
-        for fragment in source_fragments {
-            assert!(definition.source.contains(fragment));
-        }
     }
 }
 

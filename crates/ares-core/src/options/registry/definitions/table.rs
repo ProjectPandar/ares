@@ -1,12 +1,11 @@
 use super::super::{OptionDefinition, OptionValueKind};
 
 macro_rules! definition {
-    ($key:literal, $kind:ident, $default_value:literal, $source:literal $(,)?) => {
+    ($key:literal, $kind:ident, $default_value:literal $(,)?) => {
         OptionDefinition {
             key: $key,
             kind: OptionValueKind::$kind,
             default_value: $default_value,
-            source: $source,
         }
     };
 }
@@ -66,7 +65,6 @@ const EMPTY_OPTION_DEFINITION: OptionDefinition = OptionDefinition {
     key: "",
     kind: OptionValueKind::String,
     default_value: "",
-    source: "",
 };
 static OPTION_DEFINITIONS_ARRAY: [OptionDefinition; OPTION_DEFINITION_COUNT] = merge_definitions();
 

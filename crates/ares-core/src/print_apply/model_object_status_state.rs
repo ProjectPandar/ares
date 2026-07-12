@@ -2,7 +2,6 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[repr(u8)]
 pub(super) enum StagedModelObjectApplyStatus {
     Unknown,
     Old,
@@ -12,7 +11,6 @@ pub(super) enum StagedModelObjectApplyStatus {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[repr(u8)]
 pub(super) enum StagedPrintObjectRegionsStatus {
     Invalid,
     Valid,

@@ -1,16 +1,6 @@
 use super::super::apply_filament_map_mode_guard_state::staged_apply_filament_map_mode_guard;
 
 #[test]
-fn apply_filament_map_mode_guard_records_comment_and_identities() {
-    let guard = staged_apply_filament_map_mode_guard(&[]);
-
-    assert_eq!(guard.comment, "BBS: process the filament_map related logic");
-    assert_eq!(guard.source, "print_diff");
-    assert_eq!(guard.set_name, "print_diff_set");
-    assert_eq!(guard.guard_key, "filament_map_mode");
-}
-
-#[test]
 fn apply_filament_map_mode_guard_enters_when_key_absent() {
     let guard = staged_apply_filament_map_mode_guard(&["filament_map"]);
 

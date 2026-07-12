@@ -27,11 +27,3 @@ fn apply_filament_map_extraction_preserves_duplicates_and_negative_values() {
 
     assert_eq!(extraction.filament_maps, [2, -1, 2, 0]);
 }
-
-#[test]
-fn apply_filament_map_extraction_records_source_and_key() {
-    let extraction = staged_apply_filament_map_extraction(Some(&[1]));
-
-    assert_eq!(extraction.source_config, "new_full_config");
-    assert_eq!(extraction.option_key, "filament_map");
-}

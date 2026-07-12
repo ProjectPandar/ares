@@ -40,26 +40,21 @@ fn exposes_bed_mesh_option_definition_lookup() {
 
 #[test]
 fn exposes_bed_temperature_and_nozzle_flush_option_definition_lookup() {
-    for (key, kind, default_value, source_fragments) in [
+    for (key, kind, default_value) in [
         (
             "bed_temperature_formula",
             crate::OptionValueKind::Enum,
             "by_highest_temp",
-            &["PrintConfig.hpp:1340", "PrintConfig.cpp:2503-2512"][..],
         ),
         (
             "nozzle_flush_dataset",
             crate::OptionValueKind::IntsNullable,
             "0",
-            &["PrintConfig.hpp:1342", "PrintConfig.cpp:2514-2516"][..],
         ),
     ] {
         let definition = crate::option_definition(key).unwrap();
         assert_eq!(definition.kind, kind);
         assert_eq!(definition.default_value, default_value);
-        for fragment in source_fragments {
-            assert!(definition.source.contains(fragment));
-        }
     }
 }
 
@@ -78,25 +73,13 @@ fn exposes_extruder_visual_and_offset_option_definition_lookup() {
 
 #[test]
 fn exposes_filament_load_unload_time_option_definition_lookup() {
-    for (key, source_fragments) in [
-        (
-            "machine_load_filament_time",
-            &["PrintConfig.hpp:1433", "PrintConfig.cpp:2472-2479"][..],
-        ),
-        (
-            "machine_tool_change_time",
-            &["PrintConfig.hpp:1434", "PrintConfig.cpp:2490-2497"][..],
-        ),
-        (
-            "machine_unload_filament_time",
-            &["PrintConfig.hpp:1435", "PrintConfig.cpp:2481-2488"][..],
-        ),
+    for key in [
+        "machine_load_filament_time",
+        "machine_tool_change_time",
+        "machine_unload_filament_time",
     ] {
         let definition = crate::option_definition(key).unwrap();
         assert_eq!(definition.kind, crate::OptionValueKind::Float);
         assert_eq!(definition.default_value, "0");
-        for fragment in source_fragments {
-            assert!(definition.source.contains(fragment));
-        }
     }
 }

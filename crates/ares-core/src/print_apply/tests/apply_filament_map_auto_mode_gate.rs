@@ -3,16 +3,6 @@ use super::super::apply_filament_map_auto_mode_gate_state::{
 };
 
 #[test]
-fn apply_filament_map_auto_mode_gate_records_lookup_identity() {
-    let gate = staged_apply_filament_map_auto_mode_gate("fmmManual");
-
-    assert_eq!(gate.source_config, "new_full_config");
-    assert_eq!(gate.option_key, "filament_map_mode");
-    assert!(gate.required);
-    assert_eq!(gate.value_name, "map_mode");
-}
-
-#[test]
 fn apply_filament_map_auto_mode_gate_accepts_auto_for_flush_forms() {
     let internal = staged_apply_filament_map_auto_mode_gate("fmmAutoForFlush");
     let display = staged_apply_filament_map_auto_mode_gate("Auto For Flush");
