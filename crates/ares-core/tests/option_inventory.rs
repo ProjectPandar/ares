@@ -161,11 +161,49 @@ fn committed_inventory_is_available_without_an_orca_checkout() {
 }
 
 #[test]
+fn committed_inventory_keeps_qualified_enum_defaults_and_axis_declarations() {
+    let rows = committed_inventory();
+    let input_shaping = rows
+        .iter()
+        .find(|row| row.key == "input_shaping_type")
+        .unwrap();
+    assert_eq!(input_shaping.default_serialized, "Default");
+    let nozzle_type = rows.iter().find(|row| row.key == "nozzle_type").unwrap();
+    assert_eq!(nozzle_type.default_serialized, "undefine");
+
+    let expected = [
+        ("machine_max_acceleration_x", 1257),
+        ("machine_max_acceleration_y", 1258),
+        ("machine_max_acceleration_z", 1259),
+        ("machine_max_acceleration_e", 1260),
+        ("machine_max_speed_x", 1262),
+        ("machine_max_speed_y", 1263),
+        ("machine_max_speed_z", 1264),
+        ("machine_max_speed_e", 1265),
+        ("machine_max_jerk_x", 1273),
+        ("machine_max_jerk_y", 1274),
+        ("machine_max_jerk_z", 1275),
+        ("machine_max_jerk_e", 1276),
+    ];
+    assert_eq!(expected.len(), 12);
+    for (key, line) in expected {
+        let row = rows.iter().find(|row| row.key == key).unwrap();
+        assert_eq!(
+            row.upstream_definition.path,
+            "src/libslic3r/PrintConfig.hpp"
+        );
+        assert_eq!(row.upstream_definition.line, line);
+        assert_eq!(row.upstream_definition.symbol, key);
+    }
+}
+
+#[test]
 #[ignore = "requires ORCA_SLICER_REPO fixed-commit provenance checkout"]
 fn inventory_matches_fixed_orca_source_provenance() {
     let repo = std::env::var_os("ORCA_SLICER_REPO").expect("ORCA_SLICER_REPO must be set");
     let files = [
         "src/libslic3r/Config.hpp",
+        "src/libslic3r/CommonDefs.hpp",
         "src/libslic3r/Config.cpp",
         "src/libslic3r/PrintConfig.hpp",
         "src/libslic3r/PrintConfig.cpp",
@@ -211,6 +249,13 @@ fn inventory_matches_fixed_orca_source_provenance() {
         }
     }
     let gcode = &sources["src/libslic3r/GCode.cpp"];
+    provenance::verify_axis_defaults(&sources["src/libslic3r/PrintConfig.cpp"], &rows);
+    provenance::verify_nozzle_type_default(
+        &sources["src/libslic3r/PrintConfig.cpp"],
+        &sources["src/libslic3r/Config.hpp"],
+        &sources["src/libslic3r/CommonDefs.hpp"],
+        &rows,
+    );
     let derived_export_rules = provenance::derive_export_rules(gcode);
     let artifact_export_rules = rows
         .iter()

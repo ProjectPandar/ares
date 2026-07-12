@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { deriveConsumerCitations, deriveExportRules, deriveMetadata } from "./task5_inventory/source.mjs";
-import { verifySourceMutations } from "./task5_inventory/mutations.mjs";
+import { verifyOptionDefinitionMutations, verifySourceMutations } from "./task5_inventory/mutations.mjs";
+import { axisDefinitions } from "./task5_inventory/axis.mjs";
+import { enumLookup, evaluateEnumDefault } from "./task5_inventory/enums.mjs";
 
 const commit = "8500fcdccaa10b5099ac20d252af3a7c560046f1";
 const repo = process.env.ORCA_SLICER_REPO ?? "OrcaSlicer";
@@ -72,15 +74,7 @@ const owners = [
 ];
 
 const constants = new Map([...sources.constants.matchAll(/^#define\s+([A-Z0-9_]+)\s+([^\s/]+)/gm)].map(match => [match[1], match[2]]));
-const enumValues = new Map();
-for (const match of sources.print.matchAll(/\{\s*"([^"]+)"\s*,\s*([^}\n]+)\}/g)) {
-  const symbol = normalizeEnum(match[2]);
-  if (symbol && !enumValues.has(symbol)) enumValues.set(symbol, match[1]);
-}
-
-function normalizeEnum(value) {
-  return value.replace(/\(int\)|int\(|\)|\s/g, "").split("::").at(-1);
-}
+const enums = enumLookup(sources.print);
 
 const registrations = [...stripComments(sources.print).matchAll(/add\("([^"]+)",\s*(co[A-Za-z]+)\)/g)];
 const definitions = new Map();
@@ -92,7 +86,7 @@ for (let index = 0; index < registrations.length; index++) {
   if (!expression) throw new Error(`missing default expression ${match[1]}`);
   const definition = {
     type: match[2],
-    defaultValue: evaluateDefault(match[2], expression),
+    defaultValue: evaluateDefault(match[2], expression, enums),
     nullable: /nullable\s*=\s*true/.test(block),
   };
   const previous = definitions.get(match[1]);
@@ -101,13 +95,7 @@ for (let index = 0; index < registrations.length; index++) {
 }
 if (definitions.size !== 622) throw new Error(`expected 622 literal definitions, got ${definitions.size}`);
 
-const axes = /std::vector<AxisDefault> axes\s*\{([\s\S]*?)\n\s*\};/.exec(stripComments(sources.print))?.[1];
-if (!axes) throw new Error("missing axis defaults");
-for (const match of axes.matchAll(/\{\s*"([xyze])"\s*,\s*\{([^}]+)\}\s*,\s*\{([^}]+)\}\s*,\s*\{([^}]+)\}\s*\}/g)) {
-  for (const [prefix, values] of [["machine_max_speed_", match[2]], ["machine_max_acceleration_", match[3]], ["machine_max_jerk_", match[4]]]) {
-    definitions.set(`${prefix}${match[1]}`, { type: "coFloats", defaultValue: numberList(values).join(",") });
-  }
-}
+for (const [key, definition] of axisDefinitions(sources.print, numberList)) definitions.set(key, definition);
 
 const overrideBlock = /filament_extruder_override_keys\s*=\s*\{([\s\S]*?)\};/.exec(stripComments(sources.print))?.[1];
 if (!overrideBlock) throw new Error("missing filament override list");
@@ -130,10 +118,10 @@ for (const key of keys) {
 for (const [key, definition] of definitions) if (definition.nullable) nullable.add(key);
 if (nullable.size !== 31) throw new Error(`expected 31 nullable definitions, got ${nullable.size}`);
 
-function evaluateDefault(type, expression) {
+function evaluateDefault(type, expression, enumValues) {
   let value = expression.trim();
   for (const [name, replacement] of constants) value = value.replaceAll(name, replacement);
-  if (value.includes("nil_value()") || /ntUndefine/.test(value)) return "nil";
+  if (value.includes("nil_value()")) return "nil";
   if (type === "coString" || type === "coStrings") {
     const decode = part => [...part.matchAll(/"((?:\\.|[^"\\])*)"/g)].map(match => JSON.parse(`"${match[1]}"`)).join("");
     if (type === "coString") return escapeCstyle(decode(value));
@@ -144,10 +132,7 @@ function evaluateDefault(type, expression) {
   }
   value = value.replace(/\s+/g, " ");
   if (type === "coEnum" || type === "coEnums") {
-    const opening = value.indexOf(type === "coEnum" ? ">" : "Generic");
-    const body = value.slice(opening + 1).replace(/^[^{(]*[{(]/, "").replace(/[})]\s*$/, "");
-    const names = body.split(",").map(normalizeEnum).filter(Boolean).map(name => enumValues.get(name) ?? (() => { throw new Error(`unknown enum ${name} in ${value}`); })());
-    return names.join(",");
+    return evaluateEnumDefault(value, enumValues);
   }
   if (type === "coBool" || type === "coBools") {
     const bools = [...value.matchAll(/\b(true|false|[01])\b/g)].map(match => match[1] === "true" || match[1] === "1" ? "1" : "0");
@@ -262,6 +247,11 @@ function lineOf(source, needle) {
 
 function definitionCitation(key) {
   if (metadata.has(key)) return metadata.get(key);
+  if (/^machine_max_(?:speed|acceleration|jerk)_[xyze]$/.test(key)) {
+    const field = owners[0][1].get(key);
+    if (!field) throw new Error(`missing axis declaration ${key}`);
+    return { path: "src/libslic3r/PrintConfig.hpp", line: field.line, symbol: key };
+  }
   const literal = `add(\"${key}\"`;
   const line = lineOf(sources.print, literal);
   if (line) return { path: "src/libslic3r/PrintConfig.cpp", line, symbol: key };
@@ -342,7 +332,8 @@ const exportRules = deriveExportRules(sources.gcode, keys);
 for (const key of exportRules.keys()) if (nullable.has(key)) throw new Error(`overlapping special/nullable export ${key}`);
 if (process.argv.includes("--verify-mutations")) {
   verifySourceMutations(sources, definitions, keys);
-  process.stdout.write("verified 11 source-semantics mutations\n");
+  verifyOptionDefinitionMutations(sources.print, numberList);
+  process.stdout.write("verified 19 source-semantics mutations\n");
   process.exit(0);
 }
 const consumerCitations = deriveConsumerCitations(keys, sources, new Set(metadata.keys()));

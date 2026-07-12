@@ -2,6 +2,24 @@ use std::{collections::BTreeMap, process::Command};
 
 use super::{FIXED_COMMIT, OptionInventoryRow, SourceCitation};
 
+#[path = "provenance/axis.rs"]
+mod axis;
+#[path = "provenance/enums.rs"]
+mod enums;
+
+pub(super) fn verify_axis_defaults(source: &str, rows: &[OptionInventoryRow]) {
+    axis::verify_axis_defaults(source, rows);
+}
+
+pub(super) fn verify_nozzle_type_default(
+    print_config: &str,
+    config: &str,
+    common_defs: &str,
+    rows: &[OptionInventoryRow],
+) {
+    enums::verify_nozzle_type_default(print_config, config, common_defs, rows);
+}
+
 pub(super) fn git_show(repo: &std::ffi::OsStr, path: &str) -> String {
     let output = Command::new("git")
         .arg("-C")
@@ -319,7 +337,7 @@ pub(super) fn verify_source_mutations(repo: &std::ffi::OsStr) {
     );
     assert_eq!(
         String::from_utf8(output.stdout).unwrap(),
-        "verified 11 source-semantics mutations\n"
+        "verified 19 source-semantics mutations\n"
     );
 }
 

@@ -7663,7 +7663,7 @@
     "static_owner": "machine_envelope_config",
     "option_type": "coEnum",
     "nullable": false,
-    "default_serialized": "default",
+    "default_serialized": "Default",
     "wire_shape": "scalar_string",
     "effective_projections": [],
     "legacy_inputs": [],
@@ -8925,8 +8925,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8461,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1260,
       "symbol": "machine_max_acceleration_e"
     },
     "upstream_consumers": [
@@ -9029,8 +9029,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8458,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1257,
       "symbol": "machine_max_acceleration_x"
     },
     "upstream_consumers": [
@@ -9055,8 +9055,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8459,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1258,
       "symbol": "machine_max_acceleration_y"
     },
     "upstream_consumers": [
@@ -9081,8 +9081,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8460,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1259,
       "symbol": "machine_max_acceleration_z"
     },
     "upstream_consumers": [
@@ -9107,8 +9107,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8472,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1276,
       "symbol": "machine_max_jerk_e"
     },
     "upstream_consumers": [
@@ -9133,8 +9133,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8469,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1273,
       "symbol": "machine_max_jerk_x"
     },
     "upstream_consumers": [
@@ -9159,8 +9159,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8470,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1274,
       "symbol": "machine_max_jerk_y"
     },
     "upstream_consumers": [
@@ -9185,8 +9185,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8471,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1275,
       "symbol": "machine_max_jerk_z"
     },
     "upstream_consumers": [
@@ -9237,8 +9237,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8468,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1265,
       "symbol": "machine_max_speed_e"
     },
     "upstream_consumers": [
@@ -9263,8 +9263,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8465,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1262,
       "symbol": "machine_max_speed_x"
     },
     "upstream_consumers": [
@@ -9289,8 +9289,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8466,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1263,
       "symbol": "machine_max_speed_y"
     },
     "upstream_consumers": [
@@ -9315,8 +9315,8 @@
       "kind": "canonical"
     },
     "upstream_definition": {
-      "path": "src/libslic3r/PrintConfig.cpp",
-      "line": 8467,
+      "path": "src/libslic3r/PrintConfig.hpp",
+      "line": 1264,
       "symbol": "machine_max_speed_z"
     },
     "upstream_consumers": [
@@ -10347,7 +10347,7 @@
     "static_owner": "g_code_config",
     "option_type": "coEnums",
     "nullable": true,
-    "default_serialized": "nil",
+    "default_serialized": "undefine",
     "wire_shape": "array",
     "effective_projections": [
       "g_code"
