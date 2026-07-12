@@ -1,11 +1,19 @@
+mod gcode_source;
 mod machine_envelope;
 
+pub(crate) use gcode_source::PrinterGCodeSourceOptionsBuilder;
+pub use gcode_source::{
+    ExtruderType, ExtruderTypes, NozzleType, NullableInts, NullableNozzleTypes,
+    PrinterGCodeSourceOptions, PrinterStructure, RetractLiftEnforces, WipeTowerType, ZHopType,
+    ZHopTypes,
+};
 pub(crate) use machine_envelope::MachineEnvelopeOptionsBuilder;
 pub use machine_envelope::{InputShaperType, MachineEnvelopeOptions};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PrinterOptions {
     pub machine: MachineEnvelopeOptions,
+    pub gcode: PrinterGCodeSourceOptions,
 }
 
 impl Default for PrinterOptions {
@@ -39,10 +47,9 @@ impl<'de> serde::de::Visitor<'de> for PrinterVisitor {
         let mut builder = PrinterOptionsBuilder::default();
         while let Some(key) = map.next_key::<String>()? {
             if !builder.deserialize_known_field(&key, &mut map)? {
-                return Err(serde::de::Error::unknown_field(
-                    &key,
-                    &MachineEnvelopeOptions::DECLARATION_ORDER,
-                ));
+                return Err(serde::de::Error::custom(format!(
+                    "unknown Orca printer option {key}"
+                )));
             }
         }
         Ok(builder.resolve())
@@ -52,6 +59,7 @@ impl<'de> serde::de::Visitor<'de> for PrinterVisitor {
 #[derive(Default)]
 pub(crate) struct PrinterOptionsBuilder {
     machine: MachineEnvelopeOptionsBuilder,
+    gcode: PrinterGCodeSourceOptionsBuilder,
 }
 
 impl PrinterOptionsBuilder {
@@ -63,12 +71,17 @@ impl PrinterOptionsBuilder {
     where
         A: serde::de::MapAccess<'de>,
     {
-        self.machine.deserialize_known_field(key, map)
+        if self.machine.deserialize_known_field(key, map)? {
+            Ok(true)
+        } else {
+            self.gcode.deserialize_known_field(key, map)
+        }
     }
 
     pub(crate) fn resolve(self) -> PrinterOptions {
         PrinterOptions {
             machine: self.machine.resolve(),
+            gcode: self.gcode.resolve(),
         }
     }
 }

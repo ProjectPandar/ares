@@ -109,14 +109,17 @@ pub use options::registry::{
     printer_options_with_variant_1, printer_options_with_variant_2,
 };
 pub use options::{
-    AmsCounts, CsvTable, DifferentExtrudersSupport, ExtruderIndexIdMapLookup, FilamentTypeDisplay,
-    FlatMatrix, FloatOrPercent, HardwareOptions, InfillOptions, InfillPattern, InputShaperType,
-    MachineEnvelopeOptions, Millimeters, MultiToMulti2Update, MultiToMultiUpdate, Nullable,
-    NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaFloat, OrcaFloatOrPercents, OrcaFloats,
-    OrcaInt, OrcaInts, OrcaPercents, OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d,
-    Point2dGroups, Point2dList, PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate,
-    PrinterOptions, PrinterTechnologies, PrinterTechnology, ProjectSettings, RammingParameters,
-    SliceOptions, SpaceTuple, VariantStride,
+    AmsCounts, BedTemperatureFormula, CsvTable, DifferentExtrudersSupport,
+    ExtruderIndexIdMapLookup, ExtruderType, ExtruderTypes, FilamentTypeDisplay, FlatMatrix,
+    FloatOrPercent, GCodeFlavor, HardwareOptions, InfillOptions, InfillPattern, InputShaperType,
+    MachineEnvelopeOptions, Millimeters, MultiToMulti2Update, MultiToMultiUpdate, NozzleType,
+    Nullable, NullableInts, NullableNozzleTypes, NullablePrinterTechnologies, OrcaBool, OrcaBools,
+    OrcaFloat, OrcaFloatOrPercents, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString,
+    OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList, PowerLossRecoveryMode,
+    PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate, PrinterGCodeSourceOptions,
+    PrinterOptions, PrinterStructure, PrinterTechnologies, PrinterTechnology, ProjectSettings,
+    RammingParameters, RetractLiftEnforce, RetractLiftEnforces, SliceOptions, SpaceTuple,
+    VariantStride, WipeTowerType, ZHopType, ZHopTypes,
 };
 pub use perimeters::{
     LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,

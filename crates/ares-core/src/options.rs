@@ -51,13 +51,14 @@ pub(crate) use gap_fill::GapFillTarget;
 pub(crate) use infill::{
     InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions, InternalBridgeFilter,
 };
+pub(crate) use machine_limits::MachineLimits;
 use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{LayerRoleFanControl, PartCoolingFanRamp};
 pub use support_different_extruders::DifferentExtrudersSupport;
 pub use update_multi_to_multi::{MultiToMulti2Update, MultiToMultiUpdate};
 pub use update_printer_extruders::{PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate};
-pub(crate) use {chamber_temperature::ChamberTemperatureControl, exhaust_fan::ExhaustFanControl};
 pub use {
+    bed_temperature::BedTemperatureFormula,
     config_types::{
         AmsCounts, CsvTable, FlatMatrix, FloatOrPercent, Millimeters, Nullable,
         NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaFloat, OrcaFloatOrPercents,
@@ -65,15 +66,22 @@ pub use {
         Point2d, Point2dGroups, Point2dList, PrinterTechnologies, PrinterTechnology,
         RammingParameters, SpaceTuple, VariantStride,
     },
+    gcode_flavor::GCodeFlavor,
     hardware::HardwareOptions,
     infill::{InfillOptions, InfillPattern},
-    printer_options::{InputShaperType, MachineEnvelopeOptions, PrinterOptions},
+    layer_change_retraction::RetractLiftEnforce,
+    power_loss_recovery::PowerLossRecoveryMode,
+    printer_options::{
+        ExtruderType, ExtruderTypes, InputShaperType, MachineEnvelopeOptions, NozzleType,
+        NullableInts, NullableNozzleTypes, PrinterGCodeSourceOptions, PrinterOptions,
+        PrinterStructure, RetractLiftEnforces, WipeTowerType, ZHopType, ZHopTypes,
+    },
     project_settings::ProjectSettings,
 };
+pub(crate) use {chamber_temperature::ChamberTemperatureControl, exhaust_fan::ExhaustFanControl};
 pub use {extruder_index::ExtruderIndexIdMapLookup, filament_type::FilamentTypeDisplay};
-pub(crate) use {gcode_flavor::GCodeFlavor, machine_limits::MachineLimits};
 #[rustfmt::skip]
-pub(crate) use {input_shaping::InputShapingConfig, layer_change_retraction::{RetractLiftEnforce, ZHopLiftMode}};
+pub(crate) use {input_shaping::InputShapingConfig, layer_change_retraction::ZHopLiftMode};
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize)]
 #[serde(transparent)]
 pub struct SliceOptions {

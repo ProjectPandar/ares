@@ -30,9 +30,14 @@ impl OtherLayerBedTemperature {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum BedTemperatureFormula {
+#[derive(
+    Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize,
+)]
+pub enum BedTemperatureFormula {
+    #[serde(rename = "by_first_filament")]
     FirstFilament,
+    #[default]
+    #[serde(rename = "by_highest_temp")]
     HighestTemp,
 }
 

@@ -745,11 +745,11 @@ The following ownership is fixed for this plan. Additional sibling files are all
 
 - [ ] **Step 1: Add RED coverage for the exact 62-key intersection**
 
-  Select the 62 committed inventory rows whose raw scope is Printer and static owner is `GCodeConfig`. Assert none overlap `MachineEnvelopeOptions`, and every fixture value round-trips through its declared type. Add focused cases for points/point groups, printer/extruder enums, vector cardinality, multi-line machine G-code, and invalid enum spelling.
+  Select the 62 committed inventory rows whose raw scope is Printer and static owner is `GCodeConfig`. Assert none overlap `MachineEnvelopeOptions`, and every fixture value round-trips through its declared type. Add focused cases for the sole `coPoints` field `wrapping_exclude_area`, printer/extruder enums, vector cardinality, multi-line machine G-code, and invalid enum spelling. This boundary contains no `coPointsGroups` field.
 
 - [ ] **Step 2: Add typed fields one inventory row at a time**
 
-  For each row, first add the failing field test, then add its concrete field and match arm. Do not infer type from whether the fixture value is a string or array. `extruder_printable_area`, `extruder_offset`, `bed_shape`, machine templates, nozzle/extruder vectors, and firmware flavor use their explicit upstream types and enums.
+  For each row, first add the failing field test, then add its concrete field and match arm. Do not infer type from whether the fixture value is a string or array. Machine templates, `wrapping_exclude_area`, nozzle/extruder vectors, and firmware flavor use their explicit upstream types and enums. `extruder_printable_area` belongs to Task 8's printer/`PrintConfig` intersection, `extruder_offset` is a residual/`PrintConfig` key, and `bed_shape` is absent from this fixture; none belongs to Task 7.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 

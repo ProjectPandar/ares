@@ -160,3 +160,49 @@ variant selection is not performed here. Existing legacy `SliceOptions` tests
 for machine-limit, resonance, and input-shaping G-code do not make the new typed
 project path `consumed`. Top-level project dispatch, effective config
 composition, normalization, and G-code consumption remain deferred.
+
+### Task 7: printer G-code source
+
+The next 62 entries have raw scope `printer`, static owner
+`PrintConfig.hpp::GCodeConfig`, and state `retained-only` in the typed project
+path. Their concrete key/type ledger is:
+
+- `coBool`: `auxiliary_fan`, `disable_m73`, `enable_filament_ramming`,
+  `fan_speedup_overhangs`, `high_current_on_filament_swap`,
+  `manual_filament_change`, `purge_in_prime_tower`, `scan_first_layer`,
+  `silent_mode`, `single_extruder_multi_material`, `support_air_filtration`,
+  `support_chamber_temp_control`, `support_multi_bed_types`,
+  `support_object_skip_flush`, `tool_change_on_wipe_tower`, `use_3mf`,
+  `use_firmware_retraction`, and `use_relative_e_distances`; `coBools`:
+  `long_retractions_when_cut`.
+- `coEnum`: `bed_temperature_formula`, `enable_power_loss_recovery`,
+  `gcode_flavor`, `printer_structure`, and `wipe_tower_type`; `coEnums`:
+  `extruder_type`, nullable `nozzle_type`, `retract_lift_enforce`, and
+  `z_hop_types`.
+- `coFloat`: `cooling_tube_length`, `cooling_tube_retraction`,
+  `extra_loading_move`, `fan_kickstart`, `fan_speedup_time`,
+  `machine_load_filament_time`, `machine_tool_change_time`,
+  `machine_unload_filament_time`, `parking_pos_retraction`, and `time_cost`;
+  `coFloats`: `retraction_distances_when_cut` and `travel_slope`.
+- `coInt`: `enable_long_retraction_when_cut`, `master_extruder_id`,
+  `nozzle_hrc`, `part_cooling_fan_min_pwm`, and
+  `wrapping_detection_layers`; `coInts`: nullable
+  `nozzle_flush_dataset`, `physical_extruder_map`, and
+  `printer_extruder_id`.
+- `coPoints`: `wrapping_exclude_area`; `coStrings`:
+  `printer_extruder_variant`.
+- `coString`: `before_layer_change_gcode`, `change_extrusion_role_gcode`,
+  `change_filament_gcode`, `file_start_gcode`, `layer_change_gcode`,
+  `machine_end_gcode`, `machine_pause_gcode`, `machine_start_gcode`,
+  `printing_by_object_gcode`, `template_custom_gcode`, `time_lapse_gcode`,
+  and `wrapping_detection_gcode`.
+
+`PrinterOptions` dispatches the 28 machine-envelope and 62 G-code-source keys
+through their private concrete builders without an erased remainder. The
+focused tests prove the exact disjoint inventory intersection, fixed defaults,
+all nine enum domains, element-level nullable vectors, vector cardinalities,
+non-empty point parsing, five multiline G-code values, declaration order,
+lexicographic serialization, and mixed child dispatch. The typed project path
+still does not feed these fields into slicing; effective projection,
+normalization, placeholder/template consumers, G-code generation, and config
+export remain deferred.

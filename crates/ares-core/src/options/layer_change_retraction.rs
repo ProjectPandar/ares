@@ -2,7 +2,8 @@ mod config;
 mod lift_type;
 mod parsing;
 
-pub(crate) use config::{LayerChangeRetraction, RetractLiftEnforce, ZHopLiftMode};
+pub use config::RetractLiftEnforce;
+pub(crate) use config::{LayerChangeRetraction, ZHopLiftMode};
 use lift_type::parse_z_hop_lift_config;
 use parsing::{
     firmware_bool, first_bool, first_non_negative_f64, first_non_negative_f64_all_values,

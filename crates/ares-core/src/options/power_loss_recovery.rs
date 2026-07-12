@@ -5,10 +5,14 @@ use crate::SliceError;
 
 const KEY: &str = "enable_power_loss_recovery";
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum PowerLossRecoveryMode {
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum PowerLossRecoveryMode {
+    #[default]
+    #[serde(rename = "printer_configuration")]
     PrinterConfiguration,
+    #[serde(rename = "enable")]
     Enable,
+    #[serde(rename = "disable")]
     Disable,
 }
 
