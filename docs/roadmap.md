@@ -181,6 +181,47 @@ Model XML, meshes/transforms, public project-domain loading, embedded project
 options, and slicing remain deferred to dependent tasks, and this metadata
 layer is not wired into the old empty 3MF compatibility shell.
 
+### 2026-07-12 Load 3MF models into the public project domain
+
+Task 4 ports the model, mesh, component, build-item, transform, and
+volume-assembly boundary from fixed OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` (`Format/bbs_3mf.cpp`) into
+concrete `ares-core::project` types. `load_project` now starts at the OPC root
+relationship, loads every reachable model part in memory, preserves `f64`
+vertices and triangle indices, composes build and component transforms in Orca
+order, retains part matrices as source provenance, and exposes path-qualified
+objects, volumes, instances, plates, project-settings bytes, loaded label ID
+133, and the original `printable` / `auto_drop` flags. The old empty 3MF branch
+in the explicit-option STL loader is gone and returns a clear `load_project`
+boundary error instead.
+
+The public untrusted-input boundary validates XML typed-attribute namespace
+ownership, OPC relationship-ID uniqueness, relationship-part ownership and
+MIME, declared preview existence and PNG MIME without decoding pixels, exact
+`(PackagePath, object_id)` component references for every loaded model, mesh
+indices and finite coordinates, and the unavoidable ambiguity where Orca's
+path-qualified build identity meets bare-ID model-settings, plate, and assemble
+metadata. Optional unreferenced model parts and their canonical relationship
+parts remain ignored. Review-discovered namespace spoofing, cross-model ID
+collapse, missing preview/relationship ownership, duplicate relationship IDs,
+and unused reachable component-reference gaps were each reproduced with RED
+mutations and closed before the final independent Codex re-review approved the
+tree; the user-approved temporary OpenCode bypass applies to this increment.
+
+`GenerationMetadata`, `load_project`, and async `slice_project` are now stable
+core APIs. Until the later project pipeline lands, a successfully loaded
+project returns the typed `ProjectSlicingIncomplete` result. The stable WASM
+`sliceProject` export supplies local `js_sys::Date` fields, calls only the core
+API, and is exercised through generated `wasm-bindgen` JavaScript in real
+headless Chromium with the committed fixture. Reviewed verification passes
+4,178 workspace tests with 2 skipped, the 22-test dynamic-value audit with 1
+skipped, rustfmt, warning-denying Clippy, both WASM checks, and the Playwright
+browser boundary 1/1. Embedded typed option codecs/inventory, effective project
+configuration, project geometry slicing, toolpaths, G-code serialization and
+processing, CLI project-form activation, and removal of the golden-test ignore
+remain deferred to Tasks 5 onward; the ignored CLI golden still fails at its
+planned required-`--options` boundary.
+
 ### 2026-07-01 Consume prime tower brim width header slice
 
 `prime_tower_brim_width` is now consumed through the source-cited Orca `PrintConfig.hpp:1581-1584`, `PrintConfig.cpp:6725-6734,7878-7879`, `GCode.cpp:5523-5574`, `Print.cpp:318-323,3150,3177-3179`, `GCode/WipeTower.cpp:1461-1468,3705-3707`, and `GCode/WipeTower2.cpp:1248-1256,2115-2119,2134-2136` boundary. The Rust destination is the existing `FilamentConfigExports` config-header snapshot plus `gcode_config_header.rs` serialization. The slice validates the already-registered scalar brim-width option with Orca's `-1` lower bound; exports explicit values and the `-1` auto sentinel as one `prime_tower_brim_width` config header line; carries legacy `wipe_tower_brim_width` input through the existing normalization path; rejects invalid values before G-code bytes are returned; and preserves omitted-value header output. Automatic brim-width calculation, wipe-tower placement, fake wipe-tower state, collision checks, cone/corner geometry, wall generation, mesh construction, purge-depth planning, rib-wall width recomputation, legacy `WipeTower` and `WipeTower2` runtime brim-width behavior, adjacent prime-tower interface options, flush-volume behavior, UI, CLI, WASM bindings, and Orca binary E2E wipe-tower parity remain deferred.

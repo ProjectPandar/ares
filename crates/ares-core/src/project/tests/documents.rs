@@ -238,6 +238,20 @@ fn project_documents_validate_unreferenced_preview_crc() {
     assert!(content_types.validate_png_entries(&mut archive).is_err());
 }
 
+#[test]
+fn project_documents_reject_prefixed_typed_content_type_attributes() {
+    let xml = br#"<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types" xmlns:evil="https://example.invalid/spoof"><Override evil:PartName="/3D/model.model" evil:ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>"#;
+
+    assert!(deserialize_xml::<ContentTypes>(xml, XmlRole::ContentTypes).is_err());
+}
+
+#[test]
+fn project_documents_reject_prefixed_typed_relationship_attributes() {
+    let xml = br#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships" xmlns:evil="https://example.invalid/spoof"><Relationship evil:Target="/3D/model.model" evil:Id="r1" evil:Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>"#;
+
+    assert!(deserialize_xml::<Relationships>(xml, XmlRole::Relationships).is_err());
+}
+
 fn metadata<'a>(entries: &'a [Metadata], key: &str) -> &'a str {
     &entries.iter().find(|entry| entry.key == key).unwrap().value
 }

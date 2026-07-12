@@ -58,6 +58,7 @@ mod gcode_wipe_on_loops;
 mod gcode_wrapping_detection;
 mod gcode_writer;
 mod gcode_writer_setup;
+mod generation;
 mod infills;
 mod model;
 mod model_shrinkage;
@@ -71,8 +72,8 @@ mod print_apply;
 mod print_paths;
 mod printable_height;
 mod profiles;
-#[cfg_attr(not(test), allow(dead_code, unused_imports))]
 mod project;
+mod project_slice;
 mod segments;
 mod skirts;
 mod speeds;
@@ -97,6 +98,7 @@ pub use gcode_thumbnails::{
     GCodeThumbnailDefinition, GCodeThumbnailFormat, ThumbnailParseError,
     parse_thumbnail_definitions, thumbnail_error_string,
 };
+pub use generation::{GenerationMetadata, ORCA_SLICER_COMPATIBILITY_VERSION};
 pub use infills::{InfillPath, InfillRole, LayerInfills, generate_infills};
 pub use model::{Model, Point3, Triangle, ZBounds};
 pub use moves::{LayerToolpathMoves, ToolpathMove, ToolpathMoveKind, generate_toolpath_moves};
@@ -131,6 +133,11 @@ pub use profiles::{
     ComposedProfile, ProfileFragment, ProfileKind, ProfileSelection, compose_profile_fragments,
     merge_profile_fragments,
 };
+pub use project::{
+    PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
+    ProjectVolume, Transform3d, load_project,
+};
+pub use project_slice::slice_project;
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use speeds::{
@@ -170,6 +177,7 @@ impl InputFormat {
 pub enum SliceError {
     EmptyInput,
     InvalidInput(String),
+    ProjectSlicingIncomplete,
 }
 
 impl fmt::Display for SliceError {
@@ -177,6 +185,7 @@ impl fmt::Display for SliceError {
         match self {
             Self::EmptyInput => f.write_str("slice input is empty"),
             Self::InvalidInput(message) => f.write_str(message),
+            Self::ProjectSlicingIncomplete => f.write_str("ProjectSlicingIncomplete"),
         }
     }
 }
@@ -191,7 +200,9 @@ pub fn load_model(input: impl AsRef<[u8]>) -> Result<Model, SliceError> {
 
     match InputFormat::detect(input) {
         InputFormat::Stl => stl::load(input),
-        InputFormat::ThreeMf => Ok(Model::new(InputFormat::ThreeMf, Vec::new())),
+        InputFormat::ThreeMf => Err(SliceError::InvalidInput(
+            "3MF project input must be loaded with load_project".to_owned(),
+        )),
         InputFormat::Unknown if stl::looks_like_binary(input) => stl::load(input),
         InputFormat::Unknown => Err(SliceError::InvalidInput(
             "unsupported or malformed model input".to_owned(),

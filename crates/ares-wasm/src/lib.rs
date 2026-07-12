@@ -1,4 +1,5 @@
-use ares_core::{SliceError, SliceOptions};
+use ares_core::{GenerationMetadata, SliceError, SliceOptions};
+use js_sys::Date;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -15,12 +16,44 @@ pub async fn slice_stl_bytes(input: Vec<u8>, options_json: &str) -> Result<Vec<u
         .map_err(format_slice_error)
 }
 
+#[wasm_bindgen(js_name = sliceProject)]
+pub async fn slice_project(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
+    let metadata = local_generation_metadata().map_err(slice_error_js)?;
+    ares_core::slice_project(input, metadata)
+        .await
+        .map_err(slice_error_js)
+}
+
+fn local_generation_metadata() -> Result<GenerationMetadata, SliceError> {
+    let now = Date::new_0();
+    GenerationMetadata::new_local(
+        u16::try_from(now.get_full_year()).map_err(|_| invalid_date())?,
+        u8::try_from(now.get_month() + 1).map_err(|_| invalid_date())?,
+        u8::try_from(now.get_date()).map_err(|_| invalid_date())?,
+        u8::try_from(now.get_hours()).map_err(|_| invalid_date())?,
+        u8::try_from(now.get_minutes()).map_err(|_| invalid_date())?,
+        u8::try_from(now.get_seconds()).map_err(|_| invalid_date())?,
+    )
+}
+
+fn invalid_date() -> SliceError {
+    SliceError::InvalidInput("browser local date is outside the supported range".to_owned())
+}
+
+fn slice_error_js(error: SliceError) -> JsValue {
+    JsValue::from_str(&format_slice_error(error))
+}
+
 fn parse_options(options_json: &str) -> Result<SliceOptions, String> {
     serde_json::from_str(options_json).map_err(|error| format!("invalid options JSON: {error}"))
 }
 
 fn format_slice_error(error: SliceError) -> String {
-    error.to_string()
+    match error {
+        SliceError::EmptyInput => "slice input is empty".to_owned(),
+        SliceError::InvalidInput(message) => message,
+        SliceError::ProjectSlicingIncomplete => "ProjectSlicingIncomplete".to_owned(),
+    }
 }
 
 #[cfg(test)]
@@ -51,6 +84,14 @@ mod tests {
         let error = slice_stl_bytes(Vec::new(), "{}").await.unwrap_err();
 
         assert_eq!(error, "slice input is empty");
+    }
+
+    #[test]
+    fn project_incomplete_error_has_stable_javascript_mapping() {
+        assert_eq!(
+            format_slice_error(SliceError::ProjectSlicingIncomplete),
+            "ProjectSlicingIncomplete"
+        );
     }
 
     fn square_ascii_stl() -> Vec<u8> {

@@ -7,7 +7,8 @@ use super::{PackagePath, ProjectArchive};
 pub(crate) const MODEL_CONTENT_TYPE: &str =
     "application/vnd.ms-package.3dmanufacturing-3dmodel+xml";
 pub(crate) const PNG_CONTENT_TYPE: &str = "image/png";
-const RELATIONSHIPS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-package.relationships+xml";
+pub(crate) const RELATIONSHIPS_CONTENT_TYPE: &str =
+    "application/vnd.openxmlformats-package.relationships+xml";
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename = "Types")]

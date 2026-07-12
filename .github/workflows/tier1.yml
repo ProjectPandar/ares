@@ -42,8 +42,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: crates/ares-wasm/tests/browser/package-lock.json
       - uses: dtolnay/rust-toolchain@1.91.0
         with:
           targets: wasm32-unknown-unknown
       - run: cargo check -p ares-core --target wasm32-unknown-unknown
       - run: cargo check -p ares-wasm --target wasm32-unknown-unknown
+      - run: cargo build -p ares-wasm --target wasm32-unknown-unknown --release
+      - run: cargo install --locked wasm-bindgen-cli --version 0.2.121
+      - run: wasm-bindgen target/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+      - run: npm --prefix crates/ares-wasm/tests/browser ci
+      - run: npx --prefix crates/ares-wasm/tests/browser playwright install --with-deps chromium
+      - run: npm --prefix crates/ares-wasm/tests/browser test

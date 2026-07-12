@@ -3,3 +3,4 @@ OrcaSlicer/
 .superpowers/
 target/
 .omx/artifacts
+/crates/ares-wasm/tests/browser/node_modules/

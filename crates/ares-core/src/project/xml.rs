@@ -9,64 +9,16 @@ use crate::SliceError;
 
 use super::xml_characters::{is_legal_character, is_xml11_restricted};
 
-const CONTENT_TYPES_NAMESPACE: &[u8] =
-    b"http://schemas.openxmlformats.org/package/2006/content-types";
-const RELATIONSHIPS_NAMESPACE: &[u8] =
-    b"http://schemas.openxmlformats.org/package/2006/relationships";
+mod attribute;
+mod model;
+mod role;
+
+pub(crate) use role::{JsonRole, XmlRole};
+
 const MAX_DOCUMENT_SIZE: usize = 64 * 1024 * 1024;
 const MAX_DEPTH: usize = 256;
 const MAX_ATTRIBUTES: usize = 1_024;
 const MAX_DECODED_TEXT: usize = 64 * 1024 * 1024;
-
-#[derive(Clone, Copy)]
-pub(crate) enum XmlRole {
-    ContentTypes,
-    Relationships,
-    ModelSettings,
-    SliceInfo,
-}
-
-impl XmlRole {
-    fn name(self) -> &'static str {
-        match self {
-            Self::ContentTypes => "content types",
-            Self::Relationships => "relationships",
-            Self::ModelSettings => "model settings",
-            Self::SliceInfo => "slice info",
-        }
-    }
-
-    fn root(self) -> &'static [u8] {
-        match self {
-            Self::ContentTypes => b"Types",
-            Self::Relationships => b"Relationships",
-            Self::ModelSettings | Self::SliceInfo => b"config",
-        }
-    }
-
-    fn namespace(self) -> Option<&'static [u8]> {
-        match self {
-            Self::ContentTypes => Some(CONTENT_TYPES_NAMESPACE),
-            Self::Relationships => Some(RELATIONSHIPS_NAMESPACE),
-            Self::ModelSettings | Self::SliceInfo => None,
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub(crate) enum JsonRole {
-    FilamentSequences,
-    Plate,
-}
-
-impl JsonRole {
-    fn name(self) -> &'static str {
-        match self {
-            Self::FilamentSequences => "filament sequences",
-            Self::Plate => "plate metadata",
-        }
-    }
-}
 
 #[derive(Clone, Copy)]
 struct XmlLimits {
@@ -279,6 +231,8 @@ fn validate_attributes(
     version: XmlVersion,
     decoded_text: &mut DecodedText,
 ) -> Result<(), SliceError> {
+    let mut required_extensions = None;
+    let mut namespace_bindings = Vec::new();
     for (index, attribute) in element.attributes().enumerate() {
         if index >= MAX_ATTRIBUTES {
             return Err(invalid_xml(
@@ -287,12 +241,16 @@ fn validate_attributes(
             ));
         }
         let attribute = attribute.map_err(|error| invalid_xml(role, error))?;
-        if matches!(
-            reader.resolver().resolve_attribute(attribute.key).0,
-            ResolveResult::Unknown(_)
-        ) {
+        let (namespace, local_name) = reader.resolver().resolve_attribute(attribute.key);
+        if matches!(namespace, ResolveResult::Unknown(_)) {
             return Err(invalid_xml(role, "attribute uses an unresolved namespace"));
         }
+        attribute::validate_namespace(
+            role,
+            attribute.key.as_ref(),
+            local_name.as_ref(),
+            &namespace,
+        )?;
         let literal = reader
             .decoder()
             .decode(attribute.value.as_ref())
@@ -303,6 +261,16 @@ fn validate_attributes(
             .map_err(|error| invalid_xml(role, error))?;
         validate_legal_characters(role, &value, version)?;
         decoded_text.add(role, value.len())?;
+        if role == XmlRole::Model && attribute.key.as_ref() == b"requiredextensions" {
+            required_extensions = Some(value.into_owned());
+        } else if role == XmlRole::Model
+            && let Some(prefix) = attribute.key.as_ref().strip_prefix(b"xmlns:")
+        {
+            namespace_bindings.push((prefix.to_vec(), value.into_owned()));
+        }
+    }
+    if role == XmlRole::Model && element.local_name().as_ref() == b"model" {
+        model::validate_required_extensions(required_extensions.as_deref(), &namespace_bindings)?;
     }
     Ok(())
 }
