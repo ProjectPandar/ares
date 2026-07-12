@@ -4,6 +4,10 @@ use crate::SliceError;
 pub(crate) struct PackagePath(Box<str>);
 
 impl PackagePath {
+    pub(crate) fn root() -> Self {
+        Self("".into())
+    }
+
     pub(crate) fn entry(raw: &[u8]) -> Result<Self, SliceError> {
         let raw = raw.strip_prefix(b"/").unwrap_or(raw);
         let mut decoded = Vec::with_capacity(raw.len());
@@ -44,6 +48,9 @@ impl PackagePath {
         }
 
         let target = Self::entry(target.as_bytes())?;
+        if self.0.is_empty() {
+            return Ok(target);
+        }
         let Some((owner, _)) = self.0.rsplit_once('/') else {
             return Ok(target);
         };

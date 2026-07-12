@@ -78,6 +78,10 @@ impl<'a> ProjectArchive<'a> {
         }
         Ok(bytes)
     }
+
+    pub(crate) fn paths(&self) -> impl Iterator<Item = &PackagePath> {
+        self.entries.keys()
+    }
 }
 
 fn invalid_archive(reason: impl Into<String>) -> SliceError {

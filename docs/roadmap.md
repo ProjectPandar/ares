@@ -156,6 +156,31 @@ project documents, model/domain loading, embedded options, and project slicing
 remain deferred to the dependent tasks; this reader is not wired into the old
 empty 3MF compatibility shell.
 
+### 2026-07-12 Deserialize typed 3MF package metadata
+
+Task 3 ports the fixed OrcaSlicer v2.4.2 `Format/bbs_3mf.cpp` content-type,
+relationship, model-settings, slice-info, filament-sequence, and plate-metadata
+wire boundaries into concrete crate-private serde structs under
+`ares-core::project`. Namespace-aware XML validation now scans the complete
+document before direct typed deserialization, limits documents and decoded text
+to 64 MiB, nesting to 256 levels, and attributes to 1,024 per element, and
+rejects DTD/entity expansion plus XML 1.0/1.1 illegal characters. JSON is
+likewise size-bounded and deserialized directly without `Value`, a DOM, or an
+erased catch-all. OPC relationship targets distinguish package-root and
+owning-part relative resolution; content types enumerate every PNG part and
+force archive size/CRC validation without decoding preview pixels. Focused
+verification passes 5 typed-document and 14 hostile-document tests. Primary
+review and a fresh independent Codex re-review approve the final tree after an
+initial review found and the implementation closed the XML Legal Character
+gap; the user-approved temporary OpenCode bypass applies to this increment.
+The reviewed workspace passes 4,134 tests with 2 skipped, the 22-test
+dynamic-value audit with 1 skipped, rustfmt, warning-denying Clippy, and both
+WASM checks. The ignored CLI golden remains at its planned nonzero
+required-`--options` boundary until the project API and adapters land.
+Model XML, meshes/transforms, public project-domain loading, embedded project
+options, and slicing remain deferred to dependent tasks, and this metadata
+layer is not wired into the old empty 3MF compatibility shell.
+
 ### 2026-07-01 Consume prime tower brim width header slice
 
 `prime_tower_brim_width` is now consumed through the source-cited Orca `PrintConfig.hpp:1581-1584`, `PrintConfig.cpp:6725-6734,7878-7879`, `GCode.cpp:5523-5574`, `Print.cpp:318-323,3150,3177-3179`, `GCode/WipeTower.cpp:1461-1468,3705-3707`, and `GCode/WipeTower2.cpp:1248-1256,2115-2119,2134-2136` boundary. The Rust destination is the existing `FilamentConfigExports` config-header snapshot plus `gcode_config_header.rs` serialization. The slice validates the already-registered scalar brim-width option with Orca's `-1` lower bound; exports explicit values and the `-1` auto sentinel as one `prime_tower_brim_width` config header line; carries legacy `wipe_tower_brim_width` input through the existing normalization path; rejects invalid values before G-code bytes are returned; and preserves omitted-value header output. Automatic brim-width calculation, wipe-tower placement, fake wipe-tower state, collision checks, cone/corner geometry, wall generation, mesh construction, purge-depth planning, rib-wall width recomputation, legacy `WipeTower` and `WipeTower2` runtime brim-width behavior, adjacent prime-tower interface options, flush-volume behavior, UI, CLI, WASM bindings, and Orca binary E2E wipe-tower parity remain deferred.
