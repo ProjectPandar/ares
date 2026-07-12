@@ -1,0 +1,7 @@
+[store]
+dir = "target/nextest"
+
+[profile.default]
+default-filter = "all()"
+# Keep the default test entrypoint parallel without requiring every caller to pass a job flag.
+test-threads = "num-cpus"

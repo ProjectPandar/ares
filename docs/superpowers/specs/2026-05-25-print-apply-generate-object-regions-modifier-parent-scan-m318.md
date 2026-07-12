@@ -1,0 +1,3 @@
+# Spec: M318 PrintApply generate_print_object_regions modifier parent scan
+
+Port `OrcaSlicer/src/libslic3r/PrintApply.cpp:1028-1037` into private staged `ares-core` state. M317 model-part regions from `PrintApply.cpp:1012-1024` are already staged. Add private current-input, parent-region, result, and candidate records. Build a full index-preserving adapter to `staged_find_modifier_volume_extents(...)`; skip ineligible parents for candidate selection only, never by reindexing before bbox computation. Return `added=false`, `parent_model_part_id=-1`, scanned eligible parent ids, and intersecting candidates. Defer config merge, appends, fallback parent selection, painted/fuzzy, public API, slicing, G-code, crates, dependencies, and Ares-owned pipeline behavior.

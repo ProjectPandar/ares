@@ -1,0 +1,5 @@
+# Spec: M317 PrintApply generate_print_object_regions model-part volume region
+
+Port `OrcaSlicer/src/libslic3r/PrintApply.cpp:1012-1024` as a private staged slice. Include only model-part appends; defer negative-volume logic from `PrintApply.cpp:1025-1027`, modifier logic from `PrintApply.cpp:1028-1054`, and painted/fuzzy logic from `PrintApply.cpp:1056-1101`. The helper signature is `staged_generate_model_part_volume_regions(shell: &mut StagedGeneratePrintObjectRegions, layers: &mut [StagedGenerateModelPartLayer], model_volumes: &[StagedGenerateModelPartVolume], region_set: &mut StagedGenerateRegionSet)`. `StagedGenerateModelPartLayer` is intentionally separate for this staged slice; `shell` owns `all_regions` for the M316 region set. No public API or independent Ares pipeline behavior.
+
+Tests must prove model-volume order, per-layer extent gating, unsupported type skipping, negative/modifier no-op deferral, equal-config region reuse, distinct config region creation, parent `-1`, and bbox identity.

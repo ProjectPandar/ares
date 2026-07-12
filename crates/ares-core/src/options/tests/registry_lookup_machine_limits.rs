@@ -1,0 +1,92 @@
+#[test]
+fn exposes_machine_limit_option_definition_lookup() {
+    for (key, kind, default_value, source_fragments) in [
+        (
+            "machine_max_acceleration_e",
+            crate::OptionValueKind::Floats,
+            "5000,5000",
+            &[
+                "PrintConfig.hpp:1252",
+                "PrintConfig.cpp:4389",
+                "PrintConfig.cpp:4411-4428",
+            ][..],
+        ),
+        (
+            "machine_max_acceleration_x",
+            crate::OptionValueKind::Floats,
+            "1000,1000",
+            &[
+                "PrintConfig.hpp:1249",
+                "PrintConfig.cpp:4386",
+                "PrintConfig.cpp:4411-4428",
+            ][..],
+        ),
+        (
+            "machine_max_acceleration_y",
+            crate::OptionValueKind::Floats,
+            "1000,1000",
+            &[
+                "PrintConfig.hpp:1250",
+                "PrintConfig.cpp:4387",
+                "PrintConfig.cpp:4411-4428",
+            ][..],
+        ),
+        (
+            "machine_max_acceleration_z",
+            crate::OptionValueKind::Floats,
+            "500,200",
+            &[
+                "PrintConfig.hpp:1251",
+                "PrintConfig.cpp:4388",
+                "PrintConfig.cpp:4411-4428",
+            ][..],
+        ),
+        (
+            "machine_max_speed_e",
+            crate::OptionValueKind::Floats,
+            "120,120",
+            &[
+                "PrintConfig.hpp:1257",
+                "PrintConfig.cpp:4389",
+                "PrintConfig.cpp:4391-4410",
+            ][..],
+        ),
+        (
+            "machine_max_speed_x",
+            crate::OptionValueKind::Floats,
+            "500,200",
+            &[
+                "PrintConfig.hpp:1254",
+                "PrintConfig.cpp:4386",
+                "PrintConfig.cpp:4391-4410",
+            ][..],
+        ),
+        (
+            "machine_max_speed_y",
+            crate::OptionValueKind::Floats,
+            "500,200",
+            &[
+                "PrintConfig.hpp:1255",
+                "PrintConfig.cpp:4387",
+                "PrintConfig.cpp:4391-4410",
+            ][..],
+        ),
+        (
+            "machine_max_speed_z",
+            crate::OptionValueKind::Floats,
+            "12,12",
+            &[
+                "PrintConfig.hpp:1256",
+                "PrintConfig.cpp:4388",
+                "PrintConfig.cpp:4391-4410",
+            ][..],
+        ),
+    ] {
+        let definition = crate::option_definition(key).unwrap();
+        assert_eq!(definition.kind, kind);
+        assert_eq!(definition.default_value, default_value);
+        for fragment in source_fragments {
+            assert!(definition.source.contains(fragment));
+        }
+    }
+}

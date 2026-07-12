@@ -1,0 +1,166 @@
+use super::super::super::{OptionValueKind, option_definition};
+
+#[test]
+fn compatible_profile_metadata_matches_upstream_print_config() {
+    for (key, kind, default_value, source_fragments) in [
+        (
+            "activate_air_filtration",
+            OptionValueKind::Bools,
+            "false",
+            &["PrintConfig.cpp:1800-1804"][..],
+        ),
+        (
+            "activate_air_filtration_during_print",
+            OptionValueKind::Bools,
+            "true",
+            &["PrintConfig.cpp:1807-1811"][..],
+        ),
+        (
+            "activate_air_filtration_on_completion",
+            OptionValueKind::Bools,
+            "true",
+            &["PrintConfig.cpp:1813-1817"][..],
+        ),
+        (
+            "close_fan_the_first_x_layers",
+            OptionValueKind::Ints,
+            "1",
+            &["PrintConfig.cpp:1837-1845"][..],
+        ),
+        (
+            "complete_print_exhaust_fan_speed",
+            OptionValueKind::Ints,
+            "80",
+            &["PrintConfig.cpp:1828-1835"][..],
+        ),
+        (
+            "compatible_machine_expression_group",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1734"][..],
+        ),
+        (
+            "compatible_printers",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1695"][..],
+        ),
+        (
+            "compatible_printers_condition",
+            OptionValueKind::String,
+            "",
+            &["PrintConfig.cpp:1708"][..],
+        ),
+        (
+            "compatible_prints",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1717"][..],
+        ),
+        (
+            "compatible_prints_condition",
+            OptionValueKind::String,
+            "",
+            &["PrintConfig.cpp:1723"][..],
+        ),
+        (
+            "compatible_process_expression_group",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1737"][..],
+        ),
+        (
+            "default_acceleration",
+            OptionValueKind::Float,
+            "500",
+            &["PrintConfig.cpp:1779-1786"][..],
+        ),
+        (
+            "default_filament_profile",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1788-1792"][..],
+        ),
+        (
+            "default_print_profile",
+            OptionValueKind::String,
+            "",
+            &["PrintConfig.cpp:1794-1798"][..],
+        ),
+        (
+            "different_settings_to_system",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1742"][..],
+        ),
+        (
+            "machine_end_gcode",
+            OptionValueKind::String,
+            "M104 S0 ; turn off temperature\nG28 X0  ; home X axis\nM84     ; disable motors\n",
+            &["PrintConfig.hpp:1299", "PrintConfig.cpp:1940-1947"][..],
+        ),
+        (
+            "printing_by_object_gcode",
+            OptionValueKind::String,
+            "",
+            &["PrintConfig.hpp:1295", "PrintConfig.cpp:1949-1956"][..],
+        ),
+        (
+            "filament_end_gcode",
+            OptionValueKind::Strings,
+            " ",
+            &["PrintConfig.hpp:1300", "PrintConfig.cpp:1958-1965"][..],
+        ),
+        (
+            "during_print_exhaust_fan_speed",
+            OptionValueKind::Ints,
+            "60",
+            &["PrintConfig.cpp:1819-1826"][..],
+        ),
+        (
+            "print_compatible_printers",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1746"][..],
+        ),
+        (
+            "print_order",
+            OptionValueKind::Enum,
+            "default",
+            &[
+                "PrintConfig.hpp:1506",
+                "PrintConfig.cpp:299",
+                "PrintConfig.cpp:1761",
+            ][..],
+        ),
+        (
+            "print_sequence",
+            OptionValueKind::Enum,
+            "by layer",
+            &[
+                "PrintConfig.hpp:1505",
+                "PrintConfig.cpp:293",
+                "PrintConfig.cpp:1750",
+            ][..],
+        ),
+        (
+            "slow_down_for_layer_cooling",
+            OptionValueKind::Bools,
+            "true",
+            &["PrintConfig.cpp:1772-1777"][..],
+        ),
+        (
+            "upward_compatible_machine",
+            OptionValueKind::Strings,
+            "",
+            &["PrintConfig.cpp:1702"][..],
+        ),
+    ] {
+        let definition = option_definition(key).unwrap();
+        assert_eq!(definition.kind, kind);
+        assert_eq!(definition.default_value, default_value);
+        for fragment in source_fragments {
+            assert!(definition.source.contains(fragment));
+        }
+    }
+}

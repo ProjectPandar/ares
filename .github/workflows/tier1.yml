@@ -1,0 +1,49 @@
+name: Tier 1
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+          - ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.91.0
+        with:
+          components: clippy
+      - uses: taiki-e/install-action@nextest
+      - run: cargo nextest run --workspace
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.91.0
+        with:
+          components: rustfmt
+      - run: cargo fmt --check
+
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.91.0
+        with:
+          targets: wasm32-unknown-unknown
+      - run: cargo check -p ares-core --target wasm32-unknown-unknown
+      - run: cargo check -p ares-wasm --target wasm32-unknown-unknown

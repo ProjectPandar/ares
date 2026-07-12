@@ -1,0 +1,14 @@
+mod different_key_noop;
+mod direct_inheritance;
+mod normalize_stride2;
+mod restore_count_guard;
+mod restore_stride_size;
+mod stride1_set_with_restore;
+mod stride1_size_mismatch;
+mod stride1_source_resize;
+mod stride1_target_temp_resize;
+mod stride2_float_type_check;
+mod stride2_normalize_pair;
+mod stride2_set_with_restore;
+mod stride2_size_mismatch;
+mod variant_indices;

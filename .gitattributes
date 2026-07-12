@@ -1,0 +1,2 @@
+tests/ksr_fdmtest_v4/*.gcode -text
+tests/ksr_fdmtest_v4/*.3mf binary

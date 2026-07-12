@@ -1,0 +1,17 @@
+[package]
+name = "ares-wasm"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ares-core = { path = "../ares-core" }
+serde_json = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
