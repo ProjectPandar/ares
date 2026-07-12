@@ -5,6 +5,7 @@ mod bridge_wiring;
 mod brim_runtime;
 mod chamber_temperature_runtime;
 mod core;
+mod config_types;
 mod custom_gcode_runtime;
 mod different_extruders;
 mod draft_shield;
@@ -37,6 +38,7 @@ mod machine_limits_runtime;
 mod nozzle_temperature_runtime;
 mod object_distance;
 mod parameter_size;
+mod project_inventory;
 #[rustfmt::skip] option_test_modules!(part_cooling_fan_runtime, fan_speedup_runtime, fan_cooling_layer_time_runtime, accel_to_decel);
 mod relative_e;
 

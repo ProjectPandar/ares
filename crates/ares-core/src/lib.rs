@@ -109,9 +109,13 @@ pub use options::registry::{
     printer_options_with_variant_1, printer_options_with_variant_2,
 };
 pub use options::{
-    DifferentExtrudersSupport, ExtruderIndexIdMapLookup, FilamentTypeDisplay, HardwareOptions,
-    InfillOptions, InfillPattern, MultiToMulti2Update, MultiToMultiUpdate,
-    PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate, SliceOptions,
+    AmsCounts, CsvTable, DifferentExtrudersSupport, ExtruderIndexIdMapLookup, FilamentTypeDisplay,
+    FlatMatrix, FloatOrPercent, HardwareOptions, InfillOptions, InfillPattern, Millimeters,
+    MultiToMulti2Update, MultiToMultiUpdate, Nullable, NullablePrinterTechnologies, OrcaBool,
+    OrcaBools, OrcaFloat, OrcaFloatOrPercents, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents,
+    OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList,
+    PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate, PrinterTechnologies,
+    PrinterTechnology, ProjectSettings, RammingParameters, SliceOptions, SpaceTuple, VariantStride,
 };
 pub use perimeters::{
     LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,

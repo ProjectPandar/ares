@@ -2,10 +2,11 @@
 
 ## Status
 
-Task 1B establishes the byte-exact test oracle. It does not implement or
-consume any project option yet. Option behavior remains owned by the later
-source-cited `Config.*`, `PrintConfig.*`, and `PrintApply.cpp` rewrite tasks in
-the approved parity plan.
+Task 5 establishes the typed option codec boundary and a reproducible inventory
+for every embedded project-settings key. It does not yet compose those keys
+into concrete printer/process/filament groups or claim their slicing behavior.
+That work remains owned by the later source-cited `Config.*`, `PrintConfig.*`,
+and `PrintApply.cpp` rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -44,10 +45,80 @@ until the project adapter is complete. Its Task 1B RED run exits with code 2
 because the current CLI requires `--options <OPTIONS>` for every slice command.
 No comparison rule is relaxed to accommodate that missing project boundary.
 
+## Task 5 fixed-source inventory
+
+The inventory is derived only from fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its source boundaries are
+`Config.hpp/cpp::ConfigOption*` and `ConfigBase::save_to_json`,
+`PrintConfig.hpp/cpp` option ownership, registration, defaults, nullable and
+legacy handling, `Preset.cpp` raw-scope lists, `Preset.hpp` JSON-key macros,
+`GCode.cpp::append_full_config`, and the project-settings save call in
+`Format/bbs_3mf.cpp`.
+
+The committed `options-v242.json` contract contains 653 bytewise-sorted unique
+rows: 448 scalar strings, 205 arrays, and five empty arrays. Raw scopes are 132
+printer, 352 process, 122 filament, and 47 residual keys. Static ownership and
+effective projection are recorded separately; the verified projections are
+126 object, 153 region, and 149 G-code keys. Thirty-one options are nullable.
+
+The concrete type histogram is:
+
+| Type | Count | Type | Count |
+| --- | ---: | --- | ---: |
+| `coBool` | 105 | `coBools` | 22 |
+| `coEnum` | 44 | `coEnums` | 9 |
+| `coFloat` | 160 | `coFloatOrPercent` | 36 |
+| `coFloats` | 90 | `coInt` | 41 |
+| `coInts` | 45 | `coPercent` | 25 |
+| `coPercents` | 5 | `coPoint` | 4 |
+| `coPoints` | 6 | `coPointsGroups` | 1 |
+| `coString` | 30 | `coStrings` | 27 |
+| metadata | 3 |  |  |
+
+Config-export disposition is 615 canonical, 31 omit-when-nil, three metadata
+exclusions, and four source-derived special rules: scaled flush matrix,
+extruder-colour substitution, and duplicate plate-coordinate output for the X
+and Y wipe-tower keys. The export parser proves the fixed banned-key and nil
+guard, independent wipe/substitution branches, read/write data flow, and
+canonical fallback; fixture keys may not intersect the banned set.
+
+## Typed codec contract
+
+The public codecs directly deserialize Orca's string/array wire forms without
+an erased intermediate value. They cover embedded `0`/`1` booleans plus the
+existing explicit-STL native forms, signed and unsigned integer bounds, finite
+floats with Orca lexical output, millimeters, whitespace-tolerant percentages,
+float-or-percent unions, nullable `nil`, typed vectors and enums, scalar and
+`x`-separated points, point groups, and the fixture's opaque matrix, stride,
+AMS, ramming, CSV, and space-tuple forms. Empty strings remain distinct from
+empty arrays, and invalid or non-finite values are rejected.
+
+The group dispatcher reads a value only in the matching concrete key arm,
+stores presence as `Option<T>`, resolves missing values through typed defaults,
+rejects duplicate known keys, and leaves a nonmatching value available for the
+next group. Task 5 deliberately leaves `ProjectSettings` empty; Task 6 begins
+the concrete group population with the 28 machine-envelope fields.
+
+## Provenance and behavior boundary
+
+The active inventory test needs only the committed artifact and fixture. The
+ignored provenance gate reconstructs it from fixed `git show` sources, checks
+every cited line, and compares all rows. Eleven generator mutations and eight
+independent Rust-parser mutations prove that broken export control/data flow or
+metadata partitioning is rejected.
+
+Every non-metadata row currently cites the generic
+`GCode::append_full_config` banned/nil guard, and the three metadata rows cite
+the project-settings `save_to_json` call. These are truthful generic
+retention/export consumers, not claims that 653 option-specific slicing
+algorithms are implemented. Later tasks must replace or supplement them with
+the actual fixed upstream behavioral consumer as each option becomes consumed.
+
 ## Option implementation ledger
 
-No embedded option is behaviorally complete in this increment. Each later
-entry must identify its Orca owner, concrete Rust field/type, focused RED/GREEN
-behavioral test, effective normalization or serialization effect, and any
-remaining adjacent behavior. Merely retaining a key or matching source text is
+No new embedded option is behaviorally complete in Task 5. Each later entry
+must record the key, raw scope, concrete type, effective projections, fixed
+upstream behavioral consumer, state (`retained-only` or `consumed`), focused
+RED/GREEN test, observable normalization or serialization effect, and deferred
+adjacent behavior. Merely retaining a key or citing the generic export loop is
 not option parity.

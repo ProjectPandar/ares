@@ -7,6 +7,7 @@ mod acceleration;
 #[rustfmt::skip]
 option_modules!(adaptive_bed_mesh, bed_excluded_area, defaults, different_extruders, draft_shield, extruder_count, extruder_index, extruder_variant, fdm_normalization);
 mod brim;
+mod config_types;
 #[rustfmt::skip]
 option_modules!(pub(crate) filament_config_export, filament_count, filament_override, filament_type, flow_ratios, gap_fill, hardware, infill, small_area_infill_flow);
 #[rustfmt::skip]
@@ -17,11 +18,13 @@ option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type)
 mod machine_limits;
 #[rustfmt::skip]
 option_modules!(layer_change_retraction, legacy, initial_layer_print_height, object_distance, overhang_reverse, overhang_speed, parameter_size, raft, skirt_type, support_enable, support_object_skip_flush, support_style, support_placement, pub(crate) support_threshold, support_interface_not_for_body, support_type, pub(crate) support_z_distance, tree_support_options, wall_direction, wall_sequence);
+pub(crate) mod option_group;
 pub(crate) mod parsing;
 mod pellet;
 mod physical_extruder_map;
 pub(crate) mod power_loss_recovery;
 mod pressure_advance;
+mod project_settings;
 mod relative_e;
 mod shell_layers;
 mod slow_down_layers;
@@ -53,12 +56,20 @@ pub use support_different_extruders::DifferentExtrudersSupport;
 pub use update_multi_to_multi::{MultiToMulti2Update, MultiToMultiUpdate};
 pub use update_printer_extruders::{PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate};
 pub(crate) use {chamber_temperature::ChamberTemperatureControl, exhaust_fan::ExhaustFanControl};
-pub use {extruder_index::ExtruderIndexIdMapLookup, filament_type::FilamentTypeDisplay};
-pub(crate) use {gcode_flavor::GCodeFlavor, machine_limits::MachineLimits};
 pub use {
+    config_types::{
+        AmsCounts, CsvTable, FlatMatrix, FloatOrPercent, Millimeters, Nullable,
+        NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaFloat, OrcaFloatOrPercents,
+        OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString, OrcaStrings, OrcaUInt, Percent,
+        Point2d, Point2dGroups, Point2dList, PrinterTechnologies, PrinterTechnology,
+        RammingParameters, SpaceTuple, VariantStride,
+    },
     hardware::HardwareOptions,
     infill::{InfillOptions, InfillPattern},
+    project_settings::ProjectSettings,
 };
+pub use {extruder_index::ExtruderIndexIdMapLookup, filament_type::FilamentTypeDisplay};
+pub(crate) use {gcode_flavor::GCodeFlavor, machine_limits::MachineLimits};
 #[rustfmt::skip]
 pub(crate) use {input_shaping::InputShapingConfig, layer_change_retraction::{RetractLiftEnforce, ZHopLiftMode}};
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize)]

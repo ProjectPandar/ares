@@ -222,6 +222,39 @@ processing, CLI project-form activation, and removal of the golden-test ignore
 remain deferred to Tasks 5 onward; the ignored CLI golden still fails at its
 planned required-`--options` boundary.
 
+### 2026-07-12 Establish typed option codecs and the fixed v2.4.2 inventory
+
+Task 5 ports the serialization boundary of fixed OrcaSlicer v2.4.2
+`Config.hpp/cpp::ConfigOption*`, option registration/default/nullable/legacy
+metadata from `PrintConfig.hpp/cpp`, raw scopes from `Preset.cpp`, metadata
+headers from `ConfigBase::save_to_json` plus `Preset.hpp`, and config-export
+control flow from `GCode.cpp::append_full_config`. Ares now has concrete serde
+codecs for Orca scalar, vector, nullable, point, enum, and fixture-specific
+opaque wire forms, plus typed group dispatch support that does not deserialize
+through an erased value.
+
+The committed fixed-source inventory proves 653 sorted fixture keys, exact
+scope/type/default/wire/nullable/owner/projection/legacy/export metadata, 31
+nullable options, and export disposition of 615 canonical, 31 omit-when-nil,
+three metadata, and four special entries. Its ignored provenance test
+reconstructs every row from commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`, verifies every citation, and runs
+11 generator plus eight independent Rust-parser semantic mutations. The 650
+non-metadata consumer citations intentionally identify the generic
+`append_full_config` runtime guard; they are provenance for retention/export,
+not claims that every option's slicing behavior is implemented.
+
+Reviewed focused verification passes nine codec tests, two project-inventory
+tests, the active inventory test, and the fixed-source ignored provenance test,
+with clean rustfmt and warning-denying `ares-core` all-target Clippy. Two
+independent Codex reviews approve the final implementation under the
+user-approved temporary OpenCode bypass. Concrete `ProjectSettings` groups,
+effective config composition, slicing behavior, project G-code generation,
+CLI project activation, and exact golden parity remain deferred. Task 6 is
+next: port the 28 printer machine-envelope fields from the fixed `Preset.cpp`
+printer lists and `PrintConfig.hpp::MachineEnvelopeConfig` boundary into the
+first concrete typed project group.
+
 ### 2026-07-01 Consume prime tower brim width header slice
 
 `prime_tower_brim_width` is now consumed through the source-cited Orca `PrintConfig.hpp:1581-1584`, `PrintConfig.cpp:6725-6734,7878-7879`, `GCode.cpp:5523-5574`, `Print.cpp:318-323,3150,3177-3179`, `GCode/WipeTower.cpp:1461-1468,3705-3707`, and `GCode/WipeTower2.cpp:1248-1256,2115-2119,2134-2136` boundary. The Rust destination is the existing `FilamentConfigExports` config-header snapshot plus `gcode_config_header.rs` serialization. The slice validates the already-registered scalar brim-width option with Orca's `-1` lower bound; exports explicit values and the `-1` auto sentinel as one `prime_tower_brim_width` config header line; carries legacy `wipe_tower_brim_width` input through the existing normalization path; rejects invalid values before G-code bytes are returned; and preserves omitted-value header output. Automatic brim-width calculation, wipe-tower placement, fake wipe-tower state, collision checks, cone/corner geometry, wall generation, mesh construction, purge-depth planning, rib-wall width recomputation, legacy `WipeTower` and `WipeTower2` runtime brim-width behavior, adjacent prime-tower interface options, flush-volume behavior, UI, CLI, WASM bindings, and Orca binary E2E wipe-tower parity remain deferred.
