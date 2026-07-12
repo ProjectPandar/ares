@@ -99,6 +99,7 @@ dependencies = [
  "tokio",
  "toml",
  "walkdir",
+ "zip",
 ]
 
 [[package]]

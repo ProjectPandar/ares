@@ -133,6 +133,29 @@ OpenCode reviews both approve the final tree. Public project wiring, concrete
 typed `PrintApply` config ownership, replacement of the remaining staged
 compatibility shell, and complete slicing/G-code parity remain deferred.
 
+### 2026-07-12 Add the bounded in-memory 3MF package reader
+
+Task 2 ports the archive-extraction and OPC package-path boundary from the
+fixed OrcaSlicer v2.4.2 `Format/bbs_3mf.hpp::load_bbs_3mf` and
+`Format/bbs_3mf.cpp::_BBS_3MF_Importer` helpers into crate-private
+`ArchiveLimits`, `PackagePath`, and `ProjectArchive` types under
+`ares-core::project`. A raw central-directory preflight now enforces the
+4,096-entry, 256 MiB per-entry, 1 GiB total, and 1,000:1 expansion limits
+before payload allocation; accepts only Stored and Deflated data; and rejects
+encryption, exact or normalized duplicates, conflicting Unicode aliases,
+central/local/ZIP32/ZIP64 descriptor mismatches, expanded-size mismatches, and
+CRC failures. Entry reads are capped at declared size plus one and consume EOF
+to force CRC verification. Host-independent OPC paths resolve package-root and
+owner-relative targets with one normalization pass while rejecting drive/UNC,
+authority, backslash, NUL, empty/dot, encoded-separator, query, and fragment
+ambiguities. Focused verification passes 21 archive and 19 path tests; the
+reviewed workspace passes 4,115 tests, the dynamic-value audit, rustfmt,
+warning-denying Clippy, and both WASM checks. Independent Codex and OpenCode
+reviews approve the final Task 2 tree. Typed content types, relationships,
+project documents, model/domain loading, embedded options, and project slicing
+remain deferred to the dependent tasks; this reader is not wired into the old
+empty 3MF compatibility shell.
+
 ### 2026-07-01 Consume prime tower brim width header slice
 
 `prime_tower_brim_width` is now consumed through the source-cited Orca `PrintConfig.hpp:1581-1584`, `PrintConfig.cpp:6725-6734,7878-7879`, `GCode.cpp:5523-5574`, `Print.cpp:318-323,3150,3177-3179`, `GCode/WipeTower.cpp:1461-1468,3705-3707`, and `GCode/WipeTower2.cpp:1248-1256,2115-2119,2134-2136` boundary. The Rust destination is the existing `FilamentConfigExports` config-header snapshot plus `gcode_config_header.rs` serialization. The slice validates the already-registered scalar brim-width option with Orca's `-1` lower bound; exports explicit values and the `-1` auto sentinel as one `prime_tower_brim_width` config header line; carries legacy `wipe_tower_brim_width` input through the existing normalization path; rejects invalid values before G-code bytes are returned; and preserves omitted-value header output. Automatic brim-width calculation, wipe-tower placement, fake wipe-tower state, collision checks, cone/corner geometry, wall generation, mesh construction, purge-depth planning, rib-wall width recomputation, legacy `WipeTower` and `WipeTower2` runtime brim-width behavior, adjacent prime-tower interface options, flush-volume behavior, UI, CLI, WASM bindings, and Orca binary E2E wipe-tower parity remain deferred.

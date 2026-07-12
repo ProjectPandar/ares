@@ -71,6 +71,8 @@ mod print_apply;
 mod print_paths;
 mod printable_height;
 mod profiles;
+#[cfg_attr(not(test), allow(dead_code, unused_imports))]
+mod project;
 mod segments;
 mod skirts;
 mod speeds;
