@@ -110,12 +110,13 @@ pub use options::registry::{
 };
 pub use options::{
     AmsCounts, CsvTable, DifferentExtrudersSupport, ExtruderIndexIdMapLookup, FilamentTypeDisplay,
-    FlatMatrix, FloatOrPercent, HardwareOptions, InfillOptions, InfillPattern, Millimeters,
-    MultiToMulti2Update, MultiToMultiUpdate, Nullable, NullablePrinterTechnologies, OrcaBool,
-    OrcaBools, OrcaFloat, OrcaFloatOrPercents, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents,
-    OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList,
-    PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate, PrinterTechnologies,
-    PrinterTechnology, ProjectSettings, RammingParameters, SliceOptions, SpaceTuple, VariantStride,
+    FlatMatrix, FloatOrPercent, HardwareOptions, InfillOptions, InfillPattern, InputShaperType,
+    MachineEnvelopeOptions, Millimeters, MultiToMulti2Update, MultiToMultiUpdate, Nullable,
+    NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaFloat, OrcaFloatOrPercents, OrcaFloats,
+    OrcaInt, OrcaInts, OrcaPercents, OrcaString, OrcaStrings, OrcaUInt, Percent, Point2d,
+    Point2dGroups, Point2dList, PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate,
+    PrinterOptions, PrinterTechnologies, PrinterTechnology, ProjectSettings, RammingParameters,
+    SliceOptions, SpaceTuple, VariantStride,
 };
 pub use perimeters::{
     LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,

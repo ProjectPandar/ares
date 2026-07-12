@@ -2,10 +2,11 @@
 
 ## Status
 
-Task 5 establishes the typed option codec boundary and a reproducible inventory
-for every embedded project-settings key. It does not yet compose those keys
-into concrete printer/process/filament groups or claim their slicing behavior.
-That work remains owned by the later source-cited `Config.*`, `PrintConfig.*`,
+Task 6 establishes the first concrete project-settings group: the 28 printer
+keys owned by fixed-tag `MachineEnvelopeConfig`. These keys are retained and
+round-trip through concrete types, but the typed project tree is not yet wired
+to slicing behavior. The remaining printer/process/filament groups and runtime
+composition stay owned by the later source-cited `Config.*`, `PrintConfig.*`,
 and `PrintApply.cpp` rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
@@ -96,16 +97,27 @@ empty arrays, and invalid or non-finite values are rejected.
 The group dispatcher reads a value only in the matching concrete key arm,
 stores presence as `Option<T>`, resolves missing values through typed defaults,
 rejects duplicate known keys, and leaves a nonmatching value available for the
-next group. Task 5 deliberately leaves `ProjectSettings` empty; Task 6 begins
-the concrete group population with the 28 machine-envelope fields.
+next group. Task 6 adds `ProjectSettings::printer`, a flat `PrinterOptions`
+dispatcher, and its completed `MachineEnvelopeOptions` child. Strict top-level
+deserialization remains deferred until all project groups exist.
 
 ## Provenance and behavior boundary
 
 The active inventory test needs only the committed artifact and fixture. The
 ignored provenance gate reconstructs it from fixed `git show` sources, checks
-every cited line, and compares all rows. Eleven generator mutations and eight
-independent Rust-parser mutations prove that broken export control/data flow or
-metadata partitioning is rejected.
+every cited line, and compares all rows. Nineteen generator mutations and 13
+independent Rust-side mutations cover export control/data flow, metadata
+partitioning, enum-map qualification, nullable enum sentinels, axis aggregate
+member order, and each axis registration-to-default binding.
+
+Task 6 corrected two default-provenance errors exposed by the first concrete
+group reviews. `InputShaperType::Default` serializes as `Default`, independently
+of `PrintOrder::Default` serializing as `default`. `NozzleType::ntUndefine` is
+the real token `undefine`; only the nullable integer `INT_MAX` sentinel is
+`nil`. The 12 loop-generated axis rows now cite their exact
+`PrintConfig.hpp::MachineEnvelopeConfig` typed declarations, while independent
+JavaScript and Rust provenance checks reconstruct their defaults from
+`PrintConfig.cpp::AxisDefault` and the three registration blocks.
 
 Every non-metadata row currently cites the generic
 `GCode::append_full_config` banned/nil guard, and the three metadata rows cite
@@ -116,9 +128,35 @@ the actual fixed upstream behavioral consumer as each option becomes consumed.
 
 ## Option implementation ledger
 
-No new embedded option is behaviorally complete in Task 5. Each later entry
-must record the key, raw scope, concrete type, effective projections, fixed
-upstream behavioral consumer, state (`retained-only` or `consumed`), focused
-RED/GREEN test, observable normalization or serialization effect, and deferred
-adjacent behavior. Merely retaining a key or citing the generic export loop is
-not option parity.
+Each entry records the key boundary, raw scope, concrete type, fixed upstream
+owner or consumer, state (`retained-only` or `consumed`), focused test,
+observable serialization effect, and deferred adjacent behavior. Merely
+retaining a key or citing the generic export loop is not option parity.
+
+### Task 6: printer machine envelope
+
+All 28 entries have raw scope `printer`, static owner
+`PrintConfig.hpp::MachineEnvelopeConfig`, and state `retained-only` in the new
+typed project path:
+
+- `OrcaBool`: `emit_machine_limits_to_gcode`, `resonance_avoidance`,
+  `input_shaping_emit`.
+- `OrcaFloat`: `min_resonance_avoidance_speed`,
+  `max_resonance_avoidance_speed`, `input_shaping_freq_x`,
+  `input_shaping_freq_y`, `input_shaping_damp_x`, and
+  `input_shaping_damp_y`.
+- `OrcaFloats`: the 12 individual XYZE speed, acceleration, and jerk fields;
+  `machine_max_acceleration_extruding`,
+  `machine_max_acceleration_retracting`,
+  `machine_max_acceleration_travel`, `machine_max_junction_deviation`,
+  `machine_min_travel_rate`, and `machine_min_extruding_rate`.
+- `InputShaperType`: `input_shaping_type`, with the exact 13 fixed-tag tokens.
+
+The focused test proves the exact inventory intersection, defaults, 3MF wire
+shape, concrete semantic values, fixture cardinalities, declaration order,
+lexicographic serialization, duplicate/unknown rejection, every input-shaper
+token, and changed typed state. Raw vectors retain all fixture values; active
+variant selection is not performed here. Existing legacy `SliceOptions` tests
+for machine-limit, resonance, and input-shaping G-code do not make the new typed
+project path `consumed`. Top-level project dispatch, effective config
+composition, normalization, and G-code consumption remain deferred.

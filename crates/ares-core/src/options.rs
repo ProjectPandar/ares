@@ -24,6 +24,7 @@ mod pellet;
 mod physical_extruder_map;
 pub(crate) mod power_loss_recovery;
 mod pressure_advance;
+mod printer_options;
 mod project_settings;
 mod relative_e;
 mod shell_layers;
@@ -66,6 +67,7 @@ pub use {
     },
     hardware::HardwareOptions,
     infill::{InfillOptions, InfillPattern},
+    printer_options::{InputShaperType, MachineEnvelopeOptions, PrinterOptions},
     project_settings::ProjectSettings,
 };
 pub use {extruder_index::ExtruderIndexIdMapLookup, filament_type::FilamentTypeDisplay};

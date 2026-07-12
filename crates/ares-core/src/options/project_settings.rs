@@ -1,2 +1,6 @@
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ProjectSettings;
+use super::PrinterOptions;
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ProjectSettings {
+    pub printer: PrinterOptions,
+}

@@ -239,7 +239,7 @@ nullable options, and export disposition of 615 canonical, 31 omit-when-nil,
 three metadata, and four special entries. Its ignored provenance test
 reconstructs every row from commit
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`, verifies every citation, and runs
-11 generator plus eight independent Rust-parser semantic mutations. The 650
+19 generator plus 13 independent Rust-side semantic mutations. The 650
 non-metadata consumer citations intentionally identify the generic
 `append_full_config` runtime guard; they are provenance for retention/export,
 not claims that every option's slicing behavior is implemented.
@@ -248,12 +248,39 @@ Reviewed focused verification passes nine codec tests, two project-inventory
 tests, the active inventory test, and the fixed-source ignored provenance test,
 with clean rustfmt and warning-denying `ares-core` all-target Clippy. Two
 independent Codex reviews approve the final implementation under the
-user-approved temporary OpenCode bypass. Concrete `ProjectSettings` groups,
-effective config composition, slicing behavior, project G-code generation,
-CLI project activation, and exact golden parity remain deferred. Task 6 is
-next: port the 28 printer machine-envelope fields from the fixed `Preset.cpp`
-printer lists and `PrintConfig.hpp::MachineEnvelopeConfig` boundary into the
-first concrete typed project group.
+user-approved temporary OpenCode bypass. The later Task 6 review corrected
+qualified enum-default provenance for `InputShaperType::Default`, distinguished
+`NozzleType::ntUndefine` from the nullable `nil` sentinel, and moved the 12
+loop-generated axis definition citations from a variant list to their exact
+`PrintConfig.hpp` typed declarations. Independent JavaScript and Rust checks
+now bind the `AxisDefault` aggregate to its three registration blocks.
+
+### 2026-07-12 Type the printer machine-envelope group
+
+Task 6 ports fixed OrcaSlicer v2.4.2
+`PrintConfig.hpp::MachineEnvelopeConfig`, the `PrintConfig.cpp::AxisDefault`
+table and registration loop, the remaining literal machine-envelope defaults,
+the 13-token `InputShaperType` map, and the fixed `Preset.cpp` printer-scope
+lists. `ProjectSettings` now contains `PrinterOptions`, whose flat typed
+dispatcher owns a completed `MachineEnvelopeOptions` child with exactly 28
+fields and no untyped remainder.
+
+The new group preserves upstream declaration order separately from
+lexicographic 3MF serialization, retains all raw fixture vector values, applies
+fixed defaults through a private typed builder, and rejects duplicate, unknown,
+or invalid enum fields. All 28 fields remain `retained-only`: the focused
+behavior test observes changed typed state, while strict top-level project
+deserialization, effective config composition, normalization, and typed-path
+G-code consumption remain deferred.
+
+Reviewed verification passes seven focused machine-envelope tests, the active
+inventory tests, the fixed-source ignored provenance gate, 19 generator
+mutations, the 22-test dynamic-value audit, clean rustfmt, warning-denying
+`ares-core` all-target Clippy, and both `ares-core` and `ares-wasm` WASM checks.
+Two fresh independent Codex reviews approve the implementation under the
+user-approved temporary OpenCode bypass. Task 7 is next: type the exact 62-key
+printer/`GCodeConfig` intersection without pulling adjacent `PrintConfig` point
+groups into that boundary.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 
