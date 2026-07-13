@@ -338,6 +338,33 @@ effective config composition, normalization, slicing consumers, config export,
 and G-code output remain deferred. Task 9 is next: type the exact 126
 process/`PrintObjectConfig` raw rows.
 
+### 2026-07-12 Type the process object-source group
+
+Task 9 ports the 126 active fixed OrcaSlicer v2.4.2
+`PrintConfig.hpp::PrintObjectConfig` declarations and their exact
+`PrintConfig.cpp` defaults and canonical enum maps. The two commented tuple
+lines are excluded. Every field is a scalar string: 22 bool, 12 enum, 63 float,
+six float-or-percent, 13 int, and ten percent fields. `ProcessOptions` now owns
+one flat typed `object` child and `ProjectSettings` exposes it; effective
+`ObjectOptions` projection is not created early.
+
+The source review corrected the original Task 9 examples: first-layer height
+and resolution belong to Task 11, while wall count, sparse fill, and top/bottom
+shell fields belong to Task 10. The raw support-ironing enum uses all 28 fixed
+`InfillPattern` tokens rather than the two UI entries. The shared typed builder
+now preserves the Option key in value-decoding errors. Direct tests exercise a
+non-default value for all 126 fields, because only 18 fixture values differ
+from upstream defaults.
+
+The current dynamic behavior pipeline contains literal consumers for 108 of
+the 126 names; Task 9 records those collisions but deliberately leaves their
+behavior in place until Task 15 establishes effective object projection and
+override order. Reviewed verification passes 12 focused tests, 4,234 workspace
+tests with three configured skips, warning-denying workspace all-target Clippy,
+rustfmt, both WASM checks, the dynamic-value audit, and the diff whitespace
+gate. The typed group remains `retained-only`. Task 10 is next: type the exact
+149 process/`PrintRegionConfig` raw rows.
+
 ### 2026-07-01 Consume prime tower brim width header slice
 
 `prime_tower_brim_width` is now consumed through the source-cited Orca `PrintConfig.hpp:1581-1584`, `PrintConfig.cpp:6725-6734,7878-7879`, `GCode.cpp:5523-5574`, `Print.cpp:318-323,3150,3177-3179`, `GCode/WipeTower.cpp:1461-1468,3705-3707`, and `GCode/WipeTower2.cpp:1248-1256,2115-2119,2134-2136` boundary. The Rust destination is the existing `FilamentConfigExports` config-header snapshot plus `gcode_config_header.rs` serialization. The slice validates the already-registered scalar brim-width option with Orca's `-1` lower bound; exports explicit values and the `-1` auto sentinel as one `prime_tower_brim_width` config header line; carries legacy `wipe_tower_brim_width` input through the existing normalization path; rejects invalid values before G-code bytes are returned; and preserves omitted-value header output. Automatic brim-width calculation, wipe-tower placement, fake wipe-tower state, collision checks, cone/corner geometry, wall generation, mesh construction, purge-depth planning, rib-wall width recomputation, legacy `WipeTower` and `WipeTower2` runtime brim-width behavior, adjacent prime-tower interface options, flush-volume behavior, UI, CLI, WASM bindings, and Orca binary E2E wipe-tower parity remain deferred.

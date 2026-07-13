@@ -256,3 +256,105 @@ and cross-scope rejection, exact 42-field byte round-trip, and exact flat
 132-field byte round-trip with streaming key-order observation. The typed
 project path still does not compose effective configs or consume these values
 in slicing or G-code generation.
+
+### Task 9: process object source
+
+The first process child is the exact active intersection of process raw keys
+with `PrintConfig.hpp::PrintObjectConfig` at fixed lines 917-1071. It contains
+126 unique scalar-string fields and excludes the commented tuple-shaped
+`independent_support_layer_height` and `adaptive_layer_height` lines. All 126
+entries remain `retained-only`; `ProcessOptions` has one flat `object` child and
+`ProjectSettings` exposes that typed process boundary without implementing a
+partial whole-project deserializer. The concrete key/type ledger is:
+
+- `coBool` (22): `bridge_no_support`, `brim_use_efc_outline`,
+  `calib_flowrate_topinfill_special_order`,
+  `detect_narrow_internal_solid_infill`, `enable_support`,
+  `flush_into_infill`, `flush_into_objects`, `flush_into_support`,
+  `interface_shells`, `interlocking_beam`, `precise_z_height`,
+  `set_other_flow_ratios`, `staggered_inner_seams`,
+  `support_critical_regions_only`, `support_interface_loop_pattern`,
+  `support_interface_not_for_body`, `support_ironing`,
+  `support_on_build_plate_only`, `support_remove_small_overhang`,
+  `thick_bridges`, `thick_internal_bridges`, and
+  `tree_support_auto_brim`.
+- `coEnum` (12): `brim_type`, `dont_filter_internal_bridges`,
+  `enable_extra_bridge_layer`, `gap_fill_target`, `seam_position`,
+  `slicing_mode`, `support_base_pattern`, `support_interface_pattern`,
+  `support_ironing_pattern`, `support_style`, `support_type`, and
+  `wall_generator`.
+- `coFloat` (63): `brim_ears_detection_length`, `brim_ears_max_angle`,
+  `brim_flow_ratio`, `brim_object_gap`, `brim_width`,
+  `default_acceleration`, `default_jerk`, `default_junction_deviation`,
+  `elefant_foot_compensation`, `infill_jerk`,
+  `initial_layer_acceleration`, `initial_layer_jerk`,
+  `inner_wall_acceleration`, `inner_wall_jerk`, `interlocking_beam_width`,
+  `interlocking_orientation`, `layer_height`,
+  `make_overhang_printable_angle`, `make_overhang_printable_hole_size`,
+  `max_bridge_length`, `min_length_factor`,
+  `mmu_segmented_region_interlocking_depth`,
+  `mmu_segmented_region_max_width`, `outer_wall_acceleration`,
+  `outer_wall_jerk`, `raft_contact_distance`, `raft_expansion`,
+  `raft_first_layer_expansion`, `skirt_start_angle`, `slice_closing_radius`,
+  `support_angle`, `support_base_pattern_spacing`,
+  `support_bottom_interface_spacing`, `support_bottom_z_distance`,
+  `support_expansion`, `support_flow_ratio`,
+  `support_interface_flow_ratio`, `support_interface_spacing`,
+  `support_interface_speed`, `support_ironing_spacing`,
+  `support_object_first_layer_gap`, `support_object_xy_distance`,
+  `support_speed`, `support_top_z_distance`, `top_surface_acceleration`,
+  `top_surface_jerk`, `travel_acceleration`, `travel_jerk`,
+  `tree_support_angle_slow`, `tree_support_branch_angle`,
+  `tree_support_branch_angle_organic`, `tree_support_branch_diameter`,
+  `tree_support_branch_diameter_angle`,
+  `tree_support_branch_diameter_organic`, `tree_support_branch_distance`,
+  `tree_support_branch_distance_organic`, `tree_support_brim_width`,
+  `tree_support_tip_diameter`, `wall_maximum_deviation`,
+  `wall_maximum_resolution`, `wall_transition_angle`,
+  `xy_contour_compensation`, and `xy_hole_compensation`.
+- `coFloatOrPercent` (6): `bridge_acceleration`,
+  `internal_solid_infill_acceleration`, `line_width`,
+  `sparse_infill_acceleration`, `support_line_width`, and
+  `support_threshold_overlap`.
+- `coInt` (13): `elefant_foot_compensation_layers`,
+  `enforce_support_layers`, `interlocking_beam_layer_count`,
+  `interlocking_boundary_avoidance`, `interlocking_depth`, `raft_layers`,
+  `support_filament`, `support_interface_bottom_layers`,
+  `support_interface_filament`, `support_interface_top_layers`,
+  `support_threshold_angle`, `tree_support_wall_count`, and
+  `wall_distribution_count`.
+- `coPercent` (10): `elefant_foot_layers_density`,
+  `initial_layer_min_bead_width`, `internal_bridge_density`,
+  `min_bead_width`, `min_feature_size`, `raft_first_layer_density`,
+  `support_ironing_flow`, `tree_support_top_rate`,
+  `wall_transition_filter_deviation`, and `wall_transition_length`.
+
+The raw enum boundary uses all fixed canonical maps. In particular,
+`support_ironing_pattern` accepts the complete 28-token global
+`InfillPattern` map; its two UI choices are not the deserialization domain.
+Legacy aliases remain deferred to their separate normalization boundary.
+Production declaration order is asserted positionally against the 126 active
+HPP declarations, while direct serialization uses the independent bytewise
+lexicographic order. The shared typed group decoder now attaches the literal
+Option key to value-decoding errors without changing duplicate or unknown-key
+behavior.
+
+A literal-consumer scan records 108 of these 126 names in the existing dynamic
+`SliceOptions` behavior pipeline. The exact 18 without a current literal
+consumer are `flush_into_infill`, `flush_into_objects`, `flush_into_support`,
+`interface_shells`, `interlocking_beam`, `interlocking_beam_layer_count`,
+`interlocking_beam_width`, `interlocking_boundary_avoidance`,
+`interlocking_depth`, `interlocking_orientation`, `max_bridge_length`,
+`mmu_segmented_region_interlocking_depth`,
+`mmu_segmented_region_max_width`, `raft_contact_distance`,
+`slice_closing_radius`, `slicing_mode`, `xy_contour_compensation`, and
+`xy_hole_compensation`; the complementary 108 names are the recorded
+collisions. Task 9 does not migrate any of them. Effective object projection,
+override ordering, and typed consumer migration remain Task 15 work.
+
+Focused tests prove the exact 126-key/type/wire intersection, all defaults and
+18 fixture overrides, concrete field types, declaration and export orders,
+the complete enum domains, both float-or-percent branches, flat parent serde,
+strict cross-owner rejection, and exact fixture byte round-trip. A
+single-field non-default typed-state test covers every one of the 126 dispatch
+arms so the 108 fixture values equal to defaults cannot hide a dropped field.

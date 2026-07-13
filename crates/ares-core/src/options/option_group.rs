@@ -32,7 +32,12 @@ macro_rules! declare_option_group {
                                     "duplicate Orca option ", $key
                                 )));
                             }
-                            self.$field = Some(map.next_value::<$ty>()?);
+                            self.$field = Some(map.next_value::<$ty>().map_err(|error| {
+                                serde::de::Error::custom(format_args!(
+                                    concat!("invalid Orca option ", $key, ": {}"),
+                                    error
+                                ))
+                            })?);
                             Ok(true)
                         }
                     ),*

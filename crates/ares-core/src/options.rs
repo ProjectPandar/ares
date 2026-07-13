@@ -25,6 +25,7 @@ mod physical_extruder_map;
 pub(crate) mod power_loss_recovery;
 mod pressure_advance;
 mod printer_options;
+mod process_options;
 mod project_settings;
 mod relative_e;
 mod shell_layers;
@@ -78,6 +79,13 @@ pub use {
         PrinterGCodeSourceOptions, PrinterModel, PrinterNotes, PrinterOptions,
         PrinterRemainingOptions, PrinterStructure, RetractLiftEnforces, ThumbnailDefinitions,
         WipeTowerType, ZHopType, ZHopTypes,
+    },
+    process_options::{
+        ProcessBrimType, ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
+        ProcessInternalBridgeFilter, ProcessObjectSourceOptions, ProcessOptions,
+        ProcessPerimeterGenerator, ProcessSeamPosition, ProcessSlicingMode,
+        ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
+        ProcessSupportType,
     },
     project_settings::ProjectSettings,
 };

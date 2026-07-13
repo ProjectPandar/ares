@@ -801,20 +801,26 @@ The following ownership is fixed for this plan. Additional sibling files are all
 **Files:**
 - Create: `options/process_options.rs`
 - Create: `options/process_options/object_source.rs`
+- Create: `options/process_options/object_source/enums.rs`
+- Create: `options/process_options/object_source/wire.rs`
 - Create: `options/tests/process_object_source.rs`
-- Modify: `options/project_settings.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/tests/process_object_source/expected.rs`
+- Create: `options/tests/process_object_source/enums.rs`
+- Create: `options/tests/process_object_source/type_assertions.rs`
+- Create: `options/tests/process_object_source/direct_dispatch.rs`
+- Modify: `options/project_settings.rs`, `options/option_group.rs`, `options.rs`, `lib.rs`, `options/tests.rs`, `docs/architecture/option-parity-v4.md`
 
 **Interfaces:**
 - Produces `ProcessObjectSourceOptions` with 126 concrete resolved fields plus its private typed builder.
 - Starts `ProcessOptions` raw ownership; it does not yet create the effective `ObjectOptions` projection.
 
-- [ ] **Step 1: Add RED inventory and representative behavior-state tests**
+- [ ] **Step 1: Add RED inventory and complete typed-state tests**
 
-  Select the inventory's exact 126 Process/`PrintObjectConfig` rows using active line-anchored macro entries (not a cross-line/loose regex). Explicitly exclude the two commented-out tuple-shaped lines (`independent_support_layer_height` and `adaptive_layer_height`) that make an unanchored textual count appear as 128. Cover layer height, first-layer height, slicing mode, resolution, closing radius, elephant-foot options, support/object settings, seam position, wall count, fill density/pattern, top/bottom shell, and other object-level forms. Each field that an existing Ares consumer already reads gets a typed-state change test before its dynamic accessor is migrated.
+  Select the inventory's exact 126 Process/`PrintObjectConfig` rows using active line-anchored macro entries (not a cross-line/loose regex). Explicitly exclude the two commented-out tuple-shaped lines (`independent_support_layer_height` and `adaptive_layer_height`) that make an unanchored textual count appear as 128. Prove all 126 fields are scalar strings with the exact histogram of 22 bool, 12 enum, 63 float, six float-or-percent, 13 int, and ten percent fields. Cover layer height, slicing mode, closing radius, brim and elephant-foot options, raft, support/interface/tree settings, XY compensation, bridge policies, object acceleration/jerk, wall-generator transitions, interlocking/MMU segmentation, and calibration state. Assert that first-layer height and resolution are deferred to Task 11, while wall count, sparse fill density/pattern, and top/bottom shell fields are deferred to Task 10. Because 108 fixture values equal upstream defaults, add a valid non-default single-field typed-state test for every one of the 126 keys rather than relying on fixture round-trip alone.
 
 - [ ] **Step 2: Implement all 126 fields through direct typed dispatch**
 
-  Split the declaration into focused files (`layers.rs`, `walls.rs`, `fill.rs`, `support.rs`) if any file would exceed 400 LOC, while `ProcessObjectSourceOptions` remains the single public child group. Preserve exact upstream defaults and enum spellings; reject unknown spellings with the key name.
+  Keep `ProcessObjectSourceOptions` as the single public child group; split its raw enum definitions and direct lexicographic serializer into private sibling modules so every production file remains below 400 LOC. Preserve exact upstream defaults and canonical enum spellings. `support_ironing_pattern` uses the complete fixed 28-token `InfillPattern` raw map, not its two-value UI subset or Ares's effective infill enum. Update the shared typed group decoder so invalid field values report the Option key, with regression coverage for existing printer groups. Record the 108 current dynamic-consumer name collisions but do not migrate them in Task 9; effective typed projection and consumer migration remain Task 15.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 
