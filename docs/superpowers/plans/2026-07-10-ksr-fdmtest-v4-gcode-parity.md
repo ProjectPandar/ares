@@ -1042,31 +1042,184 @@ this raw slice to Task 19B (`PrintConfig.cpp:9004-9054,9805-10023`,
 
 ### Task 13: Remaining Filament Raw Options and Nullable Overrides (69 Fields)
 
-**Upstream boundary:** Fixed-tag filament scope intersected with `PrintConfig` (48), `PrintRegionConfig` (4), and unowned keys (17); `filament_extruder_override_keys` and `add_nullable` loop for 16 additional nullable override fields.
+**Upstream boundary:** The remaining fixed-tag filament raw scope consists of
+48 FFF `PrintConfig` declarations at `PrintConfig.hpp:1484-1650`, four
+filament ironing overrides declared by `PrintRegionConfig` at
+`PrintConfig.hpp:1153-1156`, the exact 16-entry
+`filament_extruder_override_keys` list and `add_nullable` construction loop at
+`PrintConfig.cpp:63-84,7287-7318`, and the uniquely unowned
+`pellet_flow_coefficient` definition at `PrintConfig.cpp:2639`. Fixed preset
+serialization force-preserves nil retract overrides at
+`Preset.cpp:1861-1878`. After stripping comments, the fixed live filament
+preset list at `Preset.cpp:1309-1346` has 126 unique names and intersects the
+fixture in 121; every Task 13 field is live, while the sole filament fixture
+exception is Task 12's project-owned `filament_colour`. Raw vector/nullable
+JSON grammar remains the fixed
+`Config.hpp`/`Config.cpp` boundary cited by Task 12, and the exact 27
+eight-entry variant fields are the intersection with
+`PrintConfig.cpp:8375-8415`. Active selection and resizing remain Task 19B;
+all-nil effective export omission at `GCode.cpp:5632-5640` remains Task 19C.
 
 **Files:**
 - Create: `options/filament_options/print_source.rs`
+- Create: `options/filament_options/print_source/enums.rs`
+- Create: `options/filament_options/print_source/wire.rs`
 - Create: `options/filament_options/region_source.rs`
-- Create: `options/filament_options/runtime.rs`
+- Create: `options/filament_options/region_source/wire.rs`
 - Create: `options/filament_options/retract_overrides.rs`
+- Create: `options/filament_options/retract_overrides/wire.rs`
+- Create: `options/filament_options/wire/early.rs`
+- Create: `options/filament_options/wire/middle.rs`
+- Create: `options/filament_options/wire/late.rs`
 - Create: `options/tests/filament_remaining.rs`
-- Modify: `options/filament_options.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/tests/filament_remaining/expected.rs`
+- Create: `options/tests/filament_remaining/expected/keys.rs`
+- Create: `options/tests/filament_remaining/expected/orders.rs`
+- Create: `options/tests/filament_remaining/expected/sets.rs`
+- Create: `options/tests/filament_remaining/inventory_defaults.rs`
+- Create: `options/tests/filament_remaining/type_assertions.rs`
+- Create: `options/tests/filament_remaining/fixture.rs`
+- Create: `options/tests/filament_remaining/direct_dispatch.rs`
+- Create: `options/tests/filament_remaining/nullable.rs`
+- Create: `options/tests/filament_remaining/enums.rs`
+- Create: `options/tests/filament_remaining/invalid.rs`
+- Create: `options/tests/filament_remaining/wire.rs`
+- Modify: `options/filament_options.rs`, `options/filament_options/wire.rs`,
+  `options.rs`, `lib.rs`, `options/tests.rs`,
+  `docs/architecture/option-parity-v4.md`, `docs/roadmap.md`
 
 **Interfaces:**
-- Completes `FilamentOptions` at exactly 122 raw keys while representing all 31 nullable fixture fields concretely.
+- Completes `FilamentOptions` at exactly 122 raw keys with public `print`,
+  `region`, and `retract_overrides` children plus direct
+  `pellet_flow_coefficient`; no
+  invented runtime projection owns the unowned vector.
+- Adds exactly 20 element-nullable filament fields in this task: four region
+  ironing overrides and 16 generated retract overrides. Completed
+  `FilamentOptions` owns 27 nullable fields including Task 12's seven; the
+  cumulative project-wide count is 31 only after including Printer's four.
+- Standalone children preserve their fixed declaration/list order and
+  serialize lexically; the flat parent directly streams all 122 entries in
+  one global lexical order without nesting, serde flattening, or a DOM.
 
-- [ ] **Step 1: Add RED completeness and nullable tests**
+- [ ] **Step 1: Add RED exact-inventory, nullable, and 122-parent tests**
 
-  Assert 53 + 48 + 4 + 17 = 122 unique raw keys. Separately assert the 15 statically nullable fixture fields and 16 dynamically registered filament retract override fields have `Nullable<T>` element types. Cover 8-to-active stride metadata, adaptive pressure model lines, ramming data, volumetric coefficient tuples, and `nil` at individual vector positions.
+  Prove the remaining exact 69-key set is unique, all-array, disjoint from the
+  Task 12 child, and partitioned as 48 `PrintConfig`, four
+  `PrintRegionConfig`, 16 generated retract, and one direct pellet field. The
+  exact histogram is 11 `coBools`, three `coEnums`, 20 `coFloats`, 30
+  `coInts`, four `coPercents`, and one `coStrings`; subgroup histograms are
+  Print 8/1/6/30/2/1, Region 0/0/3/0/1/0, retract 3/2/10/0/1/0, and pellet one
+  float vector. Assert the fixed HPP order for the first two children, the
+  fixed `filament_extruder_override_keys` order for the third, exact singleton
+  defaults for every field, and concrete public field types.
 
-- [ ] **Step 2: Implement all remaining fields and explicit retract overrides**
+  Assert exactly 20 Task 13 element-nullable arrays. All four region defaults
+  are singleton nil, while all 16 generated defaults clone a concrete
+  singleton from the corresponding extruder option. Exercise mixed
+  `["nil", value, "nil"]` payloads for every nullable field. The fixture is
+  fully nil for exactly 15 fields: the four region fields plus 11 generated
+  overrides. Its five nullable fields with concrete values are
+  `filament_retraction_distances_when_cut`, `filament_retraction_length`,
+  `filament_wipe`, `filament_wipe_distance`, and `filament_z_hop_types`.
+  Exactly 48 non-string, non-nullable arrays reject `"nil"`, while raw
+  `filament_notes` retains it as ordinary text.
 
-  Each of the 16 dynamically registered upstream names becomes an explicit Rust field and direct match arm; no prefix/suffix reflection chooses a type at runtime. Structured strings that downstream code parses receive dedicated concrete newtypes with serde and validation now.
+  Prove exact fixture cardinality of 42 two-entry and 27 eight-entry vectors;
+  the latter set must equal the fixed `filament_options_with_variant`
+  intersection. Every fixture value differs from its singleton default by raw
+  cardinality. After cardinality is ignored, assert the exact 36 semantic
+  overrides and 33 repeated defaults. The override set is
+  `additional_cooling_fan_speed`, `close_additional_fan_first_x_layers`,
+  `complete_print_exhaust_fan_speed`, `during_print_exhaust_fan_speed`,
+  `eng_plate_temp`, `eng_plate_temp_initial_layer`,
+  `fan_cooling_layer_time`, `fan_min_speed`,
+  `filament_deretraction_speed`, `filament_long_retractions_when_cut`,
+  `filament_retract_before_wipe`, `filament_retract_lift_above`,
+  `filament_retract_lift_below`, `filament_retract_lift_enforce`,
+  `filament_retract_restart_extra`,
+  `filament_retract_when_changing_layer`,
+  `filament_retraction_distances_when_cut`, `filament_retraction_length`,
+  `filament_retraction_minimum_travel`, `filament_retraction_speed`,
+  `filament_wipe`, `filament_z_hop`, `filament_z_hop_types`,
+  `first_x_layer_fan_speed`, `hot_plate_temp`,
+  `hot_plate_temp_initial_layer`, `nozzle_temperature`,
+  `nozzle_temperature_initial_layer`, `overhang_fan_threshold`,
+  `reduce_fan_stop_start_freq`, `slow_down_layer_time`,
+  `slow_down_min_speed`, `supertack_plate_temp`,
+  `supertack_plate_temp_initial_layer`, `textured_plate_temp`, and
+  `textured_plate_temp_initial_layer`. Raw
+  child and parent parsing must accept and byte-round-trip arbitrary valid
+  empty, one-, three-, five-, and eight-entry arrays without active selection,
+  resizing, or cross-field cardinality validation.
+
+  Cover all three strict canonical enum domains:
+  `overhang_fan_threshold` accepts `0%`, `10%`, `25%`, `50%`, `75%`, and
+  `95%`; nullable `filament_retract_lift_enforce` accepts `All Surfaces`,
+  `Top Only`, `Bottom Only`, and `Top and Bottom`; nullable
+  `filament_z_hop_types` accepts `Auto Lift`, `Normal Lift`, `Slope Lift`, and
+  `Spiral Lift`. Reject unknown/case variants and the legacy `5%` value.
+  Assert their singleton defaults `95%`, `All Surfaces`, and `Slope Lift`, and
+  the fixture's `50%`, nil, and `Spiral Lift` payloads respectively.
+  `filament_notes` is the only remaining string field and must preserve empty,
+  multiline, UTF-8, and literal `"nil"` strings without a parsing newtype.
+
+  For each of the 68 child-owned fields, pass a valid non-default value through
+  its owning standalone child and flat `FilamentOptions` direct dispatch.
+  Exercise direct `pellet_flow_coefficient` separately through the parent for
+  valid non-default, duplicate, scalar, object, null, and invalid-element
+  cases. Through every applicable child and the parent, reject bad shapes with
+  an error naming the key. Cover representative duplicate keys per child,
+  unknown and cross-child keys, nested group objects, exact standalone lexical
+  bytes, the exact fixture's full flat 122-key bytes, and the public
+  `ProjectSettings::default().filament` child/direct-field boundary.
+
+- [ ] **Step 2: Implement the source-owned children and direct pellet field**
+
+  Implement the 48-field `FilamentPrintSourceOptions`, four-field
+  `FilamentRegionSourceOptions`, and 16-field
+  `FilamentRetractOverrideOptions` with crate-private typed builders. Each
+  dynamically generated upstream name becomes an explicit Rust field and
+  match arm; no prefix/suffix reflection chooses a type at runtime. Keep
+  `pellet_flow_coefficient: OrcaFloats` directly on `FilamentOptions`, with a
+  singleton `0.4157` default and direct duplicate handling. Because the
+  concrete vector's derived default is empty, implement parent default through
+  its builder resolution rather than deriving the wrong pellet default.
+
+  Define a strict raw enum for the six overhang-threshold tokens. Reuse the
+  existing source-equivalent `RetractLiftEnforce` and `ZHopType` enums inside
+  direct `Vec<Nullable<T>>` fields. The other nullable fields likewise use
+  direct `Vec<Nullable<OrcaBool>>`, `Vec<Nullable<OrcaFloat>>`, or
+  `Vec<Nullable<Percent>>`; do not couple them to printer-owned wrappers or
+  create one-use nullable wrappers. Preserve `filament_notes` as raw
+  `OrcaStrings`; there is no structured grammar in this slice. Do not reuse
+  the existing behavioral overhang-threshold type, which collapses the six
+  raw tokens into two runtime states.
+
+  Replace the 53-entry parent serializer with one directly streamed,
+  globally lexical 122-entry map split into contiguous 41/41/40-entry
+  `early`/`middle`/`late` helpers. Do not delegate nested child maps, use serde
+  flattening, or buffer through a DOM. Preserve arbitrary raw cardinality and
+  exact nil elements. Record but do not apply the four legacy targets
+  (`bridge_fan_speed`, `cooling`, `overhang_fan_threshold=5%`, and
+  `chamber_temperatures`), the 20 `omit_when_nil` exports, or the 66 current
+  production literal collisions; the exact three-key complement is
+  `chamber_minimal_temperature`, `filament_long_retractions_when_cut`, and
+  `filament_retraction_distances_when_cut`; none of the 66 is legacy-only.
+  Legacy conversion remains Task
+  19A, region projection remains Task 16, active sizing/normalization remains
+  Task 19B together with nullable retract inheritance, nil export remains Task
+  19C, consumer migration remains Tasks 20A and 20D, and compatibility-parser
+  removal remains Task 20E. Keep every
+  changed production and test Rust module below 400 physical LOC.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 
+  In addition to the standard workspace nextest, warning-denying Clippy,
+  rustfmt, WASM, dynamic-value, and diff gates, run a physical-LOC audit over
+  every changed production and test Rust module and fail the task at 400 lines.
+
   ```powershell
-  cargo nextest run -p ares-core filament_options
+  cargo +1.91.0 nextest run -p ares-core filament_remaining
   git commit -m "feat(config): complete typed filament project options"
   git push
   ```

@@ -760,3 +760,113 @@ physical-LOC gate are green; the largest changed Rust module is 280 lines.
 Independent fixed-source, TDD-plan, wrapper, inventory, frozen-byte quality,
 and final specification reviews approve the slice under the user-approved
 temporary OpenCode bypass.
+
+### Task 13: remaining filament raw sources
+
+The remaining filament raw slice is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its exact 69-key partition is 48
+FFF `PrintConfig` declarations selected from `PrintConfig.hpp:1484-1650`, four
+filament ironing fields declared by `PrintRegionConfig` at
+`PrintConfig.hpp:1153-1156` and defined nullable at
+`PrintConfig.cpp:3492-3538`, the 16-entry
+`filament_extruder_override_keys` list plus `add_nullable` construction loop at
+`PrintConfig.cpp:63-84,7287-7318`, and direct `pellet_flow_coefficient` at
+`PrintConfig.cpp:2639-2643`. The fixed live filament list is
+`Preset.cpp:1309-1346`; nil retract overrides are preserved by preset
+serialization at `Preset.cpp:1861-1878`. Generic raw array, nullable-element,
+JSON-array load, and 3MF JSON-array emission behavior remains the fixed
+`Config.hpp:624-663,812-952,995-1085,1118-1163,1857-1967` and
+`Config.cpp:830-870,950-1004,1464-1496` boundary.
+
+All 69 top-level values are arrays. Their exact histogram is 11 `coBools`,
+three `coEnums`, 20 `coFloats`, 30 `coInts`, four `coPercents`, and one
+`coStrings`. The subgroup histograms are Print `8/1/6/30/2/1`, Region
+`0/0/3/0/1/0`, retract overrides `3/2/10/0/1/0`, and pellet one float vector.
+The 48-, four-, and 16-field children preserve fixed HPP/list order internally
+and serialize independently in bytewise lexical order.
+
+Exactly 20 Task 13 fields have nullable elements. The four region fields are
+`filament_ironing_flow`, `filament_ironing_spacing`,
+`filament_ironing_inset`, and `filament_ironing_speed`. The 16 generated fields
+are `filament_retraction_length`, `filament_z_hop`,
+`filament_z_hop_types`, `filament_retract_lift_above`,
+`filament_retract_lift_below`, `filament_retract_lift_enforce`,
+`filament_retraction_speed`, `filament_deretraction_speed`,
+`filament_retract_restart_extra`, `filament_retraction_minimum_travel`,
+`filament_wipe_distance`, `filament_retract_when_changing_layer`,
+`filament_wipe`, `filament_retract_before_wipe`,
+`filament_long_retractions_when_cut`, and
+`filament_retraction_distances_when_cut`. Region defaults are singleton nil;
+the generated defaults clone their corresponding concrete extruder singleton
+at `PrintConfig.cpp:7311-7315`. The fixture is all-nil for the four region
+fields and 11 generated fields; its five nullable fields with concrete payloads
+are `filament_retraction_distances_when_cut`,
+`filament_retraction_length`, `filament_wipe`, `filament_wipe_distance`, and
+`filament_z_hop_types`. Together with Task 12's seven, `FilamentOptions` owns
+exactly 27 nullable fields. `ProjectSettings` reaches 31 only after adding the
+four printer nullable fields; that project count is not a filament count.
+
+Every Task 13 source default is a singleton vector. The direct pellet default
+is exactly `[0.4157]` from `PrintConfig.cpp:2639-2643`. The three strict raw enum
+domains come from `PrintConfig.cpp:1227-1248,5282-5295,5320-5333`:
+`overhang_fan_threshold` accepts `0%`, `10%`, `25%`, `50%`, `75%`, and `95%`
+with default `95%`; nullable `filament_retract_lift_enforce` accepts
+`All Surfaces`, `Top Only`, `Bottom Only`, and `Top and Bottom` with concrete
+source default `All Surfaces`; nullable `filament_z_hop_types` accepts
+`Auto Lift`, `Normal Lift`, `Slope Lift`, and `Spiral Lift` with concrete
+source default `Slope Lift`. The fixture carries `50%`, all nil, and
+`Spiral Lift` respectively. The legacy `5%` threshold conversion at
+`PrintConfig.cpp:8132-8133` is not part of raw parsing. `filament_notes` is the
+only Task 13 string vector; raw empty, multiline, UTF-8, and literal `"nil"`
+strings remain uninterpreted.
+
+The fixture has exactly 42 two-entry vectors and 27 eight-entry vectors. The
+27 are the exact Task 13 intersection with `filament_options_with_variant` at
+`PrintConfig.cpp:8375-8415`: all 16 retract overrides,
+`nozzle_temperature_initial_layer`, `nozzle_temperature`, the four filament
+ironing fields, the three air-filtration toggles, and both exhaust-fan-speed
+fields. Raw parsing and serialization preserve arbitrary valid cardinality and
+do not perform active selection, resizing, or cross-field validation. All 69
+fixture values differ from singleton defaults by cardinality; ignoring
+cardinality, exactly 36 are semantic overrides and 33 repeat the source
+default.
+
+`FilamentOptions` exposes public `gcode`, `print`, `region`, and
+`retract_overrides` children plus direct `pellet_flow_coefficient`. Its parent
+serializer directly streams all 122 Task 12 plus Task 13 keys in one global
+lexical map, split only into contiguous 41/41/40 helpers; it emits no nested
+group, serde flattening, or DOM. A production-literal audit records collisions
+for exactly 66 Task 13 names. The exact three-key complement is
+`chamber_minimal_temperature`, `filament_long_retractions_when_cut`, and
+`filament_retraction_distances_when_cut`; no consumer is migrated in this
+slice.
+
+Region projection remains Task 16. The four legacy transformations
+`bridge_fan_speed`, `cooling`, `overhang_fan_threshold=5%`, and
+`chamber_temperatures` remain Task 19A work at
+`PrintConfig.cpp:8048-8049,8105-8106,8132-8133,8184-8185`. Active sizing,
+variant selection, full FDM normalization, and nullable retract inheritance
+remain Task 19B work at `PrintConfig.cpp:9004-9054,9805-10023`,
+`PrintApply.cpp:1164-1173`, and `Print.cpp:3166-3175`. The 20 all-nil effective
+export omissions remain Task 19C at `GCode.cpp:5632-5640`. Existing
+option/profile and G-code consumer migrations remain Tasks 20A and 20D, and
+compatibility-parser removal remains Task 20E.
+
+TDD first produced only the expected missing-interface failures for the three
+new source groups, their enum, and the four new parent fields. The completed
+focused matrix passes 22 tests and proves the exact inventory, partitions,
+histograms, declaration orders, defaults and concrete types, nullable split,
+fixture cardinalities and overrides, strict enums, every-field dispatch,
+invalid shapes, arbitrary cardinalities, standalone lexical maps, and the flat
+122-key parent bytes. The adjacent Task 12 matrix passes all 14 tests while
+retaining its exact standalone 53-key child boundary.
+
+Reviewed local verification passes all 4,296 workspace tests with three
+configured skips and the 22-test dynamic-value audit with one configured skip.
+Warning-denying workspace all-target Clippy, rustfmt, native `ares-core`, both
+`ares-core` and `ares-wasm` WASM checks, tracked and untracked whitespace
+checks, and the physical-LOC gate are green; the largest changed Rust module is
+283 lines. Independent upstream, RED-test, final-specification, code-quality,
+and frozen-byte reviews approve the slice under the user-approved temporary
+OpenCode bypass. The exact pushed commit remains subject to the five-job Tier 1
+gate before downstream implementation proceeds.

@@ -57,8 +57,14 @@ fn declaration_order_and_lexical_wire_order_are_distinct_and_exact() {
     let child = serde_json::to_string(&FilamentGCodeSourceOptions::default()).unwrap();
     let parent = serde_json::to_string(&FilamentOptions::default()).unwrap();
     assert_eq!(serialized_key_order(&child), LEXICAL_KEYS);
-    assert_eq!(serialized_key_order(&parent), LEXICAL_KEYS);
-    assert_eq!(child, parent);
+    assert_eq!(
+        serialized_key_order(&parent),
+        inventory()
+            .into_iter()
+            .filter(|row| row.raw_scope == "filament")
+            .map(|row| row.key)
+            .collect::<Vec<_>>()
+    );
     assert!(!parent.contains(r#""gcode":{"#));
 }
 
@@ -84,7 +90,10 @@ fn fixture_preserves_all_source_vectors_and_exact_bytes() {
     let parent: FilamentOptions = serde_json::from_value(Value::Object(fixture.clone())).unwrap();
     type_assertions::assert_concrete_types(&child);
     assert_eq!(serde_json::to_vec(&child).unwrap(), serde_json::to_vec(&fixture).unwrap());
-    assert_eq!(serde_json::to_vec(&parent).unwrap(), serde_json::to_vec(&fixture).unwrap());
+    let parent = serde_json::to_value(parent).unwrap();
+    for key in LEXICAL_KEYS {
+        assert_eq!(parent[key], fixture[key], "{key}");
+    }
 
     let lengths = fixture.values().map(|value| value.as_array().unwrap().len()).fold(
         BTreeMap::new(),

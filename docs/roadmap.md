@@ -467,8 +467,58 @@ fixed-source, TDD-plan, wrapper, inventory, frozen-byte quality, and final
 specification reviews approve the slice under the user-approved temporary
 OpenCode bypass.
 
-Task 13 is next: type the remaining 69 filament raw fields and nullable
-overrides to complete exact 122-key filament ownership.
+### 2026-07-13 Complete typed filament project options
+
+Task 13 ports the remaining exact 69 raw filament fields from fixed
+OrcaSlicer v2.4.2: 48 FFF `PrintConfig` declarations at
+`PrintConfig.hpp:1484-1650`, four nullable `PrintRegionConfig` ironing fields
+at `PrintConfig.hpp:1153-1156` / `PrintConfig.cpp:3492-3538`, 16 generated
+nullable retract overrides at `PrintConfig.cpp:63-84,7287-7318`, and direct
+`pellet_flow_coefficient` at `PrintConfig.cpp:2639-2643`. All 69 wire values
+are arrays. The aggregate histogram is 11 bool, three enum, 20 float, 30 int,
+four percent, and one string vectors; the 48/4/16/1 partition histograms are
+Print `8/1/6/30/2/1`, Region `0/0/3/0/1/0`, retract `3/2/10/0/1/0`, and one
+pellet float vector.
+
+Task 13 adds exactly 20 nullable fields: four singleton-nil region defaults
+and 16 generated fields whose singleton defaults clone their extruder
+sources. This completes 27 nullable filament fields with Task 12's seven, and
+31 project-wide only after including Printer's four. The fixture preserves 42
+two-entry and the exact 27 eight-entry vectors selected by
+`PrintConfig.cpp:8375-8415`; all 69 differ from singleton defaults by
+cardinality, with exactly 36 semantic overrides and 33 repeated defaults.
+Raw arrays keep arbitrary valid lengths and nil elements without active
+selection, resizing, inheritance, or cross-field normalization.
+
+The three strict raw enum domains retain the six canonical overhang-threshold
+tokens, four retract-lift-enforcement tokens, and four Z-hop tokens from
+`PrintConfig.cpp:1227-1248,5282-5295,5320-5333` with defaults `95%`,
+`All Surfaces`, and `Slope Lift`; the fixture carries `50%`, nil, and
+`Spiral Lift`. `filament_notes` remains the sole raw string vector, and direct
+`pellet_flow_coefficient` retains singleton default `0.4157`.
+`FilamentOptions` exposes its four source children plus direct pellet storage
+and streams one flat global lexical 122-key parent map through 41/41/40
+helpers.
+
+The compatibility layer has literal collisions for exactly 66 Task 13 names;
+the exact complement is `chamber_minimal_temperature`,
+`filament_long_retractions_when_cut`, and
+`filament_retraction_distances_when_cut`. No consumer moves here. Region
+projection remains Task 16; legacy conversion remains Task 19A; active sizing,
+normalization, and retract inheritance remain Task 19B; all-nil export remains
+Task 19C; consumer migrations remain Tasks 20A and 20D; and final
+compatibility-parser removal remains Task 20E.
+
+TDD first failed only on the missing Task 13 interfaces. Reviewed local gates
+pass 22 focused tests, all 14 adjacent Task 12 tests, all 4,296 workspace tests
+with three configured skips, and the 22-test dynamic-value audit with one
+configured skip. Warning-denying workspace Clippy, rustfmt, native and WASM
+checks, whitespace checks, and the under-400-LOC gate are green. Independent
+upstream, RED-test, final-specification, code-quality, and frozen-byte reviews
+approve the slice under the user-approved temporary OpenCode bypass. The
+five-job Tier 1 workflow gates the exact pushed commit before Task 14 begins.
+
+Task 14 is next: type the remaining project/runtime residual options.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

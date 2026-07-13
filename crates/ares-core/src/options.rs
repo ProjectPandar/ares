@@ -68,7 +68,10 @@ pub use {
         Point2d, Point2dGroups, Point2dList, PrinterTechnologies, PrinterTechnology,
         RammingParameters, SpaceTuple, VariantStride,
     },
-    filament_options::{FilamentGCodeSourceOptions, FilamentOptions},
+    filament_options::{
+        FilamentGCodeSourceOptions, FilamentOptions, FilamentPrintSourceOptions,
+        FilamentRegionSourceOptions, FilamentRetractOverrideOptions, RawOverhangFanThreshold,
+    },
     gcode_flavor::GCodeFlavor,
     hardware::HardwareOptions,
     infill::{InfillOptions, InfillPattern},

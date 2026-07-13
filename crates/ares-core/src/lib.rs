@@ -111,10 +111,11 @@ pub use options::registry::{
 pub use options::{
     AmsCounts, AuthorizationType, BedTemperatureFormula, CsvTable, DefaultBedType,
     DifferentExtrudersSupport, ExtruderIndexIdMapLookup, ExtruderType, ExtruderTypes,
-    ExtruderVariantLists, FilamentGCodeSourceOptions, FilamentOptions, FilamentTypeDisplay,
-    FlatMatrix, FloatOrPercent, GCodeFlavor, HardwareOptions, InfillOptions, InfillPattern,
-    InputShaperType, MachineEnvelopeOptions, Millimeters, MultiToMulti2Update, MultiToMultiUpdate,
-    NozzleType, NozzleVolumeType, NozzleVolumeTypes, Nullable, NullableFloats, NullableInts,
+    ExtruderVariantLists, FilamentGCodeSourceOptions, FilamentOptions, FilamentPrintSourceOptions,
+    FilamentRegionSourceOptions, FilamentRetractOverrideOptions, FilamentTypeDisplay, FlatMatrix,
+    FloatOrPercent, GCodeFlavor, HardwareOptions, InfillOptions, InfillPattern, InputShaperType,
+    MachineEnvelopeOptions, Millimeters, MultiToMulti2Update, MultiToMultiUpdate, NozzleType,
+    NozzleVolumeType, NozzleVolumeTypes, Nullable, NullableFloats, NullableInts,
     NullableNozzleTypes, NullablePrinterTechnologies, OrcaBool, OrcaBools, OrcaFloat,
     OrcaFloatOrPercents, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaString, OrcaStrings,
     OrcaUInt, Percent, Point2d, Point2dGroups, Point2dList, PowerLossRecoveryMode, PrintHostType,
@@ -129,9 +130,9 @@ pub use options::{
     ProcessSeamPosition, ProcessSeamScarfType, ProcessSkirtType, ProcessSlicingMode,
     ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
     ProcessSupportType, ProcessTimelapseType, ProcessWallDirection, ProcessWallSequence,
-    ProcessWipeTowerWallType, ProjectSettings, RammingParameters, RetractLiftEnforce,
-    RetractLiftEnforces, SliceOptions, SpaceTuple, ThumbnailDefinitions, VariantStride,
-    WipeTowerType, ZHopType, ZHopTypes,
+    ProcessWipeTowerWallType, ProjectSettings, RammingParameters, RawOverhangFanThreshold,
+    RetractLiftEnforce, RetractLiftEnforces, SliceOptions, SpaceTuple, ThumbnailDefinitions,
+    VariantStride, WipeTowerType, ZHopType, ZHopTypes,
 };
 pub use perimeters::{
     LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,
