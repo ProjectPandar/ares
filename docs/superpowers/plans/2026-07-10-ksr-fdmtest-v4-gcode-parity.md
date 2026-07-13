@@ -763,25 +763,26 @@ The following ownership is fixed for this plan. Additional sibling files are all
 
 ### Task 8: Remaining Printer Raw Options (42 Fields)
 
-**Upstream boundary:** Fixed-tag printer raw scope intersected with `PrintConfig` ownership (27) plus printer raw keys without a static config macro owner (15), including variant and hardware metadata used by `PrintApply.cpp`.
+**Upstream boundary:** Fixed-tag printer raw scope intersected with `PrintConfig` ownership (27) plus the 15 printer rows classified `unowned` by the committed FFF raw inventory, including variant and hardware metadata used by `PrintApply.cpp`.
 
 **Files:**
-- Create: `options/printer_options/print_source.rs`
-- Create: `options/printer_options/runtime.rs`
+- Create: `options/printer_options/remaining.rs`
+- Create: `options/printer_options/remaining/enums.rs`
+- Create: `options/printer_options/remaining/wire.rs`
 - Create: `options/tests/printer_remaining.rs`
 - Modify: `options/printer_options.rs`, `docs/architecture/option-parity-v4.md`
 
 **Interfaces:**
 - Completes `PrinterOptions` at exactly 132 raw fields.
-- Produces typed hardware/variant helpers used later by effective normalization.
+- Produces one `PrinterRemainingOptions` child with the exact 42 rows plus typed hardware/variant helpers used later by effective normalization.
 
 - [ ] **Step 1: Add RED coverage for 27 + 15 fields and whole-printer completeness**
 
-  Select the remaining 42 Printer rows from the committed inventory. Assert the three printer child sets are pairwise disjoint and their union equals the inventory's 132-key printer set. Exercise the fixture's 8-entry variant strides, two active extruders, `extruder_ams_count` structured string, nullable `extruder_printable_height`, and empty-area forms without erased values.
+  Select exactly the 42 rows where `raw_scope=printer` and `static_owner` is `print_config` or `unowned`. Assert the 28/62/42 printer child sets are pairwise disjoint and their union equals the inventory's 132-key printer set. Exercise the already-loaded 8-entry `MachineEnvelope` stride vectors as a cross-child regression, the two physical-extruder forms, four expanded `nozzle_volume` values, both nullable float-vector types, structured `extruder_variant_list`, and all explicit empty-area arrays. Assert that `extruder_ams_count` is rejected here because it belongs to Task 14 residual options.
 
 - [ ] **Step 2: Implement the remaining concrete fields and typed special encodings**
 
-  Define dedicated newtypes for structured encodings such as AMS count and variant lists when their internal components are consumed later. Preserve an opaque `String` only for an upstream `coString` whose content is not parsed to make a slicing decision. Complete direct serde serialization and raw field dispatch for all 132 printer keys.
+  Define dedicated newtypes for structured encodings such as per-extruder variant lists and thumbnail definitions when their internal components are consumed later. Preserve an opaque `String` only for an upstream `coString` whose content is not parsed to make a slicing decision. Keep `AmsCounts` ownership deferred to Task 14. Complete direct serde serialization and raw field dispatch for all 132 printer keys.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 

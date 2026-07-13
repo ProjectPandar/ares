@@ -1,5 +1,7 @@
 mod gcode_source;
 mod machine_envelope;
+mod remaining;
+mod wire;
 
 pub(crate) use gcode_source::PrinterGCodeSourceOptionsBuilder;
 pub use gcode_source::{
@@ -9,11 +11,18 @@ pub use gcode_source::{
 };
 pub(crate) use machine_envelope::MachineEnvelopeOptionsBuilder;
 pub use machine_envelope::{InputShaperType, MachineEnvelopeOptions};
+pub(crate) use remaining::PrinterRemainingOptionsBuilder;
+pub use remaining::{
+    AuthorizationType, DefaultBedType, ExtruderVariantLists, NozzleVolumeType, NozzleVolumeTypes,
+    NullableFloats, PrintHostType, PrinterModel, PrinterNotes, PrinterRemainingOptions,
+    ThumbnailDefinitions,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PrinterOptions {
     pub machine: MachineEnvelopeOptions,
     pub gcode: PrinterGCodeSourceOptions,
+    pub remaining: PrinterRemainingOptions,
 }
 
 impl Default for PrinterOptions {
@@ -60,6 +69,7 @@ impl<'de> serde::de::Visitor<'de> for PrinterVisitor {
 pub(crate) struct PrinterOptionsBuilder {
     machine: MachineEnvelopeOptionsBuilder,
     gcode: PrinterGCodeSourceOptionsBuilder,
+    remaining: PrinterRemainingOptionsBuilder,
 }
 
 impl PrinterOptionsBuilder {
@@ -71,10 +81,12 @@ impl PrinterOptionsBuilder {
     where
         A: serde::de::MapAccess<'de>,
     {
-        if self.machine.deserialize_known_field(key, map)? {
+        if self.machine.deserialize_known_field(key, map)?
+            || self.gcode.deserialize_known_field(key, map)?
+        {
             Ok(true)
         } else {
-            self.gcode.deserialize_known_field(key, map)
+            self.remaining.deserialize_known_field(key, map)
         }
     }
 
@@ -82,6 +94,7 @@ impl PrinterOptionsBuilder {
         PrinterOptions {
             machine: self.machine.resolve(),
             gcode: self.gcode.resolve(),
+            remaining: self.remaining.resolve(),
         }
     }
 }

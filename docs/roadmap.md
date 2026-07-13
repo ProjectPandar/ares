@@ -309,6 +309,35 @@ normalization, runtime consumers, and G-code output remain deferred. Task 8 is
 next: complete the remaining 42 printer raw keys at their `PrintConfig` and
 runtime ownership boundaries.
 
+### 2026-07-12 Complete the typed printer raw scope
+
+Task 8 ports the final 42 fixed OrcaSlicer v2.4.2 printer raw rows: 27 declared
+by `PrintConfig.hpp::PrintConfig` and 15 classified `unowned` by the committed
+FFF raw inventory with defaults and enum maps registered in `PrintConfig.cpp`.
+`PrinterOptions` now has one remaining child and completes the exact disjoint
+`28 + 62 + 42 = 132` printer set. Its direct parent serializer emits all 132
+keys in global lexicographic order without `flatten`, buffering, an erased map,
+or a dynamic remainder.
+
+The implementation preserves both element-nullable float vectors, all point,
+point-list, and point-group shapes, explicit empty area arrays, the fixture's
+physical-extruder and expanded-variant cardinalities, and the raw bytes of
+`extruder_variant_list` and `thumbnails`. Variant normalization and exact
+thumbnail composite parsing remain deferred instead of reusing behavior that
+does not match the fixed source. The original Task 8 plan incorrectly named
+`extruder_ams_count`; inventory and source review proved it is a residual key,
+so `PrinterOptions` rejects it and Task 14 retains ownership.
+
+Reviewed verification passes 13 focused printer-option tests, 4,222 workspace
+tests with three configured skips, warning-denying workspace all-target Clippy,
+rustfmt, both `ares-core` and `ares-wasm` WASM checks, the dynamic-value audit,
+and the diff whitespace gate. Two independent frozen-byte Codex reviews and
+the primary-agent review approve the implementation under the user-approved
+temporary OpenCode bypass. All 42 fields remain typed `retained-only`;
+effective config composition, normalization, slicing consumers, config export,
+and G-code output remain deferred. Task 9 is next: type the exact 126
+process/`PrintObjectConfig` raw rows.
+
 ### 2026-07-01 Consume prime tower brim width header slice
 
 `prime_tower_brim_width` is now consumed through the source-cited Orca `PrintConfig.hpp:1581-1584`, `PrintConfig.cpp:6725-6734,7878-7879`, `GCode.cpp:5523-5574`, `Print.cpp:318-323,3150,3177-3179`, `GCode/WipeTower.cpp:1461-1468,3705-3707`, and `GCode/WipeTower2.cpp:1248-1256,2115-2119,2134-2136` boundary. The Rust destination is the existing `FilamentConfigExports` config-header snapshot plus `gcode_config_header.rs` serialization. The slice validates the already-registered scalar brim-width option with Orca's `-1` lower bound; exports explicit values and the `-1` auto sentinel as one `prime_tower_brim_width` config header line; carries legacy `wipe_tower_brim_width` input through the existing normalization path; rejects invalid values before G-code bytes are returned; and preserves omitted-value header output. Automatic brim-width calculation, wipe-tower placement, fake wipe-tower state, collision checks, cone/corner geometry, wall generation, mesh construction, purge-depth planning, rib-wall width recomputation, legacy `WipeTower` and `WipeTower2` runtime brim-width behavior, adjacent prime-tower interface options, flush-volume behavior, UI, CLI, WASM bindings, and Orca binary E2E wipe-tower parity remain deferred.

@@ -72,9 +72,12 @@ pub use {
     layer_change_retraction::RetractLiftEnforce,
     power_loss_recovery::PowerLossRecoveryMode,
     printer_options::{
-        ExtruderType, ExtruderTypes, InputShaperType, MachineEnvelopeOptions, NozzleType,
-        NullableInts, NullableNozzleTypes, PrinterGCodeSourceOptions, PrinterOptions,
-        PrinterStructure, RetractLiftEnforces, WipeTowerType, ZHopType, ZHopTypes,
+        AuthorizationType, DefaultBedType, ExtruderType, ExtruderTypes, ExtruderVariantLists,
+        InputShaperType, MachineEnvelopeOptions, NozzleType, NozzleVolumeType, NozzleVolumeTypes,
+        NullableFloats, NullableInts, NullableNozzleTypes, PrintHostType,
+        PrinterGCodeSourceOptions, PrinterModel, PrinterNotes, PrinterOptions,
+        PrinterRemainingOptions, PrinterStructure, RetractLiftEnforces, ThumbnailDefinitions,
+        WipeTowerType, ZHopType, ZHopTypes,
     },
     project_settings::ProjectSettings,
 };

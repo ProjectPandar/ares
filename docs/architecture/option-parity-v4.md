@@ -206,3 +206,53 @@ lexicographic serialization, and mixed child dispatch. The typed project path
 still does not feed these fields into slicing; effective projection,
 normalization, placeholder/template consumers, G-code generation, and config
 export remain deferred.
+
+### Task 8: remaining printer raw options
+
+The final printer child contains exactly the 42 inventory rows where
+`raw_scope=printer` and `static_owner` is `print_config` (27) or `unowned`
+(15). All remain `retained-only`. Together with Tasks 6 and 7,
+`PrinterOptions` now owns the complete disjoint `28 + 62 + 42 = 132` printer
+raw-key set without a dynamic remainder. The remaining key/type ledger is:
+
+- `coBool`: `bbl_use_printhost`, `pellet_modded_printer`,
+  `printhost_ssl_ignore_revoke`, and `support_parallel_printheads`.
+- `coEnum`: `host_type`, `printer_technology`,
+  `printhost_authorization_type`, and `thumbnails_format`; `coEnums`:
+  `default_nozzle_volume_type`.
+- `coFloat`: `adaptive_bed_mesh_margin`,
+  `extruder_clearance_height_to_lid`, `extruder_clearance_height_to_rod`,
+  `extruder_clearance_radius`, `nozzle_height`, `preferred_orientation`,
+  `printable_height`, and `z_offset`; `coFloats`: nullable
+  `extruder_printable_height`, `grab_length`, and nullable `nozzle_volume`.
+- `coInt`: `parallel_printheads_count`.
+- `coPoint`: `bed_mesh_max`, `bed_mesh_min`, `bed_mesh_probe_distance`, and
+  `best_object_pos`; `coPoints`: `bed_exclude_area`,
+  `head_wrap_detect_zone`, and `printable_area`; `coPointsGroups`:
+  `extruder_printable_area`.
+- `coString`: `bed_custom_model`, `bed_custom_texture`, `default_bed_type`,
+  `default_print_profile`, `flashforge_serial_number`, `printer_agent`,
+  `printer_model`, `printer_notes`, `printer_variant`, and `thumbnails`;
+  `coStrings`: `extruder_variant_list`,
+  `parallel_printheads_bed_exclude_areas`, and
+  `upward_compatible_machine`.
+
+The 27 `PrintConfig.hpp::PrintConfig` declarations and 15 fixed
+`PrintConfig.cpp` registrations retain separate provenance orders, while the
+remaining child serializes 42 keys and the parent serializes all 132 keys in
+global lexicographic order. Explicit empty area arrays remain distinct from
+missing fields and upstream defaults. `extruder_variant_list` and `thumbnails`
+use semantic raw-preserving wrappers: Task 8 does not normalize variant tokens
+or expose the existing stricter thumbnail parser as fixed-source behavior.
+Exact variant expansion and thumbnail composite parsing remain deferred.
+`extruder_ams_count` is a residual key, is rejected by `PrinterOptions`, and
+remains owned by Task 14.
+
+The focused tests prove exact ownership and type histograms, the disjoint
+132-key union, fixed defaults and all 18 fixture/default differences, complete
+enum domains, element-nullable float vectors, point/list/group wire shapes,
+fixture cardinalities, raw structured strings, mixed flat dispatch, duplicate
+and cross-scope rejection, exact 42-field byte round-trip, and exact flat
+132-field byte round-trip with streaming key-order observation. The typed
+project path still does not compose effective configs or consume these values
+in slicing or G-code generation.

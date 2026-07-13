@@ -1,9 +1,14 @@
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum GCodeThumbnailFormat {
+    #[serde(rename = "PNG")]
     Png,
+    #[serde(rename = "JPG")]
     Jpg,
+    #[serde(rename = "QOI")]
     Qoi,
+    #[serde(rename = "BTT_TFT")]
     BttTft,
+    #[serde(rename = "COLPIC")]
     ColPic,
 }
 
