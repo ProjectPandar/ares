@@ -43,6 +43,7 @@ mod printer_machine_envelope;
 mod printer_remaining;
 mod printer_gcode_source;
 mod process_object_source;
+mod process_region_source;
 #[rustfmt::skip] option_test_modules!(part_cooling_fan_runtime, fan_speedup_runtime, fan_cooling_layer_time_runtime, accel_to_decel);
 mod relative_e;
 

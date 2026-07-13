@@ -81,11 +81,13 @@ pub use {
         WipeTowerType, ZHopType, ZHopTypes,
     },
     process_options::{
-        ProcessBrimType, ProcessExtraBridgeLayer, ProcessGapFillTarget, ProcessInfillPattern,
-        ProcessInternalBridgeFilter, ProcessObjectSourceOptions, ProcessOptions,
-        ProcessPerimeterGenerator, ProcessSeamPosition, ProcessSlicingMode,
+        ProcessBrimType, ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness,
+        ProcessExtraBridgeLayer, ProcessFuzzySkinMode, ProcessFuzzySkinType, ProcessGapFillTarget,
+        ProcessInfillPattern, ProcessInternalBridgeFilter, ProcessIroningType, ProcessNoiseType,
+        ProcessObjectSourceOptions, ProcessOptions, ProcessPerimeterGenerator,
+        ProcessRegionSourceOptions, ProcessSeamPosition, ProcessSeamScarfType, ProcessSlicingMode,
         ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
-        ProcessSupportType,
+        ProcessSupportType, ProcessWallDirection, ProcessWallSequence,
     },
     project_settings::ProjectSettings,
 };

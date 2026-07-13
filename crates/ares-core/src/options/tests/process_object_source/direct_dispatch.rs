@@ -25,8 +25,6 @@ fn process_object_source_rejects_duplicate_unknown_wrong_shape_and_deferred_scop
         r#"{"raft_layers":{}}"#,
         r#"{"wall_transition_length":[]}"#,
         r#"{"brim_type":[]}"#,
-        r#"{"wall_loops":"2"}"#,
-        r#"{"sparse_infill_density":"20%"}"#,
         r#"{"initial_layer_print_height":"0.2"}"#,
         r#"{"independent_support_layer_height":"1"}"#,
         r#"{"printable_height":"256"}"#,
@@ -38,6 +36,16 @@ fn process_object_source_rejects_duplicate_unknown_wrong_shape_and_deferred_scop
             "{invalid}"
         );
         assert!(serde_json::from_str::<ProcessOptions>(invalid).is_err(), "{invalid}");
+    }
+    for region in [
+        r#"{"wall_loops":"2"}"#,
+        r#"{"sparse_infill_density":"20%"}"#,
+    ] {
+        assert!(
+            serde_json::from_str::<ProcessObjectSourceOptions>(region).is_err(),
+            "{region}"
+        );
+        assert!(serde_json::from_str::<ProcessOptions>(region).is_ok(), "{region}");
     }
 }
 

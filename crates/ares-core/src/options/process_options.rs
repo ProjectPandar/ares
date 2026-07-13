@@ -1,8 +1,10 @@
 mod object_source;
+mod region_source;
+mod wire;
 
 use std::fmt;
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Visitor};
+use serde::{Deserialize, Deserializer, de::Visitor};
 
 pub(crate) use object_source::ProcessObjectSourceOptionsBuilder;
 pub use object_source::{
@@ -11,10 +13,17 @@ pub use object_source::{
     ProcessSeamPosition, ProcessSlicingMode, ProcessSupportBasePattern,
     ProcessSupportInterfacePattern, ProcessSupportStyle, ProcessSupportType,
 };
+pub(crate) use region_source::ProcessRegionSourceOptionsBuilder;
+pub use region_source::{
+    ProcessCounterboreHoleBridging, ProcessEnsureVerticalShellThickness, ProcessFuzzySkinMode,
+    ProcessFuzzySkinType, ProcessIroningType, ProcessNoiseType, ProcessRegionSourceOptions,
+    ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
+};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ProcessOptions {
     pub object: ProcessObjectSourceOptions,
+    pub region: ProcessRegionSourceOptions,
 }
 
 impl<'de> Deserialize<'de> for ProcessOptions {
@@ -23,15 +32,6 @@ impl<'de> Deserialize<'de> for ProcessOptions {
         D: Deserializer<'de>,
     {
         deserializer.deserialize_map(ProcessVisitor)
-    }
-}
-
-impl Serialize for ProcessOptions {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.object.serialize(serializer)
     }
 }
 
@@ -50,7 +50,9 @@ impl<'de> Visitor<'de> for ProcessVisitor {
     {
         let mut builder = ProcessOptionsBuilder::default();
         while let Some(key) = map.next_key::<String>()? {
-            if !builder.object.deserialize_known_field(&key, &mut map)? {
+            if !builder.object.deserialize_known_field(&key, &mut map)?
+                && !builder.region.deserialize_known_field(&key, &mut map)?
+            {
                 return Err(serde::de::Error::custom(format!(
                     "unknown Orca process option {key}"
                 )));
@@ -63,12 +65,14 @@ impl<'de> Visitor<'de> for ProcessVisitor {
 #[derive(Default)]
 struct ProcessOptionsBuilder {
     object: ProcessObjectSourceOptionsBuilder,
+    region: ProcessRegionSourceOptionsBuilder,
 }
 
 impl ProcessOptionsBuilder {
     fn resolve(self) -> ProcessOptions {
         ProcessOptions {
             object: self.object.resolve(),
+            region: self.region.resolve(),
         }
     }
 }

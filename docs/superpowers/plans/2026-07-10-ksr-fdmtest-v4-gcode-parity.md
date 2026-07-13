@@ -838,19 +838,29 @@ The following ownership is fixed for this plan. Additional sibling files are all
 
 **Files:**
 - Create: `options/process_options/region_source.rs`
+- Create: `options/process_options/region_source/enums.rs`
+- Create: `options/process_options/region_source/wire.rs`
+- Create: `options/process_options/wire.rs`
+- Create: `options/process_options/wire/early.rs`
+- Create: `options/process_options/wire/middle.rs`
+- Create: `options/process_options/wire/late.rs`
 - Create: `options/tests/process_region_source.rs`
-- Modify: `options/process_options.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/tests/process_region_source/expected.rs`
+- Create: `options/tests/process_region_source/enums.rs`
+- Create: `options/tests/process_region_source/type_assertions.rs`
+- Create: `options/tests/process_region_source/direct_dispatch.rs`
+- Modify: `options/process_options.rs`, `options.rs`, `lib.rs`, `options/tests.rs`, `options/tests/process_object_source.rs`, `options/tests/process_object_source/direct_dispatch.rs`, `docs/architecture/option-parity-v4.md`, `docs/roadmap.md`
 
 **Interfaces:**
 - Produces `ProcessRegionSourceOptions` with 149 concrete resolved fields plus its private typed builder.
 
 - [ ] **Step 1: Add RED inventory and lexical/enum tests for all 149 keys**
 
-  Select the inventory's 149 Process/`PrintRegionConfig` rows, assert no overlap with the 126 object-source rows, and check widths, flows, speeds, accelerations, `seam_gap`, bridge settings, sparse/solid/top/bottom fill patterns, fuzzy/ironing forms, and nullable fields. Add targeted invalid-type/cardinality tests rather than relying on a single bulk fixture parse.
+  Select the inventory's exact 149 Process/`PrintRegionConfig` rows from the 155 active HPP tuples. Exclude the four filament-scope nullable ironing overrides and the two legacy-only shells `ironing_direction` and `wall_infill_order`. Assert no overlap with the 126 object-source rows and prove the exact histogram: 31 bool, 14 enum, 49 float, 24 float-or-percent, 15 int, one integer vector, 11 percent, three string, and one string-vector field. The wire boundary is 147 scalar strings plus the two non-nullable vectors `print_extruder_id` and `print_extruder_variant`; preserve fixture cardinality four but accept and round-trip other valid lengths. Check widths, flows, speeds, `seam_gap`, bridge settings, sparse/solid/top/bottom fill patterns, fuzzy/ironing forms, and the two variant vectors. Because 119 fixture values equal defaults, exercise a valid non-default typed state for every one of the 149 keys. Add targeted invalid scalar/array/element-shape tests and exact 149-child plus global 275-parent lexicographic byte-round-trip tests.
 
-- [ ] **Step 2: Implement fields in geometry-consumer order**
+- [ ] **Step 2: Implement fields in fixed declaration order**
 
-  Add perimeter/flow fields, then fill/bridge fields, then ironing/fuzzy/speed fields; run the focused test after every small batch. Actual enum variants mirror Orca's machine-readable serialized names. UI labels are accepted only where `handle_legacy` at the fixed commit explicitly converts them.
+  Keep `ProcessRegionSourceOptions` as one public region child and preserve the exact filtered HPP declaration order in production. Perimeter/flow, fill/bridge, and ironing/fuzzy/speed may be implementation batches only. Reuse the complete 28-token raw `ProcessInfillPattern` for all five pattern fields and define dedicated raw enums for the other nine domains. Canonical serde accepts only Orca's machine-readable tokens; UI labels and `handle_legacy` conversions remain Task 19A. Preserve the two arrays as raw typed vectors without active-extruder normalization. Add `region` to direct parent dispatch, but do not migrate the 109 current dynamic consumers; effective region projection remains Task 16. Replace the one-child parent serializer with a direct globally lexicographic 275-entry serializer split across contiguous helper modules that share one `SerializeMap`; do not delegate child maps, flatten, or buffer through a DOM.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 

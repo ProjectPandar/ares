@@ -122,16 +122,6 @@ fn process_object_source_scalar_codecs_preserve_categories() {
 }
 
 #[test]
-fn process_options_serializes_object_child_as_one_flat_map() {
-    let process = ProcessOptions::default();
-    let parent = serde_json::to_string(&process).unwrap();
-    let child = serde_json::to_string(&process.object).unwrap();
-    assert_eq!(parent, child);
-    assert!(!parent.contains(r#""object":{"#));
-    assert_eq!(serialized_key_order(&parent).len(), 126);
-}
-
-#[test]
 fn project_settings_starts_with_typed_process_object_child() {
     assert_eq!(
         ProjectSettings::default().process.object.layer_height,

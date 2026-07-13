@@ -358,3 +358,134 @@ the complete enum domains, both float-or-percent branches, flat parent serde,
 strict cross-owner rejection, and exact fixture byte round-trip. A
 single-field non-default typed-state test covers every one of the 126 dispatch
 arms so the 108 fixture values equal to defaults cannot hide a dropped field.
+
+### Task 10: process region source
+
+The second process child is the exact active intersection of process raw keys
+with fixed OrcaSlicer v2.4.2 `PrintConfig.hpp::PrintRegionConfig` declarations
+and `PrintConfig.cpp` defaults and enum maps. Of the 155 active HPP tuples, it
+owns 149. The four filament-scope nullable overrides
+`filament_ironing_flow`, `filament_ironing_spacing`,
+`filament_ironing_inset`, and `filament_ironing_speed`, plus the two
+legacy-only shells `ironing_direction` and `wall_infill_order`, are excluded.
+All 149 fields remain `retained-only`; effective region projection is deferred
+to Task 16, while dynamic consumer migration remains in Tasks 20A-20D. The
+concrete key/type ledger is:
+
+- `coBool` (31): `align_infill_direction_to_model`, `alternate_extra_wall`,
+  `detect_overhang_wall`, `detect_thin_wall`, `enable_overhang_speed`,
+  `extra_perimeters_on_overhangs`, `fuzzy_skin_first_layer`,
+  `gyroid_optimized`, `hole_to_polyhole`, `hole_to_polyhole_twisted`,
+  `infill_combination`, `ironing_angle_fixed`, `is_infill_first`,
+  `make_overhang_printable`, `only_one_wall_first_layer`,
+  `only_one_wall_top`, `overhang_reverse`, `overhang_reverse_internal_only`,
+  `precise_outer_wall`, `relative_bridge_angle`, `role_based_wipe_speed`,
+  `seam_slope_conditional`, `seam_slope_entire_loop`,
+  `seam_slope_inner_walls`, `slowdown_for_curled_perimeters`,
+  `small_area_infill_flow_compensation`, `symmetric_infill_y_axis`,
+  `wipe_before_external_loop`, `wipe_on_loops`,
+  `zaa_dont_alternate_fill_direction`, and `zaa_enabled`.
+- `coEnum` (14): `bottom_surface_pattern`, `counterbore_hole_bridging`,
+  `ensure_vertical_shell_thickness`, `fuzzy_skin`, `fuzzy_skin_mode`,
+  `fuzzy_skin_noise_type`, `internal_solid_infill_pattern`,
+  `ironing_pattern`, `ironing_type`, `seam_slope_type`,
+  `sparse_infill_pattern`, `top_surface_pattern`, `wall_direction`, and
+  `wall_sequence`.
+- `coFloat` (49): `bottom_shell_thickness`,
+  `bottom_solid_infill_flow_ratio`, `bridge_angle`, `bridge_flow`,
+  `bridge_speed`, `filter_out_gap_fill`, `first_layer_flow_ratio`,
+  `fuzzy_skin_persistence`, `fuzzy_skin_point_distance`, `fuzzy_skin_scale`,
+  `fuzzy_skin_thickness`, `gap_fill_flow_ratio`, `gap_infill_speed`,
+  `infill_direction`, `infill_lock_depth`, `infill_overhang_angle`,
+  `infill_shift_step`, `inner_wall_flow_ratio`, `inner_wall_speed`,
+  `internal_bridge_angle`, `internal_bridge_flow`,
+  `internal_solid_infill_flow_ratio`, `internal_solid_infill_speed`,
+  `ironing_angle`, `ironing_inset`, `ironing_spacing`, `ironing_speed`,
+  `lateral_lattice_angle_1`, `lateral_lattice_angle_2`,
+  `lightning_overhang_angle`, `lightning_prune_angle`,
+  `lightning_straightening_angle`, `minimum_sparse_infill_area`,
+  `outer_wall_flow_ratio`, `outer_wall_speed`, `overhang_flow_ratio`,
+  `print_flow_ratio`, `scarf_joint_flow_ratio`, `seam_slope_min_length`,
+  `skin_infill_depth`, `small_perimeter_threshold`,
+  `solid_infill_direction`, `sparse_infill_flow_ratio`,
+  `sparse_infill_speed`, `top_shell_thickness`,
+  `top_solid_infill_flow_ratio`, `top_surface_speed`, `zaa_min_z`, and
+  `zaa_minimize_perimeter_height`.
+- `coFloatOrPercent` (24): `bridge_line_width`,
+  `hole_to_polyhole_threshold`, `infill_anchor`, `infill_anchor_max`,
+  `infill_combination_max_layer_height`, `inner_wall_line_width`,
+  `internal_bridge_speed`, `internal_solid_infill_line_width`,
+  `min_width_top_surface`, `outer_wall_line_width`, `overhang_1_4_speed`,
+  `overhang_2_4_speed`, `overhang_3_4_speed`, `overhang_4_4_speed`,
+  `overhang_reverse_threshold`, `scarf_joint_speed`, `seam_gap`,
+  `seam_slope_start_height`, `skeleton_infill_line_width`,
+  `skin_infill_line_width`, `small_perimeter_speed`,
+  `sparse_infill_line_width`, `top_surface_line_width`, and `wipe_speed`.
+- `coInt` (15): `bottom_shell_layers`, `bottom_surface_filament_id`,
+  `fill_multiline`, `fuzzy_skin_layers_between_ripple_offset`,
+  `fuzzy_skin_octaves`, `fuzzy_skin_ripples_per_layer`,
+  `inner_wall_filament_id`, `internal_solid_filament_id`,
+  `outer_wall_filament_id`, `scarf_angle_threshold`, `seam_slope_steps`,
+  `sparse_infill_filament_id`, `top_shell_layers`,
+  `top_surface_filament_id`, and `wall_loops`.
+- `coInts` (1): `print_extruder_id`.
+- `coPercent` (11): `bottom_surface_density`, `bridge_density`,
+  `fuzzy_skin_ripple_offset`, `infill_wall_overlap`, `ironing_flow`,
+  `scarf_overhang_threshold`, `skeleton_infill_density`,
+  `skin_infill_density`, `sparse_infill_density`,
+  `top_bottom_infill_wall_overlap`, and `top_surface_density`.
+- `coString` (3): `extra_solid_infills`,
+  `solid_infill_rotate_template`, and `sparse_infill_rotate_template`.
+- `coStrings` (1): `print_extruder_variant`.
+
+The wire boundary is 147 scalar strings plus the non-nullable integer and
+string vectors `print_extruder_id` and `print_extruder_variant`. Their fixture
+length is four, but typed parsing and serialization preserve any valid length;
+there is no active-extruder cardinality rule in this raw layer. The three raw
+string fields are preserved without template interpretation.
+
+All five pattern fields use the complete fixed 28-token
+`ProcessInfillPattern` map. The other nine enum domains are dedicated raw
+types for vertical-shell enforcement, fuzzy-skin type, fuzzy noise, fuzzy
+mode, ironing type, counterbore bridging, wall sequence, wall direction, and
+seam scarf type. Only Orca's machine-readable tokens are accepted. UI labels,
+aliases, and `handle_legacy` conversions remain Task 19A.
+
+`ProcessOptions` now directly dispatches both children from one flat input
+map. Each child serializes in its independent lexical order, and the parent
+streams the disjoint 126 + 149 union as one globally lexical 275-key map. It
+does not delegate nested child maps, use serde flattening, or allocate a DOM.
+
+A literal-consumer scan records 109 of these 149 names in the existing dynamic
+`SliceOptions` behavior pipeline. The exact 40 without a current literal
+consumer are `align_infill_direction_to_model`,
+`bottom_surface_filament_id`, `bridge_line_width`, `fuzzy_skin_mode`,
+`gyroid_optimized`, `hole_to_polyhole`, `hole_to_polyhole_threshold`,
+`hole_to_polyhole_twisted`, `infill_lock_depth`, `infill_overhang_angle`,
+`inner_wall_filament_id`, `internal_solid_filament_id`,
+`lateral_lattice_angle_1`, `lateral_lattice_angle_2`,
+`lightning_overhang_angle`, `lightning_prune_angle`,
+`lightning_straightening_angle`, `outer_wall_filament_id`,
+`print_extruder_id`, `relative_bridge_angle`, `scarf_angle_threshold`,
+`scarf_joint_flow_ratio`, `scarf_joint_speed`, `scarf_overhang_threshold`,
+`seam_slope_conditional`, `seam_slope_entire_loop`,
+`seam_slope_inner_walls`, `seam_slope_min_length`,
+`seam_slope_start_height`, `seam_slope_steps`, `seam_slope_type`,
+`skeleton_infill_density`, `skin_infill_density`, `skin_infill_depth`,
+`sparse_infill_filament_id`, `top_surface_filament_id`,
+`zaa_dont_alternate_fill_direction`, `zaa_enabled`, `zaa_min_z`, and
+`zaa_minimize_perimeter_height`; the complementary 109 names are the recorded
+collisions and are not migrated by Task 10.
+
+Focused tests prove exact ownership and the type histogram, fixed declaration
+order, exact defaults and all 30 fixture overrides, concrete field types, all
+enum domains, both float-or-percent categories, arbitrary valid vector
+lengths, direct non-default dispatch for all 149 fields, strict owner and shape
+rejection, child 149-key bytes, and flat parent 275-key bytes and order.
+Reviewed verification passes 24 focused object/region tests, all 4,246
+workspace tests with three configured skips, the 22-test dynamic-value audit
+with one configured skip, warning-denying workspace all-target Clippy,
+rustfmt, both `ares-core` and `ares-wasm` WASM checks, and the diff whitespace
+gate. Two independent frozen-byte code reviews, an independent documentation
+review, and the primary-agent review approve this boundary under the
+user-approved temporary OpenCode bypass.
