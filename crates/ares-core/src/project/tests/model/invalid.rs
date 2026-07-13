@@ -43,6 +43,19 @@ fn project_import_rejects_duplicate_part_identity_and_invalid_object_shape() {
 }
 
 #[test]
+fn project_import_still_rejects_duplicate_retained_part_matrix() {
+    let mut parts = ProjectParts::valid();
+    parts.replace(
+        "Metadata/model_settings.config",
+        r#"<metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>"#,
+        r#"<metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/><metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>"#,
+    );
+
+    let error = load_project(parts.bytes()).unwrap_err().to_string();
+    assert!(error.contains("repeated metadata \"matrix\""), "{error}");
+}
+
+#[test]
 fn project_import_rejects_missing_or_wrong_relationship_targets() {
     let mut missing_root = ProjectParts::valid();
     missing_root.replace("_rels/.rels", "/3D/root.model", "/3D/missing.model");

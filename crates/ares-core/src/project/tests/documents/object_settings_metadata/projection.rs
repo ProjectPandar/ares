@@ -1,6 +1,6 @@
-use crate::{ObjectOptions, OrcaFloat, OrcaInt, ProcessObjectSourceOptions};
+use crate::{ObjectOptions, OrcaFloat, OrcaInt, Percent, ProcessObjectSourceOptions};
 
-use super::{object_overrides, pairs, parse_settings, retained_config};
+use super::{object_overrides, pairs, parse_settings, region_overrides, retained_config};
 
 fn project(
     base: &ProcessObjectSourceOptions,
@@ -65,12 +65,13 @@ fn object_options_projection_retained_entries_stay_ordered_and_isolated() {
             ..Default::default()
         }
     );
-    let retained = [
-        ("extruder", "2"),
-        ("sparse_infill_density", "37.5%"),
-        ("future_non_object_option", "opaque"),
-    ];
+    let retained = [("future_non_object_option", "opaque")];
     assert_eq!(pairs(retained_config(object)), retained);
+    assert_eq!(region_overrides(object).extruder, Some(OrcaInt(2)));
+    assert_eq!(
+        region_overrides(object).sparse_infill_density,
+        Some(Percent(37.5))
+    );
 
     let base = ProcessObjectSourceOptions {
         brim_width: OrcaFloat(4.5),

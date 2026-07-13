@@ -379,9 +379,10 @@ The two vectors retain arbitrary valid lengths rather than encoding the
 fixture's four-extruder cardinality. Five pattern fields reuse the full fixed
 28-token raw infill map, while nine dedicated raw enums preserve the remaining
 canonical domains. `ProcessOptions` now decodes both process children from one
-flat map and directly streams their global lexical 275-key union. All fields
-remain `retained-only`; UI/legacy conversion is deferred to Task 19A and
-effective region projection remains Task 16.
+flat map and directly streams their global lexical 275-key union. Task 10
+introduced all fields as retained raw source state; UI/legacy conversion
+remains deferred to Task 19A, while Task 16 now reuses the same 149-field
+inventory for effective region projection.
 
 The existing dynamic behavior pipeline has literal consumers for 109 of the
 149 names. Task 10 records that boundary without migrating consumers. Focused
@@ -504,8 +505,9 @@ helpers.
 The compatibility layer has literal collisions for exactly 66 Task 13 names;
 the exact complement is `chamber_minimal_temperature`,
 `filament_long_retractions_when_cut`, and
-`filament_retraction_distances_when_cut`. No consumer moves here. Region
-projection remains Task 16; legacy conversion remains Task 19A; active sizing,
+`filament_retraction_distances_when_cut`. No consumer moves here. Task 16 now
+selects the four region ironing vectors into concrete effective values; legacy
+conversion remains Task 19A; active sizing,
 normalization, and retract inheritance remain Task 19B; all-nil export remains
 Task 19C; consumer migrations remain Tasks 20A and 20D; and final
 compatibility-parser removal remains Task 20E.
@@ -593,9 +595,10 @@ only when it is strictly greater than the supplied extruder count. Fixed
 monolithic and split normalization write sets have zero intersection with all
 126 fields.
 
-The real 3MF verifies object ID 2, `name=ksr_fdmtest_v4.drc`, retained
-`extruder=1`, zero typed object overrides, two nozzle diameters, and complete
-effective equality with the typed process base. Exactly 108 object fields
+The real 3MF verifies object ID 2, `name=ksr_fdmtest_v4.drc`, typed region
+override `extruder=1`, zero typed object overrides or residual object config,
+two nozzle diameters, and complete effective equality with the typed process
+base. Exactly 108 object fields
 equal fixed defaults and 18 carry process overrides; the complete differing
 key set is recorded in the architecture ledger. No fixture identity or value
 is present in production code.
@@ -604,12 +607,47 @@ Six sequential slices are green and independently approved for inventory/base
 identity, ordered metadata, sparse projection, exact clamps, normalization
 zero-intersection, and real-document verification. The complete
 pre-documentation 28-file Task 15 diff also has fresh literal
-`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Region projection,
-G-code projection, top-level project storage, legacy conversion, general
+`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Region projection is
+now implemented by Task 16. G-code projection, top-level project storage,
+legacy conversion, general
 normalization/association, config export, consumer migration, geometry,
-slicing, and final G-code byte parity remain owned by Tasks 16-20 and later
-stages. Documentation approval, the fresh full local matrix, commit, push, and
-exact-SHA five-job Tier 1 evidence remain pending before Task 16 begins.
+slicing, and final G-code byte parity remain owned by Tasks 17-20 and later
+stages. Task 15 is released as pushed commit
+`4fbb61282cdb73160414d2d9f67edacf61ba2e42`; exact-SHA Tier 1 run
+`29273332261` is green across format, Ubuntu/Linux, WASM, macOS, and Windows,
+satisfying the Task 16 entry gate.
+
+### 2026-07-13 Resolve effective region options
+
+Task 16 ports fixed OrcaSlicer v2.4.2
+`PrintConfig.hpp:1074-1249::PrintRegionConfig`, region overlay construction at
+`PrintObject.cpp:3582-3709`, model-part/modifier call sites at
+`PrintApply.cpp:786-795,1021-1042`, ironing selection at
+`Fill/Fill.cpp:1591-1604`, and the ordered 3MF metadata plus exact lexical
+codec boundaries in `Format/bbs_3mf.cpp`, `Config.hpp`, and `Config.cpp`. The
+Rust destination is concrete `RegionOptions` and its crate-private typed
+handoff/resolver in `ares-core`, not a new independent pipeline.
+
+The shared 149-field process inventory now also drives concrete effective
+region state, with four selected ironing outputs for 153 fields total. Ordered
+object/part metadata routes all region keys plus `extruder` into typed sparse
+overrides, omits those consumed entries from residual storage, and retains
+every unconsumed entry in source order, including structural metadata.
+`RegionBase` represents model-part and modifier-parent inputs; resolution
+implements their distinct ordered precedence and six-feature mask/fallback
+behavior, followed by six ID clamps, sparse-density/fuzzy normalization, and
+final top-surface-ID selection of all four nullable filament ironing vectors.
+
+The real 3MF proves typed object `extruder=1`, all six effective feature IDs
+equal to one, selected index zero, and concrete nil inheritance of `10%`,
+`0.15`, `0.21`, and `30`, without fixture-specific production behavior. All
+seven sequential slices and the frozen whole diff have independent
+specification and quality approval. G-code projection remains Task 17;
+cardinality, active sizing, and association remain Task 19B; consumer migration
+remains Tasks 20A-20E; modifier graph construction, geometry, slicing, G-code
+generation, and final byte parity remain later work. Documentation approval,
+the full local release gate, commit, push, and exact-SHA Tier 1 evidence remain
+pending.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

@@ -123,7 +123,7 @@ fn project_documents_deserialize_typed_project_metadata() {
     assert_eq!(part.id, 1);
     assert_eq!(part.subtype, "normal_part");
     assert_eq!(
-        metadata(&part.metadata, "matrix"),
+        metadata(&part.retained_metadata, "matrix"),
         "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"
     );
     assert_eq!(part.mesh_stat.as_ref().unwrap().edges_fixed, 0);

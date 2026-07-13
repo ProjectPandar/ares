@@ -7,7 +7,10 @@ use crate::project::{
 use crate::{OrcaFloat, SliceError};
 
 use super::super::{FIXTURE, read};
-use super::{object_module, object_name, object_overrides, pairs, parse_settings, retained_config};
+use super::{
+    object_module, object_name, object_overrides, pairs, parse_settings, region_overrides,
+    retained_config,
+};
 
 #[test]
 fn object_settings_metadata_order_is_last_write_wins_for_names_and_typed_option() {
@@ -144,13 +147,15 @@ fn object_settings_metadata_retains_exact_non_126_sequence_with_duplicates() {
     assert_eq!(
         pairs(retained_config(object)),
         [
-            ("extruder", "1"),
             ("support_material_extruder", "2"),
-            ("sparse_infill_density", "37%"),
             ("unregistered_future_key", "beta"),
-            ("extruder", "2"),
             ("support_material_extruder", "3"),
         ]
+    );
+    assert_eq!(region_overrides(object).extruder, Some(crate::OrcaInt(2)));
+    assert_eq!(
+        region_overrides(object).sparse_infill_density,
+        Some(crate::Percent(37.0))
     );
 }
 
@@ -172,7 +177,7 @@ fn object_settings_metadata_keeps_matrix_and_canonical_key_on_nested_part_path()
     assert_eq!(overrides.layer_height, None);
     assert!(retained_config(object).is_empty());
     assert_eq!(
-        pairs(&object.parts[0].metadata),
+        pairs(&object.parts[0].retained_metadata),
         [
             ("matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
             ("layer_height", "0.77"),
@@ -197,14 +202,25 @@ fn object_settings_metadata_real_fixture_preserves_named_retained_and_part_bound
     assert_eq!(object_name(object), "ksr_fdmtest_v4.drc");
     assert_eq!(object_module(object), "");
     assert_eq!(object_overrides(object), &ObjectOptionOverrides::default());
-    assert_eq!(pairs(retained_config(object)), [("extruder", "1")]);
+    assert!(retained_config(object).is_empty());
+    assert_eq!(region_overrides(object).extruder, Some(crate::OrcaInt(1)));
     let part = object.parts.iter().find(|part| part.id == 1).unwrap();
     assert_eq!(
-        part.metadata
-            .iter()
-            .find(|entry| entry.key == "matrix")
-            .unwrap()
-            .value,
-        "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"
+        pairs(&part.retained_metadata),
+        [
+            ("name", "ksr_fdmtest_v4.drc"),
+            ("matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
+            ("source_file", "ksr_fdmtest_v4.drc"),
+            ("source_object_id", "0"),
+            ("source_volume_id", "0"),
+            ("source_offset_x", "128.5"),
+            ("source_offset_y", "128.5"),
+            ("source_offset_z", "46"),
+        ]
     );
+    assert_eq!(
+        part.region_overrides,
+        crate::options::RegionOptionOverrides::default()
+    );
+    assert_eq!(part.mesh_stat.as_ref().unwrap().edges_fixed, 0);
 }

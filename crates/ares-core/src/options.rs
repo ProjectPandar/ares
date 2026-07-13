@@ -32,6 +32,8 @@ mod printer_options;
 mod process_options;
 mod project_runtime_options;
 mod project_settings;
+mod region_fields;
+mod region_options;
 mod relative_e;
 mod shell_layers;
 mod slow_down_layers;
@@ -61,6 +63,8 @@ pub(crate) use machine_limits::MachineLimits;
 pub(crate) use object_options::ObjectOptionOverrides;
 use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{LayerRoleFanControl, PartCoolingFanRamp};
+#[cfg_attr(not(test), allow(unused_imports))]
+pub(crate) use region_options::RegionOptionOverrides;
 pub use support_different_extruders::DifferentExtrudersSupport;
 pub use update_multi_to_multi::{MultiToMulti2Update, MultiToMultiUpdate};
 pub use update_printer_extruders::{PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate};
@@ -109,6 +113,7 @@ pub use {
         ProjectPresetSourceOptions, ProjectPrintSourceOptions, ProjectRuntimeOptions,
     },
     project_settings::ProjectSettings,
+    region_options::RegionOptions,
 };
 pub(crate) use {chamber_temperature::ChamberTemperatureControl, exhaust_fan::ExhaustFanControl};
 pub use {extruder_index::ExtruderIndexIdMapLookup, filament_type::FilamentTypeDisplay};

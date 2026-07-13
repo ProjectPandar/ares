@@ -1,6 +1,6 @@
 use crate::options::ObjectOptionOverrides;
 
-use super::{object_overrides, pairs, parse_settings, retained_config};
+use super::{object_overrides, pairs, parse_settings, region_overrides, retained_config};
 
 #[test]
 fn object_options_normalization_drivers_remain_ordered_and_outside_sparse_overrides() {
@@ -28,7 +28,6 @@ fn object_options_normalization_drivers_remain_ordered_and_outside_sparse_overri
     assert_eq!(
         pairs(retained_config(first)),
         [
-            ("extruder", "2"),
             ("spiral_mode", "1"),
             ("enable_prime_tower", "1"),
             ("enable_wrapping_detection", "1"),
@@ -37,7 +36,6 @@ fn object_options_normalization_drivers_remain_ordered_and_outside_sparse_overri
     assert_eq!(
         pairs(retained_config(second)),
         [
-            ("extruder", "1"),
             ("spiral_mode", "0"),
             ("enable_prime_tower", "0"),
             ("enable_wrapping_detection", "0"),
@@ -45,4 +43,6 @@ fn object_options_normalization_drivers_remain_ordered_and_outside_sparse_overri
     );
     assert_eq!(object_overrides(first), &ObjectOptionOverrides::default());
     assert_eq!(object_overrides(second), &ObjectOptionOverrides::default());
+    assert_eq!(region_overrides(first).extruder, Some(crate::OrcaInt(2)));
+    assert_eq!(region_overrides(second).extruder, Some(crate::OrcaInt(1)));
 }

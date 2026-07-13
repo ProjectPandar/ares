@@ -53,9 +53,8 @@ fn object_options_fixture_preserves_document_metadata_and_part_matrix() {
     assert_eq!(settings.name, "ksr_fdmtest_v4.drc");
     assert!(settings.module.is_empty());
     assert_eq!(settings.overrides, ObjectOptionOverrides::default());
-    assert_eq!(settings.retained_config.len(), 1);
-    assert_eq!(settings.retained_config[0].key, "extruder");
-    assert_eq!(settings.retained_config[0].value, "1");
+    assert!(settings.retained_config.is_empty());
+    assert_eq!(settings.region_overrides.extruder, Some(OrcaInt(1)));
     assert!(!settings.retained_config.iter().any(|entry| entry.key == "matrix"));
     assert!(!ObjectOptions::DECLARATION_ORDER.contains(&"matrix"));
 
@@ -63,7 +62,7 @@ fn object_options_fixture_preserves_document_metadata_and_part_matrix() {
     let part = settings.parts.iter().find(|value| value.id == 1).unwrap();
     assert_eq!(part.subtype, "normal_part");
     assert_eq!(
-        part.metadata
+        part.retained_metadata
             .iter()
             .find(|entry| entry.key == "matrix")
             .unwrap()

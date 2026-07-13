@@ -1,8 +1,9 @@
 use serde::{Deserialize, Deserializer, de::Error as _};
 
-use crate::options::ObjectOptionOverrides;
+use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 
 mod object_metadata;
+mod part_metadata;
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename = "config")]
@@ -21,6 +22,7 @@ pub(crate) struct ObjectSettings {
     pub name: String,
     pub module: String,
     pub overrides: ObjectOptionOverrides,
+    pub region_overrides: RegionOptionOverrides,
     pub retained_config: Vec<Metadata>,
     pub parts: Vec<PartSettings>,
 }
@@ -49,15 +51,12 @@ impl<'de> Deserialize<'de> for ObjectSettings {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct PartSettings {
-    #[serde(rename = "@id")]
     pub id: u32,
-    #[serde(rename = "@subtype")]
     pub subtype: String,
-    #[serde(rename = "metadata", default)]
-    pub metadata: Vec<Metadata>,
-    #[serde(rename = "mesh_stat")]
+    pub region_overrides: RegionOptionOverrides,
+    pub retained_metadata: Vec<Metadata>,
     pub mesh_stat: Option<MeshStatistics>,
 }
 

@@ -132,9 +132,9 @@ pub use options::{
     ProcessSupportType, ProcessTimelapseType, ProcessWallDirection, ProcessWallSequence,
     ProcessWipeTowerWallType, ProjectBedType, ProjectFilamentMapMode, ProjectGCodeSourceOptions,
     ProjectPresetSourceOptions, ProjectPrintSourceOptions, ProjectRuntimeOptions, ProjectSettings,
-    RammingParameters, RawOverhangFanThreshold, RetractLiftEnforce, RetractLiftEnforces,
-    SliceOptions, SpaceTuple, ThumbnailDefinitions, VariantStride, WipeTowerType, ZHopType,
-    ZHopTypes,
+    RammingParameters, RawOverhangFanThreshold, RegionOptions, RetractLiftEnforce,
+    RetractLiftEnforces, SliceOptions, SpaceTuple, ThumbnailDefinitions, VariantStride,
+    WipeTowerType, ZHopType, ZHopTypes,
 };
 pub use perimeters::{
     LayerPerimeters, PerimeterOptions, PerimeterPath, PerimeterRole, SeamPosition, WallDirection,

@@ -370,8 +370,9 @@ owns 149. The four filament-scope nullable overrides
 `filament_ironing_flow`, `filament_ironing_spacing`,
 `filament_ironing_inset`, and `filament_ironing_speed`, plus the two
 legacy-only shells `ironing_direction` and `wall_infill_order`, are excluded.
-All 149 fields remain `retained-only`; effective region projection is deferred
-to Task 16, while dynamic consumer migration remains in Tasks 20A-20D. The
+Task 10 introduced these 149 fields as retained raw source state. Task 16 now
+reuses the same compile-time inventory for concrete effective region
+projection, while dynamic consumer migration remains in Tasks 20A-20D. The
 concrete key/type ledger is:
 
 - `coBool` (31): `align_infill_direction_to_model`, `alternate_extra_wall`,
@@ -843,7 +844,9 @@ for exactly 66 Task 13 names. The exact three-key complement is
 `filament_retraction_distances_when_cut`; no consumer is migrated in this
 slice.
 
-Region projection remains Task 16. The four legacy transformations
+Task 16 now selects the four nullable region ironing vectors into concrete
+effective region values using the final top-surface filament ID. The four
+legacy transformations
 `bridge_fan_speed`, `cooling`, `overhang_fan_threshold=5%`, and
 `chamber_temperatures` remain Task 19A work at
 `PrintConfig.cpp:8048-8049,8105-8106,8132-8133,8184-8185`. Active sizing,
@@ -1080,12 +1083,14 @@ fields, with one production source for defaults and enum domains.
 
 `ObjectSettings` processes object metadata in XML order. It retains the ID,
 the last assigned `name` and `module`, typed sparse values for the 126 owned
-keys, and every non-object key/value pair in ordered `retained_config`.
+keys, and every entry not consumed as `name`, `module`, an object option, or a
+region option in ordered `retained_config`.
 Repeated object fields and strings are last-write-wins, while a malformed
 later assignment returns a keyed error instead of exposing an earlier valid
 value. Part `matrix` metadata remains on the part path. Noncanonical aliases
-and `extruder` remain ordered text for Tasks 19A and 16 respectively; this
-stage does not invent a global option registry or a legacy fallback.
+remain ordered text for Task 19A; Task 16 now routes canonical region keys and
+`extruder` into typed sparse region overrides. Neither stage invents a global
+option registry or a legacy fallback.
 
 Resolution copies the supplied base, applies only present sparse fields, then
 runs the two post-overlay `PrintObject.cpp:3555-3560` clamps. For
@@ -1100,8 +1105,9 @@ Normalization-driving keys such as `extruder`, `spiral_mode`, and
 reviewed normalization stage.
 
 The real bounded 3MF path finds object ID 2 generically with
-`name=ksr_fdmtest_v4.drc`, no module, ordered retained `extruder=1`, and zero
-typed object overrides. Its two `0.4` nozzle diameters supply
+`name=ksr_fdmtest_v4.drc`, no module, typed region override `extruder=1`, and
+zero typed object overrides or residual object config. Its two `0.4` nozzle
+diameters supply
 `num_extruders=2`; effective object state equals the complete typed process
 base. Exactly 108 fields equal fixed defaults and 18 differ:
 `brim_object_gap`, `brim_width`, `default_acceleration`,
@@ -1116,7 +1122,8 @@ test evidence, not production branches.
 Included behavior is limited to the typed inventory, ordered object-metadata
 handoff, sparse overlay, exact support-filament clamps, normalization
 zero-intersection proof, and real-document verification. Region/extruder
-propagation remains Task 16; G-code projection Task 17; strict top-level
+propagation is now implemented by Task 16; G-code projection remains Task 17;
+strict top-level
 project storage Task 18; legacy rewrites Task 19A; general normalization,
 active sizing, and object association Task 19B; config export Task 19C; and
 consumer migration/removal Tasks 20A-20E. Geometry, slicing, G-code generation,
@@ -1126,6 +1133,64 @@ All six sequential slice filters are green for inventory/base identity,
 ordered metadata, sparse projection, clamps, normalization, and the real
 fixture. Each slice received independent specification and quality approval,
 and the complete pre-documentation 28-file Task 15 diff has fresh literal
-`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. The final full local
-matrix, documentation approval, commit, push, and exact-SHA five-job Tier 1
-result remain pending.
+`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Commit
+`4fbb61282cdb73160414d2d9f67edacf61ba2e42` is pushed, and exact-SHA Tier 1
+run `29273332261` is green across format, Ubuntu/Linux, WASM, macOS, and
+Windows. This satisfies the Task 16 entry gate.
+
+### Task 16: effective region options
+
+Task 16 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is
+`PrintConfig.hpp:1074-1249::PrintRegionConfig`, region construction and
+override application at `PrintObject.cpp:3582-3709`, the model-part and
+modifier call sites at `PrintApply.cpp:786-795,1021-1042`, final ironing reads
+at `Fill/Fill.cpp:1591-1604`, ordered object/volume metadata at
+`Format/bbs_3mf.cpp:2119-2132,4894-5117`, and the string/vector lexical codecs
+at `Config.hpp:994-1067,1087-1158` and
+`Config.cpp:123-144,146-215`. The Rust destination is the public concrete
+`RegionOptions` projection plus crate-private sparse metadata handoff and
+resolution under `ares-core::options`, with ordered object/part decoding under
+`ares-core::project::model_settings`.
+
+One shared compile-time inventory owns the 149 process-region fields and
+expands both raw and effective concrete state. `RegionOptions` adds four
+concrete selected ironing values, for 153 fields total. Presence-preserving
+`RegionOptionOverrides` stores all 149 fields plus `extruder`; direct keyed
+codecs implement comma-separated integer vectors, C-style scalar strings, and
+the quoted/escaped semicolon string-vector grammar without a dynamic value
+map. Object and part metadata are consumed in source order with last write
+winning, consumed region entries omitted from residual storage, and part
+structural metadata retained in exact order.
+
+The crate-private `RegionBase` ADT makes the two upstream bases explicit. A
+model part starts from process state and applies object, volume, material, then
+layer-range overrides. A modifier starts from an already-resolved parent,
+clears all six feature-explicit mask bits, and applies only volume then
+material; object and layer-range inputs are unrepresentable in that branch.
+For each feature filament ID, positive explicit values assign and set the mask,
+nonpositive values clear it without assigning, and a positive same-scope
+`extruder` fills only clear features. Finalization maps each ID at or below zero
+or above `num_extruders` to one. Sparse density below `0.00011` becomes zero
+and values above 100 become 100, with both equalities retained. Every non-None
+fuzzy variant becomes None when point distance is below `0.01` or thickness is
+below `0.001`, again retaining equality. Only then does the final clamped
+top-surface filament ID select all four nullable filament ironing vectors. A
+nil selected value inherits its corresponding final ordinary ironing value.
+
+The real project proves object `extruder=1`, all six effective feature IDs
+equal to one, selected filament index zero, and nil inheritance to concrete
+`10%` flow, `0.15` spacing, `0.21` inset, and `30` speed. These are typed
+fixture observations, not production identity branches. Included behavior is
+limited to the 149+4 projection, ordered metadata/codecs, both precedence
+branches and feature mask, six ID clamps, density/fuzzy normalization, and
+final ironing selection. G-code projection remains Task 17; active sizing,
+association, and cardinality errors remain Task 19B; consumer migration remains
+Tasks 20A-20E. Modifier graph construction, region deduplication, geometry,
+slicing, G-code generation, and final byte parity remain deferred.
+
+All seven sequential TDD slices received independent specification and quality
+approval. The frozen 34-file whole diff also received literal
+`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Documentation review,
+the full local release gate, commit, push, and exact-SHA five-job Tier 1 result
+remain pending; Task 16 does not claim complete slicing or G-code parity.

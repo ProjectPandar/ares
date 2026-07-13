@@ -2,7 +2,10 @@ use crate::project::{
     model_settings::{Metadata, ModelSettings, ObjectSettings},
     xml::{XmlRole, deserialize_xml},
 };
-use crate::{SliceError, options::ObjectOptionOverrides};
+use crate::{
+    SliceError,
+    options::{ObjectOptionOverrides, RegionOptionOverrides},
+};
 
 mod cases;
 mod decode;
@@ -16,6 +19,7 @@ mod document;
 mod expected;
 mod normalization;
 mod projection;
+mod region_handoff;
 
 fn parse_settings(xml: &str) -> Result<ModelSettings, SliceError> {
     deserialize_xml(xml.as_bytes(), XmlRole::ModelSettings)
@@ -43,6 +47,10 @@ fn object_module(object: &ObjectSettings) -> &str {
 
 fn retained_config(object: &ObjectSettings) -> &[Metadata] {
     &object.retained_config
+}
+
+fn region_overrides(object: &ObjectSettings) -> &RegionOptionOverrides {
+    &object.region_overrides
 }
 
 fn pairs(entries: &[Metadata]) -> Vec<(&str, &str)> {

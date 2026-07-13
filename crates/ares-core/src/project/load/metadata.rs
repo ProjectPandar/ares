@@ -20,7 +20,7 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
     for object in &settings.objects {
         let mut parts = BTreeMap::new();
         for part in &object.parts {
-            let transform = match optional_value(&part.metadata, "matrix")? {
+            let transform = match optional_value(&part.retained_metadata, "matrix")? {
                 Some(value) => Transform3d::parse_row_major(value)?,
                 None => Transform3d::IDENTITY,
             };

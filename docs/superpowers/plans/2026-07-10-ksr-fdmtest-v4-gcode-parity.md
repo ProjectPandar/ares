@@ -1775,12 +1775,14 @@ config-block export to Task 19C; dynamic consumer migration/removal to Tasks
 
 ### Task 16: Effective Region Options (153-Field Projection)
 
-**Fixed upstream boundary:** `PrintConfig.hpp:1074-1476::PrintRegionConfig`,
+**Fixed upstream boundary:** `PrintConfig.hpp:1074-1249::PrintRegionConfig`,
 `PrintObject.cpp:3582-3709::apply_to_print_region_config` and
 `region_config_from_model_volume`, the model-part path at
-`PrintApply.cpp:793-795,1021-1027`, the selected filament ironing reads at
+`PrintApply.cpp:786-795,1021-1042`, the selected filament ironing reads at
 `Fill/Fill.cpp:1591-1604`, and object/volume metadata loading at
-`Format/bbs_3mf.cpp:2119-2132,4894-5117`, all at fixed commit
+`Format/bbs_3mf.cpp:2119-2132,4894-5117`, with exact metadata string codecs at
+`Config.cpp:123-144::unescape_string_cstyle` and
+`Config.cpp:146-215::unescape_strings_cstyle`, all at fixed commit
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 The exact effective inventory is 153 real fields: the 149 typed process-region
@@ -1791,15 +1793,19 @@ fields plus the four nullable filament vectors `filament_ironing_flow`,
 additional effective fields.
 
 **Files:**
-- Create: `options/region_options.rs` with private `fields`, `overrides`, and
-  `merge` siblings
+- Create: `options/region_fields.rs` as the single compile-time 149-field
+  inventory shared by the existing process source and the effective projection
+- Create: `options/region_options.rs` with private `overrides` and `merge`
+  siblings
 - Create: `options/tests/region_options.rs` with focused inventory,
   precedence, filament, normalization, and fixture siblings
 - Create or modify: `project/model_settings/part_metadata.rs`
 - Modify: `project/model_settings.rs`, the Task 15
-  `project/model_settings/object_metadata.rs` handoff, `options.rs`, `lib.rs`,
-  focused project/model-settings tests, `docs/architecture/option-parity-v4.md`,
-  and `docs/roadmap.md`
+  `project/model_settings/object_metadata.rs` handoff,
+  `project/load/metadata.rs`, `options/process_options/region_source.rs`,
+  `options/tests.rs`, `options.rs`, `lib.rs`, focused project-document,
+  model-settings, process-region, and matrix/import tests,
+  `docs/architecture/option-parity-v4.md`, and `docs/roadmap.md`
 
 **Interfaces:**
 - Produces public non-raw `RegionOptions` with 153 concrete fields and
@@ -1809,17 +1815,25 @@ additional effective fields.
 - The exact pure resolution boundary is:
 
   ```rust,ignore
+  pub(crate) enum RegionBase<'a> {
+      ModelPart {
+          process: &'a ProcessRegionSourceOptions,
+          object: Option<&'a RegionOptionOverrides>,
+          layer_range: Option<&'a RegionOptionOverrides>,
+      },
+      Modifier {
+          parent: &'a RegionOptions,
+      },
+  }
+
   pub(crate) struct RegionOverrideSources<'a> {
-      pub object: Option<&'a RegionOptionOverrides>,
+      pub base: RegionBase<'a>,
       pub volume: &'a RegionOptionOverrides,
       pub material: Option<&'a RegionOptionOverrides>,
-      pub layer_range: Option<&'a RegionOptionOverrides>,
-      pub is_model_part: bool,
   }
 
   impl RegionOptions {
       pub(crate) fn resolve(
-          process: &ProcessRegionSourceOptions,
           filament: &FilamentRegionSourceOptions,
           sources: RegionOverrideSources<'_>,
           num_extruders: usize,
@@ -1831,9 +1845,46 @@ additional effective fields.
   erased value. XML lexical and active-vector cardinality errors are handled at
   the external typed document/full-config boundary; trusted concrete merge,
   clamps, and selection are infallible.
+- `RegionBase::ModelPart` projects the 149 process fields and seeds its feature
+  mask from positive process/default feature IDs before applying object,
+  volume, material, and layer-range sources. `RegionBase::Modifier` clones the
+  already-resolved parent's 149 region fields, starts the feature mask entirely
+  clear even when parent feature IDs are positive, and applies only volume and
+  material. Both branches recompute the four selected ironing scalars after
+  final clamps and normalization. This directly represents upstream's
+  `default_or_parent_region_config` parameter without reconstructing a parent
+  through `ProcessRegionSourceOptions` or carrying a contradictory boolean.
+- The crate-private resolver has a trusted precondition that
+  `num_extruders > 0` and each of the four filament vectors has exactly that
+  cardinality. Task 19B owns the active-vector sizing/validation boundary before
+  the first production resolver call. Task 16 tests use only inputs satisfying
+  that precondition; the internal merge does not add a fallback or duplicate
+  boundary validation.
 - Task 16 decodes Task 15's ordered `ObjectSettings::retained_config` into the
   object `RegionOptionOverrides`, including `extruder`, before effective
-  resolution. It never recovers region state from `ObjectOptions`.
+  resolution. Consumed region entries are not duplicated in retained raw
+  metadata, while every remaining non-Task-16 entry stays in XML order for
+  Tasks 18/19A/19B. It never recovers region state from `ObjectOptions`.
+- Part metadata follows the same split: all 149 canonical region keys and
+  model-only `extruder` become typed sparse overrides with repeated keys applied
+  in XML order and last write winning. The non-Task-16 structural keys `name`,
+  `volume_type`, `part_type`, `matrix`, `mesh_shared`, `source_file`,
+  `source_object_id`, `source_volume_id`, `source_offset_x`, `source_offset_y`,
+  `source_offset_z`, `source_in_inches`, and `source_in_meters` remain in an
+  ordered retained document field for their existing project loader/later
+  owners; the typed `mesh_stat` element remains named. Region/extruder entries
+  are removed from that retained field rather than duplicated. Existing
+  structural duplicate validation remains at the project metadata boundary.
+- Metadata decoding uses the fixed `Config.hpp:994-1067,1087-1158` and
+  `Config.cpp:123-215` lexical forms: comma-separated non-null integer vectors,
+  C-style escaped scalar strings, and the exact quoted/escaped semicolon vector
+  parser. The vector codec must preserve Orca's treatment of quoted semicolons,
+  spaces/tabs between entries, consecutive/trailing separators, empty input,
+  and malformed quotes/escapes; it may not unescape the whole input and then
+  split on semicolons. The three scalar string region fields,
+  `print_extruder_id`, and `print_extruder_variant` receive explicit codecs;
+  the remaining concrete scalar/enum wrappers use keyed direct lexical
+  decoding. No metadata path round-trips through JSON or an erased value.
 - The four ironing fields are selected with the final clamped
   `top_surface_filament_id - 1`; there is no independent caller-provided active
   filament that can disagree with the resolved region. Selected nil inherits
@@ -1842,7 +1893,18 @@ additional effective fields.
 - [ ] **Step 1: RED/GREEN inventory, handoff, and source precedence**
 
   Assert 149 + 4, the fixed 149-field type histogram, unique keys, and concrete
-  selected ironing outputs. For model parts, prove exact precedence:
+  selected ironing outputs. Freeze the resolved 153-field histogram as 31
+  bool, 14 enum, 52 float, 24 float-or-percent, 15 int, one integer vector, 12
+  percent, three string, and one string-vector field. Prove direct sparse
+  metadata dispatch for all 149 keys, including the two vector codecs,
+  last-write-wins region/extruder duplicates, keyed malformed-value errors, and
+  ordered retention of every remaining object/part entry. For model parts,
+  prove exact precedence:
+
+  Freeze scalar string cases for trailing-backslash rejection, `\r`, `\n`, and
+  generic escaped characters. Freeze string-vector cases for quoted semicolons,
+  quoted escapes, leading/inter-item spaces and tabs, consecutive and trailing
+  separators, empty input, and malformed quote/escape rejection.
 
   ```text
   process/default region -> ModelObject -> volume -> material -> layer range
@@ -1850,13 +1912,19 @@ additional effective fields.
   ```
 
   Preserve the upstream feature-override mask across scopes: a positive
-  feature ID is explicit, explicit zero clears that flag and permits a later
-  same-scope `extruder` fallback, and a nonzero process/default feature ID
-  starts explicit. Synthetic sources must use different values at every stage
-  so an omission or swap fails. The real fixture must consume object
-  `extruder=1`; with its six process feature IDs at zero, all six effective IDs
-  become one. A modifier begins with its already-resolved parent region and
-  applies volume then material; modifier-parent graph construction is deferred.
+  feature ID is explicit; any nonpositive feature ID clears that flag without
+  assigning the nonpositive value; a positive same-scope `extruder` fallback
+  then applies only to clear features. Without such a fallback the prior field
+  value remains while its mask stays clear, allowing a later scope's extruder
+  fallback to replace it. A positive process/default feature ID starts explicit
+  only for model parts. Synthetic sources must use different values at every
+  stage so an omission or swap fails, and must distinguish negative/no-extruder
+  mask clearing from naive assign-then-final-clamp behavior. The real fixture
+  must consume object `extruder=1`; with its six process feature IDs at zero,
+  all six effective IDs become one. A modifier begins with its already-resolved
+  parent region, starts with all feature-mask bits clear, applies volume then
+  material, and never reapplies object or layer-range sources;
+  modifier-parent graph construction is deferred.
 
 - [ ] **Step 2: RED/GREEN six clamps, final normalization, and ironing selection**
 
@@ -1864,11 +1932,15 @@ additional effective fields.
   each `<= 0` or `> num_extruders` value becomes one while `1..=num_extruders`
   stays unchanged. Do not reuse Task 15's strict-`>` helper.
 
-  Prove sparse density below `0.00011` becomes zero and otherwise caps at 100;
-  enabled fuzzy skin disables when point distance is below `0.01` or thickness
-  below `0.001`. For all four filament vectors, selected non-nil overrides the
-  ordinary region scalar and selected nil inherits it. The fixture selects
-  index zero and inherits `10%`, `0.15`, `0.21`, and `30` respectively.
+  `Percent` stores Orca's percentage number directly, so prove density values
+  below `0.00011` become `Percent(0.0)`, equality remains unchanged, and values
+  above 100 cap at `Percent(100.0)`. For fuzzy skin, every
+  `ProcessFuzzySkinType` other than `None` (including `Disabled`) enters the
+  fixed guard; it becomes `None`, not `Disabled`, when point distance is below
+  `0.01` or thickness below `0.001`. Test both strict thresholds at equality.
+  For all four filament vectors, selected non-nil overrides the ordinary region
+  scalar and selected nil inherits it. The fixture selects index zero and
+  inherits `10%`, `0.15`, `0.21`, and `30` respectively.
 
 - [ ] **Step 3: Implement direct typed metadata and merge dispatch**
 
