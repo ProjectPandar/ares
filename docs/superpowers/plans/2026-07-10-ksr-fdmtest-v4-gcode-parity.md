@@ -919,30 +919,121 @@ The following ownership is fixed for this plan. Additional sibling files are all
 
 ### Task 12: Filament G-code-Owned Raw Options (53 Fields)
 
-**Upstream boundary:** Fixed-tag filament raw scope intersected with `PrintConfig.hpp::GCodeConfig`; filament temperature, cooling, retraction, material, and custom-G-code definitions in `PrintConfig.cpp`.
+**Upstream boundary:** Select the 52 live fixed-tag filament preset names from
+`Preset.cpp:1309-1346` that intersect fixed
+`PrintConfig.hpp:1299-1476` `GCodeConfig`, then add the separately project-owned
+`filament_colour` from `PresetBundle.cpp:43-58,2652-2658,2795-2802`. The latter
+is commented out of the preset list at `Preset.cpp:1309` but remains a
+`GCodeConfig` field at `PrintConfig.hpp:1333` with its definition at
+`PrintConfig.cpp:2455`. The resulting exact 53 declarations are at
+`PrintConfig.hpp:1308-1464` and their definitions are in `PrintConfig.cpp`. Raw
+nullable and non-nullable float, int, string, and bool
+vector grammar is owned by generic `Config.hpp:624-663` plus the exact float,
+int, string, and bool boundaries at `Config.hpp:812-952,995-1085,1118-1163`
+and `Config.hpp:1857-1967`; JSON array loading is at
+`Config.cpp:830-870,950-1004` and 3MF JSON array emission is at
+`Config.cpp:1464-1496`. The exact ten variant-stride fields are named by
+`PrintConfig.cpp:8375-8415`; lookup and 8-to-active mapping remain deferred from
+this raw slice to Task 19B (`PrintConfig.cpp:9004-9054,9805-10023`,
+`PrintApply.cpp:1164-1173`, and `Print.cpp:3166-3175`).
 
 **Files:**
 - Create: `options/filament_options.rs`
+- Create: `options/filament_options/wire.rs`
 - Create: `options/filament_options/gcode_source.rs`
+- Create: `options/filament_options/gcode_source/wire.rs`
 - Create: `options/tests/filament_gcode_source.rs`
-- Modify: `options/project_settings.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/tests/filament_gcode_source/direct_dispatch.rs`
+- Create: `options/tests/filament_gcode_source/expected.rs`
+- Create: `options/tests/filament_gcode_source/type_assertions.rs`
+- Create: `options/tests/filament_gcode_source/vectors.rs`
+- Modify: `options.rs`, `lib.rs`, `options/tests.rs`,
+  `options/project_settings.rs`, `docs/architecture/option-parity-v4.md`,
+  `docs/roadmap.md`
 
 **Interfaces:**
-- Produces `FilamentGCodeSourceOptions` with 53 concrete resolved vector fields plus its private typed builder.
-- Starts `FilamentOptions` raw ownership.
+- Produces `FilamentGCodeSourceOptions` with 53 concrete raw typed vector
+  fields plus its private typed builder; it does not produce resolved or active
+  filament values.
+- Starts `FilamentOptions` raw ownership with a public `gcode` child and adds a
+  public `filament: FilamentOptions` aggregate to `ProjectSettings`.
+- Both standalone and flat-parent serialization stream the same 53 entries in
+  global lexical order; the parent does not emit a nested `gcode` object or
+  buffer through a DOM.
 
-- [ ] **Step 1: Add RED tests for 53 keys and per-filament cardinality**
+- [ ] **Step 1: Add RED exact-inventory, raw-vector, and dispatch tests**
 
-  Cover two active filament values, original 8-entry source vectors, temperature vectors, cooling and fan fields, material density/diameter/cost, retraction, multi-line start/end G-code, enum labels, `nil`, empty strings, and wrong vector lengths.
+  Prove the exact 53-key inventory is unique, belongs to filament raw scope and
+  `GCodeConfig`, and has the exact histogram of eight `coBools`, 27 `coFloats`,
+  seven `coInts`, and 11 `coStrings`. All 53 wire values are arrays. The exact
+  seven element-nullable fields are `filament_adaptive_volumetric_speed`,
+  `filament_cooling_before_tower`, `filament_flow_ratio`,
+  `filament_flush_temp`, `filament_flush_volumetric_speed`,
+  `long_retractions_when_ec`, and `retraction_distances_when_ec`; test their
+  concrete `Nullable<T>` element types and exact `"nil"` round-trip. Non-nullable
+  numeric and boolean arrays reject `"nil"`; string arrays retain it as an
+  ordinary raw string.
 
-- [ ] **Step 2: Implement typed vector fields**
+  Assert the fixed HPP declaration order separately from lexical wire order and
+  the exact singleton-vector defaults, including the single-space G-code
+  defaults and embedded newlines. Fixture tests must preserve 43 two-element
+  vectors and the exact ten eight-element variant vectors without shrinking or
+  expansion. All 53 fixture vectors differ from singleton defaults by source
+  cardinality, while exactly 17 also differ after cardinality is ignored; add a
+  valid non-default typed-state test through both child and flat parent dispatch
+  for every field so repeated fixture defaults cannot conceal a bad type or
+  dispatch arm.
 
-  Deserialize each upstream option directly into `Vec<T>` or a dedicated typed structure. Preserve source cardinality in raw state; do not shrink to active values during deserialization. Record the stride/variant policy only as typed metadata for Task 19B normalization.
+  Accept and byte-round-trip arbitrary valid raw lengths, including empty,
+  one-, three-, five-, and eight-element vectors. Reject a scalar, object, or
+  null top-level value and invalid element lexical shapes with an error naming
+  the key; do not reject a vector merely because its length differs from the
+  fixture. Cover duplicate and unknown keys, strict child ownership, globally
+  lexical 53-key bytes, the exact multiline start/end G-code bytes, empty
+  strings, and raw structured-string bytes. `filament_type` is an open string
+  suggestion domain, `filament_extruder_variant` remains raw strings carrying
+  four normalization tokens, and `filament_printable` is an integer bitmask;
+  none is a Task 12 enum. Add an explicit aggregate-boundary RED assertion that
+  `ProjectSettings::default().filament == FilamentOptions::default()` and that
+  its public `.filament.gcode` child has the concrete default type, so omitting
+  the `ProjectSettings` integration cannot leave focused tests green.
+
+- [ ] **Step 2: Implement the 53 raw typed vectors without normalization**
+
+  Preserve production field layout in exact filtered HPP declaration order and
+  use the existing raw semantic wrappers for
+  `adaptive_pressure_advance_model` (`CsvTable`),
+  `filament_extruder_variant` (`VariantStride`),
+  `filament_ramming_parameters` (`RammingParameters`), and
+  `volumetric_speed_coefficients` (`SpaceTuple`). These wrappers preserve raw
+  string contents in Task 12; they do not select active entries, expand a
+  stride, or interpret a slicing model. The other fields use the concrete Orca
+  vector wrappers. Represent the seven nullable arrays directly as
+  `Vec<Nullable<OrcaBool>>`, `Vec<Nullable<OrcaFloat>>`, or
+  `Vec<Nullable<OrcaInt>>`; do not couple filament ownership to printer-owned
+  nullable wrapper names or create one-use filament wrapper types. Keep all
+  defaults as singleton vectors and deserialize arbitrary valid lengths
+  directly.
+
+  Record but do not apply open-enum suggestions, the four canonical extruder
+  variant tokens, the `Normal`/`Big Traffic` and `ASA-Aero` legacy conversions,
+  or the seven `omit_when_nil` export rules. The exact fixture variant mapping
+  selects raw indices `[0,4]`, but active selection and cross-field cardinality
+  validation belong to Task 19B; nullable export belongs to Task 19C. Record the
+  51 current production literal collisions and exact two-key complement
+  (`adaptive_pressure_advance_model`,
+  `adaptive_pressure_advance_overhangs`) without migrating consumers; consumer
+  migration remains Tasks 20A and 20D and legacy parser removal remains Task
+  20E. Keep every changed production and test module below 400 physical LOC.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 
+  In addition to the standard workspace nextest, warning-denying Clippy,
+  rustfmt, WASM, dynamic-value, and diff gates, run a physical-LOC audit over
+  every changed production and test Rust module and fail the task at 400 lines.
+
   ```powershell
-  cargo nextest run -p ares-core filament_gcode_source
+  cargo +1.91.0 nextest run -p ares-core filament_gcode_source
   git commit -m "feat(config): type filament gcode options"
   git push
   ```

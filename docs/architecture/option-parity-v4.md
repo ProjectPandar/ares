@@ -626,3 +626,137 @@ Task 17. Legacy canonicalization remains Task 19A, full-print resolution and
 FDM normalization remain Task 19B, existing behavioral consumers migrate
 across Tasks 20A-20D, and the final legacy compatibility parser is removed
 only in Task 20E.
+
+### Task 12: filament G-code source
+
+The first filament raw child combines the fixed-source intersection of 52
+live filament preset names with `GCodeConfig` plus the separately
+project-owned `filament_colour` at OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The live preset boundary is
+`Preset.cpp:1309-1346`; project ownership is explicit at
+`PresetBundle.cpp:43-58,2652-2658,2795-2802`; and `GCodeConfig` is bounded by
+`PrintConfig.hpp:1299-1476`. `filament_colour` is commented out at
+`Preset.cpp:1309` but remains declared at `PrintConfig.hpp:1333` and defined
+at `PrintConfig.cpp:2455`. The resulting boundary contains the 53 declarations
+at `PrintConfig.hpp:1308-1464`; their definitions and singleton defaults are
+in `PrintConfig.cpp:2046-2401,2447-2925,5229-5425,5949,6700`. Generic vector,
+nullable-element, JSON-array load, and 3MF JSON-array emission behavior comes
+from fixed `Config.hpp:624-663,812-952,995-1085,1118-1163,1857-1967` and
+`Config.cpp:830-870,950-1004,1464-1496`.
+
+All 53 top-level wire values are arrays and there are no enums in this slice.
+The exact type ledger is:
+
+- `coBools` (8): `adaptive_pressure_advance`,
+  `adaptive_pressure_advance_overhangs`, `enable_pressure_advance`,
+  `filament_adaptive_volumetric_speed`, `filament_is_support`,
+  `filament_multitool_ramming`, `filament_soluble`, and
+  `long_retractions_when_ec`.
+- `coFloats` (27): `adaptive_pressure_advance_bridges`,
+  `filament_change_length`, `filament_cooling_before_tower`,
+  `filament_cooling_final_speed`, `filament_cooling_initial_speed`,
+  `filament_cost`, `filament_density`, `filament_diameter`,
+  `filament_flow_ratio`, `filament_flush_volumetric_speed`,
+  `filament_loading_speed`, `filament_loading_speed_start`,
+  `filament_max_volumetric_speed`,
+  `filament_minimal_purge_on_wipe_tower`, `filament_multitool_ramming_flow`,
+  `filament_multitool_ramming_volume`, `filament_stamping_distance`,
+  `filament_stamping_loading_speed`, `filament_toolchange_delay`,
+  `filament_tower_interface_pre_extrusion_dist`,
+  `filament_tower_interface_pre_extrusion_length`,
+  `filament_tower_interface_purge_volume`, `filament_tower_ironing_area`,
+  `filament_unloading_speed`, `filament_unloading_speed_start`,
+  `pressure_advance`, and `retraction_distances_when_ec`.
+- `coInts` (7): `filament_adhesiveness_category`,
+  `filament_cooling_moves`, `filament_flush_temp`, `filament_printable`,
+  `filament_tower_interface_print_temp`, `required_nozzle_HRC`, and
+  `temperature_vitrification`.
+- `coStrings` (11): `adaptive_pressure_advance_model`,
+  `default_filament_colour`, `filament_change_extrusion_role_gcode`,
+  `filament_colour`, `filament_end_gcode`, `filament_extruder_variant`,
+  `filament_ramming_parameters`, `filament_start_gcode`, `filament_type`,
+  `filament_vendor`, and `volumetric_speed_coefficients`.
+
+The exact seven element-nullable arrays are
+`filament_adaptive_volumetric_speed` and `long_retractions_when_ec` as direct
+`Vec<Nullable<OrcaBool>>`, `filament_flow_ratio`,
+`filament_flush_volumetric_speed`, `filament_cooling_before_tower`, and
+`retraction_distances_when_ec` as direct `Vec<Nullable<OrcaFloat>>`, and
+`filament_flush_temp` as direct `Vec<Nullable<OrcaInt>>`. They preserve an
+exact `"nil"` element. The other numeric and boolean arrays reject `"nil"`,
+while string arrays retain it as ordinary string content. No printer-owned
+nullable-vector wrapper or filament-only nullable wrapper is introduced.
+
+Every fixed default is a singleton vector, including the single-space
+`filament_start_gcode` and `filament_end_gcode` defaults, the embedded-newline
+`adaptive_pressure_advance_model` default, and the exact raw ramming and
+space-tuple strings. The implementation uses the raw semantic wrappers
+`CsvTable` for `adaptive_pressure_advance_model`, `VariantStride` for
+`filament_extruder_variant`, `RammingParameters` for
+`filament_ramming_parameters`, and `SpaceTuple` for
+`volumetric_speed_coefficients`; these wrappers preserve strings without
+interpreting their contents. `filament_type` remains an open suggestion
+string, `filament_extruder_variant` remains a raw string vector, and
+`filament_printable` remains an integer bitmask.
+
+The fixture contains exactly 43 vectors of length two and ten vectors of
+length eight. The ten are `filament_adaptive_volumetric_speed`,
+`filament_cooling_before_tower`, `filament_extruder_variant`,
+`filament_flow_ratio`, `filament_flush_temp`,
+`filament_flush_volumetric_speed`, `filament_max_volumetric_speed`,
+`long_retractions_when_ec`, `retraction_distances_when_ec`, and
+`volumetric_speed_coefficients`, matching the fixed variant-stride set at
+`PrintConfig.cpp:8375-8415`. All 53 fixture values differ from singleton
+defaults by cardinality. After cardinality is ignored, exactly 17 still
+differ: `filament_adhesiveness_category`, `filament_change_length`,
+`filament_colour`, `filament_cost`, `filament_density`,
+`filament_end_gcode`, `filament_extruder_variant`, `filament_flow_ratio`,
+`filament_max_volumetric_speed`, `filament_start_gcode`,
+`filament_tower_interface_print_temp`, `filament_vendor`,
+`long_retractions_when_ec`, `required_nozzle_HRC`,
+`retraction_distances_when_ec`, `temperature_vitrification`, and
+`volumetric_speed_coefficients`. Raw parsing and serialization preserve any
+valid vector length, including empty vectors; this layer neither imposes the
+fixture cardinality nor collapses eight-value vectors to active values.
+
+`FilamentGCodeSourceOptions` preserves the fixed filtered HPP declaration
+order in production and serializes independently in bytewise lexical key
+order. `FilamentOptions` owns public `gcode: FilamentGCodeSourceOptions` and
+directly streams the same flat lexical 53-key map without a nested `gcode`
+object, serde flattening, or DOM buffering. `ProjectSettings` adds public
+`filament: FilamentOptions`, whose aggregate default is the filament default.
+
+A production-literal audit, excluding registry/tests and these typed Task 12
+declarations, records 51 of the 53 names as existing compatibility-consumer
+collisions. The exact two-key complement is
+`adaptive_pressure_advance_model` and
+`adaptive_pressure_advance_overhangs`. This task records that boundary but
+does not migrate a consumer. Fixed `PrintConfig.cpp:8153-8154,8219` legacy
+conversions for `Normal`/`Big Traffic` and `ASA-Aero` remain Task 19A work.
+The `[0,4]` active selection, variant resizing, cross-field cardinality, and
+full FDM normalization remain Task 19B work at fixed
+`PrintConfig.cpp:9004-9054,9805-10023`, `PrintApply.cpp:1164-1173`, and
+`Print.cpp:3166-3175`. The seven nullable `omit_when_nil` export rules remain
+Task 19C work. Existing option/profile and G-code consumer migrations remain
+Tasks 20A and 20D respectively, and the compatibility parser is removed only
+in Task 20E.
+
+TDD first produced the expected missing-interface compiler failures for
+`FilamentGCodeSourceOptions`, `FilamentOptions`, and
+`ProjectSettings::filament`. The completed focused matrix has 14 tests proving
+the exact inventory and histogram, fixed declaration order, singleton
+defaults, fixture cardinality and bytes, the exact 17 payload overrides,
+concrete field types, every-field child and flat-parent non-default dispatch,
+all seven nullable vectors, arbitrary valid lengths, keyed invalid shapes,
+duplicate and unknown keys, lexical wire order, raw structured strings, and
+the aggregate boundary.
+
+Reviewed local verification passes all 14 focused tests, 62 adjacent typed
+printer/process tests, all 4,274 workspace tests with three configured skips,
+and the 22-test dynamic-value audit with one configured skip. Warning-denying
+`ares-core` all-target Clippy, rustfmt, native `ares-core`, both `ares-core`
+and `ares-wasm` WASM checks, tracked and untracked whitespace checks, and the
+physical-LOC gate are green; the largest changed Rust module is 280 lines.
+Independent fixed-source, TDD-plan, wrapper, inventory, frozen-byte quality,
+and final specification reviews approve the slice under the user-approved
+temporary OpenCode bypass.

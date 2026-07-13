@@ -424,7 +424,51 @@ process tests, 4,260 workspace tests with three configured skips,
 warning-denying workspace all-target Clippy, rustfmt, both WASM checks, the
 22-test dynamic-value audit with one configured skip, the diff whitespace
 gate, and the physical-LOC audit for every changed production and test module.
-Task 12 is next: type the exact 53 filament raw options owned by `GCodeConfig`.
+
+### 2026-07-13 Type the filament G-code-source group
+
+Task 12 ports 52 live filament preset names in the fixed OrcaSlicer v2.4.2
+`Preset.cpp:1309-1346` / `PrintConfig.hpp:1299-1476` `GCodeConfig`
+intersection plus the separately project-owned `filament_colour` from
+`PresetBundle.cpp:43-58,2652-2658,2795-2802`. The resulting exact 53
+declarations are fixed at `PrintConfig.hpp:1308-1464`, with
+definitions/defaults in `PrintConfig.cpp` and raw array/nullable serde
+behavior in `Config.hpp` and `Config.cpp`. The exact histogram is eight bool
+vectors, 27 float vectors, seven int vectors, and 11 string vectors. All 53
+wire values are arrays and none is a Task 12 enum.
+
+The seven nullable-element fields use direct `Vec<Nullable<T>>` storage. The
+four raw semantic string-vector wrappers are `CsvTable`, `VariantStride`,
+`RammingParameters`, and `SpaceTuple`; they retain bytes without parsing or
+normalization. Exact upstream defaults remain singleton vectors. The fixture
+retains 43 two-element vectors plus the ten fixed variant-stride eight-element
+vectors, and exactly 17 payloads differ from defaults after cardinality is
+ignored. Arbitrary valid raw lengths remain accepted, so Task 12 does not
+encode the fixture's active-filament count or its later `[0,4]` selection.
+
+`FilamentOptions` exposes one flat `gcode` child, and `ProjectSettings`
+exposes the typed filament aggregate. Standalone child and parent output use
+the same global lexical 53-key map without nesting, flattening, or DOM
+buffering. The existing compatibility code has literal collisions for 51
+keys; the exact complement is `adaptive_pressure_advance_model` and
+`adaptive_pressure_advance_overhangs`, and no consumer is migrated here.
+Legacy conversions remain Task 19A, active sizing and FDM normalization remain
+Task 19B, nullable config-block omission remains Task 19C, consumer migrations
+remain Tasks 20A and 20D, and final compatibility-parser removal remains Task
+20E.
+
+TDD began with the expected missing Task 12 types and
+`ProjectSettings::filament`. Reviewed local gates pass 14 focused tests, 62
+adjacent typed printer/process tests, 4,274 workspace tests with three
+configured skips, the 22-test dynamic-value audit with one configured skip,
+warning-denying `ares-core` all-target Clippy, rustfmt, native and WASM checks,
+tracked/untracked whitespace checks, and the physical-LOC audit. Independent
+fixed-source, TDD-plan, wrapper, inventory, frozen-byte quality, and final
+specification reviews approve the slice under the user-approved temporary
+OpenCode bypass.
+
+Task 13 is next: type the remaining 69 filament raw fields and nullable
+overrides to complete exact 122-key filament ownership.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

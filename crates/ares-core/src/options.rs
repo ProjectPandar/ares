@@ -10,6 +10,7 @@ mod brim;
 mod config_types;
 #[rustfmt::skip]
 option_modules!(pub(crate) filament_config_export, filament_count, filament_override, filament_type, flow_ratios, gap_fill, hardware, infill, small_area_infill_flow);
+mod filament_options;
 #[rustfmt::skip]
 option_modules!(auxiliary_fan, bed_temperature, chamber_temperature, custom_gcode, filament_change, exhaust_fan, fan_speedup, filament_cooling_before_tower, flush_placeholders, gcode_flavor, gcode_output, nozzle_temperature, part_cooling_fan, preheat, timelapse_type, temperature_vector, temperature_vitrification);
 
@@ -67,6 +68,7 @@ pub use {
         Point2d, Point2dGroups, Point2dList, PrinterTechnologies, PrinterTechnology,
         RammingParameters, SpaceTuple, VariantStride,
     },
+    filament_options::{FilamentGCodeSourceOptions, FilamentOptions},
     gcode_flavor::GCodeFlavor,
     hardware::HardwareOptions,
     infill::{InfillOptions, InfillPattern},

@@ -17,6 +17,7 @@ mod fdm_normalization;
 mod fdm_normalization_prime_tower;
 mod fdm_normalization_prime_tower_changed_keys;
 mod filament_count;
+mod filament_gcode_source;
 mod filament_flow_ratio;
 mod filament_max_volumetric_speed;
 mod filament_type;
