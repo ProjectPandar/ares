@@ -1989,33 +1989,234 @@ additional effective fields.
 
 ---
 
-### Task 17: Effective G-code Options (149-Field Projection)
+### Task 17: Registered Pre-normalization GCodeConfig Projection (149 Fields)
 
-**Upstream boundary:** `PrintConfig.hpp::GCodeConfig`; fixed-tag cross-scope ownership: Printer 62 + Process 17 + Filament 53 + Residual 17.
+**Fixed upstream boundary:** OrcaSlicer commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`, specifically
+`PrintConfig.hpp:759-776::StaticPrintConfig::StaticCache::finalize`,
+`PrintConfig.hpp:838-865::PRINT_CONFIG_CLASS_DEFINE`,
+`PrintConfig.hpp:1299-1476::GCodeConfig`,
+`PrintConfig.hpp:1479-1482::PrintConfig`,
+`PrintConfig.hpp:1662-1666::FullPrintConfig`, and cache initialization at
+`PrintConfig.cpp:10571-10585`.
+
+`GCodeConfig` contains 151 active C++ members. Only 149 have a registered
+`PrintConfigDef` entry and therefore enter the static runtime key set:
+
+```text
+151 active members
+- thumbnail_size            (unregistered legacy input)
+- bbl_bed_temperature_gcode (unregistered temporary placeholder)
+= 149 registered GCodeConfig keys
+```
+
+`thumbnail_size` canonicalization to `thumbnails` remains Task 19A.
+`bbl_bed_temperature_gcode` is not an Option; its later placeholder behavior
+belongs to the template/document rewrite. Task 17 creates no field for either.
+The exact registered ownership already typed by Tasks 7, 11, 12, and 14 is
+Printer 62 + Process 17 + Filament 53 + residual/project 17 = 149. The
+committed 653-row inventory is the reproducible key/type/default evidence; no
+active test pins raw Orca source lines or needs an Orca checkout.
 
 **Files:**
-- Create: `options/gcode_options.rs`
-- Create: `options/tests/gcode_options.rs`
-- Modify: `docs/architecture/option-parity-v4.md`
+- Create: `crates/ares-core/src/options/gcode_fields.rs` as the single
+  compile-time effective 149-field ledger, carrying each Rust field, canonical
+  wire key, concrete Rust type, and its unique typed source owner
+- Create: `crates/ares-core/src/options/gcode_options.rs`
+- Create: `crates/ares-core/src/options/tests/gcode_options.rs` with
+  `gcode_options/{inventory,types,projection,templates,fixture}.rs` siblings
+- Modify: `crates/ares-core/src/options.rs`,
+  `crates/ares-core/src/options/tests.rs`, and `crates/ares-core/src/lib.rs`
+- Modify only after final implementation approval:
+  `docs/architecture/option-parity-v4.md` and `docs/roadmap.md`
+
+Do not modify the four already-approved raw source groups merely to change
+their structure. Their declarations remain the one raw owner of each value;
+`gcode_fields.rs` owns only the effective projection definition. Split test
+siblings further if required to keep every changed Rust file below 400
+physical lines.
 
 **Interfaces:**
-- Produces `GCodeOptions::resolve(printer, process, filament, project, active_filaments) -> Result<Self, SliceError>` with 149 concrete effective fields.
 
-- [ ] **Step 1: Write RED cross-scope and template-string tests**
+```rust,ignore
+#[derive(Clone, Debug, PartialEq)]
+pub struct GCodeOptions {
+    // 149 public concrete fields generated from the compile-time ledger.
+}
 
-  Assert 62 + 17 + 53 + 17 = 149 unique effective fields. Verify machine/filament/layer/timelapse/end templates preserve exact newlines and escaping; active filament vector selection is deterministic; firmware/bed/temperature enums remain typed; invalid vector cardinality fails with the key name.
+impl GCodeOptions {
+    pub(crate) fn from_sources(
+        printer: &PrinterGCodeSourceOptions,
+        process: &ProcessGCodeSourceOptions,
+        filament: &FilamentGCodeSourceOptions,
+        project: &ProjectGCodeSourceOptions,
+    ) -> Self;
+}
+```
 
-- [ ] **Step 2: Implement effective projection without raw lookup**
+This boundary is infallible. It receives no active-filament parameter, returns
+no `SliceError`, implements no `Default`, `Deserialize`, or `Serialize`, and
+performs only direct typed clone/copy from four pairwise-disjoint owners. Task
+18 owns production top-level 3MF-to-`ProjectSettings` parsing. Task 19B owns
+active sizing, printer variant indices `[0,2]`, filament variant indices
+`[0,4]`, nullable retract inheritance, `has_scarf_joint_seam` recomputation,
+normalization, and final reprojection. Task 19C owns config-block export.
 
-  Construct `GCodeOptions` only from typed source fields. Template strings are copied as strings; expression parsing belongs to Task 28. No runtime code accepts a key string to discover a value type.
+Freeze the exact registered option histogram:
 
-- [ ] **Step 3: Run focused GREEN and the mandatory task gate**
+```text
+coBool=27, coBools=9, coEnum=6, coEnums=5,
+coFloat=14, coFloats=38, coFloatOrPercent=3,
+coInt=5, coInts=11, coPercent=1, coPercents=1,
+coPoints=1, coString=13, coStrings=15
+```
+
+The raw wire boundary represented by these fields is 69 scalars plus 80
+arrays. The exact nine nullable-element arrays are
+`nozzle_flush_dataset`, `nozzle_type`,
+`filament_adaptive_volumetric_speed`, `filament_cooling_before_tower`,
+`filament_flow_ratio`, `filament_flush_temp`,
+`filament_flush_volumetric_speed`, `long_retractions_when_ec`, and
+`retraction_distances_when_ec`. The concrete enum/newtype domains remain the
+already-approved `GCodeFlavor`, `BedTemperatureFormula`,
+`PowerLossRecoveryMode`, `PrinterStructure`, `WipeTowerType`,
+`ExtruderTypes`, `NullableNozzleTypes`, `RetractLiftEnforces`, `ZHopTypes`,
+`ProjectFilamentMapMode`, `NozzleVolumeTypes`, and existing opaque wrappers.
+There is no catch-all effective value type.
+
+- [ ] **Step 1: RED/GREEN registered inventory and concrete structure**
+
+  Start with a genuine missing-`GCodeOptions` compiler RED. Independently read
+  the committed inventory in test code and assert exactly 149 unique `g_code`
+  rows, the pairwise-disjoint 62/17/53/17 source partition, the complete type
+  histogram, 69/80 wire-shape split, and exact nullable set above. Assert the
+  union equals the four existing source declaration sets and excludes both
+  unregistered active C++ members. Add compile-time concrete type assertions
+  for every field, including the wire/Rust spelling pair
+  `required_nozzle_HRC` / `required_nozzle_hrc`.
+
+  Implement only the single compile-time effective ledger and public concrete
+  `GCodeOptions` structure. Generate its test-only canonical key inventory from
+  that ledger. Do not create a runtime registry, deserialize an effective
+  struct, serialize it, parse the upstream checkout, or add a source-line
+  pinning test.
 
   ```powershell
-  cargo nextest run -p ares-core gcode_options
-  git commit -m "feat(config): resolve effective gcode options"
-  git push
+  cargo +1.91.0 nextest run -p ares-core gcode_options_inventory
+  cargo +1.91.0 nextest run -p ares-core gcode_options_types
   ```
+
+- [ ] **Step 2: RED/GREEN direct four-source projection**
+
+  Start with a genuine missing-`from_sources` RED. Use independent explicit
+  test assertions for all 149 fields and distinct typed source values so an
+  omission, same-typed field swap, or default substitution fails. Prove each
+  field has exactly one owning source and all four default source groups also
+  project field-for-field. There is no precedence between the disjoint groups.
+
+  Implement `from_sources` through the compile-time ledger so each destination
+  field can only clone the identically named field from its fixed source
+  owner. Add no string-key lookup, serde round trip, generic value, fallback,
+  validation, resizing, selection, override, or normalization.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core gcode_options_projection
+  ```
+
+- [ ] **Step 3: Verify template, opaque-string, vector, and nullable fidelity**
+
+  This is a verification-only slice and may begin GREEN after Step 2. Prove
+  byte preservation for all 16 template fields: the twelve printer strings
+  `before_layer_change_gcode`, `printing_by_object_gcode`,
+  `machine_end_gcode`, `layer_change_gcode`, `time_lapse_gcode`,
+  `wrapping_detection_gcode`, `file_start_gcode`, `machine_start_gcode`,
+  `change_filament_gcode`, `change_extrusion_role_gcode`,
+  `machine_pause_gcode`, and `template_custom_gcode`; process
+  `process_change_extrusion_role_gcode`; and filament vectors
+  `filament_end_gcode`, `filament_start_gcode`, and
+  `filament_change_extrusion_role_gcode`. Cover LF, CRLF, backslashes,
+  placeholder expressions, UTF-8, empty strings, and trailing newlines.
+  Expression parsing remains Task 28.
+
+  Prove `adaptive_pressure_advance_model`,
+  `volumetric_speed_coefficients`, `filament_ramming_parameters`, and
+  `small_area_infill_flow_compensation_model` remain their existing opaque
+  typed strings. Preserve every raw vector and nullable element exactly,
+  including empty, singleton, unequal, three-, four-, and eight-element inputs.
+  Tests must explicitly kill any `[0,2]`/`[0,4]` selection, resize, nil
+  inheritance, or cardinality check in Task 17.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core gcode_options_templates
+  cargo +1.91.0 nextest run -p ares-core gcode_options_shapes
+  ```
+
+- [ ] **Step 4: Verify the real 3MF through typed sources**
+
+  This is a test-only verification slice. Load the real project through the
+  bounded in-memory project reader, read only its project-settings bytes, and
+  use the committed inventory in test code to split those bytes into the four
+  typed source structs. Production top-level parsing remains Task 18. Assert
+  all 149 effective fields equal their unique typed source value and template
+  bytes remain exact. Freeze the fixture's raw 80-array length histogram as
+  one empty, 49 length-two, 19 length-four, ten length-eight, and one
+  length-ten array. The 19 printer-variant fields remain length four, the ten
+  filament-variant fields remain length eight, and the other 43 filament
+  G-code arrays remain length two. Do not read the reference G-code or add a
+  production fixture name, ID, value, path, or hash branch.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core gcode_options_fixture
+  ```
+
+- [ ] **Step 5: Run review, documentation, release, and exact-SHA gates**
+
+  Execute Steps 1-2 sequentially with fresh TDD implementers; no production
+  writers overlap. Steps 3-4 use fresh bounded test implementers. Each slice
+  receives fresh independent specification and quality review before the next
+  begins. After Step 4, freeze the complete implementation bytes and obtain
+  independent whole-diff `VERDICT: APPROVE` for specification and quality.
+  The user-approved OpenCode bypass remains in force.
+
+  Only after implementation approval, update architecture and roadmap,
+  including the already-released Task 16 SHA/Tier-1 evidence and Task 17's
+  included/deferred behavior. Obtain independent documentation approval, then
+  run the complete frozen-byte matrix:
+
+  ```powershell
+  cargo +1.91.0 fmt --all -- --check
+  cargo +1.91.0 nextest run -p ares-core gcode_options
+  cargo +1.91.0 nextest run -p ares-core -E 'test(/(gcode_options|printer_gcode_source|filament_gcode_source|process_remaining|project_runtime_options|project_inventory|project)/)'
+  cargo +1.91.0 nextest run --workspace
+  cargo +1.91.0 nextest run -p ares-core --test no_unapproved_dynamic_values
+  cargo +1.91.0 clippy --workspace --all-targets -- -D warnings
+  cargo +1.91.0 check -p ares-core
+  cargo +1.91.0 check -p ares-core --target wasm32-unknown-unknown
+  cargo +1.91.0 check -p ares-wasm --target wasm32-unknown-unknown
+  cargo +1.91.0 build -p ares-wasm --target wasm32-unknown-unknown --release
+  wasm-bindgen target/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+  npm --prefix crates/ares-wasm/tests/browser ci
+  npm --prefix crates/ares-wasm/tests/browser test
+  git diff --check -- . ':(exclude)tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode'
+  ```
+
+  Also require per-added-file no-index whitespace checks, exact changed-file
+  ownership, every changed Rust file below 400 physical lines, unchanged
+  fixture hashes, and production guards against dynamic/JSON/erased values,
+  runtime option-key lookup, Option Pinning, fixture/reference reads or
+  branches, active selection/normalization, native I/O, terminal/UI, FFI, and
+  platform-specific code. Stage only the frozen approved manifest, prove
+  index/workspace and commit-tree byte equality, commit
+  `feat(config): resolve effective gcode options`, push, and require all five
+  Tier 1 jobs green for that exact pushed SHA before Task 18.
+
+**Explicitly deferred:** production flat project-settings parsing to Task 18;
+legacy names/value conversion to Task 19A; active sizing, printer/filament
+variant selection, nullable retract inheritance, model-driven recomputation,
+normalization, and final reprojection to Task 19B; config export to Task 19C;
+consumer migration/removal to Tasks 20A-20E; templates to Task 28; document
+assembly to Task 29; and all geometry/G-code byte generation later in the
+approved program.
 
 ---
 

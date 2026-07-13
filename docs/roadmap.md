@@ -645,9 +645,46 @@ seven sequential slices and the frozen whole diff have independent
 specification and quality approval. G-code projection remains Task 17;
 cardinality, active sizing, and association remain Task 19B; consumer migration
 remains Tasks 20A-20E; modifier graph construction, geometry, slicing, G-code
-generation, and final byte parity remain later work. Documentation approval,
-the full local release gate, commit, push, and exact-SHA Tier 1 evidence remain
-pending.
+generation, and final byte parity remain later work. Task 16 is released as
+pushed commit `2651c6376d0cc8229876471d0a4d5c6f98f84314`; exact-SHA Tier 1
+run `29286285164` is green across format, Ubuntu/Linux, WASM, macOS, and
+Windows.
+
+### 2026-07-13 Project registered pre-normalization GCodeConfig options
+
+Task 17 ports the registered projection boundary from fixed OrcaSlicer v2.4.2
+`PrintConfig.hpp:759-776::StaticPrintConfig::StaticCache::finalize`,
+`PrintConfig.hpp:1299-1476::GCodeConfig`, and static cache initialization at
+`PrintConfig.cpp:10571-10585`. Of 151 active C++ members, unregistered legacy
+input `thumbnail_size` and temporary non-Option placeholder
+`bbl_bed_temperature_gcode` do not enter the 149-key registered set. The Rust
+destination is the HPP-order compile-time ledger in `gcode_fields.rs` and the
+public concrete `GCodeOptions` in `gcode_options.rs`, with only
+`Clone`/`Debug`/`PartialEq` and a crate-private infallible `from_sources`.
+
+The projection directly clones the pairwise-disjoint 62 printer, 17 process,
+53 filament, and 17 project/residual typed source fields. It preserves the 69
+scalar and 80 array raw shapes, including nine nullable arrays, without active
+selection, resizing, inheritance, normalization, fallback, or runtime option
+lookup. Independent inventory, type, all-field projection, 16-template,
+four-opaque-string, shape, and bounded real-3MF tests are approved. The fixture
+proof uses a test-only four-source split and retains one empty, 49 length-two,
+19 length-four, ten length-eight, and one length-ten array; the 19 printer
+variant, ten filament variant, and other 43 filament G-code arrays retain their
+raw length-four, length-eight, and length-two shapes respectively. Production
+remains WASM-safe and adds no I/O, dynamic/erased value, JSON round trip,
+runtime registry, reference-G-code read or branch, or source-line pinning.
+
+All four implementation slices and the frozen whole implementation have
+independent specification and quality approval, and these architecture and
+roadmap updates record the reviewed boundary. The full local release matrix,
+commit, push, and exact-pushed-SHA five-job Tier 1 gate are still required
+before Task 18 starts. Task 18 owns production flat parsing; Task 19A legacy
+conversion; Task 19B active sizing/selection, nullable retract overrides,
+model recomputation, normalization, and final reprojection; Task 19C export;
+Tasks 20A-20E consumers; Task 28 templates; and Task 29 document assembly.
+Complete slicing and `ksr_fdmtest_v4` G-code byte parity are not yet
+implemented.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

@@ -2,12 +2,13 @@
 
 ## Status
 
-Task 6 establishes the first concrete project-settings group: the 28 printer
-keys owned by fixed-tag `MachineEnvelopeConfig`. These keys are retained and
-round-trip through concrete types, but the typed project tree is not yet wired
-to slicing behavior. The remaining printer/process/filament groups and runtime
-composition stay owned by the later source-cited `Config.*`, `PrintConfig.*`,
-and `PrintApply.cpp` rewrite tasks in the approved parity plan.
+Task 16 is released, and Task 17's registered pre-normalization `GCodeConfig`
+projection has whole-implementation approval. This architecture record is
+updated from that frozen implementation; the full local release matrix,
+commit, push, and exact-pushed-SHA Tier 1 gate remain pending. Production
+project loading, active sizing, normalization, consumer migration, slicing,
+and final G-code parity remain owned by later source-cited rewrite tasks in the
+approved parity plan.
 
 ## Fixed baseline
 
@@ -1191,6 +1192,85 @@ slicing, G-code generation, and final byte parity remain deferred.
 
 All seven sequential TDD slices received independent specification and quality
 approval. The frozen 34-file whole diff also received literal
-`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Documentation review,
-the full local release gate, commit, push, and exact-SHA five-job Tier 1 result
-remain pending; Task 16 does not claim complete slicing or G-code parity.
+`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Task 16 is released as
+pushed commit `2651c6376d0cc8229876471d0a4d5c6f98f84314`; exact-SHA Tier 1
+run `29286285164` is green across format, Ubuntu/Linux, WASM, macOS, and
+Windows. Task 16 does not claim complete slicing or G-code parity.
+
+### Task 17: registered pre-normalization GCodeConfig projection
+
+Task 17 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is
+`PrintConfig.hpp:759-776::StaticPrintConfig::StaticCache::finalize`, the
+static class definition at `PrintConfig.hpp:838-865`,
+`PrintConfig.hpp:1299-1476::GCodeConfig`, the `PrintConfig` and
+`FullPrintConfig` inheritance boundaries at `PrintConfig.hpp:1479-1482` and
+`:1662-1666`, and static cache initialization at
+`PrintConfig.cpp:10571-10585`.
+
+`GCodeConfig` declares 151 active C++ members, but only 149 enter the
+registered runtime key set finalized from `PrintConfigDef`. The two excluded
+members are unregistered `thumbnail_size`, a legacy input, and
+`bbl_bed_temperature_gcode`, a temporary placeholder rather than an Option.
+The registered fields are owned exactly once by the existing typed raw source
+groups: 62 printer, 17 process, 53 filament, and 17 project/residual fields.
+Their raw wire shapes are 69 scalars and 80 arrays, including nine nullable
+arrays.
+
+The Rust destination is `ares-core::options::gcode_fields`, which defines one
+compile-time ledger in fixed HPP declaration order, and
+`ares-core::options::gcode_options`, which exposes the public concrete
+`GCodeOptions`. The effective type derives only `Clone`, `Debug`, and
+`PartialEq`; it has no independent default or serde implementation. Its
+crate-private infallible `from_sources` constructor directly clones each
+identically named field from its unique typed source. It performs no
+selection, resizing, inheritance, validation, normalization, fallback, or
+runtime key lookup, so this is specifically a registered pre-normalization
+projection rather than final effective configuration.
+
+The exact registered type histogram is:
+
+| Type | Count | Type | Count |
+| --- | ---: | --- | ---: |
+| `coBool` | 27 | `coBools` | 9 |
+| `coEnum` | 6 | `coEnums` | 5 |
+| `coFloat` | 14 | `coFloats` | 38 |
+| `coFloatOrPercent` | 3 | `coInt` | 5 |
+| `coInts` | 11 | `coPercent` | 1 |
+| `coPercents` | 1 | `coPoints` | 1 |
+| `coString` | 13 | `coStrings` | 15 |
+
+Independent inventory, concrete-type, projection, template, shape, and real
+3MF tests prove the compile-time ledger and direct typed projection without
+using an upstream checkout as an active oracle. Fidelity coverage preserves
+all 16 template fields byte-for-byte, including LF and CRLF line endings,
+backslashes, placeholders, UTF-8, empty strings, and trailing newlines; it also
+preserves four opaque typed strings and every one of the 80 array shapes,
+including nullable elements. The real project is loaded through the bounded
+in-memory reader and split into the four typed source groups only in test code.
+Its array histogram is one empty array, 49 length-two, 19 length-four, ten
+length-eight, and one length-ten array. The 19 printer-variant arrays remain
+length four, the ten filament-variant arrays remain length eight, and the
+other 43 filament G-code arrays remain length two.
+
+Production code remains platform-neutral and WASM-safe: it adds no file I/O,
+terminal/UI or FFI boundary, erased/dynamic option value, runtime registry,
+JSON/serde round trip, fixture/reference branch, or source-line pinning test.
+The real-project proof does not read the reference G-code.
+
+Task 17 includes only the registered ledger, public concrete projection,
+direct typed cloning, and the independent fidelity/fixture verification above.
+Production flat project-settings parsing remains Task 18. Legacy conversion
+remains Task 19A. Active sizing and printer/filament selection, nullable
+retract overrides, model-driven recomputation, normalization, and final
+reprojection remain Task 19B. Config export remains Task 19C; consumer
+migration and compatibility-parser removal remain Tasks 20A-20E; template
+evaluation remains Task 28; document assembly remains Task 29. Geometry,
+slicing, generated G-code bytes, and complete `ksr_fdmtest_v4` parity remain
+deferred.
+
+All four Task 17 slices and the frozen whole implementation have independent
+specification and quality approval. This documentation records that approved
+implementation; the full local release matrix, commit, push, and
+exact-pushed-SHA five-job Tier 1 evidence remain pending. Task 18 may begin only
+after that release gate completes.

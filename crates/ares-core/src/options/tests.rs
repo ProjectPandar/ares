@@ -22,6 +22,7 @@ mod filament_remaining;
 mod filament_flow_ratio;
 mod filament_max_volumetric_speed;
 mod filament_type;
+mod gcode_options;
 mod gcode_flavor_runtime;
 #[rustfmt::skip] option_test_modules!(bridge_angle_runtime, bridge_density_runtime, enable_extra_bridge_layer_runtime, counterbore_hole_bridging_runtime, internal_bridge_density_runtime, internal_bridge_angle_runtime, dont_filter_internal_bridges_runtime, surface_density_runtime, calib_flowrate_topinfill_special_order, infill_wall_overlap_runtime, infill_anchor, infill_combination, fill_multiline, extra_solid_infills, internal_solid_infill, internal_solid_numeric, gap_fill_runtime, tree_support_options, support_enable, support_object_skip_flush, support_type, support_style, support_placement, support_threshold, support_interface_not_for_body, raft, support_z_distance, top_bottom_solid_surface, sparse_infill_rotate_template, symmetric_infill_y_axis, overhang_wall, overhang_flow_ratio, overhang_speed, overhang_reverse, pellet, flush_placeholders_runtime, filament_cooling_before_tower_runtime, temperature_vitrification_runtime, preheat, timelapse_type);
 mod inner_wall_line_width;

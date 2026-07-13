@@ -8,6 +8,8 @@ mod acceleration;
 option_modules!(adaptive_bed_mesh, bed_excluded_area, defaults, different_extruders, draft_shield, extruder_count, extruder_index, extruder_variant, fdm_normalization);
 mod brim;
 mod config_types;
+mod gcode_fields;
+mod gcode_options;
 #[rustfmt::skip]
 option_modules!(pub(crate) filament_config_export, filament_count, filament_override, filament_type, flow_ratios, gap_fill, hardware, infill, small_area_infill_flow);
 mod filament_options;
@@ -56,6 +58,8 @@ pub(crate) use bed_temperature::FirstLayerBedTemperature;
 use defaults::*;
 pub(crate) use fan_speedup::FanSpeedupControl;
 pub(crate) use gap_fill::GapFillTarget;
+#[cfg(test)]
+pub(crate) use gcode_options::GCodeOptionSource;
 pub(crate) use infill::{
     InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions, InternalBridgeFilter,
 };
@@ -82,6 +86,7 @@ pub use {
         FilamentRegionSourceOptions, FilamentRetractOverrideOptions, RawOverhangFanThreshold,
     },
     gcode_flavor::GCodeFlavor,
+    gcode_options::GCodeOptions,
     hardware::HardwareOptions,
     infill::{InfillOptions, InfillPattern},
     layer_change_retraction::RetractLiftEnforce,
