@@ -1,15 +1,18 @@
 use serde::ser::SerializeMap;
 
-use super::super::{ProcessObjectSourceOptions, ProcessRegionSourceOptions};
+use super::super::ProcessOptions;
 
-pub(super) fn serialize_entries<M>(
-    map: &mut M,
-    object: &ProcessObjectSourceOptions,
-    region: &ProcessRegionSourceOptions,
-) -> Result<(), M::Error>
+pub(super) fn serialize_entries<M>(map: &mut M, process: &ProcessOptions) -> Result<(), M::Error>
 where
     M: SerializeMap,
 {
+    let ProcessOptions {
+        gcode,
+        ironing_expansion,
+        object,
+        print,
+        region,
+    } = process;
     map.serialize_entry("internal_bridge_angle", &region.internal_bridge_angle)?;
     map.serialize_entry("internal_bridge_density", &object.internal_bridge_density)?;
     map.serialize_entry("internal_bridge_flow", &region.internal_bridge_flow)?;
@@ -40,6 +43,7 @@ where
     )?;
     map.serialize_entry("ironing_angle", &region.ironing_angle)?;
     map.serialize_entry("ironing_angle_fixed", &region.ironing_angle_fixed)?;
+    map.serialize_entry("ironing_expansion", ironing_expansion)?;
     map.serialize_entry("ironing_flow", &region.ironing_flow)?;
     map.serialize_entry("ironing_inset", &region.ironing_inset)?;
     map.serialize_entry("ironing_pattern", &region.ironing_pattern)?;
@@ -67,9 +71,22 @@ where
         &object.make_overhang_printable_hole_size,
     )?;
     map.serialize_entry("max_bridge_length", &object.max_bridge_length)?;
+    map.serialize_entry(
+        "max_travel_detour_distance",
+        &print.max_travel_detour_distance,
+    )?;
+    map.serialize_entry(
+        "max_volumetric_extrusion_rate_slope",
+        &gcode.max_volumetric_extrusion_rate_slope,
+    )?;
+    map.serialize_entry(
+        "max_volumetric_extrusion_rate_slope_segment_length",
+        &gcode.max_volumetric_extrusion_rate_slope_segment_length,
+    )?;
     map.serialize_entry("min_bead_width", &object.min_bead_width)?;
     map.serialize_entry("min_feature_size", &object.min_feature_size)?;
     map.serialize_entry("min_length_factor", &object.min_length_factor)?;
+    map.serialize_entry("min_skirt_length", &print.min_skirt_length)?;
     map.serialize_entry("min_width_top_surface", &region.min_width_top_surface)?;
     map.serialize_entry(
         "minimum_sparse_infill_area",
@@ -83,11 +100,13 @@ where
         "mmu_segmented_region_max_width",
         &object.mmu_segmented_region_max_width,
     )?;
+    map.serialize_entry("notes", &print.notes)?;
     map.serialize_entry(
         "only_one_wall_first_layer",
         &region.only_one_wall_first_layer,
     )?;
     map.serialize_entry("only_one_wall_top", &region.only_one_wall_top)?;
+    map.serialize_entry("ooze_prevention", &print.ooze_prevention)?;
     map.serialize_entry("outer_wall_acceleration", &object.outer_wall_acceleration)?;
     map.serialize_entry("outer_wall_filament_id", &region.outer_wall_filament_id)?;
     map.serialize_entry("outer_wall_flow_ratio", &region.outer_wall_flow_ratio)?;
@@ -108,11 +127,30 @@ where
         "overhang_reverse_threshold",
         &region.overhang_reverse_threshold,
     )?;
+    map.serialize_entry("post_process", &print.post_process)?;
     map.serialize_entry("precise_outer_wall", &region.precise_outer_wall)?;
     map.serialize_entry("precise_z_height", &object.precise_z_height)?;
+    map.serialize_entry("preheat_steps", &print.preheat_steps)?;
+    map.serialize_entry("preheat_time", &print.preheat_time)?;
+    map.serialize_entry("prime_tower_brim_width", &print.prime_tower_brim_width)?;
+    map.serialize_entry(
+        "prime_tower_enable_framework",
+        &print.prime_tower_enable_framework,
+    )?;
+    map.serialize_entry("prime_tower_flat_ironing", &print.prime_tower_flat_ironing)?;
+    map.serialize_entry("prime_tower_infill_gap", &print.prime_tower_infill_gap)?;
+    map.serialize_entry("prime_tower_skip_points", &print.prime_tower_skip_points)?;
+    map.serialize_entry("prime_tower_width", &print.prime_tower_width)?;
+    map.serialize_entry("prime_volume", &print.prime_volume)?;
     map.serialize_entry("print_extruder_id", &region.print_extruder_id)?;
     map.serialize_entry("print_extruder_variant", &region.print_extruder_variant)?;
     map.serialize_entry("print_flow_ratio", &region.print_flow_ratio)?;
+    map.serialize_entry("print_order", &print.print_order)?;
+    map.serialize_entry("print_sequence", &print.print_sequence)?;
+    map.serialize_entry(
+        "process_change_extrusion_role_gcode",
+        &gcode.process_change_extrusion_role_gcode,
+    )?;
     map.serialize_entry("raft_contact_distance", &object.raft_contact_distance)?;
     map.serialize_entry("raft_expansion", &object.raft_expansion)?;
     map.serialize_entry("raft_first_layer_density", &object.raft_first_layer_density)?;
@@ -121,7 +159,10 @@ where
         &object.raft_first_layer_expansion,
     )?;
     map.serialize_entry("raft_layers", &object.raft_layers)?;
+    map.serialize_entry("reduce_crossing_wall", &print.reduce_crossing_wall)?;
+    map.serialize_entry("reduce_infill_retraction", &print.reduce_infill_retraction)?;
     map.serialize_entry("relative_bridge_angle", &region.relative_bridge_angle)?;
+    map.serialize_entry("resolution", &print.resolution)?;
     map.serialize_entry("role_based_wipe_speed", &region.role_based_wipe_speed)?;
     map.serialize_entry("scarf_angle_threshold", &region.scarf_angle_threshold)?;
     map.serialize_entry("scarf_joint_flow_ratio", &region.scarf_joint_flow_ratio)?;
@@ -137,6 +178,11 @@ where
     map.serialize_entry("seam_slope_steps", &region.seam_slope_steps)?;
     map.serialize_entry("seam_slope_type", &region.seam_slope_type)?;
     map.serialize_entry("set_other_flow_ratios", &object.set_other_flow_ratios)?;
+    map.serialize_entry(
+        "single_extruder_multi_material_priming",
+        &gcode.single_extruder_multi_material_priming,
+    )?;
+    map.serialize_entry("single_loop_draft_shield", &print.single_loop_draft_shield)?;
     map.serialize_entry("skeleton_infill_density", &region.skeleton_infill_density)?;
     map.serialize_entry(
         "skeleton_infill_line_width",
@@ -145,9 +191,15 @@ where
     map.serialize_entry("skin_infill_density", &region.skin_infill_density)?;
     map.serialize_entry("skin_infill_depth", &region.skin_infill_depth)?;
     map.serialize_entry("skin_infill_line_width", &region.skin_infill_line_width)?;
+    map.serialize_entry("skirt_distance", &print.skirt_distance)?;
+    map.serialize_entry("skirt_height", &print.skirt_height)?;
+    map.serialize_entry("skirt_loops", &print.skirt_loops)?;
+    map.serialize_entry("skirt_speed", &print.skirt_speed)?;
     map.serialize_entry("skirt_start_angle", &object.skirt_start_angle)?;
+    map.serialize_entry("skirt_type", &print.skirt_type)?;
     map.serialize_entry("slice_closing_radius", &object.slice_closing_radius)?;
     map.serialize_entry("slicing_mode", &object.slicing_mode)?;
+    map.serialize_entry("slow_down_layers", &print.slow_down_layers)?;
     map.serialize_entry(
         "slowdown_for_curled_perimeters",
         &region.slowdown_for_curled_perimeters,
@@ -155,6 +207,10 @@ where
     map.serialize_entry(
         "small_area_infill_flow_compensation",
         &region.small_area_infill_flow_compensation,
+    )?;
+    map.serialize_entry(
+        "small_area_infill_flow_compensation_model",
+        &gcode.small_area_infill_flow_compensation_model,
     )?;
     map.serialize_entry("small_perimeter_speed", &region.small_perimeter_speed)?;
     map.serialize_entry(

@@ -489,3 +489,140 @@ rustfmt, both `ares-core` and `ares-wasm` WASM checks, and the diff whitespace
 gate. Two independent frozen-byte code reviews, an independent documentation
 review, and the primary-agent review approve this boundary under the
 user-approved temporary OpenCode bypass.
+
+### Task 11: remaining process raw source
+
+The final process raw slice is the exact fixed-source intersection of the
+fixture's Process keys with direct `GCodeConfig` and FFF `PrintConfig`
+ownership. `GCodeConfig` is bounded by fixed
+`PrintConfig.hpp:1299-1476`; direct FFF `PrintConfig` ownership is bounded by
+`PrintConfig.hpp:1479-1660`, excluding the unrelated SLA
+`filename_format` declaration. The one definition without an active static
+owner is `ironing_expansion` from fixed `PrintConfig.cpp:4368`.
+
+The exact ownership and type ledger is:
+
+- `GCodeConfig` (17):
+  - `coBool` (7): `accel_to_decel_enable`, `enable_arc_fitting`,
+    `enable_wrapping_detection`,
+    `extrusion_rate_smoothing_external_perimeter_only`,
+    `gcode_add_line_number`, `single_extruder_multi_material_priming`, and
+    `wipe_tower_no_sparse_layers`.
+  - `coFloat` (4): `max_volumetric_extrusion_rate_slope`,
+    `max_volumetric_extrusion_rate_slope_segment_length`, `travel_speed`,
+    and `travel_speed_z`.
+  - `coFloatOrPercent` (3): `initial_layer_travel_acceleration`,
+    `initial_layer_travel_jerk`, and `initial_layer_travel_speed`.
+  - `coPercent` (1): `accel_to_decel_factor`.
+  - `coString` (1): `process_change_extrusion_role_gcode`.
+  - `coStrings` (1): `small_area_infill_flow_compensation_model`.
+- direct FFF `PrintConfig` (59):
+  - `coBool` (18): `combine_brims`, `enable_prime_tower`,
+    `enable_tower_interface_cooldown_during_tower`,
+    `enable_tower_interface_features`, `exclude_object`, `gcode_comments`,
+    `gcode_label_objects`, `independent_support_layer_height`,
+    `ooze_prevention`, `prime_tower_enable_framework`,
+    `prime_tower_flat_ironing`, `prime_tower_skip_points`,
+    `reduce_crossing_wall`, `reduce_infill_retraction`,
+    `single_loop_draft_shield`, `spiral_mode`, `spiral_mode_smooth`, and
+    `wipe_tower_fillet_wall`.
+  - `coEnum` (6): `draft_shield`, `print_order`, `print_sequence`,
+    `skirt_type`, `timelapse_type`, and `wipe_tower_wall_type`.
+  - `coFloat` (19): `initial_layer_infill_speed`,
+    `initial_layer_print_height`, `initial_layer_speed`, `min_skirt_length`,
+    `preheat_time`, `prime_tower_brim_width`, `prime_tower_width`,
+    `prime_volume`, `resolution`, `skirt_distance`, `skirt_speed`,
+    `spiral_finishing_flow_ratio`, `spiral_starting_flow_ratio`,
+    `wipe_tower_bridging`, `wipe_tower_cone_angle`,
+    `wipe_tower_extra_rib_length`, `wipe_tower_max_purge_speed`,
+    `wipe_tower_rib_width`, and `wipe_tower_rotation_angle`.
+  - `coFloatOrPercent` (3): `initial_layer_line_width`,
+    `max_travel_detour_distance`, and `spiral_mode_max_xy_smoothing`.
+  - `coFloats` (1): `wiping_volumes_extruders`.
+  - `coInt` (6): `preheat_steps`, `skirt_height`, `skirt_loops`,
+    `slow_down_layers`, `standby_temperature_delta`, and
+    `wipe_tower_filament`.
+  - `coPercent` (3): `prime_tower_infill_gap`, `wipe_tower_extra_flow`, and
+    `wipe_tower_extra_spacing`.
+  - `coString` (2): `filename_format` and `notes`.
+  - `coStrings` (1): `post_process`.
+- unowned (1):
+  - `coFloat` (1): `ironing_expansion`.
+
+The resulting histogram is exactly 25 bool, six enum, 24 float, six
+float-or-percent, one float-vector, six int, four percent, three string, and
+two string-vector fields. All 77 fields are non-nullable. The wire boundary
+contains 74 scalar strings and exactly three arrays: `post_process`,
+`small_area_infill_flow_compensation_model`, and
+`wiping_volumes_extruders`. Raw parsing preserves arbitrary valid vector
+lengths, including empty arrays; it does not infer a matrix or encode the
+fixture's ten-element defaults. The leading newlines in
+`small_area_infill_flow_compensation_model` remain individual string content.
+These definitions are fixed at `PrintConfig.cpp:4479-4491`,
+`PrintConfig.cpp:5068-5079`, and `PrintConfig.cpp:6976-6981`.
+
+The six strict raw enum domains are:
+
+| Option | Canonical machine tokens |
+|---|---|
+| `draft_shield` | `disabled`, `enabled` |
+| `print_order` | `default`, `as_obj_list` |
+| `print_sequence` | `by layer`, `by object` |
+| `skirt_type` | `combined`, `perobject` |
+| `timelapse_type` | `0`, `1` |
+| `wipe_tower_wall_type` | `rectangle`, `cone`, `rib` |
+
+The maps are fixed by `PrintConfig.cpp:295-305`,
+`PrintConfig.cpp:432-449`, and `PrintConfig.cpp:560-565`, with their option
+definitions at `PrintConfig.cpp:1836-1856`,
+`PrintConfig.cpp:5706-5731`, `PrintConfig.cpp:5879-5894`, and
+`PrintConfig.cpp:6925-6939`. UI labels, enum sentinels, and legacy spellings
+are not raw enum tokens. `prime_tower_brim_width` remains a float: its
+open-enum UI at fixed `PrintConfig.cpp:6891-6900` gives `-1` the meaning Auto
+but does not turn its machine type into a closed enum.
+
+Exactly 15 fixture values differ from fixed defaults:
+`enable_arc_fitting`, `enable_prime_tower`,
+`enable_tower_interface_features`, `filename_format`,
+`initial_layer_infill_speed`, `initial_layer_line_width`,
+`initial_layer_speed`, `initial_layer_travel_acceleration`,
+`prime_tower_brim_width`, `prime_tower_flat_ironing`, `prime_tower_width`,
+`reduce_infill_retraction`, `resolution`, `skirt_loops`, and `travel_speed`.
+The other 62 fixture values equal their fixed defaults, so every field also
+has an independent valid non-default typed-state proof.
+
+The inventory records 13 canonical targets with fixed
+`PrintConfigDef::handle_legacy` inputs: `draft_shield`,
+`enable_prime_tower`, `initial_layer_print_height`, `initial_layer_speed`,
+`prime_tower_brim_width`, `prime_tower_width`, `prime_volume`,
+`timelapse_type`, `wipe_tower_extra_rib_length`, `wipe_tower_filament`,
+`wipe_tower_fillet_wall`, `wipe_tower_rib_width`, and
+`wipe_tower_wall_type`. Canonical Task 11 dispatch does not accept those
+aliases or value conversions; the source-cited conversion boundary remains
+Task 19A.
+
+`ProcessOptions` now owns public `gcode` and `print` children and the direct
+unowned `ironing_expansion` scalar. Together with the 126 object-source and
+149 region-source fields, this forms exactly 352 disjoint Process fields.
+Each child preserves its fixed HPP declaration order and standalone lexical
+serialization. The parent directly streams one globally lexicographic
+352-entry map without nested child maps, serde flattening, or a DOM. Relative
+to the previous 275-entry parent, the new lexical entries distribute 23/32/22
+across `early`/`middle`/`late`, producing helper totals of 115/124/113.
+
+A production literal scan finds 63 of the 77 names in the existing dynamic
+compatibility implementation. The exact 14-key complement is
+`enable_arc_fitting`, `enable_tower_interface_cooldown_during_tower`,
+`enable_tower_interface_features`, `filename_format`, `ironing_expansion`,
+`max_travel_detour_distance`, `post_process`,
+`prime_tower_enable_framework`, `prime_tower_flat_ironing`,
+`prime_tower_infill_gap`, `prime_tower_skip_points`, `print_order`,
+`reduce_crossing_wall`, and `wiping_volumes_extruders`. `prime_volume`
+appears only in the legacy compatibility parser, so the behavioral-consumer
+union is 62 names. Task 11 records but does not migrate these users.
+
+The 17 G-code-owned raw fields project into effective `GCodeOptions` in
+Task 17. Legacy canonicalization remains Task 19A, full-print resolution and
+FDM normalization remain Task 19B, existing behavioral consumers migrate
+across Tasks 20A-20D, and the final legacy compatibility parser is removed
+only in Task 20E.

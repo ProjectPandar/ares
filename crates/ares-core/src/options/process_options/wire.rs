@@ -11,10 +11,10 @@ impl Serialize for ProcessOptions {
     where
         S: Serializer,
     {
-        let mut map = serializer.serialize_map(Some(275))?;
-        early::serialize_entries(&mut map, &self.object, &self.region)?;
-        middle::serialize_entries(&mut map, &self.object, &self.region)?;
-        late::serialize_entries(&mut map, &self.object, &self.region)?;
+        let mut map = serializer.serialize_map(Some(352))?;
+        early::serialize_entries(&mut map, self)?;
+        middle::serialize_entries(&mut map, self)?;
+        late::serialize_entries(&mut map, self)?;
         map.end()
     }
 }

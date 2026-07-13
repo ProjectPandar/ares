@@ -878,26 +878,39 @@ The following ownership is fixed for this plan. Additional sibling files are all
 
 **Files:**
 - Create: `options/process_options/gcode_source.rs`
+- Create: `options/process_options/gcode_source/wire.rs`
 - Create: `options/process_options/print_source.rs`
-- Create: `options/process_options/runtime.rs`
+- Create: `options/process_options/print_source/enums.rs`
+- Create: `options/process_options/print_source/wire.rs`
 - Create: `options/tests/process_remaining.rs`
-- Modify: `options/process_options.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/tests/process_remaining/direct_dispatch.rs`
+- Create: `options/tests/process_remaining/enums.rs`
+- Create: `options/tests/process_remaining/expected.rs`
+- Create: `options/tests/process_remaining/type_assertions.rs`
+- Create: `options/tests/process_remaining/vectors.rs`
+- Modify: `options/process_options.rs`, `options/process_options/wire.rs`, `options/process_options/wire/early.rs`, `options/process_options/wire/middle.rs`, `options/process_options/wire/late.rs`, `options.rs`, `lib.rs`, `options/tests.rs`, `options/tests/process_object_source/direct_dispatch.rs`, `options/tests/process_region_source.rs`, `docs/architecture/option-parity-v4.md`, `docs/roadmap.md`
 
 **Interfaces:**
 - Completes `ProcessOptions` at exactly 352 raw fields.
 
 - [ ] **Step 1: Add RED whole-process set proof**
 
-  Select the remaining Process rows from the inventory and assert the 126, 149, 17, 59, and 1 key sets are pairwise disjoint and union to its 352-key process scope. Cover print sequence, brim/skirt, prime tower, output/post-process, timelapse, custom layer G-code, and empty arrays distinctly.
+  Select the remaining Process rows from the inventory and assert the 126 object, 149 region, 17 `GCodeConfig`, 59 `PrintConfig`, and one unowned key sets are pairwise disjoint and union to its exact 352-key process scope. Prove the remaining histogram is 25 bool, six enum, 24 float, six float-or-percent, one float-vector, six int, four percent, three string, and two string-vector fields; all 77 are non-nullable, with 74 scalar-string and three array wire shapes. The only arrays are `post_process`, `small_area_infill_flow_compensation_model`, and `wiping_volumes_extruders`; accept and byte-round-trip arbitrary valid lengths, including empty arrays, and reject scalar, null, and invalid element shapes without encoding the fixture's cardinality. Assert the exact 15 fixture/default differences and exercise a valid non-default typed state for every key because 62 fixture values equal fixed defaults. For both standalone children, pass every one of their fields through both standalone and flat-parent non-default dispatch. For all 77 fields, prove `null` fails with the key; for all 74 scalars, prove array and object shapes fail with the key. Exercise the direct parent `ironing_expansion` path separately for a valid non-default, duplicate, null, array, and object value. Cover output/post-process, print sequence, brim/skirt, prime tower, timelapse, the extrusion-role-change G-code, all six canonical enum domains, strict child ownership, and exact standalone-child plus flat 352-parent lexical bytes.
 
 - [ ] **Step 2: Implement 77 concrete fields and complete process dispatch**
 
-  Keep G-code strings as typed string fields, enums as concrete enums, and matrix/vector options as typed containers with cardinality checked during effective normalization. No raw key or unparsed JSON value remains after dispatch.
+  Add public `gcode: ProcessGCodeSourceOptions` and `print: ProcessPrintSourceOptions` children with crate-private builders. Preserve each child's exact filtered HPP declaration order: `GCodeConfig` only within fixed `PrintConfig.hpp:1299-1476`, and FFF `PrintConfig` only within `PrintConfig.hpp:1479-1660` so the unrelated SLA `filename_format` declaration is not counted. Keep the unique unowned `ironing_expansion` scalar directly on `ProcessOptions`, sourced from fixed `PrintConfig.cpp:4368`; do not create an invented effective-runtime group for it. G-code and other strings remain raw typed strings, and the three arrays remain raw typed containers without matrix interpretation or cardinality normalization. Define strict raw enums for draft shield, print order, print sequence, skirt type, timelapse, and wipe-tower wall type; canonical serde accepts only machine tokens. UI labels, `draft_shield=limited`, `timelapse_type=2`, and the 13 recorded legacy canonical targets remain Task 19A work. Record the 63 current production literal collisions and exact 14-key complement without migrating them; `prime_volume` is legacy-parser-only, so the behavioral-consumer union is 62. The 17 G-code-source fields project in Task 17, full-print normalization remains Task 19B, behavioral consumers migrate across Tasks 20A-20D, and the legacy compatibility parser is removed only in Task 20E.
+
+  Extend direct parent dispatch to the two new children and the unowned scalar. Replace the 275-entry parent output with one globally lexicographic, directly streamed 352-entry map across the existing contiguous `early`/`middle`/`late` helpers. The new entries distribute 23/32/22, producing 115/124/113 entries per helper; do not delegate child maps, use serde flattening, or buffer through a DOM. Keep every changed production and test module below 400 physical LOC.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 
+  In addition to the standard workspace nextest, warning-denying Clippy,
+  rustfmt, WASM, dynamic-value, and diff gates, run a physical-LOC audit over
+  every changed production and test Rust module and fail the task at 400 lines.
+
   ```powershell
-  cargo nextest run -p ares-core process_options
+  cargo nextest run -p ares-core process_remaining
   git commit -m "feat(config): complete typed process project options"
   git push
   ```

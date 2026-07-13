@@ -392,6 +392,40 @@ all-target Clippy, rustfmt, both WASM checks, the dynamic-value audit, and the
 diff whitespace gate. Task 11 is next: type the remaining 77 process raw
 options owned by `GCodeConfig`, `PrintConfig`, and the one unowned row.
 
+### 2026-07-12 Complete typed process raw ownership
+
+Task 11 ports the remaining exact 77 process raw options from fixed OrcaSlicer
+v2.4.2: 17 filtered `GCodeConfig` declarations, 59 FFF `PrintConfig`
+declarations, and the one unowned `ironing_expansion` definition. Together
+with the 126 object-source and 149 region-source fields, `ProcessOptions` now
+owns all 352 process raw keys exactly once. The remaining histogram is 25
+bool, six enum, 24 float, six float-or-percent, one float vector, six int,
+four percent, three string, and two string-vector fields; all 77 are
+non-nullable.
+
+The two new typed children preserve the fixed HPP declaration boundaries and
+strict canonical enum domains, while `ironing_expansion` remains a direct
+parent scalar rather than an invented effective group. The three raw arrays
+`post_process`, `small_area_infill_flow_compensation_model`, and
+`wiping_volumes_extruders` preserve arbitrary valid lengths, including empty
+arrays. `ProcessOptions` directly streams its flat 352-key union in global
+lexical order across the 115/124/113-entry parent wire helpers. All fields
+remain `retained-only`; legacy/UI conversions remain Task 19A work,
+full-print normalization remains Task 19B, behavioral-consumer migration
+remains Tasks 20A-20D, and compatibility parser removal remains Task 20E.
+
+TDD began with an E0432 failure for the missing `ProcessGCodeSourceOptions`.
+Focused tests cover exact 77/352 ownership, the three arrays, all six enum
+domains, the exact 15 fixture overrides, every field's valid non-default
+child/parent dispatch, all 77 keyed null failures, all 74 scalar array/object
+shape failures, direct-scalar duplicate handling, and exact standalone-child
+and 352-parent bytes. Reviewed local gates pass 14 focused tests, 24 adjacent
+process tests, 4,260 workspace tests with three configured skips,
+warning-denying workspace all-target Clippy, rustfmt, both WASM checks, the
+22-test dynamic-value audit with one configured skip, the diff whitespace
+gate, and the physical-LOC audit for every changed production and test module.
+Task 12 is next: type the exact 53 filament raw options owned by `GCodeConfig`.
+
 ### 2026-07-01 Consume prime tower brim width header slice
 
 `prime_tower_brim_width` is now consumed through the source-cited Orca `PrintConfig.hpp:1581-1584`, `PrintConfig.cpp:6725-6734,7878-7879`, `GCode.cpp:5523-5574`, `Print.cpp:318-323,3150,3177-3179`, `GCode/WipeTower.cpp:1461-1468,3705-3707`, and `GCode/WipeTower2.cpp:1248-1256,2115-2119,2134-2136` boundary. The Rust destination is the existing `FilamentConfigExports` config-header snapshot plus `gcode_config_header.rs` serialization. The slice validates the already-registered scalar brim-width option with Orca's `-1` lower bound; exports explicit values and the `-1` auto sentinel as one `prime_tower_brim_width` config header line; carries legacy `wipe_tower_brim_width` input through the existing normalization path; rejects invalid values before G-code bytes are returned; and preserves omitted-value header output. Automatic brim-width calculation, wipe-tower placement, fake wipe-tower state, collision checks, cone/corner geometry, wall generation, mesh construction, purge-depth planning, rib-wall width recomputation, legacy `WipeTower` and `WipeTower2` runtime brim-width behavior, adjacent prime-tower interface options, flush-volume behavior, UI, CLI, WASM bindings, and Orca binary E2E wipe-tower parity remain deferred.

@@ -1,15 +1,18 @@
 use serde::ser::SerializeMap;
 
-use super::super::{ProcessObjectSourceOptions, ProcessRegionSourceOptions};
+use super::super::ProcessOptions;
 
-pub(super) fn serialize_entries<M>(
-    map: &mut M,
-    object: &ProcessObjectSourceOptions,
-    region: &ProcessRegionSourceOptions,
-) -> Result<(), M::Error>
+pub(super) fn serialize_entries<M>(map: &mut M, process: &ProcessOptions) -> Result<(), M::Error>
 where
     M: SerializeMap,
 {
+    let ProcessOptions {
+        gcode,
+        object,
+        print,
+        region,
+        ..
+    } = process;
     map.serialize_entry(
         "solid_infill_rotate_template",
         &region.solid_infill_rotate_template,
@@ -31,7 +34,25 @@ where
         &region.sparse_infill_rotate_template,
     )?;
     map.serialize_entry("sparse_infill_speed", &region.sparse_infill_speed)?;
+    map.serialize_entry(
+        "spiral_finishing_flow_ratio",
+        &print.spiral_finishing_flow_ratio,
+    )?;
+    map.serialize_entry("spiral_mode", &print.spiral_mode)?;
+    map.serialize_entry(
+        "spiral_mode_max_xy_smoothing",
+        &print.spiral_mode_max_xy_smoothing,
+    )?;
+    map.serialize_entry("spiral_mode_smooth", &print.spiral_mode_smooth)?;
+    map.serialize_entry(
+        "spiral_starting_flow_ratio",
+        &print.spiral_starting_flow_ratio,
+    )?;
     map.serialize_entry("staggered_inner_seams", &object.staggered_inner_seams)?;
+    map.serialize_entry(
+        "standby_temperature_delta",
+        &print.standby_temperature_delta,
+    )?;
     map.serialize_entry("support_angle", &object.support_angle)?;
     map.serialize_entry("support_base_pattern", &object.support_base_pattern)?;
     map.serialize_entry(
@@ -119,6 +140,7 @@ where
     map.serialize_entry("symmetric_infill_y_axis", &region.symmetric_infill_y_axis)?;
     map.serialize_entry("thick_bridges", &object.thick_bridges)?;
     map.serialize_entry("thick_internal_bridges", &object.thick_internal_bridges)?;
+    map.serialize_entry("timelapse_type", &print.timelapse_type)?;
     map.serialize_entry(
         "top_bottom_infill_wall_overlap",
         &region.top_bottom_infill_wall_overlap,
@@ -138,6 +160,8 @@ where
     map.serialize_entry("top_surface_speed", &region.top_surface_speed)?;
     map.serialize_entry("travel_acceleration", &object.travel_acceleration)?;
     map.serialize_entry("travel_jerk", &object.travel_jerk)?;
+    map.serialize_entry("travel_speed", &gcode.travel_speed)?;
+    map.serialize_entry("travel_speed_z", &gcode.travel_speed_z)?;
     map.serialize_entry("tree_support_angle_slow", &object.tree_support_angle_slow)?;
     map.serialize_entry("tree_support_auto_brim", &object.tree_support_auto_brim)?;
     map.serialize_entry(
@@ -194,6 +218,31 @@ where
     )?;
     map.serialize_entry("wipe_on_loops", &region.wipe_on_loops)?;
     map.serialize_entry("wipe_speed", &region.wipe_speed)?;
+    map.serialize_entry("wipe_tower_bridging", &print.wipe_tower_bridging)?;
+    map.serialize_entry("wipe_tower_cone_angle", &print.wipe_tower_cone_angle)?;
+    map.serialize_entry("wipe_tower_extra_flow", &print.wipe_tower_extra_flow)?;
+    map.serialize_entry(
+        "wipe_tower_extra_rib_length",
+        &print.wipe_tower_extra_rib_length,
+    )?;
+    map.serialize_entry("wipe_tower_extra_spacing", &print.wipe_tower_extra_spacing)?;
+    map.serialize_entry("wipe_tower_filament", &print.wipe_tower_filament)?;
+    map.serialize_entry("wipe_tower_fillet_wall", &print.wipe_tower_fillet_wall)?;
+    map.serialize_entry(
+        "wipe_tower_max_purge_speed",
+        &print.wipe_tower_max_purge_speed,
+    )?;
+    map.serialize_entry(
+        "wipe_tower_no_sparse_layers",
+        &gcode.wipe_tower_no_sparse_layers,
+    )?;
+    map.serialize_entry("wipe_tower_rib_width", &print.wipe_tower_rib_width)?;
+    map.serialize_entry(
+        "wipe_tower_rotation_angle",
+        &print.wipe_tower_rotation_angle,
+    )?;
+    map.serialize_entry("wipe_tower_wall_type", &print.wipe_tower_wall_type)?;
+    map.serialize_entry("wiping_volumes_extruders", &print.wiping_volumes_extruders)?;
     map.serialize_entry("xy_contour_compensation", &object.xy_contour_compensation)?;
     map.serialize_entry("xy_hole_compensation", &object.xy_hole_compensation)?;
     map.serialize_entry(

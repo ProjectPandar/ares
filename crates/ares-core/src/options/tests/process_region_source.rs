@@ -190,7 +190,7 @@ fn region_and_parent_decode_errors_are_keyed_strict_and_scope_aware() {
     }
 
     let rows = inventory();
-    let deferred = rows
+    let remaining = rows
         .iter()
         .filter(|row| {
             row.raw_scope == "process"
@@ -198,26 +198,28 @@ fn region_and_parent_decode_errors_are_keyed_strict_and_scope_aware() {
                 && row.static_owner != "print_region_config"
         })
         .collect::<Vec<_>>();
-    assert_eq!(deferred.len(), 77);
-    for row in deferred {
-        let error = serde_json::from_value::<ProcessOptions>(json!({row.key.clone(): "0"}))
-            .unwrap_err()
-            .to_string();
-        assert!(error.contains(&row.key), "{}: {error}", row.key);
-        assert!(error.contains("unknown Orca process option"), "{error}");
+    assert_eq!(remaining.len(), 77);
+    for row in remaining {
+        let fixture = fixture_fields([row.key.as_str()]);
+        assert!(
+            serde_json::from_value::<ProcessRegionSourceOptions>(Value::Object(fixture.clone()))
+                .is_err(),
+            "{}",
+            row.key
+        );
+        serde_json::from_value::<ProcessOptions>(Value::Object(fixture)).unwrap();
     }
 }
 
 #[test]
-fn process_parent_flattens_object_and_region_in_global_lexicographic_order() {
+fn process_parent_flattens_all_four_sources_in_global_lexicographic_order() {
     let rows = inventory();
-    let mut keys = object_rows(&rows)
-        .into_iter()
-        .chain(region_rows(&rows))
+    let keys = rows
+        .iter()
+        .filter(|row| row.raw_scope == "process")
         .map(|row| row.key.as_str())
         .collect::<Vec<_>>();
-    keys.sort_unstable();
-    assert_eq!(keys.len(), 275);
+    assert_eq!(keys.len(), 352);
     let fixture = fixture_fields(keys.iter().copied());
     let process: ProcessOptions =
         serde_json::from_value(Value::Object(fixture.clone())).unwrap();

@@ -1,15 +1,20 @@
 use serde::ser::SerializeMap;
 
-use super::super::{ProcessObjectSourceOptions, ProcessRegionSourceOptions};
+use super::super::ProcessOptions;
 
-pub(super) fn serialize_entries<M>(
-    map: &mut M,
-    object: &ProcessObjectSourceOptions,
-    region: &ProcessRegionSourceOptions,
-) -> Result<(), M::Error>
+pub(super) fn serialize_entries<M>(map: &mut M, process: &ProcessOptions) -> Result<(), M::Error>
 where
     M: SerializeMap,
 {
+    let ProcessOptions {
+        gcode,
+        object,
+        print,
+        region,
+        ..
+    } = process;
+    map.serialize_entry("accel_to_decel_enable", &gcode.accel_to_decel_enable)?;
+    map.serialize_entry("accel_to_decel_factor", &gcode.accel_to_decel_factor)?;
     map.serialize_entry(
         "align_infill_direction_to_model",
         &region.align_infill_direction_to_model,
@@ -48,6 +53,7 @@ where
         "calib_flowrate_topinfill_special_order",
         &object.calib_flowrate_topinfill_special_order,
     )?;
+    map.serialize_entry("combine_brims", &print.combine_brims)?;
     map.serialize_entry(
         "counterbore_hole_bridging",
         &region.counterbore_hole_bridging,
@@ -68,6 +74,7 @@ where
         "dont_filter_internal_bridges",
         &object.dont_filter_internal_bridges,
     )?;
+    map.serialize_entry("draft_shield", &print.draft_shield)?;
     map.serialize_entry(
         "elefant_foot_compensation",
         &object.elefant_foot_compensation,
@@ -80,22 +87,42 @@ where
         "elefant_foot_layers_density",
         &object.elefant_foot_layers_density,
     )?;
+    map.serialize_entry("enable_arc_fitting", &gcode.enable_arc_fitting)?;
     map.serialize_entry(
         "enable_extra_bridge_layer",
         &object.enable_extra_bridge_layer,
     )?;
     map.serialize_entry("enable_overhang_speed", &region.enable_overhang_speed)?;
+    map.serialize_entry("enable_prime_tower", &print.enable_prime_tower)?;
     map.serialize_entry("enable_support", &object.enable_support)?;
+    map.serialize_entry(
+        "enable_tower_interface_cooldown_during_tower",
+        &print.enable_tower_interface_cooldown_during_tower,
+    )?;
+    map.serialize_entry(
+        "enable_tower_interface_features",
+        &print.enable_tower_interface_features,
+    )?;
+    map.serialize_entry(
+        "enable_wrapping_detection",
+        &gcode.enable_wrapping_detection,
+    )?;
     map.serialize_entry("enforce_support_layers", &object.enforce_support_layers)?;
     map.serialize_entry(
         "ensure_vertical_shell_thickness",
         &region.ensure_vertical_shell_thickness,
     )?;
+    map.serialize_entry("exclude_object", &print.exclude_object)?;
     map.serialize_entry(
         "extra_perimeters_on_overhangs",
         &region.extra_perimeters_on_overhangs,
     )?;
     map.serialize_entry("extra_solid_infills", &region.extra_solid_infills)?;
+    map.serialize_entry(
+        "extrusion_rate_smoothing_external_perimeter_only",
+        &gcode.extrusion_rate_smoothing_external_perimeter_only,
+    )?;
+    map.serialize_entry("filename_format", &print.filename_format)?;
     map.serialize_entry("fill_multiline", &region.fill_multiline)?;
     map.serialize_entry("filter_out_gap_fill", &region.filter_out_gap_fill)?;
     map.serialize_entry("first_layer_flow_ratio", &region.first_layer_flow_ratio)?;
@@ -126,6 +153,9 @@ where
     map.serialize_entry("gap_fill_flow_ratio", &region.gap_fill_flow_ratio)?;
     map.serialize_entry("gap_fill_target", &object.gap_fill_target)?;
     map.serialize_entry("gap_infill_speed", &region.gap_infill_speed)?;
+    map.serialize_entry("gcode_add_line_number", &gcode.gcode_add_line_number)?;
+    map.serialize_entry("gcode_comments", &print.gcode_comments)?;
+    map.serialize_entry("gcode_label_objects", &print.gcode_label_objects)?;
     map.serialize_entry("gyroid_optimized", &region.gyroid_optimized)?;
     map.serialize_entry("hole_to_polyhole", &region.hole_to_polyhole)?;
     map.serialize_entry(
@@ -133,6 +163,10 @@ where
         &region.hole_to_polyhole_threshold,
     )?;
     map.serialize_entry("hole_to_polyhole_twisted", &region.hole_to_polyhole_twisted)?;
+    map.serialize_entry(
+        "independent_support_layer_height",
+        &print.independent_support_layer_height,
+    )?;
     map.serialize_entry("infill_anchor", &region.infill_anchor)?;
     map.serialize_entry("infill_anchor_max", &region.infill_anchor_max)?;
     map.serialize_entry("infill_combination", &region.infill_combination)?;
@@ -150,10 +184,32 @@ where
         "initial_layer_acceleration",
         &object.initial_layer_acceleration,
     )?;
+    map.serialize_entry(
+        "initial_layer_infill_speed",
+        &print.initial_layer_infill_speed,
+    )?;
     map.serialize_entry("initial_layer_jerk", &object.initial_layer_jerk)?;
+    map.serialize_entry("initial_layer_line_width", &print.initial_layer_line_width)?;
     map.serialize_entry(
         "initial_layer_min_bead_width",
         &object.initial_layer_min_bead_width,
+    )?;
+    map.serialize_entry(
+        "initial_layer_print_height",
+        &print.initial_layer_print_height,
+    )?;
+    map.serialize_entry("initial_layer_speed", &print.initial_layer_speed)?;
+    map.serialize_entry(
+        "initial_layer_travel_acceleration",
+        &gcode.initial_layer_travel_acceleration,
+    )?;
+    map.serialize_entry(
+        "initial_layer_travel_jerk",
+        &gcode.initial_layer_travel_jerk,
+    )?;
+    map.serialize_entry(
+        "initial_layer_travel_speed",
+        &gcode.initial_layer_travel_speed,
     )?;
     map.serialize_entry("inner_wall_acceleration", &object.inner_wall_acceleration)?;
     map.serialize_entry("inner_wall_filament_id", &region.inner_wall_filament_id)?;
