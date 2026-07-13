@@ -24,9 +24,11 @@ pub(crate) mod parsing;
 mod pellet;
 mod physical_extruder_map;
 pub(crate) mod power_loss_recovery;
+mod preset_metadata;
 mod pressure_advance;
 mod printer_options;
 mod process_options;
+mod project_runtime_options;
 mod project_settings;
 mod relative_e;
 mod shell_layers;
@@ -77,6 +79,7 @@ pub use {
     infill::{InfillOptions, InfillPattern},
     layer_change_retraction::RetractLiftEnforce,
     power_loss_recovery::PowerLossRecoveryMode,
+    preset_metadata::PresetMetadata,
     printer_options::{
         AuthorizationType, DefaultBedType, ExtruderType, ExtruderTypes, ExtruderVariantLists,
         InputShaperType, MachineEnvelopeOptions, NozzleType, NozzleVolumeType, NozzleVolumeTypes,
@@ -96,6 +99,10 @@ pub use {
         ProcessSupportBasePattern, ProcessSupportInterfacePattern, ProcessSupportStyle,
         ProcessSupportType, ProcessTimelapseType, ProcessWallDirection, ProcessWallSequence,
         ProcessWipeTowerWallType,
+    },
+    project_runtime_options::{
+        ProjectBedType, ProjectFilamentMapMode, ProjectGCodeSourceOptions,
+        ProjectPresetSourceOptions, ProjectPrintSourceOptions, ProjectRuntimeOptions,
     },
     project_settings::ProjectSettings,
 };

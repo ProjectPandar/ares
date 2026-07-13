@@ -1228,33 +1228,238 @@ all-nil effective export omission at `GCode.cpp:5632-5640` remains Task 19C.
 
 ### Task 14: Typed Project/Runtime Residual Options (47 Fields)
 
-**Upstream boundary:** The fixed-tag fixture keys outside the three `Preset.cpp` raw scope lists; their individual `PrintConfig`/`GCodeConfig` owners and project metadata semantics.
+**Upstream boundary:** The exact difference between the fixed-tag 653-key
+fixture and the already typed Printer 132 + Process 352 + Filament 122 union;
+17 residual `GCodeConfig` declarations, 19 residual FFF `PrintConfig`
+declarations, eight project/preset registrations, and three project JSON
+provenance strings.
+
+This task is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The exact source slices are:
+
+- `PrintConfig.hpp:1299-1476`, with the 17 filtered `GCodeConfig`
+  declarations at `:1304-1475` and their definitions in `PrintConfig.cpp`;
+- `PrintConfig.hpp:1479-1660`, with the 19 filtered FFF `PrintConfig`
+  declarations at `:1501-1626` and their definitions in `PrintConfig.cpp`;
+- the eight registrations at `PrintConfig.cpp:1832,1874,2473,2477,2933,
+  5111,5116,5432`, with project/preset composition at
+  `PresetBundle.cpp:43-58,102-239,2652-2672,3881-4161`;
+- `extruder_ams_count` raw structured-string behavior at
+  `PrintConfig.cpp:617-653` and its empty-vector default at `:5379-5383`;
+- metadata load/save at `Config.cpp:887-911,1464-1496` and the 3MF save call
+  at `Format/bbs_3mf.cpp:7726`; and
+- strict raw enum maps at `PrintConfig.cpp:469-478,573-584`, distinct from
+  adjacent UI-facing enum lists.
+
+Do not define the residual as the literal complement of the fixed Preset
+lists. That complement contains 48 keys because `filament_colour` is commented
+out at `Preset.cpp:1309`; Task 12 already assigns that project-owned
+`GCodeConfig` field to Filament using
+`PresetBundle.cpp:43-58,2652-2658,2795-2802`. The exact typed equation is:
+
+```text
+fixture 653 - printer 132 - process 352 - filament 122 = residual 47
+```
 
 **Files:**
-- Create: `options/project_runtime_options.rs`
+- Create: `options/project_runtime_options.rs` with `gcode_source`,
+  `print_source`, `preset_source`, enum, and wire siblings as required by the
+  under-400-physical-LOC gate
 - Create: `options/preset_metadata.rs`
-- Create: `options/tests/project_runtime_options.rs`
-- Modify: `options/project_settings.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/tests/project_runtime_options.rs` with focused inventory,
+  defaults/types, fixture, dispatch, enum, invalid-shape, wire, metadata, and
+  expected-data siblings
+- Modify: `options.rs`, `lib.rs`, `options/project_settings.rs`,
+  `options/tests.rs`, `docs/architecture/option-parity-v4.md`,
+  `docs/roadmap.md`
 
 **Interfaces:**
-- Produces `ProjectRuntimeOptions` for 44 real options and `PresetMetadata { from, name, version }` for the three metadata strings.
-- Completes raw ownership of all 653 keys when combined with Printer/Process/Filament.
+- Produces public `ProjectRuntimeOptions { gcode, print, preset }` for 44 real
+  raw options and `PresetMetadata { from, name, version }` for the three
+  provenance strings.
+- Adds concrete public `project` and `metadata` fields to `ProjectSettings`.
+- Each source child preserves fixed upstream declaration/registration order and
+  serializes independently in lexical order. `ProjectRuntimeOptions` streams a
+  flat lexical 44-key map directly through one shared `SerializeMap`; it emits
+  no nested child objects, serde flattening, remainder map, or DOM buffer.
+- Completes the pairwise-disjoint typed 653-key fixture union in tests. Task 18
+  still owns the production top-level `ProjectSettings` visitor/serializer,
+  cross-group duplicate/unknown handling, and strict project loading.
 
-- [ ] **Step 1: Add RED residual and global-union tests**
+**Exact ownership:**
 
-  Assert exactly 47 residual keys, including exactly three metadata fields, and prove the four raw scopes are pairwise disjoint with a 653-key union identical to the committed fixture. Assert all 650 real options map to the exact type histogram and all 653 values can be serialized without loss of string/array shape.
+- `ProjectGCodeSourceOptions` owns these 17 fields in fixed HPP order:
+  `deretraction_speed`, `filament_ids`, `filament_map_mode`, `filament_map`,
+  `retract_before_wipe`, `retraction_length`, `retract_length_toolchange`,
+  `z_hop`, `retract_lift_above`, `retract_lift_below`,
+  `retract_restart_extra`, `retract_restart_extra_toolchange`,
+  `retraction_speed`, `nozzle_volume_type`, `extruder_ams_count`,
+  `bbl_calib_mark_logo`, `has_scarf_joint_seam`.
+- `ProjectPrintSourceOptions` owns these 19 fields in fixed HPP order:
+  `curr_bed_type`, `first_layer_print_sequence`,
+  `other_layers_print_sequence`, `other_layers_print_sequence_nums`,
+  `extruder_colour`, `extruder_offset`, `max_layer_height`,
+  `min_layer_height`, `nozzle_diameter`, `retraction_minimum_travel`,
+  `retract_when_changing_layer`, `wipe`, `wipe_distance`, `wipe_tower_x`,
+  `wipe_tower_y`, `flush_volumes_matrix`, `flush_volumes_vector`,
+  `flush_multiplier`, `start_end_points`.
+- `ProjectPresetSourceOptions` owns these eight real fields in fixed
+  registration order: `print_compatible_printers`,
+  `default_filament_profile`, `filament_multi_colour`,
+  `filament_colour_type`, `filament_settings_id`, `print_settings_id`,
+  `printer_settings_id`, `filament_self_index`.
+- `PresetMetadata` owns exactly `from`, `name`, and `version`; they are not
+  `PrintConfig` options and never enter `ProjectRuntimeOptions`.
 
-- [ ] **Step 2: Implement the 47 concrete fields**
+The exact 44-real-option histogram is:
 
-  Metadata is retained for project provenance but excluded from the G-code config block exactly as upstream does. Every other field is placed under its source-cited semantic child within `ProjectRuntimeOptions`; no catch-all remainder exists.
+```text
+coBool=2, coBools=2, coEnum=2, coEnums=1, coFloats=19,
+coInt=1, coInts=4, coPercents=1, coPoints=2, coString=2, coStrings=8
+```
 
-- [ ] **Step 3: Run focused GREEN and the mandatory task gate**
+All 47 fields are non-nullable. The fixture and canonical-save boundary is 37
+JSON arrays plus ten scalar strings. The six singleton vectors remain arrays:
+`default_filament_profile`, `first_layer_print_sequence`,
+`other_layers_print_sequence`, `print_compatible_printers`, `wipe_tower_x`,
+and `wipe_tower_y`. The exact array-length histogram is
+`{1:6, 2:14, 4:15, 8:2}`. Raw vectors accept arbitrary valid cardinality; no
+fixture-length, matrix-dimension, AMS-topology, or active-extruder rule enters
+this task.
+
+- [ ] **Step 1: Establish genuine aggregate RED and exact inventory tests**
+
+  First require the missing `ProjectSettings::project: ProjectRuntimeOptions`
+  and `ProjectSettings::metadata: PresetMetadata` interfaces and record a
+  focused nonzero result caused only by those absent production interfaces.
+  Then assert the exact 17/19/8/3 partition, fixed source orders, unique 47-key
+  inventory, histogram, zero nullable fields, 37/10 wire shapes, and all fixed
+  defaults/concrete public types using expected constants independent of
+  production declarations.
+
+  Prove Printer 132, Process 352, Filament 122, and Residual 47 are pairwise
+  disjoint and merge to the exact 653 fixture keys. The whole 650-real-option
+  histogram must remain:
+
+  ```text
+  coBool105/coBools22/coEnum44/coEnums9/coFloat160/
+  coFloatOrPercent36/coFloats90/coInt41/coInts45/coPercent25/
+  coPercents5/coPoint4/coPoints6/coPointsGroups1/coString30/coStrings27
+  ```
+
+  This union is test evidence only; do not implement Task 18's production
+  top-level map visitor early.
+
+- [ ] **Step 2: Add RED defaults, enum, fixture-shape, and dispatch tests**
+
+  Exercise every one of the 44 real fields through its child and flat parent
+  with a valid non-default value before adding production support. Assert all
+  singleton/vector/scalar defaults, including `extruder_ams_count == []`, and
+  exactly these strict raw enum domains:
+
+  - `curr_bed_type`: `Default Plate`, `Supertack Plate`, `Cool Plate`,
+    `Engineering Plate`, `High Temp Plate`, `Textured PEI Plate`,
+    `Textured Cool Plate`;
+  - `filament_map_mode`: `Auto For Flush`, `Auto For Match`, `Manual`; UI-only
+    `Default` is not a canonical raw token; and
+  - `nozzle_volume_type` elements: `Standard`, `High Flow`.
+
+  Reject unknown, case-variant, numeric, UI-only, and legacy enum spellings;
+  legacy conversions remain Task 19A. For every vector, accept and byte-round
+  trip arbitrary valid empty, one-, and three-element values. Preserve `[]`
+  versus `[""]`, structured AMS strings, point encodings, percent suffixes,
+  and finite numeric values without interpretation.
+
+  Reject wrong top-level shapes, invalid elements, JSON null, duplicates,
+  unknown keys, cross-child keys, and nested child objects with bounded errors
+  naming the field. Test declaration order separately from exact standalone
+  child lexical bytes, flat 44-key parent bytes, and `from,name,version`
+  metadata bytes.
+
+  Use the real 3MF through the existing bounded test loader to prove the exact
+  six singleton arrays, `{1:6,2:14,4:15,8:2}` cardinalities, metadata values,
+  and lossless typed round trip. Exactly seven real fixture fields equal their
+  fixed defaults: `bbl_calib_mark_logo`, `filament_map_mode`,
+  `first_layer_print_sequence`, `has_scarf_joint_seam`,
+  `other_layers_print_sequence`, `other_layers_print_sequence_nums`, and
+  `start_end_points`; the other 37 differ.
+
+- [ ] **Step 3: Implement the 47 concrete fields option-by-option**
+
+  For each field, add its failing valid/default/wire assertion first, then only
+  its concrete field, default, direct dispatch arm, and serializer entry before
+  rerunning focused GREEN. Reuse existing `Orca*`, `Point2dList`,
+  `FlatMatrix`, `AmsCounts`, and `NozzleVolumeTypes` codecs. Add strict
+  `ProjectBedType` and `ProjectFilamentMapMode` enums from the raw key maps;
+  do not reuse the open-string `DefaultBedType` wrapper.
+
+  `AmsCounts` remains a raw string vector and `FlatMatrix` remains a finite
+  float vector. Do not parse AMS structure, enforce square matrices, resize
+  vectors, select active entries, or validate cross-field cardinality. Keep
+  metadata in its concrete sibling and add only the two aggregate fields to
+  `ProjectSettings`; do not add production top-level serialization or project
+  loader wiring.
+
+  Every changed production and test Rust file must remain below 400 physical
+  lines. Split only the named semantic siblings needed to satisfy that gate.
+  Add no filesystem, terminal, FFI, native-only, UI, fallback, fixture-name,
+  or reference-G-code behavior to `ares-core`.
+
+  Record without migrating the 31 real-name production literal collisions.
+  The exact 13-key no-collision complement is `bbl_calib_mark_logo`,
+  `extruder_offset`, `filament_self_index`, `first_layer_print_sequence`,
+  `flush_multiplier`, `flush_volumes_matrix`, `flush_volumes_vector`,
+  `has_scarf_joint_seam`, `other_layers_print_sequence`,
+  `other_layers_print_sequence_nums`, `retract_length_toolchange`,
+  `retract_restart_extra_toolchange`, and `start_end_points`.
+
+  Explicitly defer all 17 residual effective G-code projections to Task 17;
+  strict top-level dispatch/persistence to Task 18; legacy key/value conversion
+  to Task 19A; active sizing, AMS/self-index interpretation, vector/matrix
+  normalization, and cross-field validation to Task 19B; metadata exclusion,
+  `extruder_colour` substitution, scaled `flush_volumes_matrix`, duplicate
+  plate-indexed `wipe_tower_x/y`, and exact config-block export to Task 19C;
+  and consumer migration/parser removal to Tasks 20A-20E.
+
+- [ ] **Step 4: Run focused GREEN and the mandatory task gate**
+
+  Run the focused test throughout TDD, then the complete local matrix:
 
   ```powershell
-  cargo nextest run -p ares-core project_runtime_options
+  cargo +1.91.0 fmt --all -- --check
+  cargo +1.91.0 nextest run -p ares-core project_runtime_options
+  cargo +1.91.0 nextest run --workspace
+  cargo +1.91.0 nextest run -p ares-core --test no_unapproved_dynamic_values
+  cargo +1.91.0 clippy --workspace --all-targets -- -D warnings
+  cargo +1.91.0 check -p ares-core
+  cargo +1.91.0 check -p ares-core --target wasm32-unknown-unknown
+  cargo +1.91.0 check -p ares-wasm --target wasm32-unknown-unknown
+  cargo +1.91.0 build -p ares-wasm --target wasm32-unknown-unknown --release
+  wasm-bindgen target/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+  npm --prefix crates/ares-wasm/tests/browser ci
+  npm --prefix crates/ares-wasm/tests/browser test
+  git diff --check -- . ':(exclude)tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode'
+  ```
+
+  The browser harness must import the generated web binding, pass the real 3MF
+  as a `Uint8Array`, and observe exact `ProjectSlicingIncomplete`. Also run
+  no-index whitespace checks for untracked files, physical LOC checks failing
+  at 400 or more, an exact changed-file audit, and affected adjacent typed
+  option tests.
+
+  Freeze the complete diff and obtain independent literal
+  `SPEC VERDICT: APPROVE`, `QUALITY VERDICT: APPROVE`, and after tracked docs
+  are updated, `DOCS VERDICT: APPROVE`. The user-approved OpenCode bypass
+  applies. Any finding requires correction and fresh affected gates/review.
+  Rerun the complete final local matrix on the exact bytes to commit, then:
+
+  ```powershell
   git commit -m "feat(config): type project runtime options"
   git push
   ```
+
+  Identify the Tier 1 run for the exact pushed SHA and require all five jobs--
+  Windows, macOS, Ubuntu/Linux, format, and WASM--to succeed before Task 15.
 
 ---
 

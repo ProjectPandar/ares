@@ -518,7 +518,62 @@ upstream, RED-test, final-specification, code-quality, and frozen-byte reviews
 approve the slice under the user-approved temporary OpenCode bypass. The
 five-job Tier 1 workflow gates the exact pushed commit before Task 14 begins.
 
-Task 14 is next: type the remaining project/runtime residual options.
+### 2026-07-13 Type project/runtime residual raw options
+
+Task 14 ports the exact 47-key residual at fixed OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`: 17 filtered `GCodeConfig`
+declarations, 19 filtered FFF `PrintConfig` declarations, eight direct
+project/preset registrations, and three separate metadata strings. The
+boundary is `653 - 132 Printer - 352 Process - 122 Filament = 47`; literal
+preset-list subtraction would incorrectly produce 48 because Task 12 already
+owns the commented-out preset key `filament_colour`.
+
+The 44 real options are concrete and non-nullable with histogram two bool
+scalars, two bool vectors, two enum scalars, one enum vector, 19 float vectors,
+one int scalar, four int vectors, one percent vector, two point vectors, two
+string scalars, and eight string vectors. The corrected defaults retain
+`extruder_ams_count=[]`, a 16-entry `flush_volumes_matrix` with zero diagonal
+and `280` elsewhere, eight `140` flush-vector entries, and the remaining fixed
+source values recorded in the Task 14 architecture ledger. Metadata is the
+separate `from,name,version` sibling and defaults to empty strings.
+
+The raw enum domains are exactly seven bed tokens including `Default Plate`
+and canonical `Supertack Plate`, three filament-map tokens excluding UI-only
+`Default`, and two nozzle-volume tokens `Standard` / `High Flow`. Legacy
+spellings remain rejected here. Canonical fixture shape is 37 arrays and ten
+scalar strings; its array histogram is `{1:6,2:14,4:15,8:2}`. Exactly seven
+real fixture values equal defaults and 37 differ, while arbitrary valid raw
+vector lengths remain accepted.
+
+`ProjectRuntimeOptions` directly streams one globally lexical flat 44-key map,
+and `PresetMetadata` streams lexical `from,name,version`. Tests prove the
+pairwise-disjoint typed 653-key union, but production top-level
+`ProjectSettings` load/save and cross-group dispatch remain Task 18. The
+dynamic debt ledger records 31 literal collisions and the exact 13-key
+no-collision complement without migrating consumers or changing the dynamic
+baseline.
+
+Task 17 retains all 17 effective G-code projections. Task 19A retains legacy
+conversion; Task 19B retains active sizing, AMS/self-index interpretation,
+normalization, and cross-field validation; Task 19C retains metadata exclusion
+and special config-block export; and Tasks 20A-20E retain consumer migration
+and final compatibility-parser removal.
+
+TDD began with two frozen focused RED runs that failed only on missing planned
+interfaces. Local verification passes 23 focused tests, 107 adjacent tests,
+all 4,319 workspace tests with three configured skips, the 22-test dynamic
+audit with one configured skip, rustfmt, warning-denying workspace Clippy,
+native and WASM checks, release web binding generation, the real-3MF
+Playwright test, whitespace and forbidden-dynamic scans, exact file ownership,
+and the under-400-LOC gate. The largest changed Rust file is 290 lines.
+Independent final specification and code-quality reviews approve the frozen
+implementation under the user-authorized temporary OpenCode bypass. The exact
+pushed commit remains gated by Windows, macOS, Ubuntu/Linux, format, and WASM.
+
+Task 15 is next: port Effective Object Options, the non-raw 126-field
+projection and typed per-object override resolution fixed to
+`PrintObject.cpp::object_config_from_model_object`, `PrintApply.cpp::Print::apply`,
+`ModelObject` metadata overrides, and `PrintObjectConfig` inheritance.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

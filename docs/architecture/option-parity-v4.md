@@ -870,3 +870,184 @@ checks, and the physical-LOC gate are green; the largest changed Rust module is
 and frozen-byte reviews approve the slice under the user-approved temporary
 OpenCode bypass. The exact pushed commit remains subject to the five-job Tier 1
 gate before downstream implementation proceeds.
+
+### Task 14: project/runtime residual raw options
+
+Task 14 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its source boundary is the exact
+difference between the 653-key fixture and the already typed Printer 132,
+Process 352, and Filament 122 union:
+
+```text
+fixture 653 - printer 132 - process 352 - filament 122 = residual 47
+ProjectGCodeSourceOptions 17
++ ProjectPrintSourceOptions 19
++ ProjectPresetSourceOptions 8
++ PresetMetadata 3
+= Task 14 47
+```
+
+The literal complement of the three fixed preset lists is 48, not 47,
+because `filament_colour` is commented out at fixed `Preset.cpp:1309`; Task 12
+already owns it in `FilamentGCodeSourceOptions`. Task 14 therefore uses the
+typed-union difference and does not duplicate that field. The corrected source
+audit also fixes the raw enum domains and the empty-vector
+`extruder_ams_count` default that were wrong in the earlier contract.
+
+`ProjectRuntimeOptions { gcode, print, preset }` owns the 44 real raw options,
+and sibling `PresetMetadata { from, name, version }` owns the three provenance
+strings. `ProjectSettings` exposes both as concrete public fields. The three
+metadata strings are not `PrintConfig` options and never enter the 44-key
+runtime map.
+
+The exact 44-real-option upstream type histogram is:
+
+```text
+coBool=2, coBools=2, coEnum=2, coEnums=1, coFloats=19,
+coInt=1, coInts=4, coPercents=1, coPoints=2,
+coString=2, coStrings=8
+```
+
+All 44 real values and all three metadata values are non-nullable on the wire;
+an absent field resolves to its concrete typed default, while JSON null is
+rejected. The fixed field types and defaults are:
+
+| `ProjectGCodeSourceOptions` field | Upstream type | Fixed default wire value |
+| --- | --- | --- |
+| `deretraction_speed` | `coFloats` | `["0"]` |
+| `filament_ids` | `coStrings` | `[]` |
+| `filament_map_mode` | `coEnum` | `"Auto For Flush"` |
+| `filament_map` | `coInts` | `["1"]` |
+| `retract_before_wipe` | `coPercents` | `["100%"]` |
+| `retraction_length` | `coFloats` | `["0.8"]` |
+| `retract_length_toolchange` | `coFloats` | `["10"]` |
+| `z_hop` | `coFloats` | `["0.4"]` |
+| `retract_lift_above` | `coFloats` | `["0"]` |
+| `retract_lift_below` | `coFloats` | `["0"]` |
+| `retract_restart_extra` | `coFloats` | `["0"]` |
+| `retract_restart_extra_toolchange` | `coFloats` | `["0"]` |
+| `retraction_speed` | `coFloats` | `["30"]` |
+| `nozzle_volume_type` | `coEnums` | `["Standard"]` |
+| `extruder_ams_count` | `coStrings` / raw `AmsCounts` | `[]` |
+| `bbl_calib_mark_logo` | `coBool` | `"1"` |
+| `has_scarf_joint_seam` | `coBool` | `"0"` |
+
+| `ProjectPrintSourceOptions` field | Upstream type | Fixed default wire value |
+| --- | --- | --- |
+| `curr_bed_type` | `coEnum` | `"Cool Plate"` |
+| `first_layer_print_sequence` | `coInts` | `["0"]` |
+| `other_layers_print_sequence` | `coInts` | `["0"]` |
+| `other_layers_print_sequence_nums` | `coInt` | `"0"` |
+| `extruder_colour` | `coStrings` | `[""]` |
+| `extruder_offset` | `coPoints` | `["0x0"]` |
+| `max_layer_height` | `coFloats` | `["0"]` |
+| `min_layer_height` | `coFloats` | `["0.07"]` |
+| `nozzle_diameter` | `coFloats` | `["0.4"]` |
+| `retraction_minimum_travel` | `coFloats` | `["2"]` |
+| `retract_when_changing_layer` | `coBools` | `["0"]` |
+| `wipe` | `coBools` | `["0"]` |
+| `wipe_distance` | `coFloats` | `["1"]` |
+| `wipe_tower_x` | `coFloats` | `["15"]` |
+| `wipe_tower_y` | `coFloats` | `["220"]` |
+| `flush_volumes_matrix` | `coFloats` / raw `FlatMatrix` | 16 values, `0` on the 4x4 diagonal and `280` elsewhere |
+| `flush_volumes_vector` | `coFloats` | eight `"140"` values |
+| `flush_multiplier` | `coFloats` | `["0.3"]` |
+| `start_end_points` | `coPoints` | `["30x-3","54x245"]` |
+
+| `ProjectPresetSourceOptions` field | Upstream type | Fixed default wire value |
+| --- | --- | --- |
+| `print_compatible_printers` | `coStrings` | `[]` |
+| `default_filament_profile` | `coStrings` | `[]` |
+| `filament_multi_colour` | `coStrings` | `[""]` |
+| `filament_colour_type` | `coStrings` | `["1"]` |
+| `filament_settings_id` | `coStrings` | `[""]` |
+| `print_settings_id` | `coString` | `""` |
+| `printer_settings_id` | `coString` | `""` |
+| `filament_self_index` | `coInts` | `["1"]` |
+
+`PresetMetadata::default()` uses empty strings for `from`, `name`, and
+`version`; the committed fixture carries `"project"`, `"project_settings"`,
+and `"02.06.00.51"`. Its lexical wire order is exactly `from,name,version`.
+
+The strict raw enum maps come from fixed `PrintConfig.cpp`, not UI suggestion
+lists:
+
+- `curr_bed_type`: `Default Plate`, `Supertack Plate`, `Cool Plate`,
+  `Engineering Plate`, `High Temp Plate`, `Textured PEI Plate`, and
+  `Textured Cool Plate`;
+- `filament_map_mode`: `Auto For Flush`, `Auto For Match`, and `Manual`;
+  UI-only `Default` is not a raw token; and
+- each `nozzle_volume_type` element: `Standard` or `High Flow`.
+
+Case variants, numeric forms, unknown tokens, UI-only tokens, and the legacy
+spellings `SuperTack Plate`, `Auto`, `Normal`, and `Big Traffic` are rejected
+at this raw boundary. Their conversions remain Task 19A.
+
+The 44 real fixed declarations comprise 37 vectors and seven scalars.
+Canonical save plus metadata is therefore exactly 37 JSON arrays and ten
+scalar strings. The fixture's six singleton arrays are
+`default_filament_profile`, `first_layer_print_sequence`,
+`other_layers_print_sequence`, `print_compatible_printers`, `wipe_tower_x`,
+and `wipe_tower_y`; the exact vector-length histogram is
+`{1:6, 2:14, 4:15, 8:2}`. These lengths are fixture evidence only. Empty,
+one-element, three-element, and other valid vector cardinalities remain valid;
+the raw layer does not infer active extruders, AMS topology, or matrix
+dimensions.
+
+Exactly seven real fixture values equal their typed defaults:
+`bbl_calib_mark_logo`, `filament_map_mode`,
+`first_layer_print_sequence`, `has_scarf_joint_seam`,
+`other_layers_print_sequence`, `other_layers_print_sequence_nums`, and
+`start_end_points`. The other 37 differ. `AmsCounts`, `FlatMatrix`, point,
+percent, bool, numeric, and string wrappers preserve their raw distinctions;
+in particular, `[]` is not `[""]`.
+
+Each child preserves fixed declaration or registration order in memory and
+serializes its own direct lexical map. `ProjectRuntimeOptions` opens one
+`SerializeMap(Some(44))` and streams one globally lexical flat 44-key map; it
+does not emit nested child maps, serde flattening, a remainder map, or a DOM.
+Tests merge Printer 132, Process 352, Filament 122, Project 44, and Metadata 3
+into the exact pairwise-disjoint 653-key fixture union. That test-only merge
+does not implement Task 18's production top-level `ProjectSettings`
+visitor/serializer, duplicate/unknown dispatch, project loading, or
+persistence. The complete 650-real-option histogram remains:
+
+```text
+coBool105/coBools22/coEnum44/coEnums9/coFloat160/
+coFloatOrPercent36/coFloats90/coInt41/coInts45/coPercent25/
+coPercents5/coPoint4/coPoints6/coPointsGroups1/coString30/coStrings27
+```
+
+The existing compatibility implementation contains literal collisions for 31
+of the 44 real names. The exact 13-key complement is
+`bbl_calib_mark_logo`, `extruder_offset`, `filament_self_index`,
+`first_layer_print_sequence`, `flush_multiplier`, `flush_volumes_matrix`,
+`flush_volumes_vector`, `has_scarf_joint_seam`,
+`other_layers_print_sequence`, `other_layers_print_sequence_nums`,
+`retract_length_toolchange`, `retract_restart_extra_toolchange`, and
+`start_end_points`. This is a debt ledger only; Task 14 migrates no consumer
+and changes no dynamic-value baseline.
+
+The retained-only boundary explicitly defers all 17 effective residual G-code
+projections to Task 17; strict full-fixture dispatch and persistence to Task
+18; raw legacy key/value conversion to Task 19A; active sizing,
+`filament_self_index`, AMS interpretation, vector/matrix normalization, and
+cross-field validation to Task 19B; metadata exclusion, `extruder_colour`
+substitution, scaled `flush_volumes_matrix`, duplicate plate-indexed
+`wipe_tower_x/y`, and exact config-block export to Task 19C; and behavioral
+consumer migration plus final dynamic compatibility-parser removal to Tasks
+20A-20E.
+
+TDD first ran the frozen focused RED twice and failed only on the planned
+missing Task 14 interfaces. The implemented matrix passes 23 focused tests,
+107 adjacent typed-option tests, all 4,319 workspace tests with three
+configured skips, and the 22-test dynamic-value audit with one configured
+skip. Rustfmt, warning-denying workspace all-target Clippy, native
+`ares-core`, `ares-core` and `ares-wasm` WASM checks, release WASM generation,
+the generated-binding real-3MF Playwright test, tracked and untracked
+whitespace checks, the forbidden-dynamic scan, exact ownership audit, and the
+under-400-physical-LOC gate are green; the largest changed Rust file is 290
+lines. Independent final specification and code-quality reviews approve the
+frozen implementation under the user-authorized temporary OpenCode bypass.
+The exact pushed commit remains subject to the five-job Tier 1 gate before
+Task 15 begins.
