@@ -10,7 +10,7 @@ use super::super::{
 
 mod direct_dispatch;
 mod enums;
-mod expected;
+pub(super) mod expected;
 mod type_assertions;
 
 use expected::{DECLARATION_ORDER, FIXTURE_OVERRIDE_KEYS};
@@ -162,7 +162,7 @@ fn object_rows(rows: &[InventoryRow]) -> Vec<&InventoryRow> {
         .collect()
 }
 
-fn fixture_fields<'a>(keys: impl IntoIterator<Item = &'a str>) -> Map<String, Value> {
+pub(super) fn fixture_fields<'a>(keys: impl IntoIterator<Item = &'a str>) -> Map<String, Value> {
     let project = crate::load_project(include_bytes!(
         "../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
     ))

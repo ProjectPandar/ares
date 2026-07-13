@@ -16,6 +16,8 @@ use crate::project::{
 const FIXTURE: &[u8] =
     include_bytes!("../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
 
+mod object_settings_metadata;
+
 #[test]
 fn project_documents_deserialize_content_types_relationships_and_all_previews() {
     let mut archive = ProjectArchive::open(FIXTURE, ArchiveLimits::PROJECT).unwrap();
@@ -116,8 +118,6 @@ fn project_documents_deserialize_typed_project_metadata() {
     assert_eq!(model.objects.len(), 1);
     let object = &model.objects[0];
     assert_eq!(object.id, 2);
-    assert_eq!(metadata(&object.metadata, "name"), "ksr_fdmtest_v4.drc");
-    assert_eq!(metadata(&object.metadata, "extruder"), "1");
     assert_eq!(object.parts.len(), 1);
     let part = &object.parts[0];
     assert_eq!(part.id, 1);

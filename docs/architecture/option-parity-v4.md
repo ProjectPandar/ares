@@ -349,8 +349,10 @@ consumer are `flush_into_infill`, `flush_into_objects`, `flush_into_support`,
 `mmu_segmented_region_max_width`, `raft_contact_distance`,
 `slice_closing_radius`, `slicing_mode`, `xy_contour_compensation`, and
 `xy_hole_compensation`; the complementary 108 names are the recorded
-collisions. Task 9 does not migrate any of them. Effective object projection,
-override ordering, and typed consumer migration remain Task 15 work.
+collisions. Task 9 does not migrate any of them. Effective object projection
+and ordered sparse override resolution are now implemented by Task 15. Typed
+consumer migration and removal of the dynamic compatibility path remain owned
+by Tasks 20A-20E.
 
 Focused tests prove the exact 126-key/type/wire intersection, all defaults and
 18 fixture overrides, concrete field types, declaration and export orders,
@@ -1049,5 +1051,81 @@ whitespace checks, the forbidden-dynamic scan, exact ownership audit, and the
 under-400-physical-LOC gate are green; the largest changed Rust file is 290
 lines. Independent final specification and code-quality reviews approve the
 frozen implementation under the user-authorized temporary OpenCode bypass.
-The exact pushed commit remains subject to the five-job Tier 1 gate before
-Task 15 begins.
+Commit `dc47e069ede1caa307411d63ba29f78784630494` and five-job Tier 1 run
+`29253342315` are green and satisfy the Task 15 entry gate.
+
+### Task 15: effective object options
+
+Task 15 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is the
+exact 126 active `PrintObjectConfig` fields at `PrintConfig.hpp:917-1071`
+with concrete types, defaults, and enum domains from `PrintConfig.cpp`;
+ordered model-object metadata and lexical decoding at
+`Model.hpp:72-102,354-370`, `PrintConfig.hpp:2053-2128`,
+`Format/bbs_3mf.cpp:2119-2132,4389-4399`, and `Config.cpp:573-654`; static
+object projection at `PrintObject.cpp:3555-3579` and `Config.cpp:461-500`;
+and the default-object recomputation and `num_extruders` input at
+`PrintApply.cpp:1130-1133,1190-1194,1273-1283,1468-1482,1539-1548,
+1646-1656`. The normalization write-set evidence is fixed to
+`PrintConfig.cpp:8520-8741`.
+
+One private compile-time inventory now expands three distinct concrete
+126-field structs: raw `ProcessObjectSourceOptions`, all-absent-by-default
+sparse `ObjectOptionOverrides`, and effective `ObjectOptions`. The effective
+struct has no independent default; it copies the supplied typed process base.
+Sparse presence is represented only by `Option<T>`, so an explicitly present
+raw-default value still replaces a non-default base. The shared histogram is
+22 bool, 12 enum, 63 float, six float-or-percent, 13 int, and ten percent
+fields, with one production source for defaults and enum domains.
+
+`ObjectSettings` processes object metadata in XML order. It retains the ID,
+the last assigned `name` and `module`, typed sparse values for the 126 owned
+keys, and every non-object key/value pair in ordered `retained_config`.
+Repeated object fields and strings are last-write-wins, while a malformed
+later assignment returns a keyed error instead of exposing an earlier valid
+value. Part `matrix` metadata remains on the part path. Noncanonical aliases
+and `extruder` remain ordered text for Tasks 19A and 16 respectively; this
+stage does not invent a global option registry or a legacy fallback.
+
+Resolution copies the supplied base, applies only present sparse fields, then
+runs the two post-overlay `PrintObject.cpp:3555-3560` clamps. For
+`support_filament` and `support_interface_filament`, only a value strictly
+greater than `num_extruders` becomes `1`; negative values, zero, one, and a
+value equal to the extruder count remain unchanged. Resolution is recomputed
+for each supplied extruder count. Test-owned fixed write sets separately
+freeze monolithic `normalize_fdm` and split `normalize_fdm_1` /
+`normalize_fdm_2`; all have zero intersection with the 126 object fields.
+Normalization-driving keys such as `extruder`, `spiral_mode`, and
+`enable_prime_tower` therefore remain outside this projection until the
+reviewed normalization stage.
+
+The real bounded 3MF path finds object ID 2 generically with
+`name=ksr_fdmtest_v4.drc`, no module, ordered retained `extruder=1`, and zero
+typed object overrides. Its two `0.4` nozzle diameters supply
+`num_extruders=2`; effective object state equals the complete typed process
+base. Exactly 108 fields equal fixed defaults and 18 differ:
+`brim_object_gap`, `brim_width`, `default_acceleration`,
+`elefant_foot_compensation`, `initial_layer_acceleration`,
+`inner_wall_acceleration`, `line_width`, `max_bridge_length`,
+`outer_wall_acceleration`, `support_interface_bottom_layers`,
+`support_interface_top_layers`, `support_line_width`, `support_speed`,
+`support_type`, `top_surface_acceleration`, `tree_support_branch_angle`,
+`tree_support_branch_diameter`, and `wall_generator`. These fixture facts are
+test evidence, not production branches.
+
+Included behavior is limited to the typed inventory, ordered object-metadata
+handoff, sparse overlay, exact support-filament clamps, normalization
+zero-intersection proof, and real-document verification. Region/extruder
+propagation remains Task 16; G-code projection Task 17; strict top-level
+project storage Task 18; legacy rewrites Task 19A; general normalization,
+active sizing, and object association Task 19B; config export Task 19C; and
+consumer migration/removal Tasks 20A-20E. Geometry, slicing, G-code generation,
+and final `ksr_fdmtest_v4` byte parity are not claimed by Task 15.
+
+All six sequential slice filters are green for inventory/base identity,
+ordered metadata, sparse projection, clamps, normalization, and the real
+fixture. Each slice received independent specification and quality approval,
+and the complete pre-documentation 28-file Task 15 diff has fresh literal
+`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. The final full local
+matrix, documentation approval, commit, push, and exact-SHA five-job Tier 1
+result remain pending.

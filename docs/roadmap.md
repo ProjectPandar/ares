@@ -357,13 +357,14 @@ non-default value for all 126 fields, because only 18 fixture values differ
 from upstream defaults.
 
 The current dynamic behavior pipeline contains literal consumers for 108 of
-the 126 names; Task 9 records those collisions but deliberately leaves their
-behavior in place until Task 15 establishes effective object projection and
-override order. Reviewed verification passes 12 focused tests, 4,234 workspace
+the 126 names; Task 9 records those collisions without migrating them. Task 15
+now establishes effective object projection and ordered sparse overrides,
+while typed migration and removal of those dynamic consumers remain owned by
+Tasks 20A-20E. Reviewed verification passes 12 focused tests, 4,234 workspace
 tests with three configured skips, warning-denying workspace all-target Clippy,
 rustfmt, both WASM checks, the dynamic-value audit, and the diff whitespace
-gate. The typed group remains `retained-only`. Task 10 is next: type the exact
-149 process/`PrintRegionConfig` raw rows.
+gate. The Task 9 raw group remains `retained-only`. Task 10 is next: type the
+exact 149 process/`PrintRegionConfig` raw rows.
 
 ### 2026-07-12 Type the process region-source group
 
@@ -567,13 +568,48 @@ native and WASM checks, release web binding generation, the real-3MF
 Playwright test, whitespace and forbidden-dynamic scans, exact file ownership,
 and the under-400-LOC gate. The largest changed Rust file is 290 lines.
 Independent final specification and code-quality reviews approve the frozen
-implementation under the user-authorized temporary OpenCode bypass. The exact
-pushed commit remains gated by Windows, macOS, Ubuntu/Linux, format, and WASM.
+implementation under the user-authorized temporary OpenCode bypass. Commit
+`dc47e069ede1caa307411d63ba29f78784630494` and exact-SHA Tier 1 run
+`29253342315` are green across Windows, macOS, Ubuntu/Linux, format, and WASM.
 
-Task 15 is next: port Effective Object Options, the non-raw 126-field
-projection and typed per-object override resolution fixed to
-`PrintObject.cpp::object_config_from_model_object`, `PrintApply.cpp::Print::apply`,
-`ModelObject` metadata overrides, and `PrintObjectConfig` inheritance.
+### 2026-07-13 Resolve effective object options
+
+Task 15 ports the fixed OrcaSlicer v2.4.2
+`PrintConfig.hpp:917-1071` 126-field `PrintObjectConfig` boundary, ordered
+model-object metadata from `Model.hpp`, `Config.cpp`, and
+`Format/bbs_3mf.cpp`, and static object projection plus support-filament
+clamps from `PrintObject.cpp:3555-3579`. `PrintApply.cpp` supplies the
+normalized process-base and `num_extruders` recomputation contract, while
+`PrintConfig.cpp:8520-8741` supplies the separately verified normalization
+write sets.
+
+One shared typed inventory drives the existing raw process group, an
+all-absent sparse override struct, and a distinct effective object struct.
+Ordered metadata uses last-write-wins for typed object fields, `name`, and
+`module`, retains all non-object entries in source order, and reports a
+malformed later duplicate by its key. Resolution copies the supplied process
+base, applies only present fields, then clamps each support filament ID to `1`
+only when it is strictly greater than the supplied extruder count. Fixed
+monolithic and split normalization write sets have zero intersection with all
+126 fields.
+
+The real 3MF verifies object ID 2, `name=ksr_fdmtest_v4.drc`, retained
+`extruder=1`, zero typed object overrides, two nozzle diameters, and complete
+effective equality with the typed process base. Exactly 108 object fields
+equal fixed defaults and 18 carry process overrides; the complete differing
+key set is recorded in the architecture ledger. No fixture identity or value
+is present in production code.
+
+Six sequential slices are green and independently approved for inventory/base
+identity, ordered metadata, sparse projection, exact clamps, normalization
+zero-intersection, and real-document verification. The complete
+pre-documentation 28-file Task 15 diff also has fresh literal
+`SPEC VERDICT: APPROVE` and `QUALITY VERDICT: APPROVE`. Region projection,
+G-code projection, top-level project storage, legacy conversion, general
+normalization/association, config export, consumer migration, geometry,
+slicing, and final G-code byte parity remain owned by Tasks 16-20 and later
+stages. Documentation approval, the fresh full local matrix, commit, push, and
+exact-SHA five-job Tier 1 evidence remain pending before Task 16 begins.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

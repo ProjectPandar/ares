@@ -39,6 +39,7 @@ mod legacy_wiping_volumes_composite;
 mod machine_limits_runtime;
 mod nozzle_temperature_runtime;
 mod object_distance;
+mod object_options;
 mod parameter_size;
 mod project_inventory;
 mod printer_machine_envelope;

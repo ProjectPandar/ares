@@ -95,14 +95,14 @@ fn project_xml_limits_reject_general_entity_references_without_dtd() {
 }
 
 #[test]
-fn project_xml_limits_allow_predefined_and_numeric_character_references() {
+fn object_settings_metadata_project_xml_limits_allow_predefined_and_numeric_character_references() {
     let settings: ModelSettings = deserialize_xml(
         br#"<config><object id="2"><metadata key="name" value="a&amp;b&#x21;"/></object></config>"#,
         XmlRole::ModelSettings,
     )
     .unwrap();
 
-    assert_eq!(settings.objects[0].metadata[0].value, "a&b!");
+    assert_eq!(settings.objects[0].name, "a&b!");
 }
 
 #[test]

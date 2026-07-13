@@ -1465,62 +1465,455 @@ this task.
 
 ### Task 15: Effective Object Options (126-Field Projection)
 
-**Upstream boundary:** `PrintObject.cpp::object_config_from_model_object`; `PrintApply.cpp::Print::apply`; `ModelObject` metadata overrides; `PrintObjectConfig` inheritance.
+**Fixed upstream:** OrcaSlicer commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` only. Task 14's prerequisite is
+satisfied by pushed commit `dc47e069ede1caa307411d63ba29f78784630494`
+and five-job Tier 1 run `29253342315`; Task 15 production implementation may
+start only while that exact pushed-SHA evidence remains recorded.
+
+**Upstream boundary:**
+
+- `PrintConfig.hpp:917-1071` owns the exact 126 active
+  `PrintObjectConfig` fields, after which `PrintRegionConfig` begins;
+  `PrintConfig.cpp` owns their concrete types, serialized defaults, and enum
+  domains. Commented `independent_support_layer_height` and
+  `adaptive_layer_height` declarations are excluded.
+- `Model.hpp:72-102,354-370`, `PrintConfig.hpp:2053-2128`,
+  `Format/bbs_3mf.cpp:2119-2132,4389-4399`, and `Config.cpp:573-654` own
+  `ModelConfigObject`/global `ModelObject::config`, ordered object metadata,
+  and canonical lexical deserialization.
+- `PrintConfig.cpp:2200-2213` owns model-only canonical `extruder`, used by the
+  fixture and later region normalization.
+- `PrintObject.cpp:3555-3579` owns
+  `PrintObject::object_config_from_model_object`; `Config.cpp:461-500` owns
+  static projection with `ignore_nonexistent=true`.
+- `PrintApply.cpp:1130-1133,1190-1194,1273-1283,1468-1482,1539-1548,
+  1646-1656` owns normalized default-object snapshots, recomputation, and the
+  `num_extruders` input, including recomputation on `num_extruders_changed`.
+  Cache invalidation, timestamps, workers, and geometry remain outside this
+  task.
+- `PrintConfig.cpp:8520-8741` owns monolithic and split FDM normalization.
+  Their fixed write sets have zero intersection with these 126 fields; this
+  task must prove that fact before deferring the general port to Task 19B.
 
 **Files:**
-- Create: `options/object_options.rs`
-- Create: `options/tests/object_options.rs`
-- Modify: `project/model_settings.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `crates/ares-core/src/options/object_fields.rs` as the one private
+  compile-time field/type/default inventory shared by raw, sparse, and
+  effective object structs
+- Create: `crates/ares-core/src/options/object_options.rs` and only the private
+  `object_options/*` semantic siblings needed to stay below 400 physical LOC
+- Create: `crates/ares-core/src/options/tests/object_options.rs` and focused
+  inventory, metadata, overlay, clamp, normalization, and fixture siblings
+- Create: `crates/ares-core/src/project/model_settings/object_metadata.rs`
+- Modify: `crates/ares-core/src/options/process_options/object_source.rs`,
+  `crates/ares-core/src/options.rs`, `crates/ares-core/src/options/tests.rs`,
+  `crates/ares-core/src/lib.rs`, `crates/ares-core/src/project.rs`,
+  `crates/ares-core/src/project/model_settings.rs`, and focused
+  `crates/ares-core/src/project/tests/*` modules
+- Modify: `docs/architecture/option-parity-v4.md`, `docs/roadmap.md`, and the
+  ignored SDD progress/brief artifacts
 
 **Interfaces:**
-- Produces non-raw `ObjectOptions`, built from the 126 process object-source fields plus typed per-object overrides.
-- Produces `ObjectOptions::resolve(process, object_settings) -> Result<Self, SliceError>`.
+- Produces distinct concrete `ObjectOptions` and sparse
+  `ObjectOptionOverrides` structs with the same 126 concrete scalar types as
+  `ProcessObjectSourceOptions`; neither may be an alias/newtype, erased enum,
+  dynamic map, or JSON-backed representation. `ObjectOptions` has no
+  independent `Default`; its only base/default source is the supplied process
+  object snapshot, while `ObjectOptionOverrides::default()` means all fields
+  are absent.
+- `ProcessObjectSourceOptions`, `ObjectOptionOverrides`, and `ObjectOptions`
+  expand the same compile-time field inventory. Defaults and enum domains have
+  one production source; sparse presence uses `Option<T>` and is never inferred
+  by comparing with a default. The Task 9 declaration-order inventory and
+  fixed-source table are normative, including all 12 strict raw enum domains
+  and the complete 28-token `ProcessInfillPattern` domain used by
+  `support_ironing_pattern`. Independently select the same rows from committed
+  `tests/ksr_fdmtest_v4/options-v242.json` where `raw_scope=process` and
+  `static_owner=print_object_config`; tests must not use the production macro
+  as their oracle.
+- External object metadata decoding returns keyed `Result` errors. Once values
+  are typed, effective resolution is infallible:
 
-- [ ] **Step 1: Write RED override/projection tests**
+  ```rust,ignore
+  ObjectOptions::resolve(
+      base: &ProcessObjectSourceOptions,
+      overrides: &ObjectOptionOverrides,
+      num_extruders: usize,
+  ) -> ObjectOptions
+  ```
 
-  Use synthetic typed settings to prove missing object overrides inherit process values, explicit overrides replace only their field, invalid object-scope keys fail at model-settings parsing, and the fixture object resolves layer/shell/support/seam values used downstream. Each field remains concrete during override application.
+- Document-layer `ObjectSettings` retains its existing ID, last assigned
+  `name`/`module`, typed sparse 126-field overrides, and the ordered canonical
+  non-object key/value entries needed by later projections in a concrete
+  `retained_config: Vec<Metadata>` field. Task 15 does not have the complete
+  fixed global `PrintConfigDef` key universe, so every non-126 entry is retained
+  in XML source order without classifying it as known or unknown and is ignored
+  by `ObjectOptions`. Part `matrix` metadata stays on the part path.
+  Task 16 performs concrete lexical decoding for retained `extruder`/region
+  entries. Task 19A performs reviewed legacy rewrites, then Task 19B's named
+  `options/model_config_deserialize.rs` boundary ports the complete fixed
+  `PrintConfigDef` canonical key/type registry, directly validates and routes
+  every remaining entry, and rejects a still-unknown key with its exact name
+  before full resolution. This staged deviation and error timing are explicit;
+  the fixture's 653 rows are never used as a global registry. Task 15 validates
+  lexical/type/enum shape for its 126 owned fields only.
+- Task 15 does not attach effective values to `ProjectObject`, add a
+  `project.settings()` API, or perform object lookup in production. Task 18
+  owns top-level typed project storage and Task 19B owns final association by
+  source-model path/object ID.
+- Resolution order is fixed: copy the supplied normalized default/base
+  snapshot; copy the ordered model config; rely only on the separately tested
+  zero-intersection result for the upstream normalization call; apply present
+  supported object fields with `ignore_nonexistent=true` semantics; then run
+  both support-filament clamps and return.
 
-- [ ] **Step 2: Implement typed projection and override dispatch**
+- [ ] **Step 1: Freeze the shared inventory and base-identity RED**
 
-  Model-setting metadata keys that name real options deserialize directly through an object-scope key visitor into the same concrete types; arbitrary metadata such as `name` and `matrix` remain named typed fields. Build `ObjectOptions` without serializing back through JSON and without a string-to-value intermediate.
+  This sequential slice owns `object_fields.rs`, the refactor of
+  `process_options/object_source.rs`, the initial `object_options.rs`, and only
+  the inventory/base test siblings. Its genuine RED is the absent concrete
+  `ObjectOptions`/shared inventory interface.
 
-- [ ] **Step 3: Run focused GREEN and the mandatory task gate**
+  Independently assert the exact 126 declaration-order keys, scalar-string
+  wire shape, zero nullable fields, and histogram
+  `coBool=22/coEnum=12/coFloat=63/coFloatOrPercent=6/coInt=13/coPercent=10`.
+  Require the missing concrete
+  effective and sparse interfaces first. Then prove a base containing a
+  non-default value for every field projects byte-for-byte into
+  `ObjectOptions`, with no second defaults or enum table.
 
   ```powershell
-  cargo nextest run -p ares-core object_options
-  git commit -m "feat(config): resolve effective object options"
-  git push
+  cargo +1.91.0 nextest run -p ares-core object_options_inventory
+  cargo +1.91.0 nextest run -p ares-core process_object_source
   ```
+
+- [ ] **Step 2: RED/GREEN ordered external metadata decoding**
+
+  After Step 1 is GREEN, this slice owns `object_options/overrides.rs`,
+  `project/model_settings/object_metadata.rs`, the minimal
+  `project/model_settings.rs` wiring, and metadata/project test siblings. Its
+  genuine RED is canonical object metadata that still remains untyped or uses
+  the old duplicate-rejecting lookup.
+
+  Use synthetic XML to exercise one non-default value for every primitive
+  wrapper and enum and table-drive all 126 canonical keys. XML values decode
+  directly from lexical strings into their concrete fields with errors naming
+  malformed bool/int/float/percent/float-or-percent/enum keys. `name` and
+  `module` are named object strings; `matrix` remains part metadata. Retain all
+  non-object entries, including `extruder`, without premature global-key
+  classification. Process metadata in XML order and prove repeated option,
+  `name`, and `module` assignments are last-write-wins; do not reuse the
+  duplicate-rejecting `optional_value` helper for this path.
+
+  A later malformed duplicate must fail at that later assignment instead of
+  being hidden by the earlier valid value. Task 15 adds lexical, concrete-type,
+  and enum-domain decoding only; it adds no new option-range or cross-field
+  validation.
+
+  Keep the retained non-object handoff as ordered boundary key/value text; do
+  not parse it through `serde_json::Value`, a generic dynamic
+  option, a raw effective-option map, or a serialization round trip. Legacy
+  aliases are retained as noncanonical text and do not enter typed overrides
+  until Task 19A's reviewed rewrite; Task 15 adds no legacy fallback.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core object_settings_metadata
+  ```
+
+- [ ] **Step 3: RED/GREEN sparse overlay**
+
+  After Step 2 is GREEN, this slice owns the effective projection helper in
+  `object_options.rs` and only overlay tests. Its genuine RED is the missing
+  presence-preserving field application across all 126 slots.
+
+  Prove absent overrides inherit all 126 fields, each present field changes
+  only itself, and every field can override independently. With a non-default
+  base, a present override equal to that field's raw default must replace the
+  base; absence alone means inheritance. Duplicate metadata uses the final
+  value. Implement field application only; clamps remain RED in Step 4.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core object_options_projection
+  ```
+
+- [ ] **Step 4: RED/GREEN exact support-filament clamps**
+
+  After Step 3 is GREEN, this slice owns the two post-overlay clamp statements
+  and only clamp tests. Its genuine RED is an over-limit override remaining
+  unchanged after otherwise-correct sparse projection.
+
+  For both `support_filament` and `support_interface_filament`, prove `0`, a
+  codec-admitted negative, `1`, and `num_extruders` remain unchanged while
+  `num_extruders + 1` becomes `1`; changing the count recomputes the result.
+  Include over-limit sparse overrides so tests observe that both clamps run
+  after overlay.
+  Implement only the fixed strict-`>` clamp from `PrintObject.cpp:3555-3560`,
+  not the adjacent `<= 0 || > count` feature-filament rule.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core object_options_clamps
+  ```
+
+- [ ] **Step 5: Verify normalization zero-intersection**
+
+  After Step 4 is GREEN, this verification-only slice owns the normalization
+  expected sets and intersection tests. It may start GREEN because it records
+  fixed-source evidence rather than new production behavior; do not manufacture
+  a failing test to satisfy RED ceremony.
+
+  Freeze the complete fixed write sets of both `normalize_fdm` and
+  `normalize_fdm_1`/`normalize_fdm_2` independently of production declarations
+  and prove zero intersection with the 126 object keys. Exercise `extruder`
+  and at least one other normalization-driving registered key from each path:
+  they remain available to later projections and cannot change
+  `ObjectOptions` in this task.
+
+  The independently expected union is `extruder`, the six region filament-ID
+  keys, `retract_when_changing_layer`,
+  `filament_retract_when_changing_layer`, `wall_loops`,
+  `alternate_extra_wall`, `top_shell_layers`, `sparse_infill_density`,
+  `resolution`, `enable_prime_tower`, and
+  `independent_support_layer_height`; tests retain separate monolithic and
+  split sets before checking both intersections.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core object_options_normalization
+  ```
+
+- [ ] **Step 6: Verify the document-layer real fixture**
+
+  After Step 5 is verified, this verification-only slice owns the real-3MF
+  fixture tests and any minimal document-test registration not completed in
+  Step 2. It may already be GREEN because Step 2 owns the document parser; do
+  not manufacture a failure. It must not change effective projection
+  production code or add a fixture branch.
+
+  Through the bounded real-3MF loader, locate object ID 2 generically, retain
+  `name=ksr_fdmtest_v4.drc`, accept `extruder=1`, and prove there are zero
+  126-key overrides. Decode the process object-source base using the existing
+  typed fixture path and assert complete effective equality, exact
+  `108 default-equal / 18 process-overridden` counts, and these exact fixture
+  differences from the fixed defaults:
+
+  ```text
+  brim_object_gap=0.1, brim_width=5, default_acceleration=10000,
+  elefant_foot_compensation=0.15, initial_layer_acceleration=500,
+  inner_wall_acceleration=0, line_width=0.42, max_bridge_length=0,
+  outer_wall_acceleration=5000, support_interface_bottom_layers=2,
+  support_interface_top_layers=2, support_line_width=0.42,
+  support_speed=150, support_type=tree(auto),
+  top_surface_acceleration=2000, tree_support_branch_angle=45,
+  tree_support_branch_diameter=2, wall_generator=classic
+  ```
+
+  Also assert representative layer/shell/support/seam values. Keep existing part-transform
+  and model-settings tests green; fixture-only evidence does not replace the
+  synthetic override matrix.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core object_options_fixture
+  cargo +1.91.0 nextest run -p ares-core project_documents
+  ```
+
+- [ ] **Step 7: Run the mandatory review, verification, commit, and Tier 1 gate**
+
+  ```powershell
+  cargo +1.91.0 fmt --all -- --check
+  cargo +1.91.0 nextest run -p ares-core object_options
+  cargo +1.91.0 nextest run -p ares-core -E 'test(/(object_options|process_object_source|project)/)'
+  cargo +1.91.0 nextest run --workspace
+  cargo +1.91.0 nextest run -p ares-core --test no_unapproved_dynamic_values
+  cargo +1.91.0 clippy --workspace --all-targets -- -D warnings
+  cargo +1.91.0 check -p ares-core
+  cargo +1.91.0 check -p ares-core --target wasm32-unknown-unknown
+  cargo +1.91.0 check -p ares-wasm --target wasm32-unknown-unknown
+  cargo +1.91.0 build -p ares-wasm --target wasm32-unknown-unknown --release
+  wasm-bindgen target/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+  npm --prefix crates/ares-wasm/tests/browser ci
+  npm --prefix crates/ares-wasm/tests/browser test
+  git diff --check -- . ':(exclude)tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode'
+  ```
+
+  Also require no-index whitespace checks for every untracked file, an exact
+  changed-file audit, physical LOC below 400 for every changed Rust production
+  and test module, and proof that no JSON/dynamic intermediate, option pinning,
+  fixture-name branch, native I/O, terminal, FFI, or platform-specific code was
+  added. Freeze the bytes and obtain independent literal
+  `SPEC VERDICT: APPROVE`, `QUALITY VERDICT: APPROVE`, and after docs update
+  `DOCS VERDICT: APPROVE`; the user-approved OpenCode bypass applies. Report
+  the dynamic-value audit's configured ignored/skip count exactly. Only after
+  all approvals, rerun the complete local matrix on the frozen bytes, then:
+
+  ```powershell
+  git commit -m "feat(config): resolve effective object options"
+  ```
+
+  Verify the created commit tree matches the frozen reviewed byte manifest,
+  then `git push`. Require all five Tier 1 jobs green for that exact pushed SHA
+  before Task 16.
+
+  Execute Steps 1-6 sequentially; do not assign overlapping production files
+  to concurrent implementers. For each production Step 1-4 slice, first run
+  its named pinned focused filter and preserve a genuine nonzero RED
+  attributable only to that step's stated reason, then rerun that filter to
+  GREEN before beginning the next slice or widening the gate. Run Steps 5-6
+  with their named normalization and document filters as verification evidence.
+  Do not hide oversized Rust with `include!`;
+  do not put fixture IDs, names, values, or G-code fragments in production;
+  canonical option-key expansion comes only from the shared inventory. Add no
+  legacy fallback or Option Pinning.
+
+**Explicitly deferred:** region/extruder propagation outcome and
+volume/material/layer-range precedence to corrected Task 16; G-code projection
+to Task 17; strict top-level project loading to Task 18; aliases and legacy
+conversion on both top-level and model-settings paths to Task 19A; general FDM
+normalization, active sizing, and per-object association to Task 19B;
+config-block export to Task 19C; dynamic consumer migration/removal to Tasks
+20A-20E; and `PrintApply` lifecycle, geometry, G-code, GUI, and SLA behavior.
 
 ---
 
 ### Task 16: Effective Region Options (153-Field Projection)
 
-**Upstream boundary:** `PrintObject.cpp::region_config_from_model_volume`; `PrintApply.cpp`; `PrintRegionConfig` inheritance; four filament ironing overrides.
+**Fixed upstream boundary:** `PrintConfig.hpp:1074-1476::PrintRegionConfig`,
+`PrintObject.cpp:3582-3709::apply_to_print_region_config` and
+`region_config_from_model_volume`, the model-part path at
+`PrintApply.cpp:793-795,1021-1027`, the selected filament ironing reads at
+`Fill/Fill.cpp:1591-1604`, and object/volume metadata loading at
+`Format/bbs_3mf.cpp:2119-2132,4894-5117`, all at fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+
+The exact effective inventory is 153 real fields: the 149 typed process-region
+fields plus the four nullable filament vectors `filament_ironing_flow`,
+`filament_ironing_spacing`, `filament_ironing_inset`, and
+`filament_ironing_speed`, selected into concrete scalars. Active HPP members
+`ironing_direction` and `wall_infill_order` are legacy-only shells, not two
+additional effective fields.
 
 **Files:**
-- Create: `options/region_options.rs`
-- Create: `options/tests/region_options.rs`
-- Modify: `project/model_settings.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/region_options.rs` with private `fields`, `overrides`, and
+  `merge` siblings
+- Create: `options/tests/region_options.rs` with focused inventory,
+  precedence, filament, normalization, and fixture siblings
+- Create or modify: `project/model_settings/part_metadata.rs`
+- Modify: `project/model_settings.rs`, the Task 15
+  `project/model_settings/object_metadata.rs` handoff, `options.rs`, `lib.rs`,
+  focused project/model-settings tests, `docs/architecture/option-parity-v4.md`,
+  and `docs/roadmap.md`
 
 **Interfaces:**
-- Produces `RegionOptions::resolve(process, filament, part_settings, active_filament) -> Result<Self, SliceError>` with 153 concrete effective fields.
+- Produces public non-raw `RegionOptions` with 153 concrete fields and
+  crate-private sparse `RegionOptionOverrides`. Each sparse source contains
+  presence-preserving slots for the 149 region fields plus model-only
+  `extruder: Option<OrcaInt>` used by that scope's fallback/mask logic.
+- The exact pure resolution boundary is:
 
-- [ ] **Step 1: Write RED merge-precedence tests**
+  ```rust,ignore
+  pub(crate) struct RegionOverrideSources<'a> {
+      pub object: Option<&'a RegionOptionOverrides>,
+      pub volume: &'a RegionOptionOverrides,
+      pub material: Option<&'a RegionOptionOverrides>,
+      pub layer_range: Option<&'a RegionOptionOverrides>,
+      pub is_model_part: bool,
+  }
 
-  Prove the 149 process region-source values plus four filament ironing overrides form exactly 153 fields; part settings override process values; selected filament overrides apply only where upstream permits; `nil` means inherit for nullable overrides; and a second filament selection changes the effective typed value without changing raw storage.
+  impl RegionOptions {
+      pub(crate) fn resolve(
+          process: &ProcessRegionSourceOptions,
+          filament: &FilamentRegionSourceOptions,
+          sources: RegionOverrideSources<'_>,
+          num_extruders: usize,
+      ) -> RegionOptions;
+  }
+  ```
 
-- [ ] **Step 2: Implement direct typed projection**
+  The bundle preserves source identity/order and may not collapse into a map or
+  erased value. XML lexical and active-vector cardinality errors are handled at
+  the external typed document/full-config boundary; trusted concrete merge,
+  clamps, and selection are infallible.
+- Task 16 decodes Task 15's ordered `ObjectSettings::retained_config` into the
+  object `RegionOptionOverrides`, including `extruder`, before effective
+  resolution. It never recovers region state from `ObjectOptions`.
+- The four ironing fields are selected with the final clamped
+  `top_surface_filament_id - 1`; there is no independent caller-provided active
+  filament that can disagree with the resolved region. Selected nil inherits
+  the ordinary region `ironing_*` value.
 
-  Match upstream precedence in `region_config_from_model_volume` and `Print::apply`. Use explicit field assignments or generated concrete-field macros; do not loop over erased option values. Record a behavioral ledger row for each field whose merge affects the fixture.
+- [ ] **Step 1: RED/GREEN inventory, handoff, and source precedence**
 
-- [ ] **Step 3: Run focused GREEN and the mandatory task gate**
+  Assert 149 + 4, the fixed 149-field type histogram, unique keys, and concrete
+  selected ironing outputs. For model parts, prove exact precedence:
+
+  ```text
+  process/default region -> ModelObject -> volume -> material -> layer range
+  -> feature clamps/final normalization -> selected ironing values
+  ```
+
+  Preserve the upstream feature-override mask across scopes: a positive
+  feature ID is explicit, explicit zero clears that flag and permits a later
+  same-scope `extruder` fallback, and a nonzero process/default feature ID
+  starts explicit. Synthetic sources must use different values at every stage
+  so an omission or swap fails. The real fixture must consume object
+  `extruder=1`; with its six process feature IDs at zero, all six effective IDs
+  become one. A modifier begins with its already-resolved parent region and
+  applies volume then material; modifier-parent graph construction is deferred.
+
+- [ ] **Step 2: RED/GREEN six clamps, final normalization, and ironing selection**
+
+  Cover all six feature IDs from `PrintObject.cpp:3583-3590`. After overlays,
+  each `<= 0` or `> num_extruders` value becomes one while `1..=num_extruders`
+  stays unchanged. Do not reuse Task 15's strict-`>` helper.
+
+  Prove sparse density below `0.00011` becomes zero and otherwise caps at 100;
+  enabled fuzzy skin disables when point distance is below `0.01` or thickness
+  below `0.001`. For all four filament vectors, selected non-nil overrides the
+  ordinary region scalar and selected nil inherits it. The fixture selects
+  index zero and inherits `10%`, `0.15`, `0.21`, and `30` respectively.
+
+- [ ] **Step 3: Implement direct typed metadata and merge dispatch**
+
+  Decode canonical region keys from Task 15-retained object entries and
+  part/volume metadata directly into concrete sparse slots. Structural part
+  metadata (`name`, `matrix`, source IDs/offsets, mesh data) remains named.
+  Apply fields with concrete assignments or compile-time-generated concrete
+  code, preserving the feature mask and stages; add no JSON/DOM, generic option
+  value, raw map, native I/O, terminal/UI, or platform-specific dependency.
+
+  This task includes pure typed optional material/layer-range inputs. The
+  current fixture contains neither. Task 19B owns source-supported bounded
+  import/association for optional `Metadata/layer_config_ranges.xml`. Fixed
+  BBS 3MF has no material-config document ingestion path: material remains an
+  optional typed model input for the pure resolver, and no Ares archive reader
+  may be invented for it. Task 19B records that fixed-source absence while
+  associating material only if a source-supported model boundary supplies one.
+
+- [ ] **Step 4: Run the mandatory task gate**
 
   ```powershell
-  cargo nextest run -p ares-core region_options
-  git commit -m "feat(config): resolve effective region options"
-  git push
+  cargo +1.91.0 fmt --all -- --check
+  cargo +1.91.0 nextest run -p ares-core region_options
+  cargo +1.91.0 nextest run -p ares-core -E 'test(/(region_options|object_options|process_region_source|project)/)'
+  cargo +1.91.0 nextest run --workspace
+  cargo +1.91.0 nextest run -p ares-core --test no_unapproved_dynamic_values
+  cargo +1.91.0 clippy --workspace --all-targets -- -D warnings
+  cargo +1.91.0 check -p ares-core
+  cargo +1.91.0 check -p ares-core --target wasm32-unknown-unknown
+  cargo +1.91.0 check -p ares-wasm --target wasm32-unknown-unknown
+  cargo +1.91.0 build -p ares-wasm --target wasm32-unknown-unknown --release
+  wasm-bindgen target/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+  npm --prefix crates/ares-wasm/tests/browser ci
+  npm --prefix crates/ares-wasm/tests/browser test
+  git diff --check -- . ':(exclude)tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode'
   ```
+
+  Require the same no-index whitespace, changed-file ownership, under-400-LOC,
+  forbidden dynamic/JSON/Option-Pinning, independent frozen-byte spec/quality,
+  docs, fresh frozen-byte matrix, commit-tree-match, push, exact-pushed-SHA, and
+  five-job Tier 1 gates as Task 15. Only after approvals and fresh verification,
+  commit with `feat(config): resolve effective region options`, verify the
+  commit tree, and push. Explicitly defer
+  modifier graph construction, region deduplication, `PrintApply` lifecycle,
+  project-wide active sizing/association, consumers, geometry, and G-code.
 
 ---
 
@@ -1605,53 +1998,178 @@ this task.
 
 ---
 
-### Task 19A: Legacy Key/Value and Composite Conversion
+### Task 19A: Typed Legacy Conversion Across Project Inputs
 
-**Upstream boundary:** Fixed-tag `PrintConfigDef::{handle_legacy,handle_legacy_composite}`.
+**Fixed upstream boundary:** `PrintConfig.cpp:8033-8285::handle_legacy`,
+`PrintConfig.cpp:8287+::handle_legacy_composite`,
+`Config.cpp:573-685::set_deserialize_nothrow/set_deserialize_raw`, complete
+document composite calls at `Config.cpp:1092-1095,1184-1186,1273-1275,
+1455-1457`, and per-entry object/volume dispatch at
+`Format/bbs_3mf.cpp:2119-2132,5088-5117`.
+
+Object and volume metadata receive the same per-entry legacy key/value rewrite
+as top-level config. They do not run `handle_legacy_composite`; composite
+conversion applies once to a completely loaded top-level project config.
 
 **Files:**
-- Create: `options/tests/legacy.rs`
-- Modify: `options/project_deserialize.rs`, `options/project_settings.rs`, `docs/architecture/option-parity-v4.md`
+- Create: `options/typed_legacy.rs` with private `key_value` and `composite`
+  siblings
+- Create: `options/tests/typed_legacy.rs` with focused top-level,
+  model-settings, composite, and collision siblings
+- Modify: `options.rs`, `options/tests.rs`, `options/project_deserialize.rs`,
+  `options/project_settings.rs`, `project/model_settings.rs`, Task 15's
+  `project/model_settings/object_metadata.rs`, Task 16's
+  `project/model_settings/part_metadata.rs`, focused project tests,
+  `docs/architecture/option-parity-v4.md`, and `docs/roadmap.md`
+
+The existing `options/legacy.rs` and `options/tests/legacy.rs` own the temporary
+dynamic STL `SliceOptions` compatibility path and are already near the physical
+LOC limit. Keep them baseline-covered and unchanged until Task 20E; do not add
+the typed project path there.
 
 **Interfaces:**
-- Completes canonical/legacy typed dispatch before the strict unknown-key branch.
-- Produces typed composite conversions without parking values in a dynamic container.
+- One crate-private fixed-ledger lexical dispatcher is shared by top-level
+  project settings and model-settings option metadata. It rewrites a reviewed
+  legacy key/value directly into canonical concrete target slots, or reports a
+  reviewed obsolete input as ignored, without returning or parking a dynamic
+  value.
+- Top-level `ProjectSettings` runs per-entry legacy dispatch immediately before
+  Task 18's strict unknown branch, applies Task 18's strict duplicate policy,
+  then runs typed composite conversion once after complete load.
+- Object and part/volume metadata run per-entry legacy dispatch before their
+  context-specific sparse visitor, preserve XML order, and remain
+  last-write-wins after aliasing. Named `name`, `module`, `matrix`, source, and
+  mesh metadata bypass option legacy dispatch.
+- Fixed `handle_legacy` clears still-unregistered keys at
+  `PrintConfig.cpp:8281-8283`; Ares intentionally keeps the milestone's stricter
+  no-fallback rule. On the complete top-level Task 18 path, only reviewed
+  legacy/obsolete rows are accepted or ignored and a still-unknown key errors
+  immediately with its exact name. Sparse model metadata lacks the complete
+  global registry here: entries not consumed by reviewed legacy or Task 15/16
+  visitors remain ordered in `retained_config` for Task 19B's complete
+  canonical classification and exact unknown-key error.
 
-- [ ] **Step 1: Write RED cases for every fixed-tag legacy input targeting the 650 implemented options**
+- [ ] **Step 1: RED/GREEN every reviewed fixed legacy input**
 
-  The committed inventory records legacy aliases. Simple renames use serde aliases; complex names route directly into the canonical field's concrete deserializer. Cover obsolete ignored keys, enum spelling conversions, scalar conversions, collision/duplicate behavior, and unknown-after-legacy diagnostics.
+  Drive the committed `LegacyInput` ledger through simple renames, aliases,
+  multi-target shortcuts, value and enum conversions, ignored obsolete keys,
+  fixed percentage erasure, and top-level
+  unknown-after-reviewed-legacy diagnostics.
+  A compile-time-known key may select concrete setters; no generic runtime
+  value container is permitted. Top-level alias/canonical collisions follow
+  Task 18 strict duplicate rules, while model-settings assignments remain
+  ordered last-write-wins.
 
-- [ ] **Step 2: Port composite conversion and fixture idempotence**
+- [ ] **Step 2: RED/GREEN object and part model-settings legacy dispatch**
 
-  Apply `handle_legacy_composite` only after the complete typed document is loaded. Assert canonical fixture keys remain idempotent except defined composite normalization, including canonical `thumbnails` spacing.
+  Prove object aliases can target Task 15 sparse fields, such as
+  `support_material_extruder -> support_filament`, and object/part aliases can
+  target Task 16 region state, including feature-filament migrations where
+  legacy `1` becomes canonical inherit `0`. Cover both canonical/legacy orders,
+  named structural metadata, retained non-owner/unclassified keys, obsolete
+  keys, and real-fixture canonical idempotence. Prove a model key still
+  unclassified after reviewed legacy remains ordered for Task 19B rather than
+  failing early. No model-settings path runs composite conversion.
 
-- [ ] **Step 3: Run focused GREEN and the mandatory task gate**
+- [ ] **Step 3: RED/GREEN top-level typed composite conversion**
+
+  Run `handle_legacy_composite` equivalents only after the complete typed
+  `ProjectSettings` document loads. Cover thumbnails, wiping-volume and SLA
+  composites, canonical fixture idempotence, and collisions. Apply directly to
+  concrete typed builders/patches without JSON or the temporary `SliceOptions`
+  map.
+
+- [ ] **Step 4: Run the mandatory task gate**
 
   ```powershell
-  cargo nextest run -p ares-core legacy_config
-  git commit -m "feat(config): port legacy option conversion"
-  git push
+  cargo +1.91.0 fmt --all -- --check
+  cargo +1.91.0 nextest run -p ares-core typed_legacy
+  cargo +1.91.0 nextest run -p ares-core -E 'test(/(typed_legacy|project_deserialize|object_options|region_options|project_import)/)'
+  cargo +1.91.0 nextest run --workspace
+  cargo +1.91.0 nextest run -p ares-core --test no_unapproved_dynamic_values
+  cargo +1.91.0 clippy --workspace --all-targets -- -D warnings
+  cargo +1.91.0 check -p ares-core
+  cargo +1.91.0 check -p ares-core --target wasm32-unknown-unknown
+  cargo +1.91.0 check -p ares-wasm --target wasm32-unknown-unknown
+  cargo +1.91.0 build -p ares-wasm --target wasm32-unknown-unknown --release
+  wasm-bindgen target/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+  npm --prefix crates/ares-wasm/tests/browser ci
+  npm --prefix crates/ares-wasm/tests/browser test
+  git diff --check -- . ':(exclude)tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode'
   ```
+
+  Require no-index whitespace, changed-file ownership, under-400-LOC,
+  forbidden dynamic/JSON/Option-Pinning, independent spec/quality/docs,
+  fresh frozen-byte matrix, commit-tree-match, push, exact-pushed-SHA, and
+  five-job Tier 1 gates before Task 19B. Only after approvals and fresh
+  verification, commit with `feat(config): port typed legacy conversion`,
+  verify the commit tree, and push.
 
 ---
 
 ### Task 19B: Effective FullPrintConfig Resolution and FDM Normalization
 
-**Upstream boundary:** Fixed-tag `DynamicPrintConfig::{normalize_fdm,normalize_fdm_1,normalize_fdm_2,set_num_extruders,set_num_filaments,get_parameter_size}` and `PrintApply.cpp` active object/filament sizing.
+**Upstream boundary:** Fixed-tag
+`DynamicPrintConfig::{normalize_fdm,normalize_fdm_1,normalize_fdm_2,
+set_num_extruders,set_num_filaments,get_parameter_size}`, `PrintApply.cpp`
+active object/filament sizing and final region regeneration at
+`:1620-1740`, `Model.hpp:161-201,917-918` and
+`Model.cpp:622-652,2500-2508` optional in-memory material association, plus
+`Format/bbs_3mf.cpp:216,1880-1910,2092-2095,2886-2939` optional
+`Metadata/layer_config_ranges.xml` import/association. Fixed
+`Format/3mf.cpp:1729-1734,1808-1813` ignores material property identifiers;
+there is no fixed-source 3MF material-config document reader in this slice.
+The retained model-config boundary is fixed to
+`PrintConfig.cpp::PrintConfigDef`, `Config.cpp:573-685`, and
+`Config.cpp:461-500` canonical lookup, lexical decode, and static projection.
 
 **Files:**
 - Create: `options/full_print_config.rs`
 - Create: `options/project_normalize.rs`
 - Create: `options/tests/project_normalize.rs`
+- Create: `options/model_config_deserialize.rs` and focused
+  `options/tests/model_config_deserialize.rs`
+- Create: bounded in-memory `project/layer_config_ranges.rs` document module
+  with focused tests
+- Modify: project document retention/assembly only as needed to associate
+  parsed layer ranges by object ID/range
 - Modify: `docs/architecture/option-parity-v4.md`
 
 **Interfaces:**
 - Produces `FullPrintConfig::resolve(&Project, &ProjectSettings) -> Result<Self, SliceError>`.
 - Produces `normalize_project_config(&mut FullPrintConfig) -> Result<(), SliceError>`.
+- Completes the project-document ownership explicitly deferred by Task 16:
+  optional layer-range configs are read from the bounded in-memory 3MF archive,
+  retained as typed sparse region inputs, and associated before final
+  per-region resolution. Optional typed material config is applied only when a
+  source-supported model boundary supplies it; no 3MF material parser or
+  synthetic archive material resource is invented. No native filesystem API
+  enters `ares-core`.
+- After Task 19A per-entry legacy rewriting, `model_config_deserialize.rs`
+  consumes every Task 15 `retained_config` entry in XML order against a
+  source-cited compile-time registry covering the complete fixed
+  `PrintConfigDef` canonical key/type universe, not the fixture-only 653 rows.
+  It directly validates each lexical concrete value, routes object/region keys
+  to their typed sparse owners, retains only source-supported state needed by
+  normalization, and rejects a still-unknown key with its exact name. It never
+  creates a generic option value or dynamic map.
 
 - [ ] **Step 1: Write RED active-sizing and normalization tests**
 
-  Assert single-material `enable_prime_tower` normalizes from raw `1` to effective `0`; 8-/4-stride source vectors resolve to the two active values used by the reference; object/region overrides and active extruder/filament maps apply in fixed order; invalid cardinality names its key.
+  Assert single-material `enable_prime_tower` normalizes from raw `1` to
+  effective `0`; 8-/4-stride source vectors resolve to the two active values
+  used by the reference; object/region overrides and active extruder/filament
+  maps apply in fixed order; invalid cardinality names its key. Synthetic
+  in-memory 3MF documents prove layer-range import, ID/range association, and
+  Task 16 precedence end-to-end; the current fixture's absence of that resource
+  is explicit. Material precedence remains a pure typed Task 16 test because
+  fixed-source 3MF supplies no material config document.
+
+  Independently freeze the complete fixed global model-config key/type ledger
+  and prove canonical keys outside the fixture's 653 rows are accepted and
+  lexically validated, while a still-unknown retained key fails with its exact
+  name after Task 19A dispatch. Cover ordered duplicate/alias outcomes before
+  any object or region projection.
 
 - [ ] **Step 2: Implement FullPrintConfig resolution and exact normalization order**
 
@@ -1667,7 +2185,26 @@ this task.
   }
   ```
 
-  Follow the interleaved fixed-tag `Print::apply` order rather than normalizing after projection: resolve typed defaults/base merge; run `normalize_fdm_1`; determine active extruder/filament sizing and run the first `normalize_fdm_2`; derive per-object `ObjectOptions` and per-volume/filament `RegionOptions` from that normalized state; run the second `normalize_fdm_2` pass after those merges; then derive the final G-code/export projection. Tests place a changed value in every stage and prove the following stage observes it, including infill relationships and the single-material prime-tower change. Missing required values are reported only at this external configuration boundary.
+  Follow the interleaved fixed-tag `Print::apply` order rather than normalizing
+  after projection: resolve the typed defaults/base merge; run
+  `normalize_fdm_1`; determine initial active sizing and run the first
+  `normalize_fdm_2`; build only the preliminary object/region usage needed to
+  discover the new used-filament set; run the second `normalize_fdm_2`; apply
+  its changed keys to the full/default object/default region bases; discard
+  preliminary projections; and only then resolve the final per-object
+  `ObjectOptions` and per-volume/material/layer-range `RegionOptions`, followed
+  by final G-code/export projection.
+
+  A stage-order test forces the second pass through changed filament usage and
+  proves preliminary regions are discarded and final region resolution occurs
+  afterward. The fixed `normalize_fdm_2` write set contains only
+  `enable_prime_tower` and `independent_support_layer_height`, with zero
+  intersection with the 153 `RegionOptions`; freeze that fact instead of
+  inventing a nonexistent second-pass region-field mutation. Tests still place
+  a real changed value at every source-supported stage and prove the next
+  owning stage observes it, including infill relationships and the
+  single-material prime-tower change. Missing required values are reported only
+  at this external configuration boundary.
 
 - [ ] **Step 3: Run focused GREEN and the mandatory task gate**
 

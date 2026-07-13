@@ -1,4 +1,8 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer, de::Error as _};
+
+use crate::options::ObjectOptionOverrides;
+
+mod object_metadata;
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename = "config")]
@@ -11,14 +15,38 @@ pub(crate) struct ModelSettings {
     pub assemble: Option<AssembleSettings>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct ObjectSettings {
-    #[serde(rename = "@id")]
     pub id: u32,
-    #[serde(rename = "metadata", default)]
-    pub metadata: Vec<Metadata>,
-    #[serde(rename = "part", default)]
+    pub name: String,
+    pub module: String,
+    pub overrides: ObjectOptionOverrides,
+    pub retained_config: Vec<Metadata>,
     pub parts: Vec<PartSettings>,
+}
+
+#[derive(Deserialize)]
+struct ObjectSettingsWire {
+    #[serde(rename = "@id")]
+    id: u32,
+    #[serde(rename = "metadata", default)]
+    metadata: Vec<Metadata>,
+    #[serde(rename = "part", default)]
+    parts: Vec<PartSettings>,
+}
+
+impl<'de> Deserialize<'de> for ObjectSettings {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let ObjectSettingsWire {
+            id,
+            metadata,
+            parts,
+        } = ObjectSettingsWire::deserialize(deserializer)?;
+        Self::from_ordered_metadata(id, metadata, parts).map_err(D::Error::custom)
+    }
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

@@ -19,6 +19,8 @@ option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type)
 mod machine_limits;
 #[rustfmt::skip]
 option_modules!(layer_change_retraction, legacy, initial_layer_print_height, object_distance, overhang_reverse, overhang_speed, parameter_size, raft, skirt_type, support_enable, support_object_skip_flush, support_style, support_placement, pub(crate) support_threshold, support_interface_not_for_body, support_type, pub(crate) support_z_distance, tree_support_options, wall_direction, wall_sequence);
+mod object_fields;
+mod object_options;
 pub(crate) mod option_group;
 pub(crate) mod parsing;
 mod pellet;
@@ -56,6 +58,7 @@ pub(crate) use infill::{
     InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions, InternalBridgeFilter,
 };
 pub(crate) use machine_limits::MachineLimits;
+pub(crate) use object_options::ObjectOptionOverrides;
 use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{LayerRoleFanControl, PartCoolingFanRamp};
 pub use support_different_extruders::DifferentExtrudersSupport;
@@ -78,6 +81,7 @@ pub use {
     hardware::HardwareOptions,
     infill::{InfillOptions, InfillPattern},
     layer_change_retraction::RetractLiftEnforce,
+    object_options::ObjectOptions,
     power_loss_recovery::PowerLossRecoveryMode,
     preset_metadata::PresetMetadata,
     printer_options::{
