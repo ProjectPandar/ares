@@ -143,14 +143,10 @@ fn object_settings_metadata_retains_exact_non_126_sequence_with_duplicates() {
     let overrides = object_overrides(object);
 
     assert_eq!(overrides.brim_width, Some(OrcaFloat(123.456789)));
-    assert_eq!(overrides.support_filament, None);
+    assert_eq!(overrides.support_filament, Some(crate::OrcaInt(3)));
     assert_eq!(
         pairs(retained_config(object)),
-        [
-            ("support_material_extruder", "2"),
-            ("unregistered_future_key", "beta"),
-            ("support_material_extruder", "3"),
-        ]
+        [("unregistered_future_key", "beta")]
     );
     assert_eq!(region_overrides(object).extruder, Some(crate::OrcaInt(2)));
     assert_eq!(

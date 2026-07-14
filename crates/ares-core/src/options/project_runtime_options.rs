@@ -69,6 +69,12 @@ pub(crate) struct ProjectRuntimeOptionsBuilder {
 }
 
 impl ProjectRuntimeOptionsBuilder {
+    pub(crate) fn is_known_field(key: &str) -> bool {
+        ProjectGCodeSourceOptionsBuilder::is_known_field(key)
+            || ProjectPrintSourceOptionsBuilder::is_known_field(key)
+            || ProjectPresetSourceOptionsBuilder::is_known_field(key)
+    }
+
     pub(crate) fn deserialize_known_field<'de, A>(
         &mut self,
         key: &str,
@@ -83,6 +89,23 @@ impl ProjectRuntimeOptionsBuilder {
             Ok(true)
         } else {
             self.preset.deserialize_known_field(key, map)
+        }
+    }
+
+    pub(crate) fn deserialize_known_value<'de, D>(
+        &mut self,
+        key: &str,
+        deserializer: D,
+    ) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if ProjectGCodeSourceOptionsBuilder::is_known_field(key) {
+            self.gcode.deserialize_known_value(key, deserializer)
+        } else if ProjectPrintSourceOptionsBuilder::is_known_field(key) {
+            self.print.deserialize_known_value(key, deserializer)
+        } else {
+            self.preset.deserialize_known_value(key, deserializer)
         }
     }
 

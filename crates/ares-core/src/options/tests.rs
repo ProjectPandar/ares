@@ -168,5 +168,6 @@ mod update_multi_to_multi_2;
 mod update_multi_to_single_2;
 mod update_printer_extruders;
 mod update_single_to_multi;
+mod typed_legacy;
 #[rustfmt::skip]
 option_test_modules!(first_layer_flow_ratio, filter_out_gap_fill, initial_layer_line_width, initial_layer_speeds, min_feature_bead_width, min_skirt_length, minimum_sparse_infill_area, print_flow_ratio, set_other_flow_ratios, single_loop_draft_shield, skirt_start_angle, skirt_type, thick_internal_bridges, validation, wall_generator, wall_maximum_resolution_deviation, wall_transition_parameters, wall_direction, wall_sequence, wall_infill_order, role_fan_runtime, small_area_infill_flow);

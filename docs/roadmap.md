@@ -718,10 +718,58 @@ slicing, and G-code generation, and the real-3MF native/browser path still
 reaches `ProjectSlicingIncomplete` only after typed loading succeeds. Task 19A
 retains legacy and complete-document composite conversion; Task 19B effective
 sizing/selection/normalization; Task 19C only the effective `FullPrintConfig`
-G-code `CONFIG_BLOCK`; and Tasks 20A-20E dynamic-consumer migration. The Task
-18 release matrix, commit, push, and exact-SHA five-job Tier 1 gate remain
-pending before Task 19A starts; complete fixture G-code byte parity is not yet
-implemented.
+G-code `CONFIG_BLOCK`; and Tasks 20A-20E dynamic-consumer migration. Task 18 is
+released as pushed commit `a2714d4a6a197c5e10aec1b686e80e9b66794fd6`;
+exact-SHA Tier 1 run `29298974173` is green across format, Ubuntu/Linux, WASM,
+macOS, and Windows. Complete fixture G-code byte parity is not yet implemented.
+
+### 2026-07-13 Convert typed legacy project inputs
+
+Task 19A ports the fixed OrcaSlicer v2.4.2 boundaries at
+`PrintConfig.cpp:8033-8338`, `Config.cpp:573-685,885-1017` for implemented
+typed lexical decode, JSON iteration, and derived slicing-state writes,
+`PrintConfig.cpp:8099-8104,8121-8131` for the four deferred profile/UI input
+rules, `Config.cpp:1018-1088` for deferred downstream profile-difference
+bookkeeping, `Format/bbs_3mf.cpp:2119-2132,5088-5117` for ordered object and
+part XML semantics, and `GCode/Thumbnails.cpp:530-577` into private concrete
+typed conversion under `ares-core::options::typed_legacy`. Its compile-time
+inventory records all 76 named source rules, 44 obsolete keys, 72 executable
+inputs, and four deferred profile/UI bookkeeping inputs. It implements the
+exact direct, conditional, global, pattern, wall-order, feature-filament, and
+token transformations plus the twelve registered array targets'
+empty-first-pass, typed-flattening, and complete-string second-pass semantics.
+Obsolete inputs are consumed; deferred and unknown inputs fail with their exact
+names.
+
+Strict top-level project JSON shares canonical target presence across canonical
+and legacy spellings and applies the two JSON-only derived slicing values after
+iteration, independent of explicit-target order. Ordered object and part XML
+instead perform one per-entry conversion, write concrete sparse owners or
+retain non-owner canonical entries in place, preserve last-write-wins, and
+receive neither the JSON-only effects nor the composite. Presence-aware
+thumbnail conversion runs before builder resolution, honors explicit item and
+top-level formats, defaults an absent format to PNG, and emits normalized
+six-significant-digit `WIDTHxHEIGHT/FORMAT` items.
+
+The public byte-oriented real-project path remains canonically idempotent, and
+the generated browser WASM path still reaches the existing post-load
+`ProjectSlicingIncomplete` boundary. `perimeter_feed_rate` and the unreachable
+wiping-volume composite keys remain unavailable, while canonical
+`flush_volumes_matrix` is unchanged. Obsolete checkout-dependent Orca source
+pinning and generator mutation tests are removed; the 653-row semantic
+inventory and deterministic fixed-commit generator remain byte-identical.
+
+All five slices and the frozen whole implementation have independent
+specification and quality approval. Fresh whole-task evidence passes 61
+typed-legacy tests, 160 adjacent tests, all 4,484 workspace tests with two
+configured skips, the dynamic-value audit, rustfmt, warning-denying Clippy,
+native/WASM checks, browser proof, and fixed-source exclusion scans. The Task
+19A release matrix, commit, push, and exact-SHA five-job Tier 1 gate remain
+pending. Task 19B retains general normalization, active sizing/selection, and
+association; Task 19C retains effective config export; Tasks 20A-20E retain
+consumer migration and compatibility-parser removal. Geometry, slicing,
+G-code generation/post-processing, and complete `ksr_fdmtest_v4` byte parity
+remain later work.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

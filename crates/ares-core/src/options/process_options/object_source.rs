@@ -30,6 +30,12 @@ macro_rules! declare_process_object_source_options {
 
 object_option_fields!(declare_process_object_source_options);
 
+impl ProcessObjectSourceOptionsBuilder {
+    pub(crate) fn set_derived_support_style(&mut self, value: ProcessSupportStyle) {
+        self.support_style = Some(value);
+    }
+}
+
 impl ProcessObjectSourceOptions {
     pub const DECLARATION_ORDER: [&'static str; 126] = OBJECT_OPTION_DECLARATION_ORDER;
 }

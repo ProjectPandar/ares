@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { deriveConsumerCitations, deriveExportRules, deriveMetadata } from "./task5_inventory/source.mjs";
-import { verifyOptionDefinitionMutations, verifySourceMutations } from "./task5_inventory/mutations.mjs";
 import { axisDefinitions } from "./task5_inventory/axis.mjs";
 import { enumLookup, evaluateEnumDefault } from "./task5_inventory/enums.mjs";
 
@@ -330,12 +329,6 @@ function canonicalDefault(type, value) {
 const metadata = deriveMetadata(new Set(definitions.keys()), keys, sources.config, sources.presetHeader);
 const exportRules = deriveExportRules(sources.gcode, keys);
 for (const key of exportRules.keys()) if (nullable.has(key)) throw new Error(`overlapping special/nullable export ${key}`);
-if (process.argv.includes("--verify-mutations")) {
-  verifySourceMutations(sources, definitions, keys);
-  verifyOptionDefinitionMutations(sources.print, numberList);
-  process.stdout.write("verified 19 source-semantics mutations\n");
-  process.exit(0);
-}
 const consumerCitations = deriveConsumerCitations(keys, sources, new Set(metadata.keys()));
 
 const rows = keys.map(key => {

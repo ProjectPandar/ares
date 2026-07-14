@@ -68,6 +68,10 @@ pub(crate) struct PresetMetadataBuilder {
 }
 
 impl PresetMetadataBuilder {
+    pub(crate) fn is_known_field(key: &str) -> bool {
+        FIELDS.contains(&key)
+    }
+
     pub(crate) fn deserialize_known_field<'de, A>(
         &mut self,
         key: &str,
@@ -88,6 +92,31 @@ impl PresetMetadataBuilder {
             )));
         }
         *field = Some(map.next_value::<String>().map_err(|error| {
+            serde::de::Error::custom(format_args!("invalid Orca preset metadata {key}: {error}"))
+        })?);
+        Ok(true)
+    }
+
+    pub(crate) fn deserialize_known_value<'de, D>(
+        &mut self,
+        key: &str,
+        deserializer: D,
+    ) -> Result<bool, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let field = match key {
+            "from" => &mut self.from,
+            "name" => &mut self.name,
+            "version" => &mut self.version,
+            _ => return Ok(false),
+        };
+        if field.is_some() {
+            return Err(serde::de::Error::custom(format!(
+                "duplicate Orca option {key}"
+            )));
+        }
+        *field = Some(String::deserialize(deserializer).map_err(|error| {
             serde::de::Error::custom(format_args!("invalid Orca preset metadata {key}: {error}"))
         })?);
         Ok(true)

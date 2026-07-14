@@ -5,6 +5,26 @@ use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 mod object_metadata;
 mod part_metadata;
 
+fn is_structural_metadata(key: &str) -> bool {
+    matches!(
+        key,
+        "name"
+            | "module"
+            | "volume_type"
+            | "part_type"
+            | "matrix"
+            | "mesh_shared"
+            | "source_file"
+            | "source_object_id"
+            | "source_volume_id"
+            | "source_offset_x"
+            | "source_offset_y"
+            | "source_offset_z"
+            | "source_in_inches"
+            | "source_in_meters"
+    )
+}
+
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename = "config")]
 pub(crate) struct ModelSettings {

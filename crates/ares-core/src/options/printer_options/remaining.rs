@@ -12,7 +12,7 @@ pub use structured::{
     ThumbnailDefinitions,
 };
 
-use crate::GCodeThumbnailFormat;
+use crate::{GCodeThumbnailFormat, ThumbnailParseError};
 
 use super::super::{
     config_types::{
@@ -66,6 +66,19 @@ declare_option_group! {
         default_nozzle_volume_type => "default_nozzle_volume_type": NozzleVolumeTypes = NozzleVolumeTypes(vec![NozzleVolumeType::Standard]),
         extruder_variant_list => "extruder_variant_list": ExtruderVariantLists = ExtruderVariantLists(vec!["Direct Drive Standard".to_owned()]),
         thumbnails_format => "thumbnails_format": GCodeThumbnailFormat = GCodeThumbnailFormat::Png,
+    }
+}
+
+impl PrinterRemainingOptionsBuilder {
+    pub(crate) fn normalize_present_thumbnails(&mut self) -> Result<(), ThumbnailParseError> {
+        let Some(thumbnails) = self.thumbnails.as_ref() else {
+            return Ok(());
+        };
+        self.thumbnails = Some(super::super::typed_legacy::normalize_thumbnails(
+            thumbnails,
+            self.thumbnails_format,
+        )?);
+        Ok(())
     }
 }
 

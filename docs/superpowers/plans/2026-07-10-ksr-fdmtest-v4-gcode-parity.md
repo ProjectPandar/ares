@@ -2431,89 +2431,302 @@ The raw fixture bytes remain a test oracle read directly through
 
 ### Task 19A: Typed Legacy Conversion Across Project Inputs
 
-**Fixed upstream boundary:** `PrintConfig.cpp:8033-8285::handle_legacy`,
-`PrintConfig.cpp:8290-8339::handle_legacy_composite`,
-`Config.cpp:573-685::set_deserialize_nothrow/set_deserialize_raw`, complete
-document composite calls at `Config.cpp:1092-1095,1184-1186,1273-1275,
-1455-1457`, and per-entry object/volume dispatch at
-`Format/bbs_3mf.cpp:2119-2132,5088-5117`.
+**Frozen upstream boundary:** every citation in this task is against OrcaSlicer
+commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`, not the mutable checkout HEAD:
 
-Object and volume metadata receive the same per-entry legacy key/value rewrite
-as top-level config. They do not run `handle_legacy_composite`; composite
-conversion applies once to a completely loaded top-level project config.
+- `PrintConfig.cpp:8033-8285::PrintConfigDef::handle_legacy` owns the per-entry
+  key/value rewrite and the final registered-key/obsolete-key decision.
+- `Config.cpp:573-685` owns lexical typed decode, including canonical alias
+  lookup at `Config.cpp:603-626`; JSON iteration begins at `Config.cpp:885` and
+  its string/array value branches are `Config.cpp:927-1000`.
+  `Config.cpp:1008-1088` owns the two slicing-state side effects plus
+  profile-difference bookkeeping.
+- `PrintConfig.cpp:8290-8339::handle_legacy_composite` and
+  `GCode/Thumbnails.cpp:530-577` own the post-load thumbnail conversion.
+- `Config.cpp:1092-1095,1184-1186,1273-1275,1455-1457` calls the composite only
+  after a complete top-level config load. Object and volume XML metadata use
+  per-entry dispatch at `Format/bbs_3mf.cpp:2119-2132,5088-5117` and never call
+  the composite.
 
-**Files:**
-- Create: `options/typed_legacy.rs` with private `key_value` and `composite`
-  siblings
-- Create: `options/tests/typed_legacy.rs` with focused top-level,
-  model-settings, composite, and collision siblings
-- Modify: `options.rs`, `options/tests.rs`, `options/project_deserialize.rs`,
-  `options/project_settings.rs`, `project/model_settings.rs`, Task 15's
-  `project/model_settings/object_metadata.rs`, Task 16's
-  `project/model_settings/part_metadata.rs`, focused project tests,
-  `docs/architecture/option-parity-v4.md`, and `docs/roadmap.md`
+#### Reviewed source inventory and scope
 
-The existing `options/legacy.rs` and `options/tests/legacy.rs` own the temporary
-dynamic STL `SliceOptions` compatibility path and are already near the physical
-LOC limit. Keep them baseline-covered and unchanged until Task 20E; do not add
-the typed project path there.
+The committed 653-field fixture inventory is a coverage oracle, not the rule
+truth. Its 88 `LegacyInput` rows cover 73 distinct input names. The fixed source
+has 76 explicit conditional input names and 44 unconditional obsolete names:
 
-**Interfaces:**
-- One crate-private fixed-ledger lexical dispatcher is shared by top-level
-  project settings and model-settings option metadata. It rewrites a reviewed
-  legacy key/value directly into canonical concrete target slots, or reports a
-  reviewed obsolete input as ignored, without returning or parking a dynamic
-  value.
-- Top-level `ProjectSettings` runs per-entry legacy dispatch immediately before
-  Task 18's strict unknown branch, applies Task 18's strict duplicate policy,
-  then runs typed composite conversion once after complete load.
-- Object and part/volume metadata run per-entry legacy dispatch before their
-  context-specific sparse visitor, preserve XML order, and remain
-  last-write-wins after aliasing. Named `name`, `module`, `matrix`, source, and
-  mesh metadata bypass option legacy dispatch.
-- Fixed `handle_legacy` clears still-unregistered keys at
-  `PrintConfig.cpp:8281-8283`; Ares intentionally keeps the milestone's stricter
-  no-fallback rule. On the complete top-level Task 18 path, only reviewed
-  legacy/obsolete rows are accepted or ignored and a still-unknown key errors
-  immediately with its exact name. Sparse model metadata lacks the complete
-  global registry here: entries not consumed by reviewed legacy or Task 15/16
-  visitors remain ordered in `retained_config` for Task 19B's complete
-  canonical classification and exact unknown-key error.
+`76 = (73 fixture-ledger names - perimeter_feed_rate) + 4 source-only names`.
 
-- [ ] **Step 1: RED/GREEN every reviewed fixed legacy input**
+The four source-only names are `inherits_cummulative`,
+`compatible_printers_condition_cummulative`,
+`compatible_prints_condition_cummulative`, and
+`different_settings_to_system`. Their targets are not among the current 653
+typed fields. The first three rename to `inherits_group`,
+`compatible_machine_expression_group`, and
+`compatible_process_expression_group`. The fourth strips quotes, splits and
+deduplicates semicolon-separated names, recursively rewrites each name, and
+replaces changed substrings. All four are profile/UI metadata, not slicing
+state, and are source-cited deferred: Task 19A records their exact disposition
+in the compile-time audit inventory but does not accept, store, or invent fields
+or dynamic state for them. Therefore the executable Task 19A boundary is the
+remaining 72 fixed explicit names plus all 44 obsolete names.
 
-  Drive the committed `LegacyInput` ledger through simple renames, aliases,
-  multi-target shortcuts, value and enum conversions, ignored obsolete keys,
-  fixed percentage erasure, and top-level
-  unknown-after-reviewed-legacy diagnostics.
-  A compile-time-known key may select concrete setters; no generic runtime
-  value container is permitted. Top-level alias/canonical collisions follow
-  Task 18 strict duplicate rules, while model-settings assignments remain
-  ordered last-write-wins.
+The compile-time action inventory must encode the following exact inputs and
+parameters. It is an exhaustive source ledger, not a runtime string registry:
 
-- [ ] **Step 2: RED/GREEN object and part model-settings legacy dispatch**
+| Action | Exact fixed inputs and parameters |
+| --- | --- |
+| Direct rename | `enable_wipe_tower -> enable_prime_tower`; `wipe_tower_width -> prime_tower_width`; `wiping_volume -> prime_volume`; `wipe_tower_brim_width -> prime_tower_brim_width`; `tool_change_gcode -> change_filament_gcode`; `bridge_fan_speed -> overhang_fan_speed`; `wipe_tower_extruder -> wipe_tower_filament`; `support_material_extruder -> support_filament`; `support_material_interface_extruder -> support_interface_filament`; `support_material_angle -> support_angle`; `support_material_enforce_layers -> enforce_support_layers`; `cooling -> slow_down_for_layer_cooling`; `timelapse_no_toolhead -> timelapse_type`; `sparse_infill_anchor -> infill_anchor`; `sparse_infill_anchor_max -> infill_anchor_max`; `chamber_temperatures -> chamber_temperature`; `thumbnail_size -> thumbnails`; `initial_layer_flow_ratio -> bottom_solid_infill_flow_ratio`; `ironing_direction -> ironing_angle`; `counterbole_hole_bridging -> counterbore_hole_bridging`; `prime_tower_extra_rib_length -> wipe_tower_extra_rib_length`; `prime_tower_rib_width -> wipe_tower_rib_width`; `prime_tower_fillet_wall -> wipe_tower_fillet_wall`; `extruder_clearance_max_radius -> extruder_clearance_radius`; `machine_switch_extruder_time -> machine_tool_change_time`. |
+| Feature-filament rename | `infill_extruder` and `sparse_infill_filament -> sparse_infill_filament_id`; `solid_infill_extruder` and `solid_infill_filament -> internal_solid_filament_id`; `top_solid_infill_filament -> top_surface_filament_id`; `bottom_solid_infill_filament -> bottom_surface_filament_id`; `perimeter_extruder`, `wall_filament`, and `wall_filament_id -> outer_wall_filament_id`; `inner_wall_filament -> inner_wall_filament_id`; `outer_wall_filament -> outer_wall_filament_id`. For every row, exact legacy value `"1"` becomes canonical inherit `"0"`; all other values are retained. |
+| Conditional consume | For `initial_layer_print_height`, `initial_layer_speed`, `internal_solid_infill_speed`, `top_surface_speed`, `support_interface_speed`, `outer_wall_speed`, and `support_object_xy_distance`, consume the whole assignment only when the lexical value contains `%`; otherwise decode the canonical key normally. `top_one_wall_type` consumes `none`, otherwise writes `only_one_wall_top=true`. `prime_tower_rib_wall` writes `wipe_tower_wall_type=rib` only for `1`, otherwise consumes the assignment. |
+| Exact value rewrite | `curr_bed_type`: `SuperTack Plate -> Supertack Plate`; `timelapse_type`: `2 -> 0`; `support_type`: `normal -> normal(manual)`, `tree -> tree(manual)`, `hybrid(auto) -> tree(auto)`; `support_base_pattern`: `none -> hollow`; `overhang_fan_threshold`: `5% -> 10%`; `enable_power_loss_recovery`: case-insensitive `true` or `1 -> enable`, case-insensitive `false` or `0 -> disable`; `ensure_vertical_shell_thickness`: `1 -> ensure_all`, `0 -> ensure_moderate`; `rotate_solid_infill_direction -> solid_infill_rotate_template` with `1 -> 0,90`, `0 -> 0`; `ironing_angle`: any leading `- -> 0`; `draft_shield`: `limited -> disabled`; `filament_map_mode`: `Auto -> Auto For Flush`; `wall_direction`: `auto -> ccw`. Nonmatching values retain the source key/value unless a conditional-consume rule above says otherwise. The upstream `else-if` chain is intentionally non-recursive, so `ironing_direction=-45` renames without reapplying the `ironing_angle` branch in that call. |
+| Wall order | `wall_infill_order` always renames to `wall_sequence`: the two inner-first spellings become `inner wall/outer wall`; the two outer-first spellings become `outer wall/inner wall`; `inner-outer-inner wall/infill` becomes `inner-outer-inner wall`; any other value is retained under `wall_sequence`. Only the JSON project path additionally writes `is_infill_first=true` for `infill/outer wall/inner wall` and `infill/inner wall/outer wall`. |
+| Global replacement | For `nozzle_volume_type`, `default_nozzle_volume_type`, `printer_extruder_variant`, `print_extruder_variant`, `filament_extruder_variant`, and `extruder_variant_list`, replace every `Normal` with `Standard` and every `Big Traffic` with `High Flow`. For `extruder_type`, replace every `DirectDrive` with `Direct Drive`. |
+| Pattern rewrite | For `sparse_infill_pattern`, `top_surface_pattern`, `bottom_surface_pattern`, `internal_solid_infill_pattern`, `ironing_pattern`, and `support_ironing_pattern`, exact `zig-zag -> rectilinear`. |
+| Filament token rebuild | For `filament_type`, split on `;`, strip one surrounding quote pair per token, replace exact token `ASA-Aero -> ASA-AERO`, and only when a token changed rebuild every token quoted and joined by `;`. |
+| JSON-only derived side effects | `support_type=hybrid(auto)` writes canonical `support_type=tree(auto)` and schedules typed `support_style=tree_hybrid`. The two infill-first `wall_infill_order` spellings schedule `is_infill_first=true`. Fixed `Config.cpp:1008-1017` applies both after the complete JSON iteration, so each derived value overwrites an explicit canonical target regardless of whether that target appeared before or after the trigger. A derived write is not an alias/canonical duplicate. XML model dispatch performs only the per-entry key/value rewrite. |
+| Source-only deferred | The three cumulative renames and recursive `different_settings_to_system` behavior described above remain explicit `DeferredProfileBookkeeping` inventory rows. Ares stores neither their source nor target values in Task 19A. |
 
-  Prove object aliases can target Task 15 sparse fields, such as
-  `support_material_extruder -> support_filament`, and object/part aliases can
-  target Task 16 region state, including feature-filament migrations where
-  legacy `1` becomes canonical inherit `0`. Cover both canonical/legacy orders,
-  named structural metadata, retained non-owner/unclassified keys, obsolete
-  keys, and real-fixture canonical idempotence. Prove a model key still
-  unclassified after reviewed legacy remains ordered for Task 19B rather than
-  failing early. No model-settings path runs composite conversion.
+The 44 exact obsolete inputs are consumed without decoding:
+`acceleration`, `scale`, `rotate`, `duplicate`, `duplicate_grid`, `bed_size`,
+`print_center`, `g0`, `wipe_tower_per_color_wipe`, `support_sharp_tails`,
+`support_remove_small_overhangs`, `support_with_sheath`,
+`tree_support_collision_resolution`, `tree_support_with_infill`,
+`max_volumetric_speed`, `max_print_speed`, `support_closing_radius`,
+`remove_freq_sweep`, `remove_bed_leveling`,
+`remove_extrusion_calibration`, `support_transition_line_width`,
+`support_transition_speed`, `bed_temperature`,
+`bed_temperature_initial_layer`, `can_switch_nozzle_type`,
+`can_add_auxiliary_fan`, `extra_flush_volume`, `spaghetti_detector`,
+`adaptive_layer_height`, `z_hop_type`, `z_lift_type`,
+`bed_temperature_difference`, `long_retraction_when_cut`,
+`retraction_distance_when_cut`, `internal_bridge_support_thickness`,
+`top_area_threshold`, `reduce_wall_solid_infill`, `filament_load_time`,
+`filament_unload_time`, `smooth_coefficient`, `overhang_totally_speed`,
+`silent_mode`, `overhang_speed_classic`, and `filament_prime_volume`.
 
-- [ ] **Step 3: RED/GREEN top-level typed composite conversion**
+Two audited fixed branches are expressly not implemented:
 
-  Run `handle_legacy_composite` equivalents only after the complete typed
-  `ProjectSettings` document loads. Cover the fixed boundary's thumbnails and
-  wiping-volume matrix composites, canonical fixture idempotence, and
-  collisions. Apply directly to concrete typed builders/patches without JSON
-  or the temporary `SliceOptions` map. Fixed
-  `PrintConfig.cpp:8743-8763::handle_legacy_sla` is a separate SLA preset
-  normalization invoked from `Preset.cpp:443-489::Preset::normalize`; it is not
-  a top-level load composite and is outside this FDM parity program.
+- `perimeter_feed_rate -> inner_wall_speed` is only an option alias at
+  `PrintConfig.cpp:5046`, not one of the 76 `handle_legacy` inputs. Project/model
+  loaders run `handle_legacy` before alias lookup, and the unregistered key is
+  cleared at `PrintConfig.cpp:8281-8283`. The fixture ledger row is excluded.
+- `wiping_volumes_matrix` and `wiping_volumes_use_custom_matrix` occur only in
+  `handle_legacy_composite` at `PrintConfig.cpp:8320-8338`; neither is
+  registered or written in the fixed `PrintConfigDef`, so per-entry handling
+  clears them before the composite. They are absent from the 653 typed fields.
+  Task 19A must not add them or confuse them with `flush_volumes_matrix`.
 
-- [ ] **Step 4: Run the mandatory task gate**
+Committed behavioral tests prove these inputs remain unavailable/unknown and
+that the fixture/source set difference is exact. Review evidence separately
+re-runs fixed-commit `git grep` for the cited definitions and call order; no
+committed test reads or pins Orca source text.
+
+#### Ares ownership and interfaces
+
+**Create production files:**
+
+- `crates/ares-core/src/options/typed_legacy.rs`: private facade and typed
+  outcomes only.
+- `crates/ares-core/src/options/typed_legacy/actions.rs`: the complete 76-name
+  source action inventory, exact parameters, per-rule string/array wire shape,
+  array empty-value first-pass outcome, and four deferred dispositions.
+- `crates/ares-core/src/options/typed_legacy/obsolete.rs`: the exact 44-name
+  compile-time obsolete set.
+- `crates/ares-core/src/options/typed_legacy/convert.rs`: pure concrete lexical
+  transformations for the 72 executable names; no erased value.
+- `crates/ares-core/src/options/typed_legacy/project.rs`: top-level typed
+  dispatch and JSON-only `support_style` / `is_infill_first` writes.
+- `crates/ares-core/src/options/typed_legacy/model.rs`: XML per-entry
+  canonicalization and typed owner handoff.
+- `crates/ares-core/src/options/typed_legacy/thumbnails.rs`: presence-aware
+  thumbnail composite only.
+
+**Create test files:**
+
+- `crates/ares-core/src/options/tests/typed_legacy.rs` with split
+  `typed_legacy/inventory.rs`, `typed_legacy/convert.rs`,
+  `typed_legacy/project.rs`, and `typed_legacy/thumbnails.rs` siblings.
+- `crates/ares-core/src/project/tests/documents/object_settings_metadata/legacy.rs`
+  for ordered object/part XML integration.
+
+**Modify only these existing ownership points:**
+
+- `crates/ares-core/src/options.rs` and
+  `crates/ares-core/src/options/tests.rs` for module wiring.
+- `crates/ares-core/src/options/option_group.rs` to generate a crate-private
+  typed-value assignment entry point alongside canonical `MapAccess` decode;
+  it accepts a concrete deserializer and never a dynamic option value.
+- The five aggregate builders in
+  `options/printer_options.rs`, `options/process_options.rs`,
+  `options/filament_options.rs`, `options/project_runtime_options.rs`, and
+  `options/preset_metadata.rs` to delegate that typed assignment entry point.
+- `options/project_settings.rs` to add one crate-private
+  `ProjectSettingsBuilder` owning the five aggregate builders, target presence,
+  strict duplicate detection, the two typed JSON side effects, and composite
+  before final resolution; `options/project_deserialize.rs` becomes the thin
+  streaming visitor that delegates canonical and reviewed legacy entries.
+- `project/model_settings.rs`,
+  `project/model_settings/object_metadata.rs`, and
+  `project/model_settings/part_metadata.rs` for ordered XML dispatch, plus the
+  existing object-settings test module only to wire its new `legacy` sibling.
+- After whole implementation approval only,
+  `docs/architecture/option-parity-v4.md` and `docs/roadmap.md`.
+
+Every changed Rust file must remain below 400 physical lines. If any named file
+would cross that limit, split only its stated responsibility into a same-named
+private submodule before review; do not move unrelated code.
+
+The per-rule inventory has an exhaustive wire/action contract matching fixed
+`Config.cpp:573-685,885,927-1000`:
+
+- A top-level JSON string and an XML metadata lexical string each execute the
+  rule once with the actual lexical value. The resulting canonical concrete
+  target is decoded directly. Every non-deferred, non-obsolete rule accepts
+  this string path; nonmatching conditional values follow the exact preserve or
+  consume action recorded in the table above.
+- A top-level JSON array first executes the rule with `value=""`, exactly as
+  `Config.cpp:950-956` does. The action inventory records that empty-value
+  outcome per input; it is not reduced to a key-only rewrite. In particular,
+  `top_one_wall_type` maps the empty value to
+  `only_one_wall_top="1"`, while `prime_tower_rib_wall` consumes the assignment.
+  Obsolete and other conditional-consume behavior also follows its exact empty
+  predicate before any array decode.
+- If that first pass retains an input, only these registered array targets are
+  array-capable in the current typed boundary: `overhang_fan_speed` and
+  `chamber_temperature` as `coInts`; `slow_down_for_layer_cooling` as `coBools`;
+  `nozzle_volume_type`, `default_nozzle_volume_type`, `extruder_type`, and
+  `overhang_fan_threshold` as `coEnums`; and `extruder_variant_list`,
+  `filament_extruder_variant`, `filament_type`, `print_extruder_variant`, and
+  `printer_extruder_variant` as `coStrings`. Their legacy source aliases inherit
+  the target's specific vector shape. Every other rule/target is string-only;
+  a JSON array for it is an invalid option value unless the exact empty-value
+  rule consumed it first.
+- For an allowed array, reproduce `Config.cpp:831-872,975-1000`: require
+  homogeneous JSON element kinds at each level and string leaves; flatten
+  `coInts`, `coBools`, and `coEnums` with `,`; flatten `coStrings` as C-style
+  escaped, quoted strings separated by `;`; reject unsupported depth/kind or a
+  value the specific typed vector cannot decode. The flattened lexical string
+  is appended to any first-pass value, then the canonicalized key and complete
+  flattened string execute `handle_legacy` semantics a second time before typed
+  assignment. Do not rewrite array elements independently.
+- Exhaustive tests cover the second-pass distinctions: global replacements for
+  `nozzle_volume_type`, `default_nozzle_volume_type`, and `extruder_type` run
+  over the complete comma-flattened `coEnums` string; the four variant-list
+  inputs run replacements over the complete quoted/semicolon `coStrings`
+  string; `filament_type` tokenizes that complete flattened string and rebuilds
+  only when exact `ASA-Aero` changes; exact whole-string predicates such as
+  `overhang_fan_threshold="5%"` trigger only when the flattened value itself
+  equals the predicate. Tests include singleton and multi-item vectors,
+  escaping, mixed/non-string/nested invalid kinds, and first-pass
+  append/consume cases.
+
+The top-level visitor consumes each JSON value once into either the declared
+lexical string or the declared specific typed-vector path; no generic dynamic
+value is parked. The canonical target presence bit is shared by canonical and
+legacy spellings, so any input assignment collision is Task 18's strict
+duplicate error after canonicalization. The two derived slicing-state writes
+are stored separately until JSON iteration finishes, then applied over any
+explicit `support_style` / `is_infill_first` target without raising duplicate,
+which makes the result independent of input order. Without a trigger, an
+explicit target is unchanged. Unknown and the four deferred profile/UI names
+error with the exact input name; obsolete assignments are the only reviewed
+inputs silently consumed.
+
+Object and part metadata preserve XML order. A canonicalized target owned by
+`ObjectOptionOverrides` or `RegionOptionOverrides` is parsed and written
+directly to that typed owner; later canonical or legacy assignments win.
+Canonicalized non-owner targets are retained under the canonical key at the
+same ordered position for Task 19B. Unclassified non-legacy entries remain
+ordered and unchanged. Structural `name`, `module`, `matrix`, `source_*`, and
+mesh metadata bypass option dispatch entirely; `mesh_stat` remains an element.
+XML never receives JSON-only side effects or a composite.
+
+Thumbnail conversion runs on `ProjectSettingsBuilder` before `Option` presence
+is discarded, and only when canonical `thumbnails` or legacy `thumbnail_size`
+was present. A missing per-item format uses present `thumbnails_format`, or PNG
+when that option was absent; explicit per-item formats win. Invalid dimensions,
+range, or format return the typed project-option error. Valid items normalize to
+fixed `WIDTHxHEIGHT/FORMAT` spelling joined by comma-space. A missing thumbnails
+input does nothing even though the resolved printer struct has defaults.
+
+The Task 19A production path forbids `serde_json::Value`, `serde_json::Map`,
+`RawValue`, `Box<dyn Any>`, equivalent erased values, a runtime option registry,
+fixture-name/hash branches, reference-G-code reads, native I/O, terminal/UI,
+FFI, Option Pinning, and calls into the temporary dynamic `SliceOptions` legacy
+path. Existing `options/legacy.rs`, its submodules, and legacy tests remain
+unchanged and baseline-covered until Task 20E.
+
+- [ ] **Slice 19A.1: RED/GREEN exhaustive source action inventory**
+
+  First add failing inventory tests proving 76 distinct explicit source names,
+  44 distinct obsolete names, no overlap, exact action parameters, exactly four
+  `DeferredProfileBookkeeping` rows, and the exact fixture delta
+  `{source-only four}` / `{ledger-only perimeter_feed_rate}`. Add table-driven
+  RED cases for every direct rename and feature-filament parameter, including
+  non-recursive ordering, per-rule JSON string/XML string/JSON array allowance,
+  target vector type, and exact empty-string first-pass action. GREEN only the
+  compile-time action/obsolete modules and pure typed outcomes. Freeze this
+  slice and require independent spec-compliance and code-quality `APPROVE`.
+
+- [ ] **Slice 19A.2: RED/GREEN all conditional transformations and consumes**
+
+  Add failing table-driven tests for every value-rewrite branch and its
+  nonmatching branch, the seven percentage consumes, all wall-order spellings,
+  global replacements, six pattern inputs, filament-token rebuilding, all 44
+  obsolete inputs, and the two conditional consumes. Add genuine RED array
+  cases for all twelve allowed targets, both first-pass special outcomes,
+  comma/coStrings flattening, second-pass whole-string transformations,
+  singleton versus multi-item enum predicates, escaping, mixed/non-string or
+  unsupported nested kinds, and arrays rejected for string-only targets. GREEN
+  the concrete transformer only; prove there is no element-wise migration,
+  JSON/erased value, or runtime registry. Freeze and independently approve both
+  spec compliance and code quality.
+
+- [ ] **Slice 19A.3: RED/GREEN strict typed JSON project integration**
+
+  Add failing streaming-deserialization tests for all executable action families
+  through `ProjectSettings`, canonical/legacy and legacy/legacy collisions,
+  unknown/deferred exact-name errors, and JSON-only effects:
+  `support_type=hybrid(auto)` also sets `support_style=tree_hybrid`, while the
+  two infill-first wall spellings also set `is_infill_first=true`. For each
+  derived target, add genuine RED cases with an explicit conflicting canonical
+  target before and after the trigger; both orders must end with the derived
+  value and must not report a duplicate. Cover both infill-first spellings and
+  prove a non-trigger preserves its explicit target. Prove no
+  `different_settings_to_system` state appears. GREEN the option-group typed
+  assignment entry point, five aggregate delegates, `ProjectSettingsBuilder`,
+  deferred post-iteration derived writes, and thin visitor. Freeze and
+  independently approve both reviews.
+
+- [ ] **Slice 19A.4: RED/GREEN ordered object and part XML integration**
+
+  Add failing object/part tests for owner-target direct writes, non-owner
+  canonical retention, both canonical/legacy orders, feature-filament `1 -> 0`,
+  obsolete consumption, structural bypass, unclassified retention, and absence
+  of JSON-only effects/composite. GREEN only model dispatch and the two metadata
+  loops while preserving XML last-write-wins. Freeze and independently approve
+  both reviews.
+
+- [ ] **Slice 19A.5: RED/GREEN presence-aware thumbnail composite and boundary proofs**
+
+  Add failing tests for absent/present thumbnails, `thumbnail_size`, present or
+  absent `thumbnails_format`, explicit per-item formats, normalized output,
+  invalid dimensions/range/format, and collision behavior. Add behavioral
+  boundary tests proving `perimeter_feed_rate`, `wiping_volumes_matrix`, and
+  `wiping_volumes_use_custom_matrix` are not accepted/created and canonical
+  `flush_volumes_matrix` is unchanged. GREEN only the thumbnail module and its
+  pre-resolution call. Then prove the real fixture remains canonically
+  idempotent through the public byte API and browser project load still reaches
+  the existing post-load slicing boundary. Freeze and independently approve
+  both reviews.
+
+- [ ] **Whole Task 19A, documentation, and release gates**
+
+  Freeze the complete implementation manifest. A fresh independent reviewer
+  must return whole-spec `APPROVE`, and a separate quality reviewer must return
+  whole-quality `APPROVE`; any edit invalidates both. Only then update the two
+  owned docs, freeze that docs diff, and require independent docs `APPROVE`.
+  Run the complete frozen release matrix:
 
   ```powershell
   cargo +1.91.0 fmt --all -- --check
@@ -2532,12 +2745,23 @@ the typed project path there.
   git diff --check -- . ':(exclude)tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode'
   ```
 
-  Require no-index whitespace, changed-file ownership, under-400-LOC,
-  forbidden dynamic/JSON/Option-Pinning, independent spec/quality/docs,
-  fresh frozen-byte matrix, commit-tree-match, push, exact-pushed-SHA, and
-  five-job Tier 1 gates before Task 19B. Only after approvals and fresh
-  verification, commit with `feat(config): port typed legacy conversion`,
-  verify the commit tree, and push.
+  Also require source-proof review commands against fixed commit
+  `8500fcdccaa10b5099ac20d252af3a7c560046f1` for the
+  `perimeter_feed_rate` registration/load order and the absence of fixed
+  wiping-volume registrations/writers; these are review evidence, not committed
+  source-pinning tests. Require exact changed-file ownership, per-added-file
+  no-index whitespace, every changed Rust file below 400 physical lines,
+  unchanged fixture hashes, the forbidden-path scans above, fresh frozen-byte
+  results, and index/workspace/commit-tree byte equality. Only after all
+  approvals and fresh verification, commit
+  `feat(config): port typed legacy conversion`, push, and require all five Tier
+  1 jobs green for that exact pushed SHA before Task 19B.
+
+Task 19B retains complete model-key classification, effective
+`FullPrintConfig`, sizing, and FDM normalization. Task 19C retains exact
+effective config-block serialization. Task 20E retains deletion/replacement of
+the temporary dynamic `SliceOptions` legacy path. Task 19A does not pull any of
+those responsibilities forward.
 
 ---
 

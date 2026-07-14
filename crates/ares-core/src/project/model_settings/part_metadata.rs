@@ -1,8 +1,11 @@
 use serde::{Deserialize, Deserializer, de::Error as _};
 
-use crate::{SliceError, options::RegionOptionOverrides};
+use crate::{
+    SliceError,
+    options::{RegionOptionOverrides, deserialize_part_model_field},
+};
 
-use super::{MeshStatistics, Metadata, PartSettings};
+use super::{MeshStatistics, Metadata, PartSettings, is_structural_metadata};
 
 #[derive(Deserialize)]
 struct PartSettingsWire {
@@ -41,8 +44,12 @@ impl PartSettings {
         let mut region_overrides = RegionOptionOverrides::default();
         let mut retained_metadata = Vec::with_capacity(metadata.len());
         for entry in metadata {
-            if !region_overrides.deserialize_known_field(&entry.key, &entry.value)? {
+            if is_structural_metadata(&entry.key) {
                 retained_metadata.push(entry);
+            } else if let Some((key, value)) =
+                deserialize_part_model_field(entry.key, entry.value, &mut region_overrides)?
+            {
+                retained_metadata.push(Metadata { key, value });
             }
         }
         Ok(Self {

@@ -3,9 +3,8 @@ use std::fmt;
 use serde::{Deserialize, Deserializer, de::Visitor};
 
 use super::{
-    ProjectSettings, filament_options::FilamentOptionsBuilder,
-    preset_metadata::PresetMetadataBuilder, printer_options::PrinterOptionsBuilder,
-    process_options::ProcessOptionsBuilder, project_runtime_options::ProjectRuntimeOptionsBuilder,
+    ProjectSettings, project_settings::ProjectSettingsBuilder,
+    typed_legacy::deserialize_project_field,
 };
 
 impl<'de> Deserialize<'de> for ProjectSettings {
@@ -30,19 +29,13 @@ impl<'de> Visitor<'de> for ProjectSettingsVisitor {
     where
         A: serde::de::MapAccess<'de>,
     {
-        let mut printer = PrinterOptionsBuilder::default();
-        let mut process = ProcessOptionsBuilder::default();
-        let mut filament = FilamentOptionsBuilder::default();
-        let mut project = ProjectRuntimeOptionsBuilder::default();
-        let mut metadata = PresetMetadataBuilder::default();
+        let mut builder = ProjectSettingsBuilder::default();
 
         while let Some(key) = map.next_key::<String>()? {
-            if printer.deserialize_known_field(&key, &mut map)?
-                || process.deserialize_known_field(&key, &mut map)?
-                || filament.deserialize_known_field(&key, &mut map)?
-                || project.deserialize_known_field(&key, &mut map)?
-                || metadata.deserialize_known_field(&key, &mut map)?
-            {
+            if deserialize_project_field(&mut builder, &key, &mut map)? {
+                continue;
+            }
+            if builder.deserialize_known_field(&key, &mut map)? {
                 continue;
             }
 
@@ -51,12 +44,7 @@ impl<'de> Visitor<'de> for ProjectSettingsVisitor {
             )));
         }
 
-        Ok(ProjectSettings {
-            printer: printer.resolve(),
-            process: process.resolve(),
-            filament: filament.resolve(),
-            project: project.resolve(),
-            metadata: metadata.resolve(),
-        })
+        builder.apply_thumbnail_composite::<A::Error>()?;
+        Ok(builder.resolve())
     }
 }

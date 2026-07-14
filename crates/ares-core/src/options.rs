@@ -47,6 +47,8 @@ mod volumetric_speed;
 pub mod registry;
 mod support_different_extruders;
 mod support_ironing;
+#[cfg_attr(not(test), allow(dead_code, unused_imports))]
+mod typed_legacy;
 mod update_diff_values_to_child_config;
 mod update_multi_to_multi;
 mod update_non_diff_values_to_base_config;
@@ -71,6 +73,7 @@ pub(crate) use part_cooling_fan::{LayerRoleFanControl, PartCoolingFanRamp};
 #[cfg_attr(not(test), allow(unused_imports))]
 pub(crate) use region_options::RegionOptionOverrides;
 pub use support_different_extruders::DifferentExtrudersSupport;
+pub(crate) use typed_legacy::{deserialize_object_model_field, deserialize_part_model_field};
 pub use update_multi_to_multi::{MultiToMulti2Update, MultiToMultiUpdate};
 pub use update_printer_extruders::{PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate};
 pub use {

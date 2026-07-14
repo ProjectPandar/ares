@@ -66,18 +66,6 @@ fn null_and_wrong_top_level_containers_are_rejected_compactly() {
     }
 }
 
-#[test]
-fn stable_legacy_alias_remains_unknown_before_task_19a() {
-    let error = keyed_error(
-        r#"{"initial_layer_flow_ratio":"1"}"#,
-        "initial_layer_flow_ratio",
-    );
-    assert_eq!(
-        error.split(" at line").next().unwrap(),
-        "unknown Orca project option initial_layer_flow_ratio"
-    );
-}
-
 fn keyed_error(input: &str, key: &str) -> String {
     let error = serde_json::from_str::<ProjectSettings>(input)
         .unwrap_err()

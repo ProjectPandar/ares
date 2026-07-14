@@ -2,12 +2,12 @@
 
 ## Status
 
-Tasks 16 and 17 are released. Task 18's strict typed `ProjectSettings` load has
-whole-implementation approval, and this architecture record is updated from
-that frozen implementation. The Task 18 local release matrix, commit, push,
-and exact-pushed-SHA Tier 1 gate remain pending. Active sizing, normalization,
-consumer migration, slicing, and final G-code parity remain owned by later
-source-cited rewrite tasks in the approved parity plan.
+Tasks 16 through 18 are released. Task 19A's typed legacy conversion has fresh
+whole-specification and whole-quality approval, and this architecture record is
+updated from that frozen implementation. The Task 19A local release matrix,
+commit, push, and exact-pushed-SHA Tier 1 gate remain pending. Active sizing,
+normalization, consumer migration, slicing, and final G-code parity remain
+owned by later source-cited rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -103,21 +103,21 @@ deserialization remains deferred until all project groups exist.
 
 ## Provenance and behavior boundary
 
-The active inventory test needs only the committed artifact and fixture. The
-ignored provenance gate reconstructs it from fixed `git show` sources, checks
-every cited line, and compares all rows. Nineteen generator mutations and 13
-independent Rust-side mutations cover export control/data flow, metadata
-partitioning, enum-map qualification, nullable enum sentinels, axis aggregate
-member order, and each axis registration-to-default binding.
+Active tests consume only the committed 653-row semantic artifact and fixture.
+Task 19A removed the checkout-dependent source-line/symbol reconstruction test,
+its ignored Orca provenance gate, and the generator/Rust mutation probes. No
+active test requires an OrcaSlicer checkout or treats mutable source text as a
+runtime oracle.
 
-Task 6 corrected two default-provenance errors exposed by the first concrete
-group reviews. `InputShaperType::Default` serializes as `Default`, independently
-of `PrintOrder::Default` serializing as `default`. `NozzleType::ntUndefine` is
-the real token `undefine`; only the nullable integer `INT_MAX` sentinel is
-`nil`. The 12 loop-generated axis rows now cite their exact
-`PrintConfig.hpp::MachineEnvelopeConfig` typed declarations, while independent
-JavaScript and Rust provenance checks reconstruct their defaults from
-`PrintConfig.cpp::AxisDefault` and the three registration blocks.
+The deterministic fixed-commit artifact generator remains and regenerates the
+committed inventory byte-identically. The artifact and current semantic tests
+retain the metadata partition, qualified enum/default, nullable-sentinel, and
+axis properties. In particular, `InputShaperType::Default` serializes as
+`Default` independently of `PrintOrder::Default` serializing as `default`;
+`NozzleType::ntUndefine` is the real token `undefine`, while only the nullable
+integer `INT_MAX` sentinel is `nil`; and the 12 axis rows preserve their typed
+declarations, aggregate member order, and registration-to-default properties.
+These are committed-artifact semantic assertions, not source-pinning tests.
 
 Every non-metadata row currently cites the generic
 `GCode::append_full_config` banned/nil guard, and the three metadata rows cite
@@ -1329,7 +1329,99 @@ Slices 18.1-18.3 received their applicable independent per-slice reviews;
 Slice 18.4 passed its verification-only isolation gate. The frozen whole
 implementation then received independent whole-specification and whole-quality
 approval. The real-3MF native and browser paths reach the existing
-`ProjectSlicingIncomplete` boundary only after typed load succeeds. This
-documentation records that approved implementation; the full local release
-matrix, commit, push, and exact-pushed-SHA five-job Tier 1 evidence remain
-pending before Task 19A begins.
+`ProjectSlicingIncomplete` boundary only after typed load succeeds. Task 18 is
+released as pushed commit `a2714d4a6a197c5e10aec1b686e80e9b66794fd6`;
+exact-SHA Tier 1 run `29298974173` is green across format, Ubuntu/Linux, WASM,
+macOS, and Windows. That release gate completed before Task 19A implementation
+began.
+
+### Task 19A: typed legacy conversion across project inputs
+
+Task 19A is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is
+`PrintConfig.cpp:8033-8338` for per-entry legacy handling and the reachable
+post-load composite, `Config.cpp:573-685,885-1017` for typed lexical decode,
+JSON string/array iteration, alias lookup, and post-iteration slicing-state
+writes, `PrintConfig.cpp:8099-8104,8121-8131` for the four deferred profile/UI
+input rules, `Config.cpp:1018-1088` for deferred downstream profile-difference
+bookkeeping, `Format/bbs_3mf.cpp:2119-2132,5088-5117` for ordered object and
+part XML semantics, and `GCode/Thumbnails.cpp:530-577` for thumbnail
+normalization. The Rust destination is the private
+`ares-core::options::typed_legacy` action, conversion, project, model, and
+thumbnail modules plus concrete builder entry points; it is not a new Ares
+pipeline or a call into the temporary dynamic `SliceOptions` compatibility
+path.
+
+The compile-time source ledger records all 76 named fixed rules and the exact
+44 obsolete keys. Seventy-two rules are executable typed project/model inputs;
+the remaining four are explicitly deferred profile/UI bookkeeping inputs and
+are rejected rather than stored in invented dynamic state. Obsolete inputs are
+consumed without decoding. The ledger preserves direct and feature-filament
+renames, conditional consumes, exact and global value rewrites, wall-order and
+pattern conversions, filament-token rebuilding, JSON-only derived writes, and
+each rule's string/array wire contract. The twelve registered vector targets
+follow Orca's two-pass array behavior: an empty-value first pass, homogeneous
+typed flattening, then one complete-string legacy pass. String-only targets
+reject arrays unless the first pass consumes them.
+
+Top-level project JSON remains a strict streaming concrete deserializer. A
+canonical and legacy spelling share one target-presence bit, so collisions are
+the same compact duplicate error as canonical/canonical assignments. Unknown
+and deferred names report the exact input name. After the complete map is read,
+`support_type=hybrid(auto)` applies `support_style=tree_hybrid`, and the two
+infill-first wall spellings apply `is_infill_first=true`; these derived writes
+overwrite an explicit target in either input order without becoming alias
+duplicates. No generic JSON value, runtime option registry, or
+`different_settings_to_system` state is retained.
+
+Object and part XML metadata use only the per-entry conversion and preserve
+document order. Canonicalized object/region owners are decoded directly into
+their sparse typed owners, later canonical or legacy assignments win, and
+canonicalized non-owner entries remain at the same ordered position for Task
+19B. Obsolete and conditional-consume entries disappear. Structural metadata
+and `mesh_stat` bypass option dispatch, while unclassified metadata remains
+ordered and unchanged. XML receives neither the JSON-only derived writes nor
+the top-level thumbnail composite.
+
+The thumbnail composite runs on `ProjectSettingsBuilder` while input presence
+is still observable. It acts only when canonical `thumbnails` or legacy
+`thumbnail_size` was present, takes a missing per-item format from a present
+`thumbnails_format` or otherwise PNG, preserves explicit per-item formats, and
+normalizes valid items to `WIDTHxHEIGHT/FORMAT` joined by comma-space. Its
+fixed stream-prefix dimension grammar and six-significant-digit default-float
+formatting reject invalid dimensions, ranges, and formats through the typed
+project-option error. An absent thumbnails assignment does nothing despite
+resolved printer defaults.
+
+The fixed-source exclusions are also behavioral contracts:
+`perimeter_feed_rate` is not accepted as a Task 19A input, neither
+`wiping_volumes_matrix` nor `wiping_volumes_use_custom_matrix` is created, and
+canonical `flush_volumes_matrix` remains unchanged. The real project is
+canonically idempotent through the public byte-oriented load path, and the
+generated WASM web package still reaches `ProjectSlicingIncomplete` in
+headless Chromium only after the same typed load and conversion complete.
+These proofs do not read the reference G-code or claim generated G-code bytes.
+
+As part of the whole-task boundary, obsolete checkout-dependent Orca
+source-text pinning tests, exact source-line assertions, and generator mutation
+probes were removed. The committed 653-row semantic option inventory and its
+fixed-commit deterministic generator remain; regeneration is byte-identical to
+the committed artifact. Fixed-source checks for the excluded aliases remain
+review evidence rather than committed source-pinning tests.
+
+All five Task 19A slices received independent specification and quality
+approval after their RED/GREEN cycles. The frozen 49-path pre-documentation
+implementation received literal `WHOLE SPEC VERDICT: APPROVE` and
+`WHOLE QUALITY VERDICT: APPROVE`. Fresh local evidence passes 61 typed-legacy
+tests, 160 adjacent tests, all 4,484 workspace tests with two configured skips,
+the dynamic-value audit, rustfmt, warning-denying Clippy, native and WASM
+checks, browser proof, and fixed-source exclusion scans. The final Task 19A
+release matrix, commit, push, and exact-pushed-SHA five-job Tier 1 gate remain
+pending.
+
+Task 19B retains general normalization, active sizing and selection, optional
+layer/material association, and effective `FullPrintConfig` resolution. Task
+19C retains effective config-block export. Tasks 20A-20E retain consumer
+migration and removal of the temporary compatibility parser. Geometry,
+slicing, G-code generation/post-processing, and complete normalized
+`ksr_fdmtest_v4` byte parity remain deferred.

@@ -78,6 +78,14 @@ pub(crate) struct FilamentOptionsBuilder {
 }
 
 impl FilamentOptionsBuilder {
+    pub(crate) fn is_known_field(key: &str) -> bool {
+        FilamentGCodeSourceOptionsBuilder::is_known_field(key)
+            || FilamentPrintSourceOptionsBuilder::is_known_field(key)
+            || FilamentRegionSourceOptionsBuilder::is_known_field(key)
+            || FilamentRetractOverrideOptionsBuilder::is_known_field(key)
+            || key == "pellet_flow_coefficient"
+    }
+
     pub(crate) fn deserialize_known_field<'de, A>(
         &mut self,
         key: &str,
@@ -94,6 +102,42 @@ impl FilamentOptionsBuilder {
             Ok(true)
         } else {
             self.deserialize_direct_field(key, map)
+        }
+    }
+
+    pub(crate) fn deserialize_known_value<'de, D>(
+        &mut self,
+        key: &str,
+        deserializer: D,
+    ) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if FilamentGCodeSourceOptionsBuilder::is_known_field(key) {
+            self.gcode.deserialize_known_value(key, deserializer)
+        } else if FilamentPrintSourceOptionsBuilder::is_known_field(key) {
+            self.print.deserialize_known_value(key, deserializer)
+        } else if FilamentRegionSourceOptionsBuilder::is_known_field(key) {
+            self.region.deserialize_known_value(key, deserializer)
+        } else if FilamentRetractOverrideOptionsBuilder::is_known_field(key) {
+            self.retract_overrides
+                .deserialize_known_value(key, deserializer)
+        } else if key == "pellet_flow_coefficient" {
+            if self.pellet_flow_coefficient.is_some() {
+                return Err(serde::de::Error::custom(
+                    "duplicate Orca option pellet_flow_coefficient",
+                ));
+            }
+            self.pellet_flow_coefficient = Some(
+                serde::Deserialize::deserialize(deserializer).map_err(|error| {
+                    serde::de::Error::custom(format_args!(
+                        "invalid Orca option pellet_flow_coefficient: {error}"
+                    ))
+                })?,
+            );
+            Ok(true)
+        } else {
+            Ok(false)
         }
     }
 

@@ -16,6 +16,11 @@ macro_rules! declare_option_group {
         }
 
         impl $builder {
+            #[allow(dead_code)]
+            pub(crate) fn is_known_field(key: &str) -> bool {
+                matches!(key, $($key)|*)
+            }
+
             pub(crate) fn deserialize_known_field<'de, A>(
                 &mut self,
                 key: &str,
@@ -33,6 +38,38 @@ macro_rules! declare_option_group {
                                 )));
                             }
                             self.$field = Some(map.next_value::<$ty>().map_err(|error| {
+                                serde::de::Error::custom(format_args!(
+                                    concat!("invalid Orca option ", $key, ": {}"),
+                                    error
+                                ))
+                            })?);
+                            Ok(true)
+                        }
+                    ),*
+                    _ => Ok(false),
+                }
+            }
+
+            #[allow(dead_code)]
+            pub(crate) fn deserialize_known_value<'de, D>(
+                &mut self,
+                key: &str,
+                deserializer: D,
+            ) -> Result<bool, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                match key {
+                    $(
+                        $key => {
+                            if self.$field.is_some() {
+                                return Err(serde::de::Error::custom(concat!(
+                                    "duplicate Orca option ", $key
+                                )));
+                            }
+                            self.$field = Some(<$ty as serde::Deserialize>::deserialize(
+                                deserializer,
+                            ).map_err(|error| {
                                 serde::de::Error::custom(format_args!(
                                     concat!("invalid Orca option ", $key, ": {}"),
                                     error

@@ -17,6 +17,7 @@ mod document;
 )]
 #[path = "../../../options/tests/process_object_source/expected.rs"]
 mod expected;
+mod legacy;
 mod normalization;
 mod projection;
 mod region_handoff;

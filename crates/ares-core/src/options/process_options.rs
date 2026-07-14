@@ -90,6 +90,14 @@ pub(crate) struct ProcessOptionsBuilder {
 }
 
 impl ProcessOptionsBuilder {
+    pub(crate) fn is_known_field(key: &str) -> bool {
+        ProcessObjectSourceOptionsBuilder::is_known_field(key)
+            || ProcessRegionSourceOptionsBuilder::is_known_field(key)
+            || ProcessGCodeSourceOptionsBuilder::is_known_field(key)
+            || ProcessPrintSourceOptionsBuilder::is_known_field(key)
+            || key == "ironing_expansion"
+    }
+
     pub(crate) fn deserialize_known_field<'de, A>(
         &mut self,
         key: &str,
@@ -107,6 +115,51 @@ impl ProcessOptionsBuilder {
         } else {
             self.deserialize_direct_field(key, map)
         }
+    }
+
+    pub(crate) fn deserialize_known_value<'de, D>(
+        &mut self,
+        key: &str,
+        deserializer: D,
+    ) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if ProcessObjectSourceOptionsBuilder::is_known_field(key) {
+            self.object.deserialize_known_value(key, deserializer)
+        } else if ProcessRegionSourceOptionsBuilder::is_known_field(key) {
+            self.region.deserialize_known_value(key, deserializer)
+        } else if ProcessGCodeSourceOptionsBuilder::is_known_field(key) {
+            self.gcode.deserialize_known_value(key, deserializer)
+        } else if ProcessPrintSourceOptionsBuilder::is_known_field(key) {
+            self.print.deserialize_known_value(key, deserializer)
+        } else if key == "ironing_expansion" {
+            if self.ironing_expansion.is_some() {
+                return Err(serde::de::Error::custom(
+                    "duplicate Orca option ironing_expansion",
+                ));
+            }
+            self.ironing_expansion = Some(serde::Deserialize::deserialize(deserializer).map_err(
+                |error| {
+                    serde::de::Error::custom(format_args!(
+                        "invalid Orca option ironing_expansion: {error}"
+                    ))
+                },
+            )?);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    pub(crate) fn apply_derived_support_style(&mut self) {
+        self.object
+            .set_derived_support_style(ProcessSupportStyle::TreeHybrid);
+    }
+
+    pub(crate) fn apply_derived_is_infill_first(&mut self) {
+        self.region
+            .set_derived_is_infill_first(super::OrcaBool(true));
     }
 
     fn deserialize_direct_field<'de, A>(&mut self, key: &str, map: &mut A) -> Result<bool, A::Error>

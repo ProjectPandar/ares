@@ -30,6 +30,12 @@ macro_rules! declare_process_region_source_options {
 
 region_option_fields!(declare_process_region_source_options);
 
+impl ProcessRegionSourceOptionsBuilder {
+    pub(crate) fn set_derived_is_infill_first(&mut self, value: OrcaBool) {
+        self.is_infill_first = Some(value);
+    }
+}
+
 impl ProcessRegionSourceOptions {
     pub const DECLARATION_ORDER: [&'static str; 149] = REGION_OPTION_DECLARATION_ORDER;
 }

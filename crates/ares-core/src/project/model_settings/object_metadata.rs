@@ -1,9 +1,9 @@
 use crate::{
     SliceError,
-    options::{ObjectOptionOverrides, RegionOptionOverrides},
+    options::{ObjectOptionOverrides, RegionOptionOverrides, deserialize_object_model_field},
 };
 
-use super::{Metadata, ObjectSettings, PartSettings};
+use super::{Metadata, ObjectSettings, PartSettings, is_structural_metadata};
 
 impl ObjectSettings {
     pub(super) fn from_ordered_metadata(
@@ -20,9 +20,17 @@ impl ObjectSettings {
             match entry.key.as_str() {
                 "name" => name = entry.value,
                 "module" => module = entry.value,
-                key if overrides.deserialize_known_field(key, &entry.value)? => {}
-                key if region_overrides.deserialize_known_field(key, &entry.value)? => {}
-                _ => retained_config.push(entry),
+                key if is_structural_metadata(key) => retained_config.push(entry),
+                _ => {
+                    let retained = deserialize_object_model_field(
+                        entry.key,
+                        entry.value,
+                        &mut overrides,
+                        &mut region_overrides,
+                    )?
+                    .map(|(key, value)| Metadata { key, value });
+                    retained_config.extend(retained);
+                }
             }
         }
         Ok(Self {

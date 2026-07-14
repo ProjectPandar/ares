@@ -73,6 +73,12 @@ pub(crate) struct PrinterOptionsBuilder {
 }
 
 impl PrinterOptionsBuilder {
+    pub(crate) fn is_known_field(key: &str) -> bool {
+        MachineEnvelopeOptionsBuilder::is_known_field(key)
+            || PrinterGCodeSourceOptionsBuilder::is_known_field(key)
+            || PrinterRemainingOptionsBuilder::is_known_field(key)
+    }
+
     pub(crate) fn deserialize_known_field<'de, A>(
         &mut self,
         key: &str,
@@ -88,6 +94,29 @@ impl PrinterOptionsBuilder {
         } else {
             self.remaining.deserialize_known_field(key, map)
         }
+    }
+
+    pub(crate) fn deserialize_known_value<'de, D>(
+        &mut self,
+        key: &str,
+        deserializer: D,
+    ) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if MachineEnvelopeOptionsBuilder::is_known_field(key) {
+            self.machine.deserialize_known_value(key, deserializer)
+        } else if PrinterGCodeSourceOptionsBuilder::is_known_field(key) {
+            self.gcode.deserialize_known_value(key, deserializer)
+        } else {
+            self.remaining.deserialize_known_value(key, deserializer)
+        }
+    }
+
+    pub(crate) fn normalize_present_thumbnails(
+        &mut self,
+    ) -> Result<(), crate::ThumbnailParseError> {
+        self.remaining.normalize_present_thumbnails()
     }
 
     pub(crate) fn resolve(self) -> PrinterOptions {
