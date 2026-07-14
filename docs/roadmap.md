@@ -763,13 +763,57 @@ All five slices and the frozen whole implementation have independent
 specification and quality approval. Fresh whole-task evidence passes 61
 typed-legacy tests, 160 adjacent tests, all 4,484 workspace tests with two
 configured skips, the dynamic-value audit, rustfmt, warning-denying Clippy,
-native/WASM checks, browser proof, and fixed-source exclusion scans. The Task
-19A release matrix, commit, push, and exact-SHA five-job Tier 1 gate remain
-pending. Task 19B retains general normalization, active sizing/selection, and
-association; Task 19C retains effective config export; Tasks 20A-20E retain
-consumer migration and compatibility-parser removal. Geometry, slicing,
-G-code generation/post-processing, and complete `ksr_fdmtest_v4` byte parity
-remain later work.
+native/WASM checks, browser proof, and fixed-source exclusion scans. Task 19A
+is released as pushed commit `0e85302416904d0de604b969afd7f546fb8b3c1a`;
+exact-SHA Tier 1 run `29313932330` is green across format, Ubuntu/Linux, WASM,
+macOS, and Windows.
+
+### 2026-07-14 Materialize typed project variants (Task 19B.1A)
+
+Task 19B.1A ports fixed OrcaSlicer v2.4.2
+`PrintConfig.cpp:8344-8473,8981-9054,9634-10023`,
+`PrintConfig.cpp:588-606` for canonical typed variant spelling,
+`PrintApply.cpp:1164-1173` for family order, `Print.cpp:3166-3175` for restoring
+the saved pre-filament state before changed-map rematerialization, and
+`Config.hpp:624-630` into the crate-private typed
+`ares-core::options::project_variants` transform. It clones an unmaterialized
+`ProjectSettings`, installs the supplied `filament_map`, and materializes
+exactly two process, 24 printer variant-1, 15 stride-two printer variant-2, and
+37 filament fields through their existing typed owners.
+
+Printer variant 1 and process select the real project's raw indices `[0, 2]`.
+Variant 2 then re-resolves the shortened printer selectors from the current
+clone as `[0, 1]` and selects stride positions `[0, 1, 2, 3]`; filament uses
+raw logical indices `[0, 4]`. Rematerialization must always restart from the
+unmaterialized typed source, never a prior output. The external project
+boundary returns keyed errors for out-of-range selected payloads instead of
+the adjacent C++ first-value/default-output recovery. When an exact selector
+match is missing, fixed C++ falls back to index zero or ID/zero recovery at
+`PrintConfig.cpp:9677-9682,9840-9854`, while Ares returns
+`SliceError::InvalidInput` naming the selector key.
+
+The pure transform preserves every non-family field, remains isolated from
+the dynamic compatibility path and adapters, and adds no file I/O, dynamic
+option value, JSON round trip, or fixture/reference branch. The current Ares
+scaffold remains a temporary compatibility shell until later source-cited
+orchestration. Project slicing is not wired to the transform, so the real core
+and browser WASM path still returns `ProjectSlicingIncomplete`.
+
+Task 19B.1A's four TDD slices are complete with 19/19 focused tests. The frozen
+thirteen-path manifest
+`96aa793696240f6d1a33d795e5e1ea308ee61a648fd2469d20263f98494d066b`
+has independent specification-compliance, code-quality, and OpenCode
+`VERDICT: APPROVE`; 235/235 adjacent typed tests, the 22/22 dynamic audit,
+rustfmt, Clippy, fixture hashes, forbidden scans, and LOC checks pass.
+Documentation review, the full local release matrix, commit, push, and
+exact-SHA Tier 1 remain pending, so no Task 19B.1A release is claimed yet.
+
+Task 19B remains open. Next, Task 19B.1B owns the export/runtime split and
+nullable retract overlay; Task 19B.2 owns model/layer configuration import and
+association; and Task 19B.3 owns normalization plus effective
+`FullPrintConfig` orchestration. Task 19C retains config export, Tasks 20A-20E
+retain consumer migration/removal, and geometry, slicing, G-code, metadata,
+post-processing, and complete `ksr_fdmtest_v4` byte parity remain later work.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

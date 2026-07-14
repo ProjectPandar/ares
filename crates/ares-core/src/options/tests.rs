@@ -45,6 +45,7 @@ mod parameter_size;
 mod project_inventory;
 mod project_deserialize;
 mod project_fixture;
+mod project_variants;
 mod printer_machine_envelope;
 mod printer_remaining;
 mod printer_gcode_source;

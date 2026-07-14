@@ -1,0 +1,92 @@
+use crate::{
+    GenerationMetadata, OrcaFloat, SliceError, load_project,
+    options::{
+        ExtruderType, NozzleVolumeType,
+        project_variants::materialize_project_variants,
+        registry::{
+            filament_options_with_variant, print_options_with_variant,
+            printer_options_with_variant_1, printer_options_with_variant_2,
+        },
+    },
+    slice_project,
+};
+
+use super::support::{
+    assert_family_cardinalities, assert_outside_variant_families_unchanged, ints,
+};
+
+const FIXTURE: &[u8] =
+    include_bytes!("../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
+
+#[test]
+fn fixture_materializes_exact_variant_values_and_cardinalities() {
+    let project = load_project(FIXTURE).unwrap();
+    let source = project.settings().clone();
+    let original = source.clone();
+    let filament_map = source.project.gcode.filament_map.clone();
+
+    let materialized = materialize_project_variants(&source, &filament_map).unwrap();
+
+    assert_eq!(source, original);
+    assert_eq!(materialized.printer.gcode.printer_extruder_id, ints(&[1, 2]));
+    assert_eq!(
+        materialized.printer.gcode.printer_extruder_variant.0,
+        ["Direct Drive Standard", "Bowden Standard"]
+    );
+    assert_eq!(materialized.process.region.print_extruder_id, ints(&[1, 2]));
+    assert_eq!(
+        materialized.process.region.print_extruder_variant.0,
+        ["Direct Drive Standard", "Bowden Standard"]
+    );
+    assert_eq!(
+        materialized.project.gcode.retraction_length.0,
+        [OrcaFloat(0.8), OrcaFloat(2.0)]
+    );
+    assert_eq!(
+        materialized.printer.machine.machine_max_acceleration_e.0,
+        [
+            OrcaFloat(30000.0),
+            OrcaFloat(5000.0),
+            OrcaFloat(30000.0),
+            OrcaFloat(5000.0)
+        ]
+    );
+    assert_eq!(
+        materialized.printer.machine.machine_max_speed_e.0,
+        [
+            OrcaFloat(30.0),
+            OrcaFloat(30.0),
+            OrcaFloat(30.0),
+            OrcaFloat(30.0)
+        ]
+    );
+    assert_eq!(
+        materialized.filament.gcode.filament_extruder_variant.0,
+        ["Direct Drive Standard", "Direct Drive Standard"]
+    );
+    assert_eq!(
+        materialized.filament.gcode.filament_max_volumetric_speed.0,
+        [OrcaFloat(21.0), OrcaFloat(21.0)]
+    );
+    assert_eq!(materialized.project.preset.filament_self_index.0.len(), 8);
+    assert_eq!(materialized.printer.gcode.extruder_type.0[0], ExtruderType::DirectDrive);
+    assert_eq!(
+        materialized.project.gcode.nozzle_volume_type.0[0],
+        NozzleVolumeType::Standard
+    );
+    assert_eq!(print_options_with_variant().len(), 2);
+    assert_eq!(filament_options_with_variant().len(), 37);
+    assert_eq!(printer_options_with_variant_1().len(), 24);
+    assert_eq!(printer_options_with_variant_2().len(), 15);
+    assert_family_cardinalities(&materialized);
+    assert_outside_variant_families_unchanged(&source, &materialized);
+}
+
+#[tokio::test]
+async fn fixture_project_slicing_boundary_remains_incomplete() {
+    let metadata = GenerationMetadata::deterministic(2026, 7, 14, 1, 2, 3);
+    assert_eq!(
+        slice_project(FIXTURE, metadata).await.unwrap_err(),
+        SliceError::ProjectSlicingIncomplete
+    );
+}

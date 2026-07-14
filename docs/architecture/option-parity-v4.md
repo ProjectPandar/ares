@@ -2,12 +2,12 @@
 
 ## Status
 
-Tasks 16 through 18 are released. Task 19A's typed legacy conversion has fresh
-whole-specification and whole-quality approval, and this architecture record is
-updated from that frozen implementation. The Task 19A local release matrix,
-commit, push, and exact-pushed-SHA Tier 1 gate remain pending. Active sizing,
-normalization, consumer migration, slicing, and final G-code parity remain
-owned by later source-cited rewrite tasks in the approved parity plan.
+Tasks 16 through 19A are released. Task 19B.1A's typed variant materializer has
+an approved frozen implementation, and this architecture record is updated for
+its documentation gate. Independent documentation approval, the local release
+matrix, commit, push, and exact-pushed-SHA Tier 1 gate remain pending. The rest
+of Task 19B, consumer migration, slicing, and final G-code parity remain owned
+by later source-cited rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -1415,13 +1415,88 @@ implementation received literal `WHOLE SPEC VERDICT: APPROVE` and
 `WHOLE QUALITY VERDICT: APPROVE`. Fresh local evidence passes 61 typed-legacy
 tests, 160 adjacent tests, all 4,484 workspace tests with two configured skips,
 the dynamic-value audit, rustfmt, warning-denying Clippy, native and WASM
-checks, browser proof, and fixed-source exclusion scans. The final Task 19A
-release matrix, commit, push, and exact-pushed-SHA five-job Tier 1 gate remain
-pending.
+checks, browser proof, and fixed-source exclusion scans. Task 19A is released
+as pushed commit `0e85302416904d0de604b969afd7f546fb8b3c1a`;
+exact-SHA Tier 1 run `29313932330` is green across format, Ubuntu/Linux, WASM,
+macOS, and Windows. That release gate completed before Task 19B.1A began.
 
-Task 19B retains general normalization, active sizing and selection, optional
-layer/material association, and effective `FullPrintConfig` resolution. Task
-19C retains effective config-block export. Tasks 20A-20E retain consumer
-migration and removal of the temporary compatibility parser. Geometry,
-slicing, G-code generation/post-processing, and complete normalized
+### Task 19B.1A: typed active variant materialization
+
+Task 19B.1A is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream rewrite boundary is
+`PrintConfig.cpp:8344-8473,8981-9054,9634-10023` for the four family ledgers,
+selection guard, index lookup, and printer/process/filament materialization;
+`PrintConfig.cpp:588-606` for canonical typed extruder/nozzle-volume spelling;
+`PrintApply.cpp:1164-1173` for runtime family order; and
+`Print.cpp:3166-3175` for restoring the saved pre-filament state before
+rematerializing a changed map. `Config.hpp:624-630` owns the adjacent C++
+vector recovery semantics. The Rust destination is the crate-private
+`ares-core::options::project_variants` transform over existing typed option
+owners, not a new orchestration pipeline.
+
+`materialize_project_variants` clones an unmaterialized `ProjectSettings`,
+installs the supplied typed `filament_map` in `ProjectRuntimeOptions`, and
+mutates only the clone. `ProcessOptions` owns the two process selector fields;
+`PrinterOptions` owns the printer selectors and machine fields;
+`FilamentOptions` owns the logical-filament selectors and payloads; and the
+24-member printer variant-1 family also crosses into existing
+`ProjectRuntimeOptions` retract fields. The result is still a complete typed
+`ProjectSettings`, not `FullPrintConfig`, a runtime G-code view, or serialized
+configuration.
+
+The source-ordered transform materializes exactly two process fields, 24
+printer variant-1 fields at stride one, 15 printer variant-2 fields at stride
+two, and 37 filament fields, plus the supplied map. Printer variant 1 and
+process resolve the fixture's raw source indices `[0, 2]`. Because variant 1
+also shortens the shared printer selectors, variant 2 resolves them again from
+the current clone and obtains `[0, 1]`, selecting stride positions
+`[0, 1, 2, 3]`; stale reuse of `[0, 2]` is forbidden. Filament selection uses
+the installed map with raw fixture logical indices `[0, 4]`. The fixture's
+selected printer/process IDs are values `[1, 2]`, not zero-based source
+indices.
+
+The activation guard and generated-ID lookup preserve Orca's distinct token
+rules, typed Direct Drive/Bowden plus Standard/High Flow spelling, first exact
+match, and one-based filament-map interpretation. At the untrusted external
+project boundary, Ares is deliberately stricter than the adjacent C++
+recovery. Fixed C++ falls back to index zero or ID/zero recovery when an exact
+selector match is missing at `PrintConfig.cpp:9677-9682,9840-9854`; Ares
+instead returns `SliceError::InvalidInput` naming the selector key. An
+out-of-range selected printer/process payload likewise returns an error naming
+that option instead of repeating its first value, and an invalid selected
+filament payload errors instead of leaving a default-constructed element. The
+inactive one-extruder/one-variant branch replaces only the map and does not
+validate unused selectors or payloads.
+
+Rematerialization is raw-source-only relative to variant selection. Callers
+must rerun from the same unmaterialized typed source, which may already contain
+earlier source-ordered normalization writes; a previously materialized result
+is not a valid source. The transform never reloads the 3MF, preserves
+`filament_self_index`, `extruder_variant_list`, and every non-family field, and
+selects any already-normalized family payload supplied by its caller.
+
+The implementation remains platform-neutral, filesystem-free, and isolated
+inside `ares-core`; it adds no dynamic option value, JSON rematerialization,
+adapter behavior, or fixture/reference branch and compiles through the existing
+native/WASM boundaries. It is not yet called by project slicing. The current
+Ares option/slicing scaffold remains a temporary compatibility shell until the
+later source-cited orchestration replaces it, and the real project still
+returns `ProjectSlicingIncomplete` through core and browser WASM.
+
+All four TDD slices recorded genuine RED/GREEN evidence and culminate in 19/19
+focused tests. The frozen thirteen-path implementation manifest
+`96aa793696240f6d1a33d795e5e1ea308ee61a648fd2469d20263f98494d066b`
+has independent specification-compliance, code-quality, and OpenCode
+`VERDICT: APPROVE`; 235/235 adjacent typed tests, the 22/22 dynamic audit,
+rustfmt, Clippy, fixture hashes, forbidden scans, and sub-400-LOC checks also
+pass. Independent documentation approval, the complete local release matrix,
+commit, push, and exact-pushed-SHA five-job Tier 1 remain pending.
+
+Task 19B.1B retains the export/runtime split and nullable retract overlay. Task
+19B.2 retains model-option classification plus optional layer-config import and
+association. Task 19B.3 retains normalization and source-ordered effective
+`FullPrintConfig` orchestration, including the first production call to this
+transform. Task 19C retains config export; Tasks 20A-20E retain consumer
+migration and compatibility-parser removal. Geometry, slicing, G-code
+generation, metadata, post-processing, and complete normalized
 `ksr_fdmtest_v4` byte parity remain deferred.

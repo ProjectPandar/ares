@@ -35,6 +35,8 @@ mod process_options;
 mod project_deserialize;
 mod project_runtime_options;
 mod project_settings;
+#[cfg_attr(not(test), allow(dead_code))]
+mod project_variants;
 mod region_fields;
 mod region_options;
 mod relative_e;
