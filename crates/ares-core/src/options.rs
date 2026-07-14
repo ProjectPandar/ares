@@ -11,7 +11,7 @@ mod config_types;
 mod gcode_fields;
 mod gcode_options;
 #[rustfmt::skip]
-option_modules!(pub(crate) filament_config_export, filament_count, filament_override, filament_type, flow_ratios, gap_fill, hardware, infill, small_area_infill_flow);
+option_modules!(pub(crate) filament_config_export, filament_count, filament_type, flow_ratios, gap_fill, hardware, infill, small_area_infill_flow);
 mod filament_options;
 #[rustfmt::skip]
 option_modules!(auxiliary_fan, bed_temperature, chamber_temperature, custom_gcode, filament_change, exhaust_fan, fan_speedup, filament_cooling_before_tower, flush_placeholders, gcode_flavor, gcode_output, nozzle_temperature, part_cooling_fan, preheat, timelapse_type, temperature_vector, temperature_vitrification);
@@ -32,6 +32,8 @@ mod preset_metadata;
 mod pressure_advance;
 mod printer_options;
 mod process_options;
+#[cfg_attr(not(test), allow(dead_code))]
+pub(crate) mod project_config_views;
 mod project_deserialize;
 mod project_runtime_options;
 mod project_settings;

@@ -799,21 +799,70 @@ scaffold remains a temporary compatibility shell until later source-cited
 orchestration. Project slicing is not wired to the transform, so the real core
 and browser WASM path still returns `ProjectSlicingIncomplete`.
 
-Task 19B.1A's four TDD slices are complete with 19/19 focused tests. The frozen
+Task 19B.1A's four TDD slices completed with 19/19 focused tests. The frozen
 thirteen-path manifest
 `96aa793696240f6d1a33d795e5e1ea308ee61a648fd2469d20263f98494d066b`
-has independent specification-compliance, code-quality, and OpenCode
+received independent specification-compliance, code-quality, and OpenCode
 `VERDICT: APPROVE`; 235/235 adjacent typed tests, the 22/22 dynamic audit,
-rustfmt, Clippy, fixture hashes, forbidden scans, and LOC checks pass.
-Documentation review, the full local release matrix, commit, push, and
-exact-SHA Tier 1 remain pending, so no Task 19B.1A release is claimed yet.
+rustfmt, Clippy, fixture hashes, forbidden scans, and LOC checks passed. Task
+19B.1A was released as commit
+`da896a98719a621ad87a2317c23f1d27f0a3c6e5`; exact-SHA Tier 1 run
+`29330209222` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
-Task 19B remains open. Next, Task 19B.1B owns the export/runtime split and
+Task 19B remains open. Task 19B.1B below owns the export/runtime split and
 nullable retract overlay; Task 19B.2 owns model/layer configuration import and
 association; and Task 19B.3 owns normalization plus effective
 `FullPrintConfig` orchestration. Task 19C retains config export, Tasks 20A-20E
 retain consumer migration/removal, and geometry, slicing, G-code, metadata,
 post-processing, and complete `ksr_fdmtest_v4` byte parity remain later work.
+
+### 2026-07-14 Resolve typed export/runtime retract views (Task 19B.1B)
+
+Task 19B.1B ports fixed OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` at
+`PrintApply.cpp:222-263,1164-1191,1261-1283`,
+`PrintConfig.cpp:7374-7392,10300-10332`, `Config.hpp:713-751`,
+`Print.cpp:3166-3195`, `PrintConfig.hpp:1300-1478,1481-1610`, and
+`GCode.cpp:2532-2534,5552-5557,5591-5594`. The Rust destination is the
+crate-private typed `ares-core::options::project_config_views` plus its retract
+overlay. It preserves the complete Task 19B.1A materialized input for export,
+clones once for runtime, applies nullable retract values, and derives
+`runtime_gcode` through the existing typed `GCodeOptions::from_sources`.
+
+The twelve G-code-owned keys are `deretraction_speed`,
+`long_retractions_when_cut`, `retract_before_wipe`, `retract_lift_above`,
+`retract_lift_below`, `retract_lift_enforce`, `retract_restart_extra`,
+`retraction_distances_when_cut`, `retraction_length`, `retraction_speed`,
+`z_hop`, and `z_hop_types`; the four print-only keys are
+`retract_when_changing_layer`, `retraction_minimum_travel`, `wipe`, and
+`wipe_distance`. `travel_slope` is excluded. Empty vectors are no-ops;
+nonempty overrides must match the map cardinality or return an error naming
+the concrete `filament_*` key and `filament_map`; `Value` is direct; and `Nil`
+uses the one-based machine map with invalid entries falling back to machine
+element zero. The result preserves logical filament cardinality.
+
+Gate `2` applies the normal bool/distance overlays. Gates `0` and `1` replace
+the bool override with all-`Nil` entries before normal resolution but leave the
+long-distance vector unchanged at physical cardinality, preserving the fixed
+upstream typo. Map changes rerun the original Task 19B.1A materializer from raw
+source before resolving fresh views. The old dynamic `filament_override`
+scaffold is deleted with exactly its 31 baseline fingerprints.
+
+Focused tests pass 13/13, adjacent project/G-code tests pass 79/79, and the
+dynamic audit passes 22/22, including real-fixture and raw rematerialization
+proof. Frozen implementation manifest
+`eb06ab4a08293acf2b89b4e026fc52ac02887118eb1845dae50048456cc5eedd`
+has independent whole `SPEC_COMPLIANCE`, `CODE_QUALITY`, and OpenCode
+`VERDICT: APPROVE`. The byte/in-memory core remains portable across browser
+WASM, Windows, macOS, and Linux. Public project slicing is deliberately not
+wired and still returns `ProjectSlicingIncomplete`; no full G-code parity is
+claimed.
+
+Task 19B.1B is locally implemented and whole-approved, while documentation
+review, release verification, commit/push, and exact-SHA Tier 1 remain pending.
+Task 19B.2 model/layer association, Task 19B.3 orchestration, Task 19C export,
+Task 20E final dynamic removal, and complete normalized KSR G-code parity
+remain open.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

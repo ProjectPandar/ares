@@ -2,12 +2,13 @@
 
 ## Status
 
-Tasks 16 through 19A are released. Task 19B.1A's typed variant materializer has
-an approved frozen implementation, and this architecture record is updated for
-its documentation gate. Independent documentation approval, the local release
-matrix, commit, push, and exact-pushed-SHA Tier 1 gate remain pending. The rest
-of Task 19B, consumer migration, slicing, and final G-code parity remain owned
-by later source-cited rewrite tasks in the approved parity plan.
+Tasks 16 through 19A and Task 19B.1A are released. Task 19B.1B's typed
+export/runtime retract views are locally implemented and whole-approved.
+Independent documentation approval, the local release matrix, commit, push,
+and exact-pushed-SHA Tier 1 gate remain pending, so no Task 19B.1B release is
+claimed. The rest of Task 19B, consumer migration, slicing, and final G-code
+parity remain owned by later source-cited rewrite tasks in the approved parity
+plan.
 
 ## Fixed baseline
 
@@ -1483,20 +1484,86 @@ Ares option/slicing scaffold remains a temporary compatibility shell until the
 later source-cited orchestration replaces it, and the real project still
 returns `ProjectSlicingIncomplete` through core and browser WASM.
 
-All four TDD slices recorded genuine RED/GREEN evidence and culminate in 19/19
-focused tests. The frozen thirteen-path implementation manifest
+All four TDD slices recorded genuine RED/GREEN evidence and culminated in
+19/19 focused tests. The frozen thirteen-path implementation manifest
 `96aa793696240f6d1a33d795e5e1ea308ee61a648fd2469d20263f98494d066b`
-has independent specification-compliance, code-quality, and OpenCode
+received independent specification-compliance, code-quality, and OpenCode
 `VERDICT: APPROVE`; 235/235 adjacent typed tests, the 22/22 dynamic audit,
 rustfmt, Clippy, fixture hashes, forbidden scans, and sub-400-LOC checks also
-pass. Independent documentation approval, the complete local release matrix,
-commit, push, and exact-pushed-SHA five-job Tier 1 remain pending.
+passed. Task 19B.1A was released as commit
+`da896a98719a621ad87a2317c23f1d27f0a3c6e5`; exact-SHA Tier 1 run
+`29330209222` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
-Task 19B.1B retains the export/runtime split and nullable retract overlay. Task
-19B.2 retains model-option classification plus optional layer-config import and
-association. Task 19B.3 retains normalization and source-ordered effective
-`FullPrintConfig` orchestration, including the first production call to this
-transform. Task 19C retains config export; Tasks 20A-20E retain consumer
-migration and compatibility-parser removal. Geometry, slicing, G-code
-generation, metadata, post-processing, and complete normalized
-`ksr_fdmtest_v4` byte parity remain deferred.
+Task 19B.1B ports the export/runtime split and nullable retract overlay below
+but is not yet released. Task 19B.2 retains model-option classification plus
+optional layer-config import and association. Task 19B.3 retains normalization
+and source-ordered effective `FullPrintConfig` orchestration, including the
+first production call to the typed transforms. Task 19C retains config export;
+Tasks 20A-20E retain consumer migration and compatibility-parser removal.
+Geometry, slicing, G-code generation, metadata, post-processing, and complete
+normalized `ksr_fdmtest_v4` byte parity remain deferred.
+
+### Task 19B.1B: typed export/runtime retract views
+
+Task 19B.1B is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream rewrite boundary is
+`PrintApply.cpp:222-263,1164-1191,1261-1283` for retract-key diffing,
+materialization order, and the preserved full/runtime split;
+`PrintConfig.cpp:7374-7392,10300-10332` for the sixteen-key inventory and
+nullable retract computation; `Config.hpp:713-751` for vector application;
+`Print.cpp:3166-3195` for raw-source rematerialization;
+`PrintConfig.hpp:1300-1478,1481-1610` for the twelve G-code and four print-only
+owners; and `GCode.cpp:2532-2534,5552-5557,5591-5594` for the distinct runtime
+and full-config consumers. The Rust destination is the crate-private typed
+`ares-core::options::project_config_views` transform and its `retract` sibling,
+not a public slicing pipeline.
+
+The transform preserves the complete variant-materialized input as the
+full/export view, clones it once for the runtime view, applies the nullable
+retract overlays only to the runtime ordinary fields, and derives
+`runtime_gcode` through the existing typed `GCodeOptions::from_sources`. The
+twelve G-code-owned keys are `deretraction_speed`,
+`long_retractions_when_cut`, `retract_before_wipe`, `retract_lift_above`,
+`retract_lift_below`, `retract_lift_enforce`, `retract_restart_extra`,
+`retraction_distances_when_cut`, `retraction_length`, `retraction_speed`,
+`z_hop`, and `z_hop_types`. The four print-only keys are
+`retract_when_changing_layer`, `retraction_minimum_travel`, `wipe`, and
+`wipe_distance`. `travel_slope` is outside this override set and remains
+unchanged.
+
+For each typed vector, an empty machine or filament vector is a no-op. A
+nonempty override must match `filament_map` cardinality or return
+`SliceError::InvalidInput` naming the concrete `filament_*` key and
+`filament_map`. `Value` replaces the logical entry directly;
+`Nil` selects the one-based mapped machine default, with zero, negative, and
+out-of-range indices falling back to machine element zero. A nonempty result
+therefore preserves logical filament cardinality. Gate value `2` applies the
+normal bool and distance overlays. Gates `0` and `1` first replace the bool
+override vector with equal-cardinality all-`Nil` entries, while leaving the
+long-distance machine vector and its physical cardinality unchanged. The
+latter preserves the fixed upstream empty-float-temporary typo rather than
+correcting it.
+
+Changed maps are resolved only by rerunning Task 19B.1A's original source
+materializer and then deriving fresh views; neither a previous full nor runtime
+view is a rematerialization source. The obsolete dynamic
+`filament_override` scaffold and its tests are deleted, and exactly its 31
+baseline fingerprints are removed. The replacement remains byte/in-memory
+only and portable across browser WASM, Windows, macOS, and Linux, with no
+dynamic JSON or native I/O boundary.
+
+The focused typed matrix passes 13/13 tests, the adjacent project/G-code
+matrix passes 79/79, and the dynamic-value audit passes 22/22. The real 3MF
+fixture and two-map test prove full/runtime differences and original-source
+rematerialization. Frozen implementation manifest
+`eb06ab4a08293acf2b89b4e026fc52ac02887118eb1845dae50048456cc5eedd`
+received independent whole `SPEC_COMPLIANCE`, `CODE_QUALITY`, and OpenCode
+`VERDICT: APPROVE` decisions. Public project slicing is deliberately not wired
+and still returns `ProjectSlicingIncomplete`; the core/browser boundary and
+full G-code parity remain incomplete by design.
+
+Task 19B.2 retains model/layer configuration association; Task 19B.3 retains
+normalization and source-ordered orchestration; Task 19C retains config export;
+and Task 20E retains the remaining dynamic compatibility removal. Task 19B.1B
+is locally implemented and whole-approved, but its documentation review,
+release verification, commit/push, and exact-SHA Tier 1 gate remain pending.
