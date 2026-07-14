@@ -4,7 +4,7 @@ mod metadata;
 
 use std::collections::BTreeSet;
 
-use crate::{ORCA_SLICER_COMPATIBILITY_VERSION, SliceError};
+use crate::{ORCA_SLICER_COMPATIBILITY_VERSION, ProjectSettings, SliceError};
 
 use super::{
     ArchiveLimits, PackagePath, ProjectArchive,
@@ -82,14 +82,18 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
         metadata::validate_plate_document(&document)?;
         plate_documents.push(document);
     }
-    let project_settings = read(&mut archive, PROJECT_SETTINGS_PATH)?;
+    let settings: ProjectSettings = read_json(
+        &mut archive,
+        PROJECT_SETTINGS_PATH,
+        JsonRole::ProjectSettings,
+    )?;
 
     let (models, objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     Ok(Project::new(
         models,
         objects,
         metadata.plates,
-        project_settings,
+        settings,
         ProjectDocuments {
             model_settings,
             slice_info,

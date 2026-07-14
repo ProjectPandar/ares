@@ -1,7 +1,7 @@
 use crate::project::{ArchiveLimits, PackagePath, ProjectArchive};
 use crate::{
-    GenerationMetadata, ORCA_SLICER_COMPATIBILITY_VERSION, Point3d, SliceError, load_model,
-    load_project, slice_project,
+    GenerationMetadata, ORCA_SLICER_COMPATIBILITY_VERSION, Point3d, ProjectSettings, SliceError,
+    load_model, load_project, slice_project,
 };
 
 use super::fixture::{FIXTURE, ProjectParts};
@@ -106,7 +106,7 @@ fn project_import_loads_fixture_identity_transforms_and_world_bounds() {
     assert_eq!(project.plates().len(), 1);
     assert_eq!(project.plates()[0].id(), 1);
     assert_eq!(project.plates()[0].instances(), &[[2, 0, 133]]);
-    assert!(!project.project_settings_bytes().is_empty());
+    assert_eq!(project.settings().metadata.name, "project_settings");
 }
 
 #[test]
@@ -229,7 +229,7 @@ fn project_import_accepts_fixed_upstream_other_object_type() {
 }
 
 #[test]
-fn project_import_retains_raw_settings_and_typed_task3_documents() {
+fn project_import_retains_typed_settings_and_task3_documents() {
     let project = load_project(FIXTURE).unwrap();
     let documents = project.documents();
 
@@ -239,10 +239,13 @@ fn project_import_retains_raw_settings_and_typed_task3_documents() {
     assert_eq!(documents.plate_documents[0].version, 2);
 
     let mut archive = ProjectArchive::open(FIXTURE, ArchiveLimits::PROJECT).unwrap();
-    let expected = archive
-        .read(&PackagePath::entry(b"Metadata/project_settings.config").unwrap())
-        .unwrap();
-    assert_eq!(project.project_settings_bytes(), expected);
+    let expected: ProjectSettings = serde_json::from_slice(
+        &archive
+            .read(&PackagePath::entry(b"Metadata/project_settings.config").unwrap())
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(project.settings(), &expected);
 }
 
 #[tokio::test]

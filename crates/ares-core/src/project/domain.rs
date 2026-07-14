@@ -2,6 +2,7 @@ use super::{
     filament_sequence::FilamentSequences, model_settings::ModelSettings, plate::PlateJson,
     slice_info::SliceInfo, transform::Transform3d,
 };
+use crate::ProjectSettings;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point3d {
@@ -44,7 +45,7 @@ pub struct Project {
     models: Vec<ProjectModel>,
     objects: Vec<ProjectObject>,
     plates: Vec<PlateMetadata>,
-    project_settings: Vec<u8>,
+    settings: ProjectSettings,
     documents: ProjectDocuments,
 }
 
@@ -53,14 +54,14 @@ impl Project {
         models: Vec<ProjectModel>,
         objects: Vec<ProjectObject>,
         plates: Vec<PlateMetadata>,
-        project_settings: Vec<u8>,
+        settings: ProjectSettings,
         documents: ProjectDocuments,
     ) -> Self {
         Self {
             models,
             objects,
             plates,
-            project_settings,
+            settings,
             documents,
         }
     }
@@ -77,8 +78,8 @@ impl Project {
         &self.plates
     }
 
-    pub fn project_settings_bytes(&self) -> &[u8] {
-        &self.project_settings
+    pub fn settings(&self) -> &ProjectSettings {
+        &self.settings
     }
 
     pub(crate) fn documents(&self) -> &ProjectDocuments {

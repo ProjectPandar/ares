@@ -14,7 +14,7 @@ const FIXTURE: &[u8] =
 #[test]
 fn fixture_resolves_region_only_from_typed_project_and_model_settings() {
     let project = crate::load_project(FIXTURE).unwrap();
-    let raw: Value = serde_json::from_slice(project.project_settings_bytes()).unwrap();
+    let raw = super::super::project_fixture::project_settings_value();
     let raw = raw.as_object().unwrap();
     let rows = inventory();
     let process: ProcessOptions = serde_json::from_value(Value::Object(fields(

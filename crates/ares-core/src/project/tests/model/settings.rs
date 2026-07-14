@@ -1,0 +1,82 @@
+use crate::{
+    FilamentOptions, GenerationMetadata, PresetMetadata, PrinterOptions, ProcessOptions,
+    ProjectRuntimeOptions, SliceError, load_project, slice_project,
+};
+
+use super::fixture::ProjectParts;
+
+#[tokio::test]
+async fn project_exposes_partial_typed_settings_with_omitted_defaults() {
+    let mut parts = ProjectParts::valid();
+    parts.insert_text(
+        "Metadata/project_settings.config",
+        r#"{"layer_height":"0.27"}"#,
+    );
+    let bytes = parts.bytes();
+    let project = load_project(&bytes).unwrap();
+    let settings = project.settings();
+
+    assert_eq!(settings.printer, PrinterOptions::default());
+    assert_eq!(settings.filament, FilamentOptions::default());
+    assert_eq!(settings.project, ProjectRuntimeOptions::default());
+    assert_eq!(settings.metadata, PresetMetadata::default());
+
+    let mut process = serde_json::to_value(&settings.process)
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .clone();
+    let mut defaults = serde_json::to_value(ProcessOptions::default())
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .clone();
+    assert_eq!(process.remove("layer_height").unwrap(), "0.27");
+    defaults.remove("layer_height");
+    assert_eq!(process, defaults);
+
+    let metadata = GenerationMetadata::deterministic(2026, 7, 13, 1, 2, 3);
+    assert_eq!(
+        slice_project(&bytes, metadata).await.unwrap_err(),
+        SliceError::ProjectSlicingIncomplete
+    );
+}
+
+#[tokio::test]
+async fn malformed_typed_settings_fail_during_project_loading() {
+    let metadata = GenerationMetadata::deterministic(2026, 7, 13, 1, 2, 3);
+    for (input, key, reason) in [
+        (
+            r#"{"future_option":"1"}"#,
+            "future_option",
+            "unknown Orca project option",
+        ),
+        (
+            r#"{"layer_height":"0.2","layer_height":"0.3"}"#,
+            "layer_height",
+            "duplicate Orca option",
+        ),
+        (
+            r#"{"layer_height":"not-a-float"}"#,
+            "layer_height",
+            "invalid float literal",
+        ),
+    ] {
+        let mut parts = ProjectParts::valid();
+        parts.insert_text("Metadata/project_settings.config", input);
+        let bytes = parts.bytes();
+        let load_error = load_project(&bytes).unwrap_err();
+        let message = load_error.to_string();
+
+        assert!(message.starts_with("invalid project settings JSON: "));
+        assert!(message.contains(key), "diagnostic omitted {key}: {message}");
+        assert!(
+            message.contains(reason),
+            "diagnostic omitted {reason}: {message}"
+        );
+        assert_eq!(
+            slice_project(&bytes, metadata).await.unwrap_err(),
+            load_error
+        );
+    }
+}

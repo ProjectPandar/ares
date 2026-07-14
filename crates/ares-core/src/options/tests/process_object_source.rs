@@ -163,11 +163,7 @@ fn object_rows(rows: &[InventoryRow]) -> Vec<&InventoryRow> {
 }
 
 pub(super) fn fixture_fields<'a>(keys: impl IntoIterator<Item = &'a str>) -> Map<String, Value> {
-    let project = crate::load_project(include_bytes!(
-        "../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-    ))
-    .unwrap();
-    let fixture: Value = serde_json::from_slice(project.project_settings_bytes()).unwrap();
+    let fixture = super::project_fixture::project_settings_value();
     let fixture = fixture.as_object().unwrap();
     keys.into_iter()
         .map(|key| (key.to_owned(), fixture[key].clone()))

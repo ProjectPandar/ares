@@ -676,14 +676,51 @@ remains WASM-safe and adds no I/O, dynamic/erased value, JSON round trip,
 runtime registry, reference-G-code read or branch, or source-line pinning.
 
 All four implementation slices and the frozen whole implementation have
-independent specification and quality approval, and these architecture and
-roadmap updates record the reviewed boundary. The full local release matrix,
-commit, push, and exact-pushed-SHA five-job Tier 1 gate are still required
-before Task 18 starts. Task 18 owns production flat parsing; Task 19A legacy
+independent specification and quality approval. Task 17 is released as pushed
+commit `18e7065856bee306cd643ffe359023758a60befe`; exact-SHA Tier 1 run
+`29294487109` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+Task 18 began only after that gate completed. Task 19A retains legacy
 conversion; Task 19B active sizing/selection, nullable retract overrides,
 model recomputation, normalization, and final reprojection; Task 19C export;
 Tasks 20A-20E consumers; Task 28 templates; and Task 29 document assembly.
 Complete slicing and `ksr_fdmtest_v4` G-code byte parity are not yet
+implemented.
+
+### 2026-07-13 Strict typed project-settings load
+
+Task 18 ports the fixed OrcaSlicer v2.4.2 load boundary at
+`Config.cpp:573-685::set_deserialize_nothrow/set_deserialize/set_deserialize_raw`,
+`Config.cpp:820-1100::ConfigBase::load_from_json`,
+`Config.hpp:2763-2963::DynamicConfig`, and
+`Format/bbs_3mf.cpp:210,1569-1573,1923-1926,2632-2653`. A streaming
+`ProjectSettings` visitor dispatches all 653 fixture members directly into the
+132 printer, 352 process, 122 filament, 44 project-runtime, and three preset
+metadata fields. Input order is arbitrary, omitted members retain concrete
+group defaults, and no production dynamic JSON value map or runtime registry
+is introduced.
+
+The public project domain now stores typed settings and exposes
+`Project::settings()`; its raw settings bytes and production accessor are
+removed. A bounded test-only archive oracle proves exact 653-member semantic
+equality from the five standalone serializers. Unknown canonical keys and
+duplicate canonical assignments are intentionally rejected with compact
+key-specific diagnostics, while archive errors use
+`invalid project settings JSON: ...`. Existing native JSON bool/number support
+in the concrete Ares codecs remains compatible, although the real Orca fixture
+uses only scalar strings and string arrays. No production
+`Serialize<ProjectSettings>` or project-settings writer is added.
+
+Slices 18.1-18.3 received their applicable independent per-slice reviews;
+Slice 18.4 passed its verification-only isolation gate. The frozen whole
+implementation then received independent whole-specification and whole-quality
+approval. The typed loader remains isolated from `SliceOptions`, geometry,
+slicing, and G-code generation, and the real-3MF native/browser path still
+reaches `ProjectSlicingIncomplete` only after typed loading succeeds. Task 19A
+retains legacy and complete-document composite conversion; Task 19B effective
+sizing/selection/normalization; Task 19C only the effective `FullPrintConfig`
+G-code `CONFIG_BLOCK`; and Tasks 20A-20E dynamic-consumer migration. The Task
+18 release matrix, commit, push, and exact-SHA five-job Tier 1 gate remain
+pending before Task 19A starts; complete fixture G-code byte parity is not yet
 implemented.
 
 ### 2026-07-01 Consume prime tower brim width header slice

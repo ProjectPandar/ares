@@ -272,12 +272,7 @@ fn project_inventory_has_exact_v242_shape_and_ownership() {
 
 #[test]
 fn project_inventory_matches_the_embedded_fixture_keys_and_shapes() {
-    let project = crate::load_project(include_bytes!(
-        "../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-    ))
-    .unwrap();
-    let fixture: serde_json::Value =
-        serde_json::from_slice(project.project_settings_bytes()).unwrap();
+    let fixture = super::project_fixture::project_settings_value();
     let fixture = fixture.as_object().unwrap();
     let rows: Vec<InventoryRow> = serde_json::from_str(include_str!(
         "../../../../../tests/ksr_fdmtest_v4/options-v242.json"

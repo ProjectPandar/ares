@@ -70,24 +70,18 @@ impl<'de> Visitor<'de> for ProcessVisitor {
     {
         let mut builder = ProcessOptionsBuilder::default();
         while let Some(key) = map.next_key::<String>()? {
-            if builder.object.deserialize_known_field(&key, &mut map)?
-                || builder.region.deserialize_known_field(&key, &mut map)?
-                || builder.gcode.deserialize_known_field(&key, &mut map)?
-                || builder.print.deserialize_known_field(&key, &mut map)?
-                || builder.deserialize_direct_field(&key, &mut map)?
-            {
-                continue;
+            if !builder.deserialize_known_field(&key, &mut map)? {
+                return Err(serde::de::Error::custom(format!(
+                    "unknown Orca process option {key}"
+                )));
             }
-            return Err(serde::de::Error::custom(format!(
-                "unknown Orca process option {key}"
-            )));
         }
         Ok(builder.resolve())
     }
 }
 
 #[derive(Default)]
-struct ProcessOptionsBuilder {
+pub(crate) struct ProcessOptionsBuilder {
     gcode: ProcessGCodeSourceOptionsBuilder,
     object: ProcessObjectSourceOptionsBuilder,
     print: ProcessPrintSourceOptionsBuilder,
@@ -96,6 +90,25 @@ struct ProcessOptionsBuilder {
 }
 
 impl ProcessOptionsBuilder {
+    pub(crate) fn deserialize_known_field<'de, A>(
+        &mut self,
+        key: &str,
+        map: &mut A,
+    ) -> Result<bool, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        if self.object.deserialize_known_field(key, map)?
+            || self.region.deserialize_known_field(key, map)?
+            || self.gcode.deserialize_known_field(key, map)?
+            || self.print.deserialize_known_field(key, map)?
+        {
+            Ok(true)
+        } else {
+            self.deserialize_direct_field(key, map)
+        }
+    }
+
     fn deserialize_direct_field<'de, A>(&mut self, key: &str, map: &mut A) -> Result<bool, A::Error>
     where
         A: serde::de::MapAccess<'de>,
@@ -116,7 +129,7 @@ impl ProcessOptionsBuilder {
         Ok(true)
     }
 
-    fn resolve(self) -> ProcessOptions {
+    pub(crate) fn resolve(self) -> ProcessOptions {
         ProcessOptions {
             gcode: self.gcode.resolve(),
             object: self.object.resolve(),

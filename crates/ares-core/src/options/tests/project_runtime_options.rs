@@ -49,12 +49,7 @@ fn real_rows(rows: &[InventoryRow]) -> Vec<&InventoryRow> {
 }
 
 fn fixture() -> Map<String, Value> {
-    let project = crate::load_project(include_bytes!(
-        "../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-    ))
-    .unwrap();
-    serde_json::from_slice::<Value>(project.project_settings_bytes())
-        .unwrap()
+    super::project_fixture::project_settings_value()
         .as_object()
         .unwrap()
         .clone()

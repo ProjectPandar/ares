@@ -1283,8 +1283,9 @@ fixture 653 - printer 132 - process 352 - filament 122 = residual 47
   flat lexical 44-key map directly through one shared `SerializeMap`; it emits
   no nested child objects, serde flattening, remainder map, or DOM buffer.
 - Completes the pairwise-disjoint typed 653-key fixture union in tests. Task 18
-  still owns the production top-level `ProjectSettings` visitor/serializer,
-  cross-group duplicate/unknown handling, and strict project loading.
+  still owns the production top-level `ProjectSettings` visitor, cross-group
+  duplicate/unknown handling, and strict project loading. This program does not
+  add a production top-level `ProjectSettings` serializer.
 
 **Exact ownership:**
 
@@ -2220,61 +2221,218 @@ approved program.
 
 ---
 
-### Task 18: Strict Top-Level ProjectSettings and a Bounded STL Compatibility Shell
+### Task 18: Strict Typed `ProjectSettings` Load from the 3MF Package
 
-**Upstream boundary:** `ConfigBase::set_deserialize*`, `DynamicConfig`, `PrintConfigDef` lookup and unknown-key behavior.
+**Fixed upstream rewrite boundary:** OrcaSlicer commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`, specifically
+`Config.cpp:573-685::set_deserialize_nothrow/set_deserialize/set_deserialize_raw`,
+`Config.cpp:820-1100::ConfigBase::load_from_json`,
+`Config.hpp:2763-2963::DynamicConfig`, and
+`Format/bbs_3mf.cpp:210,1569-1573,1923-1926,2632-2653`
+for the `Metadata/project_settings.config` load boundary. The Rust
+destination is the existing five concrete groups under `options/`, an explicit
+`ProjectSettings` serde visitor, and typed storage in `project::Project`.
 
-**Files:**
-- Create: `options/project_deserialize.rs`
-- Create: `options/tests/project_deserialize.rs`
-- Modify: `options/project_settings.rs`, `options.rs`, `project/load.rs`, `lib.rs`
-- Retain temporarily: the existing dynamic `SliceOptions` representation and its baseline-covered parser only for the explicit-option STL API
+Fixed Orca materializes the entire JSON object before dispatch, classifies
+`from`/`name`/`version` separately, handles scalar strings and vector arrays,
+then applies complete-document composite legacy conversion once. Its
+`DynamicConfig` stores present options in a `std::map`. Per-entry legacy
+rewrite, aliases/shortcuts, obsolete inputs, the JSON-specific mutations at
+`Config.cpp:930-1089`, and the complete-document composite call are Task 19A,
+not Task 18. Fixed project-settings JSON save at
+`Config.cpp:1464-1502::ConfigBase::save_to_json` and
+`Format/bbs_3mf.cpp:6351-6355,7722-7728` is an adjacent 3MF-export boundary,
+not part of this load task or the current G-code parity program.
 
-**Interfaces:**
-- Produces concrete `ProjectSettings { printer, process, filament, project, metadata }`.
-- Produces the concrete builder/patch field definitions that Task 20E will expose as the final partial `SliceOptions`; `ProjectSettings` resolves those builders to non-optional group fields now.
-- Unknown project keys fail with the exact key after canonical dispatch in this task; Task 19A inserts reviewed legacy dispatch before that same branch. The old public `SliceOptions` map/`values()` shell remains baseline-covered and unchanged until all of its callers migrate in Tasks 20A-20D; project loading and project slicing may never call it.
+**Intentional strict Ares boundary decisions:** nlohmann object materialization
+collapses duplicate member names, while fixed Orca ignores still-unregistered
+keys after `handle_legacy`. At the untrusted 3MF JSON boundary Ares instead
+rejects a duplicate canonical assignment and rejects a still-unknown canonical
+key. Errors use compact key-specific text such as
+`unknown Orca project option <key>`; do not render a 653-key `unknown_field`
+registry. These stricter decisions, and the real fixture's lack of duplicate or
+unknown keys, are tested explicitly. Fixed Orca dispatches project scalar
+strings and vector arrays rather than native JSON booleans/numbers. The already
+approved concrete Ares codecs accept native booleans/numbers where applicable;
+Task 18 intentionally preserves that typed API compatibility behavior without
+widening it further. The real 3MF fixture remains constrained to Orca's
+string/array shape, and only that canonical shape is required for parity.
 
-- [ ] **Step 1: Write RED full-fixture/unknown/round-trip tests**
+**Included:** canonical direct dispatch of all 653 fixture members into
+`PrinterOptions` (132), `ProcessOptions` (352), `FilamentOptions` (122),
+`ProjectRuntimeOptions` (44), and `PresetMetadata` (3); aggregate defaults for
+omitted keys; bounded project JSON loading; and typed `Project::settings()`
+access. The 650 option types retain
+their existing concrete scalar/vector wrappers; the three metadata values are
+strings.
 
-  Parse the committed `project_settings.config` directly into `ProjectSettings`; assert 653 dispatched fields, group counts, no remainder, representative typed values, and semantic round-trip through each field's declared scalar/array wire shape. Exact project-input lexical preservation is not required because Ares does not rewrite the 3MF; exact effective G-code config serialization is independently RED-tested in Task 19C. Assert unknown project keys, invalid types, duplicates, and invalid vector lexical forms fail with bounded key-specific diagnostics. Add a source/behavior guard proving `project/`, `project_slice.rs`, and `FullPrintConfig` do not name or call the temporary STL `SliceOptions::values()` shell.
+**Explicitly deferred:** legacy key/value conversion and complete-document
+composites to Task 19A; active filament sizing, variant selection, inheritance,
+normalization, and recomputation to Task 19B; exact effective G-code
+config-block export and metadata exclusion to Task 19C; dynamic consumer
+migration/removal to Tasks 20A-20E; and all geometry/G-code behavior to later
+approved rewrite slices. No top-level `Serialize for ProjectSettings` is added
+or planned in this program. Tests may merge the
+five groups' already-existing standalone serialized maps as a test-only
+semantic oracle. Task 19C writes `FullPrintConfig`'s effective G-code
+`CONFIG_BLOCK`; it does not serialize `ProjectSettings` or rewrite a 3MF.
 
-- [ ] **Step 2: Implement the custom serde map visitor**
+**Production files:**
+- Create: `crates/ares-core/src/options/project_deserialize.rs`
+- Modify: `crates/ares-core/src/options.rs`
+- Modify: `crates/ares-core/src/options/project_settings.rs`
+- Modify: `crates/ares-core/src/options/printer_options.rs`
+- Modify: `crates/ares-core/src/options/process_options.rs`
+- Modify: `crates/ares-core/src/options/filament_options.rs`
+- Modify: `crates/ares-core/src/options/project_runtime_options.rs`
+- Modify: `crates/ares-core/src/options/preset_metadata.rs`
+- Modify: `crates/ares-core/src/project/domain.rs`
+- Modify: `crates/ares-core/src/project/load.rs`
+- Modify: `crates/ares-core/src/project/xml/role.rs`
 
-  ```rust
-  while let Some(key) = map.next_key::<String>()? {
-      let consumed = settings.printer.deserialize_known_field(&key, &mut map)?
-          || settings.process.deserialize_known_field(&key, &mut map)?
-          || settings.filament.deserialize_known_field(&key, &mut map)?
-          || settings.project.deserialize_known_field(&key, &mut map)?
-          || settings.metadata.deserialize_known_field(&key, &mut map)?;
-      if !consumed {
-          return Err(serde::de::Error::unknown_field(&key, ProjectSettings::FIELDS));
-      }
-  }
-  ```
+The four aggregate option modules expose only the crate-private builder
+dispatch and resolution functions needed by the top-level visitor.
+`ProcessOptionsBuilder` and `FilamentOptionsBuilder` become crate-private and
+gain aggregate `deserialize_known_field`/`resolve` methods matching the already
+usable printer/project builders. `PresetMetadata` gains the same small concrete
+builder boundary. Each aggregate's existing standalone strict serde behavior
+remains unchanged. No `flatten`, `serde_json::Value`, raw parked value,
+`BTreeMap`, runtime option registry, or all-key sort is permitted in the new
+production path.
 
-  The actual implementation tracks duplicates before assignment and leaves a typed dispatch point immediately before the unknown branch for Task 19A's reviewed legacy inputs; no untyped value is parked there. Serialization emits the canonical JSON wire shape for project persistence; config-block serialization is a separate Task 19C path.
+**Test files:**
+- Create: `crates/ares-core/src/options/tests/project_deserialize.rs` and split
+  focused children before any Rust file reaches 400 physical lines
+- Create: `crates/ares-core/src/options/tests/project_fixture.rs`, a test-only
+  bounded archive reader for the raw fixture JSON oracle
+- Modify: `crates/ares-core/src/options/tests.rs`
+- Modify the twelve existing option-test callers of
+  `Project::project_settings_bytes()` under `options/tests/` to use the shared
+  test-only archive oracle, including the nested G-code and region fixtures
+- Modify: `crates/ares-core/src/project/tests/model/import.rs`
 
-- [ ] **Step 3: Wire strict project loading while preserving intermediate workspace compilation**
+The raw fixture bytes remain a test oracle read directly through
+`ProjectArchive`; they are not retained in the production `Project`, and no
+`#[cfg(test)]` raw field is added to that domain type.
 
-  `load_project` parses its embedded settings into `ProjectSettings` and stores that typed value in `Project`. Existing STL `slice(input, SliceOptions)` continues to compile and behave through the explicitly temporary, baseline-covered map shell; do not delete `values()`, its deserializer, or its existing unknown-preservation tests in this task because current `pipeline`, `profiles`, `print_apply`, and G-code callers still use them. The shell is not a project fallback and is deleted only in Task 20E after those callers are typed.
+- [ ] **Slice 18.1: RED/GREEN canonical five-group visitor**
 
-- [ ] **Step 4: Run focused GREEN and the mandatory task gate**
+  First add a genuine compile/test RED for missing `Deserialize<ProjectSettings>`
+  and top-level dispatch. Then implement a single streaming visitor backed by
+  the five concrete builders. Prove arbitrary input member order, defaults for
+  omitted canonical keys, exact 132/352/122/44/3 ownership, 653 unique consumed
+  fixture members, and representative values from every concrete wire family.
+  Leave one explicit typed insertion point before the compact unknown branch
+  for Task 19A; do not implement legacy behavior.
 
   ```powershell
-  cargo nextest run -p ares-core project_deserialize
-  cargo nextest run -p ares-core project_import
-  git commit -m "feat(config): deserialize strict typed project settings"
-  git push
+  cargo +1.91.0 nextest run -p ares-core project_deserialize
+  cargo +1.91.0 nextest run -p ares-core project_inventory
   ```
+
+  Freeze the slice diff and require independent spec-compliance and code-quality
+  `APPROVE` before continuing.
+
+- [ ] **Slice 18.2: RED/GREEN strict canonical boundary and semantic oracle**
+
+  Add failures before their production branches for compact exact-key unknown
+  and duplicate diagnostics, null/wrong containers, and invalid scalar, enum,
+  array, and vector lexemes. For the bounded malformed cases in this slice,
+  assert each diagnostic is below 1,024 bytes and contains its exact key; this
+  is not a universal promise for an arbitrarily long unknown key inside the
+  existing 64 MiB document limit. In test code, prove that direct native
+  bool/number values already accepted by the
+  approved concrete Ares codecs remain accepted and canonicalize through those
+  groups' existing serializers; Task 18 neither widens nor narrows those codec
+  contracts. The real Orca fixture boundary remains scalar strings and arrays.
+  Also in test code only, serialize the five concrete groups independently,
+  merge their
+  object entries, and assert exact 653-member semantic equality with the raw
+  fixture, no nested scope objects, all fixture scalar values are strings, and
+  all fixture arrays contain only strings. Do not add top-level production
+  serialization or a project-settings JSON writer.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core project_deserialize
+  cargo +1.91.0 nextest run -p ares-core project_inventory
+  ```
+
+  Freeze the slice diff and require independent spec-compliance and code-quality
+  `APPROVE` before continuing.
+
+- [ ] **Slice 18.3: RED/GREEN typed project load and raw-API removal**
+
+  Add a RED for missing `Project::settings()` and strict project-settings JSON
+  diagnostics. Add `JsonRole::ProjectSettings`; parse the bounded archive bytes
+  through `deserialize_json::<ProjectSettings>`; store the concrete value in
+  `Project`; expose `settings(&self) -> &ProjectSettings`; and delete the raw
+  field plus `project_settings_bytes()`. Migrate existing raw-oracle tests to
+  the shared test-only archive reader. Synthetic project packages must prove
+  canonical partial settings load with defaults and that unknown, duplicate,
+  and ill-typed settings fail as `invalid project settings JSON: ...` before
+  project slicing begins.
+
+  ```powershell
+  cargo +1.91.0 nextest run -p ares-core project_import
+  cargo +1.91.0 nextest run -p ares-core project_deserialize
+  cargo +1.91.0 nextest run -p ares-core -E 'test(/(filament_gcode_source|filament_remaining|gcode_options|printer_gcode_source|printer_machine_envelope|printer_remaining|process_object_source|process_region_source|process_remaining|project_inventory|project_runtime_options|region_options)/)'
+  ```
+
+  Freeze the slice diff and require independent spec-compliance and code-quality
+  `APPROVE` before continuing.
+
+- [ ] **Slice 18.4: Real-fixture isolation and whole-spec review**
+
+  Load `ksr_fdmtest_v4.project.3mf` through the public byte API and prove
+  `Project::settings()` is semantically equal to the independently extracted
+  653-member raw JSON oracle. Prove the project loader/project slicer do not
+  construct, deserialize, or inspect the temporary dynamic `SliceOptions` map;
+  the explicit STL `slice(input, SliceOptions)` compatibility shell and all its
+  existing consumers remain baseline-covered and unchanged for Tasks 20A-20E.
+  Browser project slicing must still reach the existing
+  `ProjectSlicingIncomplete` boundary only after typed project loading succeeds.
+  Freeze the complete implementation manifest and require independent whole-spec
+  and code-quality `APPROVE`; any `REVISE` restarts review on a new frozen diff.
+
+- [ ] **Task 18 documentation and release gate**
+
+  Only after whole-spec `APPROVE`, update
+  `docs/architecture/option-parity-v4.md` and `docs/roadmap.md`, then require an
+  independent documentation `APPROVE`. Run the complete frozen release matrix:
+
+  ```powershell
+  cargo +1.91.0 fmt --all -- --check
+  cargo +1.91.0 nextest run -p ares-core project_deserialize
+  cargo +1.91.0 nextest run -p ares-core -E 'test(/(project_deserialize|project_import|project_inventory|gcode_options|printer_gcode_source|filament_gcode_source|process_remaining|project_runtime_options|region_options)/)'
+  cargo +1.91.0 nextest run --workspace
+  cargo +1.91.0 nextest run -p ares-core --test no_unapproved_dynamic_values
+  cargo +1.91.0 clippy --workspace --all-targets -- -D warnings
+  cargo +1.91.0 check -p ares-core
+  cargo +1.91.0 check -p ares-core --target wasm32-unknown-unknown
+  cargo +1.91.0 check -p ares-wasm --target wasm32-unknown-unknown
+  cargo +1.91.0 build -p ares-wasm --target wasm32-unknown-unknown --release
+  wasm-bindgen target/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+  npm --prefix crates/ares-wasm/tests/browser ci
+  npm --prefix crates/ares-wasm/tests/browser test
+  git diff --check -- . ':(exclude)tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode'
+  ```
+
+  Also require exact changed-file ownership, per-added-file no-index whitespace
+  checks, every changed Rust file below 400 physical lines, unchanged fixture
+  hashes, and production scans forbidding dynamic/JSON/erased values, runtime
+  key registries, raw fixture/reference access, Option Pinning, native I/O,
+  terminal/UI, FFI, platform-specific code, and geometry/G-code changes in the
+  Task 18 path. Stage only the frozen approved manifest, prove
+  index/workspace/commit-tree byte equality, commit
+  `feat(config): deserialize strict typed project settings`, push, and require
+  all five Tier 1 jobs green for that exact pushed SHA before Task 19A.
 
 ---
 
 ### Task 19A: Typed Legacy Conversion Across Project Inputs
 
 **Fixed upstream boundary:** `PrintConfig.cpp:8033-8285::handle_legacy`,
-`PrintConfig.cpp:8287+::handle_legacy_composite`,
+`PrintConfig.cpp:8290-8339::handle_legacy_composite`,
 `Config.cpp:573-685::set_deserialize_nothrow/set_deserialize_raw`, complete
 document composite calls at `Config.cpp:1092-1095,1184-1186,1273-1275,
 1455-1457`, and per-entry object/volume dispatch at
@@ -2347,10 +2505,13 @@ the typed project path there.
 - [ ] **Step 3: RED/GREEN top-level typed composite conversion**
 
   Run `handle_legacy_composite` equivalents only after the complete typed
-  `ProjectSettings` document loads. Cover thumbnails, wiping-volume and SLA
-  composites, canonical fixture idempotence, and collisions. Apply directly to
-  concrete typed builders/patches without JSON or the temporary `SliceOptions`
-  map.
+  `ProjectSettings` document loads. Cover the fixed boundary's thumbnails and
+  wiping-volume matrix composites, canonical fixture idempotence, and
+  collisions. Apply directly to concrete typed builders/patches without JSON
+  or the temporary `SliceOptions` map. Fixed
+  `PrintConfig.cpp:8743-8763::handle_legacy_sla` is a separate SLA preset
+  normalization invoked from `Preset.cpp:443-489::Preset::normalize`; it is not
+  a top-level load composite and is outside this FDM parity program.
 
 - [ ] **Step 4: Run the mandatory task gate**
 

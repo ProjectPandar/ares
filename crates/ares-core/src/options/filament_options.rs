@@ -58,26 +58,18 @@ impl<'de> Visitor<'de> for FilamentVisitor {
     {
         let mut builder = FilamentOptionsBuilder::default();
         while let Some(key) = map.next_key::<String>()? {
-            if builder.gcode.deserialize_known_field(&key, &mut map)?
-                || builder.print.deserialize_known_field(&key, &mut map)?
-                || builder.region.deserialize_known_field(&key, &mut map)?
-                || builder
-                    .retract_overrides
-                    .deserialize_known_field(&key, &mut map)?
-                || builder.deserialize_direct_field(&key, &mut map)?
-            {
-                continue;
+            if !builder.deserialize_known_field(&key, &mut map)? {
+                return Err(serde::de::Error::custom(format!(
+                    "unknown Orca filament option {key}"
+                )));
             }
-            return Err(serde::de::Error::custom(format!(
-                "unknown Orca filament option {key}"
-            )));
         }
         Ok(builder.resolve())
     }
 }
 
 #[derive(Default)]
-struct FilamentOptionsBuilder {
+pub(crate) struct FilamentOptionsBuilder {
     gcode: FilamentGCodeSourceOptionsBuilder,
     print: FilamentPrintSourceOptionsBuilder,
     region: FilamentRegionSourceOptionsBuilder,
@@ -86,6 +78,25 @@ struct FilamentOptionsBuilder {
 }
 
 impl FilamentOptionsBuilder {
+    pub(crate) fn deserialize_known_field<'de, A>(
+        &mut self,
+        key: &str,
+        map: &mut A,
+    ) -> Result<bool, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        if self.gcode.deserialize_known_field(key, map)?
+            || self.print.deserialize_known_field(key, map)?
+            || self.region.deserialize_known_field(key, map)?
+            || self.retract_overrides.deserialize_known_field(key, map)?
+        {
+            Ok(true)
+        } else {
+            self.deserialize_direct_field(key, map)
+        }
+    }
+
     fn deserialize_direct_field<'de, A>(&mut self, key: &str, map: &mut A) -> Result<bool, A::Error>
     where
         A: serde::de::MapAccess<'de>,
@@ -106,7 +117,7 @@ impl FilamentOptionsBuilder {
         Ok(true)
     }
 
-    fn resolve(self) -> FilamentOptions {
+    pub(crate) fn resolve(self) -> FilamentOptions {
         FilamentOptions {
             gcode: self.gcode.resolve(),
             print: self.print.resolve(),

@@ -2,13 +2,12 @@
 
 ## Status
 
-Task 16 is released, and Task 17's registered pre-normalization `GCodeConfig`
-projection has whole-implementation approval. This architecture record is
-updated from that frozen implementation; the full local release matrix,
-commit, push, and exact-pushed-SHA Tier 1 gate remain pending. Production
-project loading, active sizing, normalization, consumer migration, slicing,
-and final G-code parity remain owned by later source-cited rewrite tasks in the
-approved parity plan.
+Tasks 16 and 17 are released. Task 18's strict typed `ProjectSettings` load has
+whole-implementation approval, and this architecture record is updated from
+that frozen implementation. The Task 18 local release matrix, commit, push,
+and exact-pushed-SHA Tier 1 gate remain pending. Active sizing, normalization,
+consumer migration, slicing, and final G-code parity remain owned by later
+source-cited rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -1270,7 +1269,67 @@ slicing, generated G-code bytes, and complete `ksr_fdmtest_v4` parity remain
 deferred.
 
 All four Task 17 slices and the frozen whole implementation have independent
-specification and quality approval. This documentation records that approved
-implementation; the full local release matrix, commit, push, and
-exact-pushed-SHA five-job Tier 1 evidence remain pending. Task 18 may begin only
-after that release gate completes.
+specification and quality approval. Task 17 is released as pushed commit
+`18e7065856bee306cd643ffe359023758a60befe`; exact-SHA Tier 1 run
+`29294487109` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+That release gate completed before Task 18 implementation began.
+
+### Task 18: strict typed ProjectSettings load
+
+Task 18 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream load boundary is
+`Config.cpp:573-685::set_deserialize_nothrow/set_deserialize/set_deserialize_raw`,
+`Config.cpp:820-1100::ConfigBase::load_from_json`,
+`Config.hpp:2763-2963::DynamicConfig`, and
+`Format/bbs_3mf.cpp:210,1569-1573,1923-1926,2632-2653` for
+`Metadata/project_settings.config`. The adjacent project-settings save path at
+`Config.cpp:1464-1502::ConfigBase::save_to_json` and
+`Format/bbs_3mf.cpp:6351-6355,7722-7728` is not part of this load task or the
+current G-code parity program.
+
+The Rust destination is a streaming `ProjectSettings` deserializer backed
+directly by the existing concrete builders. It dispatches the complete 653-key
+fixture into `PrinterOptions` (132), `ProcessOptions` (352),
+`FilamentOptions` (122), `ProjectRuntimeOptions` (44), and `PresetMetadata`
+(3), independent of input member order and with concrete group defaults for
+omitted keys. The production path adds no flattened/dynamic value map,
+`serde_json::Value`, `BTreeMap`, runtime registry, global key sort, or native
+file I/O.
+
+At the untrusted 3MF boundary, Ares intentionally rejects still-unknown
+canonical keys and duplicate canonical assignments, although fixed Orca
+ignores unknown keys after legacy handling and its materialized JSON object
+collapses duplicates. Diagnostics remain compact and key-specific, including
+`unknown Orca project option <key>` and
+`duplicate Orca option <key>`. Archive loading wraps malformed typed
+content as `invalid project settings JSON: ...`. The real fixture contains no
+unknown or duplicate member. Its scalar values remain Orca-shaped strings and
+its vectors remain string arrays. Existing typed Ares codecs continue to
+accept native JSON booleans and numbers where already supported and
+canonicalize them through their concrete group serializers; Task 18 neither
+widens nor narrows that compatibility behavior.
+
+`Project` now owns the concrete `ProjectSettings` and exposes
+`Project::settings()`. The former production raw-byte field and accessor are
+deleted. Raw fixture JSON is available only through a bounded test archive
+oracle, which proves exact 653-member semantic equality against the five
+standalone concrete group serializers. There is deliberately no production
+`Serialize for ProjectSettings` and no project-settings JSON writer.
+
+Task 18 remains isolated from the temporary dynamic `SliceOptions` shell and
+does not change project slicing, geometry, or G-code generation. Legacy
+key/value and complete-document composite conversion remain Task 19A; active
+filament sizing, selection, inheritance, normalization, and recomputation
+remain Task 19B; Task 19C owns only the effective `FullPrintConfig` G-code
+`CONFIG_BLOCK`, not project JSON. Dynamic consumer migration remains Tasks
+20A-20E, and complete `ksr_fdmtest_v4` slicing/G-code byte parity remains
+deferred.
+
+Slices 18.1-18.3 received their applicable independent per-slice reviews;
+Slice 18.4 passed its verification-only isolation gate. The frozen whole
+implementation then received independent whole-specification and whole-quality
+approval. The real-3MF native and browser paths reach the existing
+`ProjectSlicingIncomplete` boundary only after typed load succeeds. This
+documentation records that approved implementation; the full local release
+matrix, commit, push, and exact-pushed-SHA five-job Tier 1 evidence remain
+pending before Task 19A begins.

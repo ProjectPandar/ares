@@ -32,6 +32,7 @@ mod preset_metadata;
 mod pressure_advance;
 mod printer_options;
 mod process_options;
+mod project_deserialize;
 mod project_runtime_options;
 mod project_settings;
 mod region_fields;

@@ -8,10 +8,6 @@ use super::super::super::super::{
     ProcessGCodeSourceOptions, ProjectGCodeSourceOptions,
 };
 
-const PROJECT_BYTES: &[u8] = include_bytes!(
-    "../../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-);
-
 pub(super) struct Fixture {
     pub(super) raw: Map<String, Value>,
     pub(super) source_keys: BTreeMap<&'static str, BTreeSet<String>>,
@@ -23,9 +19,7 @@ pub(super) struct Fixture {
 }
 
 pub(super) fn load_fixture() -> Fixture {
-    let project = crate::load_project(PROJECT_BYTES).unwrap();
-    let raw = serde_json::from_slice::<Value>(project.project_settings_bytes())
-        .unwrap()
+    let raw = super::super::super::project_fixture::project_settings_value()
         .as_object()
         .unwrap()
         .clone();

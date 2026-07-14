@@ -50,41 +50,54 @@ impl<'de> Visitor<'de> for PresetMetadataVisitor {
     where
         A: MapAccess<'de>,
     {
-        let mut from = None;
-        let mut name = None;
-        let mut version = None;
-
+        let mut builder = PresetMetadataBuilder::default();
         while let Some(key) = map.next_key::<String>()? {
-            let value = match key.as_str() {
-                "from" if from.is_some() => {
-                    return Err(serde::de::Error::duplicate_field("from"));
-                }
-                "name" if name.is_some() => {
-                    return Err(serde::de::Error::duplicate_field("name"));
-                }
-                "version" if version.is_some() => {
-                    return Err(serde::de::Error::duplicate_field("version"));
-                }
-                "from" | "name" | "version" => map.next_value::<String>().map_err(|error| {
-                    serde::de::Error::custom(format_args!(
-                        "invalid Orca preset metadata {key}: {error}"
-                    ))
-                })?,
-                _ => return Err(serde::de::Error::unknown_field(&key, &FIELDS)),
-            };
-
-            match key.as_str() {
-                "from" => from = Some(value),
-                "name" => name = Some(value),
-                "version" => version = Some(value),
-                _ => unreachable!(),
+            if !builder.deserialize_known_field(&key, &mut map)? {
+                return Err(serde::de::Error::unknown_field(&key, &FIELDS));
             }
         }
+        Ok(builder.resolve())
+    }
+}
 
-        Ok(PresetMetadata {
-            from: from.unwrap_or_default(),
-            name: name.unwrap_or_default(),
-            version: version.unwrap_or_default(),
-        })
+#[derive(Default)]
+pub(crate) struct PresetMetadataBuilder {
+    from: Option<String>,
+    name: Option<String>,
+    version: Option<String>,
+}
+
+impl PresetMetadataBuilder {
+    pub(crate) fn deserialize_known_field<'de, A>(
+        &mut self,
+        key: &str,
+        map: &mut A,
+    ) -> Result<bool, A::Error>
+    where
+        A: MapAccess<'de>,
+    {
+        let field = match key {
+            "from" => &mut self.from,
+            "name" => &mut self.name,
+            "version" => &mut self.version,
+            _ => return Ok(false),
+        };
+        if field.is_some() {
+            return Err(serde::de::Error::custom(format!(
+                "duplicate Orca option {key}"
+            )));
+        }
+        *field = Some(map.next_value::<String>().map_err(|error| {
+            serde::de::Error::custom(format_args!("invalid Orca preset metadata {key}: {error}"))
+        })?);
+        Ok(true)
+    }
+
+    pub(crate) fn resolve(self) -> PresetMetadata {
+        PresetMetadata {
+            from: self.from.unwrap_or_default(),
+            name: self.name.unwrap_or_default(),
+            version: self.version.unwrap_or_default(),
+        }
     }
 }

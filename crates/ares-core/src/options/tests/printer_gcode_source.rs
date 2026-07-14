@@ -223,11 +223,7 @@ fn inventory_rows() -> Vec<InventoryRow> {
 }
 
 fn fixture_gcode_fields() -> Map<String, Value> {
-    let project = crate::load_project(include_bytes!(
-        "../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf"
-    ))
-    .unwrap();
-    let fixture: Value = serde_json::from_slice(project.project_settings_bytes()).unwrap();
+    let fixture = super::project_fixture::project_settings_value();
     let fixture = fixture.as_object().unwrap();
     EXPECTED_FIELDS
         .iter()
