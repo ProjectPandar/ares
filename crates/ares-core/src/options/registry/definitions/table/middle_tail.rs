@@ -13,6 +13,7 @@ pub(super) const MIDDLE_TAIL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("internal_bridge_fan_speed", Ints, "-1",),
     definition!("internal_bridge_flow", Float, "1",),
     definition!("internal_bridge_speed", FloatOrPercent, "150%",),
+    definition!("internal_solid_filament_id", Int, "0",),
     definition!("internal_solid_infill_acceleration", FloatOrPercent, "100%",),
     definition!("internal_solid_infill_flow_ratio", Float, "1",),
     definition!("internal_solid_infill_line_width", FloatOrPercent, "0",),

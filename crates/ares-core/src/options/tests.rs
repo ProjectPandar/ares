@@ -38,6 +38,7 @@ mod legacy_sla_corrections;
 mod legacy_thumbnail_composite;
 mod legacy_wiping_volumes_composite;
 mod machine_limits_runtime;
+mod model_config_deserialize;
 mod nozzle_temperature_runtime;
 mod object_distance;
 mod object_options;

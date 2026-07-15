@@ -19,11 +19,6 @@ fn infill_combination_and_rotation_lookup_preserves_registry_contract() {
             "15",
         ),
         (
-            "sparse_infill_filament",
-            OptionValueKind::Int,
-            "1",
-        ),
-        (
             "sparse_infill_line_width",
             OptionValueKind::FloatOrPercent,
             "0",

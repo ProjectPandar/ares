@@ -19,6 +19,7 @@ option_modules!(auxiliary_fan, bed_temperature, chamber_temperature, custom_gcod
 #[rustfmt::skip]
 option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type);
 mod machine_limits;
+mod model_config_deserialize;
 #[rustfmt::skip]
 option_modules!(layer_change_retraction, legacy, initial_layer_print_height, object_distance, overhang_reverse, overhang_speed, parameter_size, raft, skirt_type, support_enable, support_object_skip_flush, support_style, support_placement, pub(crate) support_threshold, support_interface_not_for_body, support_type, pub(crate) support_z_distance, tree_support_options, wall_direction, wall_sequence);
 mod object_fields;
@@ -71,13 +72,15 @@ pub(crate) use infill::{
     InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions, InternalBridgeFilter,
 };
 pub(crate) use machine_limits::MachineLimits;
+pub(crate) use model_config_deserialize::{
+    deserialize_object_model_field, deserialize_region_model_field,
+};
 pub(crate) use object_options::ObjectOptionOverrides;
 use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{LayerRoleFanControl, PartCoolingFanRamp};
 #[cfg_attr(not(test), allow(unused_imports))]
 pub(crate) use region_options::RegionOptionOverrides;
 pub use support_different_extruders::DifferentExtrudersSupport;
-pub(crate) use typed_legacy::{deserialize_object_model_field, deserialize_part_model_field};
 pub use update_multi_to_multi::{MultiToMulti2Update, MultiToMultiUpdate};
 pub use update_printer_extruders::{PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate};
 pub use {

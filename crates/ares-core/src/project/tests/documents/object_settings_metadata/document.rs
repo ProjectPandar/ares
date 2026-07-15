@@ -9,7 +9,6 @@ use crate::{OrcaFloat, SliceError};
 use super::super::{FIXTURE, read};
 use super::{
     object_module, object_name, object_overrides, pairs, parse_settings, region_overrides,
-    retained_config,
 };
 
 #[test]
@@ -30,7 +29,6 @@ fn object_settings_metadata_order_is_last_write_wins_for_names_and_typed_option(
     assert_eq!(object_name(object), "second");
     assert_eq!(object_module(object), "module-b");
     assert_eq!(object_overrides(object).layer_height, Some(OrcaFloat(0.30)));
-    assert!(retained_config(object).is_empty());
 }
 
 #[test]
@@ -126,14 +124,14 @@ fn object_settings_metadata_later_malformed_duplicate_fails_at_that_entry() {
 }
 
 #[test]
-fn object_settings_metadata_retains_exact_non_126_sequence_with_duplicates() {
+fn object_settings_metadata_discards_valid_non_owner_values_with_duplicates() {
     let settings = parse_settings(
         r#"<config><object id="2">
         <metadata key="extruder" value="1"/>
         <metadata key="support_material_extruder" value="2"/>
         <metadata key="brim_width" value="123.456789"/>
         <metadata key="sparse_infill_density" value="37%"/>
-        <metadata key="unregistered_future_key" value="beta"/>
+        <metadata key="gcode_flavor" value="marlin"/>
         <metadata key="extruder" value="2"/>
         <metadata key="support_material_extruder" value="3"/>
         </object></config>"#,
@@ -144,10 +142,6 @@ fn object_settings_metadata_retains_exact_non_126_sequence_with_duplicates() {
 
     assert_eq!(overrides.brim_width, Some(OrcaFloat(123.456789)));
     assert_eq!(overrides.support_filament, Some(crate::OrcaInt(3)));
-    assert_eq!(
-        pairs(retained_config(object)),
-        [("unregistered_future_key", "beta")]
-    );
     assert_eq!(region_overrides(object).extruder, Some(crate::OrcaInt(2)));
     assert_eq!(
         region_overrides(object).sparse_infill_density,
@@ -156,7 +150,7 @@ fn object_settings_metadata_retains_exact_non_126_sequence_with_duplicates() {
 }
 
 #[test]
-fn object_settings_metadata_keeps_matrix_and_canonical_key_on_nested_part_path() {
+fn object_settings_metadata_keeps_matrix_and_discards_object_only_key_on_nested_part_path() {
     let settings = parse_settings(
         r#"<config><object id="7">
         <metadata key="brim_width" value="123.456789"/>
@@ -171,13 +165,9 @@ fn object_settings_metadata_keeps_matrix_and_canonical_key_on_nested_part_path()
 
     assert_eq!(overrides.brim_width, Some(OrcaFloat(123.456789)));
     assert_eq!(overrides.layer_height, None);
-    assert!(retained_config(object).is_empty());
     assert_eq!(
         pairs(&object.parts[0].retained_metadata),
-        [
-            ("matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
-            ("layer_height", "0.77"),
-        ]
+        [("matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1")]
     );
 }
 
@@ -198,7 +188,6 @@ fn object_settings_metadata_real_fixture_preserves_named_retained_and_part_bound
     assert_eq!(object_name(object), "ksr_fdmtest_v4.drc");
     assert_eq!(object_module(object), "");
     assert_eq!(object_overrides(object), &ObjectOptionOverrides::default());
-    assert!(retained_config(object).is_empty());
     assert_eq!(region_overrides(object).extruder, Some(crate::OrcaInt(1)));
     let part = object.parts.iter().find(|part| part.id == 1).unwrap();
     assert_eq!(

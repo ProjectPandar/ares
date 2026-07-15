@@ -44,6 +44,7 @@ pub(super) const LATE_TAIL_AFTER_MATERIAL_OPTION_DEFINITIONS: &[OptionDefinition
     definition!("other_layers_print_sequence_nums", Int, "0",),
     definition!("other_layers_sequence_choice", Enum, "Auto",),
     definition!("outer_wall_acceleration", Float, "500",),
+    definition!("outer_wall_filament_id", Int, "0",),
     definition!("outer_wall_flow_ratio", Float, "1",),
     definition!("outer_wall_jerk", Float, "9",),
     definition!("outer_wall_line_width", FloatOrPercent, "0",),

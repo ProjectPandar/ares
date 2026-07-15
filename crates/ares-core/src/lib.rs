@@ -157,8 +157,8 @@ pub use profiles::{
     merge_profile_fragments,
 };
 pub use project::{
-    PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject,
-    ProjectVolume, Transform3d, load_project,
+    LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
+    ProjectObject, ProjectVolume, ProjectVolumeType, Transform3d, load_project,
 };
 pub use project_slice::slice_project;
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};

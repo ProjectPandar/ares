@@ -32,6 +32,7 @@ pub(super) const MIDDLE_INDEPENDENT_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("initial_layer_travel_jerk", FloatOrPercent, "100%",),
     definition!("initial_layer_travel_speed", FloatOrPercent, "100%",),
     definition!("inner_wall_acceleration", Float, "10000",),
+    definition!("inner_wall_filament_id", Int, "0",),
     definition!("inner_wall_flow_ratio", Float, "1",),
     definition!("inner_wall_jerk", Float, "9",),
     definition!("inner_wall_line_width", FloatOrPercent, "0",),

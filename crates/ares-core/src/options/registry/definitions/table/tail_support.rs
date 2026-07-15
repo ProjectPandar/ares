@@ -44,6 +44,7 @@ pub(super) const TAIL_SUPPORT_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("support_object_skip_flush", Bool, "false",),
     definition!("support_object_xy_distance", Float, "0.35",),
     definition!("support_on_build_plate_only", Bool, "false",),
+    definition!("support_parallel_printheads", Bool, "false",),
     definition!("support_pillar_connection_mode", Enum, "dynamic",),
     definition!("support_pillar_diameter", Float, "1",),
     definition!("support_pillar_widening_factor", Float, "0",),

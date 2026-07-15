@@ -4,7 +4,7 @@ use crate::SliceError;
 
 use super::XmlRole;
 
-pub(super) fn validate_namespace(
+pub(super) fn validate(
     role: XmlRole,
     qualified_name: &[u8],
     local_name: &[u8],
@@ -15,6 +15,15 @@ pub(super) fn validate_namespace(
     }
     if role == XmlRole::Model {
         return super::model::validate_attribute_namespace(local_name, namespace);
+    }
+    if role == XmlRole::LayerConfigRanges {
+        return if matches!(namespace, ResolveResult::Unbound)
+            && matches!(local_name, b"id" | b"min_z" | b"max_z" | b"opt_key")
+        {
+            Ok(())
+        } else {
+            Err(invalid(role))
+        };
     }
 
     let typed_attribute = match role {
@@ -39,7 +48,7 @@ pub(super) fn validate_namespace(
                 | b"offset"
         ),
         XmlRole::SliceInfo => matches!(local_name, b"key" | b"value"),
-        XmlRole::Model => unreachable!(),
+        XmlRole::Model | XmlRole::LayerConfigRanges => unreachable!(),
     };
     if typed_attribute && !matches!(namespace, ResolveResult::Unbound) {
         return Err(invalid(role));

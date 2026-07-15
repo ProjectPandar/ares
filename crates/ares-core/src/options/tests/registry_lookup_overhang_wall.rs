@@ -31,11 +31,6 @@ fn exposes_overhang_wall_option_definition_lookup() {
             crate::OptionValueKind::Float,
             "0",
         ),
-        (
-            "wall_filament",
-            crate::OptionValueKind::Int,
-            "1",
-        ),
     ] {
         let definition = crate::option_definition(key).unwrap();
         assert_eq!(definition.kind, kind);

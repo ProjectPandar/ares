@@ -7,6 +7,7 @@ pub(super) const MIDDLE_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("first_layer_print_sequence", Ints, "0",),
     definition!("first_layer_sequence_choice", Enum, "Auto",),
     definition!("first_x_layer_fan_speed", Floats, "0",),
+    definition!("flashforge_serial_number", String, "",),
     definition!("flush_into_infill", Bool, "false",),
     definition!("flush_into_objects", Bool, "false",),
     definition!("flush_into_support", Bool, "true",),

@@ -334,16 +334,6 @@ fn project_import_rejects_missing_build_component_settings_plate_and_assemble_re
         ),
         (
             "Metadata/model_settings.config",
-            "<object id=\"2\">",
-            "<object id=\"99\">",
-        ),
-        (
-            "Metadata/model_settings.config",
-            "<part id=\"1\"",
-            "<part id=\"99\"",
-        ),
-        (
-            "Metadata/model_settings.config",
             "key=\"object_id\" value=\"2\"",
             "key=\"object_id\" value=\"99\"",
         ),

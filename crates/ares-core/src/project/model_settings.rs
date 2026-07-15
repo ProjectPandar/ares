@@ -5,11 +5,10 @@ use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 mod object_metadata;
 mod part_metadata;
 
-fn is_structural_metadata(key: &str) -> bool {
+fn is_part_structural_metadata(key: &str) -> bool {
     matches!(
         key,
         "name"
-            | "module"
             | "volume_type"
             | "part_type"
             | "matrix"
@@ -43,7 +42,6 @@ pub(crate) struct ObjectSettings {
     pub module: String,
     pub overrides: ObjectOptionOverrides,
     pub region_overrides: RegionOptionOverrides,
-    pub retained_config: Vec<Metadata>,
     pub parts: Vec<PartSettings>,
 }
 

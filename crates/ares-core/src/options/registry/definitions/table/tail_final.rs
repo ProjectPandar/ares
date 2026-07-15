@@ -2,11 +2,10 @@ use super::{OptionDefinition, OptionValueKind};
 
 pub(super) const TAIL_FINAL_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("solid_infill_direction", Float, "45",),
-    definition!("solid_infill_filament", Int, "1",),
     definition!("solid_infill_rotate_template", String, "",),
     definition!("sparse_infill_acceleration", FloatOrPercent, "100%",),
     definition!("sparse_infill_density", Percent, "20",),
-    definition!("sparse_infill_filament", Int, "1",),
+    definition!("sparse_infill_filament_id", Int, "0",),
     definition!("sparse_infill_flow_ratio", Float, "1",),
     definition!("sparse_infill_line_width", FloatOrPercent, "0",),
     definition!("sparse_infill_pattern", Enum, "crosshatch",),

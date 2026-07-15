@@ -2,13 +2,16 @@ use quick_xml::name::ResolveResult;
 
 use crate::SliceError;
 
-use super::super::model_xml::PRODUCTION_NAMESPACE;
+use super::super::model_xml::{MATERIAL_NAMESPACE, PRODUCTION_NAMESPACE};
+
+const XML_NAMESPACE: &[u8] = b"http://www.w3.org/XML/1998/namespace";
 
 pub(super) fn validate_attribute_namespace(
     local_name: &[u8],
     namespace: &ResolveResult<'_>,
 ) -> Result<(), SliceError> {
-    let production_attribute = matches!(local_name, b"path" | b"UUID");
+    let production_attribute = matches!(local_name, b"path" | b"UUID" | b"uuid");
+    let language_attribute = local_name == b"lang";
     let core_attribute = matches!(
         local_name,
         b"unit"
@@ -26,13 +29,18 @@ pub(super) fn validate_attribute_namespace(
             | b"v3"
             | b"printable"
             | b"auto_drop"
+            | b"pid"
+            | b"pindex"
+            | b"color"
     );
     let valid = if production_attribute {
         matches!(namespace, ResolveResult::Bound(value) if value.as_ref() == PRODUCTION_NAMESPACE.as_bytes())
+    } else if language_attribute {
+        matches!(namespace, ResolveResult::Bound(value) if value.as_ref() == XML_NAMESPACE)
     } else if core_attribute {
         matches!(namespace, ResolveResult::Unbound)
     } else {
-        true
+        false
     };
     if valid {
         Ok(())
@@ -47,6 +55,7 @@ pub(super) fn validate_required_extensions(
     required_extensions: Option<&str>,
     namespace_bindings: &[(Vec<u8>, String)],
 ) -> Result<(), SliceError> {
+    let mut resolved_namespaces = Vec::new();
     for extension in required_extensions
         .unwrap_or_default()
         .split_ascii_whitespace()
@@ -55,11 +64,15 @@ pub(super) fn validate_required_extensions(
             .iter()
             .find(|(prefix, _)| prefix.as_slice() == extension.as_bytes())
             .map(|(_, namespace)| namespace.as_str());
-        if binding != Some(PRODUCTION_NAMESPACE) {
-            return Err(invalid(format_args!(
-                "unsupported required extension {extension:?}"
-            )));
+        let Some(namespace) = binding else {
+            return Err(invalid("unsupported required extension"));
+        };
+        if !matches!(namespace, PRODUCTION_NAMESPACE | MATERIAL_NAMESPACE)
+            || resolved_namespaces.contains(&namespace)
+        {
+            return Err(invalid("unsupported required extension"));
         }
+        resolved_namespaces.push(namespace);
     }
     Ok(())
 }

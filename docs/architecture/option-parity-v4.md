@@ -2,13 +2,13 @@
 
 ## Status
 
-Tasks 16 through 19A and Task 19B.1A are released. Task 19B.1B's typed
-export/runtime retract views are locally implemented and whole-approved.
-Independent documentation approval, the local release matrix, commit, push,
-and exact-pushed-SHA Tier 1 gate remain pending, so no Task 19B.1B release is
-claimed. The rest of Task 19B, consumer migration, slicing, and final G-code
-parity remain owned by later source-cited rewrite tasks in the approved parity
-plan.
+Tasks 16 through 19A and Tasks 19B.1A-19B.1B are released. Task 19B.2's typed
+model/layer configuration association is locally implemented and
+whole-approved. Independent documentation approval, the local release matrix,
+commit, push, and exact-pushed-SHA Tier 1 gate remain pending, so no Task
+19B.2 release is claimed. Task 19B.3, consumer migration, slicing, and final
+G-code parity remain owned by later source-cited rewrite tasks in the approved
+parity plan.
 
 ## Fixed baseline
 
@@ -1562,8 +1562,98 @@ received independent whole `SPEC_COMPLIANCE`, `CODE_QUALITY`, and OpenCode
 and still returns `ProjectSlicingIncomplete`; the core/browser boundary and
 full G-code parity remain incomplete by design.
 
+Task 19B.1B was released as commit
+`8e09be79881c6365100fac06ed064f487c75fb85`; exact-SHA Tier 1 run
+`29345005311` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 Task 19B.2 retains model/layer configuration association; Task 19B.3 retains
 normalization and source-ordered orchestration; Task 19C retains config export;
-and Task 20E retains the remaining dynamic compatibility removal. Task 19B.1B
-is locally implemented and whole-approved, but its documentation review,
-release verification, commit/push, and exact-SHA Tier 1 gate remain pending.
+and Task 20E retains the remaining dynamic compatibility removal.
+
+### Task 19B.2: typed model/layer configuration association
+
+Task 19B.2 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its canonical option boundary is
+`PrintConfig.cpp:63-84,663-7328,7395-8031`,
+`Config.cpp:258-318,573-685`, and the concrete scalar, nullable, vector,
+string, enum, point, and point-group deserializers in `Config.hpp`. The model
+association boundary is
+`Format/bbs_3mf.cpp:744-764,2043-2168,3440-3513,3575-3735` and
+`Format/bbs_3mf.cpp:3893-3908,4136-4400,4894-4954,5081-5126`,
+`Model.hpp:354-370,865-918`, `Model.cpp:2717-2747`, and
+`PrintConfig.hpp:2034-2128`. Optional layer ranges are bounded by
+`Format/bbs_3mf.cpp:209-216,1896-1904,2087-2095,2886-2940,7517-7545` and
+`Slicing.hpp:150-151`; later gap/overlap normalization in
+`PrintApply.cpp:342-383` remains Task 19B.3.
+
+The Rust destination is the private
+`ares-core::options::model_config_deserialize` classifier plus typed ownership
+on `ProjectObject`, `ProjectVolume`, and `LayerConfigRange`. The registry now
+contains exactly 751 sorted unique fixed definitions: 18 missing canonical
+rows were added and the legacy-only `solid_infill_filament`,
+`sparse_infill_filament`, and `wall_filament` rows were removed while their
+Task 19A lowering rules remain. The classifier covers all 21 concrete
+`OptionValueKind` wire forms and the exact 650 typed-project-owner / 101
+registry-only partition without an erased value, dynamic map, JSON round trip,
+or public registry API expansion.
+
+Object metadata classifies canonical object owners before region owners; part
+and layer metadata accept only region owners. A canonical key with another
+typed project owner is decoded through its existing concrete builder field and
+discarded, while the remaining registry-only values are concretely validated
+and discarded. The five registry-only scalar enum domains use one private
+fixed lexical ledger from `PrintConfig.cpp:402-419,481-485`. Unknown keys
+remain strict bounded errors. Model-path
+legacy handling runs first, completes the three cumulative profile aliases and
+`different_settings_to_system` validation without storing profile state, and
+preserves XML source-order last-write-wins assignment.
+
+Model-settings association keeps path-qualified geometry identity and the
+existing ambiguous bare-ID rejection while attaching settings by bare object
+ID and leaf mesh object ID. Final objects remain build-first-occurrence
+ordered; nested leaf volumes remain breadth-first ordered. Objects own their
+name, module, object overrides, region overrides, and sorted layer ranges;
+volumes own their name, one of the five typed volume kinds, and region
+overrides. Structural scope is exact: only object `name`/`module` and the fixed
+part provenance fields bypass option classification.
+
+Part selection preserves Orca's same-index match followed by first
+source-ordered matching ID, including repeated IDs. Missing settings or
+unmatched parts create default `ModelPart` metadata without changing the mesh
+or accumulated component transform. Object and volume fallback names are
+derived during assembly with the fixed unnamed counter. When no object
+settings record exists, typed model XML `pid` and ordered material color groups
+derive the one-based object `extruder` fallback with per-group last color,
+submodel insert-only merge, root replacement, numeric group ordering, and
+exact color deduplication; any matching settings record suppresses that
+fallback.
+
+Optional `Metadata/layer_config_ranges.xml` is read only through the bounded
+in-memory `ProjectArchive`. ASCII case-insensitive lookup accepts one validated
+case variant, rejects multiple variants as ambiguous, and treats absence as an
+empty set. One-based ordinals target final object order. Source-ordered option
+duplicates and exact-range duplicates use the later assignment; results sort
+lexicographically while finite negative, reversed, gapped, and overlapping
+ranges remain raw. Invalid XML, attributes, ordinals, bounds, keys, and values
+return bounded contextual errors.
+
+The frozen 73-entry implementation manifest
+`2b80a68423b3476a7f83676393d72bc6129c6f1ce9f15654cea50a2dd7496eb7`
+received independent whole `SPEC COMPLIANCE`, whole `CODE QUALITY`, and
+OpenCode default-model `VERDICT: APPROVE` decisions. Independent verification
+passed the 125/125 focused matrix, 4545/4545 workspace tests with two configured
+skips, the 22/22 dynamic audit with one configured skip, rustfmt, warning-denying
+Clippy, native/WASM checks, release WASM and wasm-bindgen, the real-project
+browser test, fixture hashes, forbidden scans, diff validation, and the
+sub-400-LOC audit.
+
+The real KSR project now reaches these typed domain owners through public
+loading, but public slicing intentionally still returns
+`ProjectSlicingIncomplete`; the complete CLI golden remains configured skipped.
+Task 19B.3 retains normalization, raw layer-range normalization, effective
+object/volume/material/layer precedence, and the first production calls to the
+typed configuration transforms. Task 19C retains config serialization; Tasks
+20A-20E retain consumer migration and compatibility removal. Geometry,
+toolpaths, G-code generation, and complete normalized KSR byte parity remain
+open. Task 19B.2 is locally implemented and whole-approved, while its
+documentation review, release verification, commit/push, and exact-SHA Tier 1
+gate remain pending.

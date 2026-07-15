@@ -1,20 +1,24 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use crate::SliceError;
+use crate::{OrcaInt, SliceError};
 
 use super::{
+    colors,
     graph::{LoadedModel, ModelGraph},
     metadata::{self, MetadataIndex},
+    volume_metadata,
 };
+use crate::options::{ObjectOptionOverrides, RegionOptionOverrides};
 use crate::project::{
     PackagePath,
     domain::{Point3d, ProjectInstance, ProjectMesh, ProjectModel, ProjectObject, ProjectVolume},
-    model_settings::ModelSettings,
+    model_settings::{ModelSettings, ObjectSettings, PartSettings},
     model_xml::Mesh,
     transform::Transform3d,
 };
 
 struct ObjectBuilder {
+    metadata: (String, String, ObjectOptionOverrides, RegionOptionOverrides),
     volumes: Vec<ProjectVolume>,
     instances: Vec<ProjectInstance>,
 }
@@ -43,13 +47,14 @@ pub(super) fn project_domain(
 
     let root = graph.root();
     validate_bare_metadata_identity(graph, root)?;
+    let group_extruders = colors::group_extruders(graph);
 
     let mut builders = BTreeMap::<(PackagePath, u32), ObjectBuilder>::new();
     let mut order = Vec::new();
     let mut loaded_instances = BTreeSet::new();
     for item in &root.document.build.items {
         let target_path = graph.component_target(root, item.path.as_deref())?;
-        graph.object(&target_path, item.object_id)?;
+        let (_, source_object) = graph.object(&target_path, item.object_id)?;
         let identity = (target_path.clone(), item.object_id);
         let instance_id = builders
             .get(&identity)
@@ -66,15 +71,27 @@ pub(super) fn project_domain(
 
         if let std::collections::btree_map::Entry::Vacant(entry) = builders.entry(identity.clone())
         {
-            let part_transforms =
-                metadata
-                    .part_transforms
-                    .get(&item.object_id)
-                    .ok_or_else(|| {
-                        invalid(format!("missing model settings object {}", item.object_id))
-                    })?;
+            let source_settings = metadata
+                .object_settings
+                .get(&item.object_id)
+                .map(|index| &settings.objects[*index]);
+            let object_ordinal = order.len() + 1;
+            let object_metadata = object_metadata(
+                source_settings,
+                &source_object.name,
+                source_object.pid,
+                object_ordinal,
+                &group_extruders,
+            );
             entry.insert(ObjectBuilder {
-                volumes: collect_volumes(graph, &target_path, item.object_id, part_transforms)?,
+                volumes: collect_volumes(
+                    graph,
+                    &target_path,
+                    item.object_id,
+                    source_settings.map_or(&[], |object| object.parts.as_slice()),
+                    &object_metadata.0,
+                )?,
+                metadata: object_metadata,
                 instances: Vec::new(),
             });
             order.push(identity.clone());
@@ -112,12 +129,46 @@ pub(super) fn project_domain(
             ProjectObject::new(
                 identity.0.as_str().to_owned(),
                 identity.1,
+                builder.metadata,
                 builder.volumes,
                 builder.instances,
             )
         })
         .collect();
     Ok((models, objects))
+}
+
+fn object_metadata(
+    settings: Option<&ObjectSettings>,
+    xml_name: &str,
+    pid: i32,
+    ordinal: usize,
+    group_extruders: &BTreeMap<i32, i32>,
+) -> (String, String, ObjectOptionOverrides, RegionOptionOverrides) {
+    if let Some(settings) = settings {
+        return (
+            settings.name.clone(),
+            settings.module.clone(),
+            settings.overrides.clone(),
+            settings.region_overrides.clone(),
+        );
+    }
+
+    let name = if xml_name.is_empty() {
+        format!("Object_{ordinal}")
+    } else {
+        xml_name.to_owned()
+    };
+    let region_overrides = RegionOptionOverrides {
+        extruder: group_extruders.get(&pid).copied().map(OrcaInt),
+        ..Default::default()
+    };
+    (
+        name,
+        String::new(),
+        ObjectOptionOverrides::default(),
+        region_overrides,
+    )
 }
 
 fn validate_bare_metadata_identity(
@@ -151,12 +202,14 @@ fn collect_volumes(
     graph: &ModelGraph,
     path: &PackagePath,
     object_id: u32,
-    part_transforms: &BTreeMap<u32, Transform3d>,
+    parts: &[PartSettings],
+    object_name: &str,
 ) -> Result<Vec<ProjectVolume>, SliceError> {
     type Pending = (PackagePath, u32, Transform3d, Vec<(PackagePath, u32)>);
     let mut pending =
         VecDeque::<Pending>::from([(path.clone(), object_id, Transform3d::IDENTITY, Vec::new())]);
     let mut output = Vec::new();
+    let mut unnamed_count = 0_usize;
 
     while let Some((path, object_id, accumulated, mut ancestors)) = pending.pop_front() {
         let identity = (path.clone(), object_id);
@@ -166,18 +219,19 @@ fn collect_volumes(
         ancestors.push(identity);
         let (model, object) = graph.object(&path, object_id)?;
         if let Some(mesh) = &object.mesh {
-            let part = part_transforms.get(&object.id).ok_or_else(|| {
-                invalid(format!(
-                    "model settings do not contain part {} for a mesh volume",
-                    object.id
-                ))
-            })?;
+            let mut selected = volume_metadata::select(parts, output.len(), object.id)?;
+            selected.name = volume_name(selected.name, object_name, &mut unnamed_count);
             output.push(ProjectVolume::new(
                 path.as_str().to_owned(),
                 object.id,
                 project_mesh(mesh, model),
                 accumulated,
-                *part,
+                (
+                    selected.name,
+                    selected.volume_type,
+                    selected.region_overrides,
+                    selected.source_transform,
+                ),
             ));
         } else if let Some(components) = &object.components {
             for component in &components.components {
@@ -192,6 +246,17 @@ fn collect_volumes(
         }
     }
     Ok(output)
+}
+
+fn volume_name(name: String, object_name: &str, unnamed_count: &mut usize) -> String {
+    if !name.is_empty() {
+        return name;
+    }
+    *unnamed_count += 1;
+    match *unnamed_count {
+        1 => object_name.to_owned(),
+        count => format!("{object_name}_{count}"),
+    }
 }
 
 fn project_mesh(mesh: &Mesh, model: &LoadedModel) -> ProjectMesh {

@@ -10,6 +10,7 @@ use crate::SliceError;
 use super::xml_characters::{is_legal_character, is_xml11_restricted};
 
 mod attribute;
+mod element;
 mod model;
 mod role;
 
@@ -108,7 +109,7 @@ fn validate_xml(input: &[u8], role: XmlRole, limits: XmlLimits) -> Result<(), Sl
                 if depth == 0 {
                     begin_root(role, &namespace, &element, &mut root_seen, root_closed)?;
                 } else {
-                    validate_namespace(role, &namespace)?;
+                    element::validate(role, element.local_name().as_ref(), &namespace)?;
                 }
                 validate_attributes(role, &reader, &element, version, &mut decoded_text)?;
                 depth = depth
@@ -126,7 +127,7 @@ fn validate_xml(input: &[u8], role: XmlRole, limits: XmlLimits) -> Result<(), Sl
                     begin_root(role, &namespace, &element, &mut root_seen, root_closed)?;
                     root_closed = true;
                 } else {
-                    validate_namespace(role, &namespace)?;
+                    element::validate(role, element.local_name().as_ref(), &namespace)?;
                 }
                 validate_attributes(role, &reader, &element, version, &mut decoded_text)?;
             }
@@ -207,20 +208,8 @@ fn begin_root(
     if element.local_name().as_ref() != role.root() {
         return Err(invalid_xml(role, "unexpected root element"));
     }
-    validate_namespace(role, namespace)?;
+    element::validate(role, element.local_name().as_ref(), namespace)?;
     *root_seen = true;
-    Ok(())
-}
-
-fn validate_namespace(role: XmlRole, namespace: &ResolveResult<'_>) -> Result<(), SliceError> {
-    let matches = match (role.namespace(), namespace) {
-        (Some(expected), ResolveResult::Bound(actual)) => actual.as_ref() == expected,
-        (None, ResolveResult::Unbound) => true,
-        _ => false,
-    };
-    if !matches {
-        return Err(invalid_xml(role, "unexpected or unresolved XML namespace"));
-    }
     Ok(())
 }
 
@@ -245,7 +234,7 @@ fn validate_attributes(
         if matches!(namespace, ResolveResult::Unknown(_)) {
             return Err(invalid_xml(role, "attribute uses an unresolved namespace"));
         }
-        attribute::validate_namespace(
+        attribute::validate(
             role,
             attribute.key.as_ref(),
             local_name.as_ref(),

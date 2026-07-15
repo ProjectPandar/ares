@@ -11,11 +11,6 @@ fn exposes_slowdown_solid_infill_option_definition_lookup() {
             crate::OptionValueKind::Floats,
             "5",
         ),
-        (
-            "solid_infill_filament",
-            crate::OptionValueKind::Int,
-            "1",
-        ),
     ] {
         let definition = crate::option_definition(key).unwrap();
         assert_eq!(definition.kind, kind);

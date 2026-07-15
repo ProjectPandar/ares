@@ -1,8 +1,11 @@
 use super::{
-    filament_sequence::FilamentSequences, model_settings::ModelSettings, plate::PlateJson,
-    slice_info::SliceInfo, transform::Transform3d,
+    filament_sequence::FilamentSequences, layer_config_ranges::LayerConfigRange,
+    model_settings::ModelSettings, plate::PlateJson, slice_info::SliceInfo, transform::Transform3d,
 };
-use crate::ProjectSettings;
+use crate::{
+    ProjectSettings,
+    options::{ObjectOptionOverrides, RegionOptionOverrides},
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point3d {
@@ -111,6 +114,11 @@ impl ProjectModel {
 pub struct ProjectObject {
     source_model_path: String,
     id: u32,
+    name: String,
+    module: String,
+    object_overrides: ObjectOptionOverrides,
+    region_overrides: RegionOptionOverrides,
+    layer_config_ranges: Vec<LayerConfigRange>,
     volumes: Vec<ProjectVolume>,
     instances: Vec<ProjectInstance>,
 }
@@ -119,12 +127,18 @@ impl ProjectObject {
     pub(crate) fn new(
         source_model_path: String,
         id: u32,
+        metadata: (String, String, ObjectOptionOverrides, RegionOptionOverrides),
         volumes: Vec<ProjectVolume>,
         instances: Vec<ProjectInstance>,
     ) -> Self {
         Self {
             source_model_path,
             id,
+            name: metadata.0,
+            module: metadata.1,
+            object_overrides: metadata.2,
+            region_overrides: metadata.3,
+            layer_config_ranges: Vec::new(),
             volumes,
             instances,
         }
@@ -138,6 +152,32 @@ impl ProjectObject {
         &self.source_model_path
     }
 
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn module(&self) -> &str {
+        &self.module
+    }
+
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn object_overrides(&self) -> &ObjectOptionOverrides {
+        &self.object_overrides
+    }
+
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn region_overrides(&self) -> &RegionOptionOverrides {
+        &self.region_overrides
+    }
+
+    pub fn layer_config_ranges(&self) -> &[LayerConfigRange] {
+        &self.layer_config_ranges
+    }
+
+    pub(crate) fn set_layer_config_ranges(&mut self, ranges: Vec<LayerConfigRange>) {
+        self.layer_config_ranges = ranges;
+    }
+
     pub fn volumes(&self) -> &[ProjectVolume] {
         &self.volumes
     }
@@ -147,12 +187,24 @@ impl ProjectObject {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ProjectVolumeType {
+    ModelPart,
+    NegativeVolume,
+    ParameterModifier,
+    SupportEnforcer,
+    SupportBlocker,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProjectVolume {
     source_model_path: String,
     id: u32,
     mesh: ProjectMesh,
     transform: Transform3d,
+    name: String,
+    volume_type: ProjectVolumeType,
+    region_overrides: RegionOptionOverrides,
     source_transform: Transform3d,
 }
 
@@ -162,14 +214,22 @@ impl ProjectVolume {
         id: u32,
         mesh: ProjectMesh,
         transform: Transform3d,
-        source_transform: Transform3d,
+        metadata: (
+            String,
+            ProjectVolumeType,
+            RegionOptionOverrides,
+            Transform3d,
+        ),
     ) -> Self {
         Self {
             source_model_path,
             id,
             mesh,
             transform,
-            source_transform,
+            name: metadata.0,
+            volume_type: metadata.1,
+            region_overrides: metadata.2,
+            source_transform: metadata.3,
         }
     }
 
@@ -187,6 +247,19 @@ impl ProjectVolume {
 
     pub fn transform(&self) -> Transform3d {
         self.transform
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn volume_type(&self) -> ProjectVolumeType {
+        self.volume_type
+    }
+
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn region_overrides(&self) -> &RegionOptionOverrides {
+        &self.region_overrides
     }
 
     pub fn source_transform(&self) -> Transform3d {

@@ -8,34 +8,25 @@ use super::super::{
     model_settings::{Metadata, ModelSettings},
     plate::PlateJson,
 };
+use super::volume_metadata;
 
 pub(super) struct MetadataIndex {
     pub plates: Vec<PlateMetadata>,
     pub loaded_labels: BTreeMap<(u32, u32), u32>,
-    pub part_transforms: BTreeMap<u32, BTreeMap<u32, Transform3d>>,
+    pub object_settings: BTreeMap<u32, usize>,
 }
 
 pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceError> {
-    let mut part_transforms = BTreeMap::new();
-    for object in &settings.objects {
-        let mut parts = BTreeMap::new();
-        for part in &object.parts {
-            let transform = match optional_value(&part.retained_metadata, "matrix")? {
-                Some(value) => Transform3d::parse_row_major(value)?,
-                None => Transform3d::IDENTITY,
-            };
-            if parts.insert(part.id, transform).is_some() {
-                return Err(invalid(format!(
-                    "object {} repeats part {}",
-                    object.id, part.id
-                )));
-            }
-        }
-        if part_transforms.insert(object.id, parts).is_some() {
+    let mut object_settings = BTreeMap::new();
+    for (index, object) in settings.objects.iter().enumerate() {
+        if object_settings.insert(object.id, index).is_some() {
             return Err(invalid(format!(
                 "model settings repeat object {}",
                 object.id
             )));
+        }
+        for part in &object.parts {
+            volume_metadata::validate(part)?;
         }
     }
 
@@ -75,7 +66,7 @@ pub(super) fn index(settings: &ModelSettings) -> Result<MetadataIndex, SliceErro
     Ok(MetadataIndex {
         plates,
         loaded_labels,
-        part_transforms,
+        object_settings,
     })
 }
 

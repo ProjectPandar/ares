@@ -50,6 +50,7 @@ pub(super) const PRE_MIDDLE_PROCESS_OPTION_DEFINITIONS: &[OptionDefinition] = &[
     definition!("extra_loading_move", Float, "-2",),
     definition!("extra_perimeters_on_overhangs", Bool, "false",),
     definition!("extra_solid_infills", String, "",),
+    definition!("extruder", Int, "0",),
     definition!("extruder_ams_count", Strings, "",),
     definition!("extruder_clearance_height_to_lid", Float, "120",),
     definition!("extruder_clearance_height_to_rod", Float, "40",),

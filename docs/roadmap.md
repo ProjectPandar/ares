@@ -858,11 +858,81 @@ WASM, Windows, macOS, and Linux. Public project slicing is deliberately not
 wired and still returns `ProjectSlicingIncomplete`; no full G-code parity is
 claimed.
 
-Task 19B.1B is locally implemented and whole-approved, while documentation
-review, release verification, commit/push, and exact-SHA Tier 1 remain pending.
+Task 19B.1B was released as commit
+`8e09be79881c6365100fac06ed064f487c75fb85`; exact-SHA Tier 1 run
+`29345005311` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 Task 19B.2 model/layer association, Task 19B.3 orchestration, Task 19C export,
 Task 20E final dynamic removal, and complete normalized KSR G-code parity
 remain open.
+
+### 2026-07-14 Associate typed model and layer configuration (Task 19B.2)
+
+Task 19B.2 ports fixed OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Canonical option lookup and wire
+decode come from `PrintConfig.cpp:63-84,663-7328,7395-8031`,
+`Config.cpp:258-318,573-685`, and the concrete `ConfigOption*` deserializers in
+`Config.hpp`. Model identity, metadata, volume selection, naming, and color
+fallback come from
+`Format/bbs_3mf.cpp:744-764,2043-2168,3440-3513,3575-3735` and
+`Format/bbs_3mf.cpp:3893-3908,4136-4400,4894-4954,5081-5126`,
+`Model.hpp:354-370,865-918`, `Model.cpp:2717-2747`, and
+`PrintConfig.hpp:2034-2128`. Optional layer ranges come from
+`Format/bbs_3mf.cpp:209-216,1896-1904,2087-2095,2886-2940,7517-7545` and
+`Slicing.hpp:150-151`; `PrintApply.cpp:342-383` normalization remains Task
+19B.3.
+
+The private `ares-core::options::model_config_deserialize` boundary now
+classifies object, part, and layer metadata into existing typed sparse owners.
+The canonical registry is exactly 751 sorted unique rows after adding 18 fixed
+definitions and removing three legacy-only filament rows; their Task 19A
+lowering rules remain. All 21 concrete wire kinds and the exact 650 typed-owner
+/ 101 registry-only partition are validated without erased values, dynamic
+maps, JSON round trips, fixture branches, or a wider public registry API.
+
+Object metadata assigns object owners before region owners; part and layer
+metadata assign only region owners. Other canonical typed-project values are
+decoded through their existing concrete builder fields and discarded; the
+registry-only complement is concretely validated and discarded; its five
+scalar enum domains use `PrintConfig.cpp:402-419,481-485`. Model-path legacy
+handling completes the three cumulative aliases plus
+`different_settings_to_system`, and canonical/legacy duplicates remain XML
+source-order last-write-wins.
+
+`ProjectObject` now owns typed object/region overrides and layer ranges, while
+`ProjectVolume` owns its typed five-way volume kind and region overrides.
+Association preserves build-first object order, breadth-first leaf identity,
+same-index then first-source part selection, default volumes for missing or
+unmatched part settings, fixed fallback naming, exact structural scopes, and
+ambiguous bare-ID rejection. The no-settings path derives the one-based object
+extruder from typed `pid` and ordered production color groups with per-group
+last color, submodel-first/root-replacement merge behavior, numeric group
+ordering, and exact color deduplication.
+
+Optional `Metadata/layer_config_ranges.xml` remains bounded and in-memory.
+One ASCII case variant is accepted, multiple variants are rejected, one-based
+ordinals target final object order, later duplicate options and exact ranges
+win, and output is lexicographically sorted without normalizing finite
+negative, reversed, gapped, or overlapping bounds. Boundary errors are strict,
+keyed, and bounded.
+
+The frozen 73-entry implementation manifest
+`2b80a68423b3476a7f83676393d72bc6129c6f1ce9f15654cea50a2dd7496eb7`
+received independent whole `SPEC COMPLIANCE`, whole `CODE QUALITY`, and
+OpenCode default-model `VERDICT: APPROVE` decisions. Verification passed the
+125/125 focused matrix, 4545/4545 workspace tests with two configured skips,
+the 22/22 dynamic audit with one configured skip, rustfmt, warning-denying
+Clippy, native/WASM checks, release WASM plus wasm-bindgen, the real-project
+browser proof, fixture hashes, forbidden scans, diff validation, and the
+sub-400-LOC audit.
+
+Public project loading now exposes the richer typed domain, while slicing still
+returns `ProjectSlicingIncomplete` and the complete CLI golden remains
+configured skipped. Task 19B.3 retains normalization and effective
+object/volume/material/layer orchestration; Task 19C retains config export;
+Tasks 20A-20E retain consumer migration/removal; geometry, toolpaths, G-code,
+and complete normalized KSR byte parity remain open. Task 19B.2 is locally
+implemented and whole-approved, while documentation review, release
+verification, commit/push, and exact-SHA Tier 1 remain pending.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

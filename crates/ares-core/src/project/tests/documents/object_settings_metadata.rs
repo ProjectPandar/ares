@@ -8,6 +8,7 @@ use crate::{
 };
 
 mod cases;
+mod classifier;
 mod decode;
 mod document;
 #[allow(
@@ -21,6 +22,7 @@ mod legacy;
 mod normalization;
 mod projection;
 mod region_handoff;
+mod structural_scope;
 
 fn parse_settings(xml: &str) -> Result<ModelSettings, SliceError> {
     deserialize_xml(xml.as_bytes(), XmlRole::ModelSettings)
@@ -44,10 +46,6 @@ fn object_name(object: &ObjectSettings) -> &str {
 
 fn object_module(object: &ObjectSettings) -> &str {
     &object.module
-}
-
-fn retained_config(object: &ObjectSettings) -> &[Metadata] {
-    &object.retained_config
 }
 
 fn region_overrides(object: &ObjectSettings) -> &RegionOptionOverrides {

@@ -1,18 +1,15 @@
 use crate::{OrcaInt, Percent, SliceError};
 
-use super::{pairs, parse_settings, region_overrides, retained_config};
+use super::{pairs, parse_settings, region_overrides};
 
 #[test]
 fn object_region_metadata_is_typed_last_write_wins_and_not_retained() {
     let settings = parse_settings(
         r#"<config><object id="2">
-        <metadata key="future_a" value="alpha"/>
         <metadata key="sparse_infill_density" value="31%"/>
         <metadata key="extruder" value="1"/>
-        <metadata key="future_b" value="beta"/>
         <metadata key="sparse_infill_density" value="47%"/>
         <metadata key="extruder" value="2"/>
-        <metadata key="future_a" value="omega"/>
         </object></config>"#,
     )
     .unwrap();
@@ -23,14 +20,6 @@ fn object_region_metadata_is_typed_last_write_wins_and_not_retained() {
         Some(Percent(47.0))
     );
     assert_eq!(region_overrides(object).extruder, Some(OrcaInt(2)));
-    assert_eq!(
-        pairs(retained_config(object)),
-        [
-            ("future_a", "alpha"),
-            ("future_b", "beta"),
-            ("future_a", "omega")
-        ]
-    );
 }
 
 #[test]
@@ -57,10 +46,8 @@ fn part_region_metadata_is_typed_last_write_wins_and_preserves_residual_order() 
         <metadata key="wall_loops" value="3"/>
         <metadata key="matrix" value="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"/>
         <metadata key="extruder" value="1"/>
-        <metadata key="future_part" value="alpha"/>
         <metadata key="wall_loops" value="5"/>
         <metadata key="extruder" value="2"/>
-        <metadata key="future_part" value="omega"/>
         </part></object></config>"#,
     )
     .unwrap();
@@ -72,9 +59,7 @@ fn part_region_metadata_is_typed_last_write_wins_and_preserves_residual_order() 
         pairs(&part.retained_metadata),
         [
             ("name", "part-a"),
-            ("matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"),
-            ("future_part", "alpha"),
-            ("future_part", "omega")
+            ("matrix", "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1")
         ]
     );
 }

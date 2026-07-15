@@ -1,6 +1,11 @@
 mod assemble;
+mod colors;
 mod graph;
 mod metadata;
+mod volume_metadata;
+
+#[cfg(test)]
+pub(crate) use volume_metadata::selected_volume_metadata_for_test;
 
 use std::collections::BTreeSet;
 
@@ -88,7 +93,8 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
         JsonRole::ProjectSettings,
     )?;
 
-    let (models, objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
+    let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
+    super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
     Ok(Project::new(
         models,
         objects,

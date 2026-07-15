@@ -6,6 +6,8 @@ use super::transform::Transform3d;
 
 pub(crate) const PRODUCTION_NAMESPACE: &str =
     "http://schemas.microsoft.com/3dmanufacturing/production/2015/06";
+pub(crate) const MATERIAL_NAMESPACE: &str =
+    "http://schemas.microsoft.com/3dmanufacturing/material/2015/02";
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename = "model")]
@@ -73,14 +75,34 @@ pub(crate) struct ModelMetadata {
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct Resources {
+    #[serde(rename = "colorgroup", default)]
+    pub color_groups: Vec<MaterialColorGroup>,
     #[serde(rename = "object", default)]
     pub objects: Vec<ModelObject>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub(crate) struct MaterialColorGroup {
+    #[serde(rename = "@id")]
+    pub id: i32,
+    #[serde(rename = "color", default)]
+    pub colors: Vec<MaterialColor>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub(crate) struct MaterialColor {
+    #[serde(rename = "@color")]
+    pub color: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct ModelObject {
     #[serde(rename = "@id")]
     pub id: u32,
+    #[serde(rename = "@name", default)]
+    pub name: String,
+    #[serde(rename = "@pid", default, deserialize_with = "deserialize_pid")]
+    pub pid: i32,
     #[serde(rename = "@type", default)]
     pub object_type: ModelObjectType,
     pub mesh: Option<Mesh>,
@@ -213,6 +235,24 @@ pub(crate) struct BuildItem {
 
 fn default_true() -> bool {
     true
+}
+
+fn deserialize_pid<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = String::deserialize(deserializer)?;
+    let unsigned = value
+        .strip_prefix('+')
+        .or_else(|| value.strip_prefix('-'))
+        .unwrap_or(&value);
+    let digit_count = unsigned
+        .as_bytes()
+        .iter()
+        .take_while(|byte| byte.is_ascii_digit())
+        .count();
+    let sign_len = value.len() - unsigned.len();
+    Ok(value[..sign_len + digit_count].parse().unwrap_or(0))
 }
 
 fn deserialize_optional_transform<'de, D>(deserializer: D) -> Result<Transform3d, D::Error>

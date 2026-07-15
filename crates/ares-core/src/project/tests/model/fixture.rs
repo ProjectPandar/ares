@@ -120,6 +120,26 @@ impl ProjectParts {
         self.remove("3D/leaf.model");
     }
 
+    pub(super) fn set_model_settings_objects(&mut self, objects: &str, build_ids: &[u32]) {
+        let mut instance_counts = BTreeMap::<u32, u32>::new();
+        let mut instances = String::new();
+        for (index, object_id) in build_ids.iter().copied().enumerate() {
+            let instance_id = instance_counts.entry(object_id).or_default();
+            instances.push_str(&format!(
+                r#"<model_instance><metadata key="object_id" value="{object_id}"/><metadata key="instance_id" value="{}"/><metadata key="identify_id" value="{}"/></model_instance>"#,
+                *instance_id,
+                index + 1_000
+            ));
+            *instance_id += 1;
+        }
+        self.insert_text(
+            "Metadata/model_settings.config",
+            &format!(
+                r#"<config>{objects}<plate><metadata key="plater_id" value="1"/>{instances}</plate></config>"#
+            ),
+        );
+    }
+
     pub(super) fn reuse_object_id_across_build_paths(&mut self) {
         self.insert_text(
             "3D/root.model",

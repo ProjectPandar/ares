@@ -3,7 +3,7 @@ use crate::{
     options::{ProcessSupportStyle, ProcessSupportType, ProcessWallSequence},
 };
 
-use super::{pairs, parse_settings};
+use super::parse_settings;
 
 #[test]
 fn object_and_part_legacy_owner_targets_are_typed_directly() {
@@ -28,42 +28,22 @@ fn object_and_part_legacy_owner_targets_are_typed_directly() {
         part.region_overrides.outer_wall_filament_id,
         Some(OrcaInt(2))
     );
-    assert!(object.retained_config.is_empty());
     assert!(part.retained_metadata.is_empty());
 }
 
 #[test]
-fn non_owner_targets_are_canonicalized_in_their_original_order() {
+fn non_owner_targets_are_validated_and_discarded() {
     let settings = parse_settings(
         r#"<config><object id="2">
-        <metadata key="future_a" value="alpha"/>
         <metadata key="enable_wipe_tower" value="1"/>
-        <metadata key="future_b" value="beta"/>
         <part id="9" subtype="normal_part">
-        <metadata key="future_part_a" value="one"/>
         <metadata key="thumbnail_size" value="96x96"/>
-        <metadata key="future_part_b" value="two"/>
         </part></object></config>"#,
     )
     .unwrap();
     let object = &settings.objects[0];
 
-    assert_eq!(
-        pairs(&object.retained_config),
-        [
-            ("future_a", "alpha"),
-            ("enable_prime_tower", "1"),
-            ("future_b", "beta"),
-        ]
-    );
-    assert_eq!(
-        pairs(&object.parts[0].retained_metadata),
-        [
-            ("future_part_a", "one"),
-            ("thumbnails", "96x96"),
-            ("future_part_b", "two"),
-        ]
-    );
+    assert!(object.parts[0].retained_metadata.is_empty());
 }
 
 #[test]
@@ -136,78 +116,31 @@ fn feature_filament_inherit_and_obsolete_entries_apply_on_both_xml_paths() {
     );
     assert_eq!(object.region_overrides.outer_wall_speed, None);
     assert_eq!(object.parts[0].region_overrides.outer_wall_speed, None);
-    assert!(object.retained_config.is_empty());
     assert!(object.parts[0].retained_metadata.is_empty());
 }
 
 #[test]
-fn structural_and_unclassified_metadata_bypass_legacy_dispatch() {
-    let settings = parse_settings(
-        r#"<config><object id="2">
-        <metadata key="name" value="object-name"/>
-        <metadata key="module" value="object-module"/>
-        <metadata key="volume_type" value="object-volume-type"/>
-        <metadata key="matrix" value="object-matrix"/>
-        <metadata key="source_file" value="object-source"/>
-        <metadata key="source_in_inches" value="1"/>
-        <metadata key="source_future" value="object-future-source"/>
-        <metadata key="future_object" value="opaque-object"/>
-        <part id="9" subtype="normal_part">
-        <metadata key="name" value="part-name"/>
-        <metadata key="module" value="part-module"/>
-        <metadata key="part_type" value="normal_part"/>
-        <metadata key="matrix" value="part-matrix"/>
-        <metadata key="mesh_shared" value="1"/>
-        <metadata key="source_file" value="part-source"/>
-        <metadata key="source_in_meters" value="1"/>
-        <metadata key="source_future" value="part-future-source"/>
-        <metadata key="future_part" value="opaque-part"/>
-        <mesh_stat edges_fixed="1" degenerate_facets="2" facets_removed="3"
-          facets_reversed="4" backwards_edges="5"/>
-        </part></object></config>"#,
-    )
-    .unwrap();
-    let object = &settings.objects[0];
-    let part = &object.parts[0];
-
-    assert_eq!(object.name, "object-name");
-    assert_eq!(object.module, "object-module");
-    assert_eq!(
-        pairs(&object.retained_config),
-        [
-            ("volume_type", "object-volume-type"),
-            ("matrix", "object-matrix"),
-            ("source_file", "object-source"),
-            ("source_in_inches", "1"),
-            ("source_future", "object-future-source"),
-            ("future_object", "opaque-object"),
-        ]
-    );
-    assert_eq!(
-        pairs(&part.retained_metadata),
-        [
-            ("name", "part-name"),
-            ("module", "part-module"),
-            ("part_type", "normal_part"),
-            ("matrix", "part-matrix"),
-            ("mesh_shared", "1"),
-            ("source_file", "part-source"),
-            ("source_in_meters", "1"),
-            ("source_future", "part-future-source"),
-            ("future_part", "opaque-part"),
-        ]
-    );
-    let mesh = part.mesh_stat.as_ref().unwrap();
-    assert_eq!(
+fn wrong_scope_structural_and_unclassified_metadata_are_rejected() {
+    for (xml, key) in [
         (
-            mesh.edges_fixed,
-            mesh.degenerate_facets,
-            mesh.facets_removed,
-            mesh.facets_reversed,
-            mesh.backwards_edges,
+            r#"<config><object id="2"><metadata key="matrix" value="object-matrix"/></object></config>"#,
+            "matrix",
         ),
-        (1, 2, 3, 4, 5)
-    );
+        (
+            r#"<config><object id="2"><part id="9" subtype="normal_part"><metadata key="module" value="part-module"/></part></object></config>"#,
+            "module",
+        ),
+        (
+            r#"<config><object id="2"><metadata key="source_future" value="x"/></object></config>"#,
+            "source_future",
+        ),
+    ] {
+        let error = parse_settings(xml).unwrap_err();
+        let SliceError::InvalidInput(message) = error else {
+            panic!("unexpected error: {error:?}");
+        };
+        assert!(message.contains(key), "{message}");
+    }
 }
 
 #[test]
@@ -245,16 +178,13 @@ fn xml_applies_no_json_side_effects_or_thumbnail_composite() {
         object.region_overrides.wall_sequence,
         Some(ProcessWallSequence::InnerOuter)
     );
-    assert_eq!(
-        pairs(&object.retained_config),
-        [("thumbnails_format", "JPG"), ("thumbnails", "96x96")]
-    );
     let part = &object.parts[0];
     assert_eq!(part.region_overrides.is_infill_first, Some(OrcaBool(false)));
     assert_eq!(
         part.region_overrides.wall_sequence,
         Some(ProcessWallSequence::OuterInner)
     );
+    assert!(part.retained_metadata.is_empty());
 }
 
 #[test]
@@ -297,11 +227,12 @@ fn deferred_profile_metadata_is_not_stored_as_model_state() {
                 r#"<config><object id="2"><metadata key="{source}" value="profile"/></object></config>"#
             )
         };
-        let error = parse_settings(&xml).unwrap_err();
-        let SliceError::InvalidInput(message) = error else {
-            panic!("unexpected error: {error}");
-        };
-        assert!(message.contains(source), "{message}");
-        assert!(message.contains("deferred"), "{message}");
+        let settings = parse_settings(&xml).unwrap();
+        if part_path {
+            assert!(
+                settings.objects[0].parts[0].retained_metadata.is_empty(),
+                "{source}"
+            );
+        }
     }
 }

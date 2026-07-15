@@ -11,6 +11,7 @@ pub(crate) enum XmlRole {
     Relationships,
     Model,
     ModelSettings,
+    LayerConfigRanges,
     SliceInfo,
 }
 
@@ -21,6 +22,7 @@ impl XmlRole {
             Self::Relationships => "relationships",
             Self::Model => "model",
             Self::ModelSettings => "model settings",
+            Self::LayerConfigRanges => "layer configuration ranges",
             Self::SliceInfo => "slice info",
         }
     }
@@ -30,6 +32,7 @@ impl XmlRole {
             Self::ContentTypes => b"Types",
             Self::Relationships => b"Relationships",
             Self::Model => b"model",
+            Self::LayerConfigRanges => b"objects",
             Self::ModelSettings | Self::SliceInfo => b"config",
         }
     }
@@ -39,7 +42,7 @@ impl XmlRole {
             Self::ContentTypes => Some(CONTENT_TYPES_NAMESPACE),
             Self::Relationships => Some(RELATIONSHIPS_NAMESPACE),
             Self::Model => Some(MODEL_NAMESPACE),
-            Self::ModelSettings | Self::SliceInfo => None,
+            Self::ModelSettings | Self::LayerConfigRanges | Self::SliceInfo => None,
         }
     }
 }

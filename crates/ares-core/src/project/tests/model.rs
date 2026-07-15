@@ -1,5 +1,10 @@
+mod config_association;
 mod document;
 mod fixture;
 mod import;
 mod invalid;
+mod production;
+mod production_colors;
 mod settings;
+mod task19b2_fixture;
+mod volume_defaults;

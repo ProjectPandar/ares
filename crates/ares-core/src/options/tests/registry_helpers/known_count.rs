@@ -11,7 +11,7 @@ fn known_definition_count_preserves_unknown_and_excludes_obsolete_options() {
 
     let options: SliceOptions = serde_json::from_value(Value::Object(values)).unwrap();
 
-    assert_eq!(options.known_definition_count(), 677);
+    assert_eq!(options.known_definition_count(), 674);
     assert_eq!(options.values().len(), 678);
     assert_eq!(options.values()["future_orca_key"], json!(true));
     assert_eq!(options.values()["silent_mode"], json!(false));
