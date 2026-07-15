@@ -45,6 +45,7 @@ mod object_options;
 mod parameter_size;
 mod project_inventory;
 mod project_deserialize;
+mod project_fdm_normalization;
 mod project_fixture;
 mod project_config_views;
 mod project_variants;

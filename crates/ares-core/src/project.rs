@@ -1,6 +1,7 @@
 mod archive;
 mod content_types;
 mod domain;
+pub(crate) mod effective_config;
 mod filament_sequence;
 mod layer_config_ranges;
 mod load;
@@ -26,6 +27,7 @@ pub use transform::Transform3d;
 mod tests {
     mod archive;
     mod documents;
+    mod effective_config;
     mod layer_config_ranges;
     mod model;
     mod path;

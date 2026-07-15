@@ -2,13 +2,12 @@
 
 ## Status
 
-Tasks 16 through 19A and Tasks 19B.1A-19B.1B are released. Task 19B.2's typed
-model/layer configuration association is locally implemented and
-whole-approved. Independent documentation approval, the local release matrix,
-commit, push, and exact-pushed-SHA Tier 1 gate remain pending, so no Task
-19B.2 release is claimed. Task 19B.3, consumer migration, slicing, and final
-G-code parity remain owned by later source-cited rewrite tasks in the approved
-parity plan.
+Tasks 16 through 19B.2 are released. Task 19B.3's typed effective-project
+configuration resolver is locally implemented and whole-approved. Independent
+documentation approval, the local release matrix, commit, push, and the
+exact-pushed-SHA Tier 1 gate remain pending, so no Task 19B.3 release is
+claimed. Task 19C, consumer migration, slicing, and final G-code parity remain
+owned by later source-cited rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -42,10 +41,13 @@ document.
 ## Current progress boundary
 
 The active fixture identity, generator validation, normalized hash, and bounded
-difference tests pass. The complete CLI golden remains explicitly ignored
-until the project adapter is complete. Its Task 1B RED run exits with code 2
-because the current CLI requires `--options <OPTIONS>` for every slice command.
-No comparison rule is relaxed to accommodate that missing project boundary.
+difference tests pass. Public slicing now loads the project and invokes the
+typed effective-project resolver before deliberately returning
+`ProjectSlicingIncomplete`; geometry and G-code remain deferred. The complete
+CLI golden stays explicitly ignored, and no comparison rule is relaxed around
+that boundary. The reference G-code is not a direct Task 19B.3 expectation;
+the unchanged golden is only the final regression contract and configured
+skip.
 
 ## Task 5 fixed-source inventory
 
@@ -1494,14 +1496,14 @@ passed. Task 19B.1A was released as commit
 `da896a98719a621ad87a2317c23f1d27f0a3c6e5`; exact-SHA Tier 1 run
 `29330209222` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
-Task 19B.1B ports the export/runtime split and nullable retract overlay below
-but is not yet released. Task 19B.2 retains model-option classification plus
-optional layer-config import and association. Task 19B.3 retains normalization
-and source-ordered effective `FullPrintConfig` orchestration, including the
-first production call to the typed transforms. Task 19C retains config export;
-Tasks 20A-20E retain consumer migration and compatibility-parser removal.
-Geometry, slicing, G-code generation, metadata, post-processing, and complete
-normalized `ksr_fdmtest_v4` byte parity remain deferred.
+Task 19B.1B's export/runtime split and nullable retract overlay are released,
+and Task 19B.2's model-option classification plus optional layer-config import
+and association are released. Task 19B.3 normalization and source-ordered
+effective-project orchestration is locally implemented and whole-approved but
+remains release-gated. Task 19C retains config export; Tasks 20A-20E retain
+consumer migration and compatibility-parser removal. Geometry, slicing, G-code
+generation, metadata, post-processing, and complete normalized
+`ksr_fdmtest_v4` byte parity remain deferred.
 
 ### Task 19B.1B: typed export/runtime retract views
 
@@ -1654,6 +1656,121 @@ object/volume/material/layer precedence, and the first production calls to the
 typed configuration transforms. Task 19C retains config serialization; Tasks
 20A-20E retain consumer migration and compatibility removal. Geometry,
 toolpaths, G-code generation, and complete normalized KSR byte parity remain
-open. Task 19B.2 is locally implemented and whole-approved, while its
-documentation review, release verification, commit/push, and exact-SHA Tier 1
-gate remain pending.
+open. Task 19B.2 was released as commit
+`d5a50bd64b7ebe048c80919edc6028b57f83fefa`; exact-SHA Tier 1 run
+`29391775108` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### Task 19B.3: effective project configuration resolution
+
+Task 19B.3 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its normalization boundary is
+`PrintConfig.hpp:628-631` and `PrintConfig.cpp:8520-8740`. The cold apply and
+cardinality lifecycle comes from
+`PrintApply.cpp:1113-1194,1256-1283,1525-1768` and
+`src/slic3r/GUI/PartPlate.cpp:3503-3510`. Transform grouping, layer intervals,
+and occupancy come from
+`PrintApply.cpp:104-168,342-395,548-553,595-660,886-945`; candidate ownership
+and precedence come from `PrintApply.cpp:1662-1747` and
+`PrintObject.cpp:3555-3709`. Bounded filament participation is sourced from
+`PrintRegion.cpp:71-110`, `Model.cpp:2512-2564`,
+`Print.cpp:451-546,588-591,3290-3301,3385-3388`, and
+`Print.hpp:362-365,429-431`.
+
+The Rust destination is the typed `ares-core::options` project-normalization
+boundary, private `ares-core::project::effective_config` resolution, and the
+existing public project-slicing caller. Typed `normalize_fdm_1` preserves the
+fixed ordered propagation and validation writes. Typed `normalize_fdm_2`
+preserves its predicates, two-field write set, and changed-key result so the
+same side effect can be applied to full, default-object, default-region, and
+runtime owners. Project settings are validated before indexed resolution; the
+existing dynamic `SliceOptions::normalize_fdm` path remains outside this
+project caller.
+
+The resolver performs the exact cold double-apply collapse: it normalizes the
+unmaterialized source with one `_1` call, executes four source-ordered `_2`
+calls across the two applies, rematerializes all four variant families from a
+fresh normalized source for the second apply, discards preliminary candidates,
+and builds only the final candidates and exported views from final materialized
+state. This preserves the upstream dependency on first-apply object/region
+state without introducing incremental cache or GUI state into the core API.
+
+Cardinality remains explicitly split. Physical extruder count comes from
+`nozzle_diameter`; logical filament count comes from materialized
+`filament_diameter`. Filament maps and directly indexed vectors are validated
+against their owning count. Object, region, volume, and layer selectors use the
+logical count, including the fixed support-selector clamp-to-one for values
+strictly greater than that count. A non-zero wipe selector must satisfy both
+the strict physical bound and the logical output bound. Unequal physical and
+logical test cases prevent either count from substituting for the other.
+
+Raw layer ranges are normalized and queried with Orca's sorted interval,
+gap/overlap, `EPSILON`, source-index, and unconfigured-tail behavior. Printable
+instances are grouped by the exact ordered transform key. Minimal geometry is
+limited to f32 Z-slab occupancy: composed print-object and source-volume
+transforms determine whether a ModelPart occupies an interval without slicing
+polygons or constructing toolpaths.
+
+Each source `ProjectObject` owns one shared candidate vector. Its lexicographic
+first transform-group representative supplies occupancy, and every group for
+that object shares the result; different source objects never share it.
+Candidates preserve source-volume and normalized-range identity. Effective
+object options apply process then object precedence. Effective region options
+apply process, object, volume, `None` for project material, then layer-range
+precedence. Modifier-parent intersection, painted/fuzzy regions, painted
+facets, and project material documents remain explicit unsupported or deferred
+sources rather than inferred empty configuration.
+
+`BoundedProjectUsage` composes only the supported filament sources. Region-role
+participation, raw model/volume/layer selectors, support, brim, raft, and the
+explicit wipe selector retain their fixed gates and composition points.
+Object and support vectors deduplicate independently; their concatenation is
+allowed to retain cross-vector duplicates until the wipe-participation check,
+and only the final vector is sorted and deduplicated afterward. Support is
+active for enabled support, enforced support layers, or `raft_layers > 0`.
+Positive support selectors contribute their selected filament. After all
+qualifying objects are scanned, a zero/current support selector appends the
+deduplicated aggregate object-extruder set, matching `Print.cpp:514-519` and
+`crates/ares-core/src/project/effective_config/usage.rs:79-83`. Print-wide brim
+participation requires no raft and either `AutoBrim` at any width or another
+non-`NoBrim` type at positive width; zero-width `Painted` remains explicitly
+unsupported. Negative and zero raft counts both mean no raft for this
+condition, and only a strictly positive count is a raft. Selector validation
+and clamps use strict logical-count boundaries, while the wipe selector
+additionally observes its separate strict physical bound.
+
+Production project slicing now loads the 3MF, resolves the effective project
+configuration, and only then returns `ProjectSlicingIncomplete`. This proves
+the new path is called while preserving the public incomplete boundary until a
+real slicing consumer exists. No reference G-code bytes or facts are used as
+direct Task 19B.3 expectations; the unchanged complete CLI golden remains only
+a configured-skipped regression contract.
+
+The frozen 51-entry implementation manifest
+`23CCB91EC4BE509E43EDECEFD864B83B9D7CB2B5C4DA2F0FF08020F52A8D5DEB`
+received independent whole `SPEC COMPLIANCE`, whole `CODE QUALITY`, and fresh
+OpenCode `VERDICT: APPROVE` decisions with no findings. Verification passed the
+180/180 focused matrix, 4625/4625 workspace tests with two configured skips,
+the 22/22 dynamic audit with one configured skip, the 5/5 CLI contract with one
+configured golden skip, the 5/5 WASM contract, and the real-project browser
+test. Rustfmt, warning-denying Clippy, native/WASM checks, release WASM,
+wasm-bindgen, fixture hashes, forbidden scans, diff validation, and the
+sub-400-LOC audit also passed. The independent spec reviewer additionally ran
+its broader 195/195 focused selection.
+
+Task 19C is next and retains effective config-block serialization. Tasks
+20A-20E retain consumer migration and dynamic compatibility removal. Project
+material documents, modifier-parent and painted-region geometry, and per-plate
+custom-G-code `ToolChange` filament participation from `Print.cpp:528-536`
+remain deferred. The current loader does not retain those custom ToolChange
+items, so the bounded resolver neither fabricates that source nor claims it can
+reject it. Non-cold shrinkage-driven print-object/region regrouping is also
+deferred; active non-100% `filament_shrink` or
+`filament_shrinkage_compensation_z` values are instead rejected as
+`UnsupportedProjectFeature` at this bounded resolver. Preset/UI sizing behavior
+owned by `set_num_extruders`, `set_num_filaments`, `get_parameter_size`, and
+`extend_extruder_variant` remains deferred, as do complete `FullPrintConfig`
+conversion outside this resolver, wipe sequencing, geometry slicing, toolpaths,
+G-code generation, metadata, post-processing, and final normalized KSR parity.
+Task 19B.3 is locally implemented and whole-approved, while documentation
+approval, the release matrix, commit, push, and exact-pushed-SHA Tier 1 remain
+pending.

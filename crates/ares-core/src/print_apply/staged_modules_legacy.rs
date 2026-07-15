@@ -34,9 +34,6 @@ mod apply_support_used_state;
 #[cfg_attr(not(test), expect(dead_code, reason = "M335 staged before wiring"))]
 mod apply_filament_map_extraction_state;
 
-#[cfg_attr(not(test), expect(dead_code, reason = "M326 staged before wiring"))]
-mod apply_normalization_state;
-
 #[cfg_attr(not(test), expect(dead_code, reason = "M273 staged before wiring"))]
 mod instance_sync_state;
 

@@ -223,101 +223,10 @@ where
     ))
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-struct LayerConfigRangeInput {
-    start: f64,
-    end: f64,
-    config_id: usize,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-struct NormalizedLayerRange {
-    start: f64,
-    end: f64,
-    config_id: Option<usize>,
-}
-
-const ORCA_EPSILON: f64 = 1e-4;
-
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "M272 stages PrintApply LayerRanges::assign before model-object apply wiring"
-    )
-)]
-fn normalize_layer_ranges(input: &[LayerConfigRangeInput]) -> Vec<NormalizedLayerRange> {
-    let mut ranges = Vec::with_capacity(input.len().saturating_add(1));
-    let mut last_z = 0.0;
-
-    for range in input {
-        if range.end > last_z {
-            let min_z = range.start.max(0.0);
-            if min_z > last_z + ORCA_EPSILON {
-                ranges.push(NormalizedLayerRange {
-                    start: last_z,
-                    end: min_z,
-                    config_id: None,
-                });
-                last_z = min_z;
-            }
-            if range.end > last_z + ORCA_EPSILON {
-                ranges.push(NormalizedLayerRange {
-                    start: last_z,
-                    end: range.end,
-                    config_id: Some(range.config_id),
-                });
-                last_z = range.end;
-            }
-        }
-    }
-
-    if ranges.is_empty() {
-        ranges.push(NormalizedLayerRange {
-            start: 0.0,
-            end: f64::MAX,
-            config_id: None,
-        });
-    } else if ranges.last().is_some_and(|range| range.config_id.is_none()) {
-        ranges.last_mut().expect("range exists").end = f64::MAX;
-    } else {
-        ranges.push(NormalizedLayerRange {
-            start: ranges.last().expect("range exists").end,
-            end: f64::MAX,
-            config_id: None,
-        });
-    }
-
-    ranges
-}
-
 struct PrintableFilamentGeometryOps<D, A, I> {
     diff: D,
     all_intersection: A,
     intersection: I,
-}
-
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "M274 stages PrintApply LayerRanges::config before model-object apply wiring"
-    )
-)]
-fn layer_range_config_id(
-    ranges: &[NormalizedLayerRange],
-    requested: (f64, f64),
-) -> Option<Option<usize>> {
-    let key = (requested.0 - ORCA_EPSILON, requested.1 - ORCA_EPSILON);
-    let found = ranges
-        .iter()
-        .find(|range| (range.start, range.end) >= key)?;
-    if (found.start - requested.0).abs() > ORCA_EPSILON
-        || (found.end - requested.1).abs() > ORCA_EPSILON
-    {
-        return None;
-    }
-    Some(found.config_id)
 }
 
 include!("print_apply/staged_modules_legacy.rs");

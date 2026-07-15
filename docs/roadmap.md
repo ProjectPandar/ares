@@ -930,9 +930,77 @@ returns `ProjectSlicingIncomplete` and the complete CLI golden remains
 configured skipped. Task 19B.3 retains normalization and effective
 object/volume/material/layer orchestration; Task 19C retains config export;
 Tasks 20A-20E retain consumer migration/removal; geometry, toolpaths, G-code,
-and complete normalized KSR byte parity remain open. Task 19B.2 is locally
-implemented and whole-approved, while documentation review, release
-verification, commit/push, and exact-SHA Tier 1 remain pending.
+and complete normalized KSR byte parity remain open. Task 19B.2 was released as
+commit `d5a50bd64b7ebe048c80919edc6028b57f83fefa`; exact-SHA Tier 1 run
+`29391775108` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### 2026-07-14 Resolve effective project configuration (Task 19B.3)
+
+Task 19B.3 ports the effective project configuration boundary from fixed
+OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Typed normalization comes from
+`PrintConfig.hpp:628-631` and `PrintConfig.cpp:8520-8740`; the cold two-apply
+lifecycle and cardinality ownership come from
+`PrintApply.cpp:1113-1194,1256-1283,1525-1768` and
+`src/slic3r/GUI/PartPlate.cpp:3503-3510`. The remaining included boundaries are
+`PrintApply.cpp:104-168,342-395,548-553,595-660,886-945,1662-1747`,
+`PrintObject.cpp:3555-3709`, `PrintRegion.cpp:71-110`,
+`Model.cpp:2512-2564`, `Print.cpp:451-546,588-591,3290-3301,3385-3388`, and
+`Print.hpp:362-365,429-431`.
+
+The typed resolver now validates project settings, runs one
+`normalize_fdm_1` and the exact four source-ordered `normalize_fdm_2` calls,
+propagates `_2` changed keys to their fixed owners, rematerializes the second
+apply from a fresh normalized source, discards preliminary candidates, and
+publishes only final candidates and views. Physical nozzle cardinality and
+logical materialized-filament cardinality remain separate. Indexed vectors and
+maps use their owning count; object/region/volume/layer selector validation and
+support clamps use logical count; and the wipe selector satisfies both its
+strict physical bound and logical output bound.
+
+Raw layer ranges now receive the fixed sorted interval, gap/overlap, lookup,
+source-index, `EPSILON`, and unconfigured-tail behavior. Printable instances
+use the exact sorted transform grouping. The only geometry admitted here is
+f32 Z-slab occupancy under composed print-object/source-volume transforms.
+Each source object owns one candidate vector generated from the first sorted
+group representative and shared by every group for that object. Candidates
+preserve source-volume identity and apply process/object/volume/layer
+precedence with project material explicitly `None`.
+
+Bounded used-filament discovery composes supported effective-region roles, raw
+model/volume/layer selectors, brim, support, raft, and explicit wipe sources at
+their fixed timing and deduplication points. Negative and zero raft counts mean
+no raft for brim participation; only `raft_layers > 0` activates raft support.
+Strict logical-count boundaries govern role and support selectors, while the
+wipe selector also retains its distinct physical assertion boundary.
+
+Public project slicing now loads the 3MF and calls the resolver before
+deliberately returning `ProjectSlicingIncomplete`. The complete CLI golden
+remains configured skipped because geometry and G-code are not part of this
+slice. Reference G-code is not used as a direct Task 19B.3 expectation; the
+unchanged golden is only the final regression contract.
+
+The frozen 51-entry implementation manifest
+`23CCB91EC4BE509E43EDECEFD864B83B9D7CB2B5C4DA2F0FF08020F52A8D5DEB`
+received independent whole `SPEC COMPLIANCE`, whole `CODE QUALITY`, and fresh
+OpenCode `VERDICT: APPROVE` decisions with no findings. Current frozen-byte
+verification passed 180/180 focused tests, 4625/4625 workspace tests with two
+configured skips, the 22/22 dynamic audit with one configured skip, the 5/5
+CLI contract with one configured golden skip, the 5/5 WASM contract, and the
+real-project browser test. Rustfmt, warning-denying Clippy, native/WASM checks,
+release WASM, wasm-bindgen, fixture hashes, forbidden scans, diff validation,
+and the sub-400-LOC audit passed; the independent spec reviewer also ran a
+broader 195/195 focused selection.
+
+Task 19C effective config-block serialization is next. Project material
+documents, modifier-parent/painted-region geometry, painted/custom usage
+sources, wipe sequencing, complete `FullPrintConfig` conversion outside this
+bounded resolver, Tasks 20A-20E consumer migration/removal, geometry slicing,
+toolpaths, G-code, metadata, post-processing, and final normalized KSR parity
+remain deferred. The persistent full G-code parity goal remains open. Task
+19B.3 is locally implemented and whole-approved, but documentation approval,
+the release matrix, commit, push, and exact-pushed-SHA Tier 1 are still pending;
+no Task 19B.3 release is claimed here.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

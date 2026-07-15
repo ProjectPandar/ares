@@ -53,6 +53,9 @@ fn format_slice_error(error: SliceError) -> String {
         SliceError::EmptyInput => "slice input is empty".to_owned(),
         SliceError::InvalidInput(message) => message,
         SliceError::ProjectSlicingIncomplete => "ProjectSlicingIncomplete".to_owned(),
+        SliceError::UnsupportedProjectFeature(feature) => {
+            format!("unsupported project feature: {feature}")
+        }
     }
 }
 
@@ -87,11 +90,34 @@ mod tests {
     }
 
     #[test]
-    fn project_incomplete_error_has_stable_javascript_mapping() {
+    fn slice_error_javascript_mappings_are_stable() {
+        assert_eq!(
+            format_slice_error(SliceError::EmptyInput),
+            "slice input is empty"
+        );
+        assert_eq!(
+            format_slice_error(SliceError::InvalidInput(
+                "invalid input sentinel".to_owned()
+            )),
+            "invalid input sentinel"
+        );
         assert_eq!(
             format_slice_error(SliceError::ProjectSlicingIncomplete),
             "ProjectSlicingIncomplete"
         );
+    }
+
+    #[test]
+    fn unsupported_project_feature_has_stable_javascript_mapping() {
+        let supplied_document =
+            r#"{"filament_shrink":[95],"sentinel":"UNRELATED_DOCUMENT_SENTINEL"}"#;
+        let message = format_slice_error(SliceError::UnsupportedProjectFeature(
+            "filament_shrink".to_owned(),
+        ));
+
+        assert_eq!(message, "unsupported project feature: filament_shrink");
+        assert!(!message.contains(supplied_document));
+        assert!(!message.contains("UNRELATED_DOCUMENT_SENTINEL"));
     }
 
     fn square_ascii_stl() -> Vec<u8> {

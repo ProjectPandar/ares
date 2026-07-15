@@ -201,6 +201,7 @@ pub enum SliceError {
     EmptyInput,
     InvalidInput(String),
     ProjectSlicingIncomplete,
+    UnsupportedProjectFeature(String),
 }
 
 impl fmt::Display for SliceError {
@@ -209,6 +210,9 @@ impl fmt::Display for SliceError {
             Self::EmptyInput => f.write_str("slice input is empty"),
             Self::InvalidInput(message) => f.write_str(message),
             Self::ProjectSlicingIncomplete => f.write_str("ProjectSlicingIncomplete"),
+            Self::UnsupportedProjectFeature(feature) => {
+                write!(f, "unsupported project feature: {feature}")
+            }
         }
     }
 }

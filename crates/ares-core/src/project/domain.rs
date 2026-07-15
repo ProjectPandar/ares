@@ -160,12 +160,10 @@ impl ProjectObject {
         &self.module
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn object_overrides(&self) -> &ObjectOptionOverrides {
         &self.object_overrides
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn region_overrides(&self) -> &RegionOptionOverrides {
         &self.region_overrides
     }
@@ -257,7 +255,6 @@ impl ProjectVolume {
         self.volume_type
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn region_overrides(&self) -> &RegionOptionOverrides {
         &self.region_overrides
     }

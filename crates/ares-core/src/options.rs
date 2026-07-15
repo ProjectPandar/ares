@@ -33,12 +33,11 @@ mod preset_metadata;
 mod pressure_advance;
 mod printer_options;
 mod process_options;
-#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) mod project_config_views;
 mod project_deserialize;
+pub(crate) mod project_fdm_normalization;
 mod project_runtime_options;
 mod project_settings;
-#[cfg_attr(not(test), allow(dead_code))]
 mod project_variants;
 mod region_fields;
 mod region_options;
@@ -78,8 +77,9 @@ pub(crate) use model_config_deserialize::{
 pub(crate) use object_options::ObjectOptionOverrides;
 use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{LayerRoleFanControl, PartCoolingFanRamp};
+pub(crate) use project_variants::materialize_project_variants;
 #[cfg_attr(not(test), allow(unused_imports))]
-pub(crate) use region_options::RegionOptionOverrides;
+pub(crate) use region_options::{RegionBase, RegionOptionOverrides, RegionOverrideSources};
 pub use support_different_extruders::DifferentExtrudersSupport;
 pub use update_multi_to_multi::{MultiToMulti2Update, MultiToMultiUpdate};
 pub use update_printer_extruders::{PrinterExtruderMultipleFilamentUpdate, PrinterExtruderUpdate};

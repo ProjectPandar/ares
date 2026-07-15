@@ -55,12 +55,12 @@ const FILAMENT_SEQUENCE: &str =
     r#"{"plate_1":{"sequence":[],"nozzle_sequence":[],"optimal_assignment":[]}}"#;
 const PLATE_JSON: &str = r#"{"bbox_all":[10,20,11,21],"bbox_objects":[{"area":0.5,"bbox":[10,20,11,21],"id":147,"layer_height":0.2,"name":"triangle"}],"bed_type":"hot_plate","filament_colors":[],"filament_ids":[],"first_extruder":0,"first_layer_time":1.0,"is_seq_print":false,"nozzle_diameter":0.4,"version":2}"#;
 
-pub(super) struct ProjectParts {
+pub(in crate::project::tests) struct ProjectParts {
     entries: BTreeMap<String, Vec<u8>>,
 }
 
 impl ProjectParts {
-    pub(super) fn valid() -> Self {
+    pub(in crate::project::tests) fn valid() -> Self {
         let mut entries = BTreeMap::new();
         for (path, text) in [
             ("[Content_Types].xml", CONTENT_TYPES),
@@ -83,7 +83,7 @@ impl ProjectParts {
         Self { entries }
     }
 
-    pub(super) fn fixture() -> Self {
+    pub(in crate::project::tests) fn fixture() -> Self {
         let mut archive = ZipArchive::new(Cursor::new(FIXTURE)).unwrap();
         let mut entries = BTreeMap::new();
         for index in 0..archive.len() {
@@ -98,7 +98,7 @@ impl ProjectParts {
         Self { entries }
     }
 
-    pub(super) fn replace(&mut self, path: &str, from: &str, to: &str) {
+    pub(in crate::project::tests) fn replace(&mut self, path: &str, from: &str, to: &str) {
         let text = String::from_utf8(self.entries.remove(path).unwrap()).unwrap();
         assert!(text.contains(from), "{path} does not contain {from:?}");
         self.entries
@@ -109,18 +109,22 @@ impl ProjectParts {
         assert!(self.entries.remove(path).is_some(), "missing {path}");
     }
 
-    pub(super) fn insert_text(&mut self, path: &str, text: &str) {
+    pub(in crate::project::tests) fn insert_text(&mut self, path: &str, text: &str) {
         self.entries
             .insert(path.to_owned(), text.as_bytes().to_vec());
     }
 
-    pub(super) fn make_single_model(&mut self, model: &str) {
+    pub(in crate::project::tests) fn make_single_model(&mut self, model: &str) {
         self.insert_text("3D/root.model", model);
         self.remove("3D/_rels/root.model.rels");
         self.remove("3D/leaf.model");
     }
 
-    pub(super) fn set_model_settings_objects(&mut self, objects: &str, build_ids: &[u32]) {
+    pub(in crate::project::tests) fn set_model_settings_objects(
+        &mut self,
+        objects: &str,
+        build_ids: &[u32],
+    ) {
         let mut instance_counts = BTreeMap::<u32, u32>::new();
         let mut instances = String::new();
         for (index, object_id) in build_ids.iter().copied().enumerate() {
@@ -195,7 +199,7 @@ impl ProjectParts {
         );
     }
 
-    pub(super) fn bytes(self) -> Vec<u8> {
+    pub(in crate::project::tests) fn bytes(self) -> Vec<u8> {
         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
         let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
         for (path, bytes) in self.entries {

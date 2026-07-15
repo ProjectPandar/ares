@@ -136,6 +136,7 @@ mod single_loop_draft_shield_gcode;
 mod skirt_gcode;
 mod skirt_start_angle_gcode;
 mod skirt_type_gcode;
+mod slice_error;
 mod small_area_flow_model_header_gcode;
 mod speed_gcode;
 mod spiral_mode_normalization_gcode;

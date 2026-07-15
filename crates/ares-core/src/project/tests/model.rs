@@ -1,6 +1,6 @@
 mod config_association;
 mod document;
-mod fixture;
+pub(in crate::project::tests) mod fixture;
 mod import;
 mod invalid;
 mod production;

@@ -31,6 +31,45 @@ impl Transform3d {
         ]))
     }
 
+    pub(crate) fn without_xy_translation(self) -> Self {
+        let mut transform = self;
+        transform.0[0][3] = 0.0;
+        transform.0[1][3] = 0.0;
+        transform
+    }
+
+    pub(crate) fn fixed_order_less_than(self, rhs: Self) -> bool {
+        for index in 0..16 {
+            let row = index % 4;
+            let column = index / 4;
+            if self.0[row][column] < rhs.0[row][column] {
+                return true;
+            }
+            if self.0[row][column] > rhs.0[row][column] {
+                return false;
+            }
+        }
+        false
+    }
+
+    pub(crate) fn fixed_order_equal(self, rhs: Self) -> bool {
+        for index in 0..16 {
+            let row = index % 4;
+            let column = index / 4;
+            if self.0[row][column] != rhs.0[row][column] {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub(crate) fn transform_z_f32(self, point: Point3d) -> f32 {
+        self.0[2][0] as f32 * point.x as f32
+            + self.0[2][1] as f32 * point.y as f32
+            + self.0[2][2] as f32 * point.z as f32
+            + self.0[2][3] as f32
+    }
+
     pub fn then(self, rhs: Self) -> Self {
         let mut product = [[0.0; 4]; 4];
         for (row, output_row) in product.iter_mut().enumerate() {
