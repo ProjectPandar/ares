@@ -73,19 +73,19 @@ fn default_format_uses_only_present_input_and_explicit_item_formats_win() {
         .remaining
         .thumbnails
         .as_str(),
-        "16x24/JPG, 32x48/QOI"
+        "16x24/JPG,32x48/QOI"
     );
 }
 
 #[test]
-fn multiple_items_normalize_fixed_case_spacing_and_dimensions() {
+fn multiple_items_normalize_fixed_case_separator_and_dimensions() {
     let settings = parse(
         r#"{"thumbnails":" 1.23456789mmx 2.34567891px/png,3x4/jPg, 5x6,0.0000123456789x0.000123456789/png,","thumbnails_format":"QOI"}"#,
     );
 
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        "1.23457x2.34568/PNG, 3x4/JPG, 5x6/QOI, 1.23457e-05x0.000123457/PNG"
+        "1.23457x2.34568/PNG,3x4/JPG,5x6/QOI,1.23457e-05x0.000123457/PNG"
     );
 }
 
@@ -97,7 +97,7 @@ fn fixed_parser_keeps_order_duplicates_and_all_formats() {
 
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        "1x2/PNG, 3x4/JPG, 5x6/QOI, 7x8/BTT_TFT, 9x10/COLPIC, 11x12/PNG"
+        "1x2/PNG,3x4/JPG,5x6/QOI,7x8/BTT_TFT,9x10/COLPIC,11x12/PNG"
     );
 }
 
@@ -141,7 +141,7 @@ fn defaultfloat_selects_notation_after_six_significant_digit_rounding() {
 
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        "0.0001x9.99988e-05/PNG, 1000x2/PNG"
+        "0.0001x9.99988e-05/PNG,1000x2/PNG"
     );
 }
 
@@ -215,13 +215,13 @@ fn thumbnail_composite_does_not_change_flush_volumes_matrix() {
 async fn real_project_bytes_are_canonical_after_one_pass_and_reach_the_existing_boundary() {
     let project = load_project(FIXTURE).unwrap();
     let thumbnails = project.settings().printer.remaining.thumbnails.as_str();
-    assert_eq!(thumbnails, "48x48/PNG, 300x300/PNG");
+    assert_eq!(thumbnails, "48x48/PNG,300x300/PNG");
 
     let raw = project_with_thumbnails(" 16x24/png,32x48", "QOI");
     let raw = load_project(&raw).unwrap();
     assert_eq!(
         raw.settings().printer.remaining.thumbnails.as_str(),
-        "16x24/PNG, 32x48/QOI"
+        "16x24/PNG,32x48/QOI"
     );
     let canonical = project_with_thumbnails("16x24/PNG, 32x48/QOI", "QOI");
     let canonical = load_project(&canonical).unwrap();

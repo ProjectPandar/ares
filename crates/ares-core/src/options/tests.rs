@@ -6,6 +6,7 @@ mod brim_runtime;
 mod chamber_temperature_runtime;
 mod core;
 mod config_types;
+mod config_export;
 mod custom_gcode_runtime;
 mod different_extruders;
 mod draft_shield;

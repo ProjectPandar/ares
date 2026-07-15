@@ -1,6 +1,13 @@
 use serde_json::Value;
 
-use crate::{SliceError, gcode_format::format_decimal};
+use crate::{
+    SliceError,
+    gcode_format::format_decimal,
+    options::{
+        OrcaStrings,
+        config_export::value::{SerializedConfigValue, serialize_config_value},
+    },
+};
 
 pub(super) fn optional_string_vector_export(
     value: Option<&Value>,
@@ -18,7 +25,7 @@ pub(super) fn optional_string_vector_export(
                 .ok_or_else(|| SliceError::InvalidInput(format!("{key} must contain strings")))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(Some(serialize_config_option_strings(&strings)))
+    Ok(Some(serialize_config_option_strings(&strings)?))
 }
 
 pub(super) fn optional_small_area_flow_model_export(
@@ -33,7 +40,7 @@ pub(super) fn optional_small_area_flow_model_export(
         false,
     )?;
     let refs = strings.iter().map(String::as_str).collect::<Vec<_>>();
-    Ok(Some(serialize_config_option_strings(&refs)))
+    Ok(Some(serialize_config_option_strings(&refs)?))
 }
 
 pub(super) fn optional_bool_vector_export(
@@ -289,12 +296,11 @@ pub(super) fn optional_scalar_int_export_in_range(
     }
 }
 
-fn serialize_config_option_strings(values: &[&str]) -> String {
-    values
-        .iter()
-        .map(|value| serialize_config_option_string(value, values.len()))
-        .collect::<Vec<_>>()
-        .join(";")
+fn serialize_config_option_strings(values: &[&str]) -> Result<String, SliceError> {
+    let values = OrcaStrings(values.iter().map(|value| (*value).to_owned()).collect());
+    let SerializedConfigValue { token, is_nil: _ } = serialize_config_value(&values)
+        .map_err(|error| SliceError::InvalidInput(error.to_string()))?;
+    Ok(token)
 }
 
 fn serialize_config_option_bools(values: &[bool]) -> String {
@@ -319,30 +325,4 @@ fn serialize_config_option_floats(values: &[f64]) -> String {
         .map(|value| format_decimal(*value))
         .collect::<Vec<_>>()
         .join(",")
-}
-
-fn serialize_config_option_string(value: &str, value_count: usize) -> String {
-    let should_quote = (value_count == 1 && value.is_empty())
-        || value
-            .chars()
-            .any(|ch| matches!(ch, ' ' | '\t' | '\\' | '"' | '\r' | '\n'));
-    if !should_quote {
-        return value.to_owned();
-    }
-
-    let mut output = String::with_capacity(value.len() + 2);
-    output.push('"');
-    for ch in value.chars() {
-        match ch {
-            '\\' | '"' => {
-                output.push('\\');
-                output.push(ch);
-            }
-            '\r' => output.push_str("\\r"),
-            '\n' => output.push_str("\\n"),
-            _ => output.push(ch),
-        }
-    }
-    output.push('"');
-    output
 }

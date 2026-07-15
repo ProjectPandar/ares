@@ -12,17 +12,13 @@ fn five_standalone_groups_are_an_exact_flat_semantic_oracle_for_the_real_fixture
     let fixture = fixture.as_object().unwrap();
     let settings: ProjectSettings = serde_json::from_slice(&raw).unwrap();
     let serialized = serialized_project_values(&settings);
-    let mut expected = fixture.clone();
     assert_eq!(
-        expected.insert(
-            "thumbnails".to_owned(),
-            Value::String("48x48/PNG, 300x300/PNG".to_owned())
-        ),
-        Some(Value::String("48x48/PNG,300x300/PNG".to_owned()))
+        fixture.get("thumbnails"),
+        Some(&Value::String("48x48/PNG,300x300/PNG".to_owned()))
     );
 
     assert_eq!(serialized.len(), 653);
-    assert_eq!(serialized, expected);
+    assert_eq!(&serialized, fixture);
     assert!(fixture.values().all(|value| match value {
         Value::String(_) => true,
         Value::Array(values) => values.iter().all(Value::is_string),

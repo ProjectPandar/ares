@@ -7,6 +7,8 @@ mod acceleration;
 #[rustfmt::skip]
 option_modules!(adaptive_bed_mesh, bed_excluded_area, defaults, different_extruders, draft_shield, extruder_count, extruder_index, extruder_variant, fdm_normalization);
 mod brim;
+mod config_export;
+pub(crate) use config_export::{is_bambu_project, write_config_block};
 mod config_types;
 mod gcode_fields;
 mod gcode_options;

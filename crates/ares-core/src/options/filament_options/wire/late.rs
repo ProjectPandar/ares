@@ -1,6 +1,7 @@
 use serde::ser::SerializeMap;
 
 use super::super::FilamentOptions;
+use crate::options::config_types::semantic::NullableVectorRef;
 
 pub(super) fn serialize_entries<M>(map: &mut M, value: &FilamentOptions) -> Result<(), M::Error>
 where
@@ -20,15 +21,21 @@ where
         &value.gcode.filament_unloading_speed_start,
     )?;
     map.serialize_entry("filament_vendor", &value.gcode.filament_vendor)?;
-    map.serialize_entry("filament_wipe", &value.retract_overrides.filament_wipe)?;
+    map.serialize_entry(
+        "filament_wipe",
+        &NullableVectorRef::new(&value.retract_overrides.filament_wipe),
+    )?;
     map.serialize_entry(
         "filament_wipe_distance",
-        &value.retract_overrides.filament_wipe_distance,
+        &NullableVectorRef::new(&value.retract_overrides.filament_wipe_distance),
     )?;
-    map.serialize_entry("filament_z_hop", &value.retract_overrides.filament_z_hop)?;
+    map.serialize_entry(
+        "filament_z_hop",
+        &NullableVectorRef::new(&value.retract_overrides.filament_z_hop),
+    )?;
     map.serialize_entry(
         "filament_z_hop_types",
-        &value.retract_overrides.filament_z_hop_types,
+        &NullableVectorRef::new(&value.retract_overrides.filament_z_hop_types),
     )?;
     map.serialize_entry(
         "first_x_layer_fan_speed",
@@ -48,7 +55,7 @@ where
     map.serialize_entry("ironing_fan_speed", &value.print.ironing_fan_speed)?;
     map.serialize_entry(
         "long_retractions_when_ec",
-        &value.gcode.long_retractions_when_ec,
+        &NullableVectorRef::new(&value.gcode.long_retractions_when_ec),
     )?;
     map.serialize_entry("nozzle_temperature", &value.print.nozzle_temperature)?;
     map.serialize_entry(
@@ -77,7 +84,7 @@ where
     map.serialize_entry("required_nozzle_HRC", &value.gcode.required_nozzle_hrc)?;
     map.serialize_entry(
         "retraction_distances_when_ec",
-        &value.gcode.retraction_distances_when_ec,
+        &NullableVectorRef::new(&value.gcode.retraction_distances_when_ec),
     )?;
     map.serialize_entry(
         "slow_down_for_layer_cooling",

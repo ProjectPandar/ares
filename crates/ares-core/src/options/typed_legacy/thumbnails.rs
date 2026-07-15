@@ -23,7 +23,7 @@ pub(crate) fn normalize_thumbnails(
                 )
             })
             .collect::<Vec<_>>()
-            .join(", "),
+            .join(","),
     )))
 }
 

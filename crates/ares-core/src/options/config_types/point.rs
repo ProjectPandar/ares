@@ -7,6 +7,7 @@ use serde::{
 };
 
 use super::scalar::format_number;
+use super::semantic::CONFIG_OPTION_POINTS_GROUPS;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point2d {
@@ -93,8 +94,20 @@ impl Serialize for Point2dGroups {
     where
         S: Serializer,
     {
+        serializer
+            .serialize_newtype_struct(CONFIG_OPTION_POINTS_GROUPS, &Point2dGroupsWire(&self.0))
+    }
+}
+
+struct Point2dGroupsWire<'a>(&'a [Vec<Point2d>]);
+
+impl Serialize for Point2dGroupsWire<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
-        for group in &self.0 {
+        for group in self.0 {
             for point in group {
                 validate_point(*point).map_err(serde::ser::Error::custom)?;
             }

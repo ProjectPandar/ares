@@ -1,6 +1,7 @@
 use serde::ser::SerializeMap;
 
 use super::super::FilamentOptions;
+use crate::options::config_types::semantic::NullableVectorRef;
 
 pub(super) fn serialize_entries<M>(map: &mut M, value: &FilamentOptions) -> Result<(), M::Error>
 where
@@ -10,24 +11,33 @@ where
         "filament_extruder_variant",
         &value.gcode.filament_extruder_variant,
     )?;
-    map.serialize_entry("filament_flow_ratio", &value.gcode.filament_flow_ratio)?;
-    map.serialize_entry("filament_flush_temp", &value.gcode.filament_flush_temp)?;
+    map.serialize_entry(
+        "filament_flow_ratio",
+        &NullableVectorRef::new(&value.gcode.filament_flow_ratio),
+    )?;
+    map.serialize_entry(
+        "filament_flush_temp",
+        &NullableVectorRef::new(&value.gcode.filament_flush_temp),
+    )?;
     map.serialize_entry(
         "filament_flush_volumetric_speed",
-        &value.gcode.filament_flush_volumetric_speed,
+        &NullableVectorRef::new(&value.gcode.filament_flush_volumetric_speed),
     )?;
-    map.serialize_entry("filament_ironing_flow", &value.region.filament_ironing_flow)?;
+    map.serialize_entry(
+        "filament_ironing_flow",
+        &NullableVectorRef::new(&value.region.filament_ironing_flow),
+    )?;
     map.serialize_entry(
         "filament_ironing_inset",
-        &value.region.filament_ironing_inset,
+        &NullableVectorRef::new(&value.region.filament_ironing_inset),
     )?;
     map.serialize_entry(
         "filament_ironing_spacing",
-        &value.region.filament_ironing_spacing,
+        &NullableVectorRef::new(&value.region.filament_ironing_spacing),
     )?;
     map.serialize_entry(
         "filament_ironing_speed",
-        &value.region.filament_ironing_speed,
+        &NullableVectorRef::new(&value.region.filament_ironing_speed),
     )?;
     map.serialize_entry("filament_is_support", &value.gcode.filament_is_support)?;
     map.serialize_entry(
@@ -40,7 +50,7 @@ where
     )?;
     map.serialize_entry(
         "filament_long_retractions_when_cut",
-        &value.retract_overrides.filament_long_retractions_when_cut,
+        &NullableVectorRef::new(&value.retract_overrides.filament_long_retractions_when_cut),
     )?;
     map.serialize_entry(
         "filament_max_volumetric_speed",
@@ -70,45 +80,47 @@ where
     )?;
     map.serialize_entry(
         "filament_retract_before_wipe",
-        &value.retract_overrides.filament_retract_before_wipe,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_before_wipe),
     )?;
     map.serialize_entry(
         "filament_retract_lift_above",
-        &value.retract_overrides.filament_retract_lift_above,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_lift_above),
     )?;
     map.serialize_entry(
         "filament_retract_lift_below",
-        &value.retract_overrides.filament_retract_lift_below,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_lift_below),
     )?;
     map.serialize_entry(
         "filament_retract_lift_enforce",
-        &value.retract_overrides.filament_retract_lift_enforce,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_lift_enforce),
     )?;
     map.serialize_entry(
         "filament_retract_restart_extra",
-        &value.retract_overrides.filament_retract_restart_extra,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_restart_extra),
     )?;
     map.serialize_entry(
         "filament_retract_when_changing_layer",
-        &value.retract_overrides.filament_retract_when_changing_layer,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retract_when_changing_layer),
     )?;
     map.serialize_entry(
         "filament_retraction_distances_when_cut",
-        &value
-            .retract_overrides
-            .filament_retraction_distances_when_cut,
+        &NullableVectorRef::new(
+            &value
+                .retract_overrides
+                .filament_retraction_distances_when_cut,
+        ),
     )?;
     map.serialize_entry(
         "filament_retraction_length",
-        &value.retract_overrides.filament_retraction_length,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retraction_length),
     )?;
     map.serialize_entry(
         "filament_retraction_minimum_travel",
-        &value.retract_overrides.filament_retraction_minimum_travel,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retraction_minimum_travel),
     )?;
     map.serialize_entry(
         "filament_retraction_speed",
-        &value.retract_overrides.filament_retraction_speed,
+        &NullableVectorRef::new(&value.retract_overrides.filament_retraction_speed),
     )?;
     map.serialize_entry("filament_shrink", &value.print.filament_shrink)?;
     map.serialize_entry(

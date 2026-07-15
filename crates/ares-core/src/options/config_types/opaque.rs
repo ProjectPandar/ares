@@ -7,21 +7,40 @@ use serde::{
 };
 
 use super::scalar::{OrcaFloat, format_number};
+use super::semantic::serialize_string_vector;
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(transparent)]
 pub struct OrcaString(pub String);
 
-#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize)]
 #[serde(transparent)]
 pub struct OrcaStrings(pub Vec<String>);
+
+impl Serialize for OrcaStrings {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serialize_string_vector(&self.0, serializer)
+    }
+}
 
 macro_rules! opaque_strings {
     ($($name:ident),+ $(,)?) => {
         $(
-            #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
+            #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize)]
             #[serde(transparent)]
             pub struct $name(pub Vec<String>);
+
+            impl Serialize for $name {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: Serializer,
+                {
+                    serialize_string_vector(&self.0, serializer)
+                }
+            }
         )+
     };
 }

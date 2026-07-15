@@ -992,15 +992,79 @@ release WASM, wasm-bindgen, fixture hashes, forbidden scans, diff validation,
 and the sub-400-LOC audit passed; the independent spec reviewer also ran a
 broader 195/195 focused selection.
 
-Task 19C effective config-block serialization is next. Project material
+Task 19B.3 was released as commit
+`99fb0beba0a48603cb7875591cf77d02c26fb525`; exact-SHA Tier 1 run
+`29444150217` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+Task 19C retains effective config-block serialization. Project material
 documents, modifier-parent/painted-region geometry, painted/custom usage
 sources, wipe sequencing, complete `FullPrintConfig` conversion outside this
 bounded resolver, Tasks 20A-20E consumer migration/removal, geometry slicing,
 toolpaths, G-code, metadata, post-processing, and final normalized KSR parity
-remain deferred. The persistent full G-code parity goal remains open. Task
-19B.3 is locally implemented and whole-approved, but documentation approval,
-the release matrix, commit, push, and exact-pushed-SHA Tier 1 are still pending;
-no Task 19B.3 release is claimed here.
+remain deferred. The persistent full G-code parity goal remains open.
+
+### 2026-07-15 Serialize the exact effective config block (Task 19C)
+
+Task 19C ports the Bambu effective-config export boundary from fixed
+OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The named upstream sources are
+`Print.cpp:2618-2638`, `GCode.cpp:2030-2095,2461-2534,2637-2658,5591-5644`,
+`Config.cpp:48-120,543-548,1715-1721`, the concrete value and nullable
+serializers in `Config.hpp`, `PrintConfig.hpp:489-509`,
+`PrintBase.hpp:517-518,558`, and `src/OrcaSlicer.cpp:6045-6060`. The Rust
+destination is the crate-private `ares-core::options::config_export` module and
+the existing project-slicing caller.
+
+The approved implementation collects the canonical body only from
+`ProjectConfigViews::full`: 132 printer, 352 process, 122 filament, and 44
+project-runtime entries, for 650 sorted unique keys before nil omission. It
+excludes preset metadata. Explicit serde semantic tags distinguish string
+vectors, point groups, nullable vectors, and nil elements while remaining
+transparent to existing JSON wire bytes; the new path does not use a JSON
+round-trip, runtime registry, dynamic option map, or second 650-field access
+table.
+
+Empty and all-nil nullable vectors are omitted, mixed nullable vectors preserve
+their `nil` positions, and empty non-nullable vectors remain present. The
+writer applies the fixed nine banned keys, scaled flush-matrix multipliers,
+typed filament-colour substitution, both selected and ordinary wipe-tower
+coordinate forms, and the runtime-only first-layer nozzle/bed temperature tail.
+The generic thumbnail canonicalizer now emits multi-value separators without
+an added space; the config writer has no thumbnail-specific branch.
+
+Only the exact case-sensitive `printer_model.starts_with("Bambu Lab")`
+predicate enters the writer. The caller supplies plate index `0` and keeps the
+atomically produced block in a private scratch buffer. Archive and final
+materialization errors retain precedence; Bambu config-export errors are
+observable before the incomplete boundary; non-Bambu projects skip the writer;
+and every otherwise valid project still returns
+`ProjectSlicingIncomplete`. No public partial-output or success API is added.
+
+For `ksr_fdmtest_v4.project.3mf`, the block is exactly 49,004 bytes with
+SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`,
+639 assignment lines, 637 unique keys, 15 omitted all-nil options, and five
+retained empty non-nullable options. The two wipe-tower coordinate keys account
+for the duplicate assignments. Production code contains no fixture name,
+reference hash, reference G-code, or expected-size coupling.
+
+The remaining executable source-path/line/symbol assertions were removed from
+the project inventory test; its behavioral ownership, type/default,
+projection, wire-shape, legacy-conversion, and fixture checks remain. The
+39-path change set received independent whole spec-compliance, code-quality,
+and default-model OpenCode `VERDICT: APPROVE` decisions. Pre-documentation
+verification passed 29/29 config-export tests, 389/389 project tests, 4654/4654
+workspace tests with two configured skips, 15/15 CLI tests with the complete
+KSR golden as the sole CLI skip, warning-denying Clippy, native/WASM builds,
+`wasm-bindgen 0.2.121`, a zero-vulnerability npm audit, and the real-project
+browser test.
+
+Geometry slicing, toolpaths, complete G-code assembly, generated-by metadata,
+time estimation, post-processing, Tasks 20A-20E consumer migration and dynamic
+shell removal, unsupported project material/painted/modifier sources,
+selected-plate public plumbing, adapters, and final normalized KSR byte parity
+remain deferred. Task 19C is locally implemented and whole-approved. It is not
+released until documentation approval, the fresh post-documentation release
+matrix, commit, push, and exact-pushed-SHA Tier 1 all complete.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 

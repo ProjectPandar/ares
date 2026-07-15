@@ -1,6 +1,7 @@
 use serde::ser::SerializeMap;
 
 use super::super::FilamentOptions;
+use crate::options::config_types::semantic::NullableVectorRef;
 
 pub(super) fn serialize_entries<M>(map: &mut M, value: &FilamentOptions) -> Result<(), M::Error>
 where
@@ -101,7 +102,7 @@ where
     map.serialize_entry("fan_min_speed", &value.print.fan_min_speed)?;
     map.serialize_entry(
         "filament_adaptive_volumetric_speed",
-        &value.gcode.filament_adaptive_volumetric_speed,
+        &NullableVectorRef::new(&value.gcode.filament_adaptive_volumetric_speed),
     )?;
     map.serialize_entry(
         "filament_adhesiveness_category",
@@ -118,7 +119,7 @@ where
     map.serialize_entry("filament_colour", &value.gcode.filament_colour)?;
     map.serialize_entry(
         "filament_cooling_before_tower",
-        &value.gcode.filament_cooling_before_tower,
+        &NullableVectorRef::new(&value.gcode.filament_cooling_before_tower),
     )?;
     map.serialize_entry(
         "filament_cooling_final_speed",
@@ -136,7 +137,7 @@ where
     map.serialize_entry("filament_density", &value.gcode.filament_density)?;
     map.serialize_entry(
         "filament_deretraction_speed",
-        &value.retract_overrides.filament_deretraction_speed,
+        &NullableVectorRef::new(&value.retract_overrides.filament_deretraction_speed),
     )?;
     map.serialize_entry("filament_diameter", &value.gcode.filament_diameter)?;
     map.serialize_entry("filament_end_gcode", &value.gcode.filament_end_gcode)?;

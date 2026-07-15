@@ -5,6 +5,8 @@ use serde::{
     de::{Error, IntoDeserializer, Visitor},
 };
 
+use super::semantic::serialize_nil;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Nullable<T> {
     Nil,
@@ -17,7 +19,7 @@ impl<T: Serialize> Serialize for Nullable<T> {
         S: Serializer,
     {
         match self {
-            Self::Nil => serializer.serialize_str("nil"),
+            Self::Nil => serialize_nil(serializer),
             Self::Value(value) => value.serialize(serializer),
         }
     }

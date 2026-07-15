@@ -2,12 +2,13 @@
 
 ## Status
 
-Tasks 16 through 19B.2 are released. Task 19B.3's typed effective-project
-configuration resolver is locally implemented and whole-approved. Independent
-documentation approval, the local release matrix, commit, push, and the
-exact-pushed-SHA Tier 1 gate remain pending, so no Task 19B.3 release is
-claimed. Task 19C, consumer migration, slicing, and final G-code parity remain
-owned by later source-cited rewrite tasks in the approved parity plan.
+Tasks 16 through 19B.3 are released. Task 19C's exact effective config-block
+serializer is locally implemented and whole-approved. Independent
+documentation approval, the fresh local release matrix, commit, push, and the
+exact-pushed-SHA Tier 1 gate remain pending, so no Task 19C release is claimed.
+Consumer migration, geometry slicing, complete G-code assembly, and final
+byte parity remain owned by later source-cited rewrite tasks in the approved
+parity plan.
 
 ## Fixed baseline
 
@@ -41,13 +42,14 @@ document.
 ## Current progress boundary
 
 The active fixture identity, generator validation, normalized hash, and bounded
-difference tests pass. Public slicing now loads the project and invokes the
-typed effective-project resolver before deliberately returning
-`ProjectSlicingIncomplete`; geometry and G-code remain deferred. The complete
-CLI golden stays explicitly ignored, and no comparison rule is relaxed around
-that boundary. The reference G-code is not a direct Task 19B.3 expectation;
-the unchanged golden is only the final regression contract and configured
-skip.
+difference tests pass. Public slicing now loads the project, invokes the typed
+effective-project resolver, and serializes the Bambu config block into an
+internal scratch buffer before deliberately returning
+`ProjectSlicingIncomplete`; geometry and complete G-code assembly remain
+deferred. The complete CLI golden stays explicitly ignored, and no comparison
+rule is relaxed around that boundary. The reference G-code is used only by the
+test-side exact config-block oracle and the final configured-skipped regression
+contract; production code does not read or identify it.
 
 ## Task 5 fixed-source inventory
 
@@ -1496,14 +1498,14 @@ passed. Task 19B.1A was released as commit
 `da896a98719a621ad87a2317c23f1d27f0a3c6e5`; exact-SHA Tier 1 run
 `29330209222` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
-Task 19B.1B's export/runtime split and nullable retract overlay are released,
-and Task 19B.2's model-option classification plus optional layer-config import
-and association are released. Task 19B.3 normalization and source-ordered
-effective-project orchestration is locally implemented and whole-approved but
-remains release-gated. Task 19C retains config export; Tasks 20A-20E retain
-consumer migration and compatibility-parser removal. Geometry, slicing, G-code
-generation, metadata, post-processing, and complete normalized
-`ksr_fdmtest_v4` byte parity remain deferred.
+Task 19B.1B's export/runtime split and nullable retract overlay, Task 19B.2's
+model-option classification plus optional layer-config import and association,
+and Task 19B.3's normalization plus source-ordered effective-project
+orchestration are released. Task 19C's config export is locally implemented
+and whole-approved but remains release-gated; Tasks 20A-20E retain consumer
+migration and compatibility-parser removal. Geometry, slicing, complete G-code
+generation, metadata, post-processing, and normalized `ksr_fdmtest_v4` byte
+parity remain deferred.
 
 ### Task 19B.1B: typed export/runtime retract views
 
@@ -1757,8 +1759,11 @@ wasm-bindgen, fixture hashes, forbidden scans, diff validation, and the
 sub-400-LOC audit also passed. The independent spec reviewer additionally ran
 its broader 195/195 focused selection.
 
-Task 19C is next and retains effective config-block serialization. Tasks
-20A-20E retain consumer migration and dynamic compatibility removal. Project
+Task 19B.3 was released as commit
+`99fb0beba0a48603cb7875591cf77d02c26fb525`; exact-SHA Tier 1 run
+`29444150217` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+Task 19C retains effective config-block serialization. Tasks 20A-20E retain
+consumer migration and dynamic compatibility removal. Project
 material documents, modifier-parent and painted-region geometry, and per-plate
 custom-G-code `ToolChange` filament participation from `Print.cpp:528-536`
 remain deferred. The current loader does not retain those custom ToolChange
@@ -1771,6 +1776,78 @@ owned by `set_num_extruders`, `set_num_filaments`, `get_parameter_size`, and
 `extend_extruder_variant` remains deferred, as do complete `FullPrintConfig`
 conversion outside this resolver, wipe sequencing, geometry slicing, toolpaths,
 G-code generation, metadata, post-processing, and final normalized KSR parity.
-Task 19B.3 is locally implemented and whole-approved, while documentation
-approval, the release matrix, commit, push, and exact-pushed-SHA Tier 1 remain
-pending.
+
+### Task 19C: exact effective config-block serialization
+
+Task 19C is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream export boundary is
+`Print.cpp:2618-2638`, `GCode.cpp:2030-2095,2461-2534,2637-2658,5591-5644`,
+`Config.cpp:48-120,543-548,1715-1721`, the concrete serializers and nullable
+rules in `Config.hpp`, the bed-temperature mapping in
+`PrintConfig.hpp:489-509`, the external plate index in
+`PrintBase.hpp:517-518,558`, and the CLI Bambu classification in
+`src/OrcaSlicer.cpp:6045-6060`. The Rust destination is the crate-private typed
+`ares-core::options::config_export` boundary plus the existing public project
+caller; it does not create another flat config struct or a public partial-output
+API.
+
+The canonical body collects only the four typed owners in
+`ProjectConfigViews::full`: 132 printer, 352 process, 122 filament, and 44
+project-runtime entries. The resulting 650 unique entries are sorted by key;
+the three preset metadata fields are excluded. A custom serde collector
+consumes explicit semantic tags for string vectors, point groups, nullable
+vectors, and nil values after each concrete type has produced its token. Those
+tags remain transparent to existing JSON serialization, and the new path does
+not round-trip through `serde_json::Value`, a registry, or a dynamic option
+map.
+
+Nullable state is explicit: an empty nullable vector and an all-nil nullable
+vector are omitted, while mixed nullable vectors retain their `nil` positions.
+Empty non-nullable vectors remain present. The writer applies the fixed nine
+banned-key exclusions, scales each flush-matrix head by its matching
+multiplier without mutating the source, substitutes typed filament colours,
+writes both selected wipe-tower coordinates and their ordinary vector forms,
+and appends the first-layer nozzle and bed temperatures from
+`ProjectConfigViews::runtime`. Canonical option lines never read runtime-only
+state.
+
+The available printer classification is the exact case-sensitive
+`printer_model.starts_with("Bambu Lab")` predicate. The project caller supplies
+source plate index `0`; the writer accepts an explicit index and uses Orca's
+first-element fallback for short non-empty vectors. It builds the complete
+start/body/temperature/end block in a private scratch buffer and appends only
+after success. Archive and materialization errors therefore retain precedence,
+config-export errors precede the public incomplete boundary, non-Bambu projects
+skip this writer, and every otherwise valid project still returns
+`ProjectSlicingIncomplete`.
+
+For the committed KSR project, the exported block is exactly 49,004 bytes with
+SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`,
+639 assignment lines, and 637 unique assignment keys. Fifteen all-nil options
+are omitted, five empty non-nullable options remain, and the two wipe-tower
+coordinates account for the duplicate keys. The generic thumbnail parser now
+canonicalizes multi-thumbnail values with a comma and no added space, matching
+the typed project value and the generic scalar writer without a thumbnail key
+special case.
+
+Task 19C also removes the remaining executable source-path/line/symbol pinning
+assertions from the project inventory test while retaining its behavioral
+ownership, type, default, projection, wire-shape, legacy-conversion, and fixture
+agreement checks. The 39-path implementation received independent whole spec,
+whole code-quality, and default-model OpenCode `VERDICT: APPROVE` decisions.
+Fresh pre-documentation verification passed 29/29 config-export tests, 389/389
+project tests, 4654/4654 workspace tests with two configured skips, 15/15 CLI
+tests with the complete KSR golden as the sole CLI skip, the native/WASM build
+matrix, and the real-project browser test; warning-denying Clippy and the
+sub-400-LOC audit also passed.
+
+This task does not slice geometry, generate toolpaths, assemble the complete
+G-code document, emit generated-by metadata, estimate time, post-process
+output, migrate Tasks 20A-20E consumers, or remove their dynamic compatibility
+shells. Project material documents, unsupported painted/modifier sources,
+selected-plate public plumbing beyond the source default, metadata and adapter
+assembly, and final normalized `ksr_fdmtest_v4` byte parity remain deferred.
+Task 19C is locally implemented and whole-approved, while documentation
+approval, the post-documentation release matrix, commit, push, and the
+exact-pushed-SHA Tier 1 gate remain pending.

@@ -14,8 +14,6 @@ struct InventoryRow {
     effective_projections: Vec<EffectiveProjection>,
     legacy_inputs: Vec<LegacyInput>,
     config_export: ConfigExportRule,
-    upstream_definition: SourceCitation,
-    upstream_consumers: Vec<SourceCitation>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd)]
@@ -94,7 +92,6 @@ enum EffectiveProjection {
 struct LegacyInput {
     key: String,
     conversion: LegacyConversion,
-    citation: SourceCitation,
 }
 
 #[derive(Debug, Deserialize)]
@@ -111,13 +108,6 @@ enum ConfigExportRule {
     OmitWhenNil,
     MetadataExclusion,
     FixedTagSpecial(String),
-}
-
-#[derive(Debug, Deserialize)]
-struct SourceCitation {
-    path: String,
-    line: usize,
-    symbol: String,
 }
 
 #[test]
@@ -218,17 +208,10 @@ fn project_inventory_has_exact_v242_shape_and_ownership() {
     ] {
         assert_eq!(owner_counts[&(scope, owner)], expected, "{scope:?}/{owner:?}");
     }
-    assert!(rows.iter().all(|row| !row.upstream_definition.path.is_empty()
-        && row.upstream_definition.line > 0
-        && !row.upstream_definition.symbol.is_empty()
-        && !row.upstream_consumers.is_empty()));
     let mut referenced_legacy_fields = 0;
     rows.iter()
         .flat_map(|row| &row.legacy_inputs)
         .for_each(|legacy| {
-            assert!(!legacy.citation.path.is_empty());
-            assert!(legacy.citation.line > 0);
-            assert!(!legacy.citation.symbol.is_empty());
             assert!(!legacy.key.is_empty());
             let _ = legacy.conversion;
             referenced_legacy_fields += 1;
