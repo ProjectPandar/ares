@@ -4,11 +4,62 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, de::Visitor};
 
+use crate::SliceError;
+
 use super::super::{
     CsvTable, Nullable, OrcaBool, OrcaBools, OrcaFloat, OrcaFloats, OrcaInt, OrcaInts, OrcaStrings,
-    RammingParameters, SpaceTuple, VariantStride, option_group::declare_option_group,
+    RammingParameters, SpaceTuple, VariantStride,
+    option_group::{
+        apply_variant_slots, declare_option_group, exact_variant_vectors_equal,
+        normalize_present_variant_vector, normalize_root_variant_vector,
+        nullable_float_variant_vectors_equal,
+    },
 };
 
+macro_rules! normalize_root_profile_fields {
+    ($target:expr, $defaults:expr, $count:expr, $reset:expr; $($field:ident => $key:literal),+ $(,)?) => {
+        $(normalize_root_variant_vector(
+            &mut $target.$field,
+            &$defaults.$field,
+            $count,
+            $key,
+            $reset,
+        )?;)+
+    };
+}
+macro_rules! normalize_present_profile_fields {
+    ($target:expr, $count:expr; $($field:ident => $key:literal),+ $(,)?) => {
+        $(if let Some(values) = $target.$field.as_mut() {
+            normalize_present_variant_vector(values, $count, $key)?;
+        })+
+    };
+}
+macro_rules! apply_nullable_profile_fields {
+    ($target:expr, $mapping:expr, $equal:expr; $($field:ident => $key:literal),+ $(,)?) => {
+        $(if let Some(child) = $field {
+            apply_variant_slots(
+                &mut $target.$field,
+                &child,
+                $mapping,
+                $key,
+                ($equal, |value| matches!(value, Nullable::Value(_))),
+            )?;
+        })+
+    };
+}
+macro_rules! apply_wrapped_profile_fields {
+    ($target:expr, $mapping:expr; $($field:ident => $key:literal),+ $(,)?) => {
+        $(if let Some(child) = $field {
+            apply_variant_slots(
+                &mut $target.$field.0,
+                &child.0,
+                $mapping,
+                $key,
+                (exact_variant_vectors_equal, |_| true),
+            )?;
+        })+
+    };
+}
 declare_option_group! {
     append pub struct FilamentGCodeSourceOptions, FilamentGCodeSourceOptionsBuilder {
         filament_end_gcode => "filament_end_gcode": OrcaStrings = strings(&[" "]),
@@ -127,6 +178,91 @@ impl FilamentGCodeSourceOptions {
         "filament_stamping_loading_speed",
         "filament_stamping_distance",
     ];
+
+    pub(super) fn normalize_profile_root(
+        &mut self,
+        defaults: &Self,
+        count: usize,
+    ) -> Result<(), SliceError> {
+        normalize_root_profile_fields!(self, defaults, count, |_| false;
+            filament_extruder_variant => "filament_extruder_variant",
+            volumetric_speed_coefficients => "volumetric_speed_coefficients",
+        );
+        normalize_root_profile_fields!(self, defaults, count, |values| values.is_empty();
+            filament_max_volumetric_speed => "filament_max_volumetric_speed",
+        );
+        normalize_root_profile_fields!(self, defaults, count, |values| {
+            values.iter().all(|value| matches!(value, Nullable::Nil))
+        };
+            filament_flow_ratio => "filament_flow_ratio",
+            long_retractions_when_ec => "long_retractions_when_ec",
+            retraction_distances_when_ec => "retraction_distances_when_ec",
+            filament_flush_volumetric_speed => "filament_flush_volumetric_speed",
+            filament_flush_temp => "filament_flush_temp",
+            filament_cooling_before_tower => "filament_cooling_before_tower",
+            filament_adaptive_volumetric_speed => "filament_adaptive_volumetric_speed",
+        );
+        Ok(())
+    }
+}
+
+impl FilamentGCodeSourceOptionsBuilder {
+    pub(super) fn profile_variant_count(&self) -> usize {
+        self.filament_extruder_variant
+            .as_ref()
+            .map_or(1, |identity| identity.0.len())
+    }
+    pub(super) fn normalize_profile_child(&mut self, count: usize) -> Result<(), SliceError> {
+        normalize_present_profile_fields!(self, count;
+            filament_extruder_variant => "filament_extruder_variant",
+            filament_flow_ratio => "filament_flow_ratio",
+            filament_max_volumetric_speed => "filament_max_volumetric_speed",
+            long_retractions_when_ec => "long_retractions_when_ec",
+            retraction_distances_when_ec => "retraction_distances_when_ec",
+            filament_flush_volumetric_speed => "filament_flush_volumetric_speed",
+            filament_flush_temp => "filament_flush_temp",
+            filament_cooling_before_tower => "filament_cooling_before_tower",
+            volumetric_speed_coefficients => "volumetric_speed_coefficients",
+            filament_adaptive_volumetric_speed => "filament_adaptive_volumetric_speed",
+        );
+        Ok(())
+    }
+    pub(super) fn take_profile_identity(&mut self) -> Option<VariantStride> {
+        self.filament_extruder_variant.take()
+    }
+    pub(super) fn apply_profile_child(
+        mut self,
+        target: &mut FilamentGCodeSourceOptions,
+        mapping: &[Option<usize>],
+    ) -> Result<(), SliceError> {
+        let _ = self.filament_extruder_variant.take();
+        let filament_flow_ratio = self.filament_flow_ratio.take();
+        let filament_max_volumetric_speed = self.filament_max_volumetric_speed.take();
+        let long_retractions_when_ec = self.long_retractions_when_ec.take();
+        let retraction_distances_when_ec = self.retraction_distances_when_ec.take();
+        let filament_flush_volumetric_speed = self.filament_flush_volumetric_speed.take();
+        let filament_flush_temp = self.filament_flush_temp.take();
+        let filament_cooling_before_tower = self.filament_cooling_before_tower.take();
+        let volumetric_speed_coefficients = self.volumetric_speed_coefficients.take();
+        let filament_adaptive_volumetric_speed = self.filament_adaptive_volumetric_speed.take();
+        self.apply_present(target);
+        apply_nullable_profile_fields!(target, mapping, nullable_float_variant_vectors_equal;
+            filament_flow_ratio => "filament_flow_ratio",
+            retraction_distances_when_ec => "retraction_distances_when_ec",
+            filament_flush_volumetric_speed => "filament_flush_volumetric_speed",
+            filament_cooling_before_tower => "filament_cooling_before_tower",
+        );
+        apply_nullable_profile_fields!(target, mapping, exact_variant_vectors_equal;
+            long_retractions_when_ec => "long_retractions_when_ec",
+            filament_flush_temp => "filament_flush_temp",
+            filament_adaptive_volumetric_speed => "filament_adaptive_volumetric_speed",
+        );
+        apply_wrapped_profile_fields!(target, mapping;
+            filament_max_volumetric_speed => "filament_max_volumetric_speed",
+            volumetric_speed_coefficients => "volumetric_speed_coefficients",
+        );
+        Ok(())
+    }
 }
 
 impl Default for FilamentGCodeSourceOptions {

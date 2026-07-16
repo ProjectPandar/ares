@@ -87,7 +87,7 @@ fn child_explicit_fixed_default_overrides_a_different_parent_value() {
 }
 
 #[test]
-fn present_nullable_vector_replaces_the_whole_parent_vector() {
+fn present_nullable_vector_normalizes_and_inherits_slot_zero() {
     let fragments = fragments([
         br#"{"type":"filament","name":"parent","filament_flow_ratio":[0.9,"nil",1.1]}"# as &[u8],
         br#"{"type":"filament","name":"child","inherits":"parent","filament_flow_ratio":["nil",1.2]}"#,
@@ -100,12 +100,12 @@ fn present_nullable_vector_replaces_the_whole_parent_vector() {
     };
     assert_eq!(
         options.gcode.filament_flow_ratio,
-        vec![Nullable::Nil, Nullable::Value(OrcaFloat(1.2))]
+        vec![Nullable::Value(OrcaFloat(0.9))]
     );
 }
 
 #[test]
-fn omitted_nullable_vector_retains_the_parent_value() {
+fn omitted_nullable_vector_retains_normalized_parent_slot_zero() {
     let fragments = fragments([
         br#"{"type":"filament","name":"parent","filament_flow_ratio":[0.9,"nil"]}"# as &[u8],
         br#"{"type":"filament","name":"child","inherits":"parent","filament_type":["PLA"]}"#,
@@ -118,7 +118,7 @@ fn omitted_nullable_vector_retains_the_parent_value() {
     };
     assert_eq!(
         options.gcode.filament_flow_ratio,
-        vec![Nullable::Value(OrcaFloat(0.9)), Nullable::Nil]
+        vec![Nullable::Value(OrcaFloat(0.9))]
     );
 }
 

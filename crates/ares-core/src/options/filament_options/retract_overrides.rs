@@ -4,9 +4,15 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, de::Visitor};
 
+use crate::SliceError;
+
 use super::super::{
     Nullable, OrcaBool, OrcaFloat, Percent, RetractLiftEnforce, ZHopType,
-    option_group::declare_option_group,
+    option_group::{
+        apply_variant_slots, declare_option_group, exact_variant_vectors_equal,
+        normalize_present_variant_vector, normalize_root_variant_vector,
+        nullable_float_variant_vectors_equal, nullable_percent_variant_vectors_equal,
+    },
 };
 
 declare_option_group! {
@@ -27,6 +33,101 @@ declare_option_group! {
         filament_retract_before_wipe => "filament_retract_before_wipe": Vec<Nullable<Percent>> = nullable_percents(&[100.0]),
         filament_long_retractions_when_cut => "filament_long_retractions_when_cut": Vec<Nullable<OrcaBool>> = nullable_bools(&[false]),
         filament_retraction_distances_when_cut => "filament_retraction_distances_when_cut": Vec<Nullable<OrcaFloat>> = nullable_floats(&[18.0]),
+    }
+}
+
+macro_rules! retract_profile_fields {
+    ($callback:ident $(, $argument:expr)*) => {
+        $callback! {
+            [$($argument),*]
+            {
+                filament_retraction_length => ("filament_retraction_length", nullable_float_variant_vectors_equal),
+                filament_z_hop => ("filament_z_hop", nullable_float_variant_vectors_equal),
+                filament_z_hop_types => ("filament_z_hop_types", exact_variant_vectors_equal),
+                filament_retract_lift_above => ("filament_retract_lift_above", nullable_float_variant_vectors_equal),
+                filament_retract_lift_below => ("filament_retract_lift_below", nullable_float_variant_vectors_equal),
+                filament_retract_lift_enforce => ("filament_retract_lift_enforce", exact_variant_vectors_equal),
+                filament_retraction_speed => ("filament_retraction_speed", nullable_float_variant_vectors_equal),
+                filament_deretraction_speed => ("filament_deretraction_speed", nullable_float_variant_vectors_equal),
+                filament_retract_restart_extra => ("filament_retract_restart_extra", nullable_float_variant_vectors_equal),
+                filament_retraction_minimum_travel => ("filament_retraction_minimum_travel", nullable_float_variant_vectors_equal),
+                filament_wipe_distance => ("filament_wipe_distance", nullable_float_variant_vectors_equal),
+                filament_retract_when_changing_layer => ("filament_retract_when_changing_layer", exact_variant_vectors_equal),
+                filament_wipe => ("filament_wipe", exact_variant_vectors_equal),
+                filament_retract_before_wipe => ("filament_retract_before_wipe", nullable_percent_variant_vectors_equal),
+                filament_long_retractions_when_cut => ("filament_long_retractions_when_cut", exact_variant_vectors_equal),
+                filament_retraction_distances_when_cut => ("filament_retraction_distances_when_cut", nullable_float_variant_vectors_equal),
+            }
+        }
+    };
+}
+
+macro_rules! normalize_retract_root_field {
+    ([$target:expr, $defaults:expr, $count:expr] {$($field:ident => ($key:literal, $equal:path)),* $(,)?}) => {
+        $(
+            normalize_root_variant_vector(
+                &mut $target.$field,
+                &$defaults.$field,
+                $count,
+                $key,
+                |_| false,
+            )?;
+        )*
+    };
+}
+
+macro_rules! normalize_retract_child_field {
+    ([$builder:expr, $count:expr] {$($field:ident => ($key:literal, $equal:path)),* $(,)?}) => {
+        $(
+            if let Some(values) = $builder.$field.as_mut() {
+                normalize_present_variant_vector(values, $count, $key)?;
+            }
+        )*
+    };
+}
+
+macro_rules! apply_retract_profile_field {
+    ([$builder:expr, $target:expr, $mapping:expr] {$($field:ident => ($key:literal, $equal:path)),* $(,)?}) => {
+        $(let $field = $builder.$field.take();)*
+        $builder.apply_present($target);
+        $(
+            if let Some(child) = $field {
+                apply_variant_slots(
+                    &mut $target.$field,
+                    &child,
+                    $mapping,
+                    $key,
+                    ($equal, |value| matches!(value, Nullable::Value(_))),
+                )?;
+            }
+        )*
+    };
+}
+
+impl FilamentRetractOverrideOptions {
+    pub(super) fn normalize_profile_root(
+        &mut self,
+        defaults: &Self,
+        count: usize,
+    ) -> Result<(), SliceError> {
+        retract_profile_fields!(normalize_retract_root_field, self, defaults, count);
+        Ok(())
+    }
+}
+
+impl FilamentRetractOverrideOptionsBuilder {
+    pub(super) fn normalize_profile_child(&mut self, count: usize) -> Result<(), SliceError> {
+        retract_profile_fields!(normalize_retract_child_field, self, count);
+        Ok(())
+    }
+
+    pub(super) fn apply_profile_child(
+        mut self,
+        target: &mut FilamentRetractOverrideOptions,
+        mapping: &[Option<usize>],
+    ) -> Result<(), SliceError> {
+        retract_profile_fields!(apply_retract_profile_field, self, target, mapping);
+        Ok(())
     }
 }
 

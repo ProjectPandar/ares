@@ -2,6 +2,7 @@ mod composition_metadata;
 mod composition_multi;
 mod composition_single;
 mod errors;
+mod filament_variant_inheritance;
 mod fragment_parsing;
 mod inheritance;
 

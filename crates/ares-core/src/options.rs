@@ -57,7 +57,6 @@ mod support_different_extruders;
 mod support_ironing;
 #[cfg_attr(not(test), allow(dead_code, unused_imports))]
 mod typed_legacy;
-mod update_diff_values_to_child_config;
 mod update_multi_to_multi;
 mod update_non_diff_values_to_base_config;
 mod update_printer_extruders;

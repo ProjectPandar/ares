@@ -1,7 +1,176 @@
 use super::{
-    CsvTable, OrcaBools, OrcaFloats, OrcaInts, OrcaPercents, OrcaStrings, RammingParameters,
-    SpaceTuple, VariantStride,
+    CsvTable, Nullable, OrcaBools, OrcaFloat, OrcaFloats, OrcaInts, OrcaPercents, OrcaStrings,
+    Percent, RammingParameters, SpaceTuple, VariantStride,
 };
+use crate::SliceError;
+
+pub(crate) trait VariantVector {
+    type Item: Clone;
+
+    fn variant_values(&self) -> &[Self::Item];
+    fn variant_values_mut(&mut self) -> &mut Vec<Self::Item>;
+}
+
+impl<T: Clone> VariantVector for Vec<T> {
+    type Item = T;
+
+    fn variant_values(&self) -> &[Self::Item] {
+        self
+    }
+
+    fn variant_values_mut(&mut self) -> &mut Vec<Self::Item> {
+        self
+    }
+}
+
+macro_rules! impl_variant_vector {
+    ($($ty:ty => $item:ty),+ $(,)?) => {
+        $(
+            impl VariantVector for $ty {
+                type Item = $item;
+
+                fn variant_values(&self) -> &[Self::Item] {
+                    &self.0
+                }
+
+                fn variant_values_mut(&mut self) -> &mut Vec<Self::Item> {
+                    &mut self.0
+                }
+            }
+        )+
+    };
+}
+
+impl_variant_vector!(
+    OrcaFloats => OrcaFloat,
+    OrcaInts => super::OrcaInt,
+    OrcaBools => super::OrcaBool,
+    SpaceTuple => String,
+    VariantStride => String,
+);
+
+pub(crate) fn normalize_root_variant_vector<V>(
+    values: &mut V,
+    defaults: &V,
+    target: usize,
+    key: &'static str,
+    reset: impl FnOnce(&[V::Item]) -> bool,
+) -> Result<(), SliceError>
+where
+    V: VariantVector,
+{
+    if target == 0 {
+        values.variant_values_mut().clear();
+        return Ok(());
+    }
+    if reset(values.variant_values()) {
+        let defaults = defaults.variant_values();
+        let values = values.variant_values_mut();
+        values.clear();
+        values.extend_from_slice(defaults);
+    }
+    normalize_variant_vector(values, target, key)
+}
+
+pub(crate) fn normalize_present_variant_vector<V>(
+    values: &mut V,
+    target: usize,
+    key: &'static str,
+) -> Result<(), SliceError>
+where
+    V: VariantVector,
+{
+    if target == 0 {
+        values.variant_values_mut().clear();
+        return Ok(());
+    }
+    normalize_variant_vector(values, target, key)
+}
+
+fn normalize_variant_vector<V>(
+    values: &mut V,
+    target: usize,
+    key: &'static str,
+) -> Result<(), SliceError>
+where
+    V: VariantVector,
+{
+    let values = values.variant_values_mut();
+    let first = values
+        .first()
+        .cloned()
+        .ok_or_else(|| SliceError::InvalidInput(format!("{key} must not be empty")))?;
+    values.resize(target, first);
+    Ok(())
+}
+
+pub(crate) fn exact_variant_vectors_equal<T: PartialEq>(source: &[T], child: &[T]) -> bool {
+    source == child
+}
+
+pub(crate) fn nullable_float_variant_vectors_equal(
+    source: &[Nullable<OrcaFloat>],
+    child: &[Nullable<OrcaFloat>],
+) -> bool {
+    nullable_variant_vectors_equal(source, child, |value| value.0)
+}
+
+pub(crate) fn nullable_percent_variant_vectors_equal(
+    source: &[Nullable<Percent>],
+    child: &[Nullable<Percent>],
+) -> bool {
+    nullable_variant_vectors_equal(source, child, |value| value.0)
+}
+
+fn nullable_variant_vectors_equal<T>(
+    source: &[Nullable<T>],
+    child: &[Nullable<T>],
+    value: impl Fn(&T) -> f64,
+) -> bool {
+    const EPSILON: f64 = 1e-4;
+
+    source.len() == child.len()
+        && source
+            .iter()
+            .zip(child)
+            .all(|(source, child)| match (source, child) {
+                (Nullable::Nil, Nullable::Nil) => true,
+                (Nullable::Value(source), Nullable::Value(child)) => {
+                    (value(source) - value(child)).abs() < EPSILON
+                }
+                _ => false,
+            })
+}
+
+pub(crate) fn apply_variant_slots<T: Clone>(
+    source: &mut Vec<T>,
+    child: &[T],
+    mapping: &[Option<usize>],
+    key: &'static str,
+    (equal, replace): (impl FnOnce(&[T], &[T]) -> bool, impl Fn(&T) -> bool),
+) -> Result<(), SliceError> {
+    if equal(source, child) {
+        return Ok(());
+    }
+    if source.len() != mapping.len() {
+        source.clear();
+        source.extend_from_slice(child);
+        return Ok(());
+    }
+    for (source, child_index) in source
+        .iter_mut()
+        .zip(mapping)
+        .filter_map(|(source, index)| index.map(|index| (source, index)))
+    {
+        let child = child.get(child_index).ok_or_else(|| {
+            SliceError::InvalidInput(format!("{key} is missing variant slot {child_index}"))
+        })?;
+        if replace(child) {
+            source.clone_from(child);
+        }
+    }
+    Ok(())
+}
 
 pub(crate) trait OverlayOptionGroup {
     fn overlay(&mut self, child: Self);
@@ -61,6 +230,16 @@ macro_rules! declare_option_group {
                         &mut self.$field,
                         child.$field,
                     );
+                )*
+            }
+        }
+
+        impl $builder {
+            pub(crate) fn apply_present(self, target: &mut $group) {
+                $(
+                    if let Some(value) = self.$field {
+                        target.$field = value;
+                    }
                 )*
             }
         }

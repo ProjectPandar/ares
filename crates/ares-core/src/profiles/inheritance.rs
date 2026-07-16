@@ -5,7 +5,7 @@ use super::fragment::{
 };
 use crate::{
     FilamentOptions, PrinterOptions, ProcessOptions, SliceError,
-    options::{FilamentOptionsBuilder, PrinterOptionsBuilder, ProcessOptionsBuilder},
+    options::{PrinterOptionsBuilder, ProcessOptionsBuilder},
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -154,16 +154,24 @@ pub fn merge_profile_fragments(
             })
         }
         ProfileKind::Filament => {
-            let mut merged = FilamentOptionsBuilder::default();
+            let mut chain = chain.into_iter();
+            let ProfilePayload::Filament(root) = chain
+                .next()
+                .expect("collected profile chain contains its selected root")
+                .payload()
+            else {
+                unreachable!("same-kind profile chain changed payload owner")
+            };
+            let mut merged = root.as_ref().clone().resolve_profile_root()?;
             for fragment in chain {
                 let ProfilePayload::Filament(child) = fragment.payload() else {
                     unreachable!("same-kind profile chain changed payload owner")
                 };
-                merged.overlay(child.as_ref().clone());
+                child.as_ref().clone().apply_profile_child(&mut merged)?;
             }
             Ok(MergedProfile::Filament {
                 metadata,
-                options: merged.resolve(),
+                options: merged,
             })
         }
     }

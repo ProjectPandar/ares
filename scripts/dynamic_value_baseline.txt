@@ -392,14 +392,6 @@ crates/ares-core/src/options/temperature_vector.rs#crate@1|use|serde_json::Value
 crates/ares-core/src/options/temperature_vector.rs#parse_integer_vector@1|type|&serde_json::Value
 crates/ares-core/src/options/timelapse_type.rs#crate@1|use|serde_json::Value
 crates/ares-core/src/options/timelapse_type.rs#parse_timelapse_type@1|type|Option<&serde_json::Value>
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#apply_diff_values_to_child_config@1|path|serde_json::Value::Array
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#crate@1|use|serde_json::Value
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#json_vector@1|type|&serde_json::Value
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#json_vector@1|type|Result<Vec<serde_json::Value>,SliceError>
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#nullable_json_vector@1|type|&serde_json::Value
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#nullable_json_vector@1|type|Result<Vec<Option<serde_json::Value>>,SliceError>
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#optional_int_vector@1|type|Option<&serde_json::Value>
-crates/ares-core/src/options/update_diff_values_to_child_config.rs#optional_string_vector@1|type|Option<&serde_json::Value>
 crates/ares-core/src/options/update_multi_to_multi.rs#BoolMerge.source@1|type|&'aserde_json::Value
 crates/ares-core/src/options/update_multi_to_multi.rs#BoolMerge.target@1|type|Option<&'aserde_json::Value>
 crates/ares-core/src/options/update_multi_to_multi.rs#FloatMerge.source@1|type|&'aserde_json::Value

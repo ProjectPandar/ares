@@ -5,11 +5,17 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, de::Visitor};
 
+use crate::SliceError;
+
 pub use enums::RawOverhangFanThreshold;
 
 use super::super::{
     OrcaBool, OrcaBools, OrcaFloat, OrcaFloats, OrcaInt, OrcaInts, OrcaPercents, OrcaStrings,
-    Percent, option_group::declare_option_group,
+    Percent,
+    option_group::{
+        apply_variant_slots, declare_option_group, exact_variant_vectors_equal,
+        normalize_present_variant_vector, normalize_root_variant_vector,
+    },
 };
 
 declare_option_group! {
@@ -62,6 +68,92 @@ declare_option_group! {
         activate_chamber_temp_control => "activate_chamber_temp_control": OrcaBools = bools(&[false]),
         chamber_temperature => "chamber_temperature": OrcaInts = ints(&[0]),
         chamber_minimal_temperature => "chamber_minimal_temperature": OrcaInts = ints(&[0]),
+    }
+}
+
+macro_rules! print_profile_fields {
+    ($callback:ident $(, $argument:expr)*) => {
+        $callback! {
+            [$($argument),*]
+            {
+                nozzle_temperature_initial_layer => "nozzle_temperature_initial_layer",
+                nozzle_temperature => "nozzle_temperature",
+                activate_air_filtration => "activate_air_filtration",
+                activate_air_filtration_during_print => "activate_air_filtration_during_print",
+                activate_air_filtration_on_completion => "activate_air_filtration_on_completion",
+                during_print_exhaust_fan_speed => "during_print_exhaust_fan_speed",
+                complete_print_exhaust_fan_speed => "complete_print_exhaust_fan_speed",
+            }
+        }
+    };
+}
+
+macro_rules! normalize_print_root_field {
+    ([$target:expr, $defaults:expr, $count:expr] {$($field:ident => $key:literal),* $(,)?}) => {
+        $(
+            normalize_root_variant_vector(
+                &mut $target.$field,
+                &$defaults.$field,
+                $count,
+                $key,
+                |values| values.is_empty(),
+            )?;
+        )*
+    };
+}
+
+macro_rules! normalize_print_child_field {
+    ([$builder:expr, $count:expr] {$($field:ident => $key:literal),* $(,)?}) => {
+        $(
+            if let Some(values) = $builder.$field.as_mut() {
+                normalize_present_variant_vector(values, $count, $key)?;
+            }
+        )*
+    };
+}
+
+macro_rules! apply_print_profile_field {
+    ([$builder:expr, $target:expr, $mapping:expr] {$($field:ident => $key:literal),* $(,)?}) => {
+        $(let $field = $builder.$field.take();)*
+        $builder.apply_present($target);
+        $(
+            if let Some(child) = $field {
+                apply_variant_slots(
+                    &mut $target.$field.0,
+                    &child.0,
+                    $mapping,
+                    $key,
+                    (exact_variant_vectors_equal, |_| true),
+                )?;
+            }
+        )*
+    };
+}
+
+impl FilamentPrintSourceOptions {
+    pub(super) fn normalize_profile_root(
+        &mut self,
+        defaults: &Self,
+        count: usize,
+    ) -> Result<(), SliceError> {
+        print_profile_fields!(normalize_print_root_field, self, defaults, count);
+        Ok(())
+    }
+}
+
+impl FilamentPrintSourceOptionsBuilder {
+    pub(super) fn normalize_profile_child(&mut self, count: usize) -> Result<(), SliceError> {
+        print_profile_fields!(normalize_print_child_field, self, count);
+        Ok(())
+    }
+
+    pub(super) fn apply_profile_child(
+        mut self,
+        target: &mut FilamentPrintSourceOptions,
+        mapping: &[Option<usize>],
+    ) -> Result<(), SliceError> {
+        print_profile_fields!(apply_print_profile_field, self, target, mapping);
+        Ok(())
     }
 }
 

@@ -2,15 +2,15 @@
 
 ## Status
 
-Tasks 16 through 19C are released. Task 19C was released as commit
-`656b32f987827b29d08010802ba03ef6ba822980`; exact-SHA Tier 1 run
-`29457461048` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
-Task 20A.1's typed profile fragment, inheritance, and composition migration is
-locally implemented and whole-approved, but its documentation approval,
-post-documentation release matrix, commit, push, and exact-pushed-SHA Tier 1
-gate remain pending. Consumer migration outside this profile slice, geometry
-slicing, complete G-code assembly, and final byte parity remain owned by later
-source-cited rewrite tasks in the approved parity plan.
+Tasks 16 through 20A.1 are released. Task 20A.1 was released as commit
+`e0c50564283744b3dd3388eeaa10f624a492ff1f`; exact-SHA Tier 1 run
+`29488449752` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+Task 20A.2's typed filament variant inheritance implementation is
+whole-approved and is at its documentation gate; its post-documentation
+release matrix, commit, push, and exact-pushed-SHA Tier 1 gate remain pending.
+Consumer migration outside this profile slice, geometry slicing, complete
+G-code assembly, and final byte parity remain owned by later source-cited
+rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -1924,7 +1924,48 @@ reaches `ProjectSlicingIncomplete` after the released Task 19C config writer.
 Profile discovery and management, alias/Semver/compatibility evaluation,
 remaining Task 20A consumers, Tasks 20B-20E, geometry, toolpaths, G-code,
 generated-by metadata, post-processing, adapters, and complete normalized KSR
-parity remain deferred. The local implementation has whole spec, code-quality,
-and default-model OpenCode approval, but Task 20A.1 is not released until its
-documentation review, fresh post-documentation matrix, commit, push, and
-exact-pushed-SHA Tier 1 gate complete.
+parity remain deferred. Task 20A.1 was released as commit
+`e0c50564283744b3dd3388eeaa10f624a492ff1f`; exact-SHA Tier 1 run
+`29488449752` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### Task 20A.2: typed filament variant-aware inheritance
+
+Task 20A.2 remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is
+`PrintConfig.cpp:63-84,8375-8415,10209-10297`,
+`Preset.cpp:231-278,922-945,1679-1697`,
+`Config.hpp:558-580,624-665,812-837,921-931,1008-1016,1203-1218,1872-1879`,
+and `libslic3r.h:52,306-310`. The Rust destination remains the concrete
+filament option owners and typed profile resolver; this task does not add a
+parallel dynamic pipeline.
+
+The bounded family is exactly the stride-one, no-extruder-ID set of one
+`filament_extruder_variant` mapping identity plus 36 data vectors. The
+concrete root resolves against typed defaults, derives its cardinality from
+the identity, applies each field's typed all-nil, empty, or no-reset rule, and
+then clears, truncates, or grows vectors by their first value. Descendants stay
+sparse: only present family fields are normalized, their identity is mapped
+against the retained normalized root identity using the first exact match,
+and the identity itself is never assigned as data.
+
+Local comparison uses approximate nullable float/percent equality for exactly
+19 vectors and exact equality for the other 17. Nullable child `Nil` preserves
+the accumulated source slot and equals only `Nil`. An `N == 0` root keeps an
+empty identity; its first implicit one-slot descendant reaches the whole-field
+source-length fallback, while later equal-length descendants use normal
+nil/value slot behavior. Equality short-circuits before fallback, and a source
+length differing from the retained-root mapping length copies the normalized
+child before any slot read.
+
+The migration deletes exactly the eight obsolete dynamic findings owned by
+the old filament diff scaffold and retains 675 baseline findings without an
+allowlist addition. Profile-to-project wiring is unchanged, so a valid project
+still reaches `ProjectSlicingIncomplete` after the released Task 19C config
+writer.
+
+Printer and process variants, stride-two behavior, profile-to-project wiring,
+the remaining Task 20A work and Tasks 20B-20E, geometry, toolpaths, G-code,
+generated-by metadata, post-processing, metadata byte parity, and complete
+normalized KSR parity remain deferred. The Task 20A.2 implementation has whole
+spec, code-quality, and default-model OpenCode approval and is pending its
+documentation review and release gates; it is not yet released.

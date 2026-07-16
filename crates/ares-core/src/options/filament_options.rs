@@ -17,7 +17,7 @@ use region_source::FilamentRegionSourceOptionsBuilder;
 pub use retract_overrides::FilamentRetractOverrideOptions;
 use retract_overrides::FilamentRetractOverrideOptionsBuilder;
 
-use super::{OrcaFloat, OrcaFloats, option_group::OverlayOptionGroup};
+use super::{OrcaFloat, OrcaFloats, VariantStride};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FilamentOptions {
@@ -97,21 +97,53 @@ pub(crate) struct FilamentOptionsBuilder {
 }
 
 impl FilamentOptionsBuilder {
-    pub(crate) fn overlay(&mut self, child: Self) {
+    pub(crate) fn resolve_profile_root(self) -> Result<FilamentOptions, crate::SliceError> {
+        let mut target = self.resolve();
+        let defaults = FilamentOptions::default();
+        let count = target.gcode.filament_extruder_variant.0.len();
+        target
+            .gcode
+            .normalize_profile_root(&defaults.gcode, count)?;
+        target
+            .print
+            .normalize_profile_root(&defaults.print, count)?;
+        target
+            .region
+            .normalize_profile_root(&defaults.region, count)?;
+        target
+            .retract_overrides
+            .normalize_profile_root(&defaults.retract_overrides, count)?;
+        Ok(target)
+    }
+
+    pub(crate) fn apply_profile_child(
+        mut self,
+        target: &mut FilamentOptions,
+    ) -> Result<(), crate::SliceError> {
+        let count = self.gcode.profile_variant_count();
+        self.gcode.normalize_profile_child(count)?;
+        self.print.normalize_profile_child(count)?;
+        self.region.normalize_profile_child(count)?;
+        self.retract_overrides.normalize_profile_child(count)?;
+
+        let identity = self.gcode.take_profile_identity();
+        let mapping =
+            profile_variant_mapping(&target.gcode.filament_extruder_variant, identity.as_ref());
         let Self {
             gcode,
             print,
             region,
             retract_overrides,
             pellet_flow_coefficient,
-        } = child;
-        self.gcode.overlay(gcode);
-        self.print.overlay(print);
-        self.region.overlay(region);
-        self.retract_overrides.overlay(retract_overrides);
+        } = self;
         if let Some(value) = pellet_flow_coefficient {
-            self.pellet_flow_coefficient = Some(value);
+            target.pellet_flow_coefficient = value;
         }
+        gcode.apply_profile_child(&mut target.gcode, &mapping)?;
+        print.apply_profile_child(&mut target.print, &mapping)?;
+        region.apply_profile_child(&mut target.region, &mapping)?;
+        retract_overrides.apply_profile_child(&mut target.retract_overrides, &mapping)?;
+        Ok(())
     }
 
     pub(crate) fn is_known_field(key: &str) -> bool {
@@ -208,4 +240,23 @@ impl FilamentOptionsBuilder {
                 .unwrap_or_else(|| OrcaFloats(vec![OrcaFloat(0.4157)])),
         }
     }
+}
+
+fn profile_variant_mapping(
+    source: &VariantStride,
+    child: Option<&VariantStride>,
+) -> Vec<Option<usize>> {
+    if source.0.is_empty() {
+        return vec![Some(0)];
+    }
+    let Some(child) = child.filter(|identity| !identity.0.is_empty()) else {
+        let mut mapping = vec![None; source.0.len()];
+        mapping[0] = Some(0);
+        return mapping;
+    };
+    source
+        .0
+        .iter()
+        .map(|variant| child.0.iter().position(|candidate| candidate == variant))
+        .collect()
 }

@@ -1041,10 +1041,46 @@ not wired to `slice_project`, whose valid-project boundary remains
 Profile management and compatibility-expression evaluation, remaining Task
 20A consumers, Tasks 20B-20E, geometry, toolpaths, G-code, generated-by
 metadata, post-processing, adapters, and complete normalized KSR parity remain
-deferred. The implementation has whole spec, code-quality, and default-model
-OpenCode approval, but Task 20A.1 is not released: documentation review, the
-fresh post-documentation release matrix, commit, push, and exact-pushed-SHA
-Tier 1 remain pending.
+deferred. Task 20A.1 was released as commit
+`e0c50564283744b3dd3388eeaa10f624a492ff1f`; exact-SHA Tier 1 run
+`29488449752` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### 2026-07-16 Inherit typed filament variants by slot (Task 20A.2)
+
+Task 20A.2 remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The named upstream boundaries
+are `PrintConfig.cpp:63-84,8375-8415,10209-10297`,
+`Preset.cpp:231-278,922-945,1679-1697`,
+`Config.hpp:558-580,624-665,812-837,921-931,1008-1016,1203-1218,1872-1879`,
+and `libslic3r.h:52,306-310`. The Rust destination remains the concrete
+filament option owners and typed profile resolver.
+
+The approved implementation covers exactly the stride-one, no-extruder-ID
+family of one `filament_extruder_variant` identity plus 36 data vectors. The
+root derives cardinality from its resolved identity, applies the concrete
+typed-default all-nil, empty, or no-reset class, and clears, truncates, or grows
+each vector by its first value. Sparse descendants normalize only present
+family fields, map the first exact identity match against the retained root
+identity, ignore child-only variants, and never assign the identity as data.
+
+Exactly 19 nullable float/percent vectors use local approximate comparison;
+the other 17 vectors remain exact. A mapped nullable child `Nil` preserves the
+source slot and equals only `Nil`. The `N == 0` path retains an empty root
+identity and lets an implicit one-slot child reach source-length whole-copy
+fallback; equality is checked before fallback, and fallback occurs before any
+mapped-slot read.
+
+The old filament diff scaffold and its exact eight dynamic findings are
+removed, leaving 675 baseline findings and no allowlist addition. The task
+does not wire profiles into project slicing, so valid projects still reach
+`ProjectSlicingIncomplete` after the released Task 19C config writer.
+
+Printer and process variants, stride-two behavior, profile-to-project wiring,
+the remaining Task 20A work and Tasks 20B-20E, geometry, toolpaths, G-code,
+generated-by metadata, post-processing, metadata byte parity, and complete
+normalized KSR parity remain deferred. Whole spec, code-quality, and
+default-model OpenCode implementation reviews are approved; documentation and
+release gates remain pending, so Task 20A.2 is not yet released.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
