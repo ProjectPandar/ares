@@ -2,13 +2,15 @@
 
 ## Status
 
-Tasks 16 through 19B.3 are released. Task 19C's exact effective config-block
-serializer is locally implemented and whole-approved. Independent
-documentation approval, the fresh local release matrix, commit, push, and the
-exact-pushed-SHA Tier 1 gate remain pending, so no Task 19C release is claimed.
-Consumer migration, geometry slicing, complete G-code assembly, and final
-byte parity remain owned by later source-cited rewrite tasks in the approved
-parity plan.
+Tasks 16 through 19C are released. Task 19C was released as commit
+`656b32f987827b29d08010802ba03ef6ba822980`; exact-SHA Tier 1 run
+`29457461048` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+Task 20A.1's typed profile fragment, inheritance, and composition migration is
+locally implemented and whole-approved, but its documentation approval,
+post-documentation release matrix, commit, push, and exact-pushed-SHA Tier 1
+gate remain pending. Consumer migration outside this profile slice, geometry
+slicing, complete G-code assembly, and final byte parity remain owned by later
+source-cited rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -1501,11 +1503,12 @@ passed. Task 19B.1A was released as commit
 Task 19B.1B's export/runtime split and nullable retract overlay, Task 19B.2's
 model-option classification plus optional layer-config import and association,
 and Task 19B.3's normalization plus source-ordered effective-project
-orchestration are released. Task 19C's config export is locally implemented
-and whole-approved but remains release-gated; Tasks 20A-20E retain consumer
-migration and compatibility-parser removal. Geometry, slicing, complete G-code
-generation, metadata, post-processing, and normalized `ksr_fdmtest_v4` byte
-parity remain deferred.
+orchestration are released. Task 19C's config export was released as commit
+`656b32f987827b29d08010802ba03ef6ba822980`; exact-SHA Tier 1 run
+`29457461048` is green. Tasks 20A-20E retain consumer migration and
+compatibility-parser removal. Geometry, slicing, complete G-code generation,
+metadata, post-processing, and normalized `ksr_fdmtest_v4` byte parity remain
+deferred.
 
 ### Task 19B.1B: typed export/runtime retract views
 
@@ -1848,6 +1851,80 @@ output, migrate Tasks 20A-20E consumers, or remove their dynamic compatibility
 shells. Project material documents, unsupported painted/modifier sources,
 selected-plate public plumbing beyond the source default, metadata and adapter
 assembly, and final normalized `ksr_fdmtest_v4` byte parity remain deferred.
-Task 19C is locally implemented and whole-approved, while documentation
-approval, the post-documentation release matrix, commit, push, and the
-exact-pushed-SHA Tier 1 gate remain pending.
+Task 19C was released as commit
+`656b32f987827b29d08010802ba03ef6ba822980`; exact-SHA Tier 1 run
+`29457461048` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### Task 20A.1: typed profile fragment, inheritance, and composition
+
+Task 20A.1 is fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its profile-kind and identity
+boundary is `src/libslic3r/Preset.hpp:22-24,43-65`; its ownership and
+load/inheritance boundary is
+`src/libslic3r/Preset.cpp:491-504,1476-1494,1622-1703,3112-3140`; and its
+composition boundary is the `full_fff_config(false, std::nullopt)` subset of
+`src/libslic3r/PresetBundle.cpp:3884-4165`. The concrete option owners come
+from `src/libslic3r/PrintConfig.hpp:695-914,916-1666`; the dynamic upstream
+load shell at `src/libslic3r/PrintConfig.hpp:610-682` is replaced at the Rust
+API boundary. The separate calibration path
+`src/libslic3r/PresetBundle.cpp:68-242::construct_full_config` is not an owner
+for this slice.
+
+`ProfileFragment::from_json_bytes` performs two order-independent streaming
+serde passes over the supplied bytes: one reads concrete local/config metadata
+while skipping option payloads, and the other dispatches option fields into
+the sparse builder for the discovered profile kind. Both passes require a
+complete input document. Unsupported kinds, wrong-kind or unknown option keys,
+duplicate local or option fields, malformed typed values, and trailing tokens
+return `InvalidInput`; the implementation retains neither a generic JSON tree
+nor a dynamic unknown-value side map.
+
+Same-kind inheritance uses a deterministic unique index and overlays the
+oldest parent through the selected child. The compile-time sparse builders
+consume child fields and replace only present values, then resolve concrete
+defaults once after the full chain, so absence is preserved without runtime
+field lookup, serde conversion, or a presence bitmap. Compatibility fields use
+the same whole-field presence semantics: omission inherits and explicit empty
+clears. A child filament uses the resolved root filament identity, while a
+root retains its own `filament_id`. `thumbnails` and `thumbnails_format` are
+also inherited as whole fields and normalized only once after the final
+machine overlay. Per-element nullable inheritance and variant-indexed diff
+mapping are explicitly deferred; present vectors replace whole vectors while
+preserving their concrete nil/value elements.
+
+The public merge result is the exhaustive by-value `MergedProfile` enum, whose
+machine, process, and filament variants carry the corresponding concrete
+options and `MergedProfileMetadata`. `ComposedProfile` exposes selected names,
+typed `ProfileGroupMetadata`, and `ProjectSettings` through `settings()` and
+`into_settings()`; it does not expose a `SliceOptions` map. Composition starts
+from typed defaults and resolved profiles. The sparse overlay and append paths
+are generated beside the concrete option declarations as zero-cost typed
+operations with no dynamic lookup.
+
+Multi-filament composition opts exactly four declaration groups into
+compile-time append: 53 G-code fields, 48 print fields, four region fields,
+and 16 retract-override fields, plus the direct
+`pellet_flow_coefficient`, for the fixed 122-field inventory. Values append in
+selection order using their concrete numeric, bool, string, enum, nullable, or
+newtype representations. The typed project result records selected profile
+IDs, positional `filament_ids`, `filament_map`, and `filament_self_index`.
+`inherits_group`, compatible-machine conditions, and compatible-process
+conditions remain positional and are omitted only when every slot in the
+respective group is empty.
+
+The migration removes exactly the 29 dynamic fingerprints previously owned by
+the profile fragment/composition pair. The syntax-aware baseline retains 683
+unchanged findings and the allowlist is unchanged. It also removes exactly the
+two obsolete retained-STL tests that passed merged/composed profile maps into
+the legacy slicer, plus the inventory test that pinned Orca source-citation
+layout; behavioral typed profile and option-inventory coverage remains.
+
+Task 20A.1 does not connect profiles to `slice_project`; a valid project still
+reaches `ProjectSlicingIncomplete` after the released Task 19C config writer.
+Profile discovery and management, alias/Semver/compatibility evaluation,
+remaining Task 20A consumers, Tasks 20B-20E, geometry, toolpaths, G-code,
+generated-by metadata, post-processing, adapters, and complete normalized KSR
+parity remain deferred. The local implementation has whole spec, code-quality,
+and default-model OpenCode approval, but Task 20A.1 is not released until its
+documentation review, fresh post-documentation matrix, commit, push, and
+exact-pushed-SHA Tier 1 gate complete.

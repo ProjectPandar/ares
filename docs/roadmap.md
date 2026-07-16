@@ -1002,6 +1002,50 @@ bounded resolver, Tasks 20A-20E consumer migration/removal, geometry slicing,
 toolpaths, G-code, metadata, post-processing, and final normalized KSR parity
 remain deferred. The persistent full G-code parity goal remains open.
 
+### 2026-07-16 Migrate typed profile inheritance and composition (Task 20A.1)
+
+Task 20A.1 ports the in-memory profile subset from fixed OrcaSlicer v2.4.2
+commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`. The named upstream boundaries
+are `src/libslic3r/Preset.hpp:22-24,43-65`,
+`src/libslic3r/Preset.cpp:491-504,1476-1494,1622-1703,3112-3140`, the
+`full_fff_config(false, std::nullopt)` subset of
+`src/libslic3r/PresetBundle.cpp:3884-4165`, and the concrete typed FFF owners
+in `src/libslic3r/PrintConfig.hpp:695-914,916-1666`; the dynamic profile shell
+at `src/libslic3r/PrintConfig.hpp:610-682` is replaced at the Rust API
+boundary.
+
+The approved local implementation performs an order-independent two-pass
+streaming decode into sparse typed process, filament, or machine builders and
+rejects wrong-kind, unknown, duplicate, malformed, and trailing input. It
+inherits whole fields parent-first while preserving absence, resolves defaults
+once, carries a child filament's root identity, and normalizes thumbnail fields
+only after the final machine overlay. Deeper per-element nil inheritance and
+variant-indexed diff mapping remain deferred.
+
+Public merge output is the tagged by-value `MergedProfile`; typed composition
+returns `ComposedProfile` with `ProjectSettings`, selected names, and positional
+`ProfileGroupMetadata`. Compile-time sparse overlay is a zero-cost typed
+operation with no runtime key/value registry. Exactly four filament
+declaration groups opt into concrete append:
+53 G-code, 48 print, four region, and 16 retract-override fields, plus direct
+`pellet_flow_coefficient`, for 122 fields total. Selection order and empty
+interior metadata slots are preserved.
+
+The profile pair removes exactly 29 dynamic fingerprints, leaving the other
+683 baseline rows byte-identical with no allowlist addition. Exactly two
+obsolete retained-STL map-contract tests and the Orca source-citation-layout
+inventory test are removed; typed behavioral coverage remains. The result is
+not wired to `slice_project`, whose valid-project boundary remains
+`ProjectSlicingIncomplete` after Task 19C export.
+
+Profile management and compatibility-expression evaluation, remaining Task
+20A consumers, Tasks 20B-20E, geometry, toolpaths, G-code, generated-by
+metadata, post-processing, adapters, and complete normalized KSR parity remain
+deferred. The implementation has whole spec, code-quality, and default-model
+OpenCode approval, but Task 20A.1 is not released: documentation review, the
+fresh post-documentation release matrix, commit, push, and exact-pushed-SHA
+Tier 1 remain pending.
+
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
 Task 19C ports the Bambu effective-config export boundary from fixed
@@ -1062,9 +1106,9 @@ Geometry slicing, toolpaths, complete G-code assembly, generated-by metadata,
 time estimation, post-processing, Tasks 20A-20E consumer migration and dynamic
 shell removal, unsupported project material/painted/modifier sources,
 selected-plate public plumbing, adapters, and final normalized KSR byte parity
-remain deferred. Task 19C is locally implemented and whole-approved. It is not
-released until documentation approval, the fresh post-documentation release
-matrix, commit, push, and exact-pushed-SHA Tier 1 all complete.
+remain deferred. Task 19C was released as commit
+`656b32f987827b29d08010802ba03ef6ba822980`; exact-SHA Tier 1 run
+`29457461048` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
 ### 2026-07-01 Consume prime tower brim width header slice
 
@@ -1785,6 +1829,12 @@ Exit criteria are tracked in `docs/milestones/m7-profile-fragment-inheritance.md
 Compose process, filament, and machine profile groups into full print configs while preserving unknown keys and preparing substitution/compatibility behavior.
 
 Exit criteria are tracked in `docs/milestones/m8-full-profile-composition-and-option-groups.md`.
+
+Task 20A.1 supersedes only the old M7/M8 dynamic contracts: profile merging
+and composition now reject unknown keys and return concrete typed owners rather
+than preserving an unknown-value map or returning `SliceOptions`. The milestone
+entries remain as historical sequencing records; profile management and later
+compatibility behavior are still deferred to their source-cited tasks.
 
 ## M9: Slicing pipeline diagnostics
 Expose the current model import, layer planning, XY segment, and contour stitching stages as a reusable in-memory pipeline result with deterministic diagnostics.

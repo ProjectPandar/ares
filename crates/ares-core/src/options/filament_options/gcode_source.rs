@@ -10,7 +10,7 @@ use super::super::{
 };
 
 declare_option_group! {
-    pub struct FilamentGCodeSourceOptions, FilamentGCodeSourceOptionsBuilder {
+    append pub struct FilamentGCodeSourceOptions, FilamentGCodeSourceOptionsBuilder {
         filament_end_gcode => "filament_end_gcode": OrcaStrings = strings(&[" "]),
         filament_flow_ratio => "filament_flow_ratio": Vec<Nullable<OrcaFloat>> = nullable_floats(&[1.0]),
         enable_pressure_advance => "enable_pressure_advance": OrcaBools = bools(&[false]),

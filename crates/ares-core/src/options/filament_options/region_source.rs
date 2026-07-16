@@ -7,7 +7,7 @@ use serde::{Deserialize, Deserializer, de::Visitor};
 use super::super::{Nullable, OrcaFloat, Percent, option_group::declare_option_group};
 
 declare_option_group! {
-    pub struct FilamentRegionSourceOptions, FilamentRegionSourceOptionsBuilder {
+    append pub struct FilamentRegionSourceOptions, FilamentRegionSourceOptionsBuilder {
         filament_ironing_flow => "filament_ironing_flow": Vec<Nullable<Percent>> = nil_vector(),
         filament_ironing_spacing => "filament_ironing_spacing": Vec<Nullable<OrcaFloat>> = nil_vector(),
         filament_ironing_inset => "filament_ironing_inset": Vec<Nullable<OrcaFloat>> = nil_vector(),

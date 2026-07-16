@@ -17,7 +17,7 @@ use region_source::FilamentRegionSourceOptionsBuilder;
 pub use retract_overrides::FilamentRetractOverrideOptions;
 use retract_overrides::FilamentRetractOverrideOptionsBuilder;
 
-use super::{OrcaFloat, OrcaFloats};
+use super::{OrcaFloat, OrcaFloats, option_group::OverlayOptionGroup};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FilamentOptions {
@@ -26,6 +26,25 @@ pub struct FilamentOptions {
     pub region: FilamentRegionSourceOptions,
     pub retract_overrides: FilamentRetractOverrideOptions,
     pub pellet_flow_coefficient: OrcaFloats,
+}
+
+impl FilamentOptions {
+    pub(crate) fn append(&mut self, child: Self) {
+        let Self {
+            gcode,
+            print,
+            region,
+            retract_overrides,
+            pellet_flow_coefficient,
+        } = child;
+        self.gcode.append(gcode);
+        self.print.append(print);
+        self.region.append(region);
+        self.retract_overrides.append(retract_overrides);
+        self.pellet_flow_coefficient
+            .0
+            .extend(pellet_flow_coefficient.0);
+    }
 }
 
 impl Default for FilamentOptions {
@@ -68,7 +87,7 @@ impl<'de> Visitor<'de> for FilamentVisitor {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default, PartialEq)]
 pub(crate) struct FilamentOptionsBuilder {
     gcode: FilamentGCodeSourceOptionsBuilder,
     print: FilamentPrintSourceOptionsBuilder,
@@ -78,6 +97,23 @@ pub(crate) struct FilamentOptionsBuilder {
 }
 
 impl FilamentOptionsBuilder {
+    pub(crate) fn overlay(&mut self, child: Self) {
+        let Self {
+            gcode,
+            print,
+            region,
+            retract_overrides,
+            pellet_flow_coefficient,
+        } = child;
+        self.gcode.overlay(gcode);
+        self.print.overlay(print);
+        self.region.overlay(region);
+        self.retract_overrides.overlay(retract_overrides);
+        if let Some(value) = pellet_flow_coefficient {
+            self.pellet_flow_coefficient = Some(value);
+        }
+    }
+
     pub(crate) fn is_known_field(key: &str) -> bool {
         FilamentGCodeSourceOptionsBuilder::is_known_field(key)
             || FilamentPrintSourceOptionsBuilder::is_known_field(key)

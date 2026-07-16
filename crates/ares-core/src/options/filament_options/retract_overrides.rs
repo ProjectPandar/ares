@@ -10,7 +10,7 @@ use super::super::{
 };
 
 declare_option_group! {
-    pub struct FilamentRetractOverrideOptions, FilamentRetractOverrideOptionsBuilder {
+    append pub struct FilamentRetractOverrideOptions, FilamentRetractOverrideOptionsBuilder {
         filament_retraction_length => "filament_retraction_length": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.8]),
         filament_z_hop => "filament_z_hop": Vec<Nullable<OrcaFloat>> = nullable_floats(&[0.4]),
         filament_z_hop_types => "filament_z_hop_types": Vec<Nullable<ZHopType>> = nullable_values(&[ZHopType::Slope]),

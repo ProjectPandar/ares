@@ -1,7 +1,83 @@
+use super::{
+    CsvTable, OrcaBools, OrcaFloats, OrcaInts, OrcaPercents, OrcaStrings, RammingParameters,
+    SpaceTuple, VariantStride,
+};
+
+pub(crate) trait OverlayOptionGroup {
+    fn overlay(&mut self, child: Self);
+}
+
+pub(crate) trait AppendOptionValue {
+    fn append_value(&mut self, child: Self);
+}
+
+impl<T> AppendOptionValue for Vec<T> {
+    fn append_value(&mut self, mut child: Self) {
+        self.append(&mut child);
+    }
+}
+
+macro_rules! impl_append_option_value {
+    ($($ty:ty),+ $(,)?) => {
+        $(
+            impl AppendOptionValue for $ty {
+                fn append_value(&mut self, mut child: Self) {
+                    self.0.append(&mut child.0);
+                }
+            }
+        )+
+    };
+}
+
+impl_append_option_value!(
+    CsvTable,
+    OrcaBools,
+    OrcaFloats,
+    OrcaInts,
+    OrcaPercents,
+    OrcaStrings,
+    RammingParameters,
+    SpaceTuple,
+    VariantStride,
+);
+
 #[allow(unused_macros)]
 macro_rules! declare_option_group {
     (
+        append $visibility:vis struct $group:ident, $builder:ident {
+            $($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?
+        }
+    ) => {
+        declare_option_group! {
+            @declare $visibility struct $group, $builder {
+                $($field => $key: $ty = $default),*
+            }
+        }
+
+        impl $group {
+            pub(crate) fn append(&mut self, child: Self) {
+                $(
+                    $crate::options::option_group::AppendOptionValue::append_value(
+                        &mut self.$field,
+                        child.$field,
+                    );
+                )*
+            }
+        }
+    };
+    (
         $visibility:vis struct $group:ident, $builder:ident {
+            $($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?
+        }
+    ) => {
+        declare_option_group! {
+            @declare $visibility struct $group, $builder {
+                $($field => $key: $ty = $default),*
+            }
+        }
+    };
+    (
+        @declare $visibility:vis struct $group:ident, $builder:ident {
             $($field:ident => $key:literal: $ty:ty = $default:expr),* $(,)?
         }
     ) => {
@@ -10,7 +86,7 @@ macro_rules! declare_option_group {
             $($visibility $field: $ty),*
         }
 
-        #[derive(Default)]
+        #[derive(Clone, Default, PartialEq)]
         pub(crate) struct $builder {
             $($field: Option<$ty>),*
         }
@@ -81,7 +157,19 @@ macro_rules! declare_option_group {
                     _ => Ok(false),
                 }
             }
+        }
 
+        impl $crate::options::option_group::OverlayOptionGroup for $builder {
+            fn overlay(&mut self, child: Self) {
+                $(
+                    if let Some(value) = child.$field {
+                        self.$field = Some(value);
+                    }
+                )*
+            }
+        }
+
+        impl $builder {
             pub(crate) fn resolve(self) -> $group {
                 $group {
                     $($field: self.$field.unwrap_or_else(|| $default)),*

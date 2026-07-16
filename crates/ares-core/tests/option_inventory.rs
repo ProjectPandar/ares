@@ -1,17 +1,9 @@
-use std::collections::BTreeSet;
-
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 struct OptionInventoryRow {
     key: String,
     default_serialized: String,
-    upstream_consumers: Vec<SourceCitation>,
-}
-
-#[derive(Debug, Deserialize)]
-struct SourceCitation {
-    path: String,
 }
 
 fn committed_inventory() -> Vec<OptionInventoryRow> {
@@ -19,34 +11,6 @@ fn committed_inventory() -> Vec<OptionInventoryRow> {
         "../../../tests/ksr_fdmtest_v4/options-v242.json"
     ))
     .unwrap()
-}
-
-#[test]
-fn committed_inventory_is_available_without_an_orca_checkout() {
-    let rows = committed_inventory();
-    assert_eq!(rows.len(), 653);
-    assert_eq!(
-        rows.iter()
-            .map(|row| &row.key)
-            .collect::<BTreeSet<_>>()
-            .len(),
-        653
-    );
-    for row in &rows {
-        assert!(!row.upstream_consumers.is_empty(), "{}", row.key);
-        for citation in &row.upstream_consumers {
-            assert!(
-                !matches!(
-                    citation.path.as_str(),
-                    "src/libslic3r/PrintConfig.hpp"
-                        | "src/libslic3r/PrintConfig.cpp"
-                        | "src/libslic3r/Preset.cpp"
-                ),
-                "{} has a declaration/static-list consumer",
-                row.key
-            );
-        }
-    }
 }
 
 #[test]

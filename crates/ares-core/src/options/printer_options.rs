@@ -3,6 +3,8 @@ mod machine_envelope;
 mod remaining;
 mod wire;
 
+use super::option_group::OverlayOptionGroup;
+
 pub(crate) use gcode_source::PrinterGCodeSourceOptionsBuilder;
 pub use gcode_source::{
     ExtruderType, ExtruderTypes, NozzleType, NullableInts, NullableNozzleTypes,
@@ -65,7 +67,7 @@ impl<'de> serde::de::Visitor<'de> for PrinterVisitor {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default, PartialEq)]
 pub(crate) struct PrinterOptionsBuilder {
     machine: MachineEnvelopeOptionsBuilder,
     gcode: PrinterGCodeSourceOptionsBuilder,
@@ -73,6 +75,17 @@ pub(crate) struct PrinterOptionsBuilder {
 }
 
 impl PrinterOptionsBuilder {
+    pub(crate) fn overlay(&mut self, child: Self) {
+        let Self {
+            machine,
+            gcode,
+            remaining,
+        } = child;
+        self.machine.overlay(machine);
+        self.gcode.overlay(gcode);
+        self.remaining.overlay(remaining);
+    }
+
     pub(crate) fn is_known_field(key: &str) -> bool {
         MachineEnvelopeOptionsBuilder::is_known_field(key)
             || PrinterGCodeSourceOptionsBuilder::is_known_field(key)

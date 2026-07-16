@@ -153,8 +153,8 @@ pub(crate) use print_paths::{
     finalize_print_paths_with_layer_contours, generate_print_paths_with_bridge_policy,
 };
 pub use profiles::{
-    ComposedProfile, ProfileFragment, ProfileKind, ProfileSelection, compose_profile_fragments,
-    merge_profile_fragments,
+    ComposedProfile, MergedProfile, MergedProfileMetadata, ProfileFragment, ProfileGroupMetadata,
+    ProfileKind, ProfileSelection, compose_profile_fragments, merge_profile_fragments,
 };
 pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,

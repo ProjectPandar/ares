@@ -29,7 +29,7 @@ pub use region_source::{
     ProcessSeamScarfType, ProcessWallDirection, ProcessWallSequence,
 };
 
-use super::OrcaFloat;
+use super::{OrcaFloat, option_group::OverlayOptionGroup};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProcessOptions {
@@ -80,7 +80,7 @@ impl<'de> Visitor<'de> for ProcessVisitor {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default, PartialEq)]
 pub(crate) struct ProcessOptionsBuilder {
     gcode: ProcessGCodeSourceOptionsBuilder,
     object: ProcessObjectSourceOptionsBuilder,
@@ -90,6 +90,23 @@ pub(crate) struct ProcessOptionsBuilder {
 }
 
 impl ProcessOptionsBuilder {
+    pub(crate) fn overlay(&mut self, child: Self) {
+        let Self {
+            gcode,
+            object,
+            print,
+            region,
+            ironing_expansion,
+        } = child;
+        self.gcode.overlay(gcode);
+        self.object.overlay(object);
+        self.print.overlay(print);
+        self.region.overlay(region);
+        if let Some(value) = ironing_expansion {
+            self.ironing_expansion = Some(value);
+        }
+    }
+
     pub(crate) fn is_known_field(key: &str) -> bool {
         ProcessObjectSourceOptionsBuilder::is_known_field(key)
             || ProcessRegionSourceOptionsBuilder::is_known_field(key)

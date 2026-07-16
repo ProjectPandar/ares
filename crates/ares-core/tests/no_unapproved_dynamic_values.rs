@@ -8,6 +8,8 @@ mod discovery;
 mod finding;
 #[path = "no_unapproved_dynamic_values/imports.rs"]
 mod imports;
+#[path = "no_unapproved_dynamic_values/profile_shell.rs"]
+mod profile_shell;
 #[path = "no_unapproved_dynamic_values/ratchet.rs"]
 mod ratchet;
 #[path = "no_unapproved_dynamic_values/visitor.rs"]
@@ -65,6 +67,11 @@ fn no_unapproved_dynamic_values() {
         "dynamic-value audit failed:\n{}",
         errors.join("\n")
     );
+}
+
+#[test]
+fn profile_modules_use_only_typed_shells() {
+    profile_shell::assert_profile_modules_use_only_typed_shells(&repo_root());
 }
 
 #[test]
