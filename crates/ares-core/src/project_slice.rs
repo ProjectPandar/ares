@@ -9,6 +9,7 @@ mod extruders;
 mod layers;
 mod parameters;
 mod profile;
+mod raw_intersections;
 mod state;
 
 #[cfg(test)]
@@ -22,7 +23,7 @@ pub async fn slice_project(
         project,
         resolved,
         config_block,
-        planned_objects,
+        intersected_objects,
     } = state::prepare_project_slice(project)?;
 
     let documents = project.documents();
@@ -72,12 +73,20 @@ pub async fn slice_project(
             }
         }
     }
-    for layers::PlannedPrintObject {
-        source_object_index,
-        transform_index,
-        layers,
-    } in planned_objects
-    {
+    for intersected_object in intersected_objects {
+        let (plan, volumes) = intersected_object.into_parts();
+        for volume in volumes {
+            let (ordinal, volume_type, layers) = volume.into_parts();
+            let _ = (ordinal, volume_type);
+            for line in layers.into_iter().flatten() {
+                let _ = (line.a(), line.b(), line.edge_type());
+            }
+        }
+        let layers::PlannedPrintObject {
+            source_object_index,
+            transform_index,
+            layers,
+        } = plan;
         let _ = (source_object_index, transform_index);
         for layers::PlannedLayer {
             id,

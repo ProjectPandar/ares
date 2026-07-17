@@ -32,9 +32,46 @@ impl Transform3d {
     }
 
     pub(crate) fn without_xy_translation(self) -> Self {
+        let z_translation = self.0[2][3];
+        let mut transform = self.without_translation();
+        transform.0[2][3] = z_translation;
+        transform
+    }
+
+    pub(crate) fn without_translation(self) -> Self {
         let mut transform = self;
         transform.0[0][3] = 0.0;
         transform.0[1][3] = 0.0;
+        transform.0[2][3] = 0.0;
+        transform
+    }
+
+    pub(crate) fn translated(self, translation: Point3d) -> Self {
+        let translation = [translation.x, translation.y, translation.z];
+        let local = [0, 1, 2].map(|row| {
+            (0..3)
+                .map(|column| self.0[row][column] * translation[column])
+                .sum()
+        });
+        self.pretranslated(Point3d::new(local[0], local[1], local[2]))
+    }
+
+    pub(crate) fn pretranslated(self, translation: Point3d) -> Self {
+        let mut transform = self;
+        transform.0[0][3] += translation.x;
+        transform.0[1][3] += translation.y;
+        transform.0[2][3] += translation.z;
+        transform
+    }
+
+    pub(crate) fn prescaled_xy(self, factor: f64) -> Self {
+        let mut transform = self;
+        let reciprocal = 1.0 / factor;
+        for row in &mut transform.0[..2] {
+            for coefficient in row {
+                *coefficient *= reciprocal;
+            }
+        }
         transform
     }
 
@@ -70,6 +107,17 @@ impl Transform3d {
             + self.0[2][3] as f32
     }
 
+    pub(crate) fn transform_point_f32(self, point: Point3d) -> [f32; 3] {
+        let point = [point.x as f32, point.y as f32, point.z as f32];
+        [0, 1, 2].map(|row| {
+            let coefficients = self.0[row];
+            coefficients[0] as f32 * point[0]
+                + coefficients[1] as f32 * point[1]
+                + coefficients[2] as f32 * point[2]
+                + coefficients[3] as f32
+        })
+    }
+
     pub fn then(self, rhs: Self) -> Self {
         let mut product = [[0.0; 4]; 4];
         for (row, output_row) in product.iter_mut().enumerate() {
@@ -99,6 +147,9 @@ impl Transform3d {
         }
     }
 }
+
+const _: fn(Transform3d, Point3d) -> Transform3d = Transform3d::translated;
+const _: fn(Transform3d, Point3d) -> [f32; 3] = Transform3d::transform_point_f32;
 
 impl Default for Transform3d {
     fn default() -> Self {

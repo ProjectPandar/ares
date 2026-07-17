@@ -2,14 +2,15 @@
 
 ## Status
 
-Tasks 16 through 20A.2 are released. Task 20A.2 was released as commit
+Tasks 16 through 20A.2 and Task 22A are released. Task 20A.2 was released as commit
 `4281e913b8eeaaeb6111cbefdf06f896f5c611aa`; exact-SHA Tier 1 run
 `29520118127` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
-Task 22A's typed slicing-parameter and fixed-layer-planning implementation is
-whole-approved and is at its documentation gate; its post-documentation
-release matrix, commit, push, and exact-pushed-SHA Tier 1 gate remain pending.
-Geometry slicing, complete G-code assembly, and final byte parity remain owned
-by later source-cited rewrite tasks in the approved parity plan.
+Task 22A was released as commit
+`91fc19f1dbfc85d21431791d2d5acb78af818671`; exact-SHA Tier 1 run
+`29543841835` is green across the same five Tier 1 jobs. Task 22B's scaled raw
+mesh-intersection implementation is whole-approved and is at its documentation
+gate. Line chaining, polygon/Clipper processing, complete G-code assembly, and
+final byte parity remain owned by later source-cited rewrite tasks.
 
 ## Fixed baseline
 
@@ -43,14 +44,15 @@ document.
 ## Current progress boundary
 
 The active fixture identity, generator validation, normalized hash, and bounded
-difference tests pass. Public slicing now loads the project, invokes the typed
-effective-project resolver, and serializes the Bambu config block into an
-internal scratch buffer before deliberately returning
-`ProjectSlicingIncomplete`; geometry and complete G-code assembly remain
-deferred. The complete CLI golden stays explicitly ignored, and no comparison
-rule is relaxed around that boundary. The reference G-code is used only by the
-test-side exact config-block oracle and the final configured-skipped regression
-contract; production code does not read or identify it.
+difference tests pass. Public slicing now loads the project, resolves typed
+configuration, serializes the Bambu config block, plans 460 fixed layers, and
+builds 116,472 real directed/scaled mesh-plane intersection lines before
+deliberately returning `ProjectSlicingIncomplete`. Line chaining and complete
+G-code assembly remain deferred. The complete CLI golden stays explicitly
+ignored, and no comparison rule is relaxed around that boundary. The reference
+G-code is used only by the test-side exact config-block oracle and the final
+configured-skipped regression contract; production and Task 22B tests do not
+read or identify it.
 
 ## Task 5 fixed-source inventory
 
@@ -2020,8 +2022,72 @@ bytes with SHA-256
 The public API still returns `ProjectSlicingIncomplete` only after private
 planning; it emits no placeholder or successful G-code.
 
-Variable/adaptive layers, modifier geometry, scaled XY and Clipper behavior,
-mesh-plane slicing, paths and G-code, generated metadata, and successful full
-KSR parity remain explicitly deferred. Whole specification, code-quality, and
-default-model OpenCode implementation reviews are approved; documentation and
-release gates remain pending, so Task 22A is not yet released.
+Variable/adaptive layers, modifier geometry, Clipper behavior, paths and G-code,
+generated metadata, and successful full KSR parity remain explicitly deferred.
+Task 22A was released as commit
+`91fc19f1dbfc85d21431791d2d5acb78af818671`; exact-SHA Tier 1 run
+`29543841835` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### Task 22B: scaled raw mesh intersections
+
+Task 22B remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is the
+coordinate domain in `libslic3r.h` and `Point.hpp`, Bambu mesh import and fresh
+mesh preparation in `Format/bbs_3mf.cpp`, `TriangleMesh.cpp`, `Model.cpp`, and
+`Model.hpp`, object/volume identity and slicing transforms in `ObjectID.hpp`,
+`Print.hpp`, `PrintObject.cpp`, `PrintApply.cpp`, and `PrintObjectSlice.cpp`,
+and shared-edge/facet/multi-plane raw intersection behavior in
+`TriangleMesh.cpp` and `TriangleMeshSlicer.cpp`. Private `ares-core` modules
+`geometry`, `mesh_slicer`, `project::load`, and `project_slice` own the Rust
+rewrite; no legacy STL pipeline is called as a fallback.
+
+The loader materializes Bambu coordinates through f32, normalizes winding once,
+omits empty meshes, compensates fresh-mesh centering, and bounds iterative
+build-reachable component expansion. Project slicing selects a request-local
+scale from resolved 3MF `printable_area`, checks the half-open i64 coordinate
+boundary, constructs the raw center and centered slice transform, assigns
+one-based per-source-object volume ordinals, builds shared-edge topology before
+intersection, and dispatches faces across ordered `slice_z` planes. Facet
+intersection retains Orca's strict f32 plane comparisons and top-edge/on-plane
+ownership, directed endpoint provenance, vertex-coordinate truncation, and
+interior `floor(value + 0.5)` conversion. Three independent request-wide
+limits each accept exactly 1,000,000: expanded-model
+occurrence/vertex/triangle units are claimed before scheduling or
+materialization, dense layer slots are checked before allocation, and retained
+raw lines are claimed before append. Nonempty layer ranges, distinct
+print-object centering groups, explicit/shared mesh reuse, nonidentity shrink,
+and normalized edge groups with more than two uses are gated before unsupported
+work can be approximated.
+
+Using only the committed 3MF, the approved implementation retains one
+model-part volume with 6,109 vertices, 12,234 triangles, 18,351 normalized
+shared edges, 460 layer slots, and 116,472 directed raw lines. The
+source-semantic and deterministic Ares-order fixed-width encodings have SHA-256
+`a82b2d193c23c8ba499c7abd56e21cb9956f5444e9b51b1b261a7e9b67d26d21`
+and `1a6e83f2d5f53b73fa7ba9cb6444909816276496361f7fb9f9305412d2045e79`.
+The Task 19C config block remains exactly 49,004 bytes with SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
+
+Distinct transform-group center rotation/decomposition, nonidentity XY/Z
+shrink, full typed layer-range membership and slab filtering, importer-global
+shared-mesh cache/reuse and compensation, absolute process-global `ObjectID`
+values, and undefined pairing for normalized edge groups with more than two
+uses remain deferred. The same is true for remaining `Line`/`Polyline`/
+`Polygon`/`ExPolygon` bounds, area, containment, orientation, and other
+non-clipping path-domain operations; edge/vertex chaining, seed flags,
+open-chain joining and repair, loops, and path ordering; and Clipper booleans,
+PolyTree/fill rules, union, offset, simplification, closing, contour/hole
+construction, and polygon ordering.
+
+Geometry consumption of `slicing_mode`, `slice_closing_radius`, `resolution`,
+and XY compensation is deferred, as are negative/modifier booleans,
+range/region assignment, painted segmentation, fuzzy skin, interlocking,
+conical overhang, slicing-error repair, final cleanup, and reproduction of an
+Orca TBB raw-append schedule. Surfaces, elephant-foot compensation, perimeters,
+fill, brim, supports, toolpaths, motion, G-code assembly, generated metadata,
+time estimation, and post-processing remain later slices. Embedded/external
+presets, CLI overrides, UI behavior, any Ares-owned alternative pipeline, and
+final normalized KSR parity are also explicitly deferred. Supported requests
+still return `ProjectSlicingIncomplete`, but only after the private raw state is
+built. Whole specification, code-quality, and default-model OpenCode reviews
+are approved; documentation and release gates remain pending.

@@ -26,7 +26,7 @@ impl ModelDocument {
     pub(crate) fn validate(&self) -> Result<(), SliceError> {
         for object in &self.resources.objects {
             match (&object.mesh, &object.components) {
-                (Some(mesh), None) => mesh.validate()?,
+                (Some(mesh), None) => mesh.validate(self.unit.millimeter_factor())?,
                 (None, Some(_)) => {}
                 _ => {
                     return Err(SliceError::InvalidInput(format!(
@@ -53,7 +53,7 @@ pub(crate) enum ModelUnit {
 }
 
 impl ModelUnit {
-    pub(crate) const fn millimeter_factor(self) -> f64 {
+    pub(crate) const fn millimeter_factor(self) -> f32 {
         match self {
             Self::Micron => 0.001,
             Self::Millimeter => 1.0,
@@ -124,12 +124,16 @@ pub(crate) struct Mesh {
 }
 
 impl Mesh {
-    fn validate(&self) -> Result<(), SliceError> {
+    fn validate(&self, millimeter_factor: f32) -> Result<(), SliceError> {
+        if self.vertices.vertices.is_empty() || self.triangles.triangles.is_empty() {
+            return Ok(());
+        }
         if self
             .vertices
             .vertices
             .iter()
-            .any(|vertex| !vertex.x.is_finite() || !vertex.y.is_finite() || !vertex.z.is_finite())
+            .flat_map(|vertex| [vertex.x, vertex.y, vertex.z])
+            .any(|component| !component.is_finite() || !(component * millimeter_factor).is_finite())
         {
             return Err(SliceError::InvalidInput(
                 "project mesh vertices must be finite".to_owned(),
@@ -158,11 +162,11 @@ pub(crate) struct Vertices {
 #[derive(Debug, Deserialize, PartialEq)]
 pub(crate) struct Vertex {
     #[serde(rename = "@x")]
-    pub x: f64,
+    pub x: f32,
     #[serde(rename = "@y")]
-    pub y: f64,
+    pub y: f32,
     #[serde(rename = "@z")]
-    pub z: f64,
+    pub z: f32,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

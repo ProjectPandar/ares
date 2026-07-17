@@ -5,10 +5,14 @@ use std::{
 
 use zip::{CompressionMethod, ZipArchive, ZipWriter, write::SimpleFileOptions};
 
+use super::super::{
+    layers::{PlannedLayer, PlannedPrintObject},
+    raw_intersections::{ProjectedPrintObject, prepare_projected_objects},
+};
 use crate::{
     GenerationMetadata, ObjectOptions, OrcaInt, Point3d, ProjectInstance, ProjectMesh,
-    ProjectObject, ProjectSettings, ProjectVolume, ProjectVolumeType, RegionOptions, Transform3d,
-    load_project,
+    ProjectObject, ProjectSettings, ProjectVolume, ProjectVolumeType, RegionOptions, SliceError,
+    Transform3d, load_project,
     options::{ObjectOptionOverrides, RegionOptionOverrides},
     project::effective_config::types::{
         ResolvedLayerCandidate, ResolvedModelPartCandidate, ResolvedPrintObjectConfig,
@@ -63,6 +67,19 @@ impl KsrArchive {
         assert!(text.contains(from), "{path} does not contain {from:?}");
         self.entries
             .insert(path.to_owned(), text.replace(from, to).into_bytes());
+    }
+
+    pub(super) fn replace_unique(&mut self, path: &str, from: &str, to: &str) {
+        let text = String::from_utf8(self.entries.remove(path).unwrap()).unwrap();
+        assert_eq!(
+            text.match_indices(from).count(),
+            1,
+            "{path} must contain exactly one {from:?}"
+        );
+        let replaced = text.replacen(from, to, 1);
+        assert_eq!(replaced.match_indices(from).count(), 0);
+        assert_eq!(replaced.match_indices(to).count(), 1);
+        self.entries.insert(path.to_owned(), replaced.into_bytes());
     }
 
     pub(super) fn invalidate_flush_matrix(&mut self) {
@@ -153,6 +170,178 @@ pub(super) fn source(
             false,
             Transform3d::IDENTITY,
         )],
+    )
+}
+
+pub(super) fn project_volume(
+    source_model_path: &str,
+    id: u32,
+    volume_type: ProjectVolumeType,
+    nonempty: bool,
+    mesh_shared: bool,
+) -> ProjectVolume {
+    project_volume_fixture(
+        source_model_path,
+        id,
+        volume_type,
+        (nonempty, mesh_shared, 0.0),
+    )
+}
+
+pub(super) fn project_volume_at_x(
+    source_model_path: &str,
+    id: u32,
+    volume_type: ProjectVolumeType,
+    x: f64,
+) -> ProjectVolume {
+    project_volume_fixture(source_model_path, id, volume_type, (true, false, x))
+}
+
+fn project_volume_fixture(
+    source_model_path: &str,
+    id: u32,
+    volume_type: ProjectVolumeType,
+    fixture: (bool, bool, f64),
+) -> ProjectVolume {
+    let (nonempty, mesh_shared, x) = fixture;
+    let mesh = if nonempty {
+        ProjectMesh::new(
+            vec![
+                Point3d::new(x, 0.0, 0.0),
+                Point3d::new(x, 1.0, 0.0),
+                Point3d::new(x, 0.0, 1.0),
+            ],
+            vec![[0, 1, 2]],
+        )
+    } else {
+        ProjectMesh::new(Vec::new(), Vec::new())
+    };
+    let mut volume = ProjectVolume::new(
+        source_model_path.to_owned(),
+        id,
+        mesh,
+        Transform3d::IDENTITY,
+        (
+            format!("volume-{id}"),
+            volume_type,
+            RegionOptionOverrides::default(),
+            Transform3d::IDENTITY,
+        ),
+    );
+    volume.set_mesh_shared(mesh_shared);
+    volume
+}
+
+pub(super) fn object(
+    source_model_path: &str,
+    id: u32,
+    volumes: Vec<ProjectVolume>,
+    instance_transforms: &[Transform3d],
+) -> ProjectObject {
+    let instances = instance_transforms
+        .iter()
+        .copied()
+        .map(|transform| (true, transform))
+        .collect::<Vec<_>>();
+    object_with_instances(source_model_path, id, volumes, &instances)
+}
+
+pub(super) fn object_with_instances(
+    source_model_path: &str,
+    id: u32,
+    volumes: Vec<ProjectVolume>,
+    instances: &[(bool, Transform3d)],
+) -> ProjectObject {
+    ProjectObject::new(
+        source_model_path.to_owned(),
+        id,
+        (
+            format!("object-{id}"),
+            String::new(),
+            ObjectOptionOverrides::default(),
+            RegionOptionOverrides::default(),
+        ),
+        volumes,
+        instances
+            .iter()
+            .copied()
+            .enumerate()
+            .map(|(index, (printable, transform))| {
+                ProjectInstance::new(
+                    [id, index as u32, 1_000 + index as u32],
+                    printable,
+                    false,
+                    transform,
+                )
+            })
+            .collect(),
+    )
+}
+
+pub(super) fn resolved_object(
+    source_object_index: usize,
+    transforms: &[Transform3d],
+) -> ResolvedProjectObject {
+    ResolvedProjectObject {
+        source_object_index,
+        object: ObjectOptions::from_base(&ProjectSettings::default().process.object),
+        print_objects: transforms
+            .iter()
+            .copied()
+            .map(|transform| ResolvedPrintObjectConfig { transform })
+            .collect(),
+        layer_candidates: vec![ResolvedLayerCandidate {
+            min_z: 0.0,
+            max_z: 1.0,
+            source_range_index: None,
+            model_parts: Vec::new(),
+        }],
+    }
+}
+
+pub(super) fn plan(
+    source_object_index: usize,
+    transform_index: usize,
+    layer_count: usize,
+) -> PlannedPrintObject {
+    PlannedPrintObject {
+        source_object_index,
+        transform_index,
+        layers: vec![
+            PlannedLayer {
+                id: 0,
+                height: 0.2,
+                print_z: 0.2,
+                slice_z: 0.1,
+            };
+            layer_count
+        ],
+    }
+}
+
+pub(super) fn project(
+    objects: &[ProjectObject],
+    resolved: &[ResolvedProjectObject],
+    plans: Vec<PlannedPrintObject>,
+) -> Result<Vec<ProjectedPrintObject>, SliceError> {
+    prepare_projected_objects(objects, resolved, plans)
+}
+
+pub(super) fn identity_resolved(source_object_index: usize) -> ResolvedProjectObject {
+    resolved_object(source_object_index, &[Transform3d::IDENTITY])
+}
+
+pub(super) fn transform(value: &str) -> Transform3d {
+    Transform3d::parse_3mf(value).unwrap()
+}
+
+pub(super) fn unsupported(feature: &str) -> SliceError {
+    SliceError::UnsupportedProjectFeature(feature.to_owned())
+}
+
+pub(super) fn slot_limit() -> SliceError {
+    SliceError::InvalidInput(
+        "project raw intersection layer slot count exceeds supported limit of 1000000".to_owned(),
     )
 }
 

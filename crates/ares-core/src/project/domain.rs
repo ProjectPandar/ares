@@ -208,6 +208,7 @@ pub struct ProjectVolume {
     volume_type: ProjectVolumeType,
     region_overrides: RegionOptionOverrides,
     source_transform: Transform3d,
+    mesh_shared: bool,
 }
 
 impl ProjectVolume {
@@ -232,6 +233,7 @@ impl ProjectVolume {
             volume_type: metadata.1,
             region_overrides: metadata.2,
             source_transform: metadata.3,
+            mesh_shared: false,
         }
     }
 
@@ -265,6 +267,14 @@ impl ProjectVolume {
 
     pub fn source_transform(&self) -> Transform3d {
         self.source_transform
+    }
+
+    pub(crate) fn has_mesh_shared(&self) -> bool {
+        self.mesh_shared
+    }
+
+    pub(crate) fn set_mesh_shared(&mut self, mesh_shared: bool) {
+        self.mesh_shared = mesh_shared;
     }
 }
 

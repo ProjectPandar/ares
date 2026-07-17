@@ -1,18 +1,25 @@
 use crate::{
-    Project, SliceError, load_project,
+    Project, SliceError,
+    geometry::CoordinateScale,
+    load_project,
     options::{is_bambu_project, write_config_block},
     project::effective_config::{
         resolve_bounded_project_config, types::BoundedResolvedProjectConfig,
     },
 };
 
-use super::{layers::PlannedPrintObject, plan_project};
+use super::{
+    plan_project,
+    raw_intersections::{
+        IntersectedPrintObject, intersect_projected_objects, prepare_projected_objects,
+    },
+};
 
 pub(super) struct ProjectSliceState {
     pub(super) project: Project,
     pub(super) resolved: BoundedResolvedProjectConfig,
     pub(super) config_block: Option<Vec<u8>>,
-    pub(super) planned_objects: Vec<PlannedPrintObject>,
+    pub(super) intersected_objects: Vec<IntersectedPrintObject>,
 }
 
 pub(super) fn prepare_project_slice(
@@ -28,10 +35,20 @@ pub(super) fn prepare_project_slice(
         None
     };
     let planned_objects = plan_project(&project, &resolved)?;
+    let projected_objects =
+        prepare_projected_objects(project.objects(), &resolved.objects, planned_objects)?;
+    let scale =
+        CoordinateScale::from_printable_area(&resolved.views.full.printer.remaining.printable_area);
+    let intersected_objects = intersect_projected_objects(
+        project.objects(),
+        &resolved.objects,
+        projected_objects,
+        scale,
+    )?;
     Ok(ProjectSliceState {
         project,
         resolved,
         config_block,
-        planned_objects,
+        intersected_objects,
     })
 }

@@ -64,6 +64,7 @@ pub(crate) struct SelectedVolumeMetadata {
     pub(crate) volume_type: ProjectVolumeType,
     pub(crate) region_overrides: RegionOptionOverrides,
     pub(crate) source_transform: Transform3d,
+    pub(crate) mesh_shared: bool,
     pub(crate) source_provenance: SelectedSourceProvenance,
     pub(crate) mesh_statistics: SelectedMeshStatistics,
 }
@@ -85,6 +86,7 @@ pub(super) fn select(
                 volume_type: ProjectVolumeType::ModelPart,
                 region_overrides: RegionOptionOverrides::default(),
                 source_transform: Transform3d::IDENTITY,
+                mesh_shared: false,
                 source_provenance: SelectedSourceProvenance::default(),
                 mesh_statistics: SelectedMeshStatistics::default(),
             })
@@ -111,6 +113,7 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
     let mut volume_type = parse_volume_type("subtype", &part.subtype)?;
     let mut source_transform = Transform3d::IDENTITY;
     let mut has_source_transform = false;
+    let mut mesh_shared = false;
     let mut source_provenance = SelectedSourceProvenance::default();
 
     for entry in &part.retained_metadata {
@@ -143,7 +146,7 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
             "source_in_meters" => {
                 source_provenance.converted_from_meters = entry.value == "1";
             }
-            "mesh_shared" => {}
+            "mesh_shared" => mesh_shared = true,
             _ => unreachable!("part structural metadata was classified before assembly"),
         }
     }
@@ -166,6 +169,7 @@ fn from_part(part: &PartSettings) -> Result<SelectedVolumeMetadata, SliceError> 
         volume_type,
         region_overrides: part.region_overrides.clone(),
         source_transform,
+        mesh_shared,
         source_provenance,
         mesh_statistics,
     })

@@ -1,6 +1,7 @@
 mod assemble;
 mod colors;
 mod graph;
+mod mesh_prepare;
 mod metadata;
 mod volume_metadata;
 

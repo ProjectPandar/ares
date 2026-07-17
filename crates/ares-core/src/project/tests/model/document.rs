@@ -49,20 +49,20 @@ fn project_model_deserializes_root_and_leaf_without_precision_loss() {
     let vertices = &mesh.vertices.vertices;
     assert_eq!(
         [vertices[0].x, vertices[0].y, vertices[0].z],
-        [17.6525421, -26.3965759, -45.5]
+        [17.652_542, -26.396_576, -45.5]
     );
     assert_eq!(
         [vertices[1].x, vertices[1].y, vertices[1].z],
-        [17.5, -25.9000015, -46.0]
+        [17.5, -25.900_002, -46.0]
     );
     assert_eq!(
         [vertices[2].x, vertices[2].y, vertices[2].z],
-        [18.0657654, -25.8442764, -46.0]
+        [18.065_765, -25.844_276, -46.0]
     );
     let last = vertices.last().unwrap();
     assert_eq!(
         [last.x, last.y, last.z],
-        [-18.4259415, 25.6696777, -16.2765388]
+        [-18.425_941, 25.669_678, -16.276_539]
     );
     let triangles = &mesh.triangles.triangles;
     assert_eq!(
@@ -152,9 +152,9 @@ fn model(archive: &mut ProjectArchive<'_>, path: &str) -> ModelDocument {
     deserialize_xml(&bytes, XmlRole::Model).unwrap()
 }
 
-fn bounds(points: impl Iterator<Item = [f64; 3]>) -> [[f64; 3]; 2] {
+fn bounds(points: impl Iterator<Item = [f32; 3]>) -> [[f32; 3]; 2] {
     points.fold(
-        [[f64::INFINITY; 3], [f64::NEG_INFINITY; 3]],
+        [[f32::INFINITY; 3], [f32::NEG_INFINITY; 3]],
         |mut bounds, point| {
             for axis in 0..3 {
                 bounds[0][axis] = bounds[0][axis].min(point[axis]);

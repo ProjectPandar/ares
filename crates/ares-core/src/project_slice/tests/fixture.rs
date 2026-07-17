@@ -15,9 +15,9 @@ async fn task22a_ksr_fixture_plans_exact_460_layers_from_3mf_only() {
     let state = prepare_project_slice(ksr_project()).unwrap();
     assert_eq!(state.project.objects().len(), 1);
     assert_eq!(state.resolved.objects.len(), 1);
-    assert_eq!(state.planned_objects.len(), 1);
+    assert_eq!(state.intersected_objects.len(), 1);
 
-    let plan = &state.planned_objects[0];
+    let plan = &state.intersected_objects[0].plan;
     assert_eq!(plan.source_object_index, 0);
     assert_eq!(plan.transform_index, 0);
     assert_eq!(
@@ -79,7 +79,7 @@ fn task22a_ksr_fixture_plan_is_deterministic_and_config_block_unchanged() {
     let first = prepare_project_slice(ksr_project()).unwrap();
     let second = prepare_project_slice(ksr_project()).unwrap();
 
-    assert_eq!(first.planned_objects, second.planned_objects);
+    assert_eq!(first.intersected_objects, second.intersected_objects);
     assert_eq!(first.resolved, second.resolved);
     assert_eq!(first.config_block, second.config_block);
 

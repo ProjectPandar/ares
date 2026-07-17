@@ -28,11 +28,17 @@ fn project_import_retains_distinct_path_qualified_object_and_volume_identity() {
         "3D/a.model"
     );
     assert_eq!(
-        project.objects()[0].volumes()[0].mesh().vertices()[1].x,
+        project.objects()[0].volumes()[0]
+            .transform()
+            .transform_point(project.objects()[0].volumes()[0].mesh().vertices()[1])
+            .x,
         1.0
     );
     assert_eq!(
-        project.objects()[1].volumes()[0].mesh().vertices()[1].x,
+        project.objects()[1].volumes()[0]
+            .transform()
+            .transform_point(project.objects()[1].volumes()[0].mesh().vertices()[1])
+            .x,
         9.0
     );
 }
@@ -182,7 +188,12 @@ fn project_import_keeps_part_matrix_as_source_provenance_only() {
     let volume = &project.objects()[0].volumes()[0];
     let origin = Point3d::new(0.0, 0.0, 0.0);
 
-    assert_eq!(volume.transform().transform_point(origin), origin);
+    assert_eq!(
+        volume
+            .transform()
+            .transform_point(volume.mesh().vertices()[0]),
+        origin
+    );
     assert_eq!(
         volume.source_transform().transform_point(origin),
         Point3d::new(4.0, 0.0, 0.0)

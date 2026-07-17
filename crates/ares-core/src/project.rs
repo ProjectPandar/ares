@@ -31,6 +31,7 @@ mod tests {
     mod layer_config_ranges;
     mod model;
     mod path;
+    mod task22b_transform;
     mod transform;
     mod xml_limits;
 }

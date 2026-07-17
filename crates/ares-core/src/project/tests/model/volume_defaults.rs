@@ -98,7 +98,7 @@ fn unmatched_parts_default_without_mutating_source_or_component_transform() {
         volume
             .transform()
             .transform_point(Point3d::new(0.0, 0.0, 0.0)),
-        Point3d::new(4.0, 0.0, 0.0)
+        Point3d::new(4.5, 0.5, 0.0)
     );
     let source = &project.documents().model_settings.objects[0];
     assert_eq!(source.parts.len(), 1);
