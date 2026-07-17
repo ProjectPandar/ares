@@ -55,7 +55,7 @@ fn ranges_sort_lexicographically_without_normalizing_raw_shapes() {
 }
 
 #[test]
-fn later_duplicate_options_win_with_region_only_classification() {
+fn task22a_range_layer_height_is_typed_separate_and_last_write_wins() {
     let mut project = LayerProject::one_object();
     project.insert_ranges(
         "Metadata/layer_config_ranges.xml",
@@ -63,23 +63,26 @@ fn later_duplicate_options_win_with_region_only_classification() {
           <option opt_key="wall_loops">2</option>
           <option opt_key="layer_height">0.18</option>
           <option opt_key="wall_loops">9</option>
+          <option opt_key="layer_height">0.24</option>
         </range></object></objects>"#,
     );
 
     let loaded = load_project(project.bytes()).unwrap();
-    let overrides = loaded.objects()[0].layer_config_ranges()[0].region_overrides();
+    let range = &loaded.objects()[0].layer_config_ranges()[0];
+    let overrides = range.region_overrides();
 
+    assert_eq!(range.layer_height(), Some(crate::OrcaFloat(0.24)));
     assert_eq!(overrides.wall_loops, Some(crate::OrcaInt(9)));
     assert_eq!(overrides.present_keys(), ["wall_loops"]);
 }
 
 #[test]
-fn later_complete_duplicate_range_replaces_earlier_and_signed_zero_is_equal() {
+fn task22a_range_duplicate_replacement_clears_prior_layer_height() {
     let mut project = LayerProject::one_object();
     project.insert_ranges(
         "Metadata/layer_config_ranges.xml",
         r#"<objects><object id="1">
-          <range min_z="-0.0" max_z="2"><option opt_key="wall_loops">8</option><option opt_key="sparse_infill_density">31%</option></range>
+          <range min_z="-0.0" max_z="2"><option opt_key="layer_height">0.18</option><option opt_key="wall_loops">8</option><option opt_key="sparse_infill_density">31%</option></range>
           <range min_z="0.0" max_z="2"><option opt_key="extruder">5</option></range>
         </object></objects>"#,
     );
@@ -90,6 +93,7 @@ fn later_complete_duplicate_range_replaces_earlier_and_signed_zero_is_equal() {
     assert_eq!(ranges.len(), 1);
     assert_eq!(ranges[0].min_z().to_bits(), 0.0_f64.to_bits());
     assert_eq!(ranges[0].max_z(), 2.0);
+    assert_eq!(ranges[0].layer_height(), None);
     assert_eq!(ranges[0].region_overrides().present_keys(), ["extruder"]);
     assert_eq!(
         ranges[0].region_overrides().extruder,

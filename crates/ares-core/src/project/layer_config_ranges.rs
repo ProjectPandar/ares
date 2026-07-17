@@ -2,7 +2,10 @@ use std::collections::BTreeSet;
 
 use serde::Deserialize;
 
-use crate::{SliceError, options::RegionOptionOverrides};
+use crate::{
+    OrcaFloat, SliceError,
+    options::{ObjectOptionOverrides, RegionOptionOverrides},
+};
 
 use super::{
     PackagePath, ProjectArchive,
@@ -17,6 +20,7 @@ const INVALID_PREFIX: &str = "invalid project layer configuration ranges XML: ";
 pub struct LayerConfigRange {
     min_z: f64,
     max_z: f64,
+    layer_height: Option<OrcaFloat>,
     region_overrides: RegionOptionOverrides,
 }
 
@@ -27,6 +31,10 @@ impl LayerConfigRange {
 
     pub fn max_z(&self) -> f64 {
         self.max_z
+    }
+
+    pub(crate) fn layer_height(&self) -> Option<OrcaFloat> {
+        self.layer_height
     }
 
     #[cfg_attr(not(test), allow(dead_code))]
@@ -134,18 +142,32 @@ fn parse_ranges(source: Vec<LayerRange>) -> Result<Vec<LayerConfigRange>, SliceE
     for range in source {
         let min_z = parse_bound(&range.min_z, "min_z")?;
         let max_z = parse_bound(&range.max_z, "max_z")?;
+        let mut layer_height = None;
         let mut region_overrides = RegionOptionOverrides::default();
         for option in range.options {
-            super::super::options::deserialize_region_model_field(
-                option.key,
-                option.value,
-                &mut region_overrides,
-            )
-            .map_err(|error| invalid(bounded(&error.to_string(), 416)))?;
+            if option.key == "layer_height" {
+                let mut object_overrides = ObjectOptionOverrides::default();
+                super::super::options::deserialize_object_model_field(
+                    option.key,
+                    option.value,
+                    &mut object_overrides,
+                    &mut region_overrides,
+                )
+                .map_err(|error| invalid(bounded(&error.to_string(), 416)))?;
+                layer_height = object_overrides.layer_height;
+            } else {
+                super::super::options::deserialize_region_model_field(
+                    option.key,
+                    option.value,
+                    &mut region_overrides,
+                )
+                .map_err(|error| invalid(bounded(&error.to_string(), 416)))?;
+            }
         }
         let parsed = LayerConfigRange {
             min_z,
             max_z,
+            layer_height,
             region_overrides,
         };
         if let Some(index) = ranges

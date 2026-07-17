@@ -15,6 +15,18 @@ const FLUSH_MATRIX: &str = concat!(
     "\t]",
 );
 const INVALID_FLUSH_MATRIX: &str = "\t\"flush_volumes_matrix\": [\r\n\t\t\"0\"\r\n\t]";
+const MIN_LAYER_HEIGHTS: &str = concat!(
+    "\t\"min_layer_height\": [\r\n",
+    "\t\t\"0.08\",\r\n",
+    "\t\t\"0.08\"\r\n",
+    "\t]",
+);
+const MAX_LAYER_HEIGHTS: &str = concat!(
+    "\t\"max_layer_height\": [\r\n",
+    "\t\t\"0.28\",\r\n",
+    "\t\t\"0.28\"\r\n",
+    "\t]",
+);
 
 #[tokio::test]
 async fn project_config_export_preserves_archive_error_precedence() {
@@ -53,6 +65,30 @@ async fn project_config_export_returns_exact_bambu_flush_matrix_error() {
             "Flush volumes matrix do not match to the correct size!".to_owned()
         )
     );
+}
+
+#[tokio::test]
+async fn task22a_nozzle_height_vector_errors_precede_config_writer() {
+    for (from, to, key) in [
+        (
+            MIN_LAYER_HEIGHTS,
+            "\t\"min_layer_height\": []",
+            "min_layer_height",
+        ),
+        (
+            MAX_LAYER_HEIGHTS,
+            "\t\"max_layer_height\": []",
+            "max_layer_height",
+        ),
+    ] {
+        let mut parts = invalid_flush_matrix_fixture();
+        parts.replace("Metadata/project_settings.config", from, to);
+
+        assert_eq!(
+            slice_project(parts.bytes(), metadata()).await.unwrap_err(),
+            SliceError::InvalidInput(format!("invalid Orca option {key}"))
+        );
+    }
 }
 
 #[tokio::test]

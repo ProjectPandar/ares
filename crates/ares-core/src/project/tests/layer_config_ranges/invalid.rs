@@ -93,6 +93,19 @@ fn unknown_keys_and_invalid_values_are_bounded_without_echoing_attacker_input() 
 }
 
 #[test]
+fn task22a_range_layer_height_invalid_value_is_bounded() {
+    let huge_value = "not-a-height-".to_owned() + &"9".repeat(4_096);
+    let xml = ranges(&format!(
+        r#"<object id="1"><range min_z="0" max_z="1"><option opt_key="layer_height">{huge_value}</option></range></object>"#
+    ));
+
+    let message = invalid_document(&xml);
+
+    assert!(message.contains("layer_height"), "{message}");
+    assert!(!message.contains(&huge_value), "{message}");
+}
+
+#[test]
 fn unknown_xml_names_are_bounded_without_echoing_attacker_input() {
     for huge_name in [
         "element_".to_owned() + &"x".repeat(4_096),

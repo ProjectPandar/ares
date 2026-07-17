@@ -9,6 +9,16 @@ pub(super) fn validate(
     if physical_extruder_count == 0 {
         return Err(invalid_option("nozzle_diameter"));
     }
+    validate_minimum_len(
+        "min_layer_height",
+        settings.project.print.min_layer_height.0.len(),
+        1,
+    )?;
+    validate_minimum_len(
+        "max_layer_height",
+        settings.project.print.max_layer_height.0.len(),
+        1,
+    )?;
 
     let logical_filament_count = settings.filament.gcode.filament_diameter.0.len();
     if logical_filament_count == 0 {

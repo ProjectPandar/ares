@@ -88,6 +88,10 @@ impl Project {
     pub(crate) fn documents(&self) -> &ProjectDocuments {
         &self.documents
     }
+
+    pub(crate) fn has_painted_layer_height_profile(&self) -> bool {
+        self.documents.has_painted_layer_height_profile
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -342,4 +346,5 @@ pub(crate) struct ProjectDocuments {
     pub slice_info: SliceInfo,
     pub filament_sequences: FilamentSequences,
     pub plate_documents: Vec<PlateJson>,
+    pub has_painted_layer_height_profile: bool,
 }

@@ -1078,9 +1078,61 @@ does not wire profiles into project slicing, so valid projects still reach
 Printer and process variants, stride-two behavior, profile-to-project wiring,
 the remaining Task 20A work and Tasks 20B-20E, geometry, toolpaths, G-code,
 generated-by metadata, post-processing, metadata byte parity, and complete
-normalized KSR parity remain deferred. Whole spec, code-quality, and
+normalized KSR parity remain deferred. Task 20A.2 was released as commit
+`4281e913b8eeaaeb6111cbefdf06f896f5c611aa`; exact-SHA Tier 1 run
+`29520118127` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### 2026-07-16 Plan typed fixed project layers (Task 22A)
+
+Task 22A remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The named upstream boundaries are
+`Slicing.hpp:25-38,44-52,66-85,98-114`,
+`Slicing.cpp:24-43,62-70,106-146,228-304,713-866`,
+`Model.cpp:1460-1499`, `PrintRegion.cpp:71-109`,
+`PrintObject.cpp:3683-3686,3732-3833`,
+`PrintObjectSlice.cpp:24-73,817-830`,
+`PrintApply.cpp:104-167,1015-1054,1525-1621`, `Config.hpp:624-628`,
+`libslic3r.h:46,48-60,300-310`, and
+`Format/bbs_3mf.cpp:209-216,1896-1903,2087-2095,2824-2881`. The Rust
+destination is private `ares-core::project_slice` ownership of
+`SlicingParameters`, fixed profiles, planned print objects, and ordered
+`PlannedLayer` records. Its prepared state owns the loaded project, one resolved
+configuration, optional config block, and materialized planned records.
+
+The approved supported subset adds typed presence for case-insensitive painted
+layer-height profiles and object-owned range `layer_height`, rejecting either
+before fixed planning. Raft, support, precise-Z, and resolved region ZAA are
+also gated; typed true parameter-modifier `zaa_enabled` is conservatively
+rejected until modifier geometry and region assignment are implemented.
+
+Resolved objects retain stable source identity. Bounds use each source object's
+first instance composed with every model-part volume transform, require every
+transformed vertex to be finite, and include unreferenced vertices in max-Z.
+The complete object-extruder source partition includes six
+gated region feature selectors, print-wide brim, and object/volume fallback for
+model parts and parameter modifiers. Sorted zero-based IDs feed Orca's
+deliberate subtract-one/first-value nozzle-option indexing without
+`filament_map`; bare range selectors enter only through occupied resolved
+feature fallback.
+
+Fixed profiles preserve first-layer insertion, regular-height coverage, strict
+approximate compression, midpoint termination, and ordered pair-to-record
+conversion. The shared generic budget allows exactly 100,000 `PlannedLayer`
+records across all object/transform groups and rejects record 100,001.
+
+The real committed 3MF alone prepares one print object with 460 records. The
+first is `(id=0,height=0.2,print_z=0.2,slice_z=0.1)` and the final print-Z bits
+are `0x4057000000000036`. Its Task 19C config block remains exactly 49,004 bytes
+with SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
+Public slicing still returns `ProjectSlicingIncomplete` after planning and emits
+no successful or placeholder G-code.
+
+Variable/adaptive layers, modifier geometry, scaled XY and Clipper behavior,
+mesh-plane slicing, paths/G-code, generated metadata, and successful full KSR
+parity remain explicitly deferred. Whole specification, code-quality, and
 default-model OpenCode implementation reviews are approved; documentation and
-release gates remain pending, so Task 20A.2 is not yet released.
+release gates remain pending, so Task 22A is not yet released.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 

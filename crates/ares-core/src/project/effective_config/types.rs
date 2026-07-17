@@ -44,6 +44,7 @@ pub(crate) struct ResolvedLayerCandidate {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ResolvedProjectObject {
+    pub(crate) source_object_index: usize,
     pub(crate) object: ObjectOptions,
     pub(crate) print_objects: Vec<ResolvedPrintObjectConfig>,
     pub(crate) layer_candidates: Vec<ResolvedLayerCandidate>,

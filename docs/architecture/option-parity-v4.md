@@ -2,15 +2,14 @@
 
 ## Status
 
-Tasks 16 through 20A.1 are released. Task 20A.1 was released as commit
-`e0c50564283744b3dd3388eeaa10f624a492ff1f`; exact-SHA Tier 1 run
-`29488449752` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
-Task 20A.2's typed filament variant inheritance implementation is
+Tasks 16 through 20A.2 are released. Task 20A.2 was released as commit
+`4281e913b8eeaaeb6111cbefdf06f896f5c611aa`; exact-SHA Tier 1 run
+`29520118127` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+Task 22A's typed slicing-parameter and fixed-layer-planning implementation is
 whole-approved and is at its documentation gate; its post-documentation
 release matrix, commit, push, and exact-pushed-SHA Tier 1 gate remain pending.
-Consumer migration outside this profile slice, geometry slicing, complete
-G-code assembly, and final byte parity remain owned by later source-cited
-rewrite tasks in the approved parity plan.
+Geometry slicing, complete G-code assembly, and final byte parity remain owned
+by later source-cited rewrite tasks in the approved parity plan.
 
 ## Fixed baseline
 
@@ -1966,6 +1965,63 @@ writer.
 Printer and process variants, stride-two behavior, profile-to-project wiring,
 the remaining Task 20A work and Tasks 20B-20E, geometry, toolpaths, G-code,
 generated-by metadata, post-processing, metadata byte parity, and complete
-normalized KSR parity remain deferred. The Task 20A.2 implementation has whole
-spec, code-quality, and default-model OpenCode approval and is pending its
-documentation review and release gates; it is not yet released.
+normalized KSR parity remain deferred. Task 20A.2 was released as commit
+`4281e913b8eeaaeb6111cbefdf06f896f5c611aa`; exact-SHA Tier 1 run
+`29520118127` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
+
+### Task 22A: typed slicing parameters and fixed layer planning
+
+Task 22A remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is
+`Slicing.hpp:25-38,44-52,66-85,98-114`,
+`Slicing.cpp:24-43,62-70,106-146,228-304,713-866`,
+`Model.cpp:1460-1499`, `PrintRegion.cpp:71-109`,
+`PrintObject.cpp:3683-3686,3732-3833`,
+`PrintObjectSlice.cpp:24-73,817-830`,
+`PrintApply.cpp:104-167,1015-1054,1525-1621`, `Config.hpp:624-628`,
+`libslic3r.h:46,48-60,300-310`, and the painted-profile archive handling in
+`Format/bbs_3mf.cpp:209-216,1896-1903,2087-2095,2824-2881`. Private
+`project_slice` modules own `SlicingParameters`, `PlannedPrintObject`, and
+`PlannedLayer`; the prepared state owns the loaded project, its single resolved
+configuration, optional config block, and materialized planned objects before
+the existing public incomplete boundary.
+
+The supported subset rejects a case-insensitive painted layer-height-profile
+entry, an object-owned range `layer_height`, raft/support/precise-Z requests,
+resolved region ZAA, and any typed true parameter-modifier `zaa_enabled`.
+Painted-profile and range-height checks are typed presence gates; modifier ZAA
+is conservatively rejected until modifier geometry and region assignment exist.
+No deferred input is silently converted into a fixed-height plan.
+
+Planning preserves the resolved object's stable source identity. Object height
+uses the source object's first instance composed with each model-part volume
+transform, requires every transformed vertex to be finite, and takes the
+maximum Z across every mesh vertex, including unreferenced vertices.
+Object-extruder collection covers the six gated region feature
+selectors, print-wide brim contribution, and object/volume fallback for model
+parts and parameter modifiers, then sorts and deduplicates zero-based IDs. The
+nozzle helpers deliberately reproduce Orca's subtract-one/first-value indexing
+without consulting `filament_map`; a bare range selector participates only
+through an occupied resolved feature fallback.
+
+The fixed profile installs the first layer, appends the uncovered regular-height
+interval, and compresses adjacent approximately equal points. Pair generation
+uses Orca's midpoint termination and produces ordered records with pair-index
+IDs, `height = hi - lo`, `print_z = hi`, and midpoint `slice_z`. A single
+project-wide budget permits exactly 100,000 materialized records and rejects
+the next one; it is a generic input resource limit, not fixture data.
+
+Using only `ksr_fdmtest_v4.project.3mf`, the approved implementation prepares
+one planned print object with 460 complete records. Its first record is
+`(id=0,height=0.2,print_z=0.2,slice_z=0.1)` and its final print-Z bits are
+`0x4057000000000036`. The released Task 19C config block remains exactly 49,004
+bytes with SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
+The public API still returns `ProjectSlicingIncomplete` only after private
+planning; it emits no placeholder or successful G-code.
+
+Variable/adaptive layers, modifier geometry, scaled XY and Clipper behavior,
+mesh-plane slicing, paths and G-code, generated metadata, and successful full
+KSR parity remain explicitly deferred. Whole specification, code-quality, and
+default-model OpenCode implementation reviews are approved; documentation and
+release gates remain pending, so Task 22A is not yet released.

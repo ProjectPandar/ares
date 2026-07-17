@@ -34,6 +34,7 @@ const MODEL_SETTINGS_PATH: &str = "Metadata/model_settings.config";
 const SLICE_INFO_PATH: &str = "Metadata/slice_info.config";
 const FILAMENT_SEQUENCE_PATH: &str = "Metadata/filament_sequence.json";
 const PROJECT_SETTINGS_PATH: &str = "Metadata/project_settings.config";
+const LAYER_HEIGHT_PROFILE_PATH: &str = "Metadata/layer_heights_profile.txt";
 
 pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
     let input = input.as_ref();
@@ -43,6 +44,10 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
 
     let mut archive = ProjectArchive::open(input, ArchiveLimits::PROJECT)?;
     let archive_paths = archive.paths().cloned().collect::<BTreeSet<_>>();
+    let has_painted_layer_height_profile = archive_paths.iter().any(|path| {
+        path.as_str()
+            .eq_ignore_ascii_case(LAYER_HEIGHT_PROFILE_PATH)
+    });
     let content_types: ContentTypes =
         read_xml(&mut archive, CONTENT_TYPES_PATH, XmlRole::ContentTypes)?;
     content_types.validate_required()?;
@@ -105,6 +110,7 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
             slice_info,
             filament_sequences,
             plate_documents,
+            has_painted_layer_height_profile,
         },
     ))
 }

@@ -6,7 +6,7 @@ use crate::{
     project::{
         effective_config::{
             ValidatedMaterializedProject,
-            candidates::resolve_project_candidates,
+            candidates::{resolve_project_candidates, resolve_project_objects},
             grouping::group_print_object_transforms,
             types::{ResolvedLayerCandidate, ResolvedPrintObjectConfig},
         },
@@ -64,6 +64,36 @@ fn source_objects_keep_separate_candidate_ownership() {
     assert_eq!(resolved.len(), 2);
     assert_eq!(only_region(&resolved[0]).wall_loops, OrcaInt(2));
     assert_eq!(only_region(&resolved[1]).wall_loops, OrcaInt(3));
+}
+
+#[test]
+fn task22a_source_object_index_survives_filtered_object() {
+    let objects = [
+        object(
+            Default::default(),
+            Default::default(),
+            vec![model_part(10)],
+            Vec::new(),
+            Vec::new(),
+        ),
+        object(
+            Default::default(),
+            Default::default(),
+            vec![model_part(20)],
+            vec![Transform3d::IDENTITY],
+            Vec::new(),
+        ),
+    ];
+    let groups = group_print_object_transforms(&objects);
+
+    let shells = resolve_project_objects(&settings(), validated(), &objects, &groups).unwrap();
+    assert_eq!(shells.len(), 1);
+    assert_eq!(shells[0].source_object_index, 1);
+
+    let candidates =
+        resolve_project_candidates(&settings(), validated(), &objects, &groups).unwrap();
+    assert_eq!(candidates.len(), 1);
+    assert_eq!(candidates[0].source_object_index, 1);
 }
 
 #[test] #[rustfmt::skip]

@@ -3,6 +3,7 @@ mod document;
 pub(in crate::project::tests) mod fixture;
 mod import;
 mod invalid;
+mod layer_height_profile;
 mod production;
 mod production_colors;
 mod settings;

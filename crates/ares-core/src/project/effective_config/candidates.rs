@@ -34,6 +34,7 @@ pub(crate) fn resolve_project_objects(
             );
             reject_unsupported_object_sources(object, &object_options)?;
             Ok(ResolvedProjectObject {
+                source_object_index: groups.source_object_index,
                 object: object_options,
                 print_objects: groups
                     .transforms

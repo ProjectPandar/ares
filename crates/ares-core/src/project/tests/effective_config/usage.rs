@@ -85,6 +85,7 @@ fn resolved_object(object: ObjectOptions, regions: Vec<RegionOptions>) -> Resolv
         })
         .collect();
     ResolvedProjectObject {
+        source_object_index: 0,
         object,
         print_objects: vec![ResolvedPrintObjectConfig {
             transform: Transform3d::IDENTITY,

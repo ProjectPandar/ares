@@ -26,6 +26,36 @@ fn rejects_empty_physical_and_logical_cardinalities() {
 }
 
 #[test]
+fn task22a_nozzle_height_vectors_reject_each_empty_vector_in_fixed_order() {
+    let project = valid_project();
+
+    let mut settings = valid_settings(2, 2);
+    settings.project.print.min_layer_height.0.clear();
+    assert_invalid_key(validate(&settings, &project), "min_layer_height");
+
+    let mut settings = valid_settings(2, 2);
+    settings.project.print.max_layer_height.0.clear();
+    assert_invalid_key(validate(&settings, &project), "max_layer_height");
+
+    let mut settings = valid_settings(2, 2);
+    settings.project.print.min_layer_height.0.clear();
+    settings.project.print.max_layer_height.0.clear();
+    assert_invalid_key(validate(&settings, &project), "min_layer_height");
+}
+
+#[test]
+fn task22a_nozzle_height_vectors_accept_singletons_for_many_extruders() {
+    let settings = valid_settings(4, 4);
+    let project = valid_project();
+
+    let validated = validate(&settings, &project).unwrap();
+
+    assert_eq!(settings.project.print.min_layer_height.0.len(), 1);
+    assert_eq!(settings.project.print.max_layer_height.0.len(), 1);
+    assert_eq!(validated.physical_extruder_count, 4);
+}
+
+#[test]
 fn rejects_filament_map_length_mismatch() {
     let project = valid_project();
     for entries in [vec![OrcaInt(1)], vec![OrcaInt(1), OrcaInt(2), OrcaInt(1)]] {
