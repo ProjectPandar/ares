@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
 use serde_json::Value;
 
@@ -381,7 +380,7 @@ fn parse_flow_ratio(values: &BTreeMap<String, Value>, key: &str) -> Result<f64, 
 fn parse_flow_ratio_in_range(
     values: &BTreeMap<String, Value>,
     key: &str,
-    range: RangeInclusive<f64>,
+    range: std::ops::RangeInclusive<f64>,
 ) -> Result<f64, SliceError> {
     let Some(value) = values.get(key) else {
         return Ok(1.0);

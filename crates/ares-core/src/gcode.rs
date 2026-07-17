@@ -9,7 +9,6 @@ use crate::gcode_layer_markers as markers;
 use crate::gcode_move_buffer::{BufferedMove, flush};
 use crate::gcode_object_labels::{ObjectLabelConfig, ObjectLabelState};
 use crate::gcode_pressure_advance::{PressureAdvanceMoveState, startup_command};
-use crate::gcode_spiral_vase::SpiralVaseRunState;
 use crate::gcode_stat_placeholders::finish as finish_stat_placeholders;
 use crate::gcode_travel_retraction::{
     TravelRetractionCommand, TravelRetractionState, TravelUnretractCommand,
@@ -54,7 +53,7 @@ pub(crate) fn format_gcode(
     let first_layer_bed_temperature = options.first_layer_bed_temperature()?;
     let machine_limits = options.machine_limits()?;
     let input_shaping = options.input_shaping_config()?;
-    let mut spiral_vase = SpiralVaseRunState::from_options(options)?;
+    let mut spiral_vase = crate::gcode_spiral_vase::SpiralVaseRunState::from_options(options)?;
     options.filament_config_exports()?;
     crate::gcode_runtime_options::consume(options)?;
     let power_loss_recovery_mode = options.power_loss_recovery_mode()?;

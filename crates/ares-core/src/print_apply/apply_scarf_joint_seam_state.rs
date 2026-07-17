@@ -79,8 +79,7 @@ pub(super) fn staged_apply_scarf_joint_seam(
     let has_scarf_joint_seam = objects
         .iter()
         .any(StagedApplyScarfJointSeamObject::has_scarf_joint_seam);
-    let config_set =
-        has_scarf_joint_seam.then_some(StagedApplyScarfJointSeamSet { value: true });
+    let config_set = has_scarf_joint_seam.then_some(StagedApplyScarfJointSeamSet { value: true });
 
     StagedApplyScarfJointSeamResult {
         has_scarf_joint_seam,
