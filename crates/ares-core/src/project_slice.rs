@@ -5,6 +5,7 @@ use crate::{
 
 mod bounds;
 mod capabilities;
+mod chained_intersections;
 mod extruders;
 mod layers;
 mod parameters;
@@ -25,6 +26,7 @@ pub async fn slice_project(
         config_block,
         intersected_objects,
     } = state::prepare_project_slice(project)?;
+    let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
 
     let documents = project.documents();
     let _ = (
@@ -73,13 +75,22 @@ pub async fn slice_project(
             }
         }
     }
-    for intersected_object in intersected_objects {
-        let (plan, volumes) = intersected_object.into_parts();
+    for chained_object in chained_objects {
+        let (plan, volumes) = chained_object.into_parts();
         for volume in volumes {
             let (ordinal, volume_type, layers) = volume.into_parts();
             let _ = (ordinal, volume_type);
-            for line in layers.into_iter().flatten() {
-                let _ = (line.a(), line.b(), line.edge_type());
+            for polygon in layers.iter().flat_map(|layer| layer.polygons()) {
+                let _ = polygon.points();
+            }
+            for polyline in layers.iter().flat_map(|layer| layer.open_polylines()) {
+                let _ = (
+                    polyline.start(),
+                    polyline.end(),
+                    polyline.points(),
+                    polyline.length(),
+                    polyline.consumed(),
+                );
             }
         }
         let layers::PlannedPrintObject {

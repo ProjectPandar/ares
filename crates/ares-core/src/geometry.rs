@@ -1,6 +1,8 @@
 mod coord;
+mod polygon;
 
 pub(crate) use coord::{Coord, CoordinateScale, Point};
+pub(crate) use polygon::Polygon;
 
 const _: usize = std::mem::size_of::<Coord>();
 const _: fn(&crate::Point2dList) -> CoordinateScale = CoordinateScale::from_printable_area;

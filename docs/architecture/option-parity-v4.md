@@ -2091,3 +2091,51 @@ final normalized KSR parity are also explicitly deferred. Supported requests
 still return `ProjectSlicingIncomplete`, but only after the private raw state is
 built. Whole specification, code-quality, and default-model OpenCode reviews
 are approved; documentation and release gates remain pending.
+
+### Task 22C: triangle-connectivity slice chaining
+
+Task 22C remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is the
+integer point and ordered-point storage in `libslic3r.h`, `Point.hpp`,
+`MultiPoint.hpp`, and `Polygon.hpp`, the intersection reference/line and local
+open-polyline records in `TriangleMeshSlicer.cpp:58-145,1043-1056`, and only
+`chain_lines_by_triangle_connectivity` plus its first `make_loops` call in
+`TriangleMeshSlicer.cpp:1058-1161,1383-1415`. Private `ares-core`
+`geometry::polygon`, `mesh_slicer::chaining`, and
+`project_slice::chained_intersections` modules own the Rust rewrite. The
+project path does not call the legacy f64 STL segment/contour pipeline.
+
+Each raw layer is consumed once. Separate flat Edge and Vertex start-reference
+indexes preserve tagged identity, and records are ordered by identity followed
+by original raw index. Raw index remains the component seed order and provides
+a deterministic FIFO tie-break within an equal-identity range. Chaining follows
+only the directed last-B to candidate-A identity, never connects by coordinate,
+inspects candidate B, or reverses a line. Closed polygons preserve ordered
+integer points without a duplicated terminal point, start rotation, winding
+normalization, or cleanup. Unclosed chains preserve their tagged start/end,
+all ordered points, f64 Euclidean length, and initial unconsumed state.
+
+The project wrapper preserves print-object order and plan, one-based volume
+ordinal and type, and every planned layer slot including empty layers. The
+production `slice_project` path moves Task 22B raw state directly through this
+wrapper, traverses the resulting polygons and open polylines, and continues to
+return `ProjectSlicingIncomplete`; Task 22C consumes no new Option and emits no
+placeholder or successful G-code.
+
+Using only the committed 3MF, the implementation produces 460 chained layer
+slots, 3,288 closed polygons, zero open polylines, and 116,472 closed polygon
+points. The exact face/seed-order encoding has SHA-256
+`6654d9a95ef1bb024f986552b0e8c866ad55dcbe5de3af0cf9c34ff52372adbe`.
+The independently normalized numeric encoding is 2,190,993 bytes with SHA-256
+`7df1e0f90f90e4ff5ca6249c1ceb61e5e1aca74dbdb7b9153fffeff4cd165cdd`.
+The Task 19C config block remains exactly 49,004 bytes with SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
+
+Task 22D must start from the adjacent source-cited open-chain boundary:
+`TriangleMeshSlicer.cpp:1163-1381,1428-1462`, including length ordering,
+identity-exact joining with the source's allowed reversal passes, nearest-end
+search, 2 mm gap repair, and remaining loop-closing passes. Those operations,
+`slicing_mode`, polygon area/orientation and hole ownership, Clipper processing,
+negative/modifier volume booleans, regions, surfaces, perimeters, fill,
+supports, toolpaths, motion, G-code assembly, metadata, post-processing, and
+complete normalized `ksr_fdmtest_v4` parity remain explicitly deferred.

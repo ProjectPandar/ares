@@ -19,7 +19,7 @@ pub(crate) struct IntersectionPoint {
 }
 
 impl IntersectionPoint {
-    const fn new(point: Point, reference: EndpointReference) -> Self {
+    pub(super) const fn new(point: Point, reference: EndpointReference) -> Self {
         Self { point, reference }
     }
 
@@ -40,7 +40,11 @@ pub(crate) struct IntersectionLine {
 }
 
 impl IntersectionLine {
-    const fn new(a: IntersectionPoint, b: IntersectionPoint, edge_type: FacetEdgeType) -> Self {
+    pub(super) const fn new(
+        a: IntersectionPoint,
+        b: IntersectionPoint,
+        edge_type: FacetEdgeType,
+    ) -> Self {
         Self { a, b, edge_type }
     }
 

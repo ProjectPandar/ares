@@ -2,9 +2,11 @@ use std::ops::Range;
 
 use crate::SliceError;
 
+mod chaining;
 mod intersection;
 mod topology;
 
+pub(crate) use chaining::{ChainedLayer, chain_lines_by_triangle_connectivity};
 pub(crate) use intersection::{
     EndpointReference, FacetEdgeType, IntersectionLine, IntersectionPoint, intersect_facet,
 };

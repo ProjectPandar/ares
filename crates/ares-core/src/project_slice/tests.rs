@@ -1,5 +1,7 @@
 mod bounds;
 mod capabilities;
+mod chained_fixture;
+mod chained_intersections;
 mod fixture;
 mod integration;
 mod parameters;

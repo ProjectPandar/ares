@@ -1198,6 +1198,46 @@ real private raw state is built. Whole specification, code-quality, and
 default-model OpenCode implementation reviews are approved; documentation and
 release gates remain pending.
 
+### 2026-07-17 Chain slices by triangle connectivity (Task 22C)
+
+Task 22C remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports integer ordered-point
+storage and only the `TriangleMeshSlicer.cpp:1058-1161`
+`chain_lines_by_triangle_connectivity` function at the first
+`make_loops` call in `TriangleMeshSlicer.cpp:1383-1415`. The Rust destination
+is private `ares-core` `geometry::polygon`, `mesh_slicer::chaining`, and
+`project_slice::chained_intersections` ownership; the legacy f64 STL
+segment/contour pipeline is not a fallback.
+
+The implementation consumes each Task 22B raw layer once. Separate flat tagged
+Edge/Vertex start indexes, raw face-order seeds, and original-index FIFO within
+equal identities make the result deterministic. It connects only directed
+last-B to candidate-A identities. Closed polygons omit the duplicated terminal
+point without rotating or normalizing the path; open polylines preserve tagged
+ends, ordered points, scaled f64 length, and initial unconsumed state. Project
+object plans, volume order/ordinal/type, and every layer slot are preserved.
+
+The committed 3MF alone yields 460 chained layer slots, 3,288 closed polygons,
+zero open polylines, and 116,472 closed points. Exact face/seed-order and
+normalized numeric encodings have SHA-256
+`6654d9a95ef1bb024f986552b0e8c866ad55dcbe5de3af0cf9c34ff52372adbe`
+and `7df1e0f90f90e4ff5ca6249c1ceb61e5e1aca74dbdb7b9153fffeff4cd165cdd`;
+the latter is 2,190,993 bytes. The Task 19C config block remains 49,004 bytes
+with SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
+Production traverses the chained state and still returns
+`ProjectSlicingIncomplete`; no new Option or placeholder G-code is introduced.
+
+Task 22D is the next source-cited package. It must port the adjacent
+`TriangleMeshSlicer.cpp:1163-1381,1428-1462` open-polyline length ordering,
+exact identity joining and allowed reversal passes, nearest-endpoint search,
+2 mm gap repair, and remaining loop-closing behavior. `slicing_mode`, polygon
+orientation and hole ownership, Clipper, negative/modifier booleans, regions,
+surfaces, perimeters, fill, supports, toolpaths, G-code assembly, metadata,
+post-processing, and complete normalized `ksr_fdmtest_v4` byte parity remain
+later source-cited slices. The overall user-visible G-code parity goal is still
+incomplete.
+
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
 Task 19C ports the Bambu effective-config export boundary from fixed
