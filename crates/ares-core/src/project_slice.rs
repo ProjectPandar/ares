@@ -10,6 +10,7 @@ mod extruders;
 mod layers;
 mod looped_intersections;
 mod parameters;
+mod pre_closing_unions;
 mod profile;
 mod raw_intersections;
 mod slicing_mode_intersections;
@@ -41,6 +42,8 @@ pub async fn slice_project(
         &resolved.objects,
         spiral_mode,
     )?;
+    let pre_closing_objects =
+        pre_closing_unions::apply_project_pre_closing_unions(slicing_mode_objects)?;
 
     let documents = project.documents();
     let _ = (
@@ -89,19 +92,22 @@ pub async fn slice_project(
             }
         }
     }
-    for slicing_mode_object in slicing_mode_objects {
-        let (plan, volumes) = slicing_mode_object.into_parts();
-        for (mode, looped_layer) in volumes
+    for pre_closing_object in pre_closing_objects {
+        let (plan, volumes) = pre_closing_object.into_parts();
+        for (mode, expolygons) in volumes
             .into_iter()
             .flat_map(|volume| {
                 let (source_volume_index, ordinal, volume_type, layers) = volume.into_parts();
                 let _ = (source_volume_index, ordinal, volume_type);
                 layers
             })
-            .map(slicing_mode_intersections::SlicingModeLayer::into_parts)
+            .map(pre_closing_unions::PreClosingLayer::into_parts)
         {
             let _ = mode;
-            for polygon in looped_layer.polygons() {
+            for polygon in expolygons.into_iter().flat_map(|expolygon| {
+                let (contour, holes) = expolygon.into_parts();
+                std::iter::once(contour).chain(holes)
+            }) {
                 let _ = polygon.points();
             }
         }

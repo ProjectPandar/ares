@@ -14,6 +14,10 @@ impl Polygon {
         &self.points
     }
 
+    pub(crate) fn into_points(self) -> Vec<Point> {
+        self.points
+    }
+
     pub(crate) fn reverse(&mut self) {
         self.points.reverse();
     }

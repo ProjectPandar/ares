@@ -7,6 +7,8 @@ mod integration;
 mod looped_fixture;
 mod looped_intersections;
 mod parameters;
+mod pre_closing_fixture;
+mod pre_closing_unions;
 mod profile_layers;
 mod raw_fixture;
 mod raw_lifecycle;

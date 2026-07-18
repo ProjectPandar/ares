@@ -2238,15 +2238,76 @@ from 3MF Options rather than fixture identity. Production still returns
 passed the focused, workspace, native and WASM checks, browser-real-3MF,
 code-quality, default-model, and independent six-dimensional review gates.
 
-Task 22F must continue at `TriangleMeshSlicer.cpp:1738-1823,2003-2049` and the
-directly used Clipper/`ExPolygon` helpers, covering fill-rule-sensitive polygon
-combination, closing, and final contour ownership. The overlap at lines
-2003-2049 is deliberate: Task 22E ports its raw-mode adaptation, while Task 22F
-must port the downstream combination and `ExPolygon` behavior. Before
-cross-volume combination, it must also port the ascending volume-ID ordering
-prerequisite from `Model.hpp:1227-1230`; source archive order is not a
-substitute. Slab-loop work beginning at line 1535 that is not required by that
-boundary,
-`slice_closing_radius` behavior outside the cited calls, region/surface
-construction, perimeters, fill, supports, toolpaths, G-code assembly, metadata,
-post-processing, and complete normalized KSR parity remain explicitly deferred.
+### Task 22F: safe Clipper 6 pre-closing union
+
+Task 22F is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its source boundary is the closed
+Boolean and PolyTree dependency closure in
+`deps_src/clipper/clipper.hpp:75-81,88-100,121-123,137,141-223,225-535` and
+`deps_src/clipper/clipper.cpp:67-72,78-161,167-426,429-1614,1630-3340`, exact
+full-range slope products from `Int128.hpp:234-277`, and the direct union and
+tree ownership wrappers in
+`ClipperUtils.cpp:169-204,303-350,634-668,737-740,812-814`.
+`TriangleMeshSlicer.cpp:1738-1823,2003-2034` is consumed only
+through its initial `union_ex` result. Portable volume creation order comes from
+`Model.hpp:1227-1230`, `ObjectID.hpp:20-87`, and the released import ordinal.
+
+The private `ares-core::geometry::clipper` module owns a safe typed-index
+closed-path engine with all four operations and fill rules, exact winding,
+intersection, horizontal, join, ordered Paths, and PolyTree behavior. Minima
+and intersection ordering use one platform-neutral Rust rewrite of the
+separately audited MSVC STL 14.44 sort control flow. `union_ex` preserves the
+fixed two-pass Paths-then-fresh-PolyTree overlap workaround, and
+`ares-core::geometry::expolygon` owns each contour and its ordered holes. No
+native Clipper library, host sort, platform branch, unsafe graph, or output
+canonicalization is used. ARD-0024 is accepted, and the component-scoped
+BSL-1.0 and Apache-2.0 WITH LLVM-exception provenance is carried with the
+implementation.
+
+The private `ares-core::project_slice::pre_closing_unions` stage sorts each
+object's volumes by `VolumeOrdinal`, rejects duplicate ordinals as an internal
+invariant, projects `Regular` and `Positive` to NonZero, `EvenOdd` to EvenOdd,
+and `PositiveLargestContour` to Positive, and applies `union_ex` to every
+retained volume/layer slot. Empty slots and the original mode, source-volume
+index, ordinal, volume type, and owned result remain present. External Clipper
+coordinate overflow maps once to `SliceError::InvalidInput`; there is no raw
+polygon or alternate-engine fallback.
+
+The complete KSR pre-closing encoding is 1,645,481 bytes with SHA-256
+`209c6149c93994cc3ae6fa8e2f8f43dc9875b1b07b2320da9e67d8a2c43ab6e2`:
+2,891 contours, 397 holes, and 99,260 points. Exact representative layers
+0, 46, and 459 and the first hole-bearing layer match the corrected fixed
+source oracle, and repeat runs are byte-identical. Task 22F has 50 focused
+tests, passes the workspace, native, WASM, browser, code-quality,
+default-model, and independent six-dimensional gates, and leaves both committed
+fixtures unchanged. Production deliberately still returns
+`ProjectSlicingIncomplete`; no placeholder or reference-derived G-code is
+emitted, so complete normalized KSR parity is not claimed.
+
+Task 22G is the next small source-cited package. It ports only closed
+`ClipperOffset` from `clipper.hpp:138-139,144-167,538-575` and
+`clipper.cpp:63-65,73-106,128-134,150-161,1000-1036,3345-3777`, the directly
+used defaults and `offset_ex`/`offset2_ex` wrappers from
+`ClipperUtils.hpp:17-34,329-355,389-410` and
+`ClipperUtils.cpp:264-301,333-344,360-402,437-590,592-610`, and the project
+consumer in `TriangleMeshSlicer.hpp:20-46`,
+`TriangleMeshSlicer.cpp:1738-1824,2003-2034`, and
+`PrintObjectSlice.cpp:145-193`. It must reuse the Task 22F kernel and consume
+only the 3MF-derived KSR `slice_closing_radius=0.049` with `extra_offset=0`,
+which selects `offset2_ex` with scaled `+49000/-49000`; it must not substitute
+an invented `closing_ex` project call.
+
+Task 22H then ports post-closing largest-contour selection from
+`TriangleMeshSlicer.cpp:2025-2037`, `ExPolygon.cpp:532-549`,
+`ExPolygon.hpp:493-497`, and `Polygon.cpp:52-69`. Task 22I separately ports the
+`resolution > 0.001` to 0.0025 mm mapping and simplification closure from
+`PrintConfig.hpp:1554-1562`, `PrintConfig.cpp:5172-5179`,
+`PrintObjectSlice.cpp:166-177`, `TriangleMeshSlicer.cpp:2025-2044`,
+`ExPolygon.cpp:223-259`, `MultiPoint.cpp:164-230`, `MultiPoint.hpp:94-99`, and
+`Line.hpp:41-76,155-188`. Its StrictlySimple repair closure is
+`ClipperUtils.cpp:1019-1030`, `clipper.hpp:441-442,515-528`, and
+`clipper.cpp:1042-1051,1148-1160,2629-2645,3787-3851`. KSR's 3MF
+`resolution=0.012` therefore becomes a scaled tolerance of 2,500 only in Task
+22I. Cross-volume negative/modifier combination, regions, surfaces, perimeters,
+fill, supports, toolpaths, G-code assembly, metadata, post-processing, and
+complete normalized KSR byte parity remain later source-cited slices.

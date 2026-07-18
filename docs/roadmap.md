@@ -1295,20 +1295,64 @@ prove 3MF-only projection. Focused and full workspace tests, native and WASM
 checks, the browser real-3MF test, code-quality review, default-model review,
 and the independent six-dimensional implementation review pass.
 
-Task 22F is the next source-cited package. Its primary boundary is
-`TriangleMeshSlicer.cpp:1738-1823,2003-2049` plus only the directly used
-Clipper/`ExPolygon` helpers for fill-rule-sensitive polygon combination,
-closing, and final contour ownership. The overlap at lines 2003-2049 is
-deliberate: Task 22E implements the raw-mode adaptation, while Task 22F must
-implement the downstream combination and `ExPolygon` behavior. It must first
-establish ascending volume-ID order from `Model.hpp:1227-1230` before any
-cross-volume combination. Slab-loop work not required by that boundary,
-remaining `slice_closing_radius` behavior, regions, surfaces, perimeters, fill,
-supports,
-toolpaths, G-code assembly, metadata, post-processing, and normalized
-`ksr_fdmtest_v4` byte parity remain later source-cited slices. Production still
-returns `ProjectSlicingIncomplete`, so the persistent user-visible full G-code
-parity goal remains incomplete.
+### 2026-07-17 Port the safe Clipper 6 pre-closing union (Task 22F)
+
+Task 22F remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports the complete closed
+Boolean/PolyTree dependency closure in
+`deps_src/clipper/clipper.hpp:75-81,88-100,121-123,137,141-223,225-535` and
+`deps_src/clipper/clipper.cpp:67-72,78-161,167-426,429-1614,1630-3340`, exact
+full-range slopes from `Int128.hpp:234-277`, and the direct union, two-pass
+overlap workaround, and tree ownership boundaries in
+`ClipperUtils.cpp:169-204,303-350,634-668,737-740,812-814`. The Rust destination
+is private `ares-core::geometry::{clipper,expolygon}` plus
+`project_slice::pre_closing_unions`; ARD-0024 is accepted.
+
+The safe typed-index engine preserves all closed operations, fill rules,
+winding, intersection, horizontal, join, Paths, and PolyTree order. One
+platform-neutral Rust sort-control rewrite reproduces the separately audited
+MSVC STL 14.44 equal-key target. `union_ex` executes Paths first and a fresh
+PolyTree second. Project ownership sorts by released `VolumeOrdinal`, projects
+each retained slicing mode to its exact fill rule, preserves every layer slot,
+and maps only external coordinate overflow to `InvalidInput`; there is no
+fallback, native dependency, fixture branch, or output canonicalization.
+
+The KSR pre-closing result is exactly 1,645,481 bytes with SHA-256
+`209c6149c93994cc3ae6fa8e2f8f43dc9875b1b07b2320da9e67d8a2c43ab6e2`:
+2,891 contours, 397 holes, and 99,260 points, with exact representative layer
+matches and repeatability. Task 22F passes 50 focused tests, all full native and
+WASM/browser gates, three whole-candidate implementation approvals, and the
+independent six-dimensional review. Both committed KSR fixtures remain
+unchanged. Production still returns `ProjectSlicingIncomplete`, so no
+placeholder G-code or full normalized parity is claimed.
+
+Task 22G next ports only closed `ClipperOffset` from
+`clipper.hpp:138-139,144-167,538-575` and
+`clipper.cpp:63-65,73-106,128-134,150-161,1000-1036,3345-3777`, the required
+closed defaults and `offset_ex`/`offset2_ex` wrappers from
+`ClipperUtils.hpp:17-34,329-355,389-410` and
+`ClipperUtils.cpp:264-301,333-344,360-402,437-590,592-610`, and the exact
+consumer in `TriangleMeshSlicer.hpp:20-46`,
+`TriangleMeshSlicer.cpp:1738-1824,2003-2034`, and
+`PrintObjectSlice.cpp:145-193`. It reuses Task 22F and consumes the 3MF-derived
+KSR `slice_closing_radius=0.049` with `extra_offset=0`, producing the fixed
+scaled `+49000/-49000` `offset2_ex` closing sequence.
+
+Task 22H separately takes post-closing largest-contour selection from
+`TriangleMeshSlicer.cpp:2025-2037`, `ExPolygon.cpp:532-549`,
+`ExPolygon.hpp:493-497`, and `Polygon.cpp:52-69`. Task 22I then takes the
+`resolution > 0.001` to 0.0025 mm mapping and simplification closure from
+`PrintConfig.hpp:1554-1562`, `PrintConfig.cpp:5172-5179`,
+`PrintObjectSlice.cpp:166-177`, `TriangleMeshSlicer.cpp:2025-2044`,
+`ExPolygon.cpp:223-259`, `MultiPoint.cpp:164-230`, `MultiPoint.hpp:94-99`, and
+`Line.hpp:41-76,155-188`. StrictlySimple repair comes from
+`ClipperUtils.cpp:1019-1030`, `clipper.hpp:441-442,515-528`, and
+`clipper.cpp:1042-1051,1148-1160,2629-2645,3787-3851`. KSR
+`resolution=0.012` maps to scaled tolerance 2,500 there. Regions, surfaces,
+cross-volume booleans, perimeters, fill, supports, toolpaths, G-code assembly,
+metadata, post-processing, and normalized `ksr_fdmtest_v4` byte parity remain
+later source-cited slices. The persistent user-visible goal is therefore still
+incomplete after Task 22F.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 

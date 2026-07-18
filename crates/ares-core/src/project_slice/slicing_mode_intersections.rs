@@ -68,6 +68,11 @@ impl SlicingModeVolumeIntersections {
     pub(super) fn layers(&self) -> &[SlicingModeLayer] {
         &self.layers
     }
+
+    #[cfg(test)]
+    pub(super) fn set_ordinal_for_test(&mut self, ordinal: u32) {
+        self.volume_ordinal = ordinal;
+    }
 }
 
 pub(super) struct SlicingModePrintObject {
@@ -88,6 +93,11 @@ impl SlicingModePrintObject {
     #[cfg(test)]
     pub(super) fn volumes(&self) -> &[SlicingModeVolumeIntersections] {
         &self.volumes
+    }
+
+    #[cfg(test)]
+    pub(super) fn volumes_mut(&mut self) -> &mut Vec<SlicingModeVolumeIntersections> {
+        &mut self.volumes
     }
 }
 
