@@ -4,13 +4,13 @@ This file identifies the source and license provenance of two source-cited
 Rust rewrites in Ares. It does not set the license of the repository or of
 unrelated code.
 
-## Clipper 6 closed-path Boolean and PolyTree rewrite
+## Clipper 6 closed-path Boolean, PolyTree, and closed-offset rewrite
 
 The safe indexed implementation under
 `crates/ares-core/src/geometry/clipper.rs` and
 `crates/ares-core/src/geometry/clipper/`, except for `ordering.rs` described
-separately below, rewrites the closed-path Boolean and PolyTree behavior of
-Clipper 6.4.2 as bundled by OrcaSlicer at commit
+separately below, rewrites the closed-path Boolean, PolyTree, and closed
+ClipperOffset behavior of Clipper 6.4.2 as bundled by OrcaSlicer at commit
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`, principally
 `deps_src/clipper/clipper.hpp` and `deps_src/clipper/clipper.cpp`.
 

@@ -1326,17 +1326,37 @@ independent six-dimensional review. Both committed KSR fixtures remain
 unchanged. Production still returns `ProjectSlicingIncomplete`, so no
 placeholder G-code or full normalized parity is claimed.
 
-Task 22G next ports only closed `ClipperOffset` from
-`clipper.hpp:138-139,144-167,538-575` and
+### 2026-07-17 Port closed ClipperOffset and project closing (Task 22G)
+
+Task 22G is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports only closed
+`ClipperOffset` from `clipper.hpp:138-139,144-167,538-575` and
 `clipper.cpp:63-65,73-106,128-134,150-161,1000-1036,3345-3777`, the required
 closed defaults and `offset_ex`/`offset2_ex` wrappers from
-`ClipperUtils.hpp:17-34,329-355,389-410` and
-`ClipperUtils.cpp:264-301,333-344,360-402,437-590,592-610`, and the exact
+`ClipperUtils.hpp:17-34,326-355,389-393` and
+`ClipperUtils.cpp:264-293,303-315,333-351,360-410,437-558,560-585`, and the exact
 consumer in `TriangleMeshSlicer.hpp:20-46`,
 `TriangleMeshSlicer.cpp:1738-1824,2003-2034`, and
-`PrintObjectSlice.cpp:145-193`. It reuses Task 22F and consumes the 3MF-derived
-KSR `slice_closing_radius=0.049` with `extra_offset=0`, producing the fixed
-scaled `+49000/-49000` `offset2_ex` closing sequence.
+`PrintObjectSlice.cpp:145-221`.
+
+The safe Rust modules reuse Task 22F for closed Offset cleanup, preserve the
+fixed joins, fill rules, path and ExPolygon ownership order, and execute
+`offset2_ex` with one final PolyTree cleanup. The project stage resolves
+`slice_closing_radius` only from the matching effective 3MF object, preserves
+the upstream `f64` to `f32` to scaled `f64` to `f32` chain, and applies Miter
+3.0. KSR resolves `0.049` at normal scale, producing `+49000/-49000` without a
+fixture branch. Generic `closing*` overloads are not claimed as implemented and
+remain outside this direct consumer slice; their `ClipperUtils.hpp:400-410` and
+`ClipperUtils.cpp:592-610` ranges are context-only.
+
+The KSR post-closing result is exactly 1,644,681 bytes with SHA-256
+`29ffb501c54190dd4336cc1371fc5e480c5b87ac6a8184366bd072bf5cb90919`:
+one object, one volume, 460 layers, 2,890 contours, 395 holes, and 99,212
+points. Native and browser oracles are repeatable and byte-identical; both
+fixtures remain unchanged. Task 22G passes all focused and full native,
+WASM/browser, code-quality, default-model, and independent six-dimensional
+gates. Production still returns `ProjectSlicingIncomplete`, so no placeholder
+G-code or complete normalized parity is claimed.
 
 Task 22H separately takes post-closing largest-contour selection from
 `TriangleMeshSlicer.cpp:2025-2037`, `ExPolygon.cpp:532-549`,
@@ -1352,7 +1372,7 @@ Task 22H separately takes post-closing largest-contour selection from
 cross-volume booleans, perimeters, fill, supports, toolpaths, G-code assembly,
 metadata, post-processing, and normalized `ksr_fdmtest_v4` byte parity remain
 later source-cited slices. The persistent user-visible goal is therefore still
-incomplete after Task 22F.
+incomplete after Task 22G.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 

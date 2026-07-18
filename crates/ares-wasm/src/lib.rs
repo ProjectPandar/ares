@@ -24,6 +24,12 @@ pub async fn slice_project(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
         .map_err(slice_error_js)
 }
 
+#[cfg(feature = "task22g-browser-oracle")]
+#[wasm_bindgen(js_name = task22gBrowserOracle)]
+pub fn task22g_browser_oracle(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
+    ares_core::task22g_browser_oracle(input).map_err(slice_error_js)
+}
+
 fn local_generation_metadata() -> Result<GenerationMetadata, SliceError> {
     let now = Date::new_0();
     GenerationMetadata::new_local(

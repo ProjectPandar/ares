@@ -6,9 +6,129 @@
   </head>
   <body>
     <script type="module">
-      import init, { sliceProject } from "/target/wasm-browser/ares_wasm.js";
+      import init, * as bindings from "/target/wasm-browser/ares_wasm.js";
 
       await init();
+      const { sliceProject, task22gBrowserOracle } = bindings;
+
+      const task22gMagic = new TextEncoder().encode("ARES22G\0");
+
+      function task22gBytes(input) {
+        return input instanceof Uint8Array ? input : new Uint8Array(input);
+      }
+
+      function parseTask22g(input) {
+        const bytes = task22gBytes(input);
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        let cursor = 0;
+
+        const requireBytes = (length) => {
+          if (cursor + length > bytes.length) {
+            throw new Error("truncated ARES22G stream");
+          }
+        };
+        const readU8 = () => {
+          requireBytes(1);
+          return view.getUint8(cursor++);
+        };
+        const readU32 = () => {
+          requireBytes(4);
+          const value = view.getUint32(cursor, true);
+          cursor += 4;
+          return value;
+        };
+        const readCount = () => {
+          requireBytes(8);
+          const value = view.getBigUint64(cursor, true);
+          cursor += 8;
+          if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
+            throw new Error("ARES22G count exceeds JavaScript's safe range");
+          }
+          return Number(value);
+        };
+        const readPolygon = () => {
+          const points = readCount();
+          for (let point = 0; point < points; point += 1) {
+            requireBytes(16);
+            view.getBigInt64(cursor, true);
+            view.getBigInt64(cursor + 8, true);
+            cursor += 16;
+          }
+          return points;
+        };
+
+        requireBytes(task22gMagic.length);
+        for (const expected of task22gMagic) {
+          if (readU8() !== expected) {
+            throw new Error("invalid ARES22G magic");
+          }
+        }
+
+        const objects = readCount();
+        let volumes = 0;
+        let layers = 0;
+        let contours = 0;
+        let holes = 0;
+        let points = 0;
+        for (let object = 0; object < objects; object += 1) {
+          readCount();
+          readCount();
+          readCount();
+          const objectVolumes = readCount();
+          volumes += objectVolumes;
+          for (let volume = 0; volume < objectVolumes; volume += 1) {
+            readCount();
+            readU32();
+            readU8();
+            const volumeLayers = readCount();
+            layers += volumeLayers;
+            for (let layer = 0; layer < volumeLayers; layer += 1) {
+              readCount();
+              readU8();
+              const layerContours = readCount();
+              contours += layerContours;
+              for (let contour = 0; contour < layerContours; contour += 1) {
+                points += readPolygon();
+                const contourHoles = readCount();
+                holes += contourHoles;
+                for (let hole = 0; hole < contourHoles; hole += 1) {
+                  points += readPolygon();
+                }
+              }
+            }
+          }
+        }
+        if (cursor !== bytes.length) {
+          throw new Error("ARES22G stream has trailing bytes");
+        }
+
+        return {
+          magic: "ARES22G\0",
+          byteLength: bytes.length,
+          bytesRead: cursor,
+          objects,
+          volumes,
+          layers,
+          contours,
+          holes,
+          points,
+        };
+      }
+
+      async function sha256(bytes) {
+        const digest = await crypto.subtle.digest("SHA-256", task22gBytes(bytes));
+        return Array.from(new Uint8Array(digest), (byte) =>
+          byte.toString(16).padStart(2, "0"),
+        ).join("");
+      }
+
+      function byteEqual(left, right) {
+        return (
+          left.length === right.length &&
+          left.every((byte, index) => byte === right[index])
+        );
+      }
+
       window.sliceFixtureProject = async () => {
         const response = await fetch(
           "/tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf",
@@ -20,6 +140,22 @@
         } catch (error) {
           return { resolved: false, error: String(error) };
         }
+      };
+      window.parseTask22gVector = (bytes) => parseTask22g(bytes);
+      window.sha256Text = (text) => sha256(new TextEncoder().encode(text));
+      window.task22gFixtureOracle = async () => {
+        const response = await fetch(
+          "/tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf",
+        );
+        const input = new Uint8Array(await response.arrayBuffer());
+        const first = task22gBytes(await task22gBrowserOracle(input));
+        const second = task22gBytes(await task22gBrowserOracle(input));
+        return {
+          first: parseTask22g(first),
+          second: parseTask22g(second),
+          sha256: await sha256(first),
+          repeatable: byteEqual(first, second),
+        };
       };
       window.aresReady = true;
     </script>

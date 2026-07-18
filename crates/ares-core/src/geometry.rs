@@ -3,7 +3,7 @@ mod coord;
 mod expolygon;
 mod polygon;
 
-pub(crate) use clipper::{ClipperError, FillRule, union_ex};
+pub(crate) use clipper::{ClipperError, FillRule, JoinType, offset2_ex, union_ex};
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use expolygon::ExPolygon;
 pub(crate) use polygon::Polygon;

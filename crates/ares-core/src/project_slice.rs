@@ -6,6 +6,7 @@ use crate::{
 mod bounds;
 mod capabilities;
 mod chained_intersections;
+mod closing;
 mod extruders;
 mod layers;
 mod looped_intersections;
@@ -16,6 +17,9 @@ mod raw_intersections;
 mod slicing_mode_intersections;
 mod state;
 
+#[cfg(any(test, feature = "task22g-browser-oracle"))]
+mod task22g_oracle;
+
 #[cfg(test)]
 mod tests;
 
@@ -23,27 +27,12 @@ pub async fn slice_project(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let state::ProjectSliceState {
+    let PreparedPostClosing {
         project,
         resolved,
         config_block,
-        scale,
-        intersected_objects,
-    } = state::prepare_project_slice(project)?;
-    let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
-    let max_gap_scaled = scale
-        .checked_scale(2.0)
-        .expect("2 mm loop-repair radius must fit the selected coordinate scale");
-    let looped_objects =
-        looped_intersections::loop_project_intersections(chained_objects, max_gap_scaled);
-    let spiral_mode = resolved.views.full.process.print.spiral_mode.0;
-    let slicing_mode_objects = slicing_mode_intersections::apply_project_slicing_modes(
-        looped_objects,
-        &resolved.objects,
-        spiral_mode,
-    )?;
-    let pre_closing_objects =
-        pre_closing_unions::apply_project_pre_closing_unions(slicing_mode_objects)?;
+        objects: post_closing_objects,
+    } = prepare_post_closing(project)?;
 
     let documents = project.documents();
     let _ = (
@@ -92,8 +81,8 @@ pub async fn slice_project(
             }
         }
     }
-    for pre_closing_object in pre_closing_objects {
-        let (plan, volumes) = pre_closing_object.into_parts();
+    for post_closing_object in post_closing_objects {
+        let (plan, volumes) = post_closing_object.into_parts();
         for (mode, expolygons) in volumes
             .into_iter()
             .flat_map(|volume| {
@@ -101,7 +90,7 @@ pub async fn slice_project(
                 let _ = (source_volume_index, ordinal, volume_type);
                 layers
             })
-            .map(pre_closing_unions::PreClosingLayer::into_parts)
+            .map(closing::PostClosingLayer::into_parts)
         {
             let _ = mode;
             for polygon in expolygons.into_iter().flat_map(|expolygon| {
@@ -140,6 +129,50 @@ pub async fn slice_project(
         config_block,
     );
     Err(SliceError::ProjectSlicingIncomplete)
+}
+
+struct PreparedPostClosing {
+    project: Project,
+    resolved: BoundedResolvedProjectConfig,
+    config_block: Option<Vec<u8>>,
+    objects: Vec<closing::PostClosingPrintObject>,
+}
+
+fn prepare_post_closing(project: impl AsRef<[u8]>) -> Result<PreparedPostClosing, SliceError> {
+    let state::ProjectSliceState {
+        project,
+        resolved,
+        config_block,
+        scale,
+        intersected_objects,
+    } = state::prepare_project_slice(project)?;
+    let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
+    let max_gap_scaled = scale
+        .checked_scale(2.0)
+        .expect("2 mm loop-repair radius must fit the selected coordinate scale");
+    let looped_objects =
+        looped_intersections::loop_project_intersections(chained_objects, max_gap_scaled);
+    let spiral_mode = resolved.views.full.process.print.spiral_mode.0;
+    let slicing_mode_objects = slicing_mode_intersections::apply_project_slicing_modes(
+        looped_objects,
+        &resolved.objects,
+        spiral_mode,
+    )?;
+    let pre_closing_objects =
+        pre_closing_unions::apply_project_pre_closing_unions(slicing_mode_objects)?;
+    let objects = closing::apply_project_closing(pre_closing_objects, &resolved.objects, scale)?;
+    Ok(PreparedPostClosing {
+        project,
+        resolved,
+        config_block,
+        objects,
+    })
+}
+
+#[cfg(any(test, feature = "task22g-browser-oracle"))]
+pub fn task22g_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_closing(project)?;
+    Ok(task22g_oracle::encode(&prepared.objects))
 }
 
 fn plan_project(

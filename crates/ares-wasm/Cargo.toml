@@ -7,6 +7,10 @@ rust-version.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = []
+task22g-browser-oracle = ["ares-core/task22g-browser-oracle"]
+
 [dependencies]
 ares-core = { path = "../ares-core" }
 js-sys = { workspace = true }

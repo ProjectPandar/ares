@@ -2284,18 +2284,50 @@ fixtures unchanged. Production deliberately still returns
 `ProjectSlicingIncomplete`; no placeholder or reference-derived G-code is
 emitted, so complete normalized KSR parity is not claimed.
 
-Task 22G is the next small source-cited package. It ports only closed
+### Task 22G: safe closed ClipperOffset and project closing
+
+Task 22G is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports only closed
 `ClipperOffset` from `clipper.hpp:138-139,144-167,538-575` and
 `clipper.cpp:63-65,73-106,128-134,150-161,1000-1036,3345-3777`, the directly
 used defaults and `offset_ex`/`offset2_ex` wrappers from
-`ClipperUtils.hpp:17-34,329-355,389-410` and
-`ClipperUtils.cpp:264-301,333-344,360-402,437-590,592-610`, and the project
+`ClipperUtils.hpp:17-34,326-355,389-393` and
+`ClipperUtils.cpp:264-293,303-315,333-351,360-410,437-558,560-585`, and the project
 consumer in `TriangleMeshSlicer.hpp:20-46`,
 `TriangleMeshSlicer.cpp:1738-1824,2003-2034`, and
-`PrintObjectSlice.cpp:145-193`. It must reuse the Task 22F kernel and consume
-only the 3MF-derived KSR `slice_closing_radius=0.049` with `extra_offset=0`,
-which selects `offset2_ex` with scaled `+49000/-49000`; it must not substitute
-an invented `closing_ex` project call.
+`PrintObjectSlice.cpp:145-221`.
+
+The private `geometry::clipper::offset` modules reuse the Task 22F Boolean and
+PolyTree kernel for closed input normalization, orientation, normals, Miter,
+Square, and Round joins, positive and negative execution cleanup, and the
+directly used ExPolygon ownership wrappers. The second `offset2_ex` stage uses
+one PolyTree cleanup and does not call Task 22F's two-pass `union_ex` overlap
+workaround. Neighboring generic `closing*` helpers remain deferred; the project
+consumer calls the source-owned `offset2_ex` sequence directly. Their
+`ClipperUtils.hpp:400-410` and `ClipperUtils.cpp:592-610` ranges are
+context-only.
+
+The private `project_slice::closing` stage associates each print-object plan
+with its resolved 3MF object by `source_object_index` and consumes only that
+object's effective `slice_closing_radius`. It preserves the exact `f64` Option
+to `f32`, widened scale division, then `f32` delta chain. The KSR fixture
+resolves `slice_closing_radius=0.049` and normal scale, yielding
+`+49000/-49000` and `offset2_ex(..., Miter, 3.0)`. Zero or f32-underflow radii
+move the owned records unchanged; invalid external values and scaled overflow
+are rejected at the Option boundary. Archive mutations cover process-base and
+object-override precedence, large-bed scale, and non-integer float values.
+Synthetic owned-stage vectors separately cover reversed object association,
+empty layers, and metadata retention without a fixture identity branch.
+
+The complete KSR post-closing encoding is 1,644,681 bytes with SHA-256
+`29ffb501c54190dd4336cc1371fc5e480c5b87ac6a8184366bd072bf5cb90919`:
+one object, one volume, 460 layers, 2,890 contours, 395 holes, and 99,212
+points. Native and browser executions are byte-identical and repeatable, both
+committed fixtures remain unchanged, and all focused, full native, WASM,
+browser, code-quality, default-model, and independent six-dimensional review
+gates pass. Production deliberately still returns `ProjectSlicingIncomplete`;
+no placeholder or reference-derived G-code is emitted, so complete normalized
+KSR parity is not claimed.
 
 Task 22H then ports post-closing largest-contour selection from
 `TriangleMeshSlicer.cpp:2025-2037`, `ExPolygon.cpp:532-549`,

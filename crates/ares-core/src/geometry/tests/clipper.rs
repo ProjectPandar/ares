@@ -3,6 +3,7 @@ mod fill_rules;
 mod helpers;
 mod input;
 mod large_coordinates;
+mod offset;
 mod options;
 mod polytree;
 mod touching;

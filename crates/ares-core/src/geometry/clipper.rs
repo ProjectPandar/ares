@@ -2,11 +2,13 @@
 // OrcaSlicer at fixed commit 8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 mod active_edges;
+mod bounds;
 mod engine;
 mod horizontals;
 mod input;
 mod intersections;
 mod minima;
+mod offset;
 pub(crate) mod ordering;
 mod output;
 mod polytree;
@@ -14,6 +16,14 @@ mod predicates;
 mod types;
 mod winding;
 
+#[cfg(test)]
+pub(crate) use bounds::{IntBounds, negative_outer};
+pub(crate) use offset::{ClipperOffset, JoinType, offset2_ex};
+#[cfg(test)]
+pub(crate) use offset::{
+    offset_expolygon, offset_expolygons, offset_expolygons_paths, offset_expolygons_raw,
+    offset_paths, offset_paths_tree, raw_offset_paths,
+};
 #[cfg(test)]
 pub(crate) use polytree::PolyNode;
 pub(crate) use polytree::{PolyTree, union_ex};
@@ -109,6 +119,8 @@ const _: [FillRule; 4] = [
     FillRule::Positive,
     FillRule::Negative,
 ];
+const _: [JoinType; 3] = [JoinType::Square, JoinType::Round, JoinType::Miter];
+const _: fn() -> ClipperOffset = ClipperOffset::default;
 const _: fn(ClipperOptions) -> ClosedClipper = ClosedClipper::new;
 const _: fn(&mut ClosedClipper, &Polygon, PathRole) -> Result<bool, ClipperError> =
     ClosedClipper::add_closed_path;

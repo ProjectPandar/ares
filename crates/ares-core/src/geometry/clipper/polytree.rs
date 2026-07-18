@@ -27,7 +27,7 @@ pub(crate) struct PolyNodeChildren<'a> {
 }
 
 impl PolyTree {
-    pub(super) fn empty() -> Self {
+    pub(crate) fn empty() -> Self {
         Self {
             nodes: Vec::new(),
             children: Vec::new(),
@@ -36,7 +36,10 @@ impl PolyTree {
 
     #[cfg(test)]
     pub(crate) fn total(&self) -> usize {
-        self.nodes.len()
+        self.nodes
+            .iter()
+            .filter(|node| node.contour.is_some())
+            .count()
     }
 
     #[cfg(test)]
@@ -56,7 +59,7 @@ impl PolyTree {
             .sum::<usize>()
     }
 
-    fn into_expolygons(mut self) -> Vec<ExPolygon> {
+    pub(crate) fn into_expolygons(mut self) -> Vec<ExPolygon> {
         let capacity = self
             .children
             .iter()
@@ -68,6 +71,21 @@ impl PolyTree {
             append_expolygon(&mut self.nodes, root, &mut expolygons);
         }
         expolygons
+    }
+
+    pub(crate) fn remove_outermost_polygon(&mut self) {
+        if self.children.len() != 1 || self.nodes[self.children[0].0].children.is_empty() {
+            self.nodes.clear();
+            self.children.clear();
+            return;
+        }
+
+        let outer = self.children[0];
+        self.children = mem::take(&mut self.nodes[outer.0].children);
+        self.nodes[outer.0].contour = None;
+        for &root in &self.children {
+            self.nodes[root.0].parent = None;
+        }
     }
 }
 

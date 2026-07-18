@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 rust-version.workspace = true
 
+[features]
+default = []
+task22g-browser-oracle = []
+
 [dependencies]
 quick-xml = { workspace = true }
 serde = { workspace = true }

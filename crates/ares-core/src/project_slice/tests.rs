@@ -2,6 +2,8 @@ mod bounds;
 mod capabilities;
 mod chained_fixture;
 mod chained_intersections;
+mod closing;
+mod closing_fixture;
 mod fixture;
 mod integration;
 mod looped_fixture;
