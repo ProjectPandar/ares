@@ -6,7 +6,9 @@ mod chaining;
 mod intersection;
 mod topology;
 
-pub(crate) use chaining::{ChainedLayer, chain_lines_by_triangle_connectivity};
+pub(crate) use chaining::{
+    ChainedLayer, LoopedLayer, chain_lines_by_triangle_connectivity, make_loops,
+};
 pub(crate) use intersection::{
     EndpointReference, FacetEdgeType, IntersectionLine, IntersectionPoint, intersect_facet,
 };
@@ -148,11 +150,14 @@ type MeshDispatchFn = fn(
     fn(usize, usize),
     fn(usize, IntersectionLine),
 ) -> Result<(), SliceError>;
+type LoopRepairFn = fn(ChainedLayer, crate::geometry::Coord) -> LoopedLayer;
 
 const _: FacetIntersectionFn = intersect_facet;
 const _: fn() -> RawIntersectionBudget = RawIntersectionBudget::new;
 const _: MeshSliceFn = slice_mesh_on_planes;
 const _: MeshDispatchFn = dispatch_mesh_on_planes_with;
+const _: LoopRepairFn = make_loops;
+const _: fn(&LoopedLayer) -> &[crate::geometry::Polygon] = LoopedLayer::polygons;
 const _: fn(IntersectionLine) -> IntersectionPoint = IntersectionLine::a;
 const _: fn(IntersectionLine) -> IntersectionPoint = IntersectionLine::b;
 const _: fn(IntersectionLine) -> FacetEdgeType = IntersectionLine::edge_type;

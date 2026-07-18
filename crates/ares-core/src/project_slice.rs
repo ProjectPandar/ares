@@ -8,6 +8,7 @@ mod capabilities;
 mod chained_intersections;
 mod extruders;
 mod layers;
+mod looped_intersections;
 mod parameters;
 mod profile;
 mod raw_intersections;
@@ -24,9 +25,15 @@ pub async fn slice_project(
         project,
         resolved,
         config_block,
+        scale,
         intersected_objects,
     } = state::prepare_project_slice(project)?;
     let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
+    let max_gap_scaled = scale
+        .checked_scale(2.0)
+        .expect("2 mm loop-repair radius must fit the selected coordinate scale");
+    let looped_objects =
+        looped_intersections::loop_project_intersections(chained_objects, max_gap_scaled);
 
     let documents = project.documents();
     let _ = (
@@ -75,22 +82,13 @@ pub async fn slice_project(
             }
         }
     }
-    for chained_object in chained_objects {
-        let (plan, volumes) = chained_object.into_parts();
+    for looped_object in looped_objects {
+        let (plan, volumes) = looped_object.into_parts();
         for volume in volumes {
             let (ordinal, volume_type, layers) = volume.into_parts();
             let _ = (ordinal, volume_type);
             for polygon in layers.iter().flat_map(|layer| layer.polygons()) {
                 let _ = polygon.points();
-            }
-            for polyline in layers.iter().flat_map(|layer| layer.open_polylines()) {
-                let _ = (
-                    polyline.start(),
-                    polyline.end(),
-                    polyline.points(),
-                    polyline.length(),
-                    polyline.consumed(),
-                );
             }
         }
         let layers::PlannedPrintObject {

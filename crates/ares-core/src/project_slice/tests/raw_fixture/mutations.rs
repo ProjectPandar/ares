@@ -47,6 +47,7 @@ fn task22b_private_state_owns_plan_inside_intersections_and_builds_once() {
         project,
         resolved,
         config_block,
+        scale,
         intersected_objects,
     } = prepare_project_slice(input).unwrap();
 
@@ -54,6 +55,7 @@ fn task22b_private_state_owns_plan_inside_intersections_and_builds_once() {
     assert_eq!(project.objects().len(), 1);
     assert_eq!(resolved.objects.len(), 1);
     assert_eq!(resolved.print_object_count, 1);
+    assert_eq!(scale, CoordinateScale::Normal);
 
     let block = config_block.unwrap();
     assert_eq!(block.len(), 49_004);

@@ -19,6 +19,7 @@ pub(super) struct ProjectSliceState {
     pub(super) project: Project,
     pub(super) resolved: BoundedResolvedProjectConfig,
     pub(super) config_block: Option<Vec<u8>>,
+    pub(super) scale: CoordinateScale,
     pub(super) intersected_objects: Vec<IntersectedPrintObject>,
 }
 
@@ -49,6 +50,7 @@ pub(super) fn prepare_project_slice(
         project,
         resolved,
         config_block,
+        scale,
         intersected_objects,
     })
 }

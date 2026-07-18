@@ -7,6 +7,7 @@ use crate::{
 };
 
 mod identity;
+mod loops;
 mod open;
 
 fn line(a: (i64, i64, EndpointReference), b: (i64, i64, EndpointReference)) -> IntersectionLine {

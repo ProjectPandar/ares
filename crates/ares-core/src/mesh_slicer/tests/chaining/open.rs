@@ -19,12 +19,12 @@ fn task22c_open_chain_preserves_endpoints_points_length_and_state() {
 }
 
 #[test]
-fn task22c_open_length_converts_extreme_coordinates_before_subtraction() {
+fn task22c_open_length_avoids_extreme_coordinate_overflow() {
     let layer = chain_lines_by_triangle_connectivity(vec![line(
         (i64::MIN, i64::MIN, vertex(1)),
         (i64::MAX, i64::MAX, vertex(2)),
     )]);
-    let delta = i64::MAX as f64 - i64::MIN as f64;
+    let delta = (i128::from(i64::MAX) - i128::from(i64::MIN)) as f64;
     let expected = (delta * delta + delta * delta).sqrt();
 
     assert_eq!(layer.open_polylines().len(), 1);

@@ -2,6 +2,9 @@ use crate::geometry::{Point, Polygon};
 
 use super::{EndpointReference, IntersectionLine};
 
+mod exact;
+mod gaps;
+
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct OpenPolyline {
     start: EndpointReference,
@@ -23,22 +26,27 @@ impl OpenPolyline {
         }
     }
 
+    #[cfg(test)]
     pub(crate) const fn start(&self) -> EndpointReference {
         self.start
     }
 
+    #[cfg(test)]
     pub(crate) const fn end(&self) -> EndpointReference {
         self.end
     }
 
+    #[cfg(test)]
     pub(crate) fn points(&self) -> &[Point] {
         &self.points
     }
 
+    #[cfg(test)]
     pub(crate) const fn length(&self) -> f64 {
         self.length
     }
 
+    #[cfg(test)]
     pub(crate) const fn consumed(&self) -> bool {
         self.consumed
     }
@@ -51,12 +59,29 @@ pub(crate) struct ChainedLayer {
 }
 
 impl ChainedLayer {
+    #[cfg(test)]
     pub(crate) fn polygons(&self) -> &[Polygon] {
         &self.polygons
     }
 
+    #[cfg(test)]
     pub(crate) fn open_polylines(&self) -> &[OpenPolyline] {
         &self.open_polylines
+    }
+
+    fn into_parts(self) -> (Vec<Polygon>, Vec<OpenPolyline>) {
+        (self.polygons, self.open_polylines)
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) struct LoopedLayer {
+    polygons: Vec<Polygon>,
+}
+
+impl LoopedLayer {
+    pub(crate) fn polygons(&self) -> &[Polygon] {
+        &self.polygons
     }
 }
 
@@ -193,13 +218,45 @@ pub(crate) fn chain_lines_by_triangle_connectivity(lines: Vec<IntersectionLine>)
     }
 }
 
+pub(crate) fn make_loops(
+    chained: ChainedLayer,
+    max_gap_scaled: crate::geometry::Coord,
+) -> LoopedLayer {
+    let (mut polygons, mut open_polylines) = chained.into_parts();
+    exact::chain_open_polylines_exact(&mut open_polylines, &mut polygons, false);
+    exact::chain_open_polylines_exact(&mut open_polylines, &mut polygons, true);
+    gaps::chain_open_polylines_close_gaps(
+        &mut open_polylines,
+        &mut polygons,
+        max_gap_scaled,
+        false,
+    );
+    gaps::chain_open_polylines_close_gaps(&mut open_polylines, &mut polygons, max_gap_scaled, true);
+    LoopedLayer { polygons }
+}
+
 fn open_length(points: &[Point]) -> f64 {
     points
         .windows(2)
         .map(|pair| {
-            let dx = pair[1].x() as f64 - pair[0].x() as f64;
-            let dy = pair[1].y() as f64 - pair[0].y() as f64;
+            let dx = (i128::from(pair[1].x()) - i128::from(pair[0].x())) as f64;
+            let dy = (i128::from(pair[1].y()) - i128::from(pair[0].y())) as f64;
             (dx * dx + dy * dy).sqrt()
         })
         .sum()
+}
+
+fn signed_area(points: &[Point]) -> f64 {
+    let mut area = 0.0;
+    for index in 0..points.len() {
+        let previous = if index == 0 {
+            points.len() - 1
+        } else {
+            index - 1
+        };
+        let x_sum = i128::from(points[index].x()) + i128::from(points[previous].x());
+        let y_difference = i128::from(points[index].y()) - i128::from(points[previous].y());
+        area += x_sum as f64 * y_difference as f64;
+    }
+    area
 }

@@ -4,6 +4,8 @@ mod chained_fixture;
 mod chained_intersections;
 mod fixture;
 mod integration;
+mod looped_fixture;
+mod looped_intersections;
 mod parameters;
 mod profile_layers;
 mod raw_fixture;

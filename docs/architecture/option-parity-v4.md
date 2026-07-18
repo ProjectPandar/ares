@@ -2,15 +2,19 @@
 
 ## Status
 
-Tasks 16 through 20A.2 and Task 22A are released. Task 20A.2 was released as commit
+Tasks 16 through 20A.2 and Tasks 22A through 22C are released. Task 20A.2 was released as commit
 `4281e913b8eeaaeb6111cbefdf06f896f5c611aa`; exact-SHA Tier 1 run
 `29520118127` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 Task 22A was released as commit
 `91fc19f1dbfc85d21431791d2d5acb78af818671`; exact-SHA Tier 1 run
-`29543841835` is green across the same five Tier 1 jobs. Task 22B's scaled raw
-mesh-intersection implementation is whole-approved and is at its documentation
-gate. Line chaining, polygon/Clipper processing, complete G-code assembly, and
-final byte parity remain owned by later source-cited rewrite tasks.
+`29543841835` is green across the same five Tier 1 jobs. Task 22B was released
+as commit `455a0d12a9c6ac48f6e2796669b4300a6a6190a2`; exact-SHA Tier 1 run
+`29610017653` is green across the same five jobs. Task 22C was released
+as commit `8c07319a5ac1f9660324ef53172ffe95d2b53230`; exact-SHA Tier 1 run
+`29616822593` is green across the same five jobs. Task 22D's open-polyline loop
+repair is whole-approved and is at its documentation gate. Per-layer slicing
+mode, polygon/Clipper processing, complete G-code assembly, and final byte
+parity remain owned by later source-cited rewrite tasks.
 
 ## Fixed baseline
 
@@ -47,12 +51,13 @@ The active fixture identity, generator validation, normalized hash, and bounded
 difference tests pass. Public slicing now loads the project, resolves typed
 configuration, serializes the Bambu config block, plans 460 fixed layers, and
 builds 116,472 real directed/scaled mesh-plane intersection lines before
-deliberately returning `ProjectSlicingIncomplete`. Line chaining and complete
-G-code assembly remain deferred. The complete CLI golden stays explicitly
-ignored, and no comparison rule is relaxed around that boundary. The reference
-G-code is used only by the test-side exact config-block oracle and the final
-configured-skipped regression contract; production and Task 22B tests do not
-read or identify it.
+chaining them into 3,288 polygons and running the four exact/gap loop-repair
+passes before deliberately returning `ProjectSlicingIncomplete`. Per-layer
+slicing policy and complete G-code assembly remain deferred. The complete CLI
+golden stays explicitly ignored, and no comparison rule is relaxed around that
+boundary. The reference G-code is used only by the test-side exact config-block
+oracle and the final configured-skipped regression contract; production and
+Task 22D tests do not read or identify it.
 
 ## Task 5 fixed-source inventory
 
@@ -2089,8 +2094,9 @@ time estimation, and post-processing remain later slices. Embedded/external
 presets, CLI overrides, UI behavior, any Ares-owned alternative pipeline, and
 final normalized KSR parity are also explicitly deferred. Supported requests
 still return `ProjectSlicingIncomplete`, but only after the private raw state is
-built. Whole specification, code-quality, and default-model OpenCode reviews
-are approved; documentation and release gates remain pending.
+built. Task 22B was released as commit
+`455a0d12a9c6ac48f6e2796669b4300a6a6190a2`; exact-SHA Tier 1 run
+`29610017653` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
 
 ### Task 22C: triangle-connectivity slice chaining
 
@@ -2131,11 +2137,82 @@ The independently normalized numeric encoding is 2,190,993 bytes with SHA-256
 The Task 19C config block remains exactly 49,004 bytes with SHA-256
 `b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
 
-Task 22D must start from the adjacent source-cited open-chain boundary:
+Task 22D subsequently took the adjacent source-cited open-chain boundary:
 `TriangleMeshSlicer.cpp:1163-1381,1428-1462`, including length ordering,
 identity-exact joining with the source's allowed reversal passes, nearest-end
-search, 2 mm gap repair, and remaining loop-closing passes. Those operations,
-`slicing_mode`, polygon area/orientation and hole ownership, Clipper processing,
+search, 2 mm gap repair, and remaining loop-closing passes; its implemented
+outcome is recorded below. `slicing_mode`, hole ownership, Clipper processing,
 negative/modifier volume booleans, regions, surfaces, perimeters, fill,
 supports, toolpaths, motion, G-code assembly, metadata, post-processing, and
-complete normalized `ksr_fdmtest_v4` parity remain explicitly deferred.
+complete normalized `ksr_fdmtest_v4` parity remained beyond Task 22C.
+
+### Task 22D: open-polyline loop repair
+
+Task 22D remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its upstream boundary is open
+length and signed area in `MultiPoint.hpp:172-187`, unconsumed length ordering,
+identity-exact joining, and 2 mm gap repair in
+`TriangleMeshSlicer.cpp:1163-1381`, plus the four-pass call order and final
+loop return in `TriangleMeshSlicer.cpp:1428-1480`. Private `ares-core`
+`mesh_slicer::chaining::{exact,gaps}`, the request-local spatial index, and
+`project_slice::looped_intersections` own the Rust rewrite. No public geometry
+API or legacy STL contour fallback is introduced.
+
+The implementation runs exact same-direction, exact reversal-enabled, gap
+same-direction, and gap reversal-enabled passes in that fixed order, then
+intentionally drops residual opens exactly when the source returns only
+polygons. Exact passes seed from descending cached length. Gap passes recompute
+length before sorting. Source-unspecified equal-length, equal-identity, and
+equal-distance choices use original open index followed by Start before End.
+Identity lookup preserves the source's signed mapping `Vertex(n) -> +n` and
+`Edge(n) -> -n`, including the observable `Vertex(0)`/`Edge(0)` collision and
+the non-reversed pass's stale-end behavior.
+
+Gap lookup uses exact widened squared distances, a strict radius comparison,
+and the source's closure-before-attachment and conditional 30% branch order.
+Coordinate differences, cell arithmetic, and area intermediates widen before
+subtraction, addition, or squaring. The upstream 2 mm repair threshold is not
+a 3MF Option: production scales it through the request-local
+`CoordinateScale` already selected from the resolved 3MF `printable_area`,
+yielding 2,000,000 normal units or 199,999 large-bed units. Junction omission,
+nonzero bridge retention, changed-end reinsertion, and reversal/orientation
+gates follow the fixed source.
+
+The looped project wrapper consumes object, plan, volume ordinal/type/order,
+layer slots, and polygon order exactly once. Production traverses the looped
+state and still returns `ProjectSlicingIncomplete`; Task 22D consumes no new
+Option and emits no placeholder G-code. A mutation-sensitive synthetic oracle
+locks all four passes and their order, while a two-face project mesh proves a
+real three-point open is repaired through the project wrapper.
+
+The committed KSR 3MF enters this boundary with zero opens, so repair is an
+exact no-op: 460 layers, 3,288 polygons, and 116,472 points remain unchanged.
+The face-order and independently normalized encodings remain 2,190,993 bytes
+with SHA-256
+`6654d9a95ef1bb024f986552b0e8c866ad55dcbe5de3af0cf9c34ff52372adbe`
+and `7df1e0f90f90e4ff5ca6249c1ceb61e5e1aca74dbdb7b9153fffeff4cd165cdd`.
+The Task 19C config block remains 49,004 bytes with SHA-256
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
+
+Task 22E must begin at the adjacent source set
+`TriangleMeshSlicer.hpp:11-33`, `PrintConfig.hpp:162-170,947`,
+`PrintConfig.cpp:307-312,6030-6042`, `PrintObjectSlice.cpp:166-179,194-205`,
+and `TriangleMeshSlicer.cpp:1483-1532`. It maps the 3MF `slicing_mode` and
+spiral-bottom policy into ordered layer application of all four internal
+`MeshSlicingParams::SlicingMode` variants. `Regular` and `EvenOdd` preserve
+loops unchanged at this boundary; `Positive` reorients every loop CCW;
+`PositiveLargestContour` selects the greatest absolute area and makes that
+single loop CCW. EvenOdd fill-rule differentiation remains deferred to the
+later Clipper/`ExPolygon` slice. The planned private Rust destinations are
+`ares-core::mesh_slicer::slicing_mode` for the pure polygon policy and
+`ares-core::project_slice::slicing_mode_intersections` for Option-derived
+per-layer ownership. Native TBB scheduling is not a Tier-1/WASM runtime goal;
+its observable layer-order and mode semantics must be ported without
+platform-specific execution. Slab loops beginning at line 1535, hole ownership
+around line 1664, Clipper union/closing/offset and `ExPolygon` construction
+around line 1738, `slice_closing_radius`, negative/modifier booleans, regions,
+surfaces, perimeters, fill, supports, toolpaths, G-code assembly, metadata,
+post-processing, and complete normalized KSR parity remain explicitly
+deferred. Whole specification, code-quality, default-model, and six-dimensional
+implementation reviews are approved; documentation and release gates remain
+pending.

@@ -1195,8 +1195,10 @@ presets, CLI overrides, UI behavior, any Ares-owned alternative pipeline, and
 successful normalized KSR parity are likewise explicitly deferred. Supported
 project slicing still returns `ProjectSlicingIncomplete`, but only after the
 real private raw state is built. Whole specification, code-quality, and
-default-model OpenCode implementation reviews are approved; documentation and
-release gates remain pending.
+default-model OpenCode implementation reviews are approved. Task 22B was
+released as commit `455a0d12a9c6ac48f6e2796669b4300a6a6190a2`; exact-SHA
+Tier 1 run `29610017653` is green across format, Ubuntu/Linux, WASM, macOS, and
+Windows.
 
 ### 2026-07-17 Chain slices by triangle connectivity (Task 22C)
 
@@ -1228,15 +1230,65 @@ with SHA-256
 Production traverses the chained state and still returns
 `ProjectSlicingIncomplete`; no new Option or placeholder G-code is introduced.
 
-Task 22D is the next source-cited package. It must port the adjacent
+Task 22D subsequently took the adjacent source-cited boundary in
 `TriangleMeshSlicer.cpp:1163-1381,1428-1462` open-polyline length ordering,
 exact identity joining and allowed reversal passes, nearest-endpoint search,
-2 mm gap repair, and remaining loop-closing behavior. `slicing_mode`, polygon
-orientation and hole ownership, Clipper, negative/modifier booleans, regions,
-surfaces, perimeters, fill, supports, toolpaths, G-code assembly, metadata,
-post-processing, and complete normalized `ksr_fdmtest_v4` byte parity remain
-later source-cited slices. The overall user-visible G-code parity goal is still
-incomplete.
+2 mm gap repair, and remaining loop-closing behavior; its implemented outcome
+is recorded below. `slicing_mode`, hole ownership, Clipper,
+negative/modifier booleans, regions, surfaces, perimeters, fill, supports,
+toolpaths, G-code assembly, metadata, post-processing, and complete normalized
+`ksr_fdmtest_v4` byte parity remained beyond Task 22C. The overall user-visible
+G-code parity goal was still incomplete.
+
+### 2026-07-17 Repair open slice polylines (Task 22D)
+
+Task 22D remains fixed to OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports `MultiPoint.hpp:172-187`
+open length and signed area plus
+`TriangleMeshSlicer.cpp:1163-1381,1428-1480` exact identity joining, nearest
+endpoint gap repair, four-pass order, and final polygon-only return. The Rust
+destination is private `ares-core` `mesh_slicer::chaining::{exact,gaps}` and
+`project_slice::looped_intersections`; no legacy STL contour fallback is used.
+
+The implemented order is exact(false), exact(true), gap(false), gap(true),
+then residual-open discard. It preserves the signed Vertex/Edge key mapping
+and zero collision, cached-versus-recomputed length rules, stale-end quirk,
+strict 2 mm radius, conditional 30% closure heuristic, widened arithmetic,
+deterministic original-index/endpoint-side ties, junction retention, and
+source orientation gates. The 2 mm constant is scaled by request-local
+`CoordinateScale` selected from resolved 3MF `printable_area`; it is not
+`slice_closing_radius` and is not a new Option.
+
+Project object plans, volume order/ordinal/type, layer slots, and polygon order
+are consumed once into looped ownership. A high-level mutation oracle locks all
+four passes, and a real project mesh produces and repairs a three-point open.
+The KSR fixture already has zero opens, so it remains exactly 460 layers, 3,288
+polygons, 116,472 points, and 2,190,993 encoded bytes. Face-order and normalized
+hashes remain
+`6654d9a95ef1bb024f986552b0e8c866ad55dcbe5de3af0cf9c34ff52372adbe`
+and `7df1e0f90f90e4ff5ca6249c1ceb61e5e1aca74dbdb7b9153fffeff4cd165cdd`;
+the 49,004-byte config block remains
+`b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8`.
+Production still returns `ProjectSlicingIncomplete`, and full G-code parity is
+not claimed.
+
+Task 22E is the next source-cited package. Its exact source set is
+`TriangleMeshSlicer.hpp:11-33`, `PrintConfig.hpp:162-170,947`,
+`PrintConfig.cpp:307-312,6030-6042`, `PrintObjectSlice.cpp:166-179,194-205`,
+and `TriangleMeshSlicer.cpp:1483-1532`. It maps the 3MF `slicing_mode` and
+spiral-bottom policy into all four internal modes: `Regular` and `EvenOdd`
+leave loops unchanged here, `Positive` makes every loop CCW, and
+`PositiveLargestContour` keeps the greatest-absolute-area loop and makes it
+CCW. EvenOdd fill-rule differentiation remains deferred to the later
+Clipper/`ExPolygon` slice. The planned private Rust destinations are
+`ares-core::mesh_slicer::slicing_mode` and
+`ares-core::project_slice::slicing_mode_intersections`. Observable layer-order
+semantics must remain WASM-safe rather than copying native TBB. Slab loops from
+line 1535, hole ownership, Clipper/`ExPolygon`, `slice_closing_radius`,
+negative/modifier booleans, regions, surfaces, perimeters, fill, supports,
+toolpaths, G-code assembly, metadata, post-processing, and normalized
+`ksr_fdmtest_v4` byte parity remain later source-cited slices. The persistent
+user-visible parity goal is still incomplete.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 

@@ -148,12 +148,14 @@ fn task22a_private_state_owns_single_project_config_block_and_plans() {
         project,
         resolved,
         config_block,
+        scale,
         intersected_objects,
     } = prepare_project_slice(KsrArchive::new().bytes()).unwrap();
 
     assert_eq!(project.objects().len(), 1);
     assert_eq!(resolved.objects.len(), 1);
     assert_eq!(resolved.print_object_count, 1);
+    assert_eq!(scale, CoordinateScale::Normal);
     assert_eq!(intersected_objects.len(), 1);
     let plan = &intersected_objects[0].plan;
     assert_eq!(
