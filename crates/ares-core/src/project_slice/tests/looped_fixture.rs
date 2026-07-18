@@ -16,7 +16,10 @@ use super::{
     },
     support::{ksr_project, metadata},
 };
-use encoding::encode;
+
+pub(super) fn encode(layers: &[LoopedLayer], semantic_order: bool) -> Vec<u8> {
+    encoding::encode(layers, semantic_order)
+}
 
 const LAYER_COUNT: usize = 460;
 const CLOSED_POLYGON_COUNT: usize = 3_288;

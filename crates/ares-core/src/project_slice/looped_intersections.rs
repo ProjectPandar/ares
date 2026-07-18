@@ -7,14 +7,25 @@ use crate::{
 use super::{chained_intersections::ChainedPrintObject, layers::PlannedPrintObject};
 
 pub(super) struct LoopedVolumeIntersections {
+    source_volume_index: usize,
     volume_ordinal: u32,
     volume_type: ProjectVolumeType,
     layers: Vec<LoopedLayer>,
 }
 
 impl LoopedVolumeIntersections {
-    pub(super) fn into_parts(self) -> (u32, ProjectVolumeType, Vec<LoopedLayer>) {
-        (self.volume_ordinal, self.volume_type, self.layers)
+    pub(super) fn into_parts(self) -> (usize, u32, ProjectVolumeType, Vec<LoopedLayer>) {
+        (
+            self.source_volume_index,
+            self.volume_ordinal,
+            self.volume_type,
+            self.layers,
+        )
+    }
+
+    #[cfg(test)]
+    pub(super) const fn source_volume_index(&self) -> usize {
+        self.source_volume_index
     }
 
     #[cfg(test)]
@@ -65,12 +76,14 @@ pub(super) fn loop_project_intersections(
             let volumes = volumes
                 .into_iter()
                 .map(|volume| {
-                    let (volume_ordinal, volume_type, layers) = volume.into_parts();
+                    let (source_volume_index, volume_ordinal, volume_type, layers) =
+                        volume.into_parts();
                     let layers = layers
                         .into_iter()
                         .map(|layer| make_loops(layer, max_gap_scaled))
                         .collect();
                     LoopedVolumeIntersections {
+                        source_volume_index,
                         volume_ordinal,
                         volume_type,
                         layers,

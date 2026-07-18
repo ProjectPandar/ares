@@ -83,6 +83,10 @@ impl LoopedLayer {
     pub(crate) fn polygons(&self) -> &[Polygon] {
         &self.polygons
     }
+
+    pub(super) fn polygons_mut(&mut self) -> &mut Vec<Polygon> {
+        &mut self.polygons
+    }
 }
 
 #[derive(Clone, Copy)]

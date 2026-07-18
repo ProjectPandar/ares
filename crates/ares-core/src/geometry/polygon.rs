@@ -13,4 +13,8 @@ impl Polygon {
     pub(crate) fn points(&self) -> &[Point] {
         &self.points
     }
+
+    pub(crate) fn reverse(&mut self) {
+        self.points.reverse();
+    }
 }

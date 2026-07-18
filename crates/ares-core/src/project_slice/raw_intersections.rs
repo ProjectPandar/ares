@@ -56,12 +56,17 @@ impl Deref for ProjectedPrintObject {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct RawVolumeIntersections {
+    source_volume_index: usize,
     volume_ordinal: VolumeOrdinal,
     volume_type: ProjectVolumeType,
     layers: Vec<Vec<IntersectionLine>>,
 }
 
 impl RawVolumeIntersections {
+    #[cfg(test)]
+    pub(super) const fn source_volume_index(&self) -> usize {
+        self.source_volume_index
+    }
     #[cfg(test)]
     pub(super) fn ordinal(&self) -> u32 {
         self.volume_ordinal.0.get()
@@ -74,8 +79,13 @@ impl RawVolumeIntersections {
     pub(super) fn layers(&self) -> &[Vec<IntersectionLine>] {
         &self.layers
     }
-    pub(super) fn into_parts(self) -> (u32, ProjectVolumeType, Vec<Vec<IntersectionLine>>) {
-        (self.volume_ordinal.0.get(), self.volume_type, self.layers)
+    pub(super) fn into_parts(self) -> (usize, u32, ProjectVolumeType, Vec<Vec<IntersectionLine>>) {
+        (
+            self.source_volume_index,
+            self.volume_ordinal.0.get(),
+            self.volume_type,
+            self.layers,
+        )
     }
 }
 
@@ -172,6 +182,7 @@ pub(super) fn intersect_projected_objects(
                 &mut budget,
             )?;
             volumes.push(RawVolumeIntersections {
+                source_volume_index: projected_volume.source_volume_index,
                 volume_ordinal: projected_volume.volume_ordinal,
                 volume_type: source_volume.volume_type(),
                 layers,

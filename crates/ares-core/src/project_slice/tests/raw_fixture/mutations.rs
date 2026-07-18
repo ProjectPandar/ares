@@ -78,7 +78,8 @@ fn task22b_private_state_owns_plan_inside_intersections_and_builds_once() {
     let mut volumes = volumes.into_iter();
     let volume = volumes.next().unwrap();
     assert!(volumes.next().is_none());
-    let (ordinal, volume_type, layers) = volume.into_parts();
+    let (source_volume_index, ordinal, volume_type, layers) = volume.into_parts();
+    assert_eq!(source_volume_index, 0);
     assert_eq!(ordinal, 1);
     assert_eq!(volume_type, ProjectVolumeType::ModelPart);
     assert_eq!(layers.len(), plan.layers.len());

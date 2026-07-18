@@ -4,6 +4,7 @@ use crate::SliceError;
 
 mod chaining;
 mod intersection;
+mod slicing_mode;
 mod topology;
 
 pub(crate) use chaining::{
@@ -12,6 +13,7 @@ pub(crate) use chaining::{
 pub(crate) use intersection::{
     EndpointReference, FacetEdgeType, IntersectionLine, IntersectionPoint, intersect_facet,
 };
+pub(crate) use slicing_mode::{SlicingMode, apply_slicing_mode};
 pub(crate) use topology::{MeshTopology, index_mesh_edges};
 
 const RAW_INTERSECTION_LIMIT: usize = 1_000_000;

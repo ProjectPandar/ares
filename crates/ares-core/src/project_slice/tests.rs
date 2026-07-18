@@ -13,4 +13,6 @@ mod raw_lifecycle;
 mod raw_preflights;
 mod raw_support;
 mod raw_transform;
+mod slicing_mode_fixture;
+mod slicing_mode_intersections;
 mod support;

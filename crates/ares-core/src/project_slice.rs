@@ -12,6 +12,7 @@ mod looped_intersections;
 mod parameters;
 mod profile;
 mod raw_intersections;
+mod slicing_mode_intersections;
 mod state;
 
 #[cfg(test)]
@@ -34,6 +35,12 @@ pub async fn slice_project(
         .expect("2 mm loop-repair radius must fit the selected coordinate scale");
     let looped_objects =
         looped_intersections::loop_project_intersections(chained_objects, max_gap_scaled);
+    let spiral_mode = resolved.views.full.process.print.spiral_mode.0;
+    let slicing_mode_objects = slicing_mode_intersections::apply_project_slicing_modes(
+        looped_objects,
+        &resolved.objects,
+        spiral_mode,
+    )?;
 
     let documents = project.documents();
     let _ = (
@@ -82,12 +89,19 @@ pub async fn slice_project(
             }
         }
     }
-    for looped_object in looped_objects {
-        let (plan, volumes) = looped_object.into_parts();
-        for volume in volumes {
-            let (ordinal, volume_type, layers) = volume.into_parts();
-            let _ = (ordinal, volume_type);
-            for polygon in layers.iter().flat_map(|layer| layer.polygons()) {
+    for slicing_mode_object in slicing_mode_objects {
+        let (plan, volumes) = slicing_mode_object.into_parts();
+        for (mode, looped_layer) in volumes
+            .into_iter()
+            .flat_map(|volume| {
+                let (source_volume_index, ordinal, volume_type, layers) = volume.into_parts();
+                let _ = (source_volume_index, ordinal, volume_type);
+                layers
+            })
+            .map(slicing_mode_intersections::SlicingModeLayer::into_parts)
+        {
+            let _ = mode;
+            for polygon in looped_layer.polygons() {
                 let _ = polygon.points();
             }
         }

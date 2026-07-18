@@ -1272,23 +1272,43 @@ the 49,004-byte config block remains
 Production still returns `ProjectSlicingIncomplete`, and full G-code parity is
 not claimed.
 
-Task 22E is the next source-cited package. Its exact source set is
-`TriangleMeshSlicer.hpp:11-33`, `PrintConfig.hpp:162-170,947`,
-`PrintConfig.cpp:307-312,6030-6042`, `PrintObjectSlice.cpp:166-179,194-205`,
-and `TriangleMeshSlicer.cpp:1483-1532`. It maps the 3MF `slicing_mode` and
-spiral-bottom policy into all four internal modes: `Regular` and `EvenOdd`
-leave loops unchanged here, `Positive` makes every loop CCW, and
-`PositiveLargestContour` keeps the greatest-absolute-area loop and makes it
-CCW. EvenOdd fill-rule differentiation remains deferred to the later
-Clipper/`ExPolygon` slice. The planned private Rust destinations are
-`ares-core::mesh_slicer::slicing_mode` and
-`ares-core::project_slice::slicing_mode_intersections`. Observable layer-order
-semantics must remain WASM-safe rather than copying native TBB. Slab loops from
-line 1535, hole ownership, Clipper/`ExPolygon`, `slice_closing_radius`,
-negative/modifier booleans, regions, surfaces, perimeters, fill, supports,
+Task 22E is implemented from `TriangleMeshSlicer.hpp:11-33`,
+`PrintConfig.hpp:162-170,947`, `PrintConfig.cpp:307-312,6030-6042`,
+`PrintObjectSlice.cpp:138-225`, and
+`TriangleMeshSlicer.cpp:1483-1532,2003-2049`. The private
+`mesh_slicer::slicing_mode` policy implements direct `Regular`, `EvenOdd`,
+`Positive`, and `PositiveLargestContour` polygon behavior. The private
+`project_slice::slicing_mode_intersections` adapter resolves external
+`Regular`, `EvenOdd`, and `CloseHoles` from the 3MF object Option overlay,
+preserves the original largest-contour intent for the later combination stage,
+and applies the raw-stage mode in deterministic object, layer, and actual
+source-volume order.
+
+Spiral mode applies `PositiveLargestContour` only to model-part volumes above
+the Option-derived bottom region; negative and modifier volumes keep the base
+mode. Bottom-region membership uses the upstream layer-count-first rule and
+strict widened `slice_z < bottom_shell_thickness - 1e-4` comparison. Validation
+is limited to spiral-consumed Options. The KSR baseline remains exactly 460
+layers, 3,288 polygons, 116,472 points, and the Task 22D face-order and
+normalized hashes, while process, object-override, and spiral archive mutations
+prove 3MF-only projection. Focused and full workspace tests, native and WASM
+checks, the browser real-3MF test, code-quality review, default-model review,
+and the independent six-dimensional implementation review pass.
+
+Task 22F is the next source-cited package. Its primary boundary is
+`TriangleMeshSlicer.cpp:1738-1823,2003-2049` plus only the directly used
+Clipper/`ExPolygon` helpers for fill-rule-sensitive polygon combination,
+closing, and final contour ownership. The overlap at lines 2003-2049 is
+deliberate: Task 22E implements the raw-mode adaptation, while Task 22F must
+implement the downstream combination and `ExPolygon` behavior. It must first
+establish ascending volume-ID order from `Model.hpp:1227-1230` before any
+cross-volume combination. Slab-loop work not required by that boundary,
+remaining `slice_closing_radius` behavior, regions, surfaces, perimeters, fill,
+supports,
 toolpaths, G-code assembly, metadata, post-processing, and normalized
-`ksr_fdmtest_v4` byte parity remain later source-cited slices. The persistent
-user-visible parity goal is still incomplete.
+`ksr_fdmtest_v4` byte parity remain later source-cited slices. Production still
+returns `ProjectSlicingIncomplete`, so the persistent user-visible full G-code
+parity goal remains incomplete.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 

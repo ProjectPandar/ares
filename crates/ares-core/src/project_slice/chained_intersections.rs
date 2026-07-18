@@ -6,14 +6,25 @@ use crate::{
 use super::{layers::PlannedPrintObject, raw_intersections::IntersectedPrintObject};
 
 pub(super) struct ChainedVolumeIntersections {
+    source_volume_index: usize,
     volume_ordinal: u32,
     volume_type: ProjectVolumeType,
     layers: Vec<ChainedLayer>,
 }
 
 impl ChainedVolumeIntersections {
-    pub(super) fn into_parts(self) -> (u32, ProjectVolumeType, Vec<ChainedLayer>) {
-        (self.volume_ordinal, self.volume_type, self.layers)
+    pub(super) fn into_parts(self) -> (usize, u32, ProjectVolumeType, Vec<ChainedLayer>) {
+        (
+            self.source_volume_index,
+            self.volume_ordinal,
+            self.volume_type,
+            self.layers,
+        )
+    }
+
+    #[cfg(test)]
+    pub(super) const fn source_volume_index(&self) -> usize {
+        self.source_volume_index
     }
 
     #[cfg(test)]
@@ -63,12 +74,14 @@ pub(super) fn chain_project_intersections(
             let volumes = volumes
                 .into_iter()
                 .map(|volume| {
-                    let (volume_ordinal, volume_type, layers) = volume.into_parts();
+                    let (source_volume_index, volume_ordinal, volume_type, layers) =
+                        volume.into_parts();
                     let layers = layers
                         .into_iter()
                         .map(chain_lines_by_triangle_connectivity)
                         .collect();
                     ChainedVolumeIntersections {
+                        source_volume_index,
                         volume_ordinal,
                         volume_type,
                         layers,
