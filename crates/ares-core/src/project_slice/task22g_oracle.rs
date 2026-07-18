@@ -2,8 +2,13 @@ use crate::{ProjectVolumeType, geometry::Polygon, mesh_slicer::SlicingMode};
 
 use super::closing::{PostClosingLayer, PostClosingPrintObject};
 
+#[cfg(test)]
 pub(super) fn encode(objects: &[PostClosingPrintObject]) -> Vec<u8> {
-    let mut output = b"ARES22G\0".to_vec();
+    encode_with_magic(objects, b"ARES22G\0")
+}
+
+pub(super) fn encode_with_magic(objects: &[PostClosingPrintObject], magic: &[u8; 8]) -> Vec<u8> {
+    let mut output = magic.to_vec();
     put_u64(&mut output, objects.len());
     for object in objects {
         put_u64(&mut output, object.plan().source_object_index);

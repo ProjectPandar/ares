@@ -163,8 +163,10 @@ pub use project::{
     ProjectObject, ProjectVolume, ProjectVolumeType, Transform3d, load_project,
 };
 pub use project_slice::slice_project;
-#[cfg(any(test, feature = "task22g-browser-oracle"))]
+#[cfg(test)]
 pub use project_slice::task22g_browser_oracle;
+#[cfg(any(test, feature = "task22h-browser-oracle"))]
+pub use project_slice::{task22h_browser_input_oracle, task22h_browser_oracle};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use speeds::{

@@ -8,6 +8,7 @@ mod capabilities;
 mod chained_intersections;
 mod closing;
 mod extruders;
+mod largest_contours;
 mod layers;
 mod looped_intersections;
 mod parameters;
@@ -17,8 +18,10 @@ mod raw_intersections;
 mod slicing_mode_intersections;
 mod state;
 
-#[cfg(any(test, feature = "task22g-browser-oracle"))]
+#[cfg(any(test, feature = "task22h-browser-oracle"))]
 mod task22g_oracle;
+#[cfg(any(test, feature = "task22h-browser-oracle"))]
+mod task22h_oracle;
 
 #[cfg(test)]
 mod tests;
@@ -31,8 +34,8 @@ pub async fn slice_project(
         project,
         resolved,
         config_block,
-        objects: post_closing_objects,
-    } = prepare_post_closing(project)?;
+        objects: post_largest_contour_objects,
+    } = prepare_post_largest_contours(project)?;
 
     let documents = project.documents();
     let _ = (
@@ -81,8 +84,8 @@ pub async fn slice_project(
             }
         }
     }
-    for post_closing_object in post_closing_objects {
-        let (plan, volumes) = post_closing_object.into_parts();
+    for post_largest_contour_object in post_largest_contour_objects {
+        let (plan, volumes) = post_largest_contour_object.into_parts();
         for (mode, expolygons) in volumes
             .into_iter()
             .flat_map(|volume| {
@@ -169,10 +172,33 @@ fn prepare_post_closing(project: impl AsRef<[u8]>) -> Result<PreparedPostClosing
     })
 }
 
-#[cfg(any(test, feature = "task22g-browser-oracle"))]
+fn prepare_post_largest_contours(
+    project: impl AsRef<[u8]>,
+) -> Result<PreparedPostClosing, SliceError> {
+    let mut prepared = prepare_post_closing(project)?;
+    largest_contours::apply_project_largest_contours(&mut prepared.objects);
+    Ok(prepared)
+}
+
+#[cfg(test)]
 pub fn task22g_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_closing(project)?;
     Ok(task22g_oracle::encode(&prepared.objects))
+}
+
+#[cfg(any(test, feature = "task22h-browser-oracle"))]
+pub fn task22h_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_closing(project)?;
+    Ok(task22g_oracle::encode_with_magic(
+        &prepared.objects,
+        b"ARES22G\0",
+    ))
+}
+
+#[cfg(any(test, feature = "task22h-browser-oracle"))]
+pub fn task22h_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_largest_contours(project)?;
+    Ok(task22h_oracle::encode(&prepared.objects))
 }
 
 fn plan_project(

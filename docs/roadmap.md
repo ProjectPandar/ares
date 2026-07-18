@@ -1358,9 +1358,34 @@ WASM/browser, code-quality, default-model, and independent six-dimensional
 gates. Production still returns `ProjectSlicingIncomplete`, so no placeholder
 G-code or complete normalized parity is claimed.
 
-Task 22H separately takes post-closing largest-contour selection from
+### 2026-07-18 Port post-closing largest-contour selection (Task 22H)
+
+Task 22H is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports
 `TriangleMeshSlicer.cpp:2025-2037`, `ExPolygon.cpp:532-549`,
-`ExPolygon.hpp:493-497`, and `Polygon.cpp:52-69`. Task 22I then takes the
+`ExPolygon.hpp:493-497`, and `Polygon.cpp:52-69`. The Rust stage preserves
+serial signed-`f64` polygon area, strict first-positive maximum selection,
+contour-only ranking, complete ExPolygon and ordered-hole ownership, and
+post-closing per-layer `PositiveLargestContour` gating. It consumes only the
+mode and spiral boundary already resolved from the complete 3MF; there is no
+fixture, digest, count, or fixed-layer production branch.
+
+The committed all-Regular project remains an exact geometry no-op at
+1,644,681 H-checkpoint bytes, SHA-256
+`e15967c36c0aa47a9a1a3fc31053587777359bedef796053022eaeb36ad49163`.
+The primary complete three-Option 3MF mutation exercises 337 multi-ExPolygon
+PLC layers and produces 427,465 bytes, SHA-256
+`a0df3397e498306bfcade84b03721fe345d2f4b501e578a5b54df39faff44353`.
+The independent threshold-21 mutation exercises 336 PLC layers from slot 21,
+preserves multi-ExPolygon Regular slot 20, and produces 674,201 bytes,
+SHA-256 `4b64a4e70bfceabf414572f6dbe13903245612908cbaf2d12985b6c1ed440214`.
+Native and browser runs are repeatable, both fixtures remain unchanged, and
+all focused/full, WASM, structural, whole-candidate, and independent
+six-dimensional gates pass.
+
+Production still returns `ProjectSlicingIncomplete`, so Task 22H emits no
+placeholder or reference-derived G-code and does not complete normalized KSR
+parity. Task 22I next takes the
 `resolution > 0.001` to 0.0025 mm mapping and simplification closure from
 `PrintConfig.hpp:1554-1562`, `PrintConfig.cpp:5172-5179`,
 `PrintObjectSlice.cpp:166-177`, `TriangleMeshSlicer.cpp:2025-2044`,
@@ -1372,7 +1397,7 @@ Task 22H separately takes post-closing largest-contour selection from
 cross-volume booleans, perimeters, fill, supports, toolpaths, G-code assembly,
 metadata, post-processing, and normalized `ksr_fdmtest_v4` byte parity remain
 later source-cited slices. The persistent user-visible goal is therefore still
-incomplete after Task 22G.
+incomplete after Task 22H.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 

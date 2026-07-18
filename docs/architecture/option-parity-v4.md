@@ -2329,9 +2329,47 @@ gates pass. Production deliberately still returns `ProjectSlicingIncomplete`;
 no placeholder or reference-derived G-code is emitted, so complete normalized
 KSR parity is not claimed.
 
-Task 22H then ports post-closing largest-contour selection from
-`TriangleMeshSlicer.cpp:2025-2037`, `ExPolygon.cpp:532-549`,
-`ExPolygon.hpp:493-497`, and `Polygon.cpp:52-69`. Task 22I separately ports the
+### Task 22H: post-closing largest-contour selection
+
+Task 22H is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports the direct consumer in
+`TriangleMeshSlicer.cpp:2025-2037`, the selector in
+`ExPolygon.cpp:532-549` / `ExPolygon.hpp:493-497`, and signed polygon area in
+`Polygon.cpp:52-69`.
+
+The private `geometry::polygon` implementation preserves the source's serial
+signed `f64` shoelace order and positive zero for fewer than three points. The
+private `geometry::expolygon` selector ranks contour area only, starts at zero,
+uses strict `>` so the first positive tie wins, and moves the complete selected
+ExPolygon with its ordered holes. Multiple nonpositive candidates remain an
+internal invariant failure. The private `project_slice::largest_contours`
+stage mutates each post-closing object, volume, and layer independently and
+only when the retained mode is `PositiveLargestContour`. It parses no Option:
+the mode and spiral bottom boundary remain assembled from the resolved 3MF by
+Task 22E, and Task 22I simplification has not yet run.
+
+The committed KSR project remains all Regular at this stage. Its exact H
+checkpoint is 1,644,681 bytes with SHA-256
+`e15967c36c0aa47a9a1a3fc31053587777359bedef796053022eaeb36ad49163`:
+2,890 contours, 395 holes, and 99,212 points; only the checkpoint magic differs
+from Task 22G. A complete 3MF mutation of `spiral_mode`,
+`bottom_shell_layers`, and `bottom_shell_thickness` enters with mode histogram
+`2/0/0/458` and 337 multi-ExPolygon PLC layers, then produces 427,465 bytes,
+SHA-256 `a0df3397e498306bfcade84b03721fe345d2f4b501e578a5b54df39faff44353`,
+470 contours, 13 holes, and 25,747 points. An independent threshold-21 3MF
+mutation selects 336 layers from slot 21 onward while preserving Regular slot
+20 and produces 674,201 bytes, SHA-256
+`4b64a4e70bfceabf414572f6dbe13903245612908cbaf2d12985b6c1ed440214`,
+569 contours, 127 holes, and 41,012 points. These archives change Options only
+inside the complete 3MF and prove there is no fixture or fixed-layer branch.
+
+Task 22H passes focused and full native, WASM/browser, structural, code-quality,
+default-model, and independent six-dimensional review gates. Both committed
+fixtures remain unchanged. Production executes the selector and still returns
+`ProjectSlicingIncomplete`; no placeholder or reference-derived G-code is
+emitted, so complete normalized KSR parity is not claimed.
+
+Task 22I separately ports the
 `resolution > 0.001` to 0.0025 mm mapping and simplification closure from
 `PrintConfig.hpp:1554-1562`, `PrintConfig.cpp:5172-5179`,
 `PrintObjectSlice.cpp:166-177`, `TriangleMeshSlicer.cpp:2025-2044`,

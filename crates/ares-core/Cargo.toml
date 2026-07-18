@@ -6,7 +6,7 @@ rust-version.workspace = true
 
 [features]
 default = []
-task22g-browser-oracle = []
+task22h-browser-oracle = []
 
 [dependencies]
 quick-xml = { workspace = true }

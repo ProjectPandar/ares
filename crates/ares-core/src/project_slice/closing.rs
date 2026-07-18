@@ -28,14 +28,17 @@ impl PostClosingLayer {
         (self.mode, self.expolygons)
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
     pub(super) const fn mode(&self) -> SlicingMode {
         self.mode
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
+    #[cfg(any(test, feature = "task22h-browser-oracle"))]
     pub(super) fn expolygons(&self) -> &[ExPolygon] {
         &self.expolygons
+    }
+
+    pub(super) fn expolygons_mut(&mut self) -> &mut Vec<ExPolygon> {
+        &mut self.expolygons
     }
 }
 
@@ -71,24 +74,28 @@ impl PostClosingVolume {
         )
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
+    #[cfg(any(test, feature = "task22h-browser-oracle"))]
     pub(super) const fn source_volume_index(&self) -> usize {
         self.source_volume_index
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
+    #[cfg(any(test, feature = "task22h-browser-oracle"))]
     pub(super) const fn ordinal(&self) -> u32 {
         self.volume_ordinal
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
+    #[cfg(any(test, feature = "task22h-browser-oracle"))]
     pub(super) const fn volume_type(&self) -> ProjectVolumeType {
         self.volume_type
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
+    #[cfg(any(test, feature = "task22h-browser-oracle"))]
     pub(super) fn layers(&self) -> &[PostClosingLayer] {
         &self.layers
+    }
+
+    pub(super) fn layers_mut(&mut self) -> &mut [PostClosingLayer] {
+        &mut self.layers
     }
 }
 
@@ -107,14 +114,18 @@ impl PostClosingPrintObject {
         (self.plan, self.volumes)
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
+    #[cfg(any(test, feature = "task22h-browser-oracle"))]
     pub(super) const fn plan(&self) -> &PlannedPrintObject {
         &self.plan
     }
 
-    #[cfg(any(test, feature = "task22g-browser-oracle"))]
+    #[cfg(any(test, feature = "task22h-browser-oracle"))]
     pub(super) fn volumes(&self) -> &[PostClosingVolume] {
         &self.volumes
+    }
+
+    pub(super) fn volumes_mut(&mut self) -> &mut [PostClosingVolume] {
+        &mut self.volumes
     }
 }
 

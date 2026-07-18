@@ -6,6 +6,8 @@ mod closing;
 mod closing_fixture;
 mod fixture;
 mod integration;
+mod largest_contour_fixture;
+mod largest_contours;
 mod looped_fixture;
 mod looped_intersections;
 mod parameters;

@@ -9,22 +9,27 @@
       import init, * as bindings from "/target/wasm-browser/ares_wasm.js";
 
       await init();
-      const { sliceProject, task22gBrowserOracle } = bindings;
+      const {
+        sliceProject,
+        task22hBrowserInputOracle,
+        task22hBrowserOracle,
+      } = bindings;
+      const encoder = new TextEncoder();
+      const magicG = encoder.encode("ARES22G\0");
+      const magicH = encoder.encode("ARES22H\0");
 
-      const task22gMagic = new TextEncoder().encode("ARES22G\0");
-
-      function task22gBytes(input) {
+      function checkpointBytes(input) {
         return input instanceof Uint8Array ? input : new Uint8Array(input);
       }
 
-      function parseTask22g(input) {
-        const bytes = task22gBytes(input);
+      function parseCheckpoint(input) {
+        const bytes = checkpointBytes(input);
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         let cursor = 0;
 
         const requireBytes = (length) => {
           if (cursor + length > bytes.length) {
-            throw new Error("truncated ARES22G stream");
+            throw new Error("truncated ARES22 checkpoint stream");
           }
         };
         const readU8 = () => {
@@ -42,34 +47,40 @@
           const value = view.getBigUint64(cursor, true);
           cursor += 8;
           if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
-            throw new Error("ARES22G count exceeds JavaScript's safe range");
+            throw new Error("ARES22 count exceeds JavaScript's safe range");
           }
           return Number(value);
         };
         const readPolygon = () => {
           const points = readCount();
-          for (let point = 0; point < points; point += 1) {
-            requireBytes(16);
-            view.getBigInt64(cursor, true);
-            view.getBigInt64(cursor + 8, true);
-            cursor += 16;
-          }
+          requireBytes(points * 16);
+          cursor += points * 16;
           return points;
         };
+        const hasMagic = (magic) =>
+          magic.every((expected, index) => bytes[index] === expected);
 
-        requireBytes(task22gMagic.length);
-        for (const expected of task22gMagic) {
-          if (readU8() !== expected) {
-            throw new Error("invalid ARES22G magic");
-          }
+        requireBytes(magicG.length);
+        const magic = hasMagic(magicG)
+          ? "ARES22G\0"
+          : hasMagic(magicH)
+            ? "ARES22H\0"
+            : null;
+        if (magic === null) {
+          throw new Error("invalid ARES22 checkpoint magic");
         }
+        cursor += magicG.length;
 
         const objects = readCount();
+        const modes = [0, 0, 0, 0];
+        const selectedSlots = [];
+        const plcNonSingleSlots = [];
         let volumes = 0;
         let layers = 0;
         let contours = 0;
         let holes = 0;
         let points = 0;
+        let slot = 0;
         for (let object = 0; object < objects; object += 1) {
           readCount();
           readCount();
@@ -84,9 +95,19 @@
             layers += volumeLayers;
             for (let layer = 0; layer < volumeLayers; layer += 1) {
               readCount();
-              readU8();
+              const mode = readU8();
+              if (mode >= modes.length) {
+                throw new Error("invalid ARES22 slicing mode");
+              }
+              modes[mode] += 1;
               const layerContours = readCount();
               contours += layerContours;
+              if (mode === 3 && layerContours > 1) {
+                selectedSlots.push(slot);
+              }
+              if (mode === 3 && layerContours !== 1) {
+                plcNonSingleSlots.push(slot);
+              }
               for (let contour = 0; contour < layerContours; contour += 1) {
                 points += readPolygon();
                 const contourHoles = readCount();
@@ -95,15 +116,16 @@
                   points += readPolygon();
                 }
               }
+              slot += 1;
             }
           }
         }
         if (cursor !== bytes.length) {
-          throw new Error("ARES22G stream has trailing bytes");
+          throw new Error("ARES22 checkpoint stream has trailing bytes");
         }
 
         return {
-          magic: "ARES22G\0",
+          magic,
           byteLength: bytes.length,
           bytesRead: cursor,
           objects,
@@ -112,11 +134,17 @@
           contours,
           holes,
           points,
+          modes,
+          selectedSlots,
+          plcNonSingleSlots,
         };
       }
 
       async function sha256(bytes) {
-        const digest = await crypto.subtle.digest("SHA-256", task22gBytes(bytes));
+        const digest = await crypto.subtle.digest(
+          "SHA-256",
+          checkpointBytes(bytes),
+        );
         return Array.from(new Uint8Array(digest), (byte) =>
           byte.toString(16).padStart(2, "0"),
         ).join("");
@@ -129,32 +157,71 @@
         );
       }
 
-      window.sliceFixtureProject = async () => {
+      function bodyEqualExceptMagic(left, right) {
+        return (
+          left.length === right.length &&
+          left.every(
+            (byte, index) => index === 6 || byte === right[index],
+          ) &&
+          left[6] === "G".charCodeAt(0) &&
+          right[6] === "H".charCodeAt(0)
+        );
+      }
+
+      async function summarize(bytes) {
+        const { selectedSlots, plcNonSingleSlots, ...parsed } =
+          parseCheckpoint(bytes);
+        return {
+          ...parsed,
+          sha256: await sha256(bytes),
+          selectedSlotCount: selectedSlots.length,
+          selectedSlotFirst: selectedSlots.at(0) ?? null,
+          selectedSlotLast: selectedSlots.at(-1) ?? null,
+          selectedSlotSha256:
+            selectedSlots.length === 0
+              ? null
+              : await sha256(encoder.encode(selectedSlots.join(","))),
+          plcNonSingleSlotCount: plcNonSingleSlots.length,
+        };
+      }
+
+      async function fixtureBytes(input) {
+        if (input !== undefined) {
+          return checkpointBytes(input);
+        }
         const response = await fetch(
           "/tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf",
         );
-        const input = new Uint8Array(await response.arrayBuffer());
+        return new Uint8Array(await response.arrayBuffer());
+      }
+
+      window.sliceFixtureProject = async () => {
         try {
-          await sliceProject(input);
+          await sliceProject(await fixtureBytes());
           return { resolved: true };
         } catch (error) {
           return { resolved: false, error: String(error) };
         }
       };
-      window.parseTask22gVector = (bytes) => parseTask22g(bytes);
-      window.sha256Text = (text) => sha256(new TextEncoder().encode(text));
-      window.task22gFixtureOracle = async () => {
-        const response = await fetch(
-          "/tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf",
+      window.parseTask22Vector = (bytes) => parseCheckpoint(bytes);
+      window.sha256Text = (text) => sha256(encoder.encode(text));
+      window.task22hBindingExports = Object.keys(bindings).sort();
+      window.task22hFixtureOracles = async (input) => {
+        const project = await fixtureBytes(input);
+        const inputFirst = checkpointBytes(
+          await task22hBrowserInputOracle(project),
         );
-        const input = new Uint8Array(await response.arrayBuffer());
-        const first = task22gBytes(await task22gBrowserOracle(input));
-        const second = task22gBytes(await task22gBrowserOracle(input));
+        const inputSecond = checkpointBytes(
+          await task22hBrowserInputOracle(project),
+        );
+        const outputFirst = checkpointBytes(await task22hBrowserOracle(project));
+        const outputSecond = checkpointBytes(await task22hBrowserOracle(project));
         return {
-          first: parseTask22g(first),
-          second: parseTask22g(second),
-          sha256: await sha256(first),
-          repeatable: byteEqual(first, second),
+          input: await summarize(inputFirst),
+          output: await summarize(outputFirst),
+          inputRepeatable: byteEqual(inputFirst, inputSecond),
+          outputRepeatable: byteEqual(outputFirst, outputSecond),
+          bodyEqualExceptMagic: bodyEqualExceptMagic(inputFirst, outputFirst),
         };
       };
       window.aresReady = true;
