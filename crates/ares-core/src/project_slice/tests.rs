@@ -26,5 +26,6 @@ mod simplification_fixture;
 mod slicing_mode_fixture;
 mod slicing_mode_intersections;
 mod support;
+mod top_empty_layers;
 mod volume_bounds;
 mod volume_regions;

@@ -7,6 +7,7 @@ use crate::{
             prepare_region_slices,
         },
         task22j_oracle,
+        top_empty_layers::remove_project_top_empty_layers,
         volume_regions::{VolumeRegion, VolumeRegionGraph},
     },
 };
@@ -207,6 +208,32 @@ fn task22j_complex_closing_maps_generated_clipper_range_error_exactly() {
 #[test]
 fn task22j_complex_complete_synthetic_stream_is_exact() {
     region_fixture::assert_synthetic_j(&task22j_oracle::encode(&synthetic_outputs()));
+}
+
+#[test]
+fn task22k_complex_complete_synthetic_stream_is_exact() {
+    let mut expected =
+        region_fixture::checkpoint::parse_j(&task22j_oracle::encode(&synthetic_outputs())).stream;
+    expected.objects[9].planned_layer_count = 1;
+    expected.objects[9].retained_layers.truncate(1);
+    let expected = region_fixture::checkpoint::encode_with_magic(&expected, b"ARES22K\0");
+    assert_eq!(expected.len(), 5_848);
+    assert_eq!(
+        region_fixture::checkpoint::sha256(&expected),
+        "037b5e1b5aa9eb2f5c9c38f00a8d7a23768217fd7cc7ec13bb71f21d9edb3b07"
+    );
+    let mut outputs = synthetic_outputs();
+    remove_project_top_empty_layers(&mut outputs);
+    let actual = task22j_oracle::encode_with_magic(&outputs, b"ARES22K\0");
+    assert_eq!(actual, expected);
+    assert_eq!(
+        region_fixture::checkpoint::parse_k(&actual).stream.objects[9]
+            .sidecars
+            .iter()
+            .map(|sidecar| sidecar.layers.len())
+            .collect::<Vec<_>>(),
+        vec![2, 2]
+    );
 }
 
 #[rustfmt::skip]

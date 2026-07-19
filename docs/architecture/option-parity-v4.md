@@ -2,19 +2,15 @@
 
 ## Status
 
-Tasks 16 through 20A.2 and Tasks 22A through 22C are released. Task 20A.2 was released as commit
-`4281e913b8eeaaeb6111cbefdf06f896f5c611aa`; exact-SHA Tier 1 run
-`29520118127` is green across format, Ubuntu/Linux, WASM, macOS, and Windows.
-Task 22A was released as commit
-`91fc19f1dbfc85d21431791d2d5acb78af818671`; exact-SHA Tier 1 run
-`29543841835` is green across the same five Tier 1 jobs. Task 22B was released
-as commit `455a0d12a9c6ac48f6e2796669b4300a6a6190a2`; exact-SHA Tier 1 run
-`29610017653` is green across the same five jobs. Task 22C was released
-as commit `8c07319a5ac1f9660324ef53172ffe95d2b53230`; exact-SHA Tier 1 run
-`29616822593` is green across the same five jobs. Task 22D's open-polyline loop
-repair is whole-approved and is at its documentation gate. Per-layer slicing
-mode, polygon/Clipper processing, complete G-code assembly, and final byte
-parity remain owned by later source-cited rewrite tasks.
+Tasks 16 through 20A.2 and Tasks 22A through 22J are released. Task 22J was
+released as commit `fc248673cbfda7552b3fe7cba9eeff0c36345b17`; exact-SHA
+Tier 1 run `29699174614` is green across format, Ubuntu/Linux, Windows, macOS,
+and WASM/browser. Task 22K's post-region top-empty-layer removal is implemented
+and is at its documentation and release gate. Public slicing executes the new
+stage but deliberately continues to return `ProjectSlicingIncomplete`.
+Cancellation, conical-overhang processing, later surface/toolpath stages,
+complete G-code assembly, and normalized KSR parity remain owned by later
+source-cited rewrite slices.
 
 ## Fixed baseline
 
@@ -49,15 +45,16 @@ document.
 
 The active fixture identity, generator validation, normalized hash, and bounded
 difference tests pass. Public slicing now loads the project, resolves typed
-configuration, serializes the Bambu config block, plans 460 fixed layers, and
-builds 116,472 real directed/scaled mesh-plane intersection lines before
-chaining them into 3,288 polygons and running the four exact/gap loop-repair
-passes before deliberately returning `ProjectSlicingIncomplete`. Per-layer
-slicing policy and complete G-code assembly remain deferred. The complete CLI
-golden stays explicitly ignored, and no comparison rule is relaxed around that
-boundary. The reference G-code is used only by the test-side exact config-block
-oracle and the final configured-skipped regression contract; production and
-Task 22D tests do not read or identify it.
+configuration, plans and intersects 460 layers, repairs and closes the sliced
+geometry, simplifies it, composes dense Internal region surfaces, and removes
+only the maximal suffix of post-region layers whose every region surface
+vector is empty. It then deliberately returns `ProjectSlicingIncomplete`.
+
+For the committed KSR project, layer 459 is nonempty, so Task 22K removes zero
+layers: the post-K state remains one object with 460 planned and retained
+layers and one complete 460-layer occurrence sidecar. The complete CLI golden
+remains explicitly ignored. Production does not read or identify the reference
+G-code, and normalized `ksr_fdmtest_v4.gcode` parity is not claimed.
 
 ## Task 5 fixed-source inventory
 
@@ -2498,3 +2495,62 @@ metadata, and post-processing remain deferred to separately approved upstream
 slices. Production still returns `ProjectSlicingIncomplete`; no placeholder or
 reference-derived G-code is emitted, and normalized KSR G-code parity is not
 claimed.
+
+### Task 22K: post-region top-empty-layer removal
+
+Task 22K is implemented from fixed OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The owning upstream boundary is
+`PrintObjectSlice.cpp:1194-1201`, which repeatedly deletes only the final layer
+while it is empty, and `PrintObjectSlice.cpp:1202-1203`, which clears the new
+final layer's upper pointer. `Layer.cpp:21-29` defines a layer as empty only
+when every present region has an empty slice collection, while
+`SurfaceCollection.hpp:49-51` defines collection emptiness solely by
+`surfaces.empty()`, independent of polygon area.
+
+The Rust stage reverse-searches each `PostRegionPrintObject` for the final
+layer whose any region owns at least one surface, then truncates the planned
+layers and every dense region-layer vector to that identical prefix. Leading
+and interior empty layers remain, surviving IDs are not renumbered, a surface
+containing an empty `ExPolygon` keeps its layer, zero-region and all-empty
+objects retain zero layers, and occurrence-keyed volume sidecars remain
+complete. Ares has no layer adjacency pointers; retaining only the dense prefix
+is the Rust equivalent of deleting the suffix and clearing the surviving final
+`upper_layer`.
+
+Native tests fix the ten-object synthetic K checkpoint at 5,848 bytes, SHA-256
+`037b5e1b5aa9eb2f5c9c38f00a8d7a23768217fd7cc7ec13bb71f21d9edb3b07`:
+only object 9 loses its empty final retained layer, while both of its two-layer
+sidecars remain complete. The committed KSR checkpoint is 2,008,706 bytes,
+SHA-256
+`c101e0f9ff863c7abe72cd1cb792fcd8e0074d8d6d2e77d3bb56c32eedba13be`;
+all bytes after the eight-byte `ARES22K` magic equal the released Task 22J
+stream, and all 460 layers remain. Real-loader top- and bottom-negative-slab
+3MF vectors independently prove `[nonempty, empty] -> 1` and
+`[empty, nonempty] -> 2`, with ordered occurrence sidecars `[(1, 2), (2, 2)]`
+unchanged.
+
+The browser J/K known-answer checkpoints are respectively 433 bytes /
+`940f01934309cf1a23afe67e7d8365ced3e9f8296f8ee4db73261aac74e71a6a`
+and 385 bytes /
+`a49fcd311d79d216d874c585ae107f33a178fd47e99d3f862475295d0e237751`.
+The top and bottom archive semantic-entry digests are respectively
+`36f49fc5ad0788dc63ce9e25111d5d758c67711137d368dc63eb76c5aee1e538`
+and
+`2001de693fbcc3781d733beebc8ace871cc42a2abe47865c51159192b9a94817`.
+Two fresh Chromium passes reach exact EOF, reproduce the opposite trim
+decisions and complete sidecars, and agree with the exact KSR J/K identities.
+Default WASM exposes no Task 22 hook; the non-default feature exposes exactly
+`task22kBrowserInputOracle` and `task22kBrowserOracle`.
+
+Task 22K introduces and consumes no Option. Public `slice_project` executes the
+stage and still returns `ProjectSlicingIncomplete`; the `ARES22K` stream is a
+test checkpoint, not public G-code. Cancellation at
+`PrintObjectSlice.cpp:1204`, the adjacent `apply_conical_overhang` call at
+`PrintObjectSlice.cpp:1206` and implementation at
+`PrintObjectSlice.cpp:1394-1509`, material and painted segmentation,
+compensation, surface classification, perimeters, fill, supports, toolpaths,
+G-code assembly, metadata, and post-processing remain deferred. The next
+source audit must start at the `1204-1206` caller sequence, classify
+cancellation separately, and bound `apply_conical_overhang` together with its
+`make_overhang_printable*` Option ownership before another implementation
+slice is approved.

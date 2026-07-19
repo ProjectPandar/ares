@@ -21,16 +21,17 @@ mod region_slices;
 mod simplification;
 mod slicing_mode_intersections;
 mod state;
+mod top_empty_layers;
 mod volume_bounds;
 mod volume_regions;
 
-#[cfg(any(test, feature = "task22j-browser-oracle"))]
+#[cfg(test)]
 mod task22g_oracle;
 #[cfg(test)]
 mod task22h_oracle;
-#[cfg(any(test, feature = "task22j-browser-oracle"))]
+#[cfg(test)]
 mod task22i_oracle;
-#[cfg(any(test, feature = "task22j-browser-oracle"))]
+#[cfg(any(test, feature = "task22k-browser-oracle"))]
 mod task22j_oracle;
 
 #[cfg(test)]
@@ -46,7 +47,7 @@ pub async fn slice_project(
         config_block,
         scale,
         objects: post_region_objects,
-    } = prepare_post_regions(project)?;
+    } = prepare_post_top_empty_layers(project)?;
 
     let documents = project.documents();
     let _ = (
@@ -248,6 +249,14 @@ fn prepare_post_regions(project: impl AsRef<[u8]>) -> Result<PreparedPostRegions
     })
 }
 
+fn prepare_post_top_empty_layers(
+    project: impl AsRef<[u8]>,
+) -> Result<PreparedPostRegions, SliceError> {
+    let mut prepared = prepare_post_regions(project)?;
+    top_empty_layers::remove_project_top_empty_layers(&mut prepared.objects);
+    Ok(prepared)
+}
+
 #[cfg(test)]
 pub fn task22g_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_closing(project)?;
@@ -281,14 +290,29 @@ pub fn task22i_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, Slic
     Ok(task22i_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22j-browser-oracle"))]
+#[cfg(test)]
 pub fn task22j_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_simplification(project)?;
     Ok(task22i_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22j-browser-oracle"))]
+#[cfg(test)]
 pub fn task22j_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_regions(project)?;
     Ok(task22j_oracle::encode(&prepared.objects))
+}
+
+#[cfg(any(test, feature = "task22k-browser-oracle"))]
+pub fn task22k_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_regions(project)?;
+    Ok(task22j_oracle::encode(&prepared.objects))
+}
+
+#[cfg(any(test, feature = "task22k-browser-oracle"))]
+pub fn task22k_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_top_empty_layers(project)?;
+    Ok(task22j_oracle::encode_with_magic(
+        &prepared.objects,
+        b"ARES22K\0",
+    ))
 }

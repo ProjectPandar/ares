@@ -3,7 +3,11 @@ use crate::geometry::{ExPolygon, Polygon};
 use super::region_slices::{PostRegionPrintObject, RegionSurface};
 
 pub(super) fn encode(objects: &[PostRegionPrintObject]) -> Vec<u8> {
-    let mut output = b"ARES22J\0".to_vec();
+    encode_with_magic(objects, b"ARES22J\0")
+}
+
+pub(super) fn encode_with_magic(objects: &[PostRegionPrintObject], magic: &[u8; 8]) -> Vec<u8> {
+    let mut output = magic.to_vec();
     put_u64(&mut output, objects.len());
     for object in objects {
         let (plan, sidecars, regions) = object.as_parts();

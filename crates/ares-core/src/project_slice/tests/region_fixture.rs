@@ -1,4 +1,4 @@
-mod checkpoint;
+pub(super) mod checkpoint;
 
 use checkpoint::{
     ExPolygon, GeometryLayer, ILayer, IObject, IStream, IVolume, JObject, JStream, ParsedJ, Region,

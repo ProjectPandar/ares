@@ -3,7 +3,9 @@ use sha2::{Digest, Sha256};
 macro_rules! record {
     ($name:ident($($field:ident: $ty:ty),+ $(,)?)) => {
         #[derive(Clone, Debug, Eq, PartialEq)]
-        pub(super) struct $name { $(pub(super) $field: $ty),+ }
+        pub(in crate::project_slice::tests) struct $name {
+            $(pub(in crate::project_slice::tests) $field: $ty),+
+        }
     };
 }
 macro_rules! number {
@@ -26,10 +28,10 @@ record!(RetainedLayer(index: u64, regions: Vec<Region>));
 record!(Region(id: u64, surfaces: Vec<Surface>));
 record!(Surface(kind: u8, expolygon: ExPolygon));
 
-pub(super) struct ParsedJ {
-    pub(super) stream: JStream,
-    pub(super) sidecar_records: Vec<std::ops::Range<usize>>,
-    pub(super) retained_records: Vec<std::ops::Range<usize>>,
+pub(in crate::project_slice::tests) struct ParsedJ {
+    pub(in crate::project_slice::tests) stream: JStream,
+    pub(in crate::project_slice::tests) sidecar_records: Vec<std::ops::Range<usize>>,
+    pub(in crate::project_slice::tests) retained_records: Vec<std::ops::Range<usize>>,
 }
 
 pub(super) fn parse_i(bytes: &[u8], magic: &[u8; 8]) -> IStream {
@@ -53,8 +55,16 @@ pub(super) fn parse_i(bytes: &[u8], magic: &[u8; 8]) -> IStream {
     IStream { objects }
 }
 
-pub(super) fn parse_j(bytes: &[u8]) -> ParsedJ {
-    let mut reader = Reader::new(bytes, b"ARES22J\0");
+pub(in crate::project_slice::tests) fn parse_j(bytes: &[u8]) -> ParsedJ {
+    parse_post_regions(bytes, b"ARES22J\0")
+}
+
+pub(in crate::project_slice::tests) fn parse_k(bytes: &[u8]) -> ParsedJ {
+    parse_post_regions(bytes, b"ARES22K\0")
+}
+
+fn parse_post_regions(bytes: &[u8], magic: &[u8; 8]) -> ParsedJ {
+    let mut reader = Reader::new(bytes, magic);
     let mut sidecar_records = Vec::new();
     let mut retained_records = Vec::new();
     let objects = reader.count_map(|reader| {
@@ -105,7 +115,14 @@ pub(super) fn parse_j(bytes: &[u8]) -> ParsedJ {
 }
 
 pub(super) fn encode_j(stream: &JStream) -> Vec<u8> {
-    let mut bytes = b"ARES22J\0".to_vec();
+    encode_with_magic(stream, b"ARES22J\0")
+}
+
+pub(in crate::project_slice::tests) fn encode_with_magic(
+    stream: &JStream,
+    magic: &[u8; 8],
+) -> Vec<u8> {
+    let mut bytes = magic.to_vec();
     put_vec(&mut bytes, &stream.objects, |bytes, object| {
         put_u64(bytes, object.source_object_index);
         put_u64(bytes, object.transform_index);
@@ -133,7 +150,7 @@ fn put_retained_layer(bytes: &mut Vec<u8>, layer: &RetainedLayer) {
     });
 }
 
-pub(super) fn sha256(bytes: &[u8]) -> String {
+pub(in crate::project_slice::tests) fn sha256(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
         .map(|byte| format!("{byte:02x}"))

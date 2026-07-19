@@ -9,10 +9,10 @@
       import init, * as bindings from "/target/wasm-browser/ares_wasm.js";
 
       await init();
-      const { sliceProject, task22jBrowserInputOracle, task22jBrowserOracle } = bindings;
+      const { sliceProject, task22kBrowserInputOracle, task22kBrowserOracle } = bindings;
       const encoder = new TextEncoder();
-      const magicI = encoder.encode("ARES22I\0");
       const magicJ = encoder.encode("ARES22J\0");
+      const magicK = encoder.encode("ARES22K\0");
 
       const bytesOf = (value) =>
         value instanceof Uint8Array ? value : new Uint8Array(value);
@@ -86,36 +86,12 @@
       };
       const assertDense = (values, key, label) => {
         if (values.some((value, index) => value[key] !== index)) {
-          throw new Error(`ARES22J ${label} is not dense`);
+          throw new Error(`ARES22 ${label} is not dense`);
         }
       };
 
-      function parseI(input) {
-        const reader = new Reader(input, magicI);
-        const objects = reader.list(() => ({
-          sourceObjectIndex: reader.u64(),
-          transformIndex: reader.u64(),
-          plannedLayerCount: reader.u64(),
-          volumes: reader.list(() => ({
-            sourceVolumeIndex: reader.u64(),
-            ordinal: reader.u32(),
-            volumeType: reader.u8(),
-            layers: reader.list(() => ({
-              index: reader.u64(),
-              mode: reader.u8(),
-              expolygons: expolygons(reader),
-            })),
-          })),
-        }));
-        const bytesRead = reader.eof();
-        return {
-          ast: { magic: "ARES22I\0", byteLength: reader.bytes.length, bytesRead, objects },
-          records: { sidecar: [], retained: [] },
-        };
-      }
-
-      function parseJ(input) {
-        const reader = new Reader(input, magicJ);
+      function parsePostRegions(input, magic, magicText) {
+        const reader = new Reader(input, magic);
         const records = { sidecar: [], retained: [] };
         const objects = reader.list(() => {
           const object = {
@@ -135,7 +111,7 @@
                 id: reader.u64(),
                 surfaces: reader.list(() => {
                   const type = reader.u8();
-                  if (type !== 4) throw new Error("ARES22J surface is not Internal");
+                  if (type !== 4) throw new Error("ARES22 surface is not Internal");
                   return { type, expolygon: expolygon(reader) };
                 }),
               })),
@@ -152,15 +128,15 @@
         });
         const bytesRead = reader.eof();
         return {
-          ast: { magic: "ARES22J\0", byteLength: reader.bytes.length, bytesRead, objects },
+          ast: { magic: magicText, byteLength: reader.bytes.length, bytesRead, objects },
           records,
         };
       }
 
       function parseCheckpoint(input) {
         const bytes = bytesOf(input);
-        if (hasMagic(bytes, magicI)) return parseI(bytes);
-        if (hasMagic(bytes, magicJ)) return parseJ(bytes);
+        if (hasMagic(bytes, magicJ)) return parsePostRegions(bytes, magicJ, "ARES22J\0");
+        if (hasMagic(bytes, magicK)) return parsePostRegions(bytes, magicK, "ARES22K\0");
         throw new Error("invalid ARES22 checkpoint magic");
       }
 
@@ -183,21 +159,6 @@
       });
 
       function summarize(ast) {
-        if (ast.magic === "ARES22I\0") {
-          const volumes = ast.objects.flatMap((object) => object.volumes);
-          const layers = volumes.flatMap((volume) => volume.layers);
-          return {
-            objects: ast.objects.map((object) => ({
-              sourceObjectIndex: object.sourceObjectIndex,
-              transformIndex: object.transformIndex,
-              plannedLayerCount: object.plannedLayerCount,
-              volumeCount: object.volumes.length,
-            })),
-            volumeCount: volumes.length,
-            layerCount: layers.length,
-            ...geometryTotals(allExPolygons(layers)),
-          };
-        }
         const sidecars = ast.objects.flatMap((object) => object.sidecars);
         const sidecarLayers = sidecars.flatMap((sidecar) => sidecar.layers);
         const retainedLayers = ast.objects.flatMap((object) => object.retainedLayers);
@@ -234,6 +195,7 @@
         return {
           byteLength: bytes.length,
           bytesRead: parsed.ast.bytesRead,
+          magic: parsed.ast.magic,
           sha256: await sha256(bytes),
           summary: summarize(parsed.ast),
           ast: full ? parsed.ast : undefined,
@@ -248,18 +210,18 @@
       }
 
       async function execute(project, full = false, slots = []) {
-        const inputFirst = bytesOf(await task22jBrowserInputOracle(project));
-        const inputSecond = bytesOf(await task22jBrowserInputOracle(project));
-        const outputFirst = bytesOf(await task22jBrowserOracle(project));
-        const outputSecond = bytesOf(await task22jBrowserOracle(project));
+        const inputFirst = bytesOf(await task22kBrowserInputOracle(project));
+        const inputSecond = bytesOf(await task22kBrowserInputOracle(project));
+        const outputFirst = bytesOf(await task22kBrowserOracle(project));
+        const outputSecond = bytesOf(await task22kBrowserOracle(project));
         return {
           result: {
             input: await inspect(inputFirst, full),
             output: await inspect(outputFirst, full, slots),
             inputRepeatable: sameBytes(inputFirst, inputSecond),
             outputRepeatable: sameBytes(outputFirst, outputSecond),
+            sameBody: sameBytes(inputFirst.subarray(8), outputFirst.subarray(8)),
           },
-          inputFirst,
         };
       }
 
@@ -296,32 +258,26 @@
       };
       window.parseTask22Vector = (input) => parseCheckpoint(input).ast;
       window.sha256Text = (text) => sha256(encoder.encode(text));
-      window.task22jBindingExports = Object.keys(bindings).sort();
-      window.task22jFixtureOracles = async () =>
+      window.task22kBindingExports = Object.keys(bindings).sort();
+      window.task22kFixtureOracles = async () =>
         (await execute(await fixtureBytes(), false, [0, 46, 49, 459])).result;
-      window.task22jModifierOracles = async ({ variant, control }) => {
+      window.task22kSlabOracles = async ({ top, bottom }) => {
         const fixture = await fixtureBytes();
-        const modifierArchive = await buildArchive(fixture, variant);
-        const controlArchive = await buildArchive(fixture, control);
-        const modifierAgain = await buildArchive(fixture, variant);
-        const controlAgain = await buildArchive(fixture, control);
-        const modifier = await execute(modifierArchive.bytes, true);
-        const controlExecution = await execute(controlArchive.bytes, true);
+        const topArchive = await buildArchive(fixture, top);
+        const bottomArchive = await buildArchive(fixture, bottom);
+        const topAgain = await buildArchive(fixture, top);
+        const bottomAgain = await buildArchive(fixture, bottom);
         return {
-          modifier: {
-            semanticSha256: modifierArchive.semanticSha256,
-            archiveRepeatable: sameBytes(modifierArchive.bytes, modifierAgain.bytes),
-            ...modifier.result,
+          top: {
+            semanticSha256: topArchive.semanticSha256,
+            archiveRepeatable: sameBytes(topArchive.bytes, topAgain.bytes),
+            ...(await execute(topArchive.bytes, true)).result,
           },
-          control: {
-            semanticSha256: controlArchive.semanticSha256,
-            archiveRepeatable: sameBytes(controlArchive.bytes, controlAgain.bytes),
-            ...controlExecution.result,
+          bottom: {
+            semanticSha256: bottomArchive.semanticSha256,
+            archiveRepeatable: sameBytes(bottomArchive.bytes, bottomAgain.bytes),
+            ...(await execute(bottomArchive.bytes, true)).result,
           },
-          commonInputBytes: sameBytes(modifier.inputFirst, controlExecution.inputFirst),
-          commonInputAst:
-            JSON.stringify(modifier.result.input.ast) ===
-            JSON.stringify(controlExecution.result.input.ast),
         };
       };
       window.aresReady = true;

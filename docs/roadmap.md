@@ -1473,6 +1473,45 @@ incomplete. The next source-cited audit boundary is top-empty-layer removal in
 perimeter, fill, support, toolpath, G-code, metadata, and post-processing work
 remain separate until their own approved slices.
 
+### 2026-07-19 Port post-region top-empty-layer removal (Task 22K)
+
+Task 22K ports OrcaSlicer v2.4.2
+`PrintObjectSlice.cpp:1194-1203`, with emptiness semantics from
+`Layer.cpp:21-29` and `SurfaceCollection.hpp:49-51`. For each post-region
+object, Ares removes only the maximal suffix whose every region surface vector
+is empty, truncates planned and region layers in lockstep, preserves surviving
+IDs and interior empty layers, and leaves complete occurrence sidecars
+unchanged. The slice introduces no Option or external input.
+
+Native verification fixes the ten-object K checkpoint at 5,848 bytes /
+`037b5e1b5aa9eb2f5c9c38f00a8d7a23768217fd7cc7ec13bb71f21d9edb3b07`
+and the committed KSR K checkpoint at 2,008,706 bytes /
+`c101e0f9ff863c7abe72cd1cb792fcd8e0074d8d6d2e77d3bb56c32eedba13be`.
+KSR retains all 460 layers and its bytes after magic remain identical to Task
+22J. Real top- and bottom-negative-slab 3MF projects prove opposite
+`[nonempty, empty] -> 1` and `[empty, nonempty] -> 2` outcomes while retaining
+both complete two-layer sidecars.
+
+Fresh browser verification fixes independent J/K known-answer vectors at
+433/385 bytes and reproduces the real-slab behavior using semantic-entry
+digests
+`36f49fc5ad0788dc63ce9e25111d5d758c67711137d368dc63eb76c5aee1e538`
+and
+`2001de693fbcc3781d733beebc8ace871cc42a2abe47865c51159192b9a94817`.
+Two Chromium runs reach exact EOF and agree on KSR bytes, parsed ownership,
+sidecars, and repeatability; default WASM exposes no Task 22 hook and the
+feature bundle exposes exactly the two Task 22K checkpoint hooks.
+
+Production still returns `ProjectSlicingIncomplete`, so normalized
+`ksr_fdmtest_v4.gcode` equality and the persistent user goal remain
+incomplete. Cancellation at `PrintObjectSlice.cpp:1204`,
+`apply_conical_overhang` at `PrintObjectSlice.cpp:1206,1394-1509`, and all
+later segmentation, compensation, surface, perimeter, fill, support, toolpath,
+G-code, metadata, and post-processing behavior remain deferred. The next
+source audit starts at the `1204-1206` caller sequence and must establish the
+cancellation mapping and the complete conical-overhang/Option boundary before
+implementation.
+
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
 Task 19C ports the Bambu effective-config export boundary from fixed
