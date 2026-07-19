@@ -2,11 +2,13 @@ mod clipper;
 mod coord;
 mod expolygon;
 mod polygon;
+mod simplification;
 
 pub(crate) use clipper::{ClipperError, FillRule, JoinType, offset2_ex, union_ex};
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};
 pub(crate) use polygon::Polygon;
+pub(crate) use simplification::append_simplified_expolygon;
 
 const _: usize = std::mem::size_of::<Coord>();
 const _: fn(&crate::Point2dList) -> CoordinateScale = CoordinateScale::from_printable_area;
@@ -23,6 +25,11 @@ const _: fn(&ExPolygon) -> &Polygon = ExPolygon::contour;
 const _: fn(&ExPolygon) -> &[Polygon] = ExPolygon::holes;
 const _: fn(ExPolygon) -> (Polygon, Vec<Polygon>) = ExPolygon::into_parts;
 const _: fn(&mut Vec<ExPolygon>) = keep_largest_contour_only;
+const _: fn(ExPolygon, f64, &mut Vec<ExPolygon>) -> Result<(), ClipperError> =
+    append_simplified_expolygon;
+const _: fn(Point, Point, Point) -> f64 = simplification::distance_to_segment_squared;
+const _: fn(&[Point], f64) -> Vec<Point> = simplification::douglas_peucker;
+const _: fn(Vec<Point>, f64) -> Vec<Point> = simplification::simplify_closed_points;
 
 #[cfg(test)]
 mod tests;

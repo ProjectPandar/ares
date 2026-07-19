@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 import { expect, test } from "@playwright/test";
@@ -16,16 +17,20 @@ const OPTION_REPLACEMENTS = [
   ['"bottom_shell_layers": "3"', '"bottom_shell_layers": "0"'],
   ['"bottom_shell_thickness": "0"', '"bottom_shell_thickness": "0.5001"'],
 ];
-const TASK22G_BASE_SHA256 =
-  "29ffb501c54190dd4336cc1371fc5e480c5b87ac6a8184366bd072bf5cb90919";
+const FIXTURE_SHA256 =
+  "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9";
 const TASK22H_BASE_SHA256 =
   "e15967c36c0aa47a9a1a3fc31053587777359bedef796053022eaeb36ad49163";
-const TASK22G_MUTATION_SHA256 =
-  "0ca404fa4a5a6fb0a97899fe6ff8fd45815a9439378708bbe594614587e38034";
-const TASK22H_MUTATION_SHA256 =
+const TASK22I_BASE_SHA256 =
+  "0dea485aea9f003db4dbadfd524e82cc2ad33327d3b447a7d985d57d82da72ef";
+const TASK22I_DISABLED_SHA256 =
+  "572688f416497a276540adc57df50742561363a7d0470124ea21759eced591ff";
+const TASK22H_PRIMARY_SHA256 =
   "a0df3397e498306bfcade84b03721fe345d2f4b501e578a5b54df39faff44353";
-const SELECTED_SLOTS_SHA256 =
-  "24dad9513353d3cf165101199c4514830b5cbcbfe08ce2a100c469bc0eade813";
+const TASK22I_PRIMARY_SHA256 =
+  "022cc958a38d5654e0a5fc4e2ca44d5e5ef068b7e57b271cb14151b11005343e";
+const CHANGED_SLOTS_SHA256 =
+  "7377acff6b3bea897ad32249b320eeba2bc48091b9618be54d2f3ad44d269514";
 
 function pushU64(bytes, value) {
   let remaining = BigInt(value);
@@ -107,6 +112,19 @@ function mutateFixture() {
   return zipSync(archive);
 }
 
+function mutateResolution(value) {
+  const archive = unzipSync(readFileSync(FIXTURE));
+  const settings = strFromU8(archive[PROJECT_SETTINGS]);
+  archive[PROJECT_SETTINGS] = strToU8(
+    replaceUnique(
+      settings,
+      '"resolution": "0.012"',
+      `"resolution": "${value}"`,
+    ),
+  );
+  return zipSync(archive);
+}
+
 async function openFixturePage(page) {
   await page.goto("/");
   await expect.poll(() => page.evaluate(() => window.aresReady)).toBe(true);
@@ -120,11 +138,6 @@ function expectedSummary({
   contours,
   holes,
   points,
-  selectedSlotCount = 0,
-  selectedSlotFirst = null,
-  selectedSlotLast = null,
-  selectedSlotSha256 = null,
-  plcNonSingleSlotCount = 0,
 }) {
   return {
     magic,
@@ -138,13 +151,19 @@ function expectedSummary({
     points,
     modes,
     sha256,
-    selectedSlotCount,
-    selectedSlotFirst,
-    selectedSlotLast,
-    selectedSlotSha256,
-    plcNonSingleSlotCount,
+    ownership: [[0, 0, 460, 0, 1, 0]],
   };
 }
+
+const BASE_H_SUMMARY = expectedSummary({
+  magic: "ARES22H\0",
+  byteLength: 1_644_681,
+  sha256: TASK22H_BASE_SHA256,
+  modes: [460, 0, 0, 0],
+  contours: 2_890,
+  holes: 395,
+  points: 99_212,
+});
 
 test("sliceProject passes the real 3MF through the generated browser binding", async ({
   page,
@@ -159,18 +178,19 @@ test("sliceProject passes the real 3MF through the generated browser binding", a
   });
 });
 
-test("generated H-feature bindings expose only the two H checkpoint hooks", async ({
+test("generated I-feature bindings expose only the two I checkpoint hooks", async ({
   page,
 }) => {
   await openFixturePage(page);
 
-  const exports = await page.evaluate(() => window.task22hBindingExports);
-  expect(exports).toContain("task22hBrowserInputOracle");
-  expect(exports).toContain("task22hBrowserOracle");
-  expect(exports).not.toContain("task22gBrowserOracle");
+  const exports = await page.evaluate(() => window.task22iBindingExports);
+  expect(exports.filter((name) => name.startsWith("task22"))).toEqual([
+    "task22iBrowserInputOracle",
+    "task22iBrowserOracle",
+  ]);
 });
 
-test("ARES22G and ARES22H parsers consume an independent nested vector", async ({
+test("ARES22H and ARES22I parsers consume an independent nested vector", async ({
   page,
 }) => {
   await openFixturePage(page);
@@ -184,11 +204,10 @@ test("ARES22G and ARES22H parsers consume an independent nested vector", async (
     holes: 1,
     points: 8,
     modes: [1, 1, 0, 0],
-    selectedSlots: [],
-    plcNonSingleSlots: [],
+    ownership: [[7, 9, 2, 11, 3, 2]],
   };
 
-  for (const marker of ["G", "H"]) {
+  for (const marker of ["H", "I"]) {
     const vector = task22ParserVector(marker);
     expect(vector).toHaveLength(255);
     await expect(
@@ -205,77 +224,148 @@ test("WebCrypto SHA-256 passes a known-answer check", async ({ page }) => {
   );
 });
 
-test("Task22H browser baseline preserves every Regular-layer record", async ({
+test("Task22I browser committed archive matches all complete checkpoints", async ({
   page,
 }) => {
+  expect(createHash("sha256").update(readFileSync(FIXTURE)).digest("hex")).toBe(
+    FIXTURE_SHA256,
+  );
   await openFixturePage(page);
 
-  const result = await page.evaluate(() => window.task22hFixtureOracles());
-  expect(result.input).toEqual(
-    expectedSummary({
-      magic: "ARES22G\0",
-      byteLength: 1_644_681,
-      sha256: TASK22G_BASE_SHA256,
-      modes: [460, 0, 0, 0],
-      contours: 2_890,
-      holes: 395,
-      points: 99_212,
-    }),
-  );
+  const result = await page.evaluate(() => window.task22iFixtureOracles());
+  expect(result.input).toEqual(BASE_H_SUMMARY);
   expect(result.output).toEqual(
     expectedSummary({
-      magic: "ARES22H\0",
-      byteLength: 1_644_681,
-      sha256: TASK22H_BASE_SHA256,
+      magic: "ARES22I\0",
+      byteLength: 999_721,
+      sha256: TASK22I_BASE_SHA256,
       modes: [460, 0, 0, 0],
       contours: 2_890,
       holes: 395,
-      points: 99_212,
+      points: 58_902,
     }),
   );
+  expect(result.outputRecords).toEqual([
+    {
+      slot: 0,
+      byteLength: 11_681,
+      sha256: "a9320cf7f76a8a4dc24d394033ae1e53b5245eec5d808d8df26a35a5ac49bc9c",
+    },
+    {
+      slot: 46,
+      byteLength: 24_217,
+      sha256: "0e515d5ebb34e7f06e886956f62b955cc83a7e58e49f2b28ab37374b26f58291",
+    },
+    {
+      slot: 49,
+      byteLength: 23_513,
+      sha256: "c020b4558012a485af5ec1bcc01da9b3785fb448e24e37ee4adcd307deaf0ea8",
+    },
+    {
+      slot: 459,
+      byteLength: 737,
+      sha256: "c8822b67958531cb4b043d338b53f7329e0b00cb4f08108306763e763cd52f80",
+    },
+  ]);
+  expect(result.changedSlots).toEqual(Array.from({ length: 260 }, (_, slot) => slot));
+  expect(result.changedSlotSha256).toBe(CHANGED_SLOTS_SHA256);
   expect(result.inputRepeatable).toBe(true);
   expect(result.outputRepeatable).toBe(true);
+  expect(result.ownershipEqual).toBe(true);
+  expect(result.bodyEqualExceptMagic).toBe(false);
+});
+
+test("Task22I browser disables the whole stage at resolution 0.001", async ({
+  page,
+}) => {
+  const project = Array.from(mutateResolution("0.001"));
+  await openFixturePage(page);
+  const result = await page.evaluate(
+    (input) => window.task22iFixtureOracles(input),
+    project,
+  );
+
+  expect(result.input).toEqual(BASE_H_SUMMARY);
+  expect(result.output).toEqual(expectedSummary({
+    magic: "ARES22I\0",
+    byteLength: 1_644_681,
+    sha256: TASK22I_DISABLED_SHA256,
+    modes: [460, 0, 0, 0],
+    contours: 2_890,
+    holes: 395,
+    points: 99_212,
+  }));
+  expect(result.changedSlots).toEqual([]);
+  expect(result.changedSlotSha256).toBeNull();
+  expect(result.inputRepeatable).toBe(true);
+  expect(result.outputRepeatable).toBe(true);
+  expect(result.ownershipEqual).toBe(true);
   expect(result.bodyEqualExceptMagic).toBe(true);
 });
 
-test("Task22H browser selects the complete three-Option 3MF mutation", async ({
+test("Task22I browser enables the fixed stage just above the threshold", async ({
+  page,
+}) => {
+  const project = Array.from(mutateResolution("0.0011"));
+  const committed = Array.from(readFileSync(FIXTURE));
+  await openFixturePage(page);
+  const result = await page.evaluate(
+    (input) => window.task22iFixtureOracles(input),
+    project,
+  );
+
+  expect(result.input).toEqual(BASE_H_SUMMARY);
+  expect(result.output).toEqual(expectedSummary({
+    magic: "ARES22I\0",
+    byteLength: 999_721,
+    sha256: TASK22I_BASE_SHA256,
+    modes: [460, 0, 0, 0],
+    contours: 2_890,
+    holes: 395,
+    points: 58_902,
+  }));
+  expect(result.inputRepeatable).toBe(true);
+  expect(result.outputRepeatable).toBe(true);
+  expect(result.ownershipEqual).toBe(true);
+  expect(result.bodyEqualExceptMagic).toBe(false);
+  await expect(page.evaluate(
+    ([left, right]) => window.task22iOutputsEqual(left, right),
+    [project, committed],
+  )).resolves.toBe(true);
+});
+
+test("Task22I browser simplifies the complete three-Option mutation", async ({
   page,
 }) => {
   const project = Array.from(mutateFixture());
   await openFixturePage(page);
 
   const result = await page.evaluate(
-    (input) => window.task22hFixtureOracles(input),
+    (input) => window.task22iFixtureOracles(input),
     project,
   );
-  expect(result.input).toEqual({
-    ...expectedSummary({
-      magic: "ARES22G\0",
-      byteLength: 907_601,
-      sha256: TASK22G_MUTATION_SHA256,
-      modes: [2, 0, 0, 458],
-      contours: 2_622,
-      holes: 14,
-      points: 53_603,
-      selectedSlotCount: 337,
-      selectedSlotFirst: 20,
-      selectedSlotLast: 459,
-      selectedSlotSha256: SELECTED_SLOTS_SHA256,
-      plcNonSingleSlotCount: 337,
-    }),
-  });
+  expect(result.input).toEqual(expectedSummary({
+    magic: "ARES22H\0",
+    byteLength: 427_465,
+    sha256: TASK22H_PRIMARY_SHA256,
+    modes: [2, 0, 0, 458],
+    contours: 470,
+    holes: 13,
+    points: 25_747,
+  }));
   expect(result.output).toEqual(
     expectedSummary({
-      magic: "ARES22H\0",
-      byteLength: 427_465,
-      sha256: TASK22H_MUTATION_SHA256,
+      magic: "ARES22I\0",
+      byteLength: 275_433,
+      sha256: TASK22I_PRIMARY_SHA256,
       modes: [2, 0, 0, 458],
       contours: 470,
       holes: 13,
-      points: 25_747,
+      points: 16_245,
     }),
   );
   expect(result.inputRepeatable).toBe(true);
   expect(result.outputRepeatable).toBe(true);
+  expect(result.ownershipEqual).toBe(true);
   expect(result.bodyEqualExceptMagic).toBe(false);
 });

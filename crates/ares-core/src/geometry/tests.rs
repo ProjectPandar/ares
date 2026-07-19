@@ -3,3 +3,4 @@ mod coord;
 mod expolygon;
 mod polygon;
 mod scale;
+mod simplification;

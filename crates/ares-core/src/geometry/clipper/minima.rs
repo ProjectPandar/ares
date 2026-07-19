@@ -5,6 +5,9 @@ use super::types::{ExecutionConfig, Join, LocalMinimum, OutputIndex};
 
 impl ClosedClipper {
     pub(super) fn reset_for_execute(&mut self) {
+        self.maxima.clear();
+        #[cfg(test)]
+        self.collected_maxima_for_test.clear();
         fixed_msvc_sort_by(&mut self.minima, |first, second| first.y < second.y);
         for minimum in self.minima.iter().copied() {
             let left_bottom = self.edges.edge(minimum.left).bottom;

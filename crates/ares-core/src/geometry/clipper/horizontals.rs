@@ -1,5 +1,6 @@
 use super::ClosedClipper;
 use super::predicates::slopes_equal_four;
+use super::strictly_simple::MaximaCursor;
 use super::types::{EdgeId, ExecutionConfig, GhostJoin, Join, OutPointId, OutputIndex};
 use crate::geometry::Point;
 
@@ -42,6 +43,16 @@ impl ClosedClipper {
             .is_none()
             .then(|| self.horizontal_maxima_pair(last_horizontal))
             .flatten();
+        let initial = *self.edges.edge(horizontal);
+        let final_edge = *self.edges.edge(last_horizontal);
+        let mut maxima_cursor = match direction {
+            Direction::LeftToRight => {
+                MaximaCursor::left_to_right(&self.maxima, initial.bottom.x(), final_edge.top.x())
+            }
+            Direction::RightToLeft => {
+                MaximaCursor::right_to_left(&self.maxima, initial.bottom.x(), final_edge.top.x())
+            }
+        };
         let mut output_point = None;
 
         loop {
@@ -57,6 +68,7 @@ impl ClosedClipper {
                     config,
                 },
                 &mut output_point,
+                &mut maxima_cursor,
             ) {
                 return;
             }
@@ -106,6 +118,7 @@ impl ClosedClipper {
         horizontal: EdgeId,
         scan: HorizontalScan,
         output_point: &mut Option<OutPointId>,
+        maxima_cursor: &mut MaximaCursor,
     ) -> bool {
         let mut edge = match scan.direction {
             Direction::LeftToRight => self.edges.edge(horizontal).next_in_ael,
@@ -113,6 +126,11 @@ impl ClosedClipper {
         };
         while let Some(crossing) = edge {
             let crossing_edge = *self.edges.edge(crossing);
+            self.insert_strict_horizontal_maxima(
+                horizontal,
+                maxima_cursor,
+                crossing_edge.current.x(),
+            );
             if scan.direction == Direction::LeftToRight && crossing_edge.current.x() > scan.right
                 || scan.direction == Direction::RightToLeft && crossing_edge.current.x() < scan.left
             {

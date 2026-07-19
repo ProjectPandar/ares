@@ -182,6 +182,7 @@ fn negative_clipper(paths: &[Polygon]) -> Result<ClosedClipper, ClipperError> {
     let mut clipper = ClosedClipper::new(ClipperOptions {
         reverse_solution: true,
         preserve_collinear: false,
+        strictly_simple: false,
     });
     clipper.add_closed_paths(paths, PathRole::Subject)?;
     let outer = negative_outer(clipper.bounds());

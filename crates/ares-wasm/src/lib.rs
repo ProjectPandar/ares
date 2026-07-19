@@ -24,16 +24,16 @@ pub async fn slice_project(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
         .map_err(slice_error_js)
 }
 
-#[cfg(feature = "task22h-browser-oracle")]
-#[wasm_bindgen(js_name = task22hBrowserInputOracle)]
-pub fn task22h_browser_input_oracle(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
-    ares_core::task22h_browser_input_oracle(input).map_err(slice_error_js)
+#[cfg(feature = "task22i-browser-oracle")]
+#[wasm_bindgen(js_name = task22iBrowserInputOracle)]
+pub fn task22i_browser_input_oracle(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
+    ares_core::task22i_browser_input_oracle(input).map_err(slice_error_js)
 }
 
-#[cfg(feature = "task22h-browser-oracle")]
-#[wasm_bindgen(js_name = task22hBrowserOracle)]
-pub fn task22h_browser_oracle(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
-    ares_core::task22h_browser_oracle(input).map_err(slice_error_js)
+#[cfg(feature = "task22i-browser-oracle")]
+#[wasm_bindgen(js_name = task22iBrowserOracle)]
+pub fn task22i_browser_oracle(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
+    ares_core::task22i_browser_oracle(input).map_err(slice_error_js)
 }
 
 fn local_generation_metadata() -> Result<GenerationMetadata, SliceError> {

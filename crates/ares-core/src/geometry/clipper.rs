@@ -13,6 +13,8 @@ pub(crate) mod ordering;
 mod output;
 mod polytree;
 mod predicates;
+mod simplify;
+mod strictly_simple;
 mod types;
 mod winding;
 
@@ -28,6 +30,9 @@ pub(crate) use offset::{
 pub(crate) use polytree::PolyNode;
 pub(crate) use polytree::{PolyTree, union_ex};
 pub(crate) use predicates::{fixed_round, point_in_polygon, slopes_equal};
+pub(super) use simplify::simplify_polygons;
+#[cfg(test)]
+pub(crate) use strictly_simple::MaximaCursor;
 
 use std::collections::BinaryHeap;
 
@@ -63,11 +68,19 @@ pub(crate) enum FillRule {
 pub(crate) struct ClipperOptions {
     pub(crate) reverse_solution: bool,
     pub(crate) preserve_collinear: bool,
+    pub(crate) strictly_simple: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum ClipperError {
     CoordinateOutOfRange,
+}
+
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum SimpleRepair {
+    FirstLefts1,
+    FirstLefts2,
 }
 
 pub(crate) struct ClosedClipper {
@@ -84,6 +97,11 @@ pub(crate) struct ClosedClipper {
     joins: Vec<Join>,
     ghost_joins: Vec<GhostJoin>,
     intersections: Vec<IntersectionNode>,
+    maxima: Vec<i64>,
+    #[cfg(test)]
+    collected_maxima_for_test: Vec<i64>,
+    #[cfg(test)]
+    simple_repairs_for_test: Vec<SimpleRepair>,
 }
 
 impl ClosedClipper {
@@ -102,6 +120,11 @@ impl ClosedClipper {
             joins: Vec::new(),
             ghost_joins: Vec::new(),
             intersections: Vec::new(),
+            maxima: Vec::new(),
+            #[cfg(test)]
+            collected_maxima_for_test: Vec::new(),
+            #[cfg(test)]
+            simple_repairs_for_test: Vec::new(),
         }
     }
 }
@@ -131,6 +154,7 @@ const _: fn(&mut ClosedClipper, ClipOperation, FillRule, FillRule) -> Vec<Polygo
 const _: fn(&mut ClosedClipper, ClipOperation, FillRule, FillRule) -> PolyTree =
     ClosedClipper::execute_polytree;
 const _: fn(&[Polygon], FillRule) -> Result<Vec<super::ExPolygon>, ClipperError> = union_ex;
+const _: fn(&[Polygon]) -> Result<Vec<Polygon>, ClipperError> = simplify_polygons;
 const _: fn(&mut ClosedClipper) = ClosedClipper::clear;
 const _: fn(f64) -> i64 = fixed_round;
 const _: fn(i64, i64, i64, i64, bool) -> bool = slopes_equal;

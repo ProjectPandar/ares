@@ -1,6 +1,8 @@
+mod top;
+
 use super::ordering::fixed_msvc_sort_by;
-use super::predicates::{intersect_point, slopes_equal_four, top_x};
-use super::types::{Edge, EdgeId, ExecutionConfig, IntersectionNode, Join, OutputIndex};
+use super::predicates::{intersect_point, top_x};
+use super::types::{Edge, EdgeId, ExecutionConfig, IntersectionNode, OutputIndex};
 use super::{ClipOperation, ClosedClipper, FillRule, PathRole};
 use crate::geometry::Point;
 
@@ -107,64 +109,6 @@ impl ClosedClipper {
         true
     }
 
-    pub(super) fn process_edges_at_top(&mut self, top_y: i64, config: ExecutionConfig) {
-        let mut edge = self.active_edges;
-        while let Some(current) = edge {
-            let snapshot = *self.edges.edge(current);
-            edge = self.process_top_edge(current, snapshot, top_y, config);
-        }
-
-        self.process_horizontals(config);
-        let mut edge = self.active_edges;
-        while let Some(current) = edge {
-            let snapshot = *self.edges.edge(current);
-            if snapshot.top.y() == top_y && snapshot.next_in_lml.is_some() {
-                let output = matches!(snapshot.output, OutputIndex::Assigned(_))
-                    .then(|| self.add_out_point(current, snapshot.top));
-                let promoted = self.update_edge_into_ael(current);
-                self.join_promoted_edge(promoted, output);
-                edge = self.edges.edge(promoted).next_in_ael;
-            } else {
-                edge = snapshot.next_in_ael;
-            }
-        }
-    }
-
-    fn process_top_edge(
-        &mut self,
-        current: EdgeId,
-        snapshot: Edge,
-        top_y: i64,
-        config: ExecutionConfig,
-    ) -> Option<EdgeId> {
-        let maxima = snapshot.top.y() == top_y
-            && snapshot.next_in_lml.is_none()
-            && self
-                .maxima_pair_ex(current)
-                .is_none_or(|pair| !self.edges.edge(pair).is_horizontal());
-        if maxima {
-            let previous = snapshot.previous_in_ael;
-            self.do_maxima(current, config);
-            return previous
-                .and_then(|id| self.edges.edge(id).next_in_ael)
-                .or(self.active_edges.filter(|_| previous.is_none()));
-        }
-        let horizontal_promotion = snapshot
-            .next_in_lml
-            .filter(|&next| snapshot.top.y() == top_y && self.edges.edge(next).is_horizontal());
-        if horizontal_promotion.is_some() {
-            let promoted = self.update_edge_into_ael(current);
-            if matches!(self.edges.edge(promoted).output, OutputIndex::Assigned(_)) {
-                self.add_out_point(promoted, self.edges.edge(promoted).bottom);
-            }
-            self.add_edge_to_sel(promoted);
-            return self.edges.edge(promoted).next_in_ael;
-        }
-        let x = top_x(snapshot, top_y);
-        self.edges.edge_mut(current).current = Point::new(x, top_y);
-        snapshot.next_in_ael
-    }
-
     fn build_intersection_list(&mut self, top_y: i64) {
         self.intersections.clear();
         self.copy_ael_to_sel();
@@ -239,90 +183,6 @@ impl ClosedClipper {
     fn intersection_edges_adjacent(&self, node: IntersectionNode) -> bool {
         self.edges.edge(node.first).next_in_sel == Some(node.second)
             || self.edges.edge(node.first).previous_in_sel == Some(node.second)
-    }
-
-    fn maxima_pair_ex(&self, edge: EdgeId) -> Option<EdgeId> {
-        let edge_state = *self.edges.edge(edge);
-        let next = self.edges.edge(edge_state.next);
-        let pair = if next.top == edge_state.top && next.next_in_lml.is_none() {
-            Some(edge_state.next)
-        } else {
-            let previous = self.edges.edge(edge_state.previous);
-            (previous.top == edge_state.top && previous.next_in_lml.is_none())
-                .then_some(edge_state.previous)
-        }?;
-        let pair_edge = self.edges.edge(pair);
-        if pair_edge.output == OutputIndex::Skipped
-            || pair_edge.next_in_ael == pair_edge.previous_in_ael && !pair_edge.is_horizontal()
-        {
-            None
-        } else {
-            Some(pair)
-        }
-    }
-
-    fn do_maxima(&mut self, edge: EdgeId, config: ExecutionConfig) {
-        let point = self.edges.edge(edge).top;
-        let Some(pair) = self.maxima_pair_ex(edge) else {
-            if matches!(self.edges.edge(edge).output, OutputIndex::Assigned(_)) {
-                self.add_out_point(edge, point);
-            }
-            self.delete_from_ael(edge);
-            return;
-        };
-        while let Some(next) = self.edges.edge(edge).next_in_ael {
-            if next == pair {
-                break;
-            }
-            self.intersect_edges(edge, next, point, config);
-            self.swap_positions_in_ael(edge, next);
-        }
-        let first_output = self.edges.edge(edge).output;
-        let second_output = self.edges.edge(pair).output;
-        if first_output == OutputIndex::Unassigned && second_output == OutputIndex::Unassigned {
-            self.delete_from_ael(edge);
-            self.delete_from_ael(pair);
-        } else if matches!(first_output, OutputIndex::Assigned(_))
-            && matches!(second_output, OutputIndex::Assigned(_))
-        {
-            self.add_local_max_polygon(edge, pair, point);
-            self.delete_from_ael(edge);
-            self.delete_from_ael(pair);
-        } else {
-            unreachable!("closed maxima output state is paired");
-        }
-    }
-
-    fn join_promoted_edge(&mut self, edge: EdgeId, output: Option<super::types::OutPointId>) {
-        let Some(output) = output else { return };
-        let snapshot = *self.edges.edge(edge);
-        for neighbour in [snapshot.previous_in_ael, snapshot.next_in_ael]
-            .into_iter()
-            .flatten()
-        {
-            let other = *self.edges.edge(neighbour);
-            if other.current == snapshot.bottom
-                && matches!(other.output, OutputIndex::Assigned(_))
-                && other.current.y() > other.top.y()
-                && slopes_equal_four(
-                    snapshot.current,
-                    snapshot.top,
-                    other.current,
-                    other.top,
-                    self.use_full_range,
-                )
-                && snapshot.wind_delta != 0
-                && other.wind_delta != 0
-            {
-                let second = self.add_out_point(neighbour, snapshot.bottom);
-                self.joins.push(Join {
-                    first: output,
-                    second,
-                    offset: snapshot.top,
-                });
-                break;
-            }
-        }
     }
 
     fn swap_edge_output(&mut self, first: EdgeId, second: EdgeId) {

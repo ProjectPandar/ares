@@ -58,9 +58,16 @@ impl ClosedClipper {
         self.joins.clear();
         self.ghost_joins.clear();
         self.intersections.clear();
+        self.maxima.clear();
+        #[cfg(test)]
+        self.collected_maxima_for_test.clear();
+        #[cfg(test)]
+        self.simple_repairs_for_test.clear();
     }
 
     pub(super) fn execute_internal(&mut self, config: ExecutionConfig) -> bool {
+        #[cfg(test)]
+        self.simple_repairs_for_test.clear();
         self.reset_for_execute();
         if self.minima.is_empty() {
             return true;
@@ -87,6 +94,7 @@ impl ClosedClipper {
             }
         }
 
+        self.maxima.clear();
         if succeeded {
             self.finish_output();
         }
@@ -124,6 +132,9 @@ impl ClosedClipper {
             if self.out_recs[index].points.is_some() {
                 self.fixup_out_polygon(super::types::OutRecId(index));
             }
+        }
+        if self.options.strictly_simple {
+            self.do_simple_polygons();
         }
     }
 }

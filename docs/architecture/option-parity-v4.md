@@ -2369,15 +2369,64 @@ fixtures remain unchanged. Production executes the selector and still returns
 `ProjectSlicingIncomplete`; no placeholder or reference-derived G-code is
 emitted, so complete normalized KSR parity is not claimed.
 
-Task 22I separately ports the
-`resolution > 0.001` to 0.0025 mm mapping and simplification closure from
+### Task 22I: resolution-driven per-ExPolygon simplification
+
+Task 22I is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. Its direct stage boundary is
 `PrintConfig.hpp:1554-1562`, `PrintConfig.cpp:5172-5179`,
-`PrintObjectSlice.cpp:166-177`, `TriangleMeshSlicer.cpp:2025-2044`,
-`ExPolygon.cpp:223-259`, `MultiPoint.cpp:164-230`, `MultiPoint.hpp:94-99`, and
-`Line.hpp:41-76,155-188`. Its StrictlySimple repair closure is
-`ClipperUtils.cpp:1019-1030`, `clipper.hpp:441-442,515-528`, and
-`clipper.cpp:1042-1051,1148-1160,2629-2645,3787-3851`. KSR's 3MF
-`resolution=0.012` therefore becomes a scaled tolerance of 2,500 only in Task
-22I. Cross-volume negative/modifier combination, regions, surfaces, perimeters,
-fill, supports, toolpaths, G-code assembly, metadata, post-processing, and
-complete normalized KSR byte parity remain later source-cited slices.
+`PrintObjectSlice.cpp:166-177`, `TriangleMeshSlicer.hpp:37-48`, and
+`TriangleMeshSlicer.cpp:2025-2044`. Closed-loop Douglas-Peucker and Boolean
+repair come from `ExPolygon.cpp:223-259`, `MultiPoint.cpp:164-230`,
+`MultiPoint.hpp:94-99`, `Line.hpp:41-76,155-188`,
+`ClipperUtils.cpp:1019-1030`, and the cited Clipper 6.4.2 strict-state closure
+in `clipper.hpp` / `clipper.cpp`.
+
+The only new runtime input is the already resolved
+`views.full.process.print.resolution` value from the 3MF. Values at or below
+`0.001` return before geometry traversal. Larger values select fixed
+`0.0025 mm`, evaluated as `f64` division by the existing coordinate-scale
+factor, narrowed to `f32`, then promoted to `f64`. The exact tolerance is
+therefore `2500.0` at Normal scale and `250.0` at LargeBed scale. The private
+project stage runs after Task 22H for every retained slicing mode and walks
+object, volume, layer, then each source ExPolygon independently. It changes
+only each layer's ExPolygon vector; plans, volume identity, layer mode, source
+order, and empty records remain owned and ordered.
+
+`geometry::simplification` owns finite-segment distance, iterative closed-loop
+Douglas-Peucker, and contour-before-source-order-holes orchestration.
+`geometry::clipper::simplify`, `strictly_simple`, and `output::simple` extend
+the released Clipper rewrite with the required strict pass, top-edge/maxima
+state, duplicate-point splitting, and ownership repair. One source ExPolygon
+enters exactly three ordered NonZero unions: a mandatory StrictlySimple Paths
+pass, a mandatory non-strict Paths pass, then a non-strict PolyTree pass only
+when the second pass is nonempty. Outputs from one source ExPolygon are
+appended contiguously before the next source ExPolygon; siblings are never
+merged, sorted, canonicalized, or recovered through a fallback.
+
+`ClipperOptions::strictly_simple` defaults to false, preserving released Task
+22F/G/H behavior. The strict Paths pass performs the upstream maxima/touch
+state machine and `DoSimplePolygons`; dependent `FirstLeft` repair is performed
+only when PolyTree output needs ownership. The implementation introduces no
+second geometry engine, unsafe/FFI, filesystem, process, thread, native-only
+dependency, or platform branch. Tests use real Rust modules, every Rust source
+and test file remains below 400 LOC, and the non-default WASM feature exposes
+only post-H input and post-I output checkpoint hooks.
+
+The committed `resolution=0.012` project produces a 999,721-byte I checkpoint,
+SHA-256 `0dea485aea9f003db4dbadfd524e82cc2ad33327d3b447a7d985d57d82da72ef`,
+with 2,890 contours, 395 holes, and 58,902 points. Exactly layer slots 0 through
+259 change. A complete `resolution=0.001` 3MF mutation is a marker-only
+1,644,681-byte H-to-I identity; `0.0011` is byte-identical to the committed
+enabled output. The three-Option Task 22H archive becomes 275,433 bytes,
+SHA-256 `022cc958a38d5654e0a5fc4e2ca44d5e5ef068b7e57b271cb14151b11005343e`,
+with 470 contours, 13 holes, and 16,245 points. Native and real Chromium runs
+reach exact EOF and agree on hashes, counts, ownership, and repeatability.
+
+Production still returns `ProjectSlicingIncomplete`; Task 22I emits no
+placeholder or reference-derived G-code and does not claim normalized KSR
+parity. Raw `resolution` consumers in brim, fill, perimeter, arc fitting, and
+G-code remain deferred, as do cross-ExPolygon/cross-volume negative and
+modifier composition, regions, surfaces, perimeters, fill, supports,
+toolpaths, G-code assembly, metadata, and post-processing. Task 22J must begin
+with a separately approved source-cited slice of the adjacent
+`PrintObjectSlice.cpp` volume-to-region composition boundary.

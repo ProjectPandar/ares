@@ -9,7 +9,7 @@ impl ClosedClipper {
             return;
         };
         self.out_recs[out_rec.0].bottom_point = None;
-        let preserve_collinear = self.options.preserve_collinear;
+        let preserve_collinear = self.options.preserve_collinear || self.options.strictly_simple;
         let mut last_ok = None;
 
         loop {

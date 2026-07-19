@@ -11,12 +11,12 @@
       await init();
       const {
         sliceProject,
-        task22hBrowserInputOracle,
-        task22hBrowserOracle,
+        task22iBrowserInputOracle,
+        task22iBrowserOracle,
       } = bindings;
       const encoder = new TextEncoder();
-      const magicG = encoder.encode("ARES22G\0");
       const magicH = encoder.encode("ARES22H\0");
+      const magicI = encoder.encode("ARES22I\0");
 
       function checkpointBytes(input) {
         return input instanceof Uint8Array ? input : new Uint8Array(input);
@@ -60,41 +60,49 @@
         const hasMagic = (magic) =>
           magic.every((expected, index) => bytes[index] === expected);
 
-        requireBytes(magicG.length);
-        const magic = hasMagic(magicG)
-          ? "ARES22G\0"
-          : hasMagic(magicH)
-            ? "ARES22H\0"
+        requireBytes(magicH.length);
+        const magic = hasMagic(magicH)
+          ? "ARES22H\0"
+          : hasMagic(magicI)
+            ? "ARES22I\0"
             : null;
         if (magic === null) {
           throw new Error("invalid ARES22 checkpoint magic");
         }
-        cursor += magicG.length;
+        cursor += magicH.length;
 
         const objects = readCount();
         const modes = [0, 0, 0, 0];
-        const selectedSlots = [];
-        const plcNonSingleSlots = [];
+        const ownership = [];
+        const layerRecords = [];
         let volumes = 0;
         let layers = 0;
         let contours = 0;
         let holes = 0;
         let points = 0;
-        let slot = 0;
         for (let object = 0; object < objects; object += 1) {
-          readCount();
-          readCount();
-          readCount();
+          const sourceObject = readCount();
+          const transform = readCount();
+          const plannedLayers = readCount();
           const objectVolumes = readCount();
           volumes += objectVolumes;
           for (let volume = 0; volume < objectVolumes; volume += 1) {
-            readCount();
-            readU32();
-            readU8();
+            const sourceVolume = readCount();
+            const ordinal = readU32();
+            const volumeType = readU8();
+            ownership.push([
+              sourceObject,
+              transform,
+              plannedLayers,
+              sourceVolume,
+              ordinal,
+              volumeType,
+            ]);
             const volumeLayers = readCount();
             layers += volumeLayers;
             for (let layer = 0; layer < volumeLayers; layer += 1) {
-              readCount();
+              const start = cursor;
+              const index = readCount();
               const mode = readU8();
               if (mode >= modes.length) {
                 throw new Error("invalid ARES22 slicing mode");
@@ -102,12 +110,6 @@
               modes[mode] += 1;
               const layerContours = readCount();
               contours += layerContours;
-              if (mode === 3 && layerContours > 1) {
-                selectedSlots.push(slot);
-              }
-              if (mode === 3 && layerContours !== 1) {
-                plcNonSingleSlots.push(slot);
-              }
               for (let contour = 0; contour < layerContours; contour += 1) {
                 points += readPolygon();
                 const contourHoles = readCount();
@@ -116,7 +118,7 @@
                   points += readPolygon();
                 }
               }
-              slot += 1;
+              layerRecords.push({ index, mode, start, end: cursor });
             }
           }
         }
@@ -135,8 +137,8 @@
           holes,
           points,
           modes,
-          selectedSlots,
-          plcNonSingleSlots,
+          ownership,
+          layerRecords,
         };
       }
 
@@ -163,26 +165,42 @@
           left.every(
             (byte, index) => index === 6 || byte === right[index],
           ) &&
-          left[6] === "G".charCodeAt(0) &&
-          right[6] === "H".charCodeAt(0)
+          left[6] === "H".charCodeAt(0) &&
+          right[6] === "I".charCodeAt(0)
         );
       }
 
       async function summarize(bytes) {
-        const { selectedSlots, plcNonSingleSlots, ...parsed } =
-          parseCheckpoint(bytes);
+        const { layerRecords, ...parsed } = parseCheckpoint(bytes);
         return {
           ...parsed,
           sha256: await sha256(bytes),
-          selectedSlotCount: selectedSlots.length,
-          selectedSlotFirst: selectedSlots.at(0) ?? null,
-          selectedSlotLast: selectedSlots.at(-1) ?? null,
-          selectedSlotSha256:
-            selectedSlots.length === 0
-              ? null
-              : await sha256(encoder.encode(selectedSlots.join(","))),
-          plcNonSingleSlotCount: plcNonSingleSlots.length,
         };
+      }
+
+      function layerBytes(bytes, record) {
+        return bytes.subarray(record.start, record.end);
+      }
+
+      function sameOwnership(left, right) {
+        return (
+          JSON.stringify(left.ownership) === JSON.stringify(right.ownership) &&
+          left.layerRecords.length === right.layerRecords.length &&
+          left.layerRecords.every(
+            (record, slot) =>
+              record.index === right.layerRecords[slot].index &&
+              record.mode === right.layerRecords[slot].mode,
+          )
+        );
+      }
+
+      async function recordSummaries(bytes, parsed, slots) {
+        return Promise.all(
+          slots.map(async (slot) => {
+            const record = layerBytes(bytes, parsed.layerRecords[slot]);
+            return { slot, byteLength: record.length, sha256: await sha256(record) };
+          }),
+        );
       }
 
       async function fixtureBytes(input) {
@@ -203,27 +221,58 @@
           return { resolved: false, error: String(error) };
         }
       };
-      window.parseTask22Vector = (bytes) => parseCheckpoint(bytes);
+      window.parseTask22Vector = (bytes) => {
+        const { layerRecords, ...parsed } = parseCheckpoint(bytes);
+        return parsed;
+      };
       window.sha256Text = (text) => sha256(encoder.encode(text));
-      window.task22hBindingExports = Object.keys(bindings).sort();
-      window.task22hFixtureOracles = async (input) => {
+      window.task22iBindingExports = Object.keys(bindings).sort();
+      window.task22iFixtureOracles = async (input) => {
         const project = await fixtureBytes(input);
         const inputFirst = checkpointBytes(
-          await task22hBrowserInputOracle(project),
+          await task22iBrowserInputOracle(project),
         );
         const inputSecond = checkpointBytes(
-          await task22hBrowserInputOracle(project),
+          await task22iBrowserInputOracle(project),
         );
-        const outputFirst = checkpointBytes(await task22hBrowserOracle(project));
-        const outputSecond = checkpointBytes(await task22hBrowserOracle(project));
+        const outputFirst = checkpointBytes(await task22iBrowserOracle(project));
+        const outputSecond = checkpointBytes(await task22iBrowserOracle(project));
+        const inputParsed = parseCheckpoint(inputFirst);
+        const outputParsed = parseCheckpoint(outputFirst);
+        const changedSlots = inputParsed.layerRecords
+          .map((record, slot) =>
+            byteEqual(
+              layerBytes(inputFirst, record),
+              layerBytes(outputFirst, outputParsed.layerRecords[slot]),
+            )
+              ? null
+              : slot,
+          )
+          .filter((slot) => slot !== null);
         return {
           input: await summarize(inputFirst),
           output: await summarize(outputFirst),
+          outputRecords: await recordSummaries(
+            outputFirst,
+            outputParsed,
+            [0, 46, 49, 459],
+          ),
+          changedSlots,
+          changedSlotSha256:
+            changedSlots.length === 0
+              ? null
+              : await sha256(encoder.encode(changedSlots.join(","))),
           inputRepeatable: byteEqual(inputFirst, inputSecond),
           outputRepeatable: byteEqual(outputFirst, outputSecond),
+          ownershipEqual: sameOwnership(inputParsed, outputParsed),
           bodyEqualExceptMagic: bodyEqualExceptMagic(inputFirst, outputFirst),
         };
       };
+      window.task22iOutputsEqual = async (left, right) =>
+        byteEqual(
+          checkpointBytes(await task22iBrowserOracle(await fixtureBytes(left))),
+          checkpointBytes(await task22iBrowserOracle(await fixtureBytes(right))),
+        );
       window.aresReady = true;
     </script>
   </body>

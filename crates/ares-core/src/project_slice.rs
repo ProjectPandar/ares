@@ -1,5 +1,6 @@
 use crate::{
     GenerationMetadata, Project, SliceError,
+    geometry::CoordinateScale,
     project::effective_config::types::{BoundedResolvedProjectConfig, ResolvedProjectObject},
 };
 
@@ -15,13 +16,16 @@ mod parameters;
 mod pre_closing_unions;
 mod profile;
 mod raw_intersections;
+mod simplification;
 mod slicing_mode_intersections;
 mod state;
 
-#[cfg(any(test, feature = "task22h-browser-oracle"))]
+#[cfg(any(test, feature = "task22i-browser-oracle"))]
 mod task22g_oracle;
-#[cfg(any(test, feature = "task22h-browser-oracle"))]
+#[cfg(any(test, feature = "task22i-browser-oracle"))]
 mod task22h_oracle;
+#[cfg(any(test, feature = "task22i-browser-oracle"))]
+mod task22i_oracle;
 
 #[cfg(test)]
 mod tests;
@@ -34,8 +38,9 @@ pub async fn slice_project(
         project,
         resolved,
         config_block,
-        objects: post_largest_contour_objects,
-    } = prepare_post_largest_contours(project)?;
+        scale: _,
+        objects: post_simplification_objects,
+    } = prepare_post_simplification(project)?;
 
     let documents = project.documents();
     let _ = (
@@ -84,8 +89,8 @@ pub async fn slice_project(
             }
         }
     }
-    for post_largest_contour_object in post_largest_contour_objects {
-        let (plan, volumes) = post_largest_contour_object.into_parts();
+    for post_simplification_object in post_simplification_objects {
+        let (plan, volumes) = post_simplification_object.into_parts();
         for (mode, expolygons) in volumes
             .into_iter()
             .flat_map(|volume| {
@@ -138,6 +143,7 @@ struct PreparedPostClosing {
     project: Project,
     resolved: BoundedResolvedProjectConfig,
     config_block: Option<Vec<u8>>,
+    scale: CoordinateScale,
     objects: Vec<closing::PostClosingPrintObject>,
 }
 
@@ -168,6 +174,7 @@ fn prepare_post_closing(project: impl AsRef<[u8]>) -> Result<PreparedPostClosing
         project,
         resolved,
         config_block,
+        scale,
         objects,
     })
 }
@@ -180,13 +187,26 @@ fn prepare_post_largest_contours(
     Ok(prepared)
 }
 
+fn prepare_post_simplification(
+    project: impl AsRef<[u8]>,
+) -> Result<PreparedPostClosing, SliceError> {
+    let mut prepared = prepare_post_largest_contours(project)?;
+    let resolution = prepared.resolved.views.full.process.print.resolution.0;
+    simplification::apply_project_simplification(
+        &mut prepared.objects,
+        resolution,
+        prepared.scale,
+    )?;
+    Ok(prepared)
+}
+
 #[cfg(test)]
 pub fn task22g_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_closing(project)?;
     Ok(task22g_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22h-browser-oracle"))]
+#[cfg(test)]
 pub fn task22h_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_closing(project)?;
     Ok(task22g_oracle::encode_with_magic(
@@ -195,10 +215,22 @@ pub fn task22h_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>
     ))
 }
 
-#[cfg(any(test, feature = "task22h-browser-oracle"))]
+#[cfg(test)]
 pub fn task22h_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_largest_contours(project)?;
     Ok(task22h_oracle::encode(&prepared.objects))
+}
+
+#[cfg(any(test, feature = "task22i-browser-oracle"))]
+pub fn task22i_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_largest_contours(project)?;
+    Ok(task22h_oracle::encode(&prepared.objects))
+}
+
+#[cfg(any(test, feature = "task22i-browser-oracle"))]
+pub fn task22i_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_simplification(project)?;
+    Ok(task22i_oracle::encode(&prepared.objects))
 }
 
 fn plan_project(

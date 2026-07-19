@@ -1385,19 +1385,51 @@ six-dimensional gates pass.
 
 Production still returns `ProjectSlicingIncomplete`, so Task 22H emits no
 placeholder or reference-derived G-code and does not complete normalized KSR
-parity. Task 22I next takes the
-`resolution > 0.001` to 0.0025 mm mapping and simplification closure from
-`PrintConfig.hpp:1554-1562`, `PrintConfig.cpp:5172-5179`,
-`PrintObjectSlice.cpp:166-177`, `TriangleMeshSlicer.cpp:2025-2044`,
-`ExPolygon.cpp:223-259`, `MultiPoint.cpp:164-230`, `MultiPoint.hpp:94-99`, and
-`Line.hpp:41-76,155-188`. StrictlySimple repair comes from
-`ClipperUtils.cpp:1019-1030`, `clipper.hpp:441-442,515-528`, and
-`clipper.cpp:1042-1051,1148-1160,2629-2645,3787-3851`. KSR
-`resolution=0.012` maps to scaled tolerance 2,500 there. Regions, surfaces,
-cross-volume booleans, perimeters, fill, supports, toolpaths, G-code assembly,
-metadata, post-processing, and normalized `ksr_fdmtest_v4` byte parity remain
-later source-cited slices. The persistent user-visible goal is therefore still
-incomplete after Task 22H.
+parity.
+
+### 2026-07-18 Port resolution-driven simplification (Task 22I)
+
+Task 22I is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports the 3MF-backed global
+`resolution` mapping and mesh-slice consumer in `PrintConfig.hpp:1554-1562`,
+`PrintConfig.cpp:5172-5179`, `PrintObjectSlice.cpp:166-177`,
+`TriangleMeshSlicer.hpp:37-48`, and `TriangleMeshSlicer.cpp:2025-2044`, plus
+the closed-loop Douglas-Peucker, three-union repair, and StrictlySimple Clipper
+closure cited in the approved Task 22I specification.
+
+`resolution <= 0.001` is an exact pre-traversal no-op. Any larger value selects
+fixed `0.0025 mm`; the source's `f64` division then `f32` narrowing produces
+exact scaled tolerances `2500.0` and `250.0` for Normal and LargeBed. The stage
+runs after Task 22H for all four retained modes and simplifies each ExPolygon
+independently through contour-first/source-order holes, a strict NonZero Paths
+union, a non-strict NonZero Paths union, and a conditional non-strict PolyTree
+union. The strict option defaults false for every predecessor caller, and no
+fixture, digest, count, Option override, or fixed-layer production branch was
+added.
+
+The committed project produces 999,721 I-checkpoint bytes, SHA-256
+`0dea485aea9f003db4dbadfd524e82cc2ad33327d3b447a7d985d57d82da72ef`,
+with 2,890 contours, 395 holes, and 58,902 points. A complete `.001` mutation
+is marker-only identity at 1,644,681 bytes, while `.0011` is byte-identical to
+the committed enabled output. The three-Option archive produces 275,433 bytes,
+SHA-256 `022cc958a38d5654e0a5fc4e2ca44d5e5ef068b7e57b271cb14151b11005343e`,
+with 470 contours, 13 holes, and 16,245 points. The threshold-21 regression is
+416,217 bytes, SHA-256
+`185118681aad5de780a93d6f71f22f497dc7dc7dd82e038ec1feaf32b0f91294`,
+with 569 contours, 127 holes, and 24,888 points. Native checks cover every
+checkpoint above. For the committed, `.001`, `.0011`, and three-Option
+archives, native and real Chromium checks reach exact EOF and agree on digest,
+counts, ownership, and repeatability. Default WASM exports no Task 22 hooks and
+the non-default feature exposes exactly the two Task 22I checkpoint hooks.
+
+Production remains `ProjectSlicingIncomplete`, so normalized
+`ksr_fdmtest_v4.gcode` equality and the persistent user goal are still
+incomplete. Task 22J is next and must start with its own approved source-cited
+slice of the adjacent `PrintObjectSlice.cpp` volume-to-region composition
+boundary. Cross-volume negative/modifier composition, regions, surfaces,
+perimeters, fill, supports, toolpaths, G-code assembly, metadata,
+post-processing, and other `resolution` consumers remain deferred until their
+own upstream-bounded slices.
 
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 

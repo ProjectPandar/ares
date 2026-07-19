@@ -6,4 +6,5 @@ mod large_coordinates;
 mod offset;
 mod options;
 mod polytree;
+mod strictly_simple;
 mod touching;
