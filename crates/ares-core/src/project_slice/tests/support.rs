@@ -3,7 +3,7 @@ use std::{
     io::{Cursor, Read, Write},
 };
 
-use zip::{CompressionMethod, ZipArchive, ZipWriter, write::SimpleFileOptions};
+use zip::{CompressionMethod, System, ZipArchive, ZipWriter, write::SimpleFileOptions};
 
 use super::super::{
     layers::{PlannedLayer, PlannedPrintObject},
@@ -100,7 +100,9 @@ impl KsrArchive {
 
     pub(super) fn bytes(self) -> Vec<u8> {
         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
-        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = SimpleFileOptions::default()
+            .compression_method(CompressionMethod::Deflated)
+            .system(System::Dos);
         for (path, bytes) in self.entries {
             writer.start_file(path, options).unwrap();
             writer.write_all(&bytes).unwrap();

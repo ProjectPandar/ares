@@ -198,9 +198,19 @@ finding blocks implementation.
 
 ## Exact planned tracked manifest
 
-No tracked path outside this 34-path list may change without a plan amendment
+No tracked path outside this 35-path list may change without a plan amendment
 and fresh document approvals. The final candidate must change every listed
 path; substitutions, omissions, and additions are forbidden.
+
+Release-gate amendment: exact-SHA Tier-1 run `29697576398` showed that
+`zip 8.6.0` selects ZIP `System::Dos` on Windows and `System::Unix` on
+macOS/Linux when `SimpleFileOptions::system` is absent. The separate
+modifier/control slicing checkpoint tests passed, but the raw archive assertion
+stopped both Unix jobs before this test reached its semantic-digest assertion.
+The only observed mismatch was the platform-dependent central-directory
+creator byte. The approved repair adds the shared test fixture below and
+explicitly sets `System::Dos`; it changes no production path, 3MF entry, Option,
+or slicing output.
 
 ### Specification, architecture, and roadmap
 
@@ -237,6 +247,7 @@ path; substitutions, omissions, and additions are forbidden.
 ### Project and loader tests
 
 - `crates/ares-core/src/project_slice/tests.rs`
+- `crates/ares-core/src/project_slice/tests/support.rs`
 - `crates/ares-core/src/project_slice/tests/profile_layers.rs`
 - `crates/ares-core/src/project_slice/tests/volume_bounds.rs`
 - `crates/ares-core/src/project_slice/tests/volume_regions.rs`
@@ -283,6 +294,7 @@ LOC. Target budgets leave review and formatting headroom:
   path may change;
 - `project_slice/tests/volume_bounds.rs`: at most 360;
 - `project_slice/tests/volume_regions.rs`: at most 380;
+- `project_slice/tests/support.rs`: at most 390;
 - `project_slice/tests/region_slices.rs`: at most 350;
 - `project_slice/tests/region_slices/complex.rs`: at most 380;
 - `project_slice/tests/region_fixture.rs`: at most 330;
@@ -557,7 +569,9 @@ is evidence-ledger and final shell-integrity input only; no tracked Task 22J
 test opens that file.
 
 The Rust modifier builder reuses `KsrArchive`, whose `BTreeMap` fixes entry
-order and whose locked ZIP stack fixes the default 1980 timestamp. Chromium
+order, whose locked ZIP stack fixes the default 1980 timestamp, and whose
+explicit ZIP `System::Dos` fixes central-directory creator metadata on every
+host. Chromium
 sorts uncompressed entry names and supplies an explicit 1980-01-01 `mtime` to
 `fflate`. Container bytes may differ across encoders, so both runtimes assert
 the specification's filename-NUL-content semantic digest. Native Rust also
@@ -765,7 +779,7 @@ same constants registered in Package 0.
 
 1. After Package E approval, update architecture and roadmap with only verified
    source, implementation, test, release, and deferral facts.
-2. Freeze the exact docs-inclusive 34-path and per-file SHA-256 manifest.
+2. Freeze the exact docs-inclusive 35-path and per-file SHA-256 manifest.
 3. Run the full verification and structural matrix below on those exact bytes.
 4. Dispatch one independent read-only six-axis reviewer. It must assess
    requirement completeness, logical correctness, edge cases, code quality,
@@ -830,7 +844,7 @@ On every package and final candidate:
 1. parse the backtick paths between `Exact planned tracked manifest` and
    `Module ownership and line budgets`, compare that set in both directions
    with tracked modified plus candidate untracked paths, and reject any
-   addition, omission, substitution, duplicate, or count other than 34;
+   addition, omission, substitution, duplicate, or count other than 35;
 2. count every changed Rust file and reject physical LOC `>= 400`;
 3. search changed Rust files for `include!` or `include_bytes!` source/test
    splitting;
@@ -857,7 +871,7 @@ Ignored evidence is manually audited but never a build, test, or runtime input.
 ## Mandatory independent review loop
 
 The final six-axis reviewer is one dedicated read-only thread. It receives the
-exact fixed commit/tree, source citations, approved documents, 34-path
+exact fixed commit/tree, source citations, approved documents, 35-path
 manifest, per-file hashes, test commands/results, browser artifacts, oracle
 facts, and known deferred scope. It does not edit files.
 

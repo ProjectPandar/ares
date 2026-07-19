@@ -591,6 +591,13 @@ that metadata and uses the KSR base value 0.
 The deterministic Rust ZIP and sorted uncompressed
 filename-NUL-content identities are:
 
+Rust fixture archives fix every central-directory creator system to ZIP
+`System::Dos`, independent of the host platform. This is test-container
+metadata only; it does not supply a slicing Option or alter any uncompressed
+3MF entry. The fixed creator system, sorted entry order, locked compression
+stack, and 1980 timestamp together define the native ZIP identities below on
+Windows, macOS, and Linux.
+
 - variant: 56,046 bytes, ZIP SHA-256
   `83ac43d83487ad5f63b7c4b8f8c88ef20bb75b286d09e329fe24c8abc08807ce`,
   semantic SHA-256
