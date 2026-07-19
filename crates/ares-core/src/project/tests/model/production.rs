@@ -1,7 +1,13 @@
-use crate::project::{
-    model_xml::ModelDocument,
-    xml::{XmlRole, deserialize_xml},
+use crate::{
+    GenerationMetadata, SliceError, load_project,
+    project::{
+        model_xml::ModelDocument,
+        xml::{XmlRole, deserialize_xml},
+    },
+    slice_project,
 };
+
+use super::fixture::ProjectParts;
 
 const CORE_NAMESPACE: &str = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02";
 const PRODUCTION_NAMESPACE: &str =
@@ -212,5 +218,37 @@ fn material_group_and_color_require_typed_attributes() {
 
     for xml in cases {
         assert_bounded_rejection(&xml);
+    }
+}
+
+#[tokio::test]
+async fn bbs_painted_triangle_attributes_remain_fail_closed_through_load_and_slice() {
+    const MODEL_PATH: &str = "3D/Objects/ksr_fdmtest_v4.drc_2.model";
+    const FIRST_TRIANGLE: &str = r#"<triangle v1="2" v2="0" v3="1"/>"#;
+    const ERROR: &str =
+        "invalid project model XML: attribute namespace does not match its 3MF meaning";
+
+    for attribute in [r#"paint_color="1""#, r#"paint_fuzzy_skin="1""#] {
+        let mut parts = ProjectParts::fixture();
+        parts.replace(
+            MODEL_PATH,
+            FIRST_TRIANGLE,
+            &format!(r#"<triangle v1="2" v2="0" v3="1" {attribute}/>"#),
+        );
+        let bytes = parts.bytes();
+
+        assert_eq!(
+            load_project(&bytes).unwrap_err(),
+            SliceError::InvalidInput(ERROR.to_owned())
+        );
+        assert_eq!(
+            slice_project(
+                &bytes,
+                GenerationMetadata::deterministic(2026, 7, 19, 1, 2, 3),
+            )
+            .await
+            .unwrap_err(),
+            SliceError::InvalidInput(ERROR.to_owned())
+        );
     }
 }

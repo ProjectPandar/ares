@@ -1431,6 +1431,48 @@ perimeters, fill, supports, toolpaths, G-code assembly, metadata,
 post-processing, and other `resolution` consumers remain deferred until their
 own upstream-bounded slices.
 
+### 2026-07-19 Port single-range volume region composition (Task 22J)
+
+Task 22J is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. It ports the volume-region data
+and graph boundary in `Print.hpp:44-48,102-120,216-305,423-427` and
+`Print.hpp:516-519,553-555,585-590`,
+`PrintApply.cpp:342-405,542-553,582-592,699-724` and
+`PrintApply.cpp:887-910,958-1057,1727-1739`, and
+`PrintObject.cpp:3555-3710`, plus the exact
+composition caller in `PrintObjectSlice.cpp:21,231-241,269-480,1149-1192` and
+its Boolean, surface, and layer ownership dependencies cited in the approved
+specification.
+
+The Rust slice consumes only the loaded 3MF, resolved typed Options, selected
+coordinate scale, and Task 22I geometry. It specializes the current one
+implicit `[0, DBL_MAX)` range, separates stable physical occurrence identity
+from source-order graph traversal, preserves a complete occurrence-keyed
+sidecar, creates dense all-layer/all-region Internal surfaces, and implements
+the source modifier, negative-volume, later-model, stable-order, and
+same-region closing rules. Difference and Intersection rebuild ExPolygon
+ownership through a fresh NonZero PolyTree. No fixture identity, target digest,
+reference G-code, new Option default, native-only dependency, or alternate
+geometry engine enters production.
+
+The committed project exits at a repeatable 2,008,706-byte J checkpoint with
+SHA-256 `2b474697f4afae95c9a55d709d8740d382a80b2969fc5118dc89e13c1906162d`:
+one object, 460 layers, one occurrence and region, and 2,890 ExPolygons, 395
+holes, and 58,902 points in each complete sidecar and retained stream. A real
+3MF modifier/no-override pair starts from the same exact 478-byte I checkpoint
+and produces distinct exact 1,054-byte and 698-byte J streams. Native and fresh
+Chromium runs are repeatable, reach exact EOF, and agree on bytes and parsed
+ownership; default WASM remains free of Task 22 exports. Both committed
+fixtures remain unchanged.
+
+Production remains `ProjectSlicingIncomplete`, so normalized
+`ksr_fdmtest_v4.gcode` equality and the persistent user goal are still
+incomplete. The next source-cited audit boundary is top-empty-layer removal in
+`PrintObjectSlice.cpp:1194-1203`, `Layer.cpp:21-29`, and `Layer.hpp:169`.
+`apply_conical_overhang` at `PrintObjectSlice.cpp:1206` and all later surface,
+perimeter, fill, support, toolpath, G-code, metadata, and post-processing work
+remain separate until their own approved slices.
+
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
 Task 19C ports the Bambu effective-config export boundary from fixed

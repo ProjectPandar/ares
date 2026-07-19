@@ -6,7 +6,7 @@ use crate::{Transform3d, project::effective_config::types::ResolvedPrintObjectCo
 use super::super::{
     layers::{LayerBudget, LayerPair, PlannedLayer, generate_layer_pairs, planned_layers},
     parameters::SlicingParameters,
-    plan_resolved_objects,
+    planning::plan_resolved_objects,
     profile::fixed_layer_height_profile,
 };
 use super::support::{object_options, resolved};

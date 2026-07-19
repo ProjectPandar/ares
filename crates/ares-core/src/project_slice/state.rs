@@ -9,7 +9,7 @@ use crate::{
 };
 
 use super::{
-    plan_project,
+    planning::plan_project,
     raw_intersections::{
         IntersectedPrintObject, intersect_projected_objects, prepare_projected_objects,
     },

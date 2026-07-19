@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-task22i-browser-oracle = ["ares-core/task22i-browser-oracle"]
+task22j-browser-oracle = ["ares-core/task22j-browser-oracle"]
 
 [dependencies]
 ares-core = { path = "../ares-core" }

@@ -2430,3 +2430,71 @@ modifier composition, regions, surfaces, perimeters, fill, supports,
 toolpaths, G-code assembly, metadata, and post-processing. Task 22J must begin
 with a separately approved source-cited slice of the adjacent
 `PrintObjectSlice.cpp` volume-to-region composition boundary.
+
+### Task 22J: single-range volume region composition
+
+Task 22J is implemented from OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The owning upstream boundary is
+the volume-region data and graph construction in
+`Print.hpp:44-48,102-120,216-305,423-427` and
+`Print.hpp:516-519,553-555,585-590`,
+`PrintApply.cpp:342-405,542-553,582-592,699-724` and
+`PrintApply.cpp:887-910,958-1057,1727-1739`, and
+`PrintObject.cpp:3555-3710`; composition and its direct caller are
+`PrintObjectSlice.cpp:21,231-241,269-480,1149-1192`. Boolean ownership and
+closing follow `ClipperUtils.hpp:400-410` and
+`ClipperUtils.cpp:550-584,640-667,737-803`, while the retained Internal
+surfaces follow `Surface.hpp:9-47`, `SurfaceCollection.hpp:65-81`, and
+`Layer.hpp:33-48,335-341`.
+
+The current Rust boundary deliberately accepts only the one implicit
+`[0, DBL_MAX)` layer range assembled from the loaded 3MF and resolved typed
+Options; a nonempty explicit range chain is rejected. No new Option, default,
+or external input is introduced. Physical carriers use stable nonzero volume
+occurrence IDs, while graph traversal remains in source-volume order. Bounds
+come from each transformed source mesh, the region registry preserves
+first-created equality order, support volumes are excluded, negative volumes
+remain regionless, and modifier regions are resolved only from their selected
+parent region plus that volume's 3MF overrides.
+
+Every accepted physical carrier keeps a complete occurrence-keyed slice
+sidecar. The output is dense over every planned layer and every registered
+region, including explicit empty slots. The single-model-part path transfers
+geometry directly. The complex path partitions modifiers with NonZero
+Intersection and Difference, subtracts later model parts and negative volumes,
+uses the source validity order plus stable `(region_id, occurrence_id)` order,
+and applies one source-compatible `offset2_ex(+delta, -delta, Miter, 3.0)`
+closing when multiple records append to the same region. Each resulting
+ExPolygon becomes one Internal surface with tag 4 and defaults
+`thickness=-1`, `thickness_layers=1`, `bridge_angle=-1`, and
+`extra_perimeters=0`; top-empty-layer removal has not yet run.
+
+The Boolean wrappers execute Difference or Intersection into Paths, then
+rebuild ownership through a fresh NonZero Union PolyTree. Coordinate-range
+failures cross the public slicing boundary as the single exact region
+composition `InvalidInput` error. The implementation remains crate-private,
+safe Rust with real modules and no filesystem, process, thread, native-only,
+fixture-reading, or platform-specific path. Default WASM exports no Task 22
+hook; the non-default browser test feature exposes only the Task 22J input and
+output checkpoints.
+
+The committed KSR archive produces a repeatable 2,008,706-byte J checkpoint,
+SHA-256 `2b474697f4afae95c9a55d709d8740d382a80b2969fc5118dc89e13c1906162d`:
+one object, 460 planned layers, occurrence `[1]`, 460 sidecar layers, 460 dense
+retained layers, one region per layer, 2,890 ExPolygons, 395 holes, and 58,902
+points in both the sidecar and retained geometry. A complete 3MF modifier
+archive and its no-override control share the exact 478-byte Task 22I input
+but produce distinct repeatable J checkpoints of 1,054 and 698 bytes, proving
+that region composition consumes the loaded volume Option instead of fixture
+identity. Native Rust and fresh Chromium reach exact EOF and agree on the full
+registered bytes and parsed ownership.
+
+Task 22J stops before `PrintObjectSlice.cpp:1194-1203` top-empty-layer removal.
+Multi-range chains, material and painted segmentation, the ten neighboring
+usage gates, support-region graph construction, top trimming, conical
+overhang, XY and elephant-foot compensation, `make_slices`, surface
+classification, perimeters, fill, support generation, toolpaths, G-code,
+metadata, and post-processing remain deferred to separately approved upstream
+slices. Production still returns `ProjectSlicingIncomplete`; no placeholder or
+reference-derived G-code is emitted, and normalized KSR G-code parity is not
+claimed.

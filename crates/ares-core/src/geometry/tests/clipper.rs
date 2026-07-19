@@ -1,3 +1,4 @@
+mod boolean_ex;
 mod booleans;
 mod fill_rules;
 mod helpers;

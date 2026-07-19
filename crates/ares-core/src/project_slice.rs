@@ -13,19 +13,25 @@ mod largest_contours;
 mod layers;
 mod looped_intersections;
 mod parameters;
+mod planning;
 mod pre_closing_unions;
 mod profile;
 mod raw_intersections;
+mod region_slices;
 mod simplification;
 mod slicing_mode_intersections;
 mod state;
+mod volume_bounds;
+mod volume_regions;
 
-#[cfg(any(test, feature = "task22i-browser-oracle"))]
+#[cfg(any(test, feature = "task22j-browser-oracle"))]
 mod task22g_oracle;
-#[cfg(any(test, feature = "task22i-browser-oracle"))]
+#[cfg(test)]
 mod task22h_oracle;
-#[cfg(any(test, feature = "task22i-browser-oracle"))]
+#[cfg(any(test, feature = "task22j-browser-oracle"))]
 mod task22i_oracle;
+#[cfg(any(test, feature = "task22j-browser-oracle"))]
+mod task22j_oracle;
 
 #[cfg(test)]
 mod tests;
@@ -34,13 +40,13 @@ pub async fn slice_project(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let PreparedPostClosing {
+    let PreparedPostRegions {
         project,
         resolved,
         config_block,
-        scale: _,
-        objects: post_simplification_objects,
-    } = prepare_post_simplification(project)?;
+        scale,
+        objects: post_region_objects,
+    } = prepare_post_regions(project)?;
 
     let documents = project.documents();
     let _ = (
@@ -89,25 +95,9 @@ pub async fn slice_project(
             }
         }
     }
-    for post_simplification_object in post_simplification_objects {
-        let (plan, volumes) = post_simplification_object.into_parts();
-        for (mode, expolygons) in volumes
-            .into_iter()
-            .flat_map(|volume| {
-                let (source_volume_index, ordinal, volume_type, layers) = volume.into_parts();
-                let _ = (source_volume_index, ordinal, volume_type);
-                layers
-            })
-            .map(closing::PostClosingLayer::into_parts)
-        {
-            let _ = mode;
-            for polygon in expolygons.into_iter().flat_map(|expolygon| {
-                let (contour, holes) = expolygon.into_parts();
-                std::iter::once(contour).chain(holes)
-            }) {
-                let _ = polygon.points();
-            }
-        }
+    for post_region_object in post_region_objects {
+        let (plan, volume_slices, regions) = post_region_object.into_parts();
+        let _ = (volume_slices, regions);
         let layers::PlannedPrintObject {
             source_object_index,
             transform_index,
@@ -126,6 +116,7 @@ pub async fn slice_project(
     }
     let _ = (
         project,
+        scale,
         full,
         runtime,
         runtime_gcode,
@@ -145,6 +136,14 @@ struct PreparedPostClosing {
     config_block: Option<Vec<u8>>,
     scale: CoordinateScale,
     objects: Vec<closing::PostClosingPrintObject>,
+}
+
+struct PreparedPostRegions {
+    project: Project,
+    resolved: BoundedResolvedProjectConfig,
+    config_block: Option<Vec<u8>>,
+    scale: CoordinateScale,
+    objects: Vec<region_slices::PostRegionPrintObject>,
 }
 
 fn prepare_post_closing(project: impl AsRef<[u8]>) -> Result<PreparedPostClosing, SliceError> {
@@ -200,6 +199,55 @@ fn prepare_post_simplification(
     Ok(prepared)
 }
 
+fn prepare_post_regions(project: impl AsRef<[u8]>) -> Result<PreparedPostRegions, SliceError> {
+    let PreparedPostClosing {
+        project,
+        resolved,
+        config_block,
+        scale,
+        objects,
+    } = prepare_post_simplification(project)?;
+    let objects = {
+        let mut contexts = resolved
+            .objects
+            .iter()
+            .flat_map(|resolved| resolved.print_objects.iter().map(move |_| resolved));
+        let objects = objects
+            .into_iter()
+            .map(|post_i| {
+                let resolved_object = contexts
+                    .next()
+                    .expect("post-I object must have a resolved print-instance context");
+                let source = &project.objects()[resolved_object.source_object_index];
+                let bounded = volume_bounds::build_volume_bounds(source, resolved_object, post_i);
+                let graph = volume_regions::build_volume_region_graph(
+                    source,
+                    resolved_object,
+                    &bounded,
+                    &resolved.views.full.filament.region,
+                    resolved.logical_filament_count,
+                );
+                region_slices::complex::compose_complex_region_slices(
+                    region_slices::prepare_region_slices(bounded, graph),
+                    scale,
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        assert!(
+            contexts.next().is_none(),
+            "every resolved print-instance context must have one post-I object"
+        );
+        objects
+    };
+    Ok(PreparedPostRegions {
+        project,
+        resolved,
+        config_block,
+        scale,
+        objects,
+    })
+}
+
 #[cfg(test)]
 pub fn task22g_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_closing(project)?;
@@ -221,116 +269,26 @@ pub fn task22h_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, Slic
     Ok(task22h_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22i-browser-oracle"))]
+#[cfg(test)]
 pub fn task22i_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_largest_contours(project)?;
     Ok(task22h_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22i-browser-oracle"))]
+#[cfg(test)]
 pub fn task22i_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_simplification(project)?;
     Ok(task22i_oracle::encode(&prepared.objects))
 }
 
-fn plan_project(
-    project: &Project,
-    resolved: &BoundedResolvedProjectConfig,
-) -> Result<Vec<layers::PlannedPrintObject>, SliceError> {
-    capabilities::validate(
-        project.has_painted_layer_height_profile(),
-        project.objects(),
-        &resolved.objects,
-    )?;
-    let object_extruders = extruders::collect_project_object_extruders(
-        project.objects(),
-        &resolved.objects,
-        resolved.logical_filament_count,
-    );
-    plan_resolved_objects(&resolved.objects, |object_index, resolved_object| {
-        let object_height = bounds::participating_object_heights(
-            project.objects(),
-            std::slice::from_ref(resolved_object),
-        )?[0];
-        parameters::slicing_parameters(
-            &resolved.views.full,
-            &resolved_object.object,
-            object_height,
-            &object_extruders[object_index],
-        )
-    })
+#[cfg(any(test, feature = "task22j-browser-oracle"))]
+pub fn task22j_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_simplification(project)?;
+    Ok(task22i_oracle::encode(&prepared.objects))
 }
 
-fn plan_resolved_objects(
-    resolved_objects: &[ResolvedProjectObject],
-    mut prepare: impl FnMut(
-        usize,
-        &ResolvedProjectObject,
-    ) -> Result<parameters::SlicingParameters, SliceError>,
-) -> Result<Vec<layers::PlannedPrintObject>, SliceError> {
-    let mut budget = layers::LayerBudget::default();
-    let mut planned_objects = Vec::new();
-    for (object_index, resolved_object) in resolved_objects.iter().enumerate() {
-        if resolved_object.print_objects.is_empty() {
-            continue;
-        }
-        let parameters = prepare(object_index, resolved_object)?;
-        let profile = profile::fixed_layer_height_profile(&parameters);
-        for (transform_index, _) in resolved_object.print_objects.iter().enumerate() {
-            planned_objects.push(layers::plan_print_object(
-                resolved_object.source_object_index,
-                transform_index,
-                &parameters,
-                &profile,
-                &mut budget,
-            )?);
-        }
-        let parameters::SlicingParameters {
-            base_raft_layers,
-            interface_raft_layers,
-            base_raft_layer_height,
-            interface_raft_layer_height,
-            contact_raft_layer_height,
-            layer_height,
-            min_layer_height,
-            max_layer_height,
-            first_print_layer_height,
-            first_object_layer_height,
-            first_object_layer_bridging,
-            gap_raft_object,
-            gap_object_support,
-            gap_support_object,
-            raft_base_top_z,
-            raft_interface_top_z,
-            raft_contact_top_z,
-            object_print_z_min,
-            object_print_z_max,
-            object_print_z_uncompensated_max,
-            object_shrinkage_compensation_z,
-        } = parameters;
-        let _ = (
-            base_raft_layers,
-            interface_raft_layers,
-            base_raft_layer_height,
-            interface_raft_layer_height,
-            contact_raft_layer_height,
-            layer_height,
-            min_layer_height,
-            max_layer_height,
-            first_print_layer_height,
-            first_object_layer_height,
-            first_object_layer_bridging,
-            gap_raft_object,
-            gap_object_support,
-            gap_support_object,
-            raft_base_top_z,
-            raft_interface_top_z,
-            raft_contact_top_z,
-            object_print_z_min,
-            object_print_z_max,
-            object_print_z_uncompensated_max,
-            object_shrinkage_compensation_z,
-        );
-    }
-    Ok(planned_objects)
+#[cfg(any(test, feature = "task22j-browser-oracle"))]
+pub fn task22j_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_regions(project)?;
+    Ok(task22j_oracle::encode(&prepared.objects))
 }

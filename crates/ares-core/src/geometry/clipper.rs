@@ -2,6 +2,7 @@
 // OrcaSlicer at fixed commit 8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 mod active_edges;
+mod boolean_ex;
 mod bounds;
 mod engine;
 mod horizontals;
@@ -18,6 +19,7 @@ mod strictly_simple;
 mod types;
 mod winding;
 
+pub(crate) use boolean_ex::{difference_ex, intersection_ex};
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
 pub(crate) use offset::{ClipperOffset, JoinType, offset2_ex};
