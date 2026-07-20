@@ -51,28 +51,28 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - run: cargo check -p ares-core --target wasm32-unknown-unknown
-      - run: cargo check -p ares-core --target wasm32-unknown-unknown --features task22l-browser-oracle
+      - run: cargo check -p ares-core --target wasm32-unknown-unknown --features task22m-browser-oracle
       - run: cargo check -p ares-wasm --target wasm32-unknown-unknown
-      - run: cargo check -p ares-wasm --target wasm32-unknown-unknown --features task22l-browser-oracle
+      - run: cargo check -p ares-wasm --target wasm32-unknown-unknown --features task22m-browser-oracle
       - run: cargo install --locked wasm-bindgen-cli --version 0.2.121
       - run: cargo build -p ares-wasm --target wasm32-unknown-unknown --release --target-dir target/wasm-default
       - run: wasm-bindgen target/wasm-default/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser-default
-      - run: cargo build -p ares-wasm --target wasm32-unknown-unknown --release --features task22l-browser-oracle --target-dir target/wasm-task22l
-      - run: wasm-bindgen target/wasm-task22l/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
+      - run: cargo build -p ares-wasm --target wasm32-unknown-unknown --release --features task22m-browser-oracle --target-dir target/wasm-task22m
+      - run: wasm-bindgen target/wasm-task22m/wasm32-unknown-unknown/release/ares_wasm.wasm --target web --out-dir target/wasm-browser
       - name: Audit generated browser exports
         run: |
           node --input-type=module -e '
             const defaultExports = Object.keys(await import("./target/wasm-browser-default/ares_wasm.js"));
-            const task22lExports = Object.keys(await import("./target/wasm-browser/ares_wasm.js"));
-            const expectedL = ["task22lBrowserInputOracle", "task22lBrowserOracle"];
+            const task22mExports = Object.keys(await import("./target/wasm-browser/ares_wasm.js"));
+            const expectedM = ["task22mBrowserInputOracle", "task22mBrowserOracle"];
             const defaultHooks = defaultExports.filter((name) => name.startsWith("task22")).sort();
-            const featureHooks = task22lExports.filter((name) => name.startsWith("task22")).sort();
+            const featureHooks = task22mExports.filter((name) => name.startsWith("task22")).sort();
             if (defaultHooks.length !== 0) throw new Error(`default bindings expose checkpoint hooks: ${defaultHooks}`);
-            if (JSON.stringify(featureHooks) !== JSON.stringify(expectedL)) throw new Error(`L bindings mismatch: ${featureHooks}`);
+            if (JSON.stringify(featureHooks) !== JSON.stringify(expectedM)) throw new Error(`M bindings mismatch: ${featureHooks}`);
           '
       - run: npm --prefix crates/ares-wasm/tests/browser ci
       - run: node --check crates/ares-wasm/tests/browser/project-slice-page.mjs
-      - run: node --check crates/ares-wasm/tests/browser/task22l-vectors.mjs
+      - run: node --check crates/ares-wasm/tests/browser/task22m-vectors.mjs
       - run: node --check crates/ares-wasm/tests/browser/project-slice.spec.mjs
       - run: node --check crates/ares-wasm/tests/browser/server.mjs
       - run: npx --prefix crates/ares-wasm/tests/browser playwright install --with-deps chromium

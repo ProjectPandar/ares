@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { expect, test } from "@playwright/test";
 
-import { RECORDS, SHA, parserKats, steppedKats } from "./task22l-vectors.mjs";
+import { RECORDS, SHA, parserKats, smallKats } from "./task22m-vectors.mjs";
 
 const FIXTURE = fileURLToPath(
   new URL("../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf", import.meta.url),
@@ -14,6 +14,13 @@ const FFLATE_UMD = fileURLToPath(new URL("./node_modules/fflate/umd/index.js", i
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const pairRecords = (values) =>
   values.map(([byteLength, sha256]) => ({ byteLength, sha256 }));
+const objectHeader = (object) => ({
+  sourceObjectIndex: object.sourceObjectIndex,
+  transformIndex: object.transformIndex,
+  plannedLayerCount: object.plannedLayerCount,
+});
+const layerGeometry = (layer) =>
+  layer.regions.flatMap((region) => region.surfaces.map((surface) => surface.expolygon));
 
 async function openFixturePage(page) {
   await page.addInitScript({ path: FFLATE_UMD });
@@ -31,7 +38,7 @@ async function openFixturePage(page) {
   expect(state.ready).toBe(true);
 }
 
-test("independent J/K/L KATs reach EOF before any fixture fetch", async ({ page }) => {
+test("independent L/M KATs reach exact EOF before any fixture fetch", async ({ page }) => {
   let fixtureRequests = 0;
   await page.route("**/tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf", async (route) => {
     fixtureRequests += 1;
@@ -39,10 +46,9 @@ test("independent J/K/L KATs reach EOF before any fixture fetch", async ({ page 
   });
   await openFixturePage(page);
 
-  const stepped = steppedKats();
-  const vectors = [...parserKats(), stepped.input, stepped.disabled, stepped.enabled];
+  const kats = parserKats();
   const actual = [];
-  for (const { bytes, expected, sha256 } of vectors) {
+  for (const { bytes, expected, sha256 } of [kats.l, kats.m]) {
     expect(digest(bytes)).toBe(sha256);
     const serializable = Array.from(bytes);
     actual.push(await page.evaluate((value) => window.parseTask22Vector(value), serializable));
@@ -57,12 +63,13 @@ test("independent J/K/L KATs reach EOF before any fixture fetch", async ({ page 
     )).rejects.toThrow("trailing bytes");
   }
 
-  expect(actual[1].objects[0].sidecars).toEqual(actual[0].objects[0].sidecars);
-  expect(actual[1].objects[0].retainedLayers).toEqual(
-    actual[0].objects[0].retainedLayers.slice(0, 1),
-  );
-  expect(actual[3].objects).toEqual(actual[2].objects);
-  expect(actual[4]).toEqual(stepped.enabled.expected);
+  const mLayer = actual[1].objects[0].retainedLayers[0];
+  expect(mLayer.regions[0].surfaces.map((surface) => surface.expolygon.contour[0])).toEqual([
+    ["60", "60"], ["40", "40"], ["160", "60"],
+  ]);
+  expect(mLayer.lslices.map((value) => value.contour[0])).toEqual([
+    ["100", "0"], ["20", "20"], ["0", "0"],
+  ]);
   expect(fixtureRequests).toBe(0);
 });
 
@@ -73,82 +80,78 @@ test("WebCrypto SHA-256 passes a known-answer check", async ({ page }) => {
   );
 });
 
-test("public slicing stays incomplete and feature exports exactly L", async ({ page }) => {
+test("public slicing stays incomplete and feature exports exactly M", async ({ page }) => {
   await openFixturePage(page);
   await expect(page.evaluate(() => window.sliceFixtureProject())).resolves.toEqual({
     resolved: false,
     error: "ProjectSlicingIncomplete",
   });
-  const exports = await page.evaluate(() => window.task22lBindingExports);
+  const exports = await page.evaluate(() => window.task22mBindingExports);
   expect(exports.filter((name) => name.startsWith("task22"))).toEqual([
-    "task22lBrowserInputOracle",
-    "task22lBrowserOracle",
+    "task22mBrowserInputOracle",
+    "task22mBrowserOracle",
   ]);
 });
 
-test("Chromium builds exact false/true stepped 3MFs and changes only lower geometry", async ({ page }) => {
+test("Chromium builds exact disabled/enabled 3MFs and preserves raw backups", async ({ page }) => {
   expect(digest(readFileSync(FIXTURE))).toBe(SHA.fixture);
   await openFixturePage(page);
-  const result = await page.evaluate(() => window.task22lSteppedOracles());
-  const expected = steppedKats();
+  const result = await page.evaluate(() => window.task22mSmallOracles());
+  const expected = smallKats();
 
   expect(result.switchOnlyChanged).toBe(true);
-  for (const [value, archiveLength, archiveSha, semanticSha, outputLength, outputSha] of [
-    [result.disabled, 190_380, SHA.archiveDisabled, SHA.semanticDisabled, 490, SHA.stepLDisabled],
-    [result.enabled, 190_381, SHA.archiveEnabled, SHA.semanticEnabled, 554, SHA.stepLEnabled],
+  for (const [value, archiveLength, archiveSha, semanticLength, semanticSha, output] of [
+    [result.disabled, 190_424, SHA.archiveDisabled, 1_020_597, SHA.semanticDisabled,
+      expected.disabled],
+    [result.enabled, 190_427, SHA.archiveEnabled, 1_020_600, SHA.semanticEnabled,
+      expected.enabled],
   ]) {
     expect(value.archive).toEqual({ byteLength: archiveLength, sha256: archiveSha });
-    expect(value.semantic).toEqual({ byteLength: 1_020_460, sha256: semanticSha });
-    expect([
-      value.archiveRepeatable,
-      value.inputRepeatable,
-      value.outputRepeatable,
-    ]).toEqual([true, true, true]);
+    expect(value.semantic).toEqual({ byteLength: semanticLength, sha256: semanticSha });
+    expect([value.archiveRepeatable, value.inputRepeatable, value.outputRepeatable]).toEqual([
+      true, true, true,
+    ]);
     expect(value.input).toMatchObject({
-      magic: "ARES22K\0", byteLength: 490, bytesRead: 490, sha256: SHA.stepK,
+      magic: "ARES22L\0", byteLength: 746, bytesRead: 746, sha256: SHA.smallL,
     });
     expect(value.output).toMatchObject({
-      magic: "ARES22L\0", byteLength: outputLength, bytesRead: outputLength, sha256: outputSha,
+      magic: "ARES22M\0", byteLength: output.bytes.length,
+      bytesRead: output.bytes.length, sha256: output.sha256,
     });
+    expect(value.input.ast).toEqual(expected.input.expected);
+    expect(value.output.ast).toEqual(output.expected);
+    expect(value.output.summary.allInternal).toBe(true);
   }
 
-  expect(result.disabled.sameBody).toBe(true);
-  expect(result.enabled.sameBody).toBe(false);
-  expect(result.disabled.input.ast).toEqual(expected.input.expected);
-  expect(result.enabled.input.ast).toEqual(expected.input.expected);
-  expect(result.disabled.output.ast).toEqual(expected.disabled.expected);
-  expect(result.enabled.output.ast).toEqual(expected.enabled.expected);
-
   const input = result.disabled.input.ast.objects[0];
+  const disabled = result.disabled.output.ast.objects[0];
   const enabled = result.enabled.output.ast.objects[0];
-  expect(result.enabled.input.ast.objects[0]).toEqual(input);
-  expect({
-    sourceObjectIndex: enabled.sourceObjectIndex,
-    transformIndex: enabled.transformIndex,
-    plannedLayerCount: enabled.plannedLayerCount,
-  }).toEqual({
-    sourceObjectIndex: input.sourceObjectIndex,
-    transformIndex: input.transformIndex,
-    plannedLayerCount: input.plannedLayerCount,
-  });
-  expect(enabled.sidecars).toEqual(input.sidecars);
-  expect(enabled.retainedLayers[1]).toEqual(input.retainedLayers[1]);
-  expect(enabled.retainedLayers[0]).not.toEqual(input.retainedLayers[0]);
+  expect(result.enabled.input.ast).toEqual(result.disabled.input.ast);
+  for (const output of [disabled, enabled]) {
+    expect(objectHeader(output)).toEqual(objectHeader(input));
+    expect(output.sidecars).toEqual(input.sidecars);
+    expect(output.retainedLayers.map((layer) => layer.lslices)).toEqual(
+      input.retainedLayers.map(layerGeometry),
+    );
+  }
+  expect(disabled.retainedLayers.map((layer) => layer.regions)).toEqual(
+    input.retainedLayers.map((layer) => layer.regions),
+  );
+  expect(enabled.retainedLayers[0].regions).not.toEqual(input.retainedLayers[0].regions);
+  expect(enabled.retainedLayers[1].regions).toEqual(input.retainedLayers[1].regions);
 });
 
-test("Task22L complete KSR browser contract is exact", async ({ page }) => {
+test("Task22M complete KSR browser contract is exact", async ({ page }) => {
   expect(digest(readFileSync(FIXTURE))).toBe(SHA.fixture);
   await openFixturePage(page);
-  const result = await page.evaluate(() => window.task22lFixtureOracles());
+  const result = await page.evaluate(() => window.task22mFixtureOracles());
 
-  expect.soft([result.inputRepeatable, result.outputRepeatable, result.sameBody]).toEqual([
-    true, true, true,
-  ]);
+  expect.soft([result.inputRepeatable, result.outputRepeatable]).toEqual([true, true]);
   expect.soft(result.input).toMatchObject({
-    magic: "ARES22K\0", byteLength: 2_008_706, bytesRead: 2_008_706, sha256: SHA.ksrK,
+    magic: "ARES22L\0", byteLength: 2_008_706, bytesRead: 2_008_706, sha256: SHA.ksrL,
   });
   expect.soft(result.output).toMatchObject({
-    magic: "ARES22L\0", byteLength: 2_008_706, bytesRead: 2_008_706, sha256: SHA.ksrL,
+    magic: "ARES22M\0", byteLength: 3_008_346, bytesRead: 3_008_346, sha256: SHA.ksrM,
   });
   const objects = [{
     sourceObjectIndex: 0,
@@ -165,6 +168,9 @@ test("Task22L complete KSR browser contract is exact", async ({ page }) => {
     expolygons: 2_890, holes: 395, points: 58_902,
   });
   expect.soft(result.output.summary.retained).toEqual({
+    expolygons: 2_890, holes: 395, points: 59_160,
+  });
+  expect.soft(result.output.summary.lslices).toEqual({
     expolygons: 2_890, holes: 395, points: 58_902,
   });
   expect.soft(result.output.summary.allInternal).toBe(true);

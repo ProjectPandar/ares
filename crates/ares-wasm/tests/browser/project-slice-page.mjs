@@ -1,13 +1,13 @@
 import init, * as bindings from "/target/wasm-browser/ares_wasm.js";
 import {
-  STEPPED_OPTION_REPLACEMENTS,
+  SMALL_OPTION_REPLACEMENTS,
   semanticBytes,
-  steppedArchiveReplacements,
-} from "/task22l-vectors.mjs";
+  smallArchiveReplacements,
+} from "/task22m-vectors.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
-const magics = ["ARES22J\0", "ARES22K\0", "ARES22L\0"].map((text) => ({
+const magics = ["ARES22L\0", "ARES22M\0"].map((text) => ({
   bytes: encoder.encode(text), text,
 }));
 const bytesOf = (value) => value instanceof Uint8Array ? value : new Uint8Array(value);
@@ -75,6 +75,7 @@ const assertDense = (values, key, label) => {
 function parsePostRegions(input, magic) {
   const reader = new Reader(input, magic.bytes);
   const records = { sidecar: [], retained: [] };
+  const withLslices = magic.text === "ARES22M\0";
   const objects = reader.list(() => {
     const object = {
       sourceObjectIndex: reader.u64(),
@@ -86,17 +87,21 @@ function parsePostRegions(input, magic) {
           index: reader.u64(), expolygons: expolygons(reader),
         }))),
       })),
-      retainedLayers: reader.list(() => record(reader, records.retained, () => ({
-        index: reader.u64(),
-        regions: reader.list(() => ({
+      retainedLayers: reader.list(() => record(reader, records.retained, () => {
+        const layer = {
+          index: reader.u64(),
+          regions: reader.list(() => ({
           id: reader.u64(),
           surfaces: reader.list(() => {
             const type = reader.u8();
             if (type !== 4) throw new Error("ARES22 surface is not Internal");
             return { type, expolygon: expolygon(reader) };
           }),
-        })),
-      }))),
+          })),
+        };
+        if (withLslices) layer.lslices = expolygons(reader);
+        return layer;
+      })),
     };
     for (const sidecar of object.sidecars) {
       assertDense(sidecar.layers, "index", "sidecar layer index");
@@ -141,6 +146,7 @@ function summarize(ast) {
   const retainedLayers = ast.objects.flatMap((object) => object.retainedLayers);
   const surfaces = retainedLayers.flatMap((layer) =>
     layer.regions.flatMap((region) => region.surfaces));
+  const lslices = retainedLayers.flatMap((layer) => layer.lslices ?? []);
   return {
     objects: ast.objects.map((object) => ({
       sourceObjectIndex: object.sourceObjectIndex,
@@ -153,6 +159,7 @@ function summarize(ast) {
     })),
     sidecar: geometryTotals(allExPolygons(sidecarLayers)),
     retained: geometryTotals(surfaces.map((surface) => surface.expolygon)),
+    lslices: geometryTotals(lslices),
     allInternal: surfaces.every((surface) => surface.type === 4),
   };
 }
@@ -186,16 +193,15 @@ async function fixtureBytes() {
 }
 
 async function execute(project, full = false, slots = []) {
-  const inputFirst = bytesOf(await bindings.task22lBrowserInputOracle(project));
-  const inputSecond = bytesOf(await bindings.task22lBrowserInputOracle(project));
-  const outputFirst = bytesOf(await bindings.task22lBrowserOracle(project));
-  const outputSecond = bytesOf(await bindings.task22lBrowserOracle(project));
+  const inputFirst = bytesOf(await bindings.task22mBrowserInputOracle(project));
+  const inputSecond = bytesOf(await bindings.task22mBrowserInputOracle(project));
+  const outputFirst = bytesOf(await bindings.task22mBrowserOracle(project));
+  const outputSecond = bytesOf(await bindings.task22mBrowserOracle(project));
   return {
     input: await inspect(inputFirst, full),
     output: await inspect(outputFirst, full, slots),
     inputRepeatable: sameBytes(inputFirst, inputSecond),
     outputRepeatable: sameBytes(outputFirst, outputSecond),
-    sameBody: sameBytes(inputFirst.subarray(8), outputFirst.subarray(8)),
   };
 }
 
@@ -204,7 +210,7 @@ async function buildArchive(fixture, enabled) {
     Object.entries(globalThis.fflate.unzipSync(fixture)).filter(([name]) => !name.endsWith("/")),
   );
   const process = decoder.decode(entries["Metadata/project_settings.config"]);
-  for (const [name, text] of steppedArchiveReplacements(enabled, process)) {
+  for (const [name, text] of smallArchiveReplacements(enabled, process)) {
     entries[name] = encoder.encode(text);
   }
   const names = Object.keys(entries).sort();
@@ -218,7 +224,7 @@ async function buildArchive(fixture, enabled) {
   };
 }
 
-async function steppedResult(fixture, enabled) {
+async function smallResult(fixture, enabled) {
   const archive = await buildArchive(fixture, enabled);
   const repeat = await buildArchive(fixture, enabled);
   return {
@@ -239,7 +245,7 @@ function onlySwitchChanged(disabled, enabled) {
   if (names.some((name) => name !== process && !sameBytes(disabled[name], enabled[name]))) {
     return false;
   }
-  const [before, after] = STEPPED_OPTION_REPLACEMENTS.enabled;
+  const { disabled: before, enabled: after } = SMALL_OPTION_REPLACEMENTS;
   return decoder.decode(disabled[process]).replace(before, after) === decoder.decode(enabled[process]);
 }
 
@@ -255,13 +261,13 @@ export async function startProjectSlicePage() {
   };
   window.parseTask22Vector = (input) => parseCheckpoint(input).ast;
   window.sha256Text = (text) => sha256(encoder.encode(text));
-  window.task22lBindingExports = Object.keys(bindings).sort();
-  window.task22lFixtureOracles = async () =>
+  window.task22mBindingExports = Object.keys(bindings).sort();
+  window.task22mFixtureOracles = async () =>
     execute(await fixtureBytes(), false, [0, 46, 49, 459]);
-  window.task22lSteppedOracles = async () => {
+  window.task22mSmallOracles = async () => {
     const fixture = await fixtureBytes();
-    const disabled = await steppedResult(fixture, false);
-    const enabled = await steppedResult(fixture, true);
+    const disabled = await smallResult(fixture, false);
+    const enabled = await smallResult(fixture, true);
     return {
       switchOnlyChanged: onlySwitchChanged(disabled.entries, enabled.entries),
       disabled: disabled.result,

@@ -10,3 +10,4 @@ mod options;
 mod polytree;
 mod strictly_simple;
 mod touching;
+mod variable_offset;

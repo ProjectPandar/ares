@@ -1567,6 +1567,52 @@ segmentation, interlocking, `make_slices`, compensation, surface typing,
 perimeters, fill, supports, toolpaths, G-code, metadata, and post-processing
 remain later source-cited slices.
 
+### 2026-07-20 Port single-region make_slices and elephant-foot compensation (Task 22M)
+
+Task 22M ports the uncancelled single-region path from fixed OrcaSlicer v2.4.2
+commit `8500fcdccaa10b5099ac20d252af3a7c560046f1` at
+`PrintObjectSlice.cpp:1246-1276,1287-1292,1364-1387`, with island ordering from
+`Layer.cpp:38-66` / `Layer.hpp:123-178`, the kernel from
+`ElephantFootCompensation.cpp:20-28,233-447,465-532,544-644`, and the production
+spatial index from `EdgeGrid.cpp:28-334` / `EdgeGrid.hpp:15-356`.
+
+The project stage resolves elephant-foot, layer-count, raft, zero-only XY,
+line-width, external-perimeter selector, nozzle, and planned-height values only
+from the supplied 3MF. It preserves the source f32 ramp and scale conversion
+sites; direct nozzle selection is not remapped through `filament_map`.
+Validation and Flow resolution complete for all objects before mutation.
+Nonzero XY and valid nonempty multi-region inputs fail with their exact feature
+keys instead of silently taking an identity path.
+
+Every retained layer runs `make_slices`. Enabled single-region layers preserve
+ordered uncompensated `lslices`, run the full EdgeGrid-based variable-offset
+kernel, replace compensated surfaces with default Internal metadata, and use
+the fixed two-pass NonZero union. The independent fixed oracle uses a full
+segment scan rather than the production grid; its one-pass-union mutant changes
+`[left, nested, right]` to `[right, left, nested]` and is rejected. Plans,
+sidecars, region ids, disabled surfaces, and unaffected layers remain exact.
+
+The synthetic M aggregate is 10,351 bytes /
+`c112246ff48b280eb803082749d74315e771d073b0407e45afde536e37fcf46d`.
+The committed KSR L/M checkpoints are 2,008,706 /
+`7a71db2912970141adc436679621c25888c412e2010c44eccf1b49d7e8048b07`
+and 3,008,346 /
+`91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19`.
+Rust 1.91 passes 81 Task 22M, 53 Task 22L, and all 509 Task 22 tests. Default
+WASM exposes no Task 22 hook; the feature build exposes exactly the two M
+checkpoint hooks. Two fresh Chromium runs each pass all five contracts,
+including Option-only `fflate` archives and the complete KSR frame.
+
+Public slicing still returns `ProjectSlicingIncomplete`; `ARES22M` is not
+G-code, normalized KSR equality is not claimed, and the persistent goal remains
+incomplete. Painted MMU/fuzzy segmentation, interlocking, nonzero XY,
+multi-region compensation, surface classification, perimeters, fill, supports,
+toolpaths, G-code, metadata, and post-processing remain separate source-cited
+slices. For the active KSR path, the next fixed audit begins at
+`PrintObject.cpp:452-560` (`PrintObject::make_perimeters` and its
+`Layer::make_perimeters` call) after proving from the 3MF that the skipped
+`PrintObjectSlice.cpp:1208-1243` gates are inactive.
+
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
 Task 19C ports the Bambu effective-config export boundary from fixed

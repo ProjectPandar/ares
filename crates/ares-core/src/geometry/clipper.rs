@@ -17,6 +17,7 @@ mod predicates;
 mod simplify;
 mod strictly_simple;
 mod types;
+mod variable_offset;
 mod winding;
 
 pub(crate) use boolean_ex::{
@@ -37,6 +38,7 @@ pub(crate) use predicates::{fixed_round, point_in_polygon, slopes_equal};
 pub(super) use simplify::simplify_polygons;
 #[cfg(test)]
 pub(crate) use strictly_simple::MaximaCursor;
+pub(crate) use variable_offset::variable_offset_inner_ex;
 
 use std::collections::BinaryHeap;
 

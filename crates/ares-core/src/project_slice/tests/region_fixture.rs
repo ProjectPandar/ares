@@ -113,11 +113,21 @@ async fn task22j_committed_ksr_target_j_is_exact_and_public_stays_incomplete() {
 }
 
 #[tokio::test]
-async fn task22j_loaded_modifier_control_target_j_is_exact_and_public_stays_incomplete() {
+async fn task22j_loaded_modifier_control_target_j_is_exact_and_public_reflects_later_region_gate() {
     let (modifier, control) = modifier_projects();
-    for (project, expected, identity) in [
-        (modifier, expected_modifier_j(true), MODIFIER_J),
-        (control, expected_modifier_j(false), CONTROL_J),
+    for (project, expected, identity, public_error) in [
+        (
+            modifier,
+            expected_modifier_j(true),
+            MODIFIER_J,
+            SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned()),
+        ),
+        (
+            control,
+            expected_modifier_j(false),
+            CONTROL_J,
+            SliceError::ProjectSlicingIncomplete,
+        ),
     ] {
         let actual = task22j_browser_oracle(&project).unwrap();
         assert_bytes(&actual, identity);
@@ -125,7 +135,7 @@ async fn task22j_loaded_modifier_control_target_j_is_exact_and_public_stays_inco
         assert_eq!(task22j_browser_oracle(&project).unwrap(), actual);
         assert_eq!(
             slice_project(project, metadata()).await.unwrap_err(),
-            SliceError::ProjectSlicingIncomplete
+            public_error
         );
     }
 }

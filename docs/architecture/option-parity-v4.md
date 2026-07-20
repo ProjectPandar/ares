@@ -2,12 +2,13 @@
 
 ## Status
 
-Tasks 16 through 20A.2 and Tasks 22A through 22K are released. Task 22K was
-released as commit `7f71ed8068102772d54346ac08184ef6b0bcd79b`; exact-SHA
-Tier 1 run `29704298779` is green across format, Ubuntu/Linux, Windows, macOS,
-and WASM/browser. Task 22L's conical-overhang region projection is implemented
-and is at its documentation and release gate. Public slicing executes the new
-stage but deliberately continues to return `ProjectSlicingIncomplete`.
+Tasks 16 through 20A.2 and Tasks 22A through 22L are released. Task 22L was
+released as commit `fcd2c5728f4c0529f28bfc43c636507d61e263d8`; its exact-SHA
+Tier 1 run is green across format, Ubuntu/Linux, Windows, macOS, and
+WASM/browser. Task 22M's single-region `make_slices` ordering and elephant-foot
+compensation are implemented and are at their documentation and release gate.
+Public slicing executes the new stage but deliberately continues to return
+`ProjectSlicingIncomplete`.
 Cancellation, material and painted segmentation, later surface/toolpath
 stages, complete G-code assembly, and normalized KSR parity remain owned by
 later source-cited rewrite slices.
@@ -49,16 +50,21 @@ configuration, plans and intersects 460 layers, repairs and closes the sliced
 geometry, simplifies it, composes dense Internal region surfaces, and removes
 only the maximal suffix of post-region layers whose every region surface
 vector is empty. It then applies conical-overhang projection from resolved 3MF
-object and region Options before deliberately returning
-`ProjectSlicingIncomplete`.
+object and region Options, builds ordered layer islands, applies single-region
+elephant-foot compensation, and retains ordered uncompensated `lslices` before
+deliberately returning `ProjectSlicingIncomplete`.
 
 For the committed KSR project, layer 459 is nonempty, so Task 22K removes zero
 layers. Its `make_overhang_printable` region switch is false, so Task 22L also
 leaves the body unchanged: the post-L state remains one object with 460 planned
-and retained layers and one complete 460-layer occurrence sidecar. The complete
-CLI golden remains explicitly ignored. Production does not read or identify
-the reference G-code, and normalized `ksr_fdmtest_v4.gcode` parity is not
-claimed.
+and retained layers and one complete 460-layer occurrence sidecar. Task 22M
+resolves 0.15 mm and one compensation layer from that 3MF, changes only the
+first retained layer, and preserves the pre-compensation layer islands in
+`lslices`. The exact M checkpoint is 3,008,346 bytes / SHA-256
+`91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19`.
+The complete CLI golden remains explicitly ignored. Production does not read
+or identify the reference G-code, and normalized `ksr_fdmtest_v4.gcode` parity
+is not claimed.
 
 ## Task 5 fixed-source inventory
 
@@ -2633,3 +2639,64 @@ until a public control plane exists. The next source audit starts at
 line 1243, `make_slices` at line 1246, compensation, surface classification,
 perimeters, fill, supports, toolpaths, G-code assembly, metadata, and
 post-processing remain separate source-cited slices.
+
+### Task 22M: single-region make_slices and elephant-foot compensation
+
+Task 22M ports the uncancelled single-region success path from fixed
+OrcaSlicer v2.4.2 commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+The owning caller boundary is `PrintObjectSlice.cpp:1246-1276,1287-1292` and
+`1364-1387`; `Layer.cpp:38-66` / `Layer.hpp:123-178` own island extraction and
+ordering, while `ElephantFootCompensation.cpp:20-28,233-447,465-532,544-644`
+and `EdgeGrid.cpp:28-334` / `EdgeGrid.hpp:15-356` own the geometry kernel and
+spatial index. The parallel scheduler and cancellation checks are classified
+but deferred; deterministic sequential execution preserves uncancelled output.
+
+The stage consumes only effective Options resolved from the supplied 3MF:
+`elefant_foot_compensation`, `elefant_foot_compensation_layers`, `raft_layers`,
+the zero-only XY compensation pair, initial/regular/external line widths,
+external-perimeter filament selector, nozzle diameters, and each planned layer
+height. Percent widths use the selected nozzle directly, without applying
+`filament_map`; invalid raw values, nonpositive Flow spacing, nonzero XY, and
+valid nonempty multi-region input fail before any mutation. The source f32
+compensation ramp, conversion points, coordinate-scale round trips, signed-zero
+selection, width fallback order, and strict comparisons are preserved.
+
+Production builds the complete `EdgeGrid` with two-pass raster/count/fill and
+box traversal. The fixed oracle intentionally uses a full segment scan, so it
+can compare identical geometry without sharing the grid's failure modes. The
+kernel compensates each ExPolygon independently, then performs the exact
+two-pass NonZero union. A direct one-pass mutant produces
+`[right, left, nested]` instead of the required `[left, nested, right]` and is
+killed by the synthetic matrix. No rectangle shortcut, fixture branch, or
+broad identity fallback is present.
+
+The orchestration wrapper owns both the post-region object and one ordered raw
+`lslices` vector per planned layer. Disabled and raft paths still run
+`make_slices`; enabled layers replace surfaces with default Internal metadata
+while retaining the uncompensated backup. Plans, volume sidecars, region ids,
+and unaffected layers remain unchanged. The `ARES22M` checkpoint appends each
+layer's raw `lslices` immediately after its retained regions and is not a public
+format.
+
+The 19-case synthetic aggregate is 10,351 bytes / SHA-256
+`c112246ff48b280eb803082749d74315e771d073b0407e45afde536e37fcf46d`.
+The committed KSR L input remains 2,008,706 bytes /
+`7a71db2912970141adc436679621c25888c412e2010c44eccf1b49d7e8048b07`;
+its M output is 3,008,346 bytes /
+`91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19`.
+Rust 1.91 passes 81 Task 22M tests, 53 Task 22L tests, and all 509 Task 22 tests.
+Fresh default WASM exposes no Task 22 hook; the feature build exposes exactly
+`task22mBrowserInputOracle` and `task22mBrowserOracle`. Two fresh Chromium runs
+each pass all five parser, Option-only archive, public lifecycle, and complete
+KSR contracts.
+
+Public `slice_project` executes Task 22M and still returns
+`ProjectSlicingIncomplete`; `ARES22M` is a test checkpoint, not G-code. Painted
+MMU and fuzzy segmentation, interlocking, nonzero XY algorithms, multi-region
+compensation and safety union, classification, perimeters, fill, supports,
+toolpaths, G-code, metadata, and post-processing remain deferred. For the
+active KSR path, the next source audit begins at `PrintObject.cpp:452-560`,
+`PrintObject::make_perimeters`, and the called `Layer::make_perimeters`
+boundary. That audit must first prove from the 3MF that the skipped
+`PrintObjectSlice.cpp:1208-1243` segmentation/interlocking gates remain
+inactive; activated variants require their own source-cited slices.
