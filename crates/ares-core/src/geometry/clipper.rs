@@ -19,14 +19,16 @@ mod strictly_simple;
 mod types;
 mod winding;
 
-pub(crate) use boolean_ex::{difference_ex, intersection_ex};
+pub(crate) use boolean_ex::{
+    difference_ex, difference_ex_with_safety_offset, intersection_ex, union_expolygons, xor_ex,
+};
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
-pub(crate) use offset::{ClipperOffset, JoinType, offset2_ex};
+pub(crate) use offset::{ClipperOffset, JoinType, offset_expolygons, offset2_ex, raw_offset_paths};
 #[cfg(test)]
 pub(crate) use offset::{
-    offset_expolygon, offset_expolygons, offset_expolygons_paths, offset_expolygons_raw,
-    offset_paths, offset_paths_tree, raw_offset_paths,
+    offset_expolygon, offset_expolygons_paths, offset_expolygons_raw, offset_paths,
+    offset_paths_tree,
 };
 #[cfg(test)]
 pub(crate) use polytree::PolyNode;

@@ -1512,6 +1512,61 @@ source audit starts at the `1204-1206` caller sequence and must establish the
 cancellation mapping and the complete conical-overhang/Option boundary before
 implementation.
 
+### 2026-07-19 Port conical-overhang region projection (Task 22L)
+
+Task 22L ports the uncancelled success path at OrcaSlicer v2.4.2
+`PrintObjectSlice.cpp:1204-1206,1394-1509`, with merged-layer semantics from
+`Layer.cpp:117-136`. It consumes only effective object and ordered-region
+Options resolved from the supplied 3MF: `make_overhang_printable_angle`,
+`make_overhang_printable_hole_size`, nominal `layer_height`, and each region's
+`make_overhang_printable`, `bottom_shell_layers`, `top_shell_layers`,
+`sparse_infill_density`, and `wall_loops`. Validation runs for every object
+before mutation, angle before hole size.
+
+The implementation preserves the fixed f32 scale conversion points, reverse
+layer-pair order, four-field merged footprints, protected small holes, Miter-3
+offset, ordered region ownership, and fixed 10-coordinate safety-offset
+difference. Affected surfaces are rebuilt as Internal with source-default
+metadata; plan, sidecars, skipped layers, and unaffected metadata remain
+unchanged. It adds no fixture identity, reference output, hardcoded shape,
+fallback, or independent pipeline behavior.
+
+Native verification covers 53 focused tests. The stepped disabled/enabled L
+checkpoints are 490 bytes /
+`0834c61cc48aece1afd52d060c5c2a58f7243124664ad0a7dd3f500d6735b790`
+and 554 bytes /
+`33038c51ffe6f41b0bdb8b921d6976f43b0c47f6f3be8ec3bee6cc5b9c7c2505`;
+the ten-object transition is 5,848 bytes /
+`fe46d60251dcf95590c71a3e55cafdf81e0fc6af5b3cb95d58d6c39ea693b264`.
+The committed KSR disabled checkpoint is 2,008,706 bytes /
+`7a71db2912970141adc436679621c25888c412e2010c44eccf1b49d7e8048b07`.
+The native stepped disabled/enabled ZIP archives are 181,446 bytes /
+`ee928a255109b491b0640da279b86d9282c573ec49a400e3cc4529eac915030e`
+and 181,447 bytes /
+`be286d7abb2bef8ab5e8b650657b114ea35c4dcff3a1463eba1a0dd278a89faa`;
+the fflate ZIP archives are 190,380 bytes /
+`c4c0ea05709a6fadd8b2d0d6d34dab1cad5420865c5993b58b9d8e91a8f73313`
+and 190,381 bytes /
+`130260c5c63846759aa66d25e68ff9bb07cf5aeec86ef7da9476c12761f3836d`.
+Those physical ZIP bytes intentionally differ by encoder. Their shared
+disabled/enabled semantic streams are 1,020,460 bytes /
+`ade484830a6492b50c3233e51debf5eab1db7d3e3bbf81fa8cd72f10226ea9ef`
+and 1,020,460 bytes /
+`f61089d040d1edf002f1dedca66b433e4982e18b9ce69a6385aa42dbf4c780b9`;
+the K/L checkpoints agree across encoders, reach exact EOF, and are repeatable.
+Two fresh Chromium runs pass. Default WASM has no Task 22 hook and the feature
+build exports exactly the two Task 22L checkpoint hooks.
+
+Public slicing executes Task 22L and still returns
+`ProjectSlicingIncomplete`, so normalized `ksr_fdmtest_v4.gcode` equality and
+the persistent user goal remain incomplete. Caller and per-layer-pair
+cancellation stay deferred until Ares has a public cancellation contract. The
+next source audit starts at `PrintObjectSlice.cpp:1208-1225` for filament-count,
+painted-facet, warning, and `apply_mm_segmentation` ownership. Fuzzy
+segmentation, interlocking, `make_slices`, compensation, surface typing,
+perimeters, fill, supports, toolpaths, G-code, metadata, and post-processing
+remain later source-cited slices.
+
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
 Task 19C ports the Bambu effective-config export boundary from fixed

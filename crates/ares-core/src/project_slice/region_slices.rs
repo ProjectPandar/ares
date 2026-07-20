@@ -97,6 +97,24 @@ impl RegionSurface {
         }
     }
 
+    #[cfg(test)]
+    pub(super) fn internal_with_metadata(
+        expolygon: ExPolygon,
+        thickness: f64,
+        thickness_layers: u16,
+        bridge_angle: f64,
+        extra_perimeters: u16,
+    ) -> Self {
+        Self {
+            kind: RegionSurfaceKind::Internal,
+            expolygon,
+            thickness,
+            thickness_layers,
+            bridge_angle,
+            extra_perimeters,
+        }
+    }
+
     pub(super) fn as_parts(&self) -> (RegionSurfaceKind, &ExPolygon, f64, u16, f64, u16) {
         (
             self.kind,

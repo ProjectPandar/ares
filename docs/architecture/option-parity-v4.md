@@ -2,15 +2,15 @@
 
 ## Status
 
-Tasks 16 through 20A.2 and Tasks 22A through 22J are released. Task 22J was
-released as commit `fc248673cbfda7552b3fe7cba9eeff0c36345b17`; exact-SHA
-Tier 1 run `29699174614` is green across format, Ubuntu/Linux, Windows, macOS,
-and WASM/browser. Task 22K's post-region top-empty-layer removal is implemented
+Tasks 16 through 20A.2 and Tasks 22A through 22K are released. Task 22K was
+released as commit `7f71ed8068102772d54346ac08184ef6b0bcd79b`; exact-SHA
+Tier 1 run `29704298779` is green across format, Ubuntu/Linux, Windows, macOS,
+and WASM/browser. Task 22L's conical-overhang region projection is implemented
 and is at its documentation and release gate. Public slicing executes the new
 stage but deliberately continues to return `ProjectSlicingIncomplete`.
-Cancellation, conical-overhang processing, later surface/toolpath stages,
-complete G-code assembly, and normalized KSR parity remain owned by later
-source-cited rewrite slices.
+Cancellation, material and painted segmentation, later surface/toolpath
+stages, complete G-code assembly, and normalized KSR parity remain owned by
+later source-cited rewrite slices.
 
 ## Fixed baseline
 
@@ -48,13 +48,17 @@ difference tests pass. Public slicing now loads the project, resolves typed
 configuration, plans and intersects 460 layers, repairs and closes the sliced
 geometry, simplifies it, composes dense Internal region surfaces, and removes
 only the maximal suffix of post-region layers whose every region surface
-vector is empty. It then deliberately returns `ProjectSlicingIncomplete`.
+vector is empty. It then applies conical-overhang projection from resolved 3MF
+object and region Options before deliberately returning
+`ProjectSlicingIncomplete`.
 
 For the committed KSR project, layer 459 is nonempty, so Task 22K removes zero
-layers: the post-K state remains one object with 460 planned and retained
-layers and one complete 460-layer occurrence sidecar. The complete CLI golden
-remains explicitly ignored. Production does not read or identify the reference
-G-code, and normalized `ksr_fdmtest_v4.gcode` parity is not claimed.
+layers. Its `make_overhang_printable` region switch is false, so Task 22L also
+leaves the body unchanged: the post-L state remains one object with 460 planned
+and retained layers and one complete 460-layer occurrence sidecar. The complete
+CLI golden remains explicitly ignored. Production does not read or identify
+the reference G-code, and normalized `ksr_fdmtest_v4.gcode` parity is not
+claimed.
 
 ## Task 5 fixed-source inventory
 
@@ -2554,3 +2558,78 @@ source audit must start at the `1204-1206` caller sequence, classify
 cancellation separately, and bound `apply_conical_overhang` together with its
 `make_overhang_printable*` Option ownership before another implementation
 slice is approved.
+
+### Task 22L: conical-overhang region projection
+
+Task 22L ports the uncancelled success path from fixed OrcaSlicer v2.4.2 commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`. The caller is
+`PrintObjectSlice.cpp:1204-1206`, the implementation is
+`PrintObjectSlice.cpp:1394-1509`, and `Layer.cpp:117-136` defines the four-field
+merged layer footprint. The caller cancellation check at line 1204 and the
+per-layer-pair check at line 1421 are classified but deferred because Ares has
+no public cancellation contract; the slice adds no no-op callback or test-only
+production control plane.
+
+The stage consumes only resolved values loaded from the supplied 3MF. Object
+Options provide `make_overhang_printable_angle`,
+`make_overhang_printable_hole_size`, and nominal `layer_height`; each ordered
+region provides `make_overhang_printable`, `bottom_shell_layers`,
+`top_shell_layers`, `sparse_infill_density`, and `wall_loops`. Every object is
+validated in vector order, angle before hole size, before any object is
+mutated. No fixture name, digest, reference G-code, rectangle fallback, or new
+production default participates in the result.
+
+The Rust arithmetic preserves the source conversion points:
+`epsilon_scaled = f32(0.0001 / scale_factor)`, angle and tangent are evaluated
+in `f64`, `distance_scaled` is
+`-f32(tan(angle_radians) * layer_height / scale_factor)`, and the protected-hole
+threshold is `f32(hole_size / scale_factor / scale_factor)`. Adjacent layer
+pairs run in reverse. Each upper and current layer uses the complete merged
+footprint; eligible small holes are protected, the upper footprint is offset
+with Miter join and limit 3, and enabled regions take ownership in existing
+vector order. Cross-region removal uses the fixed per-path 10-coordinate
+safety offset. Rebuilt affected collections contain Internal surfaces with the
+source default metadata tuple, while the layer plan, sidecars, skipped layers,
+and unaffected surface metadata remain unchanged.
+
+The fixed Orca oracle's 40 ordered synthetic cases, together with its stepped
+and KSR binary and text outputs, remain byte-identical across two runs. Ares has
+53 focused Task 22L tests plus the released Task 22K suite.
+The native stepped disabled/enabled archives are respectively 181,446 bytes /
+`ee928a255109b491b0640da279b86d9282c573ec49a400e3cc4529eac915030e`
+and 181,447 bytes /
+`be286d7abb2bef8ab5e8b650657b114ea35c4dcff3a1463eba1a0dd278a89faa`;
+their semantic streams are 1,020,460 bytes /
+`ade484830a6492b50c3233e51debf5eab1db7d3e3bbf81fa8cd72f10226ea9ef`
+and 1,020,460 bytes /
+`f61089d040d1edf002f1dedca66b433e4982e18b9ce69a6385aa42dbf4c780b9`.
+Both share the 490-byte K checkpoint
+`c6668cfbc56b20abe71606d59d2e28abf08ebb8b22f3ecebb3058d63ba05b44f`;
+their L checkpoints are 490 bytes /
+`0834c61cc48aece1afd52d060c5c2a58f7243124664ad0a7dd3f500d6735b790`
+and 554 bytes /
+`33038c51ffe6f41b0bdb8b921d6976f43b0c47f6f3be8ec3bee6cc5b9c7c2505`.
+The independent ten-object L transition is 5,848 bytes /
+`fe46d60251dcf95590c71a3e55cafdf81e0fc6af5b3cb95d58d6c39ea693b264`.
+
+The committed KSR project's disabled L checkpoint is 2,008,706 bytes /
+`7a71db2912970141adc436679621c25888c412e2010c44eccf1b49d7e8048b07`.
+Fresh fflate browser archives are 190,380 bytes /
+`c4c0ea05709a6fadd8b2d0d6d34dab1cad5420865c5993b58b9d8e91a8f73313`
+and 190,381 bytes /
+`130260c5c63846759aa66d25e68ff9bb07cf5aeec86ef7da9476c12761f3836d`.
+Two fresh Chromium passes reproduce the archive, semantic, K, L, lower-only
+geometry change, unchanged upper/plan/sidecars, exact EOF, and repeatability
+contracts. Default WASM exposes no Task 22 hook; the non-default feature
+exposes exactly `task22lBrowserInputOracle` and `task22lBrowserOracle`.
+
+Public `slice_project` executes Task 22L and still returns
+`ProjectSlicingIncomplete`; `ARES22L` is a test checkpoint, not G-code, and
+normalized KSR G-code parity is not claimed. Cancellation remains deferred
+until a public control plane exists. The next source audit starts at
+`PrintObjectSlice.cpp:1208-1225`: filament count and
+`mmu_segmentation_facets`, the XY-compensation warning, and
+`apply_mm_segmentation`. Fuzzy segmentation at lines 1227-1241, interlocking at
+line 1243, `make_slices` at line 1246, compensation, surface classification,
+perimeters, fill, supports, toolpaths, G-code assembly, metadata, and
+post-processing remain separate source-cited slices.

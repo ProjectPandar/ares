@@ -237,7 +237,7 @@ fn task22k_complex_complete_synthetic_stream_is_exact() {
 }
 
 #[rustfmt::skip]
-fn synthetic_outputs() -> Vec<PostRegionPrintObject> {
+pub(in crate::project_slice::tests) fn synthetic_outputs() -> Vec<PostRegionPrintObject> {
     use CoordinateScale::{LargeBed, Normal}; use ProjectVolumeType::{ModelPart as Part, NegativeVolume as Neg, ParameterModifier as Mod};
     vec![
         synthetic((0,Normal),&[(7,0.6,0.5),(42,1.1,1.0),(99,1.6,1.5)],vec![volume_case(42,Part,[0.,0.,0.,0.4,0.4,2.],vec![vec![rect(0,0,100,100)],vec![],vec![rect(0,0,300,100)]])],1,&[(0,Part,None,Some(0))]),

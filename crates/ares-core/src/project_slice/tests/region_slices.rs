@@ -5,7 +5,7 @@ use crate::{
     options::RegionOptionOverrides,
 };
 
-mod complex;
+pub(in crate::project_slice::tests) mod complex;
 
 use super::{
     super::{

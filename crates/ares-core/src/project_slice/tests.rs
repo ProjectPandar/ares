@@ -4,6 +4,7 @@ mod chained_fixture;
 mod chained_intersections;
 mod closing;
 mod closing_fixture;
+mod conical_overhang;
 mod fixture;
 mod integration;
 mod largest_contour_fixture;

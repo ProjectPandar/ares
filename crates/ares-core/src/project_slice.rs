@@ -8,6 +8,7 @@ mod bounds;
 mod capabilities;
 mod chained_intersections;
 mod closing;
+mod conical_overhang;
 mod extruders;
 mod largest_contours;
 mod layers;
@@ -31,7 +32,7 @@ mod task22g_oracle;
 mod task22h_oracle;
 #[cfg(test)]
 mod task22i_oracle;
-#[cfg(any(test, feature = "task22k-browser-oracle"))]
+#[cfg(any(test, feature = "task22l-browser-oracle"))]
 mod task22j_oracle;
 
 #[cfg(test)]
@@ -47,7 +48,7 @@ pub async fn slice_project(
         config_block,
         scale,
         objects: post_region_objects,
-    } = prepare_post_top_empty_layers(project)?;
+    } = prepare_post_conical_overhang(project)?;
 
     let documents = project.documents();
     let _ = (
@@ -257,6 +258,18 @@ fn prepare_post_top_empty_layers(
     Ok(prepared)
 }
 
+fn prepare_post_conical_overhang(
+    project: impl AsRef<[u8]>,
+) -> Result<PreparedPostRegions, SliceError> {
+    let mut prepared = prepare_post_top_empty_layers(project)?;
+    conical_overhang::apply_project_conical_overhang(
+        &mut prepared.objects,
+        &prepared.resolved.objects,
+        prepared.scale,
+    )?;
+    Ok(prepared)
+}
+
 #[cfg(test)]
 pub fn task22g_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_closing(project)?;
@@ -302,17 +315,34 @@ pub fn task22j_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, Slic
     Ok(task22j_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22k-browser-oracle"))]
+#[cfg(test)]
 pub fn task22k_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_regions(project)?;
     Ok(task22j_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22k-browser-oracle"))]
+#[cfg(test)]
 pub fn task22k_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_top_empty_layers(project)?;
     Ok(task22j_oracle::encode_with_magic(
         &prepared.objects,
         b"ARES22K\0",
+    ))
+}
+
+#[cfg(any(test, feature = "task22l-browser-oracle"))]
+pub fn task22l_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_top_empty_layers(project)?;
+    let mut checkpoint = task22j_oracle::encode(&prepared.objects);
+    checkpoint[..8].copy_from_slice(b"ARES22K\0");
+    Ok(checkpoint)
+}
+
+#[cfg(any(test, feature = "task22l-browser-oracle"))]
+pub fn task22l_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = prepare_post_conical_overhang(project)?;
+    Ok(task22j_oracle::encode_with_magic(
+        &prepared.objects,
+        b"ARES22L\0",
     ))
 }

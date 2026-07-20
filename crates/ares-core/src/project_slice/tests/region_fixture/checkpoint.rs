@@ -63,6 +63,10 @@ pub(in crate::project_slice::tests) fn parse_k(bytes: &[u8]) -> ParsedJ {
     parse_post_regions(bytes, b"ARES22K\0")
 }
 
+pub(in crate::project_slice::tests) fn parse_l(bytes: &[u8]) -> ParsedJ {
+    parse_post_regions(bytes, b"ARES22L\0")
+}
+
 fn parse_post_regions(bytes: &[u8], magic: &[u8; 8]) -> ParsedJ {
     let mut reader = Reader::new(bytes, magic);
     let mut sidecar_records = Vec::new();
@@ -157,7 +161,7 @@ pub(in crate::project_slice::tests) fn sha256(bytes: &[u8]) -> String {
         .collect()
 }
 
-pub(super) fn semantic_hash(bytes: &[u8]) -> String {
+pub(in crate::project_slice::tests) fn semantic_identity(bytes: &[u8]) -> (usize, String) {
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
     let mut entries = std::collections::BTreeMap::new();
     for index in 0..zip.len() {
@@ -175,7 +179,11 @@ pub(super) fn semantic_hash(bytes: &[u8]) -> String {
         framed.push(0);
         framed.extend_from_slice(&body);
     }
-    sha256(&framed)
+    (framed.len(), sha256(&framed))
+}
+
+pub(super) fn semantic_hash(bytes: &[u8]) -> String {
+    semantic_identity(bytes).1
 }
 
 pub(super) fn render_j(stream: &JStream, metadata: &[(&str, [usize; 6])]) -> String {
