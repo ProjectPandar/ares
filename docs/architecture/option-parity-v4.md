@@ -2700,3 +2700,107 @@ active KSR path, the next source audit begins at `PrintObject.cpp:452-560`,
 boundary. That audit must first prove from the 3MF that the skipped
 `PrintObjectSlice.cpp:1208-1243` segmentation/interlocking gates remain
 inactive; activated variants require their own source-cited slices.
+
+### Task 22N: single-region perimeter inputs and Flow dispatch
+
+Task 22N ports the input-preparation seam reached by the KSR project from fixed
+OrcaSlicer v2.4.2 commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+The owning call graph is `PrintObject.cpp:453-558`,
+`Layer.cpp:185-225`, `LayerRegion.cpp:21-58,82-142`,
+`PrintRegion.cpp:7-54`, `PrintObject.cpp:3562-3565,3602-3661,3694-3700`,
+`Flow.cpp:20-35,129-143,146-229`, `Flow.hpp:16-25,52-139`, and the input
+contract in `PerimeterGenerator.hpp:73-141`. The Rust destination is the
+crate-private `project_slice::perimeters` module. It stops at the exhaustive
+Classic/Arachne dispatch and does not call either perimeter process body.
+
+Preparation is transactional across all objects. It preserves each complete
+post-M object and creates one optional record per planned layer. A present
+record owns object/occurrence/layer/region identity and indices into the
+unchanged current, lower, upper, and upper-same-region geometry; accessors
+resolve complete ordered surface collections rather than selecting one
+surface. Empty surface collections retain their M state but have no record.
+The record also carries exact layer height and slice Z, four Flow values,
+spiral state, model rotation, and dispatch.
+
+External, internal, and solid-infill Flow resolution uses the effective
+one-based feature-filament selector loaded from the 3MF, subtracts one only at
+the nozzle lookup, retains element-zero vector fallback, and never applies
+`filament_map`. Initial-layer width wins only when positive on layer zero;
+role width then object `line_width`, then the fixed `1.125f * nozzle` automatic
+width are the reached fallback order. Percent values use the selected f32
+nozzle. Spacing, bridge circular area, rounded-rectangle area, and
+`mm3_per_mm` preserve the fixed f32 narrowing and float-to-double promotion
+sites.
+
+Overhang Flow uses the internal-perimeter selector. Thick mode constructs the
+fixed circular bridge after multiplying diameter by `sqrt(bridge_flow)`;
+nonthick mode starts from ordinary internal Flow and follows the exact
+`with_cross_section` grow-height, canonical increase-else, shrink-width, round,
+and epsilon branches. The increase-else branch reuses the old f32 area divided
+by height and rebuilds width and spacing instead of asserting that the proposed
+full spacing grew. The shared Task 22M ordinary-Flow constructor remains
+spacing-only, so a metadata-valid `1e-30` height/width predecessor still reaches
+its released minimum-width behavior even when stored volume underflows to zero.
+Task 22N validates every ordinary and overhang record's final positive volume
+before state consumption. All raw widths, nozzles, planned heights, and
+`bridge_flow` values are preflighted; nonpositive/nonfinite ratios and positive
+ratios whose thick or nonthick result underflows are attributed to the
+`bridge_flow` Option rather than accepted as a zero-area Flow.
+The fixed-release decrease path matches Orca with assertions disabled: the
+debug-only intermediate-width assertion is not a runtime contract, so a
+metadata-valid nozzle `100`, width `500%`, height `2e-7`, and
+`bridge_flow=f64::MIN_POSITIVE` reducer reaches the same zero Flow and is
+reported by the existing Task 22N boundary as `invalid Orca option
+bridge_flow`. Pure Flow resolution, a real in-memory 3MF through public Rust,
+and a generated real-archive Chromium case freeze the exact error without a
+Rust panic or WASM trap. This expected-error self-check is separate from the
+unchanged 25-object success aggregate.
+
+Spiral state requires `spiral_mode`, `layer_id >= bottom_shell_layers`, and
+`print_z >= bottom_shell_thickness - EPSILON`. Model rotation is zero unless
+`align_infill_direction_to_model` is enabled, then uses the matching
+occurrence's stored `atan2(m10, m00)` inputs, including signed zero. Arachne is
+selected only for a nonspiral Arachne request; Arachne plus spiral dispatches
+Classic by the fixed branch, not by a compatibility fallback.
+
+The tracked independent 25-object aggregate is 23,747 bytes / SHA-256
+`82ccfa1db8bcfea1c4689147561be8c7058c6fdefe0df9b7b8ad127e99487fd1`.
+For the committed KSR archive, the complete predecessor M wire remains
+3,008,346 bytes /
+`91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19`;
+the complete 460-record N wire is 7,083,888 bytes /
+`42e0053bffb3093a44597abd0a2b4e8b8c8c11d6f07003cb894399ad7dce3c6e`.
+Tracked real-3MF matrices cover 19 Flow Option pairs and six context pairs,
+including raw/effective selector normalization, scoped fallback, two nozzles,
+every reached bridge branch, an anti-`filament_map` swap, spiral gates,
+alignment/signed-zero transforms, and generator dispatch. A dedicated
+single-delta archive reducer changes only `bridge_flow` from `1` to
+`1.0000001`, preserves M, produces two populated N slots, and freezes the
+canonical increase-else bits; native and browser reducers also freeze the
+Task 22M volume-underflow predecessor and both tiny-positive bridge modes.
+Default WASM exposes no Task 22 hook; the non-default build exposes exactly
+`task22nBrowserInputOracle` and `task22nBrowserOracle`. Strict composite N/M
+parser KATs run before fixture fetch, and optimized Chromium verifies the exact
+KSR wire, repeatability, all Option families, and the public lifecycle.
+Final local gates pass 45 Task 22N tests, 82 Task 22M tests, all 555 Task 22
+tests, 5,191 complete `ares-core` tests with one configured skip, and 5,227
+workspace tests with two configured skips. Two fresh Chromium runs each pass
+all nine contracts.
+
+Public `slice_project` now executes this preparation and still returns
+`ProjectSlicingIncomplete`; `ARES22N` is a test checkpoint, not G-code. The
+Classic and Arachne process bodies, perimeter loops and extrusion entities,
+precise-spacing behavior, dynamic top-one-wall behavior, overhang splitting,
+smaller-width external loops, perimeter gap generation, multi-region merging,
+fill, supports, toolpaths, G-code, metadata, and post-processing remain
+deferred. Perimeter gaps must not be suppressed by
+`gap_fill_target=nowhere`: fixed `PerimeterGenerator.cpp:1192,1325-1332,
+1573-1624` enables them from `gap_infill_speed > 0`; KSR sets that speed to
+250 and its reference contains 470 Gap infill feature blocks.
+
+Task 22O is the next fixed rewrite boundary: the complete KSR-reached Classic
+body beginning at `PerimeterGenerator.cpp:1144`,
+`PerimeterGenerator::process_classic()`, through the boundary before
+`process_arachne()` at line 2093, together with each directly called upstream
+helper needed by that branch. Its spec must inventory the reached precise,
+top-wall, overhang, small-loop, and gap behavior before implementation.

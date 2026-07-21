@@ -14,6 +14,7 @@ mod largest_contours;
 mod looped_fixture;
 mod looped_intersections;
 mod parameters;
+mod perimeters;
 mod pre_closing_fixture;
 mod pre_closing_unions;
 mod profile_layers;

@@ -7,7 +7,7 @@ use crate::{
 mod bounds;
 mod capabilities;
 mod chained_intersections;
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
 mod checkpoints;
 mod closing;
 mod compensation;
@@ -18,6 +18,7 @@ mod largest_contours;
 mod layers;
 mod looped_intersections;
 mod parameters;
+mod perimeters;
 mod planning;
 mod pre_closing_unions;
 mod profile;
@@ -37,10 +38,12 @@ mod task22g_oracle;
 mod task22h_oracle;
 #[cfg(test)]
 mod task22i_oracle;
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
+#[cfg(test)]
 mod task22j_oracle;
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
 mod task22m_oracle;
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
+mod task22n_oracle;
 
 #[cfg(test)]
 pub use checkpoints::{
@@ -49,8 +52,10 @@ pub use checkpoints::{
     task22j_browser_oracle, task22k_browser_input_oracle, task22k_browser_oracle,
     task22l_browser_input_oracle, task22l_browser_oracle,
 };
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
+#[cfg(test)]
 pub use checkpoints::{task22m_browser_input_oracle, task22m_browser_oracle};
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
+pub use checkpoints::{task22n_browser_input_oracle, task22n_browser_oracle};
 
 #[cfg(test)]
 mod tests;
@@ -59,13 +64,13 @@ pub async fn slice_project(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let compensation::PreparedPostCompensation {
+    let perimeters::PreparedPostPerimeterInputs {
         project,
         resolved,
         config_block,
         scale,
-        objects: post_compensation_objects,
-    } = compensation::prepare_post_compensation(project)?;
+        objects: post_perimeter_input_objects,
+    } = perimeters::prepare_post_perimeter_inputs(project)?;
 
     let documents = project.documents();
     let _ = (
@@ -114,7 +119,9 @@ pub async fn slice_project(
             }
         }
     }
-    for post_compensation_object in post_compensation_objects {
+    for post_perimeter_input_object in post_perimeter_input_objects {
+        let (post_compensation_object, perimeter_inputs) = post_perimeter_input_object.into_parts();
+        let _ = perimeter_inputs;
         let (post_region_object, lslices) = post_compensation_object.into_parts();
         let (plan, volume_slices, regions) = post_region_object.into_parts();
         let _ = (volume_slices, regions, lslices);

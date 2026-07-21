@@ -1,0 +1,153 @@
+use crate::geometry::ExPolygon;
+
+use super::super::{compensation::PostCompensationPrintObject, region_slices::RegionSurface};
+
+#[derive(Clone, Copy, Debug)]
+pub(in crate::project_slice) struct Flow {
+    pub(in crate::project_slice) width: f32,
+    pub(in crate::project_slice) height: f32,
+    pub(in crate::project_slice) spacing: f32,
+    pub(in crate::project_slice) nozzle_diameter: f32,
+    pub(in crate::project_slice) bridge: bool,
+    pub(in crate::project_slice) mm3_per_mm: f64,
+}
+
+impl Flow {
+    pub(in crate::project_slice) fn minimum_width(self) -> f32 {
+        self.width + self.spacing
+    }
+}
+
+impl PartialEq for Flow {
+    fn eq(&self, other: &Self) -> bool {
+        self.width == other.width
+            && self.height == other.height
+            && self.nozzle_diameter == other.nozzle_diameter
+            && self.bridge == other.bridge
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub(in crate::project_slice) struct PerimeterFlows {
+    pub(in crate::project_slice) perimeter_flow: Flow,
+    pub(in crate::project_slice) ext_perimeter_flow: Flow,
+    pub(in crate::project_slice) overhang_flow: Flow,
+    pub(in crate::project_slice) solid_infill_flow: Flow,
+}
+
+#[derive(Debug)]
+pub(in crate::project_slice) struct PreparedObjectFlows {
+    pub(in crate::project_slice) layers: Vec<Option<PerimeterFlows>>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(in crate::project_slice) enum PerimeterDispatch {
+    Classic,
+    Arachne,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(in crate::project_slice) struct RegionLayerIndex {
+    pub(in crate::project_slice) region_index: usize,
+    pub(in crate::project_slice) layer_index: usize,
+}
+
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(
+    all(not(test), not(feature = "task22n-browser-oracle")),
+    expect(dead_code, reason = "consumed by the Task 22N checkpoint package")
+)]
+pub(in crate::project_slice) struct PerimeterInputRecord {
+    pub(in crate::project_slice) source_object_index: usize,
+    pub(in crate::project_slice) transform_index: usize,
+    pub(in crate::project_slice) planned_layer_index: usize,
+    pub(in crate::project_slice) layer_id: usize,
+    pub(in crate::project_slice) region_id: usize,
+    pub(in crate::project_slice) compatible_region_ids: [usize; 1],
+    pub(in crate::project_slice) current: RegionLayerIndex,
+    pub(in crate::project_slice) lower_layer_index: Option<usize>,
+    pub(in crate::project_slice) upper_layer_index: Option<usize>,
+    pub(in crate::project_slice) upper_same_region: Option<RegionLayerIndex>,
+    pub(in crate::project_slice) layer_height: f64,
+    pub(in crate::project_slice) slice_z: f64,
+    pub(in crate::project_slice) perimeter_flow: Flow,
+    pub(in crate::project_slice) ext_perimeter_flow: Flow,
+    pub(in crate::project_slice) overhang_flow: Flow,
+    pub(in crate::project_slice) solid_infill_flow: Flow,
+    pub(in crate::project_slice) spiral_mode: bool,
+    pub(in crate::project_slice) model_rotation_rad: f64,
+    pub(in crate::project_slice) dispatch: PerimeterDispatch,
+}
+
+pub(in crate::project_slice) struct PostPerimeterInputPrintObject {
+    pub(in crate::project_slice) object: PostCompensationPrintObject,
+    pub(in crate::project_slice) records: Vec<Option<PerimeterInputRecord>>,
+}
+
+#[cfg_attr(
+    all(not(test), not(feature = "task22n-browser-oracle")),
+    expect(dead_code, reason = "consumed by the Task 22N checkpoint package")
+)]
+impl PostPerimeterInputPrintObject {
+    pub(in crate::project_slice) fn as_parts(
+        &self,
+    ) -> (
+        &PostCompensationPrintObject,
+        &[Option<PerimeterInputRecord>],
+    ) {
+        (&self.object, &self.records)
+    }
+
+    pub(in crate::project_slice) fn into_parts(
+        self,
+    ) -> (
+        PostCompensationPrintObject,
+        Vec<Option<PerimeterInputRecord>>,
+    ) {
+        (self.object, self.records)
+    }
+
+    pub(in crate::project_slice) fn current_surfaces(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> &[RegionSurface] {
+        self.region_surfaces(record.current)
+    }
+
+    pub(in crate::project_slice) fn lower_slices(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> Option<&[ExPolygon]> {
+        record
+            .lower_layer_index
+            .map(|layer_index| self.layer_slices(layer_index))
+    }
+
+    pub(in crate::project_slice) fn upper_slices(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> Option<&[ExPolygon]> {
+        record
+            .upper_layer_index
+            .map(|layer_index| self.layer_slices(layer_index))
+    }
+
+    pub(in crate::project_slice) fn upper_same_region_surfaces(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> Option<&[RegionSurface]> {
+        record
+            .upper_same_region
+            .map(|index| self.region_surfaces(index))
+    }
+
+    fn layer_slices(&self, layer_index: usize) -> &[ExPolygon] {
+        self.object.as_parts().1[layer_index].as_slice()
+    }
+
+    fn region_surfaces(&self, index: RegionLayerIndex) -> &[RegionSurface] {
+        let (post_region, _) = self.object.as_parts();
+        let (_, _, regions) = post_region.as_parts();
+        regions[index.region_index].as_parts().2[index.layer_index].surfaces()
+    }
+}

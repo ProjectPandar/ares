@@ -16,8 +16,8 @@ const routes = new Map([
     [join(browserRoot, "project-slice-page.mjs"), "text/javascript; charset=utf-8"],
   ],
   [
-    "/task22m-vectors.mjs",
-    [join(browserRoot, "task22m-vectors.mjs"), "text/javascript; charset=utf-8"],
+    "/task22n-vectors.mjs",
+    [join(browserRoot, "task22n-vectors.mjs"), "text/javascript; charset=utf-8"],
   ],
   [
     "/target/wasm-browser/ares_wasm.js",

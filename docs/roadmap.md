@@ -1613,6 +1613,86 @@ slices. For the active KSR path, the next fixed audit begins at
 `Layer::make_perimeters` call) after proving from the 3MF that the skipped
 `PrintObjectSlice.cpp:1208-1243` gates are inactive.
 
+### 2026-07-21 Port single-region perimeter inputs and Flow dispatch (Task 22N)
+
+Task 22N ports the KSR-reached preparation seam from fixed OrcaSlicer v2.4.2
+commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`: `PrintObject.cpp:453-558`,
+`Layer.cpp:185-225`, `LayerRegion.cpp:21-58,82-142`, `PrintRegion.cpp:7-54`,
+`PrintObject.cpp:3562-3565,3602-3661,3694-3700`,
+`Flow.cpp:20-35,129-143,146-229`, `Flow.hpp:16-25,52-139`, and
+`PerimeterGenerator.hpp:73-141`. The new crate-private
+`project_slice::perimeters` boundary consumes post-M state and stops before
+`PerimeterGenerator::process_classic()` or `process_arachne()`.
+
+The stage validates every object before consuming state and creates one
+optional record per planned layer. Records preserve object/occurrence/layer and
+single-region identity, complete current/lower/upper/upper-same-region geometry
+through owned indices, exact height and slice Z, four Flow values, spiral
+state, occurrence-specific model rotation, and exhaustive Classic/Arachne
+dispatch. Empty layers retain M state without a record, and zero-layer objects
+retain an empty slot vector.
+
+Flow resolution uses only effective 3MF Options. It preserves initial/role/
+object/automatic width fallback, direct one-based selector normalization,
+selected f32 nozzle percent math, absence of `filament_map`, fixed spacing and
+volume narrowing, thick circular bridges, and every reachable nonthick
+`with_cross_section` branch, including the canonical increase-else that rebuilds
+width/spacing from old f32 area. The shared Task 22M constructor retains its
+spacing-only contract for a valid `1e-30` width/height whose cached volume is
+zero; Task 22N separately rejects nonpositive final role volumes before
+consuming state. Invalid raw width/nozzle/height/bridge values fail in global
+preflight, and a tiny positive `bridge_flow` whose thick or nonthick result
+underflows is attributed to that Option. The fixed-release decrease-rounding
+case follows Orca with assertions disabled: nozzle `100`, width `500%`, height
+`2e-7`, and `bridge_flow=f64::MIN_POSITIVE` reaches the zero Flow and returns
+`invalid Orca option bridge_flow` at the existing N boundary instead of a Rust
+panic or WASM trap. Pure Flow, real in-memory 3MF/public Rust, and generated
+real-archive Chromium regressions cover that error without changing the
+25-object success aggregate. Spiral mode uses both bottom-shell gates. Aligned
+rotation reads the matching occurrence's stored `(m00, m10)` column,
+preserving signed zero, and spiral Arachne dispatches Classic only through the
+fixed rule.
+
+The independent tracked 25-object aggregate is 23,747 bytes /
+`82ccfa1db8bcfea1c4689147561be8c7058c6fdefe0df9b7b8ad127e99487fd1`.
+The committed KSR M/N checkpoints are 3,008,346 /
+`91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19`
+and 7,083,888 /
+`42e0053bffb3093a44597abd0a2b4e8b8c8c11d6f07003cb894399ad7dce3c6e`,
+with all 460 planned-layer records populated. Real in-memory archives freeze
+19 Flow Option pairs and six context pairs, including scoped selector
+fallback, anti-`filament_map`, bridge, spiral, transform, and generator cases.
+One additional non-family archive reducer changes only `bridge_flow` from `1`
+to `1.0000001`, keeps M identical, produces two populated N slots, and freezes
+the canonical increase-else bits. Native/browser regressions also preserve the
+Task 22M volume-underflow predecessor and reject both tiny-positive bridge
+modes at the N boundary.
+Default WASM has no Task 22 export; the feature build has exactly the two N
+exports. Strict N/M pre-fetch parser KATs and fresh optimized Chromium runs
+cover exact EOF, the complete KSR frame, all Option families, repeatability,
+and public incomplete behavior.
+Final local gates pass 45 Task 22N, 82 Task 22M, all 555 Task 22, 5,191 full
+`ares-core` tests with one configured skip, and 5,227 workspace tests with two
+configured skips. Both fresh Chromium runs pass all nine contracts.
+
+Public slicing still returns `ProjectSlicingIncomplete`; N is not G-code and
+the persistent normalized KSR output goal remains incomplete. Classic/Arachne
+process bodies, loop/extrusion output, precise spacing, dynamic top-one-wall,
+overhang splitting, smaller external loops, perimeter gaps, multi-region
+merging, fill, supports, toolpaths, G-code assembly, metadata, and
+post-processing remain later source-cited slices. The earlier assumption that
+`gap_fill_target=nowhere` suppresses perimeter gaps is retired: fixed
+`PerimeterGenerator.cpp:1192,1325-1332,1573-1624` gates perimeter gaps on
+`gap_infill_speed > 0`; KSR sets 250 and the reference has 470 Gap infill
+feature blocks.
+
+Task 22O must next port the complete KSR-reached Classic generator beginning at
+`PerimeterGenerator.cpp:1144`, `PerimeterGenerator::process_classic()`, and
+ending before `process_arachne()` at line 2093, plus only its reached helper
+boundaries. Its exit gate must inventory and test the KSR precise-spacing,
+top-one-wall, overhang, small-loop, and gap branches before claiming any
+perimeter output.
+
 ### 2026-07-15 Serialize the exact effective config block (Task 19C)
 
 Task 19C ports the Bambu effective-config export boundary from fixed

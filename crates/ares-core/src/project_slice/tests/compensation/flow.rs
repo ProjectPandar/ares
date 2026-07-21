@@ -1,8 +1,8 @@
 use crate::{
     FloatOrPercent, OrcaFloat, OrcaFloats, OrcaInt, Percent, SliceError,
     project_slice::{
-        compensation::{ExternalPerimeterFlow, resolve_external_perimeter_flow},
         layers::PlannedLayer,
+        perimeters::{flow::resolve_external_perimeter_flow, types::Flow},
     },
 };
 
@@ -31,10 +31,10 @@ fn task22m_flow_uses_layer_id_for_initial_then_outer_bits() {
     assert_eq!(first.height.to_bits(), 0x3e4ccccd);
     assert_eq!(first.width.to_bits(), 0x3f000000);
     assert_eq!(first.spacing.to_bits(), 0x3eea0658);
-    assert_eq!(first.minimum_width.to_bits(), 0x3f75032c);
+    assert_eq!(first.minimum_width().to_bits(), 0x3f75032c);
     assert_eq!(later.width.to_bits(), 0x3ed70a3d);
     assert_eq!(later.spacing.to_bits(), 0x3ec11094);
-    assert_eq!(later.minimum_width.to_bits(), 0x3f4c0d68);
+    assert_eq!(later.minimum_width().to_bits(), 0x3f4c0d68);
 }
 
 #[test]
@@ -52,7 +52,26 @@ fn task22m_flow_uses_each_planned_layer_height_bits() {
     assert_eq!(flow.height.to_bits(), 0x3e99999a);
     assert_eq!(flow.width.to_bits(), 0x3ed70a3d);
     assert_eq!(flow.spacing.to_bits(), 0x3eb613c0);
-    assert_eq!(flow.minimum_width.to_bits(), 0x3f468efe);
+    assert_eq!(flow.minimum_width().to_bits(), 0x3f468efe);
+}
+
+#[test]
+fn task22m_flow_preserves_spacing_valid_volume_underflow() {
+    let flow = resolve_external_perimeter_flow(
+        &layer(0, 1e-30),
+        FloatOrPercent::Float(1e-30),
+        FloatOrPercent::Float(0.42),
+        FloatOrPercent::Float(0.4),
+        OrcaInt(1),
+        &OrcaFloats(vec![OrcaFloat(0.4)]),
+    )
+    .unwrap();
+
+    assert_eq!(flow.width.to_bits(), 0x0da24260);
+    assert_eq!(flow.height.to_bits(), 0x0da24260);
+    assert_eq!(flow.spacing.to_bits(), 0x0d7ee054);
+    assert_eq!(flow.minimum_width().to_bits(), 0x0e10d945);
+    assert_eq!(flow.mm3_per_mm.to_bits(), 0);
 }
 
 #[test]
@@ -231,7 +250,7 @@ fn task22m_flow_rejects_invalid_nozzle_height_and_spacing() {
     }
 }
 
-fn selected_percent_flow(selector: i32) -> ExternalPerimeterFlow {
+fn selected_percent_flow(selector: i32) -> Flow {
     resolve_external_perimeter_flow(
         &layer(0, 0.2),
         FloatOrPercent::Percent(Percent(125.0)),
@@ -243,10 +262,10 @@ fn selected_percent_flow(selector: i32) -> ExternalPerimeterFlow {
     .unwrap()
 }
 
-fn assert_flow_bits(flow: ExternalPerimeterFlow, width: u32, spacing: u32, minimum_width: u32) {
+fn assert_flow_bits(flow: Flow, width: u32, spacing: u32, minimum_width: u32) {
     assert_eq!(flow.width.to_bits(), width);
     assert_eq!(flow.spacing.to_bits(), spacing);
-    assert_eq!(flow.minimum_width.to_bits(), minimum_width);
+    assert_eq!(flow.minimum_width().to_bits(), minimum_width);
 }
 
 fn assert_invalid(error: SliceError, expected: &str) {

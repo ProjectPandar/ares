@@ -31,6 +31,10 @@ impl Transform3d {
         ]))
     }
 
+    pub(crate) const fn first_xy_column(self) -> (f64, f64) {
+        (self.0[0][0], self.0[1][0])
+    }
+
     pub(crate) fn without_xy_translation(self) -> Self {
         let z_translation = self.0[2][3];
         let mut transform = self.without_translation();

@@ -14,13 +14,9 @@ use super::{
     slice_ordering::{make_single_region_slices, order_expolygons},
 };
 
-mod flow;
 mod preflight;
 
 use preflight::{PreparedObjectCompensation, prepare_object_compensation};
-
-#[cfg(test)]
-pub(super) use flow::{ExternalPerimeterFlow, resolve_external_perimeter_flow};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::project_slice) struct ValidatedTask22mConfig {
@@ -85,7 +81,6 @@ pub(in crate::project_slice) struct PostCompensationPrintObject {
 }
 
 impl PostCompensationPrintObject {
-    #[cfg(any(test, feature = "task22m-browser-oracle"))]
     pub(super) fn as_parts(&self) -> (&PostRegionPrintObject, &[Vec<ExPolygon>]) {
         (&self.post_regions, &self.lslices)
     }

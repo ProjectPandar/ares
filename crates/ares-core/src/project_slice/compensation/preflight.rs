@@ -1,7 +1,9 @@
 use crate::{FloatOrPercent, OrcaFloats, SliceError, geometry::CoordinateScale};
 
-use super::super::region_slices::PostRegionPrintObject;
-use super::{ValidatedTask22mConfig, flow::resolve_external_perimeter_flow, geometry_error};
+use super::super::{
+    perimeters::flow::resolve_external_perimeter_flow, region_slices::PostRegionPrintObject,
+};
+use super::{ValidatedTask22mConfig, geometry_error};
 
 #[derive(Clone, Copy)]
 pub(super) struct PreparedLayerCompensation {
@@ -54,7 +56,7 @@ pub(super) fn prepare_object_compensation(
             nozzle_diameters,
         )?;
         let compensation_mm = f64::from(ramp) * scale.factor();
-        let minimum_width_mm = f64::from(flow.minimum_width);
+        let minimum_width_mm = f64::from(flow.minimum_width());
         if !compensation_mm.is_finite() || !minimum_width_mm.is_finite() {
             return Err(geometry_error());
         }

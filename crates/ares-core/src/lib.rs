@@ -176,8 +176,10 @@ pub use project_slice::{
     task22k_browser_input_oracle, task22k_browser_oracle, task22l_browser_input_oracle,
     task22l_browser_oracle,
 };
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
+#[cfg(test)]
 pub use project_slice::{task22m_browser_input_oracle, task22m_browser_oracle};
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
+pub use project_slice::{task22n_browser_input_oracle, task22n_browser_oracle};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use speeds::{

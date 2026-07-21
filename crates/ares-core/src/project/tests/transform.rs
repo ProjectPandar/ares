@@ -40,6 +40,25 @@ fn project_transform_composes_build_and_component_in_orca_order() {
 }
 
 #[test]
+fn task22n_context_transform_exposes_direct_first_xy_column_bits() {
+    let cases = [
+        (
+            "1 -0 0 0 1 0 0 0 1 10 20 30",
+            [1.0_f64.to_bits(), (-0.0_f64).to_bits()],
+        ),
+        (
+            "0 1 0 -1 0 0 0 0 1 -7 8 9",
+            [0.0_f64.to_bits(), 1.0_f64.to_bits()],
+        ),
+    ];
+
+    for (source, expected) in cases {
+        let (m00, m10) = Transform3d::parse_3mf(source).unwrap().first_xy_column();
+        assert_eq!([m00.to_bits(), m10.to_bits()], expected);
+    }
+}
+
+#[test]
 fn project_transform_without_xy_translation_is_value_only() {
     let original = row_major([
         1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,

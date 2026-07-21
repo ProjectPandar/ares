@@ -1,12 +1,12 @@
 use crate::SliceError;
 
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
-use super::{compensation, prepare_post_conical_overhang, task22j_oracle, task22m_oracle};
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
+use super::{compensation, perimeters, task22m_oracle, task22n_oracle};
 #[cfg(test)]
 use super::{
-    prepare_post_closing, prepare_post_largest_contours, prepare_post_regions,
-    prepare_post_simplification, prepare_post_top_empty_layers, task22g_oracle, task22h_oracle,
-    task22i_oracle,
+    prepare_post_closing, prepare_post_conical_overhang, prepare_post_largest_contours,
+    prepare_post_regions, prepare_post_simplification, prepare_post_top_empty_layers,
+    task22g_oracle, task22h_oracle, task22i_oracle, task22j_oracle,
 };
 
 #[cfg(test)]
@@ -86,7 +86,7 @@ pub fn task22l_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, Slic
     ))
 }
 
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
+#[cfg(test)]
 pub fn task22m_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = prepare_post_conical_overhang(project)?;
     let mut checkpoint = task22j_oracle::encode(&prepared.objects);
@@ -94,8 +94,22 @@ pub fn task22m_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>
     Ok(checkpoint)
 }
 
-#[cfg(any(test, feature = "task22m-browser-oracle"))]
+#[cfg(test)]
 pub fn task22m_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = compensation::prepare_post_compensation(project)?;
     Ok(task22m_oracle::encode(&prepared.objects))
+}
+
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
+pub fn task22n_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = compensation::prepare_post_compensation(project)?;
+    Ok(task22m_oracle::encode(&prepared.objects))
+}
+
+#[cfg(any(test, feature = "task22n-browser-oracle"))]
+pub fn task22n_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
+    let prepared = compensation::prepare_post_compensation(project)?;
+    let predecessor = task22m_oracle::encode(&prepared.objects);
+    let prepared = perimeters::finish_post_perimeter_inputs(prepared)?;
+    Ok(task22n_oracle::encode(&predecessor, &prepared.objects))
 }

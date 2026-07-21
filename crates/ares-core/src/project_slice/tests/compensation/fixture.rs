@@ -84,6 +84,10 @@ fn task22m_small_archives_freeze_options_l_and_fixed_source_m() {
     assert!(checkpoints[1..].iter().all(|item| item == &checkpoints[0]));
     assert_ne!(outputs[0], outputs[1]);
     assert!(outputs[2..].iter().all(|item| item == &outputs[0]));
+
+    let underflow = spacing_valid_volume_underflow_archive();
+    let output = task22m_browser_oracle(&underflow).unwrap();
+    assert_eq!(parse_m(&output).len(), 1);
 }
 
 #[test]
@@ -305,6 +309,25 @@ fn small_archive(variant: Variant) -> Vec<u8> {
                 },
             );
         }
+    }
+    archive.bytes()
+}
+
+fn spacing_valid_volume_underflow_archive() -> Vec<u8> {
+    let mut archive = small_archive_source();
+    archive.replace("3D/Objects/task22m_box.model", r#"z="0.4""#, r#"z="1e-30""#);
+    for (from, to) in [
+        (r#""layer_height": "0.2""#, r#""layer_height": "1e-30""#),
+        (
+            r#""initial_layer_print_height": "0.2""#,
+            r#""initial_layer_print_height": "1e-30""#,
+        ),
+        (
+            r#""initial_layer_line_width": "0.5""#,
+            r#""initial_layer_line_width": "1e-30""#,
+        ),
+    ] {
+        archive.replace_unique(PROCESS, from, to);
     }
     archive.bytes()
 }
