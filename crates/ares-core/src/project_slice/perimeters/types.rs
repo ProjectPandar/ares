@@ -13,8 +13,38 @@ pub(in crate::project_slice) struct Flow {
 }
 
 impl Flow {
+    pub(in crate::project_slice) fn auto_infill_width(nozzle_diameter: f64) -> f64 {
+        f64::from(1.125_f32 * nozzle_diameter as f32)
+    }
+
     pub(in crate::project_slice) fn minimum_width(self) -> f32 {
         self.width + self.spacing
+    }
+
+    pub(in crate::project_slice) fn with_width(
+        self,
+        width: f32,
+    ) -> Result<Self, crate::SliceError> {
+        let rounded_rectangle_factor = (1.0 - 0.25 * std::f64::consts::PI) as f32;
+        let spacing = width - self.height * rounded_rectangle_factor;
+        let mm3_per_mm = f64::from(
+            (f64::from(self.height)
+                * (f64::from(width) - f64::from(self.height) * (1.0 - 0.25 * std::f64::consts::PI)))
+                as f32,
+        );
+        if !spacing.is_finite() || spacing <= 0.0 || !mm3_per_mm.is_finite() || mm3_per_mm <= 0.0 {
+            return Err(crate::SliceError::InvalidInput(
+                "invalid smaller external perimeter flow".to_owned(),
+            ));
+        }
+        Ok(Self {
+            width,
+            height: self.height,
+            spacing,
+            nozzle_diameter: self.nozzle_diameter,
+            bridge: false,
+            mm3_per_mm,
+        })
     }
 }
 
@@ -84,11 +114,13 @@ pub(in crate::project_slice) struct PostPerimeterInputPrintObject {
     pub(in crate::project_slice) records: Vec<Option<PerimeterInputRecord>>,
 }
 
-#[cfg_attr(
-    all(not(test), not(feature = "task22n-browser-oracle")),
-    expect(dead_code, reason = "consumed by the Task 22N checkpoint package")
-)]
 impl PostPerimeterInputPrintObject {
+    pub(in crate::project_slice) fn identity(&self) -> (usize, usize) {
+        let (post_region, _) = self.object.as_parts();
+        let (plan, _, _) = post_region.as_parts();
+        (plan.source_object_index, plan.transform_index)
+    }
+
     pub(in crate::project_slice) fn as_parts(
         &self,
     ) -> (
@@ -112,6 +144,15 @@ impl PostPerimeterInputPrintObject {
         record: &PerimeterInputRecord,
     ) -> &[RegionSurface] {
         self.region_surfaces(record.current)
+    }
+
+    pub(in crate::project_slice) fn region_options(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> &crate::RegionOptions {
+        let (post_region, _) = self.object.as_parts();
+        let (_, _, regions) = post_region.as_parts();
+        regions[record.current.region_index].as_parts().1
     }
 
     pub(in crate::project_slice) fn lower_slices(

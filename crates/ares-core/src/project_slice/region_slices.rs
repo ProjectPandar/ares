@@ -76,6 +76,14 @@ pub(super) enum RegionSurfaceKind {
     Internal = 4,
 }
 
+impl RegionSurfaceKind {
+    pub(super) const fn is_bridge(self) -> bool {
+        match self {
+            Self::Internal => false,
+        }
+    }
+}
+
 pub(super) struct RegionSurface {
     kind: RegionSurfaceKind,
     expolygon: ExPolygon,

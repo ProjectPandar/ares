@@ -14,6 +14,7 @@ mod compensation;
 mod conical_overhang;
 mod elephant_foot;
 mod extruders;
+mod incomplete_sink;
 mod largest_contours;
 mod layers;
 mod looped_intersections;
@@ -64,14 +65,39 @@ pub async fn slice_project(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let perimeters::PreparedPostPerimeterInputs {
+    slice_project_sync(project, metadata)
+}
+
+#[inline(never)]
+fn slice_project_sync(
+    project: impl AsRef<[u8]>,
+    metadata: GenerationMetadata,
+) -> Result<Vec<u8>, SliceError> {
+    consume_post_classic_gap_domain(
+        perimeters::prepare_post_classic_gap_domain(project)?,
+        metadata,
+    )
+}
+
+#[inline(never)]
+fn consume_post_classic_gap_domain(
+    prepared: perimeters::classic::PreparedPostClassicGapDomain,
+    metadata: GenerationMetadata,
+) -> Result<Vec<u8>, SliceError> {
+    let perimeters::classic::PreparedPostClassicGapDomain {
+        predecessor,
+        objects: gap_domain_objects,
+    } = prepared;
+    for object in gap_domain_objects {
+        incomplete_sink::consume_gap_domain_object(object);
+    }
+    let perimeters::classic::PreparedPostClassicTraversal {
         project,
         resolved,
         config_block,
         scale,
-        objects: post_perimeter_input_objects,
-    } = perimeters::prepare_post_perimeter_inputs(project)?;
-
+        objects: post_classic_traversal_objects,
+    } = *predecessor;
     let documents = project.documents();
     let _ = (
         project.models(),
@@ -91,7 +117,7 @@ pub async fn slice_project(
         usage,
         print_object_count,
         objects,
-    } = resolved;
+    } = *resolved;
     let full = views.full;
     let runtime = views.runtime;
     let runtime_gcode = views.runtime_gcode;
@@ -119,27 +145,8 @@ pub async fn slice_project(
             }
         }
     }
-    for post_perimeter_input_object in post_perimeter_input_objects {
-        let (post_compensation_object, perimeter_inputs) = post_perimeter_input_object.into_parts();
-        let _ = perimeter_inputs;
-        let (post_region_object, lslices) = post_compensation_object.into_parts();
-        let (plan, volume_slices, regions) = post_region_object.into_parts();
-        let _ = (volume_slices, regions, lslices);
-        let layers::PlannedPrintObject {
-            source_object_index,
-            transform_index,
-            layers,
-        } = plan;
-        let _ = (source_object_index, transform_index);
-        for layers::PlannedLayer {
-            id,
-            height,
-            print_z,
-            slice_z,
-        } in layers
-        {
-            let _ = (id, height, print_z, slice_z);
-        }
+    for object in post_classic_traversal_objects {
+        incomplete_sink::consume_traversal_object(object);
     }
     let _ = (
         project,

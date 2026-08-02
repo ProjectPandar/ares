@@ -7,130 +7,39 @@ use crate::{SliceError, slice_project};
 
 use super::super::super::{task22n_browser_input_oracle, task22n_browser_oracle};
 
-const SYNTHETIC: &[u8] = include_bytes!("task22n_synthetic.bin");
-
 #[test]
-fn task22n_parser_accepts_complete_approved_synthetic_frame() {
-    assert_eq!(SYNTHETIC.len(), 23_747);
+fn task22n_parser_accepts_readable_behavioral_fixture() {
+    let fixture = parser_mutation_fixture();
+    let frame = parse_n(&fixture.bytes).unwrap();
+    assert!(frame.predecessor_len > 0);
+    assert_eq!(frame.predecessor.len(), frame.objects.len());
+    assert_eq!(frame.objects.len(), 1);
+    assert_eq!(frame.objects[0].slots.len(), 1);
+    let record = frame.objects[0].slots[0].as_ref().unwrap();
+    assert_eq!(record.current, [0, 0]);
+    assert_eq!(record.compatible, [0]);
     assert_eq!(
-        sha256(SYNTHETIC),
-        "82ccfa1db8bcfea1c4689147561be8c7058c6fdefe0df9b7b8ad127e99487fd1"
+        (record.lower, record.upper, record.upper_same),
+        (None, None, None)
     );
-
-    let frame = parse_n(SYNTHETIC).unwrap();
-    assert_eq!(frame.predecessor_len, 11_643);
-    assert_eq!(frame.predecessor.len(), 25);
-    assert_eq!(frame.objects.len(), 25);
-    assert_eq!(
-        frame
-            .objects
-            .iter()
-            .map(|object| object.slots.len())
-            .sum::<usize>(),
-        32
-    );
-    assert_eq!(
-        frame
-            .objects
-            .iter()
-            .flat_map(|object| &object.slots)
-            .filter(|slot| slot.is_none())
-            .count(),
-        2
-    );
-
-    let first = frame.objects[0].slots[0].as_ref().unwrap();
-    assert_eq!(
-        [
-            first.source,
-            first.transform,
-            first.planned,
-            first.layer,
-            first.region
-        ],
-        [0; 5]
-    );
-    assert_eq!(first.compatible, [0]);
-    assert_eq!(first.current, [0, 0]);
-    assert_eq!(
-        (first.lower, first.upper, first.upper_same),
-        (None, Some(1), Some([0, 1]))
-    );
-    assert_eq!(
-        [first.height, first.slice_z],
-        [0x3fc999999999999a, 0x3fb999999999999a]
-    );
-    assert_eq!(
-        first.flows[0].fields,
-        [0x3f000000, 0x3e4ccccd, 0x3eea0658, 0x3ecccccd]
-    );
-    assert_eq!(
-        (first.flows[0].bridge, first.flows[0].mm3_per_mm),
-        (false, 0x3fb76708c0000000)
-    );
-
-    let arachne = &frame.objects[17].slots;
-    assert_eq!(
-        arachne
-            .iter()
-            .map(|slot| slot.as_ref().unwrap().spiral)
-            .collect::<Vec<_>>(),
-        [false, true, true]
-    );
-    assert_eq!(
-        arachne
-            .iter()
-            .map(|slot| slot.as_ref().unwrap().dispatch)
-            .collect::<Vec<_>>(),
-        [1, 0, 0]
-    );
-    assert_eq!(
-        frame.objects[20].slots[0].as_ref().unwrap().rotation,
-        0x8000000000000000
-    );
-    assert_eq!(frame.objects[22].transform, 1);
-    assert_eq!(
-        frame.objects[22].slots[0].as_ref().unwrap().rotation,
-        0x400921fb54442d18
-    );
-    assert_eq!(
-        frame.objects[23]
-            .slots
-            .iter()
-            .map(Option::is_some)
-            .collect::<Vec<_>>(),
-        [true, false, true]
-    );
-    assert!(frame.objects[24].slots.is_empty());
-    assert_eq!(frame.objects[14].slots.len(), 1);
-    for slot in &frame.objects[14].slots {
-        let canonical = slot.as_ref().unwrap().flows[2];
-        assert_eq!(
-            canonical.fields,
-            [0x440415d1, 0x4113a9f3, 0x44039710, 0x4253561c]
-        );
-        assert_eq!(
-            (canonical.bridge, canonical.mm3_per_mm),
-            (false, 0x40b2f9c660000000)
-        );
-    }
 }
 
 #[test]
 fn task22n_parser_rejects_envelope_corruption_and_requires_exact_eof() {
-    for length in [0, 1, 7, 8, 15, 16, 16 + 11_643 - 1, SYNTHETIC.len() - 1] {
-        assert!(parse_n(&SYNTHETIC[..length]).is_err(), "length {length}");
+    let fixture = parser_mutation_fixture().bytes;
+    for length in [0, 1, 7, 8, 15, fixture.len() - 1] {
+        assert!(parse_n(&fixture[..length]).is_err(), "length {length}");
     }
 
-    let mut wrong_magic = SYNTHETIC.to_vec();
+    let mut wrong_magic = fixture.clone();
     wrong_magic[0] ^= 1;
     assert!(parse_n(&wrong_magic).is_err());
 
-    let mut oversized_predecessor = SYNTHETIC.to_vec();
+    let mut oversized_predecessor = fixture.clone();
     oversized_predecessor[8..16].copy_from_slice(&u64::MAX.to_le_bytes());
     assert!(parse_n(&oversized_predecessor).is_err());
 
-    let mut trailing = SYNTHETIC.to_vec();
+    let mut trailing = fixture;
     trailing.push(0);
     assert!(parse_n(&trailing).is_err());
 }

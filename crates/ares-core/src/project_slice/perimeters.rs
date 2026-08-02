@@ -5,6 +5,8 @@ use crate::{
 
 use super::compensation::{PreparedPostCompensation, prepare_post_compensation};
 use context::prepare_perimeter_contexts;
+
+pub(super) mod classic;
 use preflight::preflight_perimeter_flows;
 use types::PostPerimeterInputPrintObject;
 
@@ -25,6 +27,78 @@ pub(super) fn prepare_post_perimeter_inputs(
     project: impl AsRef<[u8]>,
 ) -> Result<PreparedPostPerimeterInputs, SliceError> {
     finish_post_perimeter_inputs(prepare_post_compensation(project)?)
+}
+
+pub(super) fn prepare_post_classic_prelude(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicPrelude, SliceError> {
+    classic::finish_classic_prelude(prepare_post_perimeter_inputs(project)?)
+}
+
+pub(super) fn prepare_post_classic_top_split(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicTopSplit, SliceError> {
+    classic::finish_classic_top_split(prepare_post_classic_prelude(project)?)
+}
+
+pub(super) fn prepare_post_classic_onion(
+    project: impl AsRef<[u8]>,
+) -> Result<Box<classic::PreparedPostClassicOnion>, SliceError> {
+    Ok(Box::new(classic::finish_classic_onion(
+        prepare_post_classic_top_split(project)?,
+    )?))
+}
+
+pub(super) fn prepare_post_classic_hierarchy(
+    project: impl AsRef<[u8]>,
+) -> Result<Box<classic::PreparedPostClassicHierarchy>, SliceError> {
+    Ok(Box::new(classic::finish_classic_hierarchy(
+        *prepare_post_classic_onion(project)?,
+    )))
+}
+
+pub(super) fn prepare_post_classic_traversal(
+    project: impl AsRef<[u8]>,
+) -> Result<Box<classic::PreparedPostClassicTraversal>, SliceError> {
+    Ok(Box::new(classic::finish_classic_traversal(
+        *prepare_post_classic_hierarchy(project)?,
+    )))
+}
+
+pub(super) fn prepare_post_classic_raw_paths(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicRawPaths, SliceError> {
+    classic::finish_classic_raw_paths(prepare_post_classic_traversal(project)?)
+}
+
+pub(super) fn prepare_post_classic_chained_loops(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicChainedLoops, SliceError> {
+    Ok(classic::finish_classic_chained_loops(
+        prepare_post_classic_raw_paths(project)?,
+    ))
+}
+
+pub(super) fn prepare_post_classic_entity_collections(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicEntityCollections, SliceError> {
+    Ok(classic::finish_classic_entity_collections(
+        prepare_post_classic_chained_loops(project)?,
+    ))
+}
+
+pub(super) fn prepare_post_classic_perimeter_append(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicPerimeterAppend, SliceError> {
+    Ok(classic::finish_classic_perimeter_append(
+        prepare_post_classic_entity_collections(project)?,
+    ))
+}
+
+pub(super) fn prepare_post_classic_gap_domain(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicGapDomain, SliceError> {
+    classic::finish_classic_gap_domain(prepare_post_classic_perimeter_append(project)?)
 }
 
 pub(super) fn finish_post_perimeter_inputs(

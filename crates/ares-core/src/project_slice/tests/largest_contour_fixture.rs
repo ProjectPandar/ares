@@ -152,10 +152,12 @@ fn task22h_threshold_21_3mf_mutation_preserves_regular_slot_20() {
 }
 
 #[tokio::test]
-async fn task22h_public_project_lifecycle_remains_incomplete() {
+async fn task22h_public_spiral_mutation_reaches_task22o1_gate() {
     assert_eq!(
         slice_project(primary_mutation(), metadata()).await,
-        Err(SliceError::ProjectSlicingIncomplete)
+        Err(SliceError::UnsupportedProjectFeature(
+            "spiral_mode".to_owned()
+        ))
     );
 }
 

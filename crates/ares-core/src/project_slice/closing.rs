@@ -213,5 +213,8 @@ fn map_clipper_error(error: ClipperError) -> SliceError {
         ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
             "project closing polygon coordinate is outside the supported Clipper range".to_owned(),
         ),
+        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
+            unreachable!("closed clipping cannot produce open-path errors")
+        }
     }
 }

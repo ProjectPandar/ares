@@ -1,3 +1,4 @@
+mod classic;
 mod context;
 mod fixture;
 mod flow;

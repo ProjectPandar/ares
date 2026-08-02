@@ -10,7 +10,7 @@ async fn project_exposes_partial_typed_settings_with_omitted_defaults() {
     let mut parts = ProjectParts::valid();
     parts.insert_text(
         "Metadata/project_settings.config",
-        r#"{"layer_height":"0.27"}"#,
+        r#"{"layer_height":"0.27","wall_generator":"classic"}"#,
     );
     let bytes = parts.bytes();
     let project = load_project(&bytes).unwrap();
@@ -32,7 +32,9 @@ async fn project_exposes_partial_typed_settings_with_omitted_defaults() {
         .unwrap()
         .clone();
     assert_eq!(process.remove("layer_height").unwrap(), "0.27");
+    assert_eq!(process.remove("wall_generator").unwrap(), "classic");
     defaults.remove("layer_height");
+    defaults.remove("wall_generator");
     assert_eq!(process, defaults);
 
     let metadata = GenerationMetadata::deterministic(2026, 7, 13, 1, 2, 3);
