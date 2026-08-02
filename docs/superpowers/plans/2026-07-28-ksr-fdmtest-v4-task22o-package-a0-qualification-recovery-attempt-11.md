@@ -1,5 +1,9 @@
 # Task 22O Package A0 Qualification Recovery Attempt 11 Plan
 
+> Historical/non-blocking record. Task 22O.1 supersedes this external recovery
+> campaign as a production gate. Do not retry it; retain it only as audit
+> evidence.
+
 ## Goal
 
 Recover Package A0 after the terminal Attempt-10 generated-scope validator

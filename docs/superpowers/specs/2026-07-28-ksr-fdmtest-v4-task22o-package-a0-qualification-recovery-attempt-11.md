@@ -1,5 +1,9 @@
 # Task 22O Package A0 Qualification Recovery Attempt 11 Specification
 
+> Historical/non-blocking record. Task 22O.1 supersedes this external recovery
+> campaign as a production gate. Do not retry it; retain it only as audit
+> evidence.
+
 ## Status
 
 Draft. This document and its matching plan must receive two independent,

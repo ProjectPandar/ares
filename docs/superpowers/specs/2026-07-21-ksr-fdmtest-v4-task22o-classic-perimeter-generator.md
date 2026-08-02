@@ -1,5 +1,10 @@
 # Task 22O: KSR-Reached Classic Perimeter Generator
 
+> Historical execution frame: the Package-A0 qualification/recovery campaign
+> in this document and its amendments is superseded as a production gate by
+> the serial source-port plan beginning with Task 22O.1. It remains technical
+> audit evidence only and must not be retried or block Rust implementation.
+
 ## Status and objective
 
 This specification is a draft. Production and tracked-test implementation may

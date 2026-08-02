@@ -1,5 +1,10 @@
 # Task 22O Implementation Plan: KSR-Reached Classic Perimeter Generator
 
+> Historical execution frame: Package 0/A0 and its recovery plans are
+> superseded as production gates by the bounded serial source-port plan
+> beginning with Task 22O.1. Retain them as audit evidence; do not retry them
+> or require them before Rust implementation.
+
 ## Objective and gate
 
 Implement the approved Task 22O specification as the exact KSR-reached fixed

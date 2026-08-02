@@ -2763,9 +2763,11 @@ occurrence's stored `atan2(m10, m00)` inputs, including signed zero. Arachne is
 selected only for a nonspiral Arachne request; Arachne plus spiral dispatches
 Classic by the fixed branch, not by a compatibility fallback.
 
-The tracked independent 25-object aggregate is 23,747 bytes / SHA-256
-`82ccfa1db8bcfea1c4689147561be8c7058c6fdefe0df9b7b8ad127e99487fd1`.
-For the committed KSR archive, the complete predecessor M wire remains
+Task 22O.1 removes the opaque tracked 25-object binary aggregate. Readable
+behavioral builders retain Task 22N parser framing, semantic validation,
+corruption, truncation, and trailing-byte coverage without embedding a binary
+or pinning Orca source text. For the committed KSR archive, the complete
+predecessor M wire remains
 3,008,346 bytes /
 `91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19`;
 the complete 460-record N wire is 7,083,888 bytes /
@@ -2798,9 +2800,179 @@ deferred. Perimeter gaps must not be suppressed by
 1573-1624` enables them from `gap_infill_speed > 0`; KSR sets that speed to
 250 and its reference contains 470 Gap infill feature blocks.
 
-Task 22O is the next fixed rewrite boundary: the complete KSR-reached Classic
-body beginning at `PerimeterGenerator.cpp:1144`,
-`PerimeterGenerator::process_classic()`, through the boundary before
-`process_arachne()` at line 2093, together with each directly called upstream
-helper needed by that branch. Its spec must inventory the reached precise,
-top-wall, overhang, small-loop, and gap behavior before implementation.
+Task 22O is implemented as serial source-cited slices beginning at
+`PerimeterGenerator::process_classic()`. Task 22O.1 ports the pre-onion prefix
+through transactional capability validation, exact Flow-derived prelude
+arithmetic, smaller external Flow reconstruction, lower-support growth and
+sample series, counterbore-none behavior, arc-aware simplification,
+bounding-box-center surface ordering, and loop-count preparation. Its Rust
+boundary is `project_slice::perimeters::classic`, with reusable integer bounds
+in `geometry::bounding_box`; the public project lifecycle consumes this state
+and remains intentionally incomplete.
+
+The earlier Package-A0 qualification/recovery chain is historical,
+non-blocking audit evidence and is not a prerequisite for Rust production
+behavior. It is not retried and does not establish Task 22O completion. Task
+22O.1 stops before `split_top_surfaces()` and the onion loop. Dynamic top
+splitting, onion offsets, hierarchy/traversal, overhang path splitting, medial
+axis gaps, variable-width extrusion, fill remainder, seams, infill, motion,
+G-code, metadata, post-processing, and exact KSR G-code parity remain deferred
+source slices.
+
+Task 22O.2 advances the fixed upstream boundary to
+`PerimeterGenerator.cpp:574-660,1235-1306,1343-1385`. It ports the complete
+dynamic top split and only the non-thin-wall first external offset required by
+the exact caller. `project_slice::perimeters::classic::top_split` owns the
+unchanged Task 22O.1 predecessor and resolves `wall_loops`,
+`only_one_wall_top`, `interface_shells`, `min_width_top_surface`,
+`sparse_infill_line_width`, outer-nozzle selection, and gap enablement from
+effective typed 3MF configuration transactionally before Clipper geometry.
+Percent bases, zero infill-width auto resolution, mixed fixed/float casts, and
+the upstream bbox vertex prefilter are part of this boundary.
+
+Later onion loops, materialized perimeter entities, hierarchy and traversal,
+thin walls, active multi-region behavior, later bridge surface kinds, gap
+masks, overhang splitting, fill remainder, seams, infill, motion, writer and
+post-processing remain source-cited future slices. Task 22O.2 is not complete
+Task 22O and is not an independently designed Ares pipeline stage.
+
+Task 22O.3 advances only the raw onion loop-back boundary at fixed
+`PerimeterGenerator.cpp:1304-1387`. The Rust destination
+`project_slice::perimeters::classic::onion` nests the immutable Task 22O.2
+object and transactionally resolves typed effective `sparse_infill_density`,
+including the source conversion to its local `int`, while reusing predecessor
+gap enablement and integer spacing. It preserves the source f64-to-f32 delta
+casts, fixed-coordinate `-1`, `+1`, and `10` terms, ordered gap append before
+collapse/extra-pass termination, effective loop reduction, raw depth geometry,
+final `last`, and the positive converted-density gap-only iteration. Task 22O.2 remains the sole owner of depth zero and dynamic top
+splitting.
+
+Task 22O.4 advances the fixed boundary through `PerimeterGenerator.cpp:34-55,
+1353-1369,1388-1443`, with containment from `Polygon.hpp:66`,
+`Polygon.cpp:722-729`, and Clipper v6 `PointInPolygon`. The Rust destination
+`project_slice::perimeters::classic::hierarchy` nests O3, materializes only its
+ordered raw shells, and preserves exact boundary-inclusive, first-point,
+depth/index first-parent and destructive erase/retry behavior. Roots and
+unaltered diagnostic leftovers retain source order.
+
+Task 22O.5 advances the source prefix at `PerimeterGenerator.cpp:100-151` and
+`PerimeterGeneratorLoop::is_internal_contour` at `2537-2547` into
+`project_slice::perimeters::classic::traversal`. It transactionally nests O4
+and builds ordered seed trees from roots only, retaining exact extrusion and
+loop roles, smaller/external/internal predecessor flow and lower-series routes,
+`f32` width, source `f64` layer height and `f64 mm3_per_mm`, inactive overhang
+reversal provenance, and the read-only pending predicate from line 158. O4
+diagnostics remain nested and are not traversal input.
+
+No fuzzy mutation or pending path branch executes. Support clipping,
+`intersection_pl`/`diff_pl`, extrusion entities, actual recursive entity
+traversal, thin walls, active overhang reversal, wall ordering, gaps/fill,
+seams, infill, motion, writer/post-processing, complete Task 22O, and exact KSR
+parity remain deferred. This is a bounded upstream rewrite slice, not an
+Ares-owned perimeter algorithm.
+
+Task 22O.6 ports the exact open-path dependency boundary from fixed Clipper v6
+`clipper.cpp:756-949` and all output-affecting `IsOpen` branches through
+PolyTree construction/extraction, together with OrcaSlicer
+`ClipperUtils.cpp:835-934`. The Rust destination `geometry::clipper` now uses a
+single `Clipper` engine for closed and open subjects, rejects open clip paths
+and flat output for open input, preserves zero-winding scanline, horizontal,
+maxima, fixup and root-record behavior, and exposes source-order polygon
+`intersection_pl`/`diff_pl` with exact closure and destructive recombination.
+Closed topology/order and the active `f64` determinant remain unchanged.
+
+This dependency slice does not fabricate a traversal result. Its open clipping
+APIs are consumed by O7 below.
+
+Task 22O.7 ports the reached raw-path construction from fixed
+`PerimeterGenerator.cpp:153-207,218-224`, reached
+`ExtrusionEntity.hpp:153-188,551-580`, and `Polyline.hpp:291-302` into the
+crate-private `project_slice::perimeters::classic::materialize` boundary. Its
+aligned successor nests O5, dispatches only on the O5 pending branch, derives
+source `SCALED_EPSILON` from the prepared coordinate scale, borrows the
+route-selected final lower series, uses O2 bbox filtering and O6 intersection
+then difference ordering, and preserves exact fixed-coordinate fragment order,
+role, flow, width, and height provenance. The narrow local extrusion types are
+intentional because the unrelated public legacy scaffold is floating 2D and
+does not represent this reached source seam.
+
+O1 proves fuzzy skin inactive and rejects active `overhang_reverse`; therefore
+O7 consumes unchanged O5 polygons and does not model unreachable fuzzy,
+steep-overhang, or reverse branches at lines 153-177. Public slicing now
+executes O7 before remaining `ProjectSlicingIncomplete`.
+
+Task 22O.8 ports `PerimeterGenerator.cpp:208-210,227`, the reached
+all-paths-reversible `ShortestPath.cpp` greedy multi-fragment specialization
+with its exact `KDTreeIndirect.hpp` and `MutablePriorityQueue.hpp` behavior,
+and the reached `ExtrusionLoopRole` / `ExtrusionLoop` ownership boundary from
+`ExtrusionEntity.hpp`. O8 consumes O7 path vectors and point buffers zero-copy,
+retains the unchanged boxed O5 predecessor, applies the empty `continue` and
+start-near chaining only to overhang-clipping records, and exhaustively maps
+loop roles into crate-private loop compatibility shells. Transformation and
+terminal ownership are iterative. Public slicing now executes O8 before the
+same `ProjectSlicingIncomplete` boundary.
+
+O8 intentionally does not pre-orient loops: upstream orientation occurs only
+after entity selection and recursive traversal.
+
+Task 22O.9 ports fixed `PerimeterGenerator.cpp:230-280`, caller setup/call
+`1443-1450`, reached `ShortestPath.cpp:1026-1040`, and exact
+`ExtrusionEntity.cpp:141-170` loop orientation into crate-private
+`project_slice::perimeters::classic::entity_collections`. It moves O8 loops
+into flat ordered collections, chains each local loop group from zero, applies
+typed per-region wall direction, preserves the source lone-hole rule and
+contour/hole emission order, and sets source `inset_idx`. Traversal and cleanup
+are iterative and retain the same boxed O5 predecessor.
+
+The line-208 `continue` compacts source entities while lines 240-250 index the
+original loop array. O9 deliberately reproduces that indexing rather than
+adding a survivor map. Active thin walls remain unreachable because O1 rejects
+`detect_thin_wall=true`; no heterogeneous entity abstraction is fabricated.
+Active overhang reversal, gaps/fill, seams, infill, motion, G-code,
+writer/post-processing, complete Task 22O, and exact final KSR G-code parity
+remain deferred.
+
+Task 22O.10 ports fixed `PerimeterGenerator.cpp:1451-1569` into
+crate-private `project_slice::perimeters::classic::perimeter_append`. O1's
+transactional preflight makes overhang reorientation, non-`InnerOuter` wall
+ordering, and active layer-zero outer-brim reversal unrepresentable at this
+stage. O10 retains typed inactive operands and false-reason provenance without
+implementing a fallback. It executes the remaining source behavior by moving
+each nonempty O9 flat collection into one nested perimeter collection and
+omitting empty collections, while preserving order, allocations, and the boxed
+O5 predecessor. Gap fill beginning at line 1573 and all downstream behavior
+remain deferred.
+
+Task 22O.11 ports fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`,
+`PerimeterGenerator.cpp:1573-1581,1583-1585`, into crate-private
+`project_slice::perimeters::classic::gap_domain`. It borrows O3 gaps and O1
+prelude widths/resolution through O10's boxed O5 predecessor, stages all
+fallible opening/offset/difference geometry transactionally, then moves every
+O10 collection and inactive provenance into aligned O11 surfaces. Empty gaps
+are typed `None`; nonempty results retain exact bounds and source-ordered,
+in-place simplified ExPolygons. The boxed O5 allocation and nested O10
+allocations remain unchanged. Both success and error cleanup consume retained tree structures iteratively. Public slicing reaches O11 and remains
+`ProjectSlicingIncomplete`.
+
+O11 is only the upstream pre-medial prefix, not an Ares-designed pipeline. The
+next boundary starts at `PerimeterGenerator.cpp:1586` with
+`ExPolygon::medial_axis` and its actual ThickPolyline prerequisites. Medial
+axis, gap extrusion, downstream G-code, final KSR parity, and Orca end-to-end
+comparison remain deferred.
+
+Task 22O.12 ports fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`, `Line.hpp:15-19,202-212`,
+`Polyline.hpp:14-17,256-287`, and `Polyline.cpp:637-679` into crate-private
+`geometry::{line,polyline}`. It fixes the source ThickLine/ThickPolyline data,
+two-widths-per-segment invariant, reversal, clear, closed rotation, and fixed
+width conversion required by the medial-axis output contract. Rust flattens
+C++ Polyline inheritance rather than adding a compatibility shell.
+
+O12 is a prerequisite, not a lifecycle stage: O11 remains the public terminal
+prefix and `PerimeterGenerator.cpp:1586` remains unexecuted. A partial
+MedialAxis shell is rejected because source edge validation and neighbor
+chaining depend directly on the Boost.Polygon Voronoi cell/edge/twin/rotation
+topology. The next milestone must cite and port that actual source boundary;
+it may not substitute a simplistic skeleton algorithm, dependency, or runtime
+Orca oracle.

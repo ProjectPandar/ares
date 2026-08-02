@@ -4164,3 +4164,247 @@ Exit criteria are tracked in `docs/milestones/m351-print-apply-extruder-count-ch
 Record the source-structure checkpoint for crate partitioning using `OrcaSlicer/src/CMakeLists.txt`, `OrcaSlicer/src/libslic3r/CMakeLists.txt`, `OrcaSlicer/src/libvgcode/CMakeLists.txt`, and `OrcaSlicer/src/slic3r/CMakeLists.txt` as evidence. Confirm that the active Rust workspace remains `ares-core`, `ares-vgcode`, `ares-cli`, and `ares-wasm`; do not create `ares-geometry`, `ares-config`, `ares-gcode`, `ares-support`, or UI crates without a future source-cited milestone that proves the boundary and updates `Cargo.toml` plus `AGENTS.md`. This milestone is an architecture/documentation gate for the full `libslic3r`/`libvgcode` rewrite, not an Ares-owned pipeline feature.
 
 Exit criteria are tracked in `docs/milestones/m852-orcaslicer-source-crate-partition-checkpoint.md`.
+
+## Task 22O.1: Classic perimeter prelude
+
+Port the first executable Classic generator slice from fixed OrcaSlicer v2.4.2
+`LayerRegion.cpp::LayerRegion::make_perimeters`,
+`PerimeterGenerator.cpp::process_classic` before the onion loop,
+`process_no_bridge`'s `chbNone` path,
+`generate_lower_polygons_series`, `Flow.cpp::Flow::with_width`,
+`ShortestPath.cpp::chain_expolygons`, and `BoundingBox.hpp` into
+`ares-core::project_slice::perimeters::classic` and
+`ares-core::geometry::bounding_box`.
+
+Included behavior is transactional activated-branch preflight, preserved Task
+22N predecessor slots, typed 3MF Option consumption, precise spacing, smaller
+external Flow, lower support masks and samples, arc-aware surface
+simplification/union, center chaining, and loop-count preparation. Public
+`slice_project` consumes the new state and continues to return
+`ProjectSlicingIncomplete`. The obsolete opaque Task 22N synthetic binary
+embedding is removed in favor of readable parser behavior construction.
+
+The Package-A0 recovery documents are historical/non-blocking and are not
+retried. This milestone does not claim complete Classic generation or G-code
+parity. `split_top_surfaces`, onion shells, traversal, overhang splitting, gap
+medial axes, variable-width entities, fill, seams, infill, motion planning,
+writer behavior, metadata, post-processing, and normalized KSR byte parity
+remain deferred. Exit criteria are tracked in
+`docs/superpowers/specs/2026-08-01-ksr-fdmtest-v4-task22o1-classic-prelude.md`
+and its matching plan.
+
+## Task 22O.2: Classic dynamic top-one-wall split
+
+Port fixed OrcaSlicer v2.4.2
+`PerimeterGenerator.cpp::split_top_surfaces` plus the smallest source-exact
+non-thin-wall `i == 0` external offset prerequisite and caller seam. The first
+offset is included solely because upstream assigns it to `last` before calling
+the split; later onion iterations remain deferred.
+
+The Rust stage owns Task 22O.1 as its predecessor, preflights all typed 3MF
+options before geometry, retains normal/smaller first-offset geometry, and
+records the post-caller remaining area, top fills, fill clip, caller outcome,
+and upper-source selection. It also ports the required Clipper bbox vertex
+prefilter, ExPolygon area, polygon-clip difference, and automatic infill-width
+seams. The public lifecycle executes the stage and remains intentionally
+incomplete.
+
+`i >= 1`, loop entities, hierarchy/traversal, thin-wall medial axes,
+multi-region behavior, later bridge kinds, gap masks, overhang splitting, fill
+remainder, seams, infill, motion, writer and post-processing remain deferred.
+Exit criteria are tracked in
+`docs/superpowers/specs/2026-08-01-ksr-fdmtest-v4-task22o2-dynamic-top-one-wall.md`
+and its matching plan.
+
+## Task 22O.3: Classic raw-onion iteration
+
+Task 22O.3 ports fixed OrcaSlicer v2.4.2
+`PerimeterGenerator.cpp:1304-1387` as a loop-back continuation after the
+immutable Task 22O.2 depth-zero/top-split state. The
+`project_slice::perimeters::classic::onion` successor validates typed effective
+`sparse_infill_density` transactionally and converts it to the source local
+`int`, selects depth-one and deeper spacing, applies source-exact `offset2_ex`
+casts and fixed-coordinate safety terms, appends ordered gap masks before
+termination, records raw normal/smaller shell depths, reduces the effective
+count on collapse, retains final `last`, and executes the positive
+converted-density gap-only pass. The public lifecycle executes this
+stage and remains intentionally incomplete.
+
+Hierarchy and nesting begin at `PerimeterGenerator.cpp:1388` and remain the next
+source boundary. Traversal, extrusion entities, overhang behavior, gap medial
+axes, fill remainder, seams, infill, motion, writer/post-processing, complete
+Task 22O, and exact KSR G-code parity remain open. Exit criteria are tracked in
+`docs/superpowers/specs/2026-08-01-ksr-fdmtest-v4-task22o3-onion-iteration.md`
+and its matching plan.
+
+## Task 22O.4: Classic loop hierarchy
+
+Task 22O.4 ports fixed OrcaSlicer v2.4.2
+`PerimeterGenerator.cpp:34-55,1353-1369,1388-1443` and exact
+boundary-inclusive containment from `Polygon.hpp:66`, `Polygon.cpp:722-729`,
+and Clipper v6 `PointInPolygon`. The
+`project_slice::perimeters::classic::hierarchy` successor nests immutable O3,
+materializes its raw normal/smaller loops without recomputation, and performs
+the source destructive hole-first and contour first-parent searches. Roots and
+diagnostic leftovers preserve source order. The public lifecycle executes O4
+and remains intentionally incomplete.
+
+Traversal around line 1450, extrusion entities, thin walls, overhang behavior,
+wall ordering, gap medial axes, fill remainder, seams, infill, motion,
+writer/post-processing, complete Task 22O, and exact KSR G-code parity remain
+open. Exit criteria are tracked in
+`docs/superpowers/specs/2026-08-01-ksr-fdmtest-v4-task22o4-loop-hierarchy.md`
+and its matching plan.
+
+## Task 22O.5: Classic traversal seeds
+
+Task 22O.5 ports fixed OrcaSlicer v2.4.2
+`PerimeterGenerator.cpp:100-151` and `PerimeterGeneratorLoop::is_internal_contour`
+at `2537-2547` into `project_slice::perimeters::classic::traversal`. The O5
+successor nests immutable O4 and iteratively builds ordered seed trees from O4
+roots, preserving immediate-child loop classification, exact depth roles,
+source flow/lower-series selectors, `f32` width, source `f64` layer height and
+`f64 mm3_per_mm`,
+and typed pending line-158 overhang predicate provenance. Public slicing
+executes O5 and remains intentionally incomplete.
+
+No fuzzy mutation or pending ordinary/overhang branch executes. Clipping,
+extrusion paths/loops/entities, actual entity traversal/reordering, thin walls,
+active overhang reversal, wall ordering, gaps/fill, seams, infill, motion,
+writer, complete Task 22O, and exact KSR parity remain open. Exit criteria are
+tracked in
+`docs/superpowers/specs/2026-08-01-ksr-fdmtest-v4-task22o5-traversal-seeds.md`
+and its matching plan.
+
+## Task 22O.6: Exact open-path Clipper
+
+Task 22O.6 ports the fixed Clipper v6 open-input and output state machine from
+`clipper.cpp:756-949` and its output-affecting `IsOpen` branches, plus
+OrcaSlicer `ClipperUtils.cpp:835-934`, into `geometry::clipper`. The exit
+boundary includes open subjects, typed open PolyTree roots, exact scanline and
+horizontal behavior, open fixup, source-order extraction, polygon closure, and
+destructive four-case polyline recombination while preserving inherited closed
+Clipper results and `f64` full-range predicates.
+
+O6 remains the exact open-clipping dependency consumed by O7. Exit criteria
+are tracked in
+`docs/superpowers/specs/2026-08-01-ksr-fdmtest-v4-task22o6-open-clipper.md` and
+its matching plan.
+
+## Task 22O.7: Raw extrusion path materialization
+
+Task 22O.7 ports fixed `PerimeterGenerator.cpp:153-207,218-224`, reached
+`ExtrusionEntity.hpp:153-188,551-580`, and `Polyline.hpp:291-302` into
+crate-private `project_slice::perimeters::classic::materialize`. It creates an
+aligned successor nesting O5, dispatches solely on O5's pending branch, and
+uses O2 bbox filtering plus O6 intersection-before-difference output. Ordinary
+paths preserve exact polygon closure and seed flow; supported fragments retain
+seed role/flow and layer height while remainder fragments use overhang role and
+all overhang-flow numeric fields. Trees, error cleanup, and terminal sinking
+are iterative. Public slicing executes O7 and remains
+`ProjectSlicingIncomplete`.
+
+O1-established inactive fuzzy skin and rejected active `overhang_reverse` make
+the fuzzy, steep, and reverse branches unreachable, so O7 does not model them.
+O8 owns lines 208-210 empty/start/chaining and line 227 loop construction. Exit
+criteria are tracked in
+`docs/superpowers/specs/2026-08-01-ksr-fdmtest-v4-task22o7-raw-extrusion-paths.md`
+and its matching plan.
+
+## Task 22O.8: Chained extrusion loops
+
+Task 22O.8 ports fixed `PerimeterGenerator.cpp:208-210,227`, the reached
+all-paths-reversible greedy specialization in `ShortestPath.cpp` with exact
+`KDTreeIndirect.hpp` and `MutablePriorityQueue.hpp` semantics, and the reached
+`ExtrusionLoopRole` / `ExtrusionLoop` ownership from `ExtrusionEntity.hpp`.
+Only overhang-clipping records apply empty `continue` and start-near chaining;
+ordinary records bypass both. O8 moves O7 path buffers zero-copy, retains the
+boxed O5 predecessor, maps all loop roles, and transforms and drains arbitrary
+depth trees iteratively. Public slicing executes O8 and remains
+`ProjectSlicingIncomplete`.
+
+O9 owns `PerimeterGenerator.cpp:230-280`; orientation is not moved earlier
+because upstream applies it only after recursive entity selection. O8 exit criteria are
+tracked in
+`docs/superpowers/specs/2026-08-02-ksr-fdmtest-v4-task22o8-chained-extrusion-loops.md`
+and its matching plan.
+
+## Task 22O.9: Ordered entity collections
+
+Task 22O.9 ports fixed `PerimeterGenerator.cpp:230-280`, caller setup/call
+`1443-1450`, reached loop-only `ShortestPath.cpp:1026-1040`, and
+`ExtrusionEntity.cpp:141-170`. Each recursive source group chains loop entities
+from zero, clears loop reversal selections, recursively orders children,
+applies exact Clipper orientation from aligned typed wall direction, sets
+`inset_idx`, and emits a flat collection. The Rust implementation is iterative
+and moves O8 buffers while retaining the boxed O5 predecessor.
+
+The exact source compact-entity/original-loop indexing after line-208
+`continue` is retained rather than repaired. Thin-wall append is inactive
+because O1 rejects `detect_thin_wall=true`; active medial-axis generation,
+`variable_width`, heterogeneous entity chaining, fuzzy skin, overhang
+reorientation, wall-sequence changes, gaps/fill, seams, infill, motion,
+G-code, writer/post-processing, complete Task 22O, and final parity remain
+open. Exit criteria are tracked in
+`docs/superpowers/specs/2026-08-03-ksr-fdmtest-v4-task22o9-ordered-entity-collections.md`
+and its matching plan.
+
+## Task 22O.10: Perimeter collection append
+
+Task 22O.10 ports fixed `PerimeterGenerator.cpp:1451-1569`. O1 preflight
+proves overhang reorientation, non-`InnerOuter` wall ordering, and active
+layer-zero outer-brim reversal inactive before geometry moves, so O10 records
+those typed operands without adding active algorithms or fallbacks. Each
+nonempty O9 flat collection is moved as one nested perimeter collection;
+empty collections are omitted and all entity order, fields, allocations, and
+the boxed O5 predecessor remain intact. Public slicing executes O10 and stays
+`ProjectSlicingIncomplete`.
+
+Gap filling at `PerimeterGenerator.cpp:1573+`, active ordering/reorientation,
+seams, infill, motion, G-code, writer/post-processing, complete Task 22O, and
+final parity remain open. Exit criteria are tracked in
+`docs/superpowers/specs/2026-08-03-ksr-fdmtest-v4-task22o10-perimeter-collection-append.md`
+and its matching plan.
+
+## Task 22O.11: Pre-medial Classic gap domain
+
+Task 22O.11 ports fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`, exact primary boundary
+`PerimeterGenerator.cpp:1573-1581,1583-1585`, and stops before line 1586.
+The crate-private O11 stage reads aligned O3 gaps and prelude parameters through
+O10's boxed O5 chain, transactionally stages exact opening, second offset,
+ordinary difference, and in-place ExPolygon Douglas–Peucker results, then
+moves O10 collections without changing their allocations. Empty gaps produce
+typed `None`; retained predecessor trees are consumed iteratively on success and geometry error; public slicing reaches O11 and remains incomplete.
+
+Exit requires focused direct, lifecycle, and in-memory KSR anchors, unchanged
+boxed O5 and O10 nested allocations, stable geometry range errors, and Tier-1
+portable Rust checks. The paired spec and plan are
+`docs/superpowers/specs/2026-08-03-ksr-fdmtest-v4-task22o11-pre-medial-gap-domain.md`
+and
+`docs/superpowers/plans/2026-08-03-ksr-fdmtest-v4-task22o11-pre-medial-gap-domain.md`.
+The next rewrite boundary begins at `PerimeterGenerator.cpp:1586` with medial
+axis and actual ThickPolyline prerequisites. Gap extrusion, downstream G-code,
+final KSR parity, and Orca end-to-end comparison remain deferred.
+
+## Task 22O.12: ThickPolyline medial-axis prerequisite
+
+Task 22O.12 ports fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`, exact source boundaries
+`Line.hpp:15-19,202-212`, `Polyline.hpp:14-17,256-287`, and
+`Polyline.cpp:637-679`, into crate-private geometry types. It preserves
+ThickLine endpoint widths, ThickPolyline default/reverse/clear semantics,
+ordered two-width segment projection, closed-ring rotation, and fixed-width
+conversion.
+
+O12 does not advance public slicing: O11 remains the terminal prefix and
+`PerimeterGenerator.cpp:1586` remains the next unexecuted line. Exit requires
+literal source-semantic tests, unchanged O11 behavior, no dependency or public
+API change, Tier-1/WASM checks, and independent review. The paired documents
+are
+`docs/superpowers/specs/2026-08-03-ksr-fdmtest-v4-task22o12-thick-polyline-prerequisite.md`
+and
+`docs/superpowers/plans/2026-08-03-ksr-fdmtest-v4-task22o12-thick-polyline-prerequisite.md`.
+The next milestone must port the actual Voronoi topology required by
+`Geometry::MedialAxis`; a simplistic skeleton substitute or runtime Orca
+oracle is not acceptable.
