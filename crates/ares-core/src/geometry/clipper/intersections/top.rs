@@ -1,9 +1,9 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 use super::super::predicates::{slopes_equal_four, top_x};
 use super::super::types::{Edge, EdgeId, ExecutionConfig, Join, OutPointId, OutputIndex};
 use crate::geometry::Point;
 
-impl ClosedClipper {
+impl Clipper {
     pub(in crate::geometry::clipper) fn process_edges_at_top(
         &mut self,
         top_y: i64,
@@ -118,8 +118,19 @@ impl ClosedClipper {
             self.add_local_max_polygon(edge, pair, point);
             self.delete_from_ael(edge);
             self.delete_from_ael(pair);
+        } else if self.edges.edge(edge).wind_delta == 0 {
+            if matches!(self.edges.edge(edge).output, OutputIndex::Assigned(_)) {
+                self.add_out_point(edge, point);
+                self.edges.edge_mut(edge).output = OutputIndex::Unassigned;
+            }
+            self.delete_from_ael(edge);
+            if matches!(self.edges.edge(pair).output, OutputIndex::Assigned(_)) {
+                self.add_out_point(pair, point);
+                self.edges.edge_mut(pair).output = OutputIndex::Unassigned;
+            }
+            self.delete_from_ael(pair);
         } else {
-            unreachable!("closed maxima output state is paired");
+            unreachable!("maxima output state is paired");
         }
     }
 

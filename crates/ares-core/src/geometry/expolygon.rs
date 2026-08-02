@@ -22,6 +22,19 @@ impl ExPolygon {
     pub(crate) fn into_parts(self) -> (Polygon, Vec<Polygon>) {
         (self.contour, self.holes)
     }
+
+    pub(crate) fn douglas_peucker(&mut self, tolerance: f64) {
+        self.contour.douglas_peucker(tolerance);
+        for hole in &mut self.holes {
+            hole.douglas_peucker(tolerance);
+        }
+    }
+
+    pub(crate) fn area(&self) -> f64 {
+        self.holes
+            .iter()
+            .fold(self.contour.area(), |area, hole| area + hole.area())
+    }
 }
 
 pub(crate) fn keep_largest_contour_only(expolygons: &mut Vec<ExPolygon>) {

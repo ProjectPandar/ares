@@ -1,9 +1,9 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 use super::super::predicates::slopes_equal_three;
 use super::super::types::OutRecId;
 use crate::geometry::{Point, Polygon};
 
-impl ClosedClipper {
+impl Clipper {
     pub(in crate::geometry::clipper) fn fixup_out_polygon(&mut self, out_rec: OutRecId) {
         let Some(mut point) = self.out_recs[out_rec.0].points else {
             return;

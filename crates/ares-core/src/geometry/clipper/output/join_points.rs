@@ -1,4 +1,4 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 use super::super::predicates::slopes_equal_three;
 use super::super::types::{Join, OutPointId, OutRecId};
 use crate::geometry::Point;
@@ -18,7 +18,7 @@ struct HorizontalJoin {
     discard_left: bool,
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn join_points(
         &mut self,
         join: &mut Join,

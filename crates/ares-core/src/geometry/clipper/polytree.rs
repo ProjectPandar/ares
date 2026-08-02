@@ -3,9 +3,9 @@ use std::mem;
 #[cfg(test)]
 use std::slice;
 
-use super::types::{OutPointId, OutRecId, PolyNodeId, PolyNodeRecord};
-use super::{ClipOperation, ClipperError, ClipperOptions, ClosedClipper, FillRule, PathRole};
-use crate::geometry::{ExPolygon, Polygon};
+use super::types::{OutPointId, OutRecId, PolyNodeContour, PolyNodeId, PolyNodeRecord};
+use super::{ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole};
+use crate::geometry::{ExPolygon, Polygon, Polyline};
 
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) struct PolyTree {
@@ -51,6 +51,9 @@ impl PolyTree {
     }
 
     fn expolygon_count(&self, node: PolyNodeId) -> usize {
+        if matches!(self.nodes[node.0].contour, Some(PolyNodeContour::Open(_))) {
+            return 0;
+        }
         1 + self.nodes[node.0]
             .children
             .iter()
@@ -68,9 +71,22 @@ impl PolyTree {
         let roots = mem::take(&mut self.children);
         let mut expolygons = Vec::with_capacity(capacity);
         for root in roots {
-            append_expolygon(&mut self.nodes, root, &mut expolygons);
+            if matches!(self.nodes[root.0].contour, Some(PolyNodeContour::Closed(_))) {
+                append_expolygon(&mut self.nodes, root, &mut expolygons);
+            }
         }
         expolygons
+    }
+
+    pub(crate) fn into_open_polylines(mut self) -> Vec<Polyline> {
+        let roots = mem::take(&mut self.children);
+        let mut polylines = Vec::new();
+        for root in roots {
+            if let Some(PolyNodeContour::Open(polyline)) = self.nodes[root.0].contour.take() {
+                polylines.push(polyline);
+            }
+        }
+        polylines
     }
 
     pub(crate) fn remove_outermost_polygon(&mut self) {
@@ -79,7 +95,6 @@ impl PolyTree {
             self.children.clear();
             return;
         }
-
         let outer = self.children[0];
         self.children = mem::take(&mut self.nodes[outer.0].children);
         self.nodes[outer.0].contour = None;
@@ -92,10 +107,26 @@ impl PolyTree {
 #[cfg(test)]
 impl<'a> PolyNode<'a> {
     pub(crate) fn contour(self) -> &'a Polygon {
-        self.tree.nodes[self.id.0]
-            .contour
-            .as_ref()
-            .expect("live PolyTree node has a contour")
+        match self.tree.nodes[self.id.0].contour.as_ref() {
+            Some(PolyNodeContour::Closed(polygon)) => polygon,
+            Some(PolyNodeContour::Open(_)) => panic!("open PolyTree node is not a polygon"),
+            None => panic!("live PolyTree node has a contour"),
+        }
+    }
+
+    pub(crate) fn polyline(self) -> &'a Polyline {
+        match self.tree.nodes[self.id.0].contour.as_ref() {
+            Some(PolyNodeContour::Open(polyline)) => polyline,
+            Some(PolyNodeContour::Closed(_)) => panic!("closed PolyTree node is not a polyline"),
+            None => panic!("live PolyTree node has a contour"),
+        }
+    }
+
+    pub(crate) fn is_open(self) -> bool {
+        matches!(
+            self.tree.nodes[self.id.0].contour,
+            Some(PolyNodeContour::Open(_))
+        )
     }
 
     pub(crate) fn children(self) -> PolyNodeChildren<'a> {
@@ -106,6 +137,9 @@ impl<'a> PolyNode<'a> {
     }
 
     pub(crate) fn is_hole(self) -> bool {
+        if self.is_open() {
+            return false;
+        }
         let mut is_hole = false;
         let mut parent = self.tree.nodes[self.id.0].parent;
         while let Some(node) = parent {
@@ -135,7 +169,7 @@ impl<'a> Iterator for PolyNodeChildren<'a> {
 #[cfg(test)]
 impl ExactSizeIterator for PolyNodeChildren<'_> {}
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn build_polytree(&mut self) -> PolyTree {
         let mut nodes = Vec::with_capacity(self.out_recs.len());
         let mut node_by_out_rec = vec![None; self.out_recs.len()];
@@ -145,12 +179,19 @@ impl ClosedClipper {
             let Some(points) = self.out_recs[index].points else {
                 continue;
             };
-            let contour = self.output_polygon(points);
-            if contour.points().len() < 3 {
+            let output = self.output_points(points);
+            let is_open = self.out_recs[index].is_open;
+            if is_open && output.len() < 2 || !is_open && output.len() < 3 {
                 continue;
             }
-
-            self.normalize_tree_first_left(out_rec);
+            if !is_open {
+                self.normalize_tree_first_left(out_rec);
+            }
+            let contour = if is_open {
+                PolyNodeContour::Open(Polyline::new(output))
+            } else {
+                PolyNodeContour::Closed(Polygon::new(output))
+            };
             let node = PolyNodeId(nodes.len());
             nodes.push(PolyNodeRecord {
                 parent: None,
@@ -165,9 +206,13 @@ impl ClosedClipper {
             let Some(node) = node else {
                 continue;
             };
-            let parent = self.out_recs[index]
-                .first_left
-                .and_then(|out_rec| node_by_out_rec[out_rec.0]);
+            let parent = if self.out_recs[index].is_open {
+                None
+            } else {
+                self.out_recs[index]
+                    .first_left
+                    .and_then(|out_rec| node_by_out_rec[out_rec.0])
+            };
             if let Some(parent) = parent {
                 nodes[node.0].parent = Some(parent);
                 nodes[parent.0].children.push(node);
@@ -175,7 +220,6 @@ impl ClosedClipper {
                 children.push(node);
             }
         }
-
         PolyTree { nodes, children }
     }
 
@@ -192,7 +236,7 @@ impl ClosedClipper {
         self.out_recs[out_rec.0].first_left = first_left;
     }
 
-    fn output_polygon(&self, start: OutPointId) -> Polygon {
+    fn output_points(&self, start: OutPointId) -> Vec<crate::geometry::Point> {
         let first = self.out_points.point(start).previous;
         let mut point = first;
         let mut points = Vec::new();
@@ -201,7 +245,7 @@ impl ClosedClipper {
             points.push(output.point);
             point = output.previous;
             if point == first {
-                return Polygon::new(points);
+                return points;
             }
         }
     }
@@ -211,18 +255,18 @@ pub(crate) fn union_ex(
     polygons: &[Polygon],
     fill_rule: FillRule,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut paths_clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut paths_clipper = Clipper::new(ClipperOptions::default());
     paths_clipper.add_closed_paths(polygons, PathRole::Subject)?;
-    let paths = paths_clipper.execute_paths(ClipOperation::Union, fill_rule, fill_rule);
+    let paths = paths_clipper.execute_paths(ClipOperation::Union, fill_rule, fill_rule)?;
     if paths.is_empty() {
         return Ok(Vec::new());
     }
 
-    let mut tree_clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut tree_clipper = Clipper::new(ClipperOptions::default());
     assert!(
         tree_clipper
             .add_closed_paths(&paths, PathRole::Subject)
-            .expect("first-pass output paths must remain inside the validated Clipper range"),
+            .expect("first-pass output paths remain inside the validated Clipper range"),
         "nonempty first-pass output must contain a valid closed path"
     );
     Ok(tree_clipper
@@ -235,18 +279,22 @@ fn append_expolygon(
     node: PolyNodeId,
     expolygons: &mut Vec<ExPolygon>,
 ) {
-    let contour = nodes[node.0]
-        .contour
-        .take()
-        .expect("unconsumed contour node");
+    let contour = match nodes[node.0].contour.take() {
+        Some(PolyNodeContour::Closed(polygon)) => polygon,
+        Some(PolyNodeContour::Open(_)) => unreachable!("open records are PolyTree roots"),
+        None => unreachable!("unconsumed contour node"),
+    };
     let hole_nodes = mem::take(&mut nodes[node.0].children);
     let mut holes = Vec::with_capacity(hole_nodes.len());
     let mut nested_islands = Vec::with_capacity(hole_nodes.len());
     for hole in hole_nodes {
-        holes.push(nodes[hole.0].contour.take().expect("unconsumed hole node"));
+        let hole_polygon = match nodes[hole.0].contour.take() {
+            Some(PolyNodeContour::Closed(polygon)) => polygon,
+            _ => unreachable!("holes are closed contours"),
+        };
+        holes.push(hole_polygon);
         nested_islands.push(mem::take(&mut nodes[hole.0].children));
     }
-
     expolygons.push(ExPolygon::new(contour, holes));
     for islands in nested_islands {
         for island in islands {

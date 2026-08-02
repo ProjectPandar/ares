@@ -1,5 +1,5 @@
 use crate::geometry::clipper::ordering::{SortTrace, fixed_msvc_sort_by_for_test};
-use crate::geometry::clipper::{ClipOperation, ClipperOptions, ClosedClipper, FillRule, PathRole};
+use crate::geometry::clipper::{ClipOperation, Clipper, ClipperOptions, FillRule, PathRole};
 use crate::geometry::{Point, Polygon};
 
 #[derive(Clone, Copy, Debug)]
@@ -31,14 +31,16 @@ pub(super) fn execute(
     fills: (FillRule, FillRule),
     options: ClipperOptions,
 ) -> Vec<Polygon> {
-    let mut clipper = ClosedClipper::new(options);
+    let mut clipper = Clipper::new(options);
     clipper
         .add_closed_paths(&subject, PathRole::Subject)
         .expect("oracle subject coordinates are in range");
     clipper
         .add_closed_paths(&clip, PathRole::Clip)
         .expect("oracle clip coordinates are in range");
-    clipper.execute_paths(operation, fills.0, fills.1)
+    clipper
+        .execute_paths(operation, fills.0, fills.1)
+        .expect("closed Clipper execution accepts flat output")
 }
 
 pub(super) fn traced_fixed_sort(keys: &[i64], descending: bool) -> (Vec<usize>, SortTrace) {

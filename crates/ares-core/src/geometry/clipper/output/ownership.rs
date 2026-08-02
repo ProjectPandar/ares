@@ -1,9 +1,9 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 use super::super::predicates::get_dx;
 use super::super::types::{EdgeId, OutPointId, OutRecId, OutputIndex};
 use crate::geometry::Point;
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn set_hole_state(&mut self, edge: EdgeId, out_rec: OutRecId) {
         let mut previous = self.edges.edge(edge).previous_in_ael;
         let mut candidate = None;

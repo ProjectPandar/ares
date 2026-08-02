@@ -1,6 +1,6 @@
 use super::helpers::{execute, polygon, polygons};
 use crate::geometry::clipper::{
-    ClipOperation, ClipperOptions, ClosedClipper, FillRule, MaximaCursor, PathRole,
+    ClipOperation, Clipper, ClipperOptions, FillRule, MaximaCursor, PathRole,
 };
 
 mod simple_ownership;
@@ -31,14 +31,16 @@ fn strict_union(subject: &[&[(i64, i64)]]) -> Vec<crate::geometry::Polygon> {
 fn strict_union_with_collected(
     subject: &[&[(i64, i64)]],
 ) -> (Vec<crate::geometry::Polygon>, Vec<i64>) {
-    let mut clipper = ClosedClipper::new(ClipperOptions {
+    let mut clipper = Clipper::new(ClipperOptions {
         strictly_simple: true,
         ..ClipperOptions::default()
     });
     clipper
         .add_closed_paths(&polygons(subject), PathRole::Subject)
         .expect("fixed strict coordinates are in range");
-    let output = clipper.execute_paths(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero);
+    let output = clipper
+        .execute_paths(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero)
+        .expect("closed Clipper execution accepts flat output");
     (output, clipper.collected_strict_maxima_for_test().to_vec())
 }
 
@@ -262,7 +264,7 @@ fn task22i_strict_maxima_cursor_advances_while_output_is_unassigned() {
 #[test]
 fn task22i_strict_maxima_state_is_empty_after_repeated_execution_and_clear() {
     let input = polygon(&[(0, 10), (5, 0), (10, 10)]);
-    let mut clipper = ClosedClipper::new(ClipperOptions {
+    let mut clipper = Clipper::new(ClipperOptions {
         strictly_simple: true,
         ..ClipperOptions::default()
     });

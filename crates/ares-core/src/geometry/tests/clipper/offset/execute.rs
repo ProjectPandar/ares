@@ -1,7 +1,7 @@
 use super::helpers::{coordinates, polygon};
 use crate::geometry::Polygon;
 use crate::geometry::clipper::{
-    ClipOperation, ClipperError, ClipperOffset, ClipperOptions, ClosedClipper, FillRule, IntBounds,
+    ClipOperation, Clipper, ClipperError, ClipperOffset, ClipperOptions, FillRule, IntBounds,
     JoinType, PathRole, PolyNode, PolyTree, negative_outer, offset_paths, offset_paths_tree,
     raw_offset_paths,
 };
@@ -31,7 +31,7 @@ fn execute_many(paths: &[Polygon], delta: f64) -> Result<Vec<Vec<(i64, i64)>>, C
 }
 
 fn tree(paths: &[Polygon]) -> PolyTree {
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     assert_eq!(clipper.add_closed_paths(paths, PathRole::Subject), Ok(true));
     clipper.execute_polytree(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero)
 }
@@ -134,7 +134,7 @@ fn task22g_internal_execute_cleans_concave_positive_and_negative_offsets() {
 
 #[test]
 fn task22g_normalized_bounds_and_negative_outer_match_fixed_clipper() {
-    let mut empty = ClosedClipper::new(ClipperOptions::default());
+    let mut empty = Clipper::new(ClipperOptions::default());
     assert_eq!(empty.bounds(), IntBounds::default());
     assert_eq!(
         negative_outer(empty.bounds()),

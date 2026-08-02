@@ -4,7 +4,7 @@ use crate::geometry::{ExPolygon, Point, Polygon};
 
 use super::bounds::negative_outer;
 use super::predicates::HI_RANGE;
-use super::{ClipOperation, ClipperError, ClipperOptions, ClosedClipper, FillRule, PathRole};
+use super::{ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole};
 
 const SHORTEST_EDGE_FACTOR: f64 = 0.005;
 
@@ -53,7 +53,7 @@ pub(crate) fn variable_offset_inner_ex(
             .collect());
     }
 
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     clipper.add_closed_paths(&contours, PathRole::Subject)?;
     clipper.add_closed_paths(&holes, PathRole::Clip)?;
     Ok(clipper
@@ -173,7 +173,7 @@ fn repair_inner(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
         return Ok(Vec::new());
     }
 
-    let mut clipper = ClosedClipper::new(ClipperOptions {
+    let mut clipper = Clipper::new(ClipperOptions {
         reverse_solution: true,
         preserve_collinear: false,
         strictly_simple: false,
@@ -182,7 +182,7 @@ fn repair_inner(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
     let outer = negative_outer(clipper.bounds());
     clipper.add_closed_path(&outer, PathRole::Subject)?;
     let mut output =
-        clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative);
+        clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative)?;
     if !output.is_empty() {
         output.remove(0);
     }
@@ -194,9 +194,9 @@ fn repair_outer(path: Polygon) -> Result<Vec<Polygon>, ClipperError> {
         return Ok(Vec::new());
     }
 
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     clipper.add_closed_path(&path, PathRole::Subject)?;
-    Ok(clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative))
+    clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative)
 }
 
 fn append_rounded(output: &mut Vec<Point>, point: Vector) -> Result<(), ClipperError> {

@@ -1,6 +1,6 @@
 use super::super::predicates::{HI_RANGE, LO_RANGE, slopes_equal};
-use super::super::types::{Edge, EdgeId};
-use super::super::{ClipperError, ClosedClipper, PathRole};
+use super::super::types::{Edge, EdgeId, OutputIndex};
+use super::super::{Clipper, ClipperError, PathRole};
 use crate::geometry::Point;
 
 enum DuplicateStep {
@@ -9,20 +9,19 @@ enum DuplicateStep {
     Stop,
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn add_path(
         &mut self,
         points: &[Point],
         role: PathRole,
+        closed: bool,
     ) -> Result<bool, ClipperError> {
-        let Some(high_index) = candidate_high_index(points) else {
+        let Some(high_index) = candidate_high_index(points, closed) else {
             return Ok(false);
         };
-
         self.validate_range(points, high_index)?;
 
         let checkpoint = self.edges.len();
-        let start = EdgeId(checkpoint);
         let count = high_index + 1;
         for (index, point) in points.iter().copied().take(count).enumerate() {
             let previous = EdgeId(checkpoint + (index + count - 1) % count);
@@ -30,16 +29,28 @@ impl ClosedClipper {
             self.edges.push(Edge::new(point, role, previous, next));
         }
 
-        let Some(start) = self.clean_path(start) else {
+        let start = EdgeId(checkpoint);
+        let Some(start) = self.clean_path(start, closed) else {
             self.edges.truncate(checkpoint);
             return Ok(false);
         };
-        if self.initialize_edges(start) {
-            self.edges.truncate(checkpoint);
-            return Ok(false);
+        if !closed {
+            self.has_open_paths = true;
+            let terminal = self.edges.edge(start).previous;
+            self.edges.edge_mut(terminal).output = OutputIndex::Skipped;
         }
 
-        self.build_local_minima(start);
+        let is_flat = self.initialize_edges(start);
+        if is_flat {
+            if closed {
+                self.edges.truncate(checkpoint);
+                return Ok(false);
+            }
+            self.build_flat_open_minimum(start);
+            return Ok(true);
+        }
+
+        self.build_local_minima(start, closed);
         Ok(true)
     }
 
@@ -66,12 +77,11 @@ impl ClosedClipper {
         Ok(())
     }
 
-    fn clean_path(&mut self, mut start: EdgeId) -> Option<EdgeId> {
+    fn clean_path(&mut self, mut start: EdgeId, closed: bool) -> Option<EdgeId> {
         let mut edge = start;
         let mut loop_stop = start;
-
         loop {
-            match self.remove_duplicate_if_present(edge, start) {
+            match self.remove_duplicate_if_present(edge, start, closed) {
                 DuplicateStep::NotDuplicate => {}
                 DuplicateStep::Removed {
                     edge: next_edge,
@@ -90,7 +100,8 @@ impl ClosedClipper {
             if previous == next {
                 break;
             }
-            if self.is_collinear(previous, edge, next)
+            if closed
+                && self.is_collinear(previous, edge, next)
                 && (!self.options.preserve_collinear
                     || !between(
                         self.edges.edge(previous).current,
@@ -98,24 +109,42 @@ impl ClosedClipper {
                         self.edges.edge(next).current,
                     ))
             {
-                (edge, start) = self.remove_collinear(edge, start);
-                edge = self.edges.edge(edge).previous;
+                (edge, start) = self.remove_collinear(edge, start, next);
                 loop_stop = edge;
                 continue;
             }
 
             edge = next;
-            if edge == loop_stop {
+            if edge == loop_stop || (!closed && self.edges.edge(edge).next == start) {
                 break;
             }
         }
 
-        (self.edges.edge(edge).previous != self.edges.edge(edge).next).then_some(start)
+        let edge_state = self.edges.edge(edge);
+        let invalid = if closed {
+            edge_state.previous == edge_state.next
+        } else {
+            edge == edge_state.next
+        };
+        (!invalid).then_some(start)
     }
 
-    fn remove_duplicate_if_present(&mut self, edge: EdgeId, start: EdgeId) -> DuplicateStep {
+    fn remove_collinear(&mut self, edge: EdgeId, start: EdgeId, next: EdgeId) -> (EdgeId, EdgeId) {
+        let start = if edge == start { next } else { start };
+        let edge = self.edges.remove(edge);
+        (self.edges.edge(edge).previous, start)
+    }
+
+    fn remove_duplicate_if_present(
+        &mut self,
+        edge: EdgeId,
+        start: EdgeId,
+        closed: bool,
+    ) -> DuplicateStep {
         let next = self.edges.edge(edge).next;
-        if self.edges.edge(edge).current != self.edges.edge(next).current {
+        if self.edges.edge(edge).current != self.edges.edge(next).current
+            || (!closed && next == start)
+        {
             return DuplicateStep::NotDuplicate;
         }
         if edge == next {
@@ -126,12 +155,6 @@ impl ClosedClipper {
             edge: self.edges.remove(edge),
             start: next_start,
         }
-    }
-
-    fn remove_collinear(&mut self, edge: EdgeId, start: EdgeId) -> (EdgeId, EdgeId) {
-        let next = self.edges.edge(edge).next;
-        let next_start = if edge == start { next } else { start };
-        (self.edges.remove(edge), next_start)
     }
 
     fn is_collinear(&self, previous: EdgeId, edge: EdgeId, next: EdgeId) -> bool {
@@ -166,15 +189,22 @@ impl ClosedClipper {
     }
 }
 
-fn candidate_high_index(points: &[Point]) -> Option<usize> {
+fn candidate_high_index(points: &[Point], closed: bool) -> Option<usize> {
     let mut high_index = points.len().checked_sub(1)?;
-    while high_index > 0 && points[high_index] == points[0] {
-        high_index -= 1;
+    if closed {
+        while high_index > 0 && points[high_index] == points[0] {
+            high_index -= 1;
+        }
     }
     while high_index > 0 && points[high_index] == points[high_index - 1] {
         high_index -= 1;
     }
-    (high_index >= 2).then_some(high_index)
+    let valid = if closed {
+        high_index >= 2
+    } else {
+        high_index >= 1
+    };
+    valid.then_some(high_index)
 }
 
 fn point_outside(point: Point, range: i64) -> bool {

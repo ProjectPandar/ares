@@ -1,5 +1,5 @@
-// BSL-1.0 rewrite of the closed-path Clipper 6.4.2 state machine vendored by
-// OrcaSlicer at fixed commit 8500fcdccaa10b5099ac20d252af3a7c560046f1.
+// BSL-1.0 rewrite of the Clipper 6.4.2 state machine vendored by OrcaSlicer at
+// fixed commit 8500fcdccaa10b5099ac20d252af3a7c560046f1.
 
 mod active_edges;
 mod boolean_ex;
@@ -12,6 +12,8 @@ mod minima;
 mod offset;
 pub(crate) mod ordering;
 mod output;
+mod point_in_polygon;
+mod polyline;
 mod polytree;
 mod predicates;
 mod simplify;
@@ -21,20 +23,26 @@ mod variable_offset;
 mod winding;
 
 pub(crate) use boolean_ex::{
-    difference_ex, difference_ex_with_safety_offset, intersection_ex, union_expolygons, xor_ex,
+    difference_ex, difference_ex_polygons, difference_ex_polygons_with_safety_offset,
+    difference_ex_with_safety_offset, difference_polygons_ex, intersection_ex, union_expolygons,
+    xor_ex,
 };
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
-pub(crate) use offset::{ClipperOffset, JoinType, offset_expolygons, offset2_ex, raw_offset_paths};
-#[cfg(test)]
 pub(crate) use offset::{
-    offset_expolygon, offset_expolygons_paths, offset_expolygons_raw, offset_paths,
-    offset_paths_tree,
+    ClipperOffset, JoinType, offset_expolygon, offset_expolygons, offset_expolygons_paths,
+    offset_paths, offset2_ex, opening_ex, raw_offset_paths,
 };
+#[cfg(test)]
+pub(crate) use offset::{offset_expolygons_raw, offset_paths_tree};
+pub(crate) use point_in_polygon::point_in_polygon;
+#[cfg(test)]
+pub(crate) use polyline::recombine_polylines;
+pub(crate) use polyline::{diff_pl, intersection_pl};
 #[cfg(test)]
 pub(crate) use polytree::PolyNode;
 pub(crate) use polytree::{PolyTree, union_ex};
-pub(crate) use predicates::{fixed_round, point_in_polygon, slopes_equal};
+pub(crate) use predicates::{fixed_round, slopes_equal};
 pub(super) use simplify::simplify_polygons;
 #[cfg(test)]
 pub(crate) use strictly_simple::MaximaCursor;
@@ -42,7 +50,7 @@ pub(crate) use variable_offset::variable_offset_inner_ex;
 
 use std::collections::BinaryHeap;
 
-use super::{Point, Polygon};
+use super::{Point, Polygon, Polyline};
 use predicates::area;
 use types::{
     EdgeArena, EdgeId, GhostJoin, IntersectionNode, Join, LocalMinimum, OutPointArena, OutRec,
@@ -80,6 +88,8 @@ pub(crate) struct ClipperOptions {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum ClipperError {
     CoordinateOutOfRange,
+    OpenPathMustBeSubject,
+    OpenPathsRequirePolyTree,
 }
 
 #[cfg(test)]
@@ -89,7 +99,7 @@ pub(crate) enum SimpleRepair {
     FirstLefts2,
 }
 
-pub(crate) struct ClosedClipper {
+pub(crate) struct Clipper {
     options: ClipperOptions,
     using_polytree: bool,
     edges: EdgeArena,
@@ -104,13 +114,14 @@ pub(crate) struct ClosedClipper {
     ghost_joins: Vec<GhostJoin>,
     intersections: Vec<IntersectionNode>,
     maxima: Vec<i64>,
+    has_open_paths: bool,
     #[cfg(test)]
     collected_maxima_for_test: Vec<i64>,
     #[cfg(test)]
     simple_repairs_for_test: Vec<SimpleRepair>,
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(crate) fn new(options: ClipperOptions) -> Self {
         Self {
             options,
@@ -127,6 +138,7 @@ impl ClosedClipper {
             ghost_joins: Vec::new(),
             intersections: Vec::new(),
             maxima: Vec::new(),
+            has_open_paths: false,
             #[cfg(test)]
             collected_maxima_for_test: Vec::new(),
             #[cfg(test)]
@@ -150,18 +162,20 @@ const _: [FillRule; 4] = [
 ];
 const _: [JoinType; 3] = [JoinType::Square, JoinType::Round, JoinType::Miter];
 const _: fn() -> ClipperOffset = ClipperOffset::default;
-const _: fn(ClipperOptions) -> ClosedClipper = ClosedClipper::new;
-const _: fn(&mut ClosedClipper, &Polygon, PathRole) -> Result<bool, ClipperError> =
-    ClosedClipper::add_closed_path;
-const _: fn(&mut ClosedClipper, &[Polygon], PathRole) -> Result<bool, ClipperError> =
-    ClosedClipper::add_closed_paths;
-const _: fn(&mut ClosedClipper, ClipOperation, FillRule, FillRule) -> Vec<Polygon> =
-    ClosedClipper::execute_paths;
-const _: fn(&mut ClosedClipper, ClipOperation, FillRule, FillRule) -> PolyTree =
-    ClosedClipper::execute_polytree;
+const _: fn(ClipperOptions) -> Clipper = Clipper::new;
+const _: fn(&mut Clipper, &Polygon, PathRole) -> Result<bool, ClipperError> =
+    Clipper::add_closed_path;
+const _: fn(&mut Clipper, &[Polygon], PathRole) -> Result<bool, ClipperError> =
+    Clipper::add_closed_paths;
+const _: fn(&mut Clipper, &Polyline, PathRole) -> Result<bool, ClipperError> =
+    Clipper::add_open_path;
+const _: fn(&mut Clipper, &[Polyline], PathRole) -> Result<bool, ClipperError> =
+    Clipper::add_open_paths;
+const _: fn(&mut Clipper, ClipOperation, FillRule, FillRule) -> PolyTree =
+    Clipper::execute_polytree;
 const _: fn(&[Polygon], FillRule) -> Result<Vec<super::ExPolygon>, ClipperError> = union_ex;
 const _: fn(&[Polygon]) -> Result<Vec<Polygon>, ClipperError> = simplify_polygons;
-const _: fn(&mut ClosedClipper) = ClosedClipper::clear;
+const _: fn(&mut Clipper) = Clipper::clear;
 const _: fn(f64) -> i64 = fixed_round;
 const _: fn(i64, i64, i64, i64, bool) -> bool = slopes_equal;
 const _: fn(Point, &[Point]) -> i32 = point_in_polygon;

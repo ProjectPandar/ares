@@ -1,8 +1,7 @@
 use super::helpers::{point, polygon, square, traced_fixed_sort};
 use crate::geometry::clipper::ordering::SortTrace;
 use crate::geometry::clipper::{
-    ClipperError, ClipperOptions, ClosedClipper, PathRole, fixed_round, point_in_polygon,
-    slopes_equal,
+    Clipper, ClipperError, ClipperOptions, PathRole, fixed_round, point_in_polygon, slopes_equal,
 };
 
 const LO_RANGE: i64 = 0x3fff_ffff;
@@ -10,7 +9,7 @@ const HI_RANGE: i64 = 0x3fff_ffff_ffff_ffff;
 
 #[test]
 fn task22f_closed_input_switches_to_full_range_only_beyond_lo_range() {
-    let mut low = ClosedClipper::new(ClipperOptions::default());
+    let mut low = Clipper::new(ClipperOptions::default());
     assert_eq!(
         low.add_closed_path(
             &polygon(&[(LO_RANGE, 0), (0, 1), (0, 2)]),
@@ -20,7 +19,7 @@ fn task22f_closed_input_switches_to_full_range_only_beyond_lo_range() {
     );
     assert!(!low.input_snapshot().use_full_range);
 
-    let mut full = ClosedClipper::new(ClipperOptions::default());
+    let mut full = Clipper::new(ClipperOptions::default());
     assert_eq!(
         full.add_closed_path(
             &polygon(&[(LO_RANGE + 1, 0), (0, 1), (0, 2)]),
@@ -31,7 +30,7 @@ fn task22f_closed_input_switches_to_full_range_only_beyond_lo_range() {
     assert!(full.input_snapshot().use_full_range);
 
     let rejected_flat = polygon(&[(LO_RANGE + 1, 0), (LO_RANGE + 2, 0), (LO_RANGE + 3, 0)]);
-    let mut monotonic = ClosedClipper::new(ClipperOptions::default());
+    let mut monotonic = Clipper::new(ClipperOptions::default());
     assert_eq!(
         monotonic.add_closed_paths(&[rejected_flat, square()], PathRole::Subject),
         Ok(true)
@@ -45,7 +44,7 @@ fn task22f_closed_input_switches_to_full_range_only_beyond_lo_range() {
 #[test]
 fn task22f_closed_input_accepts_inclusive_positive_and_negative_hi_range() {
     for coordinate in [HI_RANGE, -HI_RANGE] {
-        let mut clipper = ClosedClipper::new(ClipperOptions::default());
+        let mut clipper = Clipper::new(ClipperOptions::default());
         assert_eq!(
             clipper.add_closed_path(
                 &polygon(&[(coordinate, 0), (0, 1), (0, 2)]),
@@ -59,7 +58,7 @@ fn task22f_closed_input_accepts_inclusive_positive_and_negative_hi_range() {
 #[test]
 fn task22f_closed_input_rejects_one_unit_outside_each_hi_range_bound() {
     for coordinate in [HI_RANGE + 1, -(HI_RANGE + 1)] {
-        let mut clipper = ClosedClipper::new(ClipperOptions::default());
+        let mut clipper = Clipper::new(ClipperOptions::default());
         assert_eq!(
             clipper.add_closed_path(
                 &polygon(&[(coordinate, 0), (0, 1), (0, 2)]),
@@ -72,14 +71,14 @@ fn task22f_closed_input_rejects_one_unit_outside_each_hi_range_bound() {
 
 #[test]
 fn task22f_closed_input_checks_candidate_count_before_coordinate_range() {
-    let mut ignored = ClosedClipper::new(ClipperOptions::default());
+    let mut ignored = Clipper::new(ClipperOptions::default());
     assert_eq!(
         ignored.add_closed_path(&polygon(&[(i64::MAX, 0), (0, 0)]), PathRole::Subject,),
         Ok(false)
     );
     assert!(ignored.input_snapshot().edges.is_empty());
 
-    let mut checked = ClosedClipper::new(ClipperOptions::default());
+    let mut checked = Clipper::new(ClipperOptions::default());
     assert_eq!(
         checked.add_closed_path(
             &polygon(&[(i64::MAX, 0), (0, 0), (1, 0)]),

@@ -1,8 +1,12 @@
+mod bbox_clip;
+mod bounding_box;
 mod chain_points;
 mod clipper;
 mod coord;
 mod edge_grid;
 mod expolygon;
+mod line;
 mod polygon;
+mod polyline;
 mod scale;
 mod simplification;

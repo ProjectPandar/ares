@@ -1,4 +1,4 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 use super::super::types::{
     EdgeId, EdgeSide, OutPoint, OutPointArena, OutPointId, OutPointSlot, OutRec, OutRecId,
     OutputIndex,
@@ -71,12 +71,13 @@ impl OutPointArena {
     }
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn create_out_rec(&mut self) -> OutRecId {
         let id = OutRecId(self.out_recs.len());
         self.out_recs.push(OutRec {
             root: id,
             is_hole: false,
+            is_open: false,
             first_left: None,
             points: None,
             bottom_point: None,
@@ -99,7 +100,10 @@ impl ClosedClipper {
                 let out_rec = self.create_out_rec();
                 let out_point = self.out_points.allocate(out_rec, point);
                 self.out_recs[out_rec.0].points = Some(out_point);
-                self.set_hole_state(edge_id, out_rec);
+                self.out_recs[out_rec.0].is_open = self.edges.edge(edge_id).wind_delta == 0;
+                if !self.out_recs[out_rec.0].is_open {
+                    self.set_hole_state(edge_id, out_rec);
+                }
                 self.edges.edge_mut(edge_id).output = OutputIndex::Assigned(out_rec);
                 out_point
             }

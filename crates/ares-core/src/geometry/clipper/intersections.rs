@@ -1,12 +1,13 @@
+mod open;
 mod top;
 
 use super::ordering::fixed_msvc_sort_by;
 use super::predicates::{intersect_point, top_x};
 use super::types::{Edge, EdgeId, ExecutionConfig, IntersectionNode, OutputIndex};
-use super::{ClipOperation, ClosedClipper, FillRule, PathRole};
+use super::{ClipOperation, Clipper, FillRule, PathRole};
 use crate::geometry::Point;
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn intersect_edges(
         &mut self,
         first: EdgeId,
@@ -18,6 +19,14 @@ impl ClosedClipper {
         let second_was_output = matches!(self.edges.edge(second).output, OutputIndex::Assigned(_));
         let first_before = *self.edges.edge(first);
         let second_before = *self.edges.edge(second);
+        if self.intersect_open_edges(
+            [first, second],
+            point,
+            config,
+            [first_was_output, second_was_output],
+        ) {
+            return;
+        }
         if first_before.role == second_before.role {
             if own_fill(first_before, config) == FillRule::EvenOdd {
                 self.edges.edge_mut(first).wind_count = second_before.wind_count;

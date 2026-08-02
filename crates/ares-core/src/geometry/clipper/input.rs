@@ -1,19 +1,19 @@
 mod bounds;
 mod path;
 
-use super::{ClipperError, ClosedClipper, PathRole};
-use crate::geometry::Polygon;
+use super::{Clipper, ClipperError, PathRole};
+use crate::geometry::{Polygon, Polyline};
 
 #[cfg(test)]
 use super::types::{InputSnapshot, LocalMinimumSnapshot};
 
-impl ClosedClipper {
+impl Clipper {
     pub(crate) fn add_closed_path(
         &mut self,
         path: &Polygon,
         role: PathRole,
     ) -> Result<bool, ClipperError> {
-        self.add_path(path.points(), role)
+        self.add_path(path.points(), role, true)
     }
 
     pub(crate) fn add_closed_paths(
@@ -28,6 +28,32 @@ impl ClosedClipper {
         Ok(accepted_any)
     }
 
+    pub(crate) fn add_open_path(
+        &mut self,
+        path: &Polyline,
+        role: PathRole,
+    ) -> Result<bool, ClipperError> {
+        if role == PathRole::Clip {
+            return Err(ClipperError::OpenPathMustBeSubject);
+        }
+        self.add_path(path.points(), role, false)
+    }
+
+    pub(crate) fn add_open_paths(
+        &mut self,
+        paths: &[Polyline],
+        role: PathRole,
+    ) -> Result<bool, ClipperError> {
+        if role == PathRole::Clip {
+            return Err(ClipperError::OpenPathMustBeSubject);
+        }
+        let mut accepted_any = false;
+        for path in paths {
+            accepted_any |= self.add_path(path.points(), role, false)?;
+        }
+        Ok(accepted_any)
+    }
+
     #[cfg(test)]
     pub(crate) fn input_snapshot(&self) -> InputSnapshot {
         InputSnapshot {
@@ -38,8 +64,8 @@ impl ClosedClipper {
                 .iter()
                 .map(|minimum| LocalMinimumSnapshot {
                     y: minimum.y,
-                    left: minimum.left.0,
-                    right: minimum.right.0,
+                    left: minimum.left.map(|id| id.0),
+                    right: minimum.right.map(|id| id.0),
                 })
                 .collect(),
         }

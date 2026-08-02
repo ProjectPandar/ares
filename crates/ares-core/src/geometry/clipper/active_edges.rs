@@ -1,8 +1,8 @@
-use super::ClosedClipper;
+use super::Clipper;
 use super::predicates::top_x;
 use super::types::EdgeId;
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn insert_edge_into_ael(&mut self, edge: EdgeId, start: Option<EdgeId>) {
         let Some(active) = self.active_edges else {
             let edge_state = self.edges.edge_mut(edge);

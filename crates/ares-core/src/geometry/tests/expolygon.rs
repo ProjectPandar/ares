@@ -42,6 +42,54 @@ fn task22f_expolygon_owns_contour_and_ordered_holes() {
 }
 
 #[test]
+fn task22o2_expolygon_area_subtracts_clockwise_holes() {
+    let value = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(0, 0),
+            Point::new(20, 0),
+            Point::new(20, 20),
+            Point::new(0, 20),
+        ]),
+        vec![Polygon::new(vec![
+            Point::new(5, 5),
+            Point::new(5, 15),
+            Point::new(15, 15),
+            Point::new(15, 5),
+        ])],
+    );
+    assert_eq!(value.area(), 300.0);
+}
+
+#[test]
+fn task22o2_expolygon_area_accumulates_holes_in_source_order() {
+    let side = 1_i64 << 30;
+    let value = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(0, 0),
+            Point::new(side, 0),
+            Point::new(side, side),
+            Point::new(0, side),
+        ]),
+        vec![
+            Polygon::new(vec![
+                Point::new(0, 0),
+                Point::new(0, side),
+                Point::new(side, side),
+                Point::new(side, 0),
+            ]),
+            Polygon::new(vec![
+                Point::new(0, 0),
+                Point::new(0, 1),
+                Point::new(1, 1),
+                Point::new(1, 0),
+            ]),
+        ],
+    );
+
+    assert_eq!(value.area(), -1.0);
+}
+
+#[test]
 fn task22h_empty_expolygons_are_an_exact_identity() {
     assert_largest_contour_identity(Vec::new());
 }

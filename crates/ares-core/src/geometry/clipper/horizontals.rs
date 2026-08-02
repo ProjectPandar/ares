@@ -1,4 +1,4 @@
-use super::ClosedClipper;
+use super::Clipper;
 use super::predicates::slopes_equal_four;
 use super::strictly_simple::MaximaCursor;
 use super::types::{EdgeId, ExecutionConfig, GhostJoin, Join, OutPointId, OutputIndex};
@@ -20,7 +20,7 @@ struct HorizontalScan {
     config: ExecutionConfig,
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn process_horizontals(&mut self, config: ExecutionConfig) {
         while let Some(horizontal) = self.pop_edge_from_sel() {
             self.process_horizontal(horizontal, config);
@@ -98,19 +98,26 @@ impl ClosedClipper {
         }
 
         if self.edges.edge(horizontal).next_in_lml.is_some() {
-            if matches!(self.edges.edge(horizontal).output, OutputIndex::Assigned(_)) {
-                let point = self.add_out_point(horizontal, self.edges.edge(horizontal).top);
-                let promoted = self.update_edge_into_ael(horizontal);
-                self.join_horizontal_promotion(promoted, point);
-            } else {
-                self.update_edge_into_ael(horizontal);
-            }
+            self.promote_horizontal(horizontal);
         } else {
             if matches!(self.edges.edge(horizontal).output, OutputIndex::Assigned(_)) {
                 self.add_out_point(horizontal, self.edges.edge(horizontal).top);
             }
             self.delete_from_ael(horizontal);
         }
+    }
+
+    fn promote_horizontal(&mut self, horizontal: EdgeId) {
+        if !matches!(self.edges.edge(horizontal).output, OutputIndex::Assigned(_)) {
+            self.update_edge_into_ael(horizontal);
+            return;
+        }
+        let point = self.add_out_point(horizontal, self.edges.edge(horizontal).top);
+        let promoted = self.update_edge_into_ael(horizontal);
+        if self.edges.edge(promoted).wind_delta == 0 {
+            return;
+        }
+        self.join_horizontal_promotion(promoted, point);
     }
 
     fn scan_horizontal_crossings(
@@ -143,7 +150,9 @@ impl ClosedClipper {
             {
                 break;
             }
-            if matches!(horizontal_edge.output, OutputIndex::Assigned(_)) {
+            if matches!(horizontal_edge.output, OutputIndex::Assigned(_))
+                && horizontal_edge.wind_delta != 0
+            {
                 let point = self.add_out_point(horizontal, crossing_edge.current);
                 *output_point = Some(point);
                 self.join_pending_horizontals(horizontal, point);

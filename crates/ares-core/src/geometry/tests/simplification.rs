@@ -279,6 +279,35 @@ fn task22i_expolygons_keep_independent_union_scope_and_contiguous_append() {
     );
 }
 
+#[test]
+fn task22o11_polygon_douglas_peucker_mutates_the_closed_ring_without_repair() {
+    let mut ring = polygon(&[(0, 0), (1, 0), (2, 0), (2, 2), (0, 2)]);
+    ring.douglas_peucker(0.1);
+    assert_eq!(ring, polygon(&[(0, 0), (2, 0), (2, 2), (0, 2)]));
+}
+
+#[test]
+fn task22o11_expolygon_douglas_peucker_visits_contour_then_each_stored_hole() {
+    let mut input = expolygon(
+        &[(0, 0), (1, 0), (4, 0), (4, 4), (0, 4)],
+        &[
+            &[(1, 1), (1, 3), (2, 3), (3, 3), (3, 1)],
+            &[(10, 10), (11, 10), (12, 10), (12, 12), (10, 12)],
+        ],
+    );
+    input.douglas_peucker(0.1);
+    assert_eq!(
+        input,
+        expolygon(
+            &[(0, 0), (4, 0), (4, 4), (0, 4)],
+            &[
+                &[(1, 1), (1, 3), (3, 3), (3, 1)],
+                &[(10, 10), (12, 10), (12, 12), (10, 12)],
+            ],
+        )
+    );
+}
+
 fn simplify_expolygon(input: ExPolygon, tolerance: f64) -> Vec<ExPolygon> {
     let mut output = Vec::new();
     append_simplified_expolygon(input, tolerance, &mut output).unwrap();

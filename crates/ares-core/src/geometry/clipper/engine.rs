@@ -1,15 +1,18 @@
 use super::polytree::PolyTree;
 use super::types::ExecutionConfig;
-use super::{ClipOperation, ClosedClipper, FillRule};
+use super::{ClipOperation, Clipper, FillRule};
 use crate::geometry::Polygon;
 
-impl ClosedClipper {
+impl Clipper {
     pub(crate) fn execute_paths(
         &mut self,
         operation: ClipOperation,
         subject_fill: FillRule,
         clip_fill: FillRule,
-    ) -> Vec<Polygon> {
+    ) -> Result<Vec<Polygon>, super::ClipperError> {
+        if self.has_open_paths {
+            return Err(super::ClipperError::OpenPathsRequirePolyTree);
+        }
         self.using_polytree = false;
         let config = ExecutionConfig {
             operation,
@@ -23,7 +26,7 @@ impl ClosedClipper {
             Vec::new()
         };
         self.dispose_all_out_recs();
-        paths
+        Ok(paths)
     }
 
     pub(crate) fn execute_polytree(
@@ -59,6 +62,7 @@ impl ClosedClipper {
         self.ghost_joins.clear();
         self.intersections.clear();
         self.maxima.clear();
+        self.has_open_paths = false;
         #[cfg(test)]
         self.collected_maxima_for_test.clear();
         #[cfg(test)]
@@ -117,8 +121,9 @@ impl ClosedClipper {
             let Some(points) = out_rec.points else {
                 continue;
             };
-            if (out_rec.is_hole ^ self.options.reverse_solution)
-                == (self.out_ring_area(points) > 0.0)
+            if !out_rec.is_open
+                && (out_rec.is_hole ^ self.options.reverse_solution)
+                    == (self.out_ring_area(points) > 0.0)
             {
                 self.reverse_out_ring(points);
             }
@@ -129,12 +134,22 @@ impl ClosedClipper {
         self.fix_output_orientations();
         self.join_common_edges();
         for index in 0..self.out_recs.len() {
-            if self.out_recs[index].points.is_some() {
-                self.fixup_out_polygon(super::types::OutRecId(index));
-            }
+            self.fixup_output_record(index);
         }
         if self.options.strictly_simple {
             self.do_simple_polygons();
+        }
+    }
+
+    fn fixup_output_record(&mut self, index: usize) {
+        if self.out_recs[index].points.is_none() {
+            return;
+        }
+        let out_rec = super::types::OutRecId(index);
+        if self.out_recs[index].is_open {
+            self.fixup_out_polyline(out_rec);
+        } else {
+            self.fixup_out_polygon(out_rec);
         }
     }
 }

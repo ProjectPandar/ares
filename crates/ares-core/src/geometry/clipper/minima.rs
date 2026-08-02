@@ -1,26 +1,29 @@
-use super::ClosedClipper;
+use super::Clipper;
 use super::ordering::fixed_msvc_sort_by;
 use super::predicates::slopes_equal_four;
-use super::types::{ExecutionConfig, Join, LocalMinimum, OutputIndex};
+use super::types::{EdgeId, ExecutionConfig, Join, LocalMinimum, OutputIndex};
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn reset_for_execute(&mut self) {
         self.maxima.clear();
         #[cfg(test)]
         self.collected_maxima_for_test.clear();
         fixed_msvc_sort_by(&mut self.minima, |first, second| first.y < second.y);
         for minimum in self.minima.iter().copied() {
-            let left_bottom = self.edges.edge(minimum.left).bottom;
-            let left = self.edges.edge_mut(minimum.left);
-            left.current = left_bottom;
-            left.side = super::types::EdgeSide::Left;
-            left.output = OutputIndex::Unassigned;
-
-            let right_bottom = self.edges.edge(minimum.right).bottom;
-            let right = self.edges.edge_mut(minimum.right);
-            right.current = right_bottom;
-            right.side = super::types::EdgeSide::Right;
-            right.output = OutputIndex::Unassigned;
+            if let Some(left_id) = minimum.left {
+                let left_bottom = self.edges.edge(left_id).bottom;
+                let left = self.edges.edge_mut(left_id);
+                left.current = left_bottom;
+                left.side = super::types::EdgeSide::Left;
+                left.output = OutputIndex::Unassigned;
+            }
+            if let Some(right_id) = minimum.right {
+                let right_bottom = self.edges.edge(right_id).bottom;
+                let right = self.edges.edge_mut(right_id);
+                right.current = right_bottom;
+                right.side = super::types::EdgeSide::Right;
+                right.output = OutputIndex::Unassigned;
+            }
         }
         self.scanbeam.clear();
         self.active_edges = None;
@@ -42,35 +45,64 @@ impl ClosedClipper {
     }
 
     fn insert_local_minimum(&mut self, minimum: LocalMinimum, config: ExecutionConfig) {
-        let left = minimum.left;
-        let right = minimum.right;
-        self.insert_edge_into_ael(left, None);
-        self.insert_edge_into_ael(right, Some(left));
-        self.set_winding_count(left, config);
-        let left_edge = *self.edges.edge(left);
-        self.edges.edge_mut(right).wind_count = left_edge.wind_count;
-        self.edges.edge_mut(right).alternate_wind_count = left_edge.alternate_wind_count;
-        let output = self
-            .is_contributing(left, config)
-            .then(|| self.add_local_min_polygon(left, right, left_edge.bottom));
-        self.scanbeam.push(left_edge.top.y());
-        let right_edge = *self.edges.edge(right);
-        if right_edge.is_horizontal() {
-            self.add_edge_to_sel(right);
-            if let Some(next) = right_edge.next_in_lml {
-                self.scanbeam.push(self.edges.edge(next).top.y());
+        let mut output = None;
+        match (minimum.left, minimum.right) {
+            (None, Some(right)) => {
+                self.insert_edge_into_ael(right, None);
+                self.set_winding_count(right, config);
+                if self.is_contributing(right, config) {
+                    output = Some(self.add_out_point(right, self.edges.edge(right).bottom));
+                }
             }
-        } else {
-            self.scanbeam.push(right_edge.top.y());
+            (Some(left), None) => {
+                self.insert_edge_into_ael(left, None);
+                self.set_winding_count(left, config);
+                if self.is_contributing(left, config) {
+                    output = Some(self.add_out_point(left, self.edges.edge(left).bottom));
+                }
+                self.scanbeam.push(self.edges.edge(left).top.y());
+            }
+            (Some(left), Some(right)) => {
+                self.insert_edge_into_ael(left, None);
+                self.insert_edge_into_ael(right, Some(left));
+                self.set_winding_count(left, config);
+                let left_edge = *self.edges.edge(left);
+                self.edges.edge_mut(right).wind_count = left_edge.wind_count;
+                self.edges.edge_mut(right).alternate_wind_count = left_edge.alternate_wind_count;
+                if self.is_contributing(left, config) {
+                    output = Some(self.add_local_min_polygon(left, right, left_edge.bottom));
+                }
+                self.scanbeam.push(left_edge.top.y());
+            }
+            (None, None) => unreachable!("local minimum has at least one bound"),
         }
-        let Some(output) = output else {
-            self.intersect_minimum_edges(left, right, config);
+
+        if let Some(right) = minimum.right {
+            self.schedule_right_minimum(right);
+        }
+
+        let (Some(left), Some(right)) = (minimum.left, minimum.right) else {
             return;
         };
-        self.join_minimum_ghosts(right_edge, output);
-        self.join_minimum_left(left, output);
-        self.join_minimum_right(left, right, output);
+        let right_edge = *self.edges.edge(right);
+        if let Some(output) = output {
+            self.join_minimum_ghosts(right_edge, output);
+            self.join_minimum_left(left, output);
+            self.join_minimum_right(left, right, output);
+        }
         self.intersect_minimum_edges(left, right, config);
+    }
+
+    fn schedule_right_minimum(&mut self, right: EdgeId) {
+        let right_edge = *self.edges.edge(right);
+        if !right_edge.is_horizontal() {
+            self.scanbeam.push(right_edge.top.y());
+            return;
+        }
+        self.add_edge_to_sel(right);
+        if let Some(next) = right_edge.next_in_lml {
+            self.scanbeam.push(self.edges.edge(next).top.y());
+        }
     }
 
     fn join_minimum_ghosts(

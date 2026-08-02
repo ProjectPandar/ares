@@ -3,7 +3,7 @@ use crate::geometry::Polygon;
 use crate::geometry::clipper::bounds::negative_outer;
 use crate::geometry::clipper::predicates::area;
 use crate::geometry::clipper::{
-    ClipOperation, ClipperError, ClipperOptions, ClosedClipper, FillRule, PathRole, PolyTree,
+    ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole, PolyTree,
 };
 
 const SHORTEST_EDGE_FACTOR: f64 = 0.005;
@@ -97,13 +97,13 @@ pub(super) fn union_paths(
     paths: &[Polygon],
     fill_rule: FillRule,
 ) -> Result<Vec<Polygon>, ClipperError> {
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     clipper.add_closed_paths(paths, PathRole::Subject)?;
-    Ok(clipper.execute_paths(ClipOperation::Union, fill_rule, fill_rule))
+    clipper.execute_paths(ClipOperation::Union, fill_rule, fill_rule)
 }
 
 pub(super) fn union_tree(paths: &[Polygon], fill_rule: FillRule) -> Result<PolyTree, ClipperError> {
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     clipper.add_closed_paths(paths, PathRole::Subject)?;
     Ok(clipper.execute_polytree(ClipOperation::Union, fill_rule, fill_rule))
 }
@@ -112,14 +112,14 @@ pub(super) fn difference_paths(
     subject: &[Polygon],
     clip: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     clipper.add_closed_paths(subject, PathRole::Subject)?;
     clipper.add_closed_paths(clip, PathRole::Clip)?;
-    Ok(clipper.execute_paths(
+    clipper.execute_paths(
         ClipOperation::Difference,
         FillRule::NonZero,
         FillRule::NonZero,
-    ))
+    )
 }
 
 fn expand_paths(
@@ -163,7 +163,7 @@ fn shrink_paths_tree(
 fn negative_paths(paths: &[Polygon]) -> Result<Vec<Polygon>, ClipperError> {
     let mut clipper = negative_clipper(paths)?;
     let mut output =
-        clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative);
+        clipper.execute_paths(ClipOperation::Union, FillRule::Negative, FillRule::Negative)?;
     if !output.is_empty() {
         output.remove(0);
     }
@@ -178,8 +178,8 @@ fn negative_tree(paths: &[Polygon]) -> Result<PolyTree, ClipperError> {
     Ok(output)
 }
 
-fn negative_clipper(paths: &[Polygon]) -> Result<ClosedClipper, ClipperError> {
-    let mut clipper = ClosedClipper::new(ClipperOptions {
+fn negative_clipper(paths: &[Polygon]) -> Result<Clipper, ClipperError> {
+    let mut clipper = Clipper::new(ClipperOptions {
         reverse_solution: true,
         preserve_collinear: false,
         strictly_simple: false,

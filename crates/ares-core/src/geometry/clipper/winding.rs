@@ -1,7 +1,7 @@
 use super::types::{Edge, EdgeId, ExecutionConfig};
-use super::{ClipOperation, ClosedClipper, FillRule, PathRole};
+use super::{ClipOperation, Clipper, FillRule, PathRole};
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn set_winding_count(&mut self, edge_id: EdgeId, config: ExecutionConfig) {
         let edge = *self.edges.edge(edge_id);
         let mut previous = edge.previous_in_ael;

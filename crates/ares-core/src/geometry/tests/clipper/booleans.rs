@@ -1,5 +1,5 @@
 use super::helpers::{execute, polygon, polygons, traced_fixed_sort};
-use crate::geometry::clipper::{ClipOperation, ClipperOptions, ClosedClipper, FillRule, PathRole};
+use crate::geometry::clipper::{ClipOperation, Clipper, ClipperOptions, FillRule, PathRole};
 
 const NONCONVEX: &[(i64, i64)] = &[(0, 0), (30, 0), (30, 10), (10, 10), (10, 30), (0, 30)];
 const CROSSING_CLIP: &[(i64, i64)] = &[(5, -5), (25, -5), (25, 25), (5, 25)];
@@ -119,7 +119,7 @@ fn task22f_closed_boolean_operations_match_fixed_nonconvex_oracle() {
 fn task22f_closed_boolean_execute_consumes_input_until_clear_and_readd() {
     let subject = vec![polygon(NONCONVEX)];
     let clip = vec![polygon(CROSSING_CLIP)];
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     let expected = polygons(&[&[(25, 10), (10, 10), (10, 25), (5, 25), (5, 0), (25, 0)]]);
 
     assert_eq!(
@@ -133,7 +133,7 @@ fn task22f_closed_boolean_execute_consumes_input_until_clear_and_readd() {
             FillRule::NonZero,
             FillRule::NonZero,
         ),
-        expected
+        Ok(expected.clone())
     );
     assert!(
         clipper
@@ -142,6 +142,7 @@ fn task22f_closed_boolean_execute_consumes_input_until_clear_and_readd() {
                 FillRule::NonZero,
                 FillRule::NonZero,
             )
+            .expect("closed Clipper execution accepts flat output")
             .is_empty()
     );
 
@@ -157,7 +158,7 @@ fn task22f_closed_boolean_execute_consumes_input_until_clear_and_readd() {
             FillRule::NonZero,
             FillRule::NonZero,
         ),
-        expected
+        Ok(expected)
     );
 }
 

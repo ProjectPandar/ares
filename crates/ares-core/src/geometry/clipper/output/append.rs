@@ -1,9 +1,9 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 use super::super::predicates::{slopes_equal_four, top_x};
 use super::super::types::{EdgeId, EdgeSide, Join, OutPointId, OutRecId, OutputIndex};
 use crate::geometry::Point;
 
-impl ClosedClipper {
+impl Clipper {
     pub(in crate::geometry::clipper) fn add_local_min_polygon(
         &mut self,
         first: EdgeId,

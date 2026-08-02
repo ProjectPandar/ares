@@ -1,5 +1,5 @@
 use super::{
-    ClipOperation, ClipperError, ClipperOptions, ClosedClipper, FillRule, JoinType, PathRole,
+    ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, JoinType, PathRole,
     raw_offset_paths,
 };
 use crate::geometry::{ExPolygon, Polygon};
@@ -24,6 +24,34 @@ pub(crate) fn difference_ex_with_safety_offset(
         for hole in expolygon.holes() {
             append_safety_offset(hole, &mut expanded)?;
         }
+    }
+    execute_ex_with_paths(subject, &expanded, ClipOperation::Difference)
+}
+
+pub(crate) fn difference_ex_polygons(
+    subject: &[ExPolygon],
+    clip: &[Polygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    execute_ex_with_paths(subject, clip, ClipOperation::Difference)
+}
+
+pub(crate) fn difference_polygons_ex(
+    subject: &[Polygon],
+    clip: &[Polygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    let mut paths_clipper = Clipper::new(ClipperOptions::default());
+    paths_clipper.add_closed_paths(subject, PathRole::Subject)?;
+    paths_clipper.add_closed_paths(clip, PathRole::Clip)?;
+    execute_two_pass(&mut paths_clipper, ClipOperation::Difference)
+}
+
+pub(crate) fn difference_ex_polygons_with_safety_offset(
+    subject: &[ExPolygon],
+    clip: &[Polygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    let mut expanded = Vec::new();
+    for polygon in clip {
+        append_safety_offset(polygon, &mut expanded)?;
     }
     execute_ex_with_paths(subject, &expanded, ClipOperation::Difference)
 }
@@ -55,7 +83,7 @@ fn execute_ex(
     operation: ClipOperation,
     clip_role: PathRole,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut paths_clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut paths_clipper = Clipper::new(ClipperOptions::default());
     add_expolygons(&mut paths_clipper, subject, PathRole::Subject)?;
     add_expolygons(&mut paths_clipper, clip, clip_role)?;
     execute_two_pass(&mut paths_clipper, operation)
@@ -66,22 +94,22 @@ fn execute_ex_with_paths(
     clip: &[Polygon],
     operation: ClipOperation,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut paths_clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut paths_clipper = Clipper::new(ClipperOptions::default());
     add_expolygons(&mut paths_clipper, subject, PathRole::Subject)?;
     paths_clipper.add_closed_paths(clip, PathRole::Clip)?;
     execute_two_pass(&mut paths_clipper, operation)
 }
 
 fn execute_two_pass(
-    paths_clipper: &mut ClosedClipper,
+    paths_clipper: &mut Clipper,
     operation: ClipOperation,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let paths = paths_clipper.execute_paths(operation, FillRule::NonZero, FillRule::NonZero);
+    let paths = paths_clipper.execute_paths(operation, FillRule::NonZero, FillRule::NonZero)?;
     if paths.is_empty() {
         return Ok(Vec::new());
     }
 
-    let mut tree_clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut tree_clipper = Clipper::new(ClipperOptions::default());
     assert!(
         tree_clipper
             .add_closed_paths(&paths, PathRole::Subject)
@@ -104,7 +132,7 @@ fn append_safety_offset(path: &Polygon, output: &mut Vec<Polygon>) -> Result<(),
 }
 
 fn add_expolygons(
-    clipper: &mut ClosedClipper,
+    clipper: &mut Clipper,
     expolygons: &[ExPolygon],
     role: PathRole,
 ) -> Result<(), ClipperError> {

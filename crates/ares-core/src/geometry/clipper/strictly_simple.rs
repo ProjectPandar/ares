@@ -1,4 +1,4 @@
-use super::ClosedClipper;
+use super::Clipper;
 use super::types::{EdgeId, Join, OutputIndex};
 use crate::geometry::Point;
 
@@ -51,7 +51,7 @@ impl MaximaCursor {
     }
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(super) fn collect_strict_maximum(&mut self, edge: EdgeId) {
         if self.options.strictly_simple {
             let x = self.edges.edge(edge).top.x();

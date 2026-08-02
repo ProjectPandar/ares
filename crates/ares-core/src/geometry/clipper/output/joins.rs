@@ -1,4 +1,4 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 use super::super::types::{Join, OutRecId};
 
 struct HoleState {
@@ -7,13 +7,15 @@ struct HoleState {
     first_left: Option<OutRecId>,
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(in crate::geometry::clipper) fn join_common_edges(&mut self) {
         for mut join in std::mem::take(&mut self.joins) {
             let first_rec = self.join_owner(join.first);
             let second_rec = self.join_owner(join.second);
             if self.out_recs[first_rec.0].points.is_none()
                 || self.out_recs[second_rec.0].points.is_none()
+                || self.out_recs[first_rec.0].is_open
+                || self.out_recs[second_rec.0].is_open
             {
                 continue;
             }

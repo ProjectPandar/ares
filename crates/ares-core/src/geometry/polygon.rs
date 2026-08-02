@@ -22,6 +22,26 @@ impl Polygon {
         self.points.reverse();
     }
 
+    pub(crate) fn split_at_first_point(&self) -> super::Polyline {
+        let mut points = Vec::with_capacity(self.points.len() + 1);
+        points.extend_from_slice(&self.points);
+        if let Some(&first) = self.points.first() {
+            points.push(first);
+        }
+        super::Polyline::new(points)
+    }
+
+    pub(crate) fn douglas_peucker(&mut self, tolerance: f64) {
+        self.points = super::simplification::simplify_closed_points(
+            std::mem::take(&mut self.points),
+            tolerance,
+        );
+    }
+
+    pub(crate) fn contains(&self, point: &Point) -> bool {
+        super::clipper::point_in_polygon(*point, &self.points) != 0
+    }
+
     pub(crate) fn area(&self) -> f64 {
         let Some(previous) = self.points.last().filter(|_| self.points.len() >= 3) else {
             return 0.0;

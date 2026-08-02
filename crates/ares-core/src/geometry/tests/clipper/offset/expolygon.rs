@@ -1,7 +1,7 @@
 use super::helpers::{coordinates, polygon};
 use crate::geometry::clipper::{
     JoinType, offset_expolygon, offset_expolygons, offset_expolygons_paths, offset_expolygons_raw,
-    offset2_ex,
+    offset2_ex, opening_ex,
 };
 use crate::geometry::{ExPolygon, Polygon};
 
@@ -187,5 +187,23 @@ fn task22g_negative_multi_offset_preserves_no_cross_union_input_order() {
             vec![(90, 90), (10, 90), (10, 10), (90, 10)],
             vec![(150, 90), (70, 90), (70, 10), (150, 10)],
         ]
+    );
+}
+
+#[test]
+fn task22o11_opening_is_the_exact_inward_then_outward_offset() {
+    let input = vec![fixed_input()];
+    assert_eq!(
+        opening_ex(&input, 5.0, JoinType::Miter, 3.0),
+        offset2_ex(&input, -5.0, 5.0, JoinType::Miter, 3.0)
+    );
+}
+
+#[test]
+fn task22o11_opening_preserves_total_collapse() {
+    let input = vec![holeless(&[(0, 0), (8, 0), (8, 8), (0, 8)])];
+    assert_eq!(
+        opening_ex(&input, 5.0, JoinType::Miter, 3.0),
+        Ok(Vec::new())
     );
 }

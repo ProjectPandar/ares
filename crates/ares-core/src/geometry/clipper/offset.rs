@@ -5,7 +5,8 @@ mod input;
 
 pub(crate) use execute::{offset_paths, offset_paths_tree, raw_offset_paths};
 pub(crate) use expolygon::{
-    offset_expolygon, offset_expolygons, offset_expolygons_paths, offset_expolygons_raw, offset2_ex,
+    offset_expolygon, offset_expolygons, offset_expolygons_paths, offset_expolygons_raw,
+    offset2_ex, opening_ex,
 };
 
 use super::{ClipperError, PolyTree};

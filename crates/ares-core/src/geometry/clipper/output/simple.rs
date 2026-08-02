@@ -1,9 +1,9 @@
-use super::super::ClosedClipper;
+use super::super::Clipper;
 #[cfg(test)]
 use super::super::SimpleRepair;
 use super::super::types::{OutPointId, OutRecId};
 
-impl ClosedClipper {
+impl Clipper {
     pub(in crate::geometry::clipper) fn do_simple_polygons(&mut self) {
         let mut index = 0;
         while index < self.out_recs.len() {
@@ -12,6 +12,9 @@ impl ClosedClipper {
             let Some(point) = self.out_recs[out_rec.0].points else {
                 continue;
             };
+            if self.out_recs[out_rec.0].is_open {
+                continue;
+            }
             self.do_simple_polygon(out_rec, point);
         }
     }

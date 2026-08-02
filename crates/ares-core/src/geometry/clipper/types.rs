@@ -1,5 +1,5 @@
 use super::{ClipOperation, FillRule, PathRole, predicates::get_dx};
-use crate::geometry::{Point, Polygon};
+use crate::geometry::{Point, Polygon, Polyline};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) struct EdgeId(pub(super) usize);
@@ -175,8 +175,8 @@ impl EdgeArena {
 #[derive(Clone, Copy, Debug)]
 pub(super) struct LocalMinimum {
     pub(super) y: i64,
-    pub(super) left: EdgeId,
-    pub(super) right: EdgeId,
+    pub(super) left: Option<EdgeId>,
+    pub(super) right: Option<EdgeId>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -190,6 +190,7 @@ pub(super) struct IntersectionNode {
 pub(super) struct OutRec {
     pub(super) root: OutRecId,
     pub(super) is_hole: bool,
+    pub(super) is_open: bool,
     pub(super) first_left: Option<OutRecId>,
     pub(super) points: Option<OutPointId>,
     pub(super) bottom_point: Option<OutPointId>,
@@ -204,10 +205,16 @@ pub(super) struct OutPoint {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+pub(super) enum PolyNodeContour {
+    Closed(Polygon),
+    Open(Polyline),
+}
+
+#[derive(Debug, Eq, PartialEq)]
 pub(super) struct PolyNodeRecord {
     pub(super) parent: Option<PolyNodeId>,
     pub(super) children: Vec<PolyNodeId>,
-    pub(super) contour: Option<Polygon>,
+    pub(super) contour: Option<PolyNodeContour>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -260,8 +267,8 @@ pub(crate) struct EdgeSnapshot {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct LocalMinimumSnapshot {
     pub(crate) y: i64,
-    pub(crate) left: usize,
-    pub(crate) right: usize,
+    pub(crate) left: Option<usize>,
+    pub(crate) right: Option<usize>,
 }
 
 #[cfg(test)]

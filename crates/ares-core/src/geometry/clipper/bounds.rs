@@ -1,4 +1,4 @@
-use super::ClosedClipper;
+use super::Clipper;
 use super::types::EdgeId;
 use crate::geometry::{Point, Polygon};
 
@@ -10,12 +10,15 @@ pub(crate) struct IntBounds {
     pub(crate) bottom: i64,
 }
 
-impl ClosedClipper {
+impl Clipper {
     pub(crate) fn bounds(&self) -> IntBounds {
         let Some(first_minimum) = self.minima.first() else {
             return IntBounds::default();
         };
-        let first = self.edges.edge(first_minimum.left).bottom;
+        let first_left = first_minimum
+            .left
+            .expect("closed bounds require a left bound");
+        let first = self.edges.edge(first_left).bottom;
         let mut result = IntBounds {
             left: first.x(),
             top: first.y(),
@@ -24,9 +27,11 @@ impl ClosedClipper {
         };
 
         for minimum in &self.minima {
-            result.bottom = result.bottom.max(self.edges.edge(minimum.left).bottom.y());
-            self.extend_bounds_along_lml(minimum.left, &mut result);
-            self.extend_bounds_along_lml(minimum.right, &mut result);
+            let left = minimum.left.expect("closed bounds require a left bound");
+            let right = minimum.right.expect("closed bounds require a right bound");
+            result.bottom = result.bottom.max(self.edges.edge(left).bottom.y());
+            self.extend_bounds_along_lml(left, &mut result);
+            self.extend_bounds_along_lml(right, &mut result);
         }
         result
     }

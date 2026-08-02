@@ -22,30 +22,6 @@ pub(crate) fn slopes_equal(dx1: i64, dy1: i64, dx2: i64, dy2: i64, use_full_rang
     }
 }
 
-pub(crate) fn point_in_polygon(point: Point, path: &[Point]) -> i32 {
-    let count = path.len();
-    if count < 3 {
-        return 0;
-    }
-
-    let mut result = 0;
-    let mut current = path[0];
-    for index in 1..=count {
-        let next = if index == count { path[0] } else { path[index] };
-        if on_horizontal_boundary(current, next, point) {
-            return -1;
-        }
-        match crossing(current, next, point) {
-            Crossing::None => {}
-            Crossing::Toggle => result = 1 - result,
-            Crossing::Boundary => return -1,
-        }
-        current = next;
-    }
-
-    result
-}
-
 pub(crate) fn get_dx(point1: Point, point2: Point) -> f64 {
     if point1.y() == point2.y() {
         HORIZONTAL
@@ -170,43 +146,4 @@ pub(crate) fn area(path: &[Point]) -> f64 {
         previous = index;
     }
     -accumulated * 0.5
-}
-
-fn crossing_determinant(current: Point, next: Point, point: Point) -> f64 {
-    let first = (current.x() - point.x()) as f64 * (next.y() - point.y()) as f64;
-    let second = (next.x() - point.x()) as f64 * (current.y() - point.y()) as f64;
-    first - second
-}
-
-fn on_horizontal_boundary(current: Point, next: Point, point: Point) -> bool {
-    next.y() == point.y()
-        && (next.x() == point.x()
-            || (current.y() == point.y() && ((next.x() > point.x()) == (current.x() < point.x()))))
-}
-
-fn crossing(current: Point, next: Point, point: Point) -> Crossing {
-    if (current.y() < point.y()) == (next.y() < point.y()) {
-        return Crossing::None;
-    }
-    if current.x() >= point.x() && next.x() > point.x() {
-        return Crossing::Toggle;
-    }
-    if current.x() < point.x() && next.x() <= point.x() {
-        return Crossing::None;
-    }
-
-    let determinant = crossing_determinant(current, next, point);
-    if determinant == 0.0 {
-        Crossing::Boundary
-    } else if (determinant > 0.0) == (next.y() > current.y()) {
-        Crossing::Toggle
-    } else {
-        Crossing::None
-    }
-}
-
-enum Crossing {
-    None,
-    Toggle,
-    Boundary,
 }

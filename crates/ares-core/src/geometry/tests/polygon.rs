@@ -24,6 +24,44 @@ fn task22c_polygon_preserves_integer_points_without_normalization() {
 }
 
 #[test]
+fn task22o6_polygon_split_at_first_point_appends_exact_closure_duplicate() {
+    let polygon = Polygon::new(vec![
+        Point::new(7, 3),
+        Point::new(11, 5),
+        Point::new(-2, 13),
+    ]);
+
+    assert_eq!(
+        polygon.split_at_first_point().points(),
+        &[
+            Point::new(7, 3),
+            Point::new(11, 5),
+            Point::new(-2, 13),
+            Point::new(7, 3),
+        ]
+    );
+    assert!(
+        Polygon::new(Vec::new())
+            .split_at_first_point()
+            .points()
+            .is_empty()
+    );
+}
+
+#[test]
+fn task22o4_polygon_contains_includes_boundaries() {
+    let polygon = Polygon::new(vec![
+        Point::new(0, 0),
+        Point::new(10, 0),
+        Point::new(10, 10),
+        Point::new(0, 10),
+    ]);
+    assert!(polygon.contains(&Point::new(5, 5)));
+    assert!(polygon.contains(&Point::new(0, 5)));
+    assert!(!polygon.contains(&Point::new(-1, 5)));
+}
+
+#[test]
 fn task22h_polygon_area_is_positive_zero_for_fewer_than_three_points() {
     for points in [
         vec![],

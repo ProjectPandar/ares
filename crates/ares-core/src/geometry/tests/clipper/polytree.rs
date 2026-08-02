@@ -1,6 +1,6 @@
 use super::helpers::polygon;
 use crate::geometry::clipper::{
-    ClipOperation, ClipperOptions, ClosedClipper, FillRule, PathRole, PolyNode, PolyTree, union_ex,
+    ClipOperation, Clipper, ClipperOptions, FillRule, PathRole, PolyNode, PolyTree, union_ex,
 };
 use crate::geometry::{ExPolygon, Polygon};
 
@@ -74,7 +74,7 @@ fn execute_tree(input: &[Polygon]) -> PolyTree {
 }
 
 fn execute_tree_with_fill(input: &[Polygon], fill: FillRule) -> PolyTree {
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     assert_eq!(clipper.add_closed_paths(input, PathRole::Subject), Ok(true));
     clipper.execute_polytree(ClipOperation::Union, fill, fill)
 }
@@ -82,7 +82,7 @@ fn execute_tree_with_fill(input: &[Polygon], fill: FillRule) -> PolyTree {
 #[test]
 fn task22f_polytree_freezes_nested_parent_child_sibling_and_start_point_order() {
     let input = nested_input();
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     assert_eq!(
         clipper.add_closed_paths(&input, PathRole::Subject),
         Ok(true)
@@ -291,7 +291,7 @@ fn task22f_union_ex_forwards_negative_fill_to_the_fresh_second_pass() {
 
 #[test]
 fn task22f_polytree_and_union_ex_empty_input_are_empty() {
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
     assert_eq!(clipper.add_closed_paths(&[], PathRole::Subject), Ok(false));
     let tree = clipper.execute_polytree(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero);
     assert_eq!(tree.total(), 0);

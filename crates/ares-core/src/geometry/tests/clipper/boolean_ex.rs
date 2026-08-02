@@ -1,5 +1,8 @@
 use super::helpers::polygon;
-use crate::geometry::{ClipperError, ExPolygon, difference_ex, intersection_ex};
+use crate::geometry::{
+    ClipperError, ExPolygon, difference_ex, difference_ex_polygons,
+    difference_ex_polygons_with_safety_offset, intersection_ex,
+};
 
 const HI_RANGE: i64 = 0x3fff_ffff_ffff_ffff;
 
@@ -55,6 +58,25 @@ fn task22j_boolean_ex_empty_inputs_and_empty_first_pass_are_empty() {
     assert_eq!(intersection_ex(&[], &square), Ok(Vec::new()));
     assert_eq!(difference_ex(&square, &square), Ok(Vec::new()));
     assert_eq!(intersection_ex(&square, &disjoint), Ok(Vec::new()));
+}
+
+#[test]
+fn task22o2_polygon_clip_difference_preserves_the_safety_offset_overload() {
+    let subject = vec![rectangle(0, 0, 1_000, 1_000)];
+    let clip = vec![polygon(&[
+        (500, 0),
+        (1_500, 0),
+        (1_500, 1_000),
+        (500, 1_000),
+    ])];
+    assert_eq!(
+        difference_ex_polygons(&subject, &clip),
+        Ok(vec![rectangle_output(0, 0, 500, 1_000)])
+    );
+    assert_eq!(
+        difference_ex_polygons_with_safety_offset(&subject, &clip),
+        Ok(vec![rectangle_output(0, 0, 490, 1_000)])
+    );
 }
 
 #[test]

@@ -1,6 +1,6 @@
 use super::helpers::{point, polygon, square};
 use crate::geometry::Polygon;
-use crate::geometry::clipper::{ClipperOptions, ClosedClipper, PathRole};
+use crate::geometry::clipper::{Clipper, ClipperOptions, PathRole};
 
 #[test]
 fn task22f_closed_input_ignores_empty_one_two_point_and_flat_paths() {
@@ -10,7 +10,7 @@ fn task22f_closed_input_ignores_empty_one_two_point_and_flat_paths() {
         polygon(&[(0, 0), (10, 0)]),
         polygon(&[(0, 0), (5, 0), (10, 0)]),
     ];
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
 
     assert_eq!(
         clipper.add_closed_paths(&paths, PathRole::Subject),
@@ -29,7 +29,7 @@ fn task22f_closed_input_keeps_valid_siblings_among_degenerate_paths() {
         polygon(&[(20, 0), (25, 0), (30, 0)]),
         polygon(&[(40, 0), (50, 0), (45, 10)]),
     ];
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
 
     assert_eq!(
         clipper.add_closed_paths(&paths, PathRole::Subject),
@@ -46,7 +46,7 @@ fn task22f_closed_input_trims_repeated_terminal_points_before_allocation() {
         polygon(&[(0, 0), (10, 0), (10, 10), (0, 10), (0, 0), (0, 0)]),
         polygon(&[(0, 0), (10, 0), (10, 10), (0, 10), (0, 10), (0, 10)]),
     ] {
-        let mut clipper = ClosedClipper::new(ClipperOptions::default());
+        let mut clipper = Clipper::new(ClipperOptions::default());
         assert_eq!(clipper.add_closed_path(&path, PathRole::Subject), Ok(true));
         let snapshot = clipper.input_snapshot();
         assert_eq!(snapshot.edges.len(), 4);
@@ -57,7 +57,7 @@ fn task22f_closed_input_trims_repeated_terminal_points_before_allocation() {
 #[test]
 fn task22f_closed_input_removes_adjacent_duplicate_without_renumbering_edge_ids() {
     let duplicate = polygon(&[(0, 0), (10, 0), (10, 0), (10, 10), (0, 10)]);
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
 
     assert_eq!(
         clipper.add_closed_path(&duplicate, PathRole::Subject),
@@ -83,14 +83,14 @@ fn task22f_closed_input_preserve_collinear_retains_only_between_vertices() {
     let between = polygon(&[(0, 0), (5, 0), (10, 0), (10, 10), (0, 10)]);
     let spike = polygon(&[(0, 0), (10, 0), (5, 0), (10, 10), (0, 10)]);
 
-    let mut default_clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut default_clipper = Clipper::new(ClipperOptions::default());
     assert_eq!(
         default_clipper.add_closed_path(&between, PathRole::Subject),
         Ok(true)
     );
     assert!(default_clipper.input_snapshot().edges[1].removed);
 
-    let mut preserving = ClosedClipper::new(ClipperOptions {
+    let mut preserving = Clipper::new(ClipperOptions {
         preserve_collinear: true,
         ..ClipperOptions::default()
     });
@@ -106,7 +106,7 @@ fn task22f_closed_input_preserve_collinear_retains_only_between_vertices() {
             .all(|edge| !edge.removed)
     );
 
-    let mut preserving_spike = ClosedClipper::new(ClipperOptions {
+    let mut preserving_spike = Clipper::new(ClipperOptions {
         preserve_collinear: true,
         ..ClipperOptions::default()
     });
@@ -121,7 +121,7 @@ fn task22f_closed_input_preserve_collinear_retains_only_between_vertices() {
 fn task22f_closed_input_builds_minima_and_lml_in_source_order() {
     let diamond = polygon(&[(0, 0), (10, 10), (0, 20), (-10, 10)]);
     let shifted = polygon(&[(30, 0), (40, 10), (30, 20), (20, 10)]);
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
 
     assert_eq!(
         clipper.add_closed_paths(&[diamond, shifted], PathRole::Subject),
@@ -135,7 +135,7 @@ fn task22f_closed_input_builds_minima_and_lml_in_source_order() {
             snapshot.minima[0].left,
             snapshot.minima[0].right,
         ),
-        (20, 2, 1)
+        (20, Some(2), Some(1))
     );
     assert_eq!(snapshot.edges[2].next_in_lml, Some(3));
     assert_eq!(snapshot.edges[1].next_in_lml, Some(0));
@@ -145,14 +145,14 @@ fn task22f_closed_input_builds_minima_and_lml_in_source_order() {
             .iter()
             .map(|minimum| (minimum.y, minimum.left, minimum.right))
             .collect::<Vec<_>>(),
-        vec![(20, 2, 1), (20, 6, 5)]
+        vec![(20, Some(2), Some(1)), (20, Some(6), Some(5))]
     );
 }
 
 #[test]
 fn task22f_closed_input_normalizes_horizontal_rectangle_and_equal_height_order() {
     let rectangle = square();
-    let mut clipper = ClosedClipper::new(ClipperOptions::default());
+    let mut clipper = Clipper::new(ClipperOptions::default());
 
     assert_eq!(
         clipper.add_closed_path(&rectangle, PathRole::Subject),
@@ -230,6 +230,6 @@ fn task22f_closed_input_normalizes_horizontal_rectangle_and_equal_height_order()
             snapshot.minima[0].left,
             snapshot.minima[0].right,
         ),
-        (10, 3, 2)
+        (10, Some(3), Some(2))
     );
 }

@@ -1,8 +1,8 @@
 use super::super::helpers::{execute, polygon, polygons};
 use crate::geometry::Polygon;
 use crate::geometry::clipper::{
-    ClipOperation, ClipperError, ClipperOptions, ClosedClipper, FillRule, PathRole, PolyNode,
-    PolyTree, SimpleRepair, simplify_polygons,
+    ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole, PolyNode, PolyTree,
+    SimpleRepair, simplify_polygons,
 };
 
 #[derive(Debug, Eq, PartialEq)]
@@ -12,8 +12,8 @@ pub(super) struct NodeSnapshot {
     pub(super) contour: Polygon,
 }
 
-fn strict_clipper(input: &[Polygon]) -> ClosedClipper {
-    let mut clipper = ClosedClipper::new(ClipperOptions {
+fn strict_clipper(input: &[Polygon]) -> Clipper {
+    let mut clipper = Clipper::new(ClipperOptions {
         strictly_simple: true,
         ..ClipperOptions::default()
     });
@@ -28,7 +28,9 @@ pub(super) fn strict_tree(input: &[Polygon]) -> PolyTree {
 
 fn strict_repair_traces(input: &[Polygon]) -> (Vec<SimpleRepair>, Vec<SimpleRepair>) {
     let mut paths_clipper = strict_clipper(input);
-    paths_clipper.execute_paths(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero);
+    paths_clipper
+        .execute_paths(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero)
+        .expect("closed Clipper execution accepts flat output");
     let paths = paths_clipper.simple_repairs_for_test().to_vec();
 
     let mut tree_clipper = strict_clipper(input);
