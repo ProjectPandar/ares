@@ -6,6 +6,7 @@ pub(in crate::project_slice) mod entity_collections;
 pub(in crate::project_slice) mod gap_domain;
 pub(in crate::project_slice) mod hierarchy;
 pub(in crate::project_slice) mod materialize;
+pub(in crate::project_slice) mod medial_gap;
 pub(in crate::project_slice) mod onion;
 pub(in crate::project_slice) mod perimeter_append;
 mod preflight;
@@ -22,6 +23,7 @@ pub(in crate::project_slice) use hierarchy::{
     PostClassicHierarchyPrintObject, PreparedPostClassicHierarchy,
 };
 pub(in crate::project_slice) use materialize::PreparedPostClassicRawPaths;
+pub(in crate::project_slice) use medial_gap::PreparedPostClassicMedialGap;
 pub(in crate::project_slice) use onion::{PostClassicOnionPrintObject, PreparedPostClassicOnion};
 pub(in crate::project_slice) use perimeter_append::PreparedPostClassicPerimeterAppend;
 pub(in crate::project_slice) use top_split::PreparedPostClassicTopSplit;
@@ -132,4 +134,10 @@ pub(super) fn finish_classic_gap_domain(
     prepared: PreparedPostClassicPerimeterAppend,
 ) -> Result<PreparedPostClassicGapDomain, SliceError> {
     gap_domain::finish(prepared)
+}
+
+pub(super) fn finish_classic_medial_gap(
+    prepared: PreparedPostClassicGapDomain,
+) -> Result<PreparedPostClassicMedialGap, SliceError> {
+    medial_gap::finish(prepared)
 }

@@ -10,6 +10,53 @@ pub(in crate::project_slice) struct PreparedPostClassicTraversal {
     pub(in crate::project_slice) config_block: Option<Vec<u8>>,
     pub(in crate::project_slice) scale: CoordinateScale,
     pub(in crate::project_slice) objects: Vec<PostClassicTraversalPrintObject>,
+    #[cfg(test)]
+    pub(in crate::project_slice) drop_probe: TraversalDropProbe,
+}
+
+#[cfg(test)]
+pub(in crate::project_slice) struct TraversalDropProbe {
+    token: std::sync::Arc<()>,
+    dropped: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+
+#[cfg(test)]
+impl TraversalDropProbe {
+    pub(super) fn new() -> Self {
+        Self {
+            token: std::sync::Arc::new(()),
+            dropped: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        }
+    }
+}
+
+#[cfg(test)]
+impl Drop for TraversalDropProbe {
+    fn drop(&mut self) {
+        self.dropped
+            .store(true, std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
+#[cfg(test)]
+impl PreparedPostClassicTraversal {
+    pub(in crate::project_slice) fn drop_probe_observer(
+        &self,
+    ) -> (
+        std::sync::Weak<()>,
+        std::sync::Arc<std::sync::atomic::AtomicBool>,
+    ) {
+        (
+            std::sync::Arc::downgrade(&self.drop_probe.token),
+            std::sync::Arc::clone(&self.drop_probe.dropped),
+        )
+    }
+
+    pub(in crate::project_slice) fn drop_probe_is_alive(&self) -> bool {
+        std::sync::Arc::downgrade(&self.drop_probe.token)
+            .upgrade()
+            .is_some()
+    }
 }
 
 pub(in crate::project_slice) struct PostClassicTraversalPrintObject {

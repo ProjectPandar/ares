@@ -73,23 +73,23 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_classic_gap_domain(
-        perimeters::prepare_post_classic_gap_domain(project)?,
+    consume_post_classic_medial_gap(
+        perimeters::prepare_post_classic_medial_gap(project)?,
         metadata,
     )
 }
 
 #[inline(never)]
-fn consume_post_classic_gap_domain(
-    prepared: perimeters::classic::PreparedPostClassicGapDomain,
+fn consume_post_classic_medial_gap(
+    prepared: perimeters::classic::PreparedPostClassicMedialGap,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let perimeters::classic::PreparedPostClassicGapDomain {
+    let perimeters::classic::PreparedPostClassicMedialGap {
         predecessor,
-        objects: gap_domain_objects,
+        objects: medial_gap_objects,
     } = prepared;
-    for object in gap_domain_objects {
-        incomplete_sink::consume_gap_domain_object(object);
+    for object in medial_gap_objects {
+        incomplete_sink::consume_medial_gap_object(object);
     }
     let perimeters::classic::PreparedPostClassicTraversal {
         project,
@@ -97,6 +97,8 @@ fn consume_post_classic_gap_domain(
         config_block,
         scale,
         objects: post_classic_traversal_objects,
+        #[cfg(test)]
+        drop_probe,
     } = *predecessor;
     let documents = project.documents();
     let _ = (
@@ -161,6 +163,8 @@ fn consume_post_classic_gap_domain(
         metadata,
         config_block,
     );
+    #[cfg(test)]
+    let _ = drop_probe;
     Err(SliceError::ProjectSlicingIncomplete)
 }
 

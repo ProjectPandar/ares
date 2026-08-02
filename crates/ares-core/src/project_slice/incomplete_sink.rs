@@ -13,11 +13,15 @@ pub(super) fn consume_boxed_post_classic_traversal(
         config_block,
         scale,
         objects,
+        #[cfg(test)]
+        drop_probe,
     } = *prepared;
     for object in objects {
         consume_traversal_object(object);
     }
     let _ = (project, resolved, config_block, scale);
+    #[cfg(test)]
+    let _ = drop_probe;
 }
 
 #[inline(never)]
@@ -30,6 +34,29 @@ pub(super) fn consume_perimeter_append_object(
             consume_inactive_post_collection(surface.inactive);
             consume_appended_collections(surface.appended.collections);
         }
+    }
+}
+
+#[inline(never)]
+pub(super) fn consume_medial_gap_object(
+    object: perimeters::classic::medial_gap::PreparedMedialGapObject,
+) {
+    for record in object.records.into_iter().flatten() {
+        for surface in record.surfaces {
+            consume_medial_gap_surface(surface);
+        }
+    }
+}
+
+fn consume_medial_gap_surface(surface: perimeters::classic::medial_gap::PreparedMedialGapSurface) {
+    let _ = surface.source_index;
+    consume_inactive_post_collection(surface.inactive);
+    consume_appended_collections(surface.appended.collections);
+    if let Some(medial) = surface.medial {
+        for polyline in medial.polylines {
+            let _ = (polyline.points, polyline.width, polyline.endpoints);
+        }
+        consume_pre_medial_gap_domain(medial.predecessor);
     }
 }
 

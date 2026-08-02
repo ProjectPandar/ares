@@ -54,6 +54,8 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
                 records,
             })
             .collect(),
+        #[cfg(test)]
+        drop_probe: types::TraversalDropProbe::new(),
     }
 }
 

@@ -5,6 +5,7 @@ mod flow;
 mod gap_domain;
 mod hierarchy;
 mod materialize;
+mod medial_gap;
 mod onion;
 mod perimeter_append;
 mod preflight;
