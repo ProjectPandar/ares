@@ -1,4 +1,4 @@
-use crate::geometry::{Point, Polygon};
+use crate::geometry::{Line, Point, Polygon};
 
 #[test]
 fn task22c_polygon_preserves_integer_points_without_normalization() {
@@ -96,4 +96,84 @@ fn task22h_polygon_area_preserves_upstream_floating_point_operation_order() {
     polygon.reverse();
     assert_eq!(polygon.area().to_bits(), 0xc3a3_14c1_7e96_6779);
     assert!(polygon.area().is_sign_negative());
+}
+
+#[test]
+fn task22o13_polygon_lines_and_intersection_keep_distinct_source_orders() {
+    let polygon = Polygon::new(vec![
+        Point::new(0, 0),
+        Point::new(10, 0),
+        Point::new(10, 10),
+        Point::new(0, 10),
+    ]);
+    assert_eq!(
+        polygon.lines(),
+        vec![
+            Line::new(Point::new(0, 0), Point::new(10, 0)),
+            Line::new(Point::new(10, 0), Point::new(10, 10)),
+            Line::new(Point::new(10, 10), Point::new(0, 10)),
+            Line::new(Point::new(0, 10), Point::new(0, 0)),
+        ]
+    );
+    assert_eq!(
+        polygon.intersection(Line::new(Point::new(-5, 5), Point::new(15, 5))),
+        Some(Point::new(0, 5))
+    );
+    assert_eq!(polygon.point_projection(Point::new(6, 3)), Point::new(6, 0));
+    assert!(polygon.on_boundary(Point::new(0, 5), 1.0));
+    assert!(!polygon.on_boundary(Point::new(1, 5), 1.0));
+}
+
+#[test]
+fn task22o13_polygon_emits_no_sites_below_three_points() {
+    for points in [
+        vec![],
+        vec![Point::new(7, -3)],
+        vec![Point::new(7, -3), Point::new(11, 5)],
+    ] {
+        assert!(Polygon::new(points).lines().is_empty());
+    }
+}
+
+#[test]
+fn task22o13_polygon_projection_uses_source_foot_rounding_for_both_signs() {
+    let positive = Polygon::new(vec![
+        Point::new(0, 0),
+        Point::new(5, 2),
+        Point::new(20, -20),
+    ]);
+    let negative = Polygon::new(vec![
+        Point::new(0, 0),
+        Point::new(-5, -2),
+        Point::new(-20, 20),
+    ]);
+    assert_eq!(
+        positive.point_projection(Point::new(2, 2)),
+        Point::new(2, 1)
+    );
+    assert_eq!(
+        negative.point_projection(Point::new(-2, -2)),
+        Point::new(-2, -1)
+    );
+}
+
+#[test]
+fn task22o13_polygon_projection_includes_two_points_and_preserves_tie_order() {
+    let segment = Polygon::new(vec![Point::new(0, 0), Point::new(10, 0)]);
+    assert_eq!(segment.point_projection(Point::new(5, 1)), Point::new(5, 0));
+    assert!(segment.on_boundary(Point::new(5, 1), 2.0));
+
+    let tied = Polygon::new(vec![
+        Point::new(-10, 10),
+        Point::new(10, 10),
+        Point::new(10, 0),
+        Point::new(10, -10),
+        Point::new(-10, -10),
+        Point::new(-10, 0),
+    ]);
+    assert_eq!(tied.point_projection(Point::new(0, 0)), Point::new(0, 10));
+    assert_eq!(
+        Polygon::new(vec![Point::new(7, -3)]).point_projection(Point::new(5, 1)),
+        Point::new(7, -3)
+    );
 }

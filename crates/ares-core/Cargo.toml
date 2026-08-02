@@ -9,10 +9,14 @@ default = []
 task22n-browser-oracle = []
 
 [dependencies]
+boostvoronoi = { workspace = true }
 quick-xml = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 zip = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "=0.3.4", features = ["wasm_js"] }
 
 [dev-dependencies]
 sha2 = { workspace = true }

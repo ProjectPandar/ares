@@ -6,6 +6,7 @@ mod coord;
 mod edge_grid;
 mod expolygon;
 mod line;
+pub(crate) mod medial_axis;
 mod polygon;
 mod polyline;
 mod simplification;
@@ -25,7 +26,8 @@ pub(crate) use clipper::{
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{EdgeGrid, GridEdge};
 pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};
-pub(crate) use line::ThickLine;
+pub(crate) use line::{Line, ThickLine};
+pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
 pub(crate) use simplification::append_simplified_expolygon;

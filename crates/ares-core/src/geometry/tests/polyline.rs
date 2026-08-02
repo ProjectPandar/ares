@@ -110,6 +110,16 @@ fn task22o12_closed_thick_polyline_rotation_moves_one_point_and_two_widths() {
 }
 
 #[test]
+fn task22o13_thick_polyline_length_sums_adjacent_stored_segments() {
+    let polyline = ThickPolyline {
+        points: vec![Point::new(0, 0), Point::new(3, 4), Point::new(3, 12)],
+        width: vec![1.0, 2.0, 3.0, 4.0],
+        endpoints: (true, true),
+    };
+    assert_eq!(polyline.length(), 13.0);
+}
+
+#[test]
 fn task22o12_to_thick_polylines_moves_order_and_assigns_two_widths_per_segment() {
     let output = to_thick_polylines(
         vec![

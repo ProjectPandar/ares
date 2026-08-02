@@ -1,4 +1,4 @@
-use super::Polygon;
+use super::{Line, Point, Polygon};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct ExPolygon {
@@ -28,6 +28,22 @@ impl ExPolygon {
         for hole in &mut self.holes {
             hole.douglas_peucker(tolerance);
         }
+    }
+
+    pub(crate) fn lines(&self) -> Vec<Line> {
+        let mut lines = self.contour.lines();
+        for hole in &self.holes {
+            lines.extend(hole.lines());
+        }
+        lines
+    }
+
+    pub(crate) fn on_boundary(&self, point: Point, epsilon: f64) -> bool {
+        self.contour.on_boundary(point, epsilon)
+            || self
+                .holes
+                .iter()
+                .any(|hole| hole.on_boundary(point, epsilon))
     }
 
     pub(crate) fn area(&self) -> f64 {

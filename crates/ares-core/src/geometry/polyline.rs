@@ -43,6 +43,13 @@ pub(crate) struct ThickPolyline {
 }
 
 impl ThickPolyline {
+    pub(crate) fn length(&self) -> f64 {
+        self.points
+            .windows(2)
+            .map(|points| super::Line::new(points[0], points[1]).length())
+            .sum()
+    }
+
     pub(crate) fn reverse(&mut self) {
         self.points.reverse();
         self.width.reverse();

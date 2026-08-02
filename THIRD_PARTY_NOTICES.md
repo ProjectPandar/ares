@@ -1,8 +1,23 @@
 # Third-party notices
 
-This file identifies the source and license provenance of two source-cited
-Rust rewrites in Ares. It does not set the license of the repository or of
-unrelated code.
+This file identifies source and license provenance for source-cited Rust
+rewrites and linked dependencies in Ares. It does not set the license of the
+repository or of unrelated code.
+
+## boostvoronoi 0.12.1
+
+Ares links `boostvoronoi` 0.12.1 for its pure-Rust Boost.Polygon-compatible
+integer segment Voronoi implementation. Copyright Andrii Sydorchuk 2010-2012
+and Eadf 2020-2025. Licensed under the Boost Software License 1.0; see
+`LICENSES/BSL-1.0.txt`. Its uncalled filesystem-reader utility is compiled by
+the crate and cannot be feature-disabled; Ares neither calls nor re-exports it.
+
+## getrandom 0.3.4 (`wasm32` feature qualification)
+
+On `wasm32`, Ares names the already-transitive `getrandom` 0.3.4 dependency
+directly with its `wasm_js` feature. This qualifies `boostvoronoi`'s `cpp_map`
+dependency chain for browser builds; Ares does not call or re-export it.
+`getrandom` is licensed under either Apache-2.0 or MIT, at the user's option.
 
 ## Clipper 6 closed-path Boolean, PolyTree, and closed-offset rewrite
 

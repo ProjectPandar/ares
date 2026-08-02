@@ -6,6 +6,7 @@ mod coord;
 mod edge_grid;
 mod expolygon;
 mod line;
+mod medial_axis;
 mod polygon;
 mod polyline;
 mod scale;

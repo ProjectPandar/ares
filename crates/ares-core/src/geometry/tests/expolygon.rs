@@ -1,4 +1,5 @@
-use crate::geometry::{ExPolygon, Point, Polygon, keep_largest_contour_only};
+use crate::geometry::medial_axis::scaled_epsilon;
+use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon, keep_largest_contour_only};
 
 #[test]
 fn task22f_polygon_into_points_preserves_order_without_normalization() {
@@ -39,6 +40,69 @@ fn task22f_expolygon_owns_contour_and_ordered_holes() {
     assert_eq!(expolygon.contour(), &contour);
     assert_eq!(expolygon.holes(), holes.as_slice());
     assert_eq!(expolygon.into_parts(), (contour, holes));
+}
+
+#[test]
+fn task22o13_expolygon_lines_are_contour_then_holes_and_boundary_is_strict() {
+    let value = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(0, 0),
+            Point::new(20, 0),
+            Point::new(20, 20),
+            Point::new(0, 20),
+        ]),
+        vec![Polygon::new(vec![
+            Point::new(5, 5),
+            Point::new(5, 15),
+            Point::new(15, 15),
+            Point::new(15, 5),
+        ])],
+    );
+    let lines = value.lines();
+    assert_eq!(lines.len(), 8);
+    assert_eq!(lines[0].a, Point::new(0, 0));
+    assert_eq!(lines[4].a, Point::new(5, 5));
+    assert!(value.on_boundary(Point::new(5, 10), 10.0));
+    assert!(!value.on_boundary(Point::new(6, 10), 1.0));
+}
+
+#[test]
+fn task22o13_expolygon_skips_degenerate_contour_and_hole_sites() {
+    let value = ExPolygon::new(
+        Polygon::new(vec![Point::new(0, 0), Point::new(1, 0)]),
+        vec![
+            Polygon::new(Vec::new()),
+            Polygon::new(vec![Point::new(2, 2)]),
+            Polygon::new(vec![Point::new(3, 3), Point::new(4, 4)]),
+        ],
+    );
+    assert!(value.lines().is_empty());
+}
+
+#[test]
+fn task22o13_boundary_epsilon_is_scaled_for_normal_and_large_bed() {
+    let value = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(0, 0),
+            Point::new(1_000, 0),
+            Point::new(1_000, 1_000),
+            Point::new(0, 1_000),
+        ]),
+        vec![Polygon::new(vec![
+            Point::new(300, 300),
+            Point::new(300, 700),
+            Point::new(700, 700),
+            Point::new(700, 300),
+        ])],
+    );
+    let normal = scaled_epsilon(CoordinateScale::Normal);
+    let large_bed = scaled_epsilon(CoordinateScale::LargeBed);
+    assert_eq!(normal, 100.00000000000001);
+    assert_eq!(large_bed, 10.0);
+    assert!(value.on_boundary(Point::new(99, 500), normal));
+    assert!(!value.on_boundary(Point::new(101, 500), normal));
+    assert!(value.on_boundary(Point::new(309, 500), large_bed));
+    assert!(!value.on_boundary(Point::new(310, 500), large_bed));
 }
 
 #[test]
