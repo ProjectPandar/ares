@@ -4408,3 +4408,26 @@ and
 The next milestone must port the actual Voronoi topology required by
 `Geometry::MedialAxis`; a simplistic skeleton substitute or runtime Orca
 oracle is not acceptable.
+
+## Task 22O.13: Classic gap medial-axis extraction
+
+Task 22O.13 ports fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` source boundaries
+`ExPolygon.cpp:261-369`, `Geometry/MedialAxis.cpp:458-707`, and the reached
+`Geometry/VoronoiOffset.cpp:646-971` annotation path. It adds the pinned
+pure-Rust Boost-compatible segment Voronoi topology, source-order annotation,
+validation and chaining, ExPolygon post-processing, and an aligned,
+transactional O13 Classic lifecycle successor. Exit requires literal geometry,
+topology, lifecycle and KSR structure tests, unchanged O11-O5 ownership,
+Tier-1/WASM checks, strict Clippy/rustfmt, and independent review.
+
+The parity boundary uses `std::round` (half away from zero) for Voronoi
+`Point(double, double)` seed/growth and validation-Line sites, while the
+endpoint-extension Eigen casts remain truncating. The adapter validates the
+reached twin/site/face/rotation invariants and annotation uses Boost's 64-ULP
+point comparison. Browser qualification names transitive `getrandom` 0.3.4
+with `wasm_js` only on `wasm32`.
+
+Public slicing remains `ProjectSlicingIncomplete`. Orca's invalid-diagram
+repair path, tiny-gap filtering, gap extrusion, infill boundaries, motion, and
+G-code remain deferred.

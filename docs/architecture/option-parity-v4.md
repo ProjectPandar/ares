@@ -2976,3 +2976,27 @@ chaining depend directly on the Boost.Polygon Voronoi cell/edge/twin/rotation
 topology. The next milestone must cite and port that actual source boundary;
 it may not substitute a simplistic skeleton algorithm, dependency, or runtime
 Orca oracle.
+
+Task 22O.13 advances that source-cited boundary through fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` `ExPolygon.cpp:261-369`,
+`Geometry/MedialAxis.cpp:458-707`, and the reached
+`Geometry/VoronoiOffset.cpp:646-971` annotation path. A crate-private
+`boostvoronoi` 0.12.1 adapter preserves source segment order and directed
+half-edge topology; annotation, edge validation, chaining, endpoint extension,
+short removal, and reconnect produce ordered ThickPolylines. The aligned O13
+Classic stage transactionally moves O11 domains and preserves O10/O5 ownership.
+Public slicing reaches O13 and intentionally remains `ProjectSlicingIncomplete`.
+
+Voronoi `Point(double, double)` conversion follows upstream `std::round`
+(half away from zero); only endpoint-extension Eigen `cast<coord_t>` sites
+truncate. Reached vector norms retain the source multiply/add/`sqrt` operation
+order, Voronoi vertex/site equality uses the Boost 64-ULP rule, and Boundary
+cell annotation is overriding and sticky. The crate validates source bounds,
+secondary twin/site relations, endpoint reversal, and bounded face/rotation
+cycles without claiming the deferred completed-diagram detector. For Tier-1
+browser builds, `ares-core` enables `getrandom` 0.3.4's `wasm_js` feature on
+`wasm32` to qualify the transitive `boostvoronoi` dependency chain.
+
+The upstream invalid-diagram detector/rotation/closing repair, tiny-gap
+filtering, variable-width extrusion, covered-width subtraction, infill
+boundaries, motion, and G-code remain deferred to later source-cited slices.
