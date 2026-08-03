@@ -4429,5 +4429,36 @@ point comparison. Browser qualification names transitive `getrandom` 0.3.4
 with `wasm_js` only on `wasm32`.
 
 Public slicing remains `ProjectSlicingIncomplete`. Orca's invalid-diagram
-repair path, tiny-gap filtering, gap extrusion, infill boundaries, motion, and
-G-code remain deferred.
+repair path remains deferred.
+
+## Task 22O.14: Classic variable-width gap extrusion
+
+Task 22O.14 ports fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` source boundaries
+`PerimeterGenerator.cpp:1604-1624`, `VariableWidth.cpp:99-234`, reached
+`Flow` and extrusion-entity coverage, `ClipperUtils` open-polyline offset, and
+Clipper 6 OpenButt generation/cleanup. It validates every aligned typed
+`RegionOptions.filter_out_gap_fill` before geometry, applies the strict
+source-length filter at Normal and LargeBed scales, converts retained
+ThickPolylines into ordered fixed-coordinate GapFill paths/loops using the
+aligned solid-infill flow, and subtracts their ordered covered-width polygons
+from cloned onion `last` geometry.
+
+The O14 lifecycle is transactional across the whole project: validation, keep
+masks, conversion, two-level open-offset cleanup, and differences precede any
+O13 ownership move. It preserves the boxed O5 and nested O11/O10/O13
+allocations that survive filtering and uses iterative success/error sinks.
+Public slicing reaches O14 exactly once and stays
+`ProjectSlicingIncomplete`. Exit requires literal open-offset, variable-width,
+direct option/geometry, ownership/lifecycle, and repeatable in-memory KSR
+coverage plus focused O13-O5 regressions, workspace Nextest, strict Clippy,
+workspace/native and both WASM checks, rustfmt, diff/LOC/forbidden audits, and
+independent implementation review. The post-fix workspace run passed 5,491
+Nextest tests with 2 skipped; strict Clippy, workspace/native and both WASM
+checks, rustfmt, diff/LOC/forbidden/dependency/staging audits passed. Independent
+Codex and OpenCode re-reviews both returned `VERDICT: APPROVE`.
+
+The next rewrite boundary begins at `PerimeterGenerator.cpp:1628` with the
+infill-boundary inset. Boundary simplification/collapsing, surface
+classification, no-overlap surfaces, extra perimeters, downstream
+`gap_fill_flow_ratio`, fill, seams, motion, and G-code remain deferred.

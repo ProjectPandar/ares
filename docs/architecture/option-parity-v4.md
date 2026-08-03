@@ -2997,6 +2997,39 @@ cycles without claiming the deferred completed-diagram detector. For Tier-1
 browser builds, `ares-core` enables `getrandom` 0.3.4's `wasm_js` feature on
 `wasm32` to qualify the transitive `boostvoronoi` dependency chain.
 
-The upstream invalid-diagram detector/rotation/closing repair, tiny-gap
-filtering, variable-width extrusion, covered-width subtraction, infill
-boundaries, motion, and G-code remain deferred to later source-cited slices.
+The upstream invalid-diagram detector/rotation/closing repair remains deferred.
+
+Task 22O.14 advances the fixed source boundary through
+`PerimeterGenerator.cpp:1604-1624`, `VariableWidth.cpp:99-234`, reached
+`Flow`, `ExtrusionEntity`, `ExtrusionEntityCollection`, `ClipperUtils`, and
+Clipper 6 open-butt offset behavior. The aligned typed `RegionOptions` record
+supplies `filter_out_gap_fill`; a whole-project validation pass rejects
+negative or non-finite values before variable-width or Clipper geometry. The
+unrounded threshold is divided by the active coordinate-scale factor and the
+strict source filter removes only shorter polylines without changing order.
+The aligned perimeter input record supplies `solid_infill_flow`; no legacy
+`SliceOptions`, fixture substitution, or `gap_fill_flow_ratio` is used.
+
+The variable-width conversion preserves the mutable ThickLine loop, strict
+scaled epsilon and tolerance comparisons, source midpoint versus asymmetric
+final width averaging, normalized-vector splitting with truncating coordinate
+casts, and reached `Flow::with_width` cast order. It emits fixed-coordinate
+GapFill paths or loops in a separate ordered collection. Covered-width geometry
+uses `float(scale_(width / 2)) + 10.f`. The Clipper rewrite now carries a
+crate-private OpenButt end type: each input is prepared and Positive-unioned in
+a cleared offset engine, then the ordered aggregate receives the wrapper-level
+NonZero union. Consecutive short-edge removal remains strict, so equality
+survives; closed-offset behavior is unchanged.
+
+O14 first stages option validation, keep masks, entities, coverage, and every
+ordinary difference for the whole project. Only after all fallible work
+succeeds does it move O13/O11/O10/O5 ownership, retaining surviving medial
+allocations, attaching gap entities, and cloning or subtracting the onion
+`last` fill remainder. Error cleanup iteratively consumes untouched O13 state.
+Public slicing reaches O14 once and intentionally remains
+`ProjectSlicingIncomplete`.
+
+Behavior beginning at `PerimeterGenerator.cpp:1628`—infill-boundary inset,
+simplification, collapsing, surface classification, no-overlap surfaces, and
+extra perimeters—remains deferred, as do downstream gap-flow-ratio application,
+fill, seams, motion, and G-code.
