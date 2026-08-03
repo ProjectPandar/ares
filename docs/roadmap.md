@@ -4480,7 +4480,39 @@ WASM checks, formatting, diff, LOC, forbidden-pattern, dependency, and staging
 audits pass. The final independent six-dimensional implementation rereview and
 OpenCode rereview both returned `VERDICT: APPROVE`.
 
-The next rewrite boundary begins at `PerimeterGenerator.cpp:1695`. The
-activated extra-perimeter body, counterbore/no-bridge processing, surface
-classification, downstream `gap_fill_flow_ratio`, fill, seams, motion, and
-G-code remain deferred.
+The activated extra-perimeter body and Arachne-only helper beginning at
+`PerimeterGenerator.cpp:1695` remain deferred.
+
+## Task 22O.16: Layer-region perimeter outputs
+
+Task 22O.16 ports the KSR-reached output seam at fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` from
+`LayerRegion.cpp:82-142`, `Layer.cpp:185-226`, `Layer.hpp:50-61,72-74`, and
+`Surface.hpp:159-166`. For the already validated one-compatible-region shape,
+it materializes ordered `perimeters`, `thin_fills`, `fill_surfaces`, copied
+`fill_expolygons`, and `fill_no_overlap_expolygons` after the completed Classic
+perimeter generator.
+
+The source many-to-one append consumes artificial per-surface wrapper vectors
+while moving every nested collection entity, loop/path/point, gap-loop/path,
+record-level fill/no-overlap, and boxed traversal allocation that survives in
+LayerRegion state. `fill_expolygons` are value-equal and allocation-distinct
+copies of fill-surface geometry. The inactive `process_no_bridge` return stays
+typed by existing Classic preflight; its active body and the multi-compatible-
+region merge/split branch remain deferred.
+
+The literal KSR checkpoint is
+`-169716507603417685621692788651154411580`, with totals
+`[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 1112]`. Fourteen focused O16
+tests, 192 O1/O10-O16 regressions, and 5,554 workspace Nextest tests with 2
+skipped pass together with strict Clippy, workspace/native and both WASM
+checks, formatting, diff, LOC, forbidden-pattern, source-pinning, dependency,
+and staging audits. The final independent six-dimensional implementation
+review and OpenCode review both returned `VERDICT: APPROVE`. Public slicing
+reaches O16 once and remains
+`ProjectSlicingIncomplete`.
+
+The next rewrite boundary is `PrintObject::prepare_infill` at
+`PrintObject.cpp:560`. Surface classification, fill grouping/generation,
+copying thin fills into final fills, seams, ordering, motion, G-code, and
+post-processing remain deferred.

@@ -3056,7 +3056,37 @@ forbidden-pattern, dependency, and staging audits pass. The final independent
 six-dimensional implementation rereview and OpenCode rereview both returned
 `VERDICT: APPROVE`.
 
-The activated `apply_extra_perimeters` body and behavior beginning at
-`PerimeterGenerator.cpp:1695` remain deferred, as do downstream
-gap-flow-ratio application, fill classification/generation, seams, motion, and
-G-code.
+The activated `apply_extra_perimeters` body and Arachne-only helper beginning
+at `PerimeterGenerator.cpp:1695` remain deferred.
+
+Task 22O.16 advances the KSR Classic path through
+`LayerRegion::make_perimeters` at `LayerRegion.cpp:82-142` and the
+one-compatible-region branch of `Layer::make_perimeters` at
+`Layer.cpp:185-226`. The crate-private `perimeters::layer_region` successor
+moves the ordered perimeter collections, gap-fill entities, internal fill
+surfaces, and no-overlap polygons out of O15, and copies ordered
+`fill_expolygons` exactly like `to_expolygons(const Surfaces&)` at
+`Surface.hpp:159-166`.
+
+The source-required many-to-one append consumes Ares' artificial per-surface
+wrapper-vector storage while preserving every nested collection entity,
+loop/path/point, gap-loop/path/point, record-level fill/no-overlap geometry,
+and boxed traversal allocation that becomes LayerRegion state. The copied
+fill expolygons are value-equal but allocation-distinct from fill-surface
+geometry. Existing one-region validation and Classic preflight keep the
+multi-compatible-region branch and active `process_no_bridge` body deferred.
+
+The O16 KSR checkpoint is
+`-169716507603417685621692788651154411580`, with totals
+`[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 1112]`. Fourteen focused O16
+tests, 192 O1/O10-O16 regressions, and 5,554 workspace Nextest tests with 2
+skipped pass together with strict Clippy, workspace/native and both WASM
+checks, formatting, diff, LOC, forbidden-pattern, source-pinning, dependency,
+and staging audits. The final independent six-dimensional implementation
+review and OpenCode review both returned `VERDICT: APPROVE`.
+
+Public slicing reaches O16 once and intentionally remains
+`ProjectSlicingIncomplete`. The next source boundary is
+`PrintObject::prepare_infill` at `PrintObject.cpp:560`; surface
+classification, fill grouping/generation, copying thin fills into final fills,
+seams, ordering, motion, and G-code remain deferred.
