@@ -34,38 +34,6 @@ const DISABLED_I: Expected = Expected {
     sha256: "572688f416497a276540adc57df50742561363a7d0470124ea21759eced591ff",
     ..BASE_H
 };
-const PRIMARY_H: Expected = Expected {
-    len: 427_465,
-    sha256: "a0df3397e498306bfcade84b03721fe345d2f4b501e578a5b54df39faff44353",
-    modes: [2, 0, 0, 458],
-    contours: 470,
-    holes: 13,
-    points: 25_747,
-};
-const PRIMARY_I: Expected = Expected {
-    len: 275_433,
-    sha256: "022cc958a38d5654e0a5fc4e2ca44d5e5ef068b7e57b271cb14151b11005343e",
-    modes: [2, 0, 0, 458],
-    contours: 470,
-    holes: 13,
-    points: 16_245,
-};
-const THRESHOLD_H: Expected = Expected {
-    len: 674_201,
-    sha256: "4b64a4e70bfceabf414572f6dbe13903245612908cbaf2d12985b6c1ed440214",
-    modes: [21, 0, 0, 439],
-    contours: 569,
-    holes: 127,
-    points: 41_012,
-};
-const THRESHOLD_I: Expected = Expected {
-    len: 416_217,
-    sha256: "185118681aad5de780a93d6f71f22f497dc7dc7dd82e038ec1feaf32b0f91294",
-    modes: [21, 0, 0, 439],
-    contours: 569,
-    holes: 127,
-    points: 24_888,
-};
 
 #[test]
 fn task22i_committed_archive_matches_complete_h_and_i_checkpoints() {
@@ -123,22 +91,6 @@ fn task22i_resolution_just_above_threshold_equals_committed_output() {
     assert_checkpoint(&h, b"ARES22H\0", BASE_H);
     assert_checkpoint(&i, b"ARES22I\0", BASE_I);
     assert_eq!(i, committed);
-}
-
-#[test]
-fn task22i_runs_after_the_complete_three_option_largest_contour_stage() {
-    let project = mutations::primary();
-    let (h, i) = repeatable_checkpoints(&project);
-    assert_checkpoint(&h, b"ARES22H\0", PRIMARY_H);
-    assert_checkpoint(&i, b"ARES22I\0", PRIMARY_I);
-}
-
-#[test]
-fn task22i_preserves_the_threshold_21_largest_contour_result() {
-    let project = mutations::threshold_21();
-    let (h, i) = repeatable_checkpoints(&project);
-    assert_checkpoint(&h, b"ARES22H\0", THRESHOLD_H);
-    assert_checkpoint(&i, b"ARES22I\0", THRESHOLD_I);
 }
 
 fn repeatable_checkpoints(project: &[u8]) -> (Vec<u8>, Vec<u8>) {

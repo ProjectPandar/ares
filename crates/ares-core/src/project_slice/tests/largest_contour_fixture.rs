@@ -9,14 +9,9 @@ const SPIRAL_OFF: &str = r#""spiral_mode": "0""#;
 const SPIRAL_ON: &str = r#""spiral_mode": "1""#;
 const BOTTOM_LAYERS_THREE: &str = r#""bottom_shell_layers": "3""#;
 const BOTTOM_LAYERS_ZERO: &str = r#""bottom_shell_layers": "0""#;
-const BOTTOM_LAYERS_TWENTY_ONE: &str = r#""bottom_shell_layers": "21""#;
 const BOTTOM_THICKNESS_ZERO: &str = r#""bottom_shell_thickness": "0""#;
 const BOTTOM_THICKNESS_VECTOR: &str = r#""bottom_shell_thickness": "0.5001""#;
 const FIXTURE_SHA256: &str = "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9";
-const PRIMARY_SLOTS_SHA256: &str =
-    "24dad9513353d3cf165101199c4514830b5cbcbfe08ce2a100c469bc0eade813";
-const THRESHOLD_SLOTS_SHA256: &str =
-    "39a5798f846adf8d41e76c8d6888c6afa6fc9f0d81e3b463989ecc2bb2cd5bc3";
 
 #[derive(Clone, Copy)]
 struct Expected {
@@ -40,43 +35,9 @@ const BASE_H: Expected = Expected {
     sha256: "e15967c36c0aa47a9a1a3fc31053587777359bedef796053022eaeb36ad49163",
     ..BASE_G
 };
-const PRIMARY_G: Expected = Expected {
-    len: 907_601,
-    sha256: "0ca404fa4a5a6fb0a97899fe6ff8fd45815a9439378708bbe594614587e38034",
-    modes: [2, 0, 0, 458],
-    contours: 2_622,
-    holes: 14,
-    points: 53_603,
-};
-const PRIMARY_H: Expected = Expected {
-    len: 427_465,
-    sha256: "a0df3397e498306bfcade84b03721fe345d2f4b501e578a5b54df39faff44353",
-    modes: [2, 0, 0, 458],
-    contours: 470,
-    holes: 13,
-    points: 25_747,
-};
-const THRESHOLD_G: Expected = Expected {
-    len: 1_154_017,
-    sha256: "f19e168ee3ad5d6a6c882f20bda26d8f0aedeca793fe38be7258b19abd7f4f8c",
-    modes: [21, 0, 0, 439],
-    contours: 2_717,
-    holes: 128,
-    points: 68_852,
-};
-const THRESHOLD_H: Expected = Expected {
-    len: 674_201,
-    sha256: "4b64a4e70bfceabf414572f6dbe13903245612908cbaf2d12985b6c1ed440214",
-    modes: [21, 0, 0, 439],
-    contours: 569,
-    holes: 127,
-    points: 41_012,
-};
 
 struct LayerRecord {
     index: usize,
-    mode: u8,
-    expolygons: usize,
     start: usize,
     end: usize,
 }
@@ -123,36 +84,8 @@ fn task22h_committed_project_is_exact_marker_only_identity() {
     }
 }
 
-#[test]
-fn task22h_three_option_3mf_mutation_matches_complete_selector_oracles() {
-    let project = primary_mutation();
-    let (g, h) = repeatable_checkpoints(&project);
-    let input = assert_checkpoint(&g, b"ARES22G\0", PRIMARY_G);
-    let output = assert_checkpoint(&h, b"ARES22H\0", PRIMARY_H);
-
-    assert_selection(&input, &output, 337, (20, 459), PRIMARY_SLOTS_SHA256);
-}
-
-#[test]
-fn task22h_threshold_21_3mf_mutation_preserves_regular_slot_20() {
-    let project = threshold_mutation();
-    let (g, h) = repeatable_checkpoints(&project);
-    let input = assert_checkpoint(&g, b"ARES22G\0", THRESHOLD_G);
-    let output = assert_checkpoint(&h, b"ARES22H\0", THRESHOLD_H);
-
-    assert_selection(&input, &output, 336, (21, 459), THRESHOLD_SLOTS_SHA256);
-    let input_record = record(&g, &input, 20);
-    let output_record = record(&h, &output, 20);
-    assert_eq!(input_record.len(), 16_689);
-    assert_eq!(
-        sha256(input_record),
-        "e408ee218b9fa4a2dd09da1254bc4a6e74c1d5190ca54ba5156558a5f9292730"
-    );
-    assert_eq!(output_record, input_record);
-}
-
 #[tokio::test]
-async fn task22h_public_spiral_mutation_reaches_task22o1_gate() {
+async fn task22h_public_global_spiral_capability_precedes_largest_contour() {
     assert_eq!(
         slice_project(primary_mutation(), metadata()).await,
         Err(SliceError::UnsupportedProjectFeature(
@@ -169,17 +102,6 @@ fn primary_mutation() -> Vec<u8> {
         PROJECT_SETTINGS,
         BOTTOM_THICKNESS_ZERO,
         BOTTOM_THICKNESS_VECTOR,
-    );
-    archive.bytes()
-}
-
-fn threshold_mutation() -> Vec<u8> {
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(PROJECT_SETTINGS, SPIRAL_OFF, SPIRAL_ON);
-    archive.replace_unique(
-        PROJECT_SETTINGS,
-        BOTTOM_LAYERS_THREE,
-        BOTTOM_LAYERS_TWENTY_ONE,
     );
     archive.bytes()
 }
@@ -205,40 +127,6 @@ fn assert_checkpoint(bytes: &[u8], magic: &[u8; 8], expected: Expected) -> Snaps
     assert_eq!(snapshot.points, expected.points);
     assert_eq!(snapshot.identity, (0, 0, 460, 0, 1, 0));
     snapshot
-}
-
-fn assert_selection(
-    input: &Snapshot,
-    output: &Snapshot,
-    count: usize,
-    range: (usize, usize),
-    digest: &str,
-) {
-    assert_eq!(input.layers.len(), output.layers.len());
-    for (before, after) in input.layers.iter().zip(&output.layers) {
-        assert_eq!((before.index, before.mode), (after.index, after.mode));
-    }
-    let slots = input
-        .layers
-        .iter()
-        .filter(|layer| layer.mode == 3 && layer.expolygons > 1)
-        .map(|layer| layer.index)
-        .collect::<Vec<_>>();
-    assert_eq!(slots.len(), count);
-    assert_eq!(slots.first(), Some(&range.0));
-    assert_eq!(slots.last(), Some(&range.1));
-    let encoded = slots
-        .iter()
-        .map(usize::to_string)
-        .collect::<Vec<_>>()
-        .join(",");
-    assert_eq!(sha256(encoded.as_bytes()), digest);
-    for slot in slots {
-        assert_eq!(
-            (output.layers[slot].index, output.layers[slot].expolygons),
-            (slot, 1)
-        );
-    }
 }
 
 fn parse(bytes: &[u8], magic: &[u8; 8]) -> Snapshot {
@@ -302,8 +190,6 @@ fn parse_layer(bytes: &[u8], cursor: &mut usize, snapshot: &mut Snapshot) {
     }
     snapshot.layers.push(LayerRecord {
         index,
-        mode,
-        expolygons,
         start,
         end: *cursor,
     });

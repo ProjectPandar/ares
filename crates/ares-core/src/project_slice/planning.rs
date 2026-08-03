@@ -13,6 +13,7 @@ pub(super) fn plan_project(
         project.has_painted_layer_height_profile(),
         project.objects(),
         &resolved.objects,
+        resolved.views.full.process.print.spiral_mode.0,
     )?;
     let object_extruders = extruders::collect_project_object_extruders(
         project.objects(),

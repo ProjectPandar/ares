@@ -79,13 +79,14 @@ pub(super) enum RegionSurfaceKind {
     Bottom = 1,
     BottomBridge = 2,
     Internal = 4,
+    InternalSolid = 5,
 }
 
 impl RegionSurfaceKind {
     pub(super) const fn is_bridge(self) -> bool {
         match self {
             Self::BottomBridge => true,
-            Self::Top | Self::Bottom | Self::Internal => false,
+            Self::Top | Self::Bottom | Self::Internal | Self::InternalSolid => false,
         }
     }
 }
@@ -120,6 +121,10 @@ impl RegionSurface {
         let mut surface = self.clone();
         surface.kind = kind;
         surface
+    }
+
+    pub(super) fn retag(&mut self, kind: RegionSurfaceKind) {
+        self.kind = kind;
     }
 
     #[cfg(test)]

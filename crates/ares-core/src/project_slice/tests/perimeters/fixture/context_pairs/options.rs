@@ -8,17 +8,13 @@ use super::super::{
     super::oracle::{NFrame, parse_n},
     archive::{ArchiveBuilder, assert_single_entry_replacement, semantic_identity},
 };
-use crate::project_slice::tests::region_fixture::checkpoint::sha256;
 
 const PROCESS: &str = "Metadata/project_settings.config";
 const ROOT: &str = "3D/3dmodel.model";
 const SPIRAL_OFF: &str = r#""spiral_mode": "0""#;
 const SPIRAL_ON: &str = r#""spiral_mode": "1""#;
 const BOTTOM_THREE: &str = r#""bottom_shell_layers": "3""#;
-const BOTTOM_ZERO: &str = r#""bottom_shell_layers": "0""#;
-const BOTTOM_ONE: &str = r#""bottom_shell_layers": "1""#;
 const THICKNESS_ZERO: &str = r#""bottom_shell_thickness": "0""#;
-const THICKNESS_POINT_THREE: &str = r#""bottom_shell_thickness": "0.3""#;
 const CLASSIC: &str = r#""wall_generator": "classic""#;
 const ARACHNE: &str = r#""wall_generator": "arachne""#;
 const ALIGN_OFF: &str = r#""align_infill_direction_to_model": "0""#;
@@ -29,35 +25,8 @@ const NEGATIVE_ZERO: &str = r#"transform="1 -0 0 0 1 0 0 0 1 0 0 0""#;
 const PI_OVER_TWO: u64 = 0x3ff921fb54442d18;
 const NEGATIVE_ZERO_BITS: u64 = 0x8000000000000000;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct MIdentity {
-    len: usize,
-    sha: &'static str,
-}
-
-const M_SPIRAL_OFF_BOTTOM_ONE_POINT_THREE: MIdentity = MIdentity {
-    len: 2_262,
-    sha: "14d1a4a280c53d9331dfed8e1c4be152f799ab5d1daee7fa6b2f00cb53f7e53b",
-};
-const M_SPIRAL_ON_BOTTOM_ZERO_ZERO: MIdentity = MIdentity {
-    len: 1_539,
-    sha: "b6c8dd1a473bcf43ed4fdfcbff3efce196a293aa7408e7389510fe1130ea1f13",
-};
-const M_SPIRAL_ON_AFTER_BOTTOM_GATE: MIdentity = MIdentity {
-    len: 1_780,
-    sha: "35d7b6720a3c5252d5f274e40f6b0e96991f737c435afc1a1063c6b2d20b6475",
-};
-const SPIRAL_M: [MIdentity; 2] = [
-    M_SPIRAL_OFF_BOTTOM_ONE_POINT_THREE,
-    M_SPIRAL_ON_AFTER_BOTTOM_GATE,
-];
-const BOTTOM_LAYERS_M: [MIdentity; 2] =
-    [M_SPIRAL_ON_BOTTOM_ZERO_ZERO, M_SPIRAL_ON_AFTER_BOTTOM_GATE];
-const BOTTOM_THICKNESS_M: [MIdentity; 2] = BOTTOM_LAYERS_M;
-
 #[derive(Clone, Copy)]
 enum MRelation {
-    Delta([MIdentity; 2]),
     Equal,
 }
 
@@ -70,51 +39,6 @@ struct Expected {
     align: bool,
     column: [u64; 2],
     records: [(bool, u8, u64); 3],
-}
-
-#[test]
-fn task22n_context_pairs_freeze_spiral_and_bottom_shell_gates() {
-    let arachne = ProcessPerimeterGenerator::Arachne;
-    for (name, base, from, to, before, after, relation) in [
-        (
-            "spiral",
-            context_archive(arachne, false, 1, 0.3),
-            SPIRAL_OFF,
-            SPIRAL_ON,
-            expected((arachne, false, 1, 0.3, false), [(false, 1, 0); 3]),
-            expected(
-                (arachne, true, 1, 0.3, false),
-                [(false, 1, 0), (true, 0, 0), (true, 0, 0)],
-            ),
-            MRelation::Delta(SPIRAL_M),
-        ),
-        (
-            "bottom layers",
-            context_archive(arachne, true, 0, 0.0),
-            BOTTOM_ZERO,
-            BOTTOM_ONE,
-            expected((arachne, true, 0, 0.0, false), [(true, 0, 0); 3]),
-            expected(
-                (arachne, true, 1, 0.0, false),
-                [(false, 1, 0), (true, 0, 0), (true, 0, 0)],
-            ),
-            MRelation::Delta(BOTTOM_LAYERS_M),
-        ),
-        (
-            "bottom thickness",
-            context_archive(arachne, true, 0, 0.0),
-            THICKNESS_ZERO,
-            THICKNESS_POINT_THREE,
-            expected((arachne, true, 0, 0.0, false), [(true, 0, 0); 3]),
-            expected(
-                (arachne, true, 0, 0.3, false),
-                [(false, 1, 0), (true, 0, 0), (true, 0, 0)],
-            ),
-            MRelation::Delta(BOTTOM_THICKNESS_M),
-        ),
-    ] {
-        assert_pair(name, base, (PROCESS, from, to), [before, after], relation);
-    }
 }
 
 #[test]
@@ -262,13 +186,6 @@ fn assert_pair(
 
 fn assert_m_relation(name: &str, before: &[u8], after: &[u8], relation: MRelation) {
     match relation {
-        MRelation::Delta(expected) => {
-            for (actual, expected) in [(before, expected[0]), (after, expected[1])] {
-                assert_eq!(actual.len(), expected.len, "{name} M length");
-                assert_eq!(sha256(actual), expected.sha, "{name} M SHA-256");
-            }
-            assert_ne!(before, after, "{name} M delta");
-        }
         MRelation::Equal => {
             assert_eq!(before, after, "{name} M equality");
         }

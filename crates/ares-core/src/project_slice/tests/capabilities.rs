@@ -10,8 +10,21 @@ use crate::{
     slice_project,
 };
 
-use super::super::capabilities::validate;
+use super::super::capabilities::validate as validate_capabilities;
 use super::support::{KsrArchive, metadata};
+
+fn validate(
+    has_painted_layer_height_profile: bool,
+    source_objects: &[ProjectObject],
+    resolved_objects: &[ResolvedProjectObject],
+) -> Result<(), SliceError> {
+    validate_capabilities(
+        has_painted_layer_height_profile,
+        source_objects,
+        resolved_objects,
+        false,
+    )
+}
 
 #[test]
 fn task22a_capability_gates_each_named_feature() {
@@ -97,6 +110,18 @@ fn task22a_capability_gate_order_is_project_key_major() {
     first.precise_z_height = OrcaBool(false);
     resolved_objects[0].object = first;
     assert_unsupported(validate(false, &sources, &resolved_objects), "zaa_enabled");
+}
+
+#[test]
+fn task22o18_global_spiral_gate_follows_existing_capability_precedence() {
+    assert_unsupported(validate_capabilities(false, &[], &[], true), "spiral_mode");
+
+    let source = source_object(Default::default(), Vec::new(), Vec::new());
+    let object = with_object(|value| value.raft_layers = OrcaInt(1));
+    assert_unsupported(
+        validate_capabilities(false, &[source], &[resolved(0, object, Vec::new())], true),
+        "raft_layers",
+    );
 }
 
 #[test]

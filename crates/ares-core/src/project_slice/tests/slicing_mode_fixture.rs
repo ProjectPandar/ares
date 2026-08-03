@@ -21,12 +21,7 @@ const MODEL_SETTINGS: &str = "Metadata/model_settings.config";
 const PROCESS_REGULAR: &str = r#""slicing_mode": "regular""#;
 const PROCESS_EVEN_ODD: &str = r#""slicing_mode": "even_odd""#;
 const PROCESS_CLOSE_HOLES: &str = r#""slicing_mode": "close_holes""#;
-const SPIRAL_OFF: &str = r#""spiral_mode": "0""#;
-const SPIRAL_ON: &str = r#""spiral_mode": "1""#;
-const BOTTOM_LAYERS_THREE: &str = r#""bottom_shell_layers": "3""#;
-const BOTTOM_LAYERS_ZERO: &str = r#""bottom_shell_layers": "0""#;
-const BOTTOM_THICKNESS_ZERO: &str = r#""bottom_shell_thickness": "0""#;
-const BOTTOM_THICKNESS_VECTOR: &str = r#""bottom_shell_thickness": "0.5001""#;
+
 const OBJECT_PART_ANCHOR: &str = concat!(
     "    <metadata key=\"extruder\" value=\"1\"/>\n",
     "    <part id=\"1\" subtype=\"normal_part\">",
@@ -123,34 +118,6 @@ fn task22e_ksr_object_slicing_mode_override_wins_over_process_base() {
     );
 }
 
-#[test]
-fn task22e_ksr_spiral_bottom_options_set_exact_mode_threshold_without_contour_loss() {
-    let baseline = fixture_snapshot(ksr_project()).unwrap();
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(PROJECT_SETTINGS, SPIRAL_OFF, SPIRAL_ON);
-    archive.replace_unique(PROJECT_SETTINGS, BOTTOM_LAYERS_THREE, BOTTOM_LAYERS_ZERO);
-    archive.replace_unique(
-        PROJECT_SETTINGS,
-        BOTTOM_THICKNESS_ZERO,
-        BOTTOM_THICKNESS_VECTOR,
-    );
-    let spiral = fixture_snapshot(archive.bytes()).unwrap();
-    assert!(spiral.spiral_mode);
-    assert_eq!(spiral.bottom_shell_layers, 0);
-    assert_eq!(spiral.bottom_shell_thickness, 0.5001);
-    assert_eq!(spiral.modes[..2], [SlicingMode::Regular; 2]);
-    assert!(
-        spiral.modes[2..]
-            .iter()
-            .all(|mode| *mode == SlicingMode::PositiveLargestContour)
-    );
-    assert_eq!(
-        polygon_counts(&spiral.layers),
-        polygon_counts(&baseline.layers)
-    );
-    assert_eq!(total_points(&spiral.layers), POINT_COUNT);
-}
-
 fn process_mode(mode: &str) -> Vec<u8> {
     let mut archive = KsrArchive::new();
     archive.replace_unique(PROJECT_SETTINGS, PROCESS_REGULAR, mode);
@@ -219,10 +186,6 @@ fn total_points(layers: &[LoopedLayer]) -> usize {
         .flat_map(LoopedLayer::polygons)
         .map(|polygon| polygon.points().len())
         .sum()
-}
-
-fn polygon_counts(layers: &[LoopedLayer]) -> Vec<usize> {
-    layers.iter().map(|layer| layer.polygons().len()).collect()
 }
 
 fn sorted_polygon_lengths(layer: &LoopedLayer) -> Vec<usize> {

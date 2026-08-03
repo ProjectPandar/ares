@@ -73,20 +73,20 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_surface_type_detection(
-        prepare_infill::surface_type_detection::prepare(
+    consume_post_fill_surface_preparation(
+        prepare_infill::fill_surfaces::prepare(prepare_infill::surface_type_detection::prepare(
             perimeters::prepare_post_layer_region_perimeters(project)?,
-        )?,
+        )?),
         metadata,
     )
 }
 
 #[inline(never)]
-fn consume_post_surface_type_detection(
-    prepared: prepare_infill::surface_type_detection::PreparedPostSurfaceTypeDetection,
+fn consume_post_fill_surface_preparation(
+    prepared: prepare_infill::fill_surfaces::PreparedPostFillSurfacePreparation,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let prepare_infill::surface_type_detection::PreparedPostSurfaceTypeDetection {
+    let prepare_infill::fill_surfaces::PreparedPostFillSurfacePreparation {
         predecessor,
         objects,
     } = prepared;

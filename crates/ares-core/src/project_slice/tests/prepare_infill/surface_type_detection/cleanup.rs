@@ -1,7 +1,7 @@
 use crate::{
     SliceError,
     project_slice::{
-        consume_post_surface_type_detection, incomplete_sink,
+        consume_post_fill_surface_preparation, incomplete_sink,
         perimeters::{
             self,
             classic::{
@@ -9,9 +9,12 @@ use crate::{
                 traversal::{PreparedPostClassicTraversal, TraversalSeed},
             },
         },
-        prepare_infill::surface_type_detection::{
-            self, GeometryStep, fail_geometry_at, geometry_events, reset_geometry_hooks,
-            stage_for_test,
+        prepare_infill::{
+            fill_surfaces,
+            surface_type_detection::{
+                self, GeometryStep, fail_geometry_at, geometry_events, reset_geometry_hooks,
+                stage_for_test,
+            },
         },
     },
 };
@@ -126,9 +129,9 @@ fn task22o17_public_incomplete_cleanup_with_deep_predecessors_fits_64k_stack() {
     deepen_both_tree_families(&mut source.predecessor);
     let (drop_probe, dropped) = source.predecessor.drop_probe_observer();
     run_on_constrained_stack(move || {
-        let output = surface_type_detection::prepare(source).unwrap();
+        let output = fill_surfaces::prepare(surface_type_detection::prepare(source).unwrap());
         assert_eq!(
-            consume_post_surface_type_detection(output, metadata()).unwrap_err(),
+            consume_post_fill_surface_preparation(output, metadata()).unwrap_err(),
             SliceError::ProjectSlicingIncomplete
         );
         assert!(drop_probe.upgrade().is_none());

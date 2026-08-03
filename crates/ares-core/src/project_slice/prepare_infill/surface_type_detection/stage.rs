@@ -161,11 +161,20 @@ pub(super) fn clipped_fill(
     boundaries: &[ExPolygon],
 ) -> Result<Vec<RegionSurface>, SliceError> {
     let mut output = Vec::new();
-    for kind in [
-        RegionSurfaceKind::Top,
-        RegionSurfaceKind::Bottom,
-        RegionSurfaceKind::BottomBridge,
-        RegionSurfaceKind::Internal,
+    for (kind, step) in [
+        (RegionSurfaceKind::Top, GeometryStep::FillTopIntersection),
+        (
+            RegionSurfaceKind::Bottom,
+            GeometryStep::FillBottomIntersection,
+        ),
+        (
+            RegionSurfaceKind::BottomBridge,
+            GeometryStep::FillBottomBridgeIntersection,
+        ),
+        (
+            RegionSurfaceKind::Internal,
+            GeometryStep::FillInternalIntersection,
+        ),
     ] {
         let group = slices
             .iter()
@@ -173,12 +182,6 @@ pub(super) fn clipped_fill(
             .map(|surface| surface.as_parts().1.clone())
             .collect::<Vec<_>>();
         if !group.is_empty() {
-            let step = match kind {
-                RegionSurfaceKind::Top => GeometryStep::FillTopIntersection,
-                RegionSurfaceKind::Bottom => GeometryStep::FillBottomIntersection,
-                RegionSurfaceKind::BottomBridge => GeometryStep::FillBottomBridgeIntersection,
-                RegionSurfaceKind::Internal => GeometryStep::FillInternalIntersection,
-            };
             observe(step)?;
             let clipped = intersection_ex(&group, boundaries).map_err(geometry_error)?;
             output.extend(fresh(kind, clipped));
