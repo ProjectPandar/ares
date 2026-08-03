@@ -21,6 +21,7 @@ mod parameters;
 mod perimeters;
 mod planning;
 mod pre_closing_unions;
+mod prepare_infill;
 mod profile;
 mod raw_intersections;
 mod region_slices;
@@ -72,12 +73,30 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_layer_region_perimeters(
-        perimeters::prepare_post_layer_region_perimeters(project)?,
+    consume_post_surface_type_detection(
+        prepare_infill::surface_type_detection::prepare(
+            perimeters::prepare_post_layer_region_perimeters(project)?,
+        )?,
         metadata,
     )
 }
 
+#[inline(never)]
+fn consume_post_surface_type_detection(
+    prepared: prepare_infill::surface_type_detection::PreparedPostSurfaceTypeDetection,
+    metadata: GenerationMetadata,
+) -> Result<Vec<u8>, SliceError> {
+    let prepare_infill::surface_type_detection::PreparedPostSurfaceTypeDetection {
+        predecessor,
+        objects,
+    } = prepared;
+    for object in objects {
+        incomplete_sink::surface_type_detection::consume_object(object);
+    }
+    consume_post_classic_traversal_context(predecessor, metadata)
+}
+
+#[cfg(test)]
 #[inline(never)]
 fn consume_post_layer_region_perimeters(
     prepared: perimeters::layer_region::PreparedPostLayerRegionPerimeters,

@@ -4,6 +4,7 @@ use super::{layers, perimeters};
 mod infill_boundary;
 mod layer_region;
 mod project_context;
+pub(super) mod surface_type_detection;
 #[cfg(test)]
 mod tests;
 

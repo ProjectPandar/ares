@@ -27,18 +27,6 @@ pub(super) fn validate(
     }
     if resolved_objects
         .iter()
-        .any(|resolved| resolved.object.enable_support.0)
-    {
-        return unsupported("enable_support");
-    }
-    if resolved_objects
-        .iter()
-        .any(|resolved| resolved.object.enforce_support_layers.0 != 0)
-    {
-        return unsupported("enforce_support_layers");
-    }
-    if resolved_objects
-        .iter()
         .any(|resolved| resolved.object.precise_z_height.0)
     {
         return unsupported("precise_z_height");

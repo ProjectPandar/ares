@@ -1,6 +1,8 @@
 use crate::{ProjectVolumeType, RegionOptions, geometry::ExPolygon};
 
 pub(super) mod complex;
+#[cfg(test)]
+mod tests;
 
 use super::{
     layers::PlannedPrintObject,
@@ -73,17 +75,22 @@ impl RegionLayer {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
 pub(super) enum RegionSurfaceKind {
+    Top = 0,
+    Bottom = 1,
+    BottomBridge = 2,
     Internal = 4,
 }
 
 impl RegionSurfaceKind {
     pub(super) const fn is_bridge(self) -> bool {
         match self {
-            Self::Internal => false,
+            Self::BottomBridge => true,
+            Self::Top | Self::Bottom | Self::Internal => false,
         }
     }
 }
 
+#[derive(Clone)]
 pub(super) struct RegionSurface {
     kind: RegionSurfaceKind,
     expolygon: ExPolygon,
@@ -94,15 +101,25 @@ pub(super) struct RegionSurface {
 }
 
 impl RegionSurface {
-    pub(super) fn internal(expolygon: ExPolygon) -> Self {
+    pub(super) fn new(kind: RegionSurfaceKind, expolygon: ExPolygon) -> Self {
         Self {
-            kind: RegionSurfaceKind::Internal,
+            kind,
             expolygon,
             thickness: -1.0,
             thickness_layers: 1,
             bridge_angle: -1.0,
             extra_perimeters: 0,
         }
+    }
+
+    pub(super) fn internal(expolygon: ExPolygon) -> Self {
+        Self::new(RegionSurfaceKind::Internal, expolygon)
+    }
+
+    pub(super) fn clone_with_kind(&self, kind: RegionSurfaceKind) -> Self {
+        let mut surface = self.clone();
+        surface.kind = kind;
+        surface
     }
 
     #[cfg(test)]

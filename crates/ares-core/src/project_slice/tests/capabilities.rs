@@ -33,14 +33,6 @@ fn task22a_capability_gates_each_named_feature() {
             with_object(|value| value.raft_layers = OrcaInt(1)),
         ),
         (
-            "enable_support",
-            with_object(|value| value.enable_support = OrcaBool(true)),
-        ),
-        (
-            "enforce_support_layers",
-            with_object(|value| value.enforce_support_layers = OrcaInt(1)),
-        ),
-        (
             "precise_z_height",
             with_object(|value| value.precise_z_height = OrcaBool(true)),
         ),
@@ -100,23 +92,24 @@ fn task22a_capability_gate_order_is_project_key_major() {
     resolved_objects[0].object = first.clone();
     assert_unsupported(
         validate(false, &sources, &resolved_objects),
-        "enable_support",
-    );
-    first.enable_support = OrcaBool(false);
-    resolved_objects[0].object = first.clone();
-    assert_unsupported(
-        validate(false, &sources, &resolved_objects),
-        "enforce_support_layers",
-    );
-    first.enforce_support_layers = OrcaInt(0);
-    resolved_objects[0].object = first.clone();
-    assert_unsupported(
-        validate(false, &sources, &resolved_objects),
         "precise_z_height",
     );
     first.precise_z_height = OrcaBool(false);
     resolved_objects[0].object = first;
     assert_unsupported(validate(false, &sources, &resolved_objects), "zaa_enabled");
+}
+
+#[test]
+fn task22o17_support_options_cross_the_early_capability_boundary() {
+    let source = source_object(Default::default(), Vec::new(), Vec::new());
+    let object = with_object(|value| {
+        value.enable_support = OrcaBool(true);
+        value.enforce_support_layers = OrcaInt(1);
+    });
+    assert_eq!(
+        validate(false, &[source], &[resolved(0, object, Vec::new())]),
+        Ok(())
+    );
 }
 
 #[test]

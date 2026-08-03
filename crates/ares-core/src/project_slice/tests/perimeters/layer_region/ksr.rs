@@ -45,7 +45,9 @@ fn task22o16_ksr_five_output_fields_are_literal_and_repeatable() {
     assert_eq!(first_snapshot, (EXPECTED_CHECKSUM, EXPECTED_TOTALS));
 }
 
-fn checksum(prepared: &PreparedPostLayerRegionPerimeters) -> i128 {
+pub(in crate::project_slice::tests) fn checksum(
+    prepared: &PreparedPostLayerRegionPerimeters,
+) -> i128 {
     let mut checksum = 0_i128;
     mix(&mut checksum, prepared.objects.len() as i128);
     for (object, traversal) in prepared.objects.iter().zip(&prepared.predecessor.objects) {
@@ -221,7 +223,9 @@ fn checksum_option(checksum: &mut i128, value: Option<usize>) {
     }
 }
 
-fn totals(prepared: &PreparedPostLayerRegionPerimeters) -> [usize; 9] {
+pub(in crate::project_slice::tests) fn totals(
+    prepared: &PreparedPostLayerRegionPerimeters,
+) -> [usize; 9] {
     let slots = prepared
         .objects
         .iter()

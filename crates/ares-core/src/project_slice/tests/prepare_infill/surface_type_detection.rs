@@ -1,6 +1,8 @@
 mod cleanup;
-pub(in crate::project_slice::tests) mod ksr;
+mod fixture;
+mod ksr;
 mod lifecycle;
+mod metamorphic;
 mod options;
 mod ownership;
-mod shape;
+mod transaction;
