@@ -3124,7 +3124,40 @@ independent six-dimensional implementation rereview and OpenCode rereview both
 returned `VERDICT: APPROVE`.
 
 Public slicing reaches O17 once and intentionally remains
-`ProjectSlicingIncomplete`. The next source boundary is
+`ProjectSlicingIncomplete`.
+
+Task 22O.18 ports the slicing-state mutation in
 `LayerRegion::prepare_fill_surfaces` at `LayerRegion.cpp:935-973`, called from
-`PrintObject.cpp:587-592`; shell discovery, external-surface processing, fill
-generation, seams, ordering, motion, and G-code remain deferred.
+`PrintObject.cpp:587-592`. Each aligned record reads its typed resolved
+`RegionOptions` and retags only existing fill surfaces in three source-ordered
+passes: zero top shells map `Top` to `Internal`, zero bottom shells map `Bottom`
+and `BottomBridge` to `Internal`, then sparse density within strict `1e-4` of
+100% maps `Internal` to `InternalSolid`. The pinned static
+`PrintObject::infill_only_where_needed = false` keeps `InternalVoid` deferred.
+
+The stage validates all object/record/slot/identity alignment before writing,
+then mutates allocation-free in place. Fill vector, geometry, metadata, order,
+typed slices, perimeter/thin-fill outputs, boundaries, and boxed predecessor
+retain identity. `RegionSurfaceKind::InternalSolid = 5` is non-bridge. The typed
+global print `spiral_mode` is now rejected in early capabilities before O17,
+closing the threshold-masked record-local bypass while direct tests preserve
+the upstream pass guards. Six obsolete unsupported-spiral checkpoint-pinning
+tests were deleted rather than retained as legacy expectations.
+
+The inactive KSR 5/3/15% options preserve checksum
+`-126362407653399901571400348049652748978`; O18 totals are
+`[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 5388, 519, 6, 666, 4197, 1294,
+113, 6, 48, 1127, 5388, 517, 85886, 1294, 168, 46011, 0, 0]`. Seventeen focused
+O18 tests, 209 O10-O18 regressions, and 5,607 workspace tests with 2 skipped
+pass with native, strict Clippy, both WASM, formatting, diff, LOC,
+forbidden-pattern, dependency, pinning-removal, and staging gates. Active
+project/global and model-part overrides freeze literal 113 top, 6 bottom, 48
+bottom-bridge, and 1,127 internal transitions. The final independent
+six-dimensional implementation rereview and OpenCode rereview both returned
+`VERDICT: APPROVE`.
+
+Public slicing reaches O18 once and intentionally remains
+`ProjectSlicingIncomplete`. The next source boundary is
+`PrintObject::discover_vertical_shells` beginning at `PrintObject.cpp:595`;
+horizontal shells, external-surface processing, fill generation, seams,
+ordering, motion, and G-code remain deferred.
