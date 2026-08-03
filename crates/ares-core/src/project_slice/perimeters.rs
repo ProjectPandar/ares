@@ -7,6 +7,7 @@ use super::compensation::{PreparedPostCompensation, prepare_post_compensation};
 use context::prepare_perimeter_contexts;
 
 pub(super) mod classic;
+pub(super) mod layer_region;
 use preflight::preflight_perimeter_flows;
 use types::PostPerimeterInputPrintObject;
 
@@ -117,6 +118,14 @@ pub(super) fn prepare_post_classic_infill_boundary(
     project: impl AsRef<[u8]>,
 ) -> Result<classic::PreparedPostClassicInfillBoundary, SliceError> {
     classic::finish_classic_infill_boundary(prepare_post_classic_gap_extrusion(project)?)
+}
+
+pub(super) fn prepare_post_layer_region_perimeters(
+    project: impl AsRef<[u8]>,
+) -> Result<layer_region::PreparedPostLayerRegionPerimeters, SliceError> {
+    Ok(layer_region::finish(prepare_post_classic_infill_boundary(
+        project,
+    )?))
 }
 
 pub(super) fn finish_post_perimeter_inputs(

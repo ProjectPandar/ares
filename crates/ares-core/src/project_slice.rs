@@ -1,7 +1,6 @@
 use crate::{
-    GenerationMetadata, Project, SliceError,
-    geometry::CoordinateScale,
-    project::effective_config::types::{BoundedResolvedProjectConfig, ResolvedProjectObject},
+    GenerationMetadata, Project, SliceError, geometry::CoordinateScale,
+    project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
 mod bounds;
@@ -73,98 +72,34 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_classic_infill_boundary(
-        perimeters::prepare_post_classic_infill_boundary(project)?,
+    consume_post_layer_region_perimeters(
+        perimeters::prepare_post_layer_region_perimeters(project)?,
         metadata,
     )
 }
 
 #[inline(never)]
-fn consume_post_classic_infill_boundary(
-    prepared: perimeters::classic::PreparedPostClassicInfillBoundary,
+fn consume_post_layer_region_perimeters(
+    prepared: perimeters::layer_region::PreparedPostLayerRegionPerimeters,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let perimeters::classic::PreparedPostClassicInfillBoundary {
+    let perimeters::layer_region::PreparedPostLayerRegionPerimeters {
         predecessor,
-        objects: infill_boundary_objects,
+        objects: layer_region_objects,
     } = prepared;
-    for object in infill_boundary_objects {
-        incomplete_sink::consume_infill_boundary_object(object);
+    for object in layer_region_objects {
+        incomplete_sink::consume_layer_region_perimeter_object(object);
     }
-    let perimeters::classic::PreparedPostClassicTraversal {
-        project,
-        resolved,
-        config_block,
-        scale,
-        objects: post_classic_traversal_objects,
-        #[cfg(test)]
-        drop_probe,
-    } = *predecessor;
-    let documents = project.documents();
-    let _ = (
-        project.models(),
-        project.objects(),
-        project.plates(),
-        project.settings(),
-        project.has_painted_layer_height_profile(),
-        &documents.model_settings,
-        &documents.slice_info,
-        &documents.filament_sequences,
-        &documents.plate_documents,
-        documents.has_painted_layer_height_profile,
-    );
-    let BoundedResolvedProjectConfig {
-        views,
-        logical_filament_count,
-        usage,
-        print_object_count,
-        objects,
-    } = *resolved;
-    let full = views.full;
-    let runtime = views.runtime;
-    let runtime_gcode = views.runtime_gcode;
-    let supported_used_filaments = usage.supported_used_filaments;
-    let coverage = usage.coverage;
-    for ResolvedProjectObject {
-        source_object_index,
-        object,
-        print_objects,
-        layer_candidates,
-    } in objects
-    {
-        let _ = (source_object_index, object);
-        for print_object in print_objects {
-            let _ = print_object.transform;
-        }
-        for layer_candidate in layer_candidates {
-            let _ = (
-                layer_candidate.min_z,
-                layer_candidate.max_z,
-                layer_candidate.source_range_index,
-            );
-            for model_part in layer_candidate.model_parts {
-                let _ = (model_part.volume_index, model_part.region);
-            }
-        }
-    }
-    for object in post_classic_traversal_objects {
-        incomplete_sink::consume_traversal_object(object);
-    }
-    let _ = (
-        project,
-        scale,
-        full,
-        runtime,
-        runtime_gcode,
-        logical_filament_count,
-        supported_used_filaments,
-        coverage,
-        print_object_count,
-        metadata,
-        config_block,
-    );
-    #[cfg(test)]
-    let _ = drop_probe;
+    consume_post_classic_traversal_context(predecessor, metadata)
+}
+
+#[inline(never)]
+fn consume_post_classic_traversal_context(
+    predecessor: Box<perimeters::classic::PreparedPostClassicTraversal>,
+    metadata: GenerationMetadata,
+) -> Result<Vec<u8>, SliceError> {
+    incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
+    let _ = metadata;
     Err(SliceError::ProjectSlicingIncomplete)
 }
 

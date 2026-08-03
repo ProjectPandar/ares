@@ -1,10 +1,15 @@
 use super::{layers, perimeters};
 
+#[cfg(test)]
 mod infill_boundary;
+mod layer_region;
+mod project_context;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
 pub(super) use infill_boundary::consume_infill_boundary_object;
+pub(super) use layer_region::consume_layer_region_perimeter_object;
 
 #[inline(never)]
 pub(super) fn consume_boxed_post_classic_traversal(
@@ -19,6 +24,7 @@ pub(super) fn consume_boxed_post_classic_traversal(
         #[cfg(test)]
         drop_probe,
     } = *prepared;
+    project_context::observe(&project, &resolved);
     for object in objects {
         consume_traversal_object(object);
     }
