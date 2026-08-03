@@ -23,6 +23,24 @@ pub(crate) fn append_simplified_expolygon(
     Ok(())
 }
 
+pub(crate) fn simplify_expolygon_polygons(
+    expolygon: &ExPolygon,
+    tolerance: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    let mut paths = Vec::with_capacity(expolygon.holes().len() + 1);
+    paths.push(Polygon::new(simplify_closed_points(
+        expolygon.contour().points().to_vec(),
+        tolerance,
+    )));
+    paths.extend(
+        expolygon
+            .holes()
+            .iter()
+            .map(|hole| Polygon::new(simplify_closed_points(hole.points().to_vec(), tolerance))),
+    );
+    simplify_polygons(&paths)
+}
+
 pub(super) fn distance_to_segment_squared(point: Point, start: Point, end: Point) -> f64 {
     let vector_x = (end.x() - start.x()) as f64;
     let vector_y = (end.y() - start.y()) as f64;

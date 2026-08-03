@@ -30,7 +30,7 @@ pub(crate) use line::{Line, ThickLine};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
-pub(crate) use simplification::append_simplified_expolygon;
+pub(crate) use simplification::{append_simplified_expolygon, simplify_expolygon_polygons};
 
 type BinaryExOperation = fn(&[ExPolygon], &[ExPolygon]) -> Result<Vec<ExPolygon>, ClipperError>;
 type PolygonClipOperation = fn(&[ExPolygon], &[Polygon]) -> Result<Vec<ExPolygon>, ClipperError>;
@@ -89,6 +89,7 @@ const _: ExPolygonsOffsetOperation = offset_expolygons;
 const _: VariableOffsetOperation = variable_offset_inner_ex;
 const _: fn(ExPolygon, f64, &mut Vec<ExPolygon>) -> Result<(), ClipperError> =
     append_simplified_expolygon;
+const _: fn(&ExPolygon, f64) -> Result<Vec<Polygon>, ClipperError> = simplify_expolygon_polygons;
 const _: fn(Point, Point, Point) -> f64 = simplification::distance_to_segment_squared;
 const _: fn(&[Point], f64) -> Vec<Point> = simplification::douglas_peucker;
 const _: fn(Vec<Point>, f64) -> Vec<Point> = simplification::simplify_closed_points;

@@ -11,3 +11,4 @@ mod polygon;
 mod polyline;
 mod scale;
 mod simplification;
+mod simplification_polygon_output;
