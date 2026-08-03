@@ -4512,7 +4512,42 @@ review and OpenCode review both returned `VERDICT: APPROVE`. Public slicing
 reaches O16 once and remains
 `ProjectSlicingIncomplete`.
 
-The next rewrite boundary is `PrintObject::prepare_infill` at
-`PrintObject.cpp:560`. Surface classification, fill grouping/generation,
-copying thin fills into final fills, seams, ordering, motion, G-code, and
-post-processing remain deferred.
+## Task 22O.17: Surface-type detection and clipped fill transfer
+
+Task 22O.17 ports the first complete `PrintObject::prepare_infill` mutation at
+fixed commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`: the KSR-active
+`detect_surfaces_type` path at `PrintObject.cpp:1520-1923` and
+`LayerRegion::slices_to_fill_surfaces_clipped` at `LayerRegion.cpp:63-80`.
+It emits source-ordered typed slices, then rebuilds fill surfaces in numeric
+kind order against unchanged O16 fill boundaries.
+
+The implementation preserves the two-stage miter/3.0 opening, clip-only
+10-unit safety, exact integer/float cast order, per-surface contour-then-hole
+order, metadata clone/reconstruction rules, and the pinned crack-containment
+overload that ignores its apparent safety argument. It stages the whole project
+before moving O16 ownership and iteratively consumes every failure path.
+
+The temporary early `enable_support` and `enforce_support_layers` capability
+gates are removed only far enough to feed Orca's literal typed bottom-support
+predicate. Interface shells and active external/all extra-bridge modes remain
+O17 preflight errors; earlier spiral and counterbore errors retain precedence.
+No support generation or completed prepare-infill lifecycle is claimed.
+
+The literal KSR checkpoint is
+`-126362407653399901571400348049652748978`, with totals
+`[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 5388, 519, 6, 666, 4197, 1294,
+113, 6, 48, 1127, 5388, 517, 85886, 1294, 168, 46011]`. Forty-three focused
+O17 tests, 178 O1-O17 regressions, and 5,597 workspace Nextest tests with 2
+skipped pass with strict Clippy, workspace/native and both WASM checks,
+formatting, diff, LOC, forbidden-pattern, source-pinning, dependency, and
+staging audits. ZIP repack/non-slicing rename invariance and an exact component
+X-scale relation with fixed elephant-foot compensation provide anti-hardcoding
+evidence. The final independent six-dimensional implementation rereview and
+OpenCode rereview both returned `VERDICT: APPROVE`.
+
+Public slicing reaches O17 once and remains `ProjectSlicingIncomplete`. The
+next rewrite boundary is `LayerRegion::prepare_fill_surfaces` at
+`LayerRegion.cpp:935-973`, called from `PrintObject.cpp:587-592`. Vertical and
+horizontal shell discovery, external-surface processing, fill grouping and
+generation, seams, ordering, motion, G-code, and post-processing remain
+deferred.

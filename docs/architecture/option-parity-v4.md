@@ -3086,7 +3086,45 @@ and staging audits. The final independent six-dimensional implementation
 review and OpenCode review both returned `VERDICT: APPROVE`.
 
 Public slicing reaches O16 once and intentionally remains
+`ProjectSlicingIncomplete`.
+
+Task 22O.17 advances the first complete `PrintObject::prepare_infill` mutation
+through `detect_surfaces_type` at `PrintObject.cpp:1520-1923` and
+`LayerRegion::slices_to_fill_surfaces_clipped` at `LayerRegion.cpp:63-80`.
+The crate-private successor classifies original region slices as ordered
+`Internal`, `Top`, `Bottom`, and `BottomBridge`, then clears and rebuilds fill
+surfaces by numeric surface-kind order against the unchanged O16
+`fill_expolygons` boundaries.
+
+The rewrite preserves integer-to-float opening arithmetic, two separately
+fallible miter/3.0 opening offsets, clip-only 10-unit safety, stable contour-
+then-hole path order, terminal metadata clone/reconstruction behavior, and the
+pinned `ExPolygon, ExPolygon` overload quirk that discards the apparent crack-
+containment safety flag. O16 perimeter, thin-fill, fill-boundary, no-overlap,
+and boxed traversal allocations move unchanged; old fill surfaces are consumed
+and typed slices/fills are fresh staged geometry.
+
+Only the temporary early capability gates for `enable_support` and
+`enforce_support_layers` move forward. Their typed values feed Orca's literal
+automatic-support predicate, but public slicing still ends honestly at O17.
+`interface_shells = true` and active external/all extra-bridge modes fail in
+whole-project O17 preflight; spiral and non-`none` counterbore modes retain
+earlier precedence.
+
+The O17 KSR checkpoint is
+`-126362407653399901571400348049652748978`, with totals
+`[1, 460, 460, 2881, 5243, 2285, 1112, 1112, 5388, 519, 6, 666, 4197, 1294,
+113, 6, 48, 1127, 5388, 517, 85886, 1294, 168, 46011]`. Forty-three focused
+O17 tests, 178 O1-O17 regressions, and 5,597 workspace Nextest tests with 2
+skipped pass with strict Clippy, workspace/native and both WASM checks,
+formatting, diff, LOC, forbidden-pattern, source-pinning, dependency, and
+staging audits. ZIP repack/non-slicing rename invariance and the exact component
+X-scale/elephant-foot span relation distinguish fixture hardcoding. The final
+independent six-dimensional implementation rereview and OpenCode rereview both
+returned `VERDICT: APPROVE`.
+
+Public slicing reaches O17 once and intentionally remains
 `ProjectSlicingIncomplete`. The next source boundary is
-`PrintObject::prepare_infill` at `PrintObject.cpp:560`; surface
-classification, fill grouping/generation, copying thin fills into final fills,
-seams, ordering, motion, and G-code remain deferred.
+`LayerRegion::prepare_fill_surfaces` at `LayerRegion.cpp:935-973`, called from
+`PrintObject.cpp:587-592`; shell discovery, external-surface processing, fill
+generation, seams, ordering, motion, and G-code remain deferred.
