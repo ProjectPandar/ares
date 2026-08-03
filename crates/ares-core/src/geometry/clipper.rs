@@ -31,10 +31,10 @@ pub(crate) use boolean_ex::{
 pub(crate) use bounds::{IntBounds, negative_outer};
 pub(crate) use offset::{
     ClipperOffset, JoinType, offset_expolygon, offset_expolygons, offset_expolygons_paths,
-    offset_paths, offset2_ex, opening_ex, raw_offset_paths,
+    offset_open_paths, offset_paths, offset2_ex, opening_ex, raw_offset_paths,
 };
 #[cfg(test)]
-pub(crate) use offset::{offset_expolygons_raw, offset_paths_tree};
+pub(crate) use offset::{offset_expolygons_raw, offset_paths_tree, raw_offset_open_paths};
 pub(crate) use point_in_polygon::point_in_polygon;
 #[cfg(test)]
 pub(crate) use polyline::recombine_polylines;

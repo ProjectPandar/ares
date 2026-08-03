@@ -1,6 +1,6 @@
 use crate::geometry::{Point, Polygon};
 
-use super::{ClipperOffset, JoinType, OffsetPath};
+use super::{ClipperOffset, EndType, JoinType, OffsetPath};
 use crate::geometry::clipper::predicates::area;
 
 impl ClipperOffset {
@@ -40,10 +40,29 @@ impl ClipperOffset {
         self.paths.push(OffsetPath {
             contour: Polygon::new(contour),
             join_type,
+            end_type: EndType::ClosedPolygon,
         });
         if replace_lowest {
             self.lowest = Some((path_index, lowest));
         }
+    }
+
+    pub(crate) fn add_open_path(&mut self, path: &Polygon, join_type: JoinType) {
+        let Some((&first, rest)) = path.points().split_first() else {
+            return;
+        };
+        let mut contour = Vec::with_capacity(path.points().len());
+        contour.push(first);
+        for &point in rest {
+            if !self.points_are_near(point, *contour.last().unwrap()) {
+                contour.push(point);
+            }
+        }
+        self.paths.push(OffsetPath {
+            contour: Polygon::new(contour),
+            join_type,
+            end_type: EndType::OpenButt,
+        });
     }
 
     pub(crate) fn add_closed_paths(&mut self, paths: &[Polygon], join_type: JoinType) {
@@ -57,7 +76,13 @@ impl ClipperOffset {
             return;
         };
         if area(self.paths[path_index].contour.points()) < 0.0 {
-            for path in &mut self.paths {
+            self.reverse_closed_paths();
+        }
+    }
+
+    fn reverse_closed_paths(&mut self) {
+        for path in &mut self.paths {
+            if path.end_type == EndType::ClosedPolygon {
                 path.contour.reverse();
             }
         }

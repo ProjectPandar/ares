@@ -3,7 +3,9 @@ mod expolygon;
 mod generate;
 mod input;
 
-pub(crate) use execute::{offset_paths, offset_paths_tree, raw_offset_paths};
+#[cfg(test)]
+pub(crate) use execute::raw_offset_open_paths;
+pub(crate) use execute::{offset_open_paths, offset_paths, offset_paths_tree, raw_offset_paths};
 pub(crate) use expolygon::{
     offset_expolygon, offset_expolygons, offset_expolygons_paths, offset_expolygons_raw,
     offset2_ex, opening_ex,
@@ -33,6 +35,13 @@ pub(crate) enum JoinType {
 struct OffsetPath {
     contour: Polygon,
     join_type: JoinType,
+    end_type: EndType,
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum EndType {
+    ClosedPolygon,
+    OpenButt,
 }
 
 pub(crate) struct ClipperOffset {
@@ -97,6 +106,7 @@ const _: fn(&mut ClipperOffset, f64) = ClipperOffset::set_shortest_edge_length;
 const _: fn(&mut ClipperOffset) = ClipperOffset::clear;
 const _: fn(&mut ClipperOffset, &Polygon, JoinType) = ClipperOffset::add_closed_path;
 const _: fn(&mut ClipperOffset, &[Polygon], JoinType) = ClipperOffset::add_closed_paths;
+const _: fn(&mut ClipperOffset, &Polygon, JoinType) = ClipperOffset::add_open_path;
 const _: fn(&mut ClipperOffset, f64) -> Vec<Polygon> = ClipperOffset::generate_raw;
 const _: fn(&mut ClipperOffset, f64) -> Result<Vec<Polygon>, ClipperError> =
     ClipperOffset::execute_paths;

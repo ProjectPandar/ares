@@ -20,8 +20,8 @@ pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, diff_pl, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
     difference_polygons_ex, intersection_ex, intersection_pl, offset_expolygon, offset_expolygons,
-    offset_expolygons_paths, offset_paths, offset2_ex, opening_ex, union_ex, union_expolygons,
-    variable_offset_inner_ex, xor_ex,
+    offset_expolygons_paths, offset_open_paths, offset_paths, offset2_ex, opening_ex, union_ex,
+    union_expolygons, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{EdgeGrid, GridEdge};

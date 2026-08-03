@@ -64,6 +64,33 @@ pub(crate) fn offset_paths(
     }
 }
 
+pub(crate) fn raw_offset_open_paths(
+    paths: &[Polygon],
+    delta: f32,
+    join_type: JoinType,
+    miter_limit: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    let mut raw = Vec::with_capacity(paths.len());
+    for path in paths {
+        let mut offset = configured_offset(delta, join_type, miter_limit);
+        offset.add_open_path(path, join_type);
+        raw.append(&mut offset.execute_paths(f64::from(delta))?);
+    }
+    Ok(raw)
+}
+
+pub(crate) fn offset_open_paths(
+    paths: &[Polygon],
+    delta: f32,
+    join_type: JoinType,
+    miter_limit: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    union_paths(
+        &raw_offset_open_paths(paths, delta, join_type, miter_limit)?,
+        FillRule::NonZero,
+    )
+}
+
 pub(crate) fn offset_paths_tree(
     paths: &[Polygon],
     delta: f32,
