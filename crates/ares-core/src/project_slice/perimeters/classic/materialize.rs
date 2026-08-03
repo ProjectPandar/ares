@@ -9,11 +9,9 @@ pub(in crate::project_slice) mod tree;
 mod types;
 
 pub(in crate::project_slice) use types::{
-    ExtrusionPath, PreparedPostClassicRawPaths, PreparedRawPathObject, PreparedRawPathRecord,
-    PreparedRawPathSurface, RawPathNode,
+    ExtrusionPath, ExtrusionRole, Point3, Polyline3, PreparedPostClassicRawPaths,
+    PreparedRawPathObject, PreparedRawPathRecord, PreparedRawPathSurface, RawPathNode,
 };
-#[cfg(test)]
-pub(in crate::project_slice) use types::{ExtrusionRole, Point3, Polyline3};
 
 use crate::{SliceError, project_slice::incomplete_sink};
 

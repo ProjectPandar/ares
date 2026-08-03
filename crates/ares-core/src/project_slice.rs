@@ -73,23 +73,23 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_classic_medial_gap(
-        perimeters::prepare_post_classic_medial_gap(project)?,
+    consume_post_classic_gap_extrusion(
+        perimeters::prepare_post_classic_gap_extrusion(project)?,
         metadata,
     )
 }
 
 #[inline(never)]
-fn consume_post_classic_medial_gap(
-    prepared: perimeters::classic::PreparedPostClassicMedialGap,
+fn consume_post_classic_gap_extrusion(
+    prepared: perimeters::classic::PreparedPostClassicGapExtrusion,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let perimeters::classic::PreparedPostClassicMedialGap {
+    let perimeters::classic::PreparedPostClassicGapExtrusion {
         predecessor,
-        objects: medial_gap_objects,
+        objects: gap_extrusion_objects,
     } = prepared;
-    for object in medial_gap_objects {
-        incomplete_sink::consume_medial_gap_object(object);
+    for object in gap_extrusion_objects {
+        incomplete_sink::consume_gap_extrusion_object(object);
     }
     let perimeters::classic::PreparedPostClassicTraversal {
         project,

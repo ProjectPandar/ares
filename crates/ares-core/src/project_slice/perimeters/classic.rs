@@ -4,6 +4,7 @@
 pub(in crate::project_slice) mod chained_loops;
 pub(in crate::project_slice) mod entity_collections;
 pub(in crate::project_slice) mod gap_domain;
+pub(in crate::project_slice) mod gap_extrusion;
 pub(in crate::project_slice) mod hierarchy;
 pub(in crate::project_slice) mod materialize;
 pub(in crate::project_slice) mod medial_gap;
@@ -19,6 +20,7 @@ mod types;
 pub(in crate::project_slice) use chained_loops::PreparedPostClassicChainedLoops;
 pub(in crate::project_slice) use entity_collections::PreparedPostClassicEntityCollections;
 pub(in crate::project_slice) use gap_domain::PreparedPostClassicGapDomain;
+pub(in crate::project_slice) use gap_extrusion::PreparedPostClassicGapExtrusion;
 pub(in crate::project_slice) use hierarchy::{
     PostClassicHierarchyPrintObject, PreparedPostClassicHierarchy,
 };
@@ -140,4 +142,10 @@ pub(super) fn finish_classic_medial_gap(
     prepared: PreparedPostClassicGapDomain,
 ) -> Result<PreparedPostClassicMedialGap, SliceError> {
     medial_gap::finish(prepared)
+}
+
+pub(super) fn finish_classic_gap_extrusion(
+    prepared: PreparedPostClassicMedialGap,
+) -> Result<PreparedPostClassicGapExtrusion, SliceError> {
+    gap_extrusion::finish(prepared)
 }

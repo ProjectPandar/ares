@@ -3,6 +3,7 @@ mod entity_collections;
 mod fixture;
 mod flow;
 mod gap_domain;
+mod gap_extrusion;
 mod hierarchy;
 mod materialize;
 mod medial_gap;

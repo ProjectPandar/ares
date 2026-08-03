@@ -48,6 +48,70 @@ pub(super) fn consume_medial_gap_object(
     }
 }
 
+#[inline(never)]
+pub(super) fn consume_gap_extrusion_object(
+    object: perimeters::classic::gap_extrusion::PreparedGapExtrusionObject,
+) {
+    for record in object.records.into_iter().flatten() {
+        for surface in record.surfaces {
+            consume_gap_extrusion_surface(surface);
+        }
+    }
+}
+
+fn consume_gap_extrusion_surface(
+    surface: perimeters::classic::gap_extrusion::PreparedGapExtrusionSurface,
+) {
+    let _ = surface.source_index;
+    consume_inactive_post_collection(surface.inactive);
+    consume_appended_collections(surface.appended.collections);
+    if let Some(medial) = surface.medial {
+        consume_medial_domain(medial);
+    }
+    for entity in surface.gap_fill.entities {
+        consume_gap_entity(entity);
+    }
+    for expolygon in surface.remaining {
+        consume_expolygon(expolygon);
+    }
+}
+
+fn consume_medial_domain(medial: perimeters::classic::medial_gap::MedialGapDomain) {
+    for polyline in medial.polylines {
+        let _ = (polyline.points, polyline.width, polyline.endpoints);
+    }
+    consume_pre_medial_gap_domain(medial.predecessor);
+}
+
+fn consume_gap_entity(entity: perimeters::classic::gap_extrusion::GapFillEntity) {
+    match entity {
+        perimeters::classic::gap_extrusion::GapFillEntity::Path(path) => consume_gap_path(path),
+        perimeters::classic::gap_extrusion::GapFillEntity::Loop(paths) => {
+            for path in paths {
+                consume_gap_path(path);
+            }
+        }
+    }
+}
+
+fn consume_expolygon(expolygon: crate::geometry::ExPolygon) {
+    let (contour, holes) = expolygon.into_parts();
+    let _ = contour.into_points();
+    for hole in holes {
+        let _ = hole.into_points();
+    }
+}
+
+fn consume_gap_path(path: perimeters::classic::materialize::ExtrusionPath) {
+    let _ = (
+        path.polyline.points,
+        path.role,
+        path.mm3_per_mm,
+        path.width,
+        path.height,
+    );
+}
+
 fn consume_medial_gap_surface(surface: perimeters::classic::medial_gap::PreparedMedialGapSurface) {
     let _ = surface.source_index;
     consume_inactive_post_collection(surface.inactive);

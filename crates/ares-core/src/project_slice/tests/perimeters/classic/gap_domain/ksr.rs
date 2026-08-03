@@ -243,6 +243,7 @@ fn checksum_path(checksum: &mut i128, path: &ExtrusionPath) {
             ExtrusionRole::ExternalPerimeter => 1,
             ExtrusionRole::Perimeter => 2,
             ExtrusionRole::OverhangPerimeter => 3,
+            ExtrusionRole::GapFill => 4,
         },
     );
     mix(checksum, i128::from(path.mm3_per_mm.to_bits()));
