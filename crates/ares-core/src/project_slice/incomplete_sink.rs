@@ -1,7 +1,10 @@
 use super::{layers, perimeters};
 
+mod infill_boundary;
 #[cfg(test)]
 mod tests;
+
+pub(super) use infill_boundary::consume_infill_boundary_object;
 
 #[inline(never)]
 pub(super) fn consume_boxed_post_classic_traversal(

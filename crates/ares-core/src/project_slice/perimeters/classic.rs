@@ -6,6 +6,7 @@ pub(in crate::project_slice) mod entity_collections;
 pub(in crate::project_slice) mod gap_domain;
 pub(in crate::project_slice) mod gap_extrusion;
 pub(in crate::project_slice) mod hierarchy;
+pub(in crate::project_slice) mod infill_boundary;
 pub(in crate::project_slice) mod materialize;
 pub(in crate::project_slice) mod medial_gap;
 pub(in crate::project_slice) mod onion;
@@ -24,6 +25,7 @@ pub(in crate::project_slice) use gap_extrusion::PreparedPostClassicGapExtrusion;
 pub(in crate::project_slice) use hierarchy::{
     PostClassicHierarchyPrintObject, PreparedPostClassicHierarchy,
 };
+pub(in crate::project_slice) use infill_boundary::PreparedPostClassicInfillBoundary;
 pub(in crate::project_slice) use materialize::PreparedPostClassicRawPaths;
 pub(in crate::project_slice) use medial_gap::PreparedPostClassicMedialGap;
 pub(in crate::project_slice) use onion::{PostClassicOnionPrintObject, PreparedPostClassicOnion};
@@ -148,4 +150,10 @@ pub(super) fn finish_classic_gap_extrusion(
     prepared: PreparedPostClassicMedialGap,
 ) -> Result<PreparedPostClassicGapExtrusion, SliceError> {
     gap_extrusion::finish(prepared)
+}
+
+pub(super) fn finish_classic_infill_boundary(
+    prepared: PreparedPostClassicGapExtrusion,
+) -> Result<PreparedPostClassicInfillBoundary, SliceError> {
+    infill_boundary::finish(prepared)
 }

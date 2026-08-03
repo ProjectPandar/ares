@@ -5,12 +5,12 @@ mod types;
 
 pub(in crate::project_slice) use types::{
     ClassicTopSplitRecord, PostClassicTopSplitPrintObject, PreparedPostClassicTopSplit,
-    TopSplitOutcome, TopSplitUpperSource,
+    PreparedTopSplitSurface, TopSplitOutcome, TopSplitUpperSource,
 };
 
 use crate::{SliceError, geometry::ExPolygon};
 
-use self::{config::ValidatedTopSplitConfig, types::PreparedTopSplitSurface};
+use self::config::ValidatedTopSplitConfig;
 use super::types::{
     ClassicPreludeRecord, PostClassicPreludePrintObject, PreparedClassicSurface,
     PreparedPostClassicPrelude,

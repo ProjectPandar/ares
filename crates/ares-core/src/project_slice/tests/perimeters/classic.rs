@@ -5,6 +5,7 @@ mod flow;
 mod gap_domain;
 mod gap_extrusion;
 mod hierarchy;
+mod infill_boundary;
 mod materialize;
 mod medial_gap;
 mod onion;

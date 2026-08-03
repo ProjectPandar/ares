@@ -113,6 +113,12 @@ pub(super) fn prepare_post_classic_gap_extrusion(
     classic::finish_classic_gap_extrusion(prepare_post_classic_medial_gap(project)?)
 }
 
+pub(super) fn prepare_post_classic_infill_boundary(
+    project: impl AsRef<[u8]>,
+) -> Result<classic::PreparedPostClassicInfillBoundary, SliceError> {
+    classic::finish_classic_infill_boundary(prepare_post_classic_gap_extrusion(project)?)
+}
+
 pub(super) fn finish_post_perimeter_inputs(
     prepared: PreparedPostCompensation,
 ) -> Result<PreparedPostPerimeterInputs, SliceError> {
