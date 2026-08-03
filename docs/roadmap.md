@@ -4458,7 +4458,29 @@ Nextest tests with 2 skipped; strict Clippy, workspace/native and both WASM
 checks, rustfmt, diff/LOC/forbidden/dependency/staging audits passed. Independent
 Codex and OpenCode re-reviews both returned `VERDICT: APPROVE`.
 
-The next rewrite boundary begins at `PerimeterGenerator.cpp:1628` with the
-infill-boundary inset. Boundary simplification/collapsing, surface
-classification, no-overlap surfaces, extra perimeters, downstream
-`gap_fill_flow_ratio`, fill, seams, motion, and G-code remain deferred.
+## Task 22O.15: Classic infill-boundary construction
+
+Task 22O.15 ports fixed commit
+`8500fcdccaa10b5099ac20d252af3a7c560046f1`
+`PerimeterGenerator.cpp:1628-1691` and the reached `ExPolygon::simplify_p`,
+Clipper offset/boolean, and internal-surface helpers. It derives inset and both
+overlap values from aligned typed 3MF state, uses raw `m_scaled_resolution`,
+preserves exact integer/floating halves and narrowing casts, builds ordered
+internal fill and `fill_no_overlap` geometry, and retains the exact inactive
+six-operand `apply_extra_perimeters` guard.
+
+Numeric preflight and every simplification/Clipper result are staged for the
+whole project before O14 ownership moves. The successor preserves O14 gap
+entities and remaining geometry plus O13/O11/O10 and boxed O5 allocations;
+success and failure cleanup remain iterative. Public slicing reaches O15 once
+and remains `ProjectSlicingIncomplete`. The literal KSR checksum is
+`136197013209006370081121271251125478104`; 49 focused O15 tests and geometry
+regressions, 5,540 workspace Nextest tests with 2 skipped, strict Clippy, workspace/native and both
+WASM checks, formatting, diff, LOC, forbidden-pattern, dependency, and staging
+audits pass. The final independent six-dimensional implementation rereview and
+OpenCode rereview both returned `VERDICT: APPROVE`.
+
+The next rewrite boundary begins at `PerimeterGenerator.cpp:1695`. The
+activated extra-perimeter body, counterbore/no-bridge processing, surface
+classification, downstream `gap_fill_flow_ratio`, fill, seams, motion, and
+G-code remain deferred.

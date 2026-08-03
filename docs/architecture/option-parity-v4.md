@@ -3029,7 +3029,34 @@ allocations, attaching gap entities, and cloning or subtracting the onion
 Public slicing reaches O14 once and intentionally remains
 `ProjectSlicingIncomplete`.
 
-Behavior beginning at `PerimeterGenerator.cpp:1628`—infill-boundary inset,
-simplification, collapsing, surface classification, no-overlap surfaces, and
-extra perimeters—remains deferred, as do downstream gap-flow-ratio application,
-fill, seams, motion, and G-code.
+Task 22O.15 advances the fixed source boundary through
+`PerimeterGenerator.cpp:1628-1691`. A crate-private
+`classic::infill_boundary` successor recovers aligned O3 loop counts, O2
+`top_fills`/`fill_clip`, O1 spacings, original layer adjacency, and effective
+typed `RegionOptions.infill_wall_overlap` and
+`top_bottom_infill_wall_overlap`. Whole-project numeric preflight preserves
+the source signed half operations and the full unscale/percent/scale
+conversion sequence at Normal and LargeBed scales. O15 uses raw
+`m_scaled_resolution`, not O1's arc-fitting-adjusted tolerance.
+
+The sibling geometry helper implements reached `ExPolygon::simplify_p` flat
+polygon output without changing the older per-expolygon grouping helper.
+O15 then performs one aggregate NonZero union, ordinary collapsing, mandatory
+top offset/intersection, conditional top expansion, ordered internal-surface
+append, the inactive six-operand extra-perimeter guard, and the selected
+no-overlap branch with exact `i64 -> f64 -> f32` casts. All fallible numeric
+and geometry work is staged before moving O14/O13/O11/O10/O5 ownership, and
+the public lifecycle intentionally remains `ProjectSlicingIncomplete`.
+
+The O15 KSR structure is pinned at
+`136197013209006370081121271251125478104`. The 49 focused O15 tests and geometry
+regressions, 5,540 workspace Nextest tests with 2 skipped, strict Clippy,
+workspace/native and both WASM checks, formatting, diff, LOC,
+forbidden-pattern, dependency, and staging audits pass. The final independent
+six-dimensional implementation rereview and OpenCode rereview both returned
+`VERDICT: APPROVE`.
+
+The activated `apply_extra_perimeters` body and behavior beginning at
+`PerimeterGenerator.cpp:1695` remain deferred, as do downstream
+gap-flow-ratio application, fill classification/generation, seams, motion, and
+G-code.
