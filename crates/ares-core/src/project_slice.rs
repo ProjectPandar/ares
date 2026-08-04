@@ -3,6 +3,11 @@ use crate::{
     project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
+#[cfg(all(test, windows))]
+pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 256 * 1024;
+#[cfg(all(test, not(windows)))]
+pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 64 * 1024;
+
 mod bounds;
 mod capabilities;
 mod chained_intersections;

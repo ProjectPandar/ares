@@ -17,11 +17,6 @@ use crate::{
 use super::super::super::super::support::ksr_project;
 use super::aligned::source_with_filter;
 
-#[cfg(windows)]
-const CONSTRAINED_STACK_SIZE: usize = 256 * 1024;
-#[cfg(not(windows))]
-const CONSTRAINED_STACK_SIZE: usize = 64 * 1024;
-
 #[test]
 fn task22o14_success_and_every_error_cleanup_fit_constrained_stack() {
     let mut success =
@@ -134,7 +129,7 @@ fn retained_surface(source: &PreparedPostClassicMedialGap) -> (usize, usize, usi
 
 fn run_on_constrained_stack(action: impl FnOnce() + Send + 'static) {
     std::thread::Builder::new()
-        .stack_size(CONSTRAINED_STACK_SIZE)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(action)
         .unwrap()
         .join()

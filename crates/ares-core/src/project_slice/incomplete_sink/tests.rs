@@ -28,7 +28,7 @@ fn seed(id: i64) -> TraversalSeed {
 #[test]
 fn task22o5_terminal_seed_sink_is_iterative_on_a_constrained_stack() {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(|| {
             let mut root = seed(20_000);
             for id in (0..20_000).rev() {

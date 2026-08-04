@@ -112,7 +112,7 @@ fn task22o5_preserves_root_and_child_source_order() {
 #[test]
 fn task22o5_classifies_deep_trees_iteratively() {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(|| {
             let mut root = loop_(20_000, 1, false, false);
             for id in (0..20_000).rev() {

@@ -20,11 +20,6 @@ use crate::{
 
 use super::super::super::super::support::{ksr_project, metadata};
 
-#[cfg(windows)]
-const CONSTRAINED_STACK_SIZE: usize = 256 * 1024;
-#[cfg(not(windows))]
-const CONSTRAINED_STACK_SIZE: usize = 64 * 1024;
-
 #[test]
 fn task22o11_finish_retains_boxed_o5_and_nested_o10_allocations() {
     let appended = prepare_post_classic_perimeter_append(ksr_project()).unwrap();
@@ -57,7 +52,7 @@ fn task22o11_success_and_error_cleanup_are_iterative_on_a_constrained_stack() {
     inject_invalid_gap(&mut failure);
 
     std::thread::Builder::new()
-        .stack_size(CONSTRAINED_STACK_SIZE)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(move || {
             let output = gap_domain::finish(success).unwrap();
             for object in output.objects {

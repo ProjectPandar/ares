@@ -47,7 +47,7 @@ const STEPS: [GeometryStep; 19] = [
 const ERROR: &str = "surface-type detection geometry is outside the supported Clipper range";
 
 #[test]
-fn task22o17_success_cleanup_with_both_deep_predecessors_fits_64k_stack() {
+fn task22o17_success_cleanup_with_both_deep_predecessors_fits_constrained_stack() {
     let mut source =
         perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
@@ -61,7 +61,7 @@ fn task22o17_success_cleanup_with_both_deep_predecessors_fits_64k_stack() {
 }
 
 #[test]
-fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_64k_stack() {
+fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_constrained_stack() {
     let mut source =
         perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
@@ -101,7 +101,7 @@ fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_64k_stack
 }
 
 #[test]
-fn task22o17_preflight_failure_with_deep_predecessors_fits_64k_stack() {
+fn task22o17_preflight_failure_with_deep_predecessors_fits_constrained_stack() {
     let mut source =
         perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
@@ -124,7 +124,7 @@ fn task22o17_preflight_failure_with_deep_predecessors_fits_64k_stack() {
 }
 
 #[test]
-fn task22o17_public_incomplete_cleanup_with_deep_predecessors_fits_64k_stack() {
+fn task22o17_public_incomplete_cleanup_with_deep_predecessors_fits_constrained_stack() {
     let mut source =
         perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
@@ -184,7 +184,7 @@ pub(in crate::project_slice::tests::prepare_infill) fn run_on_constrained_stack(
     action: impl FnOnce() + Send + 'static,
 ) {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(action)
         .unwrap()
         .join()

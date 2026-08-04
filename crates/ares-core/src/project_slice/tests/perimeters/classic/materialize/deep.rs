@@ -20,7 +20,7 @@ fn task22o7_deep_materialization_and_error_cleanup_fit_a_constrained_stack() {
     let ordinary = prepare_post_classic_traversal(ksr_project()).unwrap();
     let overhang = prepare_post_classic_traversal(ksr_project()).unwrap();
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(move || {
             materialize_deep_ordinary(ordinary);
             reject_after_deep_overhang(overhang);

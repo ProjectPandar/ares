@@ -12,7 +12,7 @@ use crate::geometry::{Point, Polygon};
 #[test]
 fn task22o8_transform_and_sink_are_iterative_on_a_constrained_stack() {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(|| {
             run_deep(PendingPathBranch::OrdinaryUnsplit {
                 detect_overhang_wall: false,

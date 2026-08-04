@@ -72,7 +72,7 @@ RED:
 4. Add real 3MF support-only mutations that reach O17: one selects `Bottom`, one selects `BottomBridge`; assert coordinates, metadata, predecessor identity, and unrelated O16 fields remain unchanged.
 5. Add clipped-fill tests requiring clear/rebuild semantics, actual intersection clipping to `fill_expolygons`, numeric kind order, stable intra-kind order, contour/hole order, default metadata, empty typed groups, empty fill boundaries, and no aliasing with moved `fill_expolygons`.
 6. Capture O16 perimeter, thin-fill, fill-boundary, no-overlap, old fill-surface, and boxed-predecessor pointers. Require named untouched allocations to move; old fill surfaces to be consumed; rebuilt fills to be fresh.
-7. Add a failure-hook matrix for: top safety difference; top shrink; top expand; bottom safety difference; bottom shrink; bottom expand; crack intersection; singleton erosion; containment difference; residual difference; collection erosion; singleton expansion; bottom subtraction; top difference; internal difference; and each reachable nonempty kind fill intersection. For every matrix entry require a reached-event assertion, exact error text, unchanged captured O16 allocations, no successor/partial output, and 64-KiB iterative disposal with both 10,000-node predecessor families.
+7. Add a failure-hook matrix for: top safety difference; top shrink; top expand; bottom safety difference; bottom shrink; bottom expand; crack intersection; singleton erosion; containment difference; residual difference; collection erosion; singleton expansion; bottom subtraction; top difference; internal difference; and each reachable nonempty kind fill intersection. For every matrix entry require a reached-event assertion, exact error text, unchanged captured O16 allocations, no successor/partial output, and constrained-stack iterative disposal (64 KiB on Unix, 256 KiB on Windows) with both 10,000-node predecessor families.
 8. Before project-successor GREEN, add and run failing real-archive metamorphic tests in `metamorphic.rs`: semantically identical ZIP entry reordering/compression plus non-slicing metadata/name change must be identical, while an exact component X-scale mutation must change the checksum and satisfy `scaled_first_layer_span = 2 * baseline_span + 300000`, preserving the fixed typed `0.15 mm` elephant-foot compensation on both sides.
 
 GREEN:
@@ -101,7 +101,7 @@ RED:
 
 1. Add lifecycle counters that require public slicing to invoke O17 exactly once and still return `ProjectSlicingIncomplete`.
 2. Prove earlier spiral and non-`none` counterbore failures leave O17 invocation count zero; O17 interface/extra errors invoke O17 once but no geometry.
-3. On 64 KiB threads, deepen both predecessor tree families to 10,000 nodes and exercise success/incomplete cleanup, O17 preflight failure, and every individual failure-hook matrix entry, including each reachable kind-specific fill call.
+3. On constrained test-stack threads (64 KiB on Unix, 256 KiB on Windows), deepen both predecessor tree families to 10,000 nodes and exercise success/incomplete cleanup, O17 preflight failure, and every individual failure-hook matrix entry, including each reachable kind-specific fill call.
 4. Assert the 398-line `incomplete_sink.rs` parent remains below 400 LOC.
 
 GREEN:

@@ -63,7 +63,7 @@ async fn task22o13_public_lifecycle_executes_medial_gap_then_stays_incomplete() 
 
 fn run_on_constrained_stack(action: impl FnOnce() + Send + 'static) {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(action)
         .unwrap()
         .join()

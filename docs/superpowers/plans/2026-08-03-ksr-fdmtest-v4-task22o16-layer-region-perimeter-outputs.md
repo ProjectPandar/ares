@@ -87,7 +87,7 @@ Files:
 RED:
 
 1. Add a lifecycle counter test that fails until public `slice_project` invokes O16 exactly once and still returns `ProjectSlicingIncomplete`.
-2. Add a 64 KiB success/incomplete cleanup test. Deepen both traversal-seed and hierarchy-loop predecessor families to 10,000 nodes before O16 materialization and sink consumption.
+2. Add a constrained-stack success/incomplete cleanup test (64 KiB on Unix, 256 KiB on Windows). Deepen both traversal-seed and hierarchy-loop predecessor families to 10,000 nodes before O16 materialization and sink consumption.
 3. Add a typed mutation test proving `counterbore_hole_bridging != none` fails in existing Classic preflight and O16 invocation count remains zero.
 
 GREEN:

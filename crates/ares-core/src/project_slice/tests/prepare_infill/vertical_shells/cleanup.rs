@@ -21,7 +21,7 @@ fn prepared() -> fill_surfaces::PreparedPostFillSurfacePreparation {
 }
 
 #[test]
-fn task22o19_public_incomplete_cleanup_fits_64k_with_both_deep_trees() {
+fn task22o19_public_incomplete_cleanup_fits_constrained_stack_with_both_deep_trees() {
     let mut prepared = prepared();
     deepen_both_tree_families(&mut prepared.predecessor);
     let (probe, dropped) = prepared.predecessor.drop_probe_observer();
@@ -37,7 +37,7 @@ fn task22o19_public_incomplete_cleanup_fits_64k_with_both_deep_trees() {
 }
 
 #[test]
-fn task22o19_direct_success_disposal_fits_64k_with_both_deep_trees() {
+fn task22o19_direct_success_disposal_fits_constrained_stack_with_both_deep_trees() {
     let mut prepared = prepared();
     deepen_both_tree_families(&mut prepared.predecessor);
     let (probe, dropped) = prepared.predecessor.drop_probe_observer();
@@ -50,7 +50,7 @@ fn task22o19_direct_success_disposal_fits_64k_with_both_deep_trees() {
 }
 
 #[test]
-fn task22o19_top_failure_cleanup_fits_64k_with_both_deep_trees() {
+fn task22o19_top_failure_cleanup_fits_constrained_stack_with_both_deep_trees() {
     failure_cleanup(
         vertical_shells::GeometryStep::Top,
         vec![vertical_shells::GeometryStep::Top],
@@ -58,7 +58,7 @@ fn task22o19_top_failure_cleanup_fits_64k_with_both_deep_trees() {
 }
 
 #[test]
-fn task22o19_bottom_failure_cleanup_fits_64k_with_both_deep_trees() {
+fn task22o19_bottom_failure_cleanup_fits_constrained_stack_with_both_deep_trees() {
     failure_cleanup(
         vertical_shells::GeometryStep::Bottom,
         vec![

@@ -3028,13 +3028,16 @@ allocations, attaching gap entities, and cloning or subtracting the onion
 `last` fill remainder. Error cleanup iteratively consumes untouched O13 state.
 Public slicing reaches O14 once and intentionally remains
 `ProjectSlicingIncomplete`. Tier-1 run `30900710846`, Windows job
-`91964102127`, recorded post-O20 integration aborts in the O11
+`91964102127`, first recorded post-O20 integration aborts in the O11
 closed-boolean-tree constrained-stack test (`86.033s`) and this O14
 open-offset/variable-width constrained-stack test (`47.523s`): both aborted at
-64 KiB with `0xc00000fd` / OS error 1001 after 4,175 preceding passes. These two
-tests therefore use 256 KiB only on Windows and retain 64 KiB elsewhere; this
-is operation-specific runner evidence, not a platform-wide Clipper baseline,
-and other constrained-stack tests remain unchanged.
+64 KiB with `0xc00000fd` / OS error 1001 after 4,175 preceding passes. After
+raising only those two tests, exact-SHA rerun `30904949178`, Windows job
+`91977766653`, advanced to O15 and exposed the same 64-KiB floor in aggregate-
+union and final-top-union cleanup. Project-slice constrained-stack tests now
+share one test-only baseline: 64 KiB on Unix and 256 KiB on Windows. Every
+10,000-node predecessor witness and iterative cleanup assertion remains
+unchanged.
 
 Task 22O.15 advances the fixed source boundary through
 `PerimeterGenerator.cpp:1628-1691`. A crate-private

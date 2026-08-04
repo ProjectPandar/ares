@@ -175,7 +175,7 @@ fn task22o9_contours_emit_children_first_and_holes_emit_parent_first() {
 #[test]
 fn task22o9_deep_traversal_and_cleanup_fit_a_constrained_stack() {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(|| {
             let (node, root_seed) = deep_pair(2_000);
             let collection = traverse_loops(

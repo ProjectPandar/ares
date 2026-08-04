@@ -126,7 +126,7 @@ RED:
 2. Capture O14 gap entity-vector/path/point allocations, O14 `remaining` vector plus every contour/hole point allocation, O13 medial point/width, O11 polygon, O10 collection/entity/path/point, and boxed O5 allocation addresses; require identity after success.
 3. Build a table-driven cross-product pairing every reachable numeric-preflight failure class before and after simplification, aggregate union, offset, intersection, and later union candidates. Assert the exact numeric error always wins and zero O15 geometry events occur.
 4. Add an inactive-extra-perimeter guard RED matrix. With `extra_perimeters_on_overhangs=true`, independently falsify lower-slice presence, `detect_overhang_wall`, positive `wall_loops`, and `layer_id > raft_layers`; assert an inactive guard event between logical append and no-overlap work, subject to all other preflight rules. Assert the full non-spiral conjunction is rejected by O1 and spiral remains independently rejected.
-5. Add exact rollback probes and 64 KiB cleanup for success, every reachable numeric error, and every independently covered geometry operation. Deepen both 10,000-node predecessor families—the traversal-seed tree and hierarchy-loop tree—in every case.
+5. Add exact rollback probes and constrained-stack cleanup (64 KiB on Unix, 256 KiB on Windows) for success, every reachable numeric error, and every independently covered geometry operation. Deepen both 10,000-node predecessor families—the traversal-seed tree and hierarchy-loop tree—in every case.
 6. Add a lifecycle counter that fails until the public path calls O15 exactly once and still returns `ProjectSlicingIncomplete`.
 
 GREEN:

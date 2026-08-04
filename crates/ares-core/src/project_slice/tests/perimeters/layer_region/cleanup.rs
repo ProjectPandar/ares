@@ -15,7 +15,7 @@ use crate::{
 use super::super::super::support::{ksr_project, metadata};
 
 #[test]
-fn task22o16_success_cleanup_with_both_deep_predecessors_fits_64k_stack() {
+fn task22o16_success_cleanup_with_both_deep_predecessors_fits_constrained_stack() {
     let mut source = prepare_post_classic_infill_boundary(ksr_project()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
     run_on_constrained_stack(move || {
@@ -28,7 +28,7 @@ fn task22o16_success_cleanup_with_both_deep_predecessors_fits_64k_stack() {
 }
 
 #[test]
-fn task22o16_incomplete_lifecycle_with_both_deep_predecessors_fits_64k_stack() {
+fn task22o16_incomplete_lifecycle_with_both_deep_predecessors_fits_constrained_stack() {
     let mut source = prepare_post_classic_infill_boundary(ksr_project()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
     run_on_constrained_stack(move || {
@@ -42,7 +42,7 @@ fn task22o16_incomplete_lifecycle_with_both_deep_predecessors_fits_64k_stack() {
 
 fn run_on_constrained_stack(action: impl FnOnce() + Send + 'static) {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(action)
         .unwrap()
         .join()

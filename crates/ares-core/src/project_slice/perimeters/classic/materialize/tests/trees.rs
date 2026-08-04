@@ -5,7 +5,7 @@ use crate::project_slice::perimeters::classic::materialize::{
 #[test]
 fn task22o7_terminal_sink_consumes_a_deep_raw_path_tree_iteratively() {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(|| {
             let mut node = RawPathNode {
                 paths: Vec::new(),

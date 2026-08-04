@@ -4459,11 +4459,13 @@ checks, rustfmt, diff/LOC/forbidden/dependency/staging audits passed. Independen
 Codex and OpenCode re-reviews both returned `VERDICT: APPROVE`. Post-O20
 Tier-1 run `30900710846`, Windows job `91964102127`, later recorded the O11
 closed-boolean-tree and O14 open-offset/variable-width constrained-stack tests
-reaching the Windows 64 KiB floor, aborting at `86.033s` and `47.523s`
-with `0xc00000fd` / OS error 1001 after 4,175 preceding passes. Those two tests
-use 256 KiB on Windows while retaining 64 KiB elsewhere. This is
-operation-specific runner evidence, not a platform-wide Clipper convention;
-other constrained-stack tests remain unchanged.
+reaching the Windows 64 KiB floor, aborting at `86.033s` and `47.523s` with
+`0xc00000fd` / OS error 1001 after 4,175 preceding passes. Raising only those
+two let exact-SHA rerun `30904949178`, Windows job `91977766653`, advance to
+O15, where aggregate-union and final-top-union cleanup hit the same floor.
+All project-slice constrained-stack tests therefore share a test-only baseline
+of 64 KiB on Unix and 256 KiB on Windows while retaining their 10,000-node
+predecessor and iterative-cleanup assertions.
 
 ## Task 22O.15: Classic infill-boundary construction
 

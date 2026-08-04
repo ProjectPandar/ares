@@ -34,7 +34,7 @@ Integration/lifecycle:
 
 - `crates/ares-core/src/project_slice/tests/prepare_infill.rs` (1): add `mod fill_surfaces;`.
 - new `tests/prepare_infill/fill_surfaces.rs` (at most 60) and shards `fixture.rs`, `options.rs`, `ownership.rs`, `ksr.rs`, and `lifecycle.rs` (each at most 300).
-- `tests/prepare_infill/surface_type_detection/cleanup.rs` (265): move the existing public 64-KiB/depth-10,000 terminal witness through O18; keep below 400 LOC.
+- `tests/prepare_infill/surface_type_detection/cleanup.rs` (265): move the existing public constrained-stack (64 KiB on Unix, 256 KiB on Windows) / depth-10,000 terminal witness through O18; keep below 400 LOC.
 - `crates/ares-core/src/project_slice.rs` (261): O18 public preparation/consumer wiring, below 400 LOC.
 - `incomplete_sink.rs` remains untouched at 399 LOC; reuse `incomplete_sink::surface_type_detection::consume_object`.
 
@@ -48,7 +48,7 @@ Documentation: O18 spec/plan, `docs/architecture/option-parity-v4.md`, and `docs
 4. **Alignment RED:** require a separate first phase to validate all object counts, per-object record counts, `Some`/`None` slot presence, source identities, and input/O17 slot identities before any mutation. Synthetic mismatches must panic before retagging, with a borrowed pre-mutation snapshot unchanged; a valid `None` slot must remain `None`.
 5. **Typed provenance RED:** real KSR-derived archives independently and jointly activate top-zero, bottom-zero, density-100, `99.99995%`, and `99.9998%`. A normal-part/model-settings region override leaves the global process option unchanged but changes the reached record. A synthetic aligned two-object state combines separately parsed archives whose embedded region options differ, proving orchestration does not use global/first-object/first-record shortcuts.
 6. **Ownership RED:** capture boxed predecessor, perimeter, thin-fill, typed-slice, fill-surface, fill-boundary, and no-overlap allocations before O18; require all identities and non-kind values unchanged afterward.
-7. **Lifecycle RED:** in `fill_surfaces/lifecycle.rs`, require O18 once on KSR and zero for global spiral, counterbore, O17 interface/active-extra-bridge, and an instrumented O17 geometry failure. Public success remains `ProjectSlicingIncomplete` before vertical shells. In the named O17 `cleanup.rs`, require the 64-KiB/depth-10,000 drop-probe witness to pass through the O18 consumer.
+7. **Lifecycle RED:** in `fill_surfaces/lifecycle.rs`, require O18 once on KSR and zero for global spiral, counterbore, O17 interface/active-extra-bridge, and an instrumented O17 geometry failure. Public success remains `ProjectSlicingIncomplete` before vertical shells. In the named O17 `cleanup.rs`, require the constrained-stack (64 KiB on Unix, 256 KiB on Windows) / depth-10,000 drop-probe witness to pass through the O18 consumer.
 8. **KSR RED:** add an independent-twice O18 characterization test with literal O17 checksum/totals predecessor guards, but leave the new O18 literal marked for parent capture. Record focused failures before creating `PreparedPostFillSurfacePreparation`.
 
 ## Task 2 — Implement the minimum GREEN

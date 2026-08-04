@@ -15,7 +15,7 @@ use crate::{
 use super::fixture;
 
 #[test]
-fn task22o20_direct_success_disposal_fits_64k_with_both_deep_trees() {
+fn task22o20_direct_success_disposal_fits_constrained_stack_with_both_deep_trees() {
     let mut prepared = fixture::prepare_o19(KsrArchive::new().bytes());
     deepen_both_tree_families(&mut prepared.predecessor);
     let (probe, dropped) = prepared.predecessor.drop_probe_observer();
@@ -28,7 +28,7 @@ fn task22o20_direct_success_disposal_fits_64k_with_both_deep_trees() {
 }
 
 #[test]
-fn task22o20_public_incomplete_consumption_fits_64k_with_both_deep_trees() {
+fn task22o20_public_incomplete_consumption_fits_constrained_stack_with_both_deep_trees() {
     let mut prepared = fixture::prepare_o19(KsrArchive::new().bytes());
     deepen_both_tree_families(&mut prepared.predecessor);
     let (probe, dropped) = prepared.predecessor.drop_probe_observer();
@@ -44,7 +44,7 @@ fn task22o20_public_incomplete_consumption_fits_64k_with_both_deep_trees() {
 }
 
 #[test]
-fn task22o20_failure_disposal_fits_64k_with_both_deep_trees() {
+fn task22o20_failure_disposal_fits_constrained_stack_with_both_deep_trees() {
     for step in [GeometryStep::HoleIntersection, GeometryStep::ShellUnion] {
         let mut prepared = fixture::prepare_o19(KsrArchive::new().bytes());
         deepen_both_tree_families(&mut prepared.predecessor);

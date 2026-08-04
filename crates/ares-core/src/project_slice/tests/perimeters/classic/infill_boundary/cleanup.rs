@@ -112,7 +112,7 @@ fn source_for_step(
 
 fn run_on_constrained_stack(action: impl FnOnce() + Send + 'static) {
     std::thread::Builder::new()
-        .stack_size(64 * 1024)
+        .stack_size(crate::project_slice::CONSTRAINED_TEST_STACK_SIZE)
         .spawn(action)
         .unwrap()
         .join()
