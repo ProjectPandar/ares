@@ -4669,3 +4669,46 @@ The next rewrite boundary is internal-surface trimming at
 fill generation, seams, ordering, motion, G-code, and post-processing remain
 deferred. O19/O20 sidecars are temporary source-compatibility representations,
 not an Ares-owned pipeline.
+
+## Task 22O.21: Single-region vertical-shell internal trimming
+
+Task 22O.21 ports `PrintObject::discover_vertical_shells` lines 2334-2342. An
+active populated record flattens reachable `Internal | InternalSolid` fill
+surfaces in stable collection order, contour then holes. `InternalVoid` remains
+explicitly deferred because the pinned static-false producer is not present in
+the approved O17-O20 envelope; this task adds neither a variant nor a producer.
+
+The O20 shell is intersected with the internal clip using the shared raw
+path-by-path `10.0_f32` safety offset and miter `3.0`, then flat NonZero
+`polygons_internal - holes` output is appended. Safety expands only the clip and
+never pre-unions it. Both flat boolean results preserve Clipper path/point order
+without PolyTree conversion, sorting, deduplication, or union. The accumulated
+empty gate precedes the second source-order scan and verbatim
+`InternalSolid` append, so nonempty records intentionally duplicate solid
+geometry while fully erased records skip the append.
+
+The whole project validates complete O20 alignment and stages while borrowing
+O20 before moving its exact predecessor, surface, cache, and projection
+allocations beside fresh non-aliasing trims. Inactive populated records are
+`Some(empty trim)` without geometry, `None` stays aligned, every trimming error
+uses one stable message and iterative O20 cleanup, and public slicing reaches
+O21 once while remaining `ProjectSlicingIncomplete`.
+
+KSR independently guards the frozen O19/O20 parent checksums, totals, and O20
+events before freezing O21 checksum
+`-86220837291247746226319093859583939318`, totals
+`[1, 460, 0, 460, 7704, 104680]`, and ordered events
+`[460, 460, 460, 460, 259]`. Forty-two focused O21 tests, 386 explicit
+O10-O21 regressions, and 5,717 workspace tests with 2 skipped pass. Native
+all-target check and strict all-feature Clippy are clean; final exact-diff
+formatting/audits and Tier-1/review gates remain part of the ship gate.
+Complete post-review mutation REDs exercise all 11 adapter, 10 record, and 21
+integration tests before byte-exact restoration and GREEN reruns.
+
+The next rewrite boundary is regularization at `PrintObject.cpp:2344`.
+Horizontal shells, external surfaces, fill generation, seams, ordering, motion,
+G-code, and post-processing remain deferred. O19-O21 remain temporary
+source-compatibility sidecars, not an Ares-owned pipeline. Rollback restores O20
+terminal consumption and removes only O21 state/wiring/tests/docs, its two
+flat-Paths adapters, and the sibling visibility change for existing safety
+constants.

@@ -3251,3 +3251,57 @@ The next source boundary begins at internal-surface trimming in
 processing, fill generation, seams, ordering, motion, and G-code remain
 deferred. O19/O20 sidecars remain temporary compatibility representations of
 `PrintObject::discover_vertical_shells`, not an Ares-owned slicing pipeline.
+
+Task 22O.21 ports the bounded internal-surface trim at
+`PrintObject.cpp:2334-2342`, stopping before regularization at line 2344. Each
+active populated record scans its retained O18 `fill_surfaces` once in
+collection order for the reachable `Internal | InternalSolid` envelope and
+flattens each ExPolygon contour immediately followed by stored holes. The
+source-listed `InternalVoid` role remains unreachable because the pinned
+`infill_only_where_needed` producer is statically false; O21 does not synthesize
+an enum variant or producer.
+
+The projected O20 shell is flat-Paths intersected against a fresh internal path
+list using NonZero rules. The existing shared safety constants and raw offset
+engine expand only the clip, independently path by path, by `10.0_f32` with
+miter limit `3.0`, preserving CCW Positive and CW Negative cleanup semantics;
+expanded paths are not pre-unioned. A separate ordinary flat NonZero difference
+`polygons_internal - projection.holes` always executes and appends after the
+intersection without sorting, deduplication, union, or PolyTree conversion. The
+combined result then reaches the source empty gate. Only a nonempty result
+re-scans the collection for `InternalSolid` and appends fresh contour-then-hole
+paths verbatim, intentionally retaining solid duplication and performing no
+following union.
+
+O21 validates the complete O20 object/cache/projection/fill/input/prelude/plan/
+layer alignment before geometry, stages all trim objects while borrowing O20,
+and moves the exact predecessor allocations only after whole-project success.
+Inactive populated records retain `Some(empty trim)` with no O21 events and
+aligned `None` slots stay `None`. Geometry failures use stable text
+`vertical-shell internal trimming geometry is outside the supported Clipper
+range`, expose no successor, and iteratively delegate O20 disposal. Public
+slicing invokes O21 once, iteratively disposes the successor, and remains
+`ProjectSlicingIncomplete`.
+
+Independently parsed KSR runs guard the O19 checksum
+`148296943860974241781127169756103364063` and totals
+`[1, 460, 0, 460, 572, 713, 1227, 60370, 2512]`, then the O20 checksum
+`-106767561006193260948265111057697183253`, totals
+`[1, 460, 0, 460, 1688, 1224, 36512, 69033]`, and events
+`[1830, 917, 1539, 749, 0, 0, 0, 0]`. O21 freezes parent-bound checksum
+`-86220837291247746226319093859583939318`, totals
+`[1, 460, 0, 460, 7704, 104680]`, and ordered event totals
+`[460, 460, 460, 460, 259]` for safety offset, safety intersection, ordinary
+difference, empty gate, and reached solid-append site. Forty-two focused O21
+tests, 386 explicit O10-O21 regressions, and 5,717 workspace tests with 2
+skipped pass; native all-target check and strict all-feature Clippy are clean.
+Post-review compiling mutation REDs cover the complete final 11 adapter, 10
+record, and 21 integration filters before byte-exact production restoration.
+
+The next rewrite boundary is regularization beginning at
+`PrintObject.cpp:2344`. O19-O21 sidecars remain temporary source-compatibility
+representations. O21 adds no public API, persisted format, dependency,
+migration, compatibility layer, or fallback. Mechanical rollback restores O20
+terminal consumption, removes only O21 state/wiring/tests/docs and the two
+flat-Paths adapters, and returns the pre-existing safety constants to private
+visibility while retaining all O20 behavior.
