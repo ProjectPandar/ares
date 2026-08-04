@@ -1,6 +1,6 @@
 mod cleanup;
 mod fixture;
-pub(in crate::project_slice::tests::prepare_infill) mod ksr;
+mod ksr;
 mod lifecycle;
 mod metamorphic;
 mod options;

@@ -73,11 +73,19 @@ fn task22o19_ksr_cache_is_full_structure_repeatable() {
     vertical_shells::reset_geometry_hooks();
 }
 
-fn successor_checksum(
+pub(in crate::project_slice::tests::prepare_infill) fn successor_checksum(
     prepared: &crate::project_slice::prepare_infill::vertical_shells::PreparedPostVerticalShellCache,
 ) -> i128 {
-    assert_eq!(prepared.objects.len(), prepared.caches.len());
-    for (object, cache) in prepared.objects.iter().zip(&prepared.caches) {
+    successor_checksum_parts(&prepared.predecessor, &prepared.objects, &prepared.caches)
+}
+
+pub(in crate::project_slice::tests::prepare_infill) fn successor_checksum_parts(
+    predecessor: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    objects: &[crate::project_slice::prepare_infill::surface_type_detection::PreparedSurfaceTypeObject],
+    caches: &[VerticalShellCacheObject],
+) -> i128 {
+    assert_eq!(objects.len(), caches.len());
+    for (object, cache) in objects.iter().zip(caches) {
         assert_eq!(object.records.len(), cache.records.len());
         assert!(
             object
@@ -88,15 +96,14 @@ fn successor_checksum(
         );
     }
     let mut checksum = PARENT_CAPTURE_MARKER;
-    mix(
-        &mut checksum,
-        o18_checksum(&prepared.predecessor, &prepared.objects),
-    );
-    mix(&mut checksum, cache_digest(&prepared.caches));
+    mix(&mut checksum, o18_checksum(predecessor, objects));
+    mix(&mut checksum, cache_digest(caches));
     checksum
 }
 
-pub(super) fn cache_totals(objects: &[VerticalShellCacheObject]) -> [usize; 9] {
+pub(in crate::project_slice::tests::prepare_infill) fn cache_totals(
+    objects: &[VerticalShellCacheObject],
+) -> [usize; 9] {
     let mut totals = [objects.len(), 0, 0, 0, 0, 0, 0, 0, 0];
     for object in objects {
         totals[1] += object.records.len();
@@ -123,7 +130,9 @@ pub(super) fn cache_totals(objects: &[VerticalShellCacheObject]) -> [usize; 9] {
     totals
 }
 
-pub(super) fn cache_digest(objects: &[VerticalShellCacheObject]) -> i128 {
+pub(in crate::project_slice::tests::prepare_infill) fn cache_digest(
+    objects: &[VerticalShellCacheObject],
+) -> i128 {
     let mut digest = 0x4f19_i128;
     mix(&mut digest, objects.len() as i128);
     for object in objects {
