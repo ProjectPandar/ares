@@ -3156,8 +3156,33 @@ bottom-bridge, and 1,127 internal transitions. The final independent
 six-dimensional implementation rereview and OpenCode rereview both returned
 `VERDICT: APPROVE`.
 
-Public slicing reaches O18 once and intentionally remains
-`ProjectSlicingIncomplete`. The next source boundary is
-`PrintObject::discover_vertical_shells` beginning at `PrintObject.cpp:595`;
-horizontal shells, external-surface processing, fill generation, seams,
-ordering, motion, and G-code remain deferred.
+Task 22O.19 ports caller `PrintObject.cpp:595-596` and the single-region cache
+population at `PrintObject.cpp:2008-2027,2111-2149`. Each aligned O18 record
+reads `ensure_vertical_shell_thickness` from its resolved region and the
+already-scaled `ClassicPreludeRecord.solid_infill_spacing`; `EnsureAll` expands
+typed top and bottom/bottom-bridge slices by exactly `(spacing as f32) *
+0.05_f32` with miter `3.0`, while other modes produce empty caches. Fill
+expolygons flatten contour then holes without union. A borrowed-expolygon
+Clipper adapter preserves raw Paths order and the source conditional positive
+NonZero union.
+
+All caches stage before ownership moves. The successor retains the exact O18
+boxed predecessor and object/record allocations and adds a separate aligned
+`Vec<Option<VerticalShellCache>>` sidecar; cache geometry is allocation-distinct.
+The existing one-region preflight keeps `PrintObject.cpp:2028-2109` deferred.
+Public slicing reaches O19 once and intentionally remains
+`ProjectSlicingIncomplete`. KSR freezes cache checksum
+`-114359197324258778780701398534712718623`, parent-bound successor checksum
+`148296943860974241781127169756103364063`, totals
+`[1, 460, 0, 460, 572, 713, 1227, 60370, 2512]`, and first/later scaled
+spacings `[457079, 377079]`. The active cache contains exactly 572 top, 713
+bottom, and 1,227 hole paths. Twenty-one focused O19 tests, 310 O10-O19
+regressions, and 5,630 workspace tests with 2 skipped pass with strict Clippy,
+native all-target, both WASM, formatting, diff, LOC, forbidden-pattern,
+dependency, source-pinning, and staging gates. The final independent
+six-dimensional implementation rereview and OpenCode rereview both returned
+`VERDICT: APPROVE`.
+
+The next source boundary is the vertical-shell projection loop at
+`PrintObject.cpp:2153`; horizontal shells, external-surface processing, fill
+generation, seams, ordering, motion, and G-code remain deferred.

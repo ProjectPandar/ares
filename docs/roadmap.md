@@ -4583,3 +4583,30 @@ next rewrite boundary is `PrintObject::discover_vertical_shells` beginning at
 `PrintObject.cpp:595`. Horizontal shells, external-surface processing, fill
 grouping/generation, seams, ordering, motion, G-code, and post-processing remain
 deferred.
+
+## Task 22O.19: Single-region vertical-shell cache
+
+Task 22O.19 ports caller `PrintObject.cpp:595-596` and cache declarations,
+gating, and single-region population at `PrintObject.cpp:2008-2027,2111-2149`.
+For every aligned populated record, only `EnsureAll` expands typed top and
+bottom/bottom-bridge slices by `(solid_infill_spacing as f32) * 0.05_f32` with
+miter `3.0`; all other enum modes produce an empty cache. Fill expolygons
+flatten contour then holes without union. The borrowed-expolygon offset adapter
+preserves per-expolygon Paths order and the source conditional positive NonZero
+union.
+
+The whole-project stage completes before ownership moves. Its successor keeps
+the exact O18 predecessor and object/record allocations and stores fresh cache
+geometry in an aligned sidecar. One-region preflight keeps the aggregate branch
+at `PrintObject.cpp:2028-2109` deferred. Public slicing reaches O19 once and
+remains `ProjectSlicingIncomplete`. KSR freezes cache checksum
+`-114359197324258778780701398534712718623`, parent-bound successor checksum
+`148296943860974241781127169756103364063`, totals
+`[1, 460, 0, 460, 572, 713, 1227, 60370, 2512]`, and first/later spacings
+`[457079, 377079]`. Twenty-one focused tests, 310 O10-O19 regressions, and
+5,630 workspace tests with 2 skipped pass with strict native, Clippy, WASM,
+formatting, LOC, forbidden-pattern, dependency, source-pinning, and staging
+gates. The final independent six-dimensional and OpenCode rereviews both
+returned `VERDICT: APPROVE`. The next rewrite boundary is projection at `PrintObject.cpp:2153`;
+horizontal shells, external surfaces, fill generation, seams, ordering,
+motion, G-code, and post-processing remain deferred.
