@@ -73,27 +73,24 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_fill_surface_preparation(
-        prepare_infill::fill_surfaces::prepare(prepare_infill::surface_type_detection::prepare(
-            perimeters::prepare_post_layer_region_perimeters(project)?,
-        )?),
+    consume_post_vertical_shell_cache(
+        prepare_infill::vertical_shells::prepare(prepare_infill::fill_surfaces::prepare(
+            prepare_infill::surface_type_detection::prepare(
+                perimeters::prepare_post_layer_region_perimeters(project)?,
+            )?,
+        ))?,
         metadata,
     )
 }
 
 #[inline(never)]
-fn consume_post_fill_surface_preparation(
-    prepared: prepare_infill::fill_surfaces::PreparedPostFillSurfacePreparation,
+fn consume_post_vertical_shell_cache(
+    prepared: prepare_infill::vertical_shells::PreparedPostVerticalShellCache,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let prepare_infill::fill_surfaces::PreparedPostFillSurfacePreparation {
-        predecessor,
-        objects,
-    } = prepared;
-    for object in objects {
-        incomplete_sink::surface_type_detection::consume_object(object);
-    }
-    consume_post_classic_traversal_context(predecessor, metadata)
+    prepare_infill::vertical_shells::dispose(prepared);
+    let _ = metadata;
+    Err(SliceError::ProjectSlicingIncomplete)
 }
 
 #[cfg(test)]
@@ -112,6 +109,7 @@ fn consume_post_layer_region_perimeters(
     consume_post_classic_traversal_context(predecessor, metadata)
 }
 
+#[cfg(test)]
 #[inline(never)]
 fn consume_post_classic_traversal_context(
     predecessor: Box<perimeters::classic::PreparedPostClassicTraversal>,

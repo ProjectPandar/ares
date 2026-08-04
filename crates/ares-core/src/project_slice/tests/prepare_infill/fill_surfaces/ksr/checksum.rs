@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-pub(super) fn checksum(
+pub(in crate::project_slice::tests::prepare_infill) fn checksum(
     predecessor: &PreparedPostClassicTraversal,
     objects: &[surface_type_detection::PreparedSurfaceTypeObject],
 ) -> i128 {

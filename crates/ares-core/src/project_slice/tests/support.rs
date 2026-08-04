@@ -99,11 +99,23 @@ impl KsrArchive {
     }
 
     pub(super) fn bytes(self) -> Vec<u8> {
+        self.write(CompressionMethod::Deflated, System::Dos, false)
+    }
+
+    pub(super) fn bytes_stored_reverse(self) -> Vec<u8> {
+        self.write(CompressionMethod::Stored, System::Unix, true)
+    }
+
+    fn write(self, compression: CompressionMethod, system: System, reverse: bool) -> Vec<u8> {
         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
         let options = SimpleFileOptions::default()
-            .compression_method(CompressionMethod::Deflated)
-            .system(System::Dos);
-        for (path, bytes) in self.entries {
+            .compression_method(compression)
+            .system(system);
+        let mut entries = self.entries.into_iter().collect::<Vec<_>>();
+        if reverse {
+            entries.reverse();
+        }
+        for (path, bytes) in entries {
             writer.start_file(path, options).unwrap();
             writer.write_all(&bytes).unwrap();
         }

@@ -75,6 +75,27 @@ pub(crate) fn offset_expolygons_paths(
     }
 }
 
+pub(crate) fn offset_expolygon_refs_paths(
+    expolygons: &[&ExPolygon],
+    delta: f32,
+    join_type: JoinType,
+    miter_limit: f64,
+) -> Result<Vec<Polygon>, ClipperError> {
+    let mut paths = Vec::with_capacity(expolygons.len());
+    let mut collected = 0;
+    for expolygon in expolygons {
+        let (mut offset, survives) =
+            offset_expolygon_paths(expolygon, delta, join_type, miter_limit)?;
+        paths.append(&mut offset);
+        collected += usize::from(survives);
+    }
+    if collected > 1 && delta > 0.0 {
+        union_paths(&paths, FillRule::NonZero)
+    } else {
+        Ok(paths)
+    }
+}
+
 fn offset_expolygon_paths(
     expolygon: &ExPolygon,
     delta: f32,

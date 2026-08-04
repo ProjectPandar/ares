@@ -1,7 +1,7 @@
 use crate::{
     SliceError,
     project_slice::{
-        consume_post_fill_surface_preparation, incomplete_sink,
+        consume_post_vertical_shell_cache, incomplete_sink,
         perimeters::{
             self,
             classic::{
@@ -15,6 +15,7 @@ use crate::{
                 self, GeometryStep, fail_geometry_at, geometry_events, reset_geometry_hooks,
                 stage_for_test,
             },
+            vertical_shells,
         },
     },
 };
@@ -130,8 +131,9 @@ fn task22o17_public_incomplete_cleanup_with_deep_predecessors_fits_64k_stack() {
     let (drop_probe, dropped) = source.predecessor.drop_probe_observer();
     run_on_constrained_stack(move || {
         let output = fill_surfaces::prepare(surface_type_detection::prepare(source).unwrap());
+        let output = vertical_shells::prepare(output).unwrap();
         assert_eq!(
-            consume_post_fill_surface_preparation(output, metadata()).unwrap_err(),
+            consume_post_vertical_shell_cache(output, metadata()).unwrap_err(),
             SliceError::ProjectSlicingIncomplete
         );
         assert!(drop_probe.upgrade().is_none());
@@ -178,7 +180,9 @@ fn first_record_allocations(
             .as_ptr() as usize,
     ]
 }
-fn run_on_constrained_stack(action: impl FnOnce() + Send + 'static) {
+pub(in crate::project_slice::tests::prepare_infill) fn run_on_constrained_stack(
+    action: impl FnOnce() + Send + 'static,
+) {
     std::thread::Builder::new()
         .stack_size(64 * 1024)
         .spawn(action)
@@ -187,7 +191,9 @@ fn run_on_constrained_stack(action: impl FnOnce() + Send + 'static) {
         .unwrap();
 }
 
-fn deepen_both_tree_families(prepared: &mut PreparedPostClassicTraversal) {
+pub(in crate::project_slice::tests::prepare_infill) fn deepen_both_tree_families(
+    prepared: &mut PreparedPostClassicTraversal,
+) {
     let traversal = prepared
         .objects
         .iter_mut()

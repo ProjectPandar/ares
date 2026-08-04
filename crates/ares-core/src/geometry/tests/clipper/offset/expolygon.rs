@@ -1,7 +1,7 @@
 use super::helpers::{coordinates, polygon};
 use crate::geometry::clipper::{
-    JoinType, offset_expolygon, offset_expolygons, offset_expolygons_paths, offset_expolygons_raw,
-    offset2_ex, opening_ex,
+    JoinType, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
+    offset_expolygons_paths, offset_expolygons_raw, offset2_ex, opening_ex,
 };
 use crate::geometry::{ExPolygon, Polygon};
 
@@ -187,6 +187,33 @@ fn task22g_negative_multi_offset_preserves_no_cross_union_input_order() {
             vec![(90, 90), (10, 90), (10, 10), (90, 10)],
             vec![(150, 90), (70, 90), (70, 10), (150, 10)],
         ]
+    );
+}
+
+#[test]
+fn task22o19_borrowed_multi_offset_preserves_paths_contract() {
+    let input = vec![
+        holeless(&[(0, 0), (100, 0), (100, 100), (0, 100)]),
+        holeless(&[(80, 0), (180, 0), (180, 100), (80, 100)]),
+    ];
+    let borrowed = input.iter().collect::<Vec<_>>();
+    assert_eq!(
+        offset_expolygon_refs_paths(&borrowed, 10.0, JoinType::Miter, 3.0),
+        offset_expolygons_paths(&input, 10.0, JoinType::Miter, 3.0)
+    );
+}
+
+#[test]
+fn task22o19_borrowed_offset_ignores_out_of_range_degenerate_path_like_orca() {
+    let input = vec![holeless(&[(i64::MAX, i64::MAX), (i64::MAX - 1, i64::MAX)])];
+    let borrowed = input.iter().collect::<Vec<_>>();
+    assert_eq!(
+        offset_expolygon_refs_paths(&borrowed, 10.0, JoinType::Miter, 3.0),
+        offset_expolygons_paths(&input, 10.0, JoinType::Miter, 3.0)
+    );
+    assert_eq!(
+        offset_expolygon_refs_paths(&borrowed, 10.0, JoinType::Miter, 3.0),
+        Ok(Vec::new())
     );
 }
 

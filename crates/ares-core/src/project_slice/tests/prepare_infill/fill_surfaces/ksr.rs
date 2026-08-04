@@ -1,9 +1,9 @@
-mod checksum;
-mod totals;
+pub(in crate::project_slice::tests::prepare_infill) mod checksum;
+pub(in crate::project_slice::tests::prepare_infill) mod totals;
 
-use checksum::checksum;
-pub(super) use checksum::unrelated_checksum;
-use totals::totals;
+pub(super) use checksum::checksum;
+pub(in crate::project_slice::tests::prepare_infill) use checksum::unrelated_checksum;
+pub(super) use totals::totals;
 
 use crate::project_slice::{
     perimeters,

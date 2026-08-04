@@ -18,7 +18,7 @@ fn task22o18_moves_all_o17_allocations_and_retags_only_in_place() {
     assert_eq!(allocation_snapshot(&output.objects), before);
 }
 
-pub(super) fn allocation_snapshot(
+pub(in crate::project_slice::tests::prepare_infill) fn allocation_snapshot(
     objects: &[surface_type_detection::PreparedSurfaceTypeObject],
 ) -> Vec<usize> {
     let mut output = vec![objects.as_ptr() as usize, objects.len()];

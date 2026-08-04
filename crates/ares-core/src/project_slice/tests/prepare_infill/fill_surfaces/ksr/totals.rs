@@ -3,7 +3,9 @@ use crate::project_slice::{
     region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
-pub(super) fn totals(objects: &[surface_type_detection::PreparedSurfaceTypeObject]) -> [usize; 26] {
+pub(in crate::project_slice::tests::prepare_infill) fn totals(
+    objects: &[surface_type_detection::PreparedSurfaceTypeObject],
+) -> [usize; 26] {
     let records = objects
         .iter()
         .flat_map(|object| object.records.iter().flatten())
