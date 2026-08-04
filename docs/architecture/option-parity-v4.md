@@ -2772,10 +2772,10 @@ predecessor M wire remains
 `91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19`;
 the complete 460-record N wire is 7,083,888 bytes /
 `42e0053bffb3093a44597abd0a2b4e8b8c8c11d6f07003cb894399ad7dce3c6e`.
-Tracked real-3MF matrices cover 19 Flow Option pairs and six context pairs,
-including raw/effective selector normalization, scoped fallback, two nozzles,
-every reached bridge branch, an anti-`filament_map` swap, spiral gates,
-alignment/signed-zero transforms, and generator dispatch. A dedicated
+The original Task 22N real-3MF matrices covered 19 Flow Option pairs and six
+context pairs, including raw/effective selector normalization, scoped fallback,
+two nozzles, every reached bridge branch, an anti-`filament_map` swap, spiral
+gates, alignment/signed-zero transforms, and generator dispatch. A dedicated
 single-delta archive reducer changes only `bridge_flow` from `1` to
 `1.0000001`, preserves M, produces two populated N slots, and freezes the
 canonical increase-else bits; native and browser reducers also freeze the
@@ -3027,7 +3027,14 @@ succeeds does it move O13/O11/O10/O5 ownership, retaining surviving medial
 allocations, attaching gap entities, and cloning or subtracting the onion
 `last` fill remainder. Error cleanup iteratively consumes untouched O13 state.
 Public slicing reaches O14 once and intentionally remains
-`ProjectSlicingIncomplete`.
+`ProjectSlicingIncomplete`. Tier-1 run `30900710846`, Windows job
+`91964102127`, recorded post-O20 integration aborts in the O11
+closed-boolean-tree constrained-stack test (`86.033s`) and this O14
+open-offset/variable-width constrained-stack test (`47.523s`): both aborted at
+64 KiB with `0xc00000fd` / OS error 1001 after 4,175 preceding passes. These two
+tests therefore use 256 KiB only on Windows and retain 64 KiB elsewhere; this
+is operation-specific runner evidence, not a platform-wide Clipper baseline,
+and other constrained-stack tests remain unchanged.
 
 Task 22O.15 advances the fixed source boundary through
 `PerimeterGenerator.cpp:1628-1691`. A crate-private
@@ -3142,7 +3149,12 @@ retain identity. `RegionSurfaceKind::InternalSolid = 5` is non-bridge. The typed
 global print `spiral_mode` is now rejected in early capabilities before O17,
 closing the threshold-masked record-local bypass while direct tests preserve
 the upstream pass guards. Six obsolete unsupported-spiral checkpoint-pinning
-tests were deleted rather than retained as legacy expectations.
+tests were deleted rather than retained as legacy expectations. Tier-1 run
+`30900710846`, WASM job `91964102068`, confirmed the stale six-pair browser
+matrix failed at its first spiral-activated pair with
+`unsupported project feature: spiral_mode`. The browser N matrix therefore
+excludes the three spiral-activated historical pairs and keeps the supported
+alignment, signed-zero, and generator contexts.
 
 The inactive KSR 5/3/15% options preserve checksum
 `-126362407653399901571400348049652748978`; O18 totals are

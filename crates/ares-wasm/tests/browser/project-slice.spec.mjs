@@ -216,12 +216,12 @@ test("fflate real-3MF matrix freezes all 19 flow Option families", async ({ page
   });
 });
 
-test("fflate real-3MF matrix freezes all 6 context Option families", async ({ page }) => {
+test("fflate real-3MF matrix freezes all 3 supported context Option families", async ({ page }) => {
   test.setTimeout(180_000);
   await openFixturePage(page);
   const pairs = contextPairs();
   const results = await page.evaluate((values) => window.task22nOptionMatrix(values), pairs);
-  expect(results).toHaveLength(6);
+  expect(results).toHaveLength(3);
   results.forEach((result, pairIndex) => {
     const pair = pairs[pairIndex];
     expect(result.changedEntries).toEqual([pair.delta[0]]);

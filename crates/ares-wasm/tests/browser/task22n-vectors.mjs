@@ -321,9 +321,7 @@ export function flowPairs() {
   ];
 }
 
-const SPIRAL = process("spiral_mode", "0", "1");
 const ARACHNE = process("wall_generator", "classic", "arachne");
-const BOTTOM_ZERO = process("bottom_shell_layers", "3", "0");
 const ALIGN = process("align_infill_direction_to_model", "0", "1");
 const IDENTITY = `transform="1 0 0 0 1 0 0 0 1 0 0 0"`;
 const context = (spiral, dispatch, rotation = "0000000000000000") =>
@@ -331,33 +329,10 @@ const context = (spiral, dispatch, rotation = "0000000000000000") =>
 const triple = (value) => [value, value, value];
 const contextPair = (name, setup, delta, contexts, m = null) =>
   ({ name, kind: "context", layers: 3, setup, delta, contexts, m });
-const M_AFTER_GATE = { byteLength: 1780,
-  sha256: "35d7b6720a3c5252d5f274e40f6b0e96991f737c435afc1a1063c6b2d20b6475" };
 
 export function contextPairs() {
   const classic = context(false, 0);
-  const spiral = context(true, 0);
-  const bottomGated = [context(false, 1), spiral, spiral];
   return [
-    contextPair("spiral", [ARACHNE, process("bottom_shell_layers", "3", "1"),
-      process("bottom_shell_thickness", "0", "0.3")], SPIRAL,
-    [triple(context(false, 1)), bottomGated], [
-      { byteLength: 2262,
-        sha256: "14d1a4a280c53d9331dfed8e1c4be152f799ab5d1daee7fa6b2f00cb53f7e53b" },
-      M_AFTER_GATE,
-    ]),
-    contextPair("bottom-layers", [ARACHNE, SPIRAL, BOTTOM_ZERO],
-      process("bottom_shell_layers", "0", "1"), [triple(spiral), bottomGated], [
-        { byteLength: 1539,
-          sha256: "b6c8dd1a473bcf43ed4fdfcbff3efce196a293aa7408e7389510fe1130ea1f13" },
-        M_AFTER_GATE,
-      ]),
-    contextPair("bottom-thickness", [ARACHNE, SPIRAL, BOTTOM_ZERO],
-      process("bottom_shell_thickness", "0", "0.3"), [triple(spiral), bottomGated], [
-        { byteLength: 1539,
-          sha256: "b6c8dd1a473bcf43ed4fdfcbff3efce196a293aa7408e7389510fe1130ea1f13" },
-        M_AFTER_GATE,
-      ]),
     contextPair("alignment", [edit(ROOT_PATH, IDENTITY,
       `transform="0 1 0 -1 0 0 0 0 1 0 0 0"`)], ALIGN,
     [triple(classic), triple(context(false, 0, "3ff921fb54442d18"))]),

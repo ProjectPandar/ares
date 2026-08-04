@@ -128,7 +128,7 @@ RED:
 
 1. Capture the boxed O5 address, O11 expolygon buffers, O10 collection/entity/path/point buffers, and every surviving O13 point/width buffer; require exact identity/content after O14 success.
 2. Independently trigger invalid derived flow, open-offset range failure, and difference range failure through ordinary internal inputs. Assert exact errors, no successor, and predecessor/drop-probe timing.
-3. Add success and every error path to a 64 KiB thread-stack test with a 10k-node nested predecessor; require iterative cleanup.
+3. Add success and every error path to a constrained thread-stack test with a 10k-node nested predecessor; use 64 KiB on Unix and 256 KiB on Windows specifically for the O14 open-offset/variable-width success-and-error execution frames, and require iterative cleanup. This is not a platform-wide Clipper baseline: other constrained-stack tests remain at 64 KiB unless their own target-runner evidence requires a change.
 4. Add a lifecycle invocation counter test that fails until public `slice_project` reaches O14 exactly once and still returns `ProjectSlicingIncomplete`.
 5. Add a rollback-contract regression that the O13 preparation entry remains callable, closed offsets are unchanged, and the O13 ownership graph can still be consumed independently.
 

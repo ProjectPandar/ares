@@ -4456,7 +4456,14 @@ workspace/native and both WASM checks, rustfmt, diff/LOC/forbidden audits, and
 independent implementation review. The post-fix workspace run passed 5,491
 Nextest tests with 2 skipped; strict Clippy, workspace/native and both WASM
 checks, rustfmt, diff/LOC/forbidden/dependency/staging audits passed. Independent
-Codex and OpenCode re-reviews both returned `VERDICT: APPROVE`.
+Codex and OpenCode re-reviews both returned `VERDICT: APPROVE`. Post-O20
+Tier-1 run `30900710846`, Windows job `91964102127`, later recorded the O11
+closed-boolean-tree and O14 open-offset/variable-width constrained-stack tests
+reaching the Windows 64 KiB floor, aborting at `86.033s` and `47.523s`
+with `0xc00000fd` / OS error 1001 after 4,175 preceding passes. Those two tests
+use 256 KiB on Windows while retaining 64 KiB elsewhere. This is
+operation-specific runner evidence, not a platform-wide Clipper convention;
+other constrained-stack tests remain unchanged.
 
 ## Task 22O.15: Classic infill-boundary construction
 
@@ -4564,7 +4571,10 @@ perimeter/thin-fill outputs, boundaries, and boxed predecessor retain identity.
 The early capability boundary now rejects typed global spiral mode before O17,
 closing its threshold-masked record-local bypass; six obsolete unsupported-
 spiral checkpoint-pinning tests were removed instead of retained as legacy
-expectations.
+expectations. Tier-1 run `30900710846`, WASM job `91964102068`, confirmed the
+stale six-pair browser matrix failed at its first spiral-activated pair with
+`unsupported project feature: spiral_mode`; the browser N matrix now retains
+only the supported alignment, signed-zero, and generator context pairs.
 
 KSR's inactive 5/3/15% options preserve checksum
 `-126362407653399901571400348049652748978`; totals are
