@@ -3183,6 +3183,56 @@ dependency, source-pinning, and staging gates. The final independent
 six-dimensional implementation rereview and OpenCode rereview both returned
 `VERDICT: APPROVE`.
 
-The next source boundary is the vertical-shell projection loop at
-`PrintObject.cpp:2153`; horizontal shells, external-surface processing, fill
-generation, seams, ordering, motion, and G-code remain deferred.
+Task 22O.20 ports the single-region projection gather at
+`PrintObject.cpp:2153-2278`, stopping before internal-surface trimming at line
+2334. For each populated active layer, the crate-private temporary projection
+sidecar starts with current cache holes, scans top neighbors before bottom
+neighbors using the source's strict count-or-thickness windows and f64
+`bottom_z = print_z - height`, intersects holes incrementally, and appends then
+NonZero-unions shell Paths incrementally. A neighboring aligned `None` is a
+visited empty cache: it clears holes, contributes no shell, suppresses the
+anchor, and does not terminate the planned-index window. A current `None`
+remains sidecar `None`; its otherwise-transient projection is dead at the next
+upstream trim because its internal fill set is empty.
+
+When a positive layer count visits no neighbor but the stopped index exists,
+the anchor expands the current cache with the current aligned
+external-perimeter spacing after the exact `coord_t -> f32` cast, miter `3.0`,
+then intersects with the stopped index's object `lslices` flattened contour
+then holes. The existing offset engine preserves per-path CCW Positive cleanup,
+CW Negative cleanup/outer removal/result reversal, and final NonZero union. New
+Paths-only union/intersection adapters call `Clipper::execute_paths` with
+NonZero subject and clip rules; no PolyTree, sorting, or canonicalization is
+introduced.
+
+O20 validates every aligned object, record, slot, identity, plan, flow, cache,
+and object-slice relation before geometry, stages the whole project while
+borrowing O19, then moves every O19 allocation unchanged beside fresh,
+non-aliasing projections. Any projection geometry failure has stable text
+`vertical-shell projection geometry is outside the supported Clipper range`
+and iteratively disposes the predecessor. Public slicing reaches O20 once and
+intentionally remains `ProjectSlicingIncomplete`.
+
+KSR freezes parent-bound O20 checksum
+`-106767561006193260948265111057697183253`, totals
+`[1, 460, 0, 460, 1688, 1224, 36512, 69033]`, and ordered event totals
+`[1830, 917, 1539, 749, 0, 0, 0, 0]` for top visits, bottom visits, hole
+intersections, shell unions, and four anchor sites. Forty-five focused O20
+tests cover exact Paths composition, count/thickness boundaries, current and
+neighbor `None`, both anchors, an exact acute miter-3 witness,
+current-versus-stopped spacing, every geometry failure site, exhaustive
+alignment/identity rejection, recursive ownership of both predecessor tree
+families, an active later-object transactional failure, constrained-stack
+cleanup, typed 3MF/model-part options, ZIP/name invariance, component scaling,
+and independent KSR parses. All 355 O10-O20 regressions and 5,678 workspace
+tests with 2 skipped pass with strict Clippy, native all-target, both WASM,
+formatting, diff, LOC, forbidden-pattern, dependency, source-pinning, and
+staging gates;
+the pushed commit additionally requires
+the Tier-1 native matrix and complete browser-WASM job.
+
+The next source boundary begins at internal-surface trimming in
+`PrintObject.cpp:2334`; regularization, horizontal shells, external-surface
+processing, fill generation, seams, ordering, motion, and G-code remain
+deferred. O19/O20 sidecars remain temporary compatibility representations of
+`PrintObject::discover_vertical_shells`, not an Ares-owned slicing pipeline.

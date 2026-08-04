@@ -4607,6 +4607,53 @@ remains `ProjectSlicingIncomplete`. KSR freezes cache checksum
 5,630 workspace tests with 2 skipped pass with strict native, Clippy, WASM,
 formatting, LOC, forbidden-pattern, dependency, source-pinning, and staging
 gates. The final independent six-dimensional and OpenCode rereviews both
-returned `VERDICT: APPROVE`. The next rewrite boundary is projection at `PrintObject.cpp:2153`;
-horizontal shells, external surfaces, fill generation, seams, ordering,
-motion, G-code, and post-processing remain deferred.
+returned `VERDICT: APPROVE`. The next rewrite boundary is projection at
+`PrintObject.cpp:2153`; horizontal shells, external surfaces, fill generation,
+seams, ordering, motion, G-code, and post-processing remain deferred.
+
+## Task 22O.20: Single-region vertical-shell projection gather
+
+Task 22O.20 ports the release-observable projection gather in
+`PrintObject::discover_vertical_shells` at `PrintObject.cpp:2153-2278`. It
+starts each active populated layer with current cache holes, scans top before
+bottom with exact count-or-thickness predicates, combines neighboring holes by
+incremental NonZero Paths intersection, and combines top/bottom shells by
+append-then-incremental NonZero Paths union. Planned-index existence controls
+the windows: a neighboring `None` remains a visited empty cache that clears
+holes and suppresses anchors, while current `None` stays aligned and defers a
+transient proven dead at the next trim boundary.
+
+If a positive shell count visits no layer and its stopped index exists, the
+anchor expands current cache Paths by current aligned external-perimeter
+spacing after the exact f32 cast, miter `3.0`, then intersects stopped-index
+object `lslices` in contour-then-hole order. Existing CCW Positive and CW
+Negative offset cleanup feeds final NonZero union; new Paths-only boolean
+adapters preserve flat Clipper output without PolyTree or canonicalization.
+
+The whole project validates alignment and stages while borrowing O19, then
+moves the exact O19 predecessor, objects, caches, and nested allocations beside
+fresh projection geometry. Every O20 geometry error uses stable text and
+iterative cleanup. Public slicing reaches O20 once and remains
+`ProjectSlicingIncomplete`.
+
+KSR freezes parent-bound checksum
+`-106767561006193260948265111057697183253`, totals
+`[1, 460, 0, 460, 1688, 1224, 36512, 69033]`, and event totals
+`[1830, 917, 1539, 749, 0, 0, 0, 0]`. Forty-five focused tests cover exact
+combiners, CCW/CW anchors including an exact acute miter-3 witness, first/last
+and strict epsilon windows, both `None` roles, current-versus-stopped spacing,
+exhaustive alignment/identity rejection, recursive ownership of both
+predecessor tree families, an active later-object transactional failure, all
+error sites, constrained stacks, typed project/model-part mutations, ZIP/name
+and scale metamorphism, and independent KSR parses. All 355 O10-O20 regressions
+and 5,678 workspace tests with 2 skipped pass with strict Clippy, native
+all-target, both WASM, formatting, LOC, forbidden-pattern, dependency,
+source-pinning, and staging gates. Final independent six-dimensional and
+OpenCode implementation rereviews both approve the identical final diff. The
+pushed commit must pass the Tier-1 native matrix and complete browser-WASM job.
+
+The next rewrite boundary is internal-surface trimming at
+`PrintObject.cpp:2334`. Regularization, horizontal shells, external surfaces,
+fill generation, seams, ordering, motion, G-code, and post-processing remain
+deferred. O19/O20 sidecars are temporary source-compatibility representations,
+not an Ares-owned pipeline.
