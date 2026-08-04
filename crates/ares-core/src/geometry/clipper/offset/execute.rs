@@ -120,6 +120,16 @@ pub(super) fn configured_offset(
     offset
 }
 
+#[cfg(test)]
+pub(in crate::geometry::clipper) fn offset_configuration_for_test(
+    delta: f32,
+    join_type: JoinType,
+    miter_limit: f64,
+) -> (f64, f64) {
+    let offset = configured_offset(delta, join_type, miter_limit);
+    (offset.miter_limit(), offset.shortest_edge_length())
+}
+
 pub(super) fn union_paths(
     paths: &[Polygon],
     fill_rule: FillRule,

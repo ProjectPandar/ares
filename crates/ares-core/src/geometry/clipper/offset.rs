@@ -4,6 +4,8 @@ mod generate;
 mod input;
 
 #[cfg(test)]
+pub(super) use execute::offset_configuration_for_test;
+#[cfg(test)]
 pub(crate) use execute::raw_offset_open_paths;
 pub(crate) use execute::{offset_open_paths, offset_paths, offset_paths_tree, raw_offset_paths};
 pub(crate) use expolygon::{

@@ -1,4 +1,4 @@
-mod snapshots;
+pub(super) mod snapshots;
 
 use crate::project_slice::{
     prepare_infill::vertical_shell_projection,

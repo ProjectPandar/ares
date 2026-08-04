@@ -19,10 +19,11 @@ pub(crate) use chain_points::chain_points;
 pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, diff_pl, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
-    difference_polygons_ex, intersection_ex, intersection_pl, intersection_polygons_paths,
-    offset_expolygon, offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths,
-    offset_open_paths, offset_paths, offset_paths_tree, offset2_ex, opening_ex, union_ex,
-    union_expolygons, union_polygons_paths, variable_offset_inner_ex, xor_ex,
+    difference_polygons_ex, difference_polygons_paths, intersection_ex, intersection_pl,
+    intersection_polygons_paths, intersection_polygons_paths_with_safety_offset, offset_expolygon,
+    offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths, offset_open_paths,
+    offset_paths, offset_paths_tree, offset2_ex, opening_ex, union_ex, union_expolygons,
+    union_polygons_paths, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{EdgeGrid, GridEdge};

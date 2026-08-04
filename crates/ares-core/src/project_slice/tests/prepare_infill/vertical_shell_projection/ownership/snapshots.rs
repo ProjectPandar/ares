@@ -37,7 +37,7 @@ pub(super) fn cache_point_buffers(
         .collect()
 }
 
-pub(super) fn predecessor_snapshot(
+pub(in crate::project_slice::tests::prepare_infill) fn predecessor_snapshot(
     predecessor: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 ) -> Vec<usize> {
     let mut snapshot = vec![
@@ -177,7 +177,7 @@ fn snapshot_expolygon(snapshot: &mut Vec<usize>, expolygon: &crate::geometry::Ex
     }
 }
 
-pub(super) fn lslice_point_buffers(
+pub(in crate::project_slice::tests::prepare_infill) fn lslice_point_buffers(
     predecessor: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 ) -> Vec<usize> {
     predecessor
@@ -200,4 +200,60 @@ pub(super) fn lslice_point_buffers(
         .flat_map(|expolygon| std::iter::once(expolygon.contour()).chain(expolygon.holes().iter()))
         .map(|path| path.points().as_ptr() as usize)
         .collect()
+}
+
+pub(in crate::project_slice::tests::prepare_infill) fn predecessor_geometry_point_buffers(
+    predecessor: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+) -> Vec<usize> {
+    let mut points = lslice_point_buffers(predecessor);
+    for seed in predecessor
+        .objects
+        .iter()
+        .flat_map(|object| object.records.iter().flatten())
+        .flat_map(|record| &record.surfaces)
+        .flat_map(|surface| &surface.roots)
+    {
+        traversal_seed_point_buffers(&mut points, seed);
+    }
+    for surface in predecessor
+        .objects
+        .iter()
+        .flat_map(|object| object.predecessor.records.iter().flatten())
+        .flat_map(|record| &record.surfaces)
+    {
+        for root in &surface.roots {
+            hierarchy_loop_point_buffers(&mut points, root);
+        }
+        for root in surface
+            .remaining_contours
+            .iter()
+            .chain(&surface.remaining_holes)
+            .flatten()
+        {
+            hierarchy_loop_point_buffers(&mut points, root);
+        }
+    }
+    points
+}
+
+fn traversal_seed_point_buffers(
+    points: &mut Vec<usize>,
+    root: &crate::project_slice::perimeters::classic::traversal::TraversalSeed,
+) {
+    let mut pending = vec![root];
+    while let Some(seed) = pending.pop() {
+        points.push(seed.polygon.points().as_ptr() as usize);
+        pending.extend(&seed.children);
+    }
+}
+
+fn hierarchy_loop_point_buffers(
+    points: &mut Vec<usize>,
+    root: &crate::project_slice::perimeters::classic::hierarchy::PerimeterGeneratorLoop,
+) {
+    let mut pending = vec![root];
+    while let Some(node) = pending.pop() {
+        points.push(node.polygon.points().as_ptr() as usize);
+        pending.extend(&node.children);
+    }
 }

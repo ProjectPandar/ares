@@ -23,12 +23,19 @@ mod types;
 mod variable_offset;
 mod winding;
 
+#[cfg(test)]
+pub(super) use boolean_ex::safety_offset_configuration_for_test;
 pub(crate) use boolean_ex::{
     difference_ex, difference_ex_polygons, difference_ex_polygons_with_safety_offset,
     difference_ex_with_safety_offset, difference_polygons_ex, intersection_ex, union_expolygons,
     xor_ex,
 };
-pub(crate) use boolean_paths::{intersection_polygons_paths, union_polygons_paths};
+#[cfg(test)]
+pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;
+pub(crate) use boolean_paths::{
+    difference_polygons_paths, intersection_polygons_paths,
+    intersection_polygons_paths_with_safety_offset, union_polygons_paths,
+};
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
 pub(crate) use offset::offset_paths_tree;
