@@ -3,6 +3,7 @@
 
 mod active_edges;
 mod boolean_ex;
+mod boolean_paths;
 mod bounds;
 mod engine;
 mod horizontals;
@@ -27,6 +28,7 @@ pub(crate) use boolean_ex::{
     difference_ex_with_safety_offset, difference_polygons_ex, intersection_ex, union_expolygons,
     xor_ex,
 };
+pub(crate) use boolean_paths::{intersection_polygons_paths, union_polygons_paths};
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
 pub(crate) use offset::offset_paths_tree;

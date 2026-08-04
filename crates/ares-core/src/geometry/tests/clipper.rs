@@ -1,4 +1,5 @@
 mod boolean_ex;
+mod boolean_paths;
 mod booleans;
 mod conical_overhang;
 mod fill_rules;
