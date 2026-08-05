@@ -2,12 +2,10 @@
 
 ## Status
 
-Tasks 16 through 20A.2 and Tasks 22A through 22L are released. Task 22L was
-released as commit `fcd2c5728f4c0529f28bfc43c636507d61e263d8`; its exact-SHA
-Tier 1 run is green across format, Ubuntu/Linux, Windows, macOS, and
-WASM/browser. Task 22M's single-region `make_slices` ordering and elephant-foot
-compensation are implemented and are at their documentation and release gate.
-Public slicing executes the new stage but deliberately continues to return
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.22
+are released. Task 22O.23's single-region vertical-shell tiny-island filtering
+is implemented and is at its final review and release gate. Public slicing
+executes the new stage but deliberately continues to return
 `ProjectSlicingIncomplete`.
 Cancellation, material and painted segmentation, later surface/toolpath
 stages, complete G-code assembly, and normalized KSR parity remain owned by
@@ -3363,3 +3361,63 @@ pipeline. O22 adds no public API, persisted format, dependency, migration, or
 fallback. Mechanical rollback restores O21 terminal consumption and removes
 only O22 state, wiring, tests, docs, and the inter-stage observer entry while
 retaining the unchanged ordinary `offset2_ex` behavior.
+
+Task 22O.23 ports the next single-region block of
+`PrintObject::discover_vertical_shells` at `PrintObject.cpp:2369-2400` and
+stops before `intersection_ex(polygonsInternal, regularized_shell)` at line
+2402. For every nonempty O21 trim, previous retained `lslices` are flattened as
+the subject and next retained `lslices` as the clip of a flat NonZero
+intersection. Current internal Paths are closed by Miter-3 grow then shrink
+using `(1e-4_f64 / scale.factor()) as f32`; this floating epsilon never passes
+through the truncating coordinate conversion used by the area constants.
+
+Candidate area remains signed `f64`. The selected scale truncates `scaled(1.5)`
+and `scaled(8.0)` to `i64`, each is cast to `f32` and multiplied by the shared
+O22 minimum in `f32`, and only the resulting products are promoted for strict
+`<` comparisons. The source predicate preserves lazy visibility difference,
+Miter-3 expansion, and the literal
+`diff(internal_volume, expanded_candidate).len() >= internal_volume.len()`
+protection heuristic. Survivors are deep-cloned in stable O22 order into a
+fresh aligned sidecar without grouping, sorting, union, canonicalization, or
+deduplication. A nonempty O21 trim with empty O22 morphology still constructs
+both volumes and reaches the empty gate; an empty O21 trim invokes no O23
+geometry.
+
+O23 validates the complete O22 object, record, sidecar, input, prelude, plan,
+layer, region, identity, and retained-scale alignment before the first event.
+It stages the whole project while borrowing O22 and moves the exact predecessor
+graph only after success. Every geometry site maps to
+`vertical-shell tiny-island filtering geometry is outside the supported
+Clipper range`; failure and success cleanup delegate iteratively through both
+10,000-node predecessor tree families. Public slicing invokes O23 once and
+continues to return `ProjectSlicingIncomplete`.
+
+Two independent KSR captures first reassert O19-O22 and then freeze O23
+checksum `-41564956609250807593946297629749369320`, totals
+`[1, 460, 0, 460, 632, 554, 78, 554, 128, 33815]`, threshold digest
+`-167664109034474951983490568976349754300`, and ordered event totals
+`[259, 259, 259, 632, 66, 80, 80, 259]` for neighbor intersection, closing
+grow, closing shrink, candidate scan, visibility difference, candidate
+expansion, protection difference, and empty gate. The LargeBed scale witness is
+`[1221399551, 150000, 1209170944, 799999, 1229148144, 1365946746,
+1385985605, 4621819117588971520]`, retaining truncating `scaled(8.0) = 799999`.
+
+Eighteen direct and 29 integration O23 tests pass, as do 393 explicit O10-O23
+regressions and 5,797 workspace tests with 2 skipped. Native all-target check,
+strict all-target/all-feature Clippy, four WASM checks, optimized default and
+feature browser-WASM builds/export audit, and two 9-test Playwright runs are
+green. Ten required compiling behavioral mutations are killed by their
+intended witnesses, followed by byte-exact production restoration and GREEN
+reruns. Formatting, diff, dependency, forbidden-pattern, staging, and LOC
+audits pass; every Rust file is below 400 LOC and every O23 shard is at most 270
+LOC.
+
+The exact next rewrite boundary is
+`intersection_ex(polygonsInternal, regularized_shell)` at
+`PrintObject.cpp:2402`. Fill-surface mutation, `InternalVoid`, horizontal
+shells, external surfaces, fill generation, seams, ordering, motion, G-code,
+and post-processing remain deferred. O19-O23 stay temporary
+source-compatibility sidecars rather than an Ares-owned pipeline. Rollback
+restores O22 terminal consumption and removes only O23 state, wiring, tests,
+docs, the restricted O22 minimum accessor, and the O21 internal-flattening
+visibility change.

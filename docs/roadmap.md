@@ -4752,3 +4752,45 @@ surfaces, fill generation, seams, ordering, motion, G-code, and post-processing
 remain deferred. O19-O22 stay temporary source-compatibility sidecars rather
 than an Ares-owned pipeline. Rollback restores O21 terminal consumption and
 removes only O22 state/wiring/tests/docs and its inter-stage observer entry.
+
+## Task 22O.23: Single-region vertical-shell tiny-island filtering
+
+Task 22O.23 ports `PrintObject::discover_vertical_shells` lines 2369-2400 and
+stops before `intersection_ex(polygonsInternal, regularized_shell)` at line
+2402. Previous and next retained object `lslices` form a flat NonZero
+intersection with lower Paths as subject and upper Paths as clip. Current
+internal Paths use flat Miter-3 closing with the directly cast floating
+`(1e-4_f64 / scale.factor()) as f32` epsilon. The area constants follow their
+separate truncating coordinate path: selected-scale `scaled(1.5)` and
+`scaled(8.0)` become `i64`, then `f32`, multiply the shared O22 minimum in
+`f32`, and are promoted only for signed `f64` strict-`<` comparisons.
+
+The complete lazy source predicate retains the conditional visibility
+difference, candidate Miter-3 expansion, and literal flat path-count protection
+comparison. Survivors are fresh deep clones in stable O22 order. O23 validates
+all inherited alignment before geometry, stages the whole project while
+borrowing O22, moves the exact predecessor only after success, and iteratively
+disposes both 10,000-node predecessor tree families on success, failure, and
+the public incomplete boundary. Public slicing reaches O23 exactly once and
+remains `ProjectSlicingIncomplete`.
+
+Parent-guarded repeated KSR capture freezes checksum
+`-41564956609250807593946297629749369320`, totals
+`[1, 460, 0, 460, 632, 554, 78, 554, 128, 33815]`, threshold digest
+`-167664109034474951983490568976349754300`, and ordered event totals
+`[259, 259, 259, 632, 66, 80, 80, 259]` after reasserting O19-O22. Eighteen
+direct and 29 integration tests pass; 393 O10-O23 regressions and 5,797
+workspace tests with 2 skipped pass. Native, strict Clippy, four WASM checks,
+optimized browser-WASM/export audit, and two 9-test Playwright runs are green.
+All ten required compiling behavioral mutations fail their intended witnesses
+before byte-exact restoration and GREEN reruns. Rust LOC, formatting, diff,
+dependency, forbidden-pattern, and staging audits pass.
+
+The next boundary starts at
+`intersection_ex(polygonsInternal, regularized_shell)` in
+`PrintObject.cpp:2402`. Fill-surface mutation and every later horizontal-shell,
+external-surface, fill, toolpath, G-code, and post-processing stage remain
+deferred. O19-O23 are temporary source-compatibility sidecars, not an
+Ares-owned pipeline. Rollback restores O22 terminal consumption and removes
+only O23 state/wiring/tests/docs and its two restricted sibling visibility
+changes.
