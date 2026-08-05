@@ -2,7 +2,7 @@ use crate::project_slice::prepare_infill::{
     vertical_shell_regularization, vertical_shell_trimming,
 };
 
-pub(super) fn prepare(
+pub(in crate::project_slice::tests::prepare_infill) fn prepare(
     bytes: impl AsRef<[u8]>,
 ) -> vertical_shell_regularization::PreparedPostVerticalShellRegularization {
     vertical_shell_regularization::prepare(prepare_o21(bytes)).unwrap()

@@ -1,8 +1,13 @@
 use crate::{
     geometry::Polygon,
     project_slice::{
+        perimeters::classic::traversal::PreparedPostClassicTraversal,
         prepare_infill::{
-            vertical_shell_projection, vertical_shell_regularization, vertical_shell_trimming,
+            surface_type_detection::PreparedSurfaceTypeObject,
+            vertical_shell_projection::{self, types::VerticalShellProjectionObject},
+            vertical_shell_regularization::{self, types::VerticalShellRegularizationObject},
+            vertical_shell_trimming::{self, types::VerticalShellTrimObject},
+            vertical_shells::types::VerticalShellCacheObject,
         },
         tests::{
             prepare_infill::vertical_shells::ksr::{cache_totals, successor_checksum_parts},
@@ -43,7 +48,8 @@ fn task22o22_ksr_regularization_is_parent_guarded_and_repeatable() {
     );
 }
 
-fn capture() -> (i128, [usize; 8], [usize; 4], i128) {
+pub(in crate::project_slice::tests::prepare_infill) fn capture()
+-> (i128, [usize; 8], [usize; 4], i128) {
     vertical_shell_projection::reset_geometry_hooks();
     vertical_shell_trimming::reset_geometry_hooks();
     vertical_shell_regularization::reset_geometry_hooks();
@@ -91,13 +97,52 @@ fn o21_checksum(
 fn o22_checksum(
     output: &vertical_shell_regularization::PreparedPostVerticalShellRegularization,
 ) -> i128 {
-    let mut checksum = 0x4f32_325f_5041_5245_4e54_i128;
-    mix(&mut checksum, o21_checksum(output));
+    o22_checksum_parts(O22ChecksumParts {
+        predecessor: &output.predecessor,
+        objects: &output.objects,
+        caches: &output.caches,
+        projections: &output.projections,
+        trims: &output.trims,
+        regularizations: &output.regularizations,
+    })
+}
+
+pub(in crate::project_slice::tests::prepare_infill) struct O22ChecksumParts<'a> {
+    pub(in crate::project_slice::tests::prepare_infill) predecessor:
+        &'a PreparedPostClassicTraversal,
+    pub(in crate::project_slice::tests::prepare_infill) objects: &'a [PreparedSurfaceTypeObject],
+    pub(in crate::project_slice::tests::prepare_infill) caches: &'a [VerticalShellCacheObject],
+    pub(in crate::project_slice::tests::prepare_infill) projections:
+        &'a [VerticalShellProjectionObject],
+    pub(in crate::project_slice::tests::prepare_infill) trims: &'a [VerticalShellTrimObject],
+    pub(in crate::project_slice::tests::prepare_infill) regularizations:
+        &'a [VerticalShellRegularizationObject],
+}
+
+pub(in crate::project_slice::tests::prepare_infill) fn o22_checksum_parts(
+    parts: O22ChecksumParts<'_>,
+) -> i128 {
+    let O22ChecksumParts {
+        predecessor,
+        objects,
+        caches,
+        projections,
+        trims,
+        regularizations,
+    } = parts;
+    let mut o20 = 0x4f32_305f_5041_5245_4e54_i128;
     mix(
-        &mut checksum,
-        regularization_digest(&output.regularizations),
+        &mut o20,
+        successor_checksum_parts(predecessor, objects, caches),
     );
-    checksum
+    mix(&mut o20, projection_digest(projections));
+    let mut o21 = 0x4f32_315f_5041_5245_4e54_i128;
+    mix(&mut o21, o20);
+    mix(&mut o21, trim_digest(trims));
+    let mut o22 = 0x4f32_325f_5041_5245_4e54_i128;
+    mix(&mut o22, o21);
+    mix(&mut o22, regularization_digest(regularizations));
+    o22
 }
 
 fn projection_digest(

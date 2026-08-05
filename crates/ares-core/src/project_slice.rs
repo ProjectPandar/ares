@@ -78,16 +78,18 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_vertical_shell_regularization(
-        prepare_infill::vertical_shell_regularization::prepare(
-            prepare_infill::vertical_shell_trimming::prepare(
-                prepare_infill::vertical_shell_projection::prepare(
-                    prepare_infill::vertical_shells::prepare(
-                        prepare_infill::fill_surfaces::prepare(
-                            prepare_infill::surface_type_detection::prepare(
-                                perimeters::prepare_post_layer_region_perimeters(project)?,
-                            )?,
-                        ),
+    consume_post_vertical_shell_filtering(
+        prepare_infill::vertical_shell_filtering::prepare(
+            prepare_infill::vertical_shell_regularization::prepare(
+                prepare_infill::vertical_shell_trimming::prepare(
+                    prepare_infill::vertical_shell_projection::prepare(
+                        prepare_infill::vertical_shells::prepare(
+                            prepare_infill::fill_surfaces::prepare(
+                                prepare_infill::surface_type_detection::prepare(
+                                    perimeters::prepare_post_layer_region_perimeters(project)?,
+                                )?,
+                            ),
+                        )?,
                     )?,
                 )?,
             )?,
@@ -96,6 +98,17 @@ fn slice_project_sync(
     )
 }
 
+#[inline(never)]
+fn consume_post_vertical_shell_filtering(
+    prepared: prepare_infill::vertical_shell_filtering::PreparedPostVerticalShellFiltering,
+    metadata: GenerationMetadata,
+) -> Result<Vec<u8>, SliceError> {
+    prepare_infill::vertical_shell_filtering::dispose(prepared);
+    let _ = metadata;
+    Err(SliceError::ProjectSlicingIncomplete)
+}
+
+#[cfg(test)]
 #[inline(never)]
 fn consume_post_vertical_shell_regularization(
     prepared: prepare_infill::vertical_shell_regularization::PreparedPostVerticalShellRegularization,

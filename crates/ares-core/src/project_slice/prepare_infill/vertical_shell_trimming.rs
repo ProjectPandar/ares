@@ -2,7 +2,7 @@ mod cleanup;
 mod stage;
 #[cfg(test)]
 mod tests;
-mod trim;
+pub(in crate::project_slice::prepare_infill) mod trim;
 pub(in crate::project_slice) mod types;
 
 use crate::{SliceError, project_slice::prepare_infill::vertical_shell_projection};

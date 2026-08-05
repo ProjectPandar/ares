@@ -43,7 +43,9 @@ pub(super) fn trim_record(
     Ok(VerticalShellTrim { shell })
 }
 
-pub(super) fn polygons_internal(record: &PreparedSurfaceTypeRecord) -> Vec<Polygon> {
+pub(in crate::project_slice::prepare_infill) fn polygons_internal(
+    record: &PreparedSurfaceTypeRecord,
+) -> Vec<Polygon> {
     flatten(record, |kind| {
         matches!(
             kind,

@@ -1,5 +1,5 @@
 mod mismatches;
-mod snapshots;
+pub(in crate::project_slice::tests::prepare_infill) mod snapshots;
 
 use crate::project_slice::{
     prepare_infill::vertical_shell_regularization,

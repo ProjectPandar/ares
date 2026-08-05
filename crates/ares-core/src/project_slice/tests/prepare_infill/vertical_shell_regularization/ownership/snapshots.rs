@@ -8,7 +8,9 @@ use crate::{
     },
 };
 
-pub(super) fn cache_snapshot(objects: &[VerticalShellCacheObject]) -> Vec<usize> {
+pub(in crate::project_slice::tests::prepare_infill) fn cache_snapshot(
+    objects: &[VerticalShellCacheObject],
+) -> Vec<usize> {
     let mut snapshot = vec![objects.as_ptr() as usize, objects.len()];
     for object in objects {
         snapshot.extend([object.records.as_ptr() as usize, object.records.len()]);
@@ -21,7 +23,9 @@ pub(super) fn cache_snapshot(objects: &[VerticalShellCacheObject]) -> Vec<usize>
     snapshot
 }
 
-pub(super) fn projection_snapshot(objects: &[VerticalShellProjectionObject]) -> Vec<usize> {
+pub(in crate::project_slice::tests::prepare_infill) fn projection_snapshot(
+    objects: &[VerticalShellProjectionObject],
+) -> Vec<usize> {
     let mut snapshot = vec![objects.as_ptr() as usize, objects.len()];
     for object in objects {
         snapshot.extend([object.records.as_ptr() as usize, object.records.len()]);
@@ -33,7 +37,9 @@ pub(super) fn projection_snapshot(objects: &[VerticalShellProjectionObject]) -> 
     snapshot
 }
 
-pub(super) fn trim_snapshot(objects: &[VerticalShellTrimObject]) -> Vec<usize> {
+pub(in crate::project_slice::tests::prepare_infill) fn trim_snapshot(
+    objects: &[VerticalShellTrimObject],
+) -> Vec<usize> {
     let mut snapshot = vec![objects.as_ptr() as usize, objects.len()];
     for object in objects {
         snapshot.extend([object.records.as_ptr() as usize, object.records.len()]);
@@ -51,7 +57,9 @@ fn paths_snapshot(snapshot: &mut Vec<usize>, paths: &[Polygon]) {
     }
 }
 
-pub(super) fn all_predecessor_points(input: &PreparedPostVerticalShellTrim) -> Vec<usize> {
+pub(in crate::project_slice::tests::prepare_infill) fn all_predecessor_points(
+    input: &PreparedPostVerticalShellTrim,
+) -> Vec<usize> {
     let mut points =
         super::super::super::vertical_shell_projection::predecessor_geometry_point_buffers(
             &input.predecessor,
@@ -128,7 +136,7 @@ fn trim_points(objects: &[VerticalShellTrimObject]) -> impl Iterator<Item = usiz
         .map(|path| path.points().as_ptr() as usize)
 }
 
-pub(super) fn regularization_allocations(
+pub(in crate::project_slice::tests::prepare_infill) fn regularization_allocations(
     objects: &[VerticalShellRegularizationObject],
 ) -> Vec<usize> {
     let mut allocations = vec![objects.as_ptr() as usize];
@@ -156,7 +164,7 @@ pub(super) fn regularization_allocations(
     allocations
 }
 
-pub(super) fn regularization_point_buffers(
+pub(in crate::project_slice::tests::prepare_infill) fn regularization_point_buffers(
     objects: &[VerticalShellRegularizationObject],
 ) -> Vec<usize> {
     objects
