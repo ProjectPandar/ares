@@ -2,9 +2,10 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.22
-are released. Task 22O.23's single-region vertical-shell tiny-island filtering
-is implemented and is at its final review and release gate. Public slicing
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.23
+are released. Task 22O.24 completes the constrained single-region
+`PrintObject::discover_vertical_shells` rewrite boundary and is at its final
+review and exact-SHA release gate. Public slicing
 executes the new stage but deliberately continues to return
 `ProjectSlicingIncomplete`.
 Cancellation, material and painted segmentation, later surface/toolpath
@@ -3421,3 +3422,61 @@ source-compatibility sidecars rather than an Ares-owned pipeline. Rollback
 restores O22 terminal consumption and removes only O23 state, wiring, tests,
 docs, the restricted O22 minimum accessor, and the O21 internal-flattening
 visibility change.
+
+Task 22O.24 ports the coherent final state transition in
+`PrintObject::discover_vertical_shells` at `PrintObject.cpp:2402-2432`. It
+adds the source-cited `InternalVoid = 8` vocabulary with exhaustive non-bridge
+classification and extends the shared internal flattening order to Internal,
+InternalVoid, and InternalSolid. The one new mixed adapter consumes flat
+Polygon subject Paths directly, consumes ExPolygon clip contours then holes,
+and reuses the existing two-pass NonZero PolyTree output. It introduces no
+safety offset, pre-union, sorting, canonicalization, deduplication, or alternate
+geometry algorithm.
+
+For every nonempty O23 filter, O24 computes from the original collection, in
+source order, the mixed internal-solid intersection, Internal difference, and
+InternalVoid difference. Only after whole-project staging succeeds does it
+stably retain Top, Bottom, and BottomBridge, then append fresh Internal,
+InternalVoid, and InternalSolid surfaces with default metadata
+`(-1.0, 1, -1.0, 0)`. Empty filters execute no geometry and preserve the exact
+record allocation. Complete inherited alignment, including the retained scale
+against typed printable area, is checked before the first event. Failure,
+success, and public-incomplete cleanup iteratively dispose both 10,000-node
+predecessor families while the exact O23 graph and all unrelated allocations
+remain owned by the successor.
+
+Two independent KSR captures first reassert O23, then freeze O24 checksum
+`-117597382518472843802490205604634875775`, pre/post kind totals
+`[113, 6, 48, 1127, 0, 0]` and `[113, 6, 48, 1281, 575, 0]`, and pre/post
+geometry totals `[1294, 168, 46011]` and `[2023, 270, 73848]`. Of 460 records,
+161 are active, 299 are no-ops, exactly those 299 remain byte-logically
+unchanged, and real KSR InternalVoid counts remain `[0, 0]`. Digest framing
+records object/slot positions, record and surface boundaries, path counts,
+contour/hole role and index, point counts, and end markers. The delimited
+record-sequence digest is
+`-65994586923856785425316699963519338136`; the exact event-sequence digest is
+`-110138798119262824097709645699717637653`, with ordered event totals
+`[161, 161, 161]`.
+
+Thirty-one focused tests cover empty, disjoint, partial, full-cover, multiple,
+holed, nested, mixed-winding, metadata, ordering, InternalVoid, provenance, all
+inherited alignment, transactionality, ownership, cleanup, lifecycle,
+metamorphism, and repeatable KSR evidence. The exact-source parent regression
+set passes 149/149 and workspace Nextest passes 5,827 tests with 2 skipped.
+Thirteen planned compiling mutations
+and the reviewer-added retained-scale mutation are killed by their intended witnesses; the
+commutative role-only intersection reversal is retained honestly as an
+equivalent control, and final production restoration is byte-exact. Repository
+Nextest, native/strict Clippy, Tier-1 WASM, browser-WASM/Playwright, formatting,
+LOC, forbidden-pattern, dependency, rollback, staging, independent-review, and
+exact-commit CI evidence are the release gate recorded with the implementation.
+
+The next source-cited rewrite boundary is the
+`PrintObject::prepare_infill` call to `discover_horizontal_shells` at
+`PrintObject.cpp:618`, owned by `PrintObject::discover_horizontal_shells` at
+lines 3955-4161. O19-O24 remain temporary source-compatibility state, not an
+Ares-owned pipeline. O24 adds no public API, persisted format, dependency,
+migration, fallback, or production InternalVoid producer. Mechanical rollback
+restores O23 terminal consumption and removes only O24 state/wiring/tests/docs,
+the mixed adapter, the private InternalVoid vocabulary updates, and shared
+helper selection while retaining all O23 behavior.

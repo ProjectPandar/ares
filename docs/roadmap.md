@@ -4794,3 +4794,51 @@ deferred. O19-O23 are temporary source-compatibility sidecars, not an
 Ares-owned pipeline. Rollback restores O22 terminal consumption and removes
 only O23 state/wiring/tests/docs and its two restricted sibling visibility
 changes.
+
+## Task 22O.24: Single-region vertical-shell fill-surface assignment
+
+Task 22O.24 ports `PrintObject::discover_vertical_shells` lines 2402-2432 and
+completes that function's constrained single-region state transition. It adds
+`InternalVoid = 8` as source vocabulary with exhaustive non-bridge semantics,
+feeds flat internal Paths directly into a mixed Polygon/ExPolygon NonZero
+intersection, then executes Internal and InternalVoid differences against the
+same pre-mutation collection. After whole-project staging, active records
+stably retain Top/Bottom/BottomBridge and append fresh Internal, InternalVoid,
+and InternalSolid groups in source order with default metadata. Empty-filter
+records are allocation-exact no-ops.
+
+All inherited O23 alignment, including typed printable-area scale selection,
+is rejected before geometry. Later-record failures cannot expose a partial
+mutation; exact O23 ownership is retained and both 10,000-node predecessor tree
+families are disposed iteratively across success, every geometry failure, and
+the public-incomplete path. Synthetic topology covers multiple ordered
+subjects, holes, nested islands, full cover, and InternalVoid participation in
+the preceding O23 closing/protection path, while real KSR correctly has no
+InternalVoid producer.
+
+Repeated parent-bound KSR capture freezes checksum
+`-117597382518472843802490205604634875775`, kind totals before/after
+`[113, 6, 48, 1127, 0, 0]` / `[113, 6, 48, 1281, 575, 0]`, geometry totals
+`[1294, 168, 46011]` / `[2023, 270, 73848]`, 460 total records, 161 active,
+299 no-op, and 299 unchanged records. Structural digest tags delimit
+object/slot, record/surface, contour/hole role and index, point counts, and end
+markers. Record and exact event sequence digests are `-65994586923856785425316699963519338136` and
+`-110138798119262824097709645699717637653`; ordered operation totals are
+`[161, 161, 161]` and InternalVoid counts are `[0, 0]`.
+
+Thirty-one focused tests, 149 O21-O24 regressions, and 5,827 workspace tests
+with 2 skipped pass across direct, integration, provenance, metamorphic, transaction, cleanup,
+lifecycle, and parent-regression coverage. Native, WASM, browser, and review
+gates form the remaining release criteria. Thirteen planned compiling behavioral mutations plus the retained-scale review mutation are killed;
+role-only intersection reversal is documented as an equivalent commutative
+control rather than a false RED. Formatting, LOC, forbidden-pattern,
+dependency, staging, rollback, byte-exact restoration, both independent review
+paths, and exact pushed-SHA Tier-1 must all be green.
+
+The next rewrite boundary is `PrintObject::prepare_infill` line 618 and
+`PrintObject::discover_horizontal_shells` at `PrintObject.cpp:3955-4161`.
+Bridge-over-infill, external-surface processing, fill generation, seams,
+ordering, motion, G-code, and post-processing remain deferred. O19-O24 are
+source-compatibility state only. Rollback restores O23 terminal consumption and
+removes only O24 state/wiring/tests/docs, the mixed adapter, InternalVoid
+vocabulary updates, and shared helper selection.
