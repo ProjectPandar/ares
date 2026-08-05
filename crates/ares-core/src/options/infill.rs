@@ -11,6 +11,7 @@ mod top_surface;
 #[cfg(test)]
 mod test_support;
 
+pub(crate) use extra_solid::ExtraSolidInfills;
 pub(crate) use internal_bridge_filter::InternalBridgeFilter;
 pub(crate) use layer_role::InfillLayerRole;
 pub(crate) use overlap::{InfillWallBoundaryOptions, InfillWallOverlapOptions};
@@ -86,7 +87,7 @@ pub struct InfillOptions {
     pub(super) internal_solid_infill_pattern: InfillPattern,
     pub(super) bottom_surface_pattern: InfillPattern,
     pub(super) top_surface_pattern: InfillPattern,
-    pub(super) extra_solid_infills: extra_solid::ExtraSolidInfills,
+    pub(super) extra_solid_infills: ExtraSolidInfills,
     pub(super) detect_narrow_internal_solid_infill: bool,
     pub(super) shell_layers: ShellLayerOptions,
     pub(super) spiral_mode: bool,

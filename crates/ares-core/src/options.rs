@@ -71,7 +71,8 @@ pub(crate) use gap_fill::GapFillTarget;
 #[cfg(test)]
 pub(crate) use gcode_options::GCodeOptionSource;
 pub(crate) use infill::{
-    InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions, InternalBridgeFilter,
+    ExtraSolidInfills, InfillLayerRole, InfillWallBoundaryOptions, InfillWallOverlapOptions,
+    InternalBridgeFilter,
 };
 pub(crate) use machine_limits::MachineLimits;
 pub(crate) use model_config_deserialize::{

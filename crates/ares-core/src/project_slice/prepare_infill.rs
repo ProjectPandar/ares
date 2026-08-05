@@ -1,4 +1,5 @@
 pub(in crate::project_slice) mod fill_surfaces;
+pub(in crate::project_slice) mod horizontal_shell_promotion;
 pub(in crate::project_slice) mod surface_type_detection;
 pub(in crate::project_slice) mod vertical_shell_assignment;
 pub(in crate::project_slice) mod vertical_shell_filtering;

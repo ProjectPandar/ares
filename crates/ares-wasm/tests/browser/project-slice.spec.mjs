@@ -301,3 +301,20 @@ test("release decrease-rounding returns the bridge_flow error without a WASM tra
     public: { resolved: false, error: "invalid Orca option bridge_flow" },
   });
 });
+
+test("O25 shared JSON and resolved raw schedule boundaries do not trap", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openFixturePage(page);
+  const results = await page.evaluate(() => window.task22o25ExtraSolidBoundaries());
+  expect(results.map(({ name }) => name)).toEqual(["max", "near-range", "oversized"]);
+  for (const result of results) {
+    if (result.valid) {
+      expect(result.json).toEqual({ resolved: true });
+      expect(result.raw).toEqual({ resolved: false, error: "ProjectSlicingIncomplete" });
+    } else {
+      const expected = { resolved: false, error: "invalid extra_solid_infills pattern" };
+      expect(result.json).toEqual(expected);
+      expect(result.raw).toEqual(expected);
+    }
+  }
+});

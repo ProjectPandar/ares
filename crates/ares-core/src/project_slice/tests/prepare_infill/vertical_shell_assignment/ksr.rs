@@ -33,6 +33,10 @@ const O24_EVENTS: [usize; 3] = [161, 161, 161];
 
 #[test]
 fn task22o24_ksr_assignment_is_repeatable_parent_bound_and_has_no_void_producer() {
+    assert_ksr_evidence();
+}
+
+pub(in crate::project_slice::tests::prepare_infill) fn assert_ksr_evidence() {
     assert_eq!(
         super::super::vertical_shell_filtering::ksr::capture(),
         (O23_CHECKSUM, O23_TOTALS, O23_THRESHOLD_DIGEST, O23_EVENTS)

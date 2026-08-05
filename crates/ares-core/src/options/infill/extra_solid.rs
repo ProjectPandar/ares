@@ -21,6 +21,10 @@ impl ExtraSolidInfills {
         let Some(raw) = value.as_str() else {
             return Err(invalid());
         };
+        Self::parse_raw(raw)
+    }
+
+    pub(crate) fn parse_raw(raw: &str) -> Result<Self, SliceError> {
         let pattern = normalize_pattern(raw);
         if pattern.is_empty() {
             return Ok(Self::default());
@@ -34,13 +38,17 @@ impl ExtraSolidInfills {
     }
 
     pub(crate) fn matches_layer(&self, layer_index: usize) -> bool {
-        let layer_number = layer_index + 1;
+        let Some(layer_number) = layer_index.checked_add(1) else {
+            return false;
+        };
         self.entries.iter().any(|entry| match *entry {
             ExtraSolidEntry::Repeating { interval, count } => {
                 layer_number >= interval && layer_number % interval < count
             }
             ExtraSolidEntry::ExplicitRange { start, count } => {
-                layer_number >= start && layer_number < start + count
+                start
+                    .checked_add(count)
+                    .is_some_and(|end| layer_number >= start && layer_number < end)
             }
         })
     }
@@ -107,11 +115,11 @@ fn parse_base_count(token: &str) -> Result<(usize, usize), SliceError> {
 }
 
 fn parse_positive_usize(text: &str) -> Result<usize, SliceError> {
-    let parsed = text.parse::<usize>().map_err(|_| invalid())?;
-    if parsed == 0 {
+    let parsed = text.parse::<i32>().map_err(|_| invalid())?;
+    if parsed <= 0 {
         return Err(invalid());
     }
-    Ok(parsed)
+    Ok(parsed as usize)
 }
 
 fn invalid() -> SliceError {

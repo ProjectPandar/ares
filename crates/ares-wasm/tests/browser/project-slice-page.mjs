@@ -9,6 +9,7 @@ const bytesOf = (value) => value instanceof Uint8Array ? value : new Uint8Array(
 const sameBytes = (left, right) =>
   left.length === right.length && left.every((byte, index) => byte === right[index]);
 const sameTree = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+const quoted = (key, value) => `"${key}": "${value}"`;
 
 class Reader {
   constructor(input) {
@@ -364,6 +365,31 @@ async function releaseRounding(fixture, definition) {
   };
 }
 
+async function extraSolidBoundaryMatrix(fixture) {
+  const stl = encoder.encode("solid square\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 1 0 0.2\nvertex 0 1 0.2\nendloop\nendfacet\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 0 -1 0.2\nvertex 1 0 0.2\nendloop\nendfacet\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex -1 0 0.2\nvertex 0 -1 0.2\nendloop\nendfacet\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 0 1 0.2\nvertex -1 0 0.2\nendloop\nendfacet\nendsolid square");
+  const vectors = [
+    ["max", "2147483647", true],
+    ["near-range", "2147483646#2,2147483647", true],
+    ["oversized", "2147483648", false],
+  ];
+  const results = [];
+  for (const [name, pattern, valid] of vectors) {
+    const entries = Object.fromEntries(
+      Object.entries(globalThis.fflate.unzipSync(fixture)).filter(([path]) => !path.endsWith("/")),
+    );
+    applyEdits(entries, [[PROCESS, quoted("extra_solid_infills", ""),
+      quoted("extra_solid_infills", pattern)]]);
+    results.push({
+      name, valid,
+      json: await status(() => bindings.slice_stl(
+        stl, JSON.stringify({ extra_solid_infills: pattern }),
+      )),
+      raw: await status(() => bindings.sliceProject(zipEntries(entries))),
+    });
+  }
+  return results;
+}
+
 export async function startProjectSlicePage() {
   await init();
   window.parseTask22nVector = (input) => parseN(input).frame;
@@ -388,6 +414,8 @@ export async function startProjectSlicePage() {
     tinyBridgeFlows(await fixtureBytes(), definitions);
   window.task22nReleaseRounding = async (definition) =>
     releaseRounding(await fixtureBytes(), definition);
+  window.task22o25ExtraSolidBoundaries = async () =>
+    extraSolidBoundaryMatrix(await fixtureBytes());
   window.task22nPaths = { MODEL, PROCESS };
   window.aresReady = true;
 }

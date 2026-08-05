@@ -1,4 +1,4 @@
-use crate::SliceOptions;
+use crate::{SliceError, SliceOptions, options::ExtraSolidInfills};
 use serde_json::json;
 
 fn matches(pattern: &str, layer_index: usize) -> bool {
@@ -71,12 +71,59 @@ fn whitespace_and_one_pair_of_outer_quotes_are_ignored() {
 
 #[test]
 fn invalid_extra_solid_infills_tokens_are_rejected() {
-    for pattern in ["abc", "0", "-1", "2#0", "2#abc", "1,,2", "#2"] {
+    for pattern in [
+        "abc",
+        "0",
+        "-1",
+        "2#0",
+        "2#abc",
+        "1,,2",
+        "#2",
+        "2147483648",
+        "1#2147483648",
+    ] {
         let options: SliceOptions = serde_json::from_value(json!({
             "extra_solid_infills": pattern
         }))
         .unwrap();
         let err = options.infill_options().unwrap_err();
-        assert!(err.to_string().contains("extra_solid_infills"), "{err}");
+        assert_eq!(
+            err,
+            SliceError::InvalidInput("invalid extra_solid_infills pattern".to_owned())
+        );
     }
+}
+
+#[test]
+fn raw_parser_and_json_delegate_share_source_sized_boundaries() {
+    for pattern in [
+        "",
+        " \t' 3#2 ' \n",
+        "2147483647",
+        "2147483646#1,2147483647",
+    ] {
+        let raw = ExtraSolidInfills::parse_raw(pattern).unwrap();
+        let options: SliceOptions = serde_json::from_value(json!({
+            "extra_solid_infills": pattern
+        }))
+        .unwrap();
+        let json = options.infill_options().unwrap().extra_solid_infills;
+        assert_eq!(raw, json);
+    }
+
+    for pattern in ["2147483648", "2147483647#2147483648"] {
+        let raw = ExtraSolidInfills::parse_raw(pattern).unwrap_err();
+        let options: SliceOptions = serde_json::from_value(json!({
+            "extra_solid_infills": pattern
+        }))
+        .unwrap();
+        assert_eq!(raw, options.infill_options().unwrap_err());
+    }
+}
+
+#[test]
+fn matching_near_source_bound_and_impossible_index_never_overflows() {
+    let schedule = ExtraSolidInfills::parse_raw("2147483646#2147483647,1").unwrap();
+    assert!(schedule.matches_layer(usize::try_from(i32::MAX).unwrap() - 2));
+    assert!(!schedule.matches_layer(usize::MAX));
 }
