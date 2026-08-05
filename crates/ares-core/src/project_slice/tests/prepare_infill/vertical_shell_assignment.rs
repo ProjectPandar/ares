@@ -1,6 +1,6 @@
 mod cleanup;
-pub(super) mod fixture;
-pub(super) mod ksr;
+mod fixture;
+mod ksr;
 mod lifecycle;
 mod metamorphic;
 mod options;

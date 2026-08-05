@@ -171,7 +171,9 @@ fn count_surfaces(
             RegionSurfaceKind::Bottom => 1,
             RegionSurfaceKind::BottomBridge => 2,
             RegionSurfaceKind::Internal => 3,
-            RegionSurfaceKind::InternalSolid => panic!("O17 cannot emit internal solid surfaces"),
+            RegionSurfaceKind::InternalSolid | RegionSurfaceKind::InternalVoid => {
+                panic!("O17 cannot emit internal solid or void surfaces")
+            }
         }] += 1;
     }
 }

@@ -68,6 +68,16 @@ pub(crate) fn intersection_ex(
     execute_ex(subject, clip, ClipOperation::Intersection, PathRole::Clip)
 }
 
+pub(crate) fn intersection_polygons_ex(
+    subject: &[Polygon],
+    clip: &[ExPolygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    let mut paths_clipper = Clipper::new(ClipperOptions::default());
+    paths_clipper.add_closed_paths(subject, PathRole::Subject)?;
+    add_expolygons(&mut paths_clipper, clip, PathRole::Clip)?;
+    execute_two_pass(&mut paths_clipper, ClipOperation::Intersection)
+}
+
 pub(crate) fn union_expolygons(
     current: &[ExPolygon],
     candidate: &[ExPolygon],

@@ -49,7 +49,9 @@ pub(in crate::project_slice::prepare_infill) fn polygons_internal(
     flatten(record, |kind| {
         matches!(
             kind,
-            RegionSurfaceKind::Internal | RegionSurfaceKind::InternalSolid
+            RegionSurfaceKind::Internal
+                | RegionSurfaceKind::InternalVoid
+                | RegionSurfaceKind::InternalSolid
         )
     })
 }

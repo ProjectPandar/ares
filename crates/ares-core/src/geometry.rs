@@ -20,10 +20,11 @@ pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, diff_pl, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
     difference_polygons_ex, difference_polygons_paths, intersection_ex, intersection_pl,
-    intersection_polygons_paths, intersection_polygons_paths_with_safety_offset, offset_expolygon,
-    offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths, offset_open_paths,
-    offset_paths, offset_paths_tree, offset2_ex, offset2_ex_with_interstage, opening_ex, union_ex,
-    union_expolygons, union_polygons_paths, variable_offset_inner_ex, xor_ex,
+    intersection_polygons_ex, intersection_polygons_paths,
+    intersection_polygons_paths_with_safety_offset, offset_expolygon, offset_expolygon_refs_paths,
+    offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset_paths_tree,
+    offset2_ex, offset2_ex_with_interstage, opening_ex, union_ex, union_expolygons,
+    union_polygons_paths, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{EdgeGrid, GridEdge};
@@ -37,6 +38,7 @@ pub(crate) use simplification::{append_simplified_expolygon, simplify_expolygon_
 type BinaryExOperation = fn(&[ExPolygon], &[ExPolygon]) -> Result<Vec<ExPolygon>, ClipperError>;
 type PolygonClipOperation = fn(&[ExPolygon], &[Polygon]) -> Result<Vec<ExPolygon>, ClipperError>;
 type PolygonBinaryExOperation = fn(&[Polygon], &[Polygon]) -> Result<Vec<ExPolygon>, ClipperError>;
+type MixedPolygonExOperation = fn(&[Polygon], &[ExPolygon]) -> Result<Vec<ExPolygon>, ClipperError>;
 type ExPolygonsOffsetOperation =
     fn(&[ExPolygon], f32, JoinType, f64) -> Result<Vec<ExPolygon>, ClipperError>;
 type VariableOffsetOperation =
@@ -85,6 +87,7 @@ const _: PolygonClipOperation = difference_ex_polygons;
 const _: PolygonClipOperation = difference_ex_polygons_with_safety_offset;
 const _: PolygonBinaryExOperation = difference_polygons_ex;
 const _: BinaryExOperation = intersection_ex;
+const _: MixedPolygonExOperation = intersection_polygons_ex;
 const _: BinaryExOperation = union_expolygons;
 const _: BinaryExOperation = xor_ex;
 const _: ExPolygonsOffsetOperation = offset_expolygons;

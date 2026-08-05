@@ -1,7 +1,7 @@
 use super::helpers::polygon;
 use crate::geometry::{
     ClipperError, ExPolygon, difference_ex, difference_ex_polygons,
-    difference_ex_polygons_with_safety_offset, intersection_ex,
+    difference_ex_polygons_with_safety_offset, intersection_ex, intersection_polygons_ex,
 };
 
 const HI_RANGE: i64 = 0x3fff_ffff_ffff_ffff;
@@ -200,6 +200,66 @@ fn task22j_boolean_ex_hole_clip_preserves_nested_island_ownership_order() {
 }
 
 #[test]
+fn task22o24_mixed_intersection_preserves_flat_subject_hole_topology() {
+    let subject = vec![
+        polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]),
+        polygon(&[(20, 20), (20, 80), (80, 80), (80, 20)]),
+    ];
+    let clip = vec![rectangle(-10, -10, 110, 110)];
+    assert_eq!(
+        intersection_polygons_ex(&subject, &clip),
+        Ok(vec![expolygon_with_holes(
+            &[(100, 100), (0, 100), (0, 0), (100, 0)],
+            &[&[(20, 20), (20, 80), (80, 80), (80, 20)]],
+        )])
+    );
+}
+
+#[test]
+fn task22o24_mixed_intersection_freezes_empty_disjoint_and_partial_order() {
+    let subject = vec![polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)])];
+    assert_eq!(intersection_polygons_ex(&[], &[]), Ok(Vec::new()));
+    assert_eq!(
+        intersection_polygons_ex(&subject, &[rectangle(200, 200, 300, 300)]),
+        Ok(Vec::new())
+    );
+    assert_eq!(
+        intersection_polygons_ex(&subject, &[rectangle(50, -20, 120, 80)]),
+        Ok(vec![expolygon(&[(100, 80), (50, 80), (50, 0), (100, 0)])])
+    );
+}
+
+#[test]
+fn task22o24_mixed_intersection_uses_nonzero_for_overlapping_subject_paths() {
+    let square = polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]);
+    assert_eq!(
+        intersection_polygons_ex(&[square.clone(), square], &[rectangle(-10, -10, 110, 110)],),
+        Ok(vec![rectangle_output(0, 0, 100, 100)])
+    );
+}
+
+#[test]
+fn task22o24_mixed_intersection_preserves_multicomponent_nested_island_order() {
+    let subject = vec![
+        polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]),
+        polygon(&[(20, 20), (20, 80), (80, 80), (80, 20)]),
+        polygon(&[(40, 40), (60, 40), (60, 60), (40, 60)]),
+        polygon(&[(200, 0), (300, 0), (300, 100), (200, 100)]),
+    ];
+    assert_eq!(
+        intersection_polygons_ex(&subject, &[rectangle(-10, -10, 310, 110)]),
+        Ok(vec![
+            expolygon_with_holes(
+                &[(100, 100), (0, 100), (0, 0), (100, 0)],
+                &[&[(20, 20), (20, 80), (80, 80), (80, 20)]],
+            ),
+            expolygon(&[(60, 60), (40, 60), (40, 40), (60, 40)]),
+            expolygon(&[(300, 100), (200, 100), (200, 0), (300, 0)]),
+        ])
+    );
+}
+
+#[test]
 fn task22j_boolean_ex_forwards_subject_and_clip_coordinate_errors() {
     let invalid = vec![ExPolygon::new(
         polygon(&[(HI_RANGE + 1, 0), (0, 1), (0, 2)]),
@@ -221,6 +281,14 @@ fn task22j_boolean_ex_forwards_subject_and_clip_coordinate_errors() {
     );
     assert_eq!(
         intersection_ex(&valid, &invalid),
+        Err(ClipperError::CoordinateOutOfRange)
+    );
+    assert_eq!(
+        intersection_polygons_ex(&[polygon(&[(HI_RANGE + 1, 0), (0, 1), (0, 2)])], &valid,),
+        Err(ClipperError::CoordinateOutOfRange)
+    );
+    assert_eq!(
+        intersection_polygons_ex(&[valid[0].contour().clone()], &invalid),
         Err(ClipperError::CoordinateOutOfRange)
     );
 }

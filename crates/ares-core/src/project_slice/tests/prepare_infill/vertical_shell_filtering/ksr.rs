@@ -26,7 +26,7 @@ fn task22o23_ksr_filtering_is_parent_guarded_and_repeatable() {
     );
 }
 
-fn capture() -> (i128, [usize; 10], i128, [usize; 8]) {
+pub(in crate::project_slice) fn capture() -> (i128, [usize; 10], i128, [usize; 8]) {
     let parent = super::super::vertical_shell_regularization::ksr::capture();
     assert_eq!(
         parent,

@@ -80,13 +80,18 @@ pub(super) enum RegionSurfaceKind {
     BottomBridge = 2,
     Internal = 4,
     InternalSolid = 5,
+    InternalVoid = 8,
 }
 
 impl RegionSurfaceKind {
     pub(super) const fn is_bridge(self) -> bool {
         match self {
             Self::BottomBridge => true,
-            Self::Top | Self::Bottom | Self::Internal | Self::InternalSolid => false,
+            Self::Top
+            | Self::Bottom
+            | Self::Internal
+            | Self::InternalSolid
+            | Self::InternalVoid => false,
         }
     }
 }
