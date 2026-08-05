@@ -3305,3 +3305,61 @@ migration, compatibility layer, or fallback. Mechanical rollback restores O20
 terminal consumption, removes only O21 state/wiring/tests/docs and the two
 flat-Paths adapters, and returns the pre-existing safety constants to private
 visibility while retaining all O20 behavior.
+
+Task 22O.22 ports only the initial morphology regularization in
+`PrintObject::discover_vertical_shells` at `PrintObject.cpp:2344-2367`, with
+its aligned flow provenance at lines 2174-2182. Each nonempty O21 flat shell
+uses the retained `ClassicPreludeRecord::solid_infill_spacing`: one `i64` to
+`f32` cast, multiplication by `1.05_f32`, then the source-ordered radii
+`0.5_f32 * 0.65_f32 * minimum`, `0.5_f32 * 1.2_f32 * minimum`, and
+`0.2_f32 * minimum`. The nested geometry remains NonZero `union_ex`, Square
+`offset2_ex(-ensure, ensure + sparse, 3.0)`, then Square shrink through the
+existing ExPolygon offset with `-(sparse - overlap)` and miter limit `3.0`.
+Only the O21 empty gate skips regularization; a nonempty shell whose union
+becomes empty still reaches both offset stages and shrink.
+
+The existing two-stage offset implementation exposes one inter-stage observer
+entry so O22 can record and fail the second stage after the first succeeds;
+the ordinary `offset2_ex` delegates through the identical body with a no-op
+observer. This adds no alternate geometry algorithm. Exact Square-join contour
+and hole vectors freeze Clipper ExPolygon/path/point ordering, including narrow
+material removal and near-gap closure. Actual coordinate failures are exercised
+at union, both offset2 stages, and shrink, while the project boundary maps every
+site to `vertical-shell regularization geometry is outside the supported
+Clipper range`.
+
+O22 validates all O21 object/cache/projection/trim/predecessor, record, slot,
+source/transform, region/compatibility, plan/layer/current/input, prelude, and
+lslice relations before geometry. It stages the complete project while
+borrowing O21, then moves the exact predecessor graph beside fresh aligned
+ExPolygon sidecars only after success. Failure and success cleanup iteratively
+delegate to O21 on both 10,000-node tree families and the shared constrained
+stack. Public slicing invokes O22 once and remains `ProjectSlicingIncomplete`.
+Typed `internal_solid_infill_line_width` mutation proves the complete 3MF to
+retained spacing to exact radius bits to ordered regularization-output chain;
+ZIP repacking, non-slicing renames, model-part precedence, inactive modes, and
+component scaling do not select fixture-specific behavior.
+
+Two independent KSR captures guard the frozen O19, O20, and O21 parent values
+before freezing O22 checksum
+`134936948052282121922360252649864225707`, totals
+`[1, 460, 0, 460, 632, 632, 128, 34557]` for objects, slots, `None`, `Some`,
+ExPolygons, contours, holes, and points, ordered events
+`[259, 259, 259, 259]`, and exact-radii digest
+`-119839535044106185061007902266478724784`. Eleven direct and 22 integration
+O22 tests pass; 346 explicit O10-O22 regressions and 5,750 workspace tests with
+2 skipped pass. Strict all-target/all-feature Clippy is clean. Compiling
+post-implementation mutation REDs remove the `1.05_f32` factor and fail 4 of 11
+direct tests plus 2 of 22 integration tests. Supplemental mutations fail all 5
+alignment tests, the public lifecycle witness, and the genuine later-slot
+transaction witness before current tuple-signature production artifacts are
+restored byte-exactly and affected/full GREEN gates rerun.
+
+The exact next rewrite boundary starts with `object_volume` and neighbor/tiny
+area filtering at `PrintObject.cpp:2369`. Horizontal shells, external surfaces,
+fill generation, seams, ordering, motion, G-code, and post-processing remain
+deferred. O19-O22 are temporary source-compatibility sidecars, not an Ares-owned
+pipeline. O22 adds no public API, persisted format, dependency, migration, or
+fallback. Mechanical rollback restores O21 terminal consumption and removes
+only O22 state, wiring, tests, docs, and the inter-stage observer entry while
+retaining the unchanged ordinary `offset2_ex` behavior.

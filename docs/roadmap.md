@@ -4712,3 +4712,43 @@ source-compatibility sidecars, not an Ares-owned pipeline. Rollback restores O20
 terminal consumption and removes only O21 state/wiring/tests/docs, its two
 flat-Paths adapters, and the sibling visibility change for existing safety
 constants.
+
+## Task 22O.22: Single-region vertical-shell morphology regularization
+
+Task 22O.22 ports `PrintObject::discover_vertical_shells` lines 2344-2367 and
+stops before `object_volume` at line 2369. For each nonempty O21 trim, the
+aligned typed solid-infill spacing is cast once to `f32`, multiplied by
+`1.05_f32`, and used in the three literal source expressions for ensure,
+sparse-gap, and overlap radii. O22 executes NonZero `union_ex`, both Square
+`offset2_ex` stages, and Square shrink in nested source order with miter limit
+`3.0`; an empty union still flows through the remaining operations. A minimal
+inter-stage observer reuses the existing offset2 body without duplicating or
+changing its ordinary production behavior.
+
+The whole project is validated and staged while borrowing O21 before moving the
+exact predecessor, surface, cache, projection, and trim allocations beside
+fresh regularized ExPolygons. Every error uses one stable message and
+iteratively cleans both 10,000-node predecessor tree families. Public slicing
+reaches O22 exactly once while remaining `ProjectSlicingIncomplete`. Real typed
+3MF tests cover active/inactive modes, model-part precedence, line-width to
+spacing/radius/output provenance, ZIP/name invariance, and component scaling.
+
+Parent-guarded repeated KSR capture freezes O22 checksum
+`134936948052282121922360252649864225707`, totals
+`[1, 460, 0, 460, 632, 632, 128, 34557]`, ordered operation totals
+`[259, 259, 259, 259]`, and exact-radii digest
+`-119839535044106185061007902266478724784` after reasserting all O19-O21
+values. Eleven direct and 22 integration tests pass, as do 346 O10-O22
+regressions and 5,750 workspace tests with 2 skipped. Strict
+all-target/all-feature Clippy passes. Compiling post-implementation mutation
+REDs fail 4 direct and 2 integration tests when the source `1.05_f32` factor is
+removed; supplemental mutations fail all 5 alignment tests, public lifecycle,
+and genuine later-slot transaction staging before byte-exact production
+restoration and GREEN reruns.
+
+The next boundary is `object_volume`, neighboring-layer volume accumulation,
+and tiny-area filtering at `PrintObject.cpp:2369`. Horizontal shells, external
+surfaces, fill generation, seams, ordering, motion, G-code, and post-processing
+remain deferred. O19-O22 stay temporary source-compatibility sidecars rather
+than an Ares-owned pipeline. Rollback restores O21 terminal consumption and
+removes only O22 state/wiring/tests/docs and its inter-stage observer entry.
