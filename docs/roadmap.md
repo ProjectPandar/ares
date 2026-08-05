@@ -4842,3 +4842,48 @@ ordering, motion, G-code, and post-processing remain deferred. O19-O24 are
 source-compatibility state only. Rollback restores O23 terminal consumption and
 removes only O24 state/wiring/tests/docs, the mixed adapter, InternalVoid
 vocabulary updates, and shared helper selection.
+
+## Task 22O.25: Horizontal-shell extra-solid promotion
+
+Task 22O.25 ports `PrintObject::discover_horizontal_shells` lines 3955-3972,
+stopping before the EnsureAll gate at line 3974. It consumes each aligned
+record's resolved raw `extra_solid_infills`, preserves the exact empty-string
+short circuit, uses the shared typed parser and one-based matcher against the
+zero-based planned array index, and retags every and only Internal
+`fill_surfaces` entry to InternalSolid in place. The operation has no stored-ID
+or sparse-density gate and never changes `slices`, metadata, geometry, order,
+or allocation identity.
+
+The shared option boundary accepts positive signed-`i32` components and uses
+checked arithmetic for explicit ranges and one-based matching, yielding the
+same stable invalid-pattern error on native and browser-WASM. Complete O24
+alignment is validated before any visit; all record decisions are staged before
+mutation, so later parse errors roll back the exact O24 graph. Success retains
+the boxed predecessor, object records, all O19-O24 sidecars and nested
+allocations; cleanup delegates iteratively through O24. Public slicing invokes
+O25 once after O24 and remains incomplete.
+
+Repeated parent-bound KSR capture freezes checksum
+`58727684244877231975278290246623082466`, record digest
+`160750122870413723145549886803558415603`, event digest
+`95826544899519698779358289371798515623`, and unchanged surface digest
+`-107673730348313625723619859456104452971`. All 460 records are unchanged;
+kind totals remain `[113, 6, 48, 1281, 575, 0]`, geometry totals remain
+`[2023, 270, 73848]`, and event totals are `[460, 0, 0, 0, 0]` with zero
+commits and exactly one prepare/disposal. A normal typed archive mutation
+promotes 1,281 Internal surfaces in 460 records and preserves the complete
+allocation graph.
+
+Forty-two focused O25/shared-option tests, 191 explicit O21-O25 regressions,
+and 5,856 workspace tests with 2 skipped pass. Native/strict Clippy, four WASM
+checks, optimized export audit, two 10-test Playwright runs, 14 killed compiling
+mutations with byte-exact restoration, formatting, LOC, forbidden-pattern,
+dependency, and rollback gates are green. Both six-dimensional review paths
+are approved; exact pushed-SHA Tier-1 remains the exit gate.
+
+The next bounded rewrite starts with the EnsureAll early return at
+`PrintObject.cpp:3974-3976`; all later horizontal-shell geometry,
+external-surface processing, fill generation, toolpaths, and G-code remain
+deferred. O19-O25 remain temporary source-compatibility state. Rollback restores
+O24 terminal consumption and removes only O25 state/wiring/tests/docs and its
+crate-private raw-parser seam.

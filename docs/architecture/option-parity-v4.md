@@ -2,12 +2,11 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.23
-are released. Task 22O.24 completes the constrained single-region
-`PrintObject::discover_vertical_shells` rewrite boundary and is at its final
-review and exact-SHA release gate. Public slicing
-executes the new stage but deliberately continues to return
-`ProjectSlicingIncomplete`.
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.24
+are released. Task 22O.25 implements the bounded `extra_solid_infills`
+promotion prologue of `PrintObject::discover_horizontal_shells` and is at its
+final review and exact-SHA release gate. Public slicing executes the new stage
+but deliberately continues to return `ProjectSlicingIncomplete`.
 Cancellation, material and painted segmentation, later surface/toolpath
 stages, complete G-code assembly, and normalized KSR parity remain owned by
 later source-cited rewrite slices.
@@ -3480,3 +3479,63 @@ migration, fallback, or production InternalVoid producer. Mechanical rollback
 restores O23 terminal consumption and removes only O24 state/wiring/tests/docs,
 the mixed adapter, the private InternalVoid vocabulary updates, and shared
 helper selection while retaining all O23 behavior.
+
+Task 22O.25 ports the first coherent operation of
+`PrintObject::discover_horizontal_shells` at `PrintObject.cpp:3955-3972`,
+stopping before the `ensure_vertical_shell_thickness == evstAll` gate at line
+3974. For each aligned region record in planned layer-array order, it preserves
+the exact raw-empty `extra_solid_infills` short circuit, parses nonempty
+schedules through the shared typed option, applies one-based matching to the
+zero-based planned index, and retags every exact Internal `fill_surfaces` entry
+to InternalSolid in place. It does not inspect stored layer IDs or sparse
+infill density and does not mutate `slices`, geometry, ordering, metadata, or
+allocation identity.
+
+The shared schedule parser now exposes only a crate-private raw-string seam;
+the JSON entry delegates to it. Numeric components are restricted to the
+source-sized positive signed-`i32` domain, explicit ranges and one-based
+matching use checked addition, and native and browser-WASM boundaries return
+`invalid extra_solid_infills pattern` rather than overflow or trap. Existing
+strict Ares malformed-token behavior is retained rather than broadening O25
+into a rewrite of Orca's permissive `std::stoi` prefixes.
+
+O25 validates the complete inherited O24 alignment before its first schedule
+visit, stages every decision while borrowing O24, and mutates only after the
+whole project succeeds. A later parse failure therefore exposes no partial
+promotion. The successor moves the exact boxed predecessor, object records,
+O19-O24 sidecars, and all nested allocations; cleanup reconstructs O24 and
+delegates to its iterative disposal. Public project slicing invokes O25 once
+after O24, disposes it, and remains `ProjectSlicingIncomplete`.
+
+Two independent KSR captures first reassert O24 and then freeze O25 checksum
+`58727684244877231975278290246623082466`, record-sequence digest
+`160750122870413723145549886803558415603`, event-sequence digest
+`95826544899519698779358289371798515623`, and unchanged surface digest
+`-107673730348313625723619859456104452971`. All 460 aligned records retain kind
+totals `[113, 6, 48, 1281, 575, 0]` and geometry totals
+`[2023, 270, 73848]`; event totals are `[460, 0, 0, 0, 0]` for raw visits,
+nonempty guards, parser calls, matcher calls, and promoted surfaces. Commits are
+zero, and prepare/disposal counts are exactly one. A typed archive mutation
+independently promotes all 1,281 Internal surfaces across 460 matching records,
+ending with Internal/InternalSolid totals `0/1856` while preserving the full
+allocation graph.
+
+Forty-two focused O25/shared-option tests, 191 explicit O21-O25 regressions,
+and 5,856 workspace tests with 2 skipped pass. Fourteen compiling behavioral
+mutations cover parsing, one-based planned-index matching, density independence,
+transactionality, inherited alignment, holed geometry, full nested ownership,
+cleanup, lifecycle precedence, metamorphism, active typed archives, real KSR,
+and executed browser-WASM numeric boundaries. Native and strict Clippy checks,
+four WASM checks, optimized default/feature export audits, two 10-test
+Playwright runs, formatting, LOC, dependency, forbidden-pattern, rollback, and
+byte-exact mutation restoration are green. Both independent six-dimensional
+review paths are approved; exact pushed-SHA Tier-1 CI remains the release gate.
+
+The next source boundary is the EnsureAll early return at
+`PrintObject.cpp:3974-3976`. All horizontal-shell surface gathering, layer and
+thickness windows, geometric propagation, safety offsets, density/ensure-mode
+branches, collection rebuilding, external-surface processing, fill generation,
+seams, motion, G-code, and post-processing remain deferred. O19-O25 are
+source-compatibility state only. Rollback restores O24 terminal consumption and
+removes O25 state/wiring/tests/docs plus the narrow crate-private raw parser
+seam while retaining O24 behavior and the legacy density-gated helper.
