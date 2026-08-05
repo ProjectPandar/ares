@@ -1,8 +1,11 @@
 use super::helpers::{coordinates, polygon};
 use crate::geometry::clipper::{
-    JoinType, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
-    offset_expolygons_paths, offset_expolygons_raw, offset2_ex, opening_ex,
+    FillRule, JoinType, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
+    offset_expolygons_paths, offset_expolygons_raw, offset2_ex, offset2_ex_with_interstage,
+    opening_ex, union_ex,
 };
+
+const HI_RANGE: i64 = 0x3fff_ffff_ffff_ffff;
 use crate::geometry::{ExPolygon, Polygon};
 
 fn fixed_input() -> ExPolygon {
@@ -35,6 +38,76 @@ fn task22g_fixed_expolygon_offset_and_offset2_match_orca_ordered_vectors() {
             polygon(&[(203, 203), (97, 203), (97, 97), (203, 97)]),
             vec![polygon(&[(143, 143), (143, 157), (157, 157), (157, 143)])],
         )])
+    );
+}
+
+#[test]
+fn task22o22_offset2_interstage_observer_preserves_output_and_can_stop_before_second_stage() {
+    let observed = std::cell::Cell::new(0);
+    let expected = offset2_ex(&[fixed_input()], -5.0, 8.0, JoinType::Square, 3.0);
+    assert_eq!(
+        offset2_ex_with_interstage(&[fixed_input()], (-5.0, 8.0, JoinType::Square, 3.0), || {
+            observed.set(observed.get() + 1);
+            Ok(())
+        },),
+        expected
+    );
+    assert_eq!(observed.get(), 1);
+    assert_eq!(
+        offset2_ex_with_interstage(
+            &[fixed_input()],
+            (-5.0, 8.0, JoinType::Square, 3.0),
+            || Err(crate::geometry::ClipperError::CoordinateOutOfRange),
+        ),
+        Err(crate::geometry::ClipperError::CoordinateOutOfRange)
+    );
+}
+
+#[test]
+fn task22o22_each_morphology_primitive_reports_actual_coordinate_failure() {
+    let invalid = holeless(&[
+        (HI_RANGE + 1, 0),
+        (HI_RANGE + 2, 0),
+        (HI_RANGE + 2, 10),
+        (HI_RANGE + 1, 10),
+    ]);
+    assert_eq!(
+        union_ex(&[invalid.contour().clone()], FillRule::NonZero),
+        Err(crate::geometry::ClipperError::CoordinateOutOfRange)
+    );
+    assert_eq!(
+        offset2_ex_with_interstage(&[invalid], (-1.0, 2.0, JoinType::Square, 3.0), || Ok(()),),
+        Err(crate::geometry::ClipperError::CoordinateOutOfRange)
+    );
+
+    let near_limit = holeless(&[
+        (HI_RANGE - 100, 0),
+        (HI_RANGE - 1, 0),
+        (HI_RANGE - 1, 100),
+        (HI_RANGE - 100, 100),
+    ]);
+    let near_second = holeless(&[
+        (HI_RANGE - 1_000, 0),
+        (HI_RANGE - 500, 0),
+        (HI_RANGE - 500, 500),
+        (HI_RANGE - 1_000, 500),
+    ]);
+    let reached_second = std::cell::Cell::new(false);
+    assert_eq!(
+        offset2_ex_with_interstage(
+            &[near_second],
+            (1.0, 2_000.0, JoinType::Square, 3.0),
+            || {
+                reached_second.set(true);
+                Ok(())
+            },
+        ),
+        Err(crate::geometry::ClipperError::CoordinateOutOfRange)
+    );
+    assert!(reached_second.get());
+    assert_eq!(
+        offset_expolygons(&[near_limit], -1.0, JoinType::Square, 3.0),
+        Err(crate::geometry::ClipperError::CoordinateOutOfRange)
     );
 }
 

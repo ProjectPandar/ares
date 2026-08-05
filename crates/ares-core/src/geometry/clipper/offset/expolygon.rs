@@ -40,7 +40,18 @@ pub(crate) fn offset2_ex(
     join_type: JoinType,
     miter_limit: f64,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
+    offset2_ex_with_interstage(expolygons, (first, second, join_type, miter_limit), || {
+        Ok(())
+    })
+}
+
+pub(crate) fn offset2_ex_with_interstage(
+    expolygons: &[ExPolygon],
+    (first, second, join_type, miter_limit): (f32, f32, JoinType, f64),
+    interstage: impl FnOnce() -> Result<(), ClipperError>,
+) -> Result<Vec<ExPolygon>, ClipperError> {
     let first_stage = offset_expolygons_paths(expolygons, first, join_type, miter_limit)?;
+    interstage()?;
     Ok(offset_paths_tree(&first_stage, second, join_type, miter_limit)?.into_expolygons())
 }
 

@@ -10,7 +10,7 @@ pub(crate) use execute::raw_offset_open_paths;
 pub(crate) use execute::{offset_open_paths, offset_paths, offset_paths_tree, raw_offset_paths};
 pub(crate) use expolygon::{
     offset_expolygon, offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths,
-    offset_expolygons_raw, offset2_ex, opening_ex,
+    offset_expolygons_raw, offset2_ex, offset2_ex_with_interstage, opening_ex,
 };
 
 use super::{ClipperError, PolyTree};

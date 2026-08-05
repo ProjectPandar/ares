@@ -41,8 +41,8 @@ pub(crate) use bounds::{IntBounds, negative_outer};
 pub(crate) use offset::offset_paths_tree;
 pub(crate) use offset::{
     ClipperOffset, JoinType, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
-    offset_expolygons_paths, offset_open_paths, offset_paths, offset2_ex, opening_ex,
-    raw_offset_paths,
+    offset_expolygons_paths, offset_open_paths, offset_paths, offset2_ex,
+    offset2_ex_with_interstage, opening_ex, raw_offset_paths,
 };
 #[cfg(test)]
 pub(crate) use offset::{offset_expolygons_raw, raw_offset_open_paths};
