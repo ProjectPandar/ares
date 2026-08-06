@@ -2,11 +2,11 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.24
-are released. Task 22O.25 implements the bounded `extra_solid_infills`
-promotion prologue of `PrintObject::discover_horizontal_shells` and is at its
-final review and exact-SHA release gate. Public slicing executes the new stage
-but deliberately continues to return `ProjectSlicingIncomplete`.
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.25
+are released. Task 22O.26 implements the bounded horizontal-shell propagation
+remainder of `PrintObject::discover_horizontal_shells` and is at its final
+review and exact-SHA release gate. Public slicing executes the new stage but
+deliberately continues to return `ProjectSlicingIncomplete`.
 Cancellation, material and painted segmentation, later surface/toolpath
 stages, complete G-code assembly, and normalized KSR parity remain owned by
 later source-cited rewrite slices.
@@ -3539,3 +3539,72 @@ seams, motion, G-code, and post-processing remain deferred. O19-O25 are
 source-compatibility state only. Rollback restores O24 terminal consumption and
 removes O25 state/wiring/tests/docs plus the narrow crate-private raw parser
 seam while retaining O24 behavior and the legacy density-gated helper.
+
+Task 22O.26 ports the complete executable remainder of
+`PrintObject::discover_horizontal_shells` at `PrintObject.cpp:3974-4150`,
+ending before debug SVG output. It preserves the per-record EnsureAll skip,
+Top/Bottom/BottomBridge source order, directional count-or-strict-thickness
+windows, and serial visibility of earlier neighbor rebuilds to later source
+gathers. Every option and flow is taken from the aligned resolved record: the
+source record owns layer counts and thickness, while each visited neighbor owns
+external-flow width. The existing coordinate scale remains derived from the
+resolved printable area.
+
+The rewrite performs source gathering from `slices` then `fill_surfaces`, flat
+contour-before-hole topology, the ordered asymmetric Miter-5 opening, the exact
+safety intersection and mode-dependent empty control flow, density/mode narrow
+wall filters, and Miter-3 repair expansion. InternalVoid participates only in
+the reachable repair clip; rebuilding drops it, unions solid geometry, appends
+fresh InternalSolid and Internal surfaces, and reconstructs top/bottom groups
+from their first metadata-complete template.
+`RegionSurface::clone_with_expolygon` changes only geometry. The stable geometry
+error is `horizontal-shell propagation geometry
+is outside the supported Clipper range`.
+
+O26 validates the complete inherited graph before cloning, operates on a
+whole-project working clone, and commits only dirty records after every object
+succeeds. Geometry-equal executed rebuilds are still dirty; untouched records
+keep allocation identity. Failure leaves the O25 graph unchanged. The
+successor retains the boxed O25 predecessor and all O19-O24 sidecars without a
+durable propagation sidecar; cleanup delegates iteratively. Public project
+slicing invokes O26 once after O25, disposes it, and remains
+`ProjectSlicingIncomplete`.
+
+Repeated parent-bound KSR capture preserves the O25 checksum and freezes the
+unchanged surface digest
+`-107673730348313625723619859456104452971`, event digest
+`55157732452648897477979936233453742487`, 460 record visits, 460 EnsureAll
+skips, zero source-kind visits, zero geometry, and zero commits. A typed
+Moderate archive capture freezes raw event totals
+`[460, 460, 0, 1380, 1010, 547, 143]` for fill clones, record visits,
+EnsureAll skips, source-kind visits, neighbor visits, rebuilds, and dirty
+commits. All 547 rebuilds follow nonempty intersections and commit 143 distinct
+dirty records. It freezes surface digest
+`55371787254720044626064449746884984931`, event digest
+`71433667081695804905700384637078674080`, and 5,469 ordered geometry events.
+
+Forty-five final O26-focused tests plus six opening and one surface-template
+test pass; the complete workspace passes 5,908 tests with 2 skipped. Thirty-three
+compiling behavioral mutations are killed and production is restored before
+final formatting, native check, and strict Clippy gates. Controlled production
+witnesses prove a later source gathers an exact external fragment rebuilt by an
+earlier source, every ordered failure retains an identical original/sidecar
+fingerprint with zero commits, clean inner geometry and all O19-O24 sidecars
+retain allocations, and a geometry-equal production rebuild is still dirty.
+Resolved archive/model-part witnesses independently vary count, thickness,
+density, both flow owners, scale, and non-slicing names. Optimized native and
+browser-WASM checks, export audit, and two 11-test Playwright executions cover
+the unchanged `sliceProject` boundary. Final independent six-dimensional and
+default-model OpenCode reviews approve O26; the exact pushed-SHA Tier-1 matrix
+remains its release gate.
+
+The next cited rewrite boundary is the `prepare_infill` call to
+`PrintObject::process_external_surfaces` immediately after
+`discover_horizontal_shells` (`PrintObject.cpp:624-642` in the pinned tree),
+owned by the corresponding `PrintObject` and `LayerRegion` external-surface
+implementation. External-surface processing, infill combination, fill
+generation, toolpaths, seams, motion, G-code, and post-processing remain
+deferred. O19-O26 remain temporary source-compatibility state. Mechanical
+rollback restores O25 terminal consumption and removes O26 state, wiring,
+tests, docs, path-opening adapter, and narrow surface-template seam while
+retaining O25 unchanged.

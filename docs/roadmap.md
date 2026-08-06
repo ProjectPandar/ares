@@ -4887,3 +4887,58 @@ external-surface processing, fill generation, toolpaths, and G-code remain
 deferred. O19-O25 remain temporary source-compatibility state. Rollback restores
 O24 terminal consumption and removes only O25 state/wiring/tests/docs and its
 crate-private raw-parser seam.
+
+## Task 22O.26: Horizontal-shell propagation
+
+Task 22O.26 ports the complete executable remainder of
+`PrintObject::discover_horizontal_shells` at `PrintObject.cpp:3974-4150`. It
+preserves the EnsureAll gate; Top, Bottom, BottomBridge source order; directional
+count-or-strict-thickness windows; record-local typed options and flow values;
+serial visibility of earlier neighbor rebuilds; flat path topology; exact
+Clipper opening, safety, filtering, and repair order; and metadata-complete
+collection reconstruction.
+
+The milestone validates all inherited identity, alignment, slot-presence, and
+printable-area-derived scale invariants before cloning. It stages work in a
+whole-project clone and commits only records whose rebuild path executed after
+all objects succeed. A failure leaves O25 unchanged, untouched records preserve
+allocation identity, and a geometry-equal rebuild remains a dirty commit. The
+successor owns the exact O25 graph and existing sidecars, adds no durable public
+state, cleans up iteratively, and runs once in public project slicing before the
+existing incomplete result.
+
+The real KSR EnsureAll capture retains surface digest
+`-107673730348313625723619859456104452971`, freezes event digest
+`55157732452648897477979936233453742487`, and visits/skips all 460 aligned
+records without source visits, geometry, or commits. The typed Moderate archive
+freezes surface/event digests
+`55371787254720044626064449746884984931` and
+`71433667081695804905700384637078674080`, with raw event totals
+`[460, 460, 0, 1380, 1010, 547, 143]` for fill clones, record visits,
+EnsureAll skips, source kinds, neighbors, rebuilds, and dirty commits. All 547
+rebuilds follow nonempty intersections and commit 143 distinct dirty records;
+the capture also freezes 5,469 ordered geometry events.
+
+Forty-five final O26-focused tests, six asymmetric-opening tests, one surface
+template test, and the complete 5,908-test workspace pass with 2 skipped.
+Thirty-three compiling behavioral mutations cover traversal, gates, windows, flow
+provenance and casts, opening/filter/repair geometry, carried-solid state,
+rebuild semantics, metadata, absent records, original-before-failure rollback,
+public/cleanup bypass, and dirty-only commit. Controlled serial, all-site
+transaction fingerprint, full sidecar/clean-geometry ownership,
+geometry-equal production rebuild, resolved option/flow/scale, and non-slicing
+rename witnesses are green. Formatting,
+native all-target checks, strict all-feature Clippy, WASM/export/browser gates,
+LOC, forbidden-pattern, dependency, staging, and rollback audits form the local
+exit evidence. Final independent six-dimensional and default-model OpenCode
+reviews approve O26; exact pushed-SHA Tier-1 remains required before release.
+
+The next bounded rewrite is the pinned `prepare_infill` call to
+`PrintObject::process_external_surfaces` after horizontal shells
+(`PrintObject.cpp:624-642`). External-surface processing and its owning
+`PrintObject`/`LayerRegion` source must be specified before implementation.
+Infill combination, fill generation, toolpaths, seams, motion, G-code, and
+post-processing remain deferred. O19-O26 are temporary source-compatibility
+state. Rollback restores O25 terminal consumption and removes only O26
+state/wiring/tests/docs, the path-opening adapter, and narrow surface-template
+seam.
