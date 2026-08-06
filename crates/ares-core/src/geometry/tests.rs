@@ -9,6 +9,7 @@ mod line;
 mod medial_axis;
 mod polygon;
 mod polyline;
+mod region_expansion;
 mod scale;
 mod simplification;
 mod simplification_polygon_output;

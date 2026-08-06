@@ -1,3 +1,5 @@
+mod lines;
+
 use crate::geometry::clipper::fixed_round;
 use crate::geometry::{Point, Polygon};
 
@@ -20,6 +22,7 @@ struct PreparedOffset {
     sin: f64,
     cos: f64,
     miter_threshold: f64,
+    steps: f64,
     steps_per_radian: f64,
 }
 
@@ -45,23 +48,49 @@ impl ClipperOffset {
         }
 
         let prepared = PreparedOffset::new(self, delta);
-        self.paths
-            .iter()
-            .map(|path| match path.end_type {
+        let mut output = Vec::with_capacity(self.paths.len() * 2);
+        for path in &self.paths {
+            let source = path.contour.points();
+            if source.is_empty()
+                || (delta <= 0.0 && (source.len() < 3 || path.end_type != EndType::ClosedPolygon))
+            {
+                continue;
+            }
+            if source.len() == 1 {
+                output.push(generate_one_point(source[0], path.join_type, &prepared));
+                continue;
+            }
+            match path.end_type {
                 EndType::ClosedPolygon => {
-                    generate_closed(path.contour.points(), path.join_type, &prepared)
+                    output.push(generate_closed(source, path.join_type, &prepared));
                 }
-                EndType::OpenButt => {
-                    generate_open_butt(path.contour.points(), path.join_type, &prepared)
+                EndType::ClosedLine => {
+                    output.extend(lines::generate_closed_line(
+                        source,
+                        path.join_type,
+                        &prepared,
+                    ));
                 }
-            })
-            .collect()
+                EndType::OpenButt => output.push(lines::generate_open(
+                    source,
+                    path.join_type,
+                    false,
+                    &prepared,
+                )),
+                EndType::OpenRound => output.push(lines::generate_open(
+                    source,
+                    path.join_type,
+                    true,
+                    &prepared,
+                )),
+            }
+        }
+        output
     }
 }
 
-fn generate_open_butt(source: &[Point], join_type: JoinType, prepared: &PreparedOffset) -> Polygon {
-    if source.len() == 1 {
-        let point = source[0];
+fn generate_one_point(point: Point, join_type: JoinType, prepared: &PreparedOffset) -> Polygon {
+    if join_type != JoinType::Round {
         let delta = prepared.delta;
         return Polygon::new(vec![
             Point::new(
@@ -83,65 +112,17 @@ fn generate_open_butt(source: &[Point], join_type: JoinType, prepared: &Prepared
         ]);
     }
 
-    let mut normals = source
-        .windows(2)
-        .map(|edge| unit_normal(edge[0], edge[1]))
-        .collect::<Vec<_>>();
-    normals.push(normals[normals.len() - 1]);
-
     let mut output = Vec::new();
-    let mut previous = 0;
-    for current in 1..source.len() - 1 {
-        let corner = Corner::new(source[current], normals[previous], normals[current]);
-        if generate_corner(corner, join_type, prepared, &mut output) {
-            previous = current;
-        }
+    let (mut x, mut y) = (1.0, 0.0);
+    for _ in 0..prepared.steps.floor() as usize {
+        output.push(Point::new(
+            fixed_round(point.x() as f64 + x * prepared.delta),
+            fixed_round(point.y() as f64 + y * prepared.delta),
+        ));
+        let previous_x = x;
+        x = x * prepared.cos - prepared.sin * y;
+        y = previous_x * prepared.sin + y * prepared.cos;
     }
-    let end = source.len() - 1;
-    output.push(offset_point_with_normal(
-        source[end],
-        normals[end],
-        prepared.delta,
-    ));
-    output.push(offset_point_with_normal(
-        source[end],
-        UnitNormal {
-            x: -normals[end].x,
-            y: -normals[end].y,
-        },
-        prepared.delta,
-    ));
-
-    for index in (1..normals.len()).rev() {
-        normals[index] = UnitNormal {
-            x: -normals[index - 1].x,
-            y: -normals[index - 1].y,
-        };
-    }
-    normals[0] = UnitNormal {
-        x: -normals[1].x,
-        y: -normals[1].y,
-    };
-    previous = end;
-    for current in (1..end).rev() {
-        let corner = Corner::new(source[current], normals[previous], normals[current]);
-        if generate_corner(corner, join_type, prepared, &mut output) {
-            previous = current;
-        }
-    }
-    output.push(offset_point_with_normal(
-        source[0],
-        UnitNormal {
-            x: -normals[0].x,
-            y: -normals[0].y,
-        },
-        prepared.delta,
-    ));
-    output.push(offset_point_with_normal(
-        source[0],
-        normals[0],
-        prepared.delta,
-    ));
     Polygon::new(output)
 }
 
@@ -174,6 +155,7 @@ impl PreparedOffset {
             sin,
             cos,
             miter_threshold,
+            steps,
             steps_per_radian: steps / TWO_PI,
         }
     }
@@ -307,8 +289,7 @@ fn do_square(corner: Corner, delta: f64, output: &mut Vec<Point>) {
 fn do_round(corner: Corner, prepared: &PreparedOffset, output: &mut Vec<Point>) {
     let angle = corner.sin_a.atan2(corner.dot);
     let steps = fixed_round(prepared.steps_per_radian * angle.abs()).max(1) as usize;
-    let mut x = corner.previous.x;
-    let mut y = corner.previous.y;
+    let (mut x, mut y) = (corner.previous.x, corner.previous.y);
     for _ in 0..steps {
         output.push(Point::new(
             fixed_round(corner.point.x() as f64 + x * prepared.delta),

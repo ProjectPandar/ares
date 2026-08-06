@@ -4942,3 +4942,52 @@ post-processing remain deferred. O19-O26 are temporary source-compatibility
 state. Rollback restores O25 terminal consumption and removes only O26
 state/wiring/tests/docs, the path-opening adapter, and narrow surface-template
 seam.
+
+## Task 22O.27: Region-expansion direct wave propagation
+
+Task 22O.27 ports the first bounded prerequisite of the active external-surface
+stage: Clipper 6 `etClosedLine` and `etOpenRound`,
+`Algorithm::RegionExpansion::RegionExpansionParameters::build`, and the direct
+`propagate_waves(const WaveSeeds &, ...)` overload with its wavefront helpers.
+The implementation uses only the ARD-0024 indexed Clipper kernel. It does not
+port ClipperZ seed discovery, expansion merging, `LayerRegion` or `PrintObject`
+external-surface orchestration, and it adds no lifecycle wiring.
+
+Offset input preserves exact-equality versus strict positive
+`ShortestEdgeLength` filtering, mixed ClosedPolygon/ClosedLine orientation,
+strict near-zero handling, one-point joins, two-sided ClosedLine output, and
+OpenRound side/cap order. Region parameters preserve the source `f32`/`f64`
+expression order and explicit retained coordinate scale. Direct propagation
+keeps contiguous `(boundary, src)` groups, raw endpoint closure, one persistent
+configured offsetter, inflated-bbox contour-before-hole trimming, staged Round
+offsets, Clipper-operation-order orientation, clockwise sign and reversal,
+Positive/Positive clipping, and ordered paths and IDs. Errors remain direct
+`ClipperError` values.
+
+Twenty-one O27-focused tests cover six end-type cases, five parameter cases,
+nine direct-propagation cases, and the new group-bbox constructor. Complete
+ordered vectors come from out-of-tree pinned-source diagnostics; no oracle code
+or payload is committed. Twenty-eight compiling behavioral mutations are
+killed, including end selection, filtering, near-zero and orientation branches,
+f32/f64 precision, scale substitution, reassociation, step counts, persistent
+offset configuration, fill rule, IDs, hidden sort/regroup, OpenRound versus
+ClosedPolygon, staged versus one-shot expansion, bbox trimming, clockwise
+sign/reversal, and eager/error-reordered access. The final
+offset/RegionExpansion/bbox regression runs 77 tests.
+The current full workspace runs 5,929 tests with 2 skipped; native all-target
+check, strict workspace Clippy, four wasm32 checks, optimized WASM/export
+audit, two 11-test Playwright runs, formatting, LOC, dependency, forbidden
+pattern, lifecycle, and rollback audits are green. The independent
+six-dimensional reviewer approved after one repair/re-review loop, and the
+separate default-model OpenCode reviewer also returned `VERDICT: APPROVE`.
+Exact pushed-SHA Tier-1 remains the release gate.
+
+Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`; O27
+is a crate-private geometry prerequisite only. The next bounded rewrite is the
+ClipperZ-backed `RegionExpansion.cpp::wave_seeds` boundary: expanded/opened Z
+paths, Z-fill intersection collection, split reconciliation, source/boundary ID
+recovery, and the closed-seed AABB fallback. Source-taking propagation,
+expansion merge helpers, external-surface processing, fill generation,
+toolpaths, seams, motion, G-code, and post-processing remain deferred.
+Mechanical rollback removes only O27 RegionExpansion/end-type code, tests, and
+documentation while retaining the exact O26 lifecycle.

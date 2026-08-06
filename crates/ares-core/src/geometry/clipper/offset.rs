@@ -49,7 +49,9 @@ struct OffsetPath {
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum EndType {
     ClosedPolygon,
+    ClosedLine,
     OpenButt,
+    OpenRound,
 }
 
 pub(crate) struct ClipperOffset {
@@ -114,7 +116,9 @@ const _: fn(&mut ClipperOffset, f64) = ClipperOffset::set_shortest_edge_length;
 const _: fn(&mut ClipperOffset) = ClipperOffset::clear;
 const _: fn(&mut ClipperOffset, &Polygon, JoinType) = ClipperOffset::add_closed_path;
 const _: fn(&mut ClipperOffset, &[Polygon], JoinType) = ClipperOffset::add_closed_paths;
+const _: fn(&mut ClipperOffset, &Polygon, JoinType) = ClipperOffset::add_closed_line;
 const _: fn(&mut ClipperOffset, &Polygon, JoinType) = ClipperOffset::add_open_path;
+const _: fn(&mut ClipperOffset, &Polygon, JoinType) = ClipperOffset::add_open_round_path;
 const _: fn(&mut ClipperOffset, f64) -> Vec<Polygon> = ClipperOffset::generate_raw;
 const _: fn(&mut ClipperOffset, f64) -> Result<Vec<Polygon>, ClipperError> =
     ClipperOffset::execute_paths;

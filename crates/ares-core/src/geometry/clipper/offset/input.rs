@@ -1,15 +1,39 @@
+use crate::geometry::clipper::predicates::area;
 use crate::geometry::{Point, Polygon};
 
 use super::{ClipperOffset, EndType, JoinType, OffsetPath};
-use crate::geometry::clipper::predicates::area;
 
 impl ClipperOffset {
     pub(crate) fn add_closed_path(&mut self, path: &Polygon, join_type: JoinType) {
+        self.add_path(path, join_type, EndType::ClosedPolygon);
+    }
+
+    pub(crate) fn add_closed_line(&mut self, path: &Polygon, join_type: JoinType) {
+        self.add_path(path, join_type, EndType::ClosedLine);
+    }
+
+    pub(crate) fn add_open_path(&mut self, path: &Polygon, join_type: JoinType) {
+        self.add_path(path, join_type, EndType::OpenButt);
+    }
+
+    pub(crate) fn add_open_round_path(&mut self, path: &Polygon, join_type: JoinType) {
+        self.add_path(path, join_type, EndType::OpenRound);
+    }
+
+    pub(crate) fn add_closed_paths(&mut self, paths: &[Polygon], join_type: JoinType) {
+        for path in paths {
+            self.add_closed_path(path, join_type);
+        }
+    }
+
+    fn add_path(&mut self, path: &Polygon, join_type: JoinType, end_type: EndType) {
         let Some(mut high) = path.points().len().checked_sub(1) else {
             return;
         };
-        while high > 0 && self.points_are_near(path.points()[high], path.points()[0]) {
-            high -= 1;
+        if matches!(end_type, EndType::ClosedPolygon | EndType::ClosedLine) {
+            while high > 0 && self.points_are_near(path.points()[high], path.points()[0]) {
+                high -= 1;
+            }
         }
 
         let mut contour = Vec::with_capacity(high + 1);
@@ -25,64 +49,41 @@ impl ClipperOffset {
                 lowest = index;
             }
         }
-        if contour.len() < 3 {
+        if end_type == EndType::ClosedPolygon && contour.len() < 3 {
             return;
         }
 
-        let candidate = contour[lowest];
-        let replace_lowest = self.lowest.is_none_or(|(path_index, point_index)| {
-            is_lower(
-                candidate,
-                self.paths[path_index].contour.points()[point_index],
-            )
-        });
         let path_index = self.paths.len();
+        let replace_lowest = end_type == EndType::ClosedPolygon
+            && self.lowest.is_none_or(|(current_path, current_point)| {
+                is_lower(
+                    contour[lowest],
+                    self.paths[current_path].contour.points()[current_point],
+                )
+            });
         self.paths.push(OffsetPath {
             contour: Polygon::new(contour),
             join_type,
-            end_type: EndType::ClosedPolygon,
+            end_type,
         });
         if replace_lowest {
             self.lowest = Some((path_index, lowest));
         }
     }
 
-    pub(crate) fn add_open_path(&mut self, path: &Polygon, join_type: JoinType) {
-        let Some((&first, rest)) = path.points().split_first() else {
-            return;
-        };
-        let mut contour = Vec::with_capacity(path.points().len());
-        contour.push(first);
-        for &point in rest {
-            if !self.points_are_near(point, *contour.last().unwrap()) {
-                contour.push(point);
-            }
-        }
-        self.paths.push(OffsetPath {
-            contour: Polygon::new(contour),
-            join_type,
-            end_type: EndType::OpenButt,
-        });
-    }
-
-    pub(crate) fn add_closed_paths(&mut self, paths: &[Polygon], join_type: JoinType) {
-        for path in paths {
-            self.add_closed_path(path, join_type);
-        }
-    }
-
     pub(super) fn fix_orientations(&mut self) {
-        let Some((path_index, _)) = self.lowest else {
-            return;
-        };
-        if area(self.paths[path_index].contour.points()) < 0.0 {
-            self.reverse_closed_paths();
-        }
-    }
-
-    fn reverse_closed_paths(&mut self) {
+        let reverse_polygons = self
+            .lowest
+            .is_some_and(|(path_index, _)| area(self.paths[path_index].contour.points()) < 0.0);
         for path in &mut self.paths {
-            if path.end_type == EndType::ClosedPolygon {
+            let positive = area(path.contour.points()) >= 0.0;
+            let reverse = if reverse_polygons {
+                path.end_type == EndType::ClosedPolygon
+                    || (path.end_type == EndType::ClosedLine && positive)
+            } else {
+                path.end_type == EndType::ClosedLine && !positive
+            };
+            if reverse {
                 path.contour.reverse();
             }
         }

@@ -107,6 +107,10 @@ pub(crate) enum ClipperError {
     OpenPathsRequirePolyTree,
 }
 
+pub(crate) fn orientation(polygon: &Polygon) -> bool {
+    area(polygon.points()) >= 0.0
+}
+
 #[cfg(test)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum SimpleRepair {

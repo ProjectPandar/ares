@@ -29,6 +29,22 @@ impl BoundingBox {
         })
     }
 
+    pub(crate) fn from_polygons(polygons: &[Polygon]) -> Option<Self> {
+        let mut bounds = Self::from_polygon(polygons.first()?)?;
+        for polygon in &polygons[1..] {
+            let next = Self::from_polygon(polygon)?;
+            bounds.min = Point::new(
+                bounds.min.x().min(next.min.x()),
+                bounds.min.y().min(next.min.y()),
+            );
+            bounds.max = Point::new(
+                bounds.max.x().max(next.max.x()),
+                bounds.max.y().max(next.max.y()),
+            );
+        }
+        Some(bounds)
+    }
+
     pub(crate) fn from_expolygon(expolygon: &ExPolygon) -> Option<Self> {
         Self::from_polygon(expolygon.contour())
     }

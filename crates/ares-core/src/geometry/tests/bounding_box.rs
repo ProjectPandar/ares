@@ -18,6 +18,15 @@ fn task22o1_bbox_ordering_handles_negative_coordinates_and_truncated_centers() {
 }
 
 #[test]
+fn task22o27_bbox_from_polygons_covers_every_path_in_order() {
+    let paths = [polygon(&[(10, -5), (20, 4)]), polygon(&[(-30, 8), (7, 40)])];
+    let bounds = BoundingBox::from_polygons(&paths).unwrap();
+    assert_eq!(bounds.min(), Point::new(-30, -5));
+    assert_eq!(bounds.max(), Point::new(20, 40));
+    assert_eq!(BoundingBox::from_polygons(&[]), None);
+}
+
+#[test]
 fn task22o1_bbox_ordering_uses_only_the_expolygon_contour() {
     let value = expolygon(
         &[(0, 0), (20, 0), (20, 10), (0, 10)],

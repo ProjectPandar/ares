@@ -2,11 +2,11 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.25
-are released. Task 22O.26 implements the bounded horizontal-shell propagation
-remainder of `PrintObject::discover_horizontal_shells` and is at its final
-review and exact-SHA release gate. Public slicing executes the new stage but
-deliberately continues to return `ProjectSlicingIncomplete`.
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.26
+are released. Task 22O.27 implements the bounded direct-seed RegionExpansion
+prerequisite for external-surface processing and is at its final review and
+exact-SHA release gate. It deliberately adds no project lifecycle wiring, so
+public slicing still consumes O26 and returns `ProjectSlicingIncomplete`.
 Cancellation, material and painted segmentation, later surface/toolpath
 stages, complete G-code assembly, and normalized KSR parity remain owned by
 later source-cited rewrite slices.
@@ -3608,3 +3608,54 @@ deferred. O19-O26 remain temporary source-compatibility state. Mechanical
 rollback restores O25 terminal consumption and removes O26 state, wiring,
 tests, docs, path-opening adapter, and narrow surface-template seam while
 retaining O25 unchanged.
+
+Task 22O.27 rewrites the direct supplied-seed slice of
+`Algorithm/RegionExpansion.cpp` and the reached Clipper 6.4.2 offset branches.
+Its exact upstream boundary is `EndType::etClosedLine`,
+`EndType::etOpenRound`, `ClipperOffset::AddPath`, `FixOrientations`, reached
+`DoOffset` branches, `RegionExpansionParameters::build`, the direct
+`propagate_waves(const WaveSeeds &, ...)` overload, and its bbox/wavefront
+helpers. The Rust destination is crate-private `geometry::region_expansion`
+and the existing ARD-0024 offset kernel; no second geometry engine, dependency,
+public option, or persisted state is introduced.
+
+The offset extension distinguishes exact point equality from strict positive
+shortest-edge filtering, preserves raw closure before filtering, mixed
+ClosedPolygon/ClosedLine orientation, strict near-zero behavior, one-point
+join discretization, two-sided ClosedLine order, and OpenRound side/cap order.
+The parameter builder preserves source `f32` calculations, double-literal
+reduction, scale-derived `f64` tolerances, and f32-sum-to-f64 max-inflation
+rounding. Direct propagation processes only contiguous `(boundary, src)`
+groups, keeps one offsetter configured across `clear()`, trims the selected
+boundary contour then holes by the truncated inflated bbox, and performs
+ordered staged Round expansion with Clipper-operation-order orientation,
+clockwise sign/reversal, and Positive/Positive clipping. Final polygons retain
+literal Clipper order and source/boundary IDs; the first `ClipperError` is
+returned directly.
+
+Twenty-one O27-focused tests freeze six end-type cases, five bit-exact
+parameter cases, nine propagation cases, and the bbox constructor. They cover
+Normal and LargeBed scales, open/closed/multi-step complete paths, holes,
+contiguous and separated groups, strict bbox truncation, Positive versus
+NonZero, clockwise sign/reversal, and three range-failure sites. Twenty-eight
+compiling mutations cover precision/reassociation/scale, group order, staged
+steps, and error operation order as well as the geometry branches. The complete
+geometry regression passes 77
+tests and the workspace passes 5,929 tests with 2 skipped. Native all-target
+check, strict workspace Clippy, four wasm32 checks, optimized WASM/export
+audit, two 11-test Playwright runs, formatting, LOC, dependency,
+forbidden-pattern, unchanged-lifecycle, and rollback audits are green. The
+independent six-dimensional reviewer approved after its repair/re-review loop,
+and the separate default-model OpenCode reviewer returned
+`VERDICT: APPROVE`. Exact pushed-SHA Tier-1 remains the release gate. ARD-0024
+remains accepted and unchanged.
+
+O27 is not an external-surface lifecycle stage and changes no KSR checkpoint.
+The next source boundary is ClipperZ-backed `RegionExpansion.cpp::wave_seeds`:
+expanded/opened Z paths, Z-fill intersections, split reconciliation,
+source/boundary ID recovery, and the closed-seed AABB fallback. Source-taking
+propagation, merge helpers, `LayerRegion::process_external_surfaces`,
+`PrintObject::process_external_surfaces`, fill generation, toolpaths, seams,
+motion, G-code, and post-processing remain deferred. Mechanical rollback
+removes only O27 RegionExpansion/end-type code, tests, and docs while retaining
+O26 unchanged.

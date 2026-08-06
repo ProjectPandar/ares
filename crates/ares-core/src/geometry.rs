@@ -9,6 +9,7 @@ mod line;
 pub(crate) mod medial_axis;
 mod polygon;
 mod polyline;
+mod region_expansion;
 mod simplification;
 
 pub(crate) use bbox_clip::{
@@ -37,6 +38,13 @@ pub(crate) use line::{Line, ThickLine};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
+pub(crate) use region_expansion::{
+    RegionExpansion, RegionExpansionParameters, WaveSeed, propagate_waves,
+};
+#[cfg(test)]
+pub(in crate::geometry) use region_expansion::{
+    wavefront_counter_clockwise, wavefront_step_for_test,
+};
 pub(crate) use simplification::{append_simplified_expolygon, simplify_expolygon_polygons};
 
 type BinaryExOperation = fn(&[ExPolygon], &[ExPolygon]) -> Result<Vec<ExPolygon>, ClipperError>;
@@ -47,6 +55,11 @@ type ExPolygonsOffsetOperation =
     fn(&[ExPolygon], f32, JoinType, f64) -> Result<Vec<ExPolygon>, ClipperError>;
 type VariableOffsetOperation =
     fn(&ExPolygon, &[Vec<f32>], f64) -> Result<Vec<ExPolygon>, ClipperError>;
+type RegionExpansionOperation = fn(
+    &[WaveSeed],
+    &[ExPolygon],
+    &RegionExpansionParameters,
+) -> Result<Vec<RegionExpansion>, ClipperError>;
 type EdgeGridVisitor = fn(usize, usize, &[GridEdge]) -> bool;
 
 const _: usize = std::mem::size_of::<Coord>();
@@ -54,6 +67,7 @@ const _: fn(&Polygon) -> Option<BoundingBox> = BoundingBox::from_polygon;
 const _: fn(&ExPolygon) -> Option<BoundingBox> = BoundingBox::from_expolygon;
 const _: fn(BoundingBox) -> Point = BoundingBox::center;
 const _: fn(&[ExPolygon]) -> Option<BoundingBox> = BoundingBox::from_expolygons;
+const _: fn(&[Polygon]) -> Option<BoundingBox> = BoundingBox::from_polygons;
 const _: fn(&mut BoundingBox, Coord) = BoundingBox::offset;
 const _: fn(&[ExPolygon]) -> Vec<usize> = chain_expolygons_order;
 const _: fn(Vec<ExPolygon>) -> Vec<ExPolygon> = chain_expolygons;
@@ -96,6 +110,9 @@ const _: BinaryExOperation = union_expolygons;
 const _: BinaryExOperation = xor_ex;
 const _: ExPolygonsOffsetOperation = offset_expolygons;
 const _: VariableOffsetOperation = variable_offset_inner_ex;
+const _: RegionExpansionOperation = propagate_waves;
+const _: fn(f32, f32, usize, CoordinateScale) -> RegionExpansionParameters =
+    RegionExpansionParameters::build;
 const _: fn(ExPolygon, f64, &mut Vec<ExPolygon>) -> Result<(), ClipperError> =
     append_simplified_expolygon;
 const _: fn(&ExPolygon, f64) -> Result<Vec<Polygon>, ClipperError> = simplify_expolygon_polygons;

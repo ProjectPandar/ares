@@ -5,3 +5,4 @@ mod input;
 mod joins;
 mod open;
 mod opening;
+mod wave_end_types;
