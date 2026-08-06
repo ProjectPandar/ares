@@ -30,6 +30,9 @@ wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 zip = { version = "8.6.0", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
+[profile.test]
+opt-level = 1
+
 [profile.release]
 lto = true
 codegen-units = 1

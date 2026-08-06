@@ -62,6 +62,18 @@ fn test_script_nextest_default_profile_runs_tests_in_parallel() {
 }
 
 #[test]
+fn workspace_test_profile_optimizes_cpu_bound_tests() {
+    let manifest = fs::read_to_string(repo_root().join("Cargo.toml")).unwrap();
+    let test_profile = nextest_profile(&manifest, "profile.test");
+
+    assert!(
+        test_profile
+            .lines()
+            .any(|line| line.trim() == "opt-level = 1")
+    );
+}
+
+#[test]
 fn test_script_cargo_xtest_alias_uses_parallel_nextest() {
     let config = fs::read_to_string(repo_root().join(".cargo/config.toml")).unwrap();
     let alias_profile = nextest_profile(&config, "alias");
