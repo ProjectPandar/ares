@@ -26,9 +26,9 @@ mod winding;
 #[cfg(test)]
 pub(super) use boolean_ex::safety_offset_configuration_for_test;
 pub(crate) use boolean_ex::{
-    difference_ex, difference_ex_polygons, difference_ex_polygons_with_safety_offset,
-    difference_ex_with_safety_offset, difference_polygons_ex, intersection_ex,
-    intersection_polygons_ex, union_expolygons, xor_ex,
+    SAFETY_OFFSET, difference_ex, difference_ex_polygons,
+    difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
+    difference_polygons_ex, intersection_ex, intersection_polygons_ex, union_expolygons, xor_ex,
 };
 #[cfg(test)]
 pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;
@@ -39,10 +39,14 @@ pub(crate) use boolean_paths::{
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
 pub(crate) use offset::offset_paths_tree;
+#[cfg(test)]
+pub(in crate::geometry) use offset::opening_path_configurations_for_test;
+#[cfg(test)]
+pub(crate) use offset::opening_paths_with_interstage;
 pub(crate) use offset::{
     ClipperOffset, JoinType, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
     offset_expolygons_paths, offset_open_paths, offset_paths, offset2_ex,
-    offset2_ex_with_interstage, opening_ex, raw_offset_paths,
+    offset2_ex_with_interstage, opening_ex, opening_paths, raw_offset_paths,
 };
 #[cfg(test)]
 pub(crate) use offset::{offset_expolygons_raw, raw_offset_open_paths};

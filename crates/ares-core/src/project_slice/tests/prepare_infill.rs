@@ -1,5 +1,6 @@
 mod fill_surfaces;
 mod horizontal_shell_promotion;
+mod horizontal_shell_propagation;
 mod surface_type_detection;
 mod vertical_shell_assignment;
 mod vertical_shell_filtering;

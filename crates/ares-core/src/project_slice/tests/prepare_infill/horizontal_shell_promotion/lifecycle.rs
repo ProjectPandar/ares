@@ -2,9 +2,9 @@ use crate::{
     SliceError,
     project_slice::{
         prepare_infill::{
-            horizontal_shell_promotion, surface_type_detection, vertical_shell_assignment,
-            vertical_shell_filtering, vertical_shell_projection, vertical_shell_regularization,
-            vertical_shell_trimming, vertical_shells,
+            horizontal_shell_promotion, horizontal_shell_propagation, surface_type_detection,
+            vertical_shell_assignment, vertical_shell_filtering, vertical_shell_projection,
+            vertical_shell_regularization, vertical_shell_trimming, vertical_shells,
         },
         slice_project,
         tests::support::{KsrArchive, metadata},
@@ -15,6 +15,7 @@ use crate::{
 async fn task22o25_public_lifecycle_runs_once_after_o24_and_disposes_successor() {
     vertical_shell_assignment::reset_invocations();
     horizontal_shell_promotion::reset_hooks();
+    horizontal_shell_propagation::reset_hooks();
     assert_eq!(
         slice_project(KsrArchive::new().bytes(), metadata())
             .await
@@ -24,6 +25,8 @@ async fn task22o25_public_lifecycle_runs_once_after_o24_and_disposes_successor()
     assert_eq!(vertical_shell_assignment::invocations(), 1);
     assert_eq!(horizontal_shell_promotion::invocations(), 1);
     assert_eq!(horizontal_shell_promotion::disposals(), 1);
+    assert_eq!(horizontal_shell_propagation::invocations(), 1);
+    assert_eq!(horizontal_shell_propagation::disposals(), 1);
 }
 
 #[tokio::test]
@@ -94,6 +97,7 @@ async fn task22o25_public_parse_error_disposes_o24_and_preserves_error() {
         "\"extra_solid_infills\": \"2147483648\"",
     );
     horizontal_shell_promotion::reset_hooks();
+    horizontal_shell_propagation::reset_hooks();
     assert_eq!(
         slice_project(archive.bytes(), metadata())
             .await
@@ -103,6 +107,7 @@ async fn task22o25_public_parse_error_disposes_o24_and_preserves_error() {
     assert_eq!(horizontal_shell_promotion::invocations(), 1);
     assert_eq!(horizontal_shell_promotion::commits(), 0);
     assert_eq!(horizontal_shell_promotion::disposals(), 1);
+    assert_eq!(horizontal_shell_propagation::invocations(), 0);
 }
 
 #[tokio::test]
@@ -132,6 +137,7 @@ async fn task22o25_every_earlier_capability_error_precedes_promotion() {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
         horizontal_shell_promotion::reset_hooks();
+        horizontal_shell_propagation::reset_hooks();
         assert_eq!(
             slice_project(archive.bytes(), metadata())
                 .await
@@ -140,20 +146,24 @@ async fn task22o25_every_earlier_capability_error_precedes_promotion() {
         );
         assert_eq!(horizontal_shell_promotion::invocations(), 0);
         assert_eq!(horizontal_shell_promotion::disposals(), 0);
+        assert_eq!(horizontal_shell_propagation::invocations(), 0);
     }
 
     let (multi_region, _) = crate::project_slice::tests::region_fixture::modifier_projects();
     horizontal_shell_promotion::reset_hooks();
+    horizontal_shell_propagation::reset_hooks();
     assert_eq!(
         slice_project(multi_region, metadata()).await.unwrap_err(),
         SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned())
     );
     assert_eq!(horizontal_shell_promotion::invocations(), 0);
     assert_eq!(horizontal_shell_promotion::disposals(), 0);
+    assert_eq!(horizontal_shell_propagation::invocations(), 0);
 }
 
 async fn assert_precedes(expected: &str) {
     horizontal_shell_promotion::reset_hooks();
+    horizontal_shell_propagation::reset_hooks();
     assert_eq!(
         slice_project(KsrArchive::new().bytes(), metadata())
             .await
@@ -162,4 +172,5 @@ async fn assert_precedes(expected: &str) {
     );
     assert_eq!(horizontal_shell_promotion::invocations(), 0);
     assert_eq!(horizontal_shell_promotion::disposals(), 0);
+    assert_eq!(horizontal_shell_propagation::invocations(), 0);
 }

@@ -142,6 +142,19 @@ test("public slicing stays incomplete and feature exports exactly N", async ({ p
   ]);
 });
 
+test("Task22O.26 project WASM executes EnsureAll and active horizontal propagation twice", async ({ page }) => {
+  test.setTimeout(180_000);
+  await openFixturePage(page);
+  const results = await page.evaluate(() => window.task22o26HorizontalShellPropagation());
+  expect(results.map((result) => result.name)).toEqual([
+    "ensure-all-after-promotion", "moderate-active",
+  ]);
+  for (const result of results) {
+    expect(result.first).toEqual({ resolved: false, error: "ProjectSlicingIncomplete" });
+    expect(result.second).toEqual(result.first);
+  }
+});
+
 test("Task22N complete KSR browser contract is exact and repeatable", async ({ page }) => {
   test.setTimeout(120_000);
   expect(digest(readFileSync(FIXTURE))).toBe(SHA.fixture);

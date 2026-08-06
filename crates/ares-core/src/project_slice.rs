@@ -78,21 +78,23 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_horizontal_shell_promotion(
-        prepare_infill::horizontal_shell_promotion::prepare(
-            prepare_infill::vertical_shell_assignment::prepare(
-                prepare_infill::vertical_shell_filtering::prepare(
-                    prepare_infill::vertical_shell_regularization::prepare(
-                        prepare_infill::vertical_shell_trimming::prepare(
-                            prepare_infill::vertical_shell_projection::prepare(
-                                prepare_infill::vertical_shells::prepare(
-                                    prepare_infill::fill_surfaces::prepare(
-                                        prepare_infill::surface_type_detection::prepare(
-                                            perimeters::prepare_post_layer_region_perimeters(
-                                                project,
+    consume_post_horizontal_shell_propagation(
+        prepare_infill::horizontal_shell_propagation::prepare(
+            prepare_infill::horizontal_shell_promotion::prepare(
+                prepare_infill::vertical_shell_assignment::prepare(
+                    prepare_infill::vertical_shell_filtering::prepare(
+                        prepare_infill::vertical_shell_regularization::prepare(
+                            prepare_infill::vertical_shell_trimming::prepare(
+                                prepare_infill::vertical_shell_projection::prepare(
+                                    prepare_infill::vertical_shells::prepare(
+                                        prepare_infill::fill_surfaces::prepare(
+                                            prepare_infill::surface_type_detection::prepare(
+                                                perimeters::prepare_post_layer_region_perimeters(
+                                                    project,
+                                                )?,
                                             )?,
-                                        )?,
-                                    ),
+                                        ),
+                                    )?,
                                 )?,
                             )?,
                         )?,
@@ -104,6 +106,17 @@ fn slice_project_sync(
     )
 }
 
+#[inline(never)]
+fn consume_post_horizontal_shell_propagation(
+    prepared: prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
+    metadata: GenerationMetadata,
+) -> Result<Vec<u8>, SliceError> {
+    prepare_infill::horizontal_shell_propagation::dispose(prepared);
+    let _ = metadata;
+    Err(SliceError::ProjectSlicingIncomplete)
+}
+
+#[cfg(test)]
 #[inline(never)]
 fn consume_post_horizontal_shell_promotion(
     prepared: prepare_infill::horizontal_shell_promotion::PreparedPostHorizontalShellPromotion,

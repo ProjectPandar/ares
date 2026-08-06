@@ -1,4 +1,4 @@
-mod digest;
+pub(in crate::project_slice::tests::prepare_infill) mod digest;
 
 use crate::project_slice::{
     prepare_infill::horizontal_shell_promotion, region_slices::RegionSurfaceKind,

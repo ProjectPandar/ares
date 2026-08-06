@@ -128,6 +128,12 @@ impl RegionSurface {
         surface
     }
 
+    pub(super) fn clone_with_expolygon(&self, expolygon: ExPolygon) -> Self {
+        let mut surface = self.clone();
+        surface.expolygon = expolygon;
+        surface
+    }
+
     pub(super) fn retag(&mut self, kind: RegionSurfaceKind) {
         self.kind = kind;
     }

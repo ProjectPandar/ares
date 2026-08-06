@@ -16,14 +16,18 @@ pub(crate) use bbox_clip::{
 };
 pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
 pub(crate) use chain_points::chain_points;
+#[cfg(test)]
+pub(in crate::geometry) use clipper::opening_path_configurations_for_test;
+#[cfg(test)]
+pub(crate) use clipper::opening_paths_with_interstage;
 pub(crate) use clipper::{
-    ClipperError, FillRule, JoinType, diff_pl, difference_ex, difference_ex_polygons,
-    difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
-    difference_polygons_ex, difference_polygons_paths, intersection_ex, intersection_pl,
-    intersection_polygons_ex, intersection_polygons_paths,
+    ClipperError, FillRule, JoinType, SAFETY_OFFSET, diff_pl, difference_ex,
+    difference_ex_polygons, difference_ex_polygons_with_safety_offset,
+    difference_ex_with_safety_offset, difference_polygons_ex, difference_polygons_paths,
+    intersection_ex, intersection_pl, intersection_polygons_ex, intersection_polygons_paths,
     intersection_polygons_paths_with_safety_offset, offset_expolygon, offset_expolygon_refs_paths,
     offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset_paths_tree,
-    offset2_ex, offset2_ex_with_interstage, opening_ex, union_ex, union_expolygons,
+    offset2_ex, offset2_ex_with_interstage, opening_ex, opening_paths, union_ex, union_expolygons,
     union_polygons_paths, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};

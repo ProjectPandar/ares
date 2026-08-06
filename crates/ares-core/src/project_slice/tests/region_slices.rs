@@ -1,3 +1,5 @@
+mod template;
+
 use crate::{
     Point3d, ProjectMesh, ProjectVolume, ProjectVolumeType, Transform3d,
     geometry::{ExPolygon, Point, Polygon},

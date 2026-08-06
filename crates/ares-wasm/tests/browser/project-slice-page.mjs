@@ -365,6 +365,30 @@ async function releaseRounding(fixture, definition) {
   };
 }
 
+async function horizontalShellPropagationMatrix(fixture) {
+  const vectors = [
+    ["ensure-all-after-promotion", [[PROCESS, quoted("extra_solid_infills", ""),
+      quoted("extra_solid_infills", "1#")]]],
+    ["moderate-active", [[PROCESS,
+      quoted("ensure_vertical_shell_thickness", "ensure_all"),
+      quoted("ensure_vertical_shell_thickness", "ensure_moderate")]]],
+  ];
+  const results = [];
+  for (const [name, edits] of vectors) {
+    const entries = Object.fromEntries(
+      Object.entries(globalThis.fflate.unzipSync(fixture)).filter(([path]) => !path.endsWith("/")),
+    );
+    applyEdits(entries, edits);
+    const project = zipEntries(entries);
+    results.push({
+      name,
+      first: await status(() => bindings.sliceProject(project)),
+      second: await status(() => bindings.sliceProject(project)),
+    });
+  }
+  return results;
+}
+
 async function extraSolidBoundaryMatrix(fixture) {
   const stl = encoder.encode("solid square\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 1 0 0.2\nvertex 0 1 0.2\nendloop\nendfacet\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 0 -1 0.2\nvertex 1 0 0.2\nendloop\nendfacet\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex -1 0 0.2\nvertex 0 -1 0.2\nendloop\nendfacet\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 0 1 0.2\nvertex -1 0 0.2\nendloop\nendfacet\nendsolid square");
   const vectors = [
@@ -416,6 +440,8 @@ export async function startProjectSlicePage() {
     releaseRounding(await fixtureBytes(), definition);
   window.task22o25ExtraSolidBoundaries = async () =>
     extraSolidBoundaryMatrix(await fixtureBytes());
+  window.task22o26HorizontalShellPropagation = async () =>
+    horizontalShellPropagationMatrix(await fixtureBytes());
   window.task22nPaths = { MODEL, PROCESS };
   window.aresReady = true;
 }

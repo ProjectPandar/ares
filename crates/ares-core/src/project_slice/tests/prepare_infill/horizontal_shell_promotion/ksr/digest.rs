@@ -90,7 +90,10 @@ pub(super) fn event_sequence_digest(events: &[PromotionEvent]) -> i128 {
     digest
 }
 
-pub(super) fn surfaces_digest(digest: &mut i128, objects: &[PreparedSurfaceTypeObject]) {
+pub(in crate::project_slice::tests::prepare_infill) fn surfaces_digest(
+    digest: &mut i128,
+    objects: &[PreparedSurfaceTypeObject],
+) {
     mix(digest, objects.len() as i128);
     for (object_index, object) in objects.iter().enumerate() {
         mix(digest, -30);
@@ -141,7 +144,7 @@ fn path_digest(digest: &mut i128, role: i128, index: usize, path: &Polygon) {
     mix(digest, -44);
 }
 
-pub(super) fn mix(checksum: &mut i128, value: i128) {
+pub(in crate::project_slice::tests::prepare_infill) fn mix(checksum: &mut i128, value: i128) {
     *checksum = checksum
         .wrapping_mul(0x1000003d)
         .wrapping_add(value)

@@ -1,8 +1,11 @@
 mod cleanup;
-pub(super) mod fixture;
-pub(in crate::project_slice::tests::prepare_infill) mod ksr;
+mod equal_dirty;
+mod fixture;
+mod ksr;
 mod lifecycle;
 mod metamorphic;
+mod none;
 mod options;
 mod ownership;
+mod serial;
 mod transaction;

@@ -4,7 +4,7 @@ use super::{
 };
 use crate::geometry::{ExPolygon, Polygon};
 
-pub(super) const SAFETY_OFFSET: f32 = 10.0;
+pub(crate) const SAFETY_OFFSET: f32 = 10.0;
 pub(super) const SAFETY_MITER_LIMIT: f64 = 3.0;
 
 #[cfg(test)]

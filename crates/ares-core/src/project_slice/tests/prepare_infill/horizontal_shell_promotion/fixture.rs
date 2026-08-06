@@ -6,7 +6,7 @@ pub(super) fn prepare_o24(
     super::super::vertical_shell_assignment::fixture::prepare(bytes)
 }
 
-pub(super) fn prepare(
+pub(in crate::project_slice::tests::prepare_infill) fn prepare(
     bytes: impl AsRef<[u8]>,
 ) -> horizontal_shell_promotion::PreparedPostHorizontalShellPromotion {
     horizontal_shell_promotion::prepare(prepare_o24(bytes)).unwrap()
