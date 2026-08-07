@@ -1,3 +1,4 @@
+mod composition;
 mod helpers;
 mod parameters;
 mod propagate;

@@ -1,9 +1,37 @@
-use super::{RegionExpansion, RegionExpansionParameters, WaveSeed};
+use super::{RegionExpansion, RegionExpansionParameters, WaveSeed, wave_seeds};
 use crate::geometry::clipper::{
     ClipOperation, Clipper, ClipperError, ClipperOffset, ClipperOptions, FillRule, JoinType,
     PathRole, orientation,
 };
-use crate::geometry::{BoundingBox, ExPolygon, Polygon, clip_clipper_expolygons_with_subject_bbox};
+use crate::geometry::{
+    BoundingBox, CoordinateScale, ExPolygon, Polygon, clip_clipper_expolygons_with_subject_bbox,
+};
+
+pub(crate) fn propagate_waves_from_sources(
+    src: &[ExPolygon],
+    boundary: &[ExPolygon],
+    params: &RegionExpansionParameters,
+    scale: CoordinateScale,
+) -> Result<Vec<RegionExpansion>, ClipperError> {
+    let seeds = wave_seeds(src, boundary, params.tiny_expansion, true, scale)?;
+    propagate_waves(&seeds, boundary, params)
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the source scalar overload keeps the upstream argument order"
+)]
+pub(crate) fn propagate_waves_from_sources_with_steps(
+    src: &[ExPolygon],
+    boundary: &[ExPolygon],
+    expansion: f32,
+    expansion_step: f32,
+    max_nr_steps: usize,
+    scale: CoordinateScale,
+) -> Result<Vec<RegionExpansion>, ClipperError> {
+    let params = RegionExpansionParameters::build(expansion, expansion_step, max_nr_steps, scale);
+    propagate_waves_from_sources(src, boundary, &params, scale)
+}
 
 pub(crate) fn propagate_waves(
     seeds: &[WaveSeed],
