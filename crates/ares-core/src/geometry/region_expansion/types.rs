@@ -1,4 +1,4 @@
-use crate::geometry::{CoordinateScale, Polygon};
+use crate::geometry::{CoordinateScale, ExPolygon, Polygon};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct RegionExpansionParameters {
@@ -62,6 +62,13 @@ pub(crate) struct WaveSeed {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct RegionExpansion {
     pub(crate) polygon: Polygon,
+    pub(crate) src_id: u32,
+    pub(crate) boundary_id: u32,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RegionExpansionEx {
+    pub(crate) expolygon: ExPolygon,
     pub(crate) src_id: u32,
     pub(crate) boundary_id: u32,
 }

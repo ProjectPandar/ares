@@ -3,11 +3,12 @@ mod types;
 mod wave_seeds;
 
 pub(crate) use propagate::{
-    propagate_waves, propagate_waves_from_sources, propagate_waves_from_sources_with_steps,
+    propagate_waves, propagate_waves_ex, propagate_waves_from_sources,
+    propagate_waves_from_sources_with_steps,
 };
 #[cfg(test)]
 pub(in crate::geometry) use propagate::{wavefront_counter_clockwise, wavefront_step_for_test};
-pub(crate) use types::{RegionExpansion, RegionExpansionParameters, WaveSeed};
+pub(crate) use types::{RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed};
 #[cfg(all(test, debug_assertions))]
 pub(in crate::geometry) use wave_seeds::assert_source_topology_for_test;
 pub(crate) use wave_seeds::wave_seeds;
@@ -25,6 +26,11 @@ type PropagateWavesFn = fn(
     &[ExPolygon],
     &RegionExpansionParameters,
 ) -> Result<Vec<RegionExpansion>, ClipperError>;
+type PropagateWavesExFn = fn(
+    &[WaveSeed],
+    &[ExPolygon],
+    &RegionExpansionParameters,
+) -> Result<Vec<RegionExpansionEx>, ClipperError>;
 type WaveSeedsFn = fn(
     &[ExPolygon],
     &[ExPolygon],
@@ -50,6 +56,7 @@ type PropagateWavesFromSourcesWithStepsFn = fn(
 const _: fn(f32, f32, usize, CoordinateScale) -> RegionExpansionParameters =
     RegionExpansionParameters::build;
 const _: PropagateWavesFn = propagate_waves;
+const _: PropagateWavesExFn = propagate_waves_ex;
 const _: WaveSeedsFn = wave_seeds;
 const _: PropagateWavesFromSourcesFn = propagate_waves_from_sources;
 const _: PropagateWavesFromSourcesWithStepsFn = propagate_waves_from_sources_with_steps;

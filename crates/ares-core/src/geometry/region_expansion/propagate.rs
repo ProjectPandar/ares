@@ -1,11 +1,57 @@
-use super::{RegionExpansion, RegionExpansionParameters, WaveSeed, wave_seeds};
+use super::{RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, wave_seeds};
 use crate::geometry::clipper::{
     ClipOperation, Clipper, ClipperError, ClipperOffset, ClipperOptions, FillRule, JoinType,
-    PathRole, orientation,
+    PathRole, orientation, union_ex,
 };
 use crate::geometry::{
     BoundingBox, CoordinateScale, ExPolygon, Polygon, clip_clipper_expolygons_with_subject_bbox,
 };
+
+pub(crate) fn propagate_waves_ex(
+    seeds: &[WaveSeed],
+    boundary: &[ExPolygon],
+    params: &RegionExpansionParameters,
+) -> Result<Vec<RegionExpansionEx>, ClipperError> {
+    let expanded = propagate_waves(seeds, boundary, params)?;
+    debug_assert!(seeds.is_sorted_by_key(|seed| (seed.boundary, seed.src)));
+
+    let mut expanded = expanded.into_iter().peekable();
+    let mut output = Vec::new();
+    while let Some(first) = expanded.next() {
+        let src_id = first.src_id;
+        let boundary_id = first.boundary_id;
+        let mut polygons = vec![first.polygon];
+        while expanded
+            .peek()
+            .is_some_and(|next| next.boundary_id == boundary_id && next.src_id == src_id)
+        {
+            polygons.push(
+                expanded
+                    .next()
+                    .expect("the matching record was peeked")
+                    .polygon,
+            );
+        }
+        if polygons.len() == 1 {
+            output.push(RegionExpansionEx {
+                expolygon: ExPolygon::new(polygons.pop().expect("singleton group"), Vec::new()),
+                src_id,
+                boundary_id,
+            });
+        } else {
+            output.extend(
+                union_ex(&polygons, FillRule::NonZero)?
+                    .into_iter()
+                    .map(|expolygon| RegionExpansionEx {
+                        expolygon,
+                        src_id,
+                        boundary_id,
+                    }),
+            );
+        }
+    }
+    Ok(output)
+}
 
 pub(crate) fn propagate_waves_from_sources(
     src: &[ExPolygon],
