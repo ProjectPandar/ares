@@ -2,7 +2,7 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.31
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.32
 are released. O28 implements the bounded ClipperZ-backed
 `Algorithm::wave_seeds` prerequisite; its final reviews approved and exact-SHA
 Tier-1 run `31156094839` passed at
@@ -17,13 +17,16 @@ O30 direct supplied-seed `propagate_waves_ex` was released as commits
 `6ccb145dbb1867e5724538fb071795a7fd4179f0`. O31 source/scalar
 `propagate_waves_ex` composition was released as commits `7113f7c`/`1f89dd3`;
 exact-SHA Tier-1 run `31196271880` passed all five jobs at
-`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`. O32 `expand_expolygons` is
-locally implemented and fully reviewed but unreleased pending push and
-exact-SHA Tier-1. It adds no lifecycle
-wiring, so public slicing still consumes O26 and returns
-`ProjectSlicingIncomplete`. Expansion merging, external-surface processing,
-later surface/toolpath stages, complete G-code assembly, and normalized KSR
-parity remain deferred to later source-cited rewrite slices.
+`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`. O32 `expand_expolygons` was
+released as commits `2e7168f`/`699f02b`; exact-SHA Tier-1 run `31213611275`
+passed all five jobs, including both browser runs, at
+`699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O33 expansion merging is locally
+implemented, fully verified, and approved by final independent and default-model
+OpenCode rereviews, but remains unreleased pending commit/push and exact-SHA Tier-1. It adds no lifecycle wiring, so public slicing still
+consumes O26 and returns `ProjectSlicingIncomplete`. `expand_merge_expolygons`,
+external-surface processing, later surface/toolpath stages, complete G-code
+assembly, and normalized KSR parity remain deferred to later source-cited
+rewrite slices.
 
 ## Fixed baseline
 
@@ -3842,8 +3845,41 @@ Chromium cannot launch because `libglib-2.0.so.0` is absent, so exact-SHA CI
 must pass the two browser runs. O32 adds no architecture decision, public
 export, Option, lifecycle, checkpoint, persisted state, KSR golden change, or
 G-code byte. Final independent six-dimensional and default-model OpenCode
-reviews both approve; push and exact-SHA release gates remain pending.
+reviews both approve. Implementation/documentation commits `2e7168f`/`699f02b`
+were pushed; exact-SHA Tier-1 run `31213611275` passed all five jobs, including
+both browser runs, at `699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O32 is
+released.
 
-The next bounded boundary is `merge_expansions_into_expolygons` at
-hpp:110-111/cpp:536-587; `expand_merge_expolygons` and later external-surface,
-fill, toolpath, seam, motion, G-code, and post-processing work remain deferred.
+Task 22O.33 locally ports `merge_expansions_into_expolygons` at
+`RegionExpansion.cpp:536-587` and `RegionExpansion.hpp:110-111`. The private
+helper sorts movable records by source ID through O28's fixed-MSVC index
+permutation, moves untouched sources unchanged, appends source contour and holes
+after expansion polygons, applies the fixed unscaled 10/Miter/3 safety-offset
+union, and uses the O28 AABB sampler with explicit scale to retain the
+source-connected component. It adds no new engine, architecture decision,
+Option, public export, lifecycle, checkpoint, persistence, adapter, golden
+expectation, or G-code byte.
+
+The chronological stub RED produced ten meaningful failures and one equivalent
+pass. After review repaired a missing true-zero witness and the temporary C++
+oracle's moved-buffer defect, focused debug/release pass 13/13,
+RegionExpansion passes 87/87, and corrected debug/`NDEBUG` oracle output is
+byte-identical. Thirteen runtime mutations are killed, one signature mutation
+is compiler-rejected, and four structural/equivalent survivors are disclosed.
+Repaired independent and default-model OpenCode initial implementation reviews
+approve. A test-only function-pointer type alias repair resolved Clippy, then
+the complete exact candidate was rerun: focused debug/release 13/13, AABB 8/8,
+O32 5/5, RegionExpansion 87/87, PolyTree 6/6, offset 58/58, lifecycle 3/3,
+workspace 6,028/6,028 with 2 skipped, native lint/format, four WASM checks, two
+optimized builds, export, and JavaScript syntax gates pass. Both local browser
+attempts fail before test code only because `libglib-2.0.so.0` is unavailable;
+exact-SHA CI must pass both runs. Final static audit passes, and disposable
+exact-O32 rollback proves candidate/primary byte identity while passing
+RegionExpansion 74/74, PolyTree 6/6, and lifecycle 3/3. After repairing exact
+oracle inputs and stale release text, the complete suite was rerun and final
+independent and default-model OpenCode rereviews both approved. Commit/push and
+exact-SHA Tier-1 remain pending; O33 is not released.
+
+The next bounded boundary is `expand_merge_expolygons` at hpp:113/cpp:589-594;
+later external-surface, fill, toolpath, seam, motion, G-code, and post-processing
+work remain deferred.

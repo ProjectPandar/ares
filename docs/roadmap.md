@@ -5195,10 +5195,50 @@ the five-argument Clippy threshold, workspace Nextest passes 6,015/6,015 with 2
 skipped; native, WASM build/export/syntax, static, and exact-O31 rollback gates
 are green. The local host lacks Chromium's `libglib-2.0.so.0`, so both browser
 runs remain an exact-SHA CI requirement. Final independent six-dimensional
-and default-model OpenCode reviews both approve. Commit/push and Tier-1 remain
-pending, so O32 is not released.
+and default-model OpenCode reviews both approve. Implementation/documentation
+commits `2e7168f`/`699f02b` were pushed; exact-SHA Tier-1 run `31213611275`
+passed all five jobs, including both browser runs, at
+`699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O32 is released.
 
-The next candidate is `merge_expansions_into_expolygons` at
-`RegionExpansion.hpp:110-111` and `RegionExpansion.cpp:536-587`.
-`expand_merge_expolygons`, external-surface orchestration, fill, toolpath, seam,
-motion, G-code, and post-processing remain deferred.
+## Task 22O.33: merge region expansions into source ExPolygons
+
+Task 22O.33 locally ports pinned `Algorithm/RegionExpansion.cpp:536-587` and
+`RegionExpansion.hpp:110-111`. Its crate-private helper uses O28's fixed-MSVC
+index permutation to group movable expansion records by source ID, preserves
+untouched source ExPolygons, accumulates expansion polygons followed by the
+source contour and holes, applies Orca's fixed unscaled 10/Miter/3 safety-offset
+union, and retains the source-connected component through the O28 AABB sampler
+with explicit `CoordinateScale`. It performs no lifecycle or public slicing
+integration.
+
+The compiling chronological RED ran 11 tests with ten meaningful failures and
+one behavioral-equivalence pass. Initial review found missing zero-result test
+evidence and a moved-buffer defect in the temporary C++ oracle. The repaired
+suite directly reaches the zero branch, kills its panic mutation, and the
+corrected C++ harness now gives byte-identical debug/`NDEBUG` vectors. Focused
+debug/release pass 13/13 and RegionExpansion passes 87/87. Thirteen runtime
+mutations are killed, one signature mutation is compiler-rejected, and four
+structural/equivalent survivors are disclosed. Repaired independent and
+default-model OpenCode initial implementation reviews approve. A test-only
+function-pointer alias repair resolved the first full run's Clippy finding;
+the complete exact candidate was rerun. Focused debug/release 13/13, AABB 8/8,
+O32 5/5, RegionExpansion 87/87, PolyTree 6/6, offset 58/58, lifecycle 3/3,
+workspace 6,028/6,028 with 2 skipped, check, warning-denying Clippy, rustfmt,
+four WASM checks, two optimized builds, export, and JavaScript syntax gates are
+green. Both local Playwright attempts stop before test code because Chromium
+cannot load `libglib-2.0.so.0`; exact-SHA CI must pass both runs. Disposable
+exact-O32 rollback proves candidate/primary byte identity and passes
+RegionExpansion 74/74, PolyTree 6/6, and lifecycle 3/3. Final review found
+exact oracle-input and stale status defects; both were repaired, the entire
+suite and rollback were refreshed, and final independent/default-model OpenCode
+rereviews both approve. Commit/push and exact-SHA Tier-1 remain pending, so O33
+is not released.
+
+O33 adds no Option, public API, lifecycle, checkpoint, persistence, adapter,
+KSR golden expectation, or G-code byte. Public slicing still consumes O26 and
+returns `ProjectSlicingIncomplete`.
+
+The next candidate is `expand_merge_expolygons` at
+`RegionExpansion.hpp:113` and `RegionExpansion.cpp:589-594`. External-surface
+orchestration, fill, toolpath, seam, motion, G-code, and post-processing remain
+deferred.

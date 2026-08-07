@@ -207,8 +207,11 @@ wasm-bindgen export and JavaScript syntax audits, static audits, and disposable
 exact-O31 rollback. The local browser launch stops before test code because the
 host lacks `libglib-2.0.so.0`; exact-SHA Tier-1 must install browser dependencies
 and pass both Playwright runs. Final independent six-dimensional and
-default-model OpenCode reviews both returned literal `VERDICT: APPROVE`; only
-commit/push and exact-SHA Tier-1 release gates remain pending.
+default-model OpenCode reviews both returned literal `VERDICT: APPROVE`.
+Implementation/documentation commits `2e7168f`/`699f02b` were pushed, and
+exact-SHA Tier-1 run `31213611275` passed format, WASM/browser twice, Linux,
+Windows, and macOS at
+`699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O32 is released.
 
 Public slicing must still consume O26 and return `ProjectSlicingIncomplete`;
 the golden KSR test remains unchanged and incomplete. Rollback removes only the

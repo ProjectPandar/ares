@@ -15,7 +15,9 @@ build/export/syntax gates, static audits, and exact-O31 rollback passed. Local
 Playwright cannot load Chromium because `libglib-2.0.so.0` is absent; the
 exact-SHA CI browser runs remain mandatory. Final independent six-dimensional
 and default-model OpenCode reviews both returned literal `VERDICT: APPROVE`.
-Commit/push and exact-SHA Tier-1 remain pending.
+Implementation/documentation commits `2e7168f`/`699f02b` were pushed, and
+exact-SHA Tier-1 run `31213611275` passed all five jobs, including both browser
+runs, at `699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O32 is released.
 
 ## Goal, reviewed spec, and baseline
 
