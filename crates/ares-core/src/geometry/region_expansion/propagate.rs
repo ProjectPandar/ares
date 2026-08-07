@@ -101,6 +101,32 @@ pub(crate) fn propagate_waves_from_sources_with_steps(
     propagate_waves_from_sources(src, boundary, &params, scale)
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the source helper keeps the upstream argument order"
+)]
+pub(crate) fn expand_expolygons(
+    src: &[ExPolygon],
+    boundary: &[ExPolygon],
+    expansion: f32,
+    expansion_step: f32,
+    max_nr_steps: usize,
+    scale: CoordinateScale,
+) -> Result<Vec<Vec<Polygon>>, ClipperError> {
+    let mut output = vec![Vec::new(); src.len()];
+    for expansion in propagate_waves_from_sources_with_steps(
+        src,
+        boundary,
+        expansion,
+        expansion_step,
+        max_nr_steps,
+        scale,
+    )? {
+        output[expansion.src_id as usize].push(expansion.polygon);
+    }
+    Ok(output)
+}
+
 pub(crate) fn propagate_waves(
     seeds: &[WaveSeed],
     boundary: &[ExPolygon],

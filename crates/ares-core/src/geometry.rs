@@ -39,9 +39,9 @@ pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
 pub(crate) use region_expansion::{
-    RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, propagate_waves,
-    propagate_waves_ex, propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
-    propagate_waves_from_sources_with_steps,
+    RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, expand_expolygons,
+    propagate_waves, propagate_waves_ex, propagate_waves_ex_from_sources_with_steps,
+    propagate_waves_from_sources, propagate_waves_from_sources_with_steps,
 };
 #[cfg(test)]
 pub(in crate::geometry) use region_expansion::{
@@ -91,6 +91,14 @@ type RegionExpansionFromSourcesWithStepsOperation =
         usize,
         CoordinateScale,
     ) -> Result<Vec<RegionExpansion>, ClipperError>;
+type ExpandExPolygonsOperation = fn(
+    &[ExPolygon],
+    &[ExPolygon],
+    f32,
+    f32,
+    usize,
+    CoordinateScale,
+) -> Result<Vec<Vec<Polygon>>, ClipperError>;
 type EdgeGridVisitor = fn(usize, usize, &[GridEdge]) -> bool;
 
 const _: usize = std::mem::size_of::<Coord>();
@@ -147,6 +155,7 @@ const _: RegionExpansionExFromSourcesWithStepsOperation =
     propagate_waves_ex_from_sources_with_steps;
 const _: RegionExpansionFromSourcesOperation = propagate_waves_from_sources;
 const _: RegionExpansionFromSourcesWithStepsOperation = propagate_waves_from_sources_with_steps;
+const _: ExpandExPolygonsOperation = expand_expolygons;
 const _: fn(f32, f32, usize, CoordinateScale) -> RegionExpansionParameters =
     RegionExpansionParameters::build;
 const _: fn(ExPolygon, f64, &mut Vec<ExPolygon>) -> Result<(), ClipperError> =
