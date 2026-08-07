@@ -1,7 +1,8 @@
 use super::super::Clipper;
 use super::super::predicates::slopes_equal_three;
 use super::super::types::OutRecId;
-use crate::geometry::{Point, Polygon};
+use super::super::z::KernelPoint;
+use crate::geometry::Polygon;
 
 impl Clipper {
     pub(in crate::geometry::clipper) fn fixup_out_polygon(&mut self, out_rec: OutRecId) {
@@ -58,7 +59,7 @@ impl Clipper {
             let mut points = Vec::with_capacity(count);
             for _ in 0..count {
                 let output = self.out_points.point(point);
-                points.push(output.point);
+                points.push(output.point.xy);
                 point = output.previous;
             }
             paths.push(Polygon::new(points));
@@ -67,12 +68,24 @@ impl Clipper {
     }
 }
 
-fn point_between(first: Point, middle: Point, last: Point) -> bool {
+fn point_between(first: KernelPoint, middle: KernelPoint, last: KernelPoint) -> bool {
     if first == last || first == middle || last == middle {
         false
     } else if first.x() != last.x() {
         (middle.x() > first.x()) == (middle.x() < last.x())
     } else {
         (middle.y() > first.y()) == (middle.y() < last.y())
+    }
+}
+
+#[cfg(test)]
+impl Clipper {
+    pub(in crate::geometry) fn fixup_survivors_for_test(
+        points: &[KernelPoint],
+    ) -> Vec<KernelPoint> {
+        let mut clipper = Self::new(super::super::ClipperOptions::default());
+        let out_rec = super::rings::seed_ring_for_test(&mut clipper, points);
+        clipper.fixup_out_polygon(out_rec);
+        super::rings::ring_xyz_for_test(&clipper, out_rec)
     }
 }

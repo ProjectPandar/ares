@@ -1,6 +1,9 @@
 mod bounds;
 mod path;
 
+#[cfg(test)]
+pub(in crate::geometry) use bounds::reverse_horizontal_for_test;
+
 use super::{Clipper, ClipperError, PathRole};
 use crate::geometry::{Polygon, Polyline};
 

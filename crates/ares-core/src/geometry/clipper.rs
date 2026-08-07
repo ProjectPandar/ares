@@ -22,6 +22,7 @@ mod strictly_simple;
 mod types;
 mod variable_offset;
 mod winding;
+pub(in crate::geometry) mod z;
 
 #[cfg(test)]
 pub(super) use boolean_ex::safety_offset_configuration_for_test;
@@ -38,6 +39,10 @@ pub(crate) use boolean_paths::{
 };
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
+#[cfg(test)]
+pub(in crate::geometry) use input::reverse_horizontal_for_test;
+#[cfg(test)]
+pub(in crate::geometry) use intersections::top_updates_for_test;
 pub(crate) use offset::offset_paths_tree;
 #[cfg(test)]
 pub(in crate::geometry) use offset::opening_path_configurations_for_test;
@@ -134,6 +139,7 @@ pub(crate) struct Clipper {
     intersections: Vec<IntersectionNode>,
     maxima: Vec<i64>,
     has_open_paths: bool,
+    z_intersections: Option<Vec<(i64, i64)>>,
     #[cfg(test)]
     collected_maxima_for_test: Vec<i64>,
     #[cfg(test)]
@@ -158,6 +164,7 @@ impl Clipper {
             intersections: Vec::new(),
             maxima: Vec::new(),
             has_open_paths: false,
+            z_intersections: None,
             #[cfg(test)]
             collected_maxima_for_test: Vec::new(),
             #[cfg(test)]

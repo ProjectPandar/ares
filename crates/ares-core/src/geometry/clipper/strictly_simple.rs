@@ -1,6 +1,6 @@
 use super::Clipper;
 use super::types::{EdgeId, Join, OutputIndex};
-use crate::geometry::Point;
+use super::z::KernelPoint;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum MaximaCursor {
@@ -78,7 +78,7 @@ impl Clipper {
         while let Some(x) = cursor.pop_before(&self.maxima, crossing_x) {
             let edge = *self.edges.edge(horizontal);
             if matches!(edge.output, OutputIndex::Assigned(_)) && edge.wind_delta != 0 {
-                self.add_out_point(horizontal, Point::new(x, edge.bottom.y()));
+                self.add_out_point(horizontal, KernelPoint::new(x, edge.bottom.y(), 0));
             }
         }
     }
@@ -98,7 +98,8 @@ impl Clipper {
             && previous_edge.current.x() == current.current.x()
             && previous_edge.wind_delta != 0
         {
-            let point = current.current;
+            let mut point = current.current;
+            self.set_z(&mut point, previous_edge, current);
             let first = self.add_out_point(previous, point);
             let second = self.add_out_point(edge, point);
             self.joins.push(Join {

@@ -1,12 +1,12 @@
 use super::super::types::{EdgeId, ExecutionConfig, OutputIndex};
+use super::super::z::KernelPoint;
 use super::super::{ClipOperation, Clipper};
-use crate::geometry::Point;
 
 impl Clipper {
     pub(super) fn intersect_open_edges(
         &mut self,
         edges: [EdgeId; 2],
-        point: Point,
+        point: KernelPoint,
         config: ExecutionConfig,
         was_output: [bool; 2],
     ) -> bool {
@@ -34,7 +34,7 @@ impl Clipper {
     fn intersect_same_role_open(
         &mut self,
         [first, second]: [EdgeId; 2],
-        point: Point,
+        point: KernelPoint,
         [first_was_output, second_was_output]: [bool; 2],
         first_is_open: bool,
     ) {
@@ -50,7 +50,7 @@ impl Clipper {
     fn intersect_different_role_open(
         &mut self,
         [first, second]: [EdgeId; 2],
-        point: Point,
+        point: KernelPoint,
         config: ExecutionConfig,
         [first_was_output, second_was_output]: [bool; 2],
     ) {

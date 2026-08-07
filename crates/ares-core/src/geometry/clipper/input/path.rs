@@ -1,7 +1,6 @@
 use super::super::predicates::{HI_RANGE, LO_RANGE, slopes_equal};
 use super::super::types::{Edge, EdgeId, OutputIndex};
-use super::super::{Clipper, ClipperError, PathRole};
-use crate::geometry::Point;
+use super::super::{Clipper, ClipperError, PathRole, z::KernelPoint};
 
 enum DuplicateStep {
     NotDuplicate,
@@ -10,9 +9,9 @@ enum DuplicateStep {
 }
 
 impl Clipper {
-    pub(super) fn add_path(
+    pub(in crate::geometry) fn add_path<P: Copy + Into<KernelPoint>>(
         &mut self,
-        points: &[Point],
+        points: &[P],
         role: PathRole,
         closed: bool,
     ) -> Result<bool, ClipperError> {
@@ -26,7 +25,8 @@ impl Clipper {
         for (index, point) in points.iter().copied().take(count).enumerate() {
             let previous = EdgeId(checkpoint + (index + count - 1) % count);
             let next = EdgeId(checkpoint + (index + 1) % count);
-            self.edges.push(Edge::new(point, role, previous, next));
+            self.edges
+                .push(Edge::new(point.into(), role, previous, next));
         }
 
         let start = EdgeId(checkpoint);
@@ -54,16 +54,20 @@ impl Clipper {
         Ok(true)
     }
 
-    fn validate_range(&mut self, points: &[Point], high_index: usize) -> Result<(), ClipperError> {
-        self.range_test(points[0])?;
-        self.range_test(points[high_index])?;
+    fn validate_range<P: Copy + Into<KernelPoint>>(
+        &mut self,
+        points: &[P],
+        high_index: usize,
+    ) -> Result<(), ClipperError> {
+        self.range_test(points[0].into())?;
+        self.range_test(points[high_index].into())?;
         for index in (1..high_index).rev() {
-            self.range_test(points[index])?;
+            self.range_test(points[index].into())?;
         }
         Ok(())
     }
 
-    fn range_test(&mut self, point: Point) -> Result<(), ClipperError> {
+    fn range_test(&mut self, point: KernelPoint) -> Result<(), ClipperError> {
         if self.use_full_range {
             if point_outside(point, HI_RANGE) {
                 return Err(ClipperError::CoordinateOutOfRange);
@@ -189,14 +193,16 @@ impl Clipper {
     }
 }
 
-fn candidate_high_index(points: &[Point], closed: bool) -> Option<usize> {
+fn candidate_high_index<P: Copy + Into<KernelPoint>>(points: &[P], closed: bool) -> Option<usize> {
     let mut high_index = points.len().checked_sub(1)?;
     if closed {
-        while high_index > 0 && points[high_index] == points[0] {
+        while high_index > 0 && Into::<KernelPoint>::into(points[high_index]) == points[0].into() {
             high_index -= 1;
         }
     }
-    while high_index > 0 && points[high_index] == points[high_index - 1] {
+    while high_index > 0
+        && Into::<KernelPoint>::into(points[high_index]) == points[high_index - 1].into()
+    {
         high_index -= 1;
     }
     let valid = if closed {
@@ -207,11 +213,11 @@ fn candidate_high_index(points: &[Point], closed: bool) -> Option<usize> {
     valid.then_some(high_index)
 }
 
-fn point_outside(point: Point, range: i64) -> bool {
+fn point_outside(point: KernelPoint, range: i64) -> bool {
     point.x() > range || point.x() < -range || point.y() > range || point.y() < -range
 }
 
-fn between(first: Point, middle: Point, last: Point) -> bool {
+fn between(first: KernelPoint, middle: KernelPoint, last: KernelPoint) -> bool {
     if first == last || first == middle || last == middle {
         false
     } else if first.x() != last.x() {

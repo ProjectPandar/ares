@@ -1,7 +1,7 @@
 use super::super::Clipper;
 use super::super::predicates::slopes_equal_three;
 use super::super::types::{Join, OutPointId, OutRecId};
-use crate::geometry::Point;
+use super::super::z::KernelPoint;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum HorizontalDirection {
@@ -14,7 +14,7 @@ struct HorizontalJoin {
     first_end: OutPointId,
     second: OutPointId,
     second_end: OutPointId,
-    point: Point,
+    point: KernelPoint,
     discard_left: bool,
 }
 
@@ -218,7 +218,7 @@ impl Clipper {
         true
     }
 
-    fn next_distinct_from(&self, point: OutPointId, coordinate: Point) -> OutPointId {
+    fn next_distinct_from(&self, point: OutPointId, coordinate: KernelPoint) -> OutPointId {
         let mut next = self.out_points.point(point).next;
         while next != point && self.out_points.point(next).point == coordinate {
             next = self.out_points.point(next).next;
@@ -229,7 +229,7 @@ impl Clipper {
     fn valid_nonhorizontal_neighbour(
         &self,
         point: OutPointId,
-        offset: Point,
+        offset: KernelPoint,
     ) -> Option<(OutPointId, bool)> {
         let coordinate = self.out_points.point(point).point;
         let next = self.next_distinct_from(point, coordinate);
@@ -310,7 +310,7 @@ impl Clipper {
         &mut self,
         point_id: &mut OutPointId,
         direction: HorizontalDirection,
-        point: Point,
+        point: KernelPoint,
         discard_left: bool,
     ) -> OutPointId {
         loop {
@@ -363,4 +363,29 @@ fn overlap(
     let left = first_start.min(first_end).max(second_start.min(second_end));
     let right = first_start.max(first_end).min(second_start.max(second_end));
     (left < right).then_some((left, right))
+}
+
+#[cfg(test)]
+impl Clipper {
+    pub(in crate::geometry) fn join_copy_overwrite_for_test(
+        ring: &[KernelPoint],
+        replacement: KernelPoint,
+    ) -> (KernelPoint, KernelPoint, KernelPoint) {
+        let mut clipper = Self::new(super::super::ClipperOptions::default());
+        let out_rec = super::rings::seed_ring_for_test(&mut clipper, ring);
+        let original_id = clipper.out_recs[out_rec.0].points.unwrap();
+        let original = clipper.out_points.point(original_id).point;
+        let mut overwritten = original_id;
+        let duplicate = clipper.insert_horizontal_join_point(
+            &mut overwritten,
+            HorizontalDirection::LeftToRight,
+            replacement,
+            false,
+        );
+        (
+            original,
+            clipper.out_points.point(overwritten).point,
+            clipper.out_points.point(duplicate).point,
+        )
+    }
 }

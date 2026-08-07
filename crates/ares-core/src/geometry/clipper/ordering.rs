@@ -63,7 +63,7 @@ where
             .push(items[first..last].iter().map(&self.identity).collect());
     }
 }
-pub(super) fn fixed_msvc_sort_by<T, F>(items: &mut [T], mut compare: F)
+pub(in crate::geometry) fn fixed_msvc_sort_by<T, F>(items: &mut [T], mut compare: F)
 where
     T: Copy,
     F: FnMut(&T, &T) -> bool,

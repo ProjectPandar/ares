@@ -2,7 +2,7 @@ use super::Clipper;
 use super::predicates::slopes_equal_four;
 use super::strictly_simple::MaximaCursor;
 use super::types::{EdgeId, ExecutionConfig, GhostJoin, Join, OutPointId, OutputIndex};
-use crate::geometry::Point;
+use super::z::KernelPoint;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum Direction {
@@ -153,7 +153,9 @@ impl Clipper {
             if matches!(horizontal_edge.output, OutputIndex::Assigned(_))
                 && horizontal_edge.wind_delta != 0
             {
-                let point = self.add_out_point(horizontal, crossing_edge.current);
+                let current = self.fill_horizontal_z(scan.direction, horizontal, crossing);
+                self.edges.edge_mut(crossing).current = current;
+                let point = self.add_out_point(horizontal, current);
                 *output_point = Some(point);
                 self.join_pending_horizontals(horizontal, point);
                 self.ghost_joins.push(GhostJoin {
@@ -165,9 +167,10 @@ impl Clipper {
                 self.finish_horizontal_maximum(horizontal, crossing);
                 return true;
             }
-            let intersection = Point::new(
+            let intersection = KernelPoint::new(
                 crossing_edge.current.x(),
                 self.edges.edge(horizontal).current.y(),
+                0,
             );
             match scan.direction {
                 Direction::LeftToRight => {
@@ -184,6 +187,22 @@ impl Clipper {
             self.swap_positions_in_ael(horizontal, crossing);
         }
         false
+    }
+
+    fn fill_horizontal_z(
+        &mut self,
+        direction: Direction,
+        horizontal: EdgeId,
+        crossing: EdgeId,
+    ) -> KernelPoint {
+        let horizontal_edge = *self.edges.edge(horizontal);
+        let crossing_edge = *self.edges.edge(crossing);
+        let mut current = crossing_edge.current;
+        match direction {
+            Direction::LeftToRight => self.set_z(&mut current, horizontal_edge, crossing_edge),
+            Direction::RightToLeft => self.set_z(&mut current, crossing_edge, horizontal_edge),
+        }
+        current
     }
 
     fn finish_horizontal_maximum(&mut self, horizontal: EdgeId, crossing: EdgeId) {

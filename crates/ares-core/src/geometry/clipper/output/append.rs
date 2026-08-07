@@ -1,14 +1,14 @@
 use super::super::Clipper;
 use super::super::predicates::{slopes_equal_four, top_x};
 use super::super::types::{EdgeId, EdgeSide, Join, OutPointId, OutRecId, OutputIndex};
-use crate::geometry::Point;
+use super::super::z::KernelPoint;
 
 impl Clipper {
     pub(in crate::geometry::clipper) fn add_local_min_polygon(
         &mut self,
         first: EdgeId,
         second: EdgeId,
-        point: Point,
+        point: KernelPoint,
     ) -> OutPointId {
         let first_edge = *self.edges.edge(first);
         let second_edge = *self.edges.edge(second);
@@ -50,7 +50,7 @@ impl Clipper {
         previous: EdgeId,
         edge: EdgeId,
         result: OutPointId,
-        point: Point,
+        point: KernelPoint,
     ) {
         let previous_edge = *self.edges.edge(previous);
         let edge = *self.edges.edge(edge);
@@ -66,9 +66,9 @@ impl Clipper {
             && edge.wind_delta != 0
             && previous_edge.wind_delta != 0
             && slopes_equal_four(
-                Point::new(previous_x, point.y()),
+                KernelPoint::new(previous_x, point.y(), 0),
                 previous_edge.top,
-                Point::new(edge_x, point.y()),
+                KernelPoint::new(edge_x, point.y(), 0),
                 edge.top,
                 self.use_full_range,
             )
@@ -86,7 +86,7 @@ impl Clipper {
         &mut self,
         first: EdgeId,
         second: EdgeId,
-        point: Point,
+        point: KernelPoint,
     ) {
         self.add_out_point(first, point);
         if self.edges.edge(second).wind_delta == 0 {

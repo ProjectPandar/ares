@@ -1,7 +1,7 @@
 use super::super::Clipper;
 use super::super::predicates::get_dx;
 use super::super::types::{EdgeId, OutPointId, OutRecId, OutputIndex};
-use crate::geometry::Point;
+use super::super::z::KernelPoint;
 
 impl Clipper {
     pub(super) fn set_hole_state(&mut self, edge: EdgeId, out_rec: OutRecId) {
@@ -237,7 +237,7 @@ impl Clipper {
         }
     }
 
-    fn distinct_neighbours(&self, point: OutPointId) -> (Point, Point) {
+    fn distinct_neighbours(&self, point: OutPointId) -> (KernelPoint, KernelPoint) {
         let coordinate = self.out_points.point(point).point;
         let mut previous = self.out_points.point(point).previous;
         while previous != point && self.out_points.point(previous).point == coordinate {
@@ -253,7 +253,7 @@ impl Clipper {
         )
     }
 
-    fn out_ring_point_in_polygon(&self, point: Point, start: OutPointId) -> i32 {
+    fn out_ring_point_in_polygon(&self, point: KernelPoint, start: OutPointId) -> i32 {
         let mut result = 0;
         let mut current = start;
         loop {
@@ -287,7 +287,7 @@ enum RingCrossing {
     Boundary,
 }
 
-fn ring_crossing(current: Point, next: Point, point: Point) -> RingCrossing {
+fn ring_crossing(current: KernelPoint, next: KernelPoint, point: KernelPoint) -> RingCrossing {
     if next.y() == point.y()
         && (next.x() == point.x()
             || (current.y() == point.y() && ((next.x() > point.x()) == (current.x() < point.x()))))

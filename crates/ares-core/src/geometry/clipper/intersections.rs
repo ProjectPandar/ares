@@ -1,20 +1,28 @@
 mod open;
 mod top;
 
+#[cfg(test)]
+pub(in crate::geometry) use top::top_updates_for_test;
+
 use super::ordering::fixed_msvc_sort_by;
 use super::predicates::{intersect_point, top_x};
 use super::types::{Edge, EdgeId, ExecutionConfig, IntersectionNode, OutputIndex};
+use super::z::KernelPoint;
 use super::{ClipOperation, Clipper, FillRule, PathRole};
-use crate::geometry::Point;
 
 impl Clipper {
     pub(super) fn intersect_edges(
         &mut self,
         first: EdgeId,
         second: EdgeId,
-        point: Point,
+        mut point: KernelPoint,
         config: ExecutionConfig,
     ) {
+        if self.z_intersections.is_some() {
+            let first_before_z = *self.edges.edge(first);
+            let second_before_z = *self.edges.edge(second);
+            self.set_z(&mut point, first_before_z, second_before_z);
+        }
         let first_was_output = matches!(self.edges.edge(first).output, OutputIndex::Assigned(_));
         let second_was_output = matches!(self.edges.edge(second).output, OutputIndex::Assigned(_));
         let first_before = *self.edges.edge(first);
@@ -124,8 +132,7 @@ impl Clipper {
         let mut edge = self.sorted_edges;
         while let Some(id) = edge {
             let snapshot = *self.edges.edge(id);
-            self.edges.edge_mut(id).current =
-                Point::new(top_x(snapshot, top_y), snapshot.current.y());
+            self.edges.edge_mut(id).current = snapshot.current.with_x(top_x(snapshot, top_y));
             edge = snapshot.next_in_ael;
         }
         while let Some((modified, edge)) = self.sort_intersection_pass(top_y) {
@@ -151,7 +158,7 @@ impl Clipper {
             }
             let mut point = intersect_point(*self.edges.edge(edge), *self.edges.edge(next));
             if point.y() < top_y {
-                point = Point::new(top_x(*self.edges.edge(edge), top_y), top_y);
+                point = KernelPoint::new(top_x(*self.edges.edge(edge), top_y), top_y, 0);
             }
             self.intersections.push(IntersectionNode {
                 first: edge,

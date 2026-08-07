@@ -1,5 +1,6 @@
 use super::polytree::PolyTree;
 use super::types::ExecutionConfig;
+use super::z::ZPath;
 use super::{ClipOperation, Clipper, FillRule};
 use crate::geometry::Polygon;
 
@@ -27,6 +28,33 @@ impl Clipper {
         };
         self.dispose_all_out_recs();
         Ok(paths)
+    }
+
+    pub(in crate::geometry) fn execute_z_paths(
+        &mut self,
+        operation: ClipOperation,
+        subject_fill: FillRule,
+        clip_fill: FillRule,
+    ) -> (Vec<ZPath>, Vec<(i64, i64)>) {
+        debug_assert!(self.z_intersections.is_none());
+        self.z_intersections = Some(Vec::new());
+        self.using_polytree = true;
+        let succeeded = self.execute_internal(ExecutionConfig {
+            operation,
+            subject_fill,
+            clip_fill,
+        });
+        let paths = if succeeded {
+            self.build_polytree().into_z_paths()
+        } else {
+            Vec::new()
+        };
+        let intersections = self
+            .z_intersections
+            .take()
+            .expect("Z execution owns its collector");
+        self.dispose_all_out_recs();
+        (paths, intersections)
     }
 
     pub(crate) fn execute_polytree(
@@ -63,6 +91,7 @@ impl Clipper {
         self.intersections.clear();
         self.maxima.clear();
         self.has_open_paths = false;
+        self.z_intersections = None;
         #[cfg(test)]
         self.collected_maxima_for_test.clear();
         #[cfg(test)]
@@ -139,6 +168,16 @@ impl Clipper {
         if self.options.strictly_simple {
             self.do_simple_polygons();
         }
+    }
+
+    #[cfg(test)]
+    pub(in crate::geometry) fn z_state_for_test(&self) -> (usize, bool) {
+        (self.edges.len(), self.z_intersections.is_none())
+    }
+
+    #[cfg(all(test, debug_assertions))]
+    pub(in crate::geometry) fn activate_z_collector_for_test(&mut self) {
+        self.z_intersections = Some(Vec::new());
     }
 
     fn fixup_output_record(&mut self, index: usize) {

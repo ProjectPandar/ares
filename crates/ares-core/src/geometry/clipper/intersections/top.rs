@@ -1,7 +1,7 @@
 use super::super::Clipper;
 use super::super::predicates::{slopes_equal_four, top_x};
 use super::super::types::{Edge, EdgeId, ExecutionConfig, Join, OutPointId, OutputIndex};
-use crate::geometry::Point;
+use super::super::z::KernelPoint;
 
 impl Clipper {
     pub(in crate::geometry::clipper) fn process_edges_at_top(
@@ -66,7 +66,14 @@ impl Clipper {
             return self.edges.edge(promoted).next_in_ael;
         }
         let x = top_x(snapshot, top_y);
-        self.edges.edge_mut(current).current = Point::new(x, top_y);
+        let z = if top_y == snapshot.top.y() {
+            snapshot.top.z
+        } else if top_y == snapshot.bottom.y() {
+            snapshot.bottom.z
+        } else {
+            0
+        };
+        self.edges.edge_mut(current).current = KernelPoint::new(x, top_y, z);
         self.join_strict_top_touch(current);
         snapshot.next_in_ael
     }
@@ -165,4 +172,58 @@ impl Clipper {
             }
         }
     }
+}
+
+#[cfg(test)]
+pub(in crate::geometry) fn top_updates_for_test() -> [KernelPoint; 4] {
+    use super::super::{ClipOperation, FillRule};
+
+    fn clipper_with_chain() -> Clipper {
+        use super::super::{ClipperOptions, PathRole};
+
+        let mut clipper = Clipper::new(ClipperOptions::default());
+        let mut first = Edge::new(
+            KernelPoint::new(0, 0, 10),
+            PathRole::Subject,
+            EdgeId(0),
+            EdgeId(0),
+        );
+        first.bottom = KernelPoint::new(0, 0, 10);
+        first.top = KernelPoint::new(10, 10, 20);
+        first.dx = 1.0;
+        first.next_in_lml = Some(EdgeId(1));
+        let mut second = Edge::new(
+            KernelPoint::new(10, 10, 30),
+            PathRole::Subject,
+            EdgeId(1),
+            EdgeId(1),
+        );
+        second.bottom = KernelPoint::new(10, 10, 30);
+        second.top = KernelPoint::new(20, 20, 40);
+        second.dx = 1.0;
+        clipper.edges.push(first);
+        clipper.edges.push(second);
+        clipper.active_edges = Some(EdgeId(0));
+        clipper
+    }
+
+    let config = ExecutionConfig {
+        operation: ClipOperation::Union,
+        subject_fill: FillRule::NonZero,
+        clip_fill: FillRule::NonZero,
+    };
+    let update = |top_y| {
+        let mut clipper = clipper_with_chain();
+        let snapshot = *clipper.edges.edge(EdgeId(0));
+        clipper.process_top_edge(EdgeId(0), snapshot, top_y, config);
+        clipper.edges.edge(EdgeId(0)).current
+    };
+    let mut promoted = clipper_with_chain();
+    let promoted_id = promoted.update_edge_into_ael(EdgeId(0));
+    [
+        update(10),
+        update(0),
+        update(5),
+        promoted.edges.edge(promoted_id).current,
+    ]
 }

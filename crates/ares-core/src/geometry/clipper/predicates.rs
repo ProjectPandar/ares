@@ -1,5 +1,5 @@
 use super::super::Point;
-use super::types::Edge;
+use super::{types::Edge, z::KernelPoint};
 
 pub(crate) const LO_RANGE: i64 = 0x3fff_ffff;
 pub(crate) const HI_RANGE: i64 = 0x3fff_ffff_ffff_ffff;
@@ -22,7 +22,7 @@ pub(crate) fn slopes_equal(dx1: i64, dy1: i64, dx2: i64, dy2: i64, use_full_rang
     }
 }
 
-pub(crate) fn get_dx(point1: Point, point2: Point) -> f64 {
+pub(crate) fn get_dx(point1: KernelPoint, point2: KernelPoint) -> f64 {
     if point1.y() == point2.y() {
         HORIZONTAL
     } else {
@@ -38,9 +38,9 @@ pub(super) fn top_x(edge: Edge, current_y: i64) -> i64 {
     }
 }
 
-pub(super) fn intersect_point(first: Edge, second: Edge) -> Point {
+pub(super) fn intersect_point(first: Edge, second: Edge) -> KernelPoint {
     if first.dx == second.dx {
-        return Point::new(top_x(first, first.current.y()), first.current.y());
+        return KernelPoint::new(top_x(first, first.current.y()), first.current.y(), 0);
     }
 
     let (mut x, mut y) = if first.dx == 0.0 {
@@ -104,10 +104,15 @@ pub(super) fn intersect_point(first: Edge, second: Edge) -> Point {
         );
     }
 
-    Point::new(x, y)
+    KernelPoint::new(x, y, 0)
 }
 
-pub(super) fn slopes_equal_three(first: Point, middle: Point, last: Point, full: bool) -> bool {
+pub(super) fn slopes_equal_three(
+    first: KernelPoint,
+    middle: KernelPoint,
+    last: KernelPoint,
+    full: bool,
+) -> bool {
     slopes_equal(
         first.x() - middle.x(),
         first.y() - middle.y(),
@@ -118,10 +123,10 @@ pub(super) fn slopes_equal_three(first: Point, middle: Point, last: Point, full:
 }
 
 pub(super) fn slopes_equal_four(
-    first_start: Point,
-    first_end: Point,
-    second_start: Point,
-    second_end: Point,
+    first_start: KernelPoint,
+    first_end: KernelPoint,
+    second_start: KernelPoint,
+    second_end: KernelPoint,
     full: bool,
 ) -> bool {
     slopes_equal(

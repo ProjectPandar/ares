@@ -1,5 +1,7 @@
-use super::{ClipOperation, FillRule, PathRole, predicates::get_dx};
-use crate::geometry::{Point, Polygon, Polyline};
+use super::{ClipOperation, FillRule, PathRole, predicates::get_dx, z::KernelPoint};
+#[cfg(test)]
+use crate::geometry::Point;
+use crate::geometry::{Polygon, Polyline};
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) struct EdgeId(pub(super) usize);
@@ -28,9 +30,9 @@ pub(super) enum OutputIndex {
 
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Edge {
-    pub(super) current: Point,
-    pub(super) bottom: Point,
-    pub(super) top: Point,
+    pub(super) current: KernelPoint,
+    pub(super) bottom: KernelPoint,
+    pub(super) top: KernelPoint,
     pub(super) dx: f64,
     pub(super) role: PathRole,
     pub(super) side: EdgeSide,
@@ -48,7 +50,12 @@ pub(super) struct Edge {
 }
 
 impl Edge {
-    pub(super) fn new(current: Point, role: PathRole, previous: EdgeId, next: EdgeId) -> Self {
+    pub(super) fn new(
+        current: KernelPoint,
+        role: PathRole,
+        previous: EdgeId,
+        next: EdgeId,
+    ) -> Self {
         Self {
             current,
             bottom: current,
@@ -70,7 +77,7 @@ impl Edge {
         }
     }
 
-    pub(super) fn initialize_direction(&mut self, next: Point) {
+    pub(super) fn initialize_direction(&mut self, next: KernelPoint) {
         if self.current.y() >= next.y() {
             self.bottom = self.current;
             self.top = next;
@@ -86,15 +93,9 @@ impl Edge {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-enum EdgeSlot {
-    Live(Edge),
-    Removed,
-}
-
 #[derive(Debug, Default)]
 pub(super) struct EdgeArena {
-    slots: Vec<EdgeSlot>,
+    slots: Vec<Option<Edge>>,
 }
 
 impl EdgeArena {
@@ -111,21 +112,19 @@ impl EdgeArena {
     }
 
     pub(super) fn push(&mut self, edge: Edge) {
-        self.slots.push(EdgeSlot::Live(edge));
+        self.slots.push(Some(edge));
     }
 
     pub(super) fn edge(&self, id: EdgeId) -> &Edge {
-        match &self.slots[id.0] {
-            EdgeSlot::Live(edge) => edge,
-            EdgeSlot::Removed => unreachable!("removed edge is not traversable"),
-        }
+        self.slots[id.0]
+            .as_ref()
+            .expect("removed edge is not traversable")
     }
 
     pub(super) fn edge_mut(&mut self, id: EdgeId) -> &mut Edge {
-        match &mut self.slots[id.0] {
-            EdgeSlot::Live(edge) => edge,
-            EdgeSlot::Removed => unreachable!("removed edge is not traversable"),
-        }
+        self.slots[id.0]
+            .as_mut()
+            .expect("removed edge is not traversable")
     }
 
     pub(super) fn role(&self, id: EdgeId) -> PathRole {
@@ -136,7 +135,7 @@ impl EdgeArena {
         let edge = *self.edge(id);
         self.edge_mut(edge.previous).next = edge.next;
         self.edge_mut(edge.next).previous = edge.previous;
-        self.slots[id.0] = EdgeSlot::Removed;
+        self.slots[id.0] = None;
         edge.next
     }
 
@@ -145,18 +144,18 @@ impl EdgeArena {
         self.slots
             .iter()
             .map(|slot| match slot {
-                EdgeSlot::Live(edge) => EdgeSnapshot {
+                Some(edge) => EdgeSnapshot {
                     removed: false,
-                    current: Some(edge.current),
-                    bottom: Some(edge.bottom),
-                    top: Some(edge.top),
+                    current: Some(edge.current.xy),
+                    bottom: Some(edge.bottom.xy),
+                    top: Some(edge.top.xy),
                     dx: Some(edge.dx),
                     wind_delta: Some(edge.wind_delta),
                     previous: Some(edge.previous.0),
                     next: Some(edge.next.0),
                     next_in_lml: edge.next_in_lml.map(|id| id.0),
                 },
-                EdgeSlot::Removed => EdgeSnapshot {
+                None => EdgeSnapshot {
                     removed: true,
                     current: None,
                     bottom: None,
@@ -183,7 +182,7 @@ pub(super) struct LocalMinimum {
 pub(super) struct IntersectionNode {
     pub(super) first: EdgeId,
     pub(super) second: EdgeId,
-    pub(super) point: Point,
+    pub(super) point: KernelPoint,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -199,7 +198,7 @@ pub(super) struct OutRec {
 #[derive(Clone, Copy, Debug)]
 pub(super) struct OutPoint {
     pub(super) out_rec: OutRecId,
-    pub(super) point: Point,
+    pub(super) point: KernelPoint,
     pub(super) next: OutPointId,
     pub(super) previous: OutPointId,
 }
@@ -215,6 +214,7 @@ pub(super) struct PolyNodeRecord {
     pub(super) parent: Option<PolyNodeId>,
     pub(super) children: Vec<PolyNodeId>,
     pub(super) contour: Option<PolyNodeContour>,
+    pub(super) z: Option<Vec<i64>>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -233,13 +233,13 @@ pub(super) struct OutPointArena {
 pub(super) struct Join {
     pub(super) first: OutPointId,
     pub(super) second: OutPointId,
-    pub(super) offset: Point,
+    pub(super) offset: KernelPoint,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub(super) struct GhostJoin {
     pub(super) point: OutPointId,
-    pub(super) offset: Point,
+    pub(super) offset: KernelPoint,
 }
 
 #[derive(Clone, Copy, Debug)]

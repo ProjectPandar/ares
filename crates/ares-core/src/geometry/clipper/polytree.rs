@@ -1,3 +1,5 @@
+mod z_paths;
+
 use std::mem;
 
 #[cfg(test)]
@@ -179,7 +181,7 @@ impl Clipper {
             let Some(points) = self.out_recs[index].points else {
                 continue;
             };
-            let output = self.output_points(points);
+            let output = self.output_kernel_points(points);
             let is_open = self.out_recs[index].is_open;
             if is_open && output.len() < 2 || !is_open && output.len() < 3 {
                 continue;
@@ -187,16 +189,22 @@ impl Clipper {
             if !is_open {
                 self.normalize_tree_first_left(out_rec);
             }
+            let z = self
+                .z_intersections
+                .as_ref()
+                .map(|_| output.iter().map(|point| point.z).collect());
+            let xy = output.iter().map(|point| point.xy).collect();
             let contour = if is_open {
-                PolyNodeContour::Open(Polyline::new(output))
+                PolyNodeContour::Open(Polyline::new(xy))
             } else {
-                PolyNodeContour::Closed(Polygon::new(output))
+                PolyNodeContour::Closed(Polygon::new(xy))
             };
             let node = PolyNodeId(nodes.len());
             nodes.push(PolyNodeRecord {
                 parent: None,
                 children: Vec::new(),
                 contour: Some(contour),
+                z,
             });
             *node_slot = Some(node);
         }
@@ -236,7 +244,7 @@ impl Clipper {
         self.out_recs[out_rec.0].first_left = first_left;
     }
 
-    fn output_points(&self, start: OutPointId) -> Vec<crate::geometry::Point> {
+    fn output_kernel_points(&self, start: OutPointId) -> Vec<super::z::KernelPoint> {
         let first = self.out_points.point(start).previous;
         let mut point = first;
         let mut points = Vec::new();

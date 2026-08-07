@@ -1,12 +1,14 @@
 use super::super::Clipper;
+#[cfg(test)]
+use super::super::types::Edge;
 use super::super::types::{
     EdgeId, EdgeSide, OutPoint, OutPointArena, OutPointId, OutPointSlot, OutRec, OutRecId,
     OutputIndex,
 };
-use crate::geometry::Point;
+use super::super::z::KernelPoint;
 
 impl OutPointArena {
-    fn allocate(&mut self, out_rec: OutRecId, point: Point) -> OutPointId {
+    fn allocate(&mut self, out_rec: OutRecId, point: KernelPoint) -> OutPointId {
         let id = if let Some(id) = self.free_head {
             self.free_head = match self.slots[id.0] {
                 OutPointSlot::Free { next } => next,
@@ -84,6 +86,84 @@ impl Clipper {
         });
         id
     }
+}
+
+#[cfg(test)]
+pub(super) fn seed_ring_for_test(clipper: &mut Clipper, points: &[KernelPoint]) -> OutRecId {
+    let out_rec = clipper.create_out_rec();
+    let first = clipper.out_points.allocate(out_rec, points[0]);
+    clipper.out_recs[out_rec.0].points = Some(first);
+    let mut previous = first;
+    for &point in &points[1..] {
+        let current = clipper.out_points.allocate(out_rec, point);
+        clipper.out_points.point_mut(previous).next = current;
+        clipper.out_points.point_mut(current).previous = previous;
+        previous = current;
+    }
+    clipper.out_points.point_mut(previous).next = first;
+    clipper.out_points.point_mut(first).previous = previous;
+    out_rec
+}
+
+#[cfg(test)]
+pub(super) fn ring_xyz_for_test(clipper: &Clipper, out_rec: OutRecId) -> Vec<KernelPoint> {
+    let start = clipper.out_recs[out_rec.0].points.unwrap();
+    let mut output = Vec::new();
+    let mut point = start;
+    loop {
+        output.push(clipper.out_points.point(point).point);
+        point = clipper.out_points.point(point).next;
+        if point == start {
+            return output;
+        }
+    }
+}
+
+impl Clipper {
+    #[cfg(test)]
+    pub(in crate::geometry) fn duplicate_xyz_for_test(
+        point: KernelPoint,
+    ) -> (KernelPoint, KernelPoint) {
+        let mut clipper = Self::new(super::super::ClipperOptions::default());
+        let out_rec = clipper.create_out_rec();
+        let original = clipper.out_points.allocate(out_rec, point);
+        let duplicate = clipper.duplicate_out_point(original, true);
+        (
+            clipper.out_points.point(original).point,
+            clipper.out_points.point(duplicate).point,
+        )
+    }
+
+    #[cfg(test)]
+    pub(in crate::geometry) fn immediate_dedup_for_test(
+        first: KernelPoint,
+        duplicate: KernelPoint,
+    ) -> (KernelPoint, bool) {
+        let mut clipper = Self::new(super::super::ClipperOptions::default());
+        clipper.edges.push(Edge::new(
+            first,
+            super::super::PathRole::Subject,
+            EdgeId(0),
+            EdgeId(0),
+        ));
+        let original = clipper.add_out_point(EdgeId(0), first);
+        let repeated = clipper.add_out_point(EdgeId(0), duplicate);
+        (
+            clipper.out_points.point(repeated).point,
+            original == repeated,
+        )
+    }
+
+    #[cfg(test)]
+    pub(in crate::geometry) fn open_fixup_survivors_for_test(
+        points: &[KernelPoint],
+    ) -> Vec<KernelPoint> {
+        let mut clipper = Self::new(super::super::ClipperOptions::default());
+        let out_rec = seed_ring_for_test(&mut clipper, points);
+        clipper.out_recs[out_rec.0].is_open = true;
+        clipper.fixup_out_polyline(out_rec);
+        ring_xyz_for_test(&clipper, out_rec)
+    }
 
     pub(in crate::geometry::clipper) fn dispose_all_out_recs(&mut self) {
         self.out_points.clear();
@@ -93,7 +173,7 @@ impl Clipper {
     pub(in crate::geometry::clipper) fn add_out_point(
         &mut self,
         edge_id: EdgeId,
-        point: Point,
+        point: KernelPoint,
     ) -> OutPointId {
         match self.edges.edge(edge_id).output {
             OutputIndex::Unassigned | OutputIndex::Skipped => {
