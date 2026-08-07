@@ -1,7 +1,9 @@
+mod merge;
 mod propagate;
 mod types;
 mod wave_seeds;
 
+pub(crate) use merge::merge_expansions_into_expolygons;
 pub(crate) use propagate::{
     expand_expolygons, propagate_waves, propagate_waves_ex,
     propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
@@ -69,6 +71,11 @@ type ExpandExPolygonsFn = fn(
     usize,
     CoordinateScale,
 ) -> Result<Vec<Vec<Polygon>>, ClipperError>;
+type MergeExpansionsFn = fn(
+    Vec<ExPolygon>,
+    Vec<RegionExpansion>,
+    CoordinateScale,
+) -> Result<Vec<ExPolygon>, ClipperError>;
 
 const _: fn(f32, f32, usize, CoordinateScale) -> RegionExpansionParameters =
     RegionExpansionParameters::build;
@@ -79,3 +86,4 @@ const _: WaveSeedsFn = wave_seeds;
 const _: PropagateWavesFromSourcesFn = propagate_waves_from_sources;
 const _: PropagateWavesFromSourcesWithStepsFn = propagate_waves_from_sources_with_steps;
 const _: ExpandExPolygonsFn = expand_expolygons;
+const _: MergeExpansionsFn = merge_expansions_into_expolygons;

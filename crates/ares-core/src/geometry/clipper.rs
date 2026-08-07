@@ -29,7 +29,8 @@ pub(super) use boolean_ex::safety_offset_configuration_for_test;
 pub(crate) use boolean_ex::{
     SAFETY_OFFSET, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
-    difference_polygons_ex, intersection_ex, intersection_polygons_ex, union_expolygons, xor_ex,
+    difference_polygons_ex, intersection_ex, intersection_polygons_ex, union_expolygons,
+    union_safety_offset_ex, xor_ex,
 };
 #[cfg(test)]
 pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;

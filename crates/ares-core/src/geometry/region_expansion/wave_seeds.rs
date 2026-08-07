@@ -2,6 +2,7 @@ mod aabb;
 mod splits;
 
 use self::aabb::BoundaryAabb;
+pub(super) use self::aabb::sample_in_expolygons;
 #[cfg(test)]
 pub(in crate::geometry) use self::aabb::{bbox_contains_for_test, sample_for_test};
 #[cfg(test)]

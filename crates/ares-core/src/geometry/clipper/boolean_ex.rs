@@ -1,6 +1,6 @@
 use super::{
     ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, JoinType, PathRole,
-    raw_offset_paths,
+    offset_paths_tree, raw_offset_paths,
 };
 use crate::geometry::{ExPolygon, Polygon};
 
@@ -83,6 +83,13 @@ pub(crate) fn union_expolygons(
     candidate: &[ExPolygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     execute_ex(current, candidate, ClipOperation::Union, PathRole::Subject)
+}
+
+pub(crate) fn union_safety_offset_ex(paths: &[Polygon]) -> Result<Vec<ExPolygon>, ClipperError> {
+    Ok(
+        offset_paths_tree(paths, SAFETY_OFFSET, JoinType::Miter, SAFETY_MITER_LIMIT)?
+            .into_expolygons(),
+    )
 }
 
 pub(crate) fn xor_ex(

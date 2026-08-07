@@ -197,6 +197,14 @@ fn leaf_bounds(expolygon: &ExPolygon, epsilon: i64) -> Bounds {
     )
 }
 
+pub(in crate::geometry::region_expansion) fn sample_in_expolygons(
+    expolygons: &[ExPolygon],
+    point: Point,
+    scale: CoordinateScale,
+) -> Option<usize> {
+    BoundaryAabb::build(expolygons, scale).sample(point)
+}
+
 fn contains(expolygon: &ExPolygon, point: Point) -> bool {
     point_in_polygon(point, expolygon.contour().points()) != 0
         && !expolygon
