@@ -40,7 +40,8 @@ pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
 pub(crate) use region_expansion::{
     RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, propagate_waves,
-    propagate_waves_ex, propagate_waves_from_sources, propagate_waves_from_sources_with_steps,
+    propagate_waves_ex, propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
+    propagate_waves_from_sources_with_steps,
 };
 #[cfg(test)]
 pub(in crate::geometry) use region_expansion::{
@@ -66,6 +67,15 @@ type RegionExpansionExOperation = fn(
     &[ExPolygon],
     &RegionExpansionParameters,
 ) -> Result<Vec<RegionExpansionEx>, ClipperError>;
+type RegionExpansionExFromSourcesWithStepsOperation =
+    fn(
+        &[ExPolygon],
+        &[ExPolygon],
+        f32,
+        f32,
+        usize,
+        CoordinateScale,
+    ) -> Result<Vec<RegionExpansionEx>, ClipperError>;
 type RegionExpansionFromSourcesOperation = fn(
     &[ExPolygon],
     &[ExPolygon],
@@ -133,6 +143,8 @@ const _: ExPolygonsOffsetOperation = offset_expolygons;
 const _: VariableOffsetOperation = variable_offset_inner_ex;
 const _: RegionExpansionOperation = propagate_waves;
 const _: RegionExpansionExOperation = propagate_waves_ex;
+const _: RegionExpansionExFromSourcesWithStepsOperation =
+    propagate_waves_ex_from_sources_with_steps;
 const _: RegionExpansionFromSourcesOperation = propagate_waves_from_sources;
 const _: RegionExpansionFromSourcesWithStepsOperation = propagate_waves_from_sources_with_steps;
 const _: fn(f32, f32, usize, CoordinateScale) -> RegionExpansionParameters =

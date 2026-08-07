@@ -53,6 +53,28 @@ pub(crate) fn propagate_waves_ex(
     Ok(output)
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the source scalar overload keeps the upstream argument order"
+)]
+pub(crate) fn propagate_waves_ex_from_sources_with_steps(
+    src: &[ExPolygon],
+    boundary: &[ExPolygon],
+    full_expansion: f32,
+    expansion_step: f32,
+    max_nr_expansion_steps: usize,
+    scale: CoordinateScale,
+) -> Result<Vec<RegionExpansionEx>, ClipperError> {
+    let params = RegionExpansionParameters::build(
+        full_expansion,
+        expansion_step,
+        max_nr_expansion_steps,
+        scale,
+    );
+    let seeds = wave_seeds(src, boundary, params.tiny_expansion, true, scale)?;
+    propagate_waves_ex(&seeds, boundary, &params)
+}
+
 pub(crate) fn propagate_waves_from_sources(
     src: &[ExPolygon],
     boundary: &[ExPolygon],
