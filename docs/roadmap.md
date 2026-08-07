@@ -5165,9 +5165,40 @@ witness survivor while exact same-scale forwarding is fixed structurally.
 
 O31 changes no public API, Option, lifecycle, checkpoint, persisted state, KSR
 golden expectation, G-code byte, or ARD. Public slicing remains on O26 and
-returns `ProjectSlicingIncomplete`. Full native/WASM/browser/static/rollback,
-final dual review, commit/push, and exact-SHA Tier-1 remain pending, so O31 is
-not released. The next candidate is `expand_expolygons` at
-`RegionExpansion.hpp:102-108` and `RegionExpansion.cpp:522-534`; merge helpers,
-external-surface orchestration, fill, toolpath, seam, motion, G-code, and
-post-processing remain deferred.
+returns `ProjectSlicingIncomplete`. Workspace Nextest passes 6,010 with 2
+skipped; native/WASM/static/rollback gates and both final reviews are green.
+The local host lacked Chromium runtime libraries, while the exact CI WASM job
+installed them and passed the browser suite twice. O31 was released as commits
+`7113f7c`/`1f89dd3`; exact-SHA Tier-1 run `31196271880` passed all five jobs at
+`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`.
+
+## Task 22O.32: group expanded polygons by source ExPolygon
+
+Task 22O.32 locally ports pinned `Algorithm/RegionExpansion.cpp:522-534` and
+`RegionExpansion.hpp:102-108`. Its crate-private `expand_expolygons` allocates
+one polygon-vector slot per source, calls the O29 scalar source propagation
+once with unchanged expansion, step, maximum steps, and explicit scale, then
+moves each complete polygon into `src_id`'s slot. It discards boundary IDs but
+preserves per-source relative order and all empty source slots; it performs no
+union, sorting, compaction, rescaling, validation, or lifecycle wiring.
+
+The five-test shard has a compiling chronological RED of 0/5 and focused
+debug/release GREEN of 5/5. It freezes empty/precondition behavior, one source
+with multiple raw polygons, boundary-first flat records redistributed into
+source-index slots with leading/interior/trailing empties, complete Normal and
+LargeBed vectors, and direct discovery/propagation errors. RegionExpansion is
+74/74. Thirteen runtime mutations are killed, two type-shape mutations are
+compiler-rejected, and allocation/ownership equivalences are recorded as
+structural survivors. Initial independent and default-model OpenCode
+implementation reviews both approve. After tuple-packing one test helper for
+the five-argument Clippy threshold, workspace Nextest passes 6,015/6,015 with 2
+skipped; native, WASM build/export/syntax, static, and exact-O31 rollback gates
+are green. The local host lacks Chromium's `libglib-2.0.so.0`, so both browser
+runs remain an exact-SHA CI requirement. Final independent six-dimensional
+and default-model OpenCode reviews both approve. Commit/push and Tier-1 remain
+pending, so O32 is not released.
+
+The next candidate is `merge_expansions_into_expolygons` at
+`RegionExpansion.hpp:110-111` and `RegionExpansion.cpp:536-587`.
+`expand_merge_expolygons`, external-surface orchestration, fill, toolpath, seam,
+motion, G-code, and post-processing remain deferred.

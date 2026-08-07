@@ -2,7 +2,7 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.30
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.31
 are released. O28 implements the bounded ClipperZ-backed
 `Algorithm::wave_seeds` prerequisite; its final reviews approved and exact-SHA
 Tier-1 run `31156094839` passed at
@@ -15,10 +15,13 @@ public slicing still consumes O26 and returns `ProjectSlicingIncomplete`.
 O30 direct supplied-seed `propagate_waves_ex` was released as commits
 `0a19939`/`6ccb145`; exact-SHA Tier-1 run `31184069746` passed all five jobs at
 `6ccb145dbb1867e5724538fb071795a7fd4179f0`. O31 source/scalar
-`propagate_waves_ex` composition is locally implemented but unreleased pending
-full verification, final reviews, push, and exact-SHA Tier-1. It adds no
-lifecycle wiring, so public slicing still consumes O26 and returns
-`ProjectSlicingIncomplete`. `expand_expolygons`, external-surface processing,
+`propagate_waves_ex` composition was released as commits `7113f7c`/`1f89dd3`;
+exact-SHA Tier-1 run `31196271880` passed all five jobs at
+`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`. O32 `expand_expolygons` is
+locally implemented and fully reviewed but unreleased pending push and
+exact-SHA Tier-1. It adds no lifecycle
+wiring, so public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`. Expansion merging, external-surface processing,
 later surface/toolpath stages, complete G-code assembly, and normalized KSR
 parity remain deferred to later source-cited rewrite slices.
 
@@ -3810,7 +3813,7 @@ O30 was released as commits `0a19939`/`6ccb145`; exact-SHA Tier-1 run
 `31184069746` passed all five jobs at
 `6ccb145dbb1867e5724538fb071795a7fd4179f0`.
 
-Task 22O.31 locally ports source/scalar `propagate_waves_ex` at
+Task 22O.31 ports source/scalar `propagate_waves_ex` at
 `RegionExpansion.cpp:506-520` and `RegionExpansion.hpp:94-100`. The private
 wrapper performs exactly one parameter build, sorted O28 seed discovery with
 the built tiny expansion and same explicit scale, and unchanged O30 delegation.
@@ -3819,7 +3822,28 @@ Its five-test shard passes debug/release and complete RegionExpansion passes
 rejected, and one discovery-scale focused survivor is disclosed with exact
 forwarding fixed by structural audit. O31 adds no architecture decision,
 public export, Option, lifecycle, checkpoint, persisted state, KSR golden
-change, or G-code byte. Full verification/review/release gates remain pending.
-The next bounded boundary is `expand_expolygons` at hpp:102-108/cpp:522-534;
-later merge, external-surface, fill, toolpath, seam, motion, G-code, and
-post-processing work remains deferred.
+change, or G-code byte. It was released as commits `7113f7c`/`1f89dd3`;
+exact-SHA Tier-1 run `31196271880` passed all five jobs at
+`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`.
+
+Task 22O.32 locally ports `expand_expolygons` at
+`RegionExpansion.cpp:522-534` and `RegionExpansion.hpp:102-108`. The private
+helper preallocates `src.len()` raw-polygon slots, delegates once to O29 with
+unchanged scalar inputs and explicit scale, and moves every returned polygon to
+its source-ID slot. Empty slots, complete point topology, source-index slot
+order, and per-slot propagation order are preserved; boundary IDs are discarded
+exactly as upstream. The five-test shard passes debug/release; RegionExpansion
+passes 74/74. Thirteen runtime mutations are killed, two type-shape mutations
+are compiler-rejected, and structural equivalences are disclosed. Initial
+independent and default-model OpenCode reviews approve. After a test-only
+Clippy repair, workspace Nextest passes 6,015/6,015 with 2 skipped; native,
+WASM build/export/syntax, static, and exact-O31 rollback gates are green. Local
+Chromium cannot launch because `libglib-2.0.so.0` is absent, so exact-SHA CI
+must pass the two browser runs. O32 adds no architecture decision, public
+export, Option, lifecycle, checkpoint, persisted state, KSR golden change, or
+G-code byte. Final independent six-dimensional and default-model OpenCode
+reviews both approve; push and exact-SHA release gates remain pending.
+
+The next bounded boundary is `merge_expansions_into_expolygons` at
+hpp:110-111/cpp:536-587; `expand_merge_expolygons` and later external-surface,
+fill, toolpath, seam, motion, G-code, and post-processing work remain deferred.

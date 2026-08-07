@@ -2,7 +2,7 @@
 
 ## Status and source boundary
 
-Proposed implementation specification. Exact predecessor O30 is released at
+Released implementation specification. Exact predecessor O30 is released at
 `6ccb145dbb1867e5724538fb071795a7fd4179f0`; exact-SHA Tier-1 run
 `31184069746` passed format, WASM/browser, Linux, Windows, and macOS. Pinned
 rewrite target remains OrcaSlicer v2.4.2 commit
@@ -156,10 +156,20 @@ Playwright runs, exact allowlist/LOC/visibility/forbidden-pattern audits,
 disposable rollback to exact O30, and independent/default-model literal
 `VERDICT: APPROVE` reviews.
 
-Commit and push only after review. O31 is released only after Tier-1's `headSha`
-exactly equals the pushed documentation SHA and all five jobs pass. Public
-slicing must still consume O26 and return `ProjectSlicingIncomplete`; no KSR
-G-code parity claim.
+O31 was released as implementation commit `7113f7c` and documentation commit
+`1f89dd3`; exact-SHA Tier-1 run `31196271880` passed format, WASM/browser,
+Linux, Windows, and macOS at
+`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`. Focused debug/release pass 5/5,
+complete RegionExpansion passes 69/69, workspace Nextest passes 6,010 with 2
+skipped, and native, Clippy, rustfmt, four WASM checks, optimized builds,
+export/syntax, static, and rollback gates are green. Local Playwright launch
+was unavailable because the host lacked Chromium runtime libraries; the exact
+CI WASM job installed Chromium dependencies and passed the full browser suite
+twice. Independent six-dimensional and default-model OpenCode final reviews
+both returned literal `VERDICT: APPROVE`.
+
+Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`; O31
+claims no KSR G-code parity.
 
 ## Acceptance and rollback
 

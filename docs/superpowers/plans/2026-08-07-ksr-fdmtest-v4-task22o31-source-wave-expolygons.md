@@ -1,5 +1,16 @@
 # Task 22O.31 Implementation Plan
 
+## Execution state
+
+O31 is released as implementation commit `7113f7c` and documentation commit
+`1f89dd3`. Exact-SHA Tier-1 run `31196271880` passed all five jobs at
+`1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`. Focused debug/release pass 5/5,
+RegionExpansion 69/69, workspace Nextest 6,010 with 2 skipped, and all required
+native/WASM/static/rollback gates passed. The CI WASM job installed Chromium
+runtime dependencies and passed the browser suite twice; the local host could
+not launch Chromium because those libraries were unavailable. Both final
+reviewers returned literal `VERDICT: APPROVE`.
+
 ## Goal and baseline
 
 Implement the approved source/scalar `RegionExpansionEx` composition from
