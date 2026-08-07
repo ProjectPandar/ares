@@ -247,8 +247,10 @@ check, warning-denying Clippy, rustfmt, four WASM checks, two optimized WASM
 builds, wasm-bindgen export/JavaScript syntax audits, two 11/11 Playwright runs,
 static audits, and disposable rollback. Final documented-state independent
 six-dimensional and default-model OpenCode rereviews return literal
-`VERDICT: APPROVE`; exact-pushed-SHA Tier-1 remains pending and must pass before
-release.
+`VERDICT: APPROVE`. Implementation commit `55c2c23` and documentation commit
+`118f6a7` were pushed; exact-SHA Tier-1 run `31168584784` passed all format,
+WASM/browser, Linux, Windows, and macOS jobs at
+`118f6a72b33926efe41ced1c931f9a51b26b2945`.
 
 ### 7. Verify native, WASM, browser, static, and lifecycle gates
 

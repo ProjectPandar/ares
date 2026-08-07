@@ -5101,10 +5101,47 @@ native all-target check, warning-denying Clippy, rustfmt, four WASM checks, two
 optimized WASM builds, export/syntax audits, two 11/11 Playwright runs, static
 audits, and disposable rollback. Final documented-state independent
 six-dimensional and default-model OpenCode rereviews both return literal
-`VERDICT: APPROVE`; exact-pushed-SHA Tier-1 remains pending and is not claimed.
+`VERDICT: APPROVE`. O29 was released as implementation commit `55c2c23` and
+documentation commit `118f6a7`; exact-SHA Tier-1 run `31168584784` passed all
+format, WASM/browser, Linux, Windows, and macOS jobs at
+`118f6a72b33926efe41ced1c931f9a51b26b2945`.
 
 The next bounded rewrite boundary is the direct supplied-seed
 `propagate_waves_ex` at `Algorithm/RegionExpansion.cpp:480-503`. Its source
 scalar overload, `expand_expolygons` and expansion merge helpers,
 external-surface orchestration, fill generation, toolpaths, seams, motion,
 G-code, and post-processing remain deferred.
+
+## Task 22O.30: direct RegionExpansionEx wave output
+
+Task 22O.30 locally ports pinned `Algorithm/RegionExpansion.cpp:480-503` and
+`Algorithm/RegionExpansion.hpp:85-92`. It adds crate-private
+`RegionExpansionEx` and direct supplied-seed `propagate_waves_ex`. The entry
+completes unchanged O27 propagation before its debug-only boundary-first,
+source-second sorted assertion, groups only adjacent expanded records by both
+IDs, directly wraps singleton contours, and uses the existing ARD-0024
+`union_ex` with NonZero fill for multi-polygon groups.
+
+The six-test shard freezes complete singleton, natural one-seed hole,
+multi-island, adjacent source/boundary transition, comparator-conflict,
+release-unsorted, zero-output, and error-before-assertion behavior. Its real
+compiling RED had five failures and one valid zero-output pass. Final debug and
+release focused runs pass 6/6, RegionExpansion 64/64, PolyTree 6/6, O26
+lifecycle 3/3, and workspace 6,005/6,005 with 2 skipped. Sixteen runtime
+mutations are killed, one signature mutation is compiler-rejected, and two
+semantic survivors are disclosed: valid O27 output makes Positive equivalent
+to NonZero in the probed hole, while repeated union preserves three probed
+singleton vectors. Native check, warning-denying Clippy, rustfmt, four WASM
+checks, two optimized builds, export/syntax audits, and two 11/11 Playwright
+runs are green. Final allowed-Rust LOC are 74, 218, 62, 156, 6, and 263.
+
+O30 changes no public API, Option, lifecycle, checkpoint, persisted state, KSR
+golden expectation, G-code byte, or ARD; public slicing remains on O26 and
+returns `ProjectSlicingIncomplete`. Exact static and disposable rollback gates
+are green; final independent six-dimensional and default-model OpenCode
+implementation reviews both return literal `VERDICT: APPROVE`. Exact-pushed-SHA
+Tier-1 remains pending, so O30 is not released. The next
+candidate boundary is source/scalar `propagate_waves_ex` at
+`RegionExpansion.cpp:506-520`; expansion/merge helpers, external-surface
+orchestration, fill, toolpath, seam, motion, G-code, and post-processing remain
+deferred.

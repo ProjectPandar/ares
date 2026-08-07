@@ -2,20 +2,24 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.28
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.29
 are released. O28 implements the bounded ClipperZ-backed
 `Algorithm::wave_seeds` prerequisite; its final reviews approved and exact-SHA
 Tier-1 run `31156094839` passed at
-`be334375be871eb12ca98c98d889b65a92d13a37`. O29 source-taking propagation
-wrappers are locally implemented; their full local
-native/WASM/browser/static/rollback gates are green and final documented-state
-independent six-dimensional/default-model OpenCode rereviews return literal
-`VERDICT: APPROVE`. Exact-SHA Tier-1 remains pending, so O29 is not released.
-O29 adds no lifecycle wiring, so public slicing still
-consumes O26 and returns `ProjectSlicingIncomplete`. Direct
-`propagate_waves_ex`, external-surface processing, later surface/toolpath
-stages, complete G-code assembly, and normalized KSR parity remain deferred to
-later source-cited rewrite slices.
+`be334375be871eb12ca98c98d889b65a92d13a37`. O29 source-taking propagation was
+released as implementation commit `55c2c23` and documentation commit `118f6a7`;
+its exact-SHA Tier-1 run `31168584784` passed all format, WASM/browser, Linux,
+Windows, and macOS jobs at
+`118f6a72b33926efe41ced1c931f9a51b26b2945`. O29 adds no lifecycle wiring, so
+public slicing still consumes O26 and returns `ProjectSlicingIncomplete`.
+O30 direct supplied-seed `propagate_waves_ex` is locally implemented with its
+native/WASM/browser/static/disposable-rollback gates green. Final independent
+six-dimensional and default-model OpenCode implementation reviews both return
+literal `VERDICT: APPROVE`. Exact-pushed-SHA Tier-1 remains pending, so O30 is
+not released.
+Source/scalar `propagate_waves_ex`, external-surface processing, later
+surface/toolpath stages, complete G-code assembly, and normalized KSR parity
+remain deferred to later source-cited rewrite slices.
 
 ## Fixed baseline
 
@@ -3766,11 +3770,42 @@ passes composition 5/5, RegionExpansion 58/58, O26 lifecycle 3/3, workspace
 rustfmt, four WASM checks, two optimized WASM builds, export/syntax audits, two
 11/11 Playwright runs, static audits, and disposable rollback. Final
 documented-state independent six-dimensional and default-model OpenCode
-rereviews both return literal `VERDICT: APPROVE`; exact-pushed-SHA Tier-1
-remains pending and is not claimed as passed.
+rereviews both return literal `VERDICT: APPROVE`. O29 was released as
+implementation commit `55c2c23` and documentation commit `118f6a7`; exact-SHA
+Tier-1 run `31168584784` passed all format, WASM/browser, Linux, Windows, and
+macOS jobs at `118f6a72b33926efe41ced1c931f9a51b26b2945`.
 
 The next bounded source boundary is direct supplied-seed
 `propagate_waves_ex` at `Algorithm/RegionExpansion.cpp:480-503`. Its source
 scalar overload, expansion/merge helpers, external-surface
 processing, fill generation, toolpaths, seams, motion, G-code, and
 post-processing remain deferred.
+
+Task 22O.30 locally ports the direct supplied-seed boundary at
+`Algorithm/RegionExpansion.cpp:480-503` and `RegionExpansion.hpp:85-92` into
+crate-private `RegionExpansionEx` and `propagate_waves_ex`. It reuses unchanged
+O27 propagation and the sole ARD-0024 indexed NonZero `union_ex` kernel. The
+post-propagation debug assertion is nondecreasing by boundary then source;
+conversion preserves adjacent expanded-group order, singleton contours,
+complete hole/island topology, and IDs.
+
+Complete pinned-source vectors cover a natural one-seed/two-contour hole,
+multi-island output, boundary/source transitions, comparator conflict,
+release-unsorted adjacency, zero output, and direct error precedence. The
+focused shard passes 6/6 in debug and release; RegionExpansion passes 64/64,
+PolyTree 6/6, O26 lifecycle 3/3, and workspace 6,005/6,005 with 2 skipped.
+Sixteen runtime mutations are killed, one type-shape mutation is
+compiler-rejected, and the two oracle-demonstrated semantic survivors
+(Positive for valid positive-clipped material and repeated singleton union) are
+reported rather than misclassified. Native/WASM/browser gates are green and
+final LOC are 74, 218, 62, 156, 6, and 263.
+
+O30 adds no architecture decision, public export, Option, lifecycle,
+checkpoint, persisted state, KSR golden change, or G-code byte. Public slicing
+continues to return `ProjectSlicingIncomplete`. Exact static and disposable
+rollback gates are green; final independent six-dimensional and default-model
+OpenCode implementation reviews both return literal `VERDICT: APPROVE`.
+Exact-pushed-SHA Tier-1 remains pending, so O30 is not released. The next bounded boundary is source/scalar
+`propagate_waves_ex` at `RegionExpansion.cpp:506-520`; later merge,
+external-surface, fill, toolpath, seam, motion, G-code, and post-processing work
+remains deferred.

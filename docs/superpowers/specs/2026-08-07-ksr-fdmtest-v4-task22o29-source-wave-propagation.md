@@ -57,7 +57,10 @@ check, warning-denying Clippy, rustfmt, four WASM checks, two optimized WASM
 builds, wasm-bindgen export and JavaScript syntax audits, two 11/11 Playwright
 runs, static audits, and disposable rollback are green. Final documented-state
 independent six-dimensional and default-model OpenCode reviews return literal
-`VERDICT: APPROVE`; exact-pushed-SHA Tier-1 remains pending.
+`VERDICT: APPROVE`. O29 was released as implementation commit `55c2c23` and
+documentation commit `118f6a7`; exact-pushed-SHA Tier-1 run `31168584784`
+passed all format, WASM/browser, Linux, Windows, and macOS jobs at
+`118f6a72b33926efe41ced1c931f9a51b26b2945`.
 
 The real compiling RED artifact at `/tmp/task22o29-red-focused-all.txt`
 predates the final test refactor. It records an earlier eight-test iteration:
@@ -75,9 +78,9 @@ option, persisted state, or ARD change; ARD-0024 remains unchanged. Public
 slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The full
 local native/WASM/browser/static and disposable-rollback gates are green as
 recorded above. Final documented-state independent six-dimensional and
-default-model OpenCode rereviews return literal `VERDICT: APPROVE`;
-exact-pushed-SHA Tier-1 is the remaining release gate and is not claimed as
-passed.
+default-model OpenCode rereviews return literal `VERDICT: APPROVE`; exact-SHA
+Tier-1 run `31168584784` passed at
+`118f6a72b33926efe41ced1c931f9a51b26b2945`.
 
 Mechanical rollback removes only the two O29 wrappers, their crate-private
 reexports and signature assertions, the composition shard and module
