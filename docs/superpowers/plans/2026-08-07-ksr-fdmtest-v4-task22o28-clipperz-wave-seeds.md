@@ -4,9 +4,10 @@
 
 Implement approved Task 22O.28 as a source-cited, crate-private Rust rewrite of pinned OrcaSlicer `Algorithm::wave_seeds`, extending only the existing ARD-0024 indexed Clipper kernel with private Z provenance while leaving project lifecycle and public APIs unchanged.
 
-Local implementation, rollback, and preliminary dual review are complete.
-Final documented-state dual review, commit/push, and exact pushed-SHA Tier-1
-remain execution gates.
+Execution is complete. Final documented-state independent and default-model
+OpenCode reviews returned `VERDICT: APPROVE`; implementation commit `7eb0d27`
+and documentation commit `be33437` were pushed; exact-SHA Tier-1 run
+`31156094839` passed at `be334375be871eb12ca98c98d889b65a92d13a37`.
 
 ## Source and Scope Contract
 
@@ -529,7 +530,7 @@ remain execution gates.
 - **AABB parity:** The upstream centroid expression intentionally differs from a mathematical midpoint; overlapping boundaries expose build/traversal order.
 - **False lifecycle progress:** The KSR caller reaches this upstream path, but O28 must not wire it into Ares project slicing or claim G-code parity.
 - **Insufficient evidence:** Geometry counts, area, or bounds are not acceptance evidence. Tests and oracle captures must compare complete ordered IDs and point sequences.
-- **External CI:** Shipping remains incomplete until the pushed commit’s exact `headSha` has a fully successful Tier-1 matrix.
+- **External CI:** The pushed commit's exact `headSha` required a fully successful Tier-1 matrix; run `31156094839` satisfied this ship gate.
 
 ## Execution evidence
 
@@ -546,14 +547,16 @@ remain execution gates.
   for inside, crossing, hole, split, multiple-ID, overlap, and release-only
   shared-vertex cases. The fixed over-32 comparator literals reuse unchanged
   accepted ARD-0024 MSVC STL 14.44 control flow; local proprietary MSVC
-  execution is unavailable and exact-SHA Windows Tier-1 remains required.
+  execution is unavailable, and exact-SHA Windows Tier-1 job `92795799169`
+  supplied the required platform evidence in run `31156094839`.
 - All 23 required mutations plus a strict-shortest-edge mutation are killed,
   production is restored, and each restored witness reruns GREEN. Original RED
   chronology is unavailable and is disclosed rather than recreated.
 - The disposable rollback rehearsal copied the exact O28 state, returned clean
   to predecessor `f361bb73b558b4e50bfa4fa712afcd63df44ba9f`, and preserved
   the primary diff, file list, staging state, and content digests.
-- The preliminary independent six-dimensional reviewer and default-model
-  OpenCode reviewer both returned literal `VERDICT: APPROVE` after the repair
-  loop. Final documented-state dual approval and exact pushed-SHA Tier-1 are
-  still pending and are not claimed as completed evidence.
+- Final documented-state independent six-dimensional and default-model
+  OpenCode reviewers both returned literal `VERDICT: APPROVE` after the repair
+  loop. Implementation commit `7eb0d27` and documentation commit `be33437`
+  were pushed; exact-SHA Tier-1 run `31156094839` passed at
+  `be334375be871eb12ca98c98d889b65a92d13a37`.

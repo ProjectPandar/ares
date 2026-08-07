@@ -2,14 +2,20 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.27
-are released. Task 22O.28 implements the bounded ClipperZ-backed
-`Algorithm::wave_seeds` geometry prerequisite and is at its final documented
-review and exact-SHA release gate. It deliberately adds no project lifecycle
-wiring, so public slicing still consumes O26 and returns
-`ProjectSlicingIncomplete`. Source-taking propagation, external-surface
-processing, later surface/toolpath stages, complete G-code assembly, and
-normalized KSR parity remain owned by later source-cited rewrite slices.
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.28
+are released. O28 implements the bounded ClipperZ-backed
+`Algorithm::wave_seeds` prerequisite; its final reviews approved and exact-SHA
+Tier-1 run `31156094839` passed at
+`be334375be871eb12ca98c98d889b65a92d13a37`. O29 source-taking propagation
+wrappers are locally implemented; their full local
+native/WASM/browser/static/rollback gates are green and final documented-state
+independent six-dimensional/default-model OpenCode rereviews return literal
+`VERDICT: APPROVE`. Exact-SHA Tier-1 remains pending, so O29 is not released.
+O29 adds no lifecycle wiring, so public slicing still
+consumes O26 and returns `ProjectSlicingIncomplete`. Direct
+`propagate_waves_ex`, external-surface processing, later surface/toolpath
+stages, complete G-code assembly, and normalized KSR parity remain deferred to
+later source-cited rewrite slices.
 
 ## Fixed baseline
 
@@ -3699,11 +3705,14 @@ runs are green. Static audits prove the file boundary, LOC limits, no staged
 files, no new dependency or forbidden construct, and no lifecycle/API change.
 A disposable exact-state rollback returns cleanly to predecessor
 `f361bb73b558b4e50bfa4fa712afcd63df44ba9f` and leaves the primary worktree
-byte-for-byte unchanged. Preliminary independent six-dimensional and
-separate default-model OpenCode reviews both return `VERDICT: APPROVE`; final
-documented-state review and exact pushed-SHA Tier-1 remain release gates.
+byte-for-byte unchanged. Final documented-state independent six-dimensional
+and separate default-model OpenCode reviews both return `VERDICT: APPROVE`.
+Implementation commit `7eb0d27` and documentation commit `be33437` are pushed;
+exact-SHA Tier-1 run `31156094839` passed Linux, macOS, Windows, formatting,
+WASM, export, and two browser executions at
+`be334375be871eb12ca98c98d889b65a92d13a37`.
 
-O28 is still a geometry prerequisite and changes no KSR checkpoint or G-code
+O28 remains a geometry prerequisite and changes no KSR checkpoint or G-code
 byte. The next bounded source boundary is the source-taking
 `propagate_waves(const ExPolygons &, const ExPolygons &,
 const RegionExpansionParameters &)` overload and its scalar overload at
@@ -3714,3 +3723,54 @@ toolpaths, seams, motion, G-code, and post-processing remain deferred.
 Mechanical rollback removes O28 Z/seed/AABB modules, private metadata seams,
 tests, and O28 documentation while retaining all O27 code and the exact O26
 lifecycle.
+
+Task 22O.29 composes the next pinned source boundary,
+`Algorithm/RegionExpansion.cpp:463-466,468-477` with declarations at
+`Algorithm/RegionExpansion.hpp:74-83`. Its Rust destinations are the two
+crate-private `geometry::region_expansion` wrappers
+`propagate_waves_from_sources` and `propagate_waves_from_sources_with_steps`.
+The parameter wrapper requests literal sorted O28 discovery and directly invokes
+unchanged O27 propagation. The scalar wrapper builds once and delegates once,
+using the same retained explicit `CoordinateScale`.
+
+Complete composition evidence includes the compact and sorted/unsorted ordered
+vectors and full scalar polygons with 16 Normal-scale points and 128
+LargeBed-scale points. The final composition filter passes 5/5 and the complete
+RegionExpansion filter passes 58/58. Ten runtime mutations are killed/restored,
+one differently typed signature mutation is compiler-rejected, and source
+inspection—not a false behavioral mutation claim—confirms exactly one scalar
+builder call followed by exactly one parameter-wrapper call. The frozen
+six-argument scalar signature has one function-scoped, reasoned
+`#[expect(clippy::too_many_arguments)]` because the workspace threshold is five;
+no lint `allow` was added. Final allowed-Rust LOC are 172 (`propagate.rs`), 55
+(`region_expansion.rs`), 150 (`geometry.rs`), 5 (test root), and 264
+(`composition.rs`).
+
+The original compiling RED artifact is truthfully bounded: the earlier
+eight-test `/tmp/task22o29-red-focused-all.txt` has seven empty-stub assertion
+failures and one `scalar_scale_outputs_differ` pass while both wrapper stubs
+returned empty because that test compared explicit pipelines. The final shard
+was subsequently consolidated and strengthened into five tests, including
+valid discovery before propagation failure. It has no fresh chronological RED.
+Mutation kills and restored GREEN runs are post-hoc recurrence evidence, not
+original RED evidence.
+
+O29 introduces no new architecture decision and leaves ARD-0024 unchanged. It
+adds no option, public export, lifecycle wiring, checkpoint, persisted state, or
+G-code byte; public slicing remains on O26 and returns
+`ProjectSlicingIncomplete`. Rollback removes only O29 wrappers, private
+reexports/signature assertions, composition tests/registration, and O29 docs,
+retaining O27, O28, and the O26 lifecycle. The restored final local state
+passes composition 5/5, RegionExpansion 58/58, O26 lifecycle 3/3, workspace
+5,999/5,999 with 2 skipped, native all-target check, warning-denying Clippy,
+rustfmt, four WASM checks, two optimized WASM builds, export/syntax audits, two
+11/11 Playwright runs, static audits, and disposable rollback. Final
+documented-state independent six-dimensional and default-model OpenCode
+rereviews both return literal `VERDICT: APPROVE`; exact-pushed-SHA Tier-1
+remains pending and is not claimed as passed.
+
+The next bounded source boundary is direct supplied-seed
+`propagate_waves_ex` at `Algorithm/RegionExpansion.cpp:480-503`. Its source
+scalar overload, expansion/merge helpers, external-surface
+processing, fill generation, toolpaths, seams, motion, G-code, and
+post-processing remain deferred.

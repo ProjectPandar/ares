@@ -5039,10 +5039,12 @@ runs pass. Static audits confirm the exact file allowlist, all Rust files under
 dependency, lifecycle, adapter, or forbidden-pattern change. A disposable
 worktree reproduced the exact O28 state, rolled it mechanically back to clean
 predecessor `f361bb73b558b4e50bfa4fa712afcd63df44ba9f`, and proved the primary
-diff, file list, staging state, and digests unchanged. Preliminary independent
-six-dimensional and default-model OpenCode reviews both return
-`VERDICT: APPROVE`; final documented-state review and exact pushed-SHA Tier-1
-remain release gates.
+diff, file list, staging state, and digests unchanged. Final documented-state
+independent six-dimensional and default-model OpenCode reviews both return
+`VERDICT: APPROVE`. Implementation commit `7eb0d27` and documentation commit
+`be33437` are pushed; exact-SHA Tier-1 run `31156094839` passed Linux, macOS,
+Windows, formatting, WASM, export, and both browser executions at
+`be334375be871eb12ca98c98d889b65a92d13a37`.
 
 Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`; O28
 changes no KSR checkpoint and makes no G-code parity claim. The next bounded
@@ -5055,3 +5057,54 @@ external-surface orchestration, fill generation, toolpaths, seams, motion,
 G-code, and post-processing remain deferred. Mechanical rollback removes only
 O28 Z/seed/AABB code, tests, and documentation while retaining all O27 code and
 the exact O26 lifecycle.
+
+## Task 22O.29: source-taking RegionExpansion propagation
+
+Task 22O.29 locally ports pinned
+`Algorithm/RegionExpansion.cpp:463-466,468-477` and
+`Algorithm/RegionExpansion.hpp:74-83` into two crate-private destinations:
+`geometry::region_expansion::propagate_waves_from_sources` and
+`propagate_waves_from_sources_with_steps`. The parameter entry invokes O28
+`wave_seeds` with literal `sorted=true` and sends the complete ordered result to
+unchanged O27 propagation. The scalar entry builds parameters exactly once and
+delegates exactly once with the same retained explicit coordinate scale.
+
+The five-test composition shard freezes complete compact and
+sorted-versus-unsorted results plus complete 16-point Normal and 128-point
+LargeBed scalar vectors. Focused composition passes 5/5 and the full
+RegionExpansion regression passes 58/58. Ten runtime mutations are killed and
+restored, one signature-shape mutation is rejected at compile time, and the
+separate structural audit truthfully verifies one scalar build followed by one
+delegation without claiming behaviorally equivalent inlining as a mutation.
+The frozen six-argument scalar signature has one function-scoped, reasoned
+`#[expect(clippy::too_many_arguments)]` because the workspace threshold is five;
+no lint `allow` was added. Final LOC are 172, 55, 150, 5, and 264 for
+`propagate.rs`, `region_expansion.rs`, `geometry.rs`, the RegionExpansion test
+root, and `composition.rs`, respectively.
+
+The chronological RED log is the earlier eight-test
+`/tmp/task22o29-red-focused-all.txt`: seven empty-stub assertions failed and
+`scalar_scale_outputs_differ` passed while both wrapper stubs returned empty
+because it compared explicit pipelines. The final shard was later consolidated
+and strengthened to five tests, including valid discovery before propagation
+failure. No chronological RED exists for that exact final list. Mutation
+kills/restored GREEN are post-hoc recurrence evidence, not original RED.
+
+O29 changes no public API, lifecycle, KSR checkpoint, G-code byte, option,
+persisted state, or ARD; ARD-0024 is unchanged and public slicing still uses
+O26 and returns `ProjectSlicingIncomplete`. Mechanical rollback removes only
+the O29 wrappers, private reexports/signature assertions, composition
+shard/registration, and O29 documentation while retaining O27, O28, and the O26
+lifecycle. The restored final local state passes composition 5/5,
+RegionExpansion 58/58, O26 lifecycle 3/3, workspace 5,999/5,999 with 2 skipped,
+native all-target check, warning-denying Clippy, rustfmt, four WASM checks, two
+optimized WASM builds, export/syntax audits, two 11/11 Playwright runs, static
+audits, and disposable rollback. Final documented-state independent
+six-dimensional and default-model OpenCode rereviews both return literal
+`VERDICT: APPROVE`; exact-pushed-SHA Tier-1 remains pending and is not claimed.
+
+The next bounded rewrite boundary is the direct supplied-seed
+`propagate_waves_ex` at `Algorithm/RegionExpansion.cpp:480-503`. Its source
+scalar overload, `expand_expolygons` and expansion merge helpers,
+external-surface orchestration, fill generation, toolpaths, seams, motion,
+G-code, and post-processing remain deferred.

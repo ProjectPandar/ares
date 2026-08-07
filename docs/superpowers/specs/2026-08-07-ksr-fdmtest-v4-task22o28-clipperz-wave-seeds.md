@@ -1,9 +1,11 @@
 # Task 22O.28 — Crate-private ClipperZ `wave_seeds`
 ## Status and source boundary
 
-Approved implementation specification. Local implementation and preliminary
-six-dimensional/default-model OpenCode reviews are complete; final documented
-review and exact pushed-SHA Tier-1 remain release gates. Exact predecessor
+Released implementation specification. Final documented-state independent
+six-dimensional/default-model OpenCode reviews returned `VERDICT: APPROVE`.
+Implementation commit `7eb0d27` and documentation commit `be33437` are pushed;
+exact-SHA Tier-1 run `31156094839` passed at
+`be334375be871eb12ca98c98d889b65a92d13a37`. Exact predecessor
 `f361bb73b558b4e50bfa4fa712afcd63df44ba9f` contains shipped O27; its Tier-1
 run `31127440442` is green. O27's own exact-SHA run `31126818275` is also green.
 Rewrite target: OrcaSlicer commit
@@ -282,15 +284,18 @@ intersection, split, recovery-ID, and XY results for inside, crossing, hole,
 split, multiple-ID, overlapping-fallback, and release-only shared-vertex
 cases. O28 reuses the accepted ARD-0024 MSVC STL 14.44 comparator control flow
 unchanged except for geometry-private visibility; the proprietary toolset is
-not installed on the Linux host, so the exact pushed-SHA Windows Tier-1 job
-remains mandatory platform evidence. Original compiling-RED chronology is not
+not installed on the Linux host; exact pushed-SHA Windows Tier-1 job
+`92795799169` in run `31156094839` supplied the mandatory platform evidence.
+Original compiling-RED chronology is not
 available and was not reconstructed from post-hoc mutations.
 
 A disposable worktree reproduced the exact O28 tracked and untracked state,
 rolled back mechanically to clean predecessor
 `f361bb73b558b4e50bfa4fa712afcd63df44ba9f`, and proved that the primary
 worktree diff, file list, staging state, and content digests were unchanged.
-After the repair/re-review loop, the preliminary independent six-dimensional
-reviewer and the default-model OpenCode reviewer both returned literal
-`VERDICT: APPROVE`. Final documented-state dual review, commit/push, and the
-exact-SHA Tier-1 matrix remain release gates and are not claimed here.
+After the repair/re-review loop, final documented-state independent
+six-dimensional and default-model OpenCode reviewers both returned literal
+`VERDICT: APPROVE`. Implementation commit `7eb0d27` and documentation commit
+`be33437` were pushed. Exact-SHA Tier-1 run `31156094839` passed Linux, macOS,
+Windows, formatting, WASM, export, and both browser executions at
+`be334375be871eb12ca98c98d889b65a92d13a37`.
