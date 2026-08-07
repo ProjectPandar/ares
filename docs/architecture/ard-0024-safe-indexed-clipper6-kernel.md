@@ -175,6 +175,28 @@ portable normalized equivalent of ascending Orca runtime
 Orca `ObjectID` values depend on process-global allocation history and are not
 reproduced.
 
+### Geometry-private provenance extension
+
+Task 22O.28 extends this same indexed engine with optional per-vertex `i64` Z
+metadata for pinned ClipperZ operations. Z is provenance, not a third geometry
+axis: ordinary point equality and every clipping, cleanup, winding, ownership,
+and containment predicate remain XY-only. Existing 2-D adapters create
+`z = 0`, existing ordered 2-D outputs discard Z, and the public `Point`,
+`Polygon`, and `Polyline` contracts do not change.
+
+The private Z execution path reuses the existing edge, output-point, join,
+free-list, and PolyTree arenas. It applies the pinned endpoint-priority `SetZ`
+rules, owns one execution-local intersection-label collector, and stores an
+optional Z sidecar parallel to a PolyTree contour. The collector is absent for
+ordinary clipping and must be absent before and after each Z execution.
+`KernelPoint`, Z paths, sidecars, and Z adapters are visible only inside the
+geometry module; they are not a second clipping engine or a public 3-D API.
+
+Region-expansion seed discovery may widen the fixed MSVC-sort helper only to
+geometry-private visibility and sorts a `Vec<usize>` permutation. The accepted
+MSVC STL 14.44 control flow, threshold, comparators, and lack of tie-breakers
+remain unchanged.
+
 ### Platform and license boundary
 
 The implementation stays filesystem-free and platform-neutral in `ares-core`
@@ -205,6 +227,9 @@ about unrelated Orca-derived work.
   selection, and simplification follow in later source-cited packages.
 - Offset and later Boolean consumers must extend and reuse this kernel rather
   than introduce another engine.
+- Optional Z provenance increases internal record width during geometry-private
+  ClipperZ execution, but does not alter ordinary 2-D predicates, ordering, or
+  public geometry semantics.
 
 ## Rejected alternatives
 

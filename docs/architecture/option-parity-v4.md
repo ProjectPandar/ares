@@ -2,14 +2,14 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.26
-are released. Task 22O.27 implements the bounded direct-seed RegionExpansion
-prerequisite for external-surface processing and is at its final review and
-exact-SHA release gate. It deliberately adds no project lifecycle wiring, so
-public slicing still consumes O26 and returns `ProjectSlicingIncomplete`.
-Cancellation, material and painted segmentation, later surface/toolpath
-stages, complete G-code assembly, and normalized KSR parity remain owned by
-later source-cited rewrite slices.
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.27
+are released. Task 22O.28 implements the bounded ClipperZ-backed
+`Algorithm::wave_seeds` geometry prerequisite and is at its final documented
+review and exact-SHA release gate. It deliberately adds no project lifecycle
+wiring, so public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`. Source-taking propagation, external-surface
+processing, later surface/toolpath stages, complete G-code assembly, and
+normalized KSR parity remain owned by later source-cited rewrite slices.
 
 ## Fixed baseline
 
@@ -3651,7 +3651,7 @@ and the separate default-model OpenCode reviewer returned
 remains accepted and unchanged.
 
 O27 is not an external-surface lifecycle stage and changes no KSR checkpoint.
-The next source boundary is ClipperZ-backed `RegionExpansion.cpp::wave_seeds`:
+O28 takes the next ClipperZ-backed `RegionExpansion.cpp::wave_seeds` boundary:
 expanded/opened Z paths, Z-fill intersections, split reconciliation,
 source/boundary ID recovery, and the closed-seed AABB fallback. Source-taking
 propagation, merge helpers, `LayerRegion::process_external_surfaces`,
@@ -3659,3 +3659,58 @@ propagation, merge helpers, `LayerRegion::process_external_surfaces`,
 motion, G-code, and post-processing remain deferred. Mechanical rollback
 removes only O27 RegionExpansion/end-type code, tests, and docs while retaining
 O26 unchanged.
+
+Task 22O.28 rewrites pinned `Algorithm::wave_seeds` from
+`Algorithm/RegionExpansion.cpp:88-391`, its `ClipperZUtils.hpp` conversion and
+visitor path, the four-direction `Polyline.hpp` merge, and the reached bundled
+ClipperZ metadata sites. The Rust destination is crate-private
+`geometry::region_expansion::wave_seeds` plus optional Z provenance in the
+single ARD-0024 indexed kernel. Public 2-D geometry, manifests, adapters, and
+the O26 lifecycle remain unchanged.
+
+The same kernel now carries geometry-private `KernelPoint { xy, z }` records,
+while ordinary equality and every geometry predicate remain XY-only. Existing
+2-D adapters assign zero Z. Z execution preserves endpoint priority,
+direction-sensitive horizontal and strictly-simple fills, output survivor and
+join metadata, one execution-local sorted/deduplicated intersection table, and
+optional PolyTree Z sidecars. `wave_seeds` preserves source contour/hole offset
+signs and IDs, NonZero intersection order, repeated endpoints, split
+swap-pop/reprocessing, four ID-recovery branches, and deliberate release drops.
+Its fallback AABB is lazy and retains contour-only inflated boxes, literal
+`min + max / 2` centroid arithmetic, longest-axis X ties, QuickSelect order,
+left-first traversal, and outer/hole boundary semantics. Optional sorting uses
+the accepted fixed MSVC STL 14.44 comparator control flow on an index
+permutation with no geometry or index tie-break.
+
+Twenty-five focused Z tests, 39 focused wave-seed tests, 211 Clipper tests, and
+53 RegionExpansion tests freeze complete ordered XYZ/ID/XY vectors, debug and
+release divergence, ordinary 2-D equivalence, O27 handoff, and lifecycle
+inactivity. The full workspace passes 5,994 tests twice with 2 skipped. All 23
+specified behavioral mutations plus a strict shortest-edge mutation are killed
+and followed by restored GREEN runs. Pinned debug/`NDEBUG` C++ diagnostics
+cover inside, crossing, hole, split, multiple-ID, overlapping-fallback, and the
+release-only shared-vertex case; the accepted ARD-0024 MSVC comparator literals
+cover comparator-equivalent groups over 32. Original compiling-RED chronology
+is unavailable and is recorded as a limitation rather than reconstructed.
+
+Native check, strict all-feature Clippy, formatting, four wasm32 checks, two
+optimized WASM builds, export and syntax audits, and two 11-test Playwright
+runs are green. Static audits prove the file boundary, LOC limits, no staged
+files, no new dependency or forbidden construct, and no lifecycle/API change.
+A disposable exact-state rollback returns cleanly to predecessor
+`f361bb73b558b4e50bfa4fa712afcd63df44ba9f` and leaves the primary worktree
+byte-for-byte unchanged. Preliminary independent six-dimensional and
+separate default-model OpenCode reviews both return `VERDICT: APPROVE`; final
+documented-state review and exact pushed-SHA Tier-1 remain release gates.
+
+O28 is still a geometry prerequisite and changes no KSR checkpoint or G-code
+byte. The next bounded source boundary is the source-taking
+`propagate_waves(const ExPolygons &, const ExPolygons &,
+const RegionExpansionParameters &)` overload and its scalar overload at
+`Algorithm/RegionExpansion.cpp:463-478`, composing O28 seed discovery with
+unchanged O27 propagation. `propagate_waves_ex`, expansion merge helpers,
+`LayerRegion`/`PrintObject` external-surface orchestration, fill generation,
+toolpaths, seams, motion, G-code, and post-processing remain deferred.
+Mechanical rollback removes O28 Z/seed/AABB modules, private metadata seams,
+tests, and O28 documentation while retaining all O27 code and the exact O26
+lifecycle.

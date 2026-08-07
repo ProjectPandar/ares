@@ -4983,7 +4983,7 @@ separate default-model OpenCode reviewer also returned `VERDICT: APPROVE`.
 Exact pushed-SHA Tier-1 remains the release gate.
 
 Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`; O27
-is a crate-private geometry prerequisite only. The next bounded rewrite is the
+is a crate-private geometry prerequisite only. O28 takes the next
 ClipperZ-backed `RegionExpansion.cpp::wave_seeds` boundary: expanded/opened Z
 paths, Z-fill intersection collection, split reconciliation, source/boundary ID
 recovery, and the closed-seed AABB fallback. Source-taking propagation,
@@ -4991,3 +4991,67 @@ expansion merge helpers, external-surface processing, fill generation,
 toolpaths, seams, motion, G-code, and post-processing remain deferred.
 Mechanical rollback removes only O27 RegionExpansion/end-type code, tests, and
 documentation while retaining the exact O26 lifecycle.
+
+## Task 22O.28: ClipperZ wave-seed discovery
+
+Task 22O.28 ports pinned `Algorithm::wave_seeds` from
+`Algorithm/RegionExpansion.cpp:88-391`, `ClipperZUtils.hpp:14-139`, the reached
+bundled ClipperZ sites, the four-direction `Polyline.hpp` merge, and the local
+AABB build/traversal behavior. It extends only the existing ARD-0024 indexed
+Clipper kernel with geometry-private per-vertex Z provenance. It introduces no
+second geometry engine, dependency, public API, option, persisted state, or
+project lifecycle stage.
+
+Ordinary kernel equality and all geometry predicates remain XY-only, existing
+2-D adapters assign zero Z, and existing ordered 2-D outputs discard metadata.
+The Z path preserves pinned endpoint-priority `SetZ`, direction-sensitive
+horizontal and strictly-simple fills, output/fixup/join survivor metadata, an
+execution-local sorted and deduplicated intersection table, and optional
+PolyTree Z sidecars. Seed discovery preserves contour/hole expansion signs,
+ExPolygon-level IDs, NonZero intersection and point order, repeated endpoints,
+four-direction split merging, swap-pop/reprocessing, four recovery branches,
+and the documented release-only drops.
+
+The closed-seed fallback builds lazily from contour-only inflated boxes. It
+retains both coordinate-scale epsilons, literal `min + max / 2` centroid
+arithmetic, longest-axis X ties, source QuickSelect order, left-first first-hit
+traversal, and exact outer/hole containment. `sorted=true` applies the accepted
+ARD-0024 MSVC STL 14.44 control flow to an index permutation with comparator
+`(boundary, src)` only; no stable sort, host sort, geometry tie-break, or index
+tie-break enters production.
+
+Twenty-five focused Z tests, 39 focused wave-seed tests, 211 full Clipper tests,
+and 53 full RegionExpansion tests compare complete ordered metadata, IDs, and
+paths. Focused release filters freeze first-two collector behavior, invalid
+front/valid back continuation, and containment drops. The unchanged O27 handoff
+and inactive public lifecycle are tested. All 23 planned mutations plus a
+strict shortest-edge mutation are killed, restored, and rerun GREEN. Pinned
+C++ debug/`NDEBUG` captures cover inside, crossing, hole, split, multiple-ID,
+overlapping-fallback, and release-only shared-vertex behavior; original
+compiling-RED chronology is unavailable and is disclosed rather than
+reconstructed.
+
+Both final-state workspace commands pass 5,994 tests with 2 skipped. Native
+all-target check, strict all-feature Clippy, formatting, four wasm32 checks,
+two optimized WASM builds, export/syntax audits, and two 11-test Playwright
+runs pass. Static audits confirm the exact file allowlist, all Rust files under
+400 LOC, every new shard at most 300 LOC, empty staging, no manifest/lockfile,
+dependency, lifecycle, adapter, or forbidden-pattern change. A disposable
+worktree reproduced the exact O28 state, rolled it mechanically back to clean
+predecessor `f361bb73b558b4e50bfa4fa712afcd63df44ba9f`, and proved the primary
+diff, file list, staging state, and digests unchanged. Preliminary independent
+six-dimensional and default-model OpenCode reviews both return
+`VERDICT: APPROVE`; final documented-state review and exact pushed-SHA Tier-1
+remain release gates.
+
+Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`; O28
+changes no KSR checkpoint and makes no G-code parity claim. The next bounded
+rewrite is the source-taking
+`propagate_waves(const ExPolygons &, const ExPolygons &,
+const RegionExpansionParameters &)` overload and its scalar overload at
+`Algorithm/RegionExpansion.cpp:463-478`, which compose O28 seed discovery with
+unchanged O27 propagation. `propagate_waves_ex`, expansion merge helpers,
+external-surface orchestration, fill generation, toolpaths, seams, motion,
+G-code, and post-processing remain deferred. Mechanical rollback removes only
+O28 Z/seed/AABB code, tests, and documentation while retaining all O27 code and
+the exact O26 lifecycle.
