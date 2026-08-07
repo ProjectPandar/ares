@@ -62,8 +62,10 @@ green. Final physical LOC are 74 (`types.rs`), 218 (`propagate.rs`), 62
 shard). Exact allowlist/LOC/visibility/forbidden-pattern static audit and the
 disposable exact-predecessor rollback are green. Final independent
 six-dimensional and default-model OpenCode implementation reviews both return
-literal `VERDICT: APPROVE`. Exact-pushed-SHA Tier-1 is the remaining release
-gate; O30 is not yet released.
+literal `VERDICT: APPROVE`. O30 was released as implementation commit `0a19939` and documentation commit
+`6ccb145`; exact-SHA Tier-1 run `31184069746` passed format, WASM/browser,
+Linux, Windows, and macOS at
+`6ccb145dbb1867e5724538fb071795a7fd4179f0`.
 
 Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. O30
 adds no Option, checkpoint, lifecycle state, KSR golden change, G-code byte, or

@@ -2,7 +2,7 @@
 
 ## Status
 
-Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.29
+Tasks 16 through 20A.2, Tasks 22A through 22N, and Tasks 22O.1 through 22O.30
 are released. O28 implements the bounded ClipperZ-backed
 `Algorithm::wave_seeds` prerequisite; its final reviews approved and exact-SHA
 Tier-1 run `31156094839` passed at
@@ -12,14 +12,15 @@ its exact-SHA Tier-1 run `31168584784` passed all format, WASM/browser, Linux,
 Windows, and macOS jobs at
 `118f6a72b33926efe41ced1c931f9a51b26b2945`. O29 adds no lifecycle wiring, so
 public slicing still consumes O26 and returns `ProjectSlicingIncomplete`.
-O30 direct supplied-seed `propagate_waves_ex` is locally implemented with its
-native/WASM/browser/static/disposable-rollback gates green. Final independent
-six-dimensional and default-model OpenCode implementation reviews both return
-literal `VERDICT: APPROVE`. Exact-pushed-SHA Tier-1 remains pending, so O30 is
-not released.
-Source/scalar `propagate_waves_ex`, external-surface processing, later
-surface/toolpath stages, complete G-code assembly, and normalized KSR parity
-remain deferred to later source-cited rewrite slices.
+O30 direct supplied-seed `propagate_waves_ex` was released as commits
+`0a19939`/`6ccb145`; exact-SHA Tier-1 run `31184069746` passed all five jobs at
+`6ccb145dbb1867e5724538fb071795a7fd4179f0`. O31 source/scalar
+`propagate_waves_ex` composition is locally implemented but unreleased pending
+full verification, final reviews, push, and exact-SHA Tier-1. It adds no
+lifecycle wiring, so public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`. `expand_expolygons`, external-surface processing,
+later surface/toolpath stages, complete G-code assembly, and normalized KSR
+parity remain deferred to later source-cited rewrite slices.
 
 ## Fixed baseline
 
@@ -3805,7 +3806,20 @@ checkpoint, persisted state, KSR golden change, or G-code byte. Public slicing
 continues to return `ProjectSlicingIncomplete`. Exact static and disposable
 rollback gates are green; final independent six-dimensional and default-model
 OpenCode implementation reviews both return literal `VERDICT: APPROVE`.
-Exact-pushed-SHA Tier-1 remains pending, so O30 is not released. The next bounded boundary is source/scalar
-`propagate_waves_ex` at `RegionExpansion.cpp:506-520`; later merge,
-external-surface, fill, toolpath, seam, motion, G-code, and post-processing work
-remains deferred.
+O30 was released as commits `0a19939`/`6ccb145`; exact-SHA Tier-1 run
+`31184069746` passed all five jobs at
+`6ccb145dbb1867e5724538fb071795a7fd4179f0`.
+
+Task 22O.31 locally ports source/scalar `propagate_waves_ex` at
+`RegionExpansion.cpp:506-520` and `RegionExpansion.hpp:94-100`. The private
+wrapper performs exactly one parameter build, sorted O28 seed discovery with
+the built tiny expansion and same explicit scale, and unchanged O30 delegation.
+Its five-test shard passes debug/release and complete RegionExpansion passes
+69/69; nine runtime mutations are killed, one signature mutation is compiler
+rejected, and one discovery-scale focused survivor is disclosed with exact
+forwarding fixed by structural audit. O31 adds no architecture decision,
+public export, Option, lifecycle, checkpoint, persisted state, KSR golden
+change, or G-code byte. Full verification/review/release gates remain pending.
+The next bounded boundary is `expand_expolygons` at hpp:102-108/cpp:522-534;
+later merge, external-surface, fill, toolpath, seam, motion, G-code, and
+post-processing work remains deferred.

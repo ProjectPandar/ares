@@ -5139,9 +5139,35 @@ O30 changes no public API, Option, lifecycle, checkpoint, persisted state, KSR
 golden expectation, G-code byte, or ARD; public slicing remains on O26 and
 returns `ProjectSlicingIncomplete`. Exact static and disposable rollback gates
 are green; final independent six-dimensional and default-model OpenCode
-implementation reviews both return literal `VERDICT: APPROVE`. Exact-pushed-SHA
-Tier-1 remains pending, so O30 is not released. The next
-candidate boundary is source/scalar `propagate_waves_ex` at
-`RegionExpansion.cpp:506-520`; expansion/merge helpers, external-surface
-orchestration, fill, toolpath, seam, motion, G-code, and post-processing remain
-deferred.
+implementation reviews both return literal `VERDICT: APPROVE`. O30 was
+released as implementation commit `0a19939` and documentation commit `6ccb145`;
+exact-SHA Tier-1 run `31184069746` passed all five jobs at
+`6ccb145dbb1867e5724538fb071795a7fd4179f0`.
+
+## Task 22O.31: source-taking RegionExpansionEx composition
+
+Task 22O.31 locally ports pinned `Algorithm/RegionExpansion.cpp:506-520` and
+`RegionExpansion.hpp:94-100`. Its crate-private scalar entry builds
+`RegionExpansionParameters` once, discovers sorted O28 seeds once with the
+built tiny expansion and the same explicit `CoordinateScale`, then delegates
+once to unchanged O30. Discovery and propagation/union errors escape directly;
+there is no empty shortcut, rescaling, regrouping, lifecycle wiring, or public
+export.
+
+The five-test shard freezes builder precedence, empty behavior, a natural hole,
+complete sorted source/boundary IDs and topology, Normal/LargeBed complete
+vectors, and discovery-before-propagation error order against the explicit
+build/discover/O30 pipeline. Chronological RED failed 5/5 against the compiling
+empty stub; focused debug/release pass 5/5 and RegionExpansion passes 69/69.
+Nine runtime mutations are killed, one signature mutation is compiler-rejected,
+and the discovery-call scale substitution is truthfully recorded as a focused
+witness survivor while exact same-scale forwarding is fixed structurally.
+
+O31 changes no public API, Option, lifecycle, checkpoint, persisted state, KSR
+golden expectation, G-code byte, or ARD. Public slicing remains on O26 and
+returns `ProjectSlicingIncomplete`. Full native/WASM/browser/static/rollback,
+final dual review, commit/push, and exact-SHA Tier-1 remain pending, so O31 is
+not released. The next candidate is `expand_expolygons` at
+`RegionExpansion.hpp:102-108` and `RegionExpansion.cpp:522-534`; merge helpers,
+external-surface orchestration, fill, toolpath, seam, motion, G-code, and
+post-processing remain deferred.

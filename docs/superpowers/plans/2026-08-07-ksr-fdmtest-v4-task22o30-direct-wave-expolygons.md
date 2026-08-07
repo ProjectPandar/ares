@@ -31,8 +31,9 @@ are 74, 218, 62, 156, 6, and 263 across the approved Rust files. Exact
 allowlist/LOC/visibility/forbidden-pattern static audit and disposable
 exact-predecessor rollback are green. Final independent six-dimensional and
 default-model OpenCode implementation reviews both return literal
-`VERDICT: APPROVE`. Commit/push and exact-pushed-SHA Tier-1 remain pending; O30
-is not released.
+`VERDICT: APPROVE`. O30 was released as implementation commit `0a19939` and
+documentation commit `6ccb145`; exact-SHA Tier-1 run `31184069746` passed all
+five jobs at `6ccb145dbb1867e5724538fb071795a7fd4179f0`.
 
 ## Reviewed specification, baseline, and ownership
 
