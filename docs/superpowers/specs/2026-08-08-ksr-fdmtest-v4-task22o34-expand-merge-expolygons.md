@@ -2,10 +2,11 @@
 
 ## Status and source boundary
 
-Locally implemented and initially verified, but unreleased. Exact predecessor
-O33 was released as implementation/documentation commits `b9e65fd`/`0f6f801`;
-exact-SHA Tier-1 run `31228800274` passed format, WASM/browser twice, Linux,
-Windows, and macOS at `0f6f80130d28c0cc629e8561e46d187b137a8206`.
+Released as implementation/documentation commits `f499058`/`25460c2`.
+Exact-SHA Tier-1 run `31259140846` passed format, WASM/browser twice, Linux,
+Windows, and macOS at
+`25460c2abfc5bf94104f41b05df5af2dfac419ee`. Exact predecessor O33 was
+released as implementation/documentation commits `b9e65fd`/`0f6f801`.
 Pinned Orca remains v2.4.2 commit
 `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
@@ -171,12 +172,14 @@ RegionExpansion 92/92, PolyTree 6/6, offset 58/58, O26 lifecycle 3/3, and
 workspace 6,033/6,033 with 2 skipped. All-target check, warning-denying Clippy,
 rustfmt, four WASM checks, two optimized builds, export and JavaScript audits
 pass. Both local Playwright attempts reach all 11 launches but stop before test
-code because Chromium cannot load `libglib-2.0.so.0`; exact-SHA CI must pass
-both runs. Disposable exact-O33 rollback proves candidate/primary byte identity
-and passes RegionExpansion 87/87, PolyTree 6/6, offset 58/58, and lifecycle
-3/3. The repaired exact candidate's independent six-dimensional and
-default-model OpenCode rereviews both return literal `VERDICT: APPROVE`.
-Commit/push and exact-SHA Tier-1 remain release prerequisites; O34 is not
+code because Chromium cannot load `libglib-2.0.so.0`; pushed Tier-1 installed
+browser dependencies and passed both runs. Disposable exact-O33 rollback proves
+candidate/primary byte identity and passes RegionExpansion 87/87, PolyTree 6/6,
+offset 58/58, and lifecycle 3/3. The repaired exact candidate's independent
+six-dimensional and default-model OpenCode rereviews both return literal
+`VERDICT: APPROVE`. Implementation/documentation commits `f499058`/`25460c2`
+were pushed; exact-SHA Tier-1 run `31259140846` passed all five jobs, including
+both browser runs, at `25460c2abfc5bf94104f41b05df5af2dfac419ee`. O34 is
 released.
 
 Require focused debug/release, complete RegionExpansion, O29/O33 focused,

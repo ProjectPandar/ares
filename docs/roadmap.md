@@ -5271,11 +5271,50 @@ cannot load `libglib-2.0.so.0`; exact-SHA CI retains both runs. Disposable
 exact-O33 rollback proves candidate/primary byte identity and passes
 RegionExpansion 87/87, PolyTree 6/6, offset 58/58, and lifecycle 3/3. The
 repaired candidate's independent six-dimensional and default-model OpenCode
-rereviews both approve. Commit/push and exact-SHA Tier-1 remain pending, so O34
-is not released.
+rereviews both approve. Implementation/documentation commits
+`f499058`/`25460c2` were pushed; exact-SHA Tier-1 run `31259140846` passed all
+five jobs, including both browser runs, at
+`25460c2abfc5bf94104f41b05df5af2dfac419ee`. O34 is released.
 
 O34 adds no Option, public API, lifecycle, checkpoint, persistence, adapter,
 KSR golden expectation, or G-code byte. Public slicing still consumes O26 and
-returns `ProjectSlicingIncomplete`. The next source-cited external-surface
-caller boundary requires separate reconnaissance; fill, toolpath, seam, motion,
-G-code, and post-processing remain deferred.
+returns `ProjectSlicingIncomplete`.
+
+## Task 22O.35: expand and merge one external-surface kind
+
+Task 22O.35 locally ports pinned `LayerRegion.cpp:147-163,166-171,439-484` and
+`ClipperUtils.hpp:19,27,407-408`. Its inactive crate-private helper moves one
+selected `RegionSurfaceKind` into ordered sources, propagates each ordered zone
+through O29, rebases boundary IDs with 32-bit wrapping behavior, merges once
+through O33, applies explicit Miter/3 morphological closing, trims only zones
+with successful expansions, and materializes default surface metadata with the
+supplied bridge angle. Matching records retain metadata with empty moved
+geometry; nonmatching records and point buffers remain untouched.
+
+The authoritative stub RED compiled 13 tests, with two truthful equivalent
+passes and 11 intended failures after two test-only pre-RED repairs. The frozen
+candidate passes focused debug/release 13/13, offset 62/62, O29 5/5, O33 13/13,
+O34 5/5, and RegionExpansion 92/92. Fourteen runtime mutations are killed, one
+signature mutation is compiler-rejected, and four behaviorally equivalent
+miter/rebasing/scale mutations are disclosed as survivors. Exact byte
+restoration, warning-denying focused Clippy, rustfmt, LOC/visibility/forbidden
+audits, and both initial independent/default-model OpenCode reviews pass.
+
+The complete documented implementation candidate passes focused debug/release
+13/13, offset 62/62, O29 5/5, O33 13/13, O34 5/5, RegionExpansion 92/92,
+PolyTree 6/6, lifecycle 3/3, workspace Nextest 6,046/6,046 with 2 skipped, all
+native/static/WASM/build/export gates, and exact-O34 rollback with
+5/92/6/58/3 baseline suites. Both local Playwright attempts fail before test
+code only because Chromium cannot load `libglib-2.0.so.0`; they are not passes
+and exact-SHA CI retains both runs. Final independent six-dimensional and
+default-model OpenCode implementation reviews both approve with no required
+changes.
+
+O35 remains inactive and unreleased pending exact-final-byte verification,
+documentation-only rereviews, commit/push, and exact-SHA Tier-1. It adds no
+Option, public API, lifecycle, adapter, golden expectation, or G-code byte. Its
+partial local mutations are safe only on a future staged owned working copy.
+Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The
+next slice must separately plan bridge helpers or staged
+`LayerRegion::process_external_surfaces`; fill, toolpath, seam, motion, G-code,
+and post-processing remain deferred.

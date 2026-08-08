@@ -39,8 +39,11 @@ builds, export/JavaScript, and disposable exact-O33 rollback pass. Both local
 Playwright attempts fail only at Chromium startup because `libglib-2.0.so.0` is
 absent; exact-SHA CI retains both browser runs. Repaired independent
 six-dimensional and default-model OpenCode rereviews both return literal
-`VERDICT: APPROVE`. Tasks 1-8 are complete; Task 9 commit/push and exact-SHA
-Tier-1 remain pending.
+`VERDICT: APPROVE`. Implementation/documentation commits `f499058`/`25460c2`
+were pushed, and exact-SHA Tier-1 run `31259140846` passed all five jobs,
+including both browser runs, at
+`25460c2abfc5bf94104f41b05df5af2dfac419ee`. Tasks 1-9 are complete and O34
+is released.
 
 Allowed Rust files only:
 
@@ -221,10 +224,11 @@ review-outcome-only text update.
 
 Load Conventional Commits guidance. Stage only approved files, keep
 `.pi-subagents/`, `/tmp`, target artifacts, and generated bindings unstaged,
-create separate implementation/docs commits, push `main`, prove
-`HEAD == origin/main`, and wait for the push-triggered Tier-1 run. Release O34
-only when its `headSha` equals the pushed docs SHA and format, WASM/browser
-(twice), Linux, Windows, and macOS all pass.
+create separate implementation/docs commits, push `main`, and prove
+`HEAD == origin/main`. This completed as commits `f499058`/`25460c2`; the
+push-triggered Tier-1 run `31259140846` had exact `headSha`
+`25460c2abfc5bf94104f41b05df5af2dfac419ee` and passed format, WASM/browser
+(twice), Linux, Windows, and macOS. O34 is released.
 
 Do not mark the full KSR goal complete: O34 remains a private geometry
 composition and does not yet produce G-code.
