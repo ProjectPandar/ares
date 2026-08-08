@@ -40,7 +40,7 @@ pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
 pub(crate) use region_expansion::{
     RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, expand_expolygons,
-    merge_expansions_into_expolygons, propagate_waves, propagate_waves_ex,
+    expand_merge_expolygons, merge_expansions_into_expolygons, propagate_waves, propagate_waves_ex,
     propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
     propagate_waves_from_sources_with_steps,
 };
@@ -100,6 +100,12 @@ type ExpandExPolygonsOperation = fn(
     usize,
     CoordinateScale,
 ) -> Result<Vec<Vec<Polygon>>, ClipperError>;
+type ExpandMergeOperation = fn(
+    Vec<ExPolygon>,
+    &[ExPolygon],
+    &RegionExpansionParameters,
+    CoordinateScale,
+) -> Result<Vec<ExPolygon>, ClipperError>;
 type MergeExpansionsOperation = fn(
     Vec<ExPolygon>,
     Vec<RegionExpansion>,
@@ -163,6 +169,7 @@ const _: RegionExpansionFromSourcesOperation = propagate_waves_from_sources;
 const _: RegionExpansionFromSourcesWithStepsOperation = propagate_waves_from_sources_with_steps;
 const _: ExpandExPolygonsOperation = expand_expolygons;
 const _: MergeExpansionsOperation = merge_expansions_into_expolygons;
+const _: ExpandMergeOperation = expand_merge_expolygons;
 const _: fn(f32, f32, usize, CoordinateScale) -> RegionExpansionParameters =
     RegionExpansionParameters::build;
 const _: fn(ExPolygon, f64, &mut Vec<ExPolygon>) -> Result<(), ClipperError> =

@@ -1,5 +1,5 @@
-use super::RegionExpansion;
 use super::wave_seeds::sample_in_expolygons;
+use super::{RegionExpansion, RegionExpansionParameters, propagate_waves_from_sources};
 use crate::geometry::clipper::ordering::fixed_msvc_sort_by;
 use crate::geometry::clipper::union_safety_offset_ex;
 use crate::geometry::{ClipperError, CoordinateScale, ExPolygon};
@@ -62,4 +62,14 @@ pub(crate) fn merge_expansions_into_expolygons(
     }
     output.extend(src);
     Ok(output)
+}
+
+pub(crate) fn expand_merge_expolygons(
+    src: Vec<ExPolygon>,
+    boundary: &[ExPolygon],
+    params: &RegionExpansionParameters,
+    scale: CoordinateScale,
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    let expanded = propagate_waves_from_sources(&src, boundary, params, scale)?;
+    merge_expansions_into_expolygons(src, expanded, scale)
 }

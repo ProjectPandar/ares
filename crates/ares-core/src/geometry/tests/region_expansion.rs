@@ -1,5 +1,6 @@
 mod composition;
 mod expand_expolygons;
+mod expand_merge;
 mod expolygon_composition;
 mod expolygon_output;
 mod helpers;
