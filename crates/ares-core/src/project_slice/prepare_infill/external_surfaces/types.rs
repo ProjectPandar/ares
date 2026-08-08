@@ -1,4 +1,9 @@
-use crate::geometry::{ExPolygon, RegionExpansionParameters};
+use crate::geometry::{ExPolygon, RegionExpansionEx, RegionExpansionParameters, WaveSeed};
+
+pub(in crate::project_slice) struct ExpansionResult {
+    pub(in crate::project_slice) anchors: Vec<WaveSeed>,
+    pub(in crate::project_slice) expansions: Vec<RegionExpansionEx>,
+}
 
 pub(in crate::project_slice) struct ExpansionZone {
     pub(in crate::project_slice) expolygons: Vec<ExPolygon>,

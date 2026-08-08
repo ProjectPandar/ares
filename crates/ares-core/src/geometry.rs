@@ -42,7 +42,7 @@ pub(crate) use region_expansion::{
     RegionExpansion, RegionExpansionEx, RegionExpansionParameters, WaveSeed, expand_expolygons,
     expand_merge_expolygons, merge_expansions_into_expolygons, propagate_waves, propagate_waves_ex,
     propagate_waves_ex_from_sources_with_steps, propagate_waves_from_sources,
-    propagate_waves_from_sources_with_steps,
+    propagate_waves_from_sources_with_steps, wave_seeds,
 };
 #[cfg(test)]
 pub(in crate::geometry) use region_expansion::{
@@ -58,6 +58,13 @@ type ExPolygonsOffsetOperation =
     fn(&[ExPolygon], f32, JoinType, f64) -> Result<Vec<ExPolygon>, ClipperError>;
 type VariableOffsetOperation =
     fn(&ExPolygon, &[Vec<f32>], f64) -> Result<Vec<ExPolygon>, ClipperError>;
+type WaveSeedsFn = fn(
+    &[ExPolygon],
+    &[ExPolygon],
+    f32,
+    bool,
+    CoordinateScale,
+) -> Result<Vec<WaveSeed>, ClipperError>;
 type RegionExpansionOperation = fn(
     &[WaveSeed],
     &[ExPolygon],
@@ -162,6 +169,7 @@ const _: BinaryExOperation = xor_ex;
 const _: ExPolygonsOffsetOperation = offset_expolygons;
 const _: ExPolygonsOffsetOperation = closing_ex;
 const _: VariableOffsetOperation = variable_offset_inner_ex;
+const _: WaveSeedsFn = wave_seeds;
 const _: RegionExpansionOperation = propagate_waves;
 const _: RegionExpansionExOperation = propagate_waves_ex;
 const _: RegionExpansionExFromSourcesWithStepsOperation =
