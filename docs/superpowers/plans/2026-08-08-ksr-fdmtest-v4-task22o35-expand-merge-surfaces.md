@@ -22,8 +22,11 @@ O35 stays crate-private and inactive. It adds no Option, lifecycle successor,
 public adapter, checkpoint, golden expectation, or G-code byte. Public slicing
 continues to consume O26 and return `ProjectSlicingIncomplete`.
 
-Tasks 1-9 and the implementation-review phase of Task 10 are complete. After
-two test-only pre-RED repairs with both stubs intact, the authoritative
+Tasks 1-10 are complete. Implementation/documentation commits
+`984bc01`/`c6f23ce` were pushed; exact-SHA Tier-1 run `31269521736` passed all
+five jobs and both browser executions at
+`c6f23ce1a9350ca76241d007f804f3fcfa22c352`. After two test-only pre-RED
+repairs with both stubs intact, the authoritative
 compiling RED ran 13 tests with two truthful equivalent passes and 11 intended
 failures. The frozen candidate passes focused debug/release 13/13, offset
 62/62, O29 5/5, O33 13/13, O34 5/5, and RegionExpansion 92/92. The post-hoc
@@ -35,9 +38,9 @@ exact-O34 rollback with 5/92/6/58/3 baseline suites. Both local Playwright runs
 are truthful environment failures before test code due missing
 `libglib-2.0.so.0`; exact-SHA CI retains both mandatory runs. Independent
 six-dimensional and default-model OpenCode initial and final implementation
-reviews all return literal `VERDICT: APPROVE`. O35 remains unreleased pending
-the post-documentation exact-final-byte rerun, documentation-only rereviews,
-commit/push, and exact-SHA Tier-1 required by Task 10.
+reviews all return literal `VERDICT: APPROVE`. Post-documentation exact-byte
+verification, documentation rereviews, separate commits, push, and the exact-
+SHA Tier-1 gate all completed successfully; O35 is released.
 
 One delegated worker is the sole Rust/test writer for every implementation,
 witness-repair, mutation, and restoration byte. Reviewers never edit. The

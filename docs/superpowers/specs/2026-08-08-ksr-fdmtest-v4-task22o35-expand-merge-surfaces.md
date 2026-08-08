@@ -2,11 +2,12 @@
 
 ## Status and source boundary
 
-Locally implemented, crate-private, and inactive. The complete documented
-implementation candidate, exact-O34 rollback, and both final implementation
-reviews pass. O35 remains unreleased pending exact-final-byte verification,
-documentation-only rereviews, commit/push, and exact-SHA Tier-1. Exact
-predecessor O34 is released as
+Released, crate-private, and inactive. Implementation/documentation commits
+`984bc01`/`c6f23ce` were pushed, and exact-SHA Tier-1 run `31269521736`
+passed format, WASM with both browser executions, Linux, Windows, and macOS at
+`c6f23ce1a9350ca76241d007f804f3fcfa22c352`. The authoritative run JSON is
+archived at `/tmp/task22o35-tier1-exact-sha.json`. Exact predecessor O34 is
+released as
 implementation/documentation commits `f499058`/`25460c2`; exact-SHA Tier-1 run
 `31259140846` passed format, WASM/browser twice, Linux, Windows, and macOS at
 `25460c2abfc5bf94104f41b05df5af2dfac419ee`; the authoritative run JSON is
@@ -336,9 +337,9 @@ both return literal `VERDICT: APPROVE`. Any repair requires affected and
 complete exact-candidate verification, refreshed documentation/evidence, and
 both rereviews against the same diff.
 
-Commit and push only approved files. O35 is released only when Tier-1 `headSha`
-equals the pushed documentation SHA and format, WASM/browser twice, Linux,
-Windows, and macOS all pass.
+Only approved files were committed and pushed. O35's Tier-1 `headSha` equals
+the pushed documentation SHA `c6f23ce1a9350ca76241d007f804f3fcfa22c352`;
+all five jobs and both browser executions passed in run `31269521736`.
 
 Public slicing must still consume O26 and return `ProjectSlicingIncomplete`;
 the KSR golden test remains unchanged and incomplete. The next bounded source

@@ -27,14 +27,19 @@ five jobs, including both browser runs, at
 `expand_merge_expolygons` was released as commits `f499058`/`25460c2`;
 exact-SHA Tier-1 run `31259140846` passed all five jobs, including both browser
 runs, at `25460c2abfc5bf94104f41b05df5af2dfac419ee`. O35
-`expand_merge_surfaces` is locally implemented, crate-private, inactive, and
-unreleased. Its complete documented candidate, exact-O34 rollback, and both
-final implementation reviews pass; exact-final-byte verification,
-documentation-only rereviews, commit/push, and exact-SHA Tier-1 remain. It adds
-no Option or lifecycle wiring, so public slicing still consumes O26 and returns
-`ProjectSlicingIncomplete`. Later external-surface orchestration,
-surface/toolpath stages, complete G-code assembly, and normalized KSR parity
-remain deferred to later source-cited rewrite slices.
+`expand_merge_surfaces` was released as commits `984bc01`/`c6f23ce`;
+exact-SHA Tier-1 run `31269521736` passed all five jobs and both browser runs at
+`c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O36's translation-unit-local
+bridge-zone expansion composition is locally implemented, crate-private,
+inactive, and unreleased; its chronological RED, pinned original-Orca E2E and
+helper oracle, focused regressions, mutations/restoration, test-only propagation
+witness repair, complete native/WASM/static/rollback verification, and both
+final implementation rereviews pass. Final documentation rereviews, separate
+commits, push, and exact-SHA Tier-1 remain. O35/O36 add no Option or lifecycle
+wiring, so public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`. Later bridge grouping/direction,
+external-surface orchestration, surface/toolpath stages, complete G-code
+assembly, and normalized KSR parity remain deferred.
 
 ## Fixed baseline
 
@@ -3952,11 +3957,46 @@ and exact-SHA CI retains both runs. Final independent six-dimensional and
 default-model OpenCode implementation reviews both approve with no required
 changes.
 
-O35 remains inactive and unreleased pending exact-final-byte verification,
-documentation-only rereviews, commit/push, and exact-SHA Tier-1. It adds no
-Option, public API, lifecycle, adapter, golden expectation, or G-code byte; its
-partial local mutation order must be contained by a future staged owned caller.
-Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The
-next slice must separately plan bridge helpers or staged
-`LayerRegion::process_external_surfaces`; fill, toolpath, seam, motion, G-code,
-and post-processing remain deferred.
+Implementation/documentation commits `984bc01`/`c6f23ce` were pushed;
+exact-SHA Tier-1 run `31269521736` passed all five jobs and both browser
+executions at `c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O35 is released but
+remains inactive. It adds no Option, public API, lifecycle, adapter, golden
+expectation, or G-code byte; its partial mutation order must be contained by a
+future staged owned caller. Public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`.
+
+Task 22O.36 locally ports pinned `LayerRegion.cpp:353-356,358-393`. Its
+translation-unit-local, inactive crate-private helper composes O28 sorted seed
+discovery and O30 ExPolygon propagation across ordered O35 `ExpansionZone`s,
+rebases both boundary-ID streams by the full prior-zone ExPolygon domain,
+commits per-zone flags after both fallible calls, and move-appends ordered
+anchors and expansions. Explicit `CoordinateScale`, `u32` casts, and
+`wrapping_add` preserve Ares' platform-neutral replacement for Orca's implicit
+scale and C++ `unsigned` behavior.
+
+The compiling empty-stub RED failed 0/6. Focused debug/release pass 6/6; O35,
+O28, O30, O31, RegionExpansion, external-surface, PolyTree, offset, and O26
+lifecycle regressions pass 13/39/6/5/92/15/6/62/3. The exact pinned Orca CLI
+sliced the KSR input successfully in a disposable environment; original-helper
+Debug/NDEBUG vectors are byte-identical and match complete committed Rust
+literals. The one-at-a-time campaign has 13 runtime kills, two compiler
+rejections, and two truthful sorted/scale equivalent survivors. Exact
+restoration, rustfmt, LOC/private visibility, and both initial independent and
+default-model reviews pass. A final-review test-only repair now explicitly
+proves nonempty O28 output before first/later O30 errors; production and the
+flag/no-partial assertions are unchanged, and the shard is 295 LOC.
+
+The repaired complete candidate passes O36 debug/release 6/6, focused suites
+13/39/6/5/92/15/6/62/3, workspace 6,052 passed with 2 skipped, native lint/
+format, four WASM checks, two optimized builds, export/JavaScript audits, and
+exact-O35 rollback 13/92/6/62/3. Both local Playwright runs remain pre-test
+`libglib-2.0.so.0` launch failures, not passes. Both final implementation
+rereviews approve.
+
+O36 remains inactive and unreleased pending the post-documentation exact-byte
+rerun, documentation rereviews, commits/push, and exact-SHA Tier-1. It changes
+no Option, public lifecycle, adapter, golden expectation, or
+G-code byte. Public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`. The next source boundary is `Bridge`, `group_id`,
+and `get_grouped_bridges` at `LayerRegion.cpp:174-259`; bridge direction/merge
+and `process_external_surfaces` orchestration remain deferred.

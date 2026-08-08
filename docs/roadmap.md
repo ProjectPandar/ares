@@ -5310,11 +5310,50 @@ and exact-SHA CI retains both runs. Final independent six-dimensional and
 default-model OpenCode implementation reviews both approve with no required
 changes.
 
-O35 remains inactive and unreleased pending exact-final-byte verification,
-documentation-only rereviews, commit/push, and exact-SHA Tier-1. It adds no
-Option, public API, lifecycle, adapter, golden expectation, or G-code byte. Its
-partial local mutations are safe only on a future staged owned working copy.
-Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The
-next slice must separately plan bridge helpers or staged
-`LayerRegion::process_external_surfaces`; fill, toolpath, seam, motion, G-code,
-and post-processing remain deferred.
+Implementation/documentation commits `984bc01`/`c6f23ce` were pushed;
+exact-SHA Tier-1 run `31269521736` passed all five jobs and both browser
+executions at `c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O35 is released but
+remains inactive. It adds no Option, public API, lifecycle, adapter, golden
+expectation, or G-code byte. Its partial mutations are safe only on a future
+staged owned working copy. Public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`.
+
+## Task 22O.36: compose bridge anchors and expansions across ordered zones
+
+Task 22O.36 locally ports pinned `LayerRegion.cpp:353-356,358-393`: the
+translation-unit-local `ExpansionResult` and `expand_expolygons` helper,
+distinct from released O32. The inactive crate-private helper visits O35 zones
+in source order, calls O28 sorted discovery then O30 ExPolygon propagation,
+rebases anchor/expansion boundary IDs by every prior zone's full ExPolygon
+count with 32-bit wrapping behavior, commits `expanded_into`, and move-appends
+the two complete streams.
+
+The compiling empty-stub RED failed 0/6 at the O36 seam. The frozen candidate
+passes focused debug/release 6/6, O35 13/13, O28 39/39, O30 6/6, O31 5/5,
+RegionExpansion 92/92, external surfaces 15/15, PolyTree 6/6, offset 62/62,
+and lifecycle 3/3. A disposable exact pinned-Orca CLI E2E sliced the KSR 3MF
+to a nonempty G-code, and a linked original-helper oracle emitted byte-identical
+Debug/NDEBUG vectors matching the complete Rust anchor/expansion/hole/ID/flag
+literals. Thirteen runtime mutations are killed, two API/result mutations are
+compiler-rejected, and the `sorted=false`/hard-coded-scale equivalent survivors
+are disclosed structurally. Exact restoration, rustfmt, LOC/private visibility,
+and both initial independent/default-model reviews pass. Final review required
+one test-only repair that now explicitly proves nonempty O28 seeds before both
+O30 propagation errors; existing flag/no-partial assertions and production are
+unchanged, and the shard remains bounded at 295 LOC.
+
+The repaired complete candidate passes O36 debug/release 6/6, all focused
+regressions 13/39/6/5/92/15/6/62/3, workspace 6,052 passed with 2 skipped,
+check, warning-denying Clippy, rustfmt, four WASM checks, two optimized builds,
+export/JavaScript audits, and exact-O35 rollback 13/92/6/62/3. Both local
+Playwright runs fail before test code only because `libglib-2.0.so.0` is absent;
+they are not passes. Both final implementation rereviews approve.
+
+O36 remains inactive and unreleased pending the post-documentation exact-byte
+rerun, documentation rereviews, separate commits, push, and exact-SHA Tier-1.
+It adds no Option, public API, lifecycle,
+adapter, golden expectation, or G-code byte. Public slicing still consumes O26
+and returns `ProjectSlicingIncomplete`. The next bounded slice is `Bridge`,
+`group_id`, and `get_grouped_bridges` at `LayerRegion.cpp:174-259`; bridge
+direction/merge orchestration, fill, toolpath, seam, motion, G-code, and
+post-processing remain deferred.
