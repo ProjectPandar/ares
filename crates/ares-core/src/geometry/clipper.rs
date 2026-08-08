@@ -50,8 +50,8 @@ pub(in crate::geometry) use offset::opening_path_configurations_for_test;
 #[cfg(test)]
 pub(crate) use offset::opening_paths_with_interstage;
 pub(crate) use offset::{
-    ClipperOffset, JoinType, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
-    offset_expolygons_paths, offset_open_paths, offset_paths, offset2_ex,
+    ClipperOffset, JoinType, closing_ex, offset_expolygon, offset_expolygon_refs_paths,
+    offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset2_ex,
     offset2_ex_with_interstage, opening_ex, opening_paths, raw_offset_paths,
 };
 #[cfg(test)]

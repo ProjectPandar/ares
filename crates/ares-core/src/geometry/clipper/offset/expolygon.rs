@@ -33,6 +33,16 @@ pub(crate) fn opening_ex(
     offset2_ex(expolygons, -delta, delta, join_type, miter_limit)
 }
 
+pub(crate) fn closing_ex(
+    expolygons: &[ExPolygon],
+    delta: f32,
+    join_type: JoinType,
+    miter_limit: f64,
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    assert!(delta > 0.0);
+    offset2_ex(expolygons, delta, -delta, join_type, miter_limit)
+}
+
 pub(crate) fn offset2_ex(
     expolygons: &[ExPolygon],
     first: f32,

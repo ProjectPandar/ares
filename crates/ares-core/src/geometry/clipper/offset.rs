@@ -10,8 +10,9 @@ pub(super) use execute::offset_configuration_for_test;
 pub(crate) use execute::raw_offset_open_paths;
 pub(crate) use execute::{offset_open_paths, offset_paths, offset_paths_tree, raw_offset_paths};
 pub(crate) use expolygon::{
-    offset_expolygon, offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths,
-    offset_expolygons_raw, offset2_ex, offset2_ex_with_interstage, opening_ex,
+    closing_ex, offset_expolygon, offset_expolygon_refs_paths, offset_expolygons,
+    offset_expolygons_paths, offset_expolygons_raw, offset2_ex, offset2_ex_with_interstage,
+    opening_ex,
 };
 #[cfg(test)]
 pub(in crate::geometry) use opening::opening_path_configurations_for_test;
@@ -129,6 +130,7 @@ const _: PathsOffsetFn = offset_paths;
 const _: TreeOffsetFn = offset_paths_tree;
 const _: ExPolygonOffsetFn = offset_expolygon;
 const _: ExPolygonsOffsetFn = offset_expolygons;
+const _: ExPolygonsOffsetFn = closing_ex;
 const _: ExPolygonsRawFn = offset_expolygons_raw;
 const _: ExPolygonsPathsFn = offset_expolygons_paths;
 const _: OffsetTwoFn = offset2_ex;

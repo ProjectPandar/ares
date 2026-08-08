@@ -22,7 +22,7 @@ pub(in crate::geometry) use clipper::opening_path_configurations_for_test;
 #[cfg(test)]
 pub(crate) use clipper::opening_paths_with_interstage;
 pub(crate) use clipper::{
-    ClipperError, FillRule, JoinType, SAFETY_OFFSET, diff_pl, difference_ex,
+    ClipperError, FillRule, JoinType, SAFETY_OFFSET, closing_ex, diff_pl, difference_ex,
     difference_ex_polygons, difference_ex_polygons_with_safety_offset,
     difference_ex_with_safety_offset, difference_polygons_ex, difference_polygons_paths,
     intersection_ex, intersection_pl, intersection_polygons_ex, intersection_polygons_paths,
@@ -160,6 +160,7 @@ const _: MixedPolygonExOperation = intersection_polygons_ex;
 const _: BinaryExOperation = union_expolygons;
 const _: BinaryExOperation = xor_ex;
 const _: ExPolygonsOffsetOperation = offset_expolygons;
+const _: ExPolygonsOffsetOperation = closing_ex;
 const _: VariableOffsetOperation = variable_offset_inner_ex;
 const _: RegionExpansionOperation = propagate_waves;
 const _: RegionExpansionExOperation = propagate_waves_ex;

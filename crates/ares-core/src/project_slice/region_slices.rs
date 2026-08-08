@@ -1,4 +1,7 @@
-use crate::{ProjectVolumeType, RegionOptions, geometry::ExPolygon};
+use crate::{
+    ProjectVolumeType, RegionOptions,
+    geometry::{ExPolygon, Polygon},
+};
 
 pub(super) mod complex;
 #[cfg(test)]
@@ -136,6 +139,17 @@ impl RegionSurface {
 
     pub(super) fn retag(&mut self, kind: RegionSurfaceKind) {
         self.kind = kind;
+    }
+
+    pub(super) fn take_expolygon(&mut self) -> ExPolygon {
+        std::mem::replace(
+            &mut self.expolygon,
+            ExPolygon::new(Polygon::new(Vec::new()), Vec::new()),
+        )
+    }
+
+    pub(super) fn set_bridge_angle(&mut self, bridge_angle: f64) {
+        self.bridge_angle = bridge_angle;
     }
 
     #[cfg(test)]
