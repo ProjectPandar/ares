@@ -4,7 +4,10 @@
 
 Locally implemented and fully verified. The complete documented-candidate and
 rollback gates pass, and repaired final independent/default-model OpenCode
-rereviews approve; commit/push and exact-SHA release gates remain. Exact predecessor O32 is released as
+rereviews approve. Implementation/documentation commits `b9e65fd`/`0f6f801`
+were pushed; exact-SHA Tier-1 run `31228800274` passed all five jobs, including
+both browser runs, at `0f6f80130d28c0cc629e8561e46d187b137a8206`. O33 is
+released. Exact predecessor O32 is released as
 commits `2e7168f`/`699f02b`; exact-SHA Tier-1 run `31213611275` passed format,
 WASM/browser twice, Linux, Windows, and macOS at
 `699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. The pinned rewrite target remains
@@ -294,7 +297,9 @@ tree, passes RegionExpansion 74/74, PolyTree 6/6, and lifecycle 3/3, and leaves
 the primary candidate byte-identical and unstaged. After exact oracle-input and
 stale-status repairs, the complete suite was rerun and final independent and
 default-model OpenCode rereviews returned literal `VERDICT: APPROVE`.
-Commit/push and exact-SHA Tier-1 remain release gates. O33 is not released.
+Implementation/documentation commits `b9e65fd`/`0f6f801` were pushed, and
+exact-SHA Tier-1 run `31228800274` passed all five jobs, including both browser
+runs, at `0f6f80130d28c0cc629e8561e46d187b137a8206`. O33 is released.
 
 ## Verification, review, release, and rollback
 

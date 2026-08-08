@@ -5231,14 +5231,51 @@ exact-O32 rollback proves candidate/primary byte identity and passes
 RegionExpansion 74/74, PolyTree 6/6, and lifecycle 3/3. Final review found
 exact oracle-input and stale status defects; both were repaired, the entire
 suite and rollback were refreshed, and final independent/default-model OpenCode
-rereviews both approve. Commit/push and exact-SHA Tier-1 remain pending, so O33
-is not released.
+rereviews both approve. Implementation/documentation commits
+`b9e65fd`/`0f6f801` were pushed; exact-SHA Tier-1 run `31228800274` passed all
+five jobs, including both browser runs, at
+`0f6f80130d28c0cc629e8561e46d187b137a8206`. O33 is released.
 
 O33 adds no Option, public API, lifecycle, checkpoint, persistence, adapter,
 KSR golden expectation, or G-code byte. Public slicing still consumes O26 and
 returns `ProjectSlicingIncomplete`.
 
-The next candidate is `expand_merge_expolygons` at
-`RegionExpansion.hpp:113` and `RegionExpansion.cpp:589-594`. External-surface
-orchestration, fill, toolpath, seam, motion, G-code, and post-processing remain
-deferred.
+## Task 22O.34: compose source wave expansion and ExPolygon merge
+
+Task 22O.34 locally ports pinned `Algorithm/RegionExpansion.hpp:113` and
+`Algorithm/RegionExpansion.cpp:589-594`. Its crate-private
+`expand_merge_expolygons` borrows the complete source vector for exactly one O29
+source-propagation call, propagates discovery/propagation errors through `?`,
+then moves the original sources and complete ordered records into exactly one
+O33 merge call with the same explicit `CoordinateScale`. It adds no builder,
+seed discovery, sorting, cloning, rescaling, shortcut, validation, fallback,
+error mapping, public export, or lifecycle wiring.
+
+The historical compiling stub run reported 0/5, with four genuine failures and
+one deleted witness that failed in direct O29 setup before reaching O34. The
+replacement successful non-empty O29-to-O33 handoff is classified only as
+post-body recurrence/GREEN evidence. Focused debug/release pass 5/5 and
+RegionExpansion passes 92/92. Six runtime mutations are killed, one signature
+mutation is compiler-rejected, and two equivalent scale substitutions plus an
+unreachable-through-valid-O29 O33-error swallowing mutation are disclosed as
+truthful survivors. Post-mutation restoration and the initial static audit pass.
+The default-model OpenCode initial review approved, while independent review
+required physical placement after O33 and non-vacuous multiple-source,
+multiple-hole ordering/ownership evidence. Both repairs are present and
+verified. The repaired exact candidate passes focused debug/release 5/5, O29
+5/5, O33 13/13, RegionExpansion 92/92, PolyTree 6/6, offset 58/58, lifecycle
+3/3, workspace 6,033/6,033 with 2 skipped, check, warning-denying Clippy,
+rustfmt, four WASM checks, two optimized builds, export, and JavaScript syntax.
+Both local Playwright attempts fail before test code only because Chromium
+cannot load `libglib-2.0.so.0`; exact-SHA CI retains both runs. Disposable
+exact-O33 rollback proves candidate/primary byte identity and passes
+RegionExpansion 87/87, PolyTree 6/6, offset 58/58, and lifecycle 3/3. The
+repaired candidate's independent six-dimensional and default-model OpenCode
+rereviews both approve. Commit/push and exact-SHA Tier-1 remain pending, so O34
+is not released.
+
+O34 adds no Option, public API, lifecycle, checkpoint, persistence, adapter,
+KSR golden expectation, or G-code byte. Public slicing still consumes O26 and
+returns `ProjectSlicingIncomplete`. The next source-cited external-surface
+caller boundary requires separate reconnaissance; fill, toolpath, seam, motion,
+G-code, and post-processing remain deferred.

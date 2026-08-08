@@ -20,13 +20,18 @@ exact-SHA Tier-1 run `31196271880` passed all five jobs at
 `1f89dd34c9226a96b92ddc1711c317ff6ce7b7b0`. O32 `expand_expolygons` was
 released as commits `2e7168f`/`699f02b`; exact-SHA Tier-1 run `31213611275`
 passed all five jobs, including both browser runs, at
-`699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O33 expansion merging is locally
-implemented, fully verified, and approved by final independent and default-model
-OpenCode rereviews, but remains unreleased pending commit/push and exact-SHA Tier-1. It adds no lifecycle wiring, so public slicing still
-consumes O26 and returns `ProjectSlicingIncomplete`. `expand_merge_expolygons`,
-external-surface processing, later surface/toolpath stages, complete G-code
-assembly, and normalized KSR parity remain deferred to later source-cited
-rewrite slices.
+`699f02b2bbc3d797f53edf5f8c65dd2614830ecb`. O33 expansion merging was released
+as commits `b9e65fd`/`0f6f801`; exact-SHA Tier-1 run `31228800274` passed all
+five jobs, including both browser runs, at
+`0f6f80130d28c0cc629e8561e46d187b137a8206`. O34
+`expand_merge_expolygons` is locally implemented and fully verified; independent
+six-dimensional and default-model OpenCode rereviews approve. Both local
+Playwright attempts fail at Chromium startup because `libglib-2.0.so.0` is
+absent, so O34 remains unreleased pending commit/push and exact-SHA Tier-1,
+including both browser runs. It adds no lifecycle wiring, so public slicing
+still consumes O26 and returns `ProjectSlicingIncomplete`. External-surface
+processing, later surface/toolpath stages, complete G-code assembly, and
+normalized KSR parity remain deferred to later source-cited rewrite slices.
 
 ## Fixed baseline
 
@@ -3877,9 +3882,41 @@ exact-SHA CI must pass both runs. Final static audit passes, and disposable
 exact-O32 rollback proves candidate/primary byte identity while passing
 RegionExpansion 74/74, PolyTree 6/6, and lifecycle 3/3. After repairing exact
 oracle inputs and stale release text, the complete suite was rerun and final
-independent and default-model OpenCode rereviews both approved. Commit/push and
-exact-SHA Tier-1 remain pending; O33 is not released.
+independent and default-model OpenCode rereviews both approved.
+Implementation/documentation commits `b9e65fd`/`0f6f801` were pushed;
+exact-SHA Tier-1 run `31228800274` passed all five jobs, including both browser
+runs, at `0f6f80130d28c0cc629e8561e46d187b137a8206`. O33 is released.
 
-The next bounded boundary is `expand_merge_expolygons` at hpp:113/cpp:589-594;
-later external-surface, fill, toolpath, seam, motion, G-code, and post-processing
-work remain deferred.
+Task 22O.34 locally ports `expand_merge_expolygons` at
+`RegionExpansion.hpp:113` and `RegionExpansion.cpp:589-594`. The private
+composition borrows the full source vector for O29, propagates O29 errors before
+any merge work, then moves the original source and complete ordered expansion
+records into O33 with the same explicit scale. It adds no builder, direct seed
+call, ordering step, clone, shortcut, validation, public export, Option,
+lifecycle, checkpoint, persistence, adapter, golden expectation, or G-code
+byte.
+
+The historical stub run reported 0/5, with only four failures attributable to
+the empty body; the deleted fifth failed in direct O29 setup. The replacement
+non-empty handoff witness is recorded only as post-body recurrence/GREEN
+evidence. Focused debug/release pass 5/5 and RegionExpansion passes 92/92. Six
+runtime mutations are killed, one signature mutation is compiler-rejected, and
+two behaviorally equivalent scale substitutions plus one
+valid-O29-unreachable O33-error swallowing survivor are truthfully disclosed. Post-mutation
+restoration and the initial static audit pass. The default-model OpenCode
+initial review approved, while independent review required physical placement
+after O33 and non-vacuous multiple-source, multiple-hole ordering/ownership
+evidence. Both repairs are present and verified. The repaired exact candidate
+passes focused debug/release 5/5, O29 5/5, O33 13/13, RegionExpansion 92/92,
+PolyTree 6/6, offset 58/58, lifecycle 3/3, workspace 6,033/6,033 with 2 skipped,
+check, warning-denying Clippy, rustfmt, four WASM checks, two optimized builds,
+export, and JavaScript syntax. Both local Playwright attempts fail before test
+code only because Chromium cannot load `libglib-2.0.so.0`; exact-SHA CI retains
+both runs. Disposable exact-O33 rollback proves candidate/primary byte identity
+and the 87/6/58/3 baseline suites. The repaired candidate's independent
+six-dimensional and default-model OpenCode rereviews both approve. Commit/push
+and exact-SHA Tier-1 remain pending; O34 is not released.
+
+The next source-cited external-surface caller boundary requires separate
+reconnaissance; later external-surface, fill, toolpath, seam, motion, G-code,
+and post-processing work remain deferred.
