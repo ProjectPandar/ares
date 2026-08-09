@@ -2,23 +2,17 @@
 
 ## Status and source boundary
 
-Locally implemented, crate-private, inactive, and unreleased. Chronological RED,
-pinned original-Orca CLI/helper evidence, the repaired exact-byte mutation and
-focused regression campaigns, warning-denying Clippy, rustfmt, complete
-workspace/WASM/static/rollback verification, and the default-model final review
-pass. Both local Playwright attempts failed before test execution because
-Chromium could not load `libglib-2.0.so.0`; neither is a pass, and both exact-SHA
-Tier-1 browser executions remain mandatory. The independent final review found
-no Rust blocker and requested only this stale-status repair. These final
-tracked bytes require the complete exact-candidate rerun and both documentation
-rereviews before separate commits, push, and exact-SHA Tier-1. Exact predecessor
-O36 is released as
-implementation/documentation commits `b546e6f`/`3e927ed`; exact-SHA Tier-1 run
-`31280579891` passed all five jobs and both browser executions at
-`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. Its authoritative run JSON is
-archived outside the repository at `/tmp/task22o36-tier1-exact-sha.json`.
-Pinned Orca remains v2.4.2 commit
-`8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Released as implementation/documentation commits `a0caa5a`/`4d83d15`.
+Exact-SHA Tier-1 run `31291016394` passed all five jobs and both browser
+executions at `4d83d15832c7905d7ea9727d14c07c5a75eb7312`; its authoritative run
+JSON is archived outside the repository at
+`/tmp/task22o37-tier1-exact-sha.json`. O37 remains crate-private and inactive:
+it adds no Option, lifecycle, adapter, golden expectation, or G-code byte, and
+public slicing still consumes O26 before returning `ProjectSlicingIncomplete`.
+Exact predecessor O36 is released as implementation/documentation commits
+`b546e6f`/`3e927ed`, with successful exact-SHA run `31280579891` at
+`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. Pinned Orca remains v2.4.2
+commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 Port only the next coherent translation-unit-local boundary in
 `OrcaSlicer/src/libslic3r/LayerRegion.cpp`:

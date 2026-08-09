@@ -32,20 +32,25 @@ exact-SHA Tier-1 run `31269521736` passed all five jobs and both browser runs at
 `c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O36 bridge-zone expansion was
 released as commits `b546e6f`/`3e927ed`; exact-SHA Tier-1 run `31280579891`
 passed all five jobs and both browser runs at
-`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O37 bridge grouping is locally
-implemented, crate-private, inactive, and unreleased. Its chronological RED,
-pinned original-Orca CLI/helper evidence, repaired mutation/restoration,
-focused suites, Clippy/rustfmt, complete workspace/WASM/static/rollback gates,
-and default-model final review pass. Both local Playwright attempts failed
-before test execution because Chromium lacked `libglib-2.0.so.0`; neither is a
-pass, and both exact-SHA Tier-1 browser executions remain mandatory. The
-independent final review found no Rust blocker and requested only this stale-
-status repair. These final tracked bytes require the complete exact-candidate
-rerun and both documentation rereviews before separate commits, push, and
-exact-SHA Tier-1. O35-O37 add no Option or lifecycle wiring, so public slicing still
-consumes O26 and returns `ProjectSlicingIncomplete`. Bridge direction/merge,
-external-surface orchestration, surface/toolpath stages, complete G-code
-assembly, and normalized KSR parity remain deferred.
+`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O37 bridge grouping was released
+as commits `a0caa5a`/`4d83d15`; exact-SHA Tier-1 run `31291016394` passed all
+five jobs and both browser executions at
+`4d83d15832c7905d7ea9727d14c07c5a75eb7312`. O38 direct bridge-direction
+selection is locally implemented, crate-private, inactive, and unreleased. Its
+compiling RED, exact pinned-Orca CLI/helper, current audited MSVC model,
+source-shaped numeric/order implementation, repaired mutation/restoration, and
+both initial rereviews pass. The exact documented candidate passes focused and
+bounded predecessor suites, workspace Nextest 6,080/6,080 with two skipped,
+all-target check, warning-denying Clippy, rustfmt, four WASM checks, optimized
+builds/bindgen/export/JavaScript audit, static audit, and exact-O37 rollback.
+Both local Playwright runs fail before test code because Chromium lacks
+`libglib-2.0.so.0`; neither is a pass and both exact-SHA CI browser executions
+remain mandatory. Final reviews, separate commits, push, and exact-SHA Tier-1
+remain pending. O35-O38 add no Option or lifecycle wiring, so public slicing
+still consumes O26 and returns `ProjectSlicingIncomplete`.
+`LayerRegion.cpp:262-308` composition, bridge merge/external-surface
+orchestration, surface/toolpath stages, complete G-code assembly, and normalized
+KSR parity remain deferred.
 
 ## Fixed baseline
 
@@ -4030,18 +4035,46 @@ mutations, compiler-rejects two, truthfully records one bbox-comparison
 equivalent survivor, and restores all five hashes. Body/test shards are 96/289
 LOC, and both repaired initial implementation reviews approve.
 
-O37 remains crate-private, inactive, and unreleased. Complete documented-
-candidate workspace/WASM/static/rollback verification and the default-model
-final review pass. Both local Playwright attempts failed before test execution
-because Chromium lacked `libglib-2.0.so.0`; neither is a pass, and both exact-SHA
-Tier-1 browser executions remain mandatory. The independent final review found
-no Rust blocker and requested only the stale-status repair recorded here. These
-final tracked bytes require the complete exact-candidate rerun and both
-documentation rereviews before separate commits, push, and exact-SHA Tier-1.
-O37 changes no Option, lifecycle, adapter, golden expectation, or G-code byte.
-Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The
-next source boundary is
-`detect_bridge_directions` at `LayerRegion.cpp:262-308` and its direct
-`detect_bridging_direction(const Lines &, const Polygons &)` dependency at
-`BridgeDetector.hpp:75-119`; bridge merge/orchestration and downstream G-code
-remain deferred.
+Implementation/documentation commits `a0caa5a`/`4d83d15` were pushed;
+exact-SHA Tier-1 run `31291016394` passed all five jobs and both browser
+executions at `4d83d15832c7905d7ea9727d14c07c5a75eb7312`. O37 is released but
+remains crate-private and inactive. It changes no Option, lifecycle, adapter,
+golden expectation, or G-code byte. Public slicing still consumes O26 and
+returns `ProjectSlicingIncomplete`.
+
+Task 22O.38 locally ports pinned `BridgeDetector.hpp:75-119`,
+`PrincipalComponents2D.hpp:12-20` / `PrincipalComponents2D.cpp:8-138`,
+`Line.hpp:180`, and the cited Eigen 5.0.1 normalization boundary. The inactive
+crate-private helper preserves explicit request-local scale, source-associated
+signed `f32` moment accumulation, mixed-width eigen casts, f64 edge-normal
+normalization, `ceil(atan2*1000)` first-emplace, original cost order, strict
+minimum, and final perpendicular rotation. Its private deterministic adapter
+reproduces the audited MSVC STL 14.44 FNV/hash-double, eight-bucket, occupied-
+bucket front insertion, unique-emplace, 8-to-64 growth, and rehash-group
+iteration target without host hash order or a platform branch.
+
+The return-only stub compiled 18 tests with one shape-equivalent pass and 17
+body-dependent failures. Fresh pinned-Orca E2E metadata records success and a
+nonzero 6,338,289-byte disposable G-code deleted without content ingestion.
+Debug/`NDEBUG` helper output is byte-identical, and the repaired independent
+MSVC model supplies complete behavior-named ordering vectors. A test-only local
+type alias resolves warning-denying Clippy without an allowance. The final
+one-at-a-time record kills fourteen runtime mutations, compiler-rejects one,
+and truthfully discloses four bounded equivalent survivors; contaminated early
+mutation evidence is excluded. Production hashes restore exactly. Focused
+debug/release pass 18/18, O37/O36 pass 10/6, complete geometry passes 442/442,
+Clippy/rustfmt pass, and both repaired initial implementation rereviews approve.
+
+The exact documented candidate passes focused debug/release, complete geometry
+and bounded predecessor regressions, workspace Nextest 6,080/6,080 with two
+skipped, all-target check, warning-denying Clippy, rustfmt, four WASM checks,
+two optimized builds, bindgen/export/JavaScript audit, static audit, and exact-
+O37 rollback. Both local Playwright runs fail before test code because Chromium
+cannot load `libglib-2.0.so.0`; neither is a pass, so both exact-SHA CI browser
+executions remain mandatory. O38 remains crate-private, inactive, and unreleased
+pending final reviews, separate commits, push, and exact-SHA Tier-1. It changes
+no typed Option, lifecycle, adapter, fixture branch, golden expectation, or
+G-code byte. Public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`. The next source boundary is
+`detect_bridge_directions` at `LayerRegion.cpp:262-308`; bridge merge/
+orchestration and downstream G-code remain deferred.

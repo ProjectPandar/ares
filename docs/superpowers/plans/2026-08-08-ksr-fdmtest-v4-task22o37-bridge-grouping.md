@@ -2,19 +2,16 @@
 
 ## Goal, approved source boundary, and release baseline
 
-Tasks 1-9 have produced the compiling stub RED, pinned original-Orca CLI and
-byte-identical 45-assertion helper, frozen implementation, ownership/order
-audit, repaired exact-byte M01-M16 campaign, focused debug/release and
-regressions, warning-denying Clippy, rustfmt, complete workspace/WASM/static/
-rollback verification, and a default-model final approval. A review-required
-private pair-helper extraction changed no test or source operation order. Both
-local Playwright attempts failed before test execution because Chromium lacked
-`libglib-2.0.so.0`; neither is a pass, and both exact-SHA Tier-1 browser runs
-remain mandatory. The independent final review found no Rust blocker and
-requested only the stale-status repair now recorded in the approved docs. The
-final tracked bytes must repeat Task 9's complete exact-candidate suite and both
-documentation rereviews before Task 10 creates separate commits, pushes, and
-waits for exact-SHA Tier-1. O37 remains crate-private, inactive, and unreleased.
+Tasks 1-10 completed. The implementation/documentation commits are
+`a0caa5a`/`4d83d15`; exact-SHA Tier-1 run `31291016394` passed all five jobs and
+both browser executions at
+`4d83d15832c7905d7ea9727d14c07c5a75eb7312`. O37 is released but remains
+crate-private and inactive. Its compiling stub RED, pinned original-Orca CLI and
+byte-identical 45-assertion helper, frozen implementation, repaired M01-M16
+campaign, complete native/WASM/static/rollback gates, review repair, final
+reviews, separate commits, push, and exact-SHA ship gate are complete. The run
+JSON is archived only at `/tmp/task22o37-tier1-exact-sha.json`; no tracked O37
+byte changed after that exact-SHA run.
 
 Implement only the approved O37 contract in
 `docs/superpowers/specs/2026-08-08-ksr-fdmtest-v4-task22o37-bridge-grouping.md`:

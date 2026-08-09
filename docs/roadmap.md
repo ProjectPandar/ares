@@ -5384,18 +5384,51 @@ and truthfully reports the strict/inclusive bbox comparison substitution as an
 equivalent survivor. All hashes restore; body/test shards are 96/289 LOC; both
 repaired initial implementation reviews approve.
 
-O37 remains crate-private, inactive, and unreleased. Complete documented-
-candidate workspace/WASM/static/rollback gates and the default-model final
-review pass. Both local Playwright attempts failed before test execution because
-Chromium lacked `libglib-2.0.so.0`; neither is a pass, and both exact-SHA Tier-1
-browser executions remain mandatory. The independent final review found no Rust
-blocker and requested only the stale-status repair recorded here. These final
-tracked bytes require the complete exact-candidate rerun and both documentation
-rereviews before separate commits, push, and exact-SHA Tier-1. O37 changes no
-Option, lifecycle, adapter, golden expectation, or G-code byte. Public slicing
-still consumes O26 and returns `ProjectSlicingIncomplete`. The next bounded
-source candidate is
-`detect_bridge_directions` at `LayerRegion.cpp:262-308` and its direct
-`detect_bridging_direction(const Lines &, const Polygons &)` dependency at
-`BridgeDetector.hpp:75-119`; bridge merging, complete external-surface
-orchestration, fill/toolpath/motion/G-code remain deferred.
+Implementation/documentation commits `a0caa5a`/`4d83d15` were pushed;
+exact-SHA Tier-1 run `31291016394` passed all five jobs and both browser
+executions at `4d83d15832c7905d7ea9727d14c07c5a75eb7312`. O37 is released but
+remains crate-private and inactive. It changes no Option, lifecycle, adapter,
+golden expectation, or G-code byte. Public slicing still consumes O26 and
+returns `ProjectSlicingIncomplete`.
+
+## Task 22O.38: direct bridge-direction selection
+
+Task 22O.38 locally ports the independent
+`detect_bridging_direction(const Lines &, const Polygons &)` helper at pinned
+`BridgeDetector.hpp:75-119`, its `PrincipalComponents2D.hpp:12-20` /
+`PrincipalComponents2D.cpp:8-138` dependency, `Line.hpp:180`, and the cited
+Eigen 5.0.1 scalar-normalization behavior. The inactive crate-private API takes
+explicit `CoordinateScale`, preserves signed ordered `f32` PCA accumulation and
+mixed-width eigensystem casts, and preserves the nonempty-edge `(dy,-dx)`,
+normalization, quantization, cost, strict-minimum, and `(y,-x)` rotation order.
+A private platform-neutral adapter reproduces the audited MSVC STL 14.44
+FNV/unique-emplace/bucket/rehash iteration target without host hash order or a
+platform branch.
+
+The compiling return-only stub ran 18 tests with 17 body-dependent failures and
+one shape-equivalent pass. A fresh exact pinned-Orca CLI E2E produced a nonzero
+6,338,289-byte G-code and deleted it without content inspection. The standalone
+pinned helper emits byte-identical Debug/`NDEBUG` complete vectors, while an
+independent audited MSVC model freezes duplicate, occupied-bucket, 8-to-64
+rehash, and distinguishing rehash-group order. After one test-only named-alias
+Clippy repair, the campaign kills fourteen runtime mutations, compiler-rejects
+one signature mutation, and truthfully reports four bounded equivalent
+survivors. Exact production hashes restore; focused debug/release pass 18/18,
+O37/O36 pass 10/6, complete geometry passes 442/442, warning-denying Clippy and
+rustfmt pass, and both repaired initial implementation rereviews approve.
+
+The exact documented candidate passes focused debug/release, complete geometry
+and bounded predecessor regressions, workspace Nextest 6,080/6,080 with two
+skipped, all-target check, warning-denying Clippy, rustfmt, four WASM checks,
+two optimized builds, bindgen/export/JavaScript audit, static audit, and exact-
+O37 rollback. Both local Playwright runs fail before test code because Chromium
+cannot load `libglib-2.0.so.0`; neither is a pass, so both exact-SHA CI browser
+executions remain mandatory. O38 remains crate-private, inactive, and unreleased
+pending final reviews, separate commits, push, and exact-SHA Tier-1. It adds no
+Option, lifecycle, adapter, fixture branch, golden expectation, or G-code byte.
+Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The
+next bounded source candidate is `detect_bridge_directions` at
+`LayerRegion.cpp:262-308`, composing the frozen direct helper with ordered
+anchor lookup, scaled-epsilon expansion, open-path difference, and Bridge angle
+assignment. Bridge merge/orchestration, fill/toolpath/motion/G-code remain
+deferred.
