@@ -1,5 +1,6 @@
 mod expand_expolygons;
 mod expand_merge;
+mod group_bridges;
 #[cfg(test)]
 mod tests;
 mod types;
@@ -11,8 +12,10 @@ use crate::{
 
 pub(in crate::project_slice) use expand_expolygons::expand_expolygons;
 pub(in crate::project_slice) use expand_merge::expand_merge_surfaces;
-pub(in crate::project_slice) use types::{ExpansionResult, ExpansionZone};
+pub(in crate::project_slice) use group_bridges::{get_grouped_bridges, group_id};
+pub(in crate::project_slice) use types::{Bridge, ExpansionResult, ExpansionZone};
 
+type BridgePartsFn = fn(Bridge) -> (ExPolygon, u32, usize, Option<f64>);
 type ExpandExPolygonsFn = fn(
     &[ExPolygon],
     &mut [ExpansionZone],
@@ -32,10 +35,23 @@ type ExpandMergeSurfacesFn = fn(
     f64,
     CoordinateScale,
 ) -> Result<Vec<RegionSurface>, ClipperError>;
+type GetGroupedBridgesFn =
+    fn(Vec<ExPolygon>, &[crate::geometry::RegionExpansionEx]) -> Result<Vec<Bridge>, ClipperError>;
+type GroupIdFn = fn(&mut [Bridge], u32) -> u32;
 
+const _: BridgePartsFn = |bridge| {
+    (
+        bridge.expolygon,
+        bridge.group_id,
+        bridge.bridge_expansion_begin,
+        bridge.angle,
+    )
+};
 const _: ExpandExPolygonsFn = expand_expolygons;
 const _: ExpansionResultPartsFn = |result| (result.anchors, result.expansions);
 const _: ExpandMergeSurfacesFn = expand_merge_surfaces;
+const _: GetGroupedBridgesFn = get_grouped_bridges;
+const _: GroupIdFn = group_id;
 const _: fn(
     Vec<crate::geometry::ExPolygon>,
     crate::geometry::RegionExpansionParameters,
