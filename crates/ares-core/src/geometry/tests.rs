@@ -1,5 +1,6 @@
 mod bbox_clip;
 mod bounding_box;
+mod bridge_direction;
 mod chain_points;
 mod clipper;
 mod coord;

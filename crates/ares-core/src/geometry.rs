@@ -1,5 +1,6 @@
 mod bbox_clip;
 mod bounding_box;
+mod bridge_direction;
 mod chain_points;
 mod clipper;
 mod coord;
@@ -16,6 +17,7 @@ pub(crate) use bbox_clip::{
     clip_clipper_expolygons_with_subject_bbox, clip_clipper_polygons_with_subject_bbox,
 };
 pub(crate) use bounding_box::{BoundingBox, chain_expolygons, chain_expolygons_order};
+pub(crate) use bridge_direction::detect_bridging_direction;
 pub(crate) use chain_points::chain_points;
 #[cfg(test)]
 pub(in crate::geometry) use clipper::opening_path_configurations_for_test;
@@ -50,6 +52,7 @@ pub(in crate::geometry) use region_expansion::{
 };
 pub(crate) use simplification::{append_simplified_expolygon, simplify_expolygon_polygons};
 
+type DetectBridgingDirection = fn(&[Line], &[Polygon], CoordinateScale) -> ((f64, f64), f64);
 type BinaryExOperation = fn(&[ExPolygon], &[ExPolygon]) -> Result<Vec<ExPolygon>, ClipperError>;
 type PolygonClipOperation = fn(&[ExPolygon], &[Polygon]) -> Result<Vec<ExPolygon>, ClipperError>;
 type PolygonBinaryExOperation = fn(&[Polygon], &[Polygon]) -> Result<Vec<ExPolygon>, ClipperError>;
@@ -120,6 +123,7 @@ type MergeExpansionsOperation = fn(
 ) -> Result<Vec<ExPolygon>, ClipperError>;
 type EdgeGridVisitor = fn(usize, usize, &[GridEdge]) -> bool;
 
+const _: DetectBridgingDirection = detect_bridging_direction;
 const _: usize = std::mem::size_of::<Coord>();
 const _: fn(&Polygon) -> Option<BoundingBox> = BoundingBox::from_polygon;
 const _: fn(&ExPolygon) -> Option<BoundingBox> = BoundingBox::from_expolygon;
