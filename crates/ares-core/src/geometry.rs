@@ -26,12 +26,13 @@ pub(crate) use clipper::opening_paths_with_interstage;
 pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, SAFETY_OFFSET, closing_ex, diff_pl, difference_ex,
     difference_ex_polygons, difference_ex_polygons_with_safety_offset,
-    difference_ex_with_safety_offset, difference_polygons_ex, difference_polygons_paths,
-    intersection_ex, intersection_pl, intersection_polygons_ex, intersection_polygons_paths,
-    intersection_polygons_paths_with_safety_offset, offset_expolygon, offset_expolygon_refs_paths,
-    offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset_paths_tree,
-    offset2_ex, offset2_ex_with_interstage, opening_ex, opening_paths, union_ex, union_expolygons,
-    union_polygons_paths, variable_offset_inner_ex, xor_ex,
+    difference_ex_with_safety_offset, difference_open_polylines, difference_polygons_ex,
+    difference_polygons_paths, intersection_ex, intersection_pl, intersection_polygons_ex,
+    intersection_polygons_paths, intersection_polygons_paths_with_safety_offset, offset_expolygon,
+    offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths, offset_open_paths,
+    offset_paths, offset_paths_tree, offset2_ex, offset2_ex_with_interstage, opening_ex,
+    opening_paths, union_ex, union_expolygons, union_polygons_paths, variable_offset_inner_ex,
+    xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{EdgeGrid, GridEdge};
@@ -153,8 +154,10 @@ const _: fn(&ThickPolyline) -> Vec<ThickLine> = ThickPolyline::thicklines;
 const _: fn(&mut ThickPolyline, usize) = ThickPolyline::start_at_index;
 const _: fn(Vec<Polyline>, f64) -> Vec<ThickPolyline> = to_thick_polylines;
 type PolygonPolylineClip = fn(&[Polygon], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
+type OpenPolylineClip = fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
 const _: PolygonPolylineClip = intersection_pl;
 const _: PolygonPolylineClip = diff_pl;
+const _: OpenPolylineClip = difference_open_polylines;
 const _: fn(&Polygon) -> f64 = Polygon::area;
 const _: fn(Polygon, Vec<Polygon>) -> ExPolygon = ExPolygon::new;
 const _: fn(&ExPolygon) -> &Polygon = ExPolygon::contour;

@@ -59,7 +59,7 @@ pub(crate) use offset::{offset_expolygons_raw, raw_offset_open_paths};
 pub(crate) use point_in_polygon::point_in_polygon;
 #[cfg(test)]
 pub(crate) use polyline::recombine_polylines;
-pub(crate) use polyline::{diff_pl, intersection_pl};
+pub(crate) use polyline::{diff_pl, difference_open_polylines, intersection_pl};
 #[cfg(test)]
 pub(crate) use polytree::PolyNode;
 pub(crate) use polytree::{PolyTree, union_ex};
@@ -201,6 +201,8 @@ const _: fn(&mut Clipper, &[Polyline], PathRole) -> Result<bool, ClipperError> =
 const _: fn(&mut Clipper, ClipOperation, FillRule, FillRule) -> PolyTree =
     Clipper::execute_polytree;
 const _: fn(&[Polygon], FillRule) -> Result<Vec<super::ExPolygon>, ClipperError> = union_ex;
+type OpenPolylineDifferenceFn = fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
+const _: OpenPolylineDifferenceFn = difference_open_polylines;
 const _: fn(&[Polygon]) -> Result<Vec<Polygon>, ClipperError> = simplify_polygons;
 const _: fn(&mut Clipper) = Clipper::clear;
 const _: fn(f64) -> i64 = fixed_round;

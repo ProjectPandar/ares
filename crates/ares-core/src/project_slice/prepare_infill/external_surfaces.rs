@@ -1,3 +1,4 @@
+mod detect_bridge_directions;
 mod expand_expolygons;
 mod expand_merge;
 mod group_bridges;
@@ -10,12 +11,19 @@ use crate::{
     project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
 };
 
+pub(in crate::project_slice) use detect_bridge_directions::detect_bridge_directions;
 pub(in crate::project_slice) use expand_expolygons::expand_expolygons;
 pub(in crate::project_slice) use expand_merge::expand_merge_surfaces;
 pub(in crate::project_slice) use group_bridges::{get_grouped_bridges, group_id};
 pub(in crate::project_slice) use types::{Bridge, ExpansionResult, ExpansionZone};
 
 type BridgePartsFn = fn(Bridge) -> (ExPolygon, u32, usize, Option<f64>);
+type DetectBridgeDirectionsFn = fn(
+    &[crate::geometry::WaveSeed],
+    &mut [Bridge],
+    &[ExpansionZone],
+    CoordinateScale,
+) -> Result<(), ClipperError>;
 type ExpandExPolygonsFn = fn(
     &[ExPolygon],
     &mut [ExpansionZone],
@@ -39,6 +47,7 @@ type GetGroupedBridgesFn =
     fn(Vec<ExPolygon>, &[crate::geometry::RegionExpansionEx]) -> Result<Vec<Bridge>, ClipperError>;
 type GroupIdFn = fn(&mut [Bridge], u32) -> u32;
 
+const _: DetectBridgeDirectionsFn = detect_bridge_directions;
 const _: BridgePartsFn = |bridge| {
     (
         bridge.expolygon,
