@@ -2,18 +2,20 @@
 
 ## Status and source boundary
 
-Locally implemented, crate-private, inactive, and unreleased. The compiling
-stub RED had 17 body-dependent failures and one shape-equivalent pass. The
-source-shaped implementation, pinned original-Orca CLI/helper and audited MSVC
-model evidence, repaired one-at-a-time mutation campaign, and both initial
-rereviews pass. The exact documented candidate passes focused debug/release,
-complete geometry and bounded predecessor regressions, workspace Nextest
-6,080/6,080 with two skipped, all-target check, warning-denying Clippy, rustfmt,
-four WASM checks, two optimized builds, bindgen/export/JavaScript audit, static
-audit, and exact-O37 rollback. Both local Playwright runs fail before test code
-because Chromium cannot load `libglib-2.0.so.0`; neither is a pass, so both
-exact-SHA CI browser executions remain mandatory. O38 remains pending final
-reviews, separate commits, push, and exact-SHA Tier-1.
+Released as implementation/documentation commits `04920e0`/`2d6154d`.
+Exact-SHA Tier-1 run `31303115603` passed all five jobs and both browser
+executions at `2d6154d401c3c954bed69de6ba631a53af05f1a3`; its authoritative run
+JSON is archived outside the repository at
+`/tmp/task22o38-tier1-exact-sha.json`. The compiling stub RED had 17 body-
+dependent failures and one shape-equivalent pass. The source-shaped
+implementation, pinned original-Orca CLI/helper, audited MSVC model, repaired
+one-at-a-time mutation campaign, complete native/WASM/static/rollback gates,
+and both final independent review tracks pass. Both local Playwright attempts
+failed before test code because Chromium could not load `libglib-2.0.so.0`;
+exact-SHA CI executed and passed the browser suite twice. O38 remains crate-
+private and inactive, changes no Option, lifecycle, adapter, fixture branch,
+golden expectation, or G-code byte, and public slicing still consumes O26
+before returning `ProjectSlicingIncomplete`.
 
 Exact predecessor O37 is released as implementation/documentation commits
 `a0caa5a`/`4d83d15`; exact-SHA Tier-1 run `31291016394` passed all five jobs and

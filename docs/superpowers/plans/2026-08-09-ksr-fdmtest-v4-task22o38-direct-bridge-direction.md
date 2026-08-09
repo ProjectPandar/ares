@@ -18,17 +18,18 @@ Exact predecessor O37 is released as implementation/documentation commits
 browser executions at
 `4d83d15832c7905d7ea9727d14c07c5a75eb7312`.
 
-Tasks 1-9 now cover the compiling RED, pinned original-Orca CLI/helper and
-current audited MSVC model, frozen Rust body, test-only Clippy repair, repaired
-one-at-a-time campaign with the required f64 PCA accumulation kill, exact
-restoration, both initial rereview approvals, and the complete documented-
-candidate native/WASM/static/rollback matrix. Workspace Nextest passes
-6,080/6,080 with two skipped. Both local Playwright runs fail before test code
-because Chromium cannot load `libglib-2.0.so.0`; neither is a pass and both
-exact-SHA CI browser executions remain mandatory. O38 remains locally
-implemented but unreleased pending Task 10 final reviews, separate commits,
-push, and exact-SHA Tier-1. Keep O38 inactive and preserve public slicing's O26
-stop with `ProjectSlicingIncomplete`.
+Tasks 1-10 are complete. The compiling RED, pinned original-Orca CLI/helper,
+audited MSVC model, frozen Rust body, test-only Clippy repair, repaired one-at-
+a-time campaign, exact restoration, complete native/WASM/static/rollback
+matrix, both final review tracks, separate commits, push, and exact-SHA ship
+gate all pass. Implementation/documentation commits are `04920e0`/`2d6154d`;
+Tier-1 run `31303115603` passed exactly five jobs and both browser executions
+at `2d6154d401c3c954bed69de6ba631a53af05f1a3`. The authoritative run JSON is
+archived only at `/tmp/task22o38-tier1-exact-sha.json`; no tracked O38 byte
+changed after that run. O38 is released but remains inactive, and public
+slicing still stops after O26 with `ProjectSlicingIncomplete`. Its direct
+`LayerRegion.cpp:262-308` consumer is now locally implemented only inside the
+inactive crate-private O39 boundary; no lifecycle or public adapter is added.
 
 Success means the exact crate-private three-argument API, literal signed `f32`
 PCA formulas, explicit scale forwarding, source normal/quantization/cost/minimum

@@ -5421,14 +5421,39 @@ The exact documented candidate passes focused debug/release, complete geometry
 and bounded predecessor regressions, workspace Nextest 6,080/6,080 with two
 skipped, all-target check, warning-denying Clippy, rustfmt, four WASM checks,
 two optimized builds, bindgen/export/JavaScript audit, static audit, and exact-
-O37 rollback. Both local Playwright runs fail before test code because Chromium
-cannot load `libglib-2.0.so.0`; neither is a pass, so both exact-SHA CI browser
-executions remain mandatory. O38 remains crate-private, inactive, and unreleased
-pending final reviews, separate commits, push, and exact-SHA Tier-1. It adds no
-Option, lifecycle, adapter, fixture branch, golden expectation, or G-code byte.
-Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The
-next bounded source candidate is `detect_bridge_directions` at
-`LayerRegion.cpp:262-308`, composing the frozen direct helper with ordered
-anchor lookup, scaled-epsilon expansion, open-path difference, and Bridge angle
-assignment. Bridge merge/orchestration, fill/toolpath/motion/G-code remain
-deferred.
+O37 rollback. Both local Playwright attempts failed before test code because
+Chromium could not load `libglib-2.0.so.0`; neither was treated as a pass.
+Implementation/documentation commits `04920e0`/`2d6154d` were pushed;
+exact-SHA Tier-1 run `31303115603` passed all five jobs and both browser
+executions at `2d6154d401c3c954bed69de6ba631a53af05f1a3`. O38 is released but
+remains crate-private and inactive. It adds no Option, lifecycle, adapter,
+fixture branch, golden expectation, or G-code byte. Public slicing still
+consumes O26 and returns `ProjectSlicingIncomplete`.
+
+## Task 22O.39: detect grouped bridge directions
+
+Task 22O.39 locally implements the exact pinned source slice
+`detect_bridge_directions` at `LayerRegion.cpp:262-308`, with direct conversion
+and geometry dependencies at `ExPolygon.hpp:228-242,300-307`,
+`Polyline.hpp:180-193`, `libslic3r.h:52,93-96`, and
+`ClipperUtils.hpp:19,23-27,373-376,457` / `ClipperUtils.cpp:837-845,908-909`.
+The inactive crate-private entry composes released O36/O37/O38 records and
+helpers while preserving the one-way supplied-order anchor cursor,
+source-width ID casts, contour/hole order, double-to-float scaled epsilon,
+Miter-3 offset, non-recombining open-path difference, unchanged-scale O38 call,
+sequential error commits, and `PI + atan2(y,x)` angle assignment.
+
+The repaired fresh implementation cycle records 11 body-dependent RED failures
+and two stub-equivalent passes, followed by 14/14 debug/release GREEN. The
+byte-identical original-Orca Debug/`NDEBUG` helper passes 12 assertions and
+covers multiple bridges plus an unmatched boundary; reviewed literals,
+contour/hole pointer identity, M01-M28 mutation coverage, exact restoration,
+and both implementation rereviews pass. Complete exact-final-byte native,
+WASM, static, and exact-O38 rollback gates pass, including workspace Nextest
+6,094/6,094 with two skipped and warning-denying Clippy. Both local Playwright
+attempts failed before test execution on missing `libglib-2.0.so.0`; both
+exact-SHA CI browser executions remain mandatory. O39 is inactive and
+unreleased pending final reviews, separate commits, push, and exact-SHA Tier-1.
+It does not complete KSR slicing. `merge_bridges` at
+`LayerRegion.cpp:310-351`, external-surface orchestration, Options, fill,
+toolpath, motion, and G-code remain deferred.
