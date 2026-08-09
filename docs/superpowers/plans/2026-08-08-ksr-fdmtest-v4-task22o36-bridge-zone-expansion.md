@@ -2,15 +2,14 @@
 
 ## Goal and release baseline
 
-Tasks 1-9 and both final implementation rereviews are complete. The compiling
-empty-stub RED failed 0/6; the frozen candidate passes 6/6. Pinned original-Orca
-E2E and byte-identical Debug/NDEBUG helper output, 13 runtime mutation kills,
-two truthful equivalent survivors, two compiler rejections, and exact
-restoration pass. A final-review repair changed only the test shard to prove
-nonempty O28 output before both O30 errors; the complete native/WASM/static/
-rollback suite was rerun and both final implementation rereviews approve. O36
-remains inactive and unreleased pending Task 10's exact-final-byte rerun,
-documentation rereviews, commit/push, and exact-SHA Tier-1.
+Tasks 1-10 are complete. The compiling empty-stub RED failed 0/6; the frozen
+candidate passes 6/6. Pinned original-Orca E2E and byte-identical Debug/NDEBUG
+helper output, 13 runtime mutation kills, two truthful equivalent survivors,
+two compiler rejections, exact restoration, complete native/WASM/static/
+rollback verification, and both final review rounds pass. Implementation and
+documentation commits `b546e6f`/`3e927ed` were pushed; exact-SHA Tier-1 run
+`31280579891` passed all five jobs and both browser executions at
+`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O36 remains inactive.
 
 Port only pinned OrcaSlicer v2.4.2
 `LayerRegion.cpp:353-356,358-393`: the translation-unit-local

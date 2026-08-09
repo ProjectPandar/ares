@@ -29,15 +29,21 @@ exact-SHA Tier-1 run `31259140846` passed all five jobs, including both browser
 runs, at `25460c2abfc5bf94104f41b05df5af2dfac419ee`. O35
 `expand_merge_surfaces` was released as commits `984bc01`/`c6f23ce`;
 exact-SHA Tier-1 run `31269521736` passed all five jobs and both browser runs at
-`c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O36's translation-unit-local
-bridge-zone expansion composition is locally implemented, crate-private,
-inactive, and unreleased; its chronological RED, pinned original-Orca E2E and
-helper oracle, focused regressions, mutations/restoration, test-only propagation
-witness repair, complete native/WASM/static/rollback verification, and both
-final implementation rereviews pass. Final documentation rereviews, separate
-commits, push, and exact-SHA Tier-1 remain. O35/O36 add no Option or lifecycle
-wiring, so public slicing still consumes O26 and returns
-`ProjectSlicingIncomplete`. Later bridge grouping/direction,
+`c6f23ce1a9350ca76241d007f804f3fcfa22c352`. O36 bridge-zone expansion was
+released as commits `b546e6f`/`3e927ed`; exact-SHA Tier-1 run `31280579891`
+passed all five jobs and both browser runs at
+`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O37 bridge grouping is locally
+implemented, crate-private, inactive, and unreleased. Its chronological RED,
+pinned original-Orca CLI/helper evidence, repaired mutation/restoration,
+focused suites, Clippy/rustfmt, complete workspace/WASM/static/rollback gates,
+and default-model final review pass. Both local Playwright attempts failed
+before test execution because Chromium lacked `libglib-2.0.so.0`; neither is a
+pass, and both exact-SHA Tier-1 browser executions remain mandatory. The
+independent final review found no Rust blocker and requested only this stale-
+status repair. These final tracked bytes require the complete exact-candidate
+rerun and both documentation rereviews before separate commits, push, and
+exact-SHA Tier-1. O35-O37 add no Option or lifecycle wiring, so public slicing still
+consumes O26 and returns `ProjectSlicingIncomplete`. Bridge direction/merge,
 external-surface orchestration, surface/toolpath stages, complete G-code
 assembly, and normalized KSR parity remain deferred.
 
@@ -3993,10 +3999,49 @@ exact-O35 rollback 13/92/6/62/3. Both local Playwright runs remain pre-test
 `libglib-2.0.so.0` launch failures, not passes. Both final implementation
 rereviews approve.
 
-O36 remains inactive and unreleased pending the post-documentation exact-byte
-rerun, documentation rereviews, commits/push, and exact-SHA Tier-1. It changes
-no Option, public lifecycle, adapter, golden expectation, or
-G-code byte. Public slicing still consumes O26 and returns
+Implementation/documentation commits `b546e6f`/`3e927ed` were pushed;
+exact-SHA Tier-1 run `31280579891` passed all five jobs and both browser
+executions at `3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O36 is released but
+remains inactive. It changes no Option, public lifecycle, adapter, golden
+expectation, or G-code byte. Public slicing still consumes O26 and returns
 `ProjectSlicingIncomplete`. The next source boundary is `Bridge`, `group_id`,
-and `get_grouped_bridges` at `LayerRegion.cpp:174-259`; bridge direction/merge
+and `get_grouped_bridges` at `LayerRegion.cpp:174-260`; bridge direction/merge
 and `process_external_surfaces` orchestration remain deferred.
+
+Task 22O.37 locally ports pinned `LayerRegion.cpp:174-260`: the source-shaped
+`Bridge` record, literal parent traversal, and adjacent-window overlap grouping.
+The inactive crate-private implementation moves ordered source ExPolygons,
+retains expansion-end sentinels and absent angles, caches contour-only bounds,
+ignores holes, and evaluates each ordered pair through equal-source, exact
+inclusive bbox, and one fallible NonZero contour intersection before lower-root
+union. It returns the raw, non-normalized parent forest.
+
+The initialization-only stub compiled and ran ten tests with six body-dependent
+failures and four disclosed stub-equivalent passes. The pinned original-Orca CLI
+sliced the KSR project to a disposable nonempty G-code that was deleted without
+content ingestion; its linked original helper passed 45 assertions and emitted
+byte-identical Debug/`NDEBUG` vectors matching complete Rust literals. The
+repaired candidate passes O37 debug/release 10/10 and focused O36/O35/O28/O30/
+RegionExpansion/external-surface/PolyTree/boolean-path/offset/O26 suites
+6/13/39/6/92/25/15/11/62/3. A private pair-helper extraction fixes Clippy
+nesting without changing tests or source order; warning-denying Clippy and
+rustfmt pass. The post-repair exact-byte campaign kills thirteen runtime
+mutations, compiler-rejects two, truthfully records one bbox-comparison
+equivalent survivor, and restores all five hashes. Body/test shards are 96/289
+LOC, and both repaired initial implementation reviews approve.
+
+O37 remains crate-private, inactive, and unreleased. Complete documented-
+candidate workspace/WASM/static/rollback verification and the default-model
+final review pass. Both local Playwright attempts failed before test execution
+because Chromium lacked `libglib-2.0.so.0`; neither is a pass, and both exact-SHA
+Tier-1 browser executions remain mandatory. The independent final review found
+no Rust blocker and requested only the stale-status repair recorded here. These
+final tracked bytes require the complete exact-candidate rerun and both
+documentation rereviews before separate commits, push, and exact-SHA Tier-1.
+O37 changes no Option, lifecycle, adapter, golden expectation, or G-code byte.
+Public slicing still consumes O26 and returns `ProjectSlicingIncomplete`. The
+next source boundary is
+`detect_bridge_directions` at `LayerRegion.cpp:262-308` and its direct
+`detect_bridging_direction(const Lines &, const Polygons &)` dependency at
+`BridgeDetector.hpp:75-119`; bridge merge/orchestration and downstream G-code
+remain deferred.

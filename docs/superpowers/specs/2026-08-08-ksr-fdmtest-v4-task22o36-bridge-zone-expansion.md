@@ -2,18 +2,14 @@
 
 ## Status and source boundary
 
-Locally implemented, crate-private, inactive, and unreleased. Chronological
-RED, original-Orca E2E/helper oracle, mutation/restoration, the repaired O30
-error witness, complete documented-candidate native/WASM/static/rollback gates,
-and both final implementation rereviews pass. Only the post-documentation exact-
-byte rerun, documentation rereviews, commit/push, and exact-SHA Tier-1 remain.
-Exact predecessor O35 is released as implementation/documentation commits
-`984bc01`/`c6f23ce`;
-exact-SHA Tier-1 run `31269521736` passed format, WASM/browser twice, Linux,
-Windows, and macOS at
-`c6f23ce1a9350ca76241d007f804f3fcfa22c352`. The authoritative run JSON is
-archived at `/tmp/task22o35-tier1-exact-sha.json`. Pinned Orca remains v2.4.2
-commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
+Released but still crate-private and inactive. Implementation/documentation
+commits `b546e6f`/`3e927ed` were pushed, and exact-SHA Tier-1 run `31280579891`
+passed format, WASM/browser twice, Linux, Windows, and macOS at
+`3e927ed569d3db8d6f5c08b7843fb049fcc86412`. The authoritative run JSON is
+archived outside the repository at `/tmp/task22o36-tier1-exact-sha.json`.
+Exact predecessor O35 remains released as commits `984bc01`/`c6f23ce` and run
+`31269521736` at `c6f23ce1a9350ca76241d007f804f3fcfa22c352`. Pinned Orca remains
+v2.4.2 commit `8500fcdccaa10b5099ac20d252af3a7c560046f1`.
 
 Port only the next coherent translation-unit-local bridge-expansion helper:
 
@@ -256,11 +252,12 @@ missing `libglib-2.0.so.0`; neither is a pass and both exact-SHA CI browser runs
 remain mandatory. Fresh independent and default-model final implementation
 rereviews approve the repaired candidate with no required changes.
 
-O36 remains inactive and unreleased pending the post-documentation exact-byte
-rerun, documentation rereviews, separate commits, push, and exact-SHA Tier-1.
-Public slicing and the KSR golden expectation are unchanged.
+O36 is released but remains inactive. Implementation/documentation commits
+`b546e6f`/`3e927ed` and exact-SHA Tier-1 run `31280579891` passed at
+`3e927ed569d3db8d6f5c08b7843fb049fcc86412`, including all five jobs and both
+browser executions. Public slicing and the KSR golden expectation are unchanged.
 The next bounded source slice is `Bridge`, `group_id`, and
-`get_grouped_bridges` at `LayerRegion.cpp:174-259`; direction detection,
+`get_grouped_bridges` at `LayerRegion.cpp:174-260`; direction detection,
 bridge merging, orchestration, fill/toolpath/motion/G-code remain deferred.
 
 ## Verification, review, release, and rollback

@@ -5349,11 +5349,53 @@ export/JavaScript audits, and exact-O35 rollback 13/92/6/62/3. Both local
 Playwright runs fail before test code only because `libglib-2.0.so.0` is absent;
 they are not passes. Both final implementation rereviews approve.
 
-O36 remains inactive and unreleased pending the post-documentation exact-byte
-rerun, documentation rereviews, separate commits, push, and exact-SHA Tier-1.
-It adds no Option, public API, lifecycle,
-adapter, golden expectation, or G-code byte. Public slicing still consumes O26
-and returns `ProjectSlicingIncomplete`. The next bounded slice is `Bridge`,
-`group_id`, and `get_grouped_bridges` at `LayerRegion.cpp:174-259`; bridge
-direction/merge orchestration, fill, toolpath, seam, motion, G-code, and
-post-processing remain deferred.
+Implementation/documentation commits `b546e6f`/`3e927ed` were pushed;
+exact-SHA Tier-1 run `31280579891` passed all five jobs and both browser
+executions at `3e927ed569d3db8d6f5c08b7843fb049fcc86412`. O36 is released but
+remains inactive. It adds no Option, public API, lifecycle, adapter, golden
+expectation, or G-code byte. Public slicing still consumes O26 and returns
+`ProjectSlicingIncomplete`. The next bounded slice is `Bridge`, `group_id`, and
+`get_grouped_bridges` at `LayerRegion.cpp:174-260`; bridge direction/merge
+orchestration, fill, toolpath, seam, motion, G-code, and post-processing remain
+deferred.
+
+## Task 22O.37: group bridge regions by overlapping expansions
+
+Task 22O.37 locally ports pinned `LayerRegion.cpp:174-260`: source-shaped
+`Bridge`, parent traversal `group_id`, and `get_grouped_bridges`. The inactive
+crate-private helper consumes source ExPolygons into ordered bridge records,
+keeps the expansion-end index sentinel and `None` angle, scans only adjacent
+boundary-ID windows, caches contour-only bounding boxes, and processes ordered
+pairs through equal-source, exact inclusive bbox, and one fallible NonZero
+contour intersection before attaching the higher root to the lower. It returns
+the raw parent forest without normalization; holes remain irrelevant.
+
+The compiling initialization-only stub ran ten tests with six body-dependent
+failures and four disclosed stub-equivalent passes. A disposable exact pinned-
+Orca CLI E2E produced a nonempty G-code and removed it without content
+inspection; the linked original helper passed 45 assertions and emitted byte-
+identical Debug/`NDEBUG` vectors matching complete Rust source/order/group/
+sentinel/angle literals. The frozen candidate passes O37 debug/release 10/10,
+O36/O35/O28/O30/RegionExpansion/external-surface/PolyTree/boolean-path/offset/
+O26 regressions 6/13/39/6/92/25/15/11/62/3, warning-denying Clippy, and
+rustfmt. After a review-required private pair-helper extraction, the exact-byte
+mutation campaign again kills thirteen runtime mutations, compiler-rejects two,
+and truthfully reports the strict/inclusive bbox comparison substitution as an
+equivalent survivor. All hashes restore; body/test shards are 96/289 LOC; both
+repaired initial implementation reviews approve.
+
+O37 remains crate-private, inactive, and unreleased. Complete documented-
+candidate workspace/WASM/static/rollback gates and the default-model final
+review pass. Both local Playwright attempts failed before test execution because
+Chromium lacked `libglib-2.0.so.0`; neither is a pass, and both exact-SHA Tier-1
+browser executions remain mandatory. The independent final review found no Rust
+blocker and requested only the stale-status repair recorded here. These final
+tracked bytes require the complete exact-candidate rerun and both documentation
+rereviews before separate commits, push, and exact-SHA Tier-1. O37 changes no
+Option, lifecycle, adapter, golden expectation, or G-code byte. Public slicing
+still consumes O26 and returns `ProjectSlicingIncomplete`. The next bounded
+source candidate is
+`detect_bridge_directions` at `LayerRegion.cpp:262-308` and its direct
+`detect_bridging_direction(const Lines &, const Polygons &)` dependency at
+`BridgeDetector.hpp:75-119`; bridge merging, complete external-surface
+orchestration, fill/toolpath/motion/G-code remain deferred.
