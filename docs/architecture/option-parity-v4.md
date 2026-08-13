@@ -4995,3 +4995,13 @@ immutability, non-CrossHatch non-fallback, and atomic range error. Strict
 workspace Clippy, rustfmt, diff, and LOC checks pass. This remains a
 CrossHatch-only inactive slice; the complete KSR fill-entity oracle and G-code
 parity wait for the remaining source filler classes and lifecycle.
+
+### Task 22O.77: rectilinear vertical segmentation
+
+O77 ports pinned `FillRectilinear.cpp:357-496,759-993`. Its private source
+prerequisite creates rotated outer/inner offset contour inventories and exact
+rational vertical intersections with outer/inner low/high identity and source
+ordering. Three focused tests cover rectangle/hole/offset topology, rational
+rounding, rotation, repeatability/immutability, and range error. Strict core
+Clippy, rustfmt, diff, and LOC gates pass. Link construction, monotonic traversal,
+entities, lifecycle, and G-code remain pending.

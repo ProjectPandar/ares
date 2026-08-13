@@ -6445,3 +6445,18 @@ workspace Clippy, rustfmt, diff, and sub-400-LOC gates pass.
 O76 is lifecycle-inactive and deliberately does not claim complete KSR fill
 entities. Remaining filler classes, adjusted solid/bridge flow, gap/thin fill,
 ordering, motion, G-code, and normalized golden parity remain later slices.
+
+## Task 22O.77: rectilinear vertical segmentation
+
+O77 ports pinned `FillRectilinear.cpp:357-496,759-993` as the first dependency
+slice for KSR's Monotonic and MonotonicLine fillers. The private Rust module
+builds source outer/inner offset contours, rotates fixed coordinates, intersects
+source-ordered contours with equally spaced vertical lines using rational
+arithmetic, classifies outer/inner low/high intersections, and removes duplicate
+vertices.
+
+Three focused tests pass for rectangle order/kinds, holes and offset identities,
+rational rounding, rotation, repeatability/immutability, and coordinate range
+errors. Strict core Clippy, rustfmt, diff, and sub-400-LOC gates pass. Link graph,
+monotonic traversal, complete fillers/entities, lifecycle, motion, and G-code
+remain later source-cited slices.
