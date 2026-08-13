@@ -159,23 +159,27 @@ fn prepare_infill_lines(
         let lines = match (&inputs[lower_layer], &horizontal.records[lower_layer]) {
             (Some(input), Some(record)) => {
                 let region = prelude.region_options(input);
-                let nominal_flow =
-                    resolve_nominal_sparse_infill_flow(region, object_options, nozzles)?;
-                super::anchor_projection::validate(
-                    region,
-                    &record.fill_surfaces,
-                    nominal_flow.spacing,
-                    scale,
-                )?;
-                generate_sparse_infill_polylines_for_anchoring(SparseAnchoringLayer {
-                    planned: &plan.layers[lower_layer],
-                    fill_surfaces: &record.fill_surfaces,
-                    region_options: region,
-                    object_options,
-                    nozzle_diameters: nozzles,
-                    scale,
-                })
-                .map_err(geometry_error)?
+                if region.sparse_infill_density.0 == 0.0 {
+                    Vec::new()
+                } else {
+                    let nominal_flow =
+                        resolve_nominal_sparse_infill_flow(region, object_options, nozzles)?;
+                    super::anchor_projection::validate(
+                        region,
+                        &record.fill_surfaces,
+                        nominal_flow.spacing,
+                        scale,
+                    )?;
+                    generate_sparse_infill_polylines_for_anchoring(SparseAnchoringLayer {
+                        planned: &plan.layers[lower_layer],
+                        fill_surfaces: &record.fill_surfaces,
+                        region_options: region,
+                        object_options,
+                        nozzle_diameters: nozzles,
+                        scale,
+                    })
+                    .map_err(geometry_error)?
+                }
             }
             (None, None) => Vec::new(),
             _ => unreachable!("bridge anchor records remain aligned"),

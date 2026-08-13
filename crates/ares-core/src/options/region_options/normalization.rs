@@ -9,7 +9,7 @@ pub(super) fn normalize(options: &mut RegionOptions, num_extruders: usize) {
     clamp_feature(&mut options.outer_wall_filament_id, num_extruders);
     clamp_feature(&mut options.inner_wall_filament_id, num_extruders);
 
-    if options.sparse_infill_density.0 < 0.00011 {
+    if options.sparse_infill_density.0 < f64::from(0.00011_f32) {
         options.sparse_infill_density = Percent(0.0);
     } else if options.sparse_infill_density.0 > 100.0 {
         options.sparse_infill_density = Percent(100.0);

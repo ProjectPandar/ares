@@ -49,11 +49,17 @@ fn every_feature_id_clamps_out_of_range_and_preserves_the_active_range() {
 
 #[test]
 fn sparse_density_uses_raw_percent_numbers_and_strict_bounds() {
+    let source_threshold = f64::from(0.00011_f32);
     for (input, expected) in [
         (-1.0, 0.0),
         (0.0, 0.0),
         (0.00010, 0.0),
-        (0.00011, 0.00011),
+        (0.00011, 0.0),
+        (source_threshold, source_threshold),
+        (
+            f64::from_bits(source_threshold.to_bits() + 1),
+            f64::from_bits(source_threshold.to_bits() + 1),
+        ),
         (35.0, 35.0),
         (100.0, 100.0),
         (100.1, 100.0),

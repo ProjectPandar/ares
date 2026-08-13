@@ -1245,8 +1245,9 @@ material; object and layer-range inputs are unrepresentable in that branch.
 For each feature filament ID, positive explicit values assign and set the mask,
 nonpositive values clear it without assigning, and a positive same-scope
 `extruder` fills only clear features. Finalization maps each ID at or below zero
-or above `num_extruders` to one. Sparse density below `0.00011` becomes zero
-and values above 100 become 100, with both equalities retained. Every non-None
+or above `num_extruders` to one. Sparse density below the double value promoted
+from Orca's `0.00011f` literal becomes zero and values above 100 become 100,
+with equality at that promoted threshold retained. Every non-None
 fuzzy variant becomes None when point distance is below `0.01` or thickness is
 below `0.001`, again retaining equality. Only then does the final clamped
 top-surface filament ID select all four nullable filament ironing vectors. A
@@ -4646,8 +4647,8 @@ O43 candidate provenance through pinned `PrintObject.cpp:2725-2761,3114-3389`.
 The active rewrite boundary supports the fixture-reachable single-region,
 non-Lightning CrossHatch path and rejects an active unported sparse anchoring
 pattern instead of substituting a fallback. Lightning/adaptive/support-cubic,
-generic other-pattern generation, and the second/third bridge passes remain
-explicitly deferred.
+generic other-pattern generation, and the optional second internal-bridge
+pass remain explicitly deferred.
 
 The transaction boundary rejects only active adaptive/support-cubic octree
 states; density-zero or objects without nonempty fill surfaces retain Orca's
@@ -4660,7 +4661,58 @@ Final evidence is focused O71 16/16, bridge dependency 240/240, workspace
 6,473/6,473 with two skipped, strict Clippy/rustfmt/diff, WASM plus two Windows
 and two macOS checks, and unconditional independent review. The KSR prepared
 surface checkpoint has 47 `InternalBridge` surfaces, 15,689 ordered points,
-17 planned layers, and SHA-256
+17 bridge-bearing planned layers, and SHA-256
 `c547cb34b8d5d27d572a166f13a16741f75f7f9d34f15db59ddac8575b5a33b9`.
 This does not claim complete G-code parity; the public lifecycle remains
 `ProjectSlicingIncomplete` after O71 disposal.
+
+## Task 22O.72 infill-combination identity-gate parity
+
+O72 introduces no raw option or option type. It reads the exact already typed
+per-region `infill_combination: OrcaBool` and
+`sparse_infill_density: Percent` retained by the project-slice graph and ports
+the source branch at pinned `PrintObject.cpp:4172-4174`. Effective global,
+object, and part overrides are resolved before this region-level decision:
+
+```text
+!infill_combination || sparse_infill_density == 0.0  => unchanged successor
+ infill_combination && sparse_infill_density != 0.0  =>
+     UnsupportedProjectFeature("infill_combination")
+```
+
+The comparison is exact, not epsilon-based and not `<= 0`. Enabled combination
+with exact-zero density is admitted as the source identity branch. Disabled
+combination does not activate or gate on
+`infill_combination_max_layer_height`, because pinned Orca reads that option
+only inside the deferred active body at `4188-4190`; existing typed parsing and
+validation remain unchanged.
+
+The public exact-zero path retains O43's real candidate inventory. Following
+`PrintObject.cpp:2737-2753` and `Fill/Fill.cpp:855-902,1394-1508`, O71 produces
+an empty sparse-anchor line set for that density and continues with its existing
+boundary-derived bridge angle; it does not erase candidates or make the whole
+bridge transaction a no-op.
+
+The embedded KSR project carries `infill_combination = "0"`,
+`infill_combination_max_layer_height = "100%"`, and
+`sparse_infill_density = "15%"`. It therefore crosses O72 unchanged and retains
+the O71 digest
+`c547cb34b8d5d27d572a166f13a16741f75f7f9d34f15db59ddac8575b5a33b9`.
+
+The older `InfillOptions` projection and
+`crates/ares-core/src/infills/combination.rs` scaffold are not option-parity
+evidence and are not used as a fallback. Full active parity for
+`infill_combination_max_layer_height`, sparse/internal-solid filament IDs,
+nozzle selection, pattern-dependent clearance, flows, and surface rewrites is
+deferred with `PrintObject.cpp:4176-4287`. Until that exact source body is
+ported, enabled nonzero-density projects remain explicitly unsupported.
+
+Public slicing invokes O72 and still returns `ProjectSlicingIncomplete` after
+disposing `PreparedPostInfillCombination`; no placeholder G-code is emitted.
+
+Final evidence passes focused 14/14, prepare-infill 255/255, and workspace
+6,486/6,486 with two configured skips. Six compiling mutations, including the
+promoted Orca `0.00011f` normalization threshold, were killed and byte-exactly
+restored. Strict Clippy/rustfmt, six Tier-1 target checks,
+LOC/static/diff/no-staged gates, and a clean pinned Orca worktree pass.
+Complete G-code parity remains deferred.

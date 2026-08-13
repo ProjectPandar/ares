@@ -55,6 +55,45 @@ fn task22o71_inactive_adaptive_density_is_a_noop_without_candidates() {
 }
 
 #[test]
+fn task22o71_zero_sparse_density_skips_anchor_generation_with_real_candidates() {
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"sparse_infill_density\": \"15%\"",
+        "\"sparse_infill_density\": \"0%\"",
+    );
+
+    let raw = super::super::prepare(archive);
+    assert!(
+        raw.objects
+            .iter()
+            .any(|object| !object.surfaces_by_layer.is_empty())
+    );
+
+    let prepared = transaction::prepare(raw).unwrap();
+    let snapshot = super::snapshot(&prepared);
+    assert_eq!(
+        snapshot.bridge_layers,
+        vec![
+            15, 30, 31, 41, 45, 60, 65, 70, 75, 82, 85, 90, 105, 116, 125, 136, 255,
+        ]
+    );
+    assert_eq!(
+        (
+            snapshot.bridge_surfaces,
+            snapshot.bridge_expolygon_points,
+            super::sha256(&snapshot.bytes),
+        ),
+        (
+            50,
+            14_868,
+            "a519ba121b7005baface15ec8e1ba6cbc12ff7809907e7550d96cce22b11a2af".to_owned(),
+        )
+    );
+    transaction::dispose(prepared);
+}
+
+#[test]
 fn task22o71_adaptive_pattern_on_an_empty_object_is_a_noop() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
@@ -81,11 +120,6 @@ fn task22o71_unported_anchor_density_and_lengths_fail_without_fallback() {
         "\"top_surface_density\": \"100%\"",
         "\"top_surface_density\": \"0%\"",
         "top_surface_density",
-    );
-    assert_unsupported_mutation(
-        "\"sparse_infill_density\": \"15%\"",
-        "\"sparse_infill_density\": \"0%\"",
-        "sparse_infill_density",
     );
     assert_unsupported_mutation(
         "\"infill_anchor_max\": \"20\"",

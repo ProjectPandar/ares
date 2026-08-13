@@ -216,14 +216,16 @@ fn assert_error_raw(raw: PreparedPostBridgeCandidates, expected: SliceError) {
     transaction::reset_hooks();
 }
 
-struct SurfaceSnapshot {
-    bytes: Vec<u8>,
-    bridge_layers: Vec<usize>,
-    bridge_surfaces: usize,
-    bridge_expolygon_points: usize,
+pub(in crate::project_slice::tests::prepare_infill) struct SurfaceSnapshot {
+    pub(in crate::project_slice::tests::prepare_infill) bytes: Vec<u8>,
+    pub(in crate::project_slice::tests::prepare_infill) bridge_layers: Vec<usize>,
+    pub(in crate::project_slice::tests::prepare_infill) bridge_surfaces: usize,
+    pub(in crate::project_slice::tests::prepare_infill) bridge_expolygon_points: usize,
 }
 
-fn snapshot(prepared: &transaction::PreparedPostBridgeOverInfill) -> SurfaceSnapshot {
+pub(in crate::project_slice::tests::prepare_infill) fn snapshot(
+    prepared: &transaction::PreparedPostBridgeOverInfill,
+) -> SurfaceSnapshot {
     snapshot_horizontal(&prepared.predecessor.predecessor)
 }
 
@@ -301,7 +303,7 @@ fn put_usize(output: &mut Vec<u8>, value: usize) {
     output.extend_from_slice(&(value as u64).to_le_bytes());
 }
 
-fn sha256(bytes: &[u8]) -> String {
+pub(in crate::project_slice::tests::prepare_infill) fn sha256(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
         .fold(String::new(), |mut output, byte| {

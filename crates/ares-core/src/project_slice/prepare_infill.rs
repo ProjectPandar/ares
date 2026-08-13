@@ -1,4 +1,5 @@
 pub(in crate::project_slice) mod bridge_over_infill;
+pub(in crate::project_slice) mod combine_infill;
 pub(in crate::project_slice) mod external_surfaces;
 pub(in crate::project_slice) mod fill_surfaces;
 pub(in crate::project_slice) mod horizontal_shell_promotion;

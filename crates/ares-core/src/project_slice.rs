@@ -104,16 +104,17 @@ fn slice_project_sync(
         )?,
     )?;
     let candidates = prepare_infill::bridge_over_infill::prepare(external)?;
-    let prepared = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
-    consume_post_bridge_over_infill(prepared, metadata)
+    let bridged = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
+    let prepared = prepare_infill::combine_infill::prepare(bridged)?;
+    consume_post_infill_combination(prepared, metadata)
 }
 
 #[inline(never)]
-fn consume_post_bridge_over_infill(
-    prepared: prepare_infill::bridge_over_infill::transaction::PreparedPostBridgeOverInfill,
+fn consume_post_infill_combination(
+    prepared: prepare_infill::combine_infill::PreparedPostInfillCombination,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::bridge_over_infill::transaction::dispose(prepared);
+    prepare_infill::combine_infill::dispose(prepared);
     let _ = metadata;
     Err(SliceError::ProjectSlicingIncomplete)
 }

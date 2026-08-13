@@ -1,6 +1,7 @@
 mod bridge_over_infill;
 mod candidate_anchored_bridge;
 mod candidate_bridge_angle;
+mod combine_infill;
 mod deep_sparse_area;
 mod external_surfaces;
 mod fill_surfaces;

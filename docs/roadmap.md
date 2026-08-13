@@ -6148,7 +6148,7 @@ unchanged region snapshots and activates the post-bridge prepared lifecycle.
 
 The current scope is the fixture-reachable single-region, non-Lightning
 CrossHatch path. Lightning/adaptive/support-cubic and generic other-pattern
-generation, the second/third bridge passes at `3393+`, combine-infill,
+generation, the optional second internal-bridge pass at `3393+`, combine-infill,
 extrusion, motion, G-code, CLI, and complete golden parity remain deferred.
 Start from a real-KSR layer-15 `InternalBridge` RED; exit requires focused and
 workspace tests, strict/portability/static gates, current golden checkpoint,
@@ -6165,3 +6165,45 @@ feature runs. Focused O71 16/16, bridge dependency 240/240, workspace
 6,473/6,473 with two skipped, strict lint/format/diff, all five portability
 checks, LOC/static gates, and final independent reviews pass. Full G-code
 golden parity remains deferred beyond the current incomplete lifecycle.
+
+## Task 22O.72: infill-combination identity gate
+
+Task 22O.72 ports the admitted branch of pinned
+`PrintObject.cpp:673-680,3701-3706,4163-4287` as
+`prepare_infill::combine_infill::{prepare, dispose, PreparedPostInfillCombination}`.
+After O71, every region with disabled combination or exactly zero sparse
+density passes unchanged; any enabled, nonzero-density region returns
+`UnsupportedProjectFeature("infill_combination")` before mutation. Public
+slicing advances to `consume_post_infill_combination`, disposes the successor,
+and remains `ProjectSlicingIncomplete`.
+
+The milestone must not reuse the legacy path-level
+`infills::combination`/`InfillOptions` scaffold. The optional internal-bridge
+pass at `PrintObject.cpp:3393-3546` gets no placeholder lifecycle stage because
+O17/O71 reject every activating mode. The active combination algorithm at
+`4176-4287`, fill grouping, extrusion, motion, G-code, CLI, and complete golden
+parity remain deferred.
+
+O72 is implemented and lifecycle-active. The public enabled/zero RED also
+closed the preceding source case: O43 candidates remain intact, O71 projects
+zero-density sparse anchor generation to an empty line set, then continues
+boundary anchoring and commits InternalBridge surfaces before O72 applies its
+identity branch. Tests do not clear candidate state to reach this behavior.
+
+Exit requires disabled/nonzero and enabled/zero identity tests,
+enabled/nonzero global/object/part override rejection and ownership tests,
+public lifecycle coverage, gate-mutation kills, and an exact unchanged KSR O71
+checkpoint: 47 bridge surfaces, 15,689 points, 17 bridge-bearing layers, SHA-256
+`c547cb34b8d5d27d572a166f13a16741f75f7f9d34f15db59ddac8575b5a33b9`.
+Final validation passes focused 14/14, prepare-infill 255/255, and workspace
+6,486/6,486 with two configured skips. Six compiling mutations (including the
+source `0.00011f` threshold) were killed and byte-exactly restored. Strict
+lint/format, WASM core and adapter, both Windows targets, both macOS targets,
+LOC/static/diff/no-staged gates, and a clean pinned Orca worktree pass;
+unconditional independent six-axis review is the final release gate.
+
+The next source owner is O73: pinned
+`Fill/Fill.cpp:216-346,829-1067,1213-1224` for `SurfaceFillParams`,
+`SurfaceFill`, and base `group_fills`. KSR-active narrow-solid splitting at
+`Fill/Fill.cpp:349-827,1152-1186` must follow before grouped fills activate a
+production lifecycle successor.

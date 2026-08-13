@@ -9,7 +9,7 @@ use crate::{
     slice_project,
 };
 
-fn prepare(archive: KsrArchive) -> bridge_over_infill::PreparedPostBridgeCandidates {
+pub(super) fn prepare(archive: KsrArchive) -> bridge_over_infill::PreparedPostBridgeCandidates {
     let horizontal = super::horizontal_shell_propagation::fixture::prepare(archive.bytes());
     let external = external_surfaces::prepare(horizontal).unwrap();
     bridge_over_infill::prepare(external).unwrap()
@@ -199,6 +199,6 @@ fn outside_clipper_range() -> ExPolygon {
 }
 
 mod density_provenance;
-mod multi_object;
+pub(super) mod multi_object;
 mod object_scope;
-mod transaction;
+pub(super) mod transaction;
