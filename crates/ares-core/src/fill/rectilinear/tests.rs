@@ -2,7 +2,7 @@ use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
 
 use super::{
     IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine, connect_contours,
-    insert_phony_outer_pairs, slice_vertical_lines,
+    generate_monotonic_regions, insert_phony_outer_pairs, slice_vertical_lines,
 };
 
 fn rectangle() -> ExPolygon {
@@ -199,6 +199,40 @@ fn task22o79_disconnected_inner_pair_receives_ordered_phony_outer_pair() {
             && pair[0].contour_index == usize::MAX
             && pair[1].contour_index == usize::MAX
     }));
+}
+
+#[test]
+fn task22o80_rectangular_runs_form_one_region_with_source_flip_parity() {
+    let prepare = |count| {
+        let mut lines =
+            slice_vertical_lines(&rectangle(), 0.0, -5.0, -10.0, count, 10, 20).unwrap();
+        connect_contours(&mut lines, false, 0.0);
+        insert_phony_outer_pairs(&mut lines);
+        lines
+    };
+
+    let odd = generate_monotonic_regions(&prepare(3));
+    let even = generate_monotonic_regions(&prepare(4));
+
+    assert_eq!(odd.len(), 1);
+    assert_eq!((odd[0].left.line, odd[0].right.line), (0, 2));
+    assert!(odd[0].flips);
+    assert_eq!(even.len(), 1);
+    assert_eq!((even[0].left.line, even[0].right.line), (0, 3));
+    assert!(!even[0].flips);
+}
+
+#[test]
+fn task22o80_region_generation_is_repeatable_and_does_not_mutate_sections() {
+    let mut lines = slice_vertical_lines(&rectangle(), 0.0, -5.0, -10.0, 3, 10, 30).unwrap();
+    connect_contours(&mut lines, false, 0.0);
+    let before = lines.clone();
+
+    assert_eq!(
+        generate_monotonic_regions(&lines),
+        generate_monotonic_regions(&lines)
+    );
+    assert_eq!(lines, before);
 }
 
 #[test]

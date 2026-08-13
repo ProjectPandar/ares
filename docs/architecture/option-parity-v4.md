@@ -5022,3 +5022,11 @@ ordered phony outer pairs and all affected link indices are remapped. Two O79
 focused tests plus five O77/O78 regressions pass; strict core Clippy, rustfmt,
 diff, and LOC gates pass. Monotonic region generation/chaining, filler entities,
 lifecycle, and G-code remain pending.
+
+### Task 22O.80: monotonic region generation
+
+O80 ports pinned `FillRectilinear.cpp:1590-1629,1711-1931`. Source-ordered seed
+runs and exclusive adjacent overlaps produce owned monotonic region boundaries
+and flip parity without mutating the linked input. Two focused tests pass;
+strict core Clippy, rustfmt, diff, and LOC gates pass. Neighbors/path lengths,
+chaining, filler entities, lifecycle, and G-code remain pending.

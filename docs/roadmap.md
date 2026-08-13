@@ -6484,3 +6484,15 @@ remain identical.
 Two O79 tests and all five O77/O78 regressions pass. Strict core Clippy,
 rustfmt, diff, and LOC gates pass. Monotonic regions/chaining, complete filler
 entities, lifecycle, motion, and G-code remain later source-cited slices.
+
+## Task 22O.80: monotonic region generation
+
+O80 ports pinned `FillRectilinear.cpp:1590-1629,1711-1931`. O79 linked
+sections are scanned in source seed order and exclusive adjacent overlaps extend
+owned left/right monotonic boundaries. Source consumed state prevents duplicate
+regions and line-count parity determines `flips`.
+
+Two focused tests pass for odd/even rectangular parity, repeatability, and input
+immutability. Strict core Clippy, rustfmt, diff, and LOC gates pass. Neighbor
+scattering/path lengths, ant chaining, polylines/entities, lifecycle, motion,
+and G-code remain later slices.
