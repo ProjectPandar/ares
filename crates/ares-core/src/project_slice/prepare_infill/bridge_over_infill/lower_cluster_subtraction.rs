@@ -9,13 +9,6 @@ pub(in crate::project_slice) struct ClusterBridgeHistoryLayer<'a> {
     pub(in crate::project_slice) candidates: &'a [CandidateSurface],
 }
 
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "retained for the unwired bridge-over-infill transaction"
-    )
-)]
 pub(in crate::project_slice) fn subtract_filled_lower_cluster_bridges(
     deep_infill_area: &[Polygon],
     previous_cluster_layers: &[ClusterBridgeHistoryLayer<'_>],

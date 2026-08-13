@@ -1,11 +1,3 @@
-#![cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "the source-cited Layer operation remains unwired until the bridge transaction"
-    )
-)]
-
 mod grouping;
 #[cfg(test)]
 mod tests;
@@ -34,7 +26,6 @@ pub(in crate::project_slice) struct SparseAnchoringLayer<'a> {
 pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     layer: SparseAnchoringLayer<'_>,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    debug_assert_ne!(layer.planned.id, 0);
     debug_assert!(layer.region_options.sparse_infill_density.0 > 0.0);
     debug_assert!(layer.region_options.top_surface_density.0 > 0.0);
     debug_assert!(
@@ -59,14 +50,12 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
         layer.object_options,
         layer.nozzle_diameters,
     )
-    .expect("trusted sparse anchoring inputs have a valid nominal frInfill Flow");
+    .expect("bridge transaction validates the nominal frInfill Flow before O46");
     let spacing = f64::from(flow.spacing);
-    let density_percent = layer.region_options.sparse_infill_density.0 as f32;
-    let density = (0.01_f64 * f64::from(density_percent)) as f32;
+    let density = projected_sparse_density(layer.region_options);
     let angle = layer.region_options.infill_direction.0.to_radians() as f32;
-    let anchor_length = projected_length(layer.region_options.infill_anchor, spacing);
-    let anchor_length_max = projected_length(layer.region_options.infill_anchor_max, spacing);
-    let anchor_length = anchor_length.min(anchor_length_max);
+    let (anchor_length, anchor_length_max) =
+        projected_anchor_lengths(layer.region_options, spacing);
     debug_assert!(anchor_length_max >= 0.05);
 
     let groups = grouping::group_and_prioritize(layer.fill_surfaces, layer.region_options)?;
@@ -98,6 +87,17 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
         }
     }
     Ok(result)
+}
+
+pub(super) fn projected_sparse_density(options: &RegionOptions) -> f32 {
+    let density_percent = options.sparse_infill_density.0 as f32;
+    (0.01_f64 * f64::from(density_percent)) as f32
+}
+
+pub(super) fn projected_anchor_lengths(options: &RegionOptions, spacing: f64) -> (f32, f32) {
+    let anchor_length = projected_length(options.infill_anchor, spacing);
+    let anchor_length_max = projected_length(options.infill_anchor_max, spacing);
+    (anchor_length.min(anchor_length_max), anchor_length_max)
 }
 
 fn projected_length(value: FloatOrPercent, spacing: f64) -> f32 {

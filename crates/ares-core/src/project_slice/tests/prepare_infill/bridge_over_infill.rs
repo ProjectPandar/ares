@@ -35,8 +35,9 @@ fn inventory_counts(
 }
 
 #[tokio::test]
-async fn task22o43_task22o44_public_lifecycle_still_disposes_o43_once() {
+async fn task22o71_public_lifecycle_consumes_o43_and_disposes_transaction_once() {
     bridge_over_infill::reset_hooks();
+    bridge_over_infill::transaction::reset_hooks();
 
     assert_eq!(
         slice_project(KsrArchive::new().bytes(), metadata())
@@ -45,9 +46,12 @@ async fn task22o43_task22o44_public_lifecycle_still_disposes_o43_once() {
         SliceError::ProjectSlicingIncomplete
     );
     assert_eq!(bridge_over_infill::invocations(), 1);
-    assert_eq!(bridge_over_infill::disposals(), 1);
+    assert_eq!(bridge_over_infill::disposals(), 0);
+    assert_eq!(bridge_over_infill::transaction::invocations(), 1);
+    assert_eq!(bridge_over_infill::transaction::disposals(), 1);
 
     bridge_over_infill::reset_hooks();
+    bridge_over_infill::transaction::reset_hooks();
 }
 
 #[test]
@@ -197,3 +201,4 @@ fn outside_clipper_range() -> ExPolygon {
 mod density_provenance;
 mod multi_object;
 mod object_scope;
+mod transaction;

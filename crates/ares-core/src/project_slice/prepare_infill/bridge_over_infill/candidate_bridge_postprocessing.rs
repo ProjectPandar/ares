@@ -1,11 +1,3 @@
-#![cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "the source-cited dependency remains unwired until the bridge transaction"
-    )
-)]
-
 #[cfg(test)]
 mod tests;
 

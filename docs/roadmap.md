@@ -6138,3 +6138,30 @@ O70 now passes focused 3/3, workspace 6,457/6,457 with two skipped, strict
 lint/format, five portability builds, and 15/15 compiling mutation kills with
 byte-exact restoration. Final independent six-axis review approved after the
 complete topology snapshot repair, with no remaining item.
+
+## Task 22O.71: first internal bridge transaction
+
+Task 22O.71 ports pinned `PrintObject.cpp:2725-2761,3114-3389` as one deep
+production transaction. It generates lower-layer anchors before clustering,
+executes O54-O64 with ordered cluster history, then executes O65-O70 against
+unchanged region snapshots and activates the post-bridge prepared lifecycle.
+
+The current scope is the fixture-reachable single-region, non-Lightning
+CrossHatch path. Lightning/adaptive/support-cubic and generic other-pattern
+generation, the second/third bridge passes at `3393+`, combine-infill,
+extrusion, motion, G-code, CLI, and complete golden parity remain deferred.
+Start from a real-KSR layer-15 `InternalBridge` RED; exit requires focused and
+workspace tests, strict/portability/static gates, current golden checkpoint,
+and unconditional independent six-axis approval.
+
+O71 is now implemented and lifecycle-active. Active adaptive/support-cubic
+octree states and other unported anchoring behavior fail explicitly, while
+source-inactive density-zero or empty-fill adaptive states remain no-ops. The
+KSR checkpoint freezes 47 bridge surfaces, 15,689 ordered topology points,
+and the 17-layer digest
+`c547cb34b8d5d27d572a166f13a16741f75f7f9d34f15db59ddac8575b5a33b9`;
+the independent Orca G-code witness has the same 17 bridge layers and 30
+feature runs. Focused O71 16/16, bridge dependency 240/240, workspace
+6,473/6,473 with two skipped, strict lint/format/diff, all five portability
+checks, LOC/static gates, and final independent reviews pass. Full G-code
+golden parity remains deferred beyond the current incomplete lifecycle.

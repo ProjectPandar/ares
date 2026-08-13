@@ -13,13 +13,6 @@ struct SourceBounds {
     defined: bool,
 }
 
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "retained for the unwired bridge-over-infill transaction"
-    )
-)]
 pub(in crate::project_slice) fn order_candidate_surfaces(
     candidates: Vec<CandidateSurface>,
 ) -> Vec<CandidateSurface> {

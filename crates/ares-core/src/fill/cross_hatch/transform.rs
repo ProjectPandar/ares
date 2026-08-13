@@ -63,7 +63,7 @@ fn rotate_points_with_trig(
         .collect()
 }
 
-pub(super) fn line_spacing(
+pub(crate) fn line_spacing(
     spacing: f64,
     density: f32,
     multiline: i32,

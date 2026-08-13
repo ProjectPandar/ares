@@ -4637,3 +4637,30 @@ G-code output.
 Focused 3/3, workspace 6,457/6,457 with two skipped, strict gates, five
 portability builds, and 15/15 compiling mutation kills pass. Composer wiring,
 the second internal-bridge pass, CLI, and full golden parity remain deferred.
+
+## Task 22O.71 first internal bridge transaction dependency
+
+O71 consumes no new raw option type. It composes the already typed object and
+region options, nozzle diameters, planned layers, normal solid-infill Flow, and
+O43 candidate provenance through pinned `PrintObject.cpp:2725-2761,3114-3389`.
+The active rewrite boundary supports the fixture-reachable single-region,
+non-Lightning CrossHatch path and rejects an active unported sparse anchoring
+pattern instead of substituting a fallback. Lightning/adaptive/support-cubic,
+generic other-pattern generation, and the second/third bridge passes remain
+explicitly deferred.
+
+The transaction boundary rejects only active adaptive/support-cubic octree
+states; density-zero or objects without nonempty fill surfaces retain Orca's
+inactive no-op. It also rejects active unported anchor templates, direction
+controls, surface kinds, densities/lengths, and effective extruder ordering at
+the external project boundary, rather than silently applying the reduced KSR
+grouping model. No new raw option or compatibility fallback was introduced.
+
+Final evidence is focused O71 16/16, bridge dependency 240/240, workspace
+6,473/6,473 with two skipped, strict Clippy/rustfmt/diff, WASM plus two Windows
+and two macOS checks, and unconditional independent review. The KSR prepared
+surface checkpoint has 47 `InternalBridge` surfaces, 15,689 ordered points,
+17 planned layers, and SHA-256
+`c547cb34b8d5d27d572a166f13a16741f75f7f9d34f15db59ddac8575b5a33b9`.
+This does not claim complete G-code parity; the public lifecycle remains
+`ProjectSlicingIncomplete` after O71 disposal.

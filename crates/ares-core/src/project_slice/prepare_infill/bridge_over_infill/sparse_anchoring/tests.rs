@@ -31,6 +31,21 @@ fn task22o46_single_internal_uses_owned_deterministic_output_without_mutation() 
 }
 
 #[test]
+fn task22o46_sparse_anchoring_accepts_zero_based_layer_id() {
+    let baseline = fixture(vec![RegionSurface::internal(rectangle(
+        0, 0, 12_000_000, 8_000_000,
+    ))]);
+    let expected = generate(&baseline, CoordinateScale::Normal).unwrap();
+    let mut lower_layer_zero = baseline;
+    lower_layer_zero.planned.id = 0;
+
+    assert_eq!(
+        generate(&lower_layer_zero, CoordinateScale::Normal).unwrap(),
+        expected
+    );
+}
+
+#[test]
 fn task22o46_nominal_object_height_drives_spacing_and_projection_changes_output() {
     let baseline = fixture(vec![RegionSurface::internal(rectangle(
         0, 0, 12_000_000, 8_000_000,

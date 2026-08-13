@@ -1,6 +1,8 @@
 mod pattern;
 mod transform;
 
+pub(crate) use transform::line_spacing;
+
 use super::connect::{FillConnectionParams, connect_infill};
 use crate::geometry::{
     ClipperError, CoordinateScale, ExPolygon, JoinType, Polyline, intersection_open_polylines,
@@ -63,7 +65,7 @@ fn fill_component(
     let mut polylines = pattern::generate_infill_layers(
         params.z / scale.factor(),
         pattern::repeat_ratio(params.density),
-        transform::line_spacing(params.spacing, params.density, params.multiline, scale),
+        line_spacing(params.spacing, params.density, params.multiline, scale),
         width,
         height,
     )?;

@@ -15,13 +15,6 @@ pub(in crate::project_slice) struct CandidateSurface {
     pub(in crate::project_slice) bridge_angle: f64,
 }
 
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "retained for the next bridge-over-infill source slice"
-    )
-)]
 pub(in crate::project_slice) struct BridgeCandidateObject {
     pub(in crate::project_slice) has_lightning_infill: bool,
     pub(in crate::project_slice) surfaces_by_layer: BTreeMap<usize, Vec<CandidateSurface>>,

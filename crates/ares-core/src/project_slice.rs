@@ -78,26 +78,22 @@ fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    consume_post_bridge_candidates(
-        prepare_infill::bridge_over_infill::prepare(
-            prepare_infill::external_surfaces::prepare(
-                prepare_infill::horizontal_shell_propagation::prepare(
-                    prepare_infill::horizontal_shell_promotion::prepare(
-                        prepare_infill::vertical_shell_assignment::prepare(
-                            prepare_infill::vertical_shell_filtering::prepare(
-                                prepare_infill::vertical_shell_regularization::prepare(
-                                    prepare_infill::vertical_shell_trimming::prepare(
-                                        prepare_infill::vertical_shell_projection::prepare(
-                                            prepare_infill::vertical_shells::prepare(
-                                                prepare_infill::fill_surfaces::prepare(
-                                                    prepare_infill::surface_type_detection::prepare(
-                                                        perimeters::prepare_post_layer_region_perimeters(
-                                                            project,
-                                                        )?,
-                                                    )?,
-                                                ),
+    let external = prepare_infill::external_surfaces::prepare(
+        prepare_infill::horizontal_shell_propagation::prepare(
+            prepare_infill::horizontal_shell_promotion::prepare(
+                prepare_infill::vertical_shell_assignment::prepare(
+                    prepare_infill::vertical_shell_filtering::prepare(
+                        prepare_infill::vertical_shell_regularization::prepare(
+                            prepare_infill::vertical_shell_trimming::prepare(
+                                prepare_infill::vertical_shell_projection::prepare(
+                                    prepare_infill::vertical_shells::prepare(
+                                        prepare_infill::fill_surfaces::prepare(
+                                            prepare_infill::surface_type_detection::prepare(
+                                                perimeters::prepare_post_layer_region_perimeters(
+                                                    project,
+                                                )?,
                                             )?,
-                                        )?,
+                                        ),
                                     )?,
                                 )?,
                             )?,
@@ -106,16 +102,18 @@ fn slice_project_sync(
                 )?,
             )?,
         )?,
-        metadata,
-    )
+    )?;
+    let candidates = prepare_infill::bridge_over_infill::prepare(external)?;
+    let prepared = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
+    consume_post_bridge_over_infill(prepared, metadata)
 }
 
 #[inline(never)]
-fn consume_post_bridge_candidates(
-    prepared: prepare_infill::bridge_over_infill::PreparedPostBridgeCandidates,
+fn consume_post_bridge_over_infill(
+    prepared: prepare_infill::bridge_over_infill::transaction::PreparedPostBridgeOverInfill,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::bridge_over_infill::dispose(prepared);
+    prepare_infill::bridge_over_infill::transaction::dispose(prepared);
     let _ = metadata;
     Err(SliceError::ProjectSlicingIncomplete)
 }

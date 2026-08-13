@@ -1,8 +1,3 @@
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "unwired bridge transaction dependency")
-)]
-
 #[cfg(test)]
 mod tests;
 

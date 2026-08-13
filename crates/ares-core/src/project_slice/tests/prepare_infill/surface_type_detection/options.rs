@@ -142,7 +142,7 @@ async fn task22o17_active_extra_bridge_values_fail_at_o17() {
 }
 
 #[tokio::test]
-async fn task22o17_internal_only_extra_bridge_value_is_source_inactive() {
+async fn task22o17_internal_only_extra_bridge_value_reaches_o71_boundary() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
@@ -153,7 +153,7 @@ async fn task22o17_internal_only_extra_bridge_value_is_source_inactive() {
         slice_project(archive.bytes(), metadata())
             .await
             .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
+        SliceError::UnsupportedProjectFeature("enable_extra_bridge_layer".to_owned())
     );
 }
 

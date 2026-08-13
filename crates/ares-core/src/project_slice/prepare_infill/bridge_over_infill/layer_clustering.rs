@@ -59,13 +59,6 @@ pub(in crate::project_slice) fn cluster_candidate_layers(
     Ok(clusters)
 }
 
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "retained for the unwired bridge-over-infill transaction"
-    )
-)]
 pub(in crate::project_slice) fn cluster_candidate_object(
     candidates: &BridgeCandidateObject,
     planned_layers: &[PlannedLayer],

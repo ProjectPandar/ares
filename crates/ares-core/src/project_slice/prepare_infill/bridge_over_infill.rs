@@ -24,6 +24,7 @@ pub(in crate::project_slice) mod sparse_anchoring;
 mod stage;
 #[cfg(test)]
 mod tests;
+pub(in crate::project_slice) mod transaction;
 mod types;
 
 use crate::{
@@ -46,6 +47,7 @@ pub(in crate::project_slice) fn prepare(
     stage::prepare(predecessor)
 }
 
+#[cfg(test)]
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostBridgeCandidates) {
     #[cfg(test)]
     DISPOSALS.with(|count| count.set(count.get() + 1));

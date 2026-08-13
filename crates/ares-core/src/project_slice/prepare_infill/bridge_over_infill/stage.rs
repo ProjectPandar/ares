@@ -11,13 +11,6 @@ use super::{
 
 pub(in crate::project_slice) struct PreparedPostBridgeCandidates {
     pub(in crate::project_slice) predecessor: PreparedPostExternalSurfaces,
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "retained for the next bridge-over-infill source slice"
-        )
-    )]
     pub(in crate::project_slice) objects: Vec<BridgeCandidateObject>,
 }
 
@@ -36,6 +29,7 @@ pub(in crate::project_slice) fn prepare(
     }
 }
 
+#[cfg(test)]
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostBridgeCandidates) {
     external_surfaces::dispose(prepared.predecessor);
 }
