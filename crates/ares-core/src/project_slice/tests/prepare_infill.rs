@@ -5,6 +5,7 @@ mod combine_infill;
 mod deep_sparse_area;
 mod external_surfaces;
 mod fill_surfaces;
+mod group_fills;
 mod horizontal_shell_promotion;
 mod horizontal_shell_propagation;
 mod internal_bridge_angle;

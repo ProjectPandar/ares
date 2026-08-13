@@ -18,6 +18,14 @@ mod compensation;
 mod conical_overhang;
 mod elephant_foot;
 mod extruders;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "O73 base fill grouping remains inactive until the O74 postpasses are complete"
+    )
+)]
+mod group_fills;
 mod incomplete_sink;
 mod largest_contours;
 mod layers;

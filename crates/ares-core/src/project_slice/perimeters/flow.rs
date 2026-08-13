@@ -3,6 +3,13 @@ use crate::{FloatOrPercent, ObjectOptions, OrcaFloats, OrcaInt, RegionOptions, S
 use super::super::layers::PlannedLayer;
 use super::types::{Flow, PerimeterFlows};
 
+mod fill;
+
+pub(in crate::project_slice) use fill::{
+    FillFlowContext, FillFlowRole, resolve_configured_fill_flow, resolve_fill_bridge_flow,
+    resolve_fill_flow, resolve_nominal_sparse_infill_flow, resolve_thick_solid_infill_bridge_flow,
+};
+
 const ROUNDED_RECTANGLE_FACTOR: f64 = 1.0 - 0.25 * std::f64::consts::PI;
 const FLOW_EPSILON: f64 = 1e-4;
 
@@ -57,31 +64,6 @@ pub(in crate::project_slice) fn resolve_external_perimeter_flow(
         selected_width = object_line_width;
     }
     build_nonbridging_flow(selected_width, height, nozzle_diameter)
-}
-
-pub(in crate::project_slice) fn resolve_nominal_sparse_infill_flow(
-    region: &RegionOptions,
-    object: &ObjectOptions,
-    nozzle_diameters: &OrcaFloats,
-) -> Result<Flow, SliceError> {
-    let nozzle_diameter = selected_nozzle(region.sparse_infill_filament_id, nozzle_diameters)?;
-    let width = if raw(region.sparse_infill_line_width) == 0.0 {
-        object.line_width
-    } else {
-        region.sparse_infill_line_width
-    };
-    let height = object.layer_height.0 as f32;
-    if !height.is_finite() || height <= 0.0 {
-        return Err(invalid("invalid Orca option layer_height"));
-    }
-    build_nonbridging_flow(width, height, nozzle_diameter)
-}
-
-pub(in crate::project_slice) fn resolve_thick_solid_infill_bridge_flow(
-    region: &RegionOptions,
-    nozzle_diameters: &OrcaFloats,
-) -> Result<Flow, SliceError> {
-    resolve_thick_bridge_flow(region.internal_solid_filament_id, region, nozzle_diameters)
 }
 
 pub(in crate::project_slice) fn resolve_perimeter_flows(

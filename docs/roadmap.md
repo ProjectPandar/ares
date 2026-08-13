@@ -6202,8 +6202,96 @@ lint/format, WASM core and adapter, both Windows targets, both macOS targets,
 LOC/static/diff/no-staged gates, and a clean pinned Orca worktree pass;
 unconditional independent six-axis review is the final release gate.
 
-The next source owner is O73: pinned
+O72 handed the next source boundary to O73 at pinned
 `Fill/Fill.cpp:216-346,829-1067,1213-1224` for `SurfaceFillParams`,
-`SurfaceFill`, and base `group_fills`. KSR-active narrow-solid splitting at
-`Fill/Fill.cpp:349-827,1152-1186` must follow before grouped fills activate a
-production lifecycle successor.
+`SurfaceFill`, and base `group_fills`; O73 now implements that boundary as a
+lifecycle-inactive module. O74 owns the remaining full-group tail at
+`Fill/Fill.cpp:349-827,1069-1186`, including the KSR-active narrow-solid
+splitting at `1152-1186`, before grouped fills may activate a production
+lifecycle successor.
+
+## Task 22O.73: base fill grouping
+
+Task 22O.73 is the dependency-first port of pinned
+`Fill/Fill.cpp:216-346,829-1067` and the directly reached Flow, surface,
+configuration, and Clipper behavior. It introduces one graph-native,
+crate-private deep module:
+
+```rust
+project_slice::group_fills::group_fills_base(
+    &PreparedPostExternalSurfaces,
+    object_index,
+    layer_index,
+) -> Result<BaseGroupedFills, SliceError>
+```
+
+The module borrows the smallest prepared graph common to both source callers
+and returns owned ordered base groups, LockedZag sidecars, and the observed
+InternalVoid continuation bit. It hides exact surface/role Flow projection,
+one-based filament and nozzle selection, source f32 cast points, the layer-wide
+sticky params record, explicit pattern/role ranks, comparator-equivalent
+interning, source-order coalescing, representative metadata, and raw-priority
+safety union/difference.
+
+Grouping identity follows only `SurfaceFillParams::operator<`: decreasing f32
+bridge angle followed by the exact source fields. It is not the source
+`operator==`, derived Rust equality/order, `total_cmp`, or hashing. Flow
+spacing, Flow bridge state, `mm3_per_mm`, and source `idx` remain excluded;
+`params.bridge` and `flow.bridge` remain independent. Grouped ExPolygons are
+the authoritative geometry, so the Rust result carries representative surface
+metadata without a moved-from placeholder ExPolygon.
+
+O73 is not a lifecycle successor and must not alter the O72 incomplete sink.
+The current public `multi_region_layer_slices` capability gate continues to
+own multi-region rejection; its graph representation, ordered region joining,
+and no-overlap union are deferred rather than replaced with region zero.
+Nonempty rotation templates remain explicitly unsupported until their pinned
+grammar/PRNG is ported, with no legacy simple-list or host-RNG fallback.
+
+O73 also does not replace the current O46 reduced private grouping. Both O46
+and future `Layer::make_fills` may move to the shared implementation only after
+O74 ports `Fill/Fill.cpp:349-827,1069-1186`, including the KSR-active narrow
+internal-solid continuation.
+
+The pre-narrow KSR exit contract preserves all 460 ordered layer slots and
+requires 477 groups, 1,882 fill ExPolygons, 174 fill holes, 2,056 fill paths,
+107,540 fill points, and 2,547 no-overlap ExPolygons, with metadata SHA-256
+`a091ca0a63e45dc81712223571b1dfe888ab256bec2437ea564f386783f77900`
+and canonical geometry SHA-256
+`062fab2bbcb683df778ac024a8f6abed7960f3ebac3d55f13124617694d7e2af`,
+plus layer-table SHA-256
+`ebd74a25609827e4affda26a21d9cd3b10dca08778f56f394b5170f74ecdf721`.
+These values replay O38's fixed-MSVC bridge-direction order; the complete
+Linux PRE/POST triplets recorded in the O73 ADR and specification remain
+nonnormative provenance. The fill totals exclude the no-overlap section; the
+canonical geometry digest includes both. Canonicalization is oracle-only;
+production Clipper order is preserved. Explicit `assert_ne!` witnesses reject
+the distinct O74 aggregate totals and each of its three hashes; O74 remains a
+negative boundary, not an O73 success target.
+
+Final exact-tree validation passed focused `task22o73` 19/19 with 6,451
+skipped, prepare-infill 277/277 with 26 slow and 6,193 skipped, and workspace
+6,508/6,508 with 27 slow and two configured skips. Strict workspace
+all-target/all-feature Clippy with `-D warnings`, rustfmt, diff, all six Tier-1
+checks, zero-staged/Cargo-unchanged/forbidden-production/lifecycle-static
+checks, and clean pinned Orca at
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` passed. The maximum changed/new
+Rust file was `project_slice.rs` at 381 LOC and the maximum new production
+shard was `group_fills/params/projection.rs` at 369 LOC. Thirty-one compiling
+behavioral mutations were killed and byte-exactly restored; one additional
+compiling contour/hole insertion-order mutation was an equivalent survivor on
+normalized valid ExPolygons and was not counted as a kill. The nine restored
+production hashes matched the exact manifest in the O73 ADR, specification,
+and plan. Independent source/specification and standards rereviews closed
+unconditionally. O73 remains crate-private and lifecycle-inactive; O74 is the
+next source owner and is not started by this milestone.
+
+## Task 22O.74: InternalVoid repair and narrow internal-solid grouping tail
+
+Task 22O.74 is the next planned source owner at pinned
+`Fill/Fill.cpp:349-827,1069-1186`. It will consume the O73 base result, port the
+InternalVoid repair branch and KSR-active narrow-solid split, and emit the
+complete source-shaped `group_fills` result. Only after that tail is verified
+may grouped fills become a production lifecycle input or replace O46's
+temporary compatibility grouping. Fill-generator dispatch, extrusion, motion,
+G-code, CLI, and complete golden parity remain later source-cited slices.

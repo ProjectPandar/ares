@@ -61,11 +61,14 @@ materialization. Its focused tests and independent pinned-Orca closing oracle
 pass; after repairing the initial review's rustfmt, coverage, and citation
 findings, the same six-dimensional thread approved O40 with zero findings. It
 remains inactive and unreleased. O35-O41 add no Option or lifecycle wiring.
-The current local O42 activates external-surface processing after O26, and the
-current local O43 activates internal-bridge candidate discovery after O42;
-public slicing consumes O43 and returns `ProjectSlicingIncomplete` before
-anchor generation. Later bridge processing, fill/toolpath stages, complete
-G-code assembly, and normalized KSR parity remain deferred.
+The current local O42 activates external-surface processing after O26, O43
+activates internal-bridge candidate discovery after O42, O71 consumes that
+candidate state through the admitted first internal-bridge transaction, and
+O72 applies the infill-combination identity gate. Public slicing consumes and
+disposes O72 before returning `ProjectSlicingIncomplete`. O73 is implemented
+only as a crate-private, lifecycle-inactive base fill-grouping module and does
+not advance that sink. O74's grouping tail, later fill/toolpath stages,
+complete G-code assembly, and normalized KSR parity remain deferred.
 
 ## Fixed baseline
 
@@ -4716,3 +4719,124 @@ promoted Orca `0.00011f` normalization threshold, were killed and byte-exactly
 restored. Strict Clippy/rustfmt, six Tier-1 target checks,
 LOC/static/diff/no-staged gates, and a clean pinned Orca worktree pass.
 Complete G-code parity remains deferred.
+
+## Task 22O.73 base fill-grouping parity
+
+O73 introduces no raw option, parser, or public option type. Its
+single graph-native seam borrows `PreparedPostExternalSurfaces` and projects
+the already typed effective object, print, and region values used by pinned
+`Fill/Fill.cpp:829-1067`. Global, object, part, and material inheritance remain
+owned by the existing option materialization stages; callers must not rebuild
+an `InfillOptions` or raw config map.
+
+The admitted projection consumes these existing typed values where selected by
+the source surface role:
+
+- print nozzle diameters and initial-layer line width;
+- object layer height, generic line width, `thick_bridges`, and
+  `thick_internal_bridges`;
+- sparse, top, bottom, and internal-solid patterns and densities;
+- sparse and solid directions plus their rotation-template strings and
+  `align_infill_direction_to_model`;
+- sparse, internal-solid, top, and bottom filament selectors;
+- sparse, internal-solid, top, bridge, skin, and skeleton line widths,
+  bridge flow ratio, and the current/effective surface thickness;
+- sparse, internal-solid, top, bridge, and percent-valued internal-bridge
+  speeds;
+- fill multiline, infill anchors, both lateral lattice angles, symmetric-Y,
+  lock/skin depths and densities, overhang angle, and Gyroid optimization.
+
+No option is reinterpreted as an Ares-specific grouping control. Source Flow
+role is chosen from surface classification before the eventual extrusion role:
+top uses top-solid Flow, all other solids and bridges use solid-infill Flow,
+and sparse internal uses infill Flow. Top, bottom, and internal-solid output
+roles may then override the group filament selector without changing the Flow
+role already chosen. Filament selectors stay one-based in
+`SurfaceFillParams`; only nozzle-vector lookup subtracts one.
+
+First-layer width selection, role-width fallback, float-or-percent conversion,
+and automatic widths follow `PrintRegion.cpp:25-53` and
+`Flow.cpp:20-36,129-143`. In particular, automatic top-solid width is one
+nozzle diameter while automatic sparse/solid width is the source
+`1.125f * nozzle`. Standard bridge Flow applies the bridge ratio while
+preserving ordinary Flow spacing and `flow.bridge == false`; thick round bridge
+Flow has `flow.bridge == true`. `params.bridge` is a separate group-key field.
+
+Role speed is zero except for the exact source roles. Internal bridge speed is
+resolved from its float-or-percent value against bridge speed before the f32
+group field is stored. Solid/bridge anchors become 1000 mm. Sparse anchor and
+maximum are cast to f32 before percent multiplication by nominal sparse
+spacing, then the anchor is clamped with source `std::min` first-operand
+identity for signed-zero equivalence. `overlap` remains source default zero
+throughout this slice.
+
+Pattern and extrusion-role order use explicit pinned ranks; Rust enum layout is
+not option-parity evidence. The result pattern wraps existing
+`ProcessInfillPattern` and reserves a slice-private `ConcentricInternal` value
+for O74. It does not add that synthetic source value, `ipSupportBase`, or
+`ipCount` to the user-configurable process enum, and it does not reuse the
+incomplete legacy public `InfillPattern`.
+
+Empty rotation-template strings use direct configured degrees-to-radians
+conversion. Nonempty `sparse_infill_rotate_template` and
+`solid_infill_rotate_template` remain explicitly unsupported at O73 because
+the pinned metalanguage and random/pseudorandom joints at
+`Fill.cpp:25-214` are not yet ported. The older simple-list parser, legacy
+`InfillOptions`, and a host RNG are not fallbacks. Model-direction alignment is
+applied from the already materialized transform rotation with the source f32
+cast order.
+
+LockedZag consumes its existing typed lock, skin, skeleton, width, and density
+options to produce the source sidecars. Its density-map identity is ordinary
+f32 order, while its Flow-map identity is only `mm3_per_mm`; neither may be
+substituted with full Flow equality. The layer-wide params record intentionally
+retains source conditional assignment: lock/skin depth and symmetric-Y can
+remain sticky when a later surface changes pattern.
+
+The existing public `multi_region_layer_slices` gate remains the owner of
+multi-region rejection. O73 preserves source-shaped region and no-overlap
+fields for the admitted single region but does not claim multi-region graph,
+override, ordered joining, or union parity and must not fall back to region
+zero. `detect_narrow_internal_solid_infill` is not consumed by O73; the
+complete O74 tail is `Fill.cpp:349-827,1069-1186`, including its KSR-active
+narrow-solid behavior at `1152-1186`.
+
+Adaptive, support-cubic, Lightning, and other configured patterns may retain
+their grouping metadata, but generator creation and their octree/generator
+options remain downstream caller behavior. O73 adds no filler dispatch,
+extrusion, motion, G-code, or CLI option-consumption claim.
+
+The verified O73 KSR result uses pre-narrow metadata SHA-256
+`a091ca0a63e45dc81712223571b1dfe888ab256bec2437ea564f386783f77900`
+and canonical geometry SHA-256
+`062fab2bbcb683df778ac024a8f6abed7960f3ebac3d55f13124617694d7e2af`,
+plus layer-table SHA-256
+`ebd74a25609827e4affda26a21d9cd3b10dca08778f56f394b5170f74ecdf721`,
+over 460 preserved layer slots. Its aggregate contract is 477 groups, 1,882
+fill ExPolygons, 174 fill holes, 2,056 fill paths, 107,540 fill points, and
+2,547 no-overlap ExPolygons. The fill totals exclude the no-overlap section;
+the canonical geometry digest includes both. It must also distinguish 33
+groups with `params.bridge` from 22 with bridge-flagged Flow. These are
+acceptance values under O38's fixed-MSVC bridge-direction policy; the complete
+Linux PRE/POST provenance is recorded in the O73 ADR and specification and is
+nonnormative. Explicit `assert_ne!` witnesses reject the distinct O74
+aggregate totals and each of its three hashes.
+
+Final exact-tree evidence passed focused `task22o73` 19/19 with 6,451 skipped,
+prepare-infill 277/277 with 26 slow and 6,193 skipped, and workspace
+6,508/6,508 with 27 slow and two configured skips. Strict workspace
+all-target/all-feature Clippy with `-D warnings`, rustfmt, diff, all six Tier-1
+checks, zero-staged/Cargo-unchanged/forbidden-production/lifecycle-static
+checks, and clean pinned Orca at
+`8500fcdccaa10b5099ac20d252af3a7c560046f1` passed. All changed/new Rust files
+remained below 400 LOC: `project_slice.rs` was the maximum changed file at 381
+LOC and `group_fills/params/projection.rs` was the maximum new production
+shard at 369 LOC. Thirty-one compiling behavioral mutations were killed and
+byte-exactly restored; one additional contour/hole insertion-order mutation was
+a behaviorally equivalent survivor on normalized valid ExPolygons and was not
+counted as a kill. The nine restored production hashes matched the exact
+manifest recorded in the O73 ADR, specification, and plan. Independent
+source/specification and standards rereviews closed unconditionally. Public
+slicing remains `ProjectSlicingIncomplete` at O72, O73 remains crate-private
+and unwired, and O46 replacement remains deferred until the next source owner,
+O74, completes the full grouping tail.
