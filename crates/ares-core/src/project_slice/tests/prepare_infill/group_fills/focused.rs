@@ -1,4 +1,4 @@
-pub(super) mod fixture;
+pub(in crate::project_slice::tests::prepare_infill) mod fixture;
 
 use crate::{
     ExtrusionRole, FloatOrPercent, OrcaBool, OrcaFloat, OrcaFloats, OrcaInt, OrcaString, Percent,

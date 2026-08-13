@@ -22,6 +22,14 @@ mod extruders;
     not(test),
     expect(
         dead_code,
+        reason = "CrossHatch fill entities remain inactive until a later make_fills lifecycle slice"
+    )
+)]
+mod fill_entities;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
         reason = "full fill grouping remains inactive until a later source-cited lifecycle slice"
     )
 )]

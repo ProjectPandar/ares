@@ -1,5 +1,5 @@
 mod coverage;
-mod focused;
+pub(super) mod focused;
 mod ksr;
 mod o74;
 mod o74_line;

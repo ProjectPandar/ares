@@ -6426,3 +6426,22 @@ passed.
 O75 adds no lifecycle stage or public API. Unsupported filler generators,
 `Layer::make_fills`, extrusion, motion, G-code, CLI success, and normalized KSR
 golden parity remain later source-cited work.
+
+## Task 22O.76: CrossHatch fill entities
+
+O76 ports the first bounded `Layer::make_fills` slice from pinned
+`Fill/Fill.cpp:1213-1224,1234-1357` and `FillBase.cpp:133-184`. A graph-native
+crate-private seam calls complete `group_fills`, selects configured CrossHatch
+groups, iterates authoritative ExPolygons in source order, and turns generated
+polylines into owned extrusion collections.
+
+Each path retains the grouped extrusion role and Internal sparse Flow exactly;
+the focused KSR-shaped witness freezes `mm3_per_mm`, width, and height bits as
+`0x3fb4d7aca0000000`, `0x3ee66666`, and `0x3e4ccccd`. Non-CrossHatch groups do
+not run through a fallback. Three focused graph tests pass for metadata/order,
+repeatability/immutability, non-fallback, and atomic range errors. Strict
+workspace Clippy, rustfmt, diff, and sub-400-LOC gates pass.
+
+O76 is lifecycle-inactive and deliberately does not claim complete KSR fill
+entities. Remaining filler classes, adjusted solid/bridge flow, gap/thin fill,
+ordering, motion, G-code, and normalized golden parity remain later slices.

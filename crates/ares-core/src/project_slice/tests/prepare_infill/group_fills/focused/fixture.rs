@@ -15,7 +15,7 @@ use crate::{
     },
 };
 
-pub(in super::super) fn graph() -> PreparedPostInfillCombination {
+pub(in crate::project_slice::tests::prepare_infill) fn graph() -> PreparedPostInfillCombination {
     let mut graph = combine_infill::prepare(super::super::super::combine_infill::prepare_o71(
         KsrArchive::new(),
     ))
@@ -24,19 +24,19 @@ pub(in super::super) fn graph() -> PreparedPostInfillCombination {
     graph
 }
 
-pub(in super::super) fn external(
+pub(in crate::project_slice::tests::prepare_infill) fn external(
     graph: &PreparedPostInfillCombination,
 ) -> &PreparedPostExternalSurfaces {
     &graph.predecessor.predecessor
 }
 
-pub(in super::super) fn external_mut(
+pub(in crate::project_slice::tests::prepare_infill) fn external_mut(
     graph: &mut PreparedPostInfillCombination,
 ) -> &mut PreparedPostExternalSurfaces {
     &mut graph.predecessor.predecessor
 }
 
-pub(in super::super) fn record_mut(
+pub(in crate::project_slice::tests::prepare_infill) fn record_mut(
     graph: &mut PreparedPostInfillCombination,
     layer: usize,
 ) -> &mut PreparedSurfaceTypeRecord {
@@ -74,7 +74,7 @@ pub(in super::super) fn options(
     prelude.object.region_options(input)
 }
 
-pub(in super::super) fn options_mut(
+pub(in crate::project_slice::tests::prepare_infill) fn options_mut(
     graph: &mut PreparedPostInfillCombination,
     layer: usize,
 ) -> &mut RegionOptions {
@@ -136,7 +136,7 @@ pub(in super::super) fn set_transform(
         transform;
 }
 
-pub(in super::super) fn surface(
+pub(in crate::project_slice::tests::prepare_infill) fn surface(
     kind: RegionSurfaceKind,
     expolygon: ExPolygon,
     extra_perimeters: u16,
@@ -147,11 +147,19 @@ pub(in super::super) fn surface(
     surface
 }
 
-pub(in super::super) fn surface_with_height(expolygon: ExPolygon, height: f64) -> RegionSurface {
+pub(in crate::project_slice::tests::prepare_infill) fn surface_with_height(
+    expolygon: ExPolygon,
+    height: f64,
+) -> RegionSurface {
     RegionSurface::internal_with_metadata(expolygon, height, 1, -1.0, 0)
 }
 
-pub(in super::super) fn rectangle(min_x: i64, min_y: i64, max_x: i64, max_y: i64) -> ExPolygon {
+pub(in crate::project_slice::tests::prepare_infill) fn rectangle(
+    min_x: i64,
+    min_y: i64,
+    max_x: i64,
+    max_y: i64,
+) -> ExPolygon {
     ExPolygon::new(
         Polygon::new(vec![
             Point::new(min_x, min_y),
@@ -163,7 +171,7 @@ pub(in super::super) fn rectangle(min_x: i64, min_y: i64, max_x: i64, max_y: i64
     )
 }
 
-pub(in super::super) fn outside_clipper_range() -> ExPolygon {
+pub(in crate::project_slice::tests::prepare_infill) fn outside_clipper_range() -> ExPolygon {
     ExPolygon::new(
         Polygon::new(vec![
             Point::new(0x4000_0000_0000_0000, 0),
@@ -174,7 +182,9 @@ pub(in super::super) fn outside_clipper_range() -> ExPolygon {
     )
 }
 
-pub(in super::super) fn graph_snapshot(graph: &PreparedPostInfillCombination) -> SurfaceSnapshot {
+pub(in crate::project_slice::tests::prepare_infill) fn graph_snapshot(
+    graph: &PreparedPostInfillCombination,
+) -> SurfaceSnapshot {
     snapshot(&graph.predecessor)
 }
 

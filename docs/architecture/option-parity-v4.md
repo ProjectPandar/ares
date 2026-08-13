@@ -4980,3 +4980,18 @@ Focused anchoring/grouping/transaction runs passed 1/1, 35/35, and 17/17;
 workspace Nextest passed 6,516/6,516 with 27 slow and two configured skips.
 Core strict Clippy, rustfmt, diff, static deletion, and sub-400-LOC gates passed.
 O75 does not activate lifecycle output; complete G-code parity remains pending.
+
+### Task 22O.76: CrossHatch fill entities
+
+O76 ports pinned `Fill/Fill.cpp:1213-1224,1234-1357` and
+`FillBase.cpp:133-184` for the first `Layer::make_fills` vertical slice. The
+crate-private graph seam consumes complete groups, selects CrossHatch, and
+creates ordered owned extrusion collections with grouped role and Internal Flow
+metadata. Focused bits are `mm3_per_mm=0x3fb4d7aca0000000`,
+`width=0x3ee66666`, and `height=0x3e4ccccd`.
+
+Three graph-native tests pass for output metadata/order, repeatability and
+immutability, non-CrossHatch non-fallback, and atomic range error. Strict
+workspace Clippy, rustfmt, diff, and LOC checks pass. This remains a
+CrossHatch-only inactive slice; the complete KSR fill-entity oracle and G-code
+parity wait for the remaining source filler classes and lifecycle.
