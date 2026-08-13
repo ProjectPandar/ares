@@ -1,6 +1,6 @@
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
 
-use super::{IntersectionKind, slice_vertical_lines};
+use super::{IntersectionKind, LinkQuality, LinkType, connect_contours, slice_vertical_lines};
 
 fn rectangle() -> ExPolygon {
     ExPolygon::new(
@@ -91,6 +91,59 @@ fn task22o77_hole_and_inner_offset_preserve_outer_before_inner_identity() {
         intersection.kind,
         IntersectionKind::InnerLow | IntersectionKind::InnerHigh
     )));
+}
+
+#[test]
+fn task22o78_rectangle_intersections_link_horizontally_and_symmetrically() {
+    let mut sections = slice_vertical_lines(&rectangle(), 0.0, 0.0, 0.0, 3, 10, 40).unwrap();
+    connect_contours(&mut sections, false, 0.0);
+
+    assert_eq!(
+        sections[1].intersections[0].previous,
+        Some((0, LinkType::Horizontal, LinkQuality::Valid))
+    );
+    assert_eq!(
+        sections[1].intersections[0].next,
+        Some((0, LinkType::Horizontal, LinkQuality::Valid))
+    );
+    assert_eq!(
+        sections[0].intersections[0].next,
+        Some((0, LinkType::Horizontal, LinkQuality::Valid))
+    );
+    assert_eq!(
+        sections[2].intersections[0].previous,
+        Some((0, LinkType::Horizontal, LinkQuality::Valid))
+    );
+}
+
+#[test]
+fn task22o78_dont_connect_and_max_length_change_only_link_quality() {
+    let source = slice_vertical_lines(&rectangle(), 0.0, 0.0, 0.0, 2, 10, 80).unwrap();
+    let mut disconnected = source.clone();
+    connect_contours(&mut disconnected, true, 0.0);
+    assert!(
+        disconnected
+            .iter()
+            .flat_map(|line| &line.intersections)
+            .all(|item| {
+                item.previous
+                    .is_none_or(|link| link.2 == LinkQuality::TooLong)
+                    && item.next.is_none_or(|link| link.2 == LinkQuality::TooLong)
+            })
+    );
+
+    let mut limited = source;
+    connect_contours(&mut limited, false, 10.0);
+    assert!(
+        limited
+            .iter()
+            .flat_map(|line| &line.intersections)
+            .any(|item| {
+                item.previous
+                    .is_some_and(|link| link.2 == LinkQuality::TooLong)
+                    || item.next.is_some_and(|link| link.2 == LinkQuality::TooLong)
+            })
+    );
 }
 
 #[test]

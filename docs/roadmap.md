@@ -6460,3 +6460,16 @@ rational rounding, rotation, repeatability/immutability, and coordinate range
 errors. Strict core Clippy, rustfmt, diff, and sub-400-LOC gates pass. Link graph,
 monotonic traversal, complete fillers/entities, lifecycle, motion, and G-code
 remain later source-cited slices.
+
+## Task 22O.78: rectilinear contour links
+
+O78 ports pinned `FillRectilinear.cpp:994-1214` over O77 vertical sections.
+Each intersection now owns source previous/next contour link index, horizontal
+or vertical direction, and valid/invalid/too-long quality. Adjacent candidate
+selection follows contour/kind identity and source segment-distance order;
+same-line opposite kinds may replace adjacent links. Don't-connect and maximum
+length gates update quality without changing geometry.
+
+Two O78 focused tests and all three O77 regressions pass. Strict core Clippy,
+rustfmt, diff, and LOC gates pass. Pinch handling, monotonic region chaining,
+complete fillers/entities, lifecycle, motion, and G-code remain later slices.

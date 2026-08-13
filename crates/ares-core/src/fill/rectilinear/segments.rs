@@ -16,6 +16,22 @@ pub(crate) struct SegmentIntersection {
     pub(crate) contour_index: usize,
     pub(crate) segment_index: usize,
     pub(crate) kind: IntersectionKind,
+    pub(crate) previous: Option<(usize, LinkType, LinkQuality)>,
+    pub(crate) next: Option<(usize, LinkType, LinkQuality)>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum LinkType {
+    Horizontal,
+    Up,
+    Down,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum LinkQuality {
+    Valid,
+    Invalid,
+    TooLong,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -70,6 +86,8 @@ pub(crate) fn slice_vertical_lines(
                         contour_index,
                         segment_index,
                         kind: kind(contour.inner, second.x() > first.x()),
+                        previous: None,
+                        next: None,
                     });
                 }
             }

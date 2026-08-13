@@ -5005,3 +5005,12 @@ ordering. Three focused tests cover rectangle/hole/offset topology, rational
 rounding, rotation, repeatability/immutability, and range error. Strict core
 Clippy, rustfmt, diff, and LOC gates pass. Link construction, monotonic traversal,
 entities, lifecycle, and G-code remain pending.
+
+### Task 22O.78: rectilinear contour links
+
+O78 ports pinned `FillRectilinear.cpp:994-1214`. O77 intersections now carry
+source adjacent/same-line contour links with horizontal/up/down direction and
+valid/invalid/too-long quality. Two focused link tests plus three segmentation
+regressions pass; strict core Clippy, rustfmt, diff, and LOC gates pass. Pinch,
+monotonic region chaining, complete fillers/entities, lifecycle, and G-code
+remain pending.
