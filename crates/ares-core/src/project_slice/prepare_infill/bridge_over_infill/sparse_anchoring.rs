@@ -1,88 +1,89 @@
-mod grouping;
-#[cfg(test)]
-mod tests;
-
 use crate::{
-    FloatOrPercent, ObjectOptions, OrcaFloats, RegionOptions,
+    FloatOrPercent, ProcessInfillPattern, RegionOptions, SliceError,
     fill::cross_hatch::{CrossHatchFillParams, fill_surface},
-    geometry::{ClipperError, CoordinateScale, Polyline},
+    geometry::Polyline,
     project_slice::{
-        layers::PlannedLayer,
-        perimeters::flow::resolve_nominal_sparse_infill_flow,
-        region_slices::{RegionSurface, RegionSurfaceKind},
+        group_fills::{SurfaceFillPattern, group_fills},
+        prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
+        region_slices::RegionSurfaceKind,
     },
 };
 
-#[derive(Clone, Copy)]
-pub(in crate::project_slice) struct SparseAnchoringLayer<'a> {
-    pub(in crate::project_slice) planned: &'a PlannedLayer,
-    pub(in crate::project_slice) fill_surfaces: &'a [RegionSurface],
-    pub(in crate::project_slice) region_options: &'a RegionOptions,
-    pub(in crate::project_slice) object_options: &'a ObjectOptions,
-    pub(in crate::project_slice) nozzle_diameters: &'a OrcaFloats,
-    pub(in crate::project_slice) scale: CoordinateScale,
-}
-
 pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
-    layer: SparseAnchoringLayer<'_>,
-) -> Result<Vec<Polyline>, ClipperError> {
-    debug_assert!(layer.region_options.sparse_infill_density.0 > 0.0);
-    debug_assert!(layer.region_options.top_surface_density.0 > 0.0);
-    debug_assert!(
-        layer
-            .region_options
-            .sparse_infill_rotate_template
-            .0
-            .is_empty()
-    );
-    debug_assert!(
-        layer
-            .region_options
-            .solid_infill_rotate_template
-            .0
-            .is_empty()
-    );
-    debug_assert!(!layer.region_options.align_infill_direction_to_model.0);
-    debug_assert_eq!(layer.region_options.fill_multiline.0, 1);
-
-    let flow = resolve_nominal_sparse_infill_flow(
-        layer.region_options,
-        layer.object_options,
-        layer.nozzle_diameters,
-    )
-    .expect("bridge transaction validates the nominal frInfill Flow before O46");
-    let spacing = f64::from(flow.spacing);
-    let density = projected_sparse_density(layer.region_options);
-    let angle = layer.region_options.infill_direction.0.to_radians() as f32;
-    let (anchor_length, anchor_length_max) =
-        projected_anchor_lengths(layer.region_options, spacing);
-    debug_assert!(anchor_length_max >= 0.05);
-
-    let groups = grouping::group_and_prioritize(layer.fill_surfaces, layer.region_options)?;
-    let params = CrossHatchFillParams {
-        z: layer.planned.print_z,
-        spacing,
-        overlap: 0.0,
-        angle,
-        density,
-        multiline: 1,
-        anchor_length,
-        anchor_length_max,
-        dont_sort: false,
-    };
+    prepared: &PreparedPostExternalSurfaces,
+    object_index: usize,
+    layer_index: usize,
+) -> Result<Vec<Polyline>, SliceError> {
+    let grouped = group_fills(prepared, object_index, layer_index)?;
+    let traversal = &prepared.predecessor.predecessor;
+    let traversal_object = &traversal.objects[object_index];
+    let prelude = &traversal_object
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let (compensated, _) = prelude.as_parts();
+    let (post_regions, _) = compensated.as_parts();
+    let (plan, _, _) = post_regions.as_parts();
+    let z = plan.layers[layer_index].print_z;
     let mut result = Vec::new();
-    for group in groups {
-        if group.representative_kind != RegionSurfaceKind::Internal {
+
+    for fill in grouped.surface_fills {
+        if fill.representative.kind != RegionSurfaceKind::Internal {
             continue;
         }
-        match group.pattern {
-            grouping::Pattern::CrossHatch => {
-                for expolygon in group.expolygons {
-                    result.extend(fill_surface(&expolygon, params, layer.scale)?);
+        match fill.params.pattern {
+            SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
+                let params = CrossHatchFillParams {
+                    z,
+                    spacing: fill.params.spacing,
+                    overlap: 0.0,
+                    angle: fill.params.angle,
+                    density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    multiline: fill.params.multiline,
+                    anchor_length: fill.params.anchor_length,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    dont_sort: false,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_surface(&expolygon, params, traversal.scale)
+                            .map_err(super::transaction::geometry_error)?,
+                    );
                 }
             }
-            grouping::Pattern::Monotonic | grouping::Pattern::MonotonicLine => {
-                unreachable!("trusted Internal sparse anchoring group is CrossHatch")
+            SurfaceFillPattern::Configured(
+                ProcessInfillPattern::Rectilinear
+                | ProcessInfillPattern::Monotonic
+                | ProcessInfillPattern::MonotonicLine
+                | ProcessInfillPattern::AlignedRectilinear
+                | ProcessInfillPattern::ZigZag
+                | ProcessInfillPattern::CrossZag
+                | ProcessInfillPattern::LockedZag
+                | ProcessInfillPattern::Line
+                | ProcessInfillPattern::Grid
+                | ProcessInfillPattern::Triangles
+                | ProcessInfillPattern::TriHexagon
+                | ProcessInfillPattern::Cubic
+                | ProcessInfillPattern::AdaptiveCubic
+                | ProcessInfillPattern::QuarterCubic
+                | ProcessInfillPattern::SupportCubic
+                | ProcessInfillPattern::Lightning
+                | ProcessInfillPattern::Honeycomb
+                | ProcessInfillPattern::ThreeDHoneycomb
+                | ProcessInfillPattern::LateralHoneycomb
+                | ProcessInfillPattern::LateralLattice
+                | ProcessInfillPattern::TpmsD
+                | ProcessInfillPattern::TpmsFk
+                | ProcessInfillPattern::Gyroid
+                | ProcessInfillPattern::Concentric
+                | ProcessInfillPattern::HilbertCurve
+                | ProcessInfillPattern::ArchimedeanChords
+                | ProcessInfillPattern::OctagramSpiral,
+            )
+            | SurfaceFillPattern::ConcentricInternal => {
+                unreachable!("bridge transaction admits only CrossHatch sparse anchoring")
             }
         }
     }

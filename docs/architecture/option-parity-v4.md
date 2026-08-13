@@ -4962,3 +4962,21 @@ Exact focused/dependency/workspace command counts, strict
 lint/format/Tier-1/diff/static results, and unconditional independent
 source/specification and standards approval remain an intentionally unfilled
 placeholder. Implemented status does not imply those final results.
+
+### Task 22O.75: full-grouping sparse anchoring
+
+O75 ports pinned `Fill/Fill.cpp:1394-1407` by replacing O46's temporary reduced
+anchoring grouping with O74 `group_fills`. The graph-native entry receives the
+prepared external-surface graph and aligned object/layer indices, filters the
+complete owned result for `Internal`, and feeds existing CrossHatch generation
+from grouped spacing, angle, multiline, anchor lengths, geometry, and source
+`float(0.01 * density)` conversion.
+
+`sparse_anchoring/grouping.rs`, `SparseAnchoringLayer`, and the reduced direct
+tests are deleted without fallback. The fixed-MSVC KSR 18-layer anchoring
+oracle remains 186 paths / 5,941 points with aggregate digest
+`917adc6ea02ad7cd7af79e45d90db6f4c1497bf5c8716d7f2f49b7de4b2070ef`.
+Focused anchoring/grouping/transaction runs passed 1/1, 35/35, and 17/17;
+workspace Nextest passed 6,516/6,516 with 27 slow and two configured skips.
+Core strict Clippy, rustfmt, diff, static deletion, and sub-400-LOC gates passed.
+O75 does not activate lifecycle output; complete G-code parity remains pending.

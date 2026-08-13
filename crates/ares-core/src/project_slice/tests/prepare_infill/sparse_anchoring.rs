@@ -6,9 +6,7 @@ use crate::{
     geometry::Polyline,
     project_slice::{
         prepare_infill::{
-            bridge_over_infill::sparse_anchoring::{
-                SparseAnchoringLayer, generate_sparse_infill_polylines_for_anchoring,
-            },
+            bridge_over_infill::sparse_anchoring::generate_sparse_infill_polylines_for_anchoring,
             external_surfaces,
         },
         region_slices::RegionSurfaceKind,
@@ -128,7 +126,7 @@ const EXPECTED: [(usize, usize, usize, &str); 18] = [
 ];
 
 #[test]
-fn task22o46_real_ksr_matches_global_fixed_msvc_oracle_and_preserves_input() {
+fn task22o75_real_ksr_full_grouping_anchors_match_fixed_msvc_oracle_and_preserve_input() {
     let horizontal =
         super::horizontal_shell_propagation::fixture::prepare(KsrArchive::new().bytes());
     let external = external_surfaces::prepare(horizontal).unwrap();
@@ -189,12 +187,7 @@ fn task22o46_real_ksr_matches_global_fixed_msvc_oracle_and_preserves_input() {
     );
 
     let context = KsrRun {
-        horizontal,
-        inputs,
-        layers: &plan.layers,
-        object: object_options,
-        nozzles,
-        scale: traversal.scale,
+        external: &external,
     };
     let first = run(context);
     let second = run(context);
@@ -236,38 +229,16 @@ fn task22o46_real_ksr_matches_global_fixed_msvc_oracle_and_preserves_input() {
 
 #[derive(Clone, Copy)]
 struct KsrRun<'a> {
-    horizontal: &'a crate::project_slice::prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
-    inputs: &'a [Option<crate::project_slice::perimeters::types::PerimeterInputRecord>],
-    layers: &'a [crate::project_slice::layers::PlannedLayer],
-    object: &'a crate::ObjectOptions,
-    nozzles: &'a crate::OrcaFloats,
-    scale: crate::geometry::CoordinateScale,
+    external:
+        &'a crate::project_slice::prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
 }
 
 fn run(context: KsrRun<'_>) -> Vec<Vec<u8>> {
     EXPECTED
         .iter()
         .map(|&(layer, _, _, _)| {
-            let input = context.inputs[layer].as_ref().unwrap();
-            let surfaces = &context.horizontal.objects[0].records[layer]
-                .as_ref()
-                .unwrap()
-                .fill_surfaces;
-            let paths = generate_sparse_infill_polylines_for_anchoring(SparseAnchoringLayer {
-                planned: &context.layers[layer],
-                fill_surfaces: surfaces,
-                region_options: context.horizontal.predecessor.objects[0]
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .predecessor
-                    .object
-                    .region_options(input),
-                object_options: context.object,
-                nozzle_diameters: context.nozzles,
-                scale: context.scale,
-            })
-            .unwrap();
+            let paths =
+                generate_sparse_infill_polylines_for_anchoring(context.external, 0, layer).unwrap();
             serialize(layer, &paths)
         })
         .collect()

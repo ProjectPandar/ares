@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    ObjectOptions, OrcaFloats, SliceError,
+    OrcaFloats, SliceError,
     geometry::{CoordinateScale, Polyline},
     project_slice::{
         perimeters::{
@@ -31,7 +31,7 @@ use super::super::{
     deep_sparse_area::{DeepSparseLayer, gather_deep_sparse_infill_area},
     layer_clustering::cluster_candidate_object,
     lower_cluster_subtraction::{ClusterBridgeHistoryLayer, subtract_filled_lower_cluster_bridges},
-    sparse_anchoring::{SparseAnchoringLayer, generate_sparse_infill_polylines_for_anchoring},
+    sparse_anchoring::generate_sparse_infill_polylines_for_anchoring,
 };
 use super::geometry_error;
 
@@ -47,20 +47,13 @@ pub(super) fn prepare(
     for (index, candidates) in candidates.iter_mut().enumerate() {
         let traversal_object = &traversal.objects[index];
         let prelude = prelude(traversal_object);
-        let source_index = prelude.identity().0;
-        let object_options = &traversal
-            .resolved
-            .objects
-            .iter()
-            .find(|object| object.source_object_index == source_index)
-            .expect("bridge transaction retains its resolved object")
-            .object;
         prepare_object(
+            predecessor,
+            index,
             candidates,
             ObjectView {
                 horizontal: &horizontal.objects[index],
                 prelude,
-                object_options,
                 nozzles,
                 scale: traversal.scale,
             },
@@ -73,12 +66,13 @@ pub(super) fn prepare(
 struct ObjectView<'a> {
     horizontal: &'a PreparedSurfaceTypeObject,
     prelude: &'a PostPerimeterInputPrintObject,
-    object_options: &'a ObjectOptions,
     nozzles: &'a OrcaFloats,
     scale: CoordinateScale,
 }
 
 fn prepare_object(
+    predecessor: &PreparedPostExternalSurfaces,
+    object_index: usize,
     candidates: &mut BridgeCandidateObject,
     view: ObjectView<'_>,
 ) -> Result<(), SliceError> {
@@ -88,7 +82,6 @@ fn prepare_object(
     let ObjectView {
         horizontal,
         prelude,
-        object_options: _,
         nozzles,
         scale,
     } = view;
@@ -99,7 +92,7 @@ fn prepare_object(
         .iter()
         .map(|region| region.as_parts().1)
         .collect::<Vec<_>>();
-    let infill_lines = prepare_infill_lines(candidates, view)?;
+    let infill_lines = prepare_infill_lines(predecessor, object_index, candidates, view)?;
     let clusters =
         cluster_candidate_object(candidates, &plan.layers, &region_options, nozzles, scale)?;
     let deep_layers = plan
@@ -138,19 +131,27 @@ fn prepare_object(
 }
 
 fn prepare_infill_lines(
+    predecessor: &PreparedPostExternalSurfaces,
+    object_index: usize,
     candidates: &BridgeCandidateObject,
     view: ObjectView<'_>,
 ) -> Result<BTreeMap<usize, Vec<Polyline>>, SliceError> {
     let ObjectView {
         horizontal,
         prelude,
-        object_options,
         nozzles,
         scale,
     } = view;
-    let (compensated, inputs) = prelude.as_parts();
-    let (post_regions, _) = compensated.as_parts();
-    let (plan, _, _) = post_regions.as_parts();
+    let object_options = &predecessor
+        .predecessor
+        .predecessor
+        .resolved
+        .objects
+        .iter()
+        .find(|object| object.source_object_index == prelude.identity().0)
+        .expect("bridge transaction retains its resolved object")
+        .object;
+    let (_, inputs) = prelude.as_parts();
     let mut result = BTreeMap::new();
     for &candidate_layer in candidates.surfaces_by_layer.keys() {
         let lower_layer = candidate_layer
@@ -170,15 +171,11 @@ fn prepare_infill_lines(
                         nominal_flow.spacing,
                         scale,
                     )?;
-                    generate_sparse_infill_polylines_for_anchoring(SparseAnchoringLayer {
-                        planned: &plan.layers[lower_layer],
-                        fill_surfaces: &record.fill_surfaces,
-                        region_options: region,
-                        object_options,
-                        nozzle_diameters: nozzles,
-                        scale,
-                    })
-                    .map_err(geometry_error)?
+                    generate_sparse_infill_polylines_for_anchoring(
+                        predecessor,
+                        object_index,
+                        lower_layer,
+                    )?
                 }
             }
             (None, None) => Vec::new(),

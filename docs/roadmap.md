@@ -6400,3 +6400,29 @@ strict lint/format/Tier-1/diff/static gate results, and unconditional
 independent source/specification and standards approval remain a deliberately
 unfilled final-evidence placeholder. Do not infer those results from the
 implemented status.
+
+## Task 22O.75: full-grouping sparse anchoring
+
+Task 22O.75 ports the pinned caller relationship at
+`Fill/Fill.cpp:1394-1407`: sparse anchoring now calls the complete O74
+`group_fills` seam and filters its owned result for `stInternal` before the
+existing KSR-active CrossHatch continuation. The transaction passes the
+prepared external-surface graph plus aligned object/layer indices, so grouping
+uses only the effective options and geometry derived from the 3MF.
+
+The temporary O46 `sparse_anchoring/grouping.rs`, its three-pattern comparator,
+priority copy, caller-built `SparseAnchoringLayer`, and direct reduced tests are
+deleted without a wrapper or fallback. Returned percentage density is converted
+with source expression `float(0.01 * density)` before CrossHatch filling.
+
+The fixed-MSVC KSR 18-layer oracle remains exact at 186 paths, 5,941 points,
+and aggregate SHA-256
+`917adc6ea02ad7cd7af79e45d90db6f4c1497bf5c8716d7f2f49b7de4b2070ef`.
+Focused anchoring, grouping, and bridge transaction runs passed 1/1, 35/35,
+and 17/17. Workspace Nextest passed 6,516/6,516 with 27 slow and two configured
+skips; core strict Clippy, rustfmt, diff, static deletion, and sub-400-LOC gates
+passed.
+
+O75 adds no lifecycle stage or public API. Unsupported filler generators,
+`Layer::make_fills`, extrusion, motion, G-code, CLI success, and normalized KSR
+golden parity remain later source-cited work.
