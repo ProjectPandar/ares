@@ -6473,3 +6473,14 @@ length gates update quality without changing geometry.
 Two O78 focused tests and all three O77 regressions pass. Strict core Clippy,
 rustfmt, diff, and LOC gates pass. Pinch handling, monotonic region chaining,
 complete fillers/entities, lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.79: rectilinear pinch intersections
+
+O79 ports pinned `FillRectilinear.cpp:1216-1312`. Disconnected adjacent
+InnerHigh/InnerLow runs receive source-midpoint phony OuterHigh/OuterLow pairs;
+current and neighboring link indices are remapped in place. Nonpinched sections
+remain identical.
+
+Two O79 tests and all five O77/O78 regressions pass. Strict core Clippy,
+rustfmt, diff, and LOC gates pass. Monotonic regions/chaining, complete filler
+entities, lifecycle, motion, and G-code remain later source-cited slices.

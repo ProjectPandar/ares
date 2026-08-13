@@ -1,6 +1,9 @@
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
 
-use super::{IntersectionKind, LinkQuality, LinkType, connect_contours, slice_vertical_lines};
+use super::{
+    IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine, connect_contours,
+    insert_phony_outer_pairs, slice_vertical_lines,
+};
 
 fn rectangle() -> ExPolygon {
     ExPolygon::new(
@@ -144,6 +147,58 @@ fn task22o78_dont_connect_and_max_length_change_only_link_quality() {
                     || item.next.is_some_and(|link| link.2 == LinkQuality::TooLong)
             })
     );
+}
+
+#[test]
+fn task22o79_nonpinched_sections_remain_identical() {
+    let mut sections = slice_vertical_lines(&rectangle(), 0.0, 0.0, 0.0, 3, 10, 40).unwrap();
+    connect_contours(&mut sections, false, 0.0);
+    let before = sections.clone();
+
+    insert_phony_outer_pairs(&mut sections);
+
+    assert_eq!(sections, before);
+}
+
+#[test]
+fn task22o79_disconnected_inner_pair_receives_ordered_phony_outer_pair() {
+    let record = |y, kind| SegmentIntersection {
+        point: Point::new(50, y),
+        contour_index: 0,
+        segment_index: y as usize,
+        kind,
+        previous: None,
+        next: None,
+    };
+    let mut sections = vec![
+        SegmentedLine {
+            x: 10,
+            intersections: Vec::new(),
+        },
+        SegmentedLine {
+            x: 50,
+            intersections: vec![
+                record(0, IntersectionKind::OuterLow),
+                record(20, IntersectionKind::InnerLow),
+                record(40, IntersectionKind::InnerHigh),
+                record(60, IntersectionKind::InnerLow),
+                record(80, IntersectionKind::InnerHigh),
+                record(100, IntersectionKind::OuterHigh),
+            ],
+        },
+    ];
+    let midpoint = 50;
+
+    insert_phony_outer_pairs(&mut sections);
+
+    assert!(sections[1].intersections.windows(2).any(|pair| {
+        pair[0].kind == IntersectionKind::OuterHigh
+            && pair[1].kind == IntersectionKind::OuterLow
+            && pair[0].point.y() == midpoint
+            && pair[1].point.y() == midpoint
+            && pair[0].contour_index == usize::MAX
+            && pair[1].contour_index == usize::MAX
+    }));
 }
 
 #[test]

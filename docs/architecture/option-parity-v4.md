@@ -5014,3 +5014,11 @@ valid/invalid/too-long quality. Two focused link tests plus three segmentation
 regressions pass; strict core Clippy, rustfmt, diff, and LOC gates pass. Pinch,
 monotonic region chaining, complete fillers/entities, lifecycle, and G-code
 remain pending.
+
+### Task 22O.79: rectilinear pinch intersections
+
+O79 ports pinned `FillRectilinear.cpp:1216-1312`: disconnected inner runs gain
+ordered phony outer pairs and all affected link indices are remapped. Two O79
+focused tests plus five O77/O78 regressions pass; strict core Clippy, rustfmt,
+diff, and LOC gates pass. Monotonic region generation/chaining, filler entities,
+lifecycle, and G-code remain pending.
