@@ -22,6 +22,13 @@ pub(crate) fn difference_open_polylines(
     clipper_pl_open(ClipOperation::Difference, subject, clip)
 }
 
+pub(crate) fn intersection_open_polylines(
+    subject: &[Polyline],
+    clip: &[Polygon],
+) -> Result<Vec<Polyline>, ClipperError> {
+    clipper_pl_open(ClipOperation::Intersection, subject, clip)
+}
+
 fn clipper_pl_closed(
     operation: ClipOperation,
     subject: &[Polygon],
@@ -50,8 +57,11 @@ fn clipper_pl_open(
 }
 
 type OpenPolylineDifferenceFn = fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
+type OpenPolylineIntersectionFn =
+    fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
 
 const _: OpenPolylineDifferenceFn = difference_open_polylines;
+const _: OpenPolylineIntersectionFn = intersection_open_polylines;
 
 pub(crate) fn recombine_polylines(polylines: &mut Vec<Polyline>) {
     let mut i = 0;

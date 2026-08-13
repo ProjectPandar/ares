@@ -1,4 +1,7 @@
+mod query;
 pub(crate) mod raster;
+
+pub(crate) use query::ClosestPointResult;
 
 use super::{ClipperError, Coord, ExPolygon, Point};
 use raster::{RasterGrid, visit_line};
@@ -36,15 +39,31 @@ impl EdgeGrid {
         initial_max: Point,
         resolution: Coord,
     ) -> Result<Self, ClipperError> {
+        Self::new_from_contours(
+            std::iter::once(expolygon.contour())
+                .chain(expolygon.holes())
+                .map(|polygon| polygon.points()),
+            initial_min,
+            initial_max,
+            resolution,
+        )
+    }
+
+    pub(crate) fn new_from_contours<'a>(
+        contours: impl IntoIterator<Item = &'a [Point]>,
+        initial_min: Point,
+        initial_max: Point,
+        resolution: Coord,
+    ) -> Result<Self, ClipperError> {
         if resolution <= 0 || initial_min.x() > initial_max.x() || initial_min.y() > initial_max.y()
         {
             return Err(ClipperError::CoordinateOutOfRange);
         }
 
-        let contours = std::iter::once(expolygon.contour())
-            .chain(expolygon.holes())
-            .filter(|polygon| !polygon.points().is_empty())
-            .map(|polygon| polygon.points().to_vec())
+        let contours = contours
+            .into_iter()
+            .filter(|contour| !contour.is_empty())
+            .map(<[Point]>::to_vec)
             .collect::<Vec<_>>();
         let (mut min_x, mut min_y) = (initial_min.x(), initial_min.y());
         let (mut max_x, mut max_y) = (initial_max.x(), initial_max.y());

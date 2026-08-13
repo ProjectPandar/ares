@@ -1,4 +1,4 @@
-use super::{EXPAND_MERGE_SURFACES, helpers::*};
+use super::{expand_merge_surfaces, helpers::*};
 use crate::{
     geometry::{ClipperError, CoordinateScale},
     project_slice::region_slices::RegionSurfaceKind,
@@ -28,7 +28,7 @@ fn task22o35_first_zone_discovery_error_follows_source_extraction() {
     let mut zones = vec![zone(vec![invalid])];
 
     assert!(matches!(
-        EXPAND_MERGE_SURFACES(
+        expand_merge_surfaces(
             &mut surfaces,
             RegionSurfaceKind::Top,
             &mut zones,
@@ -54,7 +54,7 @@ fn task22o35_later_zone_error_preserves_the_earlier_flag_without_trimming() {
     let mut zones = vec![zone(vec![first_geometry]), zone(vec![invalid])];
 
     assert!(matches!(
-        EXPAND_MERGE_SURFACES(
+        expand_merge_surfaces(
             &mut surfaces,
             RegionSurfaceKind::Top,
             &mut zones,
@@ -75,7 +75,7 @@ fn task22o35_invalid_radius_panics_after_nonempty_source_extraction() {
     for radius in [0.0, -1.0, f32::NAN] {
         let mut surfaces = selected(square(20, 30));
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            EXPAND_MERGE_SURFACES(
+            expand_merge_surfaces(
                 &mut surfaces,
                 RegionSurfaceKind::Top,
                 &mut [],
@@ -103,7 +103,7 @@ fn task22o35_closing_coordinate_error_escapes_after_no_zone_merge() {
     let mut surfaces = selected(near_limit);
 
     assert!(matches!(
-        EXPAND_MERGE_SURFACES(
+        expand_merge_surfaces(
             &mut surfaces,
             RegionSurfaceKind::Top,
             &mut [],

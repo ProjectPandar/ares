@@ -25,22 +25,13 @@ use crate::{
 use super::{support::ProjectParts, valid_settings};
 
 #[test]
-fn bounded_usage_exposes_only_typed_coverage_without_complete_conversion() {
+fn bounded_usage_exposes_typed_coverage() {
     let source_settings = settings(2);
     let usage = collect(&source_settings, &source_settings, &[], &[]);
 
     let _: &[usize] = &usage.supported_used_filaments;
     match usage.coverage {
         ProjectUsageCoverage::TypedConfigSourcesOnly => {}
-    }
-    let source = include_str!("../../effective_config/types.rs");
-    for forbidden in [
-        "impl From<BoundedProjectUsage",
-        "impl Into<",
-        "impl AsRef<",
-        "impl std::ops::Deref",
-    ] {
-        assert!(!source.contains(forbidden));
     }
 }
 

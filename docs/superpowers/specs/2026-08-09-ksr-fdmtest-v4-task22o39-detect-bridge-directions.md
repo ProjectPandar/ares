@@ -2,8 +2,12 @@
 
 ## Status and source boundary
 
-Locally implemented, crate-private, inactive, and unreleased. Exact predecessor
-O38 is released as implementation commit
+Released, crate-private, and inactive. O39 was released as implementation
+commit `2038e93491de89e33f12ecb5379132a013bfc996` and documentation commit
+`c84119ee6871a176ec94117bc16f7e402c9caf96`. Exact-SHA Tier-1 run
+`31317150231` passed all five jobs and both browser executions at
+`c84119ee6871a176ec94117bc16f7e402c9caf96`. Exact predecessor O38 is released
+as implementation commit
 `04920e061b9b7e3e780b0735fccd0610b52eb73c` and documentation commit
 `2d6154d401c3c954bed69de6ba631a53af05f1a3`. Exact-SHA Tier-1 run
 `31303115603` passed all five jobs and both browser executions at
@@ -26,9 +30,9 @@ two skipped, all-target check, warning-denying all-feature Clippy, rustfmt,
 four wasm32 checks, two optimized WASM builds, both bindgen runs, export/npm/
 JavaScript audits, exact allowlist audit, and exact-O38 rollback are green. Both
 local Playwright attempts failed before test execution because Chromium lacks
-`libglib-2.0.so.0`; neither is called a pass, and both exact-SHA CI browser
-executions remain mandatory. O39 remains unreleased pending final reviews,
-separate commits, push, and exact-SHA Tier-1. Public slicing still returns
+`libglib-2.0.so.0`; neither is called a pass. The later exact-SHA Tier-1 run
+`31317150231` passed both browser executions and all three native jobs. O39 is
+released but inactive. Public slicing still returns
 `ProjectSlicingIncomplete`; this milestone is not KSR parity.
 
 Port only `detect_bridge_directions` at

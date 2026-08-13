@@ -1,11 +1,18 @@
 use super::{
-    ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, PathRole,
-    boolean_ex::append_safety_offset,
+    ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, JoinType, PathRole,
+    boolean_ex::{SAFETY_MITER_LIMIT, SAFETY_OFFSET, append_safety_offset},
+    offset::offset_paths,
 };
 use crate::geometry::Polygon;
 
 pub(crate) fn union_polygons_paths(paths: &[Polygon]) -> Result<Vec<Polygon>, ClipperError> {
     execute(paths, &[], ClipOperation::Union)
+}
+
+pub(crate) fn union_safety_offset_polygons(
+    paths: &[Polygon],
+) -> Result<Vec<Polygon>, ClipperError> {
+    offset_paths(paths, SAFETY_OFFSET, JoinType::Miter, SAFETY_MITER_LIMIT)
 }
 
 pub(crate) fn intersection_polygons_paths(

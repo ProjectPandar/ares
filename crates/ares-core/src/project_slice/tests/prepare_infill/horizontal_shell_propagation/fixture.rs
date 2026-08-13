@@ -13,7 +13,7 @@ pub(super) fn prepare_o25(
     super::super::horizontal_shell_promotion::fixture::prepare(bytes)
 }
 
-pub(super) fn prepare(
+pub(in crate::project_slice::tests::prepare_infill) fn prepare(
     bytes: impl AsRef<[u8]>,
 ) -> horizontal_shell_propagation::PreparedPostHorizontalShellPropagation {
     horizontal_shell_propagation::prepare(prepare_o25(bytes)).unwrap()

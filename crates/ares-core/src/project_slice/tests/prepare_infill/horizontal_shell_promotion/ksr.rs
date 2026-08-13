@@ -213,6 +213,7 @@ fn kind_index(kind: RegionSurfaceKind) -> usize {
         RegionSurfaceKind::BottomBridge => 2,
         RegionSurfaceKind::Internal => 3,
         RegionSurfaceKind::InternalSolid => 4,
+        RegionSurfaceKind::InternalBridge => 6,
         RegionSurfaceKind::InternalVoid => 5,
     }
 }

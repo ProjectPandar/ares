@@ -1,4 +1,4 @@
-use super::{EXPAND_EXPOLYGONS, helpers::*};
+use super::{expand_expolygons, helpers::*};
 use crate::geometry::{
     ClipperError, CoordinateScale, ExPolygon, Polygon, RegionExpansionEx,
     RegionExpansionParameters, WaveSeed, propagate_waves_ex, wave_seeds,
@@ -112,7 +112,7 @@ fn task22o36_zero_zones_do_not_access_source_and_empty_source_visits_zones() {
         &[(OUTSIDE, 0), (OUTSIDE, 10), (OUTSIDE - 1, 10)],
         Vec::new(),
     )];
-    let result = EXPAND_EXPOLYGONS(&invalid_source, &mut [], CoordinateScale::Normal).unwrap();
+    let result = expand_expolygons(&invalid_source, &mut [], CoordinateScale::Normal).unwrap();
     assert!(result.anchors.is_empty());
     assert!(result.expansions.is_empty());
 
@@ -120,7 +120,7 @@ fn task22o36_zero_zones_do_not_access_source_and_empty_source_visits_zones() {
     for zone in &mut zones {
         zone.expanded_into = true;
     }
-    let result = EXPAND_EXPOLYGONS(&[], &mut zones, CoordinateScale::Normal).unwrap();
+    let result = expand_expolygons(&[], &mut zones, CoordinateScale::Normal).unwrap();
     assert!(result.anchors.is_empty());
     assert!(result.expansions.is_empty());
     assert!(zones.iter().all(|zone| !zone.expanded_into));
@@ -128,7 +128,7 @@ fn task22o36_zero_zones_do_not_access_source_and_empty_source_visits_zones() {
     zones[1].parameters.tiny_expansion = 0.0;
     assert!(
         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            EXPAND_EXPOLYGONS(&[], &mut zones, CoordinateScale::Normal)
+            expand_expolygons(&[], &mut zones, CoordinateScale::Normal)
         }))
         .is_err()
     );
@@ -138,7 +138,7 @@ fn task22o36_zero_zones_do_not_access_source_and_empty_source_visits_zones() {
 fn task22o36_one_natural_zone_preserves_complete_anchor_and_expansion() {
     let sources = [square(20, 30)];
     let mut zones = vec![expansion_zone(vec![square(0, 100)])];
-    let result = EXPAND_EXPOLYGONS(&sources, &mut zones, CoordinateScale::Normal).unwrap();
+    let result = expand_expolygons(&sources, &mut zones, CoordinateScale::Normal).unwrap();
 
     assert_eq!(
         seed_snapshots(&result.anchors),
@@ -160,7 +160,7 @@ fn task22o36_ordered_zones_rebase_complete_pinned_oracle() {
         expansion_zone(vec![square(200, 300)]),
     ];
     zones[0].expanded_into = true;
-    let result = EXPAND_EXPOLYGONS(&sources, &mut zones, CoordinateScale::Normal).unwrap();
+    let result = expand_expolygons(&sources, &mut zones, CoordinateScale::Normal).unwrap();
 
     assert_eq!(
         seed_snapshots(&result.anchors),
@@ -196,7 +196,7 @@ fn task22o36_both_scales_match_the_explicit_sorted_pipeline() {
             vec![square(0, 1_000_000)],
             parameters,
         )];
-        let actual = EXPAND_EXPOLYGONS(&sources, &mut actual_zones, scale).unwrap();
+        let actual = expand_expolygons(&sources, &mut actual_zones, scale).unwrap();
         let expected = explicit_pipeline(&sources, &mut expected_zones, scale).unwrap();
         assert_eq!(actual.anchors, expected.0);
         assert_eq!(actual.expansions, expected.1);
@@ -219,7 +219,7 @@ fn task22o36_discovery_errors_preserve_failing_and_later_flags() {
     let mut first = vec![expansion_zone(vec![invalid.clone()])];
     first[0].expanded_into = true;
     assert!(matches!(
-        EXPAND_EXPOLYGONS(&sources, &mut first, CoordinateScale::Normal),
+        expand_expolygons(&sources, &mut first, CoordinateScale::Normal),
         Err(ClipperError::CoordinateOutOfRange)
     ));
     assert!(first[0].expanded_into);
@@ -232,7 +232,7 @@ fn task22o36_discovery_errors_preserve_failing_and_later_flags() {
     later[1].expanded_into = true;
     later[2].expanded_into = true;
     assert!(matches!(
-        EXPAND_EXPOLYGONS(&sources, &mut later, CoordinateScale::Normal),
+        expand_expolygons(&sources, &mut later, CoordinateScale::Normal),
         Err(ClipperError::CoordinateOutOfRange)
     ));
     assert_eq!(
@@ -263,7 +263,7 @@ fn task22o36_propagation_errors_commit_only_prior_zone_flags() {
     first[0].expanded_into = true;
     assert_o30_error(std::slice::from_ref(&huge_source), &first[0]);
     assert!(matches!(
-        EXPAND_EXPOLYGONS(
+        expand_expolygons(
             std::slice::from_ref(&huge_source),
             &mut first,
             CoordinateScale::Normal,
@@ -282,7 +282,7 @@ fn task22o36_propagation_errors_commit_only_prior_zone_flags() {
     later[2].expanded_into = true;
     assert_o30_error(&sources, &later[1]);
     assert!(matches!(
-        EXPAND_EXPOLYGONS(&sources, &mut later, CoordinateScale::Normal),
+        expand_expolygons(&sources, &mut later, CoordinateScale::Normal),
         Err(ClipperError::CoordinateOutOfRange)
     ));
     assert_eq!(

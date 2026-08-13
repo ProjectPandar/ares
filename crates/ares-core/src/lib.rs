@@ -4,6 +4,7 @@ mod brims;
 mod contours;
 mod extrusion_entity;
 mod extrusions;
+mod fill;
 mod gap_fills;
 mod gcode;
 mod gcode_adaptive_bed_mesh;

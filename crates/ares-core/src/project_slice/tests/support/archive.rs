@@ -47,6 +47,11 @@ impl KsrArchive {
             .insert(path.to_owned(), text.as_bytes().to_vec());
     }
 
+    pub(in crate::project_slice::tests) fn copy_entry(&mut self, from: &str, to: &str) {
+        let bytes = self.entries.get(from).unwrap().clone();
+        assert!(self.entries.insert(to.to_owned(), bytes).is_none());
+    }
+
     pub(in crate::project_slice::tests) fn replace(&mut self, path: &str, from: &str, to: &str) {
         let text = String::from_utf8(self.entries.remove(path).unwrap()).unwrap();
         assert!(text.contains(from), "{path} does not contain {from:?}");

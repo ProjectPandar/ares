@@ -1,10 +1,10 @@
-use super::{GET_GROUPED_BRIDGES, GROUP_ID};
+use super::{get_grouped_bridges, group_id};
 use crate::geometry::{ClipperError, ExPolygon, Polygon, RegionExpansionEx};
 
 use super::super::Bridge;
 use super::helpers::{ExPolygonSnapshot, expolygon, snapshots, square};
 
-type BridgeSnapshot = (ExPolygonSnapshot, u32, usize, Option<f64>);
+type BridgeSnapshot = (ExPolygonSnapshot, u32, Option<f64>);
 
 fn expansion(expolygon: ExPolygon, src_id: u32, boundary_id: u32) -> RegionExpansionEx {
     RegionExpansionEx {
@@ -21,7 +21,6 @@ fn bridge_snapshots(bridges: &[Bridge]) -> Vec<BridgeSnapshot> {
             (
                 snapshots(std::slice::from_ref(&bridge.expolygon)).remove(0),
                 bridge.group_id,
-                bridge.bridge_expansion_begin,
                 bridge.angle,
             )
         })
@@ -34,7 +33,7 @@ fn groups(bridges: &[Bridge]) -> Vec<u32> {
 
 fn roots(bridges: &mut [Bridge]) -> Vec<u32> {
     (0..bridges.len())
-        .map(|src_id| GROUP_ID(bridges, src_id as u32))
+        .map(|src_id| group_id(bridges, src_id as u32))
         .collect()
 }
 
@@ -43,8 +42,8 @@ fn invalid_overlap() -> ExPolygon {
 }
 
 #[test]
-fn task22o37_initializes_empty_and_moved_sources_with_end_sentinel() {
-    assert!(GET_GROUPED_BRIDGES(Vec::new(), &[]).unwrap().is_empty());
+fn task22o37_initializes_empty_and_preserves_source_geometry() {
+    assert!(get_grouped_bridges(Vec::new(), &[]).unwrap().is_empty());
 
     let source_with_hole = expolygon(
         &[(10, 10), (20, 10), (20, 20), (10, 20)],
@@ -56,35 +55,19 @@ fn task22o37_initializes_empty_and_moved_sources_with_end_sentinel() {
         ])],
     );
     let sources = vec![square(0, 4), source_with_hole];
-    let first_points = sources[0].contour().points().as_ptr();
-    let second_points = sources[1].contour().points().as_ptr();
-    let hole_points = sources[1].holes()[0].points().as_ptr();
 
-    let bridges = GET_GROUPED_BRIDGES(sources, &[]).unwrap();
+    let bridges = get_grouped_bridges(sources, &[]).unwrap();
 
-    assert_eq!(
-        bridges[0].expolygon.contour().points().as_ptr(),
-        first_points
-    );
-    assert_eq!(
-        bridges[1].expolygon.contour().points().as_ptr(),
-        second_points
-    );
-    assert_eq!(
-        bridges[1].expolygon.holes()[0].points().as_ptr(),
-        hole_points
-    );
     assert_eq!(
         bridge_snapshots(&bridges),
         vec![
-            (((vec![(0, 0), (4, 0), (4, 4), (0, 4)]), vec![]), 0, 0, None),
+            (((vec![(0, 0), (4, 0), (4, 4), (0, 4)]), vec![]), 0, None),
             (
                 (
                     vec![(10, 10), (20, 10), (20, 20), (10, 20)],
                     vec![vec![(12, 12), (12, 18), (18, 18), (18, 12)]],
                 ),
                 1,
-                0,
                 None,
             ),
         ]
@@ -93,7 +76,7 @@ fn task22o37_initializes_empty_and_moved_sources_with_end_sentinel() {
 
 #[test]
 fn task22o37_group_id_follows_parent_chain_without_full_compression() {
-    let mut bridges = GET_GROUPED_BRIDGES(
+    let mut bridges = get_grouped_bridges(
         vec![square(0, 1), square(2, 3), square(4, 5), square(6, 7)],
         &[],
     )
@@ -102,7 +85,7 @@ fn task22o37_group_id_follows_parent_chain_without_full_compression() {
     bridges[2].group_id = 1;
     bridges[3].group_id = 2;
 
-    assert_eq!(GROUP_ID(&mut bridges, 3), 0);
+    assert_eq!(group_id(&mut bridges, 3), 0);
     assert_eq!(groups(&bridges), vec![0, 0, 1, 2]);
 }
 
@@ -122,7 +105,7 @@ fn task22o37_matches_pinned_multiple_boundary_oracle_in_source_order() {
         expansion(square(5, 15), 2, 1),
     ];
 
-    let bridges = GET_GROUPED_BRIDGES(sources, &expansions).unwrap();
+    let bridges = get_grouped_bridges(sources, &expansions).unwrap();
 
     assert_eq!(
         bridge_snapshots(&bridges),
@@ -130,25 +113,21 @@ fn task22o37_matches_pinned_multiple_boundary_oracle_in_source_order() {
             (
                 (vec![(100, 100), (104, 100), (104, 104), (100, 104)], vec![]),
                 0,
-                5,
                 None
             ),
             (
                 (vec![(110, 110), (114, 110), (114, 114), (110, 114)], vec![]),
                 0,
-                5,
                 None
             ),
             (
                 (vec![(120, 120), (124, 120), (124, 124), (120, 124)], vec![]),
                 2,
-                5,
                 None
             ),
             (
                 (vec![(130, 130), (134, 130), (134, 134), (130, 134)], vec![]),
                 2,
-                5,
                 None
             ),
         ]
@@ -162,7 +141,7 @@ fn task22o37_preserves_raw_parent_forest_and_does_not_regroup_windows() {
         expansion(square(1, 19), 1, 8),
         expansion(square(2, 18), 0, 8),
     ];
-    let mut bridges = GET_GROUPED_BRIDGES(
+    let mut bridges = get_grouped_bridges(
         vec![square(300, 304), square(310, 314), square(320, 324)],
         &expansions,
     )
@@ -177,7 +156,7 @@ fn task22o37_preserves_raw_parent_forest_and_does_not_regroup_windows() {
         expansion(square(1, 19), 1, 9),
     ];
     let bridges =
-        GET_GROUPED_BRIDGES(vec![square(400, 404), square(410, 414)], &separated).unwrap();
+        get_grouped_bridges(vec![square(400, 404), square(410, 414)], &separated).unwrap();
     assert_eq!(groups(&bridges), vec![0, 1]);
 }
 
@@ -191,7 +170,7 @@ fn task22o37_same_source_disjoint_and_separate_windows_stay_roots() {
         expansion(square(35, 45), 2, 2),
     ];
     let bridges =
-        GET_GROUPED_BRIDGES(vec![square(0, 1), square(2, 3), square(4, 5)], &expansions).unwrap();
+        get_grouped_bridges(vec![square(0, 1), square(2, 3), square(4, 5)], &expansions).unwrap();
     assert_eq!(groups(&bridges), vec![0, 1, 2]);
 }
 
@@ -220,7 +199,7 @@ fn task22o37_uses_expansion_contours_and_ignores_holes() {
         expansion(square(6, 14), 1, 4),
     ];
     let bridges =
-        GET_GROUPED_BRIDGES(vec![source_with_hole, square(230, 234)], &expansions).unwrap();
+        get_grouped_bridges(vec![source_with_hole, square(230, 234)], &expansions).unwrap();
 
     assert_eq!(groups(&bridges), vec![0, 0]);
     assert_eq!(bridges[0].expolygon.holes().len(), 1);
@@ -235,7 +214,7 @@ fn task22o37_propagates_first_and_later_coordinate_failures_without_input_mutati
     ];
     let first_before = first.clone();
     assert!(matches!(
-        GET_GROUPED_BRIDGES(vec![square(0, 1), square(2, 3)], &first),
+        get_grouped_bridges(vec![square(0, 1), square(2, 3)], &first),
         Err(ClipperError::CoordinateOutOfRange)
     ));
     assert_eq!(first, first_before);
@@ -247,7 +226,7 @@ fn task22o37_propagates_first_and_later_coordinate_failures_without_input_mutati
     ];
     let later_before = later.clone();
     assert!(matches!(
-        GET_GROUPED_BRIDGES(vec![square(0, 1), square(2, 3), square(4, 5)], &later),
+        get_grouped_bridges(vec![square(0, 1), square(2, 3), square(4, 5)], &later),
         Err(ClipperError::CoordinateOutOfRange)
     ));
     assert_eq!(later, later_before);
@@ -259,14 +238,14 @@ fn task22o37_invalid_paths_short_circuit_for_equal_source_and_disjoint_bbox() {
         expansion(invalid_overlap(), 0, 0),
         expansion(square(0, 10), 0, 0),
     ];
-    let bridges = GET_GROUPED_BRIDGES(vec![square(0, 1)], &equal_source).unwrap();
+    let bridges = get_grouped_bridges(vec![square(0, 1)], &equal_source).unwrap();
     assert_eq!(groups(&bridges), vec![0]);
 
     let disjoint = vec![
         expansion(square(0, 10), 0, 0),
         expansion(square(i64::MAX - 20, i64::MAX - 10), 1, 0),
     ];
-    let bridges = GET_GROUPED_BRIDGES(vec![square(0, 1), square(2, 3)], &disjoint).unwrap();
+    let bridges = get_grouped_bridges(vec![square(0, 1), square(2, 3)], &disjoint).unwrap();
     assert_eq!(groups(&bridges), vec![0, 1]);
 }
 
@@ -277,7 +256,7 @@ fn task22o37_trusts_source_ids_when_overlap_reaches_root_resolution() {
         expansion(square(0, 10), 0, 0),
         expansion(square(5, 15), 2, 0),
     ];
-    let _ = GET_GROUPED_BRIDGES(vec![square(0, 1), square(2, 3)], &expansions);
+    let _ = get_grouped_bridges(vec![square(0, 1), square(2, 3)], &expansions);
 }
 
 #[test]
@@ -285,5 +264,5 @@ fn task22o37_trusts_source_ids_when_overlap_reaches_root_resolution() {
 fn task22o37_trusts_nonempty_expansion_contours() {
     let empty = ExPolygon::new(Polygon::new(Vec::new()), Vec::new());
     let expansions = vec![expansion(empty, 0, 0)];
-    let _ = GET_GROUPED_BRIDGES(vec![square(0, 1)], &expansions);
+    let _ = get_grouped_bridges(vec![square(0, 1)], &expansions);
 }

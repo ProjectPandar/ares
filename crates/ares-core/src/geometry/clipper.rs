@@ -29,14 +29,16 @@ pub(super) use boolean_ex::safety_offset_configuration_for_test;
 pub(crate) use boolean_ex::{
     SAFETY_OFFSET, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
-    difference_polygons_ex, intersection_ex, intersection_polygons_ex, union_expolygons,
-    union_safety_offset_ex, xor_ex,
+    difference_polygons_ex, difference_polygons_ex_with_safety_offset, intersection_ex,
+    intersection_polygons_ex, intersection_polygons_polygons_ex, union_expolygons,
+    union_safety_offset_ex, union_safety_offset_expolygons, xor_ex,
 };
 #[cfg(test)]
 pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;
 pub(crate) use boolean_paths::{
     difference_polygons_paths, intersection_polygons_paths,
     intersection_polygons_paths_with_safety_offset, union_polygons_paths,
+    union_safety_offset_polygons,
 };
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
@@ -59,7 +61,9 @@ pub(crate) use offset::{offset_expolygons_raw, raw_offset_open_paths};
 pub(crate) use point_in_polygon::point_in_polygon;
 #[cfg(test)]
 pub(crate) use polyline::recombine_polylines;
-pub(crate) use polyline::{diff_pl, difference_open_polylines, intersection_pl};
+pub(crate) use polyline::{
+    diff_pl, difference_open_polylines, intersection_open_polylines, intersection_pl,
+};
 #[cfg(test)]
 pub(crate) use polytree::PolyNode;
 pub(crate) use polytree::{PolyTree, union_ex};
@@ -202,7 +206,10 @@ const _: fn(&mut Clipper, ClipOperation, FillRule, FillRule) -> PolyTree =
     Clipper::execute_polytree;
 const _: fn(&[Polygon], FillRule) -> Result<Vec<super::ExPolygon>, ClipperError> = union_ex;
 type OpenPolylineDifferenceFn = fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
+type OpenPolylineIntersectionFn =
+    fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, ClipperError>;
 const _: OpenPolylineDifferenceFn = difference_open_polylines;
+const _: OpenPolylineIntersectionFn = intersection_open_polylines;
 const _: fn(&[Polygon]) -> Result<Vec<Polygon>, ClipperError> = simplify_polygons;
 const _: fn(&mut Clipper) = Clipper::clear;
 const _: fn(f64) -> i64 = fixed_round;

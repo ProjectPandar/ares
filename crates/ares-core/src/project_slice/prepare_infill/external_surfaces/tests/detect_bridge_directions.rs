@@ -2,19 +2,16 @@ mod anchors;
 mod errors;
 mod geometry;
 
-use super::{DETECT_BRIDGE_DIRECTIONS, helpers::*};
+use super::helpers::*;
 use crate::{
     geometry::{
-        ClipperError, CoordinateScale, ExPolygon, JoinType, Line, Point, Polygon, Polyline,
-        WaveSeed, detect_bridging_direction, difference_open_polylines, offset_paths,
+        ClipperError, CoordinateScale, ExPolygon, JoinType, Line, Polygon, Polyline, WaveSeed,
+        detect_bridging_direction, difference_open_polylines, offset_paths,
     },
-    project_slice::prepare_infill::external_surfaces::{Bridge, ExpansionZone},
+    project_slice::prepare_infill::external_surfaces::{
+        Bridge, detect_bridge_directions::detect_bridge_directions,
+    },
 };
-
-type DetectBridgeDirectionsFn =
-    fn(&[WaveSeed], &mut [Bridge], &[ExpansionZone], CoordinateScale) -> Result<(), ClipperError>;
-
-pub(super) const DETECT: DetectBridgeDirectionsFn = DETECT_BRIDGE_DIRECTIONS;
 
 pub(super) struct Manual {
     pub(super) expanded: Vec<Polygon>,
@@ -29,7 +26,6 @@ pub(super) fn bridge(expolygon: ExPolygon, angle: Option<f64>) -> Bridge {
     Bridge {
         expolygon,
         group_id: 0,
-        bridge_expansion_begin: 0,
         angle,
     }
 }
@@ -139,5 +135,3 @@ pub(super) fn invalid_triangle() -> ExPolygon {
         Vec::new(),
     )
 }
-
-const _: fn(i64, i64) -> Point = Point::new;

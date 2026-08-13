@@ -72,7 +72,7 @@ fn task22o39_repeated_boundaries_ignore_seed_paths_and_extract_contour_then_hole
     );
     assert_eq!(expected.cost.to_bits(), 0x40a2_c000_0000_0000);
     assert_eq!(expected.angle.to_bits(), 0x3ff9_21fb_5444_2d18);
-    DETECT(&anchors, &mut bridges, &zones, CoordinateScale::Normal).unwrap();
+    detect_bridge_directions(&anchors, &mut bridges, &zones, CoordinateScale::Normal).unwrap();
 
     assert_eq!(anchors, anchor_snapshot);
     assert_eq!(snapshots(&zones[0].expolygons), zone_geometry_snapshot);
@@ -141,7 +141,7 @@ fn task22o39_multiple_bridges_rebase_global_boundaries_through_leading_empty_zon
         .map(|(index, geometry)| bridge(geometry, Some(-(index as f64) - 1.0)))
         .collect::<Vec<_>>();
 
-    DETECT(&anchors, &mut bridges, &zones, CoordinateScale::Normal).unwrap();
+    detect_bridge_directions(&anchors, &mut bridges, &zones, CoordinateScale::Normal).unwrap();
 
     assert_eq!(
         angles(&bridges),
@@ -169,7 +169,7 @@ fn task22o39_forward_cursor_does_not_sort_search_ahead_or_restart_for_earlier_so
     let anchors = vec![seed(1, 0, &[(91, 92)]), seed(0, 0, &[(93, 94)])];
     let mut bridges = vec![bridge(first_geometry, None), bridge(second_geometry, None)];
 
-    DETECT(
+    detect_bridge_directions(
         &anchors,
         &mut bridges,
         &[zone(vec![anchor_geometry])],
@@ -204,7 +204,7 @@ fn task22o39_nonconsecutive_duplicate_boundary_is_processed_in_supplied_order() 
     ];
     let mut bridges = vec![bridge(geometry, None)];
 
-    DETECT(
+    detect_bridge_directions(
         &anchors,
         &mut bridges,
         &[zone(vec![area_a, area_b])],
@@ -236,7 +236,7 @@ fn task22o39_forward_cursor_continues_to_later_source_and_preserves_error_commit
         bridge(second_geometry, Some(7.25)),
     ];
 
-    let result = DETECT(
+    let result = detect_bridge_directions(
         &anchors,
         &mut bridges,
         &[zone(vec![first_anchor, invalid_triangle()])],
@@ -281,7 +281,7 @@ fn task22o39_supplied_order_does_not_sort_later_invalid_earlier_source() {
     let mut bridges = vec![bridge(first, Some(-1.0)), bridge(second, Some(-2.0))];
 
     assert_eq!(
-        DETECT(
+        detect_bridge_directions(
             &anchors,
             &mut bridges,
             &[zone(vec![invalid_triangle(), valid])],

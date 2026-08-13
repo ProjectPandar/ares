@@ -3,8 +3,6 @@ use super::super::{CoordinateScale, Line, Point, Polygon, detect_bridging_direct
 mod pca;
 mod selection;
 
-type DetectBridgingDirection = fn(&[Line], &[Polygon], CoordinateScale) -> ((f64, f64), f64);
-
 fn point(x: i64, y: i64) -> Point {
     Point::new(x, y)
 }
@@ -30,10 +28,4 @@ fn assert_output_bits(actual: ((f64, f64), f64), expected: (u64, u64, u64)) {
         ),
         expected
     );
-}
-
-#[test]
-fn task22o38_exact_crate_private_function_shape_is_reachable() {
-    let function: DetectBridgingDirection = detect_bridging_direction;
-    let _: ((f64, f64), f64) = function(&[], &[], CoordinateScale::Normal);
 }

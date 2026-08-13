@@ -33,9 +33,13 @@ Nextest 6,094/6,094 with two skipped, all-target check, warning-denying
 all-feature Clippy, rustfmt, four wasm32 checks, optimized builds, bindgen/
 export/npm/JavaScript audits, static allowlist audit, and exact-O38 rollback.
 Both local Playwright attempts failed before test execution because Chromium
-lacks `libglib-2.0.so.0`; the two exact-SHA CI browser executions remain
-mandatory. Task 10 final reviews, separate commits, push, and matching Tier-1
-remain. O39 is crate-private, inactive, unreleased, and not KSR completion.
+lacks `libglib-2.0.so.0`; neither was treated as a pass. Task 10 subsequently
+completed: implementation/documentation commits
+`2038e93491de89e33f12ecb5379132a013bfc996` /
+`c84119ee6871a176ec94117bc16f7e402c9caf96` were pushed, and exact-SHA Tier-1
+run `31317150231` passed all five jobs and both browser executions at the
+documentation SHA. O39 is crate-private, inactive, released, and not KSR
+completion.
 
 Success means the exact crate-private four-argument API, unconditional empty-
 zone assertion, one forward-only anchor cursor, source-width ID/cumulative cast
@@ -323,6 +327,13 @@ PolyTree/boolean-path/offset/O26 suites, remove it, and prove all primary
 candidate hashes/status unchanged.
 
 ## Task 10 — Final reviews, commits, push, and exact-SHA Tier-1
+
+Completed. The implementation and documentation commits are
+`2038e93491de89e33f12ecb5379132a013bfc996` and
+`c84119ee6871a176ec94117bc16f7e402c9caf96`; `HEAD == origin/main` at the
+documentation commit. Exact-SHA Tier-1 run `31317150231` passed exactly five
+jobs and both browser executions. The procedure below records the completed
+release gate.
 
 Run fresh final six-dimensional and default-model OpenCode reviews over exact
 candidate bytes and all evidence. Any tracked repair invalidates stale proof:

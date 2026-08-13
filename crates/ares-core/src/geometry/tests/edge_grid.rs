@@ -1,5 +1,6 @@
 use super::super::{ClipperError, EdgeGrid, ExPolygon, GridEdge, Point, Polygon};
 
+mod query;
 mod raster;
 
 fn square_with_hole() -> ExPolygon {

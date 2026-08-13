@@ -1,6 +1,6 @@
 mod cleanup;
 mod equal_dirty;
-mod fixture;
+pub(super) mod fixture;
 mod ksr;
 mod lifecycle;
 mod metamorphic;

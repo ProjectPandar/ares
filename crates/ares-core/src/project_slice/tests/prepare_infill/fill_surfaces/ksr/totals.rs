@@ -51,6 +51,7 @@ fn count_surfaces(output: &mut [usize], solid: &mut usize, surfaces: &[RegionSur
             RegionSurfaceKind::BottomBridge => output[3] += 1,
             RegionSurfaceKind::Internal => output[4] += 1,
             RegionSurfaceKind::InternalSolid => *solid += 1,
+            RegionSurfaceKind::InternalBridge => panic!("O18 has no internal-bridge producer"),
             RegionSurfaceKind::InternalVoid => panic!("O18 has no internal-void producer"),
         }
     }

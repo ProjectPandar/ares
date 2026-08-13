@@ -51,7 +51,6 @@ pub(in crate::project_slice) fn get_grouped_bridges(
         result.push(Bridge {
             expolygon,
             group_id: group_id as u32,
-            bridge_expansion_begin: bridge_expansions.len(),
             angle: None,
         });
     }

@@ -7,6 +7,7 @@ mod coord;
 mod edge_grid;
 mod expolygon;
 mod line;
+mod line_distance_tree;
 pub(crate) mod medial_axis;
 mod polygon;
 mod polyline;
@@ -23,21 +24,34 @@ pub(crate) use chain_points::chain_points;
 pub(in crate::geometry) use clipper::opening_path_configurations_for_test;
 #[cfg(test)]
 pub(crate) use clipper::opening_paths_with_interstage;
+pub(crate) use clipper::ordering::fixed_msvc_sort_by;
+#[cfg(test)]
+pub(crate) use clipper::raw_offset_paths;
 pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, SAFETY_OFFSET, closing_ex, diff_pl, difference_ex,
     difference_ex_polygons, difference_ex_polygons_with_safety_offset,
     difference_ex_with_safety_offset, difference_open_polylines, difference_polygons_ex,
-    difference_polygons_paths, intersection_ex, intersection_pl, intersection_polygons_ex,
-    intersection_polygons_paths, intersection_polygons_paths_with_safety_offset, offset_expolygon,
-    offset_expolygon_refs_paths, offset_expolygons, offset_expolygons_paths, offset_open_paths,
-    offset_paths, offset_paths_tree, offset2_ex, offset2_ex_with_interstage, opening_ex,
-    opening_paths, union_ex, union_expolygons, union_polygons_paths, variable_offset_inner_ex,
-    xor_ex,
+    difference_polygons_ex_with_safety_offset, difference_polygons_paths, intersection_ex,
+    intersection_open_polylines, intersection_pl, intersection_polygons_ex,
+    intersection_polygons_paths, intersection_polygons_paths_with_safety_offset,
+    intersection_polygons_polygons_ex, offset_expolygon, offset_expolygon_refs_paths,
+    offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset_paths_tree,
+    offset2_ex, offset2_ex_with_interstage, opening_ex, opening_paths, union_ex, union_expolygons,
+    union_polygons_paths, union_safety_offset_ex, union_safety_offset_expolygons,
+    union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};
-pub(crate) use edge_grid::{EdgeGrid, GridEdge};
+pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};
 pub(crate) use expolygon::{ExPolygon, keep_largest_contour_only};
 pub(crate) use line::{Line, ThickLine};
+#[cfg_attr(
+    not(test),
+    expect(
+        unused_imports,
+        reason = "consumed by the future automatic bridge-direction operation"
+    )
+)]
+pub(crate) use line_distance_tree::{LineDistanceTree, NearestLine};
 pub(crate) use medial_axis::medial_axis;
 pub(crate) use polygon::Polygon;
 pub(crate) use polyline::{Polyline, ThickPolyline, to_thick_polylines};
@@ -123,6 +137,8 @@ type MergeExpansionsOperation = fn(
     CoordinateScale,
 ) -> Result<Vec<ExPolygon>, ClipperError>;
 type EdgeGridVisitor = fn(usize, usize, &[GridEdge]) -> bool;
+type EdgeGridClosestPointQuery =
+    fn(&EdgeGrid, Point, Coord) -> Result<Option<ClosestPointResult>, ClipperError>;
 
 const _: DetectBridgingDirection = detect_bridging_direction;
 const _: usize = std::mem::size_of::<Coord>();
@@ -158,6 +174,7 @@ type OpenPolylineClip = fn(&[Polyline], &[Polygon]) -> Result<Vec<Polyline>, Cli
 const _: PolygonPolylineClip = intersection_pl;
 const _: PolygonPolylineClip = diff_pl;
 const _: OpenPolylineClip = difference_open_polylines;
+const _: OpenPolylineClip = intersection_open_polylines;
 const _: fn(&Polygon) -> f64 = Polygon::area;
 const _: fn(Polygon, Vec<Polygon>) -> ExPolygon = ExPolygon::new;
 const _: fn(&ExPolygon) -> &Polygon = ExPolygon::contour;
@@ -169,8 +186,10 @@ const _: BinaryExOperation = difference_ex_with_safety_offset;
 const _: PolygonClipOperation = difference_ex_polygons;
 const _: PolygonClipOperation = difference_ex_polygons_with_safety_offset;
 const _: PolygonBinaryExOperation = difference_polygons_ex;
+const _: PolygonBinaryExOperation = difference_polygons_ex_with_safety_offset;
 const _: BinaryExOperation = intersection_ex;
 const _: MixedPolygonExOperation = intersection_polygons_ex;
+const _: PolygonBinaryExOperation = intersection_polygons_polygons_ex;
 const _: BinaryExOperation = union_expolygons;
 const _: BinaryExOperation = xor_ex;
 const _: ExPolygonsOffsetOperation = offset_expolygons;
@@ -202,6 +221,9 @@ const _: fn(&EdgeGrid, usize) -> &[Point] = EdgeGrid::contour;
 const _: fn(&EdgeGrid, GridEdge) -> (Point, Point) = EdgeGrid::segment;
 const _: fn(&EdgeGrid, Point, Point, EdgeGridVisitor) =
     EdgeGrid::visit_cells_intersecting_box::<EdgeGridVisitor>;
+const _: EdgeGridClosestPointQuery = EdgeGrid::closest_point_signed_distance;
+const _: fn(&EdgeGrid, Point, Point, EdgeGridVisitor) -> Result<(), ClipperError> =
+    EdgeGrid::visit_cells_intersecting_line::<EdgeGridVisitor>;
 
 #[cfg(test)]
 mod tests;

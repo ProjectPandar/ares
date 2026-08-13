@@ -192,10 +192,13 @@ ordinary clipping and must be absent before and after each Z execution.
 `KernelPoint`, Z paths, sidecars, and Z adapters are visible only inside the
 geometry module; they are not a second clipping engine or a public 3-D API.
 
-Region-expansion seed discovery may widen the fixed MSVC-sort helper only to
-geometry-private visibility and sorts a `Vec<usize>` permutation. The accepted
-MSVC STL 14.44 control flow, threshold, comparators, and lack of tie-breakers
-remain unchanged.
+Region-expansion seed discovery widens the fixed MSVC-sort helper to geometry-
+private visibility and sorts a `Vec<usize>` permutation. Task 22O.44's
+source-cited `Fill::connect_infill` rewrite widens the same helper to crate-
+private visibility because its two upstream `std::sort` calls have output-
+affecting comparator-equivalent records. Both consumers retain the accepted
+MSVC STL 14.44 control flow, threshold, source comparators, and lack of tie-
+breakers; neither exposes the helper publicly or substitutes a host sort.
 
 ### Platform and license boundary
 

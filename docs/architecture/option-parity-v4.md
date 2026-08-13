@@ -10,8 +10,9 @@ Tier-1 run `31156094839` passed at
 released as implementation commit `55c2c23` and documentation commit `118f6a7`;
 its exact-SHA Tier-1 run `31168584784` passed all format, WASM/browser, Linux,
 Windows, and macOS jobs at
-`118f6a72b33926efe41ced1c931f9a51b26b2945`. O29 adds no lifecycle wiring, so
-public slicing still consumes O26 and returns `ProjectSlicingIncomplete`.
+`118f6a72b33926efe41ced1c931f9a51b26b2945`. O29 added no lifecycle wiring;
+the current local lifecycle progression is summarized at the end of this
+status section.
 O30 direct supplied-seed `propagate_waves_ex` was released as commits
 `0a19939`/`6ccb145`; exact-SHA Tier-1 run `31184069746` passed all five jobs at
 `6ccb145dbb1867e5724538fb071795a7fd4179f0`. O31 source/scalar
@@ -39,7 +40,9 @@ five jobs and both browser executions at
 selection was released as commits `04920e0`/`2d6154d`; exact-SHA Tier-1 run
 `31303115603` passed all five jobs and both browser executions at
 `2d6154d401c3c954bed69de6ba631a53af05f1a3`. O38 remains crate-private and
-inactive. O39 is locally implemented as the bounded
+inactive. O39 was released as commits `2038e93`/`c84119e`; exact-SHA Tier-1
+run `31317150231` passed all five jobs and both browser executions at
+`c84119ee6871a176ec94117bc16f7e402c9caf96`. O39 is the bounded
 `detect_bridge_directions` composition at `LayerRegion.cpp:262-308`, preserving
 the supplied-order forward anchor cursor, source-width boundary casts,
 contour/hole order, scaled-epsilon Miter-3 expansion, non-recombining open-path
@@ -49,12 +52,19 @@ GREEN, original-Orca multi-bridge/missing-boundary helper matrix, reviewed
 literals/pointer ownership, M01-M28 campaign, exact restoration, and both
 implementation rereviews pass. Complete exact-final-byte native/WASM/static/
 rollback verification passes; both local Playwright attempts failed before test
-execution on missing `libglib-2.0.so.0`, so both exact-SHA CI browser executions
-remain mandatory. O39 remains inactive and unreleased pending final reviews,
-separate commits, push, and exact-SHA Tier-1. O35-O39 add no Option or lifecycle
-wiring, so public slicing still consumes O26 and returns
-`ProjectSlicingIncomplete`.
-Bridge merge/external-surface orchestration, surface/toolpath stages, complete
+execution on missing `libglib-2.0.so.0`, and neither was treated as a pass. The
+later exact-SHA run supplies the required browser evidence. O39 remains
+inactive. O40 locally implements the next `merge_bridges` boundary at
+`LayerRegion.cpp:310-351`, including source-to-expansion association, root-
+group collection, per-group Miter-3 flat closing, and bottom-bridge surface
+materialization. Its focused tests and independent pinned-Orca closing oracle
+pass; after repairing the initial review's rustfmt, coverage, and citation
+findings, the same six-dimensional thread approved O40 with zero findings. It
+remains inactive and unreleased. O35-O41 add no Option or lifecycle wiring.
+The current local O42 activates external-surface processing after O26, and the
+current local O43 activates internal-bridge candidate discovery after O42;
+public slicing consumes O43 and returns `ProjectSlicingIncomplete` before
+anchor generation. Later bridge processing, fill/toolpath stages, complete
 G-code assembly, and normalized KSR parity remain deferred.
 
 ## Fixed baseline
@@ -4101,7 +4111,529 @@ restoration, and both implementation rereviews pass. Complete exact-final-byte
 native/WASM/static/exact-O38 rollback verification also passes, including
 workspace Nextest 6,094/6,094 with two skipped and warning-denying Clippy. Both
 local Playwright attempts failed before test execution on missing
-`libglib-2.0.so.0`; both exact-SHA CI browser executions remain mandatory. O39
-is inactive and unreleased pending final reviews, separate commits, push, and
-exact-SHA Tier-1. `merge_bridges` at `LayerRegion.cpp:310-351`, orchestration,
-Options, and downstream G-code remain deferred.
+`libglib-2.0.so.0`; neither was treated as a pass. Implementation/documentation
+commits `2038e93491de89e33f12ecb5379132a013bfc996` /
+`c84119ee6871a176ec94117bc16f7e402c9caf96` were pushed, and exact-SHA Tier-1
+run `31317150231` passed all five jobs and both browser executions at the
+documentation SHA. O39 is released but inactive.
+
+Task 22O.40 locally implements the source-cited `merge_bridges` boundary at
+`LayerRegion.cpp:310-351`. The crate-private function consumes O37/O39 bridge
+records and sorted O36 expansion records, resolves every bridge to its root,
+flattens each member contour then holes and matching expansion contours/holes,
+applies Miter-3 morphological closing per group, and emits default
+`BottomBridge` surfaces with only the root angle. Its Rust ownership model
+removes the C++ iterator field and uses temporary contiguous source ranges;
+pointer identity, partial mutation, and malformed internal inputs are not API
+contracts.
+
+The compiling stub RED failed the first emitted-surface assertion. Eight O40
+behavior tests pass, including exact contour/hole/order output from an
+independently compiled pinned-Orca Debug/`NDEBUG` flat-closing oracle and a
+three-bridge case that detects accidental global closing. O35-O40 focused
+regressions pass 69/69; workspace Nextest passes 6,101/6,101 with two skipped;
+warning-denying Clippy, rustfmt, native/wasm32 checks, diff, LOC, include, and
+fixture-branch audits pass. The public normalized KSR golden still fails at the
+pre-core CLI `--options` requirement. The same six-dimensional review thread
+approved the repaired candidate with zero findings. O40 remains crate-private,
+inactive, and unreleased. `expand_bridges_detect_orientations` at
+`LayerRegion.cpp:395-437`, external-surface lifecycle integration, Options,
+adapters, and downstream G-code remain deferred.
+
+Six O41 tests cover the sorted zone-major composition, exact no-op and mixed
+surface ownership, default output metadata, selective zone clipping, and first
+and later expansion-error mutation order. Focused O41 passes 6/6 and all
+external-surface regressions pass 53/53; workspace warning-denying Clippy,
+rustfmt, diff, and LOC checks pass. The normalized KSR probe remains the
+expected RED at the CLI `--options` boundary.
+
+Workspace Nextest passes 6,107/6,107 with two skipped. The initial independent
+review requested the direct sorting and first/later error-ledger tests; after
+those repairs and complete gate reruns, the same six-dimensional reviewer
+approved O41 without remaining findings.
+
+## Task 22O.41 bridge-orientation orchestration boundary
+
+O41 ports pinned
+`LayerRegion.cpp:395-437::expand_bridges_detect_orientations` into one inactive
+crate-private composition seam. It moves only `BottomBridge` geometry, invokes
+the O36/O37/O39/O40 rewrite helpers in upstream order, sorts anchors and
+expansions by the upstream keys, and clips only zones whose expansion stage set
+`expanded_into`. The explicit `CoordinateScale` remains platform-neutral and
+all Clipper errors propagate without fallback. This creates no new public API
+or architecture decision; active `process_external_surfaces`, configuration,
+adapters, and downstream G-code remain deferred.
+
+## Task 22O.42 external-surface successor boundary
+
+O42 replaces the inactive external-surface helper scaffold with one active,
+deep crate-private successor for pinned
+`LayerRegion.cpp:486-623::process_external_surfaces`. Its record boundary owns
+the destructive surface normalization; its lifecycle adapter consumes
+`PreparedPostHorizontalShellPropagation` immediately after O26, matching
+`PrintObject.cpp:610-641`. The adapter resolves no new configuration: it uses
+the surviving composed `RegionOptions`, integer-scaled Classic prelude fields,
+record model rotation, global print spiral mode, and `CoordinateScale`.
+
+The owned stage mutates records directly and drops/disposes the graph on a
+Clipper failure. It deliberately does not clone the full project for rollback,
+because no failed successor is externally observable. The only new surface
+operation sets inherited thickness on a freshly defaulted `RegionSurface`.
+Lower-layer covered-area caching is not part of this boundary because the
+pinned active callee does not read it. Public slicing advances through O42 and
+still terminates explicitly at the next missing upstream stage.
+
+The repaired boundary is covered by 19/19 focused O42 tests, 72/72 complete
+external-surface tests, and a 119/119 O24-O26/O40-O42 regression band. Public
+activation and disposal are observed through `slice_project`; all 460 KSR
+records carry independent traversal evidence; and a real 3MF minimum-area
+mutation changes controlled adapter output. Workspace Nextest passes
+6,126/6,126 with 27 slow and two skipped, while warning-denying Clippy,
+rustfmt, WASM, diff, LOC, and include audits pass. The final independent
+standards, specification, and upstream-parity re-review returned unconditional
+approval with no findings.
+
+## Task 22O.43 internal-bridge candidate successor boundary
+
+O43 activates the first owned successor for pinned
+`PrintObject.cpp:2467-2591::PrintObject::bridge_over_infill` after O42. The
+pinned-disabled `clip_fill_surfaces` call remains a documented identity, not a
+Rust lifecycle type. The successor stores stable candidate indices and owned
+polygon paths while preserving the O42 graph for later source-cited bridge
+angle and surface-commit slices.
+
+The stage projects only existing composed inputs: each object's complete
+effective-region set for Lightning, each aligned record's current solid
+spacing, lower-region density, filter policy, and coordinate scale. It adds no
+Option, parser default, public API, fallback, platform branch, or approximate
+CrossHatch substitution. An aligned empty lower record contributes empty
+geometry; absent physical lower links are skipped. Geometry failures consume
+and dispose the unobservable predecessor rather than cloning it for rollback.
+
+The repaired boundary passes O43 35/35, the O24-O26/O40-O43 band 154/154, and
+workspace Nextest 6,161/6,161 with 27 slow and two skipped. Warning-denying
+workspace Clippy, rustfmt, WASM, and static audits pass. Candidate discovery is
+therefore available to the next exact `bridge_over_infill` rewrite slice, but
+public slicing remains explicitly incomplete and the normalized golden remains
+RED at the pre-core CLI contract.
+
+The final independent standards and specification/upstream reviews approve
+the repaired O43 boundary unconditionally with no remaining findings.
+
+## Task 22O.44 boundary-connection dependency
+
+O44 adds the crate-private source-owned `fill::connect` implementation of
+pinned `Fill::connect_infill`. The interface owns ordered polylines, borrows an
+ExPolygon boundary, receives source-typed anchor fields plus explicit
+`CoordinateScale`, and returns exact connected/hooked polylines or the first
+checked geometry error. Its stable-index graph hides Orca's pointer-linked
+working state, and both active comparator-equivalent sorts reuse the audited
+MSVC 14.44 control flow without a host sort or added tie-break.
+
+This is intentionally a dependency, not another prepared-project checkpoint.
+It does not consume O43, call the legacy infill scaffold, parse configuration,
+or alter the public lifecycle. The 41 focused tests, 76-test dependency band,
+194-test predecessor band, 6,201-test workspace run, warning-denying Clippy,
+rustfmt, WASM, static audits, restored Orca harnesses, and repaired independent
+reviews pass. The public KSR path remains terminal after O43 until a later
+source-cited slice ports complete CrossHatch generation and its anchor-map
+transaction.
+
+## Task 22O.45 CrossHatch fill-surface dependency
+
+O45 adds the dependency-first crate-private `fill::cross_hatch` transaction
+for pinned public `Fill::fill_surface`, complete `FillCrossHatch`, the active
+O44 dispatch, and multiline one. Its deep owned-result interface accepts one
+raw ExPolygon plus already-resolved source-typed fields and explicit
+`CoordinateScale`, then owns inset-component order, lattice generation, open
+clipping, strict filtering, O44 connection, and rotate-back. The legacy
+`infills` scaffold remains an uncalled compatibility shell.
+
+Exact public Orca, raw-pattern-order, and arithmetic harnesses cover both
+scales and source arithmetic/order. The LargeBed fixture correction preserves
+`scaled<coord_t>` truncation toward zero, and all four LargeBed cases pass.
+Sixteen reversible arithmetic/composition/f32-repeat-ratio mutants are RED and
+production is restored byte-for-byte. O45 passes 34/34 focused tests, its
+305-test dependency band, the 228-test predecessor band, and the 6,235-test
+workspace run with 30 slow and two skipped; warning-denying Clippy, rustfmt,
+wasm32, and static audits pass. Final independent source/specification and
+standards reviews unconditionally approve this implemented and gate-verified
+state.
+
+This dependency does not consume O43 or create a public prepared checkpoint.
+Public slicing still disposes O43 and returns `ProjectSlicingIncomplete`, and
+the unchanged missing-`--options` golden probe remains the expected RED. O45
+therefore makes no public option, activation, or G-code parity claim. O46 is
+scheduled to port the public Layer anchoring result with its exact-corpus
+bridge-angle/pattern grouping plus nominal sparse Flow/angle projection.
+Complete generic `group_fills`, the
+transaction-local lower-layer anchor map, Lightning generation, and later
+bridge/fill/toolpath/motion/G-code/CLI behavior remain source-cited future
+slices.
+
+## Task 22O.46 sparse-anchoring dependency
+
+O46 implements the crate-private rewrite of pinned
+`Layer::generate_sparse_infill_polylines_for_anchoring`, returning only final
+ordered sparse polylines. Its private implementation processes every retained
+KSR group through mutual priority geometry before filtering `Internal`, using
+the KSR-observable decreasing f32 bridge-angle and explicit pattern-rank ordered
+coalescing, then calls O45 with exact nominal sparse Flow, angle, density,
+anchors, accumulated Z, zero overlap, explicit scale, and `dont_sort=false`.
+
+The seam does not create a prepared successor or production lower-layer map.
+Public slicing remains terminal at O43. Generic grouping, post-priority
+non-sparse repair, other patterns, adaptive/Lightning state, map ownership,
+bridge commit, extrusion, motion, G-code, and CLI activation remain deferred.
+The strict global fixed-MSVC proof rebuilt 209 affected objects per mode and
+confirmed Debug/Release identity: 103 calls, 1,507 endpoint records/zero ties,
+1,439 arc records/2,700 ties across 30 calls and 82 classes, and the normative
+186-path / 5,941-point ordered digest `917adc6e...`. The exact per-layer table
+has SHA-256 `bf531afc...`; the previous Linux, hybrid, and captured-input
+results are diagnostic or rejected. Final focused 6/6, dependency 625/625, and
+workspace 6,241/6,241 Nextest runs, rustfmt, warning-denying workspace Clippy,
+core/browser wasm32, diff/LOC/static audits, and the unchanged ignored golden
+progress probe pass; the 18-case reversible mutation audit is fully killed and
+restored byte-exact; independent source/specification and standards rereviews
+approve unconditionally.
+
+## Task 22O.47 deep sparse bridge-area dependency
+
+O47 consumes the already-resolved embedded `sparse_infill_density` attached to
+each retained lower-layer view and ports pinned
+`PrintObject.cpp:2819-2846::gather_areas_w_depth`. The operation uses no raw
+configuration map or external option file: it receives typed density, planned
+`print_z`, post-O42 surfaces, caller-resolved target bridge height, and the
+existing coordinate scale.
+
+The 18-layer KSR regression also derives its target height from embedded
+`bridge_line_width`, `bridge_flow`, and `nozzle_diameter`, then freezes 115
+flat Polygons / 5,641 points and ordered SHA-256
+`f28db7dd3fc63155752ba5c33d4cd6338b2e311d83eb973c473d7f65268aa92a`.
+Focused tests prove per-layer density changes affect classification rather than
+a fixture-name or layer-index branch.
+
+This remains an unwired dependency. The later bridge transaction is deferred;
+no fallback, external options, public lifecycle activation, or G-code output is
+introduced.
+
+## Task 22O.48 thick solid-infill bridge Flow dependency
+
+O48 consumes effective embedded `internal_solid_filament_id`,
+`bridge_line_width`, `bridge_flow`, and `nozzle_diameter` through the typed
+project graph. The source-cited `frSolidInfill, thick_bridge=true` resolver
+preserves selector element-zero fallback, percent/absolute width evaluation,
+f64 square root followed by f32 multiplication, circular thread spacing, and
+volume bits in the existing Flow model.
+
+The O47 KSR regression now derives target height exclusively through O48 and
+retains its exact ordered geometry digest. Final verification passes focused
+7/7, combined O47/O48 16/16, dependency 597/597, and workspace 6,257/6,257
+Nextest, warning-denying workspace Clippy, rustfmt, core/browser wasm32, diff,
+LOC, and static audits. Independent six-axis repair/re-review ends in
+unconditional approval. No raw option map, external JSON, fixture identity
+branch, legacy Flow, or lifecycle activation is introduced.
+
+## Task 22O.49 internal bridge angle override dependency
+
+O49 consumes effective embedded `internal_bridge_angle`,
+`relative_bridge_angle`, and `align_infill_direction_to_model` through the O43
+candidate region and uses the already-retained print-object occurrence rotation
+from `PerimeterInputRecord`. It ports pinned `PrintObject.cpp:3253-3267` with
+exact `PI * degrees / 180` ordering, relative addition, absolute replacement,
+and absolute-only model alignment.
+
+Three KSR tests traverse all 43 candidates. The default archive remains exact
+zero pass-through; two semantic archive mutations enable the same pi/2
+occurrence rotation and positive angle, proving that absolute mode adds the
+rotation while relative mode ignores it. Final verification passes focused
+8/8, dependency 605/605, and workspace 6,265/6,265 Nextest,
+warning-denying workspace Clippy, rustfmt, core/browser wasm32, diff, LOC, and
+static audits. Independent six-axis repair/re-review ends in unconditional
+approval. No raw option map, fixture identity branch, legacy
+`InfillOptions` fallback, lifecycle activation, or G-code output is introduced.
+
+## Task 22O.50 nearest anchor-line tree dependency
+
+O50 ports the balanced indexed-line tree reached by
+`PrintObject.cpp::determine_bridging_angle`, including exact implicit layout,
+median-of-three QuickSelect, pinned-Eigen bbox distance conversions, recursive
+traversal and strict tie ownership, and source-order line projection. It
+introduces no option: the tree borrows existing geometry lines and returns the
+nearest original index, squared distance, and projected point.
+
+Literal tests derived from a standalone driver using the actual pinned Orca
+and Eigen templates cover empty/degenerate/interior projections, equal
+centroids, non-power-of-two layouts, containment, right-first bbox ties,
+coordinates above 2^53, and `HI_RANGE`. Final gates pass focused 8/8,
+dependency 613/613, and workspace 6,273/6,273 Nextest, warning-denying Clippy,
+rustfmt, core/browser wasm32, diff, LOC, and static audits. The seam remains
+crate-private and unwired; automatic direction aggregation and the bridge
+transaction remain deferred.
+
+## Task 22O.51 automatic bridge-angle dependency
+
+O51 consumes no new option surface. It accepts the already typed dominant
+`ProcessInfillPattern`, runtime coordinate scale, borrowed bridge polygons, and
+borrowed anchor lines, then ports pinned
+`PrintObject.cpp::determine_bridging_angle` on O50. Exact integer-scaled 2-mm
+sampling, Eigen/f32 cast order, ordered numeric direction buckets, periodic
+windows, strict score ownership, fallback, and Hilbert/Octagram adjustments are
+preserved.
+
+Final gates pass focused 9/9, dependency 622/622, and workspace 6,282/6,282
+Nextest, warning-denying Clippy, rustfmt, core/browser wasm32, diff, LOC, and
+static audits. No raw option map, fixture identity branch, host sort/hash
+bucket, public lifecycle activation, or G-code output is introduced.
+
+## Task 22O.52 indexed line query dependency
+
+O52 consumes no new option surface. It extends O50's borrowed line tree with the pinned `intersections_with_line<true>` and `outside` operations required by `PrintObject.cpp::construct_anchored_polygon`, including original-line indices, truncating source intersection arithmetic, fixed-MSVC equal-key sorting, shared-vertex ownership, and exact X/Y parity fallback.
+
+Final gates pass focused 8/8, dependency 630/630, and workspace 6,290/6,290 Nextest, warning-denying Clippy, rustfmt, core/browser wasm32, diff, LOC, and static audits. Five reversible mutations are killed and production restored byte-exact. No raw option map, external input, host sort, public lifecycle activation, or G-code output is introduced.
+
+## Task 22O.53 anchored bridge polygon dependency
+
+O53 consumes no new option surface. It accepts the existing typed O48 `Flow`, runtime coordinate scale, borrowed bridge polygons and anchor lines, then ports pinned `PrintObject.cpp:2939-3111::construct_anchored_polygon` on O50-O52. Exact rotation, centered scanlines, anchor extension, fixed-MSVC section ordering, trace identity, flat Paths safety union, and inverse rotation are preserved.
+
+Pinned-C++/fixed-MSVC-replayed normal and large-scale literals match exactly. Final gates pass focused 20/20, dependency 650/650, workspace 6,310/6,310, warning-denying Clippy, wasm32, Windows/macOS cross-checks, rustfmt, diff, LOC, and static audits. Nineteen mutations are killed and restored byte-exact. No raw option map, external input, fixture identity branch, lifecycle activation, or G-code output is introduced.
+
+## Task 22O.54 bridge candidate-layer clustering dependency
+
+O54 consumes O43 candidate geometry, planned layer Z, runtime coordinate scale,
+and the effective region-zero O48 thick solid bridge Flow. It ports pinned
+`PrintObject.cpp:2763-2818`: sequential flat union of rounded 7-mm inflated
+candidate AABBs followed by exact strict Z-gap and previous-tail intersection
+clustering.
+
+Actual-source/fixed-MSVC-order normal and large-scale literals match exactly.
+Final gates pass focused 11/11, dependency 661/661, workspace 6,321/6,321,
+warning-denying Clippy, wasm32, Windows/macOS cross-checks, rustfmt, diff, LOC,
+and static audits. Fifteen mutations are killed and restored byte-exact,
+including raw-nozzle, ignored bridge-width, and ignored bridge-flow bypasses. No raw
+option map, candidate-region flow selection, scheduler, terminal adapter,
+lifecycle activation, or G-code output is introduced.
+
+## Task 22O.55 bridge candidate ordering dependency
+
+O55 consumes no new option. It moves owned O43 candidates through pinned
+`PrintObject.cpp:3127-3153` ordering: fixed-MSVC minimum-X/minimum-Y first sort,
+then stable tail distance ordering from the post-sort front maximum. Task-local
+source-shaped bounding keys preserve undefined extent semantics, and payload
+allocations remain unchanged.
+
+Pinned candidate/BoundingBox/Eigen/fixed-MSVC literals match exactly. Final
+gates pass focused 12/12, dependency 673/673, workspace 6,333/6,333, strict
+Clippy, wasm32, Windows/macOS, formatting/static checks, and thirteen
+killed/restored mutations. No raw option map, host-dependent first sort,
+geometry clone, lifecycle activation, or G-code output is introduced.
+
+## Task 22O.56 lower-cluster bridge subtraction dependency
+
+O56 consumes no new option surface. It accepts the transaction-composed,
+already-promoted O55-front candidate-region target height and borrowed
+postprocessed history from earlier jobs in the same O54 cluster. It ports
+pinned `PrintObject.cpp:3160-3179`: exact bottom-Z arithmetic, reverse inclusive
+history traversal, source-order flattening, and one unconditional flat
+difference.
+
+Pinned-source/fixed-MSVC-order literals match exactly. Final gates pass focused
+10/10, dependency 683/683, workspace 6,343/6,343, strict Clippy, wasm32,
+Windows/macOS, formatting/static checks, and ten killed/restored mutations. No
+raw option map, pre-expansion-history fallback, repeated difference, lifecycle
+activation, or G-code output is introduced.
+
+## Task 22O.57 current-layer bridge expansion context dependency
+
+O57 consumes only typed `ProcessInfillPattern` ownership from each current-layer
+region plus transaction-composed O46 lower-layer lines, O56 deep area, O48
+front-candidate-region scaled spacing, and `CoordinateScale`. It ports pinned
+`PrintObject.cpp:3181-3205`: exact expansion/shrink arithmetic, Top/Internal/
+InternalSolid/all-fill/Lightning selection, scale-epsilon closing, deep
+intersection, and ordered anchor clipping. Spacing is strictly positive, and
+source epsilon is computed directly from the coordinate-scale factor without an
+integer intermediate.
+
+No raw option map, default option fallback, pattern inference, filesystem input,
+lifecycle activation, or G-code output is introduced. Pinned actual-source
+ordered literals match exactly. Final gates pass focused 15/15, dependency
+698/698, workspace 6,358/6,358, strict Clippy, wasm32, Windows/macOS,
+formatting/static checks, and nineteen killed behavioral mutations including
+both operation-order transformations.
+
+## Task 22O.58 candidate bridge area filtering dependency
+
+O58 consumes no new option surface. The future composer supplies the current
+O55 candidate's O43 polygons, O57 deep/unsupported/expansion geometry, and that
+candidate region's O48 `scaled_spacing()`. The private seam ports pinned
+`PrintObject.cpp:3215-3224` without raw-option lookup, fallback Flow, pattern
+inference, lifecycle activation, or G-code output.
+
+Removed actual-source literals match exactly; fifteen mutations, including
+repeated-union and two competing-error-order variants, were killed and source
+restored byte-exact. Final gates pass focused 10/10, dependency 708/708,
+workspace 6,368/6,368, strict Clippy, wasm32, Windows/macOS,
+formatting/static/clean-Orca/no-staged checks, and independent six-axis
+re-review approval.
+
+## Task 22O.59 candidate boundary polyline dependency
+
+O59 consumes no new option surface. The future composer supplies the O58
+candidate area and the selected candidate region's exact O48-derived
+`scaled_spacing()` and `spacing()` values. The private seam ports pinned
+`PrintObject.cpp:3226-3233` without raw-option lookup, fallback Flow, pattern
+inference, lifecycle activation, or G-code output.
+
+Removed actual-source literals match exactly; nineteen mutations, including
+explicit ascending output sorting, were killed and source restored byte-exact. Final gates pass focused 10/10, dependency
+718/718, workspace 6,378/6,378, strict Clippy, wasm32, x86_64/aarch64 Windows
+and macOS, formatting/static/clean-Orca/no-staged checks.
+
+## Task 22O.60 candidate bridge angle composition dependency
+
+O60 consumes no new raw option surface. The future composer supplies O58
+`area_to_be_bridge`, O57 anchors, O59 fallback boundaries, the candidate
+region's already-resolved `sparse_infill_pattern` plus O49 override options,
+retained `model_rotation_rad`, and coordinate scale. The private seam ports
+pinned `PrintObject.cpp:3242-3267` and `Polyline.hpp:169-193` without inferring
+Flow/options, reviving the source's commented-out `infill_direction` behavior,
+activating lifecycle, or emitting G-code.
+
+The real-KSR test traverses all 43 O43 candidates to the resolved CrossHatch
+region and retained rotation, then verifies exact O60 output bits and complete
+input preservation. Focused 7/7, dependency 2,354/2,354, workspace
+6,385/6,385, strict lint/format, five portability builds, and nineteen mutation
+kills pass; final independent six-axis re-review approved unconditionally.
+
+## Task 22O.61 candidate anchored bridge dependency
+
+O61 consumes no new raw option surface. The future composer supplies O57 anchors
+and Lightning area, O58 bridge area, owned O59 boundaries, exact O48 Flow, O60
+angle, and retained coordinate scale. The private seam ports
+`PrintObject.cpp:3268-3272` without inferred options, lifecycle activation, or
+G-code output; collision and surface commit remain deferred.
+
+Real-KSR provenance reaches the embedded CrossHatch region, exact O48 Flow, O60
+angle, and retained scale without input mutation. Focused/KSR 9/9, dependency
+2,363/2,363, workspace 6,394/6,394, strict gates, portability, and twenty-three
+mutation kills pass; final independent six-axis implementation review approved
+unconditionally.
+
+## Task 22O.62 candidate collision reconstruction dependency
+
+O62 consumes no new raw option surface. It receives exact O48 Flow, O61 owned
+boundaries/initial bridge polygons, borrowed prior-completed O43-shaped records,
+original candidate area, current angle, and retained coordinate scale from the
+future composer. Those records must contain `new_polygons` history postprocessed
+at source lines `3292-3297` and appended at `3304-3305` in exact append order;
+raw O43 candidate geometry is forbidden and producing history remains deferred. The
+private seam ports `PrintObject.cpp:3274-3288` without option inference,
+postprocessing, commit, lifecycle activation, or G-code output.
+
+Focused 8/8, dependency 2,371/2,371, workspace 6,402/6,402, strict gates, five
+portability builds, and 26/26 mutation kills pass. Final independent six-axis
+implementation review approved unconditionally.
+
+## Task 22O.63 bridge postprocessing dependency
+
+O63 consumes no new raw option surface. It receives exact O48 Flow, owned O62
+collision state and expansion area, borrowed limiting/total-fill/total-top
+areas, and retained coordinate scale from the future composer. The private seam
+ports `PrintObject.cpp:3290-3298` without option inference, candidate commit,
+lifecycle activation, or G-code output.
+
+Focused 7/7, dependency 2,378/2,378, workspace 6,409/6,409, strict gates, five
+portability builds, and 25/25 mutation kills pass. Final independent six-axis
+implementation review approved unconditionally.
+
+## Task 22O.64 bridge candidate commit dependency
+
+O64 consumes no new raw option surface. It receives O43 stable candidate
+identity and successful owned O63 state from the future composer. The private
+seam ports `PrintObject.cpp:3304-3310` candidate append and per-layer swap/clear
+without option inference, geometry work, second-pass behavior, lifecycle
+activation, or G-code output.
+
+Focused 6/6, dependency 2,384/2,384, workspace 6,415/6,415, strict gates, five
+portability builds, and 16/16 mutation kills pass. Final independent six-axis
+implementation review approved unconditionally.
+
+## Task 22O.65 bridge rewrite-area dependency
+
+O65 consumes no new raw option surface. The future composer supplies O64
+current/upper committed candidates, each upper candidate's Task 22N-resolved
+normal solid-infill Flow, and retained object scale. The future composer only
+projects source/layer/region identity to that record. The private seam ports
+`PrintObject.cpp:3318-3319,3322-3336` without option inference, map traversal, region
+rewrite, lifecycle activation, or G-code output.
+
+Focused 9/9, dependency 2,393/2,393, workspace 6,424/6,424, strict gates, five
+portability builds, and 24/24 compiling mutation kills pass. Final independent
+six-axis implementation review approved unconditionally.
+
+## Task 22O.66 region bridge ensuring-area dependency
+
+O66 consumes no new raw option surface. The future composer supplies all current
+region fill surfaces, O65 `additional_ensuring_areas`, the region's exact Task
+22N-resolved normal solid-infill Flow, and retained object scale. The private
+seam ports `PrintObject.cpp:3341-3343` without option inference, surface-kind
+filtering, region mutation, lifecycle activation, or G-code output.
+
+Focused 6/6, dependency 782/782, workspace 6,442/6,442, strict and five
+portability gates, and 18/18 compiling mutation kills pass. Final independent
+review is pending.
+
+Internal infill/solid rebuilding, bridge conversion, region replacement, second
+pass, composer, CLI, and full golden parity remain deferred.
+
+Focused 12/12, dependency 776/776, workspace 6,436/6,436, strict gates, five
+portability builds, and 30/30 compiling mutation kills, including safety
+difference/intersection, pass. Final independent
+six-axis implementation review approved unconditionally.
+
+## Task 22O.67 internal infill rebuild dependency
+
+O67 consumes no new raw option surface. The future composer supplies current
+region surfaces plus exact O65 cut and O66 ensuring geometry. The private seam
+ports `PrintObject.cpp:3345-3350` with two default no-safety differences and
+fresh default-metadata Internal records, without option inference, region
+mutation, lifecycle activation, or G-code output.
+
+## Task 22O.68 internal bridge surface conversion dependency
+
+O68 consumes no new raw option surface. The future composer supplies current
+region surfaces and the exact O64 committed candidate history. The private seam
+ports pinned `PrintObject.cpp:3352-3367`: stable region/source-index matching,
+default-NonZero candidate union, source metadata copying, InternalBridge retag,
+angle replacement, and ordered fresh output without region mutation, lifecycle
+activation, or G-code output.
+
+Focused 6/6, dependency 788/788, workspace 6,448/6,448, strict gates, five
+portability builds, and 14/14 compiling mutation kills pass. Solid recomposition,
+composer, CLI, and full golden parity remain deferred.
+
+## Task 22O.69 internal solid recomposition dependency
+
+O69 consumes no new raw option surface. The future composer supplies current
+region surfaces plus exact O65 cut and O66 additional-ensuring geometry. The
+private seam ports pinned `PrintObject.cpp:3368-3374`: stable InternalSolid
+selection, ordered ensuring append, one no-safety difference, one safety union,
+and fresh default-metadata InternalSolid output without region mutation,
+lifecycle activation, or G-code output.
+
+Focused 6/6, dependency 794/794, workspace 6,454/6,454, strict gates, five
+portability builds, and 26/26 compiling mutation kills pass. Region commit,
+composer, CLI, and full golden parity remain deferred.
+
+## Task 22O.70 region bridge surface commit dependency
+
+O70 consumes no new raw option surface. The future composer supplies the
+current region's owned fill collection and the complete borrowed O67/O68/O69
+rebuilt sequence. The private seam ports pinned `PrintObject.cpp:3385-3386`:
+stable removal of prior InternalSolid/Internal surfaces followed by ordered
+copy-append, without option inference, geometry, lifecycle activation, or
+G-code output.
+
+Focused 3/3, workspace 6,457/6,457 with two skipped, strict gates, five
+portability builds, and 15/15 compiling mutation kills pass. Composer wiring,
+the second internal-bridge pass, CLI, and full golden parity remain deferred.

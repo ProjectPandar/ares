@@ -1,5 +1,6 @@
 mod horizontals;
 mod input;
+mod intersection;
 mod large_coordinates;
 mod operations;
 mod polygon_overloads;

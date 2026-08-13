@@ -6,4 +6,5 @@ mod flow_edges;
 pub(super) mod layer_region;
 mod oracle;
 mod preflight;
+mod thick_bridge_flow;
 mod types;

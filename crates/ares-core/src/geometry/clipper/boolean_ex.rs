@@ -1,6 +1,6 @@
 use super::{
     ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, JoinType, PathRole,
-    offset_paths_tree, raw_offset_paths,
+    offset_expolygons, offset_paths_tree, raw_offset_paths,
 };
 use crate::geometry::{ExPolygon, Polygon};
 
@@ -61,11 +61,35 @@ pub(crate) fn difference_ex_polygons_with_safety_offset(
     execute_ex_with_paths(subject, &expanded, ClipOperation::Difference)
 }
 
+pub(crate) fn difference_polygons_ex_with_safety_offset(
+    subject: &[Polygon],
+    clip: &[Polygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    let mut expanded = Vec::new();
+    for polygon in clip {
+        append_safety_offset(polygon, &mut expanded)?;
+    }
+    let mut paths_clipper = Clipper::new(ClipperOptions::default());
+    paths_clipper.add_closed_paths(subject, PathRole::Subject)?;
+    paths_clipper.add_closed_paths(&expanded, PathRole::Clip)?;
+    execute_two_pass(&mut paths_clipper, ClipOperation::Difference)
+}
+
 pub(crate) fn intersection_ex(
     subject: &[ExPolygon],
     clip: &[ExPolygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     execute_ex(subject, clip, ClipOperation::Intersection, PathRole::Clip)
+}
+
+pub(crate) fn intersection_polygons_polygons_ex(
+    subject: &[Polygon],
+    clip: &[Polygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    let mut paths_clipper = Clipper::new(ClipperOptions::default());
+    paths_clipper.add_closed_paths(subject, PathRole::Subject)?;
+    paths_clipper.add_closed_paths(clip, PathRole::Clip)?;
+    execute_two_pass(&mut paths_clipper, ClipOperation::Intersection)
 }
 
 pub(crate) fn intersection_polygons_ex(
@@ -89,6 +113,17 @@ pub(crate) fn union_safety_offset_ex(paths: &[Polygon]) -> Result<Vec<ExPolygon>
     Ok(
         offset_paths_tree(paths, SAFETY_OFFSET, JoinType::Miter, SAFETY_MITER_LIMIT)?
             .into_expolygons(),
+    )
+}
+
+pub(crate) fn union_safety_offset_expolygons(
+    expolygons: &[ExPolygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    offset_expolygons(
+        expolygons,
+        SAFETY_OFFSET,
+        JoinType::Miter,
+        SAFETY_MITER_LIMIT,
     )
 }
 

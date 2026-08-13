@@ -1,6 +1,13 @@
+mod bridge_over_infill;
+mod candidate_anchored_bridge;
+mod candidate_bridge_angle;
+mod deep_sparse_area;
+mod external_surfaces;
 mod fill_surfaces;
 mod horizontal_shell_promotion;
 mod horizontal_shell_propagation;
+mod internal_bridge_angle;
+mod sparse_anchoring;
 mod surface_type_detection;
 mod vertical_shell_assignment;
 mod vertical_shell_filtering;

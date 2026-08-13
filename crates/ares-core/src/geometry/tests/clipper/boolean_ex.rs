@@ -1,8 +1,11 @@
 use super::helpers::polygon;
 use crate::geometry::{
     ClipperError, ExPolygon, difference_ex, difference_ex_polygons,
-    difference_ex_polygons_with_safety_offset, intersection_ex, intersection_polygons_ex,
+    difference_ex_polygons_with_safety_offset, difference_polygons_ex_with_safety_offset,
+    intersection_ex, intersection_polygons_ex, intersection_polygons_polygons_ex,
 };
+
+mod errors;
 
 const HI_RANGE: i64 = 0x3fff_ffff_ffff_ffff;
 
@@ -76,6 +79,72 @@ fn task22o2_polygon_clip_difference_preserves_the_safety_offset_overload() {
     assert_eq!(
         difference_ex_polygons_with_safety_offset(&subject, &clip),
         Ok(vec![rectangle_output(0, 0, 490, 1_000)])
+    );
+}
+
+#[test]
+fn task22o46_polygon_subject_safety_difference_preserves_order_and_offset() {
+    let subject = vec![polygon(&[(0, 0), (1_000, 0), (1_000, 1_000), (0, 1_000)])];
+    let clip = vec![polygon(&[
+        (500, 0),
+        (1_500, 0),
+        (1_500, 1_000),
+        (500, 1_000),
+    ])];
+
+    assert_eq!(
+        difference_polygons_ex_with_safety_offset(&subject, &clip),
+        Ok(vec![rectangle_output(0, 0, 490, 1_000)])
+    );
+    assert_eq!(
+        difference_polygons_ex_with_safety_offset(&[], &clip),
+        Ok(Vec::new())
+    );
+    assert_eq!(
+        difference_polygons_ex_with_safety_offset(&subject, &[]),
+        Ok(vec![rectangle_output(0, 0, 1_000, 1_000)])
+    );
+    assert_eq!(
+        difference_polygons_ex_with_safety_offset(
+            &[polygon(&[
+                (HI_RANGE + 1, 0),
+                (HI_RANGE + 1, 10),
+                (HI_RANGE, 10)
+            ])],
+            &clip,
+        ),
+        Err(ClipperError::CoordinateOutOfRange)
+    );
+
+    let ordered_subjects = vec![
+        polygon(&[(0, 0), (1_000, 0), (1_000, 1_000), (0, 1_000)]),
+        polygon(&[(2_000, 0), (3_000, 0), (3_000, 1_000), (2_000, 1_000)]),
+    ];
+    let ordered_clips = vec![
+        polygon(&[(500, 0), (1_500, 0), (1_500, 1_000), (500, 1_000)]),
+        polygon(&[(2_300, 300), (2_700, 300), (2_700, 700), (2_300, 700)]),
+    ];
+    assert_eq!(
+        difference_polygons_ex_with_safety_offset(&ordered_subjects, &ordered_clips),
+        Ok(vec![
+            rectangle_output(0, 0, 490, 1_000),
+            expolygon_with_holes(
+                &[(3_000, 1_000), (2_000, 1_000), (2_000, 0), (3_000, 0)],
+                &[&[(2_290, 290), (2_290, 710), (2_710, 710), (2_710, 290)]],
+            ),
+        ])
+    );
+    assert_eq!(
+        difference_polygons_ex_with_safety_offset(
+            &subject,
+            &[polygon(&[
+                (HI_RANGE - 5, 0),
+                (HI_RANGE, 0),
+                (HI_RANGE, 10),
+                (HI_RANGE - 5, 10),
+            ])],
+        ),
+        Err(ClipperError::CoordinateOutOfRange)
     );
 }
 
@@ -200,6 +269,60 @@ fn task22j_boolean_ex_hole_clip_preserves_nested_island_ownership_order() {
 }
 
 #[test]
+fn task22o66_flat_intersection_preserves_nonzero_topology_and_order() {
+    let subject = vec![
+        polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]),
+        polygon(&[(20, 20), (20, 80), (80, 80), (80, 20)]),
+    ];
+    let clip = vec![polygon(&[(-10, -10), (110, -10), (110, 110), (-10, 110)])];
+
+    assert_eq!(
+        intersection_polygons_polygons_ex(&subject, &clip),
+        Ok(vec![expolygon_with_holes(
+            &[(100, 100), (0, 100), (0, 0), (100, 0)],
+            &[&[(20, 20), (20, 80), (80, 80), (80, 20)]],
+        )])
+    );
+    let square = polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]);
+    assert_eq!(
+        intersection_polygons_polygons_ex(
+            &[square.clone(), square],
+            &[polygon(&[(-10, -10), (110, -10), (110, 110), (-10, 110)])],
+        ),
+        Ok(vec![rectangle_output(0, 0, 100, 100)])
+    );
+}
+
+#[test]
+fn task22o66_flat_intersection_empty_disjoint_and_range_errors_are_exact() {
+    let valid = vec![polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)])];
+    let disjoint = vec![polygon(&[(200, 0), (300, 0), (300, 100), (200, 100)])];
+    let invalid = vec![polygon(&[(HI_RANGE + 1, 0), (0, 1), (0, 2)])];
+
+    assert_eq!(intersection_polygons_polygons_ex(&[], &[]), Ok(Vec::new()));
+    assert_eq!(
+        intersection_polygons_polygons_ex(&valid, &[]),
+        Ok(Vec::new())
+    );
+    assert_eq!(
+        intersection_polygons_polygons_ex(&[], &valid),
+        Ok(Vec::new())
+    );
+    assert_eq!(
+        intersection_polygons_polygons_ex(&valid, &disjoint),
+        Ok(Vec::new())
+    );
+    assert_eq!(
+        intersection_polygons_polygons_ex(&invalid, &valid),
+        Err(ClipperError::CoordinateOutOfRange)
+    );
+    assert_eq!(
+        intersection_polygons_polygons_ex(&valid, &invalid),
+        Err(ClipperError::CoordinateOutOfRange)
+    );
+}
+
+#[test]
 fn task22o24_mixed_intersection_preserves_flat_subject_hole_topology() {
     let subject = vec![
         polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]),
@@ -256,39 +379,5 @@ fn task22o24_mixed_intersection_preserves_multicomponent_nested_island_order() {
             expolygon(&[(60, 60), (40, 60), (40, 40), (60, 40)]),
             expolygon(&[(300, 100), (200, 100), (200, 0), (300, 0)]),
         ])
-    );
-}
-
-#[test]
-fn task22j_boolean_ex_forwards_subject_and_clip_coordinate_errors() {
-    let invalid = vec![ExPolygon::new(
-        polygon(&[(HI_RANGE + 1, 0), (0, 1), (0, 2)]),
-        Vec::new(),
-    )];
-    let valid = vec![rectangle(0, 0, 10, 10)];
-
-    assert_eq!(
-        difference_ex(&invalid, &valid),
-        Err(ClipperError::CoordinateOutOfRange)
-    );
-    assert_eq!(
-        difference_ex(&valid, &invalid),
-        Err(ClipperError::CoordinateOutOfRange)
-    );
-    assert_eq!(
-        intersection_ex(&invalid, &valid),
-        Err(ClipperError::CoordinateOutOfRange)
-    );
-    assert_eq!(
-        intersection_ex(&valid, &invalid),
-        Err(ClipperError::CoordinateOutOfRange)
-    );
-    assert_eq!(
-        intersection_polygons_ex(&[polygon(&[(HI_RANGE + 1, 0), (0, 1), (0, 2)])], &valid,),
-        Err(ClipperError::CoordinateOutOfRange)
-    );
-    assert_eq!(
-        intersection_polygons_ex(&[valid[0].contour().clone()], &invalid),
-        Err(ClipperError::CoordinateOutOfRange)
     );
 }

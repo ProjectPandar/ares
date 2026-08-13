@@ -7,8 +7,10 @@ fn task22o18_surface_kind_values_and_bridge_predicate_match_source() {
     assert_eq!(RegionSurfaceKind::BottomBridge as u8, 2);
     assert_eq!(RegionSurfaceKind::Internal as u8, 4);
     assert_eq!(RegionSurfaceKind::InternalSolid as u8, 5);
+    assert_eq!(RegionSurfaceKind::InternalBridge as u8, 6);
     assert_eq!(RegionSurfaceKind::InternalVoid as u8, 8);
     assert!(RegionSurfaceKind::BottomBridge.is_bridge());
+    assert!(RegionSurfaceKind::InternalBridge.is_bridge());
     for kind in [
         RegionSurfaceKind::Top,
         RegionSurfaceKind::Bottom,

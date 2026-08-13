@@ -83,13 +83,14 @@ pub(super) enum RegionSurfaceKind {
     BottomBridge = 2,
     Internal = 4,
     InternalSolid = 5,
+    InternalBridge = 6,
     InternalVoid = 8,
 }
 
 impl RegionSurfaceKind {
     pub(super) const fn is_bridge(self) -> bool {
         match self {
-            Self::BottomBridge => true,
+            Self::BottomBridge | Self::InternalBridge => true,
             Self::Top
             | Self::Bottom
             | Self::Internal
@@ -150,6 +151,9 @@ impl RegionSurface {
 
     pub(super) fn set_bridge_angle(&mut self, bridge_angle: f64) {
         self.bridge_angle = bridge_angle;
+    }
+    pub(super) fn set_thickness(&mut self, thickness: f64) {
+        self.thickness = thickness;
     }
 
     #[cfg(test)]

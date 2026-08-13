@@ -1,4 +1,4 @@
-use super::{EXPAND_MERGE_SURFACES, helpers::*};
+use super::{expand_merge_surfaces, helpers::*};
 use crate::{geometry::CoordinateScale, project_slice::region_slices::RegionSurfaceKind};
 
 #[test]
@@ -14,7 +14,7 @@ fn task22o35_zero_selected_sources_short_circuit_without_mutation() {
     let zone_pointer = zone_geometry.contour().points().as_ptr();
     let mut zones = vec![zone(vec![zone_geometry])];
 
-    let actual = EXPAND_MERGE_SURFACES(
+    let actual = expand_merge_surfaces(
         &mut surfaces,
         RegionSurfaceKind::Top,
         &mut zones,
@@ -61,7 +61,7 @@ fn task22o35_selected_geometry_moves_and_output_uses_exact_metadata_defaults() {
         surface(RegionSurfaceKind::Top, square(120, 180), (0.4, 5, 1.5, 8)),
     ];
 
-    let actual = EXPAND_MERGE_SURFACES(
+    let actual = expand_merge_surfaces(
         &mut surfaces,
         RegionSurfaceKind::Top,
         &mut [],

@@ -11,7 +11,7 @@ fn task22o39_empty_zone_assertion_precedes_zero_bridges_and_invalid_anchor_geome
         u32::MAX,
         &[(i64::MIN, i64::MAX), (i64::MAX, i64::MIN)],
     )];
-    DETECT(&anchors, &mut [], &[], CoordinateScale::Normal).unwrap();
+    detect_bridge_directions(&anchors, &mut [], &[], CoordinateScale::Normal).unwrap();
 }
 
 #[test]
@@ -23,7 +23,7 @@ fn task22o39_nonempty_zone_with_zero_bridges_does_not_consume_anchors() {
     )];
     let snapshot = anchors.clone();
 
-    DETECT(
+    detect_bridge_directions(
         &anchors,
         &mut [],
         &[zone(Vec::new())],
@@ -54,7 +54,7 @@ fn task22o39_offset_error_is_direct_and_first_bridge_retains_all_owned_and_borro
     let zones = vec![zone(vec![invalid_anchor])];
     let mut bridges = vec![bridge(bridge_geometry, Some(7.25))];
 
-    let result = DETECT(&anchors, &mut bridges, &zones, CoordinateScale::Normal);
+    let result = detect_bridge_directions(&anchors, &mut bridges, &zones, CoordinateScale::Normal);
 
     assert_eq!(result, Err(ClipperError::CoordinateOutOfRange));
     assert_eq!(angles(&bridges), vec![Some(7.25_f64.to_bits())]);
@@ -101,7 +101,7 @@ fn task22o39_later_open_difference_error_keeps_prior_commit_and_failing_later_an
         .map(|bridge| snapshots(std::slice::from_ref(&bridge.expolygon)).remove(0))
         .collect::<Vec<_>>();
 
-    let result = DETECT(
+    let result = detect_bridge_directions(
         &[],
         &mut bridges,
         &[zone(Vec::new())],
@@ -143,7 +143,7 @@ fn task22o39_trusted_signed_boundary_cast_and_wrapping_local_index_may_panic() {
     let zones = vec![zone(vec![rectangle(10, 10, 20, 20)])];
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        DETECT(&anchors, &mut bridges, &zones, CoordinateScale::Normal)
+        detect_bridge_directions(&anchors, &mut bridges, &zones, CoordinateScale::Normal)
     }));
 
     assert!(result.is_err());

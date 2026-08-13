@@ -35,7 +35,7 @@ fn task22o39_empty_anchors_preserve_complete_contour_hole_line_order_and_angle_b
     assert_eq!(expected.angle.to_bits(), 0.0_f64.to_bits());
 
     let mut bridges = vec![bridge(geometry, Some(-7.0))];
-    DETECT(
+    detect_bridge_directions(
         &[],
         &mut bridges,
         &[zone(Vec::new())],
@@ -94,7 +94,7 @@ fn task22o39_non_recombining_open_difference_retains_pinned_fragment_and_line_to
 
     let anchors = vec![seed(0, 0, &[(777, 888)]), seed(0, 0, &[(999, 111)])];
     let mut bridges = vec![bridge(geometry, None)];
-    DETECT(
+    detect_bridge_directions(
         &anchors,
         &mut bridges,
         &[zone(vec![rectangle(400, -200, 600, 200)])],
@@ -178,6 +178,6 @@ fn task22o39_normal_and_large_bed_freeze_f64_to_f32_epsilon_and_forward_scale() 
     ];
     let anchors = vec![seed(0, 0, &[(1, 2)]), seed(0, 1, &[(3, 4)])];
     let mut bridges = vec![bridge(geometry, None)];
-    DETECT(&anchors, &mut bridges, &zones, CoordinateScale::LargeBed).unwrap();
+    detect_bridge_directions(&anchors, &mut bridges, &zones, CoordinateScale::LargeBed).unwrap();
     assert_eq!(angles(&bridges), vec![Some(0.0_f64.to_bits())]);
 }

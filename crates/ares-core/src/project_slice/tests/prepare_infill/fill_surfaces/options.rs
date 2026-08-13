@@ -16,6 +16,7 @@ fn kind_index(kind: RegionSurfaceKind) -> usize {
         RegionSurfaceKind::BottomBridge => 2,
         RegionSurfaceKind::Internal => 3,
         RegionSurfaceKind::InternalSolid => 4,
+        RegionSurfaceKind::InternalBridge => panic!("O18 has no internal-bridge producer"),
         RegionSurfaceKind::InternalVoid => panic!("O18 has no internal-void producer"),
     }
 }

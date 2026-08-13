@@ -1,4 +1,4 @@
-use super::{EXPAND_MERGE_SURFACES, helpers::*};
+use super::{expand_merge_surfaces, helpers::*};
 use crate::{
     geometry::{CoordinateScale, RegionExpansionParameters},
     project_slice::region_slices::RegionSurfaceKind,
@@ -17,7 +17,7 @@ fn run_pipeline_case(
         .into_iter()
         .map(|source| surface(RegionSurfaceKind::Bottom, source, (0.2, 1, -1.0, 0)))
         .collect::<Vec<_>>();
-    let actual = EXPAND_MERGE_SURFACES(
+    let actual = expand_merge_surfaces(
         &mut surfaces,
         RegionSurfaceKind::Bottom,
         actual_zones,
@@ -105,7 +105,7 @@ fn dual_scale_case(scale: CoordinateScale) -> Vec<ExPolygonSnapshot> {
         sources.into_iter().next().unwrap(),
         (0.2, 1, -1.0, 0),
     )];
-    let actual = EXPAND_MERGE_SURFACES(
+    let actual = expand_merge_surfaces(
         &mut surfaces,
         RegionSurfaceKind::Top,
         &mut actual_zones,

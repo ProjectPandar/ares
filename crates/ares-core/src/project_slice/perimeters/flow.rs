@@ -59,6 +59,31 @@ pub(in crate::project_slice) fn resolve_external_perimeter_flow(
     build_nonbridging_flow(selected_width, height, nozzle_diameter)
 }
 
+pub(in crate::project_slice) fn resolve_nominal_sparse_infill_flow(
+    region: &RegionOptions,
+    object: &ObjectOptions,
+    nozzle_diameters: &OrcaFloats,
+) -> Result<Flow, SliceError> {
+    let nozzle_diameter = selected_nozzle(region.sparse_infill_filament_id, nozzle_diameters)?;
+    let width = if raw(region.sparse_infill_line_width) == 0.0 {
+        object.line_width
+    } else {
+        region.sparse_infill_line_width
+    };
+    let height = object.layer_height.0 as f32;
+    if !height.is_finite() || height <= 0.0 {
+        return Err(invalid("invalid Orca option layer_height"));
+    }
+    build_nonbridging_flow(width, height, nozzle_diameter)
+}
+
+pub(in crate::project_slice) fn resolve_thick_solid_infill_bridge_flow(
+    region: &RegionOptions,
+    nozzle_diameters: &OrcaFloats,
+) -> Result<Flow, SliceError> {
+    resolve_thick_bridge_flow(region.internal_solid_filament_id, region, nozzle_diameters)
+}
+
 pub(in crate::project_slice) fn resolve_perimeter_flows(
     layer: &PlannedLayer,
     initial_layer_width: FloatOrPercent,
@@ -105,37 +130,53 @@ fn resolve_role_flow(
 }
 
 fn resolve_overhang_flow(context: FlowContext<'_>) -> Result<Flow, SliceError> {
+    if context.object.thick_bridges.0 {
+        return resolve_thick_bridge_flow(
+            context.region.inner_wall_filament_id,
+            context.region,
+            context.nozzle_diameters,
+        );
+    }
+
     let nozzle_diameter = selected_nozzle(
         context.region.inner_wall_filament_id,
         context.nozzle_diameters,
     )?;
     let configured_width = absolute_f64(context.region.bridge_line_width, nozzle_diameter);
-    if context.object.thick_bridges.0 {
-        let mut diameter = if configured_width > 0.0 {
-            configured_width as f32
-        } else {
-            nozzle_diameter
-        };
-        diameter *= context.region.bridge_flow.0.sqrt() as f32;
-        return require_positive_volume(
-            Flow {
-                width: diameter,
-                height: diameter,
-                spacing: (f64::from(diameter) + 0.05) as f32,
-                nozzle_diameter,
-                bridge: true,
-                mm3_per_mm: bridge_volume(diameter),
-            },
-            "invalid Orca option bridge_flow",
-        );
-    }
-
     let mut flow = resolve_role_flow(context, PerimeterFlowRole::Internal)?;
     if configured_width > 0.0 {
         flow = build_nonbridging_from_width(configured_width as f32, flow.height, nozzle_diameter)?;
     }
     require_positive_volume(
         with_flow_ratio(flow, context.region.bridge_flow.0),
+        "invalid Orca option bridge_flow",
+    )
+}
+
+fn resolve_thick_bridge_flow(
+    selector: OrcaInt,
+    region: &RegionOptions,
+    nozzle_diameters: &OrcaFloats,
+) -> Result<Flow, SliceError> {
+    let nozzle_diameter = selected_nozzle(selector, nozzle_diameters)?;
+    let configured_width = absolute_f64(region.bridge_line_width, nozzle_diameter);
+    let mut diameter = if configured_width > 0.0 {
+        configured_width as f32
+    } else {
+        nozzle_diameter
+    };
+    if region.bridge_flow.0 > 0.0 {
+        diameter *= region.bridge_flow.0.sqrt() as f32;
+    }
+    require_positive_volume(
+        Flow {
+            width: diameter,
+            height: diameter,
+            spacing: (f64::from(diameter) + 0.05) as f32,
+            nozzle_diameter,
+            bridge: true,
+            mm3_per_mm: bridge_volume(diameter),
+        },
         "invalid Orca option bridge_flow",
     )
 }
