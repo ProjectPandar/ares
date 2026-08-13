@@ -1,5 +1,11 @@
 use crate::geometry::ExPolygon;
 
+#[derive(Clone, Copy)]
+pub(crate) enum OracleStage {
+    PreNarrow,
+    PostNarrow,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct OracleTotals {
     pub(super) layers: usize,
@@ -24,6 +30,7 @@ pub(crate) struct OracleFlow {
 
 #[derive(Clone, Copy)]
 pub(crate) struct OracleParams {
+    pub(super) idx: usize,
     pub(super) extruder: u32,
     pub(super) pattern: u8,
     pub(super) spacing: f64,
@@ -75,6 +82,7 @@ pub(crate) struct OracleLockCounts {
 }
 
 pub(crate) struct OracleLayer<'a> {
+    pub(super) stage: OracleStage,
     pub(super) layer_id: usize,
     pub(super) layer_height: f64,
     pub(super) print_z: f64,

@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use crate::{
     geometry::{ExPolygon, Polygon},
-    project_slice::group_fills::{BaseGroupedFills, SurfaceFillPattern},
+    project_slice::group_fills::{GroupedFills, SurfaceFillPattern},
 };
 
 #[derive(Clone, Copy)]
@@ -12,11 +12,19 @@ pub(super) struct LayerHeader {
     pub(super) print_z: f64,
 }
 
-pub(super) fn metadata(header: LayerHeader, grouped: &BaseGroupedFills) -> Vec<u8> {
+pub(super) fn metadata(header: LayerHeader, grouped: &GroupedFills) -> Vec<u8> {
+    metadata_at_stage(header, grouped, "pre-narrow")
+}
+
+pub(super) fn post_metadata(header: LayerHeader, grouped: &GroupedFills) -> Vec<u8> {
+    metadata_at_stage(header, grouped, "post-narrow")
+}
+
+fn metadata_at_stage(header: LayerHeader, grouped: &GroupedFills, stage: &str) -> Vec<u8> {
     let mut output = String::new();
     writeln!(
         output,
-        "layer {} stage pre-narrow height_bits {} print_z_bits {} groups {}",
+        "layer {} stage {stage} height_bits {} print_z_bits {} groups {}",
         header.id,
         header.height.to_bits(),
         header.print_z.to_bits(),
@@ -73,7 +81,7 @@ pub(super) fn metadata(header: LayerHeader, grouped: &BaseGroupedFills) -> Vec<u
             params.flow.nozzle_diameter.to_bits(),
             u8::from(params.flow.bridge),
             super::portable_oracle::extrusion_role_rank(params.extrusion_role),
-            index,
+            params.idx,
             params.role_speed.to_bits()
         )
         .unwrap();
@@ -111,7 +119,7 @@ pub(super) fn metadata(header: LayerHeader, grouped: &BaseGroupedFills) -> Vec<u
     output.into_bytes()
 }
 
-pub(super) fn authoritative_geometry(grouped: &BaseGroupedFills) -> Vec<u8> {
+pub(super) fn authoritative_geometry(grouped: &GroupedFills) -> Vec<u8> {
     let mut output = String::new();
     for fill in &grouped.surface_fills {
         write_expolygons(&mut output, "fills", &fill.expolygons);

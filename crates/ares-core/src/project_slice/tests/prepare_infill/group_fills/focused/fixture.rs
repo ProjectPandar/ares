@@ -1,5 +1,5 @@
 use crate::{
-    ObjectOptions, OrcaFloats, RegionOptions, Transform3d,
+    ObjectOptions, OrcaBool, OrcaFloats, RegionOptions, Transform3d,
     geometry::{ExPolygon, Point, Polygon},
     project_slice::{
         prepare_infill::{
@@ -16,10 +16,12 @@ use crate::{
 };
 
 pub(in super::super) fn graph() -> PreparedPostInfillCombination {
-    combine_infill::prepare(super::super::super::combine_infill::prepare_o71(
+    let mut graph = combine_infill::prepare(super::super::super::combine_infill::prepare_o71(
         KsrArchive::new(),
     ))
-    .unwrap()
+    .unwrap();
+    object_mut(&mut graph).detect_narrow_internal_solid_infill = OrcaBool(false);
+    graph
 }
 
 pub(in super::super) fn external(
@@ -28,7 +30,9 @@ pub(in super::super) fn external(
     &graph.predecessor.predecessor
 }
 
-fn external_mut(graph: &mut PreparedPostInfillCombination) -> &mut PreparedPostExternalSurfaces {
+pub(in super::super) fn external_mut(
+    graph: &mut PreparedPostInfillCombination,
+) -> &mut PreparedPostExternalSurfaces {
     &mut graph.predecessor.predecessor
 }
 
@@ -93,6 +97,20 @@ pub(in super::super) fn object_mut(
     graph: &mut PreparedPostInfillCombination,
 ) -> &mut ObjectOptions {
     &mut external_mut(graph).predecessor.predecessor.resolved.objects[0].object
+}
+
+pub(in super::super) fn planned_layer_mut(
+    graph: &mut PreparedPostInfillCombination,
+    layer: usize,
+) -> &mut crate::project_slice::layers::PlannedLayer {
+    let traversal = &mut external_mut(graph).predecessor.predecessor;
+    let prelude = &mut traversal.objects[0]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor;
+    let (post_regions, _) = prelude.object.object.as_parts_mut();
+    &mut post_regions.plan.layers[layer]
 }
 
 pub(in super::super) fn set_nozzles(

@@ -1,24 +1,26 @@
 mod coalesce;
+mod narrow;
 mod params;
 mod priority;
 mod types;
 
 pub(in crate::project_slice) use types::{
-    BaseGroupedFills, LockDensityParam, LockFlowParam, LockRegionParam, RepresentativeSurface,
+    GroupedFills, LockDensityParam, LockFlowParam, LockRegionParam, RepresentativeSurface,
     SurfaceFill, SurfaceFillParams, SurfaceFillPattern,
 };
 
 use crate::{
-    SliceError, project_slice::prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
+    SliceError, geometry::ClipperError,
+    project_slice::prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
 };
 
 use self::params::LayerContext;
 
-pub(in crate::project_slice) fn group_fills_base(
+pub(in crate::project_slice) fn group_fills(
     prepared: &PreparedPostExternalSurfaces,
     object_index: usize,
     layer_index: usize,
-) -> Result<BaseGroupedFills, SliceError> {
+) -> Result<GroupedFills, SliceError> {
     let horizontal = &prepared.predecessor;
     let traversal = &horizontal.predecessor;
     let traversal_object = &traversal.objects[object_index];
@@ -38,14 +40,31 @@ pub(in crate::project_slice) fn group_fills_base(
             input,
             layer_index,
         )),
-        (None, None) => Ok(BaseGroupedFills::empty()),
+        (None, None) => Ok(GroupedFills::empty()),
         _ => unreachable!("validated fill-grouping record slots remain aligned"),
     }
 }
 
-fn group_present_layer(context: LayerContext<'_>) -> Result<BaseGroupedFills, SliceError> {
+fn geometry_error(error: ClipperError) -> SliceError {
+    match error {
+        ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
+            "fill-grouping polygon coordinate is outside the supported Clipper range".to_owned(),
+        ),
+        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
+            unreachable!("fill-grouping operations contain only closed polygon paths")
+        }
+    }
+}
+
+fn group_present_layer(context: LayerContext<'_>) -> Result<GroupedFills, SliceError> {
+    let narrow = narrow::Context {
+        enabled: context.object.detect_narrow_internal_solid_infill.0,
+        layer_id: context.planned.id,
+        scale: context.scale,
+    };
     let projected = params::project_layer(context)?;
     let mut grouped = coalesce::coalesce(projected);
     priority::apply(&mut grouped.surface_fills)?;
+    narrow::apply(&mut grouped.surface_fills, narrow)?;
     Ok(grouped)
 }

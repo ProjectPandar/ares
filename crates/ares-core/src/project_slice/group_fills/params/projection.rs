@@ -127,6 +127,7 @@ pub(super) fn project_surface(
 
 pub(super) fn source_defaults() -> SurfaceFillParams {
     SurfaceFillParams {
+        idx: 0,
         extruder: 0,
         pattern: configured(ProcessInfillPattern::Monotonic),
         spacing: 0.0,

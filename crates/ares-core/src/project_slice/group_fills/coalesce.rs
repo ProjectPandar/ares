@@ -3,7 +3,7 @@ use std::{cmp::Ordering, collections::BTreeSet};
 use crate::{ExtrusionRole, ProcessInfillPattern};
 
 use super::{
-    BaseGroupedFills, RepresentativeSurface, SurfaceFill, SurfaceFillParams, SurfaceFillPattern,
+    GroupedFills, RepresentativeSurface, SurfaceFill, SurfaceFillParams, SurfaceFillPattern,
     params::ProjectedLayer,
 };
 
@@ -30,15 +30,16 @@ impl Ord for ParamsKey {
     }
 }
 
-pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> BaseGroupedFills {
+pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> GroupedFills {
     let mut unique = BTreeSet::new();
     for params in projected.params.iter().flatten().copied() {
         unique.insert(ParamsKey(params));
     }
     let mut fills = unique
         .into_iter()
-        .map(|key| PendingFill {
-            params: key.0,
+        .enumerate()
+        .map(|(idx, key)| PendingFill {
+            params: SurfaceFillParams { idx, ..key.0 },
             fill: None,
         })
         .collect::<Vec<_>>();
@@ -73,7 +74,7 @@ pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> BaseGroupedFills {
         }
     }
 
-    BaseGroupedFills {
+    GroupedFills {
         surface_fills: fills
             .into_iter()
             .map(|fill| {
@@ -82,7 +83,6 @@ pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> BaseGroupedFills {
             })
             .collect(),
         lock_region_param: projected.lock_region_param,
-        has_internal_voids: projected.has_internal_voids,
     }
 }
 

@@ -4838,5 +4838,127 @@ counted as a kill. The nine restored production hashes matched the exact
 manifest recorded in the O73 ADR, specification, and plan. Independent
 source/specification and standards rereviews closed unconditionally. Public
 slicing remains `ProjectSlicingIncomplete` at O72, O73 remains crate-private
-and unwired, and O46 replacement remains deferred until the next source owner,
-O74, completes the full grouping tail.
+and unwired, and O46 replacement remains deferred to a later activation slice
+even though O74 now completes the full grouping tail.
+
+## Task 22O.74 implemented full fill-grouping parity
+
+O74 is implemented, with exact-tree final gate counts and unconditional
+independent review pending. It consumes no new raw option, parser, or public
+option type. Its one graph-native seam borrows
+`PreparedPostExternalSurfaces`; the existing option materialization graph
+remains the sole owner of global, object, part, and material inheritance:
+
+```rust
+project_slice::group_fills::group_fills(
+    &PreparedPostExternalSurfaces,
+    object_index,
+    layer_index,
+) -> Result<GroupedFills, SliceError>
+```
+
+The only newly reached configuration read is the effective object boolean
+`detect_narrow_internal_solid_infill` at pinned
+`Fill/Fill.cpp:1152-1154`. False returns the complete O73 base behavior through
+the same full seam; true runs the pinned line/non-line narrow classifier at
+`349-827` over the original prefix of InternalSolid groups and applies the
+source mutation/append at `1155-1186`. The option is not reinterpreted as a
+raw Ares control and is never passed as a separate argument.
+
+The old `crates/ares-core/src/infills/narrow_internal.rs` behavior—one
+rectangle-width heuristic followed by a path generator—is not option parity
+for this source slice. O74 neither calls it nor uses it as a fallback. The O46
+reduced sparse-anchoring grouping is likewise not reused; O74 only makes a
+future replacement at source `Fill.cpp:1394-1407` possible and does not modify
+that caller.
+
+`SurfaceFillParams` carries source `idx`. The value is assigned as the
+comparator-order base-group ordinal at `Fill.cpp:1020-1024`, remains excluded
+from the grouping comparator, and is copied unchanged into a partial appended
+narrow group at `1172-1174`. It is source identity, not a configurable option
+and not necessarily the final vector index. POST metadata must serialize this
+field directly.
+
+The InternalVoid body at `1069-1150` consumes no additional option in O74. Its
+inner repair is unreachable for source-produced groups: `855-861` observes but
+does not project voids, `1028-1051` excludes them from group construction, and
+`1086-1097` searches only the filtered group result. Implemented parity is the
+observable no-op. Raw void surfaces must not be smuggled into the tail to make
+the commented repair intent active.
+
+The KSR true-option acceptance preserves 460 ordered layer slots and
+requires 536 groups, 2,218 fill ExPolygons, 152 holes, 2,370 fill paths,
+110,610 fill points, and 2,928 no-overlap ExPolygons. Under O38's fixed-MSVC
+direction-map replay, the required metadata, canonical-geometry, and
+layer-table SHA-256 values are respectively
+`cd4aa18a831dd4672e3e394944e496b8d349b5e21990672a7f14868cc2b3b387`,
+`c149d65f5e5ddb89643b78314861ac2343707ddf76decc1e6aa2f88901331f6c`, and
+`8d9845b22e38857dbb0840b2527286436a6b9c684c8662d925f8fd4873cef5b2`.
+The Linux libstdc++ POST triplet—metadata
+`36aecdaf4d3bfb8dadcaf63a0d0d39f3a12ad9b0b0e1aad0c5a9ceab19ef2eff`,
+geometry
+`13d36da11e01e99840b1cf058003ad18c26c29bd8d6bb0d33af23c1b2ce4534c`, and
+table `15dd3f792d2a9176630e30c2170487c872a9b94eb637fdb6eb6a2841667ece5a`—is
+nonnormative provenance for the predecessor tie-order difference.
+
+The false-option regression retains O73's full 460-layer PRE totals and hashes
+`a091ca0a63e45dc81712223571b1dfe888ab256bec2437ea564f386783f77900`,
+`062fab2bbcb683df778ac024a8f6abed7960f3ebac3d55f13124617694d7e2af`,
+and `ebd74a25609827e4affda26a21d9cd3b10dca08778f56f394b5170f74ecdf721`
+through `group_fills`; POST remains the O74 success target. Canonicalization is
+confined to the oracle and may not alter production order.
+
+Raw-order POST evidence pins layer-1 metadata
+`b466abfd76770f5e776b9df3866cf12b07b836bee2a8a7ba721c66ae1f2851bf`,
+layer-1 authoritative geometry
+`0938758d43750be165712735f6f5e1b6a1ae8fbb52a7f551b101118e1083c856`,
+and layer-45/layer-70 authoritative geometry
+`33bf737e3d836096a20a821fcf1ace79dccda10973203408ba87ddee5ee25d64` /
+`7a8e9ec6e0aa2b1a8cd6bd8d1e9c261719b77168427f113fa051e7f5c551be71`.
+The fixed-MSVC source-backed table rows are:
+
+```text
+1\t2\t29\t0\t723\t5,5\t0,29\t5,5
+45\t4\t75\t15\t29423\t6,5,0,4\t0,29,1,20\t10,5,6,4
+70\t8\t70\t0\t626\t2,6,6,6,6,6,5,4\t0,0,0,0,0,0,29,20\t9,10,10,10,10,10,5,4
+```
+
+The layer-45/layer-70 geometry hashes above use the same source-backed ordered
+raw records, not canonical-sort substitutes.
+
+The source-backed C++ oracle grammar deliberately omits
+`Flow::mm3_per_mm`. Rust-only focused tests assert its exact `f64::to_bits()`
+values, including partial-split copy value `0x3fbb_4fc3_4000_0000`. This
+protects Rust grouping/ownership without changing either aggregate hash
+triplet or claiming a C++ grammar field that does not exist.
+
+The public-seam corpus killed the vibration-filter identity substitution,
+`4 mm -> 3 mm`, maximum skips `2 -> 1`, exact two-skip `>= 2 -> > 2`,
+removal depth `> 5 -> >= 5`, exact `4 mm` `< -> <=`, touch-back removal,
+final normal expansion `0.5 * spacing -> 0`, a zero non-line closing delta,
+and hard-coded Normal scale. The KSR checkpoint specifically killed the
+filter/threshold/skip/depth/touch-back/final-expansion subset; graph-native
+focused tests killed exact-4-mm, zero-closing-delta, and hardcoded-scale
+changes. The two skip
+mutations produced 2,223 / 2,375 / 110,582 and 2,217 / 2,369 / 110,597
+fill-ExPolygon/path/point totals. Next-section reset removal,
+inclusive-Y-to-strict-Y, `558-559` correction, `candidates_begin` correction,
+early-closure removal, reconnection `< -> <=`, one-coordinate-unit non-line
+spacing, and premature f32 scale/cast changes survived; they remain by
+pinned-source/static review and are not reported as kills. FIFO/LIFO
+pending-order and duplicate-queue cases are monotone-closure/static-review
+cases.
+
+O74 removes `group_fills_base`, `BaseGroupedFills`, and the returned
+InternalVoid continuation bit rather than preserving compatibility aliases.
+It adds no `PreparedPostGroupFills`, lifecycle status, public API, Cargo
+feature, raw option view, or O46 wiring. `project_slice.rs` changes only its
+inactive-module reason. Public slicing therefore remains
+`ProjectSlicingIncomplete` at O72 until a later source-cited lifecycle slice.
+
+### Final evidence — pending
+
+Exact focused/dependency/workspace command counts, strict
+lint/format/Tier-1/diff/static results, and unconditional independent
+source/specification and standards approval remain an intentionally unfilled
+placeholder. Implemented status does not imply those final results.

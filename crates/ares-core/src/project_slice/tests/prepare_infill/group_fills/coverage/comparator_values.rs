@@ -35,7 +35,7 @@ fn task22o73_spacing_and_both_anchor_fields_each_drive_priority_order() {
         surface(RegionSurfaceKind::Internal, expolygon.clone(), 0),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills
@@ -64,7 +64,7 @@ fn task22o73_spacing_and_both_anchor_fields_each_drive_priority_order() {
         surface(RegionSurfaceKind::Internal, expolygon.clone(), 0),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills
@@ -87,7 +87,7 @@ fn task22o73_spacing_and_both_anchor_fields_each_drive_priority_order() {
         surface(RegionSurfaceKind::InternalSolid, expolygon, 0),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills
@@ -133,7 +133,7 @@ fn task22o73_flow_width_and_height_each_drive_priority_order() {
     top.retag(RegionSurfaceKind::Top);
     record_mut(&mut graph, LAYER).fill_surfaces = vec![solid, top];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped.surface_fills[0].params.spacing.to_bits(),
         grouped.surface_fills[1].params.spacing.to_bits()
@@ -159,7 +159,7 @@ fn task22o73_flow_width_and_height_each_drive_priority_order() {
         surface_with_height(expolygon, 0.2),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped.surface_fills[0].params.spacing.to_bits(),
         grouped.surface_fills[1].params.spacing.to_bits()
@@ -206,7 +206,7 @@ fn task22o73_flow_nozzle_precedes_extrusion_role_and_drives_priority_order() {
         surface(RegionSurfaceKind::Bottom, expolygon, 0),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills

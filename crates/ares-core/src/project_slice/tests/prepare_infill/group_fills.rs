@@ -1,5 +1,10 @@
 mod coverage;
 mod focused;
 mod ksr;
+mod o74;
+mod o74_line;
+mod o74_ownership;
+mod o74_scale;
+mod o74_topology;
 mod oracle;
 mod portable_oracle;

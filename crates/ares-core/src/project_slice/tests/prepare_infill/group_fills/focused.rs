@@ -23,7 +23,7 @@ fn task22o73_projection_uses_source_precision_roles_selectors_and_density_skips(
     let mut first_layer_bridge = surface(RegionSurfaceKind::BottomBridge, shape.clone(), 0);
     first_layer_bridge.set_bridge_angle(0.375);
     record_mut(&mut graph, 0).fill_surfaces = vec![first_layer_bridge];
-    let grouped = group_fills::group_fills_base(external(&graph), 0, 0).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, 0).unwrap();
     let fill = &grouped.surface_fills[0];
     assert_eq!(fill.representative.kind, RegionSurfaceKind::BottomBridge);
     assert!(!fill.params.bridge);
@@ -38,7 +38,7 @@ fn task22o73_projection_uses_source_precision_roles_selectors_and_density_skips(
         options.infill_direction = OrcaFloat(1.792621887649045);
         options.align_infill_direction_to_model = OrcaBool(false);
     }
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(grouped.surface_fills[0].params.angle.to_bits(), 0x3d00_26f5);
 
     {
@@ -46,7 +46,7 @@ fn task22o73_projection_uses_source_precision_roles_selectors_and_density_skips(
         options.infill_direction = OrcaFloat(-0.0);
         options.align_infill_direction_to_model = OrcaBool(false);
     }
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped.surface_fills[0].params.angle.to_bits(),
         (-0.0_f32).to_bits()
@@ -64,7 +64,7 @@ fn task22o73_projection_uses_source_precision_roles_selectors_and_density_skips(
         )
         .unwrap(),
     );
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(grouped.surface_fills[0].params.angle.to_bits(), 0x3f7b_1dd2);
 
     let mut positive_zero = surface(
@@ -80,7 +80,7 @@ fn task22o73_projection_uses_source_precision_roles_selectors_and_density_skips(
     );
     negative_zero.set_bridge_angle(-0.0);
     record_mut(&mut graph, LAYER).fill_surfaces = vec![positive_zero, negative_zero];
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(grouped.surface_fills.len(), 1);
     assert_eq!(
         grouped.surface_fills[0]
@@ -102,7 +102,7 @@ fn task22o73_projection_uses_source_precision_roles_selectors_and_density_skips(
     }
     record_mut(&mut graph, LAYER).fill_surfaces =
         vec![surface(RegionSurfaceKind::Top, shape.clone(), 0)];
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     let top = &grouped.surface_fills[0];
     assert_eq!(top.params.extruder, 2);
     assert_eq!(top.params.extrusion_role, ExtrusionRole::TopSolidInfill);
@@ -118,7 +118,7 @@ fn task22o73_projection_uses_source_precision_roles_selectors_and_density_skips(
         surface(RegionSurfaceKind::Internal, shape.clone(), 0),
         surface(RegionSurfaceKind::Top, shape, 0),
     ];
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert!(grouped.surface_fills.is_empty());
     combine_infill::dispose(graph);
 }
@@ -152,7 +152,7 @@ fn task22o73_lockedzag_retains_sticky_params_and_materializes_four_sorted_sideca
     let before = graph_snapshot(&graph);
     let options_before = options(&graph, LAYER).clone();
 
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
 
     assert_snapshot_eq(graph_snapshot(&graph), before);
     assert_eq!(options(&graph, LAYER), &options_before);
@@ -215,6 +215,20 @@ fn task22o73_lockedzag_retains_sticky_params_and_materializes_four_sorted_sideca
             .iter()
             .all(|entry| entry.flow.width.to_bits() == 0.58_f32.to_bits())
     );
+    assert_eq!(
+        lock.skin_flow_params
+            .iter()
+            .map(|entry| entry.flow.mm3_per_mm.to_bits())
+            .collect::<Vec<_>>(),
+        [0x3fb3_4e75_4000_0000, 0x3fbb_4fc3_4000_0000]
+    );
+    assert_eq!(
+        lock.skeleton_flow_params
+            .iter()
+            .map(|entry| entry.flow.mm3_per_mm.to_bits())
+            .collect::<Vec<_>>(),
+        [0x3fbb_7f9c_2000_0000, 0x3fc3_ccbe_e000_0000]
+    );
     assert_sorted_flow_sidecar(&lock.skin_flow_params, &[low.clone(), high.clone()]);
     assert_sorted_flow_sidecar(&lock.skeleton_flow_params, &[low, high]);
 }
@@ -238,7 +252,7 @@ fn task22o73_priority_coalesces_first_multi_retains_empty_and_reports_range_atom
     record.fill_no_overlap_expolygons.clear();
     let before = graph_snapshot(&graph);
 
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
 
     assert_snapshot_eq(graph_snapshot(&graph), before);
     assert_eq!(grouped.surface_fills.len(), 2);
@@ -277,7 +291,7 @@ fn task22o73_priority_coalesces_first_multi_retains_empty_and_reports_range_atom
     ];
     let before = graph_snapshot(&graph);
     let options_before = options(&graph, LAYER).clone();
-    let error = match group_fills::group_fills_base(external(&graph), 0, LAYER) {
+    let error = match group_fills::group_fills(external(&graph), 0, LAYER) {
         Err(error) => error,
         Ok(_) => panic!("out-of-range fill grouping must fail atomically"),
     };
@@ -305,7 +319,7 @@ fn task22o73_rotation_template_error_key_follows_projected_sparse_or_solid_role(
         vec![surface(RegionSurfaceKind::Internal, shape.clone(), 0)];
     let before = graph_snapshot(&graph);
     let options_before = options(&graph, LAYER).clone();
-    let error = match group_fills::group_fills_base(external(&graph), 0, LAYER) {
+    let error = match group_fills::group_fills(external(&graph), 0, LAYER) {
         Err(error) => error,
         Ok(_) => panic!("a nonempty sparse rotation template must fail"),
     };
@@ -319,7 +333,7 @@ fn task22o73_rotation_template_error_key_follows_projected_sparse_or_solid_role(
     record_mut(&mut graph, LAYER).fill_surfaces =
         vec![surface(RegionSurfaceKind::InternalSolid, shape, 0)];
     let before = graph_snapshot(&graph);
-    let error = match group_fills::group_fills_base(external(&graph), 0, LAYER) {
+    let error = match group_fills::group_fills(external(&graph), 0, LAYER) {
         Err(error) => error,
         Ok(_) => panic!("a nonempty solid rotation template must fail"),
     };

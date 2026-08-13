@@ -1,5 +1,5 @@
 use crate::{
-    ExtrusionRole, ProcessInfillPattern,
+    ExtrusionRole, OrcaBool, ProcessInfillPattern,
     project_slice::{
         group_fills::{self, SurfaceFillPattern},
         prepare_infill::combine_infill,
@@ -21,7 +21,16 @@ const LAYER_255_AUTHORITATIVE_GEOMETRY_SHA256: &str =
 fn task22o73_real_ksr_layer_255_matches_owned_pre_narrow_group_without_mutation() {
     let (grouped, header) = {
         let input = super::super::combine_infill::prepare_o71(KsrArchive::new());
-        let graph = combine_infill::prepare(input).unwrap();
+        let mut graph = combine_infill::prepare(input).unwrap();
+        graph
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .resolved
+            .objects[0]
+            .object
+            .detect_narrow_internal_solid_infill = OrcaBool(false);
         let external = &graph.predecessor.predecessor;
         let traversal = &external.predecessor.predecessor;
         let traversal_object = &traversal.objects[0];
@@ -42,7 +51,7 @@ fn task22o73_real_ksr_layer_255_matches_owned_pre_narrow_group_without_mutation(
         let before = snapshot(&graph.predecessor);
         assert_eq!(sha256(&before.bytes), O71_SURFACE_SHA256);
 
-        let grouped = group_fills::group_fills_base(external, 0, 255).unwrap();
+        let grouped = group_fills::group_fills(external, 0, 255).unwrap();
 
         let after = snapshot(&graph.predecessor);
         assert_eq!(after.bytes, before.bytes);
@@ -59,7 +68,6 @@ fn task22o73_real_ksr_layer_255_matches_owned_pre_narrow_group_without_mutation(
     assert_eq!(header.id, 255);
     assert_eq!(header.height.to_bits(), 4_596_373_779_694_328_320);
     assert_eq!(header.print_z.to_bits(), 4_632_402_576_713_292_212);
-    assert!(!grouped.has_internal_voids);
     assert!(grouped.lock_region_param.skin_density_params.is_empty());
     assert!(grouped.lock_region_param.skeleton_density_params.is_empty());
     assert!(grouped.lock_region_param.skin_flow_params.is_empty());

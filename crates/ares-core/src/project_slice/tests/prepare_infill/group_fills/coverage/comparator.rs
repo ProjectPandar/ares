@@ -38,7 +38,7 @@ fn task22o73_all_configured_pattern_ranks_order_every_adjacent_pair() {
             options.internal_solid_infill_pattern = *lower;
             options.sparse_infill_pattern = *higher;
         }
-        let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+        let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
         assert_eq!(grouped.surface_fills.len(), 2);
         assert_eq!(grouped.surface_fills[0].params.extruder, 1);
         assert_eq!(grouped.surface_fills[1].params.extruder, 1);
@@ -117,7 +117,7 @@ fn task22o73_reachable_role_ranks_and_output_selector_precedence_are_observable(
             0,
         ),
     ];
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills
@@ -154,7 +154,7 @@ fn task22o73_reachable_role_ranks_and_output_selector_precedence_are_observable(
     );
     internal_bridge.set_bridge_angle(0.5);
     record_mut(&mut graph, LAYER).fill_surfaces = vec![internal_bridge, bridge];
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills
@@ -177,7 +177,7 @@ fn task22o73_reachable_role_ranks_and_output_selector_precedence_are_observable(
         rectangle(0, 0, 4_000_000, 4_000_000),
         0,
     )];
-    let grouped = group_fills::group_fills_base(external(&graph), 0, 0).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, 0).unwrap();
     let fill = &grouped.surface_fills[0];
     assert_eq!(fill.params.extruder, 2);
     assert_eq!(
@@ -211,7 +211,7 @@ fn task22o73_extruder_precedes_pattern_and_drives_priority_order() {
     ];
     let before = graph_snapshot(&graph);
 
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
 
     assert_eq!(
         grouped
@@ -268,7 +268,7 @@ fn task22o73_angle_density_and_multiline_each_drive_priority_order() {
         surface(RegionSurfaceKind::Internal, expolygon.clone(), 0),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills
@@ -296,7 +296,7 @@ fn task22o73_angle_density_and_multiline_each_drive_priority_order() {
         surface(RegionSurfaceKind::Top, expolygon.clone(), 0),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills
@@ -319,7 +319,7 @@ fn task22o73_angle_density_and_multiline_each_drive_priority_order() {
         surface(RegionSurfaceKind::InternalSolid, expolygon, 0),
     ];
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         grouped
             .surface_fills

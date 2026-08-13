@@ -35,7 +35,6 @@ pub(super) struct ProjectedLayer<'a> {
     pub(super) region_id: usize,
     pub(super) no_overlap_expolygons: &'a [ExPolygon],
     pub(super) lock_region_param: LockRegionParam,
-    pub(super) has_internal_voids: bool,
 }
 
 impl<'a> LayerContext<'a> {
@@ -93,11 +92,9 @@ pub(super) fn project_layer(context: LayerContext<'_>) -> Result<ProjectedLayer<
     let mut current = projection::source_defaults();
     let mut projected = Vec::with_capacity(context.record.fill_surfaces.len());
     let mut lock_region_param = locked::Builder::default();
-    let mut has_internal_voids = false;
 
     for surface in &context.record.fill_surfaces {
         if surface.as_parts().0 == RegionSurfaceKind::InternalVoid {
-            has_internal_voids = true;
             projected.push(None);
             continue;
         }
@@ -114,6 +111,5 @@ pub(super) fn project_layer(context: LayerContext<'_>) -> Result<ProjectedLayer<
         region_id: context.region_id,
         no_overlap_expolygons: &context.record.fill_no_overlap_expolygons,
         lock_region_param: lock_region_param.finish(),
-        has_internal_voids,
     })
 }

@@ -2,13 +2,17 @@ use std::fmt::Write as _;
 
 use crate::geometry::{ExPolygon, Polygon};
 
-use super::{OracleGroup, OracleLayer};
+use super::{OracleGroup, OracleLayer, OracleStage};
 
 pub(super) fn encode_layer_metadata(output: &mut String, layer: &OracleLayer<'_>) {
     writeln!(
         output,
-        "layer {} stage pre-narrow height_bits {} print_z_bits {} groups {}",
+        "layer {} stage {} height_bits {} print_z_bits {} groups {}",
         layer.layer_id,
+        match layer.stage {
+            OracleStage::PreNarrow => "pre-narrow",
+            OracleStage::PostNarrow => "post-narrow",
+        },
         layer.layer_height.to_bits(),
         layer.print_z.to_bits(),
         layer.groups.len()
@@ -63,13 +67,14 @@ fn encode_group_metadata(output: &mut String, group_index: usize, group: &Oracle
     .unwrap();
     writeln!(
         output,
-        "flow width_bits {} height_bits {} spacing_bits {} nozzle_bits {} bridge {} extrusion_role {} idx {group_index} role_speed_bits {}",
+        "flow width_bits {} height_bits {} spacing_bits {} nozzle_bits {} bridge {} extrusion_role {} idx {} role_speed_bits {}",
         params.flow.width.to_bits(),
         params.flow.height.to_bits(),
         params.flow.spacing.to_bits(),
         params.flow.nozzle_diameter.to_bits(),
         u8::from(params.flow.bridge),
         params.extrusion_role,
+        params.idx,
         params.role_speed.to_bits()
     )
     .unwrap();

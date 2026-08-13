@@ -1,12 +1,11 @@
 use crate::{
     SliceError,
     geometry::{
-        ClipperError, ExPolygon, Polygon, difference_polygons_ex_with_safety_offset,
-        union_safety_offset_ex,
+        ExPolygon, Polygon, difference_polygons_ex_with_safety_offset, union_safety_offset_ex,
     },
 };
 
-use super::SurfaceFill;
+use super::{SurfaceFill, geometry_error};
 
 pub(super) fn apply(fills: &mut [SurfaceFill]) -> Result<(), SliceError> {
     let mut preceding = Vec::new();
@@ -48,15 +47,4 @@ fn flatten_borrowed(expolygons: &[ExPolygon]) -> Vec<Polygon> {
         polygons.extend(expolygon.holes().iter().cloned());
     }
     polygons
-}
-
-fn geometry_error(error: ClipperError) -> SliceError {
-    match error {
-        ClipperError::CoordinateOutOfRange => SliceError::InvalidInput(
-            "fill-grouping polygon coordinate is outside the supported Clipper range".to_owned(),
-        ),
-        ClipperError::OpenPathMustBeSubject | ClipperError::OpenPathsRequirePolyTree => {
-            unreachable!("fill-grouping operations contain only closed polygon paths")
-        }
-    }
 }

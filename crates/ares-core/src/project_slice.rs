@@ -22,7 +22,7 @@ mod extruders;
     not(test),
     expect(
         dead_code,
-        reason = "O73 base fill grouping remains inactive until the O74 postpasses are complete"
+        reason = "full fill grouping remains inactive until a later source-cited lifecycle slice"
     )
 )]
 mod group_fills;

@@ -1,9 +1,15 @@
 use std::collections::BTreeMap;
 
-use crate::project_slice::{
-    group_fills::{self, BaseGroupedFills, SurfaceFillPattern},
-    prepare_infill::{combine_infill, external_surfaces::PreparedPostExternalSurfaces},
-    tests::{prepare_infill::bridge_over_infill::transaction::snapshot, support::KsrArchive},
+use crate::{
+    OrcaBool,
+    project_slice::{
+        group_fills::{self, GroupedFills, SurfaceFillPattern},
+        prepare_infill::{combine_infill, external_surfaces::PreparedPostExternalSurfaces},
+        tests::{
+            prepare_infill::bridge_over_infill::transaction::{sha256, snapshot},
+            support::KsrArchive,
+        },
+    },
 };
 
 use super::*;
@@ -16,7 +22,7 @@ struct LayerHeader {
 }
 
 #[test]
-fn task22o73_real_ksr_all_460_layers_match_portable_pre_narrow_oracle_and_repeat() {
+fn task22o74_real_ksr_all_460_layers_match_portable_post_narrow_oracle_and_repeat() {
     let (headers, first, second) = {
         let input = super::super::super::combine_infill::prepare_o71(KsrArchive::new());
         let graph = combine_infill::prepare(input).unwrap();
@@ -110,11 +116,34 @@ fn task22o73_real_ksr_all_460_layers_match_portable_pre_narrow_oracle_and_repeat
         (headers, first, second)
     };
 
-    let first = adapt_layers(&headers, &first);
-    let second = adapt_layers(&headers, &second);
+    let layer_1 = super::super::oracle::LayerHeader {
+        id: headers[1].id,
+        height: headers[1].height,
+        print_z: headers[1].print_z,
+    };
+    assert_eq!(
+        sha256(&super::super::oracle::post_metadata(layer_1, &first[1])),
+        LAYER_1_METADATA_SHA256
+    );
+    assert_eq!(
+        sha256(&super::super::oracle::authoritative_geometry(&first[1])),
+        LAYER_1_AUTHORITATIVE_GEOMETRY_SHA256
+    );
+    for (layer, expected) in ORDERED_LAYER_GEOMETRY_SHA256 {
+        assert_eq!(
+            sha256(&super::super::oracle::authoritative_geometry(&first[layer])),
+            expected
+        );
+        assert_eq!(
+            super::super::oracle::authoritative_geometry(&second[layer]),
+            super::super::oracle::authoritative_geometry(&first[layer])
+        );
+    }
+
+    let first = adapt_layers(&headers, &first, OracleStage::PostNarrow);
+    let second = adapt_layers(&headers, &second, OracleStage::PostNarrow);
     let first_totals = totals(&first);
     assert_eq!(first_totals, KSR_TOTALS);
-    assert_ne!(first_totals, O74_POST_TOTALS);
     assert_eq!(totals(&second), KSR_TOTALS);
     assert_distributions(&first);
     assert_empty_layer_suffix(&first);
@@ -127,33 +156,81 @@ fn task22o73_real_ksr_all_460_layers_match_portable_pre_narrow_oracle_and_repeat
     let metadata_sha256 = sha256_hex(&first.metadata);
     let geometry_sha256 = sha256_hex(&first.canonical_geometry);
     let table_sha256 = sha256_hex(&first.layer_table);
-    assert_eq!(metadata_sha256, PRE_METADATA_SHA256);
-    assert_eq!(geometry_sha256, PRE_CANONICAL_GEOMETRY_SHA256);
-    assert_eq!(table_sha256, PRE_LAYER_TABLE_SHA256);
-    assert_ne!(metadata_sha256, O74_POST_METADATA_SHA256);
-    assert_ne!(geometry_sha256, O74_POST_CANONICAL_GEOMETRY_SHA256);
-    assert_ne!(table_sha256, O74_POST_LAYER_TABLE_SHA256);
+    assert_eq!(metadata_sha256, KSR_METADATA_SHA256);
+    assert_eq!(geometry_sha256, KSR_CANONICAL_GEOMETRY_SHA256);
+    assert_eq!(table_sha256, KSR_LAYER_TABLE_SHA256);
+    assert_eq!(
+        first.layer_table.split(|byte| *byte == b'\n').nth(2),
+        Some(b"1\t2\t29\t0\t723\t5,5\t0,29\t5,5".as_slice())
+    );
+}
+
+#[test]
+fn task22o74_disabled_narrow_detection_retains_the_full_ksr_pre_oracle() {
+    let input = super::super::super::combine_infill::prepare_o71(KsrArchive::new());
+    let mut graph = combine_infill::prepare(input).unwrap();
+    graph
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .resolved
+        .objects[0]
+        .object
+        .detect_narrow_internal_solid_infill = OrcaBool(false);
+    let external = &graph.predecessor.predecessor;
+    let prelude = &external.predecessor.predecessor.objects[0]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor;
+    let (compensated, _) = prelude.object.as_parts();
+    let (post_regions, _) = compensated.as_parts();
+    let (plan, _, _) = post_regions.as_parts();
+    let headers = plan
+        .layers
+        .iter()
+        .map(|layer| LayerHeader {
+            id: layer.id,
+            height: layer.height,
+            print_z: layer.print_z,
+        })
+        .collect::<Vec<_>>();
+    let grouped = group_all_layers(external, headers.len());
+    combine_infill::dispose(graph);
+
+    let layers = adapt_layers(&headers, &grouped, OracleStage::PreNarrow);
+    assert_eq!(totals(&layers), PRE_TOTALS);
+    let encoded = encode(&layers);
+    assert_eq!(sha256_hex(&encoded.metadata), PRE_METADATA_SHA256);
+    assert_eq!(
+        sha256_hex(&encoded.canonical_geometry),
+        PRE_CANONICAL_GEOMETRY_SHA256
+    );
+    assert_eq!(sha256_hex(&encoded.layer_table), PRE_LAYER_TABLE_SHA256);
 }
 
 fn group_all_layers(
     external: &PreparedPostExternalSurfaces,
     layer_count: usize,
-) -> Vec<BaseGroupedFills> {
+) -> Vec<GroupedFills> {
     (0..layer_count)
-        .map(|layer_index| group_fills::group_fills_base(external, 0, layer_index))
+        .map(|layer_index| group_fills::group_fills(external, 0, layer_index))
         .collect::<Result<Vec<_>, _>>()
         .unwrap()
 }
 
 fn adapt_layers<'a>(
     headers: &[LayerHeader],
-    grouped: &'a [BaseGroupedFills],
+    grouped: &'a [GroupedFills],
+    stage: OracleStage,
 ) -> Vec<OracleLayer<'a>> {
     assert_eq!(headers.len(), grouped.len());
     headers
         .iter()
         .zip(grouped)
         .map(|(header, grouped)| OracleLayer {
+            stage,
             layer_id: header.id,
             layer_height: header.height,
             print_z: header.print_z,
@@ -176,6 +253,7 @@ fn adapt_layers<'a>(
                         extra_perimeters: fill.representative.extra_perimeters,
                     },
                     params: OracleParams {
+                        idx: fill.params.idx,
                         extruder: fill.params.extruder,
                         pattern: match fill.params.pattern {
                             SurfaceFillPattern::Configured(pattern) => {
@@ -293,7 +371,7 @@ fn assert_distributions(layers: &[OracleLayer<'_>]) {
 }
 
 fn assert_empty_layer_suffix(layers: &[OracleLayer<'_>]) {
-    assert_eq!(layers[41].groups.len(), 5);
+    assert_eq!(layers[41].groups.len(), 6);
     assert_eq!(layers[70].groups.len(), 8);
     assert_eq!(layers[255].groups.len(), 1);
     assert!(layers[260].groups.is_empty());

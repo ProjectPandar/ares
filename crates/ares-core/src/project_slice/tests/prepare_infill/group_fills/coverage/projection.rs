@@ -36,8 +36,8 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     let before = graph_snapshot(&graph);
     let options_before = options(&graph, LAYER).clone();
 
-    let first = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
-    let second = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let first = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
+    let second = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
 
     assert_snapshot_eq(graph_snapshot(&graph), before);
     assert_eq!(options(&graph, LAYER), &options_before);
@@ -56,6 +56,10 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     assert_eq!(first_sparse.params.anchor_length_max.to_bits(), 0x3e0a_f329);
     assert_eq!(first_sparse.params.multiline, 4);
     assert!(first_sparse.params.gyroid_optimized);
+    assert_eq!(
+        first_sparse.params.flow.mm3_per_mm.to_bits(),
+        0x3fb4_d7ac_a000_0000
+    );
     assert_eq!(
         first_sparse.params.role_speed.to_bits(),
         73.25_f32.to_bits()
@@ -81,7 +85,7 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
         options.infill_anchor = FloatOrPercent::Percent(Percent(50.0));
         options.infill_anchor_max = FloatOrPercent::Float(1_000.0);
     }
-    let percent = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let percent = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     let percent = find_kind(&percent.surface_fills, RegionSurfaceKind::Internal);
     assert_eq!(percent.params.anchor_length.to_bits(), 0x3e50_6cbe);
     assert_eq!(
@@ -94,7 +98,7 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
         options.infill_anchor = FloatOrPercent::Float(-0.0);
         options.infill_anchor_max = FloatOrPercent::Float(0.0);
     }
-    let signed_zero = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let signed_zero = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     let signed_zero = find_kind(&signed_zero.surface_fills, RegionSurfaceKind::Internal);
     assert_eq!(
         signed_zero.params.anchor_length.to_bits(),
@@ -142,7 +146,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
     ];
     object_mut(&mut graph).thick_bridges = OrcaBool(false);
     object_mut(&mut graph).thick_internal_bridges = OrcaBool(false);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     let sparse = find_kind(&grouped.surface_fills, RegionSurfaceKind::Internal);
     let external_bridge = find_kind(&grouped.surface_fills, RegionSurfaceKind::BottomBridge);
     let internal_bridge = find_kind(&grouped.surface_fills, RegionSurfaceKind::InternalBridge);
@@ -167,10 +171,11 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
         assert_eq!(fill.params.flow.width.to_bits(), 0x3ecc_cccd);
         assert_eq!(fill.params.flow.height.to_bits(), 0x3e4c_cccd);
         assert_eq!(fill.params.flow.spacing.to_bits(), 0x3eb6_d324);
+        assert_eq!(fill.params.flow.mm3_per_mm.to_bits(), 0x3fb2_4850_8000_0000);
     }
 
     options_mut(&mut graph, LAYER).internal_bridge_speed = FloatOrPercent::Float(17.25);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
         find_kind(&grouped.surface_fills, RegionSurfaceKind::InternalBridge)
             .params
@@ -180,7 +185,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
     );
 
     object_mut(&mut graph).thick_bridges = OrcaBool(true);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert!(
         find_kind(&grouped.surface_fills, RegionSurfaceKind::BottomBridge)
             .params
@@ -198,7 +203,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
     object_mut(&mut graph).thick_internal_bridges = OrcaBool(true);
     let before = graph_snapshot(&graph);
     let object_before = object_mut(&mut graph).clone();
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert!(
         !find_kind(&grouped.surface_fills, RegionSurfaceKind::BottomBridge)
             .params
@@ -211,6 +216,10 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
     assert_eq!(thick_internal.params.flow.width.to_bits(), 0x3ecc_cccd);
     assert_eq!(thick_internal.params.flow.height.to_bits(), 0x3ecc_cccd);
     assert_eq!(thick_internal.params.flow.spacing.to_bits(), 0x3ee6_6667);
+    assert_eq!(
+        thick_internal.params.flow.mm3_per_mm.to_bits(),
+        0x3fc0_15bf_a000_0000
+    );
     assert_snapshot_eq(graph_snapshot(&graph), before);
     assert_eq!(object_mut(&mut graph).clone(), object_before);
     combine_infill::dispose(graph);
@@ -238,7 +247,7 @@ fn task22o73_lockedzag_flow_key_keeps_first_flow_and_source_geometry_order() {
     let before = graph_snapshot(&graph);
     let options_before = options(&graph, LAYER).clone();
 
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
 
     assert_snapshot_eq(graph_snapshot(&graph), before);
     assert_eq!(options(&graph, LAYER), &options_before);
@@ -268,18 +277,35 @@ fn task22o73_lockedzag_flow_key_keeps_first_flow_and_source_geometry_order() {
 }
 
 #[test]
-fn task22o73_internal_void_is_observed_but_not_materialized() {
+fn task22o74_internal_void_is_an_exact_noop_beside_printable_groups() {
     let mut graph = graph();
     record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
+        RegionSurfaceKind::InternalSolid,
+        rectangle(6_000_000, 0, 10_000_000, 4_000_000),
+        0,
+    )];
+    let without_void = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
+    record_mut(&mut graph, LAYER).fill_surfaces.push(surface(
         RegionSurfaceKind::InternalVoid,
         rectangle(0, 0, 4_000_000, 4_000_000),
         0,
-    )];
+    ));
     let before = graph_snapshot(&graph);
-    let grouped = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let with_void = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_snapshot_eq(graph_snapshot(&graph), before);
-    assert!(grouped.has_internal_voids);
-    assert!(grouped.surface_fills.is_empty());
+    let header = super::super::oracle::LayerHeader {
+        id: LAYER,
+        height: 0.0,
+        print_z: 0.0,
+    };
+    assert_eq!(
+        super::super::oracle::metadata(header, &with_void),
+        super::super::oracle::metadata(header, &without_void)
+    );
+    assert_eq!(
+        super::super::oracle::authoritative_geometry(&with_void),
+        super::super::oracle::authoritative_geometry(&without_void)
+    );
     combine_infill::dispose(graph);
 }
 
@@ -288,13 +314,12 @@ fn task22o73_aligned_absent_layer_is_empty_repeatable_and_nonmutating() {
     let mut graph = graph();
     clear_aligned_layer(&mut graph, LAYER);
     let before = graph_snapshot(&graph);
-    let first = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
-    let second = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let first = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
+    let second = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_snapshot_eq(graph_snapshot(&graph), before);
     combine_infill::dispose(graph);
     for grouped in [first, second] {
         assert!(grouped.surface_fills.is_empty());
-        assert!(!grouped.has_internal_voids);
         assert!(grouped.lock_region_param.skin_density_params.is_empty());
         assert!(grouped.lock_region_param.skeleton_density_params.is_empty());
         assert!(grouped.lock_region_param.skin_flow_params.is_empty());

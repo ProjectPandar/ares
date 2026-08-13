@@ -11,55 +11,37 @@ use sha2::{Digest, Sha256};
 use render::{encode_layer_geometry, encode_layer_metadata, encode_layer_table};
 pub(super) use types::{
     EncodedOracle, OracleFlow, OracleGroup, OracleLayer, OracleLockCounts, OracleParams,
-    OracleRepresentative, OracleTotals,
+    OracleRepresentative, OracleStage, OracleTotals,
 };
 
-pub(super) const PINNED_ORCA_COMMIT: &str = "8500fcdccaa10b5099ac20d252af3a7c560046f1";
-pub(super) const INSTRUMENTATION_PATCH_SHA256: &str =
-    "582e53cd1162f573fe4facbafb21e7f360431505e314726e7bb85e7f7221bc52";
+pub(super) const KSR_METADATA_SHA256: &str =
+    "cd4aa18a831dd4672e3e394944e496b8d349b5e21990672a7f14868cc2b3b387";
+pub(super) const KSR_CANONICAL_GEOMETRY_SHA256: &str =
+    "c149d65f5e5ddb89643b78314861ac2343707ddf76decc1e6aa2f88901331f6c";
+pub(super) const KSR_LAYER_TABLE_SHA256: &str =
+    "8d9845b22e38857dbb0840b2527286436a6b9c684c8662d925f8fd4873cef5b2";
 pub(super) const PRE_METADATA_SHA256: &str =
     "a091ca0a63e45dc81712223571b1dfe888ab256bec2437ea564f386783f77900";
 pub(super) const PRE_CANONICAL_GEOMETRY_SHA256: &str =
     "062fab2bbcb683df778ac024a8f6abed7960f3ebac3d55f13124617694d7e2af";
 pub(super) const PRE_LAYER_TABLE_SHA256: &str =
     "ebd74a25609827e4affda26a21d9cd3b10dca08778f56f394b5170f74ecdf721";
-pub(super) const O74_POST_METADATA_SHA256: &str =
-    "cd4aa18a831dd4672e3e394944e496b8d349b5e21990672a7f14868cc2b3b387";
-pub(super) const O74_POST_CANONICAL_GEOMETRY_SHA256: &str =
-    "c149d65f5e5ddb89643b78314861ac2343707ddf76decc1e6aa2f88901331f6c";
-pub(super) const O74_POST_LAYER_TABLE_SHA256: &str =
-    "8d9845b22e38857dbb0840b2527286436a6b9c684c8662d925f8fd4873cef5b2";
-pub(super) const LINUX_PRE_METADATA_SHA256: &str =
-    "25a9ddd67028354ff44607a59c04a065ffa74a99b9f1a05bdc7a1adb9c15dce7";
-pub(super) const LINUX_PRE_CANONICAL_GEOMETRY_SHA256: &str =
-    "136cca449aebb9d155fd51552f51a7bb3b2f5acb42702bd84b2d2920e265d1dc";
-pub(super) const LINUX_PRE_LAYER_TABLE_SHA256: &str =
-    "f45a91b4f62dabae2f2320f936b8c903ee5d8e7d8db07fb9251418c82e832bf6";
-pub(super) const LINUX_POST_METADATA_SHA256: &str =
-    "36aecdaf4d3bfb8dadcaf63a0d0d39f3a12ad9b0b0e1aad0c5a9ceab19ef2eff";
-pub(super) const LINUX_POST_CANONICAL_GEOMETRY_SHA256: &str =
-    "13d36da11e01e99840b1cf058003ad18c26c29bd8d6bb0d33af23c1b2ce4534c";
-pub(super) const LINUX_POST_LAYER_TABLE_SHA256: &str =
-    "15dd3f792d2a9176630e30c2170487c872a9b94eb637fdb6eb6a2841667ece5a";
-
-// This Linux instrumentation checksum is provenance, not a result oracle. The
-// accepted hashes above replay the repository's fixed-MSVC bridge ordering.
-pub(super) const NONPORTABLE_STABLE_RAW_SHA256: &str =
-    "5ac8e44d9ab4f9c9e8954db375ee70fbfc5a38e16f66fd7038321bc7cdcd3124";
-pub(super) const RAW_ORDER_VARIANT_LAYERS: [usize; 4] = [13, 18, 49, 259];
+pub(super) const LAYER_1_METADATA_SHA256: &str =
+    "b466abfd76770f5e776b9df3866cf12b07b836bee2a8a7ba721c66ae1f2851bf";
+pub(super) const LAYER_1_AUTHORITATIVE_GEOMETRY_SHA256: &str =
+    "0938758d43750be165712735f6f5e1b6a1ae8fbb52a7f551b101118e1083c856";
+pub(super) const ORDERED_LAYER_GEOMETRY_SHA256: [(usize, &str); 2] = [
+    (
+        45,
+        "33bf737e3d836096a20a821fcf1ace79dccda10973203408ba87ddee5ee25d64",
+    ),
+    (
+        70,
+        "7a8e9ec6e0aa2b1a8cd6bd8d1e9c261719b77168427f113fa051e7f5c551be71",
+    ),
+];
 
 pub(super) const KSR_TOTALS: OracleTotals = OracleTotals {
-    layers: 460,
-    groups: 477,
-    fill_expolygons: 1_882,
-    fill_holes: 174,
-    fill_paths: 2_056,
-    fill_points: 107_540,
-    no_overlap_expolygons: 2_547,
-    nonempty_layers: 260,
-    empty_layers: 200,
-};
-pub(super) const O74_POST_TOTALS: OracleTotals = OracleTotals {
     layers: 460,
     groups: 536,
     fill_expolygons: 2_218,
@@ -70,23 +52,35 @@ pub(super) const O74_POST_TOTALS: OracleTotals = OracleTotals {
     nonempty_layers: 260,
     empty_layers: 200,
 };
-pub(super) const KSR_GROUP_HISTOGRAM: [(usize, usize); 7] = [
+pub(super) const PRE_TOTALS: OracleTotals = OracleTotals {
+    layers: 460,
+    groups: 477,
+    fill_expolygons: 1_882,
+    fill_holes: 174,
+    fill_paths: 2_056,
+    fill_points: 107_540,
+    no_overlap_expolygons: 2_547,
+    nonempty_layers: 260,
+    empty_layers: 200,
+};
+pub(super) const KSR_GROUP_HISTOGRAM: [(usize, usize); 8] = [
     (0, 200),
-    (1, 105),
-    (2, 107),
-    (3, 40),
-    (4, 5),
+    (1, 100),
+    (2, 67),
+    (3, 78),
+    (4, 11),
     (5, 2),
+    (6, 1),
     (8, 1),
 ];
 pub(super) const KSR_KIND_COUNTS: [(u8, usize); 6] =
-    [(0, 31), (1, 1), (2, 11), (4, 252), (5, 160), (6, 22)];
-pub(super) const KSR_PATTERN_COUNTS: [(u8, usize); 3] = [(0, 194), (1, 31), (20, 252)];
+    [(0, 31), (1, 1), (2, 11), (4, 252), (5, 219), (6, 22)];
+pub(super) const KSR_PATTERN_COUNTS: [(u8, usize); 4] = [(0, 93), (1, 31), (20, 252), (29, 160)];
 pub(super) const KSR_ROLE_COUNTS: [(u8, usize); 6] =
-    [(4, 252), (5, 160), (6, 31), (7, 1), (9, 11), (10, 22)];
-pub(super) const KSR_EXTRUDER_COUNTS: [(u32, usize); 1] = [(1, 477)];
-pub(super) const KSR_PARAMS_BRIDGE_COUNTS: [(bool, usize); 2] = [(false, 444), (true, 33)];
-pub(super) const KSR_FLOW_BRIDGE_COUNTS: [(bool, usize); 2] = [(false, 455), (true, 22)];
+    [(4, 252), (5, 219), (6, 31), (7, 1), (9, 11), (10, 22)];
+pub(super) const KSR_EXTRUDER_COUNTS: [(u32, usize); 1] = [(1, 536)];
+pub(super) const KSR_PARAMS_BRIDGE_COUNTS: [(bool, usize); 2] = [(false, 503), (true, 33)];
+pub(super) const KSR_FLOW_BRIDGE_COUNTS: [(bool, usize); 2] = [(false, 514), (true, 22)];
 pub(super) const KSR_LOCK_COUNTS: OracleLockCounts = OracleLockCounts {
     skin_density: 0,
     skeleton_density: 0,

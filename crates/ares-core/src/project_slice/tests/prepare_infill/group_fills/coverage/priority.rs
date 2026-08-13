@@ -46,8 +46,8 @@ fn task22o73_priority_uses_ordered_donut_paths_and_accumulates_raw_empty_groups(
     record_mut(&mut graph, LAYER).fill_surfaces = surfaces.into_iter().collect();
     let before = graph_snapshot(&graph);
 
-    let first = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
-    let second = group_fills::group_fills_base(external(&graph), 0, LAYER).unwrap();
+    let first = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
+    let second = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
 
     assert_snapshot_eq(graph_snapshot(&graph), before);
     assert_eq!(first.surface_fills.len(), 4);

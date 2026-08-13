@@ -7,13 +7,6 @@ use crate::{
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(in crate::project_slice) enum SurfaceFillPattern {
     Configured(ProcessInfillPattern),
-    #[cfg_attr(
-        test,
-        expect(
-            dead_code,
-            reason = "O74 emits the source ConcentricInternal postpass pattern"
-        )
-    )]
     ConcentricInternal,
 }
 
@@ -33,6 +26,7 @@ pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) anchor_length_max: f32,
     pub(in crate::project_slice) flow: Flow,
     pub(in crate::project_slice) extrusion_role: ExtrusionRole,
+    pub(in crate::project_slice) idx: usize,
     pub(in crate::project_slice) role_speed: f32,
     pub(in crate::project_slice) lateral_lattice_angle_1: f32,
     pub(in crate::project_slice) lateral_lattice_angle_2: f32,
@@ -79,18 +73,16 @@ pub(in crate::project_slice) struct LockRegionParam {
     pub(in crate::project_slice) skeleton_flow_params: Vec<LockFlowParam>,
 }
 
-pub(in crate::project_slice) struct BaseGroupedFills {
+pub(in crate::project_slice) struct GroupedFills {
     pub(in crate::project_slice) surface_fills: Vec<SurfaceFill>,
     pub(in crate::project_slice) lock_region_param: LockRegionParam,
-    pub(in crate::project_slice) has_internal_voids: bool,
 }
 
-impl BaseGroupedFills {
+impl GroupedFills {
     pub(super) fn empty() -> Self {
         Self {
             surface_fills: Vec::new(),
             lock_region_param: LockRegionParam::default(),
-            has_internal_voids: false,
         }
     }
 }
