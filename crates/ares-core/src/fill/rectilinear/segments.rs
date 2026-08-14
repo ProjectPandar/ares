@@ -40,9 +40,17 @@ pub(crate) struct SegmentedLine {
     pub(crate) intersections: Vec<SegmentIntersection>,
 }
 
-struct Contour {
-    polygon: Polygon,
-    inner: bool,
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct OffsetContour {
+    pub(crate) polygon: Polygon,
+    pub(crate) inner: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RectilinearSlice {
+    pub(crate) source: ExPolygon,
+    pub(crate) contours: Vec<OffsetContour>,
+    pub(crate) lines: Vec<SegmentedLine>,
 }
 
 #[expect(
@@ -50,7 +58,7 @@ struct Contour {
     clippy::excessive_nesting,
     reason = "the source seam carries offset/scanline state and walks contours, segments, then lines"
 )]
-pub(crate) fn slice_vertical_lines(
+pub(crate) fn prepare_rectilinear_slice(
     expolygon: &ExPolygon,
     angle: f64,
     outer_offset: f32,
@@ -58,8 +66,8 @@ pub(crate) fn slice_vertical_lines(
     count: usize,
     x0: i64,
     spacing: i64,
-) -> Result<Vec<SegmentedLine>, ClipperError> {
-    let contours = prepare_contours(expolygon, angle, outer_offset, inner_offset)?;
+) -> Result<RectilinearSlice, ClipperError> {
+    let (source, contours) = prepare_contours(expolygon, angle, outer_offset, inner_offset)?;
     let mut lines = (0..count)
         .map(|index| {
             let delta = i64::try_from(index)
@@ -98,7 +106,36 @@ pub(crate) fn slice_vertical_lines(
             .sort_by_key(|intersection| intersection.point.y());
         remove_duplicate_vertices(&mut line.intersections);
     }
-    Ok(lines)
+    Ok(RectilinearSlice {
+        source,
+        contours,
+        lines,
+    })
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "temporary O77 test shell forwards the exact source slice parameters"
+)]
+pub(crate) fn slice_vertical_lines(
+    expolygon: &ExPolygon,
+    angle: f64,
+    outer_offset: f32,
+    inner_offset: f32,
+    count: usize,
+    x0: i64,
+    spacing: i64,
+) -> Result<Vec<SegmentedLine>, ClipperError> {
+    prepare_rectilinear_slice(
+        expolygon,
+        angle,
+        outer_offset,
+        inner_offset,
+        count,
+        x0,
+        spacing,
+    )
+    .map(|slice| slice.lines)
 }
 
 fn prepare_contours(
@@ -106,10 +143,10 @@ fn prepare_contours(
     angle: f64,
     outer_offset: f32,
     inner_offset: f32,
-) -> Result<Vec<Contour>, ClipperError> {
+) -> Result<(ExPolygon, Vec<OffsetContour>), ClipperError> {
     let rotated = rotate_expolygon(expolygon, angle)?;
     let outer = if outer_offset == 0.0 {
-        vec![rotated]
+        vec![rotated.clone()]
     } else {
         offset_expolygon(&rotated, outer_offset, JoinType::Miter, 3.0)?
     };
@@ -120,18 +157,22 @@ fn prepare_contours(
     };
     let mut contours = flatten(outer, false);
     contours.extend(flatten(inner, true));
-    Ok(contours)
+    Ok((rotated, contours))
 }
 
-fn flatten(expolygons: Vec<ExPolygon>, inner: bool) -> Vec<Contour> {
+fn flatten(expolygons: Vec<ExPolygon>, inner: bool) -> Vec<OffsetContour> {
     let mut output = Vec::new();
     for expolygon in expolygons {
         let (contour, holes) = expolygon.into_parts();
-        output.push(Contour {
+        output.push(OffsetContour {
             polygon: contour,
             inner,
         });
-        output.extend(holes.into_iter().map(|polygon| Contour { polygon, inner }));
+        output.extend(
+            holes
+                .into_iter()
+                .map(|polygon| OffsetContour { polygon, inner }),
+        );
     }
     output
 }

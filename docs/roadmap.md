@@ -6506,3 +6506,14 @@ indices with bidirectional symmetry.
 Two focused tests and all 1,179 task22o core regressions pass. Strict core
 Clippy, rustfmt, diff, and LOC gates pass. Region path lengths, ant chaining,
 polylines/entities, lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.82: rectilinear contour context
+
+O82 ports the retained ownership boundary of pinned
+`FillRectilinear.cpp:357-457,759-993`. One owned slice now keeps the rotated
+source, ordered outer/inner offset contours, and O77 lines whose contour and
+segment indices address that inventory.
+
+Two focused tests pass; strict core Clippy, rustfmt, diff, and LOC gates pass.
+Contour path measurement/emission, region lengths/chaining, filler entities,
+lifecycle, motion, and G-code remain later slices.

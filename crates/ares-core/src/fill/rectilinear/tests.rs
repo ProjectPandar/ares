@@ -3,7 +3,7 @@ use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
 use super::{
     IntersectionKind, LinkQuality, LinkType, MonotonicRegion, RegionBoundary, SegmentIntersection,
     SegmentedLine, connect_contours, connect_region_neighbors, generate_monotonic_regions,
-    insert_phony_outer_pairs, slice_vertical_lines,
+    insert_phony_outer_pairs, prepare_rectilinear_slice, slice_vertical_lines,
 };
 
 fn rectangle() -> ExPolygon {
@@ -234,6 +234,42 @@ fn task22o80_region_generation_is_repeatable_and_does_not_mutate_sections() {
         generate_monotonic_regions(&lines)
     );
     assert_eq!(lines, before);
+}
+
+#[test]
+fn task22o82_slice_retains_source_and_indexed_outer_inner_contours() {
+    let source = rectangle();
+    let slice = prepare_rectilinear_slice(&source, 0.0, -5.0, -10.0, 3, 10, 20).unwrap();
+
+    assert_eq!(slice.source, source);
+    assert_eq!(slice.contours.len(), 2);
+    assert!(!slice.contours[0].inner);
+    assert!(slice.contours[1].inner);
+    assert!(
+        slice
+            .lines
+            .iter()
+            .flat_map(|line| &line.intersections)
+            .all(|item| {
+                item.contour_index < slice.contours.len()
+                    && item.segment_index
+                        < slice.contours[item.contour_index].polygon.points().len()
+            })
+    );
+}
+
+#[test]
+fn task22o82_retained_slice_is_repeatable_and_atomic_on_range_error() {
+    let source = rectangle();
+    let first = prepare_rectilinear_slice(&source, 0.25, -5.0, -10.0, 2, 10, 20).unwrap();
+    let second = prepare_rectilinear_slice(&source, 0.25, -5.0, -10.0, 2, 10, 20).unwrap();
+
+    assert_eq!(first, second);
+    assert_eq!(source, rectangle());
+    assert_eq!(
+        prepare_rectilinear_slice(&source, 0.0, 0.0, 0.0, 2, i64::MAX, 1),
+        Err(ClipperError::CoordinateOutOfRange)
+    );
 }
 
 fn intersection(y: i64, kind: IntersectionKind) -> SegmentIntersection {

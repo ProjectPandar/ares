@@ -5038,3 +5038,12 @@ horizontal links to populate sorted unique symmetric left/right neighbor
 indices. Two focused tests and all 1,179 task22o core regressions pass; strict
 core Clippy, rustfmt, diff, and LOC gates pass. Region lengths, ant chaining,
 filler entities, lifecycle, and G-code remain pending.
+
+### Task 22O.82: rectilinear contour context
+
+O82 ports the retained ownership boundary of pinned
+`FillRectilinear.cpp:357-457,759-993`. Rotated source geometry, ordered
+outer/inner contours, and indexed O77 lines now share one owned slice. Two
+focused tests pass; strict core Clippy, rustfmt, diff, and LOC gates pass.
+Perimeter measurement/emission, chaining, entities, lifecycle, and G-code remain
+pending.

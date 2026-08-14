@@ -10,7 +10,7 @@ pub(crate) use pinch::insert_phony_outer_pairs;
 pub(crate) use regions::{MonotonicRegion, RegionBoundary, generate_monotonic_regions};
 pub(crate) use segments::{
     IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine,
-    slice_vertical_lines,
+    prepare_rectilinear_slice, slice_vertical_lines,
 };
 
 #[cfg(test)]
