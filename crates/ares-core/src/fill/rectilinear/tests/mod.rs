@@ -1,5 +1,6 @@
 mod chain;
 mod costs;
+mod emit;
 mod links;
 mod path_matrix;
 mod perimeter;

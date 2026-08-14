@@ -6574,3 +6574,14 @@ and the pinned no-op 3-opt now emit owned region/orientation chains.
 Compile RED proved missing modules. Three focused and both O86 regressions pass.
 Strict core Clippy, rustfmt, diff, and LOC gates pass. Path-to-polyline emission,
 filler entities, lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.88: monotonic polyline emission
+
+O88 ports pinned `FillRectilinear.cpp:2584-2753`. O87 chains now emit source-
+ordered outer endpoints, vertical runs, retained contour arcs, disconnected
+splits, scale-aware filtering, duplicate removal, and phony-pinch merging.
+
+Compile RED proved the missing emitter. Two focused and all three O87 regressions
+pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Full
+`fill_surface_by_lines` spacing/alignment/rotation, extrusion entities,
+lifecycle, motion, and G-code remain later slices.

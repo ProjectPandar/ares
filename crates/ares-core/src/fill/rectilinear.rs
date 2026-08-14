@@ -1,5 +1,6 @@
 mod chain;
 mod costs;
+mod emit;
 mod links;
 mod neighbors;
 mod path_matrix;
@@ -11,6 +12,7 @@ mod segments;
 
 pub(crate) use chain::chain_monotonic_regions;
 pub(crate) use costs::compute_region_costs;
+pub(crate) use emit::emit_monotonic_polylines;
 pub(crate) use links::connect_contours;
 pub(crate) use neighbors::connect_region_neighbors;
 pub(crate) use path_matrix::MonotonicPathMatrix;

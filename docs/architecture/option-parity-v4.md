@@ -5092,3 +5092,12 @@ order, strict best replacement, and no-op 3-opt produce owned region/orientation
 chains. Compile RED proved missing modules; three focused and both O86 regression
 tests pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Polyline
 emission, entities, lifecycle, and G-code remain pending.
+
+### Task 22O.88: monotonic polyline emission
+
+O88 ports pinned `FillRectilinear.cpp:2584-2753`. O87 chains emit exact outer
+endpoints, vertical runs, retained contour arcs, split paths, scale-aware
+filtering, and phony-pinch merging. Compile RED proved the missing emitter; two
+focused and all three O87 regression tests pass. Strict core Clippy, rustfmt,
+diff, and LOC gates pass. Filler orchestration/rotation, entities, lifecycle,
+and G-code remain pending.
