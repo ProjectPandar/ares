@@ -18,6 +18,10 @@ pub(crate) struct MonotonicRegion {
 }
 
 impl MonotonicRegion {
+    pub(crate) const fn length(&self, flipped: bool) -> f32 {
+        self.lengths[flipped as usize]
+    }
+
     pub(crate) const fn left_intersection(&self, flipped: bool) -> usize {
         if flipped {
             self.left.high

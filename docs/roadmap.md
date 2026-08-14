@@ -6563,3 +6563,14 @@ Compile RED proved the missing module. Two focused and both O85 regressions pass
 Strict core Clippy, rustfmt, diff, and LOC gates pass. Ant simulation/RNG,
 pheromone evolution, path selection, polylines/entities, lifecycle, motion, and
 G-code remain later slices.
+
+## Task 22O.87: monotonic ant chain
+
+O87 ports pinned `FillRectilinear.cpp:2190-2582`. Standard default MT19937-64,
+precedence queue, greedy deposit, bounded ant rounds, source probabilities,
+local diversification, global pheromone evolution, strict best replacement,
+and the pinned no-op 3-opt now emit owned region/orientation chains.
+
+Compile RED proved missing modules. Three focused and both O86 regressions pass.
+Strict core Clippy, rustfmt, diff, and LOC gates pass. Path-to-polyline emission,
+filler entities, lifecycle, motion, and G-code remain later slices.

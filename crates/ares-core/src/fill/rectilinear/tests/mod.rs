@@ -1,3 +1,4 @@
+mod chain;
 mod costs;
 mod links;
 mod path_matrix;

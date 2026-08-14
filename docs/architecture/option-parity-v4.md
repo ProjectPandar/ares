@@ -5083,3 +5083,12 @@ entries lazily cache exact f32 endpoint length/visibility and retain independent
 pheromone. Compile RED proved the missing module; two focused and both O85
 regression tests pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Ant
 simulation/RNG, path selection, entities, lifecycle, and G-code remain pending.
+
+### Task 22O.87: monotonic ant chain
+
+O87 ports pinned `FillRectilinear.cpp:2190-2582`. Default MT19937-64,
+precedence-constrained greedy/ant traversal, source probability and pheromone
+order, strict best replacement, and no-op 3-opt produce owned region/orientation
+chains. Compile RED proved missing modules; three focused and both O86 regression
+tests pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Polyline
+emission, entities, lifecycle, and G-code remain pending.
