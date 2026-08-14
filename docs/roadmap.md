@@ -6698,3 +6698,18 @@ Five focused/KSR tests pass; KSR freezes 3,272 perimeters, 62,094 candidates,
 and checksum `11805973356074762675`. Strict core gates pass. Runtime
 visibility/penalties/selection/alignment/placement/clipping, cursor, O96
 activation, motion, and G-code remain later slices.
+
+## Task 22O.98: Arachne extrusion-line primitives
+
+O98 ports pinned `Arachne/utils/ExtrusionJunction.hpp` and
+`Arachne/utils/ExtrusionLine.hpp/.cpp:21-275`. Crate-private Rust types retain
+junction width/perimeter identity, line metadata and mutation, source integer
+length and thick-width layout, clockwise contour/area conventions, and the
+source simplification and extrusion-area guards across active coordinate
+scales.
+
+Ten focused tests cover the accepted primitive boundary and strict core gates
+pass. O98 is inactive:
+half-edge/skeletal topology, beading, `WallToolPaths`,
+`FillConcentricInternal`, variable-width entity materialization, lifecycle,
+motion, and G-code remain later source-cited slices.

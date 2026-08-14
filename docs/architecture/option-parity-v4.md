@@ -5188,3 +5188,15 @@ flow width, counter-clockwise normalization, original-winding angle signs, and
 source 0.4 mm-arm vertex angles. Five tests pass; KSR freezes 3,272 perimeters,
 62,094 candidates, and checksum `11805973356074762675`; strict core gates pass. Visibility, penalties, selection, alignment, placement/clipping,
 runtime cursor, O96 activation, motion, and G-code remain pending.
+
+### Task 22O.98: Arachne extrusion-line primitives
+
+O98 ports pinned `Arachne/utils/ExtrusionJunction.hpp` and
+`Arachne/utils/ExtrusionLine.hpp/.cpp:21-275`. Crate-private junction and line
+types preserve width/perimeter/inset identity, mutation, source integer length,
+thick-polyline width layout, clockwise contour/area conventions, and source
+simplification and extrusion-area guards using the active coordinate scale.
+Ten focused tests cover the boundary and strict core gates pass. Half-edge/
+skeletal topology, beading,
+`WallToolPaths`, `FillConcentricInternal`, variable-width entities, lifecycle,
+motion, and G-code remain pending.

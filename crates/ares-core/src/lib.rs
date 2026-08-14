@@ -1,3 +1,11 @@
+#[cfg_attr(
+    not(test),
+    allow(
+        dead_code,
+        reason = "O98 Arachne primitives activate with concentric internal fill"
+    )
+)]
+mod arachne;
 mod bridge_support;
 mod bridges;
 mod brims;
