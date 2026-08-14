@@ -5120,3 +5120,13 @@ link gate and zero-anchor MonotonicLine policy, then exact ordered role/flow
 collections. Compile RED proved missing dispatch; two focused, three O76, and
 two O89 regression tests pass. Strict core Clippy, rustfmt, diff, and LOC gates
 pass. Remaining fillers/thin fills, lifecycle, and G-code remain pending.
+
+### Task 22O.91: layer fill entity stage
+
+O91 ports pinned `Fill.cpp:1213-1384` ownership across every object/layer after
+combination and advances the public lifecycle transactionally. KSR traversal
+also ports pinned O77 endpoint-overlap classification, O79 any-side vertical
+connectivity, and the O80 zigzag reachability invariant. Three focused and
+O79/O80/O90 regression tests pass; strict core Clippy, rustfmt, diff, and LOC
+gates pass. Thin fills, perimeter/fill ordering, motion, and G-code remain
+pending.

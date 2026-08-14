@@ -65,6 +65,7 @@ pub(crate) fn generate_monotonic_regions(lines: &[SegmentedLine]) -> Vec<Monoton
                 let mut left = (seed, high);
                 let mut right = left;
                 let mut right_line = seed_line;
+                let mut zigzag = [seed, high];
                 consumed[seed_line][seed] = true;
                 let mut count = 1;
                 while right_line + 1 < lines.len() {
@@ -84,6 +85,21 @@ pub(crate) fn generate_monotonic_regions(lines: &[SegmentedLine]) -> Vec<Monoton
                     if back != left {
                         break;
                     }
+                    let Some(first_next) = next_zigzag_intersection(
+                        &lines[right_line],
+                        &lines[right_line + 1],
+                        zigzag[0],
+                    ) else {
+                        break;
+                    };
+                    let Some(second_next) = next_zigzag_intersection(
+                        &lines[right_line],
+                        &lines[right_line + 1],
+                        zigzag[1],
+                    ) else {
+                        break;
+                    };
+                    zigzag = [first_next, second_next];
                     right_line += 1;
                     right = candidate;
                     consumed[right_line][right.0] = true;
@@ -136,13 +152,139 @@ fn overlap(
     high: usize,
     link: impl Fn(&super::segments::SegmentIntersection) -> Option<(usize, LinkType, LinkQuality)>,
 ) -> Option<(usize, usize)> {
-    let linked = (low..=high).find_map(|index| {
-        link(&current.intersections[index])
-            .and_then(|(target, kind, _)| (kind == LinkType::Horizontal).then_some(target))
-    })?;
-    let bottom = vertical_run_bottom(other, linked);
-    let top = vertical_run_top(other, linked);
+    let mut index = low;
+    let bottom = loop {
+        let item = current.intersections[index];
+        if is_inner(item.kind)
+            && let Some((target, LinkType::Horizontal, _)) = link(&item)
+        {
+            break vertical_run_bottom(other, target);
+        }
+        if index == high {
+            return None;
+        }
+        if item.kind != IntersectionKind::InnerHigh
+            || current.intersections[index + 1].kind == IntersectionKind::InnerLow
+        {
+            index += 1;
+        } else {
+            let Some((target, LinkQuality::Valid)) = vertical_link(item, LinkType::Up) else {
+                return None;
+            };
+            index = target;
+        }
+    };
+
+    index = high;
+    let top = loop {
+        let item = current.intersections[index];
+        if is_inner(item.kind)
+            && let Some((target, LinkType::Horizontal, _)) = link(&item)
+        {
+            break vertical_run_top(other, target);
+        }
+        if index == low {
+            return None;
+        }
+        if item.kind != IntersectionKind::InnerLow
+            || current.intersections[index - 1].kind == IntersectionKind::InnerHigh
+        {
+            index -= 1;
+        } else {
+            let Some((target, LinkQuality::Valid)) = vertical_link(item, LinkType::Down) else {
+                return None;
+            };
+            index = target;
+        }
+    };
     (bottom < top).then_some((bottom, top))
+}
+
+fn vertical_link(
+    item: super::segments::SegmentIntersection,
+    direction: LinkType,
+) -> Option<(usize, LinkQuality)> {
+    [item.previous, item.next]
+        .into_iter()
+        .flatten()
+        .find_map(|(target, kind, quality)| (kind == direction).then_some((target, quality)))
+}
+
+const fn is_inner(kind: IntersectionKind) -> bool {
+    matches!(
+        kind,
+        IntersectionKind::InnerLow | IntersectionKind::InnerHigh
+    )
+}
+
+#[expect(
+    clippy::excessive_nesting,
+    reason = "source zigzag validation traverses linked vertical runs in both directions"
+)]
+fn next_zigzag_intersection(
+    line: &SegmentedLine,
+    next: &SegmentedLine,
+    start: usize,
+) -> Option<usize> {
+    let going_up = matches!(
+        line.intersections[start].kind,
+        IntersectionKind::OuterLow | IntersectionKind::InnerLow
+    );
+    let mut index = start;
+    let mut right = right_horizontal(line.intersections[index]);
+    if going_up {
+        loop {
+            loop {
+                index += 1;
+                if let Some(target) = right_horizontal(line.intersections[index]) {
+                    right = Some(right.map_or(target, |current| current.max(target)));
+                }
+                if line.intersections[index].kind == IntersectionKind::InnerHigh
+                    && line.intersections[index + 1].kind == IntersectionKind::OuterHigh
+                {
+                    break;
+                }
+            }
+            let Some((target, LinkQuality::Valid)) =
+                vertical_link(line.intersections[index], LinkType::Up)
+            else {
+                break;
+            };
+            index = target;
+        }
+    } else {
+        loop {
+            loop {
+                index -= 1;
+                if let Some(target) = right_horizontal(line.intersections[index]) {
+                    right = Some(target);
+                }
+                if line.intersections[index].kind == IntersectionKind::InnerLow
+                    && line.intersections[index - 1].kind == IntersectionKind::OuterLow
+                {
+                    break;
+                }
+            }
+            let Some((target, LinkQuality::Valid)) =
+                vertical_link(line.intersections[index], LinkType::Down)
+            else {
+                break;
+            };
+            index = target;
+        }
+    }
+    right.map(|target| {
+        if going_up {
+            vertical_run_top(next, target)
+        } else {
+            vertical_run_bottom(next, target)
+        }
+    })
+}
+
+fn right_horizontal(item: super::segments::SegmentIntersection) -> Option<usize> {
+    item.next
+        .and_then(|(target, kind, _)| (kind == LinkType::Horizontal).then_some(target))
 }
 
 pub(super) fn vertical_run_bottom(line: &SegmentedLine, mut index: usize) -> usize {

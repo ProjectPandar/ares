@@ -130,7 +130,7 @@ pub(super) fn populate_vertical_lines(
     for line in &mut slice.lines {
         line.intersections
             .sort_by_key(|intersection| intersection.point.y());
-        remove_duplicate_vertices(&mut line.intersections);
+        remove_overlapping_vertices(line, &slice.contours);
     }
     Ok(())
 }
@@ -247,12 +247,45 @@ const fn kind(inner: bool, low: bool) -> IntersectionKind {
     }
 }
 
-fn remove_duplicate_vertices(intersections: &mut Vec<SegmentIntersection>) {
-    intersections.dedup_by(|right, left| {
-        left.contour_index == right.contour_index
-            && left.point == right.point
-            && left.kind == right.kind
-    });
+fn remove_overlapping_vertices(line: &mut SegmentedLine, contours: &[OffsetContour]) {
+    let mut output: Vec<SegmentIntersection> = Vec::with_capacity(line.intersections.len());
+    for intersection in line.intersections.iter().copied() {
+        let Some(previous) = output.last_mut() else {
+            output.push(intersection);
+            continue;
+        };
+        if previous.contour_index != intersection.contour_index
+            || !at_segment_vertex(*previous, line.x, contours)
+            || !at_segment_vertex(intersection, line.x, contours)
+        {
+            output.push(intersection);
+            continue;
+        }
+        if previous.point.y() == intersection.point.y() {
+            continue;
+        }
+        if previous.kind == intersection.kind {
+            if !matches!(
+                intersection.kind,
+                IntersectionKind::OuterLow | IntersectionKind::InnerLow
+            ) {
+                *previous = intersection;
+            }
+            continue;
+        }
+        output.push(intersection);
+    }
+    line.intersections = output;
+}
+
+fn at_segment_vertex(
+    intersection: SegmentIntersection,
+    x: i64,
+    contours: &[OffsetContour],
+) -> bool {
+    let points = contours[intersection.contour_index].polygon.points();
+    let previous = (intersection.segment_index + points.len() - 1) % points.len();
+    points[previous].x() == x || points[intersection.segment_index].x() == x
 }
 
 fn intersection_y(

@@ -27,27 +27,27 @@ fn pinch_positions(line: &SegmentedLine) -> Vec<usize> {
         .filter_map(|(index, pair)| {
             (pair[0].kind == IntersectionKind::InnerHigh
                 && pair[1].kind == IntersectionKind::InnerLow
-                && !connected_pair(pair[0].next, pair[1].previous, index, index + 1))
+                && !connected_pair(pair[0], pair[1]))
             .then_some(index)
         })
         .collect()
 }
 
-fn connected_pair(
-    high: Option<(usize, LinkType, LinkQuality)>,
-    low: Option<(usize, LinkType, LinkQuality)>,
-    high_index: usize,
-    low_index: usize,
-) -> bool {
-    high.is_some_and(|link| {
-        link.0 == low_index
-            && matches!(link.1, LinkType::Up | LinkType::Down)
-            && link.2 == LinkQuality::Valid
-    }) || low.is_some_and(|link| {
-        link.0 == high_index
-            && matches!(link.1, LinkType::Up | LinkType::Down)
-            && link.2 == LinkQuality::Valid
-    })
+fn connected_pair(high: SegmentIntersection, low: SegmentIntersection) -> bool {
+    let up = vertical_target(high, LinkType::Up)
+        .map(|index| index as isize)
+        .unwrap_or(-1);
+    let down = vertical_target(low, LinkType::Down)
+        .map(|index| index as isize)
+        .unwrap_or(-1);
+    down + 1 == up
+}
+
+fn vertical_target(item: SegmentIntersection, direction: LinkType) -> Option<usize> {
+    [item.previous, item.next]
+        .into_iter()
+        .flatten()
+        .find_map(|(target, kind, _)| (kind == direction).then_some(target))
 }
 
 fn insert_pairs(

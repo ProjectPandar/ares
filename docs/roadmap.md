@@ -6608,3 +6608,15 @@ and MonotonicLine zero-anchor policy, and emits ordered role/flow collections.
 Compile RED proved missing dispatch. Two focused, three O76, and two O89
 regressions pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Remaining
 fillers/thin fills, lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.91: layer fill entity stage
+
+O91 ports pinned `Fill.cpp:1213-1384` ownership. Post-combination state now
+materializes every object/layer through O76/O90 transactionally and advances the
+public lifecycle before the explicit incomplete sink. Full traversal also ports
+pinned O77 endpoint-overlap classification, O79 any-side vertical connectivity,
+and the O80 zigzag reachability invariant assumed by source assertions.
+
+Three O91 and O79/O80/O90 regressions pass. Strict core Clippy, rustfmt, diff,
+and LOC gates pass. Thin fills, perimeter/fill ordering, motion, and G-code
+remain later slices.

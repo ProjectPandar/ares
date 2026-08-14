@@ -122,15 +122,16 @@ fn slice_project_sync(
     let candidates = prepare_infill::bridge_over_infill::prepare(external)?;
     let bridged = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
-    consume_post_infill_combination(prepared, metadata)
+    let filled = fill_entities::prepare(prepared)?;
+    consume_post_fill_entities(filled, metadata)
 }
 
 #[inline(never)]
-fn consume_post_infill_combination(
-    prepared: prepare_infill::combine_infill::PreparedPostInfillCombination,
+fn consume_post_fill_entities(
+    prepared: fill_entities::PreparedPostFillEntities,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::combine_infill::dispose(prepared);
+    fill_entities::dispose(prepared);
     let _ = metadata;
     Err(SliceError::ProjectSlicingIncomplete)
 }

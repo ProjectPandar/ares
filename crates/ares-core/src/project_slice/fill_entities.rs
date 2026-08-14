@@ -10,9 +10,85 @@ use crate::{
     ProcessInfillPattern, SliceError,
     project_slice::{
         group_fills::{SurfaceFillPattern, group_fills},
-        prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
+        prepare_infill::{
+            combine_infill::{self, PreparedPostInfillCombination},
+            external_surfaces::PreparedPostExternalSurfaces,
+        },
     },
 };
+
+#[cfg(test)]
+thread_local! {
+    static INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static DISPOSALS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+pub(in crate::project_slice) struct PreparedPostFillEntities {
+    pub(in crate::project_slice) predecessor: PreparedPostInfillCombination,
+    pub(in crate::project_slice) objects: Vec<Vec<LayerFillEntities>>,
+}
+
+pub(in crate::project_slice) fn prepare(
+    predecessor: PreparedPostInfillCombination,
+) -> Result<PreparedPostFillEntities, SliceError> {
+    #[cfg(test)]
+    INVOCATIONS.with(|count| count.set(count.get() + 1));
+    let result = {
+        let external = &predecessor.predecessor.predecessor;
+        let traversal = &external.predecessor.predecessor;
+        traversal
+            .objects
+            .iter()
+            .enumerate()
+            .map(|(object_index, object)| {
+                let prelude = &object
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .predecessor
+                    .object;
+                let (compensated, _) = prelude.as_parts();
+                let (post_regions, _) = compensated.as_parts();
+                let (plan, _, _) = post_regions.as_parts();
+                (0..plan.layers.len())
+                    .map(|layer_index| generate_layer(external, object_index, layer_index))
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .collect::<Result<Vec<_>, _>>()
+    };
+    match result {
+        Ok(objects) => Ok(PreparedPostFillEntities {
+            predecessor,
+            objects,
+        }),
+        Err(error) => {
+            combine_infill::dispose(predecessor);
+            Err(error)
+        }
+    }
+}
+
+pub(in crate::project_slice) fn dispose(prepared: PreparedPostFillEntities) {
+    #[cfg(test)]
+    DISPOSALS.with(|count| count.set(count.get() + 1));
+    combine_infill::dispose(prepared.predecessor);
+}
+
+#[cfg(test)]
+pub(in crate::project_slice) fn reset_hooks() {
+    INVOCATIONS.with(|count| count.set(0));
+    DISPOSALS.with(|count| count.set(0));
+}
+
+#[cfg(test)]
+pub(in crate::project_slice) fn invocations() -> usize {
+    INVOCATIONS.with(std::cell::Cell::get)
+}
+
+#[cfg(test)]
+pub(in crate::project_slice) fn disposals() -> usize {
+    DISPOSALS.with(std::cell::Cell::get)
+}
 
 pub(in crate::project_slice) fn generate_layer(
     prepared: &PreparedPostExternalSurfaces,
