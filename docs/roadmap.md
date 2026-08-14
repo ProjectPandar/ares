@@ -6728,3 +6728,17 @@ pass.
 O99 remains inactive. Half-edge/skeletal topology, `WallToolPaths`, extrusion-
 line production, `FillConcentricInternal`, variable-width entities, lifecycle,
 motion, and G-code remain later source-cited slices.
+
+## Task 22O.100: Arachne skeletal graph
+
+O100 ports the pinned half-edge templates and skeletal edge, joint, and graph
+sources into an inactive crate-private stable-index arena. It preserves weak
+payload storage, twin/chain/incident topology, upward and local-maximum walks,
+rib/node insertion, both small-edge collapse shapes, removal holes, and stable
+identity. Thirteen source-worked tests cover payload lifetime, recursive
+traversal, large-coordinate projection, insertion, collapse thresholds and
+rewiring cap, and removal identity; strict core gates pass.
+
+O100 remains inactive. The full skeletal trapezoidation builder and transition
+stages, `WallToolPaths`, `FillConcentricInternal`, variable-width entities,
+lifecycle, motion, and G-code remain later source-cited slices.

@@ -5210,3 +5210,14 @@ lengths, thin-wall widening, outer-width redistribution, zero-width markers,
 signed optional inset, and source wrapper order. Ten focused worked tests and
 a KSR-style 0.42 mm factory case pass with strict core gates. Skeletal topology, `WallToolPaths`,
 `FillConcentricInternal`, runtime lifecycle, motion, and G-code remain pending.
+
+### Task 22O.100: Arachne skeletal graph
+
+O100 ports pinned half-edge and `SkeletalTrapezoidationGraph` payload/topology
+sources into an inactive crate-private stable-index arena. Optional links
+replace pointers while retaining twin cycles, chain/incident traversal, weak
+payload ownership, rib/node insertion, source middle/side edge collapse, vacant
+removal slots, and stable identity. Thirteen focused source-worked tests and
+strict core gates pass. The
+full trapezoidation builder, `WallToolPaths`, `FillConcentricInternal`, runtime
+lifecycle, motion, and G-code remain pending.
