@@ -1,3 +1,4 @@
+mod costs;
 mod links;
 mod perimeter;
 

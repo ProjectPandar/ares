@@ -1,3 +1,4 @@
+mod costs;
 mod links;
 mod neighbors;
 mod perimeter;
@@ -5,6 +6,7 @@ mod pinch;
 mod regions;
 mod segments;
 
+pub(crate) use costs::compute_region_costs;
 pub(crate) use links::connect_contours;
 pub(crate) use neighbors::connect_region_neighbors;
 pub(crate) use perimeter::{

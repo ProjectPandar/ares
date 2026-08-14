@@ -6540,3 +6540,15 @@ Compile RED rejected the old bare-lines seam. Two focused and all 15 O77-O83
 regressions pass. Strict core Clippy, rustfmt, diff, approximation-removal, and
 LOC gates pass. Region costing, ant chaining, polyline/entity output, lifecycle,
 motion, and G-code remain later slices.
+
+## Task 22O.85: monotonic region costs
+
+O85 ports pinned `FillRectilinear.cpp:1989-2077,2179-2188`. Both O80 boundary
+orientations traverse corrected O84 vertical runs and horizontal arcs, retaining
+source f32 accumulation, half perimeter cost, straight split-gap distance,
+coordinate unscaling, and common-minimum subtraction.
+
+Compile RED proved the missing seam. Two focused and both O84 regressions pass.
+Strict core Clippy, rustfmt, diff, and LOC gates pass. Inter-region path matrix,
+ant chaining, polyline/entity output, lifecycle, motion, and G-code remain later
+slices.

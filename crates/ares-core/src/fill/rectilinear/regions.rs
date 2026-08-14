@@ -123,7 +123,7 @@ fn overlap(
     (bottom < top).then_some((bottom, top))
 }
 
-fn vertical_run_bottom(line: &SegmentedLine, mut index: usize) -> usize {
+pub(super) fn vertical_run_bottom(line: &SegmentedLine, mut index: usize) -> usize {
     loop {
         while index > 0 && line.intersections[index].kind != IntersectionKind::InnerLow {
             index -= 1;
@@ -143,7 +143,7 @@ fn vertical_run_bottom(line: &SegmentedLine, mut index: usize) -> usize {
     index
 }
 
-fn vertical_run_top(line: &SegmentedLine, mut index: usize) -> usize {
+pub(super) fn vertical_run_top(line: &SegmentedLine, mut index: usize) -> usize {
     loop {
         while index + 1 < line.intersections.len()
             && line.intersections[index].kind != IntersectionKind::InnerHigh

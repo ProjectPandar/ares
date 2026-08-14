@@ -5066,3 +5066,12 @@ symmetry follow source. Compile RED rejected the bare-lines seam. Two focused
 and 15 O77-O83 regression tests pass; strict core Clippy, rustfmt, diff,
 approximation-removal, and LOC gates pass. Region chaining, entities, lifecycle,
 and G-code remain pending.
+
+### Task 22O.85: monotonic region costs
+
+O85 ports pinned `FillRectilinear.cpp:1989-2077,2179-2188`. Dual orientation
+traversal keeps f32 order, half perimeter cost, split-gap distance, coordinate
+unscaling, and common-minimum normalization. Compile RED proved the missing
+seam; two focused and both O84 regression tests pass. Strict core Clippy,
+rustfmt, diff, and LOC gates pass. Inter-region matrix/chaining, entities,
+lifecycle, and G-code remain pending.
