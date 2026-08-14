@@ -5177,3 +5177,14 @@ Monotonic variants set no-sort and CrossHatch remains sortable. Four entity and
 ten shortest-path tests pass; KSR freezes 782 no-sort and 876 sortable
 collections with valid endpoints. Runtime activation and its real cursor, role
 filtering, motion, and G-code remain pending.
+
+### Task 22O.97: external seam candidate topology
+
+O97 ports pinned `GCode/SeamPlacer.hpp:42-108`,
+`GCode/SeamPlacer.cpp:229-273,406-592,1014-1038`, and
+`ExtrusionEntity.hpp:507-512`. Retained source-native external loops, including
+mixed external/overhang loops, own candidate points, corresponding per-region
+flow width, counter-clockwise normalization, original-winding angle signs, and
+source 0.4 mm-arm vertex angles. Five tests pass; KSR freezes 3,272 perimeters,
+62,094 candidates, and checksum `11805973356074762675`; strict core gates pass. Visibility, penalties, selection, alignment, placement/clipping,
+runtime cursor, O96 activation, motion, and G-code remain pending.

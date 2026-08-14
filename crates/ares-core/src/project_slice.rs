@@ -48,6 +48,11 @@ mod prepare_infill;
 mod profile;
 mod raw_intersections;
 mod region_slices;
+#[cfg_attr(
+    not(test),
+    allow(dead_code, reason = "pure O97 topology activates with seam placement")
+)]
+mod seam_candidates;
 mod simplification;
 mod slice_ordering;
 mod slicing_mode_intersections;

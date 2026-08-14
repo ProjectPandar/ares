@@ -6683,3 +6683,18 @@ gates pass.
 O96 deliberately does not advance the public lifecycle or invent a cursor.
 O95 activation with its real current position, multi-region role filtering,
 motion, and G-code remain later slices.
+
+## Task 22O.97: external seam candidate topology
+
+O97 ports pinned `GCode/SeamPlacer.hpp:42-108`,
+`GCode/SeamPlacer.cpp:229-273,406-592,1014-1038`, and
+`ExtrusionEntity.hpp:507-512` as a pure source-native perimeter seam. External
+loops, including mixed external/overhang loops, retain source `collect_points`
+order and their corresponding region flow width; candidate polygons normalize
+counter-clockwise and retain original winding through signed 0.4 mm-arm vertex
+angles.
+
+Five focused/KSR tests pass; KSR freezes 3,272 perimeters, 62,094 candidates,
+and checksum `11805973356074762675`. Strict core gates pass. Runtime
+visibility/penalties/selection/alignment/placement/clipping, cursor, O96
+activation, motion, and G-code remain later slices.
