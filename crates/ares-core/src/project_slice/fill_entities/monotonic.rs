@@ -1,6 +1,6 @@
 use crate::{
-    SliceError,
-    fill::cross_hatch::{CrossHatchFillParams, fill_surface},
+    ProcessInfillPattern, SliceError,
+    fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
@@ -10,22 +10,36 @@ use super::{FillExtrusionCollection, FillExtrusionPath, LayerFillEntities, geome
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    z: f64,
+    pattern: ProcessInfillPattern,
+    layer_id: usize,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    let params = CrossHatchFillParams {
-        z,
+    let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
+    let anchor_length_max = if pattern == ProcessInfillPattern::MonotonicLine {
+        0.0
+    } else {
+        fill.params.anchor_length_max
+    };
+    let params = MonotonicFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
+        density,
         angle: fill.params.angle,
-        density: (0.01_f64 * f64::from(fill.params.density)) as f32,
-        multiline: fill.params.multiline,
-        anchor_length: fill.params.anchor_length,
-        anchor_length_max: fill.params.anchor_length_max,
-        dont_sort: false,
+        layer_index: layer_id,
+        thickness_layers: fill.representative.thickness_layers.max(1),
+        fixed_angle: fill.params.fixed_angle,
+        bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
+        dont_adjust: false,
+        anchor_length_max,
+        link_max_length: if !fill.params.bridge && fill.params.density > 80.0 {
+            3.0 * fill.params.spacing
+        } else {
+            0.0
+        },
     };
     for expolygon in fill.expolygons {
-        let polylines = fill_surface(&expolygon, params, scale).map_err(geometry_error)?;
+        let polylines =
+            fill_monotonic_surface(&expolygon, params, scale).map_err(geometry_error)?;
         if polylines.is_empty() {
             continue;
         }

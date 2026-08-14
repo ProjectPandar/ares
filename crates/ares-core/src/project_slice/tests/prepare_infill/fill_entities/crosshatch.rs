@@ -1,7 +1,7 @@
 use crate::{
     ProcessInfillPattern,
     project_slice::{
-        fill_entities::generate_crosshatch_layer,
+        fill_entities::generate_layer,
         prepare_infill::combine_infill,
         region_slices::RegionSurfaceKind,
         tests::prepare_infill::group_fills::focused::fixture::{
@@ -26,8 +26,8 @@ fn task22o76_crosshatch_group_becomes_owned_flow_annotated_entities() {
     options_mut(&mut graph, LAYER).sparse_infill_pattern = ProcessInfillPattern::CrossHatch;
     let before = graph_snapshot(&graph);
 
-    let first = generate_crosshatch_layer(external(&graph), 0, LAYER).unwrap();
-    let second = generate_crosshatch_layer(external(&graph), 0, LAYER).unwrap();
+    let first = generate_layer(external(&graph), 0, LAYER).unwrap();
+    let second = generate_layer(external(&graph), 0, LAYER).unwrap();
 
     assert_eq!(first, second);
     assert_eq!(graph_snapshot(&graph).bytes, before.bytes);

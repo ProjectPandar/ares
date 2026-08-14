@@ -5111,3 +5111,12 @@ and inverse rotation without re-offsetting geometry. Compile RED proved the
 missing module; two focused and five O77/O88 regression tests pass. Strict core
 Clippy, rustfmt, diff, and LOC gates pass. Grouped entities, lifecycle, and
 G-code remain pending.
+
+### Task 22O.90: monotonic fill entities
+
+O90 ports the Monotonic/MonotonicLine part of pinned `Fill.cpp:1213-1374` and
+`FillBase.cpp:133-155`. Grouped effective state drives O89, the dense source
+link gate and zero-anchor MonotonicLine policy, then exact ordered role/flow
+collections. Compile RED proved missing dispatch; two focused, three O76, and
+two O89 regression tests pass. Strict core Clippy, rustfmt, diff, and LOC gates
+pass. Remaining fillers/thin fills, lifecycle, and G-code remain pending.

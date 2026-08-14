@@ -6597,3 +6597,14 @@ retention and line population are separated without recomputing offsets.
 Compile RED proved the missing module. Two focused and five O77/O88 boundary
 regressions pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Grouped
 extrusion entities, lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.90: monotonic fill entities
+
+O90 ports the Monotonic/MonotonicLine part of pinned `Fill.cpp:1213-1374` and
+`FillBase.cpp:133-155`. The graph-native layer pass now derives all O89 inputs
+from grouped effective state, applies the pinned dense `3 × spacing` link gate
+and MonotonicLine zero-anchor policy, and emits ordered role/flow collections.
+
+Compile RED proved missing dispatch. Two focused, three O76, and two O89
+regressions pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Remaining
+fillers/thin fills, lifecycle, motion, and G-code remain later slices.
