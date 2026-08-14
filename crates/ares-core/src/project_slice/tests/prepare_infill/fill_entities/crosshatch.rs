@@ -32,6 +32,7 @@ fn task22o76_crosshatch_group_becomes_owned_flow_annotated_entities() {
     assert_eq!(first, second);
     assert_eq!(graph_snapshot(&graph).bytes, before.bytes);
     assert_eq!(first.collections.len(), 1);
+    assert!(!first.collections[0].no_sort);
     assert!(!first.collections[0].paths.is_empty());
     assert!(first.collections[0].paths.iter().all(|path| {
         path.role == crate::ExtrusionRole::InternalInfill

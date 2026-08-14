@@ -6665,3 +6665,21 @@ Focused tests cover all phase branches. KSR freezes 3,350 islands, 2,881
 nonempty/perimeter-first islands, and exact 2,881/1,658/2,285 entity counts.
 Four tests and strict core gates pass. Infill greedy chaining/reversal,
 multi-region/tool behavior, motion, and G-code remain later slices.
+
+## Task 22O.96: pure infill chaining dependencies
+
+O96 ports pinned `ShortestPath.cpp:15-40,92-393,1026-1069`,
+`ExtrusionEntityCollection.cpp:65-72,87-96`,
+`ExtrusionEntityCollection.hpp:78-123`, and `FillBase.cpp:161-185`. The reached
+classic shortest-path seam now supports explicit-cursor constrained reversal,
+source fallback ordering, fill/gap endpoint and reverse operations, and pure
+`chained_path_from`. Monotonic variants own no-sort while CrossHatch remains
+sortable.
+
+Four O96 entity tests and all ten shortest-path regressions pass. KSR freezes
+782 no-sort and 876 sortable collections with valid endpoints; strict core
+gates pass.
+
+O96 deliberately does not advance the public lifecycle or invent a cursor.
+O95 activation with its real current position, multi-region role filtering,
+motion, and G-code remain later slices.

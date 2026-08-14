@@ -32,6 +32,7 @@ fn task22o90_monotonic_internal_solid_becomes_ordered_flow_entities() {
     assert_eq!(first, second);
     assert_eq!(graph_snapshot(&graph).bytes, before.bytes);
     assert_eq!(first.collections.len(), 1);
+    assert!(first.collections[0].no_sort);
     assert!(!first.collections[0].paths.is_empty());
     assert!(
         first.collections[0]
@@ -71,6 +72,7 @@ fn task22o90_monotonicline_top_surface_keeps_lines_disconnected() {
     let entities = generate_layer(external(&graph), 0, LAYER).unwrap();
 
     assert_eq!(entities.collections.len(), 1);
+    assert!(entities.collections[0].no_sort);
     assert!(entities.collections[0].paths.len() > 1);
     assert!(
         entities.collections[0]

@@ -54,6 +54,7 @@ pub(super) fn append(
                     height: fill.params.flow.height,
                 })
                 .collect(),
+            no_sort: true,
         });
     }
     Ok(())

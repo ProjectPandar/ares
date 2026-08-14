@@ -18,6 +18,7 @@ fn task22o95_orders_first_and_later_layer_phases_from_option() {
     let island = || ExtrusionIsland {
         infills: vec![IslandInfillEntity::Fill(FillExtrusionCollection {
             paths: Vec::new(),
+            no_sort: false,
         })],
         perimeters: vec![ExtrusionEntityCollection::default()],
     };
@@ -44,7 +45,9 @@ fn task22o95_orders_ksr_islands_without_losing_entities() {
     let prepared = island_print_order::prepare(islands);
 
     let inventory = prepared.objects[0].iter().fold(
-        (0_usize, 0_usize, 0_usize, 0_usize, 0_usize, 0_usize),
+        (
+            0_usize, 0_usize, 0_usize, 0_usize, 0_usize, 0_usize, 0_usize, 0_usize,
+        ),
         |mut counts, layer| {
             counts.0 += layer.islands.len();
             for island in &layer.islands {
@@ -53,19 +56,38 @@ fn task22o95_orders_ksr_islands_without_losing_entities() {
                     counts.2 += usize::from(matches!(first, IslandPrintEntity::Perimeter(_)));
                 }
                 for entity in &island.entities {
-                    match entity {
-                        IslandPrintEntity::Perimeter(_) => counts.3 += 1,
-                        IslandPrintEntity::Fill(_) => counts.4 += 1,
-                        IslandPrintEntity::Thin(_) => counts.5 += 1,
-                    }
+                    record_inventory(entity, &mut counts);
                 }
             }
             counts
         },
     );
-    assert_eq!(inventory, (3_350, 2_881, 2_881, 2_881, 1_658, 2_285));
+    assert_eq!(
+        inventory,
+        (3_350, 2_881, 2_881, 2_881, 1_658, 2_285, 782, 876)
+    );
 
     island_print_order::dispose(prepared);
+}
+
+fn record_inventory(
+    entity: &IslandPrintEntity,
+    counts: &mut (usize, usize, usize, usize, usize, usize, usize, usize),
+) {
+    match entity {
+        IslandPrintEntity::Perimeter(_) => counts.3 += 1,
+        IslandPrintEntity::Fill(collection) => {
+            assert!(
+                collection.paths.iter().all(|path| {
+                    path.polyline.front().is_some() && path.polyline.back().is_some()
+                })
+            );
+            counts.4 += 1;
+            counts.6 += usize::from(collection.no_sort);
+            counts.7 += usize::from(!collection.no_sort);
+        }
+        IslandPrintEntity::Thin(_) => counts.5 += 1,
+    }
 }
 
 #[test]

@@ -5165,3 +5165,15 @@ preserving phase order. Focused tests cover all branches; KSR freezes 3,350
 islands, 2,881 nonempty/perimeter-first islands, and exact entity inventories.
 Four tests and strict core gates pass. Infill chaining/reversal, multi-region/
 tool behavior, motion, and G-code remain pending.
+
+### Task 22O.96: pure infill chaining dependencies
+
+O96 ports pinned `ShortestPath.cpp:15-40,92-393,1026-1069`,
+`ExtrusionEntityCollection.cpp:65-72,87-96`,
+`ExtrusionEntityCollection.hpp:78-123`, and `FillBase.cpp:161-185`. Classic
+shortest path now owns explicit-cursor constrained reversal and source fallback;
+fill/gap entities own endpoints, reversal, and pure `chained_path_from`.
+Monotonic variants set no-sort and CrossHatch remains sortable. Four entity and
+ten shortest-path tests pass; KSR freezes 782 no-sort and 876 sortable
+collections with valid endpoints. Runtime activation and its real cursor, role
+filtering, motion, and G-code remain pending.

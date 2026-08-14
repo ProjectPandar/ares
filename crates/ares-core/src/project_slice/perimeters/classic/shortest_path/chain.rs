@@ -120,12 +120,24 @@ pub(in crate::project_slice) fn chain_extrusion_loops(
 }
 
 fn chain_multiple(positions: &[[f64; 2]], start_near: Option<[f64; 2]>) -> Vec<(usize, bool)> {
+    chain_multiple_constrained(positions, start_near, None)
+}
+
+fn chain_multiple_constrained(
+    positions: &[[f64; 2]],
+    start_near: Option<[f64; 2]>,
+    can_reverse: Option<&[bool]>,
+) -> Vec<(usize, bool)> {
     let tree = KdTree::new(positions);
     let mut endpoints: Vec<_> = positions.iter().map(|_| EndPoint::new()).collect();
     let segment_count = positions.len() / 2;
     let mut equivalents = EquivalentChains::new(segment_count);
 
-    let mut first_point = start_near.map(|start| tree.find_closest(positions, start, |_| true));
+    let mut first_point = start_near.map(|start| {
+        tree.find_closest(positions, start, |index| {
+            index & 1 == 0 || can_reverse.is_none_or(|reversible| reversible[index >> 1])
+        })
+    });
     let first_point_idx = first_point.unwrap_or(usize::MAX);
     if let Some(index) = first_point {
         endpoints[index].distance_out = 0.0;
@@ -202,7 +214,67 @@ fn chain_multiple(positions: &[[f64; 2]], start_near: Option<[f64; 2]>) -> Vec<(
         output.push((first >> 1, first & 1 != 0));
         current = endpoints[first ^ 1].edge_out;
     }
+    if let Some(reversible) = can_reverse
+        && output
+            .iter()
+            .any(|&(segment, reverse)| reverse && !reversible[segment])
+    {
+        return chain_closest_point(positions, first_point.expect("explicit cursor"), reversible);
+    }
     output
+}
+
+fn chain_closest_point(
+    positions: &[[f64; 2]],
+    first: usize,
+    can_reverse: &[bool],
+) -> Vec<(usize, bool)> {
+    let tree = KdTree::new(positions);
+    let mut visited = vec![false; positions.len() / 2];
+    let mut output = Vec::with_capacity(visited.len());
+    let mut endpoint = first;
+    loop {
+        let segment = endpoint >> 1;
+        visited[segment] = true;
+        output.push((segment, endpoint & 1 != 0));
+        if output.len() == visited.len() {
+            break;
+        }
+        let cursor = positions[endpoint ^ 1];
+        endpoint = tree.find_closest(positions, cursor, |candidate| {
+            let segment = candidate >> 1;
+            !visited[segment] && (candidate & 1 == 0 || can_reverse[segment])
+        });
+    }
+    output
+}
+
+pub(in crate::project_slice) fn chain_segments_constrained(
+    endpoints: &[[[crate::geometry::Coord; 2]; 2]],
+    start_near: [crate::geometry::Coord; 2],
+    can_reverse: &[bool],
+) -> Vec<(usize, bool)> {
+    debug_assert_eq!(endpoints.len(), can_reverse.len());
+    match endpoints.len() {
+        0 => Vec::new(),
+        1 => vec![(
+            0,
+            can_reverse[0]
+                && squared_coord_delta(endpoints[0][1], start_near)
+                    < squared_coord_delta(endpoints[0][0], start_near),
+        )],
+        _ => {
+            let positions = endpoints
+                .iter()
+                .flat_map(|endpoints| endpoints.map(coord_to_f64))
+                .collect::<Vec<_>>();
+            chain_multiple_constrained(
+                &positions,
+                Some(coord_to_f64(start_near)),
+                Some(can_reverse),
+            )
+        }
+    }
 }
 
 fn merged_chain_id(first: usize, second: usize, equivalents: &mut EquivalentChains) -> usize {
