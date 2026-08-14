@@ -49,6 +49,40 @@ fn task22o91_stage_materializes_all_objects_and_layers_in_order() {
             counts
         });
     assert_eq!(thin_inventory, (2_285, 2_285, 5_401));
+    let perimeter_inventory = prepared.objects[0]
+        .iter()
+        .flat_map(|layer| &layer.perimeters)
+        .fold(
+            (0_usize, 0_usize, 0_usize, 0_usize),
+            |mut counts, collection| {
+                counts.0 += 1;
+                counts.1 += collection.entities.len();
+                counts.2 += collection
+                    .entities
+                    .iter()
+                    .map(|entity| entity.extrusion_loop.paths.len())
+                    .sum::<usize>();
+                counts.3 += collection
+                    .entities
+                    .iter()
+                    .flat_map(|entity| &entity.extrusion_loop.paths)
+                    .map(|path| path.polyline.points.len())
+                    .sum::<usize>();
+                counts
+            },
+        );
+    assert_eq!(perimeter_inventory, (2_881, 5_243, 5_483, 111_933));
+    let source = &prepared.predecessor.predecessor.predecessor.predecessor;
+    assert!(
+        source
+            .objects
+            .iter()
+            .all(|object| object.records.iter().all(|record| {
+                record.as_ref().is_none_or(|record| {
+                    record.perimeters.is_empty() && record.thin_fills.is_empty()
+                })
+            }))
+    );
     fill_entities::dispose(prepared);
     assert_eq!(fill_entities::disposals(), 1);
 }

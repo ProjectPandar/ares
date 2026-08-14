@@ -1,6 +1,9 @@
 use crate::{
-    ExtrusionRole, geometry::Polyline,
-    project_slice::perimeters::classic::gap_extrusion::GapFillEntity,
+    ExtrusionRole,
+    geometry::Polyline,
+    project_slice::perimeters::classic::{
+        entity_collections::ExtrusionEntityCollection, gap_extrusion::GapFillEntity,
+    },
 };
 
 #[derive(Debug, PartialEq)]
@@ -19,6 +22,7 @@ pub(in crate::project_slice) struct FillExtrusionCollection {
 
 #[derive(Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct LayerFillEntities {
+    pub(in crate::project_slice) perimeters: Vec<ExtrusionEntityCollection>,
     pub(in crate::project_slice) collections: Vec<FillExtrusionCollection>,
     pub(in crate::project_slice) thin_fills: Vec<GapFillEntity>,
 }

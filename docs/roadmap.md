@@ -6631,3 +6631,14 @@ Compile RED proved missing ownership. The KSR oracle freezes 2,285 entities,
 2,285 paths, and 5,401 points; all three O91 tests and strict core Clippy,
 rustfmt, diff, and LOC gates pass. Island ordering, motion, and G-code remain
 later slices.
+
+## Task 22O.93: layer-region extrusion ownership
+
+O93 ports pinned `Layer.hpp:43-76`. Each O92 layer output now owns retained
+perimeter collections beside generated fills and moved thin fills, preserving
+source tree/path/role/flow order and draining predecessor ownership.
+
+Compile RED proved missing ownership. KSR freezes 2,881 collections, 5,243
+loops, 5,483 paths, and 111,933 points. Three lifecycle/repeatability tests and
+strict core Clippy, rustfmt, diff, and LOC gates pass. Island sorting/chaining,
+motion, and G-code remain later slices.

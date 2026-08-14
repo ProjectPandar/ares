@@ -78,6 +78,7 @@ fn move_thin_fills(
     for (output, source) in objects.iter_mut().zip(&mut external.predecessor.objects) {
         for (layer, record) in output.iter_mut().zip(&mut source.records) {
             if let Some(record) = record {
+                layer.perimeters = std::mem::take(&mut record.perimeters);
                 layer.thin_fills = std::mem::take(&mut record.thin_fills);
             }
         }

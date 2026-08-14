@@ -5138,3 +5138,12 @@ fill collections with exact order, 3D points, role/flow metadata, and ownership.
 Compile RED proved the missing field; KSR freezes 2,285 entities/paths and 5,401
 points. All three O91 tests and strict core Clippy, rustfmt, diff, and LOC gates
 pass. Island ordering, motion, and G-code remain pending.
+
+### Task 22O.93: layer-region extrusion ownership
+
+O93 ports pinned `Layer.hpp:43-76`. O92 layer outputs now own retained perimeter
+collections beside generated fills and moved thin fills, preserving source
+order and draining predecessor inventories. Compile RED proved the missing
+boundary; KSR freezes 2,881 collections, 5,243 loops, 5,483 paths, and 111,933
+points. Three lifecycle/repeatability tests and strict core gates pass. Island
+sorting/chaining, motion, and G-code remain pending.
