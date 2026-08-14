@@ -5056,3 +5056,13 @@ vertex emission. A RED same-segment oracle caught an incorrect full-loop append;
 two focused and seven O77-O79 regression tests pass. Strict core Clippy,
 rustfmt, diff, and LOC gates pass. Corrected links, region chaining, entities,
 lifecycle, and G-code remain pending.
+
+### Task 22O.84: source rectilinear links
+
+O84 replaces O78 approximations with pinned `FillRectilinear.cpp:994-1214`.
+Directed retained-contour distance selects adjacent/same-line links; skipped
+inner intersections, same-side traps, exact arc-length gates, and invalid
+symmetry follow source. Compile RED rejected the bare-lines seam. Two focused
+and 15 O77-O83 regression tests pass; strict core Clippy, rustfmt, diff,
+approximation-removal, and LOC gates pass. Region chaining, entities, lifecycle,
+and G-code remain pending.

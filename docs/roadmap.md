@@ -6528,3 +6528,15 @@ A RED same-segment oracle caught an incorrect full-loop append. Two O83 focused
 and all seven O77-O79 regression tests pass. Strict core Clippy, rustfmt, diff,
 and LOC gates pass. Corrected source link selection/quality, region
 costing/chaining, entities, lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.84: source rectilinear links
+
+O84 replaces O78 approximations with pinned `FillRectilinear.cpp:994-1214`.
+O82 retained contours and O83 directed distances now select strict first-tie
+adjacent/same-line links, invalidate skipped-inner/same-side arcs, apply exact
+contour-length quality gates, and mirror invalid vertical quality.
+
+Compile RED rejected the old bare-lines seam. Two focused and all 15 O77-O83
+regressions pass. Strict core Clippy, rustfmt, diff, approximation-removal, and
+LOC gates pass. Region costing, ant chaining, polyline/entity output, lifecycle,
+motion, and G-code remain later slices.

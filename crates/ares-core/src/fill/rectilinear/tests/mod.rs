@@ -1,3 +1,4 @@
+mod links;
 mod perimeter;
 
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
@@ -101,8 +102,9 @@ fn task22o77_hole_and_inner_offset_preserve_outer_before_inner_identity() {
 
 #[test]
 fn task22o78_rectangle_intersections_link_horizontally_and_symmetrically() {
-    let mut sections = slice_vertical_lines(&rectangle(), 0.0, 0.0, 0.0, 3, 10, 40).unwrap();
-    connect_contours(&mut sections, false, 0.0);
+    let mut slice = prepare_rectilinear_slice(&rectangle(), 0.0, 0.0, 0.0, 3, 10, 40).unwrap();
+    connect_contours(&mut slice, false, 0.0);
+    let sections = &slice.lines;
 
     assert_eq!(
         sections[1].intersections[0].previous,
@@ -124,11 +126,12 @@ fn task22o78_rectangle_intersections_link_horizontally_and_symmetrically() {
 
 #[test]
 fn task22o78_dont_connect_and_max_length_change_only_link_quality() {
-    let source = slice_vertical_lines(&rectangle(), 0.0, 0.0, 0.0, 2, 10, 80).unwrap();
+    let source = prepare_rectilinear_slice(&rectangle(), 0.0, 0.0, 0.0, 2, 10, 80).unwrap();
     let mut disconnected = source.clone();
     connect_contours(&mut disconnected, true, 0.0);
     assert!(
         disconnected
+            .lines
             .iter()
             .flat_map(|line| &line.intersections)
             .all(|item| {
@@ -142,6 +145,7 @@ fn task22o78_dont_connect_and_max_length_change_only_link_quality() {
     connect_contours(&mut limited, false, 10.0);
     assert!(
         limited
+            .lines
             .iter()
             .flat_map(|line| &line.intersections)
             .any(|item| {
@@ -154,13 +158,13 @@ fn task22o78_dont_connect_and_max_length_change_only_link_quality() {
 
 #[test]
 fn task22o79_nonpinched_sections_remain_identical() {
-    let mut sections = slice_vertical_lines(&rectangle(), 0.0, 0.0, 0.0, 3, 10, 40).unwrap();
-    connect_contours(&mut sections, false, 0.0);
-    let before = sections.clone();
+    let mut slice = prepare_rectilinear_slice(&rectangle(), 0.0, 0.0, 0.0, 3, 10, 40).unwrap();
+    connect_contours(&mut slice, false, 0.0);
+    let before = slice.lines.clone();
 
-    insert_phony_outer_pairs(&mut sections);
+    insert_phony_outer_pairs(&mut slice.lines);
 
-    assert_eq!(sections, before);
+    assert_eq!(slice.lines, before);
 }
 
 #[test]
@@ -207,11 +211,11 @@ fn task22o79_disconnected_inner_pair_receives_ordered_phony_outer_pair() {
 #[test]
 fn task22o80_rectangular_runs_form_one_region_with_source_flip_parity() {
     let prepare = |count| {
-        let mut lines =
-            slice_vertical_lines(&rectangle(), 0.0, -5.0, -10.0, count, 10, 20).unwrap();
-        connect_contours(&mut lines, false, 0.0);
-        insert_phony_outer_pairs(&mut lines);
-        lines
+        let mut slice =
+            prepare_rectilinear_slice(&rectangle(), 0.0, -5.0, -10.0, count, 10, 20).unwrap();
+        connect_contours(&mut slice, false, 0.0);
+        insert_phony_outer_pairs(&mut slice.lines);
+        slice.lines
     };
 
     let odd = generate_monotonic_regions(&prepare(3));
@@ -227,15 +231,16 @@ fn task22o80_rectangular_runs_form_one_region_with_source_flip_parity() {
 
 #[test]
 fn task22o80_region_generation_is_repeatable_and_does_not_mutate_sections() {
-    let mut lines = slice_vertical_lines(&rectangle(), 0.0, -5.0, -10.0, 3, 10, 30).unwrap();
-    connect_contours(&mut lines, false, 0.0);
+    let mut slice = prepare_rectilinear_slice(&rectangle(), 0.0, -5.0, -10.0, 3, 10, 30).unwrap();
+    connect_contours(&mut slice, false, 0.0);
+    let lines = &slice.lines;
     let before = lines.clone();
 
     assert_eq!(
-        generate_monotonic_regions(&lines),
-        generate_monotonic_regions(&lines)
+        generate_monotonic_regions(lines),
+        generate_monotonic_regions(lines)
     );
-    assert_eq!(lines, before);
+    assert_eq!(lines, &before);
 }
 
 #[test]
