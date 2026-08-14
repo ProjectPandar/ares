@@ -5101,3 +5101,13 @@ filtering, and phony-pinch merging. Compile RED proved the missing emitter; two
 focused and all three O87 regression tests pass. Strict core Clippy, rustfmt,
 diff, and LOC gates pass. Filler orchestration/rotation, entities, lifecycle,
 and G-code remain pending.
+
+### Task 22O.89: monotonic surface filler
+
+O89 ports pinned `FillBase.cpp:255-324` and
+`FillRectilinear.cpp:2755-2908,3404-3421`. Explicit parameters drive direction,
+layer alternation, offsets, density/solid spacing, retained scanlines, O79-O88,
+and inverse rotation without re-offsetting geometry. Compile RED proved the
+missing module; two focused and five O77/O88 regression tests pass. Strict core
+Clippy, rustfmt, diff, and LOC gates pass. Grouped entities, lifecycle, and
+G-code remain pending.

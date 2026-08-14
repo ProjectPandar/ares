@@ -55,8 +55,7 @@ pub(crate) struct RectilinearSlice {
 
 #[expect(
     clippy::too_many_arguments,
-    clippy::excessive_nesting,
-    reason = "the source seam carries offset/scanline state and walks contours, segments, then lines"
+    reason = "the source seam carries exact offset and scanline parameters"
 )]
 pub(crate) fn prepare_rectilinear_slice(
     expolygon: &ExPolygon,
@@ -67,8 +66,36 @@ pub(crate) fn prepare_rectilinear_slice(
     x0: i64,
     spacing: i64,
 ) -> Result<RectilinearSlice, ClipperError> {
+    let mut slice = prepare_rectilinear_contours(expolygon, angle, outer_offset, inner_offset)?;
+    populate_vertical_lines(&mut slice, count, x0, spacing)?;
+    Ok(slice)
+}
+
+pub(super) fn prepare_rectilinear_contours(
+    expolygon: &ExPolygon,
+    angle: f64,
+    outer_offset: f32,
+    inner_offset: f32,
+) -> Result<RectilinearSlice, ClipperError> {
     let (source, contours) = prepare_contours(expolygon, angle, outer_offset, inner_offset)?;
-    let mut lines = (0..count)
+    Ok(RectilinearSlice {
+        source,
+        contours,
+        lines: Vec::new(),
+    })
+}
+
+#[expect(
+    clippy::excessive_nesting,
+    reason = "source slicing walks retained contours, segments, then vertical lines"
+)]
+pub(super) fn populate_vertical_lines(
+    slice: &mut RectilinearSlice,
+    count: usize,
+    x0: i64,
+    spacing: i64,
+) -> Result<(), ClipperError> {
+    slice.lines = (0..count)
         .map(|index| {
             let delta = i64::try_from(index)
                 .ok()
@@ -81,13 +108,12 @@ pub(crate) fn prepare_rectilinear_slice(
             })
         })
         .collect::<Result<Vec<_>, _>>()?;
-
-    for (contour_index, contour) in contours.iter().enumerate() {
+    for (contour_index, contour) in slice.contours.iter().enumerate() {
         let points = contour.polygon.points();
         for segment_index in 0..points.len() {
             let first = points[(segment_index + points.len() - 1) % points.len()];
             let second = points[segment_index];
-            for line in &mut lines {
+            for line in &mut slice.lines {
                 if let Some(y) = intersection_y(points, segment_index, first, second, line.x) {
                     line.intersections.push(SegmentIntersection {
                         point: Point::new(line.x, y),
@@ -101,16 +127,12 @@ pub(crate) fn prepare_rectilinear_slice(
             }
         }
     }
-    for line in &mut lines {
+    for line in &mut slice.lines {
         line.intersections
             .sort_by_key(|intersection| intersection.point.y());
         remove_duplicate_vertices(&mut line.intersections);
     }
-    Ok(RectilinearSlice {
-        source,
-        contours,
-        lines,
-    })
+    Ok(())
 }
 
 #[expect(

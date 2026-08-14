@@ -6585,3 +6585,15 @@ Compile RED proved the missing emitter. Two focused and all three O87 regression
 pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Full
 `fill_surface_by_lines` spacing/alignment/rotation, extrusion entities,
 lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.89: monotonic surface filler
+
+O89 ports pinned `FillBase.cpp:255-324` and
+`FillRectilinear.cpp:2755-2908,3404-3421`. Explicit source parameters now drive
+direction/layer alternation, offsets, density and adjusted-solid spacing,
+retained scanlines, O79-O88 graph generation, and inverse rotation. O82 contour
+retention and line population are separated without recomputing offsets.
+
+Compile RED proved the missing module. Two focused and five O77/O88 boundary
+regressions pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Grouped
+extrusion entities, lifecycle, motion, and G-code remain later slices.

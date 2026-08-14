@@ -9,6 +9,7 @@ mod pinch;
 mod regions;
 mod rng;
 mod segments;
+mod surface;
 
 pub(crate) use chain::chain_monotonic_regions;
 pub(crate) use costs::compute_region_costs;
@@ -26,6 +27,7 @@ pub(crate) use segments::{
     IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine,
     prepare_rectilinear_slice, slice_vertical_lines,
 };
+pub(crate) use surface::{MonotonicFillParams, fill_monotonic_surface};
 
 #[cfg(test)]
 mod tests;

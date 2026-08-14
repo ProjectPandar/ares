@@ -4,6 +4,7 @@ mod emit;
 mod links;
 mod path_matrix;
 mod perimeter;
+mod surface;
 
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
 
