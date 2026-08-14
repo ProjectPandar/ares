@@ -6713,3 +6713,18 @@ pass. O98 is inactive:
 half-edge/skeletal topology, beading, `WallToolPaths`,
 `FillConcentricInternal`, variable-width entity materialization, lifecycle,
 motion, and G-code remain later source-cited slices.
+
+## Task 22O.99: Arachne beading strategies
+
+O99 ports the pinned base, distributed, redistribute, widening, limited, outer-
+inset, and factory files under `Arachne/BeadingStrategy/`. The crate-private
+strategy stack preserves source integer/f32 rounding, odd/even thresholds,
+transition metadata, thin-wall widening, fixed outer widths, zero-width limit
+markers, signed optional inset, and source factory order across the active
+coordinate scale. Ten focused source-worked tests, including full-expression
+conversion order and the KSR-style 0.42 mm factory stack, and strict core gates
+pass.
+
+O99 remains inactive. Half-edge/skeletal topology, `WallToolPaths`, extrusion-
+line production, `FillConcentricInternal`, variable-width entities, lifecycle,
+motion, and G-code remain later source-cited slices.

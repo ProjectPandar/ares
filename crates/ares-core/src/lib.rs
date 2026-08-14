@@ -2,7 +2,7 @@
     not(test),
     allow(
         dead_code,
-        reason = "O98 Arachne primitives activate with concentric internal fill"
+        reason = "O98/O99 Arachne prerequisites activate with concentric internal fill"
     )
 )]
 mod arachne;

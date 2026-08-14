@@ -5200,3 +5200,13 @@ Ten focused tests cover the boundary and strict core gates pass. Half-edge/
 skeletal topology, beading,
 `WallToolPaths`, `FillConcentricInternal`, variable-width entities, lifecycle,
 motion, and G-code remain pending.
+
+### Task 22O.99: Arachne beading strategies
+
+O99 ports pinned `Arachne/BeadingStrategy` base, distributed, redistribute,
+widening, limited, outer-inset, and factory sources. The inactive crate-private
+stack preserves integer/f32 bead rounding, odd/even transitions, active-scale
+lengths, thin-wall widening, outer-width redistribution, zero-width markers,
+signed optional inset, and source wrapper order. Ten focused worked tests and
+a KSR-style 0.42 mm factory case pass with strict core gates. Skeletal topology, `WallToolPaths`,
+`FillConcentricInternal`, runtime lifecycle, motion, and G-code remain pending.
