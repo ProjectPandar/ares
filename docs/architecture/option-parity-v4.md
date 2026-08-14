@@ -5075,3 +5075,11 @@ unscaling, and common-minimum normalization. Compile RED proved the missing
 seam; two focused and both O84 regression tests pass. Strict core Clippy,
 rustfmt, diff, and LOC gates pass. Inter-region matrix/chaining, entities,
 lifecycle, and G-code remain pending.
+
+### Task 22O.86: monotonic path matrix
+
+O86 ports pinned `FillRectilinear.cpp:1590-1709`. Dense orientation-addressed
+entries lazily cache exact f32 endpoint length/visibility and retain independent
+pheromone. Compile RED proved the missing module; two focused and both O85
+regression tests pass. Strict core Clippy, rustfmt, diff, and LOC gates pass. Ant
+simulation/RNG, path selection, entities, lifecycle, and G-code remain pending.

@@ -6552,3 +6552,14 @@ Compile RED proved the missing seam. Two focused and both O84 regressions pass.
 Strict core Clippy, rustfmt, diff, and LOC gates pass. Inter-region path matrix,
 ant chaining, polyline/entity output, lifecycle, motion, and G-code remain later
 slices.
+
+## Task 22O.86: monotonic path matrix
+
+O86 ports pinned `FillRectilinear.cpp:1590-1709`. A dense `2N × 2N` matrix
+lazily caches exact f32 endpoint length/visibility for all region orientations,
+while initial-deposit reset changes pheromone only.
+
+Compile RED proved the missing module. Two focused and both O85 regressions pass.
+Strict core Clippy, rustfmt, diff, and LOC gates pass. Ant simulation/RNG,
+pheromone evolution, path selection, polylines/entities, lifecycle, motion, and
+G-code remain later slices.

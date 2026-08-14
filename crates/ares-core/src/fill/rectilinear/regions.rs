@@ -17,6 +17,24 @@ pub(crate) struct MonotonicRegion {
     pub(crate) lengths: [f32; 2],
 }
 
+impl MonotonicRegion {
+    pub(crate) const fn left_intersection(&self, flipped: bool) -> usize {
+        if flipped {
+            self.left.high
+        } else {
+            self.left.low
+        }
+    }
+
+    pub(crate) const fn right_intersection(&self, flipped: bool) -> usize {
+        if flipped == self.flips {
+            self.right.low
+        } else {
+            self.right.high
+        }
+    }
+}
+
 #[expect(
     clippy::excessive_nesting,
     reason = "source region generation scans seed lines, inner runs, then exclusive right overlaps"

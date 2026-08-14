@@ -1,5 +1,6 @@
 mod costs;
 mod links;
+mod path_matrix;
 mod perimeter;
 
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
