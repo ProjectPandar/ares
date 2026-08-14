@@ -5147,3 +5147,12 @@ order and draining predecessor inventories. Compile RED proved the missing
 boundary; KSR freezes 2,881 collections, 5,243 loops, 5,483 paths, and 111,933
 points. Three lifecycle/repeatability tests and strict core gates pass. Island
 sorting/chaining, motion, and G-code remain pending.
+
+### Task 22O.94: extrusion island assignment
+
+O94 ports pinned `GCode.cpp:4970-5048` for KSR's single region/tool. Source
+bbox-area order, half-open bounds, contour containment, and fallback-island
+assignment now own generated fills, appended thin fills, and perimeters. KSR
+freezes 3,350 total / 2,881 nonempty / zero nonempty-fallback islands and exact
+1,658/2,285/2,881 entity inventories. Three tests and strict core gates pass.
+Multi-region/tool/wiping, chaining, motion, and G-code remain pending.

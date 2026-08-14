@@ -4,6 +4,7 @@ mod candidate_bridge_angle;
 mod combine_infill;
 mod deep_sparse_area;
 mod external_surfaces;
+mod extrusion_islands;
 mod fill_entities;
 mod fill_surfaces;
 mod group_fills;

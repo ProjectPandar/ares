@@ -22,9 +22,10 @@ mod extruders;
     not(test),
     expect(
         dead_code,
-        reason = "CrossHatch fill entities remain inactive until a later make_fills lifecycle slice"
+        reason = "assigned extrusion islands remain inactive until the chaining lifecycle slice"
     )
 )]
+mod extrusion_islands;
 mod fill_entities;
 #[cfg_attr(
     not(test),
@@ -123,15 +124,16 @@ fn slice_project_sync(
     let bridged = prepare_infill::bridge_over_infill::transaction::prepare(candidates)?;
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
     let filled = fill_entities::prepare(prepared)?;
-    consume_post_fill_entities(filled, metadata)
+    let islands = extrusion_islands::prepare(filled);
+    consume_post_extrusion_islands(islands, metadata)
 }
 
 #[inline(never)]
-fn consume_post_fill_entities(
-    prepared: fill_entities::PreparedPostFillEntities,
+fn consume_post_extrusion_islands(
+    prepared: extrusion_islands::PreparedPostExtrusionIslands,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    fill_entities::dispose(prepared);
+    extrusion_islands::dispose(prepared);
     let _ = metadata;
     Err(SliceError::ProjectSlicingIncomplete)
 }
