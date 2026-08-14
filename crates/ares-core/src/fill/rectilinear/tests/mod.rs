@@ -1,3 +1,5 @@
+mod perimeter;
+
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
 
 use super::{

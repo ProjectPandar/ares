@@ -5047,3 +5047,12 @@ outer/inner contours, and indexed O77 lines now share one owned slice. Two
 focused tests pass; strict core Clippy, rustfmt, diff, and LOC gates pass.
 Perimeter measurement/emission, chaining, entities, lifecycle, and G-code remain
 pending.
+
+### Task 22O.83: rectilinear perimeter primitives
+
+O83 ports pinned `FillRectilinear.cpp:38-116,459-685`. O82 indexed contours now
+drive directed/wrapped arc lengths and exact forward/reverse adjacent/same-line
+vertex emission. A RED same-segment oracle caught an incorrect full-loop append;
+two focused and seven O77-O79 regression tests pass. Strict core Clippy,
+rustfmt, diff, and LOC gates pass. Corrected links, region chaining, entities,
+lifecycle, and G-code remain pending.

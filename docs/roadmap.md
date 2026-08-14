@@ -6517,3 +6517,14 @@ segment indices address that inventory.
 Two focused tests pass; strict core Clippy, rustfmt, diff, and LOC gates pass.
 Contour path measurement/emission, region lengths/chaining, filler entities,
 lifecycle, motion, and G-code remain later slices.
+
+## Task 22O.83: rectilinear perimeter primitives
+
+O83 ports pinned `FillRectilinear.cpp:38-116,459-685`. O82 contour indices now
+drive directed/wrapped arc distance, exact f64 length, and forward/reverse
+perimeter vertex emission for adjacent and same-line intersections.
+
+A RED same-segment oracle caught an incorrect full-loop append. Two O83 focused
+and all seven O77-O79 regression tests pass. Strict core Clippy, rustfmt, diff,
+and LOC gates pass. Corrected source link selection/quality, region
+costing/chaining, entities, lifecycle, motion, and G-code remain later slices.
