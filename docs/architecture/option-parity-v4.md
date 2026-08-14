@@ -5130,3 +5130,11 @@ connectivity, and the O80 zigzag reachability invariant. Three focused and
 O79/O80/O90 regression tests pass; strict core Clippy, rustfmt, diff, and LOC
 gates pass. Thin fills, perimeter/fill ordering, motion, and G-code remain
 pending.
+
+### Task 22O.92: thin fill append
+
+O92 ports pinned `Fill.cpp:1376-1384`. Retained thin-fill paths/loops move after
+fill collections with exact order, 3D points, role/flow metadata, and ownership.
+Compile RED proved the missing field; KSR freezes 2,285 entities/paths and 5,401
+points. All three O91 tests and strict core Clippy, rustfmt, diff, and LOC gates
+pass. Island ordering, motion, and G-code remain pending.

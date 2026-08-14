@@ -1,5 +1,6 @@
 use crate::{
     SliceError,
+    project_slice::perimeters::classic::gap_extrusion::GapFillEntity,
     project_slice::{
         fill_entities,
         tests::{
@@ -27,6 +28,27 @@ fn task22o91_stage_materializes_all_objects_and_layers_in_order() {
             .iter()
             .all(|collection| collection.paths.iter().all(|path| path.polyline.is_valid()))
     }));
+    let thin_inventory = prepared.objects[0]
+        .iter()
+        .flat_map(|layer| &layer.thin_fills)
+        .fold((0_usize, 0_usize, 0_usize), |mut counts, entity| {
+            counts.0 += 1;
+            match entity {
+                GapFillEntity::Path(path) => {
+                    counts.1 += 1;
+                    counts.2 += path.polyline.points.len();
+                }
+                GapFillEntity::Loop(paths) => {
+                    counts.1 += paths.len();
+                    counts.2 += paths
+                        .iter()
+                        .map(|path| path.polyline.points.len())
+                        .sum::<usize>();
+                }
+            }
+            counts
+        });
+    assert_eq!(thin_inventory, (2_285, 2_285, 5_401));
     fill_entities::dispose(prepared);
     assert_eq!(fill_entities::disposals(), 1);
 }

@@ -6620,3 +6620,14 @@ and the O80 zigzag reachability invariant assumed by source assertions.
 Three O91 and O79/O80/O90 regressions pass. Strict core Clippy, rustfmt, diff,
 and LOC gates pass. Thin fills, perimeter/fill ordering, motion, and G-code
 remain later slices.
+
+## Task 22O.92: thin fill append
+
+O92 ports pinned `Fill.cpp:1376-1384`. O91 now moves each retained thin-fill
+path/loop after generated fill collections, preserving source order, 3D points,
+roles, flow metadata, and single ownership.
+
+Compile RED proved missing ownership. The KSR oracle freezes 2,285 entities,
+2,285 paths, and 5,401 points; all three O91 tests and strict core Clippy,
+rustfmt, diff, and LOC gates pass. Island ordering, motion, and G-code remain
+later slices.

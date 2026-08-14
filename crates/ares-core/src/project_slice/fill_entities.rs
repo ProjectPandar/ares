@@ -29,7 +29,7 @@ pub(in crate::project_slice) struct PreparedPostFillEntities {
 }
 
 pub(in crate::project_slice) fn prepare(
-    predecessor: PreparedPostInfillCombination,
+    mut predecessor: PreparedPostInfillCombination,
 ) -> Result<PreparedPostFillEntities, SliceError> {
     #[cfg(test)]
     INVOCATIONS.with(|count| count.set(count.get() + 1));
@@ -57,13 +57,29 @@ pub(in crate::project_slice) fn prepare(
             .collect::<Result<Vec<_>, _>>()
     };
     match result {
-        Ok(objects) => Ok(PreparedPostFillEntities {
-            predecessor,
-            objects,
-        }),
+        Ok(mut objects) => {
+            move_thin_fills(&mut objects, &mut predecessor.predecessor.predecessor);
+            Ok(PreparedPostFillEntities {
+                predecessor,
+                objects,
+            })
+        }
         Err(error) => {
             combine_infill::dispose(predecessor);
             Err(error)
+        }
+    }
+}
+
+fn move_thin_fills(
+    objects: &mut [Vec<LayerFillEntities>],
+    external: &mut PreparedPostExternalSurfaces,
+) {
+    for (output, source) in objects.iter_mut().zip(&mut external.predecessor.objects) {
+        for (layer, record) in output.iter_mut().zip(&mut source.records) {
+            if let Some(record) = record {
+                layer.thin_fills = std::mem::take(&mut record.thin_fills);
+            }
         }
     }
 }

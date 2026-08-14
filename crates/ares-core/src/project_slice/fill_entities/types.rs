@@ -1,6 +1,9 @@
-use crate::{ExtrusionRole, geometry::Polyline};
+use crate::{
+    ExtrusionRole, geometry::Polyline,
+    project_slice::perimeters::classic::gap_extrusion::GapFillEntity,
+};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct FillExtrusionPath {
     pub(in crate::project_slice) polyline: Polyline,
     pub(in crate::project_slice) role: ExtrusionRole,
@@ -9,12 +12,13 @@ pub(in crate::project_slice) struct FillExtrusionPath {
     pub(in crate::project_slice) height: f32,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct FillExtrusionCollection {
     pub(in crate::project_slice) paths: Vec<FillExtrusionPath>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct LayerFillEntities {
     pub(in crate::project_slice) collections: Vec<FillExtrusionCollection>,
+    pub(in crate::project_slice) thin_fills: Vec<GapFillEntity>,
 }
