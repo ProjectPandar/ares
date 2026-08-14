@@ -1,8 +1,9 @@
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
 
 use super::{
-    IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine, connect_contours,
-    generate_monotonic_regions, insert_phony_outer_pairs, slice_vertical_lines,
+    IntersectionKind, LinkQuality, LinkType, MonotonicRegion, RegionBoundary, SegmentIntersection,
+    SegmentedLine, connect_contours, connect_region_neighbors, generate_monotonic_regions,
+    insert_phony_outer_pairs, slice_vertical_lines,
 };
 
 fn rectangle() -> ExPolygon {
@@ -233,6 +234,87 @@ fn task22o80_region_generation_is_repeatable_and_does_not_mutate_sections() {
         generate_monotonic_regions(&lines)
     );
     assert_eq!(lines, before);
+}
+
+fn intersection(y: i64, kind: IntersectionKind) -> SegmentIntersection {
+    SegmentIntersection {
+        point: Point::new(0, y),
+        contour_index: 0,
+        segment_index: 0,
+        kind,
+        previous: None,
+        next: None,
+    }
+}
+
+fn region(left_line: usize, right_line: usize, low: usize, high: usize) -> MonotonicRegion {
+    MonotonicRegion {
+        left: RegionBoundary {
+            line: left_line,
+            low,
+            high,
+        },
+        right: RegionBoundary {
+            line: right_line,
+            low,
+            high,
+        },
+        flips: true,
+        left_neighbors: Vec::new(),
+        right_neighbors: Vec::new(),
+        lengths: [0.0; 2],
+    }
+}
+
+#[test]
+fn task22o81_region_neighbors_are_sorted_unique_and_symmetric() {
+    let mut lines = vec![
+        SegmentedLine {
+            x: 0,
+            intersections: vec![
+                intersection(0, IntersectionKind::InnerLow),
+                intersection(10, IntersectionKind::InnerHigh),
+            ],
+        },
+        SegmentedLine {
+            x: 10,
+            intersections: vec![
+                intersection(0, IntersectionKind::InnerLow),
+                intersection(10, IntersectionKind::InnerHigh),
+            ],
+        },
+    ];
+    lines[0].intersections[0].next = Some((0, LinkType::Horizontal, LinkQuality::Valid));
+    lines[1].intersections[0].previous = Some((0, LinkType::Horizontal, LinkQuality::Valid));
+    let mut regions = vec![region(0, 0, 0, 1), region(1, 1, 0, 1)];
+
+    connect_region_neighbors(&mut regions, &lines);
+    connect_region_neighbors(&mut regions, &lines);
+
+    assert_eq!(regions[0].right_neighbors, vec![1]);
+    assert_eq!(regions[1].left_neighbors, vec![0]);
+    assert!(regions[0].left_neighbors.is_empty());
+    assert!(regions[1].right_neighbors.is_empty());
+}
+
+#[test]
+fn task22o81_regions_without_adjacent_overlap_remain_disconnected() {
+    let lines = vec![
+        SegmentedLine {
+            x: 0,
+            intersections: vec![intersection(0, IntersectionKind::InnerLow)],
+        },
+        SegmentedLine {
+            x: 10,
+            intersections: vec![intersection(20, IntersectionKind::InnerLow)],
+        },
+    ];
+    let mut regions = vec![region(0, 0, 0, 0), region(1, 1, 0, 0)];
+
+    connect_region_neighbors(&mut regions, &lines);
+
+    assert!(regions.iter().all(|item| item.left_neighbors.is_empty()));
+    assert!(regions.iter().all(|item| item.right_neighbors.is_empty()));
 }
 
 #[test]

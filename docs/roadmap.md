@@ -6496,3 +6496,13 @@ Two focused tests pass for odd/even rectangular parity, repeatability, and input
 immutability. Strict core Clippy, rustfmt, diff, and LOC gates pass. Neighbor
 scattering/path lengths, ant chaining, polylines/entities, lifecycle, motion,
 and G-code remain later slices.
+
+## Task 22O.81: monotonic region neighbors
+
+O81 ports pinned `FillRectilinear.cpp:2079-2179`. O80 region boundaries are
+mapped through O78 horizontal links into sorted unique left/right neighbor
+indices with bidirectional symmetry.
+
+Two focused tests and all 1,179 task22o core regressions pass. Strict core
+Clippy, rustfmt, diff, and LOC gates pass. Region path lengths, ant chaining,
+polylines/entities, lifecycle, motion, and G-code remain later slices.

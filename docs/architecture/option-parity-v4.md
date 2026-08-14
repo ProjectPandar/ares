@@ -5030,3 +5030,11 @@ runs and exclusive adjacent overlaps produce owned monotonic region boundaries
 and flip parity without mutating the linked input. Two focused tests pass;
 strict core Clippy, rustfmt, diff, and LOC gates pass. Neighbors/path lengths,
 chaining, filler entities, lifecycle, and G-code remain pending.
+
+### Task 22O.81: monotonic region neighbors
+
+O81 ports pinned `FillRectilinear.cpp:2079-2179`. O80 boundaries use O78
+horizontal links to populate sorted unique symmetric left/right neighbor
+indices. Two focused tests and all 1,179 task22o core regressions pass; strict
+core Clippy, rustfmt, diff, and LOC gates pass. Region lengths, ant chaining,
+filler entities, lifecycle, and G-code remain pending.
