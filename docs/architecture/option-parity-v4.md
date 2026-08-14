@@ -5156,3 +5156,12 @@ assignment now own generated fills, appended thin fills, and perimeters. KSR
 freezes 3,350 total / 2,881 nonempty / zero nonempty-fallback islands and exact
 1,658/2,285/2,881 entity inventories. Three tests and strict core gates pass.
 Multi-region/tool/wiping, chaining, motion, and G-code remain pending.
+
+### Task 22O.95: island print phase order
+
+O95 ports pinned `GCode.cpp:5434-5470,6131-6148`. Layer-zero wall-first and
+later-layer 3MF `is_infill_first` dispatch now flatten O94 islands while
+preserving phase order. Focused tests cover all branches; KSR freezes 3,350
+islands, 2,881 nonempty/perimeter-first islands, and exact entity inventories.
+Four tests and strict core gates pass. Infill chaining/reversal, multi-region/
+tool behavior, motion, and G-code remain pending.

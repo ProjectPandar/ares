@@ -18,13 +18,6 @@ mod compensation;
 mod conical_overhang;
 mod elephant_foot;
 mod extruders;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "assigned extrusion islands remain inactive until the chaining lifecycle slice"
-    )
-)]
 mod extrusion_islands;
 mod fill_entities;
 #[cfg_attr(
@@ -36,6 +29,14 @@ mod fill_entities;
 )]
 mod group_fills;
 mod incomplete_sink;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "ordered island entities remain inactive until infill chaining"
+    )
+)]
+mod island_print_order;
 mod largest_contours;
 mod layers;
 mod looped_intersections;
@@ -125,15 +126,16 @@ fn slice_project_sync(
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
     let filled = fill_entities::prepare(prepared)?;
     let islands = extrusion_islands::prepare(filled);
-    consume_post_extrusion_islands(islands, metadata)
+    let ordered = island_print_order::prepare(islands);
+    consume_post_island_print_order(ordered, metadata)
 }
 
 #[inline(never)]
-fn consume_post_extrusion_islands(
-    prepared: extrusion_islands::PreparedPostExtrusionIslands,
+fn consume_post_island_print_order(
+    prepared: island_print_order::PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    extrusion_islands::dispose(prepared);
+    island_print_order::dispose(prepared);
     let _ = metadata;
     Err(SliceError::ProjectSlicingIncomplete)
 }

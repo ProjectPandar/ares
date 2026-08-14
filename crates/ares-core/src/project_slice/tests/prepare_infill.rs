@@ -11,6 +11,7 @@ mod group_fills;
 mod horizontal_shell_promotion;
 mod horizontal_shell_propagation;
 mod internal_bridge_angle;
+mod island_print_order;
 mod sparse_anchoring;
 mod surface_type_detection;
 mod vertical_shell_assignment;

@@ -6654,3 +6654,14 @@ KSR freezes 3,350 total and 2,881 nonempty islands, zero nonempty fallbacks,
 1,658/2,285/2,881 fill/thin/perimeter entities, and a deterministic 1,835
 perimeter-only / 1,046 mixed split. Three tests and strict core gates pass.
 Multi-region/tool/wiping, chaining, motion, and G-code remain later slices.
+
+## Task 22O.95: island print phase order
+
+O95 ports pinned `GCode.cpp:5434-5470,6131-6148`. O94 islands flatten into
+owned perimeter/fill/thin print entities; layer zero is always wall-first and
+later layers use 3MF-derived `is_infill_first` (false for KSR).
+
+Focused tests cover all phase branches. KSR freezes 3,350 islands, 2,881
+nonempty/perimeter-first islands, and exact 2,881/1,658/2,285 entity counts.
+Four tests and strict core gates pass. Infill greedy chaining/reversal,
+multi-region/tool behavior, motion, and G-code remain later slices.
