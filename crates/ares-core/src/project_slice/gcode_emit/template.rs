@@ -55,8 +55,9 @@ fn render_range(
         let line = lines[index];
         if let Some(expression) = directive(line, "if") {
             let (branches, next) = find_branches(lines, index + 1, end, expression)?;
+            let branch_count = branches.len();
 
-            output.push('\n');
+            output.push_str(&directive_blank(line));
             let mut selected = None;
             for (condition, start, branch_end) in branches {
                 if condition.is_empty()
@@ -71,7 +72,9 @@ fn render_range(
             if let Some((start, branch_end)) = selected {
                 output.push_str(&render_range(lines, start, branch_end, config)?.0);
             }
-            output.push('\n');
+            if branch_count > 1 {
+                output.push_str(&directive_blank(lines[next - 1]));
+            }
             index = next;
             continue;
         }
@@ -134,6 +137,11 @@ fn directive<'a>(line: &'a str, name: &str) -> Option<&'a str> {
         .map(str::trim)
 }
 
+fn directive_blank(line: &str) -> String {
+    let indentation = line.len() - line.trim_start().len();
+    format!("{}\n", &line[..indentation])
+}
+
 fn replace_line(line: &str, config: &Config) -> Result<String, String> {
     let mut output = String::new();
     let mut index = 0;
@@ -192,7 +200,7 @@ mod tests {
     fn renderer_selects_nested_branches_and_replaces_values() {
         let config = Config::from_block(b"; enabled = 1\n; n = 2\n");
         let template = "{if enabled}\nA [n]\n{if n > 1}\nB\n{endif}\n{else}\nC\n{endif}\n";
-        assert_eq!(render(template, &config).unwrap(), "\nA 2\n\nB\n\n\n");
+        assert_eq!(render(template, &config).unwrap(), "\nA 2\n\nB\n\n");
     }
 
     #[test]
