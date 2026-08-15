@@ -227,7 +227,7 @@ fn append_machine_start(
         "first_filaments",
         value::Value::List(
             (0..filament_count)
-                .map(|index| value::Value::number(index as f64))
+                .map(|index| value::Value::number(index as f64 - 1.0))
                 .collect(),
         ),
     );

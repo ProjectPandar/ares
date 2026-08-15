@@ -55,6 +55,8 @@ fn render_range(
         let line = lines[index];
         if let Some(expression) = directive(line, "if") {
             let (branches, next) = find_branches(lines, index + 1, end, expression)?;
+
+            output.push('\n');
             let mut selected = None;
             for (condition, start, branch_end) in branches {
                 if condition.is_empty()
@@ -69,6 +71,7 @@ fn render_range(
             if let Some((start, branch_end)) = selected {
                 output.push_str(&render_range(lines, start, branch_end, config)?.0);
             }
+            output.push('\n');
             index = next;
             continue;
         }
@@ -189,13 +192,13 @@ mod tests {
     fn renderer_selects_nested_branches_and_replaces_values() {
         let config = Config::from_block(b"; enabled = 1\n; n = 2\n");
         let template = "{if enabled}\nA [n]\n{if n > 1}\nB\n{endif}\n{else}\nC\n{endif}\n";
-        assert_eq!(render(template, &config).unwrap(), "A 2\nB\n");
+        assert_eq!(render(template, &config).unwrap(), "\nA 2\n\nB\n\n\n");
     }
 
     #[test]
     fn renderer_coalesces_multiline_conditions_and_selects_else() {
         let config = Config::from_block(b"; enabled = 0\n; n = 2\n");
         let template = "{if enabled == 1 ||\n n == 3}\nA\n{else}\nB [n]\n{endif}\n";
-        assert_eq!(render(template, &config).unwrap(), "B 2\n");
+        assert_eq!(render(template, &config).unwrap(), "\nB 2\n\n");
     }
 }
