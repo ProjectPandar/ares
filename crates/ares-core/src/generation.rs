@@ -13,6 +13,17 @@ pub struct GenerationMetadata {
 }
 
 impl GenerationMetadata {
+    pub(crate) const fn timestamp(self) -> (u16, u8, u8, u8, u8, u8) {
+        (
+            self.year,
+            self.month,
+            self.day,
+            self.hour,
+            self.minute,
+            self.second,
+        )
+    }
+
     #[expect(
         clippy::too_many_arguments,
         reason = "the approved public API names all six local calendar fields"

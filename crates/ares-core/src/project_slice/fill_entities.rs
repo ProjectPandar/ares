@@ -1,3 +1,4 @@
+mod concentric;
 mod crosshatch;
 mod monotonic;
 mod types;
@@ -137,7 +138,10 @@ pub(in crate::project_slice) fn generate_layer(
             ) => {
                 monotonic::append(&mut output, fill, pattern, layer.id, traversal.scale)?;
             }
-            SurfaceFillPattern::Configured(_) | SurfaceFillPattern::ConcentricInternal => {}
+            SurfaceFillPattern::ConcentricInternal => {
+                concentric::append(&mut output, fill, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(_) => {}
         }
     }
     Ok(output)

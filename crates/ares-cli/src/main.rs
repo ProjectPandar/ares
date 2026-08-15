@@ -20,7 +20,7 @@ enum Commands {
 #[derive(Parser)]
 struct SliceArgs {
     #[arg(long)]
-    options: PathBuf,
+    options: Option<PathBuf>,
     #[arg(short = 'o')]
     output: PathBuf,
     input: PathBuf,
@@ -38,10 +38,27 @@ async fn main() -> Result<(), Box<dyn Error>> {
 async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
     ensure_supported_input(&args.input)?;
 
-    let options = fs::read(args.options)?;
-    let options = serde_json::from_slice::<ares_core::SliceOptions>(&options)?;
+    let extension = args
+        .input
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(str::to_owned);
     let input = fs::read(args.input)?;
-    let output = ares_core::slice(input, options).await?;
+    let output = match extension {
+        Some(extension) if extension == "3mf" => {
+            let metadata = ares_core::GenerationMetadata::deterministic(2026, 1, 1, 0, 0, 0);
+            ares_core::slice_project(input, metadata).await?
+        }
+        Some(extension) if extension == "stl" => {
+            let options = args.options.ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidInput, "STL input requires --options")
+            })?;
+            let options = fs::read(options)?;
+            let options = serde_json::from_slice::<ares_core::SliceOptions>(&options)?;
+            ares_core::slice(input, options).await?
+        }
+        _ => unreachable!("input extension was validated above"),
+    };
     fs::write(args.output, output)?;
 
     Ok(())

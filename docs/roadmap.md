@@ -6765,3 +6765,13 @@ written; focused nextest, formatting, and strict workspace clippy pass.
 O101 stops before `generateTransitioningRibs`. Transition generation and later
 skeletal stages, `WallToolPaths`, `FillConcentricInternal`, variable-width
 entities, lifecycle, motion, and G-code remain later source-cited slices.
+
+## Task 22O.103: Project G-code emission lifecycle
+
+O103 activates the typed `.3mf` project route through a crate-private emitter
+bounded by Orca `FillConcentricInternal.cpp`, `GCode.cpp`, and `GCodeWriter`
+sources. It materializes concentric groups through the existing geometry kernel,
+retains ordered prepared entities until emission, writes resolved header/config
+and machine metadata, and emits perimeter/fill/thin entity paths. Focused
+project lifecycle tests pass. Full WallToolPaths, placeholder evaluation,
+seams, arcs, timing, motion parity, and exact golden output remain deferred.

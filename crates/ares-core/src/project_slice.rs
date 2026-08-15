@@ -20,6 +20,7 @@ mod elephant_foot;
 mod extruders;
 mod extrusion_islands;
 mod fill_entities;
+mod gcode_emit;
 #[cfg_attr(
     not(test),
     expect(
@@ -29,13 +30,6 @@ mod fill_entities;
 )]
 mod group_fills;
 mod incomplete_sink;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "ordered island entities remain inactive until infill chaining"
-    )
-)]
 mod island_print_order;
 mod largest_contours;
 mod layers;
@@ -140,9 +134,19 @@ fn consume_post_island_print_order(
     prepared: island_print_order::PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
+    let output = {
+        let traversal = &prepared
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor
+            .predecessor;
+        gcode_emit::emit(&prepared, traversal, metadata)
+    }?;
     island_print_order::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
+    Ok(output)
 }
 
 #[cfg(test)]
