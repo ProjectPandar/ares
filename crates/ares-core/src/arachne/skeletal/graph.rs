@@ -66,7 +66,7 @@ impl SkeletalGraph {
         id
     }
 
-    pub(super) fn add_node_front(&mut self, data: SkeletalJoint, point: Point) -> NodeId {
+    pub(crate) fn add_node_front(&mut self, data: SkeletalJoint, point: Point) -> NodeId {
         let id = NodeId(self.nodes.len());
         self.nodes.push(Some(HalfEdgeNode::new(data, point)));
         self.node_order.push_front(id);
@@ -80,7 +80,7 @@ impl SkeletalGraph {
         id
     }
 
-    pub(super) fn add_edge_front(&mut self, data: SkeletalEdge) -> EdgeId {
+    pub(crate) fn add_edge_front(&mut self, data: SkeletalEdge) -> EdgeId {
         let id = EdgeId(self.edges.len());
         self.edges.push(Some(HalfEdge::new(data)));
         self.edge_order.push_front(id);

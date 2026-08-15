@@ -6742,3 +6742,17 @@ rewiring cap, and removal identity; strict core gates pass.
 O100 remains inactive. The full skeletal trapezoidation builder and transition
 stages, `WallToolPaths`, `FillConcentricInternal`, variable-width entities,
 lifecycle, motion, and G-code remain later source-cited slices.
+
+## Task 22O.101: Arachne skeletal trapezoidation builder
+
+O101 ports the pinned `SkeletalTrapezoidation` constructor through initial
+central/bead filtering. The inactive crate-private slice preserves ordered
+polygon segment sites, inside-cell ranges, rounded Voronoi transfer,
+point/segment and point/point discretization, O100 graph links and collapse,
+pointy-node separation, central angles, recursive filters, and O99 beading
+strategy calls at both active coordinate scales. Six source-worked tests are
+written; focused nextest, formatting, and strict workspace clippy pass.
+
+O101 stops before `generateTransitioningRibs`. Transition generation and later
+skeletal stages, `WallToolPaths`, `FillConcentricInternal`, variable-width
+entities, lifecycle, motion, and G-code remain later source-cited slices.

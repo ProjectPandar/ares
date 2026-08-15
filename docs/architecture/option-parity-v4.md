@@ -5221,3 +5221,14 @@ removal slots, and stable identity. Thirteen focused source-worked tests and
 strict core gates pass. The
 full trapezoidation builder, `WallToolPaths`, `FillConcentricInternal`, runtime
 lifecycle, motion, and G-code remain pending.
+
+### Task 22O.101: Arachne skeletal trapezoidation builder
+
+O101 ports pinned `SkeletalTrapezoidation.hpp/.cpp:98-745` into an inactive
+crate-private builder over O99/O100. It preserves source-ordered polygon sites,
+inside point/segment cells, integer-rounded Voronoi transfer, curved-edge
+markings and discretization, twin/rib topology, pointy-node splitting, central
+classification and filtering, and initial bead-count propagation at both
+coordinate scales. Six focused tests pass; formatting and strict workspace gates pass. Transition generation, later skeletal stages,
+`WallToolPaths`, `FillConcentricInternal`, lifecycle, motion, and G-code remain
+pending.

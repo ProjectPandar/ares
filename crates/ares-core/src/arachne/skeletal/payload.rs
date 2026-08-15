@@ -157,7 +157,7 @@ impl BeadingPropagation {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct SkeletalJoint {
     pub(crate) distance_to_boundary: i64,
     pub(crate) bead_count: i64,
