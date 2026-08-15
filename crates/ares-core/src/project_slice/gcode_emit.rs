@@ -168,11 +168,11 @@ fn append_machine_start(
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
     config.insert("current_extruder", value::Value::number(0.0));
-    config.insert("current_hotend", value::Value::number(0.0));
+    config.insert("current_hotend", value::Value::number(-1.0));
     config.insert("next_extruder", value::Value::number(0.0));
-    config.insert("next_hotend", value::Value::number(0.0));
+    config.insert("next_hotend", value::Value::number(-1.0));
     config.insert("initial_no_support_extruder", value::Value::number(0.0));
-    config.insert("initial_no_support_hotend", value::Value::number(0.0));
+    config.insert("initial_no_support_hotend", value::Value::number(-1.0));
     config.insert("overall_chamber_temperature", value::Value::number(0.0));
     config.insert(
         "hold_chamber_temp_for_flat_print",

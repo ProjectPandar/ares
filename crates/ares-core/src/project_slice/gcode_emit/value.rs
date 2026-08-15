@@ -49,7 +49,7 @@ impl Value {
     pub(super) fn as_string(&self) -> String {
         match self.scalar() {
             Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
-            Self::Number(value) => format!("{value}"),
+            Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
             Self::Bool(value) => value.to_string(),
             Self::List(values) => values
@@ -59,6 +59,19 @@ impl Value {
                 .join(","),
         }
     }
+}
+
+fn format_number(value: f64) -> String {
+    if value == 0.0 {
+        return "0".to_owned();
+    }
+    let exponent = value.abs().log10().floor() as i32;
+    let decimals = (5 - exponent).max(0) as usize;
+    let formatted = format!("{value:.decimals$}");
+    formatted
+        .trim_end_matches('0')
+        .trim_end_matches('.')
+        .to_owned()
 }
 
 #[derive(Clone, Debug, Default)]
@@ -135,5 +148,12 @@ mod tests {
             config.get("names").unwrap().index(1).unwrap().as_string(),
             "PETG"
         );
+    }
+
+    #[test]
+    fn scalar_numbers_use_six_significant_digits() {
+        assert_eq!(Value::number(523.843179).as_string(), "523.843");
+        assert_eq!(Value::number(4.3653598).as_string(), "4.36536");
+        assert_eq!(Value::number(0.022).as_string(), "0.022");
     }
 }
