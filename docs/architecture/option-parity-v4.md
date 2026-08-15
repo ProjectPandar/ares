@@ -5232,3 +5232,12 @@ classification and filtering, and initial bead-count propagation at both
 coordinate scales. Six focused tests pass; formatting and strict workspace gates pass. Transition generation, later skeletal stages,
 `WallToolPaths`, `FillConcentricInternal`, lifecycle, motion, and G-code remain
 pending.
+
+### Task 22O.102: Arachne transition middle generation
+
+O102 ports the pinned `generateTransitionMids` source boundary into the
+inactive crate-private trapezoidation module. It owns weak edge references
+backed by trapezoidation storage, selects upward central edges, computes
+clamped threshold radii and ordered integer positions, and passes one focused
+source-worked test. Filtering, transition ends, rib insertion, toolpaths,
+and G-code remain pending.

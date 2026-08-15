@@ -87,6 +87,7 @@ fn empty<'a>(
         config: config(scale),
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
     }
 }
 

@@ -2,6 +2,7 @@ mod builder;
 mod discretize;
 mod filtering;
 mod index;
+mod transitions;
 mod voronoi;
 
 use std::collections::HashMap;
@@ -50,6 +51,7 @@ pub(crate) struct SkeletalTrapezoidation<'a> {
     config: TrapezoidationConfig,
     vd_edge_to_he_edge: HashMap<EdgeIndex, EdgeId>,
     vd_node_to_he_node: HashMap<VertexIndex, NodeId>,
+    transition_storage: Vec<super::skeletal::Shared<super::skeletal::TransitionMiddle>>,
 }
 
 impl<'a> SkeletalTrapezoidation<'a> {
@@ -64,6 +66,7 @@ impl<'a> SkeletalTrapezoidation<'a> {
             config,
             vd_edge_to_he_edge: HashMap::new(),
             vd_node_to_he_node: HashMap::new(),
+            transition_storage: Vec::new(),
         };
         result.construct_from_polygons(polygons)?;
         Ok(result)

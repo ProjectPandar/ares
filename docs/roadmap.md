@@ -6485,6 +6485,15 @@ Two O79 tests and all five O77/O78 regressions pass. Strict core Clippy,
 rustfmt, diff, and LOC gates pass. Monotonic regions/chaining, complete filler
 entities, lifecycle, motion, and G-code remain later source-cited slices.
 
+## Task 22O.102: Arachne transition middle generation
+
+O102 ports `generateTransitionMids` from the pinned
+`SkeletalTrapezoidation.cpp:788-850` boundary. The inactive slice generates
+ordered threshold transitions on upward central edges with O99 strategy
+values, wide integer interpolation, and owned weak-reference storage. One
+focused test passes; transition filtering, transition ends, ribs, toolpaths,
+and G-code remain deferred.
+
 ## Task 22O.80: monotonic region generation
 
 O80 ports pinned `FillRectilinear.cpp:1590-1629,1711-1931`. O79 linked
