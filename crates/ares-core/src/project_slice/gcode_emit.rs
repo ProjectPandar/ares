@@ -27,10 +27,84 @@ pub(super) fn emit(
     let mut state = EmitState::default();
     for object in &prepared.objects {
         for (layer_index, layer) in object.iter().enumerate() {
+            if layer_index == 0 {
+                append_print_preamble(&mut output);
+            }
             output.extend_from_slice(b"; CHANGE_LAYER\n");
-            output.extend_from_slice(format!("; LAYER_CHANGE {layer_index}\n").as_bytes());
+            let layer_height = traversal
+                .objects
+                .first()
+                .and_then(|object| object.records.get(layer_index))
+                .and_then(|record| record.as_ref())
+                .map_or(0.0, |record| record.layer_height);
+            let layer_z = object
+                .iter()
+                .take(layer_index + 1)
+                .enumerate()
+                .map(|(index, _)| {
+                    traversal
+                        .objects
+                        .first()
+                        .and_then(|object| object.records.get(index))
+                        .and_then(|record| record.as_ref())
+                        .map_or(0.0, |record| record.layer_height)
+                })
+                .sum::<f64>();
+            output.extend_from_slice(
+                format!("; Z_HEIGHT: {layer_z}\n; LAYER_HEIGHT: {layer_height}\n").as_bytes(),
+            );
+            if layer_index == 0 {
+                output.extend_from_slice(b"G1 E-.4 F1800\n");
+            }
+            append_layer_change(&mut output, traversal, layer_index, layer_z)?;
             emit_layer(&mut output, layer, traversal.scale, &mut state)?;
         }
+    }
+
+    fn append_print_preamble(output: &mut Vec<u8>) {
+        output.extend_from_slice(
+            b"; filament start gcode\n;VT0\nG90\nG21\nM83 ; use relative distances for extrusion\n",
+        );
+        output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\nM106 S0\nM106 P2 S0\n");
+    }
+
+    fn append_layer_change(
+        output: &mut Vec<u8>,
+        traversal: &PreparedPostClassicTraversal,
+        layer_index: usize,
+        layer_z: f64,
+    ) -> Result<(), SliceError> {
+        let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
+        if template.is_empty() {
+            return Ok(());
+        }
+        let mut config =
+            value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+        config.insert("current_extruder", value::Value::number(0.0));
+        config.insert("layer_num", value::Value::number(layer_index as f64));
+        config.insert("layer_z", value::Value::number(layer_z));
+        config.insert("overall_chamber_temperature", value::Value::number(0.0));
+        if let Some(value) = config
+            .get("temperature_vitrification")
+            .and_then(|value| value.index(0))
+            .cloned()
+        {
+            config.insert("min_vitrification_temperature", value);
+        }
+        if let Some(value) = config
+            .get("fan_max_speed")
+            .and_then(|value| value.index(0))
+            .cloned()
+        {
+            config.insert("max_additional_fan", value);
+        }
+        let rendered = template::render(template, &config).map_err(|error| {
+            SliceError::InvalidInput(format!(
+                "invalid project layer-change G-code template: {error}"
+            ))
+        })?;
+        output.extend_from_slice(rendered.as_bytes());
+        Ok(())
     }
     output.extend_from_slice(b"M2\n");
     Ok(output)
