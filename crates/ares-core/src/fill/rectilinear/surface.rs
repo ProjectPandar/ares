@@ -69,7 +69,14 @@ pub(crate) fn fill_monotonic_surface(
 }
 
 fn infill_direction(params: MonotonicFillParams) -> f32 {
-    params.bridge_angle.unwrap_or(params.angle) + std::f32::consts::FRAC_PI_2
+    let mut direction = params.bridge_angle.unwrap_or(params.angle);
+    if params.bridge_angle.is_none()
+        && !params.fixed_angle
+        && (params.layer_index / usize::from(params.thickness_layers)) & 1 == 1
+    {
+        direction += std::f32::consts::FRAC_PI_2;
+    }
+    direction + std::f32::consts::FRAC_PI_2
 }
 
 fn adjust_solid_spacing(width: i64, distance: i64) -> i64 {
