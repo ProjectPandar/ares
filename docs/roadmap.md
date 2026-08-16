@@ -6775,3 +6775,15 @@ retains ordered prepared entities until emission, writes resolved header/config
 and machine metadata, and emits perimeter/fill/thin entity paths. Focused
 project lifecycle tests pass. Full WallToolPaths, placeholder evaluation,
 seams, arcs, timing, motion parity, and exact golden output remain deferred.
+
+## KSR FDM Test V4 complete G-code parity
+
+Complete `slice_project` through OrcaSlicer 2.4.2 `GCode.cpp:4539-7110`,
+`GCodeWriter.cpp`, `GCode/SeamPlacer.cpp`, the configured arc-fitting path, and
+`GCode/GCodeProcessor.cpp:1100-1140`. Work proceeds as independently committed
+option-driven slices: finite volumetric extrusion and role speeds; acceleration,
+travel, retraction/lift/wipe; seam placement and arcs; object/layer/end templates;
+timing/progress/statistics; then removal of obsolete internal source-pinning
+oracles. Exit requires normalized byte-for-byte parity for the KSR project (only
+the Ares generator name/timestamp may differ), workspace nextest, strict Clippy,
+rustfmt, LOC/macro gates, and an approved independent six-axis runtime review.
