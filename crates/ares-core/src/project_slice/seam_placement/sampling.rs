@@ -24,7 +24,7 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
     let cumulative = areas
         .into_iter()
         .map(|area| {
-            total_area += area as f32;
+            total_area += area;
             total_area
         })
         .collect::<Vec<_>>();
@@ -36,8 +36,8 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
     let mut positions = Vec::with_capacity(sample_count);
     let mut normals = Vec::with_capacity(sample_count);
     for [triangle_sample, u, v] in random_samples {
-        let target = (triangle_sample * f64::from(total_area)) as f32;
-        let triangle_index = cumulative.partition_point(|&sum| sum <= target);
+        let target = triangle_sample * f64::from(total_area);
+        let triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
         let triangle = mesh.triangles[triangle_index];
         let square_u = u.sqrt() as f32;
         let v = v as f32;

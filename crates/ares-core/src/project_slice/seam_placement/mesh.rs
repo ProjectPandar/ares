@@ -120,30 +120,11 @@ impl Triangle {
             .normalized()
     }
 
-    pub(super) fn area(self) -> f64 {
+    pub(super) fn area(self) -> f32 {
         let a = self.vertices[0];
         let b = self.vertices[1];
         let c = self.vertices[2];
-        let ab = [
-            f64::from(b.x - a.x),
-            f64::from(b.y - a.y),
-            f64::from(b.z - a.z),
-        ];
-        let ac = [
-            f64::from(c.x - a.x),
-            f64::from(c.y - a.y),
-            f64::from(c.z - a.z),
-        ];
-        let cross = [
-            ab[1] * ac[2] - ab[2] * ac[1],
-            ab[2] * ac[0] - ab[0] * ac[2],
-            ab[0] * ac[1] - ab[1] * ac[0],
-        ];
-        0.5 * cross
-            .into_iter()
-            .map(|value| value * value)
-            .sum::<f64>()
-            .sqrt()
+        0.5 * (b - a).cross(c - a).norm()
     }
 
     pub(super) fn bounds(self) -> (Vec3, Vec3) {

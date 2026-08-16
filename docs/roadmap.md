@@ -6819,9 +6819,22 @@ source-cited parity slices.
 ## Task 22O.128: Global seam visibility
 
 O128 ports OrcaSlicer 2.4.2 `TriangleSetSampling.cpp:9-68` and
-`GCode/SeamPlacer.cpp:40-227,624-705,892-930` into a deterministic global
-seam-visibility stage. Aligned seam candidates receive mesh-derived visibility
-from transformed 3MF model parts through AABB-accelerated hemisphere ray casts
-and nearby-sample interpolation. Cross-layer spline alignment, final loop
-splitting, cooling markers, timing, and exact G-code differences remain later
-source-cited parity slices.
+`GCode/SeamPlacer.cpp:40-227,405-529,624-705,742-797,916-928,1500-1628`
+into a deterministic global seam-visibility stage. Aligned seam candidates
+receive mesh-derived visibility from transformed 3MF model parts through
+AABB-accelerated hemisphere ray casts and nearby-sample interpolation; loops
+are matched to the closest generated perimeter and split at its initial seam.
+Cross-layer spline alignment, cooling markers, timing, and exact G-code
+differences remain later source-cited parity slices.
+
+## Task 22O.129: Aligned seam strings
+
+O129 ports OrcaSlicer 2.4.2 `GCode/SeamPlacer.cpp:742-854,1107-1425,
+1500-1628`, `Geometry/Curves.hpp:61-200`, and `Geometry/Bicubic.hpp:127-213`.
+Visibility-selected seams are grouped across nearby layers, fitted as weighted
+cubic B-splines, and projected onto their associated inner and outer loops.
+The first KSR outer seam travel and extrusion match Orca exactly; the preceding
+inner travel is within 0.03 mm per axis. Global penalty-ordered string
+ownership, exact slice-contour distance fields,
+seam painting, cooling markers, timing, and exact G-code differences remain
+later source-cited parity slices.

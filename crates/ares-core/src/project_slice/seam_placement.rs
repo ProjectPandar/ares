@@ -1,6 +1,8 @@
+mod alignment;
 mod mesh;
 mod sampling;
 mod spatial;
+mod spline;
 mod visibility;
 
 use crate::{
@@ -8,14 +10,16 @@ use crate::{
     geometry::CoordinateScale,
     project_slice::{
         gcode_emit,
-        island_print_order::{IslandPrintEntity, PreparedPostIslandPrintOrder},
+        island_print_order::{
+            IslandPrintEntity, OrderedExtrusionLayer, PreparedPostIslandPrintOrder,
+        },
         perimeters::classic::{
             chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
             entity_collections::ExtrusionEntityCollection,
             materialize::{ExtrusionPath, Point3, Polyline3},
             traversal::PreparedPostClassicTraversal,
         },
-        seam_candidates::{self, SeamCandidate},
+        seam_candidates::SeamCandidate,
     },
 };
 
@@ -66,7 +70,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
 }
 
 fn apply_objects(
-    objects: &mut [Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>],
+    objects: &mut [Vec<OrderedExtrusionLayer>],
     traversal: &PreparedPostClassicTraversal,
     aligned: &[bool],
     visibility: &visibility::GlobalVisibility,
@@ -76,80 +80,52 @@ fn apply_objects(
         if !aligned[object_index] {
             continue;
         }
-        let mut z = 0.0_f32;
-        for (layer_index, layer) in layers.iter_mut().enumerate() {
-            z += traversal.objects[object_index].records[layer_index]
-                .as_ref()
-                .map_or(0.0, |record| record.layer_height) as f32;
-            let collections = layer
-                .islands
-                .iter_mut()
-                .flat_map(|island| &mut island.entities)
-                .filter_map(|entity| match entity {
-                    IslandPrintEntity::Perimeter(collection) => Some(collection),
-                    IslandPrintEntity::Fill(_) | IslandPrintEntity::Thin(_) => None,
-                });
-            for collection in collections {
-                place_collection(collection, z, traversal.scale, nozzle_diameter, visibility);
-            }
+        let layer_zs = traversal.objects[object_index]
+            .records
+            .iter()
+            .scan(0.0_f32, |print_z, record| {
+                let height = record.as_ref().map_or(0.0, |record| record.layer_height) as f32;
+                *print_z += height;
+                Some(*print_z - 0.5 * height)
+            })
+            .collect::<Vec<_>>();
+        let mut plans =
+            alignment::prepare(layers, &layer_zs, traversal, nozzle_diameter, visibility);
+        alignment::align(&mut plans);
+        for (layer, plan) in layers.iter_mut().zip(&plans) {
+            place_layer(layer, plan, traversal.scale);
         }
+    }
+}
+
+fn place_layer(
+    layer: &mut OrderedExtrusionLayer,
+    plan: &alignment::LayerPlan,
+    scale: CoordinateScale,
+) {
+    let collections = layer
+        .islands
+        .iter_mut()
+        .flat_map(|island| &mut island.entities)
+        .filter_map(|entity| match entity {
+            IslandPrintEntity::Perimeter(collection) => Some(collection),
+            IslandPrintEntity::Fill(_) | IslandPrintEntity::Thin(_) => None,
+        });
+    for (collection, perimeter_indices) in collections.zip(&plan.collection_perimeters) {
+        place_collection(collection, perimeter_indices, plan, scale);
     }
 }
 
 fn place_collection(
     collection: &mut ExtrusionEntityCollection,
-    z: f32,
+    perimeter_indices: &[usize],
+    plan: &alignment::LayerPlan,
     scale: CoordinateScale,
-    nozzle_diameter: f32,
-    visibility: &visibility::GlobalVisibility,
 ) {
-    let candidates = seam_candidates::generate_regions(
-        &[seam_candidates::RegionPerimeters {
-            collections: std::slice::from_ref(collection),
-            external_flow_width: collection
-                .entities
-                .iter()
-                .flat_map(|entity| &entity.extrusion_loop.paths)
-                .find(|path| {
-                    path.role
-                        == crate::project_slice::perimeters::classic::materialize::ExtrusionRole::ExternalPerimeter
-                })
-                .map_or(0.0, |path| path.width),
-        }],
-        z,
-        scale,
-        nozzle_diameter,
-    );
-    for entity in &mut collection.entities {
-        let Some(first_point) = entity
-            .extrusion_loop
-            .paths
-            .first()
-            .and_then(|path| path.polyline.points.first())
-        else {
-            continue;
-        };
-        let first = (
-            scale.unscale(first_point.x) as f32,
-            scale.unscale(first_point.y) as f32,
-        );
-        let perimeter = candidates
-            .perimeters
-            .iter()
-            .min_by(|left, right| {
-                perimeter_distance_squared(left, &candidates.points, first).total_cmp(
-                    &perimeter_distance_squared(right, &candidates.points, first),
-                )
-            })
-            .expect("a generated seam candidate has a perimeter");
-        let (offset, best) = candidates.points[perimeter.start_index..perimeter.end_index]
-            .iter()
-            .enumerate()
-            .min_by(|(_, left), (_, right)| {
-                candidate_penalty(left, visibility).total_cmp(&candidate_penalty(right, visibility))
-            })
-            .expect("a seam perimeter has candidates");
-        let selected = perimeter.start_index + offset;
+    for (entity, &perimeter_index) in collection.entities.iter_mut().zip(perimeter_indices) {
+        let perimeter = &plan.candidates.perimeters[perimeter_index];
+        let choice = &plan.choices[perimeter_index];
+        let selected = choice.seam_index;
         let previous = if selected == perimeter.start_index {
             perimeter.end_index - 1
         } else {
@@ -160,32 +136,24 @@ fn place_collection(
         } else {
             selected + 1
         };
+        let selected_candidate = &plan.candidates.points[selected];
         place_loop(
             &mut entity.extrusion_loop,
             Placement {
-                selected: best,
-                previous: &candidates.points[previous],
-                next: &candidates.points[next],
+                selected: selected_candidate,
+                previous: &plan.candidates.points[previous],
+                next: &plan.candidates.points[next],
+                position: choice.final_position.unwrap_or_else(|| {
+                    mesh::Vec3::new(
+                        selected_candidate.position.x,
+                        selected_candidate.position.y,
+                        selected_candidate.position.z,
+                    )
+                }),
             },
             scale,
         );
     }
-}
-
-fn perimeter_distance_squared(
-    perimeter: &seam_candidates::SeamPerimeter,
-    candidates: &[SeamCandidate],
-    point: (f32, f32),
-) -> f32 {
-    candidates[perimeter.start_index..perimeter.end_index]
-        .iter()
-        .map(|candidate| {
-            let x = candidate.position.x - point.0;
-            let y = candidate.position.y - point.1;
-            x.mul_add(x, y * y)
-        })
-        .reduce(f32::min)
-        .expect("a seam perimeter has candidates")
 }
 
 #[derive(Clone, Copy)]
@@ -193,6 +161,7 @@ struct Placement<'a> {
     selected: &'a SeamCandidate,
     previous: &'a SeamCandidate,
     next: &'a SeamCandidate,
+    position: mesh::Vec3,
 }
 
 fn candidate_penalty(candidate: &SeamCandidate, visibility: &visibility::GlobalVisibility) -> f32 {
@@ -216,7 +185,10 @@ fn angle_penalty(angle: f32) -> f32 {
 )]
 fn place_loop(loop_: &mut ExtrusionLoop, placement: Placement<'_>, scale: CoordinateScale) {
     let selected = placement.selected.position;
-    let mut seam = (f64::from(selected.x), f64::from(selected.y));
+    let mut seam = (
+        f64::from(placement.position.x),
+        f64::from(placement.position.y),
+    );
     if loop_.role == ExtrusionLoopRole::Internal {
         let projection = closest_projection(&loop_.paths, seam, scale);
         let mut depth = projection.distance;
