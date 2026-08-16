@@ -70,6 +70,12 @@ pub(super) fn begin_object_travel(output: &mut Vec<u8>, state: &mut EmitState) {
     set_acceleration(output, state, acceleration);
 }
 
+pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
+    if state.options.retract_when_changing_layer && state.positioned {
+        travel::retract_for_timelapse(output, state);
+    }
+}
+
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32) {
     if state.last_acceleration != Some(acceleration) {
         output.extend_from_slice(format!("M204 S{acceleration}\n").as_bytes());

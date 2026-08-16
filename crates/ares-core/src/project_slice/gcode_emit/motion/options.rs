@@ -34,6 +34,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) reduce_infill_retraction: bool,
     pub(in crate::project_slice::gcode_emit) retract_before_wipe: f64,
     pub(in crate::project_slice::gcode_emit) role_based_wipe_speed: bool,
+    pub(in crate::project_slice::gcode_emit) wipe_speed: f64,
+    pub(in crate::project_slice::gcode_emit) retract_when_changing_layer: bool,
     pub(in crate::project_slice::gcode_emit) spiral_lift: bool,
     pub(in crate::project_slice::gcode_emit) travel_slope_radians: f64,
     pub(in crate::project_slice::gcode_emit) enable_arc_fitting: bool,
@@ -196,6 +198,20 @@ impl MotionOptions {
                 .first()
                 .map_or(0.0, |value| value.0 / 100.0),
             role_based_wipe_speed: full.process.region.role_based_wipe_speed.0,
+            wipe_speed: absolute(
+                region.map_or(full.process.region.wipe_speed, |value| value.wipe_speed),
+                travel_speed,
+            ),
+            retract_when_changing_layer: traversal
+                .resolved
+                .views
+                .runtime
+                .project
+                .print
+                .retract_when_changing_layer
+                .0
+                .first()
+                .is_some_and(|value| value.0),
             spiral_lift: gcode
                 .z_hop_types
                 .0

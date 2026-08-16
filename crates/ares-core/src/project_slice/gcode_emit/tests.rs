@@ -261,6 +261,21 @@ async fn ksr_project_renders_timelapse_template_after_every_layer() {
 }
 
 #[tokio::test]
+async fn ksr_project_retracts_wipes_and_lifts_before_timelapse() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(output.contains(
+        "; stop printing object ksr_fdmtest_v4.drc id:2 copy 0\nG1 E-.11429 F1800\n; WIPE_START\nG1 F6300\nG1 X109.036 Y94.518 E-.28571\n; WIPE_END\nG17\nG3 Z.6 I1.217 J0 P1  F60000\n; stop printing object, unique label id: 133\nM625\n;======== X2D timelapse gcode ========\n"
+    ));
+}
+
+#[tokio::test]
 async fn ksr_layer_metadata_uses_orca_float_precision() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),

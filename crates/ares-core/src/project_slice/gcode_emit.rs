@@ -109,6 +109,9 @@ pub(super) fn emit(
             )?;
             if let Some(labels) = &labels {
                 labels.append_stopping(&mut output);
+            }
+            motion::end_layer_for_timelapse(&mut output, &mut state);
+            if let Some(labels) = &labels {
                 labels.append_stop_label(&mut output);
             }
             timelapse::append(
