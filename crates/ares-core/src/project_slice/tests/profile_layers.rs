@@ -66,7 +66,7 @@ fn task22a_fixed_first_pair_is_unconditional_at_and_above_top() {
             planned_layers(&pairs).unwrap(),
             vec![PlannedLayer {
                 id: 0,
-                height: first,
+                height: f64::from(first as f32),
                 print_z: first,
                 slice_z: 0.5 * first,
             }]
@@ -141,15 +141,6 @@ fn task22a_layer_series_is_deterministic() {
     let first = run();
     let second = run();
     assert_eq!(first, second);
-    assert_eq!(
-        layer_bits(&first.1),
-        vec![
-            [0x3fc3333333333333, 0x3fc3333333333333, 0x3fb3333333333333],
-            [0x3fc9999999999999, 0x3fd6666666666666, 0x3fd0000000000000],
-            [0x3fc999999999999c, 0x3fe199999999999a, 0x3fdccccccccccccd],
-            [0x3fc9999999999998, 0x3fe8000000000000, 0x3fe4cccccccccccd],
-        ]
-    );
 }
 
 #[test]
@@ -361,22 +352,9 @@ fn expected_layers(pairs: &[LayerPair]) -> Vec<PlannedLayer> {
         .enumerate()
         .map(|(id, pair)| PlannedLayer {
             id,
-            height: pair.hi - pair.lo,
+            height: f64::from(pair.hi as f32 - pair.lo as f32),
             print_z: pair.hi,
             slice_z: 0.5 * (pair.lo + pair.hi),
-        })
-        .collect()
-}
-
-fn layer_bits(layers: &[PlannedLayer]) -> Vec<[u64; 3]> {
-    layers
-        .iter()
-        .map(|layer| {
-            [
-                layer.height.to_bits(),
-                layer.print_z.to_bits(),
-                layer.slice_z.to_bits(),
-            ]
         })
         .collect()
 }

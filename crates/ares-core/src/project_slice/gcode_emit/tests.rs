@@ -242,6 +242,22 @@ async fn ksr_layer_change_appends_fan_speed_marker_after_custom_gcode() {
 }
 
 #[tokio::test]
+async fn ksr_layer_metadata_uses_orca_float_precision() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(output.contains("; Z_HEIGHT: 8.6\n; LAYER_HEIGHT: 0.200001\n"));
+    assert!(output.contains("; Z_HEIGHT: 91.4\n; LAYER_HEIGHT: 0.200005\n"));
+    assert_eq!(output.matches("; CHANGE_LAYER\n; Z_HEIGHT:").count(), 460);
+    assert!(!output.contains("; Z_HEIGHT: 0.6000000000000001\n"));
+}
+
+#[tokio::test]
 async fn ksr_internal_bridges_keep_their_processor_role() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),

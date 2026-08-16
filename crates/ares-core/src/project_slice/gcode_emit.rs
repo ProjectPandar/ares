@@ -40,39 +40,43 @@ pub(super) fn emit(
     };
     let labels = object::ObjectLabels::from_traversal(traversal);
     for (object_index, object) in prepared.objects.iter().enumerate() {
+        let mut precise_layer_z = 0.0;
+        let mut previous_layer_z = 0.0_f32;
         for (layer_index, layer) in object.iter().enumerate() {
             if layer_index == 0 {
                 append_print_preamble(&mut output);
             }
             output.extend_from_slice(b"; CHANGE_LAYER\n");
-            let layer_height = traversal
+            let record_layer_height = traversal
                 .objects
                 .first()
                 .and_then(|object| object.records.get(layer_index))
                 .and_then(|record| record.as_ref())
                 .map_or(0.0, |record| record.layer_height);
-            let layer_z = object
-                .iter()
-                .take(layer_index + 1)
-                .enumerate()
-                .map(|(index, _)| {
-                    traversal
-                        .objects
-                        .first()
-                        .and_then(|object| object.records.get(index))
-                        .and_then(|record| record.as_ref())
-                        .map_or(0.0, |record| record.layer_height)
-                })
-                .sum::<f64>();
+            precise_layer_z += record_layer_height;
+            let layer_z = precise_layer_z as f32;
+            let layer_height = layer_z - previous_layer_z;
+            previous_layer_z = layer_z;
             output.extend_from_slice(
-                format!("; Z_HEIGHT: {layer_z}\n; LAYER_HEIGHT: {layer_height}\n").as_bytes(),
+                format!(
+                    "; Z_HEIGHT: {}\n; LAYER_HEIGHT: {}\n",
+                    format_processor_float(f64::from(layer_z)),
+                    format_processor_float(f64::from(layer_height))
+                )
+                .as_bytes(),
             );
             if layer_index == 0 {
                 output.extend_from_slice(b"G1 E-.4 F1800\n");
                 state.retracted = true;
             }
-            append_layer_change(&mut output, traversal, layer_index, layer_z)?;
-            motion::begin_layer(&mut output, &mut state, layer_index, layer_z, layer_height);
+            append_layer_change(&mut output, traversal, layer_index, f64::from(layer_z))?;
+            motion::begin_layer(
+                &mut output,
+                &mut state,
+                layer_index,
+                f64::from(layer_z),
+                f64::from(layer_height),
+            );
             if let Some(labels) = &labels {
                 labels.append_printing(&mut output);
                 motion::begin_object_travel(&mut output, &mut state);
@@ -155,6 +159,23 @@ pub(super) fn emit(
     finish::append(&mut output, traversal, max_layer_z)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     Ok(output)
+}
+fn format_processor_float(value: f64) -> String {
+    if value == 0.0 {
+        return "0".to_owned();
+    }
+    let magnitude = value.abs().log10().floor() as i32;
+    let precision = (5 - magnitude).max(0) as usize;
+    let mut formatted = format!("{value:.precision$}");
+    if formatted.contains('.') {
+        while formatted.ends_with('0') {
+            formatted.pop();
+        }
+        if formatted.ends_with('.') {
+            formatted.pop();
+        }
+    }
+    formatted
 }
 
 fn append_machine_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {

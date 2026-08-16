@@ -292,7 +292,7 @@ fn emit_points(
         output.extend_from_slice(
             format!(
                 "; LAYER_HEIGHT: {}\n",
-                format_axis(f64::from(properties.height))
+                super::format_processor_float(f64::from(properties.height))
             )
             .as_bytes(),
         );
