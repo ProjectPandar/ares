@@ -4,6 +4,8 @@ mod features;
 mod format;
 mod loop_paths;
 mod options;
+#[cfg(test)]
+mod tests;
 mod travel;
 
 use features::PathProperties;
@@ -196,6 +198,8 @@ fn emit_points(
     };
     let first_position = !state.positioned;
     let needs_travel = first_position || first_x != state.x || first_y != state.y;
+    let feedrate_interrupted = needs_travel || state.retracted;
+    let previous_extrusion_feedrate = state.extrusion_feedrate;
     if needs_travel {
         begin_object_travel(output, state);
         let inside_internal_surface = state.options.reduce_infill_retraction
@@ -296,7 +300,13 @@ fn emit_points(
         );
         state.last_height = Some(properties.height);
     }
-    output.extend_from_slice(format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes());
+    if feedrate_interrupted
+        || (state.extrusion_feedrate - previous_extrusion_feedrate).abs() > f64::EPSILON
+    {
+        output.extend_from_slice(
+            format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes(),
+        );
+    }
     let arc_points = points
         .iter()
         .map(|&(x, y)| arc::Point { x, y })

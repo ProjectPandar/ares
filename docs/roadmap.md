@@ -6868,3 +6868,13 @@ segment endpoints aggregated across the complete seam-clipped extrusion loop,
 rather than raw points from only its final subpath. The first KSR wipe move now
 matches Orca exactly. Seam-coordinate, cooling-marker, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.133: Contiguous extrusion feedrate state
+
+O133 ports the source-path speed behavior from OrcaSlicer 2.4.2
+`GCode.cpp:6924-7010` across Ares materialization fragments. Endpoint-contiguous
+fragments with unchanged kinematics now retain the active extrusion feedrate;
+travel, retraction, or a speed change still emits a new `G1 F...` command. This
+removes 5,528 redundant feedrate lines from the KSR output and advances its first
+non-metadata structural divergence. Seam-coordinate, cooling-marker, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
