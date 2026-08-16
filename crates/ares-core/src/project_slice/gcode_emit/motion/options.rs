@@ -35,6 +35,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) travel_slope_radians: f64,
     pub(in crate::project_slice::gcode_emit) enable_arc_fitting: bool,
     pub(in crate::project_slice::gcode_emit) arc_fitting_tolerance: f64,
+    pub(in crate::project_slice::gcode_emit) seam_gap: f64,
 }
 
 impl MotionOptions {
@@ -185,6 +186,15 @@ impl MotionOptions {
                 .0
                 .first()
                 .map_or(0.0, |value| value.0.to_radians()),
+            seam_gap: absolute(
+                region.map_or(full.process.region.seam_gap, |value| value.seam_gap),
+                full.project
+                    .print
+                    .nozzle_diameter
+                    .0
+                    .first()
+                    .map_or(0.4, |value| value.0),
+            ),
             enable_arc_fitting: gcode.enable_arc_fitting.0,
             arc_fitting_tolerance: full.process.print.resolution.0,
         }

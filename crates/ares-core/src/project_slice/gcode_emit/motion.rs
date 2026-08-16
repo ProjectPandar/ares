@@ -1,5 +1,7 @@
 mod arc;
+mod clip;
 mod features;
+mod loop_paths;
 mod options;
 mod travel;
 
@@ -87,9 +89,12 @@ pub(super) fn emit_layer(
             match entity {
                 IslandPrintEntity::Perimeter(collection) => {
                     for loop_ in &collection.entities {
-                        for path in &loop_.extrusion_loop.paths {
-                            emit_materialized_path(output, path, geometry, state);
-                        }
+                        loop_paths::emit(
+                            output,
+                            &loop_.extrusion_loop.paths,
+                            geometry,
+                            state,
+                        );
                     }
                 }
                 IslandPrintEntity::Fill(collection) => {
@@ -107,6 +112,7 @@ pub(super) fn emit_layer(
                                         | crate::ExtrusionRole::ExternalPerimeter
                                         | crate::ExtrusionRole::OverhangPerimeter
                                 ),
+                                end_clip: 0.0,
                             },
                             geometry,
                             state,
@@ -115,12 +121,10 @@ pub(super) fn emit_layer(
                 }
                 IslandPrintEntity::Thin(entity) => match entity {
                     crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(path) => {
-                        emit_materialized_path(output, path, geometry, state);
+                        emit_materialized_path(output, path, 0.0, geometry, state);
                     }
                     crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(paths) => {
-                        for path in paths {
-                            emit_materialized_path(output, path, geometry, state);
-                        }
+                        loop_paths::emit(output, paths, geometry, state);
                     }
                 },
             }
@@ -132,6 +136,7 @@ pub(super) fn emit_layer(
 fn emit_materialized_path(
     output: &mut Vec<u8>,
     path: &crate::project_slice::perimeters::classic::materialize::ExtrusionPath,
+    end_clip: f64,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
@@ -150,6 +155,7 @@ fn emit_materialized_path(
             width: path.width,
             feature,
             is_perimeter: path.role != ExtrusionRole::GapFill,
+            end_clip,
         },
         geometry,
         state,
@@ -163,7 +169,7 @@ fn emit_points(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
-    let points = points
+    let mut points = points
         .map(|(x, y)| {
             (
                 geometry.scale.unscale(x) + state.offset.0,
@@ -171,6 +177,7 @@ fn emit_points(
             )
         })
         .collect::<Vec<_>>();
+    clip::clip_end(&mut points, properties.end_clip);
     let Some(&(first_x, first_y)) = points.first() else {
         return;
     };

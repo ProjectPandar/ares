@@ -7,6 +7,7 @@ pub(super) struct PathProperties {
     pub(super) width: f32,
     pub(super) feature: &'static str,
     pub(super) is_perimeter: bool,
+    pub(super) end_clip: f64,
 }
 
 impl PathProperties {

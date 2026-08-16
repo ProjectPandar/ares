@@ -44,6 +44,7 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     assert!(options.role_based_wipe_speed);
     assert!(options.spiral_lift);
     assert_eq!(options.travel_slope_radians, 3.0_f64.to_radians());
+    assert_eq!(options.seam_gap, 0.04);
 }
 
 #[test]
@@ -72,6 +73,45 @@ async fn ksr_project_motion_is_finite_and_uses_configured_first_layer_rates() {
     assert!(!output.contains(" F0\n"));
     assert!(output.contains("G1 X144.504 Y100.092 F60000\n"));
     assert!(output.contains("; FEATURE: Inner wall\n; LINE_WIDTH: 0.5\nG1 F3000\n"));
+}
+
+#[tokio::test]
+async fn ksr_seam_gap_clips_the_first_closed_loop_endpoint() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let feature = lines
+        .iter()
+        .position(|line| *line == "; FEATURE: Inner wall")
+        .unwrap();
+    let travel = lines[..feature]
+        .iter()
+        .rposition(|line| line.starts_with("G1 X") && line.ends_with(" F60000"))
+        .unwrap();
+    let travel_xy = lines[travel]
+        .split_ascii_whitespace()
+        .skip(1)
+        .take(2)
+        .collect::<Vec<_>>();
+    let next_travel = lines[feature + 1..]
+        .iter()
+        .position(|line| line.starts_with("G1 X") && line.ends_with(" F60000"))
+        .map(|offset| feature + 1 + offset)
+        .unwrap();
+
+    assert!(!lines[feature + 1..next_travel].iter().any(|line| {
+        line.split_ascii_whitespace()
+            .skip(1)
+            .take(2)
+            .eq(travel_xy.iter().copied())
+    }));
 }
 
 #[tokio::test]
