@@ -59,3 +59,33 @@ async fn ksr_project_motion_is_finite_and_uses_configured_first_layer_rates() {
     assert!(output.contains("G1 X144.504 Y100.092 F60000\n"));
     assert!(output.contains("; FEATURE: Inner wall\n; LINE_WIDTH: 0.5\nG1 F3000\n"));
 }
+
+#[tokio::test]
+async fn ksr_project_emits_3mf_object_labels_per_layer() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert_eq!(
+        output
+            .matches("; printing object ksr_fdmtest_v4.drc id:2 copy 0\n")
+            .count(),
+        460
+    );
+    assert_eq!(
+        output
+            .matches("; start printing object, unique label id: 133\nM624 AQAAAAAAAAA=\n")
+            .count(),
+        460
+    );
+    assert_eq!(
+        output
+            .matches("; stop printing object, unique label id: 133\nM625\n")
+            .count(),
+        460
+    );
+}

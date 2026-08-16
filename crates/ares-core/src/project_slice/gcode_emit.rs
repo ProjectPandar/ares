@@ -7,6 +7,7 @@ mod expression;
 mod header;
 mod lexer;
 mod motion;
+mod object;
 mod template;
 #[cfg(test)]
 mod tests;
@@ -35,6 +36,7 @@ pub(super) fn emit(
         options,
         ..Default::default()
     };
+    let labels = object::ObjectLabels::from_traversal(traversal);
     for object in &prepared.objects {
         for (layer_index, layer) in object.iter().enumerate() {
             if layer_index == 0 {
@@ -67,7 +69,13 @@ pub(super) fn emit(
                 output.extend_from_slice(b"G1 E-.4 F1800\n");
             }
             append_layer_change(&mut output, traversal, layer_index, layer_z)?;
+            if let Some(labels) = &labels {
+                labels.append_start(&mut output);
+            }
             motion::emit_layer(&mut output, layer, traversal.scale, &mut state, layer_index)?;
+            if let Some(labels) = &labels {
+                labels.append_stop(&mut output);
+            }
         }
     }
 
