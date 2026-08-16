@@ -193,7 +193,12 @@ fn place_loop(loop_: &mut ExtrusionLoop, placement: Placement<'_>, scale: Coordi
         let projection = closest_projection(&loop_.paths, seam, scale);
         let mut depth = projection.distance;
         let angle = placement.selected.local_ccw_angle;
-        if angle < -f32::EPSILON {
+        let displacement_squared = f64::from(placement.position.x - selected.x).mul_add(
+            f64::from(placement.position.x - selected.x),
+            f64::from(placement.position.y - selected.y)
+                * f64::from(placement.position.y - selected.y),
+        );
+        if displacement_squared < depth && angle < -f32::EPSILON {
             let previous = placement.previous.position;
             let next = placement.next.position;
             let to_previous = normalized((
@@ -209,8 +214,8 @@ fn place_loop(loop_: &mut ExtrusionLoop, placement: Placement<'_>, scale: Coordi
                 0.5 * (to_previous.1 + to_next.1),
             );
             depth = 1.4142 * depth / f64::from((angle * 0.5).cos());
-            seam.0 += depth * direction.0;
-            seam.1 += depth * direction.1;
+            seam.0 = f64::from(selected.x) + depth * direction.0;
+            seam.1 = f64::from(selected.y) + depth * direction.1;
         }
         let projection = closest_projection(&loop_.paths, seam, scale);
         seam = (scale.unscale(projection.x), scale.unscale(projection.y));

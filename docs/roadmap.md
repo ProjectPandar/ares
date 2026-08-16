@@ -6838,3 +6838,14 @@ inner travel is within 0.03 mm per axis. Global penalty-ordered string
 ownership, exact slice-contour distance fields,
 seam painting, cooling markers, timing, and exact G-code differences remain
 later source-cited parity slices.
+
+## Task 22O.130: Internal seam corner projection
+
+O130 ports OrcaSlicer 2.4.2 `GCode/SeamPlacer.cpp:1562-1599` into the
+internal-loop seam projection. Concave overshoot now uses the selected external
+candidate as its base and honors the source squared-displacement guard. A
+focused generated-loop test pins the source split point; the bounded first KSR
+seam result remains unchanged.
+Global penalty-ordered string ownership, exact slice-contour distance fields,
+seam painting, cooling markers, timing, and remaining exact G-code differences
+remain later source-cited parity slices.
