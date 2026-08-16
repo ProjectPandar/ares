@@ -6859,3 +6859,12 @@ post-first-layer KSR object travels now emit XY plus `F60000` without an
 incorrect recomputed Z, then lower explicitly to the new layer. Seam-coordinate,
 cooling-marker, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.132: Emitted-loop wipe path
+
+O132 ports OrcaSlicer 2.4.2 `GCode.cpp:310-358,7400-7448` wipe-path
+retention into the project emitter. Wipes now continue over post-arc-fitting
+segment endpoints aggregated across the complete seam-clipped extrusion loop,
+rather than raw points from only its final subpath. The first KSR wipe move now
+matches Orca exactly. Seam-coordinate, cooling-marker, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

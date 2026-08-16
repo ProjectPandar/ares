@@ -39,7 +39,7 @@ fn travel_leaving_internal_surface_requires_retraction() {
 }
 
 #[test]
-fn task22o127_wipe_replaces_start_and_follows_stored_path_forward() {
+fn task22o132_wipe_continues_along_emitted_loop_segments() {
     let state = super::super::EmitState {
         x: 0.25,
         y: 0.0,
@@ -48,7 +48,7 @@ fn task22o127_wipe_replaces_start_and_follows_stored_path_forward() {
             arc::Point { x: 1.0, y: 0.0 },
             arc::Point { x: 1.0, y: 1.0 },
             arc::Point { x: 0.0, y: 1.0 },
-            arc::Point { x: 0.0, y: 0.0 },
+            arc::Point { x: 0.25, y: 0.0 },
         ],
         options: super::super::MotionOptions {
             wipe: true,
@@ -65,4 +65,24 @@ fn task22o127_wipe_replaces_start_and_follows_stored_path_forward() {
             (arc::Point { x: 1.0, y: 0.75 }, 0.75),
         ]
     );
+}
+
+#[tokio::test]
+async fn task22o132_ksr_first_wipe_continues_along_emitted_loop() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let first_wipe = lines
+        .iter()
+        .position(|line| *line == "; WIPE_START")
+        .unwrap();
+
+    assert_eq!(lines[first_wipe + 1], "G1 X140.618 Y102.994 E-.02125");
 }

@@ -17,6 +17,7 @@ pub(super) fn emit(
         path_count -= 1;
         remaining_clip -= length;
     }
+    let mut emitted_loop_path = Vec::new();
     for (index, path) in paths[..path_count].iter().enumerate() {
         let end_clip = if index + 1 == path_count {
             remaining_clip
@@ -24,7 +25,13 @@ pub(super) fn emit(
             0.0
         };
         super::emit_materialized_path(output, path, end_clip, geometry, state);
+        if emitted_loop_path.is_empty() {
+            emitted_loop_path.extend_from_slice(&state.wipe_path);
+        } else {
+            emitted_loop_path.extend(state.wipe_path.iter().copied().skip(1));
+        }
     }
+    state.wipe_path = emitted_loop_path;
 }
 
 fn path_length(path: &ExtrusionPath, geometry: LayerGeometry<'_>) -> f64 {
