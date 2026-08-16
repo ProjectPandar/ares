@@ -6878,3 +6878,12 @@ travel, retraction, or a speed change still emits a new `G1 F...` command. This
 removes 5,528 redundant feedrate lines from the KSR output and advances its first
 non-metadata structural divergence. Seam-coordinate, cooling-marker, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.134: Overhang-role base kinematics
+
+O134 ports OrcaSlicer 2.4.2 `GCode.cpp:6415-6438,6515-6533` base
+kinematics for `erOverhangPerimeter`. Ares `Overhang wall` paths now use the
+3MF-resolved bridge acceleration and speed; the first KSR block changes from the
+incorrect default `10000`/`300 mm/s` pair to `2500`/`50 mm/s`. Dynamic overlap
+band speeds, seam coordinates, cooling markers, timing, and remaining exact
+G-code differences remain later source-cited parity slices.

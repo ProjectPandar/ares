@@ -28,3 +28,24 @@ async fn task22o133_contiguous_same_speed_paths_do_not_repeat_feedrate() {
         1
     );
 }
+
+#[tokio::test]
+async fn task22o134_overhang_role_uses_bridge_kinematics() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let feature = lines
+        .iter()
+        .position(|line| *line == "; FEATURE: Overhang wall")
+        .unwrap();
+
+    assert_eq!(lines[feature - 1], "M204 S2500");
+    assert_eq!(lines[feature + 2], "G1 F3000");
+}

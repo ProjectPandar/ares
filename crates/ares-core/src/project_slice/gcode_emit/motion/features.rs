@@ -24,6 +24,7 @@ impl PathProperties {
         match self.feature {
             "Outer wall" => (options.outer_wall_acceleration, options.outer_wall_speed),
             "Bridge" => (options.bridge_acceleration, options.bridge_speed),
+            "Overhang wall" => (options.bridge_acceleration, options.bridge_speed),
             "Internal Bridge" => (options.bridge_acceleration, options.internal_bridge_speed),
             "Top surface" => (options.top_surface_acceleration, options.top_surface_speed),
             "Sparse infill" => (options.default_acceleration, options.sparse_infill_speed),
