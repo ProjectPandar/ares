@@ -66,12 +66,20 @@ fn task22a_fixed_first_pair_is_unconditional_at_and_above_top() {
             planned_layers(&pairs).unwrap(),
             vec![PlannedLayer {
                 id: 0,
-                height: f64::from(first as f32),
+                height: first,
                 print_z: first,
                 slice_z: 0.5 * first,
             }]
         );
     }
+}
+
+#[test]
+fn task22o126_planned_layers_preserve_interval_precision() {
+    let pair = LayerPair { lo: 0.2, hi: 0.4 };
+    let layer = planned_layers(&[pair]).unwrap().remove(0);
+
+    assert_eq!(layer.height.to_bits(), (pair.hi - pair.lo).to_bits());
 }
 
 #[test]
@@ -352,7 +360,7 @@ fn expected_layers(pairs: &[LayerPair]) -> Vec<PlannedLayer> {
         .enumerate()
         .map(|(id, pair)| PlannedLayer {
             id,
-            height: f64::from(pair.hi as f32 - pair.lo as f32),
+            height: pair.hi - pair.lo,
             print_z: pair.hi,
             slice_z: 0.5 * (pair.lo + pair.hi),
         })

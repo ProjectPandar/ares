@@ -6797,3 +6797,12 @@ caps role speed, so the KSR regular inner-wall feedrate is `F15791.926` rather
 than `F15476.087`. Geometry, seam placement, path order, variable-width fill,
 lifecycle, timing, and exact G-code differences remain later source-cited
 parity slices.
+
+## Task 22O.126: Layer interval precision
+
+O126 ports OrcaSlicer 2.4.2 `PrintObjectSlice.cpp:50-70` into the Ares layer
+planner. `PlannedLayer::height` now preserves `coordf_t`-equivalent interval
+subtraction before downstream flow conversion, eliminating accumulated `f32`
+coordinate drift from regular-layer volumetric feedrates. Geometry, cooling,
+seam/path order, lifecycle, timing, and exact G-code differences remain later
+source-cited parity slices.

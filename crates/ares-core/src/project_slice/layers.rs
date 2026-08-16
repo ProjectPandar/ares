@@ -131,7 +131,7 @@ pub(super) fn planned_layers(pairs: &[LayerPair]) -> Result<Vec<PlannedLayer>, S
         .iter()
         .enumerate()
         .map(|(id, pair)| {
-            let height = f64::from(pair.hi as f32 - pair.lo as f32);
+            let height = pair.hi - pair.lo;
             let print_z = pair.hi;
             let slice_z = 0.5 * (pair.lo + pair.hi);
             require_finite(height)?;
