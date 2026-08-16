@@ -239,6 +239,19 @@ async fn ksr_layer_change_appends_fan_speed_marker_after_custom_gcode() {
 }
 
 #[tokio::test]
+async fn ksr_internal_bridges_keep_their_processor_role() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(output.contains("; FEATURE: Bridge\n"));
+    assert!(output.contains("; FEATURE: Internal Bridge\n"));
+}
+#[tokio::test]
 async fn ksr_project_renders_end_templates_and_closes_executable_block() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
