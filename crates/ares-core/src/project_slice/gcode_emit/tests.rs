@@ -337,3 +337,28 @@ async fn ksr_project_renders_end_templates_and_closes_executable_block() {
     assert!(output.ends_with("M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n"));
     assert!(!output.ends_with("M2\n"));
 }
+
+#[tokio::test]
+async fn task22o131_lifted_next_layer_travel_keeps_current_z() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let second_label = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, line)| **line == "M624 AQAAAAAAAAA=")
+        .nth(1)
+        .unwrap()
+        .0;
+
+    assert!(lines[second_label + 1].ends_with(" F60000"));
+    assert!(!lines[second_label + 1].contains(" Z"));
+    assert_eq!(lines[second_label + 2], "G1 Z.4");
+}

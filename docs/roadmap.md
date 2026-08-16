@@ -6849,3 +6849,13 @@ seam result remains unchanged.
 Global penalty-ordered string ownership, exact slice-contour distance fields,
 seam painting, cooling markers, timing, and remaining exact G-code differences
 remain later source-cited parity slices.
+
+## Task 22O.131: Lifted next-layer travel
+
+O131 ports OrcaSlicer 2.4.2 `GCode.cpp:6345-7047` and
+`GCodeWriter.cpp:587-617` lifted-travel state into the project emitter. A
+layer-end hop remains the physical travel Z across the layer boundary; all 459
+post-first-layer KSR object travels now emit XY plus `F60000` without an
+incorrect recomputed Z, then lower explicitly to the new layer. Seam-coordinate,
+cooling-marker, timing, and remaining exact G-code differences remain later
+source-cited parity slices.
