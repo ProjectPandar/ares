@@ -6806,3 +6806,12 @@ subtraction before downstream flow conversion, eliminating accumulated `f32`
 coordinate drift from regular-layer volumetric feedrates. Geometry, cooling,
 seam/path order, lifecycle, timing, and exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.127: Forward stored-path wipe
+
+O127 ports OrcaSlicer 2.4.2 `GCode.cpp:426-497,5978-5991` into the Ares
+retraction emitter. Wipe motion now replaces the stored path's first point with
+the actual seam-clipped endpoint and follows the remaining stored points
+forward, instead of reversing the terminal extrusion segments. Aligned seam
+placement, cooling markers, timing, and exact G-code differences remain later
+source-cited parity slices.
