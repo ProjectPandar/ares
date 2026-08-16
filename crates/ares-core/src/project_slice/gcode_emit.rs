@@ -8,6 +8,8 @@ mod header;
 mod lexer;
 mod motion;
 mod template;
+#[cfg(test)]
+mod tests;
 mod value;
 use crate::{GenerationMetadata, SliceError};
 
@@ -25,8 +27,12 @@ pub(super) fn emit(
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     append_machine_limits(&mut output, traversal);
     append_machine_start(&mut output, traversal)?;
+    let options = motion::MotionOptions::from_traversal(traversal);
     let mut state = motion::EmitState {
         offset: model_center(traversal).unwrap_or_default(),
+        filament_area: options.filament_area,
+        travel_feedrate: options.first_layer_travel_feedrate,
+        extrusion_feedrate: options.initial_layer_speed * 60.0,
         ..Default::default()
     };
     for object in &prepared.objects {

@@ -19,11 +19,11 @@ use crate::{
 
 const KSR_PROJECT: &[u8] =
     include_bytes!("../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.project.3mf");
-pub(super) fn ksr_project() -> &'static [u8] {
+pub(in crate::project_slice) fn ksr_project() -> &'static [u8] {
     KSR_PROJECT
 }
 
-pub(super) fn metadata() -> GenerationMetadata {
+pub(in crate::project_slice) fn metadata() -> GenerationMetadata {
     GenerationMetadata::deterministic(2026, 7, 16, 1, 2, 3)
 }
 

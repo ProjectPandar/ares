@@ -31,7 +31,7 @@ mod simplification_fixture;
 mod slice_ordering;
 mod slicing_mode_fixture;
 mod slicing_mode_intersections;
-mod support;
+pub(in crate::project_slice) mod support;
 mod top_empty_layers;
 mod volume_bounds;
 mod volume_regions;
