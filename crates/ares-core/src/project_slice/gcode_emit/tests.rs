@@ -73,6 +73,19 @@ async fn ksr_project_motion_is_finite_and_uses_configured_first_layer_rates() {
     assert!(output.contains("G1 X144.504 Y100.092 F60000\n"));
     assert!(output.contains("; FEATURE: Inner wall\n; LINE_WIDTH: 0.5\nG1 F3000\n"));
 }
+
+#[tokio::test]
+async fn ksr_machine_start_uses_skirt_expanded_first_layer_hull() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(output.contains("G29 A1 X93.5392 Y79.8921 I78.1 J73.1 R\n"));
+}
 #[tokio::test]
 async fn ksr_first_object_travel_uses_configured_acceleration_lift_and_deretraction() {
     let output = crate::slice_project(
