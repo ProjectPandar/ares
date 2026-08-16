@@ -3,6 +3,7 @@ use crate::project_slice::{
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
+mod cooling;
 mod expression;
 mod finish;
 mod footprint;
@@ -39,6 +40,7 @@ pub(super) fn emit(
         ..Default::default()
     };
     let labels = object::ObjectLabels::from_traversal(traversal);
+    let mut cooling = cooling::CoolingState::from_traversal(traversal);
     for (object_index, object) in prepared.objects.iter().enumerate() {
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
@@ -46,6 +48,7 @@ pub(super) fn emit(
             if layer_index == 0 {
                 append_print_preamble(&mut output);
             }
+            cooling.begin_layer(&mut output, layer_index);
             output.extend_from_slice(b"; CHANGE_LAYER\n");
             let record_layer_height = traversal
                 .objects

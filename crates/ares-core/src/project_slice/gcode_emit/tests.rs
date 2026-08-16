@@ -242,6 +242,7 @@ async fn ksr_layer_change_appends_fan_speed_marker_after_custom_gcode() {
     assert!(output.contains(
         ";===== 2025/04/08 =====\n\n\n\n\n\n\n\n    M106 P2 S102\n\tM106 P10 S102\n\n;not reset fan\n"
     ));
+    assert!(output.contains("M106 S255\nM106 P2 S178\n; CHANGE_LAYER\n"));
 }
 
 #[tokio::test]
