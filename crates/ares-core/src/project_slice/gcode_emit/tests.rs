@@ -22,6 +22,8 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     assert_eq!(options.initial_layer_infill_speed, 105.0);
     assert_eq!(options.inner_wall_speed, 300.0);
     assert_eq!(options.outer_wall_speed, 200.0);
+    assert_eq!(options.bridge_speed, 50.0);
+    assert_eq!(options.internal_bridge_speed, 75.0);
     assert_eq!(options.sparse_infill_speed, 270.0);
     assert_eq!(options.internal_solid_infill_speed, 250.0);
     assert_eq!(options.top_surface_speed, 200.0);
@@ -29,6 +31,7 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     assert_eq!(options.initial_layer_acceleration, 500);
     assert_eq!(options.default_acceleration, 10_000);
     assert_eq!(options.outer_wall_acceleration, 5_000);
+    assert_eq!(options.bridge_acceleration, 2_500);
     assert_eq!(options.top_surface_acceleration, 2_000);
     assert_eq!(options.initial_layer_travel_acceleration, 6_000);
     assert_eq!(options.travel_acceleration, 10_000);
@@ -250,6 +253,9 @@ async fn ksr_internal_bridges_keep_their_processor_role() {
 
     assert!(output.contains("; FEATURE: Bridge\n"));
     assert!(output.contains("; FEATURE: Internal Bridge\n"));
+    assert!(
+        output.contains("M204 S2500\n; FEATURE: Internal Bridge\n; LINE_WIDTH: 0.4\nG1 F4500\n")
+    );
 }
 #[tokio::test]
 async fn ksr_project_renders_end_templates_and_closes_executable_block() {

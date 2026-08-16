@@ -11,6 +11,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) initial_layer_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) inner_wall_speed: f64,
     pub(in crate::project_slice::gcode_emit) outer_wall_speed: f64,
+    pub(in crate::project_slice::gcode_emit) bridge_speed: f64,
+    pub(in crate::project_slice::gcode_emit) internal_bridge_speed: f64,
     pub(in crate::project_slice::gcode_emit) sparse_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) internal_solid_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) top_surface_speed: f64,
@@ -18,6 +20,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) bridge_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) top_surface_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) initial_layer_travel_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) travel_acceleration: u32,
@@ -60,6 +63,14 @@ impl MotionOptions {
             .map_or(full.process.object.travel_acceleration.0, |value| {
                 value.object.travel_acceleration.0
             });
+        let bridge_speed = region.map_or(full.process.region.bridge_speed.0, |value| {
+            value.bridge_speed.0
+        });
+        let outer_wall_acceleration = acceleration(
+            object.map(|value| &value.object),
+            full.process.object.outer_wall_acceleration.0,
+            |value| value.outer_wall_acceleration.0,
+        );
         Self {
             filament_area: std::f64::consts::PI * filament_diameter.powi(2) * 0.25,
             filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
@@ -79,6 +90,13 @@ impl MotionOptions {
             outer_wall_speed: region.map_or(full.process.region.outer_wall_speed.0, |value| {
                 value.outer_wall_speed.0
             }),
+            bridge_speed,
+            internal_bridge_speed: absolute(
+                region.map_or(full.process.region.internal_bridge_speed, |value| {
+                    value.internal_bridge_speed
+                }),
+                bridge_speed,
+            ),
             sparse_infill_speed: region
                 .map_or(full.process.region.sparse_infill_speed.0, |value| {
                     value.sparse_infill_speed.0
@@ -103,11 +121,13 @@ impl MotionOptions {
                 full.process.object.default_acceleration.0,
                 |value| value.default_acceleration.0,
             ),
-            outer_wall_acceleration: acceleration(
-                object.map(|value| &value.object),
-                full.process.object.outer_wall_acceleration.0,
-                |value| value.outer_wall_acceleration.0,
-            ),
+            outer_wall_acceleration,
+            bridge_acceleration: rounded_acceleration(absolute(
+                object.map_or(full.process.object.bridge_acceleration, |value| {
+                    value.object.bridge_acceleration
+                }),
+                f64::from(outer_wall_acceleration),
+            )),
             top_surface_acceleration: acceleration(
                 object.map(|value| &value.object),
                 full.process.object.top_surface_acceleration.0,
