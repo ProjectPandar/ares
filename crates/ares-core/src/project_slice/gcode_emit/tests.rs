@@ -89,3 +89,20 @@ async fn ksr_project_emits_3mf_object_labels_per_layer() {
         460
     );
 }
+
+#[tokio::test]
+async fn ksr_project_renders_end_templates_and_closes_executable_block() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(output.contains(";======== X2D timelapse gcode ========\n"));
+    assert!(output.contains("; filament end gcode \n"));
+    assert!(output.contains(";======== X2D end gcode ==========\n"));
+    assert!(output.ends_with("M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n"));
+    assert!(!output.ends_with("M2\n"));
+}

@@ -4,6 +4,7 @@ use crate::project_slice::{
 };
 
 mod expression;
+mod finish;
 mod header;
 mod lexer;
 mod motion;
@@ -124,7 +125,16 @@ pub(super) fn emit(
         output.extend_from_slice(rendered.as_bytes());
         Ok(())
     }
-    output.extend_from_slice(b"M2\n");
+    let max_layer_z = traversal
+        .objects
+        .first()
+        .into_iter()
+        .flat_map(|object| object.records.iter())
+        .filter_map(|record| record.as_ref())
+        .map(|record| record.layer_height)
+        .sum();
+    finish::append(&mut output, traversal, max_layer_z)?;
+    output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     Ok(output)
 }
 
