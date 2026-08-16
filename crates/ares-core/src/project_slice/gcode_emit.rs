@@ -1,5 +1,5 @@
 use crate::project_slice::{
-    island_print_order::PreparedPostIslandPrintOrder,
+    island_print_order::{IslandPrintEntity, PreparedPostIslandPrintOrder},
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
@@ -24,8 +24,11 @@ pub(super) fn emit(
     header::append_width_block(&mut output, traversal);
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     append_machine_limits(&mut output, traversal);
-    append_machine_start(&mut output, traversal)?;
-    let mut state = motion::EmitState::default();
+    append_machine_start(&mut output, prepared, traversal)?;
+    let mut state = motion::EmitState {
+        offset: model_center(traversal).unwrap_or_default(),
+        ..Default::default()
+    };
     for object in &prepared.objects {
         for (layer_index, layer) in object.iter().enumerate() {
             if layer_index == 0 {
@@ -167,7 +170,15 @@ fn first(values: &crate::OrcaFloats) -> f64 {
     values.0.first().map_or(0.0, |value| value.0)
 }
 
-fn first_layer_bounds(traversal: &PreparedPostClassicTraversal) -> Option<(f64, f64, f64, f64)> {
+#[expect(
+    clippy::excessive_nesting,
+    reason = "keeps first-layer entity bounds traversal ordered"
+)]
+fn first_layer_bounds(
+    prepared: &PreparedPostIslandPrintOrder,
+    traversal: &PreparedPostClassicTraversal,
+) -> Option<(f64, f64, f64, f64)> {
+    let layer = prepared.objects.first()?.first()?;
     let mut bounds = None::<(f64, f64, f64, f64)>;
     let mut include = |x: f64, y: f64| {
         bounds = Some(match bounds {
@@ -177,8 +188,73 @@ fn first_layer_bounds(traversal: &PreparedPostClassicTraversal) -> Option<(f64, 
             None => (x, y, x, y),
         });
     };
+    for island in &layer.islands {
+        for entity in &island.entities {
+            match entity {
+                IslandPrintEntity::Perimeter(collection) => {
+                    for loop_ in &collection.entities {
+                        for path in &loop_.extrusion_loop.paths {
+                            for point in &path.polyline.points {
+                                include(
+                                    traversal.scale.unscale(point.x),
+                                    traversal.scale.unscale(point.y),
+                                );
+                            }
+                        }
+                    }
+                }
+                IslandPrintEntity::Fill(collection) => {
+                    for path in &collection.paths {
+                        for point in path.polyline.points() {
+                            include(
+                                traversal.scale.unscale(point.x()),
+                                traversal.scale.unscale(point.y()),
+                            );
+                        }
+                    }
+                }
+                IslandPrintEntity::Thin(entity) => match entity {
+                    crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(
+                        path,
+                    ) => {
+                        for point in &path.polyline.points {
+                            include(
+                                traversal.scale.unscale(point.x),
+                                traversal.scale.unscale(point.y),
+                            );
+                        }
+                    }
+                    crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(
+                        paths,
+                    ) => {
+                        for path in paths {
+                            for point in &path.polyline.points {
+                                include(
+                                    traversal.scale.unscale(point.x),
+                                    traversal.scale.unscale(point.y),
+                                );
+                            }
+                        }
+                    }
+                },
+            }
+        }
+    }
+    let (center_x, center_y) = model_center(traversal)?;
+    bounds.map(|(min_x, min_y, max_x, max_y)| {
+        (
+            min_x + center_x,
+            min_y + center_y,
+            max_x - min_x,
+            max_y - min_y,
+        )
+    })
+}
+
+fn model_center(traversal: &PreparedPostClassicTraversal) -> Option<(f64, f64)> {
     let object = traversal.project.objects().first()?;
     let instance_transform = object.instances().first()?.transform();
+    let mut bounds = None::<(f64, f64, f64, f64)>;
     for volume in object
         .volumes()
         .iter()
@@ -187,14 +263,24 @@ fn first_layer_bounds(traversal: &PreparedPostClassicTraversal) -> Option<(f64, 
         let transform = instance_transform.then(volume.transform());
         for &vertex in volume.mesh().vertices() {
             let point = transform.transform_point(vertex);
-            include(point.x, point.y);
+            bounds = Some(match bounds {
+                Some((min_x, min_y, max_x, max_y)) => (
+                    min_x.min(point.x),
+                    min_y.min(point.y),
+                    max_x.max(point.x),
+                    max_y.max(point.y),
+                ),
+                None => (point.x, point.y, point.x, point.y),
+            });
         }
     }
-    bounds.map(|(min_x, min_y, max_x, max_y)| (min_x, min_y, max_x - min_x, max_y - min_y))
+    let (min_x, min_y, max_x, max_y) = bounds?;
+    Some(((min_x + max_x) * 0.5, (min_y + max_y) * 0.5))
 }
 
 fn append_machine_start(
     output: &mut Vec<u8>,
+    prepared: &PreparedPostIslandPrintOrder,
     traversal: &PreparedPostClassicTraversal,
 ) -> Result<(), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
@@ -234,7 +320,7 @@ fn append_machine_start(
         ),
     );
     config.insert("layer_num", value::Value::number(0.0));
-    if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds(traversal) {
+    if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds(prepared, traversal) {
         config.insert(
             "first_layer_print_min",
             value::Value::List(vec![

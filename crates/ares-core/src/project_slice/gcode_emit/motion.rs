@@ -7,6 +7,7 @@ pub(super) struct EmitState {
     pub(super) x: f64,
     pub(super) y: f64,
     pub(super) e: f64,
+    pub(super) offset: (f64, f64),
 }
 
 #[expect(
@@ -99,8 +100,8 @@ fn emit_points(
     state: &mut EmitState,
 ) {
     for (x, y) in points {
-        let x = scale.unscale(x);
-        let y = scale.unscale(y);
+        let x = scale.unscale(x) + state.offset.0;
+        let y = scale.unscale(y) + state.offset.1;
         let distance = (x - state.x).hypot(y - state.y);
         state.e += distance * mm3_per_mm;
         output.extend_from_slice(format!("G1 X{x:.5} Y{y:.5} E{:.5}\n", state.e).as_bytes());
