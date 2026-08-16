@@ -5,6 +5,7 @@ use crate::ExtrusionRole;
 pub(super) struct PathProperties {
     pub(super) mm3_per_mm: f64,
     pub(super) width: f32,
+    pub(super) height: f32,
     pub(super) feature: &'static str,
     pub(super) is_perimeter: bool,
     pub(super) end_clip: f64,

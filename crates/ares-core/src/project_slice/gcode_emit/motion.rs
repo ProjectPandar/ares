@@ -25,6 +25,7 @@ pub(super) struct EmitState {
     pub(super) positioned: bool,
     pub(super) last_feature: Option<&'static str>,
     pub(super) last_width: Option<f32>,
+    pub(super) last_height: Option<f32>,
     pub(super) last_acceleration: Option<u32>,
     pub(super) layer_z: f64,
     pub(super) retracted: bool,
@@ -42,8 +43,10 @@ pub(super) fn begin_layer(
     state: &mut EmitState,
     layer_index: usize,
     layer_z: f64,
+    layer_height: f64,
 ) {
     state.layer_index = layer_index;
+    state.last_height = Some(layer_height as f32);
     state.layer_z = layer_z;
     state.travel_feedrate = if layer_index == 0 {
         state.options.first_layer_travel_feedrate
@@ -105,6 +108,7 @@ pub(super) fn emit_layer(
                             PathProperties {
                                 mm3_per_mm: path.mm3_per_mm,
                                 width: path.width,
+                                height: path.height,
                                 feature: features::for_fill(path.role),
                                 is_perimeter: matches!(
                                     path.role,
@@ -153,6 +157,7 @@ fn emit_materialized_path(
         PathProperties {
             mm3_per_mm: path.mm3_per_mm,
             width: path.width,
+            height: path.height,
             feature,
             is_perimeter: path.role != ExtrusionRole::GapFill,
             end_clip,
@@ -279,6 +284,19 @@ fn emit_points(
             .as_bytes(),
         );
         state.last_width = Some(properties.width);
+    }
+    if state
+        .last_height
+        .is_none_or(|height| (height - properties.height).abs() > f32::EPSILON)
+    {
+        output.extend_from_slice(
+            format!(
+                "; LAYER_HEIGHT: {}\n",
+                format_axis(f64::from(properties.height))
+            )
+            .as_bytes(),
+        );
+        state.last_height = Some(properties.height);
     }
     output.extend_from_slice(format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes());
     let arc_points = points

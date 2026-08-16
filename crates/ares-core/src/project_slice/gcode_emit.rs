@@ -72,7 +72,7 @@ pub(super) fn emit(
                 state.retracted = true;
             }
             append_layer_change(&mut output, traversal, layer_index, layer_z)?;
-            motion::begin_layer(&mut output, &mut state, layer_index, layer_z);
+            motion::begin_layer(&mut output, &mut state, layer_index, layer_z, layer_height);
             if let Some(labels) = &labels {
                 labels.append_printing(&mut output);
                 motion::begin_object_travel(&mut output, &mut state);
