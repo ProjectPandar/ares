@@ -3,7 +3,7 @@
 
 #[cfg(test)]
 mod tests;
-use super::{EmitState, arc, format_axis, format_extrusion};
+use super::{EmitState, arc, format::offset as format_offset, format_axis, format_extrusion};
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, target: arc::Point, state: &mut EmitState) {
     retract_and_wipe(output, state);
@@ -177,15 +177,6 @@ fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
         );
     }
     state.lifted = true;
-}
-
-fn format_offset(value: f64) -> String {
-    let value = format_axis(value);
-    if let Some(value) = value.strip_prefix("-0") {
-        format!("-{value}")
-    } else {
-        value.strip_prefix('0').unwrap_or(&value).to_owned()
-    }
 }
 
 pub(super) fn inside_internal_surfaces(

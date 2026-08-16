@@ -1,11 +1,13 @@
 mod arc;
 mod clip;
 mod features;
+mod format;
 mod loop_paths;
 mod options;
 mod travel;
 
 use features::PathProperties;
+use format::{axis as format_axis, extrusion as format_extrusion};
 pub(in crate::project_slice::gcode_emit) use options::MotionOptions;
 #[cfg(test)]
 pub(in crate::project_slice::gcode_emit) use options::first_nullable_float;
@@ -372,30 +374,4 @@ fn emit_linear_segment(
     );
     state.x = end.x;
     state.y = end.y;
-}
-
-fn format_axis(value: f64) -> String {
-    let mut value = format!("{value:.3}");
-    while value.ends_with('0') {
-        value.pop();
-    }
-    if value.ends_with('.') {
-        value.pop();
-    }
-    value
-}
-
-fn format_extrusion(value: f64) -> String {
-    let mut value = format!("{value:.5}");
-    while value.ends_with('0') {
-        value.pop();
-    }
-    if value.ends_with('.') {
-        value.pop();
-    }
-    if let Some(value) = value.strip_prefix("-0") {
-        format!("-{value}")
-    } else {
-        value.strip_prefix('0').unwrap_or(&value).to_owned()
-    }
 }
