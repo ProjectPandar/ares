@@ -1,0 +1,100 @@
+use crate::{
+    SliceError, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+};
+
+use super::{footprint, template, value};
+
+pub(super) fn append(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    layer_index: usize,
+    layer_z: f64,
+    max_layer_z: f64,
+) -> Result<(), SliceError> {
+    let runtime = &traversal.resolved.views.runtime_gcode;
+    let source = &runtime.time_lapse_gcode.0;
+    if source.is_empty() {
+        return Ok(());
+    }
+
+    let mut config =
+        value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+    config.insert("layer_num", value::Value::number(layer_index as f64));
+    config.insert("layer_z", value::Value::number(layer_z));
+    config.insert("max_layer_z", value::Value::number(max_layer_z));
+    let physical_extruder = runtime
+        .physical_extruder_map
+        .0
+        .first()
+        .map_or(0, |value| value.0);
+    config.insert(
+        "most_used_physical_extruder_id",
+        value::Value::number(physical_extruder as f64),
+    );
+    config.insert(
+        "curr_physical_extruder_id",
+        value::Value::number(physical_extruder as f64),
+    );
+    let position = safe_position(traversal);
+    config.insert(
+        "has_timelapse_safe_pos",
+        value::Value::Bool(position.is_some()),
+    );
+    let (x, y) = position.unwrap_or_default();
+    config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
+    config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
+
+    let rendered = template::render(source, &config).map_err(|error| {
+        SliceError::InvalidInput(format!(
+            "invalid project timelapse G-code template: {error}"
+        ))
+    })?;
+    output.extend_from_slice(rendered.as_bytes());
+    output.push(b'\n');
+    Ok(())
+}
+
+fn safe_position(traversal: &PreparedPostClassicTraversal) -> Option<(i32, i32)> {
+    let (object_min_x, object_min_y, object_max_x, object_max_y) =
+        footprint::model_bounds(traversal)?;
+    let printer = &traversal.resolved.views.full.printer.remaining;
+    let first = printer.printable_area.0.first()?;
+    let (bed_min_x, bed_min_y, bed_max_x, bed_max_y) =
+        printer.printable_area.0.iter().skip(1).fold(
+            (first.x, first.y, first.x, first.y),
+            |bounds, point| {
+                (
+                    bounds.0.min(point.x),
+                    bounds.1.min(point.y),
+                    bounds.2.max(point.x),
+                    bounds.3.max(point.y),
+                )
+            },
+        );
+    let camera_clearance = printer.extruder_clearance_radius.0 * std::f64::consts::FRAC_1_SQRT_2;
+    let y = object_max_y + camera_clearance;
+    if y < bed_min_y || y > bed_max_y {
+        return None;
+    }
+    let line_start = (object_min_x - camera_clearance).max(bed_min_x);
+    let line_end = (object_max_x + camera_clearance).min(bed_max_x);
+    if line_start > line_end {
+        return None;
+    }
+
+    let current_x = (object_min_x + object_max_x) * 0.5;
+    let current_y = (object_min_y + object_max_y) * 0.5;
+    let steps = ((line_end - line_start) / 5.0).floor() as usize;
+    let mut best = line_start;
+    let mut best_penalty = f64::MAX;
+    for step in 0..=steps {
+        let candidate = line_start + step as f64 * 5.0;
+        let penalty = (current_x - candidate).abs() + (current_y - y).abs()
+            - (candidate.abs() + y.abs()) / 3.0;
+        if penalty < best_penalty {
+            best_penalty = penalty;
+            best = candidate;
+        }
+    }
+    Some((best as i32, y as i32))
+}

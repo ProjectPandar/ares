@@ -14,6 +14,7 @@ mod object;
 mod template;
 #[cfg(test)]
 mod tests;
+mod timelapse;
 mod value;
 use crate::{GenerationMetadata, SliceError};
 
@@ -41,6 +42,14 @@ pub(super) fn emit(
     };
     let labels = object::ObjectLabels::from_traversal(traversal);
     let mut cooling = cooling::CoolingState::from_traversal(traversal);
+    let max_layer_z = traversal
+        .objects
+        .first()
+        .into_iter()
+        .flat_map(|object| object.records.iter())
+        .filter_map(|record| record.as_ref())
+        .map(|record| record.layer_height)
+        .sum();
     for (object_index, object) in prepared.objects.iter().enumerate() {
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
@@ -102,6 +111,13 @@ pub(super) fn emit(
                 labels.append_stopping(&mut output);
                 labels.append_stop_label(&mut output);
             }
+            timelapse::append(
+                &mut output,
+                traversal,
+                layer_index,
+                f64::from(layer_z),
+                max_layer_z,
+            )?;
         }
     }
 
@@ -151,14 +167,6 @@ pub(super) fn emit(
         output.extend_from_slice(b";_SET_FAN_SPEED_CHANGING_LAYER\n");
         Ok(())
     }
-    let max_layer_z = traversal
-        .objects
-        .first()
-        .into_iter()
-        .flat_map(|object| object.records.iter())
-        .filter_map(|record| record.as_ref())
-        .map(|record| record.layer_height)
-        .sum();
     finish::append(&mut output, traversal, max_layer_z)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     Ok(output)

@@ -72,7 +72,9 @@ fn include_polygon_bounds(
     }
 }
 
-pub(super) fn model_center(traversal: &PreparedPostClassicTraversal) -> Option<(f64, f64)> {
+pub(super) fn model_bounds(
+    traversal: &PreparedPostClassicTraversal,
+) -> Option<(f64, f64, f64, f64)> {
     let object = traversal.project.objects().first()?;
     let instance_transform = object.instances().first()?.transform();
     let mut bounds = None::<(f64, f64, f64, f64)>;
@@ -95,6 +97,10 @@ pub(super) fn model_center(traversal: &PreparedPostClassicTraversal) -> Option<(
             });
         }
     }
-    let (min_x, min_y, max_x, max_y) = bounds?;
+    bounds
+}
+
+pub(super) fn model_center(traversal: &PreparedPostClassicTraversal) -> Option<(f64, f64)> {
+    let (min_x, min_y, max_x, max_y) = model_bounds(traversal)?;
     Some(((min_x + max_x) * 0.5, (min_y + max_y) * 0.5))
 }

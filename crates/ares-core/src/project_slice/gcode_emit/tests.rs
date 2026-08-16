@@ -246,6 +246,21 @@ async fn ksr_layer_change_appends_fan_speed_marker_after_custom_gcode() {
 }
 
 #[tokio::test]
+async fn ksr_project_renders_timelapse_template_after_every_layer() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert_eq!(output.matches("\nM9711 M0 E1 X133 Y193 Z").count(), 460);
+    assert!(output.contains("M9711 M0 E1 X133 Y193 Z0.6 S11 C10 O0 T3000\n"));
+    assert!(output.contains("M9711 M0 E1 X133 Y193 Z92.4 S11 C10 O0 T3000\n"));
+}
+
+#[tokio::test]
 async fn ksr_layer_metadata_uses_orca_float_precision() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
