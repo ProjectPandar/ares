@@ -112,35 +112,36 @@ pub(super) fn emit(
         layer_z: f64,
     ) -> Result<(), SliceError> {
         let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
-        if template.is_empty() {
-            return Ok(());
+        if !template.is_empty() {
+            let mut config =
+                value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+            config.insert("current_extruder", value::Value::number(0.0));
+            config.insert("layer_num", value::Value::number(layer_index as f64));
+            config.insert("layer_z", value::Value::number(layer_z));
+            config.insert("overall_chamber_temperature", value::Value::number(0.0));
+            if let Some(value) = config
+                .get("temperature_vitrification")
+                .and_then(|value| value.index(0))
+                .cloned()
+            {
+                config.insert("min_vitrification_temperature", value);
+            }
+            if let Some(value) = config
+                .get("fan_max_speed")
+                .and_then(|value| value.index(0))
+                .cloned()
+            {
+                config.insert("max_additional_fan", value);
+            }
+            let rendered = template::render(template, &config).map_err(|error| {
+                SliceError::InvalidInput(format!(
+                    "invalid project layer-change G-code template: {error}"
+                ))
+            })?;
+            output.extend_from_slice(rendered.as_bytes());
+            output.push(b'\n');
         }
-        let mut config =
-            value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
-        config.insert("current_extruder", value::Value::number(0.0));
-        config.insert("layer_num", value::Value::number(layer_index as f64));
-        config.insert("layer_z", value::Value::number(layer_z));
-        config.insert("overall_chamber_temperature", value::Value::number(0.0));
-        if let Some(value) = config
-            .get("temperature_vitrification")
-            .and_then(|value| value.index(0))
-            .cloned()
-        {
-            config.insert("min_vitrification_temperature", value);
-        }
-        if let Some(value) = config
-            .get("fan_max_speed")
-            .and_then(|value| value.index(0))
-            .cloned()
-        {
-            config.insert("max_additional_fan", value);
-        }
-        let rendered = template::render(template, &config).map_err(|error| {
-            SliceError::InvalidInput(format!(
-                "invalid project layer-change G-code template: {error}"
-            ))
-        })?;
-        output.extend_from_slice(rendered.as_bytes());
+        output.extend_from_slice(b";_SET_FAN_SPEED_CHANGING_LAYER\n");
         Ok(())
     }
     let max_layer_z = traversal
