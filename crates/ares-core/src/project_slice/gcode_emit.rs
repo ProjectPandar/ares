@@ -1,5 +1,5 @@
 use crate::project_slice::{
-    island_print_order::PreparedPostIslandPrintOrder,
+    island_print_order::{self, PreparedPostIslandPrintOrder},
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
@@ -38,7 +38,7 @@ pub(super) fn emit(
         ..Default::default()
     };
     let labels = object::ObjectLabels::from_traversal(traversal);
-    for object in &prepared.objects {
+    for (object_index, object) in prepared.objects.iter().enumerate() {
         for (layer_index, layer) in object.iter().enumerate() {
             if layer_index == 0 {
                 append_print_preamble(&mut output);
@@ -68,14 +68,31 @@ pub(super) fn emit(
             );
             if layer_index == 0 {
                 output.extend_from_slice(b"G1 E-.4 F1800\n");
+                state.retracted = true;
             }
             append_layer_change(&mut output, traversal, layer_index, layer_z)?;
+            motion::begin_layer(&mut output, &mut state, layer_index, layer_z);
             if let Some(labels) = &labels {
-                labels.append_start(&mut output);
+                labels.append_printing(&mut output);
+                motion::begin_object_travel(&mut output, &mut state);
+                labels.append_start_label(&mut output);
             }
-            motion::emit_layer(&mut output, layer, traversal.scale, &mut state, layer_index)?;
+            motion::emit_layer(
+                &mut output,
+                layer,
+                motion::LayerGeometry {
+                    internal_surfaces: island_print_order::internal_surfaces(
+                        prepared,
+                        object_index,
+                        layer_index,
+                    ),
+                    scale: traversal.scale,
+                },
+                &mut state,
+            )?;
             if let Some(labels) = &labels {
-                labels.append_stop(&mut output);
+                labels.append_stopping(&mut output);
+                labels.append_stop_label(&mut output);
             }
         }
     }

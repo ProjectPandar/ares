@@ -109,6 +109,22 @@ pub(in crate::project_slice) fn order_island(
     OrderedExtrusionIsland { entities }
 }
 
+pub(in crate::project_slice) fn internal_surfaces(
+    prepared: &PreparedPostIslandPrintOrder,
+    object_index: usize,
+    layer_index: usize,
+) -> &[crate::project_slice::region_slices::RegionSurface] {
+    let external = &prepared
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor;
+    external.predecessor.objects[object_index].records[layer_index]
+        .as_ref()
+        .map_or(&[], |record| record.fill_surfaces.as_slice())
+}
+
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostIslandPrintOrder) {
     #[cfg(test)]
     DISPOSALS.with(|count| count.set(count.get() + 1));

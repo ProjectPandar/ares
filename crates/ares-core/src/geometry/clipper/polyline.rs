@@ -29,6 +29,26 @@ pub(crate) fn intersection_open_polylines(
     clipper_pl_open(ClipOperation::Intersection, subject, clip)
 }
 
+pub(crate) fn open_polyline_inside_expolygon(
+    subject: &Polyline,
+    clip: &crate::geometry::ExPolygon,
+) -> Result<bool, ClipperError> {
+    let mut clipper = Clipper::new(ClipperOptions::default());
+    clipper.add_open_path(subject, PathRole::Subject)?;
+    clipper.add_closed_path(clip.contour(), PathRole::Clip)?;
+    for hole in clip.holes() {
+        clipper.add_closed_path(hole, PathRole::Clip)?;
+    }
+    Ok(clipper
+        .execute_polytree(
+            ClipOperation::Difference,
+            FillRule::NonZero,
+            FillRule::NonZero,
+        )
+        .into_open_polylines()
+        .is_empty())
+}
+
 fn clipper_pl_closed(
     operation: ClipOperation,
     subject: &[Polygon],

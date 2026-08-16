@@ -1,12 +1,15 @@
 mod arc;
+mod features;
 mod options;
+mod travel;
 
+use features::PathProperties;
 pub(in crate::project_slice::gcode_emit) use options::MotionOptions;
 #[cfg(test)]
 pub(in crate::project_slice::gcode_emit) use options::first_nullable_float;
 
 use super::super::island_print_order::{IslandPrintEntity, OrderedExtrusionLayer};
-use crate::{ExtrusionRole, SliceError};
+use crate::SliceError;
 
 #[derive(Default)]
 pub(super) struct EmitState {
@@ -21,6 +24,52 @@ pub(super) struct EmitState {
     pub(super) last_feature: Option<&'static str>,
     pub(super) last_width: Option<f32>,
     pub(super) last_acceleration: Option<u32>,
+    pub(super) layer_z: f64,
+    pub(super) retracted: bool,
+    pub(super) wipe_path: Vec<arc::Point>,
+    pub(super) lifted: bool,
+}
+#[derive(Clone, Copy)]
+pub(super) struct LayerGeometry<'a> {
+    pub(super) internal_surfaces: &'a [crate::project_slice::region_slices::RegionSurface],
+    pub(super) scale: crate::geometry::CoordinateScale,
+}
+
+pub(super) fn begin_layer(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    layer_index: usize,
+    layer_z: f64,
+) {
+    state.layer_index = layer_index;
+    state.layer_z = layer_z;
+    state.travel_feedrate = if layer_index == 0 {
+        state.options.first_layer_travel_feedrate
+    } else {
+        state.options.travel_feedrate
+    };
+    let acceleration = if layer_index == 0 {
+        state.options.initial_layer_acceleration
+    } else {
+        state.options.default_acceleration
+    };
+    set_acceleration(output, state, acceleration);
+}
+
+pub(super) fn begin_object_travel(output: &mut Vec<u8>, state: &mut EmitState) {
+    let acceleration = if state.layer_index == 0 {
+        state.options.initial_layer_travel_acceleration
+    } else {
+        state.options.travel_acceleration
+    };
+    set_acceleration(output, state, acceleration);
+}
+
+fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32) {
+    if state.last_acceleration != Some(acceleration) {
+        output.extend_from_slice(format!("M204 S{acceleration}\n").as_bytes());
+        state.last_acceleration = Some(acceleration);
+    }
 }
 
 #[expect(
@@ -30,43 +79,47 @@ pub(super) struct EmitState {
 pub(super) fn emit_layer(
     output: &mut Vec<u8>,
     layer: &OrderedExtrusionLayer,
-    scale: crate::geometry::CoordinateScale,
+    geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-    layer_index: usize,
 ) -> Result<(), SliceError> {
-    state.layer_index = layer_index;
     for island in &layer.islands {
         for entity in &island.entities {
             match entity {
                 IslandPrintEntity::Perimeter(collection) => {
                     for loop_ in &collection.entities {
                         for path in &loop_.extrusion_loop.paths {
-                            emit_materialized_path(output, path, scale, state);
+                            emit_materialized_path(output, path, geometry, state);
                         }
                     }
                 }
                 IslandPrintEntity::Fill(collection) => {
                     for path in &collection.paths {
-                        emit_polyline(
+                        emit_points(
                             output,
-                            &path.polyline,
+                            path.polyline.points().iter().map(|point| (point.x(), point.y())),
                             PathProperties {
                                 mm3_per_mm: path.mm3_per_mm,
                                 width: path.width,
-                                feature: feature_for_fill(path.role),
+                                feature: features::for_fill(path.role),
+                                is_perimeter: matches!(
+                                    path.role,
+                                    crate::ExtrusionRole::Perimeter
+                                        | crate::ExtrusionRole::ExternalPerimeter
+                                        | crate::ExtrusionRole::OverhangPerimeter
+                                ),
                             },
-                            scale,
+                            geometry,
                             state,
                         );
                     }
                 }
                 IslandPrintEntity::Thin(entity) => match entity {
                     crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(path) => {
-                        emit_materialized_path(output, path, scale, state);
+                        emit_materialized_path(output, path, geometry, state);
                     }
                     crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(paths) => {
                         for path in paths {
-                            emit_materialized_path(output, path, scale, state);
+                            emit_materialized_path(output, path, geometry, state);
                         }
                     }
                 },
@@ -76,41 +129,10 @@ pub(super) fn emit_layer(
     Ok(())
 }
 
-#[derive(Clone, Copy)]
-struct PathProperties {
-    mm3_per_mm: f64,
-    width: f32,
-    feature: &'static str,
-}
-
-impl PathProperties {
-    fn kinematics(self, options: &MotionOptions, layer_index: usize) -> (u32, f64) {
-        if layer_index == 0 {
-            let speed = if self.feature == "Bottom surface" {
-                options.initial_layer_infill_speed
-            } else {
-                options.initial_layer_speed
-            };
-            return (options.initial_layer_acceleration, speed);
-        }
-        match self.feature {
-            "Outer wall" => (options.outer_wall_acceleration, options.outer_wall_speed),
-            "Top surface" => (options.top_surface_acceleration, options.top_surface_speed),
-            "Sparse infill" => (options.default_acceleration, options.sparse_infill_speed),
-            "Internal solid infill" => (
-                options.default_acceleration,
-                options.internal_solid_infill_speed,
-            ),
-            "Gap infill" => (options.default_acceleration, options.gap_infill_speed),
-            _ => (options.default_acceleration, options.inner_wall_speed),
-        }
-    }
-}
-
 fn emit_materialized_path(
     output: &mut Vec<u8>,
     path: &crate::project_slice::perimeters::classic::materialize::ExtrusionPath,
-    scale: crate::geometry::CoordinateScale,
+    geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
     use crate::project_slice::perimeters::classic::materialize::ExtrusionRole;
@@ -127,24 +149,9 @@ fn emit_materialized_path(
             mm3_per_mm: path.mm3_per_mm,
             width: path.width,
             feature,
+            is_perimeter: path.role != ExtrusionRole::GapFill,
         },
-        scale,
-        state,
-    );
-}
-
-fn emit_polyline(
-    output: &mut Vec<u8>,
-    polyline: &crate::geometry::Polyline,
-    properties: PathProperties,
-    scale: crate::geometry::CoordinateScale,
-    state: &mut EmitState,
-) {
-    emit_points(
-        output,
-        polyline.points().iter().map(|point| (point.x(), point.y())),
-        properties,
-        scale,
+        geometry,
         state,
     );
 }
@@ -153,39 +160,103 @@ fn emit_points(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
     properties: PathProperties,
-    scale: crate::geometry::CoordinateScale,
+    geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
     let points = points
         .map(|(x, y)| {
             (
-                scale.unscale(x) + state.offset.0,
-                scale.unscale(y) + state.offset.1,
+                geometry.scale.unscale(x) + state.offset.0,
+                geometry.scale.unscale(y) + state.offset.1,
             )
         })
         .collect::<Vec<_>>();
     let Some(&(first_x, first_y)) = points.first() else {
         return;
     };
-    if !state.positioned || first_x != state.x || first_y != state.y {
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} F{}\n",
-                format_axis(first_x),
-                format_axis(first_y),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
+    let first_position = !state.positioned;
+    let needs_travel = first_position || first_x != state.x || first_y != state.y;
+    if needs_travel {
+        begin_object_travel(output, state);
+        let inside_internal_surface = state.options.reduce_infill_retraction
+            && !properties.is_perimeter
+            && travel::inside_internal_surfaces(
+                geometry.internal_surfaces,
+                arc::Point {
+                    x: state.x,
+                    y: state.y,
+                },
+                arc::Point {
+                    x: first_x,
+                    y: first_y,
+                },
+                geometry.scale,
+                state.offset,
+            );
+        let retract = !first_position
+            && !state.retracted
+            && (first_x - state.x).hypot(first_y - state.y)
+                >= state.options.retraction_minimum_travel
+            && !inside_internal_surface;
+        if retract {
+            travel::retract_and_lift(
+                output,
+                arc::Point {
+                    x: first_x,
+                    y: first_y,
+                },
+                state,
+            );
+        }
+        if state.lifted {
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{} Z{}\n",
+                    format_axis(first_x),
+                    format_axis(first_y),
+                    format_extrusion(state.layer_z + state.options.z_hop)
+                )
+                .as_bytes(),
+            );
+        } else {
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{} F{}\n",
+                    format_axis(first_x),
+                    format_axis(first_y),
+                    format_axis(state.travel_feedrate)
+                )
+                .as_bytes(),
+            );
+        }
         state.x = first_x;
         state.y = first_y;
         state.positioned = true;
     }
-    let (acceleration, speed) = properties.kinematics(&state.options, state.layer_index);
-    if state.last_acceleration != Some(acceleration) {
-        output.extend_from_slice(format!("M204 S{acceleration}\n").as_bytes());
-        state.last_acceleration = Some(acceleration);
+    if state.retracted {
+        if first_position && state.options.z_hop > 0.0 {
+            output.extend_from_slice(
+                format!(
+                    "G1 Z{}\n",
+                    format_extrusion(state.layer_z + state.options.z_hop)
+                )
+                .as_bytes(),
+            );
+        }
+        output.extend_from_slice(format!("G1 Z{}\n", format_extrusion(state.layer_z)).as_bytes());
+        output.extend_from_slice(
+            format!(
+                "G1 E{} F{}\n",
+                format_extrusion(state.options.retraction_length),
+                format_axis(state.options.deretraction_feedrate)
+            )
+            .as_bytes(),
+        );
+        state.retracted = false;
+        state.lifted = false;
     }
+    let (acceleration, speed) = properties.kinematics(&state.options, state.layer_index);
+    set_acceleration(output, state, acceleration);
     state.extrusion_feedrate =
         speed.min(state.options.max_volumetric_speed / properties.mm3_per_mm) * 60.0;
     if state.last_feature != Some(properties.feature) {
@@ -247,6 +318,7 @@ fn emit_points(
             }
         }
     }
+    state.wipe_path = arc_points;
 }
 
 fn emit_linear_segment(
@@ -271,29 +343,6 @@ fn emit_linear_segment(
     state.y = end.y;
 }
 
-fn feature_for_fill(role: ExtrusionRole) -> &'static str {
-    match role {
-        ExtrusionRole::InternalInfill => "Sparse infill",
-        ExtrusionRole::SolidInfill => "Internal solid infill",
-        ExtrusionRole::TopSolidInfill => "Top surface",
-        ExtrusionRole::BottomSurface => "Bottom surface",
-        ExtrusionRole::Ironing => "Ironing",
-        ExtrusionRole::BridgeInfill | ExtrusionRole::InternalBridgeInfill => "Bridge",
-        ExtrusionRole::GapFill => "Gap infill",
-        ExtrusionRole::Skirt => "Skirt",
-        ExtrusionRole::Brim => "Brim",
-        ExtrusionRole::SupportMaterial => "Support",
-        ExtrusionRole::SupportMaterialInterface => "Support interface",
-        ExtrusionRole::SupportTransition => "Support transition",
-        ExtrusionRole::WipeTower => "Prime tower",
-        ExtrusionRole::Custom => "Custom",
-        ExtrusionRole::Perimeter => "Inner wall",
-        ExtrusionRole::ExternalPerimeter => "Outer wall",
-        ExtrusionRole::OverhangPerimeter => "Overhang wall",
-        ExtrusionRole::None | ExtrusionRole::Mixed => "Mixed",
-    }
-}
-
 fn format_axis(value: f64) -> String {
     let mut value = format!("{value:.3}");
     while value.ends_with('0') {
@@ -306,6 +355,16 @@ fn format_axis(value: f64) -> String {
 }
 
 fn format_extrusion(value: f64) -> String {
-    let value = format!("{value:.5}");
-    value.strip_prefix('0').unwrap_or(&value).to_owned()
+    let mut value = format!("{value:.5}");
+    while value.ends_with('0') {
+        value.pop();
+    }
+    if value.ends_with('.') {
+        value.pop();
+    }
+    if let Some(value) = value.strip_prefix("-0") {
+        format!("-{value}")
+    } else {
+        value.strip_prefix('0').unwrap_or(&value).to_owned()
+    }
 }

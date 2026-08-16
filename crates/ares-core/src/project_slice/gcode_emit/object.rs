@@ -32,21 +32,41 @@ impl ObjectLabels {
         })
     }
 
-    pub(super) fn append_start(&self, output: &mut Vec<u8>) {
+    pub(super) fn append_printing(&self, output: &mut Vec<u8>) {
         output.extend_from_slice(
             format!(
-                "; printing object {} id:{} copy {}\n; start printing object, unique label id: {}\nM624 {}\n",
-                self.name, self.object_id, self.copy_id, self.label_id, self.encoded_labels,
+                "; printing object {} id:{} copy {}\n",
+                self.name, self.object_id, self.copy_id,
             )
             .as_bytes(),
         );
     }
 
-    pub(super) fn append_stop(&self, output: &mut Vec<u8>) {
+    pub(super) fn append_start_label(&self, output: &mut Vec<u8>) {
         output.extend_from_slice(
             format!(
-                "; stop printing object {} id:{} copy {}\n; stop printing object, unique label id: {}\nM625\n",
-                self.name, self.object_id, self.copy_id, self.label_id,
+                "; start printing object, unique label id: {}\nM624 {}\n",
+                self.label_id, self.encoded_labels,
+            )
+            .as_bytes(),
+        );
+    }
+
+    pub(super) fn append_stopping(&self, output: &mut Vec<u8>) {
+        output.extend_from_slice(
+            format!(
+                "; stop printing object {} id:{} copy {}\n",
+                self.name, self.object_id, self.copy_id,
+            )
+            .as_bytes(),
+        );
+    }
+
+    pub(super) fn append_stop_label(&self, output: &mut Vec<u8>) {
+        output.extend_from_slice(
+            format!(
+                "; stop printing object, unique label id: {}\nM625\n",
+                self.label_id,
             )
             .as_bytes(),
         );

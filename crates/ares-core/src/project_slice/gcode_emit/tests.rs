@@ -30,6 +30,20 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     assert_eq!(options.default_acceleration, 10_000);
     assert_eq!(options.outer_wall_acceleration, 5_000);
     assert_eq!(options.top_surface_acceleration, 2_000);
+    assert_eq!(options.initial_layer_travel_acceleration, 6_000);
+    assert_eq!(options.travel_acceleration, 10_000);
+    assert_eq!(options.retraction_length, 0.4);
+    assert_eq!(options.deretraction_feedrate, 1_800.0);
+    assert_eq!(options.z_hop, 0.4);
+    assert_eq!(options.retraction_feedrate, 1_800.0);
+    assert!(options.wipe);
+    assert_eq!(options.wipe_distance, 1.0);
+    assert_eq!(options.retraction_minimum_travel, 1.0);
+    assert!(options.reduce_infill_retraction);
+    assert_eq!(options.retract_before_wipe, 0.0);
+    assert!(options.role_based_wipe_speed);
+    assert!(options.spiral_lift);
+    assert_eq!(options.travel_slope_radians, 3.0_f64.to_radians());
 }
 
 #[test]
@@ -58,6 +72,68 @@ async fn ksr_project_motion_is_finite_and_uses_configured_first_layer_rates() {
     assert!(!output.contains(" F0\n"));
     assert!(output.contains("G1 X144.504 Y100.092 F60000\n"));
     assert!(output.contains("; FEATURE: Inner wall\n; LINE_WIDTH: 0.5\nG1 F3000\n"));
+}
+#[tokio::test]
+async fn ksr_first_object_travel_uses_configured_acceleration_lift_and_deretraction() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let label = lines
+        .iter()
+        .position(|line| *line == "M624 AQAAAAAAAAA=")
+        .unwrap();
+
+    assert_eq!(lines[label - 4], "M204 S500");
+    assert!(lines[label - 3].starts_with("; printing object "));
+    assert_eq!(lines[label - 2], "M204 S6000");
+    assert_eq!(
+        lines[label - 1],
+        "; start printing object, unique label id: 133"
+    );
+    assert!(lines[label + 1].starts_with("G1 X"));
+    assert!(lines[label + 1].ends_with(" F60000"));
+    assert_eq!(lines[label + 2], "G1 Z.6");
+    assert_eq!(lines[label + 3], "G1 Z.2");
+    assert_eq!(lines[label + 4], "G1 E.4 F1800");
+}
+#[tokio::test]
+async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let wipe_start = lines
+        .iter()
+        .position(|line| *line == "; WIPE_START")
+        .unwrap();
+    let wipe_end = lines[wipe_start + 1..]
+        .iter()
+        .position(|line| *line == "; WIPE_END")
+        .map(|offset| wipe_start + 1 + offset)
+        .unwrap();
+
+    assert!(
+        lines[wipe_start + 1..wipe_end]
+            .iter()
+            .any(|line| line.starts_with("G1 X") && line.contains(" E-"))
+    );
+    assert_eq!(lines[wipe_end + 1], "G17");
+    assert!(lines[wipe_end + 2].starts_with("G3 Z.6 I"));
+    assert!(lines[wipe_end + 2].contains(" J"));
+    assert!(lines[wipe_end + 2].ends_with(" P1  F60000"));
 }
 
 #[tokio::test]

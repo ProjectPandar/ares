@@ -36,9 +36,9 @@ pub(crate) use clipper::{
     intersection_polygons_paths, intersection_polygons_paths_with_safety_offset,
     intersection_polygons_polygons_ex, offset_expolygon, offset_expolygon_refs_paths,
     offset_expolygons, offset_expolygons_paths, offset_open_paths, offset_paths, offset_paths_tree,
-    offset2_ex, offset2_ex_with_interstage, opening_ex, opening_paths, union_ex, union_expolygons,
-    union_polygons_paths, union_safety_offset_ex, union_safety_offset_expolygons,
-    union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
+    offset2_ex, offset2_ex_with_interstage, open_polyline_inside_expolygon, opening_ex,
+    opening_paths, union_ex, union_expolygons, union_polygons_paths, union_safety_offset_ex,
+    union_safety_offset_expolygons, union_safety_offset_polygons, variable_offset_inner_ex, xor_ex,
 };
 pub(crate) use coord::{Coord, CoordinateScale, Point};
 pub(crate) use edge_grid::{ClosestPointResult, EdgeGrid, GridEdge};

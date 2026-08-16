@@ -63,6 +63,7 @@ pub(crate) use point_in_polygon::point_in_polygon;
 pub(crate) use polyline::recombine_polylines;
 pub(crate) use polyline::{
     diff_pl, difference_open_polylines, intersection_open_polylines, intersection_pl,
+    open_polyline_inside_expolygon,
 };
 #[cfg(test)]
 pub(crate) use polytree::PolyNode;

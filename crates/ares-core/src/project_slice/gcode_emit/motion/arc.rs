@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct Point {
+pub(in crate::project_slice::gcode_emit) struct Point {
     pub(super) x: f64,
     pub(super) y: f64,
 }

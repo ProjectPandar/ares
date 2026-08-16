@@ -1,4 +1,4 @@
-use crate::{FloatOrPercent, Nullable, OrcaFloat};
+use crate::{FloatOrPercent, Nullable, OrcaFloat, ZHopType};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
@@ -19,6 +19,20 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) top_surface_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) initial_layer_travel_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) travel_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) retraction_length: f64,
+    pub(in crate::project_slice::gcode_emit) deretraction_feedrate: f64,
+    pub(in crate::project_slice::gcode_emit) z_hop: f64,
+    pub(in crate::project_slice::gcode_emit) retraction_feedrate: f64,
+    pub(in crate::project_slice::gcode_emit) wipe: bool,
+    pub(in crate::project_slice::gcode_emit) wipe_distance: f64,
+    pub(in crate::project_slice::gcode_emit) retraction_minimum_travel: f64,
+    pub(in crate::project_slice::gcode_emit) reduce_infill_retraction: bool,
+    pub(in crate::project_slice::gcode_emit) retract_before_wipe: f64,
+    pub(in crate::project_slice::gcode_emit) role_based_wipe_speed: bool,
+    pub(in crate::project_slice::gcode_emit) spiral_lift: bool,
+    pub(in crate::project_slice::gcode_emit) travel_slope_radians: f64,
     pub(in crate::project_slice::gcode_emit) enable_arc_fitting: bool,
     pub(in crate::project_slice::gcode_emit) arc_fitting_tolerance: f64,
 }
@@ -29,6 +43,7 @@ impl MotionOptions {
     ) -> Self {
         let full = &traversal.resolved.views.full;
         let gcode = &traversal.resolved.views.runtime_gcode;
+        let retract_overrides = &full.filament.retract_overrides;
         let object = traversal.resolved.objects.first();
         let region = object
             .and_then(|object| object.layer_candidates.first())
@@ -40,6 +55,10 @@ impl MotionOptions {
             .first()
             .map_or(1.75, |value| value.0);
         let travel_speed = gcode.travel_speed.0;
+        let travel_acceleration = object
+            .map_or(full.process.object.travel_acceleration.0, |value| {
+                value.object.travel_acceleration.0
+            });
         Self {
             filament_area: std::f64::consts::PI * filament_diameter.powi(2) * 0.25,
             filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
@@ -93,6 +112,79 @@ impl MotionOptions {
                 full.process.object.top_surface_acceleration.0,
                 |value| value.top_surface_acceleration.0,
             ),
+            initial_layer_travel_acceleration: rounded_acceleration(absolute(
+                gcode.initial_layer_travel_acceleration,
+                travel_acceleration,
+            )),
+            travel_acceleration: rounded_acceleration(travel_acceleration),
+            retraction_length: gcode
+                .retraction_length
+                .0
+                .first()
+                .map_or(0.0, |value| value.0),
+            deretraction_feedrate: gcode
+                .deretraction_speed
+                .0
+                .first()
+                .map_or(0.0, |value| value.0)
+                * 60.0,
+            z_hop: gcode.z_hop.0.first().map_or(0.0, |value| value.0),
+            retraction_feedrate: gcode
+                .retraction_speed
+                .0
+                .first()
+                .map_or(0.0, |value| value.0)
+                * 60.0,
+            wipe: retract_overrides
+                .filament_wipe
+                .iter()
+                .find_map(|value| match value {
+                    Nullable::Value(value) => Some(value.0),
+                    Nullable::Nil => None,
+                })
+                .unwrap_or_else(|| {
+                    full.project
+                        .print
+                        .wipe
+                        .0
+                        .first()
+                        .is_some_and(|value| value.0)
+                }),
+            wipe_distance: first_nullable_float(
+                &retract_overrides.filament_wipe_distance,
+                full.project
+                    .print
+                    .wipe_distance
+                    .0
+                    .first()
+                    .map_or(0.0, |value| value.0),
+            ),
+            retraction_minimum_travel: first_nullable_float(
+                &retract_overrides.filament_retraction_minimum_travel,
+                full.project
+                    .print
+                    .retraction_minimum_travel
+                    .0
+                    .first()
+                    .map_or(0.0, |value| value.0),
+            ),
+            reduce_infill_retraction: full.process.print.reduce_infill_retraction.0,
+            retract_before_wipe: gcode
+                .retract_before_wipe
+                .0
+                .first()
+                .map_or(0.0, |value| value.0 / 100.0),
+            role_based_wipe_speed: full.process.region.role_based_wipe_speed.0,
+            spiral_lift: gcode
+                .z_hop_types
+                .0
+                .first()
+                .is_some_and(|value| matches!(value, ZHopType::Auto | ZHopType::Spiral)),
+            travel_slope_radians: gcode
+                .travel_slope
+                .0
+                .first()
+                .map_or(0.0, |value| value.0.to_radians()),
             enable_arc_fitting: gcode.enable_arc_fitting.0,
             arc_fitting_tolerance: full.process.print.resolution.0,
         }
