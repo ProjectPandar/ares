@@ -258,6 +258,12 @@ async fn ksr_project_renders_timelapse_template_after_every_layer() {
     assert_eq!(output.matches("\nM9711 M0 E1 X133 Y193 Z").count(), 460);
     assert!(output.contains("M9711 M0 E1 X133 Y193 Z0.6 S11 C10 O0 T3000\n"));
     assert!(output.contains("M9711 M0 E1 X133 Y193 Z92.4 S11 C10 O0 T3000\n"));
+    assert_eq!(
+        output
+            .matches(";======== X2D timelapse gcode ========\n")
+            .count(),
+        460
+    );
 }
 
 #[tokio::test]

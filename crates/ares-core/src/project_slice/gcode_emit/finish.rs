@@ -25,7 +25,6 @@ pub(super) fn append(
     config.insert("curr_physical_extruder_id", value::Value::number(1.0));
     config.insert("has_timelapse_safe_pos", value::Value::Bool(false));
 
-    append_template(output, &gcode.time_lapse_gcode.0, &config, "time-lapse")?;
     output.extend_from_slice(
         b"M106 S0\nM106 P2 S0\nM981 S0 P20000 ; close spaghetti detector\n; FEATURE: Custom\n",
     );
