@@ -19,6 +19,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) top_surface_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) enable_arc_fitting: bool,
+    pub(in crate::project_slice::gcode_emit) arc_fitting_tolerance: f64,
 }
 
 impl MotionOptions {
@@ -91,6 +93,8 @@ impl MotionOptions {
                 full.process.object.top_surface_acceleration.0,
                 |value| value.top_surface_acceleration.0,
             ),
+            enable_arc_fitting: gcode.enable_arc_fitting.0,
+            arc_fitting_tolerance: full.process.print.resolution.0,
         }
     }
 }

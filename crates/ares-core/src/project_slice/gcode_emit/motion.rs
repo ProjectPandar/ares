@@ -1,3 +1,4 @@
+mod arc;
 mod options;
 
 pub(in crate::project_slice::gcode_emit) use options::MotionOptions;
@@ -155,13 +156,15 @@ fn emit_points(
     scale: crate::geometry::CoordinateScale,
     state: &mut EmitState,
 ) {
-    let mut points = points.map(|(x, y)| {
-        (
-            scale.unscale(x) + state.offset.0,
-            scale.unscale(y) + state.offset.1,
-        )
-    });
-    let Some((first_x, first_y)) = points.next() else {
+    let points = points
+        .map(|(x, y)| {
+            (
+                scale.unscale(x) + state.offset.0,
+                scale.unscale(y) + state.offset.1,
+            )
+        })
+        .collect::<Vec<_>>();
+    let Some(&(first_x, first_y)) = points.first() else {
         return;
     };
     if !state.positioned || first_x != state.x || first_y != state.y {
@@ -200,22 +203,72 @@ fn emit_points(
         state.last_width = Some(properties.width);
     }
     output.extend_from_slice(format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes());
-    for (x, y) in points {
-        let distance = (x - state.x).hypot(y - state.y);
-        let extrusion = distance * properties.mm3_per_mm * state.options.filament_flow_ratio
-            / state.options.filament_area;
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} E{}\n",
-                format_axis(x),
-                format_axis(y),
-                format_extrusion(extrusion)
-            )
-            .as_bytes(),
-        );
-        state.x = x;
-        state.y = y;
+    let arc_points = points
+        .iter()
+        .map(|&(x, y)| arc::Point { x, y })
+        .collect::<Vec<_>>();
+    let segments = if state.options.enable_arc_fitting {
+        arc::fit(&arc_points, state.options.arc_fitting_tolerance)
+    } else {
+        points
+            .windows(2)
+            .map(|pair| arc::Segment::Line {
+                end: arc::Point {
+                    x: pair[1].0,
+                    y: pair[1].1,
+                },
+                length: (pair[1].0 - pair[0].0).hypot(pair[1].1 - pair[0].1),
+            })
+            .collect()
+    };
+    for segment in segments {
+        match segment {
+            arc::Segment::Line { end, length } => {
+                emit_linear_segment(output, end, length, properties, state);
+            }
+            arc::Segment::Arc(arc_segment) => {
+                let extrusion =
+                    arc_segment.length * properties.mm3_per_mm * state.options.filament_flow_ratio
+                        / state.options.filament_area;
+                let command = if arc_segment.clockwise { "G2" } else { "G3" };
+                output.extend_from_slice(
+                    format!(
+                        "{command} X{} Y{} I{} J{} E{}\n",
+                        format_axis(arc_segment.end.x),
+                        format_axis(arc_segment.end.y),
+                        format_axis(arc_segment.center.x - state.x),
+                        format_axis(arc_segment.center.y - state.y),
+                        format_extrusion(extrusion)
+                    )
+                    .as_bytes(),
+                );
+                state.x = arc_segment.end.x;
+                state.y = arc_segment.end.y;
+            }
+        }
     }
+}
+
+fn emit_linear_segment(
+    output: &mut Vec<u8>,
+    end: arc::Point,
+    length: f64,
+    properties: PathProperties,
+    state: &mut EmitState,
+) {
+    let extrusion = length * properties.mm3_per_mm * state.options.filament_flow_ratio
+        / state.options.filament_area;
+    output.extend_from_slice(
+        format!(
+            "G1 X{} Y{} E{}\n",
+            format_axis(end.x),
+            format_axis(end.y),
+            format_extrusion(extrusion)
+        )
+        .as_bytes(),
+    );
+    state.x = end.x;
+    state.y = end.y;
 }
 
 fn feature_for_fill(role: ExtrusionRole) -> &'static str {
