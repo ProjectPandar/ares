@@ -30,9 +30,9 @@ pub(super) fn emit(
     let options = motion::MotionOptions::from_traversal(traversal);
     let mut state = motion::EmitState {
         offset: model_center(traversal).unwrap_or_default(),
-        filament_area: options.filament_area,
         travel_feedrate: options.first_layer_travel_feedrate,
         extrusion_feedrate: options.initial_layer_speed * 60.0,
+        options,
         ..Default::default()
     };
     for object in &prepared.objects {
@@ -67,7 +67,7 @@ pub(super) fn emit(
                 output.extend_from_slice(b"G1 E-.4 F1800\n");
             }
             append_layer_change(&mut output, traversal, layer_index, layer_z)?;
-            motion::emit_layer(&mut output, layer, traversal.scale, &mut state)?;
+            motion::emit_layer(&mut output, layer, traversal.scale, &mut state, layer_index)?;
         }
     }
 

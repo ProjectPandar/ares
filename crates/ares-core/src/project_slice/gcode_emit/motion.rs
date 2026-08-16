@@ -12,12 +12,14 @@ pub(super) struct EmitState {
     pub(super) x: f64,
     pub(super) y: f64,
     pub(super) offset: (f64, f64),
-    pub(super) filament_area: f64,
     pub(super) travel_feedrate: f64,
     pub(super) extrusion_feedrate: f64,
+    pub(super) options: MotionOptions,
+    pub(super) layer_index: usize,
     pub(super) positioned: bool,
     pub(super) last_feature: Option<&'static str>,
     pub(super) last_width: Option<f32>,
+    pub(super) last_acceleration: Option<u32>,
 }
 
 #[expect(
@@ -29,7 +31,9 @@ pub(super) fn emit_layer(
     layer: &OrderedExtrusionLayer,
     scale: crate::geometry::CoordinateScale,
     state: &mut EmitState,
+    layer_index: usize,
 ) -> Result<(), SliceError> {
+    state.layer_index = layer_index;
     for island in &layer.islands {
         for entity in &island.entities {
             match entity {
@@ -71,10 +75,35 @@ pub(super) fn emit_layer(
     Ok(())
 }
 
+#[derive(Clone, Copy)]
 struct PathProperties {
     mm3_per_mm: f64,
     width: f32,
     feature: &'static str,
+}
+
+impl PathProperties {
+    fn kinematics(self, options: &MotionOptions, layer_index: usize) -> (u32, f64) {
+        if layer_index == 0 {
+            let speed = if self.feature == "Bottom surface" {
+                options.initial_layer_infill_speed
+            } else {
+                options.initial_layer_speed
+            };
+            return (options.initial_layer_acceleration, speed);
+        }
+        match self.feature {
+            "Outer wall" => (options.outer_wall_acceleration, options.outer_wall_speed),
+            "Top surface" => (options.top_surface_acceleration, options.top_surface_speed),
+            "Sparse infill" => (options.default_acceleration, options.sparse_infill_speed),
+            "Internal solid infill" => (
+                options.default_acceleration,
+                options.internal_solid_infill_speed,
+            ),
+            "Gap infill" => (options.default_acceleration, options.gap_infill_speed),
+            _ => (options.default_acceleration, options.inner_wall_speed),
+        }
+    }
 }
 
 fn emit_materialized_path(
@@ -149,6 +178,13 @@ fn emit_points(
         state.y = first_y;
         state.positioned = true;
     }
+    let (acceleration, speed) = properties.kinematics(&state.options, state.layer_index);
+    if state.last_acceleration != Some(acceleration) {
+        output.extend_from_slice(format!("M204 S{acceleration}\n").as_bytes());
+        state.last_acceleration = Some(acceleration);
+    }
+    state.extrusion_feedrate =
+        speed.min(state.options.max_volumetric_speed / properties.mm3_per_mm) * 60.0;
     if state.last_feature != Some(properties.feature) {
         output.extend_from_slice(format!("; FEATURE: {}\n", properties.feature).as_bytes());
         state.last_feature = Some(properties.feature);
@@ -166,7 +202,8 @@ fn emit_points(
     output.extend_from_slice(format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes());
     for (x, y) in points {
         let distance = (x - state.x).hypot(y - state.y);
-        let extrusion = distance * properties.mm3_per_mm / state.filament_area;
+        let extrusion = distance * properties.mm3_per_mm * state.options.filament_flow_ratio
+            / state.options.filament_area;
         output.extend_from_slice(
             format!(
                 "G1 X{} Y{} E{}\n",

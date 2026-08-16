@@ -1,6 +1,6 @@
 use crate::{FloatOrPercent, Nullable, OrcaFloat};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) filament_area: f64,
     pub(in crate::project_slice::gcode_emit) filament_flow_ratio: f64,
