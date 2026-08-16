@@ -6,7 +6,7 @@ use crate::project_slice::{
 mod cooling;
 mod expression;
 mod finish;
-mod footprint;
+pub(super) mod footprint;
 mod header;
 mod lexer;
 mod motion;

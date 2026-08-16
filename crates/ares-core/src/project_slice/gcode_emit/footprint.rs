@@ -100,7 +100,9 @@ pub(super) fn model_bounds(
     bounds
 }
 
-pub(super) fn model_center(traversal: &PreparedPostClassicTraversal) -> Option<(f64, f64)> {
+pub(in crate::project_slice) fn model_center(
+    traversal: &PreparedPostClassicTraversal,
+) -> Option<(f64, f64)> {
     let (min_x, min_y, max_x, max_y) = model_bounds(traversal)?;
     Some(((min_x + max_x) * 0.5, (min_y + max_y) * 0.5))
 }

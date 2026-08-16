@@ -6815,3 +6815,13 @@ the actual seam-clipped endpoint and follows the remaining stored points
 forward, instead of reversing the terminal extrusion segments. Aligned seam
 placement, cooling markers, timing, and exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.128: Global seam visibility
+
+O128 ports OrcaSlicer 2.4.2 `TriangleSetSampling.cpp:9-68` and
+`GCode/SeamPlacer.cpp:40-227,624-705,892-930` into a deterministic global
+seam-visibility stage. Aligned seam candidates receive mesh-derived visibility
+from transformed 3MF model parts through AABB-accelerated hemisphere ray casts
+and nearby-sample interpolation. Cross-layer spline alignment, final loop
+splitting, cooling markers, timing, and exact G-code differences remain later
+source-cited parity slices.

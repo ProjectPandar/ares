@@ -47,6 +47,7 @@ mod region_slices;
     allow(dead_code, reason = "pure O97 topology activates with seam placement")
 )]
 mod seam_candidates;
+mod seam_placement;
 mod simplification;
 mod slice_ordering;
 mod slicing_mode_intersections;
@@ -125,7 +126,8 @@ fn slice_project_sync(
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
     let filled = fill_entities::prepare(prepared)?;
     let islands = extrusion_islands::prepare(filled);
-    let ordered = island_print_order::prepare(islands);
+    let mut ordered = island_print_order::prepare(islands);
+    seam_placement::apply(&mut ordered);
     consume_post_island_print_order(ordered, metadata)
 }
 
