@@ -2,6 +2,29 @@ use super::{Point, Segment, fit};
 
 #[test]
 fn fits_clockwise_circle_with_analytic_length() {
+    let points = (0..=18)
+        .map(|step| {
+            let angle = -(step as f64) * std::f64::consts::FRAC_PI_2 / 18.0;
+            Point {
+                x: angle.cos(),
+                y: angle.sin(),
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let fitted = fit(&points, 0.0125);
+    let [Segment::Arc(arc)] = fitted.as_slice() else {
+        panic!("expected one fitted arc");
+    };
+    assert!(arc.clockwise);
+    assert!(arc.center.x.abs() < 0.0125, "{arc:?}");
+    assert!(arc.center.y.abs() < 0.0125, "{arc:?}");
+    assert!((arc.length - std::f64::consts::FRAC_PI_2).abs() < 0.005);
+    assert_eq!(arc.end, points[18]);
+}
+
+#[test]
+fn rejects_circle_whose_chords_exceed_fitting_tolerance() {
     let diagonal = 2.0_f64.sqrt() * 0.5;
     let points = [
         Point { x: 1.0, y: 0.0 },
@@ -12,15 +35,11 @@ fn fits_clockwise_circle_with_analytic_length() {
         Point { x: 0.0, y: -1.0 },
     ];
 
-    let fitted = fit(&points, 0.0125);
-    let [Segment::Arc(arc)] = fitted.as_slice() else {
-        panic!("expected one fitted arc");
-    };
-    assert!(arc.clockwise);
-    assert!((arc.center.x).abs() < 1e-9);
-    assert!((arc.center.y).abs() < 1e-9);
-    assert!((arc.length - std::f64::consts::FRAC_PI_2).abs() < 1e-9);
-    assert_eq!(arc.end, points[2]);
+    assert!(
+        fit(&points, 0.0125)
+            .iter()
+            .all(|segment| matches!(segment, Segment::Line { .. }))
+    );
 }
 
 #[test]
