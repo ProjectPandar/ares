@@ -6787,3 +6787,13 @@ timing/progress/statistics; then removal of obsolete internal source-pinning
 oracles. Exit requires normalized byte-for-byte parity for the KSR project (only
 the Ares generator name/timestamp may differ), workspace nextest, strict Clippy,
 rustfmt, LOC/macro gates, and an approved independent six-axis runtime review.
+
+## Task 22O.124: Monotonic configured direction
+
+O124 corrects the active monotonic fill direction against OrcaSlicer 2.4.2
+`FillBase.cpp:275-319` and `FillRectilinear.hpp:39-54`. Monotonic fill now
+inherits the rectilinear zero `_layer_angle` behavior instead of applying the
+generic odd-layer 90-degree alternation; resolved bridge angles remain active.
+The focused direction contract and KSR project motion smoke test pass. Remaining
+surface assignment, path ordering, gap fill, lifecycle, timing, and exact G-code
+differences remain later source-cited parity slices.

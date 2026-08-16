@@ -59,13 +59,13 @@ fn task22o89_full_solid_rectangle_emits_repeatable_scaled_polylines() {
 }
 
 #[test]
-fn task22o89_fixed_angle_and_layer_alternation_select_distinct_directions() {
+fn task22o124_monotonic_keeps_its_configured_direction_between_layers() {
     let source = scaled_rectangle();
-    let fixed = fill_monotonic_surface(&source, params(), CoordinateScale::Normal).unwrap();
-    let mut alternating = params();
-    alternating.fixed_angle = false;
-    alternating.layer_index = 1;
-    let rotated = fill_monotonic_surface(&source, alternating, CoordinateScale::Normal).unwrap();
+    let first = fill_monotonic_surface(&source, params(), CoordinateScale::Normal).unwrap();
+    let mut next_layer = params();
+    next_layer.fixed_angle = false;
+    next_layer.layer_index = 1;
+    let second = fill_monotonic_surface(&source, next_layer, CoordinateScale::Normal).unwrap();
 
-    assert_ne!(fixed, rotated);
+    assert_eq!(first, second);
 }
