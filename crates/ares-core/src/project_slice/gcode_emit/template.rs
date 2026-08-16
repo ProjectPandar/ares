@@ -71,6 +71,9 @@ fn render_range(
             }
             if let Some((start, branch_end)) = selected {
                 output.push_str(&render_range(lines, start, branch_end, config)?.0);
+                if branch_count == 1 {
+                    output.push_str(&directive_blank(lines[next - 1]));
+                }
             }
             if branch_count > 1 {
                 output.push_str(&directive_blank(lines[next - 1]));
@@ -200,7 +203,7 @@ mod tests {
     fn renderer_selects_nested_branches_and_replaces_values() {
         let config = Config::from_block(b"; enabled = 1\n; n = 2\n");
         let template = "{if enabled}\nA [n]\n{if n > 1}\nB\n{endif}\n{else}\nC\n{endif}\n";
-        assert_eq!(render(template, &config).unwrap(), "\nA 2\n\nB\n\n");
+        assert_eq!(render(template, &config).unwrap(), "\nA 2\n\nB\n\n\n");
     }
 
     #[test]
@@ -208,5 +211,12 @@ mod tests {
         let config = Config::from_block(b"; enabled = 0\n; n = 2\n");
         let template = "{if enabled == 1 ||\n n == 3}\nA\n{else}\nB [n]\n{endif}\n";
         assert_eq!(render(template, &config).unwrap(), "\nB 2\n\n");
+    }
+
+    #[test]
+    fn renderer_keeps_closing_blank_only_for_selected_single_branch() {
+        let config = Config::from_block(b"; enabled = 1\n");
+        let template = "{if enabled}\nA\n{endif}\n{if !enabled}\nB\n{endif}\n";
+        assert_eq!(render(template, &config).unwrap(), "\nA\n\n\n");
     }
 }
