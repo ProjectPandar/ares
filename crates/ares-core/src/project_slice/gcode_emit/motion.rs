@@ -277,8 +277,10 @@ fn emit_points(
     }
     let (acceleration, speed) = properties.kinematics(&state.options, state.layer_index);
     set_acceleration(output, state, acceleration);
-    state.extrusion_feedrate =
-        speed.min(state.options.max_volumetric_speed / properties.mm3_per_mm) * 60.0;
+    state.extrusion_feedrate = speed.min(
+        state.options.max_volumetric_speed
+            / (properties.mm3_per_mm * state.options.filament_flow_ratio),
+    ) * 60.0;
     if state.last_feature != Some(properties.feature) {
         output.extend_from_slice(format!("; FEATURE: {}\n", properties.feature).as_bytes());
         state.last_feature = Some(properties.feature);

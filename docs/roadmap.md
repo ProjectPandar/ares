@@ -6787,3 +6787,13 @@ timing/progress/statistics; then removal of obsolete internal source-pinning
 oracles. Exit requires normalized byte-for-byte parity for the KSR project (only
 the Ares generator name/timestamp may differ), workspace nextest, strict Clippy,
 rustfmt, LOC/macro gates, and an approved independent six-axis runtime review.
+
+## Task 22O.125: Effective-flow volumetric speed cap
+
+O125 ports OrcaSlicer 2.4.2 `GCode.cpp:6468-6471,6554-6562,6614-6616` into
+the project G-code motion emitter. The configured `filament_flow_ratio` now
+participates in effective path volume before `filament_max_volumetric_speed`
+caps role speed, so the KSR regular inner-wall feedrate is `F15791.926` rather
+than `F15476.087`. Geometry, seam placement, path order, variable-width fill,
+lifecycle, timing, and exact G-code differences remain later source-cited
+parity slices.
