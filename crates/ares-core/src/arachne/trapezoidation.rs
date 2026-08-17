@@ -20,10 +20,6 @@ use super::{
 pub(crate) struct TrapezoidationConfig {
     pub(crate) transitioning_angle: f64,
     pub(crate) discretization_step_size: i64,
-    #[expect(
-        dead_code,
-        reason = "consumed by the deferred transition filtering stage"
-    )]
     pub(crate) transition_filter_dist: i64,
     pub(crate) allowed_filter_deviation: i64,
     #[expect(

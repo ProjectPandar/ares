@@ -60,6 +60,124 @@ impl SkeletalTrapezoidation<'_> {
         }
     }
 
+    fn filter_transition_mids(&mut self) {
+        let edges = self.graph.active_edges().collect::<Vec<_>>();
+        for edge in edges {
+            let Some(storage) = self.graph.edge(edge).data.transitions() else {
+                continue;
+            };
+            if storage.borrow().is_empty() {
+                continue;
+            }
+            {
+                let transitions = storage.borrow();
+                assert!(
+                    transitions.first().unwrap().lower_bead_count
+                        <= transitions.last().unwrap().lower_bead_count
+                );
+            }
+            let from = self.graph.edge(edge).from.unwrap();
+            let to = self.graph.edge(edge).to.unwrap();
+            assert!(
+                self.graph.node(from).data.distance_to_boundary
+                    <= self.graph.node(to).data.distance_to_boundary
+            );
+            let edge_length =
+                point_distance(self.graph.node(from).point, self.graph.node(to).point);
+
+            let back = *storage.borrow().last().unwrap();
+            let references = self.dissolve_nearby_transitions(
+                edge,
+                edge_length - back.pos,
+                NearbyTransitionSearch {
+                    origin: back,
+                    maximum_distance: self.config.transition_filter_dist,
+                    going_up: true,
+                },
+            );
+            let mut dissolve_back = !references.is_empty();
+            if dissolve_back {
+                self.dissolve_bead_count_region(
+                    edge,
+                    i64::from(back.lower_bead_count) + 1,
+                    i64::from(back.lower_bead_count),
+                );
+            }
+            self.erase_transition_refs(references);
+            let upper_half_length =
+                (1.0 - f64::from(
+                    self.beading_strategy
+                        .transition_anchor_pos(i64::from(back.lower_bead_count)),
+                )) * self
+                    .beading_strategy
+                    .transitioning_length(i64::from(back.lower_bead_count))
+                    as f64;
+            dissolve_back |= self.filter_end_of_central_transition(
+                edge,
+                edge_length - back.pos,
+                upper_half_length as i64,
+                i64::from(back.lower_bead_count),
+            );
+            if dissolve_back {
+                storage.borrow_mut().pop();
+            }
+            if storage.borrow().is_empty() {
+                continue;
+            }
+
+            let front = storage.borrow()[0];
+            let twin = self.graph.edge(edge).twin.unwrap();
+            let references = self.dissolve_nearby_transitions(
+                twin,
+                front.pos,
+                NearbyTransitionSearch {
+                    origin: front,
+                    maximum_distance: self.config.transition_filter_dist,
+                    going_up: false,
+                },
+            );
+            let mut dissolve_front = !references.is_empty();
+            if dissolve_front {
+                self.dissolve_bead_count_region(
+                    twin,
+                    i64::from(front.lower_bead_count),
+                    i64::from(front.lower_bead_count) + 1,
+                );
+            }
+            self.erase_transition_refs(references);
+            let lower_half_length = f64::from(
+                self.beading_strategy
+                    .transition_anchor_pos(i64::from(front.lower_bead_count)),
+            ) * self
+                .beading_strategy
+                .transitioning_length(i64::from(front.lower_bead_count))
+                as f64;
+            dissolve_front |= self.filter_end_of_central_transition(
+                twin,
+                front.pos,
+                lower_half_length as i64,
+                i64::from(front.lower_bead_count) + 1,
+            );
+            if dissolve_front {
+                storage.borrow_mut().remove(0);
+            }
+        }
+    }
+
+    fn erase_transition_refs(&self, mut references: Vec<TransitionMidRef>) {
+        references.sort_unstable_by_key(|reference| (reference.edge.0, reference.index));
+        references.dedup();
+        for reference in references.into_iter().rev() {
+            self.graph
+                .edge(reference.edge)
+                .data
+                .transitions()
+                .unwrap()
+                .borrow_mut()
+                .remove(reference.index);
+        }
+    }
+
     #[expect(
         clippy::excessive_nesting,
         reason = "the source requires every central branch to reach a compatible transition"

@@ -7217,3 +7217,14 @@ middles for the later erase phase. Transition-middle filtering orchestration,
 transition ends, ribs, segments, Arachne concentric internal fill, cooling,
 timing, and remaining exact G-code differences remain later source-cited parity
 slices.
+
+## Task 22O.167: Arachne transition-middle filtering
+
+O167 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:864-931`. Generated transition middles are
+now filtered from the back and front of each upward central edge. Nearby
+opposing middles are erased through stable per-edge references, their connected
+bead-count region is rewritten, and central-terminal half-length checks remove
+truncated transitions. Transition ends, ribs, segments, Arachne concentric
+internal fill, cooling, timing, and remaining exact G-code differences remain
+later source-cited parity slices.

@@ -291,3 +291,48 @@ fn task22o166_discovers_matching_transition_only_inside_distance_limit() {
             .is_empty()
     );
 }
+
+#[test]
+fn task22o167_dissolves_nearby_transition_pair_and_intervening_region() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let (mut graph, source, nodes) = central_chain(scale);
+    let candidate = graph.edge(source).next.unwrap();
+    graph.node_mut(nodes[0]).data.distance_to_boundary = scale.checked_scale(0.1).unwrap();
+    graph.node_mut(nodes[1]).data.distance_to_boundary = scale.checked_scale(0.3).unwrap();
+    graph.node_mut(nodes[2]).data.distance_to_boundary = scale.checked_scale(0.5).unwrap();
+    graph.node_mut(nodes[0]).data.bead_count = 0;
+    graph.node_mut(nodes[1]).data.bead_count = 1;
+    graph.node_mut(nodes[2]).data.bead_count = 1;
+    let radius = scale.checked_scale(0.3).unwrap();
+    let source_storage = std::rc::Rc::new(std::cell::RefCell::new(vec![TransitionMiddle::new(
+        scale.checked_scale(0.9).unwrap(),
+        0,
+        radius,
+    )]));
+    let candidate_storage = std::rc::Rc::new(std::cell::RefCell::new(vec![TransitionMiddle::new(
+        scale.checked_scale(0.1).unwrap(),
+        0,
+        radius,
+    )]));
+    graph.edge_mut(source).data.set_transitions(&source_storage);
+    graph
+        .edge_mut(candidate)
+        .data
+        .set_transitions(&candidate_storage);
+    let mut trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: vec![source_storage.clone(), candidate_storage.clone()],
+    };
+
+    trapezoidation.filter_transition_mids();
+
+    assert!(source_storage.borrow().is_empty());
+    assert!(candidate_storage.borrow().is_empty());
+    assert_eq!(trapezoidation.graph.node(nodes[1]).data.bead_count, 0);
+    assert_eq!(trapezoidation.graph.node(nodes[2]).data.bead_count, 0);
+}
