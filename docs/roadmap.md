@@ -7171,3 +7171,14 @@ footer after `EXECUTABLE_BLOCK_END`. Exact reference material totals remain
 dependent on deferred geometry parity; object identifiers, sub-micron extrusion
 differences, later path ordering, cooling, and timing remain later source-cited
 parity slices.
+
+## Task 22O.163: Arachne transition midpoint radius
+
+O163 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:827-858`. Transition middles now convert
+the beading strategy's full transition thickness to a radius before clamping
+and edge interpolation. Stored feature radii and midpoint positions therefore
+match the skeletal graph's distance-to-boundary coordinate. Transition-middle
+filtering, transition ends, ribs, segments, Arachne concentric internal fill,
+cooling, timing, and remaining exact G-code differences remain later
+source-cited parity slices.

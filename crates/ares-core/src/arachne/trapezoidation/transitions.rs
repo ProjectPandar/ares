@@ -28,10 +28,9 @@ impl SkeletalTrapezoidation<'_> {
                 point_distance(self.graph.node(from).point, self.graph.node(to).point);
             let transitions = Rc::new(RefCell::new(Vec::new()));
             for lower_bead_count in start_beads..end_beads {
-                let transition_radius = self
-                    .beading_strategy
-                    .transition_thickness(lower_bead_count)
-                    .clamp(start_radius, end_radius);
+                let transition_radius =
+                    (self.beading_strategy.transition_thickness(lower_bead_count) / 2)
+                        .clamp(start_radius, end_radius);
                 let position = i128::from(edge_length)
                     * i128::from(transition_radius - start_radius)
                     / i128::from(end_radius - start_radius);
@@ -124,8 +123,17 @@ mod tests {
         assert!(transitions[0].pos < transitions[1].pos);
         assert_eq!(transitions[0].lower_bead_count, 1);
         assert_eq!(transitions[1].lower_bead_count, 2);
-        assert!(transitions.iter().all(|transition| {
-            transition.feature_radius >= scaled(0.3) && transition.feature_radius <= scaled(2.0)
-        }));
+        let start_radius = scaled(0.3);
+        let end_radius = scaled(2.0);
+        let edge_length = scaled(2.0);
+        for transition in transitions.iter() {
+            let expected_radius =
+                strategy.transition_thickness(i64::from(transition.lower_bead_count)) / 2;
+            assert_eq!(transition.feature_radius, expected_radius);
+            assert_eq!(
+                transition.pos,
+                edge_length * (expected_radius - start_radius) / (end_radius - start_radius)
+            );
+        }
     }
 }
