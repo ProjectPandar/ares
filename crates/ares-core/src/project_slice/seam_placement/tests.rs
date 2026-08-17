@@ -108,6 +108,45 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
     );
 }
 
+#[test]
+fn split_within_source_epsilon_snaps_to_existing_vertex() {
+    let mut loop_ = ExtrusionLoop {
+        paths: vec![ExtrusionPath {
+            polyline: Polyline3 {
+                points: [(0, 0), (1_000_000, 0), (1_000_000, 1_000_000), (0, 0)]
+                    .into_iter()
+                    .map(|(x, y)| Point3 { x, y, z: 200_000 })
+                    .collect(),
+                fitting: Vec::new(),
+                candidate_points: Vec::new(),
+            },
+            role: ExtrusionRole::ExternalPerimeter,
+            mm3_per_mm: 0.04,
+            width: 0.4,
+            height: 0.2,
+        }],
+        role: ExtrusionLoopRole::Default,
+    };
+
+    split_at(&mut loop_, (999_000, 1_000), CoordinateScale::Normal);
+
+    assert_eq!(
+        loop_.paths[0].polyline.points[..2],
+        [
+            Point3 {
+                x: 1_000_000,
+                y: 0,
+                z: 200_000,
+            },
+            Point3 {
+                x: 1_000_000,
+                y: 1_000_000,
+                z: 200_000,
+            },
+        ]
+    );
+}
+
 #[tokio::test]
 async fn task22o142_inner_path_role_projects_aligned_seam() {
     let output = crate::slice_project(

@@ -233,6 +233,8 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
     );
     assert!(lines.contains(&"G3 X104.96 Y100.092 I.232 J-5.372 E.031"));
     assert!(!lines.contains(&"G1 X136.839 Y100.592 E0"));
+    assert!(lines.contains(&"G1 X135.839 Y100.618 E-.4"));
+    assert!(!lines.contains(&"G1 X136.839 Y100.592 E-.016"));
 }
 
 #[tokio::test]

@@ -7083,3 +7083,13 @@ longer emit zero-length extrusion commands. Variable paths retain skipped
 source points for later wipe traversal while measuring the next move from the
 last emitted endpoint. Object identifiers, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.155: Near-vertex seam snapping
+
+O155 ports OrcaSlicer 2.4.2 `GCode/SeamPlacer.cpp:1622-1628` and
+`ExtrusionEntity.cpp:182-225`. Aligned seam points within the source 1.5-micron
+radius now reuse an existing extrusion-loop vertex before projected splitting.
+This removes G-code-resolution near-duplicate segments and produces the exact
+KSR single wipe move `G1 X135.839 Y100.618 E-.4`. Object identifiers, cooling,
+timing, spiral-lift geometry, and remaining exact G-code differences remain
+later source-cited parity slices.

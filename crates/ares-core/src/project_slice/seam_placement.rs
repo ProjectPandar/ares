@@ -26,6 +26,7 @@ use crate::{
 
 const VISIBILITY_SAMPLE_COUNT: usize = 30_000;
 const ANGLE_IMPORTANCE_ALIGNED: f32 = 0.6;
+const SEAM_VERTEX_SNAP_MM: f64 = 0.0015;
 
 pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
     let predecessor = &prepared.predecessor;
@@ -323,6 +324,14 @@ fn squared_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
 }
 
 fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: CoordinateScale) {
+    let snap_distance = SEAM_VERTEX_SNAP_MM / scale.factor();
+    let snap_distance_squared = snap_distance * snap_distance;
+    let seam = loop_
+        .paths
+        .iter()
+        .flat_map(|path| &path.polyline.points)
+        .find(|point| squared_distance((point.x, point.y), seam) < snap_distance_squared)
+        .map_or(seam, |point| (point.x, point.y));
     let projection = closest_projection(&loop_.paths, seam);
     let mut paths = std::mem::take(&mut loop_.paths);
     let following = paths.split_off(projection.path + 1);
