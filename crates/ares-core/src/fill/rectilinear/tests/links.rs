@@ -10,6 +10,7 @@ use super::rectangle;
 fn intersection(y: i64, segment_index: usize, kind: IntersectionKind) -> SegmentIntersection {
     SegmentIntersection {
         point: Point::new(0, y),
+        position: super::super::segments::RationalPosition::integer(y),
         contour_index: 0,
         segment_index,
         kind,

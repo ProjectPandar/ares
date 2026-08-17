@@ -11,8 +11,40 @@ pub(crate) enum IntersectionKind {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct RationalPosition {
+    numerator: i64,
+    denominator: u32,
+}
+
+impl RationalPosition {
+    pub(crate) const fn integer(value: i64) -> Self {
+        Self {
+            numerator: value,
+            denominator: 1,
+        }
+    }
+
+    fn rounded(self) -> Result<i64, ClipperError> {
+        let denominator = i128::from(self.denominator);
+        let numerator = i128::from(self.numerator)
+            + if self.numerator < 0 {
+                -(denominator >> 1)
+            } else {
+                denominator >> 1
+            };
+        i64::try_from(numerator / denominator).map_err(|_| ClipperError::CoordinateOutOfRange)
+    }
+
+    fn compare(self, other: Self) -> std::cmp::Ordering {
+        (i128::from(self.numerator) * i128::from(other.denominator))
+            .cmp(&(i128::from(other.numerator) * i128::from(self.denominator)))
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct SegmentIntersection {
     pub(crate) point: Point,
+    pub(crate) position: RationalPosition,
     pub(crate) contour_index: usize,
     pub(crate) segment_index: usize,
     pub(crate) kind: IntersectionKind,
@@ -114,9 +146,12 @@ pub(super) fn populate_vertical_lines(
             let first = points[(segment_index + points.len() - 1) % points.len()];
             let second = points[segment_index];
             for line in &mut slice.lines {
-                if let Some(y) = intersection_y(points, segment_index, first, second, line.x) {
+                if let Some(position) =
+                    intersection_position(points, segment_index, first, second, line.x)?
+                {
                     line.intersections.push(SegmentIntersection {
-                        point: Point::new(line.x, y),
+                        point: Point::new(line.x, position.rounded()?),
+                        position,
                         contour_index,
                         segment_index,
                         kind: kind(contour.inner, second.x() > first.x()),
@@ -129,7 +164,7 @@ pub(super) fn populate_vertical_lines(
     }
     for line in &mut slice.lines {
         line.intersections
-            .sort_by_key(|intersection| intersection.point.y());
+            .sort_by(|first, second| first.position.compare(second.position));
         remove_overlapping_vertices(line, &slice.contours);
     }
     Ok(())
@@ -288,47 +323,45 @@ fn at_segment_vertex(
     points[previous].x() == x || points[intersection.segment_index].x() == x
 }
 
-fn intersection_y(
+fn intersection_position(
     points: &[Point],
     segment_index: usize,
     first: Point,
     second: Point,
     x: i64,
-) -> Option<i64> {
+) -> Result<Option<RationalPosition>, ClipperError> {
     let (left, right) = if first.x() <= second.x() {
         (first.x(), second.x())
     } else {
         (second.x(), first.x())
     };
     if x < left || x > right || first.x() == second.x() {
-        return None;
+        return Ok(None);
     }
     if first.x() == x {
         let previous = points[(segment_index + points.len() - 2) % points.len()];
-        return ((previous.x() - first.x()) as i128 * (second.x() - first.x()) as i128 <= 0)
-            .then_some(first.y());
+        return Ok(
+            ((previous.x() - first.x()) as i128 * (second.x() - first.x()) as i128 <= 0)
+                .then_some(RationalPosition::integer(first.y())),
+        );
     }
     if second.x() == x {
         let next = points[(segment_index + 1) % points.len()];
-        return ((next.x() - second.x()) as i128 * (first.x() - second.x()) as i128 <= 0)
-            .then_some(second.y());
+        return Ok(
+            ((next.x() - second.x()) as i128 * (first.x() - second.x()) as i128 <= 0)
+                .then_some(RationalPosition::integer(second.y())),
+        );
     }
-    let denominator = (second.x() - first.x()).abs();
-    let numerator = if second.x() > first.x() {
-        x - first.x()
+    let denominator = (i128::from(second.x()) - i128::from(first.x())).abs();
+    let distance = if second.x() > first.x() {
+        i128::from(x) - i128::from(first.x())
     } else {
-        first.x() - x
+        i128::from(first.x()) - i128::from(x)
     };
-    let value = numerator as i128 * (second.y() - first.y()) as i128
-        + first.y() as i128 * denominator as i128;
-    Some(round_ratio(value, denominator))
-}
-
-fn round_ratio(mut numerator: i128, denominator: i64) -> i64 {
-    numerator += if numerator < 0 {
-        -i128::from(denominator >> 1)
-    } else {
-        i128::from(denominator >> 1)
-    };
-    (numerator / i128::from(denominator)) as i64
+    let numerator = distance * (i128::from(second.y()) - i128::from(first.y()))
+        + i128::from(first.y()) * denominator;
+    Ok(Some(RationalPosition {
+        numerator: i64::try_from(numerator).map_err(|_| ClipperError::CoordinateOutOfRange)?,
+        denominator: u32::try_from(denominator).map_err(|_| ClipperError::CoordinateOutOfRange)?,
+    }))
 }

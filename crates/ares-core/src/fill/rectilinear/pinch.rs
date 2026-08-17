@@ -74,6 +74,7 @@ fn insert_pairs(
 fn phony(x: i64, y: i64, kind: IntersectionKind) -> SegmentIntersection {
     SegmentIntersection {
         point: Point::new(x, y),
+        position: super::segments::RationalPosition::integer(y),
         contour_index: usize::MAX,
         segment_index: usize::MAX,
         kind,

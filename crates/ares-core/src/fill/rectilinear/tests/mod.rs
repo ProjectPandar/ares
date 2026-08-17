@@ -4,6 +4,7 @@ mod emit;
 mod links;
 mod path_matrix;
 mod perimeter;
+mod segments;
 mod surface;
 
 use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
@@ -176,6 +177,7 @@ fn task22o79_nonpinched_sections_remain_identical() {
 fn task22o79_disconnected_inner_pair_receives_ordered_phony_outer_pair() {
     let record = |y, kind| SegmentIntersection {
         point: Point::new(50, y),
+        position: super::segments::RationalPosition::integer(y),
         contour_index: 0,
         segment_index: y as usize,
         kind,
@@ -287,6 +289,7 @@ fn task22o82_retained_slice_is_repeatable_and_atomic_on_range_error() {
 fn intersection(y: i64, kind: IntersectionKind) -> SegmentIntersection {
     SegmentIntersection {
         point: Point::new(0, y),
+        position: super::segments::RationalPosition::integer(y),
         contour_index: 0,
         segment_index: 0,
         kind,

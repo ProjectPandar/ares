@@ -7104,3 +7104,14 @@ three-region exact-order assertion that pinned the old Ares sampler is replaced
 by repeatability, completeness, and precedence contracts. Region-cost
 precision, fill flow width, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.157: Exact rational scanline ordering
+
+O157 ports OrcaSlicer 2.4.2 `Fill/FillRectilinear.cpp:120-138`, `759-911`, and
+`1855-1932`. Scanline intersections retain exact rational Y positions for
+ordering before coordinate rounding, and monotonic vertical runs now select
+source-preferred valid links from either contour side. This removes the
+Ares-only next-zigzag extension gate and corrects the KSR first bottom-surface
+path and spiral lift to `X168.396 Y83.649` and `G3 Z.6 I.591 J1.064`.
+Line-width tags, extrusion precision, flow width, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

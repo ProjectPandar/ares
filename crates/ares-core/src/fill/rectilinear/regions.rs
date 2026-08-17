@@ -65,7 +65,6 @@ pub(crate) fn generate_monotonic_regions(lines: &[SegmentedLine]) -> Vec<Monoton
                 let mut left = (seed, high);
                 let mut right = left;
                 let mut right_line = seed_line;
-                let mut zigzag = [seed, high];
                 consumed[seed_line][seed] = true;
                 let mut count = 1;
                 while right_line + 1 < lines.len() {
@@ -85,21 +84,6 @@ pub(crate) fn generate_monotonic_regions(lines: &[SegmentedLine]) -> Vec<Monoton
                     if back != left {
                         break;
                     }
-                    let Some(first_next) = next_zigzag_intersection(
-                        &lines[right_line],
-                        &lines[right_line + 1],
-                        zigzag[0],
-                    ) else {
-                        break;
-                    };
-                    let Some(second_next) = next_zigzag_intersection(
-                        &lines[right_line],
-                        &lines[right_line + 1],
-                        zigzag[1],
-                    ) else {
-                        break;
-                    };
-                    zigzag = [first_next, second_next];
                     right_line += 1;
                     right = candidate;
                     consumed[right_line][right.0] = true;
@@ -217,76 +201,6 @@ const fn is_inner(kind: IntersectionKind) -> bool {
     )
 }
 
-#[expect(
-    clippy::excessive_nesting,
-    reason = "source zigzag validation traverses linked vertical runs in both directions"
-)]
-fn next_zigzag_intersection(
-    line: &SegmentedLine,
-    next: &SegmentedLine,
-    start: usize,
-) -> Option<usize> {
-    let going_up = matches!(
-        line.intersections[start].kind,
-        IntersectionKind::OuterLow | IntersectionKind::InnerLow
-    );
-    let mut index = start;
-    let mut right = right_horizontal(line.intersections[index]);
-    if going_up {
-        loop {
-            loop {
-                index += 1;
-                if let Some(target) = right_horizontal(line.intersections[index]) {
-                    right = Some(right.map_or(target, |current| current.max(target)));
-                }
-                if line.intersections[index].kind == IntersectionKind::InnerHigh
-                    && line.intersections[index + 1].kind == IntersectionKind::OuterHigh
-                {
-                    break;
-                }
-            }
-            let Some((target, LinkQuality::Valid)) =
-                vertical_link(line.intersections[index], LinkType::Up)
-            else {
-                break;
-            };
-            index = target;
-        }
-    } else {
-        loop {
-            loop {
-                index -= 1;
-                if let Some(target) = right_horizontal(line.intersections[index]) {
-                    right = Some(target);
-                }
-                if line.intersections[index].kind == IntersectionKind::InnerLow
-                    && line.intersections[index - 1].kind == IntersectionKind::OuterLow
-                {
-                    break;
-                }
-            }
-            let Some((target, LinkQuality::Valid)) =
-                vertical_link(line.intersections[index], LinkType::Down)
-            else {
-                break;
-            };
-            index = target;
-        }
-    }
-    right.map(|target| {
-        if going_up {
-            vertical_run_top(next, target)
-        } else {
-            vertical_run_bottom(next, target)
-        }
-    })
-}
-
-fn right_horizontal(item: super::segments::SegmentIntersection) -> Option<usize> {
-    item.next
-        .and_then(|(target, kind, _)| (kind == LinkType::Horizontal).then_some(target))
-}
-
 pub(super) fn vertical_run_bottom(line: &SegmentedLine, mut index: usize) -> usize {
     loop {
         while index > 0 && line.intersections[index].kind != IntersectionKind::InnerLow {
@@ -296,12 +210,11 @@ pub(super) fn vertical_run_bottom(line: &SegmentedLine, mut index: usize) -> usi
             index -= 1;
             continue;
         }
-        let Some((target, kind, quality)) = line.intersections[index].previous else {
+        let Some((target, LinkQuality::Valid)) =
+            vertical_link(line.intersections[index], LinkType::Down)
+        else {
             break;
         };
-        if kind != LinkType::Down || quality != LinkQuality::Valid {
-            break;
-        }
         index = target;
     }
     index
@@ -320,12 +233,11 @@ pub(super) fn vertical_run_top(line: &SegmentedLine, mut index: usize) -> usize 
             index += 1;
             continue;
         }
-        let Some((target, kind, quality)) = line.intersections[index].next else {
+        let Some((target, LinkQuality::Valid)) =
+            vertical_link(line.intersections[index], LinkType::Up)
+        else {
             break;
         };
-        if kind != LinkType::Up || quality != LinkQuality::Valid {
-            break;
-        }
         index = target;
     }
     index
