@@ -1,3 +1,4 @@
+mod postprocess;
 mod stitch;
 
 use crate::geometry::{CoordinateScale, Polygon};
@@ -21,6 +22,8 @@ pub(crate) struct RawWallToolPathConfig {
     pub(crate) transitioning_angle: f64,
     pub(crate) transition_filter_deviation: i64,
     pub(crate) wall_distribution_count: i32,
+    pub(crate) min_length_factor: f64,
+    pub(crate) is_top_or_bottom_layer: bool,
     pub(crate) coordinate_scale: CoordinateScale,
 }
 
@@ -78,6 +81,11 @@ pub(crate) fn generate(
         config.inner_spacing - 1,
         config.coordinate_scale.checked_scale(0.01).unwrap(),
     );
+    postprocess::remove_small_lines(
+        &mut toolpaths,
+        config.min_length_factor,
+        config.is_top_or_bottom_layer,
+    );
     Ok(toolpaths)
 }
 
@@ -110,6 +118,8 @@ mod tests {
                 transition_filter_deviation: scaled(0.1),
                 wall_distribution_count: 1,
                 coordinate_scale: scale,
+                min_length_factor: 0.5,
+                is_top_or_bottom_layer: false,
             },
         )
     }

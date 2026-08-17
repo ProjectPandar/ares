@@ -7536,3 +7536,12 @@ threshold, reconnect near endpoints, and mark closed lines. Outline
 preprocessing, small-line removal, inner-contour separation, simplification,
 concentric-internal conversion, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.197: Arachne small odd-line removal
+
+O197 ports OrcaSlicer 2.4.2 `Arachne/WallToolPaths.cpp:671-700`.
+Post-stitch processing now removes odd open lines below the configured
+minimum-width length threshold while retaining even, closed, and
+threshold-meeting lines. Inner-contour separation, simplification,
+concentric-internal conversion, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.
