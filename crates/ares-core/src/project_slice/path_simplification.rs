@@ -45,7 +45,7 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                     .iter_mut()
                     .flat_map(|entity| &mut entity.extrusion_loop.paths)
                 {
-                    simplify_path3(path, scale, tolerance);
+                    simplify_path3(path, scale, tolerance, true);
                 }
             }
             IslandPrintEntity::Fill(collection) => {
@@ -66,10 +66,10 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                 }
             }
             IslandPrintEntity::Thin(entity) => match entity {
-                GapFillEntity::Path(path) => simplify_path3(path, scale, tolerance),
+                GapFillEntity::Path(path) => simplify_path3(path, scale, tolerance, false),
                 GapFillEntity::Loop(paths) => {
                     for path in paths {
-                        simplify_path3(path, scale, tolerance);
+                        simplify_path3(path, scale, tolerance, false);
                     }
                 }
             },
@@ -84,11 +84,15 @@ fn scaled_point((x, y): (f64, f64), scale: CoordinateScale) -> Point {
     )
 }
 
-fn simplify_path3(path: &mut ExtrusionPath, scale: CoordinateScale, tolerance: f64) {
+fn simplify_path3(
+    path: &mut ExtrusionPath,
+    scale: CoordinateScale,
+    tolerance: f64,
+    preserve_candidate_points: bool,
+) {
     let z = path.polyline.points[0].z;
-    let mut points = path
-        .polyline
-        .points
+    let source_points = std::mem::take(&mut path.polyline.points);
+    let mut points = source_points
         .iter()
         .map(|point| (scale.unscale(point.x), scale.unscale(point.y)))
         .collect::<Vec<_>>();
@@ -103,5 +107,10 @@ fn simplify_path3(path: &mut ExtrusionPath, scale: CoordinateScale, tolerance: f
             })
             .collect(),
         fitting,
+        candidate_points: if preserve_candidate_points {
+            source_points
+        } else {
+            Vec::new()
+        },
     };
 }

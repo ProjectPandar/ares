@@ -63,26 +63,44 @@ fn align_collection_choices_at(plan: &mut LayerPlan, collection_index: usize) {
             let previous = plan.candidates.points[plan.choices[previous_index].seam_index].position;
             let selected = plan.choices[perimeter_index].seam_index;
             plan.choices[perimeter_index].seam_index =
-                nearest_acceptable_candidate(plan, perimeter_index, selected, previous);
+                nearest_feature_best_candidate(plan, perimeter_index, selected, previous);
         }
         previous_perimeter = Some(perimeter_index);
     }
 }
 
-fn nearest_acceptable_candidate(
+fn nearest_feature_best_candidate(
     plan: &LayerPlan,
     perimeter_index: usize,
     selected: usize,
     previous: seam_candidates::SeamCandidatePosition,
 ) -> usize {
     let perimeter = &plan.candidates.perimeters[perimeter_index];
-    (perimeter.start_index..perimeter.end_index)
+    let candidates = perimeter.start_index..perimeter.end_index;
+    let nearest = candidates
+        .clone()
         .filter(|&candidate| is_not_much_worse(plan, candidate, selected))
         .min_by(|&left, &right| {
             candidate_distance_squared(plan, left, previous)
                 .total_cmp(&candidate_distance_squared(plan, right, previous))
         })
-        .expect("the selected seam candidate remains acceptable")
+        .expect("the selected seam candidate remains acceptable");
+    let nearest_position = plan.candidates.points[nearest].position;
+    let feature_radius_squared = perimeter.flow_width * perimeter.flow_width;
+    candidates
+        .filter(|&candidate| {
+            candidate_distance_squared(plan, candidate, nearest_position) <= feature_radius_squared
+        })
+        .min_by(|&left, &right| {
+            if is_better(plan, left, right) {
+                std::cmp::Ordering::Less
+            } else if is_better(plan, right, left) {
+                std::cmp::Ordering::Greater
+            } else {
+                left.cmp(&right)
+            }
+        })
+        .unwrap_or(nearest)
 }
 
 fn candidate_distance_squared(
@@ -210,7 +228,7 @@ fn collection_perimeter_map(
                 .extrusion_loop
                 .paths
                 .first()
-                .and_then(|path| path.polyline.points.first())
+                .and_then(|path| path.polyline.candidate_points().first())
                 .expect("an extrusion loop has a point");
             let target = (scale.unscale(point.x) as f32, scale.unscale(point.y) as f32);
             perimeter_base

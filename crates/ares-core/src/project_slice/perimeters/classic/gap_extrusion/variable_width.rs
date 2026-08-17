@@ -191,6 +191,7 @@ fn push_group(
             polyline: Polyline3 {
                 points,
                 fitting: Vec::new(),
+                candidate_points: Vec::new(),
             },
             role: ExtrusionRole::GapFill,
             mm3_per_mm: new_flow.mm3_per_mm,

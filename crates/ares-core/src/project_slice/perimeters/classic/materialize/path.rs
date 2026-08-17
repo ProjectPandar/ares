@@ -132,6 +132,7 @@ fn path(
                 })
                 .collect(),
             fitting: Vec::new(),
+            candidate_points: Vec::new(),
         },
         role,
         mm3_per_mm,

@@ -7032,3 +7032,14 @@ omit their leading zero while exact zero remains valid, producing exact KSR
 command `G2 X155.758 Y90.456 I-6.194 J.091 E.09765`. Later perimeter geometry,
 cooling, timing, and remaining exact G-code differences remain source-cited
 parity slices.
+
+## Task 22O.150: Pre-fit aligned seam corner
+
+O150 ports OrcaSlicer 2.4.2 `ArcFitter.cpp:9-150`,
+`GCode/SeamPlacer.cpp:405-447,1014-1175`, and
+`ExtrusionEntity.cpp:182-315`. Pre-fit perimeter points now remain available to
+aligned-seam candidate selection without copying, and collection-local matching
+keeps the best corner within the nearest flow-width feature. The second KSR
+transition now emits exact commands `G3 Z.6 I1.188 J-.264 P1  F60000` and
+`G1 X145.539 Y94.166 Z.6`. Object identifiers, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

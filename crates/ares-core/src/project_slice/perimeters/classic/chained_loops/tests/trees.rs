@@ -68,6 +68,7 @@ fn raw(children: Vec<RawPathNode>) -> RawPathNode {
             polyline: Polyline3 {
                 points: vec![Point3 { x: 0, y: 0, z: 0 }, Point3 { x: 10, y: 0, z: 0 }],
                 fitting: Vec::new(),
+                candidate_points: Vec::new(),
             },
             role: ExtrusionRole::Perimeter,
             mm3_per_mm: 1.0,

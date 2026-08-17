@@ -112,7 +112,7 @@ fn collect_loop_points(paths: &[ExtrusionPath]) -> Vec<Point> {
         .iter()
         .flat_map(|path| {
             path.polyline
-                .points
+                .candidate_points()
                 .iter()
                 .map(|point| Point::new(point.x, point.y))
         })

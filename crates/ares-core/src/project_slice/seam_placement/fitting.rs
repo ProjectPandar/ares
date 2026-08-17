@@ -54,10 +54,12 @@ pub(super) fn split_at_index(
         Polyline3 {
             points: before_points,
             fitting: before_fitting,
+            candidate_points: Vec::new(),
         },
         Polyline3 {
             points: after_points,
             fitting: after_fitting,
+            candidate_points: Vec::new(),
         },
     )
 }

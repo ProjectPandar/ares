@@ -146,6 +146,7 @@ fn path(points: &[(i64, i64, i64)], mm3: f64, width: f32, height: f32) -> Extrus
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y, z)| Point3 { x, y, z }).collect(),
             fitting: Vec::new(),
+            candidate_points: Vec::new(),
         },
         role: ExtrusionRole::Perimeter,
         mm3_per_mm: mm3,

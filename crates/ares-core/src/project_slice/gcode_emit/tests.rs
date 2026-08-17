@@ -204,6 +204,15 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
         lines[wipe_end + 23],
         "G2 X155.758 Y90.456 I-6.194 J.091 E.09765"
     );
+    let outer_wipe_end = lines
+        .iter()
+        .enumerate()
+        .skip(wipe_end + 1)
+        .find(|(_, line)| **line == "; WIPE_END")
+        .unwrap()
+        .0;
+    assert_eq!(lines[outer_wipe_end + 2], "G3 Z.6 I1.188 J-.264 P1  F60000");
+    assert_eq!(lines[outer_wipe_end + 3], "G1 X145.539 Y94.166 Z.6");
 }
 
 #[tokio::test]

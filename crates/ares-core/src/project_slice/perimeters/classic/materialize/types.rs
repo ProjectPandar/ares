@@ -63,6 +63,17 @@ pub(in crate::project_slice) struct FittedMove {
 pub(in crate::project_slice) struct Polyline3 {
     pub(in crate::project_slice) points: Vec<Point3>,
     pub(in crate::project_slice) fitting: Vec<FittedMove>,
+    pub(in crate::project_slice) candidate_points: Vec<Point3>,
+}
+
+impl Polyline3 {
+    pub(in crate::project_slice) fn candidate_points(&self) -> &[Point3] {
+        if self.candidate_points.is_empty() {
+            &self.points
+        } else {
+            &self.candidate_points
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -87,5 +98,6 @@ impl ExtrusionPath {
         }
         self.polyline.fitting.reverse();
         self.polyline.points.reverse();
+        self.polyline.candidate_points.reverse();
     }
 }
