@@ -1,0 +1,174 @@
+use super::{ArcSegment, Point, try_arc};
+
+#[derive(Clone, Copy)]
+pub(super) struct FittedRange {
+    pub(super) start: usize,
+    pub(super) end: usize,
+    pub(super) arc: Option<ArcSegment>,
+}
+
+pub(super) fn fit_and_simplify(points: &[Point], tolerance: f64) -> (Vec<Point>, Vec<FittedRange>) {
+    if points.len() < 2 {
+        return (points.to_vec(), Vec::new());
+    }
+    let ranges = if tolerance.abs() > 0.0001 {
+        fit_ranges(points, tolerance)
+    } else {
+        vec![FittedRange {
+            start: 0,
+            end: points.len() - 1,
+            arc: None,
+        }]
+    };
+    let mut simplified = Vec::with_capacity(points.len());
+    simplified.push(points[0]);
+    let mut simplified_ranges = Vec::with_capacity(ranges.len());
+    for range in ranges {
+        let part = douglas_peucker(&points[range.start..=range.end], tolerance);
+        let start = simplified.len() - 1;
+        simplified.extend_from_slice(&part[1..]);
+        simplified_ranges.push(FittedRange {
+            start,
+            end: simplified.len() - 1,
+            arc: range.arc,
+        });
+    }
+    (simplified, simplified_ranges)
+}
+
+pub(in crate::project_slice::gcode_emit) fn simplify_points(
+    points: &mut Vec<(f64, f64)>,
+    tolerance: f64,
+) {
+    let converted = points
+        .iter()
+        .map(|&(x, y)| Point { x, y })
+        .collect::<Vec<_>>();
+    let (converted, _) = fit_and_simplify(&converted, tolerance);
+    points.clear();
+    points.extend(converted.into_iter().map(|point| (point.x, point.y)));
+}
+
+fn fit_ranges(points: &[Point], tolerance: f64) -> Vec<FittedRange> {
+    if points.len() < 3 {
+        return vec![FittedRange {
+            start: 0,
+            end: points.len() - 1,
+            arc: None,
+        }];
+    }
+    let mut ranges = Vec::with_capacity(points.len() / 2);
+    let mut front = 0;
+    let mut last_arc = None;
+    for back in 0..points.len() {
+        if back - front < 2 {
+            continue;
+        }
+        if let Some(arc) = try_arc(&points[front..=back], tolerance) {
+            last_arc = Some(arc);
+            if back + 1 == points.len() {
+                ranges.push(FittedRange {
+                    start: front,
+                    end: back,
+                    arc: Some(arc),
+                });
+                front = back;
+            }
+        } else {
+            if back - front > 2 {
+                ranges.push(FittedRange {
+                    start: front,
+                    end: back - 1,
+                    arc: Some(last_arc.expect("the preceding point span fitted as an arc")),
+                });
+            } else {
+                append_linear_range(&mut ranges, front, front + 1);
+            }
+            front = back - 1;
+            last_arc = None;
+        }
+    }
+    if front + 1 < points.len() {
+        append_linear_range(&mut ranges, front, points.len() - 1);
+    }
+    ranges
+}
+
+fn append_linear_range(ranges: &mut Vec<FittedRange>, start: usize, end: usize) {
+    if let Some(last) = ranges.last_mut()
+        && last.arc.is_none()
+    {
+        last.end = end;
+    } else {
+        ranges.push(FittedRange {
+            start,
+            end,
+            arc: None,
+        });
+    }
+}
+
+fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
+    let Some(&first) = points.first() else {
+        return Vec::new();
+    };
+    let mut result = Vec::with_capacity(points.len());
+    result.push(first);
+    if points.len() == 1 {
+        return result;
+    }
+
+    let tolerance_squared = tolerance * tolerance;
+    let mut anchor = 0;
+    let mut floater = points.len() - 1;
+    let mut endpoints = Vec::with_capacity(points.len());
+    endpoints.push(floater);
+    loop {
+        let mut maximum = 0.0;
+        let mut farthest = anchor;
+        for index in anchor + 1..floater {
+            let distance =
+                point_segment_distance_squared(points[index], points[anchor], points[floater]);
+            if distance > maximum {
+                maximum = distance;
+                farthest = index;
+            }
+        }
+        if maximum <= tolerance_squared {
+            result.push(points[floater]);
+            anchor = floater;
+            endpoints.pop();
+            let Some(&next) = endpoints.last() else {
+                break;
+            };
+            floater = next;
+        } else {
+            floater = farthest;
+            endpoints.push(floater);
+        }
+    }
+    result
+}
+
+fn point_segment_distance_squared(point: Point, start: Point, end: Point) -> f64 {
+    let vector_x = end.x - start.x;
+    let vector_y = end.y - start.y;
+    let point_x = point.x - start.x;
+    let point_y = point.y - start.y;
+    let length_squared = vector_x * vector_x + vector_y * vector_y;
+    if length_squared == 0.0 {
+        return point_x * point_x + point_y * point_y;
+    }
+    let projection = (point_x * vector_x + point_y * vector_y) / length_squared;
+    if projection <= 0.0 {
+        point_x * point_x + point_y * point_y
+    } else if projection >= 1.0 {
+        let point_x = point.x - end.x;
+        let point_y = point.y - end.y;
+        point_x * point_x + point_y * point_y
+    } else {
+        let distance_x = projection * vector_x - point_x;
+        let distance_y = projection * vector_y - point_y;
+        distance_x * distance_x + distance_y * distance_y
+    }
+}

@@ -1,3 +1,7 @@
+mod simplify;
+
+pub(super) use simplify::simplify_points;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct Point {
     pub(super) x: f64,
@@ -19,38 +23,15 @@ pub(super) enum Segment {
 }
 
 pub(super) fn fit(points: &[Point], tolerance: f64) -> Vec<Segment> {
-    if points.len() < 2 {
-        return Vec::new();
-    }
+    let (points, ranges) = simplify::fit_and_simplify(points, tolerance);
     let mut segments = Vec::with_capacity(points.len());
-    let mut front = 0;
-    let mut last_arc = None;
-    for back in 0..points.len() {
-        if back - front < 2 {
-            continue;
-        }
-        let candidate = try_arc(&points[front..=back], tolerance);
-        if let Some(arc) = candidate {
-            last_arc = Some(arc);
-            if back + 1 == points.len() {
-                segments.push(Segment::Arc(arc));
-                front = back;
-            }
+    for range in ranges {
+        if let Some(arc) = range.arc {
+            segments.push(Segment::Arc(arc));
         } else {
-            if back - front > 2 {
-                segments.push(Segment::Arc(
-                    last_arc.expect("a preceding point span fitted"),
-                ));
-            } else {
-                append_line(&mut segments, points[front], points[front + 1]);
+            for pair in points[range.start..=range.end].windows(2) {
+                append_line(&mut segments, pair[0], pair[1]);
             }
-            front = back - 1;
-            last_arc = None;
-        }
-    }
-    if front + 1 < points.len() {
-        for index in front..points.len() - 1 {
-            append_line(&mut segments, points[index], points[index + 1]);
         }
     }
     segments
