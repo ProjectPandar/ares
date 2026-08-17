@@ -40,6 +40,7 @@ fn task22o89_full_solid_rectangle_emits_repeatable_scaled_polylines() {
     assert_eq!(first, second);
     assert_eq!(
         first
+            .polylines
             .iter()
             .map(|polyline| polyline.points().to_vec())
             .collect::<Vec<_>>(),
@@ -54,7 +55,8 @@ fn task22o89_full_solid_rectangle_emits_repeatable_scaled_polylines() {
             Point::new(840_050, 9_999),
         ]]
     );
-    assert!(first.iter().all(|polyline| polyline.is_valid()));
+    assert!(first.polylines.iter().all(|polyline| polyline.is_valid()));
+    assert_eq!(first.spacing.to_bits(), 0.24_f32.to_bits());
     assert_eq!(source, before);
 }
 

@@ -257,6 +257,25 @@ fn require_positive_volume(flow: Flow, message: &str) -> Result<Flow, SliceError
     Ok(flow)
 }
 
+pub(in crate::project_slice) fn with_spacing(flow: Flow, spacing: f32) -> Flow {
+    let (width, height, mm3_per_mm) = if flow.bridge {
+        let diameter = spacing - (flow.spacing - flow.width);
+        (diameter, diameter, bridge_volume(diameter))
+    } else {
+        let width = flow.width + spacing - flow.spacing;
+        debug_assert!(width >= flow.height);
+        (width, flow.height, ordinary_volume(width, flow.height))
+    };
+    Flow {
+        width,
+        height,
+        spacing,
+        nozzle_diameter: flow.nozzle_diameter,
+        bridge: flow.bridge,
+        mm3_per_mm,
+    }
+}
+
 fn with_flow_ratio(flow: Flow, ratio: f64) -> Flow {
     with_cross_section(flow, (flow.mm3_per_mm * ratio) as f32)
 }

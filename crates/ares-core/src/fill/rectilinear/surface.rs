@@ -20,19 +20,27 @@ pub(crate) struct MonotonicFillParams {
     pub(crate) anchor_length_max: f32,
     pub(crate) link_max_length: f64,
 }
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct MonotonicFillOutput {
+    pub(crate) polylines: Vec<Polyline>,
+    pub(crate) spacing: f32,
+}
 
 pub(crate) fn fill_monotonic_surface(
     expolygon: &ExPolygon,
     params: MonotonicFillParams,
     scale: CoordinateScale,
-) -> Result<Vec<Polyline>, ClipperError> {
+) -> Result<MonotonicFillOutput, ClipperError> {
     let direction = infill_direction(params);
     let outer_offset = checked_scale(scale, params.overlap - (0.5 - 0.45) * params.spacing)? as f32;
     let inner_offset = checked_scale(scale, params.overlap - 0.5 * params.spacing)? as f32;
     let mut slice =
         prepare_rectilinear_contours(expolygon, -f64::from(direction), outer_offset, inner_offset)?;
     if !slice.contours.iter().any(|contour| contour.inner) {
-        return Ok(Vec::new());
+        return Ok(MonotonicFillOutput {
+            polylines: Vec::new(),
+            spacing: params.spacing as f32,
+        });
     }
 
     let (minimum_x, maximum_x) = x_bounds(&slice.source);
@@ -42,6 +50,7 @@ pub(crate) fn fill_monotonic_surface(
     if params.density > 0.9999 && !params.dont_adjust {
         line_spacing = adjust_solid_spacing(width, line_spacing);
     }
+    let actual_spacing = (line_spacing as f64 * scale.factor()) as f32;
     let count = usize::try_from(
         (i128::from(width) + i128::from(line_spacing) - 1) / i128::from(line_spacing),
     )
@@ -62,10 +71,14 @@ pub(crate) fn fill_monotonic_surface(
     connect_region_neighbors(&mut regions, &slice.lines);
     compute_region_costs(&mut regions, &slice, scale);
     let path = chain_monotonic_regions(&regions, &slice, scale);
-    emit_monotonic_polylines(&path, &regions, &slice, scale)
+    let polylines = emit_monotonic_polylines(&path, &regions, &slice, scale)
         .into_iter()
         .map(|polyline| rotate_polyline(polyline, f64::from(direction)))
-        .collect()
+        .collect::<Result<_, _>>()?;
+    Ok(MonotonicFillOutput {
+        polylines,
+        spacing: actual_spacing,
+    })
 }
 
 fn infill_direction(params: MonotonicFillParams) -> f32 {

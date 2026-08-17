@@ -79,4 +79,9 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
             .iter()
             .any(|line| line.starts_with("G1 X168.396 Y83.649 E"))
     );
+    let bottom_surface = lines
+        .iter()
+        .position(|line| *line == "; FEATURE: Bottom surface")
+        .unwrap();
+    assert_eq!(lines[bottom_surface + 1], "; LINE_WIDTH: 0.500542");
 }

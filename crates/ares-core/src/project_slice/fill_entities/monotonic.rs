@@ -2,7 +2,7 @@ use crate::{
     ProcessInfillPattern, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     geometry::CoordinateScale,
-    project_slice::group_fills::SurfaceFill,
+    project_slice::{group_fills::SurfaceFill, perimeters::flow::with_spacing},
 };
 
 use super::{FillExtrusionCollection, FillExtrusionPath, LayerFillEntities, geometry_error};
@@ -38,20 +38,22 @@ pub(super) fn append(
         },
     };
     for expolygon in fill.expolygons {
-        let polylines =
+        let generated =
             fill_monotonic_surface(&expolygon, params, scale).map_err(geometry_error)?;
-        if polylines.is_empty() {
+        if generated.polylines.is_empty() {
             continue;
         }
+        let flow = with_spacing(fill.params.flow, generated.spacing);
         output.collections.push(FillExtrusionCollection {
-            paths: polylines
+            paths: generated
+                .polylines
                 .into_iter()
                 .map(|polyline| FillExtrusionPath {
                     polyline,
                     role: fill.params.extrusion_role,
-                    mm3_per_mm: fill.params.flow.mm3_per_mm,
-                    width: fill.params.flow.width,
-                    height: fill.params.flow.height,
+                    mm3_per_mm: flow.mm3_per_mm,
+                    width: flow.width,
+                    height: flow.height,
                 })
                 .collect(),
             no_sort: true,

@@ -160,7 +160,7 @@ pub(super) fn emit(
         output.extend_from_slice(
             format!(
                 "; LINE_WIDTH: {}\n",
-                format_axis(f64::from(properties.width))
+                super::super::format_processor_float(f64::from(properties.width))
             )
             .as_bytes(),
         );

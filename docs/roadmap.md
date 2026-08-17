@@ -7115,3 +7115,14 @@ Ares-only next-zigzag extension gate and corrects the KSR first bottom-surface
 path and spiral lift to `X168.396 Y83.649` and `G3 Z.6 I.591 J1.064`.
 Line-width tags, extrusion precision, flow width, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.158: Adjusted solid fill flow
+
+O158 ports OrcaSlicer 2.4.2 `Fill/FillBase.cpp:250-270`,
+`Fill/FillRectilinear.cpp:2767-2790`, and `Flow.cpp:146-163`. Full-density
+monotonic fill now returns its adjusted scanline spacing, and emitted extrusion
+paths apply the corresponding `Flow::with_spacing` width and volumetric-flow
+update. Processor line-width tags use the source six-significant-digit format,
+producing the KSR first bottom-surface `; LINE_WIDTH: 0.500542` marker.
+Extrusion precision, cooling, timing, and remaining exact G-code differences
+remain later source-cited parity slices.
