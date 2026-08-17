@@ -7073,3 +7073,13 @@ matches source floating-point operation order at half-thousandth boundaries and
 produces exact KSR arc `G3 X104.96 Y100.092 I.232 J-5.372 E.031`. Object
 identifiers, cooling, timing, and remaining exact G-code differences remain
 later source-cited parity slices.
+
+## Task 22O.154: Source-epsilon extrusion filtering
+
+O154 ports OrcaSlicer 2.4.2 `libslic3r.h:51-53` and
+`GCode.cpp:6992-7003,7049-7085,7133-7155`. Fixed-speed lines, fitted arcs,
+and variable-speed segments shorter than the source `EPSILON = 1e-4` mm no
+longer emit zero-length extrusion commands. Variable paths retain skipped
+source points for later wipe traversal while measuring the next move from the
+last emitted endpoint. Object identifiers, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

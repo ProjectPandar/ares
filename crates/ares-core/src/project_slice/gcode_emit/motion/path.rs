@@ -5,6 +5,8 @@ use super::{
     overhang, set_acceleration, travel,
 };
 
+const SOURCE_EPSILON_MM: f64 = 1e-4;
+
 pub(super) fn emit(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
@@ -219,10 +221,11 @@ pub(super) fn emit(
     };
     for segment in segments {
         match segment {
-            arc::Segment::Line { end, length } => {
+            arc::Segment::Line { end, length } if length >= SOURCE_EPSILON_MM => {
                 emit_linear_segment(output, end, length, properties, state);
             }
-            arc::Segment::Arc(arc_segment) => {
+            arc::Segment::Line { .. } => {}
+            arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {
                 let extrusion =
                     arc_segment.length * properties.mm3_per_mm * state.options.filament_flow_ratio
                         / state.options.filament_area;
@@ -241,6 +244,7 @@ pub(super) fn emit(
                 state.x = arc_segment.end.x;
                 state.y = arc_segment.end.y;
             }
+            arc::Segment::Arc(_) => {}
         }
     }
     state.wipe_path = arc_points;
@@ -292,7 +296,17 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
         x: points[0].0,
         y: points[0].1,
     });
+    let mut previous = points[0];
     for index in 1..points.len() {
+        let end = arc::Point {
+            x: points[index].0,
+            y: points[index].1,
+        };
+        let length = (end.x - previous.0).hypot(end.y - previous.1);
+        if length < SOURCE_EPSILON_MM {
+            emitted_path.push(end);
+            continue;
+        }
         let feedrate = processed[index - 1].speed * 60.0;
         if (last_feedrate - feedrate).abs() > 60.0 {
             output.extend_from_slice(format!("G1 F{}\n", format_axis(feedrate)).as_bytes());
@@ -302,13 +316,9 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
                 .extend_from_slice(format!("G1 F{}\n", format_axis(original_feedrate)).as_bytes());
             last_feedrate = original_feedrate;
         }
-        let end = arc::Point {
-            x: points[index].0,
-            y: points[index].1,
-        };
-        let length = (end.x - points[index - 1].0).hypot(end.y - points[index - 1].1);
         emit_linear_segment(output, end, length, properties, state);
         emitted_path.push(end);
+        previous = (end.x, end.y);
     }
     state.extrusion_feedrate = last_feedrate;
     state.wipe_path = emitted_path;
