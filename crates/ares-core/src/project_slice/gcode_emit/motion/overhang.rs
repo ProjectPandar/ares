@@ -259,7 +259,7 @@ impl BoundaryContext<'_> {
 
 fn speed_for_distance(distance: f64, sections: &[(f64, f64)], original_speed: f64) -> f64 {
     if distance <= sections[0].0 {
-        return original_speed;
+        return original_speed.round();
     }
     if distance >= sections[sections.len() - 1].0 {
         return sections[sections.len() - 1].1.round();

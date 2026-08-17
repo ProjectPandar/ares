@@ -6909,3 +6909,14 @@ unquantized emitter state from changing relative E. The first KSR post-overhang
 inner-wall endpoint now matches `E.06303`. Perimeter source-geometry density,
 seam coordinates, cooling markers, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.137: Rounded dynamic-overhang base speed
+
+O137 ports OrcaSlicer 2.4.2
+`GCode/ExtrusionProcessor.hpp:426-448` and `GCode.cpp:7111-7124,7202-7210`.
+Ares now rounds the fully supported branch like every other overlap band before
+emitting a dynamically processed path. The first KSR dynamic inner wall starts
+with the source `F15780` then restores the precise `F15791.926`. Redundant
+feedrate cooling-buffer processing, perimeter source-geometry density, seam
+coordinates, timing, and remaining exact G-code differences remain later
+source-cited parity slices.

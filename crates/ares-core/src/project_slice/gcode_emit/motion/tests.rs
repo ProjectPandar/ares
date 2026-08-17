@@ -109,3 +109,28 @@ async fn task22o136_dynamic_segment_extrusion_uses_quantized_endpoints() {
 
     assert_eq!(lines[following_inner + 3], "G1 X116.989 Y81.637 E.06303");
 }
+
+#[tokio::test]
+async fn task22o137_dynamic_overhang_rounds_original_speed() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let overhang = lines
+        .iter()
+        .position(|line| *line == "; FEATURE: Overhang wall")
+        .unwrap();
+    let first_inner = lines[..overhang]
+        .iter()
+        .rposition(|line| *line == "; FEATURE: Inner wall")
+        .unwrap();
+
+    assert_eq!(lines[first_inner + 2], "G1 F15780");
+    assert_eq!(lines[first_inner + 3], "G1 F15791.926");
+}
