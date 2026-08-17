@@ -94,6 +94,14 @@ pub(super) fn emit(
                 motion::begin_object_travel(&mut output, &mut state);
                 labels.append_start_label(&mut output);
             }
+            let lower_boundary_lines = traversal.objects[object_index]
+                .lower_slices(layer_index)
+                .into_iter()
+                .flatten()
+                .flat_map(crate::geometry::ExPolygon::lines)
+                .collect::<Vec<_>>();
+            let lower_boundary = (!lower_boundary_lines.is_empty())
+                .then(|| crate::geometry::LineDistanceTree::new(&lower_boundary_lines));
             motion::emit_layer(
                 &mut output,
                 layer,
@@ -104,6 +112,7 @@ pub(super) fn emit(
                         layer_index,
                     ),
                     scale: traversal.scale,
+                    previous_layer_boundary: lower_boundary.as_ref(),
                 },
                 &mut state,
             )?;

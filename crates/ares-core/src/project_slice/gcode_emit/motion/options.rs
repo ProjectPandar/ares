@@ -17,6 +17,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) internal_solid_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) top_surface_speed: f64,
     pub(in crate::project_slice::gcode_emit) gap_infill_speed: f64,
+    pub(in crate::project_slice::gcode_emit) enable_overhang_speed: bool,
+    pub(in crate::project_slice::gcode_emit) slowdown_for_curled_perimeters: bool,
+    pub(in crate::project_slice::gcode_emit) overhang_speed_bands: [Option<FloatOrPercent>; 4],
     pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
@@ -113,6 +116,36 @@ impl MotionOptions {
             gap_infill_speed: region.map_or(full.process.region.gap_infill_speed.0, |value| {
                 value.gap_infill_speed.0
             }),
+            enable_overhang_speed: region
+                .map_or(full.process.region.enable_overhang_speed.0, |value| {
+                    value.enable_overhang_speed.0
+                }),
+            slowdown_for_curled_perimeters: region.map_or(
+                full.process.region.slowdown_for_curled_perimeters.0,
+                |value| value.slowdown_for_curled_perimeters.0,
+            ),
+            overhang_speed_bands: [
+                Some(
+                    region.map_or(full.process.region.overhang_1_4_speed, |value| {
+                        value.overhang_1_4_speed
+                    }),
+                ),
+                Some(
+                    region.map_or(full.process.region.overhang_2_4_speed, |value| {
+                        value.overhang_2_4_speed
+                    }),
+                ),
+                Some(
+                    region.map_or(full.process.region.overhang_3_4_speed, |value| {
+                        value.overhang_3_4_speed
+                    }),
+                ),
+                Some(
+                    region.map_or(full.process.region.overhang_4_4_speed, |value| {
+                        value.overhang_4_4_speed
+                    }),
+                ),
+            ],
             initial_layer_acceleration: acceleration(
                 object.map(|value| &value.object),
                 full.process.object.initial_layer_acceleration.0,

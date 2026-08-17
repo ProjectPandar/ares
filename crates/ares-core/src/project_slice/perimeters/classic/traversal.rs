@@ -133,6 +133,15 @@ impl PostClassicTraversalPrintObject {
         }
     }
 
+    pub(in crate::project_slice) fn lower_slices(
+        &self,
+        record_index: usize,
+    ) -> Option<&[crate::geometry::ExPolygon]> {
+        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
+        let input = prelude.object.records[record_index].as_ref()?;
+        prelude.object.lower_slices(input)
+    }
+
     pub(in crate::project_slice) fn wall_direction(
         &self,
         record_index: usize,

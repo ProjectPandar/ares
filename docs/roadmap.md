@@ -6887,3 +6887,15 @@ kinematics for `erOverhangPerimeter`. Ares `Overhang wall` paths now use the
 incorrect default `10000`/`300 mm/s` pair to `2500`/`50 mm/s`. Dynamic overlap
 band speeds, seam coordinates, cooling markers, timing, and remaining exact
 G-code differences remain later source-cited parity slices.
+
+## Task 22O.135: Dynamic overhang overlap speeds
+
+O135 ports OrcaSlicer 2.4.2
+`GCode/ExtrusionProcessor.hpp:37-217,315-459` and
+`GCode.cpp:6654-6715,7111-7210` for the KSR-disabled-curled-edge branch. Ares now
+measures perimeter and bridge points against the prior layer, inserts source
+boundary/segmentation points, interpolates the loaded overlap-speed bands, and
+emits variable linear speeds. The first KSR 50/33 mm/s boundary transition now
+matches exactly. Curled-line adjustment, perimeter source-geometry density,
+seam coordinates, cooling markers, timing, and remaining exact G-code
+differences remain later source-cited parity slices.

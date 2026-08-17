@@ -3,7 +3,10 @@
 
 #[cfg(test)]
 mod tests;
-use super::{EmitState, arc, format::offset as format_offset, format_axis, format_extrusion};
+use super::{
+    EmitState, arc,
+    format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
+};
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, target: arc::Point, state: &mut EmitState) {
     retract_and_wipe(output, state);
