@@ -167,6 +167,7 @@ fn accumulate_loop(
                 ExtrusionRole::Perimeter => 2,
                 ExtrusionRole::OverhangPerimeter => 3,
                 ExtrusionRole::GapFill => 4,
+                ExtrusionRole::SolidInfill => 5,
             },
         );
         mix(checksum, i128::from(path.mm3_per_mm.to_bits()));

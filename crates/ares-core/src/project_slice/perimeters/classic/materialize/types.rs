@@ -35,6 +35,7 @@ pub(in crate::project_slice) enum ExtrusionRole {
     Perimeter,
     OverhangPerimeter,
     GapFill,
+    SolidInfill,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -80,7 +80,9 @@ fn move_thin_fills(
         for (layer, record) in output.iter_mut().zip(&mut source.records) {
             if let Some(record) = record {
                 layer.perimeters = std::mem::take(&mut record.perimeters);
-                layer.thin_fills = std::mem::take(&mut record.thin_fills);
+                layer
+                    .thin_fills
+                    .extend(std::mem::take(&mut record.thin_fills));
             }
         }
     }
@@ -115,6 +117,18 @@ pub(in crate::project_slice) fn generate_layer(
 ) -> Result<LayerFillEntities, SliceError> {
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
+    let minimum_nozzle_diameter = traversal
+        .resolved
+        .views
+        .full
+        .project
+        .print
+        .nozzle_diameter
+        .0
+        .iter()
+        .map(|value| value.0)
+        .reduce(f64::min)
+        .expect("validated print configuration has a nozzle diameter");
     let traversal_object = &traversal.objects[object_index];
     let prelude = &traversal_object
         .predecessor
@@ -139,7 +153,7 @@ pub(in crate::project_slice) fn generate_layer(
                 monotonic::append(&mut output, fill, pattern, layer.id, traversal.scale)?;
             }
             SurfaceFillPattern::ConcentricInternal => {
-                concentric::append(&mut output, fill, traversal.scale)?;
+                concentric::append(&mut output, fill, minimum_nozzle_diameter, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(_) => {}
         }

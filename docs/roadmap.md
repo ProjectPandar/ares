@@ -7565,3 +7565,13 @@ source scaled resolution, deviation, extrusion-area, collinearity, and
 intersection-adjustment rules before inner-contour separation.
 Concentric-internal extrusion conversion, cooling, timing, and remaining exact
 G-code differences remain later source-cited parity slices.
+
+## Task 22O.200: Arachne concentric-internal entities
+
+O200 ports OrcaSlicer 2.4.2 `Fill/FillConcentricInternal.cpp:12-46,84-97`.
+Narrow internal-solid no-overlap polygons now derive loop counts and source
+wall parameters from typed flow/nozzle values, pass through the Arachne wall
+pipeline, and become role-aware variable-width solid-infill entities. Existing
+thin fills are merged rather than overwritten. Loop rotation, seam-gap
+clipping, shortest-traverse reordering, cooling, timing, and remaining exact
+G-code differences remain later source-cited parity slices.

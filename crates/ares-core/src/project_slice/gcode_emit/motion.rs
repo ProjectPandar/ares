@@ -166,6 +166,7 @@ fn emit_materialized_path(
         ExtrusionRole::Perimeter => "Inner wall",
         ExtrusionRole::OverhangPerimeter => "Overhang wall",
         ExtrusionRole::GapFill => "Gap infill",
+        ExtrusionRole::SolidInfill => "Internal solid infill",
     };
     path::emit(
         output,
@@ -175,7 +176,12 @@ fn emit_materialized_path(
             width: path.width,
             height: path.height,
             feature,
-            is_perimeter: path.role != ExtrusionRole::GapFill,
+            is_perimeter: matches!(
+                path.role,
+                ExtrusionRole::ExternalPerimeter
+                    | ExtrusionRole::Perimeter
+                    | ExtrusionRole::OverhangPerimeter
+            ),
             end_clip,
             fitting: &path.polyline.fitting,
         },

@@ -7,7 +7,7 @@ mod preflight;
 #[cfg(test)]
 mod tests;
 mod types;
-mod variable_width;
+pub(in crate::project_slice) mod variable_width;
 
 pub(in crate::project_slice) use entity::{GapFillCollection, GapFillEntity};
 pub(in crate::project_slice) use types::{

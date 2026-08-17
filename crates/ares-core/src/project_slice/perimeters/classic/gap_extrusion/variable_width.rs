@@ -11,10 +11,19 @@ pub(super) fn convert(
     flow: Flow,
     scale: CoordinateScale,
 ) -> Result<GapFillCollection, SliceError> {
+    convert_with_role(polylines, flow, scale, ExtrusionRole::GapFill)
+}
+
+pub(in crate::project_slice) fn convert_with_role(
+    polylines: &[ThickPolyline],
+    flow: Flow,
+    scale: CoordinateScale,
+    role: ExtrusionRole,
+) -> Result<GapFillCollection, SliceError> {
     let tolerance = (0.05 / scale.factor()) as f32;
     let mut entities = Vec::new();
     for polyline in polylines {
-        let paths = convert_polyline(polyline, flow, scale, f64::from(tolerance))?;
+        let paths = convert_polyline(polyline, flow, scale, f64::from(tolerance), role)?;
         if let (Some(first), Some(last)) = (paths.first(), paths.last()) {
             if first.polyline.points.first().map(|p| (p.x, p.y))
                 == last.polyline.points.last().map(|p| (p.x, p.y))
@@ -33,6 +42,7 @@ fn convert_polyline(
     flow: Flow,
     scale: CoordinateScale,
     tolerance: f64,
+    role: ExtrusionRole,
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
     let mut lines = polyline.thicklines();
     let epsilon = medial_axis::scaled_epsilon(scale);
@@ -66,6 +76,7 @@ fn convert_polyline(
                         scale,
                         epsilon,
                         final_group: false,
+                        role,
                     },
                     &mut paths,
                 )?;
@@ -95,6 +106,7 @@ fn convert_polyline(
                 scale,
                 epsilon,
                 final_group: true,
+                role,
             },
             &mut paths,
         )?;
@@ -147,6 +159,7 @@ struct GroupContext {
     scale: CoordinateScale,
     epsilon: f64,
     final_group: bool,
+    role: ExtrusionRole,
 }
 
 fn push_group(
@@ -160,6 +173,7 @@ fn push_group(
         scale,
         epsilon,
         final_group,
+        role,
     } = context;
     let mut length = Line::new(lines[0].a, lines[0].b).length();
     let mut sum = length
@@ -193,7 +207,7 @@ fn push_group(
                 fitting: Vec::new(),
                 candidate_points: Vec::new(),
             },
-            role: ExtrusionRole::GapFill,
+            role,
             mm3_per_mm: new_flow.mm3_per_mm,
             width: new_flow.width,
             height: new_flow.height,

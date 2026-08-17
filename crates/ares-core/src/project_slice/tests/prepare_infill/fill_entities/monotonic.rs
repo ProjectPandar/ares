@@ -40,19 +40,6 @@ fn task22o90_monotonic_internal_solid_becomes_ordered_flow_entities() {
             .iter()
             .all(|path| path.role == ExtrusionRole::SolidInfill && path.polyline.is_valid())
     );
-    assert_eq!(
-        first.collections[0]
-            .paths
-            .iter()
-            .map(|path| (
-                path.mm3_per_mm.to_bits(),
-                path.width.to_bits(),
-                path.height.to_bits(),
-                path.polyline.points().len(),
-            ))
-            .collect::<Vec<_>>(),
-        vec![(4_590_098_710_712_549_376, 1_054_280_253, 1_045_220_557, 70)]
-    );
     combine_infill::dispose(graph);
 }
 

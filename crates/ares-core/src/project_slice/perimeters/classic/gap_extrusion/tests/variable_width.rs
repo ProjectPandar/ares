@@ -292,3 +292,19 @@ fn task22o14_skipped_zero_and_below_epsilon_lines_remain_in_final_group() {
         vec![0, 0, 50, 250]
     );
 }
+
+#[test]
+fn task22o200_variable_width_conversion_preserves_solid_infill_role() {
+    let result = variable_width::convert_with_role(
+        &[thick(&[(0, 0), (200, 0)], &[400_000.0, 400_000.0])],
+        flow(),
+        CoordinateScale::Normal,
+        ExtrusionRole::SolidInfill,
+    )
+    .unwrap();
+
+    let GapFillEntity::Path(path) = &result.entities[0] else {
+        panic!("expected path")
+    };
+    assert_eq!(path.role, ExtrusionRole::SolidInfill);
+}
