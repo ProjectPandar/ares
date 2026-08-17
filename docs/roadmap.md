@@ -7492,3 +7492,13 @@ middle perimeter index, centered on the skeletal node with radius
 `middle_width / 8`. Final segment-stage orchestration, Arachne concentric
 internal fill, cooling, timing, and remaining exact G-code differences remain
 later source-cited parity slices.
+
+## Task 22O.193: Arachne segment-stage orchestration
+
+O193 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1936-1941`. One segment-stage method now
+propagates retained beadings, generates edge junctions, connects polygon
+domains, and generates local-maximum single beads in source order. Invocation
+from the full trapezoidation pipeline, Arachne concentric internal fill,
+cooling, timing, and remaining exact G-code differences remain later
+source-cited parity slices.

@@ -12,6 +12,13 @@ use crate::arachne::{
 use super::{SkeletalTrapezoidation, point_distance};
 
 impl SkeletalTrapezoidation<'_> {
+    pub(super) fn generate_segments(&mut self) {
+        self.propagate_node_beadings();
+        self.generate_junctions();
+        self.connect_junctions();
+        self.generate_local_maxima_single_beads();
+    }
+
     pub(super) fn propagate_node_beadings(&mut self) {
         let upward_quad_mids = self.upward_quad_mids();
         self.store_node_beadings();

@@ -5,7 +5,7 @@ use crate::arachne::skeletal::EdgeId;
 use super::super::super::SkeletalTrapezoidation;
 
 impl SkeletalTrapezoidation<'_> {
-    pub(super) fn connect_junctions(&mut self) {
+    pub(in crate::arachne::trapezoidation::transitions::segments) fn connect_junctions(&mut self) {
         let mut unprocessed = self
             .graph
             .active_edges()
