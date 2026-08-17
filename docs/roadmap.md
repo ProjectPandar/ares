@@ -6920,3 +6920,24 @@ with the source `F15780` then restores the precise `F15791.926`. Redundant
 feedrate cooling-buffer processing, perimeter source-geometry density, seam
 coordinates, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.138: Cooling-buffer feedrate normalization
+
+O138 ports OrcaSlicer 2.4.2 `GCode/CoolingBuffer.cpp:822-823,899-963`.
+Ares now rewrites each generated layer with source integer-feedrate state,
+removing redundant standalone G0/G1 feedrate commands and redundant inline `F`
+words. The first KSR dynamic inner wall now retains one precise feedrate restore
+instead of 90 copies, and total feedrate-only lines fall from 36,088 to 24,793.
+Fan-marker resolution, minimum-layer-time slowdown, perimeter source-geometry
+density, seam coordinates, timing, and remaining exact G-code differences
+remain later source-cited parity slices.
+
+## Task 22O.139: Reverse extrusion-path wipe
+
+O139 ports OrcaSlicer 2.4.2 `GCode.cpp:343-350,6110-6124`. Ares now
+traverses the retained emitted extrusion path from its final endpoint back
+toward its start when wiping. The KSR layer-zero wipe no longer jumps into a
+forward-ordered loop and now reaches the source `X109.036 Y94.518` endpoint.
+Perimeter source-geometry density, seam coordinates, fan-marker resolution,
+timing, and remaining exact G-code differences remain later source-cited
+parity slices.

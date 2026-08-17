@@ -134,3 +134,33 @@ async fn task22o137_dynamic_overhang_rounds_original_speed() {
     assert_eq!(lines[first_inner + 2], "G1 F15780");
     assert_eq!(lines[first_inner + 3], "G1 F15791.926");
 }
+
+#[tokio::test]
+async fn task22o138_cooling_removes_redundant_feedrate_commands() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let overhang = lines
+        .iter()
+        .position(|line| *line == "; FEATURE: Overhang wall")
+        .unwrap();
+    let first_inner = lines[..overhang]
+        .iter()
+        .rposition(|line| *line == "; FEATURE: Inner wall")
+        .unwrap();
+
+    assert_eq!(
+        lines[first_inner + 2..overhang]
+            .iter()
+            .filter(|line| **line == "G1 F15791.926")
+            .count(),
+        1
+    );
+}

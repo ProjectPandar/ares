@@ -1,3 +1,5 @@
+mod feedrate;
+
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 pub(super) struct CoolingState {
@@ -51,6 +53,10 @@ impl CoolingState {
                 format!("M106 P2 S{}\n", additional_fan_pwm(additional_speed)).as_bytes(),
             );
         }
+    }
+
+    pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
+        feedrate::rewrite_layer(output, layer_start);
     }
 
     fn part_speed_for_layer(&self, layer_index: usize) -> u8 {

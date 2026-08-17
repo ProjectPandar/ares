@@ -74,7 +74,7 @@ async fn ksr_project_motion_is_finite_and_uses_configured_first_layer_rates() {
     assert!(!output.contains("Einf"));
     assert!(!output.contains("Enan"));
     assert!(!output.contains(" F0\n"));
-    assert!(output.contains("G1 X144.504 Y100.092 F60000\n"));
+    assert!(output.contains("G1 X144.504 Y100.092 E.63582\n"));
     assert!(output.contains("; FEATURE: Inner wall\n; LINE_WIDTH: 0.5\nG1 F3000\n"));
     assert!(output.contains("; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 F15791.926\n"));
 }

@@ -54,6 +54,7 @@ pub(super) fn emit(
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
         for (layer_index, layer) in object.iter().enumerate() {
+            let layer_output_start = output.len();
             if layer_index == 0 {
                 append_print_preamble(&mut output);
             }
@@ -130,6 +131,7 @@ pub(super) fn emit(
                 f64::from(layer_z),
                 max_layer_z,
             )?;
+            cooling.finish_layer(&mut output, layer_output_start);
         }
     }
 
