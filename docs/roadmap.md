@@ -7555,3 +7555,13 @@ union. The wall seam returns printable lines and the contour together.
 Toolpath simplification, concentric-internal extrusion conversion, cooling,
 timing, and remaining exact G-code differences remain later source-cited
 parity slices.
+
+## Task 22O.199: Arachne variable-width simplification
+
+O199 activates the existing source rewrite of OrcaSlicer 2.4.2
+`Arachne/utils/ExtrusionLine.cpp:43-256` at the pipeline position from
+`Arachne/WallToolPaths.cpp:702-719`. Post-removal wall lines now apply the
+source scaled resolution, deviation, extrusion-area, collinearity, and
+intersection-adjustment rules before inner-contour separation.
+Concentric-internal extrusion conversion, cooling, timing, and remaining exact
+G-code differences remain later source-cited parity slices.

@@ -1,6 +1,6 @@
 use crate::{
     arachne::extrusion_line::ExtrusionLine,
-    geometry::{Point, Polygon, union_even_odd_polygons_paths},
+    geometry::{CoordinateScale, Point, Polygon, union_even_odd_polygons_paths},
 };
 
 pub(super) fn remove_small_lines(
@@ -29,6 +29,20 @@ pub(super) fn remove_small_lines(
                 line_index += 1;
             }
         }
+    }
+}
+
+pub(super) fn simplify_toolpaths(toolpaths: &mut [Vec<ExtrusionLine>], scale: CoordinateScale) {
+    let maximum_resolution = scale.checked_scale(0.5).unwrap();
+    let maximum_deviation = scale.checked_scale(0.025).unwrap();
+    let maximum_extrusion_area_deviation = scale.checked_scale(2.0).unwrap();
+    for line in toolpaths.iter_mut().flatten() {
+        line.simplify(
+            maximum_resolution * maximum_resolution,
+            maximum_deviation * maximum_deviation,
+            maximum_extrusion_area_deviation,
+            scale,
+        );
     }
 }
 
@@ -83,10 +97,10 @@ fn distance(left: Point, right: Point) -> i64 {
 mod tests {
     use crate::{
         arachne::{ExtrusionJunction, ExtrusionLine},
-        geometry::Point,
+        geometry::{CoordinateScale, Point},
     };
 
-    use super::{remove_small_lines, separate_inner_contour};
+    use super::{remove_small_lines, separate_inner_contour, simplify_toolpaths};
 
     fn odd_line(length: i64) -> ExtrusionLine {
         let mut line = ExtrusionLine::new(0, true);
@@ -128,5 +142,20 @@ mod tests {
         assert_eq!(toolpaths, vec![vec![printable]]);
         assert_eq!(inner_contour.len(), 1);
         assert_eq!(inner_contour[0].points().len(), 4);
+    }
+
+    #[test]
+    fn task22o199_simplifies_variable_width_lines_with_source_defaults() {
+        let mut line = ExtrusionLine::new(0, false);
+        for x in [0, 100_000, 200_000] {
+            line.push(ExtrusionJunction::new(Point::new(x, 0), 400_000, 0));
+        }
+        let mut toolpaths = vec![vec![line]];
+
+        simplify_toolpaths(&mut toolpaths, CoordinateScale::Normal);
+
+        assert_eq!(toolpaths[0][0].junctions.len(), 2);
+        assert_eq!(toolpaths[0][0].junctions[0].point, Point::new(0, 0));
+        assert_eq!(toolpaths[0][0].junctions[1].point, Point::new(200_000, 0));
     }
 }

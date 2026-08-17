@@ -92,6 +92,7 @@ pub(crate) fn generate(
         config.min_length_factor,
         config.is_top_or_bottom_layer,
     );
+    postprocess::simplify_toolpaths(&mut toolpaths, config.coordinate_scale);
     let inner_contour = postprocess::separate_inner_contour(&mut toolpaths);
     Ok(GeneratedWallToolPaths {
         toolpaths,
