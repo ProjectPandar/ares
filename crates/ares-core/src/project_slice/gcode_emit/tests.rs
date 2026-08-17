@@ -195,7 +195,7 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
     assert!(lines[wipe_end + 2].starts_with("G3 Z.6 I"));
     assert!(lines[wipe_end + 2].contains(" J"));
     assert!(lines[wipe_end + 2].ends_with(" P1  F60000"));
-    assert_eq!(lines[wipe_end + 3], "G1 X145.539 Y95.848 Z.6 F60000");
+    assert_eq!(lines[wipe_end + 3], "G1 X145.539 Y95.848 Z.6");
 }
 
 #[tokio::test]

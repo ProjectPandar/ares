@@ -7005,3 +7005,11 @@ seam alignment now select the next KSR perimeter start at `X145.539 Y95.848`.
 The consuming travel also carries the deferred spiral-lift height `Z.6`.
 Fitted-arc grouping, cooling, timing, and remaining exact G-code differences
 remain later source-cited parity slices.
+
+## Task 22O.147: Lifted-travel modal feedrate
+
+O147 ports OrcaSlicer 2.4.2 `GCodeWriter.cpp:713-769`. The XYZ travel that
+consumes a newly emitted spiral lift now reuses the lift command's modal
+feedrate, producing exact KSR line `G1 X145.539 Y95.848 Z.6` without a redundant
+`F60000`. Fitted-arc grouping, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.

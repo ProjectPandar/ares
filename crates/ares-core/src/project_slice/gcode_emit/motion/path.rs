@@ -92,11 +92,10 @@ pub(super) fn emit(
         if retract && state.lifted {
             output.extend_from_slice(
                 format!(
-                    "G1 X{} Y{} Z{} F{}\n",
+                    "G1 X{} Y{} Z{}\n",
                     format_axis(first_x),
                     format_axis(first_y),
-                    format_extrusion(state.layer_z + state.options.z_hop),
-                    format_axis(state.travel_feedrate)
+                    format_extrusion(state.layer_z + state.options.z_hop)
                 )
                 .as_bytes(),
             );
