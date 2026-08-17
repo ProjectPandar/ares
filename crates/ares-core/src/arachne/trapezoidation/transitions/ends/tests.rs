@@ -34,6 +34,7 @@ fn task22o170_continues_transition_end_onto_next_central_edge() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.generate_all_transition_ends();
@@ -124,6 +125,7 @@ fn task22o171_skips_descending_branch_for_increasing_transition() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.generate_all_transition_ends();

@@ -48,6 +48,7 @@ fn task22o183_generates_segment_junction_with_width_and_perimeter_index() {
         transition_end_storage: Vec::new(),
         beading_storage: vec![beading_storage],
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.generate_junctions();

@@ -91,6 +91,7 @@ fn empty<'a>(
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     }
 }
 

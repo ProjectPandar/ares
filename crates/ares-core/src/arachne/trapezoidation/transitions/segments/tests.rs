@@ -94,6 +94,7 @@ fn task22o175_stores_exact_strategy_beading_on_zero_transition_node() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.store_node_beadings();
@@ -139,6 +140,7 @@ fn task22o176_interpolates_transitional_node_beading() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.store_node_beadings();
@@ -178,6 +180,7 @@ fn task22o177_orders_upward_quad_mids_by_descending_radius() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     assert_eq!(trapezoidation.upward_quad_mids(), vec![higher, lower]);
@@ -202,6 +205,7 @@ fn task22o178_propagates_lower_beading_to_unassigned_upper_node() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
     trapezoidation.store_node_beadings();
     let expected = trapezoidation
@@ -243,6 +247,7 @@ fn task22o179_copies_peak_beading_to_empty_lower_node() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
     trapezoidation.store_node_beadings();
     let expected = trapezoidation
@@ -300,6 +305,7 @@ fn task22o180_merges_downward_and_upward_beading_sources() {
         transition_end_storage: Vec::new(),
         beading_storage: vec![lower_storage, top_storage],
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.merge_beading_downward(edge);
@@ -342,6 +348,7 @@ fn task22o181_dispatches_noncentral_downward_propagation() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
     trapezoidation.store_node_beadings();
 
@@ -376,6 +383,7 @@ fn task22o182_runs_node_beading_propagation_stage() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.propagate_node_beadings();

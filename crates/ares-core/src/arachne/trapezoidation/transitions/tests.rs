@@ -44,6 +44,7 @@ fn task22o102_generates_ordered_mids_on_upward_central_edge() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.generate_transition_mids();
@@ -83,6 +84,7 @@ fn task22o164_replaces_bead_count_through_reached_central_terminal() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     assert!(trapezoidation.filter_end_of_central_transition(
@@ -110,6 +112,7 @@ fn task22o164_keeps_bead_count_when_terminal_exceeds_limit() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     assert!(!trapezoidation.filter_end_of_central_transition(
@@ -173,6 +176,7 @@ fn task22o165_replaces_only_matching_connected_central_region() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.dissolve_bead_count_region(source, 3, 2);
@@ -207,6 +211,7 @@ fn task22o166_discovers_matching_transition_only_inside_distance_limit() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
     let origin = TransitionMiddle::new(0, 1, radius);
 
@@ -279,6 +284,7 @@ fn task22o167_dissolves_nearby_transition_pair_and_intervening_region() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.filter_transition_mids();
@@ -315,6 +321,7 @@ fn task22o169_generates_ordered_transition_ends_around_middle() {
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
         extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
     };
 
     trapezoidation.generate_all_transition_ends();

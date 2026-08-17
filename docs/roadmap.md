@@ -7397,3 +7397,14 @@ bead width, and perimeter index. Junction generation and tests live in child
 modules below 400 LOC. Lazy source beading, junction connection, local maxima,
 Arachne concentric internal fill, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.184: Arachne toolpath segment assembly
+
+O184 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1887-1932`. Generated toolpaths are now
+grouped by perimeter index; compatible width/proximity endpoints extend the
+current parity-matched line in either direction, while forced boundaries,
+three-way nodes, and incompatible lines start a new path. Assembly logic and
+tests live in child modules below 400 LOC. Quad traversal, junction connection,
+local maxima, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

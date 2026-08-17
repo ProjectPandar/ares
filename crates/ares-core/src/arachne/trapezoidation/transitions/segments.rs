@@ -1,4 +1,5 @@
 mod junctions;
+mod toolpaths;
 
 use std::{cell::RefCell, cmp::Ordering, rc::Rc};
 
