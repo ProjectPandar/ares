@@ -88,6 +88,7 @@ fn empty<'a>(
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
     }
 }
 

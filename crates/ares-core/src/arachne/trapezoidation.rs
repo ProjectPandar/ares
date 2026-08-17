@@ -44,6 +44,7 @@ pub(crate) struct SkeletalTrapezoidation<'a> {
     vd_edge_to_he_edge: HashMap<EdgeIndex, EdgeId>,
     vd_node_to_he_node: HashMap<VertexIndex, NodeId>,
     transition_storage: Vec<super::skeletal::Shared<super::skeletal::TransitionMiddle>>,
+    transition_end_storage: Vec<super::skeletal::Shared<super::skeletal::TransitionEnd>>,
 }
 
 impl<'a> SkeletalTrapezoidation<'a> {
@@ -59,6 +60,7 @@ impl<'a> SkeletalTrapezoidation<'a> {
             vd_edge_to_he_edge: HashMap::new(),
             vd_node_to_he_node: HashMap::new(),
             transition_storage: Vec::new(),
+            transition_end_storage: Vec::new(),
         };
         result.construct_from_polygons(polygons)?;
         Ok(result)

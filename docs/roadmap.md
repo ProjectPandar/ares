@@ -7239,3 +7239,14 @@ and test files remain below 400 lines using real Rust modules rather than source
 composition macros. Transition ends, ribs, segments, Arachne concentric internal
 fill, cooling, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.169: Arachne transition-end generation
+
+O169 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1040-1200` for the local central-edge
+case. Each retained transition middle now yields strategy-sized lower and upper
+transition ends, normalized onto the upward edge and retained in ascending edge
+coordinates with the source bead-count payload. Recursive continuation across
+central junctions and `isGoingDown`, transition insertion into the graph, ribs,
+segments, Arachne concentric internal fill, cooling, timing, and remaining exact
+G-code differences remain later source-cited parity slices.

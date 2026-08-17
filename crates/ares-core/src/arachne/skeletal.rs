@@ -5,10 +5,9 @@ mod payload;
 pub(crate) use graph::{EdgeId, NodeId, SkeletalGraph};
 #[cfg(test)]
 pub(crate) use payload::BeadingPropagation;
-#[cfg(test)]
-pub(crate) use payload::TransitionEnd;
-pub(crate) use payload::{EdgeType, SkeletalEdge, SkeletalJoint};
-pub(crate) use payload::{Shared, TransitionMiddle};
+pub(crate) use payload::{
+    EdgeType, Shared, SkeletalEdge, SkeletalJoint, TransitionEnd, TransitionMiddle,
+};
 
 #[cfg(test)]
 mod tests;

@@ -1,7 +1,7 @@
 use super::*;
 use crate::arachne::{
     beading::factory::{BeadingStrategyFactoryConfig, make_strategy},
-    skeletal::{EdgeId, SkeletalEdge, SkeletalGraph, SkeletalJoint},
+    skeletal::{EdgeId, SkeletalEdge, SkeletalGraph, SkeletalJoint, TransitionEnd},
 };
 use crate::geometry::CoordinateScale;
 
@@ -107,6 +107,7 @@ fn task22o102_generates_ordered_mids_on_upward_central_edge() {
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
     };
 
     trapezoidation.generate_transition_mids();
@@ -143,6 +144,7 @@ fn task22o164_replaces_bead_count_through_reached_central_terminal() {
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
     };
 
     assert!(trapezoidation.filter_end_of_central_transition(
@@ -167,6 +169,7 @@ fn task22o164_keeps_bead_count_when_terminal_exceeds_limit() {
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
     };
 
     assert!(!trapezoidation.filter_end_of_central_transition(
@@ -227,6 +230,7 @@ fn task22o165_replaces_only_matching_connected_central_region() {
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
     };
 
     trapezoidation.dissolve_bead_count_region(source, 3, 2);
@@ -258,6 +262,7 @@ fn task22o166_discovers_matching_transition_only_inside_distance_limit() {
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
         transition_storage: vec![storage],
+        transition_end_storage: Vec::new(),
     };
     let origin = TransitionMiddle::new(0, 1, radius);
 
@@ -327,6 +332,7 @@ fn task22o167_dissolves_nearby_transition_pair_and_intervening_region() {
         vd_edge_to_he_edge: Default::default(),
         vd_node_to_he_node: Default::default(),
         transition_storage: vec![source_storage.clone(), candidate_storage.clone()],
+        transition_end_storage: Vec::new(),
     };
 
     trapezoidation.filter_transition_mids();
@@ -335,4 +341,51 @@ fn task22o167_dissolves_nearby_transition_pair_and_intervening_region() {
     assert!(candidate_storage.borrow().is_empty());
     assert_eq!(trapezoidation.graph.node(nodes[1]).data.bead_count, 0);
     assert_eq!(trapezoidation.graph.node(nodes[2]).data.bead_count, 0);
+}
+
+#[test]
+fn task22o169_generates_ordered_transition_ends_around_middle() {
+    let scale = CoordinateScale::Normal;
+    let scaled = |value| scale.checked_scale(value).unwrap();
+    let strategy = strategy(scale);
+    let (mut graph, edge, nodes) = central_chain(scale);
+    graph.node_mut(nodes[0]).data.distance_to_boundary = scaled(0.2);
+    graph.node_mut(nodes[1]).data.distance_to_boundary = scaled(0.8);
+    let middle_position = scaled(0.5);
+    let lower_bead_count = 1;
+    let middle_storage = std::rc::Rc::new(std::cell::RefCell::new(vec![TransitionMiddle::new(
+        middle_position,
+        lower_bead_count,
+        scaled(0.5),
+    )]));
+    graph.edge_mut(edge).data.set_transitions(&middle_storage);
+    let mut trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: vec![middle_storage],
+        transition_end_storage: Vec::new(),
+    };
+
+    trapezoidation.generate_all_transition_ends();
+
+    let transition_length = strategy.transitioning_length(i64::from(lower_bead_count));
+    let anchor = f64::from(strategy.transition_anchor_pos(i64::from(lower_bead_count)));
+    let lower_position = middle_position - (anchor * transition_length as f64) as i64;
+    let upper_position = middle_position + ((1.0 - anchor) * transition_length as f64) as i64;
+    assert_eq!(
+        *trapezoidation
+            .graph
+            .edge(edge)
+            .data
+            .transition_ends()
+            .unwrap()
+            .borrow(),
+        vec![
+            TransitionEnd::new(lower_position, lower_bead_count, true),
+            TransitionEnd::new(upper_position, lower_bead_count, false),
+        ]
+    );
 }
