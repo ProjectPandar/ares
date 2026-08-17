@@ -5,8 +5,6 @@ use crate::project_slice::perimeters::{
 
 use super::super::super::super::support::{KsrArchive, ksr_project};
 
-pub(super) use super::super::super::super::support::metadata;
-
 pub(super) fn archive() -> KsrArchive {
     KsrArchive::new()
 }

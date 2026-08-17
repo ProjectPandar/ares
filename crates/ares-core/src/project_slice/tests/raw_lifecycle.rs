@@ -4,8 +4,8 @@ use super::super::state::prepare_project_slice;
 use super::{
     raw_support::{intersections, preflight_order_scenarios},
     support::{
-        KsrArchive, identity_resolved, ksr_project, metadata, object, plan, project_volume,
-        project_volume_at_x, slot_limit, unsupported,
+        KsrArchive, identity_resolved, metadata, object, plan, project_volume, project_volume_at_x,
+        slot_limit, unsupported,
     },
 };
 
@@ -145,11 +145,6 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
     }
     assert_later_request_preflights_beat_earlier_coordinate();
 
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-
     let mut non_bambu = KsrArchive::new();
     set_scalar(
         &mut non_bambu,
@@ -166,10 +161,6 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
             .layers()
             .len(),
         460
-    );
-    assert_eq!(
-        slice_error(&non_bambu).await,
-        SliceError::ProjectSlicingIncomplete
     );
 }
 

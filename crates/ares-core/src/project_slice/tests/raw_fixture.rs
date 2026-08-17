@@ -5,16 +5,12 @@ mod mutations;
 use sha2::{Digest, Sha256};
 
 use crate::{
-    Point3d, ProjectMesh, ProjectVolumeType, SliceError, Transform3d,
+    Point3d, ProjectMesh, ProjectVolumeType, Transform3d,
     geometry::CoordinateScale,
     mesh_slicer::{IntersectionLine, index_mesh_edges},
-    slice_project,
 };
 
-use super::{
-    super::state::prepare_project_slice,
-    support::{ksr_project, metadata},
-};
+use super::{super::state::prepare_project_slice, support::ksr_project};
 use encoding::{
     EDGE, GENERAL, LineRecord, ObjectView, TOP, VERTEX, VolumeView, encode, line_record,
     sorted_records,
@@ -26,8 +22,8 @@ const CONFIG_BLOCK_SHA256: &str =
 const SEMANTIC_SHA256: &str = "a82b2d193c23c8ba499c7abd56e21cb9956f5444e9b51b1b261a7e9b67d26d21";
 const FACE_ORDER_SHA256: &str = "1a6e83f2d5f53b73fa7ba9cb6444909816276496361f7fb9f9305412d2045e79";
 
-#[tokio::test]
-async fn task22b_ksr_fixture_matches_exact_raw_counts_components_records_and_digests() {
+#[test]
+fn task22b_ksr_fixture_matches_exact_raw_counts_components_records_and_digests() {
     let project_bytes = ksr_project();
     assert_eq!(project_bytes.len(), 183_007);
     assert_eq!(sha256(project_bytes), PROJECT_SHA256);
@@ -129,11 +125,6 @@ async fn task22b_ksr_fixture_matches_exact_raw_counts_components_records_and_dig
         assert_eq!(sha256(&semantic), SEMANTIC_SHA256);
         assert_eq!(sha256(&face_order), FACE_ORDER_SHA256);
     }
-
-    assert_eq!(
-        slice_project(project_bytes, metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 fn assert_import_oracles(mesh: &ProjectMesh) {

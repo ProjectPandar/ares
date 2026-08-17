@@ -1,13 +1,9 @@
-use crate::{
-    SliceError,
-    project_slice::perimeters::{
-        classic::perimeter_append, prepare_post_classic_entity_collections,
-        prepare_post_classic_perimeter_append,
-    },
-    slice_project,
+use crate::project_slice::perimeters::{
+    classic::perimeter_append, prepare_post_classic_entity_collections,
+    prepare_post_classic_perimeter_append,
 };
 
-use super::super::super::super::support::{ksr_project, metadata};
+use super::super::super::super::support::ksr_project;
 
 #[test]
 fn task22o10_code_level_preparation_reaches_nested_perimeter_append() {
@@ -30,13 +26,5 @@ fn task22o10_finish_retains_the_exact_boxed_o5_predecessor() {
     assert_eq!(
         std::ptr::from_ref(appended.predecessor.as_ref()),
         predecessor
-    );
-}
-
-#[tokio::test]
-async fn task22o10_public_lifecycle_executes_append_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
     );
 }

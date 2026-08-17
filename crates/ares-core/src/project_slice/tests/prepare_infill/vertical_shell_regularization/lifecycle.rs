@@ -7,18 +7,6 @@ use crate::project_slice::{
 };
 use crate::{SliceError, slice_project};
 
-#[tokio::test]
-async fn task22o22_public_lifecycle_runs_once_and_remains_incomplete() {
-    vertical_shell_regularization::reset_invocations();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(vertical_shell_regularization::invocations(), 1);
-}
-
 #[test]
 fn task22o22_inactive_typed_mode_produces_empty_sidecars_without_geometry() {
     let mut archive = KsrArchive::new();

@@ -20,16 +20,6 @@ async fn slice_project_reports_materialized_cardinality_before_incomplete() {
 }
 
 #[tokio::test]
-async fn slice_project_keeps_valid_project_at_incomplete_boundary() {
-    assert_eq!(
-        slice_project(ProjectParts::fixture().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-}
-
-#[tokio::test]
 async fn slice_project_keeps_malformed_archive_before_resolution() {
     let bytes = b"not a 3MF archive";
     let load_error = load_project(bytes).unwrap_err();

@@ -3,9 +3,8 @@ mod encoding;
 use sha2::{Digest, Sha256};
 
 use crate::{
-    ProjectVolumeType, SliceError,
+    ProjectVolumeType,
     mesh_slicer::{ChainedLayer, LoopedLayer},
-    slice_project,
 };
 
 use super::{
@@ -14,7 +13,7 @@ use super::{
         looped_intersections::{LoopedPrintObject, loop_project_intersections},
         state::prepare_project_slice,
     },
-    support::{ksr_project, metadata},
+    support::ksr_project,
 };
 
 pub(super) fn encode(layers: &[LoopedLayer], semantic_order: bool) -> Vec<u8> {
@@ -78,8 +77,8 @@ fn task22d_ksr_fixture_loop_repair_is_an_exact_noop() {
     assert_encoding(layers, true, SEMANTIC_SHA256);
 }
 
-#[tokio::test]
-async fn task22d_ksr_fixture_loop_repair_is_repeatable_and_keeps_public_lifecycle() {
+#[test]
+fn task22d_ksr_fixture_loop_repair_is_repeatable() {
     let state = prepare_project_slice(ksr_project()).unwrap();
     let config_block = state.config_block.as_deref().unwrap();
     assert_eq!(config_block.len(), CONFIG_BLOCK_LEN);
@@ -99,11 +98,6 @@ async fn task22d_ksr_fixture_loop_repair_is_repeatable_and_keeps_public_lifecycl
     assert_eq!(
         encode(fixture_layers(&first), true),
         encode(fixture_layers(&second), true)
-    );
-
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
     );
 }
 

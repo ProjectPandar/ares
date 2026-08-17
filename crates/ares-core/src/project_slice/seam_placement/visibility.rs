@@ -7,6 +7,7 @@ use super::{
 };
 
 const RAYS_PER_AXIS: usize = 5;
+const DIRECTION_COUNT: usize = RAYS_PER_AXIS * RAYS_PER_AXIS;
 
 pub(super) struct GlobalVisibility {
     samples: TriangleSamples,
@@ -59,7 +60,7 @@ impl GlobalVisibility {
     }
 }
 
-fn hemisphere_directions() -> [Vec3; RAYS_PER_AXIS * RAYS_PER_AXIS] {
+fn hemisphere_directions() -> [Vec3; DIRECTION_COUNT] {
     let step = 1.0 / RAYS_PER_AXIS as f32;
     std::array::from_fn(|index| {
         let x = index / RAYS_PER_AXIS;

@@ -36,13 +36,7 @@ const GEOMETRY_ERROR: &str =
 
 #[cfg(test)]
 thread_local! {
-    static FINISH_INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static STAGE_SURFACE_INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn finish_invocations() -> usize {
-    FINISH_INVOCATIONS.with(std::cell::Cell::get)
 }
 
 #[cfg(test)]
@@ -58,9 +52,6 @@ pub(in crate::project_slice) fn stage_surface_invocations() -> usize {
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicMedialGap,
 ) -> Result<PreparedPostClassicGapExtrusion, SliceError> {
-    #[cfg(test)]
-    FINISH_INVOCATIONS.with(|count| count.set(count.get() + 1));
-
     let scale = prepared.predecessor.scale;
     let validated = match preflight::validate(&prepared, scale) {
         Ok(validated) => validated,

@@ -122,8 +122,8 @@ fn task22n_flow_option_pairs_cover_bridge_branches() {
     );
 }
 
-#[tokio::test]
-async fn task22n_canonical_increase_else_is_reached_from_one_3mf_option_delta() {
+#[test]
+fn task22n_canonical_increase_else_is_reached_from_one_3mf_option_delta() {
     let mut setup = ArchiveBuilder::new();
     setup.replace_all("3D/Objects/task22n_box.model", r#"z="0.4""#, r#"z="18.5""#);
     for (from, to) in [
@@ -230,13 +230,6 @@ async fn task22n_canonical_increase_else_is_reached_from_one_3mf_option_delta() 
                 false,
                 0x40b2f9c660000000,
             )
-        );
-    }
-
-    for project in [before_archive, after_archive] {
-        assert_eq!(
-            slice_project(project, metadata()).await,
-            Err(SliceError::ProjectSlicingIncomplete)
         );
     }
 }

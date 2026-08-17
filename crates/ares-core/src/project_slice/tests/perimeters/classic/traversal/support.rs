@@ -3,7 +3,7 @@ use crate::project_slice::perimeters::{
     prepare_post_classic_traversal,
 };
 
-pub(super) use super::super::super::super::support::{ksr_project as project, metadata};
+pub(super) use super::super::super::super::support::ksr_project as project;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct Summary {

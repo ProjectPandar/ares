@@ -1,17 +1,12 @@
 use sha2::{Digest, Sha256};
 
-use crate::{SliceError, slice_project};
-
-use super::{
-    super::state::prepare_project_slice,
-    support::{ksr_project, metadata},
-};
+use super::{super::state::prepare_project_slice, support::ksr_project};
 
 const CONFIG_BLOCK_SHA256: &str =
     "b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8";
 
-#[tokio::test]
-async fn task22a_ksr_fixture_plans_exact_460_layers_from_3mf_only() {
+#[test]
+fn task22a_ksr_fixture_plans_exact_460_layers_from_3mf_only() {
     let state = prepare_project_slice(ksr_project()).unwrap();
     assert_eq!(state.project.objects().len(), 1);
     assert_eq!(state.resolved.objects.len(), 1);
@@ -67,11 +62,6 @@ async fn task22a_ksr_fixture_plans_exact_460_layers_from_3mf_only() {
         expected_lo = expected_hi;
         expected_hi += 0.2;
     }
-
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 #[test]

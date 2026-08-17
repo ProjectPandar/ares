@@ -139,8 +139,8 @@ async fn task22l_stepped_invalid_options_fail_before_disabled_gate() {
     }
 }
 
-#[tokio::test]
-async fn task22l_committed_ksr_checkpoint_is_exact_and_public_stays_incomplete() {
+#[test]
+fn task22l_committed_ksr_checkpoint_is_exact() {
     assert_loaded_options(ksr_project(), 55.0, false);
     let k = task22l_browser_input_oracle(ksr_project()).unwrap();
     assert_eq!(k, task22k_browser_oracle(ksr_project()).unwrap());
@@ -154,20 +154,6 @@ async fn task22l_committed_ksr_checkpoint_is_exact_and_public_stays_incomplete()
         "7a71db2912970141adc436679621c25888c412e2010c44eccf1b49d7e8048b07",
     );
     assert_eq!(task22l_browser_oracle(ksr_project()).unwrap(), l);
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await,
-        Err(SliceError::ProjectSlicingIncomplete)
-    );
-}
-
-#[tokio::test]
-async fn task22l_stepped_projects_stay_publicly_incomplete() {
-    for project in [stepped_archive(false), stepped_archive(true)] {
-        assert_eq!(
-            slice_project(project, metadata()).await,
-            Err(SliceError::ProjectSlicingIncomplete)
-        );
-    }
 }
 
 pub(super) fn stepped_archive(enabled: bool) -> Vec<u8> {

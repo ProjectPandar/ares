@@ -1,7 +1,6 @@
 use crate::{
-    Point3d, ProjectVolume, ProjectVolumeType, SliceError, Transform3d,
+    Point3d, ProjectVolume, ProjectVolumeType, Transform3d,
     geometry::{CoordinateScale, Point},
-    slice_project,
 };
 
 use super::{
@@ -10,7 +9,7 @@ use super::{
         looped_intersections::loop_project_intersections, state::prepare_project_slice,
     },
     raw_support::{intersections, mesh_volume, planned_layers},
-    support::{KsrArchive, identity_resolved, ksr_project, metadata, object},
+    support::{KsrArchive, identity_resolved, ksr_project, object},
 };
 
 const NORMAL_PRINTABLE_AREA: &str = concat!(
@@ -165,14 +164,6 @@ fn task22d_looped_wrapper_repairs_a_project_open_polyline() {
             Point::new(250_000, -500_000),
             Point::new(-500_000, 250_000),
         ]
-    );
-}
-
-#[tokio::test]
-async fn task22d_public_slice_reaches_looped_path_and_stays_incomplete() {
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await,
-        Err(SliceError::ProjectSlicingIncomplete)
     );
 }
 

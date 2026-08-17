@@ -25,17 +25,9 @@ use types::{StagedObject, StagedRecord, ValidatedProject};
 #[cfg(test)]
 pub(in crate::project_slice) use geometry::GeometryStep;
 
-#[cfg(test)]
-thread_local! {
-    static FINISH_INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapExtrusion,
 ) -> Result<PreparedPostClassicInfillBoundary, SliceError> {
-    #[cfg(test)]
-    FINISH_INVOCATIONS.with(|count| count.set(count.get() + 1));
-
     let validated = match preflight::validate(&prepared) {
         Ok(validated) => validated,
         Err(error) => {
@@ -138,16 +130,6 @@ fn consume_predecessor(prepared: PreparedPostClassicGapExtrusion) {
         incomplete_sink::consume_gap_extrusion_object(object);
     }
     incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn finish_invocations() -> usize {
-    FINISH_INVOCATIONS.with(std::cell::Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_finish_invocations() {
-    FINISH_INVOCATIONS.with(|count| count.set(0));
 }
 
 #[cfg(test)]

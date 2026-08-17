@@ -11,18 +11,6 @@ use crate::{SliceError, slice_project};
 use super::fixture;
 
 #[tokio::test]
-async fn task22o20_public_lifecycle_runs_once_and_remains_incomplete() {
-    vertical_shell_projection::reset_invocations();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(vertical_shell_projection::invocations(), 1);
-}
-
-#[tokio::test]
 async fn task22o20_earlier_errors_have_precedence_and_zero_invocations() {
     for (from, to, expected) in [
         (

@@ -90,7 +90,7 @@ async fn task22a_lifecycle_preserves_archive_effective_and_writer_precedence() {
 }
 
 #[tokio::test]
-async fn task22a_lifecycle_reaches_planning_error_then_incomplete() {
+async fn task22a_lifecycle_reaches_planning_error_precedence() {
     let mut archive = invalid_bambu_chain();
     assert_eq!(slice_error(&archive).await, flush_matrix_error());
 
@@ -104,12 +104,6 @@ async fn task22a_lifecycle_reaches_planning_error_then_incomplete() {
     assert_eq!(
         slice_error(&archive).await,
         SliceError::InvalidInput("invalid Orca option layer_height".to_owned())
-    );
-
-    set_scalar(&mut archive, "layer_height", "0", "0.2");
-    assert_eq!(
-        slice_error(&archive).await,
-        SliceError::ProjectSlicingIncomplete
     );
 }
 
@@ -131,14 +125,6 @@ async fn task22a_non_bambu_skips_writer_but_runs_planning() {
     assert_eq!(
         slice_error(&archive).await,
         SliceError::InvalidInput("invalid Orca option layer_height".to_owned())
-    );
-
-    set_scalar(&mut archive, "layer_height", "0", "0.2");
-    let state = prepare_project_slice(archive.clone().bytes()).unwrap();
-    assert!(state.config_block.is_none());
-    assert_eq!(
-        slice_error(&archive).await,
-        SliceError::ProjectSlicingIncomplete
     );
 }
 

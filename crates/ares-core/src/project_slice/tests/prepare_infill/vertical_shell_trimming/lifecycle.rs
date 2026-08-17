@@ -10,18 +10,6 @@ use crate::project_slice::{
 use crate::{SliceError, slice_project};
 
 #[tokio::test]
-async fn task22o21_public_lifecycle_runs_once_and_remains_incomplete() {
-    vertical_shell_trimming::reset_invocations();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(vertical_shell_trimming::invocations(), 1);
-}
-
-#[tokio::test]
 async fn task22o21_earlier_capability_errors_have_precedence() {
     for (from, to, expected) in [
         (

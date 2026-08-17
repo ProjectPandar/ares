@@ -1,13 +1,9 @@
-use crate::{
-    SliceError,
-    project_slice::perimeters::{
-        classic::entity_collections, prepare_post_classic_chained_loops,
-        prepare_post_classic_entity_collections,
-    },
-    slice_project,
+use crate::project_slice::perimeters::{
+    classic::entity_collections, prepare_post_classic_chained_loops,
+    prepare_post_classic_entity_collections,
 };
 
-use super::super::super::super::support::{ksr_project, metadata};
+use super::super::super::super::support::ksr_project;
 
 #[test]
 fn task22o9_code_level_preparation_constructs_ordered_collections() {
@@ -30,13 +26,5 @@ fn task22o9_finish_retains_the_exact_boxed_o5_predecessor() {
     assert_eq!(
         std::ptr::from_ref(ordered.predecessor.as_ref()),
         predecessor
-    );
-}
-
-#[tokio::test]
-async fn task22o9_public_lifecycle_executes_collections_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
     );
 }

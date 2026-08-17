@@ -4,7 +4,6 @@ use crate::{
     ProjectVolumeType, SliceError,
     geometry::{ExPolygon, Point, Polygon},
     mesh_slicer::{LoopedLayer, SlicingMode},
-    slice_project,
 };
 
 use super::{
@@ -18,7 +17,7 @@ use super::{
         state::prepare_project_slice,
     },
     looped_fixture::encode as encode_looped,
-    support::{ksr_project, metadata},
+    support::ksr_project,
 };
 
 const LAYER_COUNT: usize = 460;
@@ -103,8 +102,8 @@ fn task22f_ksr_pre_closing_union_matches_complete_fixed_oracle() {
     assert_representative_layers(volume.layers());
 }
 
-#[tokio::test]
-async fn task22f_ksr_pre_closing_is_repeatable_and_keeps_public_lifecycle_incomplete() {
+#[test]
+fn task22f_ksr_pre_closing_is_repeatable() {
     let first = fixture_snapshot().unwrap();
     let second = fixture_snapshot().unwrap();
     assert_eq!(
@@ -112,10 +111,6 @@ async fn task22f_ksr_pre_closing_is_repeatable_and_keeps_public_lifecycle_incomp
         encode_pre_closing(&second.objects)
     );
     assert_eq!(sha256(ksr_project()), PROJECT_SHA256);
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 fn fixture_snapshot() -> Result<FixtureSnapshot, SliceError> {

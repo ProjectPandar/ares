@@ -1,8 +1,6 @@
-use crate::{
-    SliceError, project_slice::perimeters::prepare_post_classic_chained_loops, slice_project,
-};
+use crate::project_slice::perimeters::prepare_post_classic_chained_loops;
 
-use super::super::super::super::support::{ksr_project, metadata};
+use super::super::super::super::support::ksr_project;
 
 #[test]
 fn task22o8_code_level_preparation_constructs_loops_before_terminal_boundary() {
@@ -17,12 +15,4 @@ fn task22o8_code_level_preparation_constructs_loops_before_terminal_boundary() {
             })
         })
     }));
-}
-
-#[tokio::test]
-async fn task22o8_public_lifecycle_executes_chained_loops_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }

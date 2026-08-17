@@ -26,8 +26,6 @@ mod raw_support;
 mod raw_transform;
 mod region_fixture;
 mod region_slices;
-mod simplification;
-mod simplification_fixture;
 mod slice_ordering;
 mod slicing_mode_fixture;
 mod slicing_mode_intersections;

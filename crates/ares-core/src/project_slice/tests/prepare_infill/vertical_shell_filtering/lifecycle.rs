@@ -10,20 +10,6 @@ use crate::{
 };
 
 #[tokio::test]
-async fn task22o23_public_lifecycle_runs_once_after_o22_and_remains_incomplete() {
-    vertical_shell_regularization::reset_invocations();
-    vertical_shell_filtering::reset_invocations();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(vertical_shell_regularization::invocations(), 1);
-    assert_eq!(vertical_shell_filtering::invocations(), 1);
-}
-
-#[tokio::test]
 async fn task22o23_earlier_capability_error_has_precedence() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(

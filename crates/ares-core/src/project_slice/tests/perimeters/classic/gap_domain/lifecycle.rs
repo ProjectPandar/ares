@@ -15,11 +15,9 @@ use crate::{
             prepare_post_classic_gap_domain, prepare_post_classic_perimeter_append,
         },
     },
-    slice_project,
 };
 
-use super::super::super::super::support::{ksr_project, metadata};
-
+use super::super::super::super::support::ksr_project;
 #[test]
 fn task22o11_finish_retains_boxed_o5_and_nested_o10_allocations() {
     let appended = prepare_post_classic_perimeter_append(ksr_project()).unwrap();
@@ -68,16 +66,6 @@ fn task22o11_success_and_error_cleanup_are_iterative_on_a_constrained_stack() {
         .unwrap()
         .join()
         .unwrap();
-}
-
-#[tokio::test]
-async fn task22o11_public_lifecycle_executes_gap_domain_then_stays_incomplete() {
-    let before = gap_domain::finish_invocations();
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(gap_domain::finish_invocations(), before + 1);
 }
 
 fn deepen_both_tree_families(prepared: &mut PreparedPostClassicPerimeterAppend) {

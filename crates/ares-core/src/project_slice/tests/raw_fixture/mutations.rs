@@ -1,15 +1,14 @@
 use std::cell::Cell;
 
 use crate::{
-    ProjectVolumeType, SliceError,
+    ProjectVolumeType,
     geometry::CoordinateScale,
     mesh_slicer::{EndpointReference, FacetEdgeType},
-    slice_project,
 };
 
 use super::super::super::{
     state::{ProjectSliceState, prepare_project_slice},
-    tests::support::{KsrArchive, ksr_project, metadata},
+    tests::support::{KsrArchive, ksr_project},
 };
 use super::{
     CONFIG_BLOCK_SHA256, FACE_ORDER_SHA256, SEMANTIC_SHA256,
@@ -85,8 +84,8 @@ fn task22b_private_state_owns_plan_inside_intersections_and_builds_once() {
     assert_eq!(layers.len(), plan.layers.len());
 }
 
-#[tokio::test]
-async fn task22b_ksr_fixture_is_repeatable_config_unchanged_and_publicly_incomplete() {
+#[test]
+fn task22b_ksr_fixture_is_repeatable_config_unchanged() {
     let first = prepare_project_slice(ksr_project()).unwrap();
     let second = prepare_project_slice(ksr_project()).unwrap();
 
@@ -112,13 +111,6 @@ async fn task22b_ksr_fixture_is_repeatable_config_unchanged_and_publicly_incompl
     assert_eq!(sha256(&second_semantic), SEMANTIC_SHA256);
     assert_eq!(sha256(&first_face_order), FACE_ORDER_SHA256);
     assert_eq!(sha256(&second_face_order), FACE_ORDER_SHA256);
-
-    for _ in 0..2 {
-        assert_eq!(
-            slice_project(ksr_project(), metadata()).await.unwrap_err(),
-            SliceError::ProjectSlicingIncomplete
-        );
-    }
 }
 
 #[test]

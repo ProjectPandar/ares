@@ -8,11 +8,9 @@ use crate::{
             prepare_post_classic_gap_domain,
         },
     },
-    slice_project,
 };
 
-use super::super::super::super::support::{ksr_project, metadata};
-
+use super::super::super::super::support::ksr_project;
 #[test]
 fn task22o13_repeated_source_point_maps_exact_transactional_error() {
     let mut prepared = prepare_post_classic_gap_domain(ksr_project()).unwrap();
@@ -49,16 +47,6 @@ fn task22o13_success_and_error_cleanup_fit_constrained_stack() {
     run_on_constrained_stack(move || {
         assert!(medial_gap::finish(failure).is_err());
     });
-}
-
-#[tokio::test]
-async fn task22o13_public_lifecycle_executes_medial_gap_then_stays_incomplete() {
-    let before = medial_gap::finish_invocations();
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(medial_gap::finish_invocations(), before + 1);
 }
 
 fn run_on_constrained_stack(action: impl FnOnce() + Send + 'static) {

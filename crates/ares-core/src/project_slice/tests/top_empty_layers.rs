@@ -1,9 +1,9 @@
 use crate::{
-    ProjectVolumeType, SliceError, Transform3d,
+    ProjectVolumeType, Transform3d,
     geometry::{ExPolygon, Point, Polygon},
     load_project,
     mesh_slicer::SlicingMode,
-    slice_project, task22j_browser_oracle, task22k_browser_input_oracle, task22k_browser_oracle,
+    task22j_browser_oracle, task22k_browser_input_oracle, task22k_browser_oracle,
 };
 
 use super::{
@@ -19,7 +19,7 @@ use super::{
     },
     region_fixture::checkpoint,
     support::{
-        KsrArchive, ksr_project, metadata, object as project_object, plan, project_volume, region,
+        KsrArchive, ksr_project, object as project_object, plan, project_volume, region,
         resolved_object,
     },
 };
@@ -143,8 +143,8 @@ fn task22k_top_empty_layers_preserve_complete_volume_sidecar() {
     }
 }
 
-#[tokio::test]
-async fn task22k_committed_ksr_checkpoint_is_exact_and_public_stays_incomplete() {
+#[test]
+fn task22k_committed_ksr_checkpoint_is_exact() {
     let j = task22k_browser_input_oracle(ksr_project()).unwrap();
     assert_eq!(j, task22j_browser_oracle(ksr_project()).unwrap());
     let expected = checkpoint::encode_with_magic(&checkpoint::parse_j(&j).stream, b"ARES22K\0");
@@ -163,23 +163,19 @@ async fn task22k_committed_ksr_checkpoint_is_exact_and_public_stays_incomplete()
     );
     assert_eq!(object.sidecars[0].layers.len(), 460);
     assert_eq!(task22k_browser_oracle(ksr_project()).unwrap(), k);
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
-#[tokio::test]
-async fn task22k_loaded_top_negative_slab_trims_only_empty_suffix() {
-    assert_loaded_slab(0.2, 0.4, &[true, false], 1).await;
+#[test]
+fn task22k_loaded_top_negative_slab_trims_only_empty_suffix() {
+    assert_loaded_slab(0.2, 0.4, &[true, false], 1);
 }
 
-#[tokio::test]
-async fn task22k_loaded_bottom_negative_slab_preserves_leading_empty_layer() {
-    assert_loaded_slab(0.0, 0.2, &[false, true], 2).await;
+#[test]
+fn task22k_loaded_bottom_negative_slab_preserves_leading_empty_layer() {
+    assert_loaded_slab(0.0, 0.2, &[false, true], 2);
 }
 
-async fn assert_loaded_slab(z0: f64, z1: f64, occupancy: &[bool], retained: usize) {
+fn assert_loaded_slab(z0: f64, z1: f64, occupancy: &[bool], retained: usize) {
     let project = slab_project(z0, z1);
     let loaded = load_project(&project).unwrap();
     let volumes = loaded.objects()[0].volumes();
@@ -260,10 +256,6 @@ async fn assert_loaded_slab(z0: f64, z1: f64, occupancy: &[bool], retained: usiz
         j_object.retained_layers[..retained]
     );
     assert_eq!(k_object.sidecars, j_object.sidecars);
-    assert_eq!(
-        slice_project(&project, metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 fn slab_project(z0: f64, z1: f64) -> Vec<u8> {

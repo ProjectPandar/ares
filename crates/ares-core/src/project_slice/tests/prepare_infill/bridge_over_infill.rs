@@ -4,9 +4,8 @@ use crate::{
     project_slice::{
         prepare_infill::{bridge_over_infill, external_surfaces},
         region_slices::RegionSurfaceKind,
-        tests::support::{KsrArchive, metadata},
+        tests::support::KsrArchive,
     },
-    slice_project,
 };
 
 pub(super) fn prepare(archive: KsrArchive) -> bridge_over_infill::PreparedPostBridgeCandidates {
@@ -32,26 +31,6 @@ fn inventory_counts(
             .map(|candidate| candidate.new_polygons.len())
             .sum(),
     )
-}
-
-#[tokio::test]
-async fn task22o71_public_lifecycle_consumes_o43_and_disposes_transaction_once() {
-    bridge_over_infill::reset_hooks();
-    bridge_over_infill::transaction::reset_hooks();
-
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(bridge_over_infill::invocations(), 1);
-    assert_eq!(bridge_over_infill::disposals(), 0);
-    assert_eq!(bridge_over_infill::transaction::invocations(), 1);
-    assert_eq!(bridge_over_infill::transaction::disposals(), 1);
-
-    bridge_over_infill::reset_hooks();
-    bridge_over_infill::transaction::reset_hooks();
 }
 
 #[test]

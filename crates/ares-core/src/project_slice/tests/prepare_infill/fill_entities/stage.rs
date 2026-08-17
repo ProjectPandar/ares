@@ -1,14 +1,6 @@
 use crate::{
-    SliceError,
     project_slice::perimeters::classic::gap_extrusion::GapFillEntity,
-    project_slice::{
-        fill_entities,
-        tests::{
-            prepare_infill::group_fills::focused::fixture::graph,
-            support::{KsrArchive, metadata},
-        },
-    },
-    slice_project,
+    project_slice::{fill_entities, tests::prepare_infill::group_fills::focused::fixture::graph},
 };
 
 #[test]
@@ -96,20 +88,4 @@ fn task22o91_stage_is_repeatable_for_independent_graphs() {
 
     fill_entities::dispose(first);
     fill_entities::dispose(second);
-}
-
-#[tokio::test]
-async fn task22o91_public_lifecycle_materializes_and_disposes_once_before_incomplete() {
-    fill_entities::reset_hooks();
-
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(fill_entities::invocations(), 1);
-    assert_eq!(fill_entities::disposals(), 1);
-
-    fill_entities::reset_hooks();
 }

@@ -8,15 +8,6 @@ use crate::{
     },
 };
 
-#[cfg(test)]
-use std::cell::Cell;
-
-#[cfg(test)]
-thread_local! {
-    static INVOCATIONS: Cell<usize> = const { Cell::new(0) };
-    static DISPOSALS: Cell<usize> = const { Cell::new(0) };
-}
-
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) enum IslandInfillEntity {
     Fill(FillExtrusionCollection),
@@ -42,8 +33,6 @@ pub(in crate::project_slice) struct PreparedPostExtrusionIslands {
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostFillEntities,
 ) -> PreparedPostExtrusionIslands {
-    #[cfg(test)]
-    INVOCATIONS.with(|count| count.set(count.get() + 1));
     let objects = {
         let traversal = &predecessor
             .predecessor
@@ -166,23 +155,5 @@ fn contour_bounds(expolygon: &ExPolygon) -> Bounds {
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostExtrusionIslands) {
-    #[cfg(test)]
-    DISPOSALS.with(|count| count.set(count.get() + 1));
     super::fill_entities::dispose(prepared.predecessor);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_hooks() {
-    INVOCATIONS.with(|count| count.set(0));
-    DISPOSALS.with(|count| count.set(0));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn invocations() -> usize {
-    INVOCATIONS.with(Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn disposals() -> usize {
-    DISPOSALS.with(Cell::get)
 }

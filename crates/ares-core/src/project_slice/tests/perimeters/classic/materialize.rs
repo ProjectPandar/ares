@@ -10,11 +10,9 @@ use crate::{
         },
         prepare_post_classic_raw_paths, prepare_post_classic_traversal,
     },
-    slice_project,
 };
 
-use super::super::super::support::{ksr_project, metadata};
-
+use super::super::super::support::ksr_project;
 #[test]
 fn task22o7_ksr_materializes_real_branches_with_exact_numeric_provenance() {
     let prepared = prepare_post_classic_raw_paths(ksr_project()).unwrap();
@@ -105,14 +103,6 @@ fn task22o7_coordinate_error_is_transactional_and_has_no_ordinary_fallback() {
         Err(SliceError::InvalidInput(message))
             if message == "classic perimeter raw path coordinate is outside the supported Clipper range"
     ));
-}
-
-#[tokio::test]
-async fn task22o7_public_lifecycle_executes_raw_paths_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 struct AssertContext<'a> {

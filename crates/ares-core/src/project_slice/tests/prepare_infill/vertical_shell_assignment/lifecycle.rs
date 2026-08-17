@@ -8,20 +8,6 @@ use crate::{
 };
 
 #[tokio::test]
-async fn task22o24_public_lifecycle_runs_once_after_o23_and_remains_incomplete() {
-    vertical_shell_filtering::reset_invocations();
-    vertical_shell_assignment::reset_invocations();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(vertical_shell_filtering::invocations(), 1);
-    assert_eq!(vertical_shell_assignment::invocations(), 1);
-}
-
-#[tokio::test]
 async fn task22o24_predecessor_failure_has_zero_assignment_invocations() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(

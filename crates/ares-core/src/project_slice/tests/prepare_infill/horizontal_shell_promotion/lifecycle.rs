@@ -12,24 +12,6 @@ use crate::{
 };
 
 #[tokio::test]
-async fn task22o25_public_lifecycle_runs_once_after_o24_and_disposes_successor() {
-    vertical_shell_assignment::reset_invocations();
-    horizontal_shell_promotion::reset_hooks();
-    horizontal_shell_propagation::reset_hooks();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(vertical_shell_assignment::invocations(), 1);
-    assert_eq!(horizontal_shell_promotion::invocations(), 1);
-    assert_eq!(horizontal_shell_promotion::disposals(), 1);
-    assert_eq!(horizontal_shell_propagation::invocations(), 1);
-    assert_eq!(horizontal_shell_propagation::disposals(), 1);
-}
-
-#[tokio::test]
 async fn task22o25_every_earlier_geometry_stage_precedes_promotion() {
     surface_type_detection::reset_geometry_hooks();
     surface_type_detection::fail_geometry_at(

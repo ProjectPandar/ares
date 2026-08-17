@@ -6941,3 +6941,12 @@ forward-ordered loop and now reaches the source `X109.036 Y94.518` endpoint.
 Perimeter source-geometry density, seam coordinates, fan-marker resolution,
 timing, and remaining exact G-code differences remain later source-cited
 parity slices.
+
+## Task 22O.140: Remove simplification checkpoint pinning
+
+O140 removes the obsolete Task 22I private-stage tests that pinned ARES22H/I
+magic bytes, SHA-256 digests, record lengths, contour counts, and exact internal
+simplification tolerance representation. Production simplification is
+unchanged and remains covered through downstream slicing behavior. Remaining
+source-stage checkpoint suites are candidates for removal when their owning
+behavior receives an external G-code assertion.

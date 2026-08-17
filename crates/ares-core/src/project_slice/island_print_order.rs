@@ -6,15 +6,6 @@ use crate::project_slice::{
     },
 };
 
-#[cfg(test)]
-use std::cell::Cell;
-
-#[cfg(test)]
-thread_local! {
-    static INVOCATIONS: Cell<usize> = const { Cell::new(0) };
-    static DISPOSALS: Cell<usize> = const { Cell::new(0) };
-}
-
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) enum IslandPrintEntity {
     Perimeter(ExtrusionEntityCollection),
@@ -40,8 +31,6 @@ pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostExtrusionIslands,
 ) -> PreparedPostIslandPrintOrder {
-    #[cfg(test)]
-    INVOCATIONS.with(|count| count.set(count.get() + 1));
     let infill_first = {
         let traversal = &predecessor
             .predecessor
@@ -126,23 +115,5 @@ pub(in crate::project_slice) fn internal_surfaces(
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostIslandPrintOrder) {
-    #[cfg(test)]
-    DISPOSALS.with(|count| count.set(count.get() + 1));
     super::extrusion_islands::dispose(prepared.predecessor);
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn reset_hooks() {
-    INVOCATIONS.with(|count| count.set(0));
-    DISPOSALS.with(|count| count.set(0));
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn invocations() -> usize {
-    INVOCATIONS.with(Cell::get)
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn disposals() -> usize {
-    DISPOSALS.with(Cell::get)
 }

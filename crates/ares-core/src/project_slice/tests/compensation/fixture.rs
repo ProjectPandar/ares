@@ -4,7 +4,7 @@ use std::{
     panic::catch_unwind,
 };
 
-use crate::{FloatOrPercent, OrcaFloat, OrcaInt, Percent, SliceError, slice_project};
+use crate::{FloatOrPercent, OrcaFloat, OrcaInt, Percent};
 
 use super::super::super::{
     prepare_post_conical_overhang, task22l_browser_oracle, task22m_browser_input_oracle,
@@ -12,7 +12,7 @@ use super::super::super::{
 };
 use super::super::{
     region_fixture::checkpoint as region_checkpoint,
-    support::{KsrArchive, ksr_project, metadata},
+    support::{KsrArchive, ksr_project},
 };
 
 mod checkpoint;
@@ -108,8 +108,8 @@ fn task22m_m_parser_rejects_wrong_magic_nested_truncation_and_trailing_bytes() {
     }
 }
 
-#[tokio::test]
-async fn task22m_ksr_m_checkpoint_is_exact_complete_and_repeatable() {
+#[test]
+fn task22m_ksr_m_checkpoint_is_exact_complete_and_repeatable() {
     let l_bytes = task22m_browser_input_oracle(ksr_project()).unwrap();
     assert_identity(&l_bytes, KSR_L);
     assert_eq!(l_bytes, task22l_browser_oracle(ksr_project()).unwrap());
@@ -148,10 +148,6 @@ async fn task22m_ksr_m_checkpoint_is_exact_complete_and_repeatable() {
     assert_same_geometry(
         &lslices[1],
         &surface_geometry(&m.retained_layers[1].regions),
-    );
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await,
-        Err(SliceError::ProjectSlicingIncomplete)
     );
 }
 

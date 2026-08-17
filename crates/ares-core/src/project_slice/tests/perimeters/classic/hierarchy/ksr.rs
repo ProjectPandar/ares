@@ -1,6 +1,4 @@
-use crate::{SliceError, slice_project};
-
-use super::support::{direct_raw_checksums, metadata, project, summaries};
+use super::support::{direct_raw_checksums, project, summaries};
 
 #[test]
 fn task22o4_ksr_reaches_ordered_loop_hierarchy() {
@@ -20,13 +18,5 @@ fn task22o4_ksr_hierarchy_is_deterministic_and_preserves_o3_raw_shells() {
             .map(|summary| (summary.source_index, summary.raw_checksum))
             .collect::<Vec<_>>(),
         direct_raw_checksums(project())
-    );
-}
-
-#[tokio::test]
-async fn task22o4_ksr_public_lifecycle_executes_hierarchy_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
     );
 }

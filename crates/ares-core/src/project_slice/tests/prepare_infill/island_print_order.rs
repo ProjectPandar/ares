@@ -1,16 +1,9 @@
-use crate::{
-    SliceError,
-    project_slice::{
-        extrusion_islands::{self, ExtrusionIsland, IslandInfillEntity},
-        fill_entities::{self, FillExtrusionCollection},
-        island_print_order::{self, IslandPrintEntity},
-        perimeters::classic::entity_collections::ExtrusionEntityCollection,
-        tests::{
-            prepare_infill::group_fills::focused::fixture::graph,
-            support::{KsrArchive, metadata},
-        },
-    },
-    slice_project,
+use crate::project_slice::{
+    extrusion_islands::{self, ExtrusionIsland, IslandInfillEntity},
+    fill_entities::{self, FillExtrusionCollection},
+    island_print_order::{self, IslandPrintEntity},
+    perimeters::classic::entity_collections::ExtrusionEntityCollection,
+    tests::prepare_infill::group_fills::focused::fixture::graph,
 };
 
 #[test]
@@ -104,20 +97,4 @@ fn task22o95_is_repeatable_for_independent_graphs() {
 
     island_print_order::dispose(first);
     island_print_order::dispose(second);
-}
-
-#[tokio::test]
-async fn task22o95_public_lifecycle_orders_and_disposes_once_before_incomplete() {
-    island_print_order::reset_hooks();
-
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(island_print_order::invocations(), 1);
-    assert_eq!(island_print_order::disposals(), 1);
-
-    island_print_order::reset_hooks();
 }

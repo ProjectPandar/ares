@@ -1,9 +1,9 @@
 use crate::{
-    SliceError, project_slice::perimeters::classic::top_split::TopSplitOutcome,
-    project_slice::perimeters::prepare_post_classic_top_split, slice_project,
+    project_slice::perimeters::classic::top_split::TopSplitOutcome,
+    project_slice::perimeters::prepare_post_classic_top_split,
 };
 
-use super::support::{archive, geometry_summary, metadata, outcomes, project};
+use super::support::{archive, geometry_summary, outcomes, project};
 
 const NORMAL_PRINTABLE_AREA: &str = concat!(
     "\t\"printable_area\": [\r\n",
@@ -54,13 +54,5 @@ fn task22o2_ksr_executes_at_both_supported_coordinate_scales() {
             .flatten()
             .flat_map(|record| record.surfaces)
             .any(|surface| surface.outcome == TopSplitOutcome::Applied)
-    );
-}
-
-#[tokio::test]
-async fn task22o2_ksr_public_lifecycle_executes_stage_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
     );
 }

@@ -1,6 +1,6 @@
-use crate::{SliceError, project_slice::perimeters::prepare_post_classic_prelude, slice_project};
+use crate::project_slice::perimeters::prepare_post_classic_prelude;
 
-use super::super::super::support::{KsrArchive, ksr_project, metadata};
+use super::super::super::support::{KsrArchive, ksr_project};
 
 const NORMAL_PRINTABLE_AREA: &str = concat!(
     "\t\"printable_area\": [\r\n",
@@ -73,14 +73,6 @@ fn task22o1_fixture_prelude_runs_at_both_supported_coordinate_scales() {
         .collect::<Vec<_>>();
     assert_eq!(normal_widths, [500_000, 419_999]);
     assert_eq!(large_widths, [49_999, 41_999]);
-}
-
-#[tokio::test]
-async fn task22o1_fixture_public_lifecycle_consumes_prelude_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 #[test]

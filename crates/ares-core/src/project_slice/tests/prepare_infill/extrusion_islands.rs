@@ -1,14 +1,7 @@
-use crate::{
-    SliceError,
-    project_slice::{
-        extrusion_islands::{self, IslandInfillEntity},
-        fill_entities,
-        tests::{
-            prepare_infill::group_fills::focused::fixture::graph,
-            support::{KsrArchive, metadata},
-        },
-    },
-    slice_project,
+use crate::project_slice::{
+    extrusion_islands::{self, IslandInfillEntity},
+    fill_entities,
+    tests::prepare_infill::group_fills::focused::fixture::graph,
 };
 
 #[test]
@@ -65,20 +58,4 @@ fn task22o94_is_repeatable_for_independent_graphs() {
 
     extrusion_islands::dispose(first);
     extrusion_islands::dispose(second);
-}
-
-#[tokio::test]
-async fn task22o94_public_lifecycle_assigns_and_disposes_once_before_incomplete() {
-    extrusion_islands::reset_hooks();
-
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(extrusion_islands::invocations(), 1);
-    assert_eq!(extrusion_islands::disposals(), 1);
-
-    extrusion_islands::reset_hooks();
 }

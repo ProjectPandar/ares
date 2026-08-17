@@ -24,13 +24,7 @@ const VORONOI_ERROR: &str = "Classic medial-axis Voronoi construction failed";
 
 #[cfg(test)]
 thread_local! {
-    static FINISH_INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static ERROR_CLEANUP_PROBE_ALIVE: std::cell::Cell<Option<bool>> = const { std::cell::Cell::new(None) };
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn finish_invocations() -> usize {
-    FINISH_INVOCATIONS.with(std::cell::Cell::get)
 }
 
 #[cfg(test)]
@@ -41,9 +35,6 @@ pub(in crate::project_slice) fn error_cleanup_probe_alive() -> Option<bool> {
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicGapDomain,
 ) -> Result<PreparedPostClassicMedialGap, SliceError> {
-    #[cfg(test)]
-    FINISH_INVOCATIONS.with(|invocations| invocations.set(invocations.get() + 1));
-
     let staged = match stage(&prepared) {
         Ok(staged) => staged,
         Err(error) => {

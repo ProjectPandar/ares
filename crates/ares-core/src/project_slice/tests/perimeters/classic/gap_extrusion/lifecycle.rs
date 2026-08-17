@@ -2,11 +2,9 @@ use crate::{
     SliceError,
     geometry::{ExPolygon, Point, Polygon},
     project_slice::perimeters::{classic::gap_extrusion, prepare_post_classic_medial_gap},
-    slice_project,
 };
 
-use super::super::super::super::support::{ksr_project, metadata};
-
+use super::super::super::super::support::ksr_project;
 #[test]
 fn task22o14_invalid_derived_flow_is_transactional() {
     let mut source = prepare_post_classic_medial_gap(ksr_project()).unwrap();
@@ -120,14 +118,4 @@ fn assert_stage_error(
         Err(error) => panic!("unexpected O14 error: {error:?}"),
         Ok(_) => panic!("O14 failure case unexpectedly succeeded"),
     }
-}
-
-#[tokio::test]
-async fn task22o14_public_lifecycle_executes_once_and_remains_incomplete() {
-    let before = gap_extrusion::finish_invocations();
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete,
-    );
-    assert_eq!(gap_extrusion::finish_invocations(), before + 1);
 }

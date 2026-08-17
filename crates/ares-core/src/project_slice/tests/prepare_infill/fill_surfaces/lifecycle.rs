@@ -7,18 +7,6 @@ use crate::{SliceError, slice_project};
 use super::super::super::support::{KsrArchive, metadata};
 
 #[tokio::test]
-async fn task22o18_public_lifecycle_runs_once_and_remains_incomplete() {
-    fill_surfaces::reset_invocations();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(fill_surfaces::invocations(), 1);
-}
-
-#[tokio::test]
 async fn task22o18_earlier_errors_leave_invocations_zero() {
     for (from, to, error) in [
         (

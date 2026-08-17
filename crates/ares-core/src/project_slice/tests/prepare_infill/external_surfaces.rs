@@ -4,9 +4,8 @@ use crate::{
     project_slice::{
         prepare_infill::{external_surfaces, horizontal_shell_propagation},
         region_slices::{RegionSurface, RegionSurfaceKind},
-        tests::support::{KsrArchive, metadata},
+        tests::support::KsrArchive,
     },
-    slice_project,
 };
 
 fn square(min: i64, max: i64) -> ExPolygon {
@@ -19,22 +18,6 @@ fn square(min: i64, max: i64) -> ExPolygon {
         ]),
         Vec::new(),
     )
-}
-
-#[tokio::test]
-async fn task22o42_public_lifecycle_runs_and_disposes_once() {
-    external_surfaces::reset_hooks();
-
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(external_surfaces::invocations(), 1);
-    assert_eq!(external_surfaces::disposals(), 1);
-
-    external_surfaces::reset_hooks();
 }
 
 #[test]

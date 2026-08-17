@@ -28,22 +28,9 @@ const INSET_OVERLAP_TOLERANCE: f64 = 0.4;
 const CLIPPER_SAFETY_OFFSET: f64 = 10.0;
 const MITER_LIMIT: f64 = 3.0;
 
-#[cfg(test)]
-thread_local! {
-    static FINISH_INVOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
-#[cfg(test)]
-pub(in crate::project_slice) fn finish_invocations() -> usize {
-    FINISH_INVOCATIONS.with(std::cell::Cell::get)
-}
-
 pub(in crate::project_slice) fn finish(
     prepared: PreparedPostClassicPerimeterAppend,
 ) -> Result<PreparedPostClassicGapDomain, SliceError> {
-    #[cfg(test)]
-    FINISH_INVOCATIONS.with(|invocations| invocations.set(invocations.get() + 1));
-
     let staged = match stage(&prepared) {
         Ok(staged) => staged,
         Err(error) => {

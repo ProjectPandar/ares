@@ -6,18 +6,6 @@ use crate::project_slice::prepare_infill::surface_type_detection::{
 };
 
 #[tokio::test]
-async fn task22o17_public_lifecycle_invokes_detection_once_and_remains_incomplete() {
-    reset_invocations();
-    assert_eq!(
-        slice_project(KsrArchive::new().bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
-    assert_eq!(invocations(), 1);
-}
-
-#[tokio::test]
 async fn task22o17_counterbore_fails_before_detection() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(

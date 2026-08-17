@@ -3,7 +3,6 @@ use sha2::{Digest, Sha256};
 use crate::{
     ProcessSlicingMode, SliceError,
     mesh_slicer::{LoopedLayer, SlicingMode},
-    slice_project,
 };
 
 use super::{
@@ -13,7 +12,7 @@ use super::{
         slicing_mode_intersections::apply_project_slicing_modes, state::prepare_project_slice,
     },
     looped_fixture::encode,
-    support::{KsrArchive, ksr_project, metadata},
+    support::{KsrArchive, ksr_project},
 };
 
 const PROJECT_SETTINGS: &str = "Metadata/project_settings.config";
@@ -64,17 +63,13 @@ fn task22e_ksr_fixture_regular_projection_is_exact_and_preserves_task22d_facts()
     assert_eq!(sha256(&snapshot.config_block), CONFIG_BLOCK_SHA256);
 }
 
-#[tokio::test]
-async fn task22e_ksr_fixture_projection_is_repeatable_and_keeps_public_lifecycle() {
+#[test]
+fn task22e_ksr_fixture_projection_is_repeatable() {
     let first = fixture_snapshot(ksr_project()).unwrap();
     let second = fixture_snapshot(ksr_project()).unwrap();
     assert_eq!(first.modes, second.modes);
     assert_eq!(encode(&first.layers, false), encode(&second.layers, false));
     assert_eq!(encode(&first.layers, true), encode(&second.layers, true));
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 #[test]

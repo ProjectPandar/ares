@@ -1,6 +1,4 @@
-use crate::{SliceError, slice_project};
-
-use super::support::{metadata, project, summaries};
+use super::support::{project, summaries};
 
 #[test]
 fn task22o3_ksr_reaches_internal_raw_onion_state() {
@@ -22,12 +20,4 @@ fn task22o3_ksr_reaches_internal_raw_onion_state() {
 #[test]
 fn task22o3_ksr_typed_geometry_is_deterministic() {
     assert_eq!(summaries(project()), summaries(project()));
-}
-
-#[tokio::test]
-async fn task22o3_ksr_public_lifecycle_executes_stage_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }

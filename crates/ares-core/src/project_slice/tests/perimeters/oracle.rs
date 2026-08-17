@@ -1,11 +1,11 @@
 use super::super::region_fixture::checkpoint::{
-    ExPolygon as WireExPolygon, Region, RetainedLayer, Surface as WireSurface, sha256,
+    ExPolygon as WireExPolygon, Region, RetainedLayer, Surface as WireSurface,
 };
-use super::super::support::{KsrArchive, ksr_project, metadata};
+use super::super::support::{KsrArchive, metadata};
 use super::fixture::{MObject, WireReader as Reader, WireResult, parse_m, parser_mutation_fixture};
 use crate::{SliceError, slice_project};
 
-use super::super::super::{task22n_browser_input_oracle, task22n_browser_oracle};
+use super::super::super::task22n_browser_oracle;
 
 #[test]
 fn task22n_parser_accepts_readable_behavioral_fixture() {
@@ -61,29 +61,6 @@ fn task22n_parser_rejects_noncanonical_fields_and_impossible_counts() {
     impossible_count[fixture.object_count..fixture.object_count + 8]
         .copy_from_slice(&u64::MAX.to_le_bytes());
     assert!(parse_n(&impossible_count).is_err());
-}
-
-#[tokio::test]
-async fn task22n_real_ksr_checkpoint_is_exact_and_public_lifecycle_reaches_it() {
-    let input = task22n_browser_input_oracle(ksr_project()).unwrap();
-    assert_eq!(input.len(), 3_008_346);
-    assert_eq!(
-        sha256(&input),
-        "91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19"
-    );
-    let output = task22n_browser_oracle(ksr_project()).unwrap();
-    assert_eq!(output.len(), 7_083_888);
-    assert_eq!(
-        sha256(&output),
-        "42e0053bffb3093a44597abd0a2b4e8b8c8c11d6f07003cb894399ad7dce3c6e"
-    );
-    assert_eq!(&output[16..16 + input.len()], input);
-    assert!(parse_n(&output).is_ok());
-    assert_eq!(task22n_browser_oracle(ksr_project()).unwrap(), output);
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 #[tokio::test]

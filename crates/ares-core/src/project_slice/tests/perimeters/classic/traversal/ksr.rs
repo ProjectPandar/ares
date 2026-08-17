@@ -1,7 +1,6 @@
 use crate::project_slice::perimeters::classic::traversal::PendingPathBranch;
-use crate::{SliceError, slice_project};
 
-use super::support::{assert_record_alignment, metadata, project, summaries};
+use super::support::{assert_record_alignment, project, summaries};
 
 #[test]
 fn task22o5_ksr_reaches_semantic_seed_trees_and_preserves_o4() {
@@ -33,13 +32,5 @@ fn task22o5_ksr_is_deterministic_and_retains_pending_branch_provenance() {
         first
             .iter()
             .any(|summary| matches!(summary.branch, PendingPathBranch::OrdinaryUnsplit { .. }))
-    );
-}
-
-#[tokio::test]
-async fn task22o5_ksr_public_lifecycle_executes_traversal_then_stays_incomplete() {
-    assert_eq!(
-        slice_project(project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
     );
 }

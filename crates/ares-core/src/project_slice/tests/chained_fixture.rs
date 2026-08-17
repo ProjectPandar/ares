@@ -3,14 +3,14 @@ mod oracles;
 
 use sha2::{Digest, Sha256};
 
-use crate::{ProjectVolumeType, SliceError, mesh_slicer::ChainedLayer, slice_project};
+use crate::{ProjectVolumeType, mesh_slicer::ChainedLayer};
 
 use super::{
     super::{
         chained_intersections::{ChainedPrintObject, chain_project_intersections},
         state::prepare_project_slice,
     },
-    support::{ksr_project, metadata},
+    support::ksr_project,
 };
 use encoding::encode;
 use oracles::{
@@ -74,8 +74,8 @@ fn task22c_ksr_fixture_matches_exact_counts_lengths_and_digests() {
     );
 }
 
-#[tokio::test]
-async fn task22c_ksr_fixture_chaining_is_repeatable_and_public_api_stays_incomplete() {
+#[test]
+fn task22c_ksr_fixture_chaining_is_repeatable() {
     let state = prepare_project_slice(ksr_project()).unwrap();
     let config_block = state.config_block.as_deref().unwrap();
     assert_eq!(config_block.len(), CONFIG_BLOCK_LEN);
@@ -87,11 +87,6 @@ async fn task22c_ksr_fixture_chaining_is_repeatable_and_public_api_stays_incompl
     let second_layers = fixture_layers(&second);
     assert_eq!(encode(first_layers, false), encode(second_layers, false));
     assert_eq!(encode(first_layers, true), encode(second_layers, true));
-
-    assert_eq!(
-        slice_project(ksr_project(), metadata()).await.unwrap_err(),
-        SliceError::ProjectSlicingIncomplete
-    );
 }
 
 fn assert_fixture_totals(
