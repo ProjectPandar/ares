@@ -7428,3 +7428,14 @@ a near-flat terminal maximum to the preceding edge, guaranteeing an outgoing
 peak side. Quad/domain traversal, adjacent-edge concatenation, odd-edge
 deduplication, local maxima, Arachne concentric internal fill, cooling, timing,
 and remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.187: Arachne even-quad junction connection
+
+O187 ports the even-quad path of OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1955-1981,2012-2049`. A quad now selects
+its peak-facing sides, initializes absent junction storage, pairs their shared
+perimeters, and forwards the domain-boundary condition into even toolpath
+assembly. Adjacent-edge concatenation, domain traversal, odd-edge
+classification and deduplication, three-way breaks, local maxima, Arachne
+concentric internal fill, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.

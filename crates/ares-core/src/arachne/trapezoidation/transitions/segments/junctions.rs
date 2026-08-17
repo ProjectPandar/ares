@@ -53,6 +53,38 @@ impl SkeletalTrapezoidation<'_> {
         selected
     }
 
+    pub(super) fn connect_even_quad_junctions(&mut self, quad_start: EdgeId, force_new_path: bool) {
+        let edge_to_peak = self.get_quad_max_r_edge_to(quad_start);
+        let peak = self.graph.edge(edge_to_peak).to.unwrap();
+        assert_eq!(self.graph.node(peak).data.bead_count % 2, 0);
+        let edge_from_peak = self.graph.edge(edge_to_peak).next.unwrap();
+        let opposite_edge = self.graph.edge(edge_from_peak).twin.unwrap();
+        self.ensure_edge_junction_storage(edge_to_peak);
+        self.ensure_edge_junction_storage(opposite_edge);
+        self.connect_junction_pair(
+            edge_to_peak,
+            opposite_edge,
+            SegmentConditions {
+                is_odd: false,
+                force_new_path,
+                from_is_three_way: false,
+                to_is_three_way: false,
+            },
+        );
+    }
+
+    fn ensure_edge_junction_storage(&mut self, edge: EdgeId) {
+        if self.graph.edge(edge).data.extrusion_junctions().is_some() {
+            return;
+        }
+        let storage = Rc::new(RefCell::new(Vec::new()));
+        self.graph
+            .edge_mut(edge)
+            .data
+            .set_extrusion_junctions(&storage);
+        self.extrusion_junction_storage.push(storage);
+    }
+
     pub(super) fn connect_junction_pair(
         &mut self,
         from_edge: EdgeId,
