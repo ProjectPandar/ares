@@ -23,6 +23,36 @@ impl SkeletalTrapezoidation<'_> {
         }
     }
 
+    pub(super) fn get_quad_max_r_edge_to(&self, quad_start: EdgeId) -> EdgeId {
+        assert!(self.graph.edge(quad_start).prev.is_none());
+        let mut selected = None;
+        let mut max_radius = -1;
+        let mut current = Some(quad_start);
+        while let Some(edge) = current {
+            let to = self.graph.edge(edge).to.unwrap();
+            let radius = self.graph.node(to).data.distance_to_boundary;
+            if radius > max_radius {
+                max_radius = radius;
+                selected = Some(edge);
+            }
+            current = self.graph.edge(edge).next;
+        }
+        let mut selected = selected.unwrap();
+        let half_edge = self.graph.edge(selected);
+        if half_edge.next.is_none() {
+            let from = half_edge.from.unwrap();
+            let to = half_edge.to.unwrap();
+            let epsilon = self.config.coordinate_scale.checked_scale(0.005).unwrap();
+            if self.graph.node(to).data.distance_to_boundary - epsilon
+                < self.graph.node(from).data.distance_to_boundary
+            {
+                selected = half_edge.prev.unwrap();
+            }
+        }
+        assert!(self.graph.edge(selected).next.is_some());
+        selected
+    }
+
     pub(super) fn connect_junction_pair(
         &mut self,
         from_edge: EdgeId,

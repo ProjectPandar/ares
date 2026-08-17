@@ -7418,3 +7418,13 @@ perimeter indices, and dispatch each pair with the quad's assembly conditions.
 Quad/domain traversal, adjacent-edge concatenation, odd-edge deduplication,
 local maxima, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.186: Arachne quad peak edge selection
+
+O186 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1536-1559`. Quad processing now selects the
+half-edge entering the greatest destination boundary radius and falls back from
+a near-flat terminal maximum to the preceding edge, guaranteeing an outgoing
+peak side. Quad/domain traversal, adjacent-edge concatenation, odd-edge
+deduplication, local maxima, Arachne concentric internal fill, cooling, timing,
+and remaining exact G-code differences remain later source-cited parity slices.

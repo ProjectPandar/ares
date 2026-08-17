@@ -11,7 +11,7 @@ use crate::{
 
 use super::super::super::{
     SkeletalTrapezoidation,
-    test_support::{config, strategy},
+    test_support::{central_cell, config, strategy},
 };
 
 use super::super::toolpaths::SegmentConditions;
@@ -117,4 +117,33 @@ fn task22o185_connects_paired_junctions_from_inner_to_outer() {
         trapezoidation.generated_toolpaths[1][0].junctions,
         vec![from_inner, to_inner]
     );
+}
+
+#[test]
+fn task22o186_selects_edge_entering_quad_maximum_radius() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let (mut graph, peak_edge, _twin, from, to) = central_cell(scale);
+    let quad_start = graph.edge(peak_edge).prev.unwrap();
+    let quad_end = graph.edge(peak_edge).next.unwrap();
+    let start_boundary = graph.edge(quad_start).from.unwrap();
+    let end_boundary = graph.edge(quad_end).to.unwrap();
+    graph.node_mut(start_boundary).data.distance_to_boundary = 0;
+    graph.node_mut(from).data.distance_to_boundary = 10_000;
+    graph.node_mut(to).data.distance_to_boundary = 20_000;
+    graph.node_mut(end_boundary).data.distance_to_boundary = 0;
+    let trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
+        extrusion_junction_storage: Vec::new(),
+        generated_toolpaths: Vec::new(),
+    };
+
+    assert_eq!(trapezoidation.get_quad_max_r_edge_to(quad_start), peak_edge);
 }
