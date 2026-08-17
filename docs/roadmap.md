@@ -7303,3 +7303,13 @@ derived radius crossings with source integer interpolation, 0.02 mm endpoint
 snapping, and the lower endpoint bead count. Segment generation, beading
 propagation, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.175: Arachne node beading storage
+
+O175 ports the zero-transition setup from OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1469-1486`. Positive-count skeletal nodes
+with zero transition ratio now retain the effective strategy beading computed
+for twice their boundary radius. Transitional interpolation, upward/downward
+propagation, junction generation and connection, local maxima, Arachne
+concentric internal fill, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.

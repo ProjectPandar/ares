@@ -89,6 +89,7 @@ fn empty<'a>(
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     }
 }
 

@@ -42,6 +42,7 @@ fn task22o102_generates_ordered_mids_on_upward_central_edge() {
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
 
     trapezoidation.generate_transition_mids();
@@ -79,6 +80,7 @@ fn task22o164_replaces_bead_count_through_reached_central_terminal() {
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
 
     assert!(trapezoidation.filter_end_of_central_transition(
@@ -104,6 +106,7 @@ fn task22o164_keeps_bead_count_when_terminal_exceeds_limit() {
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
 
     assert!(!trapezoidation.filter_end_of_central_transition(
@@ -165,6 +168,7 @@ fn task22o165_replaces_only_matching_connected_central_region() {
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
 
     trapezoidation.dissolve_bead_count_region(source, 3, 2);
@@ -197,6 +201,7 @@ fn task22o166_discovers_matching_transition_only_inside_distance_limit() {
         vd_node_to_he_node: Default::default(),
         transition_storage: vec![storage],
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
     let origin = TransitionMiddle::new(0, 1, radius);
 
@@ -267,6 +272,7 @@ fn task22o167_dissolves_nearby_transition_pair_and_intervening_region() {
         vd_node_to_he_node: Default::default(),
         transition_storage: vec![source_storage.clone(), candidate_storage.clone()],
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
 
     trapezoidation.filter_transition_mids();
@@ -301,6 +307,7 @@ fn task22o169_generates_ordered_transition_ends_around_middle() {
         vd_node_to_he_node: Default::default(),
         transition_storage: vec![middle_storage],
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
 
     trapezoidation.generate_all_transition_ends();

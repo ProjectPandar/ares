@@ -34,6 +34,7 @@ fn task22o172_applies_transition_end_as_central_node() {
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
         transition_end_storage: vec![end_storage],
+        beading_storage: Vec::new(),
     };
 
     trapezoidation.apply_transitions();

@@ -2,6 +2,7 @@ mod apply;
 mod ends;
 mod filtering;
 mod ribs;
+mod segments;
 
 #[cfg(test)]
 mod test_support;

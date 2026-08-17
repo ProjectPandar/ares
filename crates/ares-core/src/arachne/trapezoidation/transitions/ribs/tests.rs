@@ -30,6 +30,7 @@ fn task22o174_inserts_nonlinear_radius_crossing_as_extra_rib() {
         vd_node_to_he_node: Default::default(),
         transition_storage: Vec::new(),
         transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
     };
 
     trapezoidation.generate_extra_ribs();
