@@ -7472,3 +7472,13 @@ the domain boundary. Traversal logic and tests live in child modules below 400
 LOC. Odd-edge deduplication across adjacent quads, local maxima, Arachne
 concentric internal fill, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.191: Arachne odd-segment deduplication
+
+O191 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1947,2038-2046`. Domain traversal now
+shares a passed-central-edge set; odd single-bead segments are suppressed when
+the opposite central edge was already processed, while every connected segment
+records its current central edge. Local maxima, final segment-stage
+orchestration, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

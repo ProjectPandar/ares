@@ -1,6 +1,6 @@
 mod domains;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use crate::{
     arachne::{extrusion_line::ExtrusionJunction, skeletal::EdgeId},
@@ -79,12 +79,23 @@ impl SkeletalTrapezoidation<'_> {
     }
 
     pub(super) fn connect_quad_junctions(&mut self, quad_start: EdgeId, force_new_path: bool) {
+        self.connect_quad_junctions_with_passed(quad_start, force_new_path, &mut HashSet::new());
+    }
+
+    pub(super) fn connect_quad_junctions_with_passed(
+        &mut self,
+        quad_start: EdgeId,
+        force_new_path: bool,
+        passed_odd_edges: &mut HashSet<EdgeId>,
+    ) {
         let sides = self.quad_junction_sides(quad_start);
         assert!(sides.from.len().abs_diff(sides.to.len()) <= 1);
         let segment_count = sides.from.len().min(sides.to.len());
         let from_node = self.graph.edge(quad_start).to.unwrap();
         let to_node = self.graph.edge(sides.quad_end).from.unwrap();
         let tolerance = self.config.coordinate_scale.checked_scale(0.005).unwrap();
+        let central_edge = self.graph.edge(quad_start).next.unwrap();
+        let opposite_central_edge = self.graph.edge(central_edge).twin.unwrap();
         for reverse_index in 0..segment_count {
             let from = sides.from[sides.from.len() - 1 - reverse_index];
             let to = sides.to[sides.to.len() - 1 - reverse_index];
@@ -102,11 +113,16 @@ impl SkeletalTrapezoidation<'_> {
                 && to_data.transition_ratio == 0.0
                 && innermost
                 && point_is_near(to.point, self.graph.node(to_node).point, tolerance);
+            let is_odd = from_is_odd && to_is_odd;
+            if is_odd && passed_odd_edges.contains(&opposite_central_edge) {
+                continue;
+            }
+            passed_odd_edges.insert(central_edge);
             self.add_toolpath_segment(
                 from,
                 to,
                 SegmentConditions {
-                    is_odd: from_is_odd && to_is_odd,
+                    is_odd,
                     force_new_path,
                     from_is_three_way: from_is_odd
                         && self.graph.node_is_multi_intersection(from_node),
