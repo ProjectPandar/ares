@@ -47,6 +47,33 @@ impl SkeletalTrapezoidation<'_> {
         edges
     }
 
+    pub(super) fn propagate_beadings_upward(&mut self, upward_quad_mids: &[EdgeId]) {
+        for &edge in upward_quad_mids.iter().rev() {
+            let half_edge = self.graph.edge(edge);
+            let from = half_edge.from.unwrap();
+            let to = half_edge.to.unwrap();
+            if self.graph.node(to).data.bead_count >= 0 {
+                continue;
+            }
+            let Some(lower_storage) = self.graph.node(from).data.beading() else {
+                continue;
+            };
+            if self.graph.node(to).data.has_beading() {
+                continue;
+            }
+            let mut upper = lower_storage.borrow().clone();
+            upper.dist_to_bottom_source +=
+                point_distance(self.graph.node(from).point, self.graph.node(to).point);
+            upper.is_upward_propagated_only = true;
+            assert!(
+                upper.beading.total_thickness <= self.graph.node(to).data.distance_to_boundary * 2
+            );
+            let storage = Rc::new(RefCell::new(upper));
+            self.graph.node_mut(to).data.set_beading(&storage);
+            self.beading_storage.push(storage);
+        }
+    }
+
     fn compare_upward_quad_mids(&self, left: EdgeId, right: EdgeId) -> Ordering {
         let left_edge = self.graph.edge(left);
         let right_edge = self.graph.edge(right);

@@ -7334,3 +7334,14 @@ smaller destination radius, including the source flat-edge distance-to-rise tie
 rule. Upward/downward beading propagation, junction generation and connection,
 local maxima, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.178: Arachne upward beading propagation
+
+O178 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1561-1588`. Ordered upward edges now copy
+existing lower-node beadings into unassigned higher nodes, accumulate traveled
+distance, retain the propagation, and mark it upward-only without replacing
+local or existing assignments. Downward propagation, radius-aware unequal-count
+interpolation, junction generation and connection, local maxima, Arachne
+concentric internal fill, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.
