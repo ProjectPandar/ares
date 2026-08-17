@@ -1,4 +1,5 @@
 mod alignment;
+mod fitting;
 mod mesh;
 mod sampling;
 mod spatial;
@@ -16,7 +17,7 @@ use crate::{
         perimeters::classic::{
             chained_loops::ExtrusionLoop,
             entity_collections::ExtrusionEntityCollection,
-            materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
+            materialize::{ExtrusionPath, ExtrusionRole, Point3},
             traversal::PreparedPostClassicTraversal,
         },
         seam_candidates::SeamCandidate,
@@ -280,7 +281,7 @@ fn split_at(loop_: &mut ExtrusionLoop, seam: (f64, f64), scale: CoordinateScale)
     let mut paths = std::mem::take(&mut loop_.paths);
     let following = paths.split_off(projection.path + 1);
     let target = paths.pop().expect("projected path exists");
-    let split = projected_parts(target, &projection);
+    let split = projected_parts(target, &projection, scale);
     loop_.paths.extend(split.0);
     loop_.paths.extend(following);
     loop_.paths.extend(paths);
@@ -290,35 +291,33 @@ fn split_at(loop_: &mut ExtrusionLoop, seam: (f64, f64), scale: CoordinateScale)
 fn projected_parts(
     path: ExtrusionPath,
     projection: &Projection,
+    scale: CoordinateScale,
 ) -> (Option<ExtrusionPath>, Option<ExtrusionPath>) {
     let point = Point3 {
         x: projection.x,
         y: projection.y,
         z: path.polyline.points[projection.segment].z,
     };
-    let source = &path.polyline.points;
-    let start = source[projection.segment];
-    let end = source[projection.segment + 1];
+    let start = path.polyline.points[projection.segment];
+    let end = path.polyline.points[projection.segment + 1];
     let (suffix, prefix) = if point.x == start.x && point.y == start.y {
-        (
-            source[projection.segment..].to_vec(),
-            source[..=projection.segment].to_vec(),
-        )
+        let (prefix, suffix) = fitting::split_at_index(&path.polyline, projection.segment, scale);
+        (suffix, prefix)
     } else if point.x == end.x && point.y == end.y {
-        (
-            source[projection.segment + 1..].to_vec(),
-            source[..=projection.segment + 1].to_vec(),
-        )
+        let (prefix, suffix) =
+            fitting::split_at_index(&path.polyline, projection.segment + 1, scale);
+        (suffix, prefix)
     } else {
-        let mut suffix = vec![point];
-        suffix.extend_from_slice(&source[projection.segment + 1..]);
-        let mut prefix = source[..=projection.segment].to_vec();
-        prefix.push(point);
+        let (mut prefix, _) = fitting::split_at_index(&path.polyline, projection.segment, scale);
+        fitting::append(&mut prefix, point);
+        let (_, mut suffix) =
+            fitting::split_at_index(&path.polyline, projection.segment + 1, scale);
+        fitting::prepend(&mut suffix, point);
         (suffix, prefix)
     };
-    let make = |points: Vec<Point3>| {
-        (points.len() >= 2).then_some(ExtrusionPath {
-            polyline: Polyline3 { points },
+    let make = |polyline: crate::project_slice::perimeters::classic::materialize::Polyline3| {
+        (polyline.points.len() >= 2).then_some(ExtrusionPath {
+            polyline,
             role: path.role,
             mm3_per_mm: path.mm3_per_mm,
             width: path.width,

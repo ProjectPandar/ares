@@ -1,4 +1,5 @@
 use super::{ArcSegment, Point, try_arc};
+use crate::project_slice::perimeters::classic::materialize::{FittedArc, FittedMove};
 
 #[derive(Clone, Copy)]
 pub(super) struct FittedRange {
@@ -36,14 +37,31 @@ pub(super) fn fit_and_simplify(points: &[Point], tolerance: f64) -> (Vec<Point>,
     (simplified, simplified_ranges)
 }
 
-pub(in crate::project_slice) fn simplify_points(points: &mut Vec<(f64, f64)>, tolerance: f64) {
+pub(in crate::project_slice) fn simplify_points(
+    points: &mut Vec<(f64, f64)>,
+    tolerance: f64,
+) -> Vec<FittedMove> {
     let converted = points
         .iter()
         .map(|&(x, y)| Point { x, y })
         .collect::<Vec<_>>();
-    let (converted, _) = fit_and_simplify(&converted, tolerance);
+    let (converted, ranges) = fit_and_simplify(&converted, tolerance);
+    let fitting = ranges
+        .into_iter()
+        .map(|range| FittedMove {
+            start: range.start,
+            end: range.end,
+            arc: range.arc.map(|arc| FittedArc {
+                center: (arc.center.x, arc.center.y),
+                radius: super::distance(arc.center, converted[range.start]),
+                length: arc.length,
+                clockwise: arc.clockwise,
+            }),
+        })
+        .collect();
     points.clear();
     points.extend(converted.into_iter().map(|point| (point.x, point.y)));
+    fitting
 }
 
 pub(super) fn fit_ranges(points: &[Point], tolerance: f64) -> Vec<FittedRange> {

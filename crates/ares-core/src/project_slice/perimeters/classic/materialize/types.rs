@@ -44,9 +44,25 @@ pub(in crate::project_slice) struct Point3 {
     pub(in crate::project_slice) z: Coord,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(in crate::project_slice) struct FittedArc {
+    pub(in crate::project_slice) center: (f64, f64),
+    pub(in crate::project_slice) radius: f64,
+    pub(in crate::project_slice) length: f64,
+    pub(in crate::project_slice) clockwise: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(in crate::project_slice) struct FittedMove {
+    pub(in crate::project_slice) start: usize,
+    pub(in crate::project_slice) end: usize,
+    pub(in crate::project_slice) arc: Option<FittedArc>,
+}
+
+#[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct Polyline3 {
     pub(in crate::project_slice) points: Vec<Point3>,
+    pub(in crate::project_slice) fitting: Vec<FittedMove>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -60,6 +76,16 @@ pub(in crate::project_slice) struct ExtrusionPath {
 
 impl ExtrusionPath {
     pub(in crate::project_slice) fn reverse(&mut self) {
+        let last_index = self.polyline.points.len().saturating_sub(1);
+        for fitted in &mut self.polyline.fitting {
+            let start = fitted.start;
+            fitted.start = last_index - fitted.end;
+            fitted.end = last_index - start;
+            if let Some(arc) = &mut fitted.arc {
+                arc.clockwise = !arc.clockwise;
+            }
+        }
+        self.polyline.fitting.reverse();
         self.polyline.points.reverse();
     }
 }

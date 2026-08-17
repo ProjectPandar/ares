@@ -83,6 +83,7 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
                     .into_iter()
                     .map(|(x, y)| Point3 { x, y, z: 200_000 })
                     .collect(),
+                fitting: Vec::new(),
             },
             role: ExtrusionRole::ExternalPerimeter,
             mm3_per_mm: 0.04,
@@ -132,6 +133,7 @@ fn task22o130_internal_corner_projection_starts_at_selected_candidate() {
                         z: 200_000,
                     })
                     .collect(),
+                fitting: Vec::new(),
             },
             role: ExtrusionRole::Perimeter,
             mm3_per_mm: 0.04,

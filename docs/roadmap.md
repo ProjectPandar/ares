@@ -7013,3 +7013,13 @@ consumes a newly emitted spiral lift now reuses the lift command's modal
 feedrate, producing exact KSR line `G1 X145.539 Y95.848 Z.6` without a redundant
 `F60000`. Fitted-arc grouping, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.148: Retained pre-seam fitted arcs
+
+O148 ports OrcaSlicer 2.4.2 `ArcFitter.cpp:9-150`, `Circle.cpp:276-488`,
+`Polyline.cpp:34-101,268-297,939-1005`, and `GCode.cpp:6991-7110`.
+Materialized `Polyline3` paths now retain fitting ranges through reversal, seam
+splitting, inserted points, and seam-gap clipping. Emission consumes those
+ranges, producing the exact first KSR arc
+`G2 X145.766 Y96.281 I3.394 J-1.502 E.01821`. Arc-offset formatting, cooling,
+timing, and remaining exact G-code differences remain later source-cited slices.

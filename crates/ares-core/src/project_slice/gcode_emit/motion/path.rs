@@ -8,7 +8,7 @@ use super::{
 pub(super) fn emit(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,
-    properties: PathProperties,
+    properties: PathProperties<'_>,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
@@ -16,6 +16,10 @@ pub(super) fn emit(
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
         .collect::<Vec<_>>();
     clip::clip_end(&mut local_points, properties.end_clip);
+    let mut fitting = properties.fitting.to_vec();
+    if properties.end_clip > 0.0 {
+        arc::clip_fitting_end(&mut local_points, &mut fitting);
+    }
     let (acceleration, configured_speed) = properties.kinematics(&state.options, state.layer_index);
     let original_speed = configured_speed.min(
         state.options.max_volumetric_speed
@@ -191,7 +195,11 @@ pub(super) fn emit(
         .map(|&(x, y)| arc::Point { x, y })
         .collect::<Vec<_>>();
     let segments = if state.options.enable_arc_fitting {
-        arc::fit(&arc_points, state.options.arc_fitting_tolerance)
+        if fitting.is_empty() {
+            arc::fit(&arc_points, state.options.arc_fitting_tolerance)
+        } else {
+            arc::from_fitting(&arc_points, &fitting, state.offset)
+        }
     } else {
         points
             .windows(2)
@@ -245,7 +253,7 @@ fn emit_linear_segment(
     output: &mut Vec<u8>,
     end: arc::Point,
     length: f64,
-    properties: PathProperties,
+    properties: PathProperties<'_>,
     state: &mut EmitState,
 ) {
     let extrusion = length * properties.mm3_per_mm * state.options.filament_flow_ratio
@@ -267,7 +275,7 @@ struct VariableEmission<'a> {
     points: &'a [(f64, f64)],
     processed: &'a [overhang::ProcessedPoint],
     original_speed: f64,
-    properties: PathProperties,
+    properties: PathProperties<'a>,
     state: &'a mut EmitState,
 }
 

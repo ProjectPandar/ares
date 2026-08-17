@@ -17,6 +17,7 @@ fn path(y: i64) -> ExtrusionPath {
                     z: 0,
                 },
             ],
+            fitting: Vec::new(),
         },
         role: ExtrusionRole::GapFill,
         mm3_per_mm: 0.08,

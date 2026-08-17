@@ -56,7 +56,7 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                         .iter()
                         .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
                         .collect::<Vec<_>>();
-                    gcode_emit::simplify_points(&mut points, tolerance);
+                    drop(gcode_emit::simplify_points(&mut points, tolerance));
                     path.polyline = Polyline::new(
                         points
                             .into_iter()
@@ -92,7 +92,7 @@ fn simplify_path3(path: &mut ExtrusionPath, scale: CoordinateScale, tolerance: f
         .iter()
         .map(|point| (scale.unscale(point.x), scale.unscale(point.y)))
         .collect::<Vec<_>>();
-    gcode_emit::simplify_points(&mut points, tolerance);
+    let fitting = gcode_emit::simplify_points(&mut points, tolerance);
     path.polyline = Polyline3 {
         points: points
             .into_iter()
@@ -102,5 +102,6 @@ fn simplify_path3(path: &mut ExtrusionPath, scale: CoordinateScale, tolerance: f
                 z,
             })
             .collect(),
+        fitting,
     };
 }

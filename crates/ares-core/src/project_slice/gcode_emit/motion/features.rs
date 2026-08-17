@@ -1,17 +1,19 @@
 use super::MotionOptions;
 use crate::ExtrusionRole;
+use crate::project_slice::perimeters::classic::materialize::FittedMove;
 
 #[derive(Clone, Copy)]
-pub(super) struct PathProperties {
+pub(super) struct PathProperties<'a> {
     pub(super) mm3_per_mm: f64,
     pub(super) width: f32,
     pub(super) height: f32,
     pub(super) feature: &'static str,
     pub(super) is_perimeter: bool,
     pub(super) end_clip: f64,
+    pub(super) fitting: &'a [FittedMove],
 }
 
-impl PathProperties {
+impl PathProperties<'_> {
     pub(super) fn kinematics(self, options: &MotionOptions, layer_index: usize) -> (u32, f64) {
         if layer_index == 0 {
             let speed = if self.feature == "Bottom surface" {

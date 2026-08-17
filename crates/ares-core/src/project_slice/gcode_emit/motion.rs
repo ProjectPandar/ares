@@ -131,6 +131,7 @@ pub(super) fn emit_layer(
                                         | crate::ExtrusionRole::OverhangPerimeter
                                 ),
                                 end_clip: 0.0,
+                                fitting: &[],
                             },
                             geometry,
                             state,
@@ -175,6 +176,7 @@ fn emit_materialized_path(
             feature,
             is_perimeter: path.role != ExtrusionRole::GapFill,
             end_clip,
+            fitting: &path.polyline.fitting,
         },
         geometry,
         state,

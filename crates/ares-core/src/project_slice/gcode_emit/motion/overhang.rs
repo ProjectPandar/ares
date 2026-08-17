@@ -6,7 +6,7 @@ const INTERSECTION_EPSILON_MM: f64 = 1e-4;
 
 pub(super) struct EstimateRequest<'a> {
     pub(super) points: &'a [(f64, f64)],
-    pub(super) properties: PathProperties,
+    pub(super) properties: PathProperties<'a>,
     pub(super) geometry: LayerGeometry<'a>,
     pub(super) options: &'a MotionOptions,
     pub(super) layer_index: usize,

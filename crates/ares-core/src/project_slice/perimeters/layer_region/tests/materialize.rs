@@ -279,6 +279,7 @@ fn path(x: i64, role: ExtrusionRole) -> ExtrusionPath {
                     z: 0,
                 },
             ],
+            fitting: Vec::new(),
         },
         role,
         mm3_per_mm: x as f64 / 100.0,

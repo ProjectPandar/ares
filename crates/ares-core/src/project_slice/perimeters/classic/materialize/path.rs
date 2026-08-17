@@ -131,6 +131,7 @@ fn path(
                     z: 0,
                 })
                 .collect(),
+            fitting: Vec::new(),
         },
         role,
         mm3_per_mm,

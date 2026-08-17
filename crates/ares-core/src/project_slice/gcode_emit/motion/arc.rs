@@ -1,5 +1,7 @@
+mod retained;
 mod simplify;
 
+pub(super) use retained::{clip_end as clip_fitting_end, from_fitting};
 pub(in crate::project_slice) use simplify::simplify_points;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -232,7 +234,7 @@ fn points_within_arc(points: &[Point], arc: ArcSlice) -> bool {
         (end.x - arc.center.x) / arc.radius,
         (end.y - arc.center.y) / arc.radius,
     );
-    for index in 2..points.len() {
+    for index in points.len() - 2..points.len() {
         let angle = if index + 1 == points.len() {
             arc.end_angle
         } else {
