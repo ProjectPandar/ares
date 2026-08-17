@@ -7063,3 +7063,13 @@ through exact KSR points `X145.621 Y94.523`, `X145.756 Y94.862`, and
 `X145.814 Y95.162`, followed by exact spiral lift
 `G3 Z.6 I-.612 J-1.052 P1  F60000`. Object identifiers, cooling, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.153: Scaled object-origin arithmetic
+
+O153 ports OrcaSlicer 2.4.2 `GCode.cpp:5380-5386,5659-5668,8123-8135`.
+The 3MF-derived object center is now truncated to the active scaled-coordinate
+grid and unscaled before local perimeter points are converted to G-code. This
+matches source floating-point operation order at half-thousandth boundaries and
+produces exact KSR arc `G3 X104.96 Y100.092 I.232 J-5.372 E.031`. Object
+identifiers, cooling, timing, and remaining exact G-code differences remain
+later source-cited parity slices.

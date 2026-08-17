@@ -231,6 +231,7 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
         lines[fitted_wipe_start + 6],
         "G3 Z.6 I-.612 J-1.052 P1  F60000"
     );
+    assert!(lines.contains(&"G3 X104.96 Y100.092 I.232 J-5.372 E.031"));
 }
 
 #[tokio::test]

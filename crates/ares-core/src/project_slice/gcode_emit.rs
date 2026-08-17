@@ -35,8 +35,17 @@ pub(super) fn emit(
     append_machine_limits(&mut output, traversal);
     append_machine_start(&mut output, traversal)?;
     let options = motion::MotionOptions::from_traversal(traversal);
+    let offset = footprint::model_center(traversal).unwrap_or_default();
+    let offset = (
+        traversal
+            .scale
+            .unscale(traversal.scale.checked_scale(offset.0).unwrap()),
+        traversal
+            .scale
+            .unscale(traversal.scale.checked_scale(offset.1).unwrap()),
+    );
     let mut state = motion::EmitState {
-        offset: footprint::model_center(traversal).unwrap_or_default(),
+        offset,
         travel_feedrate: options.first_layer_travel_feedrate,
         extrusion_feedrate: options.initial_layer_speed * 60.0,
         options,
