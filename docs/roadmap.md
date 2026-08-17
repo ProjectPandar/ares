@@ -7193,3 +7193,15 @@ tests cover both a reached terminal and a branch beyond the distance limit.
 Nearby-transition dissolution, transition-middle orchestration, transition
 ends, ribs, segments, Arachne concentric internal fill, cooling, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.165: Arachne bead-count region dissolution
+
+O165 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:993-1008`. Transition filtering can now
+replace one bead count through a connected central skeletal region while
+stopping at noncentral edges and nodes carrying another source count. The
+transition tests moved into a real Rust submodule before further growth, keeping
+production code and test support independently below 400 lines. Nearby
+transition discovery, transition-middle orchestration, transition ends, ribs,
+segments, Arachne concentric internal fill, cooling, timing, and remaining exact
+G-code differences remain later source-cited parity slices.
