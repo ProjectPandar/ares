@@ -210,3 +210,62 @@ fn task22o187_connects_even_quad_peak_facing_junctions() {
         vec![from, to]
     );
 }
+
+#[test]
+fn task22o188_concatenates_adjacent_outer_junctions_before_pairing() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let (mut graph, peak_edge, _twin, from_node, peak_node) = central_cell(scale);
+    let quad_start = graph.edge(peak_edge).prev.unwrap();
+    let edge_from_peak = graph.edge(peak_edge).next.unwrap();
+    let opposite_edge = graph.edge(edge_from_peak).twin.unwrap();
+    let start_boundary = graph.edge(quad_start).from.unwrap();
+    let end_boundary = graph.edge(edge_from_peak).to.unwrap();
+    graph.node_mut(start_boundary).data.distance_to_boundary = 0;
+    graph.node_mut(from_node).data.distance_to_boundary = 10_000;
+    graph.node_mut(peak_node).data.distance_to_boundary = 20_000;
+    graph.node_mut(peak_node).data.bead_count = 2;
+    graph.node_mut(end_boundary).data.distance_to_boundary = 0;
+    let from_inner = ExtrusionJunction::new(Point::new(40, 10), 80, 1);
+    let from_outer = ExtrusionJunction::new(Point::new(30, 0), 100, 0);
+    let to_inner = ExtrusionJunction::new(Point::new(60, 10), 80, 1);
+    let to_outer = ExtrusionJunction::new(Point::new(70, 0), 100, 0);
+    let peak_storage = Rc::new(RefCell::new(vec![from_inner]));
+    let adjacent_storage = Rc::new(RefCell::new(vec![from_outer]));
+    let opposite_storage = Rc::new(RefCell::new(vec![to_inner, to_outer]));
+    graph
+        .edge_mut(peak_edge)
+        .data
+        .set_extrusion_junctions(&peak_storage);
+    graph
+        .edge_mut(quad_start)
+        .data
+        .set_extrusion_junctions(&adjacent_storage);
+    graph
+        .edge_mut(opposite_edge)
+        .data
+        .set_extrusion_junctions(&opposite_storage);
+    let mut trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
+        extrusion_junction_storage: vec![peak_storage, adjacent_storage, opposite_storage],
+        generated_toolpaths: Vec::new(),
+    };
+
+    trapezoidation.connect_even_quad_junctions(quad_start, true);
+
+    assert_eq!(
+        trapezoidation.generated_toolpaths[0][0].junctions,
+        vec![from_outer, to_outer]
+    );
+    assert_eq!(
+        trapezoidation.generated_toolpaths[1][0].junctions,
+        vec![from_inner, to_inner]
+    );
+}

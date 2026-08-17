@@ -61,9 +61,21 @@ impl SkeletalTrapezoidation<'_> {
         let opposite_edge = self.graph.edge(edge_from_peak).twin.unwrap();
         self.ensure_edge_junction_storage(edge_to_peak);
         self.ensure_edge_junction_storage(opposite_edge);
-        self.connect_junction_pair(
-            edge_to_peak,
-            opposite_edge,
+        let mut from_junctions = self.edge_junctions(edge_to_peak);
+        if let Some(previous) = self.graph.edge(edge_to_peak).prev {
+            from_junctions =
+                append_adjacent_junctions(from_junctions, self.edge_junctions(previous));
+            assert!(self.graph.edge(previous).prev.is_none());
+        }
+        let mut to_junctions = self.edge_junctions(opposite_edge);
+        if let Some(next) = self.graph.edge(edge_from_peak).next {
+            let adjacent = self.graph.edge(next).twin.unwrap();
+            to_junctions = append_adjacent_junctions(to_junctions, self.edge_junctions(adjacent));
+            assert!(self.graph.edge(next).next.is_none());
+        }
+        self.connect_junction_vectors(
+            &from_junctions,
+            &to_junctions,
             SegmentConditions {
                 is_odd: false,
                 force_new_path,
@@ -91,22 +103,27 @@ impl SkeletalTrapezoidation<'_> {
         to_edge: EdgeId,
         conditions: SegmentConditions,
     ) {
-        let from_junctions = self
-            .graph
-            .edge(from_edge)
+        let from_junctions = self.edge_junctions(from_edge);
+        let to_junctions = self.edge_junctions(to_edge);
+        self.connect_junction_vectors(&from_junctions, &to_junctions, conditions);
+    }
+
+    fn edge_junctions(&self, edge: EdgeId) -> Vec<ExtrusionJunction> {
+        self.graph
+            .edge(edge)
             .data
             .extrusion_junctions()
             .unwrap()
             .borrow()
-            .clone();
-        let to_junctions = self
-            .graph
-            .edge(to_edge)
-            .data
-            .extrusion_junctions()
-            .unwrap()
-            .borrow()
-            .clone();
+            .clone()
+    }
+
+    fn connect_junction_vectors(
+        &mut self,
+        from_junctions: &[ExtrusionJunction],
+        to_junctions: &[ExtrusionJunction],
+        conditions: SegmentConditions,
+    ) {
         assert!(from_junctions.len().abs_diff(to_junctions.len()) <= 1);
         let segment_count = from_junctions.len().min(to_junctions.len());
         for reverse_index in 0..segment_count {
@@ -193,3 +210,18 @@ fn interpolate_point(start: Point, end: Point, numerator: i64, denominator: i64)
 
 #[cfg(test)]
 mod tests;
+
+fn append_adjacent_junctions(
+    mut junctions: Vec<ExtrusionJunction>,
+    adjacent: Vec<ExtrusionJunction>,
+) -> Vec<ExtrusionJunction> {
+    while junctions
+        .last()
+        .zip(adjacent.first())
+        .is_some_and(|(current, next)| current.perimeter_index <= next.perimeter_index)
+    {
+        junctions.pop();
+    }
+    junctions.extend(adjacent);
+    junctions
+}

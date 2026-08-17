@@ -7439,3 +7439,14 @@ assembly. Adjacent-edge concatenation, domain traversal, odd-edge
 classification and deduplication, three-way breaks, local maxima, Arachne
 concentric internal fill, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.188: Arachne adjacent junction concatenation
+
+O188 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1982-2011`. Peak-facing quad sides now
+append adjacent-edge junctions after trimming overlapping perimeter indices,
+then connect the resulting side vectors from shared innermost perimeter outward.
+The same rule is available symmetrically after the peak. Domain traversal,
+odd-edge classification and deduplication, three-way breaks, local maxima,
+Arachne concentric internal fill, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.
