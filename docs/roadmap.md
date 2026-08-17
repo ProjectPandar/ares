@@ -6950,3 +6950,20 @@ simplification tolerance representation. Production simplification is
 unchanged and remains covered through downstream slicing behavior. Remaining
 source-stage checkpoint suites are candidates for removal when their owning
 behavior receives an external G-code assertion.
+
+## Task 22O.141: Arc-path source simplification
+
+O141 ports OrcaSlicer 2.4.2 `ArcFitter.cpp:9-150` into the motion emitter.
+Each source extrusion path is fitted and Douglas-Peucker simplified before
+motion planning, preserving source wall vertices while keeping arc emission
+option-driven. Seam placement, clipping precision, cooling, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.142: Inner-path aligned seam projection
+
+O142 ports OrcaSlicer 2.4.2 `GCode/SeamPlacer.cpp:1562-1600` role selection.
+Aligned seam placement now identifies an inner wall from the extrusion path's
+`erPerimeter` role rather than the loop nesting/orientation role. The first KSR
+inner-wall travel now matches `G1 X140.158 Y102.797 F60000` exactly. Loop-end
+clipping precision, cooling, timing, and remaining exact G-code differences
+remain later source-cited parity slices.

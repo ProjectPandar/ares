@@ -14,9 +14,9 @@ use crate::{
             IslandPrintEntity, OrderedExtrusionLayer, PreparedPostIslandPrintOrder,
         },
         perimeters::classic::{
-            chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
+            chained_loops::ExtrusionLoop,
             entity_collections::ExtrusionEntityCollection,
-            materialize::{ExtrusionPath, Point3, Polyline3},
+            materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
             traversal::PreparedPostClassicTraversal,
         },
         seam_candidates::SeamCandidate,
@@ -189,7 +189,7 @@ fn place_loop(loop_: &mut ExtrusionLoop, placement: Placement<'_>, scale: Coordi
         f64::from(placement.position.x),
         f64::from(placement.position.y),
     );
-    if loop_.role == ExtrusionLoopRole::Internal {
+    if loop_.paths[0].role == ExtrusionRole::Perimeter {
         let projection = closest_projection(&loop_.paths, seam, scale);
         let mut depth = projection.distance;
         let angle = placement.selected.local_ccw_angle;

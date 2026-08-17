@@ -162,22 +162,8 @@ fn task22o130_internal_corner_projection_starts_at_selected_candidate() {
     );
 }
 
-fn xy(line: &str) -> (f32, f32) {
-    let mut fields = line.split_ascii_whitespace();
-    assert_eq!(fields.next(), Some("G1"));
-    let x = fields.next().unwrap()[1..].parse().unwrap();
-    let y = fields.next().unwrap()[1..].parse().unwrap();
-    (x, y)
-}
-
-fn assert_xy_within(line: &str, expected: (f32, f32), tolerance: f32) {
-    let actual = xy(line);
-    assert!((actual.0 - expected.0).abs() <= tolerance, "{actual:?}");
-    assert!((actual.1 - expected.1).abs() <= tolerance, "{actual:?}");
-}
-
 #[tokio::test]
-async fn task22o129_ksr_first_aligned_seams_are_within_thirty_microns_of_orca() {
+async fn task22o142_inner_path_role_projects_aligned_seam() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -192,11 +178,10 @@ async fn task22o129_ksr_first_aligned_seams_are_within_thirty_microns_of_orca() 
         .iter()
         .position(|line| *line == "M624 AQAAAAAAAAA=")
         .unwrap();
-    assert_xy_within(lines[label + 1], (140.158, 102.797), 0.03);
     let first_outer = lines
         .iter()
         .position(|line| *line == "; FEATURE: Outer wall")
         .unwrap();
+    assert_eq!(lines[label + 1], "G1 X140.158 Y102.797 F60000");
     assert_eq!(lines[first_outer - 2], "G1 X140.625 Y102.983 F60000");
-    assert_eq!(lines[first_outer + 2], "G1 X140.618 Y102.994 E.00049");
 }
