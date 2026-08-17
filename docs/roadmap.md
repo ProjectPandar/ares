@@ -7514,3 +7514,14 @@ mutation at every builder callsite; omitting that mutation left detached rib
 roots outside valid quad chains. Consumption by Arachne wall/fill generation,
 concentric internal fill, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.195: raw Arachne wall toolpaths
+
+O195 ports the parameter assembly and skeletal invocation from OrcaSlicer
+2.4.2 `Arachne/WallToolPaths.cpp:482-554`. Prepared outlines now feed a
+source-shaped beading strategy and trapezoidation configuration derived from
+outer/inner spacing, layer height, inset count, thin-feature limits, and
+transition options. Outline preprocessing, stitching, small-line removal,
+inner-contour separation, simplification, concentric-internal conversion,
+cooling, timing, and remaining exact G-code differences remain later
+source-cited parity slices.
