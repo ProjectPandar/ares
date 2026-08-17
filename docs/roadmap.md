@@ -7182,3 +7182,14 @@ match the skeletal graph's distance-to-boundary coordinate. Transition-middle
 filtering, transition ends, ribs, segments, Arachne concentric internal fill,
 cooling, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.164: Arachne central-end transition filter
+
+O164 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1010-1038`. Transition filtering can now
+walk each central descendant branch, stop at the configured half-length, and
+propagate a replacement bead count back from every reached terminal. Focused
+tests cover both a reached terminal and a branch beyond the distance limit.
+Nearby-transition dissolution, transition-middle orchestration, transition
+ends, ribs, segments, Arachne concentric internal fill, cooling, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
