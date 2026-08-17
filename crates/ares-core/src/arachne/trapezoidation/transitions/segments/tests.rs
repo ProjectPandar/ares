@@ -1,7 +1,7 @@
 use crate::{
     arachne::{
         beading::base::{Beading, BeadingStrategy, BeadingStrategyConfig},
-        skeletal::{SkeletalGraph, SkeletalJoint},
+        skeletal::{EdgeId, SkeletalEdge, SkeletalGraph, SkeletalJoint},
     },
     geometry::{CoordinateScale, Point},
 };
@@ -45,6 +45,30 @@ impl BeadingStrategy for DeterministicTransitionStrategy {
     fn description(&self) -> String {
         "DeterministicTransitionStrategy".to_owned()
     }
+}
+
+fn upward_quad_candidate(
+    graph: &mut SkeletalGraph,
+    x: i64,
+    from_radius: i64,
+    to_radius: i64,
+) -> EdgeId {
+    let from = graph.add_node(SkeletalJoint::default(), Point::new(x, 0));
+    let to = graph.add_node(SkeletalJoint::default(), Point::new(x + 100, 0));
+    graph.node_mut(from).data.distance_to_boundary = from_radius;
+    graph.node_mut(to).data.distance_to_boundary = to_radius;
+    let edge = graph.add_edge(SkeletalEdge::default());
+    let twin = graph.add_edge(SkeletalEdge::default());
+    graph.edge_mut(edge).from = Some(from);
+    graph.edge_mut(edge).to = Some(to);
+    graph.edge_mut(twin).from = Some(to);
+    graph.edge_mut(twin).to = Some(from);
+    graph.edge_mut(edge).prev = Some(twin);
+    graph.edge_mut(edge).next = Some(twin);
+    graph.edge_mut(edge).data.set_is_central(true);
+    graph.edge_mut(twin).data.set_is_central(true);
+    graph.connect_twins(edge, twin);
+    edge
 }
 
 #[test]
@@ -131,4 +155,25 @@ fn task22o176_interpolates_transitional_node_beading() {
             left_over: 100,
         }
     );
+}
+
+#[test]
+fn task22o177_orders_upward_quad_mids_by_descending_radius() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let mut graph = SkeletalGraph::default();
+    let lower = upward_quad_candidate(&mut graph, 0, 10, 20);
+    let higher = upward_quad_candidate(&mut graph, 200, 20, 40);
+    let trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
+    };
+
+    assert_eq!(trapezoidation.upward_quad_mids(), vec![higher, lower]);
 }

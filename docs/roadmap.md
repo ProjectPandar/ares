@@ -7324,3 +7324,13 @@ unmatched entries, thickness, and leftover. Radius-aware unequal-count
 propagation interpolation, upward/downward propagation, junction generation and
 connection, local maxima, Arachne concentric internal fill, cooling, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.177: Arachne upward segment ordering
+
+O177 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1430-1467`. Segment preparation now selects
+only upward half-edges with both quad neighbors and orders them from larger to
+smaller destination radius, including the source flat-edge distance-to-rise tie
+rule. Upward/downward beading propagation, junction generation and connection,
+local maxima, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

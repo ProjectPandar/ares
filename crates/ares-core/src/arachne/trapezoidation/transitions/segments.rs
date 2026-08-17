@@ -1,8 +1,11 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, cmp::Ordering, rc::Rc};
 
-use crate::arachne::{beading::base::Beading, skeletal::BeadingPropagation};
+use crate::arachne::{
+    beading::base::Beading,
+    skeletal::{BeadingPropagation, EdgeId},
+};
 
-use super::SkeletalTrapezoidation;
+use super::{SkeletalTrapezoidation, point_distance};
 
 impl SkeletalTrapezoidation<'_> {
     pub(super) fn store_node_beadings(&mut self) {
@@ -27,6 +30,66 @@ impl SkeletalTrapezoidation<'_> {
             self.graph.node_mut(node).data.set_beading(&storage);
             self.beading_storage.push(storage);
         }
+    }
+
+    pub(super) fn upward_quad_mids(&self) -> Vec<EdgeId> {
+        let mut edges = self
+            .graph
+            .active_edges()
+            .filter(|&edge| {
+                let edge_data = self.graph.edge(edge);
+                edge_data.prev.is_some()
+                    && edge_data.next.is_some()
+                    && self.graph.edge_is_upward(edge)
+            })
+            .collect::<Vec<_>>();
+        edges.sort_by(|left, right| self.compare_upward_quad_mids(*left, *right));
+        edges
+    }
+
+    fn compare_upward_quad_mids(&self, left: EdgeId, right: EdgeId) -> Ordering {
+        let left_edge = self.graph.edge(left);
+        let right_edge = self.graph.edge(right);
+        let left_from = left_edge.from.unwrap();
+        let left_to = left_edge.to.unwrap();
+        let right_from = right_edge.from.unwrap();
+        let right_to = right_edge.to.unwrap();
+        let left_to_radius = self.graph.node(left_to).data.distance_to_boundary;
+        let right_to_radius = self.graph.node(right_to).data.distance_to_boundary;
+        if left_to_radius == right_to_radius {
+            let left_flat = self.graph.node(left_from).data.distance_to_boundary == left_to_radius;
+            let right_flat =
+                self.graph.node(right_from).data.distance_to_boundary == right_to_radius;
+            match (left_flat, right_flat) {
+                (true, true) => {
+                    return self
+                        .distance_before_rise(left)
+                        .cmp(&self.distance_before_rise(right));
+                }
+                (true, false) => return Ordering::Less,
+                (false, true) => return Ordering::Greater,
+                (false, false) => {}
+            }
+        }
+        right_to_radius.cmp(&left_to_radius)
+    }
+
+    fn distance_before_rise(&self, edge: EdgeId) -> i64 {
+        let half_edge = self.graph.edge(edge);
+        let twin = half_edge.twin.unwrap();
+        let rise = self
+            .graph
+            .edge_dist_to_go_up(edge)
+            .into_iter()
+            .chain(self.graph.edge_dist_to_go_up(twin))
+            .min()
+            .unwrap_or(i64::MAX);
+        let from = half_edge.from.unwrap();
+        let to = half_edge.to.unwrap();
+        rise.saturating_sub(point_distance(
+            self.graph.node(from).point,
+            self.graph.node(to).point,
+        ))
     }
 }
 
