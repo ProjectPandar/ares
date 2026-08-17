@@ -7313,3 +7313,14 @@ for twice their boundary radius. Transitional interpolation, upward/downward
 propagation, junction generation and connection, local maxima, Arachne
 concentric internal fill, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.176: Arachne transitional beading interpolation
+
+O176 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1487-1499,1706-1725`. Nonzero transition
+ratios now blend lower- and higher-count strategy beadings using the source
+weight, preserving zero-width markers and the selected thicker result's
+unmatched entries, thickness, and leftover. Radius-aware unequal-count
+propagation interpolation, upward/downward propagation, junction generation and
+connection, local maxima, Arachne concentric internal fill, cooling, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
