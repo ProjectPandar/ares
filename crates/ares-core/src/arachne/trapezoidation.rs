@@ -42,6 +42,8 @@ pub(crate) struct SkeletalTrapezoidation<'a> {
     transition_storage: Vec<super::skeletal::Shared<super::skeletal::TransitionMiddle>>,
     transition_end_storage: Vec<super::skeletal::Shared<super::skeletal::TransitionEnd>>,
     beading_storage: Vec<std::rc::Rc<std::cell::RefCell<super::skeletal::BeadingPropagation>>>,
+    extrusion_junction_storage:
+        Vec<super::skeletal::Shared<super::extrusion_line::ExtrusionJunction>>,
 }
 
 impl<'a> SkeletalTrapezoidation<'a> {
@@ -59,6 +61,7 @@ impl<'a> SkeletalTrapezoidation<'a> {
             transition_storage: Vec::new(),
             transition_end_storage: Vec::new(),
             beading_storage: Vec::new(),
+            extrusion_junction_storage: Vec::new(),
         };
         result.construct_from_polygons(polygons)?;
         Ok(result)

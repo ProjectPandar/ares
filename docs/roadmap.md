@@ -7386,3 +7386,14 @@ propagates available lower sources upward, and sends final non-central peak
 beadings downward. Lazy source beading, junction generation and connection,
 local maxima, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.183: Arachne segment junction generation
+
+O183 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1727-1801`. Upward skeletal segments with
+changing bead counts now retain extrusion junctions selected from the peak
+beading's radius interval, with source integer placement, near-peak snapping,
+bead width, and perimeter index. Junction generation and tests live in child
+modules below 400 LOC. Lazy source beading, junction connection, local maxima,
+Arachne concentric internal fill, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.

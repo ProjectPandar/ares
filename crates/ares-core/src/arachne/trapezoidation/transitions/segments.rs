@@ -1,3 +1,5 @@
+mod junctions;
+
 use std::{cell::RefCell, cmp::Ordering, rc::Rc};
 
 use crate::arachne::{

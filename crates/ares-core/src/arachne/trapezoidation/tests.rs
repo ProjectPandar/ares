@@ -90,6 +90,7 @@ fn empty<'a>(
         transition_storage: Vec::new(),
         transition_end_storage: Vec::new(),
         beading_storage: Vec::new(),
+        extrusion_junction_storage: Vec::new(),
     }
 }
 
