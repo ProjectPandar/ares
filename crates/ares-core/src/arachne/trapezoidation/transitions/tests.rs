@@ -5,7 +5,9 @@ use crate::arachne::{
 };
 use crate::geometry::CoordinateScale;
 
-fn strategy(scale: CoordinateScale) -> Box<dyn crate::arachne::beading::base::BeadingStrategy> {
+pub(super) fn strategy(
+    scale: CoordinateScale,
+) -> Box<dyn crate::arachne::beading::base::BeadingStrategy> {
     let scaled = |value| scale.checked_scale(value).unwrap();
     make_strategy(BeadingStrategyFactoryConfig {
         preferred_bead_width_outer: scaled(0.42),
@@ -25,7 +27,7 @@ fn strategy(scale: CoordinateScale) -> Box<dyn crate::arachne::beading::base::Be
     })
 }
 
-fn config(scale: CoordinateScale) -> super::super::TrapezoidationConfig {
+pub(super) fn config(scale: CoordinateScale) -> super::super::TrapezoidationConfig {
     let scaled = |value| scale.checked_scale(value).unwrap();
     super::super::TrapezoidationConfig {
         transitioning_angle: 1.0,
@@ -37,7 +39,7 @@ fn config(scale: CoordinateScale) -> super::super::TrapezoidationConfig {
     }
 }
 
-fn central_chain(
+pub(super) fn central_chain(
     scale: CoordinateScale,
 ) -> (SkeletalGraph, EdgeId, [crate::arachne::skeletal::NodeId; 3]) {
     let unit = scale.checked_scale(1.0).unwrap();

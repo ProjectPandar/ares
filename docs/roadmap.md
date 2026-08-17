@@ -7250,3 +7250,15 @@ coordinates with the source bead-count payload. Recursive continuation across
 central junctions and `isGoingDown`, transition insertion into the graph, ribs,
 segments, Arachne concentric internal fill, cooling, timing, and remaining exact
 G-code differences remain later source-cited parity slices.
+
+## Task 22O.170: Arachne transition-end continuation
+
+O170 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1097-1161`. A transition half that exceeds
+its current central edge now continues across connected central edges with the
+remaining distance and interpolated transition rest, while traversed joints
+receive the source bead count and ratio. Transition-end tests now have a
+dedicated `transitions/ends/tests.rs` module before the parent test source
+exceeds 400 lines. Multi-branch `isGoingDown` rejection, transition insertion,
+ribs, segments, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.
