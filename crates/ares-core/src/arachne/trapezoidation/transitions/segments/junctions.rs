@@ -7,6 +7,12 @@ use crate::{
 
 use super::{super::SkeletalTrapezoidation, toolpaths::SegmentConditions};
 
+struct QuadJunctionSides {
+    from: Vec<ExtrusionJunction>,
+    to: Vec<ExtrusionJunction>,
+    quad_end: EdgeId,
+}
+
 impl SkeletalTrapezoidation<'_> {
     pub(super) fn generate_junctions(&mut self) {
         let edges = self.graph.active_edges().collect::<Vec<_>>();
@@ -57,25 +63,10 @@ impl SkeletalTrapezoidation<'_> {
         let edge_to_peak = self.get_quad_max_r_edge_to(quad_start);
         let peak = self.graph.edge(edge_to_peak).to.unwrap();
         assert_eq!(self.graph.node(peak).data.bead_count % 2, 0);
-        let edge_from_peak = self.graph.edge(edge_to_peak).next.unwrap();
-        let opposite_edge = self.graph.edge(edge_from_peak).twin.unwrap();
-        self.ensure_edge_junction_storage(edge_to_peak);
-        self.ensure_edge_junction_storage(opposite_edge);
-        let mut from_junctions = self.edge_junctions(edge_to_peak);
-        if let Some(previous) = self.graph.edge(edge_to_peak).prev {
-            from_junctions =
-                append_adjacent_junctions(from_junctions, self.edge_junctions(previous));
-            assert!(self.graph.edge(previous).prev.is_none());
-        }
-        let mut to_junctions = self.edge_junctions(opposite_edge);
-        if let Some(next) = self.graph.edge(edge_from_peak).next {
-            let adjacent = self.graph.edge(next).twin.unwrap();
-            to_junctions = append_adjacent_junctions(to_junctions, self.edge_junctions(adjacent));
-            assert!(self.graph.edge(next).next.is_none());
-        }
+        let sides = self.quad_junction_sides(quad_start);
         self.connect_junction_vectors(
-            &from_junctions,
-            &to_junctions,
+            &sides.from,
+            &sides.to,
             SegmentConditions {
                 is_odd: false,
                 force_new_path,
@@ -83,6 +74,68 @@ impl SkeletalTrapezoidation<'_> {
                 to_is_three_way: false,
             },
         );
+    }
+
+    pub(super) fn connect_quad_junctions(&mut self, quad_start: EdgeId, force_new_path: bool) {
+        let sides = self.quad_junction_sides(quad_start);
+        assert!(sides.from.len().abs_diff(sides.to.len()) <= 1);
+        let segment_count = sides.from.len().min(sides.to.len());
+        let from_node = self.graph.edge(quad_start).to.unwrap();
+        let to_node = self.graph.edge(sides.quad_end).from.unwrap();
+        let tolerance = self.config.coordinate_scale.checked_scale(0.005).unwrap();
+        for reverse_index in 0..segment_count {
+            let from = sides.from[sides.from.len() - 1 - reverse_index];
+            let to = sides.to[sides.to.len() - 1 - reverse_index];
+            assert_eq!(from.perimeter_index, to.perimeter_index);
+            let innermost = reverse_index == segment_count - 1;
+            let from_data = &self.graph.node(from_node).data;
+            let to_data = &self.graph.node(to_node).data;
+            let from_is_odd = from_data.bead_count > 0
+                && from_data.bead_count % 2 == 1
+                && from_data.transition_ratio == 0.0
+                && innermost
+                && point_is_near(from.point, self.graph.node(from_node).point, tolerance);
+            let to_is_odd = to_data.bead_count > 0
+                && to_data.bead_count % 2 == 1
+                && to_data.transition_ratio == 0.0
+                && innermost
+                && point_is_near(to.point, self.graph.node(to_node).point, tolerance);
+            self.add_toolpath_segment(
+                from,
+                to,
+                SegmentConditions {
+                    is_odd: from_is_odd && to_is_odd,
+                    force_new_path,
+                    from_is_three_way: from_is_odd
+                        && self.graph.node_is_multi_intersection(from_node),
+                    to_is_three_way: to_is_odd && self.graph.node_is_multi_intersection(to_node),
+                },
+            );
+        }
+    }
+
+    fn quad_junction_sides(&mut self, quad_start: EdgeId) -> QuadJunctionSides {
+        let edge_to_peak = self.get_quad_max_r_edge_to(quad_start);
+        let edge_from_peak = self.graph.edge(edge_to_peak).next.unwrap();
+        let opposite_edge = self.graph.edge(edge_from_peak).twin.unwrap();
+        self.ensure_edge_junction_storage(edge_to_peak);
+        self.ensure_edge_junction_storage(opposite_edge);
+        let mut from = self.edge_junctions(edge_to_peak);
+        if let Some(previous) = self.graph.edge(edge_to_peak).prev {
+            from = append_adjacent_junctions(from, self.edge_junctions(previous));
+            assert!(self.graph.edge(previous).prev.is_none());
+        }
+        let mut to = self.edge_junctions(opposite_edge);
+        if let Some(next) = self.graph.edge(edge_from_peak).next {
+            let adjacent = self.graph.edge(next).twin.unwrap();
+            to = append_adjacent_junctions(to, self.edge_junctions(adjacent));
+            assert!(self.graph.edge(next).next.is_none());
+        }
+        let mut quad_end = quad_start;
+        while let Some(next) = self.graph.edge(quad_end).next {
+            quad_end = next;
+        }
+        QuadJunctionSides { from, to, quad_end }
     }
 
     fn ensure_edge_junction_storage(&mut self, edge: EdgeId) {
@@ -206,6 +259,12 @@ fn interpolate_point(start: Point, end: Point, numerator: i64, denominator: i64)
         coordinate(start.x(), end.x()),
         coordinate(start.y(), end.y()),
     )
+}
+
+fn point_is_near(left: Point, right: Point, tolerance: i64) -> bool {
+    let dx = left.x() - right.x();
+    let dy = left.y() - right.y();
+    (dx as i128 * dx as i128 + dy as i128 * dy as i128) < tolerance as i128 * tolerance as i128
 }
 
 #[cfg(test)]

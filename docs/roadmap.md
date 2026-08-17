@@ -7450,3 +7450,14 @@ The same rule is available symmetrically after the peak. Domain traversal,
 odd-edge classification and deduplication, three-way breaks, local maxima,
 Arachne concentric internal fill, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.189: Arachne odd-quad classification
+
+O189 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:2028-2048`. General quad connection now
+classifies only the innermost near-node pair as an odd single-bead segment when
+both side nodes have positive odd counts and zero transition ratio, and marks
+multi-intersection endpoints as path breaks. Domain traversal, odd-edge
+deduplication across adjacent quads, local maxima, Arachne concentric internal
+fill, cooling, timing, and remaining exact G-code differences remain later
+source-cited parity slices.

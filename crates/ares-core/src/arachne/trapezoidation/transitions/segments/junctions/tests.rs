@@ -269,3 +269,62 @@ fn task22o188_concatenates_adjacent_outer_junctions_before_pairing() {
         vec![from_inner, to_inner]
     );
 }
+
+#[test]
+fn task22o189_classifies_peak_single_bead_segment_as_odd() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let mut graph = SkeletalGraph::default();
+    let left = graph.add_node(SkeletalJoint::default(), Point::new(0, 0));
+    let peak = graph.add_node(SkeletalJoint::default(), Point::new(50, 20));
+    let right = graph.add_node(SkeletalJoint::default(), Point::new(100, 0));
+    graph.node_mut(left).data.distance_to_boundary = 0;
+    graph.node_mut(peak).data.distance_to_boundary = 20;
+    graph.node_mut(peak).data.bead_count = 3;
+    graph.node_mut(right).data.distance_to_boundary = 0;
+    let incoming = graph.add_edge(SkeletalEdge::default());
+    let incoming_twin = graph.add_edge(SkeletalEdge::default());
+    let outgoing = graph.add_edge(SkeletalEdge::default());
+    let outgoing_twin = graph.add_edge(SkeletalEdge::default());
+    for (edge, from, to) in [
+        (incoming, left, peak),
+        (incoming_twin, peak, left),
+        (outgoing, peak, right),
+        (outgoing_twin, right, peak),
+    ] {
+        graph.edge_mut(edge).from = Some(from);
+        graph.edge_mut(edge).to = Some(to);
+    }
+    graph.connect_twins(incoming, incoming_twin);
+    graph.connect_twins(outgoing, outgoing_twin);
+    graph.edge_mut(incoming).next = Some(outgoing);
+    graph.edge_mut(outgoing).prev = Some(incoming);
+    let from = ExtrusionJunction::new(Point::new(50, 20), 100, 0);
+    let to = ExtrusionJunction::new(Point::new(50, 20), 101, 0);
+    let from_storage = Rc::new(RefCell::new(vec![from]));
+    let to_storage = Rc::new(RefCell::new(vec![to]));
+    graph
+        .edge_mut(incoming)
+        .data
+        .set_extrusion_junctions(&from_storage);
+    graph
+        .edge_mut(outgoing_twin)
+        .data
+        .set_extrusion_junctions(&to_storage);
+    let mut trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
+        extrusion_junction_storage: vec![from_storage, to_storage],
+        generated_toolpaths: Vec::new(),
+    };
+
+    trapezoidation.connect_quad_junctions(incoming, true);
+
+    assert!(trapezoidation.generated_toolpaths[0][0].is_odd);
+}
