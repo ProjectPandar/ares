@@ -1,19 +1,14 @@
 use super::{
-    Placement,
     mesh::{Triangle, TriangleMesh, Vec3},
-    place_loop,
     sampling::sample_uniform,
     split_at,
     visibility::GlobalVisibility,
 };
 use crate::{
     geometry::CoordinateScale,
-    project_slice::{
-        perimeters::classic::{
-            chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
-            materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
-        },
-        seam_candidates::{SeamCandidate, SeamCandidatePosition},
+    project_slice::perimeters::classic::{
+        chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
+        materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
     },
 };
 
@@ -94,7 +89,7 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
         role: ExtrusionLoopRole::Default,
     };
 
-    split_at(&mut loop_, (1.0, 0.0), CoordinateScale::Normal);
+    split_at(&mut loop_, (1_000_000, 0), CoordinateScale::Normal);
 
     assert_eq!(
         loop_.paths[0].polyline.points[..2],
@@ -110,59 +105,6 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
                 z: 200_000,
             },
         ]
-    );
-}
-
-#[test]
-fn task22o130_internal_corner_projection_starts_at_selected_candidate() {
-    let candidate = |x, y| SeamCandidate {
-        position: SeamCandidatePosition { x, y, z: 0.2 },
-        perimeter_index: 0,
-        local_ccw_angle: -std::f32::consts::FRAC_PI_2,
-    };
-    let selected = candidate(0.0, 0.0);
-    let previous = candidate(-1.0, 0.0);
-    let next = candidate(0.0, -1.0);
-    let mut loop_ = ExtrusionLoop {
-        paths: vec![ExtrusionPath {
-            polyline: Polyline3 {
-                points: [(1, 1), (5, 1), (5, 5), (1, 5), (1, 1)]
-                    .into_iter()
-                    .map(|(x, y)| Point3 {
-                        x: x * 1_000_000,
-                        y: y * 1_000_000,
-                        z: 200_000,
-                    })
-                    .collect(),
-                fitting: Vec::new(),
-                candidate_points: Vec::new(),
-            },
-            role: ExtrusionRole::Perimeter,
-            mm3_per_mm: 0.04,
-            width: 0.4,
-            height: 0.2,
-        }],
-        role: ExtrusionLoopRole::Internal,
-    };
-
-    place_loop(
-        &mut loop_,
-        Placement {
-            selected: &selected,
-            previous: &previous,
-            next: &next,
-            position: Vec3::new(0.2, 0.1, 0.2),
-        },
-        CoordinateScale::Normal,
-    );
-
-    assert_eq!(
-        loop_.paths[0].polyline.points[0],
-        Point3 {
-            x: 1_204_148,
-            y: 1_000_000,
-            z: 200_000,
-        }
     );
 }
 

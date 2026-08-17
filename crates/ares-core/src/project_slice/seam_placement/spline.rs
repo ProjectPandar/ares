@@ -79,67 +79,87 @@ fn cubic_kernel(mut value: f32) -> f32 {
     1.0 / 6.0 - 3.0 / 6.0 * value + 3.0 / 6.0 * square - square * value / 6.0
 }
 
+fn maximum_pivot(matrix: &[Vec<f32>], pivot: usize, parameter_count: usize) -> (usize, usize, f32) {
+    (pivot..parameter_count)
+        .flat_map(|column| {
+            matrix
+                .iter()
+                .enumerate()
+                .skip(pivot)
+                .map(move |(row, values)| (row, column, values[column].abs()))
+        })
+        .max_by(|left, right| left.2.total_cmp(&right.2))
+        .expect("a full-pivot coefficient exists")
+}
+
 fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
+    let row_count = matrix.len();
     let parameter_count = matrix[0].len();
-    let mut columns = (0..parameter_count)
-        .map(|column| matrix.iter().map(|row| row[column]).collect::<Vec<_>>())
-        .collect::<Vec<_>>();
+    let diagonal_count = row_count.min(parameter_count);
+    let mut coefficients = matrix.to_vec();
+    let mut projected = observed.to_vec();
     let mut permutation = (0..parameter_count).collect::<Vec<_>>();
-    let mut upper = vec![vec![0.0_f32; parameter_count]; parameter_count];
-    let mut projected = vec![0.0_f32; parameter_count];
-    for pivot in 0..parameter_count {
-        let best = (pivot..parameter_count)
-            .max_by(|&left, &right| {
-                squared_norm(&columns[left]).total_cmp(&squared_norm(&columns[right]))
-            })
-            .expect("a least-squares pivot exists");
-        columns.swap(pivot, best);
-        permutation.swap(pivot, best);
-        for row in upper.iter_mut().take(pivot) {
-            row.swap(pivot, best);
+
+    for pivot in 0..diagonal_count {
+        let maximum = maximum_pivot(&coefficients, pivot, parameter_count);
+        assert!(maximum.2 > f32::EPSILON);
+        coefficients.swap(pivot, maximum.0);
+        projected.swap(pivot, maximum.0);
+        if maximum.1 != pivot {
+            for row in &mut coefficients {
+                row.swap(pivot, maximum.1);
+            }
+            permutation.swap(pivot, maximum.1);
         }
-        let norm = squared_norm(&columns[pivot]).sqrt();
-        assert!(norm > f32::EPSILON);
-        upper[pivot][pivot] = norm;
-        for value in &mut columns[pivot] {
-            *value /= norm;
+
+        let norm = coefficients[pivot..]
+            .iter()
+            .map(|row| row[pivot] * row[pivot])
+            .sum::<f32>()
+            .sqrt();
+        let alpha = coefficients[pivot][pivot];
+        let beta = if alpha >= 0.0 { -norm } else { norm };
+        let tau = (beta - alpha) / beta;
+        let denominator = alpha - beta;
+        coefficients[pivot][pivot] = 1.0;
+        for row in &mut coefficients[pivot + 1..] {
+            row[pivot] /= denominator;
         }
-        projected[pivot] = dot(&columns[pivot], observed);
-        let upper_row = &mut upper[pivot];
-        for (column, coefficient_slot) in upper_row.iter_mut().enumerate().skip(pivot + 1) {
-            let (earlier, current_and_later) = columns.split_at_mut(column);
-            let basis = &earlier[pivot];
-            let current = &mut current_and_later[0];
-            let coefficient = dot(basis, current);
-            *coefficient_slot = coefficient;
-            for (value, &basis_value) in current.iter_mut().zip(basis) {
-                *value -= coefficient * basis_value;
+
+        for column in pivot + 1..parameter_count {
+            let projection = coefficients[pivot..]
+                .iter()
+                .map(|row| row[pivot] * row[column])
+                .sum::<f32>()
+                * tau;
+            for row in &mut coefficients[pivot..] {
+                row[column] -= row[pivot] * projection;
             }
         }
+        let rhs_projection = coefficients[pivot..]
+            .iter()
+            .zip(&projected[pivot..])
+            .map(|(row, value)| row[pivot] * value)
+            .sum::<f32>()
+            * tau;
+        for (row, value) in coefficients[pivot..].iter().zip(&mut projected[pivot..]) {
+            *value -= row[pivot] * rhs_projection;
+        }
+        coefficients[pivot][pivot] = beta;
     }
+
     let mut solution = vec![0.0_f32; parameter_count];
-    for row in (0..parameter_count).rev() {
+    for row in (0..diagonal_count).rev() {
         let remainder = (row + 1..parameter_count)
-            .map(|column| upper[row][column] * solution[column])
+            .map(|column| coefficients[row][column] * solution[column])
             .sum::<f32>();
-        solution[row] = (projected[row] - remainder) / upper[row][row];
+        solution[row] = (projected[row] - remainder) / coefficients[row][row];
     }
     let mut unpermuted = vec![0.0; parameter_count];
     for (column, source) in permutation.into_iter().enumerate() {
         unpermuted[source] = solution[column];
     }
     unpermuted
-}
-
-fn dot(left: &[f32], right: &[f32]) -> f32 {
-    left.iter()
-        .zip(right)
-        .map(|(left, right)| left * right)
-        .sum()
-}
-
-fn squared_norm(values: &[f32]) -> f32 {
-    dot(values, values)
 }
 
 #[cfg(test)]

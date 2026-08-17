@@ -183,6 +183,7 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
         .map(|offset| wipe_start + 1 + offset)
         .unwrap();
 
+    assert_eq!(lines[wipe_start - 2], "G1 X140.645 Y102.949 E.02375");
     assert_eq!(
         &lines[wipe_start + 1..wipe_start + 3],
         [
@@ -190,7 +191,7 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
             "G1 X140.353 Y103.632 E-.27626",
         ]
     );
-    assert!(lines[wipe_start + 3].starts_with("G1 X140.294 Y103.881 E-"));
+    assert_eq!(lines[wipe_start + 3], "G1 X140.294 Y103.881 E-.1025");
     assert_eq!(lines[wipe_end + 1], "G17");
     assert!(lines[wipe_end + 2].starts_with("G3 Z.6 I"));
     assert!(lines[wipe_end + 2].contains(" J"));

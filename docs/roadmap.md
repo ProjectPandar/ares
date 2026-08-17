@@ -7043,3 +7043,13 @@ keeps the best corner within the nearest flow-width feature. The second KSR
 transition now emits exact commands `G3 Z.6 I1.188 J-.264 P1  F60000` and
 `G1 X145.539 Y94.166 Z.6`. Object identifiers, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.151: Full-pivot aligned-seam precision
+
+O151 ports OrcaSlicer 2.4.2 `Geometry/Curves.hpp:61-175`,
+`GCode/SeamPlacer.cpp:1547-1628`, `Point.cpp:106-128`, and
+`Polyline.cpp:683-703`. Aligned seams now use full-pivot Householder fitting,
+scaled integer projection, and scaled seam-gap clipping, producing exact KSR
+commands `G1 X140.645 Y102.949 E.02375` and
+`G1 X140.294 Y103.881 E-.1025`. Object identifiers, cooling, timing, and
+remaining exact G-code differences remain later source-cited parity slices.

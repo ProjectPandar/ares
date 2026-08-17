@@ -210,45 +210,56 @@ fn angle_penalty(angle: f32) -> f32 {
 )]
 fn place_loop(loop_: &mut ExtrusionLoop, placement: Placement<'_>, scale: CoordinateScale) {
     let selected = placement.selected.position;
-    let mut seam = (
-        f64::from(placement.position.x),
-        f64::from(placement.position.y),
-    );
+    let mut seam = scale_position((placement.position.x, placement.position.y), scale);
     if loop_.paths[0].role == ExtrusionRole::Perimeter {
-        let projection = closest_projection(&loop_.paths, seam, scale);
-        let mut depth = projection.distance;
+        let mut projection = closest_projection(&loop_.paths, seam);
+        let mut depth = scale
+            .unscale(seam.0 - projection.x)
+            .hypot(scale.unscale(seam.1 - projection.y)) as f32;
         let angle = placement.selected.local_ccw_angle;
-        let displacement_squared = f64::from(placement.position.x - selected.x).mul_add(
-            f64::from(placement.position.x - selected.x),
-            f64::from(placement.position.y - selected.y)
-                * f64::from(placement.position.y - selected.y),
+        let displacement = (
+            placement.position.x - selected.x,
+            placement.position.y - selected.y,
+            placement.position.z - selected.z,
+        );
+        let displacement_squared = displacement.0.mul_add(
+            displacement.0,
+            displacement
+                .1
+                .mul_add(displacement.1, displacement.2 * displacement.2),
         );
         if displacement_squared < depth && angle < -f32::EPSILON {
             let previous = placement.previous.position;
             let next = placement.next.position;
-            let to_previous = normalized((
-                f64::from(selected.x - previous.x),
-                f64::from(selected.y - previous.y),
-            ));
-            let to_next = normalized((
-                f64::from(selected.x - next.x),
-                f64::from(selected.y - next.y),
-            ));
+            let to_previous = normalized((selected.x - previous.x, selected.y - previous.y));
+            let to_next = normalized((selected.x - next.x, selected.y - next.y));
             let direction = (
                 0.5 * (to_previous.0 + to_next.0),
                 0.5 * (to_previous.1 + to_next.1),
             );
-            depth = 1.4142 * depth / f64::from((angle * 0.5).cos());
-            seam.0 = f64::from(selected.x) + depth * direction.0;
-            seam.1 = f64::from(selected.y) + depth * direction.1;
+            depth = (1.4142 * f64::from(depth) / f64::from((angle * 0.5).cos())) as f32;
+            seam = scale_position(
+                (
+                    selected.x + depth * direction.0,
+                    selected.y + depth * direction.1,
+                ),
+                scale,
+            );
+            projection = closest_projection(&loop_.paths, seam);
         }
-        let projection = closest_projection(&loop_.paths, seam, scale);
-        seam = (scale.unscale(projection.x), scale.unscale(projection.y));
+        seam = (projection.x, projection.y);
     }
     split_at(loop_, seam, scale);
 }
 
-fn normalized(vector: (f64, f64)) -> (f64, f64) {
+fn scale_position(position: (f32, f32), scale: CoordinateScale) -> (i64, i64) {
+    (
+        (f64::from(position.0) / scale.factor()) as i64,
+        (f64::from(position.1) / scale.factor()) as i64,
+    )
+}
+
+fn normalized(vector: (f32, f32)) -> (f32, f32) {
     let length = vector.0.hypot(vector.1);
     (vector.0 / length, vector.1 / length)
 }
@@ -258,45 +269,61 @@ struct Projection {
     segment: usize,
     x: i64,
     y: i64,
-    distance: f64,
 }
 
-fn closest_projection(
-    paths: &[ExtrusionPath],
-    target: (f64, f64),
-    scale: CoordinateScale,
-) -> Projection {
-    let mut best = None::<Projection>;
+fn closest_projection(paths: &[ExtrusionPath], target: (i64, i64)) -> Projection {
+    let mut best = None::<(Projection, f64)>;
     for (path_index, path) in paths.iter().enumerate() {
         for (segment_index, segment) in path.polyline.points.windows(2).enumerate() {
-            let a = (scale.unscale(segment[0].x), scale.unscale(segment[0].y));
-            let b = (scale.unscale(segment[1].x), scale.unscale(segment[1].y));
-            let edge = (b.0 - a.0, b.1 - a.1);
-            let length_squared = edge.0.mul_add(edge.0, edge.1 * edge.1);
-            let ratio = if length_squared == 0.0 {
-                0.0
-            } else {
-                ((target.0 - a.0) * edge.0 + (target.1 - a.1) * edge.1) / length_squared
-            }
-            .clamp(0.0, 1.0);
-            let point = (a.0 + ratio * edge.0, a.1 + ratio * edge.1);
-            let distance = (target.0 - point.0).hypot(target.1 - point.1);
-            if best.as_ref().is_none_or(|best| distance < best.distance) {
-                best = Some(Projection {
-                    path: path_index,
-                    segment: segment_index,
-                    x: (point.0 / scale.factor()).round() as i64,
-                    y: (point.1 / scale.factor()).round() as i64,
+            let a = (segment[0].x, segment[0].y);
+            let b = (segment[1].x, segment[1].y);
+            let (x, y) = project_onto_segment(a, b, target);
+            let distance = squared_distance((x, y), target);
+            if best.as_ref().is_none_or(|(_, best)| distance < *best) {
+                best = Some((
+                    Projection {
+                        path: path_index,
+                        segment: segment_index,
+                        x,
+                        y,
+                    },
                     distance,
-                });
+                ));
             }
         }
     }
-    best.expect("an extrusion loop has a segment")
+    best.expect("an extrusion loop has a segment").0
 }
 
-fn split_at(loop_: &mut ExtrusionLoop, seam: (f64, f64), scale: CoordinateScale) {
-    let projection = closest_projection(&loop_.paths, seam, scale);
+fn project_onto_segment(a: (i64, i64), b: (i64, i64), target: (i64, i64)) -> (i64, i64) {
+    let lx = (b.0 - a.0) as f64;
+    let ly = (b.1 - a.1) as f64;
+    let denominator = lx.mul_add(lx, ly * ly);
+    if denominator == 0.0 {
+        return a;
+    }
+    let theta = (((b.0 - target.0) as f64) * lx + ((b.1 - target.1) as f64) * ly) / denominator;
+    if !(0.0..=1.0).contains(&theta) {
+        return if squared_distance(a, target) < squared_distance(b, target) {
+            a
+        } else {
+            b
+        };
+    }
+    (
+        (theta * a.0 as f64 + (1.0 - theta) * b.0 as f64) as i64,
+        (theta * a.1 as f64 + (1.0 - theta) * b.1 as f64) as i64,
+    )
+}
+
+fn squared_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
+    let dx = (left.0 - right.0) as f64;
+    let dy = (left.1 - right.1) as f64;
+    dx.mul_add(dx, dy * dy)
+}
+
+fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: CoordinateScale) {
+    let projection = closest_projection(&loop_.paths, seam);
     let mut paths = std::mem::take(&mut loop_.paths);
     let following = paths.split_off(projection.path + 1);
     let target = paths.pop().expect("projected path exists");

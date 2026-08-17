@@ -12,10 +12,15 @@ pub(super) fn emit(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
-    let mut local_points = points
+    let mut scaled_points = points.collect::<Vec<_>>();
+    clip::clip_end(
+        &mut scaled_points,
+        properties.end_clip / geometry.scale.factor(),
+    );
+    let mut local_points = scaled_points
+        .into_iter()
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
         .collect::<Vec<_>>();
-    clip::clip_end(&mut local_points, properties.end_clip);
     let mut fitting = properties.fitting.to_vec();
     if properties.end_clip > 0.0 {
         arc::clip_fitting_end(&mut local_points, &mut fitting);
