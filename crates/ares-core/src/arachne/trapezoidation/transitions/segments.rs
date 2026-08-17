@@ -1,4 +1,5 @@
 mod junctions;
+mod local_maxima;
 mod toolpaths;
 
 use std::{cell::RefCell, cmp::Ordering, rc::Rc};

@@ -7482,3 +7482,13 @@ the opposite central edge was already processed, while every connected segment
 records its current central edge. Local maxima, final segment-stage
 orchestration, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.192: Arachne local-maximum single beads
+
+O192 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:2056-2089`. A strict non-central local
+maximum with odd retained beading now emits an odd six-segment ring at the
+middle perimeter index, centered on the skeletal node with radius
+`middle_width / 8`. Final segment-stage orchestration, Arachne concentric
+internal fill, cooling, timing, and remaining exact G-code differences remain
+later source-cited parity slices.
