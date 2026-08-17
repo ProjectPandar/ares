@@ -7525,3 +7525,14 @@ transition options. Outline preprocessing, stitching, small-line removal,
 inner-contour separation, simplification, concentric-internal conversion,
 cooling, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.196: Arachne wall-line stitching
+
+O196 ports OrcaSlicer 2.4.2 `Arachne/WallToolPaths.cpp:573-669` and
+`Arachne/utils/PolylineStitcher.hpp:62-225`. Per-inset endpoint grids now
+select the shortest admissible continuation, preserve even-line direction,
+allow odd-line reversal, prevent odd/even joins, enforce the source closure
+threshold, reconnect near endpoints, and mark closed lines. Outline
+preprocessing, small-line removal, inner-contour separation, simplification,
+concentric-internal conversion, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.
