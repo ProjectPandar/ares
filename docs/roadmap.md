@@ -7366,3 +7366,13 @@ lower source, and constrain unequal-count interpolation at the switching radius.
 Downward edge dispatch, lazy source beading, junction generation and connection,
 local maxima, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.181: Arachne downward propagation dispatch
+
+O181 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1591-1612`. Ordered non-central upward
+edges now dispatch final peak beadings downward, reverse equal-radius edges when
+the known source is on the nominal lower side, and choose empty-lower copy or
+existing-lower merge. Lazy source beading, junction generation and connection,
+local maxima, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

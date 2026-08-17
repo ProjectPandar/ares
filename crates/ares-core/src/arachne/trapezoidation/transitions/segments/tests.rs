@@ -313,3 +313,35 @@ fn task22o180_merges_downward_and_upward_beading_sources() {
     assert_eq!(merged.dist_from_top_source, 0);
     assert!(!merged.is_upward_propagated_only);
 }
+
+#[test]
+fn task22o181_dispatches_noncentral_downward_propagation() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let mut graph = SkeletalGraph::default();
+    let edge = upward_quad_candidate(&mut graph, 0, 10, 20);
+    let twin = graph.edge(edge).twin.unwrap();
+    let from = graph.edge(edge).from.unwrap();
+    let to = graph.edge(edge).to.unwrap();
+    graph.edge_mut(edge).data.set_is_central(false);
+    graph.edge_mut(twin).data.set_is_central(false);
+    graph.node_mut(to).data.bead_count = 3;
+    let mut trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
+    };
+    trapezoidation.store_node_beadings();
+
+    trapezoidation.propagate_beadings_downward(&[edge]);
+
+    let lower_storage = trapezoidation.graph.node(from).data.beading().unwrap();
+    let lower = lower_storage.borrow();
+    assert_eq!(lower.dist_from_top_source, 100);
+    assert!(!lower.is_upward_propagated_only);
+}

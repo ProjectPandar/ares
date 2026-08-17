@@ -74,6 +74,34 @@ impl SkeletalTrapezoidation<'_> {
         }
     }
 
+    pub(super) fn propagate_beadings_downward(&mut self, upward_quad_mids: &[EdgeId]) {
+        for &edge in upward_quad_mids {
+            if self.graph.edge(edge).data.is_central() {
+                continue;
+            }
+            let half_edge = self.graph.edge(edge);
+            let from = half_edge.from.unwrap();
+            let to = half_edge.to.unwrap();
+            let edge_to_peak = if self.graph.node(from).data.distance_to_boundary
+                == self.graph.node(to).data.distance_to_boundary
+                && self.graph.node(from).data.has_beading()
+                && !self.graph.node(to).data.has_beading()
+            {
+                half_edge.twin.unwrap()
+            } else {
+                edge
+            };
+            let lower = self.graph.edge(edge_to_peak).from.unwrap();
+            let peak = self.graph.edge(edge_to_peak).to.unwrap();
+            assert!(self.graph.node(peak).data.has_beading());
+            if self.graph.node(lower).data.has_beading() {
+                self.merge_beading_downward(edge_to_peak);
+            } else {
+                self.propagate_beading_downward_to_empty_lower(edge_to_peak);
+            }
+        }
+    }
+
     pub(super) fn propagate_beading_downward_to_empty_lower(&mut self, edge: EdgeId) {
         let half_edge = self.graph.edge(edge);
         let from = half_edge.from.unwrap();
