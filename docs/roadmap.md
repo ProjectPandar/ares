@@ -7262,3 +7262,14 @@ dedicated `transitions/ends/tests.rs` module before the parent test source
 exceeds 400 lines. Multi-branch `isGoingDown` rejection, transition insertion,
 ribs, segments, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.171: Arachne transition-end branch direction
+
+O171 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1126-1154,1203-1259`. Increasing
+transition ends now count central continuations at a junction and skip branches
+classified as descending by boundary termination, bead-count state, nearby
+transition middles, bounded travel, and recursive all-branch descent. Transition
+insertion into the graph, ribs, segments, Arachne concentric internal fill,
+cooling, timing, and remaining exact G-code differences remain later
+source-cited parity slices.

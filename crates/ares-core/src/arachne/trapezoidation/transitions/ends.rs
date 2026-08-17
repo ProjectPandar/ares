@@ -8,9 +8,17 @@ use super::{SkeletalTrapezoidation, point_distance};
 struct TransitionEndSearch {
     start_position: i64,
     end_position: i64,
+    transition_half_length: i64,
     start_rest: f64,
     end_rest: f64,
     lower_bead_count: i32,
+}
+
+#[derive(Clone, Copy)]
+struct GoingDownSearch {
+    traveled_distance: i64,
+    maximum_distance: i64,
+    lower_bead_count: i64,
 }
 
 impl SkeletalTrapezoidation<'_> {
@@ -54,6 +62,7 @@ impl SkeletalTrapezoidation<'_> {
             TransitionEndSearch {
                 start_position: edge_length - middle.pos,
                 end_position: edge_length - middle.pos + lower_half_length,
+                transition_half_length: lower_half_length,
                 start_rest: anchor,
                 end_rest: 0.0,
                 lower_bead_count: middle.lower_bead_count,
@@ -66,6 +75,7 @@ impl SkeletalTrapezoidation<'_> {
             TransitionEndSearch {
                 start_position: middle.pos,
                 end_position: middle.pos + upper_half_length,
+                transition_half_length: upper_half_length,
                 start_rest: anchor,
                 end_rest: 1.0,
                 lower_bead_count: middle.lower_bead_count,
@@ -126,6 +136,8 @@ impl SkeletalTrapezoidation<'_> {
         assert!(rest >= search.start_rest.min(search.end_rest));
         assert!(rest <= search.start_rest.max(search.end_rest));
 
+        let central_edge_count = self.central_outgoing_edge_count(edge);
+        let going_up = search.end_rest > search.start_rest;
         let stop = self.graph.edge(edge).twin.unwrap();
         let mut next = self.graph.edge(edge).next;
         let mut is_only_going_down = true;
@@ -137,6 +149,20 @@ impl SkeletalTrapezoidation<'_> {
             let twin = self.graph.edge(outgoing).twin.unwrap();
             next = self.graph.edge(twin).next;
             if !self.graph.edge(outgoing).data.is_central() {
+                continue;
+            }
+            if central_edge_count > 1
+                && going_up
+                && self.is_going_down(
+                    outgoing,
+                    GoingDownSearch {
+                        traveled_distance: 0,
+                        maximum_distance: search.end_position - edge_length
+                            + search.transition_half_length,
+                        lower_bead_count: i64::from(search.lower_bead_count),
+                    },
+                )
+            {
                 continue;
             }
             is_only_going_down &= self.generate_transition_end(
@@ -156,6 +182,106 @@ impl SkeletalTrapezoidation<'_> {
             self.graph.node_mut(to).data.bead_count = i64::from(search.lower_bead_count);
         }
         is_only_going_down
+    }
+
+    fn central_outgoing_edge_count(&self, edge: EdgeId) -> usize {
+        let stop = self.graph.edge(edge).twin.unwrap();
+        let mut next = self.graph.edge(edge).next;
+        let mut count = 0;
+        while let Some(outgoing) = next {
+            if outgoing == stop {
+                break;
+            }
+            let twin = self.graph.edge(outgoing).twin.unwrap();
+            next = self.graph.edge(twin).next;
+            count += usize::from(self.graph.edge(outgoing).data.is_central());
+        }
+        count
+    }
+
+    fn is_going_down(&self, outgoing: EdgeId, search: GoingDownSearch) -> bool {
+        let from = self.graph.edge(outgoing).from.unwrap();
+        let to = self.graph.edge(outgoing).to.unwrap();
+        if self.graph.node(to).data.distance_to_boundary == 0 {
+            return true;
+        }
+        let is_upward = self.graph.node(to).data.distance_to_boundary
+            >= self.graph.node(from).data.distance_to_boundary;
+        let upward_edge = if is_upward {
+            outgoing
+        } else {
+            self.graph.edge(outgoing).twin.unwrap()
+        };
+        if self.graph.node(to).data.bead_count > search.lower_bead_count + 1 {
+            assert!(self.graph.edge(upward_edge).data.has_transitions(false));
+            return false;
+        }
+
+        let length = point_distance(self.graph.node(from).point, self.graph.node(to).point);
+        if self.has_nearby_down_transition(upward_edge, is_upward, length, search) {
+            return true;
+        }
+        if search.traveled_distance + length > search.maximum_distance {
+            return false;
+        }
+        let to_data = &self.graph.node(to).data;
+        if to_data.bead_count <= search.lower_bead_count
+            && !(to_data.bead_count == search.lower_bead_count && to_data.transition_ratio > 0.0)
+        {
+            return true;
+        }
+
+        let stop = self.graph.edge(outgoing).twin.unwrap();
+        let mut next = self.graph.edge(outgoing).next;
+        let mut is_only_going_down = true;
+        let mut has_recursed = false;
+        while let Some(edge) = next {
+            if edge == stop {
+                break;
+            }
+            let twin = self.graph.edge(edge).twin.unwrap();
+            next = self.graph.edge(twin).next;
+            if !self.graph.edge(edge).data.is_central() {
+                continue;
+            }
+            is_only_going_down &= self.is_going_down(
+                edge,
+                GoingDownSearch {
+                    traveled_distance: search.traveled_distance + length,
+                    ..search
+                },
+            );
+            has_recursed = true;
+        }
+        has_recursed && is_only_going_down
+    }
+
+    fn has_nearby_down_transition(
+        &self,
+        upward_edge: EdgeId,
+        is_upward: bool,
+        edge_length: i64,
+        search: GoingDownSearch,
+    ) -> bool {
+        let Some(storage) = self.graph.edge(upward_edge).data.transitions() else {
+            return false;
+        };
+        let transition_mids = storage.borrow();
+        let middle = if is_upward {
+            transition_mids.first()
+        } else {
+            transition_mids.last()
+        };
+        let Some(middle) = middle else {
+            return false;
+        };
+        let distance = if is_upward {
+            middle.pos
+        } else {
+            edge_length - middle.pos
+        };
+        i64::from(middle.lower_bead_count) == search.lower_bead_count
+            && distance + search.traveled_distance < search.maximum_distance
     }
 }
 
