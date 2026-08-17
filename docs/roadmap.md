@@ -7461,3 +7461,14 @@ multi-intersection endpoints as path breaks. Domain traversal, odd-edge
 deduplication across adjacent quads, local maxima, Arachne concentric internal
 fill, cooling, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.190: Arachne junction domain traversal
+
+O190 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1934-1967,2048-2053`. Junction connection
+now collects predecessor-free quad starts, walks each closed polygon domain via
+`next_unconnected`, processes every quad once, and forces a new toolpath only at
+the domain boundary. Traversal logic and tests live in child modules below 400
+LOC. Odd-edge deduplication across adjacent quads, local maxima, Arachne
+concentric internal fill, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.
