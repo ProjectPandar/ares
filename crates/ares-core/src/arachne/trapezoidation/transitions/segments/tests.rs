@@ -217,3 +217,43 @@ fn task22o178_propagates_lower_beading_to_unassigned_upper_node() {
     assert_eq!(upper.dist_from_top_source, 0);
     assert!(upper.is_upward_propagated_only);
 }
+
+#[test]
+fn task22o179_copies_peak_beading_to_empty_lower_node() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let mut graph = SkeletalGraph::default();
+    let edge = upward_quad_candidate(&mut graph, 0, 10, 20);
+    let from = graph.edge(edge).from.unwrap();
+    let to = graph.edge(edge).to.unwrap();
+    graph.node_mut(to).data.bead_count = 3;
+    let mut trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
+    };
+    trapezoidation.store_node_beadings();
+    let expected = trapezoidation
+        .graph
+        .node(to)
+        .data
+        .beading()
+        .unwrap()
+        .borrow()
+        .beading
+        .clone();
+
+    trapezoidation.propagate_beading_downward_to_empty_lower(edge);
+
+    let lower_storage = trapezoidation.graph.node(from).data.beading().unwrap();
+    let lower = lower_storage.borrow();
+    assert_eq!(lower.beading, expected);
+    assert_eq!(lower.dist_to_bottom_source, 0);
+    assert_eq!(lower.dist_from_top_source, 100);
+    assert!(!lower.is_upward_propagated_only);
+}

@@ -7345,3 +7345,13 @@ local or existing assignments. Downward propagation, radius-aware unequal-count
 interpolation, junction generation and connection, local maxima, Arachne
 concentric internal fill, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.179: Arachne downward beading copy
+
+O179 ports the empty-lower-node branch of OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1614-1636`. A final peak beading now copies
+down an upward edge into an empty lower node, accumulating distance from the top
+source and retaining the copied propagation. Upward/downward merge, lazy source
+beading, radius-aware unequal-count interpolation, junction generation and
+connection, local maxima, Arachne concentric internal fill, cooling, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
