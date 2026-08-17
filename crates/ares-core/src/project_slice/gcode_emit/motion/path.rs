@@ -15,10 +15,10 @@ pub(super) fn emit(
     let mut local_points = points
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
         .collect::<Vec<_>>();
+    clip::clip_end(&mut local_points, properties.end_clip);
     if state.options.enable_arc_fitting {
         arc::simplify_points(&mut local_points, state.options.arc_fitting_tolerance);
     }
-    clip::clip_end(&mut local_points, properties.end_clip);
     let (acceleration, configured_speed) = properties.kinematics(&state.options, state.layer_index);
     let original_speed = configured_speed.min(
         state.options.max_volumetric_speed

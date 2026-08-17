@@ -6967,3 +6967,12 @@ Aligned seam placement now identifies an inner wall from the extrusion path's
 inner-wall travel now matches `G1 X140.158 Y102.797 F60000` exactly. Loop-end
 clipping precision, cooling, timing, and remaining exact G-code differences
 remain later source-cited parity slices.
+
+## Task 22O.143: Seam-gap clip ordering
+
+O143 ports OrcaSlicer 2.4.2 `GCode.cpp:5793-5805`,
+`ExtrusionEntity.cpp:317-331`, and `Polyline.cpp:683-723`. Ares now clips each
+split loop's raw path by the option-resolved seam gap before arc fitting and
+simplification. The first KSR inner wall now ends at the exact source endpoint
+`G1 X140.174 Y102.761 E.02841`. Outer-wall split precision, cooling, timing,
+and remaining exact G-code differences remain later source-cited parity slices.

@@ -80,7 +80,7 @@ async fn ksr_project_motion_is_finite_and_uses_configured_first_layer_rates() {
 }
 
 #[tokio::test]
-async fn ksr_seam_gap_clips_the_first_closed_loop_endpoint() {
+async fn task22o143_ksr_seam_gap_clips_before_path_simplification() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -110,6 +110,7 @@ async fn ksr_seam_gap_clips_the_first_closed_loop_endpoint() {
         .map(|offset| feature + 1 + offset)
         .unwrap();
 
+    assert_eq!(lines[next_travel - 2], "G1 X140.174 Y102.761 E.02841");
     assert!(!lines[feature + 1..next_travel].iter().any(|line| {
         line.split_ascii_whitespace()
             .skip(1)
