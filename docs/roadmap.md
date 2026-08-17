@@ -6976,3 +6976,13 @@ split loop's raw path by the option-resolved seam gap before arc fitting and
 simplification. The first KSR inner wall now ends at the exact source endpoint
 `G1 X140.174 Y102.761 E.02841`. Outer-wall split precision, cooling, timing,
 and remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.144: Pre-seam arc-range simplification
+
+O144 ports OrcaSlicer 2.4.2 `LayerRegion.cpp:1055-1126`,
+`Polyline.cpp:152-157,732-738`, and `Circle.cpp:308-488`. Option-gated path
+simplification now runs before seam placement, and emission consumes retained
+fitted ranges without simplifying the split path again. The first KSR outer
+wall now retains `G1 X140.618 Y102.994 E.00049` exactly. Sparse-infill-specific
+tolerance, wipe traversal, timing, and remaining exact G-code differences remain
+later source-cited parity slices.

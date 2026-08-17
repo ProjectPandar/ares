@@ -1,6 +1,6 @@
 mod simplify;
 
-pub(super) use simplify::simplify_points;
+pub(in crate::project_slice) use simplify::simplify_points;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct Point {
@@ -16,6 +16,15 @@ pub(super) struct ArcSegment {
     pub(super) clockwise: bool,
 }
 
+#[derive(Clone, Copy)]
+struct ArcSlice {
+    center: Point,
+    radius: f64,
+    start_angle: f64,
+    end_angle: f64,
+    clockwise: bool,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum Segment {
     Line { end: Point, length: f64 },
@@ -23,7 +32,7 @@ pub(super) enum Segment {
 }
 
 pub(super) fn fit(points: &[Point], tolerance: f64) -> Vec<Segment> {
-    let (points, ranges) = simplify::fit_and_simplify(points, tolerance);
+    let ranges = simplify::fit_ranges(points, tolerance);
     let mut segments = Vec::with_capacity(points.len());
     for range in ranges {
         if let Some(arc) = range.arc {
@@ -66,7 +75,16 @@ fn try_arc(points: &[Point], tolerance: f64) -> Option<ArcSegment> {
         }
         clockwise = !clockwise;
     }
-    if !angles_are_monotonic(points, center, start_angle, angle, clockwise) {
+    if !points_within_arc(
+        points,
+        ArcSlice {
+            center,
+            radius,
+            start_angle,
+            end_angle,
+            clockwise,
+        },
+    ) {
         return None;
     }
     Some(ArcSegment {
@@ -82,9 +100,9 @@ fn fit_circle(points: &[Point], tolerance: f64) -> Option<(Point, f64)> {
     let middle = if points.len() == 3 {
         points[middle_index]
     } else if points.len().is_multiple_of(2) {
-        midpoint(points[middle_index], points[middle_index - 1])
+        scaled_midpoint(points[middle_index], points[middle_index - 1])
     } else {
-        midpoint(points[middle_index - 1], points[middle_index + 1])
+        scaled_midpoint(points[middle_index - 1], points[middle_index + 1])
     };
     if let Some(circle) = circle_from_three(points[0], middle, points[points.len() - 1])
         && deviation_sum(points, circle, tolerance).is_some()
@@ -92,7 +110,10 @@ fn fit_circle(points: &[Point], tolerance: f64) -> Option<(Point, f64)> {
         return Some(circle);
     }
     let mut best = None::<((Point, f64), f64)>;
-    for &candidate in &points[1..points.len() - 1] {
+    for (index, &candidate) in points[1..points.len() - 1].iter().enumerate() {
+        if index + 1 == middle_index {
+            continue;
+        }
         let Some(circle) = circle_from_three(points[0], candidate, points[points.len() - 1]) else {
             continue;
         };
@@ -107,9 +128,13 @@ fn fit_circle(points: &[Point], tolerance: f64) -> Option<(Point, f64)> {
 }
 
 fn circle_from_three(first: Point, middle: Point, last: Point) -> Option<(Point, f64)> {
+    const SCALE: f64 = 1_000_000.0;
+    let first = scaled_point(first);
+    let middle = scaled_point(middle);
+    let last = scaled_point(last);
     let area =
         (first.y - middle.y) * (first.x - last.x) - (first.y - last.y) * (first.x - middle.x);
-    if area.abs() <= 0.0001 {
+    if area.abs() <= 100_000_000.0 {
         return None;
     }
     let determinant = 2.0
@@ -119,18 +144,22 @@ fn circle_from_three(first: Point, middle: Point, last: Point) -> Option<(Point,
     let first_square = first.x * first.x + first.y * first.y;
     let middle_square = middle.x * middle.x + middle.y * middle.y;
     let last_square = last.x * last.x + last.y * last.y;
-    let center = Point {
-        x: (first_square * (middle.y - last.y)
-            + middle_square * (last.y - first.y)
-            + last_square * (first.y - middle.y))
-            / determinant,
-        y: (first_square * (last.x - middle.x)
-            + middle_square * (first.x - last.x)
-            + last_square * (middle.x - first.x))
-            / determinant,
-    };
-    let radius = distance(center, first);
-    (radius <= 2_000.0).then_some((center, radius))
+    let center_x = (first_square * (middle.y - last.y)
+        + middle_square * (last.y - first.y)
+        + last_square * (first.y - middle.y))
+        / determinant;
+    let center_y = (first_square * (last.x - middle.x)
+        + middle_square * (first.x - last.x)
+        + last_square * (middle.x - first.x))
+        / determinant;
+    let radius = (center_x - first.x).hypot(center_y - first.y) / SCALE;
+    (radius <= 2_000.0).then_some((
+        Point {
+            x: center_x.trunc() / SCALE,
+            y: center_y.trunc() / SCALE,
+        },
+        radius,
+    ))
 }
 
 fn deviation_sum(points: &[Point], circle: (Point, f64), tolerance: f64) -> Option<f64> {
@@ -148,12 +177,12 @@ fn deviation_sum(points: &[Point], circle: (Point, f64), tolerance: f64) -> Opti
         let dy = pair[1].y - pair[0].y;
         let denominator = dx * dx + dy * dy;
         let parameter = ((center.x - pair[0].x) * dx + (center.y - pair[0].y) * dy) / denominator;
-        if !(f64::EPSILON..1.0 - f64::EPSILON).contains(&parameter) {
+        if !((5.0e-6)..(1.0 - 5.0e-6)).contains(&parameter) {
             continue;
         }
         let closest = Point {
-            x: pair[0].x + parameter * dx,
-            y: pair[0].y + parameter * dy,
+            x: quantize(pair[0].x + parameter * dx),
+            y: quantize(pair[0].y + parameter * dy),
         };
         let deviation = (distance(center, closest) - radius).abs();
         if deviation > tolerance {
@@ -186,27 +215,110 @@ fn arc_direction(start: f64, middle: f64, end: f64) -> Option<(bool, f64)> {
     }
 }
 
-fn angles_are_monotonic(
-    points: &[Point],
-    center: Point,
-    start_angle: f64,
-    total_angle: f64,
-    clockwise: bool,
-) -> bool {
-    let mut previous = 0.0;
-    for point in &points[1..points.len() - 1] {
-        let angle = polar(center, *point);
-        let delta = if clockwise {
-            (start_angle - angle).rem_euclid(std::f64::consts::TAU)
+fn points_within_arc(points: &[Point], arc: ArcSlice) -> bool {
+    let mut previous = arc.start_angle;
+    let crosses_zero = if arc.clockwise {
+        arc.start_angle < arc.end_angle
+    } else {
+        arc.start_angle > arc.end_angle
+    };
+    let mut crossed_zero = false;
+    let start_direction = (
+        (points[0].x - arc.center.x) / arc.radius,
+        (points[0].y - arc.center.y) / arc.radius,
+    );
+    let end = points[points.len() - 1];
+    let end_direction = (
+        (end.x - arc.center.x) / arc.radius,
+        (end.y - arc.center.y) / arc.radius,
+    );
+    for index in 2..points.len() {
+        let angle = if index + 1 == points.len() {
+            arc.end_angle
         } else {
-            (angle - start_angle).rem_euclid(std::f64::consts::TAU)
+            polar(arc.center, points[index])
         };
-        if delta <= previous || delta >= total_angle {
+        if index + 1 < points.len() && !angle_within_arc(angle, arc, crosses_zero) {
             return false;
         }
-        previous = delta;
+        if !advance_polar(
+            previous,
+            angle,
+            arc.clockwise,
+            crosses_zero,
+            &mut crossed_zero,
+        ) {
+            return false;
+        }
+        if (index != 1
+            && ray_intersects_segment(
+                arc.center,
+                start_direction,
+                points[index - 1],
+                points[index],
+            ))
+            || (index + 1 != points.len()
+                && ray_intersects_segment(
+                    arc.center,
+                    end_direction,
+                    points[index - 1],
+                    points[index],
+                ))
+        {
+            return false;
+        }
+        previous = angle;
     }
+    crosses_zero == crossed_zero
+}
+
+fn angle_within_arc(angle: f64, arc: ArcSlice, crosses_zero: bool) -> bool {
+    if arc.clockwise {
+        if crosses_zero {
+            angle < arc.start_angle || angle > arc.end_angle
+        } else {
+            arc.start_angle > angle && angle > arc.end_angle
+        }
+    } else if crosses_zero {
+        angle > arc.start_angle || angle < arc.end_angle
+    } else {
+        arc.start_angle < angle && angle < arc.end_angle
+    }
+}
+
+fn advance_polar(
+    previous: f64,
+    angle: f64,
+    clockwise: bool,
+    crosses_zero: bool,
+    crossed_zero: &mut bool,
+) -> bool {
+    let wraps = if clockwise {
+        previous < angle
+    } else {
+        previous > angle
+    };
+    if !wraps {
+        return true;
+    }
+    if !crosses_zero || *crossed_zero {
+        return false;
+    }
+    *crossed_zero = true;
     true
+}
+
+fn ray_intersects_segment(origin: Point, direction: (f64, f64), a: Point, b: Point) -> bool {
+    let v1 = (origin.x - a.x, origin.y - a.y);
+    let v2 = (b.x - a.x, b.y - a.y);
+    let v3 = (-direction.1, direction.0);
+    let dot = v2.0 * v3.0 + v2.1 * v3.1;
+    if dot.abs() < 0.0001 {
+        return false;
+    }
+    let t1 = (v2.0 * v1.1 - v2.1 * v1.0) / dot;
+    let t2 = (v1.0 * v3.0 + v1.1 * v3.1) / dot;
+    t1 >= 0.0 && (0.0..=1.0).contains(&t2)
 }
 
 fn relative_difference(left: f64, right: f64) -> f64 {
@@ -219,11 +331,25 @@ fn polar(center: Point, point: Point) -> f64 {
         .rem_euclid(std::f64::consts::TAU)
 }
 
-fn midpoint(left: Point, right: Point) -> Point {
+fn scaled_point(point: Point) -> Point {
     Point {
-        x: (left.x + right.x) * 0.5,
-        y: (left.y + right.y) * 0.5,
+        x: (point.x * 1_000_000.0).round(),
+        y: (point.y * 1_000_000.0).round(),
     }
+}
+
+fn scaled_midpoint(left: Point, right: Point) -> Point {
+    const SCALE: f64 = 1_000_000.0;
+    let left = scaled_point(left);
+    let right = scaled_point(right);
+    Point {
+        x: ((left.x as i64 + right.x as i64) / 2) as f64 / SCALE,
+        y: ((left.y as i64 + right.y as i64) / 2) as f64 / SCALE,
+    }
+}
+
+fn quantize(value: f64) -> f64 {
+    (value * 1_000_000.0).trunc() / 1_000_000.0
 }
 
 fn distance(left: Point, right: Point) -> f64 {

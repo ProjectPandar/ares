@@ -10,6 +10,8 @@ mod path;
 mod tests;
 mod travel;
 
+pub(in crate::project_slice) use arc::simplify_points;
+
 use features::PathProperties;
 pub(in crate::project_slice::gcode_emit) use options::MotionOptions;
 #[cfg(test)]

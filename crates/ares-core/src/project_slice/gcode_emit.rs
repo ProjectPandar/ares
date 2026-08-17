@@ -18,6 +18,8 @@ mod timelapse;
 mod value;
 use crate::{GenerationMetadata, SliceError};
 
+pub(in crate::project_slice) use motion::simplify_points;
+
 pub(super) fn emit(
     prepared: &PreparedPostIslandPrintOrder,
     traversal: &PreparedPostClassicTraversal,

@@ -35,6 +35,7 @@ mod largest_contours;
 mod layers;
 mod looped_intersections;
 mod parameters;
+mod path_simplification;
 mod perimeters;
 mod planning;
 mod pre_closing_unions;
@@ -52,9 +53,13 @@ mod simplification;
 mod slice_ordering;
 mod slicing_mode_intersections;
 mod state;
+#[cfg(test)]
+mod test_consumers;
 mod top_empty_layers;
 mod volume_bounds;
 mod volume_regions;
+#[cfg(test)]
+use test_consumers::*;
 
 #[cfg(test)]
 mod task22g_oracle;
@@ -127,6 +132,7 @@ fn slice_project_sync(
     let filled = fill_entities::prepare(prepared)?;
     let islands = extrusion_islands::prepare(filled);
     let mut ordered = island_print_order::prepare(islands);
+    path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
     consume_post_island_print_order(ordered, metadata)
 }
@@ -149,121 +155,6 @@ fn consume_post_island_print_order(
     }?;
     island_print_order::dispose(prepared);
     Ok(output)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_horizontal_shell_propagation(
-    prepared: prepare_infill::horizontal_shell_propagation::PreparedPostHorizontalShellPropagation,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::horizontal_shell_propagation::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_horizontal_shell_promotion(
-    prepared: prepare_infill::horizontal_shell_promotion::PreparedPostHorizontalShellPromotion,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::horizontal_shell_promotion::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_vertical_shell_assignment(
-    prepared: prepare_infill::vertical_shell_assignment::PreparedPostVerticalShellAssignment,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::vertical_shell_assignment::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_vertical_shell_filtering(
-    prepared: prepare_infill::vertical_shell_filtering::PreparedPostVerticalShellFiltering,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::vertical_shell_filtering::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_vertical_shell_regularization(
-    prepared: prepare_infill::vertical_shell_regularization::PreparedPostVerticalShellRegularization,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::vertical_shell_regularization::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_vertical_shell_trim(
-    prepared: prepare_infill::vertical_shell_trimming::PreparedPostVerticalShellTrim,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::vertical_shell_trimming::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_vertical_shell_projection(
-    prepared: prepare_infill::vertical_shell_projection::PreparedPostVerticalShellProjection,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::vertical_shell_projection::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_vertical_shell_cache(
-    prepared: prepare_infill::vertical_shells::PreparedPostVerticalShellCache,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    prepare_infill::vertical_shells::dispose(prepared);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_layer_region_perimeters(
-    prepared: perimeters::layer_region::PreparedPostLayerRegionPerimeters,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    let perimeters::layer_region::PreparedPostLayerRegionPerimeters {
-        predecessor,
-        objects: layer_region_objects,
-    } = prepared;
-    for object in layer_region_objects {
-        incomplete_sink::consume_layer_region_perimeter_object(object);
-    }
-    consume_post_classic_traversal_context(predecessor, metadata)
-}
-
-#[cfg(test)]
-#[inline(never)]
-fn consume_post_classic_traversal_context(
-    predecessor: Box<perimeters::classic::PreparedPostClassicTraversal>,
-    metadata: GenerationMetadata,
-) -> Result<Vec<u8>, SliceError> {
-    incomplete_sink::consume_boxed_post_classic_traversal(predecessor);
-    let _ = metadata;
-    Err(SliceError::ProjectSlicingIncomplete)
 }
 
 struct PreparedPostClosing {

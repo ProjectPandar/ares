@@ -36,10 +36,7 @@ pub(super) fn fit_and_simplify(points: &[Point], tolerance: f64) -> (Vec<Point>,
     (simplified, simplified_ranges)
 }
 
-pub(in crate::project_slice::gcode_emit) fn simplify_points(
-    points: &mut Vec<(f64, f64)>,
-    tolerance: f64,
-) {
+pub(in crate::project_slice) fn simplify_points(points: &mut Vec<(f64, f64)>, tolerance: f64) {
     let converted = points
         .iter()
         .map(|&(x, y)| Point { x, y })
@@ -49,7 +46,7 @@ pub(in crate::project_slice::gcode_emit) fn simplify_points(
     points.extend(converted.into_iter().map(|point| (point.x, point.y)));
 }
 
-fn fit_ranges(points: &[Point], tolerance: f64) -> Vec<FittedRange> {
+pub(super) fn fit_ranges(points: &[Point], tolerance: f64) -> Vec<FittedRange> {
     if points.len() < 3 {
         return vec![FittedRange {
             start: 0,
