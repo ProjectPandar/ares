@@ -7273,3 +7273,13 @@ transition middles, bounded travel, and recursive all-branch descent. Transition
 insertion into the graph, ribs, segments, Arachne concentric internal fill,
 cooling, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.172: Arachne transition application
+
+O172 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1261-1334`. Transition ends are now
+normalized from twin coordinates, sorted along each central edge, snapped to a
+matching endpoint within 0.02 mm, or applied through sequential skeletal node
+insertion with the lower/upper bead count. Extra ribs, segment generation,
+beading propagation, Arachne concentric internal fill, cooling, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
