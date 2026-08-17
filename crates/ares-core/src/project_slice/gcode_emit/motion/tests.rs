@@ -84,3 +84,28 @@ async fn task22o135_overhang_overlap_bands_split_and_slow_wall_segments() {
     );
     assert_eq!(lines[following_inner + 2], "G1 F1980");
 }
+
+#[tokio::test]
+async fn task22o136_dynamic_segment_extrusion_uses_quantized_endpoints() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let overhang = lines
+        .iter()
+        .position(|line| *line == "; FEATURE: Overhang wall")
+        .unwrap();
+    let following_inner = lines[overhang + 1..]
+        .iter()
+        .position(|line| *line == "; FEATURE: Inner wall")
+        .map(|index| overhang + 1 + index)
+        .unwrap();
+
+    assert_eq!(lines[following_inner + 3], "G1 X116.989 Y81.637 E.06303");
+}

@@ -289,7 +289,7 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
             x: points[index].0,
             y: points[index].1,
         };
-        let length = (end.x - state.x).hypot(end.y - state.y);
+        let length = (end.x - points[index - 1].0).hypot(end.y - points[index - 1].1);
         emit_linear_segment(output, end, length, properties, state);
         emitted_path.push(end);
     }

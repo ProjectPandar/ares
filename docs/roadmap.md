@@ -6899,3 +6899,13 @@ emits variable linear speeds. The first KSR 50/33 mm/s boundary transition now
 matches exactly. Curled-line adjustment, perimeter source-geometry density,
 seam coordinates, cooling markers, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.136: Quantized dynamic-segment extrusion
+
+O136 ports OrcaSlicer 2.4.2 `GCode.cpp:7123-7155` endpoint ordering for
+variable-speed paths. Ares now calculates each dynamic segment's length from
+consecutive XYZF-quantized processed endpoints, preventing an adjacent path's
+unquantized emitter state from changing relative E. The first KSR post-overhang
+inner-wall endpoint now matches `E.06303`. Perimeter source-geometry density,
+seam coordinates, cooling markers, timing, and remaining exact G-code
+differences remain later source-cited parity slices.
