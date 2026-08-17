@@ -38,6 +38,7 @@ pub(super) struct EmitState {
     pub(super) retracted: bool,
     pub(super) wipe_path: Vec<arc::Point>,
     pub(super) lifted: bool,
+    pub(super) filament_used: f64,
 }
 #[derive(Clone, Copy)]
 pub(super) struct LayerGeometry<'a> {

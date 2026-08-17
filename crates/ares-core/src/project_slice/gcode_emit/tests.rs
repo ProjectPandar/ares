@@ -333,3 +333,20 @@ async fn task22o131_lifted_next_layer_travel_keeps_current_z() {
     assert!(!lines[second_label + 1].contains(" Z"));
     assert_eq!(lines[second_label + 2], "G1 Z.4");
 }
+
+#[tokio::test]
+async fn task22o162_project_emits_filament_statistics() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    let footer = output.rsplit_once("; EXECUTABLE_BLOCK_END\n").unwrap().1;
+    assert_eq!(
+        footer,
+        "\n; filament used [mm] = 12768.07, 0.00\n; filament used [cm3] = 30.71, 0.00\n; filament used [g] = 38.70, 0.00\n; filament cost = 0.97, 0.00\n"
+    );
+}

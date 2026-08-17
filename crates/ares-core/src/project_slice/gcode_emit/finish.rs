@@ -35,6 +35,39 @@ pub(super) fn append(
     Ok(())
 }
 
+pub(super) fn append_filament_stats(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    used_filament: f64,
+) {
+    let filament = &traversal.resolved.views.full.filament.gcode;
+    let mut used_mm = Vec::with_capacity(filament.filament_diameter.0.len());
+    let mut used_cm3 = Vec::with_capacity(filament.filament_diameter.0.len());
+    let mut used_g = Vec::with_capacity(filament.filament_diameter.0.len());
+    let mut costs = Vec::with_capacity(filament.filament_diameter.0.len());
+    for (index, diameter) in filament.filament_diameter.0.iter().enumerate() {
+        let length = if index == 0 { used_filament } else { 0.0 };
+        let volume = length * diameter.0.powi(2) * 0.25 * std::f64::consts::PI;
+        let density = filament.filament_density.0[index].0;
+        let cost = filament.filament_cost.0[index].0;
+        let weight = volume * density * 0.001;
+        used_mm.push(format!("{length:.2}"));
+        used_cm3.push(format!("{:.2}", volume * 0.001));
+        used_g.push(format!("{weight:.2}"));
+        costs.push(format!("{:.2}", weight * cost * 0.001));
+    }
+    output.extend_from_slice(
+        format!(
+            "; filament used [mm] = {}\n; filament used [cm3] = {}\n; filament used [g] = {}\n; filament cost = {}\n",
+            used_mm.join(", "),
+            used_cm3.join(", "),
+            used_g.join(", "),
+            costs.join(", "),
+        )
+        .as_bytes(),
+    );
+}
+
 fn append_template(
     output: &mut Vec<u8>,
     source: &str,

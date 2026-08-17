@@ -229,6 +229,7 @@ pub(super) fn emit(
                 let extrusion =
                     arc_segment.length * properties.mm3_per_mm * state.options.filament_flow_ratio
                         / state.options.filament_area;
+                state.filament_used += extrusion;
                 let command = if arc_segment.clockwise { "G2" } else { "G3" };
                 output.extend_from_slice(
                     format!(
@@ -259,6 +260,7 @@ fn emit_linear_segment(
 ) {
     let extrusion = length * properties.mm3_per_mm * state.options.filament_flow_ratio
         / state.options.filament_area;
+    state.filament_used += extrusion;
     output.extend_from_slice(
         format!(
             "G1 X{} Y{} E{}\n",

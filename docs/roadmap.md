@@ -7160,3 +7160,14 @@ The KSR first bottom-surface retract wipes back to `X104.446 Y94.771`, and its
 dependent spiral lift emits `I.097 J1.213`. Object identifiers, sub-micron
 extrusion differences, later path ordering, cooling, timing, and final
 statistics remain later source-cited parity slices.
+
+## Task 22O.162: Generated filament statistics
+
+O162 ports OrcaSlicer 2.4.2 `Extruder.cpp:30-49,124-145` and
+`GCode.cpp:2312-2368`. Raw line and fitted-arc deposition deltas now accumulate
+without retraction double counting, then the loaded filament diameter, density,
+and cost vectors produce the source-formatted length, volume, mass, and cost
+footer after `EXECUTABLE_BLOCK_END`. Exact reference material totals remain
+dependent on deferred geometry parity; object identifiers, sub-micron extrusion
+differences, later path ordering, cooling, and timing remain later source-cited
+parity slices.

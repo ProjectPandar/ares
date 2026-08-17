@@ -194,6 +194,7 @@ pub(super) fn emit(
     }
     finish::append(&mut output, traversal, max_layer_z)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
+    finish::append_filament_stats(&mut output, traversal, state.filament_used);
     Ok(output)
 }
 fn format_processor_float(value: f64) -> String {
