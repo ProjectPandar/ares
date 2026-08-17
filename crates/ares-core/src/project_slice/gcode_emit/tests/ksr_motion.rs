@@ -84,4 +84,13 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
         .position(|line| *line == "; FEATURE: Bottom surface")
         .unwrap();
     assert_eq!(lines[bottom_surface + 1], "; LINE_WIDTH: 0.500542");
+    assert_eq!(
+        &lines[bottom_surface + 91..bottom_surface + 95],
+        [
+            "G1 X139.407 Y83.135 E.02413",
+            "G1 X145.616 Y89.344 E.32744",
+            "G1 X145.54 Y89.438 E.00452",
+            "G1 X145.092 Y88.869 E.02702",
+        ]
+    );
 }

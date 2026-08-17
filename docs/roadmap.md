@@ -7126,3 +7126,15 @@ update. Processor line-width tags use the source six-significant-digit format,
 producing the KSR first bottom-surface `; LINE_WIDTH: 0.500542` marker.
 Extrusion precision, cooling, timing, and remaining exact G-code differences
 remain later source-cited parity slices.
+
+## Task 22O.159: Zero-initialized monotonic link limit
+
+O159 ports the executed initialization order in OrcaSlicer 2.4.2
+`Fill/FillBase.hpp:181-194`, `Fill/Fill.cpp:1234-1277,1334-1356`, and
+`Fill/FillRectilinear.cpp:1051-1052,1182-1193`. Normal project fill now retains
+the source-zero perimeter-link limit, so valid monotonic contour links are not
+reclassified `TooLong` before per-expolygon spacing is assigned. The KSR first
+bottom-surface path continues from `X139.407 Y83.135` through
+`X145.616 Y89.344` instead of extending to the outer offset and retracting.
+Ironing limits, extrusion precision, cooling, timing, and remaining exact
+G-code differences remain later source-cited parity slices.

@@ -31,11 +31,7 @@ pub(super) fn append(
         bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
         dont_adjust: false,
         anchor_length_max,
-        link_max_length: if !fill.params.bridge && fill.params.density > 80.0 {
-            3.0 * fill.params.spacing
-        } else {
-            0.0
-        },
+        link_max_length: 0.0,
     };
     for expolygon in fill.expolygons {
         let generated =
