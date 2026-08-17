@@ -7408,3 +7408,13 @@ three-way nodes, and incompatible lines start a new path. Assembly logic and
 tests live in child modules below 400 LOC. Quad traversal, junction connection,
 local maxima, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.185: Arachne paired junction connection
+
+O185 ports the paired-side core of OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:2012-2049`. Retained quad-side junctions
+now connect from their innermost shared perimeter outward, enforce matching
+perimeter indices, and dispatch each pair with the quad's assembly conditions.
+Quad/domain traversal, adjacent-edge concatenation, odd-edge deduplication,
+local maxima, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

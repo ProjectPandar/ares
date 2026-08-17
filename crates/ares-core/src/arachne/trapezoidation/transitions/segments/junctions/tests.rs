@@ -14,6 +14,8 @@ use super::super::super::{
     test_support::{config, strategy},
 };
 
+use super::super::toolpaths::SegmentConditions;
+
 #[test]
 fn task22o183_generates_segment_junction_with_width_and_perimeter_index() {
     let scale = CoordinateScale::Normal;
@@ -62,5 +64,57 @@ fn task22o183_generates_segment_junction_with_width_and_perimeter_index() {
             .unwrap()
             .borrow(),
         vec![ExtrusionJunction::new(Point::new(33_334, 0), 200, 1)]
+    );
+}
+
+#[test]
+fn task22o185_connects_paired_junctions_from_inner_to_outer() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let mut graph = SkeletalGraph::default();
+    let from_edge = graph.add_edge(SkeletalEdge::default());
+    let to_edge = graph.add_edge(SkeletalEdge::default());
+    let from_outer = ExtrusionJunction::new(Point::new(0, 0), 100, 0);
+    let from_inner = ExtrusionJunction::new(Point::new(0, 10), 80, 1);
+    let to_outer = ExtrusionJunction::new(Point::new(100, 0), 100, 0);
+    let to_inner = ExtrusionJunction::new(Point::new(100, 10), 80, 1);
+    let from_storage = Rc::new(RefCell::new(vec![from_outer, from_inner]));
+    let to_storage = Rc::new(RefCell::new(vec![to_outer, to_inner]));
+    graph
+        .edge_mut(from_edge)
+        .data
+        .set_extrusion_junctions(&from_storage);
+    graph
+        .edge_mut(to_edge)
+        .data
+        .set_extrusion_junctions(&to_storage);
+    let mut trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: Vec::new(),
+        transition_end_storage: Vec::new(),
+        beading_storage: Vec::new(),
+        extrusion_junction_storage: vec![from_storage, to_storage],
+        generated_toolpaths: Vec::new(),
+    };
+    let conditions = SegmentConditions {
+        is_odd: false,
+        force_new_path: false,
+        from_is_three_way: false,
+        to_is_three_way: false,
+    };
+
+    trapezoidation.connect_junction_pair(from_edge, to_edge, conditions);
+
+    assert_eq!(
+        trapezoidation.generated_toolpaths[0][0].junctions,
+        vec![from_outer, to_outer]
+    );
+    assert_eq!(
+        trapezoidation.generated_toolpaths[1][0].junctions,
+        vec![from_inner, to_inner]
     );
 }

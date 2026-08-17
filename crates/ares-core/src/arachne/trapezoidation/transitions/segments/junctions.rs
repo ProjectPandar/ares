@@ -1,8 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{arachne::extrusion_line::ExtrusionJunction, geometry::Point};
+use crate::{
+    arachne::{extrusion_line::ExtrusionJunction, skeletal::EdgeId},
+    geometry::Point,
+};
 
-use super::super::SkeletalTrapezoidation;
+use super::{super::SkeletalTrapezoidation, toolpaths::SegmentConditions};
 
 impl SkeletalTrapezoidation<'_> {
     pub(super) fn generate_junctions(&mut self) {
@@ -17,6 +20,38 @@ impl SkeletalTrapezoidation<'_> {
                 .data
                 .set_extrusion_junctions(&storage);
             self.extrusion_junction_storage.push(storage);
+        }
+    }
+
+    pub(super) fn connect_junction_pair(
+        &mut self,
+        from_edge: EdgeId,
+        to_edge: EdgeId,
+        conditions: SegmentConditions,
+    ) {
+        let from_junctions = self
+            .graph
+            .edge(from_edge)
+            .data
+            .extrusion_junctions()
+            .unwrap()
+            .borrow()
+            .clone();
+        let to_junctions = self
+            .graph
+            .edge(to_edge)
+            .data
+            .extrusion_junctions()
+            .unwrap()
+            .borrow()
+            .clone();
+        assert!(from_junctions.len().abs_diff(to_junctions.len()) <= 1);
+        let segment_count = from_junctions.len().min(to_junctions.len());
+        for reverse_index in 0..segment_count {
+            let from = from_junctions[from_junctions.len() - 1 - reverse_index];
+            let to = to_junctions[to_junctions.len() - 1 - reverse_index];
+            assert_eq!(from.perimeter_index, to.perimeter_index);
+            self.add_toolpath_segment(from, to, conditions);
         }
     }
 
