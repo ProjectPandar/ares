@@ -9,7 +9,7 @@ use crate::{
 
 use super::super::{
     SkeletalTrapezoidation,
-    tests::{config, strategy},
+    test_support::{config, strategy},
 };
 
 fn edge_pair(

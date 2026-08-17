@@ -4,7 +4,7 @@ use crate::{
     geometry::{CoordinateScale, Point},
 };
 
-use super::super::tests::{central_chain, config, strategy};
+use super::super::test_support::{central_chain, config, strategy};
 
 #[test]
 fn task22o170_continues_transition_end_onto_next_central_edge() {

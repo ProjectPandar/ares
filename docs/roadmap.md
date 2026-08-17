@@ -7283,3 +7283,13 @@ matching endpoint within 0.02 mm, or applied through sequential skeletal node
 insertion with the lower/upper bead count. Extra ribs, segment generation,
 beading propagation, Arachne concentric internal fill, cooling, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.173: Arachne transition test-support partition
+
+O173 partitions shared Arachne transition fixtures into the real Rust module
+`trapezoidation/transitions/test_support.rs`. Parent transition tests and the
+specialized endpoint and application test modules now share one strategy,
+configuration, and central-chain fixture interface. Test behavior is unchanged,
+all affected Rust sources remain below 400 lines, and no source-composition
+macros are used. Extra ribs and the remaining source-cited parity slices are
+unchanged.

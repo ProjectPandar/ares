@@ -2,6 +2,9 @@ mod apply;
 mod ends;
 mod filtering;
 
+#[cfg(test)]
+mod test_support;
+
 use std::{cell::RefCell, rc::Rc};
 
 use crate::geometry::Point;
