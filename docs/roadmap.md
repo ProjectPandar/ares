@@ -7093,3 +7093,14 @@ This removes G-code-resolution near-duplicate segments and produces the exact
 KSR single wipe move `G1 X135.839 Y100.618 E-.4`. Object identifiers, cooling,
 timing, spiral-lift geometry, and remaining exact G-code differences remain
 later source-cited parity slices.
+
+## Task 22O.156: Standard monotonic queue distribution
+
+O156 corrects the OrcaSlicer 2.4.2
+`Fill/FillRectilinear.cpp:2423-2429` ant-chain port. Bounded queue indices now
+use unbiased 64x64-to-128-bit multiply-and-reject mapping rather than modulo,
+including source-order engine consumption for singleton queues. The obsolete
+three-region exact-order assertion that pinned the old Ares sampler is replaced
+by repeatability, completeness, and precedence contracts. Region-cost
+precision, fill flow width, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.

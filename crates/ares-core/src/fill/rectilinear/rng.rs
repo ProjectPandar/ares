@@ -41,11 +41,12 @@ impl Mt19937_64 {
 
     pub(super) fn index(&mut self, upper_exclusive: usize) -> usize {
         let range = upper_exclusive as u64;
-        let limit = u64::MAX - u64::MAX % range;
         loop {
-            let value = self.next();
-            if value < limit {
-                return (value % range) as usize;
+            let product = u128::from(self.next()) * u128::from(range);
+            let low = product as u64;
+            let threshold = range.wrapping_neg() % range;
+            if low >= range || low >= threshold {
+                return (product >> 64) as usize;
             }
         }
     }

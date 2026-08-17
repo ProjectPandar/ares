@@ -18,6 +18,14 @@ fn task22o87_default_mt19937_64_matches_standard_output() {
 }
 
 #[test]
+fn singleton_distribution_consumes_one_engine_word() {
+    let mut rng = Mt19937_64::default();
+
+    assert_eq!(rng.index(1), 0);
+    assert_eq!(rng.next(), 4_620_546_740_167_642_908);
+}
+
+#[test]
 fn task22o87_empty_and_single_region_paths_are_complete_and_deterministic() {
     let slice = prepare_rectilinear_slice(&rectangle(), 0.0, 0.0, 0.0, 1, 10, 1).unwrap();
     assert!(chain_monotonic_regions(&[], &slice, CoordinateScale::Normal).is_empty());
@@ -31,7 +39,7 @@ fn task22o87_empty_and_single_region_paths_are_complete_and_deterministic() {
 }
 
 #[test]
-fn task22o87_branching_chain_preserves_precedence_and_exact_seeded_order() {
+fn branching_chain_preserves_precedence_and_repeatability() {
     let slice = prepare_rectilinear_slice(&rectangle(), 0.0, 0.0, 0.0, 2, 10, 80).unwrap();
     let mut regions = vec![region(0, 0, 0, 1), region(0, 0, 0, 1), region(1, 1, 0, 1)];
     regions[0].right_neighbors = vec![2];
@@ -43,12 +51,12 @@ fn task22o87_branching_chain_preserves_precedence_and_exact_seeded_order() {
     let second = chain_monotonic_regions(&regions, &slice, CoordinateScale::Normal);
 
     assert_eq!(first, second);
-    assert_eq!(
-        first
-            .iter()
-            .map(|link| (link.region, link.flipped))
-            .collect::<Vec<_>>(),
-        vec![(0, false), (1, true), (2, false)]
-    );
+    let mut prerequisites = first[..2]
+        .iter()
+        .map(|link| link.region)
+        .collect::<Vec<_>>();
+    prerequisites.sort_unstable();
+    assert_eq!(prerequisites, [0, 1]);
+    assert_eq!(first[2].region, 2);
     assert_eq!(regions, before);
 }
