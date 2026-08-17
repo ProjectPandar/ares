@@ -89,6 +89,7 @@ fn append_polygon(
     if polyline.is_valid() {
         output.push(FillExtrusionPath {
             polyline,
+            fitting: Vec::new(),
             role: attributes.role,
             mm3_per_mm: attributes.mm3_per_mm,
             width: attributes.width,

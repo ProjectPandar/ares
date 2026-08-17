@@ -56,7 +56,7 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                         .iter()
                         .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
                         .collect::<Vec<_>>();
-                    drop(gcode_emit::simplify_points(&mut points, tolerance));
+                    path.fitting = gcode_emit::simplify_points(&mut points, tolerance);
                     path.polyline = Polyline::new(
                         points
                             .into_iter()

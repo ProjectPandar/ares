@@ -131,7 +131,7 @@ pub(super) fn emit_layer(
                                         | crate::ExtrusionRole::OverhangPerimeter
                                 ),
                                 end_clip: 0.0,
-                                fitting: &[],
+                                fitting: &path.fitting,
                             },
                             geometry,
                             state,

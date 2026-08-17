@@ -63,6 +63,7 @@ fn collection(endpoints: &[(i64, i64)], no_sort: bool) -> FillExtrusionCollectio
             .iter()
             .map(|&(first, last)| FillExtrusionPath {
                 polyline: Polyline::new(vec![Point::new(first, 0), Point::new(last, 0)]),
+                fitting: Vec::new(),
                 role: ExtrusionRole::InternalInfill,
                 mm3_per_mm: 1.0,
                 width: 1.0,

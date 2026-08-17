@@ -93,4 +93,11 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
             "G1 X145.092 Y88.869 E.02702",
         ]
     );
+    assert_eq!(
+        lines
+            .iter()
+            .find(|line| line.contains("X105.847 Y89.053"))
+            .copied(),
+        Some("G2 X105.847 Y89.053 I1.094 J1.245 E.01717")
+    );
 }

@@ -7138,3 +7138,15 @@ bottom-surface path continues from `X139.407 Y83.135` through
 `X145.616 Y89.344` instead of extending to the outer offset and retracting.
 Ironing limits, extrusion precision, cooling, timing, and remaining exact
 G-code differences remain later source-cited parity slices.
+
+## Task 22O.160: Retained fill arc-fitting payload
+
+O160 ports OrcaSlicer 2.4.2 `LayerRegion.cpp:1074-1084`,
+`ExtrusionEntity.cpp:41-47`, `Polyline.cpp:152-156`,
+`ArcFitter.cpp:97-150`, and `GCode.cpp:6990-7109`. Fill paths now retain the
+fitting ranges produced before Douglas-Peucker simplification and pass them to
+G-code emission, including reversal-safe range indices and arc direction. The
+KSR first bottom-surface contour now emits
+`G2 X105.847 Y89.053 I1.094 J1.245 E.01717` rather than its straight chord.
+Sub-micron extrusion differences, clipping contour parity, cooling, timing,
+and remaining exact G-code differences remain later source-cited parity slices.

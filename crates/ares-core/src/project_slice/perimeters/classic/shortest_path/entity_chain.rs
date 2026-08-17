@@ -101,6 +101,16 @@ impl FillExtrusionPath {
     }
 
     fn reverse(&mut self) {
+        let last_index = self.polyline.points().len().saturating_sub(1);
+        for fitted in &mut self.fitting {
+            let start = fitted.start;
+            fitted.start = last_index - fitted.end;
+            fitted.end = last_index - start;
+            if let Some(arc) = &mut fitted.arc {
+                arc.clockwise = !arc.clockwise;
+            }
+        }
+        self.fitting.reverse();
         self.polyline.reverse();
     }
 }

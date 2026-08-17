@@ -34,6 +34,7 @@ pub(super) fn append(
                 .into_iter()
                 .map(|polyline| FillExtrusionPath {
                     polyline,
+                    fitting: Vec::new(),
                     role: fill.params.extrusion_role,
                     mm3_per_mm: fill.params.flow.mm3_per_mm,
                     width: fill.params.flow.width,
