@@ -12,7 +12,7 @@ use crate::arachne::{
 use super::{SkeletalTrapezoidation, point_distance};
 
 impl SkeletalTrapezoidation<'_> {
-    pub(super) fn generate_segments(&mut self) {
+    pub(in crate::arachne::trapezoidation) fn generate_segments(&mut self) {
         self.propagate_node_beadings();
         self.generate_junctions();
         self.connect_junctions();

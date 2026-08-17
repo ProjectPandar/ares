@@ -140,6 +140,24 @@ fn task22o101_rectangle_builds_stable_twinned_graph_at_both_scales() {
 }
 
 #[test]
+fn task22o194_rectangle_generates_nonempty_variable_width_toolpaths() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let size = scale.checked_scale(10.0).unwrap();
+    let trapezoidation =
+        SkeletalTrapezoidation::new(&[rectangle(size)], strategy.as_ref(), config(scale)).unwrap();
+
+    let toolpaths = trapezoidation.generate_toolpaths(false);
+
+    assert!(
+        toolpaths
+            .iter()
+            .flatten()
+            .any(|line| line.junctions.len() >= 2)
+    );
+}
+
+#[test]
 fn task22o101_hole_preserves_polygon_segment_site_topology() {
     let scale = CoordinateScale::LargeBed;
     let strategy = strategy(scale);

@@ -46,11 +46,11 @@ impl SkeletalTrapezoidation<'_> {
                 .ok_or(TrapezoidationError::InvalidTopology)?;
             self.graph.node_mut(first_node).data.distance_to_boundary = 0;
 
-            self.graph.make_rib(
+            previous = Some(self.graph.make_rib(
                 previous.ok_or(TrapezoidationError::InvalidTopology)?,
                 range.source_start,
                 range.source_end,
-            );
+            ));
 
             let mut edge = voronoi::next(&vd, range.edge_begin)?;
             while edge != range.edge_end {
@@ -70,11 +70,11 @@ impl SkeletalTrapezoidation<'_> {
                     &segments,
                 )?;
 
-                self.graph.make_rib(
+                previous = Some(self.graph.make_rib(
                     previous.ok_or(TrapezoidationError::InvalidTopology)?,
                     range.source_start,
                     range.source_end,
-                );
+                ));
                 edge = voronoi::next(&vd, edge)?;
             }
 
@@ -181,7 +181,7 @@ impl SkeletalTrapezoidation<'_> {
                     return Ok(());
                 };
                 twin = previous_twin;
-                self.graph.make_rib(edge, source_start, source_end);
+                *previous = Some(self.graph.make_rib(edge, source_start, source_end));
             }
         }
 
@@ -220,7 +220,7 @@ impl SkeletalTrapezoidation<'_> {
             *previous = Some(edge);
             v0 = v1;
             if !last {
-                self.graph.make_rib(edge, source_start, source_end);
+                *previous = Some(self.graph.make_rib(edge, source_start, source_end));
             }
         }
         self.vd_edge_to_he_edge.insert(vd_edge, previous.unwrap());

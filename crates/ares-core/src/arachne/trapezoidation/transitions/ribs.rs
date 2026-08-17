@@ -3,7 +3,7 @@ use crate::arachne::skeletal::EdgeId;
 use super::{SkeletalTrapezoidation, point_at_distance, point_distance};
 
 impl SkeletalTrapezoidation<'_> {
-    pub(super) fn generate_extra_ribs(&mut self) {
+    pub(in crate::arachne::trapezoidation) fn generate_extra_ribs(&mut self) {
         let snap_distance = self.config.coordinate_scale.checked_scale(0.02).unwrap();
         let edges = self.graph.active_edges().collect::<Vec<_>>();
         for edge in edges {

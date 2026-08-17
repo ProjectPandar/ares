@@ -7502,3 +7502,15 @@ domains, and generates local-maximum single beads in source order. Invocation
 from the full trapezoidation pipeline, Arachne concentric internal fill,
 cooling, timing, and remaining exact G-code differences remain later
 source-cited parity slices.
+
+## Task 22O.194: Arachne full toolpath orchestration
+
+O194 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:496-552,746-781`. Constructed
+trapezoidations can now be consumed through central filtering, bead-count,
+transition, rib, and segment stages into variable-width extrusion lines. The
+port also preserves the source `makeRib(edge_t *& prev_edge, ...)` cursor
+mutation at every builder callsite; omitting that mutation left detached rib
+roots outside valid quad chains. Consumption by Arachne wall/fill generation,
+concentric internal fill, cooling, timing, and remaining exact G-code
+differences remain later source-cited parity slices.

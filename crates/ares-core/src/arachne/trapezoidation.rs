@@ -68,6 +68,23 @@ impl<'a> SkeletalTrapezoidation<'a> {
         result.construct_from_polygons(polygons)?;
         Ok(result)
     }
+
+    pub(crate) fn generate_toolpaths(
+        mut self,
+        filter_outermost_central_edges: bool,
+    ) -> Vec<Vec<super::extrusion_line::ExtrusionLine>> {
+        self.update_is_central();
+        self.filter_central(self.config.coordinate_scale.checked_scale(0.02).unwrap());
+        if filter_outermost_central_edges {
+            self.filter_outer_central();
+        }
+        self.update_bead_count();
+        self.filter_noncentral_regions();
+        self.generate_transitioning_ribs();
+        self.generate_extra_ribs();
+        self.generate_segments();
+        self.generated_toolpaths
+    }
 }
 
 #[cfg(test)]

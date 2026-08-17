@@ -28,6 +28,27 @@ struct NearbyTransitionSearch {
 }
 
 impl SkeletalTrapezoidation<'_> {
+    pub(super) fn generate_transitioning_ribs(&mut self) {
+        self.generate_transition_mids();
+        for edge in self.graph.active_edges() {
+            let half_edge = self.graph.edge(edge);
+            let from = half_edge.from.unwrap();
+            let to = half_edge.to.unwrap();
+            if half_edge.data.is_central()
+                && self.graph.node(from).data.bead_count != self.graph.node(to).data.bead_count
+            {
+                let twin = half_edge.twin.unwrap();
+                assert!(
+                    half_edge.data.transitions().is_some()
+                        || self.graph.edge(twin).data.transitions().is_some()
+                );
+            }
+        }
+        self.filter_transition_mids();
+        self.generate_all_transition_ends();
+        self.apply_transitions();
+    }
+
     pub(super) fn generate_transition_mids(&mut self) {
         let edges = self.graph.active_edges().collect::<Vec<_>>();
         for edge in edges {
