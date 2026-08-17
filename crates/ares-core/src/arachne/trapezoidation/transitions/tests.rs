@@ -236,3 +236,58 @@ fn task22o165_replaces_only_matching_connected_central_region() {
     assert_eq!(trapezoidation.graph.node(nodes[3]).data.bead_count, 3);
     assert_eq!(trapezoidation.graph.node(nodes[4]).data.bead_count, 4);
 }
+
+#[test]
+fn task22o166_discovers_matching_transition_only_inside_distance_limit() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let (mut graph, source, nodes) = central_chain(scale);
+    let candidate = graph.edge(source).next.unwrap();
+    let radius = scale.checked_scale(0.3).unwrap();
+    graph.node_mut(nodes[1]).data.distance_to_boundary = radius;
+    graph.node_mut(nodes[2]).data.distance_to_boundary = scale.checked_scale(0.5).unwrap();
+    let position = scale.checked_scale(0.2).unwrap();
+    let storage = std::rc::Rc::new(std::cell::RefCell::new(vec![TransitionMiddle::new(
+        position, 1, radius,
+    )]));
+    graph.edge_mut(candidate).data.set_transitions(&storage);
+    let trapezoidation = SkeletalTrapezoidation {
+        graph,
+        beading_strategy: strategy.as_ref(),
+        config: config(scale),
+        vd_edge_to_he_edge: Default::default(),
+        vd_node_to_he_node: Default::default(),
+        transition_storage: vec![storage],
+    };
+    let origin = TransitionMiddle::new(0, 1, radius);
+
+    let nearby = trapezoidation.dissolve_nearby_transitions(
+        source,
+        0,
+        NearbyTransitionSearch {
+            origin,
+            maximum_distance: scale.checked_scale(2.0).unwrap(),
+            going_up: false,
+        },
+    );
+    assert_eq!(
+        nearby,
+        [TransitionMidRef {
+            edge: candidate,
+            index: 0
+        }]
+    );
+    assert!(
+        trapezoidation
+            .dissolve_nearby_transitions(
+                source,
+                0,
+                NearbyTransitionSearch {
+                    origin,
+                    maximum_distance: scale.checked_scale(0.1).unwrap(),
+                    going_up: false,
+                },
+            )
+            .is_empty()
+    );
+}

@@ -7205,3 +7205,15 @@ production code and test support independently below 400 lines. Nearby
 transition discovery, transition-middle orchestration, transition ends, ribs,
 segments, Arachne concentric internal fill, cooling, timing, and remaining exact
 G-code differences remain later source-cited parity slices.
+
+## Task 22O.166: Arachne nearby transition discovery
+
+O166 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:933-990`. Transition filtering can now
+discover same-count transition middles across every connected central branch,
+respect upward storage orientation, and reject partial results at the distance
+or line-width-deviation gates. Stable edge/index references retain the exact
+middles for the later erase phase. Transition-middle filtering orchestration,
+transition ends, ribs, segments, Arachne concentric internal fill, cooling,
+timing, and remaining exact G-code differences remain later source-cited parity
+slices.

@@ -25,10 +25,6 @@ pub(crate) struct TrapezoidationConfig {
         reason = "consumed by the deferred transition filtering stage"
     )]
     pub(crate) transition_filter_dist: i64,
-    #[expect(
-        dead_code,
-        reason = "consumed by the deferred transition filtering stage"
-    )]
     pub(crate) allowed_filter_deviation: i64,
     #[expect(
         dead_code,
