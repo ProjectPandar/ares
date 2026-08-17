@@ -84,7 +84,7 @@ fn wipe_moves(state: &EmitState) -> Vec<(arc::Point, f64)> {
         x: state.x,
         y: state.y,
     };
-    for &end in state.wipe_path.iter().rev().skip(1) {
+    for &end in state.wipe_path.iter().skip(1) {
         let length = distance(current, end);
         if length <= f64::EPSILON {
             current = end;

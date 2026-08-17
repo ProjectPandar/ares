@@ -6986,3 +6986,12 @@ fitted ranges without simplifying the split path again. The first KSR outer
 wall now retains `G1 X140.618 Y102.994 E.00049` exactly. Sparse-infill-specific
 tolerance, wipe traversal, timing, and remaining exact G-code differences remain
 later source-cited parity slices.
+
+## Task 22O.145: Forward stored-path wipe traversal
+
+O145 ports OrcaSlicer 2.4.2 `GCode.cpp:426-492,5978-5990`. Option-gated wipe
+motion now starts at the clipped extrusion endpoint and traverses the stored
+loop path forward from its second point. The first KSR wipe moves now reach
+`X140.618 Y102.994`, `X140.353 Y103.632`, and `X140.294 Y103.881` in source
+order. Integer endpoint precision, the next spiral-lift target, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
