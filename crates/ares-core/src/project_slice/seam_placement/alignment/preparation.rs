@@ -10,22 +10,26 @@ use crate::{
     },
 };
 
-use super::{LayerPlan, PerimeterChoice, context, is_better};
+use super::{LayerPlan, PerimeterChoice, context, is_better, is_not_much_worse};
 use crate::project_slice::seam_placement::{candidate_penalty, visibility};
 
 pub(in crate::project_slice::seam_placement) fn prepare(
-    layers: &[OrderedExtrusionLayer],
-    layer_zs: &[f32],
+    layers: (&[OrderedExtrusionLayer], &[f32]),
     traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
     nozzle_diameter: f32,
     visibility: &visibility::GlobalVisibility,
 ) -> Vec<LayerPlan> {
+    let (layers, layer_zs) = layers;
     let mut plans = layers
         .iter()
         .zip(layer_zs)
         .map(|(layer, &z)| prepare_layer(layer, z, traversal.scale, nozzle_diameter, visibility))
         .collect::<Vec<_>>();
-    context::populate(&mut plans);
+    context::populate(
+        &mut plans,
+        &embedding_layers(traversal, object_index, layers.len()),
+    );
     for plan in &mut plans {
         plan.choices = plan
             .candidates
@@ -37,8 +41,87 @@ pub(in crate::project_slice::seam_placement) fn prepare(
                 finalized: false,
             })
             .collect();
+        align_collection_choices(plan);
     }
     plans
+}
+
+fn align_collection_choices(plan: &mut LayerPlan) {
+    for collection_index in 0..plan.collection_perimeters.len() {
+        align_collection_choices_at(plan, collection_index);
+    }
+}
+
+fn align_collection_choices_at(plan: &mut LayerPlan, collection_index: usize) {
+    let mapping = &plan.collection_perimeters[collection_index];
+    let mut previous_perimeter = None;
+    for &perimeter_index in mapping {
+        if previous_perimeter == Some(perimeter_index) {
+            continue;
+        }
+        if let Some(previous_index) = previous_perimeter {
+            let previous = plan.candidates.points[plan.choices[previous_index].seam_index].position;
+            let selected = plan.choices[perimeter_index].seam_index;
+            plan.choices[perimeter_index].seam_index =
+                nearest_acceptable_candidate(plan, perimeter_index, selected, previous);
+        }
+        previous_perimeter = Some(perimeter_index);
+    }
+}
+
+fn nearest_acceptable_candidate(
+    plan: &LayerPlan,
+    perimeter_index: usize,
+    selected: usize,
+    previous: seam_candidates::SeamCandidatePosition,
+) -> usize {
+    let perimeter = &plan.candidates.perimeters[perimeter_index];
+    (perimeter.start_index..perimeter.end_index)
+        .filter(|&candidate| is_not_much_worse(plan, candidate, selected))
+        .min_by(|&left, &right| {
+            candidate_distance_squared(plan, left, previous)
+                .total_cmp(&candidate_distance_squared(plan, right, previous))
+        })
+        .expect("the selected seam candidate remains acceptable")
+}
+
+fn candidate_distance_squared(
+    plan: &LayerPlan,
+    candidate_index: usize,
+    target: seam_candidates::SeamCandidatePosition,
+) -> f32 {
+    let candidate = plan.candidates.points[candidate_index].position;
+    let x = candidate.x - target.x;
+    let y = candidate.y - target.y;
+    x.mul_add(x, y * y)
+}
+
+fn embedding_layers(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+    layer_count: usize,
+) -> Vec<bool> {
+    let object = &traversal.objects[object_index];
+    let input = &object
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let mut region_counts = vec![0_u16; layer_count];
+    for (input, perimeters) in input.records.iter().zip(&object.records) {
+        let (Some(input), Some(perimeters)) = (input, perimeters) else {
+            continue;
+        };
+        if perimeters
+            .surfaces
+            .iter()
+            .any(|surface| !surface.roots.is_empty())
+        {
+            region_counts[input.planned_layer_index] += 1;
+        }
+    }
+    region_counts.into_iter().map(|count| count > 1).collect()
 }
 
 fn prepare_layer(

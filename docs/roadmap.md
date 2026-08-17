@@ -6995,3 +6995,13 @@ loop path forward from its second point. The first KSR wipe moves now reach
 `X140.618 Y102.994`, `X140.353 Y103.632`, and `X140.294 Y103.881` in source
 order. Integer endpoint precision, the next spiral-lift target, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.146: Aligned collection seam target
+
+O146 ports OrcaSlicer 2.4.2 `GCode/SeamPlacer.cpp:1107-1166,1370-1393`,
+`KDTreeIndirect.hpp:280-324`, and `GCodeWriter.cpp:685-780`. Source-style point
+KD traversal, multi-region embedding context, and collection-local acceptable
+seam alignment now select the next KSR perimeter start at `X145.539 Y95.848`.
+The consuming travel also carries the deferred spiral-lift height `Z.6`.
+Fitted-arc grouping, cooling, timing, and remaining exact G-code differences
+remain later source-cited parity slices.

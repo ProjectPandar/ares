@@ -89,8 +89,13 @@ fn apply_objects(
                 Some(*print_z - 0.5 * height)
             })
             .collect::<Vec<_>>();
-        let mut plans =
-            alignment::prepare(layers, &layer_zs, traversal, nozzle_diameter, visibility);
+        let mut plans = alignment::prepare(
+            (layers, &layer_zs),
+            traversal,
+            object_index,
+            nozzle_diameter,
+            visibility,
+        );
         alignment::align(&mut plans);
         for (layer, plan) in layers.iter_mut().zip(&plans) {
             place_layer(layer, plan, traversal.scale);

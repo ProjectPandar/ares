@@ -89,15 +89,28 @@ pub(super) fn emit(
                 state,
             );
         }
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} F{}\n",
-                format_axis(first_x),
-                format_axis(first_y),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
+        if retract && state.lifted {
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{} Z{} F{}\n",
+                    format_axis(first_x),
+                    format_axis(first_y),
+                    format_extrusion(state.layer_z + state.options.z_hop),
+                    format_axis(state.travel_feedrate)
+                )
+                .as_bytes(),
+            );
+        } else {
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{} F{}\n",
+                    format_axis(first_x),
+                    format_axis(first_y),
+                    format_axis(state.travel_feedrate)
+                )
+                .as_bytes(),
+            );
+        }
         state.x = first_x;
         state.y = first_y;
         state.positioned = true;

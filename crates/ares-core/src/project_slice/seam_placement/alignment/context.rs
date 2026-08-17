@@ -1,8 +1,11 @@
 use super::LayerPlan;
 
-pub(super) fn populate(layers: &mut [LayerPlan]) {
+pub(super) fn populate(layers: &mut [LayerPlan], compute_embedding: &[bool]) {
+    assert_eq!(layers.len(), compute_embedding.len());
     for layer_index in 0..layers.len() {
-        populate_embedded_distance(&mut layers[layer_index]);
+        if compute_embedding[layer_index] {
+            populate_embedded_distance(&mut layers[layer_index]);
+        }
         if layer_index > 0 {
             let (previous, current) = layers.split_at_mut(layer_index);
             populate_overhang(&previous[layer_index - 1], &mut current[0]);
