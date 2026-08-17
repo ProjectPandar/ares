@@ -7228,3 +7228,14 @@ bead-count region is rewritten, and central-terminal half-length checks remove
 truncated transitions. Transition ends, ribs, segments, Arachne concentric
 internal fill, cooling, timing, and remaining exact G-code differences remain
 later source-cited parity slices.
+
+## Task 22O.168: Arachne transition module partition
+
+O168 partitions the Rust destination for OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:784-1058`. Transition-middle generation
+remains in `trapezoidation/transitions.rs`, while back/front filtering and its
+recursive helpers now live in `transitions/filtering.rs`. Transition production
+and test files remain below 400 lines using real Rust modules rather than source
+composition macros. Transition ends, ribs, segments, Arachne concentric internal
+fill, cooling, timing, and remaining exact G-code differences remain later
+source-cited parity slices.
