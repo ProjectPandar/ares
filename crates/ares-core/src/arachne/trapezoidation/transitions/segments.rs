@@ -96,6 +96,36 @@ impl SkeletalTrapezoidation<'_> {
         self.beading_storage.push(storage);
     }
 
+    pub(super) fn merge_beading_downward(&mut self, edge: EdgeId) {
+        let half_edge = self.graph.edge(edge);
+        let from = half_edge.from.unwrap();
+        let to = half_edge.to.unwrap();
+        let length = point_distance(self.graph.node(from).point, self.graph.node(to).point);
+        let top = self.graph.node(to).data.beading().unwrap().borrow().clone();
+        assert!(!top.is_upward_propagated_only);
+        let bottom_storage = self.graph.node(from).data.beading().unwrap();
+        let mut bottom = bottom_storage.borrow_mut();
+        let total_distance = top.dist_from_top_source + length + bottom.dist_to_bottom_source;
+        let transition_distance =
+            total_distance.min(self.config.beading_propagation_transition_dist);
+        let top_ratio =
+            f64::from(bottom.dist_to_bottom_source as f32 / transition_distance as f32).max(0.0);
+        if top_ratio >= 1.0 {
+            let distance_from_top = top.dist_from_top_source + length;
+            *bottom = top;
+            bottom.dist_from_top_source = distance_from_top;
+            return;
+        }
+        let merged = interpolate_beading_at_radius(
+            &top.beading,
+            top_ratio,
+            &bottom.beading,
+            self.graph.node(from).data.distance_to_boundary,
+        );
+        assert!(merged.total_thickness >= self.graph.node(from).data.distance_to_boundary * 2);
+        *bottom = BeadingPropagation::new(merged);
+    }
+
     fn compare_upward_quad_mids(&self, left: EdgeId, right: EdgeId) -> Ordering {
         let left_edge = self.graph.edge(left);
         let right_edge = self.graph.edge(right);
@@ -164,6 +194,32 @@ fn interpolate_beading(left: &Beading, left_ratio: f64, right: &Beading) -> Bead
             as i64;
     }
     result
+}
+
+fn interpolate_beading_at_radius(
+    left: &Beading,
+    left_ratio: f64,
+    right: &Beading,
+    switching_radius: i64,
+) -> Beading {
+    let result = interpolate_beading(left, left_ratio, right);
+    let Some(next_inset) = left
+        .toolpath_locations
+        .iter()
+        .rposition(|&location| switching_radius > location)
+    else {
+        return result;
+    };
+    if next_inset + 1 == left.toolpath_locations.len()
+        || result.toolpath_locations[next_inset] <= switching_radius
+    {
+        return result;
+    }
+    let adjusted_ratio = ((switching_radius - right.toolpath_locations[next_inset]) as f32
+        / (left.toolpath_locations[next_inset] - right.toolpath_locations[next_inset]) as f32
+        + 0.1)
+        .min(1.0);
+    interpolate_beading(left, f64::from(adjusted_ratio), right)
 }
 
 #[cfg(test)]

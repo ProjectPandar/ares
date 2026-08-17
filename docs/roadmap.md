@@ -7355,3 +7355,14 @@ source and retaining the copied propagation. Upward/downward merge, lazy source
 beading, radius-aware unequal-count interpolation, junction generation and
 connection, local maxima, Arachne concentric internal fill, cooling, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.180: Arachne downward beading merge
+
+O180 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1637-1703`. Downward propagation can now
+merge a final top source with an upward-only lower source over the configured
+transition distance, reset merged propagation state, replace a fully dominated
+lower source, and constrain unequal-count interpolation at the switching radius.
+Downward edge dispatch, lazy source beading, junction generation and connection,
+local maxima, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

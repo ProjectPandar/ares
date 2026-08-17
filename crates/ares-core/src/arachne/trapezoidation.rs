@@ -22,10 +22,6 @@ pub(crate) struct TrapezoidationConfig {
     pub(crate) discretization_step_size: i64,
     pub(crate) transition_filter_dist: i64,
     pub(crate) allowed_filter_deviation: i64,
-    #[expect(
-        dead_code,
-        reason = "consumed by the deferred beading propagation stage"
-    )]
     pub(crate) beading_propagation_transition_dist: i64,
     pub(crate) coordinate_scale: CoordinateScale,
 }
