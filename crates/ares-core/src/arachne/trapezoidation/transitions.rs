@@ -1,6 +1,7 @@
 mod apply;
 mod ends;
 mod filtering;
+mod ribs;
 
 #[cfg(test)]
 mod test_support;
@@ -72,6 +73,19 @@ fn point_distance(left: Point, right: Point) -> i64 {
     let dx = (left.x() - right.x()) as f64;
     let dy = (left.y() - right.y()) as f64;
     (dx * dx + dy * dy).sqrt() as i64
+}
+
+fn point_at_distance(start: Point, finish: Point, distance: i64) -> Point {
+    let dx = finish.x() - start.x();
+    let dy = finish.y() - start.y();
+    let length = point_distance(start, finish);
+    if length < 1 {
+        return Point::new(start.x() + distance, start.y());
+    }
+    Point::new(
+        start.x() + (i128::from(dx) * i128::from(distance) / i128::from(length)) as i64,
+        start.y() + (i128::from(dy) * i128::from(distance) / i128::from(length)) as i64,
+    )
 }
 
 #[cfg(test)]

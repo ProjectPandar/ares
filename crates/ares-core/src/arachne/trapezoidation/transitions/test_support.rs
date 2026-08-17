@@ -75,3 +75,54 @@ pub(super) fn central_chain(scale: CoordinateScale) -> (SkeletalGraph, EdgeId, [
     graph.edge_mut(second).next = Some(second_twin);
     (graph, first, nodes)
 }
+
+pub(super) fn central_cell(
+    scale: CoordinateScale,
+) -> (SkeletalGraph, EdgeId, EdgeId, NodeId, NodeId) {
+    let scaled = |value| scale.checked_scale(value).unwrap();
+    let mut graph = SkeletalGraph::default();
+    let lower_left = graph.add_node(SkeletalJoint::default(), Point::new(0, 0));
+    let lower_right = graph.add_node(SkeletalJoint::default(), Point::new(scaled(1.0), 0));
+    let upper_left = graph.add_node(SkeletalJoint::default(), Point::new(0, scaled(1.0)));
+    let upper_right = graph.add_node(
+        SkeletalJoint::default(),
+        Point::new(scaled(1.0), scaled(1.0)),
+    );
+    let from = graph.add_node(SkeletalJoint::default(), Point::new(0, scaled(0.5)));
+    let to = graph.add_node(
+        SkeletalJoint::default(),
+        Point::new(scaled(1.0), scaled(0.5)),
+    );
+    let (edge, twin) = edge_pair(&mut graph, from, to, true);
+    let (lower_in, _) = edge_pair(&mut graph, lower_left, from, false);
+    let (lower_out, _) = edge_pair(&mut graph, to, lower_right, false);
+    let (upper_in, _) = edge_pair(&mut graph, upper_right, to, false);
+    let (upper_out, _) = edge_pair(&mut graph, from, upper_left, false);
+    graph.edge_mut(lower_in).next = Some(edge);
+    graph.edge_mut(edge).prev = Some(lower_in);
+    graph.edge_mut(edge).next = Some(lower_out);
+    graph.edge_mut(lower_out).prev = Some(edge);
+    graph.edge_mut(upper_in).next = Some(twin);
+    graph.edge_mut(twin).prev = Some(upper_in);
+    graph.edge_mut(twin).next = Some(upper_out);
+    graph.edge_mut(upper_out).prev = Some(twin);
+    (graph, edge, twin, from, to)
+}
+
+fn edge_pair(
+    graph: &mut SkeletalGraph,
+    from: NodeId,
+    to: NodeId,
+    central: bool,
+) -> (EdgeId, EdgeId) {
+    let edge = graph.add_edge(SkeletalEdge::default());
+    let twin = graph.add_edge(SkeletalEdge::default());
+    graph.edge_mut(edge).from = Some(from);
+    graph.edge_mut(edge).to = Some(to);
+    graph.edge_mut(twin).from = Some(to);
+    graph.edge_mut(twin).to = Some(from);
+    graph.edge_mut(edge).data.set_is_central(central);
+    graph.edge_mut(twin).data.set_is_central(central);
+    graph.connect_twins(edge, twin);
+    (edge, twin)
+}

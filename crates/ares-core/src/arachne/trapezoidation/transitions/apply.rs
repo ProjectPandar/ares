@@ -1,11 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{
-    arachne::skeletal::{EdgeId, TransitionEnd},
-    geometry::Point,
-};
+use crate::arachne::skeletal::{EdgeId, TransitionEnd};
 
-use super::{SkeletalTrapezoidation, point_distance};
+use super::{SkeletalTrapezoidation, point_at_distance, point_distance};
 
 impl SkeletalTrapezoidation<'_> {
     pub(super) fn apply_transitions(&mut self) {
@@ -91,19 +88,6 @@ impl SkeletalTrapezoidation<'_> {
         self.transition_end_storage.push(storage.clone());
         storage
     }
-}
-
-fn point_at_distance(start: Point, finish: Point, distance: i64) -> Point {
-    let dx = finish.x() - start.x();
-    let dy = finish.y() - start.y();
-    let length = point_distance(start, finish);
-    if length < 1 {
-        return Point::new(start.x() + distance, start.y());
-    }
-    Point::new(
-        start.x() + (i128::from(dx) * i128::from(distance) / i128::from(length)) as i64,
-        start.y() + (i128::from(dy) * i128::from(distance) / i128::from(length)) as i64,
-    )
 }
 
 #[cfg(test)]

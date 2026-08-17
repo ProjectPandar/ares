@@ -255,7 +255,7 @@ fn task22o99_ksr_style_factory_builds_the_exact_ordered_meta_strategy_stack() {
         strategy.compute(1_680_000, 4).bead_widths,
         vec![420_000, 420_000, 0, 420_000, 420_000]
     );
-    assert!(strategy.nonlinear_thicknesses(1).is_empty());
+    assert_eq!(strategy.nonlinear_thicknesses(1), vec![340_000]);
 
     let inset_strategy = make_strategy(BeadingStrategyFactoryConfig {
         outer_wall_offset: 10_000,
@@ -265,4 +265,5 @@ fn task22o99_ksr_style_factory_builds_the_exact_ordered_meta_strategy_stack() {
         inset_strategy.description(),
         "LimitedBeadingStrategy+OuterWallOfsetBeadingStrategy+Widening+RedistributeBeadingStrategy+DistributedBeadingStrategy"
     );
+    assert_eq!(inset_strategy.nonlinear_thicknesses(1), vec![340_000]);
 }

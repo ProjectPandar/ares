@@ -7293,3 +7293,13 @@ configuration, and central-chain fixture interface. Test behavior is unchanged,
 all affected Rust sources remain below 400 lines, and no source-composition
 macros are used. Extra ribs and the remaining source-cited parity slices are
 unchanged.
+
+## Task 22O.174: Arachne nonlinear extra ribs
+
+O174 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1357-1419`. Effective beading wrappers now
+preserve nonlinear thickness markers, and upward central edges insert strategy-
+derived radius crossings with source integer interpolation, 0.02 mm endpoint
+snapping, and the lower endpoint bead count. Segment generation, beading
+propagation, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.
