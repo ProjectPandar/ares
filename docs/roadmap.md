@@ -7376,3 +7376,13 @@ the known source is on the nominal lower side, and choose empty-lower copy or
 existing-lower merge. Lazy source beading, junction generation and connection,
 local maxima, Arachne concentric internal fill, cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.182: Arachne node-beading propagation stage
+
+O182 wires the beading preparation prefix of OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1430-1612`. One segment-stage call now
+collects and orders upward quad edges, retains local strategy beadings,
+propagates available lower sources upward, and sends final non-central peak
+beadings downward. Lazy source beading, junction generation and connection,
+local maxima, Arachne concentric internal fill, cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

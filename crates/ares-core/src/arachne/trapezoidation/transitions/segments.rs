@@ -8,6 +8,13 @@ use crate::arachne::{
 use super::{SkeletalTrapezoidation, point_distance};
 
 impl SkeletalTrapezoidation<'_> {
+    pub(super) fn propagate_node_beadings(&mut self) {
+        let upward_quad_mids = self.upward_quad_mids();
+        self.store_node_beadings();
+        self.propagate_beadings_upward(&upward_quad_mids);
+        self.propagate_beadings_downward(&upward_quad_mids);
+    }
+
     pub(super) fn store_node_beadings(&mut self) {
         let nodes = self.graph.active_nodes().collect::<Vec<_>>();
         for node in nodes {
