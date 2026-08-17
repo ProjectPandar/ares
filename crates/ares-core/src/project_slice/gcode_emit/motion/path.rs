@@ -1,7 +1,7 @@
 use super::{
     EmitState, LayerGeometry, arc, begin_object_travel, clip,
     features::PathProperties,
-    format::{axis as format_axis, extrusion as format_extrusion},
+    format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
     overhang, set_acceleration, travel,
 };
 
@@ -233,8 +233,8 @@ pub(super) fn emit(
                         "{command} X{} Y{} I{} J{} E{}\n",
                         format_axis(arc_segment.end.x),
                         format_axis(arc_segment.end.y),
-                        format_axis(arc_segment.center.x - state.x),
-                        format_axis(arc_segment.center.y - state.y),
+                        format_offset(arc_segment.center.x - state.x),
+                        format_offset(arc_segment.center.y - state.y),
                         format_extrusion(extrusion)
                     )
                     .as_bytes(),

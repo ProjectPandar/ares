@@ -7023,3 +7023,12 @@ splitting, inserted points, and seam-gap clipping. Emission consumes those
 ranges, producing the exact first KSR arc
 `G2 X145.766 Y96.281 I3.394 J-1.502 E.01821`. Arc-offset formatting, cooling,
 timing, and remaining exact G-code differences remain later source-cited slices.
+
+## Task 22O.149: Arc-offset number formatting
+
+O149 ports the I/J word formatting used by OrcaSlicer 2.4.2
+`GCode.cpp:7080-7110` and `GCodeG2G3Formatter`. Nonzero sub-unit arc offsets now
+omit their leading zero while exact zero remains valid, producing exact KSR
+command `G2 X155.758 Y90.456 I-6.194 J.091 E.09765`. Later perimeter geometry,
+cooling, timing, and remaining exact G-code differences remain source-cited
+parity slices.
