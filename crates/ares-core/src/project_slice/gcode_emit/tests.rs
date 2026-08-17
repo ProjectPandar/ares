@@ -214,6 +214,23 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
         .0;
     assert_eq!(lines[outer_wipe_end + 2], "G3 Z.6 I1.188 J-.264 P1  F60000");
     assert_eq!(lines[outer_wipe_end + 3], "G1 X145.539 Y94.166 Z.6");
+    let fitted_wipe_start = lines[outer_wipe_end + 1..]
+        .iter()
+        .position(|line| *line == "; WIPE_START")
+        .map(|offset| outer_wipe_end + 1 + offset)
+        .unwrap();
+    assert_eq!(
+        &lines[fitted_wipe_start + 1..fitted_wipe_start + 4],
+        [
+            "G1 X145.621 Y94.523 E-.1318",
+            "G1 X145.756 Y94.862 E-.14599",
+            "G1 X145.814 Y95.162 E-.12221",
+        ]
+    );
+    assert_eq!(
+        lines[fitted_wipe_start + 6],
+        "G3 Z.6 I-.612 J-1.052 P1  F60000"
+    );
 }
 
 #[tokio::test]

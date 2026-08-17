@@ -217,16 +217,10 @@ pub(super) fn emit(
             })
             .collect()
     };
-    let mut emitted_path = Vec::with_capacity(segments.len() + 1);
-    emitted_path.push(arc::Point {
-        x: first_x,
-        y: first_y,
-    });
     for segment in segments {
-        let end = match segment {
+        match segment {
             arc::Segment::Line { end, length } => {
                 emit_linear_segment(output, end, length, properties, state);
-                end
             }
             arc::Segment::Arc(arc_segment) => {
                 let extrusion =
@@ -246,12 +240,10 @@ pub(super) fn emit(
                 );
                 state.x = arc_segment.end.x;
                 state.y = arc_segment.end.y;
-                arc_segment.end
             }
-        };
-        emitted_path.push(end);
+        }
     }
-    state.wipe_path = emitted_path;
+    state.wipe_path = arc_points;
 }
 
 fn emit_linear_segment(

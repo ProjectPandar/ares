@@ -7053,3 +7053,13 @@ scaled integer projection, and scaled seam-gap clipping, producing exact KSR
 commands `G1 X140.645 Y102.949 E.02375` and
 `G1 X140.294 Y103.881 E-.1025`. Object identifiers, cooling, timing, and
 remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.152: Retained-polyline fitted-arc wipe
+
+O152 ports OrcaSlicer 2.4.2 `GCode.cpp:426-496,5978-5991`. Arc fitting now
+changes only emitted extrusion commands; the complete clipped source polyline
+remains the wipe path. The first-layer fitted outer wall therefore retracts
+through exact KSR points `X145.621 Y94.523`, `X145.756 Y94.862`, and
+`X145.814 Y95.162`, followed by exact spiral lift
+`G3 Z.6 I-.612 J-1.052 P1  F60000`. Object identifiers, cooling, timing, and
+remaining exact G-code differences remain later source-cited parity slices.
