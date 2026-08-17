@@ -26,9 +26,9 @@ pub(super) fn emit(
         };
         super::emit_materialized_path(output, path, end_clip, geometry, state);
         if emitted_loop_path.is_empty() {
-            emitted_loop_path.extend_from_slice(&state.wipe_path);
+            emitted_loop_path.extend(state.wipe_path.iter().rev().copied());
         } else {
-            emitted_loop_path.extend(state.wipe_path.iter().copied().skip(1));
+            emitted_loop_path.extend(state.wipe_path.iter().rev().copied().skip(1));
         }
     }
     state.wipe_path = emitted_loop_path;

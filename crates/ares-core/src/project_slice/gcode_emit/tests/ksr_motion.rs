@@ -100,4 +100,20 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
             .copied(),
         Some("G2 X105.847 Y89.053 I1.094 J1.245 E.01717")
     );
+    let bottom_wipe = lines
+        .iter()
+        .position(|line| *line == "G1 X105.153 Y95.478 E.44148")
+        .unwrap();
+    assert_eq!(
+        &lines[bottom_wipe + 1..bottom_wipe + 7],
+        [
+            "M204 S6000",
+            "G1 E-.11429 F1800",
+            "; WIPE_START",
+            "G1 F6300",
+            "G1 X104.446 Y94.771 E-.28571",
+            "; WIPE_END",
+        ]
+    );
+    assert_eq!(lines[bottom_wipe + 8], "G3 Z.6 I.097 J1.213 P1  F60000");
 }

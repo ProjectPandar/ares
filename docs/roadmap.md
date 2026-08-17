@@ -7150,3 +7150,13 @@ KSR first bottom-surface contour now emits
 `G2 X105.847 Y89.053 I1.094 J1.245 E.01717` rather than its straight chord.
 Sub-micron extrusion differences, clipping contour parity, cooling, timing,
 and remaining exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.161: Standalone extrusion wipe direction
+
+O161 ports OrcaSlicer 2.4.2 `GCode.cpp:426-499,5979-5991,6103-6125`.
+Standalone extrusion paths now retain their wipe payload in reverse emission
+order, while loop aggregation reconstructs the source forward loop payload.
+The KSR first bottom-surface retract wipes back to `X104.446 Y94.771`, and its
+dependent spiral lift emits `I.097 J1.213`. Object identifiers, sub-micron
+extrusion differences, later path ordering, cooling, timing, and final
+statistics remain later source-cited parity slices.

@@ -247,7 +247,7 @@ pub(super) fn emit(
             arc::Segment::Arc(_) => {}
         }
     }
-    state.wipe_path = arc_points;
+    state.wipe_path = arc_points.into_iter().rev().collect();
 }
 
 fn emit_linear_segment(
