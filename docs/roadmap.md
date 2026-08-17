@@ -7545,3 +7545,13 @@ minimum-width length threshold while retaining even, closed, and
 threshold-meeting lines. Inner-contour separation, simplification,
 concentric-internal conversion, cooling, timing, and remaining exact G-code
 differences remain later source-cited parity slices.
+
+## Task 22O.198: Arachne inner-contour separation
+
+O198 ports OrcaSlicer 2.4.2 `Arachne/WallToolPaths.cpp:728-777`.
+Zero-width inset groups are now removed from printable wall lines; closed even
+members become winding-independent inner contours through an even-odd Clipper
+union. The wall seam returns printable lines and the contour together.
+Toolpath simplification, concentric-internal extrusion conversion, cooling,
+timing, and remaining exact G-code differences remain later source-cited
+parity slices.

@@ -27,6 +27,12 @@ pub(crate) struct RawWallToolPathConfig {
     pub(crate) coordinate_scale: CoordinateScale,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct GeneratedWallToolPaths {
+    pub(crate) toolpaths: Vec<Vec<ExtrusionLine>>,
+    pub(crate) inner_contour: Vec<Polygon>,
+}
+
 pub(crate) fn generate_raw(
     prepared_outline: &[Polygon],
     config: RawWallToolPathConfig,
@@ -74,7 +80,7 @@ pub(crate) fn generate_raw(
 pub(crate) fn generate(
     prepared_outline: &[Polygon],
     config: RawWallToolPathConfig,
-) -> Result<Vec<Vec<ExtrusionLine>>, TrapezoidationError> {
+) -> Result<GeneratedWallToolPaths, TrapezoidationError> {
     let mut toolpaths = generate_raw(prepared_outline, config)?;
     stitch::stitch_toolpaths(
         &mut toolpaths,
@@ -86,7 +92,11 @@ pub(crate) fn generate(
         config.min_length_factor,
         config.is_top_or_bottom_layer,
     );
-    Ok(toolpaths)
+    let inner_contour = postprocess::separate_inner_contour(&mut toolpaths);
+    Ok(GeneratedWallToolPaths {
+        toolpaths,
+        inner_contour,
+    })
 }
 
 #[cfg(test)]
@@ -141,8 +151,22 @@ mod tests {
     fn task22o196_wall_toolpath_pipeline_stitches_closed_rectangle_lines() {
         let (outline, config) = fixture();
 
-        let toolpaths = generate(&[outline], config).unwrap();
+        let generated = generate(&[outline], config).unwrap();
 
-        assert!(toolpaths.iter().flatten().any(|line| line.is_closed));
+        assert!(
+            generated
+                .toolpaths
+                .iter()
+                .flatten()
+                .any(|line| line.is_closed)
+        );
+        assert!(
+            generated
+                .toolpaths
+                .iter()
+                .flatten()
+                .flat_map(|line| &line.junctions)
+                .all(|junction| junction.width > 0)
+        );
     }
 }

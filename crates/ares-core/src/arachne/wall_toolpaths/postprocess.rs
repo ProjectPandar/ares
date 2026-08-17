@@ -1,4 +1,7 @@
-use crate::{arachne::extrusion_line::ExtrusionLine, geometry::Point};
+use crate::{
+    arachne::extrusion_line::ExtrusionLine,
+    geometry::{Point, Polygon, union_even_odd_polygons_paths},
+};
 
 pub(super) fn remove_small_lines(
     toolpaths: &mut [Vec<ExtrusionLine>],
@@ -29,6 +32,34 @@ pub(super) fn remove_small_lines(
     }
 }
 
+pub(super) fn separate_inner_contour(toolpaths: &mut Vec<Vec<ExtrusionLine>>) -> Vec<Polygon> {
+    let mut actual_toolpaths = Vec::with_capacity(toolpaths.len());
+    let mut inner_contour = Vec::new();
+    for inset in std::mem::take(toolpaths) {
+        let Some(last_line) = inset.last() else {
+            continue;
+        };
+        let is_contour = last_line.junctions.first().unwrap().width == 0;
+        if is_contour {
+            debug_assert!(
+                inset
+                    .iter()
+                    .flat_map(|line| &line.junctions)
+                    .all(|junction| junction.width == 0)
+            );
+            inner_contour.extend(
+                inset
+                    .iter()
+                    .filter(|line| !line.is_odd && line.is_closed)
+                    .map(ExtrusionLine::to_polygon),
+            );
+        } else {
+            actual_toolpaths.push(inset);
+        }
+    }
+    *toolpaths = actual_toolpaths;
+    union_even_odd_polygons_paths(&inner_contour).unwrap()
+}
 fn shorter_than(line: &ExtrusionLine, threshold: i64) -> bool {
     let mut previous = line.junctions.last().unwrap().point;
     let mut length = 0;
@@ -55,7 +86,7 @@ mod tests {
         geometry::Point,
     };
 
-    use super::remove_small_lines;
+    use super::{remove_small_lines, separate_inner_contour};
 
     fn odd_line(length: i64) -> ExtrusionLine {
         let mut line = ExtrusionLine::new(0, true);
@@ -71,5 +102,31 @@ mod tests {
         remove_small_lines(&mut toolpaths, 0.5, false);
 
         assert_eq!(toolpaths[0], vec![odd_line(30)]);
+    }
+
+    #[test]
+    fn task22o198_separates_closed_even_zero_width_inner_contour() {
+        let mut contour = ExtrusionLine::new(1, false);
+        contour.is_closed = true;
+        for point in [
+            Point::new(0, 0),
+            Point::new(100, 0),
+            Point::new(100, 100),
+            Point::new(0, 100),
+        ] {
+            contour.push(ExtrusionJunction::new(point, 0, 1));
+        }
+        let mut ignored_odd = odd_line(20);
+        for junction in &mut ignored_odd.junctions {
+            junction.width = 0;
+        }
+        let printable = odd_line(30);
+        let mut toolpaths = vec![vec![contour], vec![ignored_odd], vec![printable.clone()]];
+
+        let inner_contour = separate_inner_contour(&mut toolpaths);
+
+        assert_eq!(toolpaths, vec![vec![printable]]);
+        assert_eq!(inner_contour.len(), 1);
+        assert_eq!(inner_contour[0].points().len(), 4);
     }
 }

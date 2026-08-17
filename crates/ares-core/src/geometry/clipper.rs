@@ -37,8 +37,8 @@ pub(crate) use boolean_ex::{
 pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;
 pub(crate) use boolean_paths::{
     difference_polygons_paths, intersection_polygons_paths,
-    intersection_polygons_paths_with_safety_offset, union_polygons_paths,
-    union_safety_offset_polygons,
+    intersection_polygons_paths_with_safety_offset, union_even_odd_polygons_paths,
+    union_polygons_paths, union_safety_offset_polygons,
 };
 #[cfg(test)]
 pub(crate) use bounds::{IntBounds, negative_outer};
