@@ -7620,3 +7620,14 @@ internal-solid moves fall from O201's 257,394 to 14,523 versus the reference
 35,007, and total output falls to 184,339 lines versus 269,330. Remaining
 geometry/entity differences, cooling, timing, and exact G-code parity remain
 later source-cited slices.
+
+## Task 22O.205: source circle-fit arithmetic
+
+O205 ports literal expression order from OrcaSlicer 2.4.2
+`libslic3r/Circle.cpp:16-55`. Three-point fitting now evaluates source `a`,
+`b`, `c`, and center divisions instead of algebraically rearranged determinants;
+the high-coordinate micron counterexample and fixture `I-3.393` arc now match.
+After timing/object metadata and E normalization, the first structural
+difference advances to bottom-surface collection traversal. Exact E arithmetic,
+collection ordering, infill counts, cooling, timing, and remaining G-code
+differences remain later source-cited slices.

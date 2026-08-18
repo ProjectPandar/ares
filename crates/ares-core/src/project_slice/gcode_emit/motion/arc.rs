@@ -139,21 +139,22 @@ fn circle_from_three(first: Point, middle: Point, last: Point) -> Option<(Point,
     if area.abs() <= 100_000_000.0 {
         return None;
     }
-    let determinant = 2.0
-        * (first.x * (middle.y - last.y)
-            + middle.x * (last.y - first.y)
-            + last.x * (first.y - middle.y));
+    let a = first.x * (middle.y - last.y) - first.y * (middle.x - last.x) + middle.x * last.y
+        - last.x * middle.y;
+    if a.abs() < 1.0 {
+        return None;
+    }
     let first_square = first.x * first.x + first.y * first.y;
     let middle_square = middle.x * middle.x + middle.y * middle.y;
     let last_square = last.x * last.x + last.y * last.y;
-    let center_x = (first_square * (middle.y - last.y)
-        + middle_square * (last.y - first.y)
-        + last_square * (first.y - middle.y))
-        / determinant;
-    let center_y = (first_square * (last.x - middle.x)
-        + middle_square * (first.x - last.x)
-        + last_square * (middle.x - first.x))
-        / determinant;
+    let b = first_square * (last.y - middle.y)
+        + middle_square * (first.y - last.y)
+        + last_square * (middle.y - first.y);
+    let c = first_square * (middle.x - last.x)
+        + middle_square * (last.x - first.x)
+        + last_square * (first.x - middle.x);
+    let center_x = -b / (2.0 * a);
+    let center_y = -c / (2.0 * a);
     let radius = (center_x - first.x).hypot(center_y - first.y) / SCALE;
     (radius <= 2_000.0).then_some((
         Point {
