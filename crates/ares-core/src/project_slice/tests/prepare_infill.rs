@@ -1,4 +1,4 @@
-mod bridge_over_infill;
+pub(in crate::project_slice) mod bridge_over_infill;
 mod candidate_anchored_bridge;
 mod candidate_bridge_angle;
 mod combine_infill;

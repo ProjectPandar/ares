@@ -174,7 +174,7 @@ fn retained_pattern(
         .sparse_infill_pattern
 }
 
-pub(in crate::project_slice::tests::prepare_infill) fn two_object_archive() -> KsrArchive {
+pub(in crate::project_slice) fn two_object_archive() -> KsrArchive {
     let mut archive = KsrArchive::new();
     archive.copy_entry(FIRST_LEAF, SECOND_LEAF);
     archive.replace_unique(

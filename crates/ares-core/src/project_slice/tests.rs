@@ -17,7 +17,7 @@ mod parameters;
 pub(super) mod perimeters;
 mod pre_closing_fixture;
 mod pre_closing_unions;
-mod prepare_infill;
+pub(in crate::project_slice) mod prepare_infill;
 mod profile_layers;
 mod raw_fixture;
 mod raw_lifecycle;

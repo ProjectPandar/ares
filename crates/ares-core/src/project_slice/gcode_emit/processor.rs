@@ -1,6 +1,8 @@
 use std::f64::consts::PI;
 mod delays;
+mod time;
 use delays::command_delay;
+use time::{duration, minutes};
 
 pub(super) fn process(mut output: Vec<u8>, emit_progress: bool) -> Vec<u8> {
     let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
@@ -74,25 +76,6 @@ pub(super) fn process(mut output: Vec<u8>, emit_progress: bool) -> Vec<u8> {
     output.clear();
     output.extend_from_slice(result.as_bytes());
     output
-}
-
-fn minutes(seconds: f64) -> u64 {
-    (seconds / 60.0).floor() as u64
-}
-
-fn duration(seconds: f64) -> String {
-    let mut remaining = seconds.round() as u64;
-    let hours = remaining / 3600;
-    remaining %= 3600;
-    let minutes = remaining / 60;
-    let seconds = remaining % 60;
-    if hours > 0 {
-        format!("{hours}h {minutes}m {seconds}s")
-    } else if minutes > 0 {
-        format!("{minutes}m {seconds}s")
-    } else {
-        format!("{seconds}s")
-    }
 }
 
 struct Estimate {

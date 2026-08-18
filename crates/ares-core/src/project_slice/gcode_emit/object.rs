@@ -9,8 +9,11 @@ pub(super) struct ObjectLabels {
 }
 
 impl ObjectLabels {
-    pub(super) fn from_traversal(traversal: &PreparedPostClassicTraversal) -> Option<Self> {
-        let object = traversal.project.objects().first()?;
+    pub(super) fn from_traversal(
+        traversal: &PreparedPostClassicTraversal,
+        object_index: usize,
+    ) -> Option<Self> {
+        let object = traversal.project.objects().get(object_index)?;
         let instance = object.instances().first()?;
         let mut labels = traversal
             .project

@@ -59,16 +59,14 @@ pub(super) fn emit(
         options,
         ..Default::default()
     };
-    let labels = traversal
+    let emit_labels = traversal
         .resolved
         .views
         .full
         .process
         .print
         .gcode_label_objects
-        .0
-        .then(|| object::ObjectLabels::from_traversal(traversal))
-        .flatten();
+        .0;
     let mut cooling = cooling::CoolingState::from_traversal(traversal);
     let max_layer_z = traversal
         .objects
@@ -79,6 +77,9 @@ pub(super) fn emit(
         .map(|record| record.layer_height)
         .sum();
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
+        let labels = emit_labels
+            .then(|| object::ObjectLabels::from_traversal(traversal, object_index))
+            .flatten();
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
         for (layer_index, layer) in object.iter_mut().enumerate() {

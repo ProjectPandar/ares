@@ -178,6 +178,6 @@ fn outside_clipper_range() -> ExPolygon {
 }
 
 mod density_provenance;
-pub(super) mod multi_object;
+pub(in crate::project_slice) mod multi_object;
 mod object_scope;
 pub(super) mod transaction;
