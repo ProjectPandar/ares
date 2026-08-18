@@ -7778,16 +7778,11 @@ and later G-code differences remain source-cited slices.
 
 ## Task 22O.219: fitted-circle center quantization
 
-O219 ports OrcaSlicer 2.4.2 `Circle.cpp:16-55`. Fitted circle centers
-now use the source `double` to integer `Point` conversion (truncation toward
-zero) rather than nearest-grid rounding; the radius remains the pre-conversion
-floating result. On the KSR fixture this changes 45 output lines, moves G1
-commands from 199,639 to 199,598, extrusion arcs from 8,680 to 8,681, and
-spiral-lift/wipe sequences from 6,336 to 6,335. Total G2/G3 count remains
-15,016. The first exact difference remains extrusion `.03178` versus `.03177`,
-and the first E-normalized difference remains arc offset `I-3.392` versus
-`I-3.393`. Remaining arc fitting, monotonic sub-micron geometry, retraction,
-cooling, timing, and later G-code differences remain source-cited slices.
+O219 identified OrcaSlicer 2.4.2 `Circle.cpp:16-55` as the fitted-center
+conversion seam but incorrectly stopped at `Point`'s integer storage and
+inferred truncation. Task O222 follows `Point(double, double)` and supersedes
+that behavior. No fitted-center truncation remains in production; the O219
+metrics are retained in git history only as investigation evidence.
 
 ## Task 22O.220: rectilinear offset float scaling
 
@@ -7813,6 +7808,19 @@ and the predecessor-of-0.5 exception, instead of Rust's ties-away-from-zero
 `round`. The KSR fixture changes 36 total lines relative to O220; G1 commands
 move from 199,563 to 199,626, extrusion arcs from 8,683 to 8,653, and
 spiral-lift/wipe sequences from 6,327 to 6,323. The normalized first difference
+remains line 1,855, arc offset `J-1.23` versus `J-1.229`; ignoring arc offsets,
+the first endpoint difference remains line 1,965, `X121.643` versus
+`X121.642`. Remaining offset/arc numeric parity, ant topology, retraction,
+cooling, timing, and later G-code differences remain source-cited slices.
+
+## Task 22O.222: fitted-circle Point constructor rounding
+
+O222 completes OrcaSlicer 2.4.2 `Circle.cpp:43-53` through
+`Point.hpp:187-203`. Fitted circle centers again use `std::round` semantics
+before returning to millimeters, while radius retains its pre-conversion
+floating result. Relative to O221, the KSR fixture falls by 11 lines; G1 moves
+from 199,626 to 199,628, extrusion arcs from 8,653 to 8,659, and
+spiral-lift/wipe sequences from 6,323 to 6,322. The normalized first difference
 remains line 1,855, arc offset `J-1.23` versus `J-1.229`; ignoring arc offsets,
 the first endpoint difference remains line 1,965, `X121.643` versus
 `X121.642`. Remaining offset/arc numeric parity, ant topology, retraction,
