@@ -216,6 +216,26 @@ async fn gcode_label_objects_false_suppresses_project_object_labels() {
 }
 
 #[tokio::test]
+async fn disable_m73_true_suppresses_project_progress_lines() {
+    let mut archive = crate::project_slice::tests::support::KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"disable_m73\": \"0\"",
+        "\"disable_m73\": \"1\"",
+    );
+
+    let output = crate::slice_project(
+        &archive.bytes(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(!output.lines().any(|line| line.starts_with("M73 P")));
+}
+
+#[tokio::test]
 async fn ksr_layer_change_appends_fan_speed_marker_after_custom_gcode() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),

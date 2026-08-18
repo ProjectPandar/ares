@@ -212,7 +212,10 @@ pub(super) fn emit(
     finish::append(&mut output, traversal, max_layer_z)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     finish::append_filament_stats(&mut output, traversal, state.filament_used);
-    Ok(processor::process(output))
+    Ok(processor::process(
+        output,
+        !traversal.resolved.views.full.printer.gcode.disable_m73.0,
+    ))
 }
 fn format_processor_float(value: f64) -> String {
     if value == 0.0 {

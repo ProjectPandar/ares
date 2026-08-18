@@ -2,7 +2,7 @@ use std::f64::consts::PI;
 mod delays;
 use delays::command_delay;
 
-pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
+pub(super) fn process(mut output: Vec<u8>, emit_progress: bool) -> Vec<u8> {
     let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
     let estimate = Estimate::from_lines(&lines);
@@ -23,9 +23,14 @@ pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
 
     for (index, line) in lines.iter().enumerate() {
         if line == "M73 P0 R0" {
-            let remaining = minutes(estimate.total);
-            last_progress = Some((0, remaining));
-            result.push_str(&format!("M73 P0 R{remaining}\n"));
+            if emit_progress {
+                let remaining = minutes(estimate.total);
+                last_progress = Some((0, remaining));
+                result.push_str(&format!("M73 P0 R{remaining}\n"));
+            }
+            continue;
+        }
+        if !emit_progress && line == "M73 P100 R0" {
             continue;
         }
         if line.starts_with("; model printing time:") {
@@ -48,18 +53,20 @@ pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
             result.push('\n');
             continue;
         }
-        let elapsed = estimate.elapsed_at(index);
-        let percent = if estimate.total > 0.0 {
-            ((elapsed / estimate.total) * 100.0)
-                .floor()
-                .clamp(0.0, 99.0) as u64
-        } else {
-            0
-        };
-        let remaining = minutes(estimate.total - elapsed);
-        if last_progress != Some((percent, remaining)) {
-            last_progress = Some((percent, remaining));
-            result.push_str(&format!("M73 P{percent} R{remaining}\n"));
+        if emit_progress {
+            let elapsed = estimate.elapsed_at(index);
+            let percent = if estimate.total > 0.0 {
+                ((elapsed / estimate.total) * 100.0)
+                    .floor()
+                    .clamp(0.0, 99.0) as u64
+            } else {
+                0
+            };
+            let remaining = minutes(estimate.total - elapsed);
+            if last_progress != Some((percent, remaining)) {
+                last_progress = Some((percent, remaining));
+                result.push_str(&format!("M73 P{percent} R{remaining}\n"));
+            }
         }
         result.push_str(line);
         result.push('\n');

@@ -3,11 +3,22 @@ use super::{MotionState, process};
 #[test]
 fn inserts_progress_and_rewrites_time_fields() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n".to_vec();
-    let output = String::from_utf8(process(output)).unwrap();
+    let output = String::from_utf8(process(output, true)).unwrap();
     assert!(output.contains("total estimated time: 1m 40s"), "{output}");
     assert!(output.contains("M73 P0 R"));
     assert!(output.contains("; model printing time:"));
     assert!(!output.contains("total estimated time: 0s"));
+}
+
+#[test]
+fn disable_m73_suppresses_synthetic_progress_lines() {
+    let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n"
+        .to_vec();
+
+    let output = String::from_utf8(process(output, false)).unwrap();
+
+    assert!(!output.lines().any(|line| line.starts_with("M73 P")));
+    assert!(output.contains("total estimated time: 1m 40s"));
 }
 
 #[test]
