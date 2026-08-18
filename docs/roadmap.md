@@ -7626,8 +7626,19 @@ later source-cited slices.
 O205 ports literal expression order from OrcaSlicer 2.4.2
 `libslic3r/Circle.cpp:16-55`. Three-point fitting now evaluates source `a`,
 `b`, `c`, and center divisions instead of algebraically rearranged determinants;
-the high-coordinate micron counterexample and fixture `I-3.393` arc now match.
-After timing/object metadata and E normalization, the first structural
-difference advances to bottom-surface collection traversal. Exact E arithmetic,
-collection ordering, infill counts, cooling, timing, and remaining G-code
-differences remain later source-cited slices.
+the high-coordinate micron counterexample now matches. Fixture probing shows
+its `I-3.392` versus `I-3.393` arc persists, so that stored arc diverges earlier
+in fitting range/candidate selection rather than this three-point expression.
+Exact E arithmetic, arc range selection, infill ordering/counts, cooling,
+timing, and remaining G-code differences remain later source-cited slices.
+
+## Task 22O.206: monotonic three-opt path pass
+
+O206 ports OrcaSlicer 2.4.2 `Fill/FillRectilinear.cpp:2189-2216,2539-2549`.
+Each ant path now applies the strict, precedence-preserving consecutive-link
+three-opt pass before path measurement and best-path selection. The focused
+monotonic suite remains deterministic. Fixture comparison confirms this pass
+does not change the first divergent stored arc, isolating that earlier mismatch
+to arc fitting range/candidate construction. Arc range selection, exact E,
+infill ordering/counts, cooling, timing, and remaining G-code differences
+remain later source-cited slices.
