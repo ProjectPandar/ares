@@ -88,14 +88,18 @@ impl Estimate {
         let mut blocks = Vec::new();
         let mut state = MotionState::default();
         let mut delays = vec![0.0; lines.len()];
+        let mut pending_delay = 0.0;
         for (index, line) in lines.iter().enumerate() {
             let code = line.split(';').next().unwrap_or_default().trim();
-            if let Some(delay) = command_delay(code) {
-                delays[index] += delay;
-            }
+            pending_delay += command_delay(code).unwrap_or(0.0);
             if let Some(block) = state.motion(code) {
+                delays[index] += pending_delay;
+                pending_delay = 0.0;
                 blocks.push(MotionBlock { index, ..block });
             }
+        }
+        if pending_delay > 0.0 {
+            *delays.last_mut().unwrap() += pending_delay;
         }
         let times = planned_times(&blocks);
         let mut elapsed = vec![0.0; lines.len() + 1];
@@ -118,12 +122,24 @@ impl Estimate {
     }
 }
 
-#[derive(Default)]
 struct MotionState {
     position: [f64; 3],
     feedrate: f64,
     acceleration: f64,
+    jerk: [f64; 3],
     relative: bool,
+}
+
+impl Default for MotionState {
+    fn default() -> Self {
+        Self {
+            position: [0.0; 3],
+            feedrate: 0.0,
+            acceleration: 0.0,
+            jerk: [9.0, 9.0, 3.0],
+            relative: false,
+        }
+    }
 }
 
 struct MotionBlock {
@@ -131,6 +147,7 @@ struct MotionBlock {
     distance: f64,
     speed: f64,
     acceleration: f64,
+    jerk: [f64; 3],
     direction: [f64; 3],
 }
 
@@ -153,6 +170,12 @@ impl MotionState {
                 .or_else(|| word(code, 'T'))
             {
                 self.acceleration = value;
+            }
+            return None;
+        }
+        if code.starts_with("M205") {
+            for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
+                self.jerk[axis] = word(code, letter).unwrap_or(self.jerk[axis]);
             }
             return None;
         }
@@ -198,6 +221,7 @@ impl MotionState {
             distance,
             speed: self.feedrate,
             acceleration: self.acceleration.max(1.0),
+            jerk: self.jerk,
             direction: scale(delta, 1.0 / distance),
         })
     }
@@ -211,12 +235,13 @@ fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     let mut max_entry = vec![0.0; blocks.len()];
     for (index, block) in blocks.iter().enumerate() {
         max_entry[index] = if let Some(next) = blocks.get(index + 1) {
-            let dot = block.direction[0] * next.direction[0]
-                + block.direction[1] * next.direction[1]
-                + block.direction[2] * next.direction[2];
-            let sine = ((1.0 - dot.clamp(-1.0, 1.0)) * 0.5).sqrt();
-            let junction = (block.acceleration * 0.01 * sine / (1.0 - sine).max(1e-6)).sqrt();
-            block.speed.min(next.speed).min(junction)
+            let junction = block.speed.min(next.speed);
+            (0..3).fold(junction, |limit, axis| {
+                let delta =
+                    (next.speed * next.direction[axis] - block.speed * block.direction[axis]).abs();
+                let factor = (block.jerk[axis] / delta.max(block.jerk[axis])).min(1.0);
+                limit.min(junction * factor)
+            })
         } else {
             0.0
         };
@@ -263,6 +288,9 @@ fn trapezoid_time(distance: f64, start: f64, cruise: f64, end: f64, acceleration
 fn command_delay(code: &str) -> Option<f64> {
     if code.starts_with("M400") {
         return Some(word(code, 'S').unwrap_or(0.0) + word(code, 'P').unwrap_or(0.0) * 0.001);
+    }
+    if code.starts_with("G29") && !code.starts_with("G29.") {
+        return Some(260.0);
     }
     if code.starts_with("M191") && word(code, 'S').unwrap_or(0.0) > 40.0 {
         return Some(720.0);
