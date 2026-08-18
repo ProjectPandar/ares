@@ -190,12 +190,17 @@ impl MotionState {
             self.e_relative = true;
             return None;
         }
-        if code.starts_with("G92") {
-            if let Some(value) = word(code, 'E') {
-                self.e_position = value;
-            }
-            for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
-                self.position[axis] = word(code, letter).unwrap_or(self.position[axis]);
+        if code.split_whitespace().next() == Some("G92") {
+            let e = word(code, 'E');
+            let position = ['X', 'Y', 'Z'].map(|letter| word(code, letter));
+            if e.is_none() && position.iter().all(Option::is_none) {
+                self.position = [0.0; 3];
+                self.e_position = 0.0;
+            } else {
+                self.e_position = e.unwrap_or(self.e_position);
+                for (axis, value) in position.into_iter().enumerate() {
+                    self.position[axis] = value.unwrap_or(self.position[axis]);
+                }
             }
             return None;
         }

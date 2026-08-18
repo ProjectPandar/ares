@@ -40,3 +40,15 @@ fn arc_p_word_adds_full_turns() {
     let block = state.motion("G3 X0 Y2 I0 J1 P1 F600").unwrap();
     assert!((block.distance - 3.0 * std::f64::consts::PI).abs() < 1e-9);
 }
+
+#[test]
+fn bare_g92_resets_all_logical_axes() {
+    let mut state = MotionState::default();
+    state.position = [10.0, 20.0, 30.0];
+    state.e_position = 40.0;
+
+    assert!(state.motion("G92").is_none());
+
+    assert_eq!(state.position, [0.0; 3]);
+    assert_eq!(state.e_position, 0.0);
+}
