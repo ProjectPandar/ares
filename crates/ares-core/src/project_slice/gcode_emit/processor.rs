@@ -5,7 +5,7 @@ pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
     let estimate = Estimate::from_lines(&lines);
     let mut result = String::with_capacity(text.len() + text.len() / 100);
-    let mut next_percent = 1;
+    let mut last_progress = None;
     let first_marker = lines
         .iter()
         .position(|line| line == "M73 P0 R0")
@@ -21,7 +21,9 @@ pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
 
     for (index, line) in lines.iter().enumerate() {
         if line == "M73 P0 R0" {
-            result.push_str(&format!("M73 P0 R{}\n", minutes(estimate.total)));
+            let remaining = minutes(estimate.total);
+            last_progress = Some((0, remaining));
+            result.push_str(&format!("M73 P0 R{remaining}\n"));
             continue;
         }
         if line.starts_with("; model printing time:") {
@@ -39,21 +41,23 @@ pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
             ));
             continue;
         }
-
-        let elapsed = estimate.elapsed_at(index);
-        let mut latest_percent = None;
-        while next_percent < 100
-            && estimate.total > 0.0
-            && elapsed >= estimate.total * f64::from(next_percent) / 100.0
-        {
-            latest_percent = Some(next_percent);
-            next_percent += 1;
+        if index < first_marker {
+            result.push_str(line);
+            result.push('\n');
+            continue;
         }
-        if let Some(percent) = latest_percent {
-            result.push_str(&format!(
-                "M73 P{percent} R{}\n",
-                minutes(estimate.total - elapsed)
-            ));
+        let elapsed = estimate.elapsed_at(index);
+        let percent = if estimate.total > 0.0 {
+            ((elapsed / estimate.total) * 100.0)
+                .floor()
+                .clamp(0.0, 99.0) as u64
+        } else {
+            0
+        };
+        let remaining = minutes(estimate.total - elapsed);
+        if last_progress != Some((percent, remaining)) {
+            last_progress = Some((percent, remaining));
+            result.push_str(&format!("M73 P{percent} R{remaining}\n"));
         }
         result.push_str(line);
         result.push('\n');
@@ -92,9 +96,18 @@ impl Estimate {
         let mut blocks = Vec::new();
         let mut state = MotionState::default();
         let mut delays = vec![0.0; lines.len()];
+        let mut measure_g29_time = false;
         for (index, line) in lines.iter().enumerate() {
             let code = line.split(';').next().unwrap_or_default().trim();
-            delays[index] += command_delay(code).unwrap_or(0.0);
+            if code.starts_with("M622") && word(code, 'J').unwrap_or(0.0).round() == 1.0 {
+                measure_g29_time = true;
+            } else if code.starts_with("M623") {
+                measure_g29_time = false;
+            }
+            let is_g29 = code.starts_with("G29") && !code.starts_with("G29.");
+            if !is_g29 || measure_g29_time {
+                delays[index] += command_delay(code).unwrap_or(0.0);
+            }
             if let Some(block) = state.motion(code) {
                 blocks.push(MotionBlock { index, ..block });
             }
@@ -190,7 +203,6 @@ impl MotionState {
         if code.starts_with("M204") {
             if let Some(value) = word(code, 'S') {
                 self.acceleration = value;
-                self.retract_acceleration = value;
                 self.travel_acceleration = value;
             }
             self.acceleration = word(code, 'P').unwrap_or(self.acceleration);
@@ -235,7 +247,12 @@ impl MotionState {
             next[2] - old[2],
             e_delta,
         ];
-        let mut distance = norm(delta);
+        let xyz_distance = norm([delta[0], delta[1], delta[2], 0.0]);
+        let e_only = xyz_distance <= f64::EPSILON;
+        if !e_only {
+            delta[3] = 0.0;
+        }
+        let mut distance = if e_only { e_delta.abs() } else { xyz_distance };
         if matches!(command, "G2" | "G3") {
             let i = word(code, 'I').unwrap_or(0.0);
             let j = word(code, 'J').unwrap_or(0.0);
