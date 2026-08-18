@@ -12,6 +12,7 @@ pub(in crate::project_slice::gcode_emit) struct Point {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct ArcSegment {
+    pub(super) start: Point,
     pub(super) end: Point,
     pub(super) center: Point,
     pub(super) length: f64,
@@ -90,6 +91,7 @@ fn try_arc(points: &[Point], tolerance: f64) -> Option<ArcSegment> {
         return None;
     }
     Some(ArcSegment {
+        start,
         end,
         center,
         length,
@@ -158,8 +160,8 @@ fn circle_from_three(first: Point, middle: Point, last: Point) -> Option<(Point,
     let radius = (center_x - first.x).hypot(center_y - first.y) / SCALE;
     (radius <= 2_000.0).then_some((
         Point {
-            x: center_x.trunc() / SCALE,
-            y: center_y.trunc() / SCALE,
+            x: center_x.round() / SCALE,
+            y: center_y.round() / SCALE,
         },
         radius,
     ))

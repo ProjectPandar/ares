@@ -236,8 +236,8 @@ pub(super) fn emit(
                         "{command} X{} Y{} I{} J{} E{}\n",
                         format_axis(arc_segment.end.x),
                         format_axis(arc_segment.end.y),
-                        format_offset(arc_segment.center.x - state.x),
-                        format_offset(arc_segment.center.y - state.y),
+                        format_offset(arc_segment.center.x - arc_segment.start.x),
+                        format_offset(arc_segment.center.y - arc_segment.start.y),
                         format_extrusion(extrusion)
                     )
                     .as_bytes(),

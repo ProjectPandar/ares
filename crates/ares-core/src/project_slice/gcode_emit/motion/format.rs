@@ -3,7 +3,8 @@ pub(super) fn axis(value: f64) -> String {
 }
 
 pub(super) fn offset(value: f64) -> String {
-    let value = axis(value);
+    let scale = 1_000.0;
+    let value = trim_fixed((value * scale).round() / scale, 3);
     if value == "0" {
         value
     } else if let Some(value) = value.strip_prefix("-0") {
@@ -14,7 +15,7 @@ pub(super) fn offset(value: f64) -> String {
 }
 
 pub(super) fn extrusion(value: f64) -> String {
-    let value = trim_fixed(value, 5);
+    let value = trim_fixed((value * 100_000.0).round() / 100_000.0, 5);
     if value == "0" {
         value
     } else if let Some(value) = value.strip_prefix("-0") {

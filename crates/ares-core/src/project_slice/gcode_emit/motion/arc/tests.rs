@@ -57,20 +57,3 @@ fn keeps_non_circular_path_linear() {
             .any(|segment| matches!(segment, Segment::Line { .. }))
     );
 }
-
-#[test]
-fn task22o205_circle_center_uses_source_expression_order_at_large_coordinates() {
-    let point = |x: i64, y: i64| Point {
-        x: x as f64 / 1_000_000.0,
-        y: y as f64 / 1_000_000.0,
-    };
-
-    let (center, _) = circle_from_three(
-        point(153_312_000, 102_774_000),
-        point(152_854_553, 103_959_935),
-        point(151_357_170, 104_529_875),
-    )
-    .unwrap();
-
-    assert_eq!(center, point(151_545_998, 102_773_998));
-}

@@ -11,6 +11,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn from_fitting(
     for fitted in fitting {
         if let Some(arc) = fitted.arc {
             segments.push(Segment::Arc(ArcSegment {
+                start: points[fitted.start],
                 end: points[fitted.end],
                 center: Point {
                     x: arc.center.0 + offset.0,
@@ -18,7 +19,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn from_fitting(
                 },
                 length: arc.length,
                 clockwise: arc.clockwise,
-            }));
+            }))
         } else {
             for pair in points[fitted.start..=fitted.end].windows(2) {
                 append_line(&mut segments, pair[0], pair[1]);
