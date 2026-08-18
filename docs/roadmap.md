@@ -7747,3 +7747,17 @@ KSR internal-solid concentric path now retains its generated direction from
 `X137.276 Y101.342`; production does not special-case fixture coordinates.
 Sub-micron Arachne/arc numeric parity, sparse-fill geometry, cooling, timing,
 and later G-code differences remain later source-cited slices.
+
+## Task 22O.217: clipped-arc endpoint quantization
+
+O217 ports OrcaSlicer 2.4.2 `Circle.hpp:24-27`, `Circle.cpp:230-236`,
+and `Polyline.cpp:52-90`. Retained fitted arcs shortened by loop clipping now
+project their endpoint through an integer coordinate vector at the active
+normal or large-bed scale before updating arc length and wipe state. Fixture
+output changes from 285,177 to 285,181 non-terminal-newline lines; G1 moves
+fall from 199,652 to 199,651, fitted arcs rise from 14,998 to 15,012, and wipe
+blocks fall from 6,332 to 6,331 versus reference counts 190,201, 13,363, and
+4,804. The first exact difference remains extrusion `.03178` versus `.03177`;
+ignoring E words, the first difference remains arc offset `I-3.392` versus
+`I-3.393`. Monotonic sub-micron geometry, remaining arc fitting, retraction,
+cooling, timing, and later G-code differences remain source-cited slices.

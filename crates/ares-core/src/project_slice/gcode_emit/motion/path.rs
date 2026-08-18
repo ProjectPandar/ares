@@ -25,7 +25,7 @@ pub(super) fn emit(
         .collect::<Vec<_>>();
     let mut fitting = properties.fitting.to_vec();
     if properties.end_clip > 0.0 {
-        arc::clip_fitting_end(&mut local_points, &mut fitting);
+        arc::clip_fitting_end(&mut local_points, &mut fitting, geometry.scale);
     }
     let (acceleration, configured_speed) = properties.kinematics(&state.options, state.layer_index);
     let original_speed = configured_speed.min(

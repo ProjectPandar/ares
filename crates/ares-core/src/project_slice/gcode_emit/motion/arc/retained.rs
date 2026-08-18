@@ -1,4 +1,10 @@
-use crate::project_slice::perimeters::classic::materialize::{FittedArc, FittedMove};
+#[cfg(test)]
+mod tests;
+
+use crate::{
+    geometry::CoordinateScale,
+    project_slice::perimeters::classic::materialize::{FittedArc, FittedMove},
+};
 
 use super::{ArcSegment, Point, Segment, append_line};
 
@@ -32,6 +38,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn from_fitting(
 pub(in crate::project_slice::gcode_emit::motion) fn clip_end(
     points: &mut [(f64, f64)],
     fitting: &mut Vec<FittedMove>,
+    scale: CoordinateScale,
 ) {
     if points.len() < 2 || fitting.is_empty() {
         fitting.clear();
@@ -46,7 +53,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn clip_end(
     let Some(arc) = &mut fitted.arc else {
         return;
     };
-    let Some(endpoint) = project_to_circle(*arc, points[fitted.end]) else {
+    let Some(endpoint) = project_to_circle(*arc, points[fitted.end], scale) else {
         fitted.arc = None;
         return;
     };
@@ -56,14 +63,22 @@ pub(in crate::project_slice::gcode_emit::motion) fn clip_end(
     }
 }
 
-fn project_to_circle(arc: FittedArc, point: (f64, f64)) -> Option<(f64, f64)> {
+fn project_to_circle(
+    arc: FittedArc,
+    point: (f64, f64),
+    scale: CoordinateScale,
+) -> Option<(f64, f64)> {
     let dx = point.0 - arc.center.0;
     let dy = point.1 - arc.center.1;
     let distance = dx.hypot(dy);
-    (distance > f64::EPSILON).then_some((
-        arc.center.0 + dx * arc.radius / distance,
-        arc.center.1 + dy * arc.radius / distance,
-    ))
+    (distance > f64::EPSILON).then(|| {
+        let x = scale.checked_scale(dx * arc.radius / distance)?;
+        let y = scale.checked_scale(dy * arc.radius / distance)?;
+        Some((
+            arc.center.0 + scale.unscale(x),
+            arc.center.1 + scale.unscale(y),
+        ))
+    })?
 }
 
 fn update_arc_length(arc: &mut FittedArc, start: (f64, f64), end: (f64, f64)) -> bool {
