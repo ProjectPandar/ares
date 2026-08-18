@@ -110,6 +110,22 @@ fn task22o12_closed_thick_polyline_rotation_moves_one_point_and_two_widths() {
 }
 
 #[test]
+fn task22o201_thick_polyline_clip_end_interpolates_points_and_retains_width_payload() {
+    let mut polyline = ThickPolyline {
+        points: vec![Point::new(0, 0), Point::new(10, 0), Point::new(10, 10)],
+        width: vec![1.0, 2.0, 3.0, 4.0],
+        endpoints: (false, false),
+    };
+
+    polyline.clip_end(5.0);
+
+    assert_eq!(
+        polyline.points,
+        [Point::new(0, 0), Point::new(10, 0), Point::new(10, 5)]
+    );
+    assert_eq!(polyline.width, [1.0, 2.0, 3.0, 4.0]);
+}
+#[test]
 fn task22o13_thick_polyline_length_sums_adjacent_stored_segments() {
     let polyline = ThickPolyline {
         points: vec![Point::new(0, 0), Point::new(3, 4), Point::new(3, 12)],

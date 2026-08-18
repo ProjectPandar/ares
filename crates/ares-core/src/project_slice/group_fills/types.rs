@@ -27,6 +27,7 @@ pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) flow: Flow,
     pub(in crate::project_slice) extrusion_role: ExtrusionRole,
     pub(in crate::project_slice) idx: usize,
+    pub(in crate::project_slice) loop_clipping: i64,
     pub(in crate::project_slice) role_speed: f32,
     pub(in crate::project_slice) lateral_lattice_angle_1: f32,
     pub(in crate::project_slice) lateral_lattice_angle_2: f32,

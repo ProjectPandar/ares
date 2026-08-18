@@ -1,12 +1,12 @@
 use crate::{
     ExtrusionRole,
-    geometry::{Point, Polyline},
+    geometry::{Point, Polyline, ThickPolyline},
     project_slice::{
         fill_entities::{FillExtrusionCollection, FillExtrusionPath},
         perimeters::classic::{
             gap_extrusion::GapFillEntity,
             materialize::{ExtrusionPath, ExtrusionRole as PerimeterRole, Point3, Polyline3},
-            shortest_path::{ChainEntity, chain_and_reorder_entities},
+            shortest_path::{ChainEntity, chain_and_reorder_entities, reorder_thick_polylines},
         },
     },
 };
@@ -121,4 +121,24 @@ fn gap_extrusion_path(first: i64, last: i64) -> ExtrusionPath {
         width: 1.0,
         height: 1.0,
     }
+}
+
+#[test]
+fn task22o201_thick_polylines_follow_shortest_reversible_endpoint_chain() {
+    let thick = |start, end| ThickPolyline {
+        points: vec![Point::new(start, 0), Point::new(end, 0)],
+        width: vec![1.0, 1.0],
+        endpoints: (false, false),
+    };
+    let mut polylines = vec![thick(30, 20), thick(100, 110), thick(10, 0)];
+
+    reorder_thick_polylines(&mut polylines);
+
+    assert_eq!(
+        polylines
+            .iter()
+            .map(|line| (line.points[0].x(), line.points[1].x()))
+            .collect::<Vec<_>>(),
+        [(0, 10), (20, 30), (100, 110)]
+    );
 }

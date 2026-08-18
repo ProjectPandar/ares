@@ -1,6 +1,6 @@
 use super::chain::chain_segments_constrained;
 use crate::{
-    geometry::{Coord, Point},
+    geometry::{Coord, Point, ThickPolyline},
     project_slice::{
         fill_entities::{FillExtrusionCollection, FillExtrusionPath},
         perimeters::classic::gap_extrusion::GapFillEntity,
@@ -183,6 +183,27 @@ impl ChainEntity for GapFillEntity {
     fn reverse(&mut self) {
         GapFillEntity::reverse(self);
     }
+}
+impl ChainEntity for ThickPolyline {
+    fn first_point(&self) -> Point {
+        self.points[0]
+    }
+
+    fn last_point(&self) -> Point {
+        *self.points.last().unwrap()
+    }
+
+    fn can_reverse(&self) -> bool {
+        true
+    }
+
+    fn reverse(&mut self) {
+        ThickPolyline::reverse(self);
+    }
+}
+
+pub(in crate::project_slice) fn reorder_thick_polylines(polylines: &mut Vec<ThickPolyline>) {
+    chain_and_reorder_entities(polylines, Point::new(0, 0));
 }
 
 const fn coordinates(point: Point) -> [Coord; 2] {

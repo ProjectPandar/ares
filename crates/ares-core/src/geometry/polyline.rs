@@ -88,6 +88,41 @@ impl ThickPolyline {
             self.points.push(self.points[0]);
         }
     }
+
+    pub(crate) fn clip_end(&mut self, mut distance: f64) {
+        let mut last_point_inserted = false;
+        let mut remove_after_index = self.points.len();
+        for point_index in (1..self.points.len()).rev() {
+            let last = self.points[point_index];
+            let previous = self.points[point_index - 1];
+            let line_length = super::Line::new(previous, last).length();
+            if line_length > distance {
+                let dx = (last.x() - previous.x()) as f64 / line_length;
+                let dy = (last.y() - previous.y()) as f64 / line_length;
+                self.points.insert(
+                    point_index,
+                    Point::new(
+                        (last.x() as f64 - dx * distance) as i64,
+                        (last.y() as f64 - dy * distance) as i64,
+                    ),
+                );
+                remove_after_index = point_index + 1;
+                last_point_inserted = true;
+                break;
+            }
+            if (line_length - distance).abs() < f64::EPSILON {
+                remove_after_index = point_index;
+                last_point_inserted = true;
+                break;
+            }
+            distance -= line_length;
+        }
+        if last_point_inserted {
+            self.points.truncate(remove_after_index);
+        } else {
+            self.points.clear();
+        }
+    }
 }
 
 pub(crate) fn to_thick_polylines(polylines: Vec<Polyline>, width: f64) -> Vec<ThickPolyline> {

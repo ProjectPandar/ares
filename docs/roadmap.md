@@ -7575,3 +7575,13 @@ pipeline, and become role-aware variable-width solid-infill entities. Existing
 thin fills are merged rather than overwritten. Loop rotation, seam-gap
 clipping, shortest-traverse reordering, cooling, timing, and remaining exact
 G-code differences remain later source-cited parity slices.
+
+
+## Task 22O.201: concentric loop finalization
+
+O201 ports OrcaSlicer 2.4.2 `Fill/FillConcentricInternal.cpp:48-82`,
+`Polyline.cpp:51-82`, and the reached `ShortestPath.hpp:32-51` chain.
+Closed Arachne loops now rotate to the source-origin nearest point, clip by the
+typed region `seam_gap`, discard invalid results, and reuse the KD endpoint
+chain for deterministic shortest traversal. Cooling, timing, and remaining
+exact G-code differences remain later source-cited parity slices.

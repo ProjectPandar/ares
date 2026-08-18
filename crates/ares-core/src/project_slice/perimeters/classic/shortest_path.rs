@@ -18,5 +18,6 @@ pub(in crate::project_slice) use chain::{
 };
 #[cfg(test)]
 pub(in crate::project_slice) use chain::{chain_extrusion_paths, reorder_extrusion_paths};
+pub(in crate::project_slice) use entity_chain::reorder_thick_polylines;
 #[cfg(test)]
 pub(in crate::project_slice) use entity_chain::{ChainEntity, chain_and_reorder_entities};

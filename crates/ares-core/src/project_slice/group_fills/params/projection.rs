@@ -108,6 +108,14 @@ pub(super) fn project_surface(
     } else {
         resolve_fill_flow(flow_context, flow_role)?
     };
+    let seam_gap = match context.region.seam_gap {
+        FloatOrPercent::Float(value) => value,
+        FloatOrPercent::Percent(value) => f64::from(params.flow.nozzle_diameter) * value.0 / 100.0,
+    };
+    params.loop_clipping = context
+        .scale
+        .checked_scale(seam_gap)
+        .ok_or_else(|| SliceError::InvalidInput("seam_gap is out of coordinate range".into()))?;
     params.role_speed = role_speed(context.region, params.extrusion_role);
 
     if solid || is_bridge {
@@ -149,6 +157,7 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
             mm3_per_mm: 0.0,
         },
         extrusion_role: ExtrusionRole::None,
+        loop_clipping: 0,
         role_speed: 0.0,
         lateral_lattice_angle_1: 0.0,
         lateral_lattice_angle_2: 0.0,

@@ -108,6 +108,7 @@ fn compare(left: &SurfaceFillParams, right: &SurfaceFillParams) -> Ordering {
         .then_with(|| compare_f32(left.flow.nozzle_diameter, right.flow.nozzle_diameter))
         .then_with(|| left.bridge.cmp(&right.bridge))
         .then_with(|| role_rank(left.extrusion_role).cmp(&role_rank(right.extrusion_role)))
+        .then_with(|| left.loop_clipping.cmp(&right.loop_clipping))
         .then_with(|| compare_f32(left.role_speed, right.role_speed))
         .then_with(|| compare_f32(left.lateral_lattice_angle_1, right.lateral_lattice_angle_1))
         .then_with(|| compare_f32(left.lateral_lattice_angle_2, right.lateral_lattice_angle_2))

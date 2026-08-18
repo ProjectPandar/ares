@@ -1,11 +1,12 @@
 use crate::{
     SliceError,
     arachne::wall_toolpaths::{RawWallToolPathConfig, generate},
-    geometry::{CoordinateScale, ExPolygon, ThickPolyline},
+    geometry::{CoordinateScale, ExPolygon, Point, ThickPolyline},
     project_slice::{
         group_fills::SurfaceFill,
         perimeters::classic::{
             gap_extrusion::variable_width, materialize::ExtrusionRole as MaterializedRole,
+            shortest_path::reorder_thick_polylines,
         },
     },
 };
@@ -28,6 +29,7 @@ pub(super) fn append(
     }
     let mut polylines = Vec::new();
     for expolygon in fill.no_overlap_expolygons {
+        let first_polyline = polylines.len();
         polylines.extend(generate_thick_polylines(
             expolygon,
             spacing,
@@ -37,6 +39,11 @@ pub(super) fn append(
             minimum_nozzle_diameter,
             scale,
         )?);
+        finalize_polylines(
+            &mut polylines,
+            first_polyline,
+            fill.params.loop_clipping as f64,
+        );
     }
     let converted = variable_width::convert_with_role(
         &polylines,
@@ -46,6 +53,43 @@ pub(super) fn append(
     )?;
     output.thin_fills.extend(converted.entities);
     Ok(())
+}
+
+fn finalize_polylines(
+    polylines: &mut Vec<ThickPolyline>,
+    first_polyline: usize,
+    loop_clipping: f64,
+) {
+    for polyline in &mut polylines[first_polyline..] {
+        if polyline.points.first() == polyline.points.last()
+            && polyline.width.first() == polyline.width.last()
+        {
+            let nearest = polyline
+                .points
+                .iter()
+                .enumerate()
+                .min_by_key(|(_, point)| squared_distance(**point, Point::new(0, 0)))
+                .unwrap()
+                .0;
+            polyline.start_at_index(nearest);
+        }
+    }
+    let mut write_index = first_polyline;
+    for read_index in first_polyline..polylines.len() {
+        polylines[read_index].clip_end(loop_clipping);
+        if polylines[read_index].points.len() >= 2 {
+            polylines.swap(write_index, read_index);
+            write_index += 1;
+        }
+    }
+    polylines.truncate(write_index);
+    reorder_thick_polylines(polylines);
+}
+
+fn squared_distance(left: Point, right: Point) -> i128 {
+    let dx = i128::from(left.x() - right.x());
+    let dy = i128::from(left.y() - right.y());
+    dx * dx + dy * dy
 }
 
 fn generate_thick_polylines(
@@ -107,9 +151,9 @@ fn generate_thick_polylines(
 
 #[cfg(test)]
 mod tests {
-    use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
+    use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon, ThickPolyline};
 
-    use super::generate_thick_polylines;
+    use super::{finalize_polylines, generate_thick_polylines};
 
     #[test]
     fn task22o200_concentric_internal_generates_positive_variable_width_loops() {
@@ -134,5 +178,25 @@ mod tests {
                 && line.width.len() == 2 * (line.points.len() - 1)
                 && line.width.iter().all(|width| *width > 0.0)
         }));
+    }
+
+    #[test]
+    fn task22o201_concentric_finalization_rotates_then_clips_closed_loop() {
+        let mut polylines = vec![ThickPolyline {
+            points: vec![
+                Point::new(10, 10),
+                Point::new(0, 0),
+                Point::new(10, 0),
+                Point::new(10, 10),
+            ],
+            width: vec![1.0; 6],
+            endpoints: (false, false),
+        }];
+
+        finalize_polylines(&mut polylines, 0, 5.0);
+
+        assert_eq!(polylines.len(), 1);
+        assert_eq!(polylines[0].points[0], Point::new(0, 0));
+        assert_ne!(polylines[0].points.first(), polylines[0].points.last());
     }
 }
