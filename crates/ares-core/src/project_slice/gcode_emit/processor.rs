@@ -206,10 +206,12 @@ impl MotionState {
             if let Some(value) = word(code, 'S') {
                 self.acceleration = value;
                 self.travel_acceleration = value;
+                self.retract_acceleration = word(code, 'T').unwrap_or(self.retract_acceleration);
+            } else {
+                self.acceleration = word(code, 'P').unwrap_or(self.acceleration);
+                self.retract_acceleration = word(code, 'R').unwrap_or(self.retract_acceleration);
+                self.travel_acceleration = word(code, 'T').unwrap_or(self.travel_acceleration);
             }
-            self.acceleration = word(code, 'P').unwrap_or(self.acceleration);
-            self.retract_acceleration = word(code, 'R').unwrap_or(self.retract_acceleration);
-            self.travel_acceleration = word(code, 'T').unwrap_or(self.travel_acceleration);
             return None;
         }
         if code.starts_with("M205") {

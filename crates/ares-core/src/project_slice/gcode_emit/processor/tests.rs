@@ -19,6 +19,15 @@ fn tracks_relative_e_only_moves() {
 }
 
 #[test]
+fn legacy_m204_s_sets_travel_and_t_as_retract() {
+    let mut state = MotionState::default();
+    state.motion("M204 S500 T125");
+    assert_eq!(state.acceleration, 500.0);
+    assert_eq!(state.travel_acceleration, 500.0);
+    assert_eq!(state.retract_acceleration, 125.0);
+}
+
+#[test]
 fn spiral_arc_p_one_is_one_turn_at_same_endpoint() {
     let mut state = MotionState::default();
     let block = state.motion("G3 Z.6 I1 J0 P1 F600").unwrap();
