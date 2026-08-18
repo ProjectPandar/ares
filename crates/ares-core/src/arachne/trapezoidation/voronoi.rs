@@ -21,9 +21,18 @@ pub(super) fn build(
     let lines = segments
         .iter()
         .map(|segment| segment.line(polygons))
-        .map(|line| BvLine::from([line.a.x(), line.a.y(), line.b.x(), line.b.y()]))
-        .collect::<Vec<_>>();
-    Builder::<i64>::default()
+        .map(|line| {
+            let coordinate =
+                |value| i32::try_from(value).map_err(|_| TrapezoidationError::VoronoiConstruction);
+            Ok(BvLine::from([
+                coordinate(line.a.x())?,
+                coordinate(line.a.y())?,
+                coordinate(line.b.x())?,
+                coordinate(line.b.y())?,
+            ]))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    Builder::<i32>::default()
         .with_segments(&lines)
         .and_then(Builder::build)
         .map_err(|_| TrapezoidationError::VoronoiConstruction)
@@ -155,10 +164,7 @@ fn vertex(
             if !vertex.x().is_finite() || !vertex.y().is_finite() {
                 return Err(TrapezoidationError::InvalidTopology);
             }
-            Ok(Point::new(
-                vertex.x().round() as i64,
-                vertex.y().round() as i64,
-            ))
+            Ok(Point::new(vertex.x() as i64, vertex.y() as i64))
         })
         .transpose()
 }

@@ -67,10 +67,11 @@ pub(crate) fn normal_print_time_s(
     layer_speed_moves: &[LayerSpeedMoves],
 ) -> Result<f64, SliceError> {
     let minimum_rates = MachineMinimumRates::from_options(options)?;
-    Ok(layer_speed_moves
+    let total = layer_speed_moves
         .iter()
         .map(|layer| layer_print_time_s(layer.moves(), minimum_rates))
-        .sum())
+        .sum();
+    Ok(total)
 }
 
 fn layer_print_time_s(moves: &[SpeedMove], minimum_rates: MachineMinimumRates) -> f64 {

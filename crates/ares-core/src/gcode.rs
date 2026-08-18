@@ -101,7 +101,10 @@ pub(crate) fn format_gcode(
     gcode.push_str(&startup_command(&writer, options)?);
     let mut pressure_advance_move_state = PressureAdvanceMoveState::from_options(options)?;
     gcode.push_str(&object_label_config.object_definition(layer_print_paths));
-    gcode.push_str(&crate::gcode_m73::first_progress_line(options)?);
+    gcode.push_str(&crate::gcode_m73::first_progress_line(
+        options,
+        layer_speed_moves,
+    )?);
     let mut role_fan_state = crate::gcode_role_fan::RoleFanGCodeState::new(
         Some(0),
         part_cooling_fan_ramp.fan_kickstart_s(),
