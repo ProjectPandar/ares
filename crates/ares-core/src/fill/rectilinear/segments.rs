@@ -1,5 +1,5 @@
 use crate::geometry::{
-    ClipperError, ExPolygon, JoinType, Point, Polygon, offset_expolygon, offset_expolygons,
+    ClipperError, ExPolygon, JoinType, Point, Polygon, offset_expolygon_refs_paths, offset_paths,
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -203,12 +203,15 @@ fn prepare_contours(
 ) -> Result<(ExPolygon, Vec<OffsetContour>), ClipperError> {
     let rotated = rotate_expolygon(expolygon, angle)?;
     let outer = if outer_offset == 0.0 {
-        vec![rotated.clone()]
+        let mut polygons = Vec::with_capacity(1 + rotated.holes().len());
+        polygons.push(rotated.contour().clone());
+        polygons.extend_from_slice(rotated.holes());
+        polygons
     } else {
-        offset_expolygon(&rotated, outer_offset, JoinType::Miter, 3.0)?
+        offset_expolygon_refs_paths(&[&rotated], outer_offset, JoinType::Miter, 3.0)?
     };
     let inner = if inner_offset < 0.0 {
-        offset_expolygons(&outer, inner_offset - outer_offset, JoinType::Miter, 3.0)?
+        offset_paths(&outer, inner_offset - outer_offset, JoinType::Miter, 3.0)?
     } else {
         Vec::new()
     };
@@ -217,21 +220,11 @@ fn prepare_contours(
     Ok((rotated, contours))
 }
 
-fn flatten(expolygons: Vec<ExPolygon>, inner: bool) -> Vec<OffsetContour> {
-    let mut output = Vec::new();
-    for expolygon in expolygons {
-        let (contour, holes) = expolygon.into_parts();
-        output.push(OffsetContour {
-            polygon: contour,
-            inner,
-        });
-        output.extend(
-            holes
-                .into_iter()
-                .map(|polygon| OffsetContour { polygon, inner }),
-        );
-    }
-    output
+fn flatten(polygons: Vec<Polygon>, inner: bool) -> Vec<OffsetContour> {
+    polygons
+        .into_iter()
+        .map(|polygon| OffsetContour { polygon, inner })
+        .collect()
 }
 
 fn rotate_expolygon(expolygon: &ExPolygon, angle: f64) -> Result<ExPolygon, ClipperError> {

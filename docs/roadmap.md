@@ -7642,3 +7642,14 @@ does not change the first divergent stored arc, isolating that earlier mismatch
 to arc fitting range/candidate construction. Arc range selection, exact E,
 infill ordering/counts, cooling, timing, and remaining G-code differences
 remain later source-cited slices.
+
+## Task 22O.207: flat rectilinear offset contours
+
+O207 ports OrcaSlicer 2.4.2 `Fill/FillRectilinear.cpp:386-429`.
+Rectilinear outer offsets now remain flat paths and inner contours shrink those
+exact paths, preserving source contour-before-hole and outer-before-inner
+staging without an intermediate ExPolygon regroup. The focused rectilinear
+suite passes. Fixture comparison keeps the first normalized one-micron arc
+endpoint divergence, excluding offset regrouping as its cause. Stick/small-area
+cleanup, arc input geometry, exact E, infill counts, cooling, timing, and
+remaining G-code differences remain later source-cited slices.
