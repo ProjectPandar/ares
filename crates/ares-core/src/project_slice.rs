@@ -139,20 +139,10 @@ fn slice_project_sync(
 
 #[inline(never)]
 fn consume_post_island_print_order(
-    prepared: island_print_order::PreparedPostIslandPrintOrder,
+    mut prepared: island_print_order::PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    let output = {
-        let traversal = &prepared
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor
-            .predecessor;
-        gcode_emit::emit(&prepared, traversal, metadata)
-    }?;
+    let output = gcode_emit::emit(&mut prepared, metadata)?;
     island_print_order::dispose(prepared);
     Ok(output)
 }

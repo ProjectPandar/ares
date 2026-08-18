@@ -7722,3 +7722,16 @@ falls from 288,364 to 287,996 lines versus reference 269,330; the first geometry
 difference remains exact E `.03178` versus `.03177`. Ant generation, fill
 geometry, cooling, timing, and remaining G-code differences remain later
 source-cited slices.
+
+## Task 22O.215: live-cursor infill entity chaining
+
+O215 activates the existing OrcaSlicer 2.4.2 `GCode.cpp:5432-5468,6130-6175`
+rewrite at the production emission seam. Infill and thin-fill collections are
+now chained from the live nozzle cursor, sortable collections chain their own
+paths from the updated cursor, `no_sort` collections retain source order, and
+closed gap loops are non-reversible. The first KSR internal-solid collection is
+selected near X137 without the previous retract and jump near X169. Output
+falls from 288,051 to 283,701 lines versus reference 269,330. The retained
+monotonic polyline still starts from the opposite endpoint; fill-generation
+orientation, sparse geometry, cooling, timing, and remaining G-code differences
+remain later source-cited slices.

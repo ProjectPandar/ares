@@ -125,3 +125,25 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
         "G1 X111.296 Y141.099 E.0564"
     );
 }
+
+#[tokio::test]
+async fn ksr_first_infill_collection_is_selected_from_the_live_perimeter_cursor() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let first_infill = lines
+        .iter()
+        .position(|line| *line == "; FEATURE: Internal solid infill")
+        .unwrap();
+
+    assert_eq!(lines[first_infill - 1], "G1 X137.276 Y101.342 F60000");
+    assert_eq!(lines[first_infill + 3], "G1 X137.276 Y100.144 E.03682");
+    assert_eq!(lines[first_infill + 11], "G1 X137.276 Y101.382 E.11678");
+}

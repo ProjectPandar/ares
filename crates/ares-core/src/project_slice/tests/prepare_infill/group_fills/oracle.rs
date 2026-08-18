@@ -16,10 +16,6 @@ pub(super) fn metadata(header: LayerHeader, grouped: &GroupedFills) -> Vec<u8> {
     metadata_at_stage(header, grouped, "pre-narrow")
 }
 
-pub(super) fn post_metadata(header: LayerHeader, grouped: &GroupedFills) -> Vec<u8> {
-    metadata_at_stage(header, grouped, "post-narrow")
-}
-
 fn metadata_at_stage(header: LayerHeader, grouped: &GroupedFills, stage: &str) -> Vec<u8> {
     let mut output = String::new();
     writeln!(

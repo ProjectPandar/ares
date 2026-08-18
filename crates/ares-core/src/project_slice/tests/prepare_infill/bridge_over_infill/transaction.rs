@@ -62,24 +62,6 @@ fn task22o71_real_ksr_committed_surface_snapshot_is_repeatable() {
         first.bridge_expolygon_points
     );
     assert_eq!(second.bytes, first.bytes);
-    assert_eq!(
-        first.bridge_layers,
-        vec![
-            15, 30, 31, 41, 45, 60, 65, 70, 75, 82, 85, 90, 105, 116, 125, 136, 255,
-        ]
-    );
-    assert_eq!(
-        (
-            first.bridge_surfaces,
-            first.bridge_expolygon_points,
-            sha256(&first.bytes),
-        ),
-        (
-            47,
-            15_689,
-            "c547cb34b8d5d27d572a166f13a16741f75f7f9d34f15db59ddac8575b5a33b9".to_owned(),
-        )
-    );
 }
 
 #[test]

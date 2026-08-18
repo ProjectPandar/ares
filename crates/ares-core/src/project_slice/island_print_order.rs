@@ -1,8 +1,12 @@
-use crate::project_slice::{
-    extrusion_islands::{ExtrusionIsland, IslandInfillEntity, PreparedPostExtrusionIslands},
-    fill_entities::FillExtrusionCollection,
-    perimeters::classic::{
-        entity_collections::ExtrusionEntityCollection, gap_extrusion::GapFillEntity,
+use crate::{
+    geometry::Point,
+    project_slice::{
+        extrusion_islands::{ExtrusionIsland, IslandInfillEntity, PreparedPostExtrusionIslands},
+        fill_entities::FillExtrusionCollection,
+        perimeters::classic::{
+            entity_collections::ExtrusionEntityCollection, gap_extrusion::GapFillEntity,
+            shortest_path::ChainEntity,
+        },
     },
 };
 
@@ -98,17 +102,46 @@ pub(in crate::project_slice) fn order_island(
     OrderedExtrusionIsland { entities }
 }
 
+impl ChainEntity for IslandPrintEntity {
+    fn first_point(&self) -> Point {
+        match self {
+            Self::Fill(collection) => collection.first_point(),
+            Self::Thin(entity) => entity.first_point(),
+            Self::Perimeter(_) => unreachable!("only infill entities are chained"),
+        }
+    }
+
+    fn last_point(&self) -> Point {
+        match self {
+            Self::Fill(collection) => collection.last_point(),
+            Self::Thin(entity) => entity.last_point(),
+            Self::Perimeter(_) => unreachable!("only infill entities are chained"),
+        }
+    }
+
+    fn can_reverse(&self) -> bool {
+        match self {
+            Self::Fill(collection) => !collection.no_sort,
+            Self::Thin(entity) => ChainEntity::can_reverse(entity),
+            Self::Perimeter(_) => unreachable!("only infill entities are chained"),
+        }
+    }
+
+    fn reverse(&mut self) {
+        match self {
+            Self::Fill(collection) => collection.reverse(),
+            Self::Thin(entity) => entity.reverse(),
+            Self::Perimeter(_) => unreachable!("only infill entities are chained"),
+        }
+    }
+}
+
 pub(in crate::project_slice) fn internal_surfaces(
-    prepared: &PreparedPostIslandPrintOrder,
+    prepared: &PreparedPostExtrusionIslands,
     object_index: usize,
     layer_index: usize,
 ) -> &[crate::project_slice::region_slices::RegionSurface] {
-    let external = &prepared
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor
-        .predecessor;
+    let external = &prepared.predecessor.predecessor.predecessor.predecessor;
     external.predecessor.objects[object_index].records[layer_index]
         .as_ref()
         .map_or(&[], |record| record.fill_surfaces.as_slice())

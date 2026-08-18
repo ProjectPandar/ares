@@ -18,7 +18,10 @@ pub(in crate::project_slice::gcode_emit) use options::MotionOptions;
 pub(in crate::project_slice::gcode_emit) use options::first_nullable_float;
 
 use super::super::island_print_order::{IslandPrintEntity, OrderedExtrusionLayer};
-use crate::SliceError;
+use crate::{
+    SliceError, geometry::Point,
+    project_slice::perimeters::classic::shortest_path::chain_and_reorder_entities,
+};
 
 #[derive(Default)]
 pub(super) struct EmitState {
@@ -92,65 +95,122 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
     }
 }
 
-#[expect(
-    clippy::excessive_nesting,
-    reason = "keeps the source ordered extrusion-entity traversal together"
-)]
 pub(super) fn emit_layer(
     output: &mut Vec<u8>,
-    layer: &OrderedExtrusionLayer,
+    layer: &mut OrderedExtrusionLayer,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) -> Result<(), SliceError> {
-    for island in &layer.islands {
-        for entity in &island.entities {
-            match entity {
-                IslandPrintEntity::Perimeter(collection) => {
-                    for loop_ in &collection.entities {
-                        loop_paths::emit(
-                            output,
-                            &loop_.extrusion_loop.paths,
-                            geometry,
-                            state,
-                        );
-                    }
-                }
-                IslandPrintEntity::Fill(collection) => {
-                    for path in &collection.paths {
-                        path::emit(
-                            output,
-                            path.polyline.points().iter().map(|point| (point.x(), point.y())),
-                            PathProperties {
-                                mm3_per_mm: path.mm3_per_mm,
-                                width: path.width,
-                                height: path.height,
-                                feature: features::for_fill(path.role),
-                                is_perimeter: matches!(
-                                    path.role,
-                                    crate::ExtrusionRole::Perimeter
-                                        | crate::ExtrusionRole::ExternalPerimeter
-                                        | crate::ExtrusionRole::OverhangPerimeter
-                                ),
-                                end_clip: 0.0,
-                                fitting: &path.fitting,
-                            },
-                            geometry,
-                            state,
-                        );
-                    }
-                }
-                IslandPrintEntity::Thin(entity) => match entity {
-                    crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(path) => {
-                        emit_materialized_path(output, path, 0.0, geometry, state);
-                    }
-                    crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(paths) => {
-                        loop_paths::emit(output, paths, geometry, state);
-                    }
-                },
+    for island in &mut layer.islands {
+        let mut entities = std::mem::take(&mut island.entities);
+        let infill_first = matches!(
+            entities.first(),
+            Some(IslandPrintEntity::Fill(_) | IslandPrintEntity::Thin(_))
+        );
+        if infill_first {
+            let split = entities
+                .iter()
+                .position(|entity| matches!(entity, IslandPrintEntity::Perimeter(_)))
+                .unwrap_or(entities.len());
+            let perimeters = entities.split_off(split);
+            emit_infills(output, &mut entities, geometry, state);
+            for perimeter in perimeters {
+                emit_perimeter(output, perimeter, geometry, state);
             }
+        } else {
+            let split = entities
+                .iter()
+                .position(|entity| !matches!(entity, IslandPrintEntity::Perimeter(_)))
+                .unwrap_or(entities.len());
+            for perimeter in entities.drain(..split) {
+                emit_perimeter(output, perimeter, geometry, state);
+            }
+            emit_infills(output, &mut entities, geometry, state);
         }
     }
     Ok(())
+}
+
+fn emit_perimeter(
+    output: &mut Vec<u8>,
+    entity: IslandPrintEntity,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    let IslandPrintEntity::Perimeter(collection) = entity else {
+        unreachable!("perimeter phase contains only perimeter entities");
+    };
+    for loop_ in &collection.entities {
+        loop_paths::emit(output, &loop_.extrusion_loop.paths, geometry, state);
+    }
+}
+
+fn emit_infills(
+    output: &mut Vec<u8>,
+    entities: &mut Vec<IslandPrintEntity>,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    if entities.is_empty() {
+        return;
+    }
+    chain_and_reorder_entities(entities, local_cursor(state, geometry));
+    for entity in entities.drain(..) {
+        match entity {
+            IslandPrintEntity::Fill(collection) => {
+                let collection = collection.chained_path_from(local_cursor(state, geometry));
+                for path in &collection.paths {
+                    path::emit(
+                        output,
+                        path.polyline
+                            .points()
+                            .iter()
+                            .map(|point| (point.x(), point.y())),
+                        PathProperties {
+                            mm3_per_mm: path.mm3_per_mm,
+                            width: path.width,
+                            height: path.height,
+                            feature: features::for_fill(path.role),
+                            is_perimeter: matches!(
+                                path.role,
+                                crate::ExtrusionRole::Perimeter
+                                    | crate::ExtrusionRole::ExternalPerimeter
+                                    | crate::ExtrusionRole::OverhangPerimeter
+                            ),
+                            end_clip: 0.0,
+                            fitting: &path.fitting,
+                        },
+                        geometry,
+                        state,
+                    );
+                }
+            }
+            IslandPrintEntity::Thin(entity) => match &entity {
+                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(
+                    path,
+                ) => emit_materialized_path(output, path, 0.0, geometry, state),
+                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(
+                    paths,
+                ) => loop_paths::emit(output, paths, geometry, state),
+            },
+            IslandPrintEntity::Perimeter(_) => {
+                unreachable!("infill phase contains only infill entities")
+            }
+        }
+    }
+}
+
+fn local_cursor(state: &EmitState, geometry: LayerGeometry<'_>) -> Point {
+    Point::new(
+        geometry
+            .scale
+            .checked_scale(state.x - state.offset.0)
+            .expect("emitted X remains in the coordinate domain"),
+        geometry
+            .scale
+            .checked_scale(state.y - state.offset.1)
+            .expect("emitted Y remains in the coordinate domain"),
+    )
 }
 
 fn emit_materialized_path(

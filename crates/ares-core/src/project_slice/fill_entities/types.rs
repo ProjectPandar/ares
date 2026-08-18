@@ -20,10 +20,6 @@ pub(in crate::project_slice) struct FillExtrusionPath {
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct FillExtrusionCollection {
     pub(in crate::project_slice) paths: Vec<FillExtrusionPath>,
-    #[cfg_attr(
-        not(test),
-        allow(dead_code, reason = "pure O96 seam activates with the real O97 cursor")
-    )]
     pub(in crate::project_slice) no_sort: bool,
 }
 

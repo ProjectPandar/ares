@@ -21,10 +21,17 @@ use crate::{GenerationMetadata, SliceError};
 pub(in crate::project_slice) use motion::simplify_points;
 
 pub(super) fn emit(
-    prepared: &PreparedPostIslandPrintOrder,
-    traversal: &PreparedPostClassicTraversal,
+    prepared: &mut PreparedPostIslandPrintOrder,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
+    let traversal = &prepared
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor;
     let mut output = Vec::new();
     header::append_header(&mut output, metadata, &prepared.objects, traversal);
     if let Some(config) = &traversal.config_block {
@@ -61,10 +68,10 @@ pub(super) fn emit(
         .filter_map(|record| record.as_ref())
         .map(|record| record.layer_height)
         .sum();
-    for (object_index, object) in prepared.objects.iter().enumerate() {
+    for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
-        for (layer_index, layer) in object.iter().enumerate() {
+        for (layer_index, layer) in object.iter_mut().enumerate() {
             let layer_output_start = output.len();
             if layer_index == 0 {
                 append_print_preamble(&mut output);
@@ -119,7 +126,7 @@ pub(super) fn emit(
                 layer,
                 motion::LayerGeometry {
                     internal_surfaces: island_print_order::internal_surfaces(
-                        prepared,
+                        &prepared.predecessor,
                         object_index,
                         layer_index,
                     ),

@@ -35,6 +35,7 @@ fn task22o95_orders_first_and_later_layer_phases_from_option() {
 fn task22o95_orders_ksr_islands_without_losing_entities() {
     let filled = fill_entities::prepare(graph()).unwrap();
     let islands = extrusion_islands::prepare(filled);
+    let expected = source_inventory(&islands.objects[0]);
     let prepared = island_print_order::prepare(islands);
 
     let inventory = prepared.objects[0].iter().fold(
@@ -55,12 +56,41 @@ fn task22o95_orders_ksr_islands_without_losing_entities() {
             counts
         },
     );
-    assert_eq!(
-        inventory,
-        (3_350, 2_881, 2_881, 2_881, 1_658, 2_285, 782, 876)
-    );
+    assert_eq!(inventory, expected);
 
     island_print_order::dispose(prepared);
+}
+
+fn source_inventory(
+    layers: &[crate::project_slice::extrusion_islands::LayerExtrusionIslands],
+) -> (usize, usize, usize, usize, usize, usize, usize, usize) {
+    let mut counts = (0, 0, 0, 0, 0, 0, 0, 0);
+    for layer in layers {
+        counts.0 += layer.islands.len();
+        for island in &layer.islands {
+            record_source_inventory(island, &mut counts);
+        }
+    }
+    counts
+}
+
+fn record_source_inventory(
+    island: &ExtrusionIsland,
+    counts: &mut (usize, usize, usize, usize, usize, usize, usize, usize),
+) {
+    counts.1 += usize::from(!island.perimeters.is_empty() || !island.infills.is_empty());
+    counts.2 += usize::from(!island.perimeters.is_empty());
+    counts.3 += island.perimeters.len();
+    for infill in &island.infills {
+        match infill {
+            IslandInfillEntity::Fill(collection) => {
+                counts.4 += 1;
+                counts.6 += usize::from(collection.no_sort);
+                counts.7 += usize::from(!collection.no_sort);
+            }
+            IslandInfillEntity::Thin(_) => counts.5 += 1,
+        }
+    }
 }
 
 fn record_inventory(

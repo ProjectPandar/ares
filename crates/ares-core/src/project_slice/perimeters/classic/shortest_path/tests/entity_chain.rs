@@ -49,7 +49,7 @@ fn task22o96_gap_loop_reports_closed_endpoints_and_never_reverses() {
     let mut loop_entity = GapFillEntity::Loop(vec![gap_extrusion_path(5, 5)]);
     assert_eq!(loop_entity.first_point(), Point::new(5, 0));
     assert_eq!(loop_entity.last_point(), Point::new(5, 0));
-    assert!(ChainEntity::can_reverse(&loop_entity));
+    assert!(!ChainEntity::can_reverse(&loop_entity));
 
     loop_entity.reverse();
 

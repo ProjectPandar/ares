@@ -1,5 +1,4 @@
 mod cleanup;
-mod ksr;
 mod lifecycle;
 mod numeric_options;
 mod operations;

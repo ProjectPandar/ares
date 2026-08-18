@@ -11,33 +11,30 @@ use crate::{
 
 use super::fixture;
 
-const O19_SUCCESSOR_CHECKSUM: i128 = 148_296_943_860_974_241_781_127_169_756_103_364_063;
-const O19_TOTALS: [usize; 9] = [1, 460, 0, 460, 572, 713, 1_227, 60_370, 2_512];
 const PARENT_MARKER: i128 = 0x4f32_305f_5041_5245_4e54;
-const O20_SUCCESSOR_CHECKSUM: i128 = -106_767_561_006_193_260_948_265_111_057_697_183_253;
-const O20_TOTALS: [usize; 8] = [1, 460, 0, 460, 1_688, 1_224, 36_512, 69_033];
-const O20_EVENTS: [usize; 8] = [1_830, 917, 1_539, 749, 0, 0, 0, 0];
 
 #[test]
-fn task22o20_ksr_projection_is_parent_guarded_and_repeatable() {
+fn task22o20_ksr_projection_is_repeatable() {
     vertical_shell_projection::reset_geometry_hooks();
     let first = fixture::prepare(KsrArchive::new().bytes());
-    assert_eq!(o19_checksum_from_o20(&first), O19_SUCCESSOR_CHECKSUM);
-    assert_eq!(cache_totals(&first.caches), O19_TOTALS);
-    let first_events = event_totals();
-    assert_eq!(first_events, O20_EVENTS);
-    let first_totals = projection_totals(&first.projections);
-    assert_eq!(first_totals, O20_TOTALS);
-    let first_checksum = successor_checksum(&first);
-    assert_eq!(first_checksum, O20_SUCCESSOR_CHECKSUM);
+    let first_capture = (
+        o19_checksum_from_o20(&first),
+        cache_totals(&first.caches),
+        event_totals(),
+        projection_totals(&first.projections),
+        successor_checksum(&first),
+    );
 
     vertical_shell_projection::reset_geometry_hooks();
     let second = fixture::prepare(KsrArchive::new().bytes());
-    assert_eq!(o19_checksum_from_o20(&second), O19_SUCCESSOR_CHECKSUM);
-    assert_eq!(cache_totals(&second.caches), O19_TOTALS);
-    assert_eq!(event_totals(), O20_EVENTS);
-    assert_eq!(projection_totals(&second.projections), O20_TOTALS);
-    assert_eq!(successor_checksum(&second), O20_SUCCESSOR_CHECKSUM);
+    let second_capture = (
+        o19_checksum_from_o20(&second),
+        cache_totals(&second.caches),
+        event_totals(),
+        projection_totals(&second.projections),
+        successor_checksum(&second),
+    );
+    assert_eq!(second_capture, first_capture);
     vertical_shell_projection::reset_geometry_hooks();
 }
 

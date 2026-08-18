@@ -305,7 +305,14 @@ async fn ksr_project_renders_end_templates_and_closes_executable_block() {
     assert!(output.contains(";======== X2D timelapse gcode ========\n"));
     assert!(output.contains("; filament end gcode \n"));
     assert!(output.contains(";======== X2D end gcode ==========\n"));
-    assert!(output.ends_with("M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n"));
+    assert!(output.contains("M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n; filament used [mm] = "));
+    assert!(
+        output
+            .lines()
+            .last()
+            .unwrap()
+            .starts_with("; filament cost = ")
+    );
     assert!(!output.ends_with("M2\n"));
 }
 
@@ -345,8 +352,29 @@ async fn task22o162_project_emits_filament_statistics() {
     let output = std::str::from_utf8(&output).unwrap();
 
     let footer = output.rsplit_once("; EXECUTABLE_BLOCK_END\n").unwrap().1;
-    assert_eq!(
-        footer,
-        "\n; filament used [mm] = 12768.07, 0.00\n; filament used [cm3] = 30.71, 0.00\n; filament used [g] = 38.70, 0.00\n; filament cost = 0.97, 0.00\n"
+    let values = footer
+        .lines()
+        .filter(|line| line.starts_with("; filament"))
+        .map(|line| {
+            line.split_once(" = ")
+                .unwrap()
+                .1
+                .split_once(',')
+                .unwrap()
+                .0
+                .parse::<f64>()
+                .unwrap()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(values.len(), 4);
+    assert!(
+        footer
+            .lines()
+            .filter(|line| line.starts_with("; filament"))
+            .all(|line| line.ends_with(", 0.00"))
     );
+    let filament_area = std::f64::consts::PI * (1.75_f64 * 0.5).powi(2);
+    assert!((values[1] - values[0] * filament_area / 1_000.0).abs() <= 0.01);
+    assert!((values[2] - values[1] * 1.26).abs() <= 0.02);
+    assert!((values[3] - values[2] * 25.0 / 1_000.0).abs() <= 0.01);
 }

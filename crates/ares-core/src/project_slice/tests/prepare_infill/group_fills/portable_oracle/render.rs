@@ -10,7 +10,6 @@ pub(super) fn encode_layer_metadata(output: &mut String, layer: &OracleLayer<'_>
         "layer {} stage {} height_bits {} print_z_bits {} groups {}",
         layer.layer_id,
         match layer.stage {
-            OracleStage::PreNarrow => "pre-narrow",
             OracleStage::PostNarrow => "post-narrow",
         },
         layer.layer_height.to_bits(),

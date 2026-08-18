@@ -1,91 +1,12 @@
-mod full_ksr;
 mod render;
 #[cfg(test)]
 mod tests;
 mod types;
 
-use std::fmt::Write as _;
-
-use sha2::{Digest, Sha256};
-
 use render::{encode_layer_geometry, encode_layer_metadata, encode_layer_table};
 pub(super) use types::{
     EncodedOracle, OracleFlow, OracleGroup, OracleLayer, OracleLockCounts, OracleParams,
     OracleRepresentative, OracleStage, OracleTotals,
-};
-
-pub(super) const KSR_METADATA_SHA256: &str =
-    "cd4aa18a831dd4672e3e394944e496b8d349b5e21990672a7f14868cc2b3b387";
-pub(super) const KSR_CANONICAL_GEOMETRY_SHA256: &str =
-    "c149d65f5e5ddb89643b78314861ac2343707ddf76decc1e6aa2f88901331f6c";
-pub(super) const KSR_LAYER_TABLE_SHA256: &str =
-    "8d9845b22e38857dbb0840b2527286436a6b9c684c8662d925f8fd4873cef5b2";
-pub(super) const PRE_METADATA_SHA256: &str =
-    "a091ca0a63e45dc81712223571b1dfe888ab256bec2437ea564f386783f77900";
-pub(super) const PRE_CANONICAL_GEOMETRY_SHA256: &str =
-    "062fab2bbcb683df778ac024a8f6abed7960f3ebac3d55f13124617694d7e2af";
-pub(super) const PRE_LAYER_TABLE_SHA256: &str =
-    "ebd74a25609827e4affda26a21d9cd3b10dca08778f56f394b5170f74ecdf721";
-pub(super) const LAYER_1_METADATA_SHA256: &str =
-    "b466abfd76770f5e776b9df3866cf12b07b836bee2a8a7ba721c66ae1f2851bf";
-pub(super) const LAYER_1_AUTHORITATIVE_GEOMETRY_SHA256: &str =
-    "0938758d43750be165712735f6f5e1b6a1ae8fbb52a7f551b101118e1083c856";
-pub(super) const ORDERED_LAYER_GEOMETRY_SHA256: [(usize, &str); 2] = [
-    (
-        45,
-        "33bf737e3d836096a20a821fcf1ace79dccda10973203408ba87ddee5ee25d64",
-    ),
-    (
-        70,
-        "7a8e9ec6e0aa2b1a8cd6bd8d1e9c261719b77168427f113fa051e7f5c551be71",
-    ),
-];
-
-pub(super) const KSR_TOTALS: OracleTotals = OracleTotals {
-    layers: 460,
-    groups: 536,
-    fill_expolygons: 2_218,
-    fill_holes: 152,
-    fill_paths: 2_370,
-    fill_points: 110_610,
-    no_overlap_expolygons: 2_928,
-    nonempty_layers: 260,
-    empty_layers: 200,
-};
-pub(super) const PRE_TOTALS: OracleTotals = OracleTotals {
-    layers: 460,
-    groups: 477,
-    fill_expolygons: 1_882,
-    fill_holes: 174,
-    fill_paths: 2_056,
-    fill_points: 107_540,
-    no_overlap_expolygons: 2_547,
-    nonempty_layers: 260,
-    empty_layers: 200,
-};
-pub(super) const KSR_GROUP_HISTOGRAM: [(usize, usize); 8] = [
-    (0, 200),
-    (1, 100),
-    (2, 67),
-    (3, 78),
-    (4, 11),
-    (5, 2),
-    (6, 1),
-    (8, 1),
-];
-pub(super) const KSR_KIND_COUNTS: [(u8, usize); 6] =
-    [(0, 31), (1, 1), (2, 11), (4, 252), (5, 219), (6, 22)];
-pub(super) const KSR_PATTERN_COUNTS: [(u8, usize); 4] = [(0, 93), (1, 31), (20, 252), (29, 160)];
-pub(super) const KSR_ROLE_COUNTS: [(u8, usize); 6] =
-    [(4, 252), (5, 219), (6, 31), (7, 1), (9, 11), (10, 22)];
-pub(super) const KSR_EXTRUDER_COUNTS: [(u32, usize); 1] = [(1, 536)];
-pub(super) const KSR_PARAMS_BRIDGE_COUNTS: [(bool, usize); 2] = [(false, 503), (true, 33)];
-pub(super) const KSR_FLOW_BRIDGE_COUNTS: [(bool, usize); 2] = [(false, 514), (true, 22)];
-pub(super) const KSR_LOCK_COUNTS: OracleLockCounts = OracleLockCounts {
-    skin_density: 0,
-    skeleton_density: 0,
-    skin_flow: 0,
-    skeleton_flow: 0,
 };
 
 pub(super) fn encode(layers: &[OracleLayer<'_>]) -> EncodedOracle {
@@ -152,15 +73,6 @@ pub(super) fn totals(layers: &[OracleLayer<'_>]) -> OracleTotals {
         }
     }
     totals
-}
-
-pub(super) fn sha256_hex(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .fold(String::with_capacity(64), |mut output, byte| {
-            write!(output, "{byte:02x}").unwrap();
-            output
-        })
 }
 
 pub(super) const fn configured_pattern_rank(pattern: crate::ProcessInfillPattern) -> u8 {

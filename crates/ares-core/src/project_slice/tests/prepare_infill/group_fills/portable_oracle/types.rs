@@ -2,7 +2,6 @@ use crate::geometry::ExPolygon;
 
 #[derive(Clone, Copy)]
 pub(crate) enum OracleStage {
-    PreNarrow,
     PostNarrow,
 }
 
