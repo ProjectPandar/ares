@@ -7608,3 +7608,15 @@ transition-rib assertion and reaches the next missing source branch,
 `SkeletalTrapezoidation.cpp:1804-1844` `getOrCreateBeading`. Grid-guided
 near-intersection nudging, exact small-hole ordering, beading recovery, cooling,
 timing, and remaining G-code differences remain later source-cited slices.
+
+## Task 22O.204: skeletal beading recovery
+
+O204 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1614-1659,1746-1751,1804-1885`.
+Downward propagation and junction generation now create missing node beadings,
+reuse a nearby beading through the bounded distance-priority graph walk, and
+derive unresolved counts from incident geometry. Fixture slicing completes;
+internal-solid moves fall from O201's 257,394 to 14,523 versus the reference
+35,007, and total output falls to 184,339 lines versus 269,330. Remaining
+geometry/entity differences, cooling, timing, and exact G-code parity remain
+later source-cited slices.

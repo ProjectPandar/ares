@@ -111,7 +111,7 @@ impl SkeletalTrapezoidation<'_> {
             };
             let lower = self.graph.edge(edge_to_peak).from.unwrap();
             let peak = self.graph.edge(edge_to_peak).to.unwrap();
-            assert!(self.graph.node(peak).data.has_beading());
+            self.get_or_create_beading(peak);
             if self.graph.node(lower).data.has_beading() {
                 self.merge_beading_downward(edge_to_peak);
             } else {

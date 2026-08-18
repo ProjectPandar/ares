@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
     arachne::skeletal::{SkeletalEdge, SkeletalGraph, SkeletalJoint, TransitionEnd},
-    geometry::CoordinateScale,
+    geometry::{CoordinateScale, Polygon},
 };
 
 use super::test_support::{central_chain, config, strategy};
@@ -343,4 +343,35 @@ fn task22o169_generates_ordered_transition_ends_around_middle() {
             TransitionEnd::new(upper_position, lower_bead_count, false),
         ]
     );
+}
+
+#[test]
+fn task22o204_creates_missing_beading_for_resolved_node_count() {
+    let scale = CoordinateScale::Normal;
+    let strategy = strategy(scale);
+    let mut trapezoidation = SkeletalTrapezoidation::new(
+        &[Polygon::new(vec![
+            Point::new(0, 0),
+            Point::new(1_000, 0),
+            Point::new(1_000, 1_000),
+            Point::new(0, 1_000),
+        ])],
+        strategy.as_ref(),
+        config(scale),
+    )
+    .unwrap();
+    let node = trapezoidation
+        .graph
+        .add_node(SkeletalJoint::default(), Point::new(500, 500));
+    trapezoidation
+        .graph
+        .node_mut(node)
+        .data
+        .distance_to_boundary = 400_000;
+    trapezoidation.graph.node_mut(node).data.bead_count = 2;
+
+    let storage = trapezoidation.get_or_create_beading(node);
+
+    assert_eq!(storage.borrow().beading, strategy.compute(800_000, 2));
+    assert!(trapezoidation.graph.node(node).data.has_beading());
 }

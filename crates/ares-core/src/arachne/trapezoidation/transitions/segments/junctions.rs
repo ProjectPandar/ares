@@ -1,3 +1,4 @@
+mod beading;
 mod domains;
 
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
@@ -206,7 +207,7 @@ impl SkeletalTrapezoidation<'_> {
     }
 
     fn junctions_for_edge(
-        &self,
+        &mut self,
         edge: crate::arachne::skeletal::EdgeId,
     ) -> Option<Vec<ExtrusionJunction>> {
         let half_edge = self.graph.edge(edge);
@@ -220,7 +221,7 @@ impl SkeletalTrapezoidation<'_> {
         {
             return None;
         }
-        let beading_storage = self.graph.node(to).data.beading().unwrap();
+        let beading_storage = self.get_or_create_beading(to);
         let beading = beading_storage.borrow();
         assert!(beading.beading.total_thickness >= start_radius * 2);
         let mut junctions = Vec::new();
