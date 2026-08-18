@@ -1,10 +1,10 @@
-use crate::geometry::{ClipperError, ExPolygon, Point, Polygon};
+use crate::geometry::{ExPolygon, Point, Polygon};
 
-pub(super) fn clean_expolygon(expolygon: ExPolygon) -> Result<ExPolygon, ClipperError> {
+pub(super) fn clean_expolygon(expolygon: ExPolygon) -> ExPolygon {
     let (contour, holes) = expolygon.into_parts();
-    let contour = remove_sticks(contour).ok_or(ClipperError::CoordinateOutOfRange)?;
+    let contour = remove_sticks(contour).unwrap_or_else(|| Polygon::new(Vec::new()));
     let holes = holes.into_iter().filter_map(remove_sticks).collect();
-    Ok(ExPolygon::new(contour, holes))
+    ExPolygon::new(contour, holes)
 }
 
 pub(super) fn clean_paths(polygons: Vec<Polygon>, minimum_area: f64) -> Vec<Polygon> {

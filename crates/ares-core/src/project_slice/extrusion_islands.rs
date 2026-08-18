@@ -126,9 +126,9 @@ struct Bounds {
 impl Bounds {
     fn contains(self, point: Point) -> bool {
         point.x() >= self.min_x
-            && point.x() < self.max_x
+            && point.x() <= self.max_x
             && point.y() >= self.min_y
-            && point.y() < self.max_y
+            && point.y() <= self.max_y
     }
 
     fn area(self) -> i128 {
@@ -156,4 +156,32 @@ fn contour_bounds(expolygon: &ExPolygon) -> Bounds {
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostExtrusionIslands) {
     super::fill_entities::dispose(prepared.predecessor);
+}
+#[cfg(test)]
+mod tests {
+    use crate::geometry::{ExPolygon, Point, Polygon};
+
+    use super::{contour_bounds, island_index};
+
+    #[test]
+    fn task22o210_maximum_boundary_selects_smallest_containing_island() {
+        let rectangle = |minimum, maximum| {
+            ExPolygon::new(
+                Polygon::new(vec![
+                    Point::new(minimum, minimum),
+                    Point::new(maximum, minimum),
+                    Point::new(maximum, maximum),
+                    Point::new(minimum, maximum),
+                ]),
+                Vec::new(),
+            )
+        };
+        let slices = [rectangle(0, 10), rectangle(-10, 20)];
+        let bounds = slices.iter().map(contour_bounds).collect::<Vec<_>>();
+
+        assert_eq!(
+            island_index(Point::new(10, 5), &slices, &bounds, &[0, 1]),
+            0
+        );
+    }
 }

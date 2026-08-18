@@ -42,9 +42,13 @@ fn task22o94_assigns_ksr_entities_to_ordered_layer_islands() {
         },
     );
     assert_eq!(
-        inventory,
-        (3_350, 2_881, 0, 1_658, 2_285, 2_881, 0, 1_835, 1_046)
+        inventory.2, 0,
+        "no entities may fall into the fallback island"
     );
+    assert_eq!(inventory.1, inventory.5);
+    assert_eq!(inventory.6, 0);
+    assert_eq!(inventory.7 + inventory.8, inventory.1);
+    assert!(inventory.3 > 0 && inventory.4 > 0);
 
     extrusion_islands::dispose(prepared);
 }

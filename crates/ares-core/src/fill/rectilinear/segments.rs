@@ -207,7 +207,7 @@ fn prepare_contours(
     outer_offset: f32,
     inner_offset: f32,
 ) -> Result<(ExPolygon, Vec<OffsetContour>), ClipperError> {
-    let rotated = clean_expolygon(rotate_expolygon(expolygon, angle)?)?;
+    let rotated = clean_expolygon(rotate_expolygon(expolygon, angle)?);
     let outer = if outer_offset == 0.0 {
         let mut polygons = Vec::with_capacity(1 + rotated.holes().len());
         polygons.push(rotated.contour().clone());

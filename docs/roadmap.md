@@ -7675,3 +7675,16 @@ gap-fill block count remains 206 versus reference 470; moves change from 8,057
 to 8,058 versus 5,881, excluding this conversion as the count deficit's cause.
 Medial domains/chaining, arc input geometry, exact E, infill counts, cooling,
 timing, and remaining G-code differences remain later source-cited slices.
+
+## Task 22O.210: inclusive island bounds prefilter
+
+O210 hardens the Ares spatial compatibility shell that restores source-owned
+fill association from OrcaSlicer `Fill/Fill.cpp:1234-1368`. Bounding boxes now
+admit maximum-edge points before boundary-inclusive polygon confirmation, so
+nested entities select the smallest containing island. Degenerate rectilinear
+cleanup now yields an empty domain instead of a geometry error, and obsolete
+exact island-inventory pinning is replaced by fallback/ownership invariants.
+Fixture gap blocks and first differing layer order remain unchanged, excluding
+the maximum-edge prefilter as their cause. Direct source ownership, medial
+topology, arc input geometry, exact E, timing, and remaining differences remain
+later source-cited slices.
