@@ -53,6 +53,10 @@ pub(in crate::project_slice::gcode_emit::motion) fn clip_end(
     let Some(arc) = &mut fitted.arc else {
         return;
     };
+    if !point_within_arc(*arc, points[fitted.start], points[fitted.end]) {
+        fitted.arc = None;
+        return;
+    }
     let Some(endpoint) = project_to_circle(*arc, points[fitted.end], scale) else {
         fitted.arc = None;
         return;
@@ -79,6 +83,23 @@ fn project_to_circle(
             arc.center.1 + scale.unscale(y),
         ))
     })?
+}
+
+fn point_within_arc(arc: FittedArc, start: (f64, f64), point: (f64, f64)) -> bool {
+    let start_angle = (start.1 - arc.center.1).atan2(start.0 - arc.center.0);
+    let point_angle = (point.1 - arc.center.1).atan2(point.0 - arc.center.0);
+    let mut delta = point_angle - start_angle;
+    if delta > 0.0 && arc.clockwise {
+        delta -= std::f64::consts::TAU;
+    } else if delta < 0.0 && !arc.clockwise {
+        delta += std::f64::consts::TAU;
+    }
+    let sweep = arc.length / arc.radius;
+    if arc.clockwise {
+        delta < 0.0 && delta > -sweep
+    } else {
+        delta > 0.0 && delta < sweep
+    }
 }
 
 fn update_arc_length(arc: &mut FittedArc, start: (f64, f64), end: (f64, f64)) -> bool {

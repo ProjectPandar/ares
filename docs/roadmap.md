@@ -7761,3 +7761,17 @@ blocks fall from 6,332 to 6,331 versus reference counts 190,201, 13,363, and
 ignoring E words, the first difference remains arc offset `I-3.392` versus
 `I-3.393`. Monotonic sub-micron geometry, remaining arc fitting, retraction,
 cooling, timing, and later G-code differences remain source-cited slices.
+
+## Task 22O.218: clipped-arc sweep containment
+
+O218 ports OrcaSlicer 2.4.2 `Circle.cpp:230-260` and
+`Polyline.cpp:80-90`. A retained fitted arc now accepts a loop-clipped endpoint
+only when it lies strictly inside the original directed sweep; otherwise the
+range falls back to linear emission instead of expanding or reversing the arc.
+The KSR fixture converts one retained extrusion arc to lines. Secondary travel
+state raises spiral-lift arcs from 6,331 to 6,336, so total fitted/lift arc
+commands move from 15,012 to 15,016; G1 commands fall from 199,651 to 199,639.
+The first exact difference remains extrusion `.03178` versus `.03177`, and the
+first E-normalized difference remains arc offset `I-3.392` versus `I-3.393`.
+Monotonic sub-micron geometry, remaining fitting, retraction, cooling, timing,
+and later G-code differences remain source-cited slices.
