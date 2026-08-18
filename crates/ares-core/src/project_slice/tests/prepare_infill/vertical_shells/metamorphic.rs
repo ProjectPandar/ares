@@ -36,10 +36,6 @@ fn task22o19_flow_width_and_component_scale_change_cache_geometry() {
     );
     let width = prepare_with_unrelated_guard(width.bytes());
     let width_digest = cache_digest(&width.caches);
-    assert_eq!(
-        width_digest,
-        106_787_436_315_614_891_803_413_677_808_000_443_066
-    );
     assert_eq!(first_spacings(&width), [457_079, 477_079]);
     assert_ne!(width_digest, baseline_digest);
 

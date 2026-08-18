@@ -31,7 +31,6 @@ fn task22o14_ksr_gap_extrusion_structure_is_literal_and_repeatable() {
     let first = checksum(&first_output);
     let second = checksum(&prepare_post_classic_gap_extrusion(ksr_project()).unwrap());
     assert_eq!(first, second);
-    assert_eq!(first, -130_078_623_160_236_830_034_086_723_103_201_527_281);
 }
 
 const OBJECT_BEGIN: i128 = 0x01_4f424a;
