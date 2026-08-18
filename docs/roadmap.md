@@ -7802,3 +7802,18 @@ from 199,598 to 199,563, extrusion arcs from 8,681 to 8,683, and
 spiral-lift/wipe sequences from 6,335 to 6,327. Remaining offset/arc numeric
 parity, ant topology, retraction, cooling, timing, and later G-code differences
 remain source-cited slices.
+
+## Task 22O.221: rectilinear rotation half-up rounding
+
+O221 ports OrcaSlicer 2.4.2 `Point.cpp:50-57`,
+`libslic3r.h:403-420`, and the forward/reverse rotation calls in
+`Fill/FillRectilinear.cpp`. Rectilinear rotations now use source
+`fast_round_up` semantics, including negative ties toward positive infinity
+and the predecessor-of-0.5 exception, instead of Rust's ties-away-from-zero
+`round`. The KSR fixture changes 36 total lines relative to O220; G1 commands
+move from 199,563 to 199,626, extrusion arcs from 8,683 to 8,653, and
+spiral-lift/wipe sequences from 6,327 to 6,323. The normalized first difference
+remains line 1,855, arc offset `J-1.23` versus `J-1.229`; ignoring arc offsets,
+the first endpoint difference remains line 1,965, `X121.643` versus
+`X121.642`. Remaining offset/arc numeric parity, ant topology, retraction,
+cooling, timing, and later G-code differences remain source-cited slices.

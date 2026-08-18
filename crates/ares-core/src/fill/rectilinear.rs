@@ -11,6 +11,14 @@ mod rng;
 mod segments;
 mod surface;
 
+fn fast_round_up(value: f64) -> f64 {
+    if value == 0.499_999_999_999_999_94 {
+        0.0
+    } else {
+        (value + 0.5).floor()
+    }
+}
+
 pub(crate) use chain::chain_monotonic_regions;
 pub(crate) use costs::compute_region_costs;
 pub(crate) use emit::emit_monotonic_polylines;

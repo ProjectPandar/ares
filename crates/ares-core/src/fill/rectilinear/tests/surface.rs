@@ -1,6 +1,8 @@
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 
-use super::super::{MonotonicFillParams, fill_monotonic_surface, surface::scaled_offsets};
+use super::super::{
+    MonotonicFillParams, fast_round_up, fill_monotonic_surface, surface::scaled_offsets,
+};
 
 fn scaled_rectangle() -> ExPolygon {
     ExPolygon::new(
@@ -78,4 +80,12 @@ fn task22o220_scaled_offsets_retain_float_fraction() {
 
     assert_eq!(offsets.0.to_bits(), 0x4792_6e71);
     assert_eq!(offsets.1.to_bits(), 0xc812_bfcb);
+}
+
+#[test]
+fn rotated_coordinates_use_orca_half_up_rounding() {
+    assert_eq!(fast_round_up(0.5), 1.0);
+    assert_eq!(fast_round_up(-0.5), 0.0);
+    assert_eq!(fast_round_up(-1.5), -1.0);
+    assert_eq!(fast_round_up(0.499_999_999_999_999_94), 0.0);
 }
