@@ -41,15 +41,19 @@ pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
         }
 
         let elapsed = estimate.elapsed_at(index);
+        let mut latest_percent = None;
         while next_percent < 100
             && estimate.total > 0.0
             && elapsed >= estimate.total * f64::from(next_percent) / 100.0
         {
+            latest_percent = Some(next_percent);
+            next_percent += 1;
+        }
+        if let Some(percent) = latest_percent {
             result.push_str(&format!(
-                "M73 P{next_percent} R{}\n",
+                "M73 P{percent} R{}\n",
                 minutes(estimate.total - elapsed)
             ));
-            next_percent += 1;
         }
         result.push_str(line);
         result.push('\n');
@@ -88,34 +92,12 @@ impl Estimate {
         let mut blocks = Vec::new();
         let mut state = MotionState::default();
         let mut delays = vec![0.0; lines.len()];
-        let mut pending_delay = 0.0;
-        let mut last_motion = None;
-        let mut g29_seen = false;
         for (index, line) in lines.iter().enumerate() {
             let code = line.split(';').next().unwrap_or_default().trim();
-            let is_g29 = code.starts_with("G29") && !code.starts_with("G29.");
-            let delay = if is_g29 && !g29_seen {
-                260.0
-            } else if is_g29 {
-                0.0
-            } else {
-                command_delay(code).unwrap_or(0.0)
-            };
-            g29_seen |= is_g29;
-            if let Some(previous) = last_motion {
-                delays[previous] += delay;
-            } else {
-                pending_delay += delay;
-            }
+            delays[index] += command_delay(code).unwrap_or(0.0);
             if let Some(block) = state.motion(code) {
-                delays[index] += pending_delay;
-                pending_delay = 0.0;
-                last_motion = Some(index);
                 blocks.push(MotionBlock { index, ..block });
             }
-        }
-        if pending_delay > 0.0 {
-            *delays.last_mut().unwrap() += pending_delay;
         }
         let times = planned_times(&blocks);
         let mut elapsed = vec![0.0; lines.len() + 1];
@@ -140,20 +122,28 @@ impl Estimate {
 
 struct MotionState {
     position: [f64; 3],
+    e_position: f64,
     feedrate: f64,
     acceleration: f64,
-    jerk: [f64; 3],
+    retract_acceleration: f64,
+    travel_acceleration: f64,
+    jerk: [f64; 4],
     relative: bool,
+    e_relative: bool,
 }
 
 impl Default for MotionState {
     fn default() -> Self {
         Self {
             position: [0.0; 3],
+            e_position: 0.0,
             feedrate: 0.0,
             acceleration: 0.0,
-            jerk: [9.0, 9.0, 3.0],
+            retract_acceleration: 0.0,
+            travel_acceleration: 0.0,
+            jerk: [9.0, 9.0, 3.0, 2.5],
             relative: false,
+            e_relative: false,
         }
     }
 }
@@ -163,8 +153,8 @@ struct MotionBlock {
     distance: f64,
     speed: f64,
     acceleration: f64,
-    jerk: [f64; 3],
-    direction: [f64; 3],
+    jerk: [f64; 4],
+    direction: [f64; 4],
 }
 
 impl MotionState {
@@ -177,56 +167,97 @@ impl MotionState {
             self.relative = true;
             return None;
         }
+        if code == "M82" {
+            self.e_relative = false;
+            return None;
+        }
+        if code == "M83" {
+            self.e_relative = true;
+            return None;
+        }
+        if code.starts_with("G92") {
+            if let Some(value) = word(code, 'E') {
+                self.e_position = value;
+            }
+            for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
+                self.position[axis] = word(code, letter).unwrap_or(self.position[axis]);
+            }
+            return None;
+        }
         if let Some(value) = word(code, 'F') {
             self.feedrate = value / 60.0;
         }
         if code.starts_with("M204") {
-            if let Some(value) = word(code, 'S')
-                .or_else(|| word(code, 'P'))
-                .or_else(|| word(code, 'T'))
-            {
+            if let Some(value) = word(code, 'S') {
                 self.acceleration = value;
+                self.retract_acceleration = value;
+                self.travel_acceleration = value;
             }
+            self.acceleration = word(code, 'P').unwrap_or(self.acceleration);
+            self.retract_acceleration = word(code, 'R').unwrap_or(self.retract_acceleration);
+            self.travel_acceleration = word(code, 'T').unwrap_or(self.travel_acceleration);
             return None;
         }
         if code.starts_with("M205") {
-            for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
+            for (axis, letter) in ['X', 'Y', 'Z', 'E'].into_iter().enumerate() {
                 self.jerk[axis] = word(code, letter).unwrap_or(self.jerk[axis]);
             }
             return None;
         }
-        let command = code.get(0..2)?;
+        let command = code.split_whitespace().next()?;
         if !matches!(command, "G0" | "G1" | "G2" | "G3") || self.feedrate <= 0.0 {
             return None;
         }
         let old = self.position;
         let mut next = old;
         for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
-            if let Some(value) = word(code, letter) {
-                let offset = match self.relative {
-                    true => value,
-                    false => value - old[axis],
-                };
-                next[axis] = old[axis] + offset;
-            }
+            let Some(value) = word(code, letter) else {
+                continue;
+            };
+            let offset = match self.relative {
+                true => value,
+                false => value - old[axis],
+            };
+            next[axis] = old[axis] + offset;
         }
-        let mut delta = [next[0] - old[0], next[1] - old[1], next[2] - old[2]];
+        let old_e = self.e_position;
+        let e_delta = word(code, 'E').map_or(0.0, |value| {
+            if self.e_relative {
+                value
+            } else {
+                value - old_e
+            }
+        });
+        self.e_position = old_e + e_delta;
+        let mut delta = [
+            next[0] - old[0],
+            next[1] - old[1],
+            next[2] - old[2],
+            e_delta,
+        ];
         let mut distance = norm(delta);
         if matches!(command, "G2" | "G3") {
             let i = word(code, 'I').unwrap_or(0.0);
             let j = word(code, 'J').unwrap_or(0.0);
             let radius = (i * i + j * j).sqrt();
-            let start = (-j).atan2(-i);
-            let end = (delta[1] - j).atan2(delta[0] - i);
-            let mut sweep = end - start;
-            if command == "G2" && sweep >= 0.0 {
-                sweep -= 2.0 * PI;
-            } else if command == "G3" && sweep <= 0.0 {
-                sweep += 2.0 * PI;
-            }
-            let turns = word(code, 'P').unwrap_or(0.0) * 2.0 * PI;
+            let same_xy = delta[0].abs() <= f64::EPSILON && delta[1].abs() <= f64::EPSILON;
+            let mut sweep = if same_xy {
+                0.0
+            } else {
+                let start = (-j).atan2(-i);
+                let end = (delta[1] - j).atan2(delta[0] - i);
+                let mut sweep = end - start;
+                sweep = match (command, sweep >= 0.0, sweep <= 0.0) {
+                    ("G2", true, _) => sweep - 2.0 * PI,
+                    ("G3", _, true) => sweep + 2.0 * PI,
+                    _ => sweep,
+                };
+                sweep
+            };
+            let turns = word(code, 'P').unwrap_or(0.0);
+            let turns = if same_xy && turns == 0.0 { 1.0 } else { turns } * 2.0 * PI;
             sweep += if command == "G2" { -turns } else { turns };
-            distance = (radius * sweep.abs()).hypot(delta[2]);
+            distance = (radius * sweep.abs()).hypot(delta[2]).hypot(delta[3]);
             delta[0] = sweep.cos() * radius;
             delta[1] = sweep.sin() * radius;
         }
@@ -234,11 +265,18 @@ impl MotionState {
         if distance <= f64::EPSILON {
             return None;
         }
+        let acceleration = if e_delta < 0.0 {
+            self.retract_acceleration
+        } else if e_delta > 0.0 {
+            self.acceleration
+        } else {
+            self.travel_acceleration
+        };
         Some(MotionBlock {
             index: 0,
             distance,
             speed: self.feedrate,
-            acceleration: self.acceleration.max(1.0),
+            acceleration: acceleration.max(1.0),
             jerk: self.jerk,
             direction: scale(delta, 1.0 / distance),
         })
@@ -254,7 +292,7 @@ fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     for (index, block) in blocks.iter().enumerate() {
         max_entry[index] = if let Some(next) = blocks.get(index + 1) {
             let junction = block.speed.min(next.speed);
-            (0..3).fold(junction, |limit, axis| {
+            (0..4).fold(junction, |limit, axis| {
                 let delta =
                     (next.speed * next.direction[axis] - block.speed * block.direction[axis]).abs();
                 let factor = (block.jerk[axis] / delta.max(block.jerk[axis])).min(1.0);
@@ -307,9 +345,11 @@ fn command_delay(code: &str) -> Option<f64> {
     if code.starts_with("M400") {
         return Some(word(code, 'S').unwrap_or(0.0) + word(code, 'P').unwrap_or(0.0) * 0.001);
     }
+    // OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:4859-4864.
     if code.starts_with("G29") && !code.starts_with("G29.") {
         return Some(260.0);
     }
+    // OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:5150-5157.
     if code.starts_with("M191") && word(code, 'S').unwrap_or(0.0) > 40.0 {
         return Some(720.0);
     }
@@ -325,7 +365,7 @@ fn word(code: &str, letter: char) -> Option<f64> {
     value[..end].trim().parse().ok()
 }
 
-fn norm(value: [f64; 3]) -> f64 {
+fn norm(value: [f64; 4]) -> f64 {
     value
         .iter()
         .map(|component| component * component)
@@ -333,27 +373,13 @@ fn norm(value: [f64; 3]) -> f64 {
         .sqrt()
 }
 
-fn scale(value: [f64; 3], factor: f64) -> [f64; 3] {
-    [value[0] * factor, value[1] * factor, value[2] * factor]
+fn scale(value: [f64; 4], factor: f64) -> [f64; 4] {
+    [
+        value[0] * factor,
+        value[1] * factor,
+        value[2] * factor,
+        value[3] * factor,
+    ]
 }
-
 #[cfg(test)]
-mod tests {
-    use super::process;
-
-    #[test]
-    fn inserts_progress_and_rewrites_time_fields() {
-        let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n".to_vec();
-        let output = String::from_utf8(process(output)).unwrap();
-        assert!(output.contains("total estimated time: 1m 40s"), "{output}");
-        assert!(output.contains("M73 P0 R"));
-        assert!(output.contains("; model printing time:"));
-        assert!(!output.contains("total estimated time: 0s"));
-    }
-    #[test]
-    fn arc_p_word_adds_full_turns() {
-        let mut state = super::MotionState::default();
-        let block = state.motion("G3 X0 Y2 I0 J1 P1 F600").unwrap();
-        assert!((block.distance - 3.0 * std::f64::consts::PI).abs() < 1e-9);
-    }
-}
+mod tests;

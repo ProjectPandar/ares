@@ -18,6 +18,7 @@ mod gcode;
 mod gcode_adaptive_bed_mesh;
 mod gcode_auxiliary_fan;
 mod gcode_config_header;
+mod gcode_dependencies;
 mod gcode_filament_stats;
 mod gcode_file_start;
 mod gcode_finish;

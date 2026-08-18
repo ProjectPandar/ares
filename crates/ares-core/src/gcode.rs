@@ -1,22 +1,4 @@
-use crate::gcode_format::format_decimal;
-use crate::gcode_layer_change_retraction::{
-    LayerChangeLiftCommand, LayerChangeLiftState, LayerChangeResumeCommand,
-    LayerChangeRetractCommand, layer_change_resume_before_print, layer_change_retract_gcode,
-};
-use crate::gcode_layer_custom::after_z_gcode;
-use crate::gcode_layer_diagnostic_emit::{LayerDiagnosticEmitCommand, layer_diagnostics};
-use crate::gcode_layer_markers as markers;
-use crate::gcode_move_buffer::{BufferedMove, flush};
-use crate::gcode_object_labels::{ObjectLabelConfig, ObjectLabelState};
-use crate::gcode_pressure_advance::{PressureAdvanceMoveState, startup_command};
-use crate::gcode_stat_placeholders::finish as finish_stat_placeholders;
-use crate::gcode_travel_retraction::{
-    TravelRetractionCommand, TravelRetractionState, TravelUnretractCommand,
-};
-use crate::gcode_wipe_before_external_loop::WipeBeforeExternalLoop;
-use crate::gcode_wipe_on_loops::{WipeOnLoops, WipeOnLoopsCommand};
-use crate::{Point2, PrintPathRole, SliceError, SliceOptions, SlicingPipeline, ToolpathMoveKind};
-
+use crate::gcode_dependencies::*;
 pub(crate) fn format_gcode(
     pipeline: &SlicingPipeline,
     options: &SliceOptions,
@@ -200,7 +182,12 @@ pub(crate) fn format_gcode(
             gcode_comments,
             &mut power_loss_recovery_state,
         ));
-        markers::push(&mut gcode, &writer, options, (layer_index, layer_num, &z))?;
+        crate::gcode_layer_markers::push(
+            &mut gcode,
+            &writer,
+            options,
+            (layer_index, layer_num, &z),
+        )?;
         let layer_part_cooling_fan_speed = crate::gcode_layer_fan::baseline_speed(
             part_cooling_fan_ramp,
             layer_index,
@@ -334,7 +321,8 @@ pub(crate) fn format_gcode(
                 });
             move_output.push_str(&travel_unretract_gcode);
             e_position_offset += travel_e_offset_delta;
-            let move_start = Point2::new(writer.current_position().0, writer.current_position().1);
+            let move_start =
+                crate::Point2::new(writer.current_position().0, writer.current_position().1);
             let travel_lift = layer_change_lift_state
                 .consume_travel_lift(&writer, extrusion_move.kind(), extrusion_move.point())
                 .or_else(|| travel_retraction_state.consume_travel_lift());
@@ -360,7 +348,8 @@ pub(crate) fn format_gcode(
                 })?;
             move_output.push_str(&emitted_move_gcode);
             e_position_offset += spiral_e_offset_delta;
-            let emitted_end = Point2::new(writer.current_position().0, writer.current_position().1);
+            let emitted_end =
+                crate::Point2::new(writer.current_position().0, writer.current_position().1);
             move_output.push_str(&loop_end_wipe.gcode(&mut writer, move_index, speed_move));
             if extrusion_move.kind() == ToolpathMoveKind::Print
                 && extrusion_move.role() != PrintPathRole::GapFill
@@ -397,6 +386,11 @@ pub(crate) fn format_gcode(
             layer_z: &last_layer.1,
         },
     )?);
-    let gcode = finish_stat_placeholders(options, gcode, layer_extrusion_moves, layer_speed_moves)?;
+    let gcode = crate::gcode_stat_placeholders::finish(
+        options,
+        gcode,
+        layer_extrusion_moves,
+        layer_speed_moves,
+    )?;
     Ok(gcode.into_bytes())
 }
