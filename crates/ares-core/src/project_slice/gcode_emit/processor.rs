@@ -89,12 +89,28 @@ impl Estimate {
         let mut state = MotionState::default();
         let mut delays = vec![0.0; lines.len()];
         let mut pending_delay = 0.0;
+        let mut last_motion = None;
+        let mut g29_seen = false;
         for (index, line) in lines.iter().enumerate() {
             let code = line.split(';').next().unwrap_or_default().trim();
-            pending_delay += command_delay(code).unwrap_or(0.0);
+            let is_g29 = code.starts_with("G29") && !code.starts_with("G29.");
+            let delay = if is_g29 && !g29_seen {
+                260.0
+            } else if is_g29 {
+                0.0
+            } else {
+                command_delay(code).unwrap_or(0.0)
+            };
+            g29_seen |= is_g29;
+            if let Some(previous) = last_motion {
+                delays[previous] += delay;
+            } else {
+                pending_delay += delay;
+            }
             if let Some(block) = state.motion(code) {
                 delays[index] += pending_delay;
                 pending_delay = 0.0;
+                last_motion = Some(index);
                 blocks.push(MotionBlock { index, ..block });
             }
         }
@@ -200,17 +216,19 @@ impl MotionState {
             let i = word(code, 'I').unwrap_or(0.0);
             let j = word(code, 'J').unwrap_or(0.0);
             let radius = (i * i + j * j).sqrt();
-            let start = (-i).atan2(-j);
-            let end = (delta[0] - i).atan2(delta[1] - j);
+            let start = (-j).atan2(-i);
+            let end = (delta[1] - j).atan2(delta[0] - i);
             let mut sweep = end - start;
             if command == "G2" && sweep >= 0.0 {
                 sweep -= 2.0 * PI;
             } else if command == "G3" && sweep <= 0.0 {
                 sweep += 2.0 * PI;
             }
+            let turns = word(code, 'P').unwrap_or(0.0) * 2.0 * PI;
+            sweep += if command == "G2" { -turns } else { turns };
             distance = (radius * sweep.abs()).hypot(delta[2]);
-            delta[0] = sweep.sin() * radius;
-            delta[1] = sweep.cos() * radius;
+            delta[0] = sweep.cos() * radius;
+            delta[1] = sweep.sin() * radius;
         }
         self.position = next;
         if distance <= f64::EPSILON {
@@ -331,5 +349,11 @@ mod tests {
         assert!(output.contains("M73 P0 R"));
         assert!(output.contains("; model printing time:"));
         assert!(!output.contains("total estimated time: 0s"));
+    }
+    #[test]
+    fn arc_p_word_adds_full_turns() {
+        let mut state = super::MotionState::default();
+        let block = state.motion("G3 X0 Y2 I0 J1 P1 F600").unwrap();
+        assert!((block.distance - 3.0 * std::f64::consts::PI).abs() < 1e-9);
     }
 }
