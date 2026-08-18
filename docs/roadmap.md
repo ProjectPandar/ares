@@ -7653,3 +7653,14 @@ suite passes. Fixture comparison keeps the first normalized one-micron arc
 endpoint divergence, excluding offset regrouping as its cause. Stick/small-area
 cleanup, arc input geometry, exact E, infill counts, cooling, timing, and
 remaining G-code differences remain later source-cited slices.
+
+## Task 22O.208: rectilinear stick and small-contour cleanup
+
+O208 ports OrcaSlicer 2.4.2 `Polygon.cpp:532-594` and
+`Fill/FillRectilinear.cpp:416-429`. Rotated source contours and both offset sets
+now remove zero-area turn-back sticks with source stable compaction, and offset
+paths below `0.01 * inner_offset²` are discarded. The focused stick and
+rectilinear suites pass. Fixture comparison retains the normalized one-micron
+arc endpoint mismatch, excluding these cleanup branches as its cause. Arc input
+geometry, exact E, infill counts, cooling, timing, and remaining G-code
+differences remain later source-cited slices.

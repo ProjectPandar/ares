@@ -1,3 +1,9 @@
+mod cleanup;
+
+#[cfg(test)]
+pub(crate) use cleanup::remove_sticks_from_polygon;
+use cleanup::{clean_expolygon, clean_paths};
+
 use crate::geometry::{
     ClipperError, ExPolygon, JoinType, Point, Polygon, offset_expolygon_refs_paths, offset_paths,
 };
@@ -201,7 +207,7 @@ fn prepare_contours(
     outer_offset: f32,
     inner_offset: f32,
 ) -> Result<(ExPolygon, Vec<OffsetContour>), ClipperError> {
-    let rotated = rotate_expolygon(expolygon, angle)?;
+    let rotated = clean_expolygon(rotate_expolygon(expolygon, angle)?)?;
     let outer = if outer_offset == 0.0 {
         let mut polygons = Vec::with_capacity(1 + rotated.holes().len());
         polygons.push(rotated.contour().clone());
@@ -215,6 +221,9 @@ fn prepare_contours(
     } else {
         Vec::new()
     };
+    let minimum_area = 0.01 * f64::from(inner_offset).powi(2);
+    let outer = clean_paths(outer, minimum_area);
+    let inner = clean_paths(inner, minimum_area);
     let mut contours = flatten(outer, false);
     contours.extend(flatten(inner, true));
     Ok((rotated, contours))

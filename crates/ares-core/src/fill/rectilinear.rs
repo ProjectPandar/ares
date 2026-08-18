@@ -23,6 +23,8 @@ pub(crate) use perimeter::{
 };
 pub(crate) use pinch::insert_phony_outer_pairs;
 pub(crate) use regions::{MonotonicRegion, RegionBoundary, generate_monotonic_regions};
+#[cfg(test)]
+pub(crate) use segments::remove_sticks_from_polygon;
 pub(crate) use segments::{
     IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine,
     prepare_rectilinear_slice, slice_vertical_lines,
