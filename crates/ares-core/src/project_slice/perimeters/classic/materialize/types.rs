@@ -81,6 +81,7 @@ impl Polyline3 {
 pub(in crate::project_slice) struct ExtrusionPath {
     pub(in crate::project_slice) polyline: Polyline3,
     pub(in crate::project_slice) role: ExtrusionRole,
+    pub(in crate::project_slice) can_reverse: bool,
     pub(in crate::project_slice) mm3_per_mm: f64,
     pub(in crate::project_slice) width: f32,
     pub(in crate::project_slice) height: f32,

@@ -142,6 +142,7 @@ fn entity(x: i64, inset_idx: i32) -> OrderedExtrusionLoop {
                     candidate_points: Vec::new(),
                 },
                 role: ExtrusionRole::Perimeter,
+                can_reverse: true,
                 mm3_per_mm: 0.08,
                 width: 0.4,
                 height: 0.2,

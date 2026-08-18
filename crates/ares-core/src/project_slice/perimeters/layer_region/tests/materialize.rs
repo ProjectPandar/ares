@@ -283,6 +283,7 @@ fn path(x: i64, role: ExtrusionRole) -> ExtrusionPath {
             candidate_points: Vec::new(),
         },
         role,
+        can_reverse: true,
         mm3_per_mm: x as f64 / 100.0,
         width: x as f32 / 1_000.0,
         height: 0.2,

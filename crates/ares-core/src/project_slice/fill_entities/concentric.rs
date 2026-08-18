@@ -49,12 +49,26 @@ pub(super) fn append(
             );
         }
     }
-    let converted = variable_width::convert_with_role(
+    let mut converted = variable_width::convert_with_role(
         &polylines,
         fill.params.flow,
         scale,
         MaterializedRole::SolidInfill,
     )?;
+    for entity in &mut converted.entities {
+        match entity {
+            crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(path) => {
+                path.can_reverse = false;
+            }
+            crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(
+                paths,
+            ) => {
+                for path in paths {
+                    path.can_reverse = false;
+                }
+            }
+        }
+    }
     output.thin_fills.extend(converted.entities);
     Ok(())
 }

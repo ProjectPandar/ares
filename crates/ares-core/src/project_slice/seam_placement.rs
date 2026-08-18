@@ -374,6 +374,7 @@ fn projected_parts(
         (polyline.points.len() >= 2).then_some(ExtrusionPath {
             polyline,
             role: path.role,
+            can_reverse: path.can_reverse,
             mm3_per_mm: path.mm3_per_mm,
             width: path.width,
             height: path.height,

@@ -36,6 +36,18 @@ fn task22o96_reversible_collection_and_gap_path_reverse_from_explicit_cursor() {
 }
 
 #[test]
+fn task22o216_oriented_gap_path_preserves_source_direction() {
+    let mut path = gap_extrusion_path(0, 100);
+    path.can_reverse = false;
+    let mut gaps = vec![GapFillEntity::Path(path)];
+
+    chain_and_reorder_entities(&mut gaps, Point::new(99, 0));
+
+    assert_eq!(gaps[0].first_point(), Point::new(0, 0));
+    assert_eq!(gaps[0].last_point(), Point::new(100, 0));
+}
+
+#[test]
 fn task22o96_chained_path_from_respects_no_sort_and_reorders_sortable_paths() {
     let fixed = collection(&[(0, 10), (100, 110)], true).chained_path_from(Point::new(109, 0));
     assert_eq!(path_endpoints(&fixed), vec![(0, 10), (100, 110)]);
@@ -117,6 +129,7 @@ fn gap_extrusion_path(first: i64, last: i64) -> ExtrusionPath {
             candidate_points: Vec::new(),
         },
         role: PerimeterRole::GapFill,
+        can_reverse: true,
         mm3_per_mm: 1.0,
         width: 1.0,
         height: 1.0,

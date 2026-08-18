@@ -135,6 +135,7 @@ fn path(
             candidate_points: Vec::new(),
         },
         role,
+        can_reverse: true,
         mm3_per_mm,
         width,
         height,

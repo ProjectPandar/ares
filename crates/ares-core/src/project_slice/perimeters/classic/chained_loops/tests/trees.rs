@@ -71,6 +71,7 @@ fn raw(children: Vec<RawPathNode>) -> RawPathNode {
                 candidate_points: Vec::new(),
             },
             role: ExtrusionRole::Perimeter,
+            can_reverse: true,
             mm3_per_mm: 1.0,
             width: 0.4,
             height: 0.2,

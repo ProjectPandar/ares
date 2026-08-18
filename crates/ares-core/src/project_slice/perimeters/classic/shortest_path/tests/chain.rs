@@ -94,6 +94,7 @@ pub(super) fn path(
             candidate_points: Vec::new(),
         },
         role: ExtrusionRole::Perimeter,
+        can_reverse: true,
         mm3_per_mm,
         width,
         height,

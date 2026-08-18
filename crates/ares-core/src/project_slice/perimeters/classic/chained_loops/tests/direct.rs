@@ -149,6 +149,7 @@ fn path(points: &[(i64, i64, i64)], mm3: f64, width: f32, height: f32) -> Extrus
             candidate_points: Vec::new(),
         },
         role: ExtrusionRole::Perimeter,
+        can_reverse: true,
         mm3_per_mm: mm3,
         width,
         height,

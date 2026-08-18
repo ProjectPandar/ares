@@ -7735,3 +7735,15 @@ falls from 288,051 to 283,701 lines versus reference 269,330. The retained
 monotonic polyline still starts from the opposite endpoint; fill-generation
 orientation, sparse geometry, cooling, timing, and remaining G-code differences
 remain later source-cited slices.
+
+## Task 22O.216: concentric path orientation
+
+O216 ports the remaining OrcaSlicer 2.4.2
+`Fill/FillBase.cpp:133-186`, `Fill/Fill.cpp:1360-1369`,
+`ExtrusionEntity.hpp:299-305`, and `ExtrusionEntityCollection.hpp:78-86`
+orientation behavior into Ares' flattened variable-width entity seam. The first
+KSR internal-solid concentric path now retains its generated direction from
+`X137.276 Y101.382` through `X139.964 Y98.694` and finishes at
+`X137.276 Y101.342`; production does not special-case fixture coordinates.
+Sub-micron Arachne/arc numeric parity, sparse-fill geometry, cooling, timing,
+and later G-code differences remain later source-cited slices.

@@ -177,7 +177,7 @@ impl ChainEntity for GapFillEntity {
     }
 
     fn can_reverse(&self) -> bool {
-        matches!(self, Self::Path(_))
+        matches!(self, Self::Path(path) if path.can_reverse)
     }
 
     fn reverse(&mut self) {

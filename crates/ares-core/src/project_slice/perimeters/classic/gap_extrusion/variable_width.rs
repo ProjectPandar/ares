@@ -208,6 +208,7 @@ fn push_group(
                 candidate_points: Vec::new(),
             },
             role,
+            can_reverse: true,
             mm3_per_mm: new_flow.mm3_per_mm,
             width: new_flow.width,
             height: new_flow.height,

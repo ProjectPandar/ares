@@ -21,6 +21,7 @@ fn path(y: i64) -> ExtrusionPath {
             candidate_points: Vec::new(),
         },
         role: ExtrusionRole::GapFill,
+        can_reverse: true,
         mm3_per_mm: 0.08,
         width: 0.4,
         height: 0.2,
