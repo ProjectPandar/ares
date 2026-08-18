@@ -7596,3 +7596,15 @@ whole parent solid region. Fixture smoke reached the next missing source stage,
 trips the skeletal transition invariant instead of being cleaned first.
 Outline preparation, cooling, timing, and remaining exact G-code differences
 remain later source-cited parity slices.
+
+## Task 22O.203: Arachne outline preparation
+
+O203 ports the reached preparation sequence from OrcaSlicer 2.4.2
+`Arachne/WallToolPaths.cpp:86-201,314-405,407-515`. Raw fill polygons now pass
+through triple epsilon offsets, accumulated-area simplification,
+degenerate/near-collinear cleanup, winding normalization, and small-area
+filtering before Voronoi construction. Fixture smoke passes the former
+transition-rib assertion and reaches the next missing source branch,
+`SkeletalTrapezoidation.cpp:1804-1844` `getOrCreateBeading`. Grid-guided
+near-intersection nudging, exact small-hole ordering, beading recovery, cooling,
+timing, and remaining G-code differences remain later source-cited slices.

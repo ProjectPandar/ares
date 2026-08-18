@@ -128,28 +128,23 @@ fn generate_thick_polylines(
     let mut polygons = Vec::with_capacity(1 + holes.len());
     polygons.push(contour);
     polygons.extend(holes);
-    let generated = generate(
-        &polygons,
-        RawWallToolPathConfig {
-            outer_spacing: spacing,
-            inner_spacing: spacing,
-            inset_count: loops_count,
-            outer_wall_inset: 0,
-            layer_height,
-            min_bead_width: scale.checked_scale(0.85 * minimum_nozzle_diameter).unwrap(),
-            min_feature_size: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
-            transition_length: scale.checked_scale(0.4).unwrap(),
-            transitioning_angle: 10.0_f64.to_radians(),
-            transition_filter_deviation: scale
-                .checked_scale(0.25 * minimum_nozzle_diameter)
-                .unwrap(),
-            wall_distribution_count: 1,
-            min_length_factor: 0.5,
-            is_top_or_bottom_layer: false,
-            coordinate_scale: scale,
-        },
-    )
-    .map_err(|error| {
+    let config = RawWallToolPathConfig {
+        outer_spacing: spacing,
+        inner_spacing: spacing,
+        inset_count: loops_count,
+        outer_wall_inset: 0,
+        layer_height,
+        min_bead_width: scale.checked_scale(0.85 * minimum_nozzle_diameter).unwrap(),
+        min_feature_size: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
+        transition_length: scale.checked_scale(0.4).unwrap(),
+        transitioning_angle: 10.0_f64.to_radians(),
+        transition_filter_deviation: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
+        wall_distribution_count: 1,
+        min_length_factor: 0.5,
+        is_top_or_bottom_layer: false,
+        coordinate_scale: scale,
+    };
+    let generated = generate(&polygons, config).map_err(|error| {
         SliceError::InvalidInput(format!("concentric Arachne generation failed: {error:?}"))
     })?;
     Ok(generated
