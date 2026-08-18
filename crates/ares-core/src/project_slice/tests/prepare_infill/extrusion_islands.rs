@@ -63,3 +63,23 @@ fn task22o94_is_repeatable_for_independent_graphs() {
     extrusion_islands::dispose(first);
     extrusion_islands::dispose(second);
 }
+
+#[test]
+fn task22o211_layer_two_thin_fills_follow_multiple_perimeter_islands() {
+    let filled = fill_entities::prepare(graph()).unwrap();
+    let prepared = extrusion_islands::prepare(filled);
+
+    let occupied = prepared.objects[0][2]
+        .islands
+        .iter()
+        .filter(|island| {
+            island
+                .infills
+                .iter()
+                .any(|entity| matches!(entity, IslandInfillEntity::Thin(_)))
+        })
+        .count();
+
+    assert!(occupied > 1, "thin fills collapsed into {occupied} island");
+    extrusion_islands::dispose(prepared);
+}

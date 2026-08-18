@@ -37,6 +37,8 @@ fn record(fill_surfaces: Vec<RegionSurface>) -> PreparedSurfaceTypeRecord {
     PreparedSurfaceTypeRecord {
         perimeters: Vec::new(),
         thin_fills: Vec::new(),
+        perimeter_source_indices: Vec::new(),
+        thin_fill_source_indices: Vec::new(),
         slices: Vec::new(),
         fill_surfaces,
         fill_expolygons: Vec::new(),

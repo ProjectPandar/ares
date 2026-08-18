@@ -7688,3 +7688,16 @@ Fixture gap blocks and first differing layer order remain unchanged, excluding
 the maximum-edge prefilter as their cause. Direct source ownership, medial
 topology, arc input geometry, exact E, timing, and remaining differences remain
 later source-cited slices.
+
+## Task 22O.211: preserve classic surface ownership
+
+O211 restores ownership explicit in OrcaSlicer 2.4.2
+`PerimeterGenerator.cpp:1573-1624` and `Fill/Fill.cpp:1360-1368`. Classic
+perimeter and thin-fill source indices now survive layer-region and fill
+staging. Island assignment uses owned perimeter components, with nearest global
+perimeter selection when one source surface spans disconnected components.
+Layer-two thin fills now occupy multiple islands; fixture gap feature blocks
+increase from 206 to 211 versus reference 470, and the first differing layer's
+gap interleaving advances toward the reference. Direct region/island ordering,
+medial topology, arc input geometry, exact E, timing, and remaining differences
+remain later source-cited slices.

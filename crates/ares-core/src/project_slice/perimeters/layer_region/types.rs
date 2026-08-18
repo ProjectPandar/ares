@@ -21,6 +21,8 @@ pub(in crate::project_slice) struct PreparedLayerRegionPerimeterObject {
 pub(in crate::project_slice) struct PreparedLayerRegionPerimeterRecord {
     pub(in crate::project_slice) perimeters: Vec<ExtrusionEntityCollection>,
     pub(in crate::project_slice) thin_fills: Vec<GapFillEntity>,
+    pub(in crate::project_slice) perimeter_source_indices: Vec<usize>,
+    pub(in crate::project_slice) thin_fill_source_indices: Vec<usize>,
     pub(in crate::project_slice) fill_surfaces: Vec<RegionSurface>,
     pub(in crate::project_slice) fill_expolygons: Vec<ExPolygon>,
     pub(in crate::project_slice) fill_no_overlap_expolygons: Vec<ExPolygon>,

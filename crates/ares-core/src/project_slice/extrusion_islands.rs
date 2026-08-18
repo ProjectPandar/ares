@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     geometry::{Coord, ExPolygon, Point},
     project_slice::{
@@ -86,15 +88,37 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
             .infills
             .push(IslandInfillEntity::Fill(collection));
     }
-    for thin in std::mem::take(&mut layer.thin_fills) {
-        let island = island_index(thin_first_point(&thin), slices, &bounds, &order);
-        islands[island].infills.push(IslandInfillEntity::Thin(thin));
-    }
-    for perimeter in std::mem::take(&mut layer.perimeters) {
+    let perimeter_sources = std::mem::take(&mut layer.perimeter_source_indices);
+    let perimeters = std::mem::take(&mut layer.perimeters);
+    assert_eq!(perimeters.len(), perimeter_sources.len());
+    let mut source_islands = HashMap::new();
+    let mut perimeter_islands = Vec::with_capacity(perimeters.len());
+    for (perimeter, source_index) in perimeters.into_iter().zip(perimeter_sources) {
         let path = &perimeter.entities[0].extrusion_loop.paths[0];
         let first = path.polyline.points[0];
         let island = island_index(Point::new(first.x, first.y), slices, &bounds, &order);
+        source_islands
+            .entry(source_index)
+            .or_insert_with(Vec::new)
+            .push((island, Point::new(first.x, first.y)));
+        perimeter_islands.push((island, Point::new(first.x, first.y)));
         islands[island].perimeters.push(perimeter);
+    }
+    let thin_sources = std::mem::take(&mut layer.thin_fill_source_indices);
+    let thin_fills = std::mem::take(&mut layer.thin_fills);
+    assert_eq!(thin_fills.len(), thin_sources.len());
+    for (thin, source_index) in thin_fills.into_iter().zip(thin_sources) {
+        let point = thin_first_point(&thin);
+        let source_candidates = source_index
+            .and_then(|source_index| source_islands.get(&source_index))
+            .filter(|candidates| candidates.len() > 1);
+        let candidates = source_candidates.unwrap_or(&perimeter_islands);
+        let island = candidates
+            .iter()
+            .min_by_key(|(_, candidate)| squared_distance(point, *candidate))
+            .map(|(island, _)| *island)
+            .unwrap_or_else(|| island_index(point, slices, &bounds, &order));
+        islands[island].infills.push(IslandInfillEntity::Thin(thin));
     }
     LayerExtrusionIslands { islands }
 }
@@ -113,6 +137,12 @@ fn island_index(point: Point, slices: &[ExPolygon], bounds: &[Bounds], order: &[
         .copied()
         .find(|&index| bounds[index].contains(point) && slices[index].contour().contains(&point))
         .unwrap_or(slices.len())
+}
+
+fn squared_distance(left: Point, right: Point) -> i128 {
+    let dx = i128::from(left.x() - right.x());
+    let dy = i128::from(left.y() - right.y());
+    dx * dx + dy * dy
 }
 
 #[derive(Clone, Copy)]

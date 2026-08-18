@@ -31,5 +31,7 @@ pub(in crate::project_slice) struct FillExtrusionCollection {
 pub(in crate::project_slice) struct LayerFillEntities {
     pub(in crate::project_slice) perimeters: Vec<ExtrusionEntityCollection>,
     pub(in crate::project_slice) collections: Vec<FillExtrusionCollection>,
+    pub(in crate::project_slice) perimeter_source_indices: Vec<usize>,
+    pub(in crate::project_slice) thin_fill_source_indices: Vec<Option<usize>>,
     pub(in crate::project_slice) thin_fills: Vec<GapFillEntity>,
 }
