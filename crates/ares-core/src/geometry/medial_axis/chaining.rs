@@ -119,5 +119,5 @@ pub(crate) fn suppress_closed_endpoints(polyline: &mut ThickPolyline) {
 }
 
 fn point((x, y): (f64, f64)) -> Point {
-    super::validate::rounded_point(x, y)
+    super::validate::integer_point(x, y)
 }

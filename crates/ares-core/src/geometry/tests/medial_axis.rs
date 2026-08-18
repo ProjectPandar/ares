@@ -8,6 +8,7 @@ mod validate;
 
 use super::super::{
     CoordinateScale, ExPolygon, Point, Polygon, medial_axis, medial_axis::MedialAxisError,
+    medial_axis::validate::integer_point,
 };
 
 #[test]
@@ -56,4 +57,10 @@ fn task22o13_repeated_adjacent_point_is_a_typed_construction_error() {
         medial_axis(&input, 1.0, 10.0, CoordinateScale::Normal),
         Err(MedialAxisError::ConstructionFailed)
     );
+}
+
+#[test]
+fn task22o209_voronoi_vertices_truncate_toward_zero() {
+    assert_eq!(integer_point(7.9, -7.9), Point::new(7, -7));
+    assert_eq!(integer_point(0.9, -0.9), Point::new(0, 0));
 }

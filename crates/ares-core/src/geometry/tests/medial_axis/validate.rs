@@ -1,12 +1,12 @@
 use crate::geometry::{
-    CoordinateScale, ExPolygon, Point, Polygon, medial_axis, medial_axis::validate::rounded_point,
+    CoordinateScale, ExPolygon, Point, Polygon, medial_axis, medial_axis::validate::integer_point,
 };
 
 #[test]
-fn task22o13_voronoi_point_conversion_rounds_fractional_literals_away_from_zero() {
-    assert_eq!(rounded_point(4.5, 4.49), Point::new(5, 4));
-    assert_eq!(rounded_point(-4.5, -4.49), Point::new(-5, -4));
-    assert_eq!(rounded_point(0.5, -0.5), Point::new(1, -1));
+fn task22o209_voronoi_point_conversion_truncates_fractional_literals() {
+    assert_eq!(integer_point(4.5, 4.49), Point::new(4, 4));
+    assert_eq!(integer_point(-4.5, -4.49), Point::new(-4, -4));
+    assert_eq!(integer_point(0.5, -0.5), Point::new(0, 0));
 }
 
 #[test]

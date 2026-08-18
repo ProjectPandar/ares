@@ -7664,3 +7664,14 @@ rectilinear suites pass. Fixture comparison retains the normalized one-micron
 arc endpoint mismatch, excluding these cleanup branches as its cause. Arc input
 geometry, exact E, infill counts, cooling, timing, and remaining G-code
 differences remain later source-cited slices.
+
+## Task 22O.209: medial Voronoi coordinate conversion
+
+O209 ports the integral vertex conversions from OrcaSlicer 2.4.2
+`Geometry/MedialAxis.cpp:493-537,627-630`. Positive and negative fractional
+Voronoi coordinates now truncate toward zero instead of rounding to nearest,
+and validation/chaining share that seam. The full medial suite passes. Fixture
+gap-fill block count remains 206 versus reference 470; moves change from 8,057
+to 8,058 versus 5,881, excluding this conversion as the count deficit's cause.
+Medial domains/chaining, arc input geometry, exact E, infill counts, cooling,
+timing, and remaining G-code differences remain later source-cited slices.

@@ -27,7 +27,7 @@ pub(crate) fn validate(
     limits: ValidationLimits,
 ) -> Result<Option<EdgeData>, MedialAxisError> {
     let [x0, y0, x1, y1] = vd.edge_as_line(edge).map_err(invariant)?;
-    let medial = Line::new(rounded_point(x0, y0), rounded_point(x1, y1));
+    let medial = Line::new(integer_point(x0, y0), integer_point(x1, y1));
     let twin = diagram::twin(vd, edge)?;
     let left = vd.cell(diagram::cell(vd, edge)?).map_err(invariant)?;
     let right = vd.cell(diagram::cell(vd, twin)?).map_err(invariant)?;
@@ -90,8 +90,8 @@ fn point_distance(left: Point, right: Point) -> f64 {
     (dx * dx + dy * dy).sqrt()
 }
 
-pub(crate) fn rounded_point(x: f64, y: f64) -> Point {
-    Point::new(x.round() as i64, y.round() as i64)
+pub(crate) fn integer_point(x: f64, y: f64) -> Point {
+    Point::new(x as i64, y as i64)
 }
 
 fn invariant(_: boostvoronoi::BvError) -> MedialAxisError {

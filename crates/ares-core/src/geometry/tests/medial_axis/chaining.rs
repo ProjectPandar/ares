@@ -2,7 +2,7 @@ use crate::geometry::medial_axis::{
     chaining::{
         NeighborSelection, directed_widths, select_active_neighbor, suppress_closed_endpoints,
     },
-    validate::{EdgeData, rounded_point},
+    validate::{EdgeData, integer_point},
 };
 use crate::geometry::{Point, ThickPolyline};
 
@@ -15,8 +15,8 @@ fn edge(active: bool, width_start: f64, width_end: f64) -> EdgeData {
 }
 
 #[test]
-fn task22o13_seed_and_growth_points_use_source_rounding() {
-    assert_eq!(rounded_point(2.5, -2.5), Point::new(3, -3));
+fn task22o209_seed_and_growth_points_use_source_truncation() {
+    assert_eq!(integer_point(2.5, -2.5), Point::new(2, -2));
 }
 
 #[test]
