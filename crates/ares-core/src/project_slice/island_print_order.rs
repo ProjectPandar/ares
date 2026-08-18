@@ -142,9 +142,16 @@ pub(in crate::project_slice) fn internal_surfaces(
     layer_index: usize,
 ) -> &[crate::project_slice::region_slices::RegionSurface] {
     let external = &prepared.predecessor.predecessor.predecessor.predecessor;
-    external.predecessor.objects[object_index].records[layer_index]
+    let layer_regions = &external.predecessor;
+    let source = &layer_regions.predecessor.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    source.records[layer_index]
         .as_ref()
-        .map_or(&[], |record| record.fill_surfaces.as_slice())
+        .map_or(&[], |record| source.current_surfaces(record))
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostIslandPrintOrder) {

@@ -7825,3 +7825,18 @@ remains line 1,855, arc offset `J-1.23` versus `J-1.229`; ignoring arc offsets,
 the first endpoint difference remains line 1,965, `X121.643` versus
 `X121.642`. Remaining offset/arc numeric parity, ant topology, retraction,
 cooling, timing, and later G-code differences remain source-cited slices.
+
+## Task 22O.223: internal-region retraction containment
+
+O223 ports OrcaSlicer 2.4.2 `GCode.cpp:7358-7364` and `7523-7645` plus
+`GCode/RetractWhenCrossingPerimeters.cpp:9-53`. Reduced-infill retraction now
+tests the complete travel against original internal layer-region slices instead
+of post-perimeter fill surfaces. Travel to a perimeter and travel departing an
+external or overhang perimeter remain retractable. Relative to O222, the KSR
+fixture falls from 285,082 to 273,109 lines; G1 moves fall from 199,628 to
+192,758, extrusion arcs rise from 8,659 to 8,683, and spiral-lift/wipe sequences
+fall from 6,322 to 5,044 versus the reference 4,804. The normalized first path
+difference remains line 1,855, arc offset `J-1.23` versus `J-1.229`. Remaining
+travel/retraction and wipe-path sequencing, offset/arc numeric parity, ant
+topology, cooling, timing/M73, and later G-code differences remain source-cited
+slices.

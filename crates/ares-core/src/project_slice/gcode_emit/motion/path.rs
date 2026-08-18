@@ -70,26 +70,30 @@ pub(super) fn emit(
     let previous_extrusion_feedrate = state.extrusion_feedrate;
     if needs_travel {
         begin_object_travel(output, state);
-        let inside_internal_surface = state.options.reduce_infill_retraction
-            && !properties.is_perimeter
-            && travel::inside_internal_surfaces(
-                geometry.internal_surfaces,
-                arc::Point {
-                    x: state.x,
-                    y: state.y,
-                },
-                arc::Point {
-                    x: first_x,
-                    y: first_y,
-                },
-                geometry.scale,
-                state.offset,
-            );
+        let inside_internal_surface = travel::inside_internal_surfaces(
+            geometry.internal_surfaces,
+            arc::Point {
+                x: state.x,
+                y: state.y,
+            },
+            arc::Point {
+                x: first_x,
+                y: first_y,
+            },
+            geometry.scale,
+            state.offset,
+        );
+        let skip_retraction = can_skip_retraction(
+            state.options.reduce_infill_retraction,
+            state.last_feature,
+            properties.is_perimeter,
+            inside_internal_surface,
+        );
         let retract = !first_position
             && !state.retracted
             && (first_x - state.x).hypot(first_y - state.y)
                 >= state.options.retraction_minimum_travel
-            && !inside_internal_surface;
+            && !skip_retraction;
         if retract {
             travel::retract_and_lift(
                 output,
@@ -328,4 +332,16 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
 
 fn quantize_axis(value: f64) -> f64 {
     (value * 1_000.0).round() / 1_000.0
+}
+
+pub(super) fn can_skip_retraction(
+    reduce_infill_retraction: bool,
+    previous_feature: Option<&str>,
+    current_is_perimeter: bool,
+    inside_internal_surface: bool,
+) -> bool {
+    reduce_infill_retraction
+        && !matches!(previous_feature, Some("Outer wall" | "Overhang wall"))
+        && !current_is_perimeter
+        && inside_internal_surface
 }

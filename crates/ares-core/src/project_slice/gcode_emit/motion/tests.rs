@@ -1,3 +1,31 @@
+#[test]
+fn internal_travel_retraction_matches_source_role_rules() {
+    assert!(super::path::can_skip_retraction(
+        true,
+        Some("Sparse infill"),
+        false,
+        true,
+    ));
+    assert!(!super::path::can_skip_retraction(
+        true,
+        Some("Outer wall"),
+        false,
+        true,
+    ));
+    assert!(!super::path::can_skip_retraction(
+        true,
+        Some("Overhang wall"),
+        false,
+        true,
+    ));
+    assert!(!super::path::can_skip_retraction(
+        true,
+        Some("Sparse infill"),
+        true,
+        true,
+    ));
+}
+
 #[tokio::test]
 async fn task22o133_contiguous_same_speed_paths_do_not_repeat_feedrate() {
     let output = crate::slice_project(
