@@ -1,6 +1,6 @@
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 
-use super::super::{MonotonicFillParams, fill_monotonic_surface};
+use super::super::{MonotonicFillParams, fill_monotonic_surface, surface::scaled_offsets};
 
 fn scaled_rectangle() -> ExPolygon {
     ExPolygon::new(
@@ -45,14 +45,14 @@ fn task22o89_full_solid_rectangle_emits_repeatable_scaled_polylines() {
             .map(|polyline| polyline.points().to_vec())
             .collect::<Vec<_>>(),
         vec![vec![
-            Point::new(120_050, 9_999),
+            Point::new(120_050, 10_000),
             Point::new(120_050, 700_000),
             Point::new(360_050, 700_000),
             Point::new(360_050, 100_000),
             Point::new(600_050, 100_000),
             Point::new(600_050, 700_000),
             Point::new(840_050, 700_000),
-            Point::new(840_050, 9_999),
+            Point::new(840_050, 10_000),
         ]]
     );
     assert!(first.polylines.iter().all(|polyline| polyline.is_valid()));
@@ -70,4 +70,12 @@ fn task22o89_fixed_angle_and_layer_alternation_select_distinct_directions() {
     let rotated = fill_monotonic_surface(&source, alternating, CoordinateScale::Normal).unwrap();
 
     assert_ne!(fixed, rotated);
+}
+
+#[test]
+fn task22o220_scaled_offsets_retain_float_fraction() {
+    let offsets = scaled_offsets(CoordinateScale::Normal, 0.1, 0.500_542_342_662_811_3).unwrap();
+
+    assert_eq!(offsets.0.to_bits(), 0x4792_6e71);
+    assert_eq!(offsets.1.to_bits(), 0xc812_bfcb);
 }

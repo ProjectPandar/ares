@@ -32,8 +32,7 @@ pub(crate) fn fill_monotonic_surface(
     scale: CoordinateScale,
 ) -> Result<MonotonicFillOutput, ClipperError> {
     let direction = infill_direction(params);
-    let outer_offset = checked_scale(scale, params.overlap - (0.5 - 0.45) * params.spacing)? as f32;
-    let inner_offset = checked_scale(scale, params.overlap - 0.5 * params.spacing)? as f32;
+    let (outer_offset, inner_offset) = scaled_offsets(scale, params.overlap, params.spacing)?;
     let mut slice =
         prepare_rectilinear_contours(expolygon, -f64::from(direction), outer_offset, inner_offset)?;
     if !slice.contours.iter().any(|contour| contour.inner) {
@@ -90,6 +89,25 @@ fn infill_direction(params: MonotonicFillParams) -> f32 {
         direction += std::f32::consts::FRAC_PI_2;
     }
     direction + std::f32::consts::FRAC_PI_2
+}
+
+pub(super) fn scaled_offsets(
+    scale: CoordinateScale,
+    overlap: f64,
+    spacing: f64,
+) -> Result<(f32, f32), ClipperError> {
+    Ok((
+        checked_scaled_f32(scale, overlap - (0.5 - 0.45) * spacing)?,
+        checked_scaled_f32(scale, overlap - 0.5 * spacing)?,
+    ))
+}
+
+fn checked_scaled_f32(scale: CoordinateScale, value: f64) -> Result<f32, ClipperError> {
+    let scaled = value / scale.factor();
+    if !scaled.is_finite() || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&scaled) {
+        return Err(ClipperError::CoordinateOutOfRange);
+    }
+    Ok(scaled as f32)
 }
 
 fn adjust_solid_spacing(width: i64, distance: i64) -> i64 {

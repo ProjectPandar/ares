@@ -7788,3 +7788,17 @@ spiral-lift/wipe sequences from 6,336 to 6,335. Total G2/G3 count remains
 and the first E-normalized difference remains arc offset `I-3.392` versus
 `I-3.393`. Remaining arc fitting, monotonic sub-micron geometry, retraction,
 cooling, timing, and later G-code differences remain source-cited slices.
+
+## Task 22O.220: rectilinear offset float scaling
+
+O220 ports OrcaSlicer 2.4.2 `Fill/FillRectilinear.cpp:2751-2775`.
+Monotonic contour offsets now pass the fractional `float(scale_(...))` values
+directly to polygon offsetting instead of truncating through integer
+coordinates. This fixes the prior first extrusion `.03178`/`.03177` mismatch
+and the following `I-3.392`/`I-3.393` arc-offset mismatch. The normalized exact
+prefix advances from line 1,682 to 1,855, where the remaining first difference
+is `J-1.23` versus `J-1.229`. KSR output falls by 64 lines; G1 commands move
+from 199,598 to 199,563, extrusion arcs from 8,681 to 8,683, and
+spiral-lift/wipe sequences from 6,335 to 6,327. Remaining offset/arc numeric
+parity, ant topology, retraction, cooling, timing, and later G-code differences
+remain source-cited slices.
