@@ -7701,3 +7701,14 @@ increase from 206 to 211 versus reference 470, and the first differing layer's
 gap interleaving advances toward the reference. Direct region/island ordering,
 medial topology, arc input geometry, exact E, timing, and remaining differences
 remain later source-cited slices.
+
+## Task 22O.213: sparse infill simplification resolution
+
+O213 ports OrcaSlicer 2.4.2 `libslic3r.h:78-79` and
+`LayerRegion.cpp:1070-1124`. `InternalInfill` paths now fit arcs and simplify at
+the source 0.04 mm tolerance while all other roles retain configured
+resolution. Fixture sparse moves fall from 43,235 to 36,941 versus reference
+33,571; role block count remains 846 versus 1,123. With O211 ownership
+interleaving, total output is 288,364 lines versus 269,330. Sparse source
+geometry/order, arc input geometry, exact E, cooling, timing, and remaining
+differences remain later source-cited slices.

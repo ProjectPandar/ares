@@ -56,7 +56,10 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                         .iter()
                         .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
                         .collect::<Vec<_>>();
-                    path.fitting = gcode_emit::simplify_points(&mut points, tolerance);
+                    path.fitting = gcode_emit::simplify_points(
+                        &mut points,
+                        fill_tolerance(path.role, tolerance),
+                    );
                     path.polyline = Polyline::new(
                         points
                             .into_iter()
@@ -74,6 +77,14 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                 }
             },
         }
+    }
+}
+
+fn fill_tolerance(role: crate::ExtrusionRole, configured: f64) -> f64 {
+    if role == crate::ExtrusionRole::InternalInfill {
+        0.04
+    } else {
+        configured
     }
 }
 
@@ -113,4 +124,17 @@ fn simplify_path3(
             Vec::new()
         },
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ExtrusionRole;
+
+    use super::fill_tolerance;
+
+    #[test]
+    fn task22o213_sparse_infill_uses_source_coarse_resolution() {
+        assert_eq!(fill_tolerance(ExtrusionRole::InternalInfill, 0.0125), 0.04);
+        assert_eq!(fill_tolerance(ExtrusionRole::SolidInfill, 0.0125), 0.0125);
+    }
 }
