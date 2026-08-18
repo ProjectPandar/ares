@@ -1,4 +1,6 @@
 use std::f64::consts::PI;
+mod delays;
+use delays::command_delay;
 
 pub(super) fn process(mut output: Vec<u8>) -> Vec<u8> {
     let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
@@ -356,21 +358,6 @@ fn trapezoid_time(distance: f64, start: f64, cruise: f64, end: f64, acceleration
         let peak = ((2.0 * acceleration * distance + start * start + end * end) * 0.5).sqrt();
         (peak - start) / acceleration + (peak - end) / acceleration
     }
-}
-
-fn command_delay(code: &str) -> Option<f64> {
-    if code.starts_with("M400") {
-        return Some(word(code, 'S').unwrap_or(0.0) + word(code, 'P').unwrap_or(0.0) * 0.001);
-    }
-    // OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:4859-4864.
-    if code.starts_with("G29") && !code.starts_with("G29.") {
-        return Some(260.0);
-    }
-    // OrcaSlicer/src/libslic3r/GCode/GCodeProcessor.cpp:5150-5157.
-    if code.starts_with("M191") && word(code, 'S').unwrap_or(0.0) > 40.0 {
-        return Some(720.0);
-    }
-    None
 }
 
 fn word(code: &str, letter: char) -> Option<f64> {
