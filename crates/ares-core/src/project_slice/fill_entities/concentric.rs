@@ -1,7 +1,9 @@
 use crate::{
     SliceError,
     arachne::wall_toolpaths::{RawWallToolPathConfig, generate},
-    geometry::{CoordinateScale, ExPolygon, Point, ThickPolyline},
+    geometry::{
+        CoordinateScale, ExPolygon, Point, ThickPolyline, intersection_ex_with_safety_offset,
+    },
     project_slice::{
         group_fills::SurfaceFill,
         perimeters::classic::{
@@ -11,7 +13,7 @@ use crate::{
     },
 };
 
-use super::LayerFillEntities;
+use super::{LayerFillEntities, geometry_error};
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
@@ -28,22 +30,24 @@ pub(super) fn append(
         ));
     }
     let mut polylines = Vec::new();
-    for expolygon in fill.no_overlap_expolygons {
-        let first_polyline = polylines.len();
-        polylines.extend(generate_thick_polylines(
-            expolygon,
-            spacing,
-            scale
-                .checked_scale(f64::from(fill.params.flow.height))
-                .unwrap(),
-            minimum_nozzle_diameter,
-            scale,
-        )?);
-        finalize_polylines(
-            &mut polylines,
-            first_polyline,
-            fill.params.loop_clipping as f64,
-        );
+    for expolygon in fill.expolygons {
+        for domain in intersect_no_overlap_domains(&fill.no_overlap_expolygons, &expolygon)? {
+            let first_polyline = polylines.len();
+            polylines.extend(generate_thick_polylines(
+                domain,
+                spacing,
+                scale
+                    .checked_scale(f64::from(fill.params.flow.height))
+                    .unwrap(),
+                minimum_nozzle_diameter,
+                scale,
+            )?);
+            finalize_polylines(
+                &mut polylines,
+                first_polyline,
+                fill.params.loop_clipping as f64,
+            );
+        }
     }
     let converted = variable_width::convert_with_role(
         &polylines,
@@ -53,6 +57,14 @@ pub(super) fn append(
     )?;
     output.thin_fills.extend(converted.entities);
     Ok(())
+}
+
+fn intersect_no_overlap_domains(
+    no_overlap: &[ExPolygon],
+    expolygon: &ExPolygon,
+) -> Result<Vec<ExPolygon>, SliceError> {
+    intersection_ex_with_safety_offset(no_overlap, std::slice::from_ref(expolygon))
+        .map_err(geometry_error)
 }
 
 fn finalize_polylines(
@@ -153,7 +165,7 @@ fn generate_thick_polylines(
 mod tests {
     use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon, ThickPolyline};
 
-    use super::{finalize_polylines, generate_thick_polylines};
+    use super::{finalize_polylines, generate_thick_polylines, intersect_no_overlap_domains};
 
     #[test]
     fn task22o200_concentric_internal_generates_positive_variable_width_loops() {
@@ -198,5 +210,27 @@ mod tests {
         assert_eq!(polylines.len(), 1);
         assert_eq!(polylines[0].points[0], Point::new(0, 0));
         assert_ne!(polylines[0].points.first(), polylines[0].points.last());
+    }
+
+    #[test]
+    fn task22o202_fill_expolygon_restricts_larger_no_overlap_domain() {
+        let rectangle = |minimum, maximum| {
+            ExPolygon::new(
+                Polygon::new(vec![
+                    Point::new(minimum, minimum),
+                    Point::new(maximum, minimum),
+                    Point::new(maximum, maximum),
+                    Point::new(minimum, maximum),
+                ]),
+                Vec::new(),
+            )
+        };
+        let no_overlap = rectangle(0, 1_000);
+        let fill = rectangle(400, 600);
+
+        let domains = intersect_no_overlap_domains(&[no_overlap], &fill).unwrap();
+
+        assert_eq!(domains.len(), 1);
+        assert_eq!(domains[0].area().abs(), 48_400.0);
     }
 }

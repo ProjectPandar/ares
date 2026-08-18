@@ -82,6 +82,20 @@ pub(crate) fn intersection_ex(
     execute_ex(subject, clip, ClipOperation::Intersection, PathRole::Clip)
 }
 
+pub(crate) fn intersection_ex_with_safety_offset(
+    subject: &[ExPolygon],
+    clip: &[ExPolygon],
+) -> Result<Vec<ExPolygon>, ClipperError> {
+    let mut expanded = Vec::new();
+    for expolygon in clip {
+        append_safety_offset(expolygon.contour(), &mut expanded)?;
+        for hole in expolygon.holes() {
+            append_safety_offset(hole, &mut expanded)?;
+        }
+    }
+    execute_ex_with_paths(subject, &expanded, ClipOperation::Intersection)
+}
+
 pub(crate) fn intersection_polygons_polygons_ex(
     subject: &[Polygon],
     clip: &[Polygon],

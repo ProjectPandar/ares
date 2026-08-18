@@ -7585,3 +7585,14 @@ Closed Arachne loops now rotate to the source-origin nearest point, clip by the
 typed region `seam_gap`, discard invalid results, and reuse the KD endpoint
 chain for deterministic shortest traversal. Cooling, timing, and remaining
 exact G-code differences remain later source-cited parity slices.
+
+## Task 22O.202: per-ExPolygon no-overlap intersection
+
+O202 ports OrcaSlicer 2.4.2 `Fill/Fill.cpp:1326-1329`. Each narrow fill
+ExPolygon now intersects the grouped no-overlap domain independently with the
+source safety offset before Arachne generation, preventing regeneration of the
+whole parent solid region. Fixture smoke reached the next missing source stage,
+`WallToolPaths.cpp:487-509` outline preparation: a repeated terminal vertex now
+trips the skeletal transition invariant instead of being cleaned first.
+Outline preparation, cooling, timing, and remaining exact G-code differences
+remain later source-cited parity slices.

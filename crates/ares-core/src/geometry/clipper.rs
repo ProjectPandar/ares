@@ -30,8 +30,9 @@ pub(crate) use boolean_ex::{
     SAFETY_OFFSET, difference_ex, difference_ex_polygons,
     difference_ex_polygons_with_safety_offset, difference_ex_with_safety_offset,
     difference_polygons_ex, difference_polygons_ex_with_safety_offset, intersection_ex,
-    intersection_polygons_ex, intersection_polygons_polygons_ex, union_expolygons,
-    union_safety_offset_ex, union_safety_offset_expolygons, xor_ex,
+    intersection_ex_with_safety_offset, intersection_polygons_ex,
+    intersection_polygons_polygons_ex, union_expolygons, union_safety_offset_ex,
+    union_safety_offset_expolygons, xor_ex,
 };
 #[cfg(test)]
 pub(crate) use boolean_paths::safety_offset_clip_paths_for_test;
