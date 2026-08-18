@@ -181,17 +181,7 @@ impl MotionState {
             return None;
         }
         if code.split_whitespace().next() == Some("G92") {
-            let e = word(code, 'E');
-            let position = ['X', 'Y', 'Z'].map(|letter| word(code, letter));
-            if e.is_none() && position.iter().all(Option::is_none) {
-                self.position = [0.0; 3];
-                self.e_position = 0.0;
-            } else {
-                self.e_position = e.unwrap_or(self.e_position);
-                for (axis, value) in position.into_iter().enumerate() {
-                    self.position[axis] = value.unwrap_or(self.position[axis]);
-                }
-            }
+            self.set_position(code);
             return None;
         }
         if let Some(value) = word(code, 'F') {
@@ -296,6 +286,20 @@ impl MotionState {
             jerk: self.jerk,
             direction: scale(delta, 1.0 / distance),
         })
+    }
+
+    fn set_position(&mut self, code: &str) {
+        let e = word(code, 'E');
+        let position = ['X', 'Y', 'Z'].map(|letter| word(code, letter));
+        if e.is_none() && position.iter().all(Option::is_none) {
+            self.position = [0.0; 3];
+            self.e_position = 0.0;
+            return;
+        }
+        self.e_position = e.unwrap_or(self.e_position);
+        for (axis, value) in position.into_iter().enumerate() {
+            self.position[axis] = value.unwrap_or(self.position[axis]);
+        }
     }
 }
 

@@ -54,9 +54,11 @@ fn arc_p_word_adds_full_turns() {
 
 #[test]
 fn bare_g92_resets_all_logical_axes() {
-    let mut state = MotionState::default();
-    state.position = [10.0, 20.0, 30.0];
-    state.e_position = 40.0;
+    let mut state = MotionState {
+        position: [10.0, 20.0, 30.0],
+        e_position: 40.0,
+        ..MotionState::default()
+    };
 
     assert!(state.motion("G92").is_none());
 
