@@ -7775,3 +7775,16 @@ The first exact difference remains extrusion `.03178` versus `.03177`, and the
 first E-normalized difference remains arc offset `I-3.392` versus `I-3.393`.
 Monotonic sub-micron geometry, remaining fitting, retraction, cooling, timing,
 and later G-code differences remain source-cited slices.
+
+## Task 22O.219: fitted-circle center quantization
+
+O219 ports OrcaSlicer 2.4.2 `Circle.cpp:16-55`. Fitted circle centers
+now use the source `double` to integer `Point` conversion (truncation toward
+zero) rather than nearest-grid rounding; the radius remains the pre-conversion
+floating result. On the KSR fixture this changes 45 output lines, moves G1
+commands from 199,639 to 199,598, extrusion arcs from 8,680 to 8,681, and
+spiral-lift/wipe sequences from 6,336 to 6,335. Total G2/G3 count remains
+15,016. The first exact difference remains extrusion `.03178` versus `.03177`,
+and the first E-normalized difference remains arc offset `I-3.392` versus
+`I-3.393`. Remaining arc fitting, monotonic sub-micron geometry, retraction,
+cooling, timing, and later G-code differences remain source-cited slices.
