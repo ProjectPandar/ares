@@ -1,4 +1,4 @@
-use super::{Point, Segment, circle_from_three, fit};
+use super::{Point, Segment, fit};
 
 #[test]
 fn fits_clockwise_circle_with_analytic_length() {

@@ -193,6 +193,29 @@ async fn ksr_project_emits_3mf_object_labels_per_layer() {
 }
 
 #[tokio::test]
+async fn gcode_label_objects_false_suppresses_project_object_labels() {
+    let mut archive = crate::project_slice::tests::support::KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"gcode_label_objects\": \"1\"",
+        "\"gcode_label_objects\": \"0\"",
+    );
+
+    let output = crate::slice_project(
+        &archive.bytes(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(!output.contains("; printing object "));
+    assert!(!output.contains("; start printing object, unique label id:"));
+    assert!(!output.contains("; stop printing object "));
+    assert!(!output.contains("; stop printing object, unique label id:"));
+}
+
+#[tokio::test]
 async fn ksr_layer_change_appends_fan_speed_marker_after_custom_gcode() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),

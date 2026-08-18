@@ -1,6 +1,6 @@
 mod archive;
 
-pub(super) use archive::KsrArchive;
+pub(in crate::project_slice) use archive::KsrArchive;
 
 use super::super::{
     layers::{PlannedLayer, PlannedPrintObject},

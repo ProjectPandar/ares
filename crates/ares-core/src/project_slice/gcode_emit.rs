@@ -59,7 +59,16 @@ pub(super) fn emit(
         options,
         ..Default::default()
     };
-    let labels = object::ObjectLabels::from_traversal(traversal);
+    let labels = traversal
+        .resolved
+        .views
+        .full
+        .process
+        .print
+        .gcode_label_objects
+        .0
+        .then(|| object::ObjectLabels::from_traversal(traversal))
+        .flatten();
     let mut cooling = cooling::CoolingState::from_traversal(traversal);
     let max_layer_z = traversal
         .objects

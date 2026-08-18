@@ -22,12 +22,12 @@ const FLUSH_MATRIX: &str = concat!(
 const INVALID_FLUSH_MATRIX: &str = "\t\"flush_volumes_matrix\": [\r\n\t\t\"0\"\r\n\t]";
 
 #[derive(Clone)]
-pub(in crate::project_slice::tests) struct KsrArchive {
+pub(in crate::project_slice) struct KsrArchive {
     entries: BTreeMap<String, Vec<u8>>,
 }
 
 impl KsrArchive {
-    pub(in crate::project_slice::tests) fn new() -> Self {
+    pub(in crate::project_slice) fn new() -> Self {
         let mut archive = ZipArchive::new(Cursor::new(KSR_PROJECT)).unwrap();
         let mut entries = BTreeMap::new();
         for index in 0..archive.len() {
@@ -59,12 +59,7 @@ impl KsrArchive {
             .insert(path.to_owned(), text.replace(from, to).into_bytes());
     }
 
-    pub(in crate::project_slice::tests) fn replace_unique(
-        &mut self,
-        path: &str,
-        from: &str,
-        to: &str,
-    ) {
+    pub(in crate::project_slice) fn replace_unique(&mut self, path: &str, from: &str, to: &str) {
         let text = String::from_utf8(self.entries.remove(path).unwrap()).unwrap();
         assert_eq!(
             text.match_indices(from).count(),
@@ -93,7 +88,7 @@ impl KsrArchive {
         );
     }
 
-    pub(in crate::project_slice::tests) fn bytes(self) -> Vec<u8> {
+    pub(in crate::project_slice) fn bytes(self) -> Vec<u8> {
         self.write(CompressionMethod::Deflated, System::Dos, false, None)
     }
 
