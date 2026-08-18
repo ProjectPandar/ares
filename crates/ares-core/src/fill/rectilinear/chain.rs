@@ -63,7 +63,6 @@ pub(crate) fn chain_monotonic_regions(
                 initial_deposit,
                 &mut rng,
             );
-            monotonic_three_opt(&mut path, regions, &mut matrix);
             let length = path_length(&path, regions, &mut matrix);
             if length < best_length {
                 best_length = length;
@@ -235,46 +234,6 @@ fn build_ant_path(
         });
     }
     path
-}
-
-fn monotonic_three_opt(
-    path: &mut [MonotonicRegionLink],
-    regions: &[MonotonicRegion],
-    matrix: &mut MonotonicPathMatrix<'_>,
-) {
-    for index in 0..path.len().saturating_sub(3) {
-        let [path0, path1, path2, path3] = [
-            path[index],
-            path[index + 1],
-            path[index + 2],
-            path[index + 3],
-        ];
-        if regions[path2.region]
-            .right_neighbors
-            .contains(&path1.region)
-        {
-            continue;
-        }
-        let before = transition_length(matrix, path0, path1)
-            + transition_length(matrix, path1, path2)
-            + transition_length(matrix, path2, path3);
-        let after = transition_length(matrix, path0, path2)
-            + transition_length(matrix, path2, path1)
-            + transition_length(matrix, path1, path3);
-        if after < before {
-            path.swap(index + 1, index + 2);
-        }
-    }
-}
-
-fn transition_length(
-    matrix: &mut MonotonicPathMatrix<'_>,
-    from: MonotonicRegionLink,
-    to: MonotonicRegionLink,
-) -> f32 {
-    matrix
-        .edge(from.region, from.flipped, to.region, to.flipped)
-        .length
 }
 
 fn select_candidate(candidates: &[Candidate], rng: &mut Mt19937_64) -> usize {

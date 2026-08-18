@@ -116,4 +116,12 @@ async fn ksr_inter_path_travel_retracts_along_wipe_path_and_spiral_lifts() {
         ]
     );
     assert_eq!(lines[bottom_wipe + 8], "G3 Z.6 I.097 J1.213 P1  F60000");
+    let first_monotonic_region = lines
+        .iter()
+        .position(|line| *line == "G1 X99.635 Y137.851 E.15048")
+        .unwrap();
+    assert_eq!(
+        lines[first_monotonic_region + 14],
+        "G1 X111.296 Y141.099 E.0564"
+    );
 }

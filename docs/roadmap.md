@@ -7632,16 +7632,13 @@ in fitting range/candidate selection rather than this three-point expression.
 Exact E arithmetic, arc range selection, infill ordering/counts, cooling,
 timing, and remaining G-code differences remain later source-cited slices.
 
-## Task 22O.206: monotonic three-opt path pass
+## Task 22O.206: monotonic three-opt path pass (withdrawn)
 
-O206 ports OrcaSlicer 2.4.2 `Fill/FillRectilinear.cpp:2189-2216,2539-2549`.
-Each ant path now applies the strict, precedence-preserving consecutive-link
-three-opt pass before path measurement and best-path selection. The focused
-monotonic suite remains deterministic. Fixture comparison confirms this pass
-does not change the first divergent stored arc, isolating that earlier mismatch
-to arc fitting range/candidate construction. Arc range selection, exact E,
-infill ordering/counts, cooling, timing, and remaining G-code differences
-remain later source-cited slices.
+O206 incorrectly treated OrcaSlicer 2.4.2
+`Fill/FillRectilinear.cpp:2186-2207` as an implemented optimizer. The upstream
+`monotonic_3_opt` body is empty; task O214 removes the Ares-only path mutation
+and supersedes this slice.
+
 
 ## Task 22O.207: flat rectilinear offset contours
 
@@ -7712,3 +7709,16 @@ resolution. Fixture sparse moves fall from 43,235 to 36,941 versus reference
 interleaving, total output is 288,364 lines versus 269,330. Sparse source
 geometry/order, arc input geometry, exact E, cooling, timing, and remaining
 differences remain later source-cited slices.
+
+## Task 22O.214: source no-op monotonic three-opt
+
+O214 corrects the source boundary at OrcaSlicer 2.4.2
+`Fill/FillRectilinear.cpp:2186-2207,2539-2549`. The upstream
+`monotonic_3_opt` call is a no-op, so Ares removes its invented consecutive-link
+swap. The first KSR bottom-surface ant path now proceeds from
+`X99.635 Y137.851` to the source-selected region beginning
+`X111.296 Y141.099`, removing the previously reordered travel. Fixture output
+falls from 288,364 to 287,996 lines versus reference 269,330; the first geometry
+difference remains exact E `.03178` versus `.03177`. Ant generation, fill
+geometry, cooling, timing, and remaining G-code differences remain later
+source-cited slices.
