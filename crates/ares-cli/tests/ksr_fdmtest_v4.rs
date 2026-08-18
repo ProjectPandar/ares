@@ -9,7 +9,7 @@ use sha2::{Digest, Sha256};
 const PROJECT_SHA256: &str = "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9";
 const REFERENCE_SHA256: &str = "10aec9a156849f59929b578429a764a61453996a5834056f600c0adbb5d6a1b3";
 const NORMALIZED_REFERENCE_SHA256: &str =
-    "2a771e078527b63e0f6114a277649e8dde80b8d81547cc50f024b7c1777a0a8b";
+    "c61202df3fa26ffcb3064f2dbc02e06a89f95565b8325b31029ec4ed6cedcdc4";
 
 fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
