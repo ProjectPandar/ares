@@ -1,0 +1,296 @@
+use std::f64::consts::PI;
+
+pub(super) struct MotionState {
+    pub(super) position: [f64; 3],
+    pub(super) e_position: f64,
+    pub(super) feedrate: f64,
+    pub(super) acceleration: f64,
+    pub(super) retract_acceleration: f64,
+    pub(super) travel_acceleration: f64,
+    pub(super) max_acceleration: [f64; 4],
+    pub(super) max_feedrate: [f64; 4],
+    pub(super) jerk: [f64; 4],
+    pub(super) relative: bool,
+    pub(super) e_relative: bool,
+}
+
+impl Default for MotionState {
+    fn default() -> Self {
+        Self {
+            position: [0.0; 3],
+            e_position: 0.0,
+            feedrate: 0.0,
+            acceleration: 0.0,
+            retract_acceleration: 0.0,
+            travel_acceleration: 0.0,
+            max_acceleration: [0.0; 4],
+            max_feedrate: [0.0; 4],
+            jerk: [9.0, 9.0, 3.0, 2.5],
+            relative: false,
+            e_relative: false,
+        }
+    }
+}
+
+pub(super) struct MotionBlock {
+    pub(super) index: usize,
+    pub(super) distance: f64,
+    pub(super) speed: f64,
+    pub(super) acceleration: f64,
+    pub(super) jerk: [f64; 4],
+    pub(super) direction: [f64; 4],
+}
+
+impl MotionState {
+    pub(super) fn motion(&mut self, code: &str) -> Option<MotionBlock> {
+        if code == "G90" {
+            self.relative = false;
+            return None;
+        }
+        if code == "G91" {
+            self.relative = true;
+            return None;
+        }
+        if code == "M82" {
+            self.e_relative = false;
+            return None;
+        }
+        if code == "M83" {
+            self.e_relative = true;
+            return None;
+        }
+        if code.split_whitespace().next() == Some("G92") {
+            self.set_position(code);
+            return None;
+        }
+        if let Some(value) = word(code, 'F') {
+            self.feedrate = value / 60.0;
+        }
+        if code.starts_with("M201") {
+            self.update_axis_limits(code, true);
+            return None;
+        }
+        if code.starts_with("M203") {
+            self.update_axis_limits(code, false);
+            return None;
+        }
+        if code.starts_with("M204") {
+            if let Some(value) = word(code, 'S') {
+                self.acceleration = value;
+                self.travel_acceleration = value;
+                self.retract_acceleration = word(code, 'T').unwrap_or(self.retract_acceleration);
+            } else {
+                self.acceleration = word(code, 'P').unwrap_or(self.acceleration);
+                self.retract_acceleration = word(code, 'R').unwrap_or(self.retract_acceleration);
+                self.travel_acceleration = word(code, 'T').unwrap_or(self.travel_acceleration);
+            }
+            return None;
+        }
+        if code.starts_with("M205") {
+            for (axis, letter) in ['X', 'Y', 'Z', 'E'].into_iter().enumerate() {
+                self.jerk[axis] = word(code, letter).unwrap_or(self.jerk[axis]);
+            }
+            return None;
+        }
+        let command = code.split_whitespace().next()?;
+        if !matches!(command, "G0" | "G1" | "G2" | "G3") || self.feedrate <= 0.0 {
+            return None;
+        }
+        let old = self.position;
+        let mut next = old;
+        for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
+            let Some(value) = word(code, letter) else {
+                continue;
+            };
+            let offset = match self.relative {
+                true => value,
+                false => value - old[axis],
+            };
+            next[axis] = old[axis] + offset;
+        }
+        let old_e = self.e_position;
+        let e_delta = word(code, 'E').map_or(0.0, |value| {
+            if self.e_relative {
+                value
+            } else {
+                value - old_e
+            }
+        });
+        self.e_position = old_e + e_delta;
+        let mut delta = [
+            next[0] - old[0],
+            next[1] - old[1],
+            next[2] - old[2],
+            e_delta,
+        ];
+        let xyz_distance = norm([delta[0], delta[1], delta[2], 0.0]);
+        let e_only = xyz_distance <= f64::EPSILON;
+        let mut distance = if e_only { e_delta.abs() } else { xyz_distance };
+        if matches!(command, "G2" | "G3") {
+            let i = word(code, 'I').unwrap_or(0.0);
+            let j = word(code, 'J').unwrap_or(0.0);
+            let radius = (i * i + j * j).sqrt();
+            let same_xy = delta[0].abs() <= f64::EPSILON && delta[1].abs() <= f64::EPSILON;
+            let mut sweep = if same_xy {
+                0.0
+            } else {
+                let start = (-j).atan2(-i);
+                let end = (delta[1] - j).atan2(delta[0] - i);
+                let mut sweep = end - start;
+                sweep = match (command, sweep >= 0.0, sweep <= 0.0) {
+                    ("G2", true, _) => sweep - 2.0 * PI,
+                    ("G3", _, true) => sweep + 2.0 * PI,
+                    _ => sweep,
+                };
+                sweep
+            };
+            let turns = word(code, 'P').unwrap_or(0.0);
+            let turns = if same_xy && turns == 0.0 { 1.0 } else { turns } * 2.0 * PI;
+            sweep += if command == "G2" { -turns } else { turns };
+            distance = (radius * sweep.abs()).hypot(delta[2]);
+            delta[0] = sweep.cos() * radius;
+            delta[1] = sweep.sin() * radius;
+        }
+        self.position = next;
+        if distance <= f64::EPSILON {
+            return None;
+        }
+        let mut acceleration = if e_only {
+            self.retract_acceleration
+        } else if e_delta != 0.0 {
+            self.acceleration
+        } else {
+            self.travel_acceleration
+        };
+        let mut speed = self.feedrate;
+        for (axis, delta) in delta.iter().enumerate() {
+            let ratio = (delta / distance).abs();
+            if ratio == 0.0 {
+                continue;
+            }
+            let max_feedrate = self.max_feedrate[axis];
+            if max_feedrate > 0.0 {
+                speed = speed.min(max_feedrate / ratio);
+            }
+            let max_acceleration = self.max_acceleration[axis];
+            if max_acceleration > 0.0 {
+                acceleration = acceleration.min(max_acceleration / ratio);
+            }
+        }
+        Some(MotionBlock {
+            index: 0,
+            distance,
+            speed,
+            acceleration: acceleration.max(1.0),
+            jerk: self.jerk,
+            direction: scale(delta, 1.0 / distance),
+        })
+    }
+
+    fn update_axis_limits(&mut self, code: &str, acceleration: bool) {
+        let limits = if acceleration {
+            &mut self.max_acceleration
+        } else {
+            &mut self.max_feedrate
+        };
+        for (axis, letter) in ['X', 'Y', 'Z', 'E'].into_iter().enumerate() {
+            limits[axis] = word(code, letter).unwrap_or(limits[axis]);
+        }
+    }
+
+    fn set_position(&mut self, code: &str) {
+        let e = word(code, 'E');
+        let position = ['X', 'Y', 'Z'].map(|letter| word(code, letter));
+        if e.is_none() && position.iter().all(Option::is_none) {
+            self.position = [0.0; 3];
+            self.e_position = 0.0;
+            return;
+        }
+        self.e_position = e.unwrap_or(self.e_position);
+        for (axis, value) in position.into_iter().enumerate() {
+            self.position[axis] = value.unwrap_or(self.position[axis]);
+        }
+    }
+}
+
+pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
+    if blocks.is_empty() {
+        return Vec::new();
+    }
+    let mut entry = vec![0.0; blocks.len()];
+    let mut max_entry = vec![0.0; blocks.len()];
+    for (index, pair) in blocks.windows(2).enumerate() {
+        let block = &pair[0];
+        let next = &pair[1];
+        let junction = block.speed.min(next.speed);
+        max_entry[index + 1] = (0..4).fold(junction, |limit, axis| {
+            let delta =
+                (next.speed * next.direction[axis] - block.speed * block.direction[axis]).abs();
+            let factor = (block.jerk[axis] / delta.max(block.jerk[axis])).min(1.0);
+            limit.min(junction * factor)
+        });
+    }
+    for index in 1..blocks.len() {
+        let previous = &blocks[index - 1];
+        entry[index] = max_entry[index].min(
+            (entry[index - 1] * entry[index - 1] + 2.0 * previous.acceleration * previous.distance)
+                .sqrt(),
+        );
+    }
+    for index in (0..blocks.len() - 1).rev() {
+        let block = &blocks[index];
+        entry[index] = entry[index].min(
+            (entry[index + 1] * entry[index + 1] + 2.0 * block.acceleration * block.distance)
+                .sqrt(),
+        );
+    }
+    blocks
+        .iter()
+        .enumerate()
+        .map(|(index, block)| {
+            let start = entry[index];
+            let end = entry.get(index + 1).copied().unwrap_or(0.0);
+            trapezoid_time(block.distance, start, block.speed, end, block.acceleration)
+        })
+        .collect()
+}
+
+fn trapezoid_time(distance: f64, start: f64, cruise: f64, end: f64, acceleration: f64) -> f64 {
+    let accelerate = ((cruise * cruise - start * start) / (2.0 * acceleration)).max(0.0);
+    let decelerate = ((cruise * cruise - end * end) / (2.0 * acceleration)).max(0.0);
+    let cruise_distance = distance - accelerate - decelerate;
+    if cruise_distance >= 0.0 {
+        (cruise - start) / acceleration
+            + cruise_distance / cruise.max(f64::MIN_POSITIVE)
+            + (cruise - end) / acceleration
+    } else {
+        let peak = ((2.0 * acceleration * distance + start * start + end * end) * 0.5).sqrt();
+        (peak - start) / acceleration + (peak - end) / acceleration
+    }
+}
+
+pub(super) fn word(code: &str, letter: char) -> Option<f64> {
+    let start = code.find(letter)? + letter.len_utf8();
+    let value = &code[start..];
+    let end = value
+        .find(|character: char| character.is_ascii_alphabetic())
+        .unwrap_or(value.len());
+    value[..end].trim().parse().ok()
+}
+
+fn norm(value: [f64; 4]) -> f64 {
+    value
+        .iter()
+        .map(|component| component * component)
+        .sum::<f64>()
+        .sqrt()
+}
+
+fn scale(value: [f64; 4], factor: f64) -> [f64; 4] {
+    [
+        value[0] * factor,
+        value[1] * factor,
+        value[2] * factor,
+        value[3] * factor,
+    ]
+}

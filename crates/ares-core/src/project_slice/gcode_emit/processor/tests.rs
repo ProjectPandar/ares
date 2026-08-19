@@ -1,4 +1,4 @@
-use super::{MotionState, process};
+use super::{MotionBlock, MotionState, planned_times, process};
 
 #[test]
 fn inserts_progress_and_rewrites_time_fields() {
@@ -38,6 +38,43 @@ fn legacy_m204_s_sets_travel_and_t_as_retract() {
     assert_eq!(state.retract_acceleration, 125.0);
 }
 
+#[test]
+fn machine_max_feedrate_limits_extrusion_time() {
+    let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E60 F3600\nM73 P100 R0\n"
+        .to_vec();
+
+    let output = String::from_utf8(process(output, false)).unwrap();
+
+    assert!(output.contains("total estimated time: 2s"), "{output}");
+}
+
+#[test]
+fn machine_max_acceleration_limits_motion_block() {
+    let mut state = MotionState::default();
+    state.motion("M201 E100");
+    state.motion("M204 R1000");
+    state.motion("M83");
+
+    let block = state.motion("G1 E10 F3600").unwrap();
+
+    assert_eq!(block.acceleration, 100.0);
+}
+
+#[test]
+fn collinear_blocks_keep_speed_at_the_shared_junction() {
+    let block = || MotionBlock {
+        index: 0,
+        distance: 10.0,
+        speed: 10.0,
+        acceleration: 100.0,
+        jerk: [10.0; 4],
+        direction: [1.0, 0.0, 0.0, 0.0],
+    };
+
+    let elapsed = planned_times(&[block(), block()]).into_iter().sum::<f64>();
+
+    assert!((elapsed - 2.1).abs() < 1e-9, "{elapsed}");
+}
 #[test]
 fn spiral_arc_p_one_is_one_turn_at_same_endpoint() {
     let mut state = MotionState::default();
