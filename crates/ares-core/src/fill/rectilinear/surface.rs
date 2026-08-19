@@ -70,7 +70,7 @@ pub(crate) fn fill_monotonic_surface(
     connect_region_neighbors(&mut regions, &slice.lines);
     compute_region_costs(&mut regions, &slice, scale);
     let path = chain_monotonic_regions(&regions, &slice, scale);
-    let polylines = emit_monotonic_polylines(&path, &regions, &slice, scale)
+    let polylines: Vec<Polyline> = emit_monotonic_polylines(&path, &regions, &slice, scale)
         .into_iter()
         .map(|polyline| rotate_polyline(polyline, f64::from(direction)))
         .collect::<Result<_, _>>()?;
