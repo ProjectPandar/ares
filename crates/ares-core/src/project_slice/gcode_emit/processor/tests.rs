@@ -1,9 +1,9 @@
-use super::{MotionBlock, MotionState, planned_times, process};
+use super::{Estimate, MotionBlock, MotionState, planned_times, process};
 
 #[test]
 fn inserts_progress_and_rewrites_time_fields() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n".to_vec();
-    let output = String::from_utf8(process(output, true)).unwrap();
+    let output = String::from_utf8(process(output, true, 0.0)).unwrap();
     assert!(output.contains("total estimated time: 1m 40s"), "{output}");
     assert!(output.contains("M73 P0 R"));
     assert!(output.contains("; model printing time:"));
@@ -15,7 +15,7 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(output, false)).unwrap();
+    let output = String::from_utf8(process(output, false, 0.0)).unwrap();
 
     assert!(!output.lines().any(|line| line.starts_with("M73 P")));
     assert!(output.contains("total estimated time: 1m 40s"));
@@ -24,7 +24,7 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
 fn first_layer_time_ends_at_first_change_layer() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X600 F3600\n; CHANGE_LAYER\nG1 X600 F3600\n; CHANGE_LAYER\nM73 P100 R0\n".to_vec();
 
-    let output = String::from_utf8(process(output, false)).unwrap();
+    let output = String::from_utf8(process(output, false, 0.0)).unwrap();
 
     assert!(
         output.contains("estimated first layer printing time (normal mode) = 10s"),
@@ -41,7 +41,7 @@ fn collinear_cruise_time_is_not_zeroed_by_default_jerk() {
 
     let times = planned_times(&[first, second]);
 
-    assert!((times.iter().sum::<f64>() - 20.06).abs() < 0.01);
+    assert!((times.iter().sum::<f64>() - 20.04335).abs() < 1e-9);
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn machine_max_feedrate_limits_extrusion_time() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E60 F3600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(output, false)).unwrap();
+    let output = String::from_utf8(process(output, false, 0.0)).unwrap();
 
     assert!(output.contains("total estimated time: 2s"), "{output}");
 }
@@ -96,13 +96,61 @@ fn collinear_blocks_keep_speed_at_the_shared_junction() {
 
     let elapsed = planned_times(&[block(), block()]).into_iter().sum::<f64>();
 
-    assert!((elapsed - 2.1).abs() < 1e-9, "{elapsed}");
+    assert!((elapsed - 2.0).abs() < 1e-9, "{elapsed}");
+}
+
+#[test]
+fn isolated_block_uses_firmware_safe_entry_speed() {
+    let block = MotionBlock {
+        index: 0,
+        distance: 10.0,
+        speed: 10.0,
+        acceleration: 100.0,
+        jerk: [9.0, 9.0, 3.0, 2.5],
+        direction: [1.0, 0.0, 0.0, 0.0],
+    };
+
+    let elapsed = planned_times(&[block])[0];
+
+    assert!((elapsed - 1.001).abs() < 1e-9, "{elapsed}");
+}
+
+#[test]
+fn synchronization_command_flushes_firmware_planner() {
+    let lines = ["M204 S1000", "G1 X600 F3600", "M1", "G1 X1200 F3600"].map(str::to_owned);
+
+    let estimate = Estimate::from_lines(&lines, 0.0);
+
+    assert!(
+        (estimate.total - 20.0867).abs() < 1e-9,
+        "{}",
+        estimate.total
+    );
+}
+
+#[test]
+fn initial_tool_selection_adds_machine_load_time_once() {
+    let lines = ["T0 H-1", "T0 H-1"].map(str::to_owned);
+
+    let estimate = Estimate::from_lines(&lines, 29.0);
+
+    assert_eq!(estimate.total, 29.0);
 }
 #[test]
 fn spiral_arc_p_one_is_one_turn_at_same_endpoint() {
     let mut state = MotionState::default();
     let block = state.motion("G3 Z.6 I1 J0 P1 F600").unwrap();
     assert!((block.distance - (2.0 * std::f64::consts::PI).hypot(0.6)).abs() < 1e-9);
+}
+
+#[test]
+fn marlin_arc_is_discretized_into_firmware_segments() {
+    let mut state = MotionState::default();
+
+    let blocks = state.motions("G3 X0 Y2 I0 J1 F600");
+
+    assert_eq!(blocks.len(), 16);
+    assert!((blocks.iter().map(|block| block.distance).sum::<f64>() - 3.136548).abs() < 1e-6);
 }
 
 #[test]

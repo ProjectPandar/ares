@@ -1,3 +1,10 @@
+mod arc;
+mod planner;
+
+pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
+    planner::planned_times(blocks)
+}
+
 use std::f64::consts::PI;
 
 pub(super) struct MotionState {
@@ -42,6 +49,34 @@ pub(super) struct MotionBlock {
 }
 
 impl MotionState {
+    pub(super) fn motions(&mut self, code: &str) -> Vec<MotionBlock> {
+        let start = self.position;
+        let start_e = self.e_position;
+        let Some(block) = self.motion(code) else {
+            return Vec::new();
+        };
+        let command = code.split_whitespace().next().unwrap_or_default();
+        if !matches!(command, "G2" | "G3") {
+            return vec![block];
+        }
+        let Some(deltas) = arc::deltas(
+            command,
+            code,
+            arc::ArcMotion {
+                start,
+                end: self.position,
+                e_delta: self.e_position - start_e,
+                feedrate: self.feedrate,
+            },
+        ) else {
+            return vec![block];
+        };
+        deltas
+            .into_iter()
+            .filter_map(|delta| self.segment_block(delta))
+            .collect()
+    }
+
     pub(super) fn motion(&mut self, code: &str) -> Option<MotionBlock> {
         if code == "G90" {
             self.relative = false;
@@ -202,6 +237,44 @@ impl MotionState {
             direction: scale(delta, 1.0 / distance),
         })
     }
+    fn segment_block(&self, delta: [f64; 4]) -> Option<MotionBlock> {
+        let xyz_distance = norm([delta[0], delta[1], delta[2], 0.0]);
+        let e_only = xyz_distance <= f64::EPSILON;
+        let distance = if e_only { delta[3].abs() } else { xyz_distance };
+        if distance <= f64::EPSILON {
+            return None;
+        }
+        let mut acceleration = if e_only {
+            self.retract_acceleration
+        } else if delta[3] != 0.0 {
+            self.acceleration
+        } else {
+            self.travel_acceleration
+        };
+        let mut speed = self.feedrate;
+        for (axis, delta) in delta.iter().enumerate() {
+            let ratio = (delta / distance).abs();
+            if ratio == 0.0 {
+                continue;
+            }
+            let max_feedrate = self.max_feedrate[axis];
+            if max_feedrate > 0.0 {
+                speed = speed.min(max_feedrate / ratio);
+            }
+            let max_acceleration = self.max_acceleration[axis];
+            if max_acceleration > 0.0 {
+                acceleration = acceleration.min(max_acceleration / ratio);
+            }
+        }
+        Some(MotionBlock {
+            index: 0,
+            distance,
+            speed,
+            acceleration: acceleration.max(1.0),
+            jerk: self.jerk,
+            direction: scale(delta, 1.0 / distance),
+        })
+    }
 
     fn update_axis_limits(&mut self, code: &str, acceleration: bool) {
         let limits = if acceleration {
@@ -226,62 +299,6 @@ impl MotionState {
         for (axis, value) in position.into_iter().enumerate() {
             self.position[axis] = value.unwrap_or(self.position[axis]);
         }
-    }
-}
-
-pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
-    if blocks.is_empty() {
-        return Vec::new();
-    }
-    let mut entry = vec![0.0; blocks.len()];
-    let mut max_entry = vec![0.0; blocks.len()];
-    for (index, pair) in blocks.windows(2).enumerate() {
-        let block = &pair[0];
-        let next = &pair[1];
-        let junction = block.speed.min(next.speed);
-        max_entry[index + 1] = (0..4).fold(junction, |limit, axis| {
-            let delta =
-                (next.speed * next.direction[axis] - block.speed * block.direction[axis]).abs();
-            let factor = (block.jerk[axis] / delta.max(block.jerk[axis])).min(1.0);
-            limit.min(junction * factor)
-        });
-    }
-    for index in 1..blocks.len() {
-        let previous = &blocks[index - 1];
-        entry[index] = max_entry[index].min(
-            (entry[index - 1] * entry[index - 1] + 2.0 * previous.acceleration * previous.distance)
-                .sqrt(),
-        );
-    }
-    for index in (0..blocks.len() - 1).rev() {
-        let block = &blocks[index];
-        entry[index] = entry[index].min(
-            (entry[index + 1] * entry[index + 1] + 2.0 * block.acceleration * block.distance)
-                .sqrt(),
-        );
-    }
-    blocks
-        .iter()
-        .enumerate()
-        .map(|(index, block)| {
-            let start = entry[index];
-            let end = entry.get(index + 1).copied().unwrap_or(0.0);
-            trapezoid_time(block.distance, start, block.speed, end, block.acceleration)
-        })
-        .collect()
-}
-
-fn trapezoid_time(distance: f64, start: f64, cruise: f64, end: f64, acceleration: f64) -> f64 {
-    let accelerate = ((cruise * cruise - start * start) / (2.0 * acceleration)).max(0.0);
-    let decelerate = ((cruise * cruise - end * end) / (2.0 * acceleration)).max(0.0);
-    let cruise_distance = distance - accelerate - decelerate;
-    if cruise_distance >= 0.0 {
-        (cruise - start) / acceleration
-            + cruise_distance / cruise.max(f64::MIN_POSITIVE)
-            + (cruise - end) / acceleration
-    } else {
-        let peak = ((2.0 * acceleration * distance + start * start + end * end) * 0.5).sqrt();
-        (peak - start) / acceleration + (peak - end) / acceleration
     }
 }
 

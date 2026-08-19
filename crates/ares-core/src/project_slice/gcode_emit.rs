@@ -216,6 +216,14 @@ pub(super) fn emit(
     Ok(processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,
+        traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .gcode
+            .machine_load_filament_time
+            .0,
     ))
 }
 fn format_processor_float(value: f64) -> String {

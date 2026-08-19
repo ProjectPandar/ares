@@ -5,10 +5,14 @@ use delays::command_delay;
 use motion::{MotionBlock, MotionState, planned_times, word};
 use time::{duration, minutes};
 
-pub(super) fn process(mut output: Vec<u8>, emit_progress: bool) -> Vec<u8> {
+pub(super) fn process(
+    mut output: Vec<u8>,
+    emit_progress: bool,
+    machine_load_filament_time: f64,
+) -> Vec<u8> {
     let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
-    let estimate = Estimate::from_lines(&lines);
+    let estimate = Estimate::from_lines(&lines, machine_load_filament_time);
     let mut result = String::with_capacity(text.len() + text.len() / 100);
     let mut last_progress = None;
     let first_marker = lines
@@ -84,11 +88,13 @@ struct Estimate {
 }
 
 impl Estimate {
-    fn from_lines(lines: &[String]) -> Self {
+    fn from_lines(lines: &[String], machine_load_filament_time: f64) -> Self {
         let mut blocks = Vec::new();
         let mut state = MotionState::default();
         let mut delays = vec![0.0; lines.len()];
+        let mut flushes = Vec::new();
         let mut measure_g29_time = false;
+        let mut active_tool = None;
         for (index, line) in lines.iter().enumerate() {
             let code = line.split(';').next().unwrap_or_default().trim();
             if code.starts_with("M622") && word(code, 'J').unwrap_or(0.0).round() == 1.0 {
@@ -100,16 +106,33 @@ impl Estimate {
             if !is_g29 || measure_g29_time {
                 delays[index] += command_delay(code).unwrap_or(0.0);
             }
-            if let Some(block) = state.motion(code) {
-                blocks.push(MotionBlock { index, ..block });
+            if synchronizes_planner(code, is_g29 && measure_g29_time) {
+                flushes.push(index);
             }
+            if selects_initial_tool(code, &mut active_tool) {
+                delays[index] += machine_load_filament_time;
+                flushes.push(index);
+            }
+            blocks.extend(
+                state
+                    .motions(code)
+                    .into_iter()
+                    .map(|block| MotionBlock { index, ..block }),
+            );
         }
-        let times = planned_times(&blocks);
+        let mut times = Vec::with_capacity(blocks.len());
+        let mut start = 0;
+        for line in flushes {
+            let end = start + blocks[start..].partition_point(|block| block.index < line);
+            times.extend(planned_times(&blocks[start..end]));
+            start = end;
+        }
+        times.extend(planned_times(&blocks[start..]));
         let mut elapsed = vec![0.0; lines.len() + 1];
         let mut block_index = 0;
         for index in 0..lines.len() {
             elapsed[index + 1] = elapsed[index] + delays[index];
-            if block_index < blocks.len() && blocks[block_index].index == index {
+            while block_index < blocks.len() && blocks[block_index].index == index {
                 elapsed[index + 1] += times[block_index];
                 block_index += 1;
             }
@@ -125,5 +148,29 @@ impl Estimate {
     }
 }
 
+fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {
+    let command = code.split_whitespace().next().unwrap_or_default();
+    matches!(command, "M0" | "M1")
+        || matches!(command, "G4" | "M400")
+            && (word(code, 'S').is_some() || word(code, 'P').is_some())
+        || measured_g29
+        || command == "M191" && word(code, 'S').unwrap_or(0.0) > 40.0
+        || command == "G92" && word(code, 'E').is_none()
+        || command == "M702" && code.contains('C')
+        || command == "SYNC" && word(code, 'T').is_some()
+}
+
 #[cfg(test)]
 mod tests;
+
+fn tool_id(code: &str) -> Option<u8> {
+    let command = code.split_whitespace().next()?;
+    command.strip_prefix('T')?.parse().ok()
+}
+
+fn selects_initial_tool(code: &str, active_tool: &mut Option<u8>) -> bool {
+    let Some(tool) = tool_id(code) else {
+        return false;
+    };
+    active_tool.replace(tool).is_none()
+}
