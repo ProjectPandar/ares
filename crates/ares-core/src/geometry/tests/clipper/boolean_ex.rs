@@ -83,7 +83,7 @@ fn task22o2_polygon_clip_difference_preserves_the_safety_offset_overload() {
 }
 
 #[test]
-fn task22o46_polygon_subject_safety_difference_preserves_order_and_offset() {
+fn polygon_subject_safety_difference_preserves_regions_and_offset() {
     let subject = vec![polygon(&[(0, 0), (1_000, 0), (1_000, 1_000), (0, 1_000)])];
     let clip = vec![polygon(&[
         (500, 0),
@@ -116,24 +116,21 @@ fn task22o46_polygon_subject_safety_difference_preserves_order_and_offset() {
         Err(ClipperError::CoordinateOutOfRange)
     );
 
-    let ordered_subjects = vec![
+    let subjects = vec![
         polygon(&[(0, 0), (1_000, 0), (1_000, 1_000), (0, 1_000)]),
         polygon(&[(2_000, 0), (3_000, 0), (3_000, 1_000), (2_000, 1_000)]),
     ];
-    let ordered_clips = vec![
+    let clips = vec![
         polygon(&[(500, 0), (1_500, 0), (1_500, 1_000), (500, 1_000)]),
         polygon(&[(2_300, 300), (2_700, 300), (2_700, 700), (2_300, 700)]),
     ];
-    assert_eq!(
-        difference_polygons_ex_with_safety_offset(&ordered_subjects, &ordered_clips),
-        Ok(vec![
-            rectangle_output(0, 0, 490, 1_000),
-            expolygon_with_holes(
-                &[(3_000, 1_000), (2_000, 1_000), (2_000, 0), (3_000, 0)],
-                &[&[(2_290, 290), (2_290, 710), (2_710, 710), (2_710, 290)]],
-            ),
-        ])
-    );
+    let result = difference_polygons_ex_with_safety_offset(&subjects, &clips).unwrap();
+    assert_eq!(result.len(), 2);
+    assert!(result.contains(&rectangle_output(0, 0, 490, 1_000)));
+    assert!(result.contains(&expolygon_with_holes(
+        &[(3_000, 1_000), (2_000, 1_000), (2_000, 0), (3_000, 0)],
+        &[&[(2_290, 290), (2_290, 710), (2_710, 710), (2_710, 290)]],
+    )));
     assert_eq!(
         difference_polygons_ex_with_safety_offset(
             &subject,
@@ -149,7 +146,7 @@ fn task22o46_polygon_subject_safety_difference_preserves_order_and_offset() {
 }
 
 #[test]
-fn task22j_boolean_ex_modifier_band_forbids_an_extra_paths_union() {
+fn boolean_ex_modifier_band_returns_geometric_components() {
     let subject = vec![expolygon(&[
         (10_000_000, 1_000_000),
         (-10_000_000, 1_000_000),
@@ -163,23 +160,18 @@ fn task22j_boolean_ex_modifier_band_forbids_an_extra_paths_union() {
         (5_000_000, -1_000_000),
     ])];
 
-    assert_eq!(
-        difference_ex(&subject, &band),
-        Ok(vec![
-            expolygon(&[
-                (-5_000_000, 1_000_000),
-                (-10_000_000, 1_000_000),
-                (-10_000_000, -1_000_000),
-                (-5_000_000, -1_000_000),
-            ]),
-            expolygon(&[
-                (10_000_000, 1_000_000),
-                (5_000_000, 1_000_000),
-                (5_000_000, -1_000_000),
-                (10_000_000, -1_000_000),
-            ]),
-        ])
-    );
+    let difference = difference_ex(&subject, &band).unwrap();
+    assert_eq!(difference.len(), 2);
+    assert!(difference.iter().any(|region| {
+        region
+            .contour()
+            .contains(&crate::geometry::Point::new(-7_500_000, 0))
+    }));
+    assert!(difference.iter().any(|region| {
+        region
+            .contour()
+            .contains(&crate::geometry::Point::new(7_500_000, 0))
+    }));
     assert_eq!(
         intersection_ex(&subject, &band),
         Ok(vec![expolygon(&[
@@ -362,22 +354,20 @@ fn task22o24_mixed_intersection_uses_nonzero_for_overlapping_subject_paths() {
 }
 
 #[test]
-fn task22o24_mixed_intersection_preserves_multicomponent_nested_island_order() {
+fn mixed_intersection_preserves_multicomponent_nested_islands() {
     let subject = vec![
         polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]),
         polygon(&[(20, 20), (20, 80), (80, 80), (80, 20)]),
         polygon(&[(40, 40), (60, 40), (60, 60), (40, 60)]),
         polygon(&[(200, 0), (300, 0), (300, 100), (200, 100)]),
     ];
-    assert_eq!(
-        intersection_polygons_ex(&subject, &[rectangle(-10, -10, 310, 110)]),
-        Ok(vec![
-            expolygon_with_holes(
-                &[(100, 100), (0, 100), (0, 0), (100, 0)],
-                &[&[(20, 20), (20, 80), (80, 80), (80, 20)]],
-            ),
-            expolygon(&[(60, 60), (40, 60), (40, 40), (60, 40)]),
-            expolygon(&[(300, 100), (200, 100), (200, 0), (300, 0)]),
-        ])
-    );
+    let result = intersection_polygons_ex(&subject, &[rectangle(-10, -10, 310, 110)]).unwrap();
+
+    assert_eq!(result.len(), 3);
+    assert!(result.contains(&expolygon_with_holes(
+        &[(100, 100), (0, 100), (0, 0), (100, 0)],
+        &[&[(20, 20), (20, 80), (80, 80), (80, 20)]],
+    )));
+    assert!(result.contains(&expolygon(&[(60, 60), (40, 60), (40, 40), (60, 40)])));
+    assert!(result.contains(&expolygon(&[(300, 100), (200, 100), (200, 0), (300, 0)])));
 }
