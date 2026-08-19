@@ -59,12 +59,14 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
     if layer.embedded_distances[second] < -0.5 && layer.embedded_distances[first] > -0.5 {
         return false;
     }
-    layer.scores[first] <= layer.scores[second]
-        || layer.scores[first] - layer.scores[second] < SCORE_TOLERANCE
+    let first_penalty = layer.overhangs[first] + layer.scores[first];
+    let second_penalty = layer.overhangs[second] + layer.scores[second];
+    first_penalty <= second_penalty || first_penalty - second_penalty < SCORE_TOLERANCE
 }
 
 pub(super) fn align(layers: &mut [LayerPlan]) {
-    let mut seams = layers
+    // Printed lower layers anchor later seam strings; perimeter order breaks same-layer ties.
+    let seams = layers
         .iter()
         .enumerate()
         .flat_map(|(layer_index, layer)| {
@@ -74,15 +76,6 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
                 .map(move |choice| (layer_index, choice.seam_index))
         })
         .collect::<Vec<_>>();
-    seams.sort_by(|&first, &second| {
-        if is_better_between(layers, first, second) {
-            std::cmp::Ordering::Less
-        } else if is_better_between(layers, second, first) {
-            std::cmp::Ordering::Greater
-        } else {
-            std::cmp::Ordering::Equal
-        }
-    });
     let mut global_index = 0;
     while global_index < seams.len() {
         let start = seams[global_index];
@@ -109,25 +102,6 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
         global_index -= 1;
         finalize_string(layers, &seam_string);
     }
-}
-
-fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize, usize)) -> bool {
-    let first_layer = &layers[first.0];
-    let second_layer = &layers[second.0];
-    let first_overhang = first_layer.overhangs[first.1];
-    let second_overhang = second_layer.overhangs[second.1];
-    if first_overhang > 0.0 || second_overhang > 0.0 {
-        return first_overhang < second_overhang;
-    }
-    let first_embedded = first_layer.embedded_distances[first.1];
-    let second_embedded = second_layer.embedded_distances[second.1];
-    if first_embedded < -0.5 && second_embedded > -0.5 {
-        return true;
-    }
-    if second_embedded < -0.5 && first_embedded > -0.5 {
-        return false;
-    }
-    first_layer.scores[first.1] < second_layer.scores[second.1]
 }
 
 fn find_seam_string(layers: &[LayerPlan], start: (usize, usize)) -> Vec<(usize, usize)> {

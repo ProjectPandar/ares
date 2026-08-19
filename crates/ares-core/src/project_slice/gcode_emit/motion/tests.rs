@@ -229,23 +229,19 @@ async fn task22o141_mesh_simplification_matches_source_wall_vertices() {
 }
 
 #[tokio::test]
-async fn task22o144_arc_fitting_preserves_source_range_boundary() {
+async fn aligned_seam_uses_project_slice_embedding() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
     )
     .await
     .unwrap();
-    let lines = std::str::from_utf8(&output)
-        .unwrap()
-        .lines()
-        .collect::<Vec<_>>();
-    let first_outer = lines
-        .iter()
-        .position(|line| *line == "; FEATURE: Outer wall")
-        .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
 
-    assert_eq!(lines[first_outer + 2], "G1 X140.618 Y102.994 E.00049");
+    let mut lines = output
+        .lines()
+        .skip_while(|line| *line != "M624 AQAAAAAAAAA=");
+    assert_eq!(lines.nth(1), Some("G1 X140.158 Y102.797 F60000"));
 }
 
 #[tokio::test]

@@ -15,7 +15,7 @@ impl Vec3 {
     }
 
     pub(super) fn dot(self, rhs: Self) -> f32 {
-        self.x.mul_add(rhs.x, self.y.mul_add(rhs.y, self.z * rhs.z))
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
     pub(super) fn cross(self, rhs: Self) -> Self {

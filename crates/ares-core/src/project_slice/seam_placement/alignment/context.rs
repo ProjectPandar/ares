@@ -12,7 +12,7 @@ pub(super) fn populate(
     assert_eq!(layers.len(), layer_slices.len());
     for layer_index in 0..layers.len() {
         if compute_embedding[layer_index] {
-            populate_embedded_distance(&mut layers[layer_index]);
+            populate_embedded_distance(&mut layers[layer_index], &layer_slices[layer_index], scale);
         }
         if layer_index > 0 {
             let layer_height = layers[layer_index].z - layers[layer_index - 1].z;
@@ -87,27 +87,14 @@ fn polygon_distance(polygon: &Polygon, point: (f32, f32), scale: CoordinateScale
         .unwrap_or(f32::INFINITY)
 }
 
-fn populate_embedded_distance(layer: &mut LayerPlan) {
-    if layer.candidates.perimeters.len() <= 1 {
-        return;
-    }
+fn populate_embedded_distance(
+    layer: &mut LayerPlan,
+    layer_slices: &[ExPolygon],
+    scale: CoordinateScale,
+) {
     for index in 0..layer.candidates.points.len() {
-        let own = layer.candidates.points[index].perimeter_index;
-        let point = position(layer, index);
-        let distance = distance_to_layer(layer, point, Some(own));
-        if !distance.is_finite() {
-            continue;
-        }
-        let inside = layer
-            .candidates
-            .perimeters
-            .iter()
-            .enumerate()
-            .any(|(perimeter_index, _)| {
-                perimeter_index != own && point_inside_perimeter(layer, perimeter_index, point)
-            });
-        layer.embedded_distances[index] =
-            if inside { -distance } else { distance } + 0.65 * flow_width(layer, index);
+        let distance = signed_distance_to_slices(layer_slices, position(layer, index), scale);
+        layer.embedded_distances[index] = distance + 0.65 * flow_width(layer, index);
     }
 }
 
@@ -121,34 +108,6 @@ fn position(layer: &LayerPlan, candidate_index: usize) -> (f32, f32) {
     (position.x, position.y)
 }
 
-fn distance_to_layer(
-    layer: &LayerPlan,
-    point: (f32, f32),
-    excluded_perimeter: Option<usize>,
-) -> f32 {
-    layer
-        .candidates
-        .perimeters
-        .iter()
-        .enumerate()
-        .filter(|(index, _)| Some(*index) != excluded_perimeter)
-        .flat_map(|(_, perimeter)| {
-            let points = &layer.candidates.points[perimeter.start_index..perimeter.end_index];
-            points
-                .iter()
-                .zip(points.iter().cycle().skip(1))
-                .map(move |(start, end)| {
-                    point_segment_distance(
-                        point,
-                        (start.position.x, start.position.y),
-                        (end.position.x, end.position.y),
-                    )
-                })
-        })
-        .reduce(f32::min)
-        .unwrap_or(f32::INFINITY)
-}
-
 fn point_segment_distance(point: (f32, f32), start: (f32, f32), end: (f32, f32)) -> f32 {
     let edge = (end.0 - start.0, end.1 - start.1);
     let length_squared = edge.0.mul_add(edge.0, edge.1 * edge.1);
@@ -160,24 +119,6 @@ fn point_segment_distance(point: (f32, f32), start: (f32, f32), end: (f32, f32))
         .clamp(0.0, 1.0);
     let closest = (start.0 + projection * edge.0, start.1 + projection * edge.1);
     (point.0 - closest.0).hypot(point.1 - closest.1)
-}
-
-fn point_inside_perimeter(layer: &LayerPlan, perimeter_index: usize, point: (f32, f32)) -> bool {
-    let perimeter = &layer.candidates.perimeters[perimeter_index];
-    let points = &layer.candidates.points[perimeter.start_index..perimeter.end_index];
-    let mut inside = false;
-    let mut previous = points.last().expect("a seam perimeter has candidates");
-    for current in points {
-        let a = (previous.position.x, previous.position.y);
-        let b = (current.position.x, current.position.y);
-        if (a.1 > point.1) != (b.1 > point.1)
-            && point.0 < (b.0 - a.0) * (point.1 - a.1) / (b.1 - a.1) + a.0
-        {
-            inside = !inside;
-        }
-        previous = current;
-    }
-    inside
 }
 
 #[cfg(test)]
