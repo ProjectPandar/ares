@@ -26,9 +26,18 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         .zip(layer_zs)
         .map(|(layer, &z)| prepare_layer(layer, z, traversal.scale, nozzle_diameter, visibility))
         .collect::<Vec<_>>();
+    let input = &traversal.objects[object_index]
+        .predecessor
+        .predecessor
+        .predecessor
+        .predecessor
+        .object;
+    let layer_slices = input.object.as_parts().1;
     context::populate(
         &mut plans,
         &embedding_layers(traversal, object_index, layers.len()),
+        layer_slices,
+        traversal.scale,
     );
     for plan in &mut plans {
         plan.choices = plan
@@ -203,6 +212,15 @@ fn prepare_layer(
         .iter()
         .map(|candidate| candidate_penalty(candidate, visibility))
         .collect::<Vec<_>>();
+    let positions = candidates
+        .points
+        .iter()
+        .map(|candidate| {
+            let position = candidate.position;
+            super::Vec3::new(position.x, position.y, position.z)
+        })
+        .collect::<Vec<_>>();
+    let point_tree = super::PointKdTree::new(&positions);
     LayerPlan {
         candidates,
         choices: Vec::new(),
@@ -211,6 +229,8 @@ fn prepare_layer(
         z,
         overhangs: vec![0.0; candidate_count],
         embedded_distances: vec![0.0; candidate_count],
+        positions,
+        point_tree,
     }
 }
 

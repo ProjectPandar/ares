@@ -1,26 +1,90 @@
+use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
+
 use super::LayerPlan;
 
-pub(super) fn populate(layers: &mut [LayerPlan], compute_embedding: &[bool]) {
+pub(super) fn populate(
+    layers: &mut [LayerPlan],
+    compute_embedding: &[bool],
+    layer_slices: &[Vec<ExPolygon>],
+    scale: CoordinateScale,
+) {
     assert_eq!(layers.len(), compute_embedding.len());
+    assert_eq!(layers.len(), layer_slices.len());
     for layer_index in 0..layers.len() {
         if compute_embedding[layer_index] {
             populate_embedded_distance(&mut layers[layer_index]);
         }
         if layer_index > 0 {
-            let (previous, current) = layers.split_at_mut(layer_index);
-            populate_overhang(&previous[layer_index - 1], &mut current[0]);
+            let layer_height = layers[layer_index].z - layers[layer_index - 1].z;
+            let (_, current) = layers.split_at_mut(layer_index);
+            populate_overhang(
+                &layer_slices[layer_index - 1],
+                &mut current[0],
+                layer_height,
+                scale,
+            );
         }
     }
 }
 
-fn populate_overhang(previous: &LayerPlan, current: &mut LayerPlan) {
-    let layer_height = current.z - previous.z;
+fn populate_overhang(
+    previous_slices: &[ExPolygon],
+    current: &mut LayerPlan,
+    layer_height: f32,
+    scale: CoordinateScale,
+) {
     for index in 0..current.candidates.points.len() {
         let point = position(current, index);
         let flow_width = flow_width(current, index);
-        let distance = distance_to_layer(previous, point, None);
-        current.overhangs[index] = (distance + 0.15 * flow_width - layer_height).max(0.0);
+        let distance = signed_distance_to_slices(previous_slices, point, scale);
+        current.overhangs[index] = (distance + 0.65 * flow_width - layer_height).max(0.0);
     }
+}
+
+fn signed_distance_to_slices(
+    slices: &[ExPolygon],
+    point: (f32, f32),
+    scale: CoordinateScale,
+) -> f32 {
+    let scaled = Point::new(
+        scale
+            .checked_scale(f64::from(point.0))
+            .expect("candidate X is scalable"),
+        scale
+            .checked_scale(f64::from(point.1))
+            .expect("candidate Y is scalable"),
+    );
+    let inside = slices.iter().any(|slice| {
+        slice.contour().contains(&scaled)
+            && !slice.holes().iter().any(|hole| hole.contains(&scaled))
+    });
+    let distance = slices
+        .iter()
+        .flat_map(|slice| std::iter::once(slice.contour()).chain(slice.holes()))
+        .map(|polygon| polygon_distance(polygon, point, scale))
+        .reduce(f32::min)
+        .unwrap_or(f32::INFINITY);
+    if inside { -distance } else { distance }
+}
+
+fn polygon_distance(polygon: &Polygon, point: (f32, f32), scale: CoordinateScale) -> f32 {
+    let points = polygon.points();
+    points
+        .iter()
+        .zip(points.iter().cycle().skip(1))
+        .take(points.len())
+        .map(|(start, end)| {
+            point_segment_distance(
+                point,
+                (
+                    scale.unscale(start.x()) as f32,
+                    scale.unscale(start.y()) as f32,
+                ),
+                (scale.unscale(end.x()) as f32, scale.unscale(end.y()) as f32),
+            )
+        })
+        .reduce(f32::min)
+        .unwrap_or(f32::INFINITY)
 }
 
 fn populate_embedded_distance(layer: &mut LayerPlan) {

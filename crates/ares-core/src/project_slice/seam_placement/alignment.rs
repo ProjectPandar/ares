@@ -3,7 +3,7 @@ mod preparation;
 
 use crate::project_slice::seam_candidates::{LayerSeamCandidates, SeamPerimeter};
 
-use super::{angle_penalty, mesh::Vec3, spline::CubicSpline};
+use super::{angle_penalty, mesh::Vec3, spatial::PointKdTree, spline::CubicSpline};
 
 pub(super) use preparation::prepare;
 
@@ -21,6 +21,8 @@ pub(super) struct LayerPlan {
     z: f32,
     overhangs: Vec<f32>,
     embedded_distances: Vec<f32>,
+    positions: Vec<Vec3>,
+    point_tree: PointKdTree,
 }
 
 pub(super) struct PerimeterChoice {
@@ -62,7 +64,7 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
 }
 
 pub(super) fn align(layers: &mut [LayerPlan]) {
-    let seams = layers
+    let mut seams = layers
         .iter()
         .enumerate()
         .flat_map(|(layer_index, layer)| {
@@ -72,6 +74,15 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
                 .map(move |choice| (layer_index, choice.seam_index))
         })
         .collect::<Vec<_>>();
+    seams.sort_by(|&first, &second| {
+        if is_better_between(layers, first, second) {
+            std::cmp::Ordering::Less
+        } else if is_better_between(layers, second, first) {
+            std::cmp::Ordering::Greater
+        } else {
+            std::cmp::Ordering::Equal
+        }
+    });
     let mut global_index = 0;
     while global_index < seams.len() {
         let start = seams[global_index];
@@ -98,6 +109,25 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
         global_index -= 1;
         finalize_string(layers, &seam_string);
     }
+}
+
+fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize, usize)) -> bool {
+    let first_layer = &layers[first.0];
+    let second_layer = &layers[second.0];
+    let first_overhang = first_layer.overhangs[first.1];
+    let second_overhang = second_layer.overhangs[second.1];
+    if first_overhang > 0.0 || second_overhang > 0.0 {
+        return first_overhang < second_overhang;
+    }
+    let first_embedded = first_layer.embedded_distances[first.1];
+    let second_embedded = second_layer.embedded_distances[second.1];
+    if first_embedded < -0.5 && second_embedded > -0.5 {
+        return true;
+    }
+    if second_embedded < -0.5 && first_embedded > -0.5 {
+        return false;
+    }
+    first_layer.scores[first.1] < second_layer.scores[second.1]
 }
 
 fn find_seam_string(layers: &[LayerPlan], start: (usize, usize)) -> Vec<(usize, usize)> {
@@ -144,20 +174,8 @@ fn find_next_in_layer(
 ) -> Option<(usize, usize)> {
     let layer = &layers[layer_index];
     let nearby = layer
-        .candidates
-        .points
-        .iter()
-        .enumerate()
-        .filter(|(_, candidate)| {
-            let position = Vec3::new(
-                candidate.position.x,
-                candidate.position.y,
-                candidate.position.z,
-            );
-            (position - projected).norm_squared() <= max_distance * max_distance
-        })
-        .map(|(index, _)| index)
-        .collect::<Vec<_>>();
+        .point_tree
+        .in_radius(&layer.positions, projected, max_distance);
     let &first = nearby.first()?;
     let mut best = first;
     let mut nearest = first;
@@ -258,8 +276,7 @@ fn string_length(layers: &[LayerPlan], seam_string: &[(usize, usize)]) -> f32 {
 }
 
 fn candidate_position(layers: &[LayerPlan], point: (usize, usize)) -> Vec3 {
-    let position = layers[point.0].candidates.points[point.1].position;
-    Vec3::new(position.x, position.y, position.z)
+    layers[point.0].positions[point.1]
 }
 
 fn candidate_angle(layers: &[LayerPlan], point: (usize, usize)) -> f32 {

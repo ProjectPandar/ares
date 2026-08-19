@@ -10,7 +10,6 @@ use crate::{
     ProcessSeamPosition,
     geometry::CoordinateScale,
     project_slice::{
-        gcode_emit,
         island_print_order::{
             IslandPrintEntity, OrderedExtrusionLayer, PreparedPostIslandPrintOrder,
         },
@@ -47,8 +46,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         discard_candidate_points(&mut prepared.objects);
         return;
     }
-    let center = gcode_emit::footprint::model_center(traversal).unwrap_or_default();
-    let mesh = mesh::TriangleMesh::from_project(&traversal.project, center);
+    let mesh = mesh::TriangleMesh::from_project(&traversal.project);
     if mesh.triangles.is_empty() {
         return;
     }

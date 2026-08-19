@@ -39,12 +39,11 @@ pub(super) fn sample_uniform(mesh: &TriangleMesh, sample_count: usize) -> Triang
         let target = triangle_sample * f64::from(total_area);
         let triangle_index = cumulative.partition_point(|&sum| f64::from(sum) <= target);
         let triangle = mesh.triangles[triangle_index];
-        let square_u = u.sqrt() as f32;
-        let v = v as f32;
+        let square_u = u.sqrt();
         positions.push(
-            triangle.vertices[0] * (1.0 - square_u)
-                + triangle.vertices[1] * (square_u * (1.0 - v))
-                + triangle.vertices[2] * (v * square_u),
+            triangle.vertices[0] * (1.0 - square_u) as f32
+                + triangle.vertices[1] * (square_u * (1.0 - v)) as f32
+                + triangle.vertices[2] * (v * square_u) as f32,
         );
         normals.push(triangle.normal());
     }

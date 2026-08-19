@@ -247,3 +247,19 @@ async fn task22o144_arc_fitting_preserves_source_range_boundary() {
 
     assert_eq!(lines[first_outer + 2], "G1 X140.618 Y102.994 E.00049");
 }
+
+#[tokio::test]
+async fn bottom_surface_travel_crossing_external_slice_retracts() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(
+        output
+            .contains("G1 X101.68 Y139.896 E.50049\nM204 S6000\nG1 E-.11429 F1800\n; WIPE_START\n")
+    );
+}

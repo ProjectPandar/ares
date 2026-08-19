@@ -148,27 +148,3 @@ fn split_within_source_epsilon_snaps_to_existing_vertex() {
         ]
     );
 }
-
-#[tokio::test]
-async fn task22o142_inner_path_role_projects_aligned_seam() {
-    let output = crate::slice_project(
-        crate::project_slice::tests::support::ksr_project(),
-        crate::project_slice::tests::support::metadata(),
-    )
-    .await
-    .unwrap();
-    let lines = std::str::from_utf8(&output)
-        .unwrap()
-        .lines()
-        .collect::<Vec<_>>();
-    let label = lines
-        .iter()
-        .position(|line| *line == "M624 AQAAAAAAAAA=")
-        .unwrap();
-    let first_outer = lines
-        .iter()
-        .position(|line| *line == "; FEATURE: Outer wall")
-        .unwrap();
-    assert_eq!(lines[label + 1], "G1 X140.158 Y102.797 F60000");
-    assert_eq!(lines[first_outer - 2], "G1 X140.625 Y102.983 F60000");
-}

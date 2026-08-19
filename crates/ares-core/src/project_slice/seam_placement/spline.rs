@@ -80,16 +80,16 @@ fn cubic_kernel(mut value: f32) -> f32 {
 }
 
 fn maximum_pivot(matrix: &[Vec<f32>], pivot: usize, parameter_count: usize) -> (usize, usize, f32) {
-    (pivot..parameter_count)
-        .flat_map(|column| {
-            matrix
-                .iter()
-                .enumerate()
-                .skip(pivot)
-                .map(move |(row, values)| (row, column, values[column].abs()))
-        })
-        .max_by(|left, right| left.2.total_cmp(&right.2))
-        .expect("a full-pivot coefficient exists")
+    let mut maximum = (pivot, pivot, matrix[pivot][pivot].abs());
+    for column in pivot..parameter_count {
+        for (row, values) in matrix.iter().enumerate().skip(pivot) {
+            let value = values[column].abs();
+            if value > maximum.2 {
+                maximum = (row, column, value);
+            }
+        }
+    }
+    maximum
 }
 
 fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {

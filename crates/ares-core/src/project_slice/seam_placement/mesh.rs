@@ -150,7 +150,7 @@ impl TriangleMesh {
         Self { triangles }
     }
 
-    pub(super) fn from_project(project: &Project, center: (f64, f64)) -> Self {
+    pub(super) fn from_project(project: &Project) -> Self {
         let object = project
             .objects()
             .first()
@@ -166,14 +166,16 @@ impl TriangleMesh {
             .iter()
             .filter(|volume| volume.volume_type() == ProjectVolumeType::ModelPart)
         {
-            let transform = instance_transform.then(volume.transform());
+            let transform = instance_transform
+                .without_xy_translation()
+                .then(volume.transform());
             let vertices = volume
                 .mesh()
                 .vertices()
                 .iter()
                 .map(|&vertex| {
                     let [x, y, z] = transform.transform_point_f32(vertex);
-                    Vec3::new(x - center.0 as f32, y - center.1 as f32, z)
+                    Vec3::new(x, y, z)
                 })
                 .collect::<Vec<_>>();
             triangles.extend(volume.mesh().triangles().iter().map(|indices| {

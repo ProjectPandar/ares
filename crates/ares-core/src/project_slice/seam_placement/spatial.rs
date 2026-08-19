@@ -186,22 +186,23 @@ fn triangle_hit(mesh: &TriangleMesh, index: usize, origin: Vec3, direction: Vec3
     let direction = to_f64(direction);
     let p = cross(direction, edge_two);
     let determinant = dot(edge_one, p);
-    if determinant.abs() < f64::EPSILON {
-        return None;
-    }
-    let inverse = determinant.recip();
     let offset = sub(to_f64(origin), a);
-    let u = dot(offset, p) * inverse;
-    if !(0.0..=1.0).contains(&u) {
-        return None;
-    }
+    let u = dot(offset, p);
     let q = cross(offset, edge_one);
-    let v = dot(direction, q) * inverse;
-    if v < 0.0 || u + v > 1.0 {
+    let v = dot(direction, q);
+    if determinant > 0.000_001 {
+        if u < 0.0 || u > determinant || v < 0.0 || u + v > determinant {
+            return None;
+        }
+    } else if determinant < -0.000_001 {
+        if u > 0.0 || u < determinant || v > 0.0 || u + v < determinant {
+            return None;
+        }
+    } else {
         return None;
     }
-    let distance = dot(edge_two, q) * inverse;
-    (distance >= 0.0).then_some(distance)
+    let distance = dot(edge_two, q) / determinant;
+    (distance > 0.0).then_some(f64::from(distance as f32))
 }
 
 fn to_f64(value: Vec3) -> [f64; 3] {
