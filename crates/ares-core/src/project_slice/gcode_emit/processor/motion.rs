@@ -63,9 +63,6 @@ impl MotionState {
             self.set_position(code);
             return None;
         }
-        if let Some(value) = word(code, 'F') {
-            self.feedrate = value / 60.0;
-        }
         if code.starts_with("M201") {
             self.update_axis_limits(code, true);
             return None;
@@ -106,7 +103,13 @@ impl MotionState {
             }
             return self.motion(&homing);
         }
-        if !matches!(command, "G0" | "G1" | "G2" | "G3") || self.feedrate <= 0.0 {
+        if !matches!(command, "G0" | "G1" | "G2" | "G3") {
+            return None;
+        }
+        if let Some(value) = word(code, 'F') {
+            self.feedrate = value / 60.0;
+        }
+        if self.feedrate <= 0.0 {
             return None;
         }
         let old = self.position;

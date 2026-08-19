@@ -20,6 +20,29 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
     assert!(!output.lines().any(|line| line.starts_with("M73 P")));
     assert!(output.contains("total estimated time: 1m 40s"));
 }
+#[test]
+fn first_layer_time_ends_at_first_change_layer() {
+    let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X600 F3600\n; CHANGE_LAYER\nG1 X600 F3600\n; CHANGE_LAYER\nM73 P100 R0\n".to_vec();
+
+    let output = String::from_utf8(process(output, false)).unwrap();
+
+    assert!(
+        output.contains("estimated first layer printing time (normal mode) = 10s"),
+        "{output}"
+    );
+}
+
+#[test]
+fn collinear_cruise_time_is_not_zeroed_by_default_jerk() {
+    let mut state = MotionState::default();
+    state.motion("M204 S1000");
+    let first = state.motion("G1 X600 F3600").unwrap();
+    let second = state.motion("G1 X1200 F3600").unwrap();
+
+    let times = planned_times(&[first, second]);
+
+    assert!((times.iter().sum::<f64>() - 20.06).abs() < 0.01);
+}
 
 #[test]
 fn tracks_relative_e_only_moves() {
@@ -93,6 +116,16 @@ fn homing_command_emits_motion_to_requested_axes() {
     assert_eq!(state.position, [0.0, 20.0, 3.0]);
 }
 
+#[test]
+fn unsupported_commands_do_not_change_motion_feedrate() {
+    let mut state = MotionState::default();
+    state.motion("G1 X1 F600");
+    state.motion("G130 F4.36536");
+
+    let block = state.motion("G1 X2").unwrap();
+
+    assert_eq!(block.speed, 10.0);
+}
 #[test]
 fn arc_p_word_adds_full_turns() {
     let mut state = MotionState::default();

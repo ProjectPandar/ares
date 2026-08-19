@@ -18,8 +18,7 @@ pub(super) fn process(mut output: Vec<u8>, emit_progress: bool) -> Vec<u8> {
     let first_layer_end = lines
         .iter()
         .enumerate()
-        .filter(|(index, line)| *index > first_marker && line.starts_with("; CHANGE_LAYER"))
-        .nth(1)
+        .find(|(index, line)| *index > first_marker && line.starts_with("; CHANGE_LAYER"))
         .map(|(index, _)| estimate.elapsed_at(index))
         .unwrap_or(estimate.total);
     let model_time = (estimate.total - first_layer_end).max(0.0);
