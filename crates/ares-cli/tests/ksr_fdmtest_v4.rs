@@ -3,7 +3,10 @@ mod golden;
 
 use std::{fs, io::Cursor, path::PathBuf};
 
-use golden::{GeneratorKind, first_difference, normalize_one_generator_line};
+use golden::{
+    GeneratorKind, first_difference, normalize_one_generator_line,
+    normalize_uninitialized_object_ids,
+};
 use sha2::{Digest, Sha256};
 
 const PROJECT_SHA256: &str = "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9";
@@ -77,6 +80,14 @@ fn generator_normalization_changes_only_the_validated_line() {
 }
 
 #[test]
+fn uninitialized_orca_object_ids_are_normalized_only_on_object_comment_lines() {
+    let input = b"; printing object part id:13965068898260364096 copy 0\n; stop printing object part id:2 copy 0\nG1 X13965068898260364096\n";
+    let expected = b"; printing object part id:<OBJECT_ID> copy 0\n; stop printing object part id:<OBJECT_ID> copy 0\nG1 X13965068898260364096\n";
+
+    assert_eq!(normalize_uninitialized_object_ids(input).unwrap(), expected);
+}
+
+#[test]
 fn generator_normalization_requires_exactly_one_complete_utf8_line() {
     assert_eq!(
         normalize_one_generator_line(b"no generator line\n", GeneratorKind::Orca).unwrap_err(),
@@ -135,7 +146,7 @@ fn first_difference_truncates_long_context_lines() {
 
 #[test]
 #[ignore = "full project parity incomplete"]
-fn project_matches_orca_242_except_generator_line() {
+fn project_matches_orca_242_except_allowed_metadata() {
     let temp = tempfile::tempdir().unwrap();
     let output = temp.path().join("actual.gcode");
     assert_cmd::Command::cargo_bin("ares")
@@ -150,7 +161,9 @@ fn project_matches_orca_242_except_generator_line() {
         .success();
     let actual = std::fs::read(output).unwrap();
     let expected = normalize_one_generator_line(&reference(), GeneratorKind::Orca).unwrap();
+    let expected = normalize_uninitialized_object_ids(&expected).unwrap();
     let actual = normalize_one_generator_line(&actual, GeneratorKind::Ares).unwrap();
+    let actual = normalize_uninitialized_object_ids(&actual).unwrap();
     if expected != actual {
         panic!("{}", first_difference(&expected, &actual).unwrap());
     }

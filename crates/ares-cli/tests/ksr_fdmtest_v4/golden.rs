@@ -33,6 +33,16 @@ pub(crate) fn normalize_one_generator_line(
     Ok(text.into_bytes())
 }
 
+pub(crate) fn normalize_uninitialized_object_ids(bytes: &[u8]) -> Result<Vec<u8>, String> {
+    let pattern =
+        regex::Regex::new(r"(?m)^(; (?:stop )?printing object .+ id:)\d+( copy \d+)$").unwrap();
+    let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+    Ok(pattern
+        .replace_all(text, "${1}<OBJECT_ID>${2}")
+        .into_owned()
+        .into_bytes())
+}
+
 pub(crate) struct Difference {
     byte_offset: usize,
     line: usize,
