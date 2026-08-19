@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use super::{LayerPlan, PerimeterChoice, context, is_better};
+use super::{LayerPlan, PerimeterChoice, context, is_better, is_not_much_worse};
 use crate::project_slice::seam_placement::{candidate_penalty, visibility};
 
 pub(in crate::project_slice::seam_placement) fn prepare(
@@ -50,8 +50,77 @@ pub(in crate::project_slice::seam_placement) fn prepare(
                 finalized: false,
             })
             .collect();
+        align_collection_choices(plan);
     }
     plans
+}
+
+fn align_collection_choices(plan: &mut LayerPlan) {
+    for collection_index in 0..plan.collection_perimeters.len() {
+        align_collection_choices_at(plan, collection_index);
+    }
+}
+
+fn align_collection_choices_at(plan: &mut LayerPlan, collection_index: usize) {
+    let mapping = &plan.collection_perimeters[collection_index];
+    let mut previous_perimeter = None;
+    for &perimeter_index in mapping {
+        if previous_perimeter == Some(perimeter_index) {
+            continue;
+        }
+        if let Some(previous_index) = previous_perimeter {
+            let previous = plan.candidates.points[plan.choices[previous_index].seam_index].position;
+            let selected = plan.choices[perimeter_index].seam_index;
+            plan.choices[perimeter_index].seam_index =
+                nearest_feature_best_candidate(plan, perimeter_index, selected, previous);
+        }
+        previous_perimeter = Some(perimeter_index);
+    }
+}
+
+fn nearest_feature_best_candidate(
+    plan: &LayerPlan,
+    perimeter_index: usize,
+    selected: usize,
+    previous: seam_candidates::SeamCandidatePosition,
+) -> usize {
+    let perimeter = &plan.candidates.perimeters[perimeter_index];
+    let candidates = perimeter.start_index..perimeter.end_index;
+    let nearest = candidates
+        .clone()
+        .filter(|&candidate| is_not_much_worse(plan, candidate, selected))
+        .min_by(|&left, &right| {
+            candidate_distance_squared(plan, left, previous)
+                .total_cmp(&candidate_distance_squared(plan, right, previous))
+        })
+        .expect("the selected seam candidate remains acceptable");
+    let nearest_position = plan.candidates.points[nearest].position;
+    let feature_radius_squared = perimeter.flow_width * perimeter.flow_width;
+    candidates
+        .filter(|&candidate| {
+            candidate_distance_squared(plan, candidate, nearest_position) <= feature_radius_squared
+        })
+        .min_by(|&left, &right| {
+            if is_better(plan, left, right) {
+                std::cmp::Ordering::Less
+            } else if is_better(plan, right, left) {
+                std::cmp::Ordering::Greater
+            } else {
+                left.cmp(&right)
+            }
+        })
+        .unwrap_or(nearest)
+}
+
+fn candidate_distance_squared(
+    plan: &LayerPlan,
+    candidate_index: usize,
+    target: seam_candidates::SeamCandidatePosition,
+) -> f32 {
+    let candidate = plan.candidates.points[candidate_index].position;
+    let x = candidate.x - target.x;
+    let y = candidate.y - target.y;
+    x.mul_add(x, y * y)
 }
 
 fn embedding_layers(

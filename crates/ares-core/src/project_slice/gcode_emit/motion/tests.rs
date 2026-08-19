@@ -229,7 +229,7 @@ async fn task22o141_mesh_simplification_matches_source_wall_vertices() {
 }
 
 #[tokio::test]
-async fn aligned_seam_uses_project_slice_embedding() {
+async fn first_layer_seam_and_island_order_match_project_slice() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -242,6 +242,12 @@ async fn aligned_seam_uses_project_slice_embedding() {
         .lines()
         .skip_while(|line| *line != "M624 AQAAAAAAAAA=");
     assert_eq!(lines.nth(1), Some("G1 X140.158 Y102.797 F60000"));
+    let lines = output.lines().collect::<Vec<_>>();
+    let first_helical_travel = lines
+        .iter()
+        .position(|line| line.starts_with("G3 Z.6 ") && line.ends_with(" F60000"))
+        .unwrap();
+    assert_eq!(lines[first_helical_travel + 1], "G1 X145.539 Y95.848 Z.6");
 }
 
 #[tokio::test]
