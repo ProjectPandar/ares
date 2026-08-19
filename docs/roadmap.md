@@ -7840,3 +7840,20 @@ difference remains line 1,855, arc offset `J-1.23` versus `J-1.229`. Remaining
 travel/retraction and wipe-path sequencing, offset/arc numeric parity, ant
 topology, cooling, timing/M73, and later G-code differences remain source-cited
 slices.
+
+## Task 22O.224: Rectilinear offset integer conversion
+
+O224 corrects O220 by following OrcaSlicer 2.4.2
+`Fill/FillRectilinear.cpp:386-425,2756-2775` through both implicit
+conversions: each scaled overlap expression first becomes `float`, then the
+`ExPolygonWithOffset` parameter becomes `coord_t`. Ares now passes integral
+scaled offsets to outer and inner polygon offsetting instead of retaining the
+intermediate fractional `float`. Against the O223 executable, the KSR output
+falls from 273,693 to 273,661 lines; G1 moves fall from 193,015 to 193,005,
+extrusion arcs fall from 8,651 to 8,641, and spiral-lift/wipe sequences fall
+from 5,114 to 5,110. This correction exposes an adjacent upstream
+surface-geometry difference at reference line 1,688: extrusion `.03178`
+versus `.03177`; the later arc offset remains `J-1.23` versus `J-1.229`.
+Surface-geometry provenance, later rectilinear geometry, travel/retraction,
+ant topology, cooling, timing/M73, and remaining exact G-code differences
+remain source-cited slices.

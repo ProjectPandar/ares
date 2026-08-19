@@ -75,11 +75,10 @@ fn task22o89_fixed_angle_and_layer_alternation_select_distinct_directions() {
 }
 
 #[test]
-fn task22o220_scaled_offsets_retain_float_fraction() {
+fn rectilinear_offsets_use_source_integer_coordinates() {
     let offsets = scaled_offsets(CoordinateScale::Normal, 0.1, 0.500_542_342_662_811_3).unwrap();
 
-    assert_eq!(offsets.0.to_bits(), 0x4792_6e71);
-    assert_eq!(offsets.1.to_bits(), 0xc812_bfcb);
+    assert_eq!(offsets, (74_972.0, -150_271.0));
 }
 
 #[test]
