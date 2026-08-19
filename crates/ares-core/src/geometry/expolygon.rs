@@ -18,6 +18,9 @@ impl ExPolygon {
     pub(crate) fn holes(&self) -> &[Polygon] {
         &self.holes
     }
+    pub(crate) fn holes_mut(&mut self) -> &mut [Polygon] {
+        &mut self.holes
+    }
 
     pub(crate) fn into_parts(self) -> (Polygon, Vec<Polygon>) {
         (self.contour, self.holes)

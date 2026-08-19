@@ -15,6 +15,8 @@ use super::{
 };
 
 mod preflight;
+#[cfg(test)]
+mod tests;
 
 use preflight::{PreparedObjectCompensation, prepare_object_compensation};
 
@@ -221,17 +223,19 @@ fn apply_object_compensation(
                 continue;
             };
             let surfaces = mem::take(&mut region.layers[layer_index].surfaces);
-            let raw = surfaces
+            let mut raw = surfaces
                 .into_iter()
                 .map(|surface| surface.into_parts().1)
                 .collect::<Vec<_>>();
-            let compensated = compensate_expolygons(
+            order_compensation_polytree(&mut raw);
+            let mut compensated = compensate_expolygons(
                 &raw,
                 prepared_layer.minimum_width_mm,
                 prepared_layer.compensation_mm,
                 scale,
             )
             .map_err(|_| geometry_error())?;
+            order_compensation_polytree(&mut compensated);
             backups[layer_index] = raw;
             region.layers[layer_index].surfaces = compensated
                 .into_iter()
@@ -252,6 +256,16 @@ fn apply_object_compensation(
         post_regions: object,
         lslices,
     })
+}
+fn order_compensation_polytree(expolygons: &mut [ExPolygon]) {
+    for expolygon in &mut *expolygons {
+        expolygon.holes_mut().sort_unstable_by(|a, b| {
+            let a = a.points()[0];
+            let b = b.points()[0];
+            b.y().cmp(&a.y()).then_with(|| a.x().cmp(&b.x()))
+        });
+    }
+    expolygons.sort_unstable_by(|a, b| b.contour().area().total_cmp(&a.contour().area()));
 }
 
 fn geometry_error() -> SliceError {
