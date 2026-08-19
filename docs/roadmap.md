@@ -7872,3 +7872,20 @@ from 5,111 to 5,110. The first normalized motion difference remains motion
 556, extrusion `.03178` versus `.03177`; surface intersection and rectilinear
 numeric parity, later travel/retraction, ant topology, cooling, timing/M73,
 and remaining exact G-code differences remain source-cited slices.
+
+## Task 22O.226: grouped offset PolyTree execution
+
+O226 ports OrcaSlicer 2.4.2 `ClipperUtils.cpp:578-610` and the grouped
+`offset_paths<ClipperLib::PolyTree>` execution in
+`deps_src/clipper/clipper.cpp:3460-3520`. Two-stage ExPolygon offsets now add
+all intermediate contours and holes to one `ClipperOffset` before negative
+PolyTree cleanup instead of independently offsetting each path and unioning
+the results afterward. This removes the extra 10-unit outward drift from the
+first-layer external-surface closing result and preserves source root order.
+Against O225, the KSR output falls from 273,651 to 273,458 lines; G1 moves fall
+from 192,995 to 192,825, extrusion arcs rise from 8,652 to 8,665, and
+spiral-lift/wipe sequences fall from 5,110 to 5,104. The first normalized path
+difference remains reference line 1,688, extrusion `.03178` versus `.03177`;
+rectilinear intersection arithmetic, remaining arc numerics, later
+travel/retraction, ant topology, cooling, timing/M73, and exact G-code parity
+remain source-cited slices.

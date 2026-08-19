@@ -97,12 +97,9 @@ pub(crate) fn offset_paths_tree(
     join_type: JoinType,
     miter_limit: f64,
 ) -> Result<PolyTree, ClipperError> {
-    if delta > 0.0 {
-        let raw = raw_offset_paths(paths, delta, join_type, miter_limit)?;
-        union_tree(&raw, FillRule::NonZero)
-    } else {
-        shrink_paths_tree(paths, -delta, join_type, miter_limit)
-    }
+    let mut offset = configured_offset(delta, join_type, miter_limit);
+    offset.add_closed_paths(paths, join_type);
+    offset.execute_polytree(f64::from(delta))
 }
 
 pub(super) fn configured_offset(
@@ -180,20 +177,6 @@ fn shrink_paths(
         Ok(Vec::new())
     } else {
         negative_paths(&raw)
-    }
-}
-
-fn shrink_paths_tree(
-    paths: &[Polygon],
-    delta: f32,
-    join_type: JoinType,
-    miter_limit: f64,
-) -> Result<PolyTree, ClipperError> {
-    let raw = raw_offset_paths(paths, -delta, join_type, miter_limit)?;
-    if raw.is_empty() {
-        Ok(PolyTree::empty())
-    } else {
-        negative_tree(&raw)
     }
 }
 
