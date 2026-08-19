@@ -93,6 +93,19 @@ impl MotionState {
             return None;
         }
         let command = code.split_whitespace().next()?;
+        if command == "G28" {
+            let has_axis = ['X', 'Y', 'Z'].iter().any(|&axis| code.contains(axis));
+            let mut homing = String::from("G1");
+            let axes = ['X', 'Y', 'Z']
+                .into_iter()
+                .filter(|axis| !has_axis || code.contains(*axis));
+            for axis in axes {
+                homing.push(' ');
+                homing.push(axis);
+                homing.push('0');
+            }
+            return self.motion(&homing);
+        }
         if !matches!(command, "G0" | "G1" | "G2" | "G3") || self.feedrate <= 0.0 {
             return None;
         }

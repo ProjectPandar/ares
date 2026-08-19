@@ -83,6 +83,17 @@ fn spiral_arc_p_one_is_one_turn_at_same_endpoint() {
 }
 
 #[test]
+fn homing_command_emits_motion_to_requested_axes() {
+    let mut state = MotionState::default();
+    state.motion("G1 X10 Y20 Z3 F600");
+
+    let block = state.motion("G28 X").unwrap();
+
+    assert!((block.distance - 10.0).abs() < 1e-9);
+    assert_eq!(state.position, [0.0, 20.0, 3.0]);
+}
+
+#[test]
 fn arc_p_word_adds_full_turns() {
     let mut state = MotionState::default();
     let block = state.motion("G3 X0 Y2 I0 J1 P1 F600").unwrap();
