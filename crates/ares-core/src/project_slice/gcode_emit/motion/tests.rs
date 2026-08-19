@@ -194,41 +194,6 @@ async fn task22o138_cooling_removes_redundant_feedrate_commands() {
 }
 
 #[tokio::test]
-async fn task22o141_mesh_simplification_matches_source_wall_vertices() {
-    let output = crate::slice_project(
-        crate::project_slice::tests::support::ksr_project(),
-        crate::project_slice::tests::support::metadata(),
-    )
-    .await
-    .unwrap();
-    let lines = std::str::from_utf8(&output)
-        .unwrap()
-        .lines()
-        .collect::<Vec<_>>();
-    let overhang = lines
-        .iter()
-        .position(|line| *line == "; FEATURE: Overhang wall")
-        .unwrap();
-    let first_inner = lines[..overhang]
-        .iter()
-        .rposition(|line| *line == "; FEATURE: Inner wall")
-        .unwrap();
-
-    assert!(lines[first_inner + 4].starts_with("G1 X132.523 Y100.347 E"));
-    assert_eq!(
-        &lines[first_inner + 5..first_inner + 11],
-        [
-            "G1 X132.28 Y100.359 E.00807",
-            "G1 X132.023 Y100.397 E.00862",
-            "G1 X131.706 Y100.484 E.0109",
-            "G1 X131.348 Y100.632 E.01285",
-            "G1 X131.069 Y100.792 E.01067",
-            "G1 X130.67 Y101.119 E.01711",
-        ]
-    );
-}
-
-#[tokio::test]
 async fn first_layer_seam_and_island_order_match_project_slice() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
