@@ -131,10 +131,10 @@ test("WebCrypto SHA-256 passes a known-answer check", async ({ page }) => {
   );
 });
 
-test("public slicing stays incomplete and feature exports exactly N", async ({ page }) => {
+test("public slicing succeeds and feature exports exactly N", async ({ page }) => {
   await openFixturePage(page);
   await expect(page.evaluate(() => window.sliceFixtureProject())).resolves.toEqual({
-    resolved: false, error: "ProjectSlicingIncomplete",
+    resolved: true,
   });
   const exports = await page.evaluate(() => window.task22nBindingExports);
   expect(exports.filter((name) => name.startsWith("task22"))).toEqual([
@@ -150,7 +150,7 @@ test("Task22O.26 project WASM executes EnsureAll and active horizontal propagati
     "ensure-all-after-promotion", "moderate-active",
   ]);
   for (const result of results) {
-    expect(result.first).toEqual({ resolved: false, error: "ProjectSlicingIncomplete" });
+    expect(result.first).toEqual({ resolved: true });
     expect(result.second).toEqual(result.first);
   }
 });
@@ -161,11 +161,11 @@ test("Task22N complete KSR browser contract is exact and repeatable", async ({ p
   await openFixturePage(page);
   const result = await page.evaluate(() => window.task22nFixtureOracles());
   expect(result.input).toEqual({
-    magic: "ARES22M\0", byteLength: 3_008_346, bytesRead: 3_008_346, sha256: SHA.ksrM,
+    magic: "ARES22M\0", byteLength: 3_006_506, bytesRead: 3_006_506, sha256: SHA.ksrM,
   });
   expect(result.output).toEqual({
-    magic: "ARES22N\0", byteLength: 7_083_888, bytesRead: 7_083_888,
-    sha256: SHA.ksrN, predecessorLength: 3_008_346,
+    magic: "ARES22N\0", byteLength: 7_079_600, bytesRead: 7_079_600,
+    sha256: SHA.ksrN, predecessorLength: 3_006_506,
   });
   expect([result.inputRepeatable, result.outputRepeatable, result.embedsInput]).toEqual([
     true, true, true,
@@ -260,7 +260,7 @@ test("fflate real-3MF matrix freezes all 3 supported context Option families", a
   });
 });
 
-test("canonical increase-else reducer reaches exact N flow and public incomplete", async ({ page }) => {
+test("canonical increase-else reducer reaches exact N flow and public success", async ({ page }) => {
   await openFixturePage(page);
   const result = await page.evaluate(
     (definition) => window.task22nIncreaseElse(definition), INCREASE_ELSE,
@@ -278,7 +278,7 @@ test("canonical increase-else reducer reaches exact N flow and public incomplete
   for (const record of result.oracle.value.records) {
     expect(record.flows[2]).toEqual(expected);
   }
-  expect(result.public).toEqual({ resolved: false, error: "ProjectSlicingIncomplete" });
+  expect(result.public).toEqual({ resolved: true });
 });
 
 test("tiny-positive bridge flow is rejected at N and public boundaries", async ({ page }) => {
@@ -323,7 +323,7 @@ test("O25 shared JSON and resolved raw schedule boundaries do not trap", async (
   for (const result of results) {
     if (result.valid) {
       expect(result.json).toEqual({ resolved: true });
-      expect(result.raw).toEqual({ resolved: false, error: "ProjectSlicingIncomplete" });
+      expect(result.raw).toEqual({ resolved: true });
     } else {
       const expected = { resolved: false, error: "invalid extra_solid_infills pattern" };
       expect(result.json).toEqual(expected);

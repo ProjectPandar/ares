@@ -2,8 +2,8 @@ const encoder = new TextEncoder();
 
 export const SHA = Object.freeze({
   fixture: "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9",
-  ksrM: "91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19",
-  ksrN: "42e0053bffb3093a44597abd0a2b4e8b8c8c11d6f07003cb894399ad7dce3c6e",
+  ksrM: "5d5b12abe5e933727770e93bb4c0510a61f35889486b8d79c1a50679c1d1cb3f",
+  ksrN: "483fa57dfc35facfaf1539efade9dc2bc24cbda98418e7b9871c6b660b17a06f",
   parserN: "4a484de8c60e948744a73bae9d123103968de9fddda187ea6829982fbcd66f1c",
 });
 
