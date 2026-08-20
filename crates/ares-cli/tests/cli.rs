@@ -38,7 +38,7 @@ fn slice_accepts_percent_sparse_infill_width() {
 }
 
 #[test]
-fn slice_3mf_rejects_the_legacy_explicit_options_pipeline() {
+fn slice_3mf_rejects_explicit_options() {
     let temp = tempfile::tempdir().unwrap();
     let options = temp.path().join("option.json");
     let input = temp.path().join("input.3mf");
@@ -59,7 +59,7 @@ fn slice_3mf_rejects_the_legacy_explicit_options_pipeline() {
         .assert()
         .failure()
         .stderr(predicate::str::contains(
-            "3MF project input must be loaded with load_project",
+            "--options is not supported for 3MF project input",
         ));
 }
 

@@ -43,6 +43,13 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
         .extension()
         .and_then(|extension| extension.to_str())
         .map(str::to_owned);
+    if extension.as_deref() == Some("3mf") && args.options.is_some() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "--options is not supported for 3MF project input",
+        )
+        .into());
+    }
     let input = fs::read(args.input)?;
     let output = match extension {
         Some(extension) if extension == "3mf" => {
