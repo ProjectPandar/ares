@@ -139,3 +139,17 @@ fn task22o191_skips_odd_segment_when_opposite_edge_was_passed() {
 
     assert!(trapezoidation.generated_toolpaths.is_empty());
 }
+
+#[test]
+fn task22o227_dense_domain_candidates_swap_last_into_removed_slot() {
+    use crate::arachne::skeletal::EdgeId;
+
+    let mut candidates =
+        super::DenseEdgeSet::from_ordered([EdgeId(0), EdgeId(1), EdgeId(2), EdgeId(3)]);
+
+    assert_eq!(candidates.first(), Some(EdgeId(0)));
+    assert!(candidates.remove(EdgeId(1)));
+    assert_eq!(candidates.values(), &[EdgeId(0), EdgeId(3), EdgeId(2)]);
+    assert!(candidates.remove(EdgeId(0)));
+    assert_eq!(candidates.first(), Some(EdgeId(2)));
+}

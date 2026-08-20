@@ -7889,3 +7889,18 @@ difference remains reference line 1,688, extrusion `.03178` versus `.03177`;
 rectilinear intersection arithmetic, remaining arc numerics, later
 travel/retraction, ant topology, cooling, timing/M73, and exact G-code parity
 remain source-cited slices.
+
+## Task 22O.227: Arachne dense domain traversal
+
+O227 ports OrcaSlicer 2.4.2
+`Arachne/SkeletalTrapezoidation.cpp:1935-1966` together with the insertion-order
+iteration and swap-with-last erase semantics of `ankerl::unordered_dense::set`.
+Ares no longer chooses Arachne junction-domain starts through randomized
+`HashSet` iteration; two independent KSR slices now produce byte-identical
+geometry, processor output, and G-code. Against O226, the deterministic output
+rises from 273,458 to 273,634 lines; G1 moves rise from 192,825 to 192,926,
+extrusion arcs fall from 8,665 to 8,658, and wipe sequences rise from 5,104 to
+5,108. The first normalized motion difference is now reference line 1,149,
+extrusion `.02865` versus `.02866`; extrusion numeric precision, remaining
+Arachne topology, rectilinear geometry, travel/retraction, cooling, timing/M73,
+and exact G-code parity remain source-cited slices.
