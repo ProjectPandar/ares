@@ -7946,3 +7946,18 @@ retains 273,634 lines, 192,926 G1 moves, 8,658 extrusion arcs, 5,108 wipe
 sequences, and 189 progress lines versus the source's 190. Centripetal planner
 acceleration, remaining float timing arithmetic, geometry, cooling, object-ID
 instability, and exact G-code parity remain source-cited slices.
+
+## Task 22O.231: processor centripetal acceleration
+
+O231 ports OrcaSlicer 2.4.2 `GCode/GCodeProcessor.cpp:4029-4031` and
+`4387-4389`. Parsed motion blocks now retain the active print acceleration
+separately from their move-type acceleration: shallow XY turns use the print
+value for the centripetal cruise ceiling, while travel, retract, and extrusion
+trapezoids keep their corresponding acceleration. The existing M203
+maximum-feedrate state path remains active. KSR timing remains 1h 46m 24s total
+and 5m 8s for layer one versus the source's 1h 48m 58s and 5m 8s. The fixture
+retains 273,634 lines, 192,926 G1 moves, 8,658 extrusion arcs, 5,108 wipe
+sequences, and 189 progress lines versus the source's 190; timing metadata is
+the first normalized divergence. Float-width planner arithmetic, geometry,
+cooling, object-ID instability, and exact G-code parity remain source-cited
+slices.

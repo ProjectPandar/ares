@@ -50,6 +50,7 @@ pub(super) struct MotionBlock {
     pub(super) distance: f64,
     pub(super) speed: f64,
     pub(super) acceleration: f64,
+    pub(super) centripetal_acceleration: f64,
     pub(super) jerk: [f64; 4],
     pub(super) direction: [f64; 4],
 }
@@ -115,6 +116,10 @@ impl MotionState {
         }
         if code.starts_with("M201") {
             self.update_axis_limits(code, true);
+            return None;
+        }
+        if code.starts_with("M203") {
+            self.update_axis_limits(code, false);
             return None;
         }
         if code.starts_with("M204") {
@@ -260,6 +265,7 @@ impl MotionState {
             distance,
             speed,
             acceleration: acceleration.max(1.0),
+            centripetal_acceleration: self.acceleration.max(1.0),
             jerk: self.jerk,
             direction: scale(delta, 1.0 / distance),
         })
@@ -298,6 +304,7 @@ impl MotionState {
             distance,
             speed,
             acceleration: acceleration.max(1.0),
+            centripetal_acceleration: self.acceleration.max(1.0),
             jerk: self.jerk,
             direction: scale(delta, 1.0 / distance),
         })

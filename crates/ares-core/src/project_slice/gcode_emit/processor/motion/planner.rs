@@ -78,7 +78,7 @@ fn prepare(block: &MotionBlock, previous: Option<PlannedBlock>) -> PlannedBlock 
                 let sin_half = ((1.0 - angle.cos()) * 0.5).sqrt();
                 let xy_distance = block.distance * block.direction[0].hypot(block.direction[1]);
                 let radius = xy_distance * 0.5 / sin_half;
-                cruise = cruise.min((block.acceleration * radius).sqrt());
+                cruise = cruise.min((block.centripetal_acceleration * radius).sqrt());
             }
         }
     }

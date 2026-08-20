@@ -109,12 +109,24 @@ fn m204_updates_respect_machine_acceleration_envelopes() {
 }
 
 #[test]
+fn travel_blocks_retain_print_acceleration_for_centripetal_limits() {
+    let mut state = MotionState::default();
+    state.motion("M204 P500 T10000");
+
+    let block = state.motion("G1 X10 F6000").unwrap();
+
+    assert_eq!(block.acceleration, 10_000.0);
+    assert_eq!(block.centripetal_acceleration, 500.0);
+}
+
+#[test]
 fn collinear_blocks_keep_speed_at_the_shared_junction() {
     let block = || MotionBlock {
         index: 0,
         distance: 10.0,
         speed: 10.0,
         acceleration: 100.0,
+        centripetal_acceleration: 100.0,
         jerk: [10.0; 4],
         direction: [1.0, 0.0, 0.0, 0.0],
     };
@@ -131,6 +143,7 @@ fn isolated_block_uses_firmware_safe_entry_speed() {
         distance: 10.0,
         speed: 10.0,
         acceleration: 100.0,
+        centripetal_acceleration: 100.0,
         jerk: [9.0, 9.0, 3.0, 2.5],
         direction: [1.0, 0.0, 0.0, 0.0],
     };
