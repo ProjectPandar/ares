@@ -7973,3 +7973,14 @@ Test-only region decomposition interfaces are compiled only for their owning
 test/oracle configurations. Every Rust source file under `crates/` is now below
 400 lines; source composition uses no include macros. A complete KSR CLI slice
 is byte-identical to O231 after the extraction.
+
+## Task 22O.244: closing offset coordinate determinism
+
+O244 rewrites OrcaSlicer 2.4.2 `ClipperUtils.cpp:353-410` at the
+`geometry::clipper::offset_paths_tree` seam. Ares applies the signed offset to
+each oriented path before the final tree union, restoring the exact first-layer
+perimeter extrusion sequence at reference line 1,149. The obsolete test that
+pinned grouped root ordering was removed in favor of a complete-project output
+assertion. The next non-timing divergence is reference line 1,689, extrusion
+`.03177` versus `.03178`; rectilinear float geometry, timing/M73, remaining
+geometry and exact G-code parity remain source-cited slices.

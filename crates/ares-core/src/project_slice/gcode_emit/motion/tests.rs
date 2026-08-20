@@ -245,6 +245,29 @@ async fn first_layer_inner_perimeter_uses_source_aligned_seam() {
 }
 
 #[tokio::test]
+async fn first_layer_linear_extrusion_uses_project_geometry_length() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+
+    assert!(lines.windows(3).any(|window| {
+        window
+            == [
+                "G1 X141.657 Y101.026 E.02865",
+                "G1 X141.072 Y101.525 E.02865",
+                "G1 X140.573 Y102.11 E.02866",
+            ]
+    }));
+}
+
+#[tokio::test]
 async fn extrusion_height_processor_state_tracks_layers_and_paths() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
