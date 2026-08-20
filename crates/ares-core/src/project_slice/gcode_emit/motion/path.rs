@@ -230,9 +230,13 @@ pub(super) fn emit(
             }
             arc::Segment::Line { .. } => {}
             arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {
-                let extrusion =
-                    arc_segment.length * properties.mm3_per_mm * state.options.filament_flow_ratio
-                        / state.options.filament_area;
+                let extrusion = extrusion_for_length(
+                    arc_segment.length,
+                    properties.mm3_per_mm,
+                    state.options.filament_flow_ratio,
+                    state.options.print_flow_ratio,
+                    state.options.filament_area,
+                );
                 state.filament_used += extrusion;
                 let command = if arc_segment.clockwise { "G2" } else { "G3" };
                 output.extend_from_slice(
@@ -262,8 +266,13 @@ fn emit_linear_segment(
     properties: PathProperties<'_>,
     state: &mut EmitState,
 ) {
-    let extrusion = length * properties.mm3_per_mm * state.options.filament_flow_ratio
-        / state.options.filament_area;
+    let extrusion = extrusion_for_length(
+        length,
+        properties.mm3_per_mm,
+        state.options.filament_flow_ratio,
+        state.options.print_flow_ratio,
+        state.options.filament_area,
+    );
     state.filament_used += extrusion;
     output.extend_from_slice(
         format!(
@@ -276,6 +285,22 @@ fn emit_linear_segment(
     );
     state.x = end.x;
     state.y = end.y;
+}
+
+fn extrusion_for_length(
+    length: f64,
+    mm3_per_mm: f64,
+    filament_flow_ratio: f64,
+    print_flow_ratio: f64,
+    filament_area: f64,
+) -> f64 {
+    let mut effective_mm3_per_mm = mm3_per_mm * print_flow_ratio;
+    effective_mm3_per_mm *= filament_flow_ratio;
+    let mut e_per_mm3 = filament_flow_ratio;
+    e_per_mm3 /= filament_area;
+    let mut e_per_mm = e_per_mm3 * effective_mm3_per_mm;
+    e_per_mm /= filament_flow_ratio;
+    e_per_mm * length
 }
 struct VariableEmission<'a> {
     output: &'a mut Vec<u8>,

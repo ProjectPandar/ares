@@ -4,6 +4,7 @@ use crate::{FloatOrPercent, Nullable, OrcaFloat, ZHopType};
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) filament_area: f64,
     pub(in crate::project_slice::gcode_emit) filament_flow_ratio: f64,
+    pub(in crate::project_slice::gcode_emit) print_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) max_volumetric_speed: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) first_layer_travel_feedrate: f64,
@@ -79,6 +80,9 @@ impl MotionOptions {
         Self {
             filament_area: std::f64::consts::PI * filament_diameter.powi(2) * 0.25,
             filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
+            print_flow_ratio: region.map_or(full.process.region.print_flow_ratio.0, |value| {
+                value.print_flow_ratio.0
+            }),
             max_volumetric_speed: gcode
                 .filament_max_volumetric_speed
                 .0

@@ -16,9 +16,10 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     assert_eq!(options.first_layer_travel_feedrate, 60_000.0);
     assert_eq!(
         options.filament_area,
-        std::f64::consts::PI * 1.75_f64.powi(2) * 0.25
+        1.75_f64 * 1.75_f64 * 0.25 * std::f64::consts::PI
     );
     assert_eq!(options.filament_flow_ratio, 0.98);
+    assert_eq!(options.print_flow_ratio, 1.0);
     assert_eq!(options.max_volumetric_speed, 21.0);
     assert_eq!(options.initial_layer_speed, 50.0);
     assert_eq!(options.initial_layer_infill_speed, 105.0);
@@ -336,4 +337,22 @@ async fn task22o162_project_emits_filament_statistics() {
     assert!((values[1] - values[0] * filament_area / 1_000.0).abs() <= 0.01);
     assert!((values[2] - values[1] * 1.26).abs() <= 0.02);
     assert!((values[3] - values[2] * 25.0 / 1_000.0).abs() <= 0.01);
+}
+
+#[tokio::test]
+async fn ksr_first_inner_wall_uses_source_extrusion_order() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+
+    assert!(output.contains(
+        "; FEATURE: Inner wall\n; LINE_WIDTH: 0.5\nG1 F3000\n\
+         G1 X139.876 Y103.477 E.02741\n\
+         G1 X139.697 Y104.225 E.02865\n\
+         G1 X139.639 Y104.957 E.02733\n"
+    ));
 }
