@@ -35,6 +35,47 @@ impl PointKdTree {
         search.visit(self, 0, 0);
         search.output
     }
+
+    pub(super) fn closest(&self, points: &[Vec3], target: Vec3) -> usize {
+        let mut search = PointClosestSearch {
+            points,
+            target,
+            best: NONE,
+            best_distance_squared: f32::MAX,
+        };
+        search.visit(self, 0, 0);
+        search.best
+    }
+}
+
+struct PointClosestSearch<'a> {
+    points: &'a [Vec3],
+    target: Vec3,
+    best: usize,
+    best_distance_squared: f32,
+}
+
+impl PointClosestSearch<'_> {
+    fn visit(&mut self, tree: &PointKdTree, node: usize, dimension: usize) {
+        if node >= tree.nodes.len() || tree.nodes[node] == NONE {
+            return;
+        }
+        let index = tree.nodes[node];
+        let distance_squared = (self.target - self.points[index]).norm_squared();
+        if distance_squared <= self.best_distance_squared {
+            self.best = index;
+            self.best_distance_squared = distance_squared;
+        }
+        let delta = self.target.axis(dimension) - self.points[index].axis(dimension);
+        let both = delta * delta < self.best_distance_squared + KD_EPSILON;
+        let next_dimension = (dimension + 1) % 3;
+        if both || delta <= 0.0 {
+            self.visit(tree, node * 2 + 1, next_dimension);
+        }
+        if both || delta > 0.0 {
+            self.visit(tree, node * 2 + 2, next_dimension);
+        }
+    }
 }
 
 struct PointRadiusSearch<'a> {

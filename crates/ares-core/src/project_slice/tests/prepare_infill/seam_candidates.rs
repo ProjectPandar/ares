@@ -111,15 +111,15 @@ fn task22o97_each_polygon_uses_its_corresponding_region_flow_width() {
     let layer = seam_candidates::generate_regions(
         &[
             seam_candidates::RegionPerimeters {
-                collections: &[],
+                collection: None,
                 external_flow_width: 0.31,
             },
             seam_candidates::RegionPerimeters {
-                collections: &fallback,
+                collection: Some(&fallback[0]),
                 external_flow_width: 0.42,
             },
             seam_candidates::RegionPerimeters {
-                collections: &external,
+                collection: Some(&external[0]),
                 external_flow_width: 0.53,
             },
         ],
@@ -207,15 +207,14 @@ fn generate(
     angle_arm_mm: f32,
     external_flow_width: f32,
 ) -> seam_candidates::LayerSeamCandidates {
-    seam_candidates::generate_regions(
-        &[seam_candidates::RegionPerimeters {
-            collections,
+    let regions = collections
+        .iter()
+        .map(|collection| seam_candidates::RegionPerimeters {
+            collection: Some(collection),
             external_flow_width,
-        }],
-        z,
-        scale,
-        angle_arm_mm,
-    )
+        })
+        .collect::<Vec<_>>();
+    seam_candidates::generate_regions(&regions, z, scale, angle_arm_mm)
 }
 
 fn collection(paths: Vec<ExtrusionPath>) -> ExtrusionEntityCollection {
@@ -227,6 +226,7 @@ fn collection(paths: Vec<ExtrusionPath>) -> ExtrusionEntityCollection {
             },
             inset_idx: 0,
         }],
+        source_order: 0,
     }
 }
 

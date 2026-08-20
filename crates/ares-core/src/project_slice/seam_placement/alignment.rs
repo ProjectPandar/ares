@@ -44,6 +44,25 @@ fn is_better(layer: &LayerPlan, first: usize, second: usize) -> bool {
     layer.scores[first] < layer.scores[second]
 }
 
+fn is_better_between(layers: &[LayerPlan], first: (usize, usize), second: (usize, usize)) -> bool {
+    let first_layer = &layers[first.0];
+    let second_layer = &layers[second.0];
+    if first_layer.overhangs[first.1] > 0.0 || second_layer.overhangs[second.1] > 0.0 {
+        return first_layer.overhangs[first.1] < second_layer.overhangs[second.1];
+    }
+    if first_layer.embedded_distances[first.1] < -0.5
+        && second_layer.embedded_distances[second.1] > -0.5
+    {
+        return true;
+    }
+    if second_layer.embedded_distances[second.1] < -0.5
+        && first_layer.embedded_distances[first.1] > -0.5
+    {
+        return false;
+    }
+    first_layer.scores[first.1] < second_layer.scores[second.1]
+}
+
 fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
     let overhang_difference = (layer.overhangs[first] - layer.overhangs[second]).abs();
     let flow_width =
@@ -65,8 +84,7 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
 }
 
 pub(super) fn align(layers: &mut [LayerPlan]) {
-    // Printed lower layers anchor later seam strings; perimeter order breaks same-layer ties.
-    let seams = layers
+    let mut seams = layers
         .iter()
         .enumerate()
         .flat_map(|(layer_index, layer)| {
@@ -76,6 +94,15 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
                 .map(move |choice| (layer_index, choice.seam_index))
         })
         .collect::<Vec<_>>();
+    seams.sort_by(|&left, &right| {
+        if is_better_between(layers, left, right) {
+            std::cmp::Ordering::Less
+        } else if is_better_between(layers, right, left) {
+            std::cmp::Ordering::Greater
+        } else {
+            std::cmp::Ordering::Equal
+        }
+    });
     let mut global_index = 0;
     while global_index < seams.len() {
         let start = seams[global_index];
@@ -85,7 +112,8 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
         }
         let mut seam_string = find_seam_string(layers, start);
         let step = 1 + seam_string.len() / 20;
-        for alternative_start in (0..seam_string.len()).step_by(step) {
+        let mut alternative_start = 0;
+        while alternative_start < seam_string.len() {
             let point = seam_string[alternative_start];
             let alternative = find_seam_string(layers, {
                 let seam_index = choice(layers, point).seam_index;
@@ -94,6 +122,7 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
             if alternative.len() > seam_string.len() {
                 seam_string = alternative;
             }
+            alternative_start += step;
         }
         if seam_string.len() < MINIMUM_STRING_SEAMS {
             continue;
@@ -105,39 +134,43 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
 }
 
 fn find_seam_string(layers: &[LayerPlan], start: (usize, usize)) -> Vec<(usize, usize)> {
-    let mut output = vec![start];
-    extend_string(layers, start, 1, &mut output);
-    extend_string(layers, start, -1, &mut output);
-    output
-}
-
-fn extend_string(
-    layers: &[LayerPlan],
-    start: (usize, usize),
-    step: isize,
-    output: &mut Vec<(usize, usize)>,
-) {
-    let flow_width = perimeter(layers, start).flow_width;
-    let max_distance = SEARCH_DISTANCE_FLOW_FACTOR * flow_width;
+    let max_distance = SEARCH_DISTANCE_FLOW_FACTOR * perimeter(layers, start).flow_width;
+    let mut next_layer = start.0 as isize + 1;
+    let mut step = 1;
     let mut previous = start;
-    let mut layer = start.0 as isize + step;
-    while let Some(next_layer) = usize::try_from(layer)
-        .ok()
-        .filter(|&index| index < layers.len())
-    {
+    let mut output = vec![start];
+    while next_layer >= 0 {
+        if next_layer >= layers.len() as isize {
+            step = -1;
+            previous = start;
+            next_layer = start.0 as isize - 1;
+            if next_layer < 0 {
+                break;
+            }
+        }
+        let next_layer_index = next_layer as usize;
         let previous_position = candidate_position(layers, previous);
         let projected = Vec3::new(
             previous_position.x,
             previous_position.y,
-            layers[next_layer].z,
+            layers[next_layer_index].z,
         );
-        let Some(next) = find_next_in_layer(layers, next_layer, projected, max_distance) else {
+        if let Some(next) = find_next_in_layer(layers, next_layer_index, projected, max_distance) {
+            output.push(next);
+            previous = next;
+        } else if step == 1 {
+            step = -1;
+            previous = start;
+            next_layer = start.0 as isize - 1;
+            if next_layer < 0 {
+                break;
+            }
+        } else {
             break;
-        };
-        output.push(next);
-        previous = next;
-        layer += step;
+        }
+        next_layer += step;
     }
+    output
 }
 
 fn find_next_in_layer(

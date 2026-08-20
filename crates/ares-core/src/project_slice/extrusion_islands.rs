@@ -93,7 +93,10 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
     assert_eq!(perimeters.len(), perimeter_sources.len());
     let mut source_islands = HashMap::new();
     let mut perimeter_islands = Vec::with_capacity(perimeters.len());
-    for (perimeter, source_index) in perimeters.into_iter().zip(perimeter_sources) {
+    for (source_order, (mut perimeter, source_index)) in
+        perimeters.into_iter().zip(perimeter_sources).enumerate()
+    {
+        perimeter.source_order = source_order;
         let path = &perimeter.entities[0].extrusion_loop.paths[0];
         let first = path.polyline.points[0];
         let island = island_index(Point::new(first.x, first.y), slices, &bounds, &order);

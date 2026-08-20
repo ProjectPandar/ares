@@ -79,17 +79,18 @@ fn cubic_kernel(mut value: f32) -> f32 {
     1.0 / 6.0 - 3.0 / 6.0 * value + 3.0 / 6.0 * square - square * value / 6.0
 }
 
-fn maximum_pivot(matrix: &[Vec<f32>], pivot: usize, parameter_count: usize) -> (usize, usize, f32) {
-    let mut maximum = (pivot, pivot, matrix[pivot][pivot].abs());
-    for column in pivot..parameter_count {
-        for (row, values) in matrix.iter().enumerate().skip(pivot) {
-            let value = values[column].abs();
-            if value > maximum.2 {
-                maximum = (row, column, value);
-            }
-        }
-    }
-    maximum
+fn maximum_norm_column(matrix: &[Vec<f32>], pivot: usize, parameter_count: usize) -> usize {
+    (pivot..parameter_count)
+        .max_by(|&left, &right| {
+            let norm = |column| {
+                matrix[pivot..]
+                    .iter()
+                    .map(|row| row[column] * row[column])
+                    .sum::<f32>()
+            };
+            norm(left).total_cmp(&norm(right))
+        })
+        .expect("a QR pivot has at least one remaining column")
 }
 
 fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
@@ -101,15 +102,12 @@ fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
     let mut permutation = (0..parameter_count).collect::<Vec<_>>();
 
     for pivot in 0..diagonal_count {
-        let maximum = maximum_pivot(&coefficients, pivot, parameter_count);
-        assert!(maximum.2 > f32::EPSILON);
-        coefficients.swap(pivot, maximum.0);
-        projected.swap(pivot, maximum.0);
-        if maximum.1 != pivot {
+        let maximum_column = maximum_norm_column(&coefficients, pivot, parameter_count);
+        if maximum_column != pivot {
             for row in &mut coefficients {
-                row.swap(pivot, maximum.1);
+                row.swap(pivot, maximum_column);
             }
-            permutation.swap(pivot, maximum.1);
+            permutation.swap(pivot, maximum_column);
         }
 
         let norm = coefficients[pivot..]

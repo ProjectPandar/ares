@@ -216,6 +216,35 @@ async fn first_layer_seam_and_island_order_match_project_slice() {
 }
 
 #[tokio::test]
+async fn first_layer_inner_perimeter_uses_source_aligned_seam() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let layer_changes = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, line)| **line == "; CHANGE_LAYER")
+        .map(|(index, _)| index)
+        .take(2)
+        .collect::<Vec<_>>();
+    let destination = lines[layer_changes[0]..layer_changes[1]]
+        .iter()
+        .enumerate()
+        .filter(|(_, line)| line.starts_with("G3 Z") && line.ends_with(" F60000"))
+        .nth(9)
+        .map(|(index, _)| lines[layer_changes[0] + index + 1]);
+
+    assert_eq!(destination, Some("G1 X151.343 Y94.919 Z.6"));
+}
+
+#[tokio::test]
 async fn extrusion_height_processor_state_tracks_layers_and_paths() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),

@@ -265,6 +265,7 @@ fn collection(inset_idx: i32, paths: Vec<ExtrusionPath>) -> ExtrusionEntityColle
                 inset_idx,
             })
             .collect(),
+        source_order: 0,
     }
 }
 

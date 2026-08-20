@@ -34,7 +34,7 @@ pub(in crate::project_slice) struct LayerSeamCandidates {
 }
 
 pub(in crate::project_slice) struct RegionPerimeters<'a> {
-    pub(in crate::project_slice) collections: &'a [ExtrusionEntityCollection],
+    pub(in crate::project_slice) collection: Option<&'a ExtrusionEntityCollection>,
     pub(in crate::project_slice) external_flow_width: f32,
 }
 
@@ -61,7 +61,7 @@ struct SourcePerimeterPolygon {
 fn extract_perimeter_polygons(regions: &[RegionPerimeters<'_>]) -> Vec<SourcePerimeterPolygon> {
     let mut polygons = Vec::new();
     for region in regions {
-        for collection in region.collections {
+        if let Some(collection) = region.collection {
             extract_collection(collection, region.external_flow_width, &mut polygons);
         }
     }

@@ -121,6 +121,7 @@ fn flow() -> Flow {
 fn collection() -> ExtrusionEntityCollection {
     ExtrusionEntityCollection {
         entities: vec![entity(0, 0), entity(10, 1)],
+        source_order: 0,
     }
 }
 

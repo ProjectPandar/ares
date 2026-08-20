@@ -24,6 +24,7 @@ pub(in crate::project_slice) struct PreparedEntityCollectionSurface {
 #[derive(Debug, Default, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionEntityCollection {
     pub(in crate::project_slice) entities: Vec<OrderedExtrusionLoop>,
+    pub(in crate::project_slice) source_order: usize,
 }
 
 #[derive(Debug, PartialEq)]
