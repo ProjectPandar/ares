@@ -172,7 +172,7 @@ pub(super) fn emit(
     }
     if state
         .last_height
-        .is_none_or(|height| (height - properties.height).abs() > f32::EPSILON)
+        .is_none_or(|height| (height - properties.height).abs() > 0.000_1)
     {
         output.extend_from_slice(
             format!(
