@@ -29,7 +29,7 @@ pub(super) fn append(
         thickness_layers: fill.representative.thickness_layers.max(1),
         fixed_angle: fill.params.fixed_angle,
         bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
-        dont_adjust: false,
+        dont_adjust: fill.params.bridge,
         anchor_length_max,
         link_max_length: 0.0,
     };

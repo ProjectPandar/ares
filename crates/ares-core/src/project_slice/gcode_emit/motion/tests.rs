@@ -225,7 +225,7 @@ async fn extrusion_height_processor_state_persists_across_layers() {
     .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
 
-    assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 520);
+    assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 519);
 }
 
 #[tokio::test]

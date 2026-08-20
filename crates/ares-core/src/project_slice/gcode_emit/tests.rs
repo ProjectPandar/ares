@@ -251,6 +251,18 @@ async fn ksr_internal_bridges_keep_their_processor_role() {
     assert!(output.contains(
         "M204 S2500\n; FEATURE: Internal Bridge\n; LINE_WIDTH: 0.4\n; LAYER_HEIGHT: 0.4\nG1 F4500\n"
     ));
+    let mut internal_bridge = false;
+    for line in output.lines() {
+        if line == "; CHANGE_LAYER" {
+            internal_bridge = false;
+        } else if let Some(feature) = line.strip_prefix("; FEATURE: ") {
+            internal_bridge = feature == "Internal Bridge";
+        } else if internal_bridge && line.starts_with("; LINE_WIDTH:") {
+            assert_eq!(line, "; LINE_WIDTH: 0.4");
+        } else if internal_bridge && line.starts_with("; LAYER_HEIGHT:") {
+            assert_eq!(line, "; LAYER_HEIGHT: 0.4");
+        }
+    }
 }
 #[tokio::test]
 async fn ksr_project_renders_end_templates_and_closes_executable_block() {
