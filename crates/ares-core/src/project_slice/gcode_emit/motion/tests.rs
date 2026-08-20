@@ -268,9 +268,9 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
     assert!(lines.windows(3).any(|window| {
         window
             == [
+                "G1 X129.699 Y83.135 E.31872",
+                "G1 X129.052 Y83.135 E.02413",
                 "G1 X133.577 Y87.66 E.23863",
-                "G1 X132.813 Y87.283 E.03177",
-                "G1 X132.435 Y87.165 E.01478",
             ]
     }));
 }

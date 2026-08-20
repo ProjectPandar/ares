@@ -107,7 +107,7 @@ fn checked_scaled_f32(scale: CoordinateScale, value: f64) -> Result<f32, Clipper
     if !scaled.is_finite() || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&scaled) {
         return Err(ClipperError::CoordinateOutOfRange);
     }
-    Ok(scaled as f32)
+    Ok(scaled as i64 as f32)
 }
 
 fn adjust_solid_spacing(width: i64, distance: i64) -> i64 {
