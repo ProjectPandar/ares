@@ -20,7 +20,7 @@ async fn enabled_gcode_add_line_number_numbers_every_output_line() {
     assert!(
         lines
             .iter()
-            .any(|line| numbered_payload(line) == Some("M73 P0 R0"))
+            .any(|line| numbered_payload(line) == Some("M73 P0 R1"))
     );
     assert!(
         lines

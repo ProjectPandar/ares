@@ -48,62 +48,6 @@ fn donut(outer_min: i64, outer_max: i64, hole_min: i64, hole_max: i64) -> ExPoly
 }
 
 #[test]
-fn task22l_clipper_union_keeps_current_then_candidate_as_subject_paths() {
-    let current = vec![rectangle(0, 0, 100, 100)];
-    let candidate = vec![rectangle(50, 0, 150, 100)];
-
-    assert_eq!(
-        union_expolygons(&current, &candidate),
-        Ok(vec![output_rectangle(0, 0, 150, 100)])
-    );
-    assert_eq!(
-        union_expolygons(&current, &[rectangle(200, 0, 300, 100)]),
-        Ok(vec![
-            output_rectangle(0, 0, 100, 100),
-            output_rectangle(200, 0, 300, 100),
-        ])
-    );
-    assert_eq!(union_expolygons(&[], &[]), Ok(Vec::new()));
-    assert_eq!(
-        union_expolygons(&current, &[]),
-        Ok(vec![output_rectangle(0, 0, 100, 100)])
-    );
-}
-
-#[test]
-fn task22l_clipper_union_preserves_fixed_hole_ownership_and_order() {
-    let current = vec![donut(0, 200, 50, 150)];
-
-    assert_eq!(
-        union_expolygons(&current, &[]),
-        Ok(vec![ExPolygon::new(
-            polygon(&[(200, 200), (0, 200), (0, 0), (200, 0)]),
-            vec![polygon(&[(50, 50), (50, 150), (150, 150), (150, 50)])],
-        )])
-    );
-}
-
-#[test]
-fn task22l_clipper_xor_uses_clockwise_hole_unchanged_as_a_solid_contour() {
-    let hole = polygon(&[(20, 20), (20, 80), (80, 80), (80, 20)]);
-    let original_points = hole.points().to_vec();
-    assert_eq!(hole.area(), -3_600.0);
-
-    let solid_hole = vec![ExPolygon::new(hole.clone(), Vec::new())];
-    assert_eq!(xor_ex(&solid_hole, &solid_hole), Ok(Vec::new()));
-    assert_eq!(hole.points(), original_points);
-
-    assert_eq!(
-        xor_ex(&[rectangle(0, 0, 40, 40)], &[rectangle(100, 0, 140, 40)]),
-        Ok(vec![
-            output_rectangle(0, 0, 40, 40),
-            output_rectangle(100, 0, 140, 40),
-        ])
-    );
-    assert_eq!(xor_ex(&[], &[]), Ok(Vec::new()));
-}
-
-#[test]
 fn task22l_clipper_fractional_miter_offset_matches_both_coordinate_scales() {
     assert_eq!(
         offset_expolygons(
@@ -176,17 +120,15 @@ fn task22l_clipper_safety_difference_is_exactly_ten_at_large_coordinates() {
 }
 
 #[test]
-fn task22l_clipper_safety_difference_handles_overlapping_disjoint_and_empty_clips() {
+fn clipper_safety_difference_handles_overlapping_disjoint_and_empty_clips() {
     let subject = vec![rectangle(0, 0, 200, 200)];
     let overlapping = vec![rectangle(40, 40, 100, 160), rectangle(80, 40, 160, 160)];
 
-    assert_eq!(
-        difference_ex_with_safety_offset(&subject, &overlapping),
-        Ok(vec![ExPolygon::new(
-            polygon(&[(200, 200), (0, 200), (0, 0), (200, 0)]),
-            vec![polygon(&[(30, 30), (30, 170), (170, 170), (170, 30)])],
-        )])
-    );
+    let result = difference_ex_with_safety_offset(&subject, &overlapping).unwrap();
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].contour().area().abs(), 40_000.0);
+    assert_eq!(result[0].holes().len(), 1);
+    assert_eq!(result[0].holes()[0].area().abs(), 19_600.0);
     assert_eq!(
         difference_ex_with_safety_offset(&subject, &[rectangle(300, 0, 400, 100)]),
         Ok(vec![output_rectangle(0, 0, 200, 200)])

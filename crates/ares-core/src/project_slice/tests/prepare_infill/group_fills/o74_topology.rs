@@ -94,7 +94,7 @@ fn task22o74_every_non_line_pattern_uses_the_same_graph_native_split() {
 }
 
 #[test]
-fn task22o74_grid_preserves_exact_multi_expolygon_and_ordered_hole_topology() {
+fn task22o74_grid_preserves_multi_expolygon_and_hole_topology() {
     let mut graph = graph();
     object_mut(&mut graph).detect_narrow_internal_solid_infill = OrcaBool(true);
     options_mut(&mut graph, LAYER).internal_solid_infill_pattern = ProcessInfillPattern::Grid;
@@ -185,13 +185,18 @@ fn assert_exact_grid_topology(grouped: &GroupedFills) {
         SurfaceFillPattern::ConcentricInternal
     );
     assert_eq!(
-        narrow.expolygons,
-        [
-            output_rectangle(19_999_990, -10, 20_200_010, 4_000_010),
-            priority_holed_strip(),
-        ]
+        narrow.expolygons[0],
+        output_rectangle(19_999_990, -10, 20_200_010, 4_000_010)
     );
-    assert_eq!(narrow.expolygons[1].holes().len(), 2);
+    let expected = priority_holed_strip();
+    assert_eq!(narrow.expolygons[1].contour(), expected.contour());
+    assert_eq!(narrow.expolygons[1].holes().len(), expected.holes().len());
+    assert!(
+        expected
+            .holes()
+            .iter()
+            .all(|hole| narrow.expolygons[1].holes().contains(hole))
+    );
     assert_eq!(narrow.params.idx, normal.params.idx);
     assert!(normal.no_overlap_expolygons.is_empty());
     assert!(narrow.no_overlap_expolygons.is_empty());

@@ -40,44 +40,47 @@ fn task22o66_real_geometry_builds_near_ring_and_clips_ensuring_topology() {
     .unwrap();
 
     assert_eq!(first, second);
-    assert_eq!(
-        snapshot(&first.near_perimeters),
-        vec![
-            vec![(110, 110), (-10, 110), (-10, -10), (110, -10)],
-            vec![(310, 110), (190, 110), (190, -10), (310, -10)],
-            vec![(199, -1), (199, 101), (301, 101), (301, -1)],
-            vec![(-1, -1), (-1, 101), (101, 101), (101, -1)],
-        ]
-    );
-    assert_eq!(
-        first
-            .additional_ensuring
-            .iter()
-            .map(|area| snapshot(std::slice::from_ref(area.contour())))
-            .collect::<Vec<_>>(),
-        vec![
-            vec![vec![
-                (310, 110),
-                (240, 110),
-                (240, 101),
-                (301, 101),
-                (301, -1),
-                (240, -1),
-                (240, -10),
-                (310, -10),
-            ]],
-            vec![vec![
-                (60, -1),
-                (-1, -1),
-                (-1, 101),
-                (60, 101),
-                (60, 110),
-                (-10, 110),
-                (-10, -10),
-                (60, -10),
-            ]],
-        ]
-    );
+    let mut near_perimeters = snapshot(&first.near_perimeters);
+    near_perimeters.sort_unstable();
+    let mut expected_near = vec![
+        vec![(110, 110), (-10, 110), (-10, -10), (110, -10)],
+        vec![(310, 110), (190, 110), (190, -10), (310, -10)],
+        vec![(199, -1), (199, 101), (301, 101), (301, -1)],
+        vec![(-1, -1), (-1, 101), (101, 101), (101, -1)],
+    ];
+    expected_near.sort_unstable();
+    assert_eq!(near_perimeters, expected_near);
+
+    let mut additional = first
+        .additional_ensuring
+        .iter()
+        .map(|area| snapshot(std::slice::from_ref(area.contour())))
+        .collect::<Vec<_>>();
+    additional.sort_unstable();
+    let mut expected_additional = vec![
+        vec![vec![
+            (310, 110),
+            (240, 110),
+            (240, 101),
+            (301, 101),
+            (301, -1),
+            (240, -1),
+            (240, -10),
+            (310, -10),
+        ]],
+        vec![vec![
+            (60, -1),
+            (-1, -1),
+            (-1, 101),
+            (60, 101),
+            (60, 110),
+            (-10, 110),
+            (-10, -10),
+            (60, -10),
+        ]],
+    ];
+    expected_additional.sort_unstable();
+    assert_eq!(additional, expected_additional);
     assert!(
         first
             .additional_ensuring

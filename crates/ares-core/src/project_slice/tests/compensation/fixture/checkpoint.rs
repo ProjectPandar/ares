@@ -92,11 +92,6 @@ pub(super) fn surface_geometry(regions: &[Region]) -> Vec<WireExPolygon> {
         .collect()
 }
 
-pub(super) fn assert_same_geometry(actual: &[WireExPolygon], expected: &[WireExPolygon]) {
-    assert_eq!(actual.len(), expected.len());
-    assert!(actual.iter().all(|expolygon| expected.contains(expolygon)));
-}
-
 pub(super) fn expolygon(contour: &[(i64, i64)]) -> WireExPolygon {
     WireExPolygon {
         contour: contour.to_vec(),

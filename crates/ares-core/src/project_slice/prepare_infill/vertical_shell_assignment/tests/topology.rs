@@ -95,15 +95,16 @@ fn record() -> PreparedSurfaceTypeRecord {
 }
 
 fn signatures(expolygons: &[ExPolygon]) -> Vec<Signature> {
-    expolygons
+    let mut signatures = expolygons
         .iter()
         .map(|expolygon| {
-            (
-                bounds(expolygon.contour()),
-                expolygon.holes().iter().map(bounds).collect(),
-            )
+            let mut holes = expolygon.holes().iter().map(bounds).collect::<Vec<_>>();
+            holes.sort_unstable();
+            (bounds(expolygon.contour()), holes)
         })
-        .collect()
+        .collect::<Vec<_>>();
+    signatures.sort_unstable();
+    signatures
 }
 
 fn bounds(polygon: &Polygon) -> Bounds {

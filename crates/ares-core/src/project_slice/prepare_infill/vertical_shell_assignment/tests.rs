@@ -158,18 +158,16 @@ fn task22o24_assignment_keeps_externals_then_appends_exact_internal_groups() {
     for surface in &record.fill_surfaces[3..] {
         assert!(!source_points.contains(&surface.as_parts().1.contour().points().as_ptr()));
     }
+    let bounds = record.fill_surfaces[3..]
+        .iter()
+        .map(bounds)
+        .collect::<Vec<_>>();
+    assert_eq!(&bounds[..2], &[(0, 50, 100, 100), (200, 50, 300, 100)]);
+    let mut solid_bounds = bounds[2..].to_vec();
+    solid_bounds.sort_unstable();
     assert_eq!(
-        record.fill_surfaces[3..]
-            .iter()
-            .map(bounds)
-            .collect::<Vec<_>>(),
-        vec![
-            (0, 50, 100, 100),
-            (200, 50, 300, 100),
-            (400, 0, 500, 50),
-            (200, 0, 300, 50),
-            (0, 0, 100, 50),
-        ]
+        solid_bounds,
+        [(0, 0, 100, 50), (200, 0, 300, 50), (400, 0, 500, 50),]
     );
 }
 

@@ -1,8 +1,9 @@
 use crate::geometry::CoordinateScale;
 
 use super::{
-    apply_objects, expolygon, layer_geometry, marked_surface, object_options, output_rectangle,
-    post_region, print_object, rectangle, region_options, square, surface_metadata,
+    apply_objects, canonical_geometry, expolygon, layer_geometry, marked_surface, object_options,
+    output_rectangle, post_region, print_object, rectangle, region_options, square,
+    surface_metadata,
 };
 
 const DEFAULT_METADATA: (f64, u16, f64, u16) = (-1.0, 1, -1.0, 0);
@@ -145,8 +146,8 @@ fn task22l_stage_cascades_top_down_across_two_enabled_regions() {
     let (middle_first, middle_second) = expected_owned_layers();
 
     assert_eq!(
-        layer_geometry(&object, 0, 0),
-        vec![expolygon(&[
+        canonical_geometry(&layer_geometry(&object, 0, 0)),
+        canonical_geometry(&[expolygon(&[
             (1_000_000, 200_000),
             (2_000_000, 200_000),
             (2_000_000, 599_990),
@@ -157,18 +158,27 @@ fn task22l_stage_cascades_top_down_across_two_enabled_regions() {
             (0, 999_990),
             (0, 0),
             (1_000_000, 0),
-        ])]
-    );
-    assert_eq!(layer_geometry(&object, 1, 0), middle_second.clone());
-    assert_eq!(layer_geometry(&object, 0, 1), middle_first);
-    assert_eq!(layer_geometry(&object, 1, 1), middle_second);
-    assert_eq!(
-        layer_geometry(&object, 0, 2),
-        vec![rectangle(800_000, 200_000, 2_000_000, 1_000_000)]
+        ])])
     );
     assert_eq!(
-        layer_geometry(&object, 1, 2),
-        vec![rectangle(1_400_000, 600_000, 2_600_000, 1_400_000)]
+        canonical_geometry(&layer_geometry(&object, 1, 0)),
+        canonical_geometry(&middle_second)
+    );
+    assert_eq!(
+        canonical_geometry(&layer_geometry(&object, 0, 1)),
+        canonical_geometry(&middle_first)
+    );
+    assert_eq!(
+        canonical_geometry(&layer_geometry(&object, 1, 1)),
+        canonical_geometry(&middle_second)
+    );
+    assert_eq!(
+        canonical_geometry(&layer_geometry(&object, 0, 2)),
+        canonical_geometry(&[rectangle(800_000, 200_000, 2_000_000, 1_000_000)])
+    );
+    assert_eq!(
+        canonical_geometry(&layer_geometry(&object, 1, 2)),
+        canonical_geometry(&[rectangle(1_400_000, 600_000, 2_600_000, 1_400_000)])
     );
 }
 

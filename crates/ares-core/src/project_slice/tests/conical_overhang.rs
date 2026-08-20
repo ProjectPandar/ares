@@ -2,7 +2,6 @@ mod fixture;
 mod gates;
 mod geometry;
 mod holes;
-mod oracle;
 mod regions;
 
 use crate::{
@@ -92,6 +91,38 @@ fn output_rectangle(min_x: i64, min_y: i64, max_x: i64, max_y: i64) -> ExPolygon
         (min_x, min_y),
         (max_x, min_y),
     ])
+}
+
+type RingSnapshot = Vec<(i64, i64)>;
+type ExPolygonSnapshot = (RingSnapshot, Vec<RingSnapshot>);
+
+fn canonical_geometry(expolygons: &[ExPolygon]) -> Vec<ExPolygonSnapshot> {
+    let mut snapshot = expolygons
+        .iter()
+        .map(|expolygon| {
+            let mut holes = expolygon
+                .holes()
+                .iter()
+                .map(canonical_ring)
+                .collect::<Vec<_>>();
+            holes.sort_unstable();
+            (canonical_ring(expolygon.contour()), holes)
+        })
+        .collect::<Vec<_>>();
+    snapshot.sort_unstable();
+    snapshot
+}
+
+fn canonical_ring(polygon: &Polygon) -> Vec<(i64, i64)> {
+    let mut points = polygon
+        .points()
+        .iter()
+        .map(|point| (point.x(), point.y()))
+        .collect::<Vec<_>>();
+    if let Some((start, _)) = points.iter().enumerate().min_by_key(|(_, point)| *point) {
+        points.rotate_left(start);
+    }
+    points
 }
 
 fn donut(outer: (i64, i64, i64, i64), holes: &[(i64, i64, i64, i64)]) -> ExPolygon {
@@ -188,67 +219,6 @@ fn surface_metadata(
         .collect()
 }
 
-fn sidecar_snapshot(object: &PostRegionPrintObject) -> Vec<(u32, Vec<Vec<ExPolygon>>)> {
-    object
-        .volume_slices
-        .iter()
-        .map(|volume| {
-            let (occurrence_id, layers) = volume.as_parts();
-            (occurrence_id.get(), layers.to_vec())
-        })
-        .collect()
-}
-
-fn geometry_snapshot(objects: &[PostRegionPrintObject]) -> Vec<Vec<Vec<Vec<ExPolygon>>>> {
-    objects
-        .iter()
-        .map(|object| {
-            object
-                .regions
-                .iter()
-                .map(|region| {
-                    region
-                        .layers
-                        .iter()
-                        .map(|layer| {
-                            layer
-                                .surfaces
-                                .iter()
-                                .map(|surface| surface.as_parts().1.clone())
-                                .collect()
-                        })
-                        .collect()
-                })
-                .collect()
-        })
-        .collect()
-}
-
-fn identity_snapshot(
-    objects: &[PostRegionPrintObject],
-) -> Vec<(PlannedPrintObject, Vec<(usize, RegionOptions)>)> {
-    objects
-        .iter()
-        .map(|object| {
-            (
-                object.plan.clone(),
-                object
-                    .regions
-                    .iter()
-                    .map(|region| (region.id, region.options.clone()))
-                    .collect(),
-            )
-        })
-        .collect()
-}
-
 fn marked_surface(expolygon: ExPolygon) -> RegionSurface {
     RegionSurface::internal_with_metadata(expolygon, 0.37, 7, 1.25, 9)
-}
-
-fn geometry_error() -> SliceError {
-    SliceError::InvalidInput(
-        "project conical overhang geometry is nonfinite or outside the supported Clipper range"
-            .to_owned(),
-    )
 }

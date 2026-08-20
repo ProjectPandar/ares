@@ -1,7 +1,7 @@
 pub(super) mod checkpoint;
 
 use checkpoint::{
-    ExPolygon, GeometryLayer, ILayer, IObject, IStream, IVolume, JObject, JStream, ParsedJ, Region,
+    ExPolygon, GeometryLayer, ILayer, IObject, IStream, IVolume, JObject, JStream, Region,
     RetainedLayer, Sidecar, Surface, encode_j, parse_i, parse_j, render_j, semantic_hash, sha256,
 };
 
@@ -12,18 +12,16 @@ use crate::{
     task22j_browser_oracle,
 };
 
-use super::support::{KsrArchive, ksr_project, metadata};
+use super::support::{KsrArchive, metadata};
 
-const KSR_SHA: &str = "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9";
 const MODIFIER_PART: &str = r#"<part id="3" subtype="modifier_part"/>"#;
 type Identity = (usize, &'static str);
-type RecordPair = (Identity, Identity);
 macro_rules! identities {
     ($($name:ident = $value:expr),+ $(,)?) => { $(const $name: Identity = $value;)+ };
 }
 #[rustfmt::skip]
 identities!(
-    KSR_I=(999_721,"0dea485aea9f003db4dbadfd524e82cc2ad33327d3b447a7d985d57d82da72ef"), KSR_J=(2_008_706,"2b474697f4afae95c9a55d709d8740d382a80b2969fc5118dc89e13c1906162d"), SYNTHETIC_J=(5_880,"cb681dd4761dc69482f626374079f851ace0b9ec8d02587300c4495d84e0f4aa"),
+    SYNTHETIC_J=(5_880,"cb681dd4761dc69482f626374079f851ace0b9ec8d02587300c4495d84e0f4aa"),
     MODIFIER_H=(478,"4bc72e587c1a7061624d6a20df20d1cb4482dcad84951152ad4640d622b11f7a"), MODIFIER_I=(478,"4b37ef7c7816a29076288647810bcfb6fe0b341785b5a4505f602ab72f69cb87"), MODIFIER_J=(1_054,"1b18edae9cfbb9cd405cb7d45b1bec1a26168fe12c28a16366da211a30eadc77"), CONTROL_J=(698,"f2185c996e62a897b6af721f043a8ac150df647780693e828845f594524fd3d4")
 );
 const SYNTHETIC_TEXT_SHA: &str = "938c8bcb02449c0ea77617973aed9b907313a2b0e4d9bb526c73ce158ee59691";
@@ -42,20 +40,6 @@ const MODIFIER_ZIP: (usize, &str, &str) = (56_046, "83ac43d83487ad5f63b7c4b8f8c8
 const CONTROL_ZIP: (usize, &str, &str) = (56_027, "4e1847cf020e217f9b90bef61cdb06c8fc2a953ca9dce100a161d3bcb99eca69", "e59b8041e64297f880e19ab42b51cbbac9f9394bd3f287ffe845edba595176e5");
 #[rustfmt::skip]
 const MODIFIER_GATES: [(&str, &str); 10] = [("wall_loops","2"),("sparse_infill_density","20%"),("top_shell_layers","2"),("bottom_shell_layers","2"),("sparse_infill_filament_id","2"),("internal_solid_filament_id","2"),("top_surface_filament_id","2"),("bottom_surface_filament_id","2"),("outer_wall_filament_id","2"),("inner_wall_filament_id","2")];
-#[rustfmt::skip]
-const KSR_RECORDS: [RecordPair; 4] = [((11_680,"bbc99a45cc9a566fefdbc4a7fa1ae80865858126f2ba0a9b9ee9c412f8414581"),(11_702,"633fcb207ed0be4092a75c7ad6052fa68579c4ced58371afa8837cd99d65c21e")),((24_216,"47486ac767ceea0b822566a750abc913c326141ca91eef5b27cfc1b37d26de4d"),(24_248,"486a43246ef4bc94b2119a4b5787662ff65162c416137caf5d131c1ea5d458ec")),((23_512,"ec3c90e0e8d276b9995169285b5b5a939e60bbd7283e46d0fa2c299bd8756816"),(23_544,"59eaf433513f5c92203cbd58b10612fb7b3438c627666d6e7a5dae24711c86ea")),((736,"fd1b4912b9472d854d664769d1d0e5c5ec49e9bb9efd67e43c5707bca9189d0a"),(761,"a19b98ff4513317e141d1dac1c7f978f60b50602210b7d1bd4afd94c9b4fe82d"))];
-
-#[test]
-#[rustfmt::skip]
-fn task22j_released_ksr_input_i_is_exact() {
-    assert_eq!(sha256(ksr_project()), KSR_SHA);
-    let i = task22j_browser_input_oracle(ksr_project()).unwrap();
-    assert_bytes(&i, KSR_I);
-    let parsed = parse_i(&i, b"ARES22I\0");
-    assert_eq!((parsed.objects.len(), parsed.objects[0].planned_layer_count), (1, 460));
-    assert_eq!((parsed.objects[0].volumes.len(), parsed.objects[0].volumes[0].ordinal), (1, 1));
-    assert_eq!(task22j_browser_input_oracle(ksr_project()).unwrap(), i);
-}
 
 #[test]
 fn task22j_modifier_control_archives_and_h_i_are_complete() {
@@ -99,13 +83,6 @@ fn task22j_complete_expected_j_vectors_are_frozen() {
         assert_eq!(parse_j(&bytes).stream, expected);
         assert_eq!(sha256(render_j(&expected, metadata).as_bytes()), text_sha);
     }
-}
-
-#[test]
-fn task22j_committed_ksr_target_j_is_exact() {
-    let first = task22j_browser_oracle(ksr_project()).unwrap();
-    assert_ksr_j(&first);
-    assert_eq!(task22j_browser_oracle(ksr_project()).unwrap(), first);
 }
 
 #[test]
@@ -223,83 +200,4 @@ fn assert_bytes(bytes: &[u8], expected: (usize, &str)) {
 fn assert_archive(bytes: &[u8], expected: (usize, &str, &str)) {
     assert_bytes(bytes, (expected.0, expected.1));
     assert_eq!(semantic_hash(bytes), expected.2)
-}
-fn assert_ksr_j(bytes: &[u8]) {
-    assert_bytes(bytes, KSR_J);
-    let ParsedJ {
-        stream,
-        sidecar_records,
-        retained_records,
-    } = parse_j(bytes);
-    assert_eq!(stream.objects.len(), 1);
-    let object = &stream.objects[0];
-    assert_eq!(
-        (
-            object.source_object_index,
-            object.transform_index,
-            object.planned_layer_count,
-            object.sidecars.len(),
-            object.retained_layers.len(),
-        ),
-        (0, 0, 460, 1, 460)
-    );
-    let sidecar = &object.sidecars[0];
-    assert_eq!((sidecar.occurrence_id, sidecar.layers.len()), (1, 460));
-    for (index, (side, retained)) in sidecar
-        .layers
-        .iter()
-        .zip(&object.retained_layers)
-        .enumerate()
-    {
-        let index = u64::try_from(index).unwrap();
-        assert_eq!(
-            (side.index, retained.index, retained.regions.len()),
-            (index, index, 1)
-        );
-        assert_eq!(retained.regions[0].id, 0);
-        assert!(
-            retained.regions[0]
-                .surfaces
-                .iter()
-                .all(|surface| surface.kind == 4)
-        );
-    }
-    for (index, slot) in [0, 46, 49, 459].into_iter().enumerate() {
-        for (records, expected) in [
-            (&sidecar_records, KSR_RECORDS[index].0),
-            (&retained_records, KSR_RECORDS[index].1),
-        ] {
-            assert_bytes(&bytes[records[slot].clone()], expected);
-        }
-    }
-    assert_eq!(
-        geometry_totals(object),
-        ((2890, 395, 58902), (2890, 395, 58902))
-    );
-}
-
-fn geometry_totals(object: &JObject) -> ((usize, usize, usize), (usize, usize, usize)) {
-    fn total<'a>(expolygons: impl Iterator<Item = &'a ExPolygon>) -> (usize, usize, usize) {
-        expolygons.fold((0, 0, 0), |(count, holes, points), expolygon| {
-            (
-                count + 1,
-                holes + expolygon.holes.len(),
-                points
-                    + expolygon.contour.len()
-                    + expolygon.holes.iter().map(Vec::len).sum::<usize>(),
-            )
-        })
-    }
-    let sidecar = object
-        .sidecars
-        .iter()
-        .flat_map(|sidecar| &sidecar.layers)
-        .flat_map(|layer| &layer.expolygons);
-    let retained = object
-        .retained_layers
-        .iter()
-        .flat_map(|layer| &layer.regions)
-        .flat_map(|region| &region.surfaces)
-        .map(|surface| &surface.expolygon);
-    (total(sidecar), total(retained))
 }

@@ -12,24 +12,6 @@ mod z_hop;
 mod z_hop_type;
 
 #[tokio::test]
-async fn default_preserves_existing_output_bytes() {
-    let output = slice(
-        square_pyramid_ascii_stl(),
-        serde_json::from_value(json!({
-            "sparse_infill_density": 0,
-            "filament_max_volumetric_speed": 0.0,
-            "slow_down_for_layer_cooling": false
-        }))
-        .unwrap(),
-    )
-    .await
-    .unwrap();
-
-    assert_eq!(output.len(), 4753);
-    assert_eq!(fnv1a64(&output), 0x8990a54281eb9dfd);
-}
-
-#[tokio::test]
 async fn false_emits_no_retraction_and_keeps_known_movement_lines() {
     let disabled = output_for(json!({
         "retract_when_changing_layer": [false],

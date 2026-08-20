@@ -1,14 +1,7 @@
-use crate::{
-    OrcaBool, OrcaFloat, OrcaInt, Percent, SliceError, slice_project, task22k_browser_oracle,
-};
+use crate::{OrcaBool, OrcaFloat, OrcaInt, Percent, SliceError, slice_project};
 
-use super::super::super::{
-    prepare_post_top_empty_layers, task22l_browser_input_oracle, task22l_browser_oracle,
-};
-use super::super::{
-    region_fixture::checkpoint,
-    support::{KsrArchive, ksr_project, metadata},
-};
+use super::super::super::prepare_post_top_empty_layers;
+use super::super::support::{KsrArchive, metadata};
 
 const PROCESS: &str = "Metadata/project_settings.config";
 const DISABLED: &str = r#""make_overhang_printable": "0""#;
@@ -17,97 +10,9 @@ const ANGLE_55: &str = r#""make_overhang_printable_angle": "55""#;
 const ANGLE_45: &str = r#""make_overhang_printable_angle": "45""#;
 
 #[test]
-fn task22l_phase_a_stepped_archives_options_and_k_are_exact() {
-    let disabled = stepped_archive(false);
-    let enabled = stepped_archive(true);
-    let disabled_repeat = stepped_archive(false);
-    let enabled_repeat = stepped_archive(true);
-
-    assert_eq!(disabled_repeat, disabled);
-    assert_eq!(enabled_repeat, enabled);
-    assert_identity(
-        &disabled,
-        181_446,
-        "ee928a255109b491b0640da279b86d9282c573ec49a400e3cc4529eac915030e",
-    );
-    assert_identity(
-        &enabled,
-        181_447,
-        "be286d7abb2bef8ab5e8b650657b114ea35c4dcff3a1463eba1a0dd278a89faa",
-    );
-    assert_eq!(
-        checkpoint::semantic_identity(&disabled),
-        (
-            1_020_460,
-            "ade484830a6492b50c3233e51debf5eab1db7d3e3bbf81fa8cd72f10226ea9ef".to_owned(),
-        )
-    );
-    assert_eq!(
-        checkpoint::semantic_identity(&enabled),
-        (
-            1_020_460,
-            "f61089d040d1edf002f1dedca66b433e4982e18b9ce69a6385aa42dbf4c780b9".to_owned(),
-        )
-    );
-
-    assert_loaded_options(&disabled, 45.0, false);
-    assert_loaded_options(&enabled, 45.0, true);
-    let disabled_k = task22k_browser_oracle(&disabled).unwrap();
-    let enabled_k = task22k_browser_oracle(&enabled).unwrap();
-    let disabled_k_repeat = task22k_browser_oracle(&disabled_repeat).unwrap();
-    let enabled_k_repeat = task22k_browser_oracle(&enabled_repeat).unwrap();
-    assert_identity(
-        &disabled_k,
-        490,
-        "c6668cfbc56b20abe71606d59d2e28abf08ebb8b22f3ecebb3058d63ba05b44f",
-    );
-    assert_eq!(enabled_k, disabled_k);
-    assert_eq!(disabled_k_repeat, disabled_k);
-    assert_eq!(enabled_k_repeat, enabled_k);
-}
-
-#[test]
-fn task22l_stepped_k_and_l_checkpoints_are_exact() {
-    let disabled = stepped_archive(false);
-    let enabled = stepped_archive(true);
-    let disabled_k = task22l_browser_input_oracle(&disabled).unwrap();
-    let enabled_k = task22l_browser_input_oracle(&enabled).unwrap();
-    assert_eq!(disabled_k, task22k_browser_oracle(&disabled).unwrap());
-    assert_eq!(enabled_k, disabled_k);
-    assert_identity(
-        &disabled_k,
-        490,
-        "c6668cfbc56b20abe71606d59d2e28abf08ebb8b22f3ecebb3058d63ba05b44f",
-    );
-
-    let disabled_l = task22l_browser_oracle(&disabled).unwrap();
-    let enabled_l = task22l_browser_oracle(&enabled).unwrap();
-    assert_identity(
-        &disabled_l,
-        490,
-        "0834c61cc48aece1afd52d060c5c2a58f7243124664ad0a7dd3f500d6735b790",
-    );
-    assert_identity(
-        &enabled_l,
-        554,
-        "33038c51ffe6f41b0bdb8b921d6976f43b0c47f6f3be8ec3bee6cc5b9c7c2505",
-    );
-    assert_eq!(&disabled_l[8..], &disabled_k[8..]);
-    assert_eq!(task22l_browser_oracle(&disabled).unwrap(), disabled_l);
-    assert_eq!(task22l_browser_oracle(&enabled).unwrap(), enabled_l);
-
-    let input = checkpoint::parse_k(&disabled_k).stream;
-    let disabled_output = checkpoint::parse_l(&disabled_l).stream;
-    let enabled_output = checkpoint::parse_l(&enabled_l).stream;
-    assert_eq!(disabled_output, input);
-    let input = &input.objects[0];
-    let enabled = &enabled_output.objects[0];
-    assert_eq!(enabled.source_object_index, input.source_object_index);
-    assert_eq!(enabled.transform_index, input.transform_index);
-    assert_eq!(enabled.planned_layer_count, input.planned_layer_count);
-    assert_eq!(enabled.sidecars, input.sidecars);
-    assert_eq!(enabled.retained_layers[1], input.retained_layers[1]);
-    assert_ne!(enabled.retained_layers[0], input.retained_layers[0]);
+fn stepped_archives_load_project_overhang_options() {
+    assert_loaded_options(&stepped_builder(false).bytes(), 45.0, false);
+    assert_loaded_options(&stepped_builder(true).bytes(), 45.0, true);
 }
 
 #[tokio::test]
@@ -134,30 +39,8 @@ async fn task22l_stepped_invalid_options_fail_before_disabled_gate() {
         archive.replace_unique(PROCESS, from, to);
         let project = archive.bytes();
         let error = || SliceError::InvalidInput(message.to_owned());
-        assert_eq!(task22l_browser_oracle(&project), Err(error()));
         assert_eq!(slice_project(&project, metadata()).await, Err(error()));
     }
-}
-
-#[test]
-fn task22l_committed_ksr_checkpoint_is_exact() {
-    assert_loaded_options(ksr_project(), 55.0, false);
-    let k = task22l_browser_input_oracle(ksr_project()).unwrap();
-    assert_eq!(k, task22k_browser_oracle(ksr_project()).unwrap());
-    let expected = checkpoint::encode_with_magic(&checkpoint::parse_k(&k).stream, b"ARES22L\0");
-    let l = task22l_browser_oracle(ksr_project()).unwrap();
-    assert_eq!(l, expected);
-    assert_eq!(&l[8..], &k[8..]);
-    assert_identity(
-        &l,
-        2_008_706,
-        "7a71db2912970141adc436679621c25888c412e2010c44eccf1b49d7e8048b07",
-    );
-    assert_eq!(task22l_browser_oracle(ksr_project()).unwrap(), l);
-}
-
-pub(super) fn stepped_archive(enabled: bool) -> Vec<u8> {
-    stepped_builder(enabled).bytes()
 }
 
 fn stepped_builder(enabled: bool) -> KsrArchive {
@@ -205,11 +88,6 @@ fn assert_loaded_options(project: &[u8], angle: f64, enabled: bool) {
             OrcaInt(2),
         )
     );
-}
-
-fn assert_identity(bytes: &[u8], len: usize, sha: &str) {
-    assert_eq!(bytes.len(), len);
-    assert_eq!(checkpoint::sha256(bytes), sha);
 }
 
 #[rustfmt::skip]

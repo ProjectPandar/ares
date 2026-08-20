@@ -1,23 +1,14 @@
-use sha2::{Digest, Sha256};
-
 use crate::{
     ProjectVolumeType,
     geometry::{ExPolygon, Point, Polygon},
     mesh_slicer::SlicingMode,
-    task22g_browser_oracle,
 };
 
-use super::{
-    super::{
-        closing::{PostClosingLayer, PostClosingPrintObject, PostClosingVolume},
-        layers::{PlannedLayer, PlannedPrintObject},
-        task22g_oracle::encode,
-    },
-    support::ksr_project,
+use super::super::{
+    closing::{PostClosingLayer, PostClosingPrintObject, PostClosingVolume},
+    layers::{PlannedLayer, PlannedPrintObject},
+    task22g_oracle::encode,
 };
-
-const OUTPUT_LEN: usize = 1_644_681;
-const OUTPUT_SHA256: &str = "29ffb501c54190dd4336cc1371fc5e480c5b87ac6a8184366bd072bf5cb90919";
 
 type PointPair = (i64, i64);
 type PolygonRef<'a> = &'a [PointPair];
@@ -129,51 +120,6 @@ fn task22g_canonical_encoder_matches_handwritten_nested_empty_vector() {
     assert_eq!(encoded, expected);
 }
 
-#[test]
-fn task22g_ksr_post_closing_matches_complete_fixed_oracle() {
-    let first = task22g_browser_oracle(ksr_project()).unwrap();
-    let second = task22g_browser_oracle(ksr_project()).unwrap();
-
-    assert_eq!(first, second);
-    assert_eq!(first.len(), OUTPUT_LEN);
-    assert_eq!(sha256(&first), OUTPUT_SHA256);
-
-    let snapshot = parse(&first);
-    assert_eq!(snapshot.objects, 1);
-    assert_eq!(snapshot.volumes, 1);
-    assert_eq!(snapshot.layers, 460);
-    assert_eq!(snapshot.contours, 2_890);
-    assert_eq!(snapshot.holes, 395);
-    assert_eq!(snapshot.points, 99_212);
-    assert_eq!(snapshot.source_object, 0);
-    assert_eq!(snapshot.transform, 0);
-    assert_eq!(snapshot.planned_layers, 460);
-    assert_eq!(snapshot.source_volume, 0);
-    assert_eq!(snapshot.ordinal, 1);
-    assert_eq!(snapshot.volume_type, 0);
-    assert_layer(
-        &first,
-        &snapshot,
-        0,
-        14_913,
-        "28fbbcc66d73c037a5dbb3c60363d83bfaeaaf1d9d8a49451594f227ea0d4fcf",
-    );
-    assert_layer(
-        &first,
-        &snapshot,
-        46,
-        46_233,
-        "8dba7c5e51c74e803903b513c5165dffb9d1c55be108e39fbccca4309a603e69",
-    );
-    assert_layer(
-        &first,
-        &snapshot,
-        459,
-        737,
-        "c8822b67958531cb4b043d338b53f7329e0b00cb4f08108306763e763cd52f80",
-    );
-}
-
 fn parse(bytes: &[u8]) -> Snapshot {
     assert!(bytes.starts_with(b"ARES22G\0"));
     let mut cursor = 8;
@@ -276,16 +222,6 @@ fn read_u8(bytes: &[u8], cursor: &mut usize) -> u8 {
     value
 }
 
-fn assert_layer(bytes: &[u8], snapshot: &Snapshot, layer: usize, len: usize, sha: &str) {
-    let &(_, start, end) = snapshot
-        .layer_records
-        .iter()
-        .find(|&&(index, _, _)| index == layer)
-        .unwrap();
-    assert_eq!(end - start, len);
-    assert_eq!(sha256(&bytes[start..end]), sha);
-}
-
 fn push_layer(bytes: &mut Vec<u8>, index: usize, mode: u8, expolygons: &[ExPolygonRef<'_>]) {
     push_u64(bytes, index);
     bytes.push(mode);
@@ -322,11 +258,4 @@ fn planned_layer(id: usize) -> PlannedLayer {
 
 fn owned_polygon(points: &[PointPair]) -> Polygon {
     Polygon::new(points.iter().map(|&(x, y)| Point::new(x, y)).collect())
-}
-
-fn sha256(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
 }

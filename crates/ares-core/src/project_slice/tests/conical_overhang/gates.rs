@@ -7,8 +7,8 @@ use crate::project_slice::conical_overhang::{
 
 use super::super::support::resolved;
 use super::{
-    apply_resolved, layer_geometry, object_options, output_rectangle, planned_layers, post_region,
-    print_object, rectangle, region_options, square,
+    apply_resolved, canonical_geometry, layer_geometry, object_options, output_rectangle,
+    planned_layers, post_region, print_object, rectangle, region_options, square,
 };
 
 #[test]
@@ -283,16 +283,16 @@ fn task22l_stage_flattens_resolved_options_across_print_instances() {
 
     assert_eq!(objects.len(), 3);
     assert_eq!(
-        layer_geometry(&objects[0], 0, 0),
-        vec![square(0, 1_000_000)]
+        canonical_geometry(&layer_geometry(&objects[0], 0, 0)),
+        canonical_geometry(&[square(0, 1_000_000)])
     );
     assert_eq!(
-        layer_geometry(&objects[1], 0, 0),
-        vec![square(0, 1_000_000)]
+        canonical_geometry(&layer_geometry(&objects[1], 0, 0)),
+        canonical_geometry(&[square(0, 1_000_000)])
     );
     assert_eq!(
-        layer_geometry(&objects[2], 0, 0),
-        vec![output_rectangle(0, 0, 1_800_000, 1_000_000)]
+        canonical_geometry(&layer_geometry(&objects[2], 0, 0)),
+        canonical_geometry(&[output_rectangle(0, 0, 1_800_000, 1_000_000)])
     );
     assert_eq!(
         objects

@@ -93,7 +93,7 @@ fn rebuilt_fill_does_not_alias_the_boundary_geometry() {
 }
 
 #[test]
-fn repeated_holed_kind_has_stable_clipper_output_order() {
+fn repeated_holed_kind_preserves_each_hole_independent_of_output_order() {
     let mut first_hole = rectangle(20, 20, 40, 40).into_parts().0;
     first_hole.reverse();
     let mut second_hole = rectangle(220, 20, 240, 40).into_parts().0;
@@ -117,21 +117,20 @@ fn repeated_holed_kind_has_stable_clipper_output_order() {
             .iter()
             .all(|surface| surface.as_parts().1.holes().len() == 1)
     );
-    assert_eq!(
-        output
-            .iter()
-            .map(|surface| {
-                surface
-                    .as_parts()
-                    .1
-                    .contour()
-                    .points()
-                    .iter()
-                    .map(|point| point.x())
-                    .min()
-                    .unwrap()
-            })
-            .collect::<Vec<_>>(),
-        [0, 200]
-    );
+    let mut contour_min_x = output
+        .iter()
+        .map(|surface| {
+            surface
+                .as_parts()
+                .1
+                .contour()
+                .points()
+                .iter()
+                .map(|point| point.x())
+                .min()
+                .unwrap()
+        })
+        .collect::<Vec<_>>();
+    contour_min_x.sort_unstable();
+    assert_eq!(contour_min_x, [0, 200]);
 }

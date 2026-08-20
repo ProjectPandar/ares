@@ -1,7 +1,3 @@
-use std::fmt::Write;
-
-use sha2::{Digest, Sha256};
-
 use crate::{
     SliceError,
     project_slice::{
@@ -283,13 +279,4 @@ fn put_polygon(output: &mut Vec<u8>, polygon: &crate::geometry::Polygon) {
 
 fn put_usize(output: &mut Vec<u8>, value: usize) {
     output.extend_from_slice(&(value as u64).to_le_bytes());
-}
-
-pub(in crate::project_slice::tests::prepare_infill) fn sha256(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .fold(String::new(), |mut output, byte| {
-            write!(output, "{byte:02x}").unwrap();
-            output
-        })
 }

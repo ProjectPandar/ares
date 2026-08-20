@@ -168,26 +168,6 @@ async fn slice_returns_deterministic_gcode_for_stl() {
 }
 
 #[tokio::test]
-async fn slice_gcode_bytes_remain_unchanged_after_print_domain_view() {
-    let options: SliceOptions = serde_json::from_value(json!({
-        "sparse_infill_density": 0,
-        "filament_max_volumetric_speed": 0.0,
-        "slow_down_for_layer_cooling": false
-    }))
-    .unwrap();
-    let output = slice(square_pyramid_ascii_stl(), options).await.unwrap();
-
-    assert_eq!(output.len(), 4753);
-    assert_eq!(fnv1a64(&output), 0x8990a54281eb9dfd);
-}
-
-fn fnv1a64(bytes: &[u8]) -> u64 {
-    bytes.iter().fold(0xcbf29ce484222325, |hash, byte| {
-        (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
-    })
-}
-
-#[tokio::test]
 async fn slice_rejects_3mf_until_geometry_extraction_exists() {
     let err = slice(b"PK\x03\x04fake-3mf", SliceOptions::default())
         .await

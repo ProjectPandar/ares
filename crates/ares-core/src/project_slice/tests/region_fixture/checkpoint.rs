@@ -30,8 +30,6 @@ record!(Surface(kind: u8, expolygon: ExPolygon));
 
 pub(in crate::project_slice::tests) struct ParsedJ {
     pub(in crate::project_slice::tests) stream: JStream,
-    pub(in crate::project_slice::tests) sidecar_records: Vec<std::ops::Range<usize>>,
-    pub(in crate::project_slice::tests) retained_records: Vec<std::ops::Range<usize>>,
 }
 
 pub(super) fn parse_i(bytes: &[u8], magic: &[u8; 8]) -> IStream {
@@ -69,38 +67,26 @@ pub(in crate::project_slice::tests) fn parse_l(bytes: &[u8]) -> ParsedJ {
 
 fn parse_post_regions(bytes: &[u8], magic: &[u8; 8]) -> ParsedJ {
     let mut reader = Reader::new(bytes, magic);
-    let mut sidecar_records = Vec::new();
-    let mut retained_records = Vec::new();
     let objects = reader.count_map(|reader| {
         let source_object_index = reader.u64();
         let transform_index = reader.u64();
         let planned_layer_count = reader.u64();
         let sidecars = reader.count_map(|reader| Sidecar {
             occurrence_id: reader.u64(),
-            layers: reader.count_map(|reader| {
-                let start = reader.1;
-                let layer = GeometryLayer {
-                    index: reader.u64(),
-                    expolygons: reader.expolygons(),
-                };
-                sidecar_records.push(start..reader.1);
-                layer
+            layers: reader.count_map(|reader| GeometryLayer {
+                index: reader.u64(),
+                expolygons: reader.expolygons(),
             }),
         });
-        let retained_layers = reader.count_map(|reader| {
-            let start = reader.1;
-            let layer = RetainedLayer {
-                index: reader.u64(),
-                regions: reader.count_map(|reader| Region {
-                    id: reader.u64(),
-                    surfaces: reader.count_map(|reader| Surface {
-                        kind: reader.u8(),
-                        expolygon: reader.expolygon(),
-                    }),
+        let retained_layers = reader.count_map(|reader| RetainedLayer {
+            index: reader.u64(),
+            regions: reader.count_map(|reader| Region {
+                id: reader.u64(),
+                surfaces: reader.count_map(|reader| Surface {
+                    kind: reader.u8(),
+                    expolygon: reader.expolygon(),
                 }),
-            };
-            retained_records.push(start..reader.1);
-            layer
+            }),
         });
         JObject {
             source_object_index,
@@ -113,8 +99,6 @@ fn parse_post_regions(bytes: &[u8], magic: &[u8; 8]) -> ParsedJ {
     reader.eof();
     ParsedJ {
         stream: JStream { objects },
-        sidecar_records,
-        retained_records,
     }
 }
 

@@ -4,9 +4,9 @@ use super::*;
 async fn default_slice_emits_first_and_last_m73_progress_lines() {
     let output = m73_output(json!({})).await.unwrap();
 
-    assert_line_before(&output, "M73 P0 R0", ";LAYER_CHANGE");
+    assert_line_before(&output, "M73 P0 R1", ";LAYER_CHANGE");
     assert_line_before(&output, "M73 P100 R0", "M2");
-    assert_eq!(m73_lines(&output), vec!["M73 P0 R0", "M73 P100 R0"]);
+    assert_eq!(m73_lines(&output), vec!["M73 P0 R1", "M73 P100 R0"]);
 }
 
 #[tokio::test]
@@ -19,9 +19,9 @@ async fn silent_mode_marlin_legacy_emits_stealth_m73_progress_lines() {
 
     assert_eq!(
         m73_lines(&output),
-        vec!["M73 P0 R0", "M73 Q0 S0", "M73 P100 R0", "M73 Q100 S0"]
+        vec!["M73 P0 R1", "M73 Q0 S0", "M73 P100 R0", "M73 Q100 S0"]
     );
-    assert_line_before(&output, "M73 P0 R0", "M73 Q0 S0");
+    assert_line_before(&output, "M73 P0 R1", "M73 Q0 S0");
     assert_line_before(&output, "M73 P100 R0", "M73 Q100 S0");
 }
 
@@ -36,7 +36,7 @@ async fn silent_mode_marlin2_emits_stealth_m73_progress_lines() {
 
     assert_eq!(
         m73_lines(&output),
-        vec!["M73 P0 R0", "M73 Q0 S0", "M73 P100 R0", "M73 Q100 S0"]
+        vec!["M73 P0 R1", "M73 Q0 S0", "M73 P100 R0", "M73 Q100 S0"]
     );
 }
 
@@ -49,7 +49,7 @@ async fn silent_mode_non_marlin_flavor_does_not_emit_stealth_m73_lines() {
     .await
     .unwrap();
 
-    assert_eq!(m73_lines(&output), vec!["M73 P0 R0", "M73 P100 R0"]);
+    assert_eq!(m73_lines(&output), vec!["M73 P0 R1", "M73 P100 R0"]);
 }
 
 #[tokio::test]

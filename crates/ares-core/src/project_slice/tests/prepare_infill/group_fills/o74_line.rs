@@ -3,7 +3,6 @@ use crate::{
     geometry::{ExPolygon, Point, Polygon},
     project_slice::{
         group_fills, prepare_infill::combine_infill, region_slices::RegionSurfaceKind,
-        tests::prepare_infill::bridge_over_infill::transaction::sha256,
     },
 };
 
@@ -47,8 +46,8 @@ fn task22o74_all_line_patterns_and_layer_alternation_cross_the_full_seam() {
         let first = group_fills::group_fills(external(&graph), 0, FIRST).unwrap();
         let second = group_fills::group_fills(external(&graph), 0, SECOND).unwrap();
         geometry.push((
-            sha256(&authoritative_geometry(&first)),
-            sha256(&authoritative_geometry(&second)),
+            authoritative_geometry(&first),
+            authoritative_geometry(&second),
         ));
     }
     assert!(geometry.iter().all(|pair| pair == &geometry[0]));
@@ -60,8 +59,8 @@ fn task22o74_all_line_patterns_and_layer_alternation_cross_the_full_seam() {
         ProcessInfillPattern::AlignedRectilinear;
     let aligned_first = group_fills::group_fills(external(&graph), 0, FIRST).unwrap();
     let aligned_second = group_fills::group_fills(external(&graph), 0, SECOND).unwrap();
-    let aligned_first = sha256(&authoritative_geometry(&aligned_first));
-    let aligned_second = sha256(&authoritative_geometry(&aligned_second));
+    let aligned_first = authoritative_geometry(&aligned_first);
+    let aligned_second = authoritative_geometry(&aligned_second);
     assert_eq!(aligned_first, aligned_second);
     assert_eq!(aligned_first, geometry[0].1);
     assert_eq!(
@@ -99,13 +98,13 @@ fn task22o74_line_alternation_divides_stored_layer_id_by_surface_thickness_layer
     }
     let before = graph_snapshot(&graph);
 
-    let hashes = [FIRST, SECOND, THIRD].map(|slot| {
+    let geometry = [FIRST, SECOND, THIRD].map(|slot| {
         let grouped = group_fills::group_fills(external(&graph), 0, slot).unwrap();
-        sha256(&authoritative_geometry(&grouped))
+        authoritative_geometry(&grouped)
     });
 
-    assert_eq!(hashes[0], hashes[1]);
-    assert_ne!(hashes[1], hashes[2]);
+    assert_eq!(geometry[0], geometry[1]);
+    assert_ne!(geometry[1], geometry[2]);
     assert_snapshot_eq(graph_snapshot(&graph), before);
     combine_infill::dispose(graph);
 }

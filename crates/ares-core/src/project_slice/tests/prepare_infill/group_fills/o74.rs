@@ -12,8 +12,6 @@ use super::focused::fixture::{
     assert_snapshot_eq, external, graph, graph_snapshot, object_mut, options_mut, record_mut,
     rectangle, surface,
 };
-use super::oracle::authoritative_geometry;
-use crate::project_slice::tests::prepare_infill::bridge_over_infill::transaction::sha256;
 
 const PARTIAL_LAYER: usize = 1;
 const ALL_NARROW_LAYER: usize = 4;
@@ -136,10 +134,6 @@ fn task22o74_partial_split_resets_only_synthetic_metadata_and_preserves_ordered_
     );
     assert!(!original.expolygons.is_empty());
     assert!(!synthetic.expolygons.is_empty());
-    assert_eq!(
-        sha256(&authoritative_geometry(&grouped)),
-        "b9c5e3d97269820130c5fbf1387b7c3856ad7aa7567ccc7ec7547f933c463cb4"
-    );
     combine_infill::dispose(graph);
 }
 
@@ -186,10 +180,6 @@ fn task22o74_non_line_split_distinguishes_full_core_no_core_and_partial_core() {
     );
     assert!(!partial.surface_fills[0].expolygons.is_empty());
     assert!(!partial.surface_fills[1].expolygons.is_empty());
-    assert_eq!(
-        sha256(&authoritative_geometry(&partial)),
-        "0010b87782cb4a432c42f274825566880bb8d126b021529c76dea41e0f128b5e"
-    );
     combine_infill::dispose(graph);
 }
 

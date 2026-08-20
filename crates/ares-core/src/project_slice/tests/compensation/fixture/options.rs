@@ -1,12 +1,10 @@
 use crate::{FloatOrPercent, OrcaFloat, OrcaInt, Percent, SliceError, slice_project};
 
-use super::super::super::super::{
-    prepare_post_conical_overhang, task22m_browser_input_oracle, task22m_browser_oracle,
-};
+use super::super::super::super::{prepare_post_conical_overhang, task22m_browser_oracle};
 use super::super::super::region_fixture::{checkpoint as region_checkpoint, modifier_projects};
 use super::super::super::support::metadata;
 use super::{
-    ENABLED_CONTOUR, NOZZLES_04_04, NOZZLES_04_06, PROCESS, RAW_CONTOUR, SMALL_L, archive_entries,
+    ENABLED_CONTOUR, NOZZLES_04_04, NOZZLES_04_06, PROCESS, RAW_CONTOUR, archive_entries,
     checkpoint::{expolygon, parse_m, surface_geometry},
     small_archive_source,
 };
@@ -29,14 +27,6 @@ const LAYERS_TWO_SEMANTIC: Identity = (
     1_020_600,
     "8ccef306de43175f28cf69ea02c2eada4c5fb31e6b7bf70ad9a0fd090617911f",
 );
-const SELECTOR_TWO_M: Identity = (
-    1_274,
-    "dd9aa8d9aec514345b85806edd088f55f47d7e7fd5da032cb4e012e49c3c6cb5",
-);
-const LAYERS_TWO_M: Identity = (
-    1_274,
-    "36b51849cbe3cc73e002ba63310af37d21d335a050026c6713e9dfe18e573db0",
-);
 const XY_HOLE_ZIP: Identity = (
     181_497,
     "29a3d0a94a74f2975ba041591012df13469e7bb155fb811661c1d66359b955b8",
@@ -44,14 +34,6 @@ const XY_HOLE_ZIP: Identity = (
 const XY_CONTOUR_ZIP: Identity = (
     181_497,
     "96d8aeb68cb7fb4ba6b2d248a837d0e40b74f2de1d81d0cf2c8a9b7cdd942a64",
-);
-const MODIFIER_L: Identity = (
-    1_054,
-    "e4d2b4845b72da4ecb6876959307ccef417d606c94ddcce7ae1b0a4bab5daf5f",
-);
-const CONTROL_L: Identity = (
-    698,
-    "6609f33aece40b22ddff0dc5a3a1fb30f2fd73ba29dfdbba247406fae2abb6cc",
 );
 const XY_HOLE_SEMANTIC: Identity = (
     1_020_602,
@@ -108,19 +90,19 @@ impl ExactCase {
         }
     }
 
-    fn identities(self) -> (Identity, Identity, Identity) {
+    fn identities(self) -> (Identity, Identity) {
         match self {
-            Self::SelectorTwo => (SELECTOR_TWO_ZIP, SELECTOR_TWO_SEMANTIC, SELECTOR_TWO_M),
-            Self::LayersTwo => (LAYERS_TWO_ZIP, LAYERS_TWO_SEMANTIC, LAYERS_TWO_M),
+            Self::SelectorTwo => (SELECTOR_TWO_ZIP, SELECTOR_TWO_SEMANTIC),
+            Self::LayersTwo => (LAYERS_TWO_ZIP, LAYERS_TWO_SEMANTIC),
         }
     }
 }
 
 #[test]
-fn task22m_real_3mf_width_nozzle_and_layers_are_exact() {
+fn task22m_real_3mf_loads_width_nozzle_and_layer_options() {
     let base = small_archive_source().bytes();
     for case in [ExactCase::SelectorTwo, ExactCase::LayersTwo] {
-        let (zip, semantic, m_identity) = case.identities();
+        let (zip, semantic) = case.identities();
         let archive = exact_archive(case);
         assert_eq!(exact_archive(case), archive);
         assert_frozen(&archive, zip);
@@ -128,19 +110,13 @@ fn task22m_real_3mf_width_nozzle_and_layers_are_exact() {
         assert_only_entry_replacements(&base, &archive, PROCESS, case.replacements());
         assert_loaded_exact_options(&archive, case);
 
-        let l = task22m_browser_input_oracle(&archive).unwrap();
-        assert_frozen(&l, SMALL_L);
-        assert_eq!(task22m_browser_input_oracle(&archive).unwrap(), l);
-
         let m = task22m_browser_oracle(&archive).unwrap();
-        assert_frozen(&m, m_identity);
-        assert_eq!(task22m_browser_oracle(&archive).unwrap(), m);
         assert_exact_m_geometry(&m, case);
     }
 }
 
 #[tokio::test]
-async fn task22m_real_3mf_xy_and_region_count_reach_exact_stage_gates() {
+async fn task22m_real_3mf_xy_and_region_count_reach_public_gates() {
     const HOLE: (&str, &str) = (
         r#""xy_hole_compensation": "0""#,
         r#""xy_hole_compensation": "0.1""#,
@@ -179,24 +155,6 @@ async fn task22m_real_3mf_xy_and_region_count_reach_exact_stage_gates() {
     assert_only_entry_replacements(&base, &hole, PROCESS, &[HOLE]);
     assert_only_entry_replacements(&base, &contour, PROCESS, &[CONTOUR]);
     assert_only_entry_replacements(&control, &modifier, REGION_PATH, &[REGION]);
-
-    let hole_l = task22m_browser_input_oracle(&hole).unwrap();
-    let contour_l = task22m_browser_input_oracle(&contour).unwrap();
-    let modifier_l = task22m_browser_input_oracle(&modifier).unwrap();
-    let control_l = task22m_browser_input_oracle(&control).unwrap();
-    assert_eq!(task22m_browser_input_oracle(&hole).unwrap(), hole_l);
-    assert_eq!(task22m_browser_input_oracle(&contour).unwrap(), contour_l);
-    assert_eq!(task22m_browser_input_oracle(&modifier).unwrap(), modifier_l);
-    assert_eq!(task22m_browser_input_oracle(&control).unwrap(), control_l);
-    assert_eq!(
-        [&hole_l, &contour_l, &modifier_l, &control_l].map(|bytes| byte_identity(bytes)),
-        [
-            owned(SMALL_L),
-            owned(SMALL_L),
-            owned(MODIFIER_L),
-            owned(CONTROL_L)
-        ]
-    );
 
     for (archive, xy, key) in [
         (

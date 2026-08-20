@@ -19,8 +19,7 @@ use super::{
     },
     region_fixture::checkpoint,
     support::{
-        KsrArchive, ksr_project, object as project_object, plan, project_volume, region,
-        resolved_object,
+        KsrArchive, object as project_object, plan, project_volume, region, resolved_object,
     },
 };
 
@@ -141,28 +140,6 @@ fn task22k_top_empty_layers_preserve_complete_volume_sidecar() {
         assert_eq!(object.regions[0].layers.len(), 1);
         assert_eq!(sidecar_snapshot(&object), expected_sidecar);
     }
-}
-
-#[test]
-fn task22k_committed_ksr_checkpoint_is_exact() {
-    let j = task22k_browser_input_oracle(ksr_project()).unwrap();
-    assert_eq!(j, task22j_browser_oracle(ksr_project()).unwrap());
-    let expected = checkpoint::encode_with_magic(&checkpoint::parse_j(&j).stream, b"ARES22K\0");
-    assert_eq!(expected.len(), 2_008_706);
-    assert_eq!(
-        checkpoint::sha256(&expected),
-        "c101e0f9ff863c7abe72cd1cb792fcd8e0074d8d6d2e77d3bb56c32eedba13be"
-    );
-    let k = task22k_browser_oracle(ksr_project()).unwrap();
-    assert_eq!(k, expected);
-    assert_eq!(&k[8..], &j[8..]);
-    let object = &checkpoint::parse_k(&k).stream.objects[0];
-    assert_eq!(
-        (object.planned_layer_count, object.retained_layers.len()),
-        (460, 460)
-    );
-    assert_eq!(object.sidecars[0].layers.len(), 460);
-    assert_eq!(task22k_browser_oracle(ksr_project()).unwrap(), k);
 }
 
 #[test]

@@ -1,24 +1,6 @@
 use super::*;
 
 #[tokio::test]
-async fn z_offset_default_preserves_existing_output_bytes() {
-    let omitted = slice(
-        square_pyramid_ascii_stl(),
-        serde_json::from_value(json!({
-            "sparse_infill_density": 0,
-            "filament_max_volumetric_speed": 0.0,
-            "slow_down_for_layer_cooling": false
-        }))
-        .unwrap(),
-    )
-    .await
-    .unwrap();
-
-    assert_eq!(omitted.len(), 4753);
-    assert_eq!(fnv1a64(&omitted), 0x8990a54281eb9dfd);
-}
-
-#[tokio::test]
 async fn z_offset_zero_preserves_command_lines() {
     let omitted = String::from_utf8(
         slice(

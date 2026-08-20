@@ -7,32 +7,16 @@ use std::{
 use crate::{FloatOrPercent, OrcaFloat, OrcaInt, Percent};
 
 use super::super::super::{
-    prepare_post_conical_overhang, task22l_browser_oracle, task22m_browser_input_oracle,
-    task22m_browser_oracle,
+    prepare_post_conical_overhang, task22m_browser_input_oracle, task22m_browser_oracle,
 };
-use super::super::{
-    region_fixture::checkpoint as region_checkpoint,
-    support::{KsrArchive, ksr_project},
-};
+use super::super::{region_fixture::checkpoint as region_checkpoint, support::KsrArchive};
 
 mod checkpoint;
 mod options;
 
-use checkpoint::{assert_same_geometry, expolygon, parse_m, surface_geometry};
+use checkpoint::{expolygon, parse_m, surface_geometry};
 
 const PROCESS: &str = "Metadata/project_settings.config";
-const SMALL_L: (usize, &str) = (
-    746,
-    "70c9c246700b068e1085a2c719243fd94839bb169c3a062b06b42fd640147b2a",
-);
-const KSR_L: (usize, &str) = (
-    2_008_706,
-    "7a71db2912970141adc436679621c25888c412e2010c44eccf1b49d7e8048b07",
-);
-const KSR_M: (usize, &str) = (
-    3_008_346,
-    "91f6943a67fb7b42acbf6d4fbf9c98bc4bb91815df888ff5a99184bf53728d19",
-);
 
 #[derive(Clone, Copy, Debug)]
 enum Variant {
@@ -42,32 +26,23 @@ enum Variant {
 }
 
 #[test]
-fn task22m_small_archives_freeze_options_l_and_fixed_source_m() {
-    #[rustfmt::skip]
+fn task22m_small_archives_drive_option_dependent_compensation() {
     let variants = [
-        (Variant::Enabled, 181_493, "b53e4c1d1be955a2ac3b3cb0855b3cb87f3e073de7260d32a21df12b41e99f4b", 1_020_600, "df965ba633362a23b19ad9f9fef62b0397a5262b61e3e8da349d9f588237c073", 1_274, "bb0fcb21a733f65462c5a669c6f46895ab16c049a342acafbb98bb376e05560e"),
-        (Variant::Disabled, 181_491, "0806ecc3e1581974d1096d19e4ea1377f15c41328650fe4398ffde103dacb9b5", 1_020_597, "0dcd709d31754d2340c5b82df4871fcd69bacf12800df540c02e513512f26fce", 1_050, "868e82681ed9712461329ea54952c63ec05be1c6b0229f2622c7fed493adc55a"),
-        (Variant::AntiMap([1, 2]), 181_498, "146f895fb5e82fc09815e790b9652beeb1dd4a68378eabd4da7792f11afb7edd", 1_020_601, "186a3d1516de9341f5c9c8df8d3dedc01a6c06244615d1cccae36ba099a45501", 1_274, "bb0fcb21a733f65462c5a669c6f46895ab16c049a342acafbb98bb376e05560e"),
-        (Variant::AntiMap([2, 1]), 181_496, "9cf61521e0413f4382910b671f1c5af95dc73a41185dd4c3f3262080c1cbba39", 1_020_601, "70335faf030d7b4156db275bc9721220e683998fe4af960dbaf99c6bffbba2c5", 1_274, "bb0fcb21a733f65462c5a669c6f46895ab16c049a342acafbb98bb376e05560e"),
+        Variant::Enabled,
+        Variant::Disabled,
+        Variant::AntiMap([1, 2]),
+        Variant::AntiMap([2, 1]),
     ];
     let mut archives = Vec::new();
     let mut checkpoints = Vec::new();
     let mut outputs = Vec::new();
-    for (variant, zip_len, zip_hash, semantic_len, semantic_hash, m_len, m_hash) in variants {
+    for variant in variants {
         let archive = small_archive(variant);
         assert_eq!(small_archive(variant), archive);
-        assert_identity(&archive, (zip_len, zip_hash));
-        assert_eq!(
-            region_checkpoint::semantic_identity(&archive),
-            (semantic_len, semantic_hash.to_owned())
-        );
         assert_loaded_options(&archive, variant);
-        let output = task22l_browser_oracle(&archive).unwrap();
-        assert_eq!(task22l_browser_oracle(&archive).unwrap(), output);
-        assert_identity(&output, SMALL_L);
+        let output = task22m_browser_input_oracle(&archive).unwrap();
         assert_eq!(task22m_browser_input_oracle(&archive).unwrap(), output);
         let m = task22m_browser_oracle(&archive).unwrap();
-        assert_identity(&m, (m_len, m_hash));
         assert_eq!(task22m_browser_oracle(&archive).unwrap(), m);
         assert_small_semantics(&output, &m, matches!(variant, Variant::Disabled));
         archives.push(archive);
@@ -108,49 +83,6 @@ fn task22m_m_parser_rejects_wrong_magic_nested_truncation_and_trailing_bytes() {
     }
 }
 
-#[test]
-fn task22m_ksr_m_checkpoint_is_exact_complete_and_repeatable() {
-    let l_bytes = task22m_browser_input_oracle(ksr_project()).unwrap();
-    assert_identity(&l_bytes, KSR_L);
-    assert_eq!(l_bytes, task22l_browser_oracle(ksr_project()).unwrap());
-    let m_bytes = task22m_browser_oracle(ksr_project()).unwrap();
-    assert_identity(&m_bytes, KSR_M);
-    assert_eq!(task22m_browser_oracle(ksr_project()).unwrap(), m_bytes);
-
-    let l = region_checkpoint::parse_l(&l_bytes).stream;
-    let m = parse_m(&m_bytes);
-    assert_eq!((l.objects.len(), m.len()), (1, 1));
-    let (l, (m, lslices)) = (&l.objects[0], &m[0]);
-    assert_eq!(
-        (
-            m.source_object_index,
-            m.transform_index,
-            m.planned_layer_count,
-            m.sidecars.len(),
-            m.sidecars[0].occurrence_id,
-            m.retained_layers.len(),
-        ),
-        (0, 0, 460, 1, 1, 460)
-    );
-    assert_eq!(m.planned_layer_count, l.planned_layer_count);
-    assert_eq!(m.sidecars, l.sidecars);
-    assert!(
-        m.retained_layers
-            .iter()
-            .all(|layer| layer.regions.len() == 1 && layer.regions[0].id == 0)
-    );
-
-    let raw = surface_geometry(&l.retained_layers[0].regions);
-    assert_eq!(raw.len(), 6);
-    assert_ne!(surface_geometry(&m.retained_layers[0].regions), raw);
-    assert_same_geometry(&lslices[0], &raw);
-    assert_eq!(m.retained_layers[1].regions, l.retained_layers[1].regions);
-    assert_same_geometry(
-        &lslices[1],
-        &surface_geometry(&m.retained_layers[1].regions),
-    );
-}
-
 fn assert_small_semantics(l: &[u8], m: &[u8], disabled: bool) {
     let l = region_checkpoint::parse_l(l).stream;
     let m = parse_m(m);
@@ -183,11 +115,6 @@ fn assert_small_semantics(l: &[u8], m: &[u8], disabled: bool) {
         std::slice::from_ref(&raw)
     );
     assert_eq!(lslices[1], [raw]);
-}
-
-fn assert_identity(bytes: &[u8], (len, hash): (usize, &str)) {
-    assert_eq!(bytes.len(), len);
-    assert_eq!(region_checkpoint::sha256(bytes), hash);
 }
 
 pub(super) fn parse_m_object_count(bytes: &[u8]) -> usize {

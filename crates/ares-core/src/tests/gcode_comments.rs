@@ -1,7 +1,7 @@
 use super::*;
 
 #[tokio::test]
-async fn gcode_comments_default_preserves_existing_output_bytes() {
+async fn gcode_comments_default_does_not_add_inline_command_comments() {
     let omitted = slice(
         square_pyramid_ascii_stl(),
         serde_json::from_value(json!({
@@ -13,9 +13,11 @@ async fn gcode_comments_default_preserves_existing_output_bytes() {
     )
     .await
     .unwrap();
+    let omitted = String::from_utf8(omitted).unwrap();
 
-    assert_eq!(omitted.len(), 4753);
-    assert_eq!(fnv1a64(&omitted), 0x8990a54281eb9dfd);
+    assert!(omitted.lines().any(|line| line.starts_with("G1 ")));
+    assert!(!omitted.contains(" ; move to layer Z"));
+    assert!(!omitted.contains(" ; perimeter"));
 }
 
 #[tokio::test]

@@ -44,7 +44,7 @@ async fn klipper_exclude_object_emits_definition_and_move_markers() {
     assert_eq!(count_lines(&output, KLIPPER_START), 1);
     assert_eq!(count_lines(&output, KLIPPER_END), 1);
     assert_order(&output, ";MACHINE-START", KLIPPER_DEFAULT_DEFINITION);
-    assert_order(&output, KLIPPER_DEFAULT_DEFINITION, "M73 P0 R0");
+    assert_order(&output, KLIPPER_DEFAULT_DEFINITION, "M73 P0 R1");
     assert_order(&output, KLIPPER_START, first_move_line(&output));
     assert_order(&output, last_move_line(&output), KLIPPER_END);
     assert_object_label_order(&output);
@@ -64,7 +64,7 @@ async fn klipper_exclude_object_definition_uses_first_layer_bounds_without_skirt
     assert_eq!(count_lines(&output, KLIPPER_DEFAULT_DEFINITION), 0);
     assert_eq!(count_lines(&output, KLIPPER_START), 1);
     assert_eq!(count_lines(&output, KLIPPER_END), 1);
-    assert_order(&output, KLIPPER_NO_SKIRT_DEFINITION, "M73 P0 R0");
+    assert_order(&output, KLIPPER_NO_SKIRT_DEFINITION, "M73 P0 R1");
 }
 
 #[tokio::test]
