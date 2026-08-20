@@ -216,7 +216,7 @@ async fn first_layer_seam_and_island_order_match_project_slice() {
 }
 
 #[tokio::test]
-async fn extrusion_height_processor_state_persists_across_layers() {
+async fn extrusion_height_processor_state_tracks_layers_and_paths() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -225,7 +225,7 @@ async fn extrusion_height_processor_state_persists_across_layers() {
     .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
 
-    assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 519);
+    assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 515);
 }
 
 #[tokio::test]

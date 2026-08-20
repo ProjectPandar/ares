@@ -60,8 +60,10 @@ pub(super) fn begin_layer(
     state: &mut EmitState,
     layer_index: usize,
     layer_z: f64,
+    layer_height: f64,
 ) {
     state.layer_index = layer_index;
+    state.last_height = Some(layer_height as f32);
     state.layer_z = layer_z;
     state.travel_feedrate = if layer_index == 0 {
         state.options.first_layer_travel_feedrate

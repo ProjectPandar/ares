@@ -7,3 +7,7 @@ For the current generated geometry, this removes 438 duplicate tags: the KSR str
 ## Upstream boundary
 
 Port `OrcaSlicer/src/libslic3r/GCode.cpp:6794-6804`: `m_last_height` is persistent G-code processor state and changes only when `_extrude` observes a different path height. Layer-change metadata remains owned by Ares's layer prologue. Deferred: seam placement, variable-width geometry values, and later G-code differences.
+
+## Superseding correction
+
+Task 22O241 restores the source assignment at `GCode.cpp:4631`: layer setup also updates `m_last_height`. Task 22O239's persistent-across-layer interpretation is therefore historical, not the final processor contract; its source tolerance remains retained.

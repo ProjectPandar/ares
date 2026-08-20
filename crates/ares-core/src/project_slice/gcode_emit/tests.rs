@@ -369,13 +369,12 @@ async fn project_print_flow_ratio_scales_extrusion() {
     let output = std::str::from_utf8(&output).unwrap();
 
     let start = output.find("; FEATURE: Inner wall\n").unwrap();
-    let block = output[start..].lines().take(7).collect::<Vec<_>>();
+    let block = output[start..].lines().take(6).collect::<Vec<_>>();
     assert_eq!(
         block,
         [
             "; FEATURE: Inner wall",
             "; LINE_WIDTH: 0.5",
-            "; LAYER_HEIGHT: 0.2",
             "G1 F3000",
             "G1 X139.876 Y103.477 E.0137",
             "G1 X139.697 Y104.225 E.01433",
