@@ -59,7 +59,7 @@ fn keeps_non_circular_path_linear() {
 }
 
 #[test]
-fn circle_center_preserves_scaled_coordinate_boundary() {
+fn circle_center_rounds_to_scaled_coordinate_grid() {
     let (center, _) = circle_from_three(
         Point { x: 0.0, y: 0.0 },
         Point {
@@ -73,8 +73,8 @@ fn circle_center_preserves_scaled_coordinate_boundary() {
     assert_eq!(
         center,
         Point {
-            x: 1.0,
-            y: 0.749_999,
+            x: 1.000_001,
+            y: 0.75,
         }
     );
 }

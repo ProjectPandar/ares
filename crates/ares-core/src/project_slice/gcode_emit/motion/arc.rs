@@ -160,8 +160,8 @@ fn circle_from_three(first: Point, middle: Point, last: Point) -> Option<(Point,
     let radius = (center_x - first.x).hypot(center_y - first.y) / SCALE;
     (radius <= 2_000.0).then_some((
         Point {
-            x: center_x.trunc() / SCALE,
-            y: center_y.trunc() / SCALE,
+            x: center_x.round() / SCALE,
+            y: center_y.round() / SCALE,
         },
         radius,
     ))
