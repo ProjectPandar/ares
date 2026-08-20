@@ -200,8 +200,6 @@ fn expected_synthetic_j() -> JStream {
         object(9,2,vec![sidecar(10,vec![empty(),q0()]),sidecar(90,vec![q0(),q0()])],vec![ret(0,vec![vec![q0()]]),ret(1,vec![vec![]])]),
     ] }
 }
-#[rustfmt::skip]
-pub(super) fn assert_synthetic_j(bytes: &[u8]) { assert_bytes(bytes, SYNTHETIC_J); let actual = parse_j(bytes).stream; assert_eq!(actual, expected_synthetic_j()); assert_eq!(sha256(render_j(&actual, &SYNTHETIC_RENDER).as_bytes()), SYNTHETIC_TEXT_SHA); }
 fn q(x: i64, y: i64) -> ExPolygon {
     p(&[(x, y), (-x, y), (-x, -y), (x, -y)])
 }

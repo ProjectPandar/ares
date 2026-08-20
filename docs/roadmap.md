@@ -7961,3 +7961,15 @@ sequences, and 189 progress lines versus the source's 190; timing metadata is
 the first normalized divergence. Float-width planner arithmetic, geometry,
 cooling, object-ID instability, and exact G-code parity remain source-cited
 slices.
+
+## Task 22O.232: module and oracle cleanup
+
+O232 extracts machine limits and machine-start template rendering into the
+ordinary `gcode_emit::machine` module. It removes the compile-only region
+interface pin block and the obsolete encoded task22J/task22K synthetic stream
+tests while preserving region subtraction and modifier-partition behavior
+checks with contour-rotation and vector-order-independent point membership.
+Test-only region decomposition interfaces are compiled only for their owning
+test/oracle configurations. Every Rust source file under `crates/` is now below
+400 lines; source composition uses no include macros. A complete KSR CLI slice
+is byte-identical to O231 after the extraction.

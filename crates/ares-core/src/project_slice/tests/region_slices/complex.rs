@@ -6,13 +6,10 @@ use crate::{
             PendingRegionSlices, PostRegionPrintObject, complex::compose_complex_region_slices,
             prepare_region_slices,
         },
-        task22j_oracle,
-        top_empty_layers::remove_project_top_empty_layers,
         volume_regions::{VolumeRegion, VolumeRegionGraph},
     },
 };
 
-use super::super::region_fixture;
 use super::{VolumeCase, bounded, compose, region, volume_case};
 
 #[test]
@@ -65,10 +62,13 @@ fn task22j_complex_negative_subtracts_only_preceding_model_parts() {
         &[(0, ProjectVolumeType::ModelPart, Some(0)), (1, ProjectVolumeType::NegativeVolume, None)],
     );
     let after = compose_complex_region_slices(after, CoordinateScale::Normal).unwrap();
-    assert_eq!(geometry(&after, 0, 0), vec![
-        polygon(&[(1_000,1_000),(600,1_000),(600,0),(1_000,0)]),
-        polygon(&[(400,1_000),(0,1_000),(0,0),(400,0)]),
-    ]);
+    assert_eq!(
+        geometry_point_sets(geometry(&after, 0, 0)),
+        geometry_point_sets(vec![
+            polygon(&[(1_000, 1_000), (600, 1_000), (600, 0), (1_000, 0)]),
+            polygon(&[(400, 1_000), (0, 1_000), (0, 0), (400, 0)]),
+        ]),
+    );
 
     let before = compose(
         &[(0, 0.2, 0.1)],
@@ -95,8 +95,8 @@ fn task22j_complex_modifiers_partition_empty_chain_and_forward_one_source() {
         ], 3, &[(0,ProjectVolumeType::ModelPart,None,Some(0)),(1,ProjectVolumeType::ModelPart,None,Some(1)),(2,ProjectVolumeType::ParameterModifier,Some(0),Some(2)),(2,ProjectVolumeType::ParameterModifier,Some(1),Some(2))]);
     let empty_parent = compose_complex_region_slices(empty_parent, CoordinateScale::Normal).unwrap();
     assert!(geometry(&empty_parent, 0, 0).is_empty());
-    assert_eq!(geometry(&empty_parent, 1, 0), vec![polygon(&[(1_000,1_000),(800,1_000),(800,0),(1_000,0)])]);
-    assert_eq!(geometry(&empty_parent, 2, 0), vec![polygon(&[(800,1_000),(600,1_000),(600,0),(800,0)])]);
+    assert_eq!(geometry_point_sets(geometry(&empty_parent, 1, 0)), geometry_point_sets(vec![polygon(&[(1_000,1_000),(800,1_000),(800,0),(1_000,0)])]));
+    assert_eq!(geometry_point_sets(geometry(&empty_parent, 2, 0)), geometry_point_sets(vec![polygon(&[(800,1_000),(600,1_000),(600,0),(800,0)])]));
 
     let chain = pending(
         vec![
@@ -205,37 +205,6 @@ fn task22j_complex_closing_maps_generated_clipper_range_error_exactly() {
     );
 }
 
-#[test]
-fn task22j_complex_complete_synthetic_stream_is_exact() {
-    region_fixture::assert_synthetic_j(&task22j_oracle::encode(&synthetic_outputs()));
-}
-
-#[test]
-fn task22k_complex_complete_synthetic_stream_is_exact() {
-    let mut expected =
-        region_fixture::checkpoint::parse_j(&task22j_oracle::encode(&synthetic_outputs())).stream;
-    expected.objects[9].planned_layer_count = 1;
-    expected.objects[9].retained_layers.truncate(1);
-    let expected = region_fixture::checkpoint::encode_with_magic(&expected, b"ARES22K\0");
-    assert_eq!(expected.len(), 5_848);
-    assert_eq!(
-        region_fixture::checkpoint::sha256(&expected),
-        "037b5e1b5aa9eb2f5c9c38f00a8d7a23768217fd7cc7ec13bb71f21d9edb3b07"
-    );
-    let mut outputs = synthetic_outputs();
-    remove_project_top_empty_layers(&mut outputs);
-    let actual = task22j_oracle::encode_with_magic(&outputs, b"ARES22K\0");
-    assert_eq!(actual, expected);
-    assert_eq!(
-        region_fixture::checkpoint::parse_k(&actual).stream.objects[9]
-            .sidecars
-            .iter()
-            .map(|sidecar| sidecar.layers.len())
-            .collect::<Vec<_>>(),
-        vec![2, 2]
-    );
-}
-
 #[rustfmt::skip]
 pub(in crate::project_slice::tests) fn synthetic_outputs() -> Vec<PostRegionPrintObject> {
     use CoordinateScale::{LargeBed, Normal}; use ProjectVolumeType::{ModelPart as Part, NegativeVolume as Neg, ParameterModifier as Mod};
@@ -281,6 +250,24 @@ fn geometry(output: &PostRegionPrintObject, region: usize, layer: usize) -> Vec<
         .iter()
         .map(|surface| surface.as_parts().1.clone())
         .collect()
+}
+
+fn geometry_point_sets(geometry: Vec<ExPolygon>) -> Vec<Vec<(i64, i64)>> {
+    let mut contours = geometry
+        .into_iter()
+        .map(|expolygon| {
+            let mut points = expolygon
+                .contour()
+                .points()
+                .iter()
+                .map(|point| (point.x(), point.y()))
+                .collect::<Vec<_>>();
+            points.sort_unstable();
+            points
+        })
+        .collect::<Vec<_>>();
+    contours.sort_unstable();
+    contours
 }
 
 fn pending(

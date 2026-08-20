@@ -20,12 +20,9 @@ pub(super) struct VolumeSlices {
 }
 
 impl VolumeSlices {
+    #[cfg(any(test, feature = "task22n-browser-oracle"))]
     pub(super) fn as_parts(&self) -> (VolumeOccurrenceId, &[Vec<ExPolygon>]) {
         (self.occurrence_id, &self.layers)
-    }
-
-    pub(super) fn into_parts(self) -> (VolumeOccurrenceId, Vec<Vec<ExPolygon>>) {
-        (self.occurrence_id, self.layers)
     }
 }
 
@@ -56,6 +53,7 @@ impl PostRegion {
         (self.id, &self.options, &self.layers)
     }
 
+    #[cfg(test)]
     pub(super) fn into_parts(self) -> (usize, RegionOptions, Vec<RegionLayer>) {
         (self.id, self.options, self.layers)
     }
@@ -70,6 +68,7 @@ impl RegionLayer {
         &self.surfaces
     }
 
+    #[cfg(test)]
     pub(super) fn into_parts(self) -> Vec<RegionSurface> {
         self.surfaces
     }
@@ -206,6 +205,7 @@ pub(super) struct PendingRegionSlices {
 }
 
 impl PendingRegionSlices {
+    #[cfg(test)]
     pub(super) fn as_parts(
         &self,
     ) -> (
@@ -384,17 +384,3 @@ fn overlaps_active_predecessor(
         predecessor.contains_z(z) && current.intersects_xy(predecessor)
     })
 }
-
-const _: fn(BoundedPrintObject, VolumeRegionGraph) -> PendingRegionSlices = prepare_region_slices;
-const _: () = {
-    let _ = (VolumeSlices::as_parts, VolumeSlices::into_parts);
-    let _ = PostRegionPrintObject::as_parts;
-    let _ = PostRegionPrintObject::into_parts;
-    let _ = (PostRegion::as_parts, PostRegion::into_parts);
-    let _ = (RegionLayer::surfaces, RegionLayer::into_parts);
-    let _ = (RegionSurface::as_parts, RegionSurface::into_parts);
-    let _ = (
-        PendingRegionSlices::as_parts,
-        PendingRegionSlices::into_parts,
-    );
-};

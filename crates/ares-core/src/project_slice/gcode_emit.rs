@@ -9,6 +9,7 @@ mod finish;
 pub(super) mod footprint;
 mod header;
 mod lexer;
+mod machine;
 mod motion;
 mod object;
 mod processor;
@@ -40,8 +41,8 @@ pub(super) fn emit(
     }
     header::append_width_block(&mut output, traversal);
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
-    append_machine_limits(&mut output, traversal);
-    append_machine_start(&mut output, traversal)?;
+    machine::append_limits(&mut output, traversal);
+    machine::append_start(&mut output, traversal)?;
     let options = motion::MotionOptions::from_traversal(traversal);
     let offset = footprint::model_center(traversal).unwrap_or_default();
     let offset = (
@@ -225,7 +226,7 @@ pub(super) fn emit(
             .machine_load_filament_time
             .0,
         processor::ProcessorLimits {
-            print_acceleration: first(
+            print_acceleration: machine::first(
                 &traversal
                     .resolved
                     .views
@@ -234,7 +235,7 @@ pub(super) fn emit(
                     .machine
                     .machine_max_acceleration_extruding,
             ),
-            retract_acceleration: first(
+            retract_acceleration: machine::first(
                 &traversal
                     .resolved
                     .views
@@ -243,7 +244,7 @@ pub(super) fn emit(
                     .machine
                     .machine_max_acceleration_retracting,
             ),
-            travel_acceleration: first(
+            travel_acceleration: machine::first(
                 &traversal
                     .resolved
                     .views
@@ -271,164 +272,4 @@ fn format_processor_float(value: f64) -> String {
         }
     }
     formatted
-}
-
-fn append_machine_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
-    let machine = &traversal.resolved.views.full.printer.machine;
-    let travel_acceleration = if traversal.resolved.views.full.printer.gcode.gcode_flavor
-        == crate::GCodeFlavor::MarlinLegacy
-    {
-        machine.machine_max_acceleration_extruding.clone()
-    } else {
-        machine.machine_max_acceleration_travel.clone()
-    };
-    output.extend_from_slice(b"M73 P0 R0\n");
-    output.extend_from_slice(
-        format!(
-            "M201 X{} Y{} Z{} E{}\n",
-            first(&machine.machine_max_acceleration_x),
-            first(&machine.machine_max_acceleration_y),
-            first(&machine.machine_max_acceleration_z),
-            first(&machine.machine_max_acceleration_e),
-        )
-        .as_bytes(),
-    );
-    output.extend_from_slice(
-        format!(
-            "M203 X{} Y{} Z{} E{}\n",
-            first(&machine.machine_max_speed_x),
-            first(&machine.machine_max_speed_y),
-            first(&machine.machine_max_speed_z),
-            first(&machine.machine_max_speed_e),
-        )
-        .as_bytes(),
-    );
-    output.extend_from_slice(
-        format!(
-            "M204 P{} R{} T{}\n",
-            first(&machine.machine_max_acceleration_extruding),
-            first(&machine.machine_max_acceleration_retracting),
-            first(&travel_acceleration),
-        )
-        .as_bytes(),
-    );
-    output.extend_from_slice(
-        format!(
-            "M205 X{:.2} Y{:.2} Z{:.2} E{:.2} ; sets the jerk limits, mm/sec\n",
-            first(&machine.machine_max_jerk_x),
-            first(&machine.machine_max_jerk_y),
-            first(&machine.machine_max_jerk_z),
-            first(&machine.machine_max_jerk_e),
-        )
-        .as_bytes(),
-    );
-    output.extend_from_slice(b"M106 S0\nM106 P2 S0\n");
-}
-
-fn first(values: &crate::OrcaFloats) -> f64 {
-    values.0.first().map_or(0.0, |value| value.0)
-}
-
-fn append_machine_start(
-    output: &mut Vec<u8>,
-    traversal: &PreparedPostClassicTraversal,
-) -> Result<(), SliceError> {
-    let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    if template.is_empty() {
-        return Ok(());
-    }
-    let mut config =
-        value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
-    config.insert("current_extruder", value::Value::number(0.0));
-    config.insert("current_hotend", value::Value::number(-1.0));
-    config.insert("next_extruder", value::Value::number(0.0));
-    config.insert("next_hotend", value::Value::number(-1.0));
-    config.insert("initial_no_support_extruder", value::Value::number(0.0));
-    config.insert("initial_no_support_hotend", value::Value::number(-1.0));
-    config.insert("overall_chamber_temperature", value::Value::number(0.0));
-    config.insert(
-        "hold_chamber_temp_for_flat_print",
-        value::Value::Bool(false),
-    );
-    let max_z = traversal
-        .objects
-        .first()
-        .into_iter()
-        .flat_map(|object| object.records.iter())
-        .filter_map(|record| record.as_ref())
-        .map(|record| record.layer_height)
-        .sum::<f64>();
-    config.insert("max_print_z", value::Value::number(max_z));
-    config.insert("max_layer_z", value::Value::number(max_z));
-    config.insert(
-        "total_layer_count",
-        value::Value::number(
-            traversal
-                .objects
-                .first()
-                .map_or(0, |object| object.records.len()) as f64,
-        ),
-    );
-    config.insert("layer_num", value::Value::number(0.0));
-    if let Some((min_x, min_y, size_x, size_y)) = footprint::first_layer_bounds(traversal) {
-        config.insert(
-            "first_layer_print_min",
-            value::Value::List(vec![
-                value::Value::number(min_x),
-                value::Value::number(min_y),
-            ]),
-        );
-        config.insert(
-            "first_layer_print_size",
-            value::Value::List(vec![
-                value::Value::number(size_x),
-                value::Value::number(size_y),
-            ]),
-        );
-    }
-    let filament_count = traversal.resolved.logical_filament_count;
-    config.insert(
-        "first_non_support_filaments",
-        value::Value::List(
-            (0..filament_count)
-                .map(|_| value::Value::number(-1.0))
-                .collect(),
-        ),
-    );
-    config.insert(
-        "first_filaments",
-        value::Value::List(
-            (0..filament_count)
-                .map(|index| value::Value::number(index as f64 - 1.0))
-                .collect(),
-        ),
-    );
-    for (target, source) in [
-        ("flush_temperatures", "nozzle_temperature_range_high"),
-        ("flush_volumetric_speeds", "filament_max_volumetric_speed"),
-        (
-            "first_layer_temperature",
-            "nozzle_temperature_initial_layer",
-        ),
-    ] {
-        if let Some(value) = config.get(source).cloned() {
-            config.insert(target, value);
-        }
-    }
-    if let Some(value) = config
-        .get("hot_plate_temp_initial_layer")
-        .and_then(|value| value.index(0))
-        .cloned()
-    {
-        config.insert("bed_temperature_initial_layer_single", value);
-    }
-    output.extend_from_slice(b"; FEATURE: Custom\n");
-    let rendered = template::render(template, &config).map_err(|error| {
-        SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
-    })?;
-    output.extend_from_slice(rendered.as_bytes());
-    if !rendered.ends_with('\n') {
-        output.push(b'\n');
-    }
-    Ok(())
 }
