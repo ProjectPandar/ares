@@ -89,6 +89,8 @@ pub(super) fn emit(
                 append_print_preamble(&mut output);
             }
             cooling.begin_layer(&mut output, layer_index);
+            state.part_fan_speed = cooling.part_speed();
+            state.physical_fan_speed = state.part_fan_speed;
             output.extend_from_slice(b"; CHANGE_LAYER\n");
             let record_layer_height = traversal
                 .objects

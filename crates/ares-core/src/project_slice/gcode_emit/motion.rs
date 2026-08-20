@@ -1,5 +1,6 @@
 mod arc;
 mod clip;
+mod fan;
 mod features;
 mod format;
 mod loop_paths;
@@ -42,6 +43,10 @@ pub(super) struct EmitState {
     pub(super) wipe_path: Vec<arc::Point>,
     pub(super) lifted: bool,
     pub(super) filament_used: f64,
+    pub(super) part_fan_speed: u8,
+    pub(super) physical_fan_speed: u8,
+    pub(super) overhang_fan_active: bool,
+    pub(super) overhang_fan_marker_layer: Option<usize>,
 }
 #[derive(Clone, Copy)]
 pub(super) struct LayerGeometry<'a> {

@@ -55,6 +55,10 @@ impl CoolingState {
         }
     }
 
+    pub(super) const fn part_speed(&self) -> u8 {
+        self.part_speed
+    }
+
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
         feedrate::rewrite_layer(output, layer_start);
     }

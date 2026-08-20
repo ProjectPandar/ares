@@ -1,5 +1,5 @@
 use super::{
-    EmitState, LayerGeometry, arc, begin_object_travel, clip,
+    EmitState, LayerGeometry, arc, begin_object_travel, clip, fan,
     features::PathProperties,
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
     overhang, set_acceleration, travel,
@@ -201,6 +201,7 @@ pub(super) fn emit(
         });
         return;
     }
+    fan::update_for_constant_path(output, properties, state);
     let arc_points = points
         .iter()
         .map(|&(x, y)| arc::Point { x, y })
@@ -333,6 +334,13 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
             x: points[index].0,
             y: points[index].1,
         };
+        fan::update_for_variable_segment(
+            output,
+            properties,
+            processed[index - 1],
+            processed[index],
+            state,
+        );
         let length = (end.x - previous.0).hypot(end.y - previous.1);
         if length < SOURCE_EPSILON_MM {
             emitted_path.push(end);

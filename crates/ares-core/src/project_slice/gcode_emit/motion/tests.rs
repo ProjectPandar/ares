@@ -230,3 +230,24 @@ async fn bottom_surface_travel_crossing_external_slice_retracts() {
             .contains("G1 X101.68 Y139.896 E.50049\nM204 S6000\nG1 E-.11429 F1800\n; WIPE_START\n")
     );
 }
+
+#[tokio::test]
+async fn task22o234_variable_overhang_segments_switch_the_configured_fan() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+
+    assert!(lines.windows(3).enumerate().any(|(index, window)| {
+        index > 20_000
+            && window[0] == "M106 S255"
+            && window[1] == "G1 F3000"
+            && window[2].starts_with("G1 X")
+    }));
+}

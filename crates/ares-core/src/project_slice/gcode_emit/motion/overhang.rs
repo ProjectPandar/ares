@@ -18,6 +18,7 @@ pub(super) struct ProcessedPoint {
     pub(super) x: f64,
     pub(super) y: f64,
     pub(super) speed: f64,
+    pub(super) overlap: f64,
 }
 
 #[derive(Clone, Copy)]
@@ -85,10 +86,13 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
             ))
             .min(request.original_speed);
         variable |= (speed - request.original_speed).abs() > 1.0;
+        let width_inverse = 1.0 / f64::from(request.properties.width);
         processed.push(ProcessedPoint {
             x: current.x,
             y: current.y,
             speed,
+            overlap: (1.0 - current.distance * width_inverse)
+                .min(1.0 - next.distance * width_inverse),
         });
     }
     variable.then_some(processed)

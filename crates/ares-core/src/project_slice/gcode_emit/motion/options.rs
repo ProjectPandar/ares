@@ -1,4 +1,4 @@
-use crate::{FloatOrPercent, Nullable, OrcaFloat, ZHopType};
+use crate::{FloatOrPercent, Nullable, OrcaFloat, RawOverhangFanThreshold, ZHopType};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
@@ -21,6 +21,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) enable_overhang_speed: bool,
     pub(in crate::project_slice::gcode_emit) slowdown_for_curled_perimeters: bool,
     pub(in crate::project_slice::gcode_emit) overhang_speed_bands: [Option<FloatOrPercent>; 4],
+    pub(in crate::project_slice::gcode_emit) enable_overhang_bridge_fan: bool,
+    pub(in crate::project_slice::gcode_emit) overhang_fan_speed: u8,
+    pub(in crate::project_slice::gcode_emit) overhang_fan_threshold: RawOverhangFanThreshold,
     pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
@@ -150,6 +153,27 @@ impl MotionOptions {
                     }),
                 ),
             ],
+            enable_overhang_bridge_fan: full
+                .filament
+                .print
+                .enable_overhang_bridge_fan
+                .0
+                .first()
+                .is_some_and(|value| value.0),
+            overhang_fan_speed: full
+                .filament
+                .print
+                .overhang_fan_speed
+                .0
+                .first()
+                .map_or(100, |value| value.0.clamp(0, 100) as u8),
+            overhang_fan_threshold: full
+                .filament
+                .print
+                .overhang_fan_threshold
+                .first()
+                .copied()
+                .unwrap_or_default(),
             initial_layer_acceleration: acceleration(
                 object.map(|value| &value.object),
                 full.process.object.initial_layer_acceleration.0,
