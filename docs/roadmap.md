@@ -7904,3 +7904,17 @@ extrusion arcs fall from 8,665 to 8,658, and wipe sequences rise from 5,104 to
 extrusion `.02865` versus `.02866`; extrusion numeric precision, remaining
 Arachne topology, rectilinear geometry, travel/retraction, cooling, timing/M73,
 and exact G-code parity remain source-cited slices.
+
+## Task 22O.228: elephant-foot batch preservation
+
+O228 ports the one-to-one `ExPolygons` overload from OrcaSlicer 2.4.2
+`ElephantFootCompensation.cpp:621-643`. Ares now returns each independently
+compensated ExPolygon in input order without an extra union that could collapse
+siblings or rotate unchanged fallback contours. Obsolete tests pinning that
+Ares-only union were replaced with fallback identity and ordering behavior
+tests. The KSR fixture is unchanged at 273,634 lines, 192,926 G1 moves, 8,658
+extrusion arcs, and 5,108 wipe sequences; its first normalized motion difference
+remains reference line 1,149, extrusion `.02865` versus `.02866`. First-layer
+contour numerics, remaining Arachne topology, rectilinear geometry,
+travel/retraction, cooling, timing/M73, and exact G-code parity remain
+source-cited slices.

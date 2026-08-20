@@ -3,7 +3,7 @@ pub(super) mod profile;
 
 use crate::geometry::{
     ClipperError, Coord, CoordinateScale, EdgeGrid, ExPolygon, Point, Polygon,
-    append_simplified_expolygon, union_expolygons, variable_offset_inner_ex,
+    append_simplified_expolygon, variable_offset_inner_ex,
 };
 
 use distance::{ClosestHit, DistanceThresholds, ResampledPoint};
@@ -183,11 +183,10 @@ pub(super) fn compensate_expolygons(
     scale: CoordinateScale,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
     let geometry = derive_geometry(minimum_width_mm, compensation_mm, scale)?;
-    let compensated = input
+    input
         .iter()
         .map(|expolygon| compensate_expolygon(expolygon, geometry))
-        .collect::<Result<Vec<_>, _>>()?;
-    union_expolygons(&[], &compensated)
+        .collect()
 }
 
 fn is_tiny(input: &ExPolygon, geometry: ElephantFootGeometry) -> Result<bool, ClipperError> {
