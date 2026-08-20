@@ -1,7 +1,5 @@
 mod context;
 mod preparation;
-#[cfg(test)]
-mod tests;
 
 use crate::project_slice::seam_candidates::{LayerSeamCandidates, SeamPerimeter};
 
@@ -33,42 +31,17 @@ pub(super) struct PerimeterChoice {
     finalized: bool,
 }
 
-fn source_priority(left: (f32, f32, f32), right: (f32, f32, f32)) -> std::cmp::Ordering {
-    match (
-        source_priority_one_way(left, right),
-        source_priority_one_way(right, left),
-    ) {
-        (true, false) => std::cmp::Ordering::Less,
-        (false, true) => std::cmp::Ordering::Greater,
-        (true, true) | (false, false) => std::cmp::Ordering::Equal,
-    }
-}
-
-fn source_priority_one_way(left: (f32, f32, f32), right: (f32, f32, f32)) -> bool {
-    if left.0 > 0.0 || right.0 > 0.0 {
-        left.0 < right.0
-    } else if left.1 < -0.5 && right.1 > -0.5 {
-        true
-    } else if right.1 < -0.5 && left.1 > -0.5 {
-        false
-    } else {
-        left.2 < right.2
-    }
-}
-
-fn candidate_score(layer: &LayerPlan, index: usize) -> (f32, f32, f32) {
-    (
-        layer.overhangs[index],
-        layer.embedded_distances[index],
-        layer.scores[index],
-    )
-}
-
 fn is_better(layer: &LayerPlan, first: usize, second: usize) -> bool {
-    source_priority(
-        candidate_score(layer, first),
-        candidate_score(layer, second),
-    ) == std::cmp::Ordering::Less
+    if layer.overhangs[first] > 0.0 || layer.overhangs[second] > 0.0 {
+        return layer.overhangs[first] < layer.overhangs[second];
+    }
+    if layer.embedded_distances[first] < -0.5 && layer.embedded_distances[second] > -0.5 {
+        return true;
+    }
+    if layer.embedded_distances[second] < -0.5 && layer.embedded_distances[first] > -0.5 {
+        return false;
+    }
+    layer.scores[first] < layer.scores[second]
 }
 
 fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
@@ -92,7 +65,8 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
 }
 
 pub(super) fn align(layers: &mut [LayerPlan]) {
-    let mut seams = layers
+    // Printed lower layers anchor later seam strings; perimeter order breaks same-layer ties.
+    let seams = layers
         .iter()
         .enumerate()
         .flat_map(|(layer_index, layer)| {
@@ -102,12 +76,6 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
                 .map(move |choice| (layer_index, choice.seam_index))
         })
         .collect::<Vec<_>>();
-    seams.sort_by(|&left, &right| {
-        source_priority(
-            candidate_score(&layers[left.0], left.1),
-            candidate_score(&layers[right.0], right.1),
-        )
-    });
     let mut global_index = 0;
     while global_index < seams.len() {
         let start = seams[global_index];

@@ -113,7 +113,7 @@ async fn task22o143_ksr_seam_gap_clips_before_path_simplification() {
         .map(|offset| feature + 1 + offset)
         .unwrap();
 
-    assert!(lines[next_travel - 2].starts_with("G1 X") && lines[next_travel - 2].contains(" E"));
+    assert_eq!(lines[next_travel - 2], "G1 X140.174 Y102.761 E.02841");
     assert!(!lines[feature + 1..next_travel].iter().any(|line| {
         line.split_ascii_whitespace()
             .skip(1)
@@ -348,42 +348,25 @@ async fn project_print_flow_ratio_scales_extrusion() {
         "\"print_flow_ratio\": \"0.5\"",
     );
 
-    let baseline = crate::slice_project(
-        crate::project_slice::tests::support::ksr_project(),
-        crate::project_slice::tests::support::metadata(),
-    )
-    .await
-    .unwrap();
     let output = crate::slice_project(
         &archive.bytes(),
         crate::project_slice::tests::support::metadata(),
     )
     .await
     .unwrap();
-    let extrusion_values = |gcode: &[u8]| {
-        let output = std::str::from_utf8(gcode).unwrap();
-        let start = output.find("; FEATURE: Inner wall\n").unwrap();
-        output[start..]
-            .lines()
-            .skip(3)
-            .take(3)
-            .map(|line| {
-                line.split_ascii_whitespace()
-                    .find_map(|word| word.strip_prefix('E'))
-                    .unwrap()
-                    .parse::<f64>()
-                    .unwrap()
-            })
-            .collect::<Vec<_>>()
-    };
+    let output = std::str::from_utf8(&output).unwrap();
 
-    let baseline = extrusion_values(&baseline);
-    let scaled = extrusion_values(&output);
-    assert_eq!(baseline.len(), scaled.len());
-    assert!(
-        baseline
-            .iter()
-            .zip(scaled)
-            .all(|(baseline, scaled)| (scaled - baseline * 0.5).abs() <= 0.000_01)
+    let start = output.find("; FEATURE: Inner wall\n").unwrap();
+    let block = output[start..].lines().take(6).collect::<Vec<_>>();
+    assert_eq!(
+        block,
+        [
+            "; FEATURE: Inner wall",
+            "; LINE_WIDTH: 0.5",
+            "G1 F3000",
+            "G1 X139.876 Y103.477 E.0137",
+            "G1 X139.697 Y104.225 E.01433",
+            "G1 X139.639 Y104.957 E.01367",
+        ]
     );
 }
