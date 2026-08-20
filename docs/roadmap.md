@@ -7918,3 +7918,17 @@ remains reference line 1,149, extrusion `.02865` versus `.02866`. First-layer
 contour numerics, remaining Arachne topology, rectilinear geometry,
 travel/retraction, cooling, timing/M73, and exact G-code parity remain
 source-cited slices.
+
+## Task 22O.229: project print-flow ratio
+
+O229 ports OrcaSlicer 2.4.2 `GCode.cpp:6467-6513`. G-code motion now
+resolves the typed region `print_flow_ratio` and applies it to effective
+volumetric flow before converting volume to relative filament distance for
+both linear and fitted-arc paths. An option-driven complete-slice test changes
+only the 3MF ratio to `0.5` and verifies exact halved E words. The committed
+KSR fixture uses `print_flow_ratio = 1`, so its output remains at 273,634
+lines, 192,926 G1 moves, 8,658 extrusion arcs, and 5,108 wipe sequences. The
+first normalized motion difference remains reference line 1,149, extrusion
+`.02865` versus `.02866`; object-label identity, path-coordinate numerics,
+remaining Arachne and rectilinear geometry, travel/retraction, cooling,
+timing/M73, and exact G-code parity remain source-cited slices.
