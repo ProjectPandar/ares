@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::super::mesh::{TriangleMesh, Vec3};
 
 #[derive(Clone, Copy)]
@@ -259,7 +262,8 @@ fn first_hit_recursive(
     }
     match node.kind {
         NodeKind::Empty => unreachable!("a visited BVH node is initialized"),
-        NodeKind::Leaf(triangle) => triangle_hit(mesh, triangle, ray.origin, ray.direction),
+        NodeKind::Leaf(triangle) => triangle_hit(mesh, triangle, ray.origin, ray.direction)
+            .filter(|hit| f64::from(hit.distance) < limit),
         NodeKind::Branch => {
             let left = first_hit_recursive(nodes, mesh, node_index * 2 + 1, ray, limit);
             let next_limit = left.map_or(limit, |hit| f64::from(hit.distance));
