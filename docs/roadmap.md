@@ -7984,3 +7984,15 @@ pinned grouped root ordering was removed in favor of a complete-project output
 assertion. The next non-timing divergence is reference line 1,689, extrusion
 `.03177` versus `.03178`; rectilinear float geometry, timing/M73, remaining
 geometry and exact G-code parity remain source-cited slices.
+
+## Task 22O.245: rectilinear fractional offsets
+
+O245 rewrites OrcaSlicer 2.4.2 `libslic3r.h:91-94` and
+`Fill/FillBase.cpp:100-125` at the rectilinear surface seam. Scaled overlap
+offsets now retain the fractional source `float` instead of truncating through
+an integer coordinate, restoring the exact extrusion at reference line 1,689.
+The generated KSR file has 273,629 lines versus the reference's 269,330; timing
+remains 1h 46m 23s versus 1h 48m 58s. The next non-timing divergence is the
+reference arc center `J-1.229` versus `J-1.23`; fitted-arc coordinates,
+timing/M73, remaining geometry and exact G-code parity remain source-cited
+slices.

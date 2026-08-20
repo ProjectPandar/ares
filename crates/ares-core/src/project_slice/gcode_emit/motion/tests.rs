@@ -245,7 +245,7 @@ async fn first_layer_inner_perimeter_uses_source_aligned_seam() {
 }
 
 #[tokio::test]
-async fn first_layer_linear_extrusion_uses_project_geometry_length() {
+async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -263,6 +263,14 @@ async fn first_layer_linear_extrusion_uses_project_geometry_length() {
                 "G1 X141.657 Y101.026 E.02865",
                 "G1 X141.072 Y101.525 E.02865",
                 "G1 X140.573 Y102.11 E.02866",
+            ]
+    }));
+    assert!(lines.windows(3).any(|window| {
+        window
+            == [
+                "G1 X133.577 Y87.66 E.23863",
+                "G1 X132.813 Y87.283 E.03177",
+                "G1 X132.435 Y87.165 E.01478",
             ]
     }));
 }
