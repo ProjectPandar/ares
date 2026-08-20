@@ -1,9 +1,9 @@
-use super::{Estimate, MotionBlock, MotionState, planned_times, process};
+use super::{Estimate, MotionBlock, MotionState, ProcessorLimits, planned_times, process};
 
 #[test]
 fn inserts_progress_and_rewrites_time_fields() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n".to_vec();
-    let output = String::from_utf8(process(output, true, 0.0)).unwrap();
+    let output = String::from_utf8(process(output, true, 0.0, ProcessorLimits::default())).unwrap();
     assert!(output.contains("total estimated time: 1m 40s"), "{output}");
     assert!(output.contains("M73 P0 R"));
     assert!(output.contains("; model printing time:"));
@@ -15,16 +15,29 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(output, false, 0.0)).unwrap();
+    let output =
+        String::from_utf8(process(output, false, 0.0, ProcessorLimits::default())).unwrap();
 
     assert!(!output.lines().any(|line| line.starts_with("M73 P")));
     assert!(output.contains("total estimated time: 1m 40s"));
+}
+
+#[test]
+fn progress_updates_follow_motion_lines_not_delay_commands() {
+    let output = b"M73 P0 R0\nT0\nG1 X1 F60\nM73 P100 R0\n".to_vec();
+
+    let output =
+        String::from_utf8(process(output, true, 120.0, ProcessorLimits::default())).unwrap();
+
+    assert!(output.contains("T0\nG1 X1 F60\nM73 P"), "{output}");
+    assert!(!output.contains("T0\nM73 P"), "{output}");
 }
 #[test]
 fn first_layer_time_ends_at_first_change_layer() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X600 F3600\n; CHANGE_LAYER\nG1 X600 F3600\n; CHANGE_LAYER\nM73 P100 R0\n".to_vec();
 
-    let output = String::from_utf8(process(output, false, 0.0)).unwrap();
+    let output =
+        String::from_utf8(process(output, false, 0.0, ProcessorLimits::default())).unwrap();
 
     assert!(
         output.contains("estimated first layer printing time (normal mode) = 10s"),
@@ -66,7 +79,8 @@ fn machine_max_feedrate_limits_extrusion_time() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E60 F3600\nM73 P100 R0\n"
         .to_vec();
 
-    let output = String::from_utf8(process(output, false, 0.0)).unwrap();
+    let output =
+        String::from_utf8(process(output, false, 0.0, ProcessorLimits::default())).unwrap();
 
     assert!(output.contains("total estimated time: 2s"), "{output}");
 }
@@ -81,6 +95,17 @@ fn machine_max_acceleration_limits_motion_block() {
     let block = state.motion("G1 E10 F3600").unwrap();
 
     assert_eq!(block.acceleration, 100.0);
+}
+
+#[test]
+fn m204_updates_respect_machine_acceleration_envelopes() {
+    let mut state = MotionState::with_acceleration_limits(20_000.0, 30_000.0, 9_000.0);
+
+    state.motion("M204 P20000 R30000 T20000");
+
+    assert_eq!(state.acceleration, 20_000.0);
+    assert_eq!(state.retract_acceleration, 30_000.0);
+    assert_eq!(state.travel_acceleration, 9_000.0);
 }
 
 #[test]
@@ -119,7 +144,7 @@ fn isolated_block_uses_firmware_safe_entry_speed() {
 fn synchronization_command_flushes_firmware_planner() {
     let lines = ["M204 S1000", "G1 X600 F3600", "M1", "G1 X1200 F3600"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(&lines, 0.0);
+    let estimate = Estimate::from_lines(&lines, 0.0, ProcessorLimits::default());
 
     assert!(
         (estimate.total - 20.0867).abs() < 1e-9,
@@ -132,7 +157,7 @@ fn synchronization_command_flushes_firmware_planner() {
 fn initial_tool_selection_adds_machine_load_time_once() {
     let lines = ["T0 H-1", "T0 H-1"].map(str::to_owned);
 
-    let estimate = Estimate::from_lines(&lines, 29.0);
+    let estimate = Estimate::from_lines(&lines, 29.0, ProcessorLimits::default());
 
     assert_eq!(estimate.total, 29.0);
 }

@@ -224,6 +224,35 @@ pub(super) fn emit(
             .gcode
             .machine_load_filament_time
             .0,
+        processor::ProcessorLimits {
+            print_acceleration: first(
+                &traversal
+                    .resolved
+                    .views
+                    .full
+                    .printer
+                    .machine
+                    .machine_max_acceleration_extruding,
+            ),
+            retract_acceleration: first(
+                &traversal
+                    .resolved
+                    .views
+                    .full
+                    .printer
+                    .machine
+                    .machine_max_acceleration_retracting,
+            ),
+            travel_acceleration: first(
+                &traversal
+                    .resolved
+                    .views
+                    .full
+                    .printer
+                    .machine
+                    .machine_max_acceleration_travel,
+            ),
+        },
     ))
 }
 fn format_processor_float(value: f64) -> String {

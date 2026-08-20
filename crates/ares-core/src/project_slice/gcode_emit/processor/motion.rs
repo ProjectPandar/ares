@@ -14,6 +14,9 @@ pub(super) struct MotionState {
     pub(super) acceleration: f64,
     pub(super) retract_acceleration: f64,
     pub(super) travel_acceleration: f64,
+    pub(super) max_print_acceleration: f64,
+    pub(super) max_retract_acceleration: f64,
+    pub(super) max_travel_acceleration: f64,
     pub(super) max_acceleration: [f64; 4],
     pub(super) max_feedrate: [f64; 4],
     pub(super) jerk: [f64; 4],
@@ -30,6 +33,9 @@ impl Default for MotionState {
             acceleration: 0.0,
             retract_acceleration: 0.0,
             travel_acceleration: 0.0,
+            max_print_acceleration: 0.0,
+            max_retract_acceleration: 0.0,
+            max_travel_acceleration: 0.0,
             max_acceleration: [0.0; 4],
             max_feedrate: [0.0; 4],
             jerk: [9.0, 9.0, 3.0, 2.5],
@@ -49,6 +55,15 @@ pub(super) struct MotionBlock {
 }
 
 impl MotionState {
+    pub(super) fn with_acceleration_limits(print: f64, retract: f64, travel: f64) -> Self {
+        Self {
+            max_print_acceleration: print,
+            max_retract_acceleration: retract,
+            max_travel_acceleration: travel,
+            ..Self::default()
+        }
+    }
+
     pub(super) fn motions(&mut self, code: &str) -> Vec<MotionBlock> {
         let start = self.position;
         let start_e = self.e_position;
@@ -102,19 +117,31 @@ impl MotionState {
             self.update_axis_limits(code, true);
             return None;
         }
-        if code.starts_with("M203") {
-            self.update_axis_limits(code, false);
-            return None;
-        }
         if code.starts_with("M204") {
             if let Some(value) = word(code, 'S') {
-                self.acceleration = value;
-                self.travel_acceleration = value;
-                self.retract_acceleration = word(code, 'T').unwrap_or(self.retract_acceleration);
+                self.acceleration = clamp(value, self.max_print_acceleration);
+                self.travel_acceleration = clamp(value, self.max_travel_acceleration);
+                self.retract_acceleration = clamped_word(
+                    code,
+                    'T',
+                    self.retract_acceleration,
+                    self.max_retract_acceleration,
+                );
             } else {
-                self.acceleration = word(code, 'P').unwrap_or(self.acceleration);
-                self.retract_acceleration = word(code, 'R').unwrap_or(self.retract_acceleration);
-                self.travel_acceleration = word(code, 'T').unwrap_or(self.travel_acceleration);
+                self.acceleration =
+                    clamped_word(code, 'P', self.acceleration, self.max_print_acceleration);
+                self.retract_acceleration = clamped_word(
+                    code,
+                    'R',
+                    self.retract_acceleration,
+                    self.max_retract_acceleration,
+                );
+                self.travel_acceleration = clamped_word(
+                    code,
+                    'T',
+                    self.travel_acceleration,
+                    self.max_travel_acceleration,
+                );
             }
             return None;
         }
@@ -299,6 +326,18 @@ impl MotionState {
         for (axis, value) in position.into_iter().enumerate() {
             self.position[axis] = value.unwrap_or(self.position[axis]);
         }
+    }
+}
+
+fn clamped_word(code: &str, letter: char, current: f64, maximum: f64) -> f64 {
+    word(code, letter).map_or(current, |value| clamp(value, maximum))
+}
+
+fn clamp(value: f64, maximum: f64) -> f64 {
+    if maximum > 0.0 {
+        value.min(maximum)
+    } else {
+        value
     }
 }
 

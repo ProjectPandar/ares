@@ -7932,3 +7932,17 @@ first normalized motion difference remains reference line 1,149, extrusion
 `.02865` versus `.02866`; object-label identity, path-coordinate numerics,
 remaining Arachne and rectilinear geometry, travel/retraction, cooling,
 timing/M73, and exact G-code parity remain source-cited slices.
+
+## Task 22O.230: processor acceleration envelopes
+
+O230 ports OrcaSlicer 2.4.2 `GCode/GCodeProcessor.cpp:2108-2122` and
+`5849-5887`. The post-processor now receives the typed print, retract, and
+travel acceleration ceilings and clamps later M204 state updates without
+altering emitted commands. Progress updates are emitted only after G0/G1/G2/G3
+motions, matching the source export pass rather than reacting directly to a
+delay command. KSR total timing rises from 1h 45m 43s to 1h 46m 24s while the
+source is 1h 48m 58s; first-layer timing remains exact at 5m 8s. The fixture
+retains 273,634 lines, 192,926 G1 moves, 8,658 extrusion arcs, 5,108 wipe
+sequences, and 189 progress lines versus the source's 190. Centripetal planner
+acceleration, remaining float timing arithmetic, geometry, cooling, object-ID
+instability, and exact G-code parity remain source-cited slices.

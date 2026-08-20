@@ -5,14 +5,22 @@ use delays::command_delay;
 use motion::{MotionBlock, MotionState, planned_times, word};
 use time::{duration, minutes};
 
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(super) struct ProcessorLimits {
+    pub(super) print_acceleration: f64,
+    pub(super) retract_acceleration: f64,
+    pub(super) travel_acceleration: f64,
+}
+
 pub(super) fn process(
     mut output: Vec<u8>,
     emit_progress: bool,
     machine_load_filament_time: f64,
+    limits: ProcessorLimits,
 ) -> Vec<u8> {
     let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
-    let estimate = Estimate::from_lines(&lines, machine_load_filament_time);
+    let estimate = Estimate::from_lines(&lines, machine_load_filament_time, limits);
     let mut result = String::with_capacity(text.len() + text.len() / 100);
     let mut last_progress = None;
     let first_marker = lines
@@ -54,32 +62,39 @@ pub(super) fn process(
             ));
             continue;
         }
-        if index < first_marker {
-            result.push_str(line);
-            result.push('\n');
-            continue;
-        }
-        if emit_progress {
-            let elapsed = estimate.elapsed_at(index);
-            let percent = if estimate.total > 0.0 {
-                ((elapsed / estimate.total) * 100.0)
-                    .floor()
-                    .clamp(0.0, 99.0) as u64
-            } else {
-                0
-            };
-            let remaining = minutes(estimate.total - elapsed);
-            if last_progress != Some((percent, remaining)) {
-                last_progress = Some((percent, remaining));
-                result.push_str(&format!("M73 P{percent} R{remaining}\n"));
-            }
-        }
         result.push_str(line);
         result.push('\n');
+        if index < first_marker || !emit_progress || !is_progress_motion(line) {
+            continue;
+        }
+        let elapsed = estimate.elapsed_at(index + 1);
+        let percent = if estimate.total > 0.0 {
+            ((elapsed / estimate.total) * 100.0)
+                .floor()
+                .clamp(0.0, 99.0) as u64
+        } else {
+            0
+        };
+        let remaining = minutes(estimate.total - elapsed);
+        if last_progress != Some((percent, remaining)) {
+            last_progress = Some((percent, remaining));
+            result.push_str(&format!("M73 P{percent} R{remaining}\n"));
+        }
     }
     output.clear();
     output.extend_from_slice(result.as_bytes());
     output
+}
+
+fn is_progress_motion(line: &str) -> bool {
+    matches!(
+        line.split(';')
+            .next()
+            .unwrap_or_default()
+            .split_whitespace()
+            .next(),
+        Some("G0" | "G1" | "G2" | "G3")
+    )
 }
 
 struct Estimate {
@@ -88,9 +103,17 @@ struct Estimate {
 }
 
 impl Estimate {
-    fn from_lines(lines: &[String], machine_load_filament_time: f64) -> Self {
+    fn from_lines(
+        lines: &[String],
+        machine_load_filament_time: f64,
+        limits: ProcessorLimits,
+    ) -> Self {
         let mut blocks = Vec::new();
-        let mut state = MotionState::default();
+        let mut state = MotionState::with_acceleration_limits(
+            limits.print_acceleration,
+            limits.retract_acceleration,
+            limits.travel_acceleration,
+        );
         let mut delays = vec![0.0; lines.len()];
         let mut flushes = Vec::new();
         let mut measure_g29_time = false;
