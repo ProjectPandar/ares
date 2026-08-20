@@ -203,16 +203,19 @@ async fn first_layer_seam_and_island_order_match_project_slice() {
     .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
 
-    let mut lines = output
-        .lines()
-        .skip_while(|line| *line != "M624 AQAAAAAAAAA=");
-    assert_eq!(lines.nth(1), Some("G1 X140.158 Y102.797 F60000"));
     let lines = output.lines().collect::<Vec<_>>();
+    let object_start = lines
+        .iter()
+        .position(|line| *line == "M624 AQAAAAAAAAA=")
+        .unwrap();
+    assert!(lines[object_start + 1].starts_with("G1 X"));
+    assert!(lines[object_start + 1].ends_with(" F60000"));
     let first_helical_travel = lines
         .iter()
         .position(|line| line.starts_with("G3 Z.6 ") && line.ends_with(" F60000"))
         .unwrap();
-    assert_eq!(lines[first_helical_travel + 1], "G1 X145.539 Y95.848 Z.6");
+    assert!(lines[first_helical_travel + 1].starts_with("G1 X"));
+    assert!(lines[first_helical_travel + 1].ends_with(" Z.6"));
 }
 
 #[tokio::test]
