@@ -58,8 +58,8 @@ impl CubicSpline {
             let distance = (segment_start - point) / self.segment_size;
             let parameter = segment.clamp(0, self.x.len() as i32 - 1) as usize;
             let weight = cubic_kernel(distance);
-            result.0 += weight * self.x[parameter];
-            result.1 += weight * self.y[parameter];
+            result.0 = weight.mul_add(self.x[parameter], result.0);
+            result.1 = weight.mul_add(self.y[parameter], result.1);
         }
         result
     }
@@ -72,11 +72,13 @@ fn cubic_kernel(mut value: f32) -> f32 {
     }
     if value <= 1.0 {
         let square = value * value;
-        return 4.0 / 6.0 - square + 3.0 / 6.0 * square * value;
+        let cube = square * value;
+        return 4.0 / 6.0 - square + (3.0 / 6.0) * cube;
     }
     value -= 1.0;
     let square = value * value;
-    1.0 / 6.0 - 3.0 / 6.0 * value + 3.0 / 6.0 * square - square * value / 6.0
+    let cube = square * value;
+    1.0 / 6.0 - (3.0 / 6.0) * value + (3.0 / 6.0) * square - (1.0 / 6.0) * cube
 }
 
 fn largest_corner_entry(matrix: &[Vec<f32>], pivot: usize) -> (usize, usize, f32) {
