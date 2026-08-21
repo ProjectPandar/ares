@@ -4,8 +4,6 @@ mod cleanup;
 pub(crate) use cleanup::remove_sticks_from_polygon;
 use cleanup::{clean_expolygon, clean_paths};
 
-use super::fast_round_up;
-
 use crate::geometry::{
     ClipperError, ExPolygon, JoinType, Point, Polygon, offset_expolygon_refs_paths, offset_paths,
 };
@@ -264,9 +262,11 @@ fn rotate_expolygon(expolygon: &ExPolygon, angle: f64) -> Result<ExPolygon, Clip
     ))
 }
 
+// Source MultiPoint::rotate rounds with std::round (half away from zero), not
+// Clipper's floor(x+0.5); negative half-values land one unit lower.
 fn checked_point(x: f64, y: f64) -> Result<Point, ClipperError> {
-    let x = fast_round_up(x);
-    let y = fast_round_up(y);
+    let x = x.round();
+    let y = y.round();
     if !x.is_finite()
         || !y.is_finite()
         || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&x)
