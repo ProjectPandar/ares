@@ -305,11 +305,11 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
     assert!(lines.windows(5).any(|window| {
         window
             == [
-                "G1 X140.625 Y102.983 F60000",
+                "G1 X140.613 Y103.006 F60000",
                 "M204 S500",
                 "; FEATURE: Outer wall",
                 "G1 F3000",
-                "G1 X140.618 Y102.994 E.00049",
+                "G1 X140.353 Y103.632 E.02524",
             ]
     }));
     assert!(lines.windows(3).any(|window| {

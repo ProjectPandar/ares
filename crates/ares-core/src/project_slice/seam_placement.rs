@@ -80,13 +80,15 @@ fn apply_objects(
         if !aligned[object_index] {
             continue;
         }
+        // Upstream `slice_z` is a double accumulated by the slicing loop; accumulate
+        // in f64 and cast per layer so candidate Z matches OrcaSlicer bit-for-bit.
         let layer_zs = traversal.objects[object_index]
             .records
             .iter()
-            .scan(0.0_f32, |print_z, record| {
-                let height = record.as_ref().map_or(0.0, |record| record.layer_height) as f32;
+            .scan(0.0_f64, |print_z, record| {
+                let height = record.as_ref().map_or(0.0, |record| record.layer_height);
                 *print_z += height;
-                Some(*print_z - 0.5 * height)
+                Some((*print_z - 0.5 * height) as f32)
             })
             .collect::<Vec<_>>();
         let mut plans = alignment::prepare(
