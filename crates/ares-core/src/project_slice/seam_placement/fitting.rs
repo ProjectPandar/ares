@@ -133,17 +133,18 @@ fn clip_arc_start(
 }
 
 fn project_to_circle(arc: FittedArc, point: Point3, scale: CoordinateScale) -> Option<Point3> {
-    let x = scale.unscale(point.x);
-    let y = scale.unscale(point.y);
-    let dx = x - arc.center.0;
-    let dy = y - arc.center.1;
+    let center_x = (arc.center.0 / scale.factor()).round() as i64;
+    let center_y = (arc.center.1 / scale.factor()).round() as i64;
+    let dx = (point.x - center_x) as f64;
+    let dy = (point.y - center_y) as f64;
     let distance = dx.hypot(dy);
     if distance <= f64::EPSILON {
         return None;
     }
+    let radius = arc.radius / scale.factor();
     Some(Point3 {
-        x: ((arc.center.0 + dx * arc.radius / distance) / scale.factor()).round() as i64,
-        y: ((arc.center.1 + dy * arc.radius / distance) / scale.factor()).round() as i64,
+        x: center_x + (dx * radius / distance) as i64,
+        y: center_y + (dy * radius / distance) as i64,
         z: point.z,
     })
 }
