@@ -3,7 +3,7 @@ use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Point, Polyline}
 use super::segments::{populate_vertical_lines, prepare_rectilinear_contours};
 use super::{
     chain_monotonic_regions, compute_region_costs, connect_contours, connect_region_neighbors,
-    emit_monotonic_polylines, fast_round_up, generate_monotonic_regions, insert_phony_outer_pairs,
+    emit_monotonic_polylines, generate_monotonic_regions, insert_phony_outer_pairs,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -161,9 +161,11 @@ fn rotate_polyline(polyline: Polyline, angle: f64) -> Result<Polyline, ClipperEr
     Ok(Polyline::new(output))
 }
 
+// MultiPoint::rotate rounds with std::round (half away from zero); the rotate-back
+// of fill polylines must match it, especially at negative half boundaries.
 fn checked_point(x: f64, y: f64) -> Result<Point, ClipperError> {
-    let x = fast_round_up(x);
-    let y = fast_round_up(y);
+    let x = x.round();
+    let y = y.round();
     if !x.is_finite()
         || !y.is_finite()
         || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&x)
