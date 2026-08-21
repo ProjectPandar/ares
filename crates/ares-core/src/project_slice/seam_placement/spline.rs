@@ -81,78 +81,11 @@ fn cubic_kernel(mut value: f32) -> f32 {
     1.0 / 6.0 - (3.0 / 6.0) * value + (3.0 / 6.0) * square - (1.0 / 6.0) * cube
 }
 
-fn largest_corner_entry(matrix: &[Vec<f32>], pivot: usize) -> (usize, usize, f32) {
-    let mut largest = (pivot, pivot, matrix[pivot][pivot].abs());
-    for column in pivot..matrix[0].len() {
-        for (row, values) in matrix.iter().enumerate().skip(pivot) {
-            let value = values[column].abs();
-            if value > largest.2 {
-                largest = (row, column, value);
-            }
-        }
-    }
-    largest
-}
-
-fn swap_row_tails(matrix: &mut [Vec<f32>], pivot: usize, other: usize) {
-    let (before_other, from_other) = matrix.split_at_mut(other);
-    for (left, right) in before_other[pivot][pivot..]
-        .iter_mut()
-        .zip(&mut from_other[0][pivot..])
-    {
-        std::mem::swap(left, right);
-    }
-}
-
-fn apply_householder_left(matrix: &mut [Vec<f32>], pivot: usize, tau: f32) {
-    if tau == 0.0 {
-        return;
-    }
-    let parameter_count = matrix[0].len();
-    for column in pivot + 1..parameter_count {
-        let tail_projection = matrix[pivot + 1..]
-            .iter()
-            .map(|row| row[pivot] * row[column])
-            .sum::<f32>();
-        let projection = (tail_projection + matrix[pivot][column]) * tau;
-        matrix[pivot][column] -= projection;
-        for row in &mut matrix[pivot + 1..] {
-            row[column] -= row[pivot] * projection;
-        }
-    }
-}
-
 fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
-    let row_count = matrix.len();
     let parameter_count = matrix[0].len();
-    let diagonal_count = row_count.min(parameter_count);
     let mut coefficients = matrix.to_vec();
-    let mut row_transpositions = vec![0; diagonal_count];
-    let mut permutation = (0..parameter_count).collect::<Vec<_>>();
-    let mut householder = vec![0.0_f32; diagonal_count];
-    let mut nonzero_pivots = diagonal_count;
-    let mut biggest = 0.0_f32;
-
-    for pivot in 0..diagonal_count {
-        let (maximum_row, maximum_column, biggest_in_corner) =
-            largest_corner_entry(&coefficients, pivot);
-        if pivot == 0 {
-            biggest = biggest_in_corner;
-        } else if biggest_in_corner <= biggest * f32::EPSILON * diagonal_count as f32 {
-            nonzero_pivots = pivot;
-            break;
-        }
-        row_transpositions[pivot] = maximum_row;
-        if maximum_row != pivot {
-            swap_row_tails(&mut coefficients, pivot, maximum_row);
-        }
-        if maximum_column != pivot {
-            for row in &mut coefficients {
-                row.swap(pivot, maximum_column);
-            }
-            permutation.swap(pivot, maximum_column);
-        }
-
+    let mut householder = vec![0.0_f32; parameter_count];
+    for pivot in 0..parameter_count {
         let tail_squared_norm = coefficients[pivot + 1..]
             .iter()
             .map(|row| row[pivot] * row[pivot])
@@ -176,24 +109,10 @@ fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
         };
         householder[pivot] = tau;
         coefficients[pivot][pivot] = beta;
-
         apply_householder_left(&mut coefficients, pivot, tau);
     }
-
-    let threshold = coefficients
-        .iter()
-        .enumerate()
-        .take(nonzero_pivots)
-        .map(|(index, row)| row[index].abs())
-        .fold(0.0_f32, f32::max)
-        * f32::EPSILON
-        * row_count.max(parameter_count) as f32;
-    let rank = (0..nonzero_pivots)
-        .filter(|&index| coefficients[index][index].abs() > threshold)
-        .count();
     let mut projected = observed.to_vec();
-    for pivot in 0..rank {
-        projected.swap(pivot, row_transpositions[pivot]);
+    for pivot in 0..parameter_count {
         let tail_projection = coefficients[pivot + 1..]
             .iter()
             .zip(&projected[pivot + 1..])
@@ -208,19 +127,32 @@ fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
             *value -= row[pivot] * projection;
         }
     }
-
     let mut solution = vec![0.0_f32; parameter_count];
-    for row in (0..rank).rev() {
-        let remainder = (row + 1..rank)
+    for row in (0..parameter_count).rev() {
+        let remainder = (row + 1..parameter_count)
             .map(|column| coefficients[row][column] * solution[column])
             .sum::<f32>();
         solution[row] = (projected[row] - remainder) / coefficients[row][row];
     }
-    let mut unpermuted = vec![0.0; parameter_count];
-    for (column, source) in permutation.into_iter().enumerate() {
-        unpermuted[source] = solution[column];
+    solution
+}
+
+fn apply_householder_left(matrix: &mut [Vec<f32>], pivot: usize, tau: f32) {
+    if tau == 0.0 {
+        return;
     }
-    unpermuted
+    let parameter_count = matrix[0].len();
+    for column in pivot + 1..parameter_count {
+        let tail_projection = matrix[pivot + 1..]
+            .iter()
+            .map(|row| row[pivot] * row[column])
+            .sum::<f32>();
+        let projection = (tail_projection + matrix[pivot][column]) * tau;
+        matrix[pivot][column] -= projection;
+        for row in &mut matrix[pivot + 1..] {
+            row[column] -= row[pivot] * projection;
+        }
+    }
 }
 
 #[cfg(test)]
