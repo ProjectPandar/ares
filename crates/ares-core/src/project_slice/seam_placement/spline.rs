@@ -257,7 +257,12 @@ fn swap_row_tail(qr: &mut [Vec<f32>], k: usize, pivot_row: usize, cols: usize) {
 // makeHouseholderInPlace on column k: beta = sqrt(c0*c0 + tailSqNorm) with the two
 // products rounded separately, matching Eigen's expression order. Returns tau.
 fn eliminate_column(qr: &mut [Vec<f32>], k: usize, max_pivot: &mut f32) -> f32 {
-    let tail_squared_norm = sse_dot(qr[k + 1..].iter().map(|row| row[k] * row[k]));
+    // Eigen's squaredNorm on the column segment reduces sequentially (no packets
+    // for this expression); verified bit-exact against the oracle trace.
+    let tail_squared_norm = qr[k + 1..]
+        .iter()
+        .map(|row| row[k] * row[k])
+        .fold(0.0_f32, |sum, square| sum + square);
     let leading = qr[k][k];
     let mut beta = (leading * leading + tail_squared_norm).sqrt();
     if leading >= 0.0 {
