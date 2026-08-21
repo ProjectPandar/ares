@@ -332,6 +332,16 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
             "G1 X112.393 Y95.344 E-.01028",
         ]
     );
+    assert!(lines.windows(5).any(|window| {
+        window
+            == [
+                "; WIPE_START",
+                "G1 X145.621 Y94.523 E-.1318",
+                "G1 X145.756 Y94.862 E-.14599",
+                "G1 X145.814 Y95.162 E-.12221",
+                "; WIPE_END",
+            ]
+    }));
 }
 
 #[tokio::test]

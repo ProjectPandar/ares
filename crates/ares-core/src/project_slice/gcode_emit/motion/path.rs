@@ -202,6 +202,13 @@ pub(super) fn emit(
         });
         return;
     }
+    let wipe_points = local_points
+        .iter()
+        .map(|&(x, y)| arc::Point {
+            x: x + state.offset.0,
+            y: y + state.offset.1,
+        })
+        .collect::<Vec<_>>();
     fan::update_for_constant_path(output, properties, state);
     let arc_points = points
         .iter()
@@ -254,11 +261,12 @@ pub(super) fn emit(
                 );
                 state.x = arc_segment.end.x;
                 state.y = arc_segment.end.y;
+                state.wipe_start = Some(arc_segment.end);
             }
             arc::Segment::Arc(_) => {}
         }
     }
-    state.wipe_path = arc_points.into_iter().rev().collect();
+    state.wipe_path = wipe_points.into_iter().rev().collect();
 }
 
 fn emit_linear_segment(

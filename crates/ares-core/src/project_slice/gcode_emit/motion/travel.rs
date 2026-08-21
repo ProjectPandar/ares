@@ -77,42 +77,52 @@ fn wipe_moves(state: &EmitState) -> Vec<(arc::Point, f64)> {
     if !state.options.wipe || state.options.wipe_distance <= 0.0 {
         return Vec::new();
     }
-    let mut output = Vec::new();
-    let mut remaining = state.options.wipe_distance / state.scale_factor;
     let start = state.wipe_start.unwrap_or(arc::Point {
         x: state.x,
         y: state.y,
     });
-    let mut current = scaled_position(start, state);
-    for &end in state.wipe_path.iter().skip(1) {
-        let end = scaled_position(end, state);
-        let dx = (end.0 - current.0) as f64;
-        let dy = (end.1 - current.1) as f64;
+    let mut points = Vec::with_capacity(state.wipe_path.len());
+    points.push(scaled_position(start, state));
+    points.extend(
+        state
+            .wipe_path
+            .iter()
+            .skip(1)
+            .map(|&point| scaled_position(point, state)),
+    );
+    let total_length = points
+        .windows(2)
+        .map(|segment| {
+            let dx = (segment[1].0 - segment[0].0) as f64;
+            let dy = (segment[1].1 - segment[0].1) as f64;
+            dx.hypot(dy)
+        })
+        .sum::<f64>();
+    let mut clip = total_length - state.options.wipe_distance / state.scale_factor;
+    while clip > 0.0 {
+        let last = points.pop().unwrap();
+        let previous = *points.last().unwrap();
+        let dx = (previous.0 - last.0) as f64;
+        let dy = (previous.1 - last.1) as f64;
         let length = dx.hypot(dy);
-        if length <= f64::EPSILON {
-            current = end;
-            continue;
-        }
-        let target = if remaining < length {
-            let ratio = remaining / length;
-            (
-                (current.0 as f64 + dx * ratio) as i64,
-                (current.1 as f64 + dy * ratio) as i64,
-            )
-        } else {
-            end
-        };
-        let used_x = (target.0 - current.0) as f64;
-        let used_y = (target.1 - current.1) as f64;
-        let used = used_x.hypot(used_y);
-        output.push((unscaled_position(target, state), used * state.scale_factor));
-        if remaining <= length {
+        if length > clip {
+            points.push((
+                (last.0 as f64 + dx * (clip / length)) as i64,
+                (last.1 as f64 + dy * (clip / length)) as i64,
+            ));
             break;
         }
-        remaining -= length;
-        current = end;
+        clip -= length;
     }
-    output
+    points
+        .windows(2)
+        .filter_map(|segment| {
+            let dx = (segment[1].0 - segment[0].0) as f64;
+            let dy = (segment[1].1 - segment[0].1) as f64;
+            let length = dx.hypot(dy) * state.scale_factor;
+            (length > f64::EPSILON).then(|| (unscaled_position(segment[1], state), length))
+        })
+        .collect()
 }
 
 fn scaled_position(point: arc::Point, state: &EmitState) -> (i64, i64) {
