@@ -79,18 +79,17 @@ fn cubic_kernel(mut value: f32) -> f32 {
     1.0 / 6.0 - 3.0 / 6.0 * value + 3.0 / 6.0 * square - square * value / 6.0
 }
 
-fn maximum_norm_column(matrix: &[Vec<f32>], pivot: usize, parameter_count: usize) -> usize {
-    (pivot..parameter_count)
-        .max_by(|&left, &right| {
-            let norm = |column| {
-                matrix[pivot..]
-                    .iter()
-                    .map(|row| row[column] * row[column])
-                    .sum::<f32>()
-            };
-            norm(left).total_cmp(&norm(right))
-        })
-        .expect("a QR pivot has at least one remaining column")
+fn largest_corner_entry(matrix: &[Vec<f32>], pivot: usize) -> (usize, usize, f32) {
+    let mut largest = (pivot, pivot, matrix[pivot][pivot].abs());
+    for column in pivot..matrix[0].len() {
+        for (row, values) in matrix.iter().enumerate().skip(pivot) {
+            let value = values[column].abs();
+            if value > largest.2 {
+                largest = (row, column, value);
+            }
+        }
+    }
+    largest
 }
 
 fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
@@ -100,9 +99,21 @@ fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
     let mut coefficients = matrix.to_vec();
     let mut projected = observed.to_vec();
     let mut permutation = (0..parameter_count).collect::<Vec<_>>();
+    let mut rank = diagonal_count;
+    let mut first_pivot = 0.0_f32;
 
     for pivot in 0..diagonal_count {
-        let maximum_column = maximum_norm_column(&coefficients, pivot, parameter_count);
+        let (maximum_row, maximum_column, biggest) = largest_corner_entry(&coefficients, pivot);
+        if pivot == 0 {
+            first_pivot = biggest;
+        } else if biggest <= first_pivot * f32::EPSILON * diagonal_count as f32 {
+            rank = pivot;
+            break;
+        }
+        if maximum_row != pivot {
+            coefficients.swap(pivot, maximum_row);
+            projected.swap(pivot, maximum_row);
+        }
         if maximum_column != pivot {
             for row in &mut coefficients {
                 row.swap(pivot, maximum_column);
@@ -147,8 +158,8 @@ fn solve_least_squares(matrix: &[Vec<f32>], observed: &[f32]) -> Vec<f32> {
     }
 
     let mut solution = vec![0.0_f32; parameter_count];
-    for row in (0..diagonal_count).rev() {
-        let remainder = (row + 1..parameter_count)
+    for row in (0..rank).rev() {
+        let remainder = (row + 1..rank)
             .map(|column| coefficients[row][column] * solution[column])
             .sum::<f32>();
         solution[row] = (projected[row] - remainder) / coefficients[row][row];

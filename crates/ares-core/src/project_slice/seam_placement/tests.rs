@@ -79,7 +79,6 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
                     .map(|(x, y)| Point3 { x, y, z: 200_000 })
                     .collect(),
                 fitting: Vec::new(),
-                candidate_points: Vec::new(),
             },
             role: ExtrusionRole::ExternalPerimeter,
             can_reverse: true,
@@ -119,7 +118,6 @@ fn split_within_source_epsilon_snaps_to_existing_vertex() {
                     .map(|(x, y)| Point3 { x, y, z: 200_000 })
                     .collect(),
                 fitting: Vec::new(),
-                candidate_points: Vec::new(),
             },
             role: ExtrusionRole::ExternalPerimeter,
             can_reverse: true,

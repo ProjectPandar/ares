@@ -45,7 +45,7 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                     .iter_mut()
                     .flat_map(|entity| &mut entity.extrusion_loop.paths)
                 {
-                    simplify_path3(path, scale, tolerance, true);
+                    simplify_path3(path, scale, tolerance);
                 }
             }
             IslandPrintEntity::Fill(collection) => {
@@ -69,10 +69,10 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                 }
             }
             IslandPrintEntity::Thin(entity) => match entity {
-                GapFillEntity::Path(path) => simplify_path3(path, scale, tolerance, false),
+                GapFillEntity::Path(path) => simplify_path3(path, scale, tolerance),
                 GapFillEntity::Loop(paths) => {
                     for path in paths {
-                        simplify_path3(path, scale, tolerance, false);
+                        simplify_path3(path, scale, tolerance);
                     }
                 }
             },
@@ -95,12 +95,7 @@ fn scaled_point((x, y): (f64, f64), scale: CoordinateScale) -> Point {
     )
 }
 
-fn simplify_path3(
-    path: &mut ExtrusionPath,
-    scale: CoordinateScale,
-    tolerance: f64,
-    preserve_candidate_points: bool,
-) {
+fn simplify_path3(path: &mut ExtrusionPath, scale: CoordinateScale, tolerance: f64) {
     let z = path.polyline.points[0].z;
     let source_points = std::mem::take(&mut path.polyline.points);
     let mut points = source_points
@@ -118,11 +113,6 @@ fn simplify_path3(
             })
             .collect(),
         fitting,
-        candidate_points: if preserve_candidate_points {
-            source_points
-        } else {
-            Vec::new()
-        },
     };
 }
 

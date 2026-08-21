@@ -91,7 +91,6 @@ pub(super) fn path(
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y, z)| Point3 { x, y, z }).collect(),
             fitting: Vec::new(),
-            candidate_points: Vec::new(),
         },
         role: ExtrusionRole::Perimeter,
         can_reverse: true,

@@ -126,7 +126,6 @@ fn gap_extrusion_path(first: i64, last: i64) -> ExtrusionPath {
                 },
             ],
             fitting: Vec::new(),
-            candidate_points: Vec::new(),
         },
         role: PerimeterRole::GapFill,
         can_reverse: true,

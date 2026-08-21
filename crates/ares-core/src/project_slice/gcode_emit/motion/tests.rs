@@ -245,6 +245,35 @@ async fn first_layer_inner_perimeter_uses_source_aligned_seam() {
 }
 
 #[tokio::test]
+async fn first_layer_second_inner_perimeter_uses_fitted_aligned_seam() {
+    let output = crate::slice_project(
+        crate::project_slice::tests::support::ksr_project(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let layer_changes = lines
+        .iter()
+        .enumerate()
+        .filter(|(_, line)| **line == "; CHANGE_LAYER")
+        .map(|(index, _)| index)
+        .take(2)
+        .collect::<Vec<_>>();
+    let destination = lines[layer_changes[0]..layer_changes[1]]
+        .iter()
+        .enumerate()
+        .filter(|(_, line)| line.starts_with("G3 Z") && line.ends_with(" F60000"))
+        .nth(11)
+        .map(|(index, _)| lines[layer_changes[0] + index + 1]);
+
+    assert_eq!(destination, Some("G1 X140.545 Y90.801 Z.6"));
+}
+
+#[tokio::test]
 async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),

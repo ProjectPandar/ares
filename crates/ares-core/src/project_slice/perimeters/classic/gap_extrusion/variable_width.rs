@@ -205,7 +205,6 @@ fn push_group(
             polyline: Polyline3 {
                 points,
                 fitting: Vec::new(),
-                candidate_points: Vec::new(),
             },
             role,
             can_reverse: true,

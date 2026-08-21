@@ -132,7 +132,6 @@ fn path(
                 })
                 .collect(),
             fitting: Vec::new(),
-            candidate_points: Vec::new(),
         },
         role,
         can_reverse: true,

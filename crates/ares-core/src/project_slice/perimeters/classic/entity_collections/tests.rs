@@ -237,7 +237,6 @@ fn path(points: &[(i64, i64)], role: ExtrusionRole) -> ExtrusionPath {
         polyline: Polyline3 {
             points: points.iter().map(|&(x, y)| Point3 { x, y, z: 0 }).collect(),
             fitting: Vec::new(),
-            candidate_points: Vec::new(),
         },
         role,
         can_reverse: true,

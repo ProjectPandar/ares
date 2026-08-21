@@ -43,7 +43,6 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         .map(|object| object.object.seam_position == ProcessSeamPosition::Aligned)
         .collect::<Vec<_>>();
     if !aligned.iter().any(|&value| value) {
-        discard_candidate_points(&mut prepared.objects);
         return;
     }
     let mesh = mesh::TriangleMesh::from_project(&traversal.project);
@@ -68,24 +67,6 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         &visibility,
         nozzle_diameter,
     );
-    discard_candidate_points(&mut prepared.objects);
-}
-
-fn discard_candidate_points(objects: &mut [Vec<OrderedExtrusionLayer>]) {
-    for path in objects
-        .iter_mut()
-        .flatten()
-        .flat_map(|layer| &mut layer.islands)
-        .flat_map(|island| &mut island.entities)
-        .filter_map(|entity| match entity {
-            IslandPrintEntity::Perimeter(collection) => Some(collection),
-            IslandPrintEntity::Fill(_) | IslandPrintEntity::Thin(_) => None,
-        })
-        .flat_map(|collection| &mut collection.entities)
-        .flat_map(|entity| &mut entity.extrusion_loop.paths)
-    {
-        path.polyline.candidate_points = Vec::new();
-    }
 }
 
 fn apply_objects(
