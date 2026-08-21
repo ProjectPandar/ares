@@ -67,6 +67,7 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
             );
             state.x = point.x;
             state.y = point.y;
+            state.wipe_start = Some(point);
         }
         output.extend_from_slice(b"; WIPE_END\n");
     }
@@ -78,13 +79,11 @@ fn wipe_moves(state: &EmitState) -> Vec<(arc::Point, f64)> {
     }
     let mut output = Vec::new();
     let mut remaining = state.options.wipe_distance / state.scale_factor;
-    let mut current = scaled_position(
-        arc::Point {
-            x: state.x,
-            y: state.y,
-        },
-        state,
-    );
+    let start = state.wipe_start.unwrap_or(arc::Point {
+        x: state.x,
+        y: state.y,
+    });
+    let mut current = scaled_position(start, state);
     for &end in state.wipe_path.iter().skip(1) {
         let end = scaled_position(end, state);
         let dx = (end.0 - current.0) as f64;

@@ -348,6 +348,9 @@ async fn later_layer_motion_processor_state_matches_source() {
     assert!(
         output.contains("G1 X140.436 Y102.822 E.02185\nM204 S5000\nG1 X140.787 Y103.081 F60000\n")
     );
+    assert!(output.contains(
+        "; WIPE_START\nG1 X133.669 Y89.214 E-.08742\nG1 X133.055 Y88.777 E-.30159\nG1 X133.03 Y88.765 E-.01099\n; WIPE_END\n"
+    ));
 }
 
 #[tokio::test]

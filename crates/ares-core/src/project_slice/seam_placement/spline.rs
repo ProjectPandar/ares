@@ -58,8 +58,8 @@ impl CubicSpline {
             let distance = (segment_start - point) / self.segment_size;
             let parameter = segment.clamp(0, self.x.len() as i32 - 1) as usize;
             let weight = cubic_kernel(distance);
-            result.0 = weight.mul_add(self.x[parameter], result.0);
-            result.1 = weight.mul_add(self.y[parameter], result.1);
+            result.0 += weight * self.x[parameter];
+            result.1 += weight * self.y[parameter];
         }
         result
     }

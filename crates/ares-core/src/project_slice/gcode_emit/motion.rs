@@ -42,6 +42,7 @@ pub(super) struct EmitState {
     pub(super) layer_z: f64,
     pub(super) retracted: bool,
     pub(super) wipe_path: Vec<arc::Point>,
+    pub(super) wipe_start: Option<arc::Point>,
     pub(super) lifted: bool,
     pub(super) filament_used: f64,
     pub(super) part_fan_speed: u8,

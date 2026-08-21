@@ -83,10 +83,10 @@ fn apply_objects(
         let layer_zs = traversal.objects[object_index]
             .records
             .iter()
-            .scan(0.0_f32, |print_z, record| {
-                let height = record.as_ref().map_or(0.0, |record| record.layer_height) as f32;
+            .scan(0.0_f64, |print_z, record| {
+                let height = record.as_ref().map_or(0.0, |record| record.layer_height);
                 *print_z += height;
-                Some(*print_z - 0.5 * height)
+                Some((*print_z - 0.5 * height) as f32)
             })
             .collect::<Vec<_>>();
         let mut plans = alignment::prepare(

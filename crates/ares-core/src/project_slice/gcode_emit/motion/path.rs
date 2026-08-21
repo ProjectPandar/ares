@@ -194,6 +194,7 @@ pub(super) fn emit(
         emit_variable_segments(VariableEmission {
             output,
             points: &points,
+            wipe_points: &local_points,
             processed: &processed,
             original_speed,
             properties,
@@ -286,6 +287,7 @@ fn emit_linear_segment(
     );
     state.x = end.x;
     state.y = end.y;
+    state.wipe_start = Some(end);
 }
 
 fn extrusion_for_length(
@@ -306,6 +308,7 @@ fn extrusion_for_length(
 struct VariableEmission<'a> {
     output: &'a mut Vec<u8>,
     points: &'a [(f64, f64)],
+    wipe_points: &'a [(f64, f64)],
     processed: &'a [overhang::ProcessedPoint],
     original_speed: f64,
     properties: PathProperties<'a>,
@@ -316,6 +319,7 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
     let VariableEmission {
         output,
         points,
+        wipe_points,
         processed,
         original_speed,
         properties,
@@ -323,12 +327,8 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
     } = command;
     let original_feedrate = original_speed * 60.0;
     let mut last_feedrate = processed[0].speed * 60.0;
-    let mut emitted_path = Vec::with_capacity(points.len());
-    emitted_path.push(arc::Point {
-        x: points[0].0,
-        y: points[0].1,
-    });
     let mut previous = points[0];
+    let mut last_emitted_index = 0;
     for index in 1..points.len() {
         let end = arc::Point {
             x: points[index].0,
@@ -343,7 +343,6 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
         );
         let length = (end.x - previous.0).hypot(end.y - previous.1);
         if length < SOURCE_EPSILON_MM {
-            emitted_path.push(end);
             continue;
         }
         let feedrate = processed[index - 1].speed * 60.0;
@@ -356,11 +355,23 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
             last_feedrate = original_feedrate;
         }
         emit_linear_segment(output, end, length, properties, state);
-        emitted_path.push(end);
+        last_emitted_index = index;
         previous = (end.x, end.y);
     }
     state.extrusion_feedrate = last_feedrate;
-    state.wipe_path = emitted_path;
+    let last = processed[last_emitted_index];
+    state.wipe_start = Some(arc::Point {
+        x: last.x + state.offset.0,
+        y: last.y + state.offset.1,
+    });
+    state.wipe_path = wipe_points
+        .iter()
+        .rev()
+        .map(|&(x, y)| arc::Point {
+            x: x + state.offset.0,
+            y: y + state.offset.1,
+        })
+        .collect();
 }
 
 fn quantize_axis(value: f64) -> f64 {
