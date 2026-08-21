@@ -15,15 +15,22 @@ struct PlannedBlock {
     axis_feedrate: [f64; 4],
 }
 
-pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
+pub(super) fn planned_times_with_initial(
+    blocks: &[MotionBlock],
+    initial_entry: Option<f64>,
+) -> (Vec<f64>, Vec<f64>) {
     let mut planned = Vec::with_capacity(blocks.len());
     for block in blocks {
         planned.push(prepare(block, planned.last().copied()));
     }
     if planned.is_empty() {
-        return Vec::new();
+        return (Vec::new(), Vec::new());
     }
-
+    if let Some(entry) = initial_entry {
+        planned[0].entry = entry;
+        planned[0].max_entry = entry;
+        planned[0].recalculate = false;
+    }
     for index in (0..planned.len().saturating_sub(1)).rev() {
         let next = planned[index + 1];
         let current = &mut planned[index];
@@ -60,8 +67,9 @@ pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     }
     let last = planned.len() - 1;
     planned[last].exit = planned[last].safe;
-
-    planned.into_iter().map(block_time).collect()
+    let entries = planned.iter().map(|block| block.entry).collect();
+    let times = planned.into_iter().map(block_time).collect();
+    (times, entries)
 }
 
 fn prepare(block: &MotionBlock, previous: Option<PlannedBlock>) -> PlannedBlock {

@@ -1,8 +1,25 @@
 mod arc;
 mod planner;
-
 pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
-    planner::planned_times(blocks)
+    const REFRESH_THRESHOLD: usize = 256;
+    const QUEUE_SIZE: usize = 64;
+    let mut result = vec![0.0; blocks.len()];
+    let mut emitted = 0;
+    let mut initial_entry = None;
+    while emitted < blocks.len() {
+        let end = (emitted + REFRESH_THRESHOLD).min(blocks.len());
+        let (window_times, entries) =
+            planner::planned_times_with_initial(&blocks[emitted..end], initial_entry);
+        let emit_end = if end < blocks.len() {
+            end - QUEUE_SIZE
+        } else {
+            end
+        };
+        result[emitted..emit_end].copy_from_slice(&window_times[..emit_end - emitted]);
+        initial_entry = (emit_end < end).then(|| entries[emit_end - emitted]);
+        emitted = emit_end;
+    }
+    result
 }
 
 use std::f64::consts::PI;
@@ -22,6 +39,7 @@ pub(super) struct MotionState {
     pub(super) jerk: [f64; 4],
     pub(super) relative: bool,
     pub(super) e_relative: bool,
+    pub(super) wiping: bool,
 }
 
 impl Default for MotionState {
@@ -41,6 +59,7 @@ impl Default for MotionState {
             jerk: [9.0, 9.0, 3.0, 2.5],
             relative: false,
             e_relative: false,
+            wiping: false,
         }
     }
 }
@@ -63,6 +82,10 @@ impl MotionState {
             max_travel_acceleration: travel,
             ..Self::default()
         }
+    }
+
+    pub(super) fn set_wiping(&mut self, wiping: bool) {
+        self.wiping = wiping;
     }
 
     pub(super) fn motions(&mut self, code: &str) -> Vec<MotionBlock> {
@@ -238,9 +261,10 @@ impl MotionState {
         if distance <= f64::EPSILON {
             return None;
         }
+        let has_xy = delta[0] != 0.0 || delta[1] != 0.0;
         let mut acceleration = if e_only {
             self.retract_acceleration
-        } else if e_delta != 0.0 {
+        } else if self.wiping || (e_delta > 0.0 && has_xy) {
             self.acceleration
         } else {
             self.travel_acceleration
@@ -277,9 +301,10 @@ impl MotionState {
         if distance <= f64::EPSILON {
             return None;
         }
+        let has_xy = delta[0] != 0.0 || delta[1] != 0.0;
         let mut acceleration = if e_only {
             self.retract_acceleration
-        } else if delta[3] != 0.0 {
+        } else if self.wiping || (delta[3] > 0.0 && has_xy) {
             self.acceleration
         } else {
             self.travel_acceleration

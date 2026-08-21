@@ -119,6 +119,11 @@ impl Estimate {
         let mut measure_g29_time = false;
         let mut active_tool = None;
         for (index, line) in lines.iter().enumerate() {
+            match line.trim() {
+                "; WIPE_START" => state.set_wiping(true),
+                "; WIPE_END" => state.set_wiping(false),
+                _ => {}
+            }
             let code = line.split(';').next().unwrap_or_default().trim();
             if code.starts_with("M622") && word(code, 'J').unwrap_or(0.0).round() == 1.0 {
                 measure_g29_time = true;
