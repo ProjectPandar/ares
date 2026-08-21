@@ -335,7 +335,7 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
 }
 
 #[tokio::test]
-async fn extrusion_height_processor_state_tracks_layers_and_paths() {
+async fn later_layer_motion_processor_state_matches_source() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -345,6 +345,9 @@ async fn extrusion_height_processor_state_tracks_layers_and_paths() {
     let output = std::str::from_utf8(&output).unwrap();
 
     assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 515);
+    assert!(
+        output.contains("G1 X140.436 Y102.822 E.02185\nM204 S5000\nG1 X140.787 Y103.081 F60000\n")
+    );
 }
 
 #[tokio::test]

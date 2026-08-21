@@ -1,5 +1,5 @@
 use super::{
-    EmitState, LayerGeometry, arc, begin_object_travel, clip, fan,
+    EmitState, LayerGeometry, arc, begin_path_travel, clip, fan,
     features::PathProperties,
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
     overhang, set_acceleration, travel,
@@ -68,8 +68,9 @@ pub(super) fn emit(
         || quantize_axis(first_y) != quantize_axis(state.y);
     let feedrate_interrupted = needs_travel || state.retracted;
     let previous_extrusion_feedrate = state.extrusion_feedrate;
+    let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     if needs_travel {
-        begin_object_travel(output, state);
+        begin_path_travel(output, state, properties.feature, travel_distance);
         let inside_internal_surface = travel::inside_internal_surfaces(
             geometry.internal_surfaces,
             arc::Point {
@@ -91,8 +92,7 @@ pub(super) fn emit(
         );
         let retract = !first_position
             && !state.retracted
-            && (first_x - state.x).hypot(first_y - state.y)
-                >= state.options.retraction_minimum_travel
+            && travel_distance >= state.options.retraction_minimum_travel
             && !skip_retraction;
         if retract {
             travel::retract_and_lift(

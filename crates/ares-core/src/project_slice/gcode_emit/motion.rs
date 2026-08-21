@@ -88,6 +88,26 @@ pub(super) fn begin_object_travel(output: &mut Vec<u8>, state: &mut EmitState) {
     set_acceleration(output, state, acceleration);
 }
 
+pub(super) fn begin_path_travel(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    destination_feature: &str,
+    travel_distance: f64,
+) {
+    let acceleration = if state.layer_index == 0 {
+        state.options.initial_layer_travel_acceleration
+    } else if travel_distance < state.options.retraction_minimum_travel {
+        match destination_feature {
+            "Overhang wall" => state.options.bridge_acceleration,
+            "Outer wall" => state.options.outer_wall_acceleration,
+            _ => state.options.travel_acceleration,
+        }
+    } else {
+        state.options.travel_acceleration
+    };
+    set_acceleration(output, state, acceleration);
+}
+
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
         travel::retract_for_timelapse(output, state);
