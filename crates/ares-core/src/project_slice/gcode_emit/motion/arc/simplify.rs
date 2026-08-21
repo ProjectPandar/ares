@@ -53,7 +53,7 @@ pub(in crate::project_slice) fn simplify_points(
             end: range.end,
             arc: range.arc.map(|arc| FittedArc {
                 center: (arc.center.x, arc.center.y),
-                radius: super::distance(arc.center, converted[range.start]),
+                radius: arc.radius,
                 length: arc.length,
                 clockwise: arc.clockwise,
             }),

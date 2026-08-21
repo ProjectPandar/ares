@@ -23,6 +23,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn from_fitting(
                     x: arc.center.0 + offset.0,
                     y: arc.center.1 + offset.1,
                 },
+                radius: arc.radius,
                 length: arc.length,
                 clockwise: arc.clockwise,
             }))

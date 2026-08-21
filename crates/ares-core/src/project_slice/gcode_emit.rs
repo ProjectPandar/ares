@@ -55,6 +55,7 @@ pub(super) fn emit(
     );
     let mut state = motion::EmitState {
         offset,
+        scale_factor: traversal.scale.factor(),
         travel_feedrate: options.first_layer_travel_feedrate,
         extrusion_feedrate: options.initial_layer_speed * 60.0,
         options,

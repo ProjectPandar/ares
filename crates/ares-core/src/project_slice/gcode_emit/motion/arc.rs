@@ -15,6 +15,7 @@ pub(super) struct ArcSegment {
     pub(super) start: Point,
     pub(super) end: Point,
     pub(super) center: Point,
+    pub(super) radius: f64,
     pub(super) length: f64,
     pub(super) clockwise: bool,
 }
@@ -94,6 +95,7 @@ fn try_arc(points: &[Point], tolerance: f64) -> Option<ArcSegment> {
         start,
         end,
         center,
+        radius,
         length,
         clockwise,
     })

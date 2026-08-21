@@ -320,6 +320,18 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
                 "G1 X133.577 Y87.66 E.23863",
             ]
     }));
+    let wipe = lines
+        .windows(3)
+        .find(|window| window[0] == "G1 X112.738 Y95.014 E-.20877")
+        .unwrap();
+    assert_eq!(
+        wipe,
+        [
+            "G1 X112.738 Y95.014 E-.20877",
+            "G1 X112.412 Y95.327 E-.18094",
+            "G1 X112.393 Y95.344 E-.01028",
+        ]
+    );
 }
 
 #[tokio::test]

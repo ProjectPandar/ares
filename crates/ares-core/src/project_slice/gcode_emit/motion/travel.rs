@@ -54,9 +54,8 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
                 format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes(),
             );
         }
-        let mut remaining = during;
         for (point, length) in wipe_moves {
-            let retraction = (during * length / wiped_distance).min(remaining);
+            let retraction = during * (length / wiped_distance);
             output.extend_from_slice(
                 format!(
                     "G1 X{} Y{} E{}\n",
@@ -68,7 +67,6 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
             );
             state.x = point.x;
             state.y = point.y;
-            remaining -= retraction;
         }
         output.extend_from_slice(b"; WIPE_END\n");
     }
@@ -79,35 +77,57 @@ fn wipe_moves(state: &EmitState) -> Vec<(arc::Point, f64)> {
         return Vec::new();
     }
     let mut output = Vec::new();
-    let mut remaining = state.options.wipe_distance;
-    let mut current = arc::Point {
-        x: state.x,
-        y: state.y,
-    };
+    let mut remaining = state.options.wipe_distance / state.scale_factor;
+    let mut current = scaled_position(
+        arc::Point {
+            x: state.x,
+            y: state.y,
+        },
+        state,
+    );
     for &end in state.wipe_path.iter().skip(1) {
-        let length = distance(current, end);
+        let end = scaled_position(end, state);
+        let dx = (end.0 - current.0) as f64;
+        let dy = (end.1 - current.1) as f64;
+        let length = dx.hypot(dy);
         if length <= f64::EPSILON {
             current = end;
             continue;
         }
-        let used = remaining.min(length);
-        let target = if used < length {
-            let ratio = used / length;
-            arc::Point {
-                x: current.x + (end.x - current.x) * ratio,
-                y: current.y + (end.y - current.y) * ratio,
-            }
+        let target = if remaining < length {
+            let ratio = remaining / length;
+            (
+                (current.0 as f64 + dx * ratio) as i64,
+                (current.1 as f64 + dy * ratio) as i64,
+            )
         } else {
             end
         };
-        output.push((target, used));
-        remaining -= used;
-        if remaining <= f64::EPSILON {
+        let used_x = (target.0 - current.0) as f64;
+        let used_y = (target.1 - current.1) as f64;
+        let used = used_x.hypot(used_y);
+        output.push((unscaled_position(target, state), used * state.scale_factor));
+        if remaining <= length {
             break;
         }
+        remaining -= length;
         current = end;
     }
     output
+}
+
+fn scaled_position(point: arc::Point, state: &EmitState) -> (i64, i64) {
+    (
+        ((point.x - state.offset.0) / state.scale_factor).round() as i64,
+        ((point.y - state.offset.1) / state.scale_factor).round() as i64,
+    )
+}
+
+fn unscaled_position(point: (i64, i64), state: &EmitState) -> arc::Point {
+    arc::Point {
+        x: point.0 as f64 * state.scale_factor + state.offset.0,
+        y: point.1 as f64 * state.scale_factor + state.offset.1,
+    }
 }
 
 fn append_lift(output: &mut Vec<u8>, target: arc::Point, state: &mut EmitState) {
@@ -207,8 +227,4 @@ pub(super) fn inside_internal_surfaces(
                 | RegionSurfaceKind::InternalVoid
         ) && crate::geometry::open_polyline_inside_expolygon(&travel, region).unwrap()
     })
-}
-
-fn distance(left: arc::Point, right: arc::Point) -> f64 {
-    (left.x - right.x).hypot(left.y - right.y)
 }

@@ -29,6 +29,7 @@ pub(super) struct EmitState {
     pub(super) x: f64,
     pub(super) y: f64,
     pub(super) offset: (f64, f64),
+    pub(super) scale_factor: f64,
     pub(super) travel_feedrate: f64,
     pub(super) extrusion_feedrate: f64,
     pub(super) options: MotionOptions,

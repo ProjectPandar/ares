@@ -143,8 +143,8 @@ fn project_to_circle(arc: FittedArc, point: Point3, scale: CoordinateScale) -> O
     }
     let radius = arc.radius / scale.factor();
     Some(Point3 {
-        x: center_x + (dx * radius / distance) as i64,
-        y: center_y + (dy * radius / distance) as i64,
+        x: center_x + (dx / distance * radius) as i64,
+        y: center_y + (dy / distance * radius) as i64,
         z: point.z,
     })
 }
