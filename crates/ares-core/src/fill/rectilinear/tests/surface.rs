@@ -92,10 +92,10 @@ fn task22o89_fixed_angle_and_layer_alternation_select_distinct_directions() {
 }
 
 #[test]
-fn rectilinear_offsets_truncate_to_source_coordinate_grid() {
+fn rectilinear_offsets_retain_source_float_coordinates() {
     let offsets = scaled_offsets(CoordinateScale::Normal, 0.1, 0.500_542_342_662_811_3).unwrap();
 
-    assert_eq!(offsets, (74_972.0, -150_271.0));
+    assert_eq!(offsets, (74_972.88, -150_271.17));
 }
 
 #[test]
