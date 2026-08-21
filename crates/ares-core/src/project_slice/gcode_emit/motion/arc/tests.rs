@@ -1,4 +1,4 @@
-use super::{Point, Segment, circle_from_three, fit};
+use super::{Point, Segment, arc_direction, circle_from_three, fit};
 
 #[test]
 fn fits_clockwise_circle_with_analytic_length() {
@@ -59,7 +59,7 @@ fn keeps_non_circular_path_linear() {
 }
 
 #[test]
-fn circle_center_rounds_to_scaled_coordinate_grid() {
+fn circle_center_rounds_to_source_coordinate_grid() {
     let (center, _) = circle_from_three(
         Point { x: 0.0, y: 0.0 },
         Point {
@@ -77,4 +77,9 @@ fn circle_center_rounds_to_scaled_coordinate_grid() {
             y: 0.75,
         }
     );
+}
+
+#[test]
+fn rejects_wrapped_arc_with_middle_at_zero_polar_angle() {
+    assert_eq!(arc_direction(4.8, 0.0, 1.3), None);
 }

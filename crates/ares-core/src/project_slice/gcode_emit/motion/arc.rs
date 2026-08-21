@@ -202,13 +202,15 @@ fn arc_direction(start: f64, middle: f64, end: f64) -> Option<(bool, f64)> {
     if end > start {
         if start < middle && middle < end {
             Some((false, end - start))
-        } else if middle < start || end < middle {
+        } else if (0.0 <= middle && middle < start)
+            || (end < middle && middle < std::f64::consts::TAU)
+        {
             Some((true, start + std::f64::consts::TAU - end))
         } else {
             None
         }
     } else if start > end {
-        if start < middle || middle < end {
+        if (start < middle && middle < std::f64::consts::TAU) || (0.0 < middle && middle < end) {
             Some((false, end + std::f64::consts::TAU - start))
         } else if end < middle && middle < start {
             Some((true, start - end))

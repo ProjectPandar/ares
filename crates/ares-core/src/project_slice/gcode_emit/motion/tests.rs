@@ -271,6 +271,13 @@ async fn first_layer_second_inner_perimeter_uses_fitted_aligned_seam() {
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
 
     assert_eq!(destination, Some("G1 X140.545 Y90.801 Z.6"));
+    let later_destination = lines[layer_changes[0]..layer_changes[1]]
+        .iter()
+        .enumerate()
+        .filter(|(_, line)| line.starts_with("G3 Z") && line.ends_with(" F60000"))
+        .nth(15)
+        .map(|(index, _)| lines[layer_changes[0] + index + 1]);
+    assert_eq!(later_destination, Some("G1 X122.022 Y94.872 Z.6"));
 }
 
 #[tokio::test]

@@ -133,7 +133,7 @@ fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
         return result;
     }
 
-    let tolerance_squared = tolerance * tolerance;
+    let tolerance_squared = (tolerance * COORDINATE_UNITS_PER_MILLIMETER).powi(2);
     let mut anchor = 0;
     let mut floater = points.len() - 1;
     let mut endpoints = Vec::with_capacity(points.len());
@@ -165,11 +165,16 @@ fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
     result
 }
 
+const COORDINATE_UNITS_PER_MILLIMETER: f64 = 1_000_000.0;
+
 fn point_segment_distance_squared(point: Point, start: Point, end: Point) -> f64 {
-    let vector_x = end.x - start.x;
-    let vector_y = end.y - start.y;
-    let point_x = point.x - start.x;
-    let point_y = point.y - start.y;
+    let [point_x, point_y] = scaled_coordinates(point);
+    let [start_x, start_y] = scaled_coordinates(start);
+    let [end_x, end_y] = scaled_coordinates(end);
+    let vector_x = (end_x - start_x) as f64;
+    let vector_y = (end_y - start_y) as f64;
+    let point_x = (point_x - start_x) as f64;
+    let point_y = (point_y - start_y) as f64;
     let length_squared = vector_x * vector_x + vector_y * vector_y;
     if length_squared == 0.0 {
         return point_x * point_x + point_y * point_y;
@@ -178,12 +183,19 @@ fn point_segment_distance_squared(point: Point, start: Point, end: Point) -> f64
     if projection <= 0.0 {
         point_x * point_x + point_y * point_y
     } else if projection >= 1.0 {
-        let point_x = point.x - end.x;
-        let point_y = point.y - end.y;
+        let point_x = (point_x + start_x as f64) - end_x as f64;
+        let point_y = (point_y + start_y as f64) - end_y as f64;
         point_x * point_x + point_y * point_y
     } else {
         let distance_x = projection * vector_x - point_x;
         let distance_y = projection * vector_y - point_y;
         distance_x * distance_x + distance_y * distance_y
     }
+}
+
+fn scaled_coordinates(point: Point) -> [i64; 2] {
+    [
+        (point.x * COORDINATE_UNITS_PER_MILLIMETER).round() as i64,
+        (point.y * COORDINATE_UNITS_PER_MILLIMETER).round() as i64,
+    ]
 }
