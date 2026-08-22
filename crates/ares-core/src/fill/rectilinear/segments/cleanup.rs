@@ -12,7 +12,21 @@ pub(super) fn clean_paths(polygons: Vec<Polygon>, minimum_area: f64) -> Vec<Poly
         .into_iter()
         .filter_map(remove_sticks)
         .filter(|polygon| polygon.area().abs() >= minimum_area)
+        .map(remove_duplicate_points)
         .collect()
+}
+
+// MultiPoint::remove_duplicate_points: drop consecutive duplicates, keep the
+// first point; the wrap-around last==first pair is left untouched.
+fn remove_duplicate_points(polygon: Polygon) -> Polygon {
+    let points = polygon.into_points();
+    let mut output = Vec::with_capacity(points.len());
+    for point in points {
+        if output.last().is_none_or(|last| *last != point) {
+            output.push(point);
+        }
+    }
+    Polygon::new(output)
 }
 
 fn remove_sticks(polygon: Polygon) -> Option<Polygon> {
