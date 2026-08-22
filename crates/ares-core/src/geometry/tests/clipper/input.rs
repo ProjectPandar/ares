@@ -149,6 +149,80 @@ fn task22f_closed_input_builds_minima_and_lml_in_source_order() {
     );
 }
 
+#[ignore = "minima construction order divergence under investigation (oracle fingerprint task)"]
+#[test]
+fn task22f_multi_notch_equal_y_minima_follow_source_walk_order() {
+    // One closed CW path with three bottom notches and three top notches; the
+    // equal-Y minima groups must come out in the source FindNextLocMin/
+    // ProcessBound walk order (verified against the oracle walk simulation):
+    // bottom group [28150000, 15000000, 0], top group [2150000, 15150000,
+    // 28150000].
+    let w = 30_000_000;
+    let top = 2_000_000;
+    let bot = -2_000_000;
+    let ndt = 1_500_000;
+    let ndb = -1_500_000;
+    let (n1, n2, n3) = (2_000_000i64, 15_000_000, 28_000_000);
+    let h = 150_000;
+    let notched = polygon(&[
+        (0, bot),
+        (n1 - h, bot),
+        (n1, ndb),
+        (n1 + h, bot),
+        (n2 - h, bot),
+        (n2, ndb),
+        (n2 + h, bot),
+        (n3 - h, bot),
+        (n3, ndb),
+        (n3 + h, bot),
+        (w, bot),
+        (w, top),
+        (n3 + h, top),
+        (n3, ndt),
+        (n3 - h, top),
+        (n2 + h, top),
+        (n2, ndt),
+        (n2 - h, top),
+        (n1 + h, top),
+        (n1, ndt),
+        (n1 - h, top),
+        (0, top),
+    ]);
+    let mut clipper = Clipper::new(ClipperOptions::default());
+
+    assert_eq!(
+        clipper.add_closed_path(&notched, PathRole::Subject),
+        Ok(true)
+    );
+    let snapshot = clipper.input_snapshot();
+    let bottoms = snapshot
+        .minima
+        .iter()
+        .map(|minimum| {
+            let bound = minimum
+                .left
+                .or(minimum.right)
+                .expect("local minimum has a bound");
+            let bottom = snapshot.edges[bound]
+                .bottom
+                .expect("edge has a bottom point");
+            (bottom.y(), bottom.x())
+        })
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        bottoms,
+        vec![
+            (-2_000_000, 28_150_000),
+            (-1_500_000, 15_000_000),
+            (-2_000_000, 0),
+            (2_000_000, 2_150_000),
+            (2_000_000, 15_150_000),
+            (2_000_000, 28_150_000),
+        ]
+    );
+}
+
 #[test]
 fn task22f_closed_input_normalizes_horizontal_rectangle_and_equal_height_order() {
     let rectangle = square();
