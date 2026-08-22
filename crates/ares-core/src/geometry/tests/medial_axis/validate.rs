@@ -3,10 +3,11 @@ use crate::geometry::{
 };
 
 #[test]
-fn task22o209_voronoi_point_conversion_truncates_fractional_literals() {
-    assert_eq!(integer_point(4.5, 4.49), Point::new(4, 4));
-    assert_eq!(integer_point(-4.5, -4.49), Point::new(-4, -4));
-    assert_eq!(integer_point(0.5, -0.5), Point::new(0, 0));
+fn task22o209_voronoi_point_conversion_rounds_half_away_from_zero() {
+    // Slic3r's `Point(double, double)` constructor rounds with std::round.
+    assert_eq!(integer_point(4.5, 4.49), Point::new(5, 4));
+    assert_eq!(integer_point(-4.5, -4.49), Point::new(-5, -4));
+    assert_eq!(integer_point(0.5, -0.5), Point::new(1, -1));
 }
 
 #[test]
