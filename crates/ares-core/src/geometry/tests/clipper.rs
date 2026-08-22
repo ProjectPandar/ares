@@ -7,6 +7,7 @@ mod helpers;
 mod input;
 mod large_coordinates;
 mod offset;
+mod offset_sweep;
 mod open;
 mod options;
 mod point_in_polygon;
