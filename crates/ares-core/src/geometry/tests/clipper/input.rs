@@ -149,14 +149,13 @@ fn task22f_closed_input_builds_minima_and_lml_in_source_order() {
     );
 }
 
-#[ignore = "minima construction order divergence under investigation (oracle fingerprint task)"]
 #[test]
 fn task22f_multi_notch_equal_y_minima_follow_source_walk_order() {
-    // One closed CW path with three bottom notches and three top notches; the
-    // equal-Y minima groups must come out in the source FindNextLocMin/
-    // ProcessBound walk order (verified against the oracle walk simulation):
-    // bottom group [28150000, 15000000, 0], top group [2150000, 15150000,
-    // 28150000].
+    // One closed CW path with three bottom notches and three top notches.
+    // Ground truth captured from the real clipper.cpp AddPath (edge-table
+    // dump of the GCC-built oracle): seven minima in construction order —
+    // the three upward notch tips at y=-1.5M, then four top-edge chain
+    // minima at y=+2M walking right to left.
     let w = 30_000_000;
     let top = 2_000_000;
     let bot = -2_000_000;
@@ -213,12 +212,13 @@ fn task22f_multi_notch_equal_y_minima_follow_source_walk_order() {
     assert_eq!(
         bottoms,
         vec![
-            (-2_000_000, 28_150_000),
+            (-1_500_000, 2_000_000),
             (-1_500_000, 15_000_000),
-            (-2_000_000, 0),
-            (2_000_000, 2_150_000),
-            (2_000_000, 15_150_000),
+            (-1_500_000, 28_000_000),
             (2_000_000, 28_150_000),
+            (2_000_000, 15_150_000),
+            (2_000_000, 2_150_000),
+            (2_000_000, 0),
         ]
     );
 }
