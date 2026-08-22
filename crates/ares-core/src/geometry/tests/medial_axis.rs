@@ -60,7 +60,7 @@ fn task22o13_repeated_adjacent_point_is_a_typed_construction_error() {
 }
 
 #[test]
-fn task22o209_voronoi_vertices_truncate_toward_zero() {
-    assert_eq!(integer_point(7.9, -7.9), Point::new(7, -7));
-    assert_eq!(integer_point(0.9, -0.9), Point::new(0, 0));
+fn task22o209_voronoi_vertices_round_half_away_from_zero() {
+    assert_eq!(integer_point(7.9, -7.9), Point::new(8, -8));
+    assert_eq!(integer_point(0.9, -0.9), Point::new(1, -1));
 }

@@ -90,8 +90,10 @@ fn point_distance(left: Point, right: Point) -> f64 {
     (dx * dx + dy * dy).sqrt()
 }
 
+// Slic3r's `Point(double, double)` constructor rounds with std::round
+// (half away from zero); truncating here shifts skeleton vertices by 1µm.
 pub(crate) fn integer_point(x: f64, y: f64) -> Point {
-    Point::new(x as i64, y as i64)
+    Point::new(x.round() as i64, y.round() as i64)
 }
 
 fn invariant(_: boostvoronoi::BvError) -> MedialAxisError {
