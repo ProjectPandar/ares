@@ -1,3 +1,6 @@
+mod gcc;
+pub(crate) use gcc::fixed_gcc_sort_by;
+
 // Apache-2.0 WITH LLVM-exception rewrite of the separately audited MSVC STL
 // 14.44 `sort` control flow used as the fixed comparator-compatibility target.
 const INSERTION_SORT_MAX: usize = 32;

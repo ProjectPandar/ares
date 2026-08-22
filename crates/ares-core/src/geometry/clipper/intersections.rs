@@ -4,7 +4,7 @@ mod top;
 #[cfg(test)]
 pub(in crate::geometry) use top::top_updates_for_test;
 
-use super::ordering::fixed_msvc_sort_by;
+use super::ordering::fixed_gcc_sort_by;
 use super::predicates::{intersect_point, top_x};
 use super::types::{Edge, EdgeId, ExecutionConfig, IntersectionNode, OutputIndex};
 use super::z::KernelPoint;
@@ -173,7 +173,7 @@ impl Clipper {
 
     fn fix_intersection_order(&mut self) -> bool {
         self.copy_ael_to_sel();
-        fixed_msvc_sort_by(&mut self.intersections, |first, second| {
+        fixed_gcc_sort_by(&mut self.intersections, |first, second| {
             second.point.y() < first.point.y()
         });
         for index in 0..self.intersections.len() {

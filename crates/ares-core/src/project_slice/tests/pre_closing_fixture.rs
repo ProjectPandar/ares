@@ -32,7 +32,7 @@ const ENCODER_VECTOR_LEN: usize = 255;
 const ENCODER_VECTOR_SHA256: &str =
     "af7055df067e53aa48f789e31a09fbd3477391ebc3061ffea1153c0796877064";
 const PRE_CLOSING_LEN: usize = 1_645_481;
-const PRE_CLOSING_SHA256: &str = "209c6149c93994cc3ae6fa8e2f8f43dc9875b1b07b2320da9e67d8a2c43ab6e2";
+const PRE_CLOSING_SHA256: &str = "587de51be637a446a948e3f98eb5eeacfd8a788b989354846771d47d2ba37eed";
 const CONTOUR_COUNT: usize = 2_891;
 const HOLE_COUNT: usize = 397;
 const POINT_COUNT: usize = 99_260;
@@ -165,7 +165,7 @@ fn assert_representative_layers(layers: &[PreClosingLayer]) {
         (
             maximum_index,
             46_073,
-            "1e3ef580ecf6989c1440280db78f94548467918b6ccd264bcdf2fb0dc9cca097",
+            "3724871ca28c97a1b4da24af91a16175ead3be1054fc174598211f4d9c465ffe",
         ),
         (
             LAYER_COUNT - 1,
