@@ -116,11 +116,14 @@ fn checked_scaled_f32(scale: CoordinateScale, value: f64) -> Result<f32, Clipper
 }
 
 fn adjust_solid_spacing(width: i64, distance: i64) -> i64 {
-    let intervals = (width - 1) / distance;
-    let mut adjusted = if intervals == 0 {
+    // FillBase.cpp uses `(width - EPSILON)` with EPSILON = 1e-4 in double
+    // arithmetic before the integer truncations.
+    let width_f = width as f64 - 1.0e-4;
+    let number_of_intervals = (width_f / distance as f64) as i64;
+    let mut adjusted = if number_of_intervals == 0 {
         distance
     } else {
-        (width - 1) / intervals
+        (width_f / number_of_intervals as f64) as i64
     };
     if adjusted as f64 / distance as f64 > 1.2 {
         adjusted = (distance as f64 * 1.2 + 0.5).floor() as i64;
