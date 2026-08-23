@@ -3,6 +3,7 @@ mod context;
 mod fixture;
 mod flow;
 mod flow_edges;
+mod flow_spacing;
 pub(super) mod layer_region;
 mod oracle;
 mod preflight;

@@ -262,7 +262,7 @@ pub(in crate::project_slice) fn with_spacing(flow: Flow, spacing: f32) -> Flow {
         let diameter = spacing - (flow.spacing - flow.width);
         (diameter, diameter, bridge_volume(diameter))
     } else {
-        let width = flow.width + spacing - flow.spacing;
+        let width = flow.width + (spacing - flow.spacing);
         debug_assert!(width >= flow.height);
         (width, flow.height, ordinary_volume(width, flow.height))
     };
