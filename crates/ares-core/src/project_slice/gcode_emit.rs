@@ -1,4 +1,5 @@
 use crate::project_slice::{
+    extruders,
     island_print_order::{self, PreparedPostIslandPrintOrder},
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
@@ -78,6 +79,7 @@ pub(super) fn emit(
         .filter_map(|record| record.as_ref())
         .map(|record| record.layer_height)
         .sum();
+    let max_additional_fan = max_additional_fan(traversal);
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = emit_labels
             .then(|| object::ObjectLabels::from_traversal(traversal, object_index))
@@ -115,7 +117,13 @@ pub(super) fn emit(
                 output.extend_from_slice(b"G1 E-.4 F1800\n");
                 state.retracted = true;
             }
-            append_layer_change(&mut output, traversal, layer_index, f64::from(layer_z))?;
+            append_layer_change(
+                &mut output,
+                traversal,
+                layer_index,
+                f64::from(layer_z),
+                max_additional_fan,
+            )?;
             motion::begin_layer(
                 &mut output,
                 &mut state,
@@ -168,6 +176,27 @@ pub(super) fn emit(
         }
     }
 
+    fn max_additional_fan(traversal: &PreparedPostClassicTraversal) -> f64 {
+        let used = extruders::collect_project_object_extruders(
+            traversal.project.objects(),
+            &traversal.resolved.objects,
+            traversal.resolved.logical_filament_count,
+        );
+        let speeds = &traversal
+            .resolved
+            .views
+            .full
+            .filament
+            .print
+            .additional_cooling_fan_speed
+            .0;
+        used.into_iter()
+            .flatten()
+            .filter_map(|extruder| speeds.get(extruder).or_else(|| speeds.first()))
+            .map(|speed| speed.0)
+            .max()
+            .map_or(0.0, f64::from)
+    }
     fn append_print_preamble(output: &mut Vec<u8>) {
         output.extend_from_slice(
             b"; filament start gcode\n;VT0\nG90\nG21\nM83 ; use relative distances for extrusion\n",
@@ -180,6 +209,7 @@ pub(super) fn emit(
         traversal: &PreparedPostClassicTraversal,
         layer_index: usize,
         layer_z: f64,
+        max_additional_fan: f64,
     ) -> Result<(), SliceError> {
         let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
         if !template.is_empty() {
@@ -196,13 +226,10 @@ pub(super) fn emit(
             {
                 config.insert("min_vitrification_temperature", value);
             }
-            if let Some(value) = config
-                .get("fan_max_speed")
-                .and_then(|value| value.index(0))
-                .cloned()
-            {
-                config.insert("max_additional_fan", value);
-            }
+            config.insert(
+                "max_additional_fan",
+                value::Value::number(max_additional_fan),
+            );
             let rendered = template::render(template, &config).map_err(|error| {
                 SliceError::InvalidInput(format!(
                     "invalid project layer-change G-code template: {error}"
