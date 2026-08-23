@@ -235,3 +235,44 @@ fn task22o13_disconnected_segments_pin_point_point_face_and_rotation_order() {
         ]
     );
 }
+
+#[test]
+fn task22f_boostvoronoi_rectangle_center_vertex_precision() {
+    // C++ boost::polygon voronoi (GCC -O2) produces:
+    //   V 2499999.9999999995 2500000  <- FP precision loss
+    // Verify boostvoronoi Rust produces same or different value.
+    let lines = vec![
+        Line::new(Point::new(1000000, 1000000), Point::new(5000000, 1000000)),
+        Line::new(Point::new(5000000, 1000000), Point::new(5000000, 4000000)),
+        Line::new(Point::new(5000000, 4000000), Point::new(1000000, 4000000)),
+        Line::new(Point::new(1000000, 4000000), Point::new(1000000, 1000000)),
+    ];
+    let diagram = diagram::build(&lines).unwrap();
+
+    // Collect all unique vertices from edges
+    let mut vertices = std::collections::BTreeSet::new();
+    for pair in (0..diagram.num_edges()).step_by(2) {
+        let edge = diagram::edge_index(&diagram, pair);
+        if let Ok(Some((x, y))) = diagram::vertex0(&diagram, edge) {
+            vertices.insert((x.to_bits(), y.to_bits()));
+        }
+        if let Ok(Some((x, y))) = diagram::vertex1(&diagram, edge) {
+            vertices.insert((x.to_bits(), y.to_bits()));
+        }
+    }
+
+    println!("boostvoronoi rectangle vertices ({}):", vertices.len());
+    for (xb, yb) in &vertices {
+        let x = f64::from_bits(*xb);
+        let y = f64::from_bits(*yb);
+        println!("  V {:.17} {:.17}", x, y);
+        if (x - 2_500_000.0).abs() < 1.0 && (y - 2_500_000.0).abs() < 1.0 {
+            println!("  ^ center vertex: x bits = {:#018x}", xb);
+            if x == 2_499_999.999_999_999_5 {
+                println!("  ** MATCHES boost::polygon FP imprecision **");
+            } else if x == 2_500_000.0 {
+                println!("  ** EXACT — differs from boost::polygon **");
+            }
+        }
+    }
+}
