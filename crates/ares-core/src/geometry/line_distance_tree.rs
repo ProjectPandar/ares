@@ -58,6 +58,10 @@ impl<'a> LineDistanceTree<'a> {
         query::nearest(self.lines, &self.nodes, point)
     }
 
+    pub(crate) fn nearest_f64(&self, point: [f64; 2]) -> Option<NearestLine> {
+        query::nearest_f64(self.lines, &self.nodes, point)
+    }
+
     pub(crate) fn intersections_sorted(&self, line: Line) -> Vec<(Point, usize)> {
         intersections::sorted(self.lines, &self.nodes, line)
     }

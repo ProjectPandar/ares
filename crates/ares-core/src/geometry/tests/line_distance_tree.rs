@@ -41,6 +41,18 @@ fn task22o50_empty_and_single_line_freeze_layout_and_projection_branches() {
 }
 
 #[test]
+fn task22o50_fractional_query_preserves_sub_coordinate_distance() {
+    let lines = [line(0, 0, 10, 0)];
+    let actual = LineDistanceTree::new(&lines)
+        .nearest_f64([4.25, 2.25])
+        .unwrap();
+
+    assert_eq!(actual.line_index, 0);
+    assert_eq!(actual.squared_distance.to_bits(), 5.0625_f64.to_bits());
+    assert_eq!(actual.nearest_point, [4.25, 0.0]);
+}
+
+#[test]
 fn task22o50_three_line_tree_matches_pinned_layout_and_queries() {
     let lines = [line(0, 0, 10, 0), line(0, 20, 10, 20), line(30, -5, 30, 5)];
     let tree = LineDistanceTree::new(&lines);

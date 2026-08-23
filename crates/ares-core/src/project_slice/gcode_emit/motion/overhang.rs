@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{LayerGeometry, MotionOptions, features::PathProperties};
 use crate::{FloatOrPercent, geometry::Point};
 
@@ -25,13 +28,13 @@ pub(super) struct ProcessedPoint {
 struct ExtendedPoint {
     x: f64,
     y: f64,
-    distance: f64,
+    distance: f32,
 }
 
 struct BoundaryContext<'a> {
     tree: &'a crate::geometry::LineDistanceTree<'a>,
     scale: crate::geometry::CoordinateScale,
-    offset: f64,
+    offset: f32,
     minimum_spacing: f64,
 }
 
@@ -58,16 +61,17 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
             / (request.properties.mm3_per_mm * request.options.filament_flow_ratio),
     );
     let sections = speed_sections(request.properties.width, reference_speed, request.options);
+    let original_speed = request.original_speed as f32;
     let minimum_slowdown_distance = sections
         .iter()
-        .filter(|section| section.1 <= request.original_speed)
+        .filter(|section| section.1 <= original_speed)
         .map(|section| section.0)
-        .reduce(f64::min)
+        .reduce(f32::min)
         .unwrap_or(-1.0);
     let context = BoundaryContext {
         tree: boundary,
         scale: request.geometry.scale,
-        offset: 0.5 * f64::from(request.properties.width),
+        offset: 0.5_f32 * request.properties.width,
         minimum_spacing: f64::from(request.properties.width) * 0.25,
     };
     let extended = context.add_boundary_intersections(request.points);
@@ -78,40 +82,40 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     for index in 0..extended.len() {
         let current = extended[index];
         let next = extended.get(index + 1).copied().unwrap_or(current);
-        let speed = speed_for_distance(current.distance, &sections, request.original_speed)
-            .min(speed_for_distance(
-                next.distance,
-                &sections,
-                request.original_speed,
-            ))
-            .min(request.original_speed);
-        variable |= (speed - request.original_speed).abs() > 1.0;
-        let width_inverse = 1.0 / f64::from(request.properties.width);
+        let speed = speed_for_distance(current.distance, &sections, original_speed)
+            .min(speed_for_distance(next.distance, &sections, original_speed))
+            .min(original_speed);
+        variable |= (f64::from(speed) - request.original_speed).abs() > 1.0;
+        let width_inverse = 1.0_f32 / request.properties.width;
         processed.push(ProcessedPoint {
-            x: current.x,
-            y: current.y,
-            speed,
-            overlap: (1.0 - current.distance * width_inverse)
-                .min(1.0 - next.distance * width_inverse),
+            x: context.scale.unscale(scale_round(current.x, context.scale)),
+            y: context.scale.unscale(scale_round(current.y, context.scale)),
+            speed: f64::from(speed),
+            overlap: f64::from(
+                (1.0_f32 - current.distance * width_inverse)
+                    .min(1.0_f32 - next.distance * width_inverse),
+            ),
         });
     }
     variable.then_some(processed)
 }
 
-fn speed_sections(width: f32, reference_speed: f64, options: &MotionOptions) -> Vec<(f64, f64)> {
+fn speed_sections(width: f32, reference_speed: f64, options: &MotionOptions) -> Vec<(f32, f32)> {
+    let reference_speed_f32 = reference_speed as f32;
     let band_speeds = options.overhang_speed_bands.map(|value| {
         value
             .map(|value| absolute(value, reference_speed))
             .filter(|speed| *speed >= 0.5)
-            .unwrap_or(reference_speed)
+            .map(|speed| source_dynamic_speed(speed, reference_speed, reference_speed_f32))
+            .unwrap_or(reference_speed_f32)
     });
     let severe_speed = if options.slowdown_for_curled_perimeters {
         band_speeds[3]
     } else {
-        options.bridge_speed
+        source_dynamic_speed(options.bridge_speed, reference_speed, reference_speed_f32)
     };
     let speeds = [
-        reference_speed,
+        reference_speed_f32,
         band_speeds[0],
         band_speeds[1],
         band_speeds[2],
@@ -121,7 +125,7 @@ fn speed_sections(width: f32, reference_speed: f64, options: &MotionOptions) -> 
     let mut sections = OVERLAPS
         .into_iter()
         .zip(speeds)
-        .map(|(overlap, speed)| (f64::from(width) * (1.0 - overlap / 100.0), speed))
+        .map(|(overlap, speed)| ((f64::from(width) * (1.0 - overlap / 100.0)) as f32, speed))
         .collect::<Vec<_>>();
     sections.sort_by(|left, right| {
         left.0
@@ -155,8 +159,9 @@ impl BoundaryContext<'_> {
         previous: ExtendedPoint,
         next: ExtendedPoint,
     ) {
-        let previous_outside = previous.distance > self.offset + INTERSECTION_EPSILON_MM;
-        let next_outside = next.distance > self.offset + INTERSECTION_EPSILON_MM;
+        let threshold = f64::from(self.offset) + INTERSECTION_EPSILON_MM;
+        let previous_outside = f64::from(previous.distance) > threshold;
+        let next_outside = f64::from(next.distance) > threshold;
         if previous_outside == next_outside {
             return;
         }
@@ -178,7 +183,7 @@ impl BoundaryContext<'_> {
     fn add_segmentation_points(
         &self,
         points: &[ExtendedPoint],
-        minimum_slowdown_distance: f64,
+        minimum_slowdown_distance: f32,
     ) -> Vec<ExtendedPoint> {
         let mut result = Vec::with_capacity(points.len() * 2);
         result.push(points[0]);
@@ -195,8 +200,10 @@ impl BoundaryContext<'_> {
                 && ((minimum_slowdown_distance > 0.0 && needs_slowdown && line_length >= 2.0)
                     || (minimum_slowdown_distance <= 0.0 && line_length > 4.0));
             if should_segment {
-                let a0 = ((current.distance + 3.0 * self.offset) / line_length).clamp(0.0, 1.0);
-                let a1 = (1.0 - (next.distance + 3.0 * self.offset) / line_length).clamp(0.0, 1.0);
+                let a0 = (f64::from(current.distance + 3.0_f32 * self.offset) / line_length)
+                    .clamp(0.0, 1.0);
+                let a1 = (1.0 - f64::from(next.distance + 3.0_f32 * self.offset) / line_length)
+                    .clamp(0.0, 1.0);
                 self.append_segmentation_candidate(
                     &mut result,
                     [current, next],
@@ -220,15 +227,19 @@ impl BoundaryContext<'_> {
         result: &mut Vec<ExtendedPoint>,
         endpoints: [ExtendedPoint; 2],
         factor: f64,
-        minimum_slowdown_distance: f64,
+        minimum_slowdown_distance: f32,
     ) {
         let [current, next] = endpoints;
         if factor <= 0.0 || factor >= 1.0 {
             return;
         }
         let candidate = interpolate(current, next, factor);
-        let candidate = self.extended((candidate.x, candidate.y));
-        if (candidate.distance - self.offset).abs() > minimum_slowdown_distance
+        let raw_distance = self.signed_distance((candidate.x, candidate.y));
+        let candidate = ExtendedPoint {
+            distance: (raw_distance + f64::from(self.offset)) as f32,
+            ..candidate
+        };
+        if raw_distance.abs() > f64::from(minimum_slowdown_distance)
             && distance(current, candidate) > self.minimum_spacing
             && distance(candidate, next) > self.minimum_spacing
         {
@@ -237,20 +248,24 @@ impl BoundaryContext<'_> {
     }
 
     fn extended(&self, point: (f64, f64)) -> ExtendedPoint {
+        let raw_distance = self.signed_distance(point);
+        ExtendedPoint {
+            x: point.0,
+            y: point.1,
+            distance: (raw_distance + f64::from(self.offset)) as f32,
+        }
+    }
+
+    fn signed_distance(&self, point: (f64, f64)) -> f64 {
+        let nearest = self
+            .tree
+            .nearest_f64([point.0 / self.scale.factor(), point.1 / self.scale.factor()])
+            .expect("a nonempty boundary has a nearest line");
         let scaled = Point::new(
             scale_round(point.0, self.scale),
             scale_round(point.1, self.scale),
         );
-        let nearest = self
-            .tree
-            .nearest(scaled)
-            .expect("a nonempty boundary has a nearest line");
-        let sign = f64::from(self.tree.outside(scaled));
-        ExtendedPoint {
-            x: point.0,
-            y: point.1,
-            distance: sign * nearest.squared_distance.sqrt() * self.scale.factor() + self.offset,
-        }
+        f64::from(self.tree.outside(scaled)) * nearest.squared_distance.sqrt() * self.scale.factor()
     }
 
     fn scaled(&self, point: ExtendedPoint) -> Point {
@@ -261,7 +276,7 @@ impl BoundaryContext<'_> {
     }
 }
 
-fn speed_for_distance(distance: f64, sections: &[(f64, f64)], original_speed: f64) -> f64 {
+fn speed_for_distance(distance: f32, sections: &[(f32, f32)], original_speed: f32) -> f32 {
     if distance <= sections[0].0 {
         return original_speed.round();
     }
@@ -271,7 +286,11 @@ fn speed_for_distance(distance: f64, sections: &[(f64, f64)], original_speed: f6
     let upper = sections.partition_point(|section| distance > section.0);
     let lower = upper - 1;
     let ratio = (distance - sections[lower].0) / (sections[upper].0 - sections[lower].0);
-    ((1.0 - ratio) * sections[lower].1 + ratio * sections[upper].1).round()
+    ((1.0_f32 - ratio) * sections[lower].1 + ratio * sections[upper].1).round()
+}
+
+fn source_dynamic_speed(speed: f64, reference_speed: f64, reference_speed_f32: f32) -> f32 {
+    (f64::from(reference_speed_f32) * (speed * 100.0 / reference_speed) / 100.0) as f32
 }
 
 fn absolute(value: FloatOrPercent, base: f64) -> f64 {
