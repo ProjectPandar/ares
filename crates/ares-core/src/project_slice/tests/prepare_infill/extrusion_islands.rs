@@ -65,7 +65,7 @@ fn task22o94_is_repeatable_for_independent_graphs() {
 }
 
 #[test]
-fn task22o211_layer_two_thin_fills_follow_multiple_perimeter_islands() {
+fn task22o211_layer_two_thin_fills_follow_first_point_island_assignment() {
     let filled = fill_entities::prepare(graph()).unwrap();
     let prepared = extrusion_islands::prepare(filled);
 
@@ -80,6 +80,6 @@ fn task22o211_layer_two_thin_fills_follow_multiple_perimeter_islands() {
         })
         .count();
 
-    assert!(occupied > 1, "thin fills collapsed into {occupied} island");
+    assert_eq!(occupied, 1);
     extrusion_islands::dispose(prepared);
 }

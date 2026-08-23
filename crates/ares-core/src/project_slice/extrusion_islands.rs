@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+// Source boundary: OrcaSlicer v2.4.2 `GCode.cpp:4982-5000,5010-5068` island
+// membership by bounding-box-ordered slice containment of each entity's first point.
 
 use crate::{
-    geometry::{Coord, ExPolygon, Point},
+    geometry::{Coord, ExPolygon, Point, fixed_gcc_sort_by},
     project_slice::{
         fill_entities::{FillExtrusionCollection, LayerFillEntities, PreparedPostFillEntities},
         perimeters::classic::{
@@ -72,7 +73,9 @@ pub(in crate::project_slice) fn prepare(
 fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExtrusionIslands {
     let bounds = slices.iter().map(contour_bounds).collect::<Vec<_>>();
     let mut order = (0..slices.len()).collect::<Vec<_>>();
-    order.sort_unstable_by_key(|&index| bounds[index].area());
+    fixed_gcc_sort_by(&mut order, |left, right| {
+        bounds[*left].area() < bounds[*right].area()
+    });
     let mut islands = (0..=slices.len())
         .map(|_| ExtrusionIsland::default())
         .collect::<Vec<_>>();
@@ -83,39 +86,16 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
             .infills
             .push(IslandInfillEntity::Fill(collection));
     }
-    let perimeter_sources = std::mem::take(&mut layer.perimeter_source_indices);
     let perimeters = std::mem::take(&mut layer.perimeters);
-    assert_eq!(perimeters.len(), perimeter_sources.len());
-    let mut source_islands = HashMap::new();
-    let mut perimeter_islands = Vec::with_capacity(perimeters.len());
-    for (source_order, (mut perimeter, source_index)) in
-        perimeters.into_iter().zip(perimeter_sources).enumerate()
-    {
+    for (source_order, mut perimeter) in perimeters.into_iter().enumerate() {
         perimeter.source_order = source_order;
         let path = &perimeter.entities[0].extrusion_loop.paths[0];
         let first = path.polyline.points[0];
         let island = island_index(Point::new(first.x, first.y), slices, &bounds, &order);
-        source_islands
-            .entry(source_index)
-            .or_insert_with(Vec::new)
-            .push((island, Point::new(first.x, first.y)));
-        perimeter_islands.push((island, Point::new(first.x, first.y)));
         islands[island].perimeters.push(perimeter);
     }
-    let thin_sources = std::mem::take(&mut layer.thin_fill_source_indices);
-    let thin_fills = std::mem::take(&mut layer.thin_fills);
-    assert_eq!(thin_fills.len(), thin_sources.len());
-    for (thin, source_index) in thin_fills.into_iter().zip(thin_sources) {
-        let point = thin_first_point(&thin);
-        let source_candidates = source_index
-            .and_then(|source_index| source_islands.get(&source_index))
-            .filter(|candidates| candidates.len() > 1);
-        let candidates = source_candidates.unwrap_or(&perimeter_islands);
-        let island = candidates
-            .iter()
-            .min_by_key(|(_, candidate)| squared_distance(point, *candidate))
-            .map(|(island, _)| *island)
-            .unwrap_or_else(|| island_index(point, slices, &bounds, &order));
+    for thin in std::mem::take(&mut layer.thin_fills) {
+        let island = island_index(thin_first_point(&thin), slices, &bounds, &order);
         islands[island].infills.push(IslandInfillEntity::Thin(thin));
     }
     LayerExtrusionIslands { islands }
@@ -137,12 +117,6 @@ fn island_index(point: Point, slices: &[ExPolygon], bounds: &[Bounds], order: &[
         .unwrap_or(slices.len())
 }
 
-fn squared_distance(left: Point, right: Point) -> i128 {
-    let dx = i128::from(left.x() - right.x());
-    let dy = i128::from(left.y() - right.y());
-    dx * dx + dy * dy
-}
-
 #[derive(Clone, Copy)]
 struct Bounds {
     min_x: Coord,
@@ -154,9 +128,9 @@ struct Bounds {
 impl Bounds {
     fn contains(self, point: Point) -> bool {
         point.x() >= self.min_x
-            && point.x() <= self.max_x
+            && point.x() < self.max_x
             && point.y() >= self.min_y
-            && point.y() <= self.max_y
+            && point.y() < self.max_y
     }
 
     fn area(self) -> i128 {
@@ -192,7 +166,7 @@ mod tests {
     use super::{contour_bounds, island_index};
 
     #[test]
-    fn task22o210_maximum_boundary_selects_smallest_containing_island() {
+    fn task22o210_maximum_boundary_is_excluded_before_contour_test() {
         let rectangle = |minimum, maximum| {
             ExPolygon::new(
                 Polygon::new(vec![
@@ -209,7 +183,7 @@ mod tests {
 
         assert_eq!(
             island_index(Point::new(10, 5), &slices, &bounds, &[0, 1]),
-            0
+            1
         );
     }
 }

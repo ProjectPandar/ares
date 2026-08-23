@@ -81,18 +81,8 @@ fn move_thin_fills(
             if let Some(record) = record {
                 layer.perimeters = std::mem::take(&mut record.perimeters);
                 layer
-                    .thin_fill_source_indices
-                    .resize(layer.thin_fills.len(), None);
-                layer.thin_fill_source_indices.extend(
-                    std::mem::take(&mut record.thin_fill_source_indices)
-                        .into_iter()
-                        .map(Some),
-                );
-                layer
                     .thin_fills
                     .extend(std::mem::take(&mut record.thin_fills));
-                layer.perimeter_source_indices =
-                    std::mem::take(&mut record.perimeter_source_indices);
             }
         }
     }

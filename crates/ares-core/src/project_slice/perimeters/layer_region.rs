@@ -102,16 +102,8 @@ pub(super) fn materialize_record(
         .sum();
     let mut perimeters = Vec::with_capacity(perimeter_count);
     let mut thin_fills = Vec::with_capacity(thin_fill_count);
-    let mut perimeter_source_indices = Vec::with_capacity(perimeter_count);
-    let mut thin_fill_source_indices = Vec::with_capacity(thin_fill_count);
     for surface in surfaces {
-        append_surface_outputs(
-            surface,
-            &mut perimeters,
-            &mut thin_fills,
-            &mut perimeter_source_indices,
-            &mut thin_fill_source_indices,
-        );
+        append_surface_outputs(surface, &mut perimeters, &mut thin_fills);
     }
     let fill_expolygons = fill_surfaces
         .iter()
@@ -121,8 +113,6 @@ pub(super) fn materialize_record(
     PreparedLayerRegionPerimeterRecord {
         perimeters,
         thin_fills,
-        perimeter_source_indices,
-        thin_fill_source_indices,
         fill_surfaces,
         fill_expolygons,
         fill_no_overlap_expolygons: fill_no_overlap,
@@ -133,22 +123,15 @@ fn append_surface_outputs(
     surface: PreparedGapExtrusionSurface,
     perimeters: &mut Vec<super::classic::entity_collections::ExtrusionEntityCollection>,
     thin_fills: &mut Vec<super::classic::gap_extrusion::GapFillEntity>,
-    perimeter_source_indices: &mut Vec<usize>,
-    thin_fill_source_indices: &mut Vec<usize>,
 ) {
     let PreparedGapExtrusionSurface {
         appended,
         gap_fill,
-        source_index,
+        source_index: _,
         inactive: _,
         medial: _,
         remaining: _,
     } = surface;
-    perimeter_source_indices.extend(std::iter::repeat_n(
-        source_index,
-        appended.collections.len(),
-    ));
-    thin_fill_source_indices.extend(std::iter::repeat_n(source_index, gap_fill.entities.len()));
     perimeters.extend(appended.collections);
     thin_fills.extend(gap_fill.entities);
 }

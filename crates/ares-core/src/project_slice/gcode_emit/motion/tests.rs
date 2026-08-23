@@ -213,6 +213,20 @@ async fn first_layer_seam_and_island_order_match_project_slice() {
         .position(|line| line.starts_with("G3 Z.6 ") && line.ends_with(" F60000"))
         .unwrap();
     assert_eq!(lines[first_helical_travel + 1], "G1 X145.539 Y95.848 Z.6");
+    let first_infill_end = lines
+        .iter()
+        .position(|line| *line == "G2 X137.277 Y97.378 I6.405 J-5.792 E.03497")
+        .unwrap();
+    assert_eq!(
+        &lines[first_infill_end + 1..first_infill_end + 6],
+        [
+            "G1 X135.582 Y95.041 F60000",
+            "; FEATURE: Gap infill",
+            "; LINE_WIDTH: 0.100762",
+            "G1 F15000",
+            "G2 X135.539 Y94.974 I-.135 J.039 E.00038",
+        ]
+    );
 }
 
 #[tokio::test]
@@ -364,7 +378,7 @@ async fn later_layer_motion_processor_state_matches_source() {
     .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
 
-    assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 515);
+    assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 517);
     assert!(
         output.contains("G1 X140.436 Y102.822 E.02185\nM204 S5000\nG1 X140.787 Y103.081 F60000\n")
     );
