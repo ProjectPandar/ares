@@ -101,12 +101,7 @@ impl SkeletalTrapezoidation<'_> {
             self.graph.node_mut(last_node).data.distance_to_boundary = 0;
         }
         self.separate_pointy_quad_end_nodes()?;
-        self.graph.collapse_small_edges(
-            self.config
-                .coordinate_scale
-                .checked_scale(0.02)
-                .ok_or(TrapezoidationError::InvalidTopology)?,
-        );
+        self.graph.collapse_small_edges(5);
         let edges = self.graph.active_edges().collect::<Vec<_>>();
         for edge in edges {
             if self.graph.edge(edge).prev.is_none() {

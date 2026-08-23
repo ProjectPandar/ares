@@ -151,7 +151,7 @@ fn generate_thick_polylines(
         min_bead_width: scale.checked_scale(0.85 * minimum_nozzle_diameter).unwrap(),
         min_feature_size: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         transition_length: scale.checked_scale(0.4).unwrap(),
-        transitioning_angle: 10.0_f64.to_radians(),
+        transitioning_angle: f64::from(10.0_f32.to_radians()),
         transition_filter_deviation: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         wall_distribution_count: 1,
         min_length_factor: 0.5,
@@ -241,5 +241,49 @@ mod tests {
 
         assert_eq!(domains.len(), 1);
         assert_eq!(domains[0].area().abs(), 48_400.0);
+    }
+
+    #[test]
+    fn task22o203_concentric_arachne_matches_source_narrow_branch() {
+        let domain = ExPolygon::new(
+            Polygon::new(vec![
+                Point::new(4_649_887, -18_239_647),
+                Point::new(4_881_733, -18_114_179),
+                Point::new(5_418_338, -17_855_755),
+                Point::new(6_234_522, -17_595_579),
+                Point::new(7_073_916, -17_465_343),
+                Point::new(7_358_779, -17_465_343),
+                Point::new(4_048_542, -14_155_107),
+                Point::new(4_048_542, -15_848_537),
+                Point::new(2_009_079, -15_848_537),
+                Point::new(4_503_846, -18_343_304),
+            ]),
+            Vec::new(),
+        );
+        let mut output =
+            generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal)
+                .unwrap();
+        finalize_polylines(&mut output, 0, 40_000.0);
+
+        let actual = output
+            .iter()
+            .find(|line| line.points.contains(&Point::new(6_177_261, -17_415_944)))
+            .expect("source target branch is generated");
+        assert_eq!(
+            actual.points,
+            vec![
+                Point::new(4_237_081, -14_610_281),
+                Point::new(6_924_526, -17_297_725),
+                Point::new(6_177_261, -17_415_944),
+                Point::new(5_336_532, -17_685_887),
+                Point::new(4_783_982, -17_952_958),
+                Point::new(4_532_575, -18_105_397),
+                Point::new(2_464_252, -16_037_076),
+                Point::new(4_048_542, -16_037_076),
+                Point::new(4_178_211, -15_985_406),
+                Point::new(4_237_081, -15_848_537),
+                Point::new(4_237_081, -14_650_281),
+            ]
+        );
     }
 }

@@ -164,7 +164,10 @@ fn vertex(
             if !vertex.x().is_finite() || !vertex.y().is_finite() {
                 return Err(TrapezoidationError::InvalidTopology);
             }
-            Ok(Point::new(vertex.x() as i64, vertex.y() as i64))
+            Ok(Point::new(
+                vertex.x().round() as i64,
+                vertex.y().round() as i64,
+            ))
         })
         .transpose()
 }

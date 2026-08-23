@@ -60,10 +60,15 @@ pub(crate) fn generate_raw(
         return Ok(Vec::new());
     }
     let rounded_rectangle_factor = 1.0 - 0.25 * std::f64::consts::PI;
-    let outer_width =
-        config.outer_spacing as f64 + config.layer_height as f64 * rounded_rectangle_factor;
-    let inner_width =
-        config.inner_spacing as f64 + config.layer_height as f64 * rounded_rectangle_factor;
+    let scale = config.coordinate_scale.factor();
+    let layer_height = (config.layer_height as f64 * scale) as f32;
+    let extrusion_width = |spacing| {
+        let spacing = spacing as f32 * scale as f32;
+        (f64::from(spacing) + f64::from(layer_height) * rounded_rectangle_factor) as f32
+    };
+    let outer_width = f64::from(extrusion_width(config.outer_spacing));
+    let inner_width = f64::from(extrusion_width(config.inner_spacing));
+    let min_bead_width = config.min_bead_width as f64 * scale;
     let strategy = make_strategy(BeadingStrategyFactoryConfig {
         preferred_bead_width_outer: config.outer_spacing,
         preferred_bead_width_inner: config.inner_spacing,
@@ -72,9 +77,8 @@ pub(crate) fn generate_raw(
         print_thin_walls: true,
         min_bead_width: config.min_bead_width,
         min_feature_size: config.min_feature_size,
-        wall_split_middle_threshold: (2.0 * config.min_bead_width as f64 / outer_width - 1.0)
-            .clamp(0.01, 0.99),
-        wall_add_middle_threshold: (config.min_bead_width as f64 / inner_width).clamp(0.01, 0.99),
+        wall_split_middle_threshold: (2.0 * min_bead_width / outer_width - 1.0).clamp(0.01, 0.99),
+        wall_add_middle_threshold: (min_bead_width / inner_width).clamp(0.01, 0.99),
         max_bead_count: (config.inset_count * 2) as i64,
         outer_wall_offset: config.outer_wall_inset,
         inward_distributed_center_wall_count: config.wall_distribution_count,
@@ -112,8 +116,8 @@ pub(crate) fn generate(
         config.min_length_factor,
         config.is_top_or_bottom_layer,
     );
-    postprocess::simplify_toolpaths(&mut toolpaths, config.coordinate_scale);
     let inner_contour = postprocess::separate_inner_contour(&mut toolpaths);
+    postprocess::simplify_toolpaths(&mut toolpaths, config.coordinate_scale);
     Ok(GeneratedWallToolPaths {
         toolpaths,
         inner_contour,
