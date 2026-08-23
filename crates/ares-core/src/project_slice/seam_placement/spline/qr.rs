@@ -41,10 +41,7 @@ impl FullPivQr {
             c.swap(k, self.row_transpositions[k]);
             self.apply_householder_to_vector(k, tau, rows, &mut c);
         }
-        for row in (0..rank).rev() {
-            let remainder = sse_dot((row + 1..rank).map(|j| self.qr[row][j] * c[j]));
-            c[row] = (c[row] - remainder) / self.qr[row][row];
-        }
+        solve_upper_triangular(&self.qr, rank, &mut c);
         for (index, &target) in self.cols_permutation.iter().enumerate().take(rank) {
             result[target] = c[index];
         }
@@ -59,9 +56,37 @@ impl FullPivQr {
         let dot = sse_dot((k + 1..rows).map(|i| self.qr[i][k] * c[i]));
         let tail = dot + c[k];
         c[k] -= tau * tail;
+
         for (i, value) in c.iter_mut().enumerate().take(rows).skip(k + 1) {
             *value -= (tau * self.qr[i][k]) * tail;
         }
+    }
+}
+
+// Eigen's column-major vector solver handles eight diagonal columns per panel:
+// backward substitution within the panel, then one matrix-vector update above it.
+pub(super) fn solve_upper_triangular(qr: &[Vec<f32>], rank: usize, right_hand_side: &mut [f32]) {
+    const PANEL_WIDTH: usize = 8;
+    let mut panel_end = rank;
+    while panel_end > 0 {
+        let panel_start = panel_end.saturating_sub(PANEL_WIDTH);
+        for column in (panel_start..panel_end).rev() {
+            if right_hand_side[column] == 0.0 {
+                continue;
+            }
+            right_hand_side[column] /= qr[column][column];
+            for row in panel_start..column {
+                right_hand_side[row] -= right_hand_side[column] * qr[row][column];
+            }
+        }
+        for row in 0..panel_start {
+            let mut update = 0.0;
+            for column in panel_start..panel_end {
+                update += qr[row][column] * right_hand_side[column];
+            }
+            right_hand_side[row] += -update;
+        }
+        panel_end = panel_start;
     }
 }
 
