@@ -220,7 +220,7 @@ impl SkeletalTrapezoidation<'_> {
 
 fn interpolate_beading(left: &Beading, left_ratio: f64, right: &Beading) -> Beading {
     assert!((0.0..=1.0).contains(&left_ratio));
-    let right_ratio = 1.0 - left_ratio;
+    let right_ratio = f64::from((1.0 - left_ratio) as f32);
     let mut result = if left.total_thickness > right.total_thickness {
         left.clone()
     } else {
