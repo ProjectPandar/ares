@@ -26,11 +26,10 @@ fn introsort_loop<T>(
             return;
         }
         depth_limit -= 1;
-        // __unguarded_partition_pivot: median of (first+1, mid, last-1), swapped
-        // to the front, then partition on the second element.
+        // __unguarded_partition_pivot: move the median of
+        // (first+1, mid, last-1) to first, then partition from first+1.
         let mid = items.len() / 2;
-        move_median_to_front(items, 1, mid, items.len() - 1, less);
-        items.swap(0, 1);
+        move_median_to_front(items, 0, 1, mid, items.len() - 1, less);
         let cut = unguarded_partition(items, less);
         // libstdc++ recurses on the right half [cut, last) and loops on the left.
         let (left, right) = items.split_at_mut(cut);
@@ -44,17 +43,22 @@ fn move_median_to_front<T>(
     result: usize,
     a: usize,
     b: usize,
+    c: usize,
     less: &mut impl FnMut(&T, &T) -> bool,
 ) {
     if less(&items[a], &items[b]) {
-        if less(&items[b], &items[result]) {
+        if less(&items[b], &items[c]) {
             items.swap(result, b);
-        } else if less(&items[a], &items[result]) {
+        } else if less(&items[a], &items[c]) {
+            items.swap(result, c);
+        } else {
             items.swap(result, a);
         }
-    } else if less(&items[a], &items[result]) {
+    } else if less(&items[a], &items[c]) {
         items.swap(result, a);
-    } else if less(&items[b], &items[result]) {
+    } else if less(&items[b], &items[c]) {
+        items.swap(result, c);
+    } else {
         items.swap(result, b);
     }
 }
@@ -143,6 +147,39 @@ mod tests {
         let mut values = vec![5, 1, 5, 2, 1, 9, 5, 2];
         fixed_gcc_sort_by(&mut values, |a, b| a < b);
         assert_eq!(values, vec![1, 1, 2, 2, 5, 5, 5, 9]);
+    }
+
+    #[test]
+    fn preserves_libstdcxx_equal_key_permutation() {
+        let mut values = (0..20).map(|id| (0, id)).collect::<Vec<_>>();
+        fixed_gcc_sort_by(&mut values, |left, right| left.0 < right.0);
+        assert_eq!(
+            values.into_iter().map(|(_, id)| id).collect::<Vec<_>>(),
+            vec![
+                10, 19, 18, 17, 16, 15, 14, 13, 12, 11, 0, 9, 8, 7, 6, 5, 4, 3, 2, 1
+            ]
+        );
+    }
+
+    #[test]
+    fn preserves_libstdcxx_grouped_key_permutation() {
+        let keys = [
+            2, 1, 2, 1, 0, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1,
+            2, 0, 1, 2,
+        ];
+        let mut values = keys
+            .into_iter()
+            .enumerate()
+            .map(|(id, key)| (key, id))
+            .collect::<Vec<_>>();
+        fixed_gcc_sort_by(&mut values, |left, right| left.0 < right.0);
+        assert_eq!(
+            values.into_iter().map(|(_, id)| id).collect::<Vec<_>>(),
+            vec![
+                30, 4, 27, 6, 24, 9, 21, 12, 18, 15, 1, 31, 28, 25, 22, 19, 13, 10, 3, 16, 7, 8,
+                32, 0, 2, 29, 5, 26, 23, 11, 20, 14, 17,
+            ]
+        );
     }
 
     #[test]
