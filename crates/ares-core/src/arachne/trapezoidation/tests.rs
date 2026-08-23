@@ -212,6 +212,47 @@ fn task22o101_point_segment_and_point_point_curves_use_source_rounding() {
     assert_eq!(point_point.first(), Some(&Point::new(500, -1_000)));
     assert_eq!(point_point.last(), Some(&Point::new(500, 1_000)));
     assert!(point_point.contains(&Point::new(500, 0)));
+
+    let oblique = vec![Polygon::new(vec![
+        Point::new(1, -201),
+        Point::new(201, 1),
+        Point::new(0, 10),
+    ])];
+    let normalized = discretize_parabola(
+        Point::new(0, 0),
+        PolygonSegmentIndex {
+            polygon_index: 0,
+            point_index: 0,
+        },
+        &oblique,
+        Point::new(1, -201),
+        Point::new(201, 1),
+        100,
+        10.0_f64.to_radians(),
+    );
+    assert!(normalized.contains(&Point::new(59, -42)), "{normalized:?}");
+
+    let target = vec![Polygon::new(vec![
+        Point::new(4_881_735, -18_114_178),
+        Point::new(5_418_340, -17_855_754),
+        Point::new(4_900_000, -18_000_000),
+    ])];
+    let target_points = discretize_parabola(
+        Point::new(4_048_542, -15_848_537),
+        PolygonSegmentIndex {
+            polygon_index: 0,
+            point_index: 0,
+        },
+        &target,
+        Point::new(4_720_001, -16_851_977),
+        Point::new(4_885_151, -16_748_613),
+        800_000,
+        f64::from((std::f32::consts::PI * 10.0_f32) / 180.0_f32),
+    );
+    assert!(
+        target_points.contains(&Point::new(4_754_308, -16_831_994)),
+        "{target_points:?}"
+    );
 }
 
 #[test]

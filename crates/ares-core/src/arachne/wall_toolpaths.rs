@@ -149,7 +149,7 @@ mod tests {
                 min_bead_width: scaled(0.34),
                 min_feature_size: scaled(0.1),
                 transition_length: scaled(0.4),
-                transitioning_angle: 10.0_f64.to_radians(),
+                transitioning_angle: f64::from((std::f32::consts::PI * 10.0_f32) / 180.0_f32),
                 transition_filter_deviation: scaled(0.1),
                 wall_distribution_count: 1,
                 coordinate_scale: scale,

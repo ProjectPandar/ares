@@ -101,10 +101,13 @@ pub(super) fn discretize_parabola(
         return vec![start, end];
     }
     let perpendicular = Point::new(-ppxx.y(), ppxx.x());
-    let perpendicular_length = distance(Point::new(0, 0), perpendicular) as f64;
-    let cosine = perpendicular.x() as f64 / perpendicular_length;
-    let sine = perpendicular.y() as f64 / perpendicular_length;
-    let marking_bound = (transitioning_angle * 0.5).atan();
+    let perpendicular_x = perpendicular.x() as f64;
+    let perpendicular_y = perpendicular.y() as f64;
+    let perpendicular_length =
+        (perpendicular_x * perpendicular_x + perpendicular_y * perpendicular_y).sqrt();
+    let cosine = perpendicular_x / perpendicular_length;
+    let sine = perpendicular_y / perpendicular_length;
+    let marking_bound = (f64::from(transitioning_angle as f32) * 0.5).atan();
     let mut marking_start_x = (-marking_bound * d as f64) as i64;
     let mut marking_end_x = (marking_bound * d as f64) as i64;
     let marking_height = marking_start_x * marking_start_x / (2 * d) + d / 2;

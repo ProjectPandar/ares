@@ -151,7 +151,7 @@ fn generate_thick_polylines(
         min_bead_width: scale.checked_scale(0.85 * minimum_nozzle_diameter).unwrap(),
         min_feature_size: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         transition_length: scale.checked_scale(0.4).unwrap(),
-        transitioning_angle: f64::from(10.0_f32.to_radians()),
+        transitioning_angle: f64::from((std::f32::consts::PI * 10.0_f32) / 180.0_f32),
         transition_filter_deviation: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         wall_distribution_count: 1,
         min_length_factor: 0.5,
@@ -264,6 +264,16 @@ mod tests {
             generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal)
                 .unwrap();
         finalize_polylines(&mut output, 0, 40_000.0);
+        assert!(output.iter().any(|line| {
+            line.points.windows(3).any(|points| {
+                points
+                    == [
+                        Point::new(5_331_706, -16_841_754),
+                        Point::new(4_853_308, -17_037_563),
+                        Point::new(4_673_461, -17_125_907),
+                    ]
+            })
+        }));
 
         let actual = output
             .iter()
