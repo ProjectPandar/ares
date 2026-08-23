@@ -1,6 +1,6 @@
 use crate::geometry::{Line, Point};
 
-use super::{Bounds, NearestLine, Node, NodeKind};
+use super::{Bounds, NearestLine, NearestLineF32, Node, NodeKind};
 
 pub(super) fn nearest(lines: &[Line], nodes: &[Node], point: Point) -> Option<NearestLine> {
     if nodes.is_empty() {
@@ -192,13 +192,18 @@ fn segment_distance(line: Line, point: Point) -> (f64, Point) {
     }
 }
 
-pub(super) fn nearest_f64(lines: &[Line], nodes: &[Node], origin: [f64; 2]) -> Option<NearestLine> {
+pub(super) fn nearest_f32(
+    lines: &[Line],
+    nodes: &[Node],
+    origin: [f32; 2],
+    scale: f32,
+) -> Option<NearestLineF32> {
     if nodes.is_empty() {
         return None;
     }
     let mut winner = None;
-    visit_f64(lines, nodes, 0, origin, &mut winner);
-    winner.map(|winner: FractionalWinner| NearestLine {
+    visit_f32(lines, nodes, 0, origin, scale, &mut winner);
+    winner.map(|winner: FloatWinner| NearestLineF32 {
         line_index: winner.line_index,
         squared_distance: winner.squared_distance,
         nearest_point: winner.nearest_point,
@@ -206,26 +211,32 @@ pub(super) fn nearest_f64(lines: &[Line], nodes: &[Node], origin: [f64; 2]) -> O
 }
 
 #[derive(Clone, Copy)]
-struct FractionalWinner {
+struct FloatWinner {
     line_index: usize,
-    squared_distance: f64,
-    nearest_point: [f64; 2],
+    squared_distance: f32,
+    nearest_point: [f32; 2],
 }
 
-fn visit_f64(
+#[expect(
+    clippy::too_many_arguments,
+    reason = "mirrors the source traversal state"
+)]
+fn visit_f32(
     lines: &[Line],
     nodes: &[Node],
     node_index: usize,
-    origin: [f64; 2],
-    winner: &mut Option<FractionalWinner>,
+    origin: [f32; 2],
+    scale: f32,
+    winner: &mut Option<FloatWinner>,
 ) {
     let node = nodes[node_index];
     match node.kind {
         NodeKind::Unused => unreachable!("tree traversal only reaches valid nodes"),
         NodeKind::Leaf(line_index) => {
-            let (squared_distance, nearest_point) = segment_distance_f64(lines[line_index], origin);
-            if squared_distance < fractional_winner_distance(*winner) {
-                *winner = Some(FractionalWinner {
+            let (squared_distance, nearest_point) =
+                segment_distance_f32(lines[line_index], origin, scale);
+            if squared_distance < float_winner_distance(*winner) {
+                *winner = Some(FloatWinner {
                     line_index,
                     squared_distance,
                     nearest_point,
@@ -240,51 +251,55 @@ fn visit_f64(
             let mut looked_left = false;
             let mut looked_right = false;
 
-            if contains_f64(left.bounds, origin) {
-                visit_f64(lines, nodes, left_index, origin, winner);
+            if contains_f32(left.bounds, origin, scale) {
+                visit_f32(lines, nodes, left_index, origin, scale, winner);
                 looked_left = true;
             }
-            if contains_f64(right.bounds, origin) {
-                visit_f64(lines, nodes, right_index, origin, winner);
+            if contains_f32(right.bounds, origin, scale) {
+                visit_f32(lines, nodes, right_index, origin, scale, winner);
                 looked_right = true;
             }
 
-            let left_distance = exterior_distance_squared_f64(left.bounds, origin);
-            let right_distance = exterior_distance_squared_f64(right.bounds, origin);
+            let left_distance = exterior_distance_squared_f32(left.bounds, origin, scale);
+            let right_distance = exterior_distance_squared_f32(right.bounds, origin, scale);
             if left_distance < right_distance {
-                visit_f64_if_closer(
+                visit_f32_if_closer(
                     lines,
                     nodes,
                     left_index,
                     origin,
+                    scale,
                     winner,
                     looked_left,
                     left_distance,
                 );
-                visit_f64_if_closer(
+                visit_f32_if_closer(
                     lines,
                     nodes,
                     right_index,
                     origin,
+                    scale,
                     winner,
                     looked_right,
                     right_distance,
                 );
             } else {
-                visit_f64_if_closer(
+                visit_f32_if_closer(
                     lines,
                     nodes,
                     right_index,
                     origin,
+                    scale,
                     winner,
                     looked_right,
                     right_distance,
                 );
-                visit_f64_if_closer(
+                visit_f32_if_closer(
                     lines,
                     nodes,
                     left_index,
                     origin,
+                    scale,
                     winner,
                     looked_left,
                     left_distance,
@@ -298,37 +313,40 @@ fn visit_f64(
     clippy::too_many_arguments,
     reason = "mirrors the source traversal state"
 )]
-fn visit_f64_if_closer(
+fn visit_f32_if_closer(
     lines: &[Line],
     nodes: &[Node],
     node_index: usize,
-    origin: [f64; 2],
-    winner: &mut Option<FractionalWinner>,
+    origin: [f32; 2],
+    scale: f32,
+    winner: &mut Option<FloatWinner>,
     already_visited: bool,
-    lower_bound: f64,
+    lower_bound: f32,
 ) {
-    if !already_visited && lower_bound < fractional_winner_distance(*winner) {
-        visit_f64(lines, nodes, node_index, origin, winner);
+    if !already_visited && lower_bound < float_winner_distance(*winner) {
+        visit_f32(lines, nodes, node_index, origin, scale, winner);
     }
 }
 
-fn fractional_winner_distance(winner: Option<FractionalWinner>) -> f64 {
-    winner.map_or(f64::INFINITY, |winner| winner.squared_distance)
+fn float_winner_distance(winner: Option<FloatWinner>) -> f32 {
+    winner.map_or(f32::INFINITY, |winner| winner.squared_distance)
 }
 
-fn contains_f64(bounds: Bounds, point: [f64; 2]) -> bool {
-    point[0] >= bounds.min.x() as f64
-        && point[0] <= bounds.max.x() as f64
-        && point[1] >= bounds.min.y() as f64
-        && point[1] <= bounds.max.y() as f64
+fn contains_f32(bounds: Bounds, point: [f32; 2], scale: f32) -> bool {
+    point[0] >= scaled_f32(bounds.min.x(), scale)
+        && point[0] <= scaled_f32(bounds.max.x(), scale)
+        && point[1] >= scaled_f32(bounds.min.y(), scale)
+        && point[1] <= scaled_f32(bounds.max.y(), scale)
 }
 
-fn exterior_distance_squared_f64(bounds: Bounds, origin: [f64; 2]) -> f64 {
-    let delta = |minimum: i64, maximum: i64, value: f64| {
-        if minimum as f64 > value {
-            minimum as f64 - value
-        } else if (maximum as f64) < value {
-            value - maximum as f64
+fn exterior_distance_squared_f32(bounds: Bounds, origin: [f32; 2], scale: f32) -> f32 {
+    let delta = |minimum: i64, maximum: i64, value: f32| {
+        let minimum = scaled_f32(minimum, scale);
+        let maximum = scaled_f32(maximum, scale);
+        if minimum > value {
+            minimum - value
+        } else if maximum < value {
+            value - maximum
         } else {
             0.0
         }
@@ -338,25 +356,32 @@ fn exterior_distance_squared_f64(bounds: Bounds, origin: [f64; 2]) -> f64 {
     x * x + y * y
 }
 
-fn segment_distance_f64(line: Line, point: [f64; 2]) -> (f64, [f64; 2]) {
-    let a = [line.a.x() as f64, line.a.y() as f64];
-    let b = [line.b.x() as f64, line.b.y() as f64];
-    let v = [b[0] - a[0], b[1] - a[1]];
-    let va = [point[0] - a[0], point[1] - a[1]];
+fn segment_distance_f32(line: Line, point: [f32; 2], scale: f32) -> (f32, [f32; 2]) {
+    let a = [scaled_f32(line.a.x(), scale), scaled_f32(line.a.y(), scale)];
+    let b = [scaled_f32(line.b.x(), scale), scaled_f32(line.b.y(), scale)];
+    let v = [(b[0] - a[0]) as f64, (b[1] - a[1]) as f64];
+    let va = [(point[0] - a[0]) as f64, (point[1] - a[1]) as f64];
     let length_squared = v[0] * v[0] + v[1] * v[1];
     if length_squared == 0.0 {
-        return (va[0] * va[0] + va[1] * va[1], a);
+        return ((va[0] * va[0] + va[1] * va[1]) as f32, a);
     }
 
     let t = (va[0] * v[0] + va[1] * v[1]) / length_squared;
     if t <= 0.0 {
-        (va[0] * va[0] + va[1] * va[1], a)
+        ((va[0] * va[0] + va[1] * va[1]) as f32, a)
     } else if t >= 1.0 {
-        let vb = [point[0] - b[0], point[1] - b[1]];
-        (vb[0] * vb[0] + vb[1] * vb[1], b)
+        let vb = [(point[0] - b[0]) as f64, (point[1] - b[1]) as f64];
+        ((vb[0] * vb[0] + vb[1] * vb[1]) as f32, b)
     } else {
-        let nearest = [a[0] + t * v[0], a[1] + t * v[1]];
+        let nearest = [
+            (f64::from(a[0]) + t * v[0]) as f32,
+            (f64::from(a[1]) + t * v[1]) as f32,
+        ];
         let delta = [t * v[0] - va[0], t * v[1] - va[1]];
-        (delta[0] * delta[0] + delta[1] * delta[1], nearest)
+        ((delta[0] * delta[0] + delta[1] * delta[1]) as f32, nearest)
     }
+}
+
+fn scaled_f32(coordinate: i64, scale: f32) -> f32 {
+    coordinate as f32 * scale
 }

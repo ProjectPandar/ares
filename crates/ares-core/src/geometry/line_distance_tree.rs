@@ -3,13 +3,20 @@ mod intersections;
 mod outside;
 mod query;
 
-use super::{Line, Point};
+use super::{CoordinateScale, Line, Point};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct NearestLine {
     pub(crate) line_index: usize,
     pub(crate) squared_distance: f64,
     pub(crate) nearest_point: [f64; 2],
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct NearestLineF32 {
+    pub(crate) line_index: usize,
+    pub(crate) squared_distance: f32,
+    pub(crate) nearest_point: [f32; 2],
 }
 
 pub(crate) struct LineDistanceTree<'a> {
@@ -58,8 +65,12 @@ impl<'a> LineDistanceTree<'a> {
         query::nearest(self.lines, &self.nodes, point)
     }
 
-    pub(crate) fn nearest_f64(&self, point: [f64; 2]) -> Option<NearestLine> {
-        query::nearest_f64(self.lines, &self.nodes, point)
+    pub(crate) fn nearest_f32(
+        &self,
+        point: [f32; 2],
+        scale: CoordinateScale,
+    ) -> Option<NearestLineF32> {
+        query::nearest_f32(self.lines, &self.nodes, point, scale.factor() as f32)
     }
 
     pub(crate) fn intersections_sorted(&self, line: Line) -> Vec<(Point, usize)> {

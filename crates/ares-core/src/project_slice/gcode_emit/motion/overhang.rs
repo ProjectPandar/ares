@@ -236,10 +236,10 @@ impl BoundaryContext<'_> {
         let candidate = interpolate(current, next, factor);
         let raw_distance = self.signed_distance((candidate.x, candidate.y));
         let candidate = ExtendedPoint {
-            distance: (raw_distance + f64::from(self.offset)) as f32,
+            distance: raw_distance + self.offset,
             ..candidate
         };
-        if raw_distance.abs() > f64::from(minimum_slowdown_distance)
+        if raw_distance.abs() > minimum_slowdown_distance
             && distance(current, candidate) > self.minimum_spacing
             && distance(candidate, next) > self.minimum_spacing
         {
@@ -252,20 +252,20 @@ impl BoundaryContext<'_> {
         ExtendedPoint {
             x: point.0,
             y: point.1,
-            distance: (raw_distance + f64::from(self.offset)) as f32,
+            distance: raw_distance + self.offset,
         }
     }
 
-    fn signed_distance(&self, point: (f64, f64)) -> f64 {
+    fn signed_distance(&self, point: (f64, f64)) -> f32 {
         let nearest = self
             .tree
-            .nearest_f64([point.0 / self.scale.factor(), point.1 / self.scale.factor()])
+            .nearest_f32([point.0 as f32, point.1 as f32], self.scale)
             .expect("a nonempty boundary has a nearest line");
         let scaled = Point::new(
             scale_round(point.0, self.scale),
             scale_round(point.1, self.scale),
         );
-        f64::from(self.tree.outside(scaled)) * nearest.squared_distance.sqrt() * self.scale.factor()
+        self.tree.outside(scaled) as f32 * nearest.squared_distance.sqrt()
     }
 
     fn scaled(&self, point: ExtendedPoint) -> Point {
