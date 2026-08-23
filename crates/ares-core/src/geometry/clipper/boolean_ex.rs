@@ -175,8 +175,15 @@ fn execute_two_pass(
     paths_clipper: &mut Clipper,
     operation: ClipOperation,
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    Ok(paths_clipper
-        .execute_polytree(operation, FillRule::NonZero, FillRule::NonZero)
+    let paths = paths_clipper.execute_paths(operation, FillRule::NonZero, FillRule::NonZero)?;
+    if paths.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let mut tree_clipper = Clipper::new(ClipperOptions::default());
+    tree_clipper.add_closed_paths(&paths, PathRole::Subject)?;
+    Ok(tree_clipper
+        .execute_polytree(ClipOperation::Union, FillRule::NonZero, FillRule::NonZero)
         .into_expolygons())
 }
 

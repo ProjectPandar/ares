@@ -354,20 +354,24 @@ fn task22o24_mixed_intersection_uses_nonzero_for_overlapping_subject_paths() {
 }
 
 #[test]
-fn mixed_intersection_preserves_multicomponent_nested_islands() {
+fn mixed_intersection_preserves_multicomponent_nested_island_order() {
     let subject = vec![
         polygon(&[(0, 0), (100, 0), (100, 100), (0, 100)]),
         polygon(&[(20, 20), (20, 80), (80, 80), (80, 20)]),
         polygon(&[(40, 40), (60, 40), (60, 60), (40, 60)]),
         polygon(&[(200, 0), (300, 0), (300, 100), (200, 100)]),
     ];
-    let result = intersection_polygons_ex(&subject, &[rectangle(-10, -10, 310, 110)]).unwrap();
-
-    assert_eq!(result.len(), 3);
-    assert!(result.contains(&expolygon_with_holes(
-        &[(100, 100), (0, 100), (0, 0), (100, 0)],
-        &[&[(20, 20), (20, 80), (80, 80), (80, 20)]],
-    )));
-    assert!(result.contains(&expolygon(&[(60, 60), (40, 60), (40, 40), (60, 40)])));
-    assert!(result.contains(&expolygon(&[(300, 100), (200, 100), (200, 0), (300, 0)])));
+    let clip = rectangle(-10, -10, 310, 110);
+    let result = intersection_polygons_ex(&subject, std::slice::from_ref(&clip)).unwrap();
+    assert_eq!(
+        result,
+        vec![
+            expolygon_with_holes(
+                &[(100, 100), (0, 100), (0, 0), (100, 0)],
+                &[&[(20, 20), (20, 80), (80, 80), (80, 20)]],
+            ),
+            expolygon(&[(60, 60), (40, 60), (40, 40), (60, 40)]),
+            expolygon(&[(300, 100), (200, 100), (200, 0), (300, 0)]),
+        ]
+    );
 }
