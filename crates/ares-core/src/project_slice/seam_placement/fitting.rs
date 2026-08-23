@@ -81,6 +81,48 @@ pub(super) fn append(polyline: &mut Polyline3, point: Point3) {
     }
 }
 
+pub(super) fn append_polyline(target: &mut Polyline3, source: Polyline3) {
+    if source.points.len() < 2 {
+        return;
+    }
+    if target.points.is_empty() {
+        *target = source;
+        return;
+    }
+
+    append(target, source.points[0]);
+    if target.fitting.is_empty() && !source.fitting.is_empty() {
+        target.fitting.push(FittedMove {
+            start: 0,
+            end: target.points.len() - 1,
+            arc: None,
+        });
+    }
+    target.points.extend(source.points.into_iter().skip(1));
+    if let Some(last) = target.fitting.last() {
+        if source.fitting.is_empty() {
+            let start = last.end;
+            let end = target.points.len() - 1;
+            if start != end {
+                target.fitting.push(FittedMove {
+                    start,
+                    end,
+                    arc: None,
+                });
+            }
+        } else {
+            let offset = last.end;
+            target
+                .fitting
+                .extend(source.fitting.into_iter().map(|mut fitted| {
+                    fitted.start += offset;
+                    fitted.end += offset;
+                    fitted
+                }));
+        }
+    }
+}
+
 pub(super) fn prepend(polyline: &mut Polyline3, point: Point3) {
     if polyline.points.first() == Some(&point) {
         return;

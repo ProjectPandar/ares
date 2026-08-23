@@ -90,6 +90,7 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
     };
 
     split_at(&mut loop_, (1_000_000, 0), CoordinateScale::Normal);
+    assert_eq!(loop_.paths.len(), 1);
 
     assert_eq!(
         loop_.paths[0].polyline.points[..2],

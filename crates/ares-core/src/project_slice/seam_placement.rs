@@ -314,10 +314,22 @@ fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: CoordinateScale)
         .find(|point| squared_distance((point.x, point.y), seam) < snap_distance_squared)
         .map_or(seam, |point| (point.x, point.y));
     let projection = closest_projection(&loop_.paths, seam);
+    let single_path = loop_.paths.len() == 1;
     let mut paths = std::mem::take(&mut loop_.paths);
     let following = paths.split_off(projection.path + 1);
     let target = paths.pop().expect("projected path exists");
     let split = projected_parts(target, &projection, scale);
+    if single_path {
+        match split {
+            (Some(mut suffix), Some(prefix)) => {
+                fitting::append_polyline(&mut suffix.polyline, prefix.polyline);
+                loop_.paths.push(suffix);
+            }
+            (Some(path), None) | (None, Some(path)) => loop_.paths.push(path),
+            (None, None) => unreachable!("a projected loop path has a valid side"),
+        }
+        return;
+    }
     loop_.paths.extend(split.0);
     loop_.paths.extend(following);
     loop_.paths.extend(paths);
