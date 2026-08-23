@@ -1,4 +1,5 @@
 mod arc;
+use super::motion_util::{clamp, clamped_word, norm, scale, word};
 mod planner;
 pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     const REFRESH_THRESHOLD: usize = 256;
@@ -359,42 +360,4 @@ impl MotionState {
             self.position[axis] = value.unwrap_or(self.position[axis]);
         }
     }
-}
-
-fn clamped_word(code: &str, letter: char, current: f64, maximum: f64) -> f64 {
-    word(code, letter).map_or(current, |value| clamp(value, maximum))
-}
-
-fn clamp(value: f64, maximum: f64) -> f64 {
-    if maximum > 0.0 {
-        value.min(maximum)
-    } else {
-        value
-    }
-}
-
-pub(super) fn word(code: &str, letter: char) -> Option<f64> {
-    let start = code.find(letter)? + letter.len_utf8();
-    let value = &code[start..];
-    let end = value
-        .find(|character: char| character.is_ascii_alphabetic())
-        .unwrap_or(value.len());
-    value[..end].trim().parse().ok()
-}
-
-fn norm(value: [f64; 4]) -> f64 {
-    value
-        .iter()
-        .map(|component| component * component)
-        .sum::<f64>()
-        .sqrt()
-}
-
-fn scale(value: [f64; 4], factor: f64) -> [f64; 4] {
-    [
-        value[0] * factor,
-        value[1] * factor,
-        value[2] * factor,
-        value[3] * factor,
-    ]
 }

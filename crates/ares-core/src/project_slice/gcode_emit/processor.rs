@@ -1,8 +1,10 @@
 mod delays;
 mod motion;
+mod motion_util;
 mod time;
 use delays::command_delay;
-use motion::{MotionBlock, MotionState, planned_times, word};
+use motion::{MotionBlock, MotionState, planned_times};
+use motion_util::word;
 use time::{duration, minutes};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
