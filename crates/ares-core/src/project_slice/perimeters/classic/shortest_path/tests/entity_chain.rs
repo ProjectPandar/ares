@@ -136,7 +136,7 @@ fn gap_extrusion_path(first: i64, last: i64) -> ExtrusionPath {
 }
 
 #[test]
-fn task22o201_thick_polylines_follow_shortest_reversible_endpoint_chain() {
+fn task22o201_thick_polylines_chain_front_points_without_reversal() {
     let thick = |start, end| ThickPolyline {
         points: vec![Point::new(start, 0), Point::new(end, 0)],
         width: vec![1.0, 1.0],
@@ -151,6 +151,6 @@ fn task22o201_thick_polylines_follow_shortest_reversible_endpoint_chain() {
             .iter()
             .map(|line| (line.points[0].x(), line.points[1].x()))
             .collect::<Vec<_>>(),
-        [(0, 10), (20, 30), (100, 110)]
+        [(100, 110), (30, 20), (10, 0)]
     );
 }

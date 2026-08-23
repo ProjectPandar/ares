@@ -118,6 +118,22 @@ pub(in crate::project_slice) fn chain_extrusion_loops(
     };
     chain.into_iter().map(|(index, _)| (index, false)).collect()
 }
+pub(super) fn chain_points(points: &[crate::geometry::Point]) -> Vec<usize> {
+    if points.len() < 2 {
+        return (0..points.len()).collect();
+    }
+    let positions = points
+        .iter()
+        .flat_map(|point| {
+            let position = [point.x() as f64, point.y() as f64];
+            [position, position]
+        })
+        .collect::<Vec<_>>();
+    chain_multiple(&positions, None)
+        .into_iter()
+        .map(|(index, _)| index)
+        .collect()
+}
 
 fn chain_multiple(positions: &[[f64; 2]], start_near: Option<[f64; 2]>) -> Vec<(usize, bool)> {
     chain_multiple_constrained(positions, start_near, None)

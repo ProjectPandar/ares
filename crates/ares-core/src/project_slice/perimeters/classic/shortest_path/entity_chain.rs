@@ -1,4 +1,4 @@
-use super::chain::chain_segments_constrained;
+use super::chain::{chain_points, chain_segments_constrained};
 use crate::{
     geometry::{Coord, Point, ThickPolyline},
     project_slice::{
@@ -203,7 +203,19 @@ impl ChainEntity for ThickPolyline {
 }
 
 pub(in crate::project_slice) fn reorder_thick_polylines(polylines: &mut Vec<ThickPolyline>) {
-    chain_and_reorder_entities(polylines, Point::new(0, 0));
+    let points = polylines
+        .iter()
+        .map(|line| line.points[0])
+        .collect::<Vec<_>>();
+    let order = chain_points(&points);
+    let mut source = std::mem::take(polylines)
+        .into_iter()
+        .map(Some)
+        .collect::<Vec<_>>();
+    polylines.reserve(order.len());
+    for index in order {
+        polylines.push(source[index].take().expect("chain indices are unique"));
+    }
 }
 
 const fn coordinates(point: Point) -> [Coord; 2] {
