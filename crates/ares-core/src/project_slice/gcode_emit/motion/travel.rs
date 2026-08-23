@@ -24,8 +24,11 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
 }
 
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
-    let wipe_moves = wipe_moves(state);
-    let wiped_distance = wipe_moves.iter().map(|(_, length)| length).sum::<f64>();
+    let WipePath {
+        segments,
+        retraction_distance,
+        distribution_distance,
+    } = wipe_moves(state);
     let requested_before = state.options.retraction_length * state.options.retract_before_wipe;
     let remaining = state.options.retraction_length - requested_before;
     let wipe_speed = if state.options.role_based_wipe_speed {
@@ -34,8 +37,8 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
         state.options.wipe_speed
     }
     .max(10.0);
-    let during =
-        (state.options.retraction_feedrate / 60.0 * wiped_distance / wipe_speed).min(remaining);
+    let during = (state.options.retraction_feedrate / 60.0 * retraction_distance / wipe_speed)
+        .min(remaining);
     let before = state.options.retraction_length - during;
     if before > f64::EPSILON {
         output.extend_from_slice(
@@ -47,15 +50,15 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
             .as_bytes(),
         );
     }
-    if !wipe_moves.is_empty() && during > f64::EPSILON {
+    if !segments.is_empty() && during > f64::EPSILON {
         output.extend_from_slice(b"; WIPE_START\n");
         if before > f64::EPSILON && state.options.role_based_wipe_speed {
             output.extend_from_slice(
                 format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes(),
             );
         }
-        for (point, length) in wipe_moves {
-            let retraction = during * (length / wiped_distance);
+        for (point, segment_length) in segments {
+            let retraction = during * (segment_length / distribution_distance);
             output.extend_from_slice(
                 format!(
                     "G1 X{} Y{} E{}\n",
@@ -73,9 +76,16 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
     }
 }
 
-fn wipe_moves(state: &EmitState) -> Vec<(arc::Point, f64)> {
+#[derive(Default)]
+struct WipePath {
+    segments: Vec<(arc::Point, f64)>,
+    retraction_distance: f64,
+    distribution_distance: f64,
+}
+
+fn wipe_moves(state: &EmitState) -> WipePath {
     if !state.options.wipe || state.options.wipe_distance <= 0.0 {
-        return Vec::new();
+        return WipePath::default();
     }
     let start = state.wipe_start.unwrap_or(arc::Point {
         x: state.x,
@@ -98,7 +108,9 @@ fn wipe_moves(state: &EmitState) -> Vec<(arc::Point, f64)> {
             dx.hypot(dy)
         })
         .sum::<f64>();
-    let mut clip = total_length - state.options.wipe_distance / state.scale_factor;
+    let configured_distance = state.options.wipe_distance / state.scale_factor;
+    let retraction_distance = total_length.min(configured_distance) * state.scale_factor;
+    let mut clip = total_length - configured_distance;
     while clip > 0.0 {
         let last = points.pop().unwrap();
         let previous = *points.last().unwrap();
@@ -114,15 +126,25 @@ fn wipe_moves(state: &EmitState) -> Vec<(arc::Point, f64)> {
         }
         clip -= length;
     }
-    points
+    let segments = points
         .windows(2)
         .filter_map(|segment| {
             let dx = (segment[1].0 - segment[0].0) as f64;
             let dy = (segment[1].1 - segment[0].1) as f64;
-            let length = dx.hypot(dy) * state.scale_factor;
+            let length = dx.hypot(dy);
             (length > f64::EPSILON).then(|| (unscaled_position(segment[1], state), length))
         })
-        .collect()
+        .collect::<Vec<_>>();
+    let distribution_distance = segments
+        .iter()
+        .map(|(_, length)| length)
+        .sum::<f64>()
+        .min(configured_distance);
+    WipePath {
+        segments,
+        retraction_distance,
+        distribution_distance,
+    }
 }
 
 fn scaled_position(point: arc::Point, state: &EmitState) -> (i64, i64) {

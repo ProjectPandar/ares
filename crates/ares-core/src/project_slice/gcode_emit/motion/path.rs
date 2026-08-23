@@ -336,7 +336,6 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
     let original_feedrate = original_speed * 60.0;
     let mut last_feedrate = processed[0].speed * 60.0;
     let mut previous = points[0];
-    let mut last_emitted_index = 0;
     for index in 1..points.len() {
         let end = arc::Point {
             x: points[index].0,
@@ -363,14 +362,12 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
             last_feedrate = original_feedrate;
         }
         emit_linear_segment(output, end, length, properties, state);
-        last_emitted_index = index;
         previous = (end.x, end.y);
     }
     state.extrusion_feedrate = last_feedrate;
-    let last = processed[last_emitted_index];
-    state.wipe_start = Some(arc::Point {
-        x: last.x + state.offset.0,
-        y: last.y + state.offset.1,
+    state.wipe_start = wipe_points.last().map(|&(x, y)| arc::Point {
+        x: x + state.offset.0,
+        y: y + state.offset.1,
     });
     state.wipe_path = wipe_points
         .iter()
