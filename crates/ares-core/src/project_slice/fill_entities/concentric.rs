@@ -6,14 +6,17 @@ use crate::{
     },
     project_slice::{
         group_fills::SurfaceFill,
-        perimeters::classic::{
-            gap_extrusion::variable_width, materialize::ExtrusionRole as MaterializedRole,
-            shortest_path::reorder_thick_polylines,
+        perimeters::{
+            classic::{
+                gap_extrusion::variable_width, materialize::ExtrusionRole as MaterializedRole,
+                shortest_path::reorder_thick_polylines,
+            },
+            flow::with_spacing,
         },
     },
 };
 
-use super::{LayerFillEntities, geometry_error};
+use super::{FillExtrusionCollection, FillExtrusionEntity, LayerFillEntities, geometry_error};
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
@@ -48,29 +51,22 @@ pub(super) fn append(
                 fill.params.loop_clipping as f64,
             );
         }
-        let mut converted = variable_width::convert_with_role(
+        let entities = variable_width::convert_with_role(
             &polylines,
-            fill.params.flow,
+            with_spacing(fill.params.flow, fill.params.spacing as f32),
             scale,
             MaterializedRole::SolidInfill,
-        )?;
-        for entity in &mut converted.entities {
-            match entity {
-                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(
-                    path,
-                ) => {
-                    path.can_reverse = false;
-                }
-                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(
-                    paths,
-                ) => {
-                    for path in paths {
-                        path.can_reverse = false;
-                    }
-                }
-            }
+        )?
+        .entities
+        .into_iter()
+        .map(FillExtrusionEntity::VariableWidth)
+        .collect::<Vec<_>>();
+        if !entities.is_empty() {
+            output.collections.push(FillExtrusionCollection {
+                entities,
+                no_sort: true,
+            });
         }
-        output.thin_fills.extend(converted.entities);
     }
     Ok(())
 }

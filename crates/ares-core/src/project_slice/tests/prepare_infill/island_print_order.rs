@@ -1,8 +1,10 @@
 use crate::project_slice::{
     extrusion_islands::{self, ExtrusionIsland, IslandInfillEntity},
-    fill_entities::{self, FillExtrusionCollection},
+    fill_entities::{self, FillExtrusionCollection, FillExtrusionEntity},
     island_print_order::{self, IslandPrintEntity},
-    perimeters::classic::entity_collections::ExtrusionEntityCollection,
+    perimeters::classic::{
+        entity_collections::ExtrusionEntityCollection, gap_extrusion::GapFillEntity,
+    },
     tests::prepare_infill::group_fills::focused::fixture::graph,
 };
 
@@ -10,7 +12,7 @@ use crate::project_slice::{
 fn task22o95_orders_first_and_later_layer_phases_from_option() {
     let island = || ExtrusionIsland {
         infills: vec![IslandInfillEntity::Fill(FillExtrusionCollection {
-            paths: Vec::new(),
+            entities: Vec::new(),
             no_sort: false,
         })],
         perimeters: vec![ExtrusionEntityCollection::default()],
@@ -100,11 +102,17 @@ fn record_inventory(
     match entity {
         IslandPrintEntity::Perimeter(_) => counts.3 += 1,
         IslandPrintEntity::Fill(collection) => {
-            assert!(
-                collection.paths.iter().all(|path| {
+            assert!(collection.entities.iter().all(|entity| match entity {
+                FillExtrusionEntity::Path(path) => {
                     path.polyline.front().is_some() && path.polyline.back().is_some()
-                })
-            );
+                }
+                FillExtrusionEntity::VariableWidth(GapFillEntity::Path(path)) => {
+                    path.polyline.points.len() >= 2
+                }
+                FillExtrusionEntity::VariableWidth(GapFillEntity::Loop(paths)) => {
+                    !paths.is_empty() && paths.iter().all(|path| path.polyline.points.len() >= 2)
+                }
+            }));
             counts.4 += 1;
             counts.6 += usize::from(collection.no_sort);
             counts.7 += usize::from(!collection.no_sort);

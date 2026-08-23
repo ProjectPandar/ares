@@ -4,7 +4,7 @@ mod monotonic;
 mod types;
 
 pub(in crate::project_slice) use types::{
-    FillExtrusionCollection, FillExtrusionPath, LayerFillEntities,
+    FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities,
 };
 
 use crate::{

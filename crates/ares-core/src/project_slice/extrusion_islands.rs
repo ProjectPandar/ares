@@ -78,12 +78,7 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
         .collect::<Vec<_>>();
 
     for collection in std::mem::take(&mut layer.collections) {
-        let island = island_index(
-            collection.paths[0].polyline.points()[0],
-            slices,
-            &bounds,
-            &order,
-        );
+        let island = island_index(collection.first_point(), slices, &bounds, &order);
         islands[island]
             .infills
             .push(IslandInfillEntity::Fill(collection));

@@ -5,7 +5,10 @@ use crate::{
     project_slice::group_fills::SurfaceFill,
 };
 
-use super::{FillExtrusionCollection, FillExtrusionPath, LayerFillEntities, geometry_error};
+use super::{
+    FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities,
+    geometry_error,
+};
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
@@ -30,15 +33,17 @@ pub(super) fn append(
             continue;
         }
         output.collections.push(FillExtrusionCollection {
-            paths: polylines
+            entities: polylines
                 .into_iter()
-                .map(|polyline| FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
-                    role: fill.params.extrusion_role,
-                    mm3_per_mm: fill.params.flow.mm3_per_mm,
-                    width: fill.params.flow.width,
-                    height: fill.params.flow.height,
+                .map(|polyline| {
+                    FillExtrusionEntity::Path(FillExtrusionPath {
+                        polyline,
+                        fitting: Vec::new(),
+                        role: fill.params.extrusion_role,
+                        mm3_per_mm: fill.params.flow.mm3_per_mm,
+                        width: fill.params.flow.width,
+                        height: fill.params.flow.height,
+                    })
                 })
                 .collect(),
             no_sort: false,

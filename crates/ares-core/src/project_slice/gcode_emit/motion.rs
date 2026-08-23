@@ -20,8 +20,14 @@ pub(in crate::project_slice::gcode_emit) use options::first_nullable_float;
 
 use super::super::island_print_order::{IslandPrintEntity, OrderedExtrusionLayer};
 use crate::{
-    SliceError, geometry::Point,
-    project_slice::perimeters::classic::shortest_path::chain_and_reorder_entities,
+    SliceError,
+    geometry::Point,
+    project_slice::{
+        fill_entities::FillExtrusionEntity,
+        perimeters::classic::{
+            gap_extrusion::GapFillEntity, shortest_path::chain_and_reorder_entities,
+        },
+    },
 };
 
 #[derive(Default)]
@@ -186,44 +192,65 @@ fn emit_infills(
         match entity {
             IslandPrintEntity::Fill(collection) => {
                 let collection = collection.chained_path_from(local_cursor(state, geometry));
-                for path in &collection.paths {
-                    path::emit(
-                        output,
-                        path.polyline
-                            .points()
-                            .iter()
-                            .map(|point| (point.x(), point.y())),
-                        PathProperties {
-                            mm3_per_mm: path.mm3_per_mm,
-                            width: path.width,
-                            height: path.height,
-                            feature: features::for_fill(path.role),
-                            is_perimeter: matches!(
-                                path.role,
-                                crate::ExtrusionRole::Perimeter
-                                    | crate::ExtrusionRole::ExternalPerimeter
-                                    | crate::ExtrusionRole::OverhangPerimeter
-                            ),
-                            end_clip: 0.0,
-                            fitting: &path.fitting,
-                        },
-                        geometry,
-                        state,
-                    );
+                for entity in &collection.entities {
+                    emit_fill_entity(output, entity, geometry, state);
                 }
             }
-            IslandPrintEntity::Thin(entity) => match &entity {
-                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(
-                    path,
-                ) => emit_materialized_path(output, path, 0.0, geometry, state),
-                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(
-                    paths,
-                ) => loop_paths::emit(output, paths, geometry, state),
-            },
+            IslandPrintEntity::Thin(entity) => {
+                emit_variable_width_entity(output, &entity, geometry, state);
+            }
             IslandPrintEntity::Perimeter(_) => {
                 unreachable!("infill phase contains only infill entities")
             }
         }
+    }
+}
+
+fn emit_fill_entity(
+    output: &mut Vec<u8>,
+    entity: &FillExtrusionEntity,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    match entity {
+        FillExtrusionEntity::Path(path) => path::emit(
+            output,
+            path.polyline
+                .points()
+                .iter()
+                .map(|point| (point.x(), point.y())),
+            PathProperties {
+                mm3_per_mm: path.mm3_per_mm,
+                width: path.width,
+                height: path.height,
+                feature: features::for_fill(path.role),
+                is_perimeter: matches!(
+                    path.role,
+                    crate::ExtrusionRole::Perimeter
+                        | crate::ExtrusionRole::ExternalPerimeter
+                        | crate::ExtrusionRole::OverhangPerimeter
+                ),
+                end_clip: 0.0,
+                fitting: &path.fitting,
+            },
+            geometry,
+            state,
+        ),
+        FillExtrusionEntity::VariableWidth(entity) => {
+            emit_variable_width_entity(output, entity, geometry, state);
+        }
+    }
+}
+
+fn emit_variable_width_entity(
+    output: &mut Vec<u8>,
+    entity: &GapFillEntity,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    match entity {
+        GapFillEntity::Path(path) => emit_materialized_path(output, path, 0.0, geometry, state),
+        GapFillEntity::Loop(paths) => loop_paths::emit(output, paths, geometry, state),
     }
 }
 

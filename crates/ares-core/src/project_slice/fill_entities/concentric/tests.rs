@@ -2,7 +2,7 @@ use crate::{
     ExtrusionRole,
     geometry::{CoordinateScale, ExPolygon, Point, Polygon, ThickPolyline},
     project_slice::{
-        fill_entities::LayerFillEntities,
+        fill_entities::{FillExtrusionEntity, LayerFillEntities},
         group_fills::{RepresentativeSurface, SurfaceFill, SurfaceFillParams, SurfaceFillPattern},
         perimeters::types::Flow,
         region_slices::RegionSurfaceKind,
@@ -208,5 +208,15 @@ fn task22o204_concentric_reorders_each_fill_expolygon_independently() {
     append(&mut expected, make_fill(vec![right]), 0.4, scale).unwrap();
     append(&mut expected, make_fill(vec![left]), 0.4, scale).unwrap();
 
-    assert_eq!(actual.thin_fills, expected.thin_fills);
+    assert_eq!(actual.collections, expected.collections);
+    assert_eq!(actual.collections.len(), 2);
+    assert!(actual.collections.iter().all(|collection| {
+        collection.no_sort
+            && !collection.entities.is_empty()
+            && collection
+                .entities
+                .iter()
+                .all(|entity| matches!(entity, FillExtrusionEntity::VariableWidth(_)))
+    }));
+    assert!(actual.thin_fills.is_empty());
 }

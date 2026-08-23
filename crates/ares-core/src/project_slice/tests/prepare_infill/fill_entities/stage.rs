@@ -1,6 +1,7 @@
-use crate::{
-    project_slice::perimeters::classic::gap_extrusion::GapFillEntity,
-    project_slice::{fill_entities, tests::prepare_infill::group_fills::focused::fixture::graph},
+use crate::project_slice::{
+    fill_entities::{self, FillExtrusionEntity},
+    perimeters::classic::gap_extrusion::GapFillEntity,
+    tests::prepare_infill::group_fills::focused::fixture::graph,
 };
 
 #[test]
@@ -18,7 +19,7 @@ fn task22o91_stage_materializes_all_objects_and_layers_in_order() {
         layer
             .collections
             .iter()
-            .all(|collection| collection.paths.iter().all(|path| path.polyline.is_valid()))
+            .all(|collection| collection.entities.iter().all(valid_fill_entity))
     }));
     let thin_inventory = prepared.objects[0]
         .iter()
@@ -90,6 +91,18 @@ fn task22o91_stage_materializes_all_objects_and_layers_in_order() {
     );
     fill_entities::dispose(prepared);
     assert_eq!(fill_entities::disposals(), 1);
+}
+
+fn valid_fill_entity(entity: &FillExtrusionEntity) -> bool {
+    match entity {
+        FillExtrusionEntity::Path(path) => path.polyline.is_valid(),
+        FillExtrusionEntity::VariableWidth(GapFillEntity::Path(path)) => {
+            path.polyline.points.len() >= 2
+        }
+        FillExtrusionEntity::VariableWidth(GapFillEntity::Loop(paths)) => {
+            !paths.is_empty() && paths.iter().all(|path| path.polyline.points.len() >= 2)
+        }
+    }
 }
 
 #[test]

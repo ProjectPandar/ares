@@ -1,7 +1,7 @@
 use crate::{
     ExtrusionRole, ProcessInfillPattern,
     project_slice::{
-        fill_entities::generate_layer,
+        fill_entities::{FillExtrusionEntity, generate_layer},
         prepare_infill::combine_infill,
         region_slices::RegionSurfaceKind,
         tests::prepare_infill::group_fills::focused::fixture::{
@@ -33,13 +33,14 @@ fn task22o90_monotonic_internal_solid_becomes_ordered_flow_entities() {
     assert_eq!(graph_snapshot(&graph).bytes, before.bytes);
     assert_eq!(first.collections.len(), 1);
     assert!(first.collections[0].no_sort);
-    assert!(!first.collections[0].paths.is_empty());
-    assert!(
-        first.collections[0]
-            .paths
-            .iter()
-            .all(|path| path.role == ExtrusionRole::SolidInfill && path.polyline.is_valid())
-    );
+    assert!(!first.collections[0].entities.is_empty());
+    assert!(first.collections[0].entities.iter().all(|entity| {
+        matches!(
+            entity,
+            FillExtrusionEntity::Path(path)
+                if path.role == ExtrusionRole::SolidInfill && path.polyline.is_valid()
+        )
+    }));
     combine_infill::dispose(graph);
 }
 
@@ -60,12 +61,12 @@ fn task22o90_monotonicline_top_surface_keeps_lines_disconnected() {
 
     assert_eq!(entities.collections.len(), 1);
     assert!(entities.collections[0].no_sort);
-    assert!(entities.collections[0].paths.len() > 1);
-    assert!(
-        entities.collections[0]
-            .paths
-            .iter()
-            .all(|path| path.role == ExtrusionRole::TopSolidInfill)
-    );
+    assert!(entities.collections[0].entities.len() > 1);
+    assert!(entities.collections[0].entities.iter().all(|entity| {
+        matches!(
+            entity,
+            FillExtrusionEntity::Path(path) if path.role == ExtrusionRole::TopSolidInfill
+        )
+    }));
     combine_infill::dispose(graph);
 }

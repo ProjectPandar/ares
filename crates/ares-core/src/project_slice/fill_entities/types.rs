@@ -16,10 +16,15 @@ pub(in crate::project_slice) struct FillExtrusionPath {
     pub(in crate::project_slice) width: f32,
     pub(in crate::project_slice) height: f32,
 }
+#[derive(Debug, PartialEq)]
+pub(in crate::project_slice) enum FillExtrusionEntity {
+    Path(FillExtrusionPath),
+    VariableWidth(GapFillEntity),
+}
 
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) struct FillExtrusionCollection {
-    pub(in crate::project_slice) paths: Vec<FillExtrusionPath>,
+    pub(in crate::project_slice) entities: Vec<FillExtrusionEntity>,
     pub(in crate::project_slice) no_sort: bool,
 }
 

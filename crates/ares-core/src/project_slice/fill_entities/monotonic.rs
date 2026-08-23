@@ -5,7 +5,10 @@ use crate::{
     project_slice::{group_fills::SurfaceFill, perimeters::flow::with_spacing},
 };
 
-use super::{FillExtrusionCollection, FillExtrusionPath, LayerFillEntities, geometry_error};
+use super::{
+    FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities,
+    geometry_error,
+};
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
@@ -41,16 +44,18 @@ pub(super) fn append(
         }
         let flow = with_spacing(fill.params.flow, generated.spacing);
         output.collections.push(FillExtrusionCollection {
-            paths: generated
+            entities: generated
                 .polylines
                 .into_iter()
-                .map(|polyline| FillExtrusionPath {
-                    polyline,
-                    fitting: Vec::new(),
-                    role: fill.params.extrusion_role,
-                    mm3_per_mm: flow.mm3_per_mm,
-                    width: flow.width,
-                    height: flow.height,
+                .map(|polyline| {
+                    FillExtrusionEntity::Path(FillExtrusionPath {
+                        polyline,
+                        fitting: Vec::new(),
+                        role: fill.params.extrusion_role,
+                        mm3_per_mm: flow.mm3_per_mm,
+                        width: flow.width,
+                        height: flow.height,
+                    })
                 })
                 .collect(),
             no_sort: true,

@@ -2,7 +2,7 @@ use super::chain::{chain_points, chain_segments_constrained};
 use crate::{
     geometry::{Coord, Point, ThickPolyline},
     project_slice::{
-        fill_entities::{FillExtrusionCollection, FillExtrusionPath},
+        fill_entities::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath},
         perimeters::classic::gap_extrusion::GapFillEntity,
     },
 };
@@ -48,26 +48,26 @@ pub(in crate::project_slice) fn chain_and_reorder_entities<T: ChainEntity>(
 
 impl FillExtrusionCollection {
     pub(in crate::project_slice) fn first_point(&self) -> Point {
-        self.paths[0].first_point()
+        self.entities[0].first_point()
     }
 
     pub(in crate::project_slice) fn last_point(&self) -> Point {
-        self.paths
+        self.entities
             .last()
             .expect("fill collection is nonempty")
             .last_point()
     }
 
     pub(in crate::project_slice) fn reverse(&mut self) {
-        for path in &mut self.paths {
-            path.reverse();
+        for entity in &mut self.entities {
+            entity.reverse();
         }
-        self.paths.reverse();
+        self.entities.reverse();
     }
 
     pub(in crate::project_slice) fn chained_path_from(mut self, start_near: Point) -> Self {
         if !self.no_sort {
-            chain_and_reorder_entities(&mut self.paths, start_near);
+            chain_and_reorder_entities(&mut self.entities, start_near);
         }
         self
     }
@@ -130,6 +130,36 @@ impl ChainEntity for FillExtrusionPath {
 
     fn reverse(&mut self) {
         FillExtrusionPath::reverse(self);
+    }
+}
+
+impl ChainEntity for FillExtrusionEntity {
+    fn first_point(&self) -> Point {
+        match self {
+            Self::Path(path) => path.first_point(),
+            Self::VariableWidth(entity) => entity.first_point(),
+        }
+    }
+
+    fn last_point(&self) -> Point {
+        match self {
+            Self::Path(path) => path.last_point(),
+            Self::VariableWidth(entity) => entity.last_point(),
+        }
+    }
+
+    fn can_reverse(&self) -> bool {
+        match self {
+            Self::Path(_) => true,
+            Self::VariableWidth(entity) => entity.can_reverse(),
+        }
+    }
+
+    fn reverse(&mut self) {
+        match self {
+            Self::Path(path) => path.reverse(),
+            Self::VariableWidth(entity) => entity.reverse(),
+        }
     }
 }
 

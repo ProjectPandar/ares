@@ -1,6 +1,7 @@
 use crate::{
     geometry::{CoordinateScale, Point, Polyline},
     project_slice::{
+        fill_entities::FillExtrusionEntity,
         gcode_emit,
         island_print_order::{
             IslandPrintEntity, OrderedExtrusionLayer, PreparedPostIslandPrintOrder,
@@ -49,33 +50,46 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                 }
             }
             IslandPrintEntity::Fill(collection) => {
-                for path in &mut collection.paths {
-                    let mut points = path
-                        .polyline
-                        .points()
-                        .iter()
-                        .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
-                        .collect::<Vec<_>>();
-                    path.fitting = gcode_emit::simplify_points(
-                        &mut points,
-                        fill_tolerance(path.role, tolerance),
-                    );
-                    path.polyline = Polyline::new(
-                        points
-                            .into_iter()
-                            .map(|point| scaled_point(point, scale))
-                            .collect(),
-                    );
+                for entity in &mut collection.entities {
+                    simplify_fill_entity(entity, scale, tolerance);
                 }
             }
-            IslandPrintEntity::Thin(entity) => match entity {
-                GapFillEntity::Path(path) => simplify_path3(path, scale, tolerance),
-                GapFillEntity::Loop(paths) => {
-                    for path in paths {
-                        simplify_path3(path, scale, tolerance);
-                    }
-                }
-            },
+            IslandPrintEntity::Thin(entity) => simplify_gap_entity(entity, scale, tolerance),
+        }
+    }
+}
+
+fn simplify_fill_entity(entity: &mut FillExtrusionEntity, scale: CoordinateScale, tolerance: f64) {
+    match entity {
+        FillExtrusionEntity::Path(path) => {
+            let mut points = path
+                .polyline
+                .points()
+                .iter()
+                .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
+                .collect::<Vec<_>>();
+            path.fitting =
+                gcode_emit::simplify_points(&mut points, fill_tolerance(path.role, tolerance));
+            path.polyline = Polyline::new(
+                points
+                    .into_iter()
+                    .map(|point| scaled_point(point, scale))
+                    .collect(),
+            );
+        }
+        FillExtrusionEntity::VariableWidth(entity) => {
+            simplify_gap_entity(entity, scale, tolerance);
+        }
+    }
+}
+
+fn simplify_gap_entity(entity: &mut GapFillEntity, scale: CoordinateScale, tolerance: f64) {
+    match entity {
+        GapFillEntity::Path(path) => simplify_path3(path, scale, tolerance),
+        GapFillEntity::Loop(paths) => {
+            for path in paths {
+                simplify_path3(path, scale, tolerance);
+            }
         }
     }
 }

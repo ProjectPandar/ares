@@ -2,7 +2,7 @@ use crate::{
     ExtrusionRole,
     geometry::{Point, Polyline, ThickPolyline},
     project_slice::{
-        fill_entities::{FillExtrusionCollection, FillExtrusionPath},
+        fill_entities::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath},
         perimeters::classic::{
             gap_extrusion::GapFillEntity,
             materialize::{ExtrusionPath, ExtrusionRole as PerimeterRole, Point3, Polyline3},
@@ -71,15 +71,17 @@ fn task22o96_gap_loop_reports_closed_endpoints_and_never_reverses() {
 
 fn collection(endpoints: &[(i64, i64)], no_sort: bool) -> FillExtrusionCollection {
     FillExtrusionCollection {
-        paths: endpoints
+        entities: endpoints
             .iter()
-            .map(|&(first, last)| FillExtrusionPath {
-                polyline: Polyline::new(vec![Point::new(first, 0), Point::new(last, 0)]),
-                fitting: Vec::new(),
-                role: ExtrusionRole::InternalInfill,
-                mm3_per_mm: 1.0,
-                width: 1.0,
-                height: 1.0,
+            .map(|&(first, last)| {
+                FillExtrusionEntity::Path(FillExtrusionPath {
+                    polyline: Polyline::new(vec![Point::new(first, 0), Point::new(last, 0)]),
+                    fitting: Vec::new(),
+                    role: ExtrusionRole::InternalInfill,
+                    mm3_per_mm: 1.0,
+                    width: 1.0,
+                    height: 1.0,
+                })
             })
             .collect(),
         no_sort,
@@ -95,13 +97,14 @@ fn endpoints(collections: &[FillExtrusionCollection]) -> Vec<(i64, i64)> {
 
 fn path_endpoints(collection: &FillExtrusionCollection) -> Vec<(i64, i64)> {
     collection
-        .paths
+        .entities
         .iter()
-        .map(|path| {
-            (
+        .map(|entity| match entity {
+            FillExtrusionEntity::Path(path) => (
                 path.polyline.front().unwrap().x(),
                 path.polyline.back().unwrap().x(),
-            )
+            ),
+            FillExtrusionEntity::VariableWidth(_) => panic!("expected fixed-width fill path"),
         })
         .collect()
 }
