@@ -131,6 +131,54 @@ fn task22o203_concentric_arachne_matches_source_narrow_branch() {
 }
 
 #[test]
+fn task22o205_concentric_arachne_matches_source_fractional_vertex() {
+    let domain = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(2_690_706, -20_263_054),
+            Point::new(-1_602_493, -15_969_855),
+            Point::new(-1_469_177, -15_836_537),
+            Point::new(-862_793, -15_909_651),
+            Point::new(-831_312, -15_909_411),
+            Point::new(-1_519_521, -15_813_200),
+            Point::new(-2_495_958, -15_601_912),
+            Point::new(-3_040_178, -15_548_538),
+            Point::new(-7_889_784, -15_548_538),
+            Point::new(-5_249_484, -18_188_838),
+            Point::new(-4_583_039, -17_856_194),
+            Point::new(-3_765_477, -17_595_579),
+            Point::new(-2_926_077, -17_465_343),
+            Point::new(-2_073_923, -17_465_343),
+            Point::new(-1_234_523, -17_595_579),
+            Point::new(-416_961, -17_856_194),
+            Point::new(347_353, -18_237_688),
+            Point::new(1_041_851, -18_730_630),
+            Point::new(1_480_065, -19_137_235),
+            Point::new(1_657_323, -19_329_792),
+            Point::new(2_027_204, -19_793_598),
+            Point::new(2_170_378, -20_012_730),
+            Point::new(2_499_256, -20_582_360),
+        ]),
+        Vec::new(),
+    );
+
+    let output =
+        generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
+    let target = Point::new(-3_822_737, -17_415_945);
+    let (line, index) = output
+        .iter()
+        .find_map(|line| {
+            line.points
+                .iter()
+                .position(|point| *point == target)
+                .map(|index| (line, index))
+        })
+        .expect("source fractional Voronoi vertex is generated");
+
+    assert_eq!(line.width[2 * index - 1], 377_078.0);
+    assert_eq!(line.width[2 * index], 377_078.0);
+}
+
+#[test]
 fn task22o204_concentric_reorders_each_fill_expolygon_independently() {
     let scale = CoordinateScale::Normal;
     let scaled = |value| scale.checked_scale(value).unwrap();
