@@ -115,36 +115,53 @@ fn insertion_sort<T>(items: &mut [T], less: &mut impl FnMut(&T, &T) -> bool) {
 
 fn heap_sort<T>(items: &mut [T], less: &mut impl FnMut(&T, &T) -> bool) {
     let len = items.len();
-    for start in (0..len / 2).rev() {
-        sift_down(items, start, len, less);
+    if len < 2 {
+        return;
+    }
+
+    for parent in (0..=(len - 2) / 2).rev() {
+        adjust_heap(items, parent, len, less);
     }
     for end in (1..len).rev() {
         items.swap(0, end);
-        sift_down(items, 0, end, less);
+        adjust_heap(&mut items[..end], 0, end, less);
     }
 }
 
-fn sift_down<T>(items: &mut [T], start: usize, end: usize, less: &mut impl FnMut(&T, &T) -> bool) {
-    let mut root = start;
-    loop {
-        let mut child = 2 * root + 1;
-        if child >= end {
-            return;
+fn adjust_heap<T>(items: &mut [T], hole: usize, len: usize, less: &mut impl FnMut(&T, &T) -> bool) {
+    // libstdc++ moves a hole down, then inserts the saved value back up.
+    // Record that path and rotate it to preserve the same equal-key permutation.
+    let mut path = [0usize; usize::BITS as usize];
+    let mut path_len = 1;
+    path[0] = hole;
+
+    let mut second_child = hole;
+    while second_child < (len - 1) / 2 {
+        second_child = 2 * (second_child + 1);
+        if less(&items[second_child], &items[second_child - 1]) {
+            second_child -= 1;
         }
-        if child + 1 < end && less(&items[child], &items[child + 1]) {
-            child += 1;
-        }
-        if !less(&items[root], &items[child]) {
-            return;
-        }
-        items.swap(root, child);
-        root = child;
+        path[path_len] = second_child;
+        path_len += 1;
+    }
+    if len & 1 == 0 && second_child == (len - 2) / 2 {
+        second_child = 2 * (second_child + 1) - 1;
+        path[path_len] = second_child;
+        path_len += 1;
+    }
+
+    let mut insertion = path_len - 1;
+    while insertion > 0 && less(&items[path[insertion]], &items[path[0]]) {
+        insertion -= 1;
+    }
+    for index in 0..insertion {
+        items.swap(path[index], path[index + 1]);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::fixed_gcc_sort_by;
+    use super::{fixed_gcc_sort_by, heap_sort};
 
     #[test]
     fn sorts_integers_stably_enough_for_equal_keys() {
@@ -182,6 +199,19 @@ mod tests {
             vec![
                 30, 4, 27, 6, 24, 9, 21, 12, 18, 15, 1, 31, 28, 25, 22, 19, 13, 10, 3, 16, 7, 8,
                 32, 0, 2, 29, 5, 26, 23, 11, 20, 14, 17,
+            ]
+        );
+    }
+
+    #[test]
+    fn heap_fallback_preserves_libstdcxx_equal_key_permutation() {
+        let mut values = (0..33).map(|id| (0, id)).collect::<Vec<_>>();
+        heap_sort(&mut values, &mut |left, right| left.0 < right.0);
+        assert_eq!(
+            values.into_iter().map(|(_, id)| id).collect::<Vec<_>>(),
+            vec![
+                18, 22, 10, 16, 26, 8, 20, 4, 24, 12, 32, 28, 7, 17, 3, 19, 9, 21, 1, 23, 11, 25,
+                5, 27, 13, 31, 29, 15, 0, 2, 6, 14, 30,
             ]
         );
     }
