@@ -1,7 +1,7 @@
 use crate::{
     ProcessInfillPattern, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
-    geometry::CoordinateScale,
+    geometry::{CoordinateScale, Point},
     project_slice::{group_fills::SurfaceFill, perimeters::flow::with_spacing},
 };
 
@@ -32,6 +32,8 @@ pub(super) fn append(
         thickness_layers: fill.representative.thickness_layers.max(1),
         fixed_angle: fill.params.fixed_angle,
         bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
+        // PrintObject::bounding_box() is symmetric about the centered object origin.
+        reference_point: Point::new(0, 0),
         dont_adjust: fill.params.bridge,
         anchor_length_max,
         link_max_length: 0.0,

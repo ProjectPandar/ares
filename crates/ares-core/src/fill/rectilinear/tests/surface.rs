@@ -26,6 +26,7 @@ fn params() -> MonotonicFillParams {
         thickness_layers: 1,
         fixed_angle: true,
         bridge_angle: None,
+        reference_point: Point::new(0, 0),
         dont_adjust: false,
         anchor_length_max: 1_000.0,
         link_max_length: 0.6,
@@ -77,6 +78,32 @@ fn large_scan_origins_follow_orca_float_horizontal_alignment() {
     let output = fill_monotonic_surface(&source, params(), CoordinateScale::Normal).unwrap();
 
     assert_eq!(output.polylines[0].points()[0].x(), -49_879_952);
+}
+
+#[test]
+fn unadjusted_solid_fill_aligns_scanlines_to_the_object_grid() {
+    let source = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(100_000, 0),
+            Point::new(1_100_000, 0),
+            Point::new(1_100_000, 800_000),
+            Point::new(100_000, 800_000),
+        ]),
+        Vec::new(),
+    );
+    let mut fill_params = params();
+    fill_params.dont_adjust = true;
+
+    let output = fill_monotonic_surface(&source, fill_params, CoordinateScale::Normal).unwrap();
+    let mut xs = output
+        .polylines
+        .iter()
+        .flat_map(|polyline| polyline.points().iter().map(|point| point.x()))
+        .collect::<Vec<_>>();
+    xs.sort_unstable();
+    xs.dedup();
+
+    assert_eq!(xs, [300_050, 500_050, 700_050, 900_050]);
 }
 
 #[test]

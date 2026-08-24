@@ -16,6 +16,7 @@ pub(crate) struct MonotonicFillParams {
     pub(crate) thickness_layers: u16,
     pub(crate) fixed_angle: bool,
     pub(crate) bridge_angle: Option<f32>,
+    pub(crate) reference_point: Point,
     pub(crate) dont_adjust: bool,
     pub(crate) anchor_length_max: f32,
     pub(crate) link_max_length: f64,
@@ -41,21 +42,26 @@ pub(crate) fn fill_monotonic_surface(
             spacing: params.spacing as f32,
         });
     }
-
-    let (minimum_x, maximum_x) = x_bounds(&slice.source);
-    let width = maximum_x - minimum_x;
+    let (source_minimum_x, maximum_x) = x_bounds(&slice.source);
+    let source_width = maximum_x - source_minimum_x;
     let nominal = checked_scale(scale, params.spacing)?;
     let mut line_spacing = (nominal as f32 / params.density) as i64;
-    if params.density > 0.9999 && !params.dont_adjust {
-        line_spacing = adjust_solid_spacing(width, line_spacing);
-    }
+    let full_infill = params.density > 0.9999;
+    let minimum_x = if full_infill && !params.dont_adjust {
+        line_spacing = adjust_solid_spacing(source_width, line_spacing);
+        source_minimum_x
+    } else {
+        let reference = rotate_point(params.reference_point, -f64::from(direction))?;
+        align_to_grid(source_minimum_x, line_spacing, reference.x())?
+    };
     let actual_spacing = (line_spacing as f64 * scale.factor()) as f32;
+    let width = maximum_x - minimum_x;
     let count = usize::try_from(
         (i128::from(width) + i128::from(line_spacing) - 1) / i128::from(line_spacing),
     )
     .map_err(|_| ClipperError::CoordinateOutOfRange)?;
     let scaled_epsilon = checked_scale(scale, 1.0e-4)?;
-    let x0 = if params.density > 0.9999 {
+    let x0 = if full_infill {
         minimum_x
             .checked_add((line_spacing + scaled_epsilon) / 2)
             .ok_or(ClipperError::CoordinateOutOfRange)?
@@ -140,6 +146,22 @@ fn x_bounds(expolygon: &ExPolygon) -> (i64, i64) {
         .fold((i64::MAX, i64::MIN), |(minimum, maximum), point| {
             (minimum.min(point.x()), maximum.max(point.x()))
         })
+}
+
+fn align_to_grid(coordinate: i64, spacing: i64, base: i64) -> Result<i64, ClipperError> {
+    let spacing = i128::from(spacing);
+    let delta = i128::from(coordinate) - i128::from(base);
+    i64::try_from(i128::from(base) + delta.div_euclid(spacing) * spacing)
+        .map_err(|_| ClipperError::CoordinateOutOfRange)
+}
+
+fn rotate_point(point: Point, angle: f64) -> Result<Point, ClipperError> {
+    let cosine = angle.cos();
+    let sine = angle.sin();
+    checked_point(
+        cosine * point.x() as f64 - sine * point.y() as f64,
+        cosine * point.y() as f64 + sine * point.x() as f64,
+    )
 }
 
 fn checked_scale(scale: CoordinateScale, value: f64) -> Result<i64, ClipperError> {
