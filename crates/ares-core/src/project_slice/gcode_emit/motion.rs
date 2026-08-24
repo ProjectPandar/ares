@@ -8,6 +8,9 @@ mod options;
 mod overhang;
 mod path;
 #[cfg(test)]
+#[path = "motion/path/tests.rs"]
+mod path_tests;
+#[cfg(test)]
 mod tests;
 mod travel;
 

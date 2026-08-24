@@ -59,9 +59,12 @@ pub(super) fn emit(
                 .collect::<Vec<_>>()
         },
     );
-    let Some(&(first_x, first_y)) = points.first() else {
+    // Source travels to the raw path start before overhang processing quantizes its points.
+    let Some(&(first_local_x, first_local_y)) = local_points.first() else {
         return;
     };
+    let first_x = first_local_x + state.offset.0;
+    let first_y = first_local_y + state.offset.1;
     let first_position = !state.positioned;
     let needs_travel = first_position
         || quantize_axis(first_x) != quantize_axis(state.x)
