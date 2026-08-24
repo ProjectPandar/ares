@@ -95,7 +95,9 @@ fn prepare_layer(
         .flat_map(|island| &island.entities)
         .filter_map(|entity| match entity {
             IslandPrintEntity::Perimeter(collection) => Some(collection),
-            IslandPrintEntity::Fill(_) | IslandPrintEntity::Thin(_) => None,
+            IslandPrintEntity::Fill(_)
+            | IslandPrintEntity::FillCollection(_)
+            | IslandPrintEntity::Thin(_) => None,
         })
         .collect::<Vec<_>>();
     let mut source_order = (0..collections.len()).collect::<Vec<_>>();

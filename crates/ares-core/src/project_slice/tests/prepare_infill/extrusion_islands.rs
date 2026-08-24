@@ -24,12 +24,21 @@ fn task22o94_assigns_ksr_entities_to_ordered_layer_islands() {
             counts.2 +=
                 usize::from(!fallback.infills.is_empty() || !fallback.perimeters.is_empty());
             for island in &layer.islands {
-                for infill in &island.infills {
-                    match infill {
-                        IslandInfillEntity::Fill(_) => counts.3 += 1,
-                        IslandInfillEntity::Thin(_) => counts.4 += 1,
-                    }
-                }
+                counts.3 += island
+                    .infills
+                    .iter()
+                    .filter(|infill| {
+                        matches!(
+                            infill,
+                            IslandInfillEntity::Fill(_) | IslandInfillEntity::FillCollection(_)
+                        )
+                    })
+                    .count();
+                counts.4 += island
+                    .infills
+                    .iter()
+                    .filter(|infill| matches!(infill, IslandInfillEntity::Thin(_)))
+                    .count();
                 counts.5 += island.perimeters.len();
                 match (island.infills.is_empty(), island.perimeters.is_empty()) {
                     (false, true) => counts.6 += 1,

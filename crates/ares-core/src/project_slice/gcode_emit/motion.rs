@@ -141,7 +141,11 @@ pub(super) fn emit_layer(
         let mut entities = std::mem::take(&mut island.entities);
         let infill_first = matches!(
             entities.first(),
-            Some(IslandPrintEntity::Fill(_) | IslandPrintEntity::Thin(_))
+            Some(
+                IslandPrintEntity::Fill(_)
+                    | IslandPrintEntity::FillCollection(_)
+                    | IslandPrintEntity::Thin(_)
+            )
         );
         if infill_first {
             let split = entities
@@ -193,7 +197,10 @@ fn emit_infills(
     chain_and_reorder_entities(entities, local_cursor(state, geometry));
     for entity in entities.drain(..) {
         match entity {
-            IslandPrintEntity::Fill(collection) => {
+            IslandPrintEntity::Fill(entity) => {
+                emit_fill_entity(output, &entity, geometry, state);
+            }
+            IslandPrintEntity::FillCollection(collection) => {
                 let collection = collection.chained_path_from(local_cursor(state, geometry));
                 for entity in &collection.entities {
                     emit_fill_entity(output, entity, geometry, state);

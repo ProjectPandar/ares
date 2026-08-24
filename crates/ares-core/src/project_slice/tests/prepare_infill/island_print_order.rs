@@ -11,10 +11,12 @@ use crate::project_slice::{
 #[test]
 fn task22o95_orders_first_and_later_layer_phases_from_option() {
     let island = || ExtrusionIsland {
-        infills: vec![IslandInfillEntity::Fill(FillExtrusionCollection {
-            entities: Vec::new(),
-            no_sort: false,
-        })],
+        infills: vec![IslandInfillEntity::FillCollection(
+            FillExtrusionCollection {
+                entities: Vec::new(),
+                no_sort: true,
+            },
+        )],
         perimeters: vec![ExtrusionEntityCollection::default()],
     };
 
@@ -29,7 +31,7 @@ fn task22o95_orders_first_and_later_layer_phases_from_option() {
     ));
     assert!(matches!(
         later_infill_first.entities[0],
-        IslandPrintEntity::Fill(_)
+        IslandPrintEntity::FillCollection(_)
     ));
 }
 
@@ -85,7 +87,11 @@ fn record_source_inventory(
     counts.3 += island.perimeters.len();
     for infill in &island.infills {
         match infill {
-            IslandInfillEntity::Fill(collection) => {
+            IslandInfillEntity::Fill(_) => {
+                counts.4 += 1;
+                counts.7 += 1;
+            }
+            IslandInfillEntity::FillCollection(collection) => {
                 counts.4 += 1;
                 counts.6 += usize::from(collection.no_sort);
                 counts.7 += usize::from(!collection.no_sort);
@@ -101,23 +107,36 @@ fn record_inventory(
 ) {
     match entity {
         IslandPrintEntity::Perimeter(_) => counts.3 += 1,
-        IslandPrintEntity::Fill(collection) => {
-            assert!(collection.entities.iter().all(|entity| match entity {
-                FillExtrusionEntity::Path(path) => {
-                    path.polyline.front().is_some() && path.polyline.back().is_some()
-                }
-                FillExtrusionEntity::VariableWidth(GapFillEntity::Path(path)) => {
-                    path.polyline.points.len() >= 2
-                }
-                FillExtrusionEntity::VariableWidth(GapFillEntity::Loop(paths)) => {
-                    !paths.is_empty() && paths.iter().all(|path| path.polyline.points.len() >= 2)
-                }
-            }));
+        IslandPrintEntity::Fill(entity) => {
+            assert_valid_fill_entity(entity);
+            counts.4 += 1;
+            counts.7 += 1;
+        }
+        IslandPrintEntity::FillCollection(collection) => {
+            assert!(collection.entities.iter().all(valid_fill_entity));
             counts.4 += 1;
             counts.6 += usize::from(collection.no_sort);
             counts.7 += usize::from(!collection.no_sort);
         }
         IslandPrintEntity::Thin(_) => counts.5 += 1,
+    }
+}
+
+fn assert_valid_fill_entity(entity: &FillExtrusionEntity) {
+    assert!(valid_fill_entity(entity));
+}
+
+fn valid_fill_entity(entity: &FillExtrusionEntity) -> bool {
+    match entity {
+        FillExtrusionEntity::Path(path) => {
+            path.polyline.front().is_some() && path.polyline.back().is_some()
+        }
+        FillExtrusionEntity::VariableWidth(GapFillEntity::Path(path)) => {
+            path.polyline.points.len() >= 2
+        }
+        FillExtrusionEntity::VariableWidth(GapFillEntity::Loop(paths)) => {
+            !paths.is_empty() && paths.iter().all(|path| path.polyline.points.len() >= 2)
+        }
     }
 }
 

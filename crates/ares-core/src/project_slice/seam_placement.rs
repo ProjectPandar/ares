@@ -116,7 +116,9 @@ fn place_layer(
         .flat_map(|island| &mut island.entities)
         .filter_map(|entity| match entity {
             IslandPrintEntity::Perimeter(collection) => Some(collection),
-            IslandPrintEntity::Fill(_) | IslandPrintEntity::Thin(_) => None,
+            IslandPrintEntity::Fill(_)
+            | IslandPrintEntity::FillCollection(_)
+            | IslandPrintEntity::Thin(_) => None,
         });
     for (collection, perimeter_indices) in collections.zip(&plan.collection_perimeters) {
         place_collection(collection, perimeter_indices, plan, scale);

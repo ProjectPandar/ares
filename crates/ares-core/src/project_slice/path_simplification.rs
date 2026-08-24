@@ -49,7 +49,10 @@ fn simplify_layers(layers: &mut [OrderedExtrusionLayer], scale: CoordinateScale,
                     simplify_path3(path, scale, tolerance);
                 }
             }
-            IslandPrintEntity::Fill(collection) => {
+            IslandPrintEntity::Fill(entity) => {
+                simplify_fill_entity(entity, scale, tolerance);
+            }
+            IslandPrintEntity::FillCollection(collection) => {
                 for entity in &mut collection.entities {
                     simplify_fill_entity(entity, scale, tolerance);
                 }

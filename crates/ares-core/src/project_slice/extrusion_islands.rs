@@ -1,10 +1,13 @@
-// Source boundary: OrcaSlicer v2.4.2 `GCode.cpp:4982-5000,5010-5068` island
-// membership by bounding-box-ordered slice containment of each entity's first point.
+// Source boundary: OrcaSlicer v2.4.2 `GCode.cpp:4982-5000,5010-5068,8220-8249`
+// island membership and sortable collection flattening.
 
 use crate::{
     geometry::{Coord, ExPolygon, Point, fixed_gcc_sort_by},
     project_slice::{
-        fill_entities::{FillExtrusionCollection, LayerFillEntities, PreparedPostFillEntities},
+        fill_entities::{
+            FillExtrusionCollection, FillExtrusionEntity, LayerFillEntities,
+            PreparedPostFillEntities,
+        },
         perimeters::classic::{
             entity_collections::ExtrusionEntityCollection, gap_extrusion::GapFillEntity,
         },
@@ -13,7 +16,8 @@ use crate::{
 
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) enum IslandInfillEntity {
-    Fill(FillExtrusionCollection),
+    Fill(FillExtrusionEntity),
+    FillCollection(FillExtrusionCollection),
     Thin(GapFillEntity),
 }
 
@@ -82,9 +86,18 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
 
     for collection in std::mem::take(&mut layer.collections) {
         let island = island_index(collection.first_point(), slices, &bounds, &order);
-        islands[island]
-            .infills
-            .push(IslandInfillEntity::Fill(collection));
+        if collection.no_sort {
+            islands[island]
+                .infills
+                .push(IslandInfillEntity::FillCollection(collection));
+        } else {
+            islands[island].infills.extend(
+                collection
+                    .entities
+                    .into_iter()
+                    .map(IslandInfillEntity::Fill),
+            );
+        }
     }
     let perimeters = std::mem::take(&mut layer.perimeters);
     for (source_order, mut perimeter) in perimeters.into_iter().enumerate() {
@@ -160,30 +173,4 @@ pub(in crate::project_slice) fn dispose(prepared: PreparedPostExtrusionIslands) 
     super::fill_entities::dispose(prepared.predecessor);
 }
 #[cfg(test)]
-mod tests {
-    use crate::geometry::{ExPolygon, Point, Polygon};
-
-    use super::{contour_bounds, island_index};
-
-    #[test]
-    fn task22o210_maximum_boundary_is_excluded_before_contour_test() {
-        let rectangle = |minimum, maximum| {
-            ExPolygon::new(
-                Polygon::new(vec![
-                    Point::new(minimum, minimum),
-                    Point::new(maximum, minimum),
-                    Point::new(maximum, maximum),
-                    Point::new(minimum, maximum),
-                ]),
-                Vec::new(),
-            )
-        };
-        let slices = [rectangle(0, 10), rectangle(-10, 20)];
-        let bounds = slices.iter().map(contour_bounds).collect::<Vec<_>>();
-
-        assert_eq!(
-            island_index(Point::new(10, 5), &slices, &bounds, &[0, 1]),
-            1
-        );
-    }
-}
+mod tests;

@@ -2,7 +2,7 @@ use crate::{
     geometry::Point,
     project_slice::{
         extrusion_islands::{ExtrusionIsland, IslandInfillEntity, PreparedPostExtrusionIslands},
-        fill_entities::FillExtrusionCollection,
+        fill_entities::{FillExtrusionCollection, FillExtrusionEntity},
         perimeters::classic::{
             entity_collections::ExtrusionEntityCollection, gap_extrusion::GapFillEntity,
             shortest_path::ChainEntity,
@@ -13,7 +13,8 @@ use crate::{
 #[derive(Debug, PartialEq)]
 pub(in crate::project_slice) enum IslandPrintEntity {
     Perimeter(ExtrusionEntityCollection),
-    Fill(FillExtrusionCollection),
+    Fill(FillExtrusionEntity),
+    FillCollection(FillExtrusionCollection),
     Thin(GapFillEntity),
 }
 
@@ -91,7 +92,10 @@ pub(in crate::project_slice) fn order_island(
     } = island;
     let perimeters = perimeters.into_iter().map(IslandPrintEntity::Perimeter);
     let infills = infills.into_iter().map(|entity| match entity {
-        IslandInfillEntity::Fill(collection) => IslandPrintEntity::Fill(collection),
+        IslandInfillEntity::Fill(entity) => IslandPrintEntity::Fill(entity),
+        IslandInfillEntity::FillCollection(collection) => {
+            IslandPrintEntity::FillCollection(collection)
+        }
         IslandInfillEntity::Thin(entity) => IslandPrintEntity::Thin(entity),
     });
     let entities = if !first_layer && infill_first {
@@ -105,7 +109,8 @@ pub(in crate::project_slice) fn order_island(
 impl ChainEntity for IslandPrintEntity {
     fn first_point(&self) -> Point {
         match self {
-            Self::Fill(collection) => collection.first_point(),
+            Self::Fill(entity) => entity.first_point(),
+            Self::FillCollection(collection) => collection.first_point(),
             Self::Thin(entity) => entity.first_point(),
             Self::Perimeter(_) => unreachable!("only infill entities are chained"),
         }
@@ -113,7 +118,8 @@ impl ChainEntity for IslandPrintEntity {
 
     fn last_point(&self) -> Point {
         match self {
-            Self::Fill(collection) => collection.last_point(),
+            Self::Fill(entity) => entity.last_point(),
+            Self::FillCollection(collection) => collection.last_point(),
             Self::Thin(entity) => entity.last_point(),
             Self::Perimeter(_) => unreachable!("only infill entities are chained"),
         }
@@ -121,7 +127,8 @@ impl ChainEntity for IslandPrintEntity {
 
     fn can_reverse(&self) -> bool {
         match self {
-            Self::Fill(collection) => !collection.no_sort,
+            Self::Fill(entity) => entity.can_reverse(),
+            Self::FillCollection(collection) => !collection.no_sort,
             Self::Thin(entity) => ChainEntity::can_reverse(entity),
             Self::Perimeter(_) => unreachable!("only infill entities are chained"),
         }
@@ -129,7 +136,8 @@ impl ChainEntity for IslandPrintEntity {
 
     fn reverse(&mut self) {
         match self {
-            Self::Fill(collection) => collection.reverse(),
+            Self::Fill(entity) => entity.reverse(),
+            Self::FillCollection(collection) => collection.reverse(),
             Self::Thin(entity) => entity.reverse(),
             Self::Perimeter(_) => unreachable!("only infill entities are chained"),
         }
