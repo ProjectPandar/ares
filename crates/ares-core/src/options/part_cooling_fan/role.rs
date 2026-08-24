@@ -1,7 +1,8 @@
 use super::PartCoolingFanRamp;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) enum InternalBridgeFanSpeed {
+    #[default]
     OverhangFallback,
     Fixed(u8),
 }
@@ -15,7 +16,7 @@ impl InternalBridgeFanSpeed {
         Self::Fixed(speed)
     }
 
-    const fn role_speed(self, fallback_speed: Option<u8>) -> Option<u8> {
+    pub(crate) const fn role_speed(self, fallback_speed: Option<u8>) -> Option<u8> {
         match self {
             Self::OverhangFallback => fallback_speed,
             Self::Fixed(speed) => Some(speed),

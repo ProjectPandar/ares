@@ -85,3 +85,58 @@ fn faster_overhang_fan_activates_for_variable_segment() {
     assert_eq!(output, b"M106 S255\n");
     assert!(state.overhang_fan_active);
 }
+
+#[test]
+fn internal_bridge_marker_reasserts_equal_baseline_at_end() {
+    let mut state = EmitState {
+        options: MotionOptions {
+            enable_overhang_bridge_fan: true,
+            overhang_fan_speed: 100,
+            overhang_fan_threshold: crate::RawOverhangFanThreshold::Percent50,
+            ..MotionOptions::default()
+        },
+        layer_index: 13,
+        part_fan_speed: 100,
+        physical_fan_speed: 100,
+        ..EmitState::default()
+    };
+    let point = ProcessedPoint {
+        x: 0.0,
+        y: 0.0,
+        speed: 50.0,
+        overlap: 1.0,
+    };
+    let mut output = Vec::new();
+
+    update_for_variable_segment(
+        &mut output,
+        properties("Internal Bridge"),
+        point,
+        point,
+        &mut state,
+    );
+    update_for_constant_path(&mut output, properties("Inner wall"), &mut state);
+
+    assert_eq!(output, b"M106 S255\n");
+}
+
+#[test]
+fn explicit_internal_bridge_speed_overrides_and_restores_baseline() {
+    let mut state = EmitState {
+        options: MotionOptions {
+            enable_overhang_bridge_fan: true,
+            internal_bridge_fan_speed: crate::options::InternalBridgeFanSpeed::new(75),
+            ..MotionOptions::default()
+        },
+        layer_index: 13,
+        part_fan_speed: 40,
+        physical_fan_speed: 40,
+        ..EmitState::default()
+    };
+    let mut output = Vec::new();
+
+    update_for_constant_path(&mut output, properties("Internal Bridge"), &mut state);
+    update_for_constant_path(&mut output, properties("Inner wall"), &mut state);
+
+    assert_eq!(output, b"M106 S191\nM106 S102\n");
+}

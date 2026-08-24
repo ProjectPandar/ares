@@ -10,13 +10,17 @@ pub(super) fn update_for_constant_path(
     state: &mut EmitState,
 ) {
     let markers_enabled = state.options.enable_overhang_bridge_fan;
-    let control_enabled =
-        markers_enabled && state.options.overhang_fan_speed > state.part_fan_speed;
-    let active = markers_enabled
+    let overhang_active = markers_enabled
         && (matches!(properties.feature, "Overhang wall" | "Bridge")
             || state.options.overhang_fan_threshold == RawOverhangFanThreshold::Percent0
                 && properties.feature == "Outer wall");
-    update(output, state, active, control_enabled);
+    update_marker(output, state, FanMarker::Overhang, overhang_active);
+    update_marker(
+        output,
+        state,
+        FanMarker::InternalBridge,
+        markers_enabled && properties.feature == "Internal Bridge",
+    );
 }
 
 pub(super) fn update_for_variable_segment(
@@ -27,9 +31,7 @@ pub(super) fn update_for_variable_segment(
     state: &mut EmitState,
 ) {
     let markers_enabled = state.options.enable_overhang_bridge_fan;
-    let control_enabled =
-        markers_enabled && state.options.overhang_fan_speed > state.part_fan_speed;
-    let active = markers_enabled
+    let overhang_active = markers_enabled
         && fan_enabled(
             properties.feature,
             start.overlap,
@@ -40,7 +42,13 @@ pub(super) fn update_for_variable_segment(
             end.overlap,
             state.options.overhang_fan_threshold,
         );
-    update(output, state, active, control_enabled);
+    update_marker(output, state, FanMarker::Overhang, overhang_active);
+    update_marker(
+        output,
+        state,
+        FanMarker::InternalBridge,
+        markers_enabled && properties.feature == "Internal Bridge",
+    );
 }
 
 fn fan_enabled(feature: &str, overlap: f64, threshold: RawOverhangFanThreshold) -> bool {
@@ -57,21 +65,89 @@ fn fan_enabled(feature: &str, overlap: f64, threshold: RawOverhangFanThreshold) 
     }
 }
 
-fn update(output: &mut Vec<u8>, state: &mut EmitState, active: bool, control_enabled: bool) {
-    let fresh_start = active
-        && (!state.overhang_fan_active
-            || state.overhang_fan_marker_layer != Some(state.layer_index));
-    let stopping = !active && state.overhang_fan_active;
-    if fresh_start && control_enabled {
-        let speed = state.options.overhang_fan_speed;
+#[derive(Clone, Copy)]
+enum FanMarker {
+    Overhang,
+    InternalBridge,
+}
+
+fn update_marker(output: &mut Vec<u8>, state: &mut EmitState, marker: FanMarker, active: bool) {
+    let (was_active, marker_layer) = marker_state(state, marker);
+    let fresh_start = active && (!was_active || marker_layer != Some(state.layer_index));
+    let stopping = !active && was_active;
+    set_marker_state(state, marker, active);
+    let emit = stopping || fresh_start && control_speed(state, marker).is_some();
+    if emit {
+        let speed = requested_speed(state).unwrap_or(state.part_fan_speed);
         output.extend_from_slice(format!("M106 S{}\n", pwm(speed)).as_bytes());
         state.physical_fan_speed = speed;
-    } else if stopping {
-        output.extend_from_slice(format!("M106 S{}\n", pwm(state.part_fan_speed)).as_bytes());
-        state.physical_fan_speed = state.part_fan_speed;
     }
-    state.overhang_fan_active = active;
-    state.overhang_fan_marker_layer = active.then_some(state.layer_index);
+}
+
+fn marker_state(state: &EmitState, marker: FanMarker) -> (bool, Option<usize>) {
+    match marker {
+        FanMarker::Overhang => (state.overhang_fan_active, state.overhang_fan_marker_layer),
+        FanMarker::InternalBridge => (
+            state.internal_bridge_fan_active,
+            state.internal_bridge_fan_marker_layer,
+        ),
+    }
+}
+
+fn set_marker_state(state: &mut EmitState, marker: FanMarker, active: bool) {
+    let layer = active.then_some(state.layer_index);
+    match marker {
+        FanMarker::Overhang => {
+            state.overhang_fan_active = active;
+            state.overhang_fan_marker_layer = layer;
+        }
+        FanMarker::InternalBridge => {
+            state.internal_bridge_fan_active = active;
+            state.internal_bridge_fan_marker_layer = layer;
+        }
+    }
+}
+
+fn requested_speed(state: &EmitState) -> Option<u8> {
+    state
+        .overhang_fan_active
+        .then(|| control_speed(state, FanMarker::Overhang))
+        .flatten()
+        .or_else(|| {
+            state
+                .internal_bridge_fan_active
+                .then(|| control_speed(state, FanMarker::InternalBridge))
+                .flatten()
+        })
+}
+
+fn control_speed(state: &EmitState, marker: FanMarker) -> Option<u8> {
+    if !state.options.enable_overhang_bridge_fan
+        || state.layer_index < state.options.close_fan_first_layers
+    {
+        return None;
+    }
+    let overhang_speed = overhang_speed(state);
+    let overhang_control = (overhang_speed > state.part_fan_speed).then_some(overhang_speed);
+    match marker {
+        FanMarker::Overhang => overhang_control,
+        FanMarker::InternalBridge => state
+            .options
+            .internal_bridge_fan_speed
+            .role_speed(overhang_control),
+    }
+}
+
+fn overhang_speed(state: &EmitState) -> u8 {
+    if state.options.full_fan_speed_layer <= state.options.close_fan_first_layers
+        || state.layer_index + 1 >= state.options.full_fan_speed_layer
+    {
+        return state.options.overhang_fan_speed;
+    }
+    let numerator = state.layer_index + 1 - state.options.close_fan_first_layers;
+    let denominator = state.options.full_fan_speed_layer - state.options.close_fan_first_layers;
+    let speed = f64::from(state.options.overhang_fan_speed) * numerator as f64 / denominator as f64;
+    (speed + 0.5).floor().clamp(0.0, 100.0) as u8
 }
 
 fn pwm(speed: u8) -> u32 {

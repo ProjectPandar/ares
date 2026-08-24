@@ -58,6 +58,8 @@ pub(super) struct EmitState {
     pub(super) physical_fan_speed: u8,
     pub(super) overhang_fan_active: bool,
     pub(super) overhang_fan_marker_layer: Option<usize>,
+    pub(super) internal_bridge_fan_active: bool,
+    pub(super) internal_bridge_fan_marker_layer: Option<usize>,
 }
 #[derive(Clone, Copy)]
 pub(super) struct LayerGeometry<'a> {

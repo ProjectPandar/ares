@@ -1,4 +1,7 @@
-use crate::{FloatOrPercent, Nullable, OrcaFloat, RawOverhangFanThreshold, ZHopType};
+use crate::{
+    FloatOrPercent, Nullable, OrcaFloat, RawOverhangFanThreshold, ZHopType,
+    options::InternalBridgeFanSpeed,
+};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
@@ -24,6 +27,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) enable_overhang_bridge_fan: bool,
     pub(in crate::project_slice::gcode_emit) overhang_fan_speed: u8,
     pub(in crate::project_slice::gcode_emit) overhang_fan_threshold: RawOverhangFanThreshold,
+    pub(in crate::project_slice::gcode_emit) internal_bridge_fan_speed: InternalBridgeFanSpeed,
+    pub(in crate::project_slice::gcode_emit) close_fan_first_layers: usize,
+    pub(in crate::project_slice::gcode_emit) full_fan_speed_layer: usize,
     pub(in crate::project_slice::gcode_emit) initial_layer_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) default_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) outer_wall_acceleration: u32,
@@ -174,6 +180,33 @@ impl MotionOptions {
                 .first()
                 .copied()
                 .unwrap_or_default(),
+            internal_bridge_fan_speed: full
+                .filament
+                .print
+                .internal_bridge_fan_speed
+                .0
+                .first()
+                .map_or_else(InternalBridgeFanSpeed::fallback, |value| {
+                    if value.0 < 0 {
+                        InternalBridgeFanSpeed::fallback()
+                    } else {
+                        InternalBridgeFanSpeed::new(value.0.clamp(0, 100) as u8)
+                    }
+                }),
+            close_fan_first_layers: full
+                .filament
+                .print
+                .close_fan_the_first_x_layers
+                .0
+                .first()
+                .map_or(0, |value| value.0.max(0) as usize),
+            full_fan_speed_layer: full
+                .filament
+                .print
+                .full_fan_speed_layer
+                .0
+                .first()
+                .map_or(0, |value| value.0.max(0) as usize),
             initial_layer_acceleration: acceleration(
                 object.map(|value| &value.object),
                 full.process.object.initial_layer_acceleration.0,
