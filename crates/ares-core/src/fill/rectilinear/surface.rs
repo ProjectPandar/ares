@@ -54,8 +54,13 @@ pub(crate) fn fill_monotonic_surface(
         let reference = rotate_point(params.reference_point, -f64::from(direction))?;
         align_to_grid(source_minimum_x, line_spacing, reference.x())?
     };
-    let actual_spacing = (line_spacing as f64 * scale.factor()) as f32;
+    let grid_spacing = (line_spacing as f64 * scale.factor()) as f32;
     let width = maximum_x - minimum_x;
+    let flow_spacing = if full_infill && !params.dont_adjust {
+        grid_spacing
+    } else {
+        params.spacing as f32
+    };
     let count = usize::try_from(
         (i128::from(width) + i128::from(line_spacing) - 1) / i128::from(line_spacing),
     )
@@ -85,7 +90,7 @@ pub(crate) fn fill_monotonic_surface(
         .collect::<Result<_, _>>()?;
     Ok(MonotonicFillOutput {
         polylines,
-        spacing: actual_spacing,
+        spacing: flow_spacing,
     })
 }
 

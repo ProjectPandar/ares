@@ -107,6 +107,21 @@ fn unadjusted_solid_fill_aligns_scanlines_to_the_object_grid() {
 }
 
 #[test]
+fn unadjusted_fill_preserves_source_flow_spacing() {
+    let mut fill_params = params();
+    fill_params.spacing = 0.357_079_632_679_489_65;
+    fill_params.dont_adjust = true;
+
+    let output =
+        fill_monotonic_surface(&scaled_rectangle(), fill_params, CoordinateScale::Normal).unwrap();
+
+    assert_eq!(
+        output.spacing.to_bits(),
+        (fill_params.spacing as f32).to_bits()
+    );
+}
+
+#[test]
 fn task22o89_fixed_angle_and_layer_alternation_select_distinct_directions() {
     let source = scaled_rectangle();
     let fixed = fill_monotonic_surface(&source, params(), CoordinateScale::Normal).unwrap();
