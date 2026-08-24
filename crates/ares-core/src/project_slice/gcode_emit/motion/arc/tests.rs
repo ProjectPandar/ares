@@ -83,3 +83,37 @@ fn circle_center_rounds_to_source_coordinate_grid() {
 fn rejects_wrapped_arc_with_middle_at_zero_polar_angle() {
     assert_eq!(arc_direction(4.8, 0.0, 1.3), None);
 }
+
+#[test]
+fn integer_grid_midpoint_on_zero_polar_axis_splits_the_arc() {
+    let points = [
+        (-1_987_296, -25_907_679),
+        (-1_490_170, -25_774_473),
+        (-1_023_727, -25_556_970),
+        (-602_159, -25_261_777),
+        (-238_228, -24_897_846),
+        (56_972, -24_476_271),
+        (274_474, -24_009_833),
+        (407_677, -23_512_704),
+        (452_541, -23_000_001),
+        (407_677, -22_487_296),
+        (274_474, -21_990_167),
+        (56_972, -21_523_729),
+        (-238_228, -21_102_154),
+        (-602_159, -20_738_223),
+        (-1_023_727, -20_443_030),
+        (-1_490_171, -20_225_526),
+        (-1_987_296, -20_092_322),
+    ]
+    .map(|(x, y)| Point {
+        x: x as f64 * 1.0e-6,
+        y: y as f64 * 1.0e-6,
+    });
+
+    let fitted = fit(&points, 0.012);
+    let [Segment::Arc(arc), Segment::Line { end, .. }] = fitted.as_slice() else {
+        panic!("expected an arc followed by the zero-axis boundary segment");
+    };
+    assert_eq!(arc.end, points[15]);
+    assert_eq!(*end, points[16]);
+}
