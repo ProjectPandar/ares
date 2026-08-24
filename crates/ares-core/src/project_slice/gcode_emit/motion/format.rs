@@ -1,5 +1,6 @@
 pub(super) fn axis(value: f64) -> String {
-    trim_fixed(value, 3)
+    let scale = 1_000.0;
+    trim_fixed((value * scale).round() / scale, 3)
 }
 
 pub(super) fn offset(value: f64) -> String {
@@ -48,6 +49,8 @@ mod tests {
         assert_eq!(axis(0.0), "0");
         assert_eq!(axis(-0.0), "0");
         assert_eq!(axis(1.230_4), "1.23");
+        assert_eq!(axis(154.692_5), "154.693");
+        assert_eq!(axis(-154.692_5), "-154.693");
     }
 
     #[test]
