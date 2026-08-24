@@ -7,4 +7,7 @@ mod redistribute;
 mod widening;
 
 #[cfg(test)]
+pub(crate) use widening::WideningBeadingStrategy;
+
+#[cfg(test)]
 mod tests;

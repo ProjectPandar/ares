@@ -51,10 +51,6 @@ impl BeadingStrategy for OuterWallInsetBeadingStrategy {
         self.parent.transitioning_length(lower_bead_count)
     }
 
-    fn nonlinear_thicknesses(&self, lower_bead_count: i64) -> Vec<i64> {
-        self.parent.nonlinear_thicknesses(lower_bead_count)
-    }
-
     fn description(&self) -> String {
         format!(
             "OuterWallOfsetBeadingStrategy+{}",

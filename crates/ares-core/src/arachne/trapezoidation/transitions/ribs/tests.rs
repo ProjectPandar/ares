@@ -1,3 +1,5 @@
+use crate::arachne::beading::{WideningBeadingStrategy, base::BeadingStrategy};
+
 use crate::geometry::{CoordinateScale, Point};
 
 use super::super::{
@@ -9,7 +11,11 @@ use super::super::{
 fn task22o174_inserts_nonlinear_radius_crossing_as_extra_rib() {
     let scale = CoordinateScale::Normal;
     let scaled = |value| scale.checked_scale(value).unwrap();
-    let strategy = strategy(scale);
+    let strategy = Box::new(WideningBeadingStrategy::new(
+        strategy(scale),
+        scaled(0.25),
+        scaled(0.2),
+    ));
     let thickness = *strategy
         .nonlinear_thicknesses(1)
         .first()

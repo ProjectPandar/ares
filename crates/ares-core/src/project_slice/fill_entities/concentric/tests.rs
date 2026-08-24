@@ -268,3 +268,43 @@ fn task22o204_concentric_reorders_each_fill_expolygon_independently() {
     }));
     assert!(actual.thin_fills.is_empty());
 }
+
+#[test]
+fn concentric_arachne_matches_source_single_bead_peak_filtering() {
+    let domain = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(-14_309_044, -27_946_472),
+            Point::new(-14_069_596, -27_884_760),
+            Point::new(-13_982_065, -27_736_448),
+            Point::new(-14_019_779, -27_590_110),
+            Point::new(-14_448_804, -27_442_826),
+            Point::new(-15_153_489, -27_061_468),
+            Point::new(-15_785_790, -26_569_326),
+            Point::new(-16_129_292, -26_196_184),
+            Point::new(-16_201_104, -26_201_956),
+            Point::new(-16_204_118, -26_202_966),
+            Point::new(-14_354_065, -28_053_020),
+        ]),
+        Vec::new(),
+    );
+    let mut output =
+        generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
+    finalize_polylines(&mut output, 0, 40_000.0);
+
+    let actual = output
+        .iter()
+        .find(|line| line.points.contains(&Point::new(-15_409_326, -26_926_338)))
+        .expect("source target branch is generated");
+    assert_eq!(
+        actual,
+        &ThickPolyline {
+            points: vec![
+                Point::new(-15_409_326, -26_926_338),
+                Point::new(-14_537_384, -27_606_503),
+                Point::new(-14_392_852, -27_697_968),
+            ],
+            width: vec![340_000.0, 372_218.0, 372_218.0, 464_814.0],
+            endpoints: (false, false),
+        },
+    );
+}
