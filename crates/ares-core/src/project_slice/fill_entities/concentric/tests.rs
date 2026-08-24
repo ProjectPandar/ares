@@ -11,6 +11,8 @@ use crate::{
 
 use super::{append, finalize_polylines, generate_thick_polylines, intersect_no_overlap_domains};
 
+mod source_cases;
+
 #[test]
 fn task22o200_concentric_internal_generates_positive_variable_width_loops() {
     let scale = CoordinateScale::Normal;

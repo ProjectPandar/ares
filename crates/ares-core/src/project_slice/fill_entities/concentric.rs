@@ -152,7 +152,8 @@ fn generate_thick_polylines(
         transitioning_angle: f64::from((std::f32::consts::PI * 10.0_f32) / 180.0_f32),
         transition_filter_deviation: scale.checked_scale(0.25 * minimum_nozzle_diameter).unwrap(),
         wall_distribution_count: 1,
-        min_length_factor: 0.5,
+        // FillConcentric.cpp leaves this field unset and retains short odd branches.
+        min_length_factor: 0.0,
         is_top_or_bottom_layer: false,
         coordinate_scale: scale,
     };
