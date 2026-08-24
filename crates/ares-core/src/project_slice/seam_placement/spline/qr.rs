@@ -1,4 +1,4 @@
-// Source boundary: Eigen 3.4.1 `FullPivHouseholderQR` (rows >= cols path used by
+// Source boundary: Eigen 5.0.1 `FullPivHouseholderQR` (rows >= cols path used by
 // OrcaSlicer `Curves.hpp:170`): corner max pivoting with column-major scan order,
 // Householder elimination with Eigen's operation order, rank threshold
 // `eps * size * max_pivot`, and back-substitution over the permuted system.
@@ -53,7 +53,13 @@ impl FullPivQr {
         if tau == 0.0 {
             return;
         }
-        let dot = sse_dot((k + 1..rows).map(|i| self.qr[i][k] * c[i]));
+        // Eigen's fixed-column Householder product keeps the two-packet redux
+        // traversal; the dynamic one-column matrix remainder below does not.
+        let tail_len = rows - k - 1;
+        let dot = eigen_sse_redux_sum(tail_len, 0, |index| {
+            let row = k + index + 1;
+            self.qr[row][k] * c[row]
+        });
         let tail = dot + c[k];
         c[k] -= tau * tail;
 
@@ -195,14 +201,13 @@ fn swap_row_tail(qr: &mut [Vec<f32>], k: usize, pivot_row: usize, cols: usize) {
     }
 }
 
-// Eigen's dynamic float squaredNorm uses its two-accumulator SSE redux, aligned
-// to the source column address. Returns tau after the in-place elimination.
+// Eigen 5's squaredNorm evaluator has no direct access, so its unaligned packet
+// reduction starts at the first coefficient rather than the column's memory alignment.
+// Returns tau after the in-place elimination.
 fn eliminate_column(qr: &mut [Vec<f32>], k: usize, max_pivot: &mut f32) -> f32 {
     let rows = qr.len();
     let tail_len = rows - k - 1;
-    let source_offset = k * rows + k + 1;
-    let aligned_start = (4 - source_offset % 4) % 4;
-    let tail_squared_norm = eigen_sse_redux_sum(tail_len, aligned_start, |index| {
+    let tail_squared_norm = eigen_sse_redux_sum(tail_len, 0, |index| {
         let value = qr[k + 1 + index][k];
         value * value
     });
@@ -293,13 +298,11 @@ fn add_sse_packets(left: [f32; 4], right: [f32; 4]) -> [f32; 4] {
     ]
 }
 
-// Eigen's runtime vector redux uses two interleaved packet accumulators before
-// `predux`; cwise products have no direct-access alignment prefix.
-fn sse_dot(mut products: impl ExactSizeIterator<Item = f32>) -> f32 {
-    let len = products.len();
-    let packeted_two = len / 8 * 8;
-    let packeted = len / 4 * 4;
-    if packeted == 0 {
+// Eigen 5's dynamic inner product uses four packet accumulators, then folds
+// packet 3 into 2, 2 into 1, and 1 into 0 before `predux`.
+fn eigen5_inner_product(mut products: impl ExactSizeIterator<Item = f32>) -> f32 {
+    let packet_count = products.len() / 4;
+    if packet_count == 0 {
         let mut result = products.next().unwrap_or(0.0);
         for product in products {
             result += product;
@@ -307,20 +310,24 @@ fn sse_dot(mut products: impl ExactSizeIterator<Item = f32>) -> f32 {
         return result;
     }
 
-    let mut first = next_sse_packet(&mut products);
-    if packeted > 4 {
-        let mut second = next_sse_packet(&mut products);
-        let mut consumed = 8;
-        while consumed < packeted_two {
-            first = add_sse_packets(first, next_sse_packet(&mut products));
-            second = add_sse_packets(second, next_sse_packet(&mut products));
-            consumed += 8;
-        }
-        first = add_sse_packets(first, second);
-        if packeted > packeted_two {
-            first = add_sse_packets(first, next_sse_packet(&mut products));
-        }
+    let mut accumulators = [[0.0; 4]; 4];
+    for accumulator in accumulators.iter_mut().take(packet_count.min(4)) {
+        *accumulator = next_sse_packet(&mut products);
     }
+    for packet in 4..packet_count {
+        let accumulator = &mut accumulators[packet % 4];
+        *accumulator = add_sse_packets(*accumulator, next_sse_packet(&mut products));
+    }
+    if packet_count >= 4 {
+        accumulators[2] = add_sse_packets(accumulators[2], accumulators[3]);
+    }
+    if packet_count >= 3 {
+        accumulators[1] = add_sse_packets(accumulators[1], accumulators[2]);
+    }
+    if packet_count >= 2 {
+        accumulators[0] = add_sse_packets(accumulators[0], accumulators[1]);
+    }
+    let first = accumulators[0];
     let mut result = (first[0] + first[2]) + (first[1] + first[3]);
     for product in products {
         result += product;
@@ -352,7 +359,7 @@ fn sse_dot_single(products: impl ExactSizeIterator<Item = f32>) -> f32 {
     (lanes[0] + lanes[2]) + (lanes[1] + lanes[3]) + scalar
 }
 
-// Eigen evaluates a one-column remainder as a vector redux with two packet
+// Eigen 5 evaluates a dynamic one-column remainder with four packet
 // accumulators; wider remainders use its matrix-product path with one per column.
 // The update order remains tmp += top, top -= tau*tmp, bottom -= tau*essential*tmp.
 #[expect(
@@ -368,7 +375,7 @@ fn apply_householder(matrix: &mut [Vec<f32>], pivot: usize, tau: f32) {
     for column in pivot + 1..cols {
         let products = || (pivot + 1..rows).map(|row| matrix[row][pivot] * matrix[row][column]);
         let mut tail = if cols - pivot - 1 == 1 {
-            sse_dot(products())
+            eigen5_inner_product(products())
         } else {
             sse_dot_single(products())
         };

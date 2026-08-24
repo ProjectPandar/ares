@@ -24,7 +24,7 @@ fn full_pivot_qr_matches_eigen_vector_and_matrix_householder_paths() {
     );
     assert_eq!(
         solve_generated_system(70, 4),
-        [0x3e43_f44b, 0x3e24_7436, 0xbc56_251c, 0xbe47_9c1c]
+        [0x3e43_f44b, 0x3e24_7436, 0xbc56_2518, 0xbe47_9c1f]
     );
 }
 
