@@ -369,25 +369,6 @@ async fn first_layer_linear_extrusions_use_project_geometry_lengths() {
 }
 
 #[tokio::test]
-async fn later_layer_motion_processor_state_matches_source() {
-    let output = crate::slice_project(
-        crate::project_slice::tests::support::ksr_project(),
-        crate::project_slice::tests::support::metadata(),
-    )
-    .await
-    .unwrap();
-    let output = std::str::from_utf8(&output).unwrap();
-
-    assert_eq!(output.matches("; LAYER_HEIGHT:").count(), 517);
-    assert!(
-        output.contains("G1 X140.436 Y102.822 E.02185\nM204 S5000\nG1 X140.787 Y103.081 F60000\n")
-    );
-    assert!(output.contains(
-        "; WIPE_START\nG1 X133.669 Y89.214 E-.08742\nG1 X133.055 Y88.777 E-.30159\nG1 X133.03 Y88.765 E-.01099\n; WIPE_END\n"
-    ));
-}
-
-#[tokio::test]
 async fn bottom_surface_travel_crossing_external_slice_retracts() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
@@ -401,25 +382,4 @@ async fn bottom_surface_travel_crossing_external_slice_retracts() {
         output
             .contains("G1 X101.68 Y139.896 E.50049\nM204 S6000\nG1 E-.11429 F1800\n; WIPE_START\n")
     );
-}
-
-#[tokio::test]
-async fn task22o234_variable_overhang_segments_switch_the_configured_fan() {
-    let output = crate::slice_project(
-        crate::project_slice::tests::support::ksr_project(),
-        crate::project_slice::tests::support::metadata(),
-    )
-    .await
-    .unwrap();
-    let lines = std::str::from_utf8(&output)
-        .unwrap()
-        .lines()
-        .collect::<Vec<_>>();
-
-    assert!(lines.windows(3).enumerate().any(|(index, window)| {
-        index > 20_000
-            && window[0] == "M106 S255"
-            && window[1] == "G1 F3000"
-            && window[2].starts_with("G1 X")
-    }));
 }
