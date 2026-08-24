@@ -1,6 +1,8 @@
 mod arc;
 use super::motion_util::{clamp, clamped_word, norm, scale, word};
 mod planner;
+#[cfg(test)]
+mod rolling_tests;
 pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     const REFRESH_THRESHOLD: usize = 256;
     const QUEUE_SIZE: usize = 64;
@@ -8,7 +10,7 @@ pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
     let mut emitted = 0;
     let mut initial_entry = None;
     while emitted < blocks.len() {
-        let end = (emitted + REFRESH_THRESHOLD).min(blocks.len());
+        let end = (emitted + REFRESH_THRESHOLD + 1).min(blocks.len());
         let (window_times, entries) =
             planner::planned_times_with_initial(&blocks[emitted..end], initial_entry);
         let emit_end = if end < blocks.len() {
