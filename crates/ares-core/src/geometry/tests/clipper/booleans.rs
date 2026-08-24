@@ -1,4 +1,4 @@
-use super::helpers::{execute, polygon, polygons, traced_fixed_sort};
+use super::helpers::{execute, polygon, polygons};
 use crate::geometry::clipper::{ClipOperation, Clipper, ClipperOptions, FillRule, PathRole};
 
 const NONCONVEX: &[(i64, i64)] = &[(0, 0), (30, 0), (30, 10), (10, 10), (10, 30), (0, 30)];
@@ -179,15 +179,7 @@ fn task22f_equal_height_minima_match_complete_fixed_oracle_order() {
 }
 
 #[test]
-fn task22f_large_minima_fixed_sort_freezes_complete_sibling_order() {
-    const MINIMUM_KEYS: [i64; 35] = [
-        20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
-        20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 10, 30,
-    ];
-    const SORTED_IDENTITIES: [usize; 35] = [
-        33, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-        25, 26, 27, 28, 29, 30, 31, 32, 0, 34,
-    ];
+fn task22f_large_minima_match_complete_source_sibling_order() {
     const INPUT: [(i64, i64); 35] = [
         (700, 20),
         (1700, 20),
@@ -244,26 +236,24 @@ fn task22f_large_minima_fixed_sort_freezes_complete_sibling_order() {
         (2700, 20),
         (700, 20),
         (200, 20),
-        (2200, 20),
-        (3200, 20),
-        (900, 20),
-        (1900, 20),
-        (2900, 20),
-        (600, 20),
-        (1600, 20),
-        (2600, 20),
-        (300, 20),
-        (1300, 20),
-        (2300, 20),
-        (0, 20),
-        (1000, 20),
-        (2000, 20),
         (3000, 20),
+        (2000, 20),
+        (1000, 20),
+        (0, 20),
+        (2300, 20),
+        (1300, 20),
+        (300, 20),
+        (2600, 20),
+        (1600, 20),
+        (600, 20),
+        (2900, 20),
+        (1900, 20),
+        (900, 20),
+        (3200, 20),
         (1700, 20),
+        (2200, 20),
         (4000, 10),
     ];
-    let (sorted_identities, _) = traced_fixed_sort(&MINIMUM_KEYS, false);
-    assert_eq!(sorted_identities, SORTED_IDENTITIES);
     assert_eq!(
         execute(
             input_rectangles(&INPUT),

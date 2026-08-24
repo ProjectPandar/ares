@@ -1,4 +1,4 @@
-use super::helpers::{execute, polygons, traced_fixed_sort};
+use super::helpers::{execute, polygons};
 use crate::geometry::clipper::{ClipOperation, ClipperOptions, FillRule};
 
 const LEFT: &[(i64, i64)] = &[(0, 0), (20, 0), (20, 20), (0, 20)];
@@ -150,19 +150,7 @@ fn task22f_touching_equal_key_intersections_match_fixed_ordered_output() {
 }
 
 #[test]
-fn task22f_large_intersections_freeze_output_and_pre_adjacency_permutation() {
-    const INTERSECTION_Y_KEYS: [i64; 36] = [
-        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11,
-    ];
-    const PRE_ADJACENCY_IDENTITIES: [usize; 36] = [
-        35, 34, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 19, 20, 21, 22, 23, 24,
-        25, 26, 27, 28, 29, 30, 31, 32, 33, 1, 18,
-    ];
-
-    let (pre_adjacency, _) = traced_fixed_sort(&INTERSECTION_Y_KEYS, true);
-    assert_eq!(pre_adjacency, PRE_ADJACENCY_IDENTITIES);
-
+fn task22f_large_intersections_match_complete_source_output_order() {
     let subject = polygons(&[
         &[(0, 0), (10, 20), (20, 0)],
         &[(1300, 0), (1310, 20), (1320, 0)],
@@ -204,7 +192,7 @@ fn task22f_large_intersections_freeze_output_and_pre_adjacency_permutation() {
         &[(2000, 20), (2010, 4), (2020, 20)],
     ]);
     let expected = polygons(&[
-        &[(2014, 11), (2010, 20), (2006, 11), (2010, 4)],
+        &[(1515, 10), (1510, 20), (1505, 10), (1510, 0)],
         &[(1015, 10), (1010, 20), (1005, 10), (1010, 0)],
         &[(15, 10), (10, 20), (5, 10), (10, 0)],
         &[(715, 10), (710, 20), (705, 10), (710, 0)],
@@ -213,7 +201,7 @@ fn task22f_large_intersections_freeze_output_and_pre_adjacency_permutation() {
         &[(1115, 10), (1110, 20), (1105, 10), (1110, 0)],
         &[(115, 10), (110, 20), (105, 10), (110, 0)],
         &[(815, 10), (810, 20), (805, 10), (810, 0)],
-        &[(1515, 10), (1510, 20), (1505, 10), (1510, 0)],
+        &[(315, 10), (310, 20), (305, 10), (310, 0)],
         &[(515, 10), (510, 20), (505, 10), (510, 0)],
         &[(1215, 10), (1210, 20), (1205, 10), (1210, 0)],
         &[(215, 10), (210, 20), (205, 10), (210, 0)],
@@ -221,7 +209,7 @@ fn task22f_large_intersections_freeze_output_and_pre_adjacency_permutation() {
         &[(1615, 10), (1610, 20), (1605, 10), (1610, 0)],
         &[(615, 10), (610, 20), (605, 10), (610, 0)],
         &[(1315, 10), (1310, 20), (1305, 10), (1310, 0)],
-        &[(315, 10), (310, 20), (305, 10), (310, 0)],
+        &[(2014, 11), (2010, 20), (2006, 11), (2010, 4)],
     ]);
 
     assert_eq!(

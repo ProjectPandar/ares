@@ -38,6 +38,10 @@ fn introsort_loop<T>(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the source helper passes one output and three candidate iterators"
+)]
 fn move_median_to_front<T>(
     items: &mut [T],
     result: usize,
