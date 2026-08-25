@@ -60,6 +60,21 @@ fn task22o192_generates_six_segment_odd_ring_at_local_maximum() {
     assert!(line.is_odd);
     assert_eq!(line.junctions.len(), 6);
     assert_eq!(line.junctions[0].point, Point::new(110, 100));
+    assert_eq!(
+        line.junctions
+            .iter()
+            .map(|junction| junction.point)
+            .collect::<Vec<_>>(),
+        [
+            (110, 100),
+            (105, 109),
+            (95, 109),
+            (90, 100),
+            (95, 91),
+            (105, 91),
+        ]
+        .map(|(x, y)| Point::new(x, y)),
+    );
     assert!(
         line.junctions
             .iter()

@@ -1,5 +1,3 @@
-use std::f32::consts::PI;
-
 use crate::{
     arachne::extrusion_line::{ExtrusionJunction, ExtrusionLine},
     geometry::Point,
@@ -32,10 +30,11 @@ impl SkeletalTrapezoidation<'_> {
             let center = self.graph.node(node).point;
             let radius = width / 8;
             for segment in 0..6 {
-                let angle = 2.0 * PI / 6.0 * segment as f32;
+                let angle = (2.0 * std::f64::consts::PI / 6.0 * segment as f64) as f32;
+                let angle = f64::from(angle);
                 let offset = Point::new(
-                    (radius as f32 * angle.cos()) as i64,
-                    (radius as f32 * angle.sin()) as i64,
+                    (radius as f64 * angle.cos()).round() as i64,
+                    (radius as f64 * angle.sin()).round() as i64,
                 );
                 line.push(ExtrusionJunction::new(
                     Point::new(center.x() + offset.x(), center.y() + offset.y()),
