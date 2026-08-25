@@ -90,33 +90,32 @@ pub(in crate::project_slice) fn chain_extrusion_paths(
 pub(in crate::project_slice) fn chain_extrusion_loops(
     loops: &[ExtrusionLoop],
 ) -> Vec<(usize, bool)> {
-    if loops.is_empty() {
-        return Vec::new();
+    match loops.len() {
+        0 => return Vec::new(),
+        1 => return vec![(0, false)],
+        _ => {}
     }
-    let positions: Vec<_> = loops
+    let mut ordered = loops
         .iter()
-        .flat_map(|loop_| {
-            let first = loop_
-                .paths
-                .first()
-                .and_then(|path| path.polyline.points.first())
-                .expect("O8 loops are nonempty");
-            let last = loop_
-                .paths
-                .last()
-                .and_then(|path| path.polyline.points.last())
-                .expect("O8 loops are nonempty");
-            debug_assert_eq!([first.x, first.y], [last.x, last.y]);
-            let point = [first.x as f64, first.y as f64];
+        .enumerate()
+        .map(|(index, loop_)| {
+            let first = &loop_.paths[0].polyline.points[0];
+            (index, [first.x, first.y])
+        })
+        .collect::<Vec<_>>();
+    // Canonicalize equivalent source orders before its index-sensitive KD-tree and heap ties.
+    ordered.sort_unstable_by_key(|&(index, [x, y])| (y, x, index));
+    let positions = ordered
+        .iter()
+        .flat_map(|&(_, [x, y])| {
+            let point = [x as f64, y as f64];
             [point, point]
         })
-        .collect();
-    let chain = if loops.len() == 1 {
-        vec![(0, false)]
-    } else {
-        chain_multiple(&positions, Some([0.0, 0.0]))
-    };
-    chain.into_iter().map(|(index, _)| (index, false)).collect()
+        .collect::<Vec<_>>();
+    chain_multiple(&positions, Some([0.0, 0.0]))
+        .into_iter()
+        .map(|(index, _)| (ordered[index].0, false))
+        .collect()
 }
 pub(super) fn chain_points(points: &[crate::geometry::Point]) -> Vec<usize> {
     if points.len() < 2 {

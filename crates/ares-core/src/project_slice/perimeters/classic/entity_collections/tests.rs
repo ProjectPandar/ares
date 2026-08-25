@@ -27,6 +27,25 @@ fn task22o9_loop_entity_chain_uses_zero_and_clears_reversals() {
 }
 
 #[test]
+fn task22o9_symmetric_loop_ties_follow_source_observed_chain() {
+    let loops = [0, -14_999_999, -29_999_999]
+        .into_iter()
+        .flat_map(|y| {
+            [3, 15_000_003, 30_000_003]
+                .into_iter()
+                .map(move |x| square_loop(x, y, ExtrusionLoopRole::Default))
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        chain_extrusion_loops(&loops),
+        [0, 3, 6, 7, 8, 5, 2, 1, 4]
+            .into_iter()
+            .map(|index| (index, false))
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
 fn task22o9_orientation_reverses_paths_in_place_with_exact_loop_polygon() {
     let mut loop_ = square_loop(0, 0, ExtrusionLoopRole::Default);
     let allocation = loop_.paths[0].polyline.points.as_ptr();
