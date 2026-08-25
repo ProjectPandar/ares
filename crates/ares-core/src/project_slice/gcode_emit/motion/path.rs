@@ -69,8 +69,6 @@ pub(super) fn emit(
     let needs_travel = first_position
         || quantize_axis(first_x) != quantize_axis(state.x)
         || quantize_axis(first_y) != quantize_axis(state.y);
-    let feedrate_interrupted = needs_travel || state.retracted;
-    let previous_extrusion_feedrate = state.extrusion_feedrate;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     if needs_travel {
         begin_path_travel(output, state, properties.feature, travel_distance);
@@ -186,13 +184,7 @@ pub(super) fn emit(
         );
         state.last_height = Some(properties.height);
     }
-    if feedrate_interrupted
-        || (state.extrusion_feedrate - previous_extrusion_feedrate).abs() > f64::EPSILON
-    {
-        output.extend_from_slice(
-            format!("G1 F{}\n", format_axis(state.extrusion_feedrate)).as_bytes(),
-        );
-    }
+    emit_extrusion_speed(output, state.extrusion_feedrate, properties);
     if let Some(processed) = processed {
         emit_variable_segments(VariableEmission {
             output,
@@ -203,6 +195,7 @@ pub(super) fn emit(
             properties,
             state,
         });
+        output.extend_from_slice(b";_EXTRUDE_END\n");
         return;
     }
     let wipe_points = local_points
@@ -269,6 +262,7 @@ pub(super) fn emit(
             arc::Segment::Arc(_) => {}
         }
     }
+    output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
 }
 
@@ -357,11 +351,10 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
         }
         let feedrate = processed[index - 1].speed * 60.0;
         if (last_feedrate - feedrate).abs() > 60.0 {
-            output.extend_from_slice(format!("G1 F{}\n", format_axis(feedrate)).as_bytes());
+            emit_extrusion_speed(output, feedrate, properties);
             last_feedrate = feedrate;
         } else if (original_feedrate - feedrate).abs() <= 60.0 {
-            output
-                .extend_from_slice(format!("G1 F{}\n", format_axis(original_feedrate)).as_bytes());
+            emit_extrusion_speed(output, original_feedrate, properties);
             last_feedrate = original_feedrate;
         }
         emit_linear_segment(output, end, length, properties, state);
@@ -380,6 +373,21 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
             y: y + state.offset.1,
         })
         .collect();
+}
+
+fn emit_extrusion_speed(output: &mut Vec<u8>, feedrate: f64, properties: PathProperties<'_>) {
+    let external = if properties.feature == "Outer wall" {
+        ";_EXTERNAL_PERIMETER"
+    } else {
+        ""
+    };
+    output.extend_from_slice(
+        format!(
+            "G1 F{};_EXTRUDE_SET_SPEED{external}\n",
+            format_axis(feedrate)
+        )
+        .as_bytes(),
+    );
 }
 
 fn quantize_axis(value: f64) -> f64 {

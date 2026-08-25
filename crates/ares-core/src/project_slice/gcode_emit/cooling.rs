@@ -1,5 +1,8 @@
 mod feedrate;
 
+#[cfg(test)]
+mod tests;
+
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
 pub(super) struct CoolingState {
@@ -11,6 +14,7 @@ pub(super) struct CoolingState {
     additional_fan_speed: u8,
     auxiliary_fan: bool,
     part_cooling_fan_min_pwm: u8,
+    feedrate: feedrate::State,
 }
 
 impl CoolingState {
@@ -18,6 +22,7 @@ impl CoolingState {
         let full = &traversal.resolved.views.full;
         let filament = &full.filament.print;
         let runtime = &traversal.resolved.views.runtime_gcode;
+        let first_bool = |values: &[crate::OrcaBool]| values.first().is_some_and(|value| value.0);
         Self {
             part_speed: 0,
             additional_speed: 0,
@@ -27,6 +32,24 @@ impl CoolingState {
             additional_fan_speed: first_percent_int(&filament.additional_cooling_fan_speed.0),
             auxiliary_fan: runtime.auxiliary_fan.0,
             part_cooling_fan_min_pwm: runtime.part_cooling_fan_min_pwm.0.clamp(0, 100) as u8,
+            feedrate: feedrate::State::new(
+                feedrate::Config {
+                    enabled: first_bool(&filament.slow_down_for_layer_cooling.0),
+                    target_time: filament
+                        .slow_down_layer_time
+                        .0
+                        .first()
+                        .map_or(0.0, |value| value.0 as f32),
+                    minimum_speed: filament
+                        .slow_down_min_speed
+                        .0
+                        .first()
+                        .map_or(0.0, |value| value.0 as f32),
+                    keep_outer_wall_speed: first_bool(&filament.dont_slow_down_outer_wall.0),
+                    relative_e: runtime.use_relative_e_distances.0,
+                },
+                runtime.travel_speed.0,
+            ),
         }
     }
 
@@ -60,7 +83,7 @@ impl CoolingState {
     }
 
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
-        feedrate::rewrite_layer(output, layer_start);
+        feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
     }
 
     fn part_speed_for_layer(&self, layer_index: usize) -> u8 {
