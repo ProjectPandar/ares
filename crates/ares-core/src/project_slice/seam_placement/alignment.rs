@@ -241,8 +241,7 @@ fn finalize_string(layers: &mut [LayerPlan], seam_string: &[(usize, usize)]) {
             let current = candidate_position(layers, point);
             let fitted = curve.value(current.z);
             let angle_ratio = candidate_angle(layers, point).abs() / SHARP_ANGLE_THRESHOLD;
-            // The source GCC build lowers `std::pow(angle_ratio, 3.0f)` to two multiplies.
-            let blend = (angle_ratio * angle_ratio * angle_ratio).min(1.0);
+            let blend = angle_ratio.powf(3.0).min(1.0);
             Vec3::new(
                 blend * current.x + (1.0 - blend) * fitted.0,
                 blend * current.y + (1.0 - blend) * fitted.1,
