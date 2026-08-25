@@ -35,9 +35,9 @@ impl SkeletalTrapezoidation<'_> {
             let bead_count = i64::from(transition_end.lower_bead_count)
                 + i64::from(!transition_end.is_lower_end);
             let close_node = if transition_end.pos < edge_length / 2 {
-                from
+                self.graph.edge(edge).from.unwrap()
             } else {
-                to
+                self.graph.edge(edge).to.unwrap()
             };
             if (transition_end.pos < snap_distance
                 || transition_end.pos > edge_length - snap_distance)
