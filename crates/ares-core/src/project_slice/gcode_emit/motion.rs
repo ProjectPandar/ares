@@ -1,5 +1,6 @@
 mod arc;
 mod clip;
+mod extrusion;
 mod fan;
 mod features;
 mod format;
@@ -44,6 +45,7 @@ pub(super) struct EmitState {
     pub(super) options: MotionOptions,
     pub(super) layer_index: usize,
     pub(super) positioned: bool,
+    pub(super) last_scaled_position: Option<(i64, i64)>,
     pub(super) last_feature: Option<&'static str>,
     pub(super) last_width: Option<f32>,
     pub(super) last_height: Option<f32>,
@@ -83,12 +85,14 @@ pub(super) fn begin_layer(
     } else {
         state.options.travel_feedrate
     };
-    let acceleration = if layer_index == 0 {
-        state.options.initial_layer_acceleration
-    } else {
-        state.options.default_acceleration
+    let acceleration = match layer_index {
+        0 => Some(state.options.initial_layer_acceleration),
+        1 => Some(state.options.default_acceleration),
+        _ => None,
     };
-    set_acceleration(output, state, acceleration);
+    if let Some(acceleration) = acceleration {
+        set_acceleration(output, state, acceleration);
+    }
 }
 
 pub(super) fn begin_object_travel(output: &mut Vec<u8>, state: &mut EmitState) {

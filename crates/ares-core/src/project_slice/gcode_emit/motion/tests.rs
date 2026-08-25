@@ -114,7 +114,7 @@ async fn task22o135_overhang_overlap_bands_split_and_slow_wall_segments() {
 }
 
 #[tokio::test]
-async fn task22o136_dynamic_segment_extrusion_uses_quantized_endpoints() {
+async fn task22o136_dynamic_segments_keep_raw_path_endpoint_identity() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -136,6 +136,18 @@ async fn task22o136_dynamic_segment_extrusion_uses_quantized_endpoints() {
         .unwrap();
 
     assert_eq!(lines[following_inner + 3], "G1 X116.989 Y81.637 E.06303");
+    let gap_end = lines
+        .iter()
+        .position(|line| *line == "G1 X118.622 Y130.844 E.00136")
+        .unwrap();
+    assert_eq!(
+        &lines[gap_end + 1..gap_end + 4],
+        [
+            "G1 X118.622 Y130.844 F60000",
+            "; LINE_WIDTH: 0.116441",
+            "G1 F15000",
+        ]
+    );
 }
 
 #[tokio::test]

@@ -1,5 +1,5 @@
 #[tokio::test]
-async fn ksr_first_object_travel_uses_configured_acceleration_lift_and_deretraction() {
+async fn ksr_object_travel_acceleration_follows_object_comment() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -27,6 +27,28 @@ async fn ksr_first_object_travel_uses_configured_acceleration_lift_and_deretract
     assert_eq!(lines[label + 2], "G1 Z.6");
     assert_eq!(lines[label + 3], "G1 Z.2");
     assert_eq!(lines[label + 4], "G1 E.4 F1800");
+
+    let layer_2 = lines
+        .iter()
+        .position(|line| *line == "M991 S0 P1 ;notify layer change")
+        .unwrap();
+    let printing = lines[layer_2..]
+        .iter()
+        .position(|line| line.starts_with("; printing object "))
+        .unwrap()
+        + layer_2;
+    assert_eq!(lines[printing - 1], "M204 S10000");
+
+    let layer_43 = lines
+        .iter()
+        .position(|line| *line == "M991 S0 P42 ;notify layer change")
+        .unwrap();
+    let printing = lines[layer_43..]
+        .iter()
+        .position(|line| line.starts_with("; printing object "))
+        .unwrap()
+        + layer_43;
+    assert_eq!(lines[printing + 1], "M204 S10000");
 }
 
 #[tokio::test]

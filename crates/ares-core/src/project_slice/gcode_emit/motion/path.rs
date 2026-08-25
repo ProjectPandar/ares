@@ -1,5 +1,5 @@
 use super::{
-    EmitState, LayerGeometry, arc, begin_path_travel, clip, fan,
+    EmitState, LayerGeometry, arc, begin_path_travel, clip, extrusion, fan,
     features::PathProperties,
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
     overhang, set_acceleration, travel,
@@ -19,6 +19,10 @@ pub(super) fn emit(
         &mut scaled_points,
         properties.end_clip / geometry.scale.factor(),
     );
+    let Some((&first_scaled, &last_scaled)) = scaled_points.first().zip(scaled_points.last())
+    else {
+        return;
+    };
     let mut local_points = scaled_points
         .into_iter()
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
@@ -66,9 +70,7 @@ pub(super) fn emit(
     let first_x = first_local_x + state.offset.0;
     let first_y = first_local_y + state.offset.1;
     let first_position = !state.positioned;
-    let needs_travel = first_position
-        || quantize_axis(first_x) != quantize_axis(state.x)
-        || quantize_axis(first_y) != quantize_axis(state.y);
+    let needs_travel = first_position || state.last_scaled_position != Some(first_scaled);
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     if needs_travel {
         begin_path_travel(output, state, properties.feature, travel_distance);
@@ -128,6 +130,7 @@ pub(super) fn emit(
         }
         state.x = first_x;
         state.y = first_y;
+        state.last_scaled_position = Some(first_scaled);
         state.positioned = true;
     }
     if state.retracted {
@@ -184,7 +187,7 @@ pub(super) fn emit(
         );
         state.last_height = Some(properties.height);
     }
-    emit_extrusion_speed(output, state.extrusion_feedrate, properties);
+    extrusion::speed(output, state.extrusion_feedrate, properties);
     if let Some(processed) = processed {
         emit_variable_segments(VariableEmission {
             output,
@@ -195,6 +198,7 @@ pub(super) fn emit(
             properties,
             state,
         });
+        state.last_scaled_position = Some(last_scaled);
         output.extend_from_slice(b";_EXTRUDE_END\n");
         return;
     }
@@ -231,11 +235,11 @@ pub(super) fn emit(
     for segment in segments {
         match segment {
             arc::Segment::Line { end, length } if length >= SOURCE_EPSILON_MM => {
-                emit_linear_segment(output, end, length, properties, state);
+                extrusion::linear_segment(output, end, length, properties, state);
             }
             arc::Segment::Line { .. } => {}
             arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {
-                let extrusion = extrusion_for_length(
+                let extrusion = extrusion::for_length(
                     arc_segment.length,
                     properties.mm3_per_mm,
                     state.options.filament_flow_ratio,
@@ -264,52 +268,9 @@ pub(super) fn emit(
     }
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
+    state.last_scaled_position = Some(last_scaled);
 }
 
-fn emit_linear_segment(
-    output: &mut Vec<u8>,
-    end: arc::Point,
-    length: f64,
-    properties: PathProperties<'_>,
-    state: &mut EmitState,
-) {
-    let extrusion = extrusion_for_length(
-        length,
-        properties.mm3_per_mm,
-        state.options.filament_flow_ratio,
-        state.options.print_flow_ratio,
-        state.options.filament_area,
-    );
-    state.filament_used += extrusion;
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{} E{}\n",
-            format_axis(end.x),
-            format_axis(end.y),
-            format_extrusion(extrusion)
-        )
-        .as_bytes(),
-    );
-    state.x = end.x;
-    state.y = end.y;
-    state.wipe_start = Some(end);
-}
-
-fn extrusion_for_length(
-    length: f64,
-    mm3_per_mm: f64,
-    filament_flow_ratio: f64,
-    print_flow_ratio: f64,
-    filament_area: f64,
-) -> f64 {
-    let mut effective_mm3_per_mm = mm3_per_mm * print_flow_ratio;
-    effective_mm3_per_mm *= filament_flow_ratio;
-    let mut e_per_mm3 = filament_flow_ratio;
-    e_per_mm3 /= filament_area;
-    let mut e_per_mm = e_per_mm3 * effective_mm3_per_mm;
-    e_per_mm /= filament_flow_ratio;
-    e_per_mm * length
-}
 struct VariableEmission<'a> {
     output: &'a mut Vec<u8>,
     points: &'a [(f64, f64)],
@@ -351,13 +312,13 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
         }
         let feedrate = processed[index - 1].speed * 60.0;
         if (last_feedrate - feedrate).abs() > 60.0 {
-            emit_extrusion_speed(output, feedrate, properties);
+            extrusion::speed(output, feedrate, properties);
             last_feedrate = feedrate;
         } else if (original_feedrate - feedrate).abs() <= 60.0 {
-            emit_extrusion_speed(output, original_feedrate, properties);
+            extrusion::speed(output, original_feedrate, properties);
             last_feedrate = original_feedrate;
         }
-        emit_linear_segment(output, end, length, properties, state);
+        extrusion::linear_segment(output, end, length, properties, state);
         previous = (end.x, end.y);
     }
     state.extrusion_feedrate = last_feedrate;
@@ -373,21 +334,6 @@ fn emit_variable_segments(command: VariableEmission<'_>) {
             y: y + state.offset.1,
         })
         .collect();
-}
-
-fn emit_extrusion_speed(output: &mut Vec<u8>, feedrate: f64, properties: PathProperties<'_>) {
-    let external = if properties.feature == "Outer wall" {
-        ";_EXTERNAL_PERIMETER"
-    } else {
-        ""
-    };
-    output.extend_from_slice(
-        format!(
-            "G1 F{};_EXTRUDE_SET_SPEED{external}\n",
-            format_axis(feedrate)
-        )
-        .as_bytes(),
-    );
 }
 
 fn quantize_axis(value: f64) -> f64 {

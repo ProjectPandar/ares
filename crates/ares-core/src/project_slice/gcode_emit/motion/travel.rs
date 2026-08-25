@@ -68,6 +68,10 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
             );
             state.x = point.x;
             state.y = point.y;
+            state.last_scaled_position = Some((
+                ((point.x - state.offset.0) / state.scale_factor).round() as i64,
+                ((point.y - state.offset.1) / state.scale_factor).round() as i64,
+            ));
             state.wipe_start = Some(point);
         }
         output.extend_from_slice(b"; WIPE_END\n");
