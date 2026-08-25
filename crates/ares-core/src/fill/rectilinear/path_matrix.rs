@@ -68,7 +68,7 @@ impl<'a> MonotonicPathMatrix<'a> {
             .point;
             let x = (to_point.x() - from_point.x()) as f32;
             let y = (to_point.y() - from_point.y()) as f32;
-            let length = (f64::from(x.hypot(y)) * self.scale.factor()) as f32;
+            let length = (x * x + y * y).sqrt() * self.scale.factor() as f32;
             self.paths[index].length = length;
             self.paths[index].visibility = 1.0 / (length + SOURCE_EPSILON);
         }

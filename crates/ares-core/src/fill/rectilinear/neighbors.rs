@@ -1,4 +1,7 @@
-use super::{LinkType, MonotonicRegion, SegmentedLine};
+use super::{
+    IntersectionKind, MonotonicRegion, SegmentedLine,
+    regions::{overlap_left, overlap_right, vertical_run_top},
+};
 
 pub(crate) fn connect_region_neighbors(regions: &mut [MonotonicRegion], lines: &[SegmentedLine]) {
     for region in &mut *regions {
@@ -6,50 +9,87 @@ pub(crate) fn connect_region_neighbors(regions: &mut [MonotonicRegion], lines: &
         region.right_neighbors.clear();
     }
 
+    let mut starts = regions
+        .iter()
+        .enumerate()
+        .map(|(index, region)| ((region.left.line, region.left.low), index))
+        .collect::<Vec<_>>();
+    let mut ends = regions
+        .iter()
+        .enumerate()
+        .map(|(index, region)| ((region.right.line, region.right.low), index))
+        .collect::<Vec<_>>();
+    starts.sort_unstable_by_key(|entry| entry.0);
+    ends.sort_unstable_by_key(|entry| entry.0);
+
     let mut links = Vec::new();
-    for (left_index, left) in regions.iter().enumerate() {
-        for (right_index, right) in regions.iter().enumerate() {
-            if left.right.line + 1 != right.left.line {
-                continue;
-            }
-            if boundaries_overlap(left, right, lines) {
-                links.push((left_index, right_index));
-            }
+    for (index, region) in regions.iter().enumerate() {
+        if let Some(left_line) = region.left.line.checked_sub(1)
+            && let Some(overlap) = overlap_left(
+                &lines[region.left.line],
+                &lines[left_line],
+                (region.left.low, region.left.high),
+            )
+        {
+            for_each_overlapping_region(&ends, left_line, &lines[left_line], overlap, |neighbor| {
+                links.push((neighbor, index))
+            });
+        }
+
+        let right_line = region.right.line + 1;
+        if right_line < lines.len()
+            && let Some(overlap) = overlap_right(
+                &lines[region.right.line],
+                &lines[right_line],
+                (region.right.low, region.right.high),
+            )
+        {
+            for_each_overlapping_region(
+                &starts,
+                right_line,
+                &lines[right_line],
+                overlap,
+                |neighbor| links.push((index, neighbor)),
+            );
         }
     }
 
+    links.sort_unstable();
+    links.dedup();
     for (left, right) in links {
         regions[left].right_neighbors.push(right);
         regions[right].left_neighbors.push(left);
     }
-    for region in regions {
-        region.left_neighbors.sort_unstable();
-        region.left_neighbors.dedup();
-        region.right_neighbors.sort_unstable();
-        region.right_neighbors.dedup();
+}
+
+fn for_each_overlapping_region(
+    map: &[((usize, usize), usize)],
+    line_index: usize,
+    line: &SegmentedLine,
+    (mut begin, end): (usize, usize),
+    mut visit: impl FnMut(usize),
+) {
+    loop {
+        visit(mapped_region(map, (line_index, begin)));
+        let top = vertical_run_top(line, begin);
+        if top == end {
+            break;
+        }
+        begin = next_inner_low(line, top);
     }
 }
 
-fn boundaries_overlap(
-    left: &MonotonicRegion,
-    right: &MonotonicRegion,
-    lines: &[SegmentedLine],
-) -> bool {
-    let left_line = &lines[left.right.line];
-    let right_line = &lines[right.left.line];
-    let forward = (left.right.low..=left.right.high).any(|index| {
-        left_line.intersections[index]
-            .next
-            .is_some_and(|(target, kind, _)| {
-                kind == LinkType::Horizontal && (right.left.low..=right.left.high).contains(&target)
-            })
-    });
-    let backward = (right.left.low..=right.left.high).any(|index| {
-        right_line.intersections[index]
-            .previous
-            .is_some_and(|(target, kind, _)| {
-                kind == LinkType::Horizontal && (left.right.low..=left.right.high).contains(&target)
-            })
-    });
-    forward || backward
+fn mapped_region(map: &[((usize, usize), usize)], boundary: (usize, usize)) -> usize {
+    let position = map
+        .binary_search_by_key(&boundary, |entry| entry.0)
+        .expect("overlap begins at a region boundary");
+    map[position].1
+}
+
+fn next_inner_low(line: &SegmentedLine, top: usize) -> usize {
+    top + 1
+        + line.intersections[top + 1..]
+            .iter()
+            .position(|intersection| intersection.kind == IntersectionKind::InnerLow)
+            .expect("overlap contains another vertical run")
 }

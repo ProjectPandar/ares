@@ -250,7 +250,7 @@ fn select_candidate(candidates: &[Candidate], rng: &mut Mt19937_64) -> usize {
             .iter()
             .map(|candidate| candidate.probability)
             .sum::<f32>();
-        let mut threshold = rng.unit_f32() * total;
+        let mut threshold = rng.next() as f32 * total / u64::MAX as f32;
         candidates
             .iter()
             .position(|candidate| {
@@ -261,19 +261,23 @@ fn select_candidate(candidates: &[Candidate], rng: &mut Mt19937_64) -> usize {
     }
 }
 
-fn path_length(
+pub(super) fn path_length(
     path: &[MonotonicRegionLink],
     regions: &[MonotonicRegion],
     matrix: &mut MonotonicPathMatrix<'_>,
 ) -> f32 {
-    let mut total = 0.0;
-    for (index, link) in path.iter().enumerate() {
-        total += regions[link.region].length(link.flipped);
-        if let Some(next) = path.get(index + 1) {
-            total += matrix
-                .edge(link.region, link.flipped, next.region, next.flipped)
-                .length;
-        }
+    let last = path.last().expect("ant path is nonempty");
+    let mut total = regions[last.region].length(last.flipped);
+    for pair in path.windows(2) {
+        total += regions[pair[0].region].length(pair[0].flipped);
+        total += matrix
+            .edge(
+                pair[0].region,
+                pair[0].flipped,
+                pair[1].region,
+                pair[1].flipped,
+            )
+            .length;
     }
     total
 }

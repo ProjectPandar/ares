@@ -170,7 +170,7 @@ pub(crate) fn emit_vertical_arc(
 fn point_distance(first: Point, second: Point) -> f64 {
     let x = (first.x() - second.x()) as f64;
     let y = (first.y() - second.y()) as f64;
-    x.hypot(y)
+    (x * x + y * y).sqrt()
 }
 
 const fn is_low(kind: IntersectionKind) -> bool {

@@ -113,7 +113,7 @@ pub(crate) fn generate_monotonic_regions(lines: &[SegmentedLine]) -> Vec<Monoton
     regions
 }
 
-fn overlap_right(
+pub(super) fn overlap_right(
     current: &SegmentedLine,
     next: &SegmentedLine,
     (low, high): (usize, usize),
@@ -121,7 +121,7 @@ fn overlap_right(
     overlap(current, next, low, high, |item| item.next)
 }
 
-fn overlap_left(
+pub(super) fn overlap_left(
     current: &SegmentedLine,
     previous: &SegmentedLine,
     (low, high): (usize, usize),

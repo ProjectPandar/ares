@@ -1,5 +1,7 @@
 use crate::geometry::CoordinateScale;
 
+use super::super::chain::{MonotonicRegionLink, path_length};
+use super::super::path_matrix::MonotonicPathMatrix;
 use super::super::rng::Mt19937_64;
 use super::super::{chain_monotonic_regions, prepare_rectilinear_slice};
 use super::{rectangle, region};
@@ -59,4 +61,30 @@ fn branching_chain_preserves_precedence_and_repeatability() {
     assert_eq!(prerequisites, [0, 1]);
     assert_eq!(first[2].region, 2);
     assert_eq!(regions, before);
+}
+
+#[test]
+fn task22o87_path_cost_reduces_in_source_accumulate_order() {
+    let slice = prepare_rectilinear_slice(&rectangle(), 0.0, 0.0, 0.0, 1, 10, 1).unwrap();
+    let mut regions = vec![region(0, 0, 0, 1), region(0, 0, 0, 1), region(0, 0, 0, 1)];
+    regions[0].lengths = [16_777_216.0, 0.0];
+    regions[1].lengths = [2.0, 0.0];
+    regions[2].lengths = [1.0, 0.0];
+    let path = [
+        MonotonicRegionLink {
+            region: 0,
+            flipped: false,
+        },
+        MonotonicRegionLink {
+            region: 1,
+            flipped: false,
+        },
+        MonotonicRegionLink {
+            region: 2,
+            flipped: false,
+        },
+    ];
+    let mut matrix = MonotonicPathMatrix::new(&regions, &slice, CoordinateScale::Normal, 0.5);
+
+    assert_eq!(path_length(&path, &regions, &mut matrix), 16_777_218.0);
 }

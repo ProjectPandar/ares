@@ -51,6 +51,6 @@ fn task22o85_region_costs_are_repeatable_and_preserve_scale_rounding() {
             .chain(&large)
             .flat_map(|region| region.lengths.map(f32::to_bits))
             .collect::<Vec<_>>(),
-        vec![891_255_680, 0, 919_034_368, 0]
+        vec![891_255_680, 0, 919_034_432, 0]
     );
 }

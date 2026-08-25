@@ -117,7 +117,7 @@ fn region_path_cost(
         line_index += 1;
     }
 
-    (f64::from(total) * scale.factor()) as f32
+    total * scale.factor() as f32
 }
 
 fn right_horizontal(item: SegmentIntersection) -> Option<(usize, LinkQuality)> {
@@ -134,9 +134,9 @@ fn vertical_link(item: SegmentIntersection, direction: LinkType) -> Option<(usiz
 }
 
 fn point_distance_f32(first: Point, second: Point) -> f32 {
-    let x = (first.x() - second.x()) as f32;
-    let y = (first.y() - second.y()) as f32;
-    x.hypot(y)
+    let x = first.x() as f32 - second.x() as f32;
+    let y = first.y() as f32 - second.y() as f32;
+    (x * x + y * y).sqrt()
 }
 
 const fn is_low(kind: IntersectionKind) -> bool {

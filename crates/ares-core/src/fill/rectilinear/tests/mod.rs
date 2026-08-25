@@ -2,6 +2,7 @@ mod chain;
 mod costs;
 mod emit;
 mod links;
+mod neighbors;
 mod path_matrix;
 mod perimeter;
 mod segments;
