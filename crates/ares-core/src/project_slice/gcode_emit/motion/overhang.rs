@@ -88,8 +88,8 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         variable |= (f64::from(speed) - request.original_speed).abs() > 1.0;
         let width_inverse = 1.0_f32 / request.properties.width;
         processed.push(ProcessedPoint {
-            x: context.scale.unscale(scale_round(current.x, context.scale)),
-            y: context.scale.unscale(scale_round(current.y, context.scale)),
+            x: context.scale.unscale(scale_trunc(current.x, context.scale)),
+            y: context.scale.unscale(scale_trunc(current.y, context.scale)),
             speed: f64::from(speed),
             overlap: f64::from(
                 (1.0_f32 - current.distance * width_inverse)
@@ -262,16 +262,16 @@ impl BoundaryContext<'_> {
             .nearest_f32([point.0 as f32, point.1 as f32], self.scale)
             .expect("a nonempty boundary has a nearest line");
         let scaled = Point::new(
-            scale_round(point.0, self.scale),
-            scale_round(point.1, self.scale),
+            scale_trunc(point.0, self.scale),
+            scale_trunc(point.1, self.scale),
         );
         self.tree.outside(scaled) as f32 * nearest.squared_distance.sqrt()
     }
 
     fn scaled(&self, point: ExtendedPoint) -> Point {
         Point::new(
-            scale_round(point.x, self.scale),
-            scale_round(point.y, self.scale),
+            scale_trunc(point.x, self.scale),
+            scale_trunc(point.y, self.scale),
         )
     }
 }
@@ -300,8 +300,8 @@ fn absolute(value: FloatOrPercent, base: f64) -> f64 {
     }
 }
 
-fn scale_round(value: f64, scale: crate::geometry::CoordinateScale) -> i64 {
-    (value / scale.factor()).round() as i64
+fn scale_trunc(value: f64, scale: crate::geometry::CoordinateScale) -> i64 {
+    (value / scale.factor()) as i64
 }
 
 fn interpolate(first: ExtendedPoint, second: ExtendedPoint, factor: f64) -> ExtendedPoint {
