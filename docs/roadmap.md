@@ -7996,3 +7996,20 @@ remains 1h 46m 23s versus 1h 48m 58s. The next non-timing divergence is the
 reference arc center `J-1.229` versus `J-1.23`; fitted-arc coordinates,
 timing/M73, remaining geometry and exact G-code parity remain source-cited
 slices.
+
+## Task 22O.246: semantic golden boundary
+
+O246 amends the final KSR acceptance seam around OrcaSlicer 2.4.2
+`TriangleMeshSlicer.cpp:511-531`, `ShortestPath.cpp`, `GCode.cpp:4539-7110`,
+and `GCode/GCodeProcessor.cpp:1100-1140`. The upstream mesh slicer appends TBB
+intersection batches under a mutex without defining batch order. Two runs of
+the same 2.4.2 AppImage and 3MF produced 6,338,754 and 6,330,090 bytes and
+first differed in motion order at the Z1.2 lift after generator, object ID,
+timing, and M73 fields were removed. Cooling feed differed by up to 7 mm/min
+(0.517%). Exact comparison to one captured scheduler order is therefore
+replaced by a semantic golden: exact layer/deposition/lifecycle/control/template
+behavior with bounded source-observed feed, time, and displayed-length
+variation. Production remains deterministic and receives no fixture or golden
+data. The next slice adds the test-only semantic parser, activates the CLI
+golden, removes obsolete internal source-stage pinning, and runs the complete
+verification/review gate.
