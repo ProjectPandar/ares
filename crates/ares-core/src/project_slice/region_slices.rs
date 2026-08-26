@@ -20,7 +20,7 @@ pub(super) struct VolumeSlices {
 }
 
 impl VolumeSlices {
-    #[cfg(any(test, feature = "task22n-browser-oracle"))]
+    #[cfg(test)]
     pub(super) fn as_parts(&self) -> (VolumeOccurrenceId, &[Vec<ExPolygon>]) {
         (self.occurrence_id, &self.layers)
     }

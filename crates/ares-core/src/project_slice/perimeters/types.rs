@@ -83,10 +83,6 @@ pub(in crate::project_slice) struct RegionLayerIndex {
 }
 
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    all(not(test), not(feature = "task22n-browser-oracle")),
-    expect(dead_code, reason = "consumed by the Task 22N checkpoint package")
-)]
 pub(in crate::project_slice) struct PerimeterInputRecord {
     pub(in crate::project_slice) source_object_index: usize,
     pub(in crate::project_slice) transform_index: usize,
@@ -99,6 +95,7 @@ pub(in crate::project_slice) struct PerimeterInputRecord {
     pub(in crate::project_slice) upper_layer_index: Option<usize>,
     pub(in crate::project_slice) upper_same_region: Option<RegionLayerIndex>,
     pub(in crate::project_slice) layer_height: f64,
+    #[cfg_attr(not(test), expect(dead_code, reason = "used by source-context tests"))]
     pub(in crate::project_slice) slice_z: f64,
     pub(in crate::project_slice) perimeter_flow: Flow,
     pub(in crate::project_slice) ext_perimeter_flow: Flow,

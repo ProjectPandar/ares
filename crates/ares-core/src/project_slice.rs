@@ -11,7 +11,7 @@ pub(in crate::project_slice) const CONSTRAINED_TEST_STACK_SIZE: usize = 64 * 102
 mod bounds;
 mod capabilities;
 mod chained_intersections;
-#[cfg(any(test, feature = "task22n-browser-oracle"))]
+#[cfg(test)]
 mod checkpoints;
 mod closing;
 mod compensation;
@@ -69,9 +69,9 @@ mod task22h_oracle;
 mod task22i_oracle;
 #[cfg(test)]
 mod task22j_oracle;
-#[cfg(any(test, feature = "task22n-browser-oracle"))]
+#[cfg(test)]
 mod task22m_oracle;
-#[cfg(any(test, feature = "task22n-browser-oracle"))]
+#[cfg(test)]
 mod task22n_oracle;
 
 #[cfg(test)]
@@ -83,7 +83,7 @@ pub use checkpoints::{
 };
 #[cfg(test)]
 pub use checkpoints::{task22m_browser_input_oracle, task22m_browser_oracle};
-#[cfg(any(test, feature = "task22n-browser-oracle"))]
+#[cfg(test)]
 pub use checkpoints::{task22n_browser_input_oracle, task22n_browser_oracle};
 
 #[cfg(test)]

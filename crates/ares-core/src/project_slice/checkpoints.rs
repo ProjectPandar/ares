@@ -1,6 +1,5 @@
 use crate::SliceError;
 
-#[cfg(any(test, feature = "task22n-browser-oracle"))]
 use super::{compensation, perimeters, task22m_oracle, task22n_oracle};
 #[cfg(test)]
 use super::{
@@ -100,13 +99,11 @@ pub fn task22m_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, Slic
     Ok(task22m_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22n-browser-oracle"))]
 pub fn task22n_browser_input_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = compensation::prepare_post_compensation(project)?;
     Ok(task22m_oracle::encode(&prepared.objects))
 }
 
-#[cfg(any(test, feature = "task22n-browser-oracle"))]
 pub fn task22n_browser_oracle(project: impl AsRef<[u8]>) -> Result<Vec<u8>, SliceError> {
     let prepared = compensation::prepare_post_compensation(project)?;
     let predecessor = task22m_oracle::encode(&prepared.objects);
