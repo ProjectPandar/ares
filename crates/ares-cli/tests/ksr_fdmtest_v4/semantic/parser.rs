@@ -1,0 +1,381 @@
+use std::collections::BTreeMap;
+
+#[derive(Debug)]
+pub(super) struct SemanticGcode {
+    pub(super) timing: Timing,
+    pub(super) filament_lengths: Vec<f64>,
+    pub(super) preamble: Vec<String>,
+    pub(super) postamble: Vec<String>,
+    pub(super) layers: Vec<Layer>,
+}
+
+#[derive(Debug, Default)]
+pub(super) struct Timing {
+    pub(super) model: u64,
+    pub(super) total: u64,
+    pub(super) first_layer: u64,
+}
+
+#[derive(Debug, Default)]
+pub(super) struct Layer {
+    pub(super) metadata: Vec<String>,
+    pub(super) deposition: Vec<Deposition>,
+    pub(super) wipes: Vec<String>,
+    pub(super) extruder_moves: Vec<String>,
+    pub(super) lifts: Vec<String>,
+    pub(super) controls: Vec<String>,
+}
+
+#[derive(Debug)]
+pub(super) struct Deposition {
+    pub(super) key: String,
+    pub(super) feed: f64,
+    pub(super) acceleration: String,
+    pub(super) fans: String,
+}
+
+#[derive(Default)]
+struct State {
+    x: String,
+    y: String,
+    z: String,
+    feed: String,
+    acceleration: String,
+    feature: String,
+    width: String,
+    fans: BTreeMap<String, String>,
+}
+
+pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
+    let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
+    let mut output = SemanticGcode {
+        timing: Timing::default(),
+        filament_lengths: Vec::new(),
+        preamble: Vec::new(),
+        postamble: Vec::new(),
+        layers: Vec::new(),
+    };
+    let mut state = State::default();
+    let postamble_start = text
+        .lines()
+        .enumerate()
+        .filter_map(|(index, line)| {
+            line.trim()
+                .starts_with("; stop printing object, unique label id:")
+                .then_some(index)
+        })
+        .last();
+
+    for (line_index, raw_line) in text.lines().enumerate() {
+        let line = raw_line.trim();
+        if parse_timing(line, &mut output.timing)? {
+            continue;
+        }
+        if let Some(lengths) = parse_filament_lengths(line)? {
+            output.filament_lengths = lengths;
+            if postamble_start.is_some_and(|start| line_index >= start) {
+                output
+                    .postamble
+                    .push("; filament used [mm] = <LENGTHS>".to_owned());
+            } else {
+                push_control(&mut output, "; filament used [mm] = <LENGTHS>");
+            }
+            continue;
+        }
+        if line.starts_with("M73 ") {
+            continue;
+        }
+        if postamble_start.is_some_and(|start| line_index >= start) {
+            if !line.is_empty() {
+                output.postamble.push(line.to_owned());
+            }
+            continue;
+        }
+        if line == "; CHANGE_LAYER" {
+            output.layers.push(Layer::default());
+            continue;
+        }
+        if let Some(value) = line.strip_prefix("; FEATURE: ") {
+            state.feature = value.to_owned();
+            continue;
+        }
+        if let Some(value) = line.strip_prefix("; LINE_WIDTH: ") {
+            state.width = canonical_number(value)?;
+            continue;
+        }
+        if line == "; WIPE_START" || line == "; WIPE_END" {
+            continue;
+        }
+        if let Some(value) = line.strip_prefix("; Z_HEIGHT: ") {
+            state.z = canonical_number(value)?;
+            current_layer(&mut output)?.metadata.push(line.to_owned());
+            continue;
+        }
+        if line.starts_with("; LAYER_HEIGHT: ") {
+            current_layer(&mut output)?.metadata.push(line.to_owned());
+            continue;
+        }
+        if let Some(value) = command_value(line, "M204", 'S')? {
+            state.acceleration = value;
+            if output.layers.is_empty() {
+                output.preamble.push(line.to_owned());
+            }
+            continue;
+        }
+        if line.starts_with("M106 ") {
+            update_fan(line, &mut state)?;
+            push_control(&mut output, line);
+            continue;
+        }
+        if let Some(motion) = Motion::parse(line)? {
+            if output.layers.is_empty() {
+                output.preamble.push(line.to_owned());
+            }
+            apply_motion(&mut output, &mut state, motion)?;
+            continue;
+        }
+        if !line.is_empty() {
+            push_control(&mut output, line);
+        }
+    }
+
+    if output.layers.is_empty() {
+        return Err("G-code contains no layers".to_owned());
+    }
+    if output.filament_lengths.is_empty() {
+        return Err("G-code contains no filament length statistics".to_owned());
+    }
+    for layer in &mut output.layers {
+        layer.deposition.sort_by(|left, right| {
+            left.key
+                .cmp(&right.key)
+                .then_with(|| left.acceleration.cmp(&right.acceleration))
+                .then_with(|| left.fans.cmp(&right.fans))
+                .then_with(|| left.feed.total_cmp(&right.feed))
+        });
+        layer.wipes.sort_unstable();
+        layer.extruder_moves.sort_unstable();
+        layer.lifts.sort_unstable();
+    }
+    Ok(output)
+}
+
+fn parse_timing(line: &str, timing: &mut Timing) -> Result<bool, String> {
+    if let Some(value) = line.strip_prefix("; model printing time: ") {
+        let (model, total) = value
+            .split_once("; total estimated time: ")
+            .ok_or_else(|| "invalid model printing time line".to_owned())?;
+        timing.model = duration_seconds(model)?;
+        timing.total = duration_seconds(total)?;
+        return Ok(true);
+    }
+    if let Some((_, value)) = line
+        .strip_prefix("; estimated first layer printing time ")
+        .and_then(|value| value.split_once("= "))
+    {
+        timing.first_layer = duration_seconds(value)?;
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+fn duration_seconds(value: &str) -> Result<u64, String> {
+    let mut seconds = 0_u64;
+    for part in value.split_whitespace() {
+        let (digits, multiplier) = match part.as_bytes().last() {
+            Some(b'h') => (&part[..part.len() - 1], 3_600),
+            Some(b'm') => (&part[..part.len() - 1], 60),
+            Some(b's') => (&part[..part.len() - 1], 1),
+            _ => return Err(format!("invalid duration {value:?}")),
+        };
+        seconds += digits
+            .parse::<u64>()
+            .map_err(|_| format!("invalid duration {value:?}"))?
+            * multiplier;
+    }
+    Ok(seconds)
+}
+
+fn parse_filament_lengths(line: &str) -> Result<Option<Vec<f64>>, String> {
+    let Some(value) = line.strip_prefix("; filament used [mm] = ") else {
+        return Ok(None);
+    };
+    value
+        .split(',')
+        .map(|value| {
+            value
+                .trim()
+                .parse::<f64>()
+                .map_err(|_| format!("invalid filament length {value:?}"))
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map(Some)
+}
+
+fn push_control(output: &mut SemanticGcode, line: &str) {
+    if let Some(layer) = output.layers.last_mut() {
+        layer.controls.push(line.to_owned());
+    } else {
+        output.preamble.push(line.to_owned());
+    }
+}
+
+fn current_layer(output: &mut SemanticGcode) -> Result<&mut Layer, String> {
+    output
+        .layers
+        .last_mut()
+        .ok_or_else(|| "layer metadata appears before CHANGE_LAYER".to_owned())
+}
+
+fn command_value(line: &str, command: &str, key: char) -> Result<Option<String>, String> {
+    if line.split_whitespace().next() != Some(command) {
+        return Ok(None);
+    }
+    line.split_whitespace()
+        .skip(1)
+        .find_map(|token| token.strip_prefix(key))
+        .map(canonical_number)
+        .transpose()
+}
+
+fn update_fan(line: &str, state: &mut State) -> Result<(), String> {
+    let mut fan = "0".to_owned();
+    let mut speed = None;
+    for token in line.split_whitespace().skip(1) {
+        if let Some(value) = token.strip_prefix('P') {
+            fan = canonical_number(value)?;
+        } else if let Some(value) = token.strip_prefix('S') {
+            speed = Some(canonical_number(value)?);
+        }
+    }
+    state
+        .fans
+        .insert(fan, speed.ok_or_else(|| "M106 has no S value".to_owned())?);
+    Ok(())
+}
+
+struct Motion {
+    command: String,
+    values: BTreeMap<char, String>,
+}
+
+impl Motion {
+    fn parse(line: &str) -> Result<Option<Self>, String> {
+        let mut tokens = line.split_whitespace();
+        let Some(command @ ("G0" | "G1" | "G2" | "G3")) = tokens.next() else {
+            return Ok(None);
+        };
+        let mut values = BTreeMap::new();
+        for token in tokens {
+            let Some(key @ ('X' | 'Y' | 'Z' | 'I' | 'J' | 'E' | 'F' | 'P')) = token.chars().next()
+            else {
+                continue;
+            };
+            values.insert(key, canonical_number(&token[1..])?);
+        }
+        Ok(Some(Self {
+            command: command.to_owned(),
+            values,
+        }))
+    }
+}
+
+fn apply_motion(
+    output: &mut SemanticGcode,
+    state: &mut State,
+    motion: Motion,
+) -> Result<(), String> {
+    if let Some(feed) = motion.values.get(&'F') {
+        state.feed.clone_from(feed);
+    }
+    let next_x = motion.values.get(&'X').unwrap_or(&state.x).clone();
+    let next_y = motion.values.get(&'Y').unwrap_or(&state.y).clone();
+    let next_z = motion.values.get(&'Z').unwrap_or(&state.z).clone();
+    if let (Some(layer), Some(extrusion)) = (output.layers.last_mut(), motion.values.get(&'E')) {
+        let moved_xy = next_x != state.x || next_y != state.y;
+        let value = extrusion
+            .parse::<f64>()
+            .map_err(|_| format!("invalid extrusion {extrusion:?}"))?;
+        if value > 0.0 && moved_xy {
+            layer.deposition.push(Deposition {
+                key: motion_key(state, &motion, [&next_x, &next_y, &next_z], extrusion),
+                feed: required_feed(state)?,
+                acceleration: state.acceleration.clone(),
+                fans: fan_state(&state.fans),
+            });
+        } else if value < 0.0 && moved_xy {
+            layer.wipes.push(format!(
+                "{}|{}",
+                motion_key(state, &motion, [&next_x, &next_y, &next_z], extrusion),
+                state.feed
+            ));
+        } else {
+            layer
+                .extruder_moves
+                .push(format!("{extrusion}|{}", state.feed));
+        }
+    } else if let Some(layer) = output.layers.last_mut()
+        && next_z != state.z
+    {
+        layer.lifts.push(format!(
+            "{}|{}|{}|{}",
+            motion.command, state.z, next_z, state.feed
+        ));
+    }
+    state.x = next_x;
+    state.y = next_y;
+    state.z = next_z;
+    Ok(())
+}
+
+fn motion_key(state: &State, motion: &Motion, next: [&str; 3], extrusion: &str) -> String {
+    format!(
+        "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
+        state.feature,
+        state.width,
+        motion.command,
+        state.x,
+        state.y,
+        state.z,
+        next[0],
+        next[1],
+        next[2],
+        motion.values.get(&'I').map_or("", String::as_str),
+        motion.values.get(&'J').map_or("", String::as_str),
+        extrusion
+    )
+}
+
+fn required_feed(state: &State) -> Result<f64, String> {
+    state
+        .feed
+        .parse::<f64>()
+        .map_err(|_| "deposition move has no feed rate".to_owned())
+}
+
+fn fan_state(fans: &BTreeMap<String, String>) -> String {
+    fans.iter()
+        .map(|(fan, speed)| format!("{fan}:{speed}"))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn canonical_number(value: &str) -> Result<String, String> {
+    let number = value
+        .parse::<f64>()
+        .map_err(|_| format!("invalid G-code number {value:?}"))?;
+    if !number.is_finite() {
+        return Err(format!("non-finite G-code number {value:?}"));
+    }
+    let mut rendered = format!("{number:.8}");
+    while rendered.ends_with('0') {
+        rendered.pop();
+    }
+    if rendered.ends_with('.') {
+        rendered.pop();
+    }
+    if rendered == "-0" {
+        rendered = "0".to_owned();
+    }
+    Ok(rendered)
+}

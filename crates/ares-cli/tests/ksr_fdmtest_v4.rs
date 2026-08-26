@@ -1,5 +1,7 @@
 #[path = "ksr_fdmtest_v4/golden.rs"]
 mod golden;
+#[path = "ksr_fdmtest_v4/semantic.rs"]
+mod semantic;
 
 use std::{fs, io::Cursor, path::PathBuf};
 
@@ -143,10 +145,8 @@ fn first_difference_truncates_long_context_lines() {
         3
     );
 }
-
 #[test]
-#[ignore = "full project parity incomplete"]
-fn project_matches_orca_242_except_allowed_metadata() {
+fn project_matches_orca_242_semantically() {
     let temp = tempfile::tempdir().unwrap();
     let output = temp.path().join("actual.gcode");
     assert_cmd::Command::cargo_bin("ares")
@@ -164,7 +164,6 @@ fn project_matches_orca_242_except_allowed_metadata() {
     let expected = normalize_uninitialized_object_ids(&expected).unwrap();
     let actual = normalize_one_generator_line(&actual, GeneratorKind::Ares).unwrap();
     let actual = normalize_uninitialized_object_ids(&actual).unwrap();
-    if expected != actual {
-        panic!("{}", first_difference(&expected, &actual).unwrap());
-    }
+
+    semantic::compare(&expected, &actual).unwrap_or_else(|error| panic!("{error}"));
 }
