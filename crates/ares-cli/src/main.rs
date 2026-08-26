@@ -53,7 +53,15 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
     let input = fs::read(args.input)?;
     let output = match extension {
         Some(extension) if extension == "3mf" => {
-            let metadata = ares_core::GenerationMetadata::deterministic(2026, 1, 1, 0, 0, 0);
+            let now = jiff::Zoned::now().datetime();
+            let metadata = ares_core::GenerationMetadata::new_local(
+                u16::try_from(now.year())?,
+                u8::try_from(now.month())?,
+                u8::try_from(now.day())?,
+                u8::try_from(now.hour())?,
+                u8::try_from(now.minute())?,
+                u8::try_from(now.second())?,
+            )?;
             ares_core::slice_project(input, metadata).await?
         }
         Some(extension) if extension == "stl" => {
