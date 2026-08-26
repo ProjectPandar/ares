@@ -293,7 +293,6 @@ fn partition_by_median<T, F: Less<T>, S: TraceSink<T>>(
         }
     }
 }
-
 fn push_heap_by_index<T: Copy, F: Less<T>>(
     items: &mut [T],
     position: HeapHole,
@@ -311,7 +310,6 @@ fn push_heap_by_index<T: Copy, F: Less<T>>(
     }
     items[first + hole as usize] = value;
 }
-
 fn pop_heap_hole_by_index<T: Copy, F: Less<T>>(
     items: &mut [T],
     position: HeapHole,
@@ -336,7 +334,6 @@ fn pop_heap_hole_by_index<T: Copy, F: Less<T>>(
     }
     push_heap_by_index(items, HeapHole(first, hole, top), value, compare);
 }
-
 fn make_heap<T: Copy, F: Less<T>>(items: &mut [T], first: usize, last: usize, compare: &mut F) {
     let bottom = last - first;
     let mut hole = bottom >> 1;
@@ -346,7 +343,6 @@ fn make_heap<T: Copy, F: Less<T>>(items: &mut [T], first: usize, last: usize, co
         pop_heap_hole_by_index(items, HeapHole(first, hole, bottom), value, compare);
     }
 }
-
 fn pop_heap<T: Copy, F: Less<T>>(items: &mut [T], first: usize, last: usize, compare: &mut F) {
     if last - first >= 2 {
         let destination = last - 1;
