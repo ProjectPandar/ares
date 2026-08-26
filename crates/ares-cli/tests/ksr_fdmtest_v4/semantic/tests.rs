@@ -52,6 +52,20 @@ fn wipe_and_retraction_lifecycle_must_match() {
     assert!(error.contains("wipe paths differs"), "{error}");
 }
 
+#[test]
+fn project_object_identity_difference_is_rejected() {
+    let expected_island = format!(
+        "; printing object part id:2 copy 0\n{}",
+        island(0, 1, 1_200)
+    );
+    let actual_island = expected_island.replace("id:2", "id:3");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("control events differs"), "{error}");
+}
+
 fn island(start: u32, end: u32, feed: u32) -> String {
     format!(
         "G1 X{start} Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X{end} Y0 E.1 F{feed}\n"

@@ -82,11 +82,15 @@ fn generator_normalization_changes_only_the_validated_line() {
 }
 
 #[test]
-fn uninitialized_orca_object_ids_are_normalized_only_on_object_comment_lines() {
+fn uninitialized_orca_object_ids_are_replaced_with_the_project_identity() {
     let input = b"; printing object part id:13965068898260364096 copy 0\n; stop printing object part id:2 copy 0\nG1 X13965068898260364096\n";
-    let expected = b"; printing object part id:<OBJECT_ID> copy 0\n; stop printing object part id:<OBJECT_ID> copy 0\nG1 X13965068898260364096\n";
+    let expected =
+        b"; printing object part id:2 copy 0\n; stop printing object part id:2 copy 0\nG1 X13965068898260364096\n";
 
-    assert_eq!(normalize_uninitialized_object_ids(input).unwrap(), expected);
+    assert_eq!(
+        normalize_uninitialized_object_ids(input, 2).unwrap(),
+        expected
+    );
 }
 
 #[test]
@@ -147,6 +151,14 @@ fn first_difference_truncates_long_context_lines() {
 }
 #[test]
 fn project_matches_orca_242_semantically() {
+    let project = project();
+    let project_object_id = ares_core::load_project(&project)
+        .unwrap()
+        .objects()
+        .iter()
+        .map(ares_core::ProjectObject::id)
+        .next()
+        .unwrap();
     let temp = tempfile::tempdir().unwrap();
     let output = temp.path().join("actual.gcode");
     assert_cmd::Command::cargo_bin("ares")
@@ -161,9 +173,8 @@ fn project_matches_orca_242_semantically() {
         .success();
     let actual = std::fs::read(output).unwrap();
     let expected = normalize_one_generator_line(&reference(), GeneratorKind::Orca).unwrap();
-    let expected = normalize_uninitialized_object_ids(&expected).unwrap();
+    let expected = normalize_uninitialized_object_ids(&expected, project_object_id).unwrap();
     let actual = normalize_one_generator_line(&actual, GeneratorKind::Ares).unwrap();
-    let actual = normalize_uninitialized_object_ids(&actual).unwrap();
 
     semantic::compare(&expected, &actual).unwrap_or_else(|error| panic!("{error}"));
 }
