@@ -1,4 +1,4 @@
-use super::compare;
+use super::{compare, compare_cross_target};
 
 #[test]
 fn source_variation_with_stable_island_order_is_tolerated() {
@@ -11,6 +11,30 @@ fn source_variation_with_stable_island_order_is_tolerated() {
     let actual = document("1m 2s", "1m 7s", "11s", "2.03", &[&left, &right]);
 
     compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
+fn cross_target_tolerates_quantized_path_split() {
+    let expected_island = island(0, 1, 1_200);
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual_island = expected_island.replace(
+        "G1 X1 Y0 E.1 F1200",
+        "G1 X.001 Y0 E.001 F1200\nG1 X1 Y0 E.099 F1200",
+    );
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare_cross_target(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
+fn cross_target_rejects_large_path_drift() {
+    let expected_island = island(0, 1, 1_200);
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual_island = expected_island.replace("G1 X1 Y0 E.1 F1200", "G1 X1.2 Y0 E.1 F1200");
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    let error = compare_cross_target(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("deposition"), "{error}");
 }
 
 #[test]

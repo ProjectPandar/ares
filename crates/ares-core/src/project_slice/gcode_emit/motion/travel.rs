@@ -104,11 +104,7 @@ fn wipe_moves(state: &EmitState) -> WipePath {
     );
     let total_length = points
         .windows(2)
-        .map(|segment| {
-            let dx = (segment[1].0 - segment[0].0) as f64;
-            let dy = (segment[1].1 - segment[0].1) as f64;
-            dx.hypot(dy)
-        })
+        .map(|segment| scaled_distance(segment[0], segment[1]))
         .sum::<f64>();
     let configured_distance = state.options.wipe_distance / state.scale_factor;
     let retraction_distance = total_length.min(configured_distance) * state.scale_factor;
@@ -118,7 +114,7 @@ fn wipe_moves(state: &EmitState) -> WipePath {
         let previous = *points.last().unwrap();
         let dx = (previous.0 - last.0) as f64;
         let dy = (previous.1 - last.1) as f64;
-        let length = dx.hypot(dy);
+        let length = scaled_distance(last, previous);
         if length > clip {
             points.push((
                 (last.0 as f64 + dx * (clip / length)) as i64,
@@ -131,9 +127,7 @@ fn wipe_moves(state: &EmitState) -> WipePath {
     let segments = points
         .windows(2)
         .filter_map(|segment| {
-            let dx = (segment[1].0 - segment[0].0) as f64;
-            let dy = (segment[1].1 - segment[0].1) as f64;
-            let length = dx.hypot(dy);
+            let length = scaled_distance(segment[0], segment[1]);
             (length > f64::EPSILON).then(|| (unscaled_position(segment[1], state), length))
         })
         .collect::<Vec<_>>();
@@ -147,6 +141,12 @@ fn wipe_moves(state: &EmitState) -> WipePath {
         retraction_distance,
         distribution_distance,
     }
+}
+
+fn scaled_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
+    let dx = (left.0 - right.0) as f64;
+    let dy = (left.1 - right.1) as f64;
+    (dx * dx + dy * dy).sqrt()
 }
 
 fn scaled_position(point: arc::Point, state: &EmitState) -> (i64, i64) {
