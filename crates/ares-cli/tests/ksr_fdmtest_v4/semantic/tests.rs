@@ -37,10 +37,10 @@ fn deposited_geometry_difference_is_rejected() {
 fn source_variation_bounds_are_enforced() {
     let baseline = island(0, 1, 1_200);
     let expected = document("1m", "1m", "10s", "2.00", &[&baseline]);
-    let bounded = document("1m", "1m", "10s", "2.00", &[&island(0, 1, 1_212)]);
+    let bounded = document("1m", "1m", "10s", "2.00", &[&island(0, 1, 1_210)]);
     compare(expected.as_bytes(), bounded.as_bytes()).unwrap();
 
-    let fast = document("1m", "1m", "10s", "2.00", &[&island(0, 1, 1_213)]);
+    let fast = document("1m", "1m", "10s", "2.00", &[&island(0, 1, 1_211)]);
     assert!(compare(expected.as_bytes(), fast.as_bytes()).is_err());
 
     let slow = document("1m 6s", "1m", "10s", "2.00", &[&baseline]);

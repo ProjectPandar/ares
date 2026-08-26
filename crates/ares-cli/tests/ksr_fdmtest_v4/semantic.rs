@@ -12,7 +12,7 @@ mod travel;
 
 use parser::{Deposition, SemanticGcode};
 
-const MAX_FEED_DIFFERENCE: f64 = 12.0;
+const MAX_FEED_DIFFERENCE: f64 = 10.0;
 const MAX_FEED_RELATIVE_DIFFERENCE: f64 = 0.01;
 const MAX_TIME_DIFFERENCE_SECONDS: u64 = 5;
 const MAX_FILAMENT_LENGTH_DIFFERENCE_MM: f64 = 0.05;
