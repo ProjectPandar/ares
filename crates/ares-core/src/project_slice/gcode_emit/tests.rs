@@ -292,10 +292,12 @@ async fn ksr_project_renders_end_templates_and_closes_executable_block() {
     assert!(
         output
             .lines()
-            .last()
+            .rev()
+            .find(|line| !line.is_empty())
             .unwrap()
             .starts_with("; filament cost = ")
     );
+    assert!(output.ends_with("\n\n"));
     assert!(!output.ends_with("M2\n"));
 }
 

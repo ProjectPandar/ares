@@ -88,9 +88,7 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             continue;
         }
         if postamble_start.is_some_and(|start| line_index >= start) {
-            if !line.is_empty() {
-                output.postamble.push(line.to_owned());
-            }
+            output.postamble.push(raw_line.to_owned());
             continue;
         }
         if line == "; CHANGE_LAYER" {
@@ -106,40 +104,42 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             continue;
         }
         if line == "; WIPE_START" || line == "; WIPE_END" {
-            push_lifecycle(current_layer(&mut output)?, line.to_owned());
+            push_lifecycle(current_layer(&mut output)?, raw_line.to_owned());
             continue;
         }
         if let Some(value) = line.strip_prefix("; Z_HEIGHT: ") {
             state.z = canonical_number(value)?;
-            current_layer(&mut output)?.metadata.push(line.to_owned());
+            current_layer(&mut output)?
+                .metadata
+                .push(raw_line.to_owned());
             continue;
         }
         if line.starts_with("; LAYER_HEIGHT: ") {
-            current_layer(&mut output)?.metadata.push(line.to_owned());
+            current_layer(&mut output)?
+                .metadata
+                .push(raw_line.to_owned());
             continue;
         }
         if let Some(value) = command_value(line, "M204", 'S')? {
             state.acceleration = value;
             if output.layers.is_empty() {
-                output.preamble.push(line.to_owned());
+                output.preamble.push(raw_line.to_owned());
             }
             continue;
         }
         if line.starts_with("M106 ") {
             update_fan(line, &mut state)?;
-            push_control(&mut output, line);
+            push_control(&mut output, raw_line);
             continue;
         }
         if let Some(motion) = Motion::parse(line)? {
             if output.layers.is_empty() {
-                output.preamble.push(line.to_owned());
+                output.preamble.push(raw_line.to_owned());
             }
             apply_motion(&mut output, &mut state, motion)?;
             continue;
         }
-        if !line.is_empty() {
-            push_control(&mut output, line);
-        }
+        push_control(&mut output, raw_line);
     }
 
     if output.layers.is_empty() {

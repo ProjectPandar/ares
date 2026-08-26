@@ -96,6 +96,27 @@ fn project_object_identity_difference_is_rejected() {
     assert!(error.contains("control events differs"), "{error}");
 }
 
+#[test]
+fn control_whitespace_difference_is_rejected() {
+    let expected_island = format!("{}; custom control  \n", island(0, 1, 1_200));
+    let actual_island = expected_island.replace("control  \n", "control\n");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("control events differs"), "{error}");
+}
+
+#[test]
+fn control_blank_line_difference_is_rejected() {
+    let expected_island = format!("{}; first\n\n; second\n", island(0, 1, 1_200));
+    let actual_island = expected_island.replace("; first\n\n", "; first\n");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("control events differs"), "{error}");
+}
 fn lifecycle_island(start: u32, end: u32, retract: &str) -> String {
     format!(
         "G1 X{start} Y0 F6000\nG1 E.4 F1800\nM204 S5000\n; FEATURE: Outer wall\n; LINE_WIDTH: 0.42\nG1 X{end} Y0 E.1 F1200\nG1 E-{retract} F1800\n; WIPE_START\nG1 X{start} Y0 E-.05 F1200\n; WIPE_END\n"

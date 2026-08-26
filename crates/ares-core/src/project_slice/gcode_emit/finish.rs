@@ -58,7 +58,7 @@ pub(super) fn append_filament_stats(
     }
     output.extend_from_slice(
         format!(
-            "; filament used [mm] = {}\n; filament used [cm3] = {}\n; filament used [g] = {}\n; filament cost = {}\n",
+            "; filament used [mm] = {}\n; filament used [cm3] = {}\n; filament used [g] = {}\n; filament cost = {}\n\n",
             used_mm.join(", "),
             used_cm3.join(", "),
             used_g.join(", "),
