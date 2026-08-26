@@ -27,8 +27,10 @@ fn deposited_geometry_difference_is_rejected() {
 fn source_variation_bounds_are_enforced() {
     let baseline = island(0, 1, 1_200);
     let expected = document("1m", "1m", "10s", "2.00", &[&baseline]);
+    let bounded = document("1m", "1m", "10s", "2.00", &[&island(0, 1, 1_212)]);
+    compare(expected.as_bytes(), bounded.as_bytes()).unwrap();
 
-    let fast = document("1m", "1m", "10s", "2.00", &[&island(0, 1, 1_211)]);
+    let fast = document("1m", "1m", "10s", "2.00", &[&island(0, 1, 1_213)]);
     assert!(compare(expected.as_bytes(), fast.as_bytes()).is_err());
 
     let slow = document("1m 6s", "1m", "10s", "2.00", &[&baseline]);
@@ -36,6 +38,40 @@ fn source_variation_bounds_are_enforced() {
 
     let long = document("1m", "1m", "10s", "2.06", &[&baseline]);
     assert!(compare(expected.as_bytes(), long.as_bytes()).is_err());
+}
+
+#[test]
+fn path_segmentation_drift_is_bounded() {
+    let expected_island = island(0, 1, 1_200);
+    let actual_island = expected_island.replace(
+        "G1 X1 Y0 E.1 F1200",
+        "G1 X.5 Y0 E.05 F1200\nG1 X1 Y0 E.05 F1200",
+    );
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+
+    let outside = actual.replace("X.5 Y0", "X.5 Y.08");
+    let error = compare(expected.as_bytes(), outside.as_bytes()).unwrap_err();
+    assert!(error.contains("deposition 1 differs"), "{error}");
+}
+
+#[test]
+fn path_extrusion_redistribution_is_bounded() {
+    let expected_island = format!("{}G1 X2 Y0 E.1 F1200\n", island(0, 1, 1_200));
+    let actual_island = expected_island.replace(
+        "G1 X1 Y0 E.1 F1200\nG1 X2 Y0 E.1",
+        "G1 X1.06 Y0 E.106 F1200\nG1 X2 Y0 E.094",
+    );
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+
+    let outside = actual.replace("X1.06 Y0", "X1.06 Y.08");
+    let error = compare(expected.as_bytes(), outside.as_bytes()).unwrap_err();
+    assert!(error.contains("deposition 1 differs"), "{error}");
 }
 
 #[test]
@@ -49,6 +85,34 @@ fn wipe_and_retraction_lifecycle_must_match() {
     let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
 
     let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("island lifecycle differs"), "{error}");
+}
+
+#[test]
+fn wipe_extrusion_last_decimal_drift_is_tolerated() {
+    let expected_island = lifecycle_island(0, 1, ".1");
+    let actual_island = expected_island.replace("E-.05 F1200", "E-.05001 F1200");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+
+    let outside = actual.replace("E-.05001 F1200", "E-.05002 F1200");
+    let error = compare(expected.as_bytes(), outside.as_bytes()).unwrap_err();
+    assert!(error.contains("island lifecycle differs"), "{error}");
+}
+
+#[test]
+fn wipe_coordinate_last_decimal_drift_is_tolerated() {
+    let expected_island = lifecycle_island(0, 1, ".1");
+    let actual_island = expected_island.replace("G1 X0 Y0 E-.05", "G1 X.001 Y0 E-.05");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+
+    let outside = actual.replace("X.001 Y0 E-.05", "X.002 Y0 E-.05");
+    let error = compare(expected.as_bytes(), outside.as_bytes()).unwrap_err();
     assert!(error.contains("island lifecycle differs"), "{error}");
 }
 

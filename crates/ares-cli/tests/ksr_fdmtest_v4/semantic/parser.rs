@@ -1,5 +1,7 @@
+mod motion;
 mod number;
 
+use motion::Motion;
 use number::canonical_number;
 use std::collections::BTreeMap;
 
@@ -31,6 +33,7 @@ pub(super) struct Layer {
 #[derive(Debug)]
 pub(super) struct Deposition {
     pub(super) key: String,
+    pub(super) path: u64,
     pub(super) feed: f64,
     pub(super) acceleration: String,
     pub(super) fans: String,
@@ -46,6 +49,8 @@ struct State {
     feature: String,
     width: String,
     fans: BTreeMap<String, String>,
+    deposition_path: u64,
+    depositing: bool,
 }
 
 pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
@@ -256,32 +261,6 @@ fn update_fan(line: &str, state: &mut State) -> Result<(), String> {
     Ok(())
 }
 
-struct Motion {
-    command: String,
-    values: BTreeMap<char, String>,
-}
-
-impl Motion {
-    fn parse(line: &str) -> Result<Option<Self>, String> {
-        let mut tokens = line.split_whitespace();
-        let Some(command @ ("G0" | "G1" | "G2" | "G3")) = tokens.next() else {
-            return Ok(None);
-        };
-        let mut values = BTreeMap::new();
-        for token in tokens {
-            let Some(key @ ('X' | 'Y' | 'Z' | 'I' | 'J' | 'E' | 'F' | 'P')) = token.chars().next()
-            else {
-                continue;
-            };
-            values.insert(key, canonical_number(&token[1..])?);
-        }
-        Ok(Some(Self {
-            command: command.to_owned(),
-            values,
-        }))
-    }
-}
-
 fn apply_motion(
     output: &mut SemanticGcode,
     state: &mut State,
@@ -293,18 +272,25 @@ fn apply_motion(
     let next_x = motion.values.get(&'X').unwrap_or(&state.x).clone();
     let next_y = motion.values.get(&'Y').unwrap_or(&state.y).clone();
     let next_z = motion.values.get(&'Z').unwrap_or(&state.z).clone();
+    let moved_xy = next_x != state.x || next_y != state.y;
+    let moved_z = next_z != state.z;
+    let mut deposited = false;
     if let (Some(layer), Some(extrusion)) = (output.layers.last_mut(), motion.values.get(&'E')) {
-        let moved_xy = next_x != state.x || next_y != state.y;
         let value = extrusion
             .parse::<f64>()
             .map_err(|_| format!("invalid extrusion {extrusion:?}"))?;
         if value > 0.0 && moved_xy {
+            if !state.depositing {
+                state.deposition_path += 1;
+            }
             layer.deposition.push(Deposition {
                 key: motion_key(state, &motion, [&next_x, &next_y, &next_z], extrusion),
+                path: state.deposition_path,
                 feed: required_feed(state)?,
                 acceleration: state.acceleration.clone(),
                 fans: fan_state(&state.fans),
             });
+            deposited = true;
         } else if value < 0.0 && moved_xy {
             push_lifecycle(
                 layer,
@@ -323,11 +309,16 @@ fn apply_motion(
             }
         }
     } else if let Some(layer) = output.layers.last_mut()
-        && next_z != state.z
+        && moved_z
     {
         layer
             .lifts
             .push(lift_key(state, &motion, [&next_x, &next_y, &next_z]));
+    }
+    if deposited {
+        state.depositing = true;
+    } else if moved_xy || moved_z || motion.values.contains_key(&'E') {
+        state.depositing = false;
     }
     state.x = next_x;
     state.y = next_y;

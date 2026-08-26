@@ -153,13 +153,6 @@ fn first_difference_truncates_long_context_lines() {
 #[test]
 fn project_matches_orca_242_semantically() {
     let project = project();
-    let project_object_id = ares_core::load_project(&project)
-        .unwrap()
-        .objects()
-        .iter()
-        .map(ares_core::ProjectObject::id)
-        .next()
-        .unwrap();
     let temp = tempfile::tempdir().unwrap();
     let output = temp.path().join("actual.gcode");
     let before = local_now_to_second();
@@ -180,10 +173,26 @@ fn project_matches_orca_242_semantically() {
         (before..=after).contains(&generated_at),
         "generator timestamp {generated_at} was outside {before}..={after}"
     );
-    let expected = normalize_one_generator_line(&reference(), GeneratorKind::Orca).unwrap();
-    let expected = normalize_uninitialized_object_ids(&expected, project_object_id).unwrap();
-    let actual = normalize_one_generator_line(&actual, GeneratorKind::Ares).unwrap();
+    compare_actual(&project, &actual);
+}
 
+#[test]
+#[ignore = "invoked by the Playwright browser parity test"]
+fn browser_output_matches_orca_242_semantically() {
+    let project = project();
+    let path = std::env::var_os("ARES_BROWSER_GCODE").unwrap();
+    let actual = fs::read(path).unwrap();
+    compare_actual(&project, &actual);
+}
+
+fn compare_actual(project: &[u8], actual: &[u8]) {
+    let project = ares_core::load_project(project).unwrap();
+    let [project_object] = project.objects() else {
+        panic!("KSR fixture must contain exactly one project object");
+    };
+    let expected = normalize_one_generator_line(&reference(), GeneratorKind::Orca).unwrap();
+    let expected = normalize_uninitialized_object_ids(&expected, project_object.id()).unwrap();
+    let actual = normalize_one_generator_line(actual, GeneratorKind::Ares).unwrap();
     semantic::compare(&expected, &actual).unwrap_or_else(|error| panic!("{error}"));
 }
 
