@@ -193,7 +193,8 @@ fn compare_actual(project: &[u8], actual: &[u8]) {
     let expected = normalize_one_generator_line(&reference(), GeneratorKind::Orca).unwrap();
     let expected = normalize_uninitialized_object_ids(&expected, project_object.id()).unwrap();
     let actual = normalize_one_generator_line(actual, GeneratorKind::Ares).unwrap();
-    let actual = normalize_uninitialized_object_ids(&actual, project_object.id()).unwrap();
+    let actual =
+        normalize_uninitialized_object_ids(actual.as_slice(), project_object.id()).unwrap();
     let comparison = if std::env::var_os("ARES_BROWSER_GCODE").is_some() {
         semantic::compare_cross_target(&expected, &actual)
     } else {

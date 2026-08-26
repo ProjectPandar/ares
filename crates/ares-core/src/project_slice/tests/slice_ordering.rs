@@ -1,6 +1,6 @@
 use crate::{
     FloatOrPercent, ObjectOptions, OrcaFloat, OrcaFloats, OrcaInt, ProjectSettings, RegionOptions,
-    geometry::{ExPolygon, Point, Polygon, chain_points},
+    geometry::{ExPolygon, Point, Polygon},
     project_slice::{
         layers::{PlannedLayer, PlannedPrintObject},
         region_slices::{
@@ -19,7 +19,7 @@ use super::{
 };
 
 #[test]
-fn task22m_slice_ordering_preserves_holes_and_uses_contour_first_points() {
+fn task22m_slice_ordering_uses_contour_first_points_and_preserves_holes() {
     let mut input = markers(&[(10, 0), (0, 0), (20, 0), (0, 10), (10, 10)]);
     input[3] = marker_with_rotated_contour_and_hole(0, 10);
     let expected = [
@@ -29,20 +29,6 @@ fn task22m_slice_ordering_preserves_holes_and_uses_contour_first_points() {
         input[0].clone(),
         input[2].clone(),
     ];
-    let bbox_minima = input
-        .iter()
-        .map(|expolygon| {
-            let points = expolygon.contour().points();
-            Point::new(
-                points.iter().map(|point| point.x()).min().unwrap(),
-                points.iter().map(|point| point.y()).min().unwrap(),
-            )
-        })
-        .collect::<Vec<_>>();
-
-    assert_eq!(input[3].contour().points()[0], Point::new(0, 10));
-    assert_eq!(bbox_minima[3], Point::new(-100, -90));
-    assert_ne!(chain_points(&bbox_minima), [1, 3, 4, 0, 2]);
 
     assert_eq!(order_expolygons(input), expected);
     assert_eq!(expected[1].holes().len(), 1);

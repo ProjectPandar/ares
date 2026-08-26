@@ -50,9 +50,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.91.0
         with:
           targets: wasm32-unknown-unknown
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-nextest
+      - uses: taiki-e/install-action@nextest
       - run: cargo nextest --version
       - run: cargo check -p ares-core --target wasm32-unknown-unknown
       - run: cargo check -p ares-wasm --target wasm32-unknown-unknown
