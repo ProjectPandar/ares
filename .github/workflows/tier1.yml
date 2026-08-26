@@ -50,6 +50,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.91.0
         with:
           targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@nextest
       - run: cargo check -p ares-core --target wasm32-unknown-unknown
       - run: cargo check -p ares-wasm --target wasm32-unknown-unknown
       - run: cargo install --locked wasm-bindgen-cli --version 0.2.121
@@ -67,5 +68,4 @@ jobs:
       - run: node --check crates/ares-wasm/tests/browser/project-slice.spec.mjs
       - run: node --check crates/ares-wasm/tests/browser/server.mjs
       - run: npx --prefix crates/ares-wasm/tests/browser playwright install --with-deps chromium
-      - run: npm --prefix crates/ares-wasm/tests/browser test
       - run: npm --prefix crates/ares-wasm/tests/browser test
