@@ -5,7 +5,6 @@ mod flow;
 mod flow_edges;
 mod flow_spacing;
 pub(super) mod layer_region;
-mod oracle;
 mod preflight;
 mod thick_bridge_flow;
 mod types;

@@ -3,13 +3,13 @@ use crate::{
     geometry::{ExPolygon, Point, Polygon},
     load_project,
     mesh_slicer::SlicingMode,
-    task22j_browser_oracle, task22k_browser_input_oracle, task22k_browser_oracle,
 };
 
 use super::{
     super::{
         closing::{PostClosingLayer, PostClosingPrintObject, PostClosingVolume},
         layers::{PlannedLayer, PlannedPrintObject},
+        prepare_post_regions,
         region_slices::{
             PostRegion, PostRegionPrintObject, RegionLayer, RegionSurface, prepare_region_slices,
         },
@@ -17,7 +17,6 @@ use super::{
         volume_bounds::build_volume_bounds,
         volume_regions::VolumeRegionGraph,
     },
-    region_fixture::checkpoint,
     support::{
         KsrArchive, object as project_object, plan, project_volume, region, resolved_object,
     },
@@ -191,48 +190,29 @@ fn assert_loaded_slab(z0: f64, z1: f64, occupancy: &[bool], retained: usize) {
     assert!((normal_max - normal_min - 0.4).abs() < 1e-6);
     assert!((negative_min - normal_min - z0).abs() < 1e-6);
     assert!((negative_max - normal_min - z1).abs() < 1e-6);
-    let j_bytes = task22k_browser_input_oracle(&project).unwrap();
-    assert_eq!(j_bytes, task22j_browser_oracle(&project).unwrap());
-    assert_eq!(task22k_browser_input_oracle(&project).unwrap(), j_bytes);
-    let j = checkpoint::parse_j(&j_bytes);
-    let j_object = &j.stream.objects[0];
+    let mut prepared = prepare_post_regions(&project).unwrap();
+    let object = &prepared.objects[0];
+    assert_eq!(object.plan.layers.len(), 2);
     assert_eq!(
-        (j_object.planned_layer_count, j_object.retained_layers.len()),
-        (2, 2)
-    );
-    assert_eq!(
-        j_object
-            .sidecars
+        object
+            .volume_slices
             .iter()
-            .map(|sidecar| (sidecar.occurrence_id, sidecar.layers.len()))
+            .map(|sidecar| sidecar.as_parts().1.len())
             .collect::<Vec<_>>(),
-        vec![(1, 2), (2, 2)]
+        [2, 2]
     );
+    assert_eq!(region_occupancy(object), vec![occupancy.to_vec()]);
+    let sidecars = sidecar_snapshot(object);
+
+    remove_project_top_empty_layers(&mut prepared.objects);
+
+    let object = &prepared.objects[0];
+    assert_eq!(object.plan.layers.len(), retained);
     assert_eq!(
-        j_object
-            .retained_layers
-            .iter()
-            .map(|layer| layer
-                .regions
-                .iter()
-                .any(|region| !region.surfaces.is_empty()))
-            .collect::<Vec<_>>(),
-        occupancy
+        region_occupancy(object),
+        vec![occupancy[..retained].to_vec()]
     );
-    let k_bytes = task22k_browser_oracle(&project).unwrap();
-    assert_eq!(task22k_browser_oracle(&project).unwrap(), k_bytes);
-    assert_eq!(k_bytes[8..] == j_bytes[8..], retained == 2);
-    let k = checkpoint::parse_k(&k_bytes);
-    let k_object = &k.stream.objects[0];
-    assert_eq!(
-        (k_object.planned_layer_count, k_object.retained_layers.len()),
-        (retained as u64, retained)
-    );
-    assert_eq!(
-        k_object.retained_layers,
-        j_object.retained_layers[..retained]
-    );
-    assert_eq!(k_object.sidecars, j_object.sidecars);
+    assert_eq!(sidecar_snapshot(object), sidecars);
 }
 
 fn slab_project(z0: f64, z1: f64) -> Vec<u8> {

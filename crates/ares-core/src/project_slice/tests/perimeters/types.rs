@@ -94,13 +94,9 @@ fn task22n_dispatch_preserves_spiral_thresholds_scalars_and_exhaustive_selection
     assert_eq!(
         records
             .iter()
-            .map(|record| [record.layer_height.to_bits(), record.slice_z.to_bits()])
+            .map(|record| record.layer_height.to_bits())
             .collect::<Vec<_>>(),
-        [
-            [0x3fc999999999999a, 0x3fb999999999999a],
-            [0x3fc999999999999a, 0x3fd3333333333334],
-            [0x3fc999999999999c, 0x3fe0000000000000],
-        ]
+        [0x3fc999999999999a, 0x3fc999999999999a, 0x3fc999999999999c,]
     );
     assert!(outputs[1].as_parts().1.iter().all(|slot| {
         slot.as_ref()

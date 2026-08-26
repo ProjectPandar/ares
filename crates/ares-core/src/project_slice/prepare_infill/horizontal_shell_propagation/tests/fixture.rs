@@ -75,7 +75,6 @@ pub(super) fn input(external_width: f32, solid_width: f32) -> PerimeterInputReco
         upper_layer_index: None,
         upper_same_region: None,
         layer_height: 0.2,
-        slice_z: 0.1,
         perimeter_flow: base,
         ext_perimeter_flow: flow(external_width),
         overhang_flow: base,

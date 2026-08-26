@@ -5,12 +5,10 @@ use crate::{
         compensation::{PostCompensationPrintObject, apply_project_compensation},
         layers::{PlannedLayer, PlannedPrintObject},
         region_slices::{PostRegion, PostRegionPrintObject, RegionLayer, RegionSurface},
-        task22m_oracle::encode,
     },
 };
 
 use super::super::support::{identity_resolved, object_options, region};
-use super::fixture::parse_m_object_count;
 
 const DEFAULT_NOZZLES: &[f64] = &[0.4, 0.4];
 const MIXED_NOZZLES: &[f64] = &[0.4, 0.6];
@@ -38,19 +36,36 @@ struct SyntheticCase {
     options: CaseOptions,
     layers: Vec<InputLayer>,
 }
+type GeometrySnapshot = (usize, Vec<Vec<ExPolygon>>, Vec<Vec<ExPolygon>>);
 
 #[test]
 fn task22m_synthetic_aggregate_covers_all_cases_and_is_repeatable() {
-    let first = synthetic_frame();
-    assert_eq!(&first[..8], b"ARES22M\0");
-    assert_eq!(parse_m_object_count(&first), 19);
-    assert_eq!(synthetic_frame(), first);
+    let first = synthetic_snapshot();
+    assert_eq!(first.len(), 19);
+    assert_eq!(synthetic_snapshot(), first);
 }
 
-fn synthetic_frame() -> Vec<u8> {
-    let objects = cases().into_iter().map(apply_case).collect::<Vec<_>>();
-    assert_eq!(objects.len(), 19);
-    encode(&objects)
+fn synthetic_snapshot() -> Vec<GeometrySnapshot> {
+    cases()
+        .into_iter()
+        .map(apply_case)
+        .map(|object| {
+            let (post_regions, slices) = object.into_parts();
+            let (plan, _, regions) = post_regions.into_parts();
+            let surfaces = regions
+                .into_iter()
+                .flat_map(|region| region.into_parts().2)
+                .map(|layer| {
+                    layer
+                        .into_parts()
+                        .into_iter()
+                        .map(|surface| surface.into_parts().1)
+                        .collect()
+                })
+                .collect();
+            (plan.source_object_index, surfaces, slices)
+        })
+        .collect()
 }
 
 fn cases() -> Vec<SyntheticCase> {

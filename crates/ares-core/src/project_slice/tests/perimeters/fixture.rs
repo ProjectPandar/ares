@@ -7,19 +7,10 @@ use crate::{
         compensation::{PostCompensationPrintObject, apply_project_compensation},
         layers::{PlannedLayer, PlannedPrintObject},
         region_slices::{PostRegion, PostRegionPrintObject, RegionLayer, RegionSurface},
-        task22m_oracle,
     },
 };
 
-use super::super::region_fixture::checkpoint::{
-    ExPolygon as WireExPolygon, GeometryLayer, JObject, Region, RetainedLayer, Sidecar,
-    Surface as WireSurface,
-};
 use super::super::support::{identity_resolved, object_options, region};
-
-mod archive;
-mod context_pairs;
-mod flow_pairs;
 
 pub(super) struct Case {
     pub(super) object: PostCompensationPrintObject,
@@ -28,7 +19,7 @@ pub(super) struct Case {
 
 #[derive(Debug, PartialEq)]
 pub(super) struct Snapshot {
-    checkpoint: Vec<u8>,
+    geometry: Vec<Vec<Vec<ExPolygon>>>,
     layers: Vec<Vec<[u64; 4]>>,
     objects: Vec<ObjectOptions>,
     regions: Vec<Vec<RegionOptions>>,
@@ -117,10 +108,11 @@ pub(super) fn snapshot(
     objects: &[PostCompensationPrintObject],
     resolved: &[ResolvedProjectObject],
 ) -> Snapshot {
+    let mut geometry = Vec::with_capacity(objects.len());
     let mut layers = Vec::with_capacity(objects.len());
     let mut regions = Vec::with_capacity(objects.len());
     for object in objects {
-        let (post_region, _) = object.as_parts();
+        let (post_region, lslices) = object.as_parts();
         let (plan, _, object_regions) = post_region.as_parts();
         layers.push(
             plan.layers
@@ -141,9 +133,23 @@ pub(super) fn snapshot(
                 .map(|region| region.as_parts().1.clone())
                 .collect(),
         );
+        geometry.push(
+            object_regions
+                .iter()
+                .flat_map(|region| &region.layers)
+                .map(|layer| {
+                    layer
+                        .surfaces
+                        .iter()
+                        .map(|surface| surface.as_parts().1.clone())
+                        .collect()
+                })
+                .chain(lslices.iter().cloned())
+                .collect(),
+        );
     }
     Snapshot {
-        checkpoint: task22m_oracle::encode(objects),
+        geometry,
         layers,
         objects: resolved.iter().map(|item| item.object.clone()).collect(),
         regions,
@@ -161,219 +167,4 @@ fn rectangle(source: usize, layer: usize, surface: usize) -> ExPolygon {
         ]),
         Vec::new(),
     )
-}
-
-pub(super) type WireResult<T> = Result<T, ()>;
-pub(super) type MObject = (JObject, Vec<Vec<WireExPolygon>>);
-
-pub(super) fn parse_m(bytes: &[u8]) -> WireResult<Vec<MObject>> {
-    let mut reader = WireReader::new(bytes);
-    reader.magic(b"ARES22M\0")?;
-    let objects = reader.list(|reader| {
-        let source_object_index = reader.u64()?;
-        let transform_index = reader.u64()?;
-        let planned_layer_count = reader.u64()?;
-        let sidecars = reader.list(|reader| {
-            Ok(Sidecar {
-                occurrence_id: reader.u64()?,
-                layers: reader.list(|reader| {
-                    Ok(GeometryLayer {
-                        index: reader.u64()?,
-                        expolygons: reader.expolygons()?,
-                    })
-                })?,
-            })
-        })?;
-        let mut lslices = Vec::new();
-        let retained_layers = reader.list(|reader| {
-            let index = reader.u64()?;
-            let regions = reader.list(|reader| {
-                Ok(Region {
-                    id: reader.u64()?,
-                    surfaces: reader.surfaces()?,
-                })
-            })?;
-            lslices.push(reader.expolygons()?);
-            Ok(RetainedLayer { index, regions })
-        })?;
-        Ok((
-            JObject {
-                source_object_index,
-                transform_index,
-                planned_layer_count,
-                sidecars,
-                retained_layers,
-            },
-            lslices,
-        ))
-    })?;
-    reader.finish()?;
-    Ok(objects)
-}
-
-pub(super) struct ParserMutationFixture {
-    pub(super) bytes: Vec<u8>,
-    pub(super) object_count: usize,
-    pub(super) slot_presence: usize,
-    pub(super) surface_kind: usize,
-    pub(super) dispatch: usize,
-}
-
-pub(super) fn parser_mutation_fixture() -> ParserMutationFixture {
-    let mut predecessor = b"ARES22M\0".to_vec();
-    for value in [1, 0, 0, 1, 0, 1, 0, 1, 0, 1] {
-        put_u64(&mut predecessor, value);
-    }
-    predecessor.push(4);
-    for value in [0; 3] {
-        put_u64(&mut predecessor, value);
-    }
-
-    let mut bytes = b"ARES22N\0".to_vec();
-    put_u64(&mut bytes, predecessor.len() as u64);
-    bytes.extend_from_slice(&predecessor);
-    let object_count = bytes.len();
-    put_u64(&mut bytes, 1);
-    for value in [0, 0, 1, 1] {
-        put_u64(&mut bytes, value);
-    }
-    let slot_presence = bytes.len();
-    bytes.push(1);
-    for value in [0, 0, 0, 0, 0, 1, 0, 0, 0] {
-        put_u64(&mut bytes, value);
-    }
-    bytes.extend_from_slice(&[0, 0, 0]);
-    put_u64(&mut bytes, 1);
-    let surface_kind = bytes.len();
-    bytes.push(4);
-    put_u64(&mut bytes, 0);
-    put_u64(&mut bytes, 0);
-    put_u64(&mut bytes, 0);
-    put_u64(&mut bytes, 0);
-    for _ in 0..4 {
-        for _ in 0..4 {
-            put_u32(&mut bytes, 0);
-        }
-        bytes.push(0);
-        put_u64(&mut bytes, 0);
-    }
-    bytes.push(0);
-    put_u64(&mut bytes, 0);
-    let dispatch = bytes.len();
-    bytes.push(0);
-    ParserMutationFixture {
-        bytes,
-        object_count,
-        slot_presence,
-        surface_kind,
-        dispatch,
-    }
-}
-
-fn put_u64(bytes: &mut Vec<u8>, value: u64) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-fn put_u32(bytes: &mut Vec<u8>, value: u32) {
-    bytes.extend_from_slice(&value.to_le_bytes());
-}
-
-pub(super) struct WireReader<'a> {
-    bytes: &'a [u8],
-    offset: usize,
-}
-
-impl<'a> WireReader<'a> {
-    pub(super) fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes, offset: 0 }
-    }
-
-    pub(super) fn finish(self) -> WireResult<()> {
-        (self.offset == self.bytes.len()).then_some(()).ok_or(())
-    }
-
-    pub(super) fn magic(&mut self, magic: &[u8; 8]) -> WireResult<()> {
-        (self.bytes(8)? == magic).then_some(()).ok_or(())
-    }
-
-    pub(super) fn list<T>(
-        &mut self,
-        mut read: impl FnMut(&mut Self) -> WireResult<T>,
-    ) -> WireResult<Vec<T>> {
-        let count = self.usize()?;
-        if count > self.bytes.len().saturating_sub(self.offset) {
-            return Err(());
-        }
-        (0..count).map(|_| read(self)).collect()
-    }
-
-    pub(super) fn optional<T>(
-        &mut self,
-        read: impl FnOnce(&mut Self) -> WireResult<T>,
-    ) -> WireResult<Option<T>> {
-        self.boolean()?.then(|| read(self)).transpose()
-    }
-
-    pub(super) fn surfaces(&mut self) -> WireResult<Vec<WireSurface>> {
-        self.list(|reader| {
-            let kind = reader.u8()?;
-            if kind != 4 {
-                return Err(());
-            }
-            Ok(WireSurface {
-                kind,
-                expolygon: reader.expolygon()?,
-            })
-        })
-    }
-
-    pub(super) fn expolygons(&mut self) -> WireResult<Vec<WireExPolygon>> {
-        self.list(Self::expolygon)
-    }
-
-    fn expolygon(&mut self) -> WireResult<WireExPolygon> {
-        Ok(WireExPolygon {
-            contour: self.list(|reader| Ok((reader.i64()?, reader.i64()?)))?,
-            holes: self.list(|reader| reader.list(|reader| Ok((reader.i64()?, reader.i64()?))))?,
-        })
-    }
-
-    pub(super) fn boolean(&mut self) -> WireResult<bool> {
-        match self.u8()? {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => Err(()),
-        }
-    }
-
-    pub(super) fn usize(&mut self) -> WireResult<usize> {
-        usize::try_from(self.u64()?).map_err(|_| ())
-    }
-
-    pub(super) fn u64(&mut self) -> WireResult<u64> {
-        Ok(u64::from_le_bytes(self.take()?))
-    }
-
-    fn i64(&mut self) -> WireResult<i64> {
-        Ok(i64::from_le_bytes(self.take()?))
-    }
-
-    pub(super) fn u32(&mut self) -> WireResult<u32> {
-        Ok(u32::from_le_bytes(self.take()?))
-    }
-
-    pub(super) fn u8(&mut self) -> WireResult<u8> {
-        Ok(self.bytes(1)?[0])
-    }
-
-    fn take<const N: usize>(&mut self) -> WireResult<[u8; N]> {
-        self.bytes(N)?.try_into().map_err(|_| ())
-    }
-
-    pub(super) fn bytes(&mut self, len: usize) -> WireResult<&'a [u8]> {
-        let end = self.offset.checked_add(len).ok_or(())?;
-        let value = self.bytes.get(self.offset..end).ok_or(())?;
-        self.offset = end;
-        Ok(value)
-    }
 }

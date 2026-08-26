@@ -95,8 +95,6 @@ pub(in crate::project_slice) struct PerimeterInputRecord {
     pub(in crate::project_slice) upper_layer_index: Option<usize>,
     pub(in crate::project_slice) upper_same_region: Option<RegionLayerIndex>,
     pub(in crate::project_slice) layer_height: f64,
-    #[cfg_attr(not(test), expect(dead_code, reason = "used by source-context tests"))]
-    pub(in crate::project_slice) slice_z: f64,
     pub(in crate::project_slice) perimeter_flow: Flow,
     pub(in crate::project_slice) ext_perimeter_flow: Flow,
     pub(in crate::project_slice) overhang_flow: Flow,

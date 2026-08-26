@@ -79,14 +79,8 @@ fn task22n_context_preserves_slots_identity_adjacency_flows_and_owned_state() {
     );
     assert_eq!(first.upper_same_region.unwrap().layer_index, 1);
     assert_eq!(later.upper_same_region.unwrap().layer_index, 2);
-    assert_eq!(
-        [first.layer_height.to_bits(), first.slice_z.to_bits()],
-        [0x3fc999999999999a, 0x3fb999999999999a]
-    );
-    assert_eq!(
-        [later.layer_height.to_bits(), later.slice_z.to_bits()],
-        [0x3fd3333333333333, 0x3fd6666666666666]
-    );
+    assert_eq!(first.layer_height.to_bits(), 0x3fc999999999999a);
+    assert_eq!(later.layer_height.to_bits(), 0x3fd3333333333333);
 
     assert_flow(
         first.perimeter_flow,

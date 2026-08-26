@@ -12,7 +12,6 @@ use super::{
         closing::{PostClosingLayer, PostClosingPrintObject, PostClosingVolume},
         prepare_post_simplification,
         state::prepare_project_slice,
-        task22j_browser_input_oracle,
         volume_bounds::build_volume_bounds,
         volume_regions::{
             VolumeRegionGraph, build_volume_region_graph, model_part_for_source_index,
@@ -203,11 +202,10 @@ fn task22j_loaded_bfs_raw_ids_and_support_gap_keep_released_occurrences() {
 #[rustfmt::skip]
 fn task22j_empty_range_document_is_absent_and_real_range_stays_rejected() {
     let absent = KsrArchive::new().bytes(); let mut empty = KsrArchive::new(); empty.insert_text("Metadata/layer_config_ranges.xml", "<objects/>"); let empty = empty.bytes();
-    assert_eq!(task22j_browser_input_oracle(&absent).unwrap(), task22j_browser_input_oracle(&empty).unwrap());
     assert_eq!(prepare_project_slice(&absent).unwrap().resolved, prepare_project_slice(&empty).unwrap().resolved);
     assert_eq!(loaded_graph(&absent).0, loaded_graph(&empty).0);
     let mut ranged = KsrArchive::new(); ranged.insert_text("Metadata/layer_config_ranges.xml", r#"<objects><object id="1"><range min_z="0" max_z="1"><option opt_key="extruder">1</option></range></object></objects>"#);
-    assert_eq!(task22j_browser_input_oracle(ranged.bytes()).unwrap_err(), SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned()));
+    assert_eq!(prepare_project_slice(ranged.bytes()).err().unwrap(), SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned()));
 }
 
 #[test]

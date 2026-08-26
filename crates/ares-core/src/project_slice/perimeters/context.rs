@@ -106,7 +106,6 @@ fn prepare_object_contexts(
                         layer_index,
                     }),
                     layer_height: layer.height,
-                    slice_z: layer.slice_z,
                     perimeter_flow: flows.perimeter_flow,
                     ext_perimeter_flow: flows.ext_perimeter_flow,
                     overhang_flow: flows.overhang_flow,
