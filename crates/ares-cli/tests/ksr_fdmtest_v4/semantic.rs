@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 #[path = "semantic/lifecycle.rs"]
 mod lifecycle;
+#[path = "semantic/model.rs"]
+mod model;
 #[path = "semantic/parser.rs"]
 mod parser;
 #[cfg(test)]
@@ -117,7 +119,10 @@ fn compare_deposition(
         ));
     }
     for (index, (expected, actual)) in expected.iter().zip(actual).enumerate() {
-        if expected.key == actual.key
+        if expected.feature == actual.feature
+            && expected.width == actual.width
+            && expected.motion == actual.motion
+            && expected.extrusion == actual.extrusion
             && expected.acceleration == actual.acceleration
             && expected.fans == actual.fans
             && feed_matches(expected.feed, actual.feed)

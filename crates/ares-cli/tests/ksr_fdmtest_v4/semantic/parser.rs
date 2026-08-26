@@ -1,5 +1,6 @@
 mod motion;
 mod number;
+use super::model::{LifecycleEvent, MotionRecord, Position};
 
 use motion::Motion;
 use number::canonical_number;
@@ -25,14 +26,17 @@ pub(super) struct Timing {
 pub(super) struct Layer {
     pub(super) metadata: Vec<String>,
     pub(super) deposition: Vec<Deposition>,
-    pub(super) lifecycles: Vec<Vec<String>>,
+    pub(super) lifecycles: Vec<Vec<LifecycleEvent>>,
     pub(super) travels: Vec<Travel>,
     pub(super) controls: Vec<String>,
 }
 
 #[derive(Debug)]
 pub(super) struct Deposition {
-    pub(super) key: String,
+    pub(super) feature: String,
+    pub(super) width: String,
+    pub(super) motion: MotionRecord,
+    pub(super) extrusion: String,
     pub(super) feed: f64,
     pub(super) acceleration: String,
     pub(super) fans: String,
@@ -40,7 +44,7 @@ pub(super) struct Deposition {
 
 #[derive(Debug)]
 pub(super) struct Travel {
-    pub(super) key: String,
+    pub(super) motion: MotionRecord,
 }
 
 #[derive(Default)]
@@ -111,7 +115,12 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             continue;
         }
         if line == "; WIPE_START" || line == "; WIPE_END" {
-            push_lifecycle(current_layer(&mut output)?, raw_line.to_owned());
+            let event = if line == "; WIPE_START" {
+                LifecycleEvent::WipeStart
+            } else {
+                LifecycleEvent::WipeEnd
+            };
+            push_lifecycle(current_layer(&mut output)?, event);
             continue;
         }
         if let Some(value) = line.strip_prefix("; Z_HEIGHT: ") {
@@ -157,8 +166,11 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
     }
     for layer in &mut output.layers {
         layer.deposition.sort_by(|left, right| {
-            left.key
-                .cmp(&right.key)
+            left.feature
+                .cmp(&right.feature)
+                .then_with(|| left.width.cmp(&right.width))
+                .then_with(|| left.motion.cmp(&right.motion))
+                .then_with(|| left.extrusion.cmp(&right.extrusion))
                 .then_with(|| left.acceleration.cmp(&right.acceleration))
                 .then_with(|| left.fans.cmp(&right.fans))
                 .then_with(|| left.feed.total_cmp(&right.feed))
@@ -273,6 +285,7 @@ fn apply_motion(
     let next_x = motion.values.get(&'X').unwrap_or(&state.x).clone();
     let next_y = motion.values.get(&'Y').unwrap_or(&state.y).clone();
     let next_z = motion.values.get(&'Z').unwrap_or(&state.z).clone();
+    let next = [next_x.as_str(), next_y.as_str(), next_z.as_str()];
     let moved_xy = next_x != state.x || next_y != state.y;
     let moved_z = next_z != state.z;
     if let (Some(layer), Some(extrusion)) = (output.layers.last_mut(), motion.values.get(&'E')) {
@@ -281,7 +294,10 @@ fn apply_motion(
             .map_err(|_| format!("invalid extrusion {extrusion:?}"))?;
         if value > 0.0 && moved_xy {
             layer.deposition.push(Deposition {
-                key: motion_key(state, &motion, [&next_x, &next_y, &next_z], extrusion),
+                feature: state.feature.clone(),
+                width: state.width.clone(),
+                motion: motion_record(state, &motion, next),
+                extrusion: extrusion.clone(),
                 feed: required_feed(state)?,
                 acceleration: state.acceleration.clone(),
                 fans: fan_state(&state.fans),
@@ -289,14 +305,17 @@ fn apply_motion(
         } else if value < 0.0 && moved_xy {
             push_lifecycle(
                 layer,
-                format!(
-                    "WIPE|{}|{}",
-                    motion_key(state, &motion, [&next_x, &next_y, &next_z], extrusion),
-                    state.feed
-                ),
+                LifecycleEvent::Wipe {
+                    motion: Box::new(motion_record(state, &motion, next)),
+                    extrusion: extrusion.clone(),
+                    feed: state.feed.clone(),
+                },
             );
         } else {
-            let event = format!("EXTRUDER|{extrusion}|{}", state.feed);
+            let event = LifecycleEvent::Extruder {
+                extrusion: extrusion.clone(),
+                feed: state.feed.clone(),
+            };
             if value > 0.0 {
                 layer.lifecycles.push(vec![event]);
             } else {
@@ -307,7 +326,7 @@ fn apply_motion(
         && (moved_xy || moved_z)
     {
         layer.travels.push(Travel {
-            key: travel_key(state, &motion, [&next_x, &next_y, &next_z]),
+            motion: motion_record(state, &motion, next),
         });
     }
     state.x = next_x;
@@ -315,44 +334,33 @@ fn apply_motion(
     state.z = next_z;
     Ok(())
 }
-fn push_lifecycle(layer: &mut Layer, event: String) {
+
+fn push_lifecycle(layer: &mut Layer, event: LifecycleEvent) {
     if layer.lifecycles.is_empty() {
         layer.lifecycles.push(Vec::new());
     }
     layer.lifecycles.last_mut().unwrap().push(event);
 }
 
-fn motion_key(state: &State, motion: &Motion, next: [&str; 3], extrusion: &str) -> String {
-    format!(
-        "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
-        state.feature,
-        state.width,
-        motion.command,
-        state.x,
-        state.y,
-        state.z,
-        next[0],
-        next[1],
-        next[2],
-        motion.values.get(&'I').map_or("", String::as_str),
-        motion.values.get(&'J').map_or("", String::as_str),
-        extrusion
-    )
-}
-fn travel_key(state: &State, motion: &Motion, next: [&str; 3]) -> String {
-    format!(
-        "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
-        motion.command,
-        state.x,
-        state.y,
-        state.z,
-        next[0],
-        next[1],
-        next[2],
-        motion.values.get(&'I').map_or("", String::as_str),
-        motion.values.get(&'J').map_or("", String::as_str),
-        motion.values.get(&'P').map_or("", String::as_str),
-    )
+fn motion_record(state: &State, motion: &Motion, next: [&str; 3]) -> MotionRecord {
+    MotionRecord {
+        command: motion.command.clone(),
+        start: Position {
+            x: state.x.clone(),
+            y: state.y.clone(),
+            z: state.z.clone(),
+        },
+        end: Position {
+            x: next[0].to_owned(),
+            y: next[1].to_owned(),
+            z: next[2].to_owned(),
+        },
+        arc_center: [
+            motion.values.get(&'I').cloned(),
+            motion.values.get(&'J').cloned(),
+        ],
+        turns: motion.values.get(&'P').cloned(),
+    }
 }
 
 fn required_feed(state: &State) -> Result<f64, String> {
