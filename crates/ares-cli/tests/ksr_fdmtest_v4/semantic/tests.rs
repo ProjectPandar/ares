@@ -49,9 +49,39 @@ fn wipe_and_retraction_lifecycle_must_match() {
     let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
 
     let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
-    assert!(error.contains("wipe paths differs"), "{error}");
+    assert!(error.contains("island lifecycle differs"), "{error}");
 }
 
+#[test]
+fn retract_and_unretract_order_difference_is_rejected() {
+    let expected_island = "G1 E-.4 F1800\nG1 E.4 F1800\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let actual_island = expected_island.replace("G1 E-.4 F1800\nG1 E.4", "G1 E.4 F1800\nG1 E-.4");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("island lifecycle differs"), "{error}");
+}
+
+#[test]
+fn retract_stays_associated_with_its_island_wipe() {
+    let left = lifecycle_island(0, 1, ".1");
+    let right = lifecycle_island(10, 11, ".2");
+    let expected = document("1m", "1m", "10s", "2.00", &[&left, &right]);
+    let actual = document(
+        "1m",
+        "1m",
+        "10s",
+        "2.00",
+        &[
+            &left.replace("E-.1 F1800", "E-.2 F1800"),
+            &right.replace("E-.2 F1800", "E-.1 F1800"),
+        ],
+    );
+
+    let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("lifecycle"), "{error}");
+}
 #[test]
 fn project_object_identity_difference_is_rejected() {
     let expected_island = format!(
@@ -64,6 +94,12 @@ fn project_object_identity_difference_is_rejected() {
 
     let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
     assert!(error.contains("control events differs"), "{error}");
+}
+
+fn lifecycle_island(start: u32, end: u32, retract: &str) -> String {
+    format!(
+        "G1 X{start} Y0 F6000\nG1 E.4 F1800\nM204 S5000\n; FEATURE: Outer wall\n; LINE_WIDTH: 0.42\nG1 X{end} Y0 E.1 F1200\nG1 E-{retract} F1800\n; WIPE_START\nG1 X{start} Y0 E-.05 F1200\n; WIPE_END\n"
+    )
 }
 
 #[test]

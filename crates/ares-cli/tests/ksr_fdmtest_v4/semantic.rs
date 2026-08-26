@@ -33,12 +33,11 @@ pub(crate) fn compare(expected: &[u8], actual: &[u8]) -> Result<(), String> {
         let layer = index + 1;
         exact_layer(layer, "metadata", &expected.metadata, &actual.metadata)?;
         compare_deposition(layer, &expected.deposition, &actual.deposition)?;
-        exact_layer(layer, "wipe paths", &expected.wipes, &actual.wipes)?;
         exact_layer(
             layer,
-            "extruder lifecycle",
-            &expected.extruder_moves,
-            &actual.extruder_moves,
+            "island lifecycle",
+            &expected.lifecycles,
+            &actual.lifecycles,
         )?;
         exact_layer(layer, "lift lifecycle", &expected.lifts, &actual.lifts)?;
         exact_layer(

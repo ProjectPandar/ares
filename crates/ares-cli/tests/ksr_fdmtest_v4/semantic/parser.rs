@@ -1,3 +1,6 @@
+mod number;
+
+use number::canonical_number;
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -20,8 +23,7 @@ pub(super) struct Timing {
 pub(super) struct Layer {
     pub(super) metadata: Vec<String>,
     pub(super) deposition: Vec<Deposition>,
-    pub(super) wipes: Vec<String>,
-    pub(super) extruder_moves: Vec<String>,
+    pub(super) lifecycles: Vec<Vec<String>>,
     pub(super) lifts: Vec<String>,
     pub(super) controls: Vec<String>,
 }
@@ -104,6 +106,7 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             continue;
         }
         if line == "; WIPE_START" || line == "; WIPE_END" {
+            push_lifecycle(current_layer(&mut output)?, line.to_owned());
             continue;
         }
         if let Some(value) = line.strip_prefix("; Z_HEIGHT: ") {
@@ -153,8 +156,7 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
                 .then_with(|| left.fans.cmp(&right.fans))
                 .then_with(|| left.feed.total_cmp(&right.feed))
         });
-        layer.wipes.sort_unstable();
-        layer.extruder_moves.sort_unstable();
+        layer.lifecycles.sort_unstable();
         layer.lifts.sort_unstable();
     }
     Ok(output)
@@ -304,15 +306,21 @@ fn apply_motion(
                 fans: fan_state(&state.fans),
             });
         } else if value < 0.0 && moved_xy {
-            layer.wipes.push(format!(
-                "{}|{}",
-                motion_key(state, &motion, [&next_x, &next_y, &next_z], extrusion),
-                state.feed
-            ));
+            push_lifecycle(
+                layer,
+                format!(
+                    "WIPE|{}|{}",
+                    motion_key(state, &motion, [&next_x, &next_y, &next_z], extrusion),
+                    state.feed
+                ),
+            );
         } else {
-            layer
-                .extruder_moves
-                .push(format!("{extrusion}|{}", state.feed));
+            let event = format!("EXTRUDER|{extrusion}|{}", state.feed);
+            if value > 0.0 {
+                layer.lifecycles.push(vec![event]);
+            } else {
+                push_lifecycle(layer, event);
+            }
         }
     } else if let Some(layer) = output.layers.last_mut()
         && next_z != state.z
@@ -326,6 +334,13 @@ fn apply_motion(
     state.z = next_z;
     Ok(())
 }
+fn push_lifecycle(layer: &mut Layer, event: String) {
+    if layer.lifecycles.is_empty() {
+        layer.lifecycles.push(Vec::new());
+    }
+    layer.lifecycles.last_mut().unwrap().push(event);
+}
+
 fn motion_key(state: &State, motion: &Motion, next: [&str; 3], extrusion: &str) -> String {
     format!(
         "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
@@ -376,24 +391,4 @@ fn fan_state(fans: &BTreeMap<String, String>) -> String {
         .map(|(fan, speed)| format!("{fan}:{speed}"))
         .collect::<Vec<_>>()
         .join(",")
-}
-
-fn canonical_number(value: &str) -> Result<String, String> {
-    let number = value
-        .parse::<f64>()
-        .map_err(|_| format!("invalid G-code number {value:?}"))?;
-    if !number.is_finite() {
-        return Err(format!("non-finite G-code number {value:?}"));
-    }
-    let mut rendered = format!("{number:.8}");
-    while rendered.ends_with('0') {
-        rendered.pop();
-    }
-    if rendered.ends_with('.') {
-        rendered.pop();
-    }
-    if rendered == "-0" {
-        rendered = "0".to_owned();
-    }
-    Ok(rendered)
 }
