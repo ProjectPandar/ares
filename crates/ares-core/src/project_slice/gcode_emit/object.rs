@@ -5,7 +5,7 @@ pub(super) struct ObjectLabels {
     object_id: u32,
     copy_id: u32,
     label_id: u32,
-    encoded_labels: String,
+    encoded_labels: [u8; 12],
 }
 
 impl ObjectLabels {
@@ -45,14 +45,8 @@ impl ObjectLabels {
         );
     }
 
-    pub(super) fn append_start_label(&self, output: &mut Vec<u8>) {
-        output.extend_from_slice(
-            format!(
-                "; start printing object, unique label id: {}\nM624 {}\n",
-                self.label_id, self.encoded_labels,
-            )
-            .as_bytes(),
-        );
+    pub(super) const fn start_label_data(&self) -> (u32, [u8; 12]) {
+        (self.label_id, self.encoded_labels)
     }
 
     pub(super) fn append_stopping(&self, output: &mut Vec<u8>) {
@@ -76,25 +70,22 @@ impl ObjectLabels {
     }
 }
 
-fn encode_base64(bytes: [u8; 8]) -> String {
+fn encode_base64(bytes: [u8; 8]) -> [u8; 12] {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut output = String::with_capacity(12);
-    for chunk in bytes.chunks(3) {
+    let mut output = [b'='; 12];
+    for (chunk_index, chunk) in bytes.chunks(3).enumerate() {
         let value = (u32::from(chunk[0]) << 16)
             | (u32::from(*chunk.get(1).unwrap_or(&0)) << 8)
             | u32::from(*chunk.get(2).unwrap_or(&0));
-        output.push(ALPHABET[((value >> 18) & 63) as usize] as char);
-        output.push(ALPHABET[((value >> 12) & 63) as usize] as char);
-        output.push(if chunk.len() > 1 {
-            ALPHABET[((value >> 6) & 63) as usize] as char
-        } else {
-            '='
-        });
-        output.push(if chunk.len() > 2 {
-            ALPHABET[(value & 63) as usize] as char
-        } else {
-            '='
-        });
+        let output_index = chunk_index * 4;
+        output[output_index] = ALPHABET[((value >> 18) & 63) as usize];
+        output[output_index + 1] = ALPHABET[((value >> 12) & 63) as usize];
+        if chunk.len() > 1 {
+            output[output_index + 2] = ALPHABET[((value >> 6) & 63) as usize];
+        }
+        if chunk.len() > 2 {
+            output[output_index + 3] = ALPHABET[(value & 63) as usize];
+        }
     }
     output
 }
@@ -105,6 +96,6 @@ mod tests {
 
     #[test]
     fn sole_label_uses_orca_little_endian_bitset_encoding() {
-        assert_eq!(encode_base64(1_u64.to_le_bytes()), "AQAAAAAAAAA=");
+        assert_eq!(encode_base64(1_u64.to_le_bytes()), *b"AQAAAAAAAAA=");
     }
 }

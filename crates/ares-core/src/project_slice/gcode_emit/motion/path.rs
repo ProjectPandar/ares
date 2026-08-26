@@ -1,5 +1,5 @@
 use super::{
-    EmitState, LayerGeometry, arc, begin_path_travel, clip, extrusion, fan,
+    EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, clip, extrusion, fan,
     features::PathProperties,
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
     overhang, set_acceleration, travel,
@@ -107,6 +107,7 @@ pub(super) fn emit(
                 state,
             );
         }
+        append_object_start(output, state);
         if retract && state.lifted {
             output.extend_from_slice(
                 format!(
@@ -133,6 +134,7 @@ pub(super) fn emit(
         state.last_scaled_position = Some(first_scaled);
         state.positioned = true;
     }
+    append_object_start(output, state);
     if state.retracted {
         if first_position && state.options.z_hop > 0.0 {
             output.extend_from_slice(

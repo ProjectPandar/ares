@@ -62,6 +62,7 @@ pub(super) struct EmitState {
     pub(super) overhang_fan_marker_layer: Option<usize>,
     pub(super) internal_bridge_fan_active: bool,
     pub(super) internal_bridge_fan_marker_layer: Option<usize>,
+    pub(super) pending_object_start: Option<(u32, [u8; 12])>,
 }
 #[derive(Clone, Copy)]
 pub(super) struct LayerGeometry<'a> {
@@ -95,13 +96,19 @@ pub(super) fn begin_layer(
     }
 }
 
-pub(super) fn begin_object_travel(output: &mut Vec<u8>, state: &mut EmitState) {
-    let acceleration = if state.layer_index == 0 {
-        state.options.initial_layer_travel_acceleration
-    } else {
-        state.options.travel_acceleration
+pub(super) fn queue_object_start(state: &mut EmitState, label_id: u32, encoded_labels: [u8; 12]) {
+    state.pending_object_start = Some((label_id, encoded_labels));
+}
+
+fn append_object_start(output: &mut Vec<u8>, state: &mut EmitState) {
+    let Some((label_id, encoded_labels)) = state.pending_object_start.take() else {
+        return;
     };
-    set_acceleration(output, state, acceleration);
+    output.extend_from_slice(
+        format!("; start printing object, unique label id: {label_id}\nM624 ").as_bytes(),
+    );
+    output.extend_from_slice(&encoded_labels);
+    output.push(b'\n');
 }
 
 pub(super) fn begin_path_travel(

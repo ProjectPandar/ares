@@ -49,6 +49,24 @@ async fn ksr_object_travel_acceleration_follows_object_comment() {
         .unwrap()
         + layer_43;
     assert_eq!(lines[printing + 1], "M204 S10000");
+
+    let layer_345 = lines
+        .iter()
+        .position(|line| *line == "M991 S0 P344 ;notify layer change")
+        .unwrap();
+    let printing = lines[layer_345..]
+        .iter()
+        .position(|line| line.starts_with("; printing object "))
+        .unwrap()
+        + layer_345;
+    let start_label = lines[printing..]
+        .iter()
+        .position(|line| *line == "; start printing object, unique label id: 133")
+        .unwrap()
+        + printing;
+    assert_eq!(lines[start_label + 1], "M624 AQAAAAAAAAA=");
+    assert!(lines[start_label + 2].starts_with("G1 X"));
+    assert!(lines[start_label + 2].ends_with(" F60000"));
 }
 
 #[tokio::test]

@@ -133,8 +133,8 @@ pub(super) fn emit(
             );
             if let Some(labels) = &labels {
                 labels.append_printing(&mut output);
-                motion::begin_object_travel(&mut output, &mut state);
-                labels.append_start_label(&mut output);
+                let (label_id, encoded_labels) = labels.start_label_data();
+                motion::queue_object_start(&mut state, label_id, encoded_labels);
             }
             let lower_boundary_lines = traversal.objects[object_index]
                 .lower_slices(layer_index)
