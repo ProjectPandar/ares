@@ -8013,3 +8013,18 @@ variation. Production remains deterministic and receives no fixture or golden
 data. The next slice adds the test-only semantic parser, activates the CLI
 golden, removes obsolete internal source-stage pinning, and runs the complete
 verification/review gate.
+
+## Task 22O.247: scheduler-independent semantic golden
+
+O247 implements the amended acceptance seam for OrcaSlicer 2.4.2
+`TriangleMeshSlicer.cpp:511-531`, `ShortestPath.cpp`, and
+`GCode.cpp:4539-7110`. The test-only parser compares deposited paths,
+wipe/retraction lifecycles, controls, templates, timing, and material totals
+while matching travel and spiral-lift shapes independently of TBB-selected
+island order and loop-start rotation. The active CLI golden passes all 24
+non-provenance tests. A browser `Uint8Array` slice emits 6,321,410 bytes,
+460 layers, finite motion, complete header/footer blocks, no obsolete
+checkpoint exports, and passes the same semantic comparison. Workspace
+nextest passes 6,695 tests with two ignored provenance-only tests; workspace
+Clippy with warnings denied and rustfmt both pass. Independent whole-change
+review remains before completion.

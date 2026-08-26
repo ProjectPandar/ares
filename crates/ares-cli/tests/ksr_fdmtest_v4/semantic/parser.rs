@@ -26,7 +26,7 @@ pub(super) struct Layer {
     pub(super) metadata: Vec<String>,
     pub(super) deposition: Vec<Deposition>,
     pub(super) lifecycles: Vec<Vec<String>>,
-    pub(super) lifts: Vec<String>,
+    pub(super) travels: Vec<Travel>,
     pub(super) controls: Vec<String>,
 }
 
@@ -37,6 +37,11 @@ pub(super) struct Deposition {
     pub(super) feed: f64,
     pub(super) acceleration: String,
     pub(super) fans: String,
+}
+
+#[derive(Debug)]
+pub(super) struct Travel {
+    pub(super) key: String,
 }
 
 #[derive(Default)]
@@ -162,7 +167,6 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
                 .then_with(|| left.feed.total_cmp(&right.feed))
         });
         layer.lifecycles.sort_unstable();
-        layer.lifts.sort_unstable();
     }
     Ok(output)
 }
@@ -309,11 +313,11 @@ fn apply_motion(
             }
         }
     } else if let Some(layer) = output.layers.last_mut()
-        && moved_z
+        && (moved_xy || moved_z)
     {
-        layer
-            .lifts
-            .push(lift_key(state, &motion, [&next_x, &next_y, &next_z]));
+        layer.travels.push(Travel {
+            key: travel_key(state, &motion, [&next_x, &next_y, &next_z]),
+        });
     }
     if deposited {
         state.depositing = true;
@@ -349,24 +353,19 @@ fn motion_key(state: &State, motion: &Motion, next: [&str; 3], extrusion: &str) 
         extrusion
     )
 }
-fn lift_key(state: &State, motion: &Motion, next: [&str; 3]) -> String {
-    let i = motion
-        .values
-        .get(&'I')
-        .map_or(0.0, |value| value.parse::<f64>().unwrap());
-    let j = motion
-        .values
-        .get(&'J')
-        .map_or(0.0, |value| value.parse::<f64>().unwrap());
+fn travel_key(state: &State, motion: &Motion, next: [&str; 3]) -> String {
     format!(
-        "{}|{}|{}|{:.2}|{}|{}|{}",
+        "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
         motion.command,
+        state.x,
+        state.y,
         state.z,
+        next[0],
+        next[1],
         next[2],
-        i.hypot(j),
+        motion.values.get(&'I').map_or("", String::as_str),
+        motion.values.get(&'J').map_or("", String::as_str),
         motion.values.get(&'P').map_or("", String::as_str),
-        state.feed,
-        state.acceleration,
     )
 }
 

@@ -7,6 +7,8 @@ mod parser;
 #[cfg(test)]
 #[path = "semantic/tests.rs"]
 mod tests;
+#[path = "semantic/travel.rs"]
+mod travel;
 
 use parser::{Deposition, SemanticGcode};
 
@@ -41,7 +43,7 @@ pub(crate) fn compare(expected: &[u8], actual: &[u8]) -> Result<(), String> {
         exact_layer(layer, "metadata", &expected.metadata, &actual.metadata)?;
         compare_deposition(layer, &expected.deposition, &actual.deposition)?;
         lifecycle::compare(layer, &expected.lifecycles, &actual.lifecycles)?;
-        exact_layer(layer, "lift lifecycle", &expected.lifts, &actual.lifts)?;
+        travel::compare(layer, &expected.travels, &actual.travels)?;
         exact_layer(
             layer,
             "control events",

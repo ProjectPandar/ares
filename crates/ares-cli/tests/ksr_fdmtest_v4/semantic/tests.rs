@@ -1,14 +1,24 @@
 use super::compare;
 
 #[test]
-fn independent_island_order_is_not_observable() {
+fn source_variation_with_stable_island_order_is_tolerated() {
     let left = island(0, 1, 1_200);
     let right = island(10, 11, 1_200);
     let expected = document("1m 0s", "1m 5s", "10s", "2.00", &[&left, &right]);
 
     let left = island(0, 1, 1_205);
     let right = island(10, 11, 1_205);
-    let actual = document("1m 2s", "1m 7s", "11s", "2.03", &[&right, &left]);
+    let actual = document("1m 2s", "1m 7s", "11s", "2.03", &[&left, &right]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
+fn independent_island_order_is_not_observable() {
+    let left = island(0, 1, 1_200);
+    let right = island(10, 11, 1_200);
+    let expected = document("1m", "1m", "10s", "2.00", &[&left, &right]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&right, &left]);
 
     compare(expected.as_bytes(), actual.as_bytes()).unwrap();
 }
@@ -195,7 +205,32 @@ fn travel_arc_geometry_difference_is_rejected() {
     let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
 
     let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
-    assert!(error.contains("lift lifecycle differs"), "{error}");
+    assert!(error.contains("travel geometry differs"), "{error}");
+}
+
+#[test]
+fn travel_arc_rounding_is_bounded() {
+    let expected_island = "G3 X0 Y0 Z.4 I1 J2 P1 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let actual_island = expected_island.replace("I1 J2 P1", "I1.01 J2 P1");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+
+    let outside = actual.replace("I1.01 J2 P1", "I1.03 J2 P1");
+    let error = compare(expected.as_bytes(), outside.as_bytes()).unwrap_err();
+    assert!(error.contains("travel geometry differs"), "{error}");
+}
+
+#[test]
+fn travel_lift_shape_difference_is_rejected() {
+    let expected_island = "G1 X0 Y0 F6000\nG1 X2 Y0 Z.3\nG1 X0 Y0 Z.2\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let actual_island = expected_island.replace("X2 Y0 Z.3", "X2 Y0 Z.4");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("travel geometry differs"), "{error}");
 }
 
 fn island(start: u32, end: u32, feed: u32) -> String {
