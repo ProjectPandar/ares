@@ -66,6 +66,17 @@ fn project_object_identity_difference_is_rejected() {
     assert!(error.contains("control events differs"), "{error}");
 }
 
+#[test]
+fn travel_arc_geometry_difference_is_rejected() {
+    let expected_island = "G3 X0 Y0 Z.4 I1 J2 P1 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let actual_island = expected_island.replace("I1 J2 P1", "I2 J2 P1");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+    assert!(error.contains("lift lifecycle differs"), "{error}");
+}
+
 fn island(start: u32, end: u32, feed: u32) -> String {
     format!(
         "G1 X{start} Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X{end} Y0 E.1 F{feed}\n"

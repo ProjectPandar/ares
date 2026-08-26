@@ -317,17 +317,15 @@ fn apply_motion(
     } else if let Some(layer) = output.layers.last_mut()
         && next_z != state.z
     {
-        layer.lifts.push(format!(
-            "{}|{}|{}|{}",
-            motion.command, state.z, next_z, state.feed
-        ));
+        layer
+            .lifts
+            .push(lift_key(state, &motion, [&next_x, &next_y, &next_z]));
     }
     state.x = next_x;
     state.y = next_y;
     state.z = next_z;
     Ok(())
 }
-
 fn motion_key(state: &State, motion: &Motion, next: [&str; 3], extrusion: &str) -> String {
     format!(
         "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}",
@@ -343,6 +341,26 @@ fn motion_key(state: &State, motion: &Motion, next: [&str; 3], extrusion: &str) 
         motion.values.get(&'I').map_or("", String::as_str),
         motion.values.get(&'J').map_or("", String::as_str),
         extrusion
+    )
+}
+fn lift_key(state: &State, motion: &Motion, next: [&str; 3]) -> String {
+    let i = motion
+        .values
+        .get(&'I')
+        .map_or(0.0, |value| value.parse::<f64>().unwrap());
+    let j = motion
+        .values
+        .get(&'J')
+        .map_or(0.0, |value| value.parse::<f64>().unwrap());
+    format!(
+        "{}|{}|{}|{:.2}|{}|{}|{}",
+        motion.command,
+        state.z,
+        next[2],
+        i.hypot(j),
+        motion.values.get(&'P').map_or("", String::as_str),
+        state.feed,
+        state.acceleration,
     )
 }
 
