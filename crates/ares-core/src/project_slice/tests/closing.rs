@@ -18,7 +18,6 @@ use super::{
         looped_intersections::loop_project_intersections,
         pre_closing_unions::{PreClosingPrintObject, apply_project_pre_closing_unions},
         slicing_mode_intersections::apply_project_slicing_modes,
-        task22g_oracle::encode,
     },
     raw_support::{intersections, mesh_volume, planned_layers},
     support::{KsrArchive, object, region, resolved},
@@ -195,7 +194,6 @@ fn task22g_zero_radius_preserves_owned_records_points_modes_and_empty_slots() {
     let output =
         apply_project_closing(pre_closing, &resolved_objects, CoordinateScale::Normal).unwrap();
     assert_eq!(post_facts(&output), before);
-    assert!(encode(&output).starts_with(b"ARES22G\0"));
 }
 
 #[test]

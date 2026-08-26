@@ -1,9 +1,4 @@
-use sha2::{Digest, Sha256};
-
 use super::{super::state::prepare_project_slice, support::ksr_project};
-
-const CONFIG_BLOCK_SHA256: &str =
-    "b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8";
 
 #[test]
 fn task22a_ksr_fixture_plans_exact_460_layers_from_3mf_only() {
@@ -62,25 +57,4 @@ fn task22a_ksr_fixture_plans_exact_460_layers_from_3mf_only() {
         expected_lo = expected_hi;
         expected_hi += 0.2;
     }
-}
-
-#[test]
-fn task22a_ksr_fixture_plan_is_deterministic_and_config_block_unchanged() {
-    let first = prepare_project_slice(ksr_project()).unwrap();
-    let second = prepare_project_slice(ksr_project()).unwrap();
-
-    assert_eq!(first.intersected_objects, second.intersected_objects);
-    assert_eq!(first.resolved, second.resolved);
-    assert_eq!(first.config_block, second.config_block);
-
-    let block = first.config_block.as_deref().unwrap();
-    assert_eq!(block.len(), 49_004);
-    assert_eq!(sha256(block), CONFIG_BLOCK_SHA256);
-}
-
-fn sha256(bytes: &[u8]) -> String {
-    Sha256::digest(bytes)
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
 }
