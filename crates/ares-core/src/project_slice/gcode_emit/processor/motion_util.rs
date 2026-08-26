@@ -7,7 +7,7 @@ pub(super) fn word(code: &str, letter: char) -> Option<f64> {
     let end = value
         .find(|character: char| character.is_ascii_alphabetic())
         .unwrap_or(value.len());
-    value[..end].trim().parse().ok()
+    value[..end].trim().parse::<f32>().ok().map(f64::from)
 }
 
 pub(super) fn clamped_word(code: &str, letter: char, current: f64, maximum: f64) -> f64 {

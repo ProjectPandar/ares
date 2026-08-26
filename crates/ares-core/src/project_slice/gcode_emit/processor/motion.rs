@@ -1,28 +1,11 @@
 mod arc;
 use super::motion_util::{clamp, clamped_word, norm, scale, word};
+use crate::options::GCodeFlavor;
 mod planner;
+pub(super) use planner::RollingPlanner;
 #[cfg(test)]
-mod rolling_tests;
 pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
-    const REFRESH_THRESHOLD: usize = 256;
-    const QUEUE_SIZE: usize = 64;
-    let mut result = vec![0.0; blocks.len()];
-    let mut emitted = 0;
-    let mut initial_entry = None;
-    while emitted < blocks.len() {
-        let end = (emitted + REFRESH_THRESHOLD + 1).min(blocks.len());
-        let (window_times, entries) =
-            planner::planned_times_with_initial(&blocks[emitted..end], initial_entry);
-        let emit_end = if end < blocks.len() {
-            end - QUEUE_SIZE
-        } else {
-            end
-        };
-        result[emitted..emit_end].copy_from_slice(&window_times[..emit_end - emitted]);
-        initial_entry = (emit_end < end).then(|| entries[emit_end - emitted]);
-        emitted = emit_end;
-    }
-    result
+    planner::planned_times(blocks)
 }
 
 use std::f64::consts::PI;
@@ -43,6 +26,7 @@ pub(super) struct MotionState {
     pub(super) relative: bool,
     pub(super) e_relative: bool,
     pub(super) wiping: bool,
+    pub(super) gcode_flavor: GCodeFlavor,
 }
 
 impl Default for MotionState {
@@ -62,19 +46,27 @@ impl Default for MotionState {
             jerk: [9.0, 9.0, 3.0, 2.5],
             relative: false,
             e_relative: false,
+            gcode_flavor: GCodeFlavor::MarlinLegacy,
             wiping: false,
         }
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum MotionKind {
+    Regular,
+    Unretract,
+    ToolChange,
+}
+
 pub(super) struct MotionBlock {
-    pub(super) index: usize,
     pub(super) distance: f64,
     pub(super) speed: f64,
     pub(super) acceleration: f64,
     pub(super) centripetal_acceleration: f64,
     pub(super) jerk: [f64; 4],
     pub(super) direction: [f64; 4],
+    pub(super) kind: MotionKind,
 }
 
 impl MotionState {
@@ -109,6 +101,7 @@ impl MotionState {
                 end: self.position,
                 e_delta: self.e_position - start_e,
                 feedrate: self.feedrate,
+                gcode_flavor: self.gcode_flavor,
             },
         ) else {
             return vec![block];
@@ -288,13 +281,17 @@ impl MotionState {
             }
         }
         Some(MotionBlock {
-            index: 0,
             distance,
             speed,
             acceleration: acceleration.max(1.0),
             centripetal_acceleration: self.acceleration.max(1.0),
             jerk: self.jerk,
             direction: scale(delta, 1.0 / distance),
+            kind: if !self.wiping && e_only && e_delta > 0.0 {
+                MotionKind::Unretract
+            } else {
+                MotionKind::Regular
+            },
         })
     }
     fn segment_block(&self, delta: [f64; 4]) -> Option<MotionBlock> {
@@ -328,13 +325,17 @@ impl MotionState {
             }
         }
         Some(MotionBlock {
-            index: 0,
             distance,
             speed,
             acceleration: acceleration.max(1.0),
             centripetal_acceleration: self.acceleration.max(1.0),
             jerk: self.jerk,
             direction: scale(delta, 1.0 / distance),
+            kind: if !self.wiping && e_only && delta[3] > 0.0 {
+                MotionKind::Unretract
+            } else {
+                MotionKind::Regular
+            },
         })
     }
 

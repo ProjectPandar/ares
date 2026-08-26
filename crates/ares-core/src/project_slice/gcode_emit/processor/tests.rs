@@ -33,8 +33,18 @@ fn progress_updates_follow_motion_lines_not_delay_commands() {
     assert!(!output.contains("T0\nM73 P"), "{output}");
 }
 #[test]
-fn first_layer_time_ends_at_first_change_layer() {
-    let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X600 F3600\n; CHANGE_LAYER\nG1 X600 F3600\n; CHANGE_LAYER\nM73 P100 R0\n".to_vec();
+fn finalized_motion_time_is_exported_after_the_next_motion_command() {
+    let output =
+        b"M73 P0 R0\nM204 S1000\nG1 X1 F60\nM400\nG1 X2 F60\nM622 J1\nG29 A1\nM73 P100 R0\n"
+            .to_vec();
+
+    let output = String::from_utf8(process(output, true, 0.0, ProcessorLimits::default())).unwrap();
+
+    assert!(output.contains("G1 X2 F60\nM73 P99 R0\nM622"), "{output}");
+}
+#[test]
+fn preparation_time_ends_at_first_print_feature() {
+    let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\n; FEATURE: Custom\nM204 S1000\nG1 X600 F3600\n; FEATURE: Inner wall\nG1 X1200 F3600\nM73 P100 R0\n".to_vec();
 
     let output =
         String::from_utf8(process(output, false, 0.0, ProcessorLimits::default())).unwrap();
@@ -54,7 +64,7 @@ fn collinear_cruise_time_is_not_zeroed_by_default_jerk() {
 
     let times = planned_times(&[first, second]);
 
-    assert!((times.iter().sum::<f64>() - 20.04335).abs() < 1e-9);
+    assert!((times.iter().sum::<f64>() - 20.043348).abs() < 1e-6);
 }
 
 #[test]
@@ -62,7 +72,7 @@ fn tracks_relative_e_only_moves() {
     let mut state = MotionState::default();
     state.motion("M83");
     let block = state.motion("G1 E-.4 F1800").unwrap();
-    assert!((block.distance - 0.4).abs() < 1e-9);
+    assert!((block.distance - 0.4).abs() < 1e-6, "{}", block.distance);
 }
 
 #[test]
@@ -122,13 +132,13 @@ fn travel_blocks_retain_print_acceleration_for_centripetal_limits() {
 #[test]
 fn collinear_blocks_keep_speed_at_the_shared_junction() {
     let block = || MotionBlock {
-        index: 0,
         distance: 10.0,
         speed: 10.0,
         acceleration: 100.0,
         centripetal_acceleration: 100.0,
         jerk: [10.0; 4],
         direction: [1.0, 0.0, 0.0, 0.0],
+        kind: super::motion::MotionKind::Regular,
     };
 
     let elapsed = planned_times(&[block(), block()]).into_iter().sum::<f64>();
@@ -137,30 +147,57 @@ fn collinear_blocks_keep_speed_at_the_shared_junction() {
 }
 
 #[test]
+fn tool_change_block_resets_the_following_junction() {
+    let tool_change = MotionBlock {
+        distance: 0.0,
+        speed: 0.0,
+        acceleration: 0.0,
+        centripetal_acceleration: 0.0,
+        jerk: [0.0; 4],
+        direction: [0.0; 4],
+        kind: super::motion::MotionKind::ToolChange,
+    };
+    let retract = MotionBlock {
+        distance: 3.0,
+        speed: 30.0,
+        acceleration: 30_000.0,
+        centripetal_acceleration: 10_000.0,
+        jerk: [9.0, 9.0, 3.0, 2.5],
+        direction: [0.0, 0.0, 0.0, -1.0],
+        kind: super::motion::MotionKind::Regular,
+    };
+
+    let times = planned_times(&[tool_change, retract]);
+
+    assert_eq!(times[0], 0.0);
+    assert!((times[1] - 0.100920171).abs() < 1e-7, "{}", times[1]);
+}
+
+#[test]
 fn isolated_block_uses_firmware_safe_entry_speed() {
     let block = MotionBlock {
-        index: 0,
         distance: 10.0,
         speed: 10.0,
         acceleration: 100.0,
         centripetal_acceleration: 100.0,
         jerk: [9.0, 9.0, 3.0, 2.5],
         direction: [1.0, 0.0, 0.0, 0.0],
+        kind: super::motion::MotionKind::Regular,
     };
 
     let elapsed = planned_times(&[block])[0];
 
-    assert!((elapsed - 1.001).abs() < 1e-9, "{elapsed}");
+    assert!((elapsed - 1.001).abs() < 1e-6, "{elapsed}");
 }
 
 #[test]
-fn synchronization_command_flushes_firmware_planner() {
+fn single_block_synchronization_waits_for_next_motion() {
     let lines = ["M204 S1000", "G1 X600 F3600", "M1", "G1 X1200 F3600"].map(str::to_owned);
 
     let estimate = Estimate::from_lines(&lines, 0.0, ProcessorLimits::default());
 
     assert!(
-        (estimate.total - 20.0867).abs() < 1e-9,
+        (estimate.total - 20.043348).abs() < 1e-6,
         "{}",
         estimate.total
     );
@@ -178,7 +215,11 @@ fn initial_tool_selection_adds_machine_load_time_once() {
 fn spiral_arc_p_one_is_one_turn_at_same_endpoint() {
     let mut state = MotionState::default();
     let block = state.motion("G3 Z.6 I1 J0 P1 F600").unwrap();
-    assert!((block.distance - (2.0 * std::f64::consts::PI).hypot(0.6)).abs() < 1e-9);
+    assert!(
+        (block.distance - (2.0 * std::f64::consts::PI).hypot(0.6)).abs() < 1e-6,
+        "{}",
+        block.distance
+    );
 }
 
 #[test]
@@ -187,8 +228,9 @@ fn marlin_arc_is_discretized_into_firmware_segments() {
 
     let blocks = state.motions("G3 X0 Y2 I0 J1 F600");
 
-    assert_eq!(blocks.len(), 16);
-    assert!((blocks.iter().map(|block| block.distance).sum::<f64>() - 3.136548).abs() < 1e-6);
+    assert_eq!(blocks.len(), 10);
+    let distance = blocks.iter().map(|block| block.distance).sum::<f64>();
+    assert!((distance - 3.123189).abs() < 1e-6, "{distance}");
 }
 
 #[test]
@@ -200,6 +242,19 @@ fn homing_command_emits_motion_to_requested_axes() {
 
     assert!((block.distance - 10.0).abs() < 1e-9);
     assert_eq!(state.position, [0.0, 20.0, 3.0]);
+}
+
+#[test]
+fn homing_motion_contributes_to_total_estimate() {
+    let lines = ["G1 X10 F600", "G28 X"].map(str::to_owned);
+
+    let estimate = Estimate::from_lines(&lines, 0.0, ProcessorLimits::default());
+
+    assert!(
+        (estimate.total - 2.157_569_885_253_906_3).abs() < 1e-9,
+        "{}",
+        estimate.total
+    );
 }
 
 #[test]

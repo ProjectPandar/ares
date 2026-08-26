@@ -283,6 +283,7 @@ pub(super) fn emit(
                     .machine
                     .machine_max_acceleration_travel,
             ),
+            gcode_flavor: traversal.resolved.views.full.printer.gcode.gcode_flavor,
         },
     ))
 }

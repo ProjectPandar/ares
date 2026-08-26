@@ -2,9 +2,13 @@ mod delays;
 mod motion;
 mod motion_util;
 mod time;
+use crate::options::GCodeFlavor;
 use delays::command_delay;
-use motion::{MotionBlock, MotionState, planned_times};
+#[cfg(test)]
+use motion::planned_times;
+use motion::{MotionBlock, MotionKind, MotionState, RollingPlanner};
 use motion_util::word;
+use std::collections::VecDeque;
 use time::{duration, minutes};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -12,6 +16,7 @@ pub(super) struct ProcessorLimits {
     pub(super) print_acceleration: f64,
     pub(super) retract_acceleration: f64,
     pub(super) travel_acceleration: f64,
+    pub(super) gcode_flavor: GCodeFlavor,
 }
 
 pub(super) fn process(
@@ -29,13 +34,8 @@ pub(super) fn process(
         .iter()
         .position(|line| line == "M73 P0 R0")
         .unwrap_or(0);
-    let first_layer_end = lines
-        .iter()
-        .enumerate()
-        .find(|(index, line)| *index > first_marker && line.starts_with("; CHANGE_LAYER"))
-        .map(|(index, _)| estimate.elapsed_at(index))
-        .unwrap_or(estimate.total);
-    let model_time = (estimate.total - first_layer_end).max(0.0);
+    let prepare_time = estimate.prepare;
+    let model_time = (estimate.total - prepare_time).max(0.0);
 
     for (index, line) in lines.iter().enumerate() {
         if line == "M73 P0 R0" {
@@ -60,7 +60,7 @@ pub(super) fn process(
         if line.starts_with("; estimated first layer printing time") {
             result.push_str(&format!(
                 "; estimated first layer printing time (normal mode) = {}\n",
-                duration(first_layer_end),
+                duration(prepare_time),
             ));
             continue;
         }
@@ -69,15 +69,15 @@ pub(super) fn process(
         if index < first_marker || !emit_progress || !is_progress_motion(line) {
             continue;
         }
-        let elapsed = estimate.elapsed_at(index + 1);
+        let Some(elapsed) = estimate.elapsed_at(index + 1).map(|elapsed| elapsed as f32) else {
+            continue;
+        };
         let percent = if estimate.total > 0.0 {
-            ((elapsed / estimate.total) * 100.0)
-                .floor()
-                .clamp(0.0, 99.0) as u64
+            (f64::from(100.0_f32 * elapsed) / estimate.total).clamp(0.0, 99.0) as u64
         } else {
             0
         };
-        let remaining = minutes(estimate.total - elapsed);
+        let remaining = minutes(estimate.total - f64::from(elapsed));
         if last_progress != Some((percent, remaining)) {
             last_progress = Some((percent, remaining));
             result.push_str(&format!("M73 P{percent} R{remaining}\n"));
@@ -101,7 +101,24 @@ fn is_progress_motion(line: &str) -> bool {
 
 struct Estimate {
     total: f64,
-    elapsed: Vec<f64>,
+    prepare: f64,
+    elapsed: Vec<Option<f64>>,
+}
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum DelayTarget {
+    Any,
+    ToolChange,
+}
+
+#[derive(Clone, Copy)]
+struct PendingDelay {
+    target: DelayTarget,
+    seconds: f32,
+}
+
+struct FlushEvent {
+    block_count: usize,
+    delay: Option<PendingDelay>,
 }
 
 impl Estimate {
@@ -111,19 +128,32 @@ impl Estimate {
         limits: ProcessorLimits,
     ) -> Self {
         let mut blocks = Vec::new();
+        let travel_limit = if limits.gcode_flavor.supports_separate_travel_acceleration() {
+            limits.travel_acceleration
+        } else {
+            0.0
+        };
         let mut state = MotionState::with_acceleration_limits(
             limits.print_acceleration,
             limits.retract_acceleration,
-            limits.travel_acceleration,
+            travel_limit,
         );
-        let mut delays = vec![0.0; lines.len()];
-        let mut flushes = Vec::new();
+        let mut prepare_stages = Vec::new();
+        state.gcode_flavor = limits.gcode_flavor;
+        let mut events = Vec::new();
+        let mut prepare_stage = false;
+        let mut saw_motion_command = false;
         let mut measure_g29_time = false;
         let mut active_tool = None;
+        let mut g1_line_id = 0;
+        let mut block_line_ids = Vec::new();
+        let mut arc_segment_counts = vec![0; lines.len()];
         for (index, line) in lines.iter().enumerate() {
             match line.trim() {
                 "; WIPE_START" => state.set_wiping(true),
                 "; WIPE_END" => state.set_wiping(false),
+                "; FEATURE: Custom" => prepare_stage = !saw_motion_command,
+                line if line.starts_with("; FEATURE:") => prepare_stage = false,
                 _ => {}
             }
             let code = line.split(';').next().unwrap_or_default().trim();
@@ -133,49 +163,191 @@ impl Estimate {
                 measure_g29_time = false;
             }
             let is_g29 = code.starts_with("G29") && !code.starts_with("G29.");
-            if !is_g29 || measure_g29_time {
-                delays[index] += command_delay(code).unwrap_or(0.0);
-            }
+            let delay = (!is_g29 || measure_g29_time)
+                .then(|| command_delay(code))
+                .flatten();
             if synchronizes_planner(code, is_g29 && measure_g29_time) {
-                flushes.push(index);
+                events.push(FlushEvent {
+                    block_count: blocks.len(),
+                    delay: delay.map(|seconds| PendingDelay {
+                        target: DelayTarget::Any,
+                        seconds: seconds as f32,
+                    }),
+                });
             }
             if selects_initial_tool(code, &mut active_tool) {
-                delays[index] += machine_load_filament_time;
-                flushes.push(index);
+                blocks.push(MotionBlock {
+                    distance: 0.0,
+                    speed: 0.0,
+                    acceleration: 0.0,
+                    centripetal_acceleration: 0.0,
+                    jerk: [0.0; 4],
+                    direction: [0.0; 4],
+                    kind: MotionKind::ToolChange,
+                });
+                block_line_ids.push(g1_line_id);
+                prepare_stages.push(prepare_stage);
+                events.push(FlushEvent {
+                    block_count: blocks.len(),
+                    delay: Some(PendingDelay {
+                        target: DelayTarget::ToolChange,
+                        seconds: machine_load_filament_time as f32,
+                    }),
+                });
             }
-            blocks.extend(
-                state
-                    .motions(code)
-                    .into_iter()
-                    .map(|block| MotionBlock { index, ..block }),
-            );
+            let command = code.split_whitespace().next().unwrap_or_default();
+            let motion_blocks = state.motions(code);
+            match command {
+                "G0" | "G1" | "G28" => {
+                    g1_line_id += 1;
+                    let count = motion_blocks.len();
+                    blocks.extend(motion_blocks);
+                    block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
+                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                }
+                "G2" | "G3" => {
+                    let count = motion_blocks.len();
+                    arc_segment_counts[index] = count;
+                    blocks.extend(motion_blocks);
+                    block_line_ids.extend((0..count).map(|offset| g1_line_id + offset + 1));
+                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                    g1_line_id += count;
+                }
+                _ => debug_assert!(motion_blocks.is_empty()),
+            }
+            saw_motion_command |= is_progress_motion(code);
         }
-        let mut times = Vec::with_capacity(blocks.len());
-        let mut start = 0;
-        for line in flushes {
-            let end = start + blocks[start..].partition_point(|block| block.index < line);
-            times.extend(planned_times(&blocks[start..end]));
-            start = end;
-        }
-        times.extend(planned_times(&blocks[start..]));
-        let mut elapsed = vec![0.0; lines.len() + 1];
-        let mut block_index = 0;
-        for index in 0..lines.len() {
-            elapsed[index + 1] = elapsed[index] + delays[index];
-            while block_index < blocks.len() && blocks[block_index].index == index {
-                elapsed[index + 1] += times[block_index];
-                block_index += 1;
+        let (times, trailing_delay) = scheduled_times(&blocks, &events);
+        debug_assert_eq!(block_line_ids.len(), times.len());
+        let mut cumulative = 0.0;
+        let cache = block_line_ids
+            .into_iter()
+            .zip(&times)
+            .map(|(id, time)| {
+                cumulative += time;
+                (id, cumulative)
+            })
+            .collect::<Vec<_>>();
+        let mut elapsed = vec![None; lines.len() + 1];
+        let mut cache_index = 0;
+        let mut exported_g1_lines = 0;
+        for (index, line) in lines.iter().enumerate() {
+            let command = line
+                .split(';')
+                .next()
+                .unwrap_or_default()
+                .split_whitespace()
+                .next()
+                .unwrap_or_default();
+            let lookup_id = match command {
+                "G0" | "G1" => {
+                    let id = exported_g1_lines;
+                    exported_g1_lines += 1;
+                    Some(id)
+                }
+                "G2" | "G3" => {
+                    let internal = arc_segment_counts[index].saturating_sub(1);
+                    let id = exported_g1_lines + internal;
+                    exported_g1_lines += internal + 1;
+                    Some(id)
+                }
+                "G28" => {
+                    exported_g1_lines += 1;
+                    None
+                }
+                _ => None,
+            };
+            let Some(lookup_id) = lookup_id else {
+                continue;
+            };
+            while cache_index < cache.len() && cache[cache_index].0 < lookup_id {
+                cache_index += 1;
+            }
+            if cache
+                .get(cache_index)
+                .is_some_and(|(id, _)| *id == lookup_id)
+            {
+                elapsed[index + 1] = Some(cache[cache_index].1);
             }
         }
+        let prepare = times
+            .iter()
+            .zip(prepare_stages)
+            .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
+            .sum();
         Self {
-            total: elapsed[lines.len()],
+            total: cumulative + trailing_delay,
+            prepare,
             elapsed,
         }
     }
 
-    fn elapsed_at(&self, line: usize) -> f64 {
-        self.elapsed.get(line).copied().unwrap_or(self.total)
+    fn elapsed_at(&self, line: usize) -> Option<f64> {
+        self.elapsed.get(line).copied().flatten()
     }
+}
+
+fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> (Vec<f64>, f64) {
+    let mut planner = RollingPlanner::new();
+    let mut times = vec![0.0; blocks.len()];
+    let mut pending = VecDeque::new();
+    let mut pushed = 0;
+    let mut emitted = 0;
+
+    for event in events {
+        while pushed < event.block_count {
+            let batch = planner.push(&blocks[pushed]);
+            pushed += 1;
+            record_batch(blocks, &mut times, &mut emitted, batch, &mut pending);
+        }
+        if let Some(delay) = event.delay.filter(|delay| delay.seconds > 0.0) {
+            if let Some(last) = pending
+                .back_mut()
+                .filter(|last| last.target == delay.target)
+            {
+                last.seconds += delay.seconds;
+            } else {
+                pending.push_back(delay);
+            }
+        }
+        let batch = planner.flush();
+        record_batch(blocks, &mut times, &mut emitted, batch, &mut pending);
+    }
+    while pushed < blocks.len() {
+        let batch = planner.push(&blocks[pushed]);
+        pushed += 1;
+        record_batch(blocks, &mut times, &mut emitted, batch, &mut pending);
+    }
+    let batch = planner.finish();
+    record_batch(blocks, &mut times, &mut emitted, batch, &mut pending);
+
+    let trailing_delay = pending
+        .into_iter()
+        .fold(0.0_f32, |total, delay| total + delay.seconds);
+    (times, f64::from(trailing_delay))
+}
+
+fn record_batch(
+    blocks: &[MotionBlock],
+    times: &mut [f64],
+    emitted: &mut usize,
+    mut batch: Vec<f64>,
+    pending: &mut VecDeque<PendingDelay>,
+) {
+    for (block, time) in blocks[*emitted..].iter().zip(&mut batch) {
+        let Some(delay) = pending.front() else {
+            break;
+        };
+        if delay.target == DelayTarget::Any
+            || delay.target == DelayTarget::ToolChange && block.kind == MotionKind::ToolChange
+        {
+            *time = f64::from(*time as f32 + delay.seconds);
+            pending.pop_front();
+        }
+    }
+    let end = *emitted + batch.len();
+    times[*emitted..end].copy_from_slice(&batch);
+    *emitted = end;
 }
 
 fn synchronizes_planner(code: &str, measured_g29: bool) -> bool {
