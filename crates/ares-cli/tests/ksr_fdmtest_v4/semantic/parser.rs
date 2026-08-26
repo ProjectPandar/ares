@@ -45,6 +45,8 @@ pub(super) struct Deposition {
 #[derive(Debug)]
 pub(super) struct Travel {
     pub(super) motion: MotionRecord,
+    pub(super) feed: f64,
+    pub(super) acceleration: String,
 }
 
 #[derive(Default)]
@@ -327,6 +329,8 @@ fn apply_motion(
     {
         layer.travels.push(Travel {
             motion: motion_record(state, &motion, next),
+            feed: required_feed(state)?,
+            acceleration: state.acceleration.clone(),
         });
     }
     state.x = next_x;

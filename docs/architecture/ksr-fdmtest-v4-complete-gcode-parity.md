@@ -45,6 +45,13 @@ times within five seconds; displayed filament length within 0.05 mm. These
 bounds contain the measured upstream run-to-run variation while rejecting
 option or toolpath changes.
 
+Independent-island order also changes the endpoints of inter-island XY travel
+and may rotate a closed loop's selected arrival point. The invariant travel
+comparison therefore checks motion count and kind, exact vertical profile,
+arc direction, quantization-bounded radius and turns, the feed multiset, and
+the acceleration-value set. It does not select one scheduler-dependent XY
+route as canonical.
+
 ## Consequences
 
 Each option-driven behavior is implemented and committed independently.

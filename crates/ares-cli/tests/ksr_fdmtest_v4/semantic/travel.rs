@@ -1,7 +1,8 @@
-use super::parser::Travel;
+use std::collections::BTreeSet;
 
-const MAX_ARC_CENTER_DIFFERENCE_MM: f64 = 0.011;
-const MAX_COORDINATE_ROUNDING_DIFFERENCE_MM: f64 = 0.001_1;
+use super::{feed_matches, parser::Travel};
+
+const MAX_ARC_RADIUS_QUANTIZATION_DIFFERENCE_MM: f64 = 0.001_5;
 
 pub(super) fn compare(layer: usize, expected: &[Travel], actual: &[Travel]) -> Result<(), String> {
     if expected.len() != actual.len() {
@@ -11,10 +12,30 @@ pub(super) fn compare(layer: usize, expected: &[Travel], actual: &[Travel]) -> R
             actual.len()
         ));
     }
-    match_each(expected, actual, travel_geometry_matches).map_err(|expected| {
+    match_each(expected, actual, travel_shape_matches).map_err(|expected| {
         format!("layer {layer} travel geometry differs: no match for {expected:?}")
+    })?;
+    match_each(expected, actual, |expected, actual| {
+        feed_matches(expected.feed, actual.feed)
     })
+    .map_err(|expected| format!("layer {layer} travel feed differs: no match for {expected:?}"))?;
+    let expected_acceleration = expected
+        .iter()
+        .map(|travel| travel.acceleration.as_str())
+        .collect::<BTreeSet<_>>();
+    let actual_acceleration = actual
+        .iter()
+        .map(|travel| travel.acceleration.as_str())
+        .collect::<BTreeSet<_>>();
+    if expected_acceleration != actual_acceleration {
+        return Err(format!(
+            "layer {layer} travel acceleration differs: expected {expected_acceleration:?}, \
+             actual {actual_acceleration:?}"
+        ));
+    }
+    Ok(())
 }
+
 fn match_each<'a>(
     expected: &'a [Travel],
     actual: &[Travel],
@@ -35,46 +56,34 @@ fn match_each<'a>(
     Ok(())
 }
 
-fn travel_geometry_matches(expected: &Travel, actual: &Travel) -> bool {
+// Island order changes both ends of inter-island XY moves and may rotate the
+// destination loop. Command, Z profile, arc radius/turns, feed multiset, and
+// acceleration values are the complete scheduler-independent travel shape.
+
+fn travel_shape_matches(expected: &Travel, actual: &Travel) -> bool {
     let expected = &expected.motion;
     let actual = &actual.motion;
-    let command_matches = expected.command == actual.command;
-    let z_matches = [
-        (&expected.start.z, &actual.start.z),
-        (&expected.end.z, &actual.end.z),
-    ]
-    .into_iter()
-    .all(|(expected, actual)| {
-        numeric_matches(expected, actual, MAX_COORDINATE_ROUNDING_DIFFERENCE_MM)
-    });
-    let arc_matches = expected.command != "G3"
+    let z_matches = expected.start.z == actual.start.z && expected.end.z == actual.end.z;
+    let arc_matches = !matches!(expected.command.as_str(), "G2" | "G3")
         || arc_radius_matches(&expected.arc_center, &actual.arc_center)
             && expected.turns == actual.turns;
-    command_matches && z_matches && arc_matches
+    expected.command == actual.command && z_matches && arc_matches
 }
 
 fn arc_radius_matches(expected: &[Option<String>; 2], actual: &[Option<String>; 2]) -> bool {
-    let radius = |center: &[Option<String>; 2]| -> Option<f64> {
-        Some(
-            center[0]
-                .as_deref()?
-                .parse::<f64>()
-                .ok()?
-                .hypot(center[1].as_deref()?.parse::<f64>().ok()?),
-        )
-    };
-    radius(expected)
-        .zip(radius(actual))
-        .is_some_and(|(expected, actual)| (expected - actual).abs() <= MAX_ARC_CENTER_DIFFERENCE_MM)
+    arc_radius(expected)
+        .zip(arc_radius(actual))
+        .is_some_and(|(expected, actual)| {
+            (expected - actual).abs() <= MAX_ARC_RADIUS_QUANTIZATION_DIFFERENCE_MM
+        })
 }
 
-fn numeric_matches(expected: &str, actual: &str, tolerance: f64) -> bool {
-    if expected.is_empty() || actual.is_empty() {
-        return expected == actual;
-    }
-    expected
-        .parse::<f64>()
-        .ok()
-        .zip(actual.parse::<f64>().ok())
-        .is_some_and(|(expected, actual)| (expected - actual).abs() <= tolerance)
+fn arc_radius(center: &[Option<String>; 2]) -> Option<f64> {
+    let component = |value: &Option<String>| match value {
+        Some(value) => value.parse::<f64>().ok(),
+        None => Some(0.0),
+    };
+    let i = component(&center[0])?;
+    let j = component(&center[1])?;
+    (i != 0.0 || j != 0.0).then(|| i.hypot(j))
 }
