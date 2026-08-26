@@ -55,9 +55,6 @@ fn render_range(
         let line = lines[index];
         if let Some(expression) = directive(line, "if") {
             let (branches, next) = find_branches(lines, index + 1, end, expression)?;
-            let branch_count = branches.len();
-
-            output.push_str(&directive_blank(line));
             let mut selected = None;
             for (condition, start, branch_end) in branches {
                 if condition.is_empty()
@@ -70,14 +67,10 @@ fn render_range(
                 }
             }
             if let Some((start, branch_end)) = selected {
+                output.push_str(&directive_blank(lines[start - 1]));
                 output.push_str(&render_range(lines, start, branch_end, config)?.0);
-                if branch_count == 1 {
-                    output.push_str(&directive_blank(lines[next - 1]));
-                }
             }
-            if branch_count > 1 {
-                output.push_str(&directive_blank(lines[next - 1]));
-            }
+            output.push_str(&directive_blank(lines[next - 1]));
             index = next;
             continue;
         }
@@ -218,5 +211,13 @@ mod tests {
         let config = Config::from_block(b"; enabled = 1\n");
         let template = "{if enabled}\nA\n{endif}\n{if !enabled}\nB\n{endif}\n";
         assert_eq!(render(template, &config).unwrap(), "\nA\n\n\n");
+    }
+
+    #[test]
+    fn renderer_keeps_only_the_closing_newline_when_no_branch_matches() {
+        let config = Config::from_block(b"; enabled = 0\n");
+        let template = "{if enabled}\nA\n{elsif enabled == 2}\nB\n{endif}\n";
+
+        assert_eq!(render(template, &config).unwrap(), "\n");
     }
 }
