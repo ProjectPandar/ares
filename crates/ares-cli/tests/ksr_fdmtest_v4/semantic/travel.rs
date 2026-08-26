@@ -1,6 +1,7 @@
-use super::{MAX_COORDINATE_ROUNDING_DIFFERENCE_MM, parser::Travel};
+use super::parser::Travel;
 
 const MAX_ARC_CENTER_DIFFERENCE_MM: f64 = 0.011;
+const MAX_COORDINATE_ROUNDING_DIFFERENCE_MM: f64 = 0.001_1;
 
 pub(super) fn compare(layer: usize, expected: &[Travel], actual: &[Travel]) -> Result<(), String> {
     if expected.len() != actual.len() {
