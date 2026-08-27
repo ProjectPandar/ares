@@ -14,7 +14,15 @@ if [ ! -x "$APPDIR/bin/orca-slicer" ]; then
     exit 127
 fi
 
-extra="$(nix eval --impure --json --expr 'with import <nixpkgs> {}; builtins.map (p: (lib.getLib p).outPath + "/lib") [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret ]' | tr ',' '\n' | tr -d '[]"' | grep . | paste -sd:)"
+# The nix eval is expensive and flaky under repeated invocations; cache the
+# resolved library paths across runs (force a refresh with ORCA_LIB_REFRESH=1).
+CACHE="${ORCA_LIB_CACHE:-/tmp/orca-parity-libs.cache}"
+if [ -s "$CACHE" ] && [ -z "${ORCA_LIB_REFRESH:-}" ]; then
+    extra="$(cat "$CACHE")"
+else
+    extra="$(nix eval --impure --json --expr 'with import <nixpkgs> {}; builtins.map (p: (lib.getLib p).outPath + "/lib") [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret ]' | tr ',' '\n' | tr -d '[]"' | grep . | paste -sd:)"
+    printf '%s' "$extra" > "$CACHE"
+fi
 
 export LD_LIBRARY_PATH="$APPDIR/lib/orca-runtime:$APPDIR/bin:$extra${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export LC_ALL=C
