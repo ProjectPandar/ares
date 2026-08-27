@@ -26,12 +26,6 @@ pub(super) fn validate(
     {
         return unsupported("raft_layers");
     }
-    if resolved_objects
-        .iter()
-        .any(|resolved| resolved.object.precise_z_height.0)
-    {
-        return unsupported("precise_z_height");
-    }
     if resolved_objects.iter().any(|resolved| {
         resolved
             .layer_candidates

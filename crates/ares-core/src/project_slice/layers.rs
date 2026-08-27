@@ -123,6 +123,74 @@ fn profile_height(
     Ok((1.0 - position) * h1 + position * h2)
 }
 
+pub(super) fn adjust_layer_pairs_to_object_height(
+    parameters: &SlicingParameters,
+    pairs: &mut [LayerPair],
+) -> Result<bool, SliceError> {
+    let object_height = parameters.object_print_z_max - parameters.object_print_z_min;
+    let Some(last) = pairs.last() else {
+        return Ok(false);
+    };
+    if (last.hi - object_height).abs() < 1.0e-4 {
+        return Ok(true);
+    }
+    if pairs.len() < 6 {
+        return Ok(false);
+    }
+    let start = pairs.len() - 5;
+    let mut heights = pairs[start..]
+        .iter()
+        .map(|pair| pair.hi - pair.lo)
+        .collect::<Vec<_>>();
+    let mut adjustable = [true; 5];
+    let grow = last.hi < object_height;
+    let mut gap = (last.hi - object_height).abs();
+    while gap >= 1.0e-4 {
+        let count = adjustable.iter().filter(|enabled| **enabled).count();
+        if count == 0 {
+            return Ok(false);
+        }
+        let delta = gap / count as f64;
+        let mut remaining = 0.0;
+        for (height, enabled) in heights.iter_mut().zip(&mut adjustable) {
+            if !*enabled {
+                continue;
+            }
+            let candidate = if grow {
+                *height + delta
+            } else {
+                *height - delta
+            };
+            let boundary = if grow {
+                parameters.max_layer_height
+            } else {
+                parameters.min_layer_height
+            };
+            let exceeds = if grow {
+                candidate > boundary
+            } else {
+                candidate < boundary
+            };
+            if exceeds {
+                remaining += (candidate - boundary).abs();
+                *height = boundary;
+                *enabled = false;
+            } else {
+                *height = candidate;
+            }
+        }
+        require_finite(remaining)?;
+        gap = remaining;
+    }
+    for index in 0..5 {
+        if index > 0 {
+            pairs[start + index].lo = pairs[start + index - 1].hi;
+        }
+        pairs[start + index].hi = pairs[start + index].lo + heights[index];
+    }
+    Ok(true)
+}
+
 pub(super) fn planned_layers(pairs: &[LayerPair]) -> Result<Vec<PlannedLayer>, SliceError> {
     if pairs.is_empty() {
         return Err(invalid("object layer pair series is empty"));
@@ -148,13 +216,16 @@ pub(super) fn planned_layers(pairs: &[LayerPair]) -> Result<Vec<PlannedLayer>, S
 }
 
 pub(super) fn plan_print_object(
-    source_object_index: usize,
-    transform_index: usize,
+    (source_object_index, transform_index): (usize, usize),
     parameters: &SlicingParameters,
     profile: &[f64],
+    precise_z_height: bool,
     budget: &mut LayerBudget,
 ) -> Result<PlannedPrintObject, SliceError> {
-    let pairs = generate_layer_pairs(parameters, profile, budget)?;
+    let mut pairs = generate_layer_pairs(parameters, profile, budget)?;
+    if precise_z_height {
+        adjust_layer_pairs_to_object_height(parameters, &mut pairs)?;
+    }
     Ok(PlannedPrintObject {
         source_object_index,
         transform_index,

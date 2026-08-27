@@ -51,10 +51,10 @@ pub(super) fn plan_resolved_objects(
         let profile = profile::fixed_layer_height_profile(&parameters);
         for (transform_index, _) in resolved_object.print_objects.iter().enumerate() {
             planned_objects.push(layers::plan_print_object(
-                resolved_object.source_object_index,
-                transform_index,
+                (resolved_object.source_object_index, transform_index),
                 &parameters,
                 &profile,
+                resolved_object.object.precise_z_height.0,
                 &mut budget,
             )?);
         }

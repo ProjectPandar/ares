@@ -4,7 +4,10 @@ use crate::SliceError;
 use crate::{Transform3d, project::effective_config::types::ResolvedPrintObjectConfig};
 
 use super::super::{
-    layers::{LayerBudget, LayerPair, PlannedLayer, generate_layer_pairs, planned_layers},
+    layers::{
+        LayerBudget, LayerPair, PlannedLayer, adjust_layer_pairs_to_object_height,
+        generate_layer_pairs, planned_layers,
+    },
     parameters::SlicingParameters,
     planning::plan_resolved_objects,
     profile::fixed_layer_height_profile,
@@ -90,6 +93,36 @@ fn task22a_midpoint_equal_to_top_stops_before_candidate() {
         generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap(),
         vec![LayerPair { lo: 0.0, hi: 0.2 }]
     );
+}
+
+#[test]
+fn precise_z_height_distributes_the_top_gap_across_five_layers() {
+    let parameters = parameters(0.2, 0.2, 0.1, 2.13);
+    let profile = fixed_layer_height_profile(&parameters);
+    let mut pairs =
+        generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap();
+    let unchanged = pairs[..pairs.len() - 5].to_vec();
+
+    assert!(adjust_layer_pairs_to_object_height(&parameters, &mut pairs).unwrap());
+
+    assert_eq!(&pairs[..pairs.len() - 5], unchanged);
+    assert!((pairs.last().unwrap().hi - 2.13).abs() < 1.0e-12);
+    assert!(pairs[pairs.len() - 5..].iter().all(|pair| {
+        let height = pair.hi - pair.lo;
+        (0.1..=0.2).contains(&height)
+    }));
+}
+
+#[test]
+fn precise_z_height_leaves_short_series_unmodified() {
+    let parameters = parameters(0.15, 0.2, 0.1, 0.7);
+    let profile = fixed_layer_height_profile(&parameters);
+    let mut pairs =
+        generate_layer_pairs(&parameters, &profile, &mut LayerBudget::default()).unwrap();
+    let before = pairs.clone();
+
+    assert!(!adjust_layer_pairs_to_object_height(&parameters, &mut pairs).unwrap());
+    assert_eq!(pairs, before);
 }
 
 #[test]

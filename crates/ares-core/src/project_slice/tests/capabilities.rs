@@ -40,22 +40,12 @@ fn task22a_capability_gates_each_named_feature() {
         "layer_height",
     );
 
-    for (key, object) in [
-        (
-            "raft_layers",
-            with_object(|value| value.raft_layers = OrcaInt(1)),
-        ),
-        (
-            "precise_z_height",
-            with_object(|value| value.precise_z_height = OrcaBool(true)),
-        ),
-    ] {
-        let source = source_object(Default::default(), Vec::new(), Vec::new());
-        assert_unsupported(
-            validate(false, &[source], &[resolved(0, object, Vec::new())]),
-            key,
-        );
-    }
+    let source = source_object(Default::default(), Vec::new(), Vec::new());
+    let object = with_object(|value| value.raft_layers = OrcaInt(1));
+    assert_unsupported(
+        validate(false, &[source], &[resolved(0, object, Vec::new())]),
+        "raft_layers",
+    );
 
     let source = source_object(Default::default(), Vec::new(), Vec::new());
     assert_unsupported(
@@ -102,12 +92,6 @@ fn task22a_capability_gate_order_is_project_key_major() {
     ];
     assert_unsupported(validate(false, &sources, &resolved_objects), "raft_layers");
     first.raft_layers = OrcaInt(0);
-    resolved_objects[0].object = first.clone();
-    assert_unsupported(
-        validate(false, &sources, &resolved_objects),
-        "precise_z_height",
-    );
-    first.precise_z_height = OrcaBool(false);
     resolved_objects[0].object = first;
     assert_unsupported(validate(false, &sources, &resolved_objects), "zaa_enabled");
 }
