@@ -62,7 +62,20 @@
 2. Fix findings on the main thread; re-run the reviewer until it passes or
    the remaining blockers are stated explicitly.
 
-## Divergence queue (Ender-3 smoke evidence, 2026-08-27)
+## Divergence queue (Ender-3 smoke evidence, updated 2026-08-27)
+
+STATUS after commits 5a780e2..12ede16: Ender-3 smoke reaches the final
+lifecycle check. Skirt matches move-for-move (68 moves, 6.725 vs 6.729mm
+E); filament used 262.35 vs 262.34 (GCodeProcessor tachometer semantics,
+Extruder.cpp:139-144); M204 parity; headers/tail layout, preamble, fan
+init, wipe direction all match. Remaining:
+
+0. LAST DIVERGENCE - eager vs lazy retraction placement: Ares retracts
+   and wipes at layer END (eager, pinned by the KSR X2D golden); Orca
+   defers the retract+wipe to the NEXT travel (layer-2 skirt travel,
+   GCode.cpp wipe-on-travel). Fixes must keep both flavors correct:
+   likely defer via state.pending-wipe and flush at the next travel or
+   layer change per flavor.
 
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
