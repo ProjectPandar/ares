@@ -13,7 +13,13 @@ pub(super) fn select_stride<T: Clone>(
     base_indices
         .iter()
         .flat_map(|base| (0..stride).map(move |offset| base + offset))
-        .map(|index| values.get(index).cloned().ok_or_else(|| invalid(key)))
+        .map(|index| {
+            values
+                .get(index)
+                .or_else(|| values.first())
+                .cloned()
+                .ok_or_else(|| invalid(key))
+        })
         .collect()
 }
 

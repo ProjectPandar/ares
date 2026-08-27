@@ -5,8 +5,8 @@ use crate::options::{
 };
 
 use super::support::{
-    assert_changed_keys, assert_invalid_key, assert_outside_variant_families_unchanged,
-    assert_selected_indices, filament_sentinel_source, ints,
+    assert_changed_keys, assert_outside_variant_families_unchanged, assert_selected_indices,
+    filament_sentinel_source, ints,
 };
 
 #[test]
@@ -54,7 +54,7 @@ fn rematerializing_same_raw_source_is_deterministic_and_map_changes_exact_family
 }
 
 #[test]
-fn selected_filament_payload_out_of_range_names_key() {
+fn short_filament_payload_broadcasts_the_first_value() {
     let mut source = filament_sentinel_source();
     source
         .filament
@@ -63,8 +63,17 @@ fn selected_filament_payload_out_of_range_names_key() {
         .0
         .truncate(6);
 
-    assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
-        "filament_max_volumetric_speed",
+    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+
+    assert_eq!(
+        materialized
+            .filament
+            .gcode
+            .filament_max_volumetric_speed
+            .0,
+        [
+            source.filament.gcode.filament_max_volumetric_speed.0[0],
+            source.filament.gcode.filament_max_volumetric_speed.0[0],
+        ]
     );
 }

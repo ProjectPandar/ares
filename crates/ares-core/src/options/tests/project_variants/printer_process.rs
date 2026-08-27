@@ -10,7 +10,7 @@ use crate::options::{
 };
 
 use super::support::{
-    active_source, assert_invalid_key, flat_settings, ints, source_with_overrides,
+    active_source, flat_settings, ints, source_with_overrides,
 };
 
 #[test]
@@ -103,7 +103,7 @@ fn printer_variant_two_reresolves_after_variant_one_and_selects_all_machine_limi
 }
 
 #[test]
-fn printer_variant_two_selected_payload_out_of_range_precedes_process() {
+fn short_printer_payloads_broadcast_the_first_value() {
     let mut source = sentinel_source();
     source
         .printer
@@ -111,27 +111,30 @@ fn printer_variant_two_selected_payload_out_of_range_precedes_process() {
         .machine_max_acceleration_e
         .0
         .truncate(2);
-    source.process.region.print_extruder_id = ints(&[1, 1]);
-
-    assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
-        "machine_max_acceleration_e",
-    );
-}
-
-#[test]
-fn printer_selected_payload_out_of_range_names_key() {
-    let mut source = sentinel_source();
     source.project.gcode.retraction_length.0.truncate(2);
 
-    assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
-        "retraction_length",
+    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+
+    assert_eq!(
+        materialized.printer.machine.machine_max_acceleration_e.0,
+        [
+            source.printer.machine.machine_max_acceleration_e.0[0],
+            source.printer.machine.machine_max_acceleration_e.0[1],
+            source.printer.machine.machine_max_acceleration_e.0[0],
+            source.printer.machine.machine_max_acceleration_e.0[0],
+        ]
+    );
+    assert_eq!(
+        materialized.project.gcode.retraction_length.0,
+        [
+            source.project.gcode.retraction_length.0[0],
+            source.project.gcode.retraction_length.0[0],
+        ]
     );
 }
 
 #[test]
-fn process_selected_payload_out_of_range_names_key() {
+fn incomplete_process_ids_are_generated_from_variant_groups() {
     let mut source = sentinel_source();
     source.printer.remaining.extruder_variant_list.0 = vec![
         "Direct Drive Standard,unused".to_owned(),
@@ -139,9 +142,12 @@ fn process_selected_payload_out_of_range_names_key() {
     ];
     source.process.region.print_extruder_id = ints(&[1, 1]);
 
-    assert_invalid_key(
-        materialize_project_variants(&source, &ints(&[1, 2])),
-        "print_extruder_id",
+    let materialized = materialize_project_variants(&source, &ints(&[1, 2])).unwrap();
+
+    assert_eq!(materialized.process.region.print_extruder_id, ints(&[1, 1]));
+    assert_eq!(
+        materialized.process.region.print_extruder_variant.0,
+        ["Direct Drive Standard", "Bowden Standard"]
     );
 }
 
