@@ -185,6 +185,7 @@ impl Parser<'_> {
         let token = self.next().ok_or("expression ended unexpectedly")?;
         match token {
             Token::Number(value) => Ok(Value::Number(value)),
+            Token::Bool(value) => Ok(Value::Bool(value)),
             Token::String(value) => Ok(Value::String(value)),
             Token::Ident(name) => {
                 if self.take(Token::Left) {
@@ -308,6 +309,13 @@ mod tests {
                 .unwrap()
                 .as_bool()
         );
+    }
+
+    #[test]
+    fn expression_supports_word_operators_and_boolean_literals() {
+        assert!(evaluate("true and not false", &config()).unwrap().as_bool());
+        assert!(evaluate("false or n == 2", &config()).unwrap().as_bool());
+        assert!(!evaluate("n != 2 or false", &config()).unwrap().as_bool());
     }
 
     #[test]

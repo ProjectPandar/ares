@@ -1,6 +1,7 @@
 #[derive(Clone, Debug, PartialEq)]
 pub(super) enum Token {
     Number(f64),
+    Bool(bool),
     String(String),
     Ident(String),
     Plus,
@@ -127,7 +128,14 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
                 Token::Number(read_number(&mut chars)?)
             }
             character if character.is_ascii_alphabetic() || character == '_' => {
-                Token::Ident(read_ident(&mut chars))
+                match read_ident(&mut chars).as_str() {
+                    "and" => Token::And,
+                    "or" => Token::Or,
+                    "not" => Token::Not,
+                    "true" => Token::Bool(true),
+                    "false" => Token::Bool(false),
+                    identifier => Token::Ident(identifier.to_owned()),
+                }
             }
             _ => return Err(format!("invalid expression character: {character}")),
         };
