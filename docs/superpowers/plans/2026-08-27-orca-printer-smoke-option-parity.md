@@ -61,3 +61,28 @@
    actual run results.
 2. Fix findings on the main thread; re-run the reviewer until it passes or
    the remaining blockers are stated explicitly.
+
+## Divergence queue (Ender-3 smoke evidence, 2026-08-27)
+
+Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
+Comparator: `semantic::compare_ignoring_time` — timing excluded until the
+GCodeProcessor motion planner port.
+
+1. Skirt/brim generation is not implemented (`footprint.rs` only uses skirt
+   config for bounds). Orca emits `;TYPE:Skirt` for 2 loops
+   (Print.cpp / GCode.cpp `_print_skirt`). ~18mm of E on the cube.
+2. Lift merging: Ares emits standalone `G1 Z{..} F9000` after wipe;
+   upstream merges lift into the next XY travel
+   (`G1 X.. Y.. Z2`) — GCodeWriter travel semantics.
+3. Object-comment ordering at object end differs between BBL golden
+   (stop comment → retract/wipe, pinned by KSR X2D fixture) and non-BBL
+   Orca reference (retract/wipe → stop comment). Needs the upstream
+   GCodeWriter object_start_str/object_end_str flush mechanics.
+4. Travel feedrate rounding `G1 F894` vs `F908` — likely upstream float
+   flow/speed computation differences in feature entry feedrates.
+5. `M204 S500/S0` pair emitted by Ares around Sparse infill but not by
+   upstream (acceleration-marker gating per feature).
+6. Model printing time difference (Ares 1540s vs Orca 535s) — blocked on
+   full acceleration-planner parity; soft metric meanwhile.
+7. Arachne wall generator unported; classic baseline pinned via overrides,
+   plus detect_thin_wall=0.
