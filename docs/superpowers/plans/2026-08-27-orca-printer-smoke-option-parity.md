@@ -123,6 +123,20 @@ init, wipe direction all match. Remaining:
    check which vertical-shell boolean stage adds the micro edge;
    upstream reference Print.cpp ensure_vertical_shell_thickness.
 
+   PINPOINTED (2026-08-27): the corner connector endpoints straddle the
+   inner-offset hexagon APEX vertex (points[2] ≈ (-3, 5684702) rotated).
+   Ares takes the EXTENDED branch (arc through the apex vertex);
+   upstream very likely takes the NOT-extended branch (finish polyline
+   + separate next polyline; the 0.084mm gap emits no travel line).
+   Both sides have the same-line-same-side Invalid rule
+   (links.rs:119-125 == FillRectilinear.cpp:1170-1177). Remaining
+   difference candidate: HORIZONTAL CANDIDATE SELECTION — ares
+   adjacent_candidate picks min-distance same-kind on the adjacent line
+   (links.rs:133-176); upstream propagate_intersections walks contour
+   order (iPrevContour/iNextContour, FillRectilinear.cpp ~1050-1140).
+   Compare those two selection algorithms near the apex where multiple
+   candidates exist; divergence in pick => different quality => branch.
+
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
 GCodeProcessor motion planner port.
