@@ -56,7 +56,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 }
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Grid) => {
-                let mut params = CrossHatchFillParams {
+                let params = CrossHatchFillParams {
                     z,
                     spacing: fill.params.spacing,
                     overlap: 0.0,
@@ -67,7 +67,6 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     anchor_length_max: fill.params.anchor_length_max,
                     dont_sort: false,
                 };
-                params.density /= 2.0;
                 for expolygon in fill.expolygons {
                     result.extend(
                         fill_surface_multilines(&expolygon, params, &GRID_SWEEPS, traversal.scale)
@@ -104,7 +103,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::OctagramSpiral,
             )
             | SurfaceFillPattern::ConcentricInternal => {
-                unreachable!("bridge transaction admits only CrossHatch sparse anchoring")
+                unreachable!("bridge transaction admits only implemented sparse anchoring patterns")
             }
         }
     }
