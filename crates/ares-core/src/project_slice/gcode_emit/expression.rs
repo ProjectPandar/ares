@@ -212,7 +212,7 @@ impl Parser<'_> {
                             }
                         }
                     }
-                    return function(&name, args);
+                    return function(&name, args, self.config);
                 }
                 let mut value = self
                     .config
@@ -265,7 +265,7 @@ impl Parser<'_> {
     }
 }
 
-fn function(name: &str, args: Vec<Value>) -> Result<Value, String> {
+fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, String> {
     let numbers = args
         .iter()
         .map(|value| {
@@ -286,6 +286,16 @@ fn function(name: &str, args: Vec<Value>) -> Result<Value, String> {
             .map(Value::Number)
             .ok_or("max requires an argument".to_owned()),
         "ceil" if numbers.len() == 1 => Ok(Value::Number(numbers[0].ceil())),
+        "random" if numbers.len() == 2 && numbers[0] <= numbers[1] => {
+            let unit = config.random_unit();
+            let integer = numbers.iter().all(|number| number.fract() == 0.0);
+            let result = if integer {
+                numbers[0] + (unit * (numbers[1] - numbers[0] + 1.0)).floor()
+            } else {
+                numbers[0] + unit * (numbers[1] - numbers[0])
+            };
+            Ok(Value::Number(result))
+        }
         "digits" if matches!(numbers.len(), 2 | 3) => {
             let width = numbers[1].clamp(0.0, 64.0) as usize;
             let rendered = if let Some(decimals) = numbers.get(2) {
@@ -330,6 +340,24 @@ mod tests {
                 .unwrap()
                 .as_bool()
         );
+    }
+
+    #[test]
+    fn expression_random_is_bounded_and_advances_state() {
+        let config = config();
+        let first = evaluate("random(-160, -152)", &config)
+            .unwrap()
+            .as_number()
+            .unwrap();
+        let second = evaluate("random(-160, -152)", &config)
+            .unwrap()
+            .as_number()
+            .unwrap();
+
+        assert!((-160.0..=-152.0).contains(&first));
+        assert!((-160.0..=-152.0).contains(&second));
+        assert_eq!(first.fract(), 0.0);
+        assert_ne!(first, second);
     }
 
     #[test]
