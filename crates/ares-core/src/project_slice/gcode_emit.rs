@@ -52,7 +52,7 @@ pub(super) fn emit(
     header::append_width_block(&mut output, traversal);
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
     machine::append_limits(&mut output, traversal);
-    machine::append_start(&mut output, traversal)?;
+    machine::append_start(&mut output, traversal, metadata)?;
     let options = motion::MotionOptions::from_traversal(traversal);
     let offset = footprint::model_center(traversal).unwrap_or_default();
     let offset = (
@@ -89,7 +89,7 @@ pub(super) fn emit(
         .filter_map(|record| record.as_ref())
         .map(|record| record.layer_height)
         .sum();
-    let max_additional_fan = layer_gcode::max_additional_fan(traversal);
+    let layer_change_template = layer_gcode::LayerChangeTemplate::new(traversal, metadata);
     let skirt = skirt::SkirtPlan::generate(traversal)?;
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = emit_labels
@@ -100,7 +100,7 @@ pub(super) fn emit(
         for (layer_index, layer) in object.iter_mut().enumerate() {
             let layer_output_start = output.len();
             if layer_index == 0 {
-                layer_gcode::append_print_preamble(&mut output, traversal)?;
+                layer_gcode::append_print_preamble(&mut output, traversal, metadata)?;
             }
             cooling.begin_layer(&mut output, layer_index);
             state.part_fan_speed = cooling.part_speed();
@@ -129,6 +129,7 @@ pub(super) fn emit(
                 traversal,
                 layer_index,
                 f64::from(layer_z),
+                metadata,
             )?;
             motion::flush_pending_retract_wipe(&mut output, &mut state);
             if layer_index == 0 {
@@ -139,7 +140,7 @@ pub(super) fn emit(
                 traversal,
                 layer_index,
                 f64::from(layer_z),
-                max_additional_fan,
+                &layer_change_template,
             )?;
             motion::flush_pending_retract_lift(&mut output, &mut state);
             motion::begin_layer(
@@ -209,7 +210,7 @@ pub(super) fn emit(
             cooling.finish_layer(&mut output, layer_output_start);
         }
     }
-    finish::append(&mut output, traversal, max_layer_z)?;
+    finish::append(&mut output, traversal, max_layer_z, metadata)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let used_filament = finish::account_used_filament(&output);
     finish::append_filament_stats(&mut output, traversal, used_filament);

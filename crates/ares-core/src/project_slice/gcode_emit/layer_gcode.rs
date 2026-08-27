@@ -1,10 +1,29 @@
 //! Per-layer emission helpers split from the emit driver: fan allowance,
 //! print preamble, and the layer-change G-code templates.
 
+use crate::GenerationMetadata;
+
 use super::super::gcode_emit::{SliceError, extruders, tags, template, value};
 use super::PreparedPostClassicTraversal;
 
-pub(super) fn max_additional_fan(traversal: &PreparedPostClassicTraversal) -> f64 {
+pub(super) struct LayerChangeTemplate {
+    max_additional_fan: f64,
+    metadata: GenerationMetadata,
+}
+
+impl LayerChangeTemplate {
+    pub(super) fn new(
+        traversal: &PreparedPostClassicTraversal,
+        metadata: GenerationMetadata,
+    ) -> Self {
+        Self {
+            max_additional_fan: max_additional_fan(traversal),
+            metadata,
+        }
+    }
+}
+
+fn max_additional_fan(traversal: &PreparedPostClassicTraversal) -> f64 {
     let used = extruders::collect_project_object_extruders(
         traversal.project.objects(),
         &traversal.resolved.objects,
@@ -28,6 +47,7 @@ pub(super) fn max_additional_fan(traversal: &PreparedPostClassicTraversal) -> f6
 pub(super) fn append_print_preamble(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
+    metadata: GenerationMetadata,
 ) -> Result<(), SliceError> {
     if tags::Tags::of(traversal).is_bbl() {
         output.extend_from_slice(
@@ -46,8 +66,7 @@ pub(super) fn append_print_preamble(
         .0
         .first()
     {
-        let config =
-            value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+        let config = super::placeholders::base_config(traversal, metadata);
         let rendered = template::render(source, &config).map_err(|error| {
             SliceError::InvalidInput(format!(
                 "invalid project filament-start G-code template: {error}"
@@ -68,6 +87,7 @@ pub(super) fn append_before_layer_change_gcode(
     traversal: &PreparedPostClassicTraversal,
     layer_index: usize,
     layer_z: f64,
+    metadata: GenerationMetadata,
 ) -> Result<(), SliceError> {
     let template = traversal
         .resolved
@@ -79,8 +99,7 @@ pub(super) fn append_before_layer_change_gcode(
     if template.is_empty() {
         return Ok(());
     }
-    let mut config =
-        value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+    let mut config = super::placeholders::base_config(traversal, metadata);
     config.insert("layer_num", value::Value::number((layer_index + 1) as f64));
     config.insert("layer_z", value::Value::number(layer_z));
     config.insert("max_layer_z", value::Value::number(layer_z));
@@ -99,12 +118,11 @@ pub(super) fn append_layer_change(
     traversal: &PreparedPostClassicTraversal,
     layer_index: usize,
     layer_z: f64,
-    max_additional_fan: f64,
+    context: &LayerChangeTemplate,
 ) -> Result<(), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
     if !template.is_empty() {
-        let mut config =
-            value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+        let mut config = super::placeholders::base_config(traversal, context.metadata);
         config.insert("current_extruder", value::Value::number(0.0));
         config.insert("layer_num", value::Value::number(layer_index as f64));
         config.insert("layer_z", value::Value::number(layer_z));
@@ -118,7 +136,7 @@ pub(super) fn append_layer_change(
         }
         config.insert(
             "max_additional_fan",
-            value::Value::number(max_additional_fan),
+            value::Value::number(context.max_additional_fan),
         );
         let rendered = template::render(template, &config).map_err(|error| {
             SliceError::InvalidInput(format!(

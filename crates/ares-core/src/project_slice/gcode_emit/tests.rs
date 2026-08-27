@@ -2,6 +2,7 @@ use super::motion::MotionOptions;
 use crate::{Nullable, OrcaFloat};
 
 mod object_labels;
+mod runtime_placeholders;
 
 #[test]
 fn ksr_motion_options_resolve_from_typed_project_settings() {

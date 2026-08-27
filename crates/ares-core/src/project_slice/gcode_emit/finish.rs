@@ -1,5 +1,6 @@
 use crate::{
-    SliceError, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    GenerationMetadata, SliceError,
+    project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
 use super::{template, value};
@@ -8,9 +9,10 @@ pub(super) fn append(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     max_layer_z: f64,
+    metadata: GenerationMetadata,
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
-    let mut config = super::placeholders::base_config(traversal);
+    let mut config = super::placeholders::base_config(traversal, metadata);
     config.insert("current_extruder", value::Value::number(0.0));
     config.insert(
         "layer_num",

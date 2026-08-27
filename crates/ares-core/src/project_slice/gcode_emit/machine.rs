@@ -1,5 +1,6 @@
 use crate::{
-    SliceError, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    GenerationMetadata, SliceError,
+    project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
 use super::{footprint, template, value};
@@ -64,12 +65,13 @@ pub(super) fn first(values: &crate::OrcaFloats) -> f64 {
 pub(super) fn append_start(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
+    metadata: GenerationMetadata,
 ) -> Result<(), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
     if template.is_empty() {
         return Ok(());
     }
-    let mut config = super::placeholders::base_config(traversal);
+    let mut config = super::placeholders::base_config(traversal, metadata);
     config.insert("next_extruder", value::Value::number(0.0));
     config.insert("next_hotend", value::Value::number(-1.0));
     config.insert("initial_no_support_extruder", value::Value::number(0.0));
@@ -116,22 +118,13 @@ pub(super) fn append_start(
         );
     }
     let filament_count = traversal.resolved.logical_filament_count;
-    config.insert(
-        "first_non_support_filaments",
-        value::Value::List(
-            (0..filament_count)
-                .map(|_| value::Value::number(-1.0))
-                .collect(),
-        ),
+    let first_filaments = value::Value::List(
+        (0..filament_count)
+            .map(|index| value::Value::number(index as f64))
+            .collect(),
     );
-    config.insert(
-        "first_filaments",
-        value::Value::List(
-            (0..filament_count)
-                .map(|index| value::Value::number(index as f64 - 1.0))
-                .collect(),
-        ),
-    );
+    config.insert("first_non_support_filaments", first_filaments.clone());
+    config.insert("first_filaments", first_filaments);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
     output.extend_from_slice(custom.as_bytes());
     let rendered = template::render(template, &config).map_err(|error| {

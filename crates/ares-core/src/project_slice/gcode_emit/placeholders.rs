@@ -1,13 +1,20 @@
-use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
+use crate::{
+    GenerationMetadata, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+};
 
 use super::value::{self, Value};
 
 /// Placeholders available to every project G-code template (start, layer
 /// change, end), mirroring the shared upstream placeholder parser state
 /// (`GCode.cpp:2890-3060`). Template-specific values are added by callers.
-pub(super) fn base_config(traversal: &PreparedPostClassicTraversal) -> value::Config {
+pub(super) fn base_config(
+    traversal: &PreparedPostClassicTraversal,
+    metadata: GenerationMetadata,
+) -> value::Config {
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+    insert_timestamp(&mut config, metadata);
+    insert_runtime_placeholders(&mut config, traversal);
     config.insert("current_extruder", Value::number(0.0));
     config.insert("current_hotend", Value::number(-1.0));
     for (target, source) in [
@@ -25,7 +32,113 @@ pub(super) fn base_config(traversal: &PreparedPostClassicTraversal) -> value::Co
     }
     insert_bed_temperature_placeholders(&mut config);
     insert_print_bed_bounds(&mut config);
+    insert_first_layer_bounds(&mut config, traversal);
+    insert_adaptive_bed_mesh(&mut config);
     config
+}
+
+fn insert_timestamp(config: &mut value::Config, metadata: GenerationMetadata) {
+    let (year, month, day, hour, minute, second) = metadata.timestamp();
+    config.insert(
+        "timestamp",
+        Value::String(format!(
+            "{year:04}{month:02}{day:02}-{hour:02}{minute:02}{second:02}"
+        )),
+    );
+    for (name, number) in [
+        ("year", year as f64),
+        ("month", f64::from(month)),
+        ("day", f64::from(day)),
+        ("hour", f64::from(hour)),
+        ("minute", f64::from(minute)),
+        ("second", f64::from(second)),
+    ] {
+        config.insert(name, Value::number(number));
+    }
+}
+
+fn insert_runtime_placeholders(
+    config: &mut value::Config,
+    traversal: &PreparedPostClassicTraversal,
+) {
+    for name in [
+        "initial_tool",
+        "initial_extruder",
+        "initial_no_support_tool",
+        "initial_no_support_extruder",
+        "initial_no_support_hotend",
+        "total_toolchanges",
+        "current_object_idx",
+    ] {
+        config.insert(name, Value::number(0.0));
+    }
+    let filament_count = traversal.resolved.logical_filament_count.max(1);
+    let first = Value::List(
+        (0..filament_count)
+            .map(|index| Value::number(index as f64))
+            .collect(),
+    );
+    for name in [
+        "first_tools",
+        "first_filaments",
+        "first_non_support_tools",
+        "first_non_support_filaments",
+    ] {
+        config.insert(name, first.clone());
+    }
+    let extruder_count = config
+        .get("nozzle_diameter")
+        .map(|value| value.iter_list().count().max(1))
+        .unwrap_or(1);
+    config.insert("num_extruders", Value::number(extruder_count as f64));
+    config.insert(
+        "is_extruder_used",
+        Value::List(
+            (0..extruder_count)
+                .map(|index| Value::Bool(index < filament_count))
+                .collect(),
+        ),
+    );
+    config.insert("has_wipe_tower", Value::Bool(false));
+    config.insert(
+        "has_single_extruder_multi_material_priming",
+        Value::Bool(false),
+    );
+    let layer_count = traversal
+        .objects
+        .iter()
+        .map(|object| object.records.len())
+        .max()
+        .unwrap_or(0);
+    config.insert("total_layer_count", Value::number(layer_count as f64));
+    let max_print_z = traversal
+        .objects
+        .iter()
+        .map(|object| {
+            object
+                .records
+                .iter()
+                .filter_map(Option::as_ref)
+                .map(|record| record.layer_height)
+                .sum::<f64>()
+        })
+        .fold(0.0, f64::max);
+    config.insert("max_print_z", Value::number(max_print_z));
+    if let Some(value) = config.get("initial_layer_print_height").cloned() {
+        config.insert("first_layer_height", value);
+    }
+    if let Some(value) = config.get("nozzle_temperature").cloned() {
+        config.insert("temperature", value);
+    }
+    if let Some(minimum) = config
+        .get("temperature_vitrification")
+        .into_iter()
+        .flat_map(Value::iter_list)
+        .filter_map(Value::as_number)
+        .reduce(f64::min)
+    {
+        config.insert("min_vitrification_temperature", Value::number(minimum));
+    }
 }
 
 /// `bed_temperature_initial_layer[_single]` from the curr-bed-type
@@ -33,6 +146,7 @@ pub(super) fn base_config(traversal: &PreparedPostClassicTraversal) -> value::Co
 fn insert_bed_temperature_placeholders(config: &mut value::Config) {
     if let Some(value) = bed_type_first_layer_temperature(config) {
         config.insert("bed_temperature_initial_layer", value.clone());
+        config.insert("first_layer_bed_temperature", value.clone());
         let single = match config.get("bed_temperature_formula").map(Value::as_string) {
             Some(formula) if formula == "by_first_filament" => {
                 value.index(0).and_then(|item| item.as_number())
@@ -54,6 +168,11 @@ fn insert_bed_temperature_placeholders(config: &mut value::Config) {
             );
         }
     }
+    if let Some(key) = bed_type_temperature_key(config)
+        && let Some(value) = config.get(key).cloned()
+    {
+        config.insert("bed_temperature", value);
+    }
 }
 
 fn bed_type_first_layer_temperature(config: &value::Config) -> Option<Value> {
@@ -64,8 +183,85 @@ fn bed_type_first_layer_temperature(config: &value::Config) -> Option<Value> {
     config.get(key).cloned()
 }
 
+fn bed_type_temperature_key(config: &value::Config) -> Option<&'static str> {
+    let bed_type = config
+        .get("curr_bed_type")
+        .map_or_else(|| "Cool Plate".to_owned(), Value::as_string);
+    crate::options::first_layer_bed_temperature_key_for(&bed_type)?.strip_suffix("_initial_layer")
+}
+
+fn insert_first_layer_bounds(config: &mut value::Config, traversal: &PreparedPostClassicTraversal) {
+    let Some((min_x, min_y, size_x, size_y)) = super::footprint::first_layer_bounds(traversal)
+    else {
+        return;
+    };
+    let point = |x, y| Value::List(vec![Value::number(x), Value::number(y)]);
+    config.insert("first_layer_print_min", point(min_x, min_y));
+    config.insert(
+        "first_layer_print_max",
+        point(min_x + size_x, min_y + size_y),
+    );
+    config.insert("first_layer_print_size", point(size_x, size_y));
+}
+
 /// `print_bed_min`/`print_bed_max`/`print_bed_size` from the printable-area
 /// bounding box (`GCode.cpp:2908-2912`).
+fn insert_adaptive_bed_mesh(config: &mut value::Config) {
+    let Some(mesh_min) = point_value(config, "bed_mesh_min") else {
+        return;
+    };
+    let Some(mesh_max) = point_value(config, "bed_mesh_max") else {
+        return;
+    };
+    let bounds_min = point_value(config, "first_layer_print_min").unwrap_or(mesh_min);
+    let bounds_max = point_value(config, "first_layer_print_max").unwrap_or(mesh_max);
+    let margin = config
+        .get("adaptive_bed_mesh_margin")
+        .and_then(Value::as_number)
+        .unwrap_or(0.0);
+    let minimum = [
+        mesh_min[0].max(bounds_min[0] - margin),
+        mesh_min[1].max(bounds_min[1] - margin),
+    ];
+    let maximum = [
+        mesh_max[0].min(bounds_max[0] + margin),
+        mesh_max[1].min(bounds_max[1] + margin),
+    ];
+    let distance = point_value(config, "bed_mesh_probe_distance").unwrap_or([50.0, 50.0]);
+    let mut probe_count = [
+        ((maximum[0] - minimum[0]) / distance[0].max(1.0)).ceil() + 1.0,
+        ((maximum[1] - minimum[1]) / distance[1].max(1.0)).ceil() + 1.0,
+    ];
+    probe_count[0] = probe_count[0].max(3.0);
+    probe_count[1] = probe_count[1].max(3.0);
+    let algorithm = if probe_count[0] * probe_count[1] <= 6.0 {
+        "lagrange"
+    } else {
+        if config.get("gcode_flavor").map(Value::as_string).as_deref() == Some("klipper") {
+            probe_count[0] = probe_count[0].max(4.0);
+            probe_count[1] = probe_count[1].max(4.0);
+        }
+        "bicubic"
+    };
+    let point = |coordinates: [f64; 2]| {
+        Value::List(
+            coordinates
+                .into_iter()
+                .map(Value::number)
+                .collect::<Vec<_>>(),
+        )
+    };
+    config.insert("adaptive_bed_mesh_min", point(minimum));
+    config.insert("adaptive_bed_mesh_max", point(maximum));
+    config.insert("bed_mesh_probe_count", point(probe_count));
+    config.insert("bed_mesh_algo", Value::String(algorithm.to_owned()));
+}
+
+fn point_value(config: &value::Config, key: &str) -> Option<[f64; 2]> {
+    let value = config.get(key)?;
+    Some([value.index(0)?.as_number()?, value.index(1)?.as_number()?])
+}
+
 fn insert_print_bed_bounds(config: &mut value::Config) {
     let Some(area) = config.get("printable_area") else {
         return;
