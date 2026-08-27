@@ -4,7 +4,7 @@
 
 use crate::{
     SliceError,
-    fill::cross_hatch::{CrossHatchFillParams, fill_surface_multilines},
+    fill::multiline::{MultilineFillParams, Sweep, fill_surface},
     geometry::{CoordinateScale, Polyline},
     project_slice::{
         fill_entities::{
@@ -15,16 +15,24 @@ use crate::{
     },
 };
 
-const SWEEPS: [f32; 2] = [0.0, std::f32::consts::FRAC_PI_2];
+const SWEEPS: [Sweep; 2] = [
+    Sweep {
+        angle: 0.0,
+        shift: 0.0,
+    },
+    Sweep {
+        angle: std::f32::consts::FRAC_PI_2,
+        shift: 0.0,
+    },
+];
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
-    z: f64,
     layer_id: usize,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    let polylines = grid_polylines_inner(&fill, z, scale, layer_id)?;
+    let polylines = grid_polylines_inner(&fill, scale, layer_id)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -50,14 +58,11 @@ pub(super) fn append(
 
 fn grid_polylines_inner(
     fill: &SurfaceFill,
-    z: f64,
     scale: crate::geometry::CoordinateScale,
     layer_id: usize,
 ) -> Result<Vec<Polyline>, SliceError> {
-    let params = CrossHatchFillParams {
-        z,
+    let params = MultilineFillParams {
         spacing: fill.params.spacing,
-        overlap: fill.params.overlap,
         angle: fill.params.angle,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
@@ -67,8 +72,7 @@ fn grid_polylines_inner(
     };
     let mut result = Vec::new();
     for expolygon in &fill.expolygons {
-        let mut polylines =
-            fill_surface_multilines(expolygon, params, &SWEEPS, scale).map_err(grid_error)?;
+        let mut polylines = fill_surface(expolygon, params, &SWEEPS, scale).map_err(grid_error)?;
         if layer_id % 2 == 1 {
             for polyline in &mut polylines {
                 polyline.reverse();

@@ -1,7 +1,8 @@
 use crate::{
     FloatOrPercent, ProcessInfillPattern, RegionOptions, SliceError,
     fill::{
-        cross_hatch::{CrossHatchFillParams, fill_surface, fill_surface_multilines},
+        cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
+        multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
         rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     },
     geometry::{Point, Polyline},
@@ -12,7 +13,16 @@ use crate::{
     },
 };
 
-const GRID_SWEEPS: [f32; 2] = [0.0, std::f32::consts::FRAC_PI_2];
+const GRID_SWEEPS: [Sweep; 2] = [
+    Sweep {
+        angle: 0.0,
+        shift: 0.0,
+    },
+    Sweep {
+        angle: std::f32::consts::FRAC_PI_2,
+        shift: 0.0,
+    },
+];
 
 pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     prepared: &PreparedPostExternalSurfaces,
@@ -53,16 +63,14 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 };
                 for expolygon in fill.expolygons {
                     result.extend(
-                        fill_surface(&expolygon, params, traversal.scale)
+                        fill_cross_hatch(&expolygon, params, traversal.scale)
                             .map_err(super::transaction::geometry_error)?,
                     );
                 }
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Grid) => {
-                let params = CrossHatchFillParams {
-                    z,
+                let params = MultilineFillParams {
                     spacing: fill.params.spacing,
-                    overlap: 0.0,
                     angle: fill.params.angle,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
@@ -72,7 +80,36 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 };
                 for expolygon in fill.expolygons {
                     result.extend(
-                        fill_surface_multilines(&expolygon, params, &GRID_SWEEPS, traversal.scale)
+                        fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
+                            .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Cubic) => {
+                let shift = (std::f64::consts::FRAC_1_SQRT_2 * z) as f32;
+                let sweeps = [
+                    Sweep { angle: 0.0, shift },
+                    Sweep {
+                        angle: std::f32::consts::FRAC_PI_3,
+                        shift: -shift,
+                    },
+                    Sweep {
+                        angle: 2.0 * std::f32::consts::FRAC_PI_3,
+                        shift,
+                    },
+                ];
+                let params = MultilineFillParams {
+                    spacing: fill.params.spacing,
+                    angle: fill.params.angle,
+                    density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    multiline: fill.params.multiline,
+                    anchor_length: fill.params.anchor_length,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    dont_sort: false,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_multiline_surface(&expolygon, params, &sweeps, traversal.scale)
                             .map_err(super::transaction::geometry_error)?,
                     );
                 }
@@ -111,7 +148,6 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::Line
                 | ProcessInfillPattern::Triangles
                 | ProcessInfillPattern::TriHexagon
-                | ProcessInfillPattern::Cubic
                 | ProcessInfillPattern::AdaptiveCubic
                 | ProcessInfillPattern::QuarterCubic
                 | ProcessInfillPattern::SupportCubic
