@@ -8,7 +8,7 @@ use crate::{
 fn task22o71_deferred_pattern_and_second_pass_fail_without_fallback() {
     assert_unsupported_mutation(
         "\"sparse_infill_pattern\": \"crosshatch\"",
-        "\"sparse_infill_pattern\": \"gyroid\"",
+        "\"sparse_infill_pattern\": \"honeycomb\"",
         "sparse_infill_pattern",
     );
     assert_unsupported_mutation(
@@ -134,11 +134,6 @@ fn task22o71_unported_anchor_rotation_templates_fail_without_fallback() {
 
 #[test]
 fn task22o71_unported_anchor_direction_controls_fail_without_fallback() {
-    assert_unsupported_mutation(
-        "\"align_infill_direction_to_model\": \"0\"",
-        "\"align_infill_direction_to_model\": \"1\"",
-        "align_infill_direction_to_model",
-    );
     assert_unsupported_mutation(
         "\"fill_multiline\": \"1\"",
         "\"fill_multiline\": \"2\"",

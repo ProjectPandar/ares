@@ -40,9 +40,6 @@ pub(super) fn validate(
     if !options.solid_infill_rotate_template.0.is_empty() {
         return unsupported("solid_infill_rotate_template");
     }
-    if options.align_infill_direction_to_model.0 {
-        return unsupported("align_infill_direction_to_model");
-    }
     if options.fill_multiline.0 != 1 {
         return unsupported("fill_multiline");
     }
