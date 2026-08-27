@@ -1,9 +1,18 @@
 use super::{Estimate, MotionBlock, MotionState, ProcessorLimits, planned_times, process};
 
+// The synthetic footer fixtures use the BBL placeholder set; the end-to-end
+// suite covers the compatible set via Orca parity.
+fn bbl_limits() -> ProcessorLimits {
+    ProcessorLimits {
+        bbl_printer: true,
+        ..ProcessorLimits::default()
+    }
+}
+
 #[test]
 fn inserts_progress_and_rewrites_time_fields() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n".to_vec();
-    let output = String::from_utf8(process(output, true, 0.0, ProcessorLimits::default())).unwrap();
+    let output = String::from_utf8(process(output, true, 0.0, bbl_limits())).unwrap();
     assert!(output.contains("total estimated time: 1m 40s"), "{output}");
     assert!(output.contains("M73 P0 R"));
     assert!(output.contains("; model printing time:"));
@@ -11,12 +20,25 @@ fn inserts_progress_and_rewrites_time_fields() {
 }
 
 #[test]
+fn rewrites_compatible_time_footer_for_non_bbl_printers() {
+    let output = b"; estimated printing time (normal mode) = 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nG1 X1000 F600\nM73 P100 R0\n"
+        .to_vec();
+
+    let output = String::from_utf8(process(output, true, 0.0, ProcessorLimits::default())).unwrap();
+
+    assert!(
+        output.contains("; estimated printing time (normal mode) = 1m 40s"),
+        "{output}"
+    );
+    assert!(!output.contains("model printing time"), "{output}");
+}
+
+#[test]
 fn disable_m73_suppresses_synthetic_progress_lines() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM204 S1000\nG1 X1000 F600\nM73 P100 R0\n"
         .to_vec();
 
-    let output =
-        String::from_utf8(process(output, false, 0.0, ProcessorLimits::default())).unwrap();
+    let output = String::from_utf8(process(output, false, 0.0, bbl_limits())).unwrap();
 
     assert!(!output.lines().any(|line| line.starts_with("M73 P")));
     assert!(output.contains("total estimated time: 1m 40s"));
@@ -26,8 +48,7 @@ fn disable_m73_suppresses_synthetic_progress_lines() {
 fn progress_updates_follow_motion_lines_not_delay_commands() {
     let output = b"M73 P0 R0\nT0\nG1 X1 F60\nM73 P100 R0\n".to_vec();
 
-    let output =
-        String::from_utf8(process(output, true, 120.0, ProcessorLimits::default())).unwrap();
+    let output = String::from_utf8(process(output, true, 120.0, bbl_limits())).unwrap();
 
     assert!(output.contains("T0\nG1 X1 F60\nM73 P"), "{output}");
     assert!(!output.contains("T0\nM73 P"), "{output}");
@@ -38,7 +59,7 @@ fn finalized_motion_time_is_exported_after_the_next_motion_command() {
         b"M73 P0 R0\nM204 S1000\nG1 X1 F60\nM400\nG1 X2 F60\nM622 J1\nG29 A1\nM73 P100 R0\n"
             .to_vec();
 
-    let output = String::from_utf8(process(output, true, 0.0, ProcessorLimits::default())).unwrap();
+    let output = String::from_utf8(process(output, true, 0.0, bbl_limits())).unwrap();
 
     assert!(output.contains("G1 X2 F60\nM73 P99 R0\nM622"), "{output}");
 }
@@ -46,8 +67,7 @@ fn finalized_motion_time_is_exported_after_the_next_motion_command() {
 fn preparation_time_ends_at_first_print_feature() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\n; FEATURE: Custom\nM204 S1000\nG1 X600 F3600\n; FEATURE: Inner wall\nG1 X1200 F3600\nM73 P100 R0\n".to_vec();
 
-    let output =
-        String::from_utf8(process(output, false, 0.0, ProcessorLimits::default())).unwrap();
+    let output = String::from_utf8(process(output, false, 0.0, bbl_limits())).unwrap();
 
     assert!(
         output.contains("estimated first layer printing time (normal mode) = 10s"),
@@ -89,8 +109,7 @@ fn machine_max_feedrate_limits_extrusion_time() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\nM203 E30\nM204 R1000\nM83\nG1 E60 F3600\nM73 P100 R0\n"
         .to_vec();
 
-    let output =
-        String::from_utf8(process(output, false, 0.0, ProcessorLimits::default())).unwrap();
+    let output = String::from_utf8(process(output, false, 0.0, bbl_limits())).unwrap();
 
     assert!(output.contains("total estimated time: 2s"), "{output}");
 }

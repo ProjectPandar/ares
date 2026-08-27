@@ -104,11 +104,14 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             output.postamble.push(raw_line.to_owned());
             continue;
         }
-        if line == "; CHANGE_LAYER" {
+        if line == "; CHANGE_LAYER" || line == ";LAYER_CHANGE" {
             output.layers.push(Layer::default());
             continue;
         }
-        if let Some(value) = line.strip_prefix("; FEATURE: ") {
+        if let Some(value) = line
+            .strip_prefix("; FEATURE: ")
+            .or_else(|| line.strip_prefix(";TYPE:"))
+        {
             state.feature = value.to_owned();
             continue;
         }
@@ -125,14 +128,17 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             push_lifecycle(current_layer(&mut output)?, event);
             continue;
         }
-        if let Some(value) = line.strip_prefix("; Z_HEIGHT: ") {
+        if let Some(value) = line
+            .strip_prefix("; Z_HEIGHT: ")
+            .or_else(|| line.strip_prefix(";Z:"))
+        {
             state.z = canonical_number(value)?;
             current_layer(&mut output)?
                 .metadata
                 .push(raw_line.to_owned());
             continue;
         }
-        if line.starts_with("; LAYER_HEIGHT: ") {
+        if line.starts_with("; LAYER_HEIGHT: ") || line.starts_with(";HEIGHT:") {
             current_layer(&mut output)?
                 .metadata
                 .push(raw_line.to_owned());
@@ -189,6 +195,11 @@ fn parse_timing(line: &str, timing: &mut Timing) -> Result<bool, String> {
             .ok_or_else(|| "invalid model printing time line".to_owned())?;
         timing.model = duration_seconds(model)?;
         timing.total = duration_seconds(total)?;
+        return Ok(true);
+    }
+    if let Some(value) = line.strip_prefix("; estimated printing time (normal mode) = ") {
+        timing.model = duration_seconds(value)?;
+        timing.total = timing.model;
         return Ok(true);
     }
     if let Some((_, value)) = line

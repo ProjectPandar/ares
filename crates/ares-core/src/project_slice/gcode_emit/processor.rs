@@ -17,6 +17,7 @@ pub(super) struct ProcessorLimits {
     pub(super) retract_acceleration: f64,
     pub(super) travel_acceleration: f64,
     pub(super) gcode_flavor: GCodeFlavor,
+    pub(super) bbl_printer: bool,
 }
 
 pub(super) fn process(
@@ -49,12 +50,21 @@ pub(super) fn process(
         if !emit_progress && line == "M73 P100 R0" {
             continue;
         }
-        if line.starts_with("; model printing time:") {
-            result.push_str(&format!(
-                "; model printing time: {}; total estimated time: {}\n",
-                duration(model_time),
-                duration(estimate.total),
-            ));
+        if line.starts_with("; model printing time:")
+            || line == "; estimated printing time (normal mode) = 0s"
+        {
+            if limits.bbl_printer {
+                result.push_str(&format!(
+                    "; model printing time: {}; total estimated time: {}\n",
+                    duration(model_time),
+                    duration(estimate.total),
+                ));
+            } else {
+                result.push_str(&format!(
+                    "; estimated printing time (normal mode) = {}\n",
+                    duration(estimate.total),
+                ));
+            }
             continue;
         }
         if line.starts_with("; estimated first layer printing time") {
@@ -152,8 +162,10 @@ impl Estimate {
             match line.trim() {
                 "; WIPE_START" => state.set_wiping(true),
                 "; WIPE_END" => state.set_wiping(false),
-                "; FEATURE: Custom" => prepare_stage = !saw_motion_command,
-                line if line.starts_with("; FEATURE:") => prepare_stage = false,
+                "; FEATURE: Custom" | ";TYPE:Custom" => prepare_stage = !saw_motion_command,
+                line if line.starts_with("; FEATURE:") || line.starts_with(";TYPE:") => {
+                    prepare_stage = false
+                }
                 _ => {}
             }
             let code = line.split(';').next().unwrap_or_default().trim();

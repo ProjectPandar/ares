@@ -24,9 +24,10 @@ pub(super) fn append(
     config.insert("curr_physical_extruder_id", value::Value::number(1.0));
     config.insert("has_timelapse_safe_pos", value::Value::Bool(false));
 
-    output.extend_from_slice(
-        b"M106 S0\nM106 P2 S0\nM981 S0 P20000 ; close spaghetti detector\n; FEATURE: Custom\n",
-    );
+    let tags = super::tags::Tags::of(traversal);
+    let custom = tags.custom() + "\n";
+    output.extend_from_slice(b"M106 S0\nM106 P2 S0\nM981 S0 P20000 ; close spaghetti detector\n");
+    output.extend_from_slice(custom.as_bytes());
     if let Some(filament_end) = gcode.filament_end_gcode.0.first() {
         append_template(output, filament_end, &config, "filament-end")?;
     }

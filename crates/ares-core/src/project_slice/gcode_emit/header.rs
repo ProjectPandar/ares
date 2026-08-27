@@ -54,7 +54,12 @@ pub(super) fn append_header(
         )
         .as_bytes(),
     );
-    output.extend_from_slice(b"; model printing time: 0s; total estimated time: 0s\n");
+    let tags = super::tags::Tags::of(traversal);
+    if tags.is_bbl() {
+        output.extend_from_slice(b"; model printing time: 0s; total estimated time: 0s\n");
+    } else {
+        output.extend_from_slice(b"; estimated printing time (normal mode) = 0s\n");
+    }
     output.extend_from_slice(b"; estimated first layer printing time (normal mode) = 0s\n");
     output.extend_from_slice(format!("; total layer number: {layers}\n").as_bytes());
     output.extend_from_slice(format!("; model label id: {label_id}\n").as_bytes());

@@ -163,7 +163,8 @@ pub(super) fn emit(
         .map_or(original_speed, |points| points[0].speed)
         * 60.0;
     if state.last_feature != Some(properties.feature) {
-        output.extend_from_slice(format!("; FEATURE: {}\n", properties.feature).as_bytes());
+        let feature = state.tags.feature(properties.feature) + "\n";
+        output.extend_from_slice(feature.as_bytes());
         state.last_feature = Some(properties.feature);
     }
     if state.last_width != Some(properties.width) {

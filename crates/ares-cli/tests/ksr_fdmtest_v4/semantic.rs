@@ -19,19 +19,43 @@ const MAX_FEED_RELATIVE_DIFFERENCE: f64 = 0.01;
 const MAX_TIME_DIFFERENCE_SECONDS: u64 = 5;
 const MAX_FILAMENT_LENGTH_DIFFERENCE_MM: f64 = 0.05;
 
+// Shared by the ksr_fdmtest_v4 and orca_parity test binaries; each uses a
+// subset of these entry points.
+#[allow(dead_code)]
 pub(crate) fn compare(expected: &[u8], actual: &[u8]) -> Result<(), String> {
-    compare_impl(expected, actual, false)
+    compare_impl(expected, actual, false, false)
 }
 
+// Shared by the ksr_fdmtest_v4 and orca_parity test binaries; each uses a
+// subset of these entry points.
+#[allow(dead_code)]
 pub(crate) fn compare_cross_target(expected: &[u8], actual: &[u8]) -> Result<(), String> {
-    compare_impl(expected, actual, true)
+    compare_impl(expected, actual, true, false)
 }
 
-fn compare_impl(expected: &[u8], actual: &[u8], cross_target: bool) -> Result<(), String> {
+/// Full structural comparison with print-time estimates excluded. The
+/// upstream GCodeProcessor time machine (`GCodeProcessor.cpp` motion
+/// planner) is a separate porting slice, so cross-slicer comparisons record
+/// timing as a soft metric instead of failing.
+// Shared by the ksr_fdmtest_v4 and orca_parity test binaries; each uses a
+// subset of these entry points.
+#[allow(dead_code)]
+pub(crate) fn compare_ignoring_time(expected: &[u8], actual: &[u8]) -> Result<(), String> {
+    compare_impl(expected, actual, false, true)
+}
+
+fn compare_impl(
+    expected: &[u8],
+    actual: &[u8],
+    cross_target: bool,
+    skip_timing: bool,
+) -> Result<(), String> {
     let expected = parser::parse(expected)?;
     let actual = parser::parse(actual)?;
 
-    compare_timing(&expected, &actual)?;
+    if !skip_timing {
+        compare_timing(&expected, &actual)?;
+    }
     compare_filament_lengths(&expected, &actual)?;
     exact_lines("preamble", &expected.preamble, &actual.preamble)?;
     exact_lines("postamble", &expected.postamble, &actual.postamble)?;

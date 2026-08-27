@@ -131,7 +131,8 @@ pub(super) fn append_start(
                 .collect(),
         ),
     );
-    output.extend_from_slice(b"; FEATURE: Custom\n");
+    let custom = super::tags::Tags::of(traversal).custom() + "\n";
+    output.extend_from_slice(custom.as_bytes());
     let rendered = template::render(template, &config).map_err(|error| {
         SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
     })?;

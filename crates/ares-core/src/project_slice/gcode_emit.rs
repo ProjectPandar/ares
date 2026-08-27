@@ -15,6 +15,7 @@ mod motion;
 mod object;
 mod placeholders;
 mod processor;
+mod tags;
 mod template;
 #[cfg(test)]
 mod tests;
@@ -61,6 +62,7 @@ pub(super) fn emit(
         travel_feedrate: options.first_layer_travel_feedrate,
         extrusion_feedrate: options.initial_layer_speed * 60.0,
         options,
+        tags: tags::Tags::of(traversal),
         ..Default::default()
     };
     let emit_labels = traversal
@@ -95,7 +97,9 @@ pub(super) fn emit(
             cooling.begin_layer(&mut output, layer_index);
             state.part_fan_speed = cooling.part_speed();
             state.physical_fan_speed = state.part_fan_speed;
-            output.extend_from_slice(b"; CHANGE_LAYER\n");
+            let tags = state.tags;
+            output.extend_from_slice(tags.layer_change().as_bytes());
+            output.push(b'\n');
             let record_layer_height = traversal
                 .objects
                 .first()
@@ -106,14 +110,18 @@ pub(super) fn emit(
             let layer_z = precise_layer_z as f32;
             let layer_height = layer_z - previous_layer_z;
             previous_layer_z = layer_z;
-            output.extend_from_slice(
-                format!(
-                    "; Z_HEIGHT: {}\n; LAYER_HEIGHT: {}\n",
-                    format_processor_float(f64::from(layer_z)),
-                    format_processor_float(f64::from(layer_height))
-                )
-                .as_bytes(),
+            let header = format!(
+                "{}\n{}\n",
+                tags.z(&format_processor_float(f64::from(layer_z))),
+                tags.height(&format_processor_float(f64::from(layer_height))),
             );
+            output.extend_from_slice(header.as_bytes());
+            append_before_layer_change_gcode(
+                &mut output,
+                traversal,
+                layer_index,
+                f64::from(layer_z),
+            )?;
             if layer_index == 0 {
                 output.extend_from_slice(b"G1 E-.4 F1800\n");
                 state.retracted = true;
@@ -205,6 +213,39 @@ pub(super) fn emit(
         output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\nM106 S0\nM106 P2 S0\n");
     }
 
+    /// Renders `before_layer_change_gcode` with `layer_num`, `layer_z`, and
+    /// `max_layer_z` in scope (`GCode.cpp:4631-4641`).
+    fn append_before_layer_change_gcode(
+        output: &mut Vec<u8>,
+        traversal: &PreparedPostClassicTraversal,
+        layer_index: usize,
+        layer_z: f64,
+    ) -> Result<(), SliceError> {
+        let template = traversal
+            .resolved
+            .views
+            .runtime_gcode
+            .before_layer_change_gcode
+            .0
+            .as_str();
+        if template.is_empty() {
+            return Ok(());
+        }
+        let mut config =
+            value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+        config.insert("layer_num", value::Value::number((layer_index + 1) as f64));
+        config.insert("layer_z", value::Value::number(layer_z));
+        config.insert("max_layer_z", value::Value::number(layer_z));
+        let rendered = template::render(template, &config).map_err(|error| {
+            SliceError::InvalidInput(format!(
+                "invalid project before-layer-change G-code template: {error}"
+            ))
+        })?;
+        output.extend_from_slice(rendered.as_bytes());
+        output.push(b'\n');
+        Ok(())
+    }
+
     fn append_layer_change(
         output: &mut Vec<u8>,
         traversal: &PreparedPostClassicTraversal,
@@ -285,6 +326,7 @@ pub(super) fn emit(
                     .machine_max_acceleration_travel,
             ),
             gcode_flavor: traversal.resolved.views.full.printer.gcode.gcode_flavor,
+            bbl_printer: state.tags.is_bbl(),
         },
     ))
 }

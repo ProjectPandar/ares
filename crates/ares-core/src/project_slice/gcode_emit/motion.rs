@@ -63,6 +63,7 @@ pub(super) struct EmitState {
     pub(super) internal_bridge_fan_active: bool,
     pub(super) internal_bridge_fan_marker_layer: Option<usize>,
     pub(super) pending_object_start: Option<(u32, [u8; 12])>,
+    pub(super) tags: super::tags::Tags,
 }
 #[derive(Clone, Copy)]
 pub(super) struct LayerGeometry<'a> {
