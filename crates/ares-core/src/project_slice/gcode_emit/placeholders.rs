@@ -25,6 +25,10 @@ pub(super) fn base_config(
             "nozzle_temperature_initial_layer",
         ),
         ("max_print_height", "printable_height"),
+        ("print_preset", "print_settings_id"),
+        ("filament_preset", "filament_settings_id"),
+        ("printer_preset", "printer_settings_id"),
+        ("physical_printer_preset", "printer_settings_id"),
     ] {
         if let Some(value) = config.get(source).cloned() {
             config.insert(target, value);
