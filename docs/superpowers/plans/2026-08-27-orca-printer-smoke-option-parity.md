@@ -194,6 +194,22 @@ init, wipe direction all match. Remaining:
    upstream sequence for same-line pinches (finish + rewrite + new
    polyline + outer-extension).
 
+CORRECTION-2 (2026-08-27): concentric.rs ALREADY routes
+ConcentricInternal through the arachne port with the exact upstream
+FillConcentricInternal params, and upstream default for
+detect_narrow_internal_solid_infill is TRUE (PrintConfig.cpp:7320-
+7328), so both slicers run arachne on the narrow corner regions. The
+4um kink survives INSIDE the arachne pipeline or its post-steps
+(finalize_polylines loop clipping / variable_width conversion), or the
+ares arachne port's outline simplification differs (upstream
+WallToolPaths simplifies with deviation = wall_transition_filter_
+deviation = 0.1mm which should filter a 4um kink). NEXT PROBE: dump
+ThickPolylines from concentric.rs generate_thick_polylines near local
+(-3.9,3.9) at layer z=0.6 — if the kink is already in the arachne
+output, diff ares arachne/wall_toolpaths/outline.rs simplify params vs
+upstream WallToolPaths.cpp; if not, inspect finalize_polylines and
+variable_width.
+
 ROOT CAUSE FOUND (2026-08-27): layer-2 SFILL dump shows the corner
 regions are SurfaceFillPattern::ConcentricInternal (narrow::apply split)
 handled by fill_entities/concentric.rs via a medial-axis port
