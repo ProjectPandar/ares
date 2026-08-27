@@ -8,6 +8,10 @@ use std::path::Path;
 
 use serde_json::{Map, Value};
 
+#[cfg(test)]
+#[path = "presets/tests.rs"]
+mod tests;
+
 pub(super) struct VendorProfiles {
     /// preset name → merged (flattened) preset fields
     machine: BTreeMap<String, Map<String, Value>>,
@@ -24,8 +28,14 @@ impl VendorProfiles {
         })
     }
 
-    pub(super) fn machine_names(&self) -> Vec<String> {
-        self.machine.keys().cloned().collect()
+    pub(super) fn instantiated_machine_names(&self) -> Vec<String> {
+        self.machine
+            .iter()
+            .filter(|(_, fields)| {
+                fields.get("instantiation").and_then(Value::as_str) == Some("true")
+            })
+            .map(|(name, _)| name.clone())
+            .collect()
     }
 
     pub(super) fn machine(&self, name: &str) -> Result<Map<String, Value>, String> {

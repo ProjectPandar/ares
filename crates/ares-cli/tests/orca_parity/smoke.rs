@@ -58,7 +58,7 @@ fn orca_parity_printer_sweep() {
         let Ok(profiles) = VendorProfiles::load(&root, &vendor) else {
             continue;
         };
-        for printer in profiles.machine_names() {
+        for printer in profiles.instantiated_machine_names() {
             let selection = match parity::select_printer(&profiles, &vendor, &printer) {
                 Ok(selection) => selection,
                 Err(error) => {
