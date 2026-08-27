@@ -8,7 +8,7 @@ use crate::{
 fn task22o71_deferred_pattern_and_second_pass_fail_without_fallback() {
     assert_unsupported_mutation(
         "\"sparse_infill_pattern\": \"crosshatch\"",
-        "\"sparse_infill_pattern\": \"rectilinear\"",
+        "\"sparse_infill_pattern\": \"gyroid\"",
         "sparse_infill_pattern",
     );
     assert_unsupported_mutation(

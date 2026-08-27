@@ -15,7 +15,10 @@ pub(super) fn validate(
 ) -> Result<(), SliceError> {
     if !matches!(
         options.sparse_infill_pattern,
-        ProcessInfillPattern::CrossHatch | ProcessInfillPattern::Grid
+        ProcessInfillPattern::CrossHatch
+            | ProcessInfillPattern::Grid
+            | ProcessInfillPattern::Rectilinear
+            | ProcessInfillPattern::ZigZag
     ) {
         return unsupported("sparse_infill_pattern");
     }

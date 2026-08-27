@@ -151,11 +151,11 @@ pub(in crate::project_slice) fn generate_layer(
             SurfaceFillPattern::Configured(ProcessInfillPattern::Grid) => {
                 grid::append(&mut output, fill, layer.print_z, layer.id, traversal.scale)?;
             }
-            SurfaceFillPattern::Configured(ProcessInfillPattern::Rectilinear) => {
-                crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
-            }
             SurfaceFillPattern::Configured(
-                pattern @ (ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine),
+                pattern @ (ProcessInfillPattern::Rectilinear
+                | ProcessInfillPattern::ZigZag
+                | ProcessInfillPattern::Monotonic
+                | ProcessInfillPattern::MonotonicLine),
             ) => {
                 monotonic::append(&mut output, fill, pattern, layer.id, traversal.scale)?;
             }

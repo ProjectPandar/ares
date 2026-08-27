@@ -31,6 +31,28 @@ fn task22o76_non_line_pattern_group_emits_no_fallback() {
 }
 
 #[test]
+fn rectilinear_sparse_group_emits_fill_paths() {
+    let mut graph = graph();
+    record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
+        RegionSurfaceKind::Internal,
+        rectangle(0, 0, 12_000_000, 8_000_000),
+        0,
+    )];
+    options_mut(&mut graph, LAYER).sparse_infill_pattern = ProcessInfillPattern::Rectilinear;
+
+    let generated = generate_layer(external(&graph), 0, LAYER).unwrap();
+
+    assert!(!generated.collections.is_empty());
+    assert!(
+        generated
+            .collections
+            .iter()
+            .all(|collection| !collection.entities.is_empty())
+    );
+    combine_infill::dispose(graph);
+}
+
+#[test]
 fn task22o76_grouping_range_error_is_atomic() {
     let mut graph = graph();
     record_mut(&mut graph, LAYER).fill_surfaces = vec![

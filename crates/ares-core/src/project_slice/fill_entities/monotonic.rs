@@ -13,6 +13,8 @@ use super::{
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
+    // `FillRectilinear::fill_surface` and its monotonic subclasses share
+    // `fill_surface_by_lines` (`FillRectilinear.cpp:3386-3419`).
     pattern: ProcessInfillPattern,
     layer_id: usize,
     scale: CoordinateScale,
@@ -60,7 +62,10 @@ pub(super) fn append(
                     })
                 })
                 .collect(),
-            no_sort: true,
+            no_sort: matches!(
+                pattern,
+                ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
+            ),
         });
     }
     Ok(())

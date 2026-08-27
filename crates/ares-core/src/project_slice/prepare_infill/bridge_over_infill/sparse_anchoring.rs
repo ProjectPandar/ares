@@ -1,7 +1,10 @@
 use crate::{
     FloatOrPercent, ProcessInfillPattern, RegionOptions, SliceError,
-    fill::cross_hatch::{CrossHatchFillParams, fill_surface, fill_surface_multilines},
-    geometry::Polyline,
+    fill::{
+        cross_hatch::{CrossHatchFillParams, fill_surface, fill_surface_multilines},
+        rectilinear::{MonotonicFillParams, fill_monotonic_surface},
+    },
+    geometry::{Point, Polyline},
     project_slice::{
         group_fills::{SurfaceFillPattern, group_fills},
         prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
@@ -75,11 +78,34 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 }
             }
             SurfaceFillPattern::Configured(
-                ProcessInfillPattern::Rectilinear
-                | ProcessInfillPattern::Monotonic
+                ProcessInfillPattern::Rectilinear | ProcessInfillPattern::ZigZag,
+            ) => {
+                let params = MonotonicFillParams {
+                    spacing: fill.params.spacing,
+                    overlap: 0.0,
+                    density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    angle: fill.params.angle,
+                    layer_index,
+                    thickness_layers: fill.representative.thickness_layers.max(1),
+                    fixed_angle: fill.params.fixed_angle,
+                    bridge_angle: None,
+                    reference_point: Point::new(0, 0),
+                    dont_adjust: false,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    link_max_length: 0.0,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_monotonic_surface(&expolygon, params, traversal.scale)
+                            .map_err(super::transaction::geometry_error)?
+                            .polylines,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(
+                ProcessInfillPattern::Monotonic
                 | ProcessInfillPattern::MonotonicLine
                 | ProcessInfillPattern::AlignedRectilinear
-                | ProcessInfillPattern::ZigZag
                 | ProcessInfillPattern::CrossZag
                 | ProcessInfillPattern::LockedZag
                 | ProcessInfillPattern::Line
