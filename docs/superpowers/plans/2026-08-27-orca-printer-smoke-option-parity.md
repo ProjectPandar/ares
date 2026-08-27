@@ -194,6 +194,20 @@ init, wipe direction all match. Remaining:
    upstream sequence for same-line pinches (finish + rewrite + new
    polyline + outer-extension).
 
+ROOT CAUSE FOUND (2026-08-27): layer-2 SFILL dump shows the corner
+regions are SurfaceFillPattern::ConcentricInternal (narrow::apply split)
+handled by fill_entities/concentric.rs via a medial-axis port
+(generate_thick_polylines). UPSTREAM FillConcentricInternal
+(FillConcentricInternal.cpp:12-58) instead runs ARACHNE WallToolPaths
+with min_bead_width=0.85*nozzle, min_feature_size=0.25*nozzle,
+wall_transition_length=0.4, wall_transition_angle=10,
+wall_transition_filter_deviation=0.25*nozzle (=0.1mm — filters the
+4um kink), wall_distribution_count=1. FIX: route ConcentricInternal
+through the existing crates/ares-core/src/arachne port with those
+params (to_thick_polyline + nearest-neighbor split/rotate +
+loop_clipping), replacing the medial-axis path. This also matches
+upstream for all narrow-solid regions across printers.
+
 MAJOR CORRECTION (2026-08-27): the infills.rs rejection was a
 coordinate-space BUG in the probe filter (world 106.x vs model-centered
 local coords). Layer-2 solid infill DOES come from infills.rs scanlines
