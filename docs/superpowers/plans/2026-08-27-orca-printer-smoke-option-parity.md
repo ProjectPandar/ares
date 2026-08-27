@@ -136,6 +136,17 @@ init, wipe direction all match. Remaining:
    order (iPrevContour/iNextContour, FillRectilinear.cpp ~1050-1140).
    Compare those two selection algorithms near the apex where multiple
    candidates exist; divergence in pick => different quality => branch.
+   RESULT: selection is EQUIVALENT (distance_of_segmens ==
+   directed_segment_distance; same filters/directions/tie-breaks) —
+   hypothesis eliminated. Remaining hypotheses: (a) upstream takes the
+   FINISH branch (its gcode then shows the straight outer-to-outer
+   junction with no travel — indistinguishable from a same-edge arc at
+   gcode level), so compare right_horizontal()/vertical targets and the
+   'extended' condition (emit.rs:38-52 vs FillRectilinear.cpp:2632-2648)
+   at the apex; (b) Orca's inner-offset contour genuinely lacks the
+   apex vertex (input contour difference). NEXT PROBE: instrument
+   emit.rs extended-vs-finish branch at the apex and print both
+   endpoints' inner/outer kinds.
 
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
