@@ -21,10 +21,15 @@ pub(super) struct VendorProfiles {
 
 impl VendorProfiles {
     pub(super) fn load(root: &Path, vendor: &str) -> Result<Self, String> {
+        let mut filament = index_kind(root, "OrcaFilamentLibrary", "filament")?;
+        let vendor_filament = root.join(vendor).join("filament");
+        if vendor_filament.is_dir() {
+            filament.extend(index_directory(&vendor_filament)?);
+        }
         Ok(Self {
             machine: index_kind(root, vendor, "machine")?,
             process: index_kind(root, vendor, "process")?,
-            filament: index_kind(root, vendor, "filament")?,
+            filament,
         })
     }
 
@@ -132,14 +137,28 @@ fn index_kind(
     vendor: &str,
     kind: &str,
 ) -> Result<BTreeMap<String, Map<String, Value>>, String> {
-    let dir = root.join(vendor).join(kind);
-    let mut index = BTreeMap::new();
-    let entries = std::fs::read_dir(&dir).map_err(|error| format!("{dir:?}: {error}"))?;
-    for entry in entries {
-        let path = entry.map_err(|error| error.to_string())?.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("json") {
-            continue;
+    index_directory(&root.join(vendor).join(kind))
+}
+
+fn index_directory(dir: &Path) -> Result<BTreeMap<String, Map<String, Value>>, String> {
+    let mut pending = vec![dir.to_owned()];
+    let mut files = Vec::new();
+    while let Some(directory) = pending.pop() {
+        let entries =
+            std::fs::read_dir(&directory).map_err(|error| format!("{directory:?}: {error}"))?;
+        for entry in entries {
+            let path = entry.map_err(|error| error.to_string())?.path();
+            if path.is_dir() {
+                pending.push(path);
+            } else if path.extension().and_then(|extension| extension.to_str()) == Some("json") {
+                files.push(path);
+            }
         }
+    }
+    files.sort();
+
+    let mut index = BTreeMap::new();
+    for path in files {
         let text = std::fs::read_to_string(&path).map_err(|error| format!("{path:?}: {error}"))?;
         let Value::Object(fields) =
             serde_json::from_str(&text).map_err(|error| format!("{path:?}: {error}"))?

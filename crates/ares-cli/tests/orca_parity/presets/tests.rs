@@ -45,6 +45,15 @@ fn selection_falls_back_to_a_compatible_process() {
 }
 
 #[test]
+fn vendor_without_filament_directory_uses_system_library() {
+    let profiles = profiles("Voron");
+    let selection = select_printer(&profiles, "Voron", "Voron 0.1 0.4 nozzle").unwrap();
+
+    assert_eq!(selection.filaments, ["Generic PLA @System"]);
+    assert!(profiles.filament("Generic PLA @System").is_ok());
+}
+
+#[test]
 fn missing_local_filament_parent_uses_orca_defaults() {
     let profiles = profiles("Z-Bolt");
     let flattened = profiles.filament("Generic PLA @Z-Bolt 0.4 nozzle").unwrap();
