@@ -34,6 +34,7 @@ fn task22o76_non_line_pattern_group_emits_no_fallback() {
 fn implemented_sparse_groups_emit_fill_paths() {
     for pattern in [
         ProcessInfillPattern::Rectilinear,
+        ProcessInfillPattern::Triangles,
         ProcessInfillPattern::Cubic,
     ] {
         let mut graph = graph();

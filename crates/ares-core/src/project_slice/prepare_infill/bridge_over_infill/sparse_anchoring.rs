@@ -23,6 +23,20 @@ const GRID_SWEEPS: [Sweep; 2] = [
         shift: 0.0,
     },
 ];
+const TRIANGLE_SWEEPS: [Sweep; 3] = [
+    Sweep {
+        angle: 0.0,
+        shift: 0.0,
+    },
+    Sweep {
+        angle: std::f32::consts::FRAC_PI_3,
+        shift: 0.0,
+    },
+    Sweep {
+        angle: 2.0 * std::f32::consts::FRAC_PI_3,
+        shift: 0.0,
+    },
+];
 
 pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     prepared: &PreparedPostExternalSurfaces,
@@ -82,6 +96,28 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     result.extend(
                         fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
                             .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
+                let params = MultilineFillParams {
+                    spacing: fill.params.spacing,
+                    angle: fill.params.angle,
+                    density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    multiline: fill.params.multiline,
+                    anchor_length: fill.params.anchor_length,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    dont_sort: false,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_multiline_surface(
+                            &expolygon,
+                            params,
+                            &TRIANGLE_SWEEPS,
+                            traversal.scale,
+                        )
+                        .map_err(super::transaction::geometry_error)?,
                     );
                 }
             }
@@ -146,7 +182,6 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::CrossZag
                 | ProcessInfillPattern::LockedZag
                 | ProcessInfillPattern::Line
-                | ProcessInfillPattern::Triangles
                 | ProcessInfillPattern::TriHexagon
                 | ProcessInfillPattern::AdaptiveCubic
                 | ProcessInfillPattern::QuarterCubic

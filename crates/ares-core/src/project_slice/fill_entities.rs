@@ -3,6 +3,7 @@ mod crosshatch;
 mod cubic;
 mod grid;
 mod monotonic;
+mod triangles;
 mod types;
 
 pub(in crate::project_slice) use types::{
@@ -154,6 +155,9 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Cubic) => {
                 cubic::append(&mut output, fill, layer.print_z, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
+                triangles::append(&mut output, fill, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear

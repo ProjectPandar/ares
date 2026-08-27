@@ -17,6 +17,7 @@ pub(super) fn validate(
         options.sparse_infill_pattern,
         ProcessInfillPattern::CrossHatch
             | ProcessInfillPattern::Grid
+            | ProcessInfillPattern::Triangles
             | ProcessInfillPattern::Cubic
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::ZigZag
