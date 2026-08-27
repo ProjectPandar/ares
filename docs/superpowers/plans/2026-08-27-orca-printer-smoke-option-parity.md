@@ -70,7 +70,18 @@ E); filament used 262.35 vs 262.34 (GCodeProcessor tachometer semantics,
 Extruder.cpp:139-144); M204 parity; headers/tail layout, preamble, fan
 init, wipe direction all match. Remaining:
 
-0. RESOLVED: lazy layer retraction via pending_layer_retract + lift-before-travel + print-object ids (commit 9e81577); Ender-3 smoke passes layers 0-1 fully. NEXT: layer 2 deposition count 97 vs 99 — Ares inserts an extra vertex ~4um before sparse-infill boundary endpoints, e.g. (106.096,113.97) then (106.1,113.963) where Orca ends directly at (106.1,113.963); two occurrences per layer; investigate the infill polyline generator (fill-line/region intersection or chain_and_reorder merging) for sliver vertices.
+0. RESOLVED: lazy layer retraction via pending_layer_retract + lift-before-travel + print-object ids (commit 9e81577); Ender-3 smoke passes layers 0-1 fully. NEXT: layer 2 deposition count 97 vs 99 — Ares inserts an extra vertex ~4um before sparse-infill boundary endpoints, e.g. (106.096,113.97) then (106.1,113.963) where Orca ends directly at (106.1,113.963); two occurrences per layer. ANALYSIS (2026-08-27): the divergent paths are
+   grid-pattern CONNECTORS (solid infill of sparse-threshold corner
+   regions uses the sparse pattern; connectors follow the region CONTOUR
+   through fill/connect apply.rs contour arcs). Ares' connector passes
+   through an extra contour vertex (106.096,113.97) where Orca's contour
+   edge is straight from (106.024,113.928) to (106.1,113.963). Root cause
+   = the solid-infill REGION polygon (sparse-area-filtered surface,
+   cross_hatch.rs offset_expolygon Miter inset) carries a ~4um sliver
+   vertex near the cube corner that Orca's region boolean does not.
+   NEXT: dump/compare the region contour near layer-2 corners
+   (group_fills surface_fills input) vs upstream Surface region
+   production; look for a missing simplify/dedup on the boolean result.
 
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
