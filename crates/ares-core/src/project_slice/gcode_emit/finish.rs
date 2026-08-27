@@ -35,6 +35,41 @@ pub(super) fn append(
     Ok(())
 }
 
+/// Accounts used filament from the emitted G-code exactly like the upstream
+/// GCodeProcessor: every G0-G3 `E` word moves the extruder tachometer —
+/// extrusions add to the absolute position, retractions withdraw into the
+/// retracted length, and used = absolute E + retracted
+/// (`Extruder.cpp:139-144`, `GCode.cpp:2329-2331`).
+pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
+    let text = std::str::from_utf8(gcode).unwrap_or_default();
+    let mut absolute_e = 0.0_f64;
+    let mut retracted = 0.0_f64;
+    for line in text.lines() {
+        let bytes = line.as_bytes();
+        if bytes.len() < 3
+            || bytes[0] != b'G'
+            || !(b'0'..=b'3').contains(&bytes[1])
+            || !bytes[2].is_ascii_whitespace()
+        {
+            continue;
+        }
+        let Some(value) = line.split_whitespace().find_map(|word| {
+            word.strip_prefix('E')
+                .and_then(|value| value.parse::<f64>().ok())
+        }) else {
+            continue;
+        };
+        if value < 0.0 {
+            retracted -= value;
+            absolute_e += value;
+        } else {
+            retracted = (retracted - value).max(0.0);
+            absolute_e += value;
+        }
+    }
+    absolute_e + retracted
+}
+
 pub(super) fn append_filament_stats(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,

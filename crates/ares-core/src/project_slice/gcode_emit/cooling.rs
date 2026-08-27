@@ -14,6 +14,9 @@ pub(super) struct CoolingState {
     additional_fan_speed: u8,
     auxiliary_fan: bool,
     part_cooling_fan_min_pwm: u8,
+    /// Non-BBL printers emit the initial fan state at the first layer
+    /// boundary; BBL machines carry it inside their start sequence.
+    emit_initial_fan: bool,
     feedrate: feedrate::State,
 }
 
@@ -32,6 +35,7 @@ impl CoolingState {
             additional_fan_speed: first_percent_int(&filament.additional_cooling_fan_speed.0),
             auxiliary_fan: runtime.auxiliary_fan.0,
             part_cooling_fan_min_pwm: runtime.part_cooling_fan_min_pwm.0.clamp(0, 100) as u8,
+            emit_initial_fan: !super::tags::Tags::of(traversal).is_bbl(),
             feedrate: feedrate::State::new(
                 feedrate::Config {
                     enabled: first_bool(&filament.slow_down_for_layer_cooling.0),
@@ -55,7 +59,7 @@ impl CoolingState {
 
     pub(super) fn begin_layer(&mut self, output: &mut Vec<u8>, layer_index: usize) {
         let part_speed = self.part_speed_for_layer(layer_index);
-        if part_speed != self.part_speed {
+        if part_speed != self.part_speed || (layer_index == 0 && self.emit_initial_fan) {
             self.part_speed = part_speed;
             let speed = if part_speed > 0 && part_speed < self.part_cooling_fan_min_pwm {
                 self.part_cooling_fan_min_pwm

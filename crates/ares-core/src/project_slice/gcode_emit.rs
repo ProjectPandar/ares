@@ -15,6 +15,7 @@ mod motion;
 mod object;
 mod placeholders;
 mod processor;
+mod skirt;
 mod tags;
 mod template;
 #[cfg(test)]
@@ -38,8 +39,13 @@ pub(super) fn emit(
         .predecessor
         .predecessor;
     let mut output = Vec::new();
+    let tags = tags::Tags::of(traversal);
     header::append_header(&mut output, metadata, &prepared.objects, traversal);
-    if let Some(config) = &traversal.config_block {
+    // `GCode.cpp` + Orca export layout: BBL keeps the config block up front;
+    // the compatible flavor moves it after the tail statistics.
+    if tags.is_bbl()
+        && let Some(config) = &traversal.config_block
+    {
         output.extend_from_slice(config);
     }
     header::append_width_block(&mut output, traversal);
@@ -83,6 +89,7 @@ pub(super) fn emit(
         .map(|record| record.layer_height)
         .sum();
     let max_additional_fan = max_additional_fan(traversal);
+    let skirt = skirt::SkirtPlan::generate(traversal)?;
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = emit_labels
             .then(|| object::ObjectLabels::from_traversal(traversal, object_index))
@@ -92,7 +99,7 @@ pub(super) fn emit(
         for (layer_index, layer) in object.iter_mut().enumerate() {
             let layer_output_start = output.len();
             if layer_index == 0 {
-                append_print_preamble(&mut output);
+                append_print_preamble(&mut output, traversal)?;
             }
             cooling.begin_layer(&mut output, layer_index);
             state.part_fan_speed = cooling.part_speed();
@@ -123,8 +130,7 @@ pub(super) fn emit(
                 f64::from(layer_z),
             )?;
             if layer_index == 0 {
-                output.extend_from_slice(b"G1 E-.4 F1800\n");
-                state.retracted = true;
+                motion::retract_before_layer(&mut output, &mut state);
             }
             append_layer_change(
                 &mut output,
@@ -158,20 +164,31 @@ pub(super) fn emit(
                 .collect::<Vec<_>>();
             let lower_boundary = (!lower_boundary_lines.is_empty())
                 .then(|| crate::geometry::LineDistanceTree::new(&lower_boundary_lines));
-            motion::emit_layer(
-                &mut output,
-                layer,
-                motion::LayerGeometry {
-                    internal_surfaces: island_print_order::internal_surfaces(
-                        &prepared.predecessor,
-                        object_index,
-                        layer_index,
-                    ),
-                    scale: traversal.scale,
-                    previous_layer_boundary: lower_boundary.as_ref(),
-                },
-                &mut state,
-            )?;
+            let geometry = motion::LayerGeometry {
+                internal_surfaces: island_print_order::internal_surfaces(
+                    &prepared.predecessor,
+                    object_index,
+                    layer_index,
+                ),
+                scale: traversal.scale,
+                previous_layer_boundary: lower_boundary.as_ref(),
+            };
+            // The skirt prints once per layer before any object content
+            // (`GCode.cpp:4388+`), on the layers it covers.
+            if object_index == 0
+                && let Some(plan) = &skirt
+            {
+                plan.emit(
+                    &mut output,
+                    skirt::SkirtLayer {
+                        index: layer_index,
+                        height_mm: f64::from(layer_height),
+                    },
+                    geometry,
+                    &mut state,
+                );
+            }
+            motion::emit_layer(&mut output, layer, geometry, &mut state)?;
             if let Some(labels) = &labels {
                 labels.append_stopping(&mut output);
                 motion::end_layer_for_timelapse(&mut output, &mut state);
@@ -211,11 +228,42 @@ pub(super) fn emit(
             .max()
             .map_or(0.0, f64::from)
     }
-    fn append_print_preamble(output: &mut Vec<u8>) {
-        output.extend_from_slice(
-            b"; filament start gcode\n;VT0\nG90\nG21\nM83 ; use relative distances for extrusion\n",
-        );
-        output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\nM106 S0\nM106 P2 S0\n");
+    fn append_print_preamble(
+        output: &mut Vec<u8>,
+        traversal: &PreparedPostClassicTraversal,
+    ) -> Result<(), SliceError> {
+        if tags::Tags::of(traversal).is_bbl() {
+            output.extend_from_slice(
+                b"; filament start gcode\n;VT0\nG90\nG21\nM83 ; use relative distances for extrusion\n",
+            );
+            output.extend_from_slice(
+                b"M981 S1 P20000 ;open spaghetti detector\nM106 S0\nM106 P2 S0\n",
+            );
+            return Ok(());
+        }
+        // Compatible flavor renders the preset's filament start template
+        // (`GCode.cpp` filament-start handling).
+        if let Some(source) = traversal
+            .resolved
+            .views
+            .runtime_gcode
+            .filament_start_gcode
+            .0
+            .first()
+        {
+            let config =
+                value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+            let rendered = template::render(source, &config).map_err(|error| {
+                SliceError::InvalidInput(format!(
+                    "invalid project filament-start G-code template: {error}"
+                ))
+            })?;
+            output.extend_from_slice(rendered.as_bytes());
+            if !rendered.ends_with('\n') {
+                output.push(b'\n');
+            }
+        }
+        Ok(())
     }
 
     /// Renders `before_layer_change_gcode` with `layer_num`, `layer_z`, and
@@ -290,7 +338,28 @@ pub(super) fn emit(
     }
     finish::append(&mut output, traversal, max_layer_z)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
-    finish::append_filament_stats(&mut output, traversal, state.filament_used);
+    let used_filament = finish::account_used_filament(&output);
+    finish::append_filament_stats(&mut output, traversal, used_filament);
+    if !tags.is_bbl() {
+        // Compatible-flavor tail statistics: layer count, klipper-style
+        // time placeholders, then the config block.
+        let layers = prepared
+            .objects
+            .first()
+            .map(|object| object.len())
+            .unwrap_or(0);
+        output.extend_from_slice(
+            format!(
+                "; total layers count = {layers}\n\
+; estimated printing time (normal mode) = 0s\n\
+; estimated first layer printing time (normal mode) = 0s\n\n"
+            )
+            .as_bytes(),
+        );
+        if let Some(config) = &traversal.config_block {
+            output.extend_from_slice(config);
+        }
+    }
     Ok(processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,

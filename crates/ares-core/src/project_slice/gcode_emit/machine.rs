@@ -53,7 +53,8 @@ pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassi
         )
         .as_bytes(),
     );
-    output.extend_from_slice(b"M106 S0\nM106 P2 S0\n");
+    (super::tags::Tags::of(traversal).is_bbl())
+        .then(|| output.extend_from_slice(b"M106 S0\nM106 P2 S0\n"));
 }
 
 pub(super) fn first(values: &crate::OrcaFloats) -> f64 {
@@ -140,5 +141,35 @@ pub(super) fn append_start(
     if !rendered.ends_with('\n') {
         output.push(b'\n');
     }
+    if !super::tags::Tags::of(traversal).is_bbl() {
+        append_flavor_preamble(output, traversal);
+    }
     Ok(())
+}
+
+/// `GCodeWriter::preamble` (`GCodeWriter.cpp:82-104`): absolute XYZ
+/// coordinates, millimeters, and the extruder distance mode for the
+/// flavors that support it. BBL machines carry their own sequence in the
+/// filament start block instead.
+fn append_flavor_preamble(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
+    use crate::options::GCodeFlavor;
+    let gcode = &traversal.resolved.views;
+    output.extend_from_slice(b"G90\nG21\n");
+    let marlin_family = matches!(
+        gcode.full.printer.gcode.gcode_flavor,
+        GCodeFlavor::MarlinLegacy
+            | GCodeFlavor::MarlinFirmware
+            | GCodeFlavor::Klipper
+            | GCodeFlavor::RepRapSprinter
+            | GCodeFlavor::RepRapFirmware
+            | GCodeFlavor::Repetier
+            | GCodeFlavor::Teacup
+    );
+    if marlin_family {
+        if gcode.runtime_gcode.use_relative_e_distances.0 {
+            output.extend_from_slice(b"M83 ; use relative distances for extrusion\n");
+        } else {
+            output.extend_from_slice(b"M82 ; use absolute distances for extrusion\n");
+        }
+    }
 }

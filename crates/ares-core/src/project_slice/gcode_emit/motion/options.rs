@@ -18,6 +18,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) bridge_speed: f64,
     pub(in crate::project_slice::gcode_emit) internal_bridge_speed: f64,
     pub(in crate::project_slice::gcode_emit) sparse_infill_speed: f64,
+    pub(in crate::project_slice::gcode_emit) skirt_speed: f64,
     pub(in crate::project_slice::gcode_emit) internal_solid_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) top_surface_speed: f64,
     pub(in crate::project_slice::gcode_emit) gap_infill_speed: f64,
@@ -127,6 +128,7 @@ impl MotionOptions {
                 .map_or(full.process.region.sparse_infill_speed.0, |value| {
                     value.sparse_infill_speed.0
                 }),
+            skirt_speed: full.process.print.skirt_speed.0,
             internal_solid_infill_speed: region
                 .map_or(full.process.region.internal_solid_infill_speed.0, |value| {
                     value.internal_solid_infill_speed.0

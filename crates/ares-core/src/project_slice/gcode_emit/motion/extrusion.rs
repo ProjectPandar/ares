@@ -18,7 +18,6 @@ pub(super) fn linear_segment(
         state.options.print_flow_ratio,
         state.options.filament_area,
     );
-    state.filament_used += extrusion;
     output.extend_from_slice(
         format!(
             "G1 X{} Y{} E{}\n",

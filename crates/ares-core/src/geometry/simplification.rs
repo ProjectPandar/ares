@@ -108,7 +108,7 @@ pub(super) fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
     result
 }
 
-pub(super) fn simplify_closed_points(mut points: Vec<Point>, tolerance: f64) -> Vec<Point> {
+pub(crate) fn simplify_closed_points(mut points: Vec<Point>, tolerance: f64) -> Vec<Point> {
     let Some(&first) = points.first() else {
         return points;
     };

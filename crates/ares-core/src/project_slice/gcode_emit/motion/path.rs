@@ -170,8 +170,12 @@ pub(super) fn emit(
     if state.last_width != Some(properties.width) {
         output.extend_from_slice(
             format!(
-                "; LINE_WIDTH: {}\n",
-                super::super::format_processor_float(f64::from(properties.width))
+                "{}\n",
+                state
+                    .tags
+                    .width(&super::super::format_processor_float(f64::from(
+                        properties.width
+                    )))
             )
             .as_bytes(),
         );
@@ -249,7 +253,6 @@ pub(super) fn emit(
                     state.options.print_flow_ratio,
                     state.options.filament_area,
                 );
-                state.filament_used += extrusion;
                 let command = if arc_segment.clockwise { "G2" } else { "G3" };
                 output.extend_from_slice(
                     format!(

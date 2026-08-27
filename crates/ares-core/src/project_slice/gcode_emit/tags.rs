@@ -65,6 +65,14 @@ impl Tags {
         }
     }
 
+    pub(super) fn width(&self, width: &str) -> String {
+        if self.bbl {
+            format!("; LINE_WIDTH: {width}")
+        } else {
+            format!(";WIDTH:{width}")
+        }
+    }
+
     pub(super) fn custom(&self) -> String {
         self.feature("Custom")
     }

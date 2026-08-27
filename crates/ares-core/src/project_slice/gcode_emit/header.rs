@@ -55,14 +55,16 @@ pub(super) fn append_header(
         .as_bytes(),
     );
     let tags = super::tags::Tags::of(traversal);
+    // `GCode.cpp:2578-2608`: BBL printers carry the time placeholders in
+    // the header; the compatible flavor keeps them at the file tail next to
+    // the klipper-style statistics.
     if tags.is_bbl() {
         output.extend_from_slice(b"; model printing time: 0s; total estimated time: 0s\n");
-    } else {
-        output.extend_from_slice(b"; estimated printing time (normal mode) = 0s\n");
+        output.extend_from_slice(b"; estimated first layer printing time (normal mode) = 0s\n");
     }
-    output.extend_from_slice(b"; estimated first layer printing time (normal mode) = 0s\n");
     output.extend_from_slice(format!("; total layer number: {layers}\n").as_bytes());
-    output.extend_from_slice(format!("; model label id: {label_id}\n").as_bytes());
+    (tags.is_bbl())
+        .then(|| output.extend_from_slice(format!("; model label id: {label_id}\n").as_bytes()));
     output.extend_from_slice(format!("; filament_density: {density}\n").as_bytes());
     output.extend_from_slice(format!("; filament_diameter: {diameter}\n").as_bytes());
     output.extend_from_slice(format!("; max_z_height: {max_z:.2}\n").as_bytes());

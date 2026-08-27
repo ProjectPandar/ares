@@ -55,7 +55,6 @@ pub(super) struct EmitState {
     pub(super) wipe_path: Vec<arc::Point>,
     pub(super) wipe_start: Option<arc::Point>,
     pub(super) lifted: bool,
-    pub(super) filament_used: f64,
     pub(super) part_fan_speed: u8,
     pub(super) physical_fan_speed: u8,
     pub(super) overhang_fan_active: bool,
@@ -65,6 +64,7 @@ pub(super) struct EmitState {
     pub(super) pending_object_start: Option<(u32, [u8; 12])>,
     pub(super) tags: super::tags::Tags,
 }
+
 #[derive(Clone, Copy)]
 pub(super) struct LayerGeometry<'a> {
     pub(super) internal_surfaces: &'a [crate::project_slice::region_slices::RegionSurface],
@@ -146,6 +146,60 @@ pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitStat
     if state.options.retract_when_changing_layer && state.positioned {
         travel::retract_for_timelapse(output, state);
     }
+}
+
+/// Configured retraction at the start of the first layer — matches the
+/// GCodeWriter `retract()` formatting (`GCodeWriter.cpp`).
+pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) {
+    let length = state.options.retraction_length;
+    if length <= 0.0 {
+        return;
+    }
+    output.extend_from_slice(
+        format!(
+            "G1 E{} F{}\n",
+            format::extrusion(-length),
+            format::axis(state.options.retraction_feedrate)
+        )
+        .as_bytes(),
+    );
+    state.retracted = true;
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct SkirtLoopFlow {
+    pub(super) width: f32,
+    pub(super) height: f32,
+    pub(super) mm3_per_mm: f64,
+}
+
+pub(super) fn emit_skirt_loop(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    flow: SkirtLoopFlow,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    path::emit(
+        output,
+        points,
+        PathProperties {
+            mm3_per_mm: flow.mm3_per_mm,
+            width: flow.width,
+            height: flow.height,
+            feature: "Skirt",
+            is_perimeter: false,
+            // `GCode::extrude_loop` clips every loop by the seam gap
+            // (`GCode.cpp:5778-5790`).
+            end_clip: state.options.seam_gap,
+            fitting: &[],
+        },
+        geometry,
+        state,
+    );
+    // `GCode.cpp:5979-5991` stores loop wipe paths forward so the wipe
+    // wraps from the loop end back toward the path start.
+    state.wipe_path.reverse();
 }
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32) {

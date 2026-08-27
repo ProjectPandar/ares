@@ -202,7 +202,7 @@ fn select_width(
     selected
 }
 
-pub(super) fn build_nonbridging_flow(
+pub(in crate::project_slice) fn build_nonbridging_flow(
     selected_width: FloatOrPercent,
     height: f32,
     nozzle_diameter: f32,

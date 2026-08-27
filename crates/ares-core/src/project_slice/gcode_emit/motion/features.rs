@@ -57,13 +57,25 @@ impl PathProperties<'_> {
 
 impl PathProperties<'_> {
     fn speed(&self, options: &MotionOptions, layer_index: usize) -> f64 {
-        if layer_index == 0 {
-            return if self.feature == "Bottom surface" {
+        let layer_default = if layer_index == 0 {
+            if self.feature == "Bottom surface" {
                 options.initial_layer_infill_speed
             } else {
                 options.initial_layer_speed
-            };
+            }
+        } else {
+            self.role_speed(options)
+        };
+        // `GCode.cpp:6599-6604`: a positive skirt speed overrides the role
+        // default on every layer; zero keeps the layer default.
+        if self.feature == "Skirt" && options.skirt_speed > 0.0 {
+            options.skirt_speed
+        } else {
+            layer_default
         }
+    }
+
+    fn role_speed(&self, options: &MotionOptions) -> f64 {
         match self.feature {
             "Outer wall" => options.outer_wall_speed,
             "Bridge" | "Overhang wall" => options.bridge_speed,
