@@ -101,6 +101,14 @@ fn insert_runtime_placeholders(
     );
     config.insert("has_wipe_tower", Value::Bool(false));
     config.insert(
+        "position",
+        Value::List(vec![
+            Value::number(0.0),
+            Value::number(0.0),
+            Value::number(0.0),
+        ]),
+    );
+    config.insert(
         "has_single_extruder_multi_material_priming",
         Value::Bool(false),
     );
@@ -130,6 +138,16 @@ fn insert_runtime_placeholders(
     if let Some(value) = config.get("nozzle_temperature").cloned() {
         config.insert("temperature", value);
     }
+    let has_tpu = config
+        .get("filament_type")
+        .is_some_and(|value| value.iter_list().any(|item| item.as_string() == "TPU"));
+    config.insert("has_tpu_in_first_layer", Value::Bool(has_tpu));
+    let all_bbl = config.get("filament_vendor").is_some_and(|value| {
+        let mut vendors = value.iter_list();
+        vendors.clone().next().is_some() && vendors.all(|vendor| vendor.as_string() == "Bambu Lab")
+    });
+    config.insert("is_all_bbl_filament", Value::Bool(all_bbl));
+    insert_outer_wall_volumetric_speed(config, traversal);
     if let Some(minimum) = config
         .get("temperature_vitrification")
         .into_iter()
@@ -139,6 +157,43 @@ fn insert_runtime_placeholders(
     {
         config.insert("min_vitrification_temperature", Value::number(minimum));
     }
+}
+
+fn insert_outer_wall_volumetric_speed(
+    config: &mut value::Config,
+    traversal: &PreparedPostClassicTraversal,
+) {
+    let full = &traversal.resolved.views.full;
+    let region = &full.process.region;
+    let object = &full.process.object;
+    let selected_width = match region.outer_wall_line_width {
+        crate::FloatOrPercent::Float(0.0) => object.line_width,
+        value => value,
+    };
+    let nozzle = full
+        .project
+        .print
+        .nozzle_diameter
+        .0
+        .first()
+        .map_or(0.4, |diameter| diameter.0) as f32;
+    let flow = crate::project_slice::perimeters::flow::build_nonbridging_flow(
+        selected_width,
+        object.layer_height.0 as f32,
+        nozzle,
+    )
+    .expect("validated project outer-wall flow remains valid");
+    let maximum = full
+        .filament
+        .gcode
+        .filament_max_volumetric_speed
+        .0
+        .first()
+        .map_or(0.0, |speed| speed.0);
+    config.insert(
+        "outer_wall_volumetric_speed",
+        Value::number((region.outer_wall_speed.0 * flow.mm3_per_mm).min(maximum)),
+    );
 }
 
 /// `bed_temperature_initial_layer[_single]` from the curr-bed-type
