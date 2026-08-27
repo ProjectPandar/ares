@@ -91,6 +91,20 @@ init, wipe direction all match. Remaining:
    verify the intersection coordinates (contour sliver propagation)
    via a dump hook in emit_monotonic_polylines (env-gated).
 
+   PROGRESS (2026-08-27): instrumentation shows the sliver vertex is NOT
+   in the monotonic input contour and NOT in the emitter logic
+   (append_contour_segment matches upstream polygon_segment_append
+   exactly: same-edge => zero intermediate points). The post-offset
+   inset contours (segments.rs prepare_contours) form a hexagon near
+   the rotated top corner; the sliver is a Miter-offset artifact of a
+   ~0.067mm input edge pair ((-4.1757,4.1757)->(-4.2232,4.2232) local
+   mm) on the surface-region contour. NEXT: compare the SURFACE REGION
+   boolean output (surface_type_detection / region pipeline) against
+   Orca's Surface polygons near sparse-threshold corners — Orca's input
+   contour presumably lacks the tiny edge, so its inset keeps a
+   straight edge. Debug hook recipe: dump expolygon.contour() in
+   fill_entities/monotonic.rs with LOCAL coords (model-centered).
+
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
 GCodeProcessor motion planner port.
