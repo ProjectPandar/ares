@@ -58,6 +58,54 @@ impl VendorProfiles {
         self.filament.contains_key(name)
     }
 
+    pub(super) fn compatible_process(&self, printer: &str) -> Option<String> {
+        self.compatible_preset(&self.process, printer, |name, _| name.contains("0.20mm"))
+    }
+
+    pub(super) fn compatible_filament(&self, printer: &str) -> Option<String> {
+        self.compatible_preset(&self.filament, printer, |name, fields| {
+            name.to_ascii_uppercase().contains("PLA")
+                || fields
+                    .get("filament_type")
+                    .is_some_and(|value| value.to_string().contains("PLA"))
+        })
+    }
+
+    fn compatible_preset(
+        &self,
+        index: &BTreeMap<String, Map<String, Value>>,
+        printer: &str,
+        preferred: impl Fn(&str, &Map<String, Value>) -> bool,
+    ) -> Option<String> {
+        index
+            .keys()
+            .filter_map(|name| {
+                let fields = self.flatten(index, name, "compatible preset").ok()?;
+                if fields.get("instantiation").and_then(Value::as_str) != Some("true") {
+                    return None;
+                }
+                let compatibility = fields
+                    .get("compatible_printers")
+                    .and_then(Value::as_array)
+                    .filter(|printers| !printers.is_empty())
+                    .map(|printers| {
+                        printers
+                            .iter()
+                            .any(|candidate| candidate.as_str() == Some(printer))
+                    });
+                match compatibility {
+                    Some(false) => None,
+                    exact => Some((
+                        if exact == Some(true) { 0 } else { 1 },
+                        if preferred(name, &fields) { 0 } else { 1 },
+                        name.clone(),
+                    )),
+                }
+            })
+            .min()
+            .map(|(_, _, name)| name)
+    }
+
     fn flatten(
         &self,
         index: &BTreeMap<String, Map<String, Value>>,
@@ -68,8 +116,8 @@ impl VendorProfiles {
             .get(name)
             .ok_or_else(|| format!("unknown {kind} preset {name:?}"))?;
         let mut merged = match entry.get("inherits").and_then(Value::as_str) {
-            Some(parent) => self.flatten(index, parent, kind)?,
-            None => Map::new(),
+            Some(parent) if index.contains_key(parent) => self.flatten(index, parent, kind)?,
+            Some(_) | None => Map::new(),
         };
         for (key, value) in entry {
             merged.insert(key.clone(), value.clone());

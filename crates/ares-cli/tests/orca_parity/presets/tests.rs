@@ -1,5 +1,5 @@
 use super::VendorProfiles;
-use crate::runner;
+use crate::{runner, select_printer};
 
 fn profiles(vendor: &str) -> VendorProfiles {
     VendorProfiles::load(
@@ -25,4 +25,33 @@ fn instantiated_printer_names_remain_sorted() {
     sorted.sort();
 
     assert_eq!(names, sorted);
+}
+
+#[test]
+fn selection_falls_back_to_an_explicitly_compatible_filament() {
+    let profiles = profiles("Afinia");
+    let selection = select_printer(&profiles, "Afinia", "Afinia H+1(HS) 0.4 nozzle").unwrap();
+
+    assert_eq!(selection.process, "0.20mm Standard @Afinia H+1(HS)");
+    assert!(selection.filaments[0].contains("PLA"));
+}
+
+#[test]
+fn selection_falls_back_to_a_compatible_process() {
+    let profiles = profiles("Anker");
+    let selection = select_printer(&profiles, "Anker", "Anker M5 0.2 nozzle").unwrap();
+
+    assert!(selection.process.contains("0.2 nozzle @Anker"));
+}
+
+#[test]
+fn missing_local_filament_parent_uses_orca_defaults() {
+    let profiles = profiles("Z-Bolt");
+    let flattened = profiles.filament("Generic PLA @Z-Bolt 0.4 nozzle").unwrap();
+
+    assert!(!flattened.contains_key("inherits"));
+    assert_eq!(
+        flattened.get("name").and_then(serde_json::Value::as_str),
+        Some("Generic PLA @Z-Bolt 0.4 nozzle")
+    );
 }

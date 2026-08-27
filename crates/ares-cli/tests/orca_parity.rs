@@ -113,26 +113,31 @@ pub(crate) fn select_printer(
         .get("default_print_profile")
         .and_then(Value::as_str)
         .map(str::to_owned);
-    let process = pick_preset(
+    let process = match pick_preset(
         base_process.as_deref(),
         &variant,
         |name| profiles.process_exists(name),
         &format!("{vendor}/{printer} process"),
-    )?;
+    ) {
+        Ok(process) => process,
+        Err(error) => profiles.compatible_process(printer).ok_or(error)?,
+    };
 
-    let filaments: Vec<String> = machine
-        .get("default_filament_profile")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(Value::as_str)
-        .filter(|name| !name.is_empty() && profiles.filament_exists(name))
-        .map(ToOwned::to_owned)
-        .collect();
+    let mut filaments: Vec<String> = match machine.get("default_filament_profile") {
+        Some(Value::Array(names)) => names.iter().filter_map(Value::as_str).collect(),
+        Some(Value::String(name)) => vec![name.as_str()],
+        _ => Vec::new(),
+    }
+    .into_iter()
+    .filter(|name| !name.is_empty() && profiles.filament_exists(name))
+    .map(ToOwned::to_owned)
+    .collect();
     if filaments.is_empty() {
-        return Err(format!(
-            "{vendor}/{printer}: no usable default_filament_profile"
-        ));
+        filaments.push(
+            profiles.compatible_filament(printer).ok_or_else(|| {
+                format!("{vendor}/{printer}: no usable compatible filament preset")
+            })?,
+        );
     }
 
     Ok(PrinterSelection {
