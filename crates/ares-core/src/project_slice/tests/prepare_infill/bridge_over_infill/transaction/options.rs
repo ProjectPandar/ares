@@ -122,12 +122,12 @@ fn task22o71_unported_anchor_density_and_lengths_fail_without_fallback() {
 fn task22o71_unported_anchor_rotation_templates_fail_without_fallback() {
     assert_unsupported_mutation(
         "\"sparse_infill_rotate_template\": \"\"",
-        "\"sparse_infill_rotate_template\": \"45\"",
+        "\"sparse_infill_rotate_template\": \"+45N2\"",
         "sparse_infill_rotate_template",
     );
     assert_unsupported_mutation(
         "\"solid_infill_rotate_template\": \"\"",
-        "\"solid_infill_rotate_template\": \"45\"",
+        "\"solid_infill_rotate_template\": \"+45N2\"",
         "solid_infill_rotate_template",
     );
 }

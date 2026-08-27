@@ -2,7 +2,10 @@ use crate::{
     ProcessInfillPattern, RegionOptions, SliceError,
     fill::cross_hatch::line_spacing,
     geometry::CoordinateScale,
-    project_slice::region_slices::{RegionSurface, RegionSurfaceKind},
+    project_slice::{
+        group_fills::simple_rotation_angle,
+        region_slices::{RegionSurface, RegionSurfaceKind},
+    },
 };
 
 use super::super::sparse_anchoring::{projected_anchor_lengths, projected_sparse_density};
@@ -34,10 +37,14 @@ pub(super) fn validate(
     if options.top_surface_density.0 <= 0.0 {
         return unsupported("top_surface_density");
     }
-    if !options.sparse_infill_rotate_template.0.is_empty() {
+    if !options.sparse_infill_rotate_template.0.is_empty()
+        && simple_rotation_angle(&options.sparse_infill_rotate_template.0, 0).is_none()
+    {
         return unsupported("sparse_infill_rotate_template");
     }
-    if !options.solid_infill_rotate_template.0.is_empty() {
+    if !options.solid_infill_rotate_template.0.is_empty()
+        && simple_rotation_angle(&options.solid_infill_rotate_template.0, 0).is_none()
+    {
         return unsupported("solid_infill_rotate_template");
     }
     if options.fill_multiline.0 != 1 {

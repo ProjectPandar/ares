@@ -307,42 +307,52 @@ fn task22o73_priority_coalesces_first_multi_retains_empty_and_reports_range_atom
 }
 
 #[test]
-fn task22o73_rotation_template_error_key_follows_projected_sparse_or_solid_role() {
+fn simple_rotation_template_cycles_angles_and_marks_them_fixed() {
     let mut graph = graph();
     let shape = rectangle(0, 0, 4_000_000, 4_000_000);
     {
         let options = options_mut(&mut graph, LAYER);
-        options.sparse_infill_rotate_template = OrcaString("15".to_owned());
-        options.solid_infill_rotate_template = OrcaString("30".to_owned());
+        options.sparse_infill_rotate_template = OrcaString("0,90".to_owned());
+        options.solid_infill_rotate_template = OrcaString("30,60".to_owned());
     }
     record_mut(&mut graph, LAYER).fill_surfaces =
         vec![surface(RegionSurfaceKind::Internal, shape.clone(), 0)];
-    let before = graph_snapshot(&graph);
-    let options_before = options(&graph, LAYER).clone();
-    let error = match group_fills::group_fills(external(&graph), 0, LAYER) {
-        Err(error) => error,
-        Ok(_) => panic!("a nonempty sparse rotation template must fail"),
-    };
+    let sparse = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     assert_eq!(
-        error,
-        SliceError::UnsupportedProjectFeature("sparse_infill_rotate_template".to_owned())
+        sparse.surface_fills[0].params.angle,
+        std::f32::consts::FRAC_PI_2
     );
-    assert_snapshot_eq(graph_snapshot(&graph), before);
-    assert_eq!(options(&graph, LAYER), &options_before);
+    assert!(sparse.surface_fills[0].params.fixed_angle);
 
     record_mut(&mut graph, LAYER).fill_surfaces =
         vec![surface(RegionSurfaceKind::InternalSolid, shape, 0)];
-    let before = graph_snapshot(&graph);
+    let solid = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
+    assert_eq!(
+        solid.surface_fills[0].params.angle,
+        std::f32::consts::FRAC_PI_3
+    );
+    assert!(solid.surface_fills[0].params.fixed_angle);
+    combine_infill::dispose(graph);
+}
+
+#[test]
+fn rotation_template_metalanguage_remains_explicitly_deferred() {
+    let mut graph = graph();
+    options_mut(&mut graph, LAYER).solid_infill_rotate_template = OrcaString("+30N2".to_owned());
+    record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
+        RegionSurfaceKind::InternalSolid,
+        rectangle(0, 0, 4_000_000, 4_000_000),
+        0,
+    )];
+
     let error = match group_fills::group_fills(external(&graph), 0, LAYER) {
         Err(error) => error,
-        Ok(_) => panic!("a nonempty solid rotation template must fail"),
+        Ok(_) => panic!("rotation-template metalanguage must remain gated"),
     };
     assert_eq!(
         error,
         SliceError::UnsupportedProjectFeature("solid_infill_rotate_template".to_owned())
     );
-    assert_snapshot_eq(graph_snapshot(&graph), before);
-    assert_eq!(options(&graph, LAYER), &options_before);
     combine_infill::dispose(graph);
 }
 

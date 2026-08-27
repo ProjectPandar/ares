@@ -1,6 +1,8 @@
 mod locked;
 mod projection;
 
+pub(in crate::project_slice) use projection::simple_rotation_angle;
+
 use crate::{
     FloatOrPercent, ObjectOptions, OrcaFloats, RegionOptions, SliceError,
     geometry::{CoordinateScale, ExPolygon},
