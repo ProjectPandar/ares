@@ -68,9 +68,15 @@ Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
 GCodeProcessor motion planner port.
 
-1. Skirt/brim generation is not implemented (`footprint.rs` only uses skirt
+1. NEXT SLICE - Skirt/brim generation is not implemented (`footprint.rs` only uses skirt
    config for bounds). Orca emits `;TYPE:Skirt` for 2 loops
-   (Print.cpp / GCode.cpp `_print_skirt`). ~18mm of E on the cube.
+   (Print.cpp _make_skirt 2646+, group_skirt.reverse at 2985, flow 2028-2049;
+   GCode.cpp generate_skirt 4388+, extrude_loop seam find_start_point).
+   ~18mm of E on the cube. Slice plan A=geometry module
+   (project_slice/skirt.rs: ConvexHull.cpp:11-43 port, offset_paths Round
+   w/ arc tol scale(0.1), Douglas-Peucker simplify scale(0.05));
+   B=emission before objects on layers < skirt_height (support_speed,
+   WIDTH comment, semantic comparator parity).
 2. Lift merging: Ares emits standalone `G1 Z{..} F9000` after wipe;
    upstream merges lift into the next XY travel
    (`G1 X.. Y.. Z2`) — GCodeWriter travel semantics.
@@ -80,8 +86,8 @@ GCodeProcessor motion planner port.
    GCodeWriter object_start_str/object_end_str flush mechanics.
 4. Travel feedrate rounding `G1 F894` vs `F908` — likely upstream float
    flow/speed computation differences in feature entry feedrates.
-5. `M204 S500/S0` pair emitted by Ares around Sparse infill but not by
-   upstream (acceleration-marker gating per feature).
+5. RESOLVED: upstream acceleration gating ported (GCode.cpp:6414-6438,
+   7374-7392; GCodeWriter.cpp:228) in commit 5a780e2.
 6. Model printing time difference (Ares 1540s vs Orca 535s) — blocked on
    full acceleration-planner parity; soft metric meanwhile.
 7. Arachne wall generator unported; classic baseline pinned via overrides,
