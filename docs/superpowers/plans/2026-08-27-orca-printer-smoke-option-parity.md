@@ -70,12 +70,7 @@ E); filament used 262.35 vs 262.34 (GCodeProcessor tachometer semantics,
 Extruder.cpp:139-144); M204 parity; headers/tail layout, preamble, fan
 init, wipe direction all match. Remaining:
 
-0. LAST DIVERGENCE - eager vs lazy retraction placement: Ares retracts
-   and wipes at layer END (eager, pinned by the KSR X2D golden); Orca
-   defers the retract+wipe to the NEXT travel (layer-2 skirt travel,
-   GCode.cpp wipe-on-travel). Fixes must keep both flavors correct:
-   likely defer via state.pending-wipe and flush at the next travel or
-   layer change per flavor.
+0. RESOLVED: lazy layer retraction via pending_layer_retract + lift-before-travel + print-object ids (commit 9e81577); Ender-3 smoke passes layers 0-1 fully. NEXT: layer 2 deposition count 97 vs 99 — Ares inserts an extra vertex ~4um before sparse-infill boundary endpoints, e.g. (106.096,113.97) then (106.1,113.963) where Orca ends directly at (106.1,113.963); two occurrences per layer; investigate the infill polyline generator (fill-line/region intersection or chain_and_reorder merging) for sliver vertices.
 
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
