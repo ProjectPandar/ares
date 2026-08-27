@@ -36,11 +36,6 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "overhang_reverse",
         ),
         (
-            "\"wall_sequence\": \"inner wall/outer wall\"",
-            "\"wall_sequence\": \"outer wall/inner wall\"",
-            "wall_sequence",
-        ),
-        (
             "\"brim_type\": \"auto_brim\"",
             "\"brim_type\": \"outer_only\"",
             "brim_type",

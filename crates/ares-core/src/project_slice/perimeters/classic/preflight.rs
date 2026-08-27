@@ -1,6 +1,6 @@
 use crate::{
     ObjectOptions, ProcessBrimType, ProcessCounterboreHoleBridging, ProcessFuzzySkinType,
-    ProcessWallSequence, RegionOptions, SliceError,
+    RegionOptions, SliceError,
 };
 
 use super::super::types::{PerimeterDispatch, PerimeterInputRecord, PostPerimeterInputPrintObject};
@@ -122,9 +122,6 @@ fn validate_record(
     }
     if region.overhang_reverse.0 {
         return Err(unsupported("overhang_reverse"));
-    }
-    if region.wall_sequence != ProcessWallSequence::InnerOuter {
-        return Err(unsupported("wall_sequence"));
     }
     if object_options.brim_type == ProcessBrimType::OuterOnly
         && object_options.brim_width.0 > 0.0

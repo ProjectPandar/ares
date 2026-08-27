@@ -6,11 +6,11 @@ use super::{
         traversal::{ClassicTraversalRecord, InactiveOverhangReverse, PendingPathBranch},
     },
     InactiveOuterBrimReordering, InactiveOverhangReorientation, InactivePostCollectionBranches,
-    InactiveWallReordering, append_nonempty, classify_inactive,
+    InactiveWallReordering, append_nonempty, classify_inactive, reorder_walls,
 };
 use crate::{
-    ObjectOptions, OrcaBool, OrcaFloat, ProcessBrimType, ProjectSettings, RegionOptions,
-    project_slice::perimeters::types::Flow,
+    ObjectOptions, OrcaBool, OrcaFloat, ProcessBrimType, ProcessWallSequence, ProjectSettings,
+    RegionOptions, project_slice::perimeters::types::Flow,
 };
 
 #[test]
@@ -20,6 +20,33 @@ fn task22o10_empty_collection_is_not_appended() {
             .collections
             .is_empty()
     );
+}
+
+#[test]
+fn wall_sequences_reorder_inset_indices_like_orca() {
+    let source = || ExtrusionEntityCollection {
+        entities: vec![entity(30, 3), entity(20, 2), entity(10, 1), entity(0, 0)],
+        source_order: 0,
+    };
+    let indices = |collection: &ExtrusionEntityCollection| {
+        collection
+            .entities
+            .iter()
+            .map(|entity| entity.inset_idx)
+            .collect::<Vec<_>>()
+    };
+
+    let mut outer_inner = source();
+    reorder_walls(&mut outer_inner, ProcessWallSequence::OuterInner, 1);
+    assert_eq!(indices(&outer_inner), [0, 1, 2, 3]);
+
+    let mut sandwich = source();
+    reorder_walls(&mut sandwich, ProcessWallSequence::InnerOuterInner, 1);
+    assert_eq!(indices(&sandwich), [3, 2, 0, 1]);
+
+    let mut first_layer = source();
+    reorder_walls(&mut first_layer, ProcessWallSequence::InnerOuterInner, 0);
+    assert_eq!(indices(&first_layer), [3, 2, 1, 0]);
 }
 
 #[test]

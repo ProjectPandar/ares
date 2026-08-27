@@ -75,7 +75,12 @@ fn transform_object(
                 (Some(source), Some(traversal_record)) => {
                     let region = region_options(traversal, index);
                     let inactive = classify_inactive(traversal_record, region, object_options);
-                    Some(transform_record(source, inactive))
+                    Some(transform_record(
+                        source,
+                        inactive,
+                        region.wall_sequence,
+                        index,
+                    ))
                 }
                 _ => panic!("O9/O5 optional record alignment is invariant"),
             },
@@ -87,19 +92,24 @@ fn transform_object(
 fn transform_record(
     source: PreparedEntityCollectionRecord,
     inactive: InactivePostCollectionBranches,
+    wall_sequence: ProcessWallSequence,
+    layer_id: usize,
 ) -> PreparedPerimeterAppendRecord {
     let surfaces = source
         .surfaces
         .into_iter()
-        .map(|surface| transform_surface(surface, inactive))
+        .map(|surface| transform_surface(surface, inactive, wall_sequence, layer_id))
         .collect();
     PreparedPerimeterAppendRecord { surfaces }
 }
 
 fn transform_surface(
-    source: PreparedEntityCollectionSurface,
+    mut source: PreparedEntityCollectionSurface,
     inactive: InactivePostCollectionBranches,
+    wall_sequence: ProcessWallSequence,
+    layer_id: usize,
 ) -> PreparedPerimeterAppendSurface {
+    reorder_walls(&mut source.collection, wall_sequence, layer_id);
     PreparedPerimeterAppendSurface {
         source_index: source.source_index,
         inactive,
@@ -124,7 +134,6 @@ fn classify_inactive(
     object: &ObjectOptions,
 ) -> InactivePostCollectionBranches {
     assert!(!record.overhang_reverse.configured);
-    assert_eq!(region.wall_sequence, ProcessWallSequence::InnerOuter);
     let layer_id = match record.branch {
         super::traversal::PendingPathBranch::OverhangClipping { layer_id, .. }
         | super::traversal::PendingPathBranch::OrdinaryUnsplit { layer_id, .. } => layer_id,
@@ -151,6 +160,39 @@ fn classify_inactive(
             overhang_reverse_internal_only: region.overhang_reverse_internal_only.0,
         },
         wall_reordering: InactiveWallReordering::InnerOuter { outer_brim },
+    }
+}
+
+fn reorder_walls(
+    collection: &mut ExtrusionEntityCollection,
+    sequence: ProcessWallSequence,
+    layer_id: usize,
+) {
+    match sequence {
+        ProcessWallSequence::InnerOuter => {}
+        ProcessWallSequence::OuterInner => collection.entities.reverse(),
+        ProcessWallSequence::InnerOuterInner if layer_id == 0 => {}
+        ProcessWallSequence::InnerOuterInner => {
+            collection.entities.reverse();
+            let mut reordered = Vec::with_capacity(collection.entities.len());
+            let mut entities = std::mem::take(&mut collection.entities)
+                .into_iter()
+                .peekable();
+            while entities.peek().is_some() {
+                let mut island = vec![entities.next().unwrap()];
+                while entities.peek().is_some_and(|entity| entity.inset_idx != 0) {
+                    island.push(entities.next().unwrap());
+                }
+                let split = island
+                    .iter()
+                    .position(|entity| entity.inset_idx >= 2)
+                    .unwrap_or(island.len());
+                let deep = island.drain(split..).rev();
+                reordered.extend(deep);
+                reordered.extend(island);
+            }
+            collection.entities = reordered;
+        }
     }
 }
 
