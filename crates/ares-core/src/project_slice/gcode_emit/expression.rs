@@ -58,6 +58,8 @@ impl Parser<'_> {
         let comparison = match self.peek() {
             Some(Token::Eq) => Some(Token::Eq),
             Some(Token::NotEq) => Some(Token::NotEq),
+            Some(Token::RegexMatch) => Some(Token::RegexMatch),
+            Some(Token::RegexNotMatch) => Some(Token::RegexNotMatch),
             Some(Token::Lt) => Some(Token::Lt),
             Some(Token::Le) => Some(Token::Le),
             Some(Token::Gt) => Some(Token::Gt),
@@ -69,7 +71,16 @@ impl Parser<'_> {
         };
         self.index += 1;
         let right = self.parse_add()?;
-        let result = if let (Some(left), Some(right)) = (left.as_number(), right.as_number()) {
+        let result = if matches!(comparison, Token::RegexMatch | Token::RegexNotMatch) {
+            let matched = regex::Regex::new(&right.as_string())
+                .map_err(|error| format!("invalid regex: {error}"))?
+                .is_match(&left.as_string());
+            if comparison == Token::RegexMatch {
+                matched
+            } else {
+                !matched
+            }
+        } else if let (Some(left), Some(right)) = (left.as_number(), right.as_number()) {
             match comparison {
                 Token::Eq => left == right,
                 Token::NotEq => left != right,
@@ -186,7 +197,7 @@ impl Parser<'_> {
         match token {
             Token::Number(value) => Ok(Value::Number(value)),
             Token::Bool(value) => Ok(Value::Bool(value)),
-            Token::String(value) => Ok(Value::String(value)),
+            Token::String(value) | Token::Regex(value) => Ok(Value::String(value)),
             Token::Ident(name) => {
                 if self.take(Token::Left) {
                     let mut args = Vec::new();
@@ -319,6 +330,17 @@ mod tests {
                 .unwrap()
                 .as_bool()
         );
+    }
+
+    #[test]
+    fn expression_supports_regex_match_and_nonmatch() {
+        let config = Config::from_block(b"; notes = PRINTER_MODEL_MINIIS HF_NOZZLE\n");
+        assert!(
+            evaluate("notes=~/.*PRINTER_MODEL_MINI.*/", &config)
+                .unwrap()
+                .as_bool()
+        );
+        assert!(evaluate("notes!~/.*MK4S.*/", &config).unwrap().as_bool());
     }
 
     #[test]

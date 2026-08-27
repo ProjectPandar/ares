@@ -3,6 +3,7 @@ pub(super) enum Token {
     Number(f64),
     Bool(bool),
     String(String),
+    Regex(String),
     Ident(String),
     Plus,
     Minus,
@@ -11,6 +12,8 @@ pub(super) enum Token {
     Percent,
     Eq,
     NotEq,
+    RegexMatch,
+    RegexNotMatch,
     Lt,
     Le,
     Gt,
@@ -47,6 +50,13 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             '*' => {
                 chars.next();
                 Token::Star
+            }
+            '/' if matches!(
+                tokens.last(),
+                Some(Token::RegexMatch | Token::RegexNotMatch)
+            ) =>
+            {
+                Token::Regex(read_regex(&mut chars)?)
             }
             '/' => {
                 chars.next();
@@ -86,13 +96,19 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
             }
             '=' => {
                 chars.next();
-                expect_char(&mut chars, '=')?;
-                Token::Eq
+                if chars.next_if_eq(&'~').is_some() {
+                    Token::RegexMatch
+                } else {
+                    expect_char(&mut chars, '=')?;
+                    Token::Eq
+                }
             }
             '!' => {
                 chars.next();
                 if chars.next_if_eq(&'=').is_some() {
                     Token::NotEq
+                } else if chars.next_if_eq(&'~').is_some() {
+                    Token::RegexNotMatch
                 } else {
                     Token::Not
                 }
@@ -166,6 +182,22 @@ fn read_string(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<S
         }
     }
     Err("unterminated string".to_owned())
+}
+
+fn read_regex(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<String, String> {
+    chars.next();
+    let mut output = String::new();
+    while let Some(character) = chars.next() {
+        match character {
+            '/' => return Ok(output),
+            '\\' => {
+                output.push(character);
+                output.push(chars.next().ok_or("unterminated regex")?);
+            }
+            character => output.push(character),
+        }
+    }
+    Err("unterminated regex".to_owned())
 }
 
 fn read_number(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<f64, String> {

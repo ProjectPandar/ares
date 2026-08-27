@@ -106,6 +106,7 @@ dependencies = [
  "boostvoronoi",
  "getrandom 0.3.4",
  "quick-xml",
+ "regex",
  "serde",
  "serde_json",
  "sha2",
