@@ -149,7 +149,7 @@ fn task22o15_no_overlap_one_failure_is_stable() {
         "\"infill_wall_overlap\": \"15%\"",
         "\"infill_wall_overlap\": \"100%\"",
     );
-    let source = prepare_post_classic_gap_extrusion(archive.bytes()).unwrap();
+    let source = prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap();
     infill_boundary::reset_geometry_hooks();
     infill_boundary::fail_geometry_at(GeometryStep::NoOverlapOne);
     match infill_boundary::finish(source) {

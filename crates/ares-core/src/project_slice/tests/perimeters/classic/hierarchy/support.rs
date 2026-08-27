@@ -15,7 +15,7 @@ pub(super) struct Summary {
 }
 
 pub(super) fn summaries(input: impl AsRef<[u8]>) -> Vec<Summary> {
-    let prepared = prepare_post_classic_hierarchy(input).unwrap();
+    let prepared = prepare_post_classic_hierarchy(input.as_ref()).unwrap();
     prepared
         .objects
         .iter()
@@ -41,7 +41,7 @@ pub(super) fn summaries(input: impl AsRef<[u8]>) -> Vec<Summary> {
 }
 
 pub(super) fn direct_raw_checksums(input: impl AsRef<[u8]>) -> Vec<(usize, i128)> {
-    prepare_post_classic_onion(input)
+    prepare_post_classic_onion(input.as_ref())
         .unwrap()
         .objects
         .iter()

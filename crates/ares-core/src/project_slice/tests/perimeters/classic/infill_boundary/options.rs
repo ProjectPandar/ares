@@ -31,7 +31,7 @@ const LARGE_PRINTABLE_AREA: &str = concat!(
 #[test]
 fn task22o15_overlap_options_come_from_typed_3mf_records() {
     let baseline =
-        overlaps(&prepare_post_classic_infill_boundary(KsrArchive::new().bytes()).unwrap());
+        overlaps(&prepare_post_classic_infill_boundary(&KsrArchive::new().bytes()).unwrap());
 
     let mut ordinary = KsrArchive::new();
     ordinary.replace_unique(
@@ -39,7 +39,7 @@ fn task22o15_overlap_options_come_from_typed_3mf_records() {
         "\"infill_wall_overlap\": \"15%\"",
         "\"infill_wall_overlap\": \"5%\"",
     );
-    let ordinary = overlaps(&prepare_post_classic_infill_boundary(ordinary.bytes()).unwrap());
+    let ordinary = overlaps(&prepare_post_classic_infill_boundary(&ordinary.bytes()).unwrap());
     assert_ne!(baseline, ordinary);
 
     let mut top = KsrArchive::new();
@@ -48,7 +48,7 @@ fn task22o15_overlap_options_come_from_typed_3mf_records() {
         "\"top_bottom_infill_wall_overlap\": \"25%\"",
         "\"top_bottom_infill_wall_overlap\": \"5%\"",
     );
-    let top = overlaps(&prepare_post_classic_infill_boundary(top.bytes()).unwrap());
+    let top = overlaps(&prepare_post_classic_infill_boundary(&top.bytes()).unwrap());
     assert_ne!(baseline, top);
 }
 
@@ -69,7 +69,7 @@ fn task22o15_true_extra_perimeter_option_stays_inactive_for_aligned_false_operan
         );
         archive.replace_unique(CONFIG, from, to);
         infill_boundary::reset_geometry_hooks();
-        prepare_post_classic_infill_boundary(archive.bytes()).unwrap();
+        prepare_post_classic_infill_boundary(&archive.bytes()).unwrap();
         assert_guard_event_order(&infill_boundary::geometry_events());
     }
 }
@@ -94,7 +94,7 @@ fn task22o15_negative_and_fractional_overlap_options_reach_typed_stage() {
             "\"infill_wall_overlap\": \"15%\"",
             &format!("\"infill_wall_overlap\": \"{value}\""),
         );
-        let output = prepare_post_classic_infill_boundary(archive.bytes()).unwrap();
+        let output = prepare_post_classic_infill_boundary(&archive.bytes()).unwrap();
         let values = overlaps(&output);
         assert!(values.iter().any(|value| value.1 != 0));
         if value.starts_with('-') {
@@ -105,14 +105,14 @@ fn task22o15_negative_and_fractional_overlap_options_reach_typed_stage() {
 
 #[test]
 fn task22o15_raw_resolution_ignores_arc_fitting_adjustment() {
-    let arc = prepare_post_classic_infill_boundary(KsrArchive::new().bytes()).unwrap();
+    let arc = prepare_post_classic_infill_boundary(&KsrArchive::new().bytes()).unwrap();
     let mut no_arc = KsrArchive::new();
     no_arc.replace_unique(
         CONFIG,
         "\"enable_arc_fitting\": \"1\"",
         "\"enable_arc_fitting\": \"0\"",
     );
-    let no_arc = prepare_post_classic_infill_boundary(no_arc.bytes()).unwrap();
+    let no_arc = prepare_post_classic_infill_boundary(&no_arc.bytes()).unwrap();
 
     assert_eq!(scaled_resolutions(&arc), scaled_resolutions(&no_arc));
     assert!(
@@ -126,10 +126,10 @@ fn task22o15_raw_resolution_ignores_arc_fitting_adjustment() {
 
 #[test]
 fn task22o15_large_bed_uses_raw_scale_specific_resolution() {
-    let normal = prepare_post_classic_infill_boundary(KsrArchive::new().bytes()).unwrap();
+    let normal = prepare_post_classic_infill_boundary(&KsrArchive::new().bytes()).unwrap();
     let mut large = KsrArchive::new();
     large.replace_unique(CONFIG, NORMAL_PRINTABLE_AREA, LARGE_PRINTABLE_AREA);
-    let large = prepare_post_classic_infill_boundary(large.bytes()).unwrap();
+    let large = prepare_post_classic_infill_boundary(&large.bytes()).unwrap();
     assert_eq!(normal.predecessor.scale.factor(), 0.000_001);
     assert_eq!(large.predecessor.scale.factor(), 0.000_01);
     assert!(
@@ -202,7 +202,7 @@ fn source_with_true_extra_perimeters_and_false_detection() -> PreparedPostClassi
         "\"detect_overhang_wall\": \"1\"",
         "\"detect_overhang_wall\": \"0\"",
     );
-    prepare_post_classic_gap_extrusion(archive.bytes()).unwrap()
+    prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap()
 }
 
 fn align_single_guard_record(

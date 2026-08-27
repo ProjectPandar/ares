@@ -1,3 +1,4 @@
+use crate::project_slice::ProjectSource;
 use crate::{
     ProjectVolumeType, Transform3d,
     geometry::{ExPolygon, Point, Polygon},
@@ -190,7 +191,7 @@ fn assert_loaded_slab(z0: f64, z1: f64, occupancy: &[bool], retained: usize) {
     assert!((normal_max - normal_min - 0.4).abs() < 1e-6);
     assert!((negative_min - normal_min - z0).abs() < 1e-6);
     assert!((negative_max - normal_min - z1).abs() < 1e-6);
-    let mut prepared = prepare_post_regions(&project).unwrap();
+    let mut prepared = prepare_post_regions(ProjectSource::from(project.as_ref())).unwrap();
     let object = &prepared.objects[0];
     assert_eq!(object.plan.layers.len(), 2);
     assert_eq!(

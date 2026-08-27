@@ -8,7 +8,7 @@ use crate::project_slice::{
 #[test]
 fn task22o18_moves_all_o17_allocations_and_retags_only_in_place() {
     let detected = surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap(),
     )
     .unwrap();
     let predecessor = std::ptr::from_ref(detected.predecessor.as_ref());

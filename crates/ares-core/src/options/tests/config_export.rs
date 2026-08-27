@@ -1,4 +1,3 @@
-mod bambu;
 mod fixture;
 mod inventory;
 mod nullable;

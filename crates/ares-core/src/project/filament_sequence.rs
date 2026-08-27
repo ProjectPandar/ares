@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, fmt};
 
 use serde::{Deserialize, Deserializer, de::Visitor};
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(transparent)]
 pub(crate) struct FilamentSequences(pub BTreeMap<PlateId, PlateFilamentSequence>);
 
@@ -55,7 +55,7 @@ impl Visitor<'_> for PlateIdVisitor {
     }
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct PlateFilamentSequence {
     pub sequence: Vec<u32>,
     pub nozzle_sequence: Vec<u32>,

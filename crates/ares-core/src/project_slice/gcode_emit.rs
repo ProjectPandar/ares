@@ -13,6 +13,7 @@ mod lexer;
 mod machine;
 mod motion;
 mod object;
+mod placeholders;
 mod processor;
 mod template;
 #[cfg(test)]

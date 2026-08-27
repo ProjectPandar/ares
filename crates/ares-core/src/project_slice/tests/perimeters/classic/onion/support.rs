@@ -24,7 +24,7 @@ pub(super) struct SurfaceSummary {
 }
 
 pub(super) fn summaries(input: impl AsRef<[u8]>) -> Vec<SurfaceSummary> {
-    prepare_post_classic_onion(input)
+    prepare_post_classic_onion(input.as_ref())
         .unwrap()
         .objects
         .iter()

@@ -7,7 +7,7 @@ use crate::project_slice::{
 #[test]
 fn task22o19_moves_o18_allocations_and_allocates_distinct_cache_paths() {
     let detected = surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap(),
     )
     .unwrap();
     let prepared = fill_surfaces::prepare(detected);
@@ -36,7 +36,7 @@ fn task22o19_moves_o18_allocations_and_allocates_distinct_cache_paths() {
 #[test]
 fn task22o19_aligned_none_slot_stays_none_without_shifting_neighbors() {
     let detected = surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap(),
     )
     .unwrap();
     let mut prepared = fill_surfaces::prepare(detected);

@@ -30,6 +30,7 @@ mod tests {
     mod effective_config;
     mod layer_config_ranges;
     mod model;
+    mod orca_cli_export;
     mod path;
     mod task22b_transform;
     mod transform;

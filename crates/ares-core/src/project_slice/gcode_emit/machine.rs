@@ -68,10 +68,7 @@ pub(super) fn append_start(
     if template.is_empty() {
         return Ok(());
     }
-    let mut config =
-        value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
-    config.insert("current_extruder", value::Value::number(0.0));
-    config.insert("current_hotend", value::Value::number(-1.0));
+    let mut config = super::placeholders::base_config(traversal);
     config.insert("next_extruder", value::Value::number(0.0));
     config.insert("next_hotend", value::Value::number(-1.0));
     config.insert("initial_no_support_extruder", value::Value::number(0.0));
@@ -134,25 +131,6 @@ pub(super) fn append_start(
                 .collect(),
         ),
     );
-    for (target, source) in [
-        ("flush_temperatures", "nozzle_temperature_range_high"),
-        ("flush_volumetric_speeds", "filament_max_volumetric_speed"),
-        (
-            "first_layer_temperature",
-            "nozzle_temperature_initial_layer",
-        ),
-    ] {
-        if let Some(value) = config.get(source).cloned() {
-            config.insert(target, value);
-        }
-    }
-    if let Some(value) = config
-        .get("hot_plate_temp_initial_layer")
-        .and_then(|value| value.index(0))
-        .cloned()
-    {
-        config.insert("bed_temperature_initial_layer_single", value);
-    }
     output.extend_from_slice(b"; FEATURE: Custom\n");
     let rendered = template::render(template, &config).map_err(|error| {
         SliceError::InvalidInput(format!("invalid project G-code template: {error}"))

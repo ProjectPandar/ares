@@ -21,15 +21,6 @@ const BANNED_KEYS: [&str; 9] = [
     "printhost_port",
 ];
 
-pub(crate) fn is_bambu_project(settings: &ProjectSettings) -> bool {
-    settings
-        .printer
-        .remaining
-        .printer_model
-        .0
-        .starts_with("Bambu Lab")
-}
-
 pub(crate) fn write_config_block(
     views: &ProjectConfigViews,
     plate_index: usize,

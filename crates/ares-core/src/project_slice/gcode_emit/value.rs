@@ -28,6 +28,15 @@ impl Value {
         }
     }
 
+    pub(super) fn iter_list(&self) -> std::slice::Iter<'_, Self> {
+        match self {
+            Self::List(values) => values.iter(),
+            scalar @ (Self::Number(_) | Self::String(_) | Self::Bool(_)) => {
+                std::slice::from_ref(scalar).iter()
+            }
+        }
+    }
+
     pub(super) fn as_number(&self) -> Option<f64> {
         match self.scalar() {
             Self::Number(value) => Some(*value),

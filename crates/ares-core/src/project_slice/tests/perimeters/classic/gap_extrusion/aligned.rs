@@ -46,7 +46,7 @@ pub(super) fn source_with_filter(value: &str) -> PreparedPostClassicMedialGap {
             &format!("\"filter_out_gap_fill\": \"{value}\""),
         );
     }
-    prepare_post_classic_medial_gap(archive.bytes()).unwrap()
+    prepare_post_classic_medial_gap(&archive.bytes()).unwrap()
 }
 
 pub(super) fn combine(

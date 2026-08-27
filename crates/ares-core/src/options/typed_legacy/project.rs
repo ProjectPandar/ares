@@ -20,11 +20,10 @@ where
 {
     if let Some(rule) = EXPLICIT_RULES.iter().find(|rule| rule.source == key) {
         if matches!(rule.action, LegacyAction::DeferredProfileBookkeeping { .. }) {
+            // Profile bookkeeping (preset inheritance metadata) does not
+            // affect slicing; OrcaSlicer loads projects carrying these keys.
             map.next_value::<IgnoredAny>()?;
-            return Err(A::Error::custom(format_args!(
-                "unsupported deferred Orca project option {}",
-                rule.source
-            )));
+            return Ok(true);
         }
         map.next_value_seed(LegacyValueSeed { builder, rule })?;
         return Ok(true);

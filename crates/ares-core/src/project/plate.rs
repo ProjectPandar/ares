@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct PlateJson {
     pub bbox_all: [f64; 4],
     pub bbox_objects: Vec<PlateObjectBounds>,
@@ -14,7 +14,7 @@ pub(crate) struct PlateJson {
     pub version: u32,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct PlateObjectBounds {
     pub area: f64,
     pub bbox: [f64; 4],

@@ -3,7 +3,7 @@ use super::{
     model_settings::ModelSettings, plate::PlateJson, slice_info::SliceInfo, transform::Transform3d,
 };
 use crate::{
-    ProjectSettings,
+    ProjectSettings, SliceError,
     options::{ObjectOptionOverrides, RegionOptionOverrides},
 };
 
@@ -79,6 +79,57 @@ impl Project {
 
     pub fn plates(&self) -> &[PlateMetadata] {
         &self.plates
+    }
+
+    /// Projects slice one plate at a time (OrcaSlicer exports `plate_<n>.gcode`
+    /// per plate). Returns a view containing only the instances of `plate_id`.
+    pub(crate) fn select_plate(&self, plate_id: u32) -> Result<Self, SliceError> {
+        let index = self
+            .plates
+            .iter()
+            .position(|plate| plate.id() == plate_id)
+            .ok_or_else(|| SliceError::InvalidInput(format!("project has no plate {plate_id}")))?;
+        let identity = self.plates[index]
+            .instances()
+            .iter()
+            .copied()
+            .collect::<std::collections::BTreeSet<_>>();
+        let objects = self
+            .objects
+            .iter()
+            .filter_map(|object| {
+                let mut instances = object.instances().to_vec();
+                instances.retain(|instance| {
+                    identity.contains(&[
+                        instance.object_id(),
+                        instance.instance_id(),
+                        instance.loaded_label_id(),
+                    ])
+                });
+                (!instances.is_empty()).then(|| {
+                    let mut object = object.clone();
+                    object.instances = instances;
+                    object
+                })
+            })
+            .collect::<Vec<_>>();
+        if objects.is_empty() {
+            return Err(SliceError::InvalidInput(format!(
+                "plate {plate_id} has no printable objects"
+            )));
+        }
+        let mut documents = self.documents.clone_shallow();
+        documents.plate_documents = vec![self.documents.plate_documents.get(index).cloned()]
+            .into_iter()
+            .flatten()
+            .collect();
+        Ok(Self {
+            models: self.models.clone(),
+            objects,
+            plates: vec![self.plates[index].clone()],
+            settings: self.settings.clone(),
+            documents,
+        })
     }
 
     pub fn settings(&self) -> &ProjectSettings {
@@ -357,4 +408,16 @@ pub(crate) struct ProjectDocuments {
     pub filament_sequences: FilamentSequences,
     pub plate_documents: Vec<PlateJson>,
     pub has_painted_layer_height_profile: bool,
+}
+
+impl ProjectDocuments {
+    pub(crate) fn clone_shallow(&self) -> Self {
+        Self {
+            model_settings: self.model_settings.clone(),
+            slice_info: self.slice_info.clone(),
+            filament_sequences: self.filament_sequences.clone(),
+            plate_documents: self.plate_documents.clone(),
+            has_painted_layer_height_profile: self.has_painted_layer_height_profile,
+        }
+    }
 }

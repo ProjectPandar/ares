@@ -3,6 +3,7 @@ use crate::{
     project::effective_config::types::BoundedResolvedProjectConfig,
 };
 
+use super::ProjectBytes;
 use super::compensation::{PreparedPostCompensation, prepare_post_compensation};
 use context::prepare_perimeter_contexts;
 
@@ -24,104 +25,108 @@ pub(super) struct PreparedPostPerimeterInputs {
     pub(super) objects: Vec<PostPerimeterInputPrintObject>,
 }
 
-pub(super) fn prepare_post_perimeter_inputs(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_perimeter_inputs<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<PreparedPostPerimeterInputs, SliceError> {
-    finish_post_perimeter_inputs(prepare_post_compensation(project)?)
+    finish_post_perimeter_inputs(prepare_post_compensation(project.into_source())?)
 }
 
-pub(super) fn prepare_post_classic_prelude(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_prelude<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicPrelude, SliceError> {
-    classic::finish_classic_prelude(prepare_post_perimeter_inputs(project)?)
+    classic::finish_classic_prelude(prepare_post_perimeter_inputs(project.into_source())?)
 }
 
-pub(super) fn prepare_post_classic_top_split(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_top_split<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicTopSplit, SliceError> {
-    classic::finish_classic_top_split(prepare_post_classic_prelude(project)?)
+    classic::finish_classic_top_split(prepare_post_classic_prelude(project.into_source())?)
 }
 
-pub(super) fn prepare_post_classic_onion(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_onion<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<Box<classic::PreparedPostClassicOnion>, SliceError> {
     Ok(Box::new(classic::finish_classic_onion(
-        prepare_post_classic_top_split(project)?,
+        prepare_post_classic_top_split(project.into_source())?,
     )?))
 }
 
-pub(super) fn prepare_post_classic_hierarchy(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_hierarchy<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<Box<classic::PreparedPostClassicHierarchy>, SliceError> {
     Ok(Box::new(classic::finish_classic_hierarchy(
-        *prepare_post_classic_onion(project)?,
+        *prepare_post_classic_onion(project.into_source())?,
     )))
 }
 
-pub(super) fn prepare_post_classic_traversal(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_traversal<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<Box<classic::PreparedPostClassicTraversal>, SliceError> {
     Ok(Box::new(classic::finish_classic_traversal(
-        *prepare_post_classic_hierarchy(project)?,
+        *prepare_post_classic_hierarchy(project.into_source())?,
     )))
 }
 
-pub(super) fn prepare_post_classic_raw_paths(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_raw_paths<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicRawPaths, SliceError> {
-    classic::finish_classic_raw_paths(prepare_post_classic_traversal(project)?)
+    classic::finish_classic_raw_paths(prepare_post_classic_traversal(project.into_source())?)
 }
 
-pub(super) fn prepare_post_classic_chained_loops(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_chained_loops<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicChainedLoops, SliceError> {
     Ok(classic::finish_classic_chained_loops(
-        prepare_post_classic_raw_paths(project)?,
+        prepare_post_classic_raw_paths(project.into_source())?,
     ))
 }
 
-pub(super) fn prepare_post_classic_entity_collections(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_entity_collections<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicEntityCollections, SliceError> {
     Ok(classic::finish_classic_entity_collections(
-        prepare_post_classic_chained_loops(project)?,
+        prepare_post_classic_chained_loops(project.into_source())?,
     ))
 }
 
-pub(super) fn prepare_post_classic_perimeter_append(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_perimeter_append<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicPerimeterAppend, SliceError> {
     Ok(classic::finish_classic_perimeter_append(
-        prepare_post_classic_entity_collections(project)?,
+        prepare_post_classic_entity_collections(project.into_source())?,
     ))
 }
 
-pub(super) fn prepare_post_classic_gap_domain(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_gap_domain<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicGapDomain, SliceError> {
-    classic::finish_classic_gap_domain(prepare_post_classic_perimeter_append(project)?)
+    classic::finish_classic_gap_domain(prepare_post_classic_perimeter_append(
+        project.into_source(),
+    )?)
 }
 
-pub(super) fn prepare_post_classic_medial_gap(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_medial_gap<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicMedialGap, SliceError> {
-    classic::finish_classic_medial_gap(prepare_post_classic_gap_domain(project)?)
+    classic::finish_classic_medial_gap(prepare_post_classic_gap_domain(project.into_source())?)
 }
 
-pub(super) fn prepare_post_classic_gap_extrusion(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_gap_extrusion<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicGapExtrusion, SliceError> {
-    classic::finish_classic_gap_extrusion(prepare_post_classic_medial_gap(project)?)
+    classic::finish_classic_gap_extrusion(prepare_post_classic_medial_gap(project.into_source())?)
 }
 
-pub(super) fn prepare_post_classic_infill_boundary(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_classic_infill_boundary<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<classic::PreparedPostClassicInfillBoundary, SliceError> {
-    classic::finish_classic_infill_boundary(prepare_post_classic_gap_extrusion(project)?)
+    classic::finish_classic_infill_boundary(prepare_post_classic_gap_extrusion(
+        project.into_source(),
+    )?)
 }
 
-pub(super) fn prepare_post_layer_region_perimeters(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_layer_region_perimeters<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<layer_region::PreparedPostLayerRegionPerimeters, SliceError> {
     Ok(layer_region::finish(prepare_post_classic_infill_boundary(
         project,

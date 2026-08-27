@@ -20,7 +20,7 @@ const LARGE_PRINTABLE_AREA: &str = concat!(
 );
 
 fn first_record(project: impl AsRef<[u8]>) -> (i64, bool) {
-    prepare_post_classic_prelude(project)
+    prepare_post_classic_prelude(project.as_ref())
         .unwrap()
         .objects
         .into_iter()
@@ -32,7 +32,7 @@ fn first_record(project: impl AsRef<[u8]>) -> (i64, bool) {
 }
 
 fn first_record_resolution(project: impl AsRef<[u8]>) -> f64 {
-    prepare_post_classic_prelude(project)
+    prepare_post_classic_prelude(project.as_ref())
         .unwrap()
         .objects
         .into_iter()
@@ -52,7 +52,7 @@ fn task22o1_fixture_prelude_runs_at_both_supported_coordinate_scales() {
         NORMAL_PRINTABLE_AREA,
         LARGE_PRINTABLE_AREA,
     );
-    let large = prepare_post_classic_prelude(archive.bytes()).unwrap();
+    let large = prepare_post_classic_prelude(&archive.bytes()).unwrap();
     assert_ne!(normal.scale, large.scale);
     assert_eq!(normal.objects.len(), large.objects.len());
     let normal_widths = normal

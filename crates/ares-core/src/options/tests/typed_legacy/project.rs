@@ -185,7 +185,9 @@ fn two_legacy_spellings_for_one_target_are_strict_duplicates() {
 }
 
 #[test]
-fn unknown_and_deferred_inputs_report_the_exact_source_name() {
+fn unknown_and_deferred_inputs_are_ignored_like_orca_config_loading() {
+    // OrcaSlicer's config loader skips unknown keys and profile-bookkeeping
+    // keys without failing the load (Config.cpp UnknownOptionException).
     for source in [
         "future_option",
         "inherits_cummulative",
@@ -194,7 +196,7 @@ fn unknown_and_deferred_inputs_report_the_exact_source_name() {
         "different_settings_to_system",
     ] {
         let input = format!(r#"{{"{source}":"value"}}"#);
-        assert_error_contains(&input, &[source]);
+        serde_json::from_str::<ProjectSettings>(&input).unwrap();
     }
 
     let settings = ProjectSettings::default();

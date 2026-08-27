@@ -12,19 +12,19 @@ const CONFIG: &str = "Metadata/project_settings.config";
 
 #[test]
 fn task22o16_wall_loop_output_changes_from_typed_3mf_option() {
-    let baseline = prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+    let baseline = prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     let baseline = perimeter_shape(&baseline);
     assert!(baseline.iter().any(|entry| entry.0 > 0));
 
     let mut archive = KsrArchive::new();
     archive.replace_unique(CONFIG, "\"wall_loops\": \"2\"", "\"wall_loops\": \"0\"");
-    let mutated = prepare_post_layer_region_perimeters(archive.bytes()).unwrap();
+    let mutated = prepare_post_layer_region_perimeters(&archive.bytes()).unwrap();
     assert_ne!(perimeter_shape(&mutated), baseline);
 }
 
 #[test]
 fn task22o16_gap_output_changes_from_typed_3mf_option() {
-    let baseline = prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+    let baseline = prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     let baseline = thin_fill_shape(&baseline);
     assert!(!baseline.is_empty());
 
@@ -34,7 +34,7 @@ fn task22o16_gap_output_changes_from_typed_3mf_option() {
         "\"gap_infill_speed\": \"250\"",
         "\"gap_infill_speed\": \"0\"",
     );
-    let mutated = prepare_post_layer_region_perimeters(archive.bytes()).unwrap();
+    let mutated = prepare_post_layer_region_perimeters(&archive.bytes()).unwrap();
     assert_ne!(thin_fill_shape(&mutated), baseline);
 }
 
@@ -55,11 +55,11 @@ fn task22o16_top_overlap_changes_fill_geometry_from_typed_3mf_option() {
 }
 
 fn assert_overlap_changes(from: &str, to: &str) {
-    let baseline = prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+    let baseline = prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     let baseline = fill_checksum(&baseline);
     let mut archive = KsrArchive::new();
     archive.replace_unique(CONFIG, from, to);
-    let mutated = prepare_post_layer_region_perimeters(archive.bytes()).unwrap();
+    let mutated = prepare_post_layer_region_perimeters(&archive.bytes()).unwrap();
     assert_ne!(fill_checksum(&mutated), baseline);
 }
 

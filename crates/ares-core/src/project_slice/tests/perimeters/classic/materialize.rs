@@ -189,7 +189,7 @@ fn assert_path_provenance(
 }
 
 fn checksum(input: impl AsRef<[u8]>) -> i128 {
-    let prepared = prepare_post_classic_raw_paths(input).unwrap();
+    let prepared = prepare_post_classic_raw_paths(input.as_ref()).unwrap();
     let mut checksum = 0_i128;
     for object in &prepared.objects {
         for record in object.records.iter().flatten() {

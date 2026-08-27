@@ -24,7 +24,7 @@ fn is_part_structural_metadata(key: &str) -> bool {
     )
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(rename = "config")]
 pub(crate) struct ModelSettings {
     #[serde(rename = "object", default)]
@@ -35,7 +35,7 @@ pub(crate) struct ModelSettings {
     pub assemble: Option<AssembleSettings>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ObjectSettings {
     pub id: u32,
     pub name: String,
@@ -69,7 +69,7 @@ impl<'de> Deserialize<'de> for ObjectSettings {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct PartSettings {
     pub id: u32,
     pub subtype: String,
@@ -78,7 +78,7 @@ pub(crate) struct PartSettings {
     pub mesh_stat: Option<MeshStatistics>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct Metadata {
     #[serde(rename = "@key")]
     pub key: String,
@@ -86,7 +86,7 @@ pub(crate) struct Metadata {
     pub value: String,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct MeshStatistics {
     #[serde(rename = "@edges_fixed")]
     pub edges_fixed: u32,
@@ -100,7 +100,7 @@ pub(crate) struct MeshStatistics {
     pub backwards_edges: u32,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct PlateSettings {
     #[serde(rename = "metadata", default)]
     pub metadata: Vec<Metadata>,
@@ -108,19 +108,19 @@ pub(crate) struct PlateSettings {
     pub model_instances: Vec<PlateModelInstance>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct PlateModelInstance {
     #[serde(rename = "metadata", default)]
     pub metadata: Vec<Metadata>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct AssembleSettings {
     #[serde(rename = "assemble_item", default)]
     pub items: Vec<AssembleItem>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub(crate) struct AssembleItem {
     #[serde(rename = "@object_id")]
     pub object_id: u32,

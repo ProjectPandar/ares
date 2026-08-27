@@ -2,6 +2,7 @@ use crate::{OrcaBool, OrcaFloat, OrcaInt, Percent, SliceError, slice_project};
 
 use super::super::super::prepare_post_top_empty_layers;
 use super::super::support::{KsrArchive, metadata};
+use crate::project_slice::ProjectSource;
 
 const PROCESS: &str = "Metadata/project_settings.config";
 const DISABLED: &str = r#""make_overhang_printable": "0""#;
@@ -61,7 +62,7 @@ fn stepped_builder(enabled: bool) -> KsrArchive {
 }
 
 fn assert_loaded_options(project: &[u8], angle: f64, enabled: bool) {
-    let prepared = prepare_post_top_empty_layers(project).unwrap();
+    let prepared = prepare_post_top_empty_layers(ProjectSource::from(project)).unwrap();
     let object = &prepared.resolved.objects[0].object;
     assert_eq!(
         (

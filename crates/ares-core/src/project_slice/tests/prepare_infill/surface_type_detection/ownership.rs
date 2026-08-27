@@ -16,7 +16,7 @@ use super::super::super::support::KsrArchive;
 #[test]
 fn task22o17_moves_unchanged_o16_allocations_and_rebuilds_fill_surfaces() {
     let source =
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     let predecessor = std::ptr::from_ref(source.predecessor.as_ref());
     let perimeter = source
         .objects

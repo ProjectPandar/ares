@@ -31,7 +31,7 @@ fn task22o15_success_and_numeric_cleanup_fit_constrained_stack() {
         "\"top_bottom_infill_wall_overlap\": \"25%\"",
         "\"top_bottom_infill_wall_overlap\": \"1e308%\"",
     );
-    let mut numeric = prepare_post_classic_gap_extrusion(archive.bytes()).unwrap();
+    let mut numeric = prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap();
     deepen_both_tree_families(&mut numeric.predecessor);
     run_on_constrained_stack(move || {
         assert!(infill_boundary::finish(numeric).is_err());
@@ -104,7 +104,7 @@ fn source_for_step(
             "\"infill_wall_overlap\": \"15%\"",
             "\"infill_wall_overlap\": \"100%\"",
         );
-        prepare_post_classic_gap_extrusion(archive.bytes()).unwrap()
+        prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap()
     } else {
         prepare_post_classic_gap_extrusion(ksr_project()).unwrap()
     }

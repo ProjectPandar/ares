@@ -45,7 +45,7 @@ fn assert_conversion_precedence(key: &str, old: &str, new: &str) {
         &format!("\"{key}\": \"{old}\""),
         &format!("\"{key}\": \"{new}\""),
     );
-    let source = prepare_post_classic_gap_extrusion(archive.bytes()).unwrap();
+    let source = prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap();
     assert_numeric_precedence(&source);
     assert!(matches!(
         infill_boundary::finish(source),

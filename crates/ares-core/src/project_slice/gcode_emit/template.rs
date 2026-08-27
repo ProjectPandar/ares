@@ -1,148 +1,214 @@
 use super::{expression::evaluate, value::Config};
 
+/// Orca template node: literal text or an `{if}`/`{elsif}`/`{else}` branch.
+/// Directives are consumed with their condition text (including any newline
+/// inside a multiline condition); every other byte, newlines included, is
+/// preserved verbatim, so whole-line and inline directives share one engine.
+enum Node {
+    Text(String),
+    Branch { arms: Vec<Arm> },
+}
+
+/// One `{if}`/`{elsif}`/`{else}` arm; `None` condition is the catch-all
+/// `{else}`.
+struct Arm {
+    condition: Option<String>,
+    nodes: Vec<Node>,
+}
+
 pub(super) fn render(template: &str, config: &Config) -> Result<String, String> {
-    let owned_lines = coalesce_directives(template);
-    let lines = owned_lines.iter().map(String::as_str).collect::<Vec<_>>();
-    let (output, next) = render_range(&lines, 0, lines.len(), config)?;
-    if next != lines.len() {
-        return Err("unbalanced template directive".to_owned());
+    let nodes = parse(template)?;
+    render_nodes(&nodes, config)
+}
+
+fn parse(template: &str) -> Result<Vec<Node>, String> {
+    let mut parser = Parser {
+        template,
+        offset: 0,
+    };
+    let (nodes, terminator) = parser.parse_branch()?;
+    match terminator {
+        None => Ok(nodes),
+        Some(_) => Err("unexpected template directive".to_owned()),
+    }
+}
+
+struct Parser<'a> {
+    template: &'a str,
+    offset: usize,
+}
+
+#[expect(
+    clippy::excessive_nesting,
+    reason = "recursive descent keeps directive scanning ordered"
+)]
+impl Parser<'_> {
+    /// Parses nodes until a branch terminator (`elsif`/`else`/`endif`), which
+    /// is consumed and reported without turning it into a node.
+    fn parse_branch(&mut self) -> Result<(Vec<Node>, Option<Directive>), String> {
+        let mut nodes = Vec::new();
+        loop {
+            let Some((start, end, directive)) = self.next_directive() else {
+                let text = &self.template[self.offset..];
+                if !text.is_empty() {
+                    nodes.push(Node::Text(text.to_owned()));
+                }
+                self.offset = self.template.len();
+                return Ok((nodes, None));
+            };
+            if start > self.offset {
+                nodes.push(Node::Text(self.template[self.offset..start].to_owned()));
+            }
+            self.offset = end;
+            match directive {
+                Directive::If(condition) => {
+                    let arms = self.parse_arms(condition)?;
+                    nodes.push(Node::Branch { arms });
+                }
+                terminator => return Ok((nodes, Some(terminator))),
+            }
+        }
+    }
+
+    /// Parses the `{if}`/`{elsif}`/`{else}` arms that follow the opening
+    /// condition, consuming the closing `{endif}`.
+    fn parse_arms(&mut self, condition: String) -> Result<Vec<Arm>, String> {
+        let mut arms = vec![Arm {
+            condition: (!condition.is_empty()).then_some(condition),
+            nodes: Vec::new(),
+        }];
+        let (nodes, terminator) = self.parse_branch()?;
+        arms.last_mut().unwrap().nodes = nodes;
+        let mut terminator = terminator;
+        loop {
+            match terminator {
+                Some(Directive::Elsif(condition)) => {
+                    let (nodes, next) = self.parse_branch()?;
+                    arms.push(Arm {
+                        condition: (!condition.is_empty()).then_some(condition),
+                        nodes,
+                    });
+                    terminator = next;
+                }
+                Some(Directive::Else) => {
+                    let (nodes, next) = self.parse_branch()?;
+                    if !matches!(next, Some(Directive::Endif)) {
+                        return Err("missing endif".to_owned());
+                    }
+                    arms.push(Arm {
+                        condition: None,
+                        nodes,
+                    });
+                    return Ok(arms);
+                }
+                Some(Directive::Endif) => return Ok(arms),
+                _ => return Err("missing endif".to_owned()),
+            }
+        }
+    }
+
+    /// Finds the next directive token and returns `(start, end, directive)`
+    /// where `end` is just past the closing `}`. `self.offset` is not
+    /// advanced; the caller keeps the text before `start`.
+    fn next_directive(&self) -> Option<(usize, usize, Directive)> {
+        let bytes = self.template.as_bytes();
+        let mut index = self.offset;
+        while index < bytes.len() {
+            if bytes[index] != b'{' {
+                index += 1;
+                continue;
+            }
+            let rest = &self.template[index + 1..];
+            let if_condition = rest.strip_prefix("if").filter(|condition| {
+                condition.starts_with([' ', '\t', '(']) || condition.is_empty()
+            });
+            if if_condition.is_some() {
+                let end = self.directive_end(index + 1)?;
+                let condition = self.template[index + 3..end].trim().to_owned();
+                return Some((index, end + 1, Directive::If(condition)));
+            }
+            let (name, length) = if rest
+                .strip_prefix("elsif")
+                .is_some_and(|tail| tail.starts_with([' ', '\t']) || tail.starts_with('}'))
+            {
+                ("elsif", "elsif".len())
+            } else if rest.starts_with("else}") {
+                ("else", "else".len())
+            } else if rest.starts_with("endif}") {
+                ("endif", "endif".len())
+            } else {
+                index += 1;
+                continue;
+            };
+            let end = self.directive_end(index + 1)?;
+            let condition = self.template[index + 1 + length..end].trim().to_owned();
+            let directive = match name {
+                "elsif" => Directive::Elsif(condition),
+                "else" => Directive::Else,
+                _ => Directive::Endif,
+            };
+            return Some((index, end + 1, directive));
+        }
+        None
+    }
+
+    /// Index of the `}` closing a directive opened at `start` (already past
+    /// `{`). Square-bracket subscripts may contain `}`-free indices but are
+    /// still skipped for safety.
+    fn directive_end(&self, start: usize) -> Option<usize> {
+        let mut square_depth: u32 = 0;
+        for (offset, character) in self.template[start..].char_indices() {
+            match character {
+                '[' => square_depth += 1,
+                ']' => square_depth = square_depth.saturating_sub(1),
+                '}' if square_depth == 0 => return Some(start + offset),
+                _ => {}
+            }
+        }
+        None
+    }
+}
+
+enum Directive {
+    If(String),
+    Elsif(String),
+    Else,
+    Endif,
+}
+
+#[expect(
+    clippy::excessive_nesting,
+    reason = "branch selection stays with node rendering"
+)]
+fn render_nodes(nodes: &[Node], config: &Config) -> Result<String, String> {
+    let mut output = String::new();
+    for node in nodes {
+        match node {
+            Node::Text(text) => output.push_str(&render_text(text, config)?),
+            Node::Branch { arms } => {
+                for arm in arms {
+                    let selected = match &arm.condition {
+                        None => true,
+                        Some(condition) => evaluate(condition, config)
+                            .map_err(|error| format!("{error} in {condition}"))?
+                            .as_bool(),
+                    };
+                    if selected {
+                        output.push_str(&render_nodes(&arm.nodes, config)?);
+                        break;
+                    }
+                }
+            }
+        }
     }
     Ok(output)
 }
 
-#[expect(
-    clippy::excessive_nesting,
-    reason = "keeps multiline directive scanning ordered"
-)]
-fn coalesce_directives(template: &str) -> Vec<String> {
-    let raw_lines = template.split_inclusive('\n').collect::<Vec<_>>();
-    let mut lines = Vec::new();
-    let mut index = 0;
-    while index < raw_lines.len() {
-        let mut line = raw_lines[index].to_owned();
-        let trimmed = line.trim_start().trim_end_matches(['\r', '\n']);
-        if (trimmed.starts_with("{if") || trimmed.starts_with("{elsif")) && !trimmed.ends_with('}')
-        {
-            line = line.trim_end_matches(['\r', '\n']).to_owned();
-            index += 1;
-            while index < raw_lines.len() {
-                let next = raw_lines[index].trim();
-                line.push_str(next);
-                if next.ends_with('}') {
-                    break;
-                }
-                index += 1;
-            }
-        }
-        lines.push(line);
-        index += 1;
-    }
-    lines
-}
-
-#[expect(
-    clippy::excessive_nesting,
-    reason = "keeps template branch rendering ordered"
-)]
-fn render_range(
-    lines: &[&str],
-    mut index: usize,
-    end: usize,
-    config: &Config,
-) -> Result<(String, usize), String> {
-    let mut output = String::new();
-    while index < end {
-        let line = lines[index];
-        if let Some(expression) = directive(line, "if") {
-            let (branches, next) = find_branches(lines, index + 1, end, expression)?;
-            let mut selected = None;
-            for (condition, start, branch_end) in branches {
-                if condition.is_empty()
-                    || evaluate(&condition, config)
-                        .map_err(|error| format!("{error} in {condition}"))?
-                        .as_bool()
-                {
-                    selected = Some((start, branch_end));
-                    break;
-                }
-            }
-            if let Some((start, branch_end)) = selected {
-                output.push_str(&directive_blank(lines[start - 1]));
-                output.push_str(&render_range(lines, start, branch_end, config)?.0);
-            }
-            output.push_str(&directive_blank(lines[next - 1]));
-            index = next;
-            continue;
-        }
-        if directive(line, "else").is_some()
-            || directive(line, "elsif").is_some()
-            || directive(line, "endif").is_some()
-        {
-            return Err("unexpected template directive".to_owned());
-        }
-        output.push_str(&replace_line(line, config)?);
-        index += 1;
-    }
-    Ok((output, index))
-}
-
-type Branch = (String, usize, usize);
-
-fn find_branches(
-    lines: &[&str],
-    mut index: usize,
-    end: usize,
-    initial_condition: &str,
-) -> Result<(Vec<Branch>, usize), String> {
-    let mut branches = Vec::new();
-    let mut depth = 0;
-    let mut condition = initial_condition.trim().to_owned();
-    let mut start = index;
-    while index < end {
-        let line = lines[index];
-        if let Some(expression) = directive(line, "if") {
-            depth += 1;
-            let _ = expression;
-        } else if directive(line, "endif").is_some() {
-            if depth == 0 {
-                branches.push((std::mem::take(&mut condition), start, index));
-                return Ok((branches, index + 1));
-            }
-            depth -= 1;
-        } else if depth == 0 {
-            if let Some(expression) = directive(line, "elsif") {
-                branches.push((std::mem::take(&mut condition), start, index));
-                condition = expression.to_owned();
-                start = index + 1;
-            } else if directive(line, "else").is_some() {
-                branches.push((std::mem::take(&mut condition), start, index));
-                condition.clear();
-                start = index + 1;
-            }
-        }
-        index += 1;
-    }
-    Err("missing endif".to_owned())
-}
-
-fn directive<'a>(line: &'a str, name: &str) -> Option<&'a str> {
-    let line = line.trim_end_matches(['\r', '\n']).trim();
-    let prefix = format!("{{{name}");
-    line.strip_prefix(&prefix)
-        .and_then(|rest| rest.strip_suffix('}'))
-        .map(str::trim)
-}
-
-fn directive_blank(line: &str) -> String {
-    let indentation = line.len() - line.trim_start().len();
-    format!("{}\n", &line[..indentation])
-}
-
-fn replace_line(line: &str, config: &Config) -> Result<String, String> {
+fn render_text(text: &str, config: &Config) -> Result<String, String> {
     let mut output = String::new();
     let mut index = 0;
-    while index < line.len() {
-        let remaining = &line[index..];
+    while index < text.len() {
+        let remaining = &text[index..];
         let next_square = remaining.find('[');
         let next_brace = remaining.find('{');
         let Some((offset, delimiter)) = [
@@ -158,10 +224,10 @@ fn replace_line(line: &str, config: &Config) -> Result<String, String> {
         output.push_str(&remaining[..offset]);
         index += offset;
         let expression_start = index + 1;
-        let Some(relative_end) = placeholder_end(line, expression_start, delimiter) else {
-            return Err(format!("unclosed placeholder in {line:?}"));
+        let Some(relative_end) = placeholder_end(text, expression_start, delimiter) else {
+            return Err(format!("unclosed placeholder in {text:?}"));
         };
-        let expression = &line[expression_start..expression_start + relative_end];
+        let expression = &text[expression_start..expression_start + relative_end];
         let value =
             evaluate(expression, config).map_err(|error| format!("{error} in {expression}"))?;
         let rendered = value.index(0).unwrap_or(&value).as_string();
@@ -171,12 +237,12 @@ fn replace_line(line: &str, config: &Config) -> Result<String, String> {
     Ok(output)
 }
 
-fn placeholder_end(line: &str, start: usize, delimiter: char) -> Option<usize> {
+fn placeholder_end(text: &str, start: usize, delimiter: char) -> Option<usize> {
     if delimiter != '[' {
-        return line[start..].find('}');
+        return text[start..].find('}');
     }
     let mut depth = 0;
-    for (offset, character) in line[start..].char_indices() {
+    for (offset, character) in text[start..].char_indices() {
         match character {
             '[' => depth += 1,
             ']' if depth == 0 => return Some(offset),
@@ -188,36 +254,4 @@ fn placeholder_end(line: &str, start: usize, delimiter: char) -> Option<usize> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::project_slice::gcode_emit::value::Config;
-
-    #[test]
-    fn renderer_selects_nested_branches_and_replaces_values() {
-        let config = Config::from_block(b"; enabled = 1\n; n = 2\n");
-        let template = "{if enabled}\nA [n]\n{if n > 1}\nB\n{endif}\n{else}\nC\n{endif}\n";
-        assert_eq!(render(template, &config).unwrap(), "\nA 2\n\nB\n\n\n");
-    }
-
-    #[test]
-    fn renderer_coalesces_multiline_conditions_and_selects_else() {
-        let config = Config::from_block(b"; enabled = 0\n; n = 2\n");
-        let template = "{if enabled == 1 ||\n n == 3}\nA\n{else}\nB [n]\n{endif}\n";
-        assert_eq!(render(template, &config).unwrap(), "\nB 2\n\n");
-    }
-
-    #[test]
-    fn renderer_keeps_closing_blank_only_for_selected_single_branch() {
-        let config = Config::from_block(b"; enabled = 1\n");
-        let template = "{if enabled}\nA\n{endif}\n{if !enabled}\nB\n{endif}\n";
-        assert_eq!(render(template, &config).unwrap(), "\nA\n\n\n");
-    }
-
-    #[test]
-    fn renderer_keeps_only_the_closing_newline_when_no_branch_matches() {
-        let config = Config::from_block(b"; enabled = 0\n");
-        let template = "{if enabled}\nA\n{elsif enabled == 2}\nB\n{endif}\n";
-
-        assert_eq!(render(template, &config).unwrap(), "\n");
-    }
-}
+mod tests;

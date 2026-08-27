@@ -2,7 +2,7 @@ use super::{super::state::prepare_project_slice, support::ksr_project};
 
 #[test]
 fn task22a_ksr_fixture_plans_exact_460_layers_from_3mf_only() {
-    let state = prepare_project_slice(ksr_project()).unwrap();
+    let state = prepare_project_slice(ksr_project(), None).unwrap();
     assert_eq!(state.project.objects().len(), 1);
     assert_eq!(state.resolved.objects.len(), 1);
     assert_eq!(state.intersected_objects.len(), 1);

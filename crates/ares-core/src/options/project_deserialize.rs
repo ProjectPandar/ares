@@ -38,10 +38,10 @@ impl<'de> Visitor<'de> for ProjectSettingsVisitor {
             if builder.deserialize_known_field(&key, &mut map)? {
                 continue;
             }
-
-            return Err(serde::de::Error::custom(format!(
-                "unknown Orca project option {key}"
-            )));
+            // OrcaSlicer's config loader ignores unknown option keys
+            // (`Config.cpp set_deserialize` catches UnknownOptionException);
+            // 3MFs written by newer slicers must still load.
+            map.next_value::<serde::de::IgnoredAny>()?;
         }
 
         builder.apply_thumbnail_composite::<A::Error>()?;

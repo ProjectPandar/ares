@@ -43,7 +43,7 @@ fn task22o2_ksr_executes_at_both_supported_coordinate_scales() {
         NORMAL_PRINTABLE_AREA,
         LARGE_PRINTABLE_AREA,
     );
-    let large = prepare_post_classic_top_split(large.bytes()).unwrap();
+    let large = prepare_post_classic_top_split(&large.bytes()).unwrap();
     assert_ne!(normal.scale, large.scale);
     assert_eq!(normal.objects.len(), large.objects.len());
     assert!(

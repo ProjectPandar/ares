@@ -31,7 +31,7 @@ fn task22o18_ksr_fill_surface_preparation_is_repeatable() {
 
 fn detected() -> surface_type_detection::PreparedPostSurfaceTypeDetection {
     surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap(),
     )
     .unwrap()
 }

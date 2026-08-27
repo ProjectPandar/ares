@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{
-    PreparedPostRegions,
+    PreparedPostRegions, ProjectBytes,
     elephant_foot::compensate_expolygons,
     prepare_post_conical_overhang,
     region_slices::{PostRegionPrintObject, RegionSurface},
@@ -105,8 +105,8 @@ pub(super) struct PreparedPostCompensation {
     pub(super) objects: Vec<PostCompensationPrintObject>,
 }
 
-pub(super) fn prepare_post_compensation(
-    project: impl AsRef<[u8]>,
+pub(super) fn prepare_post_compensation<'a>(
+    project: impl ProjectBytes<'a>,
 ) -> Result<PreparedPostCompensation, SliceError> {
     let PreparedPostRegions {
         project,
@@ -114,7 +114,7 @@ pub(super) fn prepare_post_compensation(
         config_block,
         scale,
         objects,
-    } = prepare_post_conical_overhang(project)?;
+    } = prepare_post_conical_overhang(project.into_source())?;
     let initial_layer_width = resolved.views.full.process.print.initial_layer_line_width;
     let nozzle_diameters = &resolved.views.full.project.print.nozzle_diameter;
     let objects = apply_project_compensation(

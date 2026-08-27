@@ -84,7 +84,7 @@ fn inspect_entities(
 }
 
 fn checksum(project: impl AsRef<[u8]>) -> i128 {
-    let prepared = prepare_post_classic_entity_collections(project).unwrap();
+    let prepared = prepare_post_classic_entity_collections(project.as_ref()).unwrap();
     let mut checksum = 0_i128;
     mix(&mut checksum, prepared.objects.len() as i128);
     for object in &prepared.objects {

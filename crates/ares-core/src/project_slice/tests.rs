@@ -13,6 +13,7 @@ mod largest_contours;
 mod looped_intersections;
 mod parameters;
 pub(super) mod perimeters;
+mod plates;
 mod pre_closing_unions;
 pub(in crate::project_slice) mod prepare_infill;
 mod profile_layers;

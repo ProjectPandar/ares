@@ -21,6 +21,9 @@ enum Commands {
 struct SliceArgs {
     #[arg(long)]
     options: Option<PathBuf>,
+    /// 1-based plate number to slice for multi-plate 3MF projects
+    #[arg(long)]
+    plate: Option<u32>,
     #[arg(short = 'o')]
     output: PathBuf,
     input: PathBuf,
@@ -62,7 +65,7 @@ async fn run_slice(args: SliceArgs) -> Result<(), Box<dyn Error>> {
                 u8::try_from(now.minute())?,
                 u8::try_from(now.second())?,
             )?;
-            ares_core::slice_project(input, metadata).await?
+            ares_core::slice_project_plate(input, metadata, args.plate).await?
         }
         Some(extension) if extension == "stl" => {
             let options = args.options.ok_or_else(|| {

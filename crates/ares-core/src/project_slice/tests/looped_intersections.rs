@@ -31,7 +31,7 @@ const LARGE_PRINTABLE_AREA: &str = concat!(
 
 #[test]
 fn task22d_project_state_retains_request_scale_and_source_gap_radius() {
-    let normal = prepare_project_slice(ksr_project()).unwrap();
+    let normal = prepare_project_slice(ksr_project(), None).unwrap();
     assert_eq!(normal.scale, CoordinateScale::Normal);
     assert_eq!(normal.scale.checked_scale(2.0), Some(2_000_000));
 
@@ -41,7 +41,7 @@ fn task22d_project_state_retains_request_scale_and_source_gap_radius() {
         NORMAL_PRINTABLE_AREA,
         LARGE_PRINTABLE_AREA,
     );
-    let large = prepare_project_slice(archive.bytes()).unwrap();
+    let large = prepare_project_slice(archive.bytes(), None).unwrap();
     assert_eq!(large.scale, CoordinateScale::LargeBed);
     assert_eq!(large.scale.checked_scale(2.0), Some(199_999));
 }

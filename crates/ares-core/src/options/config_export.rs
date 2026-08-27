@@ -5,4 +5,4 @@ mod writer;
 
 #[cfg(test)]
 pub(crate) use writer::write_canonical_entries;
-pub(crate) use writer::{is_bambu_project, write_config_block};
+pub(crate) use writer::write_config_block;

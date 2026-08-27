@@ -46,7 +46,7 @@ const ERROR: &str = "surface-type detection geometry is outside the supported Cl
 #[test]
 fn task22o17_success_cleanup_with_both_deep_predecessors_fits_constrained_stack() {
     let mut source =
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
     run_on_constrained_stack(move || {
         let output = surface_type_detection::prepare(source).unwrap();
@@ -60,7 +60,7 @@ fn task22o17_success_cleanup_with_both_deep_predecessors_fits_constrained_stack(
 #[test]
 fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_constrained_stack() {
     let mut source =
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
     run_on_constrained_stack(move || {
         reset_geometry_hooks();
@@ -100,7 +100,7 @@ fn task22o17_every_project_staging_failure_with_deep_predecessors_fits_constrain
 #[test]
 fn task22o17_preflight_failure_with_deep_predecessors_fits_constrained_stack() {
     let mut source =
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
     source.predecessor.resolved.objects[0]
         .object
@@ -123,7 +123,7 @@ fn task22o17_preflight_failure_with_deep_predecessors_fits_constrained_stack() {
 #[test]
 fn task22o17_public_incomplete_cleanup_with_deep_predecessors_fits_constrained_stack() {
     let mut source =
-        perimeters::prepare_post_layer_region_perimeters(KsrArchive::new().bytes()).unwrap();
+        perimeters::prepare_post_layer_region_perimeters(&KsrArchive::new().bytes()).unwrap();
     deepen_both_tree_families(&mut source.predecessor);
     let (drop_probe, dropped) = source.predecessor.drop_probe_observer();
     run_on_constrained_stack(move || {

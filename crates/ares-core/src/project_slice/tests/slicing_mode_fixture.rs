@@ -74,7 +74,7 @@ fn process_mode(mode: &str) -> Vec<u8> {
 }
 
 fn fixture_snapshot(project: impl AsRef<[u8]>) -> Result<FixtureSnapshot, SliceError> {
-    let state = prepare_project_slice(project)?;
+    let state = prepare_project_slice(project, None)?;
     let resolved = state.resolved;
     let object = &resolved.objects[0];
     let region = &object.layer_candidates[0].model_parts[0].region;

@@ -178,17 +178,14 @@ fn canonical_and_legacy_thumbnail_collisions_remain_strict() {
 }
 
 #[test]
-fn unreachable_legacy_inputs_remain_exact_unknown_names() {
+fn unreachable_legacy_inputs_are_ignored_like_orca_config_loading() {
     for source in [
         "perimeter_feed_rate",
         "wiping_volumes_matrix",
         "wiping_volumes_use_custom_matrix",
     ] {
         let input = format!(r#"{{"{source}":"value"}}"#);
-        assert_error_contains(
-            &input,
-            &[&format!("unknown Orca project option {source}")],
-        );
+        serde_json::from_str::<ProjectSettings>(&input).unwrap();
     }
 }
 

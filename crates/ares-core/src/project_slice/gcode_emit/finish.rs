@@ -10,8 +10,7 @@ pub(super) fn append(
     max_layer_z: f64,
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
-    let mut config =
-        value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
+    let mut config = super::placeholders::base_config(traversal);
     config.insert("current_extruder", value::Value::number(0.0));
     config.insert(
         "layer_num",

@@ -1,13 +1,16 @@
 use crate::ProjectSettings;
 
 #[test]
-fn unknown_and_duplicate_diagnostics_are_compact_and_exact_keyed() {
+fn unknown_project_options_are_ignored_like_orca_config_loading() {
+    let settings: ProjectSettings =
+        serde_json::from_str(r#"{"future_option":"1","layer_height":"0.2"}"#).unwrap();
+    // unknown keys are skipped; known keys still parse
+    assert!(!format!("{settings:?}").is_empty());
+}
+
+#[test]
+fn duplicate_diagnostics_are_compact_and_exact_keyed() {
     for (input, key, exact) in [
-        (
-            r#"{"future_option":"1"}"#,
-            "future_option",
-            "unknown Orca project option future_option",
-        ),
         (
             r#"{"layer_height":"0.2","layer_height":"0.3"}"#,
             "layer_height",

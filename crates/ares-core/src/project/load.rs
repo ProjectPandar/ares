@@ -89,9 +89,13 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
     let mut plate_documents = Vec::with_capacity(metadata.plates.len());
     for plate in &metadata.plates {
         let path = format!("Metadata/plate_{}.json", plate.id());
-        let document: PlateJson = read_json(&mut archive, &path, JsonRole::Plate)?;
-        metadata::validate_plate_document(&document)?;
-        plate_documents.push(document);
+        // OrcaSlicer only writes plate documents when saving a sliced plate;
+        // CLI exports of unsliced projects omit them.
+        if archive_paths.contains(&PackagePath::root().resolve(&path)?) {
+            let document: PlateJson = read_json(&mut archive, &path, JsonRole::Plate)?;
+            metadata::validate_plate_document(&document)?;
+            plate_documents.push(document);
+        }
     }
     let settings: ProjectSettings = read_json(
         &mut archive,
@@ -206,16 +210,17 @@ fn validate_plate_previews(
     Ok(())
 }
 
+// OrcaSlicer writes thumbnail relationships unconditionally
+// (`3mf.cpp _add_relationships_file_to_archive`) and ignores referenced
+// preview parts missing from the archive; Ares only validates parts that
+// exist.
 fn validate_preview_path(
     path: &PackagePath,
     content_types: &ContentTypes,
     archive_paths: &BTreeSet<PackagePath>,
 ) -> Result<(), SliceError> {
     if !archive_paths.contains(path) {
-        return Err(SliceError::InvalidInput(format!(
-            "project preview {:?} is missing",
-            path.as_str()
-        )));
+        return Ok(());
     }
     if content_types.content_type(path) != Some(PNG_CONTENT_TYPE) {
         return Err(SliceError::InvalidInput(format!(

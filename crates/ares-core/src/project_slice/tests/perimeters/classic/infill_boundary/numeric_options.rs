@@ -29,7 +29,7 @@ struct NumericContext {
 
 #[test]
 fn task22o15_typed_3mf_reaches_post_subtraction_overflow() {
-    let source = prepare_post_classic_gap_extrusion(KsrArchive::new().bytes()).unwrap();
+    let source = prepare_post_classic_gap_extrusion(&KsrArchive::new().bytes()).unwrap();
     let contexts = ordinary_contexts(&source);
     let max_basis = contexts.iter().map(|context| context.basis).max().unwrap();
     let percent = i64::MIN as f64 / max_basis as f64 * 100.0;
@@ -47,7 +47,7 @@ fn task22o15_typed_3mf_reaches_post_subtraction_overflow() {
 fn task22o15_typed_3mf_reaches_no_overlap_delta_overflow() {
     let mut wide = KsrArchive::new();
     replace_solid_width(&mut wide);
-    let source = prepare_post_classic_gap_extrusion(wide.bytes()).unwrap();
+    let source = prepare_post_classic_gap_extrusion(&wide.bytes()).unwrap();
     let contexts = ordinary_contexts(&source);
     let context = contexts.iter().max_by_key(|context| context.basis).unwrap();
     let post_target = i64::MAX as f64 - (1_u64 << 20) as f64;
@@ -142,7 +142,7 @@ fn replace_solid_width(archive: &mut KsrArchive) {
 }
 
 fn assert_preflight_range_error(archive: KsrArchive) {
-    let source = prepare_post_classic_gap_extrusion(archive.bytes()).unwrap();
+    let source = prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap();
     assert_numeric_precedence(&source);
     assert!(matches!(
         infill_boundary::finish(source),

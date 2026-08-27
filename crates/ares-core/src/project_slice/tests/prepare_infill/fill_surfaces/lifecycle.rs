@@ -64,7 +64,7 @@ async fn task22o18_global_spiral_is_rejected_even_when_record_flags_would_be_fal
         "\"bottom_shell_thickness\": \"1000\"",
     );
     let detected = surface_type_detection::prepare(
-        perimeters::prepare_post_layer_region_perimeters(thresholds.clone().bytes()).unwrap(),
+        perimeters::prepare_post_layer_region_perimeters(&thresholds.clone().bytes()).unwrap(),
     )
     .unwrap();
     assert!(detected.predecessor.objects.iter().all(|object| {

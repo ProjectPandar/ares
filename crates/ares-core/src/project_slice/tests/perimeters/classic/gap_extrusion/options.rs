@@ -12,7 +12,7 @@ fn task22o14_filter_option_rejects_negative_and_nonfinite_typed_values() {
         "\"filter_out_gap_fill\": \"0\"",
         "\"filter_out_gap_fill\": \"-1\"",
     );
-    match prepare_post_classic_gap_extrusion(negative.bytes()) {
+    match prepare_post_classic_gap_extrusion(&negative.bytes()) {
         Err(error) => assert_eq!(
             error,
             SliceError::InvalidInput("invalid Orca option filter_out_gap_fill".to_owned()),
@@ -27,7 +27,7 @@ fn task22o14_filter_option_rejects_negative_and_nonfinite_typed_values() {
             "\"filter_out_gap_fill\": \"0\"",
             &format!("\"filter_out_gap_fill\": \"{value}\""),
         );
-        match prepare_post_classic_gap_extrusion(archive.bytes()) {
+        match prepare_post_classic_gap_extrusion(&archive.bytes()) {
             Err(SliceError::InvalidInput(message)) => {
                 assert!(message.contains("Orca numeric value must be finite"));
             }
@@ -39,7 +39,7 @@ fn task22o14_filter_option_rejects_negative_and_nonfinite_typed_values() {
 
 #[test]
 fn task22o14_filter_option_uses_fractional_fixed_threshold_without_rounding() {
-    let baseline = prepare_post_classic_gap_extrusion(KsrArchive::new().bytes()).unwrap();
+    let baseline = prepare_post_classic_gap_extrusion(&KsrArchive::new().bytes()).unwrap();
     let baseline_count = retained_count(&baseline.objects);
     let mut archive = KsrArchive::new();
     archive.replace_unique(
@@ -47,7 +47,7 @@ fn task22o14_filter_option_uses_fractional_fixed_threshold_without_rounding() {
         "\"filter_out_gap_fill\": \"0\"",
         "\"filter_out_gap_fill\": \"0.0001005\"",
     );
-    let filtered = prepare_post_classic_gap_extrusion(archive.bytes()).unwrap();
+    let filtered = prepare_post_classic_gap_extrusion(&archive.bytes()).unwrap();
     assert!(retained_count(&filtered.objects) <= baseline_count);
 }
 

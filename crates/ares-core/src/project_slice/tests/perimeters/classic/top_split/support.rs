@@ -14,7 +14,7 @@ pub(super) fn project() -> &'static [u8] {
 }
 
 pub(super) fn outcomes(input: impl AsRef<[u8]>) -> Vec<TopSplitOutcome> {
-    prepare_post_classic_top_split(input)
+    prepare_post_classic_top_split(input.as_ref())
         .unwrap()
         .objects
         .into_iter()
@@ -26,7 +26,7 @@ pub(super) fn outcomes(input: impl AsRef<[u8]>) -> Vec<TopSplitOutcome> {
 }
 
 pub(super) fn upper_sources(input: impl AsRef<[u8]>) -> Vec<TopSplitUpperSource> {
-    prepare_post_classic_top_split(input)
+    prepare_post_classic_top_split(input.as_ref())
         .unwrap()
         .objects
         .into_iter()
@@ -40,7 +40,7 @@ pub(super) fn upper_sources(input: impl AsRef<[u8]>) -> Vec<TopSplitUpperSource>
 pub(super) fn geometry_summary(
     input: impl AsRef<[u8]>,
 ) -> Vec<(usize, usize, usize, usize, i128, i128)> {
-    prepare_post_classic_top_split(input)
+    prepare_post_classic_top_split(input.as_ref())
         .unwrap()
         .objects
         .into_iter()

@@ -16,7 +16,7 @@ pub(super) struct Summary {
 }
 
 pub(super) fn assert_record_alignment(input: impl AsRef<[u8]>) {
-    let prepared = prepare_post_classic_traversal(input).unwrap();
+    let prepared = prepare_post_classic_traversal(input.as_ref()).unwrap();
     let mut saw_non_roundtripping_height = false;
     let mut saw_odd_layer = false;
     let mut saw_even_layer = false;
@@ -61,7 +61,7 @@ pub(super) fn assert_record_alignment(input: impl AsRef<[u8]>) {
 }
 
 pub(super) fn summaries(input: impl AsRef<[u8]>) -> Vec<Summary> {
-    let prepared = prepare_post_classic_traversal(input).unwrap();
+    let prepared = prepare_post_classic_traversal(input.as_ref()).unwrap();
     prepared
         .objects
         .iter()

@@ -75,7 +75,9 @@ fn project_import_rejects_missing_or_wrong_relationship_targets() {
 }
 
 #[test]
-fn project_import_rejects_missing_declared_root_preview_targets() {
+fn project_import_tolerates_missing_declared_root_preview_targets() {
+    // OrcaSlicer's exporter references preview parts unconditionally and its
+    // loader ignores missing parts, so CLI exports must load.
     for (from, to) in [
         (
             r#"Target="/Metadata/plate_1.png" Id="rel-2""#,
@@ -92,12 +94,12 @@ fn project_import_rejects_missing_declared_root_preview_targets() {
     ] {
         let mut parts = ProjectParts::fixture();
         parts.replace("_rels/.rels", from, to);
-        assert!(load_project(parts.bytes()).is_err(), "accepted {from}");
+        assert!(load_project(parts.bytes()).is_ok(), "rejected {from}");
     }
 }
 
 #[test]
-fn project_import_rejects_wrong_preview_mime_and_missing_plate_preview() {
+fn project_import_rejects_wrong_preview_mime_but_tolerates_missing_previews() {
     let mut wrong_mime = ProjectParts::fixture();
     wrong_mime.replace(
         "[Content_Types].xml",
@@ -106,9 +108,11 @@ fn project_import_rejects_wrong_preview_mime_and_missing_plate_preview() {
     );
     assert!(load_project(wrong_mime.bytes()).is_err());
 
+    // OrcaSlicer references plate previews unconditionally and loads
+    // projects whose preview parts are absent (CLI exports).
     let mut missing_pick = ProjectParts::fixture();
     missing_pick.remove("Metadata/pick_1.png");
-    assert!(load_project(missing_pick.bytes()).is_err());
+    assert!(load_project(missing_pick.bytes()).is_ok());
 }
 
 #[test]

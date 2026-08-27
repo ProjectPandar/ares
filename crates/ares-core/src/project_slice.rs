@@ -66,13 +66,24 @@ pub async fn slice_project(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
 ) -> Result<Vec<u8>, SliceError> {
-    slice_project_sync(project, metadata)
+    slice_project_plate(project, metadata, None).await
+}
+
+/// Slices one plate of a multi-plate 3MF project. `plate` selects the plate
+// by its `plater_id`; `None` selects the first plate.
+pub async fn slice_project_plate(
+    project: impl AsRef<[u8]>,
+    metadata: GenerationMetadata,
+    plate: Option<u32>,
+) -> Result<Vec<u8>, SliceError> {
+    slice_project_sync(project, metadata, plate)
 }
 
 #[inline(never)]
 fn slice_project_sync(
     project: impl AsRef<[u8]>,
     metadata: GenerationMetadata,
+    plate: Option<u32>,
 ) -> Result<Vec<u8>, SliceError> {
     let external = prepare_infill::external_surfaces::prepare(
         prepare_infill::horizontal_shell_propagation::prepare(
@@ -86,7 +97,10 @@ fn slice_project_sync(
                                         prepare_infill::fill_surfaces::prepare(
                                             prepare_infill::surface_type_detection::prepare(
                                                 perimeters::prepare_post_layer_region_perimeters(
-                                                    project,
+                                                    ProjectSource {
+                                                        bytes: project.as_ref(),
+                                                        plate,
+                                                    },
                                                 )?,
                                             )?,
                                         ),
@@ -128,6 +142,47 @@ struct PreparedPostClosing {
     objects: Vec<closing::PostClosingPrintObject>,
 }
 
+/// Byte input plus the plate to slice. Implements `AsRef<[u8]>` so the
+/// byte-threading pipeline forwards it transparently; only the state seam
+/// that loads the project reads the plate selection.
+#[derive(Clone, Copy)]
+pub(crate) struct ProjectSource<'a> {
+    bytes: &'a [u8],
+    plate: Option<u32>,
+}
+
+impl AsRef<[u8]> for ProjectSource<'_> {
+    fn as_ref(&self) -> &[u8] {
+        self.bytes
+    }
+}
+
+/// Accepts borrowed byte sources as well as an explicit [`ProjectSource`].
+trait ProjectBytes<'a> {
+    fn into_source(self) -> ProjectSource<'a>;
+}
+
+impl<'a> ProjectBytes<'a> for ProjectSource<'a> {
+    fn into_source(self) -> ProjectSource<'a> {
+        self
+    }
+}
+
+impl<'a, T: AsRef<[u8]> + ?Sized> ProjectBytes<'a> for &'a T {
+    fn into_source(self) -> ProjectSource<'a> {
+        ProjectSource {
+            bytes: self.as_ref(),
+            plate: None,
+        }
+    }
+}
+
+impl<'a> From<&'a [u8]> for ProjectSource<'a> {
+    fn from(bytes: &'a [u8]) -> Self {
+        Self { bytes, plate: None }
+    }
+}
+
 struct PreparedPostRegions {
     project: Project,
     resolved: BoundedResolvedProjectConfig,
@@ -136,14 +191,14 @@ struct PreparedPostRegions {
     objects: Vec<region_slices::PostRegionPrintObject>,
 }
 
-fn prepare_post_closing(project: impl AsRef<[u8]>) -> Result<PreparedPostClosing, SliceError> {
+fn prepare_post_closing(project: ProjectSource<'_>) -> Result<PreparedPostClosing, SliceError> {
     let state::ProjectSliceState {
         project,
         resolved,
         config_block,
         scale,
         intersected_objects,
-    } = state::prepare_project_slice(project)?;
+    } = state::prepare_project_slice(project.bytes, project.plate)?;
     let chained_objects = chained_intersections::chain_project_intersections(intersected_objects);
     let max_gap_scaled = scale
         .checked_scale(2.0)
@@ -169,7 +224,7 @@ fn prepare_post_closing(project: impl AsRef<[u8]>) -> Result<PreparedPostClosing
 }
 
 fn prepare_post_largest_contours(
-    project: impl AsRef<[u8]>,
+    project: ProjectSource<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
     let mut prepared = prepare_post_closing(project)?;
     largest_contours::apply_project_largest_contours(&mut prepared.objects);
@@ -177,7 +232,7 @@ fn prepare_post_largest_contours(
 }
 
 fn prepare_post_simplification(
-    project: impl AsRef<[u8]>,
+    project: ProjectSource<'_>,
 ) -> Result<PreparedPostClosing, SliceError> {
     let mut prepared = prepare_post_largest_contours(project)?;
     let resolution = prepared.resolved.views.full.process.print.resolution.0;
@@ -189,7 +244,7 @@ fn prepare_post_simplification(
     Ok(prepared)
 }
 
-fn prepare_post_regions(project: impl AsRef<[u8]>) -> Result<PreparedPostRegions, SliceError> {
+fn prepare_post_regions(project: ProjectSource<'_>) -> Result<PreparedPostRegions, SliceError> {
     let PreparedPostClosing {
         project,
         resolved,
@@ -239,7 +294,7 @@ fn prepare_post_regions(project: impl AsRef<[u8]>) -> Result<PreparedPostRegions
 }
 
 fn prepare_post_top_empty_layers(
-    project: impl AsRef<[u8]>,
+    project: ProjectSource<'_>,
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_regions(project)?;
     top_empty_layers::remove_project_top_empty_layers(&mut prepared.objects);
@@ -247,7 +302,7 @@ fn prepare_post_top_empty_layers(
 }
 
 fn prepare_post_conical_overhang(
-    project: impl AsRef<[u8]>,
+    project: ProjectSource<'_>,
 ) -> Result<PreparedPostRegions, SliceError> {
     let mut prepared = prepare_post_top_empty_layers(project)?;
     conical_overhang::apply_project_conical_overhang(

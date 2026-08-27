@@ -169,7 +169,7 @@ pub use project::{
     LayerConfigRange, PlateMetadata, Point3d, Project, ProjectInstance, ProjectMesh, ProjectModel,
     ProjectObject, ProjectVolume, ProjectVolumeType, Transform3d, load_project,
 };
-pub use project_slice::slice_project;
+pub use project_slice::{slice_project, slice_project_plate};
 pub use segments::{LayerSlice, Point2, Segment2, slice_layers};
 pub use skirts::{DraftShield, LayerSkirts, SkirtOptions, SkirtPath, SkirtType, generate_skirts};
 pub use speeds::{

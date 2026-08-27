@@ -1,3 +1,4 @@
+use crate::project_slice::ProjectSource;
 use crate::{
     OrcaFloat, OrcaInt, Point3d, ProjectMesh, ProjectVolume, ProjectVolumeType, RegionOptions,
     SliceError, Transform3d,
@@ -202,10 +203,10 @@ fn task22j_loaded_bfs_raw_ids_and_support_gap_keep_released_occurrences() {
 #[rustfmt::skip]
 fn task22j_empty_range_document_is_absent_and_real_range_stays_rejected() {
     let absent = KsrArchive::new().bytes(); let mut empty = KsrArchive::new(); empty.insert_text("Metadata/layer_config_ranges.xml", "<objects/>"); let empty = empty.bytes();
-    assert_eq!(prepare_project_slice(&absent).unwrap().resolved, prepare_project_slice(&empty).unwrap().resolved);
+    assert_eq!(prepare_project_slice(&absent, None).unwrap().resolved, prepare_project_slice(&empty, None).unwrap().resolved);
     assert_eq!(loaded_graph(&absent).0, loaded_graph(&empty).0);
     let mut ranged = KsrArchive::new(); ranged.insert_text("Metadata/layer_config_ranges.xml", r#"<objects><object id="1"><range min_z="0" max_z="1"><option opt_key="extruder">1</option></range></object></objects>"#);
-    assert_eq!(prepare_project_slice(ranged.bytes()).err().unwrap(), SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned()));
+    assert_eq!(prepare_project_slice(ranged.bytes(), None).err().unwrap(), SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned()));
 }
 
 #[test]
@@ -263,7 +264,7 @@ fn loaded_graph(bytes: &[u8]) -> (VolumeRegionGraph, RegionOptions, Vec<u32>) {
         resolved,
         objects,
         ..
-    } = prepare_post_simplification(bytes).unwrap();
+    } = prepare_post_simplification(ProjectSource::from(bytes)).unwrap();
     let source = &project.objects()[0];
     let resolved_object = &resolved.objects[0];
     let parent = resolved_object.layer_candidates[0].model_parts[0]

@@ -108,7 +108,7 @@ async fn task22a_lifecycle_reaches_planning_error_precedence() {
 }
 
 #[tokio::test]
-async fn task22a_non_bambu_skips_writer_but_runs_planning() {
+async fn task22a_non_bambu_writes_config_block_and_runs_planning() {
     let mut archive = invalid_bambu_chain();
     set_scalar(
         &mut archive,
@@ -116,6 +116,9 @@ async fn task22a_non_bambu_skips_writer_but_runs_planning() {
         "Bambu Lab X2D",
         "Generic FFF",
     );
+    assert_eq!(slice_error(&archive).await, flush_matrix_error());
+
+    archive.repair_flush_matrix();
     assert_eq!(
         slice_error(&archive).await,
         SliceError::UnsupportedProjectFeature("raft_layers".to_owned())
@@ -136,7 +139,7 @@ fn task22a_private_state_owns_single_project_config_block_and_plans() {
         config_block,
         scale,
         intersected_objects,
-    } = prepare_project_slice(KsrArchive::new().bytes()).unwrap();
+    } = prepare_project_slice(KsrArchive::new().bytes(), None).unwrap();
 
     assert_eq!(project.objects().len(), 1);
     assert_eq!(resolved.objects.len(), 1);

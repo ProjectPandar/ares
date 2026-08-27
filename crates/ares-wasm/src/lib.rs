@@ -18,8 +18,13 @@ pub async fn slice_stl_bytes(input: Vec<u8>, options_json: &str) -> Result<Vec<u
 
 #[wasm_bindgen(js_name = sliceProject)]
 pub async fn slice_project(input: Vec<u8>) -> Result<Vec<u8>, JsValue> {
+    slice_project_plate(input, None).await
+}
+
+#[wasm_bindgen(js_name = sliceProjectPlate)]
+pub async fn slice_project_plate(input: Vec<u8>, plate: Option<u32>) -> Result<Vec<u8>, JsValue> {
     let metadata = local_generation_metadata().map_err(slice_error_js)?;
-    ares_core::slice_project(input, metadata)
+    ares_core::slice_project_plate(input, metadata, plate)
         .await
         .map_err(slice_error_js)
 }
