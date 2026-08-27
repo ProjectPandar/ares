@@ -155,6 +155,10 @@ impl RegionSurface {
         self.thickness = thickness;
     }
 
+    pub(super) fn set_thickness_layers(&mut self, thickness_layers: u16) {
+        self.thickness_layers = thickness_layers;
+    }
+
     #[cfg(test)]
     pub(super) fn internal_with_metadata(
         expolygon: ExPolygon,

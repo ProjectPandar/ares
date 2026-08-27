@@ -1,5 +1,4 @@
 use crate::{
-    SliceError,
     project_slice::{
         prepare_infill::{bridge_over_infill::transaction, combine_infill},
         tests::support::{KsrArchive, metadata},
@@ -8,7 +7,7 @@ use crate::{
 };
 
 #[tokio::test]
-async fn task22o72_public_active_combination_error_precedes_the_incomplete_sink() {
+async fn active_combination_reaches_complete_public_slice() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
@@ -18,38 +17,32 @@ async fn task22o72_public_active_combination_error_precedes_the_incomplete_sink(
     combine_infill::reset_hooks();
     transaction::reset_hooks();
 
-    assert_eq!(
-        slice_project(archive.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("infill_combination".to_owned())
-    );
+    let output = slice_project(archive.bytes(), metadata()).await.unwrap();
+    assert!(!output.is_empty());
     assert_eq!(transaction::invocations(), 1);
     assert_eq!(transaction::disposals(), 1);
     assert_eq!(combine_infill::invocations(), 1);
-    assert_eq!(combine_infill::disposals(), 0);
+    assert_eq!(combine_infill::disposals(), 1);
 
     combine_infill::reset_hooks();
     transaction::reset_hooks();
 }
 
 #[tokio::test]
-async fn task22o72_public_density_above_source_f32_threshold_is_active() {
+async fn density_above_source_f32_threshold_combines_successfully() {
     let threshold = f64::from(0.00011_f32);
     let next = f64::from_bits(threshold.to_bits() + 1).to_string();
     combine_infill::reset_hooks();
     transaction::reset_hooks();
 
-    assert_eq!(
-        slice_project(combination_density_archive(&next).bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("infill_combination".to_owned())
-    );
+    let output = slice_project(combination_density_archive(&next).bytes(), metadata())
+        .await
+        .unwrap();
+    assert!(!output.is_empty());
     assert_eq!(transaction::invocations(), 1);
     assert_eq!(transaction::disposals(), 1);
     assert_eq!(combine_infill::invocations(), 1);
-    assert_eq!(combine_infill::disposals(), 0);
+    assert_eq!(combine_infill::disposals(), 1);
 
     combine_infill::reset_hooks();
     transaction::reset_hooks();

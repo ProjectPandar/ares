@@ -1,16 +1,13 @@
-use crate::{
-    SliceError,
-    project_slice::{
-        prepare_infill::{bridge_over_infill::transaction, combine_infill},
-        tests::support::KsrArchive,
-    },
+use crate::project_slice::{
+    prepare_infill::{bridge_over_infill::transaction, combine_infill},
+    tests::support::KsrArchive,
 };
 
 const PROJECT_SETTINGS: &str = "Metadata/project_settings.config";
 const MODEL_SETTINGS: &str = "Metadata/model_settings.config";
 
 #[test]
-fn task22o72_archive_combination_with_nonzero_density_is_an_explicit_gate() {
+fn archive_combination_with_nonzero_density_produces_successor() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         PROJECT_SETTINGS,
@@ -18,13 +15,13 @@ fn task22o72_archive_combination_with_nonzero_density_is_an_explicit_gate() {
         "\"infill_combination\": \"1\"",
     );
 
-    assert_active_gate(archive, true, &[(true, 15.0)]);
+    assert_active_combination(archive, true, &[(true, 15.0)]);
 }
 
 #[test]
-fn task22o72_effective_object_and_part_overrides_drive_the_materialized_region_gate() {
+fn effective_object_and_part_overrides_drive_combination() {
     for archive in [object_override_archive(), part_override_archive()] {
-        assert_active_gate(archive, false, &[(true, 15.0)]);
+        assert_active_combination(archive, false, &[(true, 15.0)]);
     }
 }
 
@@ -95,8 +92,8 @@ fn task22o72_materialized_part_combination_at_zero_density_is_an_identity() {
 }
 
 #[test]
-fn task22o72_later_object_active_combination_is_not_skipped() {
-    assert_active_gate(
+fn later_object_active_combination_is_not_skipped() {
+    assert_active_combination(
         later_object_override_archive(),
         false,
         &[(false, 15.0), (true, 15.0)],
@@ -119,26 +116,19 @@ fn task22o72_nonzero_density_sign_does_not_replace_exact_zero() {
         post_regions.regions[0].options.infill_combination.0 = true;
         post_regions.regions[0].options.sparse_infill_density.0 = density;
 
-        let error = match combine_infill::prepare(input) {
-            Err(error) => error,
-            Ok(output) => {
-                combine_infill::dispose(output);
-                panic!("every nonzero density must activate combination")
-            }
-        };
+        let output = combine_infill::prepare(input).unwrap();
 
-        assert_eq!(
-            error,
-            SliceError::UnsupportedProjectFeature("infill_combination".to_owned())
-        );
-        assert_eq!(transaction::disposals(), 1);
+        assert_eq!(transaction::disposals(), 0);
         assert_eq!(combine_infill::disposals(), 0);
+        combine_infill::dispose(output);
+        assert_eq!(transaction::disposals(), 1);
+        assert_eq!(combine_infill::disposals(), 1);
         combine_infill::reset_hooks();
         transaction::reset_hooks();
     }
 }
 
-fn assert_active_gate(
+fn assert_active_combination(
     archive: KsrArchive,
     expected_global: bool,
     expected_options: &[(bool, f64)],
@@ -165,19 +155,15 @@ fn assert_active_gate(
         expected_global
     );
 
-    let error = match combine_infill::prepare(input) {
-        Err(error) => error,
-        Ok(_) => panic!("active infill combination must not publish an O72 successor"),
-    };
+    let output = combine_infill::prepare(input).unwrap();
 
-    assert_eq!(
-        error,
-        SliceError::UnsupportedProjectFeature("infill_combination".to_owned())
-    );
     assert_eq!(transaction::invocations(), 1);
-    assert_eq!(transaction::disposals(), 1);
+    assert_eq!(transaction::disposals(), 0);
     assert_eq!(combine_infill::invocations(), 1);
     assert_eq!(combine_infill::disposals(), 0);
+    combine_infill::dispose(output);
+    assert_eq!(transaction::disposals(), 1);
+    assert_eq!(combine_infill::disposals(), 1);
     combine_infill::reset_hooks();
     transaction::reset_hooks();
 }
