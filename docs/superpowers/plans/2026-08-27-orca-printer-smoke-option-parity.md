@@ -194,6 +194,22 @@ init, wipe direction all match. Remaining:
    upstream sequence for same-line pinches (finish + rewrite + new
    polyline + outer-extension).
 
+MAJOR CORRECTION (2026-08-27): the infills.rs rejection was a
+coordinate-space BUG in the probe filter (world 106.x vs model-centered
+local coords). Layer-2 solid infill DOES come from infills.rs scanlines
+(pipeline.rs -> generate_infills). The divergent path is TWO chained
+2-point solid scanline candidates: orca ONE
+[(106.024,113.928)->(106.1,113.963)] 0.0837mm; ares TWO
+[(106.024,113.928)->(106.096,113.97)] + [(106.096,113.97)->
+(106.1,113.963)] — one scanline crosses the region contour twice 8.4um
+apart where orca yields one pair. Root cause: region-contour micro-edge
+(vertical-shell booleans) feeding overlap::adjusted_contours ->
+clip_contours. The monotonic/phony investigation (top layers >= 1.2)
+was a red herring for THIS record. NEXT: dump infills.rs layer inputs
+with LOCAL coords near (-3.93,3.93) at z=0.6; find the boolean stage
+injecting the micro-edge; compare with upstream Print.cpp region
+production.
+
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
 GCodeProcessor motion planner port.
