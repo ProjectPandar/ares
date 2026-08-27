@@ -148,6 +148,23 @@ init, wipe direction all match. Remaining:
    emit.rs extended-vs-finish branch at the apex and print both
    endpoints' inner/outer kinds.
 
+   BREAKTHROUGH (2026-08-27): the connector is NOT a horizontal arc —
+   260 HARCs fire, none at the apex. The bent path is a VERTICAL LINK
+   crossing an inner-contour PINCH: polyline [outerA(106.096,113.886),
+   innerA(106.024,113.928), PINCH-VERTEX(106.096,113.97),
+   outerB(106.1,113.963)] — one scanline intersects the pinched corner
+   4x (outer,inner,inner,outer); ares links inner->inner THROUGH the
+   pinch vertex (emit_vertical_arc walks the contour), keeping one
+   polyline. Upstream inserts PHONY OUTER POINTS at pinches
+   (insert_phony_outer_pairs; FillRectilinear.cpp finish_polyline
+   comment) so the polyline SPLITS there and later epsilon-merges only
+   when endpoints coincide — producing Orca's straight-looking output.
+   FIX TARGET: ares pinch.rs + emit_vertical_arc phony-point split vs
+   walking through the pinch. Compare against upstream
+   emit_perimeter_segment_on_vertical_line + phony pair insertion and
+   the finish_polyline SCALED_EPSILON merge (FillRectilinear.cpp:2585-
+   2617).
+
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
 GCodeProcessor motion planner port.
