@@ -104,6 +104,15 @@ init, wipe direction all match. Remaining:
    contour presumably lacks the tiny edge, so its inset keeps a
    straight edge. Debug hook recipe: dump expolygon.contour() in
    fill_entities/monotonic.rs with LOCAL coords (model-centered).
+   UPDATE (2026-08-27): the sparse-threshold small-piece union
+   (process.rs:115-121) NEVER fires for the cube (0 pieces) — the
+   corner solid strips come from the VERTICAL SHELL boundary booleans
+   (prepare_infill/vertical_shell_assignment; upstream equivalent:
+   ensure_vertical_shell_thickness in Print.cpp). The 0.067mm stepped
+   edge on the monotonic input contour is produced by those boundary
+   booleans; compare against upstream's vertical-shell region
+   production (offset/intersection parameters and any missing
+   simplify) as the next concrete step.
 
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
