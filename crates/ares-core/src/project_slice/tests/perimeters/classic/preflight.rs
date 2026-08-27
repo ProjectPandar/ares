@@ -31,11 +31,6 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "alternate_extra_wall",
         ),
         (
-            "\"only_one_wall_first_layer\": \"0\"",
-            "\"only_one_wall_first_layer\": \"1\"",
-            "only_one_wall_first_layer",
-        ),
-        (
             "\"overhang_reverse\": \"0\"",
             "\"overhang_reverse\": \"1\"",
             "overhang_reverse",
@@ -73,6 +68,31 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "{key}"
         );
     }
+}
+
+#[tokio::test]
+async fn only_one_wall_first_layer_reduces_first_layer_perimeters() {
+    let baseline = slice_project(KsrArchive::new().bytes(), metadata())
+        .await
+        .unwrap();
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"only_one_wall_first_layer\": \"0\"",
+        "\"only_one_wall_first_layer\": \"1\"",
+    );
+
+    let reduced = slice_project(archive.bytes(), metadata()).await.unwrap();
+
+    let inner_walls = |gcode: &[u8]| {
+        String::from_utf8_lossy(gcode)
+            .split("; CHANGE_LAYER")
+            .nth(1)
+            .unwrap()
+            .matches("; FEATURE: Inner wall")
+            .count()
+    };
+    assert!(inner_walls(&reduced) < inner_walls(&baseline));
 }
 
 #[tokio::test]

@@ -120,11 +120,6 @@ fn validate_record(
     {
         return Err(unsupported("alternate_extra_wall"));
     }
-    if region.only_one_wall_first_layer.0
-        && i32::try_from(record.layer_id).ok() == Some(object_options.raft_layers.0)
-    {
-        return Err(unsupported("only_one_wall_first_layer"));
-    }
     if region.overhang_reverse.0 {
         return Err(unsupported("overhang_reverse"));
     }
@@ -162,8 +157,15 @@ fn validate_record(
         .map(|value| value.0)
         .ok_or_else(|| invalid("invalid Orca option nozzle_diameter"))?;
 
+    let first_object_layer =
+        i32::try_from(record.layer_id).ok() == Some(object_options.raft_layers.0);
+    let wall_loops = if region.only_one_wall_first_layer.0 && first_object_layer {
+        region.wall_loops.0.min(1)
+    } else {
+        region.wall_loops.0
+    };
     Ok(ValidatedClassicConfig {
-        wall_loops: region.wall_loops.0,
+        wall_loops,
         precise_outer_wall: region.precise_outer_wall.0,
         detect_overhang_wall: region.detect_overhang_wall.0,
         only_one_wall_top: region.only_one_wall_top.0,
