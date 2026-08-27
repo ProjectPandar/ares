@@ -194,6 +194,21 @@ init, wipe direction all match. Remaining:
    upstream sequence for same-line pinches (finish + rewrite + new
    polyline + outer-extension).
 
+PROBE RESULT (2026-08-27): ThickPolyline dump proves the kink is
+ALREADY in the ares arachne output: the corner toolpath is a
+4-junction diamond [(-3.9040,3.8863) (-3.9765,3.9282) (-3.9040,3.9700)
+(-3.8798,3.9282)] local (=world P1(106.096,113.886) P2(106.024,
+113.928) P3(106.096,113.970) P4(106.120,113.928)). ORCA emits only
+[P1,P2,P3'] with P3'=(106.1,113.963) ~8um inside our P3 and never
+reaches P4. So the ares arachne skeleton at this corner produces one
+extra junction (P4) and a slightly different apex node (P3 vs P3').
+NEXT: (a) check whether finalize_polylines loop_clipping explains P3'
+(seam-gap clip of a CLOSED diamond would not, but verify orca loop
+clipping value = seam_gap); (b) diff the corner node in
+arachne/skeletal trapezoidation against upstream Arachne skeleton
+(node placement near 45-deg corners), and the outline simplification
+input (upstream WallToolPaths.cpp simplify params).
+
 CORRECTION-2 (2026-08-27): concentric.rs ALREADY routes
 ConcentricInternal through the arachne port with the exact upstream
 FillConcentricInternal params, and upstream default for
