@@ -165,6 +165,21 @@ init, wipe direction all match. Remaining:
    the finish_polyline SCALED_EPSILON merge (FillRectilinear.cpp:2585-
    2617).
 
+   REFINED (2026-08-27): with the true scale factor (Normal=1e-6
+   mm/unit) the bent vertex (106.096,113.97) lies on NO contour (inner
+   hexagon apex = (105.98,114.02); outer diamond vertex =
+   (106.01,113.99)). It sits ON a scanline at the midpoint of the two
+   pinched inner points => it is a PHONY OUTER point inserted by
+   pinch.rs insert_pairs. So ares emits the phony point into the
+   polyline; Orca's output lacks it. Compare how each emitter treats
+   phony points: upstream walks polylines THROUGH phonies but SPLITS
+   them (contour==-1 has no links) and finish_polyline's epsilon-merge
+   rejoins pieces sharing the phony endpoint — check whether upstream
+   merge drops the shared phony vertex from the merged polyline, and
+   whether ares' emit.rs keeps walking through the phony instead of
+   splitting. Probe: dump polyline points around phony (contour_index
+   == usize::MAX) in emit.rs.
+
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
 GCodeProcessor motion planner port.
