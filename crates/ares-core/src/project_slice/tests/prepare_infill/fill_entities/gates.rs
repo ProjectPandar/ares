@@ -36,6 +36,7 @@ fn implemented_sparse_groups_emit_fill_paths() {
         ProcessInfillPattern::Rectilinear,
         ProcessInfillPattern::Triangles,
         ProcessInfillPattern::Cubic,
+        ProcessInfillPattern::Gyroid,
     ] {
         let mut graph = graph();
         record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
@@ -57,6 +58,27 @@ fn implemented_sparse_groups_emit_fill_paths() {
         );
         combine_infill::dispose(graph);
     }
+}
+
+#[test]
+fn optimized_gyroid_is_rejected_until_marching_squares_is_ported() {
+    let mut graph = graph();
+    record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
+        RegionSurfaceKind::Internal,
+        rectangle(0, 0, 12_000_000, 8_000_000),
+        0,
+    )];
+    let options = options_mut(&mut graph, LAYER);
+    options.sparse_infill_pattern = ProcessInfillPattern::Gyroid;
+    options.gyroid_optimized = crate::OrcaBool(true);
+
+    assert_eq!(
+        generate_layer(external(&graph), 0, LAYER),
+        Err(SliceError::UnsupportedProjectFeature(
+            "gyroid_optimized".to_owned()
+        ))
+    );
+    combine_infill::dispose(graph);
 }
 
 #[test]

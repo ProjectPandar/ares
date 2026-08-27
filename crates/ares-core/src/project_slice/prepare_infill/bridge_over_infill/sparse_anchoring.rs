@@ -2,6 +2,7 @@ use crate::{
     FloatOrPercent, ProcessInfillPattern, RegionOptions, SliceError,
     fill::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
+        gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
         rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     },
@@ -150,6 +151,30 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     );
                 }
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
+                if fill.params.gyroid_optimized {
+                    return Err(SliceError::UnsupportedProjectFeature(
+                        "gyroid_optimized".to_owned(),
+                    ));
+                }
+                let params = GyroidFillParams {
+                    z,
+                    spacing: fill.params.spacing,
+                    overlap: 0.0,
+                    angle: fill.params.angle,
+                    density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    multiline: fill.params.multiline,
+                    anchor_length: fill.params.anchor_length,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    dont_sort: false,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_gyroid(&expolygon, params, traversal.scale)
+                            .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
             SurfaceFillPattern::Configured(
                 ProcessInfillPattern::Rectilinear | ProcessInfillPattern::ZigZag,
             ) => {
@@ -193,7 +218,6 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::LateralLattice
                 | ProcessInfillPattern::TpmsD
                 | ProcessInfillPattern::TpmsFk
-                | ProcessInfillPattern::Gyroid
                 | ProcessInfillPattern::Concentric
                 | ProcessInfillPattern::HilbertCurve
                 | ProcessInfillPattern::ArchimedeanChords

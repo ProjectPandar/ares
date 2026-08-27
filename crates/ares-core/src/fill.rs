@@ -1,6 +1,7 @@
 pub(crate) mod checked_rotate;
 pub(crate) mod connect;
 pub(crate) mod cross_hatch;
+pub(crate) mod gyroid;
 pub(crate) mod multiline;
 #[cfg_attr(
     not(test),

@@ -19,10 +19,14 @@ pub(super) fn validate(
             | ProcessInfillPattern::Grid
             | ProcessInfillPattern::Triangles
             | ProcessInfillPattern::Cubic
+            | ProcessInfillPattern::Gyroid
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::ZigZag
     ) {
         return unsupported("sparse_infill_pattern");
+    }
+    if options.sparse_infill_pattern == ProcessInfillPattern::Gyroid && options.gyroid_optimized.0 {
+        return unsupported("gyroid_optimized");
     }
     if options.sparse_infill_density.0 <= 0.0 {
         return unsupported("sparse_infill_density");

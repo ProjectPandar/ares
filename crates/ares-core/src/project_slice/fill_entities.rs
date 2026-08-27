@@ -2,6 +2,7 @@ mod concentric;
 mod crosshatch;
 mod cubic;
 mod grid;
+mod gyroid;
 mod monotonic;
 mod triangles;
 mod types;
@@ -158,6 +159,9 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
                 triangles::append(&mut output, fill, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
+                gyroid::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear
