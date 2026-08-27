@@ -28,7 +28,9 @@ impl ObjectLabels {
         let bitset = 1_u64.checked_shl(position as u32)?;
         Some(Self {
             name: object.name().to_owned(),
-            object_id: object.id(),
+            // `PrintObject::get_id()` is the sequential print-object index,
+            // not the 3MF mesh id (`GCode.cpp:5349-5352`).
+            object_id: object_index as u32,
             copy_id: instance.instance_id(),
             label_id: instance.loaded_label_id(),
             encoded_labels: encode_base64(bitset.to_le_bytes()),

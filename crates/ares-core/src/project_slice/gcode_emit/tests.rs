@@ -100,9 +100,9 @@ async fn task22o143_ksr_seam_gap_clips_before_path_simplification() {
         .unwrap();
     let travel = lines[..feature]
         .iter()
-        .rposition(|line| line.starts_with("G1 X") && line.ends_with(" F60000"))
+        .rposition(|line| *line == "G1 Z.6 F60000")
         .unwrap();
-    let travel_xy = lines[travel]
+    let travel_xy = lines[travel + 1]
         .split_ascii_whitespace()
         .skip(1)
         .take(2)
@@ -228,7 +228,7 @@ async fn ksr_project_retracts_wipes_and_lifts_before_timelapse() {
     assert_eq!(invalid_numeric_word, None);
 
     assert!(output.contains(
-        "; stop printing object ksr_fdmtest_v4.drc id:2 copy 0\nG1 E-.11429 F1800\n; WIPE_START\nG1 F6300\nG1 X109.036 Y94.518 E-.28571\n; WIPE_END\nG17\nG3 Z.6 I1.217 J0 P1  F60000\n; stop printing object, unique label id: 133\nM625\n;======== X2D timelapse gcode ========\n"
+        "; stop printing object ksr_fdmtest_v4.drc id:0 copy 0\nG1 E-.11429 F1800\n; WIPE_START\nG1 F6300\nG1 X109.036 Y94.518 E-.28571\n; WIPE_END\nG17\nG3 Z.6 I1.217 J0 P1  F60000\n; stop printing object, unique label id: 133\nM625\n;======== X2D timelapse gcode ========\n"
     ));
 }
 #[tokio::test]

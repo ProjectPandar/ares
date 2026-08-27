@@ -16,6 +16,7 @@ mod tests;
 mod travel;
 
 pub(in crate::project_slice) use arc::simplify_points;
+pub(super) use travel::{flush_pending_retract_lift, flush_pending_retract_wipe};
 
 use features::PathProperties;
 pub(in crate::project_slice::gcode_emit) use options::MotionOptions;
@@ -63,6 +64,9 @@ pub(super) struct EmitState {
     pub(super) internal_bridge_fan_marker_layer: Option<usize>,
     pub(super) pending_object_start: Option<(u32, [u8; 12])>,
     pub(super) tags: super::tags::Tags,
+    /// Deferred layer-change retraction for the compatible flavor — set at
+    /// the layer end, flushed after the next layer marker block.
+    pub(super) pending_layer_retract: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -144,7 +148,13 @@ pub(super) fn begin_path_travel(
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
-        travel::retract_for_timelapse(output, state);
+        if state.tags.is_bbl() {
+            travel::retract_for_timelapse(output, state);
+        } else {
+            // Compatible flavor defers the retraction past the layer
+            // marker block; `flush_pending_retract_wipe`/`_lift` emit it.
+            state.pending_layer_retract = true;
+        }
     }
 }
 

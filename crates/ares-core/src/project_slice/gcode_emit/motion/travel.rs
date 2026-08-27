@@ -23,6 +23,30 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
     state.retracted = true;
 }
 
+/// Non-BBL printers defer the layer-change retraction to after the next
+/// layer marker block (`GCode.cpp` change_layer: the wipe lands between
+/// the rendered `before_layer_change_gcode` and the cooling fan marker,
+/// the lift after it).
+pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if state.pending_layer_retract && !state.retracted {
+        retract_and_wipe(output, state);
+    }
+}
+
+pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if state.pending_layer_retract && !state.retracted {
+        append_eager_lift(output, state);
+        state.retracted = true;
+    }
+    state.pending_layer_retract = false;
+}
+
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
     let WipePath {
         segments,

@@ -218,7 +218,8 @@ async fn first_layer_seam_and_island_order_match_project_slice() {
     let mut lines = output
         .lines()
         .skip_while(|line| *line != "M624 AQAAAAAAAAA=");
-    assert_eq!(lines.nth(1), Some("G1 X140.158 Y102.797 F60000"));
+    assert_eq!(lines.nth(1), Some("G1 Z.6 F60000"));
+    assert!(lines.next().unwrap().starts_with("G1 X140.158 Y102.797"));
     let lines = output.lines().collect::<Vec<_>>();
     let first_helical_travel = lines
         .iter()

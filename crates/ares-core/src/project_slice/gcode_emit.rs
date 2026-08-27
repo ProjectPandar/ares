@@ -130,6 +130,7 @@ pub(super) fn emit(
                 layer_index,
                 f64::from(layer_z),
             )?;
+            motion::flush_pending_retract_wipe(&mut output, &mut state);
             if layer_index == 0 {
                 motion::retract_before_layer(&mut output, &mut state);
             }
@@ -140,6 +141,7 @@ pub(super) fn emit(
                 f64::from(layer_z),
                 max_additional_fan,
             )?;
+            motion::flush_pending_retract_lift(&mut output, &mut state);
             motion::begin_layer(
                 &mut output,
                 &mut state,
