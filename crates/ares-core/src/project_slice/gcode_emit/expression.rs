@@ -275,6 +275,16 @@ fn function(name: &str, args: Vec<Value>) -> Result<Value, String> {
             .map(Value::Number)
             .ok_or("max requires an argument".to_owned()),
         "ceil" if numbers.len() == 1 => Ok(Value::Number(numbers[0].ceil())),
+        "digits" if matches!(numbers.len(), 2 | 3) => {
+            let width = numbers[1].clamp(0.0, 64.0) as usize;
+            let rendered = if let Some(decimals) = numbers.get(2) {
+                let decimals = decimals.clamp(0.0, 64.0) as usize;
+                format!("{:.decimals$}", numbers[0])
+            } else {
+                format!("{:.0}", numbers[0])
+            };
+            Ok(Value::String(format!("{rendered:>width$}")))
+        }
         _ => Err(format!("unknown function: {name}")),
     }
 }
@@ -308,6 +318,22 @@ mod tests {
             evaluate("type == \"PLA\" && max(n, 3) == 3", &config())
                 .unwrap()
                 .as_bool()
+        );
+    }
+
+    #[test]
+    fn expression_formats_digits_with_width_and_decimals() {
+        assert_eq!(
+            evaluate("digits(values[1], 8, 2)", &config())
+                .unwrap()
+                .as_string(),
+            "    5.00"
+        );
+        assert_eq!(
+            evaluate("digits(values[1], 3)", &config())
+                .unwrap()
+                .as_string(),
+            "  5"
         );
     }
 
