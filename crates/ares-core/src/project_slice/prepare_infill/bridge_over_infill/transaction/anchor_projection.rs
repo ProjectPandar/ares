@@ -13,7 +13,10 @@ pub(super) fn validate(
     spacing: f32,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    if options.sparse_infill_pattern != ProcessInfillPattern::CrossHatch {
+    if !matches!(
+        options.sparse_infill_pattern,
+        ProcessInfillPattern::CrossHatch | ProcessInfillPattern::Grid
+    ) {
         return unsupported("sparse_infill_pattern");
     }
     if options.sparse_infill_density.0 <= 0.0 {
@@ -34,10 +37,18 @@ pub(super) fn validate(
     if options.fill_multiline.0 != 1 {
         return unsupported("fill_multiline");
     }
-    if options.top_surface_pattern != ProcessInfillPattern::MonotonicLine {
+    if !matches!(
+        options.top_surface_pattern,
+        ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
+    ) {
         return unsupported("top_surface_pattern");
     }
-    if options.internal_solid_infill_pattern != ProcessInfillPattern::Monotonic {
+    if !matches!(
+        options.internal_solid_infill_pattern,
+        ProcessInfillPattern::Monotonic
+            | ProcessInfillPattern::MonotonicLine
+            | ProcessInfillPattern::Rectilinear
+    ) {
         return unsupported("internal_solid_infill_pattern");
     }
     if options.sparse_infill_filament_id != options.internal_solid_filament_id

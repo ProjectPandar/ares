@@ -164,7 +164,7 @@ pub enum ProcessInfillPattern {
     Rectilinear,
     #[serde(rename = "alignedrectilinear")]
     AlignedRectilinear,
-    #[serde(rename = "zigzag")]
+    #[serde(rename = "zig-zag", alias = "zigzag")]
     ZigZag,
     #[serde(rename = "crosszag")]
     CrossZag,

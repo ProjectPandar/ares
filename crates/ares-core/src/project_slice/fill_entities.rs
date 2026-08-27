@@ -1,5 +1,6 @@
 mod concentric;
 mod crosshatch;
+mod grid;
 mod monotonic;
 mod types;
 
@@ -145,6 +146,12 @@ pub(in crate::project_slice) fn generate_layer(
     for fill in grouped.surface_fills {
         match fill.params.pattern {
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
+                crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Grid) => {
+                grid::append(&mut output, fill, layer.print_z, layer.id, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Rectilinear) => {
                 crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(

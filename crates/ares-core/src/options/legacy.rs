@@ -310,10 +310,7 @@ fn normalize_legacy_ironing_angle(value: Value) -> Value {
 }
 
 fn normalize_legacy_pattern(value: Value) -> Value {
-    match value.as_str() {
-        Some("zig-zag") => Value::String("rectilinear".to_owned()),
-        _ => value,
-    }
+    value
 }
 
 fn normalize_legacy_filament_map_mode(value: Value) -> Value {

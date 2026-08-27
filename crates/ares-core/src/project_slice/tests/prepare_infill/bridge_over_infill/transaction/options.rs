@@ -150,12 +150,12 @@ fn task22o71_unported_anchor_direction_controls_fail_without_fallback() {
 fn task22o71_unported_anchor_group_params_fail_without_fallback() {
     assert_unsupported_mutation(
         "\"top_surface_pattern\": \"monotonicline\"",
-        "\"top_surface_pattern\": \"monotonic\"",
+        "\"top_surface_pattern\": \"gyroid\"",
         "top_surface_pattern",
     );
     assert_unsupported_mutation(
         "\"internal_solid_infill_pattern\": \"monotonic\"",
-        "\"internal_solid_infill_pattern\": \"monotonicline\"",
+        "\"internal_solid_infill_pattern\": \"gyroid\"",
         "internal_solid_infill_pattern",
     );
     assert_unsupported_mutation(
