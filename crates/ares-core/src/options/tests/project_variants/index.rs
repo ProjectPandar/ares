@@ -65,6 +65,39 @@ fn guard_uses_only_physical_groups_repeats_first_and_ignores_trailing() {
 }
 
 #[test]
+fn one_shared_variant_broadcasts_across_identical_physical_extruders() {
+    let mut source = active_source();
+    source.project.print.nozzle_diameter = OrcaFloats(vec![
+        crate::OrcaFloat(0.4),
+        crate::OrcaFloat(0.4),
+        crate::OrcaFloat(0.4),
+        crate::OrcaFloat(0.4),
+    ]);
+    source.printer.remaining.extruder_variant_list =
+        ExtruderVariantLists(vec!["Direct Drive Standard".to_owned()]);
+    source.printer.gcode.extruder_type = ExtruderTypes(vec![ExtruderType::DirectDrive]);
+    source.project.gcode.nozzle_volume_type =
+        NozzleVolumeTypes(vec![NozzleVolumeType::Standard]);
+    source.printer.gcode.printer_extruder_id = ints(&[1]);
+    source.printer.gcode.printer_extruder_variant =
+        OrcaStrings(vec!["Direct Drive Standard".to_owned()]);
+    source.process.region.print_extruder_id = ints(&[1]);
+    source.process.region.print_extruder_variant =
+        OrcaStrings(vec!["Direct Drive Standard".to_owned()]);
+    source.project.preset.filament_self_index = ints(&[1]);
+    source.filament.gcode.filament_extruder_variant =
+        VariantStride(vec!["Direct Drive Standard".to_owned()]);
+    source.project.gcode.filament_map = ints(&[1]);
+
+    let indices = inspect_printer_indices_for_test(&source).unwrap().unwrap();
+    let once = materialize_project_variants(&source, &ints(&[1])).unwrap();
+    let twice = materialize_project_variants(&once, &ints(&[1])).unwrap();
+
+    assert_eq!(indices, [0, 0, 0, 0]);
+    assert_eq!(twice, once);
+}
+
+#[test]
 fn guard_preserves_edge_empty_and_whitespace_tokens() {
     for group in [
         ",,Direct Drive Standard,,,",

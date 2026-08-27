@@ -157,6 +157,21 @@ fn resolve_requests<'a>(
     if variants.is_empty() {
         return Err(invalid(variant_key));
     }
+    let requests = requests.into_iter().collect::<Vec<_>>();
+    // ConfigOptionVector::get_at repeats its first value when a serialized
+    // vector carries one shared value (`Config.hpp:322-330`). Orca exports
+    // this compact form for multi-tool printers whose variants are equal.
+    let shared_variant = &variants[0];
+    if variants.iter().all(|variant| variant == shared_variant)
+        && requests
+            .iter()
+            .all(|(_, requested_variant)| *requested_variant == shared_variant)
+        && ids
+            .first()
+            .is_none_or(|first| ids.iter().all(|id| id == first))
+    {
+        return Ok(vec![0; requests.len()]);
+    }
 
     let complete_ids = ids.len() >= variants.len();
     let generated_ids = (!complete_ids).then(|| generated_ids(variant_groups));
