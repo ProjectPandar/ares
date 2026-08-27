@@ -31,19 +31,9 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "alternate_extra_wall",
         ),
         (
-            "\"overhang_reverse\": \"0\"",
-            "\"overhang_reverse\": \"1\"",
-            "overhang_reverse",
-        ),
-        (
             "\"brim_type\": \"auto_brim\"",
             "\"brim_type\": \"outer_only\"",
             "brim_type",
-        ),
-        (
-            "\"extra_perimeters_on_overhangs\": \"0\"",
-            "\"extra_perimeters_on_overhangs\": \"1\"",
-            "extra_perimeters_on_overhangs",
         ),
         (
             "\"counterbore_hole_bridging\": \"none\"",

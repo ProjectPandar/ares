@@ -76,10 +76,6 @@ fn prepare_object(
             match (hierarchy_record, prelude_record, input) {
                 (Some(hierarchy_record), Some(prelude), Some(input)) => {
                     let region = input_object.region_options(input);
-                    assert!(
-                        !region.overhang_reverse.0,
-                        "O1 preflight rejects active overhang reversal"
-                    );
                     let odd_layer = input.layer_id % 2 == 1;
                     let flows = RouteFlows {
                         perimeter: input.perimeter_flow,

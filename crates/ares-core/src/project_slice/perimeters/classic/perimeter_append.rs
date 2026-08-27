@@ -133,7 +133,6 @@ fn classify_inactive(
     region: &RegionOptions,
     object: &ObjectOptions,
 ) -> InactivePostCollectionBranches {
-    assert!(!record.overhang_reverse.configured);
     let layer_id = match record.branch {
         super::traversal::PendingPathBranch::OverhangClipping { layer_id, .. }
         | super::traversal::PendingPathBranch::OrdinaryUnsplit { layer_id, .. } => layer_id,

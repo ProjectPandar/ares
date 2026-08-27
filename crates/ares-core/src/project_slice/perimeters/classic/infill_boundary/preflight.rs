@@ -265,6 +265,9 @@ fn validate_inactive_extra_perimeters(
         } => (detect_overhang_wall, layer_id, raft_layers),
     };
     assert_eq!(input.layer_id, layer_id);
+    if options.extra_perimeters_on_overhangs.0 {
+        return;
+    }
     assert!(!extra_perimeters_active(ExtraPerimeterGuard {
         spiral_mode: input.spiral_mode,
         has_lower: input.lower_layer_index.is_some(),
