@@ -114,6 +114,15 @@ init, wipe direction all match. Remaining:
    production (offset/intersection parameters and any missing
    simplify) as the next concrete step.
 
+   CONFIRMED (2026-08-27): emit_horizontal_arc DOES walk multi-segment
+   arcs through the inner-offset hexagon vertex index 2 (rotated-scaled
+   (~-4407977, ~1276726); two per-layer variants 4 units apart). The
+   emitter matches upstream exactly — the fix belongs in the boolean
+   input. Fastest next probe: dump the INNER offset input contour
+   (segments.rs prepare_contours 'rotated' expolygon) at the sliver and
+   check which vertical-shell boolean stage adds the micro edge;
+   upstream reference Print.cpp ensure_vertical_shell_thickness.
+
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
 GCodeProcessor motion planner port.
