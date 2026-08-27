@@ -179,6 +179,20 @@ init, wipe direction all match. Remaining:
    whether ares' emit.rs keeps walking through the phony instead of
    splitting. Probe: dump polyline points around phony (contour_index
    == usize::MAX) in emit.rs.
+   COMPARISON RESULTS: the stop conditions already match (ares
+   up-loop breaks at InnerHigh+OuterHigh; phonies carry OuterHigh kind;
+   ares has the finish-rewrite to the outer neighbor AND the start
+   outer-extension). Remaining behavior difference must be in the
+   region-advance handling when both pinched inner points sit on the
+   SAME scanline: upstream rewrites polyline1's end to the phony OUTER
+   and starts polyline2 at the phony/outer, producing two pieces whose
+   gcode junction shows the straight inner-to-inner chord; ares keeps
+   one polyline THROUGH the phony point. NEXT: walk ares emit.rs with a
+   debugger/dump at one pinch — print (a) polyline contents each time a
+   phony point (contour_index==usize::MAX) is about to be pushed, and
+   (b) the region-advance decision at that index; then port the exact
+   upstream sequence for same-line pinches (finish + rewrite + new
+   polyline + outer-extension).
 
 Live tracker: `orca_parity_ender3_smoke` (fails while open; skips in CI).
 Comparator: `semantic::compare_ignoring_time` — timing excluded until the
