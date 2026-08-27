@@ -118,18 +118,28 @@ pub(super) fn begin_path_travel(
     destination_feature: &str,
     travel_distance: f64,
 ) {
+    // `GCode.cpp:7374-7392`: travel acceleration switches require the default
+    // to be enabled and only apply a specific value when it is above zero.
+    if state.options.default_acceleration == 0 {
+        return;
+    }
     let acceleration = if state.layer_index == 0 {
-        state.options.initial_layer_travel_acceleration
+        (state.options.initial_layer_travel_acceleration > 0)
+            .then_some(state.options.initial_layer_travel_acceleration)
     } else if travel_distance < state.options.retraction_minimum_travel {
         match destination_feature {
-            "Overhang wall" => state.options.bridge_acceleration,
-            "Outer wall" => state.options.outer_wall_acceleration,
-            _ => state.options.travel_acceleration,
+            "Overhang wall" => {
+                (state.options.bridge_acceleration > 0).then_some(state.options.bridge_acceleration)
+            }
+            "Outer wall" => (state.options.outer_wall_acceleration > 0)
+                .then_some(state.options.outer_wall_acceleration),
+            _ => None,
         }
+        .or((state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration))
     } else {
-        state.options.travel_acceleration
+        (state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration)
     };
-    set_acceleration(output, state, acceleration);
+    set_acceleration(output, state, acceleration.unwrap_or(0));
 }
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -139,10 +149,13 @@ pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitStat
 }
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32) {
-    if state.last_acceleration != Some(acceleration) {
-        output.extend_from_slice(format!("M204 S{acceleration}\n").as_bytes());
-        state.last_acceleration = Some(acceleration);
+    // `GCodeWriter.cpp:228`: zero means "keep the configured acceleration";
+    // it neither emits nor updates the cached value.
+    if acceleration == 0 || state.last_acceleration == Some(acceleration) {
+        return;
     }
+    output.extend_from_slice(format!("M204 S{acceleration}\n").as_bytes());
+    state.last_acceleration = Some(acceleration);
 }
 
 pub(super) fn emit_layer(

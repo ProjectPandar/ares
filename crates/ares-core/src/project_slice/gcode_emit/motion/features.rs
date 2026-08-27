@@ -15,27 +15,64 @@ pub(super) struct PathProperties<'a> {
 
 impl PathProperties<'_> {
     pub(super) fn kinematics(self, options: &MotionOptions, layer_index: usize) -> (u32, f64) {
+        let speed = self.speed(options, layer_index);
+        // `GCode.cpp:6414`: default acceleration of zero disables all per-print
+        // acceleration switches.
+        if options.default_acceleration == 0 {
+            return (0, speed);
+        }
+        // `GCode.cpp:6418-6438`: first layer uses its own value when set,
+        // otherwise each role picks only an option above zero and every
+        // remaining case falls back to the default.
+        let acceleration = if layer_index == 0 && options.initial_layer_acceleration > 0 {
+            options.initial_layer_acceleration
+        } else {
+            match self.feature {
+                "Bridge" | "Overhang wall" | "Internal Bridge"
+                    if options.bridge_acceleration > 0 =>
+                {
+                    options.bridge_acceleration
+                }
+                "Sparse infill" if options.sparse_infill_acceleration > 0 => {
+                    options.sparse_infill_acceleration
+                }
+                "Internal solid infill" if options.internal_solid_infill_acceleration > 0 => {
+                    options.internal_solid_infill_acceleration
+                }
+                "Outer wall" if options.outer_wall_acceleration > 0 => {
+                    options.outer_wall_acceleration
+                }
+                "Inner wall" if options.inner_wall_acceleration > 0 => {
+                    options.inner_wall_acceleration
+                }
+                "Top surface" if options.top_surface_acceleration > 0 => {
+                    options.top_surface_acceleration
+                }
+                _ => options.default_acceleration,
+            }
+        };
+        (acceleration, speed)
+    }
+}
+
+impl PathProperties<'_> {
+    fn speed(&self, options: &MotionOptions, layer_index: usize) -> f64 {
         if layer_index == 0 {
-            let speed = if self.feature == "Bottom surface" {
+            return if self.feature == "Bottom surface" {
                 options.initial_layer_infill_speed
             } else {
                 options.initial_layer_speed
             };
-            return (options.initial_layer_acceleration, speed);
         }
         match self.feature {
-            "Outer wall" => (options.outer_wall_acceleration, options.outer_wall_speed),
-            "Bridge" => (options.bridge_acceleration, options.bridge_speed),
-            "Overhang wall" => (options.bridge_acceleration, options.bridge_speed),
-            "Internal Bridge" => (options.bridge_acceleration, options.internal_bridge_speed),
-            "Top surface" => (options.top_surface_acceleration, options.top_surface_speed),
-            "Sparse infill" => (options.default_acceleration, options.sparse_infill_speed),
-            "Internal solid infill" => (
-                options.default_acceleration,
-                options.internal_solid_infill_speed,
-            ),
-            "Gap infill" => (options.default_acceleration, options.gap_infill_speed),
-            _ => (options.default_acceleration, options.inner_wall_speed),
+            "Outer wall" => options.outer_wall_speed,
+            "Bridge" | "Overhang wall" => options.bridge_speed,
+            "Internal Bridge" => options.internal_bridge_speed,
+            "Top surface" => options.top_surface_speed,
+            "Sparse infill" => options.sparse_infill_speed,
+            "Internal solid infill" => options.internal_solid_infill_speed,
+            "Gap infill" => options.gap_infill_speed,
+            _ => options.inner_wall_speed,
         }
     }
 }
