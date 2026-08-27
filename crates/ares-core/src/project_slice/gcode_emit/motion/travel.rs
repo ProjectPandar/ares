@@ -51,7 +51,12 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
         );
     }
     if !segments.is_empty() && during > f64::EPSILON {
-        output.extend_from_slice(b"; WIPE_START\n");
+        let wipe_start = if state.tags.is_bbl() {
+            "; WIPE_START\n"
+        } else {
+            ";WIPE_START\n"
+        };
+        output.extend_from_slice(wipe_start.as_bytes());
         output.extend_from_slice(
             format!("G1 F{};_WIPE\n", format_axis(wipe_speed * 60.0)).as_bytes(),
         );
@@ -74,7 +79,12 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
             ));
             state.wipe_start = Some(point);
         }
-        output.extend_from_slice(b"; WIPE_END\n");
+        let wipe_end = if state.tags.is_bbl() {
+            "; WIPE_END\n"
+        } else {
+            ";WIPE_END\n"
+        };
+        output.extend_from_slice(wipe_end.as_bytes());
     }
 }
 

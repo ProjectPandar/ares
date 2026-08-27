@@ -142,8 +142,13 @@ pub(super) fn emit(
             );
             if let Some(labels) = &labels {
                 labels.append_printing(&mut output);
+                // M624 object exclusion is only armed for BBL printers
+                // (GCode.cpp:2583-2602, 5356-5359).
                 let (label_id, encoded_labels) = labels.start_label_data();
-                motion::queue_object_start(&mut state, label_id, encoded_labels);
+                state
+                    .tags
+                    .is_bbl()
+                    .then(|| motion::queue_object_start(&mut state, label_id, encoded_labels));
             }
             let lower_boundary_lines = traversal.objects[object_index]
                 .lower_slices(layer_index)
@@ -169,10 +174,10 @@ pub(super) fn emit(
             )?;
             if let Some(labels) = &labels {
                 labels.append_stopping(&mut output);
-            }
-            motion::end_layer_for_timelapse(&mut output, &mut state);
-            if let Some(labels) = &labels {
-                labels.append_stop_label(&mut output);
+                motion::end_layer_for_timelapse(&mut output, &mut state);
+                (state.tags.is_bbl()).then(|| labels.append_stop_label(&mut output));
+            } else {
+                motion::end_layer_for_timelapse(&mut output, &mut state);
             }
             timelapse::append(
                 &mut output,

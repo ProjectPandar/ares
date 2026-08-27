@@ -119,13 +119,12 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             state.width = canonical_number(value)?;
             continue;
         }
-        if line == "; WIPE_START" || line == "; WIPE_END" {
-            let event = if line == "; WIPE_START" {
-                LifecycleEvent::WipeStart
-            } else {
-                LifecycleEvent::WipeEnd
-            };
-            push_lifecycle(current_layer(&mut output)?, event);
+        if line == "; WIPE_START" || line == ";WIPE_START" {
+            push_lifecycle(current_layer(&mut output)?, LifecycleEvent::WipeStart);
+            continue;
+        }
+        if line == "; WIPE_END" || line == ";WIPE_END" {
+            push_lifecycle(current_layer(&mut output)?, LifecycleEvent::WipeEnd);
             continue;
         }
         if let Some(value) = line

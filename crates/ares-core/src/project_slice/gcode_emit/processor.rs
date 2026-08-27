@@ -160,8 +160,8 @@ impl Estimate {
         let mut arc_segment_counts = vec![0; lines.len()];
         for (index, line) in lines.iter().enumerate() {
             match line.trim() {
-                "; WIPE_START" => state.set_wiping(true),
-                "; WIPE_END" => state.set_wiping(false),
+                "; WIPE_START" | ";WIPE_START" => state.set_wiping(true),
+                "; WIPE_END" | ";WIPE_END" => state.set_wiping(false),
                 "; FEATURE: Custom" | ";TYPE:Custom" => prepare_stage = !saw_motion_command,
                 line if line.starts_with("; FEATURE:") || line.starts_with(";TYPE:") => {
                     prepare_stage = false
