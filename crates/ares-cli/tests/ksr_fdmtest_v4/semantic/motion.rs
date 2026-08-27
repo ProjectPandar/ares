@@ -9,7 +9,8 @@ pub(super) struct Motion {
 
 impl Motion {
     pub(super) fn parse(line: &str) -> Result<Option<Self>, String> {
-        let mut tokens = line.split_whitespace();
+        let code = line.split_once(';').map_or(line, |(code, _)| code);
+        let mut tokens = code.split_whitespace();
         let Some(command @ ("G0" | "G1" | "G2" | "G3")) = tokens.next() else {
             return Ok(None);
         };

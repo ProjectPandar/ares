@@ -221,20 +221,23 @@ fn parse_timing(line: &str, timing: &mut Timing) -> Result<bool, String> {
 }
 
 fn duration_seconds(value: &str) -> Result<u64, String> {
-    let mut seconds = 0_u64;
+    let mut seconds = 0.0_f64;
     for part in value.split_whitespace() {
         let (digits, multiplier) = match part.as_bytes().last() {
-            Some(b'h') => (&part[..part.len() - 1], 3_600),
-            Some(b'm') => (&part[..part.len() - 1], 60),
-            Some(b's') => (&part[..part.len() - 1], 1),
+            Some(b'h') => (&part[..part.len() - 1], 3_600.0),
+            Some(b'm') => (&part[..part.len() - 1], 60.0),
+            Some(b's') => (&part[..part.len() - 1], 1.0),
             _ => return Err(format!("invalid duration {value:?}")),
         };
         seconds += digits
-            .parse::<u64>()
+            .parse::<f64>()
             .map_err(|_| format!("invalid duration {value:?}"))?
             * multiplier;
     }
-    Ok(seconds)
+    if !seconds.is_finite() || seconds < 0.0 {
+        return Err(format!("invalid duration {value:?}"));
+    }
+    Ok(seconds.round() as u64)
 }
 
 fn parse_filament_lengths(line: &str) -> Result<Option<Vec<f64>>, String> {

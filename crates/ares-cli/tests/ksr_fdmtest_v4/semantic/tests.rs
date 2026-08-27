@@ -1,6 +1,26 @@
 use super::{compare, compare_cross_target};
 
 #[test]
+fn fractional_duration_metadata_is_accepted() {
+    let island = island(0, 1, 1_200);
+    let expected = document("0.811081s", "1.499s", "0.25s", "2.00", &[&island]);
+    let actual = document("1s", "1s", "0s", "2.00", &[&island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
+fn motion_parameter_letters_in_inline_comments_are_ignored() {
+    let expected_island = format!("G1 Z30 F960\n{}", island(0, 1, 1_200));
+    let actual_island =
+        expected_island.replace("G1 Z30 F960", "G1 Z30 F960 ; move Z down after heating");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
 fn source_variation_with_stable_island_order_is_tolerated() {
     let left = island(0, 1, 1_200);
     let right = island(10, 11, 1_200);
