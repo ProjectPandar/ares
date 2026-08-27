@@ -95,11 +95,24 @@ fn insert_runtime_placeholders(
         .map(|value| value.iter_list().count().max(1))
         .unwrap_or(1);
     config.insert("num_extruders", Value::number(extruder_count as f64));
+    let used = crate::project_slice::extruders::collect_project_object_extruders(
+        traversal.project.objects(),
+        &traversal.resolved.objects,
+        traversal.resolved.logical_filament_count,
+    )
+    .into_iter()
+    .flatten()
+    .collect::<std::collections::BTreeSet<_>>();
+    let usage_len = config
+        .get("filament_diameter")
+        .map(|value| value.iter_list().count())
+        .unwrap_or(0)
+        .max(64);
     config.insert(
         "is_extruder_used",
         Value::List(
-            (0..extruder_count)
-                .map(|index| Value::Bool(index < filament_count))
+            (0..usage_len)
+                .map(|index| Value::Bool(used.contains(&index)))
                 .collect(),
         ),
     );
