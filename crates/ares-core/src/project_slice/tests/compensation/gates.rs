@@ -30,6 +30,8 @@ fn task22m_flow_validates_raw_config_before_unsigned_conversion() {
         validate_task22m_configs(&[&options]).unwrap(),
         [ValidatedTask22mConfig {
             compensation_mm: 0.15,
+            xy_contour_mm: 0.0,
+            xy_hole_mm: 0.0,
             compensation_layers: 3,
             raft_layers: -1,
             object_line_width: FloatOrPercent::Percent(Percent(110.0)),
@@ -63,19 +65,26 @@ fn task22m_flow_validates_raw_config_before_unsigned_conversion() {
 }
 
 #[test]
-fn task22m_flow_orders_xy_feature_keys() {
+fn task22m_flow_validates_xy_compensation_values() {
     let mut options = object_options();
     options.xy_hole_compensation = OrcaFloat(0.1);
-    options.xy_contour_compensation = OrcaFloat(0.2);
-    assert_unsupported(
-        validate_task22m_configs(&[&options]),
-        "xy_hole_compensation",
-    );
+    options.xy_contour_compensation = OrcaFloat(-0.2);
 
-    options.xy_hole_compensation = OrcaFloat(0.0);
-    assert_unsupported(
+    let validated = validate_task22m_configs(&[&options]).unwrap();
+
+    assert_eq!(validated[0].xy_hole_mm, 0.1);
+    assert_eq!(validated[0].xy_contour_mm, -0.2);
+
+    options.xy_hole_compensation = OrcaFloat(f64::NAN);
+    assert_invalid(
         validate_task22m_configs(&[&options]),
-        "xy_contour_compensation",
+        "invalid Orca option xy_hole_compensation",
+    );
+    options.xy_hole_compensation = OrcaFloat(0.0);
+    options.xy_contour_compensation = OrcaFloat(f64::INFINITY);
+    assert_invalid(
+        validate_task22m_configs(&[&options]),
+        "invalid Orca option xy_contour_compensation",
     );
 }
 
@@ -107,12 +116,16 @@ fn task22m_flow_preflight_is_all_or_error() {
         [
             ValidatedTask22mConfig {
                 compensation_mm: 0.1,
+                xy_contour_mm: 0.0,
+                xy_hole_mm: 0.0,
                 compensation_layers: 1,
                 raft_layers: 1,
                 object_line_width: FloatOrPercent::Float(0.4),
             },
             ValidatedTask22mConfig {
                 compensation_mm: 0.2,
+                xy_contour_mm: 0.0,
+                xy_hole_mm: 0.0,
                 compensation_layers: 2,
                 raft_layers: -1,
                 object_line_width: FloatOrPercent::Percent(Percent(105.0)),
@@ -271,12 +284,6 @@ fn assert_invalid(result: Result<Vec<ValidatedTask22mConfig>, SliceError>, expec
     assert_eq!(
         result.unwrap_err(),
         SliceError::InvalidInput(expected.to_owned())
-    );
-}
-fn assert_unsupported(result: Result<Vec<ValidatedTask22mConfig>, SliceError>, expected: &str) {
-    assert_eq!(
-        result.unwrap_err(),
-        SliceError::UnsupportedProjectFeature(expected.to_owned())
     );
 }
 fn object_options() -> ObjectOptions {

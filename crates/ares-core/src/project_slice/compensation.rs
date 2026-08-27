@@ -15,12 +15,17 @@ use super::{
 };
 
 mod preflight;
+mod xy;
 
-use preflight::{PreparedObjectCompensation, prepare_object_compensation};
+use preflight::{
+    PreparedLayerCompensation, PreparedObjectCompensation, prepare_object_compensation,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::project_slice) struct ValidatedTask22mConfig {
     pub(in crate::project_slice) compensation_mm: f64,
+    pub(in crate::project_slice) xy_contour_mm: f64,
+    pub(in crate::project_slice) xy_hole_mm: f64,
     pub(in crate::project_slice) compensation_layers: usize,
     pub(in crate::project_slice) raft_layers: i32,
     pub(in crate::project_slice) object_line_width: FloatOrPercent,
@@ -46,15 +51,19 @@ pub(in crate::project_slice) fn validate_task22m_configs(
             let compensation_layers = usize::try_from(raw_layers)
                 .expect("a positive i32 compensation layer count must fit usize");
 
-            if options.xy_hole_compensation.0 != 0.0 {
-                return Err(unsupported("xy_hole_compensation"));
+            let xy_hole_mm = options.xy_hole_compensation.0;
+            let xy_contour_mm = options.xy_contour_compensation.0;
+            if !xy_hole_mm.is_finite() {
+                return Err(invalid("invalid Orca option xy_hole_compensation"));
             }
-            if options.xy_contour_compensation.0 != 0.0 {
-                return Err(unsupported("xy_contour_compensation"));
+            if !xy_contour_mm.is_finite() {
+                return Err(invalid("invalid Orca option xy_contour_compensation"));
             }
 
             Ok(ValidatedTask22mConfig {
                 compensation_mm,
+                xy_contour_mm,
+                xy_hole_mm,
                 compensation_layers,
                 raft_layers: options.raft_layers.0,
                 object_line_width: options.line_width,
@@ -212,34 +221,32 @@ fn apply_object_compensation(
     prepared: PreparedObjectCompensation,
     scale: CoordinateScale,
 ) -> Result<PostCompensationPrintObject, SliceError> {
-    let mut backups = (0..prepared.backup_len)
+    let PreparedObjectCompensation {
+        backup_len,
+        xy_contour,
+        xy_hole,
+        layers,
+    } = prepared;
+    let mut backups = (0..backup_len)
         .map(|_| Vec::new())
         .collect::<Vec<Vec<ExPolygon>>>();
     if let [region] = object.regions.as_mut_slice() {
-        for (layer_index, prepared_layer) in prepared.layers.into_iter().enumerate() {
-            let Some(prepared_layer) = prepared_layer else {
+        for (layer_index, prepared_layer) in layers.into_iter().enumerate() {
+            if xy_contour == 0.0 && xy_hole == 0.0 && prepared_layer.is_none() {
                 continue;
-            };
+            }
             let surfaces = mem::take(&mut region.layers[layer_index].surfaces);
             let raw = surfaces
                 .into_iter()
                 .map(|surface| surface.into_parts().1)
                 .collect::<Vec<_>>();
-            let compensated = compensate_expolygons(
-                &raw,
-                prepared_layer.minimum_width_mm,
-                prepared_layer.compensation_mm,
-                scale,
-            )
-            .map_err(|_| geometry_error())?;
-            let mut paths = Vec::new();
-            for expolygon in compensated {
-                let (contour, holes) = expolygon.into_parts();
-                paths.push(contour);
-                paths.extend(holes);
-            }
-            let compensated = union_ex(&paths, FillRule::NonZero).map_err(|_| geometry_error())?;
-            backups[layer_index] = raw;
+            let adjusted = xy::apply(&raw, xy_contour, xy_hole).map_err(|_| geometry_error())?;
+            let compensated = if let Some(prepared_layer) = prepared_layer {
+                backups[layer_index] = adjusted.clone();
+                apply_elephant_foot(&adjusted, prepared_layer, scale)?
+            } else {
+                adjusted
+            };
             region.layers[layer_index].surfaces = compensated
                 .into_iter()
                 .map(RegionSurface::internal)
@@ -259,6 +266,28 @@ fn apply_object_compensation(
         post_regions: object,
         lslices,
     })
+}
+
+fn apply_elephant_foot(
+    source: &[ExPolygon],
+    prepared: PreparedLayerCompensation,
+    scale: CoordinateScale,
+) -> Result<Vec<ExPolygon>, SliceError> {
+    let compensated = compensate_expolygons(
+        source,
+        prepared.minimum_width_mm,
+        prepared.compensation_mm,
+        scale,
+    )
+    .map_err(|_| geometry_error())?;
+    let paths = compensated
+        .into_iter()
+        .flat_map(|expolygon| {
+            let (contour, holes) = expolygon.into_parts();
+            std::iter::once(contour).chain(holes)
+        })
+        .collect::<Vec<_>>();
+    union_ex(&paths, FillRule::NonZero).map_err(|_| geometry_error())
 }
 
 fn geometry_error() -> SliceError {

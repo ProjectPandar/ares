@@ -13,6 +13,8 @@ pub(super) struct PreparedLayerCompensation {
 
 pub(super) struct PreparedObjectCompensation {
     pub(super) backup_len: usize,
+    pub(super) xy_contour: f32,
+    pub(super) xy_hole: f32,
     pub(super) layers: Vec<Option<PreparedLayerCompensation>>,
 }
 
@@ -32,6 +34,11 @@ pub(super) fn prepare_object_compensation(
         return Err(geometry_error());
     }
 
+    let xy_contour = (config.xy_contour_mm / scale.factor()) as f32;
+    let xy_hole = (config.xy_hole_mm / scale.factor()) as f32;
+    if !xy_contour.is_finite() || !xy_hole.is_finite() {
+        return Err(geometry_error());
+    }
     let backup_len = if scaled > 0.0 {
         config.compensation_layers.min(object.plan.layers.len())
     } else {
@@ -39,7 +46,12 @@ pub(super) fn prepare_object_compensation(
     };
     let mut layers = vec![None; object.plan.layers.len()];
     let [region] = object.regions.as_slice() else {
-        return Ok(PreparedObjectCompensation { backup_len, layers });
+        return Ok(PreparedObjectCompensation {
+            backup_len,
+            xy_contour,
+            xy_hole,
+            layers,
+        });
     };
 
     for (layer_index, prepared_layer) in layers.iter_mut().enumerate().take(backup_len) {
@@ -66,5 +78,10 @@ pub(super) fn prepare_object_compensation(
         });
     }
 
-    Ok(PreparedObjectCompensation { backup_len, layers })
+    Ok(PreparedObjectCompensation {
+        backup_len,
+        xy_contour,
+        xy_hole,
+        layers,
+    })
 }

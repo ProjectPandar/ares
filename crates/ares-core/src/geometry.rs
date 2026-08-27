@@ -25,7 +25,6 @@ pub(in crate::geometry) use clipper::opening_path_configurations_for_test;
 #[cfg(test)]
 pub(crate) use clipper::opening_paths_with_interstage;
 pub(crate) use clipper::ordering::{fixed_gcc_sort_by, fixed_msvc_sort_by};
-#[cfg(test)]
 pub(crate) use clipper::raw_offset_paths;
 pub(crate) use clipper::{
     ClipperError, FillRule, JoinType, SAFETY_OFFSET, closing_ex, diff_pl, difference_ex,
