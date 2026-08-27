@@ -52,6 +52,7 @@ fn overhang_speed_bands_parse_numeric_and_percent_values() {
         "outer_wall_speed": 80,
         "bridge_speed": 25,
         "enable_overhang_speed": true,
+        "slowdown_for_curled_perimeters": true,
         "overhang_1_4_speed": "75%",
         "overhang_2_4_speed": 35,
         "overhang_3_4_speed": "50%",
@@ -101,7 +102,9 @@ fn disabled_overhang_speed_bands_return_none() {
 }
 
 #[test]
-fn slowdown_for_curled_perimeters_defaults_to_final_overhang_band() {
+fn slowdown_for_curled_perimeters_defaults_to_bridge_speed_per_upstream() {
+    // Upstream PrintConfig.cpp defaults this option to false, so an unset key
+    // must fall back to bridge_speed for the fully-curved final bucket.
     let options: SliceOptions = serde_json::from_value(json!({
         "line_width": 0.4,
         "outer_wall_speed": 80,
@@ -115,7 +118,7 @@ fn slowdown_for_curled_perimeters_defaults_to_final_overhang_band() {
             .speed_options()
             .unwrap()
             .overhang_speed_for_unsupported_span_mm(0.5),
-        Some(20.0)
+        Some(25.0)
     );
 }
 

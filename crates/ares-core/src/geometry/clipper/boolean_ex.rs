@@ -23,14 +23,11 @@ pub(crate) fn difference_ex_with_safety_offset(
     subject: &[ExPolygon],
     clip: &[ExPolygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut expanded = Vec::new();
-    for expolygon in clip {
-        append_safety_offset(expolygon.contour(), &mut expanded)?;
-        for hole in expolygon.holes() {
-            append_safety_offset(hole, &mut expanded)?;
-        }
-    }
-    execute_ex_with_paths(subject, &expanded, ClipOperation::Difference)
+    execute_ex_with_paths(
+        subject,
+        &safety_offset_expolygons(clip)?,
+        ClipOperation::Difference,
+    )
 }
 
 pub(crate) fn difference_ex_polygons(
@@ -54,24 +51,20 @@ pub(crate) fn difference_ex_polygons_with_safety_offset(
     subject: &[ExPolygon],
     clip: &[Polygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut expanded = Vec::new();
-    for polygon in clip {
-        append_safety_offset(polygon, &mut expanded)?;
-    }
-    execute_ex_with_paths(subject, &expanded, ClipOperation::Difference)
+    execute_ex_with_paths(
+        subject,
+        &safety_offset_polygons(clip)?,
+        ClipOperation::Difference,
+    )
 }
 
 pub(crate) fn difference_polygons_ex_with_safety_offset(
     subject: &[Polygon],
     clip: &[Polygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut expanded = Vec::new();
-    for polygon in clip {
-        append_safety_offset(polygon, &mut expanded)?;
-    }
     let mut paths_clipper = Clipper::new(ClipperOptions::default());
     paths_clipper.add_closed_paths(subject, PathRole::Subject)?;
-    paths_clipper.add_closed_paths(&expanded, PathRole::Clip)?;
+    paths_clipper.add_closed_paths(&safety_offset_polygons(clip)?, PathRole::Clip)?;
     execute_two_pass(&mut paths_clipper, ClipOperation::Difference)
 }
 
@@ -86,14 +79,11 @@ pub(crate) fn intersection_ex_with_safety_offset(
     subject: &[ExPolygon],
     clip: &[ExPolygon],
 ) -> Result<Vec<ExPolygon>, ClipperError> {
-    let mut expanded = Vec::new();
-    for expolygon in clip {
-        append_safety_offset(expolygon.contour(), &mut expanded)?;
-        for hole in expolygon.holes() {
-            append_safety_offset(hole, &mut expanded)?;
-        }
-    }
-    execute_ex_with_paths(subject, &expanded, ClipOperation::Intersection)
+    execute_ex_with_paths(
+        subject,
+        &safety_offset_expolygons(clip)?,
+        ClipOperation::Intersection,
+    )
 }
 
 pub(crate) fn intersection_polygons_polygons_ex(
@@ -198,6 +188,25 @@ pub(super) fn append_safety_offset(
         SAFETY_MITER_LIMIT,
     )?);
     Ok(())
+}
+
+pub(super) fn safety_offset_polygons(clip: &[Polygon]) -> Result<Vec<Polygon>, ClipperError> {
+    let mut expanded = Vec::new();
+    for polygon in clip {
+        append_safety_offset(polygon, &mut expanded)?;
+    }
+    Ok(expanded)
+}
+
+pub(super) fn safety_offset_expolygons(clip: &[ExPolygon]) -> Result<Vec<Polygon>, ClipperError> {
+    let mut expanded = Vec::new();
+    for expolygon in clip {
+        append_safety_offset(expolygon.contour(), &mut expanded)?;
+        for hole in expolygon.holes() {
+            append_safety_offset(hole, &mut expanded)?;
+        }
+    }
+    Ok(expanded)
 }
 
 fn add_expolygons(

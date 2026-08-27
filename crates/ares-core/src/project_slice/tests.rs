@@ -4,6 +4,7 @@ mod chained_intersections;
 mod closing;
 mod compensation;
 mod conical_overhang;
+mod deep_cleanup_support;
 mod elephant_foot;
 mod fixture;
 mod integration;

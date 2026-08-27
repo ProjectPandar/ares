@@ -172,34 +172,10 @@ fn path_closing_target(path: &crate::PrintPath, points: &[Point2]) -> Option<Poi
     match path.role() {
         PrintPathRole::ExternalPerimeter
         | PrintPathRole::OverhangPerimeter
-        | PrintPathRole::InternalPerimeter => closing_target(points, path.seam_gap_mm()),
+        | PrintPathRole::InternalPerimeter => path.closing_target(),
         PrintPathRole::Skirt | PrintPathRole::Brim => Some(points[0]),
         _ => None,
     }
-}
-
-fn closing_target(points: &[Point2], seam_gap_mm: f64) -> Option<Point2> {
-    let start = points[0];
-    let end = *points.last().unwrap();
-    let length = distance(end, start);
-    if length <= f64::EPSILON {
-        return None;
-    }
-    if seam_gap_mm <= 0.0 {
-        return Some(start);
-    }
-    if seam_gap_mm >= length {
-        return None;
-    }
-    let ratio = (length - seam_gap_mm) / length;
-    Some(Point2::new(
-        end.x() + (start.x() - end.x()) * ratio,
-        end.y() + (start.y() - end.y()) * ratio,
-    ))
-}
-
-fn distance(a: Point2, b: Point2) -> f64 {
-    ((a.x() - b.x()).powi(2) + (a.y() - b.y()).powi(2)).sqrt()
 }
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 use crate::gcode_auxiliary_fan::AuxiliaryFanState;
+use crate::gcode_power_loss_recovery::PowerLossRecoveryState;
 use crate::gcode_writer::GCodeWriter;
 use crate::options::{ChamberTemperatureControl, ExhaustFanControl, GCodeFlavor};
 use crate::{HardwareOptions, LayerExtrusionMoves, LayerSpeedMoves, SliceError, SliceOptions};
@@ -57,5 +58,21 @@ pub(crate) fn finish_gcode(command: FinishGCodeCommand<'_>) -> Result<String, Sl
         command.options,
     )?);
     gcode.push_str("M2\n");
+    Ok(gcode)
+}
+
+pub(crate) fn finish_output(
+    gcode_comments: bool,
+    power_loss_recovery_state: PowerLossRecoveryState,
+    command: FinishGCodeCommand<'_>,
+) -> Result<String, SliceError> {
+    let mut gcode = String::new();
+    gcode.push_str(&crate::gcode_power_loss_recovery::finish_command(
+        command.gcode_flavor,
+        gcode_comments,
+        power_loss_recovery_state,
+    ));
+    gcode.push_str(&crate::gcode_m73::last_progress_line(command.options)?);
+    gcode.push_str(&finish_gcode(command)?);
     Ok(gcode)
 }

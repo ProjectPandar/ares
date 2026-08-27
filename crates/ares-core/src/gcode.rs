@@ -1,4 +1,19 @@
-use crate::gcode_dependencies::*;
+use crate::gcode_format::format_decimal;
+use crate::gcode_layer_change_retraction::{
+    LayerChangeLiftCommand, LayerChangeLiftState, LayerChangeResumeCommand,
+    LayerChangeRetractCommand, layer_change_resume_before_print, layer_change_retract_gcode,
+};
+use crate::gcode_layer_custom::after_z_gcode;
+use crate::gcode_layer_diagnostics::{LayerDiagnosticCommand, layer_diagnostics};
+use crate::gcode_move_buffer::{BufferedMove, flush};
+use crate::gcode_object_labels::{ObjectLabelConfig, ObjectLabelState};
+use crate::gcode_pressure_advance::{PressureAdvanceMoveState, startup_command};
+use crate::gcode_travel_retraction::{
+    TravelRetractionCommand, TravelRetractionState, TravelUnretractCommand,
+};
+use crate::gcode_wipe_before_external_loop::WipeBeforeExternalLoop;
+use crate::gcode_wipe_on_loops::{WipeOnLoops, WipeOnLoopsCommand};
+use crate::{PrintPathRole, SliceError, SliceOptions, SlicingPipeline, ToolpathMoveKind};
 pub(crate) fn format_gcode(
     pipeline: &SlicingPipeline,
     options: &SliceOptions,
@@ -207,7 +222,7 @@ pub(crate) fn format_gcode(
             auxiliary_fan_control.speed_for_layer(layer_index),
             &mut auxiliary_fan_state,
         ));
-        gcode.push_str(&layer_diagnostics(LayerDiagnosticEmitCommand {
+        gcode.push_str(&layer_diagnostics(LayerDiagnosticCommand {
             layer_slice,
             layer_contours,
             layer_perimeters,
@@ -368,10 +383,10 @@ pub(crate) fn format_gcode(
     let auxiliary_fan_completion_enabled =
         auxiliary_fan_control.completion_shutdown_speed().is_some();
     gcode.push_str(&role_fan_state.finish(&writer));
-    gcode.push_str(&crate::gcode_finish_emit::finish_output(
+    gcode.push_str(&crate::gcode_finish::finish_output(
         gcode_comments,
         power_loss_recovery_state,
-        crate::gcode_finish_emit::FinishEmitCommand {
+        crate::gcode_finish::FinishGCodeCommand {
             writer: &writer,
             options,
             gcode_flavor,

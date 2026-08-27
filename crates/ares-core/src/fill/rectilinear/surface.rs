@@ -161,12 +161,7 @@ fn align_to_grid(coordinate: i64, spacing: i64, base: i64) -> Result<i64, Clippe
 }
 
 fn rotate_point(point: Point, angle: f64) -> Result<Point, ClipperError> {
-    let cosine = angle.cos();
-    let sine = angle.sin();
-    checked_point(
-        cosine * point.x() as f64 - sine * point.y() as f64,
-        cosine * point.y() as f64 + sine * point.x() as f64,
-    )
+    crate::fill::checked_rotate::rotate_point(point, angle.cos(), angle.sin())
 }
 
 fn checked_scale(scale: CoordinateScale, value: f64) -> Result<i64, ClipperError> {
@@ -176,32 +171,8 @@ fn checked_scale(scale: CoordinateScale, value: f64) -> Result<i64, ClipperError
 }
 
 fn rotate_polyline(polyline: Polyline, angle: f64) -> Result<Polyline, ClipperError> {
-    let cosine = angle.cos();
-    let sine = angle.sin();
-    let input = polyline.into_points();
-    let output = input
-        .iter()
-        .map(|point| {
-            checked_point(
-                cosine * point.x() as f64 - sine * point.y() as f64,
-                sine * point.x() as f64 + cosine * point.y() as f64,
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(Polyline::new(output))
-}
-
-// MultiPoint::rotate rounds with std::round (half away from zero); the rotate-back
-// of fill polylines must match it, especially at negative half boundaries.
-fn checked_point(x: f64, y: f64) -> Result<Point, ClipperError> {
-    let x = x.round();
-    let y = y.round();
-    if !x.is_finite()
-        || !y.is_finite()
-        || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&x)
-        || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&y)
-    {
-        return Err(ClipperError::CoordinateOutOfRange);
-    }
-    Ok(Point::new(x as i64, y as i64))
+    Ok(Polyline::new(crate::fill::checked_rotate::rotate_points(
+        polyline.into_points(),
+        angle,
+    )?))
 }

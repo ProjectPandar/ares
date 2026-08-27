@@ -4,3 +4,5 @@ OrcaSlicer/
 target/
 .omx/artifacts
 /crates/ares-wasm/tests/browser/node_modules/
+00000.log
+result.json

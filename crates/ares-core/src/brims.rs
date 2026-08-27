@@ -199,7 +199,7 @@ fn generate_layer_brims(
         )?);
     } else {
         for contour in layer.contours() {
-            if options.generates_outer_brim() && is_outer_contour(layer, contour) {
+            if options.generates_outer_brim() && layer.is_outer_contour(contour) {
                 extend_outer_brim_paths(
                     &mut paths,
                     contour,
@@ -211,7 +211,7 @@ fn generate_layer_brims(
         }
     }
     for contour in layer.contours() {
-        if options.generates_inner_brim() && !is_outer_contour(layer, contour) {
+        if options.generates_inner_brim() && !layer.is_outer_contour(contour) {
             paths.extend(inner_brim_paths(
                 contour,
                 options,
@@ -320,49 +320,6 @@ fn inner_brim_paths(
         ])?);
     }
     Ok(paths)
-}
-
-fn is_outer_contour(layer: &LayerContours, contour: &crate::Contour) -> bool {
-    containment_depth(layer, contour).is_multiple_of(2)
-}
-
-fn containment_depth(layer: &LayerContours, contour: &crate::Contour) -> usize {
-    let Some(point) = contour_reference_point(contour) else {
-        return 0;
-    };
-
-    layer
-        .contours()
-        .iter()
-        .filter(|candidate| !std::ptr::eq(*candidate, contour))
-        .filter(|candidate| point_in_contour(point, candidate))
-        .count()
-}
-
-fn contour_reference_point(contour: &crate::Contour) -> Option<Point2> {
-    contour.points().first().copied()
-}
-
-fn point_in_contour(point: Point2, contour: &crate::Contour) -> bool {
-    let points = contour.points();
-    if points.len() < 3 {
-        return false;
-    }
-
-    let mut inside = false;
-    let mut previous = points[points.len() - 1];
-    for current in points {
-        if (current.y() > point.y()) != (previous.y() > point.y()) {
-            let intersection_x = (previous.x() - current.x()) * (point.y() - current.y())
-                / (previous.y() - current.y())
-                + current.x();
-            if point.x() < intersection_x {
-                inside = !inside;
-            }
-        }
-        previous = *current;
-    }
-    inside
 }
 
 fn contour_bounds(contour: &crate::Contour) -> Option<(f64, f64, f64, f64)> {

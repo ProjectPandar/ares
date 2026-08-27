@@ -11,7 +11,7 @@ pub(super) fn outer_brim_paths(
     let Some(bounds) = layer
         .contours()
         .iter()
-        .filter(|contour| super::is_outer_contour(layer, contour))
+        .filter(|contour| layer.is_outer_contour(contour))
         .filter_map(super::contour_bounds)
         .filter_map(|bounds| {
             super::efc_outline::bounds_or_adjusted(bounds, options.efc_outline_offset_mm())

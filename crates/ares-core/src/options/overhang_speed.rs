@@ -46,7 +46,7 @@ pub(crate) fn parse_overhang_speed_bands(
         Some(value) => value.as_bool().ok_or_else(|| {
             SliceError::InvalidInput("slowdown_for_curled_perimeters must be a boolean".to_owned())
         })?,
-        None => true,
+        None => false,
     };
     if !enable {
         return Ok(OverhangSpeedBands::disabled(external_line_width_mm));

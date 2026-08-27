@@ -4,9 +4,7 @@ use crate::{
         consume_post_horizontal_shell_promotion,
         prepare_infill::horizontal_shell_promotion,
         tests::{
-            prepare_infill::surface_type_detection::cleanup::{
-                deepen_both_tree_families, run_on_constrained_stack,
-            },
+            deep_cleanup_support::{deepen_both_tree_families, run_on_constrained_stack},
             support::{KsrArchive, metadata},
         },
     },

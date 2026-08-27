@@ -1,4 +1,5 @@
-use super::transform::{checked_point, translate_polylines};
+use super::transform::translate_polylines;
+use crate::fill::checked_rotate::checked_point;
 use crate::geometry::{ClipperError, Point, Polyline};
 
 pub(super) fn repeat_ratio(density: f32) -> f64 {

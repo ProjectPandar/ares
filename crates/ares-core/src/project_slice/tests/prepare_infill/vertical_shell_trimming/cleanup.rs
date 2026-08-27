@@ -4,9 +4,7 @@ use crate::{
         consume_post_vertical_shell_trim,
         prepare_infill::vertical_shell_trimming::{self, GeometryStep},
         tests::{
-            prepare_infill::surface_type_detection::cleanup::{
-                deepen_both_tree_families, run_on_constrained_stack,
-            },
+            deep_cleanup_support::{deepen_both_tree_families, run_on_constrained_stack},
             support::{KsrArchive, metadata},
         },
     },

@@ -32,15 +32,14 @@ impl GCodeWriter {
         feedrate: f64,
         comment: Option<&str>,
     ) -> String {
-        let (x, y) = self.offset_xy(point);
         self.current_position.0 = point.x();
         self.current_position.1 = point.y();
         self.current_feedrate = feedrate;
         append_comment(
             format!(
                 "G1 X{} Y{} F{}\n",
-                format_xyzf(x),
-                format_xyzf(y),
+                format_xyzf(point.x()),
+                format_xyzf(point.y()),
                 format_xyzf(feedrate)
             ),
             comment,
@@ -54,14 +53,13 @@ impl GCodeWriter {
         feedrate: f64,
         comment: Option<&str>,
     ) -> String {
-        let (x, y) = self.offset_xy(point);
         self.current_position = (point.x(), point.y(), z);
         self.current_feedrate = feedrate;
         append_comment(
             format!(
                 "G1 X{} Y{} Z{} F{}\n",
-                format_xyzf(x),
-                format_xyzf(y),
+                format_xyzf(point.x()),
+                format_xyzf(point.y()),
                 format_xyzf(z),
                 format_xyzf(feedrate)
             ),
@@ -104,12 +102,11 @@ impl GCodeWriter {
                 center_x + radius * angle.cos(),
                 center_y + radius * angle.sin(),
             );
-            let (x, y) = self.offset_xy(point);
             let segment_z = z_start + (z - z_start) * progress;
             gcode.push_str(&format!(
                 "G1 X{} Y{} Z{}\n",
-                format_xyzf(x),
-                format_xyzf(y),
+                format_xyzf(point.x()),
+                format_xyzf(point.y()),
                 format_xyzf(segment_z)
             ));
         }

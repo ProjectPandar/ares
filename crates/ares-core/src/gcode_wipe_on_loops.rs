@@ -70,28 +70,8 @@ fn external_path_closed_by_move(paths: &[PrintPath], point: Point2) -> Option<&P
         path.role() == PrintPathRole::ExternalPerimeter
             && path.is_closed()
             && path.points().len() >= 3
-            && closing_target(path.points(), path.seam_gap_mm()) == Some(point)
+            && path.closing_target() == Some(point)
     })
-}
-
-fn closing_target(points: &[Point2], seam_gap_mm: f64) -> Option<Point2> {
-    let start = points[0];
-    let end = *points.last()?;
-    let length = distance(end, start);
-    if length <= f64::EPSILON {
-        return None;
-    }
-    if seam_gap_mm <= 0.0 {
-        return Some(start);
-    }
-    if seam_gap_mm >= length {
-        return None;
-    }
-    let ratio = (length - seam_gap_mm) / length;
-    Some(Point2::new(
-        end.x() + (start.x() - end.x()) * ratio,
-        end.y() + (start.y() - end.y()) * ratio,
-    ))
 }
 
 fn local_inward_point(points: &[Point2], nozzle_diameter: f64) -> Option<Point2> {
@@ -118,10 +98,6 @@ fn local_inward_point(points: &[Point2], nozzle_diameter: f64) -> Option<Point2>
 
 fn vector(from: Point2, to: Point2) -> (f64, f64) {
     (to.x() - from.x(), to.y() - from.y())
-}
-
-fn distance(a: Point2, b: Point2) -> f64 {
-    length(vector(a, b))
 }
 
 fn length(vector: (f64, f64)) -> f64 {

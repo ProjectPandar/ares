@@ -361,7 +361,7 @@ fn exposes_public_option_definition_lookup() {
         (
             "slowdown_for_curled_perimeters",
             crate::OptionValueKind::Bool,
-            "true",
+            "false",
         ),
         (
             "sparse_infill_flow_ratio",

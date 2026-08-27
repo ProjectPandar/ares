@@ -6,11 +6,9 @@ use crate::{
         perimeters::{
             classic::{
                 gap_domain,
-                hierarchy::PerimeterGeneratorLoop,
                 perimeter_append::{
                     PreparedPerimeterAppendObject, PreparedPostClassicPerimeterAppend,
                 },
-                traversal::TraversalSeed,
             },
             prepare_post_classic_gap_domain, prepare_post_classic_perimeter_append,
         },
@@ -44,9 +42,9 @@ fn task22o11_code_level_preparation_reaches_nonempty_pre_medial_domain() {
 #[test]
 fn task22o11_success_and_error_cleanup_are_iterative_on_a_constrained_stack() {
     let mut success = prepare_post_classic_perimeter_append(ksr_project()).unwrap();
-    deepen_both_tree_families(&mut success);
+    crate::project_slice::tests::deep_cleanup_support::deepen_perimeter_append_trees(&mut success);
     let mut failure = prepare_post_classic_perimeter_append(ksr_project()).unwrap();
-    deepen_both_tree_families(&mut failure);
+    crate::project_slice::tests::deep_cleanup_support::deepen_perimeter_append_trees(&mut failure);
     inject_invalid_gap(&mut failure);
 
     std::thread::Builder::new()
@@ -66,42 +64,6 @@ fn task22o11_success_and_error_cleanup_are_iterative_on_a_constrained_stack() {
         .unwrap()
         .join()
         .unwrap();
-}
-
-fn deepen_both_tree_families(prepared: &mut PreparedPostClassicPerimeterAppend) {
-    let traversal = prepared
-        .predecessor
-        .objects
-        .iter_mut()
-        .find(|object| {
-            object.records.iter().flatten().any(|record| {
-                record
-                    .surfaces
-                    .iter()
-                    .any(|surface| !surface.roots.is_empty())
-            })
-        })
-        .unwrap();
-    let roots = &mut traversal
-        .records
-        .iter_mut()
-        .flatten()
-        .flat_map(|record| &mut record.surfaces)
-        .find(|surface| !surface.roots.is_empty())
-        .unwrap()
-        .roots;
-    *roots = vec![deep_seed(roots.first().unwrap(), 10_000)];
-
-    let hierarchy_roots = &mut traversal
-        .predecessor
-        .records
-        .iter_mut()
-        .flatten()
-        .flat_map(|record| &mut record.surfaces)
-        .find(|surface| !surface.roots.is_empty())
-        .unwrap()
-        .roots;
-    *hierarchy_roots = vec![deep_loop(hierarchy_roots.first().unwrap(), 10_000)];
 }
 
 fn inject_invalid_gap(prepared: &mut PreparedPostClassicPerimeterAppend) {
@@ -124,51 +86,6 @@ fn inject_invalid_gap(prepared: &mut PreparedPostClassicPerimeterAppend) {
         ]),
         Vec::new(),
     )];
-}
-
-fn deep_seed(prototype: &TraversalSeed, depth: usize) -> TraversalSeed {
-    let mut seed = shallow_seed(prototype);
-    for _ in 0..depth {
-        let mut parent = shallow_seed(prototype);
-        parent.children.push(seed);
-        seed = parent;
-    }
-    seed
-}
-
-fn shallow_seed(prototype: &TraversalSeed) -> TraversalSeed {
-    TraversalSeed {
-        polygon: prototype.polygon.clone(),
-        depth: prototype.depth,
-        is_contour: prototype.is_contour,
-        is_smaller_width_perimeter: prototype.is_smaller_width_perimeter,
-        extrusion_role: prototype.extrusion_role,
-        loop_role: prototype.loop_role,
-        route: prototype.route,
-        width: prototype.width,
-        mm3_per_mm: prototype.mm3_per_mm,
-        children: Vec::new(),
-    }
-}
-
-fn deep_loop(prototype: &PerimeterGeneratorLoop, depth: usize) -> PerimeterGeneratorLoop {
-    let mut loop_ = shallow_loop(prototype);
-    for _ in 0..depth {
-        let mut parent = shallow_loop(prototype);
-        parent.children.push(loop_);
-        loop_ = parent;
-    }
-    loop_
-}
-
-fn shallow_loop(prototype: &PerimeterGeneratorLoop) -> PerimeterGeneratorLoop {
-    PerimeterGeneratorLoop {
-        polygon: prototype.polygon.clone(),
-        is_contour: prototype.is_contour,
-        is_smaller_width_perimeter: prototype.is_smaller_width_perimeter,
-        depth: prototype.depth,
-        children: Vec::new(),
-    }
 }
 
 #[derive(Debug, Eq, PartialEq)]

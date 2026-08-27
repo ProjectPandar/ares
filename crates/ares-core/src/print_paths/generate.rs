@@ -274,18 +274,18 @@ pub(crate) fn generate_print_paths_with_bridge_policy(
                     .paths()
                     .iter()
                     .map(|path| PrintPath::new(PrintPathRole::GapFill, path.points().to_vec()));
+                let unsupported_bridge = bridge_policy.unsupported_bottom_bridge_enabled()
+                    && input
+                        .layer_contours
+                        .is_some_and(|layers| fully_unsupported_layer(layers, layer_index));
+                let bridge_role = unsupported_bridge
+                    || extra_external_bridge_layer(
+                        input.layer_contours,
+                        layer_index,
+                        bridge_policy.bridge_no_support(),
+                        bridge_policy.extra_bridge_layer(),
+                    );
                 let infill_paths = infill_layer.paths().iter().map(|path| {
-                    let unsupported_bridge = bridge_policy.unsupported_bottom_bridge_enabled()
-                        && input
-                            .layer_contours
-                            .is_some_and(|layers| fully_unsupported_layer(layers, layer_index));
-                    let bridge_role = unsupported_bridge
-                        || extra_external_bridge_layer(
-                            input.layer_contours,
-                            layer_index,
-                            bridge_policy.bridge_no_support(),
-                            bridge_policy.extra_bridge_layer(),
-                        );
                     let role = match path.role() {
                         crate::InfillRole::Sparse => PrintPathRole::SparseInfill,
                         crate::InfillRole::InternalBridge => PrintPathRole::InternalBridge,

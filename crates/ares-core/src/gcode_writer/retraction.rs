@@ -42,7 +42,6 @@ impl GCodeWriter {
         feedrate: f64,
         comment: Option<&str>,
     ) -> String {
-        let (x, y) = self.offset_xy(point);
         self.current_position.0 = point.x();
         self.current_position.1 = point.y();
         self.current_feedrate = feedrate;
@@ -50,8 +49,8 @@ impl GCodeWriter {
             append_comment(
                 format!(
                     "G1 X{} Y{} F{}\n",
-                    format_xyzf(x),
-                    format_xyzf(y),
+                    format_xyzf(point.x()),
+                    format_xyzf(point.y()),
                     format_xyzf(feedrate)
                 ),
                 comment,
@@ -65,8 +64,8 @@ impl GCodeWriter {
             append_comment(
                 format!(
                     "G1 X{} Y{} E{} F{}\n",
-                    format_xyzf(x),
-                    format_xyzf(y),
+                    format_xyzf(point.x()),
+                    format_xyzf(point.y()),
                     format_e(emitted_e),
                     format_xyzf(feedrate)
                 ),

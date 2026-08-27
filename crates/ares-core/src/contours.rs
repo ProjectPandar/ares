@@ -24,6 +24,11 @@ impl Contour {
     pub fn points(&self) -> &[Point2] {
         &self.points
     }
+
+    /// Even-odd ray casting; contours with fewer than three points contain nothing.
+    pub(crate) fn contains_point(&self, point: Point2) -> bool {
+        point_in_contour(point, &self.points)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -53,6 +58,61 @@ impl LayerContours {
     pub fn contours(&self) -> &[Contour] {
         &self.contours
     }
+
+    /// True when `contour` is not nested inside another contour of this layer.
+    pub(crate) fn is_outer_contour(&self, contour: &Contour) -> bool {
+        let Some(point) = contour.points().first().copied() else {
+            return true;
+        };
+        self.contours
+            .iter()
+            .filter(|candidate| !std::ptr::eq(*candidate, contour))
+            .filter(|candidate| candidate.contains_point(point))
+            .count()
+            .is_multiple_of(2)
+    }
+}
+
+/// Bounds of a four-point axis-aligned rectangle, or `None` when the points do
+/// not form one (in any rotation order).
+pub(crate) fn axis_aligned_rectangle_bounds(points: &[Point2]) -> Option<(f64, f64, f64, f64)> {
+    let [first, second, third, fourth] = points else {
+        return None;
+    };
+    let mut actual = [*first, *second, *third, *fourth];
+    actual.sort_by(|a, b| compare_points(*a, *b));
+    let min_x = actual[0].x();
+    let max_x = actual[3].x();
+    let min_y = actual[0].y().min(actual[1].y());
+    let max_y = actual[2].y().max(actual[3].y());
+    let mut expected = [
+        Point2::new(min_x, min_y),
+        Point2::new(max_x, min_y),
+        Point2::new(max_x, max_y),
+        Point2::new(min_x, max_y),
+    ];
+    expected.sort_by(|a, b| compare_points(*a, *b));
+    (actual == expected).then_some((min_x, min_y, max_x, max_y))
+}
+
+fn point_in_contour(point: Point2, points: &[Point2]) -> bool {
+    if points.len() < 3 {
+        return false;
+    }
+    let mut inside = false;
+    let mut previous = points[points.len() - 1];
+    for &current in points {
+        if (current.y() > point.y()) != (previous.y() > point.y()) {
+            let intersection_x = (previous.x() - current.x()) * (point.y() - current.y())
+                / (previous.y() - current.y())
+                + current.x();
+            if point.x() < intersection_x {
+                inside = !inside;
+            }
+        }
+        previous = current;
+    }
+    inside
 }
 
 pub fn stitch_layer_slices(slices: &[LayerSlice]) -> Result<Vec<LayerContours>, SliceError> {

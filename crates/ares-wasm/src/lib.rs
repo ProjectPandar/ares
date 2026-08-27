@@ -13,7 +13,7 @@ pub async fn slice_stl_bytes(input: Vec<u8>, options_json: &str) -> Result<Vec<u
     let options = parse_options(options_json)?;
     ares_core::slice(input, options)
         .await
-        .map_err(format_slice_error)
+        .map_err(|error| error.to_string())
 }
 
 #[wasm_bindgen(js_name = sliceProject)]
@@ -41,22 +41,11 @@ fn invalid_date() -> SliceError {
 }
 
 fn slice_error_js(error: SliceError) -> JsValue {
-    JsValue::from_str(&format_slice_error(error))
+    JsValue::from_str(&error.to_string())
 }
 
 fn parse_options(options_json: &str) -> Result<SliceOptions, String> {
     serde_json::from_str(options_json).map_err(|error| format!("invalid options JSON: {error}"))
-}
-
-fn format_slice_error(error: SliceError) -> String {
-    match error {
-        SliceError::EmptyInput => "slice input is empty".to_owned(),
-        SliceError::InvalidInput(message) => message,
-        SliceError::ProjectSlicingIncomplete => "ProjectSlicingIncomplete".to_owned(),
-        SliceError::UnsupportedProjectFeature(feature) => {
-            format!("unsupported project feature: {feature}")
-        }
-    }
 }
 
 #[cfg(test)]
@@ -87,37 +76,6 @@ mod tests {
         let error = slice_stl_bytes(Vec::new(), "{}").await.unwrap_err();
 
         assert_eq!(error, "slice input is empty");
-    }
-
-    #[test]
-    fn slice_error_javascript_mappings_are_stable() {
-        assert_eq!(
-            format_slice_error(SliceError::EmptyInput),
-            "slice input is empty"
-        );
-        assert_eq!(
-            format_slice_error(SliceError::InvalidInput(
-                "invalid input sentinel".to_owned()
-            )),
-            "invalid input sentinel"
-        );
-        assert_eq!(
-            format_slice_error(SliceError::ProjectSlicingIncomplete),
-            "ProjectSlicingIncomplete"
-        );
-    }
-
-    #[test]
-    fn unsupported_project_feature_has_stable_javascript_mapping() {
-        let supplied_document =
-            r#"{"filament_shrink":[95],"sentinel":"UNRELATED_DOCUMENT_SENTINEL"}"#;
-        let message = format_slice_error(SliceError::UnsupportedProjectFeature(
-            "filament_shrink".to_owned(),
-        ));
-
-        assert_eq!(message, "unsupported project feature: filament_shrink");
-        assert!(!message.contains(supplied_document));
-        assert!(!message.contains("UNRELATED_DOCUMENT_SENTINEL"));
     }
 
     fn square_ascii_stl() -> Vec<u8> {

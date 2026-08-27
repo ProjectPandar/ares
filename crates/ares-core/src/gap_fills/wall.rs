@@ -45,7 +45,8 @@ fn gap_fill_for_contour(
     options: PerimeterOptions,
     effective_wall_loops: u32,
 ) -> Result<Option<GapFillPath>, SliceError> {
-    let Some((min_x, min_y, max_x, max_y)) = rectangular_bounds(points) else {
+    let Some((min_x, min_y, max_x, max_y)) = crate::contours::axis_aligned_rectangle_bounds(points)
+    else {
         return Ok(None);
     };
 
@@ -87,39 +88,6 @@ fn gap_fill_for_contour(
         }
         (true, true) | (false, false) => Ok(None),
     }
-}
-
-pub(super) fn rectangular_bounds(points: &[Point2]) -> Option<(f64, f64, f64, f64)> {
-    let [_, _, _, _] = points else {
-        return None;
-    };
-
-    let min_x = points.iter().map(Point2::x).min_by(f64::total_cmp)?;
-    let max_x = points.iter().map(Point2::x).max_by(f64::total_cmp)?;
-    let min_y = points.iter().map(Point2::y).min_by(f64::total_cmp)?;
-    let max_y = points.iter().map(Point2::y).max_by(f64::total_cmp)?;
-
-    let mut actual = points.to_vec();
-    actual.sort_by(compare_points);
-    let mut expected = vec![
-        Point2::new(min_x, min_y),
-        Point2::new(max_x, min_y),
-        Point2::new(max_x, max_y),
-        Point2::new(min_x, max_y),
-    ];
-    expected.sort_by(compare_points);
-
-    if actual == expected {
-        Some((min_x, min_y, max_x, max_y))
-    } else {
-        None
-    }
-}
-
-fn compare_points(a: &Point2, b: &Point2) -> std::cmp::Ordering {
-    a.x()
-        .total_cmp(&b.x())
-        .then_with(|| a.y().total_cmp(&b.y()))
 }
 
 fn resolve_wall_loops(
@@ -254,7 +222,7 @@ mod tests {
         ];
 
         assert_eq!(
-            super::rectangular_bounds(&points),
+            crate::contours::axis_aligned_rectangle_bounds(&points),
             Some((0.0, 0.0, 3.0, 0.7))
         );
     }

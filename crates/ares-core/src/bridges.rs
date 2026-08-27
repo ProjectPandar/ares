@@ -159,8 +159,11 @@ impl BridgeOptions {
 pub(crate) fn parse_bridge_options(
     values: &BTreeMap<String, Value>,
 ) -> Result<BridgeOptions, SliceError> {
-    let bridge_speed_mm_s =
-        positive_number_or_string(values, "bridge_speed", DEFAULT_BRIDGE_SPEED)?;
+    let bridge_speed_mm_s = crate::options::parsing::parse_positive_number_or_string(
+        "bridge_speed",
+        values.get("bridge_speed"),
+        DEFAULT_BRIDGE_SPEED,
+    )?;
     Ok(BridgeOptions {
         bridge_flow: flow_multiplier(values, "bridge_flow", DEFAULT_BRIDGE_FLOW)?,
         internal_bridge_flow: flow_multiplier(
@@ -236,32 +239,12 @@ fn flow_multiplier(
     key: &str,
     default: f64,
 ) -> Result<f64, SliceError> {
-    let value = positive_number_or_string(values, key, default)?;
+    let value =
+        crate::options::parsing::parse_positive_number_or_string(key, values.get(key), default)?;
     if value <= 2.0 {
         Ok(value)
     } else {
         Err(SliceError::InvalidInput(format!("{key} is out of range")))
-    }
-}
-
-fn positive_number_or_string(
-    values: &BTreeMap<String, Value>,
-    key: &str,
-    default: f64,
-) -> Result<f64, SliceError> {
-    let Some(value) = values.get(key) else {
-        return Ok(default);
-    };
-    let value = match value {
-        Value::Number(number) => number.as_f64(),
-        Value::String(text) => text.parse().ok(),
-        _ => None,
-    }
-    .ok_or_else(|| SliceError::InvalidInput(format!("{key} must be a number")))?;
-    if value.is_finite() && value > 0.0 {
-        Ok(value)
-    } else {
-        Err(SliceError::InvalidInput(format!("{key} must be positive")))
     }
 }
 

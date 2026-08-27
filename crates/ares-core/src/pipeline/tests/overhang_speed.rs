@@ -5,6 +5,7 @@ use serde_json::json;
 fn unsupported_second_layer_overhang_reaches_gcode_comments_and_speed() {
     let options = options(json!({
         "bridge_speed": 20,
+        "slowdown_for_curled_perimeters": true,
         "overhang_4_4_speed": 30
     }));
     let pipeline = unsupported_second_layer_pipeline(&options);

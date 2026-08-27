@@ -237,20 +237,11 @@ fn flatten(polygons: Vec<Polygon>, inner: bool) -> Vec<OffsetContour> {
 }
 
 fn rotate_expolygon(expolygon: &ExPolygon, angle: f64) -> Result<ExPolygon, ClipperError> {
-    let rotate = |polygon: &Polygon| {
-        let cosine = angle.cos();
-        let sine = angle.sin();
-        polygon
-            .points()
-            .iter()
-            .map(|point| {
-                checked_point(
-                    cosine * point.x() as f64 - sine * point.y() as f64,
-                    sine * point.x() as f64 + cosine * point.y() as f64,
-                )
-            })
-            .collect::<Result<Vec<_>, _>>()
-            .map(Polygon::new)
+    let rotate = |polygon: &Polygon| -> Result<Polygon, ClipperError> {
+        Ok(Polygon::new(crate::fill::checked_rotate::rotate_points(
+            polygon.points().to_vec(),
+            angle,
+        )?))
     };
     Ok(ExPolygon::new(
         rotate(expolygon.contour())?,
@@ -260,21 +251,6 @@ fn rotate_expolygon(expolygon: &ExPolygon, angle: f64) -> Result<ExPolygon, Clip
             .map(rotate)
             .collect::<Result<_, _>>()?,
     ))
-}
-
-// Source MultiPoint::rotate rounds with std::round (half away from zero), not
-// Clipper's floor(x+0.5); negative half-values land one unit lower.
-fn checked_point(x: f64, y: f64) -> Result<Point, ClipperError> {
-    let x = x.round();
-    let y = y.round();
-    if !x.is_finite()
-        || !y.is_finite()
-        || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&x)
-        || !(i64::MIN as f64..-(i64::MIN as f64)).contains(&y)
-    {
-        return Err(ClipperError::CoordinateOutOfRange);
-    }
-    Ok(Point::new(x as i64, y as i64))
 }
 
 const fn kind(inner: bool, low: bool) -> IntersectionKind {

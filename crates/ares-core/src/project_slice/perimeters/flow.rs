@@ -38,31 +38,14 @@ pub(in crate::project_slice) fn resolve_external_perimeter_flow(
     outer_wall_filament_id: OrcaInt,
     nozzle_diameters: &OrcaFloats,
 ) -> Result<Flow, SliceError> {
-    let nozzle_index = outer_wall_filament_id
-        .0
-        .checked_sub(1)
-        .and_then(|index| usize::try_from(index).ok())
-        .filter(|index| *index < nozzle_diameters.0.len())
-        .unwrap_or(0);
-    let nozzle_diameter = nozzle_diameters
-        .0
-        .get(nozzle_index)
-        .map(|diameter| diameter.0 as f32)
-        .filter(|diameter| diameter.is_finite() && *diameter > 0.0)
-        .ok_or_else(|| invalid("invalid Orca option nozzle_diameter"))?;
-    let height = layer.height as f32;
-    if !height.is_finite() || height <= 0.0 {
-        return Err(invalid("invalid Orca option layer_height"));
-    }
-
-    let mut selected_width = if layer.id == 0 && raw(initial_layer_width) > 0.0 {
-        initial_layer_width
-    } else {
-        outer_wall_width
-    };
-    if raw(selected_width) == 0.0 {
-        selected_width = object_line_width;
-    }
+    let nozzle_diameter = selected_nozzle(outer_wall_filament_id, nozzle_diameters)?;
+    let height = selected_height(layer)?;
+    let selected_width = select_width(
+        layer,
+        initial_layer_width,
+        outer_wall_width,
+        object_line_width,
+    );
     build_nonbridging_flow(selected_width, height, nozzle_diameter)
 }
 

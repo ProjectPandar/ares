@@ -20,13 +20,12 @@ fn travel_to_z_formats_exact_line_and_updates_state() {
 }
 
 #[test]
-fn travel_to_xy_applies_offset_and_formats_exact_line() {
+fn travel_to_xy_formats_exact_line() {
     let mut writer = GCodeWriter::new();
-    writer.set_xy_offset(Point2::new(1.0, -0.5));
 
     assert_eq!(
         writer.travel_to_xy_with_comment(Point2::new(0.5, -0.5), 7200.0, None),
-        "G1 X-0.5 Y0 F7200\n"
+        "G1 X0.5 Y-0.5 F7200\n"
     );
 
     assert_eq!(writer.current_position(), (0.5, -0.5, 0.0));

@@ -51,7 +51,7 @@ fn speed_metadata_preserves_registry_contract() {
         (
             "slowdown_for_curled_perimeters",
             OptionValueKind::Bool,
-            "true",
+            "false",
         ),
         ("slow_down_layers", OptionValueKind::Int, "0"),
         (

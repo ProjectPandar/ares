@@ -28,7 +28,6 @@ pub(crate) struct GCodeWriter {
     gcode_flavor: GCodeFlavor,
     accel_to_decel_config: AccelToDecelConfig,
     part_cooling_fan_min_pwm: u8,
-    xy_offset: Point2,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -50,7 +49,6 @@ impl GCodeWriter {
             gcode_flavor: GCodeFlavor::MarlinLegacy,
             accel_to_decel_config: AccelToDecelConfig::new(true, 50.0),
             part_cooling_fan_min_pwm: 0,
-            xy_offset: Point2::new(0.0, 0.0),
         }
     }
 
@@ -228,12 +226,15 @@ impl GCodeWriter {
         delta_e: f64,
         comment: Option<&str>,
     ) -> String {
-        let (x, y) = self.offset_xy(point);
         self.current_position.0 = point.x();
         self.current_position.1 = point.y();
         if delta_e.abs() <= f64::EPSILON {
             append_comment(
-                format!("G1 X{} Y{}\n", format_xyzf(x), format_xyzf(y)),
+                format!(
+                    "G1 X{} Y{}\n",
+                    format_xyzf(point.x()),
+                    format_xyzf(point.y())
+                ),
                 comment,
             )
         } else {
@@ -245,8 +246,8 @@ impl GCodeWriter {
             append_comment(
                 format!(
                     "G1 X{} Y{} E{}\n",
-                    format_xyzf(x),
-                    format_xyzf(y),
+                    format_xyzf(point.x()),
+                    format_xyzf(point.y()),
                     format_e(emitted_e)
                 ),
                 comment,
@@ -254,12 +255,10 @@ impl GCodeWriter {
         }
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn reset_e(&mut self) {
         self.current_e = 0.0;
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) const fn current_position(&self) -> (f64, f64, f64) {
         self.current_position
     }
@@ -272,26 +271,14 @@ impl GCodeWriter {
         self.current_e
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
+    #[cfg(test)]
     pub(crate) const fn current_acceleration(&self) -> u32 {
         self.current_print_acceleration
     }
 
-    #[cfg_attr(not(test), allow(dead_code))]
+    #[cfg(test)]
     pub(crate) const fn current_jerk(&self) -> f64 {
         self.current_jerk
-    }
-
-    #[cfg_attr(not(test), allow(dead_code))]
-    pub(crate) fn set_xy_offset(&mut self, offset: Point2) {
-        self.xy_offset = offset;
-    }
-
-    fn offset_xy(&self, point: Point2) -> (f64, f64) {
-        (
-            point.x() - self.xy_offset.x(),
-            point.y() - self.xy_offset.y(),
-        )
     }
 }
 

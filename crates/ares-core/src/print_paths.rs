@@ -239,6 +239,28 @@ impl PrintPath {
     pub const fn is_closed(&self) -> bool {
         self.closed
     }
+
+    /// Closing move target honoring the seam gap: the interpolated point along
+    /// the closing segment where extrusion stops short of the path start.
+    pub(crate) fn closing_target(&self) -> Option<Point2> {
+        let start = self.points[0];
+        let end = *self.points.last()?;
+        let length = ((end.x() - start.x()).powi(2) + (end.y() - start.y()).powi(2)).sqrt();
+        if length <= f64::EPSILON {
+            return None;
+        }
+        if self.seam_gap_mm <= 0.0 {
+            return Some(start);
+        }
+        if self.seam_gap_mm >= length {
+            return None;
+        }
+        let ratio = (length - self.seam_gap_mm) / length;
+        Some(Point2::new(
+            end.x() + (start.x() - end.x()) * ratio,
+            end.y() + (start.y() - end.y()) * ratio,
+        ))
+    }
 }
 
 const fn default_closed(role: PrintPathRole) -> bool {

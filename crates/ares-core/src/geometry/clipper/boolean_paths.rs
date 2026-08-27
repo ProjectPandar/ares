@@ -1,6 +1,6 @@
 use super::{
     ClipOperation, Clipper, ClipperError, ClipperOptions, FillRule, JoinType, PathRole,
-    boolean_ex::{SAFETY_MITER_LIMIT, SAFETY_OFFSET, append_safety_offset},
+    boolean_ex::{SAFETY_MITER_LIMIT, SAFETY_OFFSET, safety_offset_polygons},
     offset::offset_paths,
 };
 use crate::geometry::Polygon;
@@ -43,24 +43,16 @@ pub(crate) fn intersection_polygons_paths_with_safety_offset(
 ) -> Result<Vec<Polygon>, ClipperError> {
     execute(
         subject,
-        &safety_offset_clip_paths(clip)?,
+        &safety_offset_polygons(clip)?,
         ClipOperation::Intersection,
     )
-}
-
-fn safety_offset_clip_paths(clip: &[Polygon]) -> Result<Vec<Polygon>, ClipperError> {
-    let mut expanded = Vec::new();
-    for path in clip {
-        append_safety_offset(path, &mut expanded)?;
-    }
-    Ok(expanded)
 }
 
 #[cfg(test)]
 pub(crate) fn safety_offset_clip_paths_for_test(
     clip: &[Polygon],
 ) -> Result<Vec<Polygon>, ClipperError> {
-    safety_offset_clip_paths(clip)
+    safety_offset_polygons(clip)
 }
 
 fn execute(

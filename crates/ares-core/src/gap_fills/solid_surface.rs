@@ -91,7 +91,8 @@ fn solid_surface_path(
     points: &[Point2],
     solid_width: f64,
 ) -> Result<Option<GapFillPath>, SliceError> {
-    let Some((min_x, min_y, max_x, max_y)) = super::wall::rectangular_bounds(points) else {
+    let Some((min_x, min_y, max_x, max_y)) = crate::contours::axis_aligned_rectangle_bounds(points)
+    else {
         return Ok(None);
     };
     let width = max_x - min_x;
