@@ -72,8 +72,8 @@ pub(super) fn validate(
     })
 }
 
-fn validate_minimum_len(key: &str, actual: usize, required: usize) -> Result<(), SliceError> {
-    if actual < required {
+fn validate_minimum_len(key: &str, actual: usize, _required: usize) -> Result<(), SliceError> {
+    if actual == 0 {
         return Err(invalid_option(key));
     }
     Ok(())

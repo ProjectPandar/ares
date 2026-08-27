@@ -13,6 +13,7 @@ pub(crate) fn materialize_project_variants(
     filament_map: &OrcaInts,
 ) -> Result<ProjectSettings, SliceError> {
     let mut materialized = source.clone();
+    let filament_map = expanded_filament_map(source, filament_map);
     materialized.project.gcode.filament_map = filament_map.clone();
 
     let Some(active) = index::resolve_activation(&materialized)? else {
@@ -28,9 +29,20 @@ pub(crate) fn materialize_project_variants(
     let process_indices = index::resolve_process_indices(&materialized, &active)?;
     printer::materialize_process(&mut materialized, &process_indices)?;
 
-    let filament_indices = index::resolve_filament_indices(source, filament_map, &active)?;
+    let filament_indices = index::resolve_filament_indices(source, &filament_map, &active)?;
     filament::materialize(&mut materialized, &filament_indices)?;
     Ok(materialized)
+}
+
+fn expanded_filament_map(source: &ProjectSettings, map: &OrcaInts) -> OrcaInts {
+    let mut expanded = map.clone();
+    if expanded.0.len() == 1 {
+        expanded.0.resize(
+            source.filament.gcode.filament_diameter.0.len(),
+            expanded.0[0],
+        );
+    }
+    expanded
 }
 
 #[cfg(test)]

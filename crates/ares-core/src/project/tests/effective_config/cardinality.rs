@@ -78,24 +78,24 @@ fn rejects_non_one_based_or_out_of_physical_filament_map_entries() {
 }
 
 #[test]
-fn rejects_each_short_filament_ironing_vector() {
+fn accepts_single_value_filament_ironing_vectors_as_broadcasts() {
     let project = valid_project();
 
     let mut settings = valid_settings(1, 2);
     settings.filament.region.filament_ironing_flow.pop();
-    assert_invalid_key(validate(&settings, &project), "filament_ironing_flow");
+    validate(&settings, &project).unwrap();
 
     let mut settings = valid_settings(1, 2);
     settings.filament.region.filament_ironing_spacing.pop();
-    assert_invalid_key(validate(&settings, &project), "filament_ironing_spacing");
+    validate(&settings, &project).unwrap();
 
     let mut settings = valid_settings(1, 2);
     settings.filament.region.filament_ironing_inset.pop();
-    assert_invalid_key(validate(&settings, &project), "filament_ironing_inset");
+    validate(&settings, &project).unwrap();
 
     let mut settings = valid_settings(1, 2);
     settings.filament.region.filament_ironing_speed.pop();
-    assert_invalid_key(validate(&settings, &project), "filament_ironing_speed");
+    validate(&settings, &project).unwrap();
 }
 
 #[test]
@@ -136,12 +136,12 @@ fn accepts_each_filament_ironing_vector_longer_than_logical_count() {
 }
 
 #[test]
-fn rejects_each_short_shrink_vector() {
+fn accepts_single_value_shrink_vectors_as_broadcasts() {
     let project = valid_project();
 
     let mut settings = valid_settings(1, 2);
     settings.filament.print.filament_shrink.0.pop();
-    assert_invalid_key(validate(&settings, &project), "filament_shrink");
+    validate(&settings, &project).unwrap();
 
     let mut settings = valid_settings(1, 2);
     settings
@@ -150,10 +150,7 @@ fn rejects_each_short_shrink_vector() {
         .filament_shrinkage_compensation_z
         .0
         .pop();
-    assert_invalid_key(
-        validate(&settings, &project),
-        "filament_shrinkage_compensation_z",
-    );
+    validate(&settings, &project).unwrap();
 }
 
 #[test]

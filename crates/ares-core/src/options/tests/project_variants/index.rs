@@ -132,6 +132,20 @@ fn one_extruder_multiple_variants_activates_materialization() {
 }
 
 #[test]
+fn one_physical_extruder_map_broadcasts_to_all_logical_filaments() {
+    let mut source = one_extruder_source();
+    source.filament.gcode.filament_diameter = OrcaFloats(vec![
+        crate::OrcaFloat(1.75),
+        crate::OrcaFloat(1.75),
+        crate::OrcaFloat(1.75),
+    ]);
+
+    let materialized = materialize_project_variants(&source, &ints(&[1])).unwrap();
+
+    assert_eq!(materialized.project.gcode.filament_map, ints(&[1, 1, 1]));
+}
+
+#[test]
 fn one_extruder_one_variant_replaces_only_map_without_validation() {
     let mut source = one_extruder_source();
     source.printer.gcode.extruder_type.0.clear();
