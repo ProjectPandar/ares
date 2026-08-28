@@ -20,11 +20,13 @@ impl Value {
         }
     }
 
+    /// Upstream `ConfigOptionVector::get_at` never fails for a non-empty
+    /// option: an out-of-range index falls back to the first value, and a
+    /// scalar behaves as a one-element vector (`Config.hpp:624-628`).
     pub(super) fn index(&self, index: usize) -> Option<&Self> {
         match self {
             Self::List(values) => values.get(index).or_else(|| values.first()),
-            _ if index == 0 => Some(self),
-            _ => None,
+            scalar => Some(scalar),
         }
     }
 

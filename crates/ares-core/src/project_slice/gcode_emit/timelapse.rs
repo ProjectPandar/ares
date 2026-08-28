@@ -1,15 +1,21 @@
 use crate::{
-    SliceError, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    GenerationMetadata, SliceError,
+    project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
 use super::{footprint, template, value};
 
+pub(super) struct TimelapseLayer {
+    pub(super) index: usize,
+    pub(super) z: f64,
+    pub(super) max_z: f64,
+}
+
 pub(super) fn append(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
-    layer_index: usize,
-    layer_z: f64,
-    max_layer_z: f64,
+    layer: TimelapseLayer,
+    metadata: GenerationMetadata,
 ) -> Result<(), SliceError> {
     let runtime = &traversal.resolved.views.runtime_gcode;
     let source = &runtime.time_lapse_gcode.0;
@@ -17,11 +23,10 @@ pub(super) fn append(
         return Ok(());
     }
 
-    let mut config =
-        value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
-    config.insert("layer_num", value::Value::number(layer_index as f64));
-    config.insert("layer_z", value::Value::number(layer_z));
-    config.insert("max_layer_z", value::Value::number(max_layer_z));
+    let mut config = super::placeholders::base_config(traversal, metadata)?;
+    config.insert("layer_num", value::Value::number(layer.index as f64));
+    config.insert("layer_z", value::Value::number(layer.z));
+    config.insert("max_layer_z", value::Value::number(layer.max_z));
     if let Some((min_x, min_y, size_x, size_y)) = footprint::first_layer_bounds(traversal) {
         config.insert(
             "first_layer_center_no_wipe_tower",

@@ -218,9 +218,12 @@ pub(super) fn emit(
             timelapse::append(
                 &mut output,
                 traversal,
-                layer_index,
-                f64::from(layer_z),
-                max_layer_z,
+                timelapse::TimelapseLayer {
+                    index: layer_index,
+                    z: f64::from(layer_z),
+                    max_z: max_layer_z,
+                },
+                metadata,
             )?;
             cooling.finish_layer(&mut output, layer_output_start);
         }

@@ -42,7 +42,78 @@ pub(super) fn base_config(
     insert_first_layer_bounds(&mut config, traversal);
     insert_outer_wall_volumetric_speed(&mut config, traversal)?;
     insert_adaptive_bed_mesh(&mut config);
+    insert_head_wrap_detect_zone(&mut config, traversal);
     Ok(config)
+}
+
+/// `in_head_wrap_detect_zone` (`GCode.cpp:2958-2968`): true when the
+/// first-layer projection of any object intersects the printer's head wrap
+/// detect zone polygon.
+fn insert_head_wrap_detect_zone(
+    config: &mut value::Config,
+    traversal: &PreparedPostClassicTraversal,
+) {
+    use crate::geometry::Polygon;
+    use crate::geometry::intersection_polygons_paths;
+
+    let zone_mm = &traversal
+        .resolved
+        .views
+        .full
+        .printer
+        .remaining
+        .head_wrap_detect_zone;
+    let scale = traversal.scale;
+    let zone: Vec<crate::geometry::Point> = zone_mm
+        .0
+        .iter()
+        .filter_map(|point| {
+            let x = scale.checked_scale(point.x)?;
+            let y = scale.checked_scale(point.y)?;
+            Some(crate::geometry::Point::new(x, y))
+        })
+        .collect();
+    let in_zone = if zone.len() < 3 {
+        false
+    } else {
+        let zone_polygon = Polygon::new(zone.clone());
+        let mut hit = false;
+        for object in &traversal.objects {
+            let layers = &object
+                .predecessor
+                .predecessor
+                .predecessor
+                .predecessor
+                .object
+                .object
+                .as_parts()
+                .1;
+            let Some(first) = layers.first() else {
+                continue;
+            };
+            let points: Vec<crate::geometry::Point> = first
+                .iter()
+                .flat_map(|expolygon| expolygon.contour().points().iter().copied())
+                .collect();
+            if points.len() < 3 {
+                continue;
+            }
+            let hull = crate::project_slice::gcode_emit::skirt::convex_hull(&points);
+            if hull.len() < 3 {
+                continue;
+            }
+            let clipped = intersection_polygons_paths(
+                &[Polygon::new(hull)],
+                std::slice::from_ref(&zone_polygon),
+            );
+            if matches!(clipped, Ok(intersection) if !intersection.is_empty()) {
+                hit = true;
+                break;
+            }
+        }
+        hit
+    };
+    config.insert("in_head_wrap_detect_zone", Value::Bool(in_zone));
 }
 
 fn insert_runtime_placeholders(
