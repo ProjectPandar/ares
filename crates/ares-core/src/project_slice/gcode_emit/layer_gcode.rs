@@ -152,6 +152,24 @@ pub(super) fn append_before_layer_change_gcode(
     let mut config = super::placeholders::base_config(traversal, metadata);
     config.insert("layer_num", value::Value::number((layer_index + 1) as f64));
     config.insert("layer_z", value::Value::number(layer_z));
+    let filament = &traversal.resolved.views.full.filament.gcode;
+    let diameter = filament
+        .filament_diameter
+        .0
+        .first()
+        .map_or(1.75, |diameter| diameter.0);
+    let density = filament
+        .filament_density
+        .0
+        .first()
+        .map_or(1.24, |density| density.0);
+    let length = super::finish::account_used_filament(output);
+    let volume = length * diameter.powi(2) * 0.25 * std::f64::consts::PI;
+    config.insert("extruded_volume_total", value::Value::number(volume));
+    config.insert(
+        "extruded_weight_total",
+        value::Value::number(volume * density * 0.001),
+    );
     config.insert("max_layer_z", value::Value::number(layer_z));
     let rendered = template::render(template, &config).map_err(|error| {
         SliceError::InvalidInput(format!(

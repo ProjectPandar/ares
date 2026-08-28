@@ -79,9 +79,13 @@ fn insert_runtime_placeholders(
         config.insert(name, Value::number(0.0));
     }
     let filament_count = traversal.resolved.logical_filament_count.max(1);
+    let extruder_count = config
+        .get("nozzle_diameter")
+        .map(|value| value.iter_list().count().max(1))
+        .unwrap_or(1);
     let first = Value::List(
-        (0..filament_count)
-            .map(|index| Value::number(index as f64))
+        (0..filament_count.max(extruder_count))
+            .map(|index| Value::number(index.min(filament_count - 1) as f64))
             .collect(),
     );
     for name in [
@@ -92,10 +96,6 @@ fn insert_runtime_placeholders(
     ] {
         config.insert(name, first.clone());
     }
-    let extruder_count = config
-        .get("nozzle_diameter")
-        .map(|value| value.iter_list().count().max(1))
-        .unwrap_or(1);
     config.insert("num_extruders", Value::number(extruder_count as f64));
     let used = crate::project_slice::extruders::collect_project_object_extruders(
         traversal.project.objects(),
@@ -119,6 +119,36 @@ fn insert_runtime_placeholders(
         ),
     );
     config.insert("has_wipe_tower", Value::Bool(false));
+    config.insert("plate_name", Value::String(String::new()));
+    config.insert("plate_number", Value::String("1".to_owned()));
+    let model_name = traversal
+        .project
+        .objects()
+        .first()
+        .map_or_else(String::new, |object| object.name().to_owned());
+    let input_filename = model_name
+        .rsplit_once('.')
+        .map_or(model_name.as_str(), |(stem, _)| stem)
+        .to_owned();
+    config.insert("model_name", Value::String(model_name));
+    config.insert("input_filename_base", Value::String(input_filename));
+    config.insert("zhop", Value::number(0.0));
+    for (target, source) in [
+        (
+            "retraction_distance_when_cut",
+            "retraction_distances_when_cut",
+        ),
+        ("long_retraction_when_cut", "long_retractions_when_cut"),
+        (
+            "retraction_distance_when_ec",
+            "retraction_distances_when_ec",
+        ),
+        ("long_retraction_when_ec", "long_retractions_when_ec"),
+    ] {
+        if let Some(value) = config.get(source).and_then(|value| value.index(0)).cloned() {
+            config.insert(target, value);
+        }
+    }
     config.insert(
         "position",
         Value::List(vec![
@@ -276,6 +306,10 @@ fn insert_first_layer_bounds(config: &mut value::Config, traversal: &PreparedPos
         point(min_x + size_x, min_y + size_y),
     );
     config.insert("first_layer_print_size", point(size_x, size_y));
+    config.insert(
+        "first_layer_center_no_wipe_tower",
+        point(min_x + 0.5 * size_x, min_y + 0.5 * size_y),
+    );
 }
 
 /// `print_bed_min`/`print_bed_max`/`print_bed_size` from the printable-area

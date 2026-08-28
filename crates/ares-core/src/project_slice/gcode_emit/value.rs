@@ -22,7 +22,7 @@ impl Value {
 
     pub(super) fn index(&self, index: usize) -> Option<&Self> {
         match self {
-            Self::List(values) => values.get(index),
+            Self::List(values) => values.get(index).or_else(|| values.first()),
             _ if index == 0 => Some(self),
             _ => None,
         }
@@ -183,6 +183,10 @@ mod tests {
             "PETG"
         );
         assert_eq!(config.get("values_1").unwrap().as_number(), Some(2.0));
+        assert_eq!(
+            config.get("values").unwrap().index(7).unwrap().as_number(),
+            Some(1.0)
+        );
         assert_eq!(config.get("names_0").unwrap().as_string(), "PLA");
     }
 

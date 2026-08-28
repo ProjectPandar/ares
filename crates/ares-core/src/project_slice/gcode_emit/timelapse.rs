@@ -22,6 +22,15 @@ pub(super) fn append(
     config.insert("layer_num", value::Value::number(layer_index as f64));
     config.insert("layer_z", value::Value::number(layer_z));
     config.insert("max_layer_z", value::Value::number(max_layer_z));
+    if let Some((min_x, min_y, size_x, size_y)) = footprint::first_layer_bounds(traversal) {
+        config.insert(
+            "first_layer_center_no_wipe_tower",
+            value::Value::List(vec![
+                value::Value::number(min_x + 0.5 * size_x),
+                value::Value::number(min_y + 0.5 * size_y),
+            ]),
+        );
+    }
     let physical_extruder = runtime
         .physical_extruder_map
         .0

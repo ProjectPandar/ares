@@ -235,11 +235,25 @@ impl Parser<'_> {
                 Ok(value)
             }
             Token::Left => {
-                let value = self.parse_or()?;
-                if !self.take(Token::Right) {
-                    return Err("expected closing parenthesis".to_owned());
+                let first = self.parse_or()?;
+                if self.take(Token::Comma) {
+                    let mut values = vec![first];
+                    loop {
+                        values.push(self.parse_or()?);
+                        if self.take(Token::Right) {
+                            break;
+                        }
+                        if !self.take(Token::Comma) {
+                            return Err("expected comma in tuple".to_owned());
+                        }
+                    }
+                    Ok(Value::List(values))
+                } else {
+                    if !self.take(Token::Right) {
+                        return Err("expected closing parenthesis".to_owned());
+                    }
+                    Ok(first)
                 }
-                Ok(value)
             }
             _ => Err("primary expression expected".to_owned()),
         }
@@ -266,6 +280,9 @@ impl Parser<'_> {
 }
 
 fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, String> {
+    if name == "interpolate_table" {
+        return interpolate_table(&args);
+    }
     let numbers = args
         .iter()
         .map(|value| {
@@ -310,6 +327,44 @@ fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, Stri
     }
 }
 
+fn interpolate_table(args: &[Value]) -> Result<Value, String> {
+    let value = args
+        .first()
+        .and_then(Value::as_number)
+        .ok_or("interpolate_table requires a numeric value")?;
+    let points = args[1..]
+        .iter()
+        .map(|point| {
+            let mut values = point.iter_list();
+            let x = values
+                .next()
+                .and_then(Value::as_number)
+                .ok_or("interpolate_table point requires x")?;
+            let y = values
+                .next()
+                .and_then(Value::as_number)
+                .ok_or("interpolate_table point requires y")?;
+            Ok((x, y))
+        })
+        .collect::<Result<Vec<_>, &str>>()?;
+    let Some(&(first_x, first_y)) = points.first() else {
+        return Err("interpolate_table requires points".to_owned());
+    };
+    if value <= first_x {
+        return Ok(Value::number(first_y));
+    }
+    for pair in points.windows(2) {
+        let [(left_x, left_y), (right_x, right_y)] = pair else {
+            unreachable!()
+        };
+        if value <= *right_x {
+            let ratio = (value - left_x) / (right_x - left_x);
+            return Ok(Value::number(left_y + ratio * (right_y - left_y)));
+        }
+    }
+    Ok(Value::number(points.last().unwrap().1))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -339,6 +394,19 @@ mod tests {
             evaluate("type == \"PLA\" && max(n, 3) == 3", &config())
                 .unwrap()
                 .as_bool()
+        );
+    }
+
+    #[test]
+    fn expression_interpolates_piecewise_table_tuples() {
+        assert_eq!(
+            evaluate(
+                "interpolate_table(n, (0,4000), (4,2000), (10,1000))",
+                &config(),
+            )
+            .unwrap()
+            .as_number(),
+            Some(3000.0)
         );
     }
 
