@@ -10,6 +10,18 @@ fn fractional_duration_metadata_is_accepted() {
 }
 
 #[test]
+fn command_inline_comments_are_semantically_ignored() {
+    let expected_island = "M204 S5000 ; acceleration\nM106 S102;fan comment\nG1 X0 Y0 F6000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let actual_island = expected_island
+        .replace("M204 S5000 ; acceleration", "M204 S5000")
+        .replace("M106 S102;fan comment", "M106 S102");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
 fn motion_parameter_letters_in_inline_comments_are_ignored() {
     let expected_island = format!("G1 Z30 F960\n{}", island(0, 1, 1_200));
     let actual_island =
