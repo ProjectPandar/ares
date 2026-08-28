@@ -545,3 +545,21 @@ loop_number=0 for the gap pass). NEXT: instrument the onion iterate for
 the Internal-solid surface of that layer to see whether the round runs
 and what gaps it collects; suspect the Internal-solid surface's onion
 is skipped in Ares (loop_number/only_one_wall_first_layer semantics).
+## 2026-08-28 session: onion gap probe decisive result (380f6e1 base)
+
+Added the ARES_GAP_DEBUG probe to onion/iterate.rs: on the Elegoo 0.2
+case EVERY surface round reports collected 0 (empty gap set) with
+monotonic uniform shrinking of last/offsets — no gap ever collected,
+while OrcaSlicer emits a gap line on every layer. The divergence is in
+the SURFACE LOOP STRUCTURE: Orca's process_classic runs one more
+iteration per surface ("we loop one time more than needed in order to
+find gaps after the last perimeter was applied", PerimeterGenerator.cpp
+1240-1245) and collects gaps from offset(last, -0.5*distance) vs
+offset(offsets, +0.5*distance+10); Ares' equivalent rounds produce an
+empty difference, so Ares' loop structure (loop count / distance per
+round / smaller-width pass offsets_with_smaller_width) diverges from
+upstream for this surface.
+
+NEXT: trace the surface round structure against upstream
+PerimeterGenerator.cpp:1250-1382 (offsets_with_smaller_width pass,
+distance per round, loop_number semantics) — the probe is in place.
