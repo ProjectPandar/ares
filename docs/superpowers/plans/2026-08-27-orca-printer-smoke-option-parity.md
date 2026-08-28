@@ -507,3 +507,11 @@ solid region (Orca's solid region has an interior gap the Ares region
 merges over), not the fill pattern. Needs a per-layer region dump from
 Ares' prepare_infill (solid-area polygons) diffed against Orca's
 emitted geometry to find the clipping/merge divergence.
+## 2026-08-28 session: Elegoo scan correction (3bb94a0 base)
+
+The ad-hoc per-layer scan scripts produced contradictory results
+(broken X-collection filters). The RELIABLE fact stands: z=0.25 differs
+by a single Gap-infill line (Orca E.03205, 1 move) while
+Internal-solid totals match (E 2.8025 both sides, 105 moves each).
+Ad-hoc scans must be replaced by a proper per-layer geometry dump in
+the comparator before further island-splitting analysis.
