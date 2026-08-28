@@ -55,7 +55,8 @@ struct State {
     y: String,
     z: String,
     feed: String,
-    acceleration: String,
+    print_acceleration: String,
+    travel_acceleration: String,
     feature: String,
     width: String,
     fans: BTreeMap<String, String>,
@@ -158,8 +159,7 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
                 .push(raw_line.to_owned());
             continue;
         }
-        if let Some(value) = command_value(command_line, "M204", 'S')? {
-            state.acceleration = value;
+        if update_acceleration(command_line, &mut state)? {
             if output.layers.is_empty() {
                 output.preamble.push(command_line.to_owned());
             }
@@ -277,15 +277,26 @@ fn current_layer(output: &mut SemanticGcode) -> Result<&mut Layer, String> {
         .ok_or_else(|| "layer metadata appears before CHANGE_LAYER".to_owned())
 }
 
-fn command_value(line: &str, command: &str, key: char) -> Result<Option<String>, String> {
-    if line.split_whitespace().next() != Some(command) {
-        return Ok(None);
+fn update_acceleration(line: &str, state: &mut State) -> Result<bool, String> {
+    if line.split_ascii_whitespace().next() != Some("M204") {
+        return Ok(false);
     }
-    line.split_whitespace()
-        .skip(1)
-        .find_map(|token| token.strip_prefix(key))
-        .map(canonical_number)
-        .transpose()
+    for token in line.split_ascii_whitespace().skip(1) {
+        let Some(key @ ('S' | 'P' | 'T')) = token.chars().next() else {
+            continue;
+        };
+        let value = canonical_number(&token[1..])?;
+        match key {
+            'S' => {
+                state.print_acceleration.clone_from(&value);
+                state.travel_acceleration = value;
+            }
+            'P' => state.print_acceleration = value,
+            'T' => state.travel_acceleration = value,
+            _ => unreachable!(),
+        }
+    }
+    Ok(true)
 }
 
 fn update_fan(line: &str, state: &mut State) -> Result<(), String> {
@@ -329,7 +340,7 @@ fn apply_motion(
                 motion: motion_record(state, &motion, next),
                 extrusion: extrusion.clone(),
                 feed: required_feed(state)?,
-                acceleration: state.acceleration.clone(),
+                acceleration: state.print_acceleration.clone(),
                 fans: fan_state(&state.fans),
             });
         } else if value < 0.0 && moved_xy {
@@ -358,7 +369,7 @@ fn apply_motion(
         layer.travels.push(Travel {
             motion: motion_record(state, &motion, next),
             feed: required_feed(state)?,
-            acceleration: state.acceleration.clone(),
+            acceleration: state.travel_acceleration.clone(),
         });
     }
     state.x = next_x;

@@ -300,6 +300,16 @@ fn travel_feed_difference_is_rejected() {
 }
 
 #[test]
+fn marlin_role_acceleration_words_match_equivalent_s_updates() {
+    let expected_island = "M204 P5000 T9000\nG1 X0 Y0 F6000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let actual_island = "M204 S9000\nG1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
 fn travel_acceleration_difference_is_rejected() {
     let expected_island = "M204 S10000\nG1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
     let actual_island = expected_island.replacen("S10000", "S9000", 1);
