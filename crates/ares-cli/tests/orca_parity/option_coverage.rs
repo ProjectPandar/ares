@@ -46,28 +46,27 @@ fn orca_parity_option_coverage() {
             outcomes.push(OptionOutcome::omitted(plan));
             continue;
         }
-        let owned = machine.contains_key(&plan.key)
-            || process.contains_key(&plan.key)
-            || filaments
-                .iter()
-                .any(|filament| filament.contains_key(&plan.key));
-        if !owned {
-            outcomes.push(OptionOutcome::missing(plan));
-            continue;
-        }
         let mut first_failure = None;
         for case in &plan.cases {
-            let mut overrides = parity::smoke_overrides();
-            overrides.insert(plan.key.clone(), case.value.clone());
+            let mut case_machine = machine.clone();
+            let mut case_process = process.clone();
+            let mut case_filaments = filaments.clone();
+            inject_case(
+                plan,
+                case,
+                &mut case_machine,
+                &mut case_process,
+                &mut case_filaments,
+            );
             let label = format!("option/{}/{}", plan.key, case.label);
             let built = runner.build_case(
                 &CaseInputs {
                     label: &label,
-                    machine: &machine,
-                    process: &process,
-                    filaments: &filaments,
+                    machine: &case_machine,
+                    process: &case_process,
+                    filaments: &case_filaments,
                 },
-                &overrides,
+                &parity::smoke_overrides(),
                 &runner::repo_root().join("tests/parity/cube10.stl"),
             );
             let outcome = match built {
@@ -92,6 +91,48 @@ fn orca_parity_option_coverage() {
     );
 }
 
+fn inject_case(
+    plan: &domains::OptionPlan,
+    case: &domains::OptionCase,
+    machine: &mut Map<String, Value>,
+    process: &mut Map<String, Value>,
+    filaments: &mut [Map<String, Value>],
+) {
+    let target = match plan.raw_scope.as_str() {
+        "printer" => machine,
+        "process" => process,
+        "filament" => &mut filaments[0],
+        "residual" if residual_is_machine(&plan.key) => machine,
+        "residual" => process,
+        scope => panic!("unknown option scope {scope}"),
+    };
+    target.insert(plan.key.clone(), case.value.clone());
+}
+
+fn residual_is_machine(key: &str) -> bool {
+    matches!(
+        key,
+        "deretraction_speed"
+            | "extruder_offset"
+            | "max_layer_height"
+            | "min_layer_height"
+            | "nozzle_diameter"
+            | "nozzle_volume_type"
+            | "retract_before_wipe"
+            | "retract_length_toolchange"
+            | "retract_lift_above"
+            | "retract_lift_below"
+            | "retract_restart_extra"
+            | "retract_restart_extra_toolchange"
+            | "retraction_length"
+            | "retraction_minimum_travel"
+            | "retraction_speed"
+            | "wipe"
+            | "wipe_distance"
+            | "z_hop"
+    )
+}
+
 struct OptionOutcome {
     key: String,
     option_type: String,
@@ -113,15 +154,6 @@ impl OptionOutcome {
             0,
             "UNBOUNDED",
             plan.omission.unwrap_or_default().to_owned(),
-        )
-    }
-
-    fn missing(plan: &domains::OptionPlan) -> Self {
-        Self::new(
-            plan,
-            plan.cases.len(),
-            "MISSING",
-            "option absent from Ender-3 baseline presets".to_owned(),
         )
     }
 

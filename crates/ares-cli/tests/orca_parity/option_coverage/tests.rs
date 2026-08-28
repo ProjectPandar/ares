@@ -1,4 +1,4 @@
-use super::domains;
+use super::{domains, inject_case};
 use crate::runner;
 
 #[test]
@@ -47,6 +47,36 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
             .collect::<Vec<_>>()
             == ["min", "max", "seeded"]
     }));
+}
+
+#[test]
+fn generated_cases_are_injected_into_inventory_owner() {
+    let plans = domains::load(&runner::repo_root());
+    for (key, target_index) in [
+        ("gcode_flavor", 0),
+        ("detect_thin_wall", 1),
+        ("enable_pressure_advance", 2),
+        ("wipe", 0),
+    ] {
+        let plan = plans
+            .iter()
+            .find(|plan| plan.key == key && !plan.cases.is_empty())
+            .unwrap();
+        let mut machine = serde_json::Map::new();
+        let mut process = serde_json::Map::new();
+        let mut filaments = vec![serde_json::Map::new()];
+
+        inject_case(
+            plan,
+            &plan.cases[0],
+            &mut machine,
+            &mut process,
+            &mut filaments,
+        );
+
+        let targets = [&machine, &process, &filaments[0]];
+        assert!(targets[target_index].contains_key(key), "{key}");
+    }
 }
 
 #[test]

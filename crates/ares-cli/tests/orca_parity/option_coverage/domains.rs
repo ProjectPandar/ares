@@ -7,6 +7,7 @@ use serde_json::Value;
 pub(super) struct OptionPlan {
     pub(super) key: String,
     pub(super) option_type: String,
+    pub(super) raw_scope: String,
     pub(super) source: String,
     pub(super) cases: Vec<OptionCase>,
     pub(super) omission: Option<&'static str>,
@@ -37,6 +38,7 @@ pub(super) fn load(repo: &Path) -> Vec<OptionPlan> {
 fn plan(entry: &Value, lines: &[&str]) -> Option<OptionPlan> {
     let key = entry.get("key")?.as_str()?.to_owned();
     let option_type = entry.get("option_type")?.as_str()?.to_owned();
+    let raw_scope = entry.get("raw_scope")?.as_str()?.to_owned();
     if option_type == "Metadata" {
         return None;
     }
@@ -82,6 +84,7 @@ fn plan(entry: &Value, lines: &[&str]) -> Option<OptionPlan> {
     Some(OptionPlan {
         key,
         option_type,
+        raw_scope,
         source,
         cases: values,
         omission,
