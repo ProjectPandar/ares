@@ -283,3 +283,53 @@ GCodeProcessor motion planner port.
    full acceleration-planner parity; soft metric meanwhile.
 7. Arachne wall generator unported; classic baseline pinned via overrides,
    plus detect_thin_wall=0.
+
+## 2026-08-28 session: object exclusion + envelope parity (b28b587)
+
+Sweep17 analysis (20 PASS / 821 DIVERGENT / 160 ARES_ERROR) produced this
+fix list; the top two classes are resolved in b28b587:
+
+1. RESOLVED: preamble machine-limits block emitted for every flavor.
+   Upstream gates `print_machine_envelope` to
+   MarlinLegacy/MarlinFirmware/RepRapFirmware + emit_machine_limits_to_gcode
+   (GCode.cpp:3939-3944). This was the cause of the "preamble differs at
+   line 18: expected EXCLUDE_OBJECT_DEFINE..., actual M201" class (~263
+   printers).
+2. RESOLVED: EXCLUDE_OBJECT_DEFINE preamble (Klipper) and M486
+   (Marlin-family) definitions ported per-instance with the upstream
+   instance-name sanitizer, instance bbox CENTER and convex-hull POLYGON
+   (GCode.cpp:8074-8109, 4364-4386; Print.cpp:5136-5143). Gate:
+   exclude_object (GCode.cpp:5559), BBL excluded (GCode.cpp:8075).
+3. RESOLVED: in-print object markers ported: EXCLUDE_OBJECT_START/END
+   (Klipper), M486 S<n> / M486 S-1 (Marlin family) with the upstream
+   flush points — change_layer after the deferred retract/wipe
+   (GCode.cpp:5699), first travel (GCode.cpp:7467), end G-code
+   (GCode.cpp:3455), and the absolute-E G92 reset
+   (GCodeWriter.cpp:1183-1192).
+4. RESOLVED: Klipper accelerations emit SET_VELOCITY_LIMIT ACCEL= with
+   ACCEL_TO_DECEL= when enabled (GCodeWriter.cpp:216-256) instead of
+   Marlin M204 S; machine-limit clamps from apply_print_config
+   (GCodeWriter.cpp:33-45) including the Klipper per-axis X/Y min.
+5. RESOLVED: second-layer transition M140 (GCode.cpp:4777-4830) with the
+   set_bed_temperature cache (GCodeWriter.cpp:170-175) and the
+   first-layer bed-temperature pass (GCode.cpp:4023-4048, 3120-3124).
+6. RESOLVED: filament length diffs (~478 printers, e.g. Afinia 213.10 vs
+   215.34) — outer-first wall sequence must disable the precise-outer-wall
+   external-to-internal spacing (PerimeterGenerator.cpp:1159-1164;
+   commit 97527ee).
+7. RESOLVED: Ender-3 live Orca smoke PASS again (was failing on the
+   missing M140 and wrong envelope position).
+
+Known remaining gaps (unchanged):
+
+- Model printing time estimator drift: KSR project +9s (6229 vs 6238);
+  M73 R rounding off by one on some layers. Blocked on the full
+  acceleration/trapezoid planner parity port.
+- Input shaping (M975/SET_INPUT_SHAPING) not ported — no profile in the
+  sweep sets input_shaping_emit; needed only for option-coverage of that
+  bool.
+- Marlin second-layer nozzle temperature transition (M104 when
+  nozzle_temperature != nozzle_temperature_initial_layer,
+  GCode.cpp:4800-4810) not yet emitted.
+- G2/G3 arc fitting differences vs Orca on the KSR model (some arcs
+  fall back to G1); comparator tolerates these today.
