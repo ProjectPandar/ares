@@ -634,3 +634,27 @@ inset/min_spacing scalars for that corner against upstream.
 NEXT: instrument infill_boundary geometry for the Ender-3 layer-2 solid
 surface (dump not_filled area, inset, min_spacing, overlap) and diff
 against the expected Orca boundary.
+
+### Ender-3 residual gap: root cause resolved to simplify corner divergence
+
+Exhaustive verification: Ender-3 layer-2 wall lines byte-identical (13==13),
+solid infill lines byte-identical (27==27), infill WIDTH identical, all
+Clipper params aligned (offset2 jtMiter/miter=3, covered offset
+jtSquare/miter=0/etOpenButt, INSET_OVERLAP_TOLERANCE aligned to 0.4).
+Increasing the covered delta does NOT remove the residual — so it is not
+a coverage-shortfall. The residual is a ~0.62mm-wide (=line_width) corner
+triangle that Ares' fill_no_overlap retains but Orca's does not.
+
+Since walls+infill are byte-identical, the divergence is inside the
+no-overlap domain construction. The not_filled polygon is simplified with
+`simplify_p(m_scaled_resolution)` upstream vs Ares
+`simplify_expolygon_polygons(scaled_resolution)` — both Douglas-Peucker,
+but corner vertex retention at the tolerance boundary (< vs <=) diverges,
+shifting the no_overlap corner by ~line_width. At Ender-3's large
+line_width (0.62mm) this becomes a visible gap line; at Elegoo's small
+line_width (0.22mm) both sides produce the gap identically (13==13).
+
+NEXT: align Ares Douglas-Peucker corner/tolerance-boundary vertex
+retention with OrcaSlicer's simplify_p (compare both implementations at a
+corner within `scaled_resolution`); this is a geometry-library-level
+alignment shared with other Clipper/simplify DIVERGENT sweep cases.
