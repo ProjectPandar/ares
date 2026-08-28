@@ -253,18 +253,20 @@ fn dump_elegoo_depositions() {
             ));
         }
         for (side, depositions) in [("ares", &a.deposition), ("orca", &o.deposition)] {
-            for (position, deposition) in depositions.iter().enumerate() {
-                if deposition.feature.contains("Gap") {
-                    dump.push_str(&format!(
-                        "layer {layer} {side}[{position}] {} w{} e{} start {:?} end {:?} f{}\n",
-                        deposition.feature,
-                        deposition.width,
-                        deposition.extrusion,
-                        deposition.motion.start,
-                        deposition.motion.end,
-                        deposition.feed
-                    ));
-                }
+            let gap_depositions = depositions
+                .iter()
+                .enumerate()
+                .filter(|(_, d)| d.feature.contains("Gap"));
+            for (position, deposition) in gap_depositions {
+                dump.push_str(&format!(
+                    "layer {layer} {side}[{position}] {} w{} e{} start {:?} end {:?} f{}\n",
+                    deposition.feature,
+                    deposition.width,
+                    deposition.extrusion,
+                    deposition.motion.start,
+                    deposition.motion.end,
+                    deposition.feed
+                ));
             }
         }
     }
