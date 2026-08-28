@@ -150,16 +150,6 @@ pub(super) fn emit(
                 f64::from(layer_z),
                 f64::from(layer_height),
             );
-            if let Some(labels) = &labels {
-                labels.append_printing(&mut output);
-                // M624 object exclusion is only armed for BBL printers
-                // (GCode.cpp:2583-2602, 5356-5359).
-                let (label_id, encoded_labels) = labels.start_label_data();
-                state
-                    .tags
-                    .is_bbl()
-                    .then(|| motion::queue_object_start(&mut state, label_id, encoded_labels));
-            }
             let lower_boundary_lines = traversal.objects[object_index]
                 .lower_slices(layer_index)
                 .into_iter()
@@ -191,6 +181,16 @@ pub(super) fn emit(
                     geometry,
                     &mut state,
                 );
+            }
+            if let Some(labels) = &labels {
+                labels.append_printing(&mut output);
+                // M624 object exclusion is only armed for BBL printers
+                // (`GCode.cpp:2583-2602, 5356-5359`) and starts after skirt.
+                let (label_id, encoded_labels) = labels.start_label_data();
+                state
+                    .tags
+                    .is_bbl()
+                    .then(|| motion::queue_object_start(&mut state, label_id, encoded_labels));
             }
             motion::emit_layer(&mut output, layer, geometry, &mut state)?;
             if let Some(labels) = &labels {

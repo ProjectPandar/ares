@@ -56,6 +56,33 @@ impl PathProperties<'_> {
 }
 
 impl PathProperties<'_> {
+    pub(super) fn jerk(self, options: &MotionOptions, layer_index: usize) -> f64 {
+        if options.default_jerk <= 0.0 {
+            return 0.0;
+        }
+        if layer_index == 0 && options.initial_layer_jerk > 0.0 {
+            return options.initial_layer_jerk;
+        }
+        match self.feature {
+            "Outer wall" | "Overhang wall" if options.outer_wall_jerk > 0.0 => {
+                options.outer_wall_jerk
+            }
+            "Inner wall" if options.inner_wall_jerk > 0.0 => options.inner_wall_jerk,
+            "Top surface" if options.top_surface_jerk > 0.0 => options.top_surface_jerk,
+            "Sparse infill"
+            | "Internal solid infill"
+            | "Bottom surface"
+            | "Bridge"
+            | "Internal Bridge"
+            | "Gap infill"
+                if options.infill_jerk > 0.0 =>
+            {
+                options.infill_jerk
+            }
+            _ => options.default_jerk,
+        }
+    }
+
     fn speed(&self, options: &MotionOptions, layer_index: usize) -> f64 {
         let layer_default = if layer_index == 0 {
             if self.feature == "Bottom surface" {

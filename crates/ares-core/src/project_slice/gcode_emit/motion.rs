@@ -49,6 +49,7 @@ pub(super) struct EmitState {
     pub(super) last_width: Option<f32>,
     pub(super) last_height: Option<f32>,
     pub(super) last_acceleration: Option<u32>,
+    pub(super) last_jerk: Option<f64>,
     pub(super) layer_z: f64,
     pub(super) retracted: bool,
     pub(super) wipe_path: Vec<arc::Point>,
@@ -97,6 +98,14 @@ pub(super) fn begin_layer(
     if let Some(acceleration) = acceleration {
         set_acceleration(output, state, acceleration);
     }
+    let jerk = if state.options.default_jerk <= 0.0 {
+        0.0
+    } else if layer_index == 0 && state.options.initial_layer_jerk > 0.0 {
+        state.options.initial_layer_jerk
+    } else {
+        state.options.default_jerk
+    };
+    set_jerk(output, state, jerk);
 }
 
 pub(super) fn queue_object_start(state: &mut EmitState, label_id: u32, encoded_labels: [u8; 12]) {
@@ -120,12 +129,11 @@ pub(super) fn begin_path_travel(
     destination_feature: &str,
     travel_distance: f64,
 ) {
-    // `GCode.cpp:7374-7392`: travel acceleration switches require the default
-    // to be enabled and only apply a specific value when it is above zero.
-    if state.options.default_acceleration == 0 {
-        return;
-    }
-    let acceleration = if state.layer_index == 0 {
+    // `GCode.cpp:7374-7413`: travel acceleration and jerk select short
+    // outer/overhang values before falling back to travel values.
+    let acceleration = if state.options.default_acceleration == 0 {
+        None
+    } else if state.layer_index == 0 {
         (state.options.initial_layer_travel_acceleration > 0)
             .then_some(state.options.initial_layer_travel_acceleration)
     } else if travel_distance < state.options.retraction_minimum_travel {
@@ -142,6 +150,20 @@ pub(super) fn begin_path_travel(
         (state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration)
     };
     set_acceleration(output, state, acceleration.unwrap_or(0));
+
+    let jerk = if state.options.default_jerk <= 0.0 {
+        0.0
+    } else if state.layer_index == 0 {
+        state.options.travel_jerk
+    } else if travel_distance < state.options.retraction_minimum_travel
+        && matches!(destination_feature, "Outer wall" | "Overhang wall")
+        && state.options.outer_wall_jerk > 0.0
+    {
+        state.options.outer_wall_jerk
+    } else {
+        state.options.travel_jerk
+    };
+    set_jerk(output, state, jerk);
 }
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -208,6 +230,50 @@ pub(super) fn emit_skirt_loop(
     // `GCode.cpp:5979-5991` stores loop wipe paths forward so the wipe
     // wraps from the loop end back toward the path start.
     state.wipe_path.reverse();
+}
+
+pub(super) fn set_jerk(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
+    if jerk < 0.01
+        || state
+            .last_jerk
+            .is_some_and(|last| (last - jerk).abs() < 1.0e-6)
+    {
+        return;
+    }
+    state.last_jerk = Some(jerk);
+    let limit = |value: f64, maximum: f64| {
+        if maximum > 0.0 {
+            value.min(maximum)
+        } else {
+            value
+        }
+    };
+    let x = limit(jerk, state.options.max_jerk_x);
+    let y = limit(jerk, state.options.max_jerk_y);
+    match state.options.gcode_flavor {
+        crate::GCodeFlavor::Klipper => output.extend_from_slice(
+            format!(
+                "SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY={}\n",
+                format::axis(x)
+            )
+            .as_bytes(),
+        ),
+        crate::GCodeFlavor::Repetier => {
+            output.extend_from_slice(format!("M207 X{}\n", format::axis(x)).as_bytes());
+        }
+        _ => {
+            let mut command = format!("M205 X{} Y{}", format::axis(x), format::axis(y));
+            if state.tags.is_bbl() {
+                command.push_str(&format!(
+                    " Z{} E{}",
+                    format::axis(state.options.max_jerk_z),
+                    format::axis(state.options.max_jerk_e)
+                ));
+            }
+            command.push('\n');
+            output.extend_from_slice(command.as_bytes());
+        }
+    }
 }
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32) {

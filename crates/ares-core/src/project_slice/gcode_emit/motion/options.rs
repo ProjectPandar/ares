@@ -41,6 +41,18 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) top_surface_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) initial_layer_travel_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) travel_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) default_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) outer_wall_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) inner_wall_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) top_surface_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) infill_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) initial_layer_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) travel_jerk: f64,
+    pub(in crate::project_slice::gcode_emit) max_jerk_x: f64,
+    pub(in crate::project_slice::gcode_emit) max_jerk_y: f64,
+    pub(in crate::project_slice::gcode_emit) max_jerk_z: f64,
+    pub(in crate::project_slice::gcode_emit) max_jerk_e: f64,
+    pub(in crate::project_slice::gcode_emit) gcode_flavor: crate::GCodeFlavor,
     pub(in crate::project_slice::gcode_emit) retraction_length: f64,
     pub(in crate::project_slice::gcode_emit) deretraction_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) z_hop: f64,
@@ -258,6 +270,32 @@ impl MotionOptions {
                 travel_acceleration,
             )),
             travel_acceleration: rounded_acceleration(travel_acceleration),
+            default_jerk: object.map_or(full.process.object.default_jerk.0, |value| {
+                value.object.default_jerk.0
+            }),
+            outer_wall_jerk: object.map_or(full.process.object.outer_wall_jerk.0, |value| {
+                value.object.outer_wall_jerk.0
+            }),
+            inner_wall_jerk: object.map_or(full.process.object.inner_wall_jerk.0, |value| {
+                value.object.inner_wall_jerk.0
+            }),
+            top_surface_jerk: object.map_or(full.process.object.top_surface_jerk.0, |value| {
+                value.object.top_surface_jerk.0
+            }),
+            infill_jerk: object.map_or(full.process.object.infill_jerk.0, |value| {
+                value.object.infill_jerk.0
+            }),
+            initial_layer_jerk: object.map_or(full.process.object.initial_layer_jerk.0, |value| {
+                value.object.initial_layer_jerk.0
+            }),
+            travel_jerk: object.map_or(full.process.object.travel_jerk.0, |value| {
+                value.object.travel_jerk.0
+            }),
+            max_jerk_x: first_float(&full.printer.machine.machine_max_jerk_x),
+            max_jerk_y: first_float(&full.printer.machine.machine_max_jerk_y),
+            max_jerk_z: first_float(&full.printer.machine.machine_max_jerk_z),
+            max_jerk_e: first_float(&full.printer.machine.machine_max_jerk_e),
+            gcode_flavor: full.printer.gcode.gcode_flavor,
             retraction_length: gcode
                 .retraction_length
                 .0
@@ -372,6 +410,10 @@ fn absolute(value: FloatOrPercent, base: f64) -> f64 {
 
 fn rounded_acceleration(value: f64) -> u32 {
     (value + 0.5).floor() as u32
+}
+
+fn first_float(values: &crate::OrcaFloats) -> f64 {
+    values.0.first().map_or(0.0, |value| value.0)
 }
 
 pub(in crate::project_slice::gcode_emit) fn first_nullable_float(

@@ -54,6 +54,13 @@ pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassi
         )
         .as_bytes(),
     );
+    let junction_deviation = first(&machine.machine_max_junction_deviation);
+    if traversal.resolved.views.full.printer.gcode.gcode_flavor
+        == crate::GCodeFlavor::MarlinFirmware
+        && junction_deviation > 0.0
+    {
+        output.extend_from_slice(format!("M205 J{junction_deviation:.3}\n").as_bytes());
+    }
     (super::tags::Tags::of(traversal).is_bbl())
         .then(|| output.extend_from_slice(b"M106 S0\nM106 P2 S0\n"));
 }
