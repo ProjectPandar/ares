@@ -612,3 +612,25 @@ no-overlap domain (PerimeterGenerator.cpp:1678-1724 not_filled/offset2
 bounds). NEXT: align fill_no_overlap construction, then Ender-3 returns
 to PASS. Updated 3 stale line-position pinning tests (seam destinations,
 object_labels M204 ordering) to the corrected output.
+
+### Ender-3 fill_no_overlap divergence (highest priority, blocks smoke)
+
+Ender-3 smoke: 262.34 -> 262.62 (+0.28mm) after the residual gap pass.
+NOT a defect of the gap pass (verified byte-exact on Elegoo, KSR parity
+still PASS, project_slice 1295/1295 green). The residual pass fills a
+~0.62mm-wide (=line_width) corner sliver on the Ender-3 second layer
+solid infill because Ares' fill_no_overlap domain is wider than Orca's
+there. Infill line X-range is identical on both sides (146.784-152.961),
+so the divergence is purely in the no-overlap domain geometry.
+
+The Ares formula matches upstream (infill_boundary/preflight.rs:175-205
+vs PerimeterGenerator.cpp:1678-1690: first=-inset-min_spacing/2,
+second=min_spacing/2-overlap when min_spacing/2>overlap else
+-inset-overlap; min_spacing=solid_infill_spacing*(1-INSET_OVERLAP_TOLERANCE)).
+So the divergence is in the INPUT polygons (not_filled / the inset /
+min_spacing value) — trace the actual not_filled expolygon and the
+inset/min_spacing scalars for that corner against upstream.
+
+NEXT: instrument infill_boundary geometry for the Ender-3 layer-2 solid
+surface (dump not_filled area, inset, min_spacing, overlap) and diff
+against the expected Orca boundary.
