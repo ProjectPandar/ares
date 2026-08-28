@@ -203,6 +203,30 @@ pub(super) struct SkirtLoopFlow {
     pub(super) mm3_per_mm: f64,
 }
 
+pub(super) fn emit_brim_loop(
+    output: &mut Vec<u8>,
+    points: impl Iterator<Item = (i64, i64)>,
+    flow: SkirtLoopFlow,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    path::emit(
+        output,
+        points,
+        PathProperties {
+            mm3_per_mm: flow.mm3_per_mm,
+            width: flow.width,
+            height: flow.height,
+            feature: "Brim",
+            is_perimeter: false,
+            end_clip: state.options.seam_gap,
+            fitting: &[],
+        },
+        geometry,
+        state,
+    );
+}
+
 pub(super) fn emit_skirt_loop(
     output: &mut Vec<u8>,
     points: impl Iterator<Item = (i64, i64)>,

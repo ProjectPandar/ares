@@ -75,12 +75,15 @@ fn transform_object(
                 (Some(source), Some(traversal_record)) => {
                     let region = region_options(traversal, index);
                     let inactive = classify_inactive(traversal_record, region, object_options);
-                    Some(transform_record(
-                        source,
-                        inactive,
-                        region.wall_sequence,
-                        index,
-                    ))
+                    let wall_sequence = if index == 0
+                        && object_options.brim_type == ProcessBrimType::OuterOnly
+                        && object_options.brim_width.0 > 0.0
+                    {
+                        ProcessWallSequence::OuterInner
+                    } else {
+                        region.wall_sequence
+                    };
+                    Some(transform_record(source, inactive, wall_sequence, index))
                 }
                 _ => panic!("O9/O5 optional record alignment is invariant"),
             },
@@ -149,7 +152,6 @@ fn classify_inactive(
             brim_width: object.brim_width.0,
         }
     } else {
-        assert!(object.brim_width.0 <= 0.0);
         InactiveOuterBrimReordering::WidthNotPositive {
             brim_width: object.brim_width.0,
         }

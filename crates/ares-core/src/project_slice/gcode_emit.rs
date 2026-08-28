@@ -4,6 +4,7 @@ use crate::project_slice::{
     perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
+mod brim;
 mod cooling;
 mod expression;
 mod finish;
@@ -91,6 +92,7 @@ pub(super) fn emit(
         .sum();
     let layer_change_template = layer_gcode::LayerChangeTemplate::new(traversal, metadata);
     let skirt = skirt::SkirtPlan::generate(traversal)?;
+    let brim = brim::BrimPlan::generate(traversal)?;
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = emit_labels
             .then(|| object::ObjectLabels::from_traversal(traversal, object_index))
@@ -184,6 +186,12 @@ pub(super) fn emit(
                     geometry,
                     &mut state,
                 );
+            }
+            if layer_index == 0
+                && object_index == 0
+                && let Some(plan) = &brim
+            {
+                plan.emit(&mut output, geometry, &mut state);
             }
             if let Some(labels) = &labels {
                 labels.append_printing(&mut output);

@@ -1,6 +1,5 @@
 use crate::{
-    ObjectOptions, ProcessBrimType, ProcessCounterboreHoleBridging, ProcessFuzzySkinType,
-    RegionOptions, SliceError,
+    ObjectOptions, ProcessCounterboreHoleBridging, ProcessFuzzySkinType, RegionOptions, SliceError,
 };
 
 use super::super::types::{PerimeterDispatch, PerimeterInputRecord, PostPerimeterInputPrintObject};
@@ -122,12 +121,6 @@ fn validate_record(
     }
     if region.overhang_reverse.0 && has_layer_overhang(object, record) {
         return Err(unsupported("overhang_reverse"));
-    }
-    if object_options.brim_type == ProcessBrimType::OuterOnly
-        && object_options.brim_width.0 > 0.0
-        && record.layer_id == 0
-    {
-        return Err(unsupported("brim_type"));
     }
     if region.extra_perimeters_on_overhangs.0
         && object.lower_slices(record).is_some()
