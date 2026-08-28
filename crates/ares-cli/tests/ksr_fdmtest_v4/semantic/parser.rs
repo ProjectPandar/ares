@@ -1,7 +1,9 @@
+mod metadata;
 mod motion;
 mod number;
 use super::model::{LifecycleEvent, MotionRecord, Position};
 
+use metadata::{Timing, ignored_postamble_stat, parse_filament_lengths, parse_timing};
 use motion::Motion;
 use number::canonical_number;
 use std::collections::BTreeMap;
@@ -13,13 +15,6 @@ pub(super) struct SemanticGcode {
     pub(super) preamble: Vec<String>,
     pub(super) postamble: Vec<String>,
     pub(super) layers: Vec<Layer>,
-}
-
-#[derive(Debug, Default)]
-pub(super) struct Timing {
-    pub(super) model: u64,
-    pub(super) total: u64,
-    pub(super) first_layer: u64,
 }
 
 #[derive(Debug, Default)]
@@ -72,17 +67,11 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
         layers: Vec::new(),
     };
     let mut state = State::default();
-    let postamble_start = text
-        .lines()
-        .enumerate()
-        .filter_map(|(index, line)| {
-            line.trim()
-                .starts_with("; stop printing object, unique label id:")
-                .then_some(index)
-        })
-        .last();
+    let mut final_object_stopped = false;
+    let mut in_postamble = false;
+    let mut in_config_block = false;
 
-    for (line_index, raw_line) in text.lines().enumerate() {
+    for raw_line in text.lines() {
         // The generator stamp embeds producer name and wall-clock time;
         // canonicalize it so cross-slicer comparisons stay structural.
         let generated_line = raw_line
@@ -101,21 +90,34 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
         }
         if let Some(lengths) = parse_filament_lengths(line)? {
             output.filament_lengths = lengths;
-            if postamble_start.is_some_and(|start| line_index >= start) {
-                output
-                    .postamble
-                    .push("; filament used [mm] = <LENGTHS>".to_owned());
-            } else {
-                push_control(&mut output, "; filament used [mm] = <LENGTHS>");
-            }
             continue;
         }
         if line.starts_with("M73 ") {
             continue;
         }
-        if postamble_start.is_some_and(|start| line_index >= start) {
-            output.postamble.push(semantic_line.to_owned());
+        if line == "; CONFIG_BLOCK_START" {
+            in_config_block = true;
             continue;
+        }
+        if in_config_block {
+            if line == "; CONFIG_BLOCK_END" {
+                in_config_block = false;
+            }
+            continue;
+        }
+        if in_postamble {
+            if !semantic_line.trim().is_empty() && !ignored_postamble_stat(line) {
+                output.postamble.push(semantic_line.to_owned());
+            }
+            continue;
+        }
+        if final_object_stopped && command_line == "M106 S0" {
+            in_postamble = true;
+            output.postamble.push(command_line.to_owned());
+            continue;
+        }
+        if line.starts_with("; stop printing object") {
+            final_object_stopped = true;
         }
         if line == "; CHANGE_LAYER" || line == ";LAYER_CHANGE" {
             output.layers.push(Layer::default());
@@ -200,66 +202,6 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
         layer.lifecycles.sort_unstable();
     }
     Ok(output)
-}
-
-fn parse_timing(line: &str, timing: &mut Timing) -> Result<bool, String> {
-    if let Some(value) = line.strip_prefix("; model printing time: ") {
-        let (model, total) = value
-            .split_once("; total estimated time: ")
-            .ok_or_else(|| "invalid model printing time line".to_owned())?;
-        timing.model = duration_seconds(model)?;
-        timing.total = duration_seconds(total)?;
-        return Ok(true);
-    }
-    if let Some(value) = line.strip_prefix("; estimated printing time (normal mode) = ") {
-        timing.model = duration_seconds(value)?;
-        timing.total = timing.model;
-        return Ok(true);
-    }
-    if let Some((_, value)) = line
-        .strip_prefix("; estimated first layer printing time ")
-        .and_then(|value| value.split_once("= "))
-    {
-        timing.first_layer = duration_seconds(value)?;
-        return Ok(true);
-    }
-    Ok(false)
-}
-
-fn duration_seconds(value: &str) -> Result<u64, String> {
-    let mut seconds = 0.0_f64;
-    for part in value.split_whitespace() {
-        let (digits, multiplier) = match part.as_bytes().last() {
-            Some(b'h') => (&part[..part.len() - 1], 3_600.0),
-            Some(b'm') => (&part[..part.len() - 1], 60.0),
-            Some(b's') => (&part[..part.len() - 1], 1.0),
-            _ => return Err(format!("invalid duration {value:?}")),
-        };
-        seconds += digits
-            .parse::<f64>()
-            .map_err(|_| format!("invalid duration {value:?}"))?
-            * multiplier;
-    }
-    if !seconds.is_finite() || seconds < 0.0 {
-        return Err(format!("invalid duration {value:?}"));
-    }
-    Ok(seconds.round() as u64)
-}
-
-fn parse_filament_lengths(line: &str) -> Result<Option<Vec<f64>>, String> {
-    let Some(value) = line.strip_prefix("; filament used [mm] = ") else {
-        return Ok(None);
-    };
-    value
-        .split(',')
-        .map(|value| {
-            value
-                .trim()
-                .parse::<f64>()
-                .map_err(|_| format!("invalid filament length {value:?}"))
-        })
-        .collect::<Result<Vec<_>, _>>()
-        .map(Some)
 }
 
 fn push_control(output: &mut SemanticGcode, line: &str) {
