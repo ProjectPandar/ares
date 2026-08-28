@@ -5,7 +5,7 @@ mod lifecycle;
 #[path = "semantic/model.rs"]
 mod model;
 #[path = "semantic/parser.rs"]
-mod parser;
+pub(crate) mod parser;
 #[cfg(test)]
 #[path = "semantic/tests.rs"]
 mod tests;

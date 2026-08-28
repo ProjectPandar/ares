@@ -9,32 +9,32 @@ use number::canonical_number;
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
-pub(super) struct SemanticGcode {
+pub(crate) struct SemanticGcode {
     pub(super) timing: Timing,
     pub(super) filament_lengths: Vec<f64>,
     pub(super) preamble: Vec<String>,
     pub(super) postamble: Vec<String>,
-    pub(super) layers: Vec<Layer>,
+    pub(crate) layers: Vec<Layer>,
 }
 
 #[derive(Debug, Default)]
-pub(super) struct Layer {
+pub(crate) struct Layer {
     pub(super) metadata: Vec<String>,
-    pub(super) deposition: Vec<Deposition>,
+    pub(crate) deposition: Vec<Deposition>,
     pub(super) lifecycles: Vec<Vec<LifecycleEvent>>,
     pub(super) travels: Vec<Travel>,
     pub(super) controls: Vec<String>,
 }
 
 #[derive(Debug)]
-pub(super) struct Deposition {
-    pub(super) feature: String,
-    pub(super) width: String,
-    pub(super) motion: MotionRecord,
-    pub(super) extrusion: String,
-    pub(super) feed: f64,
-    pub(super) acceleration: String,
-    pub(super) fans: String,
+pub(crate) struct Deposition {
+    pub(crate) feature: String,
+    pub(crate) width: String,
+    pub(crate) motion: MotionRecord,
+    pub(crate) extrusion: String,
+    pub(crate) feed: f64,
+    pub(crate) acceleration: String,
+    pub(crate) fans: String,
 }
 
 #[derive(Debug)]
@@ -57,7 +57,7 @@ struct State {
     fans: BTreeMap<String, String>,
 }
 
-pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
+pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
     let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
     let mut output = SemanticGcode {
         timing: Timing::default(),

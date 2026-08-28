@@ -515,3 +515,18 @@ by a single Gap-infill line (Orca E.03205, 1 move) while
 Internal-solid totals match (E 2.8025 both sides, 105 moves each).
 Ad-hoc scans must be replaced by a proper per-layer geometry dump in
 the comparator before further island-splitting analysis.
+## 2026-08-28 session: Elegoo gap line precisely located (dump_elegoo_depositions)
+
+Added the env-gated diagnostic dump (ksr_fdmtest_v4
+dump_elegoo_depositions; parser fields widened to pub(crate)). Exact
+finding for the Elegoo 0.2 case: EVERY layer has deposition count
+ares 121 vs orca 122; the missing deposition is the FIRST of the layer:
+a diagonal gap line (feature "Gap infill", width 0.22, E 0.032,
+F3000, from (114.693, 112.805) to (111.805, 115.693) on even layers,
+mirrored on odd layers). It is the medial-axis main line of the
+solid-infill residual, alternating 45/135 degrees with the layer.
+
+NEXT: find why Ares' solid-infill residual gap fill misses this
+diagonal line (medial-axis stage in the solid pass); candidate areas:
+medial-axis minimum-length/width thresholds or the residual-region
+segmentation in prepare_infill.

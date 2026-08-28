@@ -226,3 +226,48 @@ fn generated_at(bytes: &[u8]) -> DateTime {
         .unwrap();
     line.replace(" at ", " ").parse().unwrap()
 }
+
+/// Diagnostic dump (env-gated): per-layer deposition lists for the Elegoo
+/// parity case, to trace the missing gap-fill line. Run with
+/// `ARES_ELEGOO_DUMP=<case-dir> cargo nextest run ... --ignored`.
+#[test]
+#[ignore = "diagnostic dump; requires ARES_ELEGOO_DUMP"]
+fn dump_elegoo_depositions() {
+    use semantic::parser as sem;
+    let Some(dir) = std::env::var_os("ARES_ELEGOO_DUMP") else {
+        panic!("set ARES_ELEGOO_DUMP to the case dir");
+    };
+    let dir = std::path::PathBuf::from(dir);
+    let ares_bytes = std::fs::read("/tmp/elegoo.gcode").unwrap();
+    let reference = std::fs::read(dir.join("plate_1.gcode")).unwrap();
+    let ares = sem::parse(&ares_bytes).unwrap();
+    let orca = sem::parse(&reference).unwrap();
+    let mut dump = String::new();
+    for (index, (a, o)) in ares.layers.iter().zip(&orca.layers).enumerate() {
+        let layer = index + 1;
+        if a.deposition.len() != o.deposition.len() {
+            dump.push_str(&format!(
+                "layer {layer}: deposition count ares {} orca {}\n",
+                a.deposition.len(),
+                o.deposition.len()
+            ));
+        }
+        for (side, depositions) in [("ares", &a.deposition), ("orca", &o.deposition)] {
+            for (position, deposition) in depositions.iter().enumerate() {
+                if deposition.feature.contains("Gap") {
+                    dump.push_str(&format!(
+                        "layer {layer} {side}[{position}] {} w{} e{} start {:?} end {:?} f{}\n",
+                        deposition.feature,
+                        deposition.width,
+                        deposition.extrusion,
+                        deposition.motion.start,
+                        deposition.motion.end,
+                        deposition.feed
+                    ));
+                }
+            }
+        }
+    }
+    eprintln!("ELEGOO DUMP:\n{dump}");
+    std::fs::write("/tmp/ares-review/elegoo_depositions.txt", &dump).unwrap();
+}

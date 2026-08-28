@@ -1,21 +1,21 @@
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub(super) struct Position {
-    pub(super) x: String,
-    pub(super) y: String,
-    pub(super) z: String,
+pub(crate) struct Position {
+    pub(crate) x: String,
+    pub(crate) y: String,
+    pub(crate) z: String,
 }
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub(super) struct MotionRecord {
-    pub(super) command: String,
-    pub(super) start: Position,
-    pub(super) end: Position,
-    pub(super) arc_center: [Option<String>; 2],
-    pub(super) turns: Option<String>,
+pub(crate) struct MotionRecord {
+    pub(crate) command: String,
+    pub(crate) start: Position,
+    pub(crate) end: Position,
+    pub(crate) arc_center: [Option<String>; 2],
+    pub(crate) turns: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub(super) enum LifecycleEvent {
+pub(crate) enum LifecycleEvent {
     Extruder {
         extrusion: String,
         feed: String,
