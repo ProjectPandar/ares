@@ -138,7 +138,12 @@ fn validate_record(
     {
         return Err(unsupported("extra_perimeters_on_overhangs"));
     }
-    if region.counterbore_hole_bridging != ProcessCounterboreHoleBridging::None {
+    if region.counterbore_hole_bridging != ProcessCounterboreHoleBridging::None
+        && object
+            .current_surfaces(record)
+            .iter()
+            .any(|surface| !surface.as_parts().1.holes().is_empty())
+    {
         return Err(unsupported("counterbore_hole_bridging"));
     }
 
