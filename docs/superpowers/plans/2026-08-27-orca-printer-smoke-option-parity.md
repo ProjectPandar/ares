@@ -395,3 +395,21 @@ Open items for review round 2:
 6. OPEN: per-family filament-length deltas (Kobra 2 Max, Snapmaker Dual,
    Qidi +3.00, Wanhao -5.00).
 7. OPEN: multi-object ByLayer emission order, Orca cache SHA pinning.
+
+## 2026-08-28 session: config-block key parity (fbab889..0251bb2)
+
+1. RESOLVED: the config block now emits exactly Orca's full-config key
+   set. The raw `Metadata/project_settings.config` key/values are retained
+   by the loader and drive the block; registry-only options without a
+   static Orca field are dropped; preset keys Ares does not model are
+   carried through verbatim; nil placeholders are skipped. The A1 mini
+   config block is byte-identical to OrcaSlicer 2.4.2.
+2. RESOLVED: wipe-tower origin writes both the formatted plate value and
+   the ordinary vector serialization (upstream fall-through,
+   GCode.cpp:5646-5655).
+3. ARES_ERROR trend: 160 (sweep17) -> 108 (sweep21) -> 98 (sweep22).
+4. OPEN: preamble residuals now concentrate in start-gcode template
+   branches (aux/exhaust fan placeholders like support_air_filtration
+   gates) — ~90 printers at the M106 positions.
+5. OPEN: the estimator gap (A1 mini 13m24s vs 12m19s) still drives the
+   M73 placement class; per-family filament-length deltas unchanged.
