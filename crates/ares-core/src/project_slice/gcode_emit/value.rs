@@ -108,13 +108,19 @@ impl Config {
             let Some((key, raw)) = line.split_once(" = ") else {
                 continue;
             };
-            config.values.insert(key.to_owned(), parse_value(raw));
+            config.insert(key, parse_value(raw));
         }
         config
     }
 
     pub(super) fn insert(&mut self, key: impl Into<String>, value: Value) {
-        self.values.insert(key.into(), value);
+        let key = key.into();
+        if let Value::List(values) = &value {
+            for (index, item) in values.iter().enumerate() {
+                self.values.insert(format!("{key}_{index}"), item.clone());
+            }
+        }
+        self.values.insert(key, value);
     }
 
     pub(super) fn get(&self, key: &str) -> Option<&Value> {
@@ -176,6 +182,8 @@ mod tests {
             config.get("names").unwrap().index(1).unwrap().as_string(),
             "PETG"
         );
+        assert_eq!(config.get("values_1").unwrap().as_number(), Some(2.0));
+        assert_eq!(config.get("names_0").unwrap().as_string(), "PLA");
     }
 
     #[test]

@@ -73,6 +73,8 @@ fn insert_runtime_placeholders(
         "initial_no_support_hotend",
         "total_toolchanges",
         "current_object_idx",
+        "layer_num",
+        "layer_z",
     ] {
         config.insert(name, Value::number(0.0));
     }
