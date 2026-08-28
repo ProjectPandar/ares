@@ -244,7 +244,84 @@ fn smoke_case_overrides(
             Value::String(format!("{before}{separator}G92 E0")),
         );
     }
+    if let Some(value) = clamp_vector(machine, "retraction_distances_when_cut", 10.0, 18.0) {
+        overrides.insert("retraction_distances_when_cut".to_owned(), value);
+    }
+    if let Some(value) = clamp_vector(machine, "extruder_printable_height", 0.0, 1_000.0) {
+        overrides.insert("extruder_printable_height".to_owned(), value);
+    }
+    if machine
+        .get("use_firmware_retraction")
+        .is_some_and(option_true)
+        && process.get("wipe").is_some_and(option_true)
+    {
+        overrides.insert(
+            "use_firmware_retraction".to_owned(),
+            Value::String("0".to_owned()),
+        );
+    }
+    let nozzle = machine
+        .get("nozzle_diameter")
+        .and_then(first_number)
+        .unwrap_or(0.4);
+    if process
+        .get("bridge_line_width")
+        .and_then(first_number)
+        .is_some_and(|width| width > nozzle)
+    {
+        overrides.insert(
+            "bridge_line_width".to_owned(),
+            Value::String(nozzle.to_string()),
+        );
+    }
     overrides
+}
+
+fn option_true(value: &Value) -> bool {
+    match value {
+        Value::Array(values) => values.first().is_some_and(option_true),
+        Value::Bool(value) => *value,
+        Value::String(value) => value == "1" || value == "true",
+        Value::Number(value) => value.as_i64() == Some(1),
+        Value::Null | Value::Object(_) => false,
+    }
+}
+
+fn first_number(value: &Value) -> Option<f64> {
+    match value {
+        Value::Array(values) => values.first().and_then(first_number),
+        Value::String(value) if !value.ends_with('%') => value.parse().ok(),
+        Value::Number(value) => value.as_f64(),
+        _ => None,
+    }
+}
+
+fn clamp_vector(
+    fields: &Map<String, Value>,
+    key: &str,
+    minimum: f64,
+    maximum: f64,
+) -> Option<Value> {
+    let Value::Array(values) = fields.get(key)? else {
+        return None;
+    };
+    let mut changed = false;
+    let values = values
+        .iter()
+        .map(|value| {
+            let Some(number) = first_number(value) else {
+                return value.clone();
+            };
+            let clamped = number.clamp(minimum, maximum);
+            changed |= clamped != number;
+            Value::String(if clamped.fract() == 0.0 {
+                format!("{clamped:.0}")
+            } else {
+                clamped.to_string()
+            })
+        })
+        .collect();
+    changed.then_some(Value::Array(values))
 }
 
 pub(crate) fn vendors(root: &std::path::Path) -> Vec<String> {

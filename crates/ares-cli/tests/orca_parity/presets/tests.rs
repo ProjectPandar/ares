@@ -10,6 +10,35 @@ fn profiles(vendor: &str) -> VendorProfiles {
 }
 
 #[test]
+fn standalone_orca_range_failures_are_normalized_for_shared_smoke_input() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "retraction_distances_when_cut": ["0", "30"],
+        "extruder_printable_height": ["2100"],
+        "use_firmware_retraction": "1",
+        "nozzle_diameter": ["0.4"]
+    }))
+    .unwrap();
+    let process = serde_json::from_value(serde_json::json!({
+        "wipe": ["1"],
+        "bridge_line_width": "0.6"
+    }))
+    .unwrap();
+
+    let overrides = smoke_case_overrides(&machine, &process);
+
+    assert_eq!(
+        overrides["retraction_distances_when_cut"],
+        serde_json::json!(["10", "18"])
+    );
+    assert_eq!(
+        overrides["extruder_printable_height"],
+        serde_json::json!(["1000"])
+    );
+    assert_eq!(overrides["use_firmware_retraction"], "0");
+    assert_eq!(overrides["bridge_line_width"], "0.4");
+}
+
+#[test]
 fn relative_e_profile_without_reset_gets_layer_reset() {
     let machine = serde_json::from_value(serde_json::json!({
         "use_relative_e_distances": "1"
