@@ -563,3 +563,19 @@ upstream for this surface.
 NEXT: trace the surface round structure against upstream
 PerimeterGenerator.cpp:1250-1382 (offsets_with_smaller_width pass,
 distance per round, loop_number semantics) — the probe is in place.
+## 2026-08-28 session: probe data persisted (bd9d068 base)
+
+Probe output (Elegoo 0.2): every surface round collected 0 gaps;
+per-round distance is 198539 scaled (0.1985 mm perimeter_spacing,
+depth>=2) and 267809 (0.268 mm external_to_internal, depth 1);
+last/offsets shrink uniformly. offset2_deltas matches upstream
+(-(distance + min_spacing/2 - 1), +(min_spacing/2 - 1)). Upstream's
+BBS change (PerimeterGenerator.cpp:1329-1335) applies offset2 for
+INTERNAL rounds (i >= 2) to intentionally leave min_spacing gaps for
+gap fill — identical formula in Ares.
+
+Two open suspects: (1) the perimeter_spacing VALUE (0.1985 mm vs the
+Elegoo preset line widths — check what the preset defines); (2) the
+offset() implementation dropping thin rings. The earlier Ares-vs-Orca
+Internal-solid X-range mismatch (Ares fills only a middle band) suggests
+the onion geometry is systematically narrower than upstream.
