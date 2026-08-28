@@ -119,29 +119,37 @@ impl Parser<'_> {
                 continue;
             }
             let rest = &self.template[index + 1..];
-            let if_condition = rest.strip_prefix("if").filter(|condition| {
-                condition.starts_with([' ', '\t', '(']) || condition.is_empty()
-            });
-            if if_condition.is_some() {
-                let end = self.directive_end(index + 1)?;
-                let condition = self.template[index + 3..end].trim().to_owned();
-                return Some((index, end + 1, Directive::If(condition)));
-            }
-            let (name, length) = if rest
+            let trimmed = rest.trim_start_matches([' ', '\t']);
+            let keyword_start = index + 1 + (rest.len() - trimmed.len());
+            let (name, length) = if trimmed
+                .strip_prefix("if")
+                .is_some_and(|tail| tail.starts_with([' ', '\t', '(']) || tail.starts_with('}'))
+            {
+                ("if", "if".len())
+            } else if trimmed
                 .strip_prefix("elsif")
                 .is_some_and(|tail| tail.starts_with([' ', '\t']) || tail.starts_with('}'))
             {
                 ("elsif", "elsif".len())
-            } else if rest.starts_with("else}") {
+            } else if trimmed
+                .strip_prefix("else")
+                .is_some_and(|tail| tail.trim_start().starts_with('}'))
+            {
                 ("else", "else".len())
-            } else if rest.starts_with("endif}") {
+            } else if trimmed
+                .strip_prefix("endif")
+                .is_some_and(|tail| tail.trim_start().starts_with('}'))
+            {
                 ("endif", "endif".len())
             } else {
                 index += 1;
                 continue;
             };
-            let end = self.directive_end(index + 1)?;
-            let condition = self.template[index + 1 + length..end].trim().to_owned();
+            let end = self.directive_end(keyword_start)?;
+            let condition = self.template[keyword_start + length..end].trim().to_owned();
+            if name == "if" {
+                return Some((index, end + 1, Directive::If(condition)));
+            }
             let directive = match name {
                 "elsif" => Directive::Elsif(condition),
                 "else" => Directive::Else,

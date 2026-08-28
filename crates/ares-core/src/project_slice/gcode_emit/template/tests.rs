@@ -31,6 +31,14 @@ fn renderer_keeps_only_the_closing_newline_when_no_branch_matches() {
 }
 
 #[test]
+fn renderer_accepts_spaces_inside_directive_braces() {
+    let config = Config::from_block(b"; enabled = 1\n");
+    let template = "{ if enabled }yes{ else }no{ endif }";
+
+    assert_eq!(render(template, &config).unwrap(), "yes");
+}
+
+#[test]
 fn renderer_supports_inline_conditionals_on_one_line() {
     let config = Config::from_block(b"; lift = 1\n; z = 10\n; top = 250\n; off = 0.1\n");
     let template = "{if lift}G1 Z{off+min(z+2, top)} F600 ; lift{endif}\nG1 X5\n";
