@@ -2,14 +2,15 @@ use super::super::*;
 use serde_json::json;
 
 #[test]
-fn normalizes_legacy_zig_zag_pattern_values() {
+fn preserves_zig_zag_pattern_values_without_migration() {
+    // ZigZag keeps its own enum semantics; patterns are no longer rewritten
+    // to rectilinear (`PrintConfig.cpp` `ipZigZag`).
     let options: SliceOptions = serde_json::from_value(json!({
         "sparse_infill_pattern": "zig-zag",
         "top_surface_pattern": "zig-zag",
         "bottom_surface_pattern": "zig-zag",
         "internal_solid_infill_pattern": "zig-zag",
         "ironing_pattern": "zig-zag",
-        "support_ironing_pattern": "zig-zag",
         "future_orca_key": "preserved"
     }))
     .unwrap();
@@ -19,9 +20,8 @@ fn normalizes_legacy_zig_zag_pattern_values() {
         "top_surface_pattern",
         "bottom_surface_pattern",
         "internal_solid_infill_pattern",
-        "support_ironing_pattern",
     ] {
-        assert_eq!(options.values()[key], json!("rectilinear"));
+        assert_eq!(options.values()[key], json!("zig-zag"));
     }
     assert_eq!(options.values()["ironing_pattern"], json!("zig-zag"));
     assert_eq!(options.values()["future_orca_key"], json!("preserved"));

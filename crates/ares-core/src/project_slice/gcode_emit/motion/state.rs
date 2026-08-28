@@ -29,6 +29,9 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_active: bool,
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_marker_layer: Option<usize>,
     pub(in crate::project_slice::gcode_emit) pending_object_start: Option<(u32, [u8; 12])>,
+    pub(in crate::project_slice::gcode_emit) last_travel_acceleration: Option<u32>,
+    pub(in crate::project_slice::gcode_emit) pending_exclude_start: Option<String>,
+    pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
 }
@@ -63,7 +66,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
         _ => None,
     };
     if let Some(acceleration) = acceleration {
-        set_acceleration(output, state, acceleration);
+        set_acceleration(output, state, acceleration, false);
     }
     let jerk = if state.options.default_jerk <= 0.0 {
         0.0
@@ -83,18 +86,47 @@ pub(in crate::project_slice::gcode_emit) fn queue_object_start(
     state.pending_object_start = Some((label_id, encoded_labels));
 }
 
+pub(in crate::project_slice::gcode_emit) fn queue_exclude_start(
+    state: &mut EmitState,
+    text: String,
+) {
+    state.pending_exclude_start = Some(text);
+}
+
+/// Mirrors `GCode.cpp:5478-5494`: an unflushed start label is dropped
+/// (empty instance) and only then does the end label get armed.
+pub(in crate::project_slice::gcode_emit) fn queue_exclude_end(state: &mut EmitState, text: String) {
+    if state.pending_exclude_start.take().is_none() {
+        state.pending_exclude_end = Some(text);
+    }
+}
+
+pub(in crate::project_slice::gcode_emit) fn append_exclude_end(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if let Some(text) = state.pending_exclude_end.take() {
+        output.extend_from_slice(text.as_bytes());
+    }
+}
+
 pub(in crate::project_slice::gcode_emit) fn append_object_start(
     output: &mut Vec<u8>,
     state: &mut EmitState,
 ) {
-    let Some((label_id, encoded_labels)) = state.pending_object_start.take() else {
-        return;
-    };
-    output.extend_from_slice(
-        format!("; start printing object, unique label id: {label_id}\nM624 ").as_bytes(),
-    );
-    output.extend_from_slice(&encoded_labels);
-    output.push(b'\n');
+    // `add_object_change_labels` writes the end label before the start label
+    // (`GCodeWriter.cpp:1197-1201`).
+    append_exclude_end(output, state);
+    if let Some((label_id, encoded_labels)) = state.pending_object_start.take() {
+        output.extend_from_slice(
+            format!("; start printing object, unique label id: {label_id}\nM624 ").as_bytes(),
+        );
+        output.extend_from_slice(&encoded_labels);
+        output.push(b'\n');
+    }
+    if let Some(text) = state.pending_exclude_start.take() {
+        output.extend_from_slice(text.as_bytes());
+    }
 }
 
 pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
@@ -121,7 +153,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     } else {
         (state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration)
     };
-    set_acceleration(output, state, acceleration.unwrap_or(0));
+    set_acceleration(output, state, acceleration.unwrap_or(0), true);
 
     let jerk = if state.options.default_jerk <= 0.0 {
         0.0

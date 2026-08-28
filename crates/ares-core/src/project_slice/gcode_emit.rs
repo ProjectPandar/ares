@@ -52,8 +52,12 @@ pub(super) fn emit(
     }
     header::append_width_block(&mut output, traversal);
     output.extend_from_slice(b"; EXECUTABLE_BLOCK_START\n");
+    object::append_definitions(&mut output, traversal);
+    machine::append_first_line_m73(&mut output);
+    // The Marlin-family machine envelope prints before the start G-code
+    // (`GCode.cpp:2819`), followed by the start G-code (`GCode.cpp:3137`).
     machine::append_limits(&mut output, traversal);
-    machine::append_start(&mut output, traversal, metadata)?;
+    let bed_cache = machine::append_start(&mut output, traversal, metadata)?;
     let options = motion::MotionOptions::from_traversal(traversal);
     let offset = footprint::model_center(traversal).unwrap_or_default();
     let offset = (
@@ -91,6 +95,7 @@ pub(super) fn emit(
         .map(|record| record.layer_height)
         .sum();
     let layer_change_template = layer_gcode::LayerChangeTemplate::new(traversal, metadata);
+    let mut second_layer_done = false;
     let skirt = skirt::SkirtPlan::generate(traversal)?;
     let brim = brim::BrimPlan::generate(traversal)?;
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
@@ -134,6 +139,10 @@ pub(super) fn emit(
                 metadata,
             )?;
             motion::flush_pending_retract_wipe(&mut output, &mut state);
+            // Pending object-end labels flush after the layer-change
+            // retract/wipe, before the layer-change gcode
+            // (`GCode.cpp:5699` `change_layer`).
+            motion::append_exclude_end(&mut output, &mut state);
             if layer_index == 0 {
                 motion::retract_before_layer(&mut output, &mut state);
             }
@@ -155,6 +164,12 @@ pub(super) fn emit(
                 f64::from(layer_z),
                 f64::from(layer_height),
             );
+            // Second-layer transition: bed temperature for the remaining
+            // layers (`GCode.cpp:4777-4830`), once per slice.
+            if layer_index == 1 && !second_layer_done {
+                second_layer_done = true;
+                machine::append_second_layer_transition(&mut output, traversal, bed_cache);
+            }
             let lower_boundary_lines = traversal.objects[object_index]
                 .lower_slices(layer_index)
                 .into_iter()
@@ -195,19 +210,13 @@ pub(super) fn emit(
             }
             if let Some(labels) = &labels {
                 labels.append_printing(&mut output);
-                // M624 object exclusion is only armed for BBL printers
-                // (`GCode.cpp:2583-2602, 5356-5359`) and starts after skirt.
-                let (label_id, encoded_labels) = labels.start_label_data();
-                state
-                    .tags
-                    .is_bbl()
-                    .then(|| motion::queue_object_start(&mut state, label_id, encoded_labels));
+                queue_object_start_labels(&mut state, labels);
             }
             motion::emit_layer(&mut output, layer, geometry, &mut state)?;
             if let Some(labels) = &labels {
                 labels.append_stopping(&mut output);
                 motion::end_layer_for_timelapse(&mut output, &mut state);
-                (state.tags.is_bbl()).then(|| labels.append_stop_label(&mut output));
+                queue_object_stop_labels(&mut output, &mut state, labels);
             } else {
                 motion::end_layer_for_timelapse(&mut output, &mut state);
             }
@@ -225,6 +234,7 @@ pub(super) fn emit(
     // deferred retraction. Flush only retract/wipe (not a travel lift) before
     // end G-code (`GCode.cpp` final object teardown).
     motion::flush_pending_retract_wipe(&mut output, &mut state);
+    motion::append_exclude_end(&mut output, &mut state);
     finish::append(&mut output, traversal, max_layer_z, metadata)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let used_filament = finish::account_used_filament(&output);
@@ -293,7 +303,34 @@ pub(super) fn emit(
         },
     ))
 }
-fn format_processor_float(value: f64) -> String {
+/// Arms the in-print object-start marker: BBL queues the M624 label
+/// (`GCode.cpp:2583-2602, 5356-5359`); Klipper/Marlin queue
+/// `EXCLUDE_OBJECT_START` / `M486 S<n>` (`GCode.cpp:5361-5372`), flushed at
+/// the first travel (`GCode.cpp:7467`).
+fn queue_object_start_labels(state: &mut motion::EmitState, labels: &object::ObjectLabels) {
+    if state.tags.is_bbl() {
+        let (label_id, encoded_labels) = labels.start_label_data();
+        motion::queue_object_start(state, label_id, encoded_labels);
+    } else if let Some(start) = labels.exclude_start() {
+        motion::queue_exclude_start(state, start.clone());
+    }
+}
+
+/// Arms the in-print object-end marker after instance content
+/// (`GCode.cpp:5478-5494`).
+fn queue_object_stop_labels(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    labels: &object::ObjectLabels,
+) {
+    if state.tags.is_bbl() {
+        labels.append_stop_label(output);
+    } else if let Some(end) = labels.exclude_end() {
+        motion::queue_exclude_end(state, end.clone());
+    }
+}
+
+pub(super) fn format_processor_float(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();
     }

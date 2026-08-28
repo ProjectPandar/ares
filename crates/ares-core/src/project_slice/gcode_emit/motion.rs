@@ -19,8 +19,8 @@ mod travel;
 
 pub(in crate::project_slice) use arc::simplify_points;
 pub(super) use state::{
-    EmitState, LayerGeometry, append_object_start, begin_layer, begin_path_travel,
-    queue_object_start,
+    EmitState, LayerGeometry, append_exclude_end, append_object_start, begin_layer,
+    begin_path_travel, queue_exclude_end, queue_exclude_start, queue_object_start,
 };
 pub(super) use travel::{flush_pending_retract_lift, flush_pending_retract_wipe};
 
@@ -129,14 +129,62 @@ pub(super) fn emit_skirt_loop(
     state.wipe_path.reverse();
 }
 
-fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32) {
-    // `GCodeWriter.cpp:228`: zero means "keep the configured acceleration";
-    // it neither emits nor updates the cached value.
-    if acceleration == 0 || state.last_acceleration == Some(acceleration) {
+fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32, travel: bool) {
+    let separate_travel = travel
+        && matches!(
+            state.options.gcode_flavor,
+            crate::GCodeFlavor::Repetier
+                | crate::GCodeFlavor::MarlinFirmware
+                | crate::GCodeFlavor::RepRapFirmware
+        );
+    let limit = if travel {
+        state.options.max_travel_acceleration
+    } else {
+        state.options.max_acceleration
+    };
+    // `GCodeWriter.cpp:218-221`: clamp by the machine limit, then skip zero
+    // or unchanged values without touching the cached one.
+    let acceleration = if limit > 0 && acceleration > limit {
+        limit
+    } else {
+        acceleration
+    };
+    let last = if separate_travel {
+        &mut state.last_travel_acceleration
+    } else {
+        &mut state.last_acceleration
+    };
+    if acceleration == 0 || *last == Some(acceleration) {
         return;
     }
-    output.extend_from_slice(format!("M204 S{acceleration}\n").as_bytes());
-    state.last_acceleration = Some(acceleration);
+    let line = match state.options.gcode_flavor {
+        crate::GCodeFlavor::Repetier => {
+            let code = if separate_travel { "M202" } else { "M201" };
+            format!("{code} X{acceleration} Y{acceleration}\n")
+        }
+        crate::GCodeFlavor::RepRapFirmware | crate::GCodeFlavor::MarlinFirmware => {
+            let code = if separate_travel { "M204 T" } else { "M204 P" };
+            format!("{code}{acceleration}\n")
+        }
+        crate::GCodeFlavor::Klipper => {
+            let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
+            if state.options.accel_to_decel_enable {
+                // `acceleration * factor / 100` streams as a double with
+                // ostream's default 6-significant-digit formatting.
+                let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
+                line.push_str(&format!(
+                    " ACCEL_TO_DECEL={}\n",
+                    super::format_processor_float(decel)
+                ));
+            } else {
+                line.push('\n');
+            }
+            line
+        }
+        _ => format!("M204 S{acceleration}\n"),
+    };
+    output.extend_from_slice(line.as_bytes());
+    *last = Some(acceleration);
 }
 
 pub(super) fn emit_layer(

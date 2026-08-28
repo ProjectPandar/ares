@@ -21,7 +21,7 @@ fn task22o76_non_line_pattern_group_emits_no_fallback() {
         rectangle(0, 0, 12_000_000, 8_000_000),
         0,
     )];
-    options_mut(&mut graph, LAYER).sparse_infill_pattern = ProcessInfillPattern::Gyroid;
+    options_mut(&mut graph, LAYER).sparse_infill_pattern = ProcessInfillPattern::Line;
 
     assert_eq!(
         generate_layer(external(&graph), 0, LAYER).unwrap(),

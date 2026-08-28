@@ -1,1192 +1,1007 @@
 # OrcaSlicer printer smoke summary
 
-0 of 1186 printers pass the semantic parity comparison (classic wall generator baseline; cube model).
+20 of 1001 printers pass the semantic parity comparison (classic wall generator baseline; cube model).
 
 | status | printer | first divergence |
 |---|---|---|
-| ARES_ERROR | Afinia/Afinia H+1(HS) | Afinia/Afinia H+1(HS) process: machine names no default preset |
-| ARES_ERROR | Afinia/Afinia H+1(HS) 0.4 nozzle | Afinia/Afinia H+1(HS) 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Afinia/Afinia H+1(HS) 0.6 nozzle | Afinia/Afinia H+1(HS) 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Afinia/fdm_afinia_common | Afinia/fdm_afinia_common: no usable default_filament_profile |
-| ARES_ERROR | Afinia/fdm_machine_common | Afinia/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Anker/Anker M5 | Anker/Anker M5 process: machine names no default preset |
-| ARES_ERROR | Anker/Anker M5 0.2 nozzle | Anker/Anker M5 0.2 nozzle process: default preset "0.10mm Standard 0.2mm nozzle @Anker" not found |
-| ARES_ERROR | Anker/Anker M5 0.25 nozzle | Anker/Anker M5 0.25 nozzle process: default preset "0.10mm Standard 0.25mm nozzle @Anker" not found |
-| DIVERGENT | Anker/Anker M5 0.4 nozzle | invalid duration "0.811081s" |
-| ARES_ERROR | Anker/Anker M5 0.6 nozzle | Anker/Anker M5 0.6 nozzle process: default preset "0.30mm Standard 0.6 nozzle @Anker" not found |
-| ARES_ERROR | Anker/Anker M5 All-Metal 0.2 nozzle | Anker/Anker M5 All-Metal 0.2 nozzle process: default preset "0.10mm Standard 0.2mm nozzle @Anker" not found |
-| ARES_ERROR | Anker/Anker M5 All-Metal 0.25 nozzle | Anker/Anker M5 All-Metal 0.25 nozzle process: default preset "0.10mm Standard 0.25mm nozzle @Anker" not found |
-| DIVERGENT | Anker/Anker M5 All-Metal 0.4 nozzle | invalid duration "0.746717s" |
-| ARES_ERROR | Anker/Anker M5 All-Metal 0.6 nozzle | Anker/Anker M5 All-Metal 0.6 nozzle process: default preset "0.30mm Standard 0.6 nozzle @Anker" not found |
-| ARES_ERROR | Anker/Anker M5 All-Metal Hot End | Anker/Anker M5 All-Metal Hot End process: machine names no default preset |
-| ARES_ERROR | Anker/Anker M5C | Anker/Anker M5C process: machine names no default preset |
-| ARES_ERROR | Anker/Anker M5C 0.2 nozzle | Anker/Anker M5C 0.2 nozzle process: default preset "0.10mm Standard 0.2mm nozzle @Anker" not found |
-| ARES_ERROR | Anker/Anker M5C 0.25 nozzle | Anker/Anker M5C 0.25 nozzle process: default preset "0.10mm Standard 0.25mm nozzle @Anker" not found |
-| DIVERGENT | Anker/Anker M5C 0.4 nozzle | invalid duration "0.734511s" |
-| ARES_ERROR | Anker/Anker M5C 0.6 nozzle | Anker/Anker M5C 0.6 nozzle process: default preset "0.30mm Standard 0.6 nozzle @Anker" not found |
-| ARES_ERROR | Anker/fdm_machine_common | Anker/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Anker/fdm_marlin_common | Anker/fdm_marlin_common process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic 4Max Pro | Anycubic/Anycubic 4Max Pro process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic 4Max Pro 0.4 nozzle | Anycubic/Anycubic 4Max Pro 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Anycubic/Anycubic 4Max Pro 2 | Anycubic/Anycubic 4Max Pro 2 process: machine names no default preset |
-| DIVERGENT | Anycubic/Anycubic 4Max Pro 2 0.4 nozzle | invalid G-code number "" |
-| ARES_ERROR | Anycubic/Anycubic Chiron | Anycubic/Anycubic Chiron process: machine names no default preset |
-| DIVERGENT | Anycubic/Anycubic Chiron 0.4 nozzle | invalid G-code number "40;extrude" |
-| ARES_ERROR | Anycubic/Anycubic Kobra | Anycubic/Anycubic Kobra process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 0.4 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 | Anycubic/Anycubic Kobra 2 process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Max | Anycubic/Anycubic Kobra 2 Max process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Max 0.4 nozzle | unsupported project feature: solid_infill_rotate_template |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Neo | Anycubic/Anycubic Kobra 2 Neo process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Neo 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Plus | Anycubic/Anycubic Kobra 2 Plus process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Plus 0.4 nozzle | unsupported project feature: solid_infill_rotate_template |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Pro | Anycubic/Anycubic Kobra 2 Pro process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 2 Pro 0.4 nozzle | unsupported project feature: solid_infill_rotate_template |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 | Anycubic/Anycubic Kobra 3 process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 0.2 nozzle | orca-slicer failed (exit status: 206): run found error, return -50, exit... |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 0.4 nozzle | orca-slicer failed (exit status: 206): run found error, return -50, exit... |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 0.6 nozzle | orca-slicer failed (exit status: 206): run found error, return -50, exit... |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 0.8 nozzle | orca-slicer failed (exit status: 206): run found error, return -50, exit... |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 Max | Anycubic/Anycubic Kobra 3 Max process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 Max 0.4 nozzle | invalid Orca option filament_map |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 Max 0.6 nozzle | invalid Orca option filament_map |
-| ARES_ERROR | Anycubic/Anycubic Kobra 3 Max 0.8 nozzle | invalid Orca option filament_map |
-| ARES_ERROR | Anycubic/Anycubic Kobra Max | Anycubic/Anycubic Kobra Max process: machine names no default preset |
+| DIVERGENT | Afinia/Afinia H+1(HS) 0.4 nozzle | filament 1 length differs: expected 215.34mm, actual 213.10mm |
+| DIVERGENT | Afinia/Afinia H+1(HS) 0.6 nozzle | filament 1 length differs: expected 310.23mm, actual 305.75mm |
+| DIVERGENT | Anker/Anker M5 0.2 nozzle | layer 2 deposition 107 differs: expected Deposition { feature: "Internal solid infill", width: "0.259746", motion: MotionRecord { command: "G1", start: Position { x: "121.313", y: "120.888", z: "0.2" }, end: Position { x: "120.902", y: "121.299", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.00295", feed: 9834.627, acceleration: "2500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.259746", motion: MotionRecord { command: "G1", start: Position { x: "121.313", y: "120.888", z: "0.2" }, end: Position { x: "120.888", y: "121.313", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.00305", feed: 9834.627, acceleration: "2500", fans: "0:255" } |
+| DIVERGENT | Anker/Anker M5 0.25 nozzle | layer 2 deposition 23 differs: expected Deposition { feature: "Internal solid infill", width: "0.269999", motion: MotionRecord { command: "G1", start: Position { x: "113.424", y: "113.424", z: "0.2" }, end: Position { x: "113.424", y: "115.978", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01349", feed: 12000.0, acceleration: "2500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.269999", motion: MotionRecord { command: "G1", start: Position { x: "113.424", y: "113.424", z: "0.2" }, end: Position { x: "113.424", y: "115.953", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01336", feed: 12000.0, acceleration: "2500", fans: "0:255" } |
+| DIVERGENT | Anker/Anker M5 0.4 nozzle | layer 2 travel geometry count differs: expected 9, actual 6 |
+| DIVERGENT | Anker/Anker M5 0.6 nozzle | layer 2 travel geometry count differs: expected 9, actual 6 |
+| DIVERGENT | Anker/Anker M5 All-Metal 0.2 nozzle | layer 2 deposition 107 differs: expected Deposition { feature: "Internal solid infill", width: "0.259746", motion: MotionRecord { command: "G1", start: Position { x: "121.313", y: "120.888", z: "0.2" }, end: Position { x: "120.902", y: "121.299", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.00295", feed: 9834.627, acceleration: "2500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.259746", motion: MotionRecord { command: "G1", start: Position { x: "121.313", y: "120.888", z: "0.2" }, end: Position { x: "120.888", y: "121.313", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.00305", feed: 9834.627, acceleration: "2500", fans: "0:255" } |
+| DIVERGENT | Anker/Anker M5 All-Metal 0.25 nozzle | layer 2 deposition 23 differs: expected Deposition { feature: "Internal solid infill", width: "0.269999", motion: MotionRecord { command: "G1", start: Position { x: "113.424", y: "113.424", z: "0.2" }, end: Position { x: "113.424", y: "115.978", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01349", feed: 12000.0, acceleration: "2500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.269999", motion: MotionRecord { command: "G1", start: Position { x: "113.424", y: "113.424", z: "0.2" }, end: Position { x: "113.424", y: "115.953", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01336", feed: 12000.0, acceleration: "2500", fans: "0:255" } |
+| DIVERGENT | Anker/Anker M5 All-Metal 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-0.5", feed: "3600" }], [Extruder { extrusion: "0.5", feed: "3600" }], [Extruder { extrusion: "0.5", feed: "3600" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "110.343", y: "110.263", z: "0.2" }, end: Position { x: "110.775", y: "109.801", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.31604", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "110.775", y: "109.801", z: "0.2" }, end: Position { x: "111.128", y: "109.698", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.18396", feed: "3000" }, WipeEnd], [Extruder { extrusion: "0.5", feed: "3600" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "122.075", y: "122.035", z: "0.2" }, end: Position { x: "121.075", y: "122.039", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-0.5", feed: "3600" }], [Extruder { extrusion: "0.5", feed: "3600" }], [Extruder { extrusion: "0.5", feed: "3600" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "110.343", y: "110.263", z: "0.2" }, end: Position { x: "110.775", y: "109.801", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.31603", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "110.775", y: "109.801", z: "0.2" }, end: Position { x: "111.128", y: "109.698", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.18397", feed: "3000" }, WipeEnd], [Extruder { extrusion: "0.5", feed: "3600" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "122.075", y: "122.035", z: "0.2" }, end: Position { x: "121.075", y: "122.039", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Anker/Anker M5 All-Metal 0.6 nozzle | layer 2 travel geometry count differs: expected 9, actual 6 |
+| DIVERGENT | Anker/Anker M5C 0.2 nozzle | layer 2 deposition 107 differs: expected Deposition { feature: "Internal solid infill", width: "0.259746", motion: MotionRecord { command: "G1", start: Position { x: "113.813", y: "113.388", z: "0.2" }, end: Position { x: "113.402", y: "113.799", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.00295", feed: 9834.627, acceleration: "2500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.259746", motion: MotionRecord { command: "G1", start: Position { x: "113.813", y: "113.388", z: "0.2" }, end: Position { x: "113.388", y: "113.813", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.00305", feed: 9834.627, acceleration: "2500", fans: "0:255" } |
+| DIVERGENT | Anker/Anker M5C 0.25 nozzle | layer 2 deposition 23 differs: expected Deposition { feature: "Internal solid infill", width: "0.269999", motion: MotionRecord { command: "G1", start: Position { x: "105.924", y: "105.924", z: "0.2" }, end: Position { x: "105.924", y: "108.478", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01349", feed: 12000.0, acceleration: "2500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.269999", motion: MotionRecord { command: "G1", start: Position { x: "105.924", y: "105.924", z: "0.2" }, end: Position { x: "105.924", y: "108.453", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01336", feed: 12000.0, acceleration: "2500", fans: "0:255" } |
+| DIVERGENT | Anker/Anker M5C 0.4 nozzle | layer 2 travel geometry count differs: expected 9, actual 6 |
+| DIVERGENT | Anker/Anker M5C 0.6 nozzle | layer 2 travel geometry count differs: expected 9, actual 6 |
+| DIVERGENT | Anycubic/Anycubic 4Max Pro 0.4 nozzle | layer 2 deposition 49 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "138.586", y: "104.829", z: "0.4" }, end: Position { x: "137.357", y: "106.058", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05056", feed: 2078.0, acceleration: "1000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "138.586", y: "104.829", z: "0.4" }, end: Position { x: "137.329", y: "106.086", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05172", feed: 2078.0, acceleration: "1000", fans: "0:255" } |
+| DIVERGENT | Anycubic/Anycubic 4Max Pro 2 0.4 nozzle | filament 1 length differs: expected 271.83mm, actual 291.83mm |
+| DIVERGENT | Anycubic/Anycubic Chiron 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-2", feed: "2400" }], [Extruder { extrusion: "2", feed: "2400" }], [Extruder { extrusion: "2", feed: "2400" }, Extruder { extrusion: "-0.66667", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "204.59", y: "204.55", z: "0.2" }, end: Position { x: "203.59", y: "204.554", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.33333", feed: "1800" }, WipeEnd], [Extruder { extrusion: "2", feed: "2400" }, Extruder { extrusion: "-1.2", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "193.362", y: "193.627", z: "0.2" }, end: Position { x: "194.152", y: "193.014", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.8", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-2", feed: "2400" }], [Extruder { extrusion: "2", feed: "0" }], [Extruder { extrusion: "2", feed: "0" }, Extruder { extrusion: "-0.66667", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "204.59", y: "204.55", z: "0.2" }, end: Position { x: "203.59", y: "204.554", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.33333", feed: "1800" }, WipeEnd], [Extruder { extrusion: "2", feed: "0" }, Extruder { extrusion: "-1.2", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "193.362", y: "193.627", z: "0.2" }, end: Position { x: "194.152", y: "193.014", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.8", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Anycubic/Anycubic Kobra 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-6", feed: "2400" }], [Extruder { extrusion: "6", feed: "3000" }], [Extruder { extrusion: "6", feed: "3000" }, Extruder { extrusion: "-4.66667", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "114.523", y: "114.579", z: "0.2" }, end: Position { x: "113.6", y: "114.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.33333", feed: "1800" }, WipeEnd], [Extruder { extrusion: "6", feed: "3000" }, Extruder { extrusion: "-5.33333", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "101.201", y: "101.547", z: "0.2" }, end: Position { x: "101.345", y: "101.331", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.17318", feed: "3600" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "101.345", y: "101.331", z: "0.2" }, end: Position { x: "101.962", y: "100.921", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.49348", feed: "3600" }, WipeEnd]], actual [[Extruder { extrusion: "-6", feed: "2400" }], [Extruder { extrusion: "6", feed: "3000" }], [Extruder { extrusion: "6", feed: "3000" }, Extruder { extrusion: "-4.66667", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "114.6", y: "114.56", z: "0.2" }, end: Position { x: "113.6", y: "114.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.33333", feed: "1800" }, WipeEnd], [Extruder { extrusion: "6", feed: "3000" }, Extruder { extrusion: "-5.33333", feed: "2400" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "101.201", y: "101.547", z: "0.2" }, end: Position { x: "101.345", y: "101.331", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.17318", feed: "3600" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "101.345", y: "101.331", z: "0.2" }, end: Position { x: "101.962", y: "100.921", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.49348", feed: "3600" }, WipeEnd]] |
+| DIVERGENT | Anycubic/Anycubic Kobra 2 0.4 nozzle | filament 1 length differs: expected 289.00mm, actual 287.00mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 2 Max 0.4 nozzle | filament 1 length differs: expected 250.19mm, actual 248.19mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 2 Neo 0.4 nozzle | filament 1 length differs: expected 272.87mm, actual 268.38mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 2 Plus 0.4 nozzle | filament 1 length differs: expected 250.53mm, actual 248.53mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 2 Pro 0.4 nozzle | filament 1 length differs: expected 242.51mm, actual 242.31mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 3 0.2 nozzle | filament 1 length differs: expected 217.70mm, actual 217.79mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 3 0.4 nozzle | filament 1 length differs: expected 232.23mm, actual 232.40mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 3 0.6 nozzle | filament 1 length differs: expected 305.85mm, actual 306.16mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 3 0.8 nozzle | filament 1 length differs: expected 362.95mm, actual 363.33mm |
+| DIVERGENT | Anycubic/Anycubic Kobra 3 Max 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=213,210 POLYGON=[[208,205],[218,205],[218,215],[208,215],[208,205]]"), actual Some("M201 X10000 Y10000 Z3000 E10000") |
+| DIVERGENT | Anycubic/Anycubic Kobra 3 Max 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=213,210 POLYGON=[[208,205],[218,205],[218,215],[208,215],[208,205]]"), actual Some("M201 X10000 Y10000 Z3000 E10000") |
+| DIVERGENT | Anycubic/Anycubic Kobra 3 Max 0.8 nozzle | filament 1 length differs: expected 288.86mm, actual 289.35mm |
 | ARES_ERROR | Anycubic/Anycubic Kobra Max 0.4 nozzle | orca-slicer failed (exit status: 205): Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode. |
-| ARES_ERROR | Anycubic/Anycubic Kobra Neo | Anycubic/Anycubic Kobra Neo process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra Neo 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Anycubic/Anycubic Kobra Plus | Anycubic/Anycubic Kobra Plus process: machine names no default preset |
+| DIVERGENT | Anycubic/Anycubic Kobra Neo 0.4 nozzle | filament 1 length differs: expected 272.87mm, actual 268.38mm |
 | ARES_ERROR | Anycubic/Anycubic Kobra Plus 0.4 nozzle | orca-slicer failed (exit status: 205): Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode. |
-| ARES_ERROR | Anycubic/Anycubic Kobra S1 | Anycubic/Anycubic Kobra S1 process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra S1 0.4 nozzle | unsupported project feature: wall_sequence |
-| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max | Anycubic/Anycubic Kobra S1 Max process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.25 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 0 not in range [10.000000,18.000000] |
-| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.4 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 0 not in range [10.000000,18.000000] |
-| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.6 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 0 not in range [10.000000,18.000000] |
-| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.8 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 0 not in range [10.000000,18.000000] |
-| ARES_ERROR | Anycubic/Anycubic Kobra X | Anycubic/Anycubic Kobra X process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Kobra X 0.4 nozzle | Anycubic/Anycubic Kobra X 0.4 nozzle process: default preset "0.20mm Standard @Anycubic Kobra X 0.4 nozzle;0.08mm Standard @Anycubic Kobra X 0.4 nozzle" not found |
-| ARES_ERROR | Anycubic/Anycubic Predator | Anycubic/Anycubic Predator process: machine names no default preset |
-| ARES_ERROR | Anycubic/Anycubic Predator 0.4 nozzle | Anycubic/Anycubic Predator 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Anycubic/Anycubic Vyper | Anycubic/Anycubic Vyper process: machine names no default preset |
+| DIVERGENT | Anycubic/Anycubic Kobra S1 0.4 nozzle | filament 1 length differs: expected 215.17mm, actual 213.11mm |
+| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.25 nozzle | orca-slicer failed (exit status: 238): filament_flush_temp: nil not in range [0.000000,1500.000000] |
+| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.4 nozzle | invalid project G-code template: unknown function: int in int(additional_cooling_fan_speed[initial_tool] * 255 / 100) |
+| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.6 nozzle | orca-slicer failed (exit status: 238): filament_flush_temp: nil not in range [0.000000,1500.000000] |
+| ARES_ERROR | Anycubic/Anycubic Kobra S1 Max 0.8 nozzle | orca-slicer failed (exit status: 238): filament_flush_temp: nil not in range [0.000000,1500.000000] |
+| DIVERGENT | Anycubic/Anycubic Kobra X 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=130,130 POLYGON=[[125,125],[135,125],[135,135],[125,135],[125,125]]"), actual Some("M201 X10000 Y10000 Z1000 E6500") |
+| DIVERGENT | Anycubic/Anycubic Predator 0.4 nozzle | filament 1 length differs: expected 279.52mm, actual 411.06mm |
 | ARES_ERROR | Anycubic/Anycubic Vyper 0.4 nozzle | orca-slicer failed (exit status: 205): Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode. |
-| ARES_ERROR | Anycubic/Anycubic i3 Mega S | Anycubic/Anycubic i3 Mega S process: machine names no default preset |
-| DIVERGENT | Anycubic/Anycubic i3 Mega S 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Anycubic/fdm_machine_common | Anycubic/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Artillery/Artillery Genius | Artillery/Artillery Genius process: machine names no default preset |
-| DIVERGENT | Artillery/Artillery Genius 0.4 nozzle | invalid G-code number "5000.0;" |
-| ARES_ERROR | Artillery/Artillery Genius Pro | Artillery/Artillery Genius Pro process: machine names no default preset |
-| DIVERGENT | Artillery/Artillery Genius Pro 0.4 nozzle | invalid G-code number "5000;" |
-| ARES_ERROR | Artillery/Artillery Hornet | Artillery/Artillery Hornet process: machine names no default preset |
+| DIVERGENT | Anycubic/Anycubic i3 Mega S 0.4 nozzle | layer 2 deposition 45 differs: expected Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "108.918", y: "107.62", z: "0.4" }, end: Position { x: "107.648", y: "108.89", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05956", feed: 2400.0, acceleration: "1000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "108.918", y: "107.62", z: "0.4" }, end: Position { x: "107.62", y: "108.918", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06089", feed: 2400.0, acceleration: "1000", fans: "0:255" } |
+| DIVERGENT | Artillery/Artillery Genius 0.4 nozzle | filament 1 length differs: expected 347.67mm, actual 302.67mm |
+| DIVERGENT | Artillery/Artillery Genius Pro 0.4 nozzle | filament 1 length differs: expected 258.70mm, actual 213.70mm |
 | DIVERGENT | Artillery/Artillery Hornet 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }, Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }, Extruder { extrusion: "-2.2", feed: "1800" }]], actual [[Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "0" }], [Extruder { extrusion: "2.2", feed: "0" }, Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "0" }, Extruder { extrusion: "-2.2", feed: "1800" }]] |
-| ARES_ERROR | Artillery/Artillery M1 Pro | Artillery/Artillery M1 Pro process: machine names no default preset |
-| ARES_ERROR | Artillery/Artillery M1 Pro 0.2 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/Artillery M1 Pro 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/Artillery M1 Pro 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/Artillery M1 Pro 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/Artillery Sidewinder X1 | Artillery/Artillery Sidewinder X1 process: machine names no default preset |
-| DIVERGENT | Artillery/Artillery Sidewinder X1 0.4 nozzle | invalid G-code number "3000;" |
-| ARES_ERROR | Artillery/Artillery Sidewinder X2 | Artillery/Artillery Sidewinder X2 process: machine names no default preset |
-| DIVERGENT | Artillery/Artillery Sidewinder X2 0.4 nozzle | invalid G-code number "3000;" |
-| ARES_ERROR | Artillery/Artillery Sidewinder X3 Plus | Artillery/Artillery Sidewinder X3 Plus process: machine names no default preset |
-| ARES_ERROR | Artillery/Artillery Sidewinder X3 Plus 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/Artillery Sidewinder X3 Pro | Artillery/Artillery Sidewinder X3 Pro process: machine names no default preset |
-| ARES_ERROR | Artillery/Artillery Sidewinder X3 Pro 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/Artillery Sidewinder X4 Plus | Artillery/Artillery Sidewinder X4 Plus process: machine names no default preset |
-| ARES_ERROR | Artillery/Artillery Sidewinder X4 Plus 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/Artillery Sidewinder X4 Pro | Artillery/Artillery Sidewinder X4 Pro process: machine names no default preset |
-| ARES_ERROR | Artillery/Artillery Sidewinder X4 Pro 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Artillery/fdm_machine_common | Artillery/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab A1 | BBL/Bambu Lab A1 process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab A1 0.2 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in nozzle_temperature_initial_layer[initial_extruder] |
-| ARES_ERROR | BBL/Bambu Lab A1 0.4 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in nozzle_temperature_initial_layer[initial_extruder] |
-| ARES_ERROR | BBL/Bambu Lab A1 0.6 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in nozzle_temperature_initial_layer[initial_extruder] |
-| ARES_ERROR | BBL/Bambu Lab A1 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab A1 mini | BBL/Bambu Lab A1 mini process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab A1 mini 0.2 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in nozzle_temperature[initial_extruder] |
-| ARES_ERROR | BBL/Bambu Lab A1 mini 0.4 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in nozzle_temperature[initial_extruder] |
-| ARES_ERROR | BBL/Bambu Lab A1 mini 0.6 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in nozzle_temperature[initial_extruder] |
-| ARES_ERROR | BBL/Bambu Lab A1 mini 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab H2D | BBL/Bambu Lab H2D process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab H2D 0.2 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2D 0.4 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2D 0.6 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2D 0.8 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2D Pro | BBL/Bambu Lab H2D Pro process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab H2D Pro 0.2 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2D Pro 0.4 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2D Pro 0.6 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2D Pro 0.8 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab H2S | BBL/Bambu Lab H2S process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab H2S 0.2 nozzle | invalid project G-code template: unknown placeholder: min_vitrification_temperature in (min_vitrification_temperature <= 50) |
-| ARES_ERROR | BBL/Bambu Lab H2S 0.4 nozzle | invalid project G-code template: unknown placeholder: min_vitrification_temperature in (min_vitrification_temperature <= 50) |
-| ARES_ERROR | BBL/Bambu Lab H2S 0.6 nozzle | invalid project G-code template: unknown placeholder: min_vitrification_temperature in (min_vitrification_temperature <= 50) |
-| ARES_ERROR | BBL/Bambu Lab H2S 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab P1P | BBL/Bambu Lab P1P process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab P1P 0.2 nozzle | BBL/Bambu Lab P1P 0.2 nozzle: no usable default_filament_profile |
-| ARES_ERROR | BBL/Bambu Lab P1P 0.4 nozzle | BBL/Bambu Lab P1P 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | BBL/Bambu Lab P1P 0.6 nozzle | BBL/Bambu Lab P1P 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | BBL/Bambu Lab P1P 0.8 nozzle | BBL/Bambu Lab P1P 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | BBL/Bambu Lab P1S | BBL/Bambu Lab P1S process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab P1S 0.2 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in filament_type[initial_extruder]=="PLA" |
-| ARES_ERROR | BBL/Bambu Lab P1S 0.4 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in filament_type[initial_extruder]=="PLA" |
-| ARES_ERROR | BBL/Bambu Lab P1S 0.6 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in filament_type[initial_extruder]=="PLA" |
-| ARES_ERROR | BBL/Bambu Lab P1S 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab P2S | BBL/Bambu Lab P2S process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab P2S 0.2 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab P2S 0.4 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab P2S 0.6 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab P2S 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab X1 | BBL/Bambu Lab X1 process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab X1 0.2 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >45)||(bed_temperature_initial_layer[initial_no_support_extruder] >45) |
-| ARES_ERROR | BBL/Bambu Lab X1 0.4 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >45)||(bed_temperature_initial_layer[initial_no_support_extruder] >45) |
-| ARES_ERROR | BBL/Bambu Lab X1 0.6 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >45)||(bed_temperature_initial_layer[initial_no_support_extruder] >45) |
-| ARES_ERROR | BBL/Bambu Lab X1 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab X1 Carbon | BBL/Bambu Lab X1 Carbon process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab X1 Carbon 0.2 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >45)||(bed_temperature_initial_layer[initial_no_support_extruder] >45) |
-| ARES_ERROR | BBL/Bambu Lab X1 Carbon 0.4 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >45)||(bed_temperature_initial_layer[initial_no_support_extruder] >45) |
-| ARES_ERROR | BBL/Bambu Lab X1 Carbon 0.6 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >45)||(bed_temperature_initial_layer[initial_no_support_extruder] >45) |
-| ARES_ERROR | BBL/Bambu Lab X1 Carbon 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab X1E | BBL/Bambu Lab X1E process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab X1E 0.2 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >50)||(bed_temperature_initial_layer[initial_no_support_extruder] >50) |
-| ARES_ERROR | BBL/Bambu Lab X1E 0.4 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >50)||(bed_temperature_initial_layer[initial_no_support_extruder] >50) |
-| ARES_ERROR | BBL/Bambu Lab X1E 0.6 nozzle | invalid project G-code template: unknown placeholder: bed_temperature in (bed_temperature[initial_no_support_extruder] >50)||(bed_temperature_initial_layer[initial_no_support_extruder] >50) |
-| ARES_ERROR | BBL/Bambu Lab X1E 0.8 nozzle | unsupported project feature: top_surface_pattern |
-| ARES_ERROR | BBL/Bambu Lab X2D | BBL/Bambu Lab X2D process: machine names no default preset |
-| ARES_ERROR | BBL/Bambu Lab X2D 0.2 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab X2D 0.4 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab X2D 0.6 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/Bambu Lab X2D 0.8 nozzle | invalid Orca option retract_lift_enforce |
-| ARES_ERROR | BBL/fdm_bbl_3dp_001_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | BBL/fdm_bbl_3dp_002_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | BBL/fdm_machine_common | BBL/fdm_machine_common: no usable default_filament_profile |
-| ARES_ERROR | Blocks/BLOCKS Pro S100 | Blocks/BLOCKS Pro S100 process: machine names no default preset |
-| ARES_ERROR | Blocks/BLOCKS Pro S100 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Blocks/BLOCKS Pro S100 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| DIVERGENT | Blocks/BLOCKS Pro S100 0.8 nozzle | filament 1 length differs: expected 330.86mm, actual 331.05mm |
-| DIVERGENT | Blocks/BLOCKS Pro S100 1.0 nozzle | filament 1 length differs: expected 369.41mm, actual 369.65mm |
-| DIVERGENT | Blocks/BLOCKS Pro S100 1.2 nozzle | filament 1 length differs: expected 406.66mm, actual 406.94mm |
-| ARES_ERROR | Blocks/BLOCKS RD50 V2 | Blocks/BLOCKS RD50 V2 process: machine names no default preset |
-| ARES_ERROR | Blocks/BLOCKS RD50 V2 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Blocks/BLOCKS RD50 V2 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| DIVERGENT | Blocks/BLOCKS RD50 V2 0.8 nozzle | filament 1 length differs: expected 342.42mm, actual 342.75mm |
-| ARES_ERROR | Blocks/BLOCKS RF50 | Blocks/BLOCKS RF50 process: machine names no default preset |
-| ARES_ERROR | Blocks/BLOCKS RF50 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Blocks/BLOCKS RF50 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| DIVERGENT | Blocks/BLOCKS RF50 0.8 nozzle | invalid duration "0.997496s" |
-| ARES_ERROR | Blocks/fdm_klipper_common | Blocks/fdm_klipper_common process: machine names no default preset |
-| ARES_ERROR | Blocks/fdm_machine_common | Blocks/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | CONSTRUCT3D/Construct 1 | CONSTRUCT3D/Construct 1 process: machine names no default preset |
-| ARES_ERROR | CONSTRUCT3D/Construct 1 0.4 nozzle | CONSTRUCT3D/Construct 1 0.4 nozzle process: default preset "0.22mm Quality @Construct 1" not found |
-| ARES_ERROR | CONSTRUCT3D/Construct 1 XL | CONSTRUCT3D/Construct 1 XL process: machine names no default preset |
-| ARES_ERROR | CONSTRUCT3D/Construct 1 XL 0.6 nozzle | CONSTRUCT3D/Construct 1 XL 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | CONSTRUCT3D/fdm_machine_common | CONSTRUCT3D/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Chuanying/Chuanying X1 | Chuanying/Chuanying X1 process: machine names no default preset |
-| ARES_ERROR | Chuanying/Chuanying X1 0.25 Nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Chuanying/Chuanying X1 0.4 Nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Chuanying/Chuanying X1 0.6 Nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Chuanying/Chuanying X1 0.8 Nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Chuanying/fdm_chuanying_common | Chuanying/fdm_chuanying_common process: default preset "0.20mm Standard @Chuanying X1" not found |
-| ARES_ERROR | Chuanying/fdm_klipper_common | Chuanying/fdm_klipper_common process: default preset "0.20mm Standard @Chuanying X1" not found |
-| ARES_ERROR | Chuanying/fdm_machine_common | Chuanying/fdm_machine_common process: default preset "0.20mm Standard @Chuanying X1" not found |
-| ARES_ERROR | Chuanying/fdm_x1_common | Chuanying/fdm_x1_common process: default preset "0.20mm Standard @Chuanying X1" not found |
-| ARES_ERROR | Co Print/Co Print ChromaSet | Co Print/Co Print ChromaSet process: machine names no default preset |
-| ARES_ERROR | Co Print/Co Print ChromaSet 0.4 nozzle | invalid project G-code template: unknown placeholder: initial_extruder in initial_extruder |
-| ARES_ERROR | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 | invalid project G-code template: unknown placeholder: initial_extruder in initial_extruder |
-| ARES_ERROR | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 Plus | invalid project G-code template: unknown placeholder: initial_extruder in initial_extruder |
-| ARES_ERROR | Co Print/Co Print ChromaSet 0.4 nozzle fast | invalid project G-code template: unknown placeholder: initial_extruder in initial_extruder |
-| ARES_ERROR | Co Print/fdm_coprint_common | Co Print/fdm_coprint_common process: default preset "0.20mm Standard @Co Print ChromaSet 0.4" not found |
-| ARES_ERROR | Co Print/fdm_machine_common | Co Print/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | CoLiDo/CoLiDo 160 V2 | CoLiDo/CoLiDo 160 V2 process: machine names no default preset |
-| ARES_ERROR | CoLiDo/CoLiDo 160 V2 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | CoLiDo/CoLiDo DIY 4.0 | CoLiDo/CoLiDo DIY 4.0 process: machine names no default preset |
-| ARES_ERROR | CoLiDo/CoLiDo DIY 4.0 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | CoLiDo/CoLiDo DIY 4.0 V2 | CoLiDo/CoLiDo DIY 4.0 V2 process: machine names no default preset |
-| ARES_ERROR | CoLiDo/CoLiDo DIY 4.0 V2 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | CoLiDo/CoLiDo SR1 | CoLiDo/CoLiDo SR1 process: machine names no default preset |
-| ARES_ERROR | CoLiDo/CoLiDo SR1 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | CoLiDo/CoLiDo X16 | CoLiDo/CoLiDo X16 process: machine names no default preset |
-| ARES_ERROR | CoLiDo/CoLiDo X16 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | CoLiDo/fdm_klipper_common | CoLiDo/fdm_klipper_common process: default preset "0.20mm Standard @MyKlipper" not found |
-| ARES_ERROR | CoLiDo/fdm_machine_common | CoLiDo/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Comgrow/Comgrow T300 | Comgrow/Comgrow T300 process: machine names no default preset |
-| ARES_ERROR | Comgrow/Comgrow T300 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Comgrow/Comgrow T500 | Comgrow/Comgrow T500 process: machine names no default preset |
-| DIVERGENT | Comgrow/Comgrow T500 0.4 nozzle | filament 1 length differs: expected 245.03mm, actual 244.95mm |
-| DIVERGENT | Comgrow/Comgrow T500 0.6 nozzle | filament 1 length differs: expected 304.02mm, actual 303.93mm |
-| ARES_ERROR | Comgrow/Comgrow T500 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Comgrow/fdm_comgrow_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Comgrow/fdm_machine_common | Comgrow/fdm_machine_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | Creality/Creality CR-10 Max | Creality/Creality CR-10 Max process: machine names no default preset |
-| DIVERGENT | Creality/Creality CR-10 Max 0.4 nozzle | layer 2 deposition count differs: expected 69, actual 71 |
-| ARES_ERROR | Creality/Creality CR-10 SE | Creality/Creality CR-10 SE process: machine names no default preset |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.2 nozzle | filament 1 length differs: expected 238.98mm, actual 202.18mm |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.4 nozzle | filament 1 length differs: expected 242.06mm, actual 219.11mm |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.6 nozzle | filament 1 length differs: expected 314.27mm, actual 277.47mm |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.8 nozzle | filament 1 length differs: expected 381.24mm, actual 344.44mm |
+| DIVERGENT | Artillery/Artillery Sidewinder X1 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }]], actual [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }]] |
+| DIVERGENT | Artillery/Artillery Sidewinder X2 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }]], actual [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }]] |
+| DIVERGENT | Artillery/Artillery Sidewinder X3 Plus 0.4 nozzle | filament 1 length differs: expected 267.50mm, actual 267.27mm |
+| DIVERGENT | Artillery/Artillery Sidewinder X3 Pro 0.4 nozzle | filament 1 length differs: expected 267.50mm, actual 267.27mm |
+| DIVERGENT | Artillery/Artillery Sidewinder X4 Plus 0.4 nozzle | filament 1 length differs: expected 268.45mm, actual 235.82mm |
+| DIVERGENT | Artillery/Artillery Sidewinder X4 Pro 0.4 nozzle | filament 1 length differs: expected 265.45mm, actual 235.82mm |
+| ARES_ERROR | BBL/Bambu Lab A1 0.2 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| ARES_ERROR | BBL/Bambu Lab A1 0.4 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| ARES_ERROR | BBL/Bambu Lab A1 0.6 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| ARES_ERROR | BBL/Bambu Lab A1 0.8 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| ARES_ERROR | BBL/Bambu Lab A1 mini 0.2 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| ARES_ERROR | BBL/Bambu Lab A1 mini 0.4 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| ARES_ERROR | BBL/Bambu Lab A1 mini 0.6 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| ARES_ERROR | BBL/Bambu Lab A1 mini 0.8 nozzle | invalid project timelapse G-code template: unknown placeholder: in_head_wrap_detect_zone in !in_head_wrap_detect_zone |
+| DIVERGENT | BBL/Bambu Lab H2D 0.2 nozzle | filament 1 length differs: expected 223.50mm, actual 203.49mm |
+| DIVERGENT | BBL/Bambu Lab H2D 0.4 nozzle | filament 1 length differs: expected 233.10mm, actual 213.10mm |
+| DIVERGENT | BBL/Bambu Lab H2D 0.6 nozzle | filament 1 length differs: expected 281.22mm, actual 261.23mm |
+| DIVERGENT | BBL/Bambu Lab H2D 0.8 nozzle | filament 1 length differs: expected 306.83mm, actual 286.83mm |
+| DIVERGENT | BBL/Bambu Lab H2D Pro 0.2 nozzle | filament 1 length differs: expected 223.50mm, actual 203.49mm |
+| DIVERGENT | BBL/Bambu Lab H2D Pro 0.4 nozzle | filament 1 length differs: expected 233.10mm, actual 213.10mm |
+| DIVERGENT | BBL/Bambu Lab H2D Pro 0.6 nozzle | filament 1 length differs: expected 179.93mm, actual 159.94mm |
+| DIVERGENT | BBL/Bambu Lab H2D Pro 0.8 nozzle | filament 1 length differs: expected 306.83mm, actual 286.83mm |
+| DIVERGENT | BBL/Bambu Lab H2S 0.2 nozzle | filament 1 length differs: expected 223.50mm, actual 203.49mm |
+| DIVERGENT | BBL/Bambu Lab H2S 0.4 nozzle | filament 1 length differs: expected 233.10mm, actual 213.10mm |
+| DIVERGENT | BBL/Bambu Lab H2S 0.6 nozzle | filament 1 length differs: expected 281.22mm, actual 261.23mm |
+| DIVERGENT | BBL/Bambu Lab H2S 0.8 nozzle | filament 1 length differs: expected 306.83mm, actual 286.83mm |
+| DIVERGENT | BBL/Bambu Lab P1P 0.2 nozzle | filament 1 length differs: expected 234.90mm, actual 341.09mm |
+| DIVERGENT | BBL/Bambu Lab P1P 0.4 nozzle | filament 1 length differs: expected 244.50mm, actual 350.70mm |
+| DIVERGENT | BBL/Bambu Lab P1P 0.6 nozzle | filament 1 length differs: expected 313.56mm, actual 419.76mm |
+| DIVERGENT | BBL/Bambu Lab P1P 0.8 nozzle | filament 1 length differs: expected 349.83mm, actual 456.13mm |
+| DIVERGENT | BBL/Bambu Lab P1S 0.2 nozzle | filament 1 length differs: expected 234.90mm, actual 341.09mm |
+| DIVERGENT | BBL/Bambu Lab P1S 0.4 nozzle | filament 1 length differs: expected 244.50mm, actual 350.70mm |
+| DIVERGENT | BBL/Bambu Lab P1S 0.6 nozzle | filament 1 length differs: expected 313.56mm, actual 419.76mm |
+| DIVERGENT | BBL/Bambu Lab P1S 0.8 nozzle | filament 1 length differs: expected 349.83mm, actual 456.13mm |
+| DIVERGENT | BBL/Bambu Lab P2S 0.2 nozzle | preamble differs at line 24: expected Some(";M1002 set_flag extrude_cali_flag=1"), actual Some("M106 S0") |
+| DIVERGENT | BBL/Bambu Lab P2S 0.4 nozzle | preamble differs at line 24: expected Some(";M1002 set_flag extrude_cali_flag=1"), actual Some("M106 S0") |
+| DIVERGENT | BBL/Bambu Lab P2S 0.6 nozzle | preamble differs at line 24: expected Some(";M1002 set_flag extrude_cali_flag=1"), actual Some("M106 S0") |
+| DIVERGENT | BBL/Bambu Lab P2S 0.8 nozzle | preamble differs at line 24: expected Some(";M1002 set_flag extrude_cali_flag=1"), actual Some("M106 S0") |
+| DIVERGENT | BBL/Bambu Lab X1 0.2 nozzle | filament 1 length differs: expected 313.21mm, actual 342.49mm |
+| DIVERGENT | BBL/Bambu Lab X1 0.4 nozzle | filament 1 length differs: expected 322.81mm, actual 352.10mm |
+| DIVERGENT | BBL/Bambu Lab X1 0.6 nozzle | filament 1 length differs: expected 440.45mm, actual 411.63mm |
+| DIVERGENT | BBL/Bambu Lab X1 0.8 nozzle | filament 1 length differs: expected 490.58mm, actual 442.66mm |
+| DIVERGENT | BBL/Bambu Lab X1 Carbon 0.2 nozzle | filament 1 length differs: expected 313.21mm, actual 342.49mm |
+| DIVERGENT | BBL/Bambu Lab X1 Carbon 0.4 nozzle | filament 1 length differs: expected 322.81mm, actual 352.10mm |
+| DIVERGENT | BBL/Bambu Lab X1 Carbon 0.6 nozzle | filament 1 length differs: expected 440.45mm, actual 411.63mm |
+| DIVERGENT | BBL/Bambu Lab X1 Carbon 0.8 nozzle | filament 1 length differs: expected 490.58mm, actual 442.66mm |
+| DIVERGENT | BBL/Bambu Lab X1E 0.2 nozzle | filament 1 length differs: expected 323.11mm, actual 352.39mm |
+| DIVERGENT | BBL/Bambu Lab X1E 0.4 nozzle | filament 1 length differs: expected 322.81mm, actual 352.10mm |
+| DIVERGENT | BBL/Bambu Lab X1E 0.6 nozzle | filament 1 length differs: expected 450.35mm, actual 421.53mm |
+| DIVERGENT | BBL/Bambu Lab X1E 0.8 nozzle | filament 1 length differs: expected 500.48mm, actual 452.56mm |
+| DIVERGENT | BBL/Bambu Lab X2D 0.2 nozzle | preamble differs at line 323: expected Some("M620.17 T0 S220 L-1"), actual Some("M620.17 T0 S220 L0") |
+| DIVERGENT | BBL/Bambu Lab X2D 0.4 nozzle | preamble differs at line 323: expected Some("M620.17 T0 S220 L-1"), actual Some("M620.17 T0 S220 L0") |
+| DIVERGENT | BBL/Bambu Lab X2D 0.6 nozzle | preamble differs at line 323: expected Some("M620.17 T0 S220 L-1"), actual Some("M620.17 T0 S220 L0") |
+| DIVERGENT | BBL/Bambu Lab X2D 0.8 nozzle | preamble differs at line 323: expected Some("M620.17 T0 S220 L-1"), actual Some("M620.17 T0 S220 L0") |
+| DIVERGENT | BIQU/BIQU B1 (0.4 nozzle) | filament 1 length differs: expected 278.60mm, actual 248.60mm |
+| DIVERGENT | BIQU/BIQU BX (0.4 nozzle) | filament 1 length differs: expected 278.60mm, actual 248.60mm |
+| DIVERGENT | BIQU/BIQU Hurakan (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT EXTRUDER_TEMP=220 BED_TEMP=35"), actual Some("M201 X3000 Y3000 Z500 E10000") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X5000 Y5000 Z500 E5000") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X5000 Y5000 Z500 E5000") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X5000 Y5000 Z500 E5000") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X5000 Y5000 Z500 E5000") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 1.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X5000 Y5000 Z500 E5000") |
+| DIVERGENT | Blocks/BLOCKS RD50 V2 0.4 nozzle | filament 1 length differs: expected 242.61mm, actual 242.80mm |
+| DIVERGENT | Blocks/BLOCKS RD50 V2 0.6 nozzle | filament 1 length differs: expected 313.34mm, actual 313.52mm |
+| DIVERGENT | Blocks/BLOCKS RD50 V2 0.8 nozzle | filament 1 length differs: expected 342.42mm, actual 342.61mm |
+| DIVERGENT | Blocks/BLOCKS RF50 0.4 nozzle | filament 1 length differs: expected 246.04mm, actual 246.96mm |
+| DIVERGENT | Blocks/BLOCKS RF50 0.6 nozzle | filament 1 length differs: expected 310.56mm, actual 310.33mm |
+| DIVERGENT | Blocks/BLOCKS RF50 0.8 nozzle | filament 1 length differs: expected 335.39mm, actual 335.20mm |
+| DIVERGENT | CONSTRUCT3D/Construct 1 0.4 nozzle | filament 1 length differs: expected 248.22mm, actual 246.69mm |
+| DIVERGENT | CONSTRUCT3D/Construct 1 XL 0.6 nozzle | filament 1 length differs: expected 315.66mm, actual 313.08mm |
+| DIVERGENT | Chuanying/Chuanying X1 0.25 Nozzle | filament 1 length differs: expected 211.26mm, actual 218.26mm |
+| DIVERGENT | Chuanying/Chuanying X1 0.4 Nozzle | filament 1 length differs: expected 248.82mm, actual 250.61mm |
+| DIVERGENT | Chuanying/Chuanying X1 0.6 Nozzle | filament 1 length differs: expected 311.97mm, actual 313.78mm |
+| DIVERGENT | Chuanying/Chuanying X1 0.8 Nozzle | filament 1 length differs: expected 321.64mm, actual 360.15mm |
+| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle | filament 1 length differs: expected 213.61mm, actual 214.34mm |
+| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 | filament 1 length differs: expected 213.61mm, actual 214.34mm |
+| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 Plus | filament 1 length differs: expected 213.61mm, actual 214.34mm |
+| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle fast | filament 1 length differs: expected 213.61mm, actual 214.34mm |
+| DIVERGENT | CoLiDo/CoLiDo 160 V2 0.4 nozzle | filament 1 length differs: expected 235.62mm, actual 237.82mm |
+| DIVERGENT | CoLiDo/CoLiDo DIY 4.0 0.4 nozzle | preamble differs at line 18: expected Some("PRINT_START EXTRUDER=220 BED=35 SPEED_WALL=50"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | CoLiDo/CoLiDo DIY 4.0 V2 0.4 nozzle | filament 1 length differs: expected 245.86mm, actual 243.57mm |
+| DIVERGENT | CoLiDo/CoLiDo SR1 0.4 nozzle | filament 1 length differs: expected 266.79mm, actual 264.30mm |
+| DIVERGENT | CoLiDo/CoLiDo X16 0.4 nozzle | filament 1 length differs: expected 235.62mm, actual 237.82mm |
+| DIVERGENT | Comgrow/Comgrow T300 0.4 nozzle | filament 1 length differs: expected 326.53mm, actual 347.62mm |
+| DIVERGENT | Comgrow/Comgrow T500 0.4 nozzle | preamble differs at line 18: expected Some("G90"), actual Some("M201 X3000 Y3000 Z500 E5000") |
+| DIVERGENT | Comgrow/Comgrow T500 0.6 nozzle | preamble differs at line 18: expected Some("G90"), actual Some("M201 X3000 Y3000 Z500 E5000") |
+| DIVERGENT | Comgrow/Comgrow T500 0.8 nozzle | preamble differs at line 18: expected Some("G90"), actual Some("M201 X3000 Y3000 Z500 E5000") |
+| DIVERGENT | Creality/Creality CR-10 Max 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "228.586", y: "227.344", z: "0.4" }, end: Position { x: "227.373", y: "228.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "228.586", y: "227.344", z: "0.4" }, end: Position { x: "227.344", y: "228.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 2400.0, acceleration: "500", fans: "0:255" } |
 | ARES_ERROR | Creality/Creality CR-10 SE 0.2 nozzle | orca-slicer failed (exit status: 205): Too small line width |
-| ARES_ERROR | Creality/Creality CR-10 SE 0.4 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Creality/Creality CR-10 SE 0.6 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Creality/Creality CR-10 SE 0.8 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Creality/Creality CR-10 V2 | Creality/Creality CR-10 V2 process: machine names no default preset |
-| DIVERGENT | Creality/Creality CR-10 V2 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality CR-10 V3 | Creality/Creality CR-10 V3 process: machine names no default preset |
-| DIVERGENT | Creality/Creality CR-10 V3 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| DIVERGENT | Creality/Creality CR-10 V3 0.6 nozzle | layer 2 deposition count differs: expected 77, actual 78 |
-| ARES_ERROR | Creality/Creality CR-6 Max | Creality/Creality CR-6 Max process: machine names no default preset |
-| ARES_ERROR | Creality/Creality CR-6 Max 0.2 nozzle | Creality/Creality CR-6 Max 0.2 nozzle process: default preset "0.16mm Opitmal @Creality CR-6 0.2" not found |
-| DIVERGENT | Creality/Creality CR-6 Max 0.4 nozzle | layer 2 deposition count differs: expected 69, actual 71 |
-| DIVERGENT | Creality/Creality CR-6 Max 0.6 nozzle | layer 2 deposition count differs: expected 41, actual 42 |
-| DIVERGENT | Creality/Creality CR-6 Max 0.8 nozzle | layer 2 deposition count differs: expected 37, actual 38 |
-| ARES_ERROR | Creality/Creality CR-6 SE | Creality/Creality CR-6 SE process: machine names no default preset |
-| ARES_ERROR | Creality/Creality CR-6 SE 0.2 nozzle | Creality/Creality CR-6 SE 0.2 nozzle process: default preset "0.16mm Opitmal @Creality CR-6 0.2" not found |
-| DIVERGENT | Creality/Creality CR-6 SE 0.4 nozzle | layer 2 deposition count differs: expected 69, actual 71 |
-| DIVERGENT | Creality/Creality CR-6 SE 0.6 nozzle | layer 2 deposition count differs: expected 41, actual 42 |
-| DIVERGENT | Creality/Creality CR-6 SE 0.8 nozzle | layer 2 deposition count differs: expected 37, actual 38 |
-| ARES_ERROR | Creality/Creality CR-M4 | Creality/Creality CR-M4 process: machine names no default preset |
-| DIVERGENT | Creality/Creality CR-M4 0.4 nozzle | invalid G-code number "" |
-| ARES_ERROR | Creality/Creality Ender-3 | Creality/Creality Ender-3 process: machine names no default preset |
+| DIVERGENT | Creality/Creality CR-10 SE 0.4 nozzle | filament 1 length differs: expected 239.14mm, actual 253.14mm |
+| DIVERGENT | Creality/Creality CR-10 SE 0.6 nozzle | filament 1 length differs: expected 298.78mm, actual 312.79mm |
+| DIVERGENT | Creality/Creality CR-10 SE 0.8 nozzle | filament 1 length differs: expected 313.90mm, actual 327.90mm |
+| PASS | Creality/Creality CR-10 V2 0.4 nozzle |  |
+| PASS | Creality/Creality CR-10 V3 0.4 nozzle |  |
+| DIVERGENT | Creality/Creality CR-10 V3 0.6 nozzle | layer 2 deposition 6 differs: expected Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "158.485", y: "157.643", z: "0.4" }, end: Position { x: "157.686", y: "158.443", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.0454", feed: 2184.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "158.485", y: "157.643", z: "0.4" }, end: Position { x: "157.643", y: "158.485", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04781", feed: 2183.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Creality/Creality CR-6 Max 0.2 nozzle | filament 1 length differs: expected 195.68mm, actual 195.86mm |
+| DIVERGENT | Creality/Creality CR-6 Max 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "203.586", y: "202.344", z: "0.4" }, end: Position { x: "202.373", y: "203.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "203.586", y: "202.344", z: "0.4" }, end: Position { x: "202.344", y: "203.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Creality/Creality CR-6 Max 0.6 nozzle | layer 2 deposition 10 differs: expected Deposition { feature: "Internal solid infill", width: "0.544606", motion: MotionRecord { command: "G1", start: Position { x: "202.834", y: "201.977", z: "0.5" }, end: Position { x: "202.02", y: "202.791", z: "0.5" }, arc_center: [None, None], turns: None }, extrusion: "0.04706", feed: 1372.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.544606", motion: MotionRecord { command: "G1", start: Position { x: "202.834", y: "201.977", z: "0.5" }, end: Position { x: "201.977", y: "202.834", z: "0.5" }, arc_center: [None, None], turns: None }, extrusion: "0.04951", feed: 1374.0, acceleration: "500", fans: "0:255" } |
+| PASS | Creality/Creality CR-6 Max 0.8 nozzle |  |
+| DIVERGENT | Creality/Creality CR-6 SE 0.2 nozzle | filament 1 length differs: expected 195.68mm, actual 195.86mm |
+| DIVERGENT | Creality/Creality CR-6 SE 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "121.086", y: "119.844", z: "0.4" }, end: Position { x: "119.873", y: "121.058", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "121.086", y: "119.844", z: "0.4" }, end: Position { x: "119.844", y: "121.086", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Creality/Creality CR-6 SE 0.6 nozzle | layer 2 deposition 10 differs: expected Deposition { feature: "Internal solid infill", width: "0.544606", motion: MotionRecord { command: "G1", start: Position { x: "120.334", y: "119.477", z: "0.5" }, end: Position { x: "119.52", y: "120.291", z: "0.5" }, arc_center: [None, None], turns: None }, extrusion: "0.04706", feed: 1372.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.544606", motion: MotionRecord { command: "G1", start: Position { x: "120.334", y: "119.477", z: "0.5" }, end: Position { x: "119.477", y: "120.334", z: "0.5" }, arc_center: [None, None], turns: None }, extrusion: "0.04951", feed: 1374.0, acceleration: "500", fans: "0:255" } |
+| PASS | Creality/Creality CR-6 SE 0.8 nozzle |  |
+| DIVERGENT | Creality/Creality CR-M4 0.4 nozzle | filament 1 length differs: expected 242.08mm, actual 256.08mm |
 | ARES_ERROR | Creality/Creality Ender-3 0.2 nozzle | orca-slicer failed (exit status: 205): Too small line width |
-| DIVERGENT | Creality/Creality Ender-3 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| DIVERGENT | Creality/Creality Ender-3 0.6 nozzle | layer 2 deposition count differs: expected 77, actual 78 |
-| DIVERGENT | Creality/Creality Ender-3 0.8 nozzle | layer 2 deposition count differs: expected 70, actual 72 |
-| ARES_ERROR | Creality/Creality Ender-3 Pro | Creality/Creality Ender-3 Pro process: machine names no default preset |
+| PASS | Creality/Creality Ender-3 0.4 nozzle |  |
+| DIVERGENT | Creality/Creality Ender-3 0.6 nozzle | layer 2 deposition 6 differs: expected Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "113.485", y: "112.643", z: "0.4" }, end: Position { x: "112.686", y: "113.443", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.0454", feed: 2350.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "113.485", y: "112.643", z: "0.4" }, end: Position { x: "112.643", y: "113.485", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04781", feed: 2349.0, acceleration: "500", fans: "0:255" } |
+| PASS | Creality/Creality Ender-3 0.8 nozzle |  |
 | ARES_ERROR | Creality/Creality Ender-3 Pro 0.2 nozzle | orca-slicer failed (exit status: 205): Too small line width |
-| DIVERGENT | Creality/Creality Ender-3 Pro 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| DIVERGENT | Creality/Creality Ender-3 Pro 0.6 nozzle | layer 2 deposition count differs: expected 77, actual 78 |
-| DIVERGENT | Creality/Creality Ender-3 Pro 0.8 nozzle | layer 2 deposition count differs: expected 70, actual 72 |
-| ARES_ERROR | Creality/Creality Ender-3 S1 | Creality/Creality Ender-3 S1 process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-3 S1 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality Ender-3 S1 Plus | Creality/Creality Ender-3 S1 Plus process: machine names no default preset |
+| PASS | Creality/Creality Ender-3 Pro 0.4 nozzle |  |
+| DIVERGENT | Creality/Creality Ender-3 Pro 0.6 nozzle | layer 2 deposition 6 differs: expected Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "113.485", y: "112.643", z: "0.4" }, end: Position { x: "112.686", y: "113.443", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.0454", feed: 2350.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "113.485", y: "112.643", z: "0.4" }, end: Position { x: "112.643", y: "113.485", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04781", feed: 2349.0, acceleration: "500", fans: "0:255" } |
+| PASS | Creality/Creality Ender-3 Pro 0.8 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 0.4 nozzle |  |
 | ARES_ERROR | Creality/Creality Ender-3 S1 Plus 0.2 nozzle | orca-slicer failed (exit status: 205): Too small line width |
-| ARES_ERROR | Creality/Creality Ender-3 S1 Plus 0.4 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Creality/Creality Ender-3 S1 Plus 0.6 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Creality/Creality Ender-3 S1 Plus 0.8 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Creality/Creality Ender-3 S1 Pro | Creality/Creality Ender-3 S1 Pro process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-3 S1 Pro 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality Ender-3 V2 | Creality/Creality Ender-3 V2 process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-3 V2 0.4 nozzle | layer 2 deposition count differs: expected 69, actual 71 |
-| ARES_ERROR | Creality/Creality Ender-3 V2 Neo | Creality/Creality Ender-3 V2 Neo process: machine names no default preset |
-| ARES_ERROR | Creality/Creality Ender-3 V2 Neo 0.4 nozzle | Creality/Creality Ender-3 V2 Neo 0.4 nozzle process: default preset "0.20mm Standard @Creality Ender3V2 Neo" not found |
-| ARES_ERROR | Creality/Creality Ender-3 V3 | Creality/Creality Ender-3 V3 process: machine names no default preset |
-| ARES_ERROR | Creality/Creality Ender-3 V3 0.4 nozzle | Creality/Creality Ender-3 V3 0.4 nozzle process: default preset "0.20mm Standard @Creality Ender3 V3" not found |
-| ARES_ERROR | Creality/Creality Ender-3 V3 0.6 nozzle | Creality/Creality Ender-3 V3 0.6 nozzle process: default preset "0.30mm Standard @Creality Ender3 V3" not found |
-| ARES_ERROR | Creality/Creality Ender-3 V3 KE | Creality/Creality Ender-3 V3 KE process: machine names no default preset |
+| PASS | Creality/Creality Ender-3 S1 Plus 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Plus 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Plus 0.8 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Pro 0.4 nozzle |  |
+| DIVERGENT | Creality/Creality Ender-3 V2 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.373", y: "113.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.344", y: "113.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Creality/Creality Ender-3 V2 Neo 0.4 nozzle | filament 1 length differs: expected 278.60mm, actual 292.60mm |
+| DIVERGENT | Creality/Creality Ender-3 V3 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y5000 Z20000 E5000") |
+| DIVERGENT | Creality/Creality Ender-3 V3 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y5000 Z20000 E5000") |
 | ARES_ERROR | Creality/Creality Ender-3 V3 KE 0.2 nozzle | orca-slicer failed (exit status: 205): Too small line width |
-| ARES_ERROR | Creality/Creality Ender-3 V3 KE 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Creality/Creality Ender-3 V3 KE 0.6 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Creality/Creality Ender-3 V3 KE 0.8 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Creality/Creality Ender-3 V3 Plus | Creality/Creality Ender-3 V3 Plus process: machine names no default preset |
-| ARES_ERROR | Creality/Creality Ender-3 V3 Plus 0.4 nozzle | Creality/Creality Ender-3 V3 Plus 0.4 nozzle process: default preset "0.20mm Standard @Creality Ender3 V3 Plus" not found |
-| ARES_ERROR | Creality/Creality Ender-3 V3 Plus 0.6 nozzle | Creality/Creality Ender-3 V3 Plus 0.6 nozzle process: default preset "0.30mm Standard @Creality Ender3 V3 Plus" not found |
-| ARES_ERROR | Creality/Creality Ender-3 V3 SE | Creality/Creality Ender-3 V3 SE process: machine names no default preset |
+| DIVERGENT | Creality/Creality Ender-3 V3 KE 0.4 nozzle | filament 1 length differs: expected 229.79mm, actual 244.79mm |
+| DIVERGENT | Creality/Creality Ender-3 V3 KE 0.6 nozzle | filament 1 length differs: expected 303.83mm, actual 318.83mm |
+| DIVERGENT | Creality/Creality Ender-3 V3 KE 0.8 nozzle | filament 1 length differs: expected 318.39mm, actual 333.39mm |
+| DIVERGENT | Creality/Creality Ender-3 V3 Plus 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Creality/Creality Ender-3 V3 Plus 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
 | ARES_ERROR | Creality/Creality Ender-3 V3 SE 0.2 nozzle | orca-slicer failed (exit status: 205): Too small line width |
-| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.4 nozzle | invalid G-code number "" |
-| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.6 nozzle | invalid G-code number "" |
-| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.8 nozzle | invalid G-code number "" |
-| ARES_ERROR | Creality/Creality Ender-3 V4 | Creality/Creality Ender-3 V4 process: machine names no default preset |
-| ARES_ERROR | Creality/Creality Ender-3 V4 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality Ender-5 | Creality/Creality Ender-5 process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-5 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality Ender-5 Max | Creality/Creality Ender-5 Max process: machine names no default preset |
-| ARES_ERROR | Creality/Creality Ender-5 Max 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality Ender-5 Max 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality Ender-5 Max 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality Ender-5 Plus | Creality/Creality Ender-5 Plus process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-5 Plus 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality Ender-5 Pro (2019) | Creality/Creality Ender-5 Pro (2019) process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.2 nozzle | layer 2 deposition count differs: expected 126, actual 127 |
+| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.4 nozzle | filament 1 length differs: expected 243.18mm, actual 257.18mm |
+| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.6 nozzle | filament 1 length differs: expected 305.35mm, actual 319.35mm |
+| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.8 nozzle | filament 1 length differs: expected 316.31mm, actual 330.31mm |
+| DIVERGENT | Creality/Creality Ender-3 V4 0.4 nozzle | filament 1 length differs: expected 224.33mm, actual 224.19mm |
+| PASS | Creality/Creality Ender-5 0.4 nozzle |  |
+| DIVERGENT | Creality/Creality Ender-5 Max 0.4 nozzle | filament 1 length differs: expected 232.02mm, actual 237.88mm |
+| DIVERGENT | Creality/Creality Ender-5 Max 0.6 nozzle | filament 1 length differs: expected 284.86mm, actual 290.39mm |
+| DIVERGENT | Creality/Creality Ender-5 Max 0.8 nozzle | filament 1 length differs: expected 335.42mm, actual 340.54mm |
+| PASS | Creality/Creality Ender-5 Plus 0.4 nozzle |  |
+| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.2 nozzle | layer 2 deposition 22 differs: expected Deposition { feature: "Internal solid infill", width: "0.211454", motion: MotionRecord { command: "G1", start: Position { x: "113.209", y: "112.907", z: "0.28" }, end: Position { x: "112.921", y: "113.195", z: "0.28" }, arc_center: [None, None], turns: None }, extrusion: "0.00471", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.211454", motion: MotionRecord { command: "G1", start: Position { x: "113.209", y: "112.907", z: "0.28" }, end: Position { x: "112.907", y: "113.209", z: "0.28" }, arc_center: [None, None], turns: None }, extrusion: "0.00494", feed: 2400.0, acceleration: "500", fans: "0:255" } |
 | DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.25 nozzle | layer 2 deposition 17 differs: expected Deposition { feature: "Internal solid infill", width: "0.232655", motion: MotionRecord { command: "G1", start: Position { x: "107.036", y: "107.036", z: "0.32" }, end: Position { x: "107.036", y: "107.36", z: "0.32" }, arc_center: [None, None], turns: None }, extrusion: "0.00501", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.232655", motion: MotionRecord { command: "G1", start: Position { x: "107.036", y: "107.036", z: "0.32" }, end: Position { x: "107.036", y: "107.335", z: "0.32" }, arc_center: [None, None], turns: None }, extrusion: "0.00462", feed: 2400.0, acceleration: "500", fans: "0:255" } |
 | DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.3 nozzle | layer 2 deposition 13 differs: expected Deposition { feature: "Internal solid infill", width: "0.321924", motion: MotionRecord { command: "G1", start: Position { x: "106.906", y: "106.906", z: "0.4" }, end: Position { x: "106.906", y: "107.383", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.01083", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.321924", motion: MotionRecord { command: "G1", start: Position { x: "106.906", y: "106.906", z: "0.4" }, end: Position { x: "106.906", y: "107.353", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.01015", feed: 2400.0, acceleration: "500", fans: "0:255" } |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.4 nozzle | layer 2 deposition count differs: expected 69, actual 71 |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.5 nozzle | layer 2 deposition count differs: expected 51, actual 52 |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.6 nozzle | layer 2 deposition count differs: expected 43, actual 44 |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.8 nozzle | layer 1 deposition 1 differs: expected Deposition { feature: "Bottom surface", width: "0.840435", motion: MotionRecord { command: "G1", start: Position { x: "106.838", y: "106.838", z: "0.32" }, end: Position { x: "113.161", y: "113.162", z: "0.32" }, arc_center: [None, None], turns: None }, extrusion: "0.89977", feed: 1200.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.840435", motion: MotionRecord { command: "G1", start: Position { x: "106.838", y: "106.838", z: "0.32" }, end: Position { x: "113.161", y: "113.162", z: "0.32" }, arc_center: [None, None], turns: None }, extrusion: "0.89976", feed: 1200.0, acceleration: "500", fans: "0:0" } |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 1.0 nozzle | layer 2 travel geometry differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "113.475", y: "114.386", z: "0.6" }, end: Position { x: "113.475", y: "114.386", z: "1" }, arc_center: [None, None], turns: None }, feed: 9000.0, acceleration: "700" } |
-| ARES_ERROR | Creality/Creality Ender-5 S1 | Creality/Creality Ender-5 S1 process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-5 S1 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality Ender-5S | Creality/Creality Ender-5S process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-5S 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality Ender-6 | Creality/Creality Ender-6 process: machine names no default preset |
-| DIVERGENT | Creality/Creality Ender-6 0.4 nozzle | layer 2 deposition count differs: expected 97, actual 99 |
-| ARES_ERROR | Creality/Creality Hi | Creality/Creality Hi process: machine names no default preset |
-| ARES_ERROR | Creality/Creality Hi 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality Hi 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality Hi 0.6 nozzle | unsupported project feature: only_one_wall_first_layer |
-| ARES_ERROR | Creality/Creality Hi 0.8 nozzle | unsupported project feature: only_one_wall_first_layer |
-| ARES_ERROR | Creality/Creality K1 | Creality/Creality K1 process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1 (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1 (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1 (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1 Max | Creality/Creality K1 Max process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1 Max (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1 Max (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1 Max (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1 Max_CFS-C | Creality/Creality K1 Max_CFS-C process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1 Max_CFS-C 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1 SE | Creality/Creality K1 SE process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1 SE 0.4 nozzle | Creality/Creality K1 SE 0.4 nozzle process: default preset "0.20mm Standard @Creality K1 SE 0.4" not found |
-| ARES_ERROR | Creality/Creality K1 SE 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
+| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.373", y: "113.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.344", y: "113.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.5 nozzle | layer 2 deposition 10 differs: expected Deposition { feature: "Internal solid infill", width: "0.470902", motion: MotionRecord { command: "G1", start: Position { x: "113.23", y: "112.5", z: "0.4" }, end: Position { x: "112.535", y: "113.195", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03429", feed: 1705.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.470902", motion: MotionRecord { command: "G1", start: Position { x: "113.23", y: "112.5", z: "0.4" }, end: Position { x: "112.5", y: "113.23", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03603", feed: 1704.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.6 nozzle | layer 2 deposition 6 differs: expected Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "113.485", y: "112.643", z: "0.4" }, end: Position { x: "112.686", y: "113.443", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.0454", feed: 1391.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.535899", motion: MotionRecord { command: "G1", start: Position { x: "113.485", y: "112.643", z: "0.4" }, end: Position { x: "112.643", y: "113.485", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04781", feed: 1390.0, acceleration: "500", fans: "0:255" } |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.8 nozzle |  |
+| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 1.0 nozzle | layer 2 travel acceleration differs: expected {"700"}, actual {"500", "700"} |
+| PASS | Creality/Creality Ender-5 S1 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-5S 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-6 0.4 nozzle |  |
+| DIVERGENT | Creality/Creality Hi 0.2 nozzle | filament 1 length differs: expected 213.61mm, actual 214.61mm |
+| DIVERGENT | Creality/Creality Hi 0.4 nozzle | filament 1 length differs: expected 236.93mm, actual 237.61mm |
+| DIVERGENT | Creality/Creality Hi 0.6 nozzle | filament 1 length differs: expected 289.04mm, actual 289.50mm |
+| DIVERGENT | Creality/Creality Hi 0.8 nozzle | filament 1 length differs: expected 347.18mm, actual 347.25mm |
+| DIVERGENT | Creality/Creality K1 (0.4 nozzle) | filament 1 length differs: expected 221.49mm, actual 221.36mm |
+| DIVERGENT | Creality/Creality K1 (0.6 nozzle) | filament 1 length differs: expected 274.59mm, actual 274.27mm |
+| DIVERGENT | Creality/Creality K1 (0.8 nozzle) | filament 1 length differs: expected 326.67mm, actual 326.09mm |
+| DIVERGENT | Creality/Creality K1 Max (0.4 nozzle) | filament 1 length differs: expected 221.49mm, actual 221.36mm |
+| DIVERGENT | Creality/Creality K1 Max (0.6 nozzle) | filament 1 length differs: expected 273.53mm, actual 274.27mm |
+| DIVERGENT | Creality/Creality K1 Max (0.8 nozzle) | filament 1 length differs: expected 327.12mm, actual 328.86mm |
+| DIVERGENT | Creality/Creality K1 Max_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.71mm, actual 214.59mm |
+| DIVERGENT | Creality/Creality K1 SE 0.4 nozzle | filament 1 length differs: expected 221.76mm, actual 221.63mm |
+| DIVERGENT | Creality/Creality K1 SE 0.6 nozzle | filament 1 length differs: expected 262.80mm, actual 262.49mm |
 | ARES_ERROR | Creality/Creality K1 SE 0.8 nozzle | Creality/Creality K1 SE 0.8 nozzle process: default preset "0.40mm Standard @Creality K1 SE 0.8 nozzle" not found |
-| ARES_ERROR | Creality/Creality K1 SE_CFS-C | Creality/Creality K1 SE_CFS-C process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1 SE_CFS-C 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1C | Creality/Creality K1C process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1C 0.4 nozzle | Creality/Creality K1C 0.4 nozzle process: default preset "0.20mm Standard @Creality K1C (0.4 nozzle)" not found |
-| ARES_ERROR | Creality/Creality K1C 0.6 nozzle | Creality/Creality K1C 0.6 nozzle process: default preset "0.30mm Standard @Creality K1C (0.6 nozzle)" not found |
-| ARES_ERROR | Creality/Creality K1C 0.8 nozzle | Creality/Creality K1C 0.8 nozzle process: default preset "0.40mm Standard @Creality K1C (0.8 nozzle)" not found |
-| ARES_ERROR | Creality/Creality K1C_CFS-C | Creality/Creality K1C_CFS-C process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1C_CFS-C 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K1_CFS-C | Creality/Creality K1_CFS-C process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K1_CFS-C 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 | Creality/Creality K2 process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K2 0.2 nozzle | Creality/Creality K2 0.2 nozzle process: default preset "0.10mm Standard @Creality K2 0.2 nozzle" not found |
+| DIVERGENT | Creality/Creality K1 SE_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.97mm, actual 214.85mm |
+| DIVERGENT | Creality/Creality K1C 0.4 nozzle | filament 1 length differs: expected 221.49mm, actual 221.36mm |
+| DIVERGENT | Creality/Creality K1C 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y20000 Z300 E5000") |
+| DIVERGENT | Creality/Creality K1C 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y20000 Z300 E5000") |
+| DIVERGENT | Creality/Creality K1C_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.71mm, actual 214.59mm |
+| DIVERGENT | Creality/Creality K1_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.71mm, actual 214.59mm |
+| DIVERGENT | Creality/Creality K2 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=130,130 POLYGON=[[125,125],[135,125],[135,135],[125,135],[125,125]]"), actual Some("M201 X20000 Y20000 Z100 E5000") |
 | ARES_ERROR | Creality/Creality K2 0.4 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 30 not in range [10.000000,18.000000] |
-| ARES_ERROR | Creality/Creality K2 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 Plus | Creality/Creality K2 Plus process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K2 Plus 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 Plus 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 Plus 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 Plus 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 Pro | Creality/Creality K2 Pro process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K2 Pro 0.2 nozzle | Creality/Creality K2 Pro 0.2 nozzle process: default preset "0.16mm Optimal @Creality K2 Pro 0.2 nozzle" not found |
-| ARES_ERROR | Creality/Creality K2 Pro 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 Pro 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 Pro 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality K2 SE | Creality/Creality K2 SE process: machine names no default preset |
-| ARES_ERROR | Creality/Creality K2 SE 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Creality/Creality SPARKX i7 | Creality/Creality SPARKX i7 process: machine names no default preset |
+| DIVERGENT | Creality/Creality K2 0.6 nozzle | filament 1 length differs: expected 296.89mm, actual 296.58mm |
+| DIVERGENT | Creality/Creality K2 0.8 nozzle | filament 1 length differs: expected 355.33mm, actual 354.58mm |
+| DIVERGENT | Creality/Creality K2 Plus 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X30000 Y30000 Z1000 E5000") |
+| DIVERGENT | Creality/Creality K2 Plus 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X30000 Y30000 Z1000 E5000") |
+| DIVERGENT | Creality/Creality K2 Plus 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X30000 Y30000 Z1000 E5000") |
+| DIVERGENT | Creality/Creality K2 Plus 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X30000 Y30000 Z1000 E5000") |
+| DIVERGENT | Creality/Creality K2 Pro 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z300 E5000") |
+| DIVERGENT | Creality/Creality K2 Pro 0.4 nozzle | filament 1 length differs: expected 245.22mm, actual 245.10mm |
+| DIVERGENT | Creality/Creality K2 Pro 0.6 nozzle | filament 1 length differs: expected 296.18mm, actual 295.87mm |
+| DIVERGENT | Creality/Creality K2 Pro 0.8 nozzle | filament 1 length differs: expected 355.03mm, actual 354.28mm |
+| DIVERGENT | Creality/Creality K2 SE 0.4 nozzle | filament 1 length differs: expected 244.32mm, actual 244.59mm |
 | ARES_ERROR | Creality/Creality SPARKX i7 0.2 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 28 not in range [10.000000,18.000000] |
 | ARES_ERROR | Creality/Creality SPARKX i7 0.4 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 28 not in range [10.000000,18.000000] |
 | ARES_ERROR | Creality/Creality SPARKX i7 0.6 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 28 not in range [10.000000,18.000000] |
 | ARES_ERROR | Creality/Creality SPARKX i7 0.8 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 28 not in range [10.000000,18.000000] |
-| ARES_ERROR | Creality/Creality Sermoon V1 | Creality/Creality Sermoon V1 process: machine names no default preset |
-| ARES_ERROR | Creality/Creality Sermoon V1 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Creality/fdm_creality_common | Creality/fdm_creality_common process: default preset "0.20mm Standard @Creality" not found |
-| ARES_ERROR | Creality/fdm_machine_common | Creality/fdm_machine_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | Cubicon/Cubicon xCeler-I | Cubicon/Cubicon xCeler-I process: machine names no default preset |
-| ARES_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Cubicon/Cubicon xCeler-I 0.4 nozzle process: default preset "cubicon default @base" not found |
-| ARES_ERROR | Cubicon/Cubicon xCeler-Mini | Cubicon/Cubicon xCeler-Mini process: machine names no default preset |
-| ARES_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Cubicon/Cubicon xCeler-Mini 0.4 nozzle process: default preset "cubicon default @base" not found |
-| ARES_ERROR | Cubicon/Cubicon xCeler-Plus | Cubicon/Cubicon xCeler-Plus process: machine names no default preset |
-| ARES_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Cubicon/Cubicon xCeler-Plus 0.4 nozzle process: default preset "cubicon default @base" not found |
-| ARES_ERROR | Cubicon/fdm_machine_common | Cubicon/fdm_machine_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | Custom/Generic Klipper Printer | Custom/Generic Klipper Printer process: machine names no default preset |
-| ARES_ERROR | Custom/Generic Marlin Printer | Custom/Generic Marlin Printer process: machine names no default preset |
-| ARES_ERROR | Custom/Generic RRF Printer | Custom/Generic RRF Printer process: machine names no default preset |
-| ARES_ERROR | Custom/Generic Repetier Printer | Custom/Generic Repetier Printer process: machine names no default preset |
-| ARES_ERROR | Custom/Generic ToolChanger Printer | Custom/Generic ToolChanger Printer process: machine names no default preset |
-| ARES_ERROR | Custom/MyKlipper 0.2 nozzle | Custom/MyKlipper 0.2 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Custom/MyKlipper 0.4 nozzle | Custom/MyKlipper 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Custom/MyKlipper 0.6 nozzle | Custom/MyKlipper 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Custom/MyKlipper 0.8 nozzle | Custom/MyKlipper 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Custom/MyMarlin 0.4 nozzle | Custom/MyMarlin 0.4 nozzle process: machine names no default preset |
-| ARES_ERROR | Custom/MyRRF 0.4 nozzle | Custom/MyRRF 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Custom/MyRepetier 0.4 nozzle | Custom/MyRepetier 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Custom/MyToolChanger 0.2 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Custom/MyToolChanger 0.4 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Custom/MyToolChanger 0.6 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Custom/MyToolChanger 0.8 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Custom/fdm_klipper_common | Custom/fdm_klipper_common: no usable default_filament_profile |
-| ARES_ERROR | Custom/fdm_machine_common | Custom/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Custom/fdm_repetier_common | Custom/fdm_repetier_common: no usable default_filament_profile |
-| ARES_ERROR | Custom/fdm_rrf_common | Custom/fdm_rrf_common: no usable default_filament_profile |
-| ARES_ERROR | Custom/fdm_toolchanger_common | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | DeltaMaker/DeltaMaker 2 | DeltaMaker/DeltaMaker 2 process: machine names no default preset |
-| ARES_ERROR | DeltaMaker/DeltaMaker 2 0.35 nozzle | invalid Orca option filament_map |
-| ARES_ERROR | DeltaMaker/DeltaMaker 2T | DeltaMaker/DeltaMaker 2T process: machine names no default preset |
-| ARES_ERROR | DeltaMaker/DeltaMaker 2T 0.5 nozzle | invalid Orca option filament_map |
-| ARES_ERROR | DeltaMaker/DeltaMaker 2XT | DeltaMaker/DeltaMaker 2XT process: machine names no default preset |
-| ARES_ERROR | DeltaMaker/DeltaMaker 2XT 0.5 nozzle | invalid Orca option filament_map |
-| ARES_ERROR | DeltaMaker/fdm_klipper_common | DeltaMaker/fdm_klipper_common process: default preset "0.20mm Standard @DeltaMaker 2 0.35 nozzle" not found |
-| ARES_ERROR | DeltaMaker/fdm_machine_common | DeltaMaker/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Dremel/Dremel 3D20 | Dremel/Dremel 3D20 process: machine names no default preset |
-| ARES_ERROR | Dremel/Dremel 3D20 0.4 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Dremel/Dremel 3D40 | Dremel/Dremel 3D40 process: machine names no default preset |
+| DIVERGENT | Creality/Creality Sermoon V1 0.4 nozzle | filament 1 length differs: expected 239.40mm, actual 256.10mm |
+| ARES_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | orca-slicer failed (signal: 6 (SIGABRT) (core dumped)):   what():  ConfigOptionVector::set_at(): Assigning from an empty vector |
+| ARES_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | orca-slicer failed (signal: 6 (SIGABRT) (core dumped)):   what():  ConfigOptionVector::set_at(): Assigning from an empty vector |
+| ARES_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | orca-slicer failed (signal: 6 (SIGABRT) (core dumped)):   what():  ConfigOptionVector::set_at(): Assigning from an empty vector |
+| DIVERGENT | Custom/MyKlipper 0.2 nozzle | filament 1 length differs: expected 188.69mm, actual 188.87mm |
+| DIVERGENT | Custom/MyKlipper 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Custom/MyKlipper 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Custom/MyKlipper 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Custom/MyMarlin 0.4 nozzle | layer 1 travel geometry count differs: expected 7, actual 8 |
+| DIVERGENT | Custom/MyRRF 0.4 nozzle | filament 1 length differs: expected 268.28mm, actual 276.28mm |
+| DIVERGENT | Custom/MyRepetier 0.4 nozzle | preamble differs at line 18: expected Some("M190 S35"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| ARES_ERROR | Custom/MyToolChanger 0.2 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] > 0 and (is_extruder_used[1]) |
+| ARES_ERROR | Custom/MyToolChanger 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Custom/MyToolChanger 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] > 0 and (is_extruder_used[1]) |
+| ARES_ERROR | Custom/MyToolChanger 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | DeltaMaker/DeltaMaker 2 0.35 nozzle | preamble differs at line 18: expected Some("M104 S235"), actual Some("M201 X3500 Y3500 Z500 E5000") |
+| DIVERGENT | DeltaMaker/DeltaMaker 2T 0.5 nozzle | preamble differs at line 18: expected Some("M104 S235"), actual Some("M201 X3500 Y3500 Z500 E5000") |
+| DIVERGENT | DeltaMaker/DeltaMaker 2XT 0.5 nozzle | preamble differs at line 18: expected Some("M104 S235"), actual Some("M201 X3500 Y3500 Z500 E5000") |
+| DIVERGENT | Dremel/Dremel 3D20 0.4 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.38mm"), actual Some("; first layer extrusion width = 0.42mm") |
 | ARES_ERROR | Dremel/Dremel 3D40 0.4 nozzle | orca-slicer failed (exit status: 205): "G92 E0" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing. |
-| ARES_ERROR | Dremel/Dremel 3D45 | Dremel/Dremel 3D45 process: machine names no default preset |
 | ARES_ERROR | Dremel/Dremel 3D45 0.4 nozzle | orca-slicer failed (exit status: 205): "G92 E0" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing. |
-| ARES_ERROR | Dremel/fdm_dremel_common | Dremel/fdm_dremel_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | Dremel/fdm_machine_common | Dremel/fdm_machine_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | Elegoo/fdm_elegoo_3dp_001_common | Elegoo/fdm_elegoo_3dp_001_common process: default preset "0.20mm Standard @Elegoo CC 0.4 nozzle" not found |
-| ARES_ERROR | Elegoo/fdm_elegoo_common | Elegoo/fdm_elegoo_common process: machine names no default preset |
-| ARES_ERROR | Elegoo/fdm_machine_common | Elegoo/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Eryone/Thinker X400 | Eryone/Thinker X400 process: machine names no default preset |
-| ARES_ERROR | Eryone/Thinker X400 0.2 nozzle | Eryone/Thinker X400 0.2 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Eryone/Thinker X400 0.4 nozzle | Eryone/Thinker X400 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Eryone/fdm_machine_common | Eryone/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Eryone/fdm_machine_eryone_ER20_Klipper_common | Eryone/fdm_machine_eryone_ER20_Klipper_common process: machine names no default preset |
-| ARES_ERROR | Eryone/fdm_machine_eryone_ER20_common | Eryone/fdm_machine_eryone_ER20_common process: machine names no default preset |
-| ARES_ERROR | FLSun/FLSun Q5 | FLSun/FLSun Q5 process: machine names no default preset |
-| DIVERGENT | FLSun/FLSun Q5 0.4 nozzle | layer 2 deposition count differs: expected 63, actual 65 |
-| ARES_ERROR | FLSun/FLSun QQ-S Pro | FLSun/FLSun QQ-S Pro process: machine names no default preset |
-| ARES_ERROR | FLSun/FLSun QQ-S Pro 0.4 nozzle | orca-slicer failed (exit status: 156): Please check the custom G-code or use the default custom G-code. |
-| ARES_ERROR | FLSun/FLSun S1 | FLSun/FLSun S1 process: machine names no default preset |
-| ARES_ERROR | FLSun/FLSun S1 0.4 nozzle | FLSun/FLSun S1 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | FLSun/FLSun Super Racer (SR) | FLSun/FLSun Super Racer (SR) process: machine names no default preset |
-| ARES_ERROR | FLSun/FLSun Super Racer 0.4 nozzle | invalid project G-code template: unknown placeholder: input_filename_base in input_filename_base |
-| ARES_ERROR | FLSun/FLSun T1 | FLSun/FLSun T1 process: machine names no default preset |
-| ARES_ERROR | FLSun/FLSun T1 0.4 nozzle | FLSun/FLSun T1 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | FLSun/FLSun V400 | FLSun/FLSun V400 process: machine names no default preset |
-| ARES_ERROR | FLSun/FLSun V400 0.4 nozzle | FLSun/FLSun V400 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | FLSun/fdm_machine_common | FLSun/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge AD5X | Flashforge/Flashforge AD5X process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge AD5X 0.25 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge AD5X 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge AD5X 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge AD5X 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 3 Series | Flashforge/Flashforge Adventurer 3 Series process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 3 Series 0.4 Nozzle | Flashforge/Flashforge Adventurer 3 Series 0.4 Nozzle: no usable default_filament_profile |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 3 Series 0.6 Nozzle | Flashforge/Flashforge Adventurer 3 Series 0.6 Nozzle process: default preset "0.20mm Standard @Flashforge AD3 0.6 Nozzle" not found |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 4 Series | Flashforge/Flashforge Adventurer 4 Series process: machine names no default preset |
+| DIVERGENT | Elegoo/Elegoo Centauri 0.2 nozzle | filament 1 length differs: expected 249.27mm, actual 249.03mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 0.4 nozzle | filament 1 length differs: expected 258.11mm, actual 258.51mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 0.6 nozzle | filament 1 length differs: expected 296.96mm, actual 297.11mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 0.8 nozzle | filament 1 length differs: expected 319.32mm, actual 319.03mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 2 0.2 nozzle | filament 1 length differs: expected 227.66mm, actual 233.42mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 2 0.4 nozzle | filament 1 length differs: expected 237.10mm, actual 242.90mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 2 0.6 nozzle | filament 1 length differs: expected 275.35mm, actual 281.51mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 2 0.8 nozzle | filament 1 length differs: expected 297.71mm, actual 303.42mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.2 nozzle | filament 1 length differs: expected 249.27mm, actual 249.03mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.4 nozzle | filament 1 length differs: expected 258.11mm, actual 258.51mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.6 nozzle | filament 1 length differs: expected 296.96mm, actual 297.11mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.8 nozzle | filament 1 length differs: expected 319.32mm, actual 319.03mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.2 nozzle | filament 1 length differs: expected 227.66mm, actual 233.42mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.4 nozzle | filament 1 length differs: expected 237.10mm, actual 242.90mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.6 nozzle | filament 1 length differs: expected 275.35mm, actual 281.51mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.8 nozzle | filament 1 length differs: expected 297.71mm, actual 303.42mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2D 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 363.03mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2D 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 357.92mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2D 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 402.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2S 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2S 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2S 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
+| DIVERGENT | Elegoo/Elegoo Neptune X 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
+| DIVERGENT | Elegoo/Elegoo Neptune X 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
+| DIVERGENT | Elegoo/Elegoo Neptune X 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo OrangeStorm Giga 0.4 nozzle | filament 1 length differs: expected 244.88mm, actual 245.55mm |
+| DIVERGENT | Elegoo/Elegoo OrangeStorm Giga 0.6 nozzle | filament 1 length differs: expected 277.40mm, actual 278.74mm |
+| DIVERGENT | Elegoo/Elegoo OrangeStorm Giga 0.8 nozzle | filament 1 length differs: expected 324.62mm, actual 326.03mm |
+| DIVERGENT | Elegoo/Elegoo OrangeStorm Giga 1.0 nozzle | filament 1 length differs: expected 349.43mm, actual 352.64mm |
+| DIVERGENT | Eryone/Eryone ER20 0.2 nozzle | filament 1 length differs: expected 226.31mm, actual 237.31mm |
+| DIVERGENT | Eryone/Eryone ER20 0.4 nozzle | filament 1 length differs: expected 247.29mm, actual 258.29mm |
+| DIVERGENT | Eryone/Eryone ER20 0.5 nozzle | filament 1 length differs: expected 274.51mm, actual 285.51mm |
+| DIVERGENT | Eryone/Eryone ER20 0.6 nozzle | filament 1 length differs: expected 291.49mm, actual 302.48mm |
+| DIVERGENT | Eryone/Eryone ER20 0.8 nozzle | filament 1 length differs: expected 331.19mm, actual 342.19mm |
+| DIVERGENT | Eryone/Eryone ER20 Klipper 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=121.5,110 POLYGON=[[116.5,105],[126.5,105],[126.5,115],[116.5,115],[116.5,105]]"), actual Some("M201 X3500 Y3000 Z100 E4000") |
+| DIVERGENT | Eryone/Eryone ER20 Klipper 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=121.5,110 POLYGON=[[116.5,105],[126.5,105],[126.5,115],[116.5,115],[116.5,105]]"), actual Some("M201 X3500 Y3000 Z100 E4000") |
+| DIVERGENT | Eryone/Eryone ER20 Klipper 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=121.5,110 POLYGON=[[116.5,105],[126.5,105],[126.5,115],[116.5,115],[116.5,105]]"), actual Some("M201 X3500 Y3000 Z100 E4000") |
+| DIVERGENT | Eryone/Eryone ER20 Klipper 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=121.5,110 POLYGON=[[116.5,105],[126.5,105],[126.5,115],[116.5,115],[116.5,105]]"), actual Some("M201 X3500 Y3000 Z100 E4000") |
+| DIVERGENT | Eryone/Eryone ER20 Klipper 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=121.5,110 POLYGON=[[116.5,105],[126.5,105],[126.5,115],[116.5,115],[116.5,105]]"), actual Some("M201 X3500 Y3000 Z100 E4000") |
+| DIVERGENT | Eryone/Thinker X400 0.2 nozzle | preamble differs at line 18: expected Some("M117 Heating"), actual Some("M201 X10000 Y10000 Z300 E5000") |
+| DIVERGENT | Eryone/Thinker X400 0.4 nozzle | preamble differs at line 18: expected Some("M117 Heating"), actual Some("M201 X10000 Y10000 Z300 E5000") |
+| DIVERGENT | FLSun/FLSun Q5 0.4 nozzle | layer 2 deposition 44 differs: expected Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.126", y: "3.483", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06496", feed: 1960.0, acceleration: "800", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.098", y: "3.511", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06629", feed: 1961.0, acceleration: "800", fans: "0:255" } |
+| DIVERGENT | FLSun/FLSun QQ-S Pro 0.4 nozzle | filament 1 length differs: expected 289.59mm, actual 291.39mm |
+| DIVERGENT | FLSun/FLSun S1 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=0,0 POLYGON=[[-5,-5],[5,-5],[5,5],[-5,5],[-5,-5]]"), actual Some("M201 X40000 Y40000 Z40000 E40000") |
+| DIVERGENT | FLSun/FLSun Super Racer 0.4 nozzle | layer 2 deposition 44 differs: expected Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.126", y: "3.483", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06496", feed: 2058.0, acceleration: "5000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.098", y: "3.511", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06629", feed: 2059.0, acceleration: "5000", fans: "0:255" } |
+| DIVERGENT | FLSun/FLSun T1 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=0,0 POLYGON=[[-5,-5],[5,-5],[5,5],[-5,5],[-5,-5]]"), actual Some("M201 X30000 Y30000 Z30000 E30000") |
+| DIVERGENT | FLSun/FLSun V400 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=0,0 POLYGON=[[-5,-5],[5,-5],[5,5],[-5,5],[-5,-5]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge AD5X 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge AD5X 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge AD5X 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge AD5X 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=110,110 POLYGON=[[105,105],[115,105],[115,115],[105,115],[105,105]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge Adventurer 3 Series 0.4 Nozzle | filament 1 length differs: expected 253.32mm, actual 251.24mm |
+| DIVERGENT | Flashforge/Flashforge Adventurer 3 Series 0.6 Nozzle | filament 1 length differs: expected 321.30mm, actual 316.50mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.3 Nozzle | preamble differs at line 22: expected Some("M106 S0"), actual Some("M140 S55 T0") |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 4 Series 0.4 Nozzle | unsupported project feature: wall_sequence |
+| DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.4 Nozzle | filament 1 length differs: expected 245.54mm, actual 243.28mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.6 Nozzle | preamble differs at line 22: expected Some("M106 S0"), actual Some("M140 S55 T0") |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 4 Series HS Nozzle | unsupported project feature: wall_sequence |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 5M | Flashforge/Flashforge Adventurer 5M process: machine names no default preset |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.25 Nozzle | filament 1 length differs: expected 207.51mm, actual 214.51mm |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.4 Nozzle | filament 1 length differs: expected 244.70mm, actual 246.51mm |
+| DIVERGENT | Flashforge/Flashforge Adventurer 4 Series HS Nozzle | filament 1 length differs: expected 252.43mm, actual 250.11mm |
+| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.25 Nozzle | filament 1 length differs: expected 211.26mm, actual 218.26mm |
+| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.4 Nozzle | filament 1 length differs: expected 244.70mm, actual 246.50mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.6 Nozzle | filament 1 length differs: expected 304.39mm, actual 306.19mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.8 Nozzle | filament 1 length differs: expected 349.64mm, actual 360.14mm |
-| ARES_ERROR | Flashforge/Flashforge Adventurer 5M Pro | Flashforge/Flashforge Adventurer 5M Pro process: machine names no default preset |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.25 Nozzle | filament 1 length differs: expected 207.51mm, actual 214.51mm |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.4 Nozzle | filament 1 length differs: expected 244.70mm, actual 246.51mm |
+| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.25 Nozzle | filament 1 length differs: expected 211.26mm, actual 218.26mm |
+| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.4 Nozzle | filament 1 length differs: expected 244.70mm, actual 246.50mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle | filament 1 length differs: expected 304.39mm, actual 306.19mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle | filament 1 length differs: expected 349.64mm, actual 360.14mm |
-| ARES_ERROR | Flashforge/Flashforge Artemis | Flashforge/Flashforge Artemis process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Artemis 0.4 Nozzle | Flashforge/Flashforge Artemis 0.4 Nozzle: no usable default_filament_profile |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 | Flashforge/Flashforge Creator 5 process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro | Flashforge/Flashforge Creator 5 Pro process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider 2s | Flashforge/Flashforge Guider 2s process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Guider 2s 0.4 nozzle | unsupported project feature: infill_combination |
-| ARES_ERROR | Flashforge/Flashforge Guider 3 Ultra | Flashforge/Flashforge Guider 3 Ultra process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle | invalid project G-code template: unknown placeholder: total_toolchanges in total_toolchanges < 1 |
-| ARES_ERROR | Flashforge/Flashforge Guider 3 Ultra 0.6 Nozzle | invalid project G-code template: unknown placeholder: total_toolchanges in total_toolchanges < 1 |
-| ARES_ERROR | Flashforge/Flashforge Guider 3 Ultra 0.8 Nozzle | invalid project G-code template: unknown placeholder: total_toolchanges in total_toolchanges < 1 |
-| ARES_ERROR | Flashforge/Flashforge Guider4 | Flashforge/Flashforge Guider4 process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Guider4 0.25 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 0.4 HF nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 0.6 HF nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 0.8 HF nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 Pro | Flashforge/Flashforge Guider4 Pro process: machine names no default preset |
-| ARES_ERROR | Flashforge/Flashforge Guider4 Pro 0.25 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 Pro 0.4 HF nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 Pro 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 Pro 0.6 HF nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 Pro 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/Flashforge Guider4 Pro 0.8 HF nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Flashforge/fdm_adventurer3_common | Flashforge/fdm_adventurer3_common process: default preset "0.20mm Standard @Flashforge AD5M" not found |
-| ARES_ERROR | Flashforge/fdm_adventurer4_common | Flashforge/fdm_adventurer4_common process: machine names no default preset |
-| ARES_ERROR | Flashforge/fdm_adventurer5m_common | Flashforge/fdm_adventurer5m_common process: default preset "0.20mm Standard @Flashforge AD5M" not found |
-| ARES_ERROR | Flashforge/fdm_artemis_common | Flashforge/fdm_artemis_common process: default preset "0.20mm Standard @Flashforge AD5M" not found |
-| ARES_ERROR | Flashforge/fdm_flashforge_common | Flashforge/fdm_flashforge_common process: default preset "0.20mm Standard @Flashforge AD5M" not found |
-| ARES_ERROR | Flashforge/fdm_guider3_common | Flashforge/fdm_guider3_common process: default preset "0.20mm Standard @Flashforge AD5M" not found |
-| ARES_ERROR | Flashforge/fdm_klipper_common | Flashforge/fdm_klipper_common process: default preset "0.20mm Standard @Flashforge AD5M" not found |
-| ARES_ERROR | Flashforge/fdm_machine_common | Flashforge/fdm_machine_common process: default preset "0.20mm Standard @Flashforge AD5M" not found |
-| ARES_ERROR | FlyingBear/FlyingBear Ghost 6 | FlyingBear/FlyingBear Ghost 6 process: machine names no default preset |
+| DIVERGENT | Flashforge/Flashforge Artemis 0.4 Nozzle | filament 1 length differs: expected 231.03mm, actual 228.88mm |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | unsupported project feature: enable_extra_bridge_layer |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 0.6 nozzle | unsupported project feature: enable_extra_bridge_layer |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | unsupported project feature: enable_extra_bridge_layer |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | Flashforge/Flashforge Guider 2s 0.4 nozzle | filament 1 length differs: expected 240.69mm, actual 239.69mm |
+| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.45mm"), actual Some("; first layer extrusion width = 0.50mm") |
+| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.6 Nozzle | filament 1 length differs: expected 307.23mm, actual 307.06mm |
+| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.8 Nozzle | preamble differs at line 18: expected Some("M106 S0"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.25 nozzle | preamble differs at line 18: expected Some("M106 S0"), actual Some("M201 X30000 Y30000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.4 HF nozzle | preamble differs at line 18: expected Some("M106 S0"), actual Some("M201 X30000 Y30000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X30000 Y30000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.6 HF nozzle | filament 1 length differs: expected 289.60mm, actual 290.33mm |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.6 nozzle | filament 1 length differs: expected 293.75mm, actual 294.87mm |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.8 HF nozzle | filament 1 length differs: expected 306.21mm, actual 306.95mm |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.25 nozzle | preamble differs at line 18: expected Some("M106 S0"), actual Some("M201 X30000 Y30000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.4 HF nozzle | preamble differs at line 18: expected Some("M106 S0"), actual Some("M201 X30000 Y30000 Z500 E5000") |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.4 nozzle | filament 1 length differs: expected 244.73mm, actual 245.16mm |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.6 HF nozzle | filament 1 length differs: expected 289.60mm, actual 290.33mm |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.6 nozzle | filament 1 length differs: expected 292.61mm, actual 293.51mm |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.8 HF nozzle | filament 1 length differs: expected 306.21mm, actual 306.95mm |
 | DIVERGENT | FlyingBear/FlyingBear Ghost 6 0.4 nozzle | filament 1 length differs: expected 249.91mm, actual 269.91mm |
-| ARES_ERROR | FlyingBear/FlyingBear Reborn3 | FlyingBear/FlyingBear Reborn3 process: machine names no default preset |
+| DIVERGENT | FlyingBear/FlyingBear Ghost7 0.4 nozzle | filament 1 length differs: expected 229.03mm, actual 260.03mm |
 | DIVERGENT | FlyingBear/FlyingBear Reborn3 0.4 nozzle | filament 1 length differs: expected 206.35mm, actual 206.55mm |
-| ARES_ERROR | FlyingBear/fdm_klipper_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | FlyingBear/fdm_machine_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | FlyingBear/fdm_marlin_common | FlyingBear/fdm_marlin_common process: machine names no default preset |
-| ARES_ERROR | Ginger Additive/Ginger G1 | Ginger Additive/Ginger G1 process: machine names no default preset |
-| ARES_ERROR | Ginger Additive/Ginger G1 1.2 nozzle | Ginger Additive/Ginger G1 1.2 nozzle process: default preset "1.50mm Standard @Ginger G1" not found |
-| ARES_ERROR | Ginger Additive/Ginger G1 3.0 nozzle | Ginger Additive/Ginger G1 3.0 nozzle process: default preset "1.50mm Standard @Ginger G1" not found |
-| ARES_ERROR | Ginger Additive/Ginger G1 5.0 nozzle | Ginger Additive/Ginger G1 5.0 nozzle process: default preset "1.50mm Standard @Ginger G1" not found |
-| ARES_ERROR | Ginger Additive/Ginger G1 8.0 nozzle | Ginger Additive/Ginger G1 8.0 nozzle process: default preset "1.50mm Standard @Ginger G1" not found |
-| ARES_ERROR | Ginger Additive/Ginger_G1_common | Ginger Additive/Ginger_G1_common process: default preset "1.50mm Standard @Ginger G1" not found |
-| ARES_ERROR | Ginger Additive/fdm_machine_common | Ginger Additive/fdm_machine_common process: default preset "0.20mm Standard @MyKlipper" not found |
-| ARES_ERROR | InfiMech/InfiMech TX | InfiMech/InfiMech TX process: machine names no default preset |
+| DIVERGENT | FlyingBear/FlyingBear S1 0.4 nozzle | filament 1 length differs: expected 215.35mm, actual 231.55mm |
+| DIVERGENT | Folgertech/Folgertech FT-5 0.4 nozzle | preamble differs at line 22: expected Some("M190 S35"), actual Some("G28") |
+| DIVERGENT | Folgertech/Folgertech FT-5 0.6 nozzle | preamble differs at line 22: expected Some("M190 S35"), actual Some("G28") |
+| DIVERGENT | Folgertech/Folgertech FT-6 0.4 nozzle | preamble differs at line 22: expected Some("M190 S35"), actual Some("G28") |
+| DIVERGENT | Folgertech/Folgertech FT-6 0.6 nozzle | preamble differs at line 22: expected Some("M190 S35"), actual Some("G28") |
+| DIVERGENT | Folgertech/Folgertech i3 0.4 nozzle | preamble differs at line 22: expected Some("M190 S35"), actual Some("G28") |
+| DIVERGENT | Folgertech/Folgertech i3 0.6 nozzle | preamble differs at line 22: expected Some("M190 S35"), actual Some("G28") |
+| DIVERGENT | Geeetech/Geeetech A10 M 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "114.6", y: "114.56", z: "0.2" }, end: Position { x: "113.6", y: "114.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "103.361", y: "103.582", z: "0.2" }, end: Position { x: "104.146", y: "102.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "114.6", y: "114.56", z: "0.2" }, end: Position { x: "113.6", y: "114.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "103.361", y: "103.582", z: "0.2" }, end: Position { x: "104.146", y: "102.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Geeetech/Geeetech A10 Pro 0.2 nozzle | filament 1 length differs: expected 249.51mm, actual 249.43mm |
+| DIVERGENT | Geeetech/Geeetech A10 Pro 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.373", y: "113.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.344", y: "113.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A10 Pro 0.6 nozzle | layer 2 deposition 3 differs: expected Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "106.486", y: "106.486", z: "0.6" }, end: Position { x: "113.514", y: "106.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "106.486", y: "106.486", z: "0.6" }, end: Position { x: "113.514", y: "106.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A10 Pro 0.8 nozzle | layer 2 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "106.23", y: "106.23", z: "0.8" }, end: Position { x: "113.77", y: "106.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "106.23", y: "106.23", z: "0.8" }, end: Position { x: "113.77", y: "106.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 2501.82, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A10 T 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "114.6", y: "114.56", z: "0.2" }, end: Position { x: "113.6", y: "114.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "103.361", y: "103.582", z: "0.2" }, end: Position { x: "104.146", y: "102.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "114.6", y: "114.56", z: "0.2" }, end: Position { x: "113.6", y: "114.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "103.361", y: "103.582", z: "0.2" }, end: Position { x: "104.146", y: "102.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Geeetech/Geeetech A20 0.2 nozzle | filament 1 length differs: expected 249.51mm, actual 249.43mm |
+| DIVERGENT | Geeetech/Geeetech A20 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.344", z: "0.4" }, end: Position { x: "127.373", y: "128.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.344", z: "0.4" }, end: Position { x: "127.344", y: "128.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A20 0.6 nozzle | layer 2 deposition 3 differs: expected Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "121.486", y: "121.486", z: "0.6" }, end: Position { x: "128.514", y: "121.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "121.486", y: "121.486", z: "0.6" }, end: Position { x: "128.514", y: "121.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A20 0.8 nozzle | layer 2 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "121.23", y: "121.23", z: "0.8" }, end: Position { x: "128.77", y: "121.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "121.23", y: "121.23", z: "0.8" }, end: Position { x: "128.77", y: "121.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 2501.82, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A20 M 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "129.6", y: "129.56", z: "0.2" }, end: Position { x: "128.6", y: "129.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "118.361", y: "118.582", z: "0.2" }, end: Position { x: "119.146", y: "117.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "129.6", y: "129.56", z: "0.2" }, end: Position { x: "128.6", y: "129.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "118.361", y: "118.582", z: "0.2" }, end: Position { x: "119.146", y: "117.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Geeetech/Geeetech A20 T 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "129.6", y: "129.56", z: "0.2" }, end: Position { x: "128.6", y: "129.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "118.361", y: "118.582", z: "0.2" }, end: Position { x: "119.146", y: "117.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "129.6", y: "129.56", z: "0.2" }, end: Position { x: "128.6", y: "129.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "118.361", y: "118.582", z: "0.2" }, end: Position { x: "119.146", y: "117.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Geeetech/Geeetech A30 M 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "164.6", y: "164.56", z: "0.2" }, end: Position { x: "163.6", y: "164.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "153.361", y: "153.582", z: "0.2" }, end: Position { x: "154.146", y: "152.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "164.6", y: "164.56", z: "0.2" }, end: Position { x: "163.6", y: "164.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "153.361", y: "153.582", z: "0.2" }, end: Position { x: "154.146", y: "152.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Geeetech/Geeetech A30 Pro 0.2 nozzle | filament 1 length differs: expected 249.51mm, actual 249.43mm |
+| DIVERGENT | Geeetech/Geeetech A30 Pro 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "163.586", y: "162.344", z: "0.4" }, end: Position { x: "162.373", y: "163.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "163.586", y: "162.344", z: "0.4" }, end: Position { x: "162.344", y: "163.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A30 Pro 0.6 nozzle | layer 2 deposition 3 differs: expected Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "156.486", y: "156.486", z: "0.6" }, end: Position { x: "163.514", y: "156.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "156.486", y: "156.486", z: "0.6" }, end: Position { x: "163.514", y: "156.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A30 Pro 0.8 nozzle | layer 2 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "156.23", y: "156.23", z: "0.8" }, end: Position { x: "163.77", y: "156.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "156.23", y: "156.23", z: "0.8" }, end: Position { x: "163.77", y: "156.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 2501.82, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech A30 T 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "164.6", y: "164.56", z: "0.2" }, end: Position { x: "163.6", y: "164.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.3", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "153.361", y: "153.582", z: "0.2" }, end: Position { x: "154.146", y: "152.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]], actual [[Extruder { extrusion: "-6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-4.83333", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "164.6", y: "164.56", z: "0.2" }, end: Position { x: "163.6", y: "164.564", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-1.66667", feed: "900" }, WipeEnd], [Extruder { extrusion: "6.5", feed: "1500" }, Extruder { extrusion: "-6", feed: "1500" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "153.361", y: "153.582", z: "0.2" }, end: Position { x: "154.146", y: "152.962", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.5", feed: "3000" }, WipeEnd]] |
+| DIVERGENT | Geeetech/Geeetech M1 0.2 nozzle | filament 1 length differs: expected 244.75mm, actual 244.67mm |
+| PASS | Geeetech/Geeetech M1 0.4 nozzle |  |
+| DIVERGENT | Geeetech/Geeetech M1 0.6 nozzle | layer 2 deposition 10 differs: expected Deposition { feature: "Internal solid infill", width: "0.594018", motion: MotionRecord { command: "G1", start: Position { x: "55.472", y: "54.568", z: "0.6" }, end: Position { x: "54.61", y: "55.429", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.07889", feed: 2788.0, acceleration: "2000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.594018", motion: MotionRecord { command: "G1", start: Position { x: "55.472", y: "54.568", z: "0.6" }, end: Position { x: "54.568", y: "55.472", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.08278", feed: 2794.0, acceleration: "2000", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech M1 0.8 nozzle | layer 2 deposition 38 differs: expected Deposition { feature: "Internal solid infill", width: "0.63556", motion: MotionRecord { command: "G1", start: Position { x: "55.511", y: "54.587", z: "0.84" }, end: Position { x: "54.644", y: "55.455", z: "0.84" }, arc_center: [None, None], turns: None }, extrusion: "0.11898", feed: 2908.0, acceleration: "2000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.63556", motion: MotionRecord { command: "G1", start: Position { x: "55.511", y: "54.587", z: "0.84" }, end: Position { x: "54.587", y: "55.511", z: "0.84" }, arc_center: [None, None], turns: None }, extrusion: "0.12674", feed: 2905.0, acceleration: "2000", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar 0.2 nozzle | filament 1 length differs: expected 249.51mm, actual 249.43mm |
+| DIVERGENT | Geeetech/Geeetech Mizar 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.373", y: "113.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.344", y: "113.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar 0.6 nozzle | layer 2 deposition 3 differs: expected Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "106.486", y: "106.486", z: "0.6" }, end: Position { x: "113.514", y: "106.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "106.486", y: "106.486", z: "0.6" }, end: Position { x: "113.514", y: "106.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar 0.8 nozzle | layer 2 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "106.23", y: "106.23", z: "0.8" }, end: Position { x: "113.77", y: "106.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "106.23", y: "106.23", z: "0.8" }, end: Position { x: "113.77", y: "106.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 2501.82, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar M 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "131.086", y: "129.844", z: "0.4" }, end: Position { x: "129.873", y: "131.058", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "131.086", y: "129.844", z: "0.4" }, end: Position { x: "129.844", y: "131.086", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar Max 0.2 nozzle | filament 1 length differs: expected 249.51mm, actual 249.43mm |
+| DIVERGENT | Geeetech/Geeetech Mizar Max 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "163.586", y: "162.344", z: "0.4" }, end: Position { x: "162.373", y: "163.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "163.586", y: "162.344", z: "0.4" }, end: Position { x: "162.344", y: "163.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar Max 0.6 nozzle | layer 2 deposition 3 differs: expected Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "156.486", y: "156.486", z: "0.6" }, end: Position { x: "163.514", y: "156.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "156.486", y: "156.486", z: "0.6" }, end: Position { x: "163.514", y: "156.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar Max 0.8 nozzle | layer 2 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "156.23", y: "156.23", z: "0.8" }, end: Position { x: "163.77", y: "156.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "156.23", y: "156.23", z: "0.8" }, end: Position { x: "163.77", y: "156.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 2501.82, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.2 nozzle | filament 1 length differs: expected 249.51mm, actual 249.43mm |
+| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.373", y: "113.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.344", y: "113.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.6 nozzle | layer 2 deposition 3 differs: expected Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "106.486", y: "106.486", z: "0.6" }, end: Position { x: "113.514", y: "106.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "106.486", y: "106.486", z: "0.6" }, end: Position { x: "113.514", y: "106.486", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.8 nozzle | layer 2 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "106.23", y: "106.23", z: "0.8" }, end: Position { x: "113.77", y: "106.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "106.23", y: "106.23", z: "0.8" }, end: Position { x: "113.77", y: "106.23", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 2501.82, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar S 0.2 nozzle | filament 1 length differs: expected 249.51mm, actual 249.43mm |
+| DIVERGENT | Geeetech/Geeetech Mizar S 0.4 nozzle | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "131.086", y: "129.844", z: "0.4" }, end: Position { x: "129.873", y: "131.058", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 3000.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "131.086", y: "129.844", z: "0.4" }, end: Position { x: "129.844", y: "131.086", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar S 0.6 nozzle | layer 2 deposition 3 differs: expected Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "123.986", y: "123.986", z: "0.6" }, end: Position { x: "131.014", y: "123.986", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "123.986", y: "123.986", z: "0.6" }, end: Position { x: "131.014", y: "123.986", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.47735", feed: 3000.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Mizar S 0.8 nozzle | layer 2 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "123.73", y: "123.73", z: "0.8" }, end: Position { x: "131.27", y: "123.73", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 900.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.82", motion: MotionRecord { command: "G1", start: Position { x: "123.73", y: "123.73", z: "0.8" }, end: Position { x: "131.27", y: "123.73", z: "0.8" }, arc_center: [None, None], turns: None }, extrusion: "0.90216", feed: 2501.82, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Geeetech/Geeetech Thunder 0.2 nozzle | preamble differs at line 22: expected Some("M106 S0"), actual Some(";Official viki homepage for Thunder:https://www.geeetech.com/wiki/index.php/Geeetech_Thunder_3D_printer") |
+| DIVERGENT | Geeetech/Geeetech Thunder 0.4 nozzle | preamble differs at line 22: expected Some("M106 S0"), actual Some(";Official viki homepage for Thunder:https://www.geeetech.com/wiki/index.php/Geeetech_Thunder_3D_printer") |
+| DIVERGENT | Geeetech/Geeetech Thunder 0.6 nozzle | preamble differs at line 22: expected Some("M106 S0"), actual Some(";Official viki homepage for Thunder:https://www.geeetech.com/wiki/index.php/Geeetech_Thunder_3D_printer") |
+| DIVERGENT | Geeetech/Geeetech Thunder 0.8 nozzle | preamble differs at line 22: expected Some("M106 S0"), actual Some(";Official viki homepage for Thunder:https://www.geeetech.com/wiki/index.php/Geeetech_Thunder_3D_printer") |
+| DIVERGENT | Ginger Additive/Ginger G1 1.2 nozzle | preamble differs at line 5: expected Some("; filament_diameter: 1.12838"), actual Some("; filament_diameter: 1.13") |
+| DIVERGENT | Ginger Additive/Ginger G1 3.0 nozzle | filament 1 length differs: expected 3165.03mm, actual 2828.84mm |
+| DIVERGENT | Ginger Additive/Ginger G1 5.0 nozzle | filament 1 length differs: expected 2708.46mm, actual 2356.75mm |
+| DIVERGENT | Ginger Additive/Ginger G1 8.0 nozzle | filament 1 length differs: expected 9524.14mm, actual 7356.06mm |
+| DIVERGENT | InfiMech/InfiMech EX 0.4 nozzle | filament 1 length differs: expected 229.03mm, actual 260.03mm |
+| DIVERGENT | InfiMech/InfiMech EX+APS 0.4 nozzle | filament 1 length differs: expected 229.03mm, actual 260.03mm |
 | DIVERGENT | InfiMech/InfiMech TX 0.4 nozzle | filament 1 length differs: expected 215.35mm, actual 231.55mm |
-| ARES_ERROR | InfiMech/fdm_klipper_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | InfiMech/fdm_machine_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | LH/LH Stinger | LH/LH Stinger process: machine names no default preset |
-| ARES_ERROR | LH/LH Stinger 0.4 nozzle | unsupported project feature: wall_sequence |
-| ARES_ERROR | LH/LH Stinger MMU | LH/LH Stinger MMU process: machine names no default preset |
-| ARES_ERROR | LH/LH Stinger MMU 0.4 nozzle | unsupported project feature: wall_sequence |
-| ARES_ERROR | LH/fdm_lh_common | LH/fdm_lh_common: no usable default_filament_profile |
-| ARES_ERROR | LH/fdm_lh_mmu_common | LH/fdm_lh_mmu_common: no usable default_filament_profile |
-| ARES_ERROR | LH/fdm_machine_common | LH/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | LONGER/LONGER LK10 | LONGER/LONGER LK10 process: machine names no default preset |
-| ARES_ERROR | LONGER/LONGER LK10 (0.2 nozzle) | LONGER/LONGER LK10 (0.2 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/LONGER LK10 (0.4 nozzle) | LONGER/LONGER LK10 (0.4 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/LONGER LK10 (0.6 nozzle) | LONGER/LONGER LK10 (0.6 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/LONGER LK10 (0.8 nozzle) | LONGER/LONGER LK10 (0.8 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/LONGER LK10 Plus | LONGER/LONGER LK10 Plus process: machine names no default preset |
-| ARES_ERROR | LONGER/LONGER LK10 Plus (0.2 nozzle) | LONGER/LONGER LK10 Plus (0.2 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/LONGER LK10 Plus (0.4 nozzle) | LONGER/LONGER LK10 Plus (0.4 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/LONGER LK10 Plus (0.6 nozzle) | LONGER/LONGER LK10 Plus (0.6 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/LONGER LK10 Plus (0.8 nozzle) | LONGER/LONGER LK10 Plus (0.8 nozzle): no usable default_filament_profile |
-| ARES_ERROR | LONGER/fdm_machine_common | LONGER/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Lulzbot/Lulzbot Taz 4 or 5 | Lulzbot/Lulzbot Taz 4 or 5 process: machine names no default preset |
-| ARES_ERROR | Lulzbot/Lulzbot Taz 4 or 5 0.5 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Lulzbot/Lulzbot Taz 6 | Lulzbot/Lulzbot Taz 6 process: machine names no default preset |
-| ARES_ERROR | Lulzbot/Lulzbot Taz 6 0.5 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Lulzbot/Lulzbot Taz Pro Common | Lulzbot/Lulzbot Taz Pro Common process: machine names no default preset |
-| ARES_ERROR | Lulzbot/Lulzbot Taz Pro Dual | Lulzbot/Lulzbot Taz Pro Dual process: machine names no default preset |
-| ARES_ERROR | Lulzbot/Lulzbot Taz Pro Dual 0.5 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Lulzbot/Lulzbot Taz Pro S | Lulzbot/Lulzbot Taz Pro S process: machine names no default preset |
-| ARES_ERROR | Lulzbot/Lulzbot Taz Pro S 0.5 nozzle | Lulzbot/Lulzbot Taz Pro S 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Lulzbot/fdm_machine_common | Lulzbot/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | MagicMaker/MM BoneKing | MagicMaker/MM BoneKing process: machine names no default preset |
-| ARES_ERROR | MagicMaker/MM BoneKing 0.4 nozzle | MagicMaker/MM BoneKing 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | MagicMaker/MM hj SK | MagicMaker/MM hj SK process: machine names no default preset |
-| ARES_ERROR | MagicMaker/MM hj SK 0.4 nozzle | MagicMaker/MM hj SK 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | MagicMaker/MM hqs SF | MagicMaker/MM hqs SF process: machine names no default preset |
-| ARES_ERROR | MagicMaker/MM hqs SF 0.4 nozzle | MagicMaker/MM hqs SF 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | MagicMaker/MM hqs hj | MagicMaker/MM hqs hj process: machine names no default preset |
-| ARES_ERROR | MagicMaker/MM hqs hj 0.4 nozzle | MagicMaker/MM hqs hj 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | MagicMaker/MM slb | MagicMaker/MM slb process: machine names no default preset |
-| ARES_ERROR | MagicMaker/MM slb 0.4 nozzle | MagicMaker/MM slb 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | MagicMaker/fdm_machine_common | MagicMaker/fdm_machine_common process: default preset "0.10mm Fine @MM hj" not found |
-| ARES_ERROR | OrcaArena/Orca Arena X1 Carbon | OrcaArena/Orca Arena X1 Carbon process: machine names no default preset |
-| ARES_ERROR | OrcaArena/Orca Arena X1 Carbon 0.2 nozzle | invalid project filament-start G-code template: unknown placeholder: bed_temperature in (bed_temperature[current_extruder] >45)||(bed_temperature_initial_layer[current_extruder] >45) |
-| ARES_ERROR | OrcaArena/Orca Arena X1 Carbon 0.4 nozzle | invalid project filament-start G-code template: unknown placeholder: bed_temperature in (bed_temperature[current_extruder] >45)||(bed_temperature_initial_layer[current_extruder] >45) |
-| ARES_ERROR | OrcaArena/Orca Arena X1 Carbon 0.6 nozzle | invalid project filament-start G-code template: unknown placeholder: bed_temperature in (bed_temperature[current_extruder] >45)||(bed_temperature_initial_layer[current_extruder] >45) |
-| ARES_ERROR | OrcaArena/Orca Arena X1 Carbon 0.8 nozzle | invalid project filament-start G-code template: unknown placeholder: bed_temperature in (bed_temperature[current_extruder] >45)||(bed_temperature_initial_layer[current_extruder] >45) |
-| ARES_ERROR | OrcaArena/fdm_bbl_3dp_001_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | OrcaArena/fdm_machine_common | OrcaArena/fdm_machine_common process: default preset "0.16mm Optimal @Orca Arena X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | Peopoly/Peopoly Magneto X | Peopoly/Peopoly Magneto X process: machine names no default preset |
-| ARES_ERROR | Peopoly/Peopoly Magneto X 0.4 nozzle | invalid project G-code template: unknown placeholder: first_layer_print_max in first_layer_print_max[0] |
-| ARES_ERROR | Peopoly/Peopoly Magneto X 0.6 nozzle | invalid project G-code template: unknown placeholder: first_layer_print_max in first_layer_print_max[0] |
-| ARES_ERROR | Peopoly/Peopoly Magneto X 0.8 nozzle | invalid project G-code template: unknown placeholder: first_layer_print_max in first_layer_print_max[0] |
-| ARES_ERROR | Peopoly/fdm_klipper_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Peopoly/fdm_machine_common | Peopoly/fdm_machine_common process: default preset "0.20mm Standard @MagnetoX" not found |
-| ARES_ERROR | Phrozen/Phrozen Arco | Phrozen/Phrozen Arco process: machine names no default preset |
-| ARES_ERROR | Phrozen/Phrozen Arco 0.4 nozzle | unsupported project feature: wall_sequence |
-| ARES_ERROR | Phrozen/fdm_machine_common | Phrozen/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa CORE One | Prusa/Prusa CORE One process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa CORE One 0.25 nozzle | Prusa/Prusa CORE One 0.25 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One 0.3 nozzle | Prusa/Prusa CORE One 0.3 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One 0.4 nozzle | Prusa/Prusa CORE One 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One 0.5 nozzle | Prusa/Prusa CORE One 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One 0.6 nozzle | Prusa/Prusa CORE One 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One 0.8 nozzle | Prusa/Prusa CORE One 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One HF | Prusa/Prusa CORE One HF process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa CORE One HF 0.4 nozzle | Prusa/Prusa CORE One HF 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One HF 0.5 nozzle | Prusa/Prusa CORE One HF 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One HF 0.6 nozzle | Prusa/Prusa CORE One HF 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One HF 0.8 nozzle | Prusa/Prusa CORE One HF 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L | Prusa/Prusa CORE One L process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa CORE One L 0.4 nozzle | Prusa/Prusa CORE One L 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L 0.5 nozzle | Prusa/Prusa CORE One L 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L 0.6 nozzle | Prusa/Prusa CORE One L 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L 0.8 nozzle | Prusa/Prusa CORE One L 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L HF | Prusa/Prusa CORE One L HF process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa CORE One L HF 0.4 nozzle | Prusa/Prusa CORE One L HF 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L HF 0.5 nozzle | Prusa/Prusa CORE One L HF 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L HF 0.6 nozzle | Prusa/Prusa CORE One L HF 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa CORE One L HF 0.8 nozzle | Prusa/Prusa CORE One L HF 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MINI | Prusa/Prusa MINI process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa MINI 0.25 nozzle | invalid project filament-start G-code template: expected = in printer_notes=~/.*PRINTER_MODEL_MINI.*/ and nozzle_diameter[0]==0.6 |
-| ARES_ERROR | Prusa/Prusa MINI 0.4 nozzle | invalid project filament-start G-code template: expected = in printer_notes=~/.*PRINTER_MODEL_MINI.*/ and nozzle_diameter[0]==0.6 |
-| ARES_ERROR | Prusa/Prusa MINI 0.6 nozzle | invalid project filament-start G-code template: expected = in printer_notes=~/.*PRINTER_MODEL_MINI.*/ and nozzle_diameter[0]==0.6 |
-| ARES_ERROR | Prusa/Prusa MINI 0.8 nozzle | invalid project filament-start G-code template: expected = in printer_notes=~/.*PRINTER_MODEL_MINI.*/ and nozzle_diameter[0]==0.6 |
-| ARES_ERROR | Prusa/Prusa MINI IS | Prusa/Prusa MINI IS process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa MINIIS 0.25 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MINIIS 0.4 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MINIIS 0.6 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MINIIS 0.8 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MK3.5 | Prusa/Prusa MK3.5 process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa MK3.5 0.25 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MK3.5 0.4 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MK3.5 0.6 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MK3.5 0.8 nozzle | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Prusa/Prusa MK3S | Prusa/Prusa MK3S process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa MK3S 0.25 nozzle | Prusa/Prusa MK3S 0.25 nozzle process: default preset "0.20mm Speed @MK3S 0.25" not found |
-| ARES_ERROR | Prusa/Prusa MK3S 0.4 nozzle | orca-slicer failed (exit status: 237): run found error, return -19, exit... |
-| ARES_ERROR | Prusa/Prusa MK3S 0.6 nozzle | orca-slicer failed (exit status: 237): run found error, return -19, exit... |
-| ARES_ERROR | Prusa/Prusa MK3S 0.8 nozzle | Prusa/Prusa MK3S 0.8 nozzle process: default preset "0.15mm Detail @MK3S 0.8" not found |
-| ARES_ERROR | Prusa/Prusa MK4 | Prusa/Prusa MK4 process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa MK4 0.25 nozzle | invalid project G-code template: unknown placeholder: first_layer_print_max in ((min(print_bed_max[0], max(first_layer_print_min[0] + 32, first_layer_print_max[0])))) - ((min(print_bed_max[0], first_layer_print_min[0] + 32) - 32)) |
-| ARES_ERROR | Prusa/Prusa MK4 0.4 nozzle | invalid project G-code template: unknown placeholder: first_layer_print_max in ((min(print_bed_max[0], max(first_layer_print_min[0] + 32, first_layer_print_max[0])))) - ((min(print_bed_max[0], first_layer_print_min[0] + 32) - 32)) |
-| ARES_ERROR | Prusa/Prusa MK4 0.6 nozzle | invalid project G-code template: unknown placeholder: first_layer_print_max in ((min(print_bed_max[0], max(first_layer_print_min[0] + 32, first_layer_print_max[0])))) - ((min(print_bed_max[0], first_layer_print_min[0] + 32) - 32)) |
-| ARES_ERROR | Prusa/Prusa MK4 0.8 nozzle | invalid project G-code template: unknown placeholder: first_layer_print_max in ((min(print_bed_max[0], max(first_layer_print_min[0] + 32, first_layer_print_max[0])))) - ((min(print_bed_max[0], first_layer_print_min[0] + 32) - 32)) |
-| ARES_ERROR | Prusa/Prusa MK4S | Prusa/Prusa MK4S process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa MK4S 0.25 nozzle | Prusa/Prusa MK4S 0.25 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S 0.3 nozzle | Prusa/Prusa MK4S 0.3 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S 0.4 nozzle | Prusa/Prusa MK4S 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S 0.5 nozzle | Prusa/Prusa MK4S 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S 0.6 nozzle | Prusa/Prusa MK4S 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S 0.8 nozzle | Prusa/Prusa MK4S 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S HF | Prusa/Prusa MK4S HF process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa MK4S HF0.4 nozzle | Prusa/Prusa MK4S HF0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S HF0.5 nozzle | Prusa/Prusa MK4S HF0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S HF0.6 nozzle | Prusa/Prusa MK4S HF0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa MK4S HF0.8 nozzle | Prusa/Prusa MK4S HF0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL | Prusa/Prusa XL process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa XL 0.25 nozzle | Prusa/Prusa XL 0.25 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 0.3 nozzle | Prusa/Prusa XL 0.3 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 0.4 nozzle | Prusa/Prusa XL 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 0.5 nozzle | Prusa/Prusa XL 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 0.6 nozzle | Prusa/Prusa XL 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 0.8 nozzle | Prusa/Prusa XL 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 5T | Prusa/Prusa XL 5T process: machine names no default preset |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.25 nozzle | Prusa/Prusa XL 5T 0.25 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.3 nozzle | Prusa/Prusa XL 5T 0.3 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.4 nozzle | Prusa/Prusa XL 5T 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.5 nozzle | Prusa/Prusa XL 5T 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.6 nozzle | Prusa/Prusa XL 5T 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | Prusa/Prusa XL 5T 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Prusa/fdm_machine_common | Prusa/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Prusa/fdm_machine_common_mk4s | Prusa/fdm_machine_common_mk4s process: default preset "0.20mm SPEED @MK4IS 0.4" not found |
-| ARES_ERROR | Prusa/fdm_machine_common_xl | Prusa/fdm_machine_common_xl process: machine names no default preset |
-| ARES_ERROR | Prusa/fdm_machine_common_xl_5t | Prusa/fdm_machine_common_xl_5t process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi Q1 Pro | Qidi/Qidi Q1 Pro process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi Q1 Pro 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi Q1 Pro 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi Q1 Pro 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi Q1 Pro 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi Q2 | Qidi/Qidi Q2 process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi Q2 0.2 nozzle | Qidi/Qidi Q2 0.2 nozzle process: default preset "0.10mm Standard @Q2 0.2 nozzle" not found |
-| ARES_ERROR | Qidi/Qidi Q2 0.4 nozzle | Qidi/Qidi Q2 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Qidi/Qidi Q2 0.6 nozzle | Qidi/Qidi Q2 0.6 nozzle process: default preset "0.30mm Standard @Q2 0.6 nozzle" not found |
-| ARES_ERROR | Qidi/Qidi Q2 0.8 nozzle | Qidi/Qidi Q2 0.8 nozzle process: default preset "0.40mm Standard @Q2 0.8 nozzle" not found |
-| ARES_ERROR | Qidi/Qidi Q2C | Qidi/Qidi Q2C process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi Q2C 0.2 nozzle | Qidi/Qidi Q2C 0.2 nozzle process: default preset "0.10mm Standard @Q2C 0.2 nozzle" not found |
-| ARES_ERROR | Qidi/Qidi Q2C 0.4 nozzle | Qidi/Qidi Q2C 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Qidi/Qidi Q2C 0.6 nozzle | Qidi/Qidi Q2C 0.6 nozzle process: default preset "0.30mm Standard @Q2C 0.6 nozzle" not found |
-| ARES_ERROR | Qidi/Qidi Q2C 0.8 nozzle | Qidi/Qidi Q2C 0.8 nozzle process: default preset "0.40mm Standard @Q2C 0.8 nozzle" not found |
-| ARES_ERROR | Qidi/Qidi X-CF Pro | Qidi/Qidi X-CF Pro process: machine names no default preset |
+| DIVERGENT | InfiMech/InfiMech TX HSN 0.4 nozzle | filament 1 length differs: expected 215.35mm, actual 231.55mm |
+| DIVERGENT | Kingroon/Kingroon KLP1 0.4 nozzle | filament 1 length differs: expected 284.99mm, actual 254.99mm |
+| DIVERGENT | Kingroon/Kingroon KP3S 3.0 0.4 nozzle | filament 1 length differs: expected 303.52mm, actual 258.52mm |
+| DIVERGENT | Kingroon/Kingroon KP3S PRO S1 0.4 nozzle | filament 1 length differs: expected 299.99mm, actual 254.99mm |
+| DIVERGENT | Kingroon/Kingroon KP3S PRO V2 0.4 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.42mm"), actual Some("; first layer extrusion width = 0.50mm") |
+| DIVERGENT | Kingroon/Kingroon KP3S V1 0.4 nozzle | filament 1 length differs: expected 251.24mm, actual 251.04mm |
+| ARES_ERROR | LH/LH Stinger 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
+| ARES_ERROR | LH/LH Stinger MMU 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
+| ARES_ERROR | LONGER/LONGER LK10 (0.2 nozzle) | orca-slicer failed (exit status: 205): Too small line width |
+| DIVERGENT | LONGER/LONGER LK10 (0.4 nozzle) | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=112.5,112.5 POLYGON=[[107.5,107.5],[117.5,107.5],[117.5,117.5],[107.5,117.5],[107.5,107.5]]"), actual Some("M201 X10000 Y10000 Z500 E5000") |
+| DIVERGENT | LONGER/LONGER LK10 (0.6 nozzle) | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=112.5,112.5 POLYGON=[[107.5,107.5],[117.5,107.5],[117.5,117.5],[107.5,117.5],[107.5,107.5]]"), actual Some("M201 X10000 Y10000 Z500 E5000") |
+| DIVERGENT | LONGER/LONGER LK10 (0.8 nozzle) | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=112.5,112.5 POLYGON=[[107.5,107.5],[117.5,107.5],[117.5,117.5],[107.5,117.5],[107.5,107.5]]"), actual Some("M201 X10000 Y10000 Z500 E5000") |
+| ARES_ERROR | LONGER/LONGER LK10 Plus (0.2 nozzle) | orca-slicer failed (exit status: 205): Too small line width |
+| DIVERGENT | LONGER/LONGER LK10 Plus (0.4 nozzle) | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=160,160 POLYGON=[[155,155],[165,155],[165,165],[155,165],[155,155]]"), actual Some("M201 X7000 Y7000 Z300 E5000") |
+| DIVERGENT | LONGER/LONGER LK10 Plus (0.6 nozzle) | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=160,160 POLYGON=[[155,155],[165,155],[165,165],[155,165],[155,155]]"), actual Some("M201 X7000 Y7000 Z300 E5000") |
+| DIVERGENT | LONGER/LONGER LK10 Plus (0.8 nozzle) | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=160,160 POLYGON=[[155,155],[165,155],[165,165],[155,165],[155,155]]"), actual Some("M201 X7000 Y7000 Z300 E5000") |
+| DIVERGENT | Lulzbot/Lulzbot Taz 4 or 5 0.5 nozzle | preamble differs at line 18: expected Some(";This G-Code has been generated specifically for the Lulzbot Taz 4 and 5 - translated from CuraLE 4.13.10 by Wrathernaut"), actual Some("M201 X500 Y500 Z100 E5000") |
+| DIVERGENT | Lulzbot/Lulzbot Taz 6 0.5 nozzle | filament 1 length differs: expected 103.05mm, actual 88.05mm |
+| ARES_ERROR | Lulzbot/Lulzbot Taz Pro Dual 0.5 nozzle | invalid project machine-end G-code template: placeholder index out of range: nozzle_temperature in nozzle_temperature[1] |
+| ARES_ERROR | Lulzbot/Lulzbot Taz Pro S 0.5 nozzle | invalid project machine-end G-code template: placeholder index out of range: nozzle_temperature in nozzle_temperature[1] |
+| DIVERGENT | M3D/M3D Enabler D8500 MM | preamble differs at line 10: expected Some("; external perimeters extrusion width = 0.45mm"), actual Some("; perimeters extrusion width = 0.40mm") |
+| DIVERGENT | MagicMaker/MM BoneKing 0.4 nozzle | filament 1 length differs: expected 293.88mm, actual 308.88mm |
+| DIVERGENT | MagicMaker/MM hj SK 0.4 nozzle | filament 1 length differs: expected 288.50mm, actual 303.50mm |
+| DIVERGENT | MagicMaker/MM hqs SF 0.4 nozzle | filament 1 length differs: expected 288.50mm, actual 303.50mm |
+| DIVERGENT | MagicMaker/MM hqs hj 0.4 nozzle | filament 1 length differs: expected 290.73mm, actual 305.73mm |
+| DIVERGENT | MagicMaker/MM slb 0.4 nozzle | filament 1 length differs: expected 281.50mm, actual 291.50mm |
+| DIVERGENT | Mellow/M1 0.2 nozzle | filament 1 length differs: expected 188.69mm, actual 188.87mm |
+| DIVERGENT | Mellow/M1 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=53,53 POLYGON=[[48,48],[58,48],[58,58],[48,58],[48,48]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| DIVERGENT | Mellow/M1 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=53,53 POLYGON=[[48,48],[58,48],[58,58],[48,58],[48,48]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| DIVERGENT | Mellow/M1 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=53,53 POLYGON=[[48,48],[58,48],[58,58],[48,58],[48,48]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.2 nozzle | filament 1 length differs: expected 202.28mm, actual 201.27mm |
+| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=118.25,121 POLYGON=[[113.25,116],[123.25,116],[123.25,126],[113.25,126],[113.25,116]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=118.25,121 POLYGON=[[113.25,116],[123.25,116],[123.25,126],[113.25,126],[113.25,116]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=118.25,121 POLYGON=[[113.25,116],[123.25,116],[123.25,126],[113.25,126],[113.25,116]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=128,128 POLYGON=[[123,123],[133,123],[133,133],[123,133],[123,123]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=128,128 POLYGON=[[123,123],[133,123],[133,133],[123,133],[123,123]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=128,128 POLYGON=[[123,123],[133,123],[133,133],[123,133],[123,123]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=128,128 POLYGON=[[123,123],[133,123],[133,133],[123,133],[123,123]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Peopoly/Peopoly Magneto X 0.4 nozzle | filament 1 length differs: expected 165.09mm, actual 165.17mm |
+| DIVERGENT | Peopoly/Peopoly Magneto X 0.6 nozzle | filament 1 length differs: expected 168.69mm, actual 168.77mm |
+| DIVERGENT | Peopoly/Peopoly Magneto X 0.8 nozzle | filament 1 length differs: expected 173.20mm, actual 173.27mm |
+| DIVERGENT | Phrozen/Phrozen Arco 0.4 nozzle | filament 1 length differs: expected 215.17mm, actual 213.11mm |
+| DIVERGENT | Positron3D/The Positron 0.2 nozzle | filament 1 length differs: expected 188.69mm, actual 188.87mm |
+| DIVERGENT | Positron3D/The Positron 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=90,90 POLYGON=[[85,85],[95,85],[95,95],[85,95],[85,85]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| DIVERGENT | Positron3D/The Positron 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=90,90 POLYGON=[[85,85],[95,85],[95,95],[85,95],[85,85]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| DIVERGENT | Positron3D/The Positron 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=90,90 POLYGON=[[85,85],[95,85],[95,95],[85,95],[85,85]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| ARES_ERROR | Prusa/Prusa CORE One 0.25 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One 0.3 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One HF 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One HF 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One HF 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One HF 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L HF 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L HF 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L HF 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa CORE One L HF 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| DIVERGENT | Prusa/Prusa MINI 0.25 nozzle | layer 1 travel geometry differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "94.55", y: "94.525", z: "0.2" }, end: Position { x: "94.85", y: "94.85", z: "0.2" }, arc_center: [None, None], turns: None }, feed: 9000.0, acceleration: "1000" } |
+| DIVERGENT | Prusa/Prusa MINI 0.4 nozzle | layer 1 travel geometry count differs: expected 7, actual 8 |
+| DIVERGENT | Prusa/Prusa MINI 0.6 nozzle | layer 1 travel geometry count differs: expected 7, actual 8 |
+| DIVERGENT | Prusa/Prusa MINI 0.8 nozzle | layer 1 travel geometry count differs: expected 7, actual 8 |
+| ARES_ERROR | Prusa/Prusa MINIIS 0.25 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| ARES_ERROR | Prusa/Prusa MINIIS 0.4 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| ARES_ERROR | Prusa/Prusa MINIIS 0.6 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| ARES_ERROR | Prusa/Prusa MINIIS 0.8 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| ARES_ERROR | Prusa/Prusa MK3.5 0.25 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| ARES_ERROR | Prusa/Prusa MK3.5 0.4 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| ARES_ERROR | Prusa/Prusa MK3.5 0.6 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| ARES_ERROR | Prusa/Prusa MK3.5 0.8 nozzle | invalid project layer-change G-code template: unknown placeholder: extruded_weight_total in extruded_weight_total |
+| DIVERGENT | Prusa/Prusa MK3S 0.25 nozzle | filament 1 length differs: expected 219.46mm, actual 218.94mm |
+| DIVERGENT | Prusa/Prusa MK3S 0.4 nozzle | filament 1 length differs: expected 246.08mm, actual 243.90mm |
+| DIVERGENT | Prusa/Prusa MK3S 0.6 nozzle | filament 1 length differs: expected 311.77mm, actual 307.53mm |
+| DIVERGENT | Prusa/Prusa MK3S 0.8 nozzle | filament 1 length differs: expected 331.62mm, actual 327.85mm |
+| DIVERGENT | Prusa/Prusa MK4 0.25 nozzle | preamble differs at line 18: expected Some("M486 S0"), actual Some("M201 X4000 Y4000 Z200 E2500") |
+| DIVERGENT | Prusa/Prusa MK4 0.4 nozzle | preamble differs at line 18: expected Some("M486 S0"), actual Some("M201 X4000 Y4000 Z200 E2500") |
+| DIVERGENT | Prusa/Prusa MK4 0.6 nozzle | preamble differs at line 18: expected Some("M486 S0"), actual Some("M201 X4000 Y4000 Z200 E2500") |
+| DIVERGENT | Prusa/Prusa MK4 0.8 nozzle | preamble differs at line 18: expected Some("M486 S0"), actual Some("M201 X4000 Y4000 Z200 E2500") |
+| ARES_ERROR | Prusa/Prusa MK4S 0.25 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S 0.3 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S HF0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S HF0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S HF0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| ARES_ERROR | Prusa/Prusa MK4S HF0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
+| DIVERGENT | Prusa/Prusa XL 0.25 nozzle | filament 1 length differs: expected 236.28mm, actual 235.62mm |
+| DIVERGENT | Prusa/Prusa XL 0.3 nozzle | filament 1 length differs: expected 248.53mm, actual 247.88mm |
+| DIVERGENT | Prusa/Prusa XL 0.4 nozzle | filament 1 length differs: expected 240.01mm, actual 239.80mm |
+| DIVERGENT | Prusa/Prusa XL 0.5 nozzle | filament 1 length differs: expected 262.37mm, actual 262.11mm |
+| DIVERGENT | Prusa/Prusa XL 0.6 nozzle | filament 1 length differs: expected 312.22mm, actual 311.71mm |
+| DIVERGENT | Prusa/Prusa XL 0.8 nozzle | preamble differs at line 18: expected Some("M486 S0"), actual Some("M201 X7000 Y7000 Z200 E2500") |
+| ARES_ERROR | Prusa/Prusa XL 5T 0.25 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Prusa/Prusa XL 5T 0.3 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Prusa/Prusa XL 5T 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Prusa/Prusa XL 5T 0.5 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Prusa/Prusa XL 5T 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] > 0 and (is_extruder_used[1]) |
+| ARES_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | Qidi/Qidi Q1 Pro 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 209.00mm |
+| DIVERGENT | Qidi/Qidi Q1 Pro 0.4 nozzle | filament 1 length differs: expected 232.51mm, actual 235.51mm |
+| DIVERGENT | Qidi/Qidi Q1 Pro 0.6 nozzle | filament 1 length differs: expected 297.56mm, actual 300.56mm |
+| DIVERGENT | Qidi/Qidi Q1 Pro 0.8 nozzle | filament 1 length differs: expected 380.05mm, actual 383.05mm |
+| DIVERGENT | Qidi/Qidi Q2 0.2 nozzle | filament 1 length differs: expected 225.98mm, actual 224.60mm |
+| DIVERGENT | Qidi/Qidi Q2 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=135,135 POLYGON=[[130,130],[140,130],[140,140],[130,140],[130,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Qidi/Qidi Q2 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=135,135 POLYGON=[[130,130],[140,130],[140,140],[130,140],[130,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Qidi/Qidi Q2 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=135,135 POLYGON=[[130,130],[140,130],[140,140],[130,140],[130,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Qidi/Qidi Q2C 0.2 nozzle | filament 1 length differs: expected 225.98mm, actual 224.60mm |
+| DIVERGENT | Qidi/Qidi Q2C 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=135,135 POLYGON=[[130,130],[140,130],[140,140],[130,140],[130,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Qidi/Qidi Q2C 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=135,135 POLYGON=[[130,130],[140,130],[140,140],[130,140],[130,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Qidi/Qidi Q2C 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=135,135 POLYGON=[[130,130],[140,130],[140,140],[130,140],[130,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
 | DIVERGENT | Qidi/Qidi X-CF Pro 0.4 nozzle | filament 1 length differs: expected 231.73mm, actual 212.73mm |
-| ARES_ERROR | Qidi/Qidi X-Max | Qidi/Qidi X-Max process: machine names no default preset |
 | DIVERGENT | Qidi/Qidi X-Max 0.4 nozzle | preamble differs at line 28: expected Some("M106 P3 S255"), actual Some("G90") |
-| ARES_ERROR | Qidi/Qidi X-Max 3 | Qidi/Qidi X-Max 3 process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi X-Max 3 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Max 3 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Max 3 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Max 3 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Max 4 | Qidi/Qidi X-Max 4 process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi X-Max 4 0.2 nozzle | Qidi/Qidi X-Max 4 0.2 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Qidi/Qidi X-Max 4 0.4 nozzle | Qidi/Qidi X-Max 4 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Qidi/Qidi X-Max 4 0.6 nozzle | Qidi/Qidi X-Max 4 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Qidi/Qidi X-Max 4 0.8 nozzle | Qidi/Qidi X-Max 4 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Qidi/Qidi X-Plus | Qidi/Qidi X-Plus process: machine names no default preset |
+| DIVERGENT | Qidi/Qidi X-Max 3 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 209.00mm |
+| DIVERGENT | Qidi/Qidi X-Max 3 0.4 nozzle | filament 1 length differs: expected 232.51mm, actual 235.51mm |
+| DIVERGENT | Qidi/Qidi X-Max 3 0.6 nozzle | filament 1 length differs: expected 297.56mm, actual 300.56mm |
+| DIVERGENT | Qidi/Qidi X-Max 3 0.8 nozzle | filament 1 length differs: expected 380.05mm, actual 383.05mm |
+| DIVERGENT | Qidi/Qidi X-Max 4 0.2 nozzle | filament 1 length differs: expected 223.63mm, actual 475.65mm |
+| DIVERGENT | Qidi/Qidi X-Max 4 0.4 nozzle | filament 1 length differs: expected 239.03mm, actual 492.03mm |
+| DIVERGENT | Qidi/Qidi X-Max 4 0.6 nozzle | filament 1 length differs: expected 287.20mm, actual 540.20mm |
+| DIVERGENT | Qidi/Qidi X-Max 4 0.8 nozzle | filament 1 length differs: expected 346.35mm, actual 599.35mm |
 | DIVERGENT | Qidi/Qidi X-Plus 0.4 nozzle | preamble differs at line 28: expected Some("M106 P3 S255"), actual Some("G90") |
-| ARES_ERROR | Qidi/Qidi X-Plus 3 | Qidi/Qidi X-Plus 3 process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi X-Plus 3 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Plus 3 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Plus 3 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Plus 3 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Plus 4 | Qidi/Qidi X-Plus 4 process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi X-Plus 4 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Plus 4 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Plus 4 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Plus 4 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Smart 3 | Qidi/Qidi X-Smart 3 process: machine names no default preset |
-| ARES_ERROR | Qidi/Qidi X-Smart 3 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Smart 3 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Smart 3 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/Qidi X-Smart 3 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Qidi/fdm_machine_common | Qidi/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Qidi/fdm_machine_x_common | Qidi/fdm_machine_x_common process: default preset "0.20mm Standard @XPlus4" not found |
-| ARES_ERROR | Qidi/fdm_q_common | Qidi/fdm_q_common process: default preset "0.20mm Standard @Q1 Pro" not found |
-| ARES_ERROR | Qidi/fdm_qidi_common | Qidi/fdm_qidi_common process: default preset "0.20mm Standard @QIDI" not found |
-| ARES_ERROR | Qidi/fdm_qidi_x3_common | Qidi/fdm_qidi_x3_common process: machine names no default preset |
-| ARES_ERROR | RH3D/E3NG v1.2S | RH3D/E3NG v1.2S process: machine names no default preset |
-| ARES_ERROR | RH3D/E3NG v1.2S - 0.2 nozzle | RH3D/E3NG v1.2S - 0.2 nozzle: no usable default_filament_profile |
-| ARES_ERROR | RH3D/E3NG v1.2S - 0.3 nozzle | RH3D/E3NG v1.2S - 0.3 nozzle: no usable default_filament_profile |
-| ARES_ERROR | RH3D/E3NG v1.2S - 0.4 nozzle | RH3D/E3NG v1.2S - 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | RH3D/E3NG v1.2S - 0.5 nozzle | RH3D/E3NG v1.2S - 0.5 nozzle: no usable default_filament_profile |
-| ARES_ERROR | RH3D/E3NG v1.2S - 0.6 nozzle | RH3D/E3NG v1.2S - 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | RH3D/fdm_common_E3NG v1.2S | RH3D/fdm_common_E3NG v1.2S process: machine names no default preset |
-| ARES_ERROR | RH3D/fdm_machine_common | RH3D/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Cast | Ratrig/RatRig V-Cast process: machine names no default preset |
-| DIVERGENT | Ratrig/RatRig V-Cast 0.4 nozzle | invalid duration "0.818575s" |
-| DIVERGENT | Ratrig/RatRig V-Cast 0.6 nozzle | invalid duration "0.818575s" |
-| ARES_ERROR | Ratrig/RatRig V-Core 3 200 | Ratrig/RatRig V-Core 3 200 process: machine names no default preset |
-| DIVERGENT | Ratrig/RatRig V-Core 3 200 0.4 nozzle | invalid duration "0.616544s" |
-| ARES_ERROR | Ratrig/RatRig V-Core 3 300 | Ratrig/RatRig V-Core 3 300 process: machine names no default preset |
-| DIVERGENT | Ratrig/RatRig V-Core 3 300 0.4 nozzle | invalid duration "0.818575s" |
-| ARES_ERROR | Ratrig/RatRig V-Core 3 400 | Ratrig/RatRig V-Core 3 400 process: machine names no default preset |
+| DIVERGENT | Qidi/Qidi X-Plus 3 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 209.00mm |
+| DIVERGENT | Qidi/Qidi X-Plus 3 0.4 nozzle | filament 1 length differs: expected 232.51mm, actual 235.51mm |
+| DIVERGENT | Qidi/Qidi X-Plus 3 0.6 nozzle | filament 1 length differs: expected 297.56mm, actual 300.56mm |
+| DIVERGENT | Qidi/Qidi X-Plus 3 0.8 nozzle | filament 1 length differs: expected 380.05mm, actual 383.05mm |
+| DIVERGENT | Qidi/Qidi X-Plus 4 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 209.00mm |
+| DIVERGENT | Qidi/Qidi X-Plus 4 0.4 nozzle | filament 1 length differs: expected 232.51mm, actual 235.51mm |
+| DIVERGENT | Qidi/Qidi X-Plus 4 0.6 nozzle | filament 1 length differs: expected 297.56mm, actual 300.56mm |
+| DIVERGENT | Qidi/Qidi X-Plus 4 0.8 nozzle | filament 1 length differs: expected 380.05mm, actual 383.05mm |
+| DIVERGENT | Qidi/Qidi X-Smart 3 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 209.00mm |
+| DIVERGENT | Qidi/Qidi X-Smart 3 0.4 nozzle | filament 1 length differs: expected 232.51mm, actual 235.51mm |
+| DIVERGENT | Qidi/Qidi X-Smart 3 0.6 nozzle | filament 1 length differs: expected 297.56mm, actual 300.56mm |
+| DIVERGENT | Qidi/Qidi X-Smart 3 0.8 nozzle | filament 1 length differs: expected 380.05mm, actual 383.05mm |
+| ARES_ERROR | RH3D/E3NG v1.2S - 0.2 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
+| ARES_ERROR | RH3D/E3NG v1.2S - 0.3 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
+| ARES_ERROR | RH3D/E3NG v1.2S - 0.4 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
+| ARES_ERROR | RH3D/E3NG v1.2S - 0.5 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
+| ARES_ERROR | RH3D/E3NG v1.2S - 0.6 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
+| ARES_ERROR | Raise3D/Raise3D Pro3 0.4 nozzle (Dual) | invalid project G-code template: placeholder index out of range: nozzle_temperature_initial_layer in nozzle_temperature_initial_layer[1] - 30 |
+| DIVERGENT | Raise3D/Raise3D Pro3 0.4 nozzle (Left) | filament 1 length differs: expected 278.07mm, actual 293.07mm |
+| ARES_ERROR | Raise3D/Raise3D Pro3 0.4 nozzle (Right) | invalid project G-code template: placeholder index out of range: nozzle_temperature_initial_layer in nozzle_temperature_initial_layer[1] - 20 |
+| ARES_ERROR | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Dual) | orca-slicer failed (exit status: 205): Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode. |
+| ARES_ERROR | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Left) | orca-slicer failed (exit status: 205): Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode. |
+| ARES_ERROR | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Right) | orca-slicer failed (exit status: 205): Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode. |
+| DIVERGENT | Ratrig/RatRig V-Cast 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X9000 Y9000 Z100 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Cast 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X9000 Y9000 Z100 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 3 200 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=100,100 POLYGON=[[95,95],[105,95],[105,105],[95,105],[95,95]]"), actual Some("M201 X9000 Y9000 Z100 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 3 300 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X9000 Y9000 Z100 E5000") |
 | DIVERGENT | Ratrig/RatRig V-Core 3 400 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X9000 Y9000 Z100 E5000") |
-| ARES_ERROR | Ratrig/RatRig V-Core 3 500 | Ratrig/RatRig V-Core 3 500 process: machine names no default preset |
 | DIVERGENT | Ratrig/RatRig V-Core 3 500 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X9000 Y9000 Z100 E5000") |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 300 | Ratrig/RatRig V-Core 4 300 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 300 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 300 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 300 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 300 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 400 | Ratrig/RatRig V-Core 4 400 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 400 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 400 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 400 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 400 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 500 | Ratrig/RatRig V-Core 4 500 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 500 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 500 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 500 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 500 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 300 | Ratrig/RatRig V-Core 4 HYBRID 300 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 300 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 300 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 300 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 300 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 400 | Ratrig/RatRig V-Core 4 HYBRID 400 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 400 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 400 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 400 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 400 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 500 | Ratrig/RatRig V-Core 4 HYBRID 500 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 500 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 500 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 500 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 HYBRID 500 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 | Ratrig/RatRig V-Core 4 IDEX 300 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 | Ratrig/RatRig V-Core 4 IDEX 400 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 | Ratrig/RatRig V-Core 4 IDEX 500 process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE process: machine names no default preset |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.4 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/RatRig V-Minion | Ratrig/RatRig V-Minion process: machine names no default preset |
-| DIVERGENT | Ratrig/RatRig V-Minion 0.4 nozzle | invalid duration "0.576138s" |
-| ARES_ERROR | Ratrig/fdm_klipper_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Ratrig/fdm_machine_common | Ratrig/fdm_machine_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
+| DIVERGENT | Ratrig/RatRig V-Core 4 300 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 300 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 300 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 300 0.8 nozzle | Ratrig/RatRig V-Core 4 300 0.8 nozzle process: no compatible preset |
+| DIVERGENT | Ratrig/RatRig V-Core 4 400 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 400 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 400 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 400 0.8 nozzle | Ratrig/RatRig V-Core 4 400 0.8 nozzle process: no compatible preset |
+| DIVERGENT | Ratrig/RatRig V-Core 4 500 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 500 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 500 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X10000 Y10000 Z200 E5000") |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 500 0.8 nozzle | Ratrig/RatRig V-Core 4 500 0.8 nozzle process: no compatible preset |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=250,250 POLYGON=[[245,245],[255,245],[255,255],[245,255],[245,245]]"), actual Some("M201 X20000 Y20000 Z200 E5000") |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.4 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.5 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.6 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| ARES_ERROR | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.8 nozzle | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| DIVERGENT | Ratrig/RatRig V-Minion 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=90,90 POLYGON=[[85,85],[95,85],[95,95],[85,95],[85,85]]"), actual Some("M201 X9000 Y9000 Z100 E5000") |
+| DIVERGENT | RolohaunDesign/Rolohaun Delta Flyer Refit 0.4 nozzle | filament 1 length differs: expected 252.29mm, actual 252.54mm |
+| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.2 nozzle | filament 1 length differs: expected 188.69mm, actual 188.87mm |
+| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=55,55 POLYGON=[[50,50],[60,50],[60,60],[50,60],[50,50]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=55,55 POLYGON=[[50,50],[60,50],[60,60],[50,60],[50,50]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
+| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=55,55 POLYGON=[[50,50],[60,50],[60,60],[50,60],[50,50]]"), actual Some("M201 X8000 Y8000 Z500 E5000") |
 | DIVERGENT | SecKit/SecKit Go3 0.4 nozzle | preamble differs at line 18: expected Some("START_PRINT EXTRUDER_TEMP=240 BED_TEMP=60"), actual Some("M201 X3500 Y3500 Z200 E8000") |
-| ARES_ERROR | SecKit/SecKit SK-Tank | SecKit/SecKit SK-Tank process: machine names no default preset |
 | DIVERGENT | SecKit/SecKit SK-Tank 0.4 nozzle | preamble differs at line 18: expected Some("START_PRINT EXTRUDER_TEMP=240 BED_TEMP=60"), actual Some("M201 X3500 Y3500 Z200 E8000") |
-| ARES_ERROR | SecKit/Seckit Go3 | SecKit/Seckit Go3 process: machine names no default preset |
-| ARES_ERROR | SecKit/fdm_klipper_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | SecKit/fdm_machine_common | SecKit/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC Artemis 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC Artemis 0.5 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC Artemis 0.7 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC Artemis 1.0 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC Artemis 300 | SeeMeCNC/SeeMeCNC Artemis 300 process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 300 | SeeMeCNC/SeeMeCNC BOSSdelta 300 process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.5 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.7 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 300 1.0 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.5 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.7 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 1.0 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.5 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.7 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 1.0 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.4 nozzle | orca-slicer failed (exit status: 238): extruder_printable_height: 2100 not in range [0.000000,1000.000000] |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.5 nozzle | orca-slicer failed (exit status: 238): extruder_printable_height: 2100 not in range [0.000000,1000.000000] |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.7 nozzle | orca-slicer failed (exit status: 238): extruder_printable_height: 2100 not in range [0.000000,1000.000000] |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 1.0 nozzle | orca-slicer failed (exit status: 238): extruder_printable_height: 2100 not in range [0.000000,1000.000000] |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v3.2 | SeeMeCNC/SeeMeCNC RostockMAX v3.2 process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.5 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.7 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v3.2 1.0 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v4 | SeeMeCNC/SeeMeCNC RostockMAX v4 process: machine names no default preset |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v4 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v4 0.5 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v4 0.7 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | SeeMeCNC/SeeMeCNC RostockMAX v4 1.0 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Snapmaker/Snapmaker A250 | Snapmaker/Snapmaker A250 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 BKit | Snapmaker/Snapmaker A250 BKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 BKit (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 BKit (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 BKit (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 BKit (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual | Snapmaker/Snapmaker A250 Dual process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual BKit | Snapmaker/Snapmaker A250 Dual BKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual BKit (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual BKit (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual BKit (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual BKit (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QS+B Kit | Snapmaker/Snapmaker A250 Dual QS+B Kit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QSKit | Snapmaker/Snapmaker A250 Dual QSKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QSKit (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QSKit (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QSKit (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 Dual QSKit (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QS+B Kit | Snapmaker/Snapmaker A250 QS+B Kit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QS+B Kit (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QS+B Kit (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QS+B Kit (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QS+B Kit (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QSKit | Snapmaker/Snapmaker A250 QSKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QSKit (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QSKit (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QSKit (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A250 QSKit (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 | Snapmaker/Snapmaker A350 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 BKit | Snapmaker/Snapmaker A350 BKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 BKit (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 BKit (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 BKit (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 BKit (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual | Snapmaker/Snapmaker A350 Dual process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual BKit | Snapmaker/Snapmaker A350 Dual BKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual BKit (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual BKit (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual BKit (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual BKit (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QS+B Kit | Snapmaker/Snapmaker A350 Dual QS+B Kit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QSKit | Snapmaker/Snapmaker A350 Dual QSKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QSKit (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QSKit (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QSKit (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 Dual QSKit (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QS+B Kit | Snapmaker/Snapmaker A350 QS+B Kit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QS+B Kit (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QS+B Kit (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QS+B Kit (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QS+B Kit (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QSKit | Snapmaker/Snapmaker A350 QSKit process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QSKit (0.2 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QSKit (0.4 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QSKit (0.6 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker A350 QSKit (0.8 nozzle) | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | Snapmaker/Snapmaker Artisan | Snapmaker/Snapmaker Artisan process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker Artisan (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker Artisan (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker Artisan (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker Artisan (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker J1 | Snapmaker/Snapmaker J1 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker J1 (0.2 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker J1 (0.4 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker J1 (0.6 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker J1 (0.8 nozzle) | orca-slicer failed (exit status: 251): run found error, return -5, exit... |
-| ARES_ERROR | Snapmaker/Snapmaker U1 | Snapmaker/Snapmaker U1 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/Snapmaker U1 (0.2 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | Snapmaker/Snapmaker U1 (0.4 nozzle) process: default preset "0.20mm Standard @Snapmaker" not found |
+| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.4 nozzle | filament 1 length differs: expected 298.14mm, actual 496.64mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.5 nozzle | filament 1 length differs: expected 327.08mm, actual 525.58mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.7 nozzle | filament 1 length differs: expected 374.44mm, actual 572.94mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 1.0 nozzle | filament 1 length differs: expected 416.29mm, actual 614.79mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.4 nozzle | filament 1 length differs: expected 298.14mm, actual 496.64mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.5 nozzle | filament 1 length differs: expected 327.08mm, actual 525.58mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.7 nozzle | filament 1 length differs: expected 374.44mm, actual 572.94mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 1.0 nozzle | filament 1 length differs: expected 416.29mm, actual 614.79mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.4 nozzle | filament 1 length differs: expected 298.14mm, actual 496.64mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.5 nozzle | filament 1 length differs: expected 327.08mm, actual 525.58mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.7 nozzle | filament 1 length differs: expected 374.44mm, actual 572.94mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 1.0 nozzle | filament 1 length differs: expected 416.29mm, actual 614.79mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.4 nozzle | filament 1 length differs: expected 298.14mm, actual 496.64mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.5 nozzle | filament 1 length differs: expected 327.08mm, actual 525.58mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.7 nozzle | filament 1 length differs: expected 374.44mm, actual 572.94mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 1.0 nozzle | filament 1 length differs: expected 416.29mm, actual 614.79mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.4 nozzle | filament 1 length differs: expected 298.14mm, actual 496.64mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.5 nozzle | filament 1 length differs: expected 327.08mm, actual 525.58mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.7 nozzle | filament 1 length differs: expected 374.44mm, actual 572.94mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 1.0 nozzle | filament 1 length differs: expected 416.29mm, actual 614.79mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.4 nozzle | filament 1 length differs: expected 298.14mm, actual 496.64mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.5 nozzle | filament 1 length differs: expected 327.08mm, actual 525.58mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.7 nozzle | filament 1 length differs: expected 374.44mm, actual 572.94mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 1.0 nozzle | filament 1 length differs: expected 416.29mm, actual 614.79mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.4 nozzle | filament 1 length differs: expected 298.14mm, actual 496.64mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.5 nozzle | filament 1 length differs: expected 327.08mm, actual 525.58mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.7 nozzle | filament 1 length differs: expected 374.44mm, actual 572.94mm |
+| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 1.0 nozzle | filament 1 length differs: expected 416.29mm, actual 614.79mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 (0.2 nozzle) | filament 1 length differs: expected 208.19mm, actual 239.49mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 278.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 276.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 319.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.2 nozzle) | filament 1 length differs: expected 208.19mm, actual 239.49mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 278.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 276.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 319.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.2 nozzle) | filament 1 length differs: expected 201.91mm, actual 243.24mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 288.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 286.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 329.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.2 nozzle) | filament 1 length differs: expected 201.91mm, actual 243.24mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 288.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 286.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 329.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.2 nozzle) | filament 1 length differs: expected 201.91mm, actual 243.24mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 288.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 286.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 329.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.2 nozzle) | filament 1 length differs: expected 201.91mm, actual 243.24mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 288.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 286.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 329.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.2 nozzle) | filament 1 length differs: expected 208.19mm, actual 239.49mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 278.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 276.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 319.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.2 nozzle) | filament 1 length differs: expected 208.19mm, actual 239.49mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.4 nozzle) | filament 1 length differs: expected 247.45mm, actual 278.81mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.6 nozzle) | filament 1 length differs: expected 243.79mm, actual 276.33mm |
+| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.8 nozzle) | filament 1 length differs: expected 286.28mm, actual 319.48mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 (0.2 nozzle) | filament 1 length differs: expected 210.99mm, actual 242.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 281.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 279.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 322.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.2 nozzle) | filament 1 length differs: expected 210.99mm, actual 242.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 281.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 279.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 322.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.2 nozzle) | filament 1 length differs: expected 204.72mm, actual 246.05mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 291.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 289.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 332.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.2 nozzle) | filament 1 length differs: expected 204.72mm, actual 246.05mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 291.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 289.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 332.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.2 nozzle) | filament 1 length differs: expected 204.72mm, actual 246.05mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 291.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 289.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 332.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.2 nozzle) | filament 1 length differs: expected 204.72mm, actual 246.05mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 291.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 289.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 332.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.2 nozzle) | filament 1 length differs: expected 210.99mm, actual 242.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 281.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 279.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 322.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.2 nozzle) | filament 1 length differs: expected 210.99mm, actual 242.29mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.4 nozzle) | filament 1 length differs: expected 250.26mm, actual 281.62mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.6 nozzle) | filament 1 length differs: expected 246.60mm, actual 279.14mm |
+| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.8 nozzle) | filament 1 length differs: expected 289.09mm, actual 322.29mm |
+| DIVERGENT | Snapmaker/Snapmaker Artisan (0.2 nozzle) | filament 1 length differs: expected 200.76mm, actual 242.15mm |
+| DIVERGENT | Snapmaker/Snapmaker Artisan (0.4 nozzle) | filament 1 length differs: expected 255.23mm, actual 296.61mm |
+| DIVERGENT | Snapmaker/Snapmaker Artisan (0.6 nozzle) | filament 1 length differs: expected 249.09mm, actual 291.63mm |
+| DIVERGENT | Snapmaker/Snapmaker Artisan (0.8 nozzle) | filament 1 length differs: expected 291.58mm, actual 334.78mm |
+| DIVERGENT | Snapmaker/Snapmaker J1 (0.2 nozzle) | filament 1 length differs: expected 206.64mm, actual 248.01mm |
+| DIVERGENT | Snapmaker/Snapmaker J1 (0.4 nozzle) | filament 1 length differs: expected 255.04mm, actual 296.42mm |
+| DIVERGENT | Snapmaker/Snapmaker J1 (0.6 nozzle) | filament 1 length differs: expected 248.90mm, actual 291.44mm |
+| DIVERGENT | Snapmaker/Snapmaker J1 (0.8 nozzle) | filament 1 length differs: expected 291.39mm, actual 334.59mm |
+| ARES_ERROR | Snapmaker/Snapmaker U1 (0.2 nozzle) | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] > 0 and (is_extruder_used[1]) |
+| ARES_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | orca-slicer failed (exit status: 238): bridge_line_width: Bridge line width must not exceed nozzle diameter: 0.600000 |
-| ARES_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | invalid Orca option printer_extruder_variant |
-| ARES_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | Snapmaker/fdm_U1 | Snapmaker/fdm_U1 process: default preset "0.20mm Standard @Snapmaker" not found |
-| ARES_ERROR | Snapmaker/fdm_a250 | Snapmaker/fdm_a250 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a250_bk | Snapmaker/fdm_a250_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a250_dual | Snapmaker/fdm_a250_dual process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a250_dual_bk | Snapmaker/fdm_a250_dual_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a250_dual_qs | Snapmaker/fdm_a250_dual_qs process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a250_dual_qs_bk | Snapmaker/fdm_a250_dual_qs_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a250_qs | Snapmaker/fdm_a250_qs process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a250_qs_bk | Snapmaker/fdm_a250_qs_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350 | Snapmaker/fdm_a350 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350_bk | Snapmaker/fdm_a350_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350_dual | Snapmaker/fdm_a350_dual process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350_dual_bk | Snapmaker/fdm_a350_dual_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350_dual_qs | Snapmaker/fdm_a350_dual_qs process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350_dual_qs_bk | Snapmaker/fdm_a350_dual_qs_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350_qs | Snapmaker/fdm_a350_qs process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a350_qs_bk | Snapmaker/fdm_a350_qs_bk process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_a400 | Snapmaker/fdm_a400 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_common | Snapmaker/fdm_common process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_idex | Snapmaker/fdm_idex process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_klipper | Snapmaker/fdm_klipper process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_linear2 | Snapmaker/fdm_linear2 process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_linear2_dual | Snapmaker/fdm_linear2_dual process: machine names no default preset |
-| ARES_ERROR | Snapmaker/fdm_toolchanger | Snapmaker/fdm_toolchanger process: default preset "0.20mm Standard @Snapmaker" not found |
-| ARES_ERROR | Sovol/Sovol SV01 | Sovol/Sovol SV01 process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV01 0.4 nozzle | Sovol/Sovol SV01 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV01 Pro | Sovol/Sovol SV01 Pro process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV01 Pro 0.4 nozzle | Sovol/Sovol SV01 Pro 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV02 | Sovol/Sovol SV02 process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV02 0.4 nozzle | Sovol/Sovol SV02 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV05 | Sovol/Sovol SV05 process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV05 0.4 nozzle | Sovol/Sovol SV05 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV06 | Sovol/Sovol SV06 process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV06 0.4 High-Speed nozzle | Sovol/Sovol SV06 0.4 High-Speed nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV06 0.4 nozzle | Sovol/Sovol SV06 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV06 ACE | Sovol/Sovol SV06 ACE process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV06 ACE 0.2 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV06 ACE 0.4 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV06 ACE 0.6 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV06 ACE 0.8 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV06 Plus | Sovol/Sovol SV06 Plus process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV06 Plus 0.4 nozzle | Sovol/Sovol SV06 Plus 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV06 Plus ACE | Sovol/Sovol SV06 Plus ACE process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV06 Plus ACE 0.4 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV07 | Sovol/Sovol SV07 process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV07 0.4 nozzle | Sovol/Sovol SV07 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV07 Plus | Sovol/Sovol SV07 Plus process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV07 Plus 0.4 nozzle | Sovol/Sovol SV07 Plus 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Sovol/Sovol SV08 | Sovol/Sovol SV08 process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV08 0.2 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV08 0.4 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV08 0.6 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV08 0.8 nozzle | Sovol/Sovol SV08 0.8 nozzle process: default preset "0.20mm Standard @Sovol SV08 0.8 nozzle" not found |
-| ARES_ERROR | Sovol/Sovol SV08 MAX | Sovol/Sovol SV08 MAX process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol SV08 MAX 0.4 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV08 MAX 0.6 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol SV08 MAX 0.8 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/Sovol Zero | Sovol/Sovol Zero process: machine names no default preset |
-| ARES_ERROR | Sovol/Sovol Zero 0.4 nozzle | unknown filament preset "Generic PLA @System" |
-| ARES_ERROR | Sovol/fdm_machine_common | Sovol/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Tiertime/Tiertime UP300 HS | Tiertime/Tiertime UP300 HS process: machine names no default preset |
-| ARES_ERROR | Tiertime/Tiertime UP300 HS 0.4 nozzle | Tiertime/Tiertime UP300 HS 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/Tiertime UP310 Pro | Tiertime/Tiertime UP310 Pro process: machine names no default preset |
-| ARES_ERROR | Tiertime/Tiertime UP310 Pro 0.4 nozzle | Tiertime/Tiertime UP310 Pro 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/Tiertime UP400 Pro | Tiertime/Tiertime UP400 Pro process: machine names no default preset |
-| ARES_ERROR | Tiertime/Tiertime UP400 Pro 0.4 nozzle | Tiertime/Tiertime UP400 Pro 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/Tiertime UP400 Pro 0.6 nozzle | Tiertime/Tiertime UP400 Pro 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/Tiertime UP400 Pro 0.8 nozzle | Tiertime/Tiertime UP400 Pro 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/Tiertime UP600 HS | Tiertime/Tiertime UP600 HS process: machine names no default preset |
-| ARES_ERROR | Tiertime/Tiertime UP600 HS 0.4 nozzle | Tiertime/Tiertime UP600 HS 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/Tiertime UP600 HS 0.6 nozzle | Tiertime/Tiertime UP600 HS 0.6 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/Tiertime UP600 HS 0.8 nozzle | Tiertime/Tiertime UP600 HS 0.8 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Tiertime/fdm_machine_common | Tiertime/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Tiertime/fdm_tiertime_common | Tiertime/fdm_tiertime_common: no usable default_filament_profile |
-| ARES_ERROR | TwoTrees/TwoTrees SK1 | TwoTrees/TwoTrees SK1 process: machine names no default preset |
-| ARES_ERROR | TwoTrees/TwoTrees SK1 0.4 nozzle | TwoTrees/TwoTrees SK1 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | TwoTrees/TwoTrees SP-5 Klipper | TwoTrees/TwoTrees SP-5 Klipper process: machine names no default preset |
-| ARES_ERROR | TwoTrees/TwoTrees SP-5 Klipper 0.4 nozzle | TwoTrees/TwoTrees SP-5 Klipper 0.4 nozzle process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | TwoTrees/fdm_klipper_common | TwoTrees/fdm_klipper_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | TwoTrees/fdm_machine_common | TwoTrees/fdm_machine_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | Volumic/EXO42 | Volumic/EXO42 process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO42 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/EXO42 IDRE | Volumic/EXO42 IDRE process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO42 IDRE (0.4 nozzle) | Volumic/EXO42 IDRE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO42 IDRE COPY MODE (0.4 nozzle) | Volumic/EXO42 IDRE COPY MODE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO42 IDRE MIRROR MODE (0.4 nozzle) | Volumic/EXO42 IDRE MIRROR MODE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO42 Performance | Volumic/EXO42 Performance process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO42 Performance (0.4 nozzle) | Volumic/EXO42 Performance (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO42 Stage 2 | Volumic/EXO42 Stage 2 process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO42 Stage 2 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/EXO65 | Volumic/EXO65 process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO65 (0.6 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/EXO65 IDRE | Volumic/EXO65 IDRE process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO65 IDRE (0.4 nozzle) | Volumic/EXO65 IDRE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO65 IDRE COPY MODE (0.4 nozzle) | Volumic/EXO65 IDRE COPY MODE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO65 IDRE MIRROR MODE (0.4 nozzle) | Volumic/EXO65 IDRE MIRROR MODE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO65 Performance | Volumic/EXO65 Performance process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO65 Performance (0.4 nozzle) | Volumic/EXO65 Performance (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO65 Performance (0.6 nozzle) | Volumic/EXO65 Performance (0.6 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO65 Performance (0.8 nozzle) | Volumic/EXO65 Performance (0.8 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/EXO65 Stage 2 | Volumic/EXO65 Stage 2 process: machine names no default preset |
-| ARES_ERROR | Volumic/EXO65 Stage 2 (0.6 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/SH65 | Volumic/SH65 process: machine names no default preset |
-| ARES_ERROR | Volumic/SH65 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/SH65 IDRE | Volumic/SH65 IDRE process: machine names no default preset |
-| ARES_ERROR | Volumic/SH65 IDRE (0.4 nozzle) | Volumic/SH65 IDRE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/SH65 IDRE COPY MODE (0.4 nozzle) | Volumic/SH65 IDRE COPY MODE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/SH65 IDRE MIRROR MODE (0.4 nozzle) | Volumic/SH65 IDRE MIRROR MODE (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/SH65 Performance | Volumic/SH65 Performance process: machine names no default preset |
-| ARES_ERROR | Volumic/SH65 Performance (0.4 nozzle) | Volumic/SH65 Performance (0.4 nozzle) process: default preset "Performance 150 - 0.15mm" not found |
-| ARES_ERROR | Volumic/SH65 Stage 2 | Volumic/SH65 Stage 2 process: machine names no default preset |
-| ARES_ERROR | Volumic/SH65 Stage 2 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS20MK2 | Volumic/VS20MK2 process: machine names no default preset |
-| ARES_ERROR | Volumic/VS20MK2 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30MK2 | Volumic/VS30MK2 process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30MK2 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30MK3 | Volumic/VS30MK3 process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30MK3 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30MK3 Stage 2 | Volumic/VS30MK3 Stage 2 process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30MK3 Stage 2 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30SC | Volumic/VS30SC process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30SC (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30SC2 | Volumic/VS30SC2 process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30SC2 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30SC2 Performance | Volumic/VS30SC2 Performance process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30SC2 Performance (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30SC2 Stage 2 | Volumic/VS30SC2 Stage 2 process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30SC2 Stage 2 (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/VS30ULTRA | Volumic/VS30ULTRA process: machine names no default preset |
-| ARES_ERROR | Volumic/VS30ULTRA (0.4 nozzle) | unsupported project feature: overhang_reverse |
-| ARES_ERROR | Volumic/fdm_volumic_common | Volumic/fdm_volumic_common process: machine names no default preset |
-| ARES_ERROR | Vzbot/Vzbot 235 AWD | Vzbot/Vzbot 235 AWD process: machine names no default preset |
-| ARES_ERROR | Vzbot/Vzbot 235 AWD 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Vzbot/Vzbot 235 AWD 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Vzbot/Vzbot 235 AWD 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Vzbot/Vzbot 330 AWD | Vzbot/Vzbot 330 AWD process: machine names no default preset |
-| ARES_ERROR | Vzbot/Vzbot 330 AWD 0.4 nozzle | unsupported project feature: xy_hole_compensation |
-| ARES_ERROR | Vzbot/Vzbot 330 AWD 0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Vzbot/Vzbot 330 AWD 0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Vzbot/fdm_klipper_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | Vzbot/fdm_machine_common | Vzbot/fdm_machine_common: no usable default_filament_profile |
-| ARES_ERROR | Wanhao France/D12 230 PRO M2 DIRECT | Wanhao France/D12 230 PRO M2 DIRECT process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 230 PRO M2 DIRECT 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 230 PRO M2 MONO DUAL | Wanhao France/D12 230 PRO M2 MONO DUAL process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle PoopTool | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 230 PRO M2 MONO DUAL PoopTool | Wanhao France/D12 230 PRO M2 MONO DUAL PoopTool process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 230 PRO SMARTPAD DIRECT | Wanhao France/D12 230 PRO SMARTPAD DIRECT process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 230 PRO SMARTPAD DIRECT 0.4 nozzle | Wanhao France/D12 230 PRO SMARTPAD DIRECT 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle PoopTool | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL PoopTool | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL PoopTool process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 300 PRO M2 DIRECT | Wanhao France/D12 300 PRO M2 DIRECT process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 300 PRO M2 DIRECT 0.4 nozzle | Wanhao France/D12 300 PRO M2 DIRECT 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Wanhao France/D12 300 PRO M2 MONO DUAL | Wanhao France/D12 300 PRO M2 MONO DUAL process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 300 PRO M2 MONO DUAL 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 300 PRO M2 MONO DUAL PoopTool | Wanhao France/D12 300 PRO M2 MONO DUAL PoopTool process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 300 PRO M2 MONO DUAL PoopTool 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 300 PRO SMARTPAD DIRECT | Wanhao France/D12 300 PRO SMARTPAD DIRECT process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 300 PRO SMARTPAD DIRECT 0.4 nozzle | Wanhao France/D12 300 PRO SMARTPAD DIRECT 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL PoopTool | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL PoopTool process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 500 PRO M2 DIRECT | Wanhao France/D12 500 PRO M2 DIRECT process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 500 PRO M2 DIRECT 0.4 nozzle | Wanhao France/D12 500 PRO M2 DIRECT 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Wanhao France/D12 500 PRO M2 MONO DUAL | Wanhao France/D12 500 PRO M2 MONO DUAL process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 500 PRO M2 MONO DUAL 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 500 PRO M2 MONO DUAL PoopTool | Wanhao France/D12 500 PRO M2 MONO DUAL PoopTool process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 500 PRO M2 MONO DUAL PoopTool 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 500 PRO SMARTPAD DIRECT | Wanhao France/D12 500 PRO SMARTPAD DIRECT process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 500 PRO SMARTPAD DIRECT 0.4 nozzle | Wanhao France/D12 500 PRO SMARTPAD DIRECT 0.4 nozzle: no usable default_filament_profile |
-| ARES_ERROR | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL PoopTool | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL PoopTool process: machine names no default preset |
-| ARES_ERROR | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle | unsupported project feature: extra_perimeters_on_overhangs |
-| ARES_ERROR | Wanhao France/fdm_machine_common | Wanhao France/fdm_machine_common process: default preset "0.16mm Optimal @Bambu Lab X1 Carbon 0.4 nozzle" not found |
-| ARES_ERROR | WonderMaker/WonderMaker ZR | WonderMaker/WonderMaker ZR process: machine names no default preset |
-| ARES_ERROR | WonderMaker/WonderMaker ZR 0.2 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | WonderMaker/WonderMaker ZR 0.4 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | WonderMaker/WonderMaker ZR 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | WonderMaker/WonderMaker ZR 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra | WonderMaker/WonderMaker ZR Ultra process: machine names no default preset |
+| ARES_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] > 0 and (is_extruder_used[1]) |
+| ARES_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] > 0 and (is_extruder_used[1]) |
+| DIVERGENT | Sovol/Sovol SV01 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.286", y: "123.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.258", y: "123.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Sovol/Sovol SV01 Pro 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.286", y: "123.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.258", y: "123.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Sovol/Sovol SV02 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.286", y: "123.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.258", y: "123.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Sovol/Sovol SV05 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "113.546", y: "112.258", z: "0.44" }, end: Position { x: "112.286", y: "113.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "113.546", y: "112.258", z: "0.44" }, end: Position { x: "112.258", y: "113.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Sovol/Sovol SV06 0.4 High-Speed nozzle | filament 1 length differs: expected 377.03mm, actual 397.86mm |
+| DIVERGENT | Sovol/Sovol SV06 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "113.546", y: "112.258", z: "0.44" }, end: Position { x: "112.286", y: "113.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "1000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "113.546", y: "112.258", z: "0.44" }, end: Position { x: "112.258", y: "113.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "1000", fans: "0:255" } |
+| DIVERGENT | Sovol/Sovol SV06 ACE 0.2 nozzle | filament 1 length differs: expected 215.17mm, actual 215.79mm |
+| DIVERGENT | Sovol/Sovol SV06 ACE 0.4 nozzle | filament 1 length differs: expected 247.27mm, actual 248.31mm |
+| DIVERGENT | Sovol/Sovol SV06 ACE 0.6 nozzle | filament 1 length differs: expected 277.36mm, actual 278.87mm |
+| DIVERGENT | Sovol/Sovol SV06 ACE 0.8 nozzle | filament 1 length differs: expected 330.97mm, actual 332.95mm |
+| DIVERGENT | Sovol/Sovol SV06 Plus 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "153.546", y: "152.258", z: "0.44" }, end: Position { x: "152.286", y: "153.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "1000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "153.546", y: "152.258", z: "0.44" }, end: Position { x: "152.258", y: "153.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "1000", fans: "0:255" } |
+| DIVERGENT | Sovol/Sovol SV06 Plus ACE 0.4 nozzle | filament 1 length differs: expected 268.18mm, actual 269.22mm |
+| DIVERGENT | Sovol/Sovol SV07 0.4 nozzle | filament 1 length differs: expected 320.61mm, actual 338.93mm |
+| DIVERGENT | Sovol/Sovol SV07 Plus 0.4 nozzle | preamble differs at line 18: expected Some("M190 S35"), actual Some("M201 X8000 Y8000 Z400 E20000") |
+| DIVERGENT | Sovol/Sovol SV08 0.2 nozzle | filament 1 length differs: expected 297.81mm, actual 322.30mm |
+| DIVERGENT | Sovol/Sovol SV08 0.4 nozzle | filament 1 length differs: expected 343.90mm, actual 365.13mm |
+| DIVERGENT | Sovol/Sovol SV08 0.6 nozzle | filament 1 length differs: expected 363.42mm, actual 386.25mm |
+| DIVERGENT | Sovol/Sovol SV08 0.8 nozzle | filament 1 length differs: expected 430.44mm, actual 451.89mm |
+| DIVERGENT | Sovol/Sovol SV08 MAX 0.4 nozzle | filament 1 length differs: expected 242.28mm, actual 242.86mm |
+| DIVERGENT | Sovol/Sovol SV08 MAX 0.6 nozzle | filament 1 length differs: expected 290.46mm, actual 291.45mm |
+| DIVERGENT | Sovol/Sovol SV08 MAX 0.8 nozzle | filament 1 length differs: expected 341.53mm, actual 342.70mm |
+| DIVERGENT | Sovol/Sovol Zero 0.4 nozzle | filament 1 length differs: expected 216.31mm, actual 214.20mm |
+| DIVERGENT | Tiertime/Tiertime UP300 HS 0.4 nozzle | filament 1 length differs: expected 215.34mm, actual 213.10mm |
+| DIVERGENT | Tiertime/Tiertime UP310 Pro 0.4 nozzle | filament 1 length differs: expected 215.34mm, actual 213.10mm |
+| DIVERGENT | Tiertime/Tiertime UP400 Pro 0.4 nozzle | filament 1 length differs: expected 210.87mm, actual 208.73mm |
+| DIVERGENT | Tiertime/Tiertime UP400 Pro 0.6 nozzle | filament 1 length differs: expected 272.70mm, actual 270.63mm |
+| DIVERGENT | Tiertime/Tiertime UP400 Pro 0.8 nozzle | filament 1 length differs: expected 292.40mm, actual 289.71mm |
+| DIVERGENT | Tiertime/Tiertime UP600 HS 0.4 nozzle | filament 1 length differs: expected 215.34mm, actual 213.10mm |
+| DIVERGENT | Tiertime/Tiertime UP600 HS 0.6 nozzle | filament 1 length differs: expected 272.70mm, actual 270.63mm |
+| DIVERGENT | Tiertime/Tiertime UP600 HS 0.8 nozzle | filament 1 length differs: expected 292.40mm, actual 289.71mm |
+| DIVERGENT | Tronxy/Tronxy X5SA 400 0.4 nozzle | layer 2 deposition 51 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "203.993", y: "202.623", z: "0.4" }, end: Position { x: "202.651", y: "203.965", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05522", feed: 4238.0, acceleration: "7000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "203.993", y: "202.623", z: "0.4" }, end: Position { x: "202.623", y: "203.993", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05638", feed: 4240.0, acceleration: "7000", fans: "0:255" } |
+| DIVERGENT | TwoTrees/TwoTrees SK1 0.4 nozzle | filament 1 length differs: expected 245.37mm, actual 244.47mm |
+| DIVERGENT | TwoTrees/TwoTrees SP-5 Klipper 0.4 nozzle | preamble differs at line 18: expected Some("START_PRINT EXTRUDER_TEMP=220 BED_TEMP=35"), actual Some("M201 X9000 Y9000 Z500 E5000") |
+| DIVERGENT | UltiMaker/UltiMaker 2 0.4 nozzle | filament 1 length differs: expected 290.38mm, actual 310.38mm |
+| DIVERGENT | Vivedino/Troodon 2.0 Klipper 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Vivedino/Troodon 2.0 RRF 0.4 nozzle | preamble differs at line 18: expected Some("M486 S0 A\"cube10.stl_id_0_copy_0\""), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Volumic/EXO42 (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| ARES_ERROR | Volumic/EXO42 IDRE (0.4 nozzle) | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| DIVERGENT | Volumic/EXO42 IDRE COPY MODE (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210 EXTRUDER1=210 COPY=1"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/EXO42 IDRE MIRROR MODE (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210 EXTRUDER1=210 MIRROR=1"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/EXO42 Performance (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/EXO42 Stage 2 (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/EXO65 (0.6 nozzle) | filament 1 length differs: expected 349.07mm, actual 353.08mm |
+| ARES_ERROR | Volumic/EXO65 IDRE (0.4 nozzle) | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| DIVERGENT | Volumic/EXO65 IDRE COPY MODE (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210 EXTRUDER1=210 COPY=1"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/EXO65 IDRE MIRROR MODE (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210 EXTRUDER1=210 MIRROR=1"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/EXO65 Performance (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/EXO65 Performance (0.6 nozzle) | filament 1 length differs: expected 342.96mm, actual 345.95mm |
+| DIVERGENT | Volumic/EXO65 Performance (0.8 nozzle) | filament 1 length differs: expected 389.40mm, actual 393.25mm |
+| DIVERGENT | Volumic/EXO65 Stage 2 (0.6 nozzle) | filament 1 length differs: expected 342.96mm, actual 345.95mm |
+| DIVERGENT | Volumic/SH65 (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| ARES_ERROR | Volumic/SH65 IDRE (0.4 nozzle) | invalid project G-code template: placeholder index out of range: first_layer_temperature in first_layer_temperature[1] |
+| DIVERGENT | Volumic/SH65 IDRE COPY MODE (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210 EXTRUDER1=210 COPY=1"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/SH65 IDRE MIRROR MODE (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210 EXTRUDER1=210 MIRROR=1"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/SH65 Performance (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/SH65 Stage 2 (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4500 Y4500 Z50 E0") |
+| DIVERGENT | Volumic/VS20MK2 (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| DIVERGENT | Volumic/VS30MK2 (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| DIVERGENT | Volumic/VS30MK3 (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| DIVERGENT | Volumic/VS30MK3 Stage 2 (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4000 Y4000 Z50 E0") |
+| DIVERGENT | Volumic/VS30SC (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| DIVERGENT | Volumic/VS30SC2 (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| DIVERGENT | Volumic/VS30SC2 Performance (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4500 Y4500 Z150 E0") |
+| DIVERGENT | Volumic/VS30SC2 Stage 2 (0.4 nozzle) | preamble differs at line 18: expected Some("START_PRINT BED=50 EXTRUDER=210"), actual Some("M201 X4000 Y4000 Z50 E0") |
+| DIVERGENT | Volumic/VS30ULTRA (0.4 nozzle) | filament 1 length differs: expected 305.67mm, actual 309.76mm |
+| DIVERGENT | Voron/Voron 0.1 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron 0.1 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=60,60 POLYGON=[[55,55],[65,55],[65,65],[55,65],[55,55]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 0.1 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=60,60 POLYGON=[[55,55],[65,55],[65,65],[55,65],[55,55]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 0.1 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=60,60 POLYGON=[[55,55],[65,55],[65,65],[55,65],[55,55]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 0.1 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=60,60 POLYGON=[[55,55],[65,55],[65,65],[55,65],[55,55]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 0.1 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=60,60 POLYGON=[[55,55],[65,55],[65,65],[55,65],[55,55]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 0.1 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=60,60 POLYGON=[[55,55],[65,55],[65,65],[55,65],[55,55]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 0.1 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=60,60 POLYGON=[[55,55],[65,55],[65,65],[55,65],[55,55]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 250 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron 2.4 250 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 250 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 250 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 250 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 250 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 250 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 250 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 300 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron 2.4 300 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 300 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 300 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 300 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 300 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 300 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 300 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 350 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron 2.4 350 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 350 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 350 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 350 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 350 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 350 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron 2.4 350 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Switchwire 250 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron Switchwire 250 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,105 POLYGON=[[120,100],[130,100],[130,110],[120,110],[120,100]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Switchwire 250 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,105 POLYGON=[[120,100],[130,100],[130,110],[120,110],[120,100]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Switchwire 250 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,105 POLYGON=[[120,100],[130,100],[130,110],[120,110],[120,100]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Switchwire 250 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,105 POLYGON=[[120,100],[130,100],[130,110],[120,110],[120,100]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Switchwire 250 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,105 POLYGON=[[120,100],[130,100],[130,110],[120,110],[120,100]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Switchwire 250 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,105 POLYGON=[[120,100],[130,100],[130,110],[120,110],[120,100]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Switchwire 250 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,105 POLYGON=[[120,100],[130,100],[130,110],[120,110],[120,100]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 250 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron Trident 250 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 250 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 250 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 250 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 250 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 250 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 250 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=125,125 POLYGON=[[120,120],[130,120],[130,130],[120,130],[120,120]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 300 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron Trident 300 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 300 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 300 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 300 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 300 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 300 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 300 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 350 0.15 nozzle | filament 1 length differs: expected 162.80mm, actual 162.93mm |
+| DIVERGENT | Voron/Voron Trident 350 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 350 0.25 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 350 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 350 0.5 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 350 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 350 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voron/Voron Trident 350 1.0 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=175,175 POLYGON=[[170,170],[180,170],[180,180],[170,180],[170,170]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Voxelab/Voxelab Aquila X2 0.4 nozzle | layer 2 deposition 58 differs: expected Deposition { feature: "Internal solid infill", width: "0.521338", motion: MotionRecord { command: "G1", start: Position { x: "113.932", y: "113.116", z: "0.4" }, end: Position { x: "113.144", y: "113.904", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04347", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.521338", motion: MotionRecord { command: "G1", start: Position { x: "113.932", y: "113.116", z: "0.4" }, end: Position { x: "113.116", y: "113.932", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04503", feed: 2400.0, acceleration: "500", fans: "0:255" } |
+| DIVERGENT | Vzbot/Vzbot 235 AWD 0.4 nozzle | filament 1 length differs: expected 258.21mm, actual 267.21mm |
+| DIVERGENT | Vzbot/Vzbot 235 AWD 0.5 nozzle | filament 1 length differs: expected 289.87mm, actual 298.87mm |
+| DIVERGENT | Vzbot/Vzbot 235 AWD 0.6 nozzle | filament 1 length differs: expected 298.00mm, actual 307.00mm |
+| DIVERGENT | Vzbot/Vzbot 330 AWD 0.4 nozzle | filament 1 length differs: expected 258.21mm, actual 267.21mm |
+| DIVERGENT | Vzbot/Vzbot 330 AWD 0.5 nozzle | filament 1 length differs: expected 289.87mm, actual 298.87mm |
+| DIVERGENT | Vzbot/Vzbot 330 AWD 0.6 nozzle | filament 1 length differs: expected 298.00mm, actual 307.00mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.2mm nozzle | filament 1 length differs: expected 270.56mm, actual 269.53mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.3mm nozzle | filament 1 length differs: expected 307.50mm, actual 306.68mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.4mm nozzle | filament 1 length differs: expected 335.42mm, actual 333.55mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.6mm nozzle | filament 1 length differs: expected 368.07mm, actual 366.26mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.2mm nozzle | filament 1 length differs: expected 304.62mm, actual 302.95mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.3mm nozzle | filament 1 length differs: expected 307.50mm, actual 306.68mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.4mm nozzle | filament 1 length differs: expected 328.86mm, actual 326.89mm |
+| DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.6mm nozzle | filament 1 length differs: expected 368.07mm, actual 366.26mm |
+| ARES_ERROR | Wanhao/Wanhao D12-300 0.4 nozzle | orca-slicer failed (exit status: 205): Relative extruder addressing requires resetting the extruder position at each layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode. |
+| DIVERGENT | Wanhao France/D12 230 PRO M2 DIRECT 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle PoopTool | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 230 PRO SMARTPAD DIRECT 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle PoopTool | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 300 PRO M2 DIRECT 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 300 PRO M2 MONO DUAL 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 300 PRO M2 MONO DUAL PoopTool 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 300 PRO SMARTPAD DIRECT 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 500 PRO M2 DIRECT 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 500 PRO M2 MONO DUAL 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 500 PRO M2 MONO DUAL PoopTool 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 500 PRO SMARTPAD DIRECT 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle | filament 1 length differs: expected 265.71mm, actual 260.71mm |
+| DIVERGENT | WonderMaker/WonderMaker ZR 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | WonderMaker/WonderMaker ZR 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | WonderMaker/WonderMaker ZR 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | WonderMaker/WonderMaker ZR 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
 | ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle | invalid Orca option printer_extruder_variant |
+| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | invalid Orca option printer_extruder_variant |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S | WonderMaker/WonderMaker ZR Ultra S process: machine names no default preset |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | invalid Orca option printer_extruder_variant |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | invalid Orca option printer_extruder_variant |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle | unsupported project feature: sparse_infill_pattern |
-| ARES_ERROR | WonderMaker/fdm_klipper_common | WonderMaker/fdm_klipper_common process: default preset "0.18mm Standard @WonderMaker ZR" not found |
-| ARES_ERROR | WonderMaker/fdm_machine_common | WonderMaker/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 | Z-Bolt/Z-Bolt S1000 process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 0.4 nozzle | Z-Bolt/Z-Bolt S1000 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S1000" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 0.6 nozzle | Z-Bolt/Z-Bolt S1000 0.6 nozzle process: default preset "0.30mm Standard @Z-Bolt S1000 0.6 nozzle" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 0.8 nozzle | Z-Bolt/Z-Bolt S1000 0.8 nozzle process: default preset "0.40mm Standard @Z-Bolt S1000 0.8 nozzle" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 Dual | Z-Bolt/Z-Bolt S1000 Dual process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 Dual 0.4 nozzle | Z-Bolt/Z-Bolt S1000 Dual 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S1000" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 Dual 0.6 nozzle | Z-Bolt/Z-Bolt S1000 Dual 0.6 nozzle process: default preset "0.30mm Standard @Z-Bolt S1000 0.6 nozzle" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S1000 Dual 0.8 nozzle | Z-Bolt/Z-Bolt S1000 Dual 0.8 nozzle process: default preset "0.40mm Standard @Z-Bolt S1000 0.8 nozzle" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 | Z-Bolt/Z-Bolt S300 process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 0.4 nozzle | Z-Bolt/Z-Bolt S300 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S300" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 0.6 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 0.8 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 Dual | Z-Bolt/Z-Bolt S300 Dual process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 Dual 0.4 nozzle | Z-Bolt/Z-Bolt S300 Dual 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S300" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 Dual 0.6 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S300 Dual 0.8 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 | Z-Bolt/Z-Bolt S400 process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 0.4 nozzle | Z-Bolt/Z-Bolt S400 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S400" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 0.6 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 0.8 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 Dual | Z-Bolt/Z-Bolt S400 Dual process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 Dual 0.4 nozzle | Z-Bolt/Z-Bolt S400 Dual 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S400" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 Dual 0.6 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S400 Dual 0.8 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 | Z-Bolt/Z-Bolt S600 process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 0.4 nozzle | Z-Bolt/Z-Bolt S600 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S600" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 0.6 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 0.8 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 Dual | Z-Bolt/Z-Bolt S600 Dual process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 Dual 0.4 nozzle | Z-Bolt/Z-Bolt S600 Dual 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S600" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 Dual 0.6 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S600 Dual 0.8 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S800 Dual | Z-Bolt/Z-Bolt S800 Dual process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/Z-Bolt S800 Dual 0.4 nozzle | Z-Bolt/Z-Bolt S800 Dual 0.4 nozzle process: default preset "0.20mm Standard @Z-Bolt S800" not found |
-| ARES_ERROR | Z-Bolt/Z-Bolt S800 Dual 0.6 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/Z-Bolt S800 Dual 0.8 nozzle | unknown filament preset "fdm_filament_pla" |
-| ARES_ERROR | Z-Bolt/fdm_machine_common | Z-Bolt/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | Z-Bolt/fdm_zbolt_common | Z-Bolt/fdm_zbolt_common process: default preset "0.20mm Standard @Z-Bolt S300" not found |
-| ARES_ERROR | iQ/TiQ2 | iQ/TiQ2 process: machine names no default preset |
-| ARES_ERROR | iQ/TiQ8 | iQ/TiQ8 process: machine names no default preset |
-| ARES_ERROR | iQ/fdm_tiq_common | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | iQ/iQ TiQ2 0.25 Nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | iQ/iQ TiQ2 0.4 Nozzle | invalid Orca option printer_extruder_variant |
-| ARES_ERROR | iQ/iQ TiQ2 0.6 Nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | iQ/iQ TiQ2 0.8 Nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | iQ/iQ TiQ8 0.25 Nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | iQ/iQ TiQ8 0.4 Nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | iQ/iQ TiQ8 0.6 Nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | iQ/iQ TiQ8 0.8 Nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| ARES_ERROR | re3D/fdm_machine_common | re3D/fdm_machine_common process: machine names no default preset |
-| ARES_ERROR | re3D/fdm_re3D_common | re3D/fdm_re3D_common process: machine names no default preset |
-| ARES_ERROR | re3D/fgf_re3D_common | re3D/fgf_re3D_common process: machine names no default preset |
-| ARES_ERROR | re3D/re3D Gigabot 4 | re3D/re3D Gigabot 4 process: machine names no default preset |
-| ARES_ERROR | re3D/re3D Gigabot 4 0.4 nozzle | invalid Orca option long_retractions_when_cut |
-| ARES_ERROR | re3D/re3D Gigabot 4 0.8 nozzle | invalid Orca option long_retractions_when_cut |
-| ARES_ERROR | re3D/re3D Gigabot 4 XLT | re3D/re3D Gigabot 4 XLT process: machine names no default preset |
-| ARES_ERROR | re3D/re3D Gigabot 4 XLT 0.4 nozzle | invalid Orca option long_retractions_when_cut |
-| ARES_ERROR | re3D/re3D Gigabot 4 XLT 0.8 nozzle | invalid Orca option long_retractions_when_cut |
-| ARES_ERROR | re3D/re3D GigabotX 2 | re3D/re3D GigabotX 2 process: machine names no default preset |
-| DIVERGENT | re3D/re3D GigabotX 2 0.8 nozzle | filament 1 length differs: expected 128.86mm, actual 121.65mm |
+| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,135 POLYGON=[[145,130],[155,130],[155,140],[145,140],[145,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,135 POLYGON=[[145,130],[155,130],[155,140],[145,140],[145,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,135 POLYGON=[[145,130],[155,130],[155,140],[145,140],[145,130]]"), actual Some("M201 X20000 Y20000 Z500 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S1000 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S1000 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S1000 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S1000 Dual 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S1000 Dual 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S1000 Dual 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S300 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z100 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S300 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z100 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S300 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z100 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S300 Dual 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z100 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S300 Dual 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z100 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S300 Dual 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=150,150 POLYGON=[[145,145],[155,145],[155,155],[145,155],[145,145]]"), actual Some("M201 X20000 Y20000 Z100 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S400 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z50 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S400 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z50 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S400 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z50 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S400 Dual 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z50 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S400 Dual 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z50 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S400 Dual 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=200,200 POLYGON=[[195,195],[205,195],[205,205],[195,205],[195,195]]"), actual Some("M201 X20000 Y20000 Z50 E5000") |
+| DIVERGENT | Z-Bolt/Z-Bolt S600 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=300,300 POLYGON=[[295,295],[305,295],[305,305],[295,305],[295,295]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S600 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=300,300 POLYGON=[[295,295],[305,295],[305,305],[295,305],[295,295]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S600 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=300,300 POLYGON=[[295,295],[305,295],[305,305],[295,305],[295,295]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S600 Dual 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=300,300 POLYGON=[[295,295],[305,295],[305,305],[295,305],[295,295]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S600 Dual 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=300,300 POLYGON=[[295,295],[305,295],[305,305],[295,305],[295,295]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S600 Dual 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=300,300 POLYGON=[[295,295],[305,295],[305,305],[295,305],[295,295]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S800 Dual 0.4 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=401,401 POLYGON=[[396,396],[406,396],[406,406],[396,406],[396,396]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S800 Dual 0.6 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=401,401 POLYGON=[[396,396],[406,396],[406,406],[396,406],[396,396]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| DIVERGENT | Z-Bolt/Z-Bolt S800 Dual 0.8 nozzle | preamble differs at line 18: expected Some("EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=401,401 POLYGON=[[396,396],[406,396],[406,406],[396,406],[396,396]]"), actual Some("M201 X20000 Y20000 Z12 E1500") |
+| ARES_ERROR | iQ/iQ TiQ2 0.25 Nozzle | iQ/iQ TiQ2 0.25 Nozzle process: no compatible preset |
+| DIVERGENT | iQ/iQ TiQ2 0.4 Nozzle | filament 1 length differs: expected 278.83mm, actual 278.96mm |
+| ARES_ERROR | iQ/iQ TiQ2 0.6 Nozzle | iQ/iQ TiQ2 0.6 Nozzle process: no compatible preset |
+| ARES_ERROR | iQ/iQ TiQ2 0.8 Nozzle | iQ/iQ TiQ2 0.8 Nozzle process: no compatible preset |
+| ARES_ERROR | iQ/iQ TiQ8 0.25 Nozzle | iQ/iQ TiQ8 0.25 Nozzle process: no compatible preset |
+| ARES_ERROR | iQ/iQ TiQ8 0.4 Nozzle | unsupported project feature: filament_shrink |
+| ARES_ERROR | iQ/iQ TiQ8 0.6 Nozzle | iQ/iQ TiQ8 0.6 Nozzle process: no compatible preset |
+| ARES_ERROR | iQ/iQ TiQ8 0.8 Nozzle | iQ/iQ TiQ8 0.8 Nozzle process: no compatible preset |
+| DIVERGENT | re3D/re3D Gigabot 4 0.4 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.48mm"), actual Some("; first layer extrusion width = 0.60mm") |
+| DIVERGENT | re3D/re3D Gigabot 4 0.8 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 1.00mm"), actual Some("; first layer extrusion width = 1.00mm") |
+| DIVERGENT | re3D/re3D Gigabot 4 XLT 0.4 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.48mm"), actual Some("; first layer extrusion width = 0.60mm") |
+| DIVERGENT | re3D/re3D Gigabot 4 XLT 0.8 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 1.00mm"), actual Some("; first layer extrusion width = 1.00mm") |
+| DIVERGENT | re3D/re3D GigabotX 2 0.8 nozzle | preamble differs at line 18: expected Some("M220 S100"), actual Some("M201 X1000 Y1000 Z500 E5000") |
 | DIVERGENT | re3D/re3D GigabotX 2 1.75 nozzle | preamble differs at line 18: expected Some("M220 S100"), actual Some("M201 X1000 Y1000 Z500 E5000") |
-| ARES_ERROR | re3D/re3D GigabotX 2 XLT | re3D/re3D GigabotX 2 XLT process: machine names no default preset |
-| DIVERGENT | re3D/re3D GigabotX 2 XLT 0.8 nozzle | filament 1 length differs: expected 128.86mm, actual 121.65mm |
+| DIVERGENT | re3D/re3D GigabotX 2 XLT 0.8 nozzle | preamble differs at line 18: expected Some("M220 S100"), actual Some("M201 X1000 Y1000 Z500 E5000") |
 | DIVERGENT | re3D/re3D GigabotX 2 XLT 1.75 nozzle | preamble differs at line 18: expected Some("M220 S100"), actual Some("M201 X1000 Y1000 Z500 E5000") |
-| ARES_ERROR | re3D/re3D Terabot 4 | re3D/re3D Terabot 4 process: machine names no default preset |
-| ARES_ERROR | re3D/re3D Terabot 4 0.4 nozzle | invalid Orca option long_retractions_when_cut |
-| ARES_ERROR | re3D/re3D Terabot 4 0.8 nozzle | invalid Orca option long_retractions_when_cut |
-| ARES_ERROR | re3D/re3D TerabotX 2 | re3D/re3D TerabotX 2 process: machine names no default preset |
-| DIVERGENT | re3D/re3D TerabotX 2 0.8 nozzle | filament 1 length differs: expected 128.86mm, actual 121.65mm |
+| DIVERGENT | re3D/re3D Terabot 4 0.4 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.48mm"), actual Some("; first layer extrusion width = 0.60mm") |
+| DIVERGENT | re3D/re3D Terabot 4 0.8 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 1.00mm"), actual Some("; first layer extrusion width = 1.00mm") |
+| DIVERGENT | re3D/re3D TerabotX 2 0.8 nozzle | preamble differs at line 18: expected Some("M220 S100"), actual Some("M201 X1000 Y1000 Z500 E5000") |
 | DIVERGENT | re3D/re3D TerabotX 2 1.75 nozzle | preamble differs at line 18: expected Some("M220 S100"), actual Some("M201 X1000 Y1000 Z500 E5000") |

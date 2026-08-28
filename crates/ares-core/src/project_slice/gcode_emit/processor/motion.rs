@@ -1,5 +1,5 @@
 mod arc;
-use super::motion_util::{clamp, clamped_word, norm, scale, word};
+use super::motion_util::{assignment, clamp, clamped_word, norm, scale, word};
 use crate::options::GCodeFlavor;
 mod planner;
 pub(super) use planner::RollingPlanner;
@@ -172,6 +172,20 @@ impl MotionState {
         if code.starts_with("M205") {
             for (axis, letter) in ['X', 'Y', 'Z', 'E'].into_iter().enumerate() {
                 self.jerk[axis] = word(code, letter).unwrap_or(self.jerk[axis]);
+            }
+            return None;
+        }
+        if code.split_whitespace().next() == Some("SET_VELOCITY_LIMIT") {
+            // Klipper: ACCEL applies to print and travel moves alike
+            // (`GCodeProcessor.cpp:5269-5304`).
+            if let Some(value) = assignment(code, "ACCEL=") {
+                let value = clamp(value, self.max_print_acceleration);
+                self.acceleration = value;
+                self.travel_acceleration = clamp(value, self.max_travel_acceleration);
+            }
+            if let Some(value) = assignment(code, "SQUARE_CORNER_VELOCITY=") {
+                self.jerk[0] = value;
+                self.jerk[1] = value;
             }
             return None;
         }

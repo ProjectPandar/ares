@@ -147,17 +147,22 @@ fn invalid_support_ironing_pattern_values_reach_slice_error() {
 }
 
 #[test]
-fn legacy_zig_zag_support_ironing_pattern_normalizes_to_rectilinear() {
-    let finalized = finalized_rectangle_paths(options(json!({
-        "support_ironing": true,
-        "support_ironing_pattern": "zig-zag",
-        "support_ironing_spacing": 1.0
-    })));
+fn legacy_zig_zag_support_ironing_pattern_is_rejected_like_orca() {
+    // Upstream restricts `support_ironing_pattern` to rectilinear/concentric
+    // (`PrintConfig.cpp`, `support_ironing_pattern` enum values).
+    let finalized = crate::finalize_print_paths(
+        vec![rectangle_layer()],
+        &options(json!({
+            "support_ironing": true,
+            "support_ironing_pattern": "zig-zag",
+            "support_ironing_spacing": 1.0
+        })),
+    );
 
-    let ironing = ironing_paths(&finalized[0]);
-    assert_eq!(ironing.len(), 4);
-    assert_open_line(ironing[0], Point2::new(0.0, 0.0), Point2::new(4.0, 0.0));
-    assert_open_line(ironing[3], Point2::new(0.0, 3.0), Point2::new(4.0, 3.0));
+    assert_eq!(
+        finalized.unwrap_err(),
+        crate::SliceError::InvalidInput("support_ironing_pattern has invalid value".to_owned())
+    );
 }
 
 #[test]

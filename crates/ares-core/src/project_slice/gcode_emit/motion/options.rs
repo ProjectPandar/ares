@@ -57,6 +57,10 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) max_jerk_z: f64,
     pub(in crate::project_slice::gcode_emit) max_jerk_e: f64,
     pub(in crate::project_slice::gcode_emit) gcode_flavor: crate::GCodeFlavor,
+    pub(in crate::project_slice::gcode_emit) max_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) max_travel_acceleration: u32,
+    pub(in crate::project_slice::gcode_emit) accel_to_decel_enable: bool,
+    pub(in crate::project_slice::gcode_emit) accel_to_decel_factor: f64,
     pub(in crate::project_slice::gcode_emit) retraction_length: f64,
     pub(in crate::project_slice::gcode_emit) deretraction_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) z_hop: f64,
@@ -77,6 +81,37 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
 }
 
 impl MotionOptions {
+    /// `GCodeWriter::apply_print_config` caps print acceleration by the
+    /// machine extruding limit (Klipper additionally clamps by per-axis X/Y
+    /// limits, `GCodeWriter.cpp:33-45`).
+    fn machine_acceleration_limit(full: &crate::options::ProjectSettings) -> u32 {
+        let flavor = full.printer.gcode.gcode_flavor;
+        if !matches!(
+            flavor,
+            crate::GCodeFlavor::MarlinLegacy
+                | crate::GCodeFlavor::MarlinFirmware
+                | crate::GCodeFlavor::Klipper
+                | crate::GCodeFlavor::RepRapFirmware
+        ) {
+            return 0;
+        }
+        let mut limit = rounded_acceleration(first_float(
+            &full.printer.machine.machine_max_acceleration_extruding,
+        ));
+        if flavor == crate::GCodeFlavor::Klipper {
+            let axis_limit = [
+                &full.printer.machine.machine_max_acceleration_x,
+                &full.printer.machine.machine_max_acceleration_y,
+            ]
+            .into_iter()
+            .map(|axis| rounded_acceleration(first_float(axis)))
+            .filter(|axis_limit| *axis_limit > 0)
+            .min()
+            .unwrap_or(u32::MAX);
+            limit = limit.min(axis_limit);
+        }
+        limit
+    }
     pub(in crate::project_slice::gcode_emit) fn from_traversal(
         traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     ) -> Self {
@@ -300,6 +335,21 @@ impl MotionOptions {
             max_jerk_z: first_float(&full.printer.machine.machine_max_jerk_z),
             max_jerk_e: first_float(&full.printer.machine.machine_max_jerk_e),
             gcode_flavor: full.printer.gcode.gcode_flavor,
+            max_acceleration: Self::machine_acceleration_limit(full),
+            max_travel_acceleration: if matches!(
+                full.printer.gcode.gcode_flavor,
+                crate::GCodeFlavor::Repetier
+                    | crate::GCodeFlavor::MarlinFirmware
+                    | crate::GCodeFlavor::RepRapFirmware
+            ) {
+                rounded_acceleration(first_float(
+                    &full.printer.machine.machine_max_acceleration_travel,
+                ))
+            } else {
+                0
+            },
+            accel_to_decel_enable: gcode.accel_to_decel_enable.0,
+            accel_to_decel_factor: gcode.accel_to_decel_factor.0,
             retraction_length: gcode
                 .retraction_length
                 .0

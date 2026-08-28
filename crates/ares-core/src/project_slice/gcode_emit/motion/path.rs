@@ -172,7 +172,7 @@ pub(super) fn emit(
         state.retracted = false;
         state.lifted = false;
     }
-    set_acceleration(output, state, acceleration);
+    set_acceleration(output, state, acceleration, false);
     let jerk = properties.jerk(&state.options, state.layer_index);
     jerk::set(output, state, jerk);
     state.extrusion_feedrate = processed

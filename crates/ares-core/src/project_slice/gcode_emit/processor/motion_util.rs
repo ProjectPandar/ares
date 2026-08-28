@@ -14,6 +14,17 @@ pub(super) fn clamped_word(code: &str, letter: char, current: f64, maximum: f64)
     word(code, letter).map_or(current, |value| clamp(value, maximum))
 }
 
+/// Parse a `KEY=value` assignment such as Klipper's `SET_VELOCITY_LIMIT
+/// ACCEL=500 ACCEL_TO_DECEL=250`.
+pub(super) fn assignment(code: &str, key: &str) -> Option<f64> {
+    let start = code.find(key)? + key.len();
+    let value = &code[start..];
+    let end = value
+        .find(|character: char| !character.is_ascii_digit() && character != '.')
+        .unwrap_or(value.len());
+    value[..end].trim().parse::<f32>().ok().map(f64::from)
+}
+
 pub(super) fn clamp(value: f64, maximum: f64) -> f64 {
     if maximum > 0.0 {
         value.min(maximum)

@@ -36,7 +36,7 @@ fn process_object_source_enum_domains_are_exact() {
         "normal(auto)", "tree(auto)", "normal(manual)", "tree(manual)",
     ]);
     assert_domain::<ProcessInfillPattern>(&[
-        "monotonic", "monotonicline", "rectilinear", "alignedrectilinear", "zigzag",
+        "monotonic", "monotonicline", "rectilinear", "alignedrectilinear", "zig-zag",
         "crosszag", "lockedzag", "line", "grid", "triangles", "tri-hexagon", "cubic",
         "adaptivecubic", "quartercubic", "supportcubic", "lightning", "honeycomb",
         "3dhoneycomb", "lateral-honeycomb", "lateral-lattice", "crosshatch", "tpmsd",
@@ -54,7 +54,7 @@ where
         let value: T = serde_json::from_str(&json).unwrap();
         assert_eq!(serde_json::to_string(&value).unwrap(), json);
     }
-    for invalid in ["", "unknown", "Default", "normal", "zig-zag"] {
+    for invalid in ["", "unknown", "Default", "normal"] {
         assert!(
             serde_json::from_str::<T>(&serde_json::to_string(invalid).unwrap()).is_err(),
             "{invalid}"

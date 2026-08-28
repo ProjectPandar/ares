@@ -28,7 +28,7 @@ fn region_enum_domains_are_exact_global_maps() {
     assert_domain::<ProcessWallDirection>(&["ccw", "cw"]);
     assert_domain::<ProcessSeamScarfType>(&["none", "external", "all"]);
     assert_domain::<ProcessInfillPattern>(&[
-        "monotonic", "monotonicline", "rectilinear", "alignedrectilinear", "zigzag",
+        "monotonic", "monotonicline", "rectilinear", "alignedrectilinear", "zig-zag",
         "crosszag", "lockedzag", "line", "grid", "triangles", "tri-hexagon", "cubic",
         "adaptivecubic", "quartercubic", "supportcubic", "lightning", "honeycomb",
         "3dhoneycomb", "lateral-honeycomb", "lateral-lattice", "crosshatch", "tpmsd",

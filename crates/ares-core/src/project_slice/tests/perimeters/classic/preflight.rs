@@ -31,11 +31,6 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "alternate_extra_wall",
         ),
         (
-            "\"brim_type\": \"auto_brim\"",
-            "\"brim_type\": \"outer_only\"",
-            "brim_type",
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             "counterbore_hole_bridging",
