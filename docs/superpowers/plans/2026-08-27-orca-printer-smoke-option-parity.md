@@ -451,3 +451,21 @@ New findings from the Artillery M1 Pro (auxiliary_fan family):
 3. NEXT: port the line-pattern branch of split_solid_surface; then the
    travel-lift state machine (GCodeWriter.cpp:685-760); then the M73
    estimator.
+## 2026-08-28 session: Elegoo narrow-strip finding (post-9dc4b79)
+
+The Elegoo 0.2 case (largest filament family, 73 printers) per-feature
+delta concentrates in one narrow vertical strip: Orca emits 13 vertical
+round-trip lines at X111.805 (Y 115.7-118.3, ~2.6mm tall, E total
+0.417mm) as `TYPE:Gap infill`; Ares emits a single wide
+Internal-solid extrusion (E.08095) for the same X region and no Gap
+infill. The strip is ~one line wide, so upstream fills it with
+vertical-line round trips while Ares merges it into the solid infill
+(and loses the correct volume). Root cause is in the narrow-region
+classification/gap-fill routing rather than the concentric override.
+
+NEXT (ordered):
+1. Trace the region through Ares' prepare_infill for that layer to find
+   where the narrow strip is merged into the Internal-solid area.
+2. Travel-lift state machine (GCodeWriter.cpp:685-760) — auxiliary-fan
+   family (~90 printers).
+3. M73 estimator (trapezoid planner).
