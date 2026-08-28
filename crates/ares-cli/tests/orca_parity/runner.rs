@@ -8,6 +8,10 @@ use std::time::Duration;
 
 use serde_json::{Map, Value};
 
+#[cfg(test)]
+#[path = "runner/tests.rs"]
+mod tests;
+
 pub(super) struct OrcaRunner {
     bin: PathBuf,
     work: PathBuf,
@@ -128,7 +132,9 @@ impl OrcaRunner {
 fn apply_override(base: &Map<String, Value>, overrides: &Map<String, Value>) -> Map<String, Value> {
     let mut merged = base.clone();
     for (key, value) in overrides {
-        merged.insert(key.clone(), value.clone());
+        if merged.contains_key(key) {
+            merged.insert(key.clone(), value.clone());
+        }
     }
     merged
 }
