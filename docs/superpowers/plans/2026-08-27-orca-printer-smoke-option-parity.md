@@ -481,3 +481,19 @@ fill. Ares drops that residual sliver entirely.
 NEXT: find where the solid-infill residual sliver is computed in
 upstream (Fill pattern spacing remainder -> gap line) and port it; this
 affects the Elegoo/Snapmaker/Creality families (~306 printers).
+## 2026-08-28 session: residual-sliver upstream boundary refined (26ac971)
+
+The residual sliver is NOT the rectilinear spacing remainder
+(_adjust_solid_spacing only widens spacing up to 20%). It is the
+post-fill gap pass: after solid infill, upstream diffs the covered area
+and runs medial-axis variable-width gap fill
+(PerimeterGenerator.cpp:1570-1593 opening/diff_ex + medial_axis(min,max)
++ variable_width(..., erGapFill, solid_infill_flow)) — the observed
+0.22mm width IS the medial-axis width at that sliver. Ares' wall gap
+fill (classic/gap_extrusion) covers the perimeter gaps only; the
+SOLID-INFILL area gaps need the same treatment wired into the
+prepare_infill solid pass.
+
+NEXT: wire solid-area gap fill (PerimeterGenerator.cpp:1570-1593
+semantics) into Ares' prepare_infill solid pass; then travel-lift
+state machine; then M73 estimator.
