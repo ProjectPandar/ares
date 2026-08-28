@@ -1,5 +1,5 @@
 use super::VendorProfiles;
-use crate::{runner, select_printer, smoke_overrides};
+use crate::{runner, select_printer, smoke_case_overrides, smoke_overrides};
 
 fn profiles(vendor: &str) -> VendorProfiles {
     VendorProfiles::load(
@@ -7,6 +7,27 @@ fn profiles(vendor: &str) -> VendorProfiles {
         vendor,
     )
     .unwrap()
+}
+
+#[test]
+fn relative_e_profile_without_reset_gets_layer_reset() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "use_relative_e_distances": "1"
+    }))
+    .unwrap();
+    let process = serde_json::from_value(serde_json::json!({
+        "before_layer_change_gcode": ";before"
+    }))
+    .unwrap();
+
+    let overrides = smoke_case_overrides(&machine, &process);
+
+    assert_eq!(
+        overrides
+            .get("before_layer_change_gcode")
+            .and_then(serde_json::Value::as_str),
+        Some(";before\nG92 E0")
+    );
 }
 
 #[test]

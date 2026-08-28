@@ -204,6 +204,7 @@ pub(crate) fn build_selection_case(
         .map(|name| profiles.filament(name))
         .collect::<Result<Vec<_>, _>>()?;
     let label = format!("{}/{}", selection.vendor, selection.printer);
+    let overrides = smoke_case_overrides(&machine, &process);
     runner.build_case(
         &CaseInputs {
             label: &label,
@@ -211,9 +212,39 @@ pub(crate) fn build_selection_case(
             process: &process,
             filaments: &filaments,
         },
-        &smoke_overrides(),
+        &overrides,
         model,
     )
+}
+
+fn smoke_case_overrides(
+    machine: &Map<String, Value>,
+    process: &Map<String, Value>,
+) -> Map<String, Value> {
+    let mut overrides = smoke_overrides();
+    let relative_e = machine
+        .get("use_relative_e_distances")
+        .is_some_and(|value| value.as_str() == Some("1") || value.as_bool() == Some(true));
+    let before = process
+        .get("before_layer_change_gcode")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let layer = process
+        .get("layer_change_gcode")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if relative_e && !before.contains("G92 E0") && !layer.contains("G92 E0") {
+        let separator = if before.is_empty() || before.ends_with('\n') {
+            ""
+        } else {
+            "\n"
+        };
+        overrides.insert(
+            "before_layer_change_gcode".to_owned(),
+            Value::String(format!("{before}{separator}G92 E0")),
+        );
+    }
+    overrides
 }
 
 pub(crate) fn vendors(root: &std::path::Path) -> Vec<String> {
