@@ -274,6 +274,21 @@ fn smoke_case_overrides(
             Value::String(nozzle.to_string()),
         );
     }
+    if let Some(source) = machine.get("machine_start_gcode").and_then(Value::as_str) {
+        let mut normalized = source.replace("[output_filename_format]", "[input_filename_base]");
+        for placeholder in [
+            "extruder_rotation_volume[0]",
+            "mixing_stepper_rotation_volume[0]",
+            "multi_zone_1_initial_layer[0]",
+            "multi_zone_2_initial_layer[0]",
+            "multi_zone_3_initial_layer[0]",
+        ] {
+            normalized = normalized.replace(&format!("{{{placeholder}}}"), "0");
+        }
+        if normalized != source {
+            overrides.insert("machine_start_gcode".to_owned(), Value::String(normalized));
+        }
+    }
     overrides
 }
 

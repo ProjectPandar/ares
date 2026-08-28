@@ -10,6 +10,21 @@ fn profiles(vendor: &str) -> VendorProfiles {
 }
 
 #[test]
+fn stale_vendor_custom_gcode_placeholders_are_normalized() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "machine_start_gcode": "M117 [output_filename_format]\nSTART V={extruder_rotation_volume[0]} Z={multi_zone_1_initial_layer[0]}"
+    }))
+    .unwrap();
+    let process = serde_json::Map::new();
+
+    let overrides = smoke_case_overrides(&machine, &process);
+    let start = overrides["machine_start_gcode"].as_str().unwrap();
+
+    assert!(start.contains("M117 [input_filename_base]"));
+    assert!(start.contains("START V=0 Z=0"));
+}
+
+#[test]
 fn standalone_orca_range_failures_are_normalized_for_shared_smoke_input() {
     let machine = serde_json::from_value(serde_json::json!({
         "retraction_distances_when_cut": ["0", "30"],
