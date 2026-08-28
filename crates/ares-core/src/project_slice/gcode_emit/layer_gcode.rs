@@ -68,7 +68,7 @@ pub(super) fn append_print_preamble(
     {
         let mut config = super::placeholders::base_config(traversal, metadata)?;
         config.insert("position", emitted_position(output));
-        let rendered = template::render(source, &config).map_err(|error| {
+        let rendered = template::render(source, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!(
                 "invalid project filament-start G-code template: {error}"
             ))
@@ -226,7 +226,7 @@ pub(super) fn append_before_layer_change_gcode(
         value::Value::number(volume * density * 0.001),
     );
     config.insert("max_layer_z", value::Value::number(layer_z));
-    let rendered = template::render(template, &config).map_err(|error| {
+    let rendered = template::render(template, &mut config).map_err(|error| {
         SliceError::InvalidInput(format!(
             "invalid project before-layer-change G-code template: {error}"
         ))
@@ -283,7 +283,7 @@ pub(super) fn append_layer_change(
             "extruded_weight_total",
             value::Value::number(volume * density * 0.001),
         );
-        let rendered = template::render(template, &config).map_err(|error| {
+        let rendered = template::render(template, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!(
                 "invalid project layer-change G-code template: {error}"
             ))

@@ -217,8 +217,8 @@ pub(super) fn append_start(
     let rendered = if template.is_empty() {
         String::new()
     } else {
-        let config = self_start_config(traversal, metadata)?;
-        template::render(template, &config).map_err(|error| {
+        let mut config = self_start_config(traversal, metadata)?;
+        template::render(template, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
         })?
     };

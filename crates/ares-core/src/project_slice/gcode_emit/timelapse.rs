@@ -58,7 +58,7 @@ pub(super) fn append(
     config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
     config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
 
-    let rendered = template::render(source, &config).map_err(|error| {
+    let rendered = template::render(source, &mut config).map_err(|error| {
         SliceError::InvalidInput(format!(
             "invalid project timelapse G-code template: {error}"
         ))

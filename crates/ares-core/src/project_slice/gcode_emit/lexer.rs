@@ -99,7 +99,9 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
                 if chars.next_if_eq(&'~').is_some() {
                     Token::RegexMatch
                 } else {
-                    expect_char(&mut chars, '=')?;
+                    // Upstream treats `=`, `==` as equality
+                    // (`PlaceholderParser.cpp:599`); consume a doubled sign.
+                    chars.next_if_eq(&'=');
                     Token::Eq
                 }
             }

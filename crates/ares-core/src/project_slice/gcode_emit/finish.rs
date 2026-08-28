@@ -34,9 +34,14 @@ pub(super) fn append(
     }
     output.extend_from_slice(custom.as_bytes());
     if let Some(filament_end) = gcode.filament_end_gcode.0.first() {
-        append_template(output, filament_end, &config, "filament-end")?;
+        append_template(output, filament_end, &mut config, "filament-end")?;
     }
-    append_template(output, &gcode.machine_end_gcode.0, &config, "machine-end")?;
+    append_template(
+        output,
+        &gcode.machine_end_gcode.0,
+        &mut config,
+        "machine-end",
+    )?;
     Ok(())
 }
 
@@ -176,7 +181,7 @@ pub(super) fn append_filament_stats(
 fn append_template(
     output: &mut Vec<u8>,
     source: &str,
-    config: &value::Config,
+    config: &mut value::Config,
     name: &str,
 ) -> Result<(), SliceError> {
     if source.is_empty() {

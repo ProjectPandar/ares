@@ -16,7 +16,7 @@ struct Arm {
     nodes: Vec<Node>,
 }
 
-pub(super) fn render(template: &str, config: &Config) -> Result<String, String> {
+pub(super) fn render(template: &str, config: &mut Config) -> Result<String, String> {
     let nodes = parse(template)?;
     render_nodes(&nodes, config)
 }
@@ -188,7 +188,7 @@ enum Directive {
     clippy::excessive_nesting,
     reason = "branch selection stays with node rendering"
 )]
-fn render_nodes(nodes: &[Node], config: &Config) -> Result<String, String> {
+fn render_nodes(nodes: &[Node], config: &mut Config) -> Result<String, String> {
     let mut output = String::new();
     for node in nodes {
         match node {
@@ -212,7 +212,7 @@ fn render_nodes(nodes: &[Node], config: &Config) -> Result<String, String> {
     Ok(output)
 }
 
-fn render_text(text: &str, config: &Config) -> Result<String, String> {
+fn render_text(text: &str, config: &mut Config) -> Result<String, String> {
     let mut output = String::new();
     let mut index = 0;
     while index < text.len() {
@@ -236,6 +236,22 @@ fn render_text(text: &str, config: &Config) -> Result<String, String> {
             return Err(format!("unclosed placeholder in {text:?}"));
         };
         let expression = &text[expression_start..expression_start + relative_end];
+        // Upstream supports assignment statements (`{var[idx] = expr}`) that
+        // store into the parser and render nothing.
+        if let Some((name, index_expression, rhs)) = assignment_parts(expression) {
+            let assignment_index = match index_expression {
+                Some(index_expression) => match evaluate(index_expression, config)?.as_number() {
+                    Some(number) if number >= 0.0 => Some(number as usize),
+                    _ => return Err(format!("invalid assignment index in {expression}")),
+                },
+                None => None,
+            };
+            let value =
+                evaluate(rhs, config).map_err(|error| format!("{error} in {expression}"))?;
+            config.assign(name, assignment_index, value);
+            index += expression_start + relative_end + 1;
+            continue;
+        }
         let value =
             evaluate(expression, config).map_err(|error| format!("{error} in {expression}"))?;
         let rendered = value.index(0).unwrap_or(&value).as_string();
@@ -243,6 +259,49 @@ fn render_text(text: &str, config: &Config) -> Result<String, String> {
         index = expression_start + relative_end + 1;
     }
     Ok(output)
+}
+
+/// Splits `name[index] = rhs` assignment statements; returns the variable
+/// name, the optional index expression and the right-hand side.
+fn assignment_parts(expression: &str) -> Option<(&str, Option<&str>, &str)> {
+    let chars: Vec<char> = expression.chars().collect();
+    let mut depth = 0_i32;
+    for (position, character) in chars.iter().enumerate() {
+        match character {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            '=' if depth == 0 => {
+                let previous = if position > 0 {
+                    chars[position - 1]
+                } else {
+                    ' '
+                };
+                let next = chars.get(position + 1).copied().unwrap_or(' ');
+                if matches!(previous, '=' | '<' | '>' | '!' | '~') || next == '=' {
+                    return None;
+                }
+                let lhs = expression[..position].trim();
+                let rhs = expression[position + 1..].trim();
+                let (name, index) = match lhs.split_once('[') {
+                    Some((name, index)) if index.ends_with(']') => {
+                        (name.trim(), Some(index[..index.len() - 1].trim()))
+                    }
+                    _ => (lhs, None),
+                };
+                let valid_name =
+                    !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
+                let valid_index = index.is_none_or(|index| {
+                    !index.is_empty()
+                        && index.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+                });
+                if valid_name && valid_index {
+                    return Some((name, index, rhs));
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 fn placeholder_end(text: &str, start: usize, delimiter: char) -> Option<usize> {

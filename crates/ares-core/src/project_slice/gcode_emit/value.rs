@@ -133,6 +133,26 @@ impl Config {
         self.values.insert(key, value);
     }
 
+    /// Stores an assignment target (`{var[idx] = value}`): lists grow with
+    /// zero padding like the upstream per-extruder vectors.
+    pub(super) fn assign(&mut self, name: &str, index: Option<usize>, value: Value) {
+        match index {
+            None => self.insert(name, value),
+            Some(index) => {
+                let mut values = match self.get(name) {
+                    Some(Value::List(existing)) => existing.clone(),
+                    Some(other) => vec![other.clone()],
+                    None => Vec::new(),
+                };
+                if values.len() <= index {
+                    values.resize(index + 1, Value::Number(0.0));
+                }
+                values[index] = value;
+                self.insert(name, Value::List(values));
+            }
+        }
+    }
+
     pub(super) fn get(&self, key: &str) -> Option<&Value> {
         self.values.get(key)
     }
