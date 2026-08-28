@@ -333,3 +333,19 @@ Known remaining gaps (unchanged):
   GCode.cpp:4800-4810) not yet emitted.
 - G2/G3 arc fitting differences vs Orca on the KSR model (some arcs
   fall back to G1); comparator tolerates these today.
+
+8. OPEN: filament `enable_pressure_advance` value not merged into the
+   effective config. Kobra 3 Max 0.4 case: filament preset has
+   `["1"]`/`["0.036"]` but Ares' config block prints
+   `; enable_pressure_advance = 0`, so the filament-start template
+   condition `{if enable_pressure_advance[initial_extruder] == "true"}`
+   is false and the `SET_PRESSURE_ADVANCE ADVANCE=0.036` line is missing
+   (137-printer preamble class). Next: trace the filament gcode_source
+   bool through project load -> effective config -> config export.
+9. OPEN: remaining sweep18 classes (30 PASS / 813 DIVERGENT /
+   148 ARES_ERROR over 991 printers): 447 filament-length deltas with
+   per-printer causes (spacing/flow families), 97 deposition detail
+   (infill ordering, e.g. Afinia layer 28), 88 control-event ordering,
+   template placeholder gaps (first_layer_temperature[1] indexing,
+   extruded_weight_total, in_head_wrap_detect_zone), plus Orca-side
+   crashes in the harness (SIGSEGV/239/238) that are not Ares defects.
