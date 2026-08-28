@@ -1,7 +1,8 @@
 mod timestamp;
 
 use crate::{
-    GenerationMetadata, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+    GenerationMetadata, SliceError,
+    project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
 
 use super::value::{self, Value};
@@ -12,7 +13,7 @@ use super::value::{self, Value};
 pub(super) fn base_config(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
-) -> value::Config {
+) -> Result<value::Config, SliceError> {
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
     timestamp::insert(&mut config, metadata);
@@ -39,8 +40,9 @@ pub(super) fn base_config(
     insert_bed_temperature_placeholders(&mut config);
     insert_print_bed_bounds(&mut config);
     insert_first_layer_bounds(&mut config, traversal);
+    insert_outer_wall_volumetric_speed(&mut config, traversal)?;
     insert_adaptive_bed_mesh(&mut config);
-    config
+    Ok(config)
 }
 
 fn insert_runtime_placeholders(
@@ -178,7 +180,6 @@ fn insert_runtime_placeholders(
         vendors.clone().next().is_some() && vendors.all(|vendor| vendor.as_string() == "Bambu Lab")
     });
     config.insert("is_all_bbl_filament", Value::Bool(all_bbl));
-    insert_outer_wall_volumetric_speed(config, traversal);
     if let Some(minimum) = config
         .get("temperature_vitrification")
         .into_iter()
@@ -193,7 +194,7 @@ fn insert_runtime_placeholders(
 fn insert_outer_wall_volumetric_speed(
     config: &mut value::Config,
     traversal: &PreparedPostClassicTraversal,
-) {
+) -> Result<(), SliceError> {
     let full = &traversal.resolved.views.full;
     let region = &full.process.region;
     let object = &full.process.object;
@@ -212,8 +213,7 @@ fn insert_outer_wall_volumetric_speed(
         selected_width,
         object.layer_height.0 as f32,
         nozzle,
-    )
-    .expect("validated project outer-wall flow remains valid");
+    )?;
     let maximum = full
         .filament
         .gcode
@@ -225,6 +225,7 @@ fn insert_outer_wall_volumetric_speed(
         "outer_wall_volumetric_speed",
         Value::number((region.outer_wall_speed.0 * flow.mm3_per_mm).min(maximum)),
     );
+    Ok(())
 }
 
 /// `bed_temperature_initial_layer[_single]` from the curr-bed-type

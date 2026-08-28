@@ -225,7 +225,7 @@ fn self_start_config(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
 ) -> Result<super::value::Config, SliceError> {
-    let mut config = super::placeholders::base_config(traversal, metadata);
+    let mut config = super::placeholders::base_config(traversal, metadata)?;
     config.insert("next_extruder", value::Value::number(0.0));
     config.insert("next_hotend", value::Value::number(-1.0));
     config.insert("initial_no_support_extruder", value::Value::number(0.0));

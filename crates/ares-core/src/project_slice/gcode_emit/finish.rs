@@ -12,7 +12,7 @@ pub(super) fn append(
     metadata: GenerationMetadata,
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
-    let mut config = super::placeholders::base_config(traversal, metadata);
+    let mut config = super::placeholders::base_config(traversal, metadata)?;
     config.insert("current_extruder", value::Value::number(0.0));
     config.insert(
         "layer_num",

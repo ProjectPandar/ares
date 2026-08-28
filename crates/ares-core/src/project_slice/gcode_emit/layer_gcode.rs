@@ -66,7 +66,7 @@ pub(super) fn append_print_preamble(
         .0
         .first()
     {
-        let mut config = super::placeholders::base_config(traversal, metadata);
+        let mut config = super::placeholders::base_config(traversal, metadata)?;
         config.insert("position", emitted_position(output));
         let rendered = template::render(source, &config).map_err(|error| {
             SliceError::InvalidInput(format!(
@@ -204,7 +204,7 @@ pub(super) fn append_before_layer_change_gcode(
     if template.is_empty() {
         return Ok(());
     }
-    let mut config = super::placeholders::base_config(traversal, metadata);
+    let mut config = super::placeholders::base_config(traversal, metadata)?;
     config.insert("layer_num", value::Value::number((layer_index + 1) as f64));
     config.insert("layer_z", value::Value::number(layer_z));
     let filament = &traversal.resolved.views.full.filament.gcode;
@@ -245,7 +245,7 @@ pub(super) fn append_layer_change(
 ) -> Result<(), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
     if !template.is_empty() {
-        let mut config = super::placeholders::base_config(traversal, context.metadata);
+        let mut config = super::placeholders::base_config(traversal, context.metadata)?;
         config.insert("current_extruder", value::Value::number(0.0));
         config.insert("layer_num", value::Value::number(layer_index as f64));
         config.insert("layer_z", value::Value::number(layer_z));
