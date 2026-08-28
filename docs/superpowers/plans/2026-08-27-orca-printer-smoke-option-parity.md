@@ -374,3 +374,24 @@ Open items for review round 2:
    labels remain single-object quality.
 4. Orca cache: version pinning + SHA-256 content hashing still pending.
 5. Time estimator drift (KSR +9s) blocked on the trapezoid planner port.
+
+## 2026-08-28 session: placeholder parity round (9bc4327..e1d3d0a)
+
+1. RESOLVED: filament usage accounting rewritten as an E-position
+   processor (M82/M83, G90/G91, G92 resets; Extrude-only counting per
+   GCodeProcessor.cpp:3834-3851) — the SeeMeCNC family's +198.5mm phantom
+   extrusion is gone and 298.14 matches Orca exactly.
+2. RESOLVED: scalar placeholder indexing out of range now falls back like
+   ConfigOptionVector::get_at — the first_layer_temperature[1] template
+   errors (~50 printers) are gone.
+3. RESOLVED: in_head_wrap_detect_zone ported (first-layer hull vs zone
+   polygon intersection); timelapse templates render through base_config.
+4. OPEN: dominant remaining divergence is M73 progress-line placement —
+   Ares' estimated times differ (A1 mini 13m24s vs 12m19s; SeeMeCNC R13 vs
+   R8), shifting the percent-boundary M73 lines. Requires trapezoid
+   planner parity; until then these printers stay DIVERGENT.
+5. OPEN: lift-merging into the next XY travel (GCodeWriter.cpp:685-760
+   lazy lift) — A1 mini shows 92 standalone G0 Z lifts.
+6. OPEN: per-family filament-length deltas (Kobra 2 Max, Snapmaker Dual,
+   Qidi +3.00, Wanhao -5.00).
+7. OPEN: multi-object ByLayer emission order, Orca cache SHA pinning.
