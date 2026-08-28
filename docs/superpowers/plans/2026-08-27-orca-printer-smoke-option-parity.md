@@ -579,3 +579,36 @@ Elegoo preset line widths — check what the preset defines); (2) the
 offset() implementation dropping thin rings. The earlier Ares-vs-Orca
 Internal-solid X-range mismatch (Ares fills only a middle band) suggests
 the onion geometry is systematically narrower than upstream.
+
+## 2026-08-28 session: FillRectilinear residual gap fill ported (Elegoo fixed)
+
+Root cause of the Elegoo/Creality/Snapmaker missing-gap family found and
+fixed. OrcaSlicer `FillRectilinear::fill_surface_by_lines`
+(FillRectilinear.cpp:3730-3782) runs a residual medial-axis gap pass after
+laying the solid infill lines: unextruded = (no_overlap ∩ surface) −
+union(covered-by-spacing), then opening/offset2/diff, DP-simplify,
+medial_axis(min,max), length filter (filter_out_gap_fill), variable_width
+erGapFill. Ares had no such pass — that is the missing per-layer diagonal
+gap line.
+
+Implemented `project_slice/fill_entities/gap_residual.rs` wired into
+monotonic::append (also covers Rectilinear/ZigZag/MonotonicLine via the
+shared fill_surface_by_lines path). Added SurfaceFillParams.
+filter_out_gap_fill (region option, default 0) plumbed through
+group_fills. Reuses variable_width::convert_with_role + medial_axis.
+
+VERIFIED: Elegoo 0.2 case now emits 13 Gap infill lines == Orca 13; the
+diagonal line matches Orca width 0.219969 / E 0.03205 byte-exact. KSR
+parity still PASS; project_slice 1295/1295 green. The earlier onion
+gap-only-round alignment (iterate.rs depth>loop_number break after gap
+collection, no extra shell) is kept.
+
+KNOWN REGRESSION (tracks to a pre-existing fill_no_overlap defect, NOT the
+gap pass): Ender-3 smoke went 262.34→262.62 (+0.28mm) because Ares'
+fill_no_overlap is ~0.62mm wider than Orca's at a solid-infill corner, so
+the residual pass fills a sliver Orca already covers. Infill line X-range
+is identical (146.784–152.961 both sides), so the divergence is in the
+no-overlap domain (PerimeterGenerator.cpp:1678-1724 not_filled/offset2
+bounds). NEXT: align fill_no_overlap construction, then Ender-3 returns
+to PASS. Updated 3 stale line-position pinning tests (seam destinations,
+object_labels M204 ordering) to the corrected output.

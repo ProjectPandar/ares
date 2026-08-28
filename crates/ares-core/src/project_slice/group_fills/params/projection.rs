@@ -123,6 +123,7 @@ pub(super) fn project_surface(
         .checked_scale(seam_gap)
         .ok_or_else(|| SliceError::InvalidInput("seam_gap is out of coordinate range".into()))?;
     params.role_speed = role_speed(context.region, params.extrusion_role);
+    params.filter_out_gap_fill = context.region.filter_out_gap_fill.0;
 
     if solid || is_bridge {
         params.spacing = f64::from(params.flow.spacing);
@@ -172,6 +173,7 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
         symmetric_infill_y_axis: false,
         infill_overhang_angle: 60.0,
         gyroid_optimized: false,
+        filter_out_gap_fill: 0.0,
     }
 }
 

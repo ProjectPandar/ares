@@ -40,6 +40,8 @@ pub(super) fn append(
         anchor_length_max,
         link_max_length: 0.0,
     };
+    let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
+    let fill_params = fill.params;
     for expolygon in fill.expolygons {
         let generated =
             fill_monotonic_surface(&expolygon, params, scale).map_err(geometry_error)?;
@@ -47,21 +49,33 @@ pub(super) fn append(
             continue;
         }
         let flow = with_spacing(fill.params.flow, generated.spacing);
-        output.collections.push(FillExtrusionCollection {
-            entities: generated
-                .polylines
-                .into_iter()
-                .map(|polyline| {
-                    FillExtrusionEntity::Path(FillExtrusionPath {
-                        polyline,
-                        fitting: Vec::new(),
-                        role: fill.params.extrusion_role,
-                        mm3_per_mm: flow.mm3_per_mm,
-                        width: flow.width,
-                        height: flow.height,
-                    })
+        let spacing = generated.spacing;
+        let mut entities: Vec<FillExtrusionEntity> = generated
+            .polylines
+            .iter()
+            .cloned()
+            .map(|polyline| {
+                FillExtrusionEntity::Path(FillExtrusionPath {
+                    polyline,
+                    fitting: Vec::new(),
+                    role: fill.params.extrusion_role,
+                    mm3_per_mm: flow.mm3_per_mm,
+                    width: flow.width,
+                    height: flow.height,
                 })
-                .collect(),
+            })
+            .collect();
+        super::gap_residual::append_residual(super::gap_residual::ResidualInput {
+            output_entities: &mut entities,
+            no_overlap_expolygons: &no_overlap_expolygons,
+            params: fill_params,
+            expolygon: &expolygon,
+            filled: &generated.polylines,
+            spacing,
+            scale,
+        })?;
+        output.collections.push(FillExtrusionCollection {
+            entities,
             no_sort: matches!(
                 pattern,
                 ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine

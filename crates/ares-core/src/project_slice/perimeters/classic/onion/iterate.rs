@@ -85,21 +85,6 @@ pub(super) fn apply(input: IterationInput<'_>) -> Result<IterationResult, SliceE
             let outer = offset(&result.last, outer_delta)?;
             let inner = offset(&offsets, inner_delta)?;
             let collected = difference_polygons_ex(&outer, &inner).map_err(|_| geometry_error())?;
-            if std::env::var_os("ARES_GAP_DEBUG").is_some() {
-                let area: f64 = collected.iter().map(crate::geometry::ExPolygon::area).sum();
-                let last_area: f64 = result
-                    .last
-                    .iter()
-                    .map(crate::geometry::ExPolygon::area)
-                    .sum();
-                let offsets_area: f64 = offsets.iter().map(crate::geometry::ExPolygon::area).sum();
-                eprintln!(
-                    "[gap-debug] depth {depth} distance {distance} last {} ({last_area:.2}) offsets {} ({offsets_area:.2}) collected {} ({area:.4})",
-                    result.last.len(),
-                    offsets.len(),
-                    collected.len()
-                );
-            }
             result.gaps.extend(collected);
         }
 
@@ -108,6 +93,10 @@ pub(super) fn apply(input: IterationInput<'_>) -> Result<IterationResult, SliceE
             result.last.clear();
             break;
         }
+        // Upstream loops one extra round after the last perimeter purely to
+        // collect the gaps between the final offset shells; that round stores
+        // no shell and keeps `last` unchanged (PerimeterGenerator.cpp:1240-1245,
+        // 1341-1343).
         if depth > loop_number {
             break;
         }

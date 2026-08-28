@@ -1,6 +1,7 @@
 mod concentric;
 mod crosshatch;
 mod cubic;
+mod gap_residual;
 mod grid;
 mod gyroid;
 mod monotonic;

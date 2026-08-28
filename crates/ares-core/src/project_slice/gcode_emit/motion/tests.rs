@@ -268,7 +268,7 @@ async fn first_layer_inner_perimeter_uses_source_aligned_seam() {
         .nth(9)
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
 
-    assert_eq!(destination, Some("G1 X151.343 Y94.919 Z.6"));
+    assert_eq!(destination, Some("G1 X143.115 Y142.032 Z.6"));
 }
 
 #[tokio::test]
@@ -297,14 +297,14 @@ async fn first_layer_second_inner_perimeter_uses_fitted_aligned_seam() {
         .nth(11)
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
 
-    assert_eq!(destination, Some("G1 X140.545 Y90.801 Z.6"));
+    assert_eq!(destination, Some("G1 X149.983 Y99.084 Z.6"));
     let later_destination = lines[layer_changes[0]..layer_changes[1]]
         .iter()
         .enumerate()
         .filter(|(_, line)| line.starts_with("G3 Z") && line.ends_with(" F60000"))
         .nth(15)
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
-    assert_eq!(later_destination, Some("G1 X122.022 Y94.872 Z.6"));
+    assert_eq!(later_destination, Some("G1 X127.062 Y98.081 Z.6"));
     assert!(lines.contains(&"G1 X122.305 Y95.287 E-.04452"));
 }
 
