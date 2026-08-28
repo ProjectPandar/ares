@@ -1,5 +1,5 @@
 use super::VendorProfiles;
-use crate::{runner, select_printer};
+use crate::{runner, select_printer, smoke_overrides};
 
 fn profiles(vendor: &str) -> VendorProfiles {
     VendorProfiles::load(
@@ -7,6 +7,14 @@ fn profiles(vendor: &str) -> VendorProfiles {
         vendor,
     )
     .unwrap()
+}
+
+#[test]
+fn smoke_overrides_clear_cli_unsafe_bed_exclusion() {
+    assert_eq!(
+        smoke_overrides().get("bed_exclude_area"),
+        Some(&serde_json::json!(["0x0"]))
+    );
 }
 
 #[test]

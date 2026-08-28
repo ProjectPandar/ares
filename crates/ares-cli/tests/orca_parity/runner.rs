@@ -88,6 +88,8 @@ impl OrcaRunner {
                     &join_paths([&machine_file, &process_file].into_iter()),
                     "--load-filaments",
                     &join_paths(filament_files.iter()),
+                    "--arrange",
+                    "1",
                     "--export-3mf",
                 ]
                 .into_iter()

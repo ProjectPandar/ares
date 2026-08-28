@@ -85,6 +85,15 @@ pub(crate) fn smoke_overrides() -> Map<String, Value> {
     // Classic thin-wall gap detection is not ported yet (tracked as its own
     // slice); pin it off so the baseline exercises ported behavior.
     overrides.insert("detect_thin_wall".to_owned(), Value::String("0".to_owned()));
+    // Some vendor profiles encode the whole bed boundary as the first
+    // exclusion polygon. The standalone Orca CLI then arranges the smoke cube
+    // outside the bed (`return -50`), unlike the GUI profile loader. Exclusions
+    // do not affect generated movement after placement, so clear them for the
+    // shared smoke fixture.
+    overrides.insert(
+        "bed_exclude_area".to_owned(),
+        Value::Array(vec![Value::String("0x0".to_owned())]),
+    );
     overrides
 }
 
