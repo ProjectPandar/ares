@@ -1,5 +1,4 @@
 use crate::{
-    SliceError,
     options::{
         Nullable, OrcaFloat, OrcaFloats, OrcaInt, OrcaInts, ProjectSettings,
         project_config_views::resolve_project_config_views,
@@ -111,22 +110,20 @@ fn project_config_views_empty_filament_deretraction_speed_preserves_machine_card
 }
 
 #[test]
-fn project_config_views_deretraction_speed_length_must_match_filament_map() {
+fn project_config_views_nullable_override_cardinality_broadcasts() {
     let mut full = ProjectSettings::default();
     clear_nullable_retract_overrides(&mut full.filament.retract_overrides);
-    full.project.gcode.deretraction_speed = floats(&[10.0]);
-    full.project.gcode.filament_map = ints(&[1]);
+    full.project.gcode.deretraction_speed = floats(&[10.0, 20.0]);
+    full.project.gcode.filament_map = ints(&[1, 2, 1]);
     full.filament
         .retract_overrides
-        .filament_deretraction_speed = vec![Nullable::Nil, Nullable::Nil];
+        .filament_deretraction_speed = vec![Nullable::Value(OrcaFloat(30.0))];
 
-    let error = resolve_project_config_views(full).unwrap_err();
+    let views = resolve_project_config_views(full).unwrap();
 
     assert_eq!(
-        error,
-        SliceError::InvalidInput(
-            "filament_deretraction_speed length must match filament_map".to_owned()
-        )
+        views.runtime.project.gcode.deretraction_speed,
+        floats(&[30.0, 30.0, 30.0])
     );
 }
 

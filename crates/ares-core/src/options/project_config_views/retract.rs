@@ -5,7 +5,7 @@ const ENABLE_FILAMENT_LONG_RETRACTION: i32 = 2;
 
 macro_rules! overlay {
     ($machine:expr, $filament:expr, $map:expr, $key:literal) => {
-        apply_nullable(&mut $machine.0, $filament, $map, $key)?
+        apply_nullable(&mut $machine.0, $filament, $map)
     };
 }
 
@@ -132,22 +132,19 @@ fn apply_nullable<T: Clone>(
     machine: &mut Vec<T>,
     filament: &[Nullable<T>],
     filament_map: &[OrcaInt],
-    key: &str,
-) -> Result<(), SliceError> {
+) {
     if machine.is_empty() || filament.is_empty() {
-        return Ok(());
+        return;
     }
-    if filament.len() != filament_map.len() {
-        return Err(SliceError::InvalidInput(format!(
-            "{key} length must match filament_map"
-        )));
-    }
-
     let defaults = machine.clone();
-    machine.resize(filament.len(), defaults[0].clone());
-    for ((target, override_value), OrcaInt(mapped_extruder)) in
-        machine.iter_mut().zip(filament).zip(filament_map)
+    machine.resize(filament_map.len(), defaults[0].clone());
+    for (index, (target, OrcaInt(mapped_extruder))) in
+        machine.iter_mut().zip(filament_map).enumerate()
     {
+        let override_value = filament
+            .get(index)
+            .or_else(|| filament.first())
+            .expect("validated nullable override vector is nonempty");
         *target = match override_value {
             Nullable::Value(value) => value.clone(),
             Nullable::Nil => {
@@ -160,5 +157,4 @@ fn apply_nullable<T: Clone>(
             }
         };
     }
-    Ok(())
 }
