@@ -60,12 +60,12 @@ impl OrcaRunner {
         model: &Path,
     ) -> Result<ParityCase, String> {
         let label = inputs.label;
-        let machine = apply_override(inputs.machine, overrides);
-        let process = apply_override(inputs.process, overrides);
+        let machine = apply_override(inputs.machine, overrides, PresetKind::Machine);
+        let process = apply_override(inputs.process, overrides, PresetKind::Process);
         let filaments: Vec<Map<String, Value>> = inputs
             .filaments
             .iter()
-            .map(|filament| apply_override(filament, overrides))
+            .map(|filament| apply_override(filament, overrides, PresetKind::Filament))
             .collect();
 
         let slug = digest_slug(label, &machine, &process, &filaments, model);
@@ -129,14 +129,41 @@ impl OrcaRunner {
     }
 }
 
-fn apply_override(base: &Map<String, Value>, overrides: &Map<String, Value>) -> Map<String, Value> {
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum PresetKind {
+    Machine,
+    Process,
+    Filament,
+}
+
+fn apply_override(
+    base: &Map<String, Value>,
+    overrides: &Map<String, Value>,
+    kind: PresetKind,
+) -> Map<String, Value> {
     let mut merged = base.clone();
     for (key, value) in overrides {
-        if merged.contains_key(key) {
+        if merged.contains_key(key) || smoke_owner(key) == Some(kind) {
             merged.insert(key.clone(), value.clone());
         }
     }
     merged
+}
+
+fn smoke_owner(key: &str) -> Option<PresetKind> {
+    match key {
+        "bed_exclude_area"
+        | "extruder_printable_height"
+        | "machine_start_gcode"
+        | "retraction_distances_when_cut"
+        | "use_firmware_retraction" => Some(PresetKind::Machine),
+        "before_layer_change_gcode"
+        | "bridge_line_width"
+        | "detect_thin_wall"
+        | "post_process"
+        | "wall_generator" => Some(PresetKind::Process),
+        _ => None,
+    }
 }
 
 fn write_preset(path: &Path, kind: &str, fields: &Map<String, Value>) -> Result<(), String> {
