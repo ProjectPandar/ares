@@ -497,3 +497,13 @@ prepare_infill solid pass.
 NEXT: wire solid-area gap fill (PerimeterGenerator.cpp:1570-1593
 semantics) into Ares' prepare_infill solid pass; then travel-lift
 state machine; then M73 estimator.
+## 2026-08-28 session: Elegoo layer structure refined (f217b01 base)
+
+The Elegoo z=0.25 layer differs structurally: Orca prints
+Internal-solid (X111.874 vertical) -> Gap infill (X111.805, 13 round
+trips, width 0.22) -> Internal-solid (second island); Ares prints a
+single Internal-solid pass. The difference is ISLAND SPLITTING of the
+solid region (Orca's solid region has an interior gap the Ares region
+merges over), not the fill pattern. Needs a per-layer region dump from
+Ares' prepare_infill (solid-area polygons) diffed against Orca's
+emitted geometry to find the clipping/merge divergence.
