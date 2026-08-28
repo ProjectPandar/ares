@@ -349,3 +349,28 @@ Known remaining gaps (unchanged):
    template placeholder gaps (first_layer_temperature[1] indexing,
    extruded_weight_total, in_head_wrap_detect_zone), plus Orca-side
    crashes in the harness (SIGSEGV/239/238) that are not Ares defects.
+
+## 2026-08-28 session: review round 1 fixes (1363b55..c3415e2)
+
+Independent review round 1 returned an 18-item fix list; resolved in this
+round: RRF M486 single-line define, M104 tool/get_at semantics, envelope
+half-up rounding, empty-start-template handling, gcode_label_objects vs
+exclude_object gating split, Klipper combined SET_VELOCITY_LIMIT with X/Y
+jerk clamps, initial pressure-advance emission, option-coverage
+override-order bug, sweep selection-failure logging, timing-ignored
+annotation, and the 400-LOC splits (motion/options.rs -> build.rs,
+motion.rs -> acceleration.rs).
+
+Open items for review round 2:
+
+1. Printer parity long tail: 35 PASS / 808 DIVERGENT / 158 ARES_ERROR
+   (sweep19). Dominant classes: per-family filament-length deltas (~450),
+   deposition ordering (~97), control-event ordering (~88), template
+   placeholder gaps (~60).
+2. Option coverage: 847 PASS / 78 DIVERGENT / 129 ARES_ERROR; the
+   ARES_ERROR class concentrates in unsupported patterns (three-d
+   honeycomb, lateral variants) and exotic gcode flavors.
+3. Multi-object/multi-instance emission order (ByLayer) and instance-1
+   labels remain single-object quality.
+4. Orca cache: version pinning + SHA-256 content hashing still pending.
+5. Time estimator drift (KSR +9s) blocked on the trapezoid planner port.
