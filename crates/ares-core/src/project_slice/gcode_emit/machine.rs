@@ -141,6 +141,18 @@ pub(super) fn append_second_layer_transition(
 ) {
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;
+    // Nozzle temperature transition (`GCode.cpp:4800-4810`): M104 when the
+    // second-layer temperature differs from the first-layer one.
+    for tool in 0..traversal.resolved.logical_filament_count {
+        let temperature = filament_int(&settings.filament.print.nozzle_temperature, tool);
+        let initial = filament_int(
+            &settings.filament.print.nozzle_temperature_initial_layer,
+            tool,
+        );
+        if temperature > 0 && temperature != initial {
+            output.extend_from_slice(format!("M104 S{temperature} T{tool}\n").as_bytes());
+        }
+    }
     let filament = &settings.filament.print;
     let temps: &[crate::OrcaInts] = match settings.project.print.curr_bed_type {
         ProjectBedType::DefaultPlate => &[],
@@ -270,6 +282,14 @@ fn append_first_layer_bed_temperature(
         );
     }
     first
+}
+
+fn filament_int(values: &crate::OrcaInts, index: usize) -> i32 {
+    values
+        .0
+        .first()
+        .or_else(|| values.0.get(index))
+        .map_or(0, |value| value.0)
 }
 
 fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
