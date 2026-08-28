@@ -530,3 +530,18 @@ NEXT: find why Ares' solid-infill residual gap fill misses this
 diagonal line (medial-axis stage in the solid pass); candidate areas:
 medial-axis minimum-length/width thresholds or the residual-region
 segmentation in prepare_infill.
+## 2026-08-28 session: gap pipeline structure traced (34ff6a2 base)
+
+Ares' classic gap pipeline mirrors upstream: onion/iterate.rs:83-90
+collects gaps per onion round (gated by has_gap_fill, using
+gap_deltas(distance) offsets — matches PerimeterGenerator.cpp:1330-1335);
+gap_domain.rs:122-150 runs the opening/offset2/difference medial
+pre-pass; medial_gap.rs:104-123 runs medial_axis per expolygon.
+
+The Elegoo missing diagonal gap line (width 0.22) is emitted by Orca
+NEXT to the Internal-solid line — it comes from the Internal-solid
+surface's own onion round (the surface processes its region with
+loop_number=0 for the gap pass). NEXT: instrument the onion iterate for
+the Internal-solid surface of that layer to see whether the round runs
+and what gaps it collects; suspect the Internal-solid surface's onion
+is skipped in Ares (loop_number/only_one_wall_first_layer semantics).
