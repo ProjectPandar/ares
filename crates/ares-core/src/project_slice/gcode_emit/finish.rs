@@ -85,8 +85,20 @@ pub(super) fn append_filament_stats(
     for (index, diameter) in filament.filament_diameter.0.iter().enumerate() {
         let length = if index == 0 { used_filament } else { 0.0 };
         let volume = length * diameter.0.powi(2) * 0.25 * std::f64::consts::PI;
-        let density = filament.filament_density.0[index].0;
-        let cost = filament.filament_cost.0[index].0;
+        let density = filament
+            .filament_density
+            .0
+            .get(index)
+            .or_else(|| filament.filament_density.0.first())
+            .expect("validated filament density vector is nonempty")
+            .0;
+        let cost = filament
+            .filament_cost
+            .0
+            .get(index)
+            .or_else(|| filament.filament_cost.0.first())
+            .expect("validated filament cost vector is nonempty")
+            .0;
         let weight = volume * density * 0.001;
         used_mm.push(format!("{length:.2}"));
         used_cm3.push(format!("{:.2}", volume * 0.001));
