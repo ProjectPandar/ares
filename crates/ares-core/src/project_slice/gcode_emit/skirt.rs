@@ -24,8 +24,6 @@ pub(super) struct SkirtPlan {
     /// First-layer flow values; later layers rescale `mm3_per_mm` by the
     /// actual layer height (`GCode.cpp:4413`).
     width: f32,
-    height: f32,
-    mm3_per_mm: f64,
     /// Number of layers the skirt is printed on (`skirt_height`, or every
     /// layer when the draft shield makes it infinite).
     layer_count: usize,
@@ -165,8 +163,6 @@ impl SkirtPlan {
         Ok(Some(Self {
             loops,
             width: flow.width,
-            height: flow.height,
-            mm3_per_mm: flow.mm3_per_mm,
             layer_count,
             start_angle_deg,
         }))
@@ -184,10 +180,15 @@ impl SkirtPlan {
         if layer.index >= self.layer_count {
             return;
         }
-        let mm3_per_mm = self.mm3_per_mm * (layer.height_mm / f64::from(self.height));
+        let height = layer.height_mm as f32;
+        let rounded_rectangle = 1.0 - 0.25 * std::f64::consts::PI;
+        let mm3_per_mm = f64::from(
+            (layer.height_mm * (f64::from(self.width) - layer.height_mm * rounded_rectangle))
+                as f32,
+        );
         let flow = motion::SkirtLoopFlow {
             width: self.width,
-            height: layer.height_mm as f32,
+            height,
             mm3_per_mm,
         };
         let mut seam_target = find_start_point(&self.loops[0], self.start_angle_deg);
