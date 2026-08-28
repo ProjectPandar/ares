@@ -261,6 +261,28 @@ pub(super) fn append_layer_change(
             "max_additional_fan",
             value::Value::number(context.max_additional_fan),
         );
+        // The upstream parser exposes the running extrusion totals to the
+        // layer-change template as well (`GCode.cpp:1652, 1689`); they are
+        // re-scanned from the emitted G-code, which is the accumulated
+        // extrusion of every layer printed so far.
+        let filament = &traversal.resolved.views.full.filament.gcode;
+        let diameter = filament
+            .filament_diameter
+            .0
+            .first()
+            .map_or(1.75, |diameter| diameter.0);
+        let density = filament
+            .filament_density
+            .0
+            .first()
+            .map_or(1.24, |density| density.0);
+        let length = super::finish::account_used_filament(output);
+        let volume = length * diameter.powi(2) * 0.25 * std::f64::consts::PI;
+        config.insert("extruded_volume_total", value::Value::number(volume));
+        config.insert(
+            "extruded_weight_total",
+            value::Value::number(volume * density * 0.001),
+        );
         let rendered = template::render(template, &config).map_err(|error| {
             SliceError::InvalidInput(format!(
                 "invalid project layer-change G-code template: {error}"

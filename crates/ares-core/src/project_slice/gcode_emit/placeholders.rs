@@ -37,6 +37,19 @@ pub(super) fn base_config(
             config.insert(target, value);
         }
     }
+    // `retract_length` is exposed to templates from the filament retraction
+    // length (`GCode.cpp:2898`).
+    let retract_length = &traversal.resolved.views.runtime_gcode.retraction_length;
+    config.insert(
+        "retract_length",
+        value::Value::List(
+            retract_length
+                .0
+                .iter()
+                .map(|value| value::Value::number(value.0))
+                .collect(),
+        ),
+    );
     insert_bed_temperature_placeholders(&mut config);
     insert_print_bed_bounds(&mut config);
     insert_first_layer_bounds(&mut config, traversal);
