@@ -413,3 +413,22 @@ Open items for review round 2:
    gates) — ~90 printers at the M106 positions.
 5. OPEN: the estimator gap (A1 mini 13m24s vs 12m19s) still drives the
    M73 placement class; per-family filament-length deltas unchanged.
+
+## 2026-08-28 session: config-block parity verified (0251bb2..5a61ac0)
+
+A1 mini config block is byte-identical. Sweep22: 35 PASS / 868 DIVERGENT /
+98 ARES_ERROR (ARES_ERROR trend 160 -> 98).
+
+New findings from the Artillery M1 Pro (auxiliary_fan family):
+
+1. The disable-fan pair (M106 S0 + M106 P2 S0) now emits for
+   auxiliary-fan printers at the correct position.
+2. Remaining Artillery divergences are travel-lift semantics: Ares emits
+   a spiral lift (G17 + G3 Z.. I.. J.. P1) where Orca merges the lift
+   into the next XY travel (G1 X.. Y.. Z.. F..) — the lift-type choice
+   (Auto: short travel -> merged NormalLift, long -> SpiralLift) and the
+   lazy-lift merge in GCodeWriter.cpp:685-760 need porting. This also
+   explains the standalone G1 Z.5 + separate XY patterns.
+3. The exhaust fan (M106 P3 S255) in the start template is gated by a
+   template branch Ares evaluates differently; needs the branch
+   placeholder checked against the preset value.
