@@ -128,7 +128,10 @@ pub(crate) fn select_printer(
         |name| profiles.process_exists(name),
         &format!("{vendor}/{printer} process"),
     ) {
-        Ok(process) => process,
+        Ok(process) if profiles.process_is_compatible(&process, printer) => process,
+        Ok(_) => profiles
+            .compatible_process(printer)
+            .ok_or_else(|| format!("{vendor}/{printer} process: no compatible preset"))?,
         Err(error) => profiles.compatible_process(printer).ok_or(error)?,
     };
 
@@ -138,7 +141,11 @@ pub(crate) fn select_printer(
         _ => Vec::new(),
     }
     .into_iter()
-    .filter(|name| !name.is_empty() && profiles.filament_exists(name))
+    .filter(|name| {
+        !name.is_empty()
+            && profiles.filament_exists(name)
+            && profiles.filament_is_compatible(name, printer)
+    })
     .map(ToOwned::to_owned)
     .collect();
     if filaments.is_empty() {

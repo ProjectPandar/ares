@@ -59,8 +59,16 @@ impl VendorProfiles {
         self.process.contains_key(name)
     }
 
+    pub(super) fn process_is_compatible(&self, name: &str, printer: &str) -> bool {
+        self.preset_is_compatible(&self.process, name, printer)
+    }
+
     pub(super) fn filament_exists(&self, name: &str) -> bool {
         self.filament.contains_key(name)
+    }
+
+    pub(super) fn filament_is_compatible(&self, name: &str, printer: &str) -> bool {
+        self.preset_is_compatible(&self.filament, name, printer)
     }
 
     pub(super) fn compatible_process(&self, printer: &str) -> Option<String> {
@@ -74,6 +82,26 @@ impl VendorProfiles {
                     .get("filament_type")
                     .is_some_and(|value| value.to_string().contains("PLA"))
         })
+    }
+
+    fn preset_is_compatible(
+        &self,
+        index: &BTreeMap<String, Map<String, Value>>,
+        name: &str,
+        printer: &str,
+    ) -> bool {
+        let Ok(fields) = self.flatten(index, name, "compatible preset") else {
+            return false;
+        };
+        fields
+            .get("compatible_printers")
+            .and_then(Value::as_array)
+            .filter(|printers| !printers.is_empty())
+            .is_none_or(|printers| {
+                printers
+                    .iter()
+                    .any(|candidate| candidate.as_str() == Some(printer))
+            })
     }
 
     fn compatible_preset(

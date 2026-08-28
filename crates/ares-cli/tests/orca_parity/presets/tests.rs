@@ -45,6 +45,15 @@ fn selection_falls_back_to_an_explicitly_compatible_filament() {
 }
 
 #[test]
+fn incompatible_named_default_falls_back_to_explicit_compatible_process() {
+    let profiles = profiles("Artillery");
+    let selection = select_printer(&profiles, "Artillery", "Artillery M1 Pro 0.2 nozzle").unwrap();
+
+    assert!(selection.process.contains("M1 Pro 0.2 nozzle"));
+    assert!(profiles.process_is_compatible(&selection.process, &selection.printer));
+}
+
+#[test]
 fn selection_falls_back_to_a_compatible_process() {
     let profiles = profiles("Anker");
     let selection = select_printer(&profiles, "Anker", "Anker M5 0.2 nozzle").unwrap();
