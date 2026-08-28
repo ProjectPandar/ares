@@ -66,7 +66,8 @@ pub(in crate::geometry) use region_expansion::{
     wavefront_counter_clockwise, wavefront_step_for_test,
 };
 pub(crate) use simplification::{
-    append_simplified_expolygon, simplify_closed_points, simplify_expolygon_polygons,
+    append_simplified_expolygon, douglas_peucker, simplify_closed_points,
+    simplify_expolygon_polygons,
 };
 
 type DetectBridgingDirection = fn(&[Line], &[Polygon], CoordinateScale) -> ((f64, f64), f64);

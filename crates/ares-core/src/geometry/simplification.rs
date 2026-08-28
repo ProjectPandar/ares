@@ -65,7 +65,7 @@ pub(super) fn distance_to_segment_squared(point: Point, start: Point, end: Point
     }
 }
 
-pub(super) fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
+pub(crate) fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
     let Some(&first) = points.first() else {
         return Vec::new();
     };

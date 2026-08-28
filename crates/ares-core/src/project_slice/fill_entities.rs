@@ -4,6 +4,7 @@ mod cubic;
 mod grid;
 mod gyroid;
 mod monotonic;
+mod simplify;
 mod triangles;
 mod types;
 
@@ -177,6 +178,13 @@ pub(in crate::project_slice) fn generate_layer(
             SurfaceFillPattern::Configured(_) => {}
         }
     }
+    let process = &traversal.resolved.views.full.process;
+    simplify::apply(
+        &mut output,
+        process.print.resolution.0.max(1.0e-4),
+        process.gcode.enable_arc_fitting.0,
+        traversal.scale,
+    );
     Ok(output)
 }
 
