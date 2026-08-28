@@ -90,6 +90,15 @@ fn task22o1_fixture_precise_spacing_and_gap_enablement_come_from_3mf_options() {
     assert_ne!(baseline.0, imprecise.0);
     assert_eq!(baseline.1, imprecise.1);
 
+    let mut outer_first = KsrArchive::new();
+    outer_first.replace_unique(
+        "Metadata/project_settings.config",
+        "\"wall_sequence\": \"inner wall/outer wall\"",
+        "\"wall_sequence\": \"outer wall/inner wall\"",
+    );
+    let outer_first = first_record(outer_first.bytes());
+    assert_eq!(outer_first.0, imprecise.0);
+
     let mut no_gaps = KsrArchive::new();
     no_gaps.replace_unique(
         "Metadata/project_settings.config",

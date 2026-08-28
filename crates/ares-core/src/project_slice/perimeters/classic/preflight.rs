@@ -162,7 +162,8 @@ fn validate_record(
     };
     Ok(ValidatedClassicConfig {
         wall_loops,
-        precise_outer_wall: region.precise_outer_wall.0,
+        precise_outer_wall: region.precise_outer_wall.0
+            && region.wall_sequence == crate::ProcessWallSequence::InnerOuter,
         detect_overhang_wall: region.detect_overhang_wall.0,
         only_one_wall_top: region.only_one_wall_top.0,
         gap_infill_speed: region.gap_infill_speed.0,
