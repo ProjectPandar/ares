@@ -126,6 +126,9 @@ fn fixture_fields<'a>(keys: impl IntoIterator<Item = &'a str>) -> Map<String, Va
 }
 
 fn expected_default(row: &InventoryRow) -> Value {
+    if row.nullable {
+        return Value::Array(vec![Value::String("nil".to_owned())]);
+    }
     let scalar = match row.option_type.as_str() {
         "coBools" | "coEnums" | "coFloats" | "coInts" | "coPercents" => {
             row.default_serialized.clone()

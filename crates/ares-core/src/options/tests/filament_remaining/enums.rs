@@ -2,7 +2,7 @@ use serde_json::{Value, json};
 
 use super::super::super::{
     FilamentOptions, FilamentPrintSourceOptions, FilamentRetractOverrideOptions,
-    RawOverhangFanThreshold, RetractLiftEnforce, ZHopType,
+    RawOverhangFanThreshold,
 };
 use super::fixture_fields;
 
@@ -61,11 +61,11 @@ fn enum_defaults_and_fixture_payloads_are_exact() {
     assert_eq!(print.overhang_fan_threshold, vec![RawOverhangFanThreshold::Percent95]);
     assert_eq!(
         retract.filament_retract_lift_enforce,
-        vec![super::super::super::Nullable::Value(RetractLiftEnforce::AllSurfaces)]
+        vec![super::super::super::Nullable::Nil]
     );
     assert_eq!(
         retract.filament_z_hop_types,
-        vec![super::super::super::Nullable::Value(ZHopType::Slope)]
+        vec![super::super::super::Nullable::Nil]
     );
     let fixture = fixture_fields([
         "overhang_fan_threshold",

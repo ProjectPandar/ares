@@ -77,7 +77,7 @@ pub(in crate::options::tests::filament_remaining) const VARIANT_KEYS: [&str; 27]
     "nozzle_temperature_initial_layer",
 ];
 
-pub(in crate::options::tests::filament_remaining) const FIXTURE_OVERRIDE_KEYS: [&str; 36] = [
+pub(in crate::options::tests::filament_remaining) const FIXTURE_OVERRIDE_KEYS: [&str; 26] = [
     "additional_cooling_fan_speed",
     "close_additional_fan_first_x_layers",
     "complete_print_exhaust_fan_speed",
@@ -86,20 +86,10 @@ pub(in crate::options::tests::filament_remaining) const FIXTURE_OVERRIDE_KEYS: [
     "eng_plate_temp_initial_layer",
     "fan_cooling_layer_time",
     "fan_min_speed",
-    "filament_deretraction_speed",
-    "filament_long_retractions_when_cut",
-    "filament_retract_before_wipe",
-    "filament_retract_lift_above",
-    "filament_retract_lift_below",
-    "filament_retract_lift_enforce",
-    "filament_retract_restart_extra",
-    "filament_retract_when_changing_layer",
     "filament_retraction_distances_when_cut",
     "filament_retraction_length",
-    "filament_retraction_minimum_travel",
-    "filament_retraction_speed",
     "filament_wipe",
-    "filament_z_hop",
+    "filament_wipe_distance",
     "filament_z_hop_types",
     "first_x_layer_fan_speed",
     "hot_plate_temp",

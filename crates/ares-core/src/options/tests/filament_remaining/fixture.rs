@@ -87,6 +87,6 @@ fn fixture_cardinality_variant_and_semantic_override_sets_are_exact() {
         .map(|row| row.key.as_str())
         .collect::<BTreeSet<_>>();
     assert_eq!(overrides, BTreeSet::from(FIXTURE_OVERRIDE_KEYS));
-    assert_eq!(overrides.len(), 36);
-    assert_eq!(remaining.len() - overrides.len(), 33);
+    assert_eq!(overrides.len(), 26);
+    assert_eq!(remaining.len() - overrides.len(), 43);
 }
