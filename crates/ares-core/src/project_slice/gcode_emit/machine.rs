@@ -40,23 +40,26 @@ fn append_machine_envelope(output: &mut Vec<u8>, traversal: &PreparedPostClassic
     let flavor = traversal.resolved.views.full.printer.gcode.gcode_flavor;
     let rrf = flavor == crate::GCodeFlavor::RepRapFirmware;
     let factor: f64 = if rrf { 60.0 } else { 1.0 };
+    // Upstream converts the envelope integers with `int(value + 0.5)`
+    // (`GCode.cpp:3945-3980`).
+    let half_up = |value: f64| (value + 0.5).floor() as i64;
     output.extend_from_slice(
         format!(
             "M201 X{} Y{} Z{} E{}\n",
-            first(&machine.machine_max_acceleration_x),
-            first(&machine.machine_max_acceleration_y),
-            first(&machine.machine_max_acceleration_z),
-            first(&machine.machine_max_acceleration_e),
+            half_up(first(&machine.machine_max_acceleration_x)),
+            half_up(first(&machine.machine_max_acceleration_y)),
+            half_up(first(&machine.machine_max_acceleration_z)),
+            half_up(first(&machine.machine_max_acceleration_e)),
         )
         .as_bytes(),
     );
     output.extend_from_slice(
         format!(
             "M203 X{} Y{} Z{} E{}\n",
-            first(&machine.machine_max_speed_x) * factor,
-            first(&machine.machine_max_speed_y) * factor,
-            first(&machine.machine_max_speed_z) * factor,
-            first(&machine.machine_max_speed_e) * factor,
+            half_up(first(&machine.machine_max_speed_x) * factor),
+            half_up(first(&machine.machine_max_speed_y) * factor),
+            half_up(first(&machine.machine_max_speed_z) * factor),
+            half_up(first(&machine.machine_max_speed_e) * factor),
         )
         .as_bytes(),
     );
@@ -71,8 +74,8 @@ fn append_machine_envelope(output: &mut Vec<u8>, traversal: &PreparedPostClassic
         output.extend_from_slice(
             format!(
                 "M204 P{} T{} ; sets acceleration (P, T), mm/sec^2\n",
-                first(&machine.machine_max_acceleration_extruding),
-                travel_acceleration,
+                half_up(first(&machine.machine_max_acceleration_extruding)),
+                half_up(travel_acceleration),
             )
             .as_bytes(),
         );
@@ -80,9 +83,9 @@ fn append_machine_envelope(output: &mut Vec<u8>, traversal: &PreparedPostClassic
         output.extend_from_slice(
             format!(
                 "M204 P{} R{} T{} ; sets acceleration (P, T) and retract acceleration (R), mm/sec^2\n",
-                first(&machine.machine_max_acceleration_extruding),
-                first(&machine.machine_max_acceleration_retracting),
-                travel_acceleration,
+                half_up(first(&machine.machine_max_acceleration_extruding)),
+                half_up(first(&machine.machine_max_acceleration_retracting)),
+                half_up(travel_acceleration),
             )
             .as_bytes(),
         );
@@ -90,9 +93,9 @@ fn append_machine_envelope(output: &mut Vec<u8>, traversal: &PreparedPostClassic
         output.extend_from_slice(
             format!(
                 "M204 P{} R{} T{}\n",
-                first(&machine.machine_max_acceleration_extruding),
-                first(&machine.machine_max_acceleration_retracting),
-                travel_acceleration,
+                half_up(first(&machine.machine_max_acceleration_extruding)),
+                half_up(first(&machine.machine_max_acceleration_retracting)),
+                half_up(travel_acceleration),
             )
             .as_bytes(),
         );
@@ -142,7 +145,9 @@ pub(super) fn append_second_layer_transition(
     let settings = &traversal.resolved.views.full;
     use crate::ProjectBedType;
     // Nozzle temperature transition (`GCode.cpp:4800-4810`): M104 when the
-    // second-layer temperature differs from the first-layer one.
+    // second-layer temperature differs from the first-layer one. The tool
+    // parameter is dropped for single-extruder printers
+    // (`GCodeWriter.cpp:155-164`).
     for tool in 0..traversal.resolved.logical_filament_count {
         let temperature = filament_int(&settings.filament.print.nozzle_temperature, tool);
         let initial = filament_int(
@@ -150,7 +155,12 @@ pub(super) fn append_second_layer_transition(
             tool,
         );
         if temperature > 0 && temperature != initial {
-            output.extend_from_slice(format!("M104 S{temperature} T{tool}\n").as_bytes());
+            let tool_suffix = if traversal.resolved.logical_filament_count > 1 {
+                format!(" T{tool}")
+            } else {
+                String::new()
+            };
+            output.extend_from_slice(format!("M104 S{temperature}{tool_suffix}\n").as_bytes());
         }
     }
     let filament = &settings.filament.print;
@@ -188,9 +198,33 @@ pub(super) fn append_start(
     metadata: GenerationMetadata,
 ) -> Result<i32, SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    if template.is_empty() {
-        return Ok(0);
+    let custom = super::tags::Tags::of(traversal).custom() + "\n";
+    output.extend_from_slice(custom.as_bytes());
+    let bed_cache = append_first_layer_bed_temperature(output, traversal);
+    // An empty start G-code still writes the role tag, the temperature
+    // handling and a blank `writeln` line (`GCode.cpp:3115-3137`).
+    let rendered = if template.is_empty() {
+        String::new()
+    } else {
+        let config = self_start_config(traversal, metadata)?;
+        template::render(template, &config).map_err(|error| {
+            SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
+        })?
+    };
+    output.extend_from_slice(rendered.as_bytes());
+    if !rendered.ends_with('\n') {
+        output.push(b'\n');
     }
+    if !super::tags::Tags::of(traversal).is_bbl() {
+        append_flavor_preamble(output, traversal);
+    }
+    Ok(bed_cache)
+}
+
+fn self_start_config(
+    traversal: &PreparedPostClassicTraversal,
+    metadata: GenerationMetadata,
+) -> Result<super::value::Config, SliceError> {
     let mut config = super::placeholders::base_config(traversal, metadata);
     config.insert("next_extruder", value::Value::number(0.0));
     config.insert("next_hotend", value::Value::number(-1.0));
@@ -245,20 +279,7 @@ pub(super) fn append_start(
     );
     config.insert("first_non_support_filaments", first_filaments.clone());
     config.insert("first_filaments", first_filaments);
-    let custom = super::tags::Tags::of(traversal).custom() + "\n";
-    output.extend_from_slice(custom.as_bytes());
-    let bed_cache = append_first_layer_bed_temperature(output, traversal);
-    let rendered = template::render(template, &config).map_err(|error| {
-        SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
-    })?;
-    output.extend_from_slice(rendered.as_bytes());
-    if !rendered.ends_with('\n') {
-        output.push(b'\n');
-    }
-    if !super::tags::Tags::of(traversal).is_bbl() {
-        append_flavor_preamble(output, traversal);
-    }
-    Ok(bed_cache)
+    Ok(config)
 }
 
 /// `_print_first_layer_bed_temperature` (`GCode.cpp:4023-4048`, called at
@@ -285,10 +306,12 @@ fn append_first_layer_bed_temperature(
 }
 
 fn filament_int(values: &crate::OrcaInts, index: usize) -> i32 {
+    // `ConfigOptionInts::get_at`: index first, fallback to the first value
+    // when out of range.
     values
         .0
-        .first()
-        .or_else(|| values.0.get(index))
+        .get(index)
+        .or_else(|| values.0.first())
         .map_or(0, |value| value.0)
 }
 

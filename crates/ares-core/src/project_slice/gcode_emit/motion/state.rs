@@ -1,4 +1,4 @@
-use super::{MotionOptions, arc, jerk, set_acceleration};
+use super::{MotionOptions, arc, set_accel_and_jerk};
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
@@ -65,9 +65,6 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
         1 => Some(state.options.default_acceleration),
         _ => None,
     };
-    if let Some(acceleration) = acceleration {
-        set_acceleration(output, state, acceleration, false);
-    }
     let jerk = if state.options.default_jerk <= 0.0 {
         0.0
     } else if layer_index == 0 && state.options.initial_layer_jerk > 0.0 {
@@ -75,7 +72,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     } else {
         state.options.default_jerk
     };
-    jerk::set(output, state, jerk);
+    set_accel_and_jerk(output, state, acceleration.unwrap_or(0), jerk, false);
 }
 
 pub(in crate::project_slice::gcode_emit) fn queue_object_start(
@@ -153,8 +150,6 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     } else {
         (state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration)
     };
-    set_acceleration(output, state, acceleration.unwrap_or(0), true);
-
     let jerk = if state.options.default_jerk <= 0.0 {
         0.0
     } else if state.layer_index == 0 {
@@ -167,5 +162,5 @@ pub(in crate::project_slice::gcode_emit) fn begin_path_travel(
     } else {
         state.options.travel_jerk
     };
-    jerk::set(output, state, jerk);
+    set_accel_and_jerk(output, state, acceleration.unwrap_or(0), jerk, true);
 }

@@ -62,7 +62,14 @@ fn orca_parity_printer_sweep() {
             let selection = match parity::select_printer(&profiles, &vendor, &printer) {
                 Ok(selection) => selection,
                 Err(error) => {
-                    outcomes.push(parity::ares_error(&format!("{vendor}/{printer}"), error));
+                    let outcome = parity::ares_error(&format!("{vendor}/{printer}"), error);
+                    eprintln!(
+                        "[{}/sweep] {} {}",
+                        outcomes.len() + 1,
+                        outcome.status,
+                        outcome.label
+                    );
+                    outcomes.push(outcome);
                     continue;
                 }
             };
@@ -98,7 +105,7 @@ fn write_summary(outcomes: &[parity::ParityOutcome]) {
         .filter(|outcome| outcome.status == "PASS")
         .count();
     let mut summary = format!(
-        "# OrcaSlicer printer smoke summary\n\n{} of {} printers pass the semantic parity comparison (classic wall generator baseline; cube model).\n\n| status | printer | first divergence |\n|---|---|---|\n",
+        "# OrcaSlicer printer smoke summary\n\n{} of {} printers pass the semantic parity comparison (classic wall generator baseline; cube model).\n\n> NOTE: timing (M73/model-printing-time) is compared with `compare_ignoring_time` until the GCodeProcessor motion planner reaches Orca parity; timing deltas are therefore not reflected in the divergences below.\n\n| status | printer | first divergence |\n|---|---|---|\n",
         passed,
         outcomes.len()
     );

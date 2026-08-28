@@ -99,9 +99,7 @@ pub(super) fn emit(
     let skirt = skirt::SkirtPlan::generate(traversal)?;
     let brim = brim::BrimPlan::generate(traversal)?;
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
-        let labels = emit_labels
-            .then(|| object::ObjectLabels::from_traversal(traversal, object_index))
-            .flatten();
+        let labels = object::ObjectLabels::from_traversal(traversal, object_index);
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
         for (layer_index, layer) in object.iter_mut().enumerate() {
@@ -209,14 +207,11 @@ pub(super) fn emit(
                 plan.emit(&mut output, geometry, &mut state);
             }
             if let Some(labels) = &labels {
-                labels.append_printing(&mut output);
-                queue_object_start_labels(&mut state, labels);
+                labels.queue_start(&mut output, &mut state, emit_labels);
             }
             motion::emit_layer(&mut output, layer, geometry, &mut state)?;
             if let Some(labels) = &labels {
-                labels.append_stopping(&mut output);
-                motion::end_layer_for_timelapse(&mut output, &mut state);
-                queue_object_stop_labels(&mut output, &mut state, labels);
+                labels.queue_stop(&mut output, &mut state, emit_labels);
             } else {
                 motion::end_layer_for_timelapse(&mut output, &mut state);
             }
@@ -303,33 +298,6 @@ pub(super) fn emit(
         },
     ))
 }
-/// Arms the in-print object-start marker: BBL queues the M624 label
-/// (`GCode.cpp:2583-2602, 5356-5359`); Klipper/Marlin queue
-/// `EXCLUDE_OBJECT_START` / `M486 S<n>` (`GCode.cpp:5361-5372`), flushed at
-/// the first travel (`GCode.cpp:7467`).
-fn queue_object_start_labels(state: &mut motion::EmitState, labels: &object::ObjectLabels) {
-    if state.tags.is_bbl() {
-        let (label_id, encoded_labels) = labels.start_label_data();
-        motion::queue_object_start(state, label_id, encoded_labels);
-    } else if let Some(start) = labels.exclude_start() {
-        motion::queue_exclude_start(state, start.clone());
-    }
-}
-
-/// Arms the in-print object-end marker after instance content
-/// (`GCode.cpp:5478-5494`).
-fn queue_object_stop_labels(
-    output: &mut Vec<u8>,
-    state: &mut motion::EmitState,
-    labels: &object::ObjectLabels,
-) {
-    if state.tags.is_bbl() {
-        labels.append_stop_label(output);
-    } else if let Some(end) = labels.exclude_end() {
-        motion::queue_exclude_end(state, end.clone());
-    }
-}
-
 pub(super) fn format_processor_float(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();

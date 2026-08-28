@@ -108,7 +108,15 @@ impl Config {
             let Some((key, raw)) = line.split_once(" = ") else {
                 continue;
             };
-            config.insert(key, parse_value(raw));
+            let is_bool =
+                crate::options::registry::option_definition(key).is_some_and(|definition| {
+                    matches!(
+                        definition.kind,
+                        crate::options::registry::OptionValueKind::Bool
+                            | crate::options::registry::OptionValueKind::Bools
+                    )
+                });
+            config.insert(key, parse_value(raw, is_bool));
         }
         config
     }
@@ -137,14 +145,17 @@ impl Config {
     }
 }
 
-fn parse_value(raw: &str) -> Value {
-    let mut values = raw.split(';').map(parse_scalar).collect::<Vec<_>>();
+fn parse_value(raw: &str, is_bool: bool) -> Value {
+    let mut values = raw
+        .split(';')
+        .map(|scalar| parse_scalar(scalar, is_bool))
+        .collect::<Vec<_>>();
     if values.len() == 1 {
         let value = values.remove(0);
         let comma_values = value
             .as_string()
             .split(',')
-            .map(parse_scalar)
+            .map(|scalar| parse_scalar(scalar, is_bool))
             .collect::<Vec<_>>();
         return if comma_values.len() == 1 {
             value
@@ -155,9 +166,11 @@ fn parse_value(raw: &str) -> Value {
     Value::List(values)
 }
 
-fn parse_scalar(raw: &str) -> Value {
+fn parse_scalar(raw: &str, is_bool: bool) -> Value {
     let raw = raw.trim().trim_matches('"');
-    if let Ok(value) = raw.parse::<f64>() {
+    if is_bool && (raw == "0" || raw == "1") {
+        Value::Bool(raw == "1")
+    } else if let Ok(value) = raw.parse::<f64>() {
         Value::Number(value)
     } else if raw == "true" || raw == "false" {
         Value::Bool(raw == "true")

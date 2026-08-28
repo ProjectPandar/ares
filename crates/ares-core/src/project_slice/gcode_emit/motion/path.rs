@@ -2,7 +2,7 @@ use super::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, clip, extrusion, fan,
     features::PathProperties,
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
-    jerk, overhang, set_acceleration, travel,
+    overhang, set_accel_and_jerk, travel,
 };
 
 const SOURCE_EPSILON_MM: f64 = 1e-4;
@@ -172,9 +172,8 @@ pub(super) fn emit(
         state.retracted = false;
         state.lifted = false;
     }
-    set_acceleration(output, state, acceleration, false);
     let jerk = properties.jerk(&state.options, state.layer_index);
-    jerk::set(output, state, jerk);
+    set_accel_and_jerk(output, state, acceleration, jerk, false);
     state.extrusion_feedrate = processed
         .as_ref()
         .map_or(original_speed, |points| points[0].speed)

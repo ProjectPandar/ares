@@ -59,6 +59,11 @@ fn orca_parity_option_coverage() {
                 &mut case_filaments,
             );
             let label = format!("option/{}/{}", plan.key, case.label);
+            // The case value must win over the baseline smoke overrides;
+            // drop the key from the override map so the injected preset
+            // value survives (`option-coverage` requirement 3).
+            let mut overrides = parity::smoke_overrides();
+            overrides.remove(&plan.key);
             let built = runner.build_case(
                 &CaseInputs {
                     label: &label,
@@ -66,7 +71,7 @@ fn orca_parity_option_coverage() {
                     process: &case_process,
                     filaments: &case_filaments,
                 },
-                &parity::smoke_overrides(),
+                &overrides,
                 &runner::repo_root().join("tests/parity/cube10.stl"),
             );
             let outcome = match built {

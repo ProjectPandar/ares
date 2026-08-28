@@ -43,3 +43,19 @@ pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
         }
     }
 }
+
+/// Klipper clamps the jerk by both the X and the Y machine limits
+/// (`GCodeWriter.cpp:332-335`).
+pub(super) fn clamp_xy(state: &EmitState, jerk: f64) -> f64 {
+    let limit = |value: f64, maximum: f64| {
+        if maximum > 0.0 {
+            value.min(maximum)
+        } else {
+            value
+        }
+    };
+    limit(
+        limit(jerk, state.options.max_jerk_x),
+        state.options.max_jerk_y,
+    )
+}

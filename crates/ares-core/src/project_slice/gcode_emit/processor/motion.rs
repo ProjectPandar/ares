@@ -187,6 +187,9 @@ impl MotionState {
                 self.jerk[0] = value;
                 self.jerk[1] = value;
             }
+            // Upstream also updates machine_max_speed_x/y from `VELOCITY=`
+            // (`GCodeProcessor.cpp:5301-5313`); Ares' planner has no
+            // per-axis speed limit yet, so the field is not tracked.
             return None;
         }
         let command = code.split_whitespace().next()?;

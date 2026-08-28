@@ -166,25 +166,59 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
             let code = if separate_travel { "M204 T" } else { "M204 P" };
             format!("{code}{acceleration}\n")
         }
-        crate::GCodeFlavor::Klipper => {
-            let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
-            if state.options.accel_to_decel_enable {
-                // `acceleration * factor / 100` streams as a double with
-                // ostream's default 6-significant-digit formatting.
-                let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
-                line.push_str(&format!(
-                    " ACCEL_TO_DECEL={}\n",
-                    super::format_processor_float(decel)
-                ));
-            } else {
-                line.push('\n');
-            }
-            line
-        }
         _ => format!("M204 S{acceleration}\n"),
     };
     output.extend_from_slice(line.as_bytes());
     *last = Some(acceleration);
+}
+
+/// Klipper merges acceleration and jerk into one `SET_VELOCITY_LIMIT` line
+/// (`GCodeWriter.cpp:324-348`, `GCode.cpp:7409-7412`); other flavors emit
+/// separate acceleration and jerk commands.
+pub(super) fn set_accel_and_jerk(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    acceleration: u32,
+    jerk: f64,
+    travel: bool,
+) {
+    if state.options.gcode_flavor != crate::GCodeFlavor::Klipper {
+        set_acceleration(output, state, acceleration, travel);
+        jerk::set(output, state, jerk);
+        return;
+    }
+    let acceleration =
+        if state.options.max_acceleration > 0 && acceleration > state.options.max_acceleration {
+            state.options.max_acceleration
+        } else {
+            acceleration
+        };
+    let jerk = jerk::clamp_xy(state, jerk);
+    let mut line = String::from("SET_VELOCITY_LIMIT");
+    let mut empty = true;
+    if acceleration != 0 && state.last_acceleration != Some(acceleration) {
+        line.push_str(&format!(" ACCEL={acceleration}"));
+        if state.options.accel_to_decel_enable {
+            // streams as a double with ostream's default 6-significant digits
+            let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
+            line.push_str(&format!(" ACCEL_TO_DECEL={}", format::axis(decel)));
+        }
+        state.last_acceleration = Some(acceleration);
+        empty = false;
+    }
+    if jerk > 0.01
+        && !state
+            .last_jerk
+            .is_some_and(|last| (last - jerk).abs() < 1.0e-6)
+    {
+        line.push_str(&format!(" SQUARE_CORNER_VELOCITY={}", format::axis(jerk)));
+        state.last_jerk = Some(jerk);
+        empty = false;
+    }
+    if !empty {
+        line.push('\n');
+        output.extend_from_slice(line.as_bytes());
+    }
 }
 
 pub(super) fn emit_layer(

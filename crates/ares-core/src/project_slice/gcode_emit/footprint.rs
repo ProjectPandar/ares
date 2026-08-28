@@ -147,12 +147,16 @@ pub(super) fn definitions(traversal: &PreparedPostClassicTraversal) -> Vec<Insta
 }
 
 impl InstanceDefinition {
-    pub(super) fn append(&self, output: &mut Vec<u8>, klipper: bool) {
+    pub(super) fn append(&self, output: &mut Vec<u8>, klipper: bool, rrf: bool) {
         let text = if klipper {
             let Some(body) = &self.klipper_body else {
                 return;
             };
             format!("EXCLUDE_OBJECT_DEFINE NAME={} {body}\n", self.name)
+        } else if rrf {
+            // RepRapFirmware takes the object name on the select line
+            // (`GCode.cpp:8110-8113`).
+            format!("M486 S{} A\"{}\"\nM486 S-1\n", self.unique_id, self.name)
         } else {
             format!("M486 S{}\nM486 A{}\nM486 S-1\n", self.unique_id, self.name)
         };
@@ -296,7 +300,10 @@ fn sanitize_instance_name(name: &str) -> String {
             output.push(character);
         }
     }
-    output.trim_matches('_').to_owned()
+    // Upstream erases at most one leading and one trailing underscore
+    // (`GCode.cpp:4368-4375`).
+    let stripped = output.strip_prefix('_').unwrap_or(&output);
+    stripped.strip_suffix('_').unwrap_or(stripped).to_owned()
 }
 
 #[cfg(test)]
@@ -311,5 +318,6 @@ mod tests {
         assert_eq!(sanitize_instance_name("trail!!"), "trail");
         assert_eq!(sanitize_instance_name("a:b,c\"d'e"), "a_b_c_d_e");
         assert_eq!(sanitize_instance_name("hyphen.dot/kept"), "hyphen.dot/kept");
+        assert_eq!(sanitize_instance_name("__foo__"), "_foo_");
     }
 }

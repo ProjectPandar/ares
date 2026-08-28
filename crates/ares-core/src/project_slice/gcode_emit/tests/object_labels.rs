@@ -115,7 +115,7 @@ async fn multi_object_project_uses_each_objects_identity() {
     assert!(output.contains("; printing object ksr_fdmtest_v4-copy.drc id:1 copy 0\n"));
 }
 #[tokio::test]
-async fn gcode_label_objects_false_suppresses_project_object_labels() {
+async fn gcode_label_objects_false_suppresses_comments_and_bbl_labels() {
     let mut archive = crate::project_slice::tests::support::KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
@@ -131,8 +131,12 @@ async fn gcode_label_objects_false_suppresses_project_object_labels() {
     .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
 
+    // gcode_label_objects only suppresses the comment markers
+    // (`GCode.cpp:5348-5352`); the exclusion markers follow exclude_object
+    // independently (`GCode.cpp:5354-5372`). The KSR printer is BBL-based,
+    // so the M624 labeling stays armed (`GCode.cpp:2583-2585`).
     assert!(!output.contains("; printing object "));
-    assert!(!output.contains("; start printing object, unique label id:"));
     assert!(!output.contains("; stop printing object "));
-    assert!(!output.contains("; stop printing object, unique label id:"));
+    assert!(output.contains("; start printing object, unique label id:"));
+    assert!(output.contains("; stop printing object, unique label id:"));
 }

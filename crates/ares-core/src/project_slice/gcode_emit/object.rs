@@ -12,8 +12,9 @@ pub(super) fn append_definitions(output: &mut Vec<u8>, traversal: &PreparedPostC
         return;
     }
     let klipper = flavor == crate::GCodeFlavor::Klipper;
+    let rrf = flavor == crate::GCodeFlavor::RepRapFirmware;
     for definition in &super::footprint::definitions(traversal) {
-        definition.append(output, klipper);
+        definition.append(output, klipper, rrf);
     }
 }
 
@@ -80,6 +81,48 @@ impl ObjectLabels {
 
     pub(super) const fn exclude_end(&self) -> Option<&String> {
         self.exclude_end.as_ref()
+    }
+
+    /// Arms the in-print object-start marker: BBL queues the M624 label
+    /// (`GCode.cpp:2583-2602, 5356-5359`); Klipper/Marlin queue
+    /// `EXCLUDE_OBJECT_START` / `M486 S<n>` (`GCode.cpp:5361-5372`), flushed
+    /// at the first travel (`GCode.cpp:7467`). The `; printing object`
+    /// comment is gated by gcode_label_objects separately
+    /// (`GCode.cpp:5348-5352`).
+    pub(super) fn queue_start(
+        &self,
+        output: &mut Vec<u8>,
+        state: &mut super::motion::EmitState,
+        emit_comments: bool,
+    ) {
+        if emit_comments {
+            self.append_printing(output);
+        }
+        if state.tags.is_bbl() {
+            let (label_id, encoded_labels) = self.start_label_data();
+            super::motion::queue_object_start(state, label_id, encoded_labels);
+        } else if let Some(start) = self.exclude_start() {
+            super::motion::queue_exclude_start(state, start.clone());
+        }
+    }
+
+    /// Arms the in-print object-end marker after instance content
+    /// (`GCode.cpp:5478-5494`); BBL writes its M625 tail directly.
+    pub(super) fn queue_stop(
+        &self,
+        output: &mut Vec<u8>,
+        state: &mut super::motion::EmitState,
+        emit_comments: bool,
+    ) {
+        if emit_comments {
+            self.append_stopping(output);
+        }
+        super::motion::end_layer_for_timelapse(output, state);
+        if state.tags.is_bbl() {
+            self.append_stop_label(output);
+        } else if let Some(end) = self.exclude_end() {
+            super::motion::queue_exclude_end(state, end.clone());
+        }
     }
 
     pub(super) fn append_stopping(&self, output: &mut Vec<u8>) {
