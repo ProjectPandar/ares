@@ -30,10 +30,17 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
     let enums = plans
         .iter()
         .filter(|plan| matches!(plan.option_type.as_str(), "coEnum" | "coEnums"))
-        .filter(|plan| plan.omission.is_none())
         .collect::<Vec<_>>();
-    assert!(enums.len() >= 30);
-    assert!(enums.iter().all(|plan| plan.cases.len() >= 2));
+    assert!(enums.len() >= 44);
+    assert!(
+        enums.iter().all(|plan| plan.cases.len() >= 2),
+        "missing enum domains: {:?}",
+        enums
+            .iter()
+            .filter(|plan| plan.cases.len() < 2)
+            .map(|plan| plan.key.as_str())
+            .collect::<Vec<_>>()
+    );
 
     let ranges = plans
         .iter()

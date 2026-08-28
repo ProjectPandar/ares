@@ -31,11 +31,11 @@ pub(super) fn load(repo: &Path) -> Vec<OptionPlan> {
         .as_array()
         .unwrap()
         .iter()
-        .filter_map(|entry| plan(entry, &lines))
+        .filter_map(|entry| plan(entry, &lines, &source))
         .collect()
 }
 
-fn plan(entry: &Value, lines: &[&str]) -> Option<OptionPlan> {
+fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> {
     let key = entry.get("key")?.as_str()?.to_owned();
     let option_type = entry.get("option_type")?.as_str()?.to_owned();
     let raw_scope = entry.get("raw_scope")?.as_str()?.to_owned();
@@ -52,7 +52,7 @@ fn plan(entry: &Value, lines: &[&str]) -> Option<OptionPlan> {
             None,
         )
     } else if matches!(option_type.as_str(), "coEnum" | "coEnums") {
-        let values = enum_values(&block)
+        let values = enum_values(&key, &block, source_text)
             .into_iter()
             .map(|value| case(&value, &value, entry))
             .collect::<Vec<_>>();
@@ -104,26 +104,65 @@ fn definition_block(lines: &[&str], key: &str, reported_line: usize) -> String {
     lines[start..end.min(start + 160)].join("\n")
 }
 
-fn enum_values(block: &str) -> Vec<String> {
-    let push = Regex::new(r#"enum_values\.push_back\("([^"]+)"\)"#).unwrap();
+fn enum_values(key: &str, block: &str, source: &str) -> Vec<String> {
+    let push = Regex::new(r#"enum_values\.(?:push_back|emplace_back)\("([^"]+)"\)"#).unwrap();
     let quoted = Regex::new(r#""([^"]+)""#).unwrap();
     let mut values = push
         .captures_iter(block)
         .map(|captures| captures[1].to_owned())
         .collect::<Vec<_>>();
+    if values.is_empty() {
+        let assignment = Regex::new(r"enum_values\s*=\s*\{").unwrap();
+        if let Some(found) = assignment.find(block)
+            && let Some(end) = block[found.end()..].find("};")
+        {
+            values.extend(
+                quoted
+                    .captures_iter(&block[found.end()..found.end() + end])
+                    .map(|captures| captures[1].to_owned()),
+            );
+        }
+    }
     if values.is_empty()
-        && let Some(start) = block.find("enum_values = {")
-        && let Some(end) = block[start..].find("};")
+        && let Some(kind) = Regex::new(r"ConfigOptionEnum<([^>]+)>")
+            .unwrap()
+            .captures(block)
     {
+        let kind = kind[1].rsplit("::").next().unwrap();
+        let map = Regex::new(&format!(
+            r"(?s)s_keys_map_{}\s*\{{(.*?)\}};",
+            regex::escape(kind)
+        ))
+        .unwrap();
+        if let Some(body) = map.captures(source) {
+            values.extend(
+                quoted
+                    .captures_iter(&body[1])
+                    .map(|captures| captures[1].to_owned()),
+            );
+        }
+    }
+    if values.is_empty() {
         values.extend(
-            quoted
-                .captures_iter(&block[start..start + end])
-                .map(|captures| captures[1].to_owned()),
+            known_vector_enum(key)
+                .iter()
+                .map(|value| (*value).to_owned()),
         );
     }
     values.sort();
     values.dedup();
     values
+}
+
+fn known_vector_enum(key: &str) -> &'static [&'static str] {
+    match key {
+        "default_nozzle_volume_type" | "nozzle_volume_type" => &["Standard", "High Flow"],
+        "filament_retract_lift_enforce" => {
+            &["All Surfaces", "Top Only", "Bottom Only", "Top and Bottom"]
+        }
+        "filament_z_hop_types" => &["Auto Lift", "Normal Lift", "Slope Lift", "Spiral Lift"],
+        _ => &[],
+    }
 }
 
 fn numeric_bounds(block: &str) -> Option<(f64, f64)> {
