@@ -469,3 +469,15 @@ NEXT (ordered):
 2. Travel-lift state machine (GCodeWriter.cpp:685-760) — auxiliary-fan
    family (~90 printers).
 3. M73 estimator (trapezoid planner).
+## 2026-08-28 session: Elegoo root cause refined (40f97e7 base)
+
+Refined the Elegoo 0.2 finding: BOTH slicers emit the Internal-solid
+vertical round trips at X111.874; Orca additionally emits 13 gap lines
+(X111.805, WIDTH 0.219969, E.032 each = 0.417mm total) filling the
+residual sliver between the solid line and the region wall. The solid
+line leaves a ~0.29mm-wide sliver that Orca fills as a width-0.22 gap
+fill. Ares drops that residual sliver entirely.
+
+NEXT: find where the solid-infill residual sliver is computed in
+upstream (Fill pattern spacing remainder -> gap line) and port it; this
+affects the Elegoo/Snapmaker/Creality families (~306 printers).
