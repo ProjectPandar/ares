@@ -5,6 +5,8 @@
 //! Environment-gated: runs only when `ARES_ORCA_BIN` (or the repository
 //! wrapper `scripts/orca-parity.sh`) names a working OrcaSlicer CLI.
 
+#[path = "orca_parity/option_coverage.rs"]
+mod option_coverage;
 #[path = "orca_parity/presets.rs"]
 mod presets;
 #[path = "orca_parity/runner.rs"]
