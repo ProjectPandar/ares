@@ -146,6 +146,7 @@ pub(crate) fn select_printer(
             && profiles.filament_exists(name)
             && profiles.filament_is_compatible(name, printer)
     })
+    .take(1)
     .map(ToOwned::to_owned)
     .collect();
     if filaments.is_empty() {

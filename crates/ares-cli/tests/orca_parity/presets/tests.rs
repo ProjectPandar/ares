@@ -45,6 +45,15 @@ fn selection_falls_back_to_an_explicitly_compatible_filament() {
 }
 
 #[test]
+fn smoke_selects_one_filament_for_multi_extruder_printers() {
+    let profiles = profiles("Snapmaker");
+    let selection =
+        select_printer(&profiles, "Snapmaker", "Snapmaker A250 Dual (0.4 nozzle)").unwrap();
+
+    assert_eq!(selection.filaments.len(), 1);
+}
+
+#[test]
 fn incompatible_named_default_falls_back_to_explicit_compatible_process() {
     let profiles = profiles("Artillery");
     let selection = select_printer(&profiles, "Artillery", "Artillery M1 Pro 0.2 nozzle").unwrap();
