@@ -432,3 +432,22 @@ New findings from the Artillery M1 Pro (auxiliary_fan family):
 3. The exhaust fan (M106 P3 S255) in the start template is gated by a
    template branch Ares evaluates differently; needs the branch
    placeholder checked against the preset value.
+
+## 2026-08-28 session: filament family analysis (d88e20e, f37759b base)
+
+1. RESOLVED: single `=` equality + numeric 1e-8 tolerance in templates
+   (PlaceholderParser.cpp:5679-5681, 599); assignment statements
+   `{var[idx] = expr}` store into the parser and render nothing
+   (8 printers, e_retracted templates).
+2. ANALYSIS: the largest filament-length family (Elegoo, 73 printers;
+   also Snapmaker/Creality) shows per-feature deltas concentrated in
+   `Gap infill` — upstream `detect_narrow_internal_solid_infill`
+   (Fill.cpp:1152-1186, `split_solid_surface` Fill.cpp:597-700) reroutes
+   narrow Internal-solid areas to `ipConcentricInternal`. Ares
+   (infills/narrow_internal.rs) only handles the all-narrow
+   axis-aligned-rectangle case; the line-pattern branch (rotated
+   opening(2×spacing, 3×spacing) + vertical scanline sections +
+   reconstruction) and the mixed normal/narrow split are unported.
+3. NEXT: port the line-pattern branch of split_solid_surface; then the
+   travel-lift state machine (GCodeWriter.cpp:685-760); then the M73
+   estimator.
