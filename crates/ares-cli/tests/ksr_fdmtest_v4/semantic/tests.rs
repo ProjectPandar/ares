@@ -1,6 +1,18 @@
 use super::{compare, compare_cross_target};
 
 #[test]
+fn layer_shaped_comments_in_start_gcode_remain_preamble() {
+    let island = island(0, 1, 1_200);
+    let expected = document("1m", "1m", "10s", "2.00", &[&island]).replacen(
+        "; HEADER_BLOCK_END",
+        ";Z:99\n;HEIGHT:1\n; HEADER_BLOCK_END",
+        1,
+    );
+
+    compare(expected.as_bytes(), expected.as_bytes()).unwrap();
+}
+
+#[test]
 fn fractional_duration_metadata_is_accepted() {
     let island = island(0, 1, 1_200);
     let expected = document("0.811081s", "1.499s", "0.25s", "2.00", &[&island]);

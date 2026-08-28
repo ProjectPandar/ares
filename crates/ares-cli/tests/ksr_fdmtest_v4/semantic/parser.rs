@@ -150,15 +150,19 @@ pub(super) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             .or_else(|| line.strip_prefix(";Z:"))
         {
             state.z = canonical_number(value)?;
-            current_layer(&mut output)?
-                .metadata
-                .push(raw_line.to_owned());
+            if let Some(layer) = output.layers.last_mut() {
+                layer.metadata.push(raw_line.to_owned());
+            } else {
+                output.preamble.push(raw_line.to_owned());
+            }
             continue;
         }
         if line.starts_with("; LAYER_HEIGHT: ") || line.starts_with(";HEIGHT:") {
-            current_layer(&mut output)?
-                .metadata
-                .push(raw_line.to_owned());
+            if let Some(layer) = output.layers.last_mut() {
+                layer.metadata.push(raw_line.to_owned());
+            } else {
+                output.preamble.push(raw_line.to_owned());
+            }
             continue;
         }
         if update_acceleration(command_line, &mut state)? {

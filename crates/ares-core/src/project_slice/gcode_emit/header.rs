@@ -75,7 +75,13 @@ pub(super) fn append_header(
 fn format_values(values: &[crate::OrcaFloat]) -> String {
     values
         .iter()
-        .map(|value| format!("{:.2}", value.0))
+        .map(|value| {
+            let rendered = format!("{:.2}", value.0);
+            rendered
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_owned()
+        })
         .collect::<Vec<_>>()
         .join(",")
 }
@@ -141,5 +147,19 @@ fn width(value: crate::FloatOrPercent, nozzle: f64) -> Option<f32> {
             Some((value.0 * nozzle / 100.0) as f32)
         }
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn header_values_trim_fractional_trailing_zeroes() {
+        let values = [
+            crate::OrcaFloat(1.3),
+            crate::OrcaFloat(1.24),
+            crate::OrcaFloat(1.0),
+        ];
+
+        assert_eq!(super::format_values(&values), "1.3,1.24,1");
     }
 }
