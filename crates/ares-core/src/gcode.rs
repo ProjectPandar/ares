@@ -1,9 +1,9 @@
-use crate::gcode_format::format_decimal;
+mod context;
+
 use crate::gcode_layer_change_retraction::{
     LayerChangeLiftCommand, LayerChangeLiftState, LayerChangeResumeCommand,
     LayerChangeRetractCommand, layer_change_resume_before_print, layer_change_retract_gcode,
 };
-use crate::gcode_layer_custom::after_z_gcode;
 use crate::gcode_layer_diagnostics::{LayerDiagnosticCommand, layer_diagnostics};
 use crate::gcode_move_buffer::{BufferedMove, flush};
 use crate::gcode_object_labels::{ObjectLabelConfig, ObjectLabelState};
@@ -14,6 +14,7 @@ use crate::gcode_travel_retraction::{
 use crate::gcode_wipe_before_external_loop::WipeBeforeExternalLoop;
 use crate::gcode_wipe_on_loops::{WipeOnLoops, WipeOnLoopsCommand};
 use crate::{PrintPathRole, SliceError, SliceOptions, SlicingPipeline, ToolpathMoveKind};
+use crate::{gcode_format::format_decimal, gcode_layer_custom::after_z_gcode};
 pub(crate) fn format_gcode(
     pipeline: &SlicingPipeline,
     options: &SliceOptions,
@@ -58,27 +59,14 @@ pub(crate) fn format_gcode(
     let layer_change_retraction = options.layer_change_retraction()?;
     let sparse_infill_density_positive = options.effective_sparse_infill_density_percent()? > 0.0;
     let first_nozzle_diameter = hardware_options.nozzle_diameters()[0];
-    let speed_comment = gcode_comments.then_some("set speed");
-    let acceleration_comment = gcode_comments.then_some("adjust acceleration");
-    let jerk_comment = gcode_comments.then_some("adjust jerk");
-    let z_travel_comment = gcode_comments.then_some("move to layer Z");
-    let z_lift_comment = gcode_comments.then_some("lift Z");
-    let z_restore_comment = gcode_comments.then_some("restore layer Z");
-    let travel_comment = gcode_comments.then_some("travel");
-    let extrude_comment = gcode_comments.then_some("extrude");
-    let retract_comment = gcode_comments.then_some("retract");
-    let unretract_comment = gcode_comments.then_some("unretract");
+    let comments = context::MoveComments::new(gcode_comments);
     let mut writer = crate::gcode_writer_setup::configured_writer(
         gcode_flavor,
         accel_to_decel_config,
         part_cooling_fan_min_pwm,
         options.use_relative_e_distances()?,
     );
-    let max_print_z = layers
-        .iter()
-        .map(|layer| layer.print_z())
-        .fold(0.0_f64, f64::max)
-        .ceil() as i32;
+    let max_print_z = context::max_print_z(layers);
     let mut gcode =
         crate::gcode_file_start::file_start(crate::gcode_file_start::FileStartCommand {
             writer: &mut writer,
@@ -173,11 +161,11 @@ pub(crate) fn format_gcode(
                     length: layer_change_retraction.length,
                     feedrate: layer_change_retraction.retract_feedrate,
                 },
-                retract_comment,
+                comments.retract,
             ));
             pending_layer_change_unretract = true;
         }
-        gcode.push_str(&writer.travel_to_z_with_comment(z_output, z_feedrate, z_travel_comment));
+        gcode.push_str(&writer.travel_to_z_with_comment(z_output, z_feedrate, comments.z_travel));
         travel_retraction_state.clear_z_restore_after_layer_z_move();
         gcode.push_str(
             &layer_change_lift_state.schedule_lift(LayerChangeLiftCommand {
@@ -186,7 +174,7 @@ pub(crate) fn format_gcode(
                 z_hop_lift: layer_change_retraction.z_hop_lift,
                 resolution: layer_change_retraction.resolution,
                 feedrate: z_feedrate,
-                comment: z_lift_comment,
+                comment: comments.z_lift,
             }),
         );
         gcode.push_str(&after_z_gcode(options, layer_num, &z)?);
@@ -301,8 +289,8 @@ pub(crate) fn format_gcode(
                     role_based_wipe_speed: layer_change_retraction.role_based_wipe_speed,
                     wipe_feedrate: layer_change_retraction.wipe_feedrate,
                     z_feedrate,
-                    retract_comment,
-                    z_lift_comment,
+                    retract_comment: comments.retract,
+                    z_lift_comment: comments.z_lift,
                 },
             ));
             let (resume_gcode, e_offset_delta) =
@@ -316,9 +304,9 @@ pub(crate) fn format_gcode(
                     unretract_feedrate: layer_change_retraction.unretract_feedrate,
                     kind: extrusion_move.kind(),
                     z_feedrate,
-                    lift_comment: z_lift_comment,
-                    restore_comment: z_restore_comment,
-                    unretract_comment,
+                    lift_comment: comments.z_lift,
+                    restore_comment: comments.z_restore,
+                    unretract_comment: comments.unretract,
                 });
             move_output.push_str(&resume_gcode);
             e_position_offset += e_offset_delta;
@@ -331,8 +319,8 @@ pub(crate) fn format_gcode(
                     unretract_feedrate: layer_change_retraction.unretract_feedrate,
                     kind: extrusion_move.kind(),
                     z_feedrate,
-                    z_restore_comment,
-                    unretract_comment,
+                    z_restore_comment: comments.z_restore,
+                    unretract_comment: comments.unretract,
                 });
             move_output.push_str(&travel_unretract_gcode);
             e_position_offset += travel_e_offset_delta;
@@ -354,11 +342,11 @@ pub(crate) fn format_gcode(
                     e_position_offset,
                     layer_num,
                     layer_z: &z,
-                    speed_comment,
-                    acceleration_comment,
-                    jerk_comment,
-                    travel_comment,
-                    extrude_comment,
+                    speed_comment: comments.speed,
+                    acceleration_comment: comments.acceleration,
+                    jerk_comment: comments.jerk,
+                    travel_comment: comments.travel,
+                    extrude_comment: comments.extrude,
                     travel_lift,
                 })?;
             move_output.push_str(&emitted_move_gcode);

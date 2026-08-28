@@ -4,6 +4,7 @@ mod extrusion;
 mod fan;
 mod features;
 mod format;
+mod jerk;
 mod loop_paths;
 mod options;
 mod overhang;
@@ -11,11 +12,16 @@ mod path;
 #[cfg(test)]
 #[path = "motion/path/tests.rs"]
 mod path_tests;
+mod state;
 #[cfg(test)]
 mod tests;
 mod travel;
 
 pub(in crate::project_slice) use arc::simplify_points;
+pub(super) use state::{
+    EmitState, LayerGeometry, append_object_start, begin_layer, begin_path_travel,
+    queue_object_start,
+};
 pub(super) use travel::{flush_pending_retract_lift, flush_pending_retract_wipe};
 
 use features::PathProperties;
@@ -32,139 +38,6 @@ use crate::{
         },
     },
 };
-
-#[derive(Default)]
-pub(super) struct EmitState {
-    pub(super) x: f64,
-    pub(super) y: f64,
-    pub(super) offset: (f64, f64),
-    pub(super) scale_factor: f64,
-    pub(super) travel_feedrate: f64,
-    pub(super) extrusion_feedrate: f64,
-    pub(super) options: MotionOptions,
-    pub(super) layer_index: usize,
-    pub(super) positioned: bool,
-    pub(super) last_scaled_position: Option<(i64, i64)>,
-    pub(super) last_feature: Option<&'static str>,
-    pub(super) last_width: Option<f32>,
-    pub(super) last_height: Option<f32>,
-    pub(super) last_acceleration: Option<u32>,
-    pub(super) last_jerk: Option<f64>,
-    pub(super) layer_z: f64,
-    pub(super) retracted: bool,
-    pub(super) wipe_path: Vec<arc::Point>,
-    pub(super) wipe_start: Option<arc::Point>,
-    pub(super) lifted: bool,
-    pub(super) part_fan_speed: u8,
-    pub(super) physical_fan_speed: u8,
-    pub(super) overhang_fan_active: bool,
-    pub(super) overhang_fan_marker_layer: Option<usize>,
-    pub(super) internal_bridge_fan_active: bool,
-    pub(super) internal_bridge_fan_marker_layer: Option<usize>,
-    pub(super) pending_object_start: Option<(u32, [u8; 12])>,
-    pub(super) tags: super::tags::Tags,
-    /// Deferred layer-change retraction for the compatible flavor — set at
-    /// the layer end, flushed after the next layer marker block.
-    pub(super) pending_layer_retract: bool,
-}
-
-#[derive(Clone, Copy)]
-pub(super) struct LayerGeometry<'a> {
-    pub(super) internal_surfaces: &'a [crate::project_slice::region_slices::RegionSurface],
-    pub(super) scale: crate::geometry::CoordinateScale,
-    pub(super) previous_layer_boundary: Option<&'a crate::geometry::LineDistanceTree<'a>>,
-}
-
-pub(super) fn begin_layer(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-    layer_index: usize,
-    layer_z: f64,
-    layer_height: f64,
-) {
-    state.layer_index = layer_index;
-    state.last_height = Some(layer_height as f32);
-    state.layer_z = layer_z;
-    state.travel_feedrate = if layer_index == 0 {
-        state.options.first_layer_travel_feedrate
-    } else {
-        state.options.travel_feedrate
-    };
-    let acceleration = match layer_index {
-        0 => Some(state.options.initial_layer_acceleration),
-        1 => Some(state.options.default_acceleration),
-        _ => None,
-    };
-    if let Some(acceleration) = acceleration {
-        set_acceleration(output, state, acceleration);
-    }
-    let jerk = if state.options.default_jerk <= 0.0 {
-        0.0
-    } else if layer_index == 0 && state.options.initial_layer_jerk > 0.0 {
-        state.options.initial_layer_jerk
-    } else {
-        state.options.default_jerk
-    };
-    set_jerk(output, state, jerk);
-}
-
-pub(super) fn queue_object_start(state: &mut EmitState, label_id: u32, encoded_labels: [u8; 12]) {
-    state.pending_object_start = Some((label_id, encoded_labels));
-}
-
-fn append_object_start(output: &mut Vec<u8>, state: &mut EmitState) {
-    let Some((label_id, encoded_labels)) = state.pending_object_start.take() else {
-        return;
-    };
-    output.extend_from_slice(
-        format!("; start printing object, unique label id: {label_id}\nM624 ").as_bytes(),
-    );
-    output.extend_from_slice(&encoded_labels);
-    output.push(b'\n');
-}
-
-pub(super) fn begin_path_travel(
-    output: &mut Vec<u8>,
-    state: &mut EmitState,
-    destination_feature: &str,
-    travel_distance: f64,
-) {
-    // `GCode.cpp:7374-7413`: travel acceleration and jerk select short
-    // outer/overhang values before falling back to travel values.
-    let acceleration = if state.options.default_acceleration == 0 {
-        None
-    } else if state.layer_index == 0 {
-        (state.options.initial_layer_travel_acceleration > 0)
-            .then_some(state.options.initial_layer_travel_acceleration)
-    } else if travel_distance < state.options.retraction_minimum_travel {
-        match destination_feature {
-            "Overhang wall" => {
-                (state.options.bridge_acceleration > 0).then_some(state.options.bridge_acceleration)
-            }
-            "Outer wall" => (state.options.outer_wall_acceleration > 0)
-                .then_some(state.options.outer_wall_acceleration),
-            _ => None,
-        }
-        .or((state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration))
-    } else {
-        (state.options.travel_acceleration > 0).then_some(state.options.travel_acceleration)
-    };
-    set_acceleration(output, state, acceleration.unwrap_or(0));
-
-    let jerk = if state.options.default_jerk <= 0.0 {
-        0.0
-    } else if state.layer_index == 0 {
-        state.options.travel_jerk
-    } else if travel_distance < state.options.retraction_minimum_travel
-        && matches!(destination_feature, "Outer wall" | "Overhang wall")
-        && state.options.outer_wall_jerk > 0.0
-    {
-        state.options.outer_wall_jerk
-    } else {
-        state.options.travel_jerk
-    };
-    set_jerk(output, state, jerk);
-}
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
@@ -254,50 +127,6 @@ pub(super) fn emit_skirt_loop(
     // `GCode.cpp:5979-5991` stores loop wipe paths forward so the wipe
     // wraps from the loop end back toward the path start.
     state.wipe_path.reverse();
-}
-
-pub(super) fn set_jerk(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
-    if jerk < 0.01
-        || state
-            .last_jerk
-            .is_some_and(|last| (last - jerk).abs() < 1.0e-6)
-    {
-        return;
-    }
-    state.last_jerk = Some(jerk);
-    let limit = |value: f64, maximum: f64| {
-        if maximum > 0.0 {
-            value.min(maximum)
-        } else {
-            value
-        }
-    };
-    let x = limit(jerk, state.options.max_jerk_x);
-    let y = limit(jerk, state.options.max_jerk_y);
-    match state.options.gcode_flavor {
-        crate::GCodeFlavor::Klipper => output.extend_from_slice(
-            format!(
-                "SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY={}\n",
-                format::axis(x)
-            )
-            .as_bytes(),
-        ),
-        crate::GCodeFlavor::Repetier => {
-            output.extend_from_slice(format!("M207 X{}\n", format::axis(x)).as_bytes());
-        }
-        _ => {
-            let mut command = format!("M205 X{} Y{}", format::axis(x), format::axis(y));
-            if state.tags.is_bbl() {
-                command.push_str(&format!(
-                    " Z{} E{}",
-                    format::axis(state.options.max_jerk_z),
-                    format::axis(state.options.max_jerk_e)
-                ));
-            }
-            command.push('\n');
-            output.extend_from_slice(command.as_bytes());
-        }
-    }
 }
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32) {

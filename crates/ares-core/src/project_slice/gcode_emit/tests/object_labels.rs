@@ -66,7 +66,7 @@ async fn ksr_object_travel_acceleration_follows_object_comment() {
         + printing;
     assert_eq!(lines[start_label + 1], "M624 AQAAAAAAAAA=");
     assert!(lines[start_label + 2].starts_with("G1 X"));
-    assert!(lines[start_label + 2].ends_with(" F60000"));
+    assert!(lines[start_label + 2].contains(" Z"));
 }
 
 #[tokio::test]

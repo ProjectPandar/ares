@@ -1,3 +1,5 @@
+mod timestamp;
+
 use crate::{
     GenerationMetadata, project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
 };
@@ -13,7 +15,7 @@ pub(super) fn base_config(
 ) -> value::Config {
     let mut config =
         value::Config::from_block(traversal.config_block.as_deref().unwrap_or_default());
-    insert_timestamp(&mut config, metadata);
+    timestamp::insert(&mut config, metadata);
     insert_runtime_placeholders(&mut config, traversal);
     config.insert("current_extruder", Value::number(0.0));
     config.insert("current_hotend", Value::number(-1.0));
@@ -39,26 +41,6 @@ pub(super) fn base_config(
     insert_first_layer_bounds(&mut config, traversal);
     insert_adaptive_bed_mesh(&mut config);
     config
-}
-
-fn insert_timestamp(config: &mut value::Config, metadata: GenerationMetadata) {
-    let (year, month, day, hour, minute, second) = metadata.timestamp();
-    config.insert(
-        "timestamp",
-        Value::String(format!(
-            "{year:04}{month:02}{day:02}-{hour:02}{minute:02}{second:02}"
-        )),
-    );
-    for (name, number) in [
-        ("year", year as f64),
-        ("month", f64::from(month)),
-        ("day", f64::from(day)),
-        ("hour", f64::from(hour)),
-        ("minute", f64::from(minute)),
-        ("second", f64::from(second)),
-    ] {
-        config.insert(name, Value::number(number));
-    }
 }
 
 fn insert_runtime_placeholders(
