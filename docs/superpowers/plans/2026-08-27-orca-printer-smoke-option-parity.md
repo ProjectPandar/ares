@@ -658,3 +658,22 @@ NEXT: align Ares Douglas-Peucker corner/tolerance-boundary vertex
 retention with OrcaSlicer's simplify_p (compare both implementations at a
 corner within `scaled_resolution`); this is a geometry-library-level
 alignment shared with other Clipper/simplify DIVERGENT sweep cases.
+
+### Correction: DP simplify is NOT the Ender-3 root cause
+
+Line-by-line comparison shows Ares `geometry/simplification.rs
+douglas_peucker` is byte-equivalent to OrcaSlicer `MultiPoint::_douglas_peucker`
+(MultiPoint.cpp:164+): identical `<= tolerance_sq` comparison, identical
+stack structure, identical first/last point retention. The simplify
+hypothesis is REFUTED.
+
+Ender-3 residual gaps appear on z=0.48, 0.72 (solid infill layers) and
+z=9.84 (near top) — a 0.62mm corner triangle per layer. With walls,
+infill, WIDTH, Clipper params, DP all verified identical, and covered-delta
+increase NOT removing the residual, the residual sits beyond infill
+coverage inside Ares' no_overlap domain. Independent reviewer thread
+(507a9580) is cross-validating whether the divergence is a Clipper corner
+offset numerical difference or a missed upstream logic step (candidate:
+the covered spacing source — Ares uses generated.spacing vs upstream
+per-path Flow(width,height).scaled_spacing(); or a variable_width
+min/max-width drop upstream that Ares does not replicate).
