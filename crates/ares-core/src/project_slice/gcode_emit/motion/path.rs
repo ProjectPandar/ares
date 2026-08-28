@@ -108,7 +108,7 @@ pub(super) fn emit(
             );
         }
         append_object_start(output, state);
-        if retract && state.lifted {
+        if state.lifted && !first_position {
             output.extend_from_slice(
                 format!(
                     "G1 X{} Y{} Z{}\n",

@@ -28,7 +28,10 @@ pub(super) fn append(
 
     let tags = super::tags::Tags::of(traversal);
     let custom = tags.custom() + "\n";
-    output.extend_from_slice(b"M106 S0\nM106 P2 S0\nM981 S0 P20000 ; close spaghetti detector\n");
+    output.extend_from_slice(b"M106 S0\n");
+    if tags.is_bbl() {
+        output.extend_from_slice(b"M106 P2 S0\nM981 S0 P20000 ; close spaghetti detector\n");
+    }
     output.extend_from_slice(custom.as_bytes());
     if let Some(filament_end) = gcode.filament_end_gcode.0.first() {
         append_template(output, filament_end, &config, "filament-end")?;

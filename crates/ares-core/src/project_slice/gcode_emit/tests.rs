@@ -303,7 +303,7 @@ async fn ksr_project_renders_end_templates_and_closes_executable_block() {
 }
 
 #[tokio::test]
-async fn task22o131_lifted_next_layer_travel_keeps_current_z() {
+async fn lifted_next_layer_travel_carries_new_layer_hop_z() {
     let output = crate::slice_project(
         crate::project_slice::tests::support::ksr_project(),
         crate::project_slice::tests::support::metadata(),
@@ -322,8 +322,7 @@ async fn task22o131_lifted_next_layer_travel_keeps_current_z() {
         .unwrap()
         .0;
 
-    assert!(lines[second_label + 1].ends_with(" F60000"));
-    assert!(!lines[second_label + 1].contains(" Z"));
+    assert!(lines[second_label + 1].ends_with(" Z.8"));
     assert_eq!(lines[second_label + 2], "G1 Z.4");
 }
 

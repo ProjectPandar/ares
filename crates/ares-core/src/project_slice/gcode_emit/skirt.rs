@@ -191,7 +191,14 @@ impl SkirtPlan {
             height,
             mm3_per_mm,
         };
-        let mut seam_target = find_start_point(&self.loops[0], self.start_angle_deg);
+        let mut seam_target = if layer.index == 0 {
+            find_start_point(&self.loops[0], self.start_angle_deg)
+        } else {
+            state.last_scaled_position.map_or_else(
+                || find_start_point(&self.loops[0], self.start_angle_deg),
+                |(x, y)| Point::new(x, y),
+            )
+        };
         for loop_points in &self.loops {
             let split = split_at_nearest(loop_points, seam_target);
             motion::emit_skirt_loop(

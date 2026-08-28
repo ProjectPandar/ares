@@ -142,6 +142,9 @@ pub(super) fn emit(
                 f64::from(layer_z),
                 &layer_change_template,
             )?;
+            // A deferred previous-layer retraction lifts above the new layer's
+            // print Z (`GCodeWriter::travel_to_z` during layer transition).
+            state.layer_z = f64::from(layer_z);
             motion::flush_pending_retract_lift(&mut output, &mut state);
             motion::begin_layer(
                 &mut output,
@@ -210,6 +213,10 @@ pub(super) fn emit(
             cooling.finish_layer(&mut output, layer_output_start);
         }
     }
+    // The final compatible layer has no following layer marker to flush its
+    // deferred retraction. Flush only retract/wipe (not a travel lift) before
+    // end G-code (`GCode.cpp` final object teardown).
+    motion::flush_pending_retract_wipe(&mut output, &mut state);
     finish::append(&mut output, traversal, max_layer_z, metadata)?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let used_filament = finish::account_used_filament(&output);
