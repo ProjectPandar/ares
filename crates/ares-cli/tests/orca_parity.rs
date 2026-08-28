@@ -94,6 +94,7 @@ pub(crate) fn smoke_overrides() -> Map<String, Value> {
         "bed_exclude_area".to_owned(),
         Value::Array(vec![Value::String("0x0".to_owned())]),
     );
+    overrides.insert("post_process".to_owned(), Value::Array(Vec::new()));
     overrides
 }
 

@@ -76,10 +76,12 @@ fn relative_e_profile_without_reset_gets_layer_reset() {
 
 #[test]
 fn smoke_overrides_clear_cli_unsafe_bed_exclusion() {
+    let overrides = smoke_overrides();
     assert_eq!(
-        smoke_overrides().get("bed_exclude_area"),
+        overrides.get("bed_exclude_area"),
         Some(&serde_json::json!(["0x0"]))
     );
+    assert_eq!(overrides.get("post_process"), Some(&serde_json::json!([])));
 }
 
 #[test]
