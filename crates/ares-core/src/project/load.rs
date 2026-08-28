@@ -102,6 +102,10 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
         PROJECT_SETTINGS_PATH,
         JsonRole::ProjectSettings,
     )?;
+    let project_settings_raw: std::collections::BTreeMap<String, serde_json::Value> =
+        serde_json::from_slice(&read(&mut archive, PROJECT_SETTINGS_PATH)?).map_err(|error| {
+            SliceError::InvalidInput(format!("invalid {PROJECT_SETTINGS_PATH}: {error}"))
+        })?;
 
     let (models, mut objects) = assemble::project_domain(&graph, &metadata, &model_settings)?;
     super::layer_config_ranges::load(&mut archive, &archive_paths, &mut objects)?;
@@ -111,6 +115,7 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
         metadata.plates,
         settings,
         ProjectDocuments {
+            project_settings_raw,
             model_settings,
             slice_info,
             filament_sequences,

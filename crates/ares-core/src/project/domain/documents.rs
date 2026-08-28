@@ -26,6 +26,9 @@ impl PlateMetadata {
 #[derive(Debug)]
 pub(crate) struct ProjectDocuments {
     pub model_settings: ModelSettings,
+    /// Raw `Metadata/project_settings.config` key/values, used to drive the
+    /// config block key set (`GCode::append_full_config`).
+    pub project_settings_raw: std::collections::BTreeMap<String, serde_json::Value>,
     pub slice_info: SliceInfo,
     pub filament_sequences: FilamentSequences,
     pub plate_documents: Vec<PlateJson>,
@@ -36,6 +39,7 @@ impl ProjectDocuments {
     pub(crate) fn clone_shallow(&self) -> Self {
         Self {
             model_settings: self.model_settings.clone(),
+            project_settings_raw: self.project_settings_raw.clone(),
             slice_info: self.slice_info.clone(),
             filament_sequences: self.filament_sequences.clone(),
             plate_documents: self.plate_documents.clone(),

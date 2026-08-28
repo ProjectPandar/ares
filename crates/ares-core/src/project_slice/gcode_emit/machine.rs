@@ -31,8 +31,19 @@ pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassi
     {
         append_machine_envelope(output, traversal);
     }
-    (super::tags::Tags::of(traversal).is_bbl())
-        .then(|| output.extend_from_slice(b"M106 S0\nM106 P2 S0\n"));
+    // Disable fan for printers with an auxiliary fan
+    // (`GCode.cpp:2822-2826`: set_fan(0) + set_additional_fan(0)).
+    let settings = &traversal.resolved.views.full;
+    let close_fan = settings
+        .filament
+        .print
+        .close_fan_the_first_x_layers
+        .0
+        .first()
+        .is_some_and(|value| value.0 > 0);
+    if settings.printer.gcode.auxiliary_fan.0 && close_fan {
+        output.extend_from_slice(b"M106 S0\nM106 P2 S0\n");
+    }
 }
 
 fn append_machine_envelope(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {

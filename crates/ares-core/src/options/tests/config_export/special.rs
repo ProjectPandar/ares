@@ -69,7 +69,7 @@ fn config_export_special_rejects_multi_filament_mismatch_and_zero_heads_atomical
         let mut output = b"preseed".to_vec();
         let expected = output.clone();
 
-        let error = write_config_block(&views, 0, &mut output).unwrap_err();
+        let error = write_config_block(&views, &Default::default(), 0, &mut output).unwrap_err();
 
         assert_eq!(error, SliceError::InvalidInput(MATRIX_ERROR.to_owned()));
         assert_eq!(output, expected);
@@ -110,7 +110,7 @@ fn config_export_special_filters_only_the_fixed_nine_banned_keys() {
     entries.sort_unstable_by(|left, right| left.key.cmp(&right.key));
     let mut output = Vec::new();
 
-    write_canonical_entries(&ProjectSettings::default(), 0, &entries, &mut output).unwrap();
+    write_canonical_entries(&ProjectSettings::default(), 0, &entries, &Default::default(), &mut output).unwrap();
 
     assert_eq!(output, b"; print_compatible_printers = keep\n");
 }
@@ -217,7 +217,7 @@ fn config_export_special_late_temperature_errors_leave_output_unchanged() {
         let mut output = b"preseed".to_vec();
         let expected = output.clone();
         assert!(matches!(
-            write_config_block(&views, 0, &mut output),
+            write_config_block(&views, &Default::default(), 0, &mut output),
             Err(SliceError::InvalidInput(_))
         ));
         assert_eq!(output, expected);

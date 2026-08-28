@@ -26,7 +26,7 @@ fn block_from_views(
     plate_index: usize,
 ) -> Result<Vec<u8>, SliceError> {
     let mut output = Vec::new();
-    write_config_block(views, plate_index, &mut output)?;
+    write_config_block(views, &Default::default(), plate_index, &mut output)?;
     Ok(output)
 }
 

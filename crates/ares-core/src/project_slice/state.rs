@@ -44,7 +44,12 @@ pub(super) fn prepare_project_slice(
     // as the machine/layer template placeholder source (`GCode.cpp` config
     // export), not only for Bambu Lab printers.
     let mut config_block = Vec::new();
-    write_config_block(&resolved.views, 0, &mut config_block)?;
+    write_config_block(
+        &resolved.views,
+        &project.documents().project_settings_raw,
+        0,
+        &mut config_block,
+    )?;
     let config_block = (!config_block.is_empty()).then_some(config_block);
     let planned_objects = plan_project(&project, &resolved)?;
     let projected_objects =

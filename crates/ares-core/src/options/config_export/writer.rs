@@ -2,6 +2,7 @@ use crate::{ProjectBedType, ProjectSettings, SliceError};
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
+    orca_block_keys::ORCA_BLOCK_KEYS,
     transform::transformed_for_export,
     value::serialize_config_value,
 };
@@ -23,6 +24,7 @@ const BANNED_KEYS: [&str; 9] = [
 
 pub(crate) fn write_config_block(
     views: &ProjectConfigViews,
+    raw_settings: &std::collections::BTreeMap<String, serde_json::Value>,
     plate_index: usize,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
@@ -30,7 +32,13 @@ pub(crate) fn write_config_block(
     let entries = collect_config_entries(&transformed).map_err(config_error)?;
     let mut scratch = Vec::new();
     scratch.extend_from_slice(START);
-    write_canonical_entries(&transformed, plate_index, &entries, &mut scratch)?;
+    write_canonical_entries(
+        &transformed,
+        plate_index,
+        &entries,
+        raw_settings,
+        &mut scratch,
+    )?;
     write_runtime_tail(&views.runtime, &mut scratch)?;
     scratch.extend_from_slice(END);
     output.extend_from_slice(&scratch);
@@ -41,13 +49,24 @@ pub(crate) fn write_canonical_entries(
     settings: &ProjectSettings,
     plate_index: usize,
     entries: &[ConfigEntry],
+    raw_settings: &std::collections::BTreeMap<String, serde_json::Value>,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
-    for entry in entries {
-        if BANNED_KEYS.contains(&entry.key.as_str()) || entry.is_nil {
-            continue;
+    // Orca emits the full config keys: every static FullPrintConfig key
+    // plus any key the project presets define (`GCode.cpp:5636-5643`).
+    // Ares registry keys outside that set only appear when the project
+    // presets set them.
+    let mut lines: Vec<(String, String)> = Vec::new();
+    fn emit(lines: &mut Vec<(String, String)>, key: &str, token: String, is_nil: bool) {
+        if BANNED_KEYS.contains(&key) || is_nil || token == "nil" {
+            return;
         }
+        lines.push((key.to_owned(), token));
+    }
+    for entry in entries {
         if matches!(entry.key.as_str(), "wipe_tower_x" | "wipe_tower_y") {
+            // The wipe tower origin is written for every printer regardless
+            // of the key set (`GCode.cpp:5646-5650`).
             let values = if entry.key == "wipe_tower_x" {
                 &settings.project.print.wipe_tower_x.0
             } else {
@@ -57,17 +76,71 @@ pub(crate) fn write_canonical_entries(
                 .get(plate_index)
                 .or_else(|| values.first())
                 .ok_or_else(|| invalid(format!("{} must not be empty", entry.key)))?;
-            append_line(output, &entry.key, &format!("{:.3}", value.0));
+            emit(&mut lines, &entry.key, format!("{:.3}", value.0), false);
+            // Upstream falls through: the ordinary serialization is written as
+            // well (`GCode.cpp:5647-5655`).
+        }
+        // Orca emits the full config keys: every static FullPrintConfig key
+        // plus any key the project presets define (`GCode.cpp:5636-5643`).
+        // Ares keys outside that set only appear when the project presets
+        // set them.
+        let known = ORCA_BLOCK_KEYS.binary_search(&entry.key.as_str()).is_ok()
+            || raw_settings.contains_key(&entry.key);
+        if !known {
+            continue;
         }
         if entry.key == "extruder_colour" {
             let colour = serialize_config_value(&settings.filament.gcode.filament_colour)
                 .map_err(config_error)?;
-            append_line(output, &entry.key, &colour.token);
-        } else {
-            append_line(output, &entry.key, &entry.token);
+            emit(&mut lines, &entry.key, colour.token, false);
+            continue;
         }
+        emit(&mut lines, &entry.key, entry.token.clone(), entry.is_nil);
+    }
+    for (key, raw) in raw_settings {
+        if matches!(key.as_str(), "from" | "name" | "version") {
+            continue;
+        }
+        if lines.iter().any(|(existing, _)| existing == key) {
+            continue;
+        }
+        let Some(rendered) = serialize_raw_value(raw) else {
+            continue;
+        };
+        emit(&mut lines, key, rendered, false);
+    }
+    // Orca iterates a sorted key map; a stable sort keeps the duplicated
+    // wipe-tower origin lines adjacent like upstream.
+    lines.sort_by(|left, right| left.0.cmp(&right.0));
+    for (key, token) in lines {
+        append_line(output, &key, &token);
     }
     Ok(())
+}
+
+/// Serializes a raw 3MF config value; `None` for `nil` placeholders.
+fn serialize_raw_value(value: &serde_json::Value) -> Option<String> {
+    match value {
+        serde_json::Value::String(text) => (text != "nil").then(|| text.clone()),
+        serde_json::Value::Array(values) => {
+            let rendered: Vec<String> = values
+                .iter()
+                .filter_map(|item| match item {
+                    serde_json::Value::String(text) if text != "nil" => Some(text.clone()),
+                    serde_json::Value::Number(number) => Some(number.to_string()),
+                    _ => None,
+                })
+                .collect();
+            (!rendered.is_empty()).then(|| rendered.join(";"))
+        }
+        serde_json::Value::Number(number) => Some(number.to_string()),
+        serde_json::Value::Bool(flag) => Some(if *flag {
+            "1".to_owned()
+        } else {
+            "0".to_owned()
+        }),
+        _ => None,
+    }
 }
 
 fn write_runtime_tail(runtime: &ProjectSettings, output: &mut Vec<u8>) -> Result<(), SliceError> {

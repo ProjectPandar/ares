@@ -112,7 +112,13 @@ fn config_export_fixture_matches_resolved_task19b3_views_byte_for_byte() {
     let runtime_entries = collect_config_entries(&resolved.views.runtime).unwrap();
     let mut actual = Vec::new();
 
-    write_config_block(&resolved.views, 0, &mut actual).unwrap();
+    write_config_block(
+        &resolved.views,
+        &project.documents().project_settings_raw,
+        0,
+        &mut actual,
+    )
+    .unwrap();
 
     let expected = reference_block();
     if actual != expected {
