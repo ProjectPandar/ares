@@ -1,4 +1,4 @@
-use super::{convex_hull, find_start_point, split_at_nearest};
+use super::{closed_length, convex_hull, find_start_point, split_at_nearest};
 use crate::geometry::Point;
 
 /// `Geometry/ConvexHull.cpp:11-43`: sorted monotone chain, collinear points
@@ -23,6 +23,13 @@ fn convex_hull_matches_upstream_ordering() {
             Point::new(0, 1000),
         ]
     );
+}
+
+#[test]
+fn closed_length_includes_the_last_to_first_edge() {
+    let points = [Point::new(0, 0), Point::new(3, 0), Point::new(3, 4)];
+
+    assert_eq!(closed_length(&points), 12.0);
 }
 
 #[test]

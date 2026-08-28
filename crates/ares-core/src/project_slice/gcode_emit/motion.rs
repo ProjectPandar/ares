@@ -19,9 +19,7 @@ pub(in crate::project_slice) use arc::simplify_points;
 pub(super) use travel::{flush_pending_retract_lift, flush_pending_retract_wipe};
 
 use features::PathProperties;
-pub(in crate::project_slice::gcode_emit) use options::MotionOptions;
-#[cfg(test)]
-pub(in crate::project_slice::gcode_emit) use options::first_nullable_float;
+pub(in crate::project_slice::gcode_emit) use options::{MotionOptions, first_nullable_float};
 
 use super::super::island_print_order::{IslandPrintEntity, OrderedExtrusionLayer};
 use crate::{

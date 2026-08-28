@@ -8,7 +8,7 @@
 //! (`GCode.cpp:4334-4359`, `extrude_loop` seam gap).
 
 use crate::geometry::{
-    CoordinateScale, JoinType, Point, Polygon, offset_paths, simplify_closed_points,
+    CoordinateScale, JoinType, Line, Point, Polygon, offset_paths, simplify_closed_points,
 };
 use crate::project_slice::gcode_emit::motion::{self, EmitState, LayerGeometry};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
@@ -45,11 +45,6 @@ impl SkirtPlan {
         if print.skirt_type != crate::ProcessSkirtType::Combined {
             return Err(SliceError::UnsupportedProjectFeature(
                 "skirt_type per-object".to_owned(),
-            ));
-        }
-        if print.min_skirt_length.0 > 0.0 {
-            return Err(SliceError::UnsupportedProjectFeature(
-                "min_skirt_length".to_owned(),
             ));
         }
         let infinite_skirt = print.draft_shield == crate::ProcessDraftShield::Enabled;
@@ -122,8 +117,19 @@ impl SkirtPlan {
             checked_scale(scale, print.skirt_distance.0 - flow.spacing as f64 * 0.5)? + spacing;
         let arc_tolerance = checked_scale(scale, 0.1)? as f64;
         let hull_polygon = Polygon::new(hull);
+        let minimum_filament = print.min_skirt_length.0;
+        let filament = &full.filament.gcode;
+        let diameter = filament
+            .filament_diameter
+            .0
+            .first()
+            .map_or(1.75, |diameter| diameter.0);
+        let flow_ratio = super::motion::first_nullable_float(&filament.filament_flow_ratio, 1.0);
+        let e_per_path_mm =
+            flow.mm3_per_mm * flow_ratio / (std::f64::consts::PI * diameter.powi(2) * 0.25);
+        let mut extruded_filament = 0.0;
         let mut loops = Vec::with_capacity(loops_count);
-        for _ in 0..loops_count {
+        while loops.len() < loops_count || extruded_filament < minimum_filament {
             let offset = offset_paths(
                 std::slice::from_ref(&hull_polygon),
                 (distance as f32).abs(),
@@ -141,6 +147,7 @@ impl SkirtPlan {
             if simplified.len() < 3 {
                 break;
             }
+            extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
             loops.push(simplified);
             distance += spacing;
         }
@@ -204,6 +211,12 @@ impl SkirtPlan {
 pub(super) struct SkirtLayer {
     pub(super) index: usize,
     pub(super) height_mm: f64,
+}
+
+fn closed_length(points: &[Point]) -> f64 {
+    (0..points.len())
+        .map(|index| Line::new(points[index], points[(index + 1) % points.len()]).length())
+        .sum()
 }
 
 /// Convex hull in counter-clockwise order — rewrite of
