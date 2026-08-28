@@ -137,7 +137,7 @@ fn scaled(scale: CoordinateScale, value: f64) -> Result<f64, SliceError> {
         .ok_or_else(|| SliceError::InvalidInput("gap residual spacing is out of range".to_owned()))
 }
 
-const INSET_OVERLAP_TOLERANCE: f64 = 0.15;
+const INSET_OVERLAP_TOLERANCE: f64 = 0.4;
 const MITER_LIMIT: f32 = 3.0;
 const CLIPPER_SAFETY_OFFSET: f64 = 10.0;
 const SCALED_RESOLUTION: f64 = 0.0125;

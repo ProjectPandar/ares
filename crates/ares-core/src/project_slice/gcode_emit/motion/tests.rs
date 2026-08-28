@@ -297,14 +297,14 @@ async fn first_layer_second_inner_perimeter_uses_fitted_aligned_seam() {
         .nth(11)
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
 
-    assert_eq!(destination, Some("G1 X149.983 Y99.084 Z.6"));
+    assert_eq!(destination, Some("G1 X139.463 Y137.849 Z.6"));
     let later_destination = lines[layer_changes[0]..layer_changes[1]]
         .iter()
         .enumerate()
         .filter(|(_, line)| line.starts_with("G3 Z") && line.ends_with(" F60000"))
         .nth(15)
         .map(|(index, _)| lines[layer_changes[0] + index + 1]);
-    assert_eq!(later_destination, Some("G1 X127.062 Y98.081 Z.6"));
+    assert_eq!(later_destination, Some("G1 X148.383 Y98.741 Z.6"));
     assert!(lines.contains(&"G1 X122.305 Y95.287 E-.04452"));
 }
 
