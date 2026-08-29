@@ -1,4 +1,4 @@
-use super::{MultilineFillParams, Sweep, fill_surface};
+use super::{MultilineFillParams, Sweep, fill_surface, generate_family};
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 
 fn square() -> ExPolygon {
@@ -23,6 +23,26 @@ fn params() -> MultilineFillParams {
         anchor_length_max: 0.01,
         dont_sort: false,
     }
+}
+
+#[test]
+fn zero_angle_family_uses_vertical_scanlines() {
+    let paths = generate_family(
+        &square(),
+        params(),
+        0.2,
+        Sweep {
+            angle: 0.0,
+            shift: 0.0,
+        },
+        CoordinateScale::Normal,
+    )
+    .unwrap();
+
+    assert!(paths.iter().all(|path| {
+        let points = path.points();
+        points.first().unwrap().x() == points.last().unwrap().x()
+    }));
 }
 
 #[test]

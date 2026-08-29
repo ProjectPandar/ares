@@ -1281,5 +1281,14 @@ regression (travel-count returns to 94). RatRig remains PASS; Snapmaker advances
 past finish layer_num to first-layer feed; CR-10 SE advances past Klipper
 controls to sparse-infill geometry.
 
-NEXT: correct multiline family orientation/reference grid, then remaining
-postamble geometry, lifecycle and travel.
+`FillRectilinear::fill_surface_by_multilines` / `make_fill_lines`
+(`FillRectilinear.cpp:2920-3042`) now uses the correct coordinate convention:
+zero-angle is vertical, sweep/base angles and pattern shift use the matching
+sign, and the rotated surface center anchors grid alignment instead of global
+zero. A RED/GREEN scanline test covers orientation; Elegoo Cubic's first sparse
+layer coordinates are now byte-exact. Remaining Cubic deltas are isolated to
+`connect_infill` splitting on three transition layers, not family generation.
+KSR golden and workspace checks pass.
+
+NEXT: fix multiline `connect_infill` splitting, then remaining postamble
+geometry, lifecycle and travel.

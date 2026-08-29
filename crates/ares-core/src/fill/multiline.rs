@@ -79,15 +79,22 @@ fn generate_family(
     sweep: Sweep,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let angle = params.angle + std::f32::consts::FRAC_PI_2 + sweep.angle;
+    let angle = -(params.angle + sweep.angle);
+    let reference = center(component);
+    let rotated_reference = rotate_points(vec![reference], -f64::from(angle))?[0];
     let rotated = rotate_expolygon(component, -f64::from(angle))?;
     let (minimum, maximum) = bounds(&rotated);
     let spacing = ((params.spacing / scale.factor()) * f64::from(params.multiline)
         / f64::from(density)) as i64;
     let shift = scale
-        .checked_scale(f64::from(sweep.shift))
+        .checked_scale(-f64::from(sweep.shift))
+        .ok_or(ClipperError::CoordinateOutOfRange)?
+        % spacing;
+    let reference_x = rotated_reference
+        .x()
+        .checked_sub(if shift >= 0 { shift } else { spacing + shift })
         .ok_or(ClipperError::CoordinateOutOfRange)?;
-    let first_x = align_to_grid(minimum.x(), spacing, shift)?;
+    let first_x = align_to_grid(minimum.x(), spacing, reference_x)?;
     let height_padding = spacing;
     let start_y = minimum
         .y()
@@ -121,6 +128,14 @@ fn generate_family(
     lines = intersection_open_polylines(&lines, &clip)?;
     rotate_polylines(&mut lines, f64::from(angle))?;
     Ok(lines)
+}
+
+fn center(expolygon: &ExPolygon) -> Point {
+    let (minimum, maximum) = bounds(expolygon);
+    Point::new(
+        minimum.x() + (maximum.x() - minimum.x()) / 2,
+        minimum.y() + (maximum.y() - minimum.y()) / 2,
+    )
 }
 
 fn bounds(expolygon: &ExPolygon) -> (Point, Point) {
