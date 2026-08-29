@@ -897,7 +897,25 @@ divergences fell from 161 to 125; 36 cases advanced, including representative
 P1P and K2 Pro into deposition mismatches. The two-error movement is again
 nondeterministic Orca reference failure.
 
-NEXT: run sweep7 for assignment + startup-temperature family-wide evidence,
-then continue with remaining preamble groups (header/comment layout, BBL
-placeholder bounds) and the larger internal-solid-infill/feedrate/travel
-families.
+The ten H2D/H2D Pro/X2D `M620.17 ... L-1` cases exposed placeholder arrays
+that Ares had filled as `0..N`. Upstream initializes one entry per physical
+hotend to `-1`, records the first/all and first/non-support logical filaments,
+then applies the effective physical-extruder permutation
+(`GCode.cpp:2721-2851`, `ToolOrdering.cpp:1000-1042`). The new
+`machine::first_filaments` module ports that boundary using actual object
+extruders, `filament_map`, support flags, extruder types, and the physical map.
+An Orca-generated KSR probe established the independent expected literal
+`FIRST -1,0 NON -1,0`; the output test is red on Ares' former `0,1`. All 10/10
+H2D/X2D semantic preambles now match in both homogeneous and heterogeneous
+hotend-map directions.
+
+Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
+completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
+first divergences fell from 125 to 114: all six Folgertech cases moved into
+travel and five reference-producing assignment cases moved onward (the sixth
+Prusa reference crashed). Error-count churn remains Orca-side nondeterminism.
+
+NEXT: run sweep8 for the 10 first-filament placeholder cases, then continue
+with remaining preamble groups (header extrusion-width vocabulary, legacy
+FLAVOR layout, bounding-box precision) and the larger
+internal-solid-infill/feedrate/travel families.

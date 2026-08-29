@@ -6,6 +6,7 @@ use crate::{
 use super::{footprint, template, value};
 
 mod exhaust_fan;
+mod first_filaments;
 mod temperature;
 
 /// The first-line M73 placeholder consumed by the G-code processor
@@ -292,14 +293,14 @@ fn self_start_config(
             ]),
         );
     }
-    let filament_count = traversal.resolved.logical_filament_count;
-    let first_filaments = value::Value::List(
-        (0..filament_count)
-            .map(|index| value::Value::number(index as f64))
-            .collect(),
-    );
-    config.insert("first_non_support_filaments", first_filaments.clone());
+    let (first_filaments, first_non_support_filaments) = first_filaments::resolve(traversal);
+    config.insert("first_tools", first_filaments.clone());
     config.insert("first_filaments", first_filaments);
+    config.insert(
+        "first_non_support_tools",
+        first_non_support_filaments.clone(),
+    );
+    config.insert("first_non_support_filaments", first_non_support_filaments);
     Ok(config)
 }
 
