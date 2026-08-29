@@ -965,6 +965,16 @@ complete file is known. The semantic parser classifies legacy `;TIME:` and
 gate). A 3MF RED/GREEN test verifies the first five lines and placeholder
 resolution; all three profile preambles match apart from ignored time values.
 
+The three Creality K1 CFS variants were missing Orca's chamber wait block.
+For used filaments with `activate_chamber_temp_control`, upstream takes the
+maximum chamber temperature and inserts `set_chamber_temperature(wait=true)`
+after the Custom role but before machine start (`GCode.cpp:3008-3013`,
+`GCode.cpp:3130-3134`). With an auxiliary fan, `GCodeWriter.cpp:192-214`
+brackets M191 with P2 on/off. Ares now computes the same used-filament value,
+exposes `overall_chamber_temperature` to the template, suppresses duplicate
+M141/M191, and emits exact ordering. The 3MF RED/GREEN test and all 3/3 family
+preambles pass.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into

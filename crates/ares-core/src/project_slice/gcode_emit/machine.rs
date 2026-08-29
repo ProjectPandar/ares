@@ -229,6 +229,7 @@ pub(super) fn append_start(
     let bed_cache = temperature::append_startup(output, traversal, &rendered);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
     output.extend_from_slice(custom.as_bytes());
+    temperature::append_chamber_startup(output, traversal, &rendered);
     // `GCodeOutputStream::writeln` (`GCode.cpp:6266-6270`) writes nothing for
     // an empty rendered template and otherwise appends exactly one newline.
     if !rendered.is_empty() {
@@ -254,7 +255,12 @@ fn self_start_config(
     config.insert("next_hotend", value::Value::number(-1.0));
     config.insert("initial_no_support_extruder", value::Value::number(0.0));
     config.insert("initial_no_support_hotend", value::Value::number(-1.0));
-    config.insert("overall_chamber_temperature", value::Value::number(0.0));
+    config.insert(
+        "overall_chamber_temperature",
+        value::Value::number(f64::from(temperature::overall_chamber_temperature(
+            traversal,
+        ))),
+    );
     config.insert(
         "hold_chamber_temp_for_flat_print",
         value::Value::Bool(false),

@@ -66,6 +66,53 @@ pub(super) fn append_startup(
     bed_temperature
 }
 
+pub(super) fn overall_chamber_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
+    chamber_settings(traversal).1
+}
+
+pub(super) fn append_chamber_startup(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    machine_start_gcode: &str,
+) {
+    let (active, temperature) = chamber_settings(traversal);
+    if !active
+        || temperature <= 0
+        || sets_temperature(machine_start_gcode, &["M141", "M191"], false)
+    {
+        return;
+    }
+    let auxiliary_fan = traversal.resolved.views.runtime_gcode.auxiliary_fan.0;
+    if auxiliary_fan {
+        output.extend_from_slice(b"M106 P2 S255 \n");
+    }
+    output.extend_from_slice(
+        format!("M191 S{temperature} ;set chamber_temperature and wait for it to be reached\n")
+            .as_bytes(),
+    );
+    if auxiliary_fan {
+        output.extend_from_slice(b"M106 P2 S0 \n");
+    }
+}
+
+fn chamber_settings(traversal: &PreparedPostClassicTraversal) -> (bool, i32) {
+    let filament = &traversal.resolved.views.full.filament.print;
+    used_filaments(traversal)
+        .into_iter()
+        .fold((false, 0), |(active, maximum), index| {
+            let enabled = filament
+                .activate_chamber_temp_control
+                .0
+                .get(index)
+                .or_else(|| filament.activate_chamber_temp_control.0.first())
+                .is_some_and(|value| value.0);
+            (
+                active || enabled,
+                maximum.max(filament_int(&filament.chamber_temperature, index)),
+            )
+        })
+}
+
 pub(super) fn filament_int(values: &crate::OrcaInts, index: usize) -> i32 {
     values
         .0
@@ -90,20 +137,7 @@ fn append_nozzle_temperatures(
 
     let settings = &traversal.resolved.views.full;
     let runtime = &traversal.resolved.views.runtime_gcode;
-    let mut used = extruders::collect_project_object_extruders(
-        traversal.project.objects(),
-        &traversal.resolved.objects,
-        traversal.resolved.logical_filament_count,
-    )
-    .into_iter()
-    .flatten()
-    .collect::<Vec<_>>();
-    if used.is_empty() {
-        used.push(0);
-    }
-    used.sort_unstable();
-    used.dedup();
-
+    let mut used = used_filaments(traversal);
     let single_extruder_multi_material = runtime.single_extruder_multi_material.0;
     if single_extruder_multi_material {
         used.truncate(1);
@@ -134,6 +168,23 @@ fn append_nozzle_temperatures(
             );
         }
     }
+}
+
+fn used_filaments(traversal: &PreparedPostClassicTraversal) -> Vec<usize> {
+    let mut used = extruders::collect_project_object_extruders(
+        traversal.project.objects(),
+        &traversal.resolved.objects,
+        traversal.resolved.logical_filament_count,
+    )
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>();
+    if used.is_empty() {
+        used.push(0);
+    }
+    used.sort_unstable();
+    used.dedup();
+    used
 }
 
 fn append_nozzle_temperature(
