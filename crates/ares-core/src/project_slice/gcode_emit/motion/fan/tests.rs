@@ -51,7 +51,7 @@ fn equal_speed_ignores_start_and_reasserts_base_fan_at_end() {
 
     assert_eq!(
         output,
-        crate::project_slice::gcode_emit::cooling::ROLE_FAN_RESTORE_MARKER
+        b";__ARES_ROLE_FAN_CONDITIONAL_100__\n;__ARES_ROLE_FAN_BASE__\n"
     );
     assert!(!state.overhang_fan_active);
 }
@@ -85,7 +85,7 @@ fn faster_overhang_fan_activates_for_variable_segment() {
         &mut state,
     );
 
-    assert_eq!(output, b"M106 S255\n");
+    assert_eq!(output, b";__ARES_ROLE_FAN_CONDITIONAL_100__\n");
     assert!(state.overhang_fan_active);
 }
 
@@ -122,7 +122,7 @@ fn internal_bridge_marker_reasserts_equal_baseline_at_end() {
 
     assert_eq!(
         output,
-        crate::project_slice::gcode_emit::cooling::ROLE_FAN_RESTORE_MARKER
+        b";__ARES_ROLE_FAN_CONDITIONAL_100__\n;__ARES_ROLE_FAN_BASE__\n"
     );
 }
 
@@ -144,7 +144,8 @@ fn explicit_internal_bridge_speed_overrides_and_restores_baseline() {
     update_for_constant_path(&mut output, properties("Internal Bridge"), &mut state);
     update_for_constant_path(&mut output, properties("Inner wall"), &mut state);
 
-    let mut expected = b"M106 S191\n".to_vec();
-    expected.extend_from_slice(crate::project_slice::gcode_emit::cooling::ROLE_FAN_RESTORE_MARKER);
-    assert_eq!(output, expected);
+    assert_eq!(
+        output,
+        b";__ARES_ROLE_FAN_FIXED_75__\n;__ARES_ROLE_FAN_BASE__\n"
+    );
 }

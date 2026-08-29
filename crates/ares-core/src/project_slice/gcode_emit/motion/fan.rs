@@ -76,15 +76,10 @@ fn update_marker(output: &mut Vec<u8>, state: &mut EmitState, marker: FanMarker,
     let fresh_start = active && (!was_active || marker_layer != Some(state.layer_index));
     let stopping = !active && was_active;
     set_marker_state(state, marker, active);
-    let emit = stopping || fresh_start && control_speed(state, marker).is_some();
-    if emit {
-        if let Some(speed) = requested_speed(state) {
-            output.extend_from_slice(format!("M106 S{}\n", pwm(speed)).as_bytes());
-            state.physical_fan_speed = speed;
-        } else {
-            output.extend_from_slice(super::super::cooling::ROLE_FAN_RESTORE_MARKER);
-            state.physical_fan_speed = state.part_fan_speed;
-        }
+    if (stopping || fresh_start)
+        && let Some(target) = deferred_target(state)
+    {
+        super::super::cooling::append_deferred_role_fan(output, target);
     }
 }
 
@@ -112,34 +107,31 @@ fn set_marker_state(state: &mut EmitState, marker: FanMarker, active: bool) {
     }
 }
 
-fn requested_speed(state: &EmitState) -> Option<u8> {
-    state
-        .overhang_fan_active
-        .then(|| control_speed(state, FanMarker::Overhang))
-        .flatten()
-        .or_else(|| {
-            state
-                .internal_bridge_fan_active
-                .then(|| control_speed(state, FanMarker::InternalBridge))
-                .flatten()
-        })
-}
+fn deferred_target(state: &EmitState) -> Option<super::super::cooling::DeferredRoleFan> {
+    use super::super::cooling::DeferredRoleFan;
 
-fn control_speed(state: &EmitState, marker: FanMarker) -> Option<u8> {
     if !state.options.enable_overhang_bridge_fan
         || state.layer_index < state.options.close_fan_first_layers
     {
         return None;
     }
     let overhang_speed = overhang_speed(state);
-    let overhang_control = (overhang_speed > state.part_fan_speed).then_some(overhang_speed);
-    match marker {
-        FanMarker::Overhang => overhang_control,
-        FanMarker::InternalBridge => state
-            .options
-            .internal_bridge_fan_speed
-            .role_speed(overhang_control),
+    if state.overhang_fan_active {
+        return Some(DeferredRoleFan::Conditional(overhang_speed));
     }
+    if state.internal_bridge_fan_active {
+        return Some(
+            state
+                .options
+                .internal_bridge_fan_speed
+                .role_speed(None)
+                .map_or(
+                    DeferredRoleFan::Conditional(overhang_speed),
+                    DeferredRoleFan::Fixed,
+                ),
+        );
+    }
+    Some(DeferredRoleFan::Baseline)
 }
 
 fn overhang_speed(state: &EmitState) -> u8 {
@@ -152,8 +144,4 @@ fn overhang_speed(state: &EmitState) -> u8 {
     let denominator = state.options.full_fan_speed_layer - state.options.close_fan_first_layers;
     let speed = f64::from(state.options.overhang_fan_speed) * numerator as f64 / denominator as f64;
     (speed + 0.5).floor().clamp(0.0, 100.0) as u8
-}
-
-fn pwm(speed: u8) -> u32 {
-    (255.5 * f64::from(speed) / 100.0).floor() as u32
 }

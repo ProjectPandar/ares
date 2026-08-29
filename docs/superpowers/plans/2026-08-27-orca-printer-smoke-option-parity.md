@@ -1190,5 +1190,13 @@ provisional-role issue: the resolved base is 99% but role activation was
 decided earlier against provisional 100%, suppressing its expected S255
 internal-bridge command.
 
-NEXT: resolve role-fan starts after layer timing, then final statistics,
-remaining cubic statistics, lifecycle and travel.
+Role-fan starts/stops are now deferred as internal markers and resolved after
+layer slowdown against both the final baseline and tracked physical fan state,
+matching `CoolingBuffer.cpp:780-948`. Conditional overhang/fallback speeds only
+emit above baseline; fixed internal-bridge speeds remain authoritative. SecKit
+Go3 now emits expected S255 for Internal Bridge (rather than retaining the 99%
+S252 baseline), no internal marker reaches final G-code, KSR golden passes, and
+focused role tests plus workspace clippy are green.
+
+NEXT: stable role-fan sweep, then final statistics, remaining cubic statistics,
+lifecycle and travel.

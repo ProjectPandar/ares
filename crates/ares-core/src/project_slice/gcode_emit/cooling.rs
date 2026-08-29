@@ -9,10 +9,30 @@ use crate::{
 };
 
 const PART_FAN_MARKER: &[u8] = b";__ARES_PART_FAN_STATE__\n";
-pub(super) const ROLE_FAN_RESTORE_MARKER: &[u8] = b";__ARES_ROLE_FAN_RESTORE__\n";
+const ROLE_FAN_MARKER_PREFIX: &str = ";__ARES_ROLE_FAN_";
+
+pub(super) enum DeferredRoleFan {
+    Baseline,
+    Conditional(u8),
+    Fixed(u8),
+}
+
+pub(super) fn append_deferred_role_fan(output: &mut Vec<u8>, target: DeferredRoleFan) {
+    let marker = match target {
+        DeferredRoleFan::Baseline => format!("{ROLE_FAN_MARKER_PREFIX}BASE__\n"),
+        DeferredRoleFan::Conditional(speed) => {
+            format!("{ROLE_FAN_MARKER_PREFIX}CONDITIONAL_{speed}__\n")
+        }
+        DeferredRoleFan::Fixed(speed) => {
+            format!("{ROLE_FAN_MARKER_PREFIX}FIXED_{speed}__\n")
+        }
+    };
+    output.extend_from_slice(marker.as_bytes());
+}
 
 pub(super) struct CoolingState {
     part_speed: u8,
+    physical_part_speed: u8,
     provisional_part_speed: u8,
     pending_layer_index: Option<usize>,
     part_fan_ramp: PartCoolingFanRamp,
@@ -58,6 +78,7 @@ impl CoolingState {
         });
         Self {
             part_speed: 0,
+            physical_part_speed: 0,
             provisional_part_speed: 0,
             pending_layer_index: None,
             part_fan_ramp,
@@ -130,11 +151,7 @@ impl CoolingState {
             part_speed,
         );
         let replacement = if part_speed != self.part_speed || initial {
-            let speed = if part_speed > 0 && part_speed < self.part_cooling_fan_min_pwm {
-                self.part_cooling_fan_min_pwm
-            } else {
-                part_speed
-            };
+            let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
             format!("M106 S{}\n", part_fan_pwm(speed)).into_bytes()
         } else {
             Vec::new()
@@ -144,28 +161,53 @@ impl CoolingState {
                 .windows(PART_FAN_MARKER.len())
                 .position(|window| window == PART_FAN_MARKER)
                 .unwrap();
+        if !replacement.is_empty() {
+            self.physical_part_speed = part_speed;
+        }
         output.splice(
             marker_start..marker_start + PART_FAN_MARKER.len(),
             replacement,
         );
-        let restore_speed = if part_speed > 0 && part_speed < self.part_cooling_fan_min_pwm {
-            self.part_cooling_fan_min_pwm
-        } else {
-            part_speed
-        };
-        let restore = format!("M106 S{}\n", part_fan_pwm(restore_speed)).into_bytes();
-        while let Some(offset) = output[layer_start..]
-            .windows(ROLE_FAN_RESTORE_MARKER.len())
-            .position(|window| window == ROLE_FAN_RESTORE_MARKER)
-        {
-            let start = layer_start + offset;
-            output.splice(
-                start..start + ROLE_FAN_RESTORE_MARKER.len(),
-                restore.iter().copied(),
-            );
-        }
+        self.resolve_role_fans(output, layer_start, part_speed);
         self.part_speed = part_speed;
         self.provisional_part_speed = part_speed;
+    }
+
+    fn resolve_role_fans(&mut self, output: &mut Vec<u8>, layer_start: usize, baseline: u8) {
+        while let Some(offset) = output[layer_start..]
+            .windows(ROLE_FAN_MARKER_PREFIX.len())
+            .position(|window| window == ROLE_FAN_MARKER_PREFIX.as_bytes())
+        {
+            let start = layer_start + offset;
+            let end = output[start..]
+                .iter()
+                .position(|byte| *byte == b'\n')
+                .map_or(output.len(), |offset| start + offset + 1);
+            let marker = std::str::from_utf8(&output[start..end]).unwrap();
+            let target = if marker.contains("_BASE__") {
+                baseline
+            } else if let Some(value) = marker
+                .strip_prefix(";__ARES_ROLE_FAN_CONDITIONAL_")
+                .and_then(|value| value.strip_suffix("__\n"))
+            {
+                value.parse::<u8>().unwrap().max(baseline)
+            } else {
+                marker
+                    .strip_prefix(";__ARES_ROLE_FAN_FIXED_")
+                    .and_then(|value| value.strip_suffix("__\n"))
+                    .unwrap()
+                    .parse::<u8>()
+                    .unwrap()
+            };
+            let replacement = if target == self.physical_part_speed {
+                Vec::new()
+            } else {
+                self.physical_part_speed = target;
+                let emitted = clamped_part_speed(target, self.part_cooling_fan_min_pwm);
+                format!("M106 S{}\n", part_fan_pwm(emitted)).into_bytes()
+            };
+            output.splice(start..end, replacement);
+        }
     }
 }
 
@@ -192,6 +234,14 @@ fn first_percent_int(values: &[crate::OrcaInt]) -> u8 {
 
 fn first_non_negative(values: &[crate::OrcaInt]) -> usize {
     values.first().map_or(0, |value| value.0.max(0) as usize)
+}
+
+fn clamped_part_speed(speed: u8, minimum: u8) -> u8 {
+    if speed > 0 && speed < minimum {
+        minimum
+    } else {
+        speed
+    }
 }
 
 fn part_fan_pwm(speed: u8) -> u32 {
