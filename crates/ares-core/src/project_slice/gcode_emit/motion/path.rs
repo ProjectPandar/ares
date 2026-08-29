@@ -15,6 +15,14 @@ pub(super) fn emit(
     state: &mut EmitState,
 ) {
     let mut scaled_points = points.collect::<Vec<_>>();
+    let source_length = scaled_points
+        .windows(2)
+        .map(|pair| {
+            let dx = (pair[1].0 - pair[0].0) as f64;
+            let dy = (pair[1].1 - pair[0].1) as f64;
+            dx.hypot(dy) * geometry.scale.factor()
+        })
+        .sum();
     clip::clip_end(
         &mut scaled_points,
         properties.end_clip / geometry.scale.factor(),
@@ -31,7 +39,8 @@ pub(super) fn emit(
     if properties.end_clip > 0.0 {
         arc::clip_fitting_end(&mut local_points, &mut fitting, geometry.scale);
     }
-    let (acceleration, configured_speed) = properties.kinematics(&state.options, state.layer_index);
+    let (acceleration, configured_speed) =
+        properties.kinematics(&state.options, state.layer_index, source_length);
     let original_speed = configured_speed.min(
         state.options.max_volumetric_speed
             / (properties.mm3_per_mm * state.options.filament_flow_ratio),

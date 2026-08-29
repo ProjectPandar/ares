@@ -18,6 +18,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) initial_layer_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) inner_wall_speed: f64,
     pub(in crate::project_slice::gcode_emit) outer_wall_speed: f64,
+    pub(in crate::project_slice::gcode_emit) small_perimeter_speed: f64,
+    pub(in crate::project_slice::gcode_emit) small_perimeter_threshold: f64,
     pub(in crate::project_slice::gcode_emit) bridge_speed: f64,
     pub(in crate::project_slice::gcode_emit) internal_bridge_speed: f64,
     pub(in crate::project_slice::gcode_emit) sparse_infill_speed: f64,

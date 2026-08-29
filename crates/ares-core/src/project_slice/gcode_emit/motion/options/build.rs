@@ -62,6 +62,18 @@ impl MotionOptions {
         let bridge_speed = region.map_or(full.process.region.bridge_speed.0, |value| {
             value.bridge_speed.0
         });
+        let outer_wall_speed = region.map_or(full.process.region.outer_wall_speed.0, |value| {
+            value.outer_wall_speed.0
+        });
+        let small_perimeter = region.map_or(full.process.region.small_perimeter_speed, |region| {
+            region.small_perimeter_speed
+        });
+        let configured_small_perimeter_speed = absolute(small_perimeter, outer_wall_speed);
+        let small_perimeter_speed = if configured_small_perimeter_speed > 0.0 {
+            configured_small_perimeter_speed
+        } else {
+            0.5 * outer_wall_speed
+        };
         let outer_wall_acceleration = acceleration(
             object.map(|value| &value.object),
             full.process.object.outer_wall_acceleration.0,
@@ -108,9 +120,12 @@ impl MotionOptions {
             inner_wall_speed: region.map_or(full.process.region.inner_wall_speed.0, |value| {
                 value.inner_wall_speed.0
             }),
-            outer_wall_speed: region.map_or(full.process.region.outer_wall_speed.0, |value| {
-                value.outer_wall_speed.0
-            }),
+            outer_wall_speed,
+            small_perimeter_speed,
+            small_perimeter_threshold: region
+                .map_or(full.process.region.small_perimeter_threshold.0, |region| {
+                    region.small_perimeter_threshold.0
+                }),
             bridge_speed,
             internal_bridge_speed: absolute(
                 region.map_or(full.process.region.internal_bridge_speed, |value| {

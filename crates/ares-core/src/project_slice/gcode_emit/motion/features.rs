@@ -14,8 +14,13 @@ pub(super) struct PathProperties<'a> {
 }
 
 impl PathProperties<'_> {
-    pub(super) fn kinematics(self, options: &MotionOptions, layer_index: usize) -> (u32, f64) {
-        let speed = self.speed(options, layer_index);
+    pub(super) fn kinematics(
+        self,
+        options: &MotionOptions,
+        layer_index: usize,
+        path_length: f64,
+    ) -> (u32, f64) {
+        let speed = self.speed(options, layer_index, path_length);
         // `GCode.cpp:6414`: default acceleration of zero disables all per-print
         // acceleration switches.
         if options.default_acceleration == 0 {
@@ -83,7 +88,7 @@ impl PathProperties<'_> {
         }
     }
 
-    fn speed(&self, options: &MotionOptions, layer_index: usize) -> f64 {
+    fn speed(&self, options: &MotionOptions, layer_index: usize, path_length: f64) -> f64 {
         let layer_default = if layer_index == 0 {
             if self.feature == "Bottom surface" {
                 options.initial_layer_infill_speed
@@ -97,6 +102,11 @@ impl PathProperties<'_> {
         // default on every layer; zero keeps the layer default.
         if self.feature == "Skirt" && options.skirt_speed > 0.0 {
             options.skirt_speed
+        } else if layer_index > 0
+            && matches!(self.feature, "Inner wall" | "Outer wall")
+            && path_length <= options.small_perimeter_threshold * 2.0 * std::f64::consts::PI
+        {
+            options.small_perimeter_speed
         } else {
             layer_default
         }

@@ -1095,5 +1095,14 @@ Feed/deposition-first cases drop from 229 to 211; control/travel become visible
 as the next failures. Geeetech's 0.6 layer-two feed remains un-slowed for a
 separate cross-layer CoolingBuffer state issue.
 
-NEXT: fix cross-layer CoolingBuffer feed state and small flow/statistics, then
+Geeetech's apparent cross-layer CoolingBuffer issue was upstream small-loop
+speed: only the first inner loop used 900, while the next used 3000. Orca tests
+`loop.length() <= small_perimeter_threshold*2π` before clipping and applies
+`small_perimeter_speed` to non-bridge perimeter paths (`GCode.cpp:5803-5814,
+5893-5897`); first-layer speed still overrides it later. Ares now computes the
+unclipped loop length, resolves percent/zero-fallback speed against outer-wall
+speed, and applies it only after layer zero. The 3MF output test is RED/GREEN;
+Geeetech 0.6 now reproduces the exact F900/F3000 sequence.
+
+NEXT: close remaining CoolingBuffer precision and small flow/statistics, then
 control/travel.
