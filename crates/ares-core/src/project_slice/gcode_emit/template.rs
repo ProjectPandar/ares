@@ -249,7 +249,7 @@ fn render_text(text: &str, config: &mut Config) -> Result<String, String> {
             let value =
                 evaluate(rhs, config).map_err(|error| format!("{error} in {expression}"))?;
             config.assign(name, assignment_index, value);
-            index += expression_start + relative_end + 1;
+            index = expression_start + relative_end + 1;
             continue;
         }
         let value =

@@ -871,6 +871,13 @@ preamble, and gates P2 on auxiliary-fan support. An output test covers template
 placement and the disabled-aux boundary. All 20/20 affected sweep5 semantic
 preambles are now equal, and KSR golden remains green.
 
+The six MyToolChanger/Prusa XL 5T/Snapmaker U1 blank-before-G90 cases exposed a
+template cursor defect rather than an intentional blank. For an assignment at
+a nonzero template offset, Ares advanced with `index += absolute_end`, skipping
+all following text (notably Prusa's final `G92 E0`). The cursor now assigns the
+absolute end offset exactly. A focused renderer test is red on the lost suffix
+and green after the one-line fix; all 6/6 affected semantic preambles now match.
+
 NEXT: run sweep6 for the K2 + BBL family-wide first-divergence update, then
 continue with remaining preamble groups (M104 ordering, header/comment layout)
 and the larger internal-solid-infill/feedrate/travel families.

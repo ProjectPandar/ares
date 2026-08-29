@@ -63,3 +63,20 @@ fn renderer_selects_inline_else_and_trailing_segment() {
     assert!(rendered.starts_with("G1 X5 Y"), "{rendered}");
     assert!(rendered.ends_with(" F600\n"), "{rendered}");
 }
+
+#[test]
+fn assignment_at_nonzero_offset_preserves_following_text() {
+    let mut config = Config::from_block(b"; position = 0,0,0\n");
+    let template = "G1 E-1\n{position[0] = 2}\nG92 E0\n";
+
+    assert_eq!(render(template, &mut config).unwrap(), "G1 E-1\n\nG92 E0\n");
+    assert_eq!(
+        config
+            .get("position")
+            .unwrap()
+            .index(0)
+            .unwrap()
+            .as_number(),
+        Some(2.0)
+    );
+}
