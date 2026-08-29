@@ -975,6 +975,14 @@ exposes `overall_chamber_temperature` to the template, suppresses duplicate
 M141/M191, and emits exact ordering. The 3MF RED/GREEN test and all 3/3 family
 preambles pass.
 
+The two H2D/H2D Pro 0.2 M142 branches compare an unindexed vector placeholder
+(`nozzle_diameter == 0.2`). Upstream resolves that expression at the current
+extruder; Ares string-compared the full `0.2,0.2` vector and selected the 0.4mm
+branch. Nonempty Value lists now scalarize to their first/current value for
+expression operations while explicit indexing and list iteration remain
+available. The focused expression test is RED/GREEN and both complete H2D
+preambles match.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into

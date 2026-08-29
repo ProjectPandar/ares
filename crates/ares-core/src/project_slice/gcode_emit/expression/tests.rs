@@ -29,6 +29,11 @@ fn expression_supports_indexing_arithmetic_and_functions() {
 }
 
 #[test]
+fn vector_identifier_uses_first_value_without_an_explicit_index() {
+    assert!(evaluate("values == 3", &config()).unwrap().as_bool());
+}
+
+#[test]
 fn expression_interpolates_piecewise_table_tuples() {
     assert_eq!(
         evaluate(

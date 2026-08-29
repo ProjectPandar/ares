@@ -16,7 +16,7 @@ impl Value {
 
     pub(super) fn scalar(&self) -> &Self {
         match self {
-            Self::List(values) if values.len() == 1 => &values[0],
+            Self::List(values) if !values.is_empty() => &values[0],
             _ => self,
         }
     }
