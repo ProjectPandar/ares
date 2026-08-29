@@ -1182,5 +1182,13 @@ instead of merely evaluating unrealized store names. A deliberately stale
 cache refresh and OrcaSlicer 2.4.2 `--help` both pass; the invalid summary was
 restored and is not counted as parity evidence.
 
-NEXT: run the stable fan-time sweep, then remaining cubic statistics, lifecycle
-and travel.
+Stable sweep25 (clean HEAD `f265393`) completed all 1001 presets: 89 PASS,
+824 DIVERGENT, 88 ARES_ERROR. Control-first rows fall 125→102. Artillery's
+first-layer/role fan values now match and reaches a final statistics-control
+omission; RatRig reaches feedrate precision. SecKit exposes the remaining
+provisional-role issue: the resolved base is 99% but role activation was
+decided earlier against provisional 100%, suppressing its expected S255
+internal-bridge command.
+
+NEXT: resolve role-fan starts after layer timing, then final statistics,
+remaining cubic statistics, lifecycle and travel.
