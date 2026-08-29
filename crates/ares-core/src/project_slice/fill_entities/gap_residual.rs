@@ -20,8 +20,12 @@ use super::{FillExtrusionEntity, geometry_error};
 // lays its extrusions: the area not covered by those extrusions (intersected
 // with the no-overlap domain) is opened, offset, and re-filled with
 // variable-width erGapFill lines. This mirrors the active upstream
-// `Fill::_create_gap_fill` (FillBase.cpp:195-245), which is attached after
-// every full-density Fill is materialized (FillBase.cpp:133-189).
+// `Fill::_create_gap_fill` (FillBase.cpp:195-245), attached after a
+// full-density Fill materializes (FillBase.cpp:133-189). Only the
+// straight-line patterns reach this seam: the narrow-surface concentric fill
+// overrides `fill_surface_extrusion` and never calls `_create_gap_fill`
+// (FillConcentricInternal.cpp:10-101), so ConcentricInternal correctly has no
+// residual pass.
 pub(super) struct ResidualInput<'a> {
     pub(super) output_entities: &'a mut Vec<FillExtrusionEntity>,
     pub(super) no_overlap_expolygons: &'a [ExPolygon],
@@ -30,11 +34,6 @@ pub(super) struct ResidualInput<'a> {
     pub(super) expolygon: &'a ExPolygon,
     pub(super) filled: &'a [Polyline],
     pub(super) spacing: f32,
-    // Some(fillers) lets a non-line pattern supply its own coverage (e.g. the
-    // concentric solid, which fully covers its narrow domain); None derives
-    // coverage by inflating `filled` centrelines by `spacing` (straight-line
-    // patterns).
-    pub(super) covered_override: Option<&'a [ExPolygon]>,
     pub(super) scale: CoordinateScale,
 }
 
@@ -47,7 +46,6 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
         expolygon,
         filled,
         spacing,
-        covered_override,
         scale,
     } = input;
     // FillBase.cpp:201-203: gap_fill_target gates the whole pass — `nowhere`
@@ -71,14 +69,11 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
     if domain.is_empty() {
         return Ok(());
     }
-    let covered = match covered_override {
-        Some(covered) => covered.to_vec(),
-        None => union_ex(
-            &covered_polygons(filled, spacing, scale).map_err(geometry_error)?,
-            FillRule::NonZero,
-        )
-        .map_err(geometry_error)?,
-    };
+    let covered = union_ex(
+        &covered_polygons(filled, spacing, scale).map_err(geometry_error)?,
+        FillRule::NonZero,
+    )
+    .map_err(geometry_error)?;
     let unextruded = difference_ex(&domain, &covered).map_err(geometry_error)?;
     let gapfill_areas = intersection_ex(
         &union_expolygons(&unextruded, &[]).map_err(geometry_error)?,
