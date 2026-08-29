@@ -78,7 +78,10 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
     if gapfill_areas.is_empty() {
         return Ok(());
     }
-    let scaled_spacing = scaled(scale, f64::from(spacing))?;
+    // FillBase.cpp:205,212-214: medial min/max derive from the nominal
+    // configured flow spacing (`new_flow = params.flow`), not the adjusted
+    // generator spacing used for covered-area reconstruction.
+    let scaled_spacing = scaled(scale, f64::from(params.flow.spacing))?;
     let minimum = 0.2 * scaled_spacing * (1.0 - INSET_OVERLAP_TOLERANCE);
     let maximum = 2.0 * scaled_spacing;
     let gaps = difference_ex(
@@ -113,7 +116,9 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
     let mut polylines = Vec::new();
     for index in order {
         let mut gap = gaps[index].clone();
-        gap.douglas_peucker(SCALED_RESOLUTION * 0.1);
+        // FillBase.cpp:230: DP-simplify in scaled units (SCALED_RESOLUTION is a
+        // scaled quantity upstream, libslic3r.h:76-79).
+        gap.douglas_peucker(scaled(scale, RESOLUTION * 0.1)?);
         polylines.extend(
             medial_axis(&gap, minimum, maximum, scale)
                 .map_err(|_| SliceError::InvalidInput(VORONOI_ERROR.to_owned()))?,
@@ -163,6 +168,6 @@ fn scaled(scale: CoordinateScale, value: f64) -> Result<f64, SliceError> {
 const INSET_OVERLAP_TOLERANCE: f64 = 0.4;
 const MITER_LIMIT: f32 = 3.0;
 const CLIPPER_SAFETY_OFFSET: f64 = 10.0;
-const SCALED_RESOLUTION: f64 = 0.0125;
+const RESOLUTION: f64 = 0.0125;
 const VORONOI_ERROR: &str = "medial-axis gap fill Voronoi diagram failed";
 const FLOW_ERROR: &str = "gap residual flow is invalid";
