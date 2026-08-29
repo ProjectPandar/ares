@@ -1275,5 +1275,11 @@ was RED at 460 and GREEN at 459; KSR golden and workspace checks pass. A fresh
 Snapmaker U1 Orca invocation remains intermittently SIGSEGV, so its cached
 full-sweep reference—not a flaky focused smoke—is the verification route.
 
-NEXT: rerun stable sweep, then remaining postamble geometry, cubic statistics,
-lifecycle and travel.
+Stable sweep30 (clean HEAD `5aab283`) completed all 1001 presets: PASS 109→128,
+779 DIVERGENT, 94 ARES_ERROR. Control-first rows fall 106→75 with no travel
+regression (travel-count returns to 94). RatRig remains PASS; Snapmaker advances
+past finish layer_num to first-layer feed; CR-10 SE advances past Klipper
+controls to sparse-infill geometry.
+
+NEXT: correct multiline family orientation/reference grid, then remaining
+postamble geometry, lifecycle and travel.
