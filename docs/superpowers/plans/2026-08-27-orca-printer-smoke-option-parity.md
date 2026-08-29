@@ -1104,5 +1104,11 @@ unclipped loop length, resolves percent/zero-fallback speed against outer-wall
 speed, and applies it only after layer zero. The 3MF output test is RED/GREEN;
 Geeetech 0.6 now reproduces the exact F900/F3000 sequence.
 
-NEXT: close remaining CoolingBuffer precision and small flow/statistics, then
-control/travel.
+Stable sweep19 (clean HEAD `2a08ecf`) completed all 1001 presets and raised
+PASS from 35 to **42** (959 failures): the Geeetech small-perimeter family
+closes, including Mizar S 0.8. Feed/deposition-first falls from 211 to 202;
+remaining Geeetech cases now reach the shared internal-solid-infill endpoint
+geometry rather than speed.
+
+NEXT: fix internal-solid-infill endpoint geometry, then remaining CoolingBuffer
+precision/small statistics and control/travel.
