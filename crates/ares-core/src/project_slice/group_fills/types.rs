@@ -25,6 +25,7 @@ pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) anchor_length: f32,
     pub(in crate::project_slice) anchor_length_max: f32,
     pub(in crate::project_slice) flow: Flow,
+    pub(in crate::project_slice) flow_ratio: f64,
     pub(in crate::project_slice) extrusion_role: ExtrusionRole,
     pub(in crate::project_slice) idx: usize,
     pub(in crate::project_slice) loop_clipping: i64,

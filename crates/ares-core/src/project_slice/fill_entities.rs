@@ -98,11 +98,13 @@ fn materialized_flow(
     params: crate::project_slice::group_fills::SurfaceFillParams,
     spacing: f32,
 ) -> crate::project_slice::perimeters::types::Flow {
-    if params.extrusion_role == ExtrusionRole::InternalInfill && !params.bridge {
+    let mut flow = if params.extrusion_role == ExtrusionRole::InternalInfill && !params.bridge {
         params.flow
     } else {
         crate::project_slice::perimeters::flow::with_spacing(params.flow, spacing)
-    }
+    };
+    flow.mm3_per_mm *= params.flow_ratio;
+    flow
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostFillEntities) {

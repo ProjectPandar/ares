@@ -32,6 +32,7 @@ pub(super) fn append(
         if polylines.is_empty() {
             continue;
         }
+        let flow = super::materialized_flow(fill.params, fill.params.spacing as f32);
         output.collections.push(FillExtrusionCollection {
             entities: polylines
                 .into_iter()
@@ -40,9 +41,9 @@ pub(super) fn append(
                         polyline,
                         fitting: Vec::new(),
                         role: fill.params.extrusion_role,
-                        mm3_per_mm: fill.params.flow.mm3_per_mm,
-                        width: fill.params.flow.width,
-                        height: fill.params.flow.height,
+                        mm3_per_mm: flow.mm3_per_mm,
+                        width: flow.width,
+                        height: flow.height,
                     })
                 })
                 .collect(),

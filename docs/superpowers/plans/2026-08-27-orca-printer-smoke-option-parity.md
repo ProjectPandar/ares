@@ -1301,5 +1301,12 @@ All 35 multiline/connect tests, KSR golden, clippy, and fmt pass. The Elegoo
 split remains, proving the next narrow seam is endpoint/collision eligibility,
 not staging or anchor thresholds.
 
-NEXT: capture and correct the Elegoo connector endpoint eligibility, then
-remaining postamble geometry, lifecycle and travel.
+The Elegoo filament-total delta was then isolated independently of connector
+ordering: every Internal Bridge extrusion was exactly high by `1/0.95`. Ares
+now carries the active `internal_bridge_flow` role multiplier through surface
+coalescing and applies it after any spacing-derived flow materialization,
+matching `GCode.cpp:6468-6485`. The focused projection test covers external
+1.0 vs internal 0.95, and Elegoo filament usage is now exact 272.68 mm.
+
+NEXT: finish Auto/Spiral lazy-lift parity, then correct the remaining multiline
+intersection ordering and postamble geometry.

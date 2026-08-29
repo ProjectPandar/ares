@@ -247,6 +247,7 @@ fn task22o204_concentric_reorders_each_fill_expolygon_independently() {
                 bridge: false,
                 mm3_per_mm: 0.08,
             },
+            flow_ratio: 1.0,
             extrusion_role: ExtrusionRole::SolidInfill,
             idx: 0,
             loop_clipping: scaled(0.04),

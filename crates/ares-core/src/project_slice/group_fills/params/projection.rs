@@ -114,6 +114,11 @@ pub(super) fn project_surface(
     } else {
         resolve_fill_flow(flow_context, flow_role)?
     };
+    params.flow_ratio = if params.extrusion_role == ExtrusionRole::InternalBridgeInfill {
+        context.region.internal_bridge_flow.0
+    } else {
+        1.0
+    };
     let seam_gap = match context.region.seam_gap {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => f64::from(params.flow.nozzle_diameter) * value.0 / 100.0,
@@ -164,6 +169,7 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
             bridge: false,
             mm3_per_mm: 0.0,
         },
+        flow_ratio: 1.0,
         extrusion_role: ExtrusionRole::None,
         loop_clipping: 0,
         role_speed: 0.0,

@@ -121,6 +121,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
         options.bridge_speed = OrcaFloat(40.0);
         options.internal_bridge_speed = FloatOrPercent::Percent(Percent(125.0));
         options.bridge_flow = OrcaFloat(1.0);
+        options.internal_bridge_flow = OrcaFloat(0.95);
         options.bridge_line_width = FloatOrPercent::Float(0.4);
     }
     let mut external_bridge = surface(
@@ -165,6 +166,8 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
         internal_bridge.params.extrusion_role,
         ExtrusionRole::InternalBridgeInfill
     );
+    assert_eq!(external_bridge.params.flow_ratio, 1.0);
+    assert_eq!(internal_bridge.params.flow_ratio, 0.95);
     for fill in [external_bridge, internal_bridge] {
         assert!(fill.params.bridge);
         assert!(!fill.params.flow.bridge);
