@@ -2,6 +2,7 @@ use std::{cell::Cell, collections::HashMap};
 
 #[derive(Clone, Debug, PartialEq)]
 pub(super) enum Value {
+    Integer(i64),
     Number(f64),
     String(String),
     List(Vec<Value>),
@@ -33,7 +34,7 @@ impl Value {
     pub(super) fn iter_list(&self) -> std::slice::Iter<'_, Self> {
         match self {
             Self::List(values) => values.iter(),
-            scalar @ (Self::Number(_) | Self::String(_) | Self::Bool(_)) => {
+            scalar @ (Self::Integer(_) | Self::Number(_) | Self::String(_) | Self::Bool(_)) => {
                 std::slice::from_ref(scalar).iter()
             }
         }
@@ -41,6 +42,7 @@ impl Value {
 
     pub(super) fn as_number(&self) -> Option<f64> {
         match self.scalar() {
+            Self::Integer(value) => Some(*value as f64),
             Self::Number(value) => Some(*value),
             Self::Bool(value) => Some(f64::from(*value)),
             Self::String(value) => value.parse().ok(),
@@ -48,9 +50,18 @@ impl Value {
         }
     }
 
+    pub(super) fn as_integer(&self) -> Option<i64> {
+        match self.scalar() {
+            Self::Integer(value) => Some(*value),
+            Self::Bool(value) => Some(i64::from(*value)),
+            _ => None,
+        }
+    }
+
     pub(super) fn as_bool(&self) -> bool {
         match self.scalar() {
             Self::Bool(value) => *value,
+            Self::Integer(value) => *value != 0,
             Self::Number(value) => *value != 0.0,
             Self::String(value) => !value.is_empty(),
             Self::List(values) => !values.is_empty(),
@@ -59,6 +70,7 @@ impl Value {
 
     pub(super) fn as_string(&self) -> String {
         match self.scalar() {
+            Self::Integer(value) => value.to_string(),
             Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
             Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
@@ -145,7 +157,7 @@ impl Config {
                     None => Vec::new(),
                 };
                 if values.len() <= index {
-                    values.resize(index + 1, Value::Number(0.0));
+                    values.resize(index + 1, Value::Integer(0));
                 }
                 values[index] = value;
                 self.insert(name, Value::List(values));

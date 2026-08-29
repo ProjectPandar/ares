@@ -93,6 +93,22 @@ fn expression_supports_word_operators_and_boolean_literals() {
 }
 
 #[test]
+fn integer_literals_keep_upstream_integer_division() {
+    assert_eq!(
+        evaluate("24 / 20", &config()).unwrap().as_number(),
+        Some(1.0)
+    );
+    assert_eq!(
+        evaluate("24.0 / 20", &config()).unwrap().as_number(),
+        Some(1.2)
+    );
+    assert_eq!(
+        evaluate("5 / 2 * 3", &config()).unwrap().as_number(),
+        Some(6.0)
+    );
+}
+
+#[test]
 fn expression_supports_modulo_unary_plus_and_conditionals() {
     assert_eq!(
         evaluate("+values[1] % 2", &config()).unwrap().as_number(),

@@ -111,64 +111,30 @@ impl Parser<'_> {
     fn parse_add(&mut self) -> Result<Value, String> {
         let mut value = self.parse_mul()?;
         loop {
-            let operator = if self.take(Token::Plus) {
-                Some(1.0)
+            let operation = if self.take(Token::Plus) {
+                Arithmetic::Add
             } else if self.take(Token::Minus) {
-                Some(-1.0)
+                Arithmetic::Subtract
             } else {
-                None
-            };
-            let Some(operator) = operator else {
                 return Ok(value);
             };
-            let right = self
-                .parse_mul()?
-                .as_number()
-                .ok_or("numeric expression expected in addition rhs")?;
-            let left = value
-                .as_number()
-                .ok_or("numeric expression expected in addition lhs")?;
-            value = Value::Number(if operator > 0.0 {
-                left + right
-            } else {
-                left - right
-            });
+            value = arithmetic(value, self.parse_mul()?, operation)?;
         }
     }
 
     fn parse_mul(&mut self) -> Result<Value, String> {
-        let parsed = self.parse_unary()?;
-        if !matches!(
-            self.peek(),
-            Some(Token::Star | Token::Slash | Token::Percent)
-        ) {
-            return Ok(parsed);
-        }
-        let mut value = parsed
-            .as_number()
-            .map(Value::Number)
-            .ok_or("numeric expression expected in multiplication lhs")?;
+        let mut value = self.parse_unary()?;
         loop {
             let operation = if self.take(Token::Star) {
-                0
+                Arithmetic::Multiply
             } else if self.take(Token::Slash) {
-                1
+                Arithmetic::Divide
             } else if self.take(Token::Percent) {
-                2
+                Arithmetic::Remainder
             } else {
                 return Ok(value);
             };
-            let right = self
-                .parse_unary()?
-                .as_number()
-                .ok_or("numeric expression expected in multiplication rhs")?;
-            let left = value.as_number().unwrap();
-            value = Value::Number(match operation {
-                0 => left * right,
-                1 => left / right,
-                2 => left % right,
-                _ => unreachable!(),
-            });
+            value = arithmetic(value, self.parse_unary()?, operation)?;
         }
     }
 
@@ -180,12 +146,14 @@ impl Parser<'_> {
             return self.parse_unary();
         }
         if self.take(Token::Minus) {
-            return Ok(Value::Number(
-                -self
-                    .parse_unary()?
-                    .as_number()
-                    .ok_or("numeric expression expected")?,
-            ));
+            let value = self.parse_unary()?;
+            return if let Some(value) = value.as_integer() {
+                Ok(Value::Integer(-value))
+            } else {
+                Ok(Value::Number(
+                    -value.as_number().ok_or("numeric expression expected")?,
+                ))
+            };
         }
         self.parse_primary()
     }
@@ -197,6 +165,7 @@ impl Parser<'_> {
     fn parse_primary(&mut self) -> Result<Value, String> {
         let token = self.next().ok_or("expression ended unexpectedly")?;
         match token {
+            Token::Integer(value) => Ok(Value::Integer(value)),
             Token::Number(value) => Ok(Value::Number(value)),
             Token::Bool(value) => Ok(Value::Bool(value)),
             Token::String(value) | Token::Regex(value) => Ok(Value::String(value)),
@@ -279,6 +248,46 @@ impl Parser<'_> {
             false
         }
     }
+}
+
+#[derive(Clone, Copy)]
+enum Arithmetic {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
+}
+
+fn arithmetic(left: Value, right: Value, operation: Arithmetic) -> Result<Value, String> {
+    if let (Some(left), Some(right)) = (left.as_integer(), right.as_integer()) {
+        if matches!(operation, Arithmetic::Divide | Arithmetic::Remainder) && right == 0 {
+            return Err("division by zero".to_owned());
+        }
+        return Ok(Value::Integer(match operation {
+            Arithmetic::Add => left + right,
+            Arithmetic::Subtract => left - right,
+            Arithmetic::Multiply => left * right,
+            Arithmetic::Divide => left / right,
+            Arithmetic::Remainder => left % right,
+        }));
+    }
+    let left = left
+        .as_number()
+        .ok_or("numeric expression expected in lhs")?;
+    let right = right
+        .as_number()
+        .ok_or("numeric expression expected in rhs")?;
+    if matches!(operation, Arithmetic::Divide | Arithmetic::Remainder) && right == 0.0 {
+        return Err("division by zero".to_owned());
+    }
+    Ok(Value::Number(match operation {
+        Arithmetic::Add => left + right,
+        Arithmetic::Subtract => left - right,
+        Arithmetic::Multiply => left * right,
+        Arithmetic::Divide => left / right,
+        Arithmetic::Remainder => left % right,
+    }))
 }
 
 fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, String> {

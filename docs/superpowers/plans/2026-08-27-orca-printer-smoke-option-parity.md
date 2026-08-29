@@ -946,6 +946,16 @@ back per index only when a value is zero (`GCode.cpp:2876-2889`). Typed helper
 tests cover configured and zero-fallback values; a 3MF output test verifies the
 projected vector exposed to templates.
 
+The 14 A1/A1 mini/Qidi Q2/Q2C purge-feed cases were expression typing, not
+flow calculation. Their templates divide by integer literals such as `24/20`;
+upstream `expr::operator/=` performs integer division when both operands are
+integers and promotes only when either is double (`PlaceholderParser.cpp:430-
+527`). Ares represented every token as f64, producing the exact 5/6 feedrate.
+The expression/value lexer now preserves integer literals across arithmetic,
+with zero-division errors and double promotion. Focused RED/GREEN tests cover
+`24/20`, `24.0/20`, and left association; all 14/14 affected semantic
+preambles now match.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into

@@ -1,5 +1,6 @@
 #[derive(Clone, Debug, PartialEq)]
 pub(super) enum Token {
+    Integer(i64),
     Number(f64),
     Bool(bool),
     String(String),
@@ -142,9 +143,7 @@ pub(super) fn tokenize(input: &str) -> Result<Vec<Token>, String> {
                 Token::Or
             }
             '"' => Token::String(read_string(&mut chars)?),
-            character if character.is_ascii_digit() || character == '.' => {
-                Token::Number(read_number(&mut chars)?)
-            }
+            character if character.is_ascii_digit() || character == '.' => read_number(&mut chars)?,
             character if character.is_ascii_alphabetic() || character == '_' => {
                 match read_ident(&mut chars).as_str() {
                     "and" => Token::And,
@@ -202,7 +201,7 @@ fn read_regex(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<St
     Err("unterminated regex".to_owned())
 }
 
-fn read_number(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<f64, String> {
+fn read_number(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<Token, String> {
     let mut value = String::new();
     while chars
         .peek()
@@ -210,9 +209,17 @@ fn read_number(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Result<f
     {
         value.push(chars.next().unwrap());
     }
-    value
-        .parse()
-        .map_err(|_| format!("invalid number: {value}"))
+    if value.contains('.') {
+        value
+            .parse()
+            .map(Token::Number)
+            .map_err(|_| format!("invalid number: {value}"))
+    } else {
+        value
+            .parse()
+            .map(Token::Integer)
+            .map_err(|_| format!("invalid integer: {value}"))
+    }
 }
 
 fn read_ident(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) -> String {
