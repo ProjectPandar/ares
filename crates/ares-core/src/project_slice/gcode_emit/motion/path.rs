@@ -128,20 +128,30 @@ pub(super) fn emit(
                 .as_bytes(),
             );
         } else if state.retracted && first_position && state.options.z_hop > 0.0 {
-            // Already retracted without a lift (layer-start retraction):
-            // lift first, then travel at the lifted height — the feedrate
-            // persists onto the XY move (`GCodeWriter::travel_to_xyz`).
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}\n",
-                    format_extrusion(state.layer_z + state.options.z_hop),
-                    format_axis(state.travel_feedrate)
-                )
-                .as_bytes(),
-            );
-            output.extend_from_slice(
-                format!("G1 X{} Y{}\n", format_axis(first_x), format_axis(first_y)).as_bytes(),
-            );
+            if state.options.spiral_lift {
+                output.extend_from_slice(
+                    format!(
+                        "G1 X{} Y{} F{}\n",
+                        format_axis(first_x),
+                        format_axis(first_y),
+                        format_axis(state.travel_feedrate)
+                    )
+                    .as_bytes(),
+                );
+            } else {
+                output.extend_from_slice(
+                    format!(
+                        "G1 Z{} F{}\n",
+                        format_extrusion(state.layer_z + state.options.z_hop),
+                        format_axis(state.travel_feedrate)
+                    )
+                    .as_bytes(),
+                );
+                output.extend_from_slice(
+                    format!("G1 X{} Y{}\n", format_axis(first_x), format_axis(first_y)).as_bytes(),
+                );
+                state.lifted = true;
+            }
         } else {
             output.extend_from_slice(
                 format!(
@@ -160,7 +170,7 @@ pub(super) fn emit(
     }
     append_object_start(output, state);
     if state.retracted {
-        if first_position && state.options.z_hop > 0.0 {
+        if first_position && state.options.z_hop > 0.0 && !state.lifted {
             output.extend_from_slice(
                 format!(
                     "G1 Z{}\n",
@@ -168,6 +178,7 @@ pub(super) fn emit(
                 )
                 .as_bytes(),
             );
+            state.lifted = true;
         }
         output.extend_from_slice(format!("G1 Z{}\n", format_extrusion(state.layer_z)).as_bytes());
         let retraction_length = state.options.retraction_length;

@@ -1205,5 +1205,11 @@ its required blank line. The public non-BBL 3MF test was RED then GREEN;
 Artillery's entire stats block is byte-identical apart from ignored timing.
 Workspace clippy/fmt and KSR golden pass.
 
-NEXT: stable role/stats sweep, then remaining cubic statistics, lifecycle and
-travel.
+First-path lift ordering now follows effective z-hop type. Auto/Spiral first
+travel (KSR) is XY → raised Z → layer Z; Normal first travel (Artillery) is
+raised Z → XY → layer Z. This deletes the duplicate raised-Z move previously
+pinned by the public object-label test and makes both raw sequences byte-exact
+to their Orca references. The test was RED/GREEN; KSR golden and clippy pass.
+
+NEXT: stable role/stats/lift sweep, then remaining cubic statistics, lifecycle
+and travel.

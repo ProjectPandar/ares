@@ -22,11 +22,11 @@ async fn ksr_object_travel_acceleration_follows_object_comment() {
         lines[label - 1],
         "; start printing object, unique label id: 133"
     );
-    assert_eq!(lines[label + 1], "G1 Z.6 F60000");
-    assert!(lines[label + 2].starts_with("G1 X"));
-    assert_eq!(lines[label + 3], "G1 Z.6");
-    assert_eq!(lines[label + 4], "G1 Z.2");
-    assert_eq!(lines[label + 5], "G1 E.4 F1800");
+    assert!(lines[label + 1].starts_with("G1 X"));
+    assert!(lines[label + 1].ends_with(" F60000"));
+    assert_eq!(lines[label + 2], "G1 Z.6");
+    assert_eq!(lines[label + 3], "G1 Z.2");
+    assert_eq!(lines[label + 4], "G1 E.4 F1800");
 
     let layer_2 = lines
         .iter()
