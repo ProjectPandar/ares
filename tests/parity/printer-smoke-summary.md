@@ -51,10 +51,10 @@
 | DIVERGENT | Artillery/Artillery Genius 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }]], actual [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }]] |
 | DIVERGENT | Artillery/Artillery Genius Pro 0.4 nozzle | filament 1 length differs: expected 258.70mm, actual 243.70mm |
 | DIVERGENT | Artillery/Artillery Hornet 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }, Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }, Extruder { extrusion: "-2.2", feed: "1800" }]], actual [[Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "0" }], [Extruder { extrusion: "2.2", feed: "0" }, Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "0" }, Extruder { extrusion: "-2.2", feed: "1800" }]] |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.2 nozzle | preamble differs at line 106: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.2 nozzle | preamble differs at line 110: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.032"), actual Some("") |
 | DIVERGENT | Artillery/Artillery M1 Pro 0.4 nozzle | preamble differs at line 122: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.032"), actual Some("") |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.6 nozzle | preamble differs at line 106: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.8 nozzle | preamble differs at line 106: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.6 nozzle | preamble differs at line 110: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.032"), actual Some("") |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.8 nozzle | preamble differs at line 110: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.032"), actual Some("") |
 | DIVERGENT | Artillery/Artillery Sidewinder X1 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }]], actual [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }]] |
 | DIVERGENT | Artillery/Artillery Sidewinder X2 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }]], actual [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }]] |
 | DIVERGENT | Artillery/Artillery Sidewinder X3 Plus 0.4 nozzle | filament 1 length differs: expected 267.50mm, actual 62.74mm |
@@ -112,11 +112,11 @@
 | DIVERGENT | BIQU/BIQU B1 (0.4 nozzle) | layer 1 travel geometry count differs: expected 10, actual 11 |
 | DIVERGENT | BIQU/BIQU BX (0.4 nozzle) | layer 1 travel geometry count differs: expected 10, actual 11 |
 | DIVERGENT | BIQU/BIQU Hurakan (0.4 nozzle) | layer 2 deposition 50 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.373", y: "113.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.04993", feed: 2400.0, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "113.586", y: "112.344", z: "0.4" }, end: Position { x: "112.344", y: "113.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05109", feed: 2400.0, acceleration: "", fans: "0:255" } |
-| DIVERGENT | Blocks/BLOCKS Pro S100 0.4 nozzle | preamble differs at line 20: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Blocks/BLOCKS Pro S100 0.6 nozzle | preamble differs at line 20: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Blocks/BLOCKS Pro S100 0.8 nozzle | preamble differs at line 20: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Blocks/BLOCKS Pro S100 1.0 nozzle | preamble differs at line 20: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Blocks/BLOCKS Pro S100 1.2 nozzle | preamble differs at line 20: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 0.4 nozzle | postamble differs at line 6: expected Some("M106 P3 S204"), actual Some("; EXECUTABLE_BLOCK_END") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 0.6 nozzle | postamble differs at line 6: expected Some("M106 P3 S204"), actual Some("; EXECUTABLE_BLOCK_END") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 0.8 nozzle | postamble differs at line 6: expected Some("M106 P3 S204"), actual Some("; EXECUTABLE_BLOCK_END") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 1.0 nozzle | postamble differs at line 6: expected Some("M106 P3 S204"), actual Some("; EXECUTABLE_BLOCK_END") |
+| DIVERGENT | Blocks/BLOCKS Pro S100 1.2 nozzle | postamble differs at line 6: expected Some("M106 P3 S204"), actual Some("; EXECUTABLE_BLOCK_END") |
 | DIVERGENT | Blocks/BLOCKS RD50 V2 0.4 nozzle | filament 1 length differs: expected 242.61mm, actual 242.80mm |
 | DIVERGENT | Blocks/BLOCKS RD50 V2 0.6 nozzle | filament 1 length differs: expected 313.34mm, actual 313.52mm |
 | DIVERGENT | Blocks/BLOCKS RD50 V2 0.8 nozzle | filament 1 length differs: expected 342.42mm, actual 342.61mm |
@@ -125,7 +125,7 @@
 | DIVERGENT | Blocks/BLOCKS RF50 0.8 nozzle | filament 1 length differs: expected 335.39mm, actual 335.20mm |
 | DIVERGENT | CONSTRUCT3D/Construct 1 0.4 nozzle | preamble differs at line 28: expected Some("M557 P5 X105.089:119.911 Y122.589:137.411"), actual Some("M557 P5 X105.5:119.5 Y123:137") |
 | DIVERGENT | CONSTRUCT3D/Construct 1 XL 0.6 nozzle | preamble differs at line 28: expected Some("M557 P5 X154.849:170.151 Y177.349:192.651"), actual Some("M557 P5 X155.5:169.5 Y178:192") |
-| DIVERGENT | Chuanying/Chuanying X1 0.25 Nozzle | preamble differs at line 33: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Chuanying/Chuanying X1 0.25 Nozzle | preamble differs at line 41: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Chuanying/Chuanying X1 0.4 Nozzle | preamble differs at line 44: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Chuanying/Chuanying X1 0.6 Nozzle | preamble differs at line 44: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Chuanying/Chuanying X1 0.8 Nozzle | preamble differs at line 38: expected Some("M106 P2 S0"), actual None |
@@ -252,9 +252,9 @@
 | DIVERGENT | Custom/MyMarlin 0.4 nozzle | layer 1 travel geometry count differs: expected 7, actual 8 |
 | DIVERGENT | Custom/MyRRF 0.4 nozzle | layer 2 deposition 49 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.357", y: "128.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05056", feed: 4170.0, acceleration: "5000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.329", y: "128.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05172", feed: 4171.0, acceleration: "5000", fans: "0:255" } |
 | DIVERGENT | Custom/MyRepetier 0.4 nozzle | layer 2 deposition 49 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.357", y: "128.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05056", feed: 4337.0, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.329", y: "128.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05172", feed: 4341.0, acceleration: "", fans: "0:255" } |
-| DIVERGENT | Custom/MyToolChanger 0.2 nozzle | filament 1 length differs: expected 207.69mm, actual 207.87mm |
+| ARES_ERROR | Custom/MyToolChanger 0.2 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | DIVERGENT | Custom/MyToolChanger 0.4 nozzle | preamble differs at line 47: expected Some(""), actual Some("G90") |
-| DIVERGENT | Custom/MyToolChanger 0.6 nozzle | preamble differs at line 47: expected Some(""), actual Some("G90") |
+| ARES_ERROR | Custom/MyToolChanger 0.6 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | DIVERGENT | Custom/MyToolChanger 0.8 nozzle | preamble differs at line 47: expected Some(""), actual Some("G90") |
 | DIVERGENT | DeltaMaker/DeltaMaker 2 0.35 nozzle | layer 1 deposition 77 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "-7.121", y: "52.754", z: "0.25" }, end: Position { x: "-6.706", y: "52.312", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "0.02278", feed: 3000.0, acceleration: "", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "-7.121", y: "52.754", z: "0.25" }, end: Position { x: "-6.706", y: "52.312", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "0.02279", feed: 3000.0, acceleration: "", fans: "0:0" } |
 | DIVERGENT | DeltaMaker/DeltaMaker 2T 0.5 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-7.188", y: "52.692", z: "0.25" }, end: Position { x: "-6.792", y: "52.261", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-0.5787", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-6.792", y: "52.261", z: "0.25" }, end: Position { x: "-5", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-1.85168", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-5", y: "51.727", z: "0.25" }, end: Position { x: "0.545", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-5.48962", feed: "3000" }, WipeEnd], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "4.7", y: "64.65", z: "0.25" }, end: Position { x: "-3.3", y: "64.693", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-7.92", feed: "1200" }, WipeEnd]], actual [[Extruder { extrusion: "-8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-7.188", y: "52.692", z: "0.25" }, end: Position { x: "-6.792", y: "52.261", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-0.57871", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-6.792", y: "52.261", z: "0.25" }, end: Position { x: "-5", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-1.85168", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-5", y: "51.727", z: "0.25" }, end: Position { x: "0.545", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-5.48962", feed: "3000" }, WipeEnd], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "4.7", y: "64.65", z: "0.25" }, end: Position { x: "-3.3", y: "64.693", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-7.92", feed: "1200" }, WipeEnd]] |
@@ -349,11 +349,11 @@
 | DIVERGENT | Eryone/Thinker X400 0.4 nozzle | layer 1 deposition 1 differs: expected Deposition { feature: "Bottom surface", width: "0.502103", motion: MotionRecord { command: "G1", start: Position { x: "196.17", y: "196.17", z: "0.2" }, end: Position { x: "203.83", y: "203.83", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.40535", feed: 3475.0, acceleration: "10000", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.502103", motion: MotionRecord { command: "G1", start: Position { x: "196.17", y: "196.17", z: "0.2" }, end: Position { x: "203.83", y: "203.83", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.40535", feed: 3495.0, acceleration: "10000", fans: "0:0" } |
 | DIVERGENT | FLSun/FLSun Q5 0.4 nozzle | layer 2 deposition 44 differs: expected Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.126", y: "3.483", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06496", feed: 1960.0, acceleration: "800", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.098", y: "3.511", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06629", feed: 1961.0, acceleration: "800", fans: "0:255" } |
 | DIVERGENT | FLSun/FLSun QQ-S Pro 0.4 nozzle | layer 2 deposition 44 differs: expected Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.126", y: "3.483", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06496", feed: 2035.0, acceleration: "1500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.098", y: "3.511", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06629", feed: 2036.0, acceleration: "1500", fans: "0:255" } |
-| DIVERGENT | FLSun/FLSun S1 0.4 nozzle | preamble differs at line 34: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | FLSun/FLSun S1 0.4 nozzle | postamble differs at line 14: expected Some("M106 P3 S0"), actual Some("; EXECUTABLE_BLOCK_END") |
 | DIVERGENT | FLSun/FLSun Super Racer 0.4 nozzle | layer 2 deposition 44 differs: expected Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.126", y: "3.483", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06496", feed: 2058.0, acceleration: "5000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.449999", motion: MotionRecord { command: "G1", start: Position { x: "3.511", y: "2.098", z: "0.4" }, end: Position { x: "2.098", y: "3.511", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.06629", feed: 2059.0, acceleration: "5000", fans: "0:255" } |
-| DIVERGENT | FLSun/FLSun T1 0.4 nozzle | preamble differs at line 35: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | FLSun/FLSun T1 0.4 nozzle | postamble differs at line 14: expected Some("M106 P3 S0"), actual Some("; EXECUTABLE_BLOCK_END") |
 | DIVERGENT | FLSun/FLSun V400 0.4 nozzle | layer 1 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.2", "G92 E0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500", "SET_VELOCITY_LIMIT SQUARE_CORNER_VELOCITY=9", "; printing object cube10.stl id:0 copy 0", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "; stop printing object cube10.stl id:0 copy 0", "M106 S255"], actual [";BEFORE_LAYER_CHANGE", ";0.2", "G92 E0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "; printing object cube10.stl id:0 copy 0", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "SET_VELOCITY_LIMIT ACCEL=5000 ACCEL_TO_DECEL=2500 SQUARE_CORNER_VELOCITY=12", "SET_VELOCITY_LIMIT ACCEL=1000 ACCEL_TO_DECEL=500 SQUARE_CORNER_VELOCITY=9", "; stop printing object cube10.stl id:0 copy 0", "M106 S255"] |
-| DIVERGENT | Flashforge/Flashforge AD5X 0.25 nozzle | preamble differs at line 32: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Flashforge/Flashforge AD5X 0.25 nozzle | preamble differs at line 40: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge AD5X 0.4 nozzle | preamble differs at line 39: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge AD5X 0.6 nozzle | preamble differs at line 39: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge AD5X 0.8 nozzle | preamble differs at line 39: expected Some("M106 P2 S0"), actual None |
@@ -363,33 +363,33 @@
 | DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.4 Nozzle | filament 1 length differs: expected 245.54mm, actual 71.83mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.6 Nozzle | filament 1 length differs: expected 312.23mm, actual 79.60mm |
 | DIVERGENT | Flashforge/Flashforge Adventurer 4 Series HS Nozzle | filament 1 length differs: expected 252.43mm, actual 73.85mm |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.25 Nozzle | preamble differs at line 35: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.25 Nozzle | preamble differs at line 43: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.4 Nozzle | preamble differs at line 44: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.6 Nozzle | preamble differs at line 44: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.8 Nozzle | preamble differs at line 40: expected Some("M106 P2 S0"), actual None |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.25 Nozzle | preamble differs at line 35: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.25 Nozzle | preamble differs at line 43: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.4 Nozzle | preamble differs at line 44: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle | preamble differs at line 44: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle | preamble differs at line 40: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Artemis 0.4 Nozzle | filament 1 length differs: expected 231.03mm, actual 67.97mm |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | unsupported project feature: enable_extra_bridge_layer |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 0.6 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 0.6 nozzle | unsupported project feature: enable_extra_bridge_layer |
 | ARES_ERROR | Flashforge/Flashforge Creator 5 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | unsupported project feature: enable_extra_bridge_layer |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | unsupported project feature: enable_extra_bridge_layer |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle | unsupported project feature: enable_extra_bridge_layer |
 | DIVERGENT | Flashforge/Flashforge Guider 2s 0.4 nozzle | filament 1 length differs: expected 240.69mm, actual 78.82mm |
 | DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.45mm"), actual Some("; first layer extrusion width = 0.50mm") |
 | DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.6 Nozzle | filament 1 length differs: expected 307.23mm, actual 307.06mm |
 | DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.8 Nozzle | preamble differs at line 28: expected Some("G1 X-145 Y-157 F4800"), actual Some("G1 X-145 Y-153 F4800") |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.25 nozzle | preamble differs at line 29: expected Some("M106 P3 S102"), actual Some("G90") |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.4 HF nozzle | preamble differs at line 29: expected Some("M106 P3 S102"), actual Some("G90") |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.4 nozzle | preamble differs at line 31: expected Some("M106 P3 S102"), actual Some("G90") |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.25 nozzle | preamble differs at line 37: expected Some("M106 P2 S0"), actual None |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.4 HF nozzle | preamble differs at line 37: expected Some("M106 P2 S0"), actual None |
+| DIVERGENT | Flashforge/Flashforge Guider4 0.4 nozzle | preamble differs at line 39: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Guider4 0.6 HF nozzle | filament 1 length differs: expected 289.60mm, actual 290.33mm |
 | DIVERGENT | Flashforge/Flashforge Guider4 0.6 nozzle | filament 1 length differs: expected 293.75mm, actual 294.87mm |
 | DIVERGENT | Flashforge/Flashforge Guider4 0.8 HF nozzle | filament 1 length differs: expected 306.21mm, actual 306.95mm |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.25 nozzle | preamble differs at line 30: expected Some("M106 P3 S102"), actual Some("G90") |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.4 HF nozzle | preamble differs at line 30: expected Some("M106 P3 S102"), actual Some("G90") |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.25 nozzle | preamble differs at line 38: expected Some("M106 P2 S0"), actual None |
+| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.4 HF nozzle | preamble differs at line 38: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.4 nozzle | filament 1 length differs: expected 244.73mm, actual 245.16mm |
 | DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.6 HF nozzle | filament 1 length differs: expected 289.60mm, actual 290.33mm |
 | DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.6 nozzle | filament 1 length differs: expected 292.61mm, actual 293.51mm |
@@ -561,9 +561,9 @@
 | DIVERGENT | Prusa/Prusa XL 5T 0.6 nozzle | preamble differs at line 123: expected Some(""), actual Some("G90") |
 | ARES_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | DIVERGENT | Qidi/Qidi Q1 Pro 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 206.00mm |
-| DIVERGENT | Qidi/Qidi Q1 Pro 0.4 nozzle | preamble differs at line 38: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi Q1 Pro 0.6 nozzle | preamble differs at line 38: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi Q1 Pro 0.8 nozzle | preamble differs at line 38: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Qidi/Qidi Q1 Pro 0.4 nozzle | preamble differs at line 42: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.042"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi Q1 Pro 0.6 nozzle | preamble differs at line 42: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.016"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi Q1 Pro 0.8 nozzle | preamble differs at line 42: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.008"), actual Some(" ") |
 | DIVERGENT | Qidi/Qidi Q2 0.2 nozzle | filament 1 length differs: expected 225.98mm, actual 224.60mm |
 | DIVERGENT | Qidi/Qidi Q2 0.4 nozzle | preamble differs at line 31: expected Some("G0 X128 E8 F904.991"), actual Some("G0 X128 E8 F754.159") |
 | DIVERGENT | Qidi/Qidi Q2 0.6 nozzle | preamble differs at line 31: expected Some("G0 X128 E8 F753.458"), actual Some("G0 X128 E8 F627.881") |
@@ -572,29 +572,29 @@
 | DIVERGENT | Qidi/Qidi Q2C 0.4 nozzle | preamble differs at line 33: expected Some("G0 X128 E8  F904.991"), actual Some("G0 X128 E8  F754.159") |
 | DIVERGENT | Qidi/Qidi Q2C 0.6 nozzle | preamble differs at line 33: expected Some("G0 X128 E8  F753.458"), actual Some("G0 X128 E8  F627.881") |
 | DIVERGENT | Qidi/Qidi Q2C 0.8 nozzle | preamble differs at line 33: expected Some("G0 X128 E8  F1327.96"), actual Some("G0 X128 E8  F1106.63") |
-| DIVERGENT | Qidi/Qidi X-CF Pro 0.4 nozzle | preamble differs at line 29: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Max 0.4 nozzle | preamble differs at line 28: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Qidi/Qidi X-CF Pro 0.4 nozzle | preamble differs at line 33: expected Some("M900 K0.031"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Max 0.4 nozzle | preamble differs at line 32: expected Some("M900 K0.031"), actual Some(" ") |
 | DIVERGENT | Qidi/Qidi X-Max 3 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 206.00mm |
-| DIVERGENT | Qidi/Qidi X-Max 3 0.4 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Max 3 0.6 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Max 3 0.8 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Qidi/Qidi X-Max 3 0.4 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.031"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Max 3 0.6 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.016"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Max 3 0.8 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.008"), actual Some(" ") |
 | DIVERGENT | Qidi/Qidi X-Max 4 0.2 nozzle | filament 1 length differs: expected 223.63mm, actual 217.65mm |
 | DIVERGENT | Qidi/Qidi X-Max 4 0.4 nozzle | filament 1 length differs: expected 239.03mm, actual 234.03mm |
 | DIVERGENT | Qidi/Qidi X-Max 4 0.6 nozzle | filament 1 length differs: expected 287.20mm, actual 282.20mm |
 | DIVERGENT | Qidi/Qidi X-Max 4 0.8 nozzle | filament 1 length differs: expected 346.35mm, actual 341.35mm |
-| DIVERGENT | Qidi/Qidi X-Plus 0.4 nozzle | preamble differs at line 28: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Qidi/Qidi X-Plus 0.4 nozzle | preamble differs at line 32: expected Some("M900 K0.031"), actual Some(" ") |
 | DIVERGENT | Qidi/Qidi X-Plus 3 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 206.00mm |
-| DIVERGENT | Qidi/Qidi X-Plus 3 0.4 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Plus 3 0.6 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Plus 3 0.8 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Qidi/Qidi X-Plus 3 0.4 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.031"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Plus 3 0.6 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.016"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Plus 3 0.8 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.008"), actual Some(" ") |
 | DIVERGENT | Qidi/Qidi X-Plus 4 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 206.00mm |
-| DIVERGENT | Qidi/Qidi X-Plus 4 0.4 nozzle | preamble differs at line 42: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Plus 4 0.6 nozzle | preamble differs at line 42: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Plus 4 0.8 nozzle | preamble differs at line 42: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Qidi/Qidi X-Plus 4 0.4 nozzle | preamble differs at line 46: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.034"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Plus 4 0.6 nozzle | preamble differs at line 46: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.016"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Plus 4 0.8 nozzle | preamble differs at line 46: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.008"), actual Some(" ") |
 | DIVERGENT | Qidi/Qidi X-Smart 3 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 206.00mm |
-| DIVERGENT | Qidi/Qidi X-Smart 3 0.4 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Smart 3 0.6 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Qidi/Qidi X-Smart 3 0.8 nozzle | preamble differs at line 45: expected Some("M106 P3 S255"), actual Some("G90") |
+| DIVERGENT | Qidi/Qidi X-Smart 3 0.4 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.031"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Smart 3 0.6 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.016"), actual Some(" ") |
+| DIVERGENT | Qidi/Qidi X-Smart 3 0.8 nozzle | preamble differs at line 49: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.008"), actual Some(" ") |
 | ARES_ERROR | RH3D/E3NG v1.2S - 0.2 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
 | ARES_ERROR | RH3D/E3NG v1.2S - 0.3 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
 | ARES_ERROR | RH3D/E3NG v1.2S - 0.4 nozzle | orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
@@ -780,7 +780,7 @@
 | DIVERGENT | Snapmaker/Snapmaker J1 (0.4 nozzle) | filament 1 length differs: expected 255.04mm, actual 254.22mm |
 | DIVERGENT | Snapmaker/Snapmaker J1 (0.6 nozzle) | filament 1 length differs: expected 248.90mm, actual 249.24mm |
 | DIVERGENT | Snapmaker/Snapmaker J1 (0.8 nozzle) | filament 1 length differs: expected 291.39mm, actual 292.39mm |
-| ARES_ERROR | Snapmaker/Snapmaker U1 (0.2 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | Snapmaker/Snapmaker U1 (0.2 nozzle) | preamble differs at line 47: expected Some(""), actual Some("G90") |
 | ARES_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | orca-slicer failed (exit status: 238): bridge_line_width: Bridge line width must not exceed nozzle diameter: 0.600000 |
 | ARES_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |

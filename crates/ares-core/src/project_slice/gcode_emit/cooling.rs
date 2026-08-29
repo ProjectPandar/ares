@@ -74,7 +74,13 @@ impl CoolingState {
         } else {
             self.additional_fan_speed
         };
-        if self.auxiliary_fan && additional_speed != self.additional_speed {
+        // Orca emits the initial auxiliary-fan state unconditionally at the
+        // first layer boundary (print-start block, before LAYER_CHANGE), not
+        // only when the speed changes.
+        if self.auxiliary_fan
+            && (additional_speed != self.additional_speed
+                || (layer_index == 0 && self.emit_initial_fan))
+        {
             self.additional_speed = additional_speed;
             output.extend_from_slice(
                 format!("M106 P2 S{}\n", additional_fan_pwm(additional_speed)).as_bytes(),
