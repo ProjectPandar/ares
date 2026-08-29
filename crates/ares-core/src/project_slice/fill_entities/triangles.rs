@@ -33,6 +33,7 @@ pub(super) fn append(
 ) -> Result<(), SliceError> {
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
+        overlap: fill.params.overlap,
         angle: fill.params.angle,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,

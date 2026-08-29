@@ -4,16 +4,17 @@
 
 use super::{
     checked_rotate::{rotate_points, rotate_points_with_trig},
-    connect::{FillConnectionParams, connect_infill},
+    connect::{FillBoundary, FillConnectionParams, connect_infill_polygons},
 };
 use crate::geometry::{
-    ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polygon, Polyline,
+    BoundingBox, ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polygon, Polyline,
     intersection_open_polylines, offset_expolygon,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct MultilineFillParams {
     pub(crate) spacing: f64,
+    pub(crate) overlap: f64,
     pub(crate) angle: f32,
     pub(crate) density: f32,
     pub(crate) multiline: i32,
@@ -35,52 +36,96 @@ pub(crate) fn fill_surface(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     debug_assert!(!sweeps.is_empty());
-    let contraction = (-0.5 * params.spacing / scale.factor()) as f32;
-    let mut components = offset_expolygon(surface, contraction, JoinType::Miter, 3.0)?;
-    if components.is_empty() {
-        components.push(surface.clone());
+    let reference = center(surface);
+    let expansion =
+        (params.overlap + 0.5 * f64::from(params.multiline) * params.spacing) / scale.factor();
+    let expanded = offset_expolygon(surface, expansion as f32, JoinType::Miter, 3.0)?;
+    if expanded.is_empty() {
+        return Ok(Vec::new());
     }
     let family_density = params.density / sweeps.len() as f32;
-    let mut output = Vec::new();
-    for component in components {
-        let mut lines = Vec::new();
-        for sweep in sweeps {
-            lines.extend(generate_family(
-                &component,
+    let line_width = scale
+        .checked_scale(params.spacing)
+        .ok_or(ClipperError::CoordinateOutOfRange)?;
+    let epsilon = scale
+        .checked_scale(1.0e-4)
+        .ok_or(ClipperError::CoordinateOutOfRange)?;
+    let x_margin = line_width
+        .checked_add(epsilon)
+        .ok_or(ClipperError::CoordinateOutOfRange)?;
+    let mut lines = Vec::new();
+    for sweep in sweeps {
+        for component in &expanded {
+            lines.extend(generate_family(FamilyRequest {
+                component,
+                reference,
                 params,
-                family_density,
-                *sweep,
+                density: family_density,
+                sweep: *sweep,
+                x_margin,
                 scale,
-            )?);
+            })?);
         }
-        if lines.is_empty() {
-            continue;
-        }
-        output.extend(connect_infill(
-            lines,
-            &component,
-            params.spacing,
-            FillConnectionParams {
-                anchor_length: params.anchor_length,
-                anchor_length_max: params.anchor_length_max,
-                multiline: params.multiline,
-                dont_sort: params.dont_sort,
-            },
-            scale,
-        )?);
     }
-    Ok(output)
+    if lines.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let contraction = (-0.5 * params.spacing / scale.factor()) as f32;
+    let mut contracted = offset_expolygon(surface, contraction, JoinType::Miter, 3.0)?;
+    if contracted.is_empty() {
+        contracted.push(surface.clone());
+    }
+    let mut boundaries = Vec::new();
+    for component in contracted {
+        let (contour, holes) = component.into_parts();
+        boundaries.push(contour);
+        boundaries.extend(holes);
+    }
+    lines = intersection_open_polylines(&lines, &boundaries)?;
+    if lines.is_empty() {
+        return Ok(Vec::new());
+    }
+    let bbox = BoundingBox::from_expolygon(surface)
+        .expect("the multiline fill surface contour must be nonempty");
+    connect_infill_polygons(
+        lines,
+        FillBoundary {
+            polygons: &boundaries,
+            bbox,
+        },
+        params.spacing,
+        FillConnectionParams {
+            anchor_length: params.anchor_length,
+            anchor_length_max: params.anchor_length_max,
+            multiline: params.multiline,
+            dont_sort: params.dont_sort,
+        },
+        scale,
+    )
 }
 
-fn generate_family(
-    component: &ExPolygon,
+struct FamilyRequest<'a> {
+    component: &'a ExPolygon,
+    reference: Point,
     params: MultilineFillParams,
     density: f32,
     sweep: Sweep,
+    x_margin: i64,
     scale: CoordinateScale,
-) -> Result<Vec<Polyline>, ClipperError> {
+}
+
+fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperError> {
+    let FamilyRequest {
+        component,
+        reference,
+        params,
+        density,
+        sweep,
+        x_margin,
+        scale,
+    } = request;
     let angle = -(params.angle + sweep.angle);
-    let reference = center(component);
     let rotated_reference = rotate_points(vec![reference], -f64::from(angle))?[0];
     let rotated = rotate_expolygon(component, -f64::from(angle))?;
     let (minimum, maximum) = bounds(&rotated);
@@ -108,6 +153,14 @@ fn generate_family(
         (i128::from(maximum.x()) - i128::from(first_x)).div_euclid(i128::from(spacing)) + 1,
     )
     .map_err(|_| ClipperError::CoordinateOutOfRange)?;
+    let x_min = minimum
+        .x()
+        .checked_add(x_margin)
+        .ok_or(ClipperError::CoordinateOutOfRange)?;
+    let x_max = maximum
+        .x()
+        .checked_sub(x_margin)
+        .ok_or(ClipperError::CoordinateOutOfRange)?;
     let mut lines = (0..count)
         .map(|index| {
             let x = i64::try_from(index)
@@ -115,12 +168,13 @@ fn generate_family(
                 .and_then(|index| index.checked_mul(spacing))
                 .and_then(|delta| first_x.checked_add(delta))
                 .ok_or(ClipperError::CoordinateOutOfRange)?;
-            Ok(Polyline::new(vec![
-                Point::new(x, start_y),
-                Point::new(x, end_y),
-            ]))
+            Ok((x >= x_min && x <= x_max)
+                .then(|| Polyline::new(vec![Point::new(x, start_y), Point::new(x, end_y)])))
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
     let (contour, holes) = rotated.into_parts();
     let mut clip = Vec::with_capacity(holes.len() + 1);
     clip.push(contour);

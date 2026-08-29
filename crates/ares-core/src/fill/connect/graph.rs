@@ -8,7 +8,7 @@ use super::{
     types::{BoundaryContour, Intersection, WorkingGraph},
 };
 use crate::geometry::{
-    BoundingBox, ClipperError, CoordinateScale, EdgeGrid, ExPolygon, Point, Polyline,
+    BoundingBox, ClipperError, CoordinateScale, EdgeGrid, Point, Polygon, Polyline,
     fixed_msvc_sort_by,
 };
 
@@ -22,12 +22,11 @@ pub(super) struct EndpointHit {
 
 pub(super) fn build_working_graph(
     infill_ordered: Vec<Polyline>,
-    boundary_source: &ExPolygon,
+    boundary_source: &[Polygon],
+    boundary_bbox: BoundingBox,
     spacing: f64,
     scale: CoordinateScale,
 ) -> Result<WorkingGraph, ClipperError> {
-    let boundary_bbox = BoundingBox::from_expolygon(boundary_source)
-        .expect("the fill boundary contour must be nonempty");
     let paths = infill_ordered
         .into_iter()
         .map(|polyline| Some(polyline.into_points()))
@@ -60,14 +59,14 @@ pub(super) fn build_working_graph(
 
 fn endpoint_hits(
     paths: &[Option<Vec<Point>>],
-    boundary_source: &ExPolygon,
+    boundary_source: &[Polygon],
     boundary_bbox: BoundingBox,
     scale: CoordinateScale,
 ) -> Result<Vec<EndpointHit>, ClipperError> {
     let epsilon = scaled_epsilon(scale);
     let bounds = inflate_bbox_round_delta(boundary_bbox, epsilon)?;
-    let grid = EdgeGrid::new(
-        boundary_source,
+    let grid = EdgeGrid::new_from_contours(
+        boundary_source.iter().map(|polygon| polygon.points()),
         bounds.min,
         bounds.max,
         scaled_coord_f64(10.0, scale)?,
@@ -111,20 +110,16 @@ pub(super) fn sort_endpoint_hits(hits: &mut [EndpointHit]) {
     reason = "the source copy inserts sorted endpoint hits while walking contours and points"
 )]
 fn split_boundary_working_copy(
-    boundary_source: &ExPolygon,
+    boundary_source: &[Polygon],
     paths: &[Option<Vec<Point>>],
     hits: &[EndpointHit],
     intersections: &mut [Intersection],
 ) -> (Vec<BoundaryContour>, Vec<Vec<usize>>) {
-    let contour_count = boundary_source.holes().len() + 1;
-    let mut boundary = Vec::with_capacity(contour_count);
-    let mut contour_intersections = Vec::with_capacity(contour_count);
+    let mut boundary = Vec::with_capacity(boundary_source.len());
+    let mut contour_intersections = Vec::with_capacity(boundary_source.len());
     let mut hit_index = 0;
 
-    for (contour_index, source) in std::iter::once(boundary_source.contour())
-        .chain(boundary_source.holes())
-        .enumerate()
-    {
+    for (contour_index, source) in boundary_source.iter().enumerate() {
         let mut points = Vec::new();
         let mut intersection_indices = Vec::new();
         for (source_point_index, &source_point) in source.points().iter().enumerate() {

@@ -1290,5 +1290,16 @@ layer coordinates are now byte-exact. Remaining Cubic deltas are isolated to
 `connect_infill` splitting on three transition layers, not family generation.
 KSR golden and workspace checks pass.
 
-NEXT: fix multiline `connect_infill` splitting, then remaining postamble
-geometry, lifecycle and travel.
+An independent read-only advisor confirmed the layer-27 tails are downstream
+limited-hook symptoms and rejected threshold/tolerance changes. The complete
+upstream multiline staging is now represented: expanded generation surface,
+explicit scanline margin, separate contracted intersection pool, and one
+polygon-pool connector pass using the original bbox (`FillRectilinear.cpp:
+2996-3042`; `FillBase.cpp:1243-1818`). `MultilineFillParams` now carries
+`overlap`, and `connect_infill` has a deeper polygon-pool boundary interface.
+All 35 multiline/connect tests, KSR golden, clippy, and fmt pass. The Elegoo
+split remains, proving the next narrow seam is endpoint/collision eligibility,
+not staging or anchor thresholds.
+
+NEXT: capture and correct the Elegoo connector endpoint eligibility, then
+remaining postamble geometry, lifecycle and travel.

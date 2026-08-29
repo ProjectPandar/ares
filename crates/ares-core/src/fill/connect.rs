@@ -6,10 +6,15 @@ mod scale;
 mod touching;
 mod types;
 
-use crate::geometry::{ClipperError, CoordinateScale, ExPolygon, Polyline};
+use crate::geometry::{BoundingBox, ClipperError, CoordinateScale, ExPolygon, Polygon, Polyline};
 use apply::apply_connections;
 use graph::build_working_graph;
 use scale::{scaled_epsilon, scaled_f32, scaled_f64};
+
+pub(crate) struct FillBoundary<'a> {
+    pub(crate) polygons: &'a [Polygon],
+    pub(crate) bbox: BoundingBox,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct FillConnectionParams {
@@ -35,11 +40,41 @@ pub(crate) fn connect_infill(
     debug_assert!(params.anchor_length_max >= params.anchor_length);
     debug_assert!(params.multiline >= 1);
 
+    let mut boundaries = Vec::with_capacity(boundary.holes().len() + 1);
+    boundaries.push(boundary.contour().clone());
+    boundaries.extend(boundary.holes().iter().cloned());
+    let bbox =
+        BoundingBox::from_expolygon(boundary).expect("the fill boundary contour must be nonempty");
+    connect_infill_polygons(
+        infill_ordered,
+        FillBoundary {
+            polygons: &boundaries,
+            bbox,
+        },
+        spacing,
+        params,
+        scale,
+    )
+}
+
+pub(crate) fn connect_infill_polygons(
+    infill_ordered: Vec<Polyline>,
+    boundary: FillBoundary<'_>,
+    spacing: f64,
+    params: FillConnectionParams,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
     let anchor_length = scaled_f32(params.anchor_length, scale);
     let anchor_length_max = scaled_f32(params.anchor_length_max, scale);
     let scaled_spacing = scaled_f64(spacing, scale);
     let epsilon = scaled_epsilon(scale);
-    let graph = build_working_graph(infill_ordered, boundary, spacing, scale)?;
+    let graph = build_working_graph(
+        infill_ordered,
+        boundary.polygons,
+        boundary.bbox,
+        spacing,
+        scale,
+    )?;
     Ok(apply_connections(
         graph,
         anchor_length,

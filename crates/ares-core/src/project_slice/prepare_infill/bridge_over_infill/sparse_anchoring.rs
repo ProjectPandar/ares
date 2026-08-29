@@ -86,6 +86,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             SurfaceFillPattern::Configured(ProcessInfillPattern::Grid) => {
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
+                    overlap: 0.0,
                     angle: fill.params.angle,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
@@ -103,6 +104,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
             SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
+                    overlap: 0.0,
                     angle: fill.params.angle,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
@@ -137,6 +139,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 ];
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
+                    overlap: 0.0,
                     angle: fill.params.angle,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
