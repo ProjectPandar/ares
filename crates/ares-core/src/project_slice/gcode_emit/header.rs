@@ -132,6 +132,34 @@ pub(super) fn append_width_block(output: &mut Vec<u8>, traversal: &PreparedPostC
             );
         }
     }
+    let support_width = object.and_then(|object| {
+        let options = &object.object;
+        if !options.enable_support.0
+            && options.enforce_support_layers.0 <= 0
+            && options.raft_layers.0 <= 0
+        {
+            return None;
+        }
+        let index = options.support_filament.0.saturating_sub(1) as usize;
+        let support_nozzle = settings
+            .project
+            .print
+            .nozzle_diameter
+            .0
+            .get(index)
+            .or_else(|| settings.project.print.nozzle_diameter.0.first())
+            .map_or(nozzle, |value| value.0);
+        Some(
+            width(options.support_line_width, support_nozzle)
+                .or_else(|| width(options.line_width, support_nozzle))
+                .unwrap_or(1.125 * support_nozzle as f32),
+        )
+    });
+    if let Some(width) = support_width {
+        output.extend_from_slice(
+            format!("; support material extrusion width = {width:.2}mm\n").as_bytes(),
+        );
+    }
     if let Some(width) = widths[5] {
         output.extend_from_slice(
             format!("; first layer extrusion width = {width:.2}mm\n").as_bytes(),

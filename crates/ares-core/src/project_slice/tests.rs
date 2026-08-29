@@ -10,6 +10,7 @@ mod fixture;
 mod gcode_fan_lifecycle;
 mod gcode_filament_start;
 mod gcode_first_filaments;
+mod gcode_header_widths;
 mod gcode_start_temperature;
 mod integration;
 mod largest_contour_fixture;

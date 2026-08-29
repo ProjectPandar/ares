@@ -909,6 +909,15 @@ An Orca-generated KSR probe established the independent expected literal
 H2D/X2D semantic preambles now match in both homogeneous and heterogeneous
 hotend-map directions.
 
+The 19 support-enabled header cases were missing the upstream support-flow row
+between top infill and first-layer widths (`GCode.cpp:2674-2693`,
+`Flow.cpp:232-242`). `append_width_block` now mirrors `has_support_material`
+(enable/enforced support or raft), selects the support filament's nozzle, and
+resolves support width → object width → automatic 1.125×nozzle. A 96%-of-0.4
+3MF output test is red without the `0.38mm` row and green with exact ordering.
+All 19 first divergences are removed: 18/19 complete semantic preambles match;
+Flashforge Guider 3 Ultra advances to its next machine-start coordinate delta.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into
