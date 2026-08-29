@@ -770,3 +770,20 @@ tractable than per-deposition geometry. NOTE: preamble divergence diagnosis
 must use a single consistent sweep run's case dirs; mixing sweep22 and sweep2
 cases gave a misleading M572 hit (the matched Artemis case has no M572 in its
 Orca reference preamble).
+
+## 2026-08-29 session: preamble root cause localized (auxiliary fan print-start)
+
+Clean diagnosis on a consistent sweep2 case (Artillery M1 Pro 0.2,
+/tmp/ares-parity-3973101/e3b8b40560fd2d44-0bf778546c1cea35): raw preamble diff
+shows the first ~28 lines identical; the divergence is Orca emitting
+`M106 P3 S255` in the print-start block (right after the start_gcode END marker,
+before G90/G21/M83/SET_PRESSURE_ADVANCE) which Ares does NOT emit. Note
+`GCodeWriter::set_additional_fan` emits P2 (GCodeWriter.cpp:1142-1155), so the
+P3 line is a DIFFERENT auxiliary-fan channel activation at print start (likely
+the GCodeWriter `config.auxiliary_fan` preamble emission, GCodeWriter.cpp:200
+region / print-start fan init). Also present: M73 remaining-time estimate
+(R16 vs R21 — trapezoid planner, already tracked), and blank-line/LAYER_CHANGE
+timing at the preamble/layer boundary. NEXT: locate the exact Orca P3
+print-start emission (grep the fan init path), then implement the auxiliary-fan
+print-start activation in ares gcode_emit; M572 pressure-advance (filament
+start_gcode, Prusa CORE One family) is a separate preamble sub-family.
