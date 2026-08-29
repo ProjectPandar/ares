@@ -42,11 +42,11 @@ impl KsrArchive {
         Self { entries }
     }
 
-    pub(in crate::project_slice::tests) fn entry_text(&self, path: &str) -> String {
+    pub(in crate::project_slice) fn entry_text(&self, path: &str) -> String {
         String::from_utf8(self.entries.get(path).expect("entry").clone()).expect("utf8")
     }
 
-    pub(in crate::project_slice::tests) fn insert_text(&mut self, path: &str, text: &str) {
+    pub(in crate::project_slice) fn insert_text(&mut self, path: &str, text: &str) {
         self.entries
             .insert(path.to_owned(), text.as_bytes().to_vec());
     }

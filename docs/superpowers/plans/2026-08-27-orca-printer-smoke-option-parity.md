@@ -1269,5 +1269,11 @@ combined API used at `GCode.cpp:6460,7410`. CR-10 SE advances past its control
 divergence to sparse-infill geometry; the focused output test and three stable
 profile smokes pass.
 
-NEXT: fix finish layer_num, rerun stable sweep, then remaining postamble
-geometry, cubic statistics, lifecycle and travel.
+Finish templates now expose the final zero-based `m_layer_index`, matching
+`GCode.cpp:3472-3479`, rather than layer count. A public 3MF machine-end test
+was RED at 460 and GREEN at 459; KSR golden and workspace checks pass. A fresh
+Snapmaker U1 Orca invocation remains intermittently SIGSEGV, so its cached
+full-sweep reference—not a flaky focused smoke—is the verification route.
+
+NEXT: rerun stable sweep, then remaining postamble geometry, cubic statistics,
+lifecycle and travel.

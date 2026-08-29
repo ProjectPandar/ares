@@ -20,7 +20,7 @@ pub(super) fn append(
     config.insert("current_extruder", value::Value::number(0.0));
     config.insert(
         "layer_num",
-        value::Value::number(layer_count(traversal) as f64),
+        value::Value::number(layer_count(traversal).saturating_sub(1) as f64),
     );
     config.insert("layer_z", value::Value::number(max_layer_z));
     config.insert("max_layer_z", value::Value::number(max_layer_z));
