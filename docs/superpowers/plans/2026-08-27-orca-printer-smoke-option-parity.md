@@ -1088,5 +1088,12 @@ RED/GREEN test rejects F0 and requires F1800. Geeetech's representative feed
 moves from 3000 to the exact Orca 900; Qidi moves from 6300 to 1586 (Orca 1580,
 leaving a small geometry/timing delta rather than a disabled cooling pass).
 
-NEXT: quantify feed/lifecycle progression, then close remaining small
-flow/statistics and CoolingBuffer precision before control/travel.
+Stable sweep18 (clean HEAD `3bf31d5`) completed all 1001 presets: 35 PASS,
+874 DIVERGENT, 92 ARES_ERROR. The F0 blocker is closed: Qidi Q1 moves from
+feed-only to travel geometry, and lifecycle-first cases drop from 104 to 92.
+Feed/deposition-first cases drop from 229 to 211; control/travel become visible
+as the next failures. Geeetech's 0.6 layer-two feed remains un-slowed for a
+separate cross-layer CoolingBuffer state issue.
+
+NEXT: fix cross-layer CoolingBuffer feed state and small flow/statistics, then
+control/travel.
