@@ -58,6 +58,24 @@ fn task22o201_concentric_finalization_rotates_then_clips_closed_loop() {
 }
 
 #[test]
+fn concentric_rotation_uses_last_equidistant_point_like_upstream() {
+    let mut polylines = vec![ThickPolyline {
+        points: vec![
+            Point::new(10, 10),
+            Point::new(10, 0),
+            Point::new(0, 10),
+            Point::new(10, 10),
+        ],
+        width: vec![1.0; 6],
+        endpoints: (false, false),
+    }];
+
+    finalize_polylines(&mut polylines, 0, 1.0);
+
+    assert_eq!(polylines[0].points[0], Point::new(0, 10));
+}
+
+#[test]
 fn task22o202_fill_expolygon_restricts_larger_no_overlap_domain() {
     let rectangle = |minimum, maximum| {
         ExPolygon::new(

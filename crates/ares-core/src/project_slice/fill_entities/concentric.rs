@@ -88,14 +88,7 @@ fn finalize_polylines(
         if polyline.points.first() == polyline.points.last()
             && polyline.width.first() == polyline.width.last()
         {
-            let nearest = polyline
-                .points
-                .iter()
-                .enumerate()
-                .min_by_key(|(_, point)| squared_distance(**point, Point::new(0, 0)))
-                .unwrap()
-                .0;
-            polyline.start_at_index(nearest);
+            polyline.start_at_index(nearest_to_origin(&polyline.points));
         }
     }
     let mut write_index = first_polyline;
@@ -108,6 +101,21 @@ fn finalize_polylines(
     }
     polylines.truncate(write_index);
     reorder_thick_polylines(polylines);
+}
+
+fn nearest_to_origin(points: &[Point]) -> usize {
+    points
+        .iter()
+        .enumerate()
+        .fold((0, i128::MAX), |nearest, (index, point)| {
+            let distance = squared_distance(*point, Point::new(0, 0));
+            if distance <= nearest.1 {
+                (index, distance)
+            } else {
+                nearest
+            }
+        })
+        .0
 }
 
 fn squared_distance(left: Point, right: Point) -> i128 {

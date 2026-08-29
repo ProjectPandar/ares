@@ -1110,5 +1110,14 @@ closes, including Mizar S 0.8. Feed/deposition-first falls from 211 to 202;
 remaining Geeetech cases now reach the shared internal-solid-infill endpoint
 geometry rather than speed.
 
-NEXT: fix internal-solid-infill endpoint geometry, then remaining CoolingBuffer
+The shared internal-solid-infill endpoint family is narrow-surface
+`FillConcentricInternal`, not rectilinear. Its closed Arachne loop had two
+vertices equidistant from origin. Upstream `Point::nearest_point_index` updates
+on equal distance and selects the **last** tie (`Point.cpp:199-221`); Ares
+`min_by_key` selected the first, rotating the same clipped triangle to a
+different start. Finalization now uses upstream last-tie semantics. A focused
+closed-loop test is RED/GREEN, and the Geeetech 0.6 entity becomes byte-exact:
+112.972,112.972 → 112.972,112.068 → 112.110,112.929.
+
+NEXT: verify the internal-solid family sweep, then remaining CoolingBuffer
 precision/small statistics and control/travel.
