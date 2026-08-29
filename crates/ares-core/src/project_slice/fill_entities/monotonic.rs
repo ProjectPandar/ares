@@ -74,6 +74,7 @@ pub(super) fn append(
             expolygon: &expolygon,
             filled: &generated.polylines,
             spacing,
+            covered_override: None,
             scale,
         })?;
         output.collections.push(FillExtrusionCollection {

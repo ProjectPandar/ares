@@ -52,15 +52,15 @@
 | DIVERGENT | Artillery/Artillery Genius Pro 0.4 nozzle | filament 1 length differs: expected 258.70mm, actual 243.70mm |
 | DIVERGENT | Artillery/Artillery Hornet 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }, Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "1800" }, Extruder { extrusion: "-2.2", feed: "1800" }]], actual [[Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "0" }], [Extruder { extrusion: "2.2", feed: "0" }, Extruder { extrusion: "-2.2", feed: "1800" }], [Extruder { extrusion: "2.2", feed: "0" }, Extruder { extrusion: "-2.2", feed: "1800" }]] |
 | DIVERGENT | Artillery/Artillery M1 Pro 0.2 nozzle | preamble differs at line 106: expected Some("M106 P3 S255"), actual Some("G90") |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.4 nozzle | filament 1 length differs: expected 242.06mm, actual 241.91mm |
+| DIVERGENT | Artillery/Artillery M1 Pro 0.4 nozzle | preamble differs at line 122: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.032"), actual Some("") |
 | DIVERGENT | Artillery/Artillery M1 Pro 0.6 nozzle | preamble differs at line 106: expected Some("M106 P3 S255"), actual Some("G90") |
 | DIVERGENT | Artillery/Artillery M1 Pro 0.8 nozzle | preamble differs at line 106: expected Some("M106 P3 S255"), actual Some("G90") |
 | DIVERGENT | Artillery/Artillery Sidewinder X1 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }]], actual [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }]] |
 | DIVERGENT | Artillery/Artillery Sidewinder X2 0.4 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "2100" }, Extruder { extrusion: "-1", feed: "2100" }]], actual [[Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }], [Extruder { extrusion: "1", feed: "0" }, Extruder { extrusion: "-1", feed: "2100" }]] |
 | DIVERGENT | Artillery/Artillery Sidewinder X3 Plus 0.4 nozzle | filament 1 length differs: expected 267.50mm, actual 62.74mm |
 | DIVERGENT | Artillery/Artillery Sidewinder X3 Pro 0.4 nozzle | filament 1 length differs: expected 267.50mm, actual 61.07mm |
-| DIVERGENT | Artillery/Artillery Sidewinder X4 Plus 0.4 nozzle | filament 1 length differs: expected 268.45mm, actual 268.22mm |
-| DIVERGENT | Artillery/Artillery Sidewinder X4 Pro 0.4 nozzle | filament 1 length differs: expected 265.45mm, actual 265.22mm |
+| DIVERGENT | Artillery/Artillery Sidewinder X4 Plus 0.4 nozzle | preamble differs at line 60: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.046"), actual Some("") |
+| DIVERGENT | Artillery/Artillery Sidewinder X4 Pro 0.4 nozzle | preamble differs at line 60: expected Some("SET_PRESSURE_ADVANCE ADVANCE=0.046"), actual Some("") |
 | DIVERGENT | BBL/Bambu Lab A1 0.2 nozzle | preamble differs at line 556: expected Some("G0 X128 E8  F120"), actual Some("G0 X128 E8  F100") |
 | DIVERGENT | BBL/Bambu Lab A1 0.4 nozzle | preamble differs at line 556: expected Some("G0 X128 E8  F904.991"), actual Some("G0 X128 E8  F754.159") |
 | DIVERGENT | BBL/Bambu Lab A1 0.6 nozzle | preamble differs at line 556: expected Some("G0 X128 E8  F1200.14"), actual Some("G0 X128 E8  F1000.12") |
@@ -187,11 +187,11 @@
 | DIVERGENT | Creality/Creality Ender-3 V3 SE 0.4 nozzle | preamble differs at line 1: expected Some(";FLAVOR:Marlin"), actual Some("; HEADER_BLOCK_START") |
 | DIVERGENT | Creality/Creality Ender-3 V3 SE 0.6 nozzle | preamble differs at line 1: expected Some(";FLAVOR:Marlin"), actual Some("; HEADER_BLOCK_START") |
 | DIVERGENT | Creality/Creality Ender-3 V3 SE 0.8 nozzle | preamble differs at line 1: expected Some(";FLAVOR:Marlin"), actual Some("; HEADER_BLOCK_START") |
-| DIVERGENT | Creality/Creality Ender-3 V4 0.4 nozzle | filament 1 length differs: expected 224.33mm, actual 224.19mm |
+| DIVERGENT | Creality/Creality Ender-3 V4 0.4 nozzle | layer 1 deposition count differs: expected 53, actual 52 |
 | PASS | Creality/Creality Ender-5 0.4 nozzle |  |
-| DIVERGENT | Creality/Creality Ender-5 Max 0.4 nozzle | filament 1 length differs: expected 232.02mm, actual 231.88mm |
-| DIVERGENT | Creality/Creality Ender-5 Max 0.6 nozzle | filament 1 length differs: expected 284.86mm, actual 284.39mm |
-| DIVERGENT | Creality/Creality Ender-5 Max 0.8 nozzle | filament 1 length differs: expected 335.42mm, actual 334.54mm |
+| DIVERGENT | Creality/Creality Ender-5 Max 0.4 nozzle | layer 1 deposition count differs: expected 46, actual 45 |
+| DIVERGENT | Creality/Creality Ender-5 Max 0.6 nozzle | layer 1 deposition count differs: expected 42, actual 41 |
+| DIVERGENT | Creality/Creality Ender-5 Max 0.8 nozzle | layer 1 deposition count differs: expected 30, actual 29 |
 | PASS | Creality/Creality Ender-5 Plus 0.4 nozzle |  |
 | DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.2 nozzle | layer 2 deposition 22 differs: expected Deposition { feature: "Internal solid infill", width: "0.211454", motion: MotionRecord { command: "G1", start: Position { x: "113.209", y: "112.907", z: "0.28" }, end: Position { x: "112.921", y: "113.195", z: "0.28" }, arc_center: [None, None], turns: None }, extrusion: "0.00471", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.211454", motion: MotionRecord { command: "G1", start: Position { x: "113.209", y: "112.907", z: "0.28" }, end: Position { x: "112.907", y: "113.209", z: "0.28" }, arc_center: [None, None], turns: None }, extrusion: "0.00494", feed: 2400.0, acceleration: "500", fans: "0:255" } |
 | DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.25 nozzle | layer 2 deposition 17 differs: expected Deposition { feature: "Internal solid infill", width: "0.232655", motion: MotionRecord { command: "G1", start: Position { x: "107.036", y: "107.036", z: "0.32" }, end: Position { x: "107.036", y: "107.36", z: "0.32" }, arc_center: [None, None], turns: None }, extrusion: "0.00501", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.232655", motion: MotionRecord { command: "G1", start: Position { x: "107.036", y: "107.036", z: "0.32" }, end: Position { x: "107.036", y: "107.335", z: "0.32" }, arc_center: [None, None], turns: None }, extrusion: "0.00462", feed: 2400.0, acceleration: "500", fans: "0:255" } |
@@ -204,39 +204,39 @@
 | PASS | Creality/Creality Ender-5 S1 0.4 nozzle |  |
 | PASS | Creality/Creality Ender-5S 0.4 nozzle |  |
 | PASS | Creality/Creality Ender-6 0.4 nozzle |  |
-| DIVERGENT | Creality/Creality Hi 0.2 nozzle | filament 1 length differs: expected 213.61mm, actual 213.81mm |
-| DIVERGENT | Creality/Creality Hi 0.4 nozzle | filament 1 length differs: expected 236.93mm, actual 236.81mm |
-| DIVERGENT | Creality/Creality Hi 0.6 nozzle | filament 1 length differs: expected 289.04mm, actual 288.70mm |
-| DIVERGENT | Creality/Creality Hi 0.8 nozzle | filament 1 length differs: expected 347.18mm, actual 346.45mm |
-| DIVERGENT | Creality/Creality K1 (0.4 nozzle) | filament 1 length differs: expected 221.49mm, actual 221.36mm |
-| DIVERGENT | Creality/Creality K1 (0.6 nozzle) | filament 1 length differs: expected 274.59mm, actual 274.27mm |
-| DIVERGENT | Creality/Creality K1 (0.8 nozzle) | filament 1 length differs: expected 326.67mm, actual 326.09mm |
-| DIVERGENT | Creality/Creality K1 Max (0.4 nozzle) | filament 1 length differs: expected 221.49mm, actual 221.36mm |
-| DIVERGENT | Creality/Creality K1 Max (0.6 nozzle) | filament 1 length differs: expected 273.53mm, actual 274.27mm |
-| DIVERGENT | Creality/Creality K1 Max (0.8 nozzle) | filament 1 length differs: expected 327.12mm, actual 328.86mm |
-| DIVERGENT | Creality/Creality K1 Max_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.71mm, actual 214.59mm |
-| DIVERGENT | Creality/Creality K1 SE 0.4 nozzle | filament 1 length differs: expected 221.76mm, actual 221.63mm |
-| DIVERGENT | Creality/Creality K1 SE 0.6 nozzle | filament 1 length differs: expected 262.80mm, actual 262.49mm |
+| DIVERGENT | Creality/Creality Hi 0.2 nozzle | filament 1 length differs: expected 213.61mm, actual 214.12mm |
+| DIVERGENT | Creality/Creality Hi 0.4 nozzle | layer 1 deposition count differs: expected 53, actual 52 |
+| DIVERGENT | Creality/Creality Hi 0.6 nozzle | layer 1 deposition 1 differs: expected Deposition { feature: "Bottom surface", width: "0.630207", motion: MotionRecord { command: "G1", start: Position { x: "125.877", y: "126.277", z: "0.3" }, end: Position { x: "125.877", y: "127.077", z: "0.3" }, arc_center: [None, None], turns: None }, extrusion: "0.05534", feed: 1326.0, acceleration: "2000", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.630207", motion: MotionRecord { command: "G1", start: Position { x: "125.877", y: "126.277", z: "0.3" }, end: Position { x: "125.877", y: "127.077", z: "0.3" }, arc_center: [None, None], turns: None }, extrusion: "0.05534", feed: 1314.0, acceleration: "2000", fans: "0:0" } |
+| DIVERGENT | Creality/Creality Hi 0.8 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-0.8", feed: "2400" }], [Extruder { extrusion: "0.8", feed: "2400" }], [Extruder { extrusion: "0.8", feed: "2400" }, Extruder { extrusion: "-0.8", feed: "2400" }, WipeStart, WipeEnd]], actual [[Extruder { extrusion: "-0.8", feed: "2400" }], [Extruder { extrusion: "0.8", feed: "2400" }], [Extruder { extrusion: "0.8", feed: "2400" }, Extruder { extrusion: "-0.8", feed: "2400" }]] |
+| DIVERGENT | Creality/Creality K1 (0.4 nozzle) | preamble differs at line 34: expected Some("M106 P2 S0"), actual None |
+| DIVERGENT | Creality/Creality K1 (0.6 nozzle) | preamble differs at line 34: expected Some("M106 P2 S0"), actual None |
+| DIVERGENT | Creality/Creality K1 (0.8 nozzle) | preamble differs at line 34: expected Some("M106 P2 S0"), actual None |
+| DIVERGENT | Creality/Creality K1 Max (0.4 nozzle) | preamble differs at line 34: expected Some("M106 P2 S0"), actual None |
+| DIVERGENT | Creality/Creality K1 Max (0.6 nozzle) | filament 1 length differs: expected 273.53mm, actual 274.60mm |
+| DIVERGENT | Creality/Creality K1 Max (0.8 nozzle) | filament 1 length differs: expected 327.12mm, actual 329.44mm |
+| DIVERGENT | Creality/Creality K1 Max_CFS-C 0.4 nozzle | preamble differs at line 21: expected Some("M106 P2 S255"), actual Some("START_PRINT EXTRUDER_TEMP=220 BED_TEMP=50") |
+| DIVERGENT | Creality/Creality K1 SE 0.4 nozzle | layer 1 deposition count differs: expected 53, actual 52 |
+| DIVERGENT | Creality/Creality K1 SE 0.6 nozzle | layer 1 deposition count differs: expected 41, actual 40 |
 | ARES_ERROR | Creality/Creality K1 SE 0.8 nozzle | Creality/Creality K1 SE 0.8 nozzle process: default preset "0.40mm Standard @Creality K1 SE 0.8 nozzle" not found |
-| DIVERGENT | Creality/Creality K1 SE_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.97mm, actual 214.85mm |
-| DIVERGENT | Creality/Creality K1C 0.4 nozzle | filament 1 length differs: expected 221.49mm, actual 221.36mm |
+| DIVERGENT | Creality/Creality K1 SE_CFS-C 0.4 nozzle | layer 1 deposition count differs: expected 53, actual 52 |
+| DIVERGENT | Creality/Creality K1C 0.4 nozzle | preamble differs at line 34: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Creality/Creality K1C 0.6 nozzle | preamble differs at line 34: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Creality/Creality K1C 0.8 nozzle | preamble differs at line 34: expected Some("M106 P2 S0"), actual None |
-| DIVERGENT | Creality/Creality K1C_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.71mm, actual 214.59mm |
-| DIVERGENT | Creality/Creality K1_CFS-C 0.4 nozzle | filament 1 length differs: expected 214.71mm, actual 214.59mm |
+| DIVERGENT | Creality/Creality K1C_CFS-C 0.4 nozzle | preamble differs at line 21: expected Some("M106 P2 S255"), actual Some("START_PRINT EXTRUDER_TEMP=220 BED_TEMP=50") |
+| DIVERGENT | Creality/Creality K1_CFS-C 0.4 nozzle | preamble differs at line 21: expected Some("M106 P2 S255"), actual Some("START_PRINT EXTRUDER_TEMP=220 BED_TEMP=50") |
 | DIVERGENT | Creality/Creality K2 0.2 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
 | ARES_ERROR | Creality/Creality K2 0.4 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 30 not in range [10.000000,18.000000] |
-| DIVERGENT | Creality/Creality K2 0.6 nozzle | filament 1 length differs: expected 296.89mm, actual 296.58mm |
-| DIVERGENT | Creality/Creality K2 0.8 nozzle | filament 1 length differs: expected 355.33mm, actual 354.58mm |
+| DIVERGENT | Creality/Creality K2 0.6 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
+| DIVERGENT | Creality/Creality K2 0.8 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
 | DIVERGENT | Creality/Creality K2 Plus 0.2 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
 | DIVERGENT | Creality/Creality K2 Plus 0.4 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
 | DIVERGENT | Creality/Creality K2 Plus 0.6 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
 | DIVERGENT | Creality/Creality K2 Plus 0.8 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
 | DIVERGENT | Creality/Creality K2 Pro 0.2 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
-| DIVERGENT | Creality/Creality K2 Pro 0.4 nozzle | filament 1 length differs: expected 245.22mm, actual 245.10mm |
-| DIVERGENT | Creality/Creality K2 Pro 0.6 nozzle | filament 1 length differs: expected 296.18mm, actual 295.87mm |
-| DIVERGENT | Creality/Creality K2 Pro 0.8 nozzle | filament 1 length differs: expected 355.03mm, actual 354.28mm |
-| DIVERGENT | Creality/Creality K2 SE 0.4 nozzle | filament 1 length differs: expected 244.32mm, actual 244.59mm |
+| DIVERGENT | Creality/Creality K2 Pro 0.4 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
+| DIVERGENT | Creality/Creality K2 Pro 0.6 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
+| DIVERGENT | Creality/Creality K2 Pro 0.8 nozzle | preamble differs at line 50: expected Some(" "), actual Some("") |
+| DIVERGENT | Creality/Creality K2 SE 0.4 nozzle | filament 1 length differs: expected 244.32mm, actual 244.71mm |
 | ARES_ERROR | Creality/Creality SPARKX i7 0.2 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 28 not in range [10.000000,18.000000] |
 | ARES_ERROR | Creality/Creality SPARKX i7 0.4 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 28 not in range [10.000000,18.000000] |
 | ARES_ERROR | Creality/Creality SPARKX i7 0.6 nozzle | orca-slicer failed (exit status: 238): retraction_distances_when_cut: 28 not in range [10.000000,18.000000] |
@@ -252,85 +252,85 @@
 | DIVERGENT | Custom/MyMarlin 0.4 nozzle | layer 1 travel geometry count differs: expected 7, actual 8 |
 | DIVERGENT | Custom/MyRRF 0.4 nozzle | layer 2 deposition 49 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.357", y: "128.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05056", feed: 4170.0, acceleration: "5000", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.329", y: "128.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05172", feed: 4171.0, acceleration: "5000", fans: "0:255" } |
 | DIVERGENT | Custom/MyRepetier 0.4 nozzle | layer 2 deposition 49 differs: expected Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.357", y: "128.558", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05056", feed: 4337.0, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.399999", motion: MotionRecord { command: "G1", start: Position { x: "128.586", y: "127.329", z: "0.4" }, end: Position { x: "127.329", y: "128.586", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.05172", feed: 4341.0, acceleration: "", fans: "0:255" } |
-| ARES_ERROR | Custom/MyToolChanger 0.2 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | Custom/MyToolChanger 0.4 nozzle | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
-| ARES_ERROR | Custom/MyToolChanger 0.6 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | Custom/MyToolChanger 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | Custom/MyToolChanger 0.2 nozzle | filament 1 length differs: expected 207.69mm, actual 207.87mm |
+| DIVERGENT | Custom/MyToolChanger 0.4 nozzle | preamble differs at line 47: expected Some(""), actual Some("G90") |
+| DIVERGENT | Custom/MyToolChanger 0.6 nozzle | preamble differs at line 47: expected Some(""), actual Some("G90") |
+| DIVERGENT | Custom/MyToolChanger 0.8 nozzle | preamble differs at line 47: expected Some(""), actual Some("G90") |
 | DIVERGENT | DeltaMaker/DeltaMaker 2 0.35 nozzle | layer 1 deposition 77 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "-7.121", y: "52.754", z: "0.25" }, end: Position { x: "-6.706", y: "52.312", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "0.02278", feed: 3000.0, acceleration: "", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "-7.121", y: "52.754", z: "0.25" }, end: Position { x: "-6.706", y: "52.312", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "0.02279", feed: 3000.0, acceleration: "", fans: "0:0" } |
 | DIVERGENT | DeltaMaker/DeltaMaker 2T 0.5 nozzle | layer 1 island lifecycle differs: expected [[Extruder { extrusion: "-8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-7.188", y: "52.692", z: "0.25" }, end: Position { x: "-6.792", y: "52.261", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-0.5787", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-6.792", y: "52.261", z: "0.25" }, end: Position { x: "-5", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-1.85168", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-5", y: "51.727", z: "0.25" }, end: Position { x: "0.545", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-5.48962", feed: "3000" }, WipeEnd], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "4.7", y: "64.65", z: "0.25" }, end: Position { x: "-3.3", y: "64.693", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-7.92", feed: "1200" }, WipeEnd]], actual [[Extruder { extrusion: "-8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-7.188", y: "52.692", z: "0.25" }, end: Position { x: "-6.792", y: "52.261", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-0.57871", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-6.792", y: "52.261", z: "0.25" }, end: Position { x: "-5", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-1.85168", feed: "3000" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "-5", y: "51.727", z: "0.25" }, end: Position { x: "0.545", y: "51.727", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-5.48962", feed: "3000" }, WipeEnd], [Extruder { extrusion: "8", feed: "9000" }, Extruder { extrusion: "-0.08", feed: "9000" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "4.7", y: "64.65", z: "0.25" }, end: Position { x: "-3.3", y: "64.693", z: "0.25" }, arc_center: [None, None], turns: None }, extrusion: "-7.92", feed: "1200" }, WipeEnd]] |
 | DIVERGENT | DeltaMaker/DeltaMaker 2XT 0.5 nozzle | layer 1 travel geometry count differs: expected 10, actual 12 |
 | DIVERGENT | Dremel/Dremel 3D20 0.4 nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.38mm"), actual Some("; first layer extrusion width = 0.42mm") |
 | ARES_ERROR | Dremel/Dremel 3D40 0.4 nozzle | orca-slicer failed (exit status: 205): "G92 E0" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing. |
 | ARES_ERROR | Dremel/Dremel 3D45 0.4 nozzle | orca-slicer failed (exit status: 205): "G92 E0" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing. |
-| DIVERGENT | Elegoo/Elegoo Centauri 0.2 nozzle | filament 1 length differs: expected 249.27mm, actual 249.03mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 0.2 nozzle | filament 1 length differs: expected 249.27mm, actual 249.45mm |
 | DIVERGENT | Elegoo/Elegoo Centauri 0.4 nozzle | filament 1 length differs: expected 258.11mm, actual 258.51mm |
-| DIVERGENT | Elegoo/Elegoo Centauri 0.6 nozzle | filament 1 length differs: expected 296.96mm, actual 297.11mm |
-| DIVERGENT | Elegoo/Elegoo Centauri 0.8 nozzle | filament 1 length differs: expected 319.32mm, actual 319.03mm |
-| DIVERGENT | Elegoo/Elegoo Centauri 2 0.2 nozzle | filament 1 length differs: expected 227.66mm, actual 227.42mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 0.6 nozzle | filament 1 length differs: expected 296.96mm, actual 297.49mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 0.8 nozzle | filament 1 length differs: expected 319.32mm, actual 319.91mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 2 0.2 nozzle | filament 1 length differs: expected 227.66mm, actual 227.84mm |
 | DIVERGENT | Elegoo/Elegoo Centauri 2 0.4 nozzle | filament 1 length differs: expected 237.10mm, actual 236.90mm |
-| DIVERGENT | Elegoo/Elegoo Centauri 2 0.6 nozzle | filament 1 length differs: expected 275.35mm, actual 275.51mm |
-| DIVERGENT | Elegoo/Elegoo Centauri 2 0.8 nozzle | filament 1 length differs: expected 297.71mm, actual 297.42mm |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.2 nozzle | filament 1 length differs: expected 249.27mm, actual 249.03mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 2 0.6 nozzle | filament 1 length differs: expected 275.35mm, actual 275.88mm |
+| DIVERGENT | Elegoo/Elegoo Centauri 2 0.8 nozzle | filament 1 length differs: expected 297.71mm, actual 298.30mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.2 nozzle | filament 1 length differs: expected 249.27mm, actual 249.45mm |
 | DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.4 nozzle | filament 1 length differs: expected 258.11mm, actual 258.51mm |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.6 nozzle | filament 1 length differs: expected 296.96mm, actual 297.11mm |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.8 nozzle | filament 1 length differs: expected 319.32mm, actual 319.03mm |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.2 nozzle | filament 1 length differs: expected 227.66mm, actual 227.42mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.6 nozzle | filament 1 length differs: expected 296.96mm, actual 297.49mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.8 nozzle | filament 1 length differs: expected 319.32mm, actual 319.91mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.2 nozzle | filament 1 length differs: expected 227.66mm, actual 227.84mm |
 | DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.4 nozzle | filament 1 length differs: expected 237.10mm, actual 236.90mm |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.6 nozzle | filament 1 length differs: expected 275.35mm, actual 275.51mm |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.8 nozzle | filament 1 length differs: expected 297.71mm, actual 297.42mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.6 nozzle | filament 1 length differs: expected 275.35mm, actual 275.88mm |
+| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.8 nozzle | filament 1 length differs: expected 297.71mm, actual 298.30mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 268.30mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 313.55mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 2 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 2 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 2 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 268.30mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 313.55mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 2D 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 2D 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 2D 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2D 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 268.30mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2D 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 313.55mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 2S 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 2S 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 2S 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2S 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 268.30mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 2S 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 313.55mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 3 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 268.30mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 313.55mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.57mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 268.28mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Max 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 313.51mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 3 Max 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.57mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 268.28mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 313.51mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 3 Plus 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.57mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 268.28mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 313.51mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 3 Pro 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.57mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 268.28mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 313.51mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.57mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 268.28mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Max 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 313.51mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 Max 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.57mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 268.28mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 313.51mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 Plus 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.15mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.2 nozzle | filament 1 length differs: expected 234.38mm, actual 234.57mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.4 nozzle | filament 1 length differs: expected 236.63mm, actual 237.41mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 267.90mm |
-| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 312.63mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.6 nozzle | filament 1 length differs: expected 266.31mm, actual 268.28mm |
+| DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 0.8 nozzle | filament 1 length differs: expected 310.85mm, actual 313.51mm |
 | DIVERGENT | Elegoo/Elegoo Neptune 4 Pro 1.0 nozzle | filament 1 length differs: expected 331.47mm, actual 334.56mm |
 | DIVERGENT | Elegoo/Elegoo Neptune X 0.4 nozzle | filament 1 length differs: expected 272.68mm, actual 273.03mm |
-| DIVERGENT | Elegoo/Elegoo Neptune X 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 267.92mm |
-| DIVERGENT | Elegoo/Elegoo Neptune X 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 312.68mm |
+| DIVERGENT | Elegoo/Elegoo Neptune X 0.6 nozzle | filament 1 length differs: expected 266.33mm, actual 268.30mm |
+| DIVERGENT | Elegoo/Elegoo Neptune X 0.8 nozzle | filament 1 length differs: expected 310.89mm, actual 313.55mm |
 | DIVERGENT | Elegoo/Elegoo OrangeStorm Giga 0.4 nozzle | filament 1 length differs: expected 244.88mm, actual 156.05mm |
 | DIVERGENT | Elegoo/Elegoo OrangeStorm Giga 0.6 nozzle | filament 1 length differs: expected 277.40mm, actual 103.95mm |
 | DIVERGENT | Elegoo/Elegoo OrangeStorm Giga 0.8 nozzle | filament 1 length differs: expected 324.62mm, actual 118.60mm |
@@ -372,7 +372,7 @@
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle | preamble differs at line 44: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle | preamble differs at line 40: expected Some("M106 P2 S0"), actual None |
 | DIVERGENT | Flashforge/Flashforge Artemis 0.4 Nozzle | filament 1 length differs: expected 231.03mm, actual 67.97mm |
-| ARES_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | unsupported project feature: enable_extra_bridge_layer |
 | ARES_ERROR | Flashforge/Flashforge Creator 5 0.6 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Flashforge/Flashforge Creator 5 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
@@ -381,7 +381,7 @@
 | DIVERGENT | Flashforge/Flashforge Guider 2s 0.4 nozzle | filament 1 length differs: expected 240.69mm, actual 78.82mm |
 | DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle | preamble differs at line 15: expected Some("; support material extrusion width = 0.45mm"), actual Some("; first layer extrusion width = 0.50mm") |
 | DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.6 Nozzle | filament 1 length differs: expected 307.23mm, actual 307.06mm |
-| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.8 Nozzle | preamble differs at line 28: expected Some("G1 X-145 Y-159 F4800"), actual Some("G1 X-145 Y-153 F4800") |
+| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.8 Nozzle | preamble differs at line 28: expected Some("G1 X-145 Y-157 F4800"), actual Some("G1 X-145 Y-153 F4800") |
 | DIVERGENT | Flashforge/Flashforge Guider4 0.25 nozzle | preamble differs at line 29: expected Some("M106 P3 S102"), actual Some("G90") |
 | DIVERGENT | Flashforge/Flashforge Guider4 0.4 HF nozzle | preamble differs at line 29: expected Some("M106 P3 S102"), actual Some("G90") |
 | DIVERGENT | Flashforge/Flashforge Guider4 0.4 nozzle | preamble differs at line 31: expected Some("M106 P3 S102"), actual Some("G90") |
@@ -548,18 +548,18 @@
 | ARES_ERROR | Prusa/Prusa MK4S HF0.5 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
 | ARES_ERROR | Prusa/Prusa MK4S HF0.6 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
 | ARES_ERROR | Prusa/Prusa MK4S HF0.8 nozzle | orca-slicer failed (exit status: 239): run found error, return -17, exit... |
-| DIVERGENT | Prusa/Prusa XL 0.25 nozzle | filament 1 length differs: expected 236.28mm, actual 235.62mm |
-| DIVERGENT | Prusa/Prusa XL 0.3 nozzle | filament 1 length differs: expected 248.53mm, actual 247.88mm |
-| DIVERGENT | Prusa/Prusa XL 0.4 nozzle | filament 1 length differs: expected 240.01mm, actual 239.80mm |
-| DIVERGENT | Prusa/Prusa XL 0.5 nozzle | filament 1 length differs: expected 262.37mm, actual 262.11mm |
-| DIVERGENT | Prusa/Prusa XL 0.6 nozzle | filament 1 length differs: expected 312.22mm, actual 311.71mm |
+| DIVERGENT | Prusa/Prusa XL 0.25 nozzle | layer 1 travel geometry differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "184.52", y: "184.495", z: "0.2" }, end: Position { x: "184.84", y: "184.84", z: "0.2" }, arc_center: [None, None], turns: None }, feed: 24000.0, acceleration: "4000" } |
+| DIVERGENT | Prusa/Prusa XL 0.3 nozzle | layer 1 travel geometry differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "184.4", y: "184.37", z: "0.2" }, end: Position { x: "184.8", y: "184.8", z: "0.2" }, arc_center: [None, None], turns: None }, feed: 24000.0, acceleration: "5000" } |
+| DIVERGENT | Prusa/Prusa XL 0.4 nozzle | layer 1 travel geometry count differs: expected 6, actual 7 |
+| DIVERGENT | Prusa/Prusa XL 0.5 nozzle | layer 1 travel geometry count differs: expected 6, actual 7 |
+| DIVERGENT | Prusa/Prusa XL 0.6 nozzle | layer 1 travel geometry count differs: expected 6, actual 7 |
 | DIVERGENT | Prusa/Prusa XL 0.8 nozzle | layer 1 deposition 15 differs: expected Deposition { feature: "Inner wall", width: "1", motion: MotionRecord { command: "G1", start: Position { x: "176.7", y: "183.3", z: "0.2" }, end: Position { x: "176.7", y: "176.78", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.51887", feed: 900.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Inner wall", width: "1", motion: MotionRecord { command: "G1", start: Position { x: "176.7", y: "183.3", z: "0.2" }, end: Position { x: "176.7", y: "176.7", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.52524", feed: 900.0, acceleration: "500", fans: "0:0" } |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.25 nozzle | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.3 nozzle | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.4 nozzle | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.5 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.6 nozzle | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
-| ARES_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
+| DIVERGENT | Prusa/Prusa XL 5T 0.25 nozzle | preamble differs at line 123: expected Some(""), actual Some("G90") |
+| DIVERGENT | Prusa/Prusa XL 5T 0.3 nozzle | preamble differs at line 123: expected Some(""), actual Some("G90") |
+| DIVERGENT | Prusa/Prusa XL 5T 0.4 nozzle | preamble differs at line 123: expected Some(""), actual Some("G90") |
+| DIVERGENT | Prusa/Prusa XL 5T 0.5 nozzle | preamble differs at line 123: expected Some(""), actual Some("G90") |
+| DIVERGENT | Prusa/Prusa XL 5T 0.6 nozzle | preamble differs at line 123: expected Some(""), actual Some("G90") |
+| ARES_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | DIVERGENT | Qidi/Qidi Q1 Pro 0.2 nozzle | filament 1 length differs: expected 206.98mm, actual 206.00mm |
 | DIVERGENT | Qidi/Qidi Q1 Pro 0.4 nozzle | preamble differs at line 38: expected Some("M106 P3 S255"), actual Some("G90") |
 | DIVERGENT | Qidi/Qidi Q1 Pro 0.6 nozzle | preamble differs at line 38: expected Some("M106 P3 S255"), actual Some("G90") |
@@ -780,10 +780,10 @@
 | DIVERGENT | Snapmaker/Snapmaker J1 (0.4 nozzle) | filament 1 length differs: expected 255.04mm, actual 254.22mm |
 | DIVERGENT | Snapmaker/Snapmaker J1 (0.6 nozzle) | filament 1 length differs: expected 248.90mm, actual 249.24mm |
 | DIVERGENT | Snapmaker/Snapmaker J1 (0.8 nozzle) | filament 1 length differs: expected 291.39mm, actual 292.39mm |
-| ARES_ERROR | Snapmaker/Snapmaker U1 (0.2 nozzle) | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
+| ARES_ERROR | Snapmaker/Snapmaker U1 (0.2 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | orca-slicer failed (exit status: 238): bridge_line_width: Bridge line width must not exceed nozzle diameter: 0.600000 |
-| ARES_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | invalid project G-code template: expected = in e_retracted[initial_tool] = 1.5 * retract_length[initial_tool] |
+| ARES_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | ARES_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | DIVERGENT | Sovol/Sovol SV01 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.286", y: "123.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.258", y: "123.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "500", fans: "0:255" } |
 | DIVERGENT | Sovol/Sovol SV01 Pro 0.4 nozzle | layer 2 deposition 47 differs: expected Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.286", y: "123.518", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05765", feed: 2400.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.439999", motion: MotionRecord { command: "G1", start: Position { x: "143.546", y: "122.258", z: "0.44" }, end: Position { x: "142.258", y: "123.546", z: "0.44" }, arc_center: [None, None], turns: None }, extrusion: "0.05894", feed: 2400.0, acceleration: "500", fans: "0:255" } |
@@ -955,9 +955,9 @@
 | DIVERGENT | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle | preamble differs at line 25: expected Some("M106 S0"), actual Some(" ") |
 | ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
 | DIVERGENT | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle | preamble differs at line 25: expected Some("M106 S0"), actual Some(" ") |
-| DIVERGENT | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | preamble differs at line 25: expected Some("M106 S0"), actual Some(" ") |
-| DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | preamble differs at line 25: expected Some("M106 S0"), actual Some(" ") |
-| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| ARES_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | orca-slicer failed (signal: 11 (SIGSEGV) (core dumped)): no output |
+| DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | preamble differs at line 25: expected Some("M106 S0"), actual Some(" ") |
 | DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle | preamble differs at line 25: expected Some("M106 S0"), actual Some(" ") |
 | DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle | preamble differs at line 25: expected Some("M106 S0"), actual Some(" ") |
 | DIVERGENT | Z-Bolt/Z-Bolt S1000 0.4 nozzle | layer 15 deposition 41 differs: expected Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "502.3", y: "504.007", z: "3" }, end: Position { x: "503.928", y: "504.007", z: "3" }, arc_center: [None, None], turns: None }, extrusion: "0.05401", feed: 1700.0, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "502.3", y: "504.007", z: "3" }, end: Position { x: "503.929", y: "504.007", z: "3" }, arc_center: [None, None], turns: None }, extrusion: "0.05401", feed: 1700.0, acceleration: "", fans: "0:255" } |

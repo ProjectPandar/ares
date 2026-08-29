@@ -32,6 +32,13 @@ pub(super) fn append(
             "concentric spacing must be positive".into(),
         ));
     }
+    // Concentric fills the narrow solid surfaces (`group_fills/narrow.rs`), so
+    // it also runs the shared residual medial-axis gap pass the active upstream
+    // attaches after materializing every full-density non-bridge Fill
+    // (FillBase.cpp:133-189 `_create_gap_fill`).
+    let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
+    let fill_params = fill.params;
+    let fill_kind = fill.representative.kind;
     for expolygon in fill.expolygons {
         let mut polylines = Vec::new();
         for domain in intersect_no_overlap_domains(&fill.no_overlap_expolygons, &expolygon)? {
@@ -51,7 +58,7 @@ pub(super) fn append(
                 fill.params.loop_clipping as f64,
             );
         }
-        let entities = variable_width::convert_with_role(
+        let mut entities = variable_width::convert_with_role(
             &polylines,
             with_spacing(fill.params.flow, fill.params.spacing as f32),
             scale,
@@ -61,6 +68,21 @@ pub(super) fn append(
         .into_iter()
         .map(FillExtrusionEntity::VariableWidth)
         .collect::<Vec<_>>();
+        // Arachne's concentric rings fully cover the narrow solid domain (every
+        // reference gcode shows zero residual gap on these surfaces), so the
+        // coverage is the fill domain itself rather than a centreline inflation.
+        let domain = intersect_no_overlap_domains(&no_overlap_expolygons, &expolygon)?;
+        super::gap_residual::append_residual(super::gap_residual::ResidualInput {
+            output_entities: &mut entities,
+            no_overlap_expolygons: &no_overlap_expolygons,
+            params: fill_params,
+            kind: fill_kind,
+            expolygon: &expolygon,
+            filled: &[],
+            spacing: fill_params.flow.width,
+            covered_override: Some(&domain),
+            scale,
+        })?;
         if !entities.is_empty() {
             output.collections.push(FillExtrusionCollection {
                 entities,
