@@ -976,7 +976,13 @@ completed all 1001 presets: 35 PASS, 875 DIVERGENT, 91 ARES_ERROR. Preamble
 first divergences fell from 86 to 77; all nine affected printers moved into
 travel/lifecycle.
 
-NEXT: run sweep11 for the 48 first-layer hull cases, then continue with the
-remaining preamble groups (legacy FLAVOR layout, BBL purge feedrate,
-start-template branches) and the larger internal-solid-infill/feedrate/travel
-families.
+A first sweep11 attempt was discarded because later source edits overlapped
+its Cargo compilation, producing a mixed binary. Stable sweep12 ran from clean
+HEAD `36e1fe0` with no concurrent edits and completed all 1001 presets: 35
+PASS, 875 DIVERGENT, 91 ARES_ERROR. Preamble first divergences fell from 77 to
+15: all 48 covered-hull cases and all 14 integer-division purge cases advanced.
+Representative RatRig now reaches layer control events; A1 reaches deposition.
+
+NEXT: close the final 15 preamble cases (legacy FLAVOR layout, auxiliary-fan
+ordering, two BBL M142 branches, and six per-profile start coordinates), then
+move to the dominant deposition/feedrate/travel families.
