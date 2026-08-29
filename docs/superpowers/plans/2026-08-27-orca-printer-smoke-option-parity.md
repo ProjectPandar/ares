@@ -1051,7 +1051,12 @@ preserves the local/global distinction in statistics accounting. Focused mode
 and 3MF output tests are RED/GREEN. Eryone and Flashforge large-delta examples
 now match exactly; across all 276 former stats rows, all >50mm mismatches except
 three Ginger skirt-geometry cases disappear (28 exact, 48 <=0.2mm, 157 <=2mm,
-40 <=50mm, 3 >50mm).
+40 <=50mm, 3 >50mm). A follow-up aligned absolute-E object labels:
+`GCodeWriter::add_object_end_labels` resets E before each object-start marker
+(`GCodeWriter.cpp:1177-1193`). Ares now emits `G92 E0` and resets its cumulative
+state before M486/EXCLUDE starts. The 3MF test covers the observable sequence;
+Eryone's first deposition coordinates are now byte-identical (E5.27404,
+E5.54807, ...).
 
 NEXT: port the GCodeProcessor filament accounting common cause, then continue
 with lifecycle/control/deposition/travel families.

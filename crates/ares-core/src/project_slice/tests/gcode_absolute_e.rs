@@ -15,6 +15,7 @@ async fn absolute_e_preamble_resets_and_depositions_accumulate() {
     settings.insert("machine_end_gcode".to_owned(), json!(";END"));
     settings.insert("filament_start_gcode".to_owned(), json!(["", ""]));
     settings.insert("use_relative_e_distances".to_owned(), json!("0"));
+    settings.insert("exclude_object".to_owned(), json!("1"));
     archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
 
     let output = crate::slice_project(&archive.bytes(), metadata())
@@ -22,6 +23,7 @@ async fn absolute_e_preamble_resets_and_depositions_accumulate() {
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
     assert!(output.contains("M82 ; use absolute distances for extrusion\nG92 E0\n"));
+    assert!(output.contains("G92 E0\nM486 S0\n"));
 
     let first_feature = output
         .find(";TYPE:Inner wall")
