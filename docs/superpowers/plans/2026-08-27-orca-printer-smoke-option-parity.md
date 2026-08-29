@@ -1149,5 +1149,10 @@ exact `_ON_LAYER_CHANGE LAYER=1,2,3` sequence. Six obsolete one-based tests on
 the legacy STL pipeline were deleted now that the observable project seam owns
 the behavior.
 
-NEXT: verify control-event sweep, then CoolingBuffer feed precision/skirt feed,
-remaining cubic statistics and travel.
+Stable sweep22 (clean HEAD `37bec45`) completed all 1001 presets: 89 PASS,
+825 DIVERGENT, 87 ARES_ERROR. First-layer layer_num offsets are gone; RatRig
+now reaches a layer-two fan PWM precision delta and Anycubic Kobra 2 reaches
+travel acceleration. Control-first rows fall from 129 to 125.
+
+NEXT: fix CoolingBuffer feed/fan precision, then remaining cubic statistics,
+lifecycle and travel.
