@@ -1160,5 +1160,10 @@ same coordinate formatter and emits the upstream absolute-mode `G92 E0`
 immediately after the retract. Artillery's layer start now matches
 `G1 E-1.3 F2400` → `G92 E0` → fan marker, removing the missing control event.
 
+Stable sweep23 (clean HEAD `5ad2324`) confirms the first-layer reset ordering:
+Artillery X3/X4 control arrays now have both expected G92 events; their only
+remaining difference is CoolingBuffer fan PWM (201 vs 204). Overall PASS stays
+89 while this isolates the fan-time slice cleanly.
+
 NEXT: fix CoolingBuffer feed/fan precision, then remaining cubic statistics,
 lifecycle and travel.
