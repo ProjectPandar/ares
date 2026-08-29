@@ -57,7 +57,7 @@ pub(super) fn emit(
     // The Marlin-family machine envelope prints before the start G-code
     // (`GCode.cpp:2819`), followed by the start G-code (`GCode.cpp:3137`).
     machine::append_limits(&mut output, traversal);
-    let bed_cache = machine::append_start(&mut output, traversal, metadata)?;
+    let (bed_cache, start_position) = machine::append_start(&mut output, traversal, metadata)?;
     let options = motion::MotionOptions::from_traversal(traversal);
     let offset = footprint::model_center(traversal).unwrap_or_default();
     let offset = (
@@ -105,7 +105,12 @@ pub(super) fn emit(
         for (layer_index, layer) in object.iter_mut().enumerate() {
             let layer_output_start = output.len();
             if layer_index == 0 {
-                layer_gcode::append_print_preamble(&mut output, traversal, metadata)?;
+                layer_gcode::append_print_preamble(
+                    &mut output,
+                    traversal,
+                    metadata,
+                    start_position.as_ref(),
+                )?;
             }
             cooling.begin_layer(&mut output, layer_index);
             state.part_fan_speed = cooling.part_speed();

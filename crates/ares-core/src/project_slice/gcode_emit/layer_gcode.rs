@@ -48,6 +48,7 @@ pub(super) fn append_print_preamble(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
+    start_position: Option<&value::Value>,
 ) -> Result<(), SliceError> {
     if tags::Tags::of(traversal).is_bbl() {
         output.extend_from_slice(
@@ -71,7 +72,9 @@ pub(super) fn append_print_preamble(
         .filter(|source| !source.trim().is_empty())
     {
         let mut config = super::placeholders::base_config(traversal, metadata)?;
-        config.insert("position", emitted_position(output));
+        if let Some(position) = start_position {
+            config.insert("position", position.clone());
+        }
         let rendered = template::render(source, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!(
                 "invalid project filament-start G-code template: {error}"
@@ -138,55 +141,6 @@ fn format_pa(value: f64) -> String {
         .trim_end_matches('0')
         .trim_end_matches('.')
         .to_owned()
-}
-
-pub(super) fn emitted_position(output: &[u8]) -> value::Value {
-    let mut position = [0.0_f64; 3];
-    let mut absolute = true;
-    for line in String::from_utf8_lossy(output).lines() {
-        let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
-        match code {
-            "G90" => {
-                absolute = true;
-                continue;
-            }
-            "G91" => {
-                absolute = false;
-                continue;
-            }
-            "G28" => {
-                position = [0.0; 3];
-                continue;
-            }
-            _ => {}
-        }
-        let Some(command) = code.split_ascii_whitespace().next() else {
-            continue;
-        };
-        if !matches!(command, "G0" | "G1" | "G2" | "G3" | "G92") {
-            continue;
-        }
-        for token in code.split_ascii_whitespace().skip(1) {
-            let Some(axis) = token.bytes().next() else {
-                continue;
-            };
-            let Some(index) = [b'X', b'Y', b'Z']
-                .iter()
-                .position(|candidate| *candidate == axis)
-            else {
-                continue;
-            };
-            let Ok(value) = token[1..].parse::<f64>() else {
-                continue;
-            };
-            if absolute || command == "G92" {
-                position[index] = value;
-            } else {
-                position[index] += value;
-            }
-        }
-    }
-    value::Value::List(position.into_iter().map(value::Value::number).collect())
 }
 
 /// Renders `before_layer_change_gcode` with `layer_num`, `layer_z`, and

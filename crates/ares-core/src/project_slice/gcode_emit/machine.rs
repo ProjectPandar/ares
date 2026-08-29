@@ -209,20 +209,23 @@ pub(super) fn append_start(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
-) -> Result<i32, SliceError> {
+) -> Result<(i32, Option<value::Value>), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
     output.extend_from_slice(custom.as_bytes());
     let bed_cache = append_first_layer_bed_temperature(output, traversal);
     // An empty start G-code still writes the role tag, the temperature
     // handling and a blank `writeln` line (`GCode.cpp:3115-3137`).
-    let rendered = if template.is_empty() {
-        String::new()
+    let (rendered, position) = if template.is_empty() {
+        (String::new(), None)
     } else {
         let mut config = self_start_config(traversal, metadata)?;
-        template::render(template, &mut config).map_err(|error| {
+        let rendered = template::render(template, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
-        })?
+        })?;
+        // `GCode.cpp:3118-3140` lets explicit template assignments update
+        // GCodeWriter position, but never parses G0/G1 text back into it.
+        (rendered, config.get("position").cloned())
     };
     output.extend_from_slice(rendered.as_bytes());
     if !rendered.ends_with('\n') {
@@ -232,7 +235,7 @@ pub(super) fn append_start(
     if !super::tags::Tags::of(traversal).is_bbl() {
         append_flavor_preamble(output, traversal);
     }
-    Ok(bed_cache)
+    Ok((bed_cache, position))
 }
 
 fn self_start_config(

@@ -839,6 +839,26 @@ P2 state → first layer, then unconditional part-fan off and auxiliary-gated P2
 off before machine end. `machine.rs` was also split through a real
 `machine::exhaust_fan` module and is back below 400 LOC.
 
-NEXT: run the affected Artemis family through the smoke harness, then continue
-with the remaining preamble groups (M104/M106 S0, whitespace/comment layout)
-and the larger internal-solid-infill/feedrate/travel families.
+The 11-printer Creality K2/K2 Plus/K2 Pro whitespace family exposed a separate
+writer-state bug. Its filament template branches on `position[2]`, while the
+machine-start text contains `G1 Z1`. Orca renders machine start through
+PlaceholderParser and then marks the writer position unknown
+(`GCode.cpp:3118-3140`); it does not parse arbitrary G0/G1 text back into
+GCodeWriter. Only explicit template assignments to `position[...]` update the
+writer. Ares instead re-parsed every emitted move and selected the opposite
+branch. The invented parser and its source-level pinning test were removed;
+machine-start now carries only assigned position state into filament-start.
+A 3MF output test covers both halves (an explicit X assignment survives while a
+textual Z move does not). Re-slicing every sweep5 K2/K2 Plus/K2 Pro/K2 SE case
+proves all 12/12 normalized preambles byte-equal after timestamp/M73 removal;
+the representative K2 Pro 0.4 comparison is 52/52 lines.
+
+Sweep5 (after the sentinel fix, before the K2 position fix) completed all 1001
+presets: 35 PASS, 875 DIVERGENT, 91 ARES_ERROR. Preamble first divergences fell
+from 235 to 161; 74 Artemis/Volumic/Qidi/etc. cases advanced to their next
+travel, deposition, lifecycle, or postamble mismatch. The error-count movement
+is from nondeterministic Orca failures, not a new Ares validation branch.
+
+NEXT: run the K2 family-wide proof in the next sweep, then continue with the
+remaining preamble groups (M104 ordering, header/comment layout) and the larger
+internal-solid-infill/feedrate/travel families.

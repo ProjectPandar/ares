@@ -22,12 +22,3 @@ async fn project_templates_share_orca_runtime_placeholders() {
     assert!(runtime.starts_with(";RUNTIME 0 0 2026 20260716-010203 0 "));
     assert!(!runtime.contains(['[', ']']));
 }
-
-#[test]
-fn filament_template_position_tracks_absolute_and_relative_machine_moves() {
-    let position = super::super::layer_gcode::emitted_position(
-        b"G90\nG1 X10 Y20 Z3\nG91\nG1 X-2 Z1\nG90\nG92 Y5\n",
-    );
-
-    assert_eq!(position.as_string(), "8,5,4");
-}
