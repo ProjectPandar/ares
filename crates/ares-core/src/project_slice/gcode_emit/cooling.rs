@@ -184,27 +184,31 @@ impl CoolingState {
                 .position(|byte| *byte == b'\n')
                 .map_or(output.len(), |offset| start + offset + 1);
             let marker = std::str::from_utf8(&output[start..end]).unwrap();
-            let target = if marker.contains("_BASE__") {
-                baseline
+            let (target, force) = if marker.contains("_BASE__") {
+                (baseline, true)
             } else if let Some(value) = marker
                 .strip_prefix(";__ARES_ROLE_FAN_CONDITIONAL_")
                 .and_then(|value| value.strip_suffix("__\n"))
             {
-                value.parse::<u8>().unwrap().max(baseline)
+                let requested = value.parse::<u8>().unwrap();
+                (requested.max(baseline), requested > baseline)
             } else {
-                marker
-                    .strip_prefix(";__ARES_ROLE_FAN_FIXED_")
-                    .and_then(|value| value.strip_suffix("__\n"))
-                    .unwrap()
-                    .parse::<u8>()
-                    .unwrap()
+                (
+                    marker
+                        .strip_prefix(";__ARES_ROLE_FAN_FIXED_")
+                        .and_then(|value| value.strip_suffix("__\n"))
+                        .unwrap()
+                        .parse::<u8>()
+                        .unwrap(),
+                    true,
+                )
             };
-            let replacement = if target == self.physical_part_speed {
-                Vec::new()
-            } else {
+            let replacement = if force || target != self.physical_part_speed {
                 self.physical_part_speed = target;
                 let emitted = clamped_part_speed(target, self.part_cooling_fan_min_pwm);
                 format!("M106 S{}\n", part_fan_pwm(emitted)).into_bytes()
+            } else {
+                Vec::new()
             };
             output.splice(start..end, replacement);
         }

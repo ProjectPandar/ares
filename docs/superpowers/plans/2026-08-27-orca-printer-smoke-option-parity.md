@@ -1211,5 +1211,14 @@ raised Z → XY → layer Z. This deletes the duplicate raised-Z move previously
 pinned by the public object-label test and makes both raw sequences byte-exact
 to their Orca references. The test was RED/GREEN; KSR golden and clippy pass.
 
-NEXT: stable role/stats/lift sweep, then remaining cubic statistics, lifecycle
-and travel.
+The first combined sweep exposed a role-resolver regression (PASS 89→26):
+Orca force-reasserts baseline fan at role end even when its numeric value is
+unchanged, whereas Ares deduplicated it and removed 77 expected `M106 S255`
+commands. Baseline, fixed-role, and effective conditional-role markers now
+force emission; only ineffective conditional starts deduplicate. Ender-3 smoke
+is PASS again and SecKit retains its expected Internal Bridge S255. The
+regressed generated summary was restored rather than recorded as valid
+progress.
+
+NEXT: rerun stable role/stats/lift sweep, then remaining cubic statistics,
+lifecycle and travel.
