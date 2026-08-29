@@ -1062,5 +1062,12 @@ upstream reset: every `GCode::retract` appends `GCodeWriter::reset_e()`
 resets cumulative state; a following object marker only resets when still
 needed. Eryone outer→bottom now matches E2.29664, G92 E0, E5, E5.03396.
 
-NEXT: port the GCodeProcessor filament accounting common cause, then continue
-with lifecycle/control/deposition/travel families.
+Stable sweep14 (absolute E before retract reset) and sweep16 (after retract
+reset) each completed all 1001 presets; sweep16 reports 35 PASS, 875 DIVERGENT,
+91 ARES_ERROR. The large absolute-E families moved to their true differences:
+Eryone now reaches travel count and Flashforge reaches a last-decimal skirt
+extrusion. Remaining filament-first rows (248) are overwhelmingly small
+geometry/flow differences; only three Ginger large-skirt cases remain >50mm.
+
+NEXT: attack the shared skirt/flow geometry and first-layer feedrate families,
+then lifecycle/control/travel.
