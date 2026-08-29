@@ -69,6 +69,21 @@ async fn non_bbl_fans_follow_orca_print_start_layer_and_finish_order() {
     assert!(part_off < auxiliary_off);
     assert!(auxiliary_off < machine_end);
     assert!(!lines.iter().any(|line| line.starts_with("M981 ")));
+    let total_weight = lines
+        .iter()
+        .position(|line| line.starts_with("; total filament used [g] = "))
+        .unwrap();
+    let total_cost = lines
+        .iter()
+        .position(|line| line.starts_with("; total filament cost = "))
+        .unwrap();
+    let layer_count = lines
+        .iter()
+        .position(|line| line.starts_with("; total layers count = "))
+        .unwrap();
+    assert!(machine_end < total_weight);
+    assert!(total_weight < total_cost);
+    assert!(total_cost < layer_count);
 }
 
 #[tokio::test]

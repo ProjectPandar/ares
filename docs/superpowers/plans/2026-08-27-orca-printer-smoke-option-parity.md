@@ -1198,5 +1198,12 @@ Go3 now emits expected S255 for Internal Bridge (rather than retaining the 99%
 S252 baseline), no internal marker reaches final G-code, KSR golden passes, and
 focused role tests plus workspace clippy are green.
 
-NEXT: stable role-fan sweep, then final statistics, remaining cubic statistics,
-lifecycle and travel.
+Non-BBL final material totals now match `GCode.cpp:3523-3550`: the per-extruder
+stats calculation returns total weight/cost, emits `; total filament used [g]`
+and `; total filament cost` immediately before layer count, while BBL retains
+its required blank line. The public non-BBL 3MF test was RED then GREEN;
+Artillery's entire stats block is byte-identical apart from ignored timing.
+Workspace clippy/fmt and KSR golden pass.
+
+NEXT: stable role/stats sweep, then remaining cubic statistics, lifecycle and
+travel.

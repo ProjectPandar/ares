@@ -255,7 +255,8 @@ pub(super) fn emit(
     )?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let used_filament = finish::account_used_filament(&output);
-    finish::append_filament_stats(&mut output, traversal, used_filament);
+    let (total_weight, total_cost) =
+        finish::append_filament_stats(&mut output, traversal, used_filament);
     if !tags.is_bbl() {
         // Compatible-flavor tail statistics: layer count, klipper-style
         // time placeholders, then the config block.
@@ -266,7 +267,9 @@ pub(super) fn emit(
             .unwrap_or(0);
         output.extend_from_slice(
             format!(
-                "; total layers count = {layers}\n\
+                "; total filament used [g] = {total_weight:.2}\n\
+; total filament cost = {total_cost:.2}\n\
+; total layers count = {layers}\n\
 ; estimated printing time (normal mode) = 0s\n\
 ; estimated first layer printing time (normal mode) = 0s\n\n"
             )
@@ -275,6 +278,8 @@ pub(super) fn emit(
         if let Some(config) = &traversal.config_block {
             output.extend_from_slice(config);
         }
+    } else {
+        output.push(b'\n');
     }
     Ok(processor::process(
         output,
