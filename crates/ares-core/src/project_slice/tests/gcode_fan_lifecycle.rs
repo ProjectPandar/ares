@@ -71,6 +71,31 @@ async fn non_bbl_fans_follow_orca_print_start_layer_and_finish_order() {
     assert!(!lines.iter().any(|line| line.starts_with("M981 ")));
 }
 
+#[tokio::test]
+async fn fan_mover_suppresses_redundant_initial_part_fan_off() {
+    let mut archive = KsrArchive::new();
+    let mut settings: serde_json::Value =
+        serde_json::from_str(&archive.entry_text(PROJECT_SETTINGS)).unwrap();
+    let settings = settings.as_object_mut().unwrap();
+    settings.insert("printer_model".to_owned(), json!("Prusa MINI IS"));
+    settings.insert("machine_start_gcode".to_owned(), json!(";MACHINE-START"));
+    settings.insert("machine_end_gcode".to_owned(), json!(";MACHINE-END"));
+    settings.insert("filament_start_gcode".to_owned(), json!(["", ""]));
+    settings.insert("auxiliary_fan".to_owned(), json!("0"));
+    settings.insert("fan_speedup_time".to_owned(), json!("0.2"));
+    settings.insert("fan_kickstart".to_owned(), json!("0"));
+    settings.insert("close_fan_the_first_x_layers".to_owned(), json!(["1", "1"]));
+    archive.insert_text(PROJECT_SETTINGS, &serde_json::to_string(&settings).unwrap());
+
+    let output = crate::slice_project(&archive.bytes(), metadata())
+        .await
+        .unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+    let first_layer = output.find(";LAYER_CHANGE").unwrap();
+
+    assert!(!output[..first_layer].lines().any(|line| line == "M106 S0"));
+}
+
 fn position(lines: &[&str], expected: &str) -> usize {
     lines
         .iter()

@@ -26,3 +26,12 @@ async fn task22o174_layer_cooling_matches_orca_slowdown_feedrate() {
 
     assert_eq!(feedrate, Some("G1 F12996"));
 }
+
+#[test]
+fn fan_mover_suppresses_only_the_redundant_initial_zero_state() {
+    assert!(!super::should_emit_initial_part_fan(0, true, true, 0));
+    assert!(super::should_emit_initial_part_fan(0, true, false, 0));
+    assert!(super::should_emit_initial_part_fan(0, true, true, 20));
+    assert!(!super::should_emit_initial_part_fan(1, true, false, 0));
+    assert!(!super::should_emit_initial_part_fan(0, false, false, 0));
+}

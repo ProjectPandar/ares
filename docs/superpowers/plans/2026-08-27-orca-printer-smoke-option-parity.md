@@ -918,6 +918,14 @@ resolves support width → object width → automatic 1.125×nozzle. A 96%-of-0.
 All 19 first divergences are removed: 18/19 complete semantic preambles match;
 Flashforge Guider 3 Ultra advances to its next machine-start coordinate delta.
 
+The nine Kingroon KP3S 3.0 / Prusa MINIIS / Prusa MK3.5 extra-S0 cases use
+Orca's FanMover path (`GCode.cpp:3727-3743`, `FanMover.cpp`). When
+`fan_speedup_time != 0` or kickstart is enabled, its known default off state
+makes CoolingBuffer's first-layer zero command redundant. Ares now suppresses
+only that CoolingState-owned initial zero; BBL and custom-template commands are
+untouched, and nonzero initial states still emit. Focused boundary and 3MF
+output tests pass, and all 9/9 affected semantic preambles are equal.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into
@@ -928,7 +936,11 @@ Sweep8 (first-filament hotend arrays, before support-width header) completed
 all 1001 presets: 35 PASS, 877 DIVERGENT, 89 ARES_ERROR. Preamble first
 divergences fell from 114 to 104; all ten H2D/X2D cases moved into travel.
 
-NEXT: run sweep9 for the 19 support-width header cases, then continue with
-remaining preamble groups (legacy FLAVOR layout, bounding-box precision,
-start-template coordinates) and the larger internal-solid-infill/feedrate/
-travel families.
+Sweep9 (support-width header, before FanMover initial-state suppression)
+completed all 1001 presets: 35 PASS, 873 DIVERGENT, 93 ARES_ERROR. Preamble
+first divergences fell from 104 to 86: 18 cases left the preamble and Guider 3
+Ultra advanced to its next start-template coordinate mismatch.
+
+NEXT: run sweep10 for the nine FanMover S0 cases, then continue with remaining
+preamble groups (legacy FLAVOR layout, bounding-box precision, start-template
+coordinates) and the larger internal-solid-infill/feedrate/travel families.

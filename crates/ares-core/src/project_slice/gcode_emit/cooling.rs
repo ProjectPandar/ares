@@ -17,6 +17,7 @@ pub(super) struct CoolingState {
     /// Non-BBL printers emit the initial fan state at the first layer
     /// boundary; BBL machines carry it inside their start sequence.
     emit_initial_fan: bool,
+    fan_mover_enabled: bool,
     feedrate: feedrate::State,
 }
 
@@ -36,6 +37,7 @@ impl CoolingState {
             auxiliary_fan: runtime.auxiliary_fan.0,
             part_cooling_fan_min_pwm: runtime.part_cooling_fan_min_pwm.0.clamp(0, 100) as u8,
             emit_initial_fan: !super::tags::Tags::of(traversal).is_bbl(),
+            fan_mover_enabled: runtime.fan_speedup_time.0 != 0.0 || runtime.fan_kickstart.0 > 0.0,
             feedrate: feedrate::State::new(
                 feedrate::Config {
                     enabled: first_bool(&filament.slow_down_for_layer_cooling.0),
@@ -59,7 +61,13 @@ impl CoolingState {
 
     pub(super) fn begin_layer(&mut self, output: &mut Vec<u8>, layer_index: usize) {
         let part_speed = self.part_speed_for_layer(layer_index);
-        if part_speed != self.part_speed || (layer_index == 0 && self.emit_initial_fan) {
+        let initial = should_emit_initial_part_fan(
+            layer_index,
+            self.emit_initial_fan,
+            self.fan_mover_enabled,
+            part_speed,
+        );
+        if part_speed != self.part_speed || initial {
             self.part_speed = part_speed;
             let speed = if part_speed > 0 && part_speed < self.part_cooling_fan_min_pwm {
                 self.part_cooling_fan_min_pwm
@@ -110,6 +118,15 @@ impl CoolingState {
         let speed = f64::from(self.max_speed) * numerator as f64 / denominator as f64;
         (speed + 0.5).floor().clamp(0.0, 100.0) as u8
     }
+}
+
+fn should_emit_initial_part_fan(
+    layer_index: usize,
+    emit_initial_fan: bool,
+    fan_mover_enabled: bool,
+    speed: u8,
+) -> bool {
+    layer_index == 0 && emit_initial_fan && !(fan_mover_enabled && speed == 0)
 }
 
 fn first_percent(values: &[crate::OrcaFloat]) -> u8 {
