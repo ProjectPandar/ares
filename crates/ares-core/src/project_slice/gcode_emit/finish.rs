@@ -28,9 +28,15 @@ pub(super) fn append(
 
     let tags = super::tags::Tags::of(traversal);
     let custom = tags.custom() + "\n";
+    // GCode.cpp:3459-3465: set_fan(0) unconditionally, then the additional
+    // (auxiliary) fan only when auxiliary_fan is enabled, then the BBL-only
+    // spaghetti detector. The aux-fan off was wrongly gated on is_bbl.
     output.extend_from_slice(b"M106 S0\n");
+    if traversal.resolved.views.runtime_gcode.auxiliary_fan.0 {
+        output.extend_from_slice(b"M106 P2 S0\n");
+    }
     if tags.is_bbl() {
-        output.extend_from_slice(b"M106 P2 S0\nM981 S0 P20000 ; close spaghetti detector\n");
+        output.extend_from_slice(b"M981 S0 P20000 ; close spaghetti detector\n");
     }
     output.extend_from_slice(custom.as_bytes());
     if let Some(filament_end) = gcode.filament_end_gcode.0.first() {
