@@ -72,6 +72,23 @@ impl MotionOptions {
             full.process.object.default_acceleration.0,
             |value| value.default_acceleration.0,
         );
+        let retraction_speed = gcode
+            .retraction_speed
+            .0
+            .first()
+            .map_or(0.0, |value| value.0)
+            .round();
+        let configured_deretraction_speed = gcode
+            .deretraction_speed
+            .0
+            .first()
+            .map_or(0.0, |value| value.0)
+            .round();
+        let deretraction_speed = if configured_deretraction_speed > 0.0 {
+            configured_deretraction_speed
+        } else {
+            retraction_speed
+        };
         Self {
             filament_area: std::f64::consts::PI * filament_diameter.powi(2) * 0.25,
             filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
@@ -282,19 +299,9 @@ impl MotionOptions {
                 .0
                 .first()
                 .map_or(0.0, |value| value.0),
-            deretraction_feedrate: gcode
-                .deretraction_speed
-                .0
-                .first()
-                .map_or(0.0, |value| value.0)
-                * 60.0,
+            deretraction_feedrate: deretraction_speed * 60.0,
             z_hop: gcode.z_hop.0.first().map_or(0.0, |value| value.0),
-            retraction_feedrate: gcode
-                .retraction_speed
-                .0
-                .first()
-                .map_or(0.0, |value| value.0)
-                * 60.0,
+            retraction_feedrate: retraction_speed * 60.0,
             wipe: retract_overrides
                 .filament_wipe
                 .iter()

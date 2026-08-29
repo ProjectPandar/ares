@@ -1078,5 +1078,15 @@ before offsetting. Ginger 8mm skirt bounds now exactly match
 443.216..556.784 and filament falls from 7356.06 to 9524.17 vs Orca 9524.14;
 5mm is exact, and 3mm is reduced to a 0.08mm last-geometry delta.
 
-NEXT: attack remaining small flow/statistics and first-layer feedrate families,
-then lifecycle/control/travel.
+The 94 feed-only first divergences shared a harder CoolingBuffer blocker:
+profiles with `deretraction_speed=0` emitted `G1 E... F0`. Upstream
+`Extruder::deretract_speed()` rounds the configured value and falls back to
+rounded retraction speed when it is zero (`Extruder.cpp:184-199`). The F0 made
+Ares layer time/maximum time infinite, disabling every slowdown calculation.
+Motion options now apply the exact fallback and integer-mm/s rounding; a 3MF
+RED/GREEN test rejects F0 and requires F1800. Geeetech's representative feed
+moves from 3000 to the exact Orca 900; Qidi moves from 6300 to 1586 (Orca 1580,
+leaving a small geometry/timing delta rather than a disabled cooling pass).
+
+NEXT: quantify feed/lifecycle progression, then close remaining small
+flow/statistics and CoolingBuffer precision before control/travel.
