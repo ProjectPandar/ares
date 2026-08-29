@@ -11,6 +11,7 @@ mod gcode_fan_lifecycle;
 mod gcode_filament_start;
 mod gcode_first_filaments;
 mod gcode_first_layer_bounds;
+mod gcode_flush_placeholders;
 mod gcode_header_widths;
 mod gcode_start_temperature;
 mod integration;

@@ -1,4 +1,6 @@
 mod bounds;
+#[cfg(test)]
+mod tests;
 mod timestamp;
 
 use crate::{
@@ -23,8 +25,6 @@ pub(super) fn base_config(
     config.insert("current_extruder", Value::number(0.0));
     config.insert("current_hotend", Value::number(-1.0));
     for (target, source) in [
-        ("flush_temperatures", "nozzle_temperature_range_high"),
-        ("flush_volumetric_speeds", "filament_max_volumetric_speed"),
         (
             "first_layer_temperature",
             "nozzle_temperature_initial_layer",
@@ -39,6 +39,7 @@ pub(super) fn base_config(
             config.insert(target, value);
         }
     }
+    insert_flush_placeholders(&mut config, traversal);
     // `retract_length` is exposed to templates from the filament retraction
     // length (`GCode.cpp:2898`).
     let retract_length = &traversal.resolved.views.runtime_gcode.retraction_length;
@@ -59,6 +60,66 @@ pub(super) fn base_config(
     bounds::insert_adaptive_bed_mesh(&mut config);
     bounds::insert_head_wrap_detect_zone(&mut config, traversal);
     Ok(config)
+}
+
+fn insert_flush_placeholders(config: &mut value::Config, traversal: &PreparedPostClassicTraversal) {
+    let filament = &traversal.resolved.views.full.filament.gcode;
+    let print = &traversal.resolved.views.full.filament.print;
+    let speeds = filament
+        .filament_flush_volumetric_speed
+        .iter()
+        .enumerate()
+        .map(|(index, value)| flush_speed(value, &filament.filament_max_volumetric_speed, index))
+        .map(Value::number)
+        .collect();
+    config.insert("flush_volumetric_speeds", Value::List(speeds));
+
+    let temperatures = filament
+        .filament_flush_temp
+        .iter()
+        .enumerate()
+        .map(|(index, value)| flush_temperature(value, &print.nozzle_temperature_range_high, index))
+        .map(|value| Value::number(f64::from(value)))
+        .collect();
+    config.insert("flush_temperatures", Value::List(temperatures));
+}
+
+fn flush_speed(
+    value: &crate::Nullable<crate::OrcaFloat>,
+    fallback: &crate::OrcaFloats,
+    index: usize,
+) -> f64 {
+    match value {
+        crate::Nullable::Value(value) if value.0 != 0.0 => value.0,
+        _ => float_at(fallback, index),
+    }
+}
+
+fn flush_temperature(
+    value: &crate::Nullable<crate::OrcaInt>,
+    fallback: &crate::OrcaInts,
+    index: usize,
+) -> i32 {
+    match value {
+        crate::Nullable::Value(value) if value.0 != 0 => value.0,
+        _ => int_at(fallback, index),
+    }
+}
+
+fn float_at(values: &crate::OrcaFloats, index: usize) -> f64 {
+    values
+        .0
+        .get(index)
+        .or_else(|| values.0.first())
+        .map_or(0.0, |value| value.0)
+}
+
+fn int_at(values: &crate::OrcaInts, index: usize) -> i32 {
+    values
+        .0
+        .get(index)
+        .or_else(|| values.0.first())
+        .map_or(0, |value| value.0)
 }
 
 fn insert_runtime_placeholders(

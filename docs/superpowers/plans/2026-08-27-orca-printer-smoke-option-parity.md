@@ -937,6 +937,13 @@ KSR probe supplies the exact independent literal
 preambles are fully equal, while three Raise3D variants advance to their next
 purge-coordinate branch.
 
+The same BBL purge trace found an independent option-projection bug:
+`flush_volumetric_speeds` and `flush_temperatures` were aliases of max-speed
+and range-high. Upstream uses configured `filament_flush_*` values and falls
+back per index only when a value is zero (`GCode.cpp:2876-2889`). Typed helper
+tests cover configured and zero-fallback values; a 3MF output test verifies the
+projected vector exposed to templates.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into
