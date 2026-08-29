@@ -787,3 +787,26 @@ timing at the preamble/layer boundary. NEXT: locate the exact Orca P3
 print-start emission (grep the fan init path), then implement the auxiliary-fan
 print-start activation in ares gcode_emit; M572 pressure-advance (filament
 start_gcode, Prusa CORE One family) is a separate preamble sub-family.
+
+## 2026-08-29 session: preamble M106 P3 root-cause progress (exhaust fan timing)
+
+Deep trace on Artillery M1 Pro 0.2 (sweep2 case e3b8b40560fd2d44): Orca emits
+`M106 P3 S255` at preamble line 109 — immediately AFTER the start_gcode END
+marker, in the print-start block (GCode.cpp:3181-3196, the
+support_air_filtration && activate_air_filtration[_during_print] exhaust-fan
+activation). Ares DOES emit an M106 P3 S255 but at line 383 — that one comes
+from the Artillery layer_change_gcode template (`{if layer_num==2} ;filter_fan
+M106 P3 S{...}` — correctly reproduced). Ares' print-start exhaust activation
+(exhaust_fan_startup_command, gcode_start_custom.rs:57) fires BEFORE
+machine_start_gcode and produced nothing here, so the print-start M106 P3 S255
+is missing. Suspect: exhaust_fan_control.during_print_speed() returned None.
+Artillery ABS filament sets activate_air_filtration=["0"] and
+during_print_exhaust_fan_speed=["0"], yet Orca still emits M106 P3 S255 — so
+either the sweep harness's resolved filament differs, or the option read path
+(vector/scoped per-extruder get_at) diverges. ALSO NOTE: ares
+exhaust_fan_startup_command skips Klipper entirely (gcode_startup.rs:107) but
+upstream set_exhaust_fan has NO flavor guard — verify whether that Klipper
+branch is an Ares invention. NEXT: resolve the actual filament/option values the
+sweep harness feeds for this case, fix the exhaust-fan print-start activation
+(option read + position after start_gcode), then the remaining preamble
+sub-families (M572 pressure advance, M104/M106 S0 blanks, comment/blank lines).
