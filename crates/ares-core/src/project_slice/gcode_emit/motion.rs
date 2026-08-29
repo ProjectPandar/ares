@@ -60,14 +60,19 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     if length <= 0.0 {
         return;
     }
+    let retract = extrusion::coordinate(state, -length);
     output.extend_from_slice(
         format!(
             "G1 E{} F{}\n",
-            format::extrusion(-length),
+            format::extrusion(retract),
             format::axis(state.options.retraction_feedrate)
         )
         .as_bytes(),
     );
+    if !state.options.use_relative_e_distances {
+        output.extend_from_slice(b"G92 E0\n");
+        state.e_position = 0.0;
+    }
     state.retracted = true;
 }
 

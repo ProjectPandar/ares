@@ -23,6 +23,13 @@ async fn absolute_e_preamble_resets_and_depositions_accumulate() {
         .unwrap();
     let output = std::str::from_utf8(&output).unwrap();
     assert!(output.contains("M82 ; use absolute distances for extrusion\nG92 E0\n"));
+    assert!(
+        output
+            .lines()
+            .collect::<Vec<_>>()
+            .windows(2)
+            .any(|pair| { pair[0].starts_with("G1 E-") && pair[1] == "G92 E0" })
+    );
 
     let first_feature = output
         .find(";TYPE:Inner wall")

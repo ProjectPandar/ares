@@ -1154,5 +1154,11 @@ Stable sweep22 (clean HEAD `37bec45`) completed all 1001 presets: 89 PASS,
 now reaches a layer-two fan PWM precision delta and Anycubic Kobra 2 reaches
 travel acceleration. Control-first rows fall from 129 to 125.
 
+A remaining absolute-E control mismatch came from the first-layer-only
+`retract_before_layer` helper bypassing cumulative E state. It now uses the
+same coordinate formatter and emits the upstream absolute-mode `G92 E0`
+immediately after the retract. Artillery's layer start now matches
+`G1 E-1.3 F2400` → `G92 E0` → fan marker, removing the missing control event.
+
 NEXT: fix CoolingBuffer feed/fan precision, then remaining cubic statistics,
 lifecycle and travel.
