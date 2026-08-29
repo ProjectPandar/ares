@@ -1174,5 +1174,13 @@ layer resolves to 79% / `M106 S201`, including the post-overhang restore where
 Ares previously emitted S204. Focused cooling/role tests (48), workspace clippy,
 KSR golden, and raw Artillery fan sequences pass.
 
+The first fan-time sweep attempt was invalid (all 1001 Orca launches exited
+127) because Nix GC removed paths named by `/tmp/orca-parity-libs.cache`.
+`scripts/orca-parity.sh` now validates every cached directory and refreshes via
+`nix build --no-link --print-out-paths`, which realizes the runtime closure
+instead of merely evaluating unrealized store names. A deliberately stale
+cache refresh and OrcaSlicer 2.4.2 `--help` both pass; the invalid summary was
+restored and is not counted as parity evidence.
+
 NEXT: run the stable fan-time sweep, then remaining cubic statistics, lifecycle
 and travel.

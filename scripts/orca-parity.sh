@@ -17,10 +17,22 @@ fi
 # The nix eval is expensive and flaky under repeated invocations; cache the
 # resolved library paths across runs (force a refresh with ORCA_LIB_REFRESH=1).
 CACHE="${ORCA_LIB_CACHE:-/tmp/orca-parity-libs.cache}"
+cache_valid=0
 if [ -s "$CACHE" ] && [ -z "${ORCA_LIB_REFRESH:-}" ]; then
+    cache_valid=1
+    IFS=: read -r -a cached_paths <<< "$(cat "$CACHE")"
+    for path in "${cached_paths[@]}"; do
+        if [ ! -d "$path" ]; then
+            cache_valid=0
+            break
+        fi
+    done
+fi
+
+if [ "$cache_valid" -eq 1 ]; then
     extra="$(cat "$CACHE")"
 else
-    extra="$(nix eval --impure --json --expr 'with import <nixpkgs> {}; builtins.map (p: (lib.getLib p).outPath + "/lib") [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret ]' | tr ',' '\n' | tr -d '[]"' | grep . | paste -sd:)"
+    extra="$(nix build --no-link --print-out-paths --impure --expr 'with import <nixpkgs> {}; builtins.map lib.getLib [ gtk3 webkitgtk_4_1 libGLU pango glib glib-networking gst_all_1.gstreamer gst_all_1.gst-plugins-base libsoup_3 libx11 libxext libxkbcommon libSM libICE libglvnd stdenv.cc.cc.lib wayland harfbuzz atk cairo gdk-pixbuf fontconfig.lib dbus libsecret ]' | sed 's#$#/lib#' | paste -sd:)"
     printf '%s' "$extra" > "$CACHE"
 fi
 
