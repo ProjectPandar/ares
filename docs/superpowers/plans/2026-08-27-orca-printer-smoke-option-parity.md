@@ -1254,5 +1254,13 @@ layer-2/layer-345 tests were RED/GREEN, RatRig V-Cast is now a dedicated PASS
 smoke, and `motion/path.rs` was split into the real `path::variable` module
 (389/66 LOC). KSR golden, clippy, and fmt pass.
 
-NEXT: stable layer-travel/feed sweep, then remaining postamble geometry, cubic
-statistics, lifecycle and travel.
+The first broad layer-travel sweep exposed an eager-lift regression: Normal
+profiles that had already emitted raised Z (Ender/Artillery) were incorrectly
+moved at layer Z, dropping PASS to 58 and travel-count firsts to 192. The branch
+now distinguishes actual lifted state: Normal+lifted keeps raised XYZ then
+down; Normal+not-lifted combines new layer Z; Spiral keeps XY then down. The
+regressed summary was restored. Ender-3, Artillery X3 Pro, and RatRig V-Cast
+focused smokes all pass together.
+
+NEXT: rerun stable layer-travel/feed sweep, then remaining postamble geometry,
+cubic statistics, lifecycle and travel.

@@ -124,6 +124,16 @@ pub(super) fn emit(
         if layer_change_travel && state.retracted {
             if state.options.spiral_lift {
                 append_xy_travel(output, first_x, first_y, state.travel_feedrate);
+            } else if state.lifted {
+                output.extend_from_slice(
+                    format!(
+                        "G1 X{} Y{} Z{}\n",
+                        format_axis(first_x),
+                        format_axis(first_y),
+                        format_extrusion(state.layer_z + state.options.z_hop)
+                    )
+                    .as_bytes(),
+                );
             } else {
                 append_xyz_travel(
                     output,
