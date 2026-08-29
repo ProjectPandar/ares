@@ -18,6 +18,7 @@ use crate::{
 
 pub(super) struct BrimPlan {
     paths: Vec<Vec<Point>>,
+    covered_hull: Vec<Point>,
     width: f32,
     spacing: f32,
     height: f32,
@@ -93,6 +94,12 @@ impl BrimPlan {
             .map_err(brim_geometry_error)?;
         let outer = offset_expolygons(&inner, brim_width, JoinType::Round, resolution)
             .map_err(brim_geometry_error)?;
+        let covered_hull = super::skirt::convex_hull(
+            &outer
+                .iter()
+                .flat_map(|expolygon| expolygon.contour().points().iter().copied())
+                .collect::<Vec<_>>(),
+        );
         let brim_area = difference_ex(&outer, &inner).map_err(brim_geometry_error)?;
         let mut area = offset_expolygons(&brim_area, -0.5 * spacing, JoinType::Round, resolution)
             .map_err(brim_geometry_error)?;
@@ -118,11 +125,16 @@ impl BrimPlan {
         }
         Ok(Some(Self {
             paths,
+            covered_hull,
             width: flow.width,
             spacing: flow.spacing,
             height: flow.height,
             mm3_per_mm: flow.mm3_per_mm * options.brim_flow_ratio.0,
         }))
+    }
+
+    pub(super) fn covered_hull(&self) -> &[Point] {
+        &self.covered_hull
     }
 
     pub(super) fn covered_bounds(&self, scale: CoordinateScale) -> Option<(f64, f64, f64, f64)> {

@@ -15,4 +15,19 @@ fn explicit_outer_brim_generates_outside_in_paths() {
 
     assert!(brim.paths.len() > 2);
     assert!(brim.paths.iter().all(|path| path.first() == path.last()));
+    assert!(!brim.covered_hull().is_empty());
+    let path_min_x = brim
+        .paths
+        .iter()
+        .flatten()
+        .map(|point| point.x())
+        .min()
+        .unwrap();
+    let covered_min_x = brim
+        .covered_hull()
+        .iter()
+        .map(|point| point.x())
+        .min()
+        .unwrap();
+    assert!(covered_min_x < path_min_x);
 }

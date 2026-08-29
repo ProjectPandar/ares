@@ -1069,5 +1069,14 @@ Eryone now reaches travel count and Flashforge reaches a last-decimal skirt
 extrusion. Remaining filament-first rows (248) are overwhelmingly small
 geometry/flow differences; only three Ginger large-skirt cases remain >50mm.
 
-NEXT: attack the shared skirt/flow geometry and first-layer feedrate families,
+Ginger's last three >50mm statistics cases came from skirt generation omitting
+the already-generated brim. Upstream first-layer skirt hull includes brim
+covered area; Ares brim paths were already exact (462.501..537.499 for the 8mm
+case) but skirt still surrounded only the object. `BrimPlan` now retains the
+outer covered hull from `outer_inner_brim_area`, and `SkirtPlan` includes it
+before offsetting. Ginger 8mm skirt bounds now exactly match
+443.216..556.784 and filament falls from 7356.06 to 9524.17 vs Orca 9524.14;
+5mm is exact, and 3mm is reduced to a 0.08mm last-geometry delta.
+
+NEXT: attack remaining small flow/statistics and first-layer feedrate families,
 then lifecycle/control/travel.

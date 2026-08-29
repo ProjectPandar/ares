@@ -35,6 +35,7 @@ pub(super) struct SkirtPlan {
 impl SkirtPlan {
     pub(super) fn generate(
         traversal: &PreparedPostClassicTraversal,
+        brim: Option<&super::brim::BrimPlan>,
     ) -> Result<Option<Self>, SliceError> {
         let print = &traversal.resolved.views.full.process.print;
         let loops_count = usize::try_from(print.skirt_loops.0).unwrap_or(0);
@@ -78,6 +79,9 @@ impl SkirtPlan {
                         .flat_map(|expolygon| expolygon.contour().points().iter().copied()),
                 );
             }
+        }
+        if let Some(brim) = brim {
+            occupied.extend_from_slice(brim.covered_hull());
         }
         let hull = convex_hull(&occupied);
         if hull.len() < 3 {

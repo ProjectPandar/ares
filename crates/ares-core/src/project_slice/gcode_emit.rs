@@ -41,8 +41,8 @@ pub(super) fn emit(
         .predecessor
         .predecessor
         .predecessor;
-    let skirt = skirt::SkirtPlan::generate(traversal)?;
     let brim = brim::BrimPlan::generate(traversal)?;
+    let skirt = skirt::SkirtPlan::generate(traversal, brim.as_ref())?;
     let first_layer_bounds =
         footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref());
     let mut output = Vec::new();
