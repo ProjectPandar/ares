@@ -1239,5 +1239,11 @@ P3 PWM. The public non-BBL 3MF test was RED/GREEN and verifies machine-end →
 M141 → P3 → executable-end ordering. Blocks S100 now has P3 S204 and Creality
 K1 CFS-C has M141 S0; KSR golden and clippy pass.
 
-NEXT: stable tail-control sweep, then remaining cubic statistics, lifecycle and
-travel.
+Stable sweep28 (clean HEAD `2db9241`) completed all 1001 presets: PASS 103→109,
+803 DIVERGENT, 89 ARES_ERROR. Postamble-first rows fall 23→10 and control rows
+112→106. Artillery X3 Pro is PASS; Blocks completion exhaust advances to
+first-layer CoolingBuffer feed precision, while K1 CFS-C advances to deposition
+count.
+
+NEXT: fix CoolingBuffer feed precision, then remaining postamble geometry,
+cubic statistics, lifecycle and travel.
