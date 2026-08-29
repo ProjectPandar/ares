@@ -1119,5 +1119,11 @@ different start. Finalization now uses upstream last-tie semantics. A focused
 closed-loop test is RED/GREEN, and the Geeetech 0.6 entity becomes byte-exact:
 112.972,112.972 → 112.972,112.068 → 112.110,112.929.
 
-NEXT: verify the internal-solid family sweep, then remaining CoolingBuffer
-precision/small statistics and control/travel.
+Stable sweep20 (clean HEAD `6ba1030`) completed all 1001 presets and raised
+PASS from 42 to **89** (912 failures). Deposition-value first divergences fall
+from 202 to 136; the entire Geeetech short-loop/concentric family closes (A10
+Pro 0.6 and Mizar S 0.8 are representative PASS rows). Remaining Anker 0.2
+cases now expose a smaller, distinct 0.02mm Arachne endpoint simplification.
+
+NEXT: close the remaining Arachne endpoint simplification, then small
+statistics/CoolingBuffer precision and control/travel.
