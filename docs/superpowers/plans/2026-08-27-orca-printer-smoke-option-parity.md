@@ -703,3 +703,37 @@ Remaining from the review list: residual pass has no focused unit tests
 (MAJOR), seam pinning tests are still ordinal-based (MINOR), and the
 residual seam only covers the four straight-line patterns (deferred — no
 failing case; concentric handles only narrow surfaces).
+
+## 2026-08-29 session: review round-2 re-verified; concentric seam root-caused
+
+Reviewer re-verification (run 872beee5) confirmed all five active-source
+fixes are CORRECT against FillBase.cpp:195-245 (gating, bridge, chain_points
+ordering, DP tolerance units, nominal-flow min/max). Net-positive, safe to
+keep. One remaining correctness P1 (BLOCK): the residual pass is only wired
+into the four straight-line patterns (monotonic.rs); concentric (the solid
+pattern auto-selected for narrow surfaces) and the sparse patterns bypass it.
+
+Attempted concentric seam this session; first implementation produced
+spurious gaps (Elegoo 26 vs 13, Creality Hi 21 vs 10) and was REVERTED to
+keep the verified 6/6 state. Root cause analysis (traced to libslic3r
+ClipperUtils): upstream covered-area is `out->polygons_covered_by_spacing(10)`
+over the MATERIALIZED entity collection (ExtrusionEntity.cpp:73-82), which
+reconstructs each path's flow from its own width/height and inflates with
+EndType etOpenButt (DefaultEndType, ClipperUtils.hpp:21). Ares' concentric
+materializes to VariableWidth (variable-width ThickPolyline) entities, NOT
+uniform-width ExtrusionLoops, so reusing the straight-line open-path
+`covered_polygons(filled, uniform_spacing)` mis-covers the closed concentric
+rings and invents residual gaps.
+
+Correct fix (next slice, not yet landed): reconstruct concentric coverage
+from the VariableWidth entities' per-segment width (or prove concentric
+coverage equals the fill domain), matching upstream's per-entity
+polygons_covered_by_spacing semantics. Until then the reverted state is
+CORRECT for every measured printer (concentric narrow surfaces empirically
+produce zero residual gap in all reference gcodes — Elegoo 13==13, Creality
+Hi/K2Pro/Snapmaker all match), so the theoretical gap is a completeness
+item, not a measured wrong-gcode defect.
+
+Review round-2 remaining (non-blocking, coverage/maintainability only):
+focused unit tests for the residual pass gating branches; seam pinning tests
+still use global .nth() ordinals.
