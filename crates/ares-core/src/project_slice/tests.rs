@@ -7,6 +7,7 @@ mod conical_overhang;
 mod deep_cleanup_support;
 mod elephant_foot;
 mod fixture;
+mod gcode_fan_lifecycle;
 mod integration;
 mod largest_contour_fixture;
 mod largest_contours;

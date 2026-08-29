@@ -832,6 +832,13 @@ whitespace-only filament-start templates before rendering. Re-slicing Artemis
 after removing the already-deferred generated timestamp and M73 lines; M572
 remains `M572 D0 S0.4; Override pressure advance value` at the same position.
 
+Focused fan regression coverage now verifies per-extruder activate/during
+filtering, last-value vector fallback, maximum active exhaust speed, and the
+observable non-BBL ordering: machine start → P3 on → flavor preamble → initial
+P2 state → first layer, then unconditional part-fan off and auxiliary-gated P2
+off before machine end. `machine.rs` was also split through a real
+`machine::exhaust_fan` module and is back below 400 LOC.
+
 NEXT: run the affected Artemis family through the smoke harness, then continue
 with the remaining preamble groups (M104/M106 S0, whitespace/comment layout)
 and the larger internal-solid-infill/feedrate/travel families.
