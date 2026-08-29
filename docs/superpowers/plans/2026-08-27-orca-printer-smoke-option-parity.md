@@ -1135,5 +1135,11 @@ patterns now preserve internal flow while solid/bridge fills still adjust. A
 public combined-layer width test is RED/GREEN, and Volumic filament is now
 exact 305.67mm.
 
-NEXT: verify combined-infill sweep, then small statistics/CoolingBuffer
-precision and control/travel.
+Stable sweep21 (clean HEAD `a0c0911`) completed all 1001 presets: 89 PASS,
+819 DIVERGENT, 93 ARES_ERROR. Filament-first rows fall from 240 to 228;
+Volumic EXO42/SH65 advance to exact-geometry skirt feed differences. The
+remaining high-nozzle Elegoo rows use cubic geometry without infill combination
+and are a separate path-generation issue.
+
+NEXT: fix CoolingBuffer feed precision/skirt feed, then remaining cubic
+statistics and control/travel.
