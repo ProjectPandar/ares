@@ -75,13 +75,7 @@ pub(super) fn append_header(
 fn format_values(values: &[crate::OrcaFloat]) -> String {
     values
         .iter()
-        .map(|value| {
-            let rendered = format!("{:.2}", value.0);
-            rendered
-                .trim_end_matches('0')
-                .trim_end_matches('.')
-                .to_owned()
-        })
+        .map(|value| value.0.to_string())
         .collect::<Vec<_>>()
         .join(",")
 }
@@ -95,29 +89,50 @@ pub(super) fn append_width_block(output: &mut Vec<u8>, traversal: &PreparedPostC
         .0
         .first()
         .map_or(0.4, |value| value.0);
-    let object = traversal.resolved.objects.first();
+    let object = traversal
+        .resolved
+        .objects
+        .first()
+        .expect("validated project has a resolved object");
+    let object_options = &object.object;
     let region = object
-        .and_then(|object| object.layer_candidates.first())
-        .and_then(|layer| layer.model_parts.first().map(|part| &part.region));
-    let object_width = object.and_then(|object| width(object.object.line_width, nozzle));
+        .layer_candidates
+        .first()
+        .and_then(|layer| layer.model_parts.first().map(|part| &part.region))
+        .expect("validated object has a model-part region");
     let widths = [
-        region
-            .and_then(|region| width(region.outer_wall_line_width, nozzle))
-            .or(object_width),
-        region
-            .and_then(|region| width(region.inner_wall_line_width, nozzle))
-            .or(object_width),
-        region
-            .and_then(|region| width(region.sparse_infill_line_width, nozzle))
-            .or(object_width),
-        region
-            .and_then(|region| width(region.internal_solid_infill_line_width, nozzle))
-            .or(object_width),
-        region
-            .and_then(|region| width(region.top_surface_line_width, nozzle))
-            .or(object_width),
-        width(settings.process.print.initial_layer_line_width, nozzle).or(object_width),
+        resolved_width(
+            region.outer_wall_line_width,
+            object_options.line_width,
+            nozzle,
+            1.125,
+        ),
+        resolved_width(
+            region.inner_wall_line_width,
+            object_options.line_width,
+            nozzle,
+            1.125,
+        ),
+        resolved_width(
+            region.sparse_infill_line_width,
+            object_options.line_width,
+            nozzle,
+            1.125,
+        ),
+        resolved_width(
+            region.internal_solid_infill_line_width,
+            object_options.line_width,
+            nozzle,
+            1.125,
+        ),
+        resolved_width(
+            region.top_surface_line_width,
+            object_options.line_width,
+            nozzle,
+            1.0,
+        ),
     ];
+    let first_layer_width = width(settings.process.print.initial_layer_line_width, nozzle);
     let labels = [
         "external perimeters",
         "perimeters",
@@ -126,21 +141,17 @@ pub(super) fn append_width_block(output: &mut Vec<u8>, traversal: &PreparedPostC
         "top infill",
     ];
     for (index, label) in labels.into_iter().enumerate() {
-        if let Some(width) = widths[index] {
-            output.extend_from_slice(
-                format!("; {label} extrusion width = {width:.2}mm\n").as_bytes(),
-            );
-        }
+        output.extend_from_slice(
+            format!("; {label} extrusion width = {:.2}mm\n", widths[index]).as_bytes(),
+        );
     }
-    let support_width = object.and_then(|object| {
-        let options = &object.object;
-        if !options.enable_support.0
-            && options.enforce_support_layers.0 <= 0
-            && options.raft_layers.0 <= 0
-        {
-            return None;
-        }
-        let index = options.support_filament.0.saturating_sub(1) as usize;
+    let support_width = if !object_options.enable_support.0
+        && object_options.enforce_support_layers.0 <= 0
+        && object_options.raft_layers.0 <= 0
+    {
+        None
+    } else {
+        let index = object_options.support_filament.0.saturating_sub(1) as usize;
         let support_nozzle = settings
             .project
             .print
@@ -149,23 +160,35 @@ pub(super) fn append_width_block(output: &mut Vec<u8>, traversal: &PreparedPostC
             .get(index)
             .or_else(|| settings.project.print.nozzle_diameter.0.first())
             .map_or(nozzle, |value| value.0);
-        Some(
-            width(options.support_line_width, support_nozzle)
-                .or_else(|| width(options.line_width, support_nozzle))
-                .unwrap_or(1.125 * support_nozzle as f32),
-        )
-    });
+        Some(resolved_width(
+            object_options.support_line_width,
+            object_options.line_width,
+            support_nozzle,
+            1.0,
+        ))
+    };
     if let Some(width) = support_width {
         output.extend_from_slice(
             format!("; support material extrusion width = {width:.2}mm\n").as_bytes(),
         );
     }
-    if let Some(width) = widths[5] {
+    if let Some(width) = first_layer_width {
         output.extend_from_slice(
             format!("; first layer extrusion width = {width:.2}mm\n").as_bytes(),
         );
     }
     output.push(b'\n');
+}
+
+fn resolved_width(
+    configured: crate::FloatOrPercent,
+    fallback: crate::FloatOrPercent,
+    nozzle: f64,
+    automatic_ratio: f64,
+) -> f32 {
+    width(configured, nozzle)
+        .or_else(|| width(fallback, nozzle))
+        .unwrap_or((automatic_ratio * nozzle) as f32)
 }
 
 fn width(value: crate::FloatOrPercent, nozzle: f64) -> Option<f32> {
@@ -181,13 +204,23 @@ fn width(value: crate::FloatOrPercent, nozzle: f64) -> Option<f32> {
 #[cfg(test)]
 mod tests {
     #[test]
+    fn automatic_role_widths_match_upstream_defaults() {
+        let auto = crate::FloatOrPercent::Float(0.0);
+
+        assert_eq!(super::resolved_width(auto, auto, 0.4, 1.125), 0.45);
+        assert_eq!(super::resolved_width(auto, auto, 0.4, 1.0), 0.4);
+        assert_eq!(super::width(auto, 0.4), None);
+    }
+
+    #[test]
     fn header_values_trim_fractional_trailing_zeroes() {
         let values = [
             crate::OrcaFloat(1.3),
             crate::OrcaFloat(1.24),
+            crate::OrcaFloat("1.12838".parse().unwrap()),
             crate::OrcaFloat(1.0),
         ];
 
-        assert_eq!(super::format_values(&values), "1.3,1.24,1");
+        assert_eq!(super::format_values(&values), "1.3,1.24,1.12838,1");
     }
 }

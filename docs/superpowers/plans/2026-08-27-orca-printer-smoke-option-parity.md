@@ -983,6 +983,18 @@ expression operations while explicit indexing and list iteration remain
 available. The focused expression test is RED/GREEN and both complete H2D
 preambles match.
 
+Ginger G1's 1.12838mm filament exposed header truncation: upstream writes the
+ConfigOption serialization (`GCode.cpp:2603-2612`), while Ares forced two
+decimals. Header float lists now use the lossless scalar serialization; the
+focused 1.12838 test is RED/GREEN and the complete Ginger preamble matches.
+
+M3D's all-zero width configuration exposed missing role-specific auto defaults.
+The header now mirrors `Flow::auto_extrusion_width` (`Flow.cpp:21-38`): 1.125×
+nozzle for perimeter/infill/solid roles, 1.0× for top/support, with configured
+role then object fallback. First-layer width remains conditional on a positive
+setting as upstream requires. Focused default tests and the full M3D preamble
+match.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into
