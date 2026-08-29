@@ -924,7 +924,11 @@ first divergences fell from 125 to 114: all six Folgertech cases moved into
 travel and five reference-producing assignment cases moved onward (the sixth
 Prusa reference crashed). Error-count churn remains Orca-side nondeterminism.
 
-NEXT: run sweep8 for the 10 first-filament placeholder cases, then continue
-with remaining preamble groups (header extrusion-width vocabulary, legacy
-FLAVOR layout, bounding-box precision) and the larger
-internal-solid-infill/feedrate/travel families.
+Sweep8 (first-filament hotend arrays, before support-width header) completed
+all 1001 presets: 35 PASS, 877 DIVERGENT, 89 ARES_ERROR. Preamble first
+divergences fell from 114 to 104; all ten H2D/X2D cases moved into travel.
+
+NEXT: run sweep9 for the 19 support-width header cases, then continue with
+remaining preamble groups (legacy FLAVOR layout, bounding-box precision,
+start-template coordinates) and the larger internal-solid-infill/feedrate/
+travel families.
