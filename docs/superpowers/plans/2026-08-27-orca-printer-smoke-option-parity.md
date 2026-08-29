@@ -677,3 +677,29 @@ offset numerical difference or a missed upstream logic step (candidate:
 the covered spacing source — Ares uses generated.spacing vs upstream
 per-path Flow(width,height).scaled_spacing(); or a variable_width
 min/max-width drop upstream that Ares does not replicate).
+
+## 2026-08-29 session: review round 2 fixed — gap residual is now net-positive
+
+Reviewer round 2 (run 507a9580) found the residual pass cited the COMMENTED
+legacy block (FillRectilinear.cpp:3730-3782) instead of the active
+FillBase.cpp:195-245 `_create_gap_fill`, which gates on the object
+`gap_fill_target` (default `nowhere`) and bridge role. Because the option
+defaults to Nowhere, Ares overfilled every default preset.
+
+Fixed (185595c, 2721c7e): plumb ProcessGapFillTarget through
+SurfaceFillParams; gate Nowhere / InternalSolid-requires-Everywhere /
+bridge before geometry; chain_points ordering; DP tolerance in scaled
+units; medial min/max from nominal flow spacing.
+
+Net-value verification across the representative matrix (was 2 fixed / 4
+overfilled before the gate):
+- Ender-3: 0==0 (was +3)   - CR-6 Max: 0==0 (was +12)
+- Snapmaker QSKit: 0==0 (was +9)  - Snapmaker QS+B: 0==0 (was +9)
+- Snapmaker 0.8: 0==0 (was +4)
+- Creality Hi: 10==10 (kept)  - K2 Pro: 4==4 (kept)  - Elegoo: 13==13 byte-exact
+Ender-3 smoke PASS, project_slice 1295/1295, KSR parity PASS, clippy/fmt green.
+
+Remaining from the review list: residual pass has no focused unit tests
+(MAJOR), seam pinning tests are still ordinal-based (MINOR), and the
+residual seam only covers the four straight-line patterns (deferred — no
+failing case; concentric handles only narrow surfaces).
