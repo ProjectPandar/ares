@@ -25,6 +25,19 @@ async fn non_bbl_fans_follow_orca_print_start_layer_and_finish_order() {
         "during_print_exhaust_fan_speed".to_owned(),
         json!(["100", "40"]),
     );
+    settings.insert(
+        "activate_air_filtration_on_completion".to_owned(),
+        json!(["1", "1"]),
+    );
+    settings.insert(
+        "complete_print_exhaust_fan_speed".to_owned(),
+        json!(["80", "60"]),
+    );
+    settings.insert(
+        "activate_chamber_temp_control".to_owned(),
+        json!(["1", "0"]),
+    );
+    settings.insert("chamber_temperature".to_owned(), json!(["35", "0"]));
     settings.insert("auxiliary_fan".to_owned(), json!("1"));
     settings.insert(
         "additional_cooling_fan_speed".to_owned(),
@@ -69,6 +82,12 @@ async fn non_bbl_fans_follow_orca_print_start_layer_and_finish_order() {
     assert!(part_off < auxiliary_off);
     assert!(auxiliary_off < machine_end);
     assert!(!lines.iter().any(|line| line.starts_with("M981 ")));
+    let chamber_off = position(&lines, "M141 S0");
+    let completion_exhaust = position(&lines, "M106 P3 S204");
+    let executable_end = position(&lines, "; EXECUTABLE_BLOCK_END");
+    assert!(machine_end < chamber_off);
+    assert!(chamber_off < completion_exhaust);
+    assert!(completion_exhaust < executable_end);
     let total_weight = lines
         .iter()
         .position(|line| line.starts_with("; total filament used [g] = "))

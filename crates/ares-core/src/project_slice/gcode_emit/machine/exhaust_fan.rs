@@ -19,9 +19,28 @@ pub(super) fn append_print_start(output: &mut Vec<u8>, traversal: &PreparedPostC
     let during_active = &filament.activate_air_filtration_during_print.0;
     let speeds = &filament.during_print_exhaust_fan_speed.0;
     if let Some(speed) = max_during_print_speed(activate, during_active, speeds) {
-        let pwm = (f64::from(speed) / 100.0 * 255.0) as i32;
-        output.extend_from_slice(format!("M106 P3 S{pwm}\n").as_bytes());
+        append_speed(output, speed);
     }
+}
+
+pub(super) fn append_print_end(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
+    let views = &traversal.resolved.views;
+    if !views.runtime_gcode.support_air_filtration.0 {
+        return;
+    }
+    let filament = &views.full.filament.print;
+    if let Some(speed) = max_active_speed(
+        &filament.activate_air_filtration.0,
+        &filament.activate_air_filtration_on_completion.0,
+        &filament.complete_print_exhaust_fan_speed.0,
+    ) {
+        append_speed(output, speed);
+    }
+}
+
+fn append_speed(output: &mut Vec<u8>, speed: i32) {
+    let pwm = (f64::from(speed) / 100.0 * 255.0) as i32;
+    output.extend_from_slice(format!("M106 P3 S{pwm}\n").as_bytes());
 }
 
 fn max_during_print_speed(
@@ -29,11 +48,19 @@ fn max_during_print_speed(
     during_active: &[OrcaBool],
     speeds: &[OrcaInt],
 ) -> Option<i32> {
-    let count = activate.len().max(during_active.len()).max(speeds.len());
+    max_active_speed(activate, during_active, speeds)
+}
+
+fn max_active_speed(
+    activate: &[OrcaBool],
+    phase_active: &[OrcaBool],
+    speeds: &[OrcaInt],
+) -> Option<i32> {
+    let count = activate.len().max(phase_active.len()).max(speeds.len());
     (0..count)
         .filter(|&index| {
             activate[index.min(activate.len() - 1)].0
-                && during_active[index.min(during_active.len() - 1)].0
+                && phase_active[index.min(phase_active.len() - 1)].0
         })
         .map(|index| speeds[index.min(speeds.len() - 1)].0)
         .max()

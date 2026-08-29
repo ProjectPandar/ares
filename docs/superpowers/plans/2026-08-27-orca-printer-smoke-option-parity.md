@@ -1232,5 +1232,12 @@ The unconditional newline after Orca's non-BBL config branch
 Pro profile/3MF smoke test now guards the complete fan, stats, whitespace, and
 movement result and passes alongside Ender-3.
 
-NEXT: add completion chamber/exhaust postamble, then remaining cubic
-statistics, lifecycle and travel.
+Completion controls now port `GCode.cpp:3497-3518`: after machine postamble,
+active chamber control emits `M141 S0`; supported air filtration selects the
+maximum completion speed among extruders with both activation flags and emits
+P3 PWM. The public non-BBL 3MF test was RED/GREEN and verifies machine-end →
+M141 → P3 → executable-end ordering. Blocks S100 now has P3 S204 and Creality
+K1 CFS-C has M141 S0; KSR golden and clippy pass.
+
+NEXT: stable tail-control sweep, then remaining cubic statistics, lifecycle and
+travel.

@@ -253,6 +253,7 @@ pub(super) fn emit(
         metadata,
         first_layer_bounds,
     )?;
+    machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let used_filament = finish::account_used_filament(&output);
     let (total_weight, total_cost) =

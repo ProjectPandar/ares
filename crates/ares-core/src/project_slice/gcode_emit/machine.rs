@@ -245,6 +245,14 @@ pub(super) fn append_start(
     Ok((bed_cache, position))
 }
 
+pub(super) fn append_completion_controls(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+) {
+    temperature::append_chamber_shutdown(output, traversal);
+    exhaust_fan::append_print_end(output, traversal);
+}
+
 fn self_start_config(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,

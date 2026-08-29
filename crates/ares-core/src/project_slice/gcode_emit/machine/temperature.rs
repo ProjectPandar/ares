@@ -70,6 +70,16 @@ pub(super) fn overall_chamber_temperature(traversal: &PreparedPostClassicTravers
     chamber_settings(traversal).1
 }
 
+pub(super) fn append_chamber_shutdown(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+) {
+    let (active, temperature) = chamber_settings(traversal);
+    if active && temperature > 0 {
+        output.extend_from_slice(b"M141 S0\n");
+    }
+}
+
 pub(super) fn append_chamber_startup(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
