@@ -878,6 +878,26 @@ all following text (notably Prusa's final `G92 E0`). The cursor now assigns the
 absolute end offset exactly. A focused renderer test is red on the lost suffix
 and green after the one-line fix; all 6/6 affected semantic preambles now match.
 
-NEXT: run sweep6 for the K2 + BBL family-wide first-divergence update, then
-continue with remaining preamble groups (M104 ordering, header/comment layout)
-and the larger internal-solid-infill/feedrate/travel families.
+The six Folgertech FT-5/FT-6/i3 cases then exposed missing startup nozzle heat
+and wrong role ordering. Upstream first renders machine-start for command
+detection, emits missing bed and extruder temperatures, then writes the Custom
+role and rendered template (`GCode.cpp:3118-3137`, helper bodies at
+`GCode.cpp:4023-4087`). Ares emitted Custom before bed heat, never injected
+M104/G10, and scanned the unrendered source. Startup temperature handling now
+lives in `machine::temperature`: it scans rendered command lines (including
+RRF G10-with-S), emits used-extruder temperatures with SEMM/ooze handling,
+keeps the bed cache, and applies exact ordering. Empty rendered machine-start
+also follows `GCodeOutputStream::writeln` and emits no invented blank. Focused
+command-detection and 3MF output tests pass; all 6/6 Folgertech semantic
+preambles are equal.
+
+Sweep6 (K2 + BBL fixes, before assignment/startup-temperature fixes) completed
+all 1001 presets: 35 PASS, 873 DIVERGENT, 93 ARES_ERROR. Preamble first
+divergences fell from 161 to 125; 36 cases advanced, including representative
+P1P and K2 Pro into deposition mismatches. The two-error movement is again
+nondeterministic Orca reference failure.
+
+NEXT: run sweep7 for assignment + startup-temperature family-wide evidence,
+then continue with remaining preamble groups (header/comment layout, BBL
+placeholder bounds) and the larger internal-solid-infill/feedrate/travel
+families.

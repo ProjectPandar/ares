@@ -6,6 +6,7 @@ use crate::{
 use super::{footprint, template, value};
 
 mod exhaust_fan;
+mod temperature;
 
 /// The first-line M73 placeholder consumed by the G-code processor
 /// (`GCode.cpp:2700-2701`).
@@ -162,8 +163,9 @@ pub(super) fn append_second_layer_transition(
     // parameter is dropped for single-extruder printers
     // (`GCodeWriter.cpp:155-164`).
     for tool in 0..traversal.resolved.logical_filament_count {
-        let temperature = filament_int(&settings.filament.print.nozzle_temperature, tool);
-        let initial = filament_int(
+        let temperature =
+            temperature::filament_int(&settings.filament.print.nozzle_temperature, tool);
+        let initial = temperature::filament_int(
             &settings.filament.print.nozzle_temperature_initial_layer,
             tool,
         );
@@ -211,11 +213,6 @@ pub(super) fn append_start(
     metadata: GenerationMetadata,
 ) -> Result<(i32, Option<value::Value>), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    let custom = super::tags::Tags::of(traversal).custom() + "\n";
-    output.extend_from_slice(custom.as_bytes());
-    let bed_cache = append_first_layer_bed_temperature(output, traversal);
-    // An empty start G-code still writes the role tag, the temperature
-    // handling and a blank `writeln` line (`GCode.cpp:3115-3137`).
     let (rendered, position) = if template.is_empty() {
         (String::new(), None)
     } else {
@@ -227,9 +224,16 @@ pub(super) fn append_start(
         // GCodeWriter position, but never parses G0/G1 text back into it.
         (rendered, config.get("position").cloned())
     };
-    output.extend_from_slice(rendered.as_bytes());
-    if !rendered.ends_with('\n') {
-        output.push(b'\n');
+    let bed_cache = temperature::append_startup(output, traversal, &rendered);
+    let custom = super::tags::Tags::of(traversal).custom() + "\n";
+    output.extend_from_slice(custom.as_bytes());
+    // `GCodeOutputStream::writeln` (`GCode.cpp:6266-6270`) writes nothing for
+    // an empty rendered template and otherwise appends exactly one newline.
+    if !rendered.is_empty() {
+        output.extend_from_slice(rendered.as_bytes());
+        if !rendered.ends_with('\n') {
+            output.push(b'\n');
+        }
     }
     exhaust_fan::append_print_start(output, traversal);
     if !super::tags::Tags::of(traversal).is_bbl() {
@@ -297,72 +301,6 @@ fn self_start_config(
     config.insert("first_non_support_filaments", first_filaments.clone());
     config.insert("first_filaments", first_filaments);
     Ok(config)
-}
-
-/// `_print_first_layer_bed_temperature` (`GCode.cpp:4023-4048`, called at
-/// `GCode.cpp:3120-3124` for non-Klipper flavors): the bed temperature is
-/// always pushed into the writer cache, but only written when the custom
-/// start G-code does not set it itself. Returns the cached bed temperature.
-fn append_first_layer_bed_temperature(
-    output: &mut Vec<u8>,
-    traversal: &PreparedPostClassicTraversal,
-) -> i32 {
-    let settings = &traversal.resolved.views.full;
-    if settings.printer.gcode.gcode_flavor == crate::GCodeFlavor::Klipper {
-        return 0;
-    }
-    let first = first_layer_bed_temperature(traversal);
-    let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    if !template.contains("M140") && !template.contains("M190") {
-        output.extend_from_slice(
-            format!("M190 S{first} ; set bed temperature and wait for it to be reached\n")
-                .as_bytes(),
-        );
-    }
-    first
-}
-
-fn filament_int(values: &crate::OrcaInts, index: usize) -> i32 {
-    // `ConfigOptionInts::get_at`: index first, fallback to the first value
-    // when out of range.
-    values
-        .0
-        .get(index)
-        .or_else(|| values.0.first())
-        .map_or(0, |value| value.0)
-}
-
-fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 {
-    let settings = &traversal.resolved.views.full;
-    use crate::ProjectBedType;
-    let filament = &settings.filament.print;
-    let temps: &[crate::OrcaInts] = match settings.project.print.curr_bed_type {
-        ProjectBedType::DefaultPlate => &[],
-        ProjectBedType::SupertackPlate => {
-            std::slice::from_ref(&filament.supertack_plate_temp_initial_layer)
-        }
-        ProjectBedType::CoolPlate => std::slice::from_ref(&filament.cool_plate_temp_initial_layer),
-        ProjectBedType::EngineeringPlate => {
-            std::slice::from_ref(&filament.eng_plate_temp_initial_layer)
-        }
-        ProjectBedType::HighTempPlate => {
-            std::slice::from_ref(&filament.hot_plate_temp_initial_layer)
-        }
-        ProjectBedType::TexturedPeiPlate => {
-            std::slice::from_ref(&filament.textured_plate_temp_initial_layer)
-        }
-        ProjectBedType::TexturedCoolPlate => {
-            std::slice::from_ref(&filament.textured_cool_plate_temp_initial_layer)
-        }
-    };
-    let temps: Vec<i32> = temps
-        .iter()
-        .flat_map(|values| values.0.iter().map(|value| value.0))
-        .collect();
-    match settings.printer.gcode.bed_temperature_formula {
-        crate::BedTemperatureFormula::FirstFilament => temps.first().copied().unwrap_or(0),
-        crate::BedTemperatureFormula::HighestTemp => temps.iter().copied().max().unwrap_or(0),
-    }
 }
 
 /// `GCodeWriter::preamble` (`GCodeWriter.cpp:82-104`): absolute XYZ
