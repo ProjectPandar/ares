@@ -20,18 +20,25 @@ fn cube_model() -> PathBuf {
 /// first divergences on a plain Marlin i3 profile.
 #[test]
 fn orca_parity_ender3_smoke() {
+    assert_printer_smoke("Creality", "Creality Ender-3 0.4 nozzle");
+}
+
+#[test]
+fn orca_parity_artillery_x3_pro_smoke() {
+    assert_printer_smoke("Artillery", "Artillery Sidewinder X3 Pro 0.4 nozzle");
+}
+
+fn assert_printer_smoke(vendor: &str, printer: &str) {
     let Some(runner) = OrcaRunner::from_env() else {
         eprintln!("skipping: no OrcaSlicer CLI available");
         return;
     };
-    let profiles = VendorProfiles::load(&profiles_root(), "Creality").expect("Creality profiles");
-    let selection =
-        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
-    let case = parity::build_selection_case(&runner, &profiles, &selection, &cube_model())
-        .expect("build ender3 case");
+    let profiles = VendorProfiles::load(&profiles_root(), vendor).unwrap();
+    let selection = parity::select_printer(&profiles, vendor, printer).unwrap();
+    let case = parity::build_selection_case(&runner, &profiles, &selection, &cube_model()).unwrap();
     let outcome = parity::compare_case(&case);
     eprintln!(
-        "ender3 smoke: {} {} {}",
+        "printer smoke: {} {} {}",
         outcome.status, outcome.label, outcome.detail
     );
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);

@@ -278,9 +278,8 @@ pub(super) fn emit(
         if let Some(config) = &traversal.config_block {
             output.extend_from_slice(config);
         }
-    } else {
-        output.push(b'\n');
     }
+    output.push(b'\n');
     Ok(processor::process(
         output,
         !traversal.resolved.views.full.printer.gcode.disable_m73.0,

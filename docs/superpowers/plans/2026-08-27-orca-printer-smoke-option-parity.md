@@ -1227,5 +1227,10 @@ Artillery now differs only by one trailing non-BBL blank line. Remaining top
 families: filament length 229, deposition value 155, control 112, travel count
 94, lifecycle 93.
 
-NEXT: fix non-BBL trailing newline and completion chamber/exhaust postamble,
-then remaining cubic statistics, lifecycle and travel.
+The unconditional newline after Orca's non-BBL config branch
+(`GCode.cpp:3533-3581`) is restored. A dedicated public Artillery Sidewinder X3
+Pro profile/3MF smoke test now guards the complete fan, stats, whitespace, and
+movement result and passes alongside Ender-3.
+
+NEXT: add completion chamber/exhaust postamble, then remaining cubic
+statistics, lifecycle and travel.
