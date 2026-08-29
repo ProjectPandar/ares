@@ -241,6 +241,7 @@ fn task22o204_concentric_reorders_each_fill_expolygon_independently() {
             infill_overhang_angle: 0.0,
             gyroid_optimized: false,
             filter_out_gap_fill: 0.0,
+            gap_fill_target: crate::ProcessGapFillTarget::Nowhere,
         },
         region_id_group: vec![0],
         no_overlap_expolygons: no_overlap.clone(),

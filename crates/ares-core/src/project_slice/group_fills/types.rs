@@ -37,6 +37,7 @@ pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) infill_overhang_angle: f32,
     pub(in crate::project_slice) gyroid_optimized: bool,
     pub(in crate::project_slice) filter_out_gap_fill: f64,
+    pub(in crate::project_slice) gap_fill_target: crate::ProcessGapFillTarget,
 }
 
 #[derive(Clone, Copy, Debug)]

@@ -42,6 +42,7 @@ pub(super) fn append(
     };
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
+    let fill_kind = fill.representative.kind;
     for expolygon in fill.expolygons {
         let generated =
             fill_monotonic_surface(&expolygon, params, scale).map_err(geometry_error)?;
@@ -69,6 +70,7 @@ pub(super) fn append(
             output_entities: &mut entities,
             no_overlap_expolygons: &no_overlap_expolygons,
             params: fill_params,
+            kind: fill_kind,
             expolygon: &expolygon,
             filled: &generated.polylines,
             spacing,

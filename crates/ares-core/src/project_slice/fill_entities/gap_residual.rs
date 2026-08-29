@@ -1,13 +1,16 @@
 use crate::{
-    SliceError,
+    ProcessGapFillTarget, SliceError,
     geometry::{
         ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Point, Polygon, Polyline,
-        difference_ex, intersection_ex, intersection_ex_with_safety_offset, medial_axis,
-        offset_open_paths, offset2_ex, opening_ex, union_ex, union_expolygons,
+        chain_points, difference_ex, intersection_ex, intersection_ex_with_safety_offset,
+        medial_axis, offset_open_paths, offset2_ex, opening_ex, union_ex, union_expolygons,
     },
-    project_slice::perimeters::classic::{
-        gap_extrusion::{GapFillCollection, variable_width},
-        materialize::ExtrusionRole,
+    project_slice::{
+        perimeters::classic::{
+            gap_extrusion::{GapFillCollection, variable_width},
+            materialize::ExtrusionRole,
+        },
+        region_slices::RegionSurfaceKind,
     },
 };
 
@@ -22,6 +25,7 @@ pub(super) struct ResidualInput<'a> {
     pub(super) output_entities: &'a mut Vec<FillExtrusionEntity>,
     pub(super) no_overlap_expolygons: &'a [ExPolygon],
     pub(super) params: crate::project_slice::group_fills::SurfaceFillParams,
+    pub(super) kind: RegionSurfaceKind,
     pub(super) expolygon: &'a ExPolygon,
     pub(super) filled: &'a [Polyline],
     pub(super) spacing: f32,
@@ -33,11 +37,22 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
         output_entities,
         no_overlap_expolygons,
         params,
+        kind,
         expolygon,
         filled,
         spacing,
         scale,
     } = input;
+    // FillBase.cpp:201-203: gap_fill_target gates the whole pass — `nowhere`
+    // disables it entirely, and internal-solid surfaces require `everywhere`.
+    // FillBase.cpp:236: bridge surfaces never receive gap fill.
+    if params.gap_fill_target == ProcessGapFillTarget::Nowhere
+        || (kind == RegionSurfaceKind::InternalSolid
+            && params.gap_fill_target != ProcessGapFillTarget::Everywhere)
+        || params.extrusion_role.is_bridge()
+    {
+        return Ok(());
+    }
     if no_overlap_expolygons.is_empty() || params.density < 100.0 {
         return Ok(());
     }
@@ -88,8 +103,16 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
         return Ok(());
     }
     let minimum_length = scaled(scale, params.filter_out_gap_fill)?;
+    // FillBase.cpp:218-227: sort gap regions by chained first point so the
+    // medial pass orders travel the same way upstream does.
+    let ordering = gaps
+        .iter()
+        .map(|gap| gap.contour().points()[0])
+        .collect::<Vec<_>>();
+    let order = chain_points(&ordering);
     let mut polylines = Vec::new();
-    for mut gap in gaps {
+    for index in order {
+        let mut gap = gaps[index].clone();
         gap.douglas_peucker(SCALED_RESOLUTION * 0.1);
         polylines.extend(
             medial_axis(&gap, minimum, maximum, scale)
