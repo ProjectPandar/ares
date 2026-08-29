@@ -1165,5 +1165,14 @@ Artillery X3/X4 control arrays now have both expected G92 events; their only
 remaining difference is CoolingBuffer fan PWM (201 vs 204). Overall PASS stays
 89 while this isolates the fan-time slice cleanly.
 
-NEXT: fix CoolingBuffer feed/fan precision, then remaining cubic statistics,
-lifecycle and travel.
+CoolingBuffer fan-time parity is now ported from active
+`GCode/CoolingBuffer.cpp:641-817`: feedrate rewriting returns the stretched
+layer time, part-fan commands are resolved after slowdown, and role-fan end
+markers restore that resolved base speed. Runtime interpolation deliberately
+uses upstream's truncation (`floor(value)`), not rounding: Artillery's 8.008 s
+layer resolves to 79% / `M106 S201`, including the post-overhang restore where
+Ares previously emitted S204. Focused cooling/role tests (48), workspace clippy,
+KSR golden, and raw Artillery fan sequences pass.
+
+NEXT: run the stable fan-time sweep, then remaining cubic statistics, lifecycle
+and travel.

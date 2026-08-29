@@ -81,7 +81,7 @@ pub(crate) use model_config_deserialize::{
 pub(crate) use object_options::ObjectOptionOverrides;
 use parsing::{parse_extrusion_width_text, parse_numeric_vector};
 pub(crate) use part_cooling_fan::{
-    InternalBridgeFanSpeed, LayerRoleFanControl, PartCoolingFanRamp,
+    InternalBridgeFanSpeed, LayerRoleFanControl, PartCoolingFanRamp, PartCoolingFanRampConfig,
 };
 pub(crate) use project_variants::materialize_project_variants;
 #[cfg_attr(not(test), allow(unused_imports))]

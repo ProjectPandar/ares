@@ -122,6 +122,27 @@ fn selects_full_interpolated_and_long_layer_baseline() {
 }
 
 #[test]
+fn runtime_interpolation_truncates_like_cooling_buffer() {
+    let options: SliceOptions = serde_json::from_value(json!({
+        "fan_min_speed": 60,
+        "fan_max_speed": 80,
+        "slow_down_layer_time": 8,
+        "fan_cooling_layer_time": 80,
+        "full_fan_speed_layer": 0,
+        "close_fan_the_first_x_layers": 0
+    }))
+    .unwrap();
+
+    assert_eq!(
+        options
+            .part_cooling_fan_ramp()
+            .unwrap()
+            .speed_for_layer_time(0, Some(8.008)),
+        Some(79)
+    );
+}
+
+#[test]
 fn reduce_fan_stop_start_frequency_long_layer_minimum_is_ramped() {
     let options: SliceOptions = serde_json::from_value(json!({
         "reduce_fan_stop_start_freq": true,

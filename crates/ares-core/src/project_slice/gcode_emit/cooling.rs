@@ -3,14 +3,20 @@ mod feedrate;
 #[cfg(test)]
 mod tests;
 
-use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
+use crate::{
+    options::{PartCoolingFanRamp, PartCoolingFanRampConfig},
+    project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
+};
+
+const PART_FAN_MARKER: &[u8] = b";__ARES_PART_FAN_STATE__\n";
+pub(super) const ROLE_FAN_RESTORE_MARKER: &[u8] = b";__ARES_ROLE_FAN_RESTORE__\n";
 
 pub(super) struct CoolingState {
     part_speed: u8,
+    provisional_part_speed: u8,
+    pending_layer_index: Option<usize>,
+    part_fan_ramp: PartCoolingFanRamp,
     additional_speed: u8,
-    max_speed: u8,
-    close_fan_first_layers: usize,
-    full_fan_speed_layer: usize,
     additional_fan_speed: u8,
     auxiliary_fan: bool,
     part_cooling_fan_min_pwm: u8,
@@ -27,12 +33,35 @@ impl CoolingState {
         let filament = &full.filament.print;
         let runtime = &traversal.resolved.views.runtime_gcode;
         let first_bool = |values: &[crate::OrcaBool]| values.first().is_some_and(|value| value.0);
+        let max_speed = first_percent(&filament.fan_max_speed.0);
+        let slow_down_layer_time = filament
+            .slow_down_layer_time
+            .0
+            .first()
+            .map_or(0.0, |value| value.0);
+        let part_fan_ramp = PartCoolingFanRamp::new(PartCoolingFanRampConfig {
+            min_speed: first_percent(&filament.fan_min_speed.0).min(max_speed),
+            max_speed,
+            full_speed_layer: first_non_negative(&filament.full_fan_speed_layer.0) as u32,
+            close_fan_first_layers: first_non_negative(&filament.close_fan_the_first_x_layers.0)
+                as u32,
+            layer_times_s: [
+                slow_down_layer_time,
+                filament
+                    .fan_cooling_layer_time
+                    .0
+                    .first()
+                    .map_or(0.0, |value| value.0),
+            ],
+            fan_kickstart_s: runtime.fan_kickstart.0,
+            reduce_fan_stop_start_freq: first_bool(&filament.reduce_fan_stop_start_freq.0),
+        });
         Self {
             part_speed: 0,
+            provisional_part_speed: 0,
+            pending_layer_index: None,
+            part_fan_ramp,
             additional_speed: 0,
-            max_speed: first_percent(&filament.fan_max_speed.0),
-            close_fan_first_layers: first_non_negative(&filament.close_fan_the_first_x_layers.0),
-            full_fan_speed_layer: first_non_negative(&filament.full_fan_speed_layer.0),
             additional_fan_speed: first_percent_int(&filament.additional_cooling_fan_speed.0),
             auxiliary_fan: runtime.auxiliary_fan.0,
             part_cooling_fan_min_pwm: runtime.part_cooling_fan_min_pwm.0.clamp(0, 100) as u8,
@@ -41,11 +70,7 @@ impl CoolingState {
             feedrate: feedrate::State::new(
                 feedrate::Config {
                     enabled: first_bool(&filament.slow_down_for_layer_cooling.0),
-                    target_time: filament
-                        .slow_down_layer_time
-                        .0
-                        .first()
-                        .map_or(0.0, |value| value.0 as f32),
+                    target_time: slow_down_layer_time as f32,
                     minimum_speed: filament
                         .slow_down_min_speed
                         .0
@@ -60,24 +85,15 @@ impl CoolingState {
     }
 
     pub(super) fn begin_layer(&mut self, output: &mut Vec<u8>, layer_index: usize) {
-        let part_speed = self.part_speed_for_layer(layer_index);
-        let initial = should_emit_initial_part_fan(
-            layer_index,
-            self.emit_initial_fan,
-            self.fan_mover_enabled,
-            part_speed,
-        );
-        if part_speed != self.part_speed || initial {
-            self.part_speed = part_speed;
-            let speed = if part_speed > 0 && part_speed < self.part_cooling_fan_min_pwm {
-                self.part_cooling_fan_min_pwm
-            } else {
-                part_speed
-            };
-            output.extend_from_slice(format!("M106 S{}\n", part_fan_pwm(speed)).as_bytes());
-        }
+        self.pending_layer_index = Some(layer_index);
+        self.provisional_part_speed = self
+            .part_fan_ramp
+            .speed_for_layer_time(layer_index, Some(0.0))
+            .unwrap_or(0);
+        output.extend_from_slice(PART_FAN_MARKER);
 
-        let additional_speed = if layer_index < self.close_fan_first_layers {
+        let additional_speed = if layer_index < self.part_fan_ramp.close_fan_first_layers() as usize
+        {
             0
         } else {
             self.additional_fan_speed
@@ -96,27 +112,60 @@ impl CoolingState {
         }
     }
 
-    pub(super) const fn part_speed(&self) -> u8 {
-        self.part_speed
+    pub(super) const fn provisional_part_speed(&self) -> u8 {
+        self.provisional_part_speed
     }
 
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
-        feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
-    }
-
-    fn part_speed_for_layer(&self, layer_index: usize) -> u8 {
-        if layer_index < self.close_fan_first_layers {
-            return 0;
-        }
-        if self.full_fan_speed_layer <= self.close_fan_first_layers
-            || layer_index + 1 >= self.full_fan_speed_layer
+        let layer_time = feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
+        let layer_index = self.pending_layer_index.take().unwrap();
+        let part_speed = self
+            .part_fan_ramp
+            .speed_for_layer_time(layer_index, Some(f64::from(layer_time)))
+            .unwrap_or(0);
+        let initial = should_emit_initial_part_fan(
+            layer_index,
+            self.emit_initial_fan,
+            self.fan_mover_enabled,
+            part_speed,
+        );
+        let replacement = if part_speed != self.part_speed || initial {
+            let speed = if part_speed > 0 && part_speed < self.part_cooling_fan_min_pwm {
+                self.part_cooling_fan_min_pwm
+            } else {
+                part_speed
+            };
+            format!("M106 S{}\n", part_fan_pwm(speed)).into_bytes()
+        } else {
+            Vec::new()
+        };
+        let marker_start = layer_start
+            + output[layer_start..]
+                .windows(PART_FAN_MARKER.len())
+                .position(|window| window == PART_FAN_MARKER)
+                .unwrap();
+        output.splice(
+            marker_start..marker_start + PART_FAN_MARKER.len(),
+            replacement,
+        );
+        let restore_speed = if part_speed > 0 && part_speed < self.part_cooling_fan_min_pwm {
+            self.part_cooling_fan_min_pwm
+        } else {
+            part_speed
+        };
+        let restore = format!("M106 S{}\n", part_fan_pwm(restore_speed)).into_bytes();
+        while let Some(offset) = output[layer_start..]
+            .windows(ROLE_FAN_RESTORE_MARKER.len())
+            .position(|window| window == ROLE_FAN_RESTORE_MARKER)
         {
-            return self.max_speed;
+            let start = layer_start + offset;
+            output.splice(
+                start..start + ROLE_FAN_RESTORE_MARKER.len(),
+                restore.iter().copied(),
+            );
         }
-        let numerator = layer_index + 1 - self.close_fan_first_layers;
-        let denominator = self.full_fan_speed_layer - self.close_fan_first_layers;
-        let speed = f64::from(self.max_speed) * numerator as f64 / denominator as f64;
-        (speed + 0.5).floor().clamp(0.0, 100.0) as u8
+        self.part_speed = part_speed;
+        self.provisional_part_speed = part_speed;
     }
 }
 

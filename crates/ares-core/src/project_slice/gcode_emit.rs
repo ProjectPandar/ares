@@ -120,7 +120,7 @@ pub(super) fn emit(
                 )?;
             }
             cooling.begin_layer(&mut output, layer_index);
-            state.part_fan_speed = cooling.part_speed();
+            state.part_fan_speed = cooling.provisional_part_speed();
             state.physical_fan_speed = state.part_fan_speed;
             let tags = state.tags;
             output.extend_from_slice(tags.layer_change().as_bytes());

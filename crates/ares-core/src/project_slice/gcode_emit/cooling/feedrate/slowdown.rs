@@ -4,11 +4,11 @@ use super::{Config, CoolingLine};
 
 const EPSILON: f64 = 1e-4;
 
-pub(super) fn apply(lines: &mut [CoolingLine], config: Config) {
+pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
     let total_time = elapsed_time(lines);
     let maximum_time = maximum_time(lines);
     if !config.enabled || lines.is_empty() {
-        return;
+        return total_time;
     }
 
     fixed_gcc_sort_by(lines, |left, right| {
@@ -23,7 +23,7 @@ pub(super) fn apply(lines: &mut [CoolingLine], config: Config) {
     let adjustable = lines.iter().take_while(|line| line.adjustable()).count();
     let target_time = config.target_time * 1.001;
     if total_time > target_time {
-        return;
+        return total_time;
     }
     if maximum_time > target_time {
         slow_down_non_proportional(
@@ -35,6 +35,7 @@ pub(super) fn apply(lines: &mut [CoolingLine], config: Config) {
     } else {
         slow_down_to_minimum(lines);
     }
+    elapsed_time(lines)
 }
 
 fn elapsed_time(lines: &[CoolingLine]) -> f32 {

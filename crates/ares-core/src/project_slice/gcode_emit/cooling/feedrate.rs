@@ -67,9 +67,10 @@ impl CoolingLine {
     }
 }
 
-pub(super) fn rewrite_layer(output: &mut Vec<u8>, layer_start: usize, state: &mut State) {
+pub(super) fn rewrite_layer(output: &mut Vec<u8>, layer_start: usize, state: &mut State) -> f32 {
     let layer = output.split_off(layer_start);
     let mut lines = parse::layer(&layer, state);
-    slowdown::apply(&mut lines, state.config);
+    let layer_time = slowdown::apply(&mut lines, state.config);
     rewrite::append(output, &layer, &mut lines);
+    layer_time
 }

@@ -78,9 +78,13 @@ fn update_marker(output: &mut Vec<u8>, state: &mut EmitState, marker: FanMarker,
     set_marker_state(state, marker, active);
     let emit = stopping || fresh_start && control_speed(state, marker).is_some();
     if emit {
-        let speed = requested_speed(state).unwrap_or(state.part_fan_speed);
-        output.extend_from_slice(format!("M106 S{}\n", pwm(speed)).as_bytes());
-        state.physical_fan_speed = speed;
+        if let Some(speed) = requested_speed(state) {
+            output.extend_from_slice(format!("M106 S{}\n", pwm(speed)).as_bytes());
+            state.physical_fan_speed = speed;
+        } else {
+            output.extend_from_slice(super::super::cooling::ROLE_FAN_RESTORE_MARKER);
+            state.physical_fan_speed = state.part_fan_speed;
+        }
     }
 }
 

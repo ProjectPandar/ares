@@ -21,6 +21,17 @@ const DEFAULT_FAN_COOLING_LAYER_TIME: f64 = 60.0;
 const DEFAULT_FAN_KICKSTART: f64 = 0.0;
 const DEFAULT_REDUCE_FAN_STOP_START_FREQ: bool = false;
 
+#[derive(Clone, Copy)]
+pub(crate) struct PartCoolingFanRampConfig {
+    pub(crate) min_speed: u8,
+    pub(crate) max_speed: u8,
+    pub(crate) full_speed_layer: u32,
+    pub(crate) close_fan_first_layers: u32,
+    pub(crate) layer_times_s: [f64; 2],
+    pub(crate) fan_kickstart_s: f64,
+    pub(crate) reduce_fan_stop_start_freq: bool,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct PartCoolingFanRamp {
     min_speed: u8,
@@ -34,6 +45,19 @@ pub(crate) struct PartCoolingFanRamp {
 }
 
 impl PartCoolingFanRamp {
+    pub(crate) const fn new(config: PartCoolingFanRampConfig) -> Self {
+        Self {
+            min_speed: config.min_speed,
+            max_speed: config.max_speed,
+            full_speed_layer: config.full_speed_layer,
+            close_fan_first_layers: config.close_fan_first_layers,
+            slow_down_layer_time_s: config.layer_times_s[0],
+            fan_cooling_layer_time_s: config.layer_times_s[1],
+            fan_kickstart_s: config.fan_kickstart_s,
+            reduce_fan_stop_start_freq: config.reduce_fan_stop_start_freq,
+        }
+    }
+
     pub(crate) const fn fan_kickstart_s(self) -> f64 {
         self.fan_kickstart_s
     }
@@ -132,7 +156,7 @@ impl PartCoolingFanRamp {
             / (self.fan_cooling_layer_time_s - self.slow_down_layer_time_s);
         let speed =
             f64::from(self.min_speed) + f64::from(self.max_speed - self.min_speed) * factor;
-        (speed + 0.5).floor().clamp(0.0, 100.0) as u8
+        speed.floor().clamp(0.0, 100.0) as u8
     }
 
     const fn long_layer_baseline_speed(self) -> u8 {
@@ -186,16 +210,15 @@ impl SliceOptions {
             self.values().get("reduce_fan_stop_start_freq"),
             DEFAULT_REDUCE_FAN_STOP_START_FREQ,
         )?;
-        Ok(PartCoolingFanRamp {
+        Ok(PartCoolingFanRamp::new(PartCoolingFanRampConfig {
             min_speed,
             max_speed,
             full_speed_layer,
             close_fan_first_layers,
-            slow_down_layer_time_s,
-            fan_cooling_layer_time_s,
+            layer_times_s: [slow_down_layer_time_s, fan_cooling_layer_time_s],
             fan_kickstart_s,
             reduce_fan_stop_start_freq,
-        })
+        }))
     }
 
     pub(crate) fn part_cooling_fan_min_pwm(&self) -> Result<u8, SliceError> {

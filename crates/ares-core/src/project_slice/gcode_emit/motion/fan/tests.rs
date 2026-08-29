@@ -49,7 +49,10 @@ fn equal_speed_ignores_start_and_reasserts_base_fan_at_end() {
         &mut state,
     );
 
-    assert_eq!(output, b"M106 S255\n");
+    assert_eq!(
+        output,
+        crate::project_slice::gcode_emit::cooling::ROLE_FAN_RESTORE_MARKER
+    );
     assert!(!state.overhang_fan_active);
 }
 
@@ -117,7 +120,10 @@ fn internal_bridge_marker_reasserts_equal_baseline_at_end() {
     );
     update_for_constant_path(&mut output, properties("Inner wall"), &mut state);
 
-    assert_eq!(output, b"M106 S255\n");
+    assert_eq!(
+        output,
+        crate::project_slice::gcode_emit::cooling::ROLE_FAN_RESTORE_MARKER
+    );
 }
 
 #[test]
@@ -138,5 +144,7 @@ fn explicit_internal_bridge_speed_overrides_and_restores_baseline() {
     update_for_constant_path(&mut output, properties("Internal Bridge"), &mut state);
     update_for_constant_path(&mut output, properties("Inner wall"), &mut state);
 
-    assert_eq!(output, b"M106 S191\nM106 S102\n");
+    let mut expected = b"M106 S191\n".to_vec();
+    expected.extend_from_slice(crate::project_slice::gcode_emit::cooling::ROLE_FAN_RESTORE_MARKER);
+    assert_eq!(output, expected);
 }
