@@ -10,9 +10,10 @@ pub(super) fn append(
     traversal: &PreparedPostClassicTraversal,
     max_layer_z: f64,
     metadata: GenerationMetadata,
+    first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
-    let mut config = super::placeholders::base_config(traversal, metadata)?;
+    let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
     config.insert("current_extruder", value::Value::number(0.0));
     config.insert(
         "layer_num",

@@ -16,6 +16,7 @@ pub(super) fn append(
     traversal: &PreparedPostClassicTraversal,
     layer: TimelapseLayer,
     metadata: GenerationMetadata,
+    first_layer_bounds: Option<footprint::FirstLayerBounds>,
 ) -> Result<(), SliceError> {
     let runtime = &traversal.resolved.views.runtime_gcode;
     let source = &runtime.time_lapse_gcode.0;
@@ -23,11 +24,11 @@ pub(super) fn append(
         return Ok(());
     }
 
-    let mut config = super::placeholders::base_config(traversal, metadata)?;
+    let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
     config.insert("layer_num", value::Value::number(layer.index as f64));
     config.insert("layer_z", value::Value::number(layer.z));
     config.insert("max_layer_z", value::Value::number(layer.max_z));
-    if let Some((min_x, min_y, size_x, size_y)) = footprint::first_layer_bounds(traversal) {
+    if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds {
         config.insert(
             "first_layer_center_no_wipe_tower",
             value::Value::List(vec![

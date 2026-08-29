@@ -926,6 +926,17 @@ only that CoolingState-owned initial zero; BBL and custom-template commands are
 untouched, and nonzero initial states still emit. Focused boundary and 3MF
 output tests pass, and all 9/9 affected semantic preambles are equal.
 
+The 45 RatRig START_PRINT bounds plus three Raise3D Bounding Box cases used
+centerline/object bounds instead of Orca's first-layer extrusion hull
+(`GCode.cpp:2913-2939`). The derived hull now caches once per traversal after
+skirt/brim planning and unions their path bounds expanded by spacing/2, matching
+`polygons_covered_by_spacing` rather than width/2. An Orca-generated two-loop
+KSR probe supplies the exact independent literal
+`94.625,80.9779 .. 170.553,151.906`; the output test is red on the previous
+0.9142mm-per-side omission. All 48 first divergences are removed: 45 RatRig
+preambles are fully equal, while three Raise3D variants advance to their next
+purge-coordinate branch.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into
@@ -941,6 +952,12 @@ completed all 1001 presets: 35 PASS, 873 DIVERGENT, 93 ARES_ERROR. Preamble
 first divergences fell from 104 to 86: 18 cases left the preamble and Guider 3
 Ultra advanced to its next start-template coordinate mismatch.
 
-NEXT: run sweep10 for the nine FanMover S0 cases, then continue with remaining
-preamble groups (legacy FLAVOR layout, bounding-box precision, start-template
-coordinates) and the larger internal-solid-infill/feedrate/travel families.
+Sweep10 (FanMover initial-state suppression, before first-layer hull cache)
+completed all 1001 presets: 35 PASS, 875 DIVERGENT, 91 ARES_ERROR. Preamble
+first divergences fell from 86 to 77; all nine affected printers moved into
+travel/lifecycle.
+
+NEXT: run sweep11 for the 48 first-layer hull cases, then continue with the
+remaining preamble groups (legacy FLAVOR layout, BBL purge feedrate,
+start-template branches) and the larger internal-solid-infill/feedrate/travel
+families.

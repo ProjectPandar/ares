@@ -40,6 +40,10 @@ pub(super) fn emit(
         .predecessor
         .predecessor
         .predecessor;
+    let skirt = skirt::SkirtPlan::generate(traversal)?;
+    let brim = brim::BrimPlan::generate(traversal)?;
+    let first_layer_bounds =
+        footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref());
     let mut output = Vec::new();
     let tags = tags::Tags::of(traversal);
     header::append_header(&mut output, metadata, &prepared.objects, traversal);
@@ -57,7 +61,8 @@ pub(super) fn emit(
     // The Marlin-family machine envelope prints before the start G-code
     // (`GCode.cpp:2819`), followed by the start G-code (`GCode.cpp:3137`).
     machine::append_limits(&mut output, traversal);
-    let (bed_cache, start_position) = machine::append_start(&mut output, traversal, metadata)?;
+    let (bed_cache, start_position) =
+        machine::append_start(&mut output, traversal, metadata, first_layer_bounds)?;
     let options = motion::MotionOptions::from_traversal(traversal);
     let offset = footprint::model_center(traversal).unwrap_or_default();
     let offset = (
@@ -94,10 +99,9 @@ pub(super) fn emit(
         .filter_map(|record| record.as_ref())
         .map(|record| record.layer_height)
         .sum();
-    let layer_change_template = layer_gcode::LayerChangeTemplate::new(traversal, metadata);
+    let layer_change_template =
+        layer_gcode::LayerChangeTemplate::new(traversal, metadata, first_layer_bounds);
     let mut second_layer_done = false;
-    let skirt = skirt::SkirtPlan::generate(traversal)?;
-    let brim = brim::BrimPlan::generate(traversal)?;
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = object::ObjectLabels::from_traversal(traversal, object_index);
         let mut precise_layer_z = 0.0;
@@ -110,6 +114,7 @@ pub(super) fn emit(
                     traversal,
                     metadata,
                     start_position.as_ref(),
+                    first_layer_bounds,
                 )?;
             }
             cooling.begin_layer(&mut output, layer_index);
@@ -139,7 +144,7 @@ pub(super) fn emit(
                 traversal,
                 layer_index,
                 f64::from(layer_z),
-                metadata,
+                &layer_change_template,
             )?;
             motion::flush_pending_retract_wipe(&mut output, &mut state);
             // Pending object-end labels flush after the layer-change
@@ -229,6 +234,7 @@ pub(super) fn emit(
                     max_z: max_layer_z,
                 },
                 metadata,
+                first_layer_bounds,
             )?;
             cooling.finish_layer(&mut output, layer_output_start);
         }
@@ -238,7 +244,13 @@ pub(super) fn emit(
     // end G-code (`GCode.cpp` final object teardown).
     motion::flush_pending_retract_wipe(&mut output, &mut state);
     motion::append_exclude_end(&mut output, &mut state);
-    finish::append(&mut output, traversal, max_layer_z, metadata)?;
+    finish::append(
+        &mut output,
+        traversal,
+        max_layer_z,
+        metadata,
+        first_layer_bounds,
+    )?;
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let used_filament = finish::account_used_filament(&output);
     finish::append_filament_stats(&mut output, traversal, used_filament);

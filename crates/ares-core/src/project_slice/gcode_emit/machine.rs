@@ -212,12 +212,13 @@ pub(super) fn append_start(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
+    first_layer_bounds: Option<footprint::FirstLayerBounds>,
 ) -> Result<(i32, Option<value::Value>), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
     let (rendered, position) = if template.is_empty() {
         (String::new(), None)
     } else {
-        let mut config = self_start_config(traversal, metadata)?;
+        let mut config = self_start_config(traversal, metadata, first_layer_bounds)?;
         let rendered = template::render(template, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!("invalid project G-code template: {error}"))
         })?;
@@ -246,8 +247,9 @@ pub(super) fn append_start(
 fn self_start_config(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
+    first_layer_bounds: Option<footprint::FirstLayerBounds>,
 ) -> Result<super::value::Config, SliceError> {
-    let mut config = super::placeholders::base_config(traversal, metadata)?;
+    let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
     config.insert("next_extruder", value::Value::number(0.0));
     config.insert("next_hotend", value::Value::number(-1.0));
     config.insert("initial_no_support_extruder", value::Value::number(0.0));
@@ -277,7 +279,7 @@ fn self_start_config(
         ),
     );
     config.insert("layer_num", value::Value::number(0.0));
-    if let Some((min_x, min_y, size_x, size_y)) = footprint::first_layer_bounds(traversal) {
+    if let Some((min_x, min_y, size_x, size_y)) = first_layer_bounds {
         config.insert(
             "first_layer_print_min",
             value::Value::List(vec![

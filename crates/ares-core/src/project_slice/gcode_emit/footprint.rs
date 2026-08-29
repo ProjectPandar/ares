@@ -2,19 +2,24 @@
 //! first-layer/timelapse bounds helpers.
 
 use crate::geometry::{CoordinateScale, Point, douglas_peucker};
-use crate::project_slice::gcode_emit::skirt::convex_hull;
+use crate::project_slice::gcode_emit::{
+    brim::BrimPlan,
+    skirt::{SkirtPlan, convex_hull},
+};
 use crate::project_slice::gcode_emit::{format_processor_float, tags::Tags};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::{ProjectInstance, ProjectObject, ProjectVolumeType};
 
+pub(super) type FirstLayerBounds = (f64, f64, f64, f64);
+
 pub(super) fn first_layer_bounds(
     traversal: &PreparedPostClassicTraversal,
-) -> Option<(f64, f64, f64, f64)> {
+    skirt: Option<&SkirtPlan>,
+    brim: Option<&BrimPlan>,
+) -> Option<FirstLayerBounds> {
     let print = &traversal.resolved.views.full.process.print;
     let skirt_height = usize::try_from(print.skirt_height.0).unwrap_or_default();
-    let infinite_skirt =
-        print.draft_shield == crate::ProcessDraftShield::Enabled && print.skirt_loops.0 > 0;
-    let collect_skirt_hull = skirt_height > 0 || infinite_skirt;
+    let infinite_skirt = print.draft_shield == crate::ProcessDraftShield::Enabled;
     let layer_limit = if infinite_skirt {
         usize::MAX
     } else {
@@ -31,7 +36,7 @@ pub(super) fn first_layer_bounds(
             .object
             .object;
         let layers = compensation_object.as_parts().1;
-        let selected_layers = if collect_skirt_hull {
+        let selected_layers = if skirt.is_some() {
             layers.iter().take(layer_limit)
         } else {
             layers.iter().take(1)
@@ -42,16 +47,15 @@ pub(super) fn first_layer_bounds(
             }
         }
     }
+    if let Some(skirt) = skirt {
+        include_bounds(skirt.covered_bounds(traversal.scale), &mut bounds);
+    }
+    if let Some(brim) = brim {
+        include_bounds(brim.covered_bounds(traversal.scale), &mut bounds);
+    }
 
     let (center_x, center_y) = model_center(traversal)?;
-    bounds.map(|(mut min_x, mut min_y, mut max_x, mut max_y)| {
-        if collect_skirt_hull {
-            let distance = print.skirt_distance.0;
-            min_x -= distance;
-            min_y -= distance;
-            max_x += distance;
-            max_y += distance;
-        }
+    bounds.map(|(min_x, min_y, max_x, max_y)| {
         (
             min_x + center_x,
             min_y + center_y,
@@ -59,6 +63,24 @@ pub(super) fn first_layer_bounds(
             max_y - min_y,
         )
     })
+}
+
+fn include_bounds(
+    additional: Option<(f64, f64, f64, f64)>,
+    bounds: &mut Option<(f64, f64, f64, f64)>,
+) {
+    let Some((min_x, min_y, max_x, max_y)) = additional else {
+        return;
+    };
+    *bounds = Some(match *bounds {
+        Some((old_min_x, old_min_y, old_max_x, old_max_y)) => (
+            old_min_x.min(min_x),
+            old_min_y.min(min_y),
+            old_max_x.max(max_x),
+            old_max_y.max(max_y),
+        ),
+        None => (min_x, min_y, max_x, max_y),
+    });
 }
 
 fn include_polygon_bounds(

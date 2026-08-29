@@ -19,6 +19,7 @@ use crate::{
 pub(super) struct BrimPlan {
     paths: Vec<Vec<Point>>,
     width: f32,
+    spacing: f32,
     height: f32,
     mm3_per_mm: f64,
 }
@@ -118,9 +119,33 @@ impl BrimPlan {
         Ok(Some(Self {
             paths,
             width: flow.width,
+            spacing: flow.spacing,
             height: flow.height,
             mm3_per_mm: flow.mm3_per_mm * options.brim_flow_ratio.0,
         }))
+    }
+
+    pub(super) fn covered_bounds(&self, scale: CoordinateScale) -> Option<(f64, f64, f64, f64)> {
+        let mut bounds = None::<(f64, f64, f64, f64)>;
+        for point in self.paths.iter().flatten() {
+            let x = scale.unscale(point.x());
+            let y = scale.unscale(point.y());
+            bounds = Some(match bounds {
+                Some((min_x, min_y, max_x, max_y)) => {
+                    (min_x.min(x), min_y.min(y), max_x.max(x), max_y.max(y))
+                }
+                None => (x, y, x, y),
+            });
+        }
+        let padding = 0.5 * f64::from(self.spacing);
+        bounds.map(|(min_x, min_y, max_x, max_y)| {
+            (
+                min_x - padding,
+                min_y - padding,
+                max_x + padding,
+                max_y + padding,
+            )
+        })
     }
 
     pub(super) fn emit(

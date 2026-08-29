@@ -24,6 +24,7 @@ pub(super) struct SkirtPlan {
     /// First-layer flow values; later layers rescale `mm3_per_mm` by the
     /// actual layer height (`GCode.cpp:4413`).
     width: f32,
+    spacing: f32,
     /// Number of layers the skirt is printed on (`skirt_height`, or every
     /// layer when the draft shield makes it infinite).
     layer_count: usize,
@@ -163,9 +164,33 @@ impl SkirtPlan {
         Ok(Some(Self {
             loops,
             width: flow.width,
+            spacing: flow.spacing,
             layer_count,
             start_angle_deg,
         }))
+    }
+
+    pub(super) fn covered_bounds(&self, scale: CoordinateScale) -> Option<(f64, f64, f64, f64)> {
+        let mut bounds = None::<(f64, f64, f64, f64)>;
+        for point in self.loops.iter().flatten() {
+            let x = scale.unscale(point.x());
+            let y = scale.unscale(point.y());
+            bounds = Some(match bounds {
+                Some((min_x, min_y, max_x, max_y)) => {
+                    (min_x.min(x), min_y.min(y), max_x.max(x), max_y.max(y))
+                }
+                None => (x, y, x, y),
+            });
+        }
+        let padding = 0.5 * f64::from(self.spacing);
+        bounds.map(|(min_x, min_y, max_x, max_y)| {
+            (
+                min_x - padding,
+                min_y - padding,
+                max_x + padding,
+                max_y + padding,
+            )
+        })
     }
 
     /// Emits the loops for `layer_index`, split at the seam point

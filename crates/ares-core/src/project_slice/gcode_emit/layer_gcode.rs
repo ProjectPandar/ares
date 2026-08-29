@@ -9,16 +9,19 @@ use super::PreparedPostClassicTraversal;
 pub(super) struct LayerChangeTemplate {
     max_additional_fan: f64,
     metadata: GenerationMetadata,
+    first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
 }
 
 impl LayerChangeTemplate {
     pub(super) fn new(
         traversal: &PreparedPostClassicTraversal,
         metadata: GenerationMetadata,
+        first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
     ) -> Self {
         Self {
             max_additional_fan: max_additional_fan(traversal),
             metadata,
+            first_layer_bounds,
         }
     }
 }
@@ -49,6 +52,7 @@ pub(super) fn append_print_preamble(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     start_position: Option<&value::Value>,
+    first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
 ) -> Result<(), SliceError> {
     let is_bbl = tags::Tags::of(traversal).is_bbl();
     // BBL renders this explicitly before `;VT` (`GCode.cpp:3143-3154`);
@@ -66,7 +70,7 @@ pub(super) fn append_print_preamble(
         // whitespace-only default sentinel to no output and no newline.
         .filter(|source| !source.trim().is_empty())
     {
-        let mut config = super::placeholders::base_config(traversal, metadata)?;
+        let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
         if let Some(position) = start_position {
             config.insert("position", position.clone());
         }
@@ -155,7 +159,7 @@ pub(super) fn append_before_layer_change_gcode(
     traversal: &PreparedPostClassicTraversal,
     layer_index: usize,
     layer_z: f64,
-    metadata: GenerationMetadata,
+    context: &LayerChangeTemplate,
 ) -> Result<(), SliceError> {
     let template = traversal
         .resolved
@@ -167,7 +171,8 @@ pub(super) fn append_before_layer_change_gcode(
     if template.is_empty() {
         return Ok(());
     }
-    let mut config = super::placeholders::base_config(traversal, metadata)?;
+    let mut config =
+        super::placeholders::base_config(traversal, context.metadata, context.first_layer_bounds)?;
     config.insert("layer_num", value::Value::number((layer_index + 1) as f64));
     config.insert("layer_z", value::Value::number(layer_z));
     let filament = &traversal.resolved.views.full.filament.gcode;
@@ -208,7 +213,11 @@ pub(super) fn append_layer_change(
 ) -> Result<(), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
     if !template.is_empty() {
-        let mut config = super::placeholders::base_config(traversal, context.metadata)?;
+        let mut config = super::placeholders::base_config(
+            traversal,
+            context.metadata,
+            context.first_layer_bounds,
+        )?;
         config.insert("current_extruder", value::Value::number(0.0));
         config.insert("layer_num", value::Value::number(layer_index as f64));
         config.insert("layer_z", value::Value::number(layer_z));
