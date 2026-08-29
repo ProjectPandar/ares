@@ -29,6 +29,42 @@ async fn active_combination_reaches_complete_public_slice() {
 }
 
 #[tokio::test]
+async fn combined_sparse_infill_keeps_internal_flow_width() {
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"infill_combination\": \"0\"",
+        "\"infill_combination\": \"1\"",
+    );
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"sparse_infill_line_width\": \"0.45\"",
+        "\"sparse_infill_line_width\": \"120%\"",
+    );
+
+    let output = slice_project(archive.bytes(), metadata()).await.unwrap();
+    let output = std::str::from_utf8(&output).unwrap();
+    let blocks = output
+        .split('\n')
+        .enumerate()
+        .filter(|(_, line)| matches!(*line, "; FEATURE: Sparse infill" | ";TYPE:Sparse infill"))
+        .map(|(index, _)| output.lines().skip(index).take(6).collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+    assert!(
+        blocks.iter().any(|block| {
+            block
+                .iter()
+                .any(|line| matches!(*line, "; LAYER_HEIGHT: 0.4" | ";HEIGHT:0.4"))
+                && block
+                    .iter()
+                    .any(|line| matches!(*line, "; LINE_WIDTH: 0.48" | ";WIDTH:0.48"))
+        }),
+        "{blocks:?}"
+    );
+}
+
+#[tokio::test]
 async fn density_above_source_f32_threshold_combines_successfully() {
     let threshold = f64::from(0.00011_f32);
     let next = f64::from_bits(threshold.to_bits() + 1).to_string();

@@ -6,7 +6,7 @@ use crate::{
     SliceError,
     fill::multiline::{MultilineFillParams, Sweep, fill_surface},
     geometry::CoordinateScale,
-    project_slice::{group_fills::SurfaceFill, perimeters::flow::with_spacing},
+    project_slice::group_fills::SurfaceFill,
 };
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
@@ -47,7 +47,7 @@ pub(super) fn append(
     if polylines.is_empty() {
         return Ok(());
     }
-    let flow = with_spacing(fill.params.flow, fill.params.spacing as f32);
+    let flow = super::materialized_flow(fill.params, fill.params.spacing as f32);
     output.collections.push(FillExtrusionCollection {
         entities: polylines
             .into_iter()

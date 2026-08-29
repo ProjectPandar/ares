@@ -2,7 +2,7 @@ use crate::{
     ProcessInfillPattern, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     geometry::{CoordinateScale, Point},
-    project_slice::{group_fills::SurfaceFill, perimeters::flow::with_spacing},
+    project_slice::group_fills::SurfaceFill,
 };
 
 use super::{
@@ -49,7 +49,7 @@ pub(super) fn append(
         if generated.polylines.is_empty() {
             continue;
         }
-        let flow = with_spacing(fill.params.flow, generated.spacing);
+        let flow = super::materialized_flow(fill.params, generated.spacing);
         let spacing = generated.spacing;
         let mut entities: Vec<FillExtrusionEntity> = generated
             .polylines

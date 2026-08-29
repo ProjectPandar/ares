@@ -1125,5 +1125,15 @@ from 202 to 136; the entire Geeetech short-loop/concentric family closes (A10
 Pro 0.6 and Mizar S 0.8 are representative PASS rows). Remaining Anker 0.2
 cases now expose a smaller, distinct 0.02mm Arachne endpoint simplification.
 
-NEXT: close the remaining Arachne endpoint simplification, then small
-statistics/CoolingBuffer precision and control/travel.
+The largest remaining statistics subgroup was combined sparse infill. Upstream
+sets `using_internal_flow` for every non-solid/non-bridge surface and skips
+`flow.with_spacing()` when materializing it (`Fill.cpp:1262-1299`,
+`FillBase.cpp:145-158`). Ares always adjusted width to the generator spacing;
+Volumic's two-layer sparse flow grew from configured 0.48 to 0.51219 and
+extruded 7.75% extra every combined layer. All straight/multiline/gyroid sparse
+patterns now preserve internal flow while solid/bridge fills still adjust. A
+public combined-layer width test is RED/GREEN, and Volumic filament is now
+exact 305.67mm.
+
+NEXT: verify combined-infill sweep, then small statistics/CoolingBuffer
+precision and control/travel.
