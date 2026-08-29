@@ -173,7 +173,7 @@ pub(super) fn append_before_layer_change_gcode(
     }
     let mut config =
         super::placeholders::base_config(traversal, context.metadata, context.first_layer_bounds)?;
-    config.insert("layer_num", value::Value::number((layer_index + 1) as f64));
+    config.insert("layer_num", value::Value::number(layer_index as f64));
     config.insert("layer_z", value::Value::number(layer_z));
     let filament = &traversal.resolved.views.full.filament.gcode;
     let diameter = filament

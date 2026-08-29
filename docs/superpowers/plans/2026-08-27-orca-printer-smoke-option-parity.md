@@ -1141,5 +1141,13 @@ Volumic EXO42/SH65 advance to exact-geometry skirt feed differences. The
 remaining high-nozzle Elegoo rows use cubic geometry without infill combination
 and are a separate path-generation issue.
 
-NEXT: fix CoolingBuffer feed precision/skirt feed, then remaining cubic
-statistics and control/travel.
+The dominant control-event offset was `before_layer_change_gcode.layer_num`.
+Upstream evaluates it before `change_layer()` increments `m_layer_index`, so
+first layer is 0 (`GCode.cpp:4617-4641`); Ares passed `layer_index+1`. The main
+3MF test is RED/GREEN on 0/1 for the first two layers, and RatRig now emits the
+exact `_ON_LAYER_CHANGE LAYER=1,2,3` sequence. Six obsolete one-based tests on
+the legacy STL pipeline were deleted now that the observable project seam owns
+the behavior.
+
+NEXT: verify control-event sweep, then CoolingBuffer feed precision/skirt feed,
+remaining cubic statistics and travel.
