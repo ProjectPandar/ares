@@ -54,13 +54,18 @@ pub(super) fn first_layer_bounds(
         include_bounds(brim.covered_bounds(traversal.scale), &mut bounds);
     }
 
+    let fallback_distance = if skirt.is_none() && skirt_height > 0 {
+        print.skirt_distance.0
+    } else {
+        0.0
+    };
     let (center_x, center_y) = model_center(traversal)?;
     bounds.map(|(min_x, min_y, max_x, max_y)| {
         (
-            min_x + center_x,
-            min_y + center_y,
-            max_x - min_x,
-            max_y - min_y,
+            min_x - fallback_distance + center_x,
+            min_y - fallback_distance + center_y,
+            max_x - min_x + 2.0 * fallback_distance,
+            max_y - min_y + 2.0 * fallback_distance,
         )
     })
 }

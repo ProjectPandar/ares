@@ -933,8 +933,10 @@ skirt/brim planning and unions their path bounds expanded by spacing/2, matching
 `polygons_covered_by_spacing` rather than width/2. An Orca-generated two-loop
 KSR probe supplies the exact independent literal
 `94.625,80.9779 .. 170.553,151.906`; the output test is red on the previous
-0.9142mm-per-side omission. All 48 first divergences are removed: 45 RatRig
-preambles are fully equal, while three Raise3D variants advance to their next
+0.9142mm-per-side omission. A second Orca probe covers the no-SkirtPlan case,
+where the configured distance envelope remains authoritative (the A1 family).
+All 48 first divergences are removed: 45 RatRig preambles are fully equal,
+while three Raise3D variants advance to their next
 purge-coordinate branch.
 
 The same BBL purge trace found an independent option-projection bug:
