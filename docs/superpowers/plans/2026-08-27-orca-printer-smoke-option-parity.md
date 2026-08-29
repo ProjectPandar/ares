@@ -995,6 +995,15 @@ role then object fallback. First-layer width remains conditional on a positive
 setting as upstream requires. Focused default tests and the full M3D preamble
 match.
 
+The final five profile-coordinate cases use literal-range `random(min,max)` in
+machine-start (Raise3D and Flashforge). Re-slicing the same 3MF three times with
+Orca produced different coordinates (for example Raise3D Dual Y=2,7,6), so no
+cross-slicer implementation can match an independently seeded run. The harness
+now normalizes only constant numeric random calls to the lower bound before the
+shared 3MF export; both slicers consume the exact same deterministic template.
+This does not relax the comparator or motion equality. A focused preset test
+covers positive and negative ranges.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into

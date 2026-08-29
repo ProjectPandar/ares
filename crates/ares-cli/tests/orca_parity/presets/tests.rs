@@ -25,6 +25,21 @@ fn stale_vendor_custom_gcode_placeholders_are_normalized() {
 }
 
 #[test]
+fn nondeterministic_random_gcode_is_fixed_before_shared_export() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "machine_start_gcode": "G1 X60 Y{random(2,8)}\nG1 X-145 Y{random(-160, -152)}"
+    }))
+    .unwrap();
+
+    let overrides = smoke_case_overrides(&machine, &serde_json::Map::new());
+
+    assert_eq!(
+        overrides["machine_start_gcode"],
+        "G1 X60 Y{2}\nG1 X-145 Y{-160}"
+    );
+}
+
+#[test]
 fn standalone_orca_range_failures_are_normalized_for_shared_smoke_input() {
     let machine = serde_json::from_value(serde_json::json!({
         "retraction_distances_when_cut": ["0", "30"],

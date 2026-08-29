@@ -288,11 +288,18 @@ fn smoke_case_overrides(
         ] {
             normalized = normalized.replace(&format!("{{{placeholder}}}"), "0");
         }
+        normalized = normalize_constant_random_calls(&normalized);
         if normalized != source {
             overrides.insert("machine_start_gcode".to_owned(), Value::String(normalized));
         }
     }
     overrides
+}
+
+fn normalize_constant_random_calls(source: &str) -> String {
+    let pattern =
+        regex::Regex::new(r"random\(\s*(-?\d+(?:\.\d+)?)\s*,\s*-?\d+(?:\.\d+)?\s*\)").unwrap();
+    pattern.replace_all(source, "$1").into_owned()
 }
 
 fn option_true(value: &Value) -> bool {
