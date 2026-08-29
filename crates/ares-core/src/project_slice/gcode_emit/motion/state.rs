@@ -1,4 +1,4 @@
-use super::{MotionOptions, arc, set_accel_and_jerk};
+use super::{MotionOptions, arc, set_accel_and_jerk, set_layer_acceleration_and_jerk};
 
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
@@ -75,7 +75,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     } else {
         state.options.default_jerk
     };
-    set_accel_and_jerk(output, state, acceleration.unwrap_or(0), jerk, false);
+    set_layer_acceleration_and_jerk(output, state, acceleration.unwrap_or(0), jerk);
 }
 
 pub(in crate::project_slice::gcode_emit) fn queue_object_start(

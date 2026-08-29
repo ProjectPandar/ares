@@ -1262,5 +1262,12 @@ down; Normal+not-lifted combines new layer Z; Spiral keeps XY then down. The
 regressed summary was restored. Ender-3, Artillery X3 Pro, and RatRig V-Cast
 focused smokes all pass together.
 
-NEXT: rerun stable layer-travel/feed sweep, then remaining postamble geometry,
-cubic statistics, lifecycle and travel.
+Klipper layer-transition kinematics now use the upstream separate writer calls
+from `GCode.cpp:4761-4800`: one `SET_VELOCITY_LIMIT ACCEL=...` line followed by
+one `SQUARE_CORNER_VELOCITY=...` line. Path/travel kinematics retain the
+combined API used at `GCode.cpp:6460,7410`. CR-10 SE advances past its control
+divergence to sparse-infill geometry; the focused output test and three stable
+profile smokes pass.
+
+NEXT: fix finish layer_num, rerun stable sweep, then remaining postamble
+geometry, cubic statistics, lifecycle and travel.

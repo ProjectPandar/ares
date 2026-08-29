@@ -1,6 +1,9 @@
 //! Acceleration/jerk emission per flavor (`GCodeWriter.cpp:216-256,
 //! 324-348`).
 
+#[cfg(test)]
+mod tests;
+
 use super::{EmitState, format, jerk};
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32, travel: bool) {
@@ -40,10 +43,29 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
             let code = if separate_travel { "M204 T" } else { "M204 P" };
             format!("{code}{acceleration}\n")
         }
+        crate::GCodeFlavor::Klipper => {
+            let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
+            if state.options.accel_to_decel_enable {
+                let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
+                line.push_str(&format!(" ACCEL_TO_DECEL={}", format::axis(decel)));
+            }
+            line.push('\n');
+            line
+        }
         _ => format!("M204 S{acceleration}\n"),
     };
     output.extend_from_slice(line.as_bytes());
     *last = Some(acceleration);
+}
+
+pub(in crate::project_slice::gcode_emit) fn set_layer_acceleration_and_jerk(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    acceleration: u32,
+    jerk: f64,
+) {
+    set_acceleration(output, state, acceleration, false);
+    jerk::set(output, state, jerk);
 }
 
 /// Klipper merges acceleration and jerk into one `SET_VELOCITY_LIMIT` line
