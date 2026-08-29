@@ -4,6 +4,7 @@ use super::{MotionOptions, arc, set_accel_and_jerk};
 pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) x: f64,
     pub(in crate::project_slice::gcode_emit) y: f64,
+    pub(in crate::project_slice::gcode_emit) e_position: f64,
     pub(in crate::project_slice::gcode_emit) offset: (f64, f64),
     pub(in crate::project_slice::gcode_emit) scale_factor: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
@@ -104,6 +105,9 @@ pub(in crate::project_slice::gcode_emit) fn append_exclude_end(
 ) {
     if let Some(text) = state.pending_exclude_end.take() {
         output.extend_from_slice(text.as_bytes());
+        if !state.options.use_relative_e_distances && text.lines().any(|line| line == "G92 E0") {
+            state.e_position = 0.0;
+        }
     }
 }
 

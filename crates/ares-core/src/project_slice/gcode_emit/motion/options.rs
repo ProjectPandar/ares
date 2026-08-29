@@ -56,6 +56,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) max_jerk_z: f64,
     pub(in crate::project_slice::gcode_emit) max_jerk_e: f64,
     pub(in crate::project_slice::gcode_emit) gcode_flavor: crate::GCodeFlavor,
+    pub(in crate::project_slice::gcode_emit) use_relative_e_distances: bool,
     pub(in crate::project_slice::gcode_emit) max_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) max_travel_acceleration: u32,
     pub(in crate::project_slice::gcode_emit) accel_to_decel_enable: bool,

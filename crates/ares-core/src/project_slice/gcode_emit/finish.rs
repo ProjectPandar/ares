@@ -5,6 +5,9 @@ use crate::{
 
 use super::{template, value};
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn append(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
@@ -63,8 +66,8 @@ pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
     let mut e_position = 0.0_f64;
     let mut x_position = 0.0_f64;
     let mut y_position = 0.0_f64;
-    let mut e_relative = false;
-    let mut xyz_relative = false;
+    let mut e_local_relative = false;
+    let mut global_relative = false;
     let mut used = 0.0_f64;
     for line in text.lines() {
         let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
@@ -79,16 +82,10 @@ pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
             })
         };
         match command {
-            "M82" => e_relative = false,
-            "M83" => e_relative = true,
-            "G90" => {
-                xyz_relative = false;
-                e_relative = false;
-            }
-            "G91" => {
-                xyz_relative = true;
-                e_relative = true;
-            }
+            "M82" => e_local_relative = false,
+            "M83" => e_local_relative = true,
+            "G90" => global_relative = false,
+            "G91" => global_relative = true,
             "G92" => {
                 if let Some(value) = letter_value('E') {
                     e_position = value;
@@ -99,25 +96,26 @@ pub(super) fn account_used_filament(gcode: &[u8]) -> f64 {
                 let y = letter_value('Y');
                 let e = letter_value('E');
                 let dx = match x {
-                    Some(value) if xyz_relative => value,
+                    Some(value) if global_relative => value,
                     Some(value) => value - x_position,
                     None => 0.0,
                 };
                 let dy = match y {
-                    Some(value) if xyz_relative => value,
+                    Some(value) if global_relative => value,
                     Some(value) => value - y_position,
                     None => 0.0,
                 };
+                let e_relative = global_relative || e_local_relative;
                 let delta_e = match e {
                     Some(value) if e_relative => value,
                     Some(value) => value - e_position,
                     None => 0.0,
                 };
                 if let Some(value) = x {
-                    x_position = apply_axis(x_position, value, xyz_relative);
+                    x_position = apply_axis(x_position, value, global_relative);
                 }
                 if let Some(value) = y {
-                    y_position = apply_axis(y_position, value, xyz_relative);
+                    y_position = apply_axis(y_position, value, global_relative);
                 }
                 if let Some(value) = e {
                     e_position = apply_e(e_position, value, e_relative);

@@ -1039,5 +1039,19 @@ lifecycle, and H2D 0.2 reaches travel. The next largest common family is
 filament-length statistics (276), followed by first-layer lifecycle/control/
 deposition/travel.
 
+The first statistics slice found two coupled E-mode errors. GCodeProcessor
+keeps global G90/G91 positioning separate from local M82/M83 and treats E as
+relative when either mode is relative (`GCodeProcessor.cpp:3834-3888`,
+`process_G90/G91/M82/M83`); Ares cleared M83 on every G90. In addition, the
+main emitter always wrote relative E increments even when the preset requested
+M82, and omitted GCodeWriter's absolute-mode `G92 E0` preamble
+(`GCodeWriter.cpp:82-104,480-502`). Motion state now tracks cumulative E,
+formats every deposition/arc/retract/wipe/unretract in the configured mode, and
+preserves the local/global distinction in statistics accounting. Focused mode
+and 3MF output tests are RED/GREEN. Eryone and Flashforge large-delta examples
+now match exactly; across all 276 former stats rows, all >50mm mismatches except
+three Ginger skirt-geometry cases disappear (28 exact, 48 <=0.2mm, 157 <=2mm,
+40 <=50mm, 3 >50mm).
+
 NEXT: port the GCodeProcessor filament accounting common cause, then continue
 with lifecycle/control/deposition/travel families.

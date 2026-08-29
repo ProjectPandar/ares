@@ -337,7 +337,7 @@ pub(super) fn append_flavor_preamble(
         if gcode.runtime_gcode.use_relative_e_distances.0 {
             output.extend_from_slice(b"M83 ; use relative distances for extrusion\n");
         } else {
-            output.extend_from_slice(b"M82 ; use absolute distances for extrusion\n");
+            output.extend_from_slice(b"M82 ; use absolute distances for extrusion\nG92 E0\n");
         }
     }
 }

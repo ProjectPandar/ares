@@ -4,7 +4,7 @@
 #[cfg(test)]
 mod tests;
 use super::{
-    EmitState, arc,
+    EmitState, arc, extrusion,
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
 };
 
@@ -65,10 +65,11 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
         .min(remaining);
     let before = state.options.retraction_length - during;
     if before > f64::EPSILON {
+        let retract = extrusion::coordinate(state, -before);
         output.extend_from_slice(
             format!(
                 "G1 E{} F{}\n",
-                format_extrusion(-before),
+                format_extrusion(retract),
                 format_axis(state.options.retraction_feedrate)
             )
             .as_bytes(),
@@ -86,12 +87,13 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
         );
         for (point, segment_length) in segments {
             let retraction = during * (segment_length / distribution_distance);
+            let retract = extrusion::coordinate(state, -retraction);
             output.extend_from_slice(
                 format!(
                     "G1 X{} Y{} E{}\n",
                     format_axis(point.x),
                     format_axis(point.y),
-                    format_extrusion(-retraction)
+                    format_extrusion(retract)
                 )
                 .as_bytes(),
             );

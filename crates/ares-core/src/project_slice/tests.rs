@@ -7,6 +7,7 @@ mod conical_overhang;
 mod deep_cleanup_support;
 mod elephant_foot;
 mod fixture;
+mod gcode_absolute_e;
 mod gcode_fan_lifecycle;
 mod gcode_filament_start;
 mod gcode_file_start;

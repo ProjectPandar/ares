@@ -18,6 +18,7 @@ pub(super) fn linear_segment(
         state.options.print_flow_ratio,
         state.options.filament_area,
     );
+    let extrusion = coordinate(state, extrusion);
     output.extend_from_slice(
         format!(
             "G1 X{} Y{} E{}\n",
@@ -30,6 +31,15 @@ pub(super) fn linear_segment(
     state.x = end.x;
     state.y = end.y;
     state.wipe_start = Some(end);
+}
+
+pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {
+    state.e_position += delta;
+    if state.options.use_relative_e_distances {
+        delta
+    } else {
+        state.e_position
+    }
 }
 
 pub(super) fn for_length(

@@ -161,10 +161,12 @@ pub(super) fn emit(
             );
         }
         output.extend_from_slice(format!("G1 Z{}\n", format_extrusion(state.layer_z)).as_bytes());
+        let retraction_length = state.options.retraction_length;
+        let unretract = extrusion::coordinate(state, retraction_length);
         output.extend_from_slice(
             format!(
                 "G1 E{} F{}\n",
-                format_extrusion(state.options.retraction_length),
+                format_extrusion(unretract),
                 format_axis(state.options.deretraction_feedrate)
             )
             .as_bytes(),
@@ -269,6 +271,7 @@ pub(super) fn emit(
                     state.options.print_flow_ratio,
                     state.options.filament_area,
                 );
+                let extrusion = extrusion::coordinate(state, extrusion);
                 let command = if arc_segment.clockwise { "G2" } else { "G3" };
                 output.extend_from_slice(
                     format!(
