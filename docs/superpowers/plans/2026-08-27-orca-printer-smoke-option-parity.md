@@ -1220,5 +1220,12 @@ is PASS again and SecKit retains its expected Internal Bridge S255. The
 regressed generated summary was restored rather than recorded as valid
 progress.
 
-NEXT: rerun stable role/stats/lift sweep, then remaining cubic statistics,
-lifecycle and travel.
+Stable sweep27 (clean HEAD `2fa1557`) completed all 1001 presets: PASS rises
+89→103, with 807 DIVERGENT and 91 ARES_ERROR. Ender-3 and all recovered
+baseline-reassert cases pass; SecKit remains PASS. Control-first rows are 112.
+Artillery now differs only by one trailing non-BBL blank line. Remaining top
+families: filament length 229, deposition value 155, control 112, travel count
+94, lifecycle 93.
+
+NEXT: fix non-BBL trailing newline and completion chamber/exhaust postamble,
+then remaining cubic statistics, lifecycle and travel.
