@@ -810,3 +810,28 @@ branch is an Ares invention. NEXT: resolve the actual filament/option values the
 sweep harness feeds for this case, fix the exhaust-fan print-start activation
 (option read + position after start_gcode), then the remaining preamble
 sub-families (M572 pressure advance, M104/M106 S0 blanks, comment/blank lines).
+
+## 2026-08-29 session: fan lifecycle landed; whitespace sentinel aligned
+
+Print-start exhaust P3, first-layer auxiliary P2 initialization, and print-end
+fan gating landed in `0fbfb12`, `dea856f`, and `cc53aa8`. Sweep4 then exercised
+all 1001 presets: 35 PASS, 877 DIVERGENT, and 89 ARES_ERROR rows. The unchanged
+PASS count is expected: the fixed fan families now reach their next deposition,
+travel, lifecycle, or control-event divergence rather than stopping in the
+preamble.
+
+The SeeMeCNC Artemis family isolated the remaining M572 preamble mismatch. Its
+3MF stores Orca's default `filament_start_gcode` sentinel as exactly `" "`.
+Upstream's active single-extruder path (`GCode.cpp:7710-7745`) processes that
+value through the macro parser, whose skipper (`PlaceholderParser.cpp:2510-2520`)
+reduces a whitespace-only template to no bytes before pressure advance is
+emitted. Ares preserved the literal space and added a newline. The 3MF
+`slice_project` output test now covers this non-BBL path, and Ares skips
+whitespace-only filament-start templates before rendering. Re-slicing Artemis
+0.4 proves its normalized preamble is now 54 lines on both sides and byte-equal
+after removing the already-deferred generated timestamp and M73 lines; M572
+remains `M572 D0 S0.4; Override pressure advance value` at the same position.
+
+NEXT: run the affected Artemis family through the smoke harness, then continue
+with the remaining preamble groups (M104/M106 S0, whitespace/comment layout)
+and the larger internal-solid-infill/feedrate/travel families.

@@ -65,9 +65,10 @@ pub(super) fn append_print_preamble(
         .filament_start_gcode
         .0
         .first()
-        // `GCode.cpp:1064` skips an empty filament_start_gcode entirely (no
-        // render, no trailing newline), so filter it out before rendering.
-        .filter(|source| !source.is_empty())
+        // `GCode.cpp:7710-7745` processes this through PlaceholderParser;
+        // its skipper (`PlaceholderParser.cpp:2510-2520`) reduces Orca's
+        // whitespace-only default sentinel to no output and no newline.
+        .filter(|source| !source.trim().is_empty())
     {
         let mut config = super::placeholders::base_config(traversal, metadata)?;
         config.insert("position", emitted_position(output));
