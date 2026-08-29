@@ -1031,6 +1031,13 @@ PASS, 875 DIVERGENT, 91 ARES_ERROR. Preamble first divergences fell from 77 to
 15: all 48 covered-hull cases and all 14 integer-division purge cases advanced.
 Representative RatRig now reaches layer control events; A1 reaches deposition.
 
-NEXT: close the final 15 preamble cases (legacy FLAVOR layout, auxiliary-fan
-ordering, two BBL M142 branches, and six per-profile start coordinates), then
-move to the dominant deposition/feedrate/travel families.
+Stable sweep13 ran from clean HEAD `0ccf617` plus the committed final preamble
+slices, with no concurrent source edits. It completed all 1001 presets: 35
+PASS, 874 DIVERGENT, 92 ARES_ERROR. **Preamble first divergences are now 0**
+(down from 235 at sweep4). Ender V3 SE now reaches travel, Raise3D reaches
+lifecycle, and H2D 0.2 reaches travel. The next largest common family is
+filament-length statistics (276), followed by first-layer lifecycle/control/
+deposition/travel.
+
+NEXT: port the GCodeProcessor filament accounting common cause, then continue
+with lifecycle/control/deposition/travel families.
