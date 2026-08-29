@@ -6,6 +6,17 @@ pub(crate) struct Timing {
 }
 
 pub(super) fn parse_timing(line: &str, timing: &mut Timing) -> Result<bool, String> {
+    if let Some(value) = line.strip_prefix(";TIME:") {
+        let seconds = value
+            .parse::<f64>()
+            .map_err(|_| "invalid legacy TIME line".to_owned())?;
+        if !seconds.is_finite() || seconds < 0.0 {
+            return Err("invalid legacy TIME line".to_owned());
+        }
+        timing.model = seconds.round() as u64;
+        timing.total = timing.model;
+        return Ok(true);
+    }
     if let Some(value) = line.strip_prefix("; model printing time: ") {
         let (model, total) = value
             .split_once("; total estimated time: ")
@@ -50,6 +61,18 @@ fn duration_seconds(value: &str) -> Result<u64, String> {
 }
 
 pub(super) fn parse_filament_lengths(line: &str) -> Result<Option<Vec<f64>>, String> {
+    if let Some(value) = line
+        .strip_prefix(";Filament used:")
+        .and_then(|value| value.strip_suffix('m'))
+    {
+        let meters = value
+            .parse::<f64>()
+            .map_err(|_| format!("invalid legacy filament length {value:?}"))?;
+        if !meters.is_finite() || meters < 0.0 {
+            return Err(format!("invalid legacy filament length {value:?}"));
+        }
+        return Ok(Some(vec![meters * 1_000.0]));
+    }
     let Some(value) = line.strip_prefix("; filament used [mm] = ") else {
         return Ok(None);
     };

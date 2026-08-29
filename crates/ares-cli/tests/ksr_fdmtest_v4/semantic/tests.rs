@@ -1,4 +1,4 @@
-use super::{compare, compare_cross_target};
+use super::{compare, compare_cross_target, compare_ignoring_time};
 
 #[test]
 fn layer_shaped_comments_in_start_gcode_remain_preamble() {
@@ -319,6 +319,15 @@ fn marlin_role_acceleration_words_match_equivalent_s_updates() {
     let actual = document("1m", "1m", "10s", "2.00", &[actual_island]);
 
     compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
+fn legacy_file_start_stats_are_classified_not_compared_as_preamble() {
+    let body = document("1m", "1m", "10s", "2.00", &[]);
+    let expected = format!(";TIME:60.00\n;Filament used:0.24m\n{body}");
+    let actual = format!(";TIME:90.00\n;Filament used:0.25m\n{body}");
+
+    compare_ignoring_time(expected.as_bytes(), actual.as_bytes()).unwrap();
 }
 
 #[test]

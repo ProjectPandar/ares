@@ -956,6 +956,15 @@ with zero-division errors and double promotion. Focused RED/GREEN tests cover
 `24/20`, `24.0/20`, and left association; all 14/14 affected semantic
 preambles now match.
 
+The three Ender-3 V3 SE legacy-header cases use `file_start_gcode`, which
+upstream renders before every generated header (`GCode.cpp:2551-2566`). Ares
+now renders that template at the same boundary, carries reserved print-time and
+used-filament markers through the post-processor, and resolves them after the
+complete file is known. The semantic parser classifies legacy `;TIME:` and
+`;Filament used:` lines as statistics (timing remains under the existing soft
+gate). A 3MF RED/GREEN test verifies the first five lines and placeholder
+resolution; all three profile preambles match apart from ignored time values.
+
 Sweep7 (assignment + startup-temperature fixes, before first-filament arrays)
 completed all 1001 presets: 35 PASS, 876 DIVERGENT, 90 ARES_ERROR. Preamble
 first divergences fell from 125 to 114: all six Folgertech cases moved into

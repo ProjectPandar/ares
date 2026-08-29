@@ -1,6 +1,7 @@
 mod delays;
 mod motion;
 mod motion_util;
+mod stats;
 mod time;
 use crate::options::GCodeFlavor;
 use delays::command_delay;
@@ -8,6 +9,7 @@ use delays::command_delay;
 use motion::planned_times;
 use motion::{MotionBlock, MotionKind, MotionState, RollingPlanner};
 use motion_util::word;
+pub(super) use stats::{PRINT_TIME_SEC_PLACEHOLDER, USED_FILAMENT_LENGTH_PLACEHOLDER};
 use std::collections::VecDeque;
 use time::{duration, minutes};
 
@@ -24,6 +26,7 @@ pub(super) fn process(
     mut output: Vec<u8>,
     emit_progress: bool,
     machine_load_filament_time: f64,
+    used_filament: f64,
     limits: ProcessorLimits,
 ) -> Vec<u8> {
     let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
@@ -37,8 +40,12 @@ pub(super) fn process(
         .unwrap_or(0);
     let prepare_time = estimate.prepare;
     let model_time = (estimate.total - prepare_time).max(0.0);
+    let print_time_sec = format!("{:.2}", estimate.total);
+    let used_filament_length = format!("{:.2}", used_filament / 1_000.0);
 
     for (index, line) in lines.iter().enumerate() {
+        let expanded = stats::expand(line, &print_time_sec, &used_filament_length);
+        let line = expanded.as_ref();
         if line == "M73 P0 R0" {
             if emit_progress {
                 let remaining = minutes(estimate.total);

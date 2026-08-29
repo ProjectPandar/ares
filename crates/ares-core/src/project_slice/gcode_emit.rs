@@ -7,6 +7,7 @@ use crate::project_slice::{
 mod brim;
 mod cooling;
 mod expression;
+mod file_start;
 mod finish;
 pub(super) mod footprint;
 mod header;
@@ -45,6 +46,7 @@ pub(super) fn emit(
     let first_layer_bounds =
         footprint::first_layer_bounds(traversal, skirt.as_ref(), brim.as_ref());
     let mut output = Vec::new();
+    file_start::append(&mut output, traversal, metadata, first_layer_bounds)?;
     let tags = tags::Tags::of(traversal);
     header::append_header(&mut output, metadata, &prepared.objects, traversal);
     // `GCode.cpp` + Orca export layout: BBL keeps the config block up front;
@@ -285,6 +287,7 @@ pub(super) fn emit(
             .gcode
             .machine_load_filament_time
             .0,
+        used_filament,
         processor::ProcessorLimits {
             print_acceleration: machine::first(
                 &traversal
