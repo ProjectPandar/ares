@@ -37,6 +37,14 @@ async fn ksr_object_travel_acceleration_follows_object_comment() {
         .position(|line| line.starts_with("; printing object "))
         .unwrap()
         + layer_2;
+    let label = lines[printing..]
+        .iter()
+        .position(|line| *line == "M624 AQAAAAAAAAA=")
+        .unwrap()
+        + printing;
+    assert!(lines[label + 1].starts_with("G1 X"));
+    assert!(!lines[label + 1].contains(" Z"));
+    assert_eq!(lines[label + 2], "G1 Z.4");
     // The travel acceleration for the object is emitted before the first
     // object block of the layer; the residual gap pass may prepend additional
     // object markers, so assert ordering within a small window instead of an
@@ -75,7 +83,8 @@ async fn ksr_object_travel_acceleration_follows_object_comment() {
         + printing;
     assert_eq!(lines[start_label + 1], "M624 AQAAAAAAAAA=");
     assert!(lines[start_label + 2].starts_with("G1 X"));
-    assert!(lines[start_label + 2].contains(" Z"));
+    assert!(!lines[start_label + 2].contains(" Z"));
+    assert_eq!(lines[start_label + 3], "G1 Z69");
 }
 
 #[tokio::test]

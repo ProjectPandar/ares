@@ -28,6 +28,11 @@ fn orca_parity_artillery_x3_pro_smoke() {
     assert_printer_smoke("Artillery", "Artillery Sidewinder X3 Pro 0.4 nozzle");
 }
 
+#[test]
+fn orca_parity_ratrig_vcast_smoke() {
+    assert_printer_smoke("Ratrig", "RatRig V-Cast 0.4 nozzle");
+}
+
 fn assert_printer_smoke(vendor: &str, printer: &str) {
     let Some(runner) = OrcaRunner::from_env() else {
         eprintln!("skipping: no OrcaSlicer CLI available");

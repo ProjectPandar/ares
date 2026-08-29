@@ -35,6 +35,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
+    pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -54,6 +55,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     layer_height: f64,
 ) {
     state.layer_index = layer_index;
+    state.layer_change_travel_pending = true;
     state.last_height = Some(layer_height as f32);
     state.layer_z = layer_z;
     state.travel_feedrate = if layer_index == 0 {

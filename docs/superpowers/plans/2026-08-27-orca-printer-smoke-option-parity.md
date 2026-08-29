@@ -1245,5 +1245,14 @@ Stable sweep28 (clean HEAD `2db9241`) completed all 1001 presets: PASS 103→109
 first-layer CoolingBuffer feed precision, while K1 CFS-C advances to deposition
 count.
 
-NEXT: fix CoolingBuffer feed precision, then remaining postamble geometry,
-cubic statistics, lifecycle and travel.
+Layer-change travel now carries explicit pending state matching
+`GCode.cpp:5685-5718`/writer nominal-Z semantics. Normal lift combines XY with
+new layer Z; Auto/Spiral keeps XY then emits new Z; same-layer retract without
+an actual lift no longer emits a fake Z. That fake move advanced CoolingBuffer's
+parsed Z by 0.2 mm and produced RatRig F10519 instead of F10496. The KSR raw
+layer-2/layer-345 tests were RED/GREEN, RatRig V-Cast is now a dedicated PASS
+smoke, and `motion/path.rs` was split into the real `path::variable` module
+(389/66 LOC). KSR golden, clippy, and fmt pass.
+
+NEXT: stable layer-travel/feed sweep, then remaining postamble geometry, cubic
+statistics, lifecycle and travel.
