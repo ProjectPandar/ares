@@ -737,3 +737,36 @@ item, not a measured wrong-gcode defect.
 Review round-2 remaining (non-blocking, coverage/maintainability only):
 focused unit tests for the residual pass gating branches; seam pinning tests
 still use global .nth() ordinals.
+
+## 2026-08-29 session: review round 2 CLOSED (PASS); sweep family map
+
+Reviewer round-2 loop fully closed. The concentric BLOCK turned out to rest on
+a false premise: upstream FillConcentricInternal OVERRIDES
+fill_surface_extrusion (FillConcentricInternal.cpp:12-99) and never calls
+_create_gap_fill, so the correct Ares behaviour is NO residual pass on that
+seam. Reverted the concentric wiring (f0e41e1); residual pass stays on the
+straight-line patterns only, matching upstream dispatch exactly. Reviewer
+verdict: PASS, round-2 concentric BLOCK closed. Reviewer's P2 note (cite
+FillConcentricInternal.cpp, not the commented FillRectilinear block) applied
+to the gap_residual file header.
+
+Full printer smoke sweep re-run (sweep2) after the gap-residual fixes: still
+35/1001 PASS, 876 DIVERGENT. Net PASS unchanged because fixing gap-fill
+overfill/underfill only advanced those printers to their NEXT divergence.
+Divergence family map (first-divergence reason, from printer-smoke-summary):
+- preamble differs ~139: auxiliary fan (M106 P2/P3 ~50), M572 pressure-advance
+  (28), M104/M106 S0 fan blanks, comment lines, blank/whitespace lines
+- deposition N differs 133 (Internal solid infill is the top feature, 140)
+- layer control events differs 86
+- island lifecycle (wipe/retract timing) 29
+- travel geometry count differs 21
+- filament length differs: many (metadata stats)
+- orca-slicer failed 47 (SIGSEGV/239/205 — harness-side Orca crashes, NOT Ares
+  defects)
+
+NEXT FRONTIER: the preamble family (largest actionable, ~139 printers). It is
+template/start-gcode rendering (auxiliary fan, pressure advance) — more
+tractable than per-deposition geometry. NOTE: preamble divergence diagnosis
+must use a single consistent sweep run's case dirs; mixing sweep22 and sweep2
+cases gave a misleading M572 hit (the matched Artemis case has no M572 in its
+Orca reference preamble).
