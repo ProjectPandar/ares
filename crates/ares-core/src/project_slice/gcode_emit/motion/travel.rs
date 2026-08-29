@@ -112,6 +112,10 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
         };
         output.extend_from_slice(wipe_end.as_bytes());
     }
+    if !state.options.use_relative_e_distances && state.e_position.abs() > f64::EPSILON {
+        output.extend_from_slice(b"G92 E0\n");
+        state.e_position = 0.0;
+    }
 }
 
 #[derive(Default)]

@@ -1056,7 +1056,11 @@ three Ginger skirt-geometry cases disappear (28 exact, 48 <=0.2mm, 157 <=2mm,
 (`GCodeWriter.cpp:1177-1193`). Ares now emits `G92 E0` and resets its cumulative
 state before M486/EXCLUDE starts. The 3MF test covers the observable sequence;
 Eryone's first deposition coordinates are now byte-identical (E5.27404,
-E5.54807, ...).
+E5.54807, ...). The final offset within a layer came from another active
+upstream reset: every `GCode::retract` appends `GCodeWriter::reset_e()`
+(`GCode.cpp:7650-7676`). Absolute-mode retract/wipe now emits `G92 E0` and
+resets cumulative state; a following object marker only resets when still
+needed. Eryone outer→bottom now matches E2.29664, G92 E0, E5, E5.03396.
 
 NEXT: port the GCodeProcessor filament accounting common cause, then continue
 with lifecycle/control/deposition/travel families.

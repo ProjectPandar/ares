@@ -126,7 +126,7 @@ pub(in crate::project_slice::gcode_emit) fn append_object_start(
         output.push(b'\n');
     }
     if let Some(text) = state.pending_exclude_start.take() {
-        if !state.options.use_relative_e_distances {
+        if !state.options.use_relative_e_distances && state.e_position.abs() > f64::EPSILON {
             output.extend_from_slice(b"G92 E0\n");
             state.e_position = 0.0;
         }
