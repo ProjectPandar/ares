@@ -859,6 +859,18 @@ from 235 to 161; 74 Artemis/Volumic/Qidi/etc. cases advanced to their next
 travel, deposition, lifecycle, or postamble mismatch. The error-count movement
 is from nondeterministic Orca failures, not a new Ares validation branch.
 
-NEXT: run the K2 family-wide proof in the next sweep, then continue with the
-remaining preamble groups (M104 ordering, header/comment layout) and the larger
-internal-solid-infill/feedrate/travel families.
+The next 20-row P1P/P1S/X1/X1 Carbon/X1E family came from a BBL-only
+hard-code. Upstream renders the actual initial filament template, writes
+`;VT<id>`, applies initial pressure advance, then emits the flavor preamble
+(`GCode.cpp:3143-3159`, `GCode.cpp:3199-3203`) before opening the spaghetti
+detector (`GCode.cpp:3274-3279`). Ares emitted a fixed comment immediately
+followed by `;VT0`, losing template blank lines, and always emitted P2 off even
+when `auxiliary_fan=0`. The BBL branch now follows the upstream order, shares
+the real template and pressure-advance paths, uses the configured M82/M83
+preamble, and gates P2 on auxiliary-fan support. An output test covers template
+placement and the disabled-aux boundary. All 20/20 affected sweep5 semantic
+preambles are now equal, and KSR golden remains green.
+
+NEXT: run sweep6 for the K2 + BBL family-wide first-divergence update, then
+continue with remaining preamble groups (M104 ordering, header/comment layout)
+and the larger internal-solid-infill/feedrate/travel families.

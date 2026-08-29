@@ -50,15 +50,10 @@ pub(super) fn append_print_preamble(
     metadata: GenerationMetadata,
     start_position: Option<&value::Value>,
 ) -> Result<(), SliceError> {
-    if tags::Tags::of(traversal).is_bbl() {
-        output.extend_from_slice(
-            b"; filament start gcode\n;VT0\nG90\nG21\nM83 ; use relative distances for extrusion\n",
-        );
-        output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\nM106 S0\nM106 P2 S0\n");
-        return Ok(());
-    }
-    // Compatible flavor renders the preset's filament start template
-    // (`GCode.cpp` filament-start handling).
+    let is_bbl = tags::Tags::of(traversal).is_bbl();
+    // BBL renders this explicitly before `;VT` (`GCode.cpp:3143-3154`);
+    // compatible printers render it from the initial set_extruder call
+    // (`GCode.cpp:7710-7745`).
     if let Some(source) = traversal
         .resolved
         .views
@@ -84,6 +79,9 @@ pub(super) fn append_print_preamble(
         if !rendered.ends_with('\n') {
             output.push(b'\n');
         }
+    }
+    if is_bbl {
+        output.extend_from_slice(b";VT0\n");
     }
     // Orca: set the initial pressure advance for the first filament
     // (`GCode.cpp:8048-8052`, `GCodeWriter.cpp:370-391`).
@@ -117,12 +115,19 @@ pub(super) fn append_print_preamble(
                 crate::GCodeFlavor::Repetier => {
                     format!("M233 X{value} Y{value} ; Override pressure advance value\n")
                 }
-                _ if tags::Tags::of(traversal).is_bbl() => {
+                _ if is_bbl => {
                     format!("M900 K{value} L1000 M10 ; Override pressure advance value\n")
                 }
                 _ => format!("M900 K{value}; Override pressure advance value\n"),
             };
             output.extend_from_slice(line.as_bytes());
+        }
+    }
+    if is_bbl {
+        super::machine::append_flavor_preamble(output, traversal);
+        output.extend_from_slice(b"M981 S1 P20000 ;open spaghetti detector\nM106 S0\n");
+        if traversal.resolved.views.runtime_gcode.auxiliary_fan.0 {
+            output.extend_from_slice(b"M106 P2 S0\n");
         }
     }
     Ok(())

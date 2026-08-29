@@ -367,9 +367,12 @@ fn first_layer_bed_temperature(traversal: &PreparedPostClassicTraversal) -> i32 
 
 /// `GCodeWriter::preamble` (`GCodeWriter.cpp:82-104`): absolute XYZ
 /// coordinates, millimeters, and the extruder distance mode for the
-/// flavors that support it. BBL machines carry their own sequence in the
-/// filament start block instead.
-fn append_flavor_preamble(output: &mut Vec<u8>, traversal: &PreparedPostClassicTraversal) {
+/// flavors that support it. Compatible printers emit it after machine start;
+/// BBL delays it until after filament start and initial pressure advance.
+pub(super) fn append_flavor_preamble(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+) {
     use crate::options::GCodeFlavor;
     let gcode = &traversal.resolved.views;
     output.extend_from_slice(b"G90\nG21\n");
