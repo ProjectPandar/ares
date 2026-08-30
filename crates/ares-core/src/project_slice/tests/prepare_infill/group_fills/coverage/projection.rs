@@ -129,6 +129,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
         options.bridge_speed = OrcaFloat(40.0);
         options.internal_bridge_speed = FloatOrPercent::Percent(Percent(125.0));
         options.bridge_flow = OrcaFloat(1.0);
+        options.bridge_density = Percent(80.0);
         options.internal_bridge_flow = OrcaFloat(0.95);
         options.bottom_solid_infill_flow_ratio = OrcaFloat(1.2);
         options.bridge_line_width = FloatOrPercent::Float(0.4);
@@ -161,6 +162,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
     ];
     object_mut(&mut graph).thick_bridges = OrcaBool(false);
     object_mut(&mut graph).thick_internal_bridges = OrcaBool(false);
+    object_mut(&mut graph).internal_bridge_density = Percent(70.0);
     let grouped = group_fills::group_fills(external(&graph), 0, LAYER).unwrap();
     let sparse = find_kind(&grouped.surface_fills, RegionSurfaceKind::Internal);
     let external_bridge = find_kind(&grouped.surface_fills, RegionSurfaceKind::BottomBridge);
@@ -182,7 +184,9 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
         ExtrusionRole::InternalBridgeInfill
     );
     assert_eq!(external_bridge.params.flow_ratio, 1.0);
+    assert_eq!(external_bridge.params.density, 80.0);
     assert_eq!(internal_bridge.params.flow_ratio, 0.95);
+    assert_eq!(internal_bridge.params.density, 70.0);
     assert_eq!(bottom.params.flow_ratio, 1.2);
     for fill in [external_bridge, internal_bridge] {
         assert!(fill.params.bridge);

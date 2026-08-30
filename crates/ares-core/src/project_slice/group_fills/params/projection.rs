@@ -51,17 +51,22 @@ pub(super) fn project_surface(
             params.pattern = configured(context.region.bottom_surface_pattern);
             params.density = context.region.bottom_surface_density.0 as f32;
         }
-        RegionSurfaceKind::BottomBridge if !is_bridge => {
-            params.pattern = configured(context.region.bottom_surface_pattern);
-            params.density = context.region.bottom_surface_density.0 as f32;
+        RegionSurfaceKind::BottomBridge => {
+            if is_bridge {
+                params.pattern = configured(bridge_pattern(context.region.top_surface_pattern));
+                params.density = context.region.bridge_density.0 as f32;
+            } else {
+                params.pattern = configured(context.region.bottom_surface_pattern);
+                params.density = context.region.bottom_surface_density.0 as f32;
+            }
         }
         RegionSurfaceKind::InternalSolid => {
             params.pattern = configured(context.region.internal_solid_infill_pattern);
             params.density = 100.0;
         }
-        RegionSurfaceKind::BottomBridge | RegionSurfaceKind::InternalBridge => {
+        RegionSurfaceKind::InternalBridge => {
             params.pattern = configured(bridge_pattern(context.region.top_surface_pattern));
-            params.density = 100.0;
+            params.density = context.object.internal_bridge_density.0 as f32;
         }
         RegionSurfaceKind::Internal => {
             if params.density <= 0.0 {

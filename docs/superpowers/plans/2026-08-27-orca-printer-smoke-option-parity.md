@@ -1666,5 +1666,11 @@ artifacts match Orca stats exactly (262.34/262.38/262.63 mm), with bottom moves
 byte-exact. Focused materialization/concentric tests, KSR, smokes, clippy, and
 fmt pass.
 
+Bridge fill projection now applies `Fill.cpp:1338-1344` density overrides:
+external bridges use region bridge_density and internal bridges use object
+internal_bridge_density, retaining bridge dont-adjust behavior. The 10% internal
+case matches Orca at 255.90 mm; projection test, KSR, smokes, clippy, and fmt
+pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
