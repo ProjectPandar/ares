@@ -201,6 +201,14 @@ fn append_template(
     let rendered = template::render(source, config).map_err(|error| {
         SliceError::InvalidInput(format!("invalid project {name} G-code template: {error}"))
     })?;
+    let rendered = if name == "filament-end" {
+        rendered.trim_start_matches([' ', '\t'])
+    } else {
+        &rendered
+    };
+    if rendered.is_empty() {
+        return Ok(());
+    }
     output.extend_from_slice(rendered.as_bytes());
     if !rendered.ends_with('\n') {
         output.push(b'\n');

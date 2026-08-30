@@ -1,6 +1,7 @@
 use super::motion::MotionOptions;
 use crate::{Nullable, OrcaFloat};
 
+mod filament_end;
 mod filament_start;
 mod flow_ratio;
 mod layer_placeholders;

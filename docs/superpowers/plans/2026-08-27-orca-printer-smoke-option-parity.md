@@ -1338,5 +1338,10 @@ Cubic/Grid/Triangles reach exact geometry; deposition-first rises to 247 as
 those metadata barriers clear. Elegoo reaches a single last-decimal extrusion
 value (`0.06107` vs `0.06108`) with exact feed and movement.
 
+Filament-end template insertion now matches PlaceholderParser output at the
+observable seam: initial horizontal whitespace is removed and a render that
+becomes empty emits no line. The public 3MF test was RED/GREEN, Creality Hi's
+postamble line is byte-identical, and KSR/clippy/fmt remain green.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue postamble geometry and lifecycle.
