@@ -128,15 +128,25 @@ pub(super) fn emit(
             state.template_lifted = false;
         } else if state.lifted && !first_position && (!layer_change_travel || pending_lift_emitted)
         {
-            output.extend_from_slice(
-                format!(
-                    "G1 X{} Y{} Z{}\n",
-                    format_axis(first_x),
-                    format_axis(first_y),
-                    format_extrusion(state.layer_z + state.options.z_hop)
-                )
-                .as_bytes(),
-            );
+            if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
+                travel_emit::xyz(
+                    output,
+                    first_x,
+                    first_y,
+                    state.layer_z + state.options.z_hop,
+                    state.travel_feedrate,
+                );
+            } else {
+                output.extend_from_slice(
+                    format!(
+                        "G1 X{} Y{} Z{}\n",
+                        format_axis(first_x),
+                        format_axis(first_y),
+                        format_extrusion(state.layer_z + state.options.z_hop)
+                    )
+                    .as_bytes(),
+                );
+            }
         } else if layer_change_travel && state.retracted {
             if state.options.spiral_lift || state.options.auto_lift {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
@@ -200,6 +210,7 @@ pub(super) fn emit(
         state.y = first_y;
         state.last_scaled_position = Some(first_scaled);
         state.positioned = true;
+        state.current_feedrate = state.travel_feedrate;
     } else if layer_change_travel {
         output.extend_from_slice(
             format!(
@@ -210,6 +221,7 @@ pub(super) fn emit(
             .as_bytes(),
         );
         travel_set_layer_z = true;
+        state.current_feedrate = state.travel_feedrate;
     }
     state.layer_change_travel_pending = false;
     append_object_start(output, state);
@@ -238,6 +250,7 @@ pub(super) fn emit(
             )
             .as_bytes(),
         );
+        state.current_feedrate = state.options.deretraction_feedrate;
         state.retracted = false;
         state.lifted = false;
         state.template_lifted = false;
@@ -281,6 +294,7 @@ pub(super) fn emit(
         state.last_height = Some(properties.height);
     }
     extrusion::speed(output, state.extrusion_feedrate, properties);
+    state.current_feedrate = state.extrusion_feedrate;
     if let Some(processed) = processed {
         variable::emit(variable::Emission {
             output,

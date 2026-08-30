@@ -17,6 +17,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) scale_factor: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) extrusion_feedrate: f64,
+    pub(in crate::project_slice::gcode_emit) current_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) options: MotionOptions,
     pub(in crate::project_slice::gcode_emit) layer_index: usize,
     pub(in crate::project_slice::gcode_emit) positioned: bool,

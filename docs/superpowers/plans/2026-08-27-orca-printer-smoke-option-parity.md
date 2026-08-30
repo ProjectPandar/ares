@@ -1454,5 +1454,11 @@ DIVERGENT, 91 ARES_ERROR. The 68 closed-role control rows clear; Snapmaker
 advances to internal-solid geometry and Comgrow Brim has exact F3600, exposing
 only last-decimal extrusion. Travel-count firsts rise as earlier controls clear.
 
+Motion emission now tracks the writer's current feedrate through retract, wipe,
+lift, travel, unretract, and extrusion speed commands. A lazy Slope lift whose
+intermediate move is skipped now restores travel F when the preceding retract F
+differs. Artillery M1 Pro matches `G1 ... Z.8 F30000` and Bottom-surface F2178
+(previously F2222). KSR/stable smokes/clippy/fmt pass.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue lifecycle, Qidi support-layer timelapse, and postamble geometry.

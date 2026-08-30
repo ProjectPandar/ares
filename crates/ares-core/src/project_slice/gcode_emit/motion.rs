@@ -84,6 +84,7 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         output.extend_from_slice(b"G92 E0\n");
         state.e_position = 0.0;
     }
+    state.current_feedrate = state.options.retraction_feedrate;
     state.retracted = true;
 }
 

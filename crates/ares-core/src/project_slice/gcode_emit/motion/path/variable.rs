@@ -42,9 +42,11 @@ pub(super) fn emit(command: Emission<'_>) {
         let feedrate = processed[index - 1].speed * 60.0;
         if (last_feedrate - feedrate).abs() > 60.0 {
             extrusion::speed(output, feedrate, properties);
+            state.current_feedrate = feedrate;
             last_feedrate = feedrate;
         } else if (original_feedrate - feedrate).abs() <= 60.0 {
             extrusion::speed(output, original_feedrate, properties);
+            state.current_feedrate = original_feedrate;
             last_feedrate = original_feedrate;
         }
         extrusion::linear_segment(output, end, length, properties, state);

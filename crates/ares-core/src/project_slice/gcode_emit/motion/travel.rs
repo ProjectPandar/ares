@@ -89,6 +89,7 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
             )
             .as_bytes(),
         );
+        state.current_feedrate = state.options.retraction_feedrate;
     }
     if !segments.is_empty() && during > f64::EPSILON {
         let wipe_start = if state.tags.is_bbl() {
@@ -100,6 +101,7 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
         output.extend_from_slice(
             format!("G1 F{};_WIPE\n", format_axis(wipe_speed * 60.0)).as_bytes(),
         );
+        state.current_feedrate = wipe_speed * 60.0;
         for (point, segment_length) in segments {
             let retraction = during * (segment_length / distribution_distance);
             let retract = extrusion::coordinate(state, -retraction);
@@ -231,14 +233,17 @@ pub(super) fn emit_pending_lift(
     let dy = target.y - state.y;
     let travel_distance = dx.hypot(dy);
     match mode {
-        LiftMode::Normal => output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}\n",
-                format_extrusion(raised_z),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        ),
+        LiftMode::Normal => {
+            output.extend_from_slice(
+                format!(
+                    "G1 Z{} F{}\n",
+                    format_extrusion(raised_z),
+                    format_axis(state.travel_feedrate)
+                )
+                .as_bytes(),
+            );
+            state.current_feedrate = state.travel_feedrate;
+        }
         LiftMode::Spiral => {
             let slope = state.options.travel_slope_radians;
             if slope > 0.0 && travel_distance > f64::EPSILON {
@@ -246,6 +251,7 @@ pub(super) fn emit_pending_lift(
                 let i = -dy / travel_distance * radius;
                 let j = dx / travel_distance * radius;
                 append_spiral_lift(output, state, raised_z, i, j);
+                state.current_feedrate = state.travel_feedrate;
             }
         }
         LiftMode::Slope => {
@@ -265,6 +271,7 @@ pub(super) fn emit_pending_lift(
                     )
                     .as_bytes(),
                 );
+                state.current_feedrate = state.travel_feedrate;
             }
         }
     }
@@ -283,6 +290,7 @@ fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
         let radius = state.options.z_hop
             / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
         append_spiral_lift(output, state, raised_z, radius, 0.0);
+        state.current_feedrate = state.travel_feedrate;
     } else {
         output.extend_from_slice(
             format!(
@@ -292,6 +300,7 @@ fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
             )
             .as_bytes(),
         );
+        state.current_feedrate = state.travel_feedrate;
     }
     state.lifted = true;
 }
