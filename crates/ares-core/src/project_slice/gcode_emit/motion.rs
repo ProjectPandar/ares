@@ -25,7 +25,9 @@ pub(super) use state::{
     begin_path_travel, queue_exclude_end, queue_exclude_start, queue_object_start,
     queue_object_stop_label,
 };
-pub(super) use travel::{flush_pending_retract_lift, flush_pending_retract_wipe};
+pub(super) use travel::{
+    flush_pending_retract_lift, flush_pending_retract_wipe, retract_for_print_end,
+};
 
 use features::PathProperties;
 pub(in crate::project_slice::gcode_emit) use options::{MotionOptions, first_nullable_float};

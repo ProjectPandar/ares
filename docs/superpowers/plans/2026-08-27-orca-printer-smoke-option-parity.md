@@ -1503,5 +1503,11 @@ min=100 down to max. The `fan_max_speed` seeded case now emits the exact
 S117→S114→S255→S114→S117 sequence. Focused min>max/runtime tests, KSR, clippy,
 and fmt pass.
 
+Print-end retraction is now independent of `retract_when_changing_layer`,
+matching Orca's unconditional final `retract(false, true)`: it performs the
+configured retract/wipe without a lift and clears pending layer state. This
+removes the missing final lifecycle in the false override case; focused unit,
+KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

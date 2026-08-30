@@ -275,7 +275,7 @@ pub(super) fn emit(
     // The final compatible layer has no following layer marker to flush its
     // deferred retraction. Flush only retract/wipe (not a travel lift) before
     // end G-code (`GCode.cpp` final object teardown).
-    motion::flush_pending_retract_wipe(&mut output, &mut state);
+    motion::retract_for_print_end(&mut output, &mut state);
     motion::append_exclude_end(&mut output, &mut state);
     finish::append(
         &mut output,

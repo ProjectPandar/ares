@@ -1,5 +1,7 @@
 use super::super::{LiftMode, MotionOptions};
-use super::{EmitState, emit_pending_lift, inside_internal_surfaces, wipe_moves};
+use super::{
+    EmitState, emit_pending_lift, inside_internal_surfaces, retract_for_print_end, wipe_moves,
+};
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
     project_slice::{gcode_emit::motion::arc, region_slices::RegionSurface},
@@ -15,6 +17,26 @@ fn internal_square() -> RegionSurface {
         ]),
         Vec::new(),
     ))
+}
+
+#[test]
+fn print_end_retracts_without_a_layer_change_lift() {
+    let mut state = EmitState {
+        options: MotionOptions {
+            retraction_length: 1.0,
+            retraction_feedrate: 3_600.0,
+            use_relative_e_distances: true,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+    let mut output = Vec::new();
+
+    retract_for_print_end(&mut output, &mut state);
+
+    assert_eq!(output, b"G1 E-1 F3600\n");
+    assert!(state.retracted);
+    assert!(!state.lifted);
 }
 
 #[test]

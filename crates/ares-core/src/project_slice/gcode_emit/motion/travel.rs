@@ -14,6 +14,17 @@ pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     state.retracted = true;
 }
 
+pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if !state.retracted {
+        retract_and_wipe(output, state);
+        state.retracted = true;
+    }
+    state.pending_layer_retract = false;
+}
+
 pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.retracted {
         return;
