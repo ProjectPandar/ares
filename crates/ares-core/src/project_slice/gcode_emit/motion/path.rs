@@ -151,7 +151,7 @@ pub(super) fn emit(
                 );
             }
         } else if layer_change_travel && state.retracted {
-            if uses_sloped_lift(state.options.z_hop_type) {
+            if state.options.z_hop > 0.0 && uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else if state.lifted {
                 output.extend_from_slice(
@@ -178,7 +178,7 @@ pub(super) fn emit(
             && state.options.z_hop > 0.0
             && travel::lift_is_allowed(state)
         {
-            if uses_sloped_lift(state.options.z_hop_type) {
+            if state.options.z_hop > 0.0 && uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else {
                 output.extend_from_slice(
@@ -195,7 +195,7 @@ pub(super) fn emit(
                 state.lifted = true;
             }
         } else if layer_change_travel {
-            if uses_sloped_lift(state.options.z_hop_type) {
+            if state.options.z_hop > 0.0 && uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
                 output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
             } else {

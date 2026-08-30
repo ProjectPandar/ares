@@ -1769,5 +1769,11 @@ force-no-extrusion pretravel before the normal outer seam travel. The true
 option's `X114.49 Y114.344` split is byte-exact; focused geometry test, KSR,
 smokes, clippy, and fmt pass.
 
+Layer-change travel no longer treats a Slope/Spiral enum as an active sloped
+lift when z_hop is zero. It now emits the source combined target XYZ, restoring
+Anker's missing first layer-transition Z; KSR, focused smokes, clippy, and fmt
+pass. Remaining Anker travel vertices are the separately tracked
+reduce_crossing_wall route.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
