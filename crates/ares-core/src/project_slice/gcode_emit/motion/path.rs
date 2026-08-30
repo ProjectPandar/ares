@@ -118,7 +118,7 @@ pub(super) fn emit(
             travel::retract_and_lift(output, state);
         }
         append_object_start(output, state);
-        let pending_lift_emitted = travel::emit_pending_lift(
+        travel::emit_pending_lift(
             output,
             arc::Point {
                 x: first_x,
@@ -129,8 +129,7 @@ pub(super) fn emit(
         if state.template_lifted && state.lifted && !first_position {
             travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             state.template_lifted = false;
-        } else if state.lifted && !first_position && (!layer_change_travel || pending_lift_emitted)
-        {
+        } else if state.lifted && !first_position {
             if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
                 travel_emit::xyz(
                     output,
