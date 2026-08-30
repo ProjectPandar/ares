@@ -1,4 +1,4 @@
-use super::{closed_length, convex_hull, find_start_point, split_at_nearest};
+use super::{SkirtPlan, closed_length, convex_hull, find_start_point, split_at_nearest};
 use crate::geometry::Point;
 
 /// `Geometry/ConvexHull.cpp:11-43`: sorted monotone chain, collinear points
@@ -23,6 +23,24 @@ fn convex_hull_matches_upstream_ordering() {
             Point::new(0, 1000),
         ]
     );
+}
+
+#[test]
+fn single_loop_draft_shield_keeps_only_the_innermost_later_loop() {
+    let plan = SkirtPlan {
+        loops: vec![
+            vec![Point::new(0, 0), Point::new(10, 0), Point::new(10, 10)],
+            vec![Point::new(2, 2), Point::new(8, 2), Point::new(8, 8)],
+        ],
+        width: 0.4,
+        spacing: 0.4,
+        layer_count: 3,
+        start_angle_deg: 0.0,
+        single_loop_draft_shield: true,
+    };
+
+    assert_eq!(plan.loops_for_layer(0).len(), 2);
+    assert_eq!(plan.loops_for_layer(1), &plan.loops[1..]);
 }
 
 #[test]

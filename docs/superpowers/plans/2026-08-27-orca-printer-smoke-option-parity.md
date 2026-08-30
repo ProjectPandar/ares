@@ -1637,5 +1637,10 @@ internal solid surfaces. All three option artifacts match Orca filament stats
 exactly (262.34/262.34/262.39 mm); grouping test, KSR, smokes, clippy, and fmt
 pass.
 
+`single_loop_draft_shield` now follows `GCode.cpp:4416-4447`: layer 1 emits all
+outermost-first skirt loops, later covered layers emit only the final/innermost
+loop. The true case matches Orca filament usage exactly at 260.62 mm; loop
+selection test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

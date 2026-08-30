@@ -30,6 +30,7 @@ pub(super) struct SkirtPlan {
     layer_count: usize,
     /// Seam target angle in degrees (`skirt_start_angle`).
     start_angle_deg: f64,
+    single_loop_draft_shield: bool,
 }
 
 impl SkirtPlan {
@@ -171,6 +172,7 @@ impl SkirtPlan {
             spacing: flow.spacing,
             layer_count,
             start_angle_deg,
+            single_loop_draft_shield: print.single_loop_draft_shield.0,
         }))
     }
 
@@ -220,15 +222,16 @@ impl SkirtPlan {
             height,
             mm3_per_mm,
         };
+        let loops = self.loops_for_layer(layer.index);
         let mut seam_target = if layer.index == 0 {
-            find_start_point(&self.loops[0], self.start_angle_deg)
+            find_start_point(&loops[0], self.start_angle_deg)
         } else {
             state.last_scaled_position.map_or_else(
-                || find_start_point(&self.loops[0], self.start_angle_deg),
+                || find_start_point(&loops[0], self.start_angle_deg),
                 |(x, y)| Point::new(x, y),
             )
         };
-        for loop_points in &self.loops {
+        for loop_points in loops {
             let split = split_at_nearest(loop_points, seam_target);
             motion::emit_skirt_loop(
                 output,
@@ -240,6 +243,14 @@ impl SkirtPlan {
             if let Some(last) = state.last_scaled_position {
                 seam_target = Point::new(last.0, last.1);
             }
+        }
+    }
+
+    fn loops_for_layer(&self, layer_index: usize) -> &[Vec<Point>] {
+        if layer_index > 0 && self.single_loop_draft_shield {
+            &self.loops[self.loops.len() - 1..]
+        } else {
+            &self.loops
         }
     }
 }
