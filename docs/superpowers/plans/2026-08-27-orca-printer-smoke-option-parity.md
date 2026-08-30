@@ -1756,5 +1756,11 @@ Combined; multi-object grouping remains explicitly gated rather than silently
 combined. The perobject option artifact matches Orca at 262.34 mm; KSR, focused
 smokes, clippy, and fmt pass.
 
+Stable printer sweep44 (clean HEAD `15b34a5`) completed all 1001 presets: PASS
+233→284 (+51), 646 DIVERGENT, 71 ARES_ERROR. All 58 non-sweep harness tests
+passed; the sweep alone failed on the remaining 717 rows. Gains cover arc-first
+simplification, extruder offsets, profile validation, lift/retraction, active
+patterns, zero walls, flow/density/skirt, placeholders, and shrink options.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
