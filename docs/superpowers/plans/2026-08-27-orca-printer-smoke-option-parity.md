@@ -1449,5 +1449,10 @@ END produces the forced base marker. Snapmaker now emits the expected `M106 S0`
 before Bottom surface; RED/GREEN role test, KSR, stable smokes, clippy, and fmt
 pass.
 
+Stable sweep39 (clean HEAD `7379762`) completed all 1001 presets: 207 PASS, 703
+DIVERGENT, 91 ARES_ERROR. The 68 closed-role control rows clear; Snapmaker
+advances to internal-solid geometry and Comgrow Brim has exact F3600, exposing
+only last-decimal extrusion. Travel-count firsts rise as earlier controls clear.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue lifecycle, Qidi support-layer timelapse, and postamble geometry.
