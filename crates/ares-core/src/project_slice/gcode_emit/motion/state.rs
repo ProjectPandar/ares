@@ -77,14 +77,16 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
         1 => Some(state.options.default_acceleration),
         _ => None,
     };
-    let jerk = if state.options.default_jerk <= 0.0 {
-        0.0
-    } else if layer_index == 0 && state.options.initial_layer_jerk > 0.0 {
-        state.options.initial_layer_jerk
-    } else {
-        state.options.default_jerk
-    };
-    set_layer_acceleration_and_jerk(output, state, acceleration.unwrap_or(0), jerk);
+    if let Some(acceleration) = acceleration {
+        let jerk = if state.options.default_jerk <= 0.0 {
+            0.0
+        } else if layer_index == 0 && state.options.initial_layer_jerk > 0.0 {
+            state.options.initial_layer_jerk
+        } else {
+            state.options.default_jerk
+        };
+        set_layer_acceleration_and_jerk(output, state, acceleration, jerk);
+    }
 }
 
 pub(in crate::project_slice::gcode_emit) fn queue_object_start(

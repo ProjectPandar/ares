@@ -1343,5 +1343,10 @@ observable seam: initial horizontal whitespace is removed and a render that
 becomes empty emits no line. The public 3MF test was RED/GREEN, Creality Hi's
 postamble line is byte-identical, and KSR/clippy/fmt remain green.
 
+Layer-start kinematics now run only on layers 1 and 2, matching
+`GCode.cpp:4761-4800`; layer 3+ preserves the path/travel writer caches instead
+of resetting jerk to default. A RED/GREEN unit test covers this, and the common
+Ender V3 Plus layer-3 control sequence is byte-identical. KSR/clippy/fmt pass.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue postamble geometry and lifecycle.
