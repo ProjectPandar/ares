@@ -1414,6 +1414,10 @@ empty render plus one caller newline, rather than preserving the sentinel and
 adding a second newline. Artillery X3 Plus first-layer block is byte-identical;
 workspace checks pass.
 
-NEXT: sweep these placeholder/cooling-boundary fixes, then correct scaled
-Clipper endpoint precision / limited-hook direction and continue postamble
-geometry/lifecycle.
+Stable sweep37 (clean HEAD `03d21c6`) completed all 1001 presets: PASS 203→206,
+705 DIVERGENT, 90 ARES_ERROR. Preamble-first rows reach zero again; Artillery X3
+Plus becomes PASS. iQ advances to travel geometry, and Snapmaker/Qidi advance to
+lifecycle/control ordering.
+
+NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
+continue lifecycle, Qidi support-layer timelapse, and postamble geometry.
