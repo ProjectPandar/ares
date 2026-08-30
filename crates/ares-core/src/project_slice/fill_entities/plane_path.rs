@@ -55,7 +55,6 @@ pub(super) fn append(
             continue;
         }
 
-        let filled = polylines.clone();
         let flow = super::materialized_flow(params, params.spacing as f32);
         let mut entities = polylines
             .into_iter()
@@ -76,8 +75,6 @@ pub(super) fn append(
             params,
             kind: fill_kind,
             expolygon: &expolygon,
-            filled: &filled,
-            spacing: params.spacing as f32,
             scale,
         })?;
         output.collections.push(FillExtrusionCollection {

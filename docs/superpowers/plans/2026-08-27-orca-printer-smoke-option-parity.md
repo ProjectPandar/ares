@@ -1894,5 +1894,11 @@ position-hash and viable-edge length weighting, including overhang and embedded
 candidate filtering before projecting the shared seam into inner walls. The
 random enum value passes focused Orca movement parity.
 
+Residual gap coverage now ports `ExtrusionPath::polygons_covered_by_spacing`:
+coverage is reconstructed from each materialized path width/height, with
+source f32 spacing arithmetic and full scaled-spacing truncation before
+halving. All `gap_fill_target` values pass focused Orca movement parity,
+including the exact `0.449969` variable width.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

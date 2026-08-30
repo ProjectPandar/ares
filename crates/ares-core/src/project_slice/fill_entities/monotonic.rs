@@ -50,7 +50,6 @@ pub(super) fn append(
             continue;
         }
         let flow = super::materialized_flow(fill.params, generated.spacing);
-        let spacing = generated.spacing;
         let mut entities: Vec<FillExtrusionEntity> = generated
             .polylines
             .iter()
@@ -72,8 +71,6 @@ pub(super) fn append(
             params: fill_params,
             kind: fill_kind,
             expolygon: &expolygon,
-            filled: &generated.polylines,
-            spacing,
             scale,
         })?;
         output.collections.push(FillExtrusionCollection {

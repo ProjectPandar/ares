@@ -43,6 +43,13 @@ fn orca_parity_fuzzy_skin_enum_smoke() {
 }
 
 #[test]
+fn orca_parity_gap_fill_target_smoke() {
+    for value in ["everywhere", "nowhere", "topbottom"] {
+        assert_process_option_smoke("gap_fill_target", value);
+    }
+}
+
+#[test]
 fn orca_parity_random_seam_smoke() {
     assert_process_option_smoke("seam_position", "random");
 }

@@ -2,7 +2,7 @@ use crate::{
     SliceError,
     arachne::wall_toolpaths::{RawWallToolPathConfig, generate},
     geometry::{
-        CoordinateScale, ExPolygon, JoinType, Point, Polyline, ThickPolyline,
+        CoordinateScale, ExPolygon, JoinType, Point, ThickPolyline,
         intersection_ex_with_safety_offset, offset_expolygon,
     },
     project_slice::{
@@ -103,10 +103,6 @@ pub(super) fn append_configured(
             )?);
         }
         finalize_standard_polylines(&mut polylines, params.loop_clipping as f64);
-        let filled = polylines
-            .iter()
-            .map(|polyline| Polyline::new(polyline.points.clone()))
-            .collect::<Vec<_>>();
         let materialized_role = match params.extrusion_role {
             crate::ExtrusionRole::TopSolidInfill => MaterializedRole::TopSolidInfill,
             crate::ExtrusionRole::BottomSurface => MaterializedRole::BottomSurface,
@@ -128,8 +124,6 @@ pub(super) fn append_configured(
             params,
             kind,
             expolygon: &expolygon,
-            filled: &filled,
-            spacing: params.spacing as f32,
             scale,
         })?;
         if !entities.is_empty() {

@@ -1,9 +1,12 @@
+#[cfg(test)]
+mod tests;
+
 use crate::{
     ProcessGapFillTarget, SliceError,
     geometry::{
-        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Point, Polygon, Polyline,
-        chain_points, difference_ex, intersection_ex, intersection_ex_with_safety_offset,
-        medial_axis, offset_open_paths, offset2_ex, opening_ex, union_ex, union_expolygons,
+        ClipperError, CoordinateScale, ExPolygon, FillRule, JoinType, Point, Polygon, chain_points,
+        difference_ex, intersection_ex, intersection_ex_with_safety_offset, medial_axis,
+        offset_open_paths, offset2_ex, opening_ex, union_ex, union_expolygons,
     },
     project_slice::{
         perimeters::classic::{
@@ -32,8 +35,6 @@ pub(super) struct ResidualInput<'a> {
     pub(super) params: crate::project_slice::group_fills::SurfaceFillParams,
     pub(super) kind: RegionSurfaceKind,
     pub(super) expolygon: &'a ExPolygon,
-    pub(super) filled: &'a [Polyline],
-    pub(super) spacing: f32,
     pub(super) scale: CoordinateScale,
 }
 
@@ -44,8 +45,6 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
         params,
         kind,
         expolygon,
-        filled,
-        spacing,
         scale,
     } = input;
     // FillBase.cpp:201-203: gap_fill_target gates the whole pass — `nowhere`
@@ -70,7 +69,7 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
         return Ok(());
     }
     let covered = union_ex(
-        &covered_polygons(filled, spacing, scale).map_err(geometry_error)?,
+        &covered_polygons(output_entities, scale).map_err(geometry_error)?,
         FillRule::NonZero,
     )
     .map_err(geometry_error)?;
@@ -141,26 +140,77 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
 }
 
 fn covered_polygons(
-    filled: &[Polyline],
-    spacing: f32,
+    entities: &[FillExtrusionEntity],
     scale: CoordinateScale,
 ) -> Result<Vec<Polygon>, ClipperError> {
-    let delta = (f64::from(spacing / 2.0) / scale.factor()) as f32 + CLIPPER_SAFETY_OFFSET as f32;
     let mut output = Vec::new();
-    for polyline in filled {
-        let points = polyline
-            .points()
-            .iter()
-            .map(|point| Point::new(point.x(), point.y()))
-            .collect();
-        output.append(&mut offset_open_paths(
-            &[Polygon::new(points)],
-            delta,
-            JoinType::Square,
-            0.0,
-        )?);
+    for entity in entities {
+        match entity {
+            FillExtrusionEntity::Path(path) => append_covered_path(
+                &mut output,
+                path.polyline
+                    .points()
+                    .iter()
+                    .map(|point| Point::new(point.x(), point.y())),
+                path.width,
+                path.height,
+                scale,
+            )?,
+            FillExtrusionEntity::VariableWidth(entity) => match entity {
+                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Path(
+                    path,
+                ) => append_materialized_path(&mut output, path, scale)?,
+                crate::project_slice::perimeters::classic::gap_extrusion::GapFillEntity::Loop(
+                    paths,
+                ) => {
+                    for path in paths {
+                        append_materialized_path(&mut output, path, scale)?;
+                    }
+                }
+            },
+        }
     }
     Ok(output)
+}
+
+fn append_materialized_path(
+    output: &mut Vec<Polygon>,
+    path: &crate::project_slice::perimeters::classic::materialize::ExtrusionPath,
+    scale: CoordinateScale,
+) -> Result<(), ClipperError> {
+    append_covered_path(
+        output,
+        path.polyline
+            .points
+            .iter()
+            .map(|point| Point::new(point.x, point.y)),
+        path.width,
+        path.height,
+        scale,
+    )
+}
+
+fn append_covered_path(
+    output: &mut Vec<Polygon>,
+    points: impl Iterator<Item = Point>,
+    width: f32,
+    height: f32,
+    scale: CoordinateScale,
+) -> Result<(), ClipperError> {
+    output.append(&mut offset_open_paths(
+        &[Polygon::new(points.collect())],
+        coverage_delta(width, height, scale),
+        JoinType::Square,
+        0.0,
+    )?);
+    Ok(())
+}
+
+fn coverage_delta(width: f32, height: f32, scale: CoordinateScale) -> f32 {
+    let rounded_rectangle = (1.0 - 0.25 * std::f64::consts::PI) as f32;
+    let spacing = width - height * rounded_rectangle;
+    let scaled_spacing = scale.checked_scale(f64::from(spacing)).unwrap();
+    0.5_f32 * scaled_spacing as f32 + CLIPPER_SAFETY_OFFSET as f32
 }
 
 fn scaled(scale: CoordinateScale, value: f64) -> Result<f64, SliceError> {
