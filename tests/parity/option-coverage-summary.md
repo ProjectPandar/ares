@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-626 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
+631 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -36,7 +36,7 @@
 | PASS | bottom_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1377 |  |
 | PASS | bottom_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6764 |  |
 | PASS | bottom_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5799 |  |
-| FAIL | bottom_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2097 | hilbertcurve: layer 1 deposition 125 differs: expected Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "108.642", y: "112.4", z: "0.2" }, end: Position { x: "109.176", y: "112.933", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.02317", feed: 2100.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "108.642", y: "112.4", z: "0.2" }, end: Position { x: "108.909", y: "112.666", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01159", feed: 2100.0, acceleration: "500", fans: "0:0" } |
+| FAIL | bottom_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2097 | hilbertcurve: layer 1 deposition count differs: expected 418, actual 417 |
 | PASS | bridge_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3224 |  |
 | PASS | bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1250 |  |
 | PASS | bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1292 |  |
@@ -77,7 +77,7 @@
 | PASS | deretraction_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5463 |  |
 | PASS | detect_narrow_internal_solid_infill | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7320 |  |
 | PASS | detect_overhang_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5003 |  |
-| FAIL | detect_thin_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6674 | true: unsupported project feature: detect_thin_wall |
+| PASS | detect_thin_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6674 |  |
 | PASS | disable_m73 | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5484 |  |
 | PASS | dont_filter_internal_bridges | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1990 |  |
 | PASS | dont_slow_down_outer_wall | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2428 |  |
@@ -195,7 +195,7 @@
 | PASS | filament_wipe | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:79 |  |
 | PASS | filament_wipe_distance | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:76 |  |
 | PASS | filament_z_hop | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:66 |  |
-| FAIL | filament_z_hop_types | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:67 | Slope Lift: layer 2 travel geometry count differs: expected 12, actual 11 |
+| PASS | filament_z_hop_types | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:67 |  |
 | PASS | file_start_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5928 |  |
 | PASS | filename_format | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4967 |  |
 | PASS | fill_multiline | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2996 |  |
@@ -291,7 +291,7 @@
 | PASS | internal_solid_infill_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3244 |  |
 | PASS | internal_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1444 |  |
 | PASS | internal_solid_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:5808 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
-| FAIL | internal_solid_infill_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2106 | hilbertcurve: layer 2 deposition count differs: expected 368, actual 370 |
+| FAIL | internal_solid_infill_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2106 | octagramspiral: layer 2 deposition 5 differs: expected Deposition { feature: "Internal solid infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "105.98", y: "106.336", z: "0.4" }, end: Position { x: "106.336", y: "106.336", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.01181", feed: 2937.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal solid infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "105.98", y: "106.743", z: "0.4" }, end: Position { x: "106.743", y: "106.743", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.02531", feed: 2942.0, acceleration: "500", fans: "0:255" } |
 | PASS | internal_solid_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5820 |  |
 | PASS | ironing_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4351 |  |
 | PASS | ironing_angle_fixed | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4361 |  |
@@ -506,7 +506,7 @@
 | PASS | solid_infill_direction | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2959 |  |
 | PASS | solid_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4007 |  |
 | PASS | sparse_infill_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3234 |  |
-| FAIL | sparse_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2969 | seeded: filament 1 length differs: expected 330.46mm, actual 329.49mm |
+| PASS | sparse_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2969 |  |
 | PASS | sparse_infill_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4127 |  |
 | PASS | sparse_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1434 |  |
 | PASS | sparse_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:4136 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
@@ -622,7 +622,7 @@
 | PASS | wall_transition_filter_deviation | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7180 |  |
 | PASS | wall_transition_length | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7169 |  |
 | PASS | wipe | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6794 |  |
-| FAIL | wipe_before_external_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5650 | true: layer 1 travel feed differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "114.49", y: "114.344", z: "0.2" }, end: Position { x: "114.69", y: "114.69", z: "0.2" }, arc_center: [None, None], turns: None }, feed: 1800.0, acceleration: "500" } |
+| PASS | wipe_before_external_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5650 |  |
 | PASS | wipe_distance | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6801 |  |
 | PASS | wipe_on_loops | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5643 |  |
 | PASS | wipe_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5661 |  |
@@ -648,7 +648,7 @@
 | PASS | xy_contour_compensation | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7083 |  |
 | PASS | xy_hole_compensation | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7073 |  |
 | PASS | z_hop | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5255 |  |
-| FAIL | z_hop_types | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5282 | Slope Lift: layer 2 travel geometry count differs: expected 12, actual 11 |
+| PASS | z_hop_types | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5282 |  |
 | PASS | z_offset | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6044 |  |
 | PASS | zaa_dont_alternate_fill_direction | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4397 |  |
 | FAIL | zaa_enabled | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4378 | true: unsupported project feature: zaa_enabled |

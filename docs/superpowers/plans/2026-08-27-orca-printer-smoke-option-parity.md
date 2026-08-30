@@ -1842,5 +1842,11 @@ The final >400 Rust file was `tests/perimeters/flow.rs` (414 LOC); fallback and
 overhang edge cases moved to `flow/edge_cases.rs` (319/99 LOC). A full scan now
 finds zero Rust files above 400 LOC. Focused flow, KSR, clippy, and fmt pass.
 
+Stable option sweep7 (clean HEAD `400d595`) completed all 650 domains/1,308
+cases: 631/649 compared domains PASS, 18 FAIL, 1 fully upstream-rejected;
+1,282 cases compared and 26 rejected upstream. Five domains turned green since
+sweep6; subsequent Thin/Slope/Wipe fixes are not yet represented in this
+summary.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
