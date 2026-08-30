@@ -220,11 +220,7 @@ fn write_summary(outcomes: &[OptionOutcome]) {
         .iter()
         .filter(|outcome| outcome.status == "PASS")
         .count();
-    let executed_cases = outcomes
-        .iter()
-        .filter(|outcome| matches!(outcome.status, "PASS" | "FAIL"))
-        .map(|outcome| outcome.cases)
-        .sum::<usize>();
+    let generated_cases = outcomes.iter().map(|outcome| outcome.cases).sum::<usize>();
     let compared_cases = outcomes
         .iter()
         .map(|outcome| outcome.compared)
@@ -233,12 +229,17 @@ fn write_summary(outcomes: &[OptionOutcome]) {
         .iter()
         .map(|outcome| outcome.rejected)
         .sum::<usize>();
+    let compared_domains = outcomes
+        .iter()
+        .filter(|outcome| matches!(outcome.status, "PASS" | "FAIL"))
+        .count();
+    let rejected_domains = outcomes
+        .iter()
+        .filter(|outcome| outcome.status == "REJECTED")
+        .count();
     let mut output = format!(
-        "# OrcaSlicer option coverage summary\n\n{pass} of {} executable option domains pass ({executed_cases} generated cases: {compared_cases} compared, {rejected_cases} rejected upstream).\n\n| status | option | type | cases | compared | rejected | upstream | first result |\n|---|---|---|---:|---:|---:|---|---|\n",
-        outcomes
-            .iter()
-            .filter(|outcome| matches!(outcome.status, "PASS" | "FAIL"))
-            .count()
+        "# OrcaSlicer option coverage summary\n\n{pass} of {compared_domains} compared option domains pass ({} source-cited domains; {generated_cases} generated cases: {compared_cases} compared, {rejected_cases} rejected upstream; {rejected_domains} domains fully rejected upstream).\n\n| status | option | type | cases | compared | rejected | upstream | first result |\n|---|---|---|---:|---:|---:|---|---|\n",
+        outcomes.len()
     );
     for outcome in outcomes {
         output.push_str(&format!(

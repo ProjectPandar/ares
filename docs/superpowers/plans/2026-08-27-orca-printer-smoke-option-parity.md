@@ -1610,7 +1610,9 @@ Option-domain discovery now strips inactive C++ comments, follows copied
 contain the eight active top-pattern values and gcode_flavor contains only five
 active values. Per-case upstream rejection is counted separately from Ares
 comparison instead of mislabeled ARES_ERROR, while any compared divergence
-still fails its domain. Inventory/rejection tests, KSR, clippy, and fmt pass.
+still fails its domain. Summary arithmetic includes fully rejected domains in
+the generated-case total and reports their domain count separately.
+Inventory/rejection tests, KSR, clippy, and fmt pass.
 
 Stable option sweep4 (clean HEAD `8784d58`) completed the corrected active
 domains: 610/649 compared domains PASS, 39 FAIL, and one domain was fully
