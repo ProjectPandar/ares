@@ -1460,5 +1460,13 @@ intermediate move is skipped now restores travel F when the preceding retract F
 differs. Artillery M1 Pro matches `G1 ... Z.8 F30000` and Bottom-surface F2178
 (previously F2222). KSR/stable smokes/clippy/fmt pass.
 
+The first full option sweep completed 1,054 generated cases: 283/348 executable
+domains PASS, 65 FAIL, and 302 are still marked UNBOUNDED (234 numerics without
+explicit source min/max, 68 opaque string/point domains). The current harness
+therefore does not yet satisfy all-option coverage; failures and unbounded
+domains remain explicit in `tests/parity/option-coverage-summary.md` rather than
+being treated as completion.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
-continue lifecycle, Qidi support-layer timelapse, and postamble geometry.
+reduce the 65 option failures, generate baseline cases for all 302 unbounded
+domains, and continue lifecycle/Qidi/postamble work.
