@@ -47,7 +47,10 @@ impl SkirtPlan {
         if loops_count == 0 {
             return Ok(None);
         }
-        if print.skirt_type != crate::ProcessSkirtType::Combined {
+        if print.skirt_type != crate::ProcessSkirtType::Combined
+            && !(print.skirt_type == crate::ProcessSkirtType::PerObject
+                && traversal.resolved.objects.len() == 1)
+        {
             return Err(SliceError::UnsupportedProjectFeature(
                 "skirt_type per-object".to_owned(),
             ));

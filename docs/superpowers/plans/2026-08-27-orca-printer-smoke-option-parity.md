@@ -1751,5 +1751,10 @@ the cube fixture. The painted option matches Orca at 262.34 mm while nonzero
 painted behavior remains outside the current Brim slice. Candidate test, KSR,
 smokes, clippy, and fmt pass.
 
+Per-object skirt mode now accepts the exact single-object equivalence to
+Combined; multi-object grouping remains explicitly gated rather than silently
+combined. The perobject option artifact matches Orca at 262.34 mm; KSR, focused
+smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
