@@ -114,11 +114,7 @@ pub(super) fn project_surface(
     } else {
         resolve_fill_flow(flow_context, flow_role)?
     };
-    params.flow_ratio = if params.extrusion_role == ExtrusionRole::InternalBridgeInfill {
-        context.region.internal_bridge_flow.0
-    } else {
-        1.0
-    };
+    params.flow_ratio = role_flow_ratio(context, params.extrusion_role);
     let seam_gap = match context.region.seam_gap {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => f64::from(params.flow.nozzle_diameter) * value.0 / 100.0,
@@ -197,6 +193,27 @@ pub(super) fn flow_role(kind: RegionSurfaceKind, solid: bool) -> FillFlowRole {
     } else {
         FillFlowRole::Infill
     }
+}
+
+fn role_flow_ratio(context: &LayerContext<'_>, role: ExtrusionRole) -> f64 {
+    let region = context.region;
+    let mut ratio = match role {
+        ExtrusionRole::TopSolidInfill => region.top_solid_infill_flow_ratio.0,
+        ExtrusionRole::BottomSurface => region.bottom_solid_infill_flow_ratio.0,
+        ExtrusionRole::InternalBridgeInfill => region.internal_bridge_flow.0,
+        _ => 1.0,
+    };
+    if context.object.set_other_flow_ratios.0 {
+        ratio *= match role {
+            ExtrusionRole::InternalInfill => region.sparse_infill_flow_ratio.0,
+            ExtrusionRole::SolidInfill => region.internal_solid_infill_flow_ratio.0,
+            _ => 1.0,
+        };
+        if context.planned.id == 0 {
+            ratio *= region.first_layer_flow_ratio.0;
+        }
+    }
+    ratio
 }
 
 fn output_selector(region: &RegionOptions, role: ExtrusionRole, current: u32) -> u32 {

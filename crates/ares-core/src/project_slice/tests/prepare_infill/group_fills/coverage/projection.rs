@@ -17,6 +17,7 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     let mut graph = graph();
     set_nozzles(&mut graph, OrcaFloats(vec![OrcaFloat(0.4)]));
     object_mut(&mut graph).layer_height = OrcaFloat(0.2);
+    object_mut(&mut graph).set_other_flow_ratios = OrcaBool(true);
     {
         let options = options_mut(&mut graph, LAYER);
         options.sparse_infill_pattern = ProcessInfillPattern::Gyroid;
@@ -26,6 +27,8 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
         options.infill_anchor_max = FloatOrPercent::Percent(Percent(33.333_333_333_333_3));
         options.fill_multiline = OrcaInt(4);
         options.gyroid_optimized = OrcaBool(true);
+        options.sparse_infill_flow_ratio = OrcaFloat(1.1);
+        options.internal_solid_infill_flow_ratio = OrcaFloat(1.2);
     }
     let shape = rectangle(0, 0, 4_000_000, 4_000_000);
     let solid_shape = rectangle(5_000_000, 0, 9_000_000, 4_000_000);
@@ -56,6 +59,7 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     assert_eq!(first_sparse.params.anchor_length_max.to_bits(), 0x3e0a_f329);
     assert_eq!(first_sparse.params.multiline, 4);
     assert!(first_sparse.params.gyroid_optimized);
+    assert_eq!(first_sparse.params.flow_ratio, 1.1);
     assert_eq!(
         first_sparse.params.flow.mm3_per_mm.to_bits(),
         0x3fb4_d7ac_a000_0000
@@ -78,6 +82,7 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     let solid = find_kind(&second.surface_fills, RegionSurfaceKind::InternalSolid);
     assert_eq!(solid.params.multiline, 1);
     assert!(!solid.params.gyroid_optimized);
+    assert_eq!(solid.params.flow_ratio, 1.2);
     assert_eq!(solid.expolygons, [solid_shape]);
 
     {
@@ -122,6 +127,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
         options.internal_bridge_speed = FloatOrPercent::Percent(Percent(125.0));
         options.bridge_flow = OrcaFloat(1.0);
         options.internal_bridge_flow = OrcaFloat(0.95);
+        options.bottom_solid_infill_flow_ratio = OrcaFloat(1.2);
         options.bridge_line_width = FloatOrPercent::Float(0.4);
     }
     let mut external_bridge = surface(
@@ -144,6 +150,11 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
         ),
         external_bridge,
         internal_bridge,
+        surface(
+            RegionSurfaceKind::Bottom,
+            rectangle(9_000_000, 0, 11_000_000, 2_000_000),
+            0,
+        ),
     ];
     object_mut(&mut graph).thick_bridges = OrcaBool(false);
     object_mut(&mut graph).thick_internal_bridges = OrcaBool(false);
@@ -151,6 +162,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
     let sparse = find_kind(&grouped.surface_fills, RegionSurfaceKind::Internal);
     let external_bridge = find_kind(&grouped.surface_fills, RegionSurfaceKind::BottomBridge);
     let internal_bridge = find_kind(&grouped.surface_fills, RegionSurfaceKind::InternalBridge);
+    let bottom = find_kind(&grouped.surface_fills, RegionSurfaceKind::Bottom);
     assert_eq!(sparse.params.role_speed.to_bits(), 73.25_f32.to_bits());
     assert_eq!(sparse.params.extrusion_role, ExtrusionRole::InternalInfill);
     assert_eq!(
@@ -168,6 +180,7 @@ fn task22o73_bridge_flags_flows_and_sparse_custom_role_speeds_are_independent() 
     );
     assert_eq!(external_bridge.params.flow_ratio, 1.0);
     assert_eq!(internal_bridge.params.flow_ratio, 0.95);
+    assert_eq!(bottom.params.flow_ratio, 1.2);
     for fill in [external_bridge, internal_bridge] {
         assert!(fill.params.bridge);
         assert!(!fill.params.flow.bridge);

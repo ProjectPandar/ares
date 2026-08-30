@@ -1357,5 +1357,11 @@ next-layer M625 placement; A1 advances from first-layer feed divergence to
 layer-31 sparse geometry. Timelapse logic is contained in its own 173-LOC
 module and `gcode_emit.rs` is back to 371 LOC.
 
-NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
-continue postamble geometry and lifecycle.
+Fill-role flow ratios now cover the rest of `GCode.cpp:6468-6505`: top/bottom
+surface multipliers always apply; sparse/internal-solid multipliers and the
+first-layer multiplier follow `set_other_flow_ratios`. Focused projection tests
+cover 1.1/1.2/0.95 roles. Snapmaker A250 moves from 207.10 to 208.17 mm against
+208.19 (inside the fixed 0.05 mm tolerance), and KSR/workspace checks pass.
+
+NEXT: rerun the full sweep, then correct scaled Clipper endpoint precision /
+limited-hook direction and continue postamble geometry/lifecycle.
