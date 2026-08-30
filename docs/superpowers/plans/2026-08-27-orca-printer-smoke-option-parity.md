@@ -1515,5 +1515,11 @@ ordering is fully closed and advances to internal-solid geometry. Remaining
 leaders are geometry/precision (310 deposition, 117 travel count, 96 lifecycle),
 not G-code phase ordering.
 
+Classic `alternate_extra_wall` now ports the active
+`PerimeterGenerator.cpp:1224-1233` condition: odd non-spiral layers with sparse
+infill increment wall_loops before first-layer/top overrides. It is no longer an
+unsupported option; the public output test verifies increased used filament on
+the second layer, and KSR/workspace checks pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

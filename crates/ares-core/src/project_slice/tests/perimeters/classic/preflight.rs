@@ -26,11 +26,6 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "detect_thin_wall",
         ),
         (
-            "\"alternate_extra_wall\": \"0\"",
-            "\"alternate_extra_wall\": \"1\"",
-            "alternate_extra_wall",
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             "counterbore_hole_bridging",
@@ -48,6 +43,33 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "{key}"
         );
     }
+}
+
+#[tokio::test]
+async fn alternate_extra_wall_adds_one_wall_on_the_second_layer() {
+    let baseline = slice_project(KsrArchive::new().bytes(), metadata())
+        .await
+        .unwrap();
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"alternate_extra_wall\": \"0\"",
+        "\"alternate_extra_wall\": \"1\"",
+    );
+    let alternate = slice_project(archive.bytes(), metadata()).await.unwrap();
+    let used_filament = |gcode: &[u8]| {
+        String::from_utf8_lossy(gcode)
+            .lines()
+            .find_map(|line| line.strip_prefix("; filament used [mm] = "))
+            .unwrap()
+            .split(',')
+            .next()
+            .unwrap()
+            .parse::<f64>()
+            .unwrap()
+    };
+
+    assert!(used_filament(&alternate) > used_filament(&baseline));
 }
 
 #[tokio::test]
