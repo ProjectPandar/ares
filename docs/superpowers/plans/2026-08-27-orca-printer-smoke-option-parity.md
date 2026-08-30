@@ -1826,5 +1826,9 @@ and focused lift/KSR/clippy/fmt checks pass.
 anchor-length projection moved into the real `projection/sticky.rs` module.
 Files are now 365/37 LOC; focused projection, KSR, clippy, and fmt pass.
 
+`seam_placement.rs` reached 403 LOC; runtime Nearest cursor selection moved to
+the real `seam_placement/runtime.rs` module while reusing parent split/snap
+logic. Files are now 386/25 LOC; nearest, KSR, clippy, and fmt checks pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
