@@ -29,7 +29,7 @@ mod timelapse;
 mod value;
 use crate::{GenerationMetadata, SliceError};
 
-pub(in crate::project_slice) use motion::simplify_points;
+pub(in crate::project_slice) use motion::{simplify_linear_points, simplify_points};
 
 pub(super) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,

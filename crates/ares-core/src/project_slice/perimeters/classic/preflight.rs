@@ -1,6 +1,4 @@
-use crate::{
-    ObjectOptions, ProcessCounterboreHoleBridging, ProcessFuzzySkinType, RegionOptions, SliceError,
-};
+use crate::{ObjectOptions, ProcessCounterboreHoleBridging, RegionOptions, SliceError};
 
 use super::super::types::{PerimeterDispatch, PerimeterInputRecord, PostPerimeterInputPrintObject};
 
@@ -31,7 +29,8 @@ pub(super) struct ClassicValidationContext<'a> {
 struct RecordValidationContext<'a> {
     object_options: &'a ObjectOptions,
     region: &'a RegionOptions,
-    simplify_resolution: f64,
+    enable_arc_fitting: bool,
+    scaled_resolution: f64,
     nozzle_diameters: &'a crate::OrcaFloats,
     scale: crate::geometry::CoordinateScale,
 }
@@ -49,11 +48,6 @@ pub(super) fn validate_project(
         1e-4
     };
     let scaled_resolution = effective_resolution / context.scale.factor();
-    let simplify_resolution = if context.enable_arc_fitting {
-        0.2 * scaled_resolution
-    } else {
-        scaled_resolution
-    };
 
     objects
         .iter()
@@ -78,7 +72,8 @@ pub(super) fn validate_project(
                                 RecordValidationContext {
                                     object_options: &resolved.object,
                                     region: object.region_options(record),
-                                    simplify_resolution,
+                                    enable_arc_fitting: context.enable_arc_fitting,
+                                    scaled_resolution,
                                     nozzle_diameters: context.nozzle_diameters,
                                     scale: context.scale,
                                 },
@@ -100,7 +95,8 @@ fn validate_record(
     let RecordValidationContext {
         object_options,
         region,
-        simplify_resolution,
+        enable_arc_fitting,
+        scaled_resolution,
         nozzle_diameters,
         scale,
     } = context;
@@ -109,9 +105,6 @@ fn validate_record(
     }
     if record.spiral_mode {
         return Err(unsupported("spiral_mode"));
-    }
-    if fuzzy_is_active(region, record.layer_id) {
-        return Err(unsupported("fuzzy_skin"));
     }
     if region.detect_thin_wall.0
         && !thin_wall_is_provably_inactive(object, record, region, nozzle_diameters, scale)
@@ -152,6 +145,13 @@ fn validate_record(
         .map(|value| value.0)
         .ok_or_else(|| invalid("invalid Orca option nozzle_diameter"))?;
 
+    let fuzzy_skin = crate::perimeters::FuzzySkinConfig::from_region(region);
+    let simplify_resolution =
+        if enable_arc_fitting && !fuzzy_skin.should_fuzzify(record.layer_id, 0, true) {
+            0.2 * scaled_resolution
+        } else {
+            scaled_resolution
+        };
     let first_object_layer =
         i32::try_from(record.layer_id).ok() == Some(object_options.raft_layers.0);
     let mut wall_loops = region.wall_loops.0;
@@ -237,13 +237,6 @@ fn has_layer_overhang(
             .iter()
             .zip(lower)
             .any(|(current, lower)| *current != lower)
-}
-
-fn fuzzy_is_active(region: &RegionOptions, layer_id: usize) -> bool {
-    !matches!(
-        region.fuzzy_skin,
-        ProcessFuzzySkinType::None | ProcessFuzzySkinType::Disabled
-    ) && (layer_id > 0 || region.fuzzy_skin_first_layer.0)
 }
 
 fn invalid(message: &str) -> SliceError {

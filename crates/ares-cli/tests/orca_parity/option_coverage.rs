@@ -33,12 +33,14 @@ fn orca_parity_option_coverage() {
     let selection =
         parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
     let machine = profiles.machine(&selection.printer).unwrap();
-    let process = profiles.process(&selection.process).unwrap();
-    let filaments = selection
+    let mut process = profiles.process(&selection.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    let mut filaments = selection
         .filaments
         .iter()
         .map(|name| profiles.filament(name).unwrap())
         .collect::<Vec<_>>();
+    parity::normalize_filament_defaults(&mut filaments);
     let plans = domains::load(&runner::repo_root());
     let mut outcomes = Vec::new();
     for plan in &plans {

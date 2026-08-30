@@ -12,6 +12,7 @@ use classify::classify_roots;
 use types::{ClassicTraversalRecord as Record, RouteFlows};
 
 pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClassicTraversal {
+    let simplification_tolerance = prepared.resolved.views.full.process.print.resolution.0;
     let objects = prepared
         .objects
         .iter()
@@ -31,7 +32,7 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
                 .object
                 .raft_layers
                 .0;
-            prepare_object(predecessor, raft_layers)
+            prepare_object(predecessor, raft_layers, simplification_tolerance)
         })
         .collect::<Vec<_>>();
     let PreparedPostClassicHierarchy {
@@ -62,11 +63,14 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
 fn prepare_object(
     hierarchy: &PostClassicHierarchyPrintObject,
     raft_layers: i32,
+    simplification_tolerance: f64,
 ) -> Vec<Option<ClassicTraversalRecord>> {
     let onion = &hierarchy.predecessor;
     let top_split = &onion.predecessor;
     let prelude_object = &top_split.predecessor;
     let input_object = &prelude_object.object;
+    let (post_regions, _) = input_object.object.as_parts();
+    let (plan, _, _) = post_regions.as_parts();
     hierarchy
         .records
         .iter()
@@ -92,7 +96,11 @@ fn prepare_object(
                         .collect();
                     Some(Record {
                         surfaces,
+                        layer_id: input.layer_id,
                         layer_height: input.layer_height,
+                        slice_z: plan.layers[input.planned_layer_index].slice_z,
+                        fuzzy_skin: crate::perimeters::FuzzySkinConfig::from_region(region),
+                        simplification_tolerance,
                         overhang_flow: input.overhang_flow,
                         branch: PendingPathBranch::from_operands(
                             region.detect_overhang_wall.0,

@@ -37,6 +37,19 @@ pub(super) fn fit_and_simplify(points: &[Point], tolerance: f64) -> (Vec<Point>,
     (simplified, simplified_ranges)
 }
 
+pub(in crate::project_slice) fn simplify_linear_points(
+    points: &mut Vec<(f64, f64)>,
+    tolerance: f64,
+) {
+    let converted = points
+        .iter()
+        .map(|&(x, y)| Point { x, y })
+        .collect::<Vec<_>>();
+    let converted = douglas_peucker(&converted, tolerance);
+    points.clear();
+    points.extend(converted.into_iter().map(|point| (point.x, point.y)));
+}
+
 pub(in crate::project_slice) fn simplify_points(
     points: &mut Vec<(f64, f64)>,
     tolerance: f64,

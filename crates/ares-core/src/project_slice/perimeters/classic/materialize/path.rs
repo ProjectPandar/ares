@@ -1,7 +1,7 @@
 use crate::{
     SliceError,
     geometry::{
-        BoundingBox, ClipperError, CoordinateScale, Polygon, Polyline,
+        BoundingBox, ClipperError, CoordinateScale, Point, Polygon, Polyline,
         clip_clipper_polygons_with_subject_bbox, diff_pl, intersection_pl,
     },
 };
@@ -25,7 +25,12 @@ pub(super) fn materialize_seed(
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
     match record.branch {
         PendingPathBranch::OrdinaryUnsplit { .. } => {
-            Ok(materialize_ordinary(seed, record.layer_height))
+            let polygon = fuzzy_polygon(record, seed, scale)?;
+            Ok(materialize_ordinary_polygon(
+                seed,
+                &polygon,
+                record.layer_height,
+            ))
         }
         PendingPathBranch::OverhangClipping { .. } => {
             materialize_overhang(object, record_index, record, seed, scale)
@@ -53,15 +58,16 @@ pub(in crate::project_slice) fn materialize_overhang_from_lower(
     scale: CoordinateScale,
     lower: &[Polygon],
 ) -> Result<Vec<ExtrusionPath>, SliceError> {
-    let mut bounds = BoundingBox::from_polygon(&seed.polygon)
-        .expect("a traversal seed polygon is source-validated nonempty");
+    let polygon = fuzzy_polygon(record, seed, scale)?;
+    let mut bounds = BoundingBox::from_polygon(&polygon)
+        .expect("a fuzzified traversal polygon remains source-valid");
     bounds.offset(scale.checked_scale(EPSILON_MM).ok_or_else(|| {
         SliceError::InvalidInput(
             "classic perimeter scaled epsilon is outside the supported coordinate range".into(),
         )
     })?);
     let filtered = clip_clipper_polygons_with_subject_bbox(lower, bounds);
-    let subject = std::slice::from_ref(&seed.polygon);
+    let subject = std::slice::from_ref(&polygon);
     let inside = intersection_pl(subject, &filtered).map_err(map_clipper_error)?;
     let remain = diff_pl(subject, &filtered).map_err(map_clipper_error)?;
     let mut paths = Vec::with_capacity(inside.len() + remain.len());
@@ -96,14 +102,64 @@ pub(in crate::project_slice) fn materialize_overhang_from_lower(
     Ok(paths)
 }
 
+#[cfg(test)]
 pub(super) fn materialize_ordinary(seed: &TraversalSeed, layer_height: f64) -> Vec<ExtrusionPath> {
+    materialize_ordinary_polygon(seed, &seed.polygon, layer_height)
+}
+
+fn materialize_ordinary_polygon(
+    seed: &TraversalSeed,
+    polygon: &Polygon,
+    layer_height: f64,
+) -> Vec<ExtrusionPath> {
     vec![path(
-        seed.polygon.split_at_first_point(),
+        polygon.split_at_first_point(),
         role(seed.extrusion_role),
         seed.mm3_per_mm,
         seed.width,
         layer_height as f32,
     )]
+}
+
+fn fuzzy_polygon(
+    record: &ClassicTraversalRecord,
+    seed: &TraversalSeed,
+    scale: CoordinateScale,
+) -> Result<Polygon, SliceError> {
+    let polygon = super::super::fuzzy_skin::apply(
+        &seed.polygon,
+        super::super::fuzzy_skin::FuzzySkinInput {
+            config: record.fuzzy_skin,
+            layer_id: record.layer_id,
+            slice_z: record.slice_z,
+            loop_index: usize::from(seed.depth),
+            is_contour: seed.is_contour,
+            scale,
+        },
+    )?;
+    if polygon == seed.polygon {
+        return Ok(polygon);
+    }
+    let mut points = polygon
+        .points()
+        .iter()
+        .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
+        .collect::<Vec<_>>();
+    crate::project_slice::gcode_emit::simplify_linear_points(
+        &mut points,
+        record.simplification_tolerance,
+    );
+    Ok(Polygon::new(
+        points
+            .into_iter()
+            .map(|(x, y)| {
+                Point::new(
+                    scale.checked_scale(x).unwrap(),
+                    scale.checked_scale(y).unwrap(),
+                )
+            })
+            .collect(),
+    ))
 }
 
 fn role(role: PendingExtrusionRole) -> ExtrusionRole {

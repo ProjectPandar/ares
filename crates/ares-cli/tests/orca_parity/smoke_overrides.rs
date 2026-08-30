@@ -43,6 +43,13 @@ pub(crate) fn normalize_process_defaults(
     machine: &Map<String, Value>,
     process: &mut Map<String, Value>,
 ) {
+    // Classic fuzzy noise uses random_device and cannot be replayed across
+    // independent slicer processes. Ripple is the deterministic source mode;
+    // option coverage overwrites this field when testing its own enum domain.
+    process.insert(
+        "fuzzy_skin_noise_type".to_owned(),
+        Value::String("ripple".to_owned()),
+    );
     let nozzle = machine
         .get("nozzle_diameter")
         .and_then(first_number)

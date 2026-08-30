@@ -2,7 +2,7 @@ mod retained;
 mod simplify;
 
 pub(super) use retained::{clip_end as clip_fitting_end, from_fitting};
-pub(in crate::project_slice) use simplify::simplify_points;
+pub(in crate::project_slice) use simplify::{simplify_linear_points, simplify_points};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct Point {

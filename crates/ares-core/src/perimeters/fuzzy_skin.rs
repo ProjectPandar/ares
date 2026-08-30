@@ -1,7 +1,10 @@
 use serde_json::Value;
 
 use super::fuzzy_skin_noise::{fuzzify_closed_polyline, ripple_closed_polyline};
-use crate::{Point2, SliceError};
+use crate::{
+    Point2, ProcessFuzzySkinType, ProcessNoiseType, RegionOptions, SliceError,
+    geometry::{CoordinateScale, Point},
+};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum FuzzySkinKind {
@@ -52,6 +55,41 @@ impl FuzzySkinConfig {
             ripple_offset_percent: 50.0,
             layers_between_ripple_offset: 1,
             first_layer: false,
+        }
+    }
+
+    pub(crate) fn from_region(region: &RegionOptions) -> Self {
+        Self {
+            kind: match region.fuzzy_skin {
+                ProcessFuzzySkinType::None => FuzzySkinKind::None,
+                ProcessFuzzySkinType::External => FuzzySkinKind::External,
+                ProcessFuzzySkinType::Hole => FuzzySkinKind::Hole,
+                ProcessFuzzySkinType::All => FuzzySkinKind::All,
+                ProcessFuzzySkinType::AllWalls => FuzzySkinKind::AllWalls,
+                ProcessFuzzySkinType::Disabled => FuzzySkinKind::Disabled,
+            },
+            noise_type: match region.fuzzy_skin_noise_type {
+                ProcessNoiseType::Classic => FuzzySkinNoiseType::Classic,
+                ProcessNoiseType::Perlin => FuzzySkinNoiseType::Perlin,
+                ProcessNoiseType::Billow => FuzzySkinNoiseType::Billow,
+                ProcessNoiseType::RidgedMulti => FuzzySkinNoiseType::RidgedMulti,
+                ProcessNoiseType::Voronoi => FuzzySkinNoiseType::Voronoi,
+                ProcessNoiseType::Ripple => FuzzySkinNoiseType::Ripple,
+            },
+            thickness_mm: region.fuzzy_skin_thickness.0,
+            point_distance_mm: region.fuzzy_skin_point_distance.0,
+            scale_mm: region.fuzzy_skin_scale.0,
+            octaves: usize::try_from(region.fuzzy_skin_octaves.0)
+                .expect("normalized fuzzy_skin_octaves is positive"),
+            persistence: region.fuzzy_skin_persistence.0,
+            ripples_per_layer: usize::try_from(region.fuzzy_skin_ripples_per_layer.0)
+                .expect("normalized fuzzy_skin_ripples_per_layer is positive"),
+            ripple_offset_percent: region.fuzzy_skin_ripple_offset.0,
+            layers_between_ripple_offset: usize::try_from(
+                region.fuzzy_skin_layers_between_ripple_offset.0,
+            )
+            .expect("normalized fuzzy_skin_layers_between_ripple_offset is positive"),
+            first_layer: region.fuzzy_skin_first_layer.0,
         }
     }
 
@@ -116,6 +154,40 @@ impl FuzzySkinConfig {
         })
     }
 
+    pub(crate) fn fuzzified_scaled_points(
+        self,
+        points: Vec<Point>,
+        layer_id: usize,
+        print_z: f64,
+        scale: CoordinateScale,
+    ) -> Vec<Point> {
+        if self.noise_type == FuzzySkinNoiseType::Ripple {
+            return super::fuzzy_skin_noise::ripple_scaled_closed_polyline(
+                &points, self, layer_id, scale,
+            );
+        }
+        self.fuzzified_points(
+            points
+                .iter()
+                .map(|point| Point2::new(scale.unscale(point.x()), scale.unscale(point.y())))
+                .collect(),
+            layer_id,
+            print_z,
+        )
+        .into_iter()
+        .map(|point| {
+            Point::new(
+                scale
+                    .checked_scale(point.x())
+                    .expect("validated fuzzy point stays in the coordinate range"),
+                scale
+                    .checked_scale(point.y())
+                    .expect("validated fuzzy point stays in the coordinate range"),
+            )
+        })
+        .collect()
+    }
+
     pub(crate) fn external_points(
         self,
         points: Vec<Point2>,
@@ -142,7 +214,12 @@ impl FuzzySkinConfig {
         }
     }
 
-    fn fuzzified_points(self, points: Vec<Point2>, layer_id: usize, print_z: f64) -> Vec<Point2> {
+    pub(crate) fn fuzzified_points(
+        self,
+        points: Vec<Point2>,
+        layer_id: usize,
+        print_z: f64,
+    ) -> Vec<Point2> {
         match self.noise_type {
             FuzzySkinNoiseType::Ripple => ripple_closed_polyline(&points, self, layer_id),
             noise_type => fuzzify_closed_polyline(&points, self, layer_id, print_z, noise_type),
@@ -150,14 +227,35 @@ impl FuzzySkinConfig {
     }
 
     fn fuzzifies_external(self, layer_id: usize) -> bool {
-        !matches!(
-            self.kind,
-            FuzzySkinKind::None | FuzzySkinKind::Hole | FuzzySkinKind::Disabled
-        ) && self.fuzzy_skin_effect_enabled(layer_id)
+        self.should_fuzzify(layer_id, 0, true)
     }
 
     fn fuzzifies_internal_wall(self, layer_id: usize) -> bool {
-        self.kind == FuzzySkinKind::AllWalls && self.fuzzy_skin_effect_enabled(layer_id)
+        self.should_fuzzify(layer_id, 1, true)
+    }
+
+    pub(crate) fn should_fuzzify(
+        self,
+        layer_id: usize,
+        loop_index: usize,
+        is_contour: bool,
+    ) -> bool {
+        if matches!(self.kind, FuzzySkinKind::None | FuzzySkinKind::Disabled)
+            || !self.fuzzy_skin_effect_enabled(layer_id)
+        {
+            return false;
+        }
+        let fuzzify_contours = (loop_index == 0 && self.kind != FuzzySkinKind::Hole)
+            || self.kind == FuzzySkinKind::AllWalls;
+        let fuzzify_holes = matches!(
+            self.kind,
+            FuzzySkinKind::Hole | FuzzySkinKind::All | FuzzySkinKind::AllWalls
+        ) && (loop_index == 0 || self.kind == FuzzySkinKind::AllWalls);
+        if is_contour {
+            fuzzify_contours
+        } else {
+            fuzzify_holes
+        }
     }
 
     fn fuzzy_skin_effect_enabled(self, layer_id: usize) -> bool {

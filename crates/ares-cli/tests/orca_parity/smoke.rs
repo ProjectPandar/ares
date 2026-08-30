@@ -29,6 +29,20 @@ fn orca_parity_ender3_smoke() {
 }
 
 #[test]
+fn orca_parity_fuzzy_skin_enum_smoke() {
+    for value in [
+        "none",
+        "external",
+        "hole",
+        "all",
+        "allwalls",
+        "disabled_fuzzy",
+    ] {
+        assert_process_option_smoke("fuzzy_skin", value);
+    }
+}
+
+#[test]
 fn orca_parity_ironing_solid_smoke() {
     assert_process_option_smoke("ironing_type", "solid");
 }

@@ -3,6 +3,20 @@ use crate::{SliceError, slice_project};
 use super::super::super::support::{KsrArchive, metadata};
 
 #[tokio::test]
+async fn fuzzy_skin_reaches_active_classic_output() {
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"fuzzy_skin\": \"disabled_fuzzy\"",
+        "\"fuzzy_skin\": \"external\"",
+    );
+
+    let output = slice_project(archive.bytes(), metadata()).await.unwrap();
+
+    assert!(!output.is_empty());
+}
+
+#[tokio::test]
 async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
     let cases = [
         (
@@ -14,16 +28,6 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "\"spiral_mode\": \"0\"",
             "\"spiral_mode\": \"1\"",
             "spiral_mode",
-        ),
-        (
-            "\"fuzzy_skin\": \"disabled_fuzzy\"",
-            "\"fuzzy_skin\": \"external\"",
-            "fuzzy_skin",
-        ),
-        (
-            "\"detect_thin_wall\": \"0\"",
-            "\"detect_thin_wall\": \"1\"",
-            "detect_thin_wall",
         ),
         (
             "\"counterbore_hole_bridging\": \"none\"",

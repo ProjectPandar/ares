@@ -84,6 +84,66 @@ fn signed_noise(
     }
 }
 
+pub(super) fn ripple_scaled_closed_polyline(
+    points: &[crate::geometry::Point],
+    config: FuzzySkinConfig,
+    layer_id: usize,
+    scale: crate::geometry::CoordinateScale,
+) -> Vec<crate::geometry::Point> {
+    if points.len() < 3 {
+        return points.to_vec();
+    }
+    let scaled_thickness = scale.checked_scale(config.thickness_mm).unwrap();
+    let scaled_step = scale.checked_scale(config.point_distance_mm).unwrap();
+    let amplitude = scale.unscale(scaled_thickness);
+    let step = scale.unscale(scaled_step);
+    let mm_points = points
+        .iter()
+        .map(|point| Point2::new(scale.unscale(point.x()), scale.unscale(point.y())))
+        .collect::<Vec<_>>();
+    let perimeter = closed_perimeter_length(&mm_points);
+    if perimeter < 1e-6 || step < 1e-6 {
+        return points.to_vec();
+    }
+    let anchor = ripple_anchor_arc_mm(&mm_points);
+    let phase_shift = ripple_phase_shift_rad(config, layer_id);
+    let mut output = Vec::with_capacity((perimeter / step) as usize + points.len() * 2);
+    let mut accumulated = 0.0;
+    for index in 0..points.len() {
+        let start = points[index];
+        let end = points[(index + 1) % points.len()];
+        let dx = (end.x() - start.x()) as f64;
+        let dy = (end.y() - start.y()) as f64;
+        let scaled_length = dx.hypot(dy);
+        if scaled_length < f64::EPSILON {
+            continue;
+        }
+        let length = scaled_length * scale.factor();
+        let segment_end = accumulated + length;
+        let mut sample = (accumulated / step).ceil() * step;
+        while sample < segment_end {
+            let ratio = (sample - accumulated) / length;
+            let phase = config.ripples_per_layer as f64 * std::f64::consts::TAU * (sample - anchor)
+                / perimeter
+                + std::f64::consts::TAU
+                + phase_shift;
+            let displacement = phase.sin() * amplitude / scale.factor();
+            let base_x = start.x() + (dx * ratio) as i64;
+            let base_y = start.y() + (dy * ratio) as i64;
+            output.push(crate::geometry::Point::new(
+                base_x + (-dy / scaled_length * displacement) as i64,
+                base_y + (dx / scaled_length * displacement) as i64,
+            ));
+            sample += step;
+        }
+        accumulated = segment_end;
+    }
+    while output.len() < 3 {
+        output.push(points[points.len() - 2]);
+    }
+    output
+}
+
 pub(super) fn ripple_closed_polyline(
     points: &[Point2],
     config: FuzzySkinConfig,

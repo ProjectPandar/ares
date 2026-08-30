@@ -67,7 +67,11 @@ pub(in crate::project_slice) struct PostClassicTraversalPrintObject {
 #[derive(Debug)]
 pub(in crate::project_slice) struct ClassicTraversalRecord {
     pub(in crate::project_slice) surfaces: Vec<PreparedTraversalSurface>,
+    pub(in crate::project_slice) layer_id: usize,
     pub(in crate::project_slice) layer_height: f64,
+    pub(in crate::project_slice) slice_z: f64,
+    pub(in crate::project_slice) fuzzy_skin: crate::perimeters::FuzzySkinConfig,
+    pub(in crate::project_slice) simplification_tolerance: f64,
     pub(in crate::project_slice) overhang_flow: Flow,
     pub(in crate::project_slice) branch: PendingPathBranch,
     pub(in crate::project_slice) overhang_reverse: InactiveOverhangReverse,
