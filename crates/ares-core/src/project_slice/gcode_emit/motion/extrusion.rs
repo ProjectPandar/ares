@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{
     EmitState, arc,
     features::PathProperties,
@@ -18,16 +21,22 @@ pub(super) fn linear_segment(
         state.options.print_flow_ratio,
         state.options.filament_area,
     );
-    let extrusion = coordinate(state, extrusion);
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{} E{}\n",
-            format_axis(end.x),
-            format_axis(end.y),
-            format_extrusion(extrusion)
-        )
-        .as_bytes(),
-    );
+    if extrusion.abs() <= f64::EPSILON {
+        output.extend_from_slice(
+            format!("G1 X{} Y{}\n", format_axis(end.x), format_axis(end.y)).as_bytes(),
+        );
+    } else {
+        let extrusion = coordinate(state, extrusion);
+        output.extend_from_slice(
+            format!(
+                "G1 X{} Y{} E{}\n",
+                format_axis(end.x),
+                format_axis(end.y),
+                format_extrusion(extrusion)
+            )
+            .as_bytes(),
+        );
+    }
     state.x = end.x;
     state.y = end.y;
     state.wipe_start = Some(end);
