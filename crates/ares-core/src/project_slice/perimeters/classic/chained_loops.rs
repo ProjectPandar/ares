@@ -7,12 +7,10 @@ pub(in crate::project_slice) mod tree;
 mod types;
 
 #[cfg(test)]
-pub(in crate::project_slice) use types::ExtrusionLoopRole;
-#[cfg(test)]
 pub(in crate::project_slice) use types::PreparedChainedLoopRecord as TestPreparedChainedLoopRecord;
 pub(in crate::project_slice) use types::{
-    ChainedLoopNode, ExtrusionLoop, PreparedChainedLoopObject, PreparedChainedLoopRecord,
-    PreparedChainedLoopSurface, PreparedPostClassicChainedLoops,
+    ChainedLoopNode, ExtrusionLoop, ExtrusionLoopRole, PreparedChainedLoopObject,
+    PreparedChainedLoopRecord, PreparedChainedLoopSurface, PreparedPostClassicChainedLoops,
 };
 
 use super::materialize::{

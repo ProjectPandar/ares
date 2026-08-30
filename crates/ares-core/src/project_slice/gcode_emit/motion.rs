@@ -205,7 +205,13 @@ fn emit_perimeter(
         unreachable!("perimeter phase contains only perimeter entities");
     };
     for loop_ in &collection.entities {
-        loop_paths::emit(output, &loop_.extrusion_loop.paths, geometry, state);
+        loop_paths::emit(
+            output,
+            &loop_.extrusion_loop.paths,
+            loop_.extrusion_loop.role,
+            geometry,
+            state,
+        );
     }
 }
 
@@ -284,7 +290,13 @@ fn emit_variable_width_entity(
 ) {
     match entity {
         GapFillEntity::Path(path) => emit_materialized_path(output, path, 0.0, geometry, state),
-        GapFillEntity::Loop(paths) => loop_paths::emit(output, paths, geometry, state),
+        GapFillEntity::Loop(paths) => loop_paths::emit(
+            output,
+            paths,
+            crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoopRole::Internal,
+            geometry,
+            state,
+        ),
     }
 }
 

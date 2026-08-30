@@ -1426,5 +1426,11 @@ membership API (307/310 keys), motion geometry tests moved to
 `motion::options::helpers`. No include macro is used for source splitting;
 focused membership test, clippy, and fmt pass.
 
+External-loop `wipe_on_loops` now ports `GCode.cpp:5996-6033`: after storing the
+original wipe path, it emits the nozzle-bounded, angle-rotated inward travel and
+keeps the original loop start for wipe clipping. Snapmaker's sequence is now
+byte-exact (`119.736,129.765` inward; `117.775,129.751 E-1.2` wipe end), and
+KSR/workspace checks pass.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue lifecycle, Qidi support-layer timelapse, and postamble geometry.

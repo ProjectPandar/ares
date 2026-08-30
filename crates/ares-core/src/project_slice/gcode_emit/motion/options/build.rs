@@ -332,6 +332,17 @@ impl MotionOptions {
                 region.map_or(full.process.region.wipe_speed, |value| value.wipe_speed),
                 travel_speed,
             ),
+            wipe_on_loops: region.map_or(full.process.region.wipe_on_loops.0, |value| {
+                value.wipe_on_loops.0
+            }),
+            wall_loops: region.map_or(full.process.region.wall_loops.0, |value| value.wall_loops.0),
+            nozzle_diameter: full
+                .project
+                .print
+                .nozzle_diameter
+                .0
+                .first()
+                .map_or(0.4, |value| value.0),
             retract_when_changing_layer: traversal
                 .resolved
                 .views
