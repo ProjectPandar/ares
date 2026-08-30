@@ -1906,5 +1906,12 @@ instead of the monotonic ant-chain branch. The top Rectilinear value passes
 focused Orca movement parity, and its previously rejected bridge projection is
 accepted.
 
+The internal second-bridge pass now ports `PrintObject.cpp:3391-3560` with a
+two-phase source cache, solid-width opening, safety-offset overlap/leftover
+splits, and 90-degree bridge-angle rotation. All four
+`enable_extra_bridge_layer` values pass the focused cube parity domain; the
+external mode is inactive for that fixture and its nontrivial rewrite remains
+a separate source slice.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

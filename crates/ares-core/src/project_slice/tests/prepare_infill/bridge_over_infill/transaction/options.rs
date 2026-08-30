@@ -5,16 +5,11 @@ use crate::{
 };
 
 #[test]
-fn task22o71_deferred_pattern_and_second_pass_fail_without_fallback() {
+fn task22o71_deferred_pattern_fails_without_fallback() {
     assert_unsupported_mutation(
         "\"sparse_infill_pattern\": \"crosshatch\"",
         "\"sparse_infill_pattern\": \"honeycomb\"",
         "sparse_infill_pattern",
-    );
-    assert_unsupported_mutation(
-        "\"enable_extra_bridge_layer\": \"disabled\"",
-        "\"enable_extra_bridge_layer\": \"internal_bridge_only\"",
-        "enable_extra_bridge_layer",
     );
 }
 

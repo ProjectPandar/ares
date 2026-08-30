@@ -105,6 +105,11 @@ fn task22o17_preflight_failure_with_deep_predecessors_fits_constrained_stack() {
     source.predecessor.resolved.objects[0]
         .object
         .interface_shells = crate::OrcaBool(true);
+    let second_part =
+        source.predecessor.resolved.objects[0].layer_candidates[0].model_parts[0].clone();
+    source.predecessor.resolved.objects[0].layer_candidates[0]
+        .model_parts
+        .push(second_part);
     let (drop_probe, dropped) = source.predecessor.drop_probe_observer();
     run_on_constrained_stack(move || {
         let error = match surface_type_detection::prepare(source) {

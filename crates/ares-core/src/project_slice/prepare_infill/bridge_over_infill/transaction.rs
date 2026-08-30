@@ -1,9 +1,10 @@
 mod anchor_projection;
 mod candidate_expansion;
+mod extra_bridge;
 mod surface_rewrite;
 
 use crate::{
-    ProcessExtraBridgeLayer, SliceError,
+    SliceError,
     geometry::ClipperError,
     project_slice::prepare_infill::external_surfaces::{self, PreparedPostExternalSurfaces},
 };
@@ -32,6 +33,7 @@ pub(in crate::project_slice) fn prepare(
     if let Err(error) = validate_capabilities(&predecessor, &objects)
         .and_then(|()| candidate_expansion::prepare(&predecessor, &mut objects))
         .and_then(|()| surface_rewrite::prepare(&mut predecessor, &objects))
+        .and_then(|()| extra_bridge::prepare(&mut predecessor))
     {
         external_surfaces::dispose(predecessor);
         return Err(error);
@@ -66,14 +68,7 @@ fn validate_capabilities(
     objects: &[BridgeCandidateObject],
 ) -> Result<(), SliceError> {
     let traversal = &predecessor.predecessor.predecessor;
-    if traversal.resolved.objects.iter().any(|object| {
-        matches!(
-            object.object.enable_extra_bridge_layer,
-            ProcessExtraBridgeLayer::InternalBridgeOnly | ProcessExtraBridgeLayer::ApplyToAll
-        )
-    }) {
-        return Err(unsupported("enable_extra_bridge_layer"));
-    }
+
     if objects.iter().any(|object| object.has_lightning_infill) {
         return Err(unsupported("sparse_infill_pattern"));
     }

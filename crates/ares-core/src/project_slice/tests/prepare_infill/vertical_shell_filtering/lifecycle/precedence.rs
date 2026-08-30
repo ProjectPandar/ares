@@ -12,23 +12,11 @@ use crate::{
 
 #[tokio::test]
 async fn task22o23_all_earlier_capability_errors_keep_filtering_uninvoked() {
-    for (from, to, expected) in [
-        (
-            "\"counterbore_hole_bridging\": \"none\"",
-            "\"counterbore_hole_bridging\": \"partiallybridge\"",
-            "counterbore_hole_bridging",
-        ),
-        (
-            "\"interface_shells\": \"0\"",
-            "\"interface_shells\": \"1\"",
-            "interface_shells",
-        ),
-        (
-            "\"enable_extra_bridge_layer\": \"disabled\"",
-            "\"enable_extra_bridge_layer\": \"apply_to_all\"",
-            "enable_extra_bridge_layer",
-        ),
-    ] {
+    for (from, to, expected) in [(
+        "\"counterbore_hole_bridging\": \"none\"",
+        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "counterbore_hole_bridging",
+    )] {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
         vertical_shell_filtering::reset_invocations();

@@ -5,23 +5,11 @@ use super::super::super::support::{KsrArchive, metadata};
 
 #[tokio::test]
 async fn task22o18_earlier_errors_leave_invocations_zero() {
-    for (from, to, error) in [
-        (
-            "\"counterbore_hole_bridging\": \"none\"",
-            "\"counterbore_hole_bridging\": \"partiallybridge\"",
-            "counterbore_hole_bridging",
-        ),
-        (
-            "\"interface_shells\": \"0\"",
-            "\"interface_shells\": \"1\"",
-            "interface_shells",
-        ),
-        (
-            "\"enable_extra_bridge_layer\": \"disabled\"",
-            "\"enable_extra_bridge_layer\": \"apply_to_all\"",
-            "enable_extra_bridge_layer",
-        ),
-    ] {
+    for (from, to, error) in [(
+        "\"counterbore_hole_bridging\": \"none\"",
+        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        "counterbore_hole_bridging",
+    )] {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
         fill_surfaces::reset_invocations();

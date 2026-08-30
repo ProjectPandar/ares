@@ -25,7 +25,11 @@ pub(super) fn apply_pattern_fields(
 pub(super) fn anchor_lengths(options: &RegionOptions, spacing: f64) -> (f32, f32) {
     let anchor_length = projected_length(options.infill_anchor, spacing);
     let anchor_length_max = projected_length(options.infill_anchor_max, spacing);
-    let anchor_length = anchor_length.min(anchor_length_max);
+    let anchor_length = if anchor_length <= anchor_length_max {
+        anchor_length
+    } else {
+        anchor_length_max
+    };
     (anchor_length, anchor_length_max)
 }
 

@@ -11,23 +11,11 @@ use crate::{SliceError, slice_project};
 
 #[tokio::test]
 async fn task22o21_earlier_capability_errors_have_precedence() {
-    for (from, to, expected) in [
-        (
-            "\"counterbore_hole_bridging\": \"none\"",
-            "\"counterbore_hole_bridging\": \"partiallybridge\"",
-            SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
-        ),
-        (
-            "\"interface_shells\": \"0\"",
-            "\"interface_shells\": \"1\"",
-            SliceError::UnsupportedProjectFeature("interface_shells".to_owned()),
-        ),
-        (
-            "\"enable_extra_bridge_layer\": \"disabled\"",
-            "\"enable_extra_bridge_layer\": \"apply_to_all\"",
-            SliceError::UnsupportedProjectFeature("enable_extra_bridge_layer".to_owned()),
-        ),
-    ] {
+    for (from, to, expected) in [(
+        "\"counterbore_hole_bridging\": \"none\"",
+        "\"counterbore_hole_bridging\": \"partiallybridge\"",
+        SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),
+    )] {
         let mut archive = KsrArchive::new();
         archive.replace_unique("Metadata/project_settings.config", from, to);
         vertical_shell_trimming::reset_invocations();

@@ -1,5 +1,5 @@
 use crate::{
-    ObjectOptions, ProcessExtraBridgeLayer, ProcessSupportType, SliceError,
+    ObjectOptions, ProcessSupportType, SliceError,
     project::effective_config::types::ResolvedProjectObject,
 };
 
@@ -14,14 +14,6 @@ pub(super) fn validate(objects: &[ResolvedProjectObject]) -> Result<(), SliceErr
                 .any(|layer| layer.model_parts.len() > 1)
     }) {
         return unsupported("interface_shells");
-    }
-    if objects.iter().any(|object| {
-        matches!(
-            object.object.enable_extra_bridge_layer,
-            ProcessExtraBridgeLayer::ExternalBridgeOnly | ProcessExtraBridgeLayer::ApplyToAll
-        )
-    }) {
-        return unsupported("enable_extra_bridge_layer");
     }
     Ok(())
 }

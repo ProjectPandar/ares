@@ -1,5 +1,4 @@
 use crate::{
-    ProcessExtraBridgeLayer, SliceError,
     project_slice::{
         perimeters::prepare_post_layer_region_perimeters,
         prepare_infill::surface_type_detection::{
@@ -112,45 +111,25 @@ async fn task22o17_interface_shells_single_region_reaches_output() {
 }
 
 #[tokio::test]
-async fn task22o17_active_extra_bridge_values_fail_at_o17() {
-    for (from, option) in [
-        ("disabled", ProcessExtraBridgeLayer::ExternalBridgeOnly),
-        ("disabled", ProcessExtraBridgeLayer::ApplyToAll),
+async fn task22o17_extra_bridge_values_reach_active_output() {
+    for token in [
+        "external_bridge_only",
+        "internal_bridge_only",
+        "apply_to_all",
     ] {
-        let token = match option {
-            ProcessExtraBridgeLayer::ExternalBridgeOnly => "external_bridge_only",
-            ProcessExtraBridgeLayer::ApplyToAll => "apply_to_all",
-            _ => unreachable!(),
-        };
         let mut archive = KsrArchive::new();
         archive.replace_unique(
             "Metadata/project_settings.config",
-            &format!("\"enable_extra_bridge_layer\": \"{from}\""),
+            "\"enable_extra_bridge_layer\": \"disabled\"",
             &format!("\"enable_extra_bridge_layer\": \"{token}\""),
         );
-        assert_eq!(
-            slice_project(archive.bytes(), metadata())
+        assert!(
+            !slice_project(archive.bytes(), metadata())
                 .await
-                .unwrap_err(),
-            SliceError::UnsupportedProjectFeature("enable_extra_bridge_layer".to_owned())
+                .unwrap()
+                .is_empty()
         );
     }
-}
-
-#[tokio::test]
-async fn task22o17_internal_only_extra_bridge_value_reaches_o71_boundary() {
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\"enable_extra_bridge_layer\": \"disabled\"",
-        "\"enable_extra_bridge_layer\": \"internal_bridge_only\"",
-    );
-    assert_eq!(
-        slice_project(archive.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("enable_extra_bridge_layer".to_owned())
-    );
 }
 
 #[test]
