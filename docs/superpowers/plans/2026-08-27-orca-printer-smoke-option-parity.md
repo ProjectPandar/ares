@@ -1474,5 +1474,11 @@ the shared real project without inventing fake extrema. Domain-plan tests now
 require all 650 source-cited options to have cases: 1,356 total (1054 value
 cases + 302 baselines), with no silent omission status.
 
+Stable sweep40 (clean HEAD `9556345`) completed all 1001 presets: PASS 207→212,
+698 DIVERGENT, 91 ARES_ERROR. First-layer feed mismatches clear; Artillery M1
+advances to segmented-travel feed, while remaining deposition leaders are now
+geometry/last-decimal families. Qidi support-layer timelapse accounts for 49 of
+52 control-first rows.
+
 NEXT: rerun all 650 option domains and reduce the 65 known value-case failures;
 in parallel continue Clipper precision, lifecycle/Qidi, and postamble work.
