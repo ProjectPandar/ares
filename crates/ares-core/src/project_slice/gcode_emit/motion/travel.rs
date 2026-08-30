@@ -345,7 +345,7 @@ fn append_spiral_lift(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i:
         return;
     }
 
-    output.push(b'\n');
+    output.extend_from_slice(format!("G1 F{}\n", format_axis(state.travel_feedrate)).as_bytes());
     let resolution = state.options.arc_fitting_tolerance;
     let segments = (8.0 * (0.01 / resolution)).round().clamp(4.0, 16.0) as usize;
     let center_x = state.x + i;

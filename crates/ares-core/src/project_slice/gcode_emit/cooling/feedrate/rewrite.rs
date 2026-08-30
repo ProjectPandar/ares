@@ -41,9 +41,12 @@ pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLin
         };
 
         if new_feedrate == current_feedrate {
-            if line.kind & (TYPE_ADJUSTABLE | TYPE_EXTERNAL_PERIMETER | TYPE_WIPE) != 0
-                || line.length == 0.0
-            {
+            if line.kind & (TYPE_ADJUSTABLE | TYPE_EXTERNAL_PERIMETER | TYPE_WIPE) != 0 {
+                position = line.end;
+                continue;
+            }
+            if line.length == 0.0 {
+                output.extend_from_slice(&command[value_end..]);
                 position = line.end;
                 continue;
             }

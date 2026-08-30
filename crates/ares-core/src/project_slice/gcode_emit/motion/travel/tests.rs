@@ -91,6 +91,7 @@ fn pending_spiral_lift_uses_resolution_based_linear_segments() {
         x: 102.379,
         y: 108.302,
         layer_z: 0.4,
+        travel_feedrate: 12_000.0,
         pending_lift: Some(LiftMode::Spiral),
         options: MotionOptions {
             z_hop: 0.4,
@@ -114,7 +115,7 @@ fn pending_spiral_lift_uses_resolution_based_linear_segments() {
 
     assert_eq!(
         output,
-        b"\n\
+        b"G1 F12000\n\
 G1 X103.278 Y108.856 Z0.457143\n\
 G1 X103.405 Y109.905 Z0.514286\n\
 G1 X102.664 Y110.658 Z0.571429\n\

@@ -28,6 +28,25 @@ async fn task22o174_layer_cooling_matches_orca_slowdown_feedrate() {
 }
 
 #[test]
+fn redundant_feed_only_move_keeps_its_blank_line() {
+    let mut output = b"G1 F9000\nG1 F9000\n".to_vec();
+    let mut state = super::feedrate::State::new(
+        super::feedrate::Config {
+            enabled: false,
+            target_time: 0.0,
+            minimum_speed: 0.0,
+            keep_outer_wall_speed: false,
+            relative_e: true,
+        },
+        150.0,
+    );
+
+    super::feedrate::rewrite_layer(&mut output, 0, &mut state);
+
+    assert_eq!(output, b"G1 F9000\n\n");
+}
+
+#[test]
 fn fan_mover_suppresses_only_the_redundant_initial_zero_state() {
     assert!(!super::should_emit_initial_part_fan(0, true, true, 0));
     assert!(super::should_emit_initial_part_fan(0, true, false, 0));
