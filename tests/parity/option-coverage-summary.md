@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-610 of 649 executable option domains pass (1305 generated cases: 1282 compared, 26 rejected upstream).
+616 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -34,9 +34,9 @@
 | PASS | bottom_shell_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1156 |  |
 | PASS | bottom_shell_thickness | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1167 |  |
 | PASS | bottom_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1377 |  |
-| FAIL | bottom_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6764 | seeded: layer 1 deposition 1 differs: expected Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "106.013", z: "0.2" }, end: Position { x: "106.013", y: "106.772", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.02332", feed: 2100.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "106.013", z: "0.2" }, end: Position { x: "113.987", y: "113.987", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.34653", feed: 2100.0, acceleration: "500", fans: "0:0" } |
+| PASS | bottom_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6764 |  |
 | PASS | bottom_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5799 |  |
-| FAIL | bottom_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2097 | alignedrectilinear: filament 1 length differs: expected 262.34mm, actual 256.67mm |
+| FAIL | bottom_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2097 | hilbertcurve: layer 1 deposition 125 differs: expected Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "108.642", y: "112.4", z: "0.2" }, end: Position { x: "109.176", y: "112.933", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.02317", feed: 2100.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "108.642", y: "112.4", z: "0.2" }, end: Position { x: "108.909", y: "112.666", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01159", feed: 2100.0, acceleration: "500", fans: "0:0" } |
 | PASS | bridge_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3224 |  |
 | PASS | bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1250 |  |
 | PASS | bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1292 |  |
@@ -167,7 +167,7 @@
 | PASS | filament_retract_before_wipe | coPercents | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:81 |  |
 | PASS | filament_retract_lift_above | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:68 |  |
 | PASS | filament_retract_lift_below | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:69 |  |
-| FAIL | filament_retract_lift_enforce | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:70 | Bottom Only: layer 2 travel geometry count differs: expected 8, actual 10 |
+| FAIL | filament_retract_lift_enforce | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:70 | Top Only: layer 1 travel geometry count differs: expected 5, actual 7 |
 | PASS | filament_retract_restart_extra | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:73 |  |
 | PASS | filament_retract_when_changing_layer | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:78 |  |
 | PASS | filament_retraction_distances_when_cut | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:83 |  |
@@ -283,7 +283,7 @@
 | PASS | interlocking_depth | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4260 |  |
 | PASS | interlocking_orientation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4242 |  |
 | PASS | internal_bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1268 |  |
-| FAIL | internal_bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1309 | min: filament 1 length differs: expected 255.90mm, actual 262.34mm |
+| PASS | internal_bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1309 |  |
 | PASS | internal_bridge_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3470 |  |
 | PASS | internal_bridge_flow | coFloat | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:1354 | min: orca-slicer failed (exit status: 238): internal_bridge_flow: invalid value 0.000000 |
 | PASS | internal_bridge_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1670 |  |
@@ -291,7 +291,7 @@
 | PASS | internal_solid_infill_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3244 |  |
 | PASS | internal_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1444 |  |
 | PASS | internal_solid_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:5808 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
-| FAIL | internal_solid_infill_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2106 | alignedrectilinear: unsupported project feature: internal_solid_infill_pattern |
+| FAIL | internal_solid_infill_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2106 | hilbertcurve: layer 2 deposition count differs: expected 368, actual 370 |
 | PASS | internal_solid_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5820 |  |
 | PASS | ironing_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4351 |  |
 | PASS | ironing_angle_fixed | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4361 |  |
@@ -452,7 +452,7 @@
 | PASS | retract_length_toolchange | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5244 |  |
 | PASS | retract_lift_above | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5266 |  |
 | PASS | retract_lift_below | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5274 |  |
-| FAIL | retract_lift_enforce | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5320 | Bottom Only: layer 2 travel geometry count differs: expected 8, actual 10 |
+| FAIL | retract_lift_enforce | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5320 | Top Only: layer 1 travel geometry count differs: expected 5, actual 7 |
 | PASS | retract_restart_extra | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5439 |  |
 | PASS | retract_restart_extra_toolchange | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5447 |  |
 | PASS | retract_when_changing_layer | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5195 |  |
@@ -468,7 +468,7 @@
 | PASS | scarf_joint_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5570 |  |
 | PASS | scarf_overhang_threshold | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5558 |  |
 | PASS | seam_gap | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5515 |  |
-| FAIL | seam_position | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:5490 | nearest: layer 1 deposition 59 differs: expected Deposition { feature: "Inner wall", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "105.73", y: "114.27", z: "0.2" }, end: Position { x: "105.73", y: "105.77", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.26118", feed: 1800.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Inner wall", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "105.73", y: "114.27", z: "0.2" }, end: Position { x: "105.73", y: "105.73", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.26241", feed: 1800.0, acceleration: "500", fans: "0:0" } |
+| FAIL | seam_position | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:5490 | random: layer 1 deposition count differs: expected 101, actual 99 |
 | PASS | seam_slope_conditional | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5539 |  |
 | PASS | seam_slope_entire_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5604 |  |
 | PASS | seam_slope_inner_walls | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5628 |  |
@@ -480,15 +480,15 @@
 | PASS | silent_mode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4440 |  |
 | PASS | single_extruder_multi_material | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5958 |  |
 | PASS | single_extruder_multi_material_priming | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6014 |  |
-| FAIL | single_loop_draft_shield | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5700 | true: filament 1 length differs: expected 260.62mm, actual 262.34mm |
+| PASS | single_loop_draft_shield | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5700 |  |
 | PASS | skeleton_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4018 |  |
 | PASS | skeleton_infill_line_width | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4074 |  |
 | PASS | skin_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4031 |  |
 | PASS | skin_infill_depth | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4044 |  |
 | PASS | skin_infill_line_width | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4064 |  |
-| FAIL | skirt_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5673 | seeded: layer 1 deposition 138 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "75.1", y: "79.206", z: "0.2" }, end: Position { x: "77.148", y: "77.149", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.08918", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "75.1", y: "79.206", z: "0.2" }, end: Position { x: "77.148", y: "77.149", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.08917", feed: 3000.0, acceleration: "500", fans: "0:0" } |
+| PASS | skirt_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5673 |  |
 | PASS | skirt_height | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5692 |  |
-| FAIL | skirt_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5733 | max: layer 1 deposition 70 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "100.46", y: "116.644", z: "0.2" }, end: Position { x: "100.172", y: "115", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.05129", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "100.461", y: "116.644", z: "0.2" }, end: Position { x: "100.172", y: "115", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.05129", feed: 3000.0, acceleration: "500", fans: "0:0" } |
+| FAIL | skirt_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5733 | max: layer 1 deposition 107 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "102.451", y: "103.53", z: "0.2" }, end: Position { x: "102.873", y: "103.107", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01836", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "102.451", y: "103.53", z: "0.2" }, end: Position { x: "102.873", y: "103.108", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01836", feed: 3000.0, acceleration: "500", fans: "0:0" } |
 | PASS | skirt_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5742 |  |
 | PASS | skirt_start_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5682 |  |
 | FAIL | skirt_type | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5721 | perobject: unsupported project feature: skirt_type per-object |
@@ -499,7 +499,7 @@
 | PASS | slow_down_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3426 |  |
 | PASS | slow_down_min_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4826 |  |
 | PASS | slowdown_for_curled_perimeters | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1587 |  |
-| FAIL | small_area_infill_flow_compensation | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4472 | true: filament 1 length differs: expected 259.24mm, actual 262.34mm |
+| PASS | small_area_infill_flow_compensation | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4472 |  |
 | PASS | small_area_infill_flow_compensation_model | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4479 |  |
 | PASS | small_perimeter_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2137 |  |
 | PASS | small_perimeter_threshold | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2149 |  |
@@ -582,11 +582,11 @@
 | PASS | top_shell_thickness | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6741 |  |
 | PASS | top_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1366 |  |
 | PASS | top_surface_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3206 |  |
-| FAIL | top_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6752 | seeded: layer 50 deposition 9 differs: expected Deposition { feature: "Top surface", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "105.795", y: "106.962", z: "10" }, end: Position { x: "106.962", y: "105.795", z: "10" }, arc_center: [None, None], turns: None }, extrusion: "0.04806", feed: 1130.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Top surface", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "105.795", y: "106.963", z: "10" }, end: Position { x: "106.963", y: "105.795", z: "10" }, arc_center: [None, None], turns: None }, extrusion: "0.04806", feed: 1130.0, acceleration: "500", fans: "0:255" } |
+| PASS | top_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6752 |  |
 | PASS | top_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5790 |  |
 | PASS | top_surface_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3326 |  |
 | PASS | top_surface_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:6709 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
-| FAIL | top_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2074 | alignedrectilinear: unsupported project feature: top_surface_pattern |
+| FAIL | top_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2074 | alignedrectilinear: layer 44 deposition 5 differs: expected Deposition { feature: "Internal Bridge", width: "0.389872", motion: MotionRecord { command: "G1", start: Position { x: "105.997", y: "106.308", z: "8.8" }, end: Position { x: "105.997", y: "106.93", z: "8.8" }, arc_center: [None, None], turns: None }, extrusion: "0.03026", feed: 1893.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal Bridge", width: "0.389872", motion: MotionRecord { command: "G1", start: Position { x: "105.997", y: "105.997", z: "8.8" }, end: Position { x: "105.997", y: "106.308", z: "8.8" }, arc_center: [None, None], turns: None }, extrusion: "0.01513", feed: 1892.0, acceleration: "500", fans: "0:255" } |
 | PASS | top_surface_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6721 |  |
 | PASS | travel_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3197 |  |
 | PASS | travel_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3353 |  |

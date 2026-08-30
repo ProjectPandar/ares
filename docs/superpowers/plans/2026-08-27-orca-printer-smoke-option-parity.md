@@ -1692,5 +1692,11 @@ loop vertex then reuses the exact snap/split implementation. The nearest option
 first-layer inner/outer travel and clipped paths are byte-exact. Runtime cursor
 test, KSR, smokes, clippy, and fmt pass.
 
+Stable option sweep5 (clean HEAD `aed68b1`) completed all 650 domains/1,308
+cases: 616/649 compared domains PASS, 33 FAIL, 1 fully upstream-rejected;
+1,282 cases compared and 26 rejected upstream. Six more domains turned green;
+remaining failures are active implementation or exact ordering/µm arithmetic,
+not inventory pollution.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
