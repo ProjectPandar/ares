@@ -1,6 +1,7 @@
 use super::super::{LiftMode, MotionOptions};
 use super::{
-    EmitState, emit_pending_lift, inside_internal_surfaces, retract_for_print_end, wipe_moves,
+    EmitState, emit_pending_lift, inside_internal_surfaces, retract_and_lift,
+    retract_for_print_end, wipe_moves,
 };
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
@@ -17,6 +18,29 @@ fn internal_square() -> RegionSurface {
         ]),
         Vec::new(),
     ))
+}
+
+#[test]
+fn bottom_only_lift_does_not_lift_later_layers() {
+    let mut state = EmitState {
+        layer_index: 1,
+        options: MotionOptions {
+            retraction_length: 1.0,
+            retraction_feedrate: 3_600.0,
+            z_hop: 0.4,
+            retract_lift_enforce: crate::RetractLiftEnforce::BottomOnly,
+            use_relative_e_distances: true,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+    let mut output = Vec::new();
+
+    retract_and_lift(&mut output, &mut state);
+
+    assert_eq!(output, b"G1 E-1 F3600\n");
+    assert!(state.retracted);
+    assert_eq!(state.pending_lift, None);
 }
 
 #[test]

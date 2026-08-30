@@ -59,7 +59,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
 }
 
 fn schedule_lift(state: &mut EmitState, layer_change: bool) {
-    if state.options.z_hop <= 0.0 {
+    if state.options.z_hop <= 0.0 || !lift_is_enforced(state) {
         return;
     }
     state.pending_lift = Some(
@@ -71,6 +71,19 @@ fn schedule_lift(state: &mut EmitState, layer_change: bool) {
             LiftMode::Normal
         },
     );
+}
+
+fn lift_is_enforced(state: &EmitState) -> bool {
+    use crate::RetractLiftEnforce;
+
+    let bottom = state.layer_index == 0;
+    let top = matches!(state.last_feature, Some("Top surface" | "Ironing"));
+    match state.options.retract_lift_enforce {
+        RetractLiftEnforce::AllSurfaces => true,
+        RetractLiftEnforce::TopOnly => top,
+        RetractLiftEnforce::BottomOnly => bottom,
+        RetractLiftEnforce::TopAndBottom => top || bottom,
+    }
 }
 
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {

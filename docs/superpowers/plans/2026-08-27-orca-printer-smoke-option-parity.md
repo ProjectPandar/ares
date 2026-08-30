@@ -1526,5 +1526,10 @@ infill on layers 2..N linearly restores configured density toward 100%, with the
 bottommost layer unchanged. The 50% option case now matches Orca filament usage
 exactly (259.75 mm); focused projection test, KSR, clippy, and fmt pass.
 
+Resolved `filament_retract_lift_enforce` now gates queued z-hop exactly like
+`GCodeWriter::retract`: All, Top, Bottom, and TopAndBottom inspect layer/last
+feature while retraction itself remains unconditional. Bottom Only no longer
+adds later-layer lifts; focused unit, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
