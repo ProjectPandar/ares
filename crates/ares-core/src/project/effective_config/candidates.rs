@@ -21,6 +21,7 @@ pub(crate) fn resolve_project_objects(
     objects: &[ProjectObject],
     grouped: &GroupedPrintObjects,
 ) -> Result<Vec<ResolvedProjectObject>, SliceError> {
+    let z_compensation = z_shrinkage_compensation(settings, validated.logical_filament_count);
     grouped
         .by_object
         .iter()
@@ -40,12 +41,26 @@ pub(crate) fn resolve_project_objects(
                     .transforms
                     .iter()
                     .copied()
-                    .map(|transform| ResolvedPrintObjectConfig { transform })
+                    .map(|transform| ResolvedPrintObjectConfig {
+                        transform: transform.with_z_shrinkage_compensation(z_compensation),
+                    })
                     .collect(),
                 layer_candidates: Vec::new(),
             })
         })
         .collect()
+}
+
+fn z_shrinkage_compensation(settings: &ProjectSettings, logical_count: usize) -> f64 {
+    let xy = &settings.filament.print.filament_shrink.0;
+    let z = &settings.filament.print.filament_shrinkage_compensation_z.0;
+    let first = (xy[0].0, z[0].0);
+    let same = (1..logical_count).all(|index| {
+        let current_xy = xy.get(index).unwrap_or(&xy[0]).0;
+        let current_z = z.get(index).unwrap_or(&z[0]).0;
+        (current_xy, current_z) == first
+    });
+    if same { 100.0 / first.1 } else { 1.0 }
 }
 
 pub(crate) fn resolve_project_candidates(

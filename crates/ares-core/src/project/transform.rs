@@ -79,6 +79,14 @@ impl Transform3d {
         transform
     }
 
+    pub(crate) fn with_z_shrinkage_compensation(self, factor: f64) -> Self {
+        let mut transform = self;
+        for coefficient in &mut transform.0[2] {
+            *coefficient *= factor;
+        }
+        transform
+    }
+
     pub(crate) fn fixed_order_less_than(self, rhs: Self) -> bool {
         for index in 0..16 {
             let row = index % 4;
@@ -102,6 +110,10 @@ impl Transform3d {
             }
         }
         true
+    }
+
+    pub(crate) fn fixed_xy_equal(self, rhs: Self) -> bool {
+        self.0[..2] == rhs.0[..2]
     }
 
     pub(crate) fn transform_z_f32(self, point: Point3d) -> f32 {

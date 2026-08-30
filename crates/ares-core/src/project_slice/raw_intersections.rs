@@ -300,7 +300,7 @@ fn validate_centering(
             .without_xy_translation();
         let same_transform = print_object
             .transform
-            .fixed_order_equal(first_source_transform);
+            .fixed_xy_equal(first_source_transform);
         if !same_transform {
             return unsupported("print_object_centering");
         }

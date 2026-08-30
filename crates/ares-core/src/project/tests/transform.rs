@@ -40,6 +40,27 @@ fn project_transform_composes_build_and_component_in_orca_order() {
 }
 
 #[test]
+fn z_shrinkage_compensation_scales_only_the_z_row() {
+    let transform = Transform3d::parse_3mf("2 0 0 0 3 0 0 0 4 100 200 5").unwrap();
+
+    let transformed = transform
+        .with_z_shrinkage_compensation(0.5)
+        .transform_point(Point3d::new(2.0, 2.0, 2.0));
+
+    assert_eq!(transformed, Point3d::new(104.0, 206.0, 6.5));
+}
+
+#[test]
+fn fixed_xy_equality_ignores_z_compensation_only() {
+    let transform = Transform3d::parse_3mf("2 0 0 0 3 0 0 0 4 100 200 5").unwrap();
+    let z_scaled = transform.with_z_shrinkage_compensation(0.5);
+    let xy_scaled = Transform3d::parse_3mf("3 0 0 0 3 0 0 0 4 100 200 5").unwrap();
+
+    assert!(transform.fixed_xy_equal(z_scaled));
+    assert!(!transform.fixed_xy_equal(xy_scaled));
+}
+
+#[test]
 fn task22n_context_transform_exposes_direct_first_xy_column_bits() {
     let cases = [
         (

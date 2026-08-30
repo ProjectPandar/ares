@@ -1583,5 +1583,11 @@ fresh after alternate wall, fan, flow, lift, shrink acceptance, and other
 recent slices; remaining rows now distinguish executable divergences from
 invalid generated Orca values.
 
+Z shrink compensation now ports the actually active reciprocal Z-row transform
+while preserving Orca's inactive XY behavior at this CLI seam. Centering checks
+compare XY only, so the compensated Z transform reaches layer planning and mesh
+intersection. The 150% case matches Orca filament usage exactly at 201.89 mm;
+transform tests, KSR, focused smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
