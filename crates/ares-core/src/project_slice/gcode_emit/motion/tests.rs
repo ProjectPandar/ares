@@ -27,11 +27,13 @@ fn third_layer_does_not_reassert_default_kinematics() {
 fn internal_travel_retraction_matches_source_role_rules() {
     assert!(super::path::can_skip_retraction(
         true,
+        true,
         Some("Sparse infill"),
         false,
         true,
     ));
     assert!(!super::path::can_skip_retraction(
+        true,
         true,
         Some("Outer wall"),
         false,
@@ -39,14 +41,23 @@ fn internal_travel_retraction_matches_source_role_rules() {
     ));
     assert!(!super::path::can_skip_retraction(
         true,
+        true,
         Some("Overhang wall"),
         false,
         true,
     ));
     assert!(!super::path::can_skip_retraction(
         true,
+        true,
         Some("Sparse infill"),
         true,
+        true,
+    ));
+    assert!(!super::path::can_skip_retraction(
+        true,
+        false,
+        Some("Sparse infill"),
+        false,
         true,
     ));
 }

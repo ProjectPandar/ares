@@ -1727,5 +1727,11 @@ remains rejected. The nofilter option advances through the transaction and
 matches Orca filament usage at 262.34 mm. Focused transaction test, KSR, smokes,
 clippy, and fmt pass.
 
+`reduce_infill_retraction` now includes the upstream
+`GCode.cpp:7635-7639` sparse-density-positive gate. At zero sparse density,
+internal travels retract/wipe/lift instead of being skipped, restoring both
+motion inventory and CoolingBuffer time; the sparse=0 layer feed is exact
+F2105. Role-gate test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

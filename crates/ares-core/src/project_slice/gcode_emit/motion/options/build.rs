@@ -341,6 +341,10 @@ impl MotionOptions {
                     .map_or(0.0, |value| value.0),
             ),
             reduce_infill_retraction: full.process.print.reduce_infill_retraction.0,
+            has_sparse_infill: region.map_or(
+                full.process.region.sparse_infill_density.0 > 0.0,
+                |region| region.sparse_infill_density.0 > 0.0,
+            ),
             retract_before_wipe: gcode
                 .retract_before_wipe
                 .0

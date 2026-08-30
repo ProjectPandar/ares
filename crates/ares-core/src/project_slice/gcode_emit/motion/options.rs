@@ -77,6 +77,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) wipe_distance: f64,
     pub(in crate::project_slice::gcode_emit) retraction_minimum_travel: f64,
     pub(in crate::project_slice::gcode_emit) reduce_infill_retraction: bool,
+    pub(in crate::project_slice::gcode_emit) has_sparse_infill: bool,
     pub(in crate::project_slice::gcode_emit) retract_before_wipe: f64,
     pub(in crate::project_slice::gcode_emit) role_based_wipe_speed: bool,
     pub(in crate::project_slice::gcode_emit) wipe_speed: f64,

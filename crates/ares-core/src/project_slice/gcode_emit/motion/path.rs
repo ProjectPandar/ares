@@ -105,6 +105,7 @@ pub(super) fn emit(
         );
         let skip_retraction = can_skip_retraction(
             state.options.reduce_infill_retraction,
+            state.options.has_sparse_infill,
             state.last_feature,
             properties.is_perimeter,
             inside_internal_surface,
@@ -393,11 +394,13 @@ fn quantize_axis(value: f64) -> f64 {
 
 pub(super) fn can_skip_retraction(
     reduce_infill_retraction: bool,
+    has_sparse_infill: bool,
     previous_feature: Option<&str>,
     current_is_perimeter: bool,
     inside_internal_surface: bool,
 ) -> bool {
     reduce_infill_retraction
+        && has_sparse_infill
         && !matches!(previous_feature, Some("Outer wall" | "Overhang wall"))
         && !current_is_perimeter
         && inside_internal_surface
