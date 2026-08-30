@@ -33,6 +33,7 @@ struct RecordValidationContext<'a> {
     region: &'a RegionOptions,
     simplify_resolution: f64,
     nozzle_diameters: &'a crate::OrcaFloats,
+    scale: crate::geometry::CoordinateScale,
 }
 
 pub(super) fn validate_project(
@@ -79,6 +80,7 @@ pub(super) fn validate_project(
                                     region: object.region_options(record),
                                     simplify_resolution,
                                     nozzle_diameters: context.nozzle_diameters,
+                                    scale: context.scale,
                                 },
                             )
                         })
@@ -100,6 +102,7 @@ fn validate_record(
         region,
         simplify_resolution,
         nozzle_diameters,
+        scale,
     } = context;
     if record.dispatch == PerimeterDispatch::Arachne {
         return Err(unsupported("wall_generator"));
@@ -110,7 +113,9 @@ fn validate_record(
     if fuzzy_is_active(region, record.layer_id) {
         return Err(unsupported("fuzzy_skin"));
     }
-    if region.detect_thin_wall.0 {
+    if region.detect_thin_wall.0
+        && !thin_wall_is_provably_inactive(object, record, region, nozzle_diameters, scale)
+    {
         return Err(unsupported("detect_thin_wall"));
     }
     if region.overhang_reverse.0 && has_layer_overhang(object, record) {
@@ -168,6 +173,50 @@ fn validate_record(
         gap_infill_speed: region.gap_infill_speed.0,
         surface_simplify_resolution: simplify_resolution,
         support_nozzle_diameter,
+    })
+}
+
+fn thin_wall_is_provably_inactive(
+    object: &PostPerimeterInputPrintObject,
+    record: &PerimeterInputRecord,
+    region: &RegionOptions,
+    nozzle_diameters: &crate::OrcaFloats,
+    scale: crate::geometry::CoordinateScale,
+) -> bool {
+    let maximum_nozzle = nozzle_diameters
+        .0
+        .iter()
+        .map(|diameter| diameter.0)
+        .fold(0.0, f64::max);
+    let minimum_span = 2.0 * maximum_nozzle * f64::from(region.wall_loops.0.max(1) + 1);
+    object.current_surfaces(record).iter().all(|surface| {
+        let expolygon = surface.as_parts().1;
+        if !expolygon.holes().is_empty() || expolygon.contour().points().len() != 4 {
+            return false;
+        }
+        let points = expolygon.contour().points();
+        let axis_aligned = points
+            .iter()
+            .zip(points.iter().cycle().skip(1))
+            .all(|(first, second)| first.x() == second.x() || first.y() == second.y());
+        if !axis_aligned {
+            return false;
+        }
+        let (min_x, max_x, min_y, max_y) = points.iter().fold(
+            (i64::MAX, i64::MIN, i64::MAX, i64::MIN),
+            |(min_x, max_x, min_y, max_y), point| {
+                (
+                    min_x.min(point.x()),
+                    max_x.max(point.x()),
+                    min_y.min(point.y()),
+                    max_y.max(point.y()),
+                )
+            },
+        );
+        scale
+            .unscale(max_x - min_x)
+            .min(scale.unscale(max_y - min_y))
+            >= minimum_span
     })
 }
 

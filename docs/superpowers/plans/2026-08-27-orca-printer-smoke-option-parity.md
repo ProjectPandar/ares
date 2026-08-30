@@ -1799,5 +1799,11 @@ Standalone smoke filament normalization now materializes nullable
 S1 Max 0.25 moves from Orca range error to full semantic PASS and is retained
 as a focused smoke; normalization test, KSR, clippy, and fmt pass.
 
+Classic detect_thin_wall is now accepted only when every active surface is a
+hole-free axis-aligned rectangle whose minimum span proves the source thin-wall
+branch inactive relative to wall count/nozzle. All other geometry remains
+explicitly gated. The true cube option matches Orca at 262.34 mm; thin-wall
+suite, KSR, smoke, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
