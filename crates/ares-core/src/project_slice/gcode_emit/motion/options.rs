@@ -69,6 +69,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) retraction_length: f64,
     pub(in crate::project_slice::gcode_emit) deretraction_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) z_hop: f64,
+    pub(in crate::project_slice::gcode_emit) retract_lift_above: f64,
+    pub(in crate::project_slice::gcode_emit) retract_lift_below: f64,
     pub(in crate::project_slice::gcode_emit) retract_lift_enforce: RetractLiftEnforce,
     pub(in crate::project_slice::gcode_emit) retraction_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) wipe: bool,

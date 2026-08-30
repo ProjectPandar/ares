@@ -1553,5 +1553,11 @@ retain one resolution DP pass. Afinia H+1 HS 0.6's former I/J/E arc divergence
 is byte-exact and the new focused Orca smoke passes; KSR, stable smokes, clippy,
 and fmt pass.
 
+Z-hop now applies `GCodeWriter.cpp:623-642` height gates using the effective
+filament-overlaid retract_lift_above/below values and Orca's 1e-4 epsilon.
+Degenerate Slope/Spiral branches no longer claim a lift unless they emitted a
+Z-changing move. Focused gate/state tests, KSR, stable smokes, clippy, and fmt
+pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

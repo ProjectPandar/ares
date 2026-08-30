@@ -44,6 +44,51 @@ fn bottom_only_lift_does_not_lift_later_layers() {
 }
 
 #[test]
+fn lift_above_gate_keeps_retraction_without_lifting() {
+    let mut state = EmitState {
+        layer_z: 0.4,
+        options: MotionOptions {
+            retraction_length: 1.0,
+            retraction_feedrate: 3_600.0,
+            z_hop: 0.4,
+            retract_lift_above: 0.5,
+            use_relative_e_distances: true,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+    let mut output = Vec::new();
+
+    retract_and_lift(&mut output, &mut state);
+
+    assert_eq!(output, b"G1 E-1 F3600\n");
+    assert_eq!(state.pending_lift, None);
+}
+
+#[test]
+fn degenerate_slope_lift_does_not_mark_the_writer_lifted() {
+    let mut state = EmitState {
+        layer_z: 0.4,
+        pending_lift: Some(LiftMode::Slope),
+        options: MotionOptions {
+            z_hop: 0.4,
+            travel_slope_radians: 0.0,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+    let mut output = Vec::new();
+
+    assert!(!emit_pending_lift(
+        &mut output,
+        arc::Point { x: 1.0, y: 1.0 },
+        &mut state,
+    ));
+    assert!(output.is_empty());
+    assert!(!state.lifted);
+}
+
+#[test]
 fn print_end_retracts_without_a_layer_change_lift() {
     let mut state = EmitState {
         options: MotionOptions {

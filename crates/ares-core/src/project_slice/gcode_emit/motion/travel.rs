@@ -59,7 +59,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
 }
 
 fn schedule_lift(state: &mut EmitState, layer_change: bool) {
-    if state.options.z_hop <= 0.0 || !lift_is_enforced(state) {
+    if state.options.z_hop <= 0.0 || !lift_height_is_allowed(state) || !lift_is_enforced(state) {
         return;
     }
     state.pending_lift = Some(
@@ -71,6 +71,14 @@ fn schedule_lift(state: &mut EmitState, layer_change: bool) {
             LiftMode::Normal
         },
     );
+}
+
+fn lift_height_is_allowed(state: &EmitState) -> bool {
+    const EPSILON: f64 = 1.0e-4;
+
+    state.layer_z >= state.options.retract_lift_above - EPSILON
+        && (state.options.retract_lift_below == 0.0
+            || state.layer_z <= state.options.retract_lift_below + EPSILON)
 }
 
 fn lift_is_enforced(state: &EmitState) -> bool {
@@ -256,7 +264,7 @@ pub(super) fn emit_pending_lift(
     let dx = target.x - state.x;
     let dy = target.y - state.y;
     let travel_distance = dx.hypot(dy);
-    match mode {
+    let emitted = match mode {
         LiftMode::Normal => {
             output.extend_from_slice(
                 format!(
@@ -267,6 +275,7 @@ pub(super) fn emit_pending_lift(
                 .as_bytes(),
             );
             state.current_feedrate = state.travel_feedrate;
+            true
         }
         LiftMode::Spiral => {
             let slope = state.options.travel_slope_radians;
@@ -276,6 +285,9 @@ pub(super) fn emit_pending_lift(
                 let j = dx / travel_distance * radius;
                 append_spiral_lift(output, state, raised_z, i, j);
                 state.current_feedrate = state.travel_feedrate;
+                true
+            } else {
+                false
             }
         }
         LiftMode::Slope => {
@@ -296,15 +308,18 @@ pub(super) fn emit_pending_lift(
                     .as_bytes(),
                 );
                 state.current_feedrate = state.travel_feedrate;
+                true
+            } else {
+                false
             }
         }
-    }
-    state.lifted = true;
-    true
+    };
+    state.lifted |= emitted;
+    emitted
 }
 
 fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
-    if state.options.z_hop <= 0.0 {
+    if state.options.z_hop <= 0.0 || !lift_height_is_allowed(state) {
         return;
     }
     let raised_z = state.layer_z + state.options.z_hop;
