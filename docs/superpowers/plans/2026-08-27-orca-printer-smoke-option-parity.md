@@ -1559,5 +1559,13 @@ Degenerate Slope/Spiral branches no longer claim a lift unless they emitted a
 Z-changing move. Focused gate/state tests, KSR, stable smokes, clippy, and fmt
 pass.
 
+Printer smoke normalization now mirrors active Orca validation rather than
+substring guesses: commented G92 is not a reset, absolute-E removes active
+resets, missing relative-E uses PrintConfig's true default, machine-owned layer
+and wipe fields participate, and scalar/vector range values both clamp. Kobra
+Max moves from Orca validation error to a full focused PASS; RH3D advances from
+firmware/wipe validation to its real filament-shrink gap. Harness tests, KSR,
+clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

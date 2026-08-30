@@ -90,6 +90,50 @@ fn relative_e_profile_without_reset_gets_layer_reset() {
 }
 
 #[test]
+fn commented_reset_does_not_satisfy_relative_e_validation() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "use_relative_e_distances": "1"
+    }))
+    .unwrap();
+    let process = serde_json::from_value(serde_json::json!({
+        "before_layer_change_gcode": ";G92 E0.0"
+    }))
+    .unwrap();
+
+    let overrides = smoke_case_overrides(&machine, &process);
+
+    assert_eq!(overrides["before_layer_change_gcode"], ";G92 E0.0\nG92 E0");
+}
+
+#[test]
+fn absolute_e_profile_removes_active_layer_reset() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "use_relative_e_distances": "0"
+    }))
+    .unwrap();
+    let process = serde_json::from_value(serde_json::json!({
+        "before_layer_change_gcode": ";before\nG92 E0\n;after"
+    }))
+    .unwrap();
+
+    let overrides = smoke_case_overrides(&machine, &process);
+
+    assert_eq!(overrides["before_layer_change_gcode"], ";before\n;after");
+}
+
+#[test]
+fn scalar_standalone_orca_range_failure_is_clamped() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "retraction_distances_when_cut": "30"
+    }))
+    .unwrap();
+
+    let overrides = smoke_case_overrides(&machine, &serde_json::Map::new());
+
+    assert_eq!(overrides["retraction_distances_when_cut"], "18");
+}
+
+#[test]
 fn smoke_overrides_clear_cli_unsafe_bed_exclusion() {
     let overrides = smoke_overrides();
     assert_eq!(

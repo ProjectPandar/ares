@@ -29,6 +29,11 @@ fn orca_parity_afinia_hs_06_smoke() {
 }
 
 #[test]
+fn orca_parity_kobra_max_smoke() {
+    assert_printer_smoke("Anycubic", "Anycubic Kobra Max 0.4 nozzle");
+}
+
+#[test]
 fn orca_parity_artillery_x3_pro_smoke() {
     assert_printer_smoke("Artillery", "Artillery Sidewinder X3 Pro 0.4 nozzle");
 }

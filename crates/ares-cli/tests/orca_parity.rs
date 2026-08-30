@@ -227,16 +227,18 @@ fn smoke_case_overrides(
     let mut overrides = smoke_overrides();
     let relative_e = machine
         .get("use_relative_e_distances")
-        .is_some_and(|value| value.as_str() == Some("1") || value.as_bool() == Some(true));
+        .is_none_or(option_true);
     let before = process
         .get("before_layer_change_gcode")
+        .or_else(|| machine.get("before_layer_change_gcode"))
         .and_then(Value::as_str)
         .unwrap_or_default();
     let layer = process
         .get("layer_change_gcode")
+        .or_else(|| machine.get("layer_change_gcode"))
         .and_then(Value::as_str)
         .unwrap_or_default();
-    if relative_e && !before.contains("G92 E0") && !layer.contains("G92 E0") {
+    if relative_e && !contains_active_reset(before) && !contains_active_reset(layer) {
         let separator = if before.is_empty() || before.ends_with('\n') {
             ""
         } else {
@@ -246,6 +248,33 @@ fn smoke_case_overrides(
             "before_layer_change_gcode".to_owned(),
             Value::String(format!("{before}{separator}G92 E0")),
         );
+    } else if !relative_e {
+        if let Some(normalized) = without_active_reset(before) {
+            overrides.insert(
+                "before_layer_change_gcode".to_owned(),
+                Value::String(normalized),
+            );
+        }
+        if let Some(normalized) = without_active_reset(layer) {
+            overrides.insert("layer_change_gcode".to_owned(), Value::String(normalized));
+        }
+    }
+
+    fn contains_active_reset(template: &str) -> bool {
+        template.lines().any(|line| {
+        let mut words = line.split(';').next().unwrap_or_default().split_whitespace();
+        matches!((words.next(), words.next(), words.next()), (Some("G92"), Some(value), None) if value.strip_prefix('E').and_then(|value| value.parse::<f64>().ok()) == Some(0.0))
+    })
+    }
+
+    fn without_active_reset(template: &str) -> Option<String> {
+        contains_active_reset(template).then(|| {
+            template
+                .lines()
+                .filter(|line| !contains_active_reset(line))
+                .collect::<Vec<_>>()
+                .join("\n")
+        })
     }
     if let Some(value) = clamp_vector(machine, "retraction_distances_when_cut", 10.0, 18.0) {
         overrides.insert("retraction_distances_when_cut".to_owned(), value);
@@ -256,7 +285,10 @@ fn smoke_case_overrides(
     if machine
         .get("use_firmware_retraction")
         .is_some_and(option_true)
-        && process.get("wipe").is_some_and(option_true)
+        && process
+            .get("wipe")
+            .or_else(|| machine.get("wipe"))
+            .is_some_and(option_true)
     {
         overrides.insert(
             "use_firmware_retraction".to_owned(),
@@ -327,26 +359,35 @@ fn clamp_vector(
     minimum: f64,
     maximum: f64,
 ) -> Option<Value> {
-    let Value::Array(values) = fields.get(key)? else {
-        return None;
+    let value = fields.get(key)?;
+    match value {
+        Value::Array(values) => {
+            let mut changed = false;
+            let values = values
+                .iter()
+                .map(|value| clamp_number(value, minimum, maximum, &mut changed))
+                .collect();
+            changed.then_some(Value::Array(values))
+        }
+        value => {
+            let mut changed = false;
+            let value = clamp_number(value, minimum, maximum, &mut changed);
+            changed.then_some(value)
+        }
+    }
+}
+
+fn clamp_number(value: &Value, minimum: f64, maximum: f64, changed: &mut bool) -> Value {
+    let Some(number) = first_number(value) else {
+        return value.clone();
     };
-    let mut changed = false;
-    let values = values
-        .iter()
-        .map(|value| {
-            let Some(number) = first_number(value) else {
-                return value.clone();
-            };
-            let clamped = number.clamp(minimum, maximum);
-            changed |= clamped != number;
-            Value::String(if clamped.fract() == 0.0 {
-                format!("{clamped:.0}")
-            } else {
-                clamped.to_string()
-            })
-        })
-        .collect();
-    changed.then_some(Value::Array(values))
+    let clamped = number.clamp(minimum, maximum);
+    *changed |= clamped != number;
+    Value::String(if clamped.fract() == 0.0 {
+        format!("{clamped:.0}")
+    } else {
+        clamped.to_string()
+    })
 }
 
 pub(crate) fn vendors(root: &std::path::Path) -> Vec<String> {
