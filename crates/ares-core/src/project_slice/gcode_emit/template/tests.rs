@@ -8,8 +8,12 @@ fn renderer_distinguishes_option_and_expression_booleans() {
     config.insert("disabled", super::super::value::Value::option_bool(false));
 
     assert_eq!(
-        render("{enabled} {disabled} {enabled == 1}", &mut config).unwrap(),
-        "1 0 true"
+        render(
+            "[enabled] [disabled] {enabled} {disabled} {enabled == 1}",
+            &mut config,
+        )
+        .unwrap(),
+        "1 0 true false true"
     );
 }
 

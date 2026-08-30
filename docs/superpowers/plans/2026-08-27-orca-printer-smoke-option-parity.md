@@ -1399,6 +1399,11 @@ longer parsed/re-written as layer motion: iQ retains every literal `F9000` and
 advances to travel geometry. The public repeated-feed test, three stable smokes,
 KSR, clippy, and fmt pass.
 
+OptionBool is now a tagged runtime value: legacy square substitution renders
+`0/1`, while curly expression evaluation renders `false/true`. This simultaneously
+matches Snapmaker Dual (`has_wipe_tower: 0`, `T0: true`) and Elegoo Centauri
+(`enable_pressure_advance:false`). KSR/clippy/fmt pass.
+
 NEXT: sweep these placeholder/cooling-boundary fixes, then correct scaled
 Clipper endpoint precision / limited-hook direction and continue postamble
 geometry/lifecycle.

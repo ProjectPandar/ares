@@ -6,6 +6,7 @@ pub(super) enum Value {
     Number(f64),
     String(String),
     List(Vec<Value>),
+    OptionBool(bool),
     Bool(bool),
 }
 
@@ -15,7 +16,7 @@ impl Value {
     }
 
     pub(super) fn option_bool(value: bool) -> Self {
-        Self::Integer(i64::from(value))
+        Self::OptionBool(value)
     }
 
     pub(super) fn scalar(&self) -> &Self {
@@ -38,9 +39,11 @@ impl Value {
     pub(super) fn iter_list(&self) -> std::slice::Iter<'_, Self> {
         match self {
             Self::List(values) => values.iter(),
-            scalar @ (Self::Integer(_) | Self::Number(_) | Self::String(_) | Self::Bool(_)) => {
-                std::slice::from_ref(scalar).iter()
-            }
+            scalar @ (Self::Integer(_)
+            | Self::Number(_)
+            | Self::String(_)
+            | Self::OptionBool(_)
+            | Self::Bool(_)) => std::slice::from_ref(scalar).iter(),
         }
     }
 
@@ -48,7 +51,7 @@ impl Value {
         match self.scalar() {
             Self::Integer(value) => Some(*value as f64),
             Self::Number(value) => Some(*value),
-            Self::Bool(value) => Some(f64::from(*value)),
+            Self::OptionBool(value) | Self::Bool(value) => Some(f64::from(*value)),
             Self::String(value) => value.parse().ok(),
             Self::List(_) => None,
         }
@@ -57,14 +60,14 @@ impl Value {
     pub(super) fn as_integer(&self) -> Option<i64> {
         match self.scalar() {
             Self::Integer(value) => Some(*value),
-            Self::Bool(value) => Some(i64::from(*value)),
+            Self::OptionBool(value) | Self::Bool(value) => Some(i64::from(*value)),
             _ => None,
         }
     }
 
     pub(super) fn as_bool(&self) -> bool {
         match self.scalar() {
-            Self::Bool(value) => *value,
+            Self::OptionBool(value) | Self::Bool(value) => *value,
             Self::Integer(value) => *value != 0,
             Self::Number(value) => *value != 0.0,
             Self::String(value) => !value.is_empty(),
@@ -78,12 +81,19 @@ impl Value {
             Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
             Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
-            Self::Bool(value) => value.to_string(),
+            Self::OptionBool(value) | Self::Bool(value) => value.to_string(),
             Self::List(values) => values
                 .iter()
                 .map(Self::as_string)
                 .collect::<Vec<_>>()
                 .join(","),
+        }
+    }
+
+    pub(super) fn as_legacy_string(&self) -> String {
+        match self.scalar() {
+            Self::OptionBool(value) => i64::from(*value).to_string(),
+            value => value.as_string(),
         }
     }
 }

@@ -189,7 +189,7 @@ fn insert_runtime_placeholders(
         "is_extruder_used",
         Value::List(
             (0..usage_len)
-                .map(|index| Value::Bool(used.contains(&index)))
+                .map(|index| Value::option_bool(used.contains(&index)))
                 .collect(),
         ),
     );

@@ -254,7 +254,12 @@ fn render_text(text: &str, config: &mut Config) -> Result<String, String> {
         }
         let value =
             evaluate(expression, config).map_err(|error| format!("{error} in {expression}"))?;
-        let rendered = value.index(0).unwrap_or(&value).as_string();
+        let value = value.index(0).unwrap_or(&value);
+        let rendered = if delimiter == '[' {
+            value.as_legacy_string()
+        } else {
+            value.as_string()
+        };
         output.push_str(&rendered);
         index = expression_start + relative_end + 1;
     }
