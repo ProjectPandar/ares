@@ -57,6 +57,27 @@ fn equal_speed_ignores_start_and_reasserts_base_fan_at_end() {
 }
 
 #[test]
+fn closed_layer_reasserts_baseline_when_overhang_region_ends() {
+    let mut state = EmitState {
+        options: MotionOptions {
+            enable_overhang_bridge_fan: true,
+            overhang_fan_speed: 100,
+            overhang_fan_threshold: crate::RawOverhangFanThreshold::Percent0,
+            close_fan_first_layers: 1,
+            ..MotionOptions::default()
+        },
+        layer_index: 0,
+        ..EmitState::default()
+    };
+    let mut output = Vec::new();
+
+    update_for_constant_path(&mut output, properties("Outer wall"), &mut state);
+    update_for_constant_path(&mut output, properties("Bottom surface"), &mut state);
+
+    assert_eq!(output, b";__ARES_ROLE_FAN_BASE__\n");
+}
+
+#[test]
 fn faster_overhang_fan_activates_for_variable_segment() {
     let mut state = EmitState {
         options: MotionOptions {

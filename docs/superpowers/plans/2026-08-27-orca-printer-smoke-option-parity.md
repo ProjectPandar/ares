@@ -1438,5 +1438,11 @@ First-layer speed classes now match `GCode.cpp:6515-6604`: perimeter roles use
 Comgrow Brim is F3600 instead of F1800; focused speed test, KSR, clippy, and fmt
 pass.
 
+Closed cooling layers now still emit the upstream baseline-resume command when
+an overhang role ends: START is suppressed below `close_fan_first_layers`, but
+END produces the forced base marker. Snapmaker now emits the expected `M106 S0`
+before Bottom surface; RED/GREEN role test, KSR, stable smokes, clippy, and fmt
+pass.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue lifecycle, Qidi support-layer timelapse, and postamble geometry.

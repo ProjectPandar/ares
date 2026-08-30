@@ -110,9 +110,13 @@ fn set_marker_state(state: &mut EmitState, marker: FanMarker, active: bool) {
 fn deferred_target(state: &EmitState) -> Option<super::super::cooling::DeferredRoleFan> {
     use super::super::cooling::DeferredRoleFan;
 
-    if !state.options.enable_overhang_bridge_fan
-        || state.layer_index < state.options.close_fan_first_layers
-    {
+    if !state.options.enable_overhang_bridge_fan {
+        return None;
+    }
+    if !state.overhang_fan_active && !state.internal_bridge_fan_active {
+        return Some(DeferredRoleFan::Baseline);
+    }
+    if state.layer_index < state.options.close_fan_first_layers {
         return None;
     }
     let overhang_speed = overhang_speed(state);
