@@ -1794,5 +1794,10 @@ the GCodeWriter fallback for steep Slope travel. Both machine/filament Slope
 option layer-2 travel sequences are exact (12); KSR, smoke, clippy, and fmt
 pass.
 
+Standalone smoke filament normalization now materializes nullable
+`filament_flush_temp` nil entries to its PrintConfig default 0. Anycubic Kobra
+S1 Max 0.25 moves from Orca range error to full semantic PASS and is retained
+as a focused smoke; normalization test, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

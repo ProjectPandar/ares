@@ -18,6 +18,27 @@ pub(crate) fn smoke_overrides() -> Map<String, Value> {
     overrides
 }
 
+pub(crate) fn normalize_filament_defaults(filaments: &mut [Map<String, Value>]) {
+    for filament in filaments {
+        let Some(value) = filament.get_mut("filament_flush_temp") else {
+            continue;
+        };
+        if let Value::Array(values) = value {
+            for value in values {
+                normalize_flush_value(value);
+            }
+        } else {
+            normalize_flush_value(value);
+        }
+    }
+}
+
+fn normalize_flush_value(value: &mut Value) {
+    if value.is_null() || value.as_str() == Some("nil") {
+        *value = Value::String("0".to_owned());
+    }
+}
+
 pub(crate) fn normalize_process_defaults(
     machine: &Map<String, Value>,
     process: &mut Map<String, Value>,

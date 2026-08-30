@@ -25,7 +25,7 @@ use presets::VendorProfiles;
 use runner::{CaseInputs, OrcaRunner};
 use serde_json::Value;
 pub(crate) use smoke_overrides::{
-    normalize_process_defaults, smoke_case_overrides, smoke_overrides,
+    normalize_filament_defaults, normalize_process_defaults, smoke_case_overrides, smoke_overrides,
 };
 
 use crate::runner::{OrcaRunner as Runner, ParityCase};
@@ -182,11 +182,12 @@ pub(crate) fn build_selection_case(
     let machine = profiles.machine(&selection.printer)?;
     let mut process = profiles.process(&selection.process)?;
     normalize_process_defaults(&machine, &mut process);
-    let filaments = selection
+    let mut filaments = selection
         .filaments
         .iter()
         .map(|name| profiles.filament(name))
         .collect::<Result<Vec<_>, _>>()?;
+    normalize_filament_defaults(&mut filaments);
     let label = format!("{}/{}", selection.vendor, selection.printer);
     let overrides = smoke_case_overrides(&machine, &process);
     runner.build_case(

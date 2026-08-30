@@ -1,6 +1,7 @@
 use super::VendorProfiles;
 use crate::{
-    normalize_process_defaults, runner, select_printer, smoke_case_overrides, smoke_overrides,
+    normalize_filament_defaults, normalize_process_defaults, runner, select_printer,
+    smoke_case_overrides, smoke_overrides,
 };
 
 fn profiles(vendor: &str) -> VendorProfiles {
@@ -121,6 +122,23 @@ fn absolute_e_profile_removes_active_layer_reset() {
     let overrides = smoke_case_overrides(&machine, &process);
 
     assert_eq!(overrides["before_layer_change_gcode"], ";before\n;after");
+}
+
+#[test]
+fn nullable_flush_temperature_is_materialized_for_standalone_orca() {
+    let mut filaments = vec![
+        serde_json::from_value(serde_json::json!({
+            "filament_flush_temp": [null, "nil", "220"]
+        }))
+        .unwrap(),
+    ];
+
+    normalize_filament_defaults(&mut filaments);
+
+    assert_eq!(
+        filaments[0]["filament_flush_temp"],
+        serde_json::json!(["0", "0", "220"])
+    );
 }
 
 #[test]
