@@ -330,6 +330,8 @@ fn emit_materialized_path(
         ExtrusionRole::OverhangPerimeter => "Overhang wall",
         ExtrusionRole::GapFill => "Gap infill",
         ExtrusionRole::SolidInfill => "Internal solid infill",
+        ExtrusionRole::TopSolidInfill => "Top surface",
+        ExtrusionRole::BottomSurface => "Bottom surface",
     };
     path::emit(
         output,

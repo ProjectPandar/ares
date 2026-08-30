@@ -49,6 +49,7 @@ pub(super) fn validate(
         ProcessInfillPattern::Monotonic
             | ProcessInfillPattern::MonotonicLine
             | ProcessInfillPattern::AlignedRectilinear
+            | ProcessInfillPattern::Concentric
             | ProcessInfillPattern::HilbertCurve
             | ProcessInfillPattern::ArchimedeanChords
             | ProcessInfillPattern::OctagramSpiral
@@ -60,6 +61,7 @@ pub(super) fn validate(
         ProcessInfillPattern::Monotonic
             | ProcessInfillPattern::MonotonicLine
             | ProcessInfillPattern::AlignedRectilinear
+            | ProcessInfillPattern::Concentric
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::HilbertCurve
             | ProcessInfillPattern::ArchimedeanChords

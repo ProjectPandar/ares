@@ -1658,5 +1658,13 @@ filament usage exactly at 259.24 mm. Configuration moved into
 `gcode_emit/small_area.rs` to keep root at 386 LOC; focused test, KSR, clippy,
 and fmt pass.
 
+Configured Concentric now ports `FillConcentric.cpp`'s standard Arachne branch
+separately from ConcentricInternal: overlap/half-spacing offsets, normal
+min-length policy, sequential seam rotation, variable widths with the exact
+Bottom/Internal/Top roles, and residual-gap processing. All three option
+artifacts match Orca stats exactly (262.34/262.38/262.63 mm), with bottom moves
+byte-exact. Focused materialization/concentric tests, KSR, smokes, clippy, and
+fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

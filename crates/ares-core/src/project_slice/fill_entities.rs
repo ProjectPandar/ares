@@ -225,6 +225,14 @@ pub(in crate::project_slice) fn generate_layer(
             SurfaceFillPattern::ConcentricInternal => {
                 concentric::append(&mut output, fill, minimum_nozzle_diameter, traversal.scale)?;
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
+                concentric::append_configured(
+                    &mut output,
+                    fill,
+                    minimum_nozzle_diameter,
+                    traversal.scale,
+                )?;
+            }
             SurfaceFillPattern::Configured(_) => {}
         }
     }

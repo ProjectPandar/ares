@@ -168,7 +168,11 @@ fn assert_path_provenance(
         ExtrusionRole::Perimeter => 1,
         ExtrusionRole::OverhangPerimeter => 2,
         ExtrusionRole::GapFill => unreachable!("raw perimeter paths cannot be gap fill"),
-        ExtrusionRole::SolidInfill => unreachable!("raw perimeter paths cannot be solid infill"),
+        ExtrusionRole::SolidInfill
+        | ExtrusionRole::TopSolidInfill
+        | ExtrusionRole::BottomSurface => {
+            unreachable!("raw perimeter paths cannot be solid infill")
+        }
     }] = true;
     assert!(path.polyline.points.iter().all(|point| point.z == 0));
     if path.role == ExtrusionRole::OverhangPerimeter {
