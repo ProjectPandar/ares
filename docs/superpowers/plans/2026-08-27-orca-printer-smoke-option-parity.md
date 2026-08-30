@@ -1721,5 +1721,11 @@ flow. The previous union-shape bug produced literal width=0. Initial-layer and
 outer-wall min option artifacts now match Orca exactly at 262.91/262.34 mm;
 flow test, KSR, smokes, clippy, and fmt pass.
 
+Bridge-over-infill anchor projection now accepts Bottom and InternalBridge
+surface kinds produced by `dont_filter_internal_bridges=nofilter`; InternalVoid
+remains rejected. The nofilter option advances through the transaction and
+matches Orca filament usage at 262.34 mm. Focused transaction test, KSR, smokes,
+clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

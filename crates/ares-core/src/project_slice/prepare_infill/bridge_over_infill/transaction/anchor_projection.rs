@@ -90,7 +90,9 @@ pub(super) fn validate(
     if surfaces.iter().any(|surface| {
         !matches!(
             surface.as_parts().0,
-            RegionSurfaceKind::BottomBridge
+            RegionSurfaceKind::Bottom
+                | RegionSurfaceKind::BottomBridge
+                | RegionSurfaceKind::InternalBridge
                 | RegionSurfaceKind::InternalSolid
                 | RegionSurfaceKind::Top
                 | RegionSurfaceKind::Internal

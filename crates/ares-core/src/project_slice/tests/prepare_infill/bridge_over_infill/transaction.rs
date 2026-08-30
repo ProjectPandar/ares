@@ -14,6 +14,22 @@ mod options;
 mod plane_path_preflight;
 
 #[test]
+fn task22o71_internal_bridge_anchor_surface_is_supported() {
+    let mut raw = super::prepare(KsrArchive::new());
+    let surfaces = &mut raw.predecessor.predecessor.objects[0].records[14]
+        .as_mut()
+        .unwrap()
+        .fill_surfaces;
+    for kind in [RegionSurfaceKind::Bottom, RegionSurfaceKind::InternalBridge] {
+        surfaces.push(surfaces[0].clone_with_kind(kind));
+    }
+
+    let prepared = transaction::prepare(raw).unwrap();
+
+    transaction::dispose(prepared);
+}
+
+#[test]
 fn task22o71_real_ksr_commits_first_internal_bridge_layer() {
     let raw = super::prepare(KsrArchive::new());
     assert!(raw.objects[0].surfaces_by_layer.contains_key(&15));
@@ -104,19 +120,13 @@ fn task22o71_nofilter_empty_candidate_accepts_an_absent_lower_record() {
 
 #[test]
 fn task22o71_unported_anchor_surface_kinds_fail_without_panicking_or_fallback() {
-    for kind in [
-        RegionSurfaceKind::Bottom,
-        RegionSurfaceKind::InternalBridge,
-        RegionSurfaceKind::InternalVoid,
-    ] {
-        let mut raw = super::prepare(KsrArchive::new());
-        let surfaces = &mut raw.predecessor.predecessor.objects[0].records[14]
-            .as_mut()
-            .unwrap()
-            .fill_surfaces;
-        surfaces.push(surfaces[0].clone_with_kind(kind));
-        assert_unsupported_raw(raw, "bridge_over_infill_anchor_surface_kind");
-    }
+    let mut raw = super::prepare(KsrArchive::new());
+    let surfaces = &mut raw.predecessor.predecessor.objects[0].records[14]
+        .as_mut()
+        .unwrap()
+        .fill_surfaces;
+    surfaces.push(surfaces[0].clone_with_kind(RegionSurfaceKind::InternalVoid));
+    assert_unsupported_raw(raw, "bridge_over_infill_anchor_surface_kind");
 }
 
 #[test]
