@@ -1672,5 +1672,11 @@ internal_bridge_density, retaining bridge dont-adjust behavior. The 10% internal
 case matches Orca at 255.90 mm; projection test, KSR, smokes, clippy, and fmt
 pass.
 
+Rectilinear partial-density line spacing now follows
+`FillRectilinear.cpp:2768`: scale the original double flow spacing, divide by
+the promoted f32 density, then truncate; it no longer rounds spacing to coord_t
+first. This removes the 1um grid drift: seeded Top and Bottom density paths and
+stats are byte-exact. Arithmetic test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

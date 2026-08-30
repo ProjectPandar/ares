@@ -1,7 +1,8 @@
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 
 use super::super::{
-    MonotonicFillParams, fast_round_up, fill_monotonic_surface, surface::scaled_offsets,
+    MonotonicFillParams, fast_round_up, fill_monotonic_surface,
+    surface::{scaled_line_spacing, scaled_offsets},
 };
 
 fn scaled_rectangle() -> ExPolygon {
@@ -31,6 +32,16 @@ fn params() -> MonotonicFillParams {
         anchor_length_max: 1_000.0,
         link_max_length: 0.6,
     }
+}
+
+#[test]
+fn partial_density_scales_unrounded_flow_spacing_before_division() {
+    let spacing = 0.4 - 0.2 * (1.0 - 0.25 * std::f64::consts::PI);
+
+    assert_eq!(
+        scaled_line_spacing(spacing, 0.348_609_f32, CoordinateScale::Normal),
+        1_024_298
+    );
 }
 
 #[test]

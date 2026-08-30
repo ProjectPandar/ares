@@ -44,8 +44,7 @@ pub(crate) fn fill_monotonic_surface(
     }
     let (source_minimum_x, maximum_x) = x_bounds(&slice.source);
     let source_width = maximum_x - source_minimum_x;
-    let nominal = checked_scale(scale, params.spacing)?;
-    let mut line_spacing = (nominal as f32 / params.density) as i64;
+    let mut line_spacing = scaled_line_spacing(params.spacing, params.density, scale);
     let full_infill = params.density > 0.9999;
     let minimum_x = if full_infill && !params.dont_adjust {
         line_spacing = adjust_solid_spacing(source_width, line_spacing);
@@ -92,6 +91,10 @@ pub(crate) fn fill_monotonic_surface(
         polylines,
         spacing: flow_spacing,
     })
+}
+
+pub(super) fn scaled_line_spacing(spacing: f64, density: f32, scale: CoordinateScale) -> i64 {
+    (spacing / scale.factor() / f64::from(density)) as i64
 }
 
 fn infill_direction(params: MonotonicFillParams) -> f32 {
