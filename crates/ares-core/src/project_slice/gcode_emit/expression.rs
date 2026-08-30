@@ -313,6 +313,9 @@ fn function(name: &str, args: Vec<Value>, config: &Config) -> Result<Value, Stri
             .reduce(f64::max)
             .map(Value::Number)
             .ok_or("max requires an argument".to_owned()),
+        "int" if numbers.len() == 1 => Ok(Value::Number(numbers[0].trunc())),
+        "round" if numbers.len() == 1 => Ok(Value::Number(numbers[0].round())),
+        "floor" if numbers.len() == 1 => Ok(Value::Number(numbers[0].floor())),
         "ceil" if numbers.len() == 1 => Ok(Value::Number(numbers[0].ceil())),
         "random" if numbers.len() == 2 && numbers[0] <= numbers[1] => {
             let unit = config.random_unit();

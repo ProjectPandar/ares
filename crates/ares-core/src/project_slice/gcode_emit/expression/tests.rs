@@ -29,6 +29,26 @@ fn expression_supports_indexing_arithmetic_and_functions() {
 }
 
 #[test]
+fn numeric_conversion_functions_match_placeholder_parser() {
+    assert_eq!(
+        evaluate("int(2.9)", &config()).unwrap().as_number(),
+        Some(2.0)
+    );
+    assert_eq!(
+        evaluate("int(-2.9)", &config()).unwrap().as_number(),
+        Some(-2.0)
+    );
+    assert_eq!(
+        evaluate("round(2.5)", &config()).unwrap().as_number(),
+        Some(3.0)
+    );
+    assert_eq!(
+        evaluate("floor(-2.1)", &config()).unwrap().as_number(),
+        Some(-3.0)
+    );
+}
+
+#[test]
 fn vector_identifier_uses_first_value_without_an_explicit_index() {
     assert!(evaluate("values == 3", &config()).unwrap().as_bool());
 }

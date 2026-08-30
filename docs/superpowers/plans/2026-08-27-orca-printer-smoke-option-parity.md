@@ -1589,5 +1589,10 @@ compare XY only, so the compensated Z transform reaches layer planning and mesh
 intersection. The 150% case matches Orca filament usage exactly at 201.89 mm;
 transform tests, KSR, focused smokes, clippy, and fmt pass.
 
+Placeholder expressions now port Orca's active unary numeric conversions:
+`int` truncates toward zero and round/floor/ceil preserve their source
+semantics. Anycubic Kobra S1 Max advances from template ARES_ERROR to real
+travel geometry; focused conversion tests, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
