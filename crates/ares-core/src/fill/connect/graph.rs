@@ -9,7 +9,7 @@ use super::{
 };
 use crate::geometry::{
     BoundingBox, ClipperError, CoordinateScale, EdgeGrid, Point, Polygon, Polyline,
-    fixed_msvc_sort_by,
+    fixed_gcc_sort_by,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -97,7 +97,7 @@ fn endpoint_hits(
 }
 
 pub(super) fn sort_endpoint_hits(hits: &mut [EndpointHit]) {
-    fixed_msvc_sort_by(hits, |left, right| {
+    fixed_gcc_sort_by(hits, |left, right| {
         left.contour_index < right.contour_index
             || (left.contour_index == right.contour_index
                 && (left.segment_index < right.segment_index

@@ -6,7 +6,7 @@ use super::{
     },
     types::{Arc, WorkingGraph},
 };
-use crate::geometry::{Point, Polyline, fixed_msvc_sort_by};
+use crate::geometry::{Point, Polyline, fixed_gcc_sort_by};
 
 #[expect(
     clippy::too_many_arguments,
@@ -45,7 +45,7 @@ pub(super) fn apply_connections(
 }
 
 pub(super) fn sort_arcs(arcs: &mut [Arc]) {
-    fixed_msvc_sort_by(arcs, |left, right| left.length < right.length);
+    fixed_gcc_sort_by(arcs, |left, right| left.length < right.length);
 }
 
 fn collect_arcs(graph: &WorkingGraph, dont_sort: bool) -> Vec<Arc> {
