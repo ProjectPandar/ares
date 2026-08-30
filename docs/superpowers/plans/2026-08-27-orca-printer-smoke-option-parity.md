@@ -1745,5 +1745,11 @@ multi-part objects remain explicitly unsupported until cross-region surface
 detection is ported. The true option matches Orca at 262.34 mm and completes
 KSR output; focused output test, KSR, smokes, clippy, and fmt pass.
 
+A zero-width Painted brim is now treated as the inactive upstream
+configuration instead of rejected; no painted-ear geometry exists to emit in
+the cube fixture. The painted option matches Orca at 262.34 mm while nonzero
+painted behavior remains outside the current Brim slice. Candidate test, KSR,
+smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

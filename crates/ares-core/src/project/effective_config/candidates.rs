@@ -1,6 +1,5 @@
 use crate::{
-    ObjectOptions, ProcessBrimType, ProjectObject, ProjectSettings, ProjectVolumeType,
-    RegionOptions, SliceError,
+    ObjectOptions, ProjectObject, ProjectSettings, ProjectVolumeType, RegionOptions, SliceError,
     options::{RegionBase, RegionOptionOverrides, RegionOverrideSources},
 };
 
@@ -33,7 +32,7 @@ pub(crate) fn resolve_project_objects(
                 object.object_overrides(),
                 validated.logical_filament_count,
             );
-            reject_unsupported_object_sources(object, &object_options)?;
+            reject_unsupported_object_sources(object)?;
             Ok(ResolvedProjectObject {
                 source_object_index: groups.source_object_index,
                 object: object_options,
@@ -135,15 +134,7 @@ pub(crate) fn resolve_project_candidates(
     Ok(resolved)
 }
 
-fn reject_unsupported_object_sources(
-    object: &ProjectObject,
-    resolved: &ObjectOptions,
-) -> Result<(), SliceError> {
-    if resolved.brim_type == ProcessBrimType::Painted && resolved.brim_width.0 == 0.0 {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "brim_type".to_owned(),
-        ));
-    }
+fn reject_unsupported_object_sources(object: &ProjectObject) -> Result<(), SliceError> {
     for volume in object
         .volumes()
         .iter()

@@ -236,12 +236,8 @@ fn usage_affecting_modifier_keys_are_rejected_in_fixed_order() {
 }
 
 #[test] #[rustfmt::skip]
-fn only_zero_width_painted_brim_is_rejected() {
-    let bad = object_with_brim(ProcessBrimType::Painted, 0.0);
-    assert_eq!(
-        resolve(&settings(), &[bad]).unwrap_err(),
-        SliceError::UnsupportedProjectFeature("brim_type".to_owned())
-    );
+fn zero_width_painted_brim_is_an_inactive_configuration() {
+    assert!(resolve(&settings(), &[object_with_brim(ProcessBrimType::Painted, 0.0)]).is_ok());
     assert!(resolve(&settings(), &[object_with_brim(ProcessBrimType::Painted, 1.0)]).is_ok());
     assert!(resolve(&settings(), &[object_with_brim(ProcessBrimType::AutoBrim, 0.0)]).is_ok());
 }
