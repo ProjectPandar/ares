@@ -1,4 +1,35 @@
 #[tokio::test]
+async fn non_bbl_timelapse_runs_between_before_and_after_layer_gcode() {
+    const SETTINGS: &str = "Metadata/project_settings.config";
+    let mut archive = crate::project_slice::tests::support::KsrArchive::new();
+    let mut settings: serde_json::Value =
+        serde_json::from_str(&archive.entry_text(SETTINGS)).unwrap();
+    settings["printer_model"] = serde_json::json!("Qidi Q1 Pro");
+    settings["printer_structure"] = serde_json::json!("undefine");
+    settings["before_layer_change_gcode"] = serde_json::json!(";BEFORE");
+    settings["layer_change_gcode"] = serde_json::json!(";AFTER");
+    settings["time_lapse_gcode"] = serde_json::json!(";TIMELAPSE");
+    archive.insert_text(SETTINGS, &serde_json::to_string(&settings).unwrap());
+
+    let output = crate::slice_project(
+        &archive.bytes(),
+        crate::project_slice::tests::support::metadata(),
+    )
+    .await
+    .unwrap();
+    let lines = std::str::from_utf8(&output)
+        .unwrap()
+        .lines()
+        .collect::<Vec<_>>();
+    let before = lines.iter().position(|line| *line == ";BEFORE").unwrap();
+    let timelapse = lines.iter().position(|line| *line == ";TIMELAPSE").unwrap();
+    let after = lines.iter().position(|line| *line == ";AFTER").unwrap();
+
+    assert!(before < timelapse);
+    assert!(timelapse < after);
+}
+
+#[tokio::test]
 async fn traditional_timelapse_runs_between_perimeters_and_infill() {
     const SETTINGS: &str = "Metadata/project_settings.config";
     let mut archive = crate::project_slice::tests::support::KsrArchive::new();

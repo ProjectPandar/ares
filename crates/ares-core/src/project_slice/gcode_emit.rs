@@ -155,6 +155,18 @@ pub(super) fn emit(
                 tags.height(&format_processor_float(f64::from(layer_height))),
             );
             output.extend_from_slice(header.as_bytes());
+            let timelapse_context = timelapse::Context {
+                traversal,
+                layer: timelapse::TimelapseLayer {
+                    index: layer_index,
+                    z: f64::from(layer_z),
+                    max_z: f64::from(layer_z),
+                },
+                metadata,
+                first_layer_bounds,
+            };
+            let timelapse_at_layer_change =
+                !tags.is_bbl() && !runtime_gcode.time_lapse_gcode.0.is_empty();
             layer_gcode::append_before_layer_change_gcode(
                 &mut output,
                 traversal,
@@ -169,6 +181,9 @@ pub(super) fn emit(
             motion::append_exclude_end(&mut output, &mut state);
             if layer_index == 0 {
                 motion::retract_before_layer(&mut output, &mut state);
+            }
+            if timelapse_at_layer_change {
+                timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
             }
             layer_gcode::append_layer_change(
                 &mut output,
@@ -235,16 +250,6 @@ pub(super) fn emit(
             if let Some(labels) = &labels {
                 labels.queue_start(&mut output, &mut state, emit_labels);
             }
-            let timelapse_context = timelapse::Context {
-                traversal,
-                layer: timelapse::TimelapseLayer {
-                    index: layer_index,
-                    z: f64::from(layer_z),
-                    max_z: f64::from(layer_z),
-                },
-                metadata,
-                first_layer_bounds,
-            };
             let timelapse_inserted =
                 motion::emit_layer(&mut output, layer, geometry, &mut state, |output, state| {
                     timelapse::append_traditional(
@@ -261,7 +266,7 @@ pub(super) fn emit(
             } else {
                 motion::end_layer_for_timelapse(&mut output, &mut state);
             }
-            if !timelapse_inserted {
+            if !timelapse_inserted && !timelapse_at_layer_change {
                 timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
             }
             cooling.finish_layer(&mut output, layer_output_start);

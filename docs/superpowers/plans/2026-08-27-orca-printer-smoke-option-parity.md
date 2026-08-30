@@ -1486,5 +1486,11 @@ and no domain remains UNBOUNDED. The same 65 value-bearing domains remain red;
 the summary now exposes only real implementation/upstream-invalid failures,
 not coverage omissions.
 
+Non-BBL `time_lapse_gcode` now follows `GCode.cpp:4667-4683`: it renders after
+change-layer/retraction state and before `layer_change_gcode`, while BBL/I3
+traditional interludes remain at perimeter→infill. Qidi Q1 Pro advances past
+all control ordering to internal-solid geometry. Both public ordering tests,
+KSR, clippy, and fmt pass.
+
 NEXT: reduce the 65 known value-case failures; in parallel continue Clipper
-precision, lifecycle/Qidi, and postamble work.
+precision, lifecycle, and postamble work.
