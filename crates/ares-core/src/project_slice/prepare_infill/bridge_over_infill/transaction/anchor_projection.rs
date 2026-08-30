@@ -34,9 +34,6 @@ pub(super) fn validate(
     if options.sparse_infill_density.0 <= 0.0 {
         return unsupported("sparse_infill_density");
     }
-    if options.top_surface_density.0 <= 0.0 {
-        return unsupported("top_surface_density");
-    }
     if !options.sparse_infill_rotate_template.0.is_empty()
         && simple_rotation_angle(&options.sparse_infill_rotate_template.0, 0).is_none()
     {

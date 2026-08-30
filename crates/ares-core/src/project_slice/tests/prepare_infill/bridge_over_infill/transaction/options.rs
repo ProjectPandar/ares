@@ -100,12 +100,7 @@ fn task22o71_adaptive_pattern_on_an_empty_object_is_a_noop() {
 }
 
 #[test]
-fn task22o71_unported_anchor_density_and_lengths_fail_without_fallback() {
-    assert_unsupported_mutation(
-        "\"top_surface_density\": \"100%\"",
-        "\"top_surface_density\": \"0%\"",
-        "top_surface_density",
-    );
+fn task22o71_unported_anchor_lengths_fail_without_fallback() {
     assert_unsupported_mutation(
         "\"infill_anchor_max\": \"20\"",
         "\"infill_anchor_max\": \"0\"",
@@ -116,6 +111,20 @@ fn task22o71_unported_anchor_density_and_lengths_fail_without_fallback() {
         "\"infill_anchor\": \"-1\"",
         "infill_anchor",
     );
+}
+
+#[test]
+fn task22o71_zero_top_density_reaches_empty_fill_grouping() {
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
+        "\"top_surface_density\": \"100%\"",
+        "\"top_surface_density\": \"0%\"",
+    );
+
+    let prepared = transaction::prepare(super::super::prepare(archive)).unwrap();
+
+    transaction::dispose(prepared);
 }
 
 #[test]

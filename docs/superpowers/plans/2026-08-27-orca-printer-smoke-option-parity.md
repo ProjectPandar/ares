@@ -1600,5 +1600,10 @@ for CrossHatch, Gyroid, and rectilinear-family generators. The obsolete gate is
 removed; max=10 matches Orca at 336.65 mm and the sampled sparse motions are
 byte-exact. Offset/transaction tests, KSR, smokes, clippy, and fmt pass.
 
+`top_surface_density=0` now reaches existing empty fill grouping instead of an
+obsolete bridge-anchor preflight gate, matching `Fill.cpp` no-top-fill behavior.
+The min case emits no Top surface and matches Orca filament usage exactly at
+256.59 mm; transaction test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
