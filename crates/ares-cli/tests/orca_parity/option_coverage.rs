@@ -47,6 +47,8 @@ fn orca_parity_option_coverage() {
             continue;
         }
         let mut first_failure = None;
+        let mut compared = 0;
+        let mut rejected = Vec::new();
         for case in &plan.cases {
             let mut case_machine = machine.clone();
             let mut case_process = process.clone();
@@ -75,15 +77,27 @@ fn orca_parity_option_coverage() {
                 &runner::repo_root().join("tests/parity/cube10.stl"),
             );
             let outcome = match built {
-                Ok(case) => parity::compare_case(&case),
-                Err(error) => parity::ares_error(&label, error),
+                Ok(case) => {
+                    compared += 1;
+                    parity::compare_case(&case)
+                }
+                Err(error) => {
+                    rejected.push(format!("{}: {error}", case.label));
+                    eprintln!("[option] UPSTREAM_REJECTED {label}");
+                    continue;
+                }
             };
             eprintln!("[option] {} {}", outcome.status, label);
             if outcome.status != "PASS" && first_failure.is_none() {
                 first_failure = Some(format!("{}: {}", case.label, outcome.detail));
             }
         }
-        outcomes.push(OptionOutcome::executed(plan, first_failure));
+        outcomes.push(OptionOutcome::executed(
+            plan,
+            compared,
+            rejected,
+            first_failure,
+        ));
     }
     write_summary(&outcomes);
     let failures = outcomes
@@ -145,31 +159,56 @@ struct OptionOutcome {
     option_type: String,
     source: String,
     cases: usize,
+    compared: usize,
+    rejected: usize,
     status: &'static str,
     detail: String,
 }
 
 impl OptionOutcome {
-    fn executed(plan: &domains::OptionPlan, failure: Option<String>) -> Self {
-        let (status, detail) = failure.map_or(("PASS", String::new()), |detail| ("FAIL", detail));
-        Self::new(plan, plan.cases.len(), status, detail)
+    fn executed(
+        plan: &domains::OptionPlan,
+        compared: usize,
+        rejected: Vec<String>,
+        failure: Option<String>,
+    ) -> Self {
+        let (status, detail) = if let Some(detail) = failure {
+            ("FAIL", detail)
+        } else if compared == 0 {
+            ("REJECTED", rejected.join("; "))
+        } else {
+            ("PASS", rejected.join("; "))
+        };
+        Self::new(
+            plan,
+            (plan.cases.len(), compared, rejected.len()),
+            status,
+            detail,
+        )
     }
 
     fn omitted(plan: &domains::OptionPlan) -> Self {
         Self::new(
             plan,
-            0,
+            (0, 0, 0),
             "UNBOUNDED",
             plan.omission.unwrap_or_default().to_owned(),
         )
     }
 
-    fn new(plan: &domains::OptionPlan, cases: usize, status: &'static str, detail: String) -> Self {
+    fn new(
+        plan: &domains::OptionPlan,
+        counts: (usize, usize, usize),
+        status: &'static str,
+        detail: String,
+    ) -> Self {
         Self {
             key: plan.key.clone(),
             option_type: plan.option_type.clone(),
             source: plan.source.clone(),
-            cases,
+            cases: counts.0,
+            compared: counts.1,
+            rejected: counts.2,
             status,
             detail,
         }
@@ -186,8 +225,16 @@ fn write_summary(outcomes: &[OptionOutcome]) {
         .filter(|outcome| matches!(outcome.status, "PASS" | "FAIL"))
         .map(|outcome| outcome.cases)
         .sum::<usize>();
+    let compared_cases = outcomes
+        .iter()
+        .map(|outcome| outcome.compared)
+        .sum::<usize>();
+    let rejected_cases = outcomes
+        .iter()
+        .map(|outcome| outcome.rejected)
+        .sum::<usize>();
     let mut output = format!(
-        "# OrcaSlicer option coverage summary\n\n{pass} of {} executable option domains pass ({executed_cases} generated cases).\n\n| status | option | type | cases | upstream | first result |\n|---|---|---|---:|---|---|\n",
+        "# OrcaSlicer option coverage summary\n\n{pass} of {} executable option domains pass ({executed_cases} generated cases: {compared_cases} compared, {rejected_cases} rejected upstream).\n\n| status | option | type | cases | compared | rejected | upstream | first result |\n|---|---|---|---:|---:|---:|---|---|\n",
         outcomes
             .iter()
             .filter(|outcome| matches!(outcome.status, "PASS" | "FAIL"))
@@ -195,11 +242,13 @@ fn write_summary(outcomes: &[OptionOutcome]) {
     );
     for outcome in outcomes {
         output.push_str(&format!(
-            "| {} | {} | {} | {} | {} | {} |\n",
+            "| {} | {} | {} | {} | {} | {} | {} | {} |\n",
             outcome.status,
             outcome.key,
             outcome.option_type,
             outcome.cases,
+            outcome.compared,
+            outcome.rejected,
             outcome.source,
             outcome.detail.replace(['\n', '|'], " "),
         ));

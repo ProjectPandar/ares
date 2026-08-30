@@ -1,4 +1,4 @@
-use super::{domains, inject_case};
+use super::{OptionOutcome, domains, inject_case};
 use crate::runner;
 
 #[test]
@@ -61,6 +61,43 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
 }
 
 #[test]
+fn enum_domains_use_only_active_definition_values() {
+    let plans = domains::load(&runner::repo_root());
+    let values = |key: &str| {
+        plans
+            .iter()
+            .find(|plan| plan.key == key)
+            .unwrap()
+            .cases
+            .iter()
+            .map(|case| case.label.as_str())
+            .collect::<Vec<_>>()
+    };
+
+    assert_eq!(
+        values("bottom_surface_pattern"),
+        [
+            "alignedrectilinear",
+            "archimedeanchords",
+            "concentric",
+            "hilbertcurve",
+            "monotonic",
+            "monotonicline",
+            "octagramspiral",
+            "rectilinear",
+        ]
+    );
+    assert_eq!(
+        values("internal_solid_infill_pattern"),
+        values("bottom_surface_pattern")
+    );
+    assert_eq!(
+        values("gcode_flavor"),
+        ["klipper", "marlin", "marlin2", "repetier", "reprapfirmware"]
+    );
+}
+
+#[test]
 fn generated_cases_are_injected_into_inventory_owner() {
     let plans = domains::load(&runner::repo_root());
     for (key, target_index) in [
@@ -88,6 +125,26 @@ fn generated_cases_are_injected_into_inventory_owner() {
         let targets = [&machine, &process, &filaments[0]];
         assert!(targets[target_index].contains_key(key), "{key}");
     }
+}
+
+#[test]
+fn upstream_rejection_does_not_mask_compared_case_parity() {
+    let plan = domains::load(&runner::repo_root())
+        .into_iter()
+        .find(|plan| plan.key == "bridge_flow")
+        .unwrap();
+
+    let passing = OptionOutcome::executed(&plan, 2, vec!["min: rejected".to_owned()], None);
+    let failing = OptionOutcome::executed(
+        &plan,
+        2,
+        vec!["min: rejected".to_owned()],
+        Some("max: divergent".to_owned()),
+    );
+
+    assert_eq!(passing.status, "PASS");
+    assert_eq!((passing.compared, passing.rejected), (2, 1));
+    assert_eq!(failing.status, "FAIL");
 }
 
 #[test]

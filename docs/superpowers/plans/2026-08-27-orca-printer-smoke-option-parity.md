@@ -1605,5 +1605,12 @@ obsolete bridge-anchor preflight gate, matching `Fill.cpp` no-top-fill behavior.
 The min case emits no Top surface and matches Orca filament usage exactly at
 256.59 mm; transaction test, KSR, smokes, clippy, and fmt pass.
 
+Option-domain discovery now strips inactive C++ comments, follows copied
+`enum_values` lists, and honors `max_literal`; bottom/internal solid patterns
+contain the eight active top-pattern values and gcode_flavor contains only five
+active values. Per-case upstream rejection is counted separately from Ares
+comparison instead of mislabeled ARES_ERROR, while any compared divergence
+still fails its domain. Inventory/rejection tests, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

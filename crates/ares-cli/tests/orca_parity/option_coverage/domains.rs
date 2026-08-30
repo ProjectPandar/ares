@@ -104,26 +104,30 @@ fn definition_block(lines: &[&str], key: &str, reported_line: usize) -> String {
 fn enum_values(key: &str, block: &str, source: &str) -> Vec<String> {
     let push = Regex::new(r#"enum_values\.(?:push_back|emplace_back)\("([^"]+)"\)"#).unwrap();
     let quoted = Regex::new(r#""([^"]+)""#).unwrap();
+    let active_block = strip_comments(block);
     let mut values = push
-        .captures_iter(block)
+        .captures_iter(&active_block)
         .map(|captures| captures[1].to_owned())
         .collect::<Vec<_>>();
     if values.is_empty() {
         let assignment = Regex::new(r"enum_values\s*=\s*\{").unwrap();
-        if let Some(found) = assignment.find(block)
-            && let Some(end) = block[found.end()..].find("};")
+        if let Some(found) = assignment.find(&active_block)
+            && let Some(end) = active_block[found.end()..].find("};")
         {
             values.extend(
                 quoted
-                    .captures_iter(&block[found.end()..found.end() + end])
+                    .captures_iter(&active_block[found.end()..found.end() + end])
                     .map(|captures| captures[1].to_owned()),
             );
         }
     }
+    if values.is_empty() {
+        values.extend(referenced_enum_values(&active_block, source, &push));
+    }
     if values.is_empty()
         && let Some(kind) = Regex::new(r"ConfigOptionEnum<([^>]+)>")
             .unwrap()
-            .captures(block)
+            .captures(&active_block)
     {
         let kind = kind[1].rsplit("::").next().unwrap();
         let map = Regex::new(&format!(
@@ -151,6 +155,41 @@ fn enum_values(key: &str, block: &str, source: &str) -> Vec<String> {
     values
 }
 
+fn strip_comments(source: &str) -> String {
+    Regex::new(r"(?s)/\*.*?\*/|//[^\n]*")
+        .unwrap()
+        .replace_all(source, "")
+        .into_owned()
+}
+
+fn referenced_enum_values(block: &str, source: &str, push: &Regex) -> Vec<String> {
+    let Some(reference) = Regex::new(r"enum_values\s*=\s*(\w+)->enum_values")
+        .unwrap()
+        .captures(block)
+        .map(|captures| captures[1].to_owned())
+    else {
+        return Vec::new();
+    };
+    let marker = Regex::new(&format!(
+        r"(?:auto\s+)?{}\s*=\s*def\s*=\s*this->add\(",
+        regex::escape(&reference)
+    ))
+    .unwrap();
+    let Some(start) = marker.find(source).map(|found| found.start()) else {
+        return Vec::new();
+    };
+    let tail = &source[start..];
+    let end = tail[marker.find(tail).unwrap().end()..]
+        .find("this->add(\"")
+        .map_or(tail.len(), |offset| {
+            marker.find(tail).unwrap().end() + offset
+        });
+    let active = strip_comments(&tail[..end]);
+    push.captures_iter(&active)
+        .map(|captures| captures[1].to_owned())
+        .collect()
+}
+
 fn known_vector_enum(key: &str) -> &'static [&'static str] {
     match key {
         "default_nozzle_volume_type" | "nozzle_volume_type" => &["Standard", "High Flow"],
@@ -167,9 +206,14 @@ fn numeric_bounds(block: &str) -> Option<(f64, f64)> {
         Regex::new(&format!(r"def->{name}\s*=\s*([-+]?\d+(?:\.\d+)?)"))
             .unwrap()
             .captures(block)
-            .and_then(|captures| captures[1].parse().ok())
+            .and_then(|captures| captures[1].parse::<f64>().ok())
     };
-    Some((bound("min")?, bound("max")?))
+    let minimum = bound("min")?;
+    let mut maximum = bound("max")?;
+    if let Some(literal) = bound("max_literal") {
+        maximum = maximum.min(literal);
+    }
+    Some((minimum, maximum))
 }
 
 fn seeded_interior(key: &str, minimum: f64, maximum: f64, integer: bool) -> f64 {
