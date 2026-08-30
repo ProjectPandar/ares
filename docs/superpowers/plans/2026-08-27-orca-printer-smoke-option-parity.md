@@ -1822,5 +1822,9 @@ enforcement, eager/pending emission, and spiral generation moved into the real
 `motion/travel/lift.rs` module. Files are now 248/188 LOC, tests remain separate,
 and focused lift/KSR/clippy/fmt checks pass.
 
+`group_fills/params/projection.rs` reached 401 LOC; sticky pattern fields and
+anchor-length projection moved into the real `projection/sticky.rs` module.
+Files are now 365/37 LOC; focused projection, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

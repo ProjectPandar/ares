@@ -1,11 +1,12 @@
 mod rotation;
+mod sticky;
 
 use rotation::projected_angle;
 pub(in crate::project_slice) use rotation::simple_rotation_angle;
+use sticky::{anchor_lengths, apply_pattern_fields};
 
 use crate::{
     ExtrusionRole, FloatOrPercent, ProcessInfillPattern, RegionOptions, SliceError,
-    geometry::CoordinateScale,
     project_slice::{
         perimeters::{
             flow::{
@@ -37,7 +38,7 @@ pub(super) fn project_surface(
     params.lateral_lattice_angle_1 = context.region.lateral_lattice_angle_1.0 as f32;
     params.lateral_lattice_angle_2 = context.region.lateral_lattice_angle_2.0 as f32;
     params.infill_overhang_angle = context.region.infill_overhang_angle.0 as f32;
-    apply_sticky_pattern_fields(params, context.region, context.scale);
+    apply_pattern_fields(params, context.region, context.scale);
 
     match kind {
         RegionSurfaceKind::Top => {
@@ -155,7 +156,7 @@ pub(super) fn project_surface(
                 .spacing,
         );
         (params.anchor_length, params.anchor_length_max) =
-            projected_anchor_lengths(context.region, params.spacing);
+            anchor_lengths(context.region, params.spacing);
     }
     Ok(Some(*params))
 }
@@ -360,42 +361,5 @@ fn absolute_speed(value: FloatOrPercent, base: f64) -> f64 {
     match value {
         FloatOrPercent::Float(value) => value,
         FloatOrPercent::Percent(value) => base * value.0 / 100.0,
-    }
-}
-
-fn apply_sticky_pattern_fields(
-    params: &mut SurfaceFillParams,
-    region: &RegionOptions,
-    scale: CoordinateScale,
-) {
-    if region.sparse_infill_pattern == ProcessInfillPattern::LockedZag {
-        params.infill_lock_depth = (region.infill_lock_depth.0 / scale.factor()) as f32;
-        params.skin_infill_depth = (region.skin_infill_depth.0 / scale.factor()) as f32;
-    }
-    if matches!(
-        region.sparse_infill_pattern,
-        ProcessInfillPattern::CrossZag
-            | ProcessInfillPattern::LockedZag
-            | ProcessInfillPattern::ZigZag
-    ) {
-        params.symmetric_infill_y_axis = region.symmetric_infill_y_axis.0;
-    }
-}
-
-fn projected_anchor_lengths(options: &RegionOptions, spacing: f64) -> (f32, f32) {
-    let anchor_length = projected_length(options.infill_anchor, spacing);
-    let anchor_length_max = projected_length(options.infill_anchor_max, spacing);
-    let anchor_length = if anchor_length_max < anchor_length {
-        anchor_length_max
-    } else {
-        anchor_length
-    };
-    (anchor_length, anchor_length_max)
-}
-
-fn projected_length(value: FloatOrPercent, spacing: f64) -> f32 {
-    match value {
-        FloatOrPercent::Float(value) => value as f32,
-        FloatOrPercent::Percent(value) => (f64::from(value.0 as f32) * 0.01 * spacing) as f32,
     }
 }
