@@ -18,6 +18,26 @@ pub(crate) fn smoke_overrides() -> Map<String, Value> {
     overrides
 }
 
+pub(crate) fn normalize_process_defaults(
+    machine: &Map<String, Value>,
+    process: &mut Map<String, Value>,
+) {
+    let nozzle = machine
+        .get("nozzle_diameter")
+        .and_then(first_number)
+        .unwrap_or(0.4);
+    let layer_height = process
+        .get("layer_height")
+        .or_else(|| machine.get("layer_height"))
+        .and_then(first_number)
+        .unwrap_or(0.2);
+    if nozzle <= layer_height {
+        for key in ["skin_infill_line_width", "skeleton_infill_line_width"] {
+            process.insert(key.to_owned(), Value::String("0".to_owned()));
+        }
+    }
+}
+
 pub(crate) fn smoke_case_overrides(
     machine: &Map<String, Value>,
     process: &Map<String, Value>,
@@ -90,6 +110,41 @@ pub(crate) fn smoke_case_overrides(
             Value::String(nozzle.to_string()),
         );
     }
+    let layer_height = process
+        .get("layer_height")
+        .or_else(|| machine.get("layer_height"))
+        .and_then(first_number)
+        .unwrap_or(0.2);
+    for key in [
+        "line_width",
+        "bridge_line_width",
+        "support_line_width",
+        "inner_wall_line_width",
+        "outer_wall_line_width",
+        "sparse_infill_line_width",
+        "internal_solid_infill_line_width",
+        "top_surface_line_width",
+        "skin_infill_line_width",
+        "skeleton_infill_line_width",
+    ] {
+        if process
+            .get(key)
+            .or_else(|| machine.get(key))
+            .and_then(|value| absolute_number(value, nozzle))
+            .is_some_and(|width| width > 0.0 && width <= layer_height)
+        {
+            overrides.insert(key.to_owned(), Value::String("0".to_owned()));
+        }
+    }
+    if nozzle <= layer_height {
+        for key in [
+            "bridge_line_width",
+            "skin_infill_line_width",
+            "skeleton_infill_line_width",
+        ] {
+            overrides.insert(key.to_owned(), Value::String("0".to_owned()));
+        }
+    }
     if let Some(source) = machine.get("machine_start_gcode").and_then(Value::as_str) {
         let mut normalized = source.replace("[output_filename_format]", "[input_filename_base]");
         for placeholder in [
@@ -139,6 +194,20 @@ fn option_true(value: &Value) -> bool {
         Value::String(value) => value == "1" || value == "true",
         Value::Number(value) => value.as_i64() == Some(1),
         Value::Null | Value::Object(_) => false,
+    }
+}
+
+fn absolute_number(value: &Value, basis: f64) -> Option<f64> {
+    match value {
+        Value::Array(values) => values
+            .first()
+            .and_then(|value| absolute_number(value, basis)),
+        Value::String(value) if value.ends_with('%') => value
+            .trim_end_matches('%')
+            .parse::<f64>()
+            .ok()
+            .map(|percent| percent * basis / 100.0),
+        _ => first_number(value),
     }
 }
 

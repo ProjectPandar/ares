@@ -1,5 +1,7 @@
 use super::VendorProfiles;
-use crate::{runner, select_printer, smoke_case_overrides, smoke_overrides};
+use crate::{
+    normalize_process_defaults, runner, select_printer, smoke_case_overrides, smoke_overrides,
+};
 
 fn profiles(vendor: &str) -> VendorProfiles {
     VendorProfiles::load(
@@ -119,6 +121,40 @@ fn absolute_e_profile_removes_active_layer_reset() {
     let overrides = smoke_case_overrides(&machine, &process);
 
     assert_eq!(overrides["before_layer_change_gcode"], ";before\n;after");
+}
+
+#[test]
+fn missing_default_widths_are_materialized_for_nozzle_height_boundary() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "nozzle_diameter": ["0.2"]
+    }))
+    .unwrap();
+    let mut process = serde_json::from_value(serde_json::json!({
+        "layer_height": "0.2"
+    }))
+    .unwrap();
+
+    normalize_process_defaults(&machine, &mut process);
+
+    assert_eq!(process["skin_infill_line_width"], "0");
+    assert_eq!(process["skeleton_infill_line_width"], "0");
+}
+
+#[test]
+fn line_width_not_above_layer_height_uses_auto_width() {
+    let machine = serde_json::from_value(serde_json::json!({
+        "nozzle_diameter": ["0.2"]
+    }))
+    .unwrap();
+    let process = serde_json::from_value(serde_json::json!({
+        "layer_height": "0.2",
+        "top_surface_line_width": "100%"
+    }))
+    .unwrap();
+
+    let overrides = smoke_case_overrides(&machine, &process);
+
+    assert_eq!(overrides["top_surface_line_width"], "0");
 }
 
 #[test]

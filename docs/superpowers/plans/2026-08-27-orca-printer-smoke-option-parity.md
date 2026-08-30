@@ -1775,5 +1775,11 @@ Anker's missing first layer-transition Z; KSR, focused smokes, clippy, and fmt
 pass. Remaining Anker travel vertices are the separately tracked
 reduce_crossing_wall route.
 
+Printer smoke normalization now mirrors Print.cpp's absolute line-width
+validation: 0<width<=layer_height becomes auto, including bridge and missing
+skin/skeleton defaults materialized into the process preset. All eight 0.2mm
+nozzle Orca validation errors advance to real geometry; Ender-3 0.2 now reaches
+the known connector endpoint seam. Harness tests, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

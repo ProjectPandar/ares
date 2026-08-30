@@ -24,7 +24,9 @@ use std::collections::BTreeMap;
 use presets::VendorProfiles;
 use runner::{CaseInputs, OrcaRunner};
 use serde_json::Value;
-pub(crate) use smoke_overrides::{smoke_case_overrides, smoke_overrides};
+pub(crate) use smoke_overrides::{
+    normalize_process_defaults, smoke_case_overrides, smoke_overrides,
+};
 
 use crate::runner::{OrcaRunner as Runner, ParityCase};
 
@@ -178,7 +180,8 @@ pub(crate) fn build_selection_case(
     model: &std::path::Path,
 ) -> Result<ParityCase, String> {
     let machine = profiles.machine(&selection.printer)?;
-    let process = profiles.process(&selection.process)?;
+    let mut process = profiles.process(&selection.process)?;
+    normalize_process_defaults(&machine, &mut process);
     let filaments = selection
         .filaments
         .iter()
