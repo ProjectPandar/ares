@@ -1317,5 +1317,12 @@ formatting; enabled mode retains G3. Elegoo layer 1 and layer 2 movement are raw
 byte-exact (apart from ignored M73), the focused seven-segment test passes, and
 KSR/Ender/Artillery/RatRig regressions remain green.
 
-NEXT: correct remaining multiline intersection ordering, then rerun the full
-printer sweep and continue postamble geometry.
+Stable sweep31 (clean HEAD `42bdb94`) completed all 1001 presets: PASS 128→148,
+761 DIVERGENT, 92 ARES_ERROR. Filament-first rows fall 228→201, travel-count
+94→71, and travel-geometry 39→18; deposition-first rises as those earlier
+barriers clear. Elegoo now reaches a layer-22 feed delta with exact movement and
+material totals. Snapmaker U1's fresh Orca reference again SIGSEGVs and is
+recorded as an upstream error.
+
+NEXT: correct remaining multiline intersection ordering/CoolingBuffer feed,
+then continue postamble geometry and lifecycle.
