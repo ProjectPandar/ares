@@ -4,7 +4,9 @@ mod variable;
 use super::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, clip, extrusion, fan,
     features::PathProperties,
-    format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
+    format::{
+        axis as format_axis, extrusion as format_extrusion, offset as format_offset, z as format_z,
+    },
     overhang, set_accel_and_jerk, travel,
 };
 
@@ -142,7 +144,7 @@ pub(super) fn emit(
                         "G1 X{} Y{} Z{}\n",
                         format_axis(first_x),
                         format_axis(first_y),
-                        format_extrusion(state.layer_z + state.options.z_hop)
+                        format_z(state.layer_z + state.options.z_hop)
                     )
                     .as_bytes(),
                 );
@@ -156,7 +158,7 @@ pub(super) fn emit(
                         "G1 X{} Y{} Z{}\n",
                         format_axis(first_x),
                         format_axis(first_y),
-                        format_extrusion(state.layer_z + state.options.z_hop)
+                        format_z(state.layer_z + state.options.z_hop)
                     )
                     .as_bytes(),
                 );
@@ -181,7 +183,7 @@ pub(super) fn emit(
                 output.extend_from_slice(
                     format!(
                         "G1 Z{} F{}\n",
-                        format_extrusion(state.layer_z + state.options.z_hop),
+                        format_z(state.layer_z + state.options.z_hop),
                         format_axis(state.travel_feedrate)
                     )
                     .as_bytes(),
@@ -194,9 +196,7 @@ pub(super) fn emit(
         } else if layer_change_travel {
             if uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
-                output.extend_from_slice(
-                    format!("G1 Z{}\n", format_extrusion(state.layer_z)).as_bytes(),
-                );
+                output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
             } else {
                 travel_emit::xyz(
                     output,
@@ -219,7 +219,7 @@ pub(super) fn emit(
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}\n",
-                format_extrusion(state.layer_z),
+                format_z(state.layer_z),
                 format_axis(state.travel_feedrate)
             )
             .as_bytes(),
@@ -236,17 +236,12 @@ pub(super) fn emit(
             && travel::lift_is_allowed(state)
         {
             output.extend_from_slice(
-                format!(
-                    "G1 Z{}\n",
-                    format_extrusion(state.layer_z + state.options.z_hop)
-                )
-                .as_bytes(),
+                format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
             );
             state.lifted = true;
         }
         if state.lifted && !travel_set_layer_z {
-            output
-                .extend_from_slice(format!("G1 Z{}\n", format_extrusion(state.layer_z)).as_bytes());
+            output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
         }
         let retraction_length = state.options.retraction_length;
         let unretract = extrusion::coordinate(state, retraction_length);

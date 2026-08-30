@@ -15,6 +15,10 @@ pub(super) fn offset(value: f64) -> String {
     }
 }
 
+pub(super) fn z(value: f64) -> String {
+    offset(value)
+}
+
 pub(super) fn extrusion(value: f64) -> String {
     let value = trim_fixed((value * 100_000.0).round() / 100_000.0, 5);
     if value == "0" {
@@ -43,7 +47,7 @@ fn trim_fixed(value: f64, precision: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{axis, extrusion, offset};
+    use super::{axis, extrusion, offset, z};
     #[test]
     fn zero_axis_words_remain_valid_gcode_numbers() {
         assert_eq!(axis(0.0), "0");
@@ -59,6 +63,12 @@ mod tests {
         assert_eq!(offset(-0.0), "0");
         assert_eq!(offset(0.75), ".75");
         assert_eq!(offset(-0.75), "-.75");
+    }
+
+    #[test]
+    fn z_uses_axis_precision_and_omits_the_leading_zero() {
+        assert_eq!(z(0.2), ".2");
+        assert_eq!(z(1.995_6), "1.996");
     }
 
     #[test]

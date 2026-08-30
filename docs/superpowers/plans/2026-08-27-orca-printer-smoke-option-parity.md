@@ -1709,5 +1709,11 @@ travel skips the preliminary slope but still emits target XYZ at raised Z and
 unlifts afterward. Both Auto option layer-2 travel inventories are exact (19);
 focused state test, KSR, smokes, clippy, and fmt pass.
 
+Normal/slope writer Z words now use the source Z formatter: XYZ precision
+(3 decimals) plus omitted leading zero, distinct from both XY and E formatters.
+The seeded z_hop emits exact `Z1.996`/`Z.2` movement instead of `Z1.9956`;
+formatter test, KSR, smokes, clippy, and fmt pass. Linear spiral interpolation
+retains its source stream precision.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

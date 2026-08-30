@@ -5,7 +5,9 @@
 mod tests;
 use super::{
     EmitState, LiftMode, arc, extrusion,
-    format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
+    format::{
+        axis as format_axis, extrusion as format_extrusion, offset as format_offset, z as format_z,
+    },
 };
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -270,7 +272,7 @@ pub(super) fn emit_pending_lift(
             output.extend_from_slice(
                 format!(
                     "G1 Z{} F{}\n",
-                    format_extrusion(raised_z),
+                    format_z(raised_z),
                     format_axis(state.travel_feedrate)
                 )
                 .as_bytes(),
@@ -303,7 +305,7 @@ pub(super) fn emit_pending_lift(
                         "G1 X{} Y{} Z{} F{}\n",
                         format_axis(x),
                         format_axis(y),
-                        format_extrusion(raised_z),
+                        format_z(raised_z),
                         format_axis(state.travel_feedrate)
                     )
                     .as_bytes(),
@@ -337,7 +339,7 @@ fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}\n",
-                format_extrusion(raised_z),
+                format_z(raised_z),
                 format_axis(state.travel_feedrate)
             )
             .as_bytes(),
@@ -353,7 +355,7 @@ fn append_spiral_lift(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i:
         output.extend_from_slice(
             format!(
                 "G3 Z{} I{} J{} P1  F{}\n",
-                format_extrusion(raised_z),
+                format_z(raised_z),
                 format_offset(i),
                 format_offset(j),
                 format_axis(state.travel_feedrate)
