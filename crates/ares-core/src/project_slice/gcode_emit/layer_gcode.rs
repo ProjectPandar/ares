@@ -171,6 +171,10 @@ pub(super) fn append_before_layer_change_gcode(
     if template.is_empty() {
         return Ok(());
     }
+    if template.trim().is_empty() {
+        output.push(b'\n');
+        return Ok(());
+    }
     let mut config =
         super::placeholders::base_config(traversal, context.metadata, context.first_layer_bounds)?;
     config.insert("layer_num", value::Value::number(layer_index as f64));

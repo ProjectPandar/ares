@@ -1409,6 +1409,11 @@ OptionBool is now a tagged runtime value: legacy square substitution renders
 matches Snapmaker Dual (`has_wipe_tower: 0`, `T0: true`) and Elegoo Centauri
 (`enable_pressure_advance:false`). KSR/clippy/fmt pass.
 
+Whitespace-only `before_layer_change_gcode` now follows PlaceholderParser's
+empty render plus one caller newline, rather than preserving the sentinel and
+adding a second newline. Artillery X3 Plus first-layer block is byte-identical;
+workspace checks pass.
+
 NEXT: sweep these placeholder/cooling-boundary fixes, then correct scaled
 Clipper endpoint precision / limited-hook direction and continue postamble
 geometry/lifecycle.
