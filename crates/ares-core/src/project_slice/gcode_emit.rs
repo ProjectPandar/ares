@@ -16,6 +16,7 @@ mod lexer;
 mod machine;
 mod motion;
 mod object;
+mod offset;
 mod placeholders;
 mod processor;
 mod skirt;
@@ -66,14 +67,19 @@ pub(super) fn emit(
     let (bed_cache, start_position) =
         machine::append_start(&mut output, traversal, metadata, first_layer_bounds)?;
     let options = motion::MotionOptions::from_traversal(traversal);
-    let offset = footprint::model_center(traversal).unwrap_or_default();
+    let model_offset = footprint::model_center(traversal).unwrap_or_default();
+    let model_offset = (
+        traversal
+            .scale
+            .unscale(traversal.scale.checked_scale(model_offset.0).unwrap()),
+        traversal
+            .scale
+            .unscale(traversal.scale.checked_scale(model_offset.1).unwrap()),
+    );
+    let extruder_offset = offset::initial_extruder(traversal);
     let offset = (
-        traversal
-            .scale
-            .unscale(traversal.scale.checked_scale(offset.0).unwrap()),
-        traversal
-            .scale
-            .unscale(traversal.scale.checked_scale(offset.1).unwrap()),
+        model_offset.0 - extruder_offset.0,
+        model_offset.1 - extruder_offset.1,
     );
     let mut state = motion::EmitState {
         offset,

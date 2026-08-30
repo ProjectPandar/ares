@@ -1541,5 +1541,11 @@ Stable sweep43 (clean HEAD `d3c022e`) completed all 1001 presets: PASS 222→233
 673 DIVERGENT, 95 ARES_ERROR. Both stable focused smokes and all other harness
 tests passed; the sweep alone failed as expected on the remaining 768 rows.
 
+Active physical-extruder XY offset now ports `GCode.cpp:8124-8128`: the mapped
+initial hotend offset is subtracted from the model origin for every motion path.
+A public KSR archive regression proves `0x2` shifts emitted Y by exactly -2 mm;
+BBL P1P advances past its former translated geometry divergence to lifecycle.
+Zero-offset focused smokes, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
