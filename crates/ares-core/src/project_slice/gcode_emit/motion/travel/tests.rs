@@ -119,7 +119,7 @@ fn lift_above_gate_keeps_retraction_without_lifting() {
 }
 
 #[test]
-fn degenerate_slope_lift_does_not_mark_the_writer_lifted() {
+fn degenerate_slope_uses_the_raised_target_without_a_preliminary_move() {
     let mut state = EmitState {
         layer_z: 0.4,
         pending_lift: Some(LiftMode::Slope),
@@ -138,7 +138,7 @@ fn degenerate_slope_lift_does_not_mark_the_writer_lifted() {
         &mut state,
     ));
     assert!(output.is_empty());
-    assert!(!state.lifted);
+    assert!(state.lifted);
 }
 
 #[test]

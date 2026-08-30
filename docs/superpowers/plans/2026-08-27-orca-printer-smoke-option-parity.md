@@ -1703,5 +1703,11 @@ deferred travel in both z-hop branches. Top Only no longer emits first-layer
 up/down geometry before any top/ironing feature; focused gate test, raw option
 output, KSR, smokes, clippy, and fmt pass.
 
+Slope/Auto lazy lift now separates “preliminary slope emitted” from “raised
+travel target required,” matching `GCodeWriter.cpp:704-764`: a steep/short
+travel skips the preliminary slope but still emits target XYZ at raised Z and
+unlifts afterward. Both Auto option layer-2 travel inventories are exact (19);
+focused state test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

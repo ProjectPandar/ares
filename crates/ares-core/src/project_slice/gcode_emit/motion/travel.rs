@@ -315,7 +315,7 @@ pub(super) fn emit_pending_lift(
             }
         }
     };
-    state.lifted |= emitted;
+    state.lifted = true;
     emitted
 }
 
