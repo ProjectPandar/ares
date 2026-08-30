@@ -1332,5 +1332,11 @@ Orca's exact deposition sequence/feed; layer 27 retains only the first limited
 hook's travel endpoint direction. A captured Cubic transition test asserts one
 10-point connected path.
 
-NEXT: correct the remaining limited-hook direction, then continue postamble
-geometry and lifecycle.
+Stable sweep32 (clean HEAD `0ee49b3`) completed all 1001 presets: PASS 148→151,
+754 DIVERGENT, 96 ARES_ERROR. Filament-first rows fall sharply 201→141 as
+Cubic/Grid/Triangles reach exact geometry; deposition-first rises to 247 as
+those metadata barriers clear. Elegoo reaches a single last-decimal extrusion
+value (`0.06107` vs `0.06108`) with exact feed and movement.
+
+NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
+continue postamble geometry and lifecycle.
