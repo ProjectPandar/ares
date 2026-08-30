@@ -1399,6 +1399,11 @@ longer parsed/re-written as layer motion: iQ retains every literal `F9000` and
 advances to travel geometry. The public repeated-feed test, three stable smokes,
 KSR, clippy, and fmt pass.
 
+Stable sweep36 (clean HEAD `e1d197c`) completed all 1001 presets: 203 PASS, 708
+DIVERGENT, 90 ARES_ERROR. Preamble-first rows fall 54→8; preserving effective
+retraction exposes the corresponding exact wipe/lifecycle geometry (174
+lifecycle-first rows) instead of hiding it behind stale printer defaults.
+
 OptionBool is now a tagged runtime value: legacy square substitution renders
 `0/1`, while curly expression evaluation renders `false/true`. This simultaneously
 matches Snapmaker Dual (`has_wipe_tower: 0`, `T0: true`) and Elegoo Centauri
