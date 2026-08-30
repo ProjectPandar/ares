@@ -1640,7 +1640,9 @@ pass.
 `single_loop_draft_shield` now follows `GCode.cpp:4416-4447`: layer 1 emits all
 outermost-first skirt loops, later covered layers emit only the final/innermost
 loop. The true case matches Orca filament usage exactly at 260.62 mm; loop
-selection test, KSR, smokes, clippy, and fmt pass.
+selection test, KSR, smokes, clippy, and fmt pass. When `skirt.rs` reached 402
+LOC, convex-hull/seam geometry moved into the real `skirt/geometry.rs` module;
+the files are now 272/122 LOC with tests separate and no source inclusion.
 
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
