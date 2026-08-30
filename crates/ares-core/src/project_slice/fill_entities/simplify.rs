@@ -2,7 +2,6 @@
 //! (`LayerRegion.cpp:1060-1125`).
 
 use crate::{
-    ExtrusionRole,
     geometry::{CoordinateScale, Point, Polyline, douglas_peucker},
     project_slice::perimeters::classic::{
         gap_extrusion::GapFillEntity,
@@ -12,12 +11,7 @@ use crate::{
 
 use super::{FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
-pub(super) fn apply(
-    output: &mut LayerFillEntities,
-    resolution: f64,
-    enable_arc_fitting: bool,
-    scale: CoordinateScale,
-) {
+pub(super) fn apply(output: &mut LayerFillEntities, resolution: f64, scale: CoordinateScale) {
     for entity in output
         .collections
         .iter_mut()
@@ -25,26 +19,12 @@ pub(super) fn apply(
     {
         match entity {
             FillExtrusionEntity::Path(path) => {
-                let tolerance = tolerance(path.role, resolution, enable_arc_fitting, scale);
-                simplify_fill_path(path, tolerance);
+                simplify_fill_path(path, resolution / scale.factor());
             }
             FillExtrusionEntity::VariableWidth(entity) => {
                 simplify_gap_entity(entity, resolution / scale.factor());
             }
         }
-    }
-}
-
-fn tolerance(
-    role: ExtrusionRole,
-    resolution: f64,
-    enable_arc_fitting: bool,
-    scale: CoordinateScale,
-) -> f64 {
-    if enable_arc_fitting && role == ExtrusionRole::InternalInfill {
-        0.04 / scale.factor()
-    } else {
-        resolution / scale.factor()
     }
 }
 

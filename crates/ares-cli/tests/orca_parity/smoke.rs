@@ -24,6 +24,11 @@ fn orca_parity_ender3_smoke() {
 }
 
 #[test]
+fn orca_parity_afinia_hs_06_smoke() {
+    assert_printer_smoke("Afinia", "Afinia H+1(HS) 0.6 nozzle");
+}
+
+#[test]
 fn orca_parity_artillery_x3_pro_smoke() {
     assert_printer_smoke("Artillery", "Artillery Sidewinder X3 Pro 0.4 nozzle");
 }

@@ -1547,5 +1547,11 @@ A public KSR archive regression proves `0x2` shifts emitted Y by exactly -2 mm;
 BBL P1P advances past its former translated geometry divergence to lifecycle.
 Zero-offset focused smokes, KSR, clippy, and fmt pass.
 
+Arc-enabled non-spiral paths now run one upstream `simplify_by_fitting_arc`
+stage instead of fill-only DP followed by arc fitting. Non-arc and spiral paths
+retain one resolution DP pass. Afinia H+1 HS 0.6's former I/J/E arc divergence
+is byte-exact and the new focused Orca smoke passes; KSR, stable smokes, clippy,
+and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

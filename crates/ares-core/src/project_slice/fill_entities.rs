@@ -6,6 +6,8 @@ mod grid;
 mod gyroid;
 mod monotonic;
 mod simplify;
+#[cfg(test)]
+mod tests;
 mod triangles;
 mod types;
 
@@ -193,13 +195,21 @@ pub(in crate::project_slice) fn generate_layer(
         }
     }
     let process = &traversal.resolved.views.full.process;
-    simplify::apply(
-        &mut output,
-        process.print.resolution.0.max(1.0e-4),
+    if simplify_before_ordering(
         process.gcode.enable_arc_fitting.0,
-        traversal.scale,
-    );
+        process.print.spiral_mode.0,
+    ) {
+        simplify::apply(
+            &mut output,
+            process.print.resolution.0.max(1.0e-4),
+            traversal.scale,
+        );
+    }
     Ok(output)
+}
+
+fn simplify_before_ordering(enable_arc_fitting: bool, spiral_mode: bool) -> bool {
+    !enable_arc_fitting || spiral_mode
 }
 
 fn geometry_error(error: crate::geometry::ClipperError) -> SliceError {
