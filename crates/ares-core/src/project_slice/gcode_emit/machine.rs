@@ -271,7 +271,7 @@ fn self_start_config(
     );
     config.insert(
         "hold_chamber_temp_for_flat_print",
-        value::Value::Bool(false),
+        value::Value::option_bool(false),
     );
     let max_z = traversal
         .objects

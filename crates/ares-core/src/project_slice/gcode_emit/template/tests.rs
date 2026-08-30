@@ -2,12 +2,15 @@ use super::*;
 use crate::project_slice::gcode_emit::value::Config;
 
 #[test]
-fn renderer_serializes_boolean_placeholders_as_zero_or_one() {
+fn renderer_distinguishes_option_and_expression_booleans() {
     let mut config = Config::default();
-    config.insert("enabled", super::super::value::Value::Bool(true));
-    config.insert("disabled", super::super::value::Value::Bool(false));
+    config.insert("enabled", super::super::value::Value::option_bool(true));
+    config.insert("disabled", super::super::value::Value::option_bool(false));
 
-    assert_eq!(render("{enabled} {disabled}", &mut config).unwrap(), "1 0");
+    assert_eq!(
+        render("{enabled} {disabled} {enabled == 1}", &mut config).unwrap(),
+        "1 0 true"
+    );
 }
 
 #[test]

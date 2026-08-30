@@ -11,9 +11,12 @@ async fn project_templates_share_orca_runtime_placeholders() {
         serde_json::from_str(&archive.entry_text(SETTINGS)).unwrap();
     let machine_start = settings["machine_start_gcode"].as_str().unwrap();
     settings["machine_start_gcode"] = serde_json::json!(format!(
-        ";RETRACTION {{retraction_length[0]}} {{retract_length[0]}}\n{machine_start}"
+        ";RETRACTION {{retraction_length[0]}} {{retract_length[0]}}\n\
+;INTEGER_TEMP {{10 - ((nozzle_temperature_initial_layer[0] - 130) / 14 - 5.0) / 100}}\n\
+{machine_start}"
     ));
     settings["filament_retraction_length"] = serde_json::json!(["1.2", "1.2"]);
+    settings["nozzle_temperature_initial_layer"] = serde_json::json!(["210", "210"]);
     archive.insert_text(SETTINGS, &serde_json::to_string(&settings).unwrap());
 
     let output = crate::slice_project(
@@ -31,4 +34,5 @@ async fn project_templates_share_orca_runtime_placeholders() {
     assert!(runtime.starts_with(";RUNTIME 0 0 2026 20260716-010203 0 "));
     assert!(!runtime.contains(['[', ']']));
     assert!(output.lines().any(|line| line == ";RETRACTION 1.2 1.2"));
+    assert!(output.lines().any(|line| line == ";INTEGER_TEMP 10"));
 }

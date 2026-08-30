@@ -14,6 +14,10 @@ impl Value {
         Self::Number(value)
     }
 
+    pub(super) fn option_bool(value: bool) -> Self {
+        Self::Integer(i64::from(value))
+    }
+
     pub(super) fn scalar(&self) -> &Self {
         match self {
             Self::List(values) if !values.is_empty() => &values[0],
@@ -74,7 +78,7 @@ impl Value {
             Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
             Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
-            Self::Bool(value) => i64::from(*value).to_string(),
+            Self::Bool(value) => value.to_string(),
             Self::List(values) => values
                 .iter()
                 .map(Self::as_string)
@@ -202,8 +206,8 @@ fn parse_value(raw: &str, is_bool: bool) -> Value {
 
 fn parse_scalar(raw: &str, is_bool: bool) -> Value {
     let raw = raw.trim().trim_matches('"');
-    if is_bool && (raw == "0" || raw == "1") {
-        Value::Bool(raw == "1")
+    if is_bool && matches!(raw, "0" | "1" | "false" | "true") {
+        Value::option_bool(matches!(raw, "1" | "true"))
     } else if let Ok(value) = raw.parse::<f64>() {
         Value::Number(value)
     } else if raw == "true" || raw == "false" {

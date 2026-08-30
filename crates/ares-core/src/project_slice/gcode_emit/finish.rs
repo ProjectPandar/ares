@@ -28,7 +28,7 @@ pub(super) fn append(
     config.insert("timelapse_type", value::Value::number(0.0));
     config.insert("most_used_physical_extruder_id", value::Value::number(1.0));
     config.insert("curr_physical_extruder_id", value::Value::number(1.0));
-    config.insert("has_timelapse_safe_pos", value::Value::Bool(false));
+    config.insert("has_timelapse_safe_pos", value::Value::option_bool(false));
 
     let tags = super::tags::Tags::of(traversal);
     let custom = tags.custom() + "\n";

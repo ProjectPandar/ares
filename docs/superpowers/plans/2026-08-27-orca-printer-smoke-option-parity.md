@@ -1381,5 +1381,11 @@ ConfigOptionBool values serialize as `1/0` (Snapmaker Dual
 `has_wipe_tower: 0`). Focused tests were RED/GREEN and KSR/workspace checks
 pass.
 
+A follow-up distinguishes legacy option substitution from expression values:
+ConfigOptionBool placeholders render `0/1`, while indexed/derived expression
+booleans retain `true/false` (Snapmaker Dual now matches both lines). Typed
+`nozzle_temperature_initial_layer` values also preserve integer division in
+Qidi's start expression, producing `G92_ Z10` instead of `Z9.99286`.
+
 NEXT: sweep these placeholder fixes, then correct scaled Clipper endpoint
 precision / limited-hook direction and continue postamble geometry/lifecycle.

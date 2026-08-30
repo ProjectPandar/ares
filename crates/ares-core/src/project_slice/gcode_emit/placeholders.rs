@@ -39,6 +39,21 @@ pub(super) fn base_config(
             config.insert(target, value);
         }
     }
+    let first_layer_temperatures = value::Value::List(
+        traversal
+            .resolved
+            .views
+            .full
+            .filament
+            .print
+            .nozzle_temperature_initial_layer
+            .0
+            .iter()
+            .map(|value| value::Value::Integer(i64::from(value.0)))
+            .collect(),
+    );
+    config.insert("first_layer_temperature", first_layer_temperatures.clone());
+    config.insert("nozzle_temperature_initial_layer", first_layer_temperatures);
     insert_flush_placeholders(&mut config, traversal);
     // `retract_length` is exposed to templates from the filament retraction
     // length (`GCode.cpp:2898`).
@@ -178,7 +193,7 @@ fn insert_runtime_placeholders(
                 .collect(),
         ),
     );
-    config.insert("has_wipe_tower", Value::Bool(false));
+    config.insert("has_wipe_tower", Value::option_bool(false));
     config.insert("plate_name", Value::String(String::new()));
     config.insert("plate_number", Value::String("1".to_owned()));
     let model_name = traversal
@@ -219,7 +234,7 @@ fn insert_runtime_placeholders(
     );
     config.insert(
         "has_single_extruder_multi_material_priming",
-        Value::Bool(false),
+        Value::option_bool(false),
     );
     let layer_count = traversal
         .objects
@@ -250,12 +265,12 @@ fn insert_runtime_placeholders(
     let has_tpu = config
         .get("filament_type")
         .is_some_and(|value| value.iter_list().any(|item| item.as_string() == "TPU"));
-    config.insert("has_tpu_in_first_layer", Value::Bool(has_tpu));
+    config.insert("has_tpu_in_first_layer", Value::option_bool(has_tpu));
     let all_bbl = config.get("filament_vendor").is_some_and(|value| {
         let mut vendors = value.iter_list();
         vendors.clone().next().is_some() && vendors.all(|vendor| vendor.as_string() == "Bambu Lab")
     });
-    config.insert("is_all_bbl_filament", Value::Bool(all_bbl));
+    config.insert("is_all_bbl_filament", Value::option_bool(all_bbl));
     if let Some(minimum) = config
         .get("temperature_vitrification")
         .into_iter()

@@ -94,7 +94,7 @@ fn append(
     let position = safe_position(traversal);
     config.insert(
         "has_timelapse_safe_pos",
-        value::Value::Bool(position.is_some()),
+        value::Value::option_bool(position.is_some()),
     );
     let (x, y) = position.unwrap_or_default();
     config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));

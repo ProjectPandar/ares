@@ -71,7 +71,7 @@ pub(super) fn insert_head_wrap_detect_zone(
         }
         hit
     };
-    config.insert("in_head_wrap_detect_zone", Value::Bool(in_zone));
+    config.insert("in_head_wrap_detect_zone", Value::option_bool(in_zone));
 }
 
 pub(super) fn insert_first_layer_bounds(
