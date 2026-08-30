@@ -6,10 +6,13 @@ use crate::{
 use crate::project_slice::region_slices::RegionSurfaceKind;
 
 pub(super) fn validate(objects: &[ResolvedProjectObject]) -> Result<(), SliceError> {
-    if objects
-        .iter()
-        .any(|object| object.object.interface_shells.0)
-    {
+    if objects.iter().any(|object| {
+        object.object.interface_shells.0
+            && object
+                .layer_candidates
+                .iter()
+                .any(|layer| layer.model_parts.len() > 1)
+    }) {
         return unsupported("interface_shells");
     }
     if objects.iter().any(|object| {

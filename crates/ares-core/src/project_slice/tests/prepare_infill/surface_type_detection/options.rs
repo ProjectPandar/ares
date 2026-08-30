@@ -97,7 +97,7 @@ fn prepare_option_case(archive: KsrArchive) -> (PreparedPostSurfaceTypeDetection
 }
 
 #[tokio::test]
-async fn task22o17_interface_shells_fails_before_geometry() {
+async fn task22o17_interface_shells_single_region_reaches_output() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
@@ -106,12 +106,8 @@ async fn task22o17_interface_shells_fails_before_geometry() {
     );
     reset_geometry_hooks();
     reset_invocations();
-    assert_eq!(
-        slice_project(archive.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("interface_shells".to_owned())
-    );
+    let output = slice_project(archive.bytes(), metadata()).await.unwrap();
+    assert!(!output.is_empty());
     assert_eq!(invocations(), 1);
 }
 

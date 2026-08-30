@@ -1739,5 +1739,11 @@ TopSplit NoLoops and Onion's negative-loop branch, matching
 roles and matches Orca filament usage exactly at 196.24 mm; lifecycle test,
 KSR, smokes, clippy, and fmt pass.
 
+`interface_shells` now passes the existing SameRegion top-split path for
+single-model-part layers, where SameRegion equals WholeLayer; genuinely
+multi-part objects remain explicitly unsupported until cross-region surface
+detection is ported. The true option matches Orca at 262.34 mm and completes
+KSR output; focused output test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
