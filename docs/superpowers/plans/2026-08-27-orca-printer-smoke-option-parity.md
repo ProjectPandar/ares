@@ -1438,6 +1438,11 @@ First-layer speed classes now match `GCode.cpp:6515-6604`: perimeter roles use
 Comgrow Brim is F3600 instead of F1800; focused speed test, KSR, clippy, and fmt
 pass.
 
+Stable sweep38 used the clean `4da3ea4` test binary (before the subsequent
+first-layer speed commit) and completed all 1001 presets: PASS 206→207, 703
+DIVERGENT, 91 ARES_ERROR. Snapmaker's wipe lifecycle becomes exact and exposes
+68 identical missing `M106 S0` control rows; all OptionBool preamble cases pass.
+
 Closed cooling layers now still emit the upstream baseline-resume command when
 an overhang role ends: START is suppressed below `close_fan_first_layers`, but
 END produces the forced base marker. Snapmaker now emits the expected `M106 S0`
