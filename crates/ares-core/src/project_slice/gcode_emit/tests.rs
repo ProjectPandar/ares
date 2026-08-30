@@ -55,7 +55,7 @@ fn ksr_motion_options_resolve_from_typed_project_settings() {
     assert!(options.reduce_infill_retraction);
     assert_eq!(options.retract_before_wipe, 0.0);
     assert!(options.role_based_wipe_speed);
-    assert!(options.spiral_lift);
+    assert_eq!(options.z_hop_type, crate::ZHopType::Spiral);
     assert_eq!(options.travel_slope_radians, 3.0_f64.to_radians());
     assert_eq!(options.seam_gap, 0.04);
 }

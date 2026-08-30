@@ -44,6 +44,23 @@ fn bottom_only_lift_does_not_lift_later_layers() {
 }
 
 #[test]
+fn slope_type_schedules_a_slope_lift() {
+    let mut state = EmitState {
+        layer_z: 0.4,
+        options: MotionOptions {
+            z_hop: 0.4,
+            z_hop_type: crate::ZHopType::Slope,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+
+    retract_and_lift(&mut Vec::new(), &mut state);
+
+    assert_eq!(state.pending_lift, Some(LiftMode::Slope));
+}
+
+#[test]
 fn lift_above_gate_keeps_retraction_without_lifting() {
     let mut state = EmitState {
         layer_z: 0.4,

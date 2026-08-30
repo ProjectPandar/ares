@@ -148,7 +148,7 @@ pub(super) fn emit(
                 );
             }
         } else if layer_change_travel && state.retracted {
-            if state.options.spiral_lift || state.options.auto_lift {
+            if uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else if state.lifted {
                 output.extend_from_slice(
@@ -171,7 +171,7 @@ pub(super) fn emit(
                 travel_set_layer_z = true;
             }
         } else if state.retracted && first_position && state.options.z_hop > 0.0 {
-            if state.options.spiral_lift || state.options.auto_lift {
+            if uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else {
                 output.extend_from_slice(
@@ -188,7 +188,7 @@ pub(super) fn emit(
                 state.lifted = true;
             }
         } else if layer_change_travel {
-            if state.options.spiral_lift || state.options.auto_lift {
+            if uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
                 output.extend_from_slice(
                     format!("G1 Z{}\n", format_extrusion(state.layer_z)).as_bytes(),
@@ -376,6 +376,10 @@ pub(super) fn emit(
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
     state.last_scaled_position = Some(last_scaled);
+}
+
+fn uses_sloped_lift(z_hop_type: crate::ZHopType) -> bool {
+    z_hop_type != crate::ZHopType::Normal
 }
 
 fn quantize_axis(value: f64) -> f64 {

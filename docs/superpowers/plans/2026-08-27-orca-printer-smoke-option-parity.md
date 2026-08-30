@@ -1619,5 +1619,11 @@ rejected upstream. Across 1,308 generated cases, 1,282 produced Orca output and
 include fill_multiline, Z shrink, zero top density, copied pattern enums, active
 gcode flavors, and prior invalid-context families.
 
+Motion options now retain the exhaustive ZHopType instead of collapsing it to
+two booleans. Scheduling matches Orca: Normal vertical, Slope lazy-sloped,
+Spiral spiral, and Auto Slope for ordinary travel/Spiral for layer change;
+path Z handling treats every non-Normal type as sloped. Enum/state tests, KSR,
+focused smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

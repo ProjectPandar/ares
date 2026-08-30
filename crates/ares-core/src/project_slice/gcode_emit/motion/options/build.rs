@@ -6,7 +6,7 @@ use super::first_nullable_float;
 use super::helpers::{
     absolute, acceleration, first_float, machine_acceleration_limit, rounded_acceleration,
 };
-use crate::{Nullable, ZHopType, options::InternalBridgeFanSpeed};
+use crate::{Nullable, options::InternalBridgeFanSpeed};
 
 impl MotionOptions {
     pub(in crate::project_slice::gcode_emit) fn from_traversal(
@@ -372,16 +372,7 @@ impl MotionOptions {
                 .0
                 .first()
                 .is_some_and(|value| value.0),
-            auto_lift: gcode
-                .z_hop_types
-                .0
-                .first()
-                .is_some_and(|value| matches!(value, ZHopType::Auto)),
-            spiral_lift: gcode
-                .z_hop_types
-                .0
-                .first()
-                .is_some_and(|value| matches!(value, ZHopType::Spiral)),
+            z_hop_type: gcode.z_hop_types.0.first().copied().unwrap_or_default(),
             travel_slope_radians: gcode
                 .travel_slope
                 .0

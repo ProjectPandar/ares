@@ -62,15 +62,12 @@ fn schedule_lift(state: &mut EmitState, layer_change: bool) {
     if state.options.z_hop <= 0.0 || !lift_height_is_allowed(state) || !lift_is_enforced(state) {
         return;
     }
-    state.pending_lift = Some(
-        if state.options.spiral_lift || state.options.auto_lift && layer_change {
-            LiftMode::Spiral
-        } else if state.options.auto_lift {
-            LiftMode::Slope
-        } else {
-            LiftMode::Normal
-        },
-    );
+    state.pending_lift = Some(match state.options.z_hop_type {
+        crate::ZHopType::Auto if layer_change => LiftMode::Spiral,
+        crate::ZHopType::Auto | crate::ZHopType::Slope => LiftMode::Slope,
+        crate::ZHopType::Normal => LiftMode::Normal,
+        crate::ZHopType::Spiral => LiftMode::Spiral,
+    });
 }
 
 fn lift_height_is_allowed(state: &EmitState) -> bool {
@@ -323,8 +320,10 @@ fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
         return;
     }
     let raised_z = state.layer_z + state.options.z_hop;
-    if (state.options.spiral_lift || state.options.auto_lift)
-        && state.options.travel_slope_radians > 0.0
+    if matches!(
+        state.options.z_hop_type,
+        crate::ZHopType::Spiral | crate::ZHopType::Auto
+    ) && state.options.travel_slope_radians > 0.0
     {
         let radius = state.options.z_hop
             / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
