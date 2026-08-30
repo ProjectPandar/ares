@@ -1565,7 +1565,9 @@ resets, missing relative-E uses PrintConfig's true default, machine-owned layer
 and wipe fields participate, and scalar/vector range values both clamp. Kobra
 Max moves from Orca validation error to a full focused PASS; RH3D advances from
 firmware/wipe validation to its real filament-shrink gap. Harness tests, KSR,
-clippy, and fmt pass.
+clippy, and fmt pass. The normalization moved into the real
+`orca_parity/smoke_overrides.rs` module when the harness root reached 416 LOC;
+both files are now below 400 without source-inclusion macros.
 
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
