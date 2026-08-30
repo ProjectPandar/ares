@@ -27,6 +27,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) internal_solid_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) top_surface_speed: f64,
     pub(in crate::project_slice::gcode_emit) gap_infill_speed: f64,
+    pub(in crate::project_slice::gcode_emit) support_speed: f64,
     pub(in crate::project_slice::gcode_emit) enable_overhang_speed: bool,
     pub(in crate::project_slice::gcode_emit) slowdown_for_curled_perimeters: bool,
     pub(in crate::project_slice::gcode_emit) overhang_speed_bands: [Option<FloatOrPercent>; 4],

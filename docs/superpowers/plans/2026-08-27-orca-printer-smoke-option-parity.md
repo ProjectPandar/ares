@@ -1432,5 +1432,11 @@ keeps the original loop start for wipe clipping. Snapmaker's sequence is now
 byte-exact (`119.736,129.765` inward; `117.775,129.751 E-1.2` wipe end), and
 KSR/workspace checks pass.
 
+First-layer speed classes now match `GCode.cpp:6515-6604`: perimeter roles use
+`initial_layer_speed`, while Brim/Sparse/other non-perimeters use
+`initial_layer_infill_speed` (with skirt's explicit override unchanged).
+Comgrow Brim is F3600 instead of F1800; focused speed test, KSR, clippy, and fmt
+pass.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue lifecycle, Qidi support-layer timelapse, and postamble geometry.

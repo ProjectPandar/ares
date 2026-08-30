@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::MotionOptions;
 use crate::ExtrusionRole;
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
@@ -90,10 +93,10 @@ impl PathProperties<'_> {
 
     fn speed(&self, options: &MotionOptions, layer_index: usize, path_length: f64) -> f64 {
         let layer_default = if layer_index == 0 {
-            if self.feature == "Bottom surface" {
-                options.initial_layer_infill_speed
-            } else {
+            if matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall") {
                 options.initial_layer_speed
+            } else {
+                options.initial_layer_infill_speed
             }
         } else {
             self.role_speed(options)
@@ -121,6 +124,7 @@ impl PathProperties<'_> {
             "Sparse infill" => options.sparse_infill_speed,
             "Internal solid infill" => options.internal_solid_infill_speed,
             "Gap infill" => options.gap_infill_speed,
+            "Brim" | "Support" => options.support_speed,
             _ => options.inner_wall_speed,
         }
     }
