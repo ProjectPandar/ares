@@ -49,6 +49,9 @@ pub(super) fn validate(
         ProcessInfillPattern::Monotonic
             | ProcessInfillPattern::MonotonicLine
             | ProcessInfillPattern::AlignedRectilinear
+            | ProcessInfillPattern::HilbertCurve
+            | ProcessInfillPattern::ArchimedeanChords
+            | ProcessInfillPattern::OctagramSpiral
     ) {
         return unsupported("top_surface_pattern");
     }
@@ -58,6 +61,9 @@ pub(super) fn validate(
             | ProcessInfillPattern::MonotonicLine
             | ProcessInfillPattern::AlignedRectilinear
             | ProcessInfillPattern::Rectilinear
+            | ProcessInfillPattern::HilbertCurve
+            | ProcessInfillPattern::ArchimedeanChords
+            | ProcessInfillPattern::OctagramSpiral
     ) {
         return unsupported("internal_solid_infill_pattern");
     }

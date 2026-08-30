@@ -4,6 +4,7 @@ pub(crate) mod cross_hatch;
 pub(crate) mod gyroid;
 pub(crate) mod multiline;
 pub(crate) mod multiline_offset;
+pub(crate) mod plane_path;
 #[cfg_attr(
     not(test),
     allow(

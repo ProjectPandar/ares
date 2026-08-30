@@ -5,6 +5,7 @@ mod gap_residual;
 mod grid;
 mod gyroid;
 mod monotonic;
+mod plane_path;
 mod simplify;
 #[cfg(test)]
 mod tests;
@@ -158,10 +159,11 @@ pub(in crate::project_slice) fn generate_layer(
         .predecessor
         .object;
     let (compensated, _) = prelude.as_parts();
-    let (post_regions, _) = compensated.as_parts();
+    let (post_regions, object_slices) = compensated.as_parts();
     let (plan, _, _) = post_regions.as_parts();
     let layer = &plan.layers[layer_index];
     let mut output = LayerFillEntities::default();
+    let mut plane_path_bounding_box = None;
 
     for fill in grouped.surface_fills {
         match fill.params.pattern {
@@ -189,6 +191,37 @@ pub(in crate::project_slice) fn generate_layer(
             ) => {
                 monotonic::append(&mut output, fill, pattern, layer.id, traversal.scale)?;
             }
+            SurfaceFillPattern::Configured(
+                pattern @ (ProcessInfillPattern::HilbertCurve
+                | ProcessInfillPattern::ArchimedeanChords
+                | ProcessInfillPattern::OctagramSpiral),
+            ) => {
+                if matches!(
+                    fill.params.extrusion_role,
+                    ExtrusionRole::TopSolidInfill
+                        | ExtrusionRole::BottomSurface
+                        | ExtrusionRole::SolidInfill
+                ) {
+                    let object_options = &traversal
+                        .resolved
+                        .objects
+                        .iter()
+                        .find(|object| object.source_object_index == prelude.identity().0)
+                        .expect("fill generation retains its resolved object")
+                        .object;
+                    let object_bounding_box = *plane_path_bounding_box
+                        .get_or_insert_with(|| plane_path_object_bounding_box(object_slices));
+                    plane_path::append(
+                        &mut output,
+                        fill,
+                        pattern,
+                        object_bounding_box,
+                        traversal.resolved.views.full.process.print.resolution.0,
+                        object_options.calib_flowrate_topinfill_special_order.0,
+                        traversal.scale,
+                    )?;
+                }
+            }
             SurfaceFillPattern::ConcentricInternal => {
                 concentric::append(&mut output, fill, minimum_nozzle_diameter, traversal.scale)?;
             }
@@ -207,6 +240,25 @@ pub(in crate::project_slice) fn generate_layer(
         );
     }
     Ok(output)
+}
+
+fn plane_path_object_bounding_box(
+    slices: &[Vec<crate::geometry::ExPolygon>],
+) -> crate::geometry::BoundingBox {
+    let mut points = slices
+        .iter()
+        .flatten()
+        .flat_map(|expolygon| expolygon.contour().points());
+    let first = *points
+        .next()
+        .expect("a sliced print object has a nonempty contour");
+    let (minimum, maximum) = points.fold((first, first), |(minimum, maximum), point| {
+        (
+            crate::geometry::Point::new(minimum.x().min(point.x()), minimum.y().min(point.y())),
+            crate::geometry::Point::new(maximum.x().max(point.x()), maximum.y().max(point.y())),
+        )
+    });
+    crate::geometry::BoundingBox::new(minimum, maximum)
 }
 
 fn simplify_before_ordering(enable_arc_fitting: bool, spiral_mode: bool) -> bool {

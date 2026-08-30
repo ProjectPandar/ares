@@ -10,6 +10,10 @@ pub(crate) struct BoundingBox {
 }
 
 impl BoundingBox {
+    pub(crate) const fn new(min: Point, max: Point) -> Self {
+        Self { min, max }
+    }
+
     pub(crate) fn from_polygon(polygon: &Polygon) -> Option<Self> {
         let first = *polygon.points().first()?;
         let (min_x, min_y, max_x, max_y) = polygon.points().iter().skip(1).fold(

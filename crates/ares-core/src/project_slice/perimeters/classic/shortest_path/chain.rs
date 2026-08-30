@@ -134,8 +134,9 @@ pub(super) fn chain_points(points: &[crate::geometry::Point]) -> Vec<usize> {
         .collect()
 }
 
-fn chain_multiple(positions: &[[f64; 2]], start_near: Option<[f64; 2]>) -> Vec<(usize, bool)> {
-    chain_multiple_constrained(positions, start_near, None)
+pub(super) type Chain = Vec<(usize, bool)>;
+pub(super) fn chain_multiple(points: &[[f64; 2]], start: Option<[f64; 2]>) -> Chain {
+    chain_multiple_constrained(points, start, None)
 }
 
 fn chain_multiple_constrained(

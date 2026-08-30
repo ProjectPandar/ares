@@ -1644,5 +1644,12 @@ selection test, KSR, smokes, clippy, and fmt pass. When `skirt.rs` reached 402
 LOC, convex-hull/seam geometry moved into the real `skirt/geometry.rs` module;
 the files are now 272/122 LOC with tests separate and no source inclusion.
 
+Plane-path solids now port `FillPlanePath.cpp/.hpp` for HilbertCurve,
+ArchimedeanChords, and OctagramSpiral, including source generators, clipped
+output rounding, object-bbox alignment, multiline, shortest-path/calibration
+ordering, and active top/bottom/internal-solid dispatch. All nine pattern-role
+option artifacts match Orca filament stats exactly (257.71..261.92 mm); nine
+focused tests, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

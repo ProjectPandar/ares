@@ -11,6 +11,7 @@ use crate::{
 };
 
 mod options;
+mod plane_path_preflight;
 
 #[test]
 fn task22o71_real_ksr_commits_first_internal_bridge_layer() {

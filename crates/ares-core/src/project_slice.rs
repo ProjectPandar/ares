@@ -34,6 +34,7 @@ mod layers;
 mod looped_intersections;
 mod parameters;
 mod path_simplification;
+pub(crate) use perimeters::classic::shortest_path::chain_polylines;
 mod perimeters;
 mod planning;
 mod pre_closing_unions;
