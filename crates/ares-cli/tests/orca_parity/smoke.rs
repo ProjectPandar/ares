@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use crate::{
     self as parity,
     presets::VendorProfiles,
-    runner::{self, OrcaRunner},
+    runner::{self, CaseInputs, OrcaRunner},
 };
 
 fn profiles_root() -> PathBuf {
@@ -26,6 +26,11 @@ fn orca_parity_kobra_s1_max_025_smoke() {
 #[test]
 fn orca_parity_ender3_smoke() {
     assert_printer_smoke("Creality", "Creality Ender-3 0.4 nozzle");
+}
+
+#[test]
+fn orca_parity_ironing_solid_smoke() {
+    assert_process_option_smoke("ironing_type", "solid");
 }
 
 #[test]
@@ -61,6 +66,41 @@ fn assert_printer_smoke(vendor: &str, printer: &str) {
         "printer smoke: {} {} {}",
         outcome.status, outcome.label, outcome.detail
     );
+    assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
+}
+
+fn assert_process_option_smoke(key: &str, value: &str) {
+    let Some(runner) = OrcaRunner::from_env() else {
+        return;
+    };
+    let profiles = VendorProfiles::load(&profiles_root(), "Creality").unwrap();
+    let selection =
+        parity::select_printer(&profiles, "Creality", "Creality Ender-3 0.4 nozzle").unwrap();
+    let machine = profiles.machine(&selection.printer).unwrap();
+    let mut process = profiles.process(&selection.process).unwrap();
+    parity::normalize_process_defaults(&machine, &mut process);
+    process.insert(key.to_owned(), serde_json::Value::String(value.to_owned()));
+    let mut filaments = selection
+        .filaments
+        .iter()
+        .map(|name| profiles.filament(name).unwrap())
+        .collect::<Vec<_>>();
+    parity::normalize_filament_defaults(&mut filaments);
+    let mut overrides = parity::smoke_overrides();
+    overrides.remove(key);
+    let case = runner
+        .build_case(
+            &CaseInputs {
+                label: &format!("option/{key}/{value}"),
+                machine: &machine,
+                process: &process,
+                filaments: &filaments,
+            },
+            &overrides,
+            &cube_model(),
+        )
+        .unwrap();
+    let outcome = parity::compare_case(&case);
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
 }
 

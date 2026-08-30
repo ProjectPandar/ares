@@ -238,7 +238,17 @@ fn emit_infills(
     if entities.is_empty() {
         return;
     }
+    let mut ironing = Vec::new();
+    let mut index = 0;
+    while index < entities.len() {
+        if is_ironing_entity(&entities[index]) {
+            ironing.push(entities.remove(index));
+        } else {
+            index += 1;
+        }
+    }
     chain_and_reorder_entities(entities, local_cursor(state, geometry));
+    entities.append(&mut ironing);
     for entity in entities.drain(..) {
         match entity {
             IslandPrintEntity::Fill(entity) => {
@@ -257,6 +267,17 @@ fn emit_infills(
                 unreachable!("infill phase contains only infill entities")
             }
         }
+    }
+}
+
+fn is_ironing_entity(entity: &IslandPrintEntity) -> bool {
+    let path_is_ironing = |entity: &FillExtrusionEntity| matches!(entity, FillExtrusionEntity::Path(path) if path.role == crate::ExtrusionRole::Ironing);
+    match entity {
+        IslandPrintEntity::Fill(entity) => path_is_ironing(entity),
+        IslandPrintEntity::FillCollection(collection) => {
+            collection.entities.first().is_some_and(path_is_ironing)
+        }
+        IslandPrintEntity::Perimeter(_) | IslandPrintEntity::Thin(_) => false,
     }
 }
 

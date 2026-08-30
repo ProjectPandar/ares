@@ -73,8 +73,8 @@ pub(super) fn emit(
                 .iter()
                 .map(|point| {
                     (
-                        quantize_axis(point.x + state.offset.0),
-                        quantize_axis(point.y + state.offset.1),
+                        travel_emit::quantize_axis(point.x + state.offset.0),
+                        travel_emit::quantize_axis(point.y + state.offset.1),
                     )
                 })
                 .collect::<Vec<_>>()
@@ -292,8 +292,12 @@ pub(super) fn emit(
     {
         output.extend_from_slice(
             format!(
-                "; LAYER_HEIGHT: {}\n",
-                super::super::format_processor_float(f64::from(properties.height))
+                "{}\n",
+                state
+                    .tags
+                    .height(&super::super::format_processor_float(f64::from(
+                        properties.height
+                    )))
             )
             .as_bytes(),
         );
@@ -392,8 +396,4 @@ pub(super) fn emit(
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
     state.last_scaled_position = Some(last_scaled);
-}
-
-fn quantize_axis(value: f64) -> f64 {
-    (value * 1_000.0).round() / 1_000.0
 }

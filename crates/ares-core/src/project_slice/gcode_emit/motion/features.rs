@@ -121,6 +121,7 @@ impl PathProperties<'_> {
             "Bridge" | "Overhang wall" => options.bridge_speed,
             "Internal Bridge" => options.internal_bridge_speed,
             "Top surface" => options.top_surface_speed,
+            "Ironing" => options.ironing_speed,
             "Sparse infill" => options.sparse_infill_speed,
             "Internal solid infill" => options.internal_solid_infill_speed,
             "Gap infill" => options.gap_infill_speed,

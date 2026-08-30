@@ -1854,5 +1854,12 @@ complex clockwise loops continue through full alignment. The CW option's
 inner/outer paths and 99-deposition count are exact. Safety-shape test, KSR,
 clippy, and fmt pass.
 
+Active ironing now ports `Fill.cpp::Layer::make_ironing`: all ironing_type
+layer gates, top/all-solid area selection, nozzle/inset clipping, filament-
+overlaid spacing/flow/speed, angle, exact flow dimensions, monotonic no-sort
+paths, and post-fill ordering. The solid focused Orca smoke fully PASSes at
+274.88 mm. Role height tags use flavor vocabulary and ironing remains after
+ordinary fills. Unit/focused parity, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

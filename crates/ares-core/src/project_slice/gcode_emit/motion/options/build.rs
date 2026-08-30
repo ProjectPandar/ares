@@ -102,6 +102,9 @@ impl MotionOptions {
             top_surface_speed: region.map_or(full.process.region.top_surface_speed.0, |value| {
                 value.top_surface_speed.0
             }),
+            ironing_speed: region.map_or(full.process.region.ironing_speed.0, |value| {
+                value.filament_ironing_speed.0
+            }),
             gap_infill_speed: region.map_or(full.process.region.gap_infill_speed.0, |value| {
                 value.gap_infill_speed.0
             }),

@@ -4,6 +4,7 @@ mod cubic;
 mod gap_residual;
 mod grid;
 mod gyroid;
+mod ironing;
 mod monotonic;
 mod plane_path;
 mod simplify;
@@ -162,6 +163,13 @@ pub(in crate::project_slice) fn generate_layer(
     let (post_regions, object_slices) = compensated.as_parts();
     let (plan, _, _) = post_regions.as_parts();
     let layer = &plan.layers[layer_index];
+    let resolved_object = traversal
+        .resolved
+        .objects
+        .iter()
+        .find(|object| object.source_object_index == prelude.identity().0)
+        .expect("fill generation retains its resolved object");
+    let object_options = &resolved_object.object;
     let mut output = LayerFillEntities::default();
     let mut plane_path_bounding_box = None;
 
@@ -202,13 +210,6 @@ pub(in crate::project_slice) fn generate_layer(
                         | ExtrusionRole::BottomSurface
                         | ExtrusionRole::SolidInfill
                 ) {
-                    let object_options = &traversal
-                        .resolved
-                        .objects
-                        .iter()
-                        .find(|object| object.source_object_index == prelude.identity().0)
-                        .expect("fill generation retains its resolved object")
-                        .object;
                     let object_bounding_box = *plane_path_bounding_box
                         .get_or_insert_with(|| plane_path_object_bounding_box(object_slices));
                     plane_path::append(
@@ -235,6 +236,31 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(_) => {}
         }
+    }
+    if let (Some(record), Some(input)) = (
+        prepared.predecessor.objects[object_index].records[layer_index].as_ref(),
+        prelude.records[layer_index].as_ref(),
+    ) {
+        let region = prelude.region_options(input);
+        ironing::append(
+            &mut output,
+            ironing::Input {
+                record,
+                layer_slices: &object_slices[layer_index],
+                region,
+                object: object_options,
+                nozzles: &traversal.resolved.views.full.project.print.nozzle_diameter,
+                layer,
+                last_layer: input.upper_layer_index.is_none(),
+                spiral_mode: input.spiral_mode,
+                model_rotation_offset: if region.align_infill_direction_to_model.0 {
+                    input.model_rotation_rad as f32
+                } else {
+                    0.0
+                },
+                scale: traversal.scale,
+            },
+        )?;
     }
     let process = &traversal.resolved.views.full.process;
     if simplify_before_ordering(
