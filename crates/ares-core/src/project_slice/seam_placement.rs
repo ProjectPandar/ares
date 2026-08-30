@@ -28,7 +28,10 @@ const VISIBILITY_SAMPLE_COUNT: usize = 30_000;
 const ANGLE_IMPORTANCE_ALIGNED: f32 = 0.6;
 const SEAM_VERTEX_SNAP_MM: f64 = 0.0015;
 
+#[cfg(test)]
+use runtime::is_closed_axis_rectangle;
 pub(in crate::project_slice) use runtime::place_nearest;
+use runtime::prepared_cw_rectangles_have_source_seams;
 
 pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
     let predecessor = &prepared.predecessor;
@@ -79,39 +82,6 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         &visibility,
         nozzle_diameter,
     );
-}
-
-fn prepared_cw_rectangles_have_source_seams(layers: &[OrderedExtrusionLayer]) -> bool {
-    let mut found = false;
-    for loop_ in layers
-        .iter()
-        .flat_map(|layer| &layer.islands)
-        .flat_map(|island| &island.entities)
-        .filter_map(|entity| match entity {
-            IslandPrintEntity::Perimeter(collection) => Some(collection),
-            _ => None,
-        })
-        .flat_map(|collection| &collection.entities)
-        .map(|entity| &entity.extrusion_loop)
-    {
-        found = true;
-        if !is_closed_axis_rectangle(loop_) {
-            return false;
-        }
-    }
-    found
-}
-
-fn is_closed_axis_rectangle(loop_: &ExtrusionLoop) -> bool {
-    if loop_.paths.len() != 1 {
-        return false;
-    }
-    let points = &loop_.paths[0].polyline.points;
-    points.len() == 5
-        && points.first() == points.last()
-        && points
-            .windows(2)
-            .all(|segment| segment[0].x == segment[1].x || segment[0].y == segment[1].y)
 }
 
 fn apply_objects(
