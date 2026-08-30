@@ -1884,5 +1884,10 @@ speed/flow, and final travel-Z state are emitted on the active path. All three
 `seam_slope_type` values pass focused Orca movement parity; scarf tests, KSR,
 clippy, and fmt pass.
 
+Aligned inner seams now port `SeamPlacer.cpp::place_seam`'s
+`staggered_inner_seams` walk: after aligned projection, each inner perimeter
+advances by at least its source path width and is split at the projected point.
+Both Boolean values pass focused Orca movement parity.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

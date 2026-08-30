@@ -3,9 +3,75 @@ use crate::{
     geometry::CoordinateScale,
     project_slice::{
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
-        perimeters::classic::{chained_loops::ExtrusionLoop, materialize::Point3},
+        perimeters::classic::{
+            chained_loops::ExtrusionLoop,
+            materialize::{ExtrusionRole, Point3},
+            traversal::ClassicTraversalRecord,
+        },
     },
 };
+
+pub(super) fn layer_mid_zs(records: &[Option<ClassicTraversalRecord>]) -> Vec<f32> {
+    records
+        .iter()
+        .scan(0.0_f64, |print_z, record| {
+            let height = record.as_ref().map_or(0.0, |record| record.layer_height);
+            *print_z += height;
+            Some((*print_z - 0.5 * height) as f32)
+        })
+        .collect()
+}
+
+pub(super) fn stagger_inner_seams(
+    layers: &mut [OrderedExtrusionLayer],
+    enabled: bool,
+    scale: CoordinateScale,
+) {
+    if !enabled {
+        return;
+    }
+    for loop_ in layers
+        .iter_mut()
+        .flat_map(|layer| &mut layer.islands)
+        .flat_map(|island| &mut island.entities)
+        .filter_map(|entity| match entity {
+            IslandPrintEntity::Perimeter(collection) => Some(collection),
+            _ => None,
+        })
+        .flat_map(|collection| &mut collection.entities)
+        .map(|entity| &mut entity.extrusion_loop)
+    {
+        if let Some(target) = stagger_target(loop_, scale) {
+            split_at(loop_, target, scale);
+        }
+    }
+}
+
+fn stagger_target(loop_: &ExtrusionLoop, scale: CoordinateScale) -> Option<(i64, i64)> {
+    let first = loop_.paths.first()?;
+    if first.role != ExtrusionRole::Perimeter {
+        return None;
+    }
+    let mut remaining = f64::from(first.width) / scale.factor();
+    for segment in loop_
+        .paths
+        .iter()
+        .flat_map(|path| path.polyline.points.windows(2))
+    {
+        let dx = (segment[1].x - segment[0].x) as f64;
+        let dy = (segment[1].y - segment[0].y) as f64;
+        let length = dx.hypot(dy);
+        if remaining <= length {
+            let ratio = remaining / length;
+            return Some((
+                (segment[0].x as f64 + dx * ratio) as i64,
+                (segment[0].y as f64 + dy * ratio) as i64,
+            ));
+        }
+        remaining -= length;
+    }
+    None
+}
 
 pub(super) fn prepared_cw_rectangles_have_source_seams(layers: &[OrderedExtrusionLayer]) -> bool {
     let mut found = false;
