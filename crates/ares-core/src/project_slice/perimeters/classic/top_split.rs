@@ -130,12 +130,14 @@ fn prepare_surface(
     } = context;
     let initial_loop_number = surface.loop_number;
     if initial_loop_number < 0 {
-        return Ok(empty_surface(
+        let mut output = empty_surface(
             surface,
             initial_loop_number,
             TopSplitOutcome::NoLoops,
             upper_source,
-        ));
+        );
+        output.remaining = surface.polygons.clone();
+        return Ok(output);
     }
 
     let first = first_outer::apply(&surface.polygons, record, scale)?;

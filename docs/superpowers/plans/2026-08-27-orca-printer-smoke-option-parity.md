@@ -1733,5 +1733,11 @@ internal travels retract/wipe/lift instead of being skipped, restoring both
 motion inventory and CoolingBuffer time; the sparse=0 layer feed is exact
 F2105. Role-gate test, KSR, smokes, clippy, and fmt pass.
 
+Classic zero-wall flow now preserves the original surface as `last` through
+TopSplit NoLoops and Onion's negative-loop branch, matching
+`PerimeterGenerator.cpp:1628-1691` (`inset=0`). wall_loops=0 now emits all fill
+roles and matches Orca filament usage exactly at 196.24 mm; lifecycle test,
+KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

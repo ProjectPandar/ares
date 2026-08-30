@@ -44,7 +44,11 @@ pub(super) fn apply(input: IterationInput<'_>) -> Result<IterationResult, SliceE
                 -1
             },
             shells: Vec::new(),
-            last: Vec::new(),
+            last: if initial_loop_number < 0 {
+                remaining.to_vec()
+            } else {
+                Vec::new()
+            },
             gaps: Vec::new(),
         });
     }

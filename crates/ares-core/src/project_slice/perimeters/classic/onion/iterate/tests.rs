@@ -156,17 +156,20 @@ fn task22o3_appends_gap_before_collapse_then_clears_last() {
 }
 
 #[test]
-fn task22o3_no_loop_and_depth_zero_collapse_have_no_raw_shell() {
+fn task22o3_no_loop_preserves_fill_while_depth_zero_collapse_is_empty() {
     let first = vec![rectangle(0, 0, 10_000, 10_000)];
     let no_loop = run(-1, &first, &[], &first, config(true, 20, 1_000, 1_000, 500));
     let collapsed = run(2, &[], &[], &[], config(true, 20, 1_000, 1_000, 500));
 
-    for result in [no_loop, collapsed] {
-        assert_eq!(result.effective_loop_number, -1);
-        assert!(result.shells.is_empty());
-        assert!(result.last.is_empty());
-        assert!(result.gaps.is_empty());
-    }
+    assert_eq!(no_loop.effective_loop_number, -1);
+    assert!(no_loop.shells.is_empty());
+    assert_eq!(no_loop.last, first);
+    assert!(no_loop.gaps.is_empty());
+
+    assert_eq!(collapsed.effective_loop_number, -1);
+    assert!(collapsed.shells.is_empty());
+    assert!(collapsed.last.is_empty());
+    assert!(collapsed.gaps.is_empty());
 }
 
 #[test]
