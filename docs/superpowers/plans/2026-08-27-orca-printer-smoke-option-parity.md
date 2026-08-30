@@ -1369,5 +1369,12 @@ DIVERGENT and 92 ARES_ERROR. Control-first rows collapse 95→33. Ender V3 Plus
 is PASS; A1 advances from first-layer CoolingBuffer feed to layer-31 sparse
 geometry; Creality Hi advances past whitespace to deposition count.
 
-NEXT: sweep the role-ratio commit, then correct scaled Clipper endpoint
+Runtime template parity now also covers effective retraction vectors and bool
+serialization. Both `retract_length` and `retraction_length` expose filament
+overrides (Snapmaker E-1.2 instead of printer-default E-0.8), while interpolated
+ConfigOptionBool values serialize as `1/0` (Snapmaker Dual
+`has_wipe_tower: 0`). Focused tests were RED/GREEN and KSR/workspace checks
+pass.
+
+NEXT: sweep these placeholder fixes, then correct scaled Clipper endpoint
 precision / limited-hook direction and continue postamble geometry/lifecycle.

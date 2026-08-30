@@ -74,7 +74,7 @@ impl Value {
             Self::Number(value) if value.fract() == 0.0 => format!("{value:.0}"),
             Self::Number(value) => format_number(*value),
             Self::String(value) => value.clone(),
-            Self::Bool(value) => value.to_string(),
+            Self::Bool(value) => i64::from(*value).to_string(),
             Self::List(values) => values
                 .iter()
                 .map(Self::as_string)

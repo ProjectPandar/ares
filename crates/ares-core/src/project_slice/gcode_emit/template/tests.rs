@@ -2,6 +2,15 @@ use super::*;
 use crate::project_slice::gcode_emit::value::Config;
 
 #[test]
+fn renderer_serializes_boolean_placeholders_as_zero_or_one() {
+    let mut config = Config::default();
+    config.insert("enabled", super::super::value::Value::Bool(true));
+    config.insert("disabled", super::super::value::Value::Bool(false));
+
+    assert_eq!(render("{enabled} {disabled}", &mut config).unwrap(), "1 0");
+}
+
+#[test]
 fn renderer_selects_nested_branches_and_replaces_values() {
     let mut config = Config::from_block(b"; enabled = 1\n; n = 2\n");
     let template = "{if enabled}\nA [n]\n{if n > 1}\nB\n{endif}\n{else}\nC\n{endif}\n";
