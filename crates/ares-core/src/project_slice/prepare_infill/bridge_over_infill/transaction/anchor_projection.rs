@@ -48,6 +48,7 @@ pub(super) fn validate(
         options.top_surface_pattern,
         ProcessInfillPattern::Monotonic
             | ProcessInfillPattern::MonotonicLine
+            | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::AlignedRectilinear
             | ProcessInfillPattern::Concentric
             | ProcessInfillPattern::HilbertCurve

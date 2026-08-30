@@ -1900,5 +1900,11 @@ source f32 spacing arithmetic and full scaled-spacing truncation before
 halving. All `gap_fill_target` values pass focused Orca movement parity,
 including the exact `0.449969` variable width.
 
+Plain Rectilinear and AlignedRectilinear fills now take
+`FillRectilinear.cpp::traverse_graph_generate_polylines`'s sweep traversal
+instead of the monotonic ant-chain branch. The top Rectilinear value passes
+focused Orca movement parity, and its previously rejected bridge projection is
+accepted.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

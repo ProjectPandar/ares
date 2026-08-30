@@ -32,6 +32,23 @@ pub(crate) fn fill_monotonic_surface(
     params: MonotonicFillParams,
     scale: CoordinateScale,
 ) -> Result<MonotonicFillOutput, ClipperError> {
+    fill_surface(expolygon, params, scale, true)
+}
+
+pub(crate) fn fill_rectilinear_surface(
+    expolygon: &ExPolygon,
+    params: MonotonicFillParams,
+    scale: CoordinateScale,
+) -> Result<MonotonicFillOutput, ClipperError> {
+    fill_surface(expolygon, params, scale, false)
+}
+
+fn fill_surface(
+    expolygon: &ExPolygon,
+    params: MonotonicFillParams,
+    scale: CoordinateScale,
+    monotonic: bool,
+) -> Result<MonotonicFillOutput, ClipperError> {
     let direction = infill_direction(params);
     let (outer_offset, inner_offset) = scaled_offsets(scale, params.overlap, params.spacing)?;
     let mut slice =
@@ -78,12 +95,17 @@ pub(crate) fn fill_monotonic_surface(
     populate_vertical_lines(&mut slice, count, x0, line_spacing)?;
     let link_max_length = checked_scale(scale, params.link_max_length)? as f64;
     connect_contours(&mut slice, params.anchor_length_max < 0.05, link_max_length);
-    insert_phony_outer_pairs(&mut slice.lines);
-    let mut regions = generate_monotonic_regions(&slice.lines);
-    connect_region_neighbors(&mut regions, &slice.lines);
-    compute_region_costs(&mut regions, &slice, scale);
-    let path = chain_monotonic_regions(&regions, &slice, scale);
-    let polylines: Vec<Polyline> = emit_monotonic_polylines(&path, &regions, &slice, scale)
+    let generated = if monotonic {
+        insert_phony_outer_pairs(&mut slice.lines);
+        let mut regions = generate_monotonic_regions(&slice.lines);
+        connect_region_neighbors(&mut regions, &slice.lines);
+        compute_region_costs(&mut regions, &slice, scale);
+        let path = chain_monotonic_regions(&regions, &slice, scale);
+        emit_monotonic_polylines(&path, &regions, &slice, scale)
+    } else {
+        super::traverse::generate(&slice, false)
+    };
+    let polylines: Vec<Polyline> = generated
         .into_iter()
         .map(|polyline| rotate_polyline(polyline, f64::from(direction)))
         .collect::<Result<_, _>>()?;

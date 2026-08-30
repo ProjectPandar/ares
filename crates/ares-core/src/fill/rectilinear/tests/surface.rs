@@ -1,7 +1,7 @@
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 
 use super::super::{
-    MonotonicFillParams, fast_round_up, fill_monotonic_surface,
+    MonotonicFillParams, fast_round_up, fill_monotonic_surface, fill_rectilinear_surface,
     surface::{scaled_line_spacing, scaled_offsets},
 };
 
@@ -72,6 +72,18 @@ fn task22o89_full_solid_rectangle_emits_repeatable_scaled_polylines() {
     assert!(first.polylines.iter().all(|polyline| polyline.is_valid()));
     assert_eq!(first.spacing.to_bits(), 0.24_f32.to_bits());
     assert_eq!(source, before);
+}
+
+#[test]
+fn plain_rectilinear_graph_traversal_is_repeatable_and_valid() {
+    let source = scaled_rectangle();
+
+    let first = fill_rectilinear_surface(&source, params(), CoordinateScale::Normal).unwrap();
+    let second = fill_rectilinear_surface(&source, params(), CoordinateScale::Normal).unwrap();
+
+    assert_eq!(first, second);
+    assert!(first.polylines.iter().all(|polyline| polyline.is_valid()));
+    assert!(!first.polylines.is_empty());
 }
 
 #[test]

@@ -10,6 +10,7 @@ mod regions;
 mod rng;
 mod segments;
 mod surface;
+mod traverse;
 
 fn fast_round_up(value: f64) -> f64 {
     if value == 0.499_999_999_999_999_94 {
@@ -37,7 +38,7 @@ pub(crate) use segments::{
     IntersectionKind, LinkQuality, LinkType, SegmentIntersection, SegmentedLine,
     prepare_rectilinear_slice, slice_vertical_lines,
 };
-pub(crate) use surface::{MonotonicFillParams, fill_monotonic_surface};
+pub(crate) use surface::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface};
 
 #[cfg(test)]
 mod tests;

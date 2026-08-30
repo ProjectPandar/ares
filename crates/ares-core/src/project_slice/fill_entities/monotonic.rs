@@ -1,6 +1,6 @@
 use crate::{
     ProcessInfillPattern, SliceError,
-    fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
+    fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
     geometry::{CoordinateScale, Point},
     project_slice::group_fills::SurfaceFill,
 };
@@ -43,9 +43,16 @@ pub(super) fn append(
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;
+    let generate = if matches!(
+        pattern,
+        ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
+    ) {
+        fill_monotonic_surface
+    } else {
+        fill_rectilinear_surface
+    };
     for expolygon in fill.expolygons {
-        let generated =
-            fill_monotonic_surface(&expolygon, params, scale).map_err(geometry_error)?;
+        let generated = generate(&expolygon, params, scale).map_err(geometry_error)?;
         if generated.polylines.is_empty() {
             continue;
         }
