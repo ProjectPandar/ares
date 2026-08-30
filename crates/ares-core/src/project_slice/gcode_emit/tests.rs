@@ -7,6 +7,7 @@ mod flow_ratio;
 mod layer_placeholders;
 mod object_labels;
 mod runtime_placeholders;
+mod timelapse;
 
 #[test]
 fn ksr_motion_options_resolve_from_typed_project_settings() {

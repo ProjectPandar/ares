@@ -1348,5 +1348,14 @@ Layer-start kinematics now run only on layers 1 and 2, matching
 of resetting jerk to default. A RED/GREEN unit test covers this, and the common
 Ender V3 Plus layer-3 control sequence is byte-identical. KSR/clippy/fmt pass.
 
+Traditional I3 timelapse is now inserted once at the first perimeter→infill
+boundary (`GCode.cpp:5145-5209,5453-5463`) instead of unconditionally at layer
+end. Its `max_layer_z` is current cumulative Z, rendered last-Z updates writer
+lift state, and BBL stop labels/retraction queue into the next layer-change
+block. The public 3MF test verifies perimeter < timelapse < bottom surface and
+next-layer M625 placement; A1 advances from first-layer feed divergence to
+layer-31 sparse geometry. Timelapse logic is contained in its own 173-LOC
+module and `gcode_emit.rs` is back to 371 LOC.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue postamble geometry and lifecycle.

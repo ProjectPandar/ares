@@ -31,6 +31,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) wipe_path: Vec<arc::Point>,
     pub(in crate::project_slice::gcode_emit) wipe_start: Option<arc::Point>,
     pub(in crate::project_slice::gcode_emit) lifted: bool,
+    pub(in crate::project_slice::gcode_emit) template_lifted: bool,
     pub(in crate::project_slice::gcode_emit) pending_lift: Option<LiftMode>,
     pub(in crate::project_slice::gcode_emit) part_fan_speed: u8,
     pub(in crate::project_slice::gcode_emit) physical_fan_speed: u8,
@@ -42,6 +43,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) last_travel_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_start: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
+    pub(in crate::project_slice::gcode_emit) pending_object_stop_label: Option<u32>,
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
@@ -112,10 +114,22 @@ pub(in crate::project_slice::gcode_emit) fn queue_exclude_end(state: &mut EmitSt
     }
 }
 
+pub(in crate::project_slice::gcode_emit) fn queue_object_stop_label(
+    state: &mut EmitState,
+    label_id: u32,
+) {
+    state.pending_object_stop_label = Some(label_id);
+}
+
 pub(in crate::project_slice::gcode_emit) fn append_exclude_end(
     output: &mut Vec<u8>,
     state: &mut EmitState,
 ) {
+    if let Some(label_id) = state.pending_object_stop_label.take() {
+        output.extend_from_slice(
+            format!("; stop printing object, unique label id: {label_id}\nM625\n").as_bytes(),
+        );
+    }
     if let Some(text) = state.pending_exclude_end.take() {
         output.extend_from_slice(text.as_bytes());
         if !state.options.use_relative_e_distances && text.lines().any(|line| line == "G92 E0") {

@@ -123,7 +123,11 @@ pub(super) fn emit(
             },
             state,
         );
-        if state.lifted && !first_position && (!layer_change_travel || pending_lift_emitted) {
+        if state.template_lifted && state.lifted && !first_position {
+            travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
+            state.template_lifted = false;
+        } else if state.lifted && !first_position && (!layer_change_travel || pending_lift_emitted)
+        {
             output.extend_from_slice(
                 format!(
                     "G1 X{} Y{} Z{}\n",
@@ -236,6 +240,7 @@ pub(super) fn emit(
         );
         state.retracted = false;
         state.lifted = false;
+        state.template_lifted = false;
     }
     let jerk = properties.jerk(&state.options, state.layer_index);
     set_accel_and_jerk(output, state, acceleration, jerk, false);

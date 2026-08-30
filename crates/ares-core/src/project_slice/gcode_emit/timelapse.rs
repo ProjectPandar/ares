@@ -5,23 +5,64 @@ use crate::{
 
 use super::{footprint, template, value};
 
+#[derive(Clone, Copy)]
 pub(super) struct TimelapseLayer {
     pub(super) index: usize,
     pub(super) z: f64,
     pub(super) max_z: f64,
 }
 
-pub(super) fn append(
+#[derive(Clone, Copy)]
+pub(super) struct Context<'a> {
+    pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) layer: TimelapseLayer,
+    pub(super) metadata: GenerationMetadata,
+    pub(super) first_layer_bounds: Option<footprint::FirstLayerBounds>,
+}
+
+pub(super) fn append_and_track(
+    output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
+    context: Context<'_>,
+) -> Result<(), SliceError> {
+    if let Some(z) = append(
+        output,
+        context.traversal,
+        context.layer,
+        context.metadata,
+        context.first_layer_bounds,
+    )? {
+        state.lifted = z > context.layer.z + f64::EPSILON;
+        state.template_lifted = state.lifted;
+    }
+    Ok(())
+}
+
+pub(super) fn append_traditional(
+    enabled: bool,
+    output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
+    context: Context<'_>,
+) -> Result<bool, SliceError> {
+    if !enabled {
+        return Ok(false);
+    }
+    super::motion::prepare_traditional_timelapse(output, state);
+    append_and_track(output, state, context)?;
+    Ok(true)
+}
+
+fn append(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     layer: TimelapseLayer,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
-) -> Result<(), SliceError> {
+) -> Result<Option<f64>, SliceError> {
     let runtime = &traversal.resolved.views.runtime_gcode;
     let source = &runtime.time_lapse_gcode.0;
     if source.is_empty() {
-        return Ok(());
+        return Ok(None);
     }
 
     let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
@@ -64,9 +105,26 @@ pub(super) fn append(
             "invalid project timelapse G-code template: {error}"
         ))
     })?;
+    let last_z = last_motion_z(&rendered);
     output.extend_from_slice(rendered.as_bytes());
     output.push(b'\n');
-    Ok(())
+    Ok(last_z)
+}
+
+fn last_motion_z(gcode: &str) -> Option<f64> {
+    gcode.lines().rev().find_map(|line| {
+        let code = line.split_once(';').map_or(line, |(code, _)| code).trim();
+        matches!(
+            code.split_ascii_whitespace().next(),
+            Some("G0" | "G1" | "G2" | "G3")
+        )
+        .then(|| {
+            code.split_ascii_whitespace()
+                .skip(1)
+                .find_map(|word| word.strip_prefix('Z')?.parse().ok())
+        })
+        .flatten()
+    })
 }
 
 fn safe_position(traversal: &PreparedPostClassicTraversal) -> Option<(i32, i32)> {

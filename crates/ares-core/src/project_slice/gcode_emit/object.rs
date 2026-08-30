@@ -113,13 +113,18 @@ impl ObjectLabels {
         output: &mut Vec<u8>,
         state: &mut super::motion::EmitState,
         emit_comments: bool,
+        defer_retraction: bool,
     ) {
         if emit_comments {
             self.append_stopping(output);
         }
-        super::motion::end_layer_for_timelapse(output, state);
+        if defer_retraction {
+            super::motion::defer_layer_retraction(state);
+        } else {
+            super::motion::end_layer_for_timelapse(output, state);
+        }
         if state.tags.is_bbl() {
-            self.append_stop_label(output);
+            super::motion::queue_object_stop_label(state, self.label_id);
         } else if let Some(end) = self.exclude_end() {
             super::motion::queue_exclude_end(state, end.clone());
         }
@@ -130,16 +135,6 @@ impl ObjectLabels {
             format!(
                 "; stop printing object {} id:{} copy {}\n",
                 self.name, self.object_id, self.copy_id,
-            )
-            .as_bytes(),
-        );
-    }
-
-    pub(super) fn append_stop_label(&self, output: &mut Vec<u8>) {
-        output.extend_from_slice(
-            format!(
-                "; stop printing object, unique label id: {}\nM625\n",
-                self.label_id,
             )
             .as_bytes(),
         );

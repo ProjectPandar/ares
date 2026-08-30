@@ -103,6 +103,20 @@ pub(super) fn emit(
         .sum();
     let layer_change_template =
         layer_gcode::LayerChangeTemplate::new(traversal, metadata, first_layer_bounds);
+    let runtime_gcode = &traversal.resolved.views.runtime_gcode;
+    let traditional_timelapse = !runtime_gcode.time_lapse_gcode.0.is_empty()
+        && ((runtime_gcode.printer_structure == crate::PrinterStructure::I3
+            && !traversal.resolved.views.full.process.print.spiral_mode.0)
+            || traversal
+                .resolved
+                .views
+                .full
+                .project
+                .print
+                .nozzle_diameter
+                .0
+                .len()
+                > 1);
     let mut second_layer_done = false;
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = object::ObjectLabels::from_traversal(traversal, object_index);
@@ -221,23 +235,35 @@ pub(super) fn emit(
             if let Some(labels) = &labels {
                 labels.queue_start(&mut output, &mut state, emit_labels);
             }
-            motion::emit_layer(&mut output, layer, geometry, &mut state)?;
-            if let Some(labels) = &labels {
-                labels.queue_stop(&mut output, &mut state, emit_labels);
-            } else {
-                motion::end_layer_for_timelapse(&mut output, &mut state);
-            }
-            timelapse::append(
-                &mut output,
+            let timelapse_context = timelapse::Context {
                 traversal,
-                timelapse::TimelapseLayer {
+                layer: timelapse::TimelapseLayer {
                     index: layer_index,
                     z: f64::from(layer_z),
-                    max_z: max_layer_z,
+                    max_z: f64::from(layer_z),
                 },
                 metadata,
                 first_layer_bounds,
-            )?;
+            };
+            let timelapse_inserted =
+                motion::emit_layer(&mut output, layer, geometry, &mut state, |output, state| {
+                    timelapse::append_traditional(
+                        traditional_timelapse,
+                        output,
+                        state,
+                        timelapse_context,
+                    )
+                })?;
+            if let Some(labels) = &labels {
+                labels.queue_stop(&mut output, &mut state, emit_labels, timelapse_inserted);
+            } else if timelapse_inserted {
+                motion::defer_layer_retraction(&mut state);
+            } else {
+                motion::end_layer_for_timelapse(&mut output, &mut state);
+            }
+            if !timelapse_inserted {
+                timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
+            }
             cooling.finish_layer(&mut output, layer_output_start);
         }
     }

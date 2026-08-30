@@ -23,6 +23,7 @@ pub(in crate::project_slice) use arc::simplify_points;
 pub(super) use state::{
     EmitState, LayerGeometry, LiftMode, append_exclude_end, append_object_start, begin_layer,
     begin_path_travel, queue_exclude_end, queue_exclude_start, queue_object_start,
+    queue_object_stop_label,
 };
 pub(super) use travel::{flush_pending_retract_lift, flush_pending_retract_wipe};
 
@@ -40,6 +41,16 @@ use crate::{
         },
     },
 };
+
+pub(super) fn prepare_traditional_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
+    travel::retract_for_timelapse(output, state);
+}
+
+pub(super) fn defer_layer_retraction(state: &mut EmitState) {
+    if state.options.retract_when_changing_layer && state.positioned {
+        state.pending_layer_retract = true;
+    }
+}
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
@@ -136,12 +147,17 @@ pub(super) fn emit_skirt_loop(
     state.wipe_path.reverse();
 }
 
-pub(super) fn emit_layer(
+pub(super) fn emit_layer<F>(
     output: &mut Vec<u8>,
     layer: &mut OrderedExtrusionLayer,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
-) -> Result<(), SliceError> {
+    mut before_first_infill: F,
+) -> Result<bool, SliceError>
+where
+    F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
+{
+    let mut interlude_emitted = false;
     for island in &mut layer.islands {
         let mut entities = std::mem::take(&mut island.entities);
         let infill_first = matches!(
@@ -170,10 +186,13 @@ pub(super) fn emit_layer(
             for perimeter in entities.drain(..split) {
                 emit_perimeter(output, perimeter, geometry, state);
             }
+            if !interlude_emitted && !entities.is_empty() {
+                interlude_emitted = before_first_infill(output, state)?;
+            }
             emit_infills(output, &mut entities, geometry, state);
         }
     }
-    Ok(())
+    Ok(interlude_emitted)
 }
 
 fn emit_perimeter(
