@@ -23,8 +23,8 @@ const DEFAULT_REDUCE_FAN_STOP_START_FREQ: bool = false;
 
 #[derive(Clone, Copy)]
 pub(crate) struct PartCoolingFanRampConfig {
-    pub(crate) min_speed: u8,
-    pub(crate) max_speed: u8,
+    pub(crate) min_speed: f64,
+    pub(crate) max_speed: f64,
     pub(crate) full_speed_layer: u32,
     pub(crate) close_fan_first_layers: u32,
     pub(crate) layer_times_s: [f64; 2],
@@ -34,8 +34,8 @@ pub(crate) struct PartCoolingFanRampConfig {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct PartCoolingFanRamp {
-    min_speed: u8,
-    max_speed: u8,
+    min_speed: f64,
+    max_speed: f64,
     full_speed_layer: u32,
     close_fan_first_layers: u32,
     slow_down_layer_time_s: f64,
@@ -76,7 +76,7 @@ impl PartCoolingFanRamp {
         layer_index: usize,
         layer_time_s: Option<f64>,
     ) -> Option<u8> {
-        if self.max_speed == 0 {
+        if self.max_speed == 0.0 {
             return None;
         }
         let layer_id = u32::try_from(layer_index).unwrap_or(u32::MAX);
@@ -92,12 +92,12 @@ impl PartCoolingFanRamp {
         if layer_id.saturating_add(1) >= self.full_speed_layer
             || self.full_speed_layer <= self.close_fan_first_layers
         {
-            return Some(base_speed);
+            return Some(base_speed.floor().clamp(0.0, 100.0) as u8);
         }
         let denominator = self.full_speed_layer - self.close_fan_first_layers;
         let numerator = layer_id + 1 - self.close_fan_first_layers;
         let factor = f64::from(numerator) / f64::from(denominator);
-        let speed = f64::from(base_speed) * factor;
+        let speed = base_speed * factor;
         Some((speed + 0.5).floor().clamp(0.0, 100.0) as u8)
     }
 
@@ -125,7 +125,7 @@ impl PartCoolingFanRamp {
         )
     }
 
-    fn base_speed_for_layer(self, layer_index: usize) -> u8 {
+    fn base_speed_for_layer(self, layer_index: usize) -> f64 {
         if self.full_speed_layer <= 1 {
             return self.max_speed;
         }
@@ -138,12 +138,10 @@ impl PartCoolingFanRamp {
         }
         let span = f64::from(self.full_speed_layer - 1);
         let factor = f64::from(layer_number - 1) / span;
-        let speed =
-            f64::from(self.min_speed) + f64::from(self.max_speed - self.min_speed) * factor;
-        (speed + 0.5).floor() as u8
+        self.min_speed + (self.max_speed - self.min_speed) * factor
     }
 
-    fn base_speed_for_runtime_layer_time(self, layer_time_s: f64) -> u8 {
+    fn base_speed_for_runtime_layer_time(self, layer_time_s: f64) -> f64 {
         if layer_time_s >= self.fan_cooling_layer_time_s {
             return self.long_layer_baseline_speed();
         }
@@ -154,16 +152,14 @@ impl PartCoolingFanRamp {
         }
         let factor = (self.fan_cooling_layer_time_s - layer_time_s)
             / (self.fan_cooling_layer_time_s - self.slow_down_layer_time_s);
-        let speed =
-            f64::from(self.min_speed) + f64::from(self.max_speed - self.min_speed) * factor;
-        speed.floor().clamp(0.0, 100.0) as u8
+        (self.min_speed + (self.max_speed - self.min_speed) * factor).floor()
     }
 
-    const fn long_layer_baseline_speed(self) -> u8 {
+    const fn long_layer_baseline_speed(self) -> f64 {
         if self.reduce_fan_stop_start_freq {
             self.min_speed
         } else {
-            0
+            0.0
         }
     }
 }
@@ -179,8 +175,7 @@ impl SliceOptions {
             "fan_min_speed",
             self.values().get("fan_min_speed"),
             DEFAULT_FAN_MIN_SPEED,
-        )?
-        .min(max_speed);
+        )?;
         let full_speed_layer = first_integer(
             "full_fan_speed_layer",
             self.values().get("full_fan_speed_layer"),

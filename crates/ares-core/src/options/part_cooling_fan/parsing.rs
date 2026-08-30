@@ -28,16 +28,16 @@ pub(super) fn first_percent(
     key: &str,
     value: Option<&Value>,
     default: u8,
-) -> Result<u8, SliceError> {
+) -> Result<f64, SliceError> {
     let Some(value) = value else {
-        return Ok(default);
+        return Ok(f64::from(default));
     };
     let value = parse_float_vector(key, value)?
         .into_iter()
         .next()
         .ok_or_else(|| invalid(key, "must not be empty"))?;
     if value.is_finite() && (0.0..=100.0).contains(&value) {
-        Ok((value + 0.5).floor() as u8)
+        Ok(value)
     } else {
         Err(invalid(key, "must be a percent from 0 to 100"))
     }

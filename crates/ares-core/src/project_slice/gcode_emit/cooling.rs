@@ -60,7 +60,7 @@ impl CoolingState {
             .first()
             .map_or(0.0, |value| value.0);
         let part_fan_ramp = PartCoolingFanRamp::new(PartCoolingFanRampConfig {
-            min_speed: first_percent(&filament.fan_min_speed.0).min(max_speed),
+            min_speed: first_percent(&filament.fan_min_speed.0),
             max_speed,
             full_speed_layer: first_non_negative(&filament.full_fan_speed_layer.0) as u32,
             close_fan_first_layers: first_non_negative(&filament.close_fan_the_first_x_layers.0)
@@ -224,10 +224,10 @@ fn should_emit_initial_part_fan(
     layer_index == 0 && emit_initial_fan && !(fan_mover_enabled && speed == 0)
 }
 
-fn first_percent(values: &[crate::OrcaFloat]) -> u8 {
+fn first_percent(values: &[crate::OrcaFloat]) -> f64 {
     values
         .first()
-        .map_or(0, |value| value.0.round().clamp(0.0, 100.0) as u8)
+        .map_or(0.0, |value| value.0.clamp(0.0, 100.0))
 }
 
 fn first_percent_int(values: &[crate::OrcaInt]) -> u8 {

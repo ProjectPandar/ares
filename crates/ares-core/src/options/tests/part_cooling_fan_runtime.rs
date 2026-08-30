@@ -69,19 +69,22 @@ fn part_cooling_fan_ramp_full_speed_layer_one_uses_max_on_first_layer() {
 }
 
 #[test]
-fn part_cooling_fan_ramp_normalizes_min_speed_above_max_speed() {
+fn part_cooling_fan_ramp_preserves_min_speed_above_max_speed() {
     let options: SliceOptions = serde_json::from_value(json!({
         "fan_min_speed": 90,
         "fan_max_speed": 40,
-        "full_fan_speed_layer": 4,
+        "slow_down_layer_time": 5,
+        "fan_cooling_layer_time": 60,
+        "reduce_fan_stop_start_freq": true,
+        "full_fan_speed_layer": 1,
         "close_fan_the_first_x_layers": 0
     }))
     .unwrap();
     let ramp = options.part_cooling_fan_ramp().unwrap();
 
-    assert_eq!(ramp.speed_for_layer(0), Some(10));
-    assert_eq!(ramp.speed_for_layer(1), Some(20));
-    assert_eq!(ramp.speed_for_layer(3), Some(40));
+    assert_eq!(ramp.speed_for_layer_time(0, Some(4.0)), Some(40));
+    assert_eq!(ramp.speed_for_layer_time(0, Some(32.5)), Some(65));
+    assert_eq!(ramp.speed_for_layer_time(0, Some(60.0)), Some(90));
 }
 
 #[test]
