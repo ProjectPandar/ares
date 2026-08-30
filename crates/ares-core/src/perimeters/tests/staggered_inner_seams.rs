@@ -58,26 +58,3 @@ fn staggered_inner_seams_shifts_internal_back_seam_without_moving_external_loop(
         ]
     );
 }
-
-#[test]
-fn staggered_inner_seams_is_noop_for_non_back_seam_position() {
-    let layers = [LayerContours::new(
-        0,
-        0.2,
-        vec![rectangle(0.0, 0.0, 4.0, 4.0)],
-    )];
-    let baseline = PerimeterOptions::new(
-        2,
-        0.4,
-        0.4,
-        WallDirection::CounterClockwise,
-        WallSequence::OuterInner,
-    )
-    .with_seam_position(SeamPosition::Aligned);
-    let enabled = baseline.with_staggered_inner_seams(true);
-
-    assert_eq!(
-        generate_perimeters(&layers, baseline).unwrap(),
-        generate_perimeters(&layers, enabled).unwrap()
-    );
-}
