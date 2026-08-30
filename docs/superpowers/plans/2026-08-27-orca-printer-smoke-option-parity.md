@@ -1838,5 +1838,9 @@ tested seam. Root is now 399 LOC; retraction, KSR, clippy, and fmt pass.
 deretraction fallback moved into real `build/retraction.rs`. Root is now 391
 LOC; options, KSR, clippy, and fmt pass.
 
+The final >400 Rust file was `tests/perimeters/flow.rs` (414 LOC); fallback and
+overhang edge cases moved to `flow/edge_cases.rs` (319/99 LOC). A full scan now
+finds zero Rust files above 400 LOC. Focused flow, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
