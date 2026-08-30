@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-631 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
+636 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -211,7 +211,7 @@
 | PASS | flush_volumes_matrix | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6835 |  |
 | PASS | flush_volumes_vector | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6825 |  |
 | PASS | full_fan_speed_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3445 |  |
-| FAIL | fuzzy_skin | coEnum | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:3540 | all: unsupported project feature: fuzzy_skin |
+| PASS | fuzzy_skin | coEnum | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:3540 |  |
 | PASS | fuzzy_skin_first_layer | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3581 |  |
 | PASS | fuzzy_skin_layers_between_ripple_offset | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3687 |  |
 | PASS | fuzzy_skin_mode | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3588 |  |
@@ -302,7 +302,7 @@
 | PASS | ironing_pattern | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4298 |  |
 | PASS | ironing_spacing | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4322 |  |
 | PASS | ironing_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4342 |  |
-| FAIL | ironing_type | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:4281 | solid: filament 1 length differs: expected 274.88mm, actual 262.34mm |
+| PASS | ironing_type | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:4281 |  |
 | PASS | is_infill_first | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2181 |  |
 | PASS | lateral_lattice_angle_1 | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3076 |  |
 | PASS | lateral_lattice_angle_2 | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3086 |  |
@@ -475,7 +475,7 @@
 | PASS | seam_slope_min_length | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5611 |  |
 | PASS | seam_slope_start_height | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5593 |  |
 | PASS | seam_slope_steps | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5620 |  |
-| FAIL | seam_slope_type | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5525 | all: layer 2 deposition count differs: expected 129, actual 97 |
+| PASS | seam_slope_type | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5525 |  |
 | PASS | set_other_flow_ratios | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1387 |  |
 | PASS | silent_mode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4440 |  |
 | PASS | single_extruder_multi_material | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5958 |  |
@@ -514,7 +514,7 @@
 | PASS | sparse_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3993 |  |
 | PASS | sparse_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4174 |  |
 | PASS | spiral_finishing_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5868 |  |
-| FAIL | spiral_mode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5829 | true: unsupported project feature: spiral_mode |
+| PASS | spiral_mode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5829 |  |
 | PASS | spiral_mode_max_xy_smoothing | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5844 |  |
 | PASS | spiral_mode_smooth | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5837 |  |
 | PASS | spiral_starting_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5857 |  |
@@ -611,7 +611,7 @@
 | PASS | use_firmware_retraction | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5471 | true: orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
 | PASS | use_relative_e_distances | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:7146 | false: orca-slicer failed (exit status: 205): "G92 E0" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing. |
 | PASS | volumetric_speed_coefficients | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2655 |  |
-| FAIL | wall_direction | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2188 | cw: layer 1 deposition count differs: expected 99, actual 100 |
+| PASS | wall_direction | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2188 |  |
 | PASS | wall_distribution_count | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7208 |  |
 | FAIL | wall_generator | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7155 | arachne: unsupported project feature: wall_generator |
 | PASS | wall_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5051 |  |
