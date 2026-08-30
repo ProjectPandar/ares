@@ -1509,5 +1509,11 @@ configured retract/wipe without a lift and clears pending layer state. This
 removes the missing final lifecycle in the false override case; focused unit,
 KSR, clippy, and fmt pass.
 
+Stable sweep41 (clean HEAD `a769b56`) completed all 1001 presets: PASS 212→222,
+686 DIVERGENT, 93 ARES_ERROR. Control-first rows collapse 52→3; Qidi timelapse
+ordering is fully closed and advances to internal-solid geometry. Remaining
+leaders are geometry/precision (310 deposition, 117 travel count, 96 lifecycle),
+not G-code phase ordering.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
