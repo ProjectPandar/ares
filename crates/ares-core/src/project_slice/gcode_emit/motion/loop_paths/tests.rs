@@ -52,4 +52,11 @@ fn wipe_before_external_uses_the_source_rotated_inner_point() {
     );
 
     assert_eq!(output, b"G1 X114.49 Y114.344 F9000\n");
+    assert_eq!(
+        state.pending_wipe_before_external_target,
+        Some(super::super::arc::Point {
+            x: 114.69,
+            y: 114.69,
+        })
+    );
 }

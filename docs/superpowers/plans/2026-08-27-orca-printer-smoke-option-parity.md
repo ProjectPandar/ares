@@ -1766,8 +1766,10 @@ patterns, zero walls, flow/density/skirt, placeholders, and shrink options.
 `GCode.cpp:5824-5894` geometry: clipped seam neighbors, contour/hole orientation,
 third-angle rotation, and min(nozzle,width)/2 inward distance produce the
 force-no-extrusion pretravel before the normal outer seam travel. The true
-option's `X114.49 Y114.344` split is byte-exact; focused geometry test, KSR,
-smokes, clippy, and fmt pass.
+option's `X114.49 Y114.344` split is byte-exact. The seam target is deferred
+until after the Outer-wall tag/F1800, matching the source force-no-extrusion
+path's feed state. Focused geometry/state test, KSR, smokes, clippy, and fmt
+pass.
 
 Layer-change travel no longer treats a Slope/Spiral enum as an active sloped
 lift when z_hop is zero. It now emits the source combined target XYZ, restoring

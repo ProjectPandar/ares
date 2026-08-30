@@ -299,6 +299,14 @@ pub(super) fn emit(
     }
     extrusion::speed(output, state.extrusion_feedrate, properties);
     state.current_feedrate = state.extrusion_feedrate;
+    if let Some(target) = state.pending_wipe_before_external_target.take() {
+        output.extend_from_slice(
+            format!("G1 X{} Y{}\n", format_axis(target.x), format_axis(target.y)).as_bytes(),
+        );
+        state.x = target.x;
+        state.y = target.y;
+        state.wipe_start = Some(target);
+    }
     if let Some(processed) = processed {
         variable::emit(variable::Emission {
             output,

@@ -50,6 +50,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
+    pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
+        Option<super::arc::Point>,
 }
 
 #[derive(Clone, Copy)]

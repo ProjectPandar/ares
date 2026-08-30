@@ -108,7 +108,11 @@ fn append_wipe_before_external(
     state.x = x;
     state.y = y;
     state.current_feedrate = state.travel_feedrate;
-    state.last_scaled_position = Some((point.x(), point.y()));
+    state.last_scaled_position = Some((current.x, current.y));
+    state.pending_wipe_before_external_target = Some(super::arc::Point {
+        x: geometry.scale.unscale(current.x) + state.offset.0,
+        y: geometry.scale.unscale(current.y) + state.offset.1,
+    });
 }
 
 fn clipped_loop_end(
