@@ -1817,5 +1817,10 @@ permutations. Connect sorting now relies on the Linux/libstdc++ GCC adapter and
 closes the explicit compiler-source pinning item without weakening output
 checks.
 
+`motion/travel.rs` exceeded 400 LOC after lift parity work; all lift scheduling,
+enforcement, eager/pending emission, and spiral generation moved into the real
+`motion/travel/lift.rs` module. Files are now 248/188 LOC, tests remain separate,
+and focused lift/KSR/clippy/fmt checks pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

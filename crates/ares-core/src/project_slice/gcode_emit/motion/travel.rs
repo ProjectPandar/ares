@@ -1,18 +1,19 @@
 // Source boundary: OrcaSlicer v2.4.2 `GCode.cpp:310-358, 7400-7448` and
 // `GCodeWriter.cpp` retract, wipe, and spiral-lift motion.
 
+mod lift;
 #[cfg(test)]
 mod tests;
+
 use super::{
-    EmitState, LiftMode, arc, extrusion,
-    format::{
-        axis as format_axis, extrusion as format_extrusion, offset as format_offset, z as format_z,
-    },
+    EmitState, arc, extrusion,
+    format::{axis as format_axis, extrusion as format_extrusion},
 };
+pub(super) use lift::{emit_pending as emit_pending_lift, is_allowed as lift_is_allowed};
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
-    schedule_lift(state, false);
+    lift::schedule(state, false);
     state.retracted = true;
 }
 
@@ -32,7 +33,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
         return;
     }
     retract_and_wipe(output, state);
-    append_eager_lift(output, state);
+    lift::append_eager(output, state);
     state.retracted = true;
 }
 
@@ -54,47 +55,10 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     state: &mut EmitState,
 ) {
     if state.pending_layer_retract && !state.retracted {
-        schedule_lift(state, true);
+        lift::schedule(state, true);
         state.retracted = true;
     }
     state.pending_layer_retract = false;
-}
-
-fn schedule_lift(state: &mut EmitState, layer_change: bool) {
-    if state.options.z_hop <= 0.0 || !lift_is_allowed(state) {
-        return;
-    }
-    state.pending_lift = Some(match state.options.z_hop_type {
-        crate::ZHopType::Auto if layer_change => LiftMode::Spiral,
-        crate::ZHopType::Auto | crate::ZHopType::Slope => LiftMode::Slope,
-        crate::ZHopType::Normal => LiftMode::Normal,
-        crate::ZHopType::Spiral => LiftMode::Spiral,
-    });
-}
-
-fn lift_height_is_allowed(state: &EmitState) -> bool {
-    const EPSILON: f64 = 1.0e-4;
-
-    state.layer_z >= state.options.retract_lift_above - EPSILON
-        && (state.options.retract_lift_below == 0.0
-            || state.layer_z <= state.options.retract_lift_below + EPSILON)
-}
-
-pub(super) fn lift_is_allowed(state: &EmitState) -> bool {
-    lift_height_is_allowed(state) && lift_is_enforced(state)
-}
-
-fn lift_is_enforced(state: &EmitState) -> bool {
-    use crate::RetractLiftEnforce;
-
-    let bottom = state.layer_index == 0;
-    let top = matches!(state.last_feature, Some("Top surface" | "Ironing"));
-    match state.options.retract_lift_enforce {
-        RetractLiftEnforce::AllSurfaces => true,
-        RetractLiftEnforce::TopOnly => top,
-        RetractLiftEnforce::BottomOnly => bottom,
-        RetractLiftEnforce::TopAndBottom => top || bottom,
-    }
 }
 
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -253,150 +217,6 @@ fn unscaled_position(point: (i64, i64), state: &EmitState) -> arc::Point {
         x: point.0 as f64 * state.scale_factor + state.offset.0,
         y: point.1 as f64 * state.scale_factor + state.offset.1,
     }
-}
-
-pub(super) fn emit_pending_lift(
-    output: &mut Vec<u8>,
-    target: arc::Point,
-    state: &mut EmitState,
-) -> bool {
-    let Some(mode) = state.pending_lift.take() else {
-        return false;
-    };
-    let raised_z = state.layer_z + state.options.z_hop;
-    let dx = target.x - state.x;
-    let dy = target.y - state.y;
-    let travel_distance = dx.hypot(dy);
-    let emitted = match mode {
-        LiftMode::Normal => {
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}\n",
-                    format_z(raised_z),
-                    format_axis(state.travel_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = state.travel_feedrate;
-            true
-        }
-        LiftMode::Spiral => {
-            let slope = state.options.travel_slope_radians;
-            if slope > 0.0 && travel_distance > f64::EPSILON {
-                let radius = state.options.z_hop / (std::f64::consts::TAU * slope.atan());
-                let i = -dy / travel_distance * radius;
-                let j = dx / travel_distance * radius;
-                append_spiral_lift(output, state, raised_z, i, j);
-                state.current_feedrate = state.travel_feedrate;
-                true
-            } else {
-                false
-            }
-        }
-        LiftMode::Slope => {
-            let slope = state.options.travel_slope_radians;
-            if travel_distance > f64::EPSILON && state.options.z_hop.atan2(travel_distance) < slope
-            {
-                let slope_distance = state.options.z_hop / slope.tan();
-                let x = state.x + dx * slope_distance / travel_distance;
-                let y = state.y + dy * slope_distance / travel_distance;
-                output.extend_from_slice(
-                    format!(
-                        "G1 X{} Y{} Z{} F{}\n",
-                        format_axis(x),
-                        format_axis(y),
-                        format_z(raised_z),
-                        format_axis(state.travel_feedrate)
-                    )
-                    .as_bytes(),
-                );
-                state.current_feedrate = state.travel_feedrate;
-                true
-            } else {
-                false
-            }
-        }
-    };
-    state.lifted = true;
-    emitted
-}
-
-fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
-    if state.options.z_hop <= 0.0 || !lift_height_is_allowed(state) {
-        return;
-    }
-    let raised_z = state.layer_z + state.options.z_hop;
-    if matches!(
-        state.options.z_hop_type,
-        crate::ZHopType::Spiral | crate::ZHopType::Auto
-    ) && state.options.travel_slope_radians > 0.0
-    {
-        let radius = state.options.z_hop
-            / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
-        append_spiral_lift(output, state, raised_z, radius, 0.0);
-        state.current_feedrate = state.travel_feedrate;
-    } else {
-        output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}\n",
-                format_z(raised_z),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = state.travel_feedrate;
-    }
-    state.lifted = true;
-}
-
-fn append_spiral_lift(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64, j: f64) {
-    if state.options.enable_arc_fitting {
-        output.extend_from_slice(b"G17\n");
-        output.extend_from_slice(
-            format!(
-                "G3 Z{} I{} J{} P1  F{}\n",
-                format_z(raised_z),
-                format_offset(i),
-                format_offset(j),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
-        return;
-    }
-
-    output.extend_from_slice(format!("G1 F{}\n", format_axis(state.travel_feedrate)).as_bytes());
-    let resolution = state.options.arc_fitting_tolerance;
-    let segments = (8.0 * (0.01 / resolution)).round().clamp(4.0, 16.0) as usize;
-    let center_x = state.x + i;
-    let center_y = state.y + j;
-    let radius = i.hypot(j);
-    let start_angle = (state.y - center_y).atan2(state.x - center_x);
-    for index in 1..segments {
-        let progress = index as f64 / segments as f64;
-        let angle = start_angle + std::f64::consts::TAU * progress;
-        let x = center_x + radius * angle.cos();
-        let y = center_y + radius * angle.sin();
-        let z = state.layer_z + (raised_z - state.layer_z) * progress;
-        output.extend_from_slice(
-            format!(
-                "G1 X{} Y{} Z{}\n",
-                super::super::format_processor_float(x),
-                super::super::format_processor_float(y),
-                super::super::format_processor_float(z)
-            )
-            .as_bytes(),
-        );
-    }
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{} Z{}\n",
-            super::super::format_processor_float(state.x),
-            super::super::format_processor_float(state.y),
-            super::super::format_processor_float(raised_z)
-        )
-        .as_bytes(),
-    );
 }
 
 pub(super) fn inside_internal_surfaces(
