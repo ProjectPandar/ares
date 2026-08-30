@@ -3,41 +3,12 @@
 
 use super::MotionOptions;
 use super::first_nullable_float;
-use super::helpers::{absolute, acceleration, first_float, rounded_acceleration};
+use super::helpers::{
+    absolute, acceleration, first_float, machine_acceleration_limit, rounded_acceleration,
+};
 use crate::{Nullable, ZHopType, options::InternalBridgeFanSpeed};
 
 impl MotionOptions {
-    /// `GCodeWriter::apply_print_config` caps print acceleration by the
-    /// machine extruding limit (Klipper additionally clamps by per-axis X/Y
-    /// limits, `GCodeWriter.cpp:33-45`).
-    fn machine_acceleration_limit(full: &crate::options::ProjectSettings) -> u32 {
-        let flavor = full.printer.gcode.gcode_flavor;
-        if !matches!(
-            flavor,
-            crate::GCodeFlavor::MarlinLegacy
-                | crate::GCodeFlavor::MarlinFirmware
-                | crate::GCodeFlavor::Klipper
-                | crate::GCodeFlavor::RepRapFirmware
-        ) {
-            return 0;
-        }
-        let mut limit = rounded_acceleration(first_float(
-            &full.printer.machine.machine_max_acceleration_extruding,
-        ));
-        if flavor == crate::GCodeFlavor::Klipper {
-            let axis_limit = [
-                &full.printer.machine.machine_max_acceleration_x,
-                &full.printer.machine.machine_max_acceleration_y,
-            ]
-            .into_iter()
-            .map(|axis| rounded_acceleration(first_float(axis)))
-            .filter(|axis_limit| *axis_limit > 0)
-            .min()
-            .unwrap_or(u32::MAX);
-            limit = limit.min(axis_limit);
-        }
-        limit
-    }
     pub(in crate::project_slice::gcode_emit) fn from_traversal(
         traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     ) -> Self {
@@ -294,7 +265,7 @@ impl MotionOptions {
             max_jerk_e: first_float(&full.printer.machine.machine_max_jerk_e),
             gcode_flavor: full.printer.gcode.gcode_flavor,
             use_relative_e_distances: gcode.use_relative_e_distances.0,
-            max_acceleration: Self::machine_acceleration_limit(full),
+            max_acceleration: machine_acceleration_limit(full),
             max_travel_acceleration: if matches!(
                 full.printer.gcode.gcode_flavor,
                 crate::GCodeFlavor::Repetier

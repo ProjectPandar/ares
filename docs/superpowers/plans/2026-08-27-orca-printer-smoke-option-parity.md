@@ -1419,5 +1419,12 @@ Stable sweep37 (clean HEAD `03d21c6`) completed all 1001 presets: PASS 203→206
 Plus becomes PASS. iQ advances to travel geometry, and Snapmaker/Qidi advance to
 lifecycle/control ordering.
 
+The source-size gate is closed again: every Rust file is now below 400 LOC.
+The 617-key Orca CONFIG_BLOCK set is split into two sorted real modules behind a
+membership API (307/310 keys), motion geometry tests moved to
+`motion::tests::geometry`, and machine acceleration-limit projection moved to
+`motion::options::helpers`. No include macro is used for source splitting;
+focused membership test, clippy, and fmt pass.
+
 NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
 continue lifecycle, Qidi support-layer timelapse, and postamble geometry.

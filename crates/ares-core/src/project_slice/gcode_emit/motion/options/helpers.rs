@@ -1,5 +1,36 @@
 use crate::{FloatOrPercent, Nullable, OrcaFloat};
 
+/// `GCodeWriter::apply_print_config` caps print acceleration by the machine
+/// extruding limit; Klipper also clamps against the X/Y axis limits.
+pub(super) fn machine_acceleration_limit(full: &crate::options::ProjectSettings) -> u32 {
+    let flavor = full.printer.gcode.gcode_flavor;
+    if !matches!(
+        flavor,
+        crate::GCodeFlavor::MarlinLegacy
+            | crate::GCodeFlavor::MarlinFirmware
+            | crate::GCodeFlavor::Klipper
+            | crate::GCodeFlavor::RepRapFirmware
+    ) {
+        return 0;
+    }
+    let mut limit = rounded_acceleration(first_float(
+        &full.printer.machine.machine_max_acceleration_extruding,
+    ));
+    if flavor == crate::GCodeFlavor::Klipper {
+        let axis_limit = [
+            &full.printer.machine.machine_max_acceleration_x,
+            &full.printer.machine.machine_max_acceleration_y,
+        ]
+        .into_iter()
+        .map(|axis| rounded_acceleration(first_float(axis)))
+        .filter(|limit| *limit > 0)
+        .min()
+        .unwrap_or(u32::MAX);
+        limit = limit.min(axis_limit);
+    }
+    limit
+}
+
 pub(super) fn acceleration(
     object: Option<&crate::ObjectOptions>,
     fallback: f64,

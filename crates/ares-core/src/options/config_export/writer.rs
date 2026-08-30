@@ -2,7 +2,7 @@ use crate::{ProjectBedType, ProjectSettings, SliceError};
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
-    orca_block_keys::ORCA_BLOCK_KEYS,
+    orca_block_keys,
     transform::transformed_for_export,
     value::serialize_config_value,
 };
@@ -84,8 +84,7 @@ pub(crate) fn write_canonical_entries(
         // plus any key the project presets define (`GCode.cpp:5636-5643`).
         // Ares keys outside that set only appear when the project presets
         // set them.
-        let known = ORCA_BLOCK_KEYS.binary_search(&entry.key.as_str()).is_ok()
-            || raw_settings.contains_key(&entry.key);
+        let known = orca_block_keys::contains(&entry.key) || raw_settings.contains_key(&entry.key);
         if !known {
             continue;
         }
