@@ -120,9 +120,9 @@ impl SkirtPlan {
         // `skirt_distance - spacing/2`, step by spacing, inner-to-outer,
         // then reverse for emission.
         let scale = traversal.scale;
-        let spacing = checked_scale(scale, flow.spacing as f64)?;
+        let scaled_spacing = (f64::from(flow.spacing) / scale.factor()) as f32;
         let mut distance =
-            checked_scale(scale, print.skirt_distance.0 - flow.spacing as f64 * 0.5)? + spacing;
+            ((print.skirt_distance.0 - f64::from(flow.spacing) * 0.5) / scale.factor()) as f32;
         let arc_tolerance = checked_scale(scale, 0.1)? as f64;
         let hull_polygon = Polygon::new(hull);
         let minimum_filament = print.min_skirt_length.0;
@@ -138,9 +138,10 @@ impl SkirtPlan {
         let mut extruded_filament = 0.0;
         let mut loops = Vec::with_capacity(loops_count);
         while loops.len() < loops_count || extruded_filament < minimum_filament {
+            distance += scaled_spacing;
             let offset = offset_paths(
                 std::slice::from_ref(&hull_polygon),
-                (distance as f32).abs(),
+                distance.abs(),
                 JoinType::Round,
                 arc_tolerance,
             )
@@ -157,7 +158,6 @@ impl SkirtPlan {
             }
             extruded_filament += closed_length(&simplified) * scale.factor() * e_per_path_mm;
             loops.push(simplified);
-            distance += spacing;
         }
         if loops.is_empty() {
             return Ok(None);

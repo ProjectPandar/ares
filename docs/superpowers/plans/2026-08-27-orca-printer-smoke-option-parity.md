@@ -1678,5 +1678,11 @@ the promoted f32 density, then truncate; it no longer rounds spacing to coord_t
 first. This removes the 1um grid drift: seeded Top and Bottom density paths and
 stats are byte-exact. Arithmetic test, KSR, smokes, clippy, and fmt pass.
 
+Skirt centerline offsets now preserve `Print.cpp:2727-2737` f32 accumulation:
+initial scaled distance and each flow-spacing increment remain float through
+Clipper offset instead of pre-rounding to coord_t. Seeded skirt_distance and
+max skirt_loops moves/stats are byte-exact (290.85/295.05 mm); KSR, smokes,
+clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
