@@ -31,6 +31,7 @@ fn zero_angle_family_uses_vertical_scanlines() {
     let surface = square();
     let paths = generate_family(FamilyRequest {
         component: &surface,
+        source: &surface,
         reference: Point::new(0, 0),
         params: params(),
         density: 0.2,
@@ -47,6 +48,49 @@ fn zero_angle_family_uses_vertical_scanlines() {
         let points = path.points();
         points.first().unwrap().x() == points.last().unwrap().x()
     }));
+}
+
+#[test]
+fn cubic_transition_keeps_one_connected_path_without_tangent_fragments() {
+    let surface = ExPolygon::new(
+        Polygon::new(vec![
+            Point::new(-3_846_111, -3_846_111),
+            Point::new(3_846_118, -3_846_111),
+            Point::new(3_846_118, 3_846_118),
+            Point::new(-3_846_111, 3_846_118),
+        ]),
+        Vec::new(),
+    );
+    let shift = (std::f64::consts::FRAC_1_SQRT_2 * 5.4) as f32;
+    let paths = fill_surface(
+        &surface,
+        MultilineFillParams {
+            spacing: 0.407_079_637_050_628_66,
+            overlap: 0.0,
+            angle: std::f32::consts::FRAC_PI_4,
+            density: 0.15,
+            multiline: 1,
+            anchor_length: 1.628_318_5,
+            anchor_length_max: 40.0,
+            dont_sort: false,
+        },
+        &[
+            Sweep { angle: 0.0, shift },
+            Sweep {
+                angle: std::f32::consts::FRAC_PI_3,
+                shift: -shift,
+            },
+            Sweep {
+                angle: 2.0 * std::f32::consts::FRAC_PI_3,
+                shift,
+            },
+        ],
+        CoordinateScale::Normal,
+    )
+    .unwrap();
+
+    assert_eq!(paths.len(), 1);
+    assert_eq!(paths[0].points().len(), 10);
 }
 
 #[test]

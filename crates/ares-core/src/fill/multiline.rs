@@ -43,6 +43,18 @@ pub(crate) fn fill_surface(
     if expanded.is_empty() {
         return Ok(Vec::new());
     }
+    let contraction = (-0.5 * params.spacing / scale.factor()) as f32;
+    let mut contracted = offset_expolygon(surface, contraction, JoinType::Miter, 3.0)?;
+    if contracted.is_empty() {
+        contracted.push(surface.clone());
+    }
+    let mut boundaries = Vec::new();
+    for component in contracted {
+        let (contour, holes) = component.into_parts();
+        boundaries.push(contour);
+        boundaries.extend(holes);
+    }
+
     let family_density = params.density / sweeps.len() as f32;
     let line_width = scale
         .checked_scale(params.spacing)
@@ -55,9 +67,11 @@ pub(crate) fn fill_surface(
         .ok_or(ClipperError::CoordinateOutOfRange)?;
     let mut lines = Vec::new();
     for sweep in sweeps {
+        let mut family = Vec::new();
         for component in &expanded {
-            lines.extend(generate_family(FamilyRequest {
+            family.extend(generate_family(FamilyRequest {
                 component,
+                source: surface,
                 reference,
                 params,
                 density: family_density,
@@ -66,23 +80,8 @@ pub(crate) fn fill_surface(
                 scale,
             })?);
         }
+        lines.extend(intersection_open_polylines(&family, &boundaries)?);
     }
-    if lines.is_empty() {
-        return Ok(Vec::new());
-    }
-
-    let contraction = (-0.5 * params.spacing / scale.factor()) as f32;
-    let mut contracted = offset_expolygon(surface, contraction, JoinType::Miter, 3.0)?;
-    if contracted.is_empty() {
-        contracted.push(surface.clone());
-    }
-    let mut boundaries = Vec::new();
-    for component in contracted {
-        let (contour, holes) = component.into_parts();
-        boundaries.push(contour);
-        boundaries.extend(holes);
-    }
-    lines = intersection_open_polylines(&lines, &boundaries)?;
     if lines.is_empty() {
         return Ok(Vec::new());
     }
@@ -107,6 +106,7 @@ pub(crate) fn fill_surface(
 
 struct FamilyRequest<'a> {
     component: &'a ExPolygon,
+    source: &'a ExPolygon,
     reference: Point,
     params: MultilineFillParams,
     density: f32,
@@ -118,6 +118,7 @@ struct FamilyRequest<'a> {
 fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperError> {
     let FamilyRequest {
         component,
+        source,
         reference,
         params,
         density,
@@ -127,8 +128,9 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
     } = request;
     let angle = -(params.angle + sweep.angle);
     let rotated_reference = rotate_points(vec![reference], -f64::from(angle))?[0];
+    let rotated_source = rotate_expolygon(source, -f64::from(angle))?;
+    let (minimum, maximum) = bounds(&rotated_source);
     let rotated = rotate_expolygon(component, -f64::from(angle))?;
-    let (minimum, maximum) = bounds(&rotated);
     let spacing = ((params.spacing / scale.factor()) * f64::from(params.multiline)
         / f64::from(density)) as i64;
     let shift = scale
@@ -180,6 +182,11 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
     clip.push(contour);
     clip.extend(holes);
     lines = intersection_open_polylines(&lines, &clip)?;
+    for line in &mut lines {
+        if line.points().first().unwrap().y() > line.points().last().unwrap().y() {
+            line.reverse();
+        }
+    }
     rotate_polylines(&mut lines, f64::from(angle))?;
     Ok(lines)
 }

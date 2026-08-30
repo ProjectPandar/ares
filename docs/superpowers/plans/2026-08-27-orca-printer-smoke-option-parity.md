@@ -1324,5 +1324,13 @@ barriers clear. Elegoo now reaches a layer-22 feed delta with exact movement and
 material totals. Snapmaker U1's fresh Orca reference again SIGSEGVs and is
 recorded as an upstream error.
 
-NEXT: correct remaining multiline intersection ordering/CoolingBuffer feed,
-then continue postamble geometry and lifecycle.
+Multiline clipping now preserves family-by-family order while still using the
+source (unexpanded) bbox for grid margin and expanded contours for generation.
+This matches `make_fill_lines`' low-to-high segment construction and avoids the
+layer-27 tangent fragments without perturbing layer 22: both layers now have
+Orca's exact deposition sequence/feed; layer 27 retains only the first limited
+hook's travel endpoint direction. A captured Cubic transition test asserts one
+10-point connected path.
+
+NEXT: correct the remaining limited-hook direction, then continue postamble
+geometry and lifecycle.
