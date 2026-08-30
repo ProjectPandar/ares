@@ -123,7 +123,6 @@ pub(super) fn emit(
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
         for (layer_index, layer) in object.iter_mut().enumerate() {
-            let layer_output_start = output.len();
             if layer_index == 0 {
                 layer_gcode::append_print_preamble(
                     &mut output,
@@ -133,6 +132,7 @@ pub(super) fn emit(
                     first_layer_bounds,
                 )?;
             }
+            let layer_output_start = output.len();
             cooling.begin_layer(&mut output, layer_index);
             state.part_fan_speed = cooling.provisional_part_speed();
             state.physical_fan_speed = state.part_fan_speed;

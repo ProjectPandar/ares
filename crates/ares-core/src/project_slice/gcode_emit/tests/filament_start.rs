@@ -7,6 +7,13 @@ const FILAMENT_START_BLOCK: &str = concat!(
 );
 
 #[tokio::test]
+async fn filament_start_stays_outside_layer_cooling_rewrite() {
+    let preamble = print_preamble("G1 X1 F9000\\nG1 X2 F9000").await;
+
+    assert!(preamble.contains("G1 X1 F9000\nG1 X2 F9000\n"));
+}
+
+#[tokio::test]
 async fn whitespace_only_filament_start_emits_no_print_start_line() {
     let preamble = print_preamble(" ").await;
 

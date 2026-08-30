@@ -1393,5 +1393,12 @@ booleans retain `true/false` (Snapmaker Dual now matches both lines). Typed
 `nozzle_temperature_initial_layer` values also preserve integer division in
 Qidi's start expression, producing `G92_ Z10` instead of `Z9.99286`.
 
-NEXT: sweep these placeholder fixes, then correct scaled Clipper endpoint
-precision / limited-hook direction and continue postamble geometry/lifecycle.
+The first-layer CoolingBuffer boundary now starts after filament-start/flavor
+preamble, matching Orca's output-stage separation. Custom filament G-code is no
+longer parsed/re-written as layer motion: iQ retains every literal `F9000` and
+advances to travel geometry. The public repeated-feed test, three stable smokes,
+KSR, clippy, and fmt pass.
+
+NEXT: sweep these placeholder/cooling-boundary fixes, then correct scaled
+Clipper endpoint precision / limited-hook direction and continue postamble
+geometry/lifecycle.
