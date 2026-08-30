@@ -207,9 +207,10 @@ pub(in crate::project_slice) fn build_nonbridging_flow(
     height: f32,
     nozzle_diameter: f32,
 ) -> Result<Flow, SliceError> {
-    let width = match selected_width {
-        FloatOrPercent::Float(value) if value <= 0.0 => 1.125_f32 * nozzle_diameter,
-        value => absolute(value, nozzle_diameter),
+    let width = if selected_width.is_non_positive() {
+        1.125_f32 * nozzle_diameter
+    } else {
+        absolute(selected_width, nozzle_diameter)
     };
     build_nonbridging_from_width(width, height, nozzle_diameter)
 }

@@ -7,13 +7,13 @@
 //! loops split at the angle-derived start point
 //! (`GCode.cpp:4334-4359`, `extrude_loop` seam gap).
 
+use crate::SliceError;
 use crate::geometry::{
     CoordinateScale, JoinType, Point, Polygon, offset_paths, simplify_closed_points,
 };
 use crate::project_slice::gcode_emit::motion::{self, EmitState, LayerGeometry};
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 use crate::project_slice::perimeters::flow::build_nonbridging_flow;
-use crate::{FloatOrPercent, SliceError};
 
 mod geometry;
 #[cfg(test)]
@@ -96,12 +96,12 @@ impl SkirtPlan {
         // `Print::skirt_flow` (`Print.cpp:2028-2049`).
         let full = &traversal.resolved.views.full;
         let object = traversal.resolved.objects.first();
-        let initial_width = match print.initial_layer_line_width {
-            FloatOrPercent::Float(value) if value <= 0.0 => object
-                .map_or(full.process.object.line_width, |value| {
-                    value.object.line_width
-                }),
-            value => value,
+        let initial_width = if print.initial_layer_line_width.is_non_positive() {
+            object.map_or(full.process.object.line_width, |value| {
+                value.object.line_width
+            })
+        } else {
+            print.initial_layer_line_width
         };
         let nozzle = full
             .project

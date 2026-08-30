@@ -1715,5 +1715,11 @@ The seeded z_hop emits exact `Z1.996`/`Z.2` movement instead of `Z1.9956`;
 formatter test, KSR, smokes, clippy, and fmt pass. Linear spiral interpolation
 retains its source stream precision.
 
+FloatOrPercent automatic width detection now treats both numeric 0 and `0%` as
+source auto values across perimeter/fill flow, skirt, brim, and placeholder
+flow. The previous union-shape bug produced literal width=0. Initial-layer and
+outer-wall min option artifacts now match Orca exactly at 262.91/262.34 mm;
+flow test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

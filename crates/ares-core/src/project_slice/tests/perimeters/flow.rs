@@ -118,6 +118,21 @@ fn task22n_flow_record_preserves_object_fallback_and_auto_bits() {
         0x3ee66667_3e4ccccd_3ed06cbe_3ecccccd,
         0x3fb4d7aca0000000,
     );
+    let percent_zero = resolve(
+        layer(0, 0.2),
+        [
+            FloatOrPercent::Percent(Percent(0.0)),
+            FloatOrPercent::Percent(Percent(0.0)),
+            FloatOrPercent::Percent(Percent(0.0)),
+        ],
+        1,
+        &[0.4],
+    );
+    assert_bits(
+        percent_zero,
+        0x3ee66667_3e4ccccd_3ed06cbe_3ecccccd,
+        0x3fb4d7aca0000000,
+    );
 }
 
 #[test]

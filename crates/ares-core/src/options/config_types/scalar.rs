@@ -174,6 +174,15 @@ pub enum FloatOrPercent {
     Percent(Percent),
 }
 
+impl FloatOrPercent {
+    pub(crate) fn is_non_positive(self) -> bool {
+        match self {
+            Self::Float(value) => value <= 0.0,
+            Self::Percent(value) => value.0 <= 0.0,
+        }
+    }
+}
+
 impl Serialize for FloatOrPercent {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

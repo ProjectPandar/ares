@@ -3,7 +3,7 @@
 //! (`Brim.cpp:421-570,819-878`).
 
 use crate::{
-    FloatOrPercent, ProcessBrimType, SliceError,
+    ProcessBrimType, SliceError,
     geometry::{
         CoordinateScale, ExPolygon, JoinType, Point, Polygon, difference_ex, offset_expolygons,
         simplify_closed_points,
@@ -64,12 +64,14 @@ impl BrimPlan {
             .and_then(|layer| layer.model_parts.first())
             .expect("brim object has a resolved model-part region")
             .region;
-        let width = match print.initial_layer_line_width {
-            FloatOrPercent::Float(value) if value <= 0.0 => match region.inner_wall_line_width {
-                FloatOrPercent::Float(value) if value <= 0.0 => options.line_width,
-                value => value,
-            },
-            value => value,
+        let width = if print.initial_layer_line_width.is_non_positive() {
+            if region.inner_wall_line_width.is_non_positive() {
+                options.line_width
+            } else {
+                region.inner_wall_line_width
+            }
+        } else {
+            print.initial_layer_line_width
         };
         let nozzle = full
             .project

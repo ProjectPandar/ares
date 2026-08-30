@@ -289,9 +289,10 @@ fn insert_outer_wall_volumetric_speed(
     let full = &traversal.resolved.views.full;
     let region = &full.process.region;
     let object = &full.process.object;
-    let selected_width = match region.outer_wall_line_width {
-        crate::FloatOrPercent::Float(0.0) => object.line_width,
-        value => value,
+    let selected_width = if region.outer_wall_line_width.is_non_positive() {
+        object.line_width
+    } else {
+        region.outer_wall_line_width
     };
     let nozzle = full
         .project

@@ -163,7 +163,7 @@ fn build_role_flow(
     height: f32,
     nozzle_diameter: f32,
 ) -> Result<Flow, SliceError> {
-    if role == FillFlowRole::Top && matches!(width, FloatOrPercent::Float(value) if value <= 0.0) {
+    if role == FillFlowRole::Top && width.is_non_positive() {
         build_nonbridging_from_width(nozzle_diameter, height, nozzle_diameter)
     } else {
         build_nonbridging_flow(width, height, nozzle_diameter)
