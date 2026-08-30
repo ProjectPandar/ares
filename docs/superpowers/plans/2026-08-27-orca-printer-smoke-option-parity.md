@@ -1848,5 +1848,11 @@ cases: 631/649 compared domains PASS, 18 FAIL, 1 fully upstream-rejected;
 sweep6; subsequent Thin/Slope/Wipe fixes are not yet represented in this
 summary.
 
+Clockwise Aligned seam now reuses the already source-ordered prepared seam only
+when every perimeter is provably a single closed axis-aligned rectangle;
+complex clockwise loops continue through full alignment. The CW option's
+inner/outer paths and 99-deposition count are exact. Safety-shape test, KSR,
+clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
