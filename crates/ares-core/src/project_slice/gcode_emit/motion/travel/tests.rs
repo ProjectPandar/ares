@@ -1,7 +1,7 @@
 use super::super::{LiftMode, MotionOptions};
 use super::{
-    EmitState, emit_pending_lift, inside_internal_surfaces, retract_and_lift,
-    retract_for_print_end, wipe_moves,
+    EmitState, emit_pending_lift, flush_pending_retract_lift, inside_internal_surfaces,
+    retract_and_lift, retract_for_print_end, wipe_moves,
 };
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
@@ -41,6 +41,25 @@ fn bottom_only_lift_does_not_lift_later_layers() {
     assert_eq!(output, b"G1 E-1 F3600\n");
     assert!(state.retracted);
     assert_eq!(state.pending_lift, None);
+}
+
+#[test]
+fn deferred_bottom_only_lift_uses_the_target_layer_index() {
+    let mut state = EmitState {
+        layer_index: 1,
+        pending_layer_retract: true,
+        options: MotionOptions {
+            z_hop: 0.4,
+            retract_lift_enforce: crate::RetractLiftEnforce::BottomOnly,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+
+    flush_pending_retract_lift(&mut Vec::new(), &mut state);
+
+    assert_eq!(state.pending_lift, None);
+    assert!(state.retracted);
 }
 
 #[test]

@@ -201,6 +201,7 @@ pub(super) fn emit(
             // A deferred previous-layer retraction lifts above the new layer's
             // print Z (`GCodeWriter::travel_to_z` during layer transition).
             state.layer_z = f64::from(layer_z);
+            state.layer_index = layer_index;
             motion::flush_pending_retract_lift(&mut output, &mut state);
             motion::begin_layer(
                 &mut output,

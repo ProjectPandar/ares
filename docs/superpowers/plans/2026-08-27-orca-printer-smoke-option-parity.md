@@ -1625,5 +1625,11 @@ Spiral spiral, and Auto Slope for ordinary travel/Spiral for layer change;
 path Z handling treats every non-Normal type as sloped. Enum/state tests, KSR,
 focused smokes, clippy, and fmt pass.
 
+Deferred layer-change lift enforcement now sees the target layer index before
+flush, matching Orca's change-layer state. Bottom Only therefore retracts/wipes
+but emits the direct layer-2 XYZ travel instead of an extra up/travel/down pair;
+raw option output and focused state test are exact. KSR, smokes, clippy, and fmt
+pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
