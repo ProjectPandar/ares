@@ -28,9 +28,6 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
 
         let mut line = CoolingLine::new(command_type(text), start, end);
         if line.kind != 0 {
-            if state.config.relative_e {
-                state.position[3] = 0.0;
-            }
             let mut new_position = state.position;
             parse_position(text, state.position, &mut new_position, &mut line.kind);
 
@@ -148,6 +145,9 @@ fn measure_and_aggregate(
 ) {
     if line.kind & TYPE_G92 != 0 {
         return;
+    }
+    if state.config.relative_e {
+        state.position[3] = 0.0;
     }
     let adjustable_block = line.kind & TYPE_ADJUSTABLE != 0 || active_speed_modifier.is_some();
     measure_movement(

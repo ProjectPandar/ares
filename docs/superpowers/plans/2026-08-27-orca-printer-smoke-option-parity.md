@@ -1532,11 +1532,10 @@ feature while retraction itself remains unconditional. Bottom Only no longer
 adds later-layer lifts; focused unit, KSR, clippy, and fmt pass.
 
 Segmented spiral lift now writes the upstream raw `G1 F...`; CoolingBuffer keeps
-it when feed changes and reduces a redundant feed-only move to a blank line.
-The relative-E parser now clears E before cloning the next position, preventing
-feed-only lines from becoming fake E motions. Auto z-hop retains F9000 while
-Elegoo's redundant F becomes the expected blank. Focused tests, KSR, clippy,
-and fmt pass.
+it when feed changes and reduces a redundant feed-only move to a blank line,
+including Orca's copied-before-reset relative-E measurement order. Auto z-hop
+retains F9000 while Elegoo's redundant F becomes the expected blank. Focused
+tests, KSR, clippy, and fmt pass.
 
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
