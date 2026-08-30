@@ -1480,5 +1480,11 @@ advances to segmented-travel feed, while remaining deposition leaders are now
 geometry/last-decimal families. Qidi support-layer timelapse accounts for 49 of
 52 control-first rows.
 
-NEXT: rerun all 650 option domains and reduce the 65 known value-case failures;
-in parallel continue Clipper precision, lifecycle/Qidi, and postamble work.
+Expanded option sweep2 (clean HEAD `65e81e4`) completed all 1,356 cases: 585 of
+650 source-cited option domains PASS, all 302 baseline-only domains execute,
+and no domain remains UNBOUNDED. The same 65 value-bearing domains remain red;
+the summary now exposes only real implementation/upstream-invalid failures,
+not coverage omissions.
+
+NEXT: reduce the 65 known value-case failures; in parallel continue Clipper
+precision, lifecycle/Qidi, and postamble work.
