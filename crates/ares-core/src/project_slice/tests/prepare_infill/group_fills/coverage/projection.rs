@@ -18,6 +18,8 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     set_nozzles(&mut graph, OrcaFloats(vec![OrcaFloat(0.4)]));
     object_mut(&mut graph).layer_height = OrcaFloat(0.2);
     object_mut(&mut graph).set_other_flow_ratios = OrcaBool(true);
+    object_mut(&mut graph).elefant_foot_compensation_layers = crate::OrcaInt(2);
+    object_mut(&mut graph).elefant_foot_layers_density = Percent(50.0);
     {
         let options = options_mut(&mut graph, LAYER);
         options.sparse_infill_pattern = ProcessInfillPattern::Gyroid;
@@ -82,6 +84,7 @@ fn task22o73_sparse_percent_anchors_clamp_after_f32_projection_and_repeat_exactl
     let solid = find_kind(&second.surface_fills, RegionSurfaceKind::InternalSolid);
     assert_eq!(solid.params.multiline, 1);
     assert!(!solid.params.gyroid_optimized);
+    assert_eq!(solid.params.density, 50.0);
     assert_eq!(solid.params.flow_ratio, 1.2);
     assert_eq!(solid.expolygons, [solid_shape]);
 

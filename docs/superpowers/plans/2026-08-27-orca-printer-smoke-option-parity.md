@@ -1521,5 +1521,10 @@ infill increment wall_loops before first-layer/top overrides. It is no longer an
 unsupported option; the public output test verifies increased used filament on
 the second layer, and KSR/workspace checks pass.
 
+`elefant_foot_layers_density` now ports `Fill.cpp:1345-1354`: InternalSolid
+infill on layers 2..N linearly restores configured density toward 100%, with the
+bottommost layer unchanged. The 50% option case now matches Orca filament usage
+exactly (259.75 mm); focused projection test, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

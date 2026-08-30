@@ -73,6 +73,15 @@ pub(super) fn project_surface(
         }
     }
 
+    if kind == RegionSurfaceKind::InternalSolid {
+        let layers = context.object.elefant_foot_compensation_layers.0.max(0) as usize;
+        let density = context.object.elefant_foot_layers_density.0 / 100.0;
+        if context.planned.id > 0 && context.planned.id <= layers && density != 1.0 {
+            let remaining = layers - (context.planned.id - 1);
+            params.density =
+                (100.0 * (1.0 - (1.0 - density) * remaining as f64 / layers as f64)) as f32;
+        }
+    }
     params.extrusion_role = extrusion_role(kind, solid, is_bridge);
     params.extruder = output_selector(context.region, params.extrusion_role, params.extruder);
     params.multiline = if params.extrusion_role == ExtrusionRole::InternalInfill {
