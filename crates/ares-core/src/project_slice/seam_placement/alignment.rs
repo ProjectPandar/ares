@@ -1,5 +1,6 @@
 mod context;
 mod preparation;
+mod random;
 
 use crate::project_slice::seam_candidates::{LayerSeamCandidates, SeamPerimeter};
 
@@ -81,6 +82,10 @@ fn is_not_much_worse(layer: &LayerPlan, first: usize, second: usize) -> bool {
     let first_penalty = layer.overhangs[first] + layer.scores[first];
     let second_penalty = layer.overhangs[second] + layer.scores[second];
     first_penalty <= second_penalty || first_penalty - second_penalty < SCORE_TOLERANCE
+}
+
+pub(super) fn randomize(layers: &mut [LayerPlan]) {
+    random::apply(layers);
 }
 
 pub(super) fn align(layers: &mut [LayerPlan]) {

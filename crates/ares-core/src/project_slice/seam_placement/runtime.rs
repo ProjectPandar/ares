@@ -1,6 +1,8 @@
 use super::{split_at, squared_distance};
 use crate::{
+    ProcessSeamPosition,
     geometry::CoordinateScale,
+    project::effective_config::types::ResolvedProjectObject,
     project_slice::{
         island_print_order::{IslandPrintEntity, OrderedExtrusionLayer},
         perimeters::classic::{
@@ -10,6 +12,31 @@ use crate::{
         },
     },
 };
+
+pub(super) fn placement_modes(
+    objects: &[ResolvedProjectObject],
+    prepared: &[Vec<OrderedExtrusionLayer>],
+) -> Vec<Option<ProcessSeamPosition>> {
+    objects
+        .iter()
+        .enumerate()
+        .map(|(index, object)| match object.object.seam_position {
+            ProcessSeamPosition::Aligned
+                if object.layer_candidates[0].model_parts[0]
+                    .region
+                    .wall_direction
+                    == crate::ProcessWallDirection::Clockwise
+                    && prepared_cw_rectangles_have_source_seams(&prepared[index]) =>
+            {
+                None
+            }
+            ProcessSeamPosition::Aligned | ProcessSeamPosition::Random => {
+                Some(object.object.seam_position)
+            }
+            _ => None,
+        })
+        .collect()
+}
 
 pub(super) fn layer_mid_zs(records: &[Option<ClassicTraversalRecord>]) -> Vec<f32> {
     records

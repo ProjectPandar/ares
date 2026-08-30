@@ -1889,5 +1889,10 @@ Aligned inner seams now port `SeamPlacer.cpp::place_seam`'s
 advances by at least its source path width and is split at the projected point.
 Both Boolean values pass focused Orca movement parity.
 
+Random seam placement now ports `SeamPlacer.cpp::pick_random_seam_point`'s
+position-hash and viable-edge length weighting, including overhang and embedded
+candidate filtering before projecting the shared seam into inner walls. The
+random enum value passes focused Orca movement parity.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

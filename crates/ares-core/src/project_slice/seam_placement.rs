@@ -30,7 +30,6 @@ const SEAM_VERTEX_SNAP_MM: f64 = 0.0015;
 
 #[cfg(test)]
 use runtime::is_closed_axis_rectangle;
-use runtime::prepared_cw_rectangles_have_source_seams;
 pub(in crate::project_slice) use runtime::{place_nearest, place_nearest_projection};
 
 pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
@@ -42,21 +41,8 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         .predecessor
         .predecessor
         .predecessor;
-    let aligned = traversal
-        .resolved
-        .objects
-        .iter()
-        .enumerate()
-        .map(|(index, object)| {
-            object.object.seam_position == ProcessSeamPosition::Aligned
-                && !(object.layer_candidates[0].model_parts[0]
-                    .region
-                    .wall_direction
-                    == crate::ProcessWallDirection::Clockwise
-                    && prepared_cw_rectangles_have_source_seams(&prepared.objects[index]))
-        })
-        .collect::<Vec<_>>();
-    if !aligned.iter().any(|&value| value) {
+    let placements = runtime::placement_modes(&traversal.resolved.objects, &prepared.objects);
+    if !placements.iter().any(Option::is_some) {
         return;
     }
 
@@ -78,7 +64,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     apply_objects(
         &mut prepared.objects,
         traversal,
-        &aligned,
+        &placements,
         &visibility,
         nozzle_diameter,
     );
@@ -87,14 +73,14 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
 fn apply_objects(
     objects: &mut [Vec<OrderedExtrusionLayer>],
     traversal: &PreparedPostClassicTraversal,
-    aligned: &[bool],
+    placements: &[Option<ProcessSeamPosition>],
     visibility: &visibility::GlobalVisibility,
     nozzle_diameter: f32,
 ) {
     for (object_index, layers) in objects.iter_mut().enumerate() {
-        if !aligned[object_index] {
+        let Some(placement) = placements[object_index] else {
             continue;
-        }
+        };
         let layer_zs = runtime::layer_mid_zs(&traversal.objects[object_index].records);
         let mut plans = alignment::prepare(
             (layers, &layer_zs),
@@ -103,7 +89,11 @@ fn apply_objects(
             nozzle_diameter,
             visibility,
         );
-        alignment::align(&mut plans);
+        match placement {
+            ProcessSeamPosition::Aligned => alignment::align(&mut plans),
+            ProcessSeamPosition::Random => alignment::randomize(&mut plans),
+            _ => unreachable!("only active seam placement modes are prepared"),
+        }
         for (layer, plan) in layers.iter_mut().zip(&plans) {
             place_layer(layer, plan, traversal.scale);
         }

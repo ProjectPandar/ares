@@ -43,6 +43,11 @@ fn orca_parity_fuzzy_skin_enum_smoke() {
 }
 
 #[test]
+fn orca_parity_random_seam_smoke() {
+    assert_process_option_smoke("seam_position", "random");
+}
+
+#[test]
 fn orca_parity_staggered_inner_seams_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("staggered_inner_seams", value);
