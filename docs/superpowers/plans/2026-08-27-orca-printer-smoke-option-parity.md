@@ -1577,5 +1577,11 @@ inactive PrintApply compensation intent. The 50% Ares output is byte-identical
 at the first outer path and stats; RH3D advances to travel geometry. Cardinality,
 preflight, KSR, focused smokes, clippy, and fmt pass.
 
+Stable option sweep3 (clean HEAD `5965b22`) completed all 650 source-cited
+domains/1,356 generated cases: PASS 585→594 and FAIL 65→56. The summary is
+fresh after alternate wall, fan, flow, lift, shrink acceptance, and other
+recent slices; remaining rows now distinguish executable divergences from
+invalid generated Orca values.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
