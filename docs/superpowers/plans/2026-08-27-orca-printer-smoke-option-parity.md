@@ -1363,5 +1363,11 @@ first-layer multiplier follow `set_other_flow_ratios`. Focused projection tests
 cover 1.1/1.2/0.95 roles. Snapmaker A250 moves from 207.10 to 208.17 mm against
 208.19 (inside the fixed 0.05 mm tolerance), and KSR/workspace checks pass.
 
-NEXT: rerun the full sweep, then correct scaled Clipper endpoint precision /
-limited-hook direction and continue postamble geometry/lifecycle.
+Stable sweep33 used the clean `9f4918c` test binary (before the subsequent
+role-ratio commit) and completed all 1001 presets: PASS jumps 151→202, with 707
+DIVERGENT and 92 ARES_ERROR. Control-first rows collapse 95→33. Ender V3 Plus
+is PASS; A1 advances from first-layer CoolingBuffer feed to layer-31 sparse
+geometry; Creality Hi advances past whitespace to deposition count.
+
+NEXT: sweep the role-ratio commit, then correct scaled Clipper endpoint
+precision / limited-hook direction and continue postamble geometry/lifecycle.
