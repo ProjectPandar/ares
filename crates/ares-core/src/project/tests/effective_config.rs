@@ -62,10 +62,3 @@ fn assert_invalid_key(result: Result<ValidatedMaterializedProject, SliceError>, 
         SliceError::InvalidInput(format!("invalid Orca option {key}"))
     );
 }
-
-fn assert_unsupported_key(result: Result<ValidatedMaterializedProject, SliceError>, key: &str) {
-    assert_eq!(
-        result.unwrap_err(),
-        SliceError::UnsupportedProjectFeature(key.to_owned())
-    );
-}

@@ -165,7 +165,7 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
 }
 
 #[tokio::test]
-async fn task22b_identity_shrink_options_precede_task22a_and_raw_state() {
+async fn task22b_nonidentity_shrink_options_continue_to_later_preflight() {
     let mut archive = KsrArchive::new();
     archive.invalidate_flush_matrix();
     set_scalar(&mut archive, "raft_layers", "0", "1");
@@ -179,25 +179,6 @@ async fn task22b_identity_shrink_options_precede_task22a_and_raw_state() {
         "Metadata/project_settings.config",
         FILAMENT_SHRINK_Z,
         NONIDENTITY_FILAMENT_SHRINK_Z,
-    );
-    assert_eq!(
-        slice_error(&archive).await,
-        SliceError::UnsupportedProjectFeature("filament_shrink".to_owned())
-    );
-
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        NONIDENTITY_FILAMENT_SHRINK,
-        FILAMENT_SHRINK,
-    );
-    assert_eq!(
-        slice_error(&archive).await,
-        SliceError::UnsupportedProjectFeature("filament_shrinkage_compensation_z".to_owned())
-    );
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        NONIDENTITY_FILAMENT_SHRINK_Z,
-        FILAMENT_SHRINK_Z,
     );
     assert_eq!(slice_error(&archive).await, flush_matrix_error());
     archive.repair_flush_matrix();

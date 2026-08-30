@@ -1569,5 +1569,13 @@ clippy, and fmt pass. The normalization moved into the real
 `orca_parity/smoke_overrides.rs` module when the harness root reached 416 LOC;
 both files are now below 400 without source-inclusion macros.
 
+`filament_shrink` and Z compensation are now accepted by the 3MF project path
+instead of rejected. Runtime authority matters here: Orca CLI 2.4.2 produced
+identical motion and 262.34 mm filament for the 50% and 100% option projects,
+so the active parity behavior is intentionally no-op rather than the currently
+inactive PrintApply compensation intent. The 50% Ares output is byte-identical
+at the first outer path and stats; RH3D advances to travel geometry. Cardinality,
+preflight, KSR, focused smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

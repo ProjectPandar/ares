@@ -1,6 +1,6 @@
 use crate::{Nullable, OrcaFloat, OrcaFloats, OrcaInt, OrcaInts, Percent, VariantStride};
 
-use super::{assert_invalid_key, assert_unsupported_key, valid_project, valid_settings, validate};
+use super::{assert_invalid_key, valid_project, valid_settings, validate};
 
 #[test]
 fn reports_unequal_physical_and_logical_counts() {
@@ -154,19 +154,16 @@ fn accepts_single_value_shrink_vectors_as_broadcasts() {
 }
 
 #[test]
-fn rejects_each_active_non_default_shrink_value_as_unsupported() {
+fn accepts_active_non_default_shrink_values() {
     let project = valid_project();
 
     let mut settings = valid_settings(1, 2);
     settings.filament.print.filament_shrink.0[1] = Percent(99.0);
-    assert_unsupported_key(validate(&settings, &project), "filament_shrink");
+    validate(&settings, &project).unwrap();
 
     let mut settings = valid_settings(1, 2);
     settings.filament.print.filament_shrinkage_compensation_z.0[0] = Percent(101.0);
-    assert_unsupported_key(
-        validate(&settings, &project),
-        "filament_shrinkage_compensation_z",
-    );
+    validate(&settings, &project).unwrap();
 }
 
 #[test]

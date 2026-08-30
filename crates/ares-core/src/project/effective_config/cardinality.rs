@@ -1,4 +1,4 @@
-use crate::{Percent, ProjectSettings, SliceError};
+use crate::{ProjectSettings, SliceError};
 
 use super::{ValidatedMaterializedProject, invalid_option};
 
@@ -55,14 +55,14 @@ pub(super) fn validate(
         filament.region.filament_ironing_speed.len(),
         logical_filament_count,
     )?;
-    validate_shrink(
+    validate_minimum_len(
         "filament_shrink",
-        &filament.print.filament_shrink.0,
+        filament.print.filament_shrink.0.len(),
         logical_filament_count,
     )?;
-    validate_shrink(
+    validate_minimum_len(
         "filament_shrinkage_compensation_z",
-        &filament.print.filament_shrinkage_compensation_z.0,
+        filament.print.filament_shrinkage_compensation_z.0.len(),
         logical_filament_count,
     )?;
 
@@ -75,18 +75,6 @@ pub(super) fn validate(
 fn validate_minimum_len(key: &str, actual: usize, _required: usize) -> Result<(), SliceError> {
     if actual == 0 {
         return Err(invalid_option(key));
-    }
-    Ok(())
-}
-
-fn validate_shrink(key: &str, values: &[Percent], logical_count: usize) -> Result<(), SliceError> {
-    validate_minimum_len(key, values.len(), logical_count)?;
-    if values
-        .iter()
-        .take(logical_count)
-        .any(|value| *value != Percent(100.0))
-    {
-        return Err(SliceError::UnsupportedProjectFeature(key.to_owned()));
     }
     Ok(())
 }
