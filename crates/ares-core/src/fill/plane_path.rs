@@ -70,8 +70,8 @@ fn fill_component(
     let direction = f64::from(params.angle + std::f32::consts::FRAC_PI_2);
     let rotated = rotate_expolygon(surface, -direction)?;
     let mut snug_bounds = Bounds::from_expolygon(&rotated);
-    snug_bounds.offset(scaled_coordinate(1.0e-4, scale)?)?;
-    snug_bounds.offset(scaled_coordinate(
+    snug_bounds.offset(scaled_offset_coordinate(1.0e-4, scale)?)?;
+    snug_bounds.offset(scaled_offset_coordinate(
         params.spacing * f64::from(params.multiline),
         scale,
     )?)?;
@@ -247,9 +247,10 @@ fn expolygon_polygons(expolygon: &ExPolygon) -> Vec<Polygon> {
         .collect()
 }
 
-fn scaled_coordinate(value: f64, scale: CoordinateScale) -> Result<i64, ClipperError> {
+fn scaled_offset_coordinate(value: f64, scale: CoordinateScale) -> Result<i64, ClipperError> {
     scale
         .checked_scale(value)
+        .map(|_| (value / scale.factor()).round() as i64)
         .ok_or(ClipperError::CoordinateOutOfRange)
 }
 

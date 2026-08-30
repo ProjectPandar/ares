@@ -1,5 +1,17 @@
-use super::super::{PlanePathFillParams, PlanePathPattern, fill_surface};
+use super::super::{PlanePathFillParams, PlanePathPattern, fill_surface, scaled_offset_coordinate};
 use crate::geometry::{BoundingBox, CoordinateScale, ExPolygon, Point, Polygon};
+
+#[test]
+fn snug_bounds_offset_uses_point_constructor_rounding() {
+    assert_eq!(
+        scaled_offset_coordinate(0.377_079_64, CoordinateScale::Normal).unwrap(),
+        377_080
+    );
+    assert_eq!(
+        scaled_offset_coordinate(0.000_1, CoordinateScale::Normal).unwrap(),
+        100
+    );
+}
 
 #[test]
 fn each_plane_path_clips_repeatably_to_the_solid_surface() {

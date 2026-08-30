@@ -1805,5 +1805,11 @@ branch inactive relative to wall count/nozzle. All other geometry remains
 explicitly gated. The true cube option matches Orca at 262.34 mm; thin-wall
 suite, KSR, smoke, clippy, and fmt pass.
 
+PlanePath snug bounding-box offsets now reproduce `BoundingBox::offset`'s
+floating delta to `Point(double,double)` std::round, locally rather than
+changing global scaled-coordinate truncation. The 377079.xµm spacing becomes
+377080µm; bottom Hilbert removes the extra midpoint and internal Hilbert raw
+motion count matches. Ten plane tests, KSR, smoke, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
