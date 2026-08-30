@@ -133,12 +133,17 @@ fn task22o71_unported_anchor_rotation_templates_fail_without_fallback() {
 }
 
 #[test]
-fn task22o71_unported_anchor_direction_controls_fail_without_fallback() {
-    assert_unsupported_mutation(
+fn task22o71_multiline_reaches_the_fill_grouping_stage() {
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
         "\"fill_multiline\": \"1\"",
         "\"fill_multiline\": \"2\"",
-        "fill_multiline",
     );
+
+    let prepared = transaction::prepare(super::super::prepare(archive)).unwrap();
+
+    transaction::dispose(prepared);
 }
 
 #[test]

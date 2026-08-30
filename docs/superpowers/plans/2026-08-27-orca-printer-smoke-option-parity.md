@@ -1594,5 +1594,11 @@ Placeholder expressions now port Orca's active unary numeric conversions:
 semantics. Anycubic Kobra S1 Max advances from template ARES_ERROR to real
 travel geometry; focused conversion tests, KSR, smokes, clippy, and fmt pass.
 
+`fill_multiline` now ports `FillBase.cpp:2712-2784`: density-adjusted sparse
+centerlines become odd/even round-ended Clipper offset bundles before clipping
+for CrossHatch, Gyroid, and rectilinear-family generators. The obsolete gate is
+removed; max=10 matches Orca at 336.65 mm and the sampled sparse motions are
+byte-exact. Offset/transaction tests, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

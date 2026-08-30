@@ -47,9 +47,6 @@ pub(super) fn validate(
     {
         return unsupported("solid_infill_rotate_template");
     }
-    if options.fill_multiline.0 != 1 {
-        return unsupported("fill_multiline");
-    }
     if !matches!(
         options.top_surface_pattern,
         ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine

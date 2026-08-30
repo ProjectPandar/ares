@@ -48,7 +48,6 @@ pub(crate) fn fill_surface(
     params: GyroidFillParams,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    debug_assert_eq!(params.multiline, 1);
     let offset = ((params.overlap - 0.5 * params.spacing) / scale.factor()) as f32;
     let components = offset_expolygon(surface, offset, JoinType::Miter, 3.0)?;
     let mut output = Vec::new();
@@ -105,6 +104,7 @@ fn fill_component(
         scale,
     )?;
     translate(&mut polylines, minimum)?;
+    polylines = super::multiline_offset::apply(polylines, params.multiline, params.spacing, scale)?;
 
     let (contour, holes) = rotated.clone().into_parts();
     let mut clip = Vec::with_capacity(holes.len() + 1);

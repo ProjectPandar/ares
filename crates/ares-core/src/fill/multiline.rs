@@ -177,6 +177,7 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
         .into_iter()
         .flatten()
         .collect::<Vec<_>>();
+    lines = super::multiline_offset::apply(lines, params.multiline, params.spacing, scale)?;
     let (contour, holes) = rotated.into_parts();
     let mut clip = Vec::with_capacity(holes.len() + 1);
     clip.push(contour);

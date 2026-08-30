@@ -3,7 +3,10 @@ mod transform;
 
 pub(crate) use transform::line_spacing;
 
-use super::connect::{FillConnectionParams, connect_infill};
+use super::{
+    connect::{FillConnectionParams, connect_infill},
+    multiline_offset,
+};
 use crate::geometry::{
     ClipperError, CoordinateScale, ExPolygon, JoinType, Polyline, intersection_open_polylines,
     offset_expolygon,
@@ -28,7 +31,6 @@ pub(crate) fn fill_surface(
     params: CrossHatchFillParams,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    debug_assert_eq!(params.multiline, 1);
     debug_assert!(params.anchor_length_max >= 0.05);
 
     let offset_delta = ((params.overlap - 0.5 * params.spacing) / scale.factor()) as f32;
@@ -70,6 +72,7 @@ fn fill_component(
         height,
     )?;
     translate_polylines(&mut polylines, bbox_min)?;
+    let polylines = multiline_offset::apply(polylines, params.multiline, params.spacing, scale)?;
 
     let (contour, holes) = component.into_parts();
     let mut clip = Vec::with_capacity(holes.len() + 1);

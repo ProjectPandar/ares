@@ -3,6 +3,7 @@ pub(crate) mod connect;
 pub(crate) mod cross_hatch;
 pub(crate) mod gyroid;
 pub(crate) mod multiline;
+pub(crate) mod multiline_offset;
 #[cfg_attr(
     not(test),
     allow(
