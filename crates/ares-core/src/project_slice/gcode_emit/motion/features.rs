@@ -14,6 +14,7 @@ pub(super) struct PathProperties<'a> {
     pub(super) is_perimeter: bool,
     pub(super) end_clip: f64,
     pub(super) fitting: &'a [FittedMove],
+    pub(super) slope: Option<super::scarf::Slope>,
 }
 
 impl PathProperties<'_> {
@@ -92,6 +93,9 @@ impl PathProperties<'_> {
     }
 
     fn speed(&self, options: &MotionOptions, layer_index: usize, path_length: f64) -> f64 {
+        if let Some(slope) = self.slope {
+            return slope.speed;
+        }
         let layer_default = if layer_index == 0 {
             if matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall") {
                 options.initial_layer_speed

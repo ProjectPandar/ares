@@ -1,3 +1,4 @@
+mod constant;
 mod retraction;
 mod start_travel;
 mod travel_emit;
@@ -6,13 +7,11 @@ mod variable;
 pub(super) use retraction::can_skip_retraction;
 
 use super::{
-    EmitState, LayerGeometry, arc, clip, extrusion, fan,
-    features::PathProperties,
-    format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
-    overhang, set_accel_and_jerk,
+    EmitState, LayerGeometry, arc, clip, extrusion, fan, features::PathProperties,
+    format::axis as format_axis, overhang, set_accel_and_jerk,
 };
 
-const SOURCE_EPSILON_MM: f64 = 1e-4;
+pub(super) const SOURCE_EPSILON_MM: f64 = 1e-4;
 
 pub(super) fn emit(
     output: &mut Vec<u8>,
@@ -148,6 +147,21 @@ pub(super) fn emit(
         state.y = target.y;
         state.wipe_start = Some(target);
     }
+    if let Some(slope) = properties.slope {
+        let wipe_points = local_points
+            .iter()
+            .map(|&(x, y)| arc::Point {
+                x: x + state.offset.0,
+                y: y + state.offset.1,
+            })
+            .collect::<Vec<_>>();
+        fan::update_for_constant_path(output, properties, state);
+        super::scarf::emit_segments(output, &points, slope, properties, state);
+        output.extend_from_slice(b";_EXTRUDE_END\n");
+        state.wipe_path = wipe_points.into_iter().rev().collect();
+        state.last_scaled_position = Some(last_scaled);
+        return;
+    }
     if let Some(processed) = processed {
         variable::emit(variable::Emission {
             output,
@@ -159,76 +173,17 @@ pub(super) fn emit(
             state,
         });
         state.last_scaled_position = Some(last_scaled);
+        state.scarf_z = Some(state.layer_z);
         output.extend_from_slice(b";_EXTRUDE_END\n");
         return;
     }
-    let wipe_points = local_points
-        .iter()
-        .map(|&(x, y)| arc::Point {
-            x: x + state.offset.0,
-            y: y + state.offset.1,
-        })
-        .collect::<Vec<_>>();
-    fan::update_for_constant_path(output, properties, state);
-    let arc_points = points
-        .iter()
-        .map(|&(x, y)| arc::Point { x, y })
-        .collect::<Vec<_>>();
-    let segments = if state.options.enable_arc_fitting {
-        if fitting.is_empty() {
-            arc::fit(&arc_points, state.options.arc_fitting_tolerance)
-        } else {
-            arc::from_fitting(&arc_points, &fitting, state.offset)
-        }
-    } else {
-        points
-            .windows(2)
-            .map(|pair| arc::Segment::Line {
-                end: arc::Point {
-                    x: pair[1].0,
-                    y: pair[1].1,
-                },
-                length: (pair[1].0 - pair[0].0).hypot(pair[1].1 - pair[0].1),
-            })
-            .collect()
-    };
-    for segment in segments {
-        match segment {
-            arc::Segment::Line { end, length } if length >= SOURCE_EPSILON_MM => {
-                extrusion::linear_segment(output, end, length, properties, state);
-            }
-            arc::Segment::Line { .. } => {}
-            arc::Segment::Arc(arc_segment) if arc_segment.length >= SOURCE_EPSILON_MM => {
-                let extrusion = extrusion::for_length(
-                    arc_segment.length,
-                    properties.mm3_per_mm,
-                    state.options.filament_flow_ratio,
-                    state.options.print_flow_ratio,
-                    state.options.filament_area,
-                ) * state
-                    .small_area_flow
-                    .multiplier_for_feature(properties.feature, arc_segment.length);
-                let extrusion = extrusion::coordinate(state, extrusion);
-                let command = if arc_segment.clockwise { "G2" } else { "G3" };
-                output.extend_from_slice(
-                    format!(
-                        "{command} X{} Y{} I{} J{} E{}\n",
-                        format_axis(arc_segment.end.x),
-                        format_axis(arc_segment.end.y),
-                        format_offset(arc_segment.center.x - arc_segment.start.x),
-                        format_offset(arc_segment.center.y - arc_segment.start.y),
-                        format_extrusion(extrusion)
-                    )
-                    .as_bytes(),
-                );
-                state.x = arc_segment.end.x;
-                state.y = arc_segment.end.y;
-                state.wipe_start = Some(arc_segment.end);
-            }
-            arc::Segment::Arc(_) => {}
-        }
-    }
-    output.extend_from_slice(b";_EXTRUDE_END\n");
-    state.wipe_path = wipe_points.into_iter().rev().collect();
-    state.last_scaled_position = Some(last_scaled);
+    constant::emit(constant::Emission {
+        output,
+        points: &points,
+        local_points: &local_points,
+        fitting: &fitting,
+        last_scaled,
+        properties,
+        state,
+    });
 }

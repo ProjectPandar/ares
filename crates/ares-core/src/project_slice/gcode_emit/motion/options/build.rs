@@ -2,6 +2,7 @@
 //! (`GCodeWriter::apply_print_config` equivalents).
 
 mod retraction;
+mod scarf;
 
 use super::MotionOptions;
 use super::first_nullable_float;
@@ -387,6 +388,7 @@ impl MotionOptions {
             seam_position: object.map_or(full.process.object.seam_position, |value| {
                 value.object.seam_position
             }),
+            scarf: scarf::from_region(&full.process.region, region),
             enable_arc_fitting: gcode.enable_arc_fitting.0,
             arc_fitting_tolerance: full.process.print.resolution.0,
         }

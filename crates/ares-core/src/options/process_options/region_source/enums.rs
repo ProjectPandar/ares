@@ -94,8 +94,9 @@ pub enum ProcessWallDirection {
     Clockwise,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ProcessSeamScarfType {
+    #[default]
     #[serde(rename = "none")]
     None,
     #[serde(rename = "external")]

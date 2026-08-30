@@ -9,6 +9,19 @@ pub(in crate::project_slice::gcode_emit) use helpers::first_nullable_float;
 mod build;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(in crate::project_slice::gcode_emit) struct ScarfOptions {
+    pub(in crate::project_slice::gcode_emit) seam_slope_type: crate::ProcessSeamScarfType,
+    pub(in crate::project_slice::gcode_emit) conditional: bool,
+    pub(in crate::project_slice::gcode_emit) start_height: Option<FloatOrPercent>,
+    pub(in crate::project_slice::gcode_emit) entire_loop: bool,
+    pub(in crate::project_slice::gcode_emit) min_length: f64,
+    pub(in crate::project_slice::gcode_emit) steps: usize,
+    pub(in crate::project_slice::gcode_emit) inner_walls: bool,
+    pub(in crate::project_slice::gcode_emit) speed: Option<FloatOrPercent>,
+    pub(in crate::project_slice::gcode_emit) flow_ratio: f64,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) filament_area: f64,
     pub(in crate::project_slice::gcode_emit) filament_flow_ratio: f64,
@@ -93,4 +106,5 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) arc_fitting_tolerance: f64,
     pub(in crate::project_slice::gcode_emit) seam_gap: f64,
     pub(in crate::project_slice::gcode_emit) seam_position: crate::ProcessSeamPosition,
+    pub(in crate::project_slice::gcode_emit) scarf: ScarfOptions,
 }

@@ -1877,5 +1877,12 @@ emission are applied before the filter. The filter runs before CoolingBuffer,
 matching upstream ordering. Both `spiral_mode` Boolean values now pass focused
 Orca movement parity; spiral unit/integration tests, KSR, clippy, and fmt pass.
 
+Active classic scarf seams now port `GCode.cpp::extrude_loop` and
+`ExtrusionEntity.cpp::ExtrusionLoopSloped`: external/all enum gates, recursive
+slope segmentation, overlap clipping, interpolated Z/E, configured scarf
+speed/flow, and final travel-Z state are emitted on the active path. All three
+`seam_slope_type` values pass focused Orca movement parity; scarf tests, KSR,
+clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

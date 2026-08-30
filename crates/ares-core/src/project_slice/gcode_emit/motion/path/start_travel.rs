@@ -23,7 +23,19 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     } = request;
     let first_position = !state.positioned;
     let layer_change_travel = state.layer_change_travel_pending && !first_position;
-    let needs_travel = first_position || state.last_scaled_position != Some(first_scaled);
+    let slope_start_z = properties
+        .slope
+        .filter(|slope| (slope.z_begin - slope.z_end).abs() > super::SOURCE_EPSILON_MM)
+        .map(|slope| {
+            state.layer_z - f64::from(properties.height)
+                + f64::from(properties.height) * slope.z_begin
+        });
+    let slope_needs_z_travel = slope_start_z.is_some_and(|target| {
+        (state.scarf_z.unwrap_or(state.layer_z) - target).abs() >= super::SOURCE_EPSILON_MM
+    });
+    let target_z = slope_start_z.unwrap_or(state.layer_z);
+    let needs_travel =
+        first_position || state.last_scaled_position != Some(first_scaled) || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     let mut travel_set_layer_z = false;
     if needs_travel {
@@ -116,13 +128,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                     .as_bytes(),
                 );
             } else {
-                travel_emit::xyz(
-                    output,
-                    first_x,
-                    first_y,
-                    state.layer_z,
-                    state.travel_feedrate,
-                );
+                travel_emit::xyz(output, first_x, first_y, target_z, state.travel_feedrate);
                 travel_set_layer_z = true;
             }
         } else if state.retracted
@@ -149,16 +155,13 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         } else if layer_change_travel {
             if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
-                output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
+                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
             } else {
-                travel_emit::xyz(
-                    output,
-                    first_x,
-                    first_y,
-                    state.layer_z,
-                    state.travel_feedrate,
-                );
+                travel_emit::xyz(output, first_x, first_y, target_z, state.travel_feedrate);
             }
+            travel_set_layer_z = true;
+        } else if let Some(z) = slope_start_z {
+            travel_emit::xyz(output, first_x, first_y, z, state.travel_feedrate);
             travel_set_layer_z = true;
         } else {
             travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
@@ -172,13 +175,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}\n",
-                format_z(state.layer_z),
+                format_z(target_z),
                 format_axis(state.travel_feedrate)
             )
             .as_bytes(),
         );
         travel_set_layer_z = true;
         state.current_feedrate = state.travel_feedrate;
+    }
+    if let Some(z) = slope_start_z {
+        state.scarf_z = Some(z);
     }
     state.layer_change_travel_pending = false;
     append_object_start(output, state);
@@ -194,7 +200,9 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             state.lifted = true;
         }
         if state.lifted && !travel_set_layer_z {
-            output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
+            let z = slope_start_z.unwrap_or(state.layer_z);
+            output.extend_from_slice(format!("G1 Z{}\n", format_z(z)).as_bytes());
+            state.scarf_z = slope_start_z;
         }
         let retraction_length = state.options.retraction_length;
         let unretract = extrusion::coordinate(state, retraction_length);

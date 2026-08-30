@@ -43,6 +43,13 @@ fn orca_parity_fuzzy_skin_enum_smoke() {
 }
 
 #[test]
+fn orca_parity_seam_slope_type_smoke() {
+    for value in ["none", "external", "all"] {
+        assert_process_option_smoke("seam_slope_type", value);
+    }
+}
+
+#[test]
 fn orca_parity_spiral_mode_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("spiral_mode", value);

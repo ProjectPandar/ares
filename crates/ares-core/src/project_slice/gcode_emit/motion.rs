@@ -7,12 +7,14 @@ mod features;
 mod format;
 mod jerk;
 mod loop_paths;
+mod materialized;
 mod options;
 mod overhang;
 mod path;
 #[cfg(test)]
 #[path = "motion/path/tests.rs"]
 mod path_tests;
+mod scarf;
 mod state;
 #[cfg(test)]
 mod tests;
@@ -116,6 +118,7 @@ pub(super) fn emit_brim_loop(
             is_perimeter: false,
             end_clip: state.options.seam_gap,
             fitting: &[],
+            slope: None,
         },
         geometry,
         state,
@@ -142,6 +145,7 @@ pub(super) fn emit_skirt_loop(
             // (`GCode.cpp:5778-5790`).
             end_clip: state.options.seam_gap,
             fitting: &[],
+            slope: None,
         },
         geometry,
         state,
@@ -318,6 +322,7 @@ fn emit_fill_entity(
                 ),
                 end_clip: 0.0,
                 fitting: &path.fitting,
+                slope: None,
             },
             geometry,
             state,
@@ -335,7 +340,7 @@ fn emit_variable_width_entity(
     state: &mut EmitState,
 ) {
     match entity {
-        GapFillEntity::Path(path) => emit_materialized_path(output, path, 0.0, geometry, state),
+        GapFillEntity::Path(path) => materialized::emit_flat(output, path, 0.0, geometry, state),
         GapFillEntity::Loop(paths) => loop_paths::emit(
             output,
             paths,
@@ -357,43 +362,4 @@ fn local_cursor(state: &EmitState, geometry: LayerGeometry<'_>) -> Point {
             .checked_scale(state.y - state.offset.1)
             .expect("emitted Y remains in the coordinate domain"),
     )
-}
-
-fn emit_materialized_path(
-    output: &mut Vec<u8>,
-    path: &crate::project_slice::perimeters::classic::materialize::ExtrusionPath,
-    end_clip: f64,
-    geometry: LayerGeometry<'_>,
-    state: &mut EmitState,
-) {
-    use crate::project_slice::perimeters::classic::materialize::ExtrusionRole;
-    let feature = match path.role {
-        ExtrusionRole::ExternalPerimeter => "Outer wall",
-        ExtrusionRole::Perimeter => "Inner wall",
-        ExtrusionRole::OverhangPerimeter => "Overhang wall",
-        ExtrusionRole::GapFill => "Gap infill",
-        ExtrusionRole::SolidInfill => "Internal solid infill",
-        ExtrusionRole::TopSolidInfill => "Top surface",
-        ExtrusionRole::BottomSurface => "Bottom surface",
-    };
-    path::emit(
-        output,
-        path.polyline.points.iter().map(|point| (point.x, point.y)),
-        PathProperties {
-            mm3_per_mm: path.mm3_per_mm,
-            width: path.width,
-            height: path.height,
-            feature,
-            is_perimeter: matches!(
-                path.role,
-                ExtrusionRole::ExternalPerimeter
-                    | ExtrusionRole::Perimeter
-                    | ExtrusionRole::OverhangPerimeter
-            ),
-            end_clip,
-            fitting: &path.polyline.fitting,
-        },
-        geometry,
-        state,
-    );
 }

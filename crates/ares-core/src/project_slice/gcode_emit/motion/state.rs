@@ -33,6 +33,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) last_jerk: Option<f64>,
     pub(in crate::project_slice::gcode_emit) layer_z: f64,
     pub(in crate::project_slice::gcode_emit) source_layer_z: f64,
+    pub(in crate::project_slice::gcode_emit) scarf_z: Option<f64>,
     pub(in crate::project_slice::gcode_emit) retracted: bool,
     pub(in crate::project_slice::gcode_emit) wipe_path: Vec<arc::Point>,
     pub(in crate::project_slice::gcode_emit) wipe_start: Option<arc::Point>,

@@ -60,6 +60,10 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         request.options.max_volumetric_speed
             / (request.properties.mm3_per_mm * request.options.filament_flow_ratio),
     );
+    let reference_speed = request
+        .properties
+        .slope
+        .map_or(reference_speed, |slope| reference_speed.min(slope.speed));
     let sections = speed_sections(request.properties.width, reference_speed, request.options);
     let original_speed = request.original_speed as f32;
     let minimum_slowdown_distance = sections

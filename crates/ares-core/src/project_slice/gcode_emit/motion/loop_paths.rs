@@ -15,6 +15,31 @@ pub(super) fn emit(
     state: &mut EmitState,
 ) {
     append_wipe_before_external(output, paths, loop_role, geometry, state);
+    if !state.spiral_vase
+        && let Some(scarf) = super::scarf::build(
+            paths,
+            loop_role,
+            geometry,
+            &state.options,
+            state.layer_index,
+        )
+    {
+        for path in &scarf.paths {
+            super::materialized::emit(
+                output,
+                state,
+                super::materialized::Emission {
+                    path: &path.path,
+                    end_clip: 0.0,
+                    slope: path.slope,
+                    geometry,
+                },
+            );
+        }
+        state.wipe_path = wipe_points(&scarf.wipe_paths, geometry, state.offset);
+        append_inward_move(output, &scarf.wipe_paths, loop_role, geometry, state);
+        return;
+    }
     // `GCode.cpp:4596-4612,5796-5804`: active vase layers keep complete
     // loops for the full-layer SpiralVase filter.
     let mut remaining_clip = if state.spiral_vase_layer {
@@ -39,7 +64,7 @@ pub(super) fn emit(
         } else {
             0.0
         };
-        super::emit_materialized_path(output, path, end_clip, geometry, state);
+        super::materialized::emit_flat(output, path, end_clip, geometry, state);
         if emitted_loop_path.is_empty() {
             emitted_loop_path.extend(state.wipe_path.iter().rev().copied());
         } else {
@@ -48,6 +73,26 @@ pub(super) fn emit(
     }
     state.wipe_path = emitted_loop_path;
     append_inward_move(output, paths, loop_role, geometry, state);
+}
+
+fn wipe_points(
+    paths: &[ExtrusionPath],
+    geometry: LayerGeometry<'_>,
+    offset: (f64, f64),
+) -> Vec<super::arc::Point> {
+    let mut points = Vec::new();
+    for path in paths {
+        for point in &path.polyline.points {
+            let point = super::arc::Point {
+                x: geometry.scale.unscale(point.x) + offset.0,
+                y: geometry.scale.unscale(point.y) + offset.1,
+            };
+            if points.last() != Some(&point) {
+                points.push(point);
+            }
+        }
+    }
+    points
 }
 
 fn append_wipe_before_external(

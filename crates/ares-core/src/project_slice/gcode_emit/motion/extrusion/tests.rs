@@ -36,6 +36,7 @@ fn active_small_area_model_scales_solid_segment_extrusion() {
             is_perimeter: false,
             end_clip: 0.0,
             fitting: &[],
+            slope: None,
         },
         &mut state,
     );
@@ -69,6 +70,7 @@ fn zero_flow_move_omits_extrusion_axis() {
             is_perimeter: false,
             end_clip: 0.0,
             fitting: &[],
+            slope: None,
         },
         &mut state,
     );

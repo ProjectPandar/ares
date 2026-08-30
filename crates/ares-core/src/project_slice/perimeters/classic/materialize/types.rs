@@ -62,13 +62,13 @@ pub(in crate::project_slice) struct FittedMove {
     pub(in crate::project_slice) arc: Option<FittedArc>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct Polyline3 {
     pub(in crate::project_slice) points: Vec<Point3>,
     pub(in crate::project_slice) fitting: Vec<FittedMove>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::project_slice) struct ExtrusionPath {
     pub(in crate::project_slice) polyline: Polyline3,
     pub(in crate::project_slice) role: ExtrusionRole,
