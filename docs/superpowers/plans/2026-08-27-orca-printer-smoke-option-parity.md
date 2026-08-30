@@ -1834,5 +1834,9 @@ logic. Files are now 386/25 LOC; nearest, KSR, clippy, and fmt checks pass.
 classification moved into real `path/retraction.rs`, re-exporting the existing
 tested seam. Root is now 399 LOC; retraction, KSR, clippy, and fmt pass.
 
+`motion/options/build.rs` reached 405 LOC; retraction speed rounding and
+deretraction fallback moved into real `build/retraction.rs`. Root is now 391
+LOC; options, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

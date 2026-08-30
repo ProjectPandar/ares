@@ -1,6 +1,8 @@
 //! Builds `MotionOptions` from the resolved project configuration
 //! (`GCodeWriter::apply_print_config` equivalents).
 
+mod retraction;
+
 use super::MotionOptions;
 use super::first_nullable_float;
 use super::helpers::{
@@ -55,23 +57,7 @@ impl MotionOptions {
             full.process.object.default_acceleration.0,
             |value| value.default_acceleration.0,
         );
-        let retraction_speed = gcode
-            .retraction_speed
-            .0
-            .first()
-            .map_or(0.0, |value| value.0)
-            .round();
-        let configured_deretraction_speed = gcode
-            .deretraction_speed
-            .0
-            .first()
-            .map_or(0.0, |value| value.0)
-            .round();
-        let deretraction_speed = if configured_deretraction_speed > 0.0 {
-            configured_deretraction_speed
-        } else {
-            retraction_speed
-        };
+        let (retraction_speed, deretraction_speed) = retraction::speeds(gcode);
         Self {
             filament_area: std::f64::consts::PI * filament_diameter.powi(2) * 0.25,
             filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
