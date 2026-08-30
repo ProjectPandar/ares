@@ -1,5 +1,13 @@
 use super::{MotionOptions, arc, set_accel_and_jerk, set_layer_acceleration_and_jerk};
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub(in crate::project_slice::gcode_emit) enum LiftMode {
+    #[default]
+    Normal,
+    Slope,
+    Spiral,
+}
+
 #[derive(Default)]
 pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) x: f64,
@@ -23,6 +31,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) wipe_path: Vec<arc::Point>,
     pub(in crate::project_slice::gcode_emit) wipe_start: Option<arc::Point>,
     pub(in crate::project_slice::gcode_emit) lifted: bool,
+    pub(in crate::project_slice::gcode_emit) pending_lift: Option<LiftMode>,
     pub(in crate::project_slice::gcode_emit) part_fan_speed: u8,
     pub(in crate::project_slice::gcode_emit) physical_fan_speed: u8,
     pub(in crate::project_slice::gcode_emit) overhang_fan_active: bool,

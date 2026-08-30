@@ -4,13 +4,13 @@
 #[cfg(test)]
 mod tests;
 use super::{
-    EmitState, arc, extrusion,
+    EmitState, LiftMode, arc, extrusion,
     format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
 };
 
-pub(super) fn retract_and_lift(output: &mut Vec<u8>, target: arc::Point, state: &mut EmitState) {
+pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
-    append_lift(output, target, state);
+    schedule_lift(state, false);
     state.retracted = true;
 }
 
@@ -37,14 +37,29 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
 }
 
 pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
-    output: &mut Vec<u8>,
+    _output: &mut Vec<u8>,
     state: &mut EmitState,
 ) {
     if state.pending_layer_retract && !state.retracted {
-        append_eager_lift(output, state);
+        schedule_lift(state, true);
         state.retracted = true;
     }
     state.pending_layer_retract = false;
+}
+
+fn schedule_lift(state: &mut EmitState, layer_change: bool) {
+    if state.options.z_hop <= 0.0 {
+        return;
+    }
+    state.pending_lift = Some(
+        if state.options.spiral_lift || state.options.auto_lift && layer_change {
+            LiftMode::Spiral
+        } else if state.options.auto_lift {
+            LiftMode::Slope
+        } else {
+            LiftMode::Normal
+        },
+    );
 }
 
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -203,33 +218,71 @@ fn unscaled_position(point: (i64, i64), state: &EmitState) -> arc::Point {
     }
 }
 
-fn append_lift(output: &mut Vec<u8>, target: arc::Point, state: &mut EmitState) {
-    if state.options.z_hop <= 0.0 {
-        return;
-    }
+pub(super) fn emit_pending_lift(
+    output: &mut Vec<u8>,
+    target: arc::Point,
+    state: &mut EmitState,
+) -> bool {
+    let Some(mode) = state.pending_lift.take() else {
+        return false;
+    };
     let raised_z = state.layer_z + state.options.z_hop;
     let dx = target.x - state.x;
     let dy = target.y - state.y;
     let travel_distance = dx.hypot(dy);
-    if state.options.spiral_lift
-        && state.options.travel_slope_radians > 0.0
-        && travel_distance > f64::EPSILON
-    {
-        let radius = state.options.z_hop
-            / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
-        let i = -dy / travel_distance * radius;
-        let j = dx / travel_distance * radius;
-        output.extend_from_slice(b"G17\n");
-        output.extend_from_slice(
+    match mode {
+        LiftMode::Normal => output.extend_from_slice(
             format!(
-                "G3 Z{} I{} J{} P1  F{}\n",
+                "G1 Z{} F{}\n",
                 format_extrusion(raised_z),
-                format_offset(i),
-                format_offset(j),
                 format_axis(state.travel_feedrate)
             )
             .as_bytes(),
-        );
+        ),
+        LiftMode::Spiral => {
+            let slope = state.options.travel_slope_radians;
+            if slope > 0.0 && travel_distance > f64::EPSILON {
+                let radius = state.options.z_hop / (std::f64::consts::TAU * slope.atan());
+                let i = -dy / travel_distance * radius;
+                let j = dx / travel_distance * radius;
+                append_spiral_lift(output, state, raised_z, i, j);
+            }
+        }
+        LiftMode::Slope => {
+            let slope = state.options.travel_slope_radians;
+            if travel_distance > f64::EPSILON && state.options.z_hop.atan2(travel_distance) < slope
+            {
+                let slope_distance = state.options.z_hop / slope.tan();
+                let x = state.x + dx * slope_distance / travel_distance;
+                let y = state.y + dy * slope_distance / travel_distance;
+                output.extend_from_slice(
+                    format!(
+                        "G1 X{} Y{} Z{} F{}\n",
+                        format_axis(x),
+                        format_axis(y),
+                        format_extrusion(raised_z),
+                        format_axis(state.travel_feedrate)
+                    )
+                    .as_bytes(),
+                );
+            }
+        }
+    }
+    state.lifted = true;
+    true
+}
+
+fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
+    if state.options.z_hop <= 0.0 {
+        return;
+    }
+    let raised_z = state.layer_z + state.options.z_hop;
+    if (state.options.spiral_lift || state.options.auto_lift)
+        && state.options.travel_slope_radians > 0.0
+    {
+        let radius = state.options.z_hop
+            / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
+        append_spiral_lift(output, state, raised_z, radius, 0.0);
     } else {
         output.extend_from_slice(
             format!(
@@ -243,35 +296,54 @@ fn append_lift(output: &mut Vec<u8>, target: arc::Point, state: &mut EmitState) 
     state.lifted = true;
 }
 
-fn append_eager_lift(output: &mut Vec<u8>, state: &mut EmitState) {
-    if state.options.z_hop <= 0.0 {
-        return;
-    }
-    let raised_z = state.layer_z + state.options.z_hop;
-    if state.options.spiral_lift && state.options.travel_slope_radians > 0.0 {
-        let radius = state.options.z_hop
-            / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
+fn append_spiral_lift(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64, j: f64) {
+    if state.options.enable_arc_fitting {
         output.extend_from_slice(b"G17\n");
         output.extend_from_slice(
             format!(
-                "G3 Z{} I{} J0 P1  F{}\n",
+                "G3 Z{} I{} J{} P1  F{}\n",
                 format_extrusion(raised_z),
-                format_offset(radius),
+                format_offset(i),
+                format_offset(j),
                 format_axis(state.travel_feedrate)
             )
             .as_bytes(),
         );
-    } else {
+        return;
+    }
+
+    output.push(b'\n');
+    let resolution = state.options.arc_fitting_tolerance;
+    let segments = (8.0 * (0.01 / resolution)).round().clamp(4.0, 16.0) as usize;
+    let center_x = state.x + i;
+    let center_y = state.y + j;
+    let radius = i.hypot(j);
+    let start_angle = (state.y - center_y).atan2(state.x - center_x);
+    for index in 1..segments {
+        let progress = index as f64 / segments as f64;
+        let angle = start_angle + std::f64::consts::TAU * progress;
+        let x = center_x + radius * angle.cos();
+        let y = center_y + radius * angle.sin();
+        let z = state.layer_z + (raised_z - state.layer_z) * progress;
         output.extend_from_slice(
             format!(
-                "G1 Z{} F{}\n",
-                format_extrusion(raised_z),
-                format_axis(state.travel_feedrate)
+                "G1 X{} Y{} Z{}\n",
+                super::super::format_processor_float(x),
+                super::super::format_processor_float(y),
+                super::super::format_processor_float(z)
             )
             .as_bytes(),
         );
     }
-    state.lifted = true;
+    output.extend_from_slice(
+        format!(
+            "G1 X{} Y{} Z{}\n",
+            super::super::format_processor_float(state.x),
+            super::super::format_processor_float(state.y),
+            super::super::format_processor_float(raised_z)
+        )
+        .as_bytes(),
+    );
 }
 
 pub(super) fn inside_internal_surfaces(

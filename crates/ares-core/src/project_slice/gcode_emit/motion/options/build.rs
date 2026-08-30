@@ -371,11 +371,16 @@ impl MotionOptions {
                 .0
                 .first()
                 .is_some_and(|value| value.0),
+            auto_lift: gcode
+                .z_hop_types
+                .0
+                .first()
+                .is_some_and(|value| matches!(value, ZHopType::Auto)),
             spiral_lift: gcode
                 .z_hop_types
                 .0
                 .first()
-                .is_some_and(|value| matches!(value, ZHopType::Auto | ZHopType::Spiral)),
+                .is_some_and(|value| matches!(value, ZHopType::Spiral)),
             travel_slope_radians: gcode
                 .travel_slope
                 .0

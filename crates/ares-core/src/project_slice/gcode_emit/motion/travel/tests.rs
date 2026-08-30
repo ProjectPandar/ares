@@ -1,5 +1,5 @@
-use super::super::MotionOptions;
-use super::{EmitState, inside_internal_surfaces, wipe_moves};
+use super::super::{LiftMode, MotionOptions};
+use super::{EmitState, emit_pending_lift, inside_internal_surfaces, wipe_moves};
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
     project_slice::{gcode_emit::motion::arc, region_slices::RegionSurface},
@@ -37,6 +37,46 @@ fn travel_leaving_internal_surface_requires_retraction() {
         CoordinateScale::Normal,
         (0.0, 0.0),
     ));
+}
+
+#[test]
+fn pending_spiral_lift_uses_resolution_based_linear_segments() {
+    let mut state = EmitState {
+        x: 102.379,
+        y: 108.302,
+        layer_z: 0.4,
+        pending_lift: Some(LiftMode::Spiral),
+        options: MotionOptions {
+            z_hop: 0.4,
+            travel_slope_radians: 3.0_f64.to_radians(),
+            arc_fitting_tolerance: 0.012,
+            travel_feedrate: 12_000.0,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+    let mut output = Vec::new();
+
+    assert!(emit_pending_lift(
+        &mut output,
+        arc::Point {
+            x: 108.991,
+            y: 108.991,
+        },
+        &mut state,
+    ));
+
+    assert_eq!(
+        output,
+        b"\n\
+G1 X103.278 Y108.856 Z0.457143\n\
+G1 X103.405 Y109.905 Z0.514286\n\
+G1 X102.664 Y110.658 Z0.571429\n\
+G1 X101.614 Y110.548 Z0.628571\n\
+G1 X101.045 Y109.659 Z0.685714\n\
+G1 X101.385 Y108.659 Z0.742857\n\
+G1 X102.379 Y108.302 Z0.8\n"
+    );
 }
 
 #[test]

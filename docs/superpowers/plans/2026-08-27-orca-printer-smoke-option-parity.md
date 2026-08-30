@@ -1308,5 +1308,14 @@ coalescing and applies it after any spacing-derived flow materialization,
 matching `GCode.cpp:6468-6485`. The focused projection test covers external
 1.0 vs internal 0.95, and Elegoo filament usage is now exact 272.68 mm.
 
-NEXT: finish Auto/Spiral lazy-lift parity, then correct the remaining multiline
-intersection ordering and postamble geometry.
+Lazy lift now follows `GCodeWriter.cpp:630-769,849-914` instead of emitting at
+the layer marker. Retracts queue Normal/Slope/Spiral mode; travel executes it
+with target direction. Auto uses Slope for ordinary cube travel and forced
+Spiral at layer change. With arc fitting disabled, spiral lift uses the
+resolution-derived 4–16 linear segments and C++ six-significant-digit
+formatting; enabled mode retains G3. Elegoo layer 1 and layer 2 movement are raw
+byte-exact (apart from ignored M73), the focused seven-segment test passes, and
+KSR/Ender/Artillery/RatRig regressions remain green.
+
+NEXT: correct remaining multiline intersection ordering, then rerun the full
+printer sweep and continue postamble geometry.

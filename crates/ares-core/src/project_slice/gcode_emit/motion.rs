@@ -21,7 +21,7 @@ mod travel;
 pub(super) use acceleration::{set_accel_and_jerk, set_layer_acceleration_and_jerk};
 pub(in crate::project_slice) use arc::simplify_points;
 pub(super) use state::{
-    EmitState, LayerGeometry, append_exclude_end, append_object_start, begin_layer,
+    EmitState, LayerGeometry, LiftMode, append_exclude_end, append_object_start, begin_layer,
     begin_path_travel, queue_exclude_end, queue_exclude_start, queue_object_start,
 };
 pub(super) use travel::{flush_pending_retract_lift, flush_pending_retract_wipe};

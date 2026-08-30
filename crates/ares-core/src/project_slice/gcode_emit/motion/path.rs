@@ -1,3 +1,4 @@
+mod travel_emit;
 mod variable;
 
 use super::{
@@ -111,19 +112,30 @@ pub(super) fn emit(
             && travel_distance >= state.options.retraction_minimum_travel
             && !skip_retraction;
         if retract {
-            travel::retract_and_lift(
-                output,
-                arc::Point {
-                    x: first_x,
-                    y: first_y,
-                },
-                state,
-            );
+            travel::retract_and_lift(output, state);
         }
         append_object_start(output, state);
-        if layer_change_travel && state.retracted {
-            if state.options.spiral_lift {
-                append_xy_travel(output, first_x, first_y, state.travel_feedrate);
+        let pending_lift_emitted = travel::emit_pending_lift(
+            output,
+            arc::Point {
+                x: first_x,
+                y: first_y,
+            },
+            state,
+        );
+        if state.lifted && !first_position && (!layer_change_travel || pending_lift_emitted) {
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{} Z{}\n",
+                    format_axis(first_x),
+                    format_axis(first_y),
+                    format_extrusion(state.layer_z + state.options.z_hop)
+                )
+                .as_bytes(),
+            );
+        } else if layer_change_travel && state.retracted {
+            if state.options.spiral_lift || state.options.auto_lift {
+                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else if state.lifted {
                 output.extend_from_slice(
                     format!(
@@ -135,7 +147,7 @@ pub(super) fn emit(
                     .as_bytes(),
                 );
             } else {
-                append_xyz_travel(
+                travel_emit::xyz(
                     output,
                     first_x,
                     first_y,
@@ -144,19 +156,9 @@ pub(super) fn emit(
                 );
                 travel_set_layer_z = true;
             }
-        } else if state.lifted && !first_position {
-            output.extend_from_slice(
-                format!(
-                    "G1 X{} Y{} Z{}\n",
-                    format_axis(first_x),
-                    format_axis(first_y),
-                    format_extrusion(state.layer_z + state.options.z_hop)
-                )
-                .as_bytes(),
-            );
         } else if state.retracted && first_position && state.options.z_hop > 0.0 {
-            if state.options.spiral_lift {
-                append_xy_travel(output, first_x, first_y, state.travel_feedrate);
+            if state.options.spiral_lift || state.options.auto_lift {
+                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else {
                 output.extend_from_slice(
                     format!(
@@ -172,13 +174,13 @@ pub(super) fn emit(
                 state.lifted = true;
             }
         } else if layer_change_travel {
-            if state.options.spiral_lift {
-                append_xy_travel(output, first_x, first_y, state.travel_feedrate);
+            if state.options.spiral_lift || state.options.auto_lift {
+                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
                 output.extend_from_slice(
                     format!("G1 Z{}\n", format_extrusion(state.layer_z)).as_bytes(),
                 );
             } else {
-                append_xyz_travel(
+                travel_emit::xyz(
                     output,
                     first_x,
                     first_y,
@@ -188,7 +190,7 @@ pub(super) fn emit(
             }
             travel_set_layer_z = true;
         } else {
-            append_xy_travel(output, first_x, first_y, state.travel_feedrate);
+            travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
         }
         state.x = first_x;
         state.y = first_y;
@@ -355,31 +357,6 @@ pub(super) fn emit(
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
     state.last_scaled_position = Some(last_scaled);
-}
-
-fn append_xy_travel(output: &mut Vec<u8>, x: f64, y: f64, feedrate: f64) {
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{} F{}\n",
-            format_axis(x),
-            format_axis(y),
-            format_axis(feedrate)
-        )
-        .as_bytes(),
-    );
-}
-
-fn append_xyz_travel(output: &mut Vec<u8>, x: f64, y: f64, z: f64, feedrate: f64) {
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{} Z{} F{}\n",
-            format_axis(x),
-            format_axis(y),
-            format_extrusion(z),
-            format_axis(feedrate)
-        )
-        .as_bytes(),
-    );
 }
 
 fn quantize_axis(value: f64) -> f64 {

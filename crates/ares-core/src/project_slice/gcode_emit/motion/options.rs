@@ -75,6 +75,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) role_based_wipe_speed: bool,
     pub(in crate::project_slice::gcode_emit) wipe_speed: f64,
     pub(in crate::project_slice::gcode_emit) retract_when_changing_layer: bool,
+    pub(in crate::project_slice::gcode_emit) auto_lift: bool,
     pub(in crate::project_slice::gcode_emit) spiral_lift: bool,
     pub(in crate::project_slice::gcode_emit) travel_slope_radians: f64,
     pub(in crate::project_slice::gcode_emit) enable_arc_fitting: bool,
