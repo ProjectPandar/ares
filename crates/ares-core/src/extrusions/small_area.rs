@@ -72,6 +72,26 @@ impl SmallAreaInfillFlowCompensation {
         }
         model.multiplier(line_length_mm)
     }
+
+    pub(crate) fn multiplier_for_feature(&self, feature: &str, line_length_mm: f64) -> f64 {
+        let Some(model) = &self.model else {
+            return 1.0;
+        };
+        if matches!(
+            feature,
+            "Internal solid infill" | "Top surface" | "Bottom surface"
+        ) {
+            model.multiplier(line_length_mm)
+        } else {
+            1.0
+        }
+    }
+}
+
+impl Default for SmallAreaInfillFlowCompensation {
+    fn default() -> Self {
+        Self::disabled()
+    }
 }
 
 fn parse_points(entries: Vec<String>) -> Result<Vec<(f64, f64)>, SliceError> {

@@ -19,6 +19,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) extrusion_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) current_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) options: MotionOptions,
+    pub(in crate::project_slice::gcode_emit) small_area_flow:
+        crate::extrusions::SmallAreaInfillFlowCompensation,
     pub(in crate::project_slice::gcode_emit) layer_index: usize,
     pub(in crate::project_slice::gcode_emit) positioned: bool,
     pub(in crate::project_slice::gcode_emit) last_scaled_position: Option<(i64, i64)>,

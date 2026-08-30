@@ -20,6 +20,7 @@ mod offset;
 mod placeholders;
 mod processor;
 mod skirt;
+mod small_area;
 mod tags;
 mod template;
 #[cfg(test)]
@@ -67,6 +68,7 @@ pub(super) fn emit(
     let (bed_cache, start_position) =
         machine::append_start(&mut output, traversal, metadata, first_layer_bounds)?;
     let options = motion::MotionOptions::from_traversal(traversal);
+    let small_area_flow = small_area::from_traversal(traversal)?;
     let model_offset = footprint::model_center(traversal).unwrap_or_default();
     let model_offset = (
         traversal
@@ -87,6 +89,7 @@ pub(super) fn emit(
         travel_feedrate: options.first_layer_travel_feedrate,
         extrusion_feedrate: options.initial_layer_speed * 60.0,
         options,
+        small_area_flow,
         tags: tags::Tags::of(traversal),
         ..Default::default()
     };

@@ -352,7 +352,9 @@ pub(super) fn emit(
                     state.options.filament_flow_ratio,
                     state.options.print_flow_ratio,
                     state.options.filament_area,
-                );
+                ) * state
+                    .small_area_flow
+                    .multiplier_for_feature(properties.feature, arc_segment.length);
                 let extrusion = extrusion::coordinate(state, extrusion);
                 let command = if arc_segment.clockwise { "G2" } else { "G3" };
                 output.extend_from_slice(

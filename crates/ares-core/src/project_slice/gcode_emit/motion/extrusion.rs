@@ -20,7 +20,9 @@ pub(super) fn linear_segment(
         state.options.filament_flow_ratio,
         state.options.print_flow_ratio,
         state.options.filament_area,
-    );
+    ) * state
+        .small_area_flow
+        .multiplier_for_feature(properties.feature, length);
     if extrusion.abs() <= f64::EPSILON {
         output.extend_from_slice(
             format!("G1 X{} Y{}\n", format_axis(end.x), format_axis(end.y)).as_bytes(),

@@ -1651,5 +1651,12 @@ ordering, and active top/bottom/internal-solid dispatch. All nine pattern-role
 option artifacts match Orca filament stats exactly (257.71..261.92 mm); nine
 focused tests, KSR, smokes, clippy, and fmt pass.
 
+The existing source-cited SmallAreaInfillFlowCompensator PCHIP model is now
+wired into active gcode_emit for every line/arc/variable solid segment, scaling
+Bottom/InternalSolid/Top E by segment length. The true option matches Orca
+filament usage exactly at 259.24 mm. Configuration moved into
+`gcode_emit/small_area.rs` to keep root at 386 LOC; focused test, KSR, clippy,
+and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
