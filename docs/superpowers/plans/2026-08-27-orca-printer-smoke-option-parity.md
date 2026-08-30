@@ -1369,6 +1369,11 @@ DIVERGENT and 92 ARES_ERROR. Control-first rows collapse 95→33. Ender V3 Plus
 is PASS; A1 advances from first-layer CoolingBuffer feed to layer-31 sparse
 geometry; Creality Hi advances past whitespace to deposition count.
 
+Stable sweep34 (clean HEAD `ee768eb`, including role ratios) completed all 1001
+presets: PASS 202→205, 705 DIVERGENT, 91 ARES_ERROR. Filament-first rows collapse
+141→30; 77 newly exposed preamble rows split into 40 boolean serialization and
+32 effective retraction-vector cases addressed below.
+
 Runtime template parity now also covers effective retraction vectors and bool
 serialization. Both `retract_length` and `retraction_length` expose filament
 overrides (Snapmaker E-1.2 instead of printer-default E-0.8), while interpolated
