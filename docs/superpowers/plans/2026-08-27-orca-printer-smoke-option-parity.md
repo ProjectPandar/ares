@@ -1537,5 +1537,9 @@ including Orca's copied-before-reset relative-E measurement order. Auto z-hop
 retains F9000 while Elegoo's redundant F becomes the expected blank. Focused
 tests, KSR, clippy, and fmt pass.
 
+Stable sweep43 (clean HEAD `d3c022e`) completed all 1001 presets: PASS 222→233,
+673 DIVERGENT, 95 ARES_ERROR. Both stable focused smokes and all other harness
+tests passed; the sweep alone failed as expected on the remaining 768 rows.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
