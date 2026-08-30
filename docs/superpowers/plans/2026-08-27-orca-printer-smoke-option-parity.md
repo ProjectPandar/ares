@@ -1762,5 +1762,12 @@ passed; the sweep alone failed on the remaining 717 rows. Gains cover arc-first
 simplification, extruder offsets, profile validation, lift/retraction, active
 patterns, zero walls, flow/density/skirt, placeholders, and shrink options.
 
+`wipe_before_external_loop` now ports the active
+`GCode.cpp:5824-5894` geometry: clipped seam neighbors, contour/hole orientation,
+third-angle rotation, and min(nozzle,width)/2 inward distance produce the
+force-no-extrusion pretravel before the normal outer seam travel. The true
+option's `X114.49 Y114.344` split is byte-exact; focused geometry test, KSR,
+smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

@@ -358,6 +358,10 @@ impl MotionOptions {
             wipe_on_loops: region.map_or(full.process.region.wipe_on_loops.0, |value| {
                 value.wipe_on_loops.0
             }),
+            wipe_before_external_loop: region
+                .map_or(full.process.region.wipe_before_external_loop.0, |value| {
+                    value.wipe_before_external_loop.0
+                }),
             wall_loops: region.map_or(full.process.region.wall_loops.0, |value| value.wall_loops.0),
             nozzle_diameter: full
                 .project

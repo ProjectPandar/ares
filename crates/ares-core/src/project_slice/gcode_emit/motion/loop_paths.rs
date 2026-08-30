@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::{EmitState, LayerGeometry, format::axis as format_axis};
 use crate::project_slice::perimeters::classic::{
     chained_loops::ExtrusionLoopRole,
@@ -11,6 +14,7 @@ pub(super) fn emit(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
+    append_wipe_before_external(output, paths, loop_role, geometry, state);
     let mut remaining_clip = state.options.seam_gap;
     let mut path_count = paths.len();
     while path_count > 0 {
@@ -18,6 +22,7 @@ pub(super) fn emit(
         if length > remaining_clip {
             break;
         }
+
         path_count -= 1;
         remaining_clip -= length;
     }
@@ -37,6 +42,97 @@ pub(super) fn emit(
     }
     state.wipe_path = emitted_loop_path;
     append_inward_move(output, paths, loop_role, geometry, state);
+}
+
+fn append_wipe_before_external(
+    output: &mut Vec<u8>,
+    paths: &[ExtrusionPath],
+    loop_role: ExtrusionLoopRole,
+    geometry: LayerGeometry<'_>,
+    state: &mut EmitState,
+) {
+    let Some(first) = paths.first() else {
+        return;
+    };
+    let last = paths.last().unwrap();
+    if !state.options.wipe_before_external_loop
+        || first.role != ExtrusionRole::ExternalPerimeter
+        || state.options.wall_loops <= 1
+        || first.polyline.points.len() < 2
+        || last.polyline.points.len() < 2
+    {
+        return;
+    }
+    let current = first.polyline.points[0];
+    let previous = first.polyline.points[1];
+    let next = clipped_loop_end(paths, state.options.seam_gap, geometry);
+    let mut a = next;
+    let mut b = previous;
+    let is_hole = loop_role == ExtrusionLoopRole::Hole;
+    let counter_clockwise = loop_is_counter_clockwise(paths);
+    if is_hole != counter_clockwise {
+        std::mem::swap(&mut a, &mut b);
+    }
+    let mut angle = ccw_angle(current, a, b) / 3.0;
+    if is_hole != counter_clockwise {
+        angle = -angle;
+    }
+    let dx = (next.x - current.x) as f64;
+    let dy = (next.y - current.y) as f64;
+    let length = dx.hypot(dy);
+    if length == 0.0 {
+        return;
+    }
+    let maximum =
+        0.5 * state.options.nozzle_diameter.min(f64::from(first.width)) / geometry.scale.factor();
+    let base_x = (current.x as f64 + dx * (2.0 * maximum / length)) as i64 as f64;
+    let base_y = (current.y as f64 + dy * (2.0 * maximum / length)) as i64 as f64;
+    let (sine, cosine) = angle.sin_cos();
+    let x = current.x as f64 + cosine * (base_x - current.x as f64)
+        - sine * (base_y - current.y as f64);
+    let y = current.y as f64
+        + sine * (base_x - current.x as f64)
+        + cosine * (base_y - current.y as f64);
+    let point = crate::geometry::Point::new(x.round() as i64, y.round() as i64);
+    let x = geometry.scale.unscale(point.x()) + state.offset.0;
+    let y = geometry.scale.unscale(point.y()) + state.offset.1;
+    output.extend_from_slice(
+        format!(
+            "G1 X{} Y{} F{}\n",
+            format_axis(x),
+            format_axis(y),
+            format_axis(state.travel_feedrate)
+        )
+        .as_bytes(),
+    );
+    state.x = x;
+    state.y = y;
+    state.current_feedrate = state.travel_feedrate;
+    state.last_scaled_position = Some((point.x(), point.y()));
+}
+
+fn clipped_loop_end(
+    paths: &[ExtrusionPath],
+    mut distance: f64,
+    geometry: LayerGeometry<'_>,
+) -> Point3 {
+    for path in paths.iter().rev() {
+        for segment in path.polyline.points.windows(2).rev() {
+            let dx = geometry.scale.unscale(segment[1].x - segment[0].x);
+            let dy = geometry.scale.unscale(segment[1].y - segment[0].y);
+            let length = dx.hypot(dy);
+            if length > distance {
+                let ratio = distance / length;
+                return Point3 {
+                    x: (segment[1].x as f64 + (segment[0].x - segment[1].x) as f64 * ratio) as i64,
+                    y: (segment[1].y as f64 + (segment[0].y - segment[1].y) as f64 * ratio) as i64,
+                    z: segment[1].z,
+                };
+            }
+            distance -= length;
+        }
+    }
+    paths[0].polyline.points[0]
 }
 
 fn append_inward_move(
