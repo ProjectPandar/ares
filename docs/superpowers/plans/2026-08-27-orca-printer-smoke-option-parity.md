@@ -1698,5 +1698,10 @@ cases: 616/649 compared domains PASS, 33 FAIL, 1 fully upstream-rejected;
 remaining failures are active implementation or exact ordering/µm arithmetic,
 not inventory pollution.
 
+First-position retracted travel now uses the same lift height/surface gate as
+deferred travel in both z-hop branches. Top Only no longer emits first-layer
+up/down geometry before any top/ironing feature; focused gate test, raw option
+output, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

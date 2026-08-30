@@ -1,7 +1,7 @@
 use super::super::{LiftMode, MotionOptions};
 use super::{
     EmitState, emit_pending_lift, flush_pending_retract_lift, inside_internal_surfaces,
-    retract_and_lift, retract_for_print_end, wipe_moves,
+    lift_is_allowed, retract_and_lift, retract_for_print_end, wipe_moves,
 };
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
@@ -41,6 +41,23 @@ fn bottom_only_lift_does_not_lift_later_layers() {
     assert_eq!(output, b"G1 E-1 F3600\n");
     assert!(state.retracted);
     assert_eq!(state.pending_lift, None);
+}
+
+#[test]
+fn top_only_lift_requires_a_top_or_ironing_feature() {
+    let mut state = EmitState {
+        layer_z: 0.2,
+        options: MotionOptions {
+            z_hop: 0.4,
+            retract_lift_enforce: crate::RetractLiftEnforce::TopOnly,
+            ..MotionOptions::default()
+        },
+        ..EmitState::default()
+    };
+
+    assert!(!lift_is_allowed(&state));
+    state.last_feature = Some("Top surface");
+    assert!(lift_is_allowed(&state));
 }
 
 #[test]

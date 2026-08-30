@@ -170,7 +170,11 @@ pub(super) fn emit(
                 );
                 travel_set_layer_z = true;
             }
-        } else if state.retracted && first_position && state.options.z_hop > 0.0 {
+        } else if state.retracted
+            && first_position
+            && state.options.z_hop > 0.0
+            && travel::lift_is_allowed(state)
+        {
             if uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else {
@@ -226,7 +230,11 @@ pub(super) fn emit(
     state.layer_change_travel_pending = false;
     append_object_start(output, state);
     if state.retracted {
-        if first_position && state.options.z_hop > 0.0 && !state.lifted {
+        if first_position
+            && state.options.z_hop > 0.0
+            && !state.lifted
+            && travel::lift_is_allowed(state)
+        {
             output.extend_from_slice(
                 format!(
                     "G1 Z{}\n",

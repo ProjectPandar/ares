@@ -59,7 +59,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
 }
 
 fn schedule_lift(state: &mut EmitState, layer_change: bool) {
-    if state.options.z_hop <= 0.0 || !lift_height_is_allowed(state) || !lift_is_enforced(state) {
+    if state.options.z_hop <= 0.0 || !lift_is_allowed(state) {
         return;
     }
     state.pending_lift = Some(match state.options.z_hop_type {
@@ -76,6 +76,10 @@ fn lift_height_is_allowed(state: &EmitState) -> bool {
     state.layer_z >= state.options.retract_lift_above - EPSILON
         && (state.options.retract_lift_below == 0.0
             || state.layer_z <= state.options.retract_lift_below + EPSILON)
+}
+
+pub(super) fn lift_is_allowed(state: &EmitState) -> bool {
+    lift_height_is_allowed(state) && lift_is_enforced(state)
 }
 
 fn lift_is_enforced(state: &EmitState) -> bool {
