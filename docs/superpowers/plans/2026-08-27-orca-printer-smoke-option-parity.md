@@ -1381,6 +1381,12 @@ ConfigOptionBool values serialize as `1/0` (Snapmaker Dual
 `has_wipe_tower: 0`). Focused tests were RED/GREEN and KSR/workspace checks
 pass.
 
+Stable sweep35 (clean HEAD `93b8bd1`) completed all 1001 presets: 203 PASS, 706
+DIVERGENT, 92 ARES_ERROR. Effective retraction removes the 32 Snapmaker
+preamble rows, but globally rendering Bool as 0/1 regresses derived expression
+booleans and leaves 54 preamble-first rows; the type-aware follow-up below
+replaces that interim behavior.
+
 A follow-up distinguishes legacy option substitution from expression values:
 ConfigOptionBool placeholders render `0/1`, while indexed/derived expression
 booleans retain `true/false` (Snapmaker Dual now matches both lines). Typed
