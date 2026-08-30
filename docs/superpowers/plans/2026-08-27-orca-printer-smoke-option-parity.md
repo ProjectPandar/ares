@@ -1830,5 +1830,9 @@ Files are now 365/37 LOC; focused projection, KSR, clippy, and fmt pass.
 the real `seam_placement/runtime.rs` module while reusing parent split/snap
 logic. Files are now 386/25 LOC; nearest, KSR, clippy, and fmt checks pass.
 
+`motion/path.rs` reached 414 LOC; retraction eligibility and sloped-type
+classification moved into real `path/retraction.rs`, re-exporting the existing
+tested seam. Root is now 399 LOC; retraction, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

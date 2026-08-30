@@ -1,5 +1,8 @@
+mod retraction;
 mod travel_emit;
 mod variable;
+
+pub(super) use retraction::can_skip_retraction;
 
 use super::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, clip, extrusion, fan,
@@ -150,7 +153,7 @@ pub(super) fn emit(
                 );
             }
         } else if layer_change_travel && state.retracted {
-            if state.options.z_hop > 0.0 && uses_sloped_lift(state.options.z_hop_type) {
+            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else if state.lifted {
                 output.extend_from_slice(
@@ -177,7 +180,7 @@ pub(super) fn emit(
             && state.options.z_hop > 0.0
             && travel::lift_is_allowed(state)
         {
-            if state.options.z_hop > 0.0 && uses_sloped_lift(state.options.z_hop_type) {
+            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
             } else {
                 output.extend_from_slice(
@@ -194,7 +197,7 @@ pub(super) fn emit(
                 state.lifted = true;
             }
         } else if layer_change_travel {
-            if state.options.z_hop > 0.0 && uses_sloped_lift(state.options.z_hop_type) {
+            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
                 output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
             } else {
@@ -391,24 +394,6 @@ pub(super) fn emit(
     state.last_scaled_position = Some(last_scaled);
 }
 
-fn uses_sloped_lift(z_hop_type: crate::ZHopType) -> bool {
-    z_hop_type != crate::ZHopType::Normal
-}
-
 fn quantize_axis(value: f64) -> f64 {
     (value * 1_000.0).round() / 1_000.0
-}
-
-pub(super) fn can_skip_retraction(
-    reduce_infill_retraction: bool,
-    has_sparse_infill: bool,
-    previous_feature: Option<&str>,
-    current_is_perimeter: bool,
-    inside_internal_surface: bool,
-) -> bool {
-    reduce_infill_retraction
-        && has_sparse_infill
-        && !matches!(previous_feature, Some("Outer wall" | "Overhang wall"))
-        && !current_is_perimeter
-        && inside_internal_surface
 }
