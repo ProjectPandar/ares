@@ -89,4 +89,5 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) enable_arc_fitting: bool,
     pub(in crate::project_slice::gcode_emit) arc_fitting_tolerance: f64,
     pub(in crate::project_slice::gcode_emit) seam_gap: f64,
+    pub(in crate::project_slice::gcode_emit) seam_position: crate::ProcessSeamPosition,
 }

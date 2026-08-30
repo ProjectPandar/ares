@@ -27,6 +27,26 @@ const VISIBILITY_SAMPLE_COUNT: usize = 30_000;
 const ANGLE_IMPORTANCE_ALIGNED: f32 = 0.6;
 const SEAM_VERTEX_SNAP_MM: f64 = 0.0015;
 
+pub(in crate::project_slice) fn place_nearest(
+    loop_: &mut ExtrusionLoop,
+    cursor: Point3,
+    scale: CoordinateScale,
+) {
+    let cursor = (cursor.x, cursor.y);
+    let seam = loop_
+        .paths
+        .iter()
+        .flat_map(|path| &path.polyline.points)
+        .min_by(|left, right| {
+            squared_distance((left.x, left.y), cursor)
+                .total_cmp(&squared_distance((right.x, right.y), cursor))
+        })
+        .map(|point| (point.x, point.y));
+    if let Some(seam) = seam {
+        split_at(loop_, seam, scale);
+    }
+}
+
 pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
     let predecessor = &prepared.predecessor;
     let traversal = &predecessor
@@ -45,6 +65,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     if !aligned.iter().any(|&value| value) {
         return;
     }
+
     let mesh = mesh::TriangleMesh::from_project(&traversal.project);
     if mesh.triangles.is_empty() {
         return;

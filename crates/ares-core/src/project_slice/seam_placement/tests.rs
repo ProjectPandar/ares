@@ -1,5 +1,6 @@
 use super::{
     mesh::{Triangle, TriangleMesh, Vec3},
+    place_nearest,
     sampling::sample_uniform,
     split_at,
     visibility::GlobalVisibility,
@@ -106,6 +107,51 @@ fn task22o128_split_at_existing_vertex_does_not_emit_zero_length_segment() {
                 z: 200_000,
             },
         ]
+    );
+}
+
+#[test]
+fn nearest_seam_uses_the_runtime_cursor() {
+    let mut loop_ = ExtrusionLoop {
+        paths: vec![ExtrusionPath {
+            polyline: Polyline3 {
+                points: [
+                    (1_000_000, 1_000_000),
+                    (0, 1_000_000),
+                    (0, 0),
+                    (1_000_000, 0),
+                    (1_000_000, 1_000_000),
+                ]
+                .into_iter()
+                .map(|(x, y)| Point3 { x, y, z: 200_000 })
+                .collect(),
+                fitting: Vec::new(),
+            },
+            role: ExtrusionRole::Perimeter,
+            can_reverse: true,
+            mm3_per_mm: 0.04,
+            width: 0.4,
+            height: 0.2,
+        }],
+        role: ExtrusionLoopRole::Default,
+    };
+
+    place_nearest(
+        &mut loop_,
+        Point3 {
+            x: -100_000,
+            y: -200_000,
+            z: 0,
+        },
+        CoordinateScale::Normal,
+    );
+
+    assert_eq!(
+        (
+            loop_.paths[0].polyline.points[0].x,
+            loop_.paths[0].polyline.points[0].y
+        ),
+        (0, 0)
     );
 }
 

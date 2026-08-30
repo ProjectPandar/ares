@@ -1684,5 +1684,11 @@ Clipper offset instead of pre-rounding to coord_t. Seeded skirt_distance and
 max skirt_loops moves/stats are byte-exact (290.85/295.05 mm); KSR, smokes,
 clippy, and fmt pass.
 
+Nearest seam placement now runs at perimeter emission with the actual local
+nozzle cursor, matching `SeamPlacer.cpp:1465,1550-1558`; it selects the nearest
+loop vertex then reuses the exact snap/split implementation. The nearest option
+first-layer inner/outer travel and clipped paths are byte-exact. Runtime cursor
+test, KSR, smokes, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

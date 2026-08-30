@@ -207,7 +207,18 @@ fn emit_perimeter(
     let IslandPrintEntity::Perimeter(collection) = entity else {
         unreachable!("perimeter phase contains only perimeter entities");
     };
-    for loop_ in &collection.entities {
+    for mut loop_ in collection.entities {
+        if state.options.seam_position == crate::ProcessSeamPosition::Nearest {
+            crate::project_slice::seam_placement::place_nearest(
+                &mut loop_.extrusion_loop,
+                crate::project_slice::perimeters::classic::materialize::Point3 {
+                    x: local_cursor(state, geometry).x(),
+                    y: local_cursor(state, geometry).y(),
+                    z: 0,
+                },
+                geometry.scale,
+            );
+        }
         loop_paths::emit(
             output,
             &loop_.extrusion_loop.paths,

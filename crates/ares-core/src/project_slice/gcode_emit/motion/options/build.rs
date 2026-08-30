@@ -387,6 +387,9 @@ impl MotionOptions {
                     .first()
                     .map_or(0.4, |value| value.0),
             ),
+            seam_position: object.map_or(full.process.object.seam_position, |value| {
+                value.object.seam_position
+            }),
             enable_arc_fitting: gcode.enable_arc_fitting.0,
             arc_fitting_tolerance: full.process.print.resolution.0,
         }
