@@ -1,656 +1,656 @@
 # OrcaSlicer option coverage summary
 
-594 of 650 executable option domains pass (1356 generated cases).
+610 of 649 executable option domains pass (1305 generated cases: 1282 compared, 26 rejected upstream).
 
-| status | option | type | cases | upstream | first result |
-|---|---|---|---:|---|---|
-| PASS | accel_to_decel_enable | coBool | 2 | src/libslic3r/PrintConfig.cpp:3272 |  |
-| PASS | accel_to_decel_factor | coPercent | 3 | src/libslic3r/PrintConfig.cpp:3279 |  |
-| PASS | activate_air_filtration | coBools | 2 | src/libslic3r/PrintConfig.cpp:1886 |  |
-| PASS | activate_air_filtration_during_print | coBools | 2 | src/libslic3r/PrintConfig.cpp:1893 |  |
-| PASS | activate_air_filtration_on_completion | coBools | 2 | src/libslic3r/PrintConfig.cpp:1899 |  |
-| PASS | activate_chamber_temp_control | coBools | 2 | src/libslic3r/PrintConfig.cpp:6599 |  |
-| PASS | adaptive_bed_mesh_margin | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2283 |  |
-| PASS | adaptive_pressure_advance | coBools | 2 | src/libslic3r/PrintConfig.cpp:2353 |  |
-| PASS | adaptive_pressure_advance_bridges | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2401 |  |
-| PASS | adaptive_pressure_advance_model | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2369 |  |
-| PASS | adaptive_pressure_advance_overhangs | coBools | 2 | src/libslic3r/PrintConfig.cpp:2394 |  |
-| PASS | additional_cooling_fan_speed | coInts | 3 | src/libslic3r/PrintConfig.cpp:4780 |  |
-| PASS | additional_fan_full_speed_layer | coInts | 3 | src/libslic3r/PrintConfig.cpp:4799 |  |
-| PASS | align_infill_direction_to_model | coBool | 2 | src/libslic3r/PrintConfig.cpp:2979 |  |
-| PASS | alternate_extra_wall | coBool | 2 | src/libslic3r/PrintConfig.cpp:5059 |  |
-| PASS | auxiliary_fan | coBool | 2 | src/libslic3r/PrintConfig.cpp:3824 |  |
-| PASS | bbl_calib_mark_logo | coBool | 2 | src/libslic3r/PrintConfig.cpp:5478 |  |
-| PASS | bbl_use_printhost | coBool | 2 | src/libslic3r/PrintConfig.cpp:814 |  |
-| PASS | bed_custom_model | coString | 1 | src/libslic3r/PrintConfig.cpp:733 |  |
-| PASS | bed_custom_texture | coString | 1 | src/libslic3r/PrintConfig.cpp:727 |  |
-| PASS | bed_exclude_area | coPoints | 1 | src/libslic3r/PrintConfig.cpp:719 |  |
-| PASS | bed_mesh_max | coPoint | 1 | src/libslic3r/PrintConfig.cpp:2262 |  |
-| PASS | bed_mesh_min | coPoint | 1 | src/libslic3r/PrintConfig.cpp:2250 |  |
-| PASS | bed_mesh_probe_distance | coPoint | 1 | src/libslic3r/PrintConfig.cpp:2274 |  |
-| PASS | bed_temperature_formula | coEnum | 2 | src/libslic3r/PrintConfig.cpp:2591 |  |
-| PASS | before_layer_change_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:1147 |  |
-| PASS | best_object_pos | coPoint | 1 | src/libslic3r/PrintConfig.cpp:3818 |  |
-| PASS | bottom_shell_layers | coInt | 1 | src/libslic3r/PrintConfig.cpp:1156 |  |
-| PASS | bottom_shell_thickness | coFloat | 1 | src/libslic3r/PrintConfig.cpp:1167 |  |
-| PASS | bottom_solid_infill_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1377 |  |
-| FAIL | bottom_surface_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:6764 | seeded: layer 1 deposition 1 differs: expected Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "106.013", z: "0.2" }, end: Position { x: "106.013", y: "106.772", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.02332", feed: 2100.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "106.013", z: "0.2" }, end: Position { x: "113.987", y: "113.987", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.34653", feed: 2100.0, acceleration: "500", fans: "0:0" } |
-| PASS | bottom_surface_filament_id | coInt | 1 | src/libslic3r/PrintConfig.cpp:5799 |  |
-| FAIL | bottom_surface_pattern | coEnum | 28 | src/libslic3r/PrintConfig.cpp:2097 | 3dhoneycomb: orca-slicer failed (exit status: 238): bottom_surface_pattern: invalid value 3dhoneycomb |
-| PASS | bridge_acceleration | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3224 |  |
-| PASS | bridge_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1250 |  |
-| PASS | bridge_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:1292 |  |
-| FAIL | bridge_flow | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1327 | min: orca-slicer failed (exit status: 238): bridge_flow: invalid value 0.000000 |
-| FAIL | bridge_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:1339 | seeded: orca-slicer failed (exit status: 205): Too small line width |
-| PASS | bridge_no_support | coBool | 2 | src/libslic3r/PrintConfig.cpp:1933 |  |
-| PASS | bridge_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:1658 |  |
-| PASS | brim_ears_detection_length | coFloat | 1 | src/libslic3r/PrintConfig.cpp:1770 |  |
-| PASS | brim_ears_max_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1758 |  |
-| PASS | brim_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1723 |  |
-| PASS | brim_object_gap | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1713 |  |
-| FAIL | brim_type | coEnum | 7 | src/libslic3r/PrintConfig.cpp:1690 | painted: unsupported project feature: brim_type |
-| PASS | brim_use_efc_outline | coBool | 2 | src/libslic3r/PrintConfig.cpp:1734 |  |
-| PASS | brim_width | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1680 |  |
-| PASS | calib_flowrate_topinfill_special_order | coBool | 2 | src/libslic3r/PrintConfig.cpp:4277 |  |
-| PASS | chamber_minimal_temperature | coInts | 1 | src/libslic3r/PrintConfig.cpp:6629 |  |
-| PASS | chamber_temperature | coInts | 1 | src/libslic3r/PrintConfig.cpp:6608 |  |
-| PASS | change_extrusion_role_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:6691 |  |
-| PASS | change_filament_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:6682 |  |
-| PASS | close_additional_fan_first_x_layers | coInts | 3 | src/libslic3r/PrintConfig.cpp:4790 |  |
-| PASS | close_fan_the_first_x_layers | coInts | 3 | src/libslic3r/PrintConfig.cpp:1923 |  |
-| PASS | combine_brims | coBool | 2 | src/libslic3r/PrintConfig.cpp:1744 |  |
-| PASS | complete_print_exhaust_fan_speed | coInts | 3 | src/libslic3r/PrintConfig.cpp:1914 |  |
-| PASS | cool_plate_temp | coInts | 3 | src/libslic3r/PrintConfig.cpp:971 |  |
-| PASS | cool_plate_temp_initial_layer | coInts | 3 | src/libslic3r/PrintConfig.cpp:1031 |  |
-| PASS | cooling_tube_length | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4911 |  |
-| PASS | cooling_tube_retraction | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4903 |  |
-| PASS | counterbore_hole_bridging | coEnum | 3 | src/libslic3r/PrintConfig.cpp:1547 |  |
-| PASS | curr_bed_type | coEnum | 6 | src/libslic3r/PrintConfig.cpp:1080 |  |
-| PASS | default_acceleration | coFloat | 1 | src/libslic3r/PrintConfig.cpp:1865 |  |
-| PASS | default_bed_type | coString | 1 | src/libslic3r/PrintConfig.cpp:1102 |  |
-| PASS | default_filament_colour | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2447 |  |
-| PASS | default_filament_profile | coStrings | 1 | src/libslic3r/PrintConfig.cpp:1874 |  |
-| PASS | default_jerk | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3289 |  |
-| PASS | default_junction_deviation | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3298 |  |
-| PASS | default_nozzle_volume_type | coEnums | 2 | src/libslic3r/PrintConfig.cpp:5360 |  |
-| PASS | default_print_profile | coString | 1 | src/libslic3r/PrintConfig.cpp:1880 |  |
-| PASS | deretraction_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5463 |  |
-| PASS | detect_narrow_internal_solid_infill | coBool | 2 | src/libslic3r/PrintConfig.cpp:7320 |  |
-| PASS | detect_overhang_wall | coBool | 2 | src/libslic3r/PrintConfig.cpp:5003 |  |
-| FAIL | detect_thin_wall | coBool | 2 | src/libslic3r/PrintConfig.cpp:6674 | true: unsupported project feature: detect_thin_wall |
-| PASS | disable_m73 | coBool | 2 | src/libslic3r/PrintConfig.cpp:5484 |  |
-| FAIL | dont_filter_internal_bridges | coEnum | 3 | src/libslic3r/PrintConfig.cpp:1990 | nofilter: unsupported project feature: bridge_over_infill_anchor_surface_kind |
-| PASS | dont_slow_down_outer_wall | coBools | 2 | src/libslic3r/PrintConfig.cpp:2428 |  |
-| PASS | draft_shield | coEnum | 2 | src/libslic3r/PrintConfig.cpp:5706 |  |
-| PASS | during_print_exhaust_fan_speed | coInts | 3 | src/libslic3r/PrintConfig.cpp:1905 |  |
-| PASS | elefant_foot_compensation | coFloat | 1 | src/libslic3r/PrintConfig.cpp:739 |  |
-| PASS | elefant_foot_compensation_layers | coInt | 1 | src/libslic3r/PrintConfig.cpp:748 |  |
-| PASS | elefant_foot_layers_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:759 |  |
-| PASS | emit_machine_limits_to_gcode | coBool | 2 | src/libslic3r/PrintConfig.cpp:4446 |  |
-| PASS | enable_arc_fitting | coBool | 2 | src/libslic3r/PrintConfig.cpp:3727 |  |
-| FAIL | enable_extra_bridge_layer | coEnum | 4 | src/libslic3r/PrintConfig.cpp:1959 | apply_to_all: unsupported project feature: enable_extra_bridge_layer |
-| PASS | enable_filament_ramming | coBool | 2 | src/libslic3r/PrintConfig.cpp:5989 |  |
-| PASS | enable_long_retraction_when_cut | coInt | 1 | src/libslic3r/PrintConfig.cpp:5210 |  |
-| PASS | enable_overhang_bridge_fan | coBools | 2 | src/libslic3r/PrintConfig.cpp:1207 |  |
-| PASS | enable_overhang_speed | coBool | 2 | src/libslic3r/PrintConfig.cpp:1580 |  |
-| PASS | enable_power_loss_recovery | coEnum | 3 | src/libslic3r/PrintConfig.cpp:3752 |  |
-| PASS | enable_pressure_advance | coBools | 2 | src/libslic3r/PrintConfig.cpp:2340 |  |
-| PASS | enable_prime_tower | coBool | 2 | src/libslic3r/PrintConfig.cpp:6812 |  |
-| PASS | enable_support | coBool | 2 | src/libslic3r/PrintConfig.cpp:6054 |  |
-| PASS | enable_tower_interface_cooldown_during_tower | coBool | 2 | src/libslic3r/PrintConfig.cpp:6999 |  |
-| PASS | enable_tower_interface_features | coBool | 2 | src/libslic3r/PrintConfig.cpp:6993 |  |
-| PASS | enable_wrapping_detection | coBool | 2 | src/libslic3r/PrintConfig.cpp:4107 |  |
-| PASS | enforce_support_layers | coInt | 3 | src/libslic3r/PrintConfig.cpp:6164 |  |
-| PASS | eng_plate_temp | coInts | 3 | src/libslic3r/PrintConfig.cpp:991 |  |
-| PASS | eng_plate_temp_initial_layer | coInts | 3 | src/libslic3r/PrintConfig.cpp:1051 |  |
-| PASS | ensure_vertical_shell_thickness | coEnum | 4 | src/libslic3r/PrintConfig.cpp:2055 |  |
-| PASS | exclude_object | coBool | 2 | src/libslic3r/PrintConfig.cpp:3959 |  |
-| PASS | extra_loading_move | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4936 |  |
-| PASS | extra_perimeters_on_overhangs | coBool | 2 | src/libslic3r/PrintConfig.cpp:1519 |  |
-| PASS | extra_solid_infills | coString | 1 | src/libslic3r/PrintConfig.cpp:2987 |  |
-| PASS | extruder_ams_count | coStrings | 1 | src/libslic3r/PrintConfig.cpp:5379 |  |
-| PASS | extruder_clearance_height_to_lid | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2225 |  |
-| PASS | extruder_clearance_height_to_rod | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2215 |  |
-| PASS | extruder_clearance_radius | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2234 |  |
-| PASS | extruder_colour | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2297 |  |
-| PASS | extruder_offset | coPoints | 1 | src/libslic3r/PrintConfig.cpp:2305 |  |
-| PASS | extruder_printable_area | coPointsGroups | 1 | src/libslic3r/PrintConfig.cpp:692 |  |
-| PASS | extruder_printable_height | coFloats | 3 | src/libslic3r/PrintConfig.cpp:788 |  |
-| PASS | extruder_type | coEnums | 2 | src/libslic3r/PrintConfig.cpp:5335 |  |
-| PASS | extruder_variant_list | coStrings | 1 | src/libslic3r/PrintConfig.cpp:5372 |  |
-| PASS | extrusion_rate_smoothing_external_perimeter_only | coBool | 2 | src/libslic3r/PrintConfig.cpp:4763 |  |
-| PASS | fan_cooling_layer_time | coFloats | 3 | src/libslic3r/PrintConfig.cpp:2437 |  |
-| PASS | fan_kickstart | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3849 |  |
-| PASS | fan_max_speed | coFloats | 3 | src/libslic3r/PrintConfig.cpp:4711 |  |
-| PASS | fan_min_speed | coFloats | 3 | src/libslic3r/PrintConfig.cpp:4771 |  |
-| PASS | fan_speedup_overhangs | coBool | 2 | src/libslic3r/PrintConfig.cpp:3843 |  |
-| PASS | fan_speedup_time | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3830 |  |
-| PASS | filament_adaptive_volumetric_speed | coBools | 2 | src/libslic3r/PrintConfig.cpp:2645 |  |
-| PASS | filament_adhesiveness_category | coInts | 1 | src/libslic3r/PrintConfig.cpp:2684 |  |
-| PASS | filament_change_extrusion_role_gcode | coStrings | 1 | src/libslic3r/PrintConfig.cpp:6700 |  |
-| PASS | filament_change_length | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2892 |  |
-| PASS | filament_colour | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2455 |  |
-| PASS | filament_colour_type | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2477 |  |
-| PASS | filament_cooling_before_tower | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2777 |  |
-| PASS | filament_cooling_final_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2825 |  |
-| PASS | filament_cooling_initial_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2758 |  |
-| PASS | filament_cooling_moves | coInts | 3 | src/libslic3r/PrintConfig.cpp:2734 |  |
-| PASS | filament_cost | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2925 |  |
-| PASS | filament_density | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2864 |  |
-| PASS | filament_deretraction_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:72 |  |
-| PASS | filament_diameter | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2606 |  |
-| PASS | filament_end_gcode | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2046 |  |
-| PASS | filament_extruder_variant | coStrings | 1 | src/libslic3r/PrintConfig.cpp:5425 |  |
-| FAIL | filament_flow_ratio | coFloats | 3 | src/libslic3r/PrintConfig.cpp:2315 | min: orca-slicer failed (exit status: 238): filament_flow_ratio: invalid value 0 |
-| PASS | filament_flush_temp | coInts | 1 | src/libslic3r/PrintConfig.cpp:2530 |  |
-| PASS | filament_flush_volumetric_speed | coFloats | 3 | src/libslic3r/PrintConfig.cpp:2540 |  |
-| PASS | filament_ids | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2938 |  |
-| PASS | filament_ironing_flow | coPercents | 3 | src/libslic3r/PrintConfig.cpp:3493 |  |
-| PASS | filament_ironing_inset | coFloats | 3 | src/libslic3r/PrintConfig.cpp:3517 |  |
-| PASS | filament_ironing_spacing | coFloats | 3 | src/libslic3r/PrintConfig.cpp:3505 |  |
-| PASS | filament_ironing_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:3529 |  |
-| PASS | filament_is_support | coBools | 2 | src/libslic3r/PrintConfig.cpp:2900 |  |
-| PASS | filament_loading_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2691 |  |
-| PASS | filament_loading_speed_start | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2699 |  |
-| PASS | filament_long_retractions_when_cut | coBools | 2 | src/libslic3r/PrintConfig.cpp:82 |  |
-| PASS | filament_map | coInts | 1 | src/libslic3r/PrintConfig.cpp:2489 |  |
-| PASS | filament_map_mode | coEnum | 4 | src/libslic3r/PrintConfig.cpp:2502 |  |
-| PASS | filament_max_volumetric_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2550 |  |
-| PASS | filament_minimal_purge_on_wipe_tower | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2766 |  |
-| PASS | filament_multi_colour | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2473 |  |
-| PASS | filament_multitool_ramming | coBools | 2 | src/libslic3r/PrintConfig.cpp:2840 |  |
-| PASS | filament_multitool_ramming_flow | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2856 |  |
-| PASS | filament_multitool_ramming_volume | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2848 |  |
-| PASS | filament_notes | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2463 |  |
-| PASS | filament_printable | coInts | 1 | src/libslic3r/PrintConfig.cpp:2910 |  |
-| PASS | filament_ramming_parameters | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2833 |  |
-| PASS | filament_retract_before_wipe | coPercents | 1 | src/libslic3r/PrintConfig.cpp:81 |  |
-| PASS | filament_retract_lift_above | coFloats | 1 | src/libslic3r/PrintConfig.cpp:68 |  |
-| PASS | filament_retract_lift_below | coFloats | 1 | src/libslic3r/PrintConfig.cpp:69 |  |
-| FAIL | filament_retract_lift_enforce | coEnums | 4 | src/libslic3r/PrintConfig.cpp:70 | Bottom Only: layer 2 travel geometry count differs: expected 8, actual 10 |
-| PASS | filament_retract_restart_extra | coFloats | 1 | src/libslic3r/PrintConfig.cpp:73 |  |
-| PASS | filament_retract_when_changing_layer | coBools | 2 | src/libslic3r/PrintConfig.cpp:78 |  |
-| PASS | filament_retraction_distances_when_cut | coFloats | 1 | src/libslic3r/PrintConfig.cpp:83 |  |
-| PASS | filament_retraction_length | coFloats | 1 | src/libslic3r/PrintConfig.cpp:65 |  |
-| PASS | filament_retraction_minimum_travel | coFloats | 1 | src/libslic3r/PrintConfig.cpp:74 |  |
-| PASS | filament_retraction_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:71 |  |
-| PASS | filament_self_index | coInts | 1 | src/libslic3r/PrintConfig.cpp:5432 |  |
-| PASS | filament_settings_id | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2933 |  |
-| PASS | filament_shrink | coPercents | 3 | src/libslic3r/PrintConfig.cpp:2659 |  |
-| FAIL | filament_shrinkage_compensation_z | coPercents | 3 | src/libslic3r/PrintConfig.cpp:2672 | max: filament 1 length differs: expected 201.89mm, actual 262.34mm |
-| PASS | filament_soluble | coBools | 2 | src/libslic3r/PrintConfig.cpp:2886 |  |
-| PASS | filament_stamping_distance | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2750 |  |
-| PASS | filament_stamping_loading_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2743 |  |
-| PASS | filament_start_gcode | coStrings | 1 | src/libslic3r/PrintConfig.cpp:5949 |  |
-| PASS | filament_toolchange_delay | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2724 |  |
-| PASS | filament_tower_interface_pre_extrusion_dist | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2785 |  |
-| PASS | filament_tower_interface_pre_extrusion_length | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2793 |  |
-| PASS | filament_tower_interface_print_temp | coInts | 1 | src/libslic3r/PrintConfig.cpp:2817 |  |
-| PASS | filament_tower_interface_purge_volume | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2809 |  |
-| PASS | filament_tower_ironing_area | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2801 |  |
-| PASS | filament_type | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2872 |  |
-| PASS | filament_unloading_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2707 |  |
-| PASS | filament_unloading_speed_start | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2716 |  |
-| PASS | filament_vendor | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2942 |  |
-| PASS | filament_wipe | coBools | 2 | src/libslic3r/PrintConfig.cpp:79 |  |
-| PASS | filament_wipe_distance | coFloats | 1 | src/libslic3r/PrintConfig.cpp:76 |  |
-| PASS | filament_z_hop | coFloats | 1 | src/libslic3r/PrintConfig.cpp:66 |  |
-| FAIL | filament_z_hop_types | coEnums | 4 | src/libslic3r/PrintConfig.cpp:67 | Auto Lift: layer 2 travel geometry count differs: expected 19, actual 18 |
-| PASS | file_start_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:5928 |  |
-| PASS | filename_format | coString | 1 | src/libslic3r/PrintConfig.cpp:4967 |  |
-| FAIL | fill_multiline | coInt | 3 | src/libslic3r/PrintConfig.cpp:2996 | max: unsupported project feature: fill_multiline |
-| PASS | filter_out_gap_fill | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3698 |  |
-| PASS | first_layer_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1394 |  |
-| PASS | first_layer_print_sequence | coInts | 3 | src/libslic3r/PrintConfig.cpp:1109 |  |
-| PASS | first_x_layer_fan_speed | coFloats | 3 | src/libslic3r/PrintConfig.cpp:4808 |  |
-| PASS | flashforge_serial_number | coString | 1 | src/libslic3r/PrintConfig.cpp:861 |  |
-| PASS | flush_into_infill | coBool | 2 | src/libslic3r/PrintConfig.cpp:7013 |  |
-| PASS | flush_into_objects | coBool | 2 | src/libslic3r/PrintConfig.cpp:7030 |  |
-| PASS | flush_into_support | coBool | 2 | src/libslic3r/PrintConfig.cpp:7022 |  |
-| PASS | flush_multiplier | coFloats | 1 | src/libslic3r/PrintConfig.cpp:6845 |  |
-| PASS | flush_volumes_matrix | coFloats | 1 | src/libslic3r/PrintConfig.cpp:6835 |  |
-| PASS | flush_volumes_vector | coFloats | 1 | src/libslic3r/PrintConfig.cpp:6825 |  |
-| PASS | full_fan_speed_layer | coInts | 3 | src/libslic3r/PrintConfig.cpp:3445 |  |
-| FAIL | fuzzy_skin | coEnum | 6 | src/libslic3r/PrintConfig.cpp:3540 | all: unsupported project feature: fuzzy_skin |
-| PASS | fuzzy_skin_first_layer | coBool | 2 | src/libslic3r/PrintConfig.cpp:3581 |  |
-| PASS | fuzzy_skin_layers_between_ripple_offset | coInt | 1 | src/libslic3r/PrintConfig.cpp:3687 |  |
-| PASS | fuzzy_skin_mode | coEnum | 3 | src/libslic3r/PrintConfig.cpp:3588 |  |
-| PASS | fuzzy_skin_noise_type | coEnum | 6 | src/libslic3r/PrintConfig.cpp:3611 |  |
-| PASS | fuzzy_skin_octaves | coInt | 3 | src/libslic3r/PrintConfig.cpp:3647 |  |
-| PASS | fuzzy_skin_persistence | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3656 |  |
-| PASS | fuzzy_skin_point_distance | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3571 |  |
-| PASS | fuzzy_skin_ripple_offset | coPercent | 3 | src/libslic3r/PrintConfig.cpp:3673 |  |
-| PASS | fuzzy_skin_ripples_per_layer | coInt | 1 | src/libslic3r/PrintConfig.cpp:3665 |  |
-| PASS | fuzzy_skin_scale | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3637 |  |
-| PASS | fuzzy_skin_thickness | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3561 |  |
-| PASS | gap_fill_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1454 |  |
-| FAIL | gap_fill_target | coEnum | 3 | src/libslic3r/PrintConfig.cpp:1178 | everywhere: layer 2 deposition 1 differs: expected Deposition { feature: "Gap infill", width: "0.449969", motion: MotionRecord { command: "G1", start: Position { x: "106.539", y: "105.879", z: "0.4" }, end: Position { x: "105.879", y: "106.539", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03096", feed: 1800.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Gap infill", width: "0.449967", motion: MotionRecord { command: "G1", start: Position { x: "106.539", y: "105.879", z: "0.4" }, end: Position { x: "105.879", y: "106.539", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03096", feed: 1800.0, acceleration: "500", fans: "0:255" } |
-| PASS | gap_infill_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3707 |  |
-| PASS | gcode_add_line_number | coBool | 2 | src/libslic3r/PrintConfig.cpp:3738 |  |
-| PASS | gcode_comments | coBool | 2 | src/libslic3r/PrintConfig.cpp:3965 |  |
-| FAIL | gcode_flavor | coEnum | 13 | src/libslic3r/PrintConfig.cpp:3905 | mach3: orca-slicer failed (exit status: 238): gcode_flavor: invalid value mach3 |
-| PASS | gcode_label_objects | coBool | 2 | src/libslic3r/PrintConfig.cpp:3951 |  |
-| PASS | grab_length | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2290 |  |
-| PASS | gyroid_optimized | coBool | 2 | src/libslic3r/PrintConfig.cpp:3008 |  |
-| PASS | has_scarf_joint_seam | coBool | 2 | src/libslic3r/PrintConfig.cpp:4493 |  |
-| PASS | head_wrap_detect_zone | coPoints | 1 | src/libslic3r/PrintConfig.cpp:6669 |  |
-| PASS | high_current_on_filament_swap | coBool | 2 | src/libslic3r/PrintConfig.cpp:4919 |  |
-| PASS | hole_to_polyhole | coBool | 2 | src/libslic3r/PrintConfig.cpp:7093 |  |
-| PASS | hole_to_polyhole_threshold | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:7102 |  |
-| PASS | hole_to_polyhole_twisted | coBool | 2 | src/libslic3r/PrintConfig.cpp:7115 |  |
-| PASS | host_type | coEnum | 16 | src/libslic3r/PrintConfig.cpp:4853 |  |
-| PASS | hot_plate_temp | coInts | 3 | src/libslic3r/PrintConfig.cpp:1001 |  |
-| PASS | hot_plate_temp_initial_layer | coInts | 1 | src/libslic3r/PrintConfig.cpp:1061 |  |
-| PASS | idle_temperature | coInts | 1 | src/libslic3r/PrintConfig.cpp:7064 |  |
-| PASS | independent_support_layer_height | coBool | 2 | src/libslic3r/PrintConfig.cpp:6383 |  |
-| PASS | infill_anchor | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3137 |  |
-| PASS | infill_anchor_max | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3165 |  |
-| PASS | infill_combination | coBool | 2 | src/libslic3r/PrintConfig.cpp:3974 |  |
-| PASS | infill_combination_max_layer_height | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:4093 |  |
-| PASS | infill_direction | coFloat | 3 | src/libslic3r/PrintConfig.cpp:2949 |  |
-| PASS | infill_jerk | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3335 |  |
-| PASS | infill_lock_depth | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4054 |  |
-| PASS | infill_overhang_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3096 |  |
-| PASS | infill_shift_step | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3982 |  |
-| PASS | infill_wall_overlap | coPercent | 1 | src/libslic3r/PrintConfig.cpp:4148 |  |
-| PASS | initial_layer_acceleration | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3254 |  |
-| PASS | initial_layer_infill_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3408 |  |
-| PASS | initial_layer_jerk | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3344 |  |
-| FAIL | initial_layer_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:3371 | min: invalid external perimeter flow spacing |
-| PASS | initial_layer_min_bead_width | coPercent | 1 | src/libslic3r/PrintConfig.cpp:7265 |  |
-| PASS | initial_layer_print_height | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3384 |  |
-| PASS | initial_layer_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3400 |  |
-| PASS | initial_layer_travel_acceleration | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3263 |  |
-| PASS | initial_layer_travel_jerk | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3362 |  |
-| PASS | initial_layer_travel_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3416 |  |
-| PASS | inner_wall_acceleration | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3188 |  |
-| PASS | inner_wall_filament_id | coInt | 1 | src/libslic3r/PrintConfig.cpp:5020 |  |
-| PASS | inner_wall_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1414 |  |
-| PASS | inner_wall_jerk | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3317 |  |
-| FAIL | inner_wall_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:5029 | max: orca-slicer failed (exit status: 238): inner_wall_line_width: too large line width 4.000000 |
-| PASS | inner_wall_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5041 |  |
-| PASS | input_shaping_damp_x | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4695 |  |
-| PASS | input_shaping_damp_y | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4703 |  |
-| PASS | input_shaping_emit | coBool | 2 | src/libslic3r/PrintConfig.cpp:4662 |  |
-| PASS | input_shaping_freq_x | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4677 |  |
-| PASS | input_shaping_freq_y | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4686 |  |
-| PASS | input_shaping_type | coEnum | 13 | src/libslic3r/PrintConfig.cpp:4668 |  |
-| FAIL | interface_shells | coBool | 2 | src/libslic3r/PrintConfig.cpp:4197 | true: unsupported project feature: interface_shells |
-| PASS | interlocking_beam | coBool | 2 | src/libslic3r/PrintConfig.cpp:4226 |  |
-| PASS | interlocking_beam_layer_count | coInt | 1 | src/libslic3r/PrintConfig.cpp:4252 |  |
-| PASS | interlocking_beam_width | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4233 |  |
-| PASS | interlocking_boundary_avoidance | coInt | 1 | src/libslic3r/PrintConfig.cpp:4268 |  |
-| PASS | interlocking_depth | coInt | 1 | src/libslic3r/PrintConfig.cpp:4260 |  |
-| PASS | interlocking_orientation | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4242 |  |
-| PASS | internal_bridge_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1268 |  |
-| FAIL | internal_bridge_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:1309 | min: filament 1 length differs: expected 255.90mm, actual 262.34mm |
-| PASS | internal_bridge_fan_speed | coInts | 3 | src/libslic3r/PrintConfig.cpp:3470 |  |
-| FAIL | internal_bridge_flow | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1354 | min: orca-slicer failed (exit status: 238): internal_bridge_flow: invalid value 0.000000 |
-| PASS | internal_bridge_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:1670 |  |
-| PASS | internal_solid_filament_id | coInt | 1 | src/libslic3r/PrintConfig.cpp:5781 |  |
-| PASS | internal_solid_infill_acceleration | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3244 |  |
-| PASS | internal_solid_infill_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1444 |  |
-| FAIL | internal_solid_infill_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:5808 | max: orca-slicer failed (exit status: 238): internal_solid_infill_line_width: too large line width 4.000000 |
-| FAIL | internal_solid_infill_pattern | coEnum | 28 | src/libslic3r/PrintConfig.cpp:2106 | 3dhoneycomb: orca-slicer failed (exit status: 238): internal_solid_infill_pattern: invalid value 3dhoneycomb |
-| PASS | internal_solid_infill_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5820 |  |
-| PASS | ironing_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4351 |  |
-| PASS | ironing_angle_fixed | coBool | 2 | src/libslic3r/PrintConfig.cpp:4361 |  |
-| PASS | ironing_expansion | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4368 |  |
-| PASS | ironing_fan_speed | coInts | 3 | src/libslic3r/PrintConfig.cpp:3481 |  |
-| PASS | ironing_flow | coPercent | 3 | src/libslic3r/PrintConfig.cpp:4310 |  |
-| PASS | ironing_inset | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4332 |  |
-| PASS | ironing_pattern | coEnum | 2 | src/libslic3r/PrintConfig.cpp:4298 |  |
-| PASS | ironing_spacing | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4322 |  |
-| PASS | ironing_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4342 |  |
-| FAIL | ironing_type | coEnum | 4 | src/libslic3r/PrintConfig.cpp:4281 | solid: filament 1 length differs: expected 274.88mm, actual 262.34mm |
-| PASS | is_infill_first | coBool | 2 | src/libslic3r/PrintConfig.cpp:2181 |  |
-| PASS | lateral_lattice_angle_1 | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3076 |  |
-| PASS | lateral_lattice_angle_2 | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3086 |  |
-| PASS | layer_change_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:4415 |  |
-| PASS | layer_height | coFloat | 1 | src/libslic3r/PrintConfig.cpp:771 |  |
-| PASS | lightning_overhang_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3106 |  |
-| PASS | lightning_prune_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3116 |  |
-| PASS | lightning_straightening_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:3127 |  |
-| FAIL | line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:2410 | min: orca-slicer failed (exit status: 156): Flow::spacing() produced negative spacing. Did you set some extrusion width too small? |
-| PASS | long_retractions_when_cut | coBools | 2 | src/libslic3r/PrintConfig.cpp:5214 |  |
-| PASS | long_retractions_when_ec | coBools | 2 | src/libslic3r/PrintConfig.cpp:5229 |  |
-| PASS | machine_end_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:2028 |  |
-| PASS | machine_load_filament_time | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2560 |  |
-| PASS | machine_max_acceleration_e | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1260 |  |
-| PASS | machine_max_acceleration_extruding | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4601 |  |
-| PASS | machine_max_acceleration_retracting | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4615 |  |
-| PASS | machine_max_acceleration_travel | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4626 |  |
-| PASS | machine_max_acceleration_x | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1257 |  |
-| PASS | machine_max_acceleration_y | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1258 |  |
-| PASS | machine_max_acceleration_z | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1259 |  |
-| PASS | machine_max_jerk_e | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1276 |  |
-| PASS | machine_max_jerk_x | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1273 |  |
-| PASS | machine_max_jerk_y | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1274 |  |
-| PASS | machine_max_jerk_z | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1275 |  |
-| PASS | machine_max_junction_deviation | coFloats | 3 | src/libslic3r/PrintConfig.cpp:4570 |  |
-| PASS | machine_max_speed_e | coFloats | 1 | src/libslic3r/PrintConfig.hpp:1265 |  |
-| PASS | machine_max_speed_x | coFloats | 3 | src/libslic3r/PrintConfig.hpp:1262 |  |
-| PASS | machine_max_speed_y | coFloats | 1 | src/libslic3r/PrintConfig.hpp:1263 |  |
-| PASS | machine_max_speed_z | coFloats | 1 | src/libslic3r/PrintConfig.hpp:1264 |  |
-| PASS | machine_min_extruding_rate | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4581 |  |
-| PASS | machine_min_travel_rate | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4591 |  |
-| PASS | machine_pause_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:4454 |  |
-| PASS | machine_start_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:5940 |  |
-| PASS | machine_tool_change_time | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2578 |  |
-| PASS | machine_unload_filament_time | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2569 |  |
-| PASS | make_overhang_printable | coBool | 2 | src/libslic3r/PrintConfig.cpp:4974 |  |
-| PASS | make_overhang_printable_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4981 |  |
-| PASS | make_overhang_printable_hole_size | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4993 |  |
-| PASS | manual_filament_change | coBool | 2 | src/libslic3r/PrintConfig.cpp:5964 |  |
-| PASS | master_extruder_id | coInt | 1 | src/libslic3r/PrintConfig.cpp:5399 |  |
-| PASS | max_bridge_length | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2019 |  |
-| PASS | max_layer_height | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4721 |  |
-| PASS | max_resonance_avoidance_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4653 |  |
-| PASS | max_travel_detour_distance | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:948 |  |
-| PASS | max_volumetric_extrusion_rate_slope | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4730 |  |
-| PASS | max_volumetric_extrusion_rate_slope_segment_length | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4751 |  |
-| PASS | min_bead_width | coPercent | 1 | src/libslic3r/PrintConfig.cpp:7275 |  |
-| PASS | min_feature_size | coPercent | 1 | src/libslic3r/PrintConfig.cpp:7217 |  |
-| PASS | min_layer_height | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4817 |  |
-| PASS | min_length_factor | coFloat | 3 | src/libslic3r/PrintConfig.cpp:7228 |  |
-| PASS | min_resonance_avoidance_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4645 |  |
-| PASS | min_skirt_length | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5751 |  |
-| PASS | min_width_top_surface | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:1498 |  |
-| PASS | minimum_sparse_infill_area | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5772 |  |
-| PASS | mmu_segmented_region_interlocking_depth | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4215 |  |
-| PASS | mmu_segmented_region_max_width | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4206 |  |
-| PASS | notes | coString | 1 | src/libslic3r/PrintConfig.cpp:4843 |  |
-| PASS | nozzle_diameter | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4835 |  |
-| PASS | nozzle_flush_dataset | coInts | 1 | src/libslic3r/PrintConfig.cpp:2602 |  |
-| PASS | nozzle_height | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2242 |  |
-| PASS | nozzle_hrc | coInt | 3 | src/libslic3r/PrintConfig.cpp:3792 |  |
-| PASS | nozzle_temperature | coInts | 1 | src/libslic3r/PrintConfig.cpp:6644 |  |
-| PASS | nozzle_temperature_initial_layer | coInts | 1 | src/libslic3r/PrintConfig.cpp:3436 |  |
-| PASS | nozzle_temperature_range_high | coInts | 1 | src/libslic3r/PrintConfig.cpp:6661 |  |
-| PASS | nozzle_temperature_range_low | coInts | 1 | src/libslic3r/PrintConfig.cpp:6653 |  |
-| PASS | nozzle_type | coEnums | 5 | src/libslic3r/PrintConfig.cpp:3772 |  |
-| PASS | nozzle_volume | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4894 |  |
-| PASS | nozzle_volume_type | coEnums | 2 | src/libslic3r/PrintConfig.cpp:5348 |  |
-| PASS | only_one_wall_first_layer | coBool | 2 | src/libslic3r/PrintConfig.cpp:1513 |  |
-| PASS | only_one_wall_top | coBool | 2 | src/libslic3r/PrintConfig.cpp:1491 |  |
-| PASS | ooze_prevention | coBool | 2 | src/libslic3r/PrintConfig.cpp:4961 |  |
-| PASS | other_layers_print_sequence | coInts | 3 | src/libslic3r/PrintConfig.cpp:1115 |  |
-| PASS | other_layers_print_sequence_nums | coInt | 1 | src/libslic3r/PrintConfig.cpp:1121 |  |
-| PASS | outer_wall_acceleration | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3215 |  |
-| PASS | outer_wall_filament_id | coInt | 1 | src/libslic3r/PrintConfig.cpp:5011 |  |
-| PASS | outer_wall_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1404 |  |
-| PASS | outer_wall_jerk | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3308 |  |
-| FAIL | outer_wall_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:2115 | min: invalid external perimeter flow spacing |
-| PASS | outer_wall_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2127 |  |
-| PASS | overhang_1_4_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:1610 |  |
-| PASS | overhang_2_4_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:1622 |  |
-| PASS | overhang_3_4_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:1634 |  |
-| PASS | overhang_4_4_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:1646 |  |
-| PASS | overhang_fan_speed | coInts | 3 | src/libslic3r/PrintConfig.cpp:1214 |  |
-| PASS | overhang_fan_threshold | coEnums | 6 | src/libslic3r/PrintConfig.cpp:1227 |  |
-| PASS | overhang_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1424 |  |
-| PASS | overhang_reverse | coBool | 2 | src/libslic3r/PrintConfig.cpp:1526 |  |
-| PASS | overhang_reverse_internal_only | coBool | 2 | src/libslic3r/PrintConfig.cpp:1534 |  |
-| PASS | overhang_reverse_threshold | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:1565 |  |
-| PASS | parallel_printheads_bed_exclude_areas | coStrings | 1 | src/libslic3r/PrintConfig.cpp:712 |  |
-| PASS | parallel_printheads_count | coInt | 3 | src/libslic3r/PrintConfig.cpp:704 |  |
-| PASS | parking_pos_retraction | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4927 |  |
-| PASS | part_cooling_fan_min_pwm | coInt | 3 | src/libslic3r/PrintConfig.cpp:3861 |  |
-| PASS | pellet_flow_coefficient | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2639 |  |
-| PASS | pellet_modded_printer | coBool | 2 | src/libslic3r/PrintConfig.cpp:3939 |  |
-| PASS | physical_extruder_map | coInts | 1 | src/libslic3r/PrintConfig.cpp:2495 |  |
-| PASS | post_process | coStrings | 1 | src/libslic3r/PrintConfig.cpp:5068 |  |
-| PASS | precise_outer_wall | coBool | 2 | src/libslic3r/PrintConfig.cpp:1484 |  |
-| PASS | precise_z_height | coBool | 2 | src/libslic3r/PrintConfig.cpp:3717 |  |
-| PASS | preferred_orientation | coFloat | 3 | src/libslic3r/PrintConfig.cpp:797 |  |
-| PASS | preheat_steps | coInt | 3 | src/libslic3r/PrintConfig.cpp:5918 |  |
-| PASS | preheat_time | coFloat | 3 | src/libslic3r/PrintConfig.cpp:5908 |  |
-| PASS | pressure_advance | coFloats | 1 | src/libslic3r/PrintConfig.cpp:2345 |  |
-| PASS | prime_tower_brim_width | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6891 |  |
-| PASS | prime_tower_enable_framework | coBool | 2 | src/libslic3r/PrintConfig.cpp:6819 |  |
-| PASS | prime_tower_flat_ironing | coBool | 2 | src/libslic3r/PrintConfig.cpp:6989 |  |
-| PASS | prime_tower_infill_gap | coPercent | 1 | src/libslic3r/PrintConfig.cpp:7005 |  |
-| PASS | prime_tower_skip_points | coBool | 2 | src/libslic3r/PrintConfig.cpp:6983 |  |
-| PASS | prime_tower_width | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6876 |  |
-| PASS | prime_volume | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6852 |  |
-| PASS | print_compatible_printers | coStrings | 1 | src/libslic3r/PrintConfig.cpp:1832 |  |
-| PASS | print_extruder_id | coInts | 1 | src/libslic3r/PrintConfig.cpp:5405 |  |
-| PASS | print_extruder_variant | coStrings | 1 | src/libslic3r/PrintConfig.cpp:5412 |  |
-| PASS | print_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:2327 |  |
-| PASS | print_order | coEnum | 2 | src/libslic3r/PrintConfig.cpp:1847 |  |
-| PASS | print_sequence | coEnum | 2 | src/libslic3r/PrintConfig.cpp:1836 |  |
-| PASS | print_settings_id | coString | 1 | src/libslic3r/PrintConfig.cpp:5111 |  |
-| PASS | printable_area | coPoints | 1 | src/libslic3r/PrintConfig.cpp:686 |  |
-| FAIL | printable_height | coFloat | 3 | src/libslic3r/PrintConfig.cpp:779 | min: orca-slicer failed (exit status: 205): The object cube10.stl exceeds the maximum build volume height. |
-| PASS | printer_agent | coString | 1 | src/libslic3r/PrintConfig.cpp:829 |  |
-| PASS | printer_extruder_id | coInts | 1 | src/libslic3r/PrintConfig.cpp:5385 |  |
-| PASS | printer_extruder_variant | coStrings | 1 | src/libslic3r/PrintConfig.cpp:5392 |  |
-| PASS | printer_model | coString | 1 | src/libslic3r/PrintConfig.cpp:5090 |  |
-| PASS | printer_notes | coString | 1 | src/libslic3r/PrintConfig.cpp:5096 |  |
-| PASS | printer_settings_id | coString | 1 | src/libslic3r/PrintConfig.cpp:5116 |  |
-| PASS | printer_structure | coEnum | 5 | src/libslic3r/PrintConfig.cpp:3801 |  |
-| PASS | printer_technology | coEnum | 2 | src/libslic3r/PrintConfig.cpp:678 |  |
-| PASS | printer_variant | coString | 1 | src/libslic3r/PrintConfig.cpp:5105 |  |
-| PASS | printhost_authorization_type | coEnum | 2 | src/libslic3r/PrintConfig.cpp:915 |  |
-| PASS | printhost_ssl_ignore_revoke | coBool | 2 | src/libslic3r/PrintConfig.cpp:901 |  |
-| PASS | printing_by_object_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:2037 |  |
-| PASS | process_change_extrusion_role_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:5081 |  |
-| PASS | purge_in_prime_tower | coBool | 2 | src/libslic3r/PrintConfig.cpp:5983 |  |
-| PASS | raft_contact_distance | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5121 |  |
-| PASS | raft_expansion | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5132 |  |
-| PASS | raft_first_layer_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:5141 |  |
-| PASS | raft_first_layer_expansion | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5151 |  |
-| FAIL | raft_layers | coInt | 3 | src/libslic3r/PrintConfig.cpp:5161 | max: unsupported project feature: raft_layers |
-| FAIL | reduce_crossing_wall | coBool | 2 | src/libslic3r/PrintConfig.cpp:941 | true: layer 2 travel geometry count differs: expected 19, actual 14 |
-| PASS | reduce_fan_stop_start_freq | coBools | 2 | src/libslic3r/PrintConfig.cpp:2422 |  |
-| PASS | reduce_infill_retraction | coBool | 2 | src/libslic3r/PrintConfig.cpp:4953 |  |
-| PASS | relative_bridge_angle | coBool | 2 | src/libslic3r/PrintConfig.cpp:1285 |  |
-| PASS | required_nozzle_HRC | coInts | 3 | src/libslic3r/PrintConfig.cpp:2481 |  |
-| PASS | resolution | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5172 |  |
-| PASS | resonance_avoidance | coBool | 2 | src/libslic3r/PrintConfig.cpp:4637 |  |
-| PASS | retract_before_wipe | coPercents | 1 | src/libslic3r/PrintConfig.cpp:5188 |  |
-| PASS | retract_length_toolchange | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5244 |  |
-| PASS | retract_lift_above | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5266 |  |
-| PASS | retract_lift_below | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5274 |  |
-| FAIL | retract_lift_enforce | coEnums | 4 | src/libslic3r/PrintConfig.cpp:5320 | Bottom Only: layer 2 travel geometry count differs: expected 8, actual 10 |
-| PASS | retract_restart_extra | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5439 |  |
-| PASS | retract_restart_extra_toolchange | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5447 |  |
-| PASS | retract_when_changing_layer | coBools | 2 | src/libslic3r/PrintConfig.cpp:5195 |  |
-| PASS | retraction_distances_when_cut | coFloats | 3 | src/libslic3r/PrintConfig.cpp:5221 |  |
-| PASS | retraction_distances_when_ec | coFloats | 3 | src/libslic3r/PrintConfig.cpp:5235 |  |
-| PASS | retraction_length | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5201 |  |
-| PASS | retraction_minimum_travel | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5181 |  |
-| PASS | retraction_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:5455 |  |
-| PASS | role_based_wipe_speed | coBool | 2 | src/libslic3r/PrintConfig.cpp:5635 |  |
-| PASS | scan_first_layer | coBool | 2 | src/libslic3r/PrintConfig.cpp:3745 |  |
-| PASS | scarf_angle_threshold | coInt | 3 | src/libslic3r/PrintConfig.cpp:5546 |  |
-| PASS | scarf_joint_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:5584 |  |
-| PASS | scarf_joint_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:5570 |  |
-| PASS | scarf_overhang_threshold | coPercent | 1 | src/libslic3r/PrintConfig.cpp:5558 |  |
-| PASS | seam_gap | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:5515 |  |
-| FAIL | seam_position | coEnum | 5 | src/libslic3r/PrintConfig.cpp:5490 | nearest: layer 1 deposition 59 differs: expected Deposition { feature: "Inner wall", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "105.73", y: "114.27", z: "0.2" }, end: Position { x: "105.73", y: "105.77", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.26118", feed: 1800.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Inner wall", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "105.73", y: "114.27", z: "0.2" }, end: Position { x: "105.73", y: "105.73", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.26241", feed: 1800.0, acceleration: "500", fans: "0:0" } |
-| PASS | seam_slope_conditional | coBool | 2 | src/libslic3r/PrintConfig.cpp:5539 |  |
-| PASS | seam_slope_entire_loop | coBool | 2 | src/libslic3r/PrintConfig.cpp:5604 |  |
-| PASS | seam_slope_inner_walls | coBool | 2 | src/libslic3r/PrintConfig.cpp:5628 |  |
-| PASS | seam_slope_min_length | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5611 |  |
-| PASS | seam_slope_start_height | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:5593 |  |
-| PASS | seam_slope_steps | coInt | 1 | src/libslic3r/PrintConfig.cpp:5620 |  |
-| FAIL | seam_slope_type | coEnum | 3 | src/libslic3r/PrintConfig.cpp:5525 | all: layer 2 deposition count differs: expected 129, actual 97 |
-| PASS | set_other_flow_ratios | coBool | 2 | src/libslic3r/PrintConfig.cpp:1387 |  |
-| PASS | silent_mode | coBool | 2 | src/libslic3r/PrintConfig.cpp:4440 |  |
-| PASS | single_extruder_multi_material | coBool | 2 | src/libslic3r/PrintConfig.cpp:5958 |  |
-| PASS | single_extruder_multi_material_priming | coBool | 2 | src/libslic3r/PrintConfig.cpp:6014 |  |
-| FAIL | single_loop_draft_shield | coBool | 2 | src/libslic3r/PrintConfig.cpp:5700 | true: filament 1 length differs: expected 260.62mm, actual 262.34mm |
-| PASS | skeleton_infill_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:4018 |  |
-| PASS | skeleton_infill_line_width | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:4074 |  |
-| PASS | skin_infill_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:4031 |  |
-| PASS | skin_infill_depth | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4044 |  |
-| PASS | skin_infill_line_width | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:4064 |  |
-| FAIL | skirt_distance | coFloat | 3 | src/libslic3r/PrintConfig.cpp:5673 | seeded: layer 1 deposition 138 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "75.1", y: "79.206", z: "0.2" }, end: Position { x: "77.148", y: "77.149", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.08918", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "75.1", y: "79.206", z: "0.2" }, end: Position { x: "77.148", y: "77.149", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.08917", feed: 3000.0, acceleration: "500", fans: "0:0" } |
-| PASS | skirt_height | coInt | 1 | src/libslic3r/PrintConfig.cpp:5692 |  |
-| FAIL | skirt_loops | coInt | 3 | src/libslic3r/PrintConfig.cpp:5733 | max: layer 1 deposition 70 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "100.46", y: "116.644", z: "0.2" }, end: Position { x: "100.172", y: "115", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.05129", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "100.461", y: "116.644", z: "0.2" }, end: Position { x: "100.172", y: "115", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.05129", feed: 3000.0, acceleration: "500", fans: "0:0" } |
-| PASS | skirt_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:5742 |  |
-| PASS | skirt_start_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:5682 |  |
-| FAIL | skirt_type | coEnum | 2 | src/libslic3r/PrintConfig.cpp:5721 | perobject: unsupported project feature: skirt_type per-object |
-| PASS | slice_closing_radius | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6020 |  |
-| PASS | slicing_mode | coEnum | 3 | src/libslic3r/PrintConfig.cpp:6030 |  |
-| PASS | slow_down_for_layer_cooling | coBools | 2 | src/libslic3r/PrintConfig.cpp:1858 |  |
-| PASS | slow_down_layer_time | coFloats | 3 | src/libslic3r/PrintConfig.cpp:5762 |  |
-| PASS | slow_down_layers | coInt | 1 | src/libslic3r/PrintConfig.cpp:3426 |  |
-| PASS | slow_down_min_speed | coFloats | 1 | src/libslic3r/PrintConfig.cpp:4826 |  |
-| PASS | slowdown_for_curled_perimeters | coBool | 2 | src/libslic3r/PrintConfig.cpp:1587 |  |
-| FAIL | small_area_infill_flow_compensation | coBool | 2 | src/libslic3r/PrintConfig.cpp:4472 | true: filament 1 length differs: expected 259.24mm, actual 262.34mm |
-| PASS | small_area_infill_flow_compensation_model | coStrings | 1 | src/libslic3r/PrintConfig.cpp:4479 |  |
-| PASS | small_perimeter_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:2137 |  |
-| PASS | small_perimeter_threshold | coFloat | 1 | src/libslic3r/PrintConfig.cpp:2149 |  |
-| PASS | solid_infill_direction | coFloat | 3 | src/libslic3r/PrintConfig.cpp:2959 |  |
-| PASS | solid_infill_rotate_template | coString | 1 | src/libslic3r/PrintConfig.cpp:4007 |  |
-| PASS | sparse_infill_acceleration | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:3234 |  |
-| FAIL | sparse_infill_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:2969 | min: layer 3 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "105.675", y: "105.675", z: "0.6" }, end: Position { x: "114.325", y: "105.675", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.28694", feed: 2105.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "105.675", y: "105.675", z: "0.6" }, end: Position { x: "114.325", y: "105.675", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.28694", feed: 2005.0, acceleration: "500", fans: "0:255" } |
-| PASS | sparse_infill_filament_id | coInt | 1 | src/libslic3r/PrintConfig.cpp:4127 |  |
-| PASS | sparse_infill_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1434 |  |
-| FAIL | sparse_infill_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:4136 | max: orca-slicer failed (exit status: 238): sparse_infill_line_width: too large line width 4.000000 |
-| FAIL | sparse_infill_pattern | coEnum | 26 | src/libslic3r/PrintConfig.cpp:3017 | 3dhoneycomb: unsupported project feature: sparse_infill_pattern |
-| PASS | sparse_infill_rotate_template | coString | 1 | src/libslic3r/PrintConfig.cpp:3993 |  |
-| PASS | sparse_infill_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:4174 |  |
-| PASS | spiral_finishing_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:5868 |  |
-| FAIL | spiral_mode | coBool | 2 | src/libslic3r/PrintConfig.cpp:5829 | true: unsupported project feature: spiral_mode |
-| PASS | spiral_mode_max_xy_smoothing | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:5844 |  |
-| PASS | spiral_mode_smooth | coBool | 2 | src/libslic3r/PrintConfig.cpp:5837 |  |
-| PASS | spiral_starting_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:5857 |  |
-| FAIL | staggered_inner_seams | coBool | 2 | src/libslic3r/PrintConfig.cpp:5508 | true: layer 1 deposition count differs: expected 100, actual 99 |
-| PASS | standby_temperature_delta | coInt | 1 | src/libslic3r/PrintConfig.cpp:5896 |  |
-| PASS | start_end_points | coPoints | 1 | src/libslic3r/PrintConfig.cpp:4945 |  |
-| PASS | supertack_plate_temp | coInts | 3 | src/libslic3r/PrintConfig.cpp:961 |  |
-| PASS | supertack_plate_temp_initial_layer | coInts | 3 | src/libslic3r/PrintConfig.cpp:1021 |  |
-| PASS | support_air_filtration | coBool | 2 | src/libslic3r/PrintConfig.cpp:3899 |  |
-| PASS | support_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6100 |  |
-| PASS | support_base_pattern | coEnum | 6 | src/libslic3r/PrintConfig.cpp:6284 |  |
-| PASS | support_base_pattern_spacing | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6329 |  |
-| PASS | support_bottom_interface_spacing | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6266 |  |
-| PASS | support_bottom_z_distance | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6153 |  |
-| PASS | support_chamber_temp_control | coBool | 2 | src/libslic3r/PrintConfig.cpp:3892 |  |
-| PASS | support_critical_regions_only | coBool | 2 | src/libslic3r/PrintConfig.cpp:6118 |  |
-| PASS | support_expansion | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6338 |  |
-| PASS | support_filament | coInt | 1 | src/libslic3r/PrintConfig.cpp:6178 |  |
-| PASS | support_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1464 |  |
-| PASS | support_interface_bottom_layers | coInt | 1 | src/libslic3r/PrintConfig.cpp:6241 |  |
-| PASS | support_interface_filament | coInt | 1 | src/libslic3r/PrintConfig.cpp:6213 |  |
-| PASS | support_interface_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1474 |  |
-| PASS | support_interface_loop_pattern | coBool | 2 | src/libslic3r/PrintConfig.cpp:6206 |  |
-| PASS | support_interface_not_for_body | coBool | 2 | src/libslic3r/PrintConfig.cpp:6187 |  |
-| PASS | support_interface_pattern | coEnum | 5 | src/libslic3r/PrintConfig.cpp:6309 |  |
-| PASS | support_interface_spacing | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6255 |  |
-| PASS | support_interface_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6275 |  |
-| PASS | support_interface_top_layers | coInt | 1 | src/libslic3r/PrintConfig.cpp:6223 |  |
-| PASS | support_ironing | coBool | 2 | src/libslic3r/PrintConfig.cpp:6557 |  |
-| PASS | support_ironing_flow | coPercent | 3 | src/libslic3r/PrintConfig.cpp:6577 |  |
-| PASS | support_ironing_pattern | coEnum | 2 | src/libslic3r/PrintConfig.cpp:6565 |  |
-| PASS | support_ironing_spacing | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6589 |  |
-| FAIL | support_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:6194 | max: orca-slicer failed (exit status: 238): support_line_width: too large line width 4.000000 |
-| PASS | support_material_interface_fan_speed | coInts | 3 | src/libslic3r/PrintConfig.cpp:3457 |  |
-| PASS | support_multi_bed_types | coBool | 2 | src/libslic3r/PrintConfig.cpp:3945 |  |
-| PASS | support_object_first_layer_gap | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6089 |  |
-| PASS | support_object_skip_flush | coBool | 2 | src/libslic3r/PrintConfig.cpp:2588 |  |
-| PASS | support_object_xy_distance | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6078 |  |
-| PASS | support_on_build_plate_only | coBool | 2 | src/libslic3r/PrintConfig.cpp:6110 |  |
-| PASS | support_parallel_printheads | coBool | 2 | src/libslic3r/PrintConfig.cpp:698 |  |
-| PASS | support_remove_small_overhang | coBool | 2 | src/libslic3r/PrintConfig.cpp:6125 |  |
-| PASS | support_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6346 |  |
-| PASS | support_style | coEnum | 7 | src/libslic3r/PrintConfig.cpp:6355 |  |
-| PASS | support_threshold_angle | coInt | 3 | src/libslic3r/PrintConfig.cpp:6391 |  |
-| PASS | support_threshold_overlap | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:6404 |  |
-| PASS | support_top_z_distance | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6134 |  |
-| PASS | support_type | coEnum | 4 | src/libslic3r/PrintConfig.cpp:6061 |  |
-| PASS | symmetric_infill_y_axis | coBool | 2 | src/libslic3r/PrintConfig.cpp:4084 |  |
-| PASS | temperature_vitrification | coInts | 1 | src/libslic3r/PrintConfig.cpp:2917 |  |
-| PASS | template_custom_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:4463 |  |
-| PASS | textured_cool_plate_temp | coInts | 3 | src/libslic3r/PrintConfig.cpp:981 |  |
-| PASS | textured_cool_plate_temp_initial_layer | coInts | 3 | src/libslic3r/PrintConfig.cpp:1041 |  |
-| PASS | textured_plate_temp | coInts | 3 | src/libslic3r/PrintConfig.cpp:1011 |  |
-| PASS | textured_plate_temp_initial_layer | coInts | 3 | src/libslic3r/PrintConfig.cpp:1070 |  |
-| PASS | thick_bridges | coBool | 2 | src/libslic3r/PrintConfig.cpp:1941 |  |
-| PASS | thick_internal_bridges | coBool | 2 | src/libslic3r/PrintConfig.cpp:1950 |  |
-| PASS | thumbnails | coString | 1 | src/libslic3r/PrintConfig.cpp:7122 |  |
-| PASS | thumbnails_format | coEnum | 5 | src/libslic3r/PrintConfig.cpp:7129 |  |
-| PASS | time_cost | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3883 |  |
-| PASS | time_lapse_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:4424 |  |
-| FAIL | timelapse_type | coEnum | 2 | src/libslic3r/PrintConfig.cpp:5879 | 1: orca-slicer failed (exit status: 154): run found error, return -102, exit... |
-| PASS | tool_change_on_wipe_tower | coBool | 2 | src/libslic3r/PrintConfig.cpp:5995 |  |
-| PASS | top_bottom_infill_wall_overlap | coPercent | 1 | src/libslic3r/PrintConfig.cpp:4161 |  |
-| PASS | top_shell_layers | coInt | 1 | src/libslic3r/PrintConfig.cpp:6730 |  |
-| PASS | top_shell_thickness | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6741 |  |
-| PASS | top_solid_infill_flow_ratio | coFloat | 3 | src/libslic3r/PrintConfig.cpp:1366 |  |
-| PASS | top_surface_acceleration | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3206 |  |
-| FAIL | top_surface_density | coPercent | 3 | src/libslic3r/PrintConfig.cpp:6752 | min: unsupported project feature: top_surface_density |
-| PASS | top_surface_filament_id | coInt | 1 | src/libslic3r/PrintConfig.cpp:5790 |  |
-| PASS | top_surface_jerk | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3326 |  |
-| FAIL | top_surface_line_width | coFloatOrPercent | 3 | src/libslic3r/PrintConfig.cpp:6709 | max: orca-slicer failed (exit status: 238): top_surface_line_width: too large line width 4.000000 |
-| FAIL | top_surface_pattern | coEnum | 8 | src/libslic3r/PrintConfig.cpp:2074 | alignedrectilinear: unsupported project feature: top_surface_pattern |
-| PASS | top_surface_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6721 |  |
-| PASS | travel_acceleration | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3197 |  |
-| PASS | travel_jerk | coFloat | 1 | src/libslic3r/PrintConfig.cpp:3353 |  |
-| PASS | travel_slope | coFloats | 3 | src/libslic3r/PrintConfig.cpp:5297 |  |
-| PASS | travel_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6776 |  |
-| PASS | travel_speed_z | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6784 |  |
-| PASS | tree_support_angle_slow | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6437 |  |
-| PASS | tree_support_auto_brim | coBool | 2 | src/libslic3r/PrintConfig.cpp:6483 |  |
-| PASS | tree_support_branch_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6415 |  |
-| PASS | tree_support_branch_angle_organic | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6426 |  |
-| PASS | tree_support_branch_diameter | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6507 |  |
-| PASS | tree_support_branch_diameter_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6517 |  |
-| PASS | tree_support_branch_diameter_organic | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6531 |  |
-| PASS | tree_support_branch_distance | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6449 |  |
-| PASS | tree_support_branch_distance_organic | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6459 |  |
-| PASS | tree_support_brim_width | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6489 |  |
-| PASS | tree_support_tip_diameter | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6496 |  |
-| PASS | tree_support_top_rate | coPercent | 1 | src/libslic3r/PrintConfig.cpp:6469 |  |
-| PASS | tree_support_wall_count | coInt | 3 | src/libslic3r/PrintConfig.cpp:6541 |  |
-| PASS | upward_compatible_machine | coStrings | 1 | src/libslic3r/PrintConfig.cpp:1788 |  |
-| PASS | use_3mf | coBool | 2 | src/libslic3r/PrintConfig.cpp:821 |  |
-| FAIL | use_firmware_retraction | coBool | 2 | src/libslic3r/PrintConfig.cpp:5471 | true: orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
-| FAIL | use_relative_e_distances | coBool | 2 | src/libslic3r/PrintConfig.cpp:7146 | false: orca-slicer failed (exit status: 205): "G92 E0" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing. |
-| PASS | volumetric_speed_coefficients | coStrings | 1 | src/libslic3r/PrintConfig.cpp:2655 |  |
-| FAIL | wall_direction | coEnum | 2 | src/libslic3r/PrintConfig.cpp:2188 | cw: layer 1 deposition count differs: expected 99, actual 100 |
-| PASS | wall_distribution_count | coInt | 1 | src/libslic3r/PrintConfig.cpp:7208 |  |
-| FAIL | wall_generator | coEnum | 2 | src/libslic3r/PrintConfig.cpp:7155 | arachne: unsupported project feature: wall_generator |
-| FAIL | wall_loops | coInt | 3 | src/libslic3r/PrintConfig.cpp:5051 | min: filament 1 length differs: expected 196.24mm, actual 26.72mm |
-| PASS | wall_maximum_deviation | coFloat | 3 | src/libslic3r/PrintConfig.cpp:7253 |  |
-| PASS | wall_maximum_resolution | coFloat | 3 | src/libslic3r/PrintConfig.cpp:7242 |  |
-| PASS | wall_sequence | coEnum | 3 | src/libslic3r/PrintConfig.cpp:2158 |  |
-| PASS | wall_transition_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:7195 |  |
-| PASS | wall_transition_filter_deviation | coPercent | 1 | src/libslic3r/PrintConfig.cpp:7180 |  |
-| PASS | wall_transition_length | coPercent | 1 | src/libslic3r/PrintConfig.cpp:7169 |  |
-| PASS | wipe | coBools | 2 | src/libslic3r/PrintConfig.cpp:6794 |  |
-| FAIL | wipe_before_external_loop | coBool | 2 | src/libslic3r/PrintConfig.cpp:5650 | true: layer 1 travel geometry count differs: expected 12, actual 11 |
-| PASS | wipe_distance | coFloats | 1 | src/libslic3r/PrintConfig.cpp:6801 |  |
-| PASS | wipe_on_loops | coBool | 2 | src/libslic3r/PrintConfig.cpp:5643 |  |
-| PASS | wipe_speed | coFloatOrPercent | 1 | src/libslic3r/PrintConfig.cpp:5661 |  |
-| PASS | wipe_tower_bridging | coFloat | 1 | src/libslic3r/PrintConfig.cpp:7038 |  |
-| PASS | wipe_tower_cone_angle | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6902 |  |
-| PASS | wipe_tower_extra_flow | coPercent | 3 | src/libslic3r/PrintConfig.cpp:7054 |  |
-| PASS | wipe_tower_extra_rib_length | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6941 |  |
-| PASS | wipe_tower_extra_spacing | coPercent | 3 | src/libslic3r/PrintConfig.cpp:7045 |  |
-| PASS | wipe_tower_filament | coInt | 1 | src/libslic3r/PrintConfig.cpp:6966 |  |
-| PASS | wipe_tower_fillet_wall | coBool | 2 | src/libslic3r/PrintConfig.cpp:6959 |  |
-| PASS | wipe_tower_max_purge_speed | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6912 |  |
-| PASS | wipe_tower_no_sparse_layers | coBool | 2 | src/libslic3r/PrintConfig.cpp:6006 |  |
-| PASS | wipe_tower_rib_width | coFloat | 3 | src/libslic3r/PrintConfig.cpp:6950 |  |
-| PASS | wipe_tower_rotation_angle | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6884 |  |
-| PASS | wipe_tower_type | coEnum | 2 | src/libslic3r/PrintConfig.cpp:5972 |  |
-| PASS | wipe_tower_wall_type | coEnum | 3 | src/libslic3r/PrintConfig.cpp:6925 |  |
-| PASS | wipe_tower_x | coFloats | 1 | src/libslic3r/PrintConfig.cpp:6860 |  |
-| PASS | wipe_tower_y | coFloats | 1 | src/libslic3r/PrintConfig.cpp:6868 |  |
-| PASS | wiping_volumes_extruders | coFloats | 1 | src/libslic3r/PrintConfig.cpp:6976 |  |
-| PASS | wrapping_detection_gcode | coString | 1 | src/libslic3r/PrintConfig.cpp:4432 |  |
-| PASS | wrapping_detection_layers | coInt | 1 | src/libslic3r/PrintConfig.cpp:4113 |  |
-| PASS | wrapping_exclude_area | coPoints | 1 | src/libslic3r/PrintConfig.cpp:4120 |  |
-| PASS | xy_contour_compensation | coFloat | 1 | src/libslic3r/PrintConfig.cpp:7083 |  |
-| PASS | xy_hole_compensation | coFloat | 1 | src/libslic3r/PrintConfig.cpp:7073 |  |
-| FAIL | z_hop | coFloats | 3 | src/libslic3r/PrintConfig.cpp:5255 | seeded: layer 1 travel geometry differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "2.3", y: "10", z: "0.2" }, end: Position { x: "2.3", y: "10", z: "1.996" }, arc_center: [None, None], turns: None }, feed: 9000.0, acceleration: "500" } |
-| FAIL | z_hop_types | coEnums | 4 | src/libslic3r/PrintConfig.cpp:5282 | Auto Lift: layer 2 travel geometry count differs: expected 19, actual 18 |
-| PASS | z_offset | coFloat | 1 | src/libslic3r/PrintConfig.cpp:6044 |  |
-| PASS | zaa_dont_alternate_fill_direction | coBool | 2 | src/libslic3r/PrintConfig.cpp:4397 |  |
-| FAIL | zaa_enabled | coBool | 2 | src/libslic3r/PrintConfig.cpp:4378 | true: unsupported project feature: zaa_enabled |
-| PASS | zaa_min_z | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4404 |  |
-| PASS | zaa_minimize_perimeter_height | coFloat | 3 | src/libslic3r/PrintConfig.cpp:4385 |  |
+| status | option | type | cases | compared | rejected | upstream | first result |
+|---|---|---|---:|---:|---:|---|---|
+| PASS | accel_to_decel_enable | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3272 |  |
+| PASS | accel_to_decel_factor | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3279 |  |
+| PASS | activate_air_filtration | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1886 |  |
+| PASS | activate_air_filtration_during_print | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1893 |  |
+| PASS | activate_air_filtration_on_completion | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1899 |  |
+| PASS | activate_chamber_temp_control | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6599 |  |
+| PASS | adaptive_bed_mesh_margin | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2283 |  |
+| PASS | adaptive_pressure_advance | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2353 |  |
+| PASS | adaptive_pressure_advance_bridges | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2401 |  |
+| PASS | adaptive_pressure_advance_model | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2369 |  |
+| PASS | adaptive_pressure_advance_overhangs | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2394 |  |
+| PASS | additional_cooling_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4780 |  |
+| PASS | additional_fan_full_speed_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4799 |  |
+| PASS | align_infill_direction_to_model | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2979 |  |
+| PASS | alternate_extra_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5059 |  |
+| PASS | auxiliary_fan | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3824 |  |
+| PASS | bbl_calib_mark_logo | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5478 |  |
+| PASS | bbl_use_printhost | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:814 |  |
+| PASS | bed_custom_model | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:733 |  |
+| PASS | bed_custom_texture | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:727 |  |
+| PASS | bed_exclude_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:719 |  |
+| PASS | bed_mesh_max | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2262 |  |
+| PASS | bed_mesh_min | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2250 |  |
+| PASS | bed_mesh_probe_distance | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2274 |  |
+| PASS | bed_temperature_formula | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2591 |  |
+| PASS | before_layer_change_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1147 |  |
+| PASS | best_object_pos | coPoint | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3818 |  |
+| PASS | bottom_shell_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1156 |  |
+| PASS | bottom_shell_thickness | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1167 |  |
+| PASS | bottom_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1377 |  |
+| FAIL | bottom_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6764 | seeded: layer 1 deposition 1 differs: expected Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "106.013", z: "0.2" }, end: Position { x: "106.013", y: "106.772", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.02332", feed: 2100.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "106.013", z: "0.2" }, end: Position { x: "113.987", y: "113.987", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.34653", feed: 2100.0, acceleration: "500", fans: "0:0" } |
+| PASS | bottom_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5799 |  |
+| FAIL | bottom_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2097 | alignedrectilinear: filament 1 length differs: expected 262.34mm, actual 256.67mm |
+| PASS | bridge_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3224 |  |
+| PASS | bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1250 |  |
+| PASS | bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1292 |  |
+| PASS | bridge_flow | coFloat | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:1327 | min: orca-slicer failed (exit status: 238): bridge_flow: invalid value 0.000000 |
+| PASS | bridge_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:1339 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
+| PASS | bridge_no_support | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1933 |  |
+| PASS | bridge_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1658 |  |
+| PASS | brim_ears_detection_length | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1770 |  |
+| PASS | brim_ears_max_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1758 |  |
+| PASS | brim_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1723 |  |
+| PASS | brim_object_gap | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1713 |  |
+| FAIL | brim_type | coEnum | 7 | 7 | 0 | src/libslic3r/PrintConfig.cpp:1690 | painted: unsupported project feature: brim_type |
+| PASS | brim_use_efc_outline | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1734 |  |
+| PASS | brim_width | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1680 |  |
+| PASS | calib_flowrate_topinfill_special_order | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4277 |  |
+| PASS | chamber_minimal_temperature | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6629 |  |
+| PASS | chamber_temperature | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6608 |  |
+| PASS | change_extrusion_role_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6691 |  |
+| PASS | change_filament_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6682 |  |
+| PASS | close_additional_fan_first_x_layers | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4790 |  |
+| PASS | close_fan_the_first_x_layers | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1923 |  |
+| PASS | combine_brims | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1744 |  |
+| PASS | complete_print_exhaust_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1914 |  |
+| PASS | cool_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:971 |  |
+| PASS | cool_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1031 |  |
+| PASS | cooling_tube_length | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4911 |  |
+| PASS | cooling_tube_retraction | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4903 |  |
+| PASS | counterbore_hole_bridging | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1547 |  |
+| PASS | curr_bed_type | coEnum | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:1080 |  |
+| PASS | default_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1865 |  |
+| PASS | default_bed_type | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1102 |  |
+| PASS | default_filament_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2447 |  |
+| PASS | default_filament_profile | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1874 |  |
+| PASS | default_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3289 |  |
+| PASS | default_junction_deviation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3298 |  |
+| PASS | default_nozzle_volume_type | coEnums | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5360 |  |
+| PASS | default_print_profile | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1880 |  |
+| PASS | deretraction_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5463 |  |
+| PASS | detect_narrow_internal_solid_infill | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7320 |  |
+| PASS | detect_overhang_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5003 |  |
+| FAIL | detect_thin_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6674 | true: unsupported project feature: detect_thin_wall |
+| PASS | disable_m73 | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5484 |  |
+| FAIL | dont_filter_internal_bridges | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1990 | nofilter: unsupported project feature: bridge_over_infill_anchor_surface_kind |
+| PASS | dont_slow_down_outer_wall | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2428 |  |
+| PASS | draft_shield | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5706 |  |
+| PASS | during_print_exhaust_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1905 |  |
+| PASS | elefant_foot_compensation | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:739 |  |
+| PASS | elefant_foot_compensation_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:748 |  |
+| PASS | elefant_foot_layers_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:759 |  |
+| PASS | emit_machine_limits_to_gcode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4446 |  |
+| PASS | enable_arc_fitting | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3727 |  |
+| FAIL | enable_extra_bridge_layer | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:1959 | apply_to_all: unsupported project feature: enable_extra_bridge_layer |
+| PASS | enable_filament_ramming | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5989 |  |
+| PASS | enable_long_retraction_when_cut | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5210 |  |
+| PASS | enable_overhang_bridge_fan | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1207 |  |
+| PASS | enable_overhang_speed | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1580 |  |
+| PASS | enable_power_loss_recovery | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3752 |  |
+| PASS | enable_pressure_advance | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2340 |  |
+| PASS | enable_prime_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6812 |  |
+| PASS | enable_support | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6054 |  |
+| PASS | enable_tower_interface_cooldown_during_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6999 |  |
+| PASS | enable_tower_interface_features | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6993 |  |
+| PASS | enable_wrapping_detection | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4107 |  |
+| PASS | enforce_support_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6164 |  |
+| PASS | eng_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:991 |  |
+| PASS | eng_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1051 |  |
+| PASS | ensure_vertical_shell_thickness | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:2055 |  |
+| PASS | exclude_object | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3959 |  |
+| PASS | extra_loading_move | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4936 |  |
+| PASS | extra_perimeters_on_overhangs | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1519 |  |
+| PASS | extra_solid_infills | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2987 |  |
+| PASS | extruder_ams_count | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5379 |  |
+| PASS | extruder_clearance_height_to_lid | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2225 |  |
+| PASS | extruder_clearance_height_to_rod | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2215 |  |
+| PASS | extruder_clearance_radius | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2234 |  |
+| PASS | extruder_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2297 |  |
+| PASS | extruder_offset | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2305 |  |
+| PASS | extruder_printable_area | coPointsGroups | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:692 |  |
+| PASS | extruder_printable_height | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:788 |  |
+| PASS | extruder_type | coEnums | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5335 |  |
+| PASS | extruder_variant_list | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5372 |  |
+| PASS | extrusion_rate_smoothing_external_perimeter_only | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4763 |  |
+| PASS | fan_cooling_layer_time | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2437 |  |
+| PASS | fan_kickstart | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3849 |  |
+| PASS | fan_max_speed | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4711 |  |
+| PASS | fan_min_speed | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4771 |  |
+| PASS | fan_speedup_overhangs | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3843 |  |
+| PASS | fan_speedup_time | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3830 |  |
+| PASS | filament_adaptive_volumetric_speed | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2645 |  |
+| PASS | filament_adhesiveness_category | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2684 |  |
+| PASS | filament_change_extrusion_role_gcode | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6700 |  |
+| PASS | filament_change_length | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2892 |  |
+| PASS | filament_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2455 |  |
+| PASS | filament_colour_type | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2477 |  |
+| PASS | filament_cooling_before_tower | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2777 |  |
+| PASS | filament_cooling_final_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2825 |  |
+| PASS | filament_cooling_initial_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2758 |  |
+| PASS | filament_cooling_moves | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2734 |  |
+| PASS | filament_cost | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2925 |  |
+| PASS | filament_density | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2864 |  |
+| PASS | filament_deretraction_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:72 |  |
+| PASS | filament_diameter | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2606 |  |
+| PASS | filament_end_gcode | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2046 |  |
+| PASS | filament_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5425 |  |
+| PASS | filament_flow_ratio | coFloats | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:2315 | min: orca-slicer failed (exit status: 238): filament_flow_ratio: invalid value 0 |
+| PASS | filament_flush_temp | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2530 |  |
+| PASS | filament_flush_volumetric_speed | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2540 |  |
+| PASS | filament_ids | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2938 |  |
+| PASS | filament_ironing_flow | coPercents | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3493 |  |
+| PASS | filament_ironing_inset | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3517 |  |
+| PASS | filament_ironing_spacing | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3505 |  |
+| PASS | filament_ironing_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3529 |  |
+| PASS | filament_is_support | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2900 |  |
+| PASS | filament_loading_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2691 |  |
+| PASS | filament_loading_speed_start | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2699 |  |
+| PASS | filament_long_retractions_when_cut | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:82 |  |
+| PASS | filament_map | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2489 |  |
+| PASS | filament_map_mode | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:2502 |  |
+| PASS | filament_max_volumetric_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2550 |  |
+| PASS | filament_minimal_purge_on_wipe_tower | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2766 |  |
+| PASS | filament_multi_colour | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2473 |  |
+| PASS | filament_multitool_ramming | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2840 |  |
+| PASS | filament_multitool_ramming_flow | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2856 |  |
+| PASS | filament_multitool_ramming_volume | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2848 |  |
+| PASS | filament_notes | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2463 |  |
+| PASS | filament_printable | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2910 |  |
+| PASS | filament_ramming_parameters | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2833 |  |
+| PASS | filament_retract_before_wipe | coPercents | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:81 |  |
+| PASS | filament_retract_lift_above | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:68 |  |
+| PASS | filament_retract_lift_below | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:69 |  |
+| FAIL | filament_retract_lift_enforce | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:70 | Bottom Only: layer 2 travel geometry count differs: expected 8, actual 10 |
+| PASS | filament_retract_restart_extra | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:73 |  |
+| PASS | filament_retract_when_changing_layer | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:78 |  |
+| PASS | filament_retraction_distances_when_cut | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:83 |  |
+| PASS | filament_retraction_length | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:65 |  |
+| PASS | filament_retraction_minimum_travel | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:74 |  |
+| PASS | filament_retraction_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:71 |  |
+| PASS | filament_self_index | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5432 |  |
+| PASS | filament_settings_id | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2933 |  |
+| PASS | filament_shrink | coPercents | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2659 |  |
+| PASS | filament_shrinkage_compensation_z | coPercents | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2672 |  |
+| PASS | filament_soluble | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2886 |  |
+| PASS | filament_stamping_distance | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2750 |  |
+| PASS | filament_stamping_loading_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2743 |  |
+| PASS | filament_start_gcode | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5949 |  |
+| PASS | filament_toolchange_delay | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2724 |  |
+| PASS | filament_tower_interface_pre_extrusion_dist | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2785 |  |
+| PASS | filament_tower_interface_pre_extrusion_length | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2793 |  |
+| PASS | filament_tower_interface_print_temp | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2817 |  |
+| PASS | filament_tower_interface_purge_volume | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2809 |  |
+| PASS | filament_tower_ironing_area | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2801 |  |
+| PASS | filament_type | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2872 |  |
+| PASS | filament_unloading_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2707 |  |
+| PASS | filament_unloading_speed_start | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2716 |  |
+| PASS | filament_vendor | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2942 |  |
+| PASS | filament_wipe | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:79 |  |
+| PASS | filament_wipe_distance | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:76 |  |
+| PASS | filament_z_hop | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:66 |  |
+| FAIL | filament_z_hop_types | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:67 | Auto Lift: layer 2 travel geometry count differs: expected 19, actual 18 |
+| PASS | file_start_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5928 |  |
+| PASS | filename_format | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4967 |  |
+| PASS | fill_multiline | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2996 |  |
+| PASS | filter_out_gap_fill | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3698 |  |
+| PASS | first_layer_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1394 |  |
+| PASS | first_layer_print_sequence | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1109 |  |
+| PASS | first_x_layer_fan_speed | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4808 |  |
+| PASS | flashforge_serial_number | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:861 |  |
+| PASS | flush_into_infill | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7013 |  |
+| PASS | flush_into_objects | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7030 |  |
+| PASS | flush_into_support | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7022 |  |
+| PASS | flush_multiplier | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6845 |  |
+| PASS | flush_volumes_matrix | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6835 |  |
+| PASS | flush_volumes_vector | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6825 |  |
+| PASS | full_fan_speed_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3445 |  |
+| FAIL | fuzzy_skin | coEnum | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:3540 | all: unsupported project feature: fuzzy_skin |
+| PASS | fuzzy_skin_first_layer | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3581 |  |
+| PASS | fuzzy_skin_layers_between_ripple_offset | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3687 |  |
+| PASS | fuzzy_skin_mode | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3588 |  |
+| PASS | fuzzy_skin_noise_type | coEnum | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:3611 |  |
+| PASS | fuzzy_skin_octaves | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3647 |  |
+| PASS | fuzzy_skin_persistence | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3656 |  |
+| PASS | fuzzy_skin_point_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3571 |  |
+| PASS | fuzzy_skin_ripple_offset | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3673 |  |
+| PASS | fuzzy_skin_ripples_per_layer | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3665 |  |
+| PASS | fuzzy_skin_scale | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3637 |  |
+| PASS | fuzzy_skin_thickness | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3561 |  |
+| PASS | gap_fill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1454 |  |
+| FAIL | gap_fill_target | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1178 | everywhere: layer 2 deposition 1 differs: expected Deposition { feature: "Gap infill", width: "0.449969", motion: MotionRecord { command: "G1", start: Position { x: "106.539", y: "105.879", z: "0.4" }, end: Position { x: "105.879", y: "106.539", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03096", feed: 1800.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Gap infill", width: "0.449967", motion: MotionRecord { command: "G1", start: Position { x: "106.539", y: "105.879", z: "0.4" }, end: Position { x: "105.879", y: "106.539", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03096", feed: 1800.0, acceleration: "500", fans: "0:255" } |
+| PASS | gap_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3707 |  |
+| PASS | gcode_add_line_number | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3738 |  |
+| PASS | gcode_comments | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3965 |  |
+| PASS | gcode_flavor | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:3905 |  |
+| PASS | gcode_label_objects | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3951 |  |
+| PASS | grab_length | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2290 |  |
+| PASS | gyroid_optimized | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3008 |  |
+| PASS | has_scarf_joint_seam | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4493 |  |
+| PASS | head_wrap_detect_zone | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6669 |  |
+| PASS | high_current_on_filament_swap | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4919 |  |
+| PASS | hole_to_polyhole | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7093 |  |
+| PASS | hole_to_polyhole_threshold | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7102 |  |
+| PASS | hole_to_polyhole_twisted | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7115 |  |
+| PASS | host_type | coEnum | 16 | 16 | 0 | src/libslic3r/PrintConfig.cpp:4853 |  |
+| PASS | hot_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1001 |  |
+| PASS | hot_plate_temp_initial_layer | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1061 |  |
+| PASS | idle_temperature | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7064 |  |
+| PASS | independent_support_layer_height | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6383 |  |
+| PASS | infill_anchor | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3137 |  |
+| PASS | infill_anchor_max | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3165 |  |
+| PASS | infill_combination | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3974 |  |
+| PASS | infill_combination_max_layer_height | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4093 |  |
+| PASS | infill_direction | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2949 |  |
+| PASS | infill_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3335 |  |
+| PASS | infill_lock_depth | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4054 |  |
+| PASS | infill_overhang_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3096 |  |
+| PASS | infill_shift_step | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3982 |  |
+| PASS | infill_wall_overlap | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4148 |  |
+| PASS | initial_layer_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3254 |  |
+| PASS | initial_layer_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3408 |  |
+| PASS | initial_layer_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3344 |  |
+| FAIL | initial_layer_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:3371 | min: invalid external perimeter flow spacing |
+| PASS | initial_layer_min_bead_width | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7265 |  |
+| PASS | initial_layer_print_height | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3384 |  |
+| PASS | initial_layer_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3400 |  |
+| PASS | initial_layer_travel_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3263 |  |
+| PASS | initial_layer_travel_jerk | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3362 |  |
+| PASS | initial_layer_travel_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3416 |  |
+| PASS | inner_wall_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3188 |  |
+| PASS | inner_wall_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5020 |  |
+| PASS | inner_wall_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1414 |  |
+| PASS | inner_wall_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3317 |  |
+| PASS | inner_wall_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:5029 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
+| PASS | inner_wall_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5041 |  |
+| PASS | input_shaping_damp_x | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4695 |  |
+| PASS | input_shaping_damp_y | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4703 |  |
+| PASS | input_shaping_emit | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4662 |  |
+| PASS | input_shaping_freq_x | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4677 |  |
+| PASS | input_shaping_freq_y | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4686 |  |
+| PASS | input_shaping_type | coEnum | 13 | 13 | 0 | src/libslic3r/PrintConfig.cpp:4668 |  |
+| FAIL | interface_shells | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4197 | true: unsupported project feature: interface_shells |
+| PASS | interlocking_beam | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4226 |  |
+| PASS | interlocking_beam_layer_count | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4252 |  |
+| PASS | interlocking_beam_width | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4233 |  |
+| PASS | interlocking_boundary_avoidance | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4268 |  |
+| PASS | interlocking_depth | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4260 |  |
+| PASS | interlocking_orientation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4242 |  |
+| PASS | internal_bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1268 |  |
+| FAIL | internal_bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1309 | min: filament 1 length differs: expected 255.90mm, actual 262.34mm |
+| PASS | internal_bridge_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3470 |  |
+| PASS | internal_bridge_flow | coFloat | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:1354 | min: orca-slicer failed (exit status: 238): internal_bridge_flow: invalid value 0.000000 |
+| PASS | internal_bridge_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1670 |  |
+| PASS | internal_solid_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5781 |  |
+| PASS | internal_solid_infill_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3244 |  |
+| PASS | internal_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1444 |  |
+| PASS | internal_solid_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:5808 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
+| FAIL | internal_solid_infill_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2106 | alignedrectilinear: unsupported project feature: internal_solid_infill_pattern |
+| PASS | internal_solid_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5820 |  |
+| PASS | ironing_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4351 |  |
+| PASS | ironing_angle_fixed | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4361 |  |
+| PASS | ironing_expansion | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4368 |  |
+| PASS | ironing_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3481 |  |
+| PASS | ironing_flow | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4310 |  |
+| PASS | ironing_inset | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4332 |  |
+| PASS | ironing_pattern | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4298 |  |
+| PASS | ironing_spacing | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4322 |  |
+| PASS | ironing_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4342 |  |
+| FAIL | ironing_type | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:4281 | solid: filament 1 length differs: expected 274.88mm, actual 262.34mm |
+| PASS | is_infill_first | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2181 |  |
+| PASS | lateral_lattice_angle_1 | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3076 |  |
+| PASS | lateral_lattice_angle_2 | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3086 |  |
+| PASS | layer_change_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4415 |  |
+| PASS | layer_height | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:771 |  |
+| PASS | lightning_overhang_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3106 |  |
+| PASS | lightning_prune_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3116 |  |
+| PASS | lightning_straightening_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3127 |  |
+| REJECTED | line_width | coFloatOrPercent | 3 | 0 | 3 | src/libslic3r/PrintConfig.cpp:2410 | min: orca-slicer failed (exit status: 156): Flow::spacing() produced negative spacing. Did you set some extrusion width too small?; max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
+| PASS | long_retractions_when_cut | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5214 |  |
+| PASS | long_retractions_when_ec | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5229 |  |
+| PASS | machine_end_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2028 |  |
+| PASS | machine_load_filament_time | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2560 |  |
+| PASS | machine_max_acceleration_e | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1260 |  |
+| PASS | machine_max_acceleration_extruding | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4601 |  |
+| PASS | machine_max_acceleration_retracting | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4615 |  |
+| PASS | machine_max_acceleration_travel | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4626 |  |
+| PASS | machine_max_acceleration_x | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1257 |  |
+| PASS | machine_max_acceleration_y | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1258 |  |
+| PASS | machine_max_acceleration_z | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1259 |  |
+| PASS | machine_max_jerk_e | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1276 |  |
+| PASS | machine_max_jerk_x | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1273 |  |
+| PASS | machine_max_jerk_y | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1274 |  |
+| PASS | machine_max_jerk_z | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1275 |  |
+| PASS | machine_max_junction_deviation | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4570 |  |
+| PASS | machine_max_speed_e | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.hpp:1265 |  |
+| PASS | machine_max_speed_x | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.hpp:1262 |  |
+| PASS | machine_max_speed_y | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.hpp:1263 |  |
+| PASS | machine_max_speed_z | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.hpp:1264 |  |
+| PASS | machine_min_extruding_rate | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4581 |  |
+| PASS | machine_min_travel_rate | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4591 |  |
+| PASS | machine_pause_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4454 |  |
+| PASS | machine_start_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5940 |  |
+| PASS | machine_tool_change_time | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2578 |  |
+| PASS | machine_unload_filament_time | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2569 |  |
+| PASS | make_overhang_printable | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4974 |  |
+| PASS | make_overhang_printable_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4981 |  |
+| PASS | make_overhang_printable_hole_size | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4993 |  |
+| PASS | manual_filament_change | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5964 |  |
+| PASS | master_extruder_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5399 |  |
+| PASS | max_bridge_length | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2019 |  |
+| PASS | max_layer_height | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4721 |  |
+| PASS | max_resonance_avoidance_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4653 |  |
+| PASS | max_travel_detour_distance | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:948 |  |
+| PASS | max_volumetric_extrusion_rate_slope | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4730 |  |
+| PASS | max_volumetric_extrusion_rate_slope_segment_length | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4751 |  |
+| PASS | min_bead_width | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7275 |  |
+| PASS | min_feature_size | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7217 |  |
+| PASS | min_layer_height | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4817 |  |
+| PASS | min_length_factor | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7228 |  |
+| PASS | min_resonance_avoidance_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4645 |  |
+| PASS | min_skirt_length | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5751 |  |
+| PASS | min_width_top_surface | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1498 |  |
+| PASS | minimum_sparse_infill_area | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5772 |  |
+| PASS | mmu_segmented_region_interlocking_depth | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4215 |  |
+| PASS | mmu_segmented_region_max_width | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4206 |  |
+| PASS | notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4843 |  |
+| PASS | nozzle_diameter | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4835 |  |
+| PASS | nozzle_flush_dataset | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2602 |  |
+| PASS | nozzle_height | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2242 |  |
+| PASS | nozzle_hrc | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3792 |  |
+| PASS | nozzle_temperature | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6644 |  |
+| PASS | nozzle_temperature_initial_layer | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3436 |  |
+| PASS | nozzle_temperature_range_high | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6661 |  |
+| PASS | nozzle_temperature_range_low | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6653 |  |
+| PASS | nozzle_type | coEnums | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:3772 |  |
+| PASS | nozzle_volume | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4894 |  |
+| PASS | nozzle_volume_type | coEnums | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5348 |  |
+| PASS | only_one_wall_first_layer | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1513 |  |
+| PASS | only_one_wall_top | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1491 |  |
+| PASS | ooze_prevention | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4961 |  |
+| PASS | other_layers_print_sequence | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1115 |  |
+| PASS | other_layers_print_sequence_nums | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1121 |  |
+| PASS | outer_wall_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3215 |  |
+| PASS | outer_wall_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5011 |  |
+| PASS | outer_wall_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1404 |  |
+| PASS | outer_wall_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3308 |  |
+| FAIL | outer_wall_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:2115 | min: invalid external perimeter flow spacing |
+| PASS | outer_wall_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2127 |  |
+| PASS | overhang_1_4_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1610 |  |
+| PASS | overhang_2_4_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1622 |  |
+| PASS | overhang_3_4_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1634 |  |
+| PASS | overhang_4_4_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1646 |  |
+| PASS | overhang_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1214 |  |
+| PASS | overhang_fan_threshold | coEnums | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:1227 |  |
+| PASS | overhang_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1424 |  |
+| PASS | overhang_reverse | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1526 |  |
+| PASS | overhang_reverse_internal_only | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1534 |  |
+| PASS | overhang_reverse_threshold | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1565 |  |
+| PASS | parallel_printheads_bed_exclude_areas | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:712 |  |
+| PASS | parallel_printheads_count | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:704 |  |
+| PASS | parking_pos_retraction | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4927 |  |
+| PASS | part_cooling_fan_min_pwm | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3861 |  |
+| PASS | pellet_flow_coefficient | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2639 |  |
+| PASS | pellet_modded_printer | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3939 |  |
+| PASS | physical_extruder_map | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2495 |  |
+| PASS | post_process | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5068 |  |
+| PASS | precise_outer_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1484 |  |
+| PASS | precise_z_height | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3717 |  |
+| PASS | preferred_orientation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:797 |  |
+| PASS | preheat_steps | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5918 |  |
+| PASS | preheat_time | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5908 |  |
+| PASS | pressure_advance | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2345 |  |
+| PASS | prime_tower_brim_width | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6891 |  |
+| PASS | prime_tower_enable_framework | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6819 |  |
+| PASS | prime_tower_flat_ironing | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6989 |  |
+| PASS | prime_tower_infill_gap | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7005 |  |
+| PASS | prime_tower_skip_points | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6983 |  |
+| PASS | prime_tower_width | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6876 |  |
+| PASS | prime_volume | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6852 |  |
+| PASS | print_compatible_printers | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1832 |  |
+| PASS | print_extruder_id | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5405 |  |
+| PASS | print_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5412 |  |
+| PASS | print_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2327 |  |
+| PASS | print_order | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1847 |  |
+| PASS | print_sequence | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1836 |  |
+| PASS | print_settings_id | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5111 |  |
+| PASS | printable_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:686 |  |
+| PASS | printable_height | coFloat | 3 | 2 | 1 | src/libslic3r/PrintConfig.cpp:779 | min: orca-slicer failed (exit status: 205): The object cube10.stl exceeds the maximum build volume height. |
+| PASS | printer_agent | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:829 |  |
+| PASS | printer_extruder_id | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5385 |  |
+| PASS | printer_extruder_variant | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5392 |  |
+| PASS | printer_model | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5090 |  |
+| PASS | printer_notes | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5096 |  |
+| PASS | printer_settings_id | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5116 |  |
+| PASS | printer_structure | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:3801 |  |
+| PASS | printer_technology | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:678 |  |
+| PASS | printer_variant | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5105 |  |
+| PASS | printhost_authorization_type | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:915 |  |
+| PASS | printhost_ssl_ignore_revoke | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:901 |  |
+| PASS | printing_by_object_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2037 |  |
+| PASS | process_change_extrusion_role_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5081 |  |
+| PASS | purge_in_prime_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5983 |  |
+| PASS | raft_contact_distance | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5121 |  |
+| PASS | raft_expansion | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5132 |  |
+| PASS | raft_first_layer_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5141 |  |
+| PASS | raft_first_layer_expansion | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5151 |  |
+| FAIL | raft_layers | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5161 | max: unsupported project feature: raft_layers |
+| FAIL | reduce_crossing_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:941 | true: layer 2 travel geometry count differs: expected 19, actual 14 |
+| PASS | reduce_fan_stop_start_freq | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2422 |  |
+| PASS | reduce_infill_retraction | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4953 |  |
+| PASS | relative_bridge_angle | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1285 |  |
+| PASS | required_nozzle_HRC | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2481 |  |
+| PASS | resolution | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5172 |  |
+| PASS | resonance_avoidance | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4637 |  |
+| PASS | retract_before_wipe | coPercents | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5188 |  |
+| PASS | retract_length_toolchange | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5244 |  |
+| PASS | retract_lift_above | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5266 |  |
+| PASS | retract_lift_below | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5274 |  |
+| FAIL | retract_lift_enforce | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5320 | Bottom Only: layer 2 travel geometry count differs: expected 8, actual 10 |
+| PASS | retract_restart_extra | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5439 |  |
+| PASS | retract_restart_extra_toolchange | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5447 |  |
+| PASS | retract_when_changing_layer | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5195 |  |
+| PASS | retraction_distances_when_cut | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5221 |  |
+| PASS | retraction_distances_when_ec | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5235 |  |
+| PASS | retraction_length | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5201 |  |
+| PASS | retraction_minimum_travel | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5181 |  |
+| PASS | retraction_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5455 |  |
+| PASS | role_based_wipe_speed | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5635 |  |
+| PASS | scan_first_layer | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3745 |  |
+| PASS | scarf_angle_threshold | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5546 |  |
+| PASS | scarf_joint_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5584 |  |
+| PASS | scarf_joint_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5570 |  |
+| PASS | scarf_overhang_threshold | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5558 |  |
+| PASS | seam_gap | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5515 |  |
+| FAIL | seam_position | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:5490 | nearest: layer 1 deposition 59 differs: expected Deposition { feature: "Inner wall", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "105.73", y: "114.27", z: "0.2" }, end: Position { x: "105.73", y: "105.77", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.26118", feed: 1800.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Inner wall", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "105.73", y: "114.27", z: "0.2" }, end: Position { x: "105.73", y: "105.73", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.26241", feed: 1800.0, acceleration: "500", fans: "0:0" } |
+| PASS | seam_slope_conditional | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5539 |  |
+| PASS | seam_slope_entire_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5604 |  |
+| PASS | seam_slope_inner_walls | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5628 |  |
+| PASS | seam_slope_min_length | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5611 |  |
+| PASS | seam_slope_start_height | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5593 |  |
+| PASS | seam_slope_steps | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5620 |  |
+| FAIL | seam_slope_type | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5525 | all: layer 2 deposition count differs: expected 129, actual 97 |
+| PASS | set_other_flow_ratios | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1387 |  |
+| PASS | silent_mode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4440 |  |
+| PASS | single_extruder_multi_material | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5958 |  |
+| PASS | single_extruder_multi_material_priming | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6014 |  |
+| FAIL | single_loop_draft_shield | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5700 | true: filament 1 length differs: expected 260.62mm, actual 262.34mm |
+| PASS | skeleton_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4018 |  |
+| PASS | skeleton_infill_line_width | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4074 |  |
+| PASS | skin_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4031 |  |
+| PASS | skin_infill_depth | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4044 |  |
+| PASS | skin_infill_line_width | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4064 |  |
+| FAIL | skirt_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5673 | seeded: layer 1 deposition 138 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "75.1", y: "79.206", z: "0.2" }, end: Position { x: "77.148", y: "77.149", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.08918", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "75.1", y: "79.206", z: "0.2" }, end: Position { x: "77.148", y: "77.149", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.08917", feed: 3000.0, acceleration: "500", fans: "0:0" } |
+| PASS | skirt_height | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5692 |  |
+| FAIL | skirt_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5733 | max: layer 1 deposition 70 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "100.46", y: "116.644", z: "0.2" }, end: Position { x: "100.172", y: "115", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.05129", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "100.461", y: "116.644", z: "0.2" }, end: Position { x: "100.172", y: "115", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.05129", feed: 3000.0, acceleration: "500", fans: "0:0" } |
+| PASS | skirt_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5742 |  |
+| PASS | skirt_start_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5682 |  |
+| FAIL | skirt_type | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5721 | perobject: unsupported project feature: skirt_type per-object |
+| PASS | slice_closing_radius | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6020 |  |
+| PASS | slicing_mode | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6030 |  |
+| PASS | slow_down_for_layer_cooling | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1858 |  |
+| PASS | slow_down_layer_time | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5762 |  |
+| PASS | slow_down_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3426 |  |
+| PASS | slow_down_min_speed | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4826 |  |
+| PASS | slowdown_for_curled_perimeters | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1587 |  |
+| FAIL | small_area_infill_flow_compensation | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4472 | true: filament 1 length differs: expected 259.24mm, actual 262.34mm |
+| PASS | small_area_infill_flow_compensation_model | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4479 |  |
+| PASS | small_perimeter_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2137 |  |
+| PASS | small_perimeter_threshold | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2149 |  |
+| PASS | solid_infill_direction | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2959 |  |
+| PASS | solid_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4007 |  |
+| PASS | sparse_infill_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3234 |  |
+| FAIL | sparse_infill_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2969 | min: layer 3 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "105.675", y: "105.675", z: "0.6" }, end: Position { x: "114.325", y: "105.675", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.28694", feed: 2105.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Inner wall", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "105.675", y: "105.675", z: "0.6" }, end: Position { x: "114.325", y: "105.675", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.28694", feed: 2005.0, acceleration: "500", fans: "0:255" } |
+| PASS | sparse_infill_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4127 |  |
+| PASS | sparse_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1434 |  |
+| PASS | sparse_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:4136 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
+| FAIL | sparse_infill_pattern | coEnum | 26 | 26 | 0 | src/libslic3r/PrintConfig.cpp:3017 | 3dhoneycomb: unsupported project feature: sparse_infill_pattern |
+| PASS | sparse_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3993 |  |
+| PASS | sparse_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4174 |  |
+| PASS | spiral_finishing_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5868 |  |
+| FAIL | spiral_mode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5829 | true: unsupported project feature: spiral_mode |
+| PASS | spiral_mode_max_xy_smoothing | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5844 |  |
+| PASS | spiral_mode_smooth | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5837 |  |
+| PASS | spiral_starting_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5857 |  |
+| FAIL | staggered_inner_seams | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5508 | true: layer 1 deposition count differs: expected 100, actual 99 |
+| PASS | standby_temperature_delta | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5896 |  |
+| PASS | start_end_points | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4945 |  |
+| PASS | supertack_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:961 |  |
+| PASS | supertack_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1021 |  |
+| PASS | support_air_filtration | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3899 |  |
+| PASS | support_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6100 |  |
+| PASS | support_base_pattern | coEnum | 6 | 6 | 0 | src/libslic3r/PrintConfig.cpp:6284 |  |
+| PASS | support_base_pattern_spacing | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6329 |  |
+| PASS | support_bottom_interface_spacing | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6266 |  |
+| PASS | support_bottom_z_distance | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6153 |  |
+| PASS | support_chamber_temp_control | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3892 |  |
+| PASS | support_critical_regions_only | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6118 |  |
+| PASS | support_expansion | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6338 |  |
+| PASS | support_filament | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6178 |  |
+| PASS | support_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1464 |  |
+| PASS | support_interface_bottom_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6241 |  |
+| PASS | support_interface_filament | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6213 |  |
+| PASS | support_interface_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1474 |  |
+| PASS | support_interface_loop_pattern | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6206 |  |
+| PASS | support_interface_not_for_body | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6187 |  |
+| PASS | support_interface_pattern | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:6309 |  |
+| PASS | support_interface_spacing | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6255 |  |
+| PASS | support_interface_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6275 |  |
+| PASS | support_interface_top_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6223 |  |
+| PASS | support_ironing | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6557 |  |
+| PASS | support_ironing_flow | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6577 |  |
+| PASS | support_ironing_pattern | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6565 |  |
+| PASS | support_ironing_spacing | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6589 |  |
+| PASS | support_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:6194 | max: orca-slicer failed (exit status: 156): Flow::spacing() produced negative spacing. Did you set some extrusion width too small?; seeded: orca-slicer failed (exit status: 156): Flow::spacing() produced negative spacing. Did you set some extrusion width too small? |
+| PASS | support_material_interface_fan_speed | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3457 |  |
+| PASS | support_multi_bed_types | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3945 |  |
+| PASS | support_object_first_layer_gap | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6089 |  |
+| PASS | support_object_skip_flush | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2588 |  |
+| PASS | support_object_xy_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6078 |  |
+| PASS | support_on_build_plate_only | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6110 |  |
+| PASS | support_parallel_printheads | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:698 |  |
+| PASS | support_remove_small_overhang | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6125 |  |
+| PASS | support_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6346 |  |
+| PASS | support_style | coEnum | 7 | 7 | 0 | src/libslic3r/PrintConfig.cpp:6355 |  |
+| PASS | support_threshold_angle | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6391 |  |
+| PASS | support_threshold_overlap | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6404 |  |
+| PASS | support_top_z_distance | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6134 |  |
+| PASS | support_type | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:6061 |  |
+| PASS | symmetric_infill_y_axis | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4084 |  |
+| PASS | temperature_vitrification | coInts | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2917 |  |
+| PASS | template_custom_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4463 |  |
+| PASS | textured_cool_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:981 |  |
+| PASS | textured_cool_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1041 |  |
+| PASS | textured_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1011 |  |
+| PASS | textured_plate_temp_initial_layer | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1070 |  |
+| PASS | thick_bridges | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1941 |  |
+| PASS | thick_internal_bridges | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1950 |  |
+| PASS | thumbnails | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7122 |  |
+| PASS | thumbnails_format | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:7129 |  |
+| PASS | time_cost | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3883 |  |
+| PASS | time_lapse_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4424 |  |
+| PASS | timelapse_type | coEnum | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5879 | 1: orca-slicer failed (exit status: 154): run found error, return -102, exit... |
+| PASS | tool_change_on_wipe_tower | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5995 |  |
+| PASS | top_bottom_infill_wall_overlap | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4161 |  |
+| PASS | top_shell_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6730 |  |
+| PASS | top_shell_thickness | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6741 |  |
+| PASS | top_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1366 |  |
+| PASS | top_surface_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3206 |  |
+| FAIL | top_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6752 | seeded: layer 50 deposition 9 differs: expected Deposition { feature: "Top surface", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "105.795", y: "106.962", z: "10" }, end: Position { x: "106.962", y: "105.795", z: "10" }, arc_center: [None, None], turns: None }, extrusion: "0.04806", feed: 1130.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Top surface", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "105.795", y: "106.963", z: "10" }, end: Position { x: "106.963", y: "105.795", z: "10" }, arc_center: [None, None], turns: None }, extrusion: "0.04806", feed: 1130.0, acceleration: "500", fans: "0:255" } |
+| PASS | top_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5790 |  |
+| PASS | top_surface_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3326 |  |
+| PASS | top_surface_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:6709 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
+| FAIL | top_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2074 | alignedrectilinear: unsupported project feature: top_surface_pattern |
+| PASS | top_surface_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6721 |  |
+| PASS | travel_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3197 |  |
+| PASS | travel_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3353 |  |
+| PASS | travel_slope | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5297 |  |
+| PASS | travel_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6776 |  |
+| PASS | travel_speed_z | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6784 |  |
+| PASS | tree_support_angle_slow | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6437 |  |
+| PASS | tree_support_auto_brim | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6483 |  |
+| PASS | tree_support_branch_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6415 |  |
+| PASS | tree_support_branch_angle_organic | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6426 |  |
+| PASS | tree_support_branch_diameter | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6507 |  |
+| PASS | tree_support_branch_diameter_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6517 |  |
+| PASS | tree_support_branch_diameter_organic | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6531 |  |
+| PASS | tree_support_branch_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6449 |  |
+| PASS | tree_support_branch_distance_organic | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6459 |  |
+| PASS | tree_support_brim_width | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6489 |  |
+| PASS | tree_support_tip_diameter | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6496 |  |
+| PASS | tree_support_top_rate | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6469 |  |
+| PASS | tree_support_wall_count | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6541 |  |
+| PASS | upward_compatible_machine | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:1788 |  |
+| PASS | use_3mf | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:821 |  |
+| PASS | use_firmware_retraction | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:5471 | true: orca-slicer failed (exit status: 238): use_firmware_retraction: --use-firmware-retraction is not compatible with --wipe |
+| PASS | use_relative_e_distances | coBool | 2 | 1 | 1 | src/libslic3r/PrintConfig.cpp:7146 | false: orca-slicer failed (exit status: 205): "G92 E0" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing. |
+| PASS | volumetric_speed_coefficients | coStrings | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:2655 |  |
+| FAIL | wall_direction | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:2188 | cw: layer 1 deposition count differs: expected 99, actual 100 |
+| PASS | wall_distribution_count | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7208 |  |
+| FAIL | wall_generator | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:7155 | arachne: unsupported project feature: wall_generator |
+| FAIL | wall_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5051 | min: filament 1 length differs: expected 196.24mm, actual 26.72mm |
+| PASS | wall_maximum_deviation | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7253 |  |
+| PASS | wall_maximum_resolution | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7242 |  |
+| PASS | wall_sequence | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:2158 |  |
+| PASS | wall_transition_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7195 |  |
+| PASS | wall_transition_filter_deviation | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7180 |  |
+| PASS | wall_transition_length | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7169 |  |
+| PASS | wipe | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6794 |  |
+| FAIL | wipe_before_external_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5650 | true: layer 1 travel geometry count differs: expected 12, actual 11 |
+| PASS | wipe_distance | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6801 |  |
+| PASS | wipe_on_loops | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5643 |  |
+| PASS | wipe_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5661 |  |
+| PASS | wipe_tower_bridging | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7038 |  |
+| PASS | wipe_tower_cone_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6902 |  |
+| PASS | wipe_tower_extra_flow | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7054 |  |
+| PASS | wipe_tower_extra_rib_length | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6941 |  |
+| PASS | wipe_tower_extra_spacing | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:7045 |  |
+| PASS | wipe_tower_filament | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6966 |  |
+| PASS | wipe_tower_fillet_wall | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6959 |  |
+| PASS | wipe_tower_max_purge_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6912 |  |
+| PASS | wipe_tower_no_sparse_layers | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:6006 |  |
+| PASS | wipe_tower_rib_width | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6950 |  |
+| PASS | wipe_tower_rotation_angle | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6884 |  |
+| PASS | wipe_tower_type | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5972 |  |
+| PASS | wipe_tower_wall_type | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6925 |  |
+| PASS | wipe_tower_x | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6860 |  |
+| PASS | wipe_tower_y | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6868 |  |
+| PASS | wiping_volumes_extruders | coFloats | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6976 |  |
+| PASS | wrapping_detection_gcode | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4432 |  |
+| PASS | wrapping_detection_layers | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4113 |  |
+| PASS | wrapping_exclude_area | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4120 |  |
+| PASS | xy_contour_compensation | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7083 |  |
+| PASS | xy_hole_compensation | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:7073 |  |
+| FAIL | z_hop | coFloats | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5255 | seeded: layer 1 travel geometry differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "2.3", y: "10", z: "0.2" }, end: Position { x: "2.3", y: "10", z: "1.996" }, arc_center: [None, None], turns: None }, feed: 9000.0, acceleration: "500" } |
+| FAIL | z_hop_types | coEnums | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:5282 | Auto Lift: layer 2 travel geometry count differs: expected 19, actual 18 |
+| PASS | z_offset | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6044 |  |
+| PASS | zaa_dont_alternate_fill_direction | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4397 |  |
+| FAIL | zaa_enabled | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4378 | true: unsupported project feature: zaa_enabled |
+| PASS | zaa_min_z | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4404 |  |
+| PASS | zaa_minimize_perimeter_height | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:4385 |  |

@@ -1612,5 +1612,12 @@ active values. Per-case upstream rejection is counted separately from Ares
 comparison instead of mislabeled ARES_ERROR, while any compared divergence
 still fails its domain. Inventory/rejection tests, KSR, clippy, and fmt pass.
 
+Stable option sweep4 (clean HEAD `8784d58`) completed the corrected active
+domains: 610/649 compared domains PASS, 39 FAIL, and one domain was fully
+rejected upstream. Across 1,308 generated cases, 1,282 produced Orca output and
+26 were transparently recorded as upstream rejection. Newly green domains
+include fill_multiline, Z shrink, zero top density, copied pattern enums, active
+gcode flavors, and prior invalid-context families.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
