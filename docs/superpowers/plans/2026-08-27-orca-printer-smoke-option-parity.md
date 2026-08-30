@@ -1783,5 +1783,10 @@ skin/skeleton defaults materialized into the process preset. All eight 0.2mm
 nozzle Orca validation errors advance to real geometry; Ender-3 0.2 now reaches
 the known connector endpoint seam. Harness tests, KSR, clippy, and fmt pass.
 
+Stable option sweep6 (clean HEAD `77a0498`) completed all 650 domains/1,308
+cases: 626/649 compared domains PASS, 23 FAIL, 1 fully upstream-rejected;
+1,282 cases compared and 26 rejected upstream. Ten domains turned green since
+sweep5, including width/flow/wall/lift/Z/skirt/bridge/interface cases.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
