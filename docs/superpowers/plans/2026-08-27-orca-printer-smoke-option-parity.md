@@ -1467,6 +1467,12 @@ therefore does not yet satisfy all-option coverage; failures and unbounded
 domains remain explicit in `tests/parity/option-coverage-summary.md` rather than
 being treated as completion.
 
-NEXT: correct scaled Clipper endpoint precision / limited-hook direction, then
-reduce the 65 option failures, generate baseline cases for all 302 unbounded
-domains, and continue lifecycle/Qidi/postamble work.
+All 302 previously UNBOUNDED domains now have explicit per-key baseline cases.
+The harness still claims min/max/seeded only where the upstream definition has
+real numeric bounds; unbounded numerics and opaque string/point options execute
+the shared real project without inventing fake extrema. Domain-plan tests now
+require all 650 source-cited options to have cases: 1,356 total (1054 value
+cases + 302 baselines), with no silent omission status.
+
+NEXT: rerun all 650 option domains and reduce the 65 known value-case failures;
+in parallel continue Clipper precision, lifecycle/Qidi, and postamble work.

@@ -10,11 +10,8 @@ fn option_domain_plan_is_complete_and_source_cited() {
         plan.source.starts_with("src/libslic3r/PrintConfig.cpp:")
             || plan.source.starts_with("src/libslic3r/PrintConfig.hpp:")
     }));
-    assert!(
-        plans
-            .iter()
-            .all(|plan| plan.omission.is_some() ^ !plan.cases.is_empty())
-    );
+    assert!(plans.iter().all(|plan| !plan.cases.is_empty()));
+    assert!(plans.iter().all(|plan| plan.omission.is_none()));
 }
 
 #[test]
@@ -54,6 +51,13 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
             .collect::<Vec<_>>()
             == ["min", "max", "seeded"]
     }));
+
+    let baselines = plans
+        .iter()
+        .filter(|plan| plan.cases[0].label == "baseline")
+        .collect::<Vec<_>>();
+    assert_eq!(baselines.len(), 302);
+    assert!(baselines.iter().all(|plan| plan.cases[0].value.is_none()));
 }
 
 #[test]

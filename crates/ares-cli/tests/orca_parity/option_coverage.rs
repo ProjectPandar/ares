@@ -111,7 +111,9 @@ fn inject_case(
         "residual" => process,
         scope => panic!("unknown option scope {scope}"),
     };
-    target.insert(plan.key.clone(), case.value.clone());
+    if let Some(value) = &case.value {
+        target.insert(plan.key.clone(), value.clone());
+    }
 }
 
 fn residual_is_machine(key: &str) -> bool {

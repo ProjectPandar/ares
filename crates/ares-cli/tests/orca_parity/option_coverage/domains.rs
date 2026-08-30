@@ -16,7 +16,7 @@ pub(super) struct OptionPlan {
 #[derive(Clone, Debug)]
 pub(super) struct OptionCase {
     pub(super) label: String,
-    pub(super) value: Value,
+    pub(super) value: Option<Value>,
 }
 
 pub(super) fn load(repo: &Path) -> Vec<OptionPlan> {
@@ -73,13 +73,10 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                     None,
                 )
             }
-            _ => (
-                Vec::new(),
-                Some("bounded min/max not explicit in definition block"),
-            ),
+            _ => (vec![baseline_case()], None),
         }
     } else {
-        (Vec::new(), Some("non boolean/enum/range option"))
+        (vec![baseline_case()], None)
     };
     Some(OptionPlan {
         key,
@@ -208,7 +205,14 @@ fn case(label: &str, value: &str, entry: &Value) -> OptionCase {
     };
     OptionCase {
         label: label.to_owned(),
-        value,
+        value: Some(value),
+    }
+}
+
+fn baseline_case() -> OptionCase {
+    OptionCase {
+        label: "baseline".to_owned(),
+        value: None,
     }
 }
 
