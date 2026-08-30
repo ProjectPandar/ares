@@ -1861,5 +1861,21 @@ paths, and post-fill ordering. The solid focused Orca smoke fully PASSes at
 274.88 mm. Role height tags use flavor vocabulary and ironing remains after
 ordinary fills. Unit/focused parity, KSR, clippy, and fmt pass.
 
+Active classic fuzzy skin now ports
+`Feature/FuzzySkin/FuzzySkin.cpp::should_fuzzify` and the polygon seam before
+overhang clipping. All six `fuzzy_skin` values pass focused Orca smoke with
+deterministic upstream ripple noise; final source-resolution simplification is
+applied after fuzzification. Focused parity, KSR, clippy, and fmt pass.
+
+Active `project_slice::gcode_emit` spiral-vase processing now ports the serial
+filter at `GCode.cpp:3693-3705` and the full-layer transform at
+`GCode/SpiralVase.cpp:66-216`: bottom layers feed parser state unchanged, body
+XY travels are omitted, print Z ramps by cumulative XY, relative-E transition
+in/out and optional XY smoothing reuse the existing Ares spiral helpers.
+`GCode.cpp:4596-4612` body-layer eligibility and complete-loop/no-seam-gap
+emission are applied before the filter. The filter runs before CoolingBuffer,
+matching upstream ordering. Both `spiral_mode` Boolean values now pass focused
+Orca movement parity; spiral unit/integration tests, KSR, clippy, and fmt pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

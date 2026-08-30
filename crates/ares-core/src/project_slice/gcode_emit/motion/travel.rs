@@ -13,7 +13,11 @@ pub(super) use lift::{emit_pending as emit_pending_lift, is_allowed as lift_is_a
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
-    lift::schedule(state, false);
+    if state.spiral_vase {
+        lift::append_spiral_vase(output, state);
+    } else {
+        lift::schedule(state, false);
+    }
     state.retracted = true;
 }
 
@@ -24,6 +28,9 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     if !state.retracted {
         retract_and_wipe(output, state);
         state.retracted = true;
+    }
+    if state.spiral_vase {
+        lift::append_spiral_vase(output, state);
     }
     state.pending_layer_retract = false;
 }

@@ -39,6 +39,7 @@ pub(super) fn append(
     if traversal.resolved.views.runtime_gcode.auxiliary_fan.0 {
         output.extend_from_slice(b"M106 P2 S0\n");
     }
+
     if tags.is_bbl() {
         output.extend_from_slice(b"M981 S0 P20000 ; close spaghetti detector\n");
     }
@@ -53,6 +54,31 @@ pub(super) fn append(
         "machine-end",
     )?;
     Ok(())
+}
+
+pub(super) fn append_compatible_stats(
+    output: &mut Vec<u8>,
+    traversal: &PreparedPostClassicTraversal,
+    total_weight: f64,
+    total_cost: f64,
+    layer_count: usize,
+) {
+    if super::tags::Tags::of(traversal).is_bbl() {
+        return;
+    }
+    output.extend_from_slice(
+        format!(
+            "; total filament used [g] = {total_weight:.2}\n\
+; total filament cost = {total_cost:.2}\n\
+; total layers count = {layer_count}\n\
+; estimated printing time (normal mode) = 0s\n\
+; estimated first layer printing time (normal mode) = 0s\n\n"
+        )
+        .as_bytes(),
+    );
+    if let Some(config) = &traversal.config_block {
+        output.extend_from_slice(config);
+    }
 }
 
 /// Accounts used filament from the emitted G-code exactly like the upstream

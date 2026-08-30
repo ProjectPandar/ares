@@ -7,7 +7,7 @@ pub(super) fn validate(
     has_painted_layer_height_profile: bool,
     source_objects: &[ProjectObject],
     resolved_objects: &[ResolvedProjectObject],
-    spiral_mode: bool,
+    _spiral_mode: bool,
 ) -> Result<(), SliceError> {
     if has_painted_layer_height_profile {
         return unsupported("layer_height_profile");
@@ -44,9 +44,6 @@ pub(super) fn validate(
                 })
     }) {
         return unsupported("zaa_enabled");
-    }
-    if spiral_mode {
-        return unsupported("spiral_mode");
     }
     Ok(())
 }

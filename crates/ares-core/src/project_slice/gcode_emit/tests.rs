@@ -8,6 +8,7 @@ mod flow_ratio;
 mod layer_placeholders;
 mod object_labels;
 mod runtime_placeholders;
+mod spiral_vase;
 mod timelapse;
 
 #[test]

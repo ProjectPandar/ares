@@ -97,8 +97,8 @@ fn task22a_capability_gate_order_is_project_key_major() {
 }
 
 #[test]
-fn task22o18_global_spiral_gate_follows_existing_capability_precedence() {
-    assert_unsupported(validate_capabilities(false, &[], &[], true), "spiral_mode");
+fn task22o18_global_spiral_crosses_the_capability_boundary_after_earlier_gates() {
+    assert_eq!(validate_capabilities(false, &[], &[], true), Ok(()));
 
     let source = source_object(Default::default(), Vec::new(), Vec::new());
     let object = with_object(|value| value.raft_layers = OrcaInt(1));

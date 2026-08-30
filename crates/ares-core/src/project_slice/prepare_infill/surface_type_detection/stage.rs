@@ -28,6 +28,15 @@ pub(super) struct StagedObject {
     pub(super) records: Vec<Option<StagedRecord>>,
 }
 
+#[derive(Clone, Copy)]
+struct StageRecordContext {
+    external_width: i64,
+    bottom_kind: RegionSurfaceKind,
+    bottom_shell_layers: usize,
+    layer_count: usize,
+    spiral_mode: bool,
+}
+
 pub(super) fn project(
     prepared: &PreparedPostLayerRegionPerimeters,
 ) -> Result<Vec<StagedObject>, SliceError> {
@@ -59,6 +68,22 @@ fn stage_object(
         .expect("O17 object retains its resolved source")
         .object;
     let bottom_kind = preflight::bottom_kind(options);
+    let spiral_mode = prepared
+        .predecessor
+        .resolved
+        .views
+        .full
+        .process
+        .print
+        .spiral_mode
+        .0;
+    let layer_count = input_object
+        .records
+        .iter()
+        .flatten()
+        .map(|record| record.layer_id + 1)
+        .max()
+        .unwrap_or(0);
     let records = object
         .records
         .iter()
@@ -66,14 +91,24 @@ fn stage_object(
         .zip(&prelude.records)
         .map(
             |((output, input), prelude)| match (output, input, prelude) {
-                (Some(output), Some(input), Some(prelude)) => stage_record(
-                    input_object,
-                    input,
-                    prelude.external_width,
-                    bottom_kind,
-                    output,
-                )
-                .map(Some),
+                (Some(output), Some(input), Some(prelude)) => {
+                    let bottom_shell_layers =
+                        usize::try_from(input_object.region_options(input).bottom_shell_layers.0)
+                            .expect("normalized bottom_shell_layers is non-negative");
+                    stage_record(
+                        input_object,
+                        input,
+                        output,
+                        StageRecordContext {
+                            external_width: prelude.external_width,
+                            bottom_kind,
+                            bottom_shell_layers,
+                            layer_count,
+                            spiral_mode,
+                        },
+                    )
+                    .map(Some)
+                }
                 (None, None, None) => Ok(None),
                 _ => unreachable!("O17 slots remain aligned with O16 and the Classic prelude"),
             },
@@ -85,23 +120,54 @@ fn stage_object(
 fn stage_record(
     object: &PostPerimeterInputPrintObject,
     input: &PerimeterInputRecord,
-    external_width: i64,
-    bottom_kind: RegionSurfaceKind,
     output: &PreparedLayerRegionPerimeterRecord,
+    context: StageRecordContext,
 ) -> Result<StagedRecord, SliceError> {
     let source = object.current_surfaces(input);
-    let slices = classify_slices(
+    let mut slices = classify_slices(
         source,
         object.upper_slices(input),
         object.lower_slices(input),
-        external_width,
-        bottom_kind,
+        context.external_width,
+        context.bottom_kind,
     )?;
+    apply_spiral_surface_types(
+        &mut slices,
+        context.spiral_mode,
+        input.layer_id,
+        context.bottom_shell_layers,
+        context.layer_count,
+    );
     let fill_surfaces = clipped_fill(&slices, &output.fill_expolygons)?;
     Ok(StagedRecord {
         slices,
         fill_surfaces,
     })
+}
+
+pub(super) fn apply_spiral_surface_types(
+    surfaces: &mut [RegionSurface],
+    spiral_mode: bool,
+    layer_id: usize,
+    bottom_shell_layers: usize,
+    layer_count: usize,
+) {
+    if !spiral_mode {
+        return;
+    }
+    let base_layer_count = bottom_shell_layers.min(layer_count);
+    let kind = if base_layer_count > 1 && layer_id + 1 == base_layer_count {
+        Some(RegionSurfaceKind::Top)
+    } else if layer_id >= base_layer_count {
+        Some(RegionSurfaceKind::Internal)
+    } else {
+        None
+    };
+    if let Some(kind) = kind {
+        for surface in surfaces {
+            surface.retag(kind);
+        }
+    }
 }
 
 pub(super) fn classify_slices(

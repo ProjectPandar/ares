@@ -5,7 +5,7 @@ use crate::{
             GeometryStep,
             cracks::crack_threshold,
             geometry::{opening_offset, paths, safety_difference},
-            stage::classify_slices,
+            stage::{apply_spiral_surface_types, classify_slices},
         },
         region_slices::{RegionSurface, RegionSurfaceKind},
     },
@@ -28,6 +28,19 @@ fn kinds(surfaces: &[RegionSurface]) -> Vec<RegionSurfaceKind> {
         .iter()
         .map(|surface| surface.as_parts().0)
         .collect()
+}
+
+#[test]
+fn spiral_mode_turns_the_last_base_layer_top_and_body_layers_internal() {
+    let surface = || RegionSurface::internal(rectangle(0, 0, 1_000, 1_000));
+    let mut last_base = vec![surface()];
+    let mut body = vec![surface()];
+
+    apply_spiral_surface_types(&mut last_base, true, 4, 5, 50);
+    apply_spiral_surface_types(&mut body, true, 49, 5, 50);
+
+    assert_eq!(kinds(&last_base), [RegionSurfaceKind::Top]);
+    assert_eq!(kinds(&body), [RegionSurfaceKind::Internal]);
 }
 
 #[test]

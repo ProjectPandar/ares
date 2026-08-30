@@ -103,9 +103,6 @@ fn validate_record(
     if record.dispatch == PerimeterDispatch::Arachne {
         return Err(unsupported("wall_generator"));
     }
-    if record.spiral_mode {
-        return Err(unsupported("spiral_mode"));
-    }
     if region.detect_thin_wall.0
         && !thin_wall_is_provably_inactive(object, record, region, nozzle_diameters, scale)
     {

@@ -30,8 +30,8 @@ const SEAM_VERTEX_SNAP_MM: f64 = 0.0015;
 
 #[cfg(test)]
 use runtime::is_closed_axis_rectangle;
-pub(in crate::project_slice) use runtime::place_nearest;
 use runtime::prepared_cw_rectangles_have_source_seams;
+pub(in crate::project_slice) use runtime::{place_nearest, place_nearest_projection};
 
 pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
     let predecessor = &prepared.predecessor;

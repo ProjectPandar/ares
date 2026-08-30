@@ -1,3 +1,9 @@
+mod project;
+
+pub(crate) use project::{
+    ProjectSpiralVaseConfig, ProjectSpiralVaseLayer, ProjectSpiralVaseRunState,
+};
+
 use crate::{LayerExtrusionMoves, Point2, SliceError, SliceOptions, ToolpathMoveKind};
 
 #[derive(Clone, Copy, Debug, PartialEq)]

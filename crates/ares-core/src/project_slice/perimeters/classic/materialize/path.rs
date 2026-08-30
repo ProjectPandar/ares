@@ -145,7 +145,7 @@ fn fuzzy_polygon(
         .iter()
         .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
         .collect::<Vec<_>>();
-    crate::project_slice::gcode_emit::simplify_linear_points(
+    crate::project_slice::gcode_emit::motion::simplify_linear_points(
         &mut points,
         record.simplification_tolerance,
     );

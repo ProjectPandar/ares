@@ -83,8 +83,7 @@ impl SpiralVaseTransitionOutState {
         let distance = previous.map_or(0.0, |start| distance(start, command.point));
         self.printed_xy += distance;
         let progress = (self.printed_xy / self.total_xy).clamp(0.0, 1.0);
-        let factor =
-            self.finishing_flow_ratio + (1.0 - progress) * (1.0 - self.finishing_flow_ratio);
+        let factor = finishing_factor(progress, self.finishing_flow_ratio);
         self.moves.push(TransitionOutMove {
             role: command.role,
             point: command.point,
@@ -111,6 +110,10 @@ impl SpiralVaseTransitionOutState {
         }
         gcode
     }
+}
+
+pub(super) fn finishing_factor(progress: f64, finishing_flow_ratio: f64) -> f64 {
+    finishing_flow_ratio + (1.0 - progress) * (1.0 - finishing_flow_ratio)
 }
 
 fn append_move(

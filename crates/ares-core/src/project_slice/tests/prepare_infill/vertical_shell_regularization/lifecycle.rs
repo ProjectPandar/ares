@@ -33,11 +33,6 @@ fn task22o22_inactive_typed_mode_produces_empty_sidecars_without_geometry() {
 async fn task22o22_earlier_capability_errors_have_precedence() {
     for (from, to, expected) in [
         (
-            "\"spiral_mode\": \"0\"",
-            "\"spiral_mode\": \"1\"",
-            SliceError::UnsupportedProjectFeature("spiral_mode".to_owned()),
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),

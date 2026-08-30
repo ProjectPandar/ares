@@ -59,3 +59,11 @@ pub(in crate::project_slice) fn place_nearest(
         split_at(loop_, seam, scale);
     }
 }
+
+pub(in crate::project_slice) fn place_nearest_projection(
+    loop_: &mut ExtrusionLoop,
+    cursor: Point3,
+    scale: CoordinateScale,
+) {
+    split_at(loop_, (cursor.x, cursor.y), scale);
+}

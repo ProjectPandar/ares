@@ -13,11 +13,6 @@ use crate::{SliceError, slice_project};
 async fn task22o21_earlier_capability_errors_have_precedence() {
     for (from, to, expected) in [
         (
-            "\"spiral_mode\": \"0\"",
-            "\"spiral_mode\": \"1\"",
-            SliceError::UnsupportedProjectFeature("spiral_mode".to_owned()),
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),

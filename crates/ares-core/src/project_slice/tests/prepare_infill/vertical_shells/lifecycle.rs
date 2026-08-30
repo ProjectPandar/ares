@@ -8,11 +8,6 @@ use crate::{SliceError, slice_project};
 async fn task22o19_earlier_capability_errors_have_precedence() {
     for (from, to, feature) in [
         (
-            "\"spiral_mode\": \"0\"",
-            "\"spiral_mode\": \"1\"",
-            "spiral_mode",
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             "counterbore_hole_bridging",

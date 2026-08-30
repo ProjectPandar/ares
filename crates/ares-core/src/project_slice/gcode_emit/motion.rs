@@ -39,7 +39,8 @@ use crate::{
     project_slice::{
         fill_entities::FillExtrusionEntity,
         perimeters::classic::{
-            gap_extrusion::GapFillEntity, shortest_path::chain_and_reorder_entities,
+            chained_loops::ExtrusionLoopRole, gap_extrusion::GapFillEntity,
+            shortest_path::chain_and_reorder_entities,
         },
     },
 };
@@ -208,7 +209,17 @@ fn emit_perimeter(
         unreachable!("perimeter phase contains only perimeter entities");
     };
     for mut loop_ in collection.entities {
-        if state.options.seam_position == crate::ProcessSeamPosition::Nearest {
+        if state.spiral_vase && loop_.extrusion_loop.role != ExtrusionLoopRole::Hole {
+            crate::project_slice::seam_placement::place_nearest_projection(
+                &mut loop_.extrusion_loop,
+                crate::project_slice::perimeters::classic::materialize::Point3 {
+                    x: local_cursor(state, geometry).x(),
+                    y: local_cursor(state, geometry).y(),
+                    z: 0,
+                },
+                geometry.scale,
+            );
+        } else if state.options.seam_position == crate::ProcessSeamPosition::Nearest {
             crate::project_slice::seam_placement::place_nearest(
                 &mut loop_.extrusion_loop,
                 crate::project_slice::perimeters::classic::materialize::Point3 {

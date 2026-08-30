@@ -15,7 +15,13 @@ pub(super) fn emit(
     state: &mut EmitState,
 ) {
     append_wipe_before_external(output, paths, loop_role, geometry, state);
-    let mut remaining_clip = state.options.seam_gap;
+    // `GCode.cpp:4596-4612,5796-5804`: active vase layers keep complete
+    // loops for the full-layer SpiralVase filter.
+    let mut remaining_clip = if state.spiral_vase_layer {
+        0.0
+    } else {
+        state.options.seam_gap
+    };
     let mut path_count = paths.len();
     while path_count > 0 {
         let length = path_length(&paths[path_count - 1], geometry);

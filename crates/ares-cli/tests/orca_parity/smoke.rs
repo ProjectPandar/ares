@@ -43,6 +43,13 @@ fn orca_parity_fuzzy_skin_enum_smoke() {
 }
 
 #[test]
+fn orca_parity_spiral_mode_smoke() {
+    for value in ["0", "1"] {
+        assert_process_option_smoke("spiral_mode", value);
+    }
+}
+
+#[test]
 fn orca_parity_ironing_solid_smoke() {
     assert_process_option_smoke("ironing_type", "solid");
 }

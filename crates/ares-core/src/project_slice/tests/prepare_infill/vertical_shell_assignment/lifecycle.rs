@@ -8,24 +8,6 @@ use crate::{
 };
 
 #[tokio::test]
-async fn task22o24_predecessor_failure_has_zero_assignment_invocations() {
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\"spiral_mode\": \"0\"",
-        "\"spiral_mode\": \"1\"",
-    );
-    vertical_shell_assignment::reset_invocations();
-    assert_eq!(
-        slice_project(archive.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("spiral_mode".to_owned())
-    );
-    assert_eq!(vertical_shell_assignment::invocations(), 0);
-}
-
-#[tokio::test]
 async fn task22o24_each_o23_geometry_failure_precedes_assignment() {
     for step in [
         vertical_shell_filtering::GeometryStep::NeighborIntersection,

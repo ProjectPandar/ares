@@ -1,4 +1,4 @@
-use crate::{SliceError, slice_project};
+use crate::slice_project;
 
 use super::support::{KsrArchive, metadata};
 
@@ -11,13 +11,9 @@ const BOTTOM_THICKNESS_ZERO: &str = r#""bottom_shell_thickness": "0""#;
 const BOTTOM_THICKNESS_VECTOR: &str = r#""bottom_shell_thickness": "0.5001""#;
 
 #[tokio::test]
-async fn task22h_public_global_spiral_capability_precedes_largest_contour() {
-    assert_eq!(
-        slice_project(primary_mutation(), metadata()).await,
-        Err(SliceError::UnsupportedProjectFeature(
-            "spiral_mode".to_owned()
-        ))
-    );
+async fn task22h_public_global_spiral_reaches_largest_contour_and_gcode() {
+    let output = slice_project(primary_mutation(), metadata()).await.unwrap();
+    assert!(String::from_utf8_lossy(&output).contains(";LAYER_CHANGE"));
 }
 
 fn primary_mutation() -> Vec<u8> {

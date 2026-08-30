@@ -14,13 +14,14 @@ mod header;
 mod layer_gcode;
 mod lexer;
 mod machine;
-mod motion;
+pub(in crate::project_slice) mod motion;
 mod object;
 mod offset;
 mod placeholders;
 mod processor;
 mod skirt;
 mod small_area;
+mod spiral_vase;
 mod tags;
 mod template;
 #[cfg(test)]
@@ -28,8 +29,6 @@ mod tests;
 mod timelapse;
 mod value;
 use crate::{GenerationMetadata, SliceError};
-
-pub(in crate::project_slice) use motion::{simplify_linear_points, simplify_points};
 
 pub(super) fn emit(
     prepared: &mut PreparedPostIslandPrintOrder,
@@ -91,6 +90,7 @@ pub(super) fn emit(
         options,
         small_area_flow,
         tags: tags::Tags::of(traversal),
+        spiral_vase: traversal.resolved.views.full.process.print.spiral_mode.0,
         ..Default::default()
     };
     let emit_labels = traversal
@@ -102,6 +102,7 @@ pub(super) fn emit(
         .gcode_label_objects
         .0;
     let mut cooling = cooling::CoolingState::from_traversal(traversal);
+    let mut spiral = spiral_vase::SpiralVaseFilter::from_traversal(traversal, brim.is_some());
     let max_layer_z = traversal
         .objects
         .first()
@@ -127,8 +128,10 @@ pub(super) fn emit(
                 .len()
                 > 1);
     let mut second_layer_done = false;
+    let object_count = prepared.objects.len();
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = object::ObjectLabels::from_traversal(traversal, object_index);
+        let object_layer_count = object.len();
         let mut precise_layer_z = 0.0;
         let mut previous_layer_z = 0.0_f32;
         for (layer_index, layer) in object.iter_mut().enumerate() {
@@ -194,6 +197,7 @@ pub(super) fn emit(
             if timelapse_at_layer_change {
                 timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
             }
+            spiral.append_layer_z(&mut output, layer_index, f64::from(layer_z));
             layer_gcode::append_layer_change(
                 &mut output,
                 traversal,
@@ -204,6 +208,7 @@ pub(super) fn emit(
             // A deferred previous-layer retraction lifts above the new layer's
             // print Z (`GCodeWriter::travel_to_z` during layer transition).
             state.layer_z = f64::from(layer_z);
+            state.source_layer_z = precise_layer_z;
             state.layer_index = layer_index;
             motion::flush_pending_retract_lift(&mut output, &mut state);
             motion::begin_layer(
@@ -257,6 +262,8 @@ pub(super) fn emit(
             {
                 plan.emit(&mut output, geometry, &mut state);
             }
+            let spiral_body_layer = spiral.is_body_layer(layer, layer_index, f64::from(layer_z));
+            state.spiral_vase_layer = spiral_body_layer;
             if let Some(labels) = &labels {
                 labels.queue_start(&mut output, &mut state, emit_labels);
             }
@@ -279,9 +286,21 @@ pub(super) fn emit(
             if !timelapse_inserted && !timelapse_at_layer_change {
                 timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
             }
+            spiral.process_layer(
+                &mut output,
+                spiral_vase::Layer {
+                    start: layer_output_start,
+                    enabled: spiral_body_layer,
+                    final_layer: object_index + 1 == object_count
+                        && layer_index + 1 == object_layer_count,
+                    z: f64::from(layer_z),
+                    height: f64::from(layer_height),
+                },
+            );
             cooling.finish_layer(&mut output, layer_output_start);
         }
     }
+    let emitted_layer_count = header::finalize_layer_count(&mut output, tags);
     // The final compatible layer has no following layer marker to flush its
     // deferred retraction. Flush only retract/wipe (not a travel lift) before
     // end G-code (`GCode.cpp` final object teardown).
@@ -299,28 +318,13 @@ pub(super) fn emit(
     let used_filament = finish::account_used_filament(&output);
     let (total_weight, total_cost) =
         finish::append_filament_stats(&mut output, traversal, used_filament);
-    if !tags.is_bbl() {
-        // Compatible-flavor tail statistics: layer count, klipper-style
-        // time placeholders, then the config block.
-        let layers = prepared
-            .objects
-            .first()
-            .map(|object| object.len())
-            .unwrap_or(0);
-        output.extend_from_slice(
-            format!(
-                "; total filament used [g] = {total_weight:.2}\n\
-; total filament cost = {total_cost:.2}\n\
-; total layers count = {layers}\n\
-; estimated printing time (normal mode) = 0s\n\
-; estimated first layer printing time (normal mode) = 0s\n\n"
-            )
-            .as_bytes(),
-        );
-        if let Some(config) = &traversal.config_block {
-            output.extend_from_slice(config);
-        }
-    }
+    finish::append_compatible_stats(
+        &mut output,
+        traversal,
+        total_weight,
+        total_cost,
+        emitted_layer_count,
+    );
     output.push(b'\n');
     Ok(processor::process(
         output,

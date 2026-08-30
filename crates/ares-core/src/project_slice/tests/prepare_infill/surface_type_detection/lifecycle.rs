@@ -22,21 +22,3 @@ async fn task22o17_counterbore_fails_before_detection() {
     );
     assert_eq!(invocations(), 0);
 }
-
-#[tokio::test]
-async fn task22o17_spiral_mode_fails_before_detection() {
-    let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\"spiral_mode\": \"0\"",
-        "\"spiral_mode\": \"1\"",
-    );
-    reset_invocations();
-    assert_eq!(
-        slice_project(archive.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("spiral_mode".to_owned())
-    );
-    assert_eq!(invocations(), 0);
-}

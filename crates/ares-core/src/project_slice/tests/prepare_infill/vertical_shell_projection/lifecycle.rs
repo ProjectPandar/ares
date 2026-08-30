@@ -14,11 +14,6 @@ use super::fixture;
 async fn task22o20_earlier_errors_have_precedence_and_zero_invocations() {
     for (from, to, expected) in [
         (
-            "\"spiral_mode\": \"0\"",
-            "\"spiral_mode\": \"1\"",
-            SliceError::UnsupportedProjectFeature("spiral_mode".to_owned()),
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             SliceError::UnsupportedProjectFeature("counterbore_hole_bridging".to_owned()),

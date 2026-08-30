@@ -96,11 +96,6 @@ async fn task22o25_public_parse_error_disposes_o24_and_preserves_error() {
 async fn task22o25_every_earlier_capability_error_precedes_promotion() {
     for (from, to, feature) in [
         (
-            "\"spiral_mode\": \"0\"",
-            "\"spiral_mode\": \"1\"",
-            "spiral_mode",
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             "counterbore_hole_bridging",

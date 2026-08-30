@@ -14,11 +14,6 @@ use crate::{
 async fn task22o23_all_earlier_capability_errors_keep_filtering_uninvoked() {
     for (from, to, expected) in [
         (
-            "\"spiral_mode\": \"0\"",
-            "\"spiral_mode\": \"1\"",
-            "spiral_mode",
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             "counterbore_hole_bridging",

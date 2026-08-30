@@ -22,6 +22,8 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) small_area_flow:
         crate::extrusions::SmallAreaInfillFlowCompensation,
     pub(in crate::project_slice::gcode_emit) layer_index: usize,
+    pub(in crate::project_slice::gcode_emit) spiral_vase: bool,
+    pub(in crate::project_slice::gcode_emit) spiral_vase_layer: bool,
     pub(in crate::project_slice::gcode_emit) positioned: bool,
     pub(in crate::project_slice::gcode_emit) last_scaled_position: Option<(i64, i64)>,
     pub(in crate::project_slice::gcode_emit) last_feature: Option<&'static str>,
@@ -30,6 +32,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) last_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) last_jerk: Option<f64>,
     pub(in crate::project_slice::gcode_emit) layer_z: f64,
+    pub(in crate::project_slice::gcode_emit) source_layer_z: f64,
     pub(in crate::project_slice::gcode_emit) retracted: bool,
     pub(in crate::project_slice::gcode_emit) wipe_path: Vec<arc::Point>,
     pub(in crate::project_slice::gcode_emit) wipe_start: Option<arc::Point>,

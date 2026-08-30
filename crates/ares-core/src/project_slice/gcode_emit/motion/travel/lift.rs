@@ -137,6 +137,22 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
     state.lifted = true;
 }
 
+pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
+    if state.options.z_hop <= 0.0 || !is_allowed(state) {
+        return;
+    }
+    output.extend_from_slice(
+        format!(
+            "G1 Z{} F{}\n",
+            format_z(state.layer_z + state.options.z_hop),
+            format_axis(state.travel_feedrate)
+        )
+        .as_bytes(),
+    );
+    state.current_feedrate = state.travel_feedrate;
+    state.lifted = true;
+}
+
 fn append_spiral(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64, j: f64) {
     if state.options.enable_arc_fitting {
         output.extend_from_slice(b"G17\n");

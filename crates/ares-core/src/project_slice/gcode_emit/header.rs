@@ -72,6 +72,27 @@ pub(super) fn append_header(
     output.extend_from_slice(b"; HEADER_BLOCK_END\n\n");
 }
 
+pub(super) fn finalize_layer_count(output: &mut Vec<u8>, tags: super::tags::Tags) -> usize {
+    let marker = format!("{}\n", tags.layer_change());
+    let layers = output
+        .windows(marker.len())
+        .filter(|window| *window == marker.as_bytes())
+        .count();
+    let prefix = b"; total layer number: ";
+    let start = output
+        .windows(prefix.len())
+        .position(|window| window == prefix)
+        .expect("generated header contains its layer-count field")
+        + prefix.len();
+    let end = output[start..]
+        .iter()
+        .position(|byte| *byte == b'\n')
+        .expect("generated layer-count field is line terminated")
+        + start;
+    output.splice(start..end, layers.to_string().bytes());
+    layers
+}
+
 fn format_values(values: &[crate::OrcaFloat]) -> String {
     values
         .iter()

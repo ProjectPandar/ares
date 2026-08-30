@@ -1,16 +1,15 @@
 mod retraction;
+mod start_travel;
 mod travel_emit;
 mod variable;
 
 pub(super) use retraction::can_skip_retraction;
 
 use super::{
-    EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, clip, extrusion, fan,
+    EmitState, LayerGeometry, arc, clip, extrusion, fan,
     features::PathProperties,
-    format::{
-        axis as format_axis, extrusion as format_extrusion, offset as format_offset, z as format_z,
-    },
-    overhang, set_accel_and_jerk, travel,
+    format::{axis as format_axis, extrusion as format_extrusion, offset as format_offset},
+    overhang, set_accel_and_jerk,
 };
 
 const SOURCE_EPSILON_MM: f64 = 1e-4;
@@ -86,181 +85,17 @@ pub(super) fn emit(
     };
     let first_x = first_local_x + state.offset.0;
     let first_y = first_local_y + state.offset.1;
-    let first_position = !state.positioned;
-    let layer_change_travel = state.layer_change_travel_pending && !first_position;
-    let needs_travel = first_position || state.last_scaled_position != Some(first_scaled);
-    let travel_distance = (first_x - state.x).hypot(first_y - state.y);
-    let mut travel_set_layer_z = false;
-    if needs_travel {
-        begin_path_travel(output, state, properties.feature, travel_distance);
-        let inside_internal_surface = travel::inside_internal_surfaces(
-            geometry.internal_surfaces,
-            arc::Point {
-                x: state.x,
-                y: state.y,
-            },
-            arc::Point {
-                x: first_x,
-                y: first_y,
-            },
-            geometry.scale,
-            state.offset,
-        );
-        let skip_retraction = can_skip_retraction(
-            state.options.reduce_infill_retraction,
-            state.options.has_sparse_infill,
-            state.last_feature,
-            properties.is_perimeter,
-            inside_internal_surface,
-        );
-        let retract = !first_position
-            && !state.retracted
-            && travel_distance >= state.options.retraction_minimum_travel
-            && !skip_retraction;
-        if retract {
-            travel::retract_and_lift(output, state);
-        }
-        append_object_start(output, state);
-        travel::emit_pending_lift(
-            output,
-            arc::Point {
-                x: first_x,
-                y: first_y,
-            },
-            state,
-        );
-        if state.template_lifted && state.lifted && !first_position {
-            travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
-            state.template_lifted = false;
-        } else if state.lifted && !first_position {
-            if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
-                travel_emit::xyz(
-                    output,
-                    first_x,
-                    first_y,
-                    state.layer_z + state.options.z_hop,
-                    state.travel_feedrate,
-                );
-            } else {
-                output.extend_from_slice(
-                    format!(
-                        "G1 X{} Y{} Z{}\n",
-                        format_axis(first_x),
-                        format_axis(first_y),
-                        format_z(state.layer_z + state.options.z_hop)
-                    )
-                    .as_bytes(),
-                );
-            }
-        } else if layer_change_travel && state.retracted {
-            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
-                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
-            } else if state.lifted {
-                output.extend_from_slice(
-                    format!(
-                        "G1 X{} Y{} Z{}\n",
-                        format_axis(first_x),
-                        format_axis(first_y),
-                        format_z(state.layer_z + state.options.z_hop)
-                    )
-                    .as_bytes(),
-                );
-            } else {
-                travel_emit::xyz(
-                    output,
-                    first_x,
-                    first_y,
-                    state.layer_z,
-                    state.travel_feedrate,
-                );
-                travel_set_layer_z = true;
-            }
-        } else if state.retracted
-            && first_position
-            && state.options.z_hop > 0.0
-            && travel::lift_is_allowed(state)
-        {
-            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
-                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
-            } else {
-                output.extend_from_slice(
-                    format!(
-                        "G1 Z{} F{}\n",
-                        format_z(state.layer_z + state.options.z_hop),
-                        format_axis(state.travel_feedrate)
-                    )
-                    .as_bytes(),
-                );
-                output.extend_from_slice(
-                    format!("G1 X{} Y{}\n", format_axis(first_x), format_axis(first_y)).as_bytes(),
-                );
-                state.lifted = true;
-            }
-        } else if layer_change_travel {
-            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
-                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
-                output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
-            } else {
-                travel_emit::xyz(
-                    output,
-                    first_x,
-                    first_y,
-                    state.layer_z,
-                    state.travel_feedrate,
-                );
-            }
-            travel_set_layer_z = true;
-        } else {
-            travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
-        }
-        state.x = first_x;
-        state.y = first_y;
-        state.last_scaled_position = Some(first_scaled);
-        state.positioned = true;
-        state.current_feedrate = state.travel_feedrate;
-    } else if layer_change_travel {
-        output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}\n",
-                format_z(state.layer_z),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
-        );
-        travel_set_layer_z = true;
-        state.current_feedrate = state.travel_feedrate;
-    }
-    state.layer_change_travel_pending = false;
-    append_object_start(output, state);
-    if state.retracted {
-        if first_position
-            && state.options.z_hop > 0.0
-            && !state.lifted
-            && travel::lift_is_allowed(state)
-        {
-            output.extend_from_slice(
-                format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
-            );
-            state.lifted = true;
-        }
-        if state.lifted && !travel_set_layer_z {
-            output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
-        }
-        let retraction_length = state.options.retraction_length;
-        let unretract = extrusion::coordinate(state, retraction_length);
-        output.extend_from_slice(
-            format!(
-                "G1 E{} F{}\n",
-                format_extrusion(unretract),
-                format_axis(state.options.deretraction_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = state.options.deretraction_feedrate;
-        state.retracted = false;
-        state.lifted = false;
-        state.template_lifted = false;
-    }
+    start_travel::emit(
+        output,
+        state,
+        start_travel::Request {
+            first_scaled,
+            first_x,
+            first_y,
+            properties,
+            geometry,
+        },
+    );
     let jerk = properties.jerk(&state.options, state.layer_index);
     set_accel_and_jerk(output, state, acceleration, jerk, false);
     state.extrusion_feedrate = processed

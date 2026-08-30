@@ -25,11 +25,6 @@ async fn task22o1_preflight_rejects_each_activated_deferred_classic_branch() {
             "wall_generator",
         ),
         (
-            "\"spiral_mode\": \"0\"",
-            "\"spiral_mode\": \"1\"",
-            "spiral_mode",
-        ),
-        (
             "\"counterbore_hole_bridging\": \"none\"",
             "\"counterbore_hole_bridging\": \"partiallybridge\"",
             "counterbore_hole_bridging",
