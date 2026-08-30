@@ -4,7 +4,7 @@ use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon, Polyline};
 mod decisions;
 mod oracles;
 mod orca_vectors;
-mod ordering;
+
 mod scale_errors;
 
 const KSR_SPACING: f64 = 0.407_079_637_050_628_66;

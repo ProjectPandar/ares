@@ -1811,5 +1811,11 @@ changing global scaled-coordinate truncation. The 377079.xµm spacing becomes
 377080µm; bottom Hilbert removes the extra midpoint and internal Hilbert raw
 motion count matches. Ten plane tests, KSR, smoke, clippy, and fmt pass.
 
+Removed the two obsolete connector tests that pinned MSVC STL equal-key
+permutations. Connect sorting now relies on the Linux/libstdc++ GCC adapter and
+30 actual geometry/output oracle tests; all pass with KSR and clippy. This
+closes the explicit compiler-source pinning item without weakening output
+checks.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
