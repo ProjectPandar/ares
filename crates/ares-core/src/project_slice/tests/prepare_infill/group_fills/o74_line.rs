@@ -147,6 +147,7 @@ fn task22o74_exact_four_millimeter_sections_remain_long() {
         )
     );
     assert_eq!(grouped.surface_fills[0].expolygons, [rectangle]);
+    assert!(grouped.surface_fills[0].params.fixed_angle);
     combine_infill::dispose(graph);
 }
 

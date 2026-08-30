@@ -1631,5 +1631,11 @@ but emits the direct layer-2 XYZ travel instead of an extra up/travel/down pair;
 raw option output and focused state test are exact. KSR, smokes, clippy, and fmt
 pass.
 
+AlignedRectilinear solid fills now use the rectilinear generator with fixed
+angle, matching `Fill.cpp:603,641-643`, and are accepted for top, bottom, and
+internal solid surfaces. All three option artifacts match Orca filament stats
+exactly (262.34/262.34/262.39 mm); grouping test, KSR, smokes, clippy, and fmt
+pass.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

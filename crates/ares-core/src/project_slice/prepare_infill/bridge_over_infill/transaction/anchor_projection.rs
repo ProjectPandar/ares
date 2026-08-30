@@ -46,7 +46,9 @@ pub(super) fn validate(
     }
     if !matches!(
         options.top_surface_pattern,
-        ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
+        ProcessInfillPattern::Monotonic
+            | ProcessInfillPattern::MonotonicLine
+            | ProcessInfillPattern::AlignedRectilinear
     ) {
         return unsupported("top_surface_pattern");
     }
@@ -54,6 +56,7 @@ pub(super) fn validate(
         options.internal_solid_infill_pattern,
         ProcessInfillPattern::Monotonic
             | ProcessInfillPattern::MonotonicLine
+            | ProcessInfillPattern::AlignedRectilinear
             | ProcessInfillPattern::Rectilinear
     ) {
         return unsupported("internal_solid_infill_pattern");

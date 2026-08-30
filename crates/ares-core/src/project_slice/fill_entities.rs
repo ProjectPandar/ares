@@ -182,6 +182,7 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear
+                | ProcessInfillPattern::AlignedRectilinear
                 | ProcessInfillPattern::ZigZag
                 | ProcessInfillPattern::Monotonic
                 | ProcessInfillPattern::MonotonicLine),
