@@ -1904,7 +1904,9 @@ Plain Rectilinear and AlignedRectilinear fills now take
 `FillRectilinear.cpp::traverse_graph_generate_polylines`'s sweep traversal
 instead of the monotonic ant-chain branch. The top Rectilinear value passes
 focused Orca movement parity, and its previously rejected bridge projection is
-accepted.
+accepted. Standard configured Concentric also applies the authoritative Linux
+2.4.2 one-spacing short-branch filter at the upstream uninitialized POD seam;
+the full sweep is the runtime oracle for this source-undefined field.
 
 The internal second-bridge pass now ports `PrintObject.cpp:3391-3560` with a
 two-phase source cache, solid-width opening, safety-offset overlap/leftover
