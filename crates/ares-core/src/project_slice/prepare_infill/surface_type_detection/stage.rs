@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::{
-    cracks,
+    cracks, extra_bridge,
     geometry::{
         GeometryStep, expolygons, fresh, geometry_error, internal, observe, opening,
         opening_offset, paths, safety_difference,
@@ -84,7 +84,7 @@ fn stage_object(
         .map(|record| record.layer_id + 1)
         .max()
         .unwrap_or(0);
-    let records = object
+    let mut records = object
         .records
         .iter()
         .zip(&input_object.records)
@@ -114,6 +114,22 @@ fn stage_object(
             },
         )
         .collect::<Result<Vec<_>, _>>()?;
+    extra_bridge::apply(
+        &mut records,
+        &input_object.records,
+        input_object,
+        options.enable_extra_bridge_layer,
+        prepared.predecessor.scale,
+    )?;
+    for (staged, output) in records.iter_mut().zip(&object.records) {
+        match (staged, output) {
+            (Some(staged), Some(output)) => {
+                staged.fill_surfaces = clipped_fill(&staged.slices, &output.fill_expolygons)?;
+            }
+            (None, None) => {}
+            _ => unreachable!("external extra-bridge records remain aligned"),
+        }
+    }
     Ok(StagedObject { records })
 }
 
