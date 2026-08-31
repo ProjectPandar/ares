@@ -168,7 +168,7 @@ fn task22m_transaction_preflight_phase_order_is_global() {
         SliceError::InvalidInput("invalid Orca option elefant_foot_compensation_layers".to_owned()),
     );
     let mut invalid_flow_options = task22m_options(0.15, 1, 0);
-    invalid_flow_options.line_width = FloatOrPercent::Percent(Percent(0.0));
+    invalid_flow_options.line_width = FloatOrPercent::Float(0.01);
     let objects = vec![invalid_flow_object(0), post_object(1, 1, 2, None)];
 
     assert_apply_error(
@@ -183,7 +183,7 @@ fn task22m_transaction_preflight_phase_order_is_global() {
         SliceError::UnsupportedProjectFeature("multi_region_layer_slices".to_owned()),
     );
     let mut invalid_flow_options = task22m_options(0.15, 1, 0);
-    invalid_flow_options.line_width = FloatOrPercent::Percent(Percent(0.0));
+    invalid_flow_options.line_width = FloatOrPercent::Float(0.01);
     let objects = vec![
         post_object(0, 1, 1, Some(out_of_range_polygon())),
         invalid_flow_object(1),
@@ -333,7 +333,7 @@ fn flow_region() -> RegionOptions {
 
 fn invalid_flow_object(source_object_index: usize) -> PostRegionPrintObject {
     let mut object = post_object(source_object_index, 1, 1, None);
-    object.regions[0].options.outer_wall_line_width = FloatOrPercent::Percent(Percent(0.0));
+    object.regions[0].options.outer_wall_line_width = FloatOrPercent::Float(0.01);
     object
 }
 

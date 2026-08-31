@@ -170,7 +170,7 @@ fn task22m_flow_selector_is_direct_unmapped_and_falls_back() {
 }
 
 #[test]
-fn task22m_flow_rejects_percent_zero_and_negative() {
+fn task22m_flow_treats_percent_zero_and_negative_as_automatic() {
     for (outer, object) in [
         (
             FloatOrPercent::Float(0.0),
@@ -181,7 +181,7 @@ fn task22m_flow_rejects_percent_zero_and_negative() {
             FloatOrPercent::Float(0.52),
         ),
     ] {
-        let error = resolve_external_perimeter_flow(
+        let flow = resolve_external_perimeter_flow(
             &layer(1, 0.2),
             FloatOrPercent::Float(0.5),
             outer,
@@ -189,12 +189,9 @@ fn task22m_flow_rejects_percent_zero_and_negative() {
             OrcaInt(1),
             &OrcaFloats(vec![OrcaFloat(0.4)]),
         )
-        .unwrap_err();
+        .unwrap();
 
-        assert_eq!(
-            error,
-            SliceError::InvalidInput("invalid external perimeter flow spacing".to_owned())
-        );
+        assert_flow_bits(flow, 0x3ee66667, 0x3ed06cbe, 0x3f5b6992);
     }
 }
 
