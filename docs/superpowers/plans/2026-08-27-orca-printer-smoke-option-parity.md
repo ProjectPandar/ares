@@ -2003,6 +2003,17 @@ Session log (2026-08-31, commits cbe24d2b..504f168):
    `get_recommended_filament_maps`) plus the timelapse most-used
    computation; the 1 mm Y delta is the safe-position picker
    (`TimelapsePosPicker::pick_pos`) vs Ares's simplified scan.
+7. Anker M5 dump (/tmp/anker_m5_02_*.gcode): `reduce_crossing_wall = 1` in
+   the preset chain. Upstream emits boundary-hugging multi-segment detours
+   (`X121.403 Y122.186 F18000 / X122.186 Y122.186 / X122.186 Y121.961 /
+   X121.961 Y121.961`) around the printed wall corner at layer starts while
+   Ares goes direct — the `avoid_crossing::route` port diverges from
+   `AvoidCrossingPerimeters::travel_to` for these crossings (the "77 travel
+   geometry count" family). Also the monotonic corner connector at
+   layer-2 deposition 109 traverses rotated (upstream
+   (114.333,113.899)→(113.899,114.333)→(114.319,113.913) vs Ares
+   (113.899,114.333)→(114.333,113.899)→(113.899,114.313)) — the phony-point
+   pinch split family.
 
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
