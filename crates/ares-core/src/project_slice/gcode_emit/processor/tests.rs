@@ -65,6 +65,30 @@ fn finalized_motion_time_is_exported_after_the_next_motion_command() {
     assert!(output.contains("G1 X2 F60\nM73 P99 R0\nM622"), "{output}");
 }
 #[test]
+fn non_bbl_g29_counts_the_bed_leveling_delay_without_m622_markers() {
+    let output = b"M73 P0 R0\nG28\nG29 ;Auto bed leveling detecting\nM109 S220\nM204 S1000\nG1 X600 F3600\nM73 P100 R0\n"
+        .to_vec();
+
+    let output =
+        String::from_utf8(process(output, true, 0.0, 0.0, ProcessorLimits::default())).unwrap();
+
+    assert!(output.contains("M73 P0 R4\n"), "{output}");
+}
+
+#[test]
+fn bbl_g29_counts_the_bed_leveling_delay_only_inside_m622_j1() {
+    let gated = b"M73 P0 R0\nM622 J1\nG29\nM623\nM204 S1000\nG1 X600 F3600\nM73 P100 R0\n".to_vec();
+    let ungated = b"M73 P0 R0\nG29\nM204 S1000\nG1 X600 F3600\nM73 P100 R0\n".to_vec();
+
+    let measured =
+        String::from_utf8(process(gated.to_vec(), true, 0.0, 0.0, bbl_limits())).unwrap();
+    let skipped = String::from_utf8(process(ungated, true, 0.0, 0.0, bbl_limits())).unwrap();
+
+    assert!(measured.contains("M73 P0 R4\n"), "{measured}");
+    assert!(skipped.contains("M73 P0 R0\n"), "{skipped}");
+}
+
+#[test]
 fn preparation_time_ends_at_first_print_feature() {
     let output = b"; model printing time: 0s; total estimated time: 0s\n; estimated first layer printing time (normal mode) = 0s\nM73 P0 R0\n; FEATURE: Custom\nM204 S1000\nG1 X600 F3600\n; FEATURE: Inner wall\nG1 X1200 F3600\nM73 P100 R0\n".to_vec();
 

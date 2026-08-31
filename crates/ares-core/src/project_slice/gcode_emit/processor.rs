@@ -182,10 +182,16 @@ impl Estimate {
                 measure_g29_time = false;
             }
             let is_g29 = code.starts_with("G29") && !code.starts_with("G29.");
-            let delay = (!is_g29 || measure_g29_time)
-                .then(|| command_delay(code))
-                .flatten();
-            if synchronizes_planner(code, is_g29 && measure_g29_time) {
+            // Orca counts the hardcoded 260s G29 bedding delay on every
+            // machine; the M622 J1 gate only applies to BBL printers
+            // (`GCodeProcessor.cpp:4859-4869`).
+            let bbl_gating_blocks_delay = limits.bbl_printer && !measure_g29_time;
+            let delay = match is_g29 {
+                true if bbl_gating_blocks_delay => None,
+                _ => command_delay(code),
+            };
+            let measured_g29 = is_g29 && !bbl_gating_blocks_delay;
+            if synchronizes_planner(code, measured_g29) {
                 events.push(FlushEvent {
                     block_count: blocks.len(),
                     delay: delay.map(|seconds| PendingDelay {
