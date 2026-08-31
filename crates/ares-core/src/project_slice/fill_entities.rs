@@ -10,6 +10,7 @@ mod plane_path;
 mod simplify;
 #[cfg(test)]
 mod tests;
+mod three_d_honeycomb;
 mod triangles;
 mod types;
 
@@ -189,6 +190,9 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
                 gyroid::append(&mut output, fill, layer.print_z, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::ThreeDHoneycomb) => {
+                three_d_honeycomb::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear

@@ -23,6 +23,7 @@ pub(super) fn validate(
             | ProcessInfillPattern::Triangles
             | ProcessInfillPattern::Cubic
             | ProcessInfillPattern::Gyroid
+            | ProcessInfillPattern::ThreeDHoneycomb
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::ZigZag
     ) {

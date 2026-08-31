@@ -1919,5 +1919,11 @@ external pass also ports `PrintObject.cpp:1736-1904`: per-layer BottomBridge
 caches, full wall-band opening, expanded same-layer top masking, and safety-
 offset Internal/BottomBridge splitting run before fill-surface clipping.
 
+The active sparse path now ports `Fill3DHoneycomb.cpp`'s truncated-octahedron
+waveform, fixed one-millimeter Z module quantization, bbox alignment, clipping,
+and anchoring projection. This removes the LH Stinger capability errors; exact
+parity remains blocked on phase-dependent `chain_or_connect_infill` boundary
+arc selection (currently two extra depositions on affected phases).
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

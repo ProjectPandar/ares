@@ -5,6 +5,7 @@ use crate::{
         gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
         rectilinear::{MonotonicFillParams, fill_monotonic_surface},
+        three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
     geometry::{Point, Polyline},
     project_slice::{
@@ -178,6 +179,25 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     );
                 }
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::ThreeDHoneycomb) => {
+                let params = Honeycomb3dParams {
+                    z,
+                    spacing: fill.params.spacing,
+                    overlap: 0.0,
+                    angle: fill.params.angle,
+                    density: 0.01 * fill.params.density,
+                    multiline: fill.params.multiline,
+                    anchor_length: fill.params.anchor_length,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    dont_sort: false,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_honeycomb_3d(&expolygon, params, traversal.scale)
+                            .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
             SurfaceFillPattern::Configured(
                 ProcessInfillPattern::Rectilinear | ProcessInfillPattern::ZigZag,
             ) => {
@@ -216,7 +236,6 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::SupportCubic
                 | ProcessInfillPattern::Lightning
                 | ProcessInfillPattern::Honeycomb
-                | ProcessInfillPattern::ThreeDHoneycomb
                 | ProcessInfillPattern::LateralHoneycomb
                 | ProcessInfillPattern::LateralLattice
                 | ProcessInfillPattern::TpmsD
