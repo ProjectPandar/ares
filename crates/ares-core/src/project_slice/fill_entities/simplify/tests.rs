@@ -1,4 +1,6 @@
-use super::simplify_extrusion_path;
+use super::{simplify_extrusion_path, simplify_fill_path};
+use crate::geometry::{Point, Polyline};
+use crate::project_slice::fill_entities::FillExtrusionPath;
 use crate::project_slice::perimeters::classic::materialize::{
     ExtrusionPath, ExtrusionRole, Point3, Polyline3,
 };
@@ -32,6 +34,28 @@ fn post_clip_corner_removes_sub_resolution_penultimate_point() {
             point(-3_899_819, 3_962_791),
         ]
     );
+}
+
+#[test]
+fn reversed_source_orientation_preserves_direction_sensitive_dp_vertex() {
+    let points = [(15, 3), (12, 6), (9, 2), (6, 3), (3, 7), (0, 3)].map(|(x, y)| Point::new(x, y));
+    let path = || FillExtrusionPath {
+        polyline: Polyline::new(points.to_vec()),
+        fitting: Vec::new(),
+        role: crate::ExtrusionRole::BottomSurface,
+        mm3_per_mm: 0.08,
+        width: 0.4,
+        height: 0.2,
+    };
+    let mut forward = path();
+    let mut reversed = path();
+
+    simplify_fill_path(&mut forward, 2.0, false);
+    simplify_fill_path(&mut reversed, 2.0, true);
+
+    assert_eq!(forward.polyline.points().len(), 5);
+    assert_eq!(reversed.polyline.points().len(), 6);
+    assert_eq!(reversed.polyline.points(), points);
 }
 
 const fn point(x: i64, y: i64) -> Point3 {

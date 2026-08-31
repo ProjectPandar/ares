@@ -86,6 +86,7 @@ pub(super) fn append(
                 pattern,
                 ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
             ),
+            simplify_reversed: false,
         });
     }
     Ok(())

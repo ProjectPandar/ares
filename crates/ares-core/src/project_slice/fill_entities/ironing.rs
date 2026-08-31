@@ -104,6 +104,7 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                 })
                 .collect(),
             no_sort: true,
+            simplify_reversed: false,
         });
     }
     Ok(())

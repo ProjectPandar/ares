@@ -51,10 +51,12 @@ fn sortable_fill_collections_flatten_before_island_print_ordering() {
                     path(Point::new(4, 8), Point::new(8, 8)),
                 ],
                 no_sort: false,
+                simplify_reversed: false,
             },
             FillExtrusionCollection {
                 entities: vec![path(Point::new(-2, 0), Point::new(2, 0))],
                 no_sort: true,
+                simplify_reversed: false,
             },
         ],
         ..LayerFillEntities::default()

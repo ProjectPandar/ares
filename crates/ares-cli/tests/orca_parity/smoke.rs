@@ -43,6 +43,11 @@ fn orca_parity_fuzzy_skin_enum_smoke() {
 }
 
 #[test]
+fn orca_parity_bottom_hilbert_smoke() {
+    assert_process_option_smoke("bottom_surface_pattern", "hilbertcurve");
+}
+
+#[test]
 fn orca_parity_extra_bridge_layer_smoke() {
     for value in [
         "apply_to_all",
@@ -76,6 +81,11 @@ fn orca_parity_staggered_inner_seams_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("staggered_inner_seams", value);
     }
+}
+
+#[test]
+fn orca_parity_skirt_loops_max_smoke() {
+    assert_process_option_smoke("skirt_loops", "10");
 }
 
 #[test]

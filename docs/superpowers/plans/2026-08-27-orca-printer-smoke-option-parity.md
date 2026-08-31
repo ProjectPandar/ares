@@ -1906,7 +1906,10 @@ instead of the monotonic ant-chain branch. The top Rectilinear value passes
 focused Orca movement parity, and its previously rejected bridge projection is
 accepted. Standard configured Concentric also applies the authoritative Linux
 2.4.2 one-spacing short-branch filter at the upstream uninitialized POD seam;
-the full sweep is the runtime oracle for this source-undefined field.
+the full sweep is the runtime oracle for this source-undefined field. Bottom
+Hilbert simplification now follows the source pre-simplification orientation,
+retaining its direction-sensitive DP vertex; the focused Hilbert artifact is
+exact, while the adjacent bottom Octagram ordering remains deferred.
 
 The internal second-bridge pass now ports `PrintObject.cpp:3391-3560` with a
 two-phase source cache, solid-width opening, safety-offset overlap/leftover

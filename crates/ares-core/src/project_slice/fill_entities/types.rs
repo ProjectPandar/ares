@@ -26,6 +26,7 @@ pub(in crate::project_slice) enum FillExtrusionEntity {
 pub(in crate::project_slice) struct FillExtrusionCollection {
     pub(in crate::project_slice) entities: Vec<FillExtrusionEntity>,
     pub(in crate::project_slice) no_sort: bool,
+    pub(in crate::project_slice) simplify_reversed: bool,
 }
 
 #[derive(Debug, Default, PartialEq)]

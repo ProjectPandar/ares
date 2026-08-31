@@ -15,6 +15,7 @@ fn task22o95_orders_first_and_later_layer_phases_from_option() {
             FillExtrusionCollection {
                 entities: Vec::new(),
                 no_sort: true,
+                simplify_reversed: false,
             },
         )],
         perimeters: vec![ExtrusionEntityCollection::default()],

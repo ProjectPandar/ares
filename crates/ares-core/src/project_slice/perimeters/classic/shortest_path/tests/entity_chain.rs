@@ -85,6 +85,7 @@ fn collection(endpoints: &[(i64, i64)], no_sort: bool) -> FillExtrusionCollectio
             })
             .collect(),
         no_sort,
+        simplify_reversed: false,
     }
 }
 

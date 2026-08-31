@@ -67,6 +67,7 @@ pub(super) fn append(
             output.collections.push(FillExtrusionCollection {
                 entities,
                 no_sort: true,
+                simplify_reversed: false,
             });
         }
     }
@@ -130,6 +131,7 @@ pub(super) fn append_configured(
             output.collections.push(FillExtrusionCollection {
                 entities,
                 no_sort: true,
+                simplify_reversed: false,
             });
         }
     }

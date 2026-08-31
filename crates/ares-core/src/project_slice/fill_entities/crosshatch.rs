@@ -48,6 +48,7 @@ pub(super) fn append(
                 })
                 .collect(),
             no_sort: false,
+            simplify_reversed: false,
         });
     }
     Ok(())
