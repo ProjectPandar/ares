@@ -199,6 +199,12 @@ fn wipe_moves(state: &EmitState) -> WipePath {
         .map(|(_, length)| length)
         .sum::<f64>()
         .min(configured_distance);
+    if std::env::var_os("ARES_WIPE_DEBUG").is_some() {
+        eprintln!(
+            "WIPE_PATH_DEBUG points={points:?} total={total_length:.17} cfg={configured_distance:.17} clip_left={clip:.17} start_mm=({:.6},{:.6})",
+            start.x, start.y
+        );
+    }
     WipePath {
         segments,
         retraction_distance,

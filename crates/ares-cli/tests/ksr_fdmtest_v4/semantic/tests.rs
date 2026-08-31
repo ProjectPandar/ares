@@ -161,14 +161,27 @@ fn wipe_and_retraction_lifecycle_must_match() {
 }
 
 #[test]
-fn wipe_extrusion_last_decimal_drift_is_rejected() {
+fn wipe_extrusion_drift_beyond_one_formatting_step_is_rejected() {
     let expected_island = lifecycle_island(0, 1, ".1");
-    let actual_island = expected_island.replace("E-.05 F1200", "E-.05001 F1200");
+    let actual_island = expected_island.replace("E-.05 F1200", "E-.0501 F1200");
     let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
     let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
 
     let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
     assert!(error.contains("island lifecycle differs"), "{error}");
+}
+
+#[test]
+fn wipe_extrusion_last_decimal_drift_is_tolerated() {
+    // The wipe distributes a fixed retraction over the just-printed path, so
+    // sub-micron perimeter geometry — invisible at the emitted 3-decimal
+    // coordinates — can flip the 5th decimal of one segment.
+    let expected_island = lifecycle_island(0, 1, ".1");
+    let actual_island = expected_island.replace("E-.05 F1200", "E-.05001 F1200");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
 }
 
 #[test]

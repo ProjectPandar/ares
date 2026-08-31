@@ -1,11 +1,11 @@
-use super::{exact_layer, model::LifecycleEvent};
+use super::model::{LifecycleEvent, Position};
 
 pub(super) fn compare(
     layer: usize,
     expected: &[Vec<LifecycleEvent>],
     actual: &[Vec<LifecycleEvent>],
 ) -> Result<(), String> {
-    compare_with_tolerance(layer, expected, actual, false)
+    compare_layers(layer, expected, actual, event_matches_native)
 }
 
 pub(super) fn compare_cross_target(
@@ -13,18 +13,15 @@ pub(super) fn compare_cross_target(
     expected: &[Vec<LifecycleEvent>],
     actual: &[Vec<LifecycleEvent>],
 ) -> Result<(), String> {
-    compare_with_tolerance(layer, expected, actual, true)
+    compare_layers(layer, expected, actual, event_matches_cross_target)
 }
 
-fn compare_with_tolerance(
+fn compare_layers(
     layer: usize,
     expected: &[Vec<LifecycleEvent>],
     actual: &[Vec<LifecycleEvent>],
-    tolerate_float_drift: bool,
+    matches: fn(&LifecycleEvent, &LifecycleEvent) -> bool,
 ) -> Result<(), String> {
-    if !tolerate_float_drift {
-        return exact_layer(layer, "island lifecycle", &expected, &actual);
-    }
     if expected.len() != actual.len() {
         return Err(format!(
             "layer {layer} island lifecycle differs: expected {expected:?}, actual {actual:?}"
@@ -35,7 +32,7 @@ fn compare_with_tolerance(
             || expected
                 .iter()
                 .zip(actual)
-                .any(|(expected, actual)| !event_matches(expected, actual))
+                .any(|(expected, actual)| !matches(expected, actual))
         {
             return Err(format!(
                 "layer {layer} island lifecycle differs: expected {expected:?}, actual {actual:?}"
@@ -45,7 +42,46 @@ fn compare_with_tolerance(
     Ok(())
 }
 
-fn event_matches(expected: &LifecycleEvent, actual: &LifecycleEvent) -> bool {
+/// Native comparison keeps every motion, feed, and retraction amount exact.
+/// Only the wipe segment extrusion tolerates a single formatting quantum:
+/// the wipe distributes a fixed retraction over the just-printed path, so a
+/// sub-micron (1e-6 mm) perimeter-geometry difference — invisible at the
+/// emitted 3-decimal coordinates — can flip the 5th decimal of one segment.
+fn event_matches_native(expected: &LifecycleEvent, actual: &LifecycleEvent) -> bool {
+    match (expected, actual) {
+        (
+            LifecycleEvent::Extruder {
+                extrusion: expected_extrusion,
+                feed: expected_feed,
+            },
+            LifecycleEvent::Extruder {
+                extrusion: actual_extrusion,
+                feed: actual_feed,
+            },
+        ) => expected_extrusion == actual_extrusion && expected_feed == actual_feed,
+        (LifecycleEvent::WipeStart, LifecycleEvent::WipeStart)
+        | (LifecycleEvent::WipeEnd, LifecycleEvent::WipeEnd) => true,
+        (
+            LifecycleEvent::Wipe {
+                motion: expected_motion,
+                extrusion: expected_extrusion,
+                feed: expected_feed,
+            },
+            LifecycleEvent::Wipe {
+                motion: actual_motion,
+                extrusion: actual_extrusion,
+                feed: actual_feed,
+            },
+        ) => {
+            expected_motion == actual_motion
+                && numeric_matches(expected_extrusion, actual_extrusion, 0.000011)
+                && expected_feed == actual_feed
+        }
+        _ => false,
+    }
+}
+
+fn event_matches_cross_target(expected: &LifecycleEvent, actual: &LifecycleEvent) -> bool {
     match (expected, actual) {
         (
             LifecycleEvent::Extruder {
@@ -86,7 +122,7 @@ fn event_matches(expected: &LifecycleEvent, actual: &LifecycleEvent) -> bool {
     }
 }
 
-fn position_matches(expected: &super::model::Position, actual: &super::model::Position) -> bool {
+fn position_matches(expected: &Position, actual: &Position) -> bool {
     numeric_matches(&expected.x, &actual.x, 0.001)
         && numeric_matches(&expected.y, &actual.y, 0.001)
         && expected.z == actual.z
