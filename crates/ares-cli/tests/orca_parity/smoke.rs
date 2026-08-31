@@ -67,6 +67,11 @@ fn orca_parity_gap_fill_target_smoke() {
 }
 
 #[test]
+fn orca_parity_top_concentric_smoke() {
+    assert_process_option_smoke("top_surface_pattern", "concentric");
+}
+
+#[test]
 fn orca_parity_top_rectilinear_smoke() {
     assert_process_option_smoke("top_surface_pattern", "rectilinear");
 }

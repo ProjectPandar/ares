@@ -1904,9 +1904,10 @@ Plain Rectilinear and AlignedRectilinear fills now take
 `FillRectilinear.cpp::traverse_graph_generate_polylines`'s sweep traversal
 instead of the monotonic ant-chain branch. The top Rectilinear value passes
 focused Orca movement parity, and its previously rejected bridge projection is
-accepted. Standard configured Concentric also applies the authoritative Linux
-2.4.2 one-spacing short-branch filter at the upstream uninitialized POD seam;
-the full sweep is the runtime oracle for this source-undefined field. Bottom
+accepted. Standard configured Concentric retains the short center branch at
+the repeated standalone Linux 2.4.2 runtime value for the upstream
+uninitialized POD field; one full sweep produced the alternate stack-dependent
+result and remains invalid as a deterministic oracle for this field. Bottom
 Hilbert simplification now follows the source pre-simplification orientation,
 retaining its direction-sensitive DP vertex; the focused Hilbert artifact is
 exact, while the adjacent bottom Octagram ordering remains deferred.

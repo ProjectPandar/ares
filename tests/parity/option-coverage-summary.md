@@ -36,7 +36,7 @@
 | PASS | bottom_solid_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1377 |  |
 | PASS | bottom_surface_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:6764 |  |
 | PASS | bottom_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5799 |  |
-| FAIL | bottom_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2097 | hilbertcurve: layer 1 deposition count differs: expected 418, actual 417 |
+| FAIL | bottom_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2097 | octagramspiral: layer 1 deposition 7 differs: expected Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "112.262", z: "0.2" }, end: Position { x: "107.738", y: "112.262", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.053", feed: 2100.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "106.013", y: "111.885", z: "0.2" }, end: Position { x: "108.115", y: "111.885", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.06458", feed: 2100.0, acceleration: "500", fans: "0:0" } |
 | PASS | bridge_acceleration | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3224 |  |
 | PASS | bridge_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1250 |  |
 | PASS | bridge_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1292 |  |
@@ -510,7 +510,7 @@
 | PASS | sparse_infill_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4127 |  |
 | PASS | sparse_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1434 |  |
 | PASS | sparse_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:4136 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
-| FAIL | sparse_infill_pattern | coEnum | 26 | 26 | 0 | src/libslic3r/PrintConfig.cpp:3017 | 3dhoneycomb: unsupported project feature: sparse_infill_pattern |
+| FAIL | sparse_infill_pattern | coEnum | 26 | 26 | 0 | src/libslic3r/PrintConfig.cpp:3017 | 3dhoneycomb: layer 6 deposition count differs: expected 25, actual 27 |
 | PASS | sparse_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3993 |  |
 | PASS | sparse_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4174 |  |
 | PASS | spiral_finishing_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5868 |  |
@@ -586,7 +586,7 @@
 | PASS | top_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5790 |  |
 | PASS | top_surface_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3326 |  |
 | PASS | top_surface_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:6709 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
-| FAIL | top_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2074 | concentric: layer 50 deposition count differs: expected 52, actual 57 |
+| FAIL | top_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2074 | concentric: layer 50 deposition count differs: expected 57, actual 52 |
 | PASS | top_surface_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6721 |  |
 | PASS | travel_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3197 |  |
 | PASS | travel_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3353 |  |
