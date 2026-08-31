@@ -21,6 +21,7 @@ use super::{
     filament_sequence::FilamentSequences,
     model_settings::ModelSettings,
     plate::PlateJson,
+    raw_settings::ProjectSettingsRaw,
     relationships::{
         COVER_THUMBNAIL_MIDDLE_RELATIONSHIP_TYPE, COVER_THUMBNAIL_SMALL_RELATIONSHIP_TYPE,
         MODEL_RELATIONSHIP_TYPE, Relationships, THUMBNAIL_RELATIONSHIP_TYPE,
@@ -102,7 +103,7 @@ pub fn load_project(input: impl AsRef<[u8]>) -> Result<Project, SliceError> {
         PROJECT_SETTINGS_PATH,
         JsonRole::ProjectSettings,
     )?;
-    let project_settings_raw: std::collections::BTreeMap<String, serde_json::Value> =
+    let project_settings_raw: ProjectSettingsRaw =
         serde_json::from_slice(&read(&mut archive, PROJECT_SETTINGS_PATH)?).map_err(|error| {
             SliceError::InvalidInput(format!("invalid {PROJECT_SETTINGS_PATH}: {error}"))
         })?;

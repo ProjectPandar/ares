@@ -7,6 +7,7 @@ use super::{
     value::serialize_config_value,
 };
 use crate::options::project_config_views::ProjectConfigViews;
+use crate::project::raw_settings::ProjectSettingsRaw;
 
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
 const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
@@ -24,7 +25,7 @@ const BANNED_KEYS: [&str; 9] = [
 
 pub(crate) fn write_config_block(
     views: &ProjectConfigViews,
-    raw_settings: &std::collections::BTreeMap<String, serde_json::Value>,
+    raw_settings: &ProjectSettingsRaw,
     plate_index: usize,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
@@ -49,7 +50,7 @@ pub(crate) fn write_canonical_entries(
     settings: &ProjectSettings,
     plate_index: usize,
     entries: &[ConfigEntry],
-    raw_settings: &std::collections::BTreeMap<String, serde_json::Value>,
+    raw_settings: &ProjectSettingsRaw,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
     // Orca emits the full config keys: every static FullPrintConfig key
@@ -96,17 +97,17 @@ pub(crate) fn write_canonical_entries(
         }
         emit(&mut lines, &entry.key, entry.token.clone(), entry.is_nil);
     }
-    for (key, raw) in raw_settings {
-        if matches!(key.as_str(), "from" | "name" | "version") {
+    for (key, token) in raw_settings.iter() {
+        if matches!(key, "from" | "name" | "version") {
             continue;
         }
-        if lines.iter().any(|(existing, _)| existing == key) {
+        if lines.iter().any(|(existing, _)| existing.as_str() == key) {
             continue;
         }
-        let Some(rendered) = serialize_raw_value(raw) else {
+        let Some(rendered) = token else {
             continue;
         };
-        emit(&mut lines, key, rendered, false);
+        emit(&mut lines, key, rendered.to_owned(), false);
     }
     // Orca iterates a sorted key map; a stable sort keeps the duplicated
     // wipe-tower origin lines adjacent like upstream.
@@ -115,31 +116,6 @@ pub(crate) fn write_canonical_entries(
         append_line(output, &key, &token);
     }
     Ok(())
-}
-
-/// Serializes a raw 3MF config value; `None` for `nil` placeholders.
-fn serialize_raw_value(value: &serde_json::Value) -> Option<String> {
-    match value {
-        serde_json::Value::String(text) => (text != "nil").then(|| text.clone()),
-        serde_json::Value::Array(values) => {
-            let rendered: Vec<String> = values
-                .iter()
-                .filter_map(|item| match item {
-                    serde_json::Value::String(text) if text != "nil" => Some(text.clone()),
-                    serde_json::Value::Number(number) => Some(number.to_string()),
-                    _ => None,
-                })
-                .collect();
-            (!rendered.is_empty()).then(|| rendered.join(";"))
-        }
-        serde_json::Value::Number(number) => Some(number.to_string()),
-        serde_json::Value::Bool(flag) => Some(if *flag {
-            "1".to_owned()
-        } else {
-            "0".to_owned()
-        }),
-        _ => None,
-    }
 }
 
 fn write_runtime_tail(runtime: &ProjectSettings, output: &mut Vec<u8>) -> Result<(), SliceError> {

@@ -1,6 +1,6 @@
 use crate::project::{
     filament_sequence::FilamentSequences, model_settings::ModelSettings, plate::PlateJson,
-    slice_info::SliceInfo,
+    raw_settings::ProjectSettingsRaw, slice_info::SliceInfo,
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -28,7 +28,7 @@ pub(crate) struct ProjectDocuments {
     pub model_settings: ModelSettings,
     /// Raw `Metadata/project_settings.config` key/values, used to drive the
     /// config block key set (`GCode::append_full_config`).
-    pub project_settings_raw: std::collections::BTreeMap<String, serde_json::Value>,
+    pub project_settings_raw: ProjectSettingsRaw,
     pub slice_info: SliceInfo,
     pub filament_sequences: FilamentSequences,
     pub plate_documents: Vec<PlateJson>,
