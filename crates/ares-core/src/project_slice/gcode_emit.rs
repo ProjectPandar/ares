@@ -288,14 +288,14 @@ pub(super) fn emit(
             } else {
                 motion::end_layer_for_timelapse(&mut output, &mut state);
             }
-            if !timelapse_inserted && !timelapse_at_layer_change {
-                if traditional_timelapse {
-                    // `GCode.cpp:5538-5546` `add_object_change_labels`: pending
-                    // object-end labels flush before the layer-end template.
-                    motion::append_exclude_end(&mut output, &mut state);
-                }
-                timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
-            }
+            append_layer_end_timelapse(
+                &mut output,
+                &mut state,
+                timelapse_inserted,
+                timelapse_at_layer_change,
+                traditional_timelapse,
+                timelapse_context,
+            )?;
             spiral.process_layer(
                 &mut output,
                 spiral_vase::Layer {
@@ -381,6 +381,29 @@ pub(super) fn emit(
         },
     ))
 }
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the layer-end timelapse branch mirrors the Orca insertion flags"
+)]
+fn append_layer_end_timelapse(
+    output: &mut Vec<u8>,
+    state: &mut motion::EmitState,
+    inserted: bool,
+    at_layer_change: bool,
+    traditional: bool,
+    context: timelapse::Context<'_>,
+) -> Result<(), SliceError> {
+    if inserted || at_layer_change {
+        return Ok(());
+    }
+    if traditional {
+        // `GCode.cpp:5538-5546` `add_object_change_labels`: pending
+        // object-end labels flush before the layer-end template.
+        motion::append_exclude_end(output, state);
+    }
+    timelapse::append_and_track(output, state, context)
+}
+
 pub(super) fn format_processor_float(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();
