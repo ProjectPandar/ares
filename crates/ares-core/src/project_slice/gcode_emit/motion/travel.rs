@@ -9,7 +9,9 @@ use super::{
     EmitState, arc, extrusion,
     format::{axis as format_axis, extrusion as format_extrusion},
 };
-pub(super) use lift::{emit_pending as emit_pending_lift, is_allowed as lift_is_allowed};
+pub(super) use lift::{
+    emit_pending as emit_pending_lift, is_allowed as lift_is_allowed, mode_for as lift_mode_for,
+};
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);

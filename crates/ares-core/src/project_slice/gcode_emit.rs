@@ -197,7 +197,12 @@ pub(super) fn emit(
             // retract/wipe, before the layer-change gcode
             // (`GCode.cpp:5699` `change_layer`).
             motion::append_exclude_end(&mut output, &mut state);
-            if layer_index == 0 {
+            // The layer-start retraction mirrors the `change_layer`/BBS
+            // layer-start retract, which is gated on
+            // `retract_when_changing_layer` (`GCode.cpp:5206`, `GCode.cpp:5693`);
+            // flavors with the flag off retract lazily at the first travel
+            // instead.
+            if layer_index == 0 && state.options.retract_when_changing_layer {
                 motion::retract_before_layer(&mut output, &mut state);
             }
             if timelapse_at_layer_change {

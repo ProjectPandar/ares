@@ -7,12 +7,22 @@ pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
     if state.options.z_hop <= 0.0 || !is_allowed(state) {
         return;
     }
-    state.pending_lift = Some(match state.options.z_hop_type {
+    state.pending_lift = Some(mode_for(state, layer_change));
+}
+
+/// The `LiftMode` a retract at this state schedules; shared with the
+/// first-travel emission, which may run after a retraction that fired
+/// before any lift could be scheduled.
+pub(in crate::project_slice::gcode_emit) fn mode_for(
+    state: &EmitState,
+    layer_change: bool,
+) -> LiftMode {
+    match state.options.z_hop_type {
         crate::ZHopType::Auto if layer_change => LiftMode::Spiral,
         crate::ZHopType::Auto | crate::ZHopType::Slope => LiftMode::Slope,
         crate::ZHopType::Normal => LiftMode::Normal,
         crate::ZHopType::Spiral => LiftMode::Spiral,
-    });
+    }
 }
 
 fn height_is_allowed(state: &EmitState) -> bool {

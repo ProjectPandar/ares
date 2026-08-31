@@ -1,6 +1,6 @@
 use super::{PathProperties, retraction, travel_emit};
 use crate::project_slice::gcode_emit::motion::{
-    EmitState, LayerGeometry, append_object_start, arc, begin_path_travel, extrusion,
+    EmitState, LayerGeometry, LiftMode, append_object_start, arc, begin_path_travel, extrusion,
     format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
     travel,
 };
@@ -60,13 +60,23 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             properties.is_perimeter,
             inside_internal_surface,
         );
-        let retract = !first_position
-            && !state.retracted
+        // Orca decides the travel retraction purely on distance, role, and
+        // overhang crossing (`GCode.cpp:7359`, `needs_retraction`); the very
+        // first travel of the print retracts the same way when it is long
+        // enough (the `; printing object` label precedes it and the queued
+        // `M486 S<n>` flushes after the retraction, `GCode.cpp:7467`).
+        let retract = !state.retracted
             && travel_distance >= state.options.retraction_minimum_travel
             && !skip_retraction;
         if retract {
             travel::retract_and_lift(output, state);
         }
+        // TODO(port): Orca arms the boundary on every layer
+        // (`GCode.cpp:5345-5347`) and routes the object's first travel with
+        // the external-only planner (`use_external_mp_once`, direct when the
+        // destination lies inside the external contour). The rectangle
+        // router below does not model that yet, so keep the first layer
+        // direct until `AvoidCrossingPerimeters` is ported.
         let mut route = if state.options.reduce_crossing_wall
             && state.layer_index > 0
             && !matches!(properties.feature, "Skirt" | "Brim")
@@ -102,14 +112,25 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         // layer-end timelapse retract, a deferred layer-change lift) travels
         // flat in XY and the unlift descends at the destination.
         let lifted_for_travel = state.pending_lift.is_some();
-        travel::emit_pending_lift(
-            output,
-            arc::Point {
-                x: travel_x,
-                y: travel_y,
-            },
-            state,
-        );
+        // The print's first travel has no known source position, so Orca
+        // cannot slope/spiral from it (`GCodeWriter.cpp:travel_to_xyz`
+        // skips those branches when `is_current_position_clear()` is
+        // false). A pending normal lift still raises before the XY move
+        // (`NormalLift` `slop_move`), and both paths end with the separate
+        // `_travel_to_z` re-statement from the unclear-position branch.
+        let first_travel_lift = if first_position {
+            state.pending_lift.take()
+        } else {
+            travel::emit_pending_lift(
+                output,
+                arc::Point {
+                    x: travel_x,
+                    y: travel_y,
+                },
+                state,
+            );
+            None
+        };
         if state.spiral_vase
             && state.lifted
             && !first_position
@@ -172,9 +193,8 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             && state.options.z_hop > 0.0
             && travel::lift_is_allowed(state)
         {
-            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
-                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
-            } else {
+            let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
+            if mode == LiftMode::Normal {
                 output.extend_from_slice(
                     format!(
                         "G1 Z{} F{}\n",
@@ -183,12 +203,15 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                     )
                     .as_bytes(),
                 );
-                output.extend_from_slice(
-                    format!("G1 X{} Y{}\n", format_axis(travel_x), format_axis(travel_y))
-                        .as_bytes(),
-                );
-                state.lifted = true;
+                state.current_feedrate = state.travel_feedrate;
+                travel_emit::xy_without_feed(output, travel_x, travel_y);
+            } else {
+                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             }
+            output.extend_from_slice(
+                format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
+            );
+            state.lifted = true;
         } else if layer_change_travel {
             if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
