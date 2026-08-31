@@ -43,6 +43,11 @@ fn orca_parity_fuzzy_skin_enum_smoke() {
 }
 
 #[test]
+fn orca_parity_internal_octagram_smoke() {
+    assert_process_option_smoke("internal_solid_infill_pattern", "octagramspiral");
+}
+
+#[test]
 fn orca_parity_bottom_hilbert_smoke() {
     assert_process_option_smoke("bottom_surface_pattern", "hilbertcurve");
 }

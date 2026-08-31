@@ -1,9 +1,23 @@
+mod advanced;
+mod two_exchange;
+
 use super::chain::chain_multiple;
 use crate::geometry::Polyline;
 
 /// `chain_polylines` from OrcaSlicer 2.4.2 `ShortestPath.cpp:1968-1994`,
-/// using the existing all-paths-reversible shortest-path seam.
+/// including greedy2 chaining and the reached two-exchange flipping pass.
 pub(crate) fn chain_polylines(polylines: &mut Vec<Polyline>) {
+    reorder(polylines, |positions| advanced::chain(positions, None));
+    two_exchange::improve(polylines);
+}
+
+/// Compatibility seam for plane-path patterns whose Clipper 6 OutRec order is
+/// still deferred; preserves their already verified movement output.
+pub(crate) fn chain_polylines_multifragment(polylines: &mut Vec<Polyline>) {
+    reorder(polylines, |positions| chain_multiple(positions, None));
+}
+
+fn reorder(polylines: &mut Vec<Polyline>, chain: impl FnOnce(&[[f64; 2]]) -> Vec<(usize, bool)>) {
     if polylines.len() < 2 {
         return;
     }
@@ -16,7 +30,7 @@ pub(crate) fn chain_polylines(polylines: &mut Vec<Polyline>) {
             ]
         })
         .collect::<Vec<_>>();
-    let chain = chain_multiple(&positions, None);
+    let chain = chain(&positions);
     let mut source = std::mem::take(polylines)
         .into_iter()
         .map(Some)

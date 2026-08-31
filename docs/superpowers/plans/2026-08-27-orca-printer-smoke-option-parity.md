@@ -1910,7 +1910,11 @@ uninitialized POD field; one full sweep produced the alternate stack-dependent
 result and remains invalid as a deterministic oracle for this field. Bottom
 Hilbert simplification now follows the source pre-simplification orientation,
 retaining its direction-sensitive DP vertex; the focused Hilbert artifact is
-exact, while the adjacent bottom Octagram ordering remains deferred.
+exact. Internal Octagram now also matches: its active path ports Clipper 6
+open-intersection double rounding and scanbeam output order, then
+`ShortestPath.cpp::chain_segments_greedy2` and the reached two-exchange
+segment-flipping pass. The focused internal enum value is exact, while bottom
+and top Octagram lifecycle/order remain deferred.
 
 The internal second-bridge pass now ports `PrintObject.cpp:3391-3560` with a
 two-phase source cache, solid-width opening, safety-offset overlap/leftover

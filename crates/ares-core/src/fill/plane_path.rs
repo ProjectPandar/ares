@@ -1,6 +1,7 @@
 //! Source-cited rewrite of OrcaSlicer 2.4.2 `Fill/FillPlanePath.cpp/.hpp`.
 
 mod bounds;
+mod classic_clip;
 mod generate;
 mod ordering;
 mod output;
@@ -139,7 +140,11 @@ fn fill_component(
         scale,
     )?;
     let clip = expolygon_polygons(&rotated);
-    let clipped = intersection_open_polylines(&polylines, &clip)?;
+    let clipped = if pattern == PlanePathPattern::OctagramSpiral {
+        classic_clip::intersect(&polylines, &clip)?
+    } else {
+        intersection_open_polylines(&polylines, &clip)?
+    };
     if clipped.is_empty() {
         return Ok(Vec::new());
     }

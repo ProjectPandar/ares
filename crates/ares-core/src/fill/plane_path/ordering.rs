@@ -1,7 +1,7 @@
 use super::PlanePathPattern;
 use crate::{
     geometry::{Line, Point, Polyline},
-    project_slice::chain_polylines,
+    project_slice::{chain_polylines, chain_polylines_multifragment},
 };
 
 pub(super) fn chain(
@@ -11,8 +11,10 @@ pub(super) fn chain(
 ) {
     if calibration_order && pattern == PlanePathPattern::ArchimedeanChords {
         order_calibration_archimedean(polylines);
-    } else {
+    } else if pattern == PlanePathPattern::OctagramSpiral {
         chain_polylines(polylines);
+    } else {
+        chain_polylines_multifragment(polylines);
     }
 }
 
@@ -34,7 +36,7 @@ fn order_calibration_archimedean(polylines: &mut Vec<Polyline>) {
     {
         center.reverse();
     }
-    chain_polylines(polylines);
+    chain_polylines_multifragment(polylines);
     polylines.push(center);
 }
 
