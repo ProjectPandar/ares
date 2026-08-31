@@ -1,6 +1,4 @@
-use super::{
-    FamilyRequest, MultilineFillParams, Sweep, fill_surface, generate_family, source_base_angle,
-};
+use super::{FamilyRequest, MultilineFillParams, Sweep, fill_surface, generate_family};
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
 
 fn square() -> ExPolygon {
@@ -26,15 +24,6 @@ fn params() -> MultilineFillParams {
         anchor_length_max: 0.01,
         dont_sort: false,
     }
-}
-
-#[test]
-fn source_multiline_base_direction_adds_the_fixed_quarter_turn() {
-    assert_eq!(source_base_angle(0.0), std::f32::consts::FRAC_PI_2);
-    assert_eq!(
-        source_base_angle(std::f32::consts::FRAC_PI_4),
-        3.0 * std::f32::consts::FRAC_PI_4
-    );
 }
 
 #[test]

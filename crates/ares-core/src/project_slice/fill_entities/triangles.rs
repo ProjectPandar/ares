@@ -4,7 +4,7 @@
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, Sweep, fill_surface, source_base_angle},
+    fill::multiline::{MultilineFillParams, Sweep, fill_surface},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
@@ -34,7 +34,7 @@ pub(super) fn append(
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
-        angle: source_base_angle(fill.params.angle),
+        angle: fill.params.angle,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,
