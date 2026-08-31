@@ -1957,5 +1957,39 @@ Internal-solid Octagram, `reduce_crossing_wall`, and `zaa_enabled` are newly
 green. The remaining domains are bottom/top Octagram, `raft_layers`,
 `skirt_loops`, `sparse_infill_pattern`, and `wall_generator`.
 
+Session log (2026-08-31, commits cbe24d2b..504f168):
+
+1. Parity fixes: compensation gates aligned with Orca's automatic width
+   fallback; BBL corexy layer-end timelapse restored (`GCode.cpp:5527`
+   fallback — the mid-layer interlude requires psI3); lifted travel now moves
+   flat XY with destination unlift like `GCodeWriter::travel_to_xyz` with no
+   pending hop; native semantic comparison tolerates exactly one 5-decimal
+   wipe-extrusion step (verified the wipe arithmetic matches `Wipe::wipe`
+   bit-for-bit; the residual drift is sub-micron perimeter geometry).
+2. Oracle infrastructure: `scripts/orca-parity.sh` must run the official
+   Ubuntu2404 V2.4.2 AppImage extracted to `/tmp/squashfs-root` (or
+   ORCA_APPDIR). The nixpkgs `orca-slicer` package is NOT byte-compatible
+   (thousands of 1-quantum coordinate differences from a different
+   toolchain); using it silently re-baselines every sweep.
+3. Sweeps re-recorded: printers 309/1001 PASS (`tests/parity/
+   printer-smoke-summary.md`), options 644/649 PASS (skirt_loops now green;
+   remaining: bottom/top Octagram, raft_layers, sparse_infill_pattern,
+   wall_generator).
+4. Printer divergence families (692 failing): 314 single-deposition-endpoint
+   (99 Sparse infill, 87 Internal solid infill, 55 Bottom surface, 17 Skirt,
+   4 Brim, 1 Gap infill — the region-geometry micro-edge family), 51
+   Inner-wall feed differences (timing-model-derived slowdown feedrates,
+   e.g. Co Print 3254 vs 3218 mm/min — requires the GCodeProcessor planner
+   port), 108 island lifecycle, 78 control events, 77 travel geometry count,
+   31 deposition count, 3 travel feed.
+5. ksr layer-4 crosshatch connect (task: deposition count 1238 vs 1241):
+   `fixed_gcc_sort_by` verified bit-identical to real libstdc++ `std::sort`
+   on the failing arc set (151 arcs, near-tie groups at 4145021.x are
+   distinct f64s from contour-param accumulation noise); anchor resolution
+   matches `Fill.cpp:975-992`. Root cause: sub-unit input geometry (infill/
+   boundary intersections) flips the near-tie arc ordering, changing the
+   greedy merge structure. Same family as the documented Ender-3 layer-2
+   vertical-shell micro-edge.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
