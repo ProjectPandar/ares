@@ -2074,3 +2074,42 @@ the first layer jumps P0→P58 on Eryone ER20: the 260s G29 delay).
   faithful port (external-once first travel, ExPolygon boundary routing);
   the rectangle router is a simplification and the layer-0 gate is a
   documented TODO in `start_travel.rs`.
+
+## 2026-08-31 session (cont): time-model A/B isolates the M73/slowdown root cause
+
+A/B method: run Ares's `Estimate` over **Orca's own reference g-code** (Eryone
+ER20, M73 lines stripped) so both models time the identical move stream, then
+compare the per-line elapsed values at Orca's 46 M73 boundary lines (bounds
+derived from `percent` truncation + `time_in_minutes` rounding against Orca's
+true total, footer `7m 26s` ⇒ t∈[446,447)).
+
+Result: **progressive drift**. Ares matches Orca through the start block
+(P58–P64 all inside bounds), then falls behind monotonically: P74 −2.0s,
+P83 −4.6s, P89 −6.1s, P95 −7.8s, P99 −8.5s (total 438.4 vs ~446.9). The
+deficit accumulates across the mid-print wall/infill moves (~3.4ms per move)
+— a systematic junction/cruise-time difference in the planner, not a missing
+fixed delay (G29/M191/G4/G92-sync are all modeled).
+
+Why this matters: this single drift drives
+- the `layer 1/2 deposition 1` sweep family (54+40 printers: the cooling
+  slowdown feedrates inherit it, e.g. H2S expected F3188 vs actual F3215 with
+  everything else identical),
+- the ksr `R108` vs `R109` M73 residue,
+- the Eryone-class M73 sub-percent placements.
+
+NEXT (well-scoped): block-level A/B of the planner — feed synthetic move
+sequences (wall/infill junctions with M204 P/T switches, M205 jerk) through
+Ares's `RollingPlanner` and the Orca `TimeMachine` math (reverse pass, forward
+pass, `recalculate_trapezoids`) extracted verbatim, and fix the first
+diverging block class. Suspects: E-axis limiting in `safe_speed`, junction
+acceleration choice between blocks with different M204 accelerations, and
+trapezoid recalculation across flushed segments.
+
+Also recorded: ksr layer-4 deposition count (expected 1238, actual 1241)
+localizes to a thin diagonal sliver of the sparse-infill region: Ares clips
+the crosshatch column at world (166.532, 127.132) where Orca continues to
+124.615 (the sliver edge crossing differs; walls bounding the region are
+byte-identical). That is the Clipper-offset/mesher precision workstream —
+needs its own milestone (the `ARES_DEBUG_CROSSHATCH` env-dump technique in
+`fill/cross_hatch.rs` reproduces the clipped/connected polyline sets for
+triage; the hook was removed after use).
