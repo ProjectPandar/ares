@@ -56,6 +56,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
     pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
         Option<super::arc::Point>,
+    pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
 }
 
 #[derive(Clone, Copy)]

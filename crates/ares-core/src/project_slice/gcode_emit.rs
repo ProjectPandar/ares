@@ -132,6 +132,7 @@ pub(super) fn emit(
     // sequence (`GCode.cpp:5527-5546`).
     let traditional_interlude =
         traditional_timelapse && runtime_gcode.printer_structure == crate::PrinterStructure::I3;
+    state.traditional_timelapse = traditional_timelapse;
     let mut second_layer_done = false;
     let object_count = prepared.objects.len();
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
@@ -292,7 +293,6 @@ pub(super) fn emit(
                 &mut output,
                 &mut state,
                 timelapse_inserted,
-                timelapse_at_layer_change,
                 traditional_timelapse,
                 timelapse_context,
             )?;
@@ -381,19 +381,14 @@ pub(super) fn emit(
         },
     ))
 }
-#[expect(
-    clippy::too_many_arguments,
-    reason = "the layer-end timelapse branch mirrors the Orca insertion flags"
-)]
 fn append_layer_end_timelapse(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
     inserted: bool,
-    at_layer_change: bool,
     traditional: bool,
     context: timelapse::Context<'_>,
 ) -> Result<(), SliceError> {
-    if inserted || at_layer_change {
+    if inserted {
         return Ok(());
     }
     if traditional {

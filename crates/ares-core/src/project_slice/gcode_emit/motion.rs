@@ -59,11 +59,15 @@ pub(super) fn defer_layer_retraction(state: &mut EmitState) {
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
-        if state.tags.is_bbl() {
+        // BBL and traditional timelapse prints retract immediately at the
+        // layer end (`GCode.cpp:5527-5546` fires `retract()` before the
+        // labels and timelapse template); only non-traditional compatible
+        // flavors defer the retraction past the layer marker block.
+        if state.tags.is_bbl() || state.traditional_timelapse {
             travel::retract_for_timelapse(output, state);
         } else {
-            // Compatible flavor defers the retraction past the layer
-            // marker block; `flush_pending_retract_wipe`/`_lift` emit it.
+            // Compatible flavor defers the retraction past the layer marker
+            // block; `flush_pending_retract_wipe`/`_lift` emit it.
             state.pending_layer_retract = true;
         }
     }
