@@ -1919,5 +1919,11 @@ external pass also ports `PrintObject.cpp:1736-1904`: per-layer BottomBridge
 caches, full wall-band opening, expanded same-layer top masking, and safety-
 offset Internal/BottomBridge splitting run before fill-surface clipping.
 
+Grid/Triangles/Cubic multiline families and their bridge-anchor projection now
+apply `Fill::_infill_direction`'s source quarter-turn before per-family sweep
+angles. Grid geometry reaches the exact first compared segment (one extrusion
+rounding unit remains); the remaining multiline connector/shift seams stay in
+the sparse-pattern backlog.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

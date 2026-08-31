@@ -3,7 +3,9 @@ use crate::{
     fill::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
         gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
-        multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
+        multiline::{
+            MultilineFillParams, Sweep, fill_surface as fill_multiline_surface, source_base_angle,
+        },
         rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     },
     geometry::{Point, Polyline},
@@ -87,7 +89,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
                     overlap: 0.0,
-                    angle: fill.params.angle,
+                    angle: source_base_angle(fill.params.angle),
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,
@@ -105,7 +107,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
                     overlap: 0.0,
-                    angle: fill.params.angle,
+                    angle: source_base_angle(fill.params.angle),
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,
@@ -140,7 +142,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
                     overlap: 0.0,
-                    angle: fill.params.angle,
+                    angle: source_base_angle(fill.params.angle),
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,

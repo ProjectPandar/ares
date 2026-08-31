@@ -29,6 +29,10 @@ pub(crate) struct Sweep {
     pub(crate) shift: f32,
 }
 
+pub(crate) fn source_base_angle(angle: f32) -> f32 {
+    angle + std::f32::consts::FRAC_PI_2
+}
+
 pub(crate) fn fill_surface(
     surface: &ExPolygon,
     params: MultilineFillParams,
