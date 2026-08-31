@@ -59,8 +59,14 @@ pub(super) fn find_start_point(points: &[Point], start_angle_deg: f64) -> Point 
             max_y = y;
         }
     }
-    let center_x = (min_x + max_x) as f64 / 2.0;
-    let center_y = (min_y + max_y) as f64 / 2.0;
+    // `Point center((min + max) / 2.)` truncates the half-unit center before
+    // `distance_to` computes the radius.
+    let center = Point::new(
+        ((min_x + max_x) as f64 / 2.0) as i64,
+        ((min_y + max_y) as f64 / 2.0) as i64,
+    );
+    let center_x = center.x() as f64;
+    let center_y = center.y() as f64;
     let radius = ((center_x - min_x as f64).powi(2) + (center_y - min_y as f64).powi(2)).sqrt();
     let radians = start_angle_deg.to_radians();
     Point::new(

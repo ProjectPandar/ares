@@ -78,6 +78,21 @@ fn find_start_point_uses_angle_from_center() {
 /// edges (`Point.cpp:106`), rotates to the seam, and repeats it so the
 /// loop closes.
 #[test]
+fn find_start_point_truncates_asymmetric_center_before_radius() {
+    let points = [
+        Point::new(-10_582_255, -10_582_255),
+        Point::new(10_582_256, -10_582_255),
+        Point::new(10_582_256, 10_582_256),
+        Point::new(-10_582_255, 10_582_256),
+    ];
+
+    assert_eq!(
+        find_start_point(&points, -135.0),
+        Point::new(-10_582_255, -10_582_255)
+    );
+}
+
+#[test]
 fn split_at_nearest_projects_rotates_and_closes() {
     let points = [
         Point::new(0, 0),

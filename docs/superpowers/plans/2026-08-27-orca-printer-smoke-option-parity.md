@@ -1944,6 +1944,12 @@ provably inactive, and both Boolean values pass focused movement parity. The
 capability boundary remains for non-box/sloped meshes and active modifier
 geometry until the variable-Z contouring rewrite is present.
 
+The max `skirt_loops` regression is closed at the seam rather than by changing
+Clipper tolerance: `GCode.cpp::find_start_point` truncates its `Point` center
+before measuring radius, and negative fractional `Polyline::clip_end` results
+use the Linux runtime's lower lattice coordinate. The exact 10-loop movement,
+including `X102.873 Y103.107`, now passes focused parity.
+
 Stable option sweep10 (clean HEAD `e55b05a9`) completed all 650 source-cited
 domains/1,308 cases: 643/649 compared domains PASS, 6 FAIL, and 1 domain fully
 rejected upstream; 1,282 cases compared and 26 were rejected upstream.
