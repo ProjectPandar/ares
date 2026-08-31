@@ -2113,3 +2113,22 @@ byte-identical). That is the Clipper-offset/mesher precision workstream —
 needs its own milestone (the `ARES_DEBUG_CROSSHATCH` env-dump technique in
 `fill/cross_hatch.rs` reproduces the clipped/connected polyline sets for
 triage; the hook was removed after use).
+
+### Planner A/B status (narrowed, next session)
+
+Verified equivalent between Ares `RollingPlanner`/`prepare` and Orca
+`TimeMachine` (GCodeProcessor.cpp:4290-4530): rolling threshold (>256 blocks →
+keep 64, `first.max_entry = first.entry`), acceleration class selection per
+move type (wipe/print/travel/retract incl. unretract→retract-accel), M203
+cruise clamping, centripetal cruise clamp (print accel, 0.5/0.00001 window),
+safe feedrate from per-axis jerk, the full junction kernel (smaller-speed
+factor, cumulative jerk scaling incl. E-axis reversal semantics, the 0.99
+safe-speed bail), `nominal_length`, `max_allowable_speed`, and both
+trapezoid branches (`intersection_distance` fallback). Remaining suspects for
+the ~3.4ms/move mid-print drift: feedword update ordering on F-only G1 lines
+between blocks, block classification for boundary moves (e.g. z-hop travels
+entering extrusion), and the f32 rounding pattern inside
+`acceleration_time_from_distance` (Orca uses the trapezoid-time form
+`2d/(v0+v1)` via `Trapezoid::acceleration_time`, Ares uses `(v1-v0)/a`).
+Next: synthetic mid-print sequence through both models with per-block times
+printed, first diverging block class.
