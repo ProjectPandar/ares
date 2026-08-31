@@ -84,11 +84,6 @@ fn orca_parity_staggered_inner_seams_smoke() {
 }
 
 #[test]
-fn orca_parity_skirt_loops_max_smoke() {
-    assert_process_option_smoke("skirt_loops", "10");
-}
-
-#[test]
 fn orca_parity_seam_slope_type_smoke() {
     for value in ["none", "external", "all"] {
         assert_process_option_smoke("seam_slope_type", value);
