@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-636 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
+640 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -88,7 +88,7 @@
 | PASS | elefant_foot_layers_density | coPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:759 |  |
 | PASS | emit_machine_limits_to_gcode | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:4446 |  |
 | PASS | enable_arc_fitting | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3727 |  |
-| FAIL | enable_extra_bridge_layer | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:1959 | apply_to_all: unsupported project feature: enable_extra_bridge_layer |
+| PASS | enable_extra_bridge_layer | coEnum | 4 | 4 | 0 | src/libslic3r/PrintConfig.cpp:1959 |  |
 | PASS | enable_filament_ramming | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5989 |  |
 | PASS | enable_long_retraction_when_cut | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5210 |  |
 | PASS | enable_overhang_bridge_fan | coBools | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:1207 |  |
@@ -224,7 +224,7 @@
 | PASS | fuzzy_skin_scale | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3637 |  |
 | PASS | fuzzy_skin_thickness | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:3561 |  |
 | PASS | gap_fill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1454 |  |
-| FAIL | gap_fill_target | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1178 | everywhere: layer 2 deposition 1 differs: expected Deposition { feature: "Gap infill", width: "0.449969", motion: MotionRecord { command: "G1", start: Position { x: "106.539", y: "105.879", z: "0.4" }, end: Position { x: "105.879", y: "106.539", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03096", feed: 1800.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Gap infill", width: "0.449967", motion: MotionRecord { command: "G1", start: Position { x: "106.539", y: "105.879", z: "0.4" }, end: Position { x: "105.879", y: "106.539", z: "0.4" }, arc_center: [None, None], turns: None }, extrusion: "0.03096", feed: 1800.0, acceleration: "500", fans: "0:255" } |
+| PASS | gap_fill_target | coEnum | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1178 |  |
 | PASS | gap_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3707 |  |
 | PASS | gcode_add_line_number | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3738 |  |
 | PASS | gcode_comments | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:3965 |  |
@@ -468,7 +468,7 @@
 | PASS | scarf_joint_speed | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5570 |  |
 | PASS | scarf_overhang_threshold | coPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5558 |  |
 | PASS | seam_gap | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5515 |  |
-| FAIL | seam_position | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:5490 | random: layer 1 deposition count differs: expected 101, actual 99 |
+| PASS | seam_position | coEnum | 5 | 5 | 0 | src/libslic3r/PrintConfig.cpp:5490 |  |
 | PASS | seam_slope_conditional | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5539 |  |
 | PASS | seam_slope_entire_loop | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5604 |  |
 | PASS | seam_slope_inner_walls | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5628 |  |
@@ -518,7 +518,7 @@
 | PASS | spiral_mode_max_xy_smoothing | coFloatOrPercent | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5844 |  |
 | PASS | spiral_mode_smooth | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5837 |  |
 | PASS | spiral_starting_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5857 |  |
-| FAIL | staggered_inner_seams | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5508 | true: layer 1 deposition count differs: expected 100, actual 99 |
+| PASS | staggered_inner_seams | coBool | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5508 |  |
 | PASS | standby_temperature_delta | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5896 |  |
 | PASS | start_end_points | coPoints | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4945 |  |
 | PASS | supertack_plate_temp | coInts | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:961 |  |
@@ -586,7 +586,7 @@
 | PASS | top_surface_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5790 |  |
 | PASS | top_surface_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3326 |  |
 | PASS | top_surface_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:6709 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
-| FAIL | top_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2074 | alignedrectilinear: layer 44 deposition 5 differs: expected Deposition { feature: "Internal Bridge", width: "0.389872", motion: MotionRecord { command: "G1", start: Position { x: "105.997", y: "106.308", z: "8.8" }, end: Position { x: "105.997", y: "106.93", z: "8.8" }, arc_center: [None, None], turns: None }, extrusion: "0.03026", feed: 1893.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Internal Bridge", width: "0.389872", motion: MotionRecord { command: "G1", start: Position { x: "105.997", y: "105.997", z: "8.8" }, end: Position { x: "105.997", y: "106.308", z: "8.8" }, arc_center: [None, None], turns: None }, extrusion: "0.01513", feed: 1892.0, acceleration: "500", fans: "0:255" } |
+| FAIL | top_surface_pattern | coEnum | 8 | 8 | 0 | src/libslic3r/PrintConfig.cpp:2074 | concentric: layer 50 deposition count differs: expected 52, actual 57 |
 | PASS | top_surface_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:6721 |  |
 | PASS | travel_acceleration | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3197 |  |
 | PASS | travel_jerk | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3353 |  |
