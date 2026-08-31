@@ -1990,6 +1990,19 @@ Session log (2026-08-31, commits cbe24d2b..504f168):
    boundary intersections) flips the near-tie arc ordering, changing the
    greedy merge structure. Same family as the documented Ender-3 layer-2
    vertical-shell micro-edge.
+6. BBL H2D family (8 printers, "layer 1 control events differs"): the
+   timelapse `M9711` renders `E0`/`Y233` upstream but `E1`/`Y232` in Ares.
+   Upstream `ToolOrdering::cal_most_used_extruder` counts via the
+   SLICING-TIME auto filament-map update (`Print.cpp:2485-2492`
+   `get_recommended_filament_maps` + `update_filament_maps_to_config`): for
+   one filament on the dual-nozzle H2D the auto map becomes `[2]`, so
+   most_used=1 and `physical_extruder_map[1]=0` → E0. The 3MF carries the
+   pre-slice default `[1]`; Ares reads it directly and takes
+   `physical_extruder_map.first()` → E1. Fix: port the auto filament-map
+   recommendation for the single-filament case (or the full
+   `get_recommended_filament_maps`) plus the timelapse most-used
+   computation; the 1 mm Y delta is the safe-position picker
+   (`TimelapsePosPicker::pick_pos`) vs Ares's simplified scan.
 
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
