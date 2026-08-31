@@ -2017,3 +2017,60 @@ Session log (2026-08-31, commits cbe24d2b..504f168):
 
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
+
+## 2026-08-31 session: M73 machinery decoded, first-travel parity landed
+
+Sweep state: 328/1001 PASS (sweeps 4-5). 51 rows are `ARES_ERROR` oracle
+SIGSEGV (AppImage instability under sweep load — retry candidates, not Ares
+divergences).
+
+### M73 remaining-time machinery (root cause of the ksr R108/R109 residue)
+
+Orca's `M73 P<percent> R<minutes>` lines are inserted by the GCodeProcessor
+post-processing pass (`GCodeProcessor.cpp` `process_line_move`): every G1
+line's elapsed time is cached during the acceleration-aware simulation, and
+the export emits an M73 whenever the `(percent, remaining-minutes)` pair
+changes. Long fixed delays (G4/M400/M191/G29) attach to their owning line, so
+percent crossings during them coalesce into the next motion line (this is why
+the first layer jumps P0→P58 on Eryone ER20: the 260s G29 delay).
+
+- `process_M190`/`process_M109` add NO time (temperature records only).
+- `process_G29` adds a hardcoded 260s on every printer; the `M622 J1` gate
+  applies only to BBL printers (`GCodeProcessor.cpp:4859-4869`). Fixed in
+  commit `4c18b5dd` (Eryone total went R2 → R7 matching Orca).
+- Semantic comparator note: M73 lines are skipped by the parser
+  (`semantic/parser.rs` skips `M73 `), so the M73 family does NOT gate the
+  printer sweep; it only matters for byte-level golden output (ksr).
+- Residual: Eryone total 7m18s vs Orca 7m26s (~8s, sub-percent M73 drift);
+  the ksr `R108` vs `R109` gap is the same estimator-precision family.
+
+### First-travel parity (commit `9b57e0b0`)
+
+- The layer-start retraction is gated on `retract_when_changing_layer`
+  (`GCode.cpp:5206`, `5693`); flavors with the flag off retract lazily at
+  the first travel (`needs_retraction`, `GCode.cpp:7359` — no first-position
+  exemption), and the queued `M486 S<n>` select flushes after that
+  retraction (`GCode.cpp:7467`).
+- `GCodeWriter::travel_to_xyz` with an unknown source position
+  (`!is_current_position_clear()`): slope/spiral lifts cannot rise; a
+  pending normal lift still raises before the XY move; both paths end with
+  the `_travel_to_z` re-statement (`GCodeWriter.cpp:685-707`). Ender-3
+  (machine `z_hop_types: Normal Lift`) gets `[G1 Z.6 F9000][XY][G1 Z.6]`;
+  Eryone (default slope) gets `[XY F7200][G1 Z.8]`.
+- With these, Eryone ER20 layer 1 matches Orca byte-for-byte outside M73
+  values; five option smokes (fuzzy skin, top rectilinear, gap fill,
+  ironing, internal octagram) recovered.
+
+### Next big families (sweep 5 clustering)
+
+- `layer 1 control events` (96) + `layer 2 control events` (20): ordering of
+  labels/accel lines around islands (Ratrig HYBRID `SET_VELOCITY_LIMIT`
+  interleaving and the extra layer-end timelapse marker).
+- `layer 1 island lifecycle` (64): extra Wipe sequences at island starts on
+  BBL (H2S-class), plus missing `; SKIPPABLE timelapse` blocks on the 0.2
+  nozzle H2S/H2D cases (filament-map root cause, see the 2026-08-30 note).
+- `deposition` families (54+40+28): first-deposit width/position drift.
+- `travel geometry count` (38+34): `AvoidCrossingPerimeters` needs a
+  faithful port (external-once first travel, ExPolygon boundary routing);
+  the rectangle router is a simplification and the layer-0 gate is a
+  documented TODO in `start_travel.rs`.
