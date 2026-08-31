@@ -127,6 +127,11 @@ pub(super) fn emit(
                 .0
                 .len()
                 > 1);
+    // The mid-layer insert only fires on I3 printers (`GCode.cpp:5455-5461`);
+    // corexy/multi-nozzle traditional prints fall through to the layer-end
+    // sequence (`GCode.cpp:5527-5546`).
+    let traditional_interlude =
+        traditional_timelapse && runtime_gcode.printer_structure == crate::PrinterStructure::I3;
     let mut second_layer_done = false;
     let object_count = prepared.objects.len();
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
@@ -270,7 +275,7 @@ pub(super) fn emit(
             let timelapse_inserted =
                 motion::emit_layer(&mut output, layer, geometry, &mut state, |output, state| {
                     timelapse::append_traditional(
-                        traditional_timelapse,
+                        traditional_interlude,
                         output,
                         state,
                         timelapse_context,
@@ -284,6 +289,11 @@ pub(super) fn emit(
                 motion::end_layer_for_timelapse(&mut output, &mut state);
             }
             if !timelapse_inserted && !timelapse_at_layer_change {
+                if traditional_timelapse {
+                    // `GCode.cpp:5538-5546` `add_object_change_labels`: pending
+                    // object-end labels flush before the layer-end template.
+                    motion::append_exclude_end(&mut output, &mut state);
+                }
                 timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
             }
             spiral.process_layer(

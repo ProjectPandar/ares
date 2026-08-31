@@ -96,6 +96,12 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         let first_travel = route[0];
         let (travel_x, travel_y) = (first_travel.x, first_travel.y);
         append_object_start(output, state);
+        // `GCodeWriter::travel_to_xyz` (`GCodeWriter.cpp:685-707`) only raises
+        // the travel destination for a hop scheduled with this travel
+        // (`m_to_lift`); a nozzle already lifted by an earlier sequence (the
+        // layer-end timelapse retract, a deferred layer-change lift) travels
+        // flat in XY and the unlift descends at the destination.
+        let lifted_for_travel = state.pending_lift.is_some();
         travel::emit_pending_lift(
             output,
             arc::Point {
@@ -123,7 +129,9 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             state.template_lifted = false;
         } else if state.lifted && !first_position {
-            if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
+            if !lifted_for_travel {
+                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
+            } else if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
                 travel_emit::xyz(
                     output,
                     travel_x,

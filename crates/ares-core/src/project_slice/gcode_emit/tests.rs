@@ -107,11 +107,11 @@ async fn task22o143_ksr_seam_gap_clips_before_path_simplification() {
         .iter()
         .position(|line| *line == "; FEATURE: Inner wall")
         .unwrap();
-    let travel = lines[..feature]
+    let descend = lines[..feature]
         .iter()
-        .rposition(|line| *line == "G1 Z.6 F60000")
+        .rposition(|line| *line == "G1 Z.6")
         .unwrap();
-    let travel_xy = lines[travel + 1]
+    let travel_xy = lines[descend - 1]
         .split_ascii_whitespace()
         .skip(1)
         .take(2)
@@ -332,7 +332,8 @@ async fn lifted_next_layer_travel_carries_new_layer_hop_z() {
         .unwrap()
         .0;
 
-    assert!(lines[second_label + 1].ends_with(" Z.8"));
+    assert!(lines[second_label + 1].starts_with("G1 X140.415 Y102.856 F"));
+    assert!(!lines[second_label + 1].contains(" Z"));
     assert_eq!(lines[second_label + 2], "G1 Z.4");
 }
 

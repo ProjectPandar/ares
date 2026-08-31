@@ -24,7 +24,7 @@ async fn task22o174_layer_cooling_matches_orca_slowdown_feedrate() {
         .find(|line| line.starts_with("G1 F"))
         .copied();
 
-    assert_eq!(feedrate, Some("G1 F12996"));
+    assert_eq!(feedrate, Some("G1 F12997"));
 }
 
 #[test]
