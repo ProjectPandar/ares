@@ -54,7 +54,13 @@ pub(super) fn route(request: Request<'_>) -> Vec<arc::Point> {
         if after_skirt {
             output = vec![end_projection];
         } else {
-            output = rect.boundary_path(start_projection, start_edge, end_projection, end_edge);
+            let boundary =
+                rect.boundary_path(start_projection, start_edge, end_projection, end_edge);
+            output = if boundary_detour_is_excessive(&boundary, end) {
+                vec![start_projection]
+            } else {
+                boundary
+            };
         }
     }
     output.dedup();
@@ -143,6 +149,20 @@ impl Rect {
         };
         vec![start, corner, end]
     }
+}
+
+fn boundary_detour_is_excessive(boundary: &[arc::Point], end: arc::Point) -> bool {
+    let direct = distance(boundary[0], end);
+    let detour = boundary
+        .windows(2)
+        .map(|points| distance(points[0], points[1]))
+        .sum::<f64>()
+        + distance(*boundary.last().unwrap(), end);
+    detour > 1.4 * direct
+}
+
+fn distance(first: arc::Point, second: arc::Point) -> f64 {
+    (second.x - first.x).hypot(second.y - first.y)
 }
 
 fn rectangle(

@@ -76,4 +76,24 @@ fn source_rectangle_routes_crossing_travels_along_inset_boundary() {
             },
         ]
     );
+    assert_eq!(
+        route(Request {
+            start: MotionPoint {
+                x: 121.29,
+                y: 122.254,
+            },
+            end: MotionPoint {
+                x: 120.187,
+                y: 121.005,
+            },
+            geometry,
+            offset: (117.5, 117.5),
+            inset,
+            after_skirt: false,
+        }),
+        [MotionPoint {
+            x: 121.29,
+            y: 121.889_38,
+        }]
+    );
 }
