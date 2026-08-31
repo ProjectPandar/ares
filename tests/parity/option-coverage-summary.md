@@ -1,6 +1,6 @@
 # OrcaSlicer option coverage summary
 
-643 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
+644 of 649 compared option domains pass (650 source-cited domains; 1308 generated cases: 1282 compared, 26 rejected upstream; 1 domains fully rejected upstream).
 
 | status | option | type | cases | compared | rejected | upstream | first result |
 |---|---|---|---:|---:|---:|---|---|
@@ -488,7 +488,7 @@
 | PASS | skin_infill_line_width | coFloatOrPercent | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4064 |  |
 | PASS | skirt_distance | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5673 |  |
 | PASS | skirt_height | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5692 |  |
-| FAIL | skirt_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5733 | max: layer 1 deposition 107 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "102.451", y: "103.53", z: "0.2" }, end: Position { x: "102.873", y: "103.107", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01836", feed: 3000.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "102.451", y: "103.53", z: "0.2" }, end: Position { x: "102.873", y: "103.108", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "0.01836", feed: 3000.0, acceleration: "500", fans: "0:0" } |
+| PASS | skirt_loops | coInt | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5733 |  |
 | PASS | skirt_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:5742 |  |
 | PASS | skirt_start_angle | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5682 |  |
 | PASS | skirt_type | coEnum | 2 | 2 | 0 | src/libslic3r/PrintConfig.cpp:5721 |  |
