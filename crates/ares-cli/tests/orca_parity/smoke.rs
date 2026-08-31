@@ -77,6 +77,13 @@ fn orca_parity_top_rectilinear_smoke() {
 }
 
 #[test]
+fn orca_parity_reduce_crossing_wall_smoke() {
+    for value in ["0", "1"] {
+        assert_process_option_smoke("reduce_crossing_wall", value);
+    }
+}
+
+#[test]
 fn orca_parity_random_seam_smoke() {
     assert_process_option_smoke("seam_position", "random");
 }

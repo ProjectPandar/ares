@@ -106,5 +106,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) arc_fitting_tolerance: f64,
     pub(in crate::project_slice::gcode_emit) seam_gap: f64,
     pub(in crate::project_slice::gcode_emit) seam_position: crate::ProcessSeamPosition,
+    pub(in crate::project_slice::gcode_emit) reduce_crossing_wall: bool,
+    pub(in crate::project_slice::gcode_emit) crossing_boundary_inset: f64,
     pub(in crate::project_slice::gcode_emit) scarf: ScarfOptions,
 }

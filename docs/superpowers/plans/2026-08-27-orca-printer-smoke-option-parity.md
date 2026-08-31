@@ -1926,5 +1926,12 @@ and anchoring projection. This removes the LH Stinger capability errors; exact
 parity remains blocked on phase-dependent `chain_or_connect_infill` boundary
 arc selection (currently two extra depositions on affected phases).
 
+`reduce_crossing_wall` now projects provably axis-aligned single-surface
+travels onto the source perimeter-spacing inset boundary, recomputes after
+wipe, preserves skirt-first routing, and emits raised-Z/intermediate waypoints
+in source order. Both Boolean values pass focused movement parity; complex
+polygons, holes, and max-detour routing remain with the full
+`AvoidCrossingPerimeters` slice.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.

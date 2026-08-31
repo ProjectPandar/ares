@@ -1,9 +1,9 @@
 //! Builds `MotionOptions` from the resolved project configuration
 //! (`GCodeWriter::apply_print_config` equivalents).
 
+mod crossing;
 mod retraction;
 mod scarf;
-
 use super::MotionOptions;
 use super::first_nullable_float;
 use super::helpers::{
@@ -58,6 +58,7 @@ impl MotionOptions {
             full.process.object.default_acceleration.0,
             |value| value.default_acceleration.0,
         );
+
         let (retraction_speed, deretraction_speed) = retraction::speeds(gcode);
         Self {
             filament_area: std::f64::consts::PI * filament_diameter.powi(2) * 0.25,
@@ -388,6 +389,8 @@ impl MotionOptions {
             seam_position: object.map_or(full.process.object.seam_position, |value| {
                 value.object.seam_position
             }),
+            reduce_crossing_wall: full.process.print.reduce_crossing_wall.0,
+            crossing_boundary_inset: crossing::boundary_inset(traversal),
             scarf: scarf::from_region(&full.process.region, region),
             enable_arc_fitting: gcode.enable_arc_fitting.0,
             arc_fitting_tolerance: full.process.print.resolution.0,

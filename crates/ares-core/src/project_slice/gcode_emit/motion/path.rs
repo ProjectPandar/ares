@@ -1,3 +1,4 @@
+mod avoid_crossing;
 mod constant;
 mod retraction;
 mod start_travel;

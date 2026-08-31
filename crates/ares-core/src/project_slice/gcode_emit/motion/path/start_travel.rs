@@ -67,12 +67,40 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         if retract {
             travel::retract_and_lift(output, state);
         }
+        let mut route = if state.options.reduce_crossing_wall
+            && state.layer_index > 0
+            && !matches!(properties.feature, "Skirt" | "Brim")
+        {
+            super::avoid_crossing::route(super::avoid_crossing::Request {
+                start: arc::Point {
+                    x: state.x,
+                    y: state.y,
+                },
+                end: arc::Point {
+                    x: first_x,
+                    y: first_y,
+                },
+                geometry,
+                offset: state.offset,
+                inset: state.options.crossing_boundary_inset,
+                after_skirt: state.last_feature == Some("Skirt"),
+            })
+        } else {
+            Vec::new()
+        };
+        route.push(arc::Point {
+            x: first_x,
+            y: first_y,
+        });
+        route.dedup();
+        let first_travel = route[0];
+        let (travel_x, travel_y) = (first_travel.x, first_travel.y);
         append_object_start(output, state);
         travel::emit_pending_lift(
             output,
             arc::Point {
-                x: first_x,
-                y: first_y,
+                x: travel_x,
+                y: travel_y,
             },
             state,
         );
@@ -85,21 +113,21 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         {
             travel_emit::xyz(
                 output,
-                first_x,
-                first_y,
+                travel_x,
+                travel_y,
                 state.layer_z,
                 state.travel_feedrate,
             );
             travel_set_layer_z = true;
         } else if state.template_lifted && state.lifted && !first_position {
-            travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
+            travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             state.template_lifted = false;
         } else if state.lifted && !first_position {
             if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
                 travel_emit::xyz(
                     output,
-                    first_x,
-                    first_y,
+                    travel_x,
+                    travel_y,
                     state.layer_z + state.options.z_hop,
                     state.travel_feedrate,
                 );
@@ -107,8 +135,8 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 output.extend_from_slice(
                     format!(
                         "G1 X{} Y{} Z{}\n",
-                        format_axis(first_x),
-                        format_axis(first_y),
+                        format_axis(travel_x),
+                        format_axis(travel_y),
                         format_z(state.layer_z + state.options.z_hop)
                     )
                     .as_bytes(),
@@ -116,19 +144,19 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             }
         } else if layer_change_travel && state.retracted {
             if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
-                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
+                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             } else if state.lifted {
                 output.extend_from_slice(
                     format!(
                         "G1 X{} Y{} Z{}\n",
-                        format_axis(first_x),
-                        format_axis(first_y),
+                        format_axis(travel_x),
+                        format_axis(travel_y),
                         format_z(state.layer_z + state.options.z_hop)
                     )
                     .as_bytes(),
                 );
             } else {
-                travel_emit::xyz(output, first_x, first_y, target_z, state.travel_feedrate);
+                travel_emit::xyz(output, travel_x, travel_y, target_z, state.travel_feedrate);
                 travel_set_layer_z = true;
             }
         } else if state.retracted
@@ -137,7 +165,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             && travel::lift_is_allowed(state)
         {
             if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
-                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
+                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             } else {
                 output.extend_from_slice(
                     format!(
@@ -148,26 +176,32 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                     .as_bytes(),
                 );
                 output.extend_from_slice(
-                    format!("G1 X{} Y{}\n", format_axis(first_x), format_axis(first_y)).as_bytes(),
+                    format!("G1 X{} Y{}\n", format_axis(travel_x), format_axis(travel_y))
+                        .as_bytes(),
                 );
                 state.lifted = true;
             }
         } else if layer_change_travel {
             if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
-                travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
+                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
                 output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
             } else {
-                travel_emit::xyz(output, first_x, first_y, target_z, state.travel_feedrate);
+                travel_emit::xyz(output, travel_x, travel_y, target_z, state.travel_feedrate);
             }
             travel_set_layer_z = true;
         } else if let Some(z) = slope_start_z {
-            travel_emit::xyz(output, first_x, first_y, z, state.travel_feedrate);
+            travel_emit::xyz(output, travel_x, travel_y, z, state.travel_feedrate);
             travel_set_layer_z = true;
         } else {
-            travel_emit::xy(output, first_x, first_y, state.travel_feedrate);
+            travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
         }
-        state.x = first_x;
-        state.y = first_y;
+        state.x = travel_x;
+        state.y = travel_y;
+        for point in &route[1..] {
+            travel_emit::xy_without_feed(output, point.x, point.y);
+            state.x = point.x;
+            state.y = point.y;
+        }
         state.last_scaled_position = Some(first_scaled);
         state.positioned = true;
         state.current_feedrate = state.travel_feedrate;

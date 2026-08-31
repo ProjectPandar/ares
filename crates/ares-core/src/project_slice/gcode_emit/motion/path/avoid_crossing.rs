@@ -1,0 +1,181 @@
+use crate::project_slice::{
+    gcode_emit::motion::{LayerGeometry, arc},
+    region_slices::RegionSurface,
+};
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Edge {
+    Right,
+    Left,
+    Top,
+    Bottom,
+}
+
+#[derive(Clone, Copy)]
+struct Rect {
+    left: f64,
+    right: f64,
+    bottom: f64,
+    top: f64,
+}
+
+pub(super) struct Request<'a> {
+    pub(super) start: arc::Point,
+    pub(super) end: arc::Point,
+    pub(super) geometry: LayerGeometry<'a>,
+    pub(super) offset: (f64, f64),
+    pub(super) inset: f64,
+    pub(super) after_skirt: bool,
+}
+
+pub(super) fn route(request: Request<'_>) -> Vec<arc::Point> {
+    let Request {
+        start,
+        end,
+        geometry,
+        offset,
+        inset,
+        after_skirt,
+    } = request;
+    let Some(rect) = rectangle(geometry.internal_surfaces, geometry, offset, inset) else {
+        return Vec::new();
+    };
+    let start_inside = rect.contains(start);
+    let end_inside = rect.contains(end);
+    if start_inside == end_inside {
+        return Vec::new();
+    }
+    let (start_projection, start_edge) = rect.project(start);
+    let (end_projection, end_edge) = rect.project(end);
+    let mut output;
+    if start_inside {
+        output = rect.boundary_path(start_projection, start_edge, end_projection, end_edge);
+    } else {
+        if after_skirt {
+            output = vec![end_projection];
+        } else {
+            output = rect.boundary_path(start_projection, start_edge, end_projection, end_edge);
+        }
+    }
+    output.dedup();
+    output
+}
+
+impl Rect {
+    fn contains(self, point: arc::Point) -> bool {
+        (self.left..=self.right).contains(&point.x) && (self.bottom..=self.top).contains(&point.y)
+    }
+
+    fn project(self, point: arc::Point) -> (arc::Point, Edge) {
+        if !self.contains(point) {
+            let x = point.x.clamp(self.left, self.right);
+            let y = point.y.clamp(self.bottom, self.top);
+            let edge = if point.x > self.right {
+                Edge::Right
+            } else if point.x < self.left {
+                Edge::Left
+            } else if point.y > self.top {
+                Edge::Top
+            } else {
+                Edge::Bottom
+            };
+            return (arc::Point { x, y }, edge);
+        }
+        let choices = [
+            (self.right - point.x, Edge::Right),
+            (point.x - self.left, Edge::Left),
+            (self.top - point.y, Edge::Top),
+            (point.y - self.bottom, Edge::Bottom),
+        ];
+        let (_, edge) = choices
+            .into_iter()
+            .min_by(|left, right| left.0.total_cmp(&right.0))
+            .unwrap();
+        let projected = match edge {
+            Edge::Right => arc::Point {
+                x: self.right,
+                y: point.y,
+            },
+            Edge::Left => arc::Point {
+                x: self.left,
+                y: point.y,
+            },
+            Edge::Top => arc::Point {
+                x: point.x,
+                y: self.top,
+            },
+            Edge::Bottom => arc::Point {
+                x: point.x,
+                y: self.bottom,
+            },
+        };
+        (projected, edge)
+    }
+
+    fn boundary_path(
+        self,
+        start: arc::Point,
+        start_edge: Edge,
+        end: arc::Point,
+        end_edge: Edge,
+    ) -> Vec<arc::Point> {
+        if start_edge == end_edge {
+            return vec![start, end];
+        }
+        let corner = match (start_edge, end_edge) {
+            (Edge::Top, Edge::Right) | (Edge::Right, Edge::Top) => arc::Point {
+                x: self.right,
+                y: self.top,
+            },
+            (Edge::Top, Edge::Left) | (Edge::Left, Edge::Top) => arc::Point {
+                x: self.left,
+                y: self.top,
+            },
+            (Edge::Bottom, Edge::Right) | (Edge::Right, Edge::Bottom) => arc::Point {
+                x: self.right,
+                y: self.bottom,
+            },
+            (Edge::Bottom, Edge::Left) | (Edge::Left, Edge::Bottom) => arc::Point {
+                x: self.left,
+                y: self.bottom,
+            },
+            _ => return vec![start, end],
+        };
+        vec![start, corner, end]
+    }
+}
+
+fn rectangle(
+    surfaces: &[RegionSurface],
+    geometry: LayerGeometry<'_>,
+    offset: (f64, f64),
+    inset: f64,
+) -> Option<Rect> {
+    let [surface] = surfaces else { return None };
+    let (_, expolygon, _, _, _, _) = surface.as_parts();
+    if !expolygon.holes().is_empty() || expolygon.contour().points().len() != 4 {
+        return None;
+    }
+    let points = expolygon.contour().points();
+    if !points
+        .iter()
+        .zip(points.iter().cycle().skip(1))
+        .take(4)
+        .all(|(first, second)| first.x() == second.x() || first.y() == second.y())
+    {
+        return None;
+    }
+    let left = points.iter().map(|point| point.x()).min()?;
+    let right = points.iter().map(|point| point.x()).max()?;
+    let bottom = points.iter().map(|point| point.y()).min()?;
+    let top = points.iter().map(|point| point.y()).max()?;
+    Some(Rect {
+        left: geometry.scale.unscale(left) + offset.0 + inset,
+        right: geometry.scale.unscale(right) + offset.0 - inset,
+        bottom: geometry.scale.unscale(bottom) + offset.1 + inset,
+        top: geometry.scale.unscale(top) + offset.1 - inset,
+    })
+}
+
+#[cfg(test)]
+mod tests;
