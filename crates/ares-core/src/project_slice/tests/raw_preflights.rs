@@ -237,6 +237,7 @@ fn task22b_print_object_centering_gate_accepts_collapsed_xy_and_rejects_distinct
  {
     let z = transform("1 0 0 0 1 0 0 0 1 0 0 3");
     let xyz = transform("1 0 0 0 1 0 0 0 1 21 -8 3");
+    let xy_scaled = transform("2 0 0 0 1 0 0 0 1 0 0 3");
     let source = object(
         "center.model",
         1,
@@ -267,8 +268,23 @@ fn task22b_print_object_centering_gate_accepts_collapsed_xy_and_rejects_distinct
         .unwrap_err(),
         unsupported("print_object_centering")
     );
+    // `fixed_xy_equal` ignores the Z row (filament Z-shrink compensation),
+    // so a Z-only mismatch no longer rejects the gate.
+    assert!(
+        project(
+            std::slice::from_ref(&source),
+            &[identity_resolved(0)],
+            vec![plan(0, 0, 1)],
+        )
+        .is_ok()
+    );
     assert_eq!(
-        project(&[source], &[identity_resolved(0)], vec![plan(0, 0, 1)]).unwrap_err(),
+        project(
+            &[source],
+            &[resolved_object(0, &[xy_scaled])],
+            vec![plan(0, 0, 1)],
+        )
+        .unwrap_err(),
         unsupported("print_object_centering")
     );
 
@@ -282,7 +298,7 @@ fn task22b_print_object_centering_gate_accepts_collapsed_xy_and_rejects_distinct
             true,
             false,
         )],
-        &[(false, z), (true, Transform3d::IDENTITY)],
+        &[(false, xy_scaled), (true, Transform3d::IDENTITY)],
     );
     assert_eq!(
         project(
