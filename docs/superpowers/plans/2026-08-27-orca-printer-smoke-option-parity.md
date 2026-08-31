@@ -2132,3 +2132,33 @@ entering extrusion), and the f32 rounding pattern inside
 `2d/(v0+v1)` via `Trapezoid::acceleration_time`, Ares uses `(v1-v0)/a`).
 Next: synthetic mid-print sequence through both models with per-block times
 printed, first diverging block class.
+
+## 2026-08-31 session (cont 2): planner exonerated — divergence is in export mechanics
+
+Built a standalone A/B harness (`/tmp/ab/orca_time_ab.cpp`, verbatim
+extraction of `GCodeProcessor.cpp` TimeMachine math: helpers 130-160,
+Trapezoid/TimeBlock 240-395, calculate_time 419-615, per-G1 setup 4290-4530)
+and ran it on the Eryone reference (M73-stripped). Result:
+
+- **Ares's `Estimate` matches the verbatim Orca math to ±0.2s cumulative over
+  the whole file (max drift 0.094s)** — the `RollingPlanner` port is
+  effectively correct. The earlier "progressive 8s drift" reading came from
+  flawed bound arithmetic, not the planner.
+- Fitting the REAL Orca run's 46 M73 marks against extract+G29(260s): no
+  total `t` satisfies more than 28/45 (best t=440.42). The real run is faster
+  early and slower late by ~±4-8s — a redistribution, not a constant.
+
+Conclusion: the remaining M73-placement divergence lives in the REAL
+processor's export pass, not the time math: `ExportLines` writes M73s in
+`ByTime` mode only when `m_result.backtrace_enabled` (else `BySize` batched
+flush, GCodeProcessor.cpp:1068-1072), the `g1_times_cache` entry positions
+vs the export line counter, and the `additional_time` buffer drain rules.
+NEXT: replicate `ExportLines::update`'s BySize flush cadence and the M73
+insertion position semantics (append after the triggering move line vs the
+batch flush position) in Ares's processor; then re-run the mark-fit — expect
+45/45.
+
+Harness notes: `awk` joins of "line N cum block" dumps must skip the literal
+`line` prefix; M73 marks map to their *preceding motion line* in stripped
+coordinates (marks sit after the crossing move). The G29/M191/G4/G92-E
+sync rules are already modeled correctly on both sides.
