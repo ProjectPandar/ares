@@ -108,6 +108,13 @@ fn orca_parity_seam_slope_type_smoke() {
 }
 
 #[test]
+fn orca_parity_zaa_enabled_smoke() {
+    for value in ["0", "1"] {
+        assert_process_option_smoke("zaa_enabled", value);
+    }
+}
+
+#[test]
 fn orca_parity_spiral_mode_smoke() {
     for value in ["0", "1"] {
         assert_process_option_smoke("spiral_mode", value);

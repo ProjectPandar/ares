@@ -54,7 +54,10 @@ pub(super) fn plan_resolved_objects(
                 (resolved_object.source_object_index, transform_index),
                 &parameters,
                 &profile,
-                resolved_object.object.precise_z_height.0,
+                layers::LayerPlanOptions {
+                    precise_z_height: resolved_object.object.precise_z_height.0,
+                    zaa_min_z: zaa_min_z(resolved_object),
+                },
                 &mut budget,
             )?);
         }
@@ -106,4 +109,14 @@ pub(super) fn plan_resolved_objects(
         );
     }
     Ok(planned_objects)
+}
+
+fn zaa_min_z(object: &ResolvedProjectObject) -> Option<f64> {
+    object
+        .layer_candidates
+        .iter()
+        .flat_map(|candidate| &candidate.model_parts)
+        .filter(|part| part.region.zaa_enabled.0)
+        .map(|part| part.region.zaa_min_z.0)
+        .reduce(f64::min)
 }

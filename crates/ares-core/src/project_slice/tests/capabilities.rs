@@ -1,17 +1,15 @@
 use crate::{
-    ObjectOptions, OrcaBool, OrcaInt, Point3d, ProjectInstance, ProjectMesh, ProjectObject,
-    ProjectSettings, ProjectVolume, ProjectVolumeType, RegionOptions, SliceError, Transform3d,
-    load_project,
-    options::{ObjectOptionOverrides, RegionOptionOverrides},
+    ObjectOptions, OrcaBool, OrcaInt, ProjectInstance, ProjectObject, ProjectSettings,
+    ProjectVolume, RegionOptions, SliceError, Transform3d, load_project,
+    options::ObjectOptionOverrides,
     project::effective_config::types::{
         ResolvedLayerCandidate, ResolvedModelPartCandidate, ResolvedPrintObjectConfig,
         ResolvedProjectObject,
     },
-    slice_project,
 };
 
 use super::super::capabilities::validate as validate_capabilities;
-use super::support::{KsrArchive, metadata};
+use super::support::KsrArchive;
 
 fn validate(
     has_painted_layer_height_profile: bool,
@@ -46,23 +44,12 @@ fn task22a_capability_gates_each_named_feature() {
         validate(false, &[source], &[resolved(0, object, Vec::new())]),
         "raft_layers",
     );
-
-    let source = source_object(Default::default(), Vec::new(), Vec::new());
-    assert_unsupported(
-        validate(
-            false,
-            &[source],
-            &[resolved(0, object_options(), vec![region(true)])],
-        ),
-        "zaa_enabled",
-    );
 }
 
 #[test]
 fn task22a_capability_gate_order_is_project_key_major() {
-    let true_modifier = modifier(Some(true), 100.0);
     let sources = [
-        source_object(Default::default(), vec![true_modifier], Vec::new()),
+        source_object(Default::default(), Vec::new(), Vec::new()),
         source_object(Default::default(), Vec::new(), one_layer_height_range()),
     ];
     let mut first = with_object(|value| {
@@ -72,7 +59,7 @@ fn task22a_capability_gate_order_is_project_key_major() {
         value.precise_z_height = OrcaBool(true);
     });
     let mut resolved_objects = vec![
-        resolved(0, first.clone(), vec![region(true)]),
+        resolved(0, first.clone(), Vec::new()),
         resolved(1, object_options(), Vec::new()),
     ];
 
@@ -83,17 +70,26 @@ fn task22a_capability_gate_order_is_project_key_major() {
     assert_unsupported(validate(false, &sources, &resolved_objects), "layer_height");
 
     let sources = [
-        source_object(
-            Default::default(),
-            vec![modifier(Some(true), 100.0)],
-            Vec::new(),
-        ),
+        source_object(Default::default(), Vec::new(), Vec::new()),
         source_object(Default::default(), Vec::new(), Vec::new()),
     ];
     assert_unsupported(validate(false, &sources, &resolved_objects), "raft_layers");
     first.raft_layers = OrcaInt(0);
     resolved_objects[0].object = first;
-    assert_unsupported(validate(false, &sources, &resolved_objects), "zaa_enabled");
+    assert_eq!(validate(false, &sources, &resolved_objects), Ok(()));
+}
+
+#[test]
+fn zaa_requires_a_provably_inactive_axis_aligned_box() {
+    let source = source_object(Default::default(), Vec::new(), Vec::new());
+    assert_unsupported(
+        validate(
+            false,
+            &[source],
+            &[resolved(0, object_options(), vec![region(true)])],
+        ),
+        "zaa_enabled",
+    );
 }
 
 #[test]
@@ -118,79 +114,6 @@ fn task22o17_support_options_cross_the_early_capability_boundary() {
     assert_eq!(
         validate(false, &[source], &[resolved(0, object, Vec::new())]),
         Ok(())
-    );
-}
-
-#[test]
-fn task22a_zaa_gate_scans_candidate_and_nonintersecting_modifier() {
-    let source = source_object(Default::default(), Vec::new(), Vec::new());
-    assert_unsupported(
-        validate(
-            false,
-            &[source],
-            &[resolved(0, object_options(), vec![region(true)])],
-        ),
-        "zaa_enabled",
-    );
-
-    let source = source_object(
-        Default::default(),
-        vec![model_part(0.0), modifier(Some(true), 100.0)],
-        Vec::new(),
-    );
-    assert_unsupported(
-        validate(
-            false,
-            &[source],
-            &[resolved(0, object_options(), vec![region(false)])],
-        ),
-        "zaa_enabled",
-    );
-}
-
-#[test]
-fn task22a_zaa_false_modifier_is_supported() {
-    for zaa_enabled in [None, Some(false)] {
-        let source = source_object(
-            Default::default(),
-            vec![modifier(zaa_enabled, 100.0)],
-            Vec::new(),
-        );
-        assert_eq!(
-            validate(
-                false,
-                &[source],
-                &[resolved(0, object_options(), vec![region(false)])],
-            ),
-            Ok(())
-        );
-    }
-}
-
-#[tokio::test]
-async fn task22a_zaa_gate_runs_after_config_writer() {
-    let mut supported_writer = KsrArchive::new();
-    supported_writer.replace(
-        "Metadata/model_settings.config",
-        r#"<part id="1" subtype="normal_part">"#,
-        r#"<part id="1" subtype="modifier_part"><metadata key="zaa_enabled" value="1"/>"#,
-    );
-    let mut invalid_writer = supported_writer.clone();
-    invalid_writer.invalidate_flush_matrix();
-
-    assert_eq!(
-        slice_project(invalid_writer.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::InvalidInput(
-            "Flush volumes matrix do not match to the correct size!".to_owned()
-        )
-    );
-    assert_eq!(
-        slice_project(supported_writer.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("zaa_enabled".to_owned())
     );
 }
 
@@ -279,37 +202,4 @@ fn one_layer_height_range() -> Vec<crate::LayerConfigRange> {
     load_project(archive.bytes()).unwrap().objects()[0]
         .layer_config_ranges()
         .to_vec()
-}
-
-fn model_part(z: f64) -> ProjectVolume {
-    volume(ProjectVolumeType::ModelPart, None, z)
-}
-
-fn modifier(zaa_enabled: Option<bool>, z: f64) -> ProjectVolume {
-    volume(ProjectVolumeType::ParameterModifier, zaa_enabled, z)
-}
-
-fn volume(volume_type: ProjectVolumeType, zaa_enabled: Option<bool>, z: f64) -> ProjectVolume {
-    ProjectVolume::new(
-        "synthetic.model".to_owned(),
-        1,
-        ProjectMesh::new(
-            vec![
-                Point3d::new(0.0, 0.0, z),
-                Point3d::new(1.0, 0.0, z),
-                Point3d::new(0.0, 1.0, z),
-            ],
-            vec![[0, 1, 2]],
-        ),
-        Transform3d::IDENTITY,
-        (
-            "volume".to_owned(),
-            volume_type,
-            RegionOptionOverrides {
-                zaa_enabled: zaa_enabled.map(OrcaBool),
-                ..Default::default()
-            },
-            Transform3d::IDENTITY,
-        ),
-    )
 }

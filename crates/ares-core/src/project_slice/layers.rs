@@ -33,6 +33,12 @@ pub(super) struct LayerBudget {
     pub(super) used: usize,
 }
 
+#[derive(Clone, Copy)]
+pub(super) struct LayerPlanOptions {
+    pub(super) precise_z_height: bool,
+    pub(super) zaa_min_z: Option<f64>,
+}
+
 impl LayerBudget {
     fn claim(&mut self) -> Result<(), SliceError> {
         if self.used >= MAX_PLANNED_LAYERS_PER_PROJECT {
@@ -191,7 +197,15 @@ pub(super) fn adjust_layer_pairs_to_object_height(
     Ok(true)
 }
 
+#[cfg(test)]
 pub(super) fn planned_layers(pairs: &[LayerPair]) -> Result<Vec<PlannedLayer>, SliceError> {
+    planned_layers_with_zaa(pairs, None)
+}
+
+pub(super) fn planned_layers_with_zaa(
+    pairs: &[LayerPair],
+    zaa_min_z: Option<f64>,
+) -> Result<Vec<PlannedLayer>, SliceError> {
     if pairs.is_empty() {
         return Err(invalid("object layer pair series is empty"));
     }
@@ -201,10 +215,17 @@ pub(super) fn planned_layers(pairs: &[LayerPair]) -> Result<Vec<PlannedLayer>, S
         .map(|(id, pair)| {
             let height = pair.hi - pair.lo;
             let print_z = pair.hi;
-            let slice_z = 0.5 * (pair.lo + pair.hi);
+            // OrcaSlicer 2.4.2 `PrintObjectSlice.cpp::compute_slice_z`.
+            let slice_z = match (id, zaa_min_z) {
+                (0, _) | (_, None) => 0.5 * (pair.lo + pair.hi),
+                (_, Some(offset)) => pair.lo + offset,
+            };
             require_finite(height)?;
             require_finite(print_z)?;
             require_finite(slice_z)?;
+            if slice_z < pair.lo || slice_z > pair.hi {
+                return Err(invalid("Bad min Z value"));
+            }
             Ok(PlannedLayer {
                 id,
                 height,
@@ -219,17 +240,17 @@ pub(super) fn plan_print_object(
     (source_object_index, transform_index): (usize, usize),
     parameters: &SlicingParameters,
     profile: &[f64],
-    precise_z_height: bool,
+    options: LayerPlanOptions,
     budget: &mut LayerBudget,
 ) -> Result<PlannedPrintObject, SliceError> {
     let mut pairs = generate_layer_pairs(parameters, profile, budget)?;
-    if precise_z_height {
+    if options.precise_z_height {
         adjust_layer_pairs_to_object_height(parameters, &mut pairs)?;
     }
     Ok(PlannedPrintObject {
         source_object_index,
         transform_index,
-        layers: planned_layers(&pairs)?,
+        layers: planned_layers_with_zaa(&pairs, options.zaa_min_z)?,
     })
 }
 
@@ -244,3 +265,6 @@ fn require_finite(value: f64) -> Result<(), SliceError> {
 fn invalid(message: &str) -> SliceError {
     SliceError::InvalidInput(message.to_owned())
 }
+
+#[cfg(test)]
+mod tests;

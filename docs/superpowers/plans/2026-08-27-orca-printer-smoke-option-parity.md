@@ -1937,5 +1937,12 @@ in source order. Both Boolean values pass focused movement parity; complex
 polygons, holes, and max-detour routing remain with the full
 `AvoidCrossingPerimeters` slice.
 
+`zaa_enabled` now ports `PrintObjectSlice.cpp::compute_slice_z`: layer zero
+keeps its midpoint and later layers slice at `lo + zaa_min_z`. For the
+axis-aligned box parity model, `ContourZ.cpp::contour_extrusion_path` is
+provably inactive, and both Boolean values pass focused movement parity. The
+capability boundary remains for non-box/sloped meshes and active modifier
+geometry until the variable-Z contouring rewrite is present.
+
 NEXT: reduce the remaining value-case failures; in parallel continue Clipper
 precision, lifecycle, and postamble work.
