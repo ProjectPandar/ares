@@ -2162,3 +2162,25 @@ Harness notes: `awk` joins of "line N cum block" dumps must skip the literal
 `line` prefix; M73 marks map to their *preceding motion line* in stripped
 coordinates (marks sit after the crossing move). The G29/M191/G4/G92-E
 sync rules are already modeled correctly on both sides.
+
+### Export-mechanics follow-up: prepare phase matches; drift isolated to printing phase
+
+- The real Orca's `; estimated first layer printing time = 4m 34s` (274s)
+  matches the verbatim extract's prepare cumulative (274.3s incl. the G29
+  260s) — **the start-gcode timing (G29/M190/primes/first-layer) is exact**.
+- The ~8s divergence is therefore entirely in the printing phase (walls/
+  travels/infill): real model-time ≈ 172s vs extract 164.2s (~5%).
+- BySize export batching drains lines in order (M73 positions are
+  append-time, not batch-shifted); the machine-envelope config values equal
+  the gcode's M201/M203/M204/M205 exactly (and those pre-first-G1 commands
+  are skipped by the real's `machine_envelope_processing_enabled` gate — a
+  no-op difference here since the config envelope equals them).
+- Cleared suspects: filament-load times (no T commands), BySize batching,
+  envelope clamping, G29 attribution (both +260s at the first block).
+
+NEXT (ground truth): instrument the nixpkgs OrcaSlicer build (source
+modifiable) with a per-G1-line time dump (extend `TimeMachine::calculate_time`'s
+`g1_times_cache` push with an env-gated stderr print) and diff against the
+standalone extract on this same file. That pinpoints the printing-phase
+divergence class without guesswork; then port the fix into Ares's processor
+and re-run the mark-fit (target 45/45) plus the M73 byte-parity checks.
