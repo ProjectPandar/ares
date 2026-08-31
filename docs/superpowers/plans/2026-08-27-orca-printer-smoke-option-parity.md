@@ -2184,3 +2184,40 @@ modifiable) with a per-G1-line time dump (extend `TimeMachine::calculate_time`'s
 standalone extract on this same file. That pinpoints the printing-phase
 divergence class without guesswork; then port the fix into Ares's processor
 and re-run the mark-fit (target 45/45) plus the M73 byte-parity checks.
+
+## 2026-08-31 session (cont 3): instrumented ground truth built; junction divergence pinned
+
+Built a patched OrcaSlicer 2.4.2 via nixpkgs (`/tmp/orca-gt/default.nix` +
+`dump.patch`, env-gated `ORCA_DUMP_TIMES` per-G1-block dump of
+cum/block-time/entry/cruise/exit/dist/accel). Key facts established:
+
+- The nixpkgs orca 2.4.2 source is **byte-identical** to the repo's
+  `OrcaSlicer/` tree, and its sliced output for the Eryone case matches the
+  AppImage reference except 2 non-motion lines — so its time dump is ground
+  truth for the same move stream.
+- GT total = 446.895s (the real M73 total ✓). Against the verbatim extract:
+  **smooth progressive drift +0.007s → +8.44s** through the printing phase
+  (1000 matched blocks), max at the end. Prepare phase matches exactly.
+- Per-block comparison pins the divergence class: the wall-block junction
+  speeds. Example (ids 161-164, the inner-wall zigzag, cruise 40.863,
+  90° turns): **GT entry=exit=3.5355 (= E-jerk 5 / √2) vs extract 9.0
+  (XY jerk 9)** — every wall block is mistimed by ~+0.02s in GT, which
+  accumulates to the 8.4s.
+- The junction computation in the running binary differs from a verbatim
+  transcription of `GCodeProcessor.cpp:4436-4530` despite identical sources —
+  the junction trace patch (`ORCA_DUMP_JUNCTION`) landed in the
+  `process_file` overload (line 4084) rather than the slicing overload
+  (4444, fuzz-2 displacement) and never fires; the time-dump in
+  `calculate_time` fires fine.
+- E-only moves (retract/unretract) are timed but get **no g1_times_cache
+  entries** in the real (M73 emission skips them) — relevant for Ares's
+  M73 line placement parity too.
+
+NEXT: re-anchor the junction trace at the slicing overload with unique
+context (extend the hunk upward past the duplicate region, `fuzz=0`), dump
+`vmax_junction`/`v_factor`/jerk vectors for ids 155-165, and identify the
+exact formula difference (suspect: the E-axis junction geometry — GT walls
+settle at E-jerk/√2 where the transcription yields the XY jerk). Then fix
+Ares's `RollingPlanner` junction kernel and the M73 cache skip for E-only
+moves; re-run the mark-fit (target 45/45), the H2S slowdown feeds, and the
+ksr R108/R109 residue.
