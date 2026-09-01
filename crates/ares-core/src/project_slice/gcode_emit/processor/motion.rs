@@ -323,13 +323,13 @@ impl MotionState {
             return self.jerk;
         }
         let mut jerk = [0.0; 4];
-        for axis in 0..4 {
-            let effective_acceleration = if self.max_acceleration[axis] > 0.0 {
-                self.acceleration.min(self.max_acceleration[axis])
+        for (jerk, max_acceleration) in jerk.iter_mut().zip(self.max_acceleration) {
+            let effective_acceleration = if max_acceleration > 0.0 {
+                self.acceleration.min(max_acceleration)
             } else {
                 self.acceleration
             };
-            jerk[axis] = if effective_acceleration > 0.0 {
+            *jerk = if effective_acceleration > 0.0 {
                 (self.junction_deviation * effective_acceleration * 2.5).sqrt()
             } else {
                 0.0
