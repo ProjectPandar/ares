@@ -127,7 +127,7 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
         );
         state.current_feedrate = state.options.retraction_feedrate;
     }
-    if !segments.is_empty() && during > f64::EPSILON {
+    if !segments.is_empty() {
         let wipe_start = if state.tags.is_bbl() {
             "; WIPE_START\n"
         } else {
@@ -143,16 +143,21 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
         state.current_feedrate = wipe_speed * 60.0;
         for (point, segment_length) in segments {
             let retraction = during * (segment_length / distribution_distance);
-            let retract = extrusion::coordinate(state, -retraction);
-            output.extend_from_slice(
+            // Orca's `extrude_to_xy` omits the E word when the wipe carries
+            // no retraction (`retract_before_wipe` = 100% leaves nothing to
+            // distribute during the wipe).
+            let line = if retraction > f64::EPSILON {
+                let retract = extrusion::coordinate(state, -retraction);
                 format!(
                     "G1 X{} Y{} E{}\n",
                     format_axis(point.x),
                     format_axis(point.y),
                     format_extrusion(retract)
                 )
-                .as_bytes(),
-            );
+            } else {
+                format!("G1 X{} Y{}\n", format_axis(point.x), format_axis(point.y))
+            };
+            output.extend_from_slice(line.as_bytes());
             state.x = point.x;
             state.y = point.y;
             state.last_scaled_position = Some((
