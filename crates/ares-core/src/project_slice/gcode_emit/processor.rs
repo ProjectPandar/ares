@@ -20,6 +20,7 @@ pub(super) struct ProcessorLimits {
     pub(super) travel_acceleration: f64,
     pub(super) gcode_flavor: GCodeFlavor,
     pub(super) bbl_printer: bool,
+    pub(super) junction_deviation: f64,
 }
 
 pub(super) fn process(
@@ -157,6 +158,7 @@ impl Estimate {
         );
         let mut prepare_stages = Vec::new();
         state.gcode_flavor = limits.gcode_flavor;
+        state.junction_deviation = limits.junction_deviation;
         let mut events = Vec::new();
         let mut prepare_stage = false;
         let mut saw_motion_command = false;

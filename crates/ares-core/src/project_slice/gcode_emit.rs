@@ -383,6 +383,15 @@ pub(super) fn emit(
             ),
             gcode_flavor: traversal.resolved.views.full.printer.gcode.gcode_flavor,
             bbl_printer: state.tags.is_bbl(),
+            junction_deviation: machine::first(
+                &traversal
+                    .resolved
+                    .views
+                    .full
+                    .printer
+                    .machine
+                    .machine_max_junction_deviation,
+            ),
         },
     ))
 }

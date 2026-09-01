@@ -23,6 +23,7 @@ pub(super) struct MotionState {
     pub(super) max_acceleration: [f64; 4],
     pub(super) max_feedrate: [f64; 4],
     pub(super) jerk: [f64; 4],
+    pub(super) junction_deviation: f64,
     pub(super) relative: bool,
     pub(super) e_relative: bool,
     pub(super) wiping: bool,
@@ -44,6 +45,7 @@ impl Default for MotionState {
             max_acceleration: [0.0; 4],
             max_feedrate: [0.0; 4],
             jerk: [9.0, 9.0, 3.0, 2.5],
+            junction_deviation: 0.0,
             relative: false,
             e_relative: false,
             gcode_flavor: GCodeFlavor::MarlinLegacy,
@@ -302,7 +304,7 @@ impl MotionState {
             speed,
             acceleration: acceleration.max(1.0),
             centripetal_acceleration: self.acceleration.max(1.0),
-            jerk: self.jerk,
+            jerk: self.effective_jerk(),
             direction: scale(delta, 1.0 / distance),
             kind: if !self.wiping && e_only && e_delta > 0.0 {
                 MotionKind::Unretract
@@ -310,6 +312,30 @@ impl MotionState {
                 MotionKind::Regular
             },
         })
+    }
+
+    /// `GCodeProcessor.cpp:5766-5791`: for Marlin firmware with a positive
+    /// `machine_max_junction_deviation`, the per-axis jerk limit derives
+    /// from the junction deviation and the current print acceleration
+    /// clamped by the per-axis maximum; classic M205 jerks apply otherwise.
+    fn effective_jerk(&self) -> [f64; 4] {
+        if self.gcode_flavor != GCodeFlavor::MarlinFirmware || self.junction_deviation <= 0.0 {
+            return self.jerk;
+        }
+        let mut jerk = [0.0; 4];
+        for axis in 0..4 {
+            let effective_acceleration = if self.max_acceleration[axis] > 0.0 {
+                self.acceleration.min(self.max_acceleration[axis])
+            } else {
+                self.acceleration
+            };
+            jerk[axis] = if effective_acceleration > 0.0 {
+                (self.junction_deviation * effective_acceleration * 2.5).sqrt()
+            } else {
+                0.0
+            };
+        }
+        jerk
     }
     fn segment_block(&self, delta: [f64; 4]) -> Option<MotionBlock> {
         let xyz_distance = norm([delta[0], delta[1], delta[2], 0.0]);
@@ -346,7 +372,7 @@ impl MotionState {
             speed,
             acceleration: acceleration.max(1.0),
             centripetal_acceleration: self.acceleration.max(1.0),
-            jerk: self.jerk,
+            jerk: self.effective_jerk(),
             direction: scale(delta, 1.0 / distance),
             kind: if !self.wiping && e_only && delta[3] > 0.0 {
                 MotionKind::Unretract
