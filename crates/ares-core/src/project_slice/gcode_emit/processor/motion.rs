@@ -68,6 +68,10 @@ pub(super) struct MotionBlock {
     pub(super) centripetal_acceleration: f64,
     pub(super) jerk: [f64; 4],
     pub(super) direction: [f64; 4],
+    /// E-only moves time into the machine total but get no g1_times_cache
+    /// entry (`GCodeProcessor` pushes the cache per block only for
+    /// motion lines, so M73 emission skips retracts/unretracts).
+    pub(super) e_only: bool,
     pub(super) kind: MotionKind,
 }
 
@@ -311,6 +315,7 @@ impl MotionState {
             } else {
                 MotionKind::Regular
             },
+            e_only,
         })
     }
 
@@ -379,6 +384,7 @@ impl MotionState {
             } else {
                 MotionKind::Regular
             },
+            e_only,
         })
     }
 

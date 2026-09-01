@@ -210,6 +210,7 @@ impl Estimate {
                     centripetal_acceleration: 0.0,
                     jerk: [0.0; 4],
                     direction: [0.0; 4],
+                    e_only: false,
                     kind: MotionKind::ToolChange,
                 });
                 block_line_ids.push(g1_line_id);
@@ -250,9 +251,13 @@ impl Estimate {
         let cache = block_line_ids
             .into_iter()
             .zip(&times)
-            .map(|(id, time)| {
+            .zip(blocks.iter().map(|block| block.e_only))
+            .filter_map(|((id, time), e_only)| {
                 cumulative += time;
-                (id, cumulative)
+                // E-only moves time into the total but get no g1_times_cache
+                // entry, so M73 emission skips retract/unretract lines
+                // (mirrors the GT dump behavior).
+                (!e_only).then_some((id, cumulative))
             })
             .collect::<Vec<_>>();
         let mut elapsed = vec![None; lines.len() + 1];

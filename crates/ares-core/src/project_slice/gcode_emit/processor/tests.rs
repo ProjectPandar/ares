@@ -183,6 +183,7 @@ fn collinear_blocks_keep_speed_at_the_shared_junction() {
         jerk: [10.0; 4],
         direction: [1.0, 0.0, 0.0, 0.0],
         kind: super::motion::MotionKind::Regular,
+        e_only: false,
     };
 
     let elapsed = planned_times(&[block(), block()]).into_iter().sum::<f64>();
@@ -200,6 +201,7 @@ fn tool_change_block_resets_the_following_junction() {
         jerk: [0.0; 4],
         direction: [0.0; 4],
         kind: super::motion::MotionKind::ToolChange,
+        e_only: false,
     };
     let retract = MotionBlock {
         distance: 3.0,
@@ -209,6 +211,7 @@ fn tool_change_block_resets_the_following_junction() {
         jerk: [9.0, 9.0, 3.0, 2.5],
         direction: [0.0, 0.0, 0.0, -1.0],
         kind: super::motion::MotionKind::Regular,
+        e_only: false,
     };
 
     let times = planned_times(&[tool_change, retract]);
@@ -227,6 +230,7 @@ fn isolated_block_uses_firmware_safe_entry_speed() {
         jerk: [9.0, 9.0, 3.0, 2.5],
         direction: [1.0, 0.0, 0.0, 0.0],
         kind: super::motion::MotionKind::Regular,
+        e_only: false,
     };
 
     let elapsed = planned_times(&[block])[0];
@@ -330,4 +334,20 @@ fn bare_g92_resets_all_logical_axes() {
 
     assert_eq!(state.position, [0.0; 3]);
     assert_eq!(state.e_position, 0.0);
+}
+#[test]
+fn progress_skips_e_only_retract_lines() {
+    // E-only moves have no g1_times_cache entry of their own (their ids are
+    // absent from Orca's dump). An M73 after the retract carries the previous
+    // motion line's cumulative time, and the line after the retract sees no
+    // entry, so the retract's own cumulative time never reaches an M73.
+    let output = b"M73 P0 R0\nG1 X100 F600\nG1 E-5 F300\nG1 Z.8 F600\nM73 P100 R0\n".to_vec();
+
+    let output =
+        String::from_utf8(process(output, true, 0.0, 0.0, ProcessorLimits::default())).unwrap();
+
+    assert!(output.contains("G1 E-5 F300\nM73 P"), "{output}");
+    // the only M73 after Z.8 is the final P100 placeholder, so no emission
+    // carries the retract's own cumulative time
+    assert!(output.ends_with("G1 Z.8 F600\nM73 P100 R0\n"), "{output}");
 }
