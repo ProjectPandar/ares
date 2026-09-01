@@ -2273,3 +2273,28 @@ Sweep 7: 328/1001 (59 oracle SIGSEGV rows are retry noise). The lifecycle
 family's printers either hit oracle crashes or carry the co-occurring
 multi-extruder/toolchange divergences; the will_move_z gate is
 upstream-faithful regardless.
+
+## 2026-09-01 session (cont 2): axis leading-zero strip landed; M205 layer-1 travel-jerk rule decoded
+
+Landed (commit `9fab2e3c`): `format::axis` strips the leading zero for
+sub-unit magnitudes on both signs (`Y-0.936` → `Y-.936`), matching
+`GCodeFormatter::emit_axis` (GCodeWriter.cpp:1248-1265). Near-origin
+printers (SeeMeCNC Artemis) had every sub-unit coordinate word wrong;
+the Artemis case diff dropped 794 → 384 lines. The wipe-path formatter
+(Orca's six-decimal second formatter, keeps `X0.743304`-style) is
+untouched — ares's dual-formatter split already mirrors that boundary.
+
+Decoded (not yet landed): the missing `M205 X8/X4` pair around the
+inner→outer wall travel on layer 1. Orca's `travel_to` has a dedicated
+first-layer branch (`GCode.cpp:7370-7380`): `initial_layer_travel_jerk`
+(a FloatOrPercent defaulting to **100% of travel_jerk**) applies to
+every layer-1 travel regardless of role/shortness; the role-based
+short-travel rule only runs on later layers. GT dump shows the 0.625mm
+role=2 (external) travel as `short=1` yet jerk=8 (the 100% default).
+Ares's `begin_path_travel` layer-0 branch already uses `travel_jerk`,
+which should equal the 100% default — but the Artemis slice still skips
+the toggle, so the divergence is elsewhere in the call path (which
+travel emitters route through `begin_path_travel` vs the gcode_writer
+path). NEXT: dump ares's `begin_path_travel` invocations for the
+Artemis case and compare against the GT `TRAVEL` trace
+(`/tmp/orca-gt/tjunction.txt`).
