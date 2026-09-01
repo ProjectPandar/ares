@@ -25,6 +25,9 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) spiral_vase: bool,
     pub(in crate::project_slice::gcode_emit) spiral_vase_layer: bool,
     pub(in crate::project_slice::gcode_emit) positioned: bool,
+    /// The Z the machine start/filament g-code left the nozzle at; mirrors
+    /// `GCodeWriter::m_pos(2)` for the `change_layer` `will_move_z` gate.
+    pub(in crate::project_slice::gcode_emit) writer_z: Option<f64>,
     pub(in crate::project_slice::gcode_emit) last_scaled_position: Option<(i64, i64)>,
     pub(in crate::project_slice::gcode_emit) last_feature: Option<&'static str>,
     pub(in crate::project_slice::gcode_emit) last_width: Option<f32>,

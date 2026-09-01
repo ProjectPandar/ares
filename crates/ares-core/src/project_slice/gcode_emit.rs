@@ -149,6 +149,10 @@ pub(super) fn emit(
                     start_position.as_ref(),
                     first_layer_bounds,
                 )?;
+                // Track the Z the start g-code left the nozzle at, mirroring
+                // `GCodeWriter::m_pos(2)` for the `change_layer`
+                // `will_move_z` gate (`GCode.cpp:5693`).
+                state.writer_z = Some(trailing_gcode_z(&output));
             }
             let layer_output_start = output.len();
             cooling.begin_layer(&mut output, layer_index);
@@ -200,9 +204,17 @@ pub(super) fn emit(
             // The layer-start retraction mirrors the `change_layer`/BBS
             // layer-start retract, which is gated on
             // `retract_when_changing_layer` (`GCode.cpp:5206`, `GCode.cpp:5693`);
-            // flavors with the flag off retract lazily at the first travel
-            // instead.
-            if layer_index == 0 && state.options.retract_when_changing_layer {
+            // the compatible-flavor `change_layer` variant additionally
+            // requires `will_move_z` — the nozzle must actually change Z
+            // from wherever the start g-code left it (`GCode.cpp:5693`).
+            // BBL layer starts retract whenever the flag is set.
+            let will_move_z = state.writer_z.map_or(true, |writer_z| {
+                (f64::from(layer_z) - writer_z).abs() > 1.0e-4
+            });
+            if layer_index == 0
+                && state.options.retract_when_changing_layer
+                && (state.tags.is_bbl() || will_move_z)
+            {
                 motion::retract_before_layer(&mut output, &mut state);
             }
             if timelapse_at_layer_change {
@@ -395,6 +407,27 @@ pub(super) fn emit(
         },
     ))
 }
+/// The Z of the last G0/G1 move in the emitted prefix — what the
+/// `GCodeWriter`'s Z position would be after emitting the same g-code
+/// (feeds the `change_layer` `will_move_z` gate).
+fn trailing_gcode_z(output: &[u8]) -> f64 {
+    std::str::from_utf8(output)
+        .ok()
+        .and_then(|text| {
+            text.lines().rev().find_map(|line| {
+                let code = line.split(';').next()?.trim();
+                let command = code.split_whitespace().next()?;
+                if !matches!(command, "G0" | "G1") {
+                    return None;
+                }
+                code.split_whitespace()
+                    .find_map(|word| word.strip_prefix('Z'))
+                    .and_then(|value| value.parse::<f64>().ok())
+            })
+        })
+        .unwrap_or(0.0)
+}
+
 fn append_layer_end_timelapse(
     output: &mut Vec<u8>,
     state: &mut motion::EmitState,
