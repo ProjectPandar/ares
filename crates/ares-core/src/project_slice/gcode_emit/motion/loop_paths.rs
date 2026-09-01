@@ -147,6 +147,16 @@ fn append_wipe_before_external(
     let point = crate::geometry::Point::new(x.round() as i64, y.round() as i64);
     let x = geometry.scale.unscale(point.x()) + state.offset.0;
     let y = geometry.scale.unscale(point.y()) + state.offset.1;
+    // Orca routes this hop through `travel_to` inside the fake
+    // extrusion path (`GCode.cpp:5884-5893`), so the travel-class
+    // accel/jerk setup fires for it exactly like any other path-start
+    // travel (the GT trace shows the `role=2` travel_to for it).
+    super::state::begin_path_travel(
+        output,
+        state,
+        "Outer wall",
+        (x - state.x).hypot(y - state.y),
+    );
     output.extend_from_slice(
         format!(
             "G1 X{} Y{} F{}\n",
@@ -222,6 +232,15 @@ fn append_inward_move(
     );
     let x = geometry.scale.unscale(point.x()) + state.offset.0;
     let y = geometry.scale.unscale(point.y()) + state.offset.1;
+    // Orca routes this hop through `travel_to` inside the fake extrusion
+    // path (`GCode.cpp:5884-5893`), so the travel-class accel/jerk setup
+    // fires for it exactly like any other path-start travel.
+    super::state::begin_path_travel(
+        output,
+        state,
+        "Inner wall",
+        (x - state.x).hypot(y - state.y),
+    );
     output.extend_from_slice(format!("G1 X{} Y{}\n", format_axis(x), format_axis(y)).as_bytes());
     state.x = x;
     state.y = y;
