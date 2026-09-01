@@ -2373,3 +2373,47 @@ next milestone is the wipe path endpoint/length differences and the
 loop chaining order (Chuanying residue: loop-2 start corner differs,
 `travel to (-4.326,-2.159)` vs direct `(-2.159,-4.326)` — the
 chained_loops ordering family).
+
+## 2026-09-01 session (cont 6): first-travel Z restatement landed; avoid-crossing milestone spec'd
+
+Landed commit `941ebee6`: the print's first travel from an unclear
+position re-states Z as a separate descend (GCodeWriter.cpp:685-707)
+and _extrude adds the first-extrusion force re-statement
+(GCode.cpp:6378-6385) regardless of retraction state. Ares modeled the
+pair only on the eager-lift path; the plain first travel (no retract,
+no hop) emitted XY alone. Verified: Anker M5C first-travel block now
+matches, H2S byte-identical, ksr golden unchanged (lazy-lift branch
+keeps its single descend). Sweep unchanged at 358 (the fix is correct
+but those printers' first semantic divergence moved elsewhere).
+
+### AvoidCrossingPerimeters port milestone (next, source-cited)
+
+Diagnosis on Co Print ChromaSet 0.4 (fixture /tmp/ares-parity-1018086/
+481e92e02c55a55a-1234a1e8fc4eb63f, layer-2 slowdown feeds 3254 vs
+3218): Orca routes the inner→outer wall travel through an
+AvoidCrossingPerimeters DETOUR — wipe back 2mm with the full E-.5
+retract, then an 8-move circular detour around the wall corner with a
+spiral Z lift 0.4→0.6, descend, unretract. Ares's rectangle router
+emits 3 flat moves and skips the wipe (needs_retraction sees the
+shorter routed travel). This drives the layer-2 travel-geometry-count
+(39+34) and deposition-feed clusters (~200 printers total).
+
+Upstream boundary:
+- `GCode/AvoidCrossingPerimeters.cpp` (1731 LOC): `travel_to`
+  (:1233-1312), `avoid_perimeters`, `init_boundary`, `init_layer`
+  (:1315+), `need_wipe` (:714+), `get_boundary`/`get_boundary_external`,
+  the grid-based visibility graph and AStar through boundary segments
+- `GCode.cpp` call sites: `travel_to` (:7415-7437 routing + re-route
+  after a wiping retract moved the start), `use_external_mp_once` for
+  the object's first travel (:5345-5347, direct when the destination
+  lies inside the external contour), `layer()->lslices`/bboxes inputs
+
+Ares destination boundary: rewrite
+`crates/ares-core/src/project_slice/gcode_emit/motion/path/avoid_crossing.rs`
+(replace the rectangle router; keep the `Request`/route-return shape so
+`start_travel.rs` consumes it unchanged). Include: per-layer boundary
+init (internal = layer boundary at perimeter spacing; external = outer
+contour), detour planning, `max_travel_detour_distance` clamping, the
+wipe-disable signal, and the re-plan after a wiping retract. Defer:
+support-layer specifics. Validation: Co Print layer-2 window
+byte-compares, Anker/Artillery fixtures, then the full sweep.
