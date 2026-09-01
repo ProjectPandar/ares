@@ -2254,3 +2254,22 @@ Remaining sequence (updated):
 2. AvoidCrossingPerimeters port (travel geometry families).
 3. ksr layer-4 Clipper sliver (deposition count 1238/1241).
 4. Option sweep residuals (5 domains), then the 6-axis review loop.
+
+## 2026-09-01 session (cont): will_move_z gate landed (commit `1c4bdc24`)
+
+The layer-start retract for compatible flavors now mirrors Orca's
+`change_layer` `will_move_z` gate (`GCode.cpp:5693`): Ares tracks the
+trailing G0/G1 Z of the emitted start g-code (`GCodeWriter::m_pos(2)`
+equivalent, `trailing_gcode_z`) and suppresses the layer-0 retraction when
+the nozzle already sits at the first-layer Z (Snapmaker U1 / Prusa-XL-style
+primes that end parked at layer height). BBL layer starts keep the
+unconditional retract (`GCode.cpp:5206`). Verified: Anycubic Kobra 3 Max
+(start z ≠ layer z) keeps its retract; Prusa XL 5T keeps its z=5 retract
+(upstream-faithful — its remaining diffs are separate roots: the
+multi-extruder unretract amount 0.8 vs 1.2 and marlin-legacy slowdown
+feeds).
+
+Sweep 7: 328/1001 (59 oracle SIGSEGV rows are retry noise). The lifecycle
+family's printers either hit oracle crashes or carry the co-occurring
+multi-extruder/toolchange divergences; the will_move_z gate is
+upstream-faithful regardless.
