@@ -41,7 +41,7 @@ fn active_small_area_model_scales_solid_segment_extrusion() {
         &mut state,
     );
 
-    assert_eq!(output, b"G1 X0.2 Y0 E.08888\n");
+    assert_eq!(output, b"G1 X.2 Y0 E.08888\n");
 }
 
 #[test]
