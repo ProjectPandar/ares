@@ -232,15 +232,6 @@ fn append_inward_move(
     );
     let x = geometry.scale.unscale(point.x()) + state.offset.0;
     let y = geometry.scale.unscale(point.y()) + state.offset.1;
-    // Orca routes this hop through `travel_to` inside the fake extrusion
-    // path (`GCode.cpp:5884-5893`), so the travel-class accel/jerk setup
-    // fires for it exactly like any other path-start travel.
-    super::state::begin_path_travel(
-        output,
-        state,
-        "Inner wall",
-        (x - state.x).hypot(y - state.y),
-    );
     output.extend_from_slice(format!("G1 X{} Y{}\n", format_axis(x), format_axis(y)).as_bytes());
     state.x = x;
     state.y = y;
