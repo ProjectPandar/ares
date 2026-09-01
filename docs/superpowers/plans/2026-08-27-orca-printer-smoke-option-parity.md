@@ -2298,3 +2298,23 @@ travel emitters route through `begin_path_travel` vs the gcode_writer
 path). NEXT: dump ares's `begin_path_travel` invocations for the
 Artemis case and compare against the GT `TRAVEL` trace
 (`/tmp/orca-gt/tjunction.txt`).
+
+## 2026-09-01 session (cont 3): wipe-hop travel setup landed and corrected
+
+Landed (commits `8b6dc630` + `3e9fbd76`): the loop-START
+`append_wipe_before_external` hop now routes through
+`begin_path_travel` (Orca's `travel_to` inside the fake extrusion path,
+`GCode.cpp:5884-5893`), restoring the M205/M204 travel-setup pair
+around the inner→outer wall transition. Verified on SeeMeCNC Artemis:
+M205 stream matches exactly (0 diffs), file diff 384 → 326.
+
+The initial version also added the setup to the loop-END
+`append_inward_move` hop, which regressed the wipe_on_loops=1 printers
+(Kingroon KP3S, MagicMaker pair): Orca prints the loop-end hop as the
+final loop segment at print accel — the following M204 belongs to the
+NEXT travel. Reverted for the loop-end hop only (Kingroon back to 8
+diff lines = M73 placement + footer comments, both tolerated).
+
+NEXT: re-run the sweep with the corrected pair; then the remaining
+layer-1 control-events cluster (SET_VELOCITY_LIMIT interleaving on
+Klipper-class printers) and the AvoidCrossingPerimeters port.
