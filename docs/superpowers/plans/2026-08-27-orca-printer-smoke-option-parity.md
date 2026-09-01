@@ -2221,3 +2221,36 @@ settle at E-jerk/√2 where the transcription yields the XY jerk). Then fix
 Ares's `RollingPlanner` junction kernel and the M73 cache skip for E-only
 moves; re-run the mark-fit (target 45/45), the H2S slowdown feeds, and the
 ksr R108/R109 residue.
+
+## 2026-09-01 session: junction-deviation jerks landed — M73 byte parity on Marlin2
+
+Instrumented-ground-truth loop completed: the patched nixpkgs OrcaSlicer 2.4.2
+(`/tmp/orca-gt`) with env-gated junction traces revealed that for
+`gcode_flavor = marlin2` with `machine_max_junction_deviation > 0`,
+`GCodeProcessor::get_axis_max_jerk` returns
+`sqrt(jd · min(print_accel, axis_max_accel) · 2.5)` per axis
+(GCodeProcessor.cpp:5766-5791) instead of the classic M205 jerks. Ares used
+the classic values, under-attributing every wall junction by ~2.5x.
+
+Fix (commit `d7c24a5a`): `MotionState::effective_jerk` derives the per-axis
+limits in the processor; `ProcessorLimits.junction_deviation` flows from
+`machine_max_junction_deviation`.
+
+- Eryone ER20: estimate 7m18s → **7m26s (exact)**, M73 stream 43 → **46/46
+  lines matching** (one minute-rounding boundary differs), full-file diff
+  41,815 → 85 lines.
+- Full suites stay green (ares-core 6779/6779; ares-cli 128/129 — the ksr
+  layer-4 Clipper sliver remains the sole failure, separate workstream).
+- Sweep 6: 328/1001 (net neutral; Marlin2-class timing corrected, remaining
+  families unchanged). New visible family: Prusa XL 5T / Snapmaker U1
+  "layer 1 island lifecycle" — Ares emits an extra leading retract-only
+  island (`[Extruder -0.8 F2100]` before the first real island); Flashforge
+  Creator 5 deposition-1 feed drift (1333 vs 1318) on marlin-legacy flavor
+  (JD branch not applicable) — a separate slowdown-precision root.
+
+Remaining sequence (updated):
+1. The extra leading retract-only island on multi-extruder/IDEX layer 1
+   (lifecycle family, 64 printers).
+2. AvoidCrossingPerimeters port (travel geometry families).
+3. ksr layer-4 Clipper sliver (deposition count 1238/1241).
+4. Option sweep residuals (5 domains), then the 6-axis review loop.
