@@ -2318,3 +2318,40 @@ diff lines = M73 placement + footer comments, both tolerated).
 NEXT: re-run the sweep with the corrected pair; then the remaining
 layer-1 control-events cluster (SET_VELOCITY_LIMIT interleaving on
 Klipper-class printers) and the AvoidCrossingPerimeters port.
+
+## 2026-09-01 session (cont 4): E-only cache skip + core-xy BBL layer-start sequence
+
+Landed commit `1f8383f1` (E-only M73 cache): `MotionBlock` gained an
+`e_only` flag; the `g1_times_cache` filter drops E-only blocks so no
+M73 ever carries a retract/unretract's own cumulative time (GT dump:
+their ids are absent). Regression test
+`progress_skips_e_only_retract_lines` pins: an M73 after `G1 E-5`
+carries the PREVIOUS motion line's cumulative, and the line after the
+retract gets no entry.
+
+Landed commit `ddd6e36e` (core-xy BBL layer-start): Ares emitted the
+change-layer retract/wipe/eager-lift/timelapse at the END of the
+previous layer; Orca places them inside the NEW layer's CHANGE_LAYER
+window (`GCode.cpp:5693` retract after the layer tags,
+`GCode.cpp:5205-5210` eager lift + timelapse after the layer-change
+acceleration). The misplacement also fed different G-code into the
+cooling-buffer slowdown window — the slowdown feeds differed
+(F1719 vs F1713) explaining the "layer 1/2 deposition 1 differs"
+feedrate-only cluster. Also: eager spiral lift requires a
+known-clear position; the first-extrusion Z re-statement
+(`GCode.cpp:6378-6385`) belongs to the eager-lift travel only; the
+print-end wipe carries no `;_WIPE` marker (`GCode.cpp:470-475`); and
+the initial `T<tool>` block carries the machine load delay into the
+total but lands no `g1_times_cache` entry (GT: no cache entry at the
+T line's id, so M73 never attaches to it).
+
+Bambu Lab H2S 0.6 is now byte-identical to Orca apart from the
+timestamp line and the thumbnails config echo (the two real-Orca
+references disagree on that echo: ksr golden keeps the raw preset
+string, the H2S ref normalizes — unresolved, cosmetic only).
+
+Remaining clusters after `ddd6e36e`: re-run the sweep to re-count
+(46 layer-1 control events → expected large drop from the BBL part;
+SET_VELOCITY_LIMIT interleaving on Klipper remains); island lifecycle
+(wipe at island start on BBL; multi-extruder retracts); AvoidCrossing
+Perimeters port (travel geometry counts); marlin-legacy decel feeds.
