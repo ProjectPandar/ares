@@ -208,9 +208,9 @@ pub(super) fn emit(
             // requires `will_move_z` — the nozzle must actually change Z
             // from wherever the start g-code left it (`GCode.cpp:5693`).
             // BBL layer starts retract whenever the flag is set.
-            let will_move_z = state.writer_z.map_or(true, |writer_z| {
-                (f64::from(layer_z) - writer_z).abs() > 1.0e-4
-            });
+            let will_move_z = state
+                .writer_z
+                .is_none_or(|writer_z| (f64::from(layer_z) - writer_z).abs() > 1.0e-4);
             if layer_index == 0
                 && state.options.retract_when_changing_layer
                 && (state.tags.is_bbl() || will_move_z)
