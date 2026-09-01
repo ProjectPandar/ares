@@ -39,6 +39,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     let mut travel_set_layer_z = false;
     let mut eager_lifted_travel = false;
+    let mut unclear_position_travel = false;
     if needs_travel {
         begin_path_travel(output, state, properties.feature, travel_distance);
         let inside_internal_surface = travel::inside_internal_surfaces(
@@ -227,6 +228,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             travel_set_layer_z = true;
         } else {
             travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
+            // The print's first travel starts from an unknown position, so
+            // Orca cannot fold Z into the XY move and re-states it as a
+            // separate descend (`GCodeWriter.cpp:travel_to_xyz` unclear-
+            // position branch emits XY then `_travel_to_z`).
+            if first_position {
+                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
+                unclear_position_travel = true;
+            }
         }
         state.x = travel_x;
         state.y = travel_y;
@@ -255,6 +264,15 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     }
     state.layer_change_travel_pending = false;
     append_object_start(output, state);
+    // Orca `_extrude` (`GCode.cpp:6378-6385`): the print's first extrusion
+    // re-states Z to sync the writer with the planned layer height
+    // (`_last_pos_undefined`). It applies whenever the travel emitted the
+    // Z as a separate unclear-position descend — the eager-lift branch or
+    // the unknown-source first travel. The lazy-lift branch's descend above
+    // already models it.
+    if (eager_lifted_travel || unclear_position_travel) && first_position && !travel_set_layer_z {
+        output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
+    }
     if state.retracted {
         if first_position
             && state.options.z_hop > 0.0
@@ -270,14 +288,6 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             let z = slope_start_z.unwrap_or(state.layer_z);
             output.extend_from_slice(format!("G1 Z{}\n", format_z(z)).as_bytes());
             state.scarf_z = slope_start_z;
-        }
-        // Orca `_extrude` (`GCode.cpp:6378-6385`): the print's first
-        // extrusion re-states Z to sync the writer with the planned layer
-        // height. Only the eager-lift travel separates the descend from this
-        // re-statement; the lazy-lift branch's descend above already models
-        // it.
-        if eager_lifted_travel && first_position && !travel_set_layer_z {
-            output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
         }
         let retraction_length = state.options.retraction_length;
         let unretract = extrusion::coordinate(state, retraction_length);
