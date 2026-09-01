@@ -124,10 +124,14 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
         return;
     }
     let raised_z = state.layer_z + state.options.z_hop;
+    // `GCodeWriter::eager_lift`: the spiral form requires a known-clear
+    // position; an unknown position (right after the start g-code) falls
+    // back to the normal Z-only lift.
     if matches!(
         state.options.z_hop_type,
         crate::ZHopType::Spiral | crate::ZHopType::Auto
     ) && state.options.travel_slope_radians > 0.0
+        && state.positioned
     {
         let radius = state.options.z_hop
             / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());

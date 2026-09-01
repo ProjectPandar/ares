@@ -28,7 +28,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     state: &mut EmitState,
 ) {
     if !state.retracted {
-        retract_and_wipe(output, state);
+        retract_and_wipe_with(output, state, false);
         state.retracted = true;
     }
     if state.spiral_vase {
@@ -37,6 +37,9 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     state.pending_layer_retract = false;
 }
 
+/// `GCode.cpp:470-475`: the last wipe of the print emits no `;_WIPE` cooling
+/// marker — no later cooling pass runs to clean it (print-end retraction
+/// happens after the final layer flushes).
 pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.retracted {
         return;
@@ -70,7 +73,32 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     state.pending_layer_retract = false;
 }
 
+/// Core-xy BBL change-layer retraction: the wipe lands inside the new
+/// layer's CHANGE_LAYER block and the lift is emitted eagerly right after
+/// (`GCode.cpp:5693` change_layer retract, `GCode.cpp:5205-5210` second
+/// retract whose E half is a no-op once retracted).
+pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    if state.pending_layer_retract && !state.retracted {
+        retract_and_wipe(output, state);
+        state.retracted = true;
+    }
+    state.pending_layer_retract = false;
+    // The eager lift supersedes any lift that the deferred path scheduled
+    // for the layer's first travel.
+    state.pending_lift = None;
+    if state.retracted {
+        lift::append_eager(output, state);
+    }
+}
+
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
+    retract_and_wipe_with(output, state, true);
+}
+
+fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_marker: bool) {
     let WipePath {
         segments,
         retraction_distance,
@@ -106,9 +134,12 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
             ";WIPE_START\n"
         };
         output.extend_from_slice(wipe_start.as_bytes());
-        output.extend_from_slice(
-            format!("G1 F{};_WIPE\n", format_axis(wipe_speed * 60.0)).as_bytes(),
-        );
+        let speed_line = if cooling_marker {
+            format!("G1 F{};_WIPE\n", format_axis(wipe_speed * 60.0))
+        } else {
+            format!("G1 F{}\n", format_axis(wipe_speed * 60.0))
+        };
+        output.extend_from_slice(speed_line.as_bytes());
         state.current_feedrate = wipe_speed * 60.0;
         for (point, segment_length) in segments {
             let retraction = during * (segment_length / distribution_distance);

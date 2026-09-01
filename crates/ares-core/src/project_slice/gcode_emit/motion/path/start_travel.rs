@@ -38,6 +38,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         first_position || state.last_scaled_position != Some(first_scaled) || slope_needs_z_travel;
     let travel_distance = (first_x - state.x).hypot(first_y - state.y);
     let mut travel_set_layer_z = false;
+    let mut eager_lifted_travel = false;
     if needs_travel {
         begin_path_travel(output, state, properties.feature, travel_distance);
         let inside_internal_surface = travel::inside_internal_surfaces(
@@ -149,7 +150,8 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         } else if state.template_lifted && state.lifted && !first_position {
             travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             state.template_lifted = false;
-        } else if state.lifted && !first_position {
+        } else if state.lifted {
+            eager_lifted_travel = true;
             if !lifted_for_travel {
                 travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             } else if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
@@ -268,6 +270,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             let z = slope_start_z.unwrap_or(state.layer_z);
             output.extend_from_slice(format!("G1 Z{}\n", format_z(z)).as_bytes());
             state.scarf_z = slope_start_z;
+        }
+        // Orca `_extrude` (`GCode.cpp:6378-6385`): the print's first
+        // extrusion re-states Z to sync the writer with the planned layer
+        // height. Only the eager-lift travel separates the descend from this
+        // re-statement; the lazy-lift branch's descend above already models
+        // it.
+        if eager_lifted_travel && first_position && !travel_set_layer_z {
+            output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
         }
         let retraction_length = state.options.retraction_length;
         let unretract = extrusion::coordinate(state, retraction_length);

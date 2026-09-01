@@ -210,7 +210,12 @@ impl Estimate {
                     centripetal_acceleration: 0.0,
                     jerk: [0.0; 4],
                     direction: [0.0; 4],
-                    e_only: false,
+                    // The tool-change block lands no `g1_times_cache` entry
+                    // (verified against the `ORCA_DUMP_TIMES` dump: the
+                    // initial `T0`'s load delay reaches the machine total via
+                    // blocks that the M73 lookup never sees), so M73 emission
+                    // never attaches to the tool-change line.
+                    e_only: true,
                     kind: MotionKind::ToolChange,
                 });
                 block_line_ids.push(g1_line_id);

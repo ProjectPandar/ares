@@ -28,7 +28,8 @@ pub(super) use state::{
     queue_object_stop_label,
 };
 pub(super) use travel::{
-    flush_pending_retract_lift, flush_pending_retract_wipe, retract_for_print_end,
+    flush_pending_retract_eager, flush_pending_retract_lift, flush_pending_retract_wipe,
+    retract_for_print_end,
 };
 
 use features::PathProperties;
@@ -59,15 +60,16 @@ pub(super) fn defer_layer_retraction(state: &mut EmitState) {
 
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
-        // BBL and traditional timelapse prints retract immediately at the
-        // layer end (`GCode.cpp:5527-5546` fires `retract()` before the
-        // labels and timelapse template); only non-traditional compatible
-        // flavors defer the retraction past the layer marker block.
-        if state.tags.is_bbl() || state.traditional_timelapse {
+        if state.traditional_timelapse {
+            // Traditional timelapse prints (i3 structure or multi-nozzle)
+            // retract immediately at the layer end (`GCode.cpp:5527-5546`
+            // fires `retract()` before the labels and timelapse template).
             travel::retract_for_timelapse(output, state);
         } else {
-            // Compatible flavor defers the retraction past the layer marker
-            // block; `flush_pending_retract_wipe`/`_lift` emit it.
+            // Core-xy BBL (`GCode.cpp:5693` change_layer retract) and
+            // compatible flavors emit the retraction inside the next layer's
+            // CHANGE_LAYER block; `flush_pending_retract_wipe`/`_lift` emit
+            // it there.
             state.pending_layer_retract = true;
         }
     }

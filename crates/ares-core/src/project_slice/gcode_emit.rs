@@ -247,6 +247,17 @@ pub(super) fn emit(
                 second_layer_done = true;
                 machine::append_second_layer_transition(&mut output, traversal, bed_cache);
             }
+            // Orca `GCode.cpp:5205-5210`: core-xy BBL printers emit the eager
+            // change-layer lift (the second change-layer retract is a no-op
+            // for E once retracted) and the timelapse gcode inside the new
+            // layer's window, after the layer-change acceleration.
+            let bbl_layer_start = state.tags.is_bbl() && !state.traditional_timelapse;
+            if bbl_layer_start && state.options.retract_when_changing_layer {
+                motion::flush_pending_retract_eager(&mut output, &mut state);
+            }
+            if bbl_layer_start {
+                timelapse::append_and_track(&mut output, &mut state, timelapse_context)?;
+            }
             let lower_boundary_lines = traversal.objects[object_index]
                 .lower_slices(layer_index)
                 .into_iter()
@@ -442,6 +453,11 @@ fn append_layer_end_timelapse(
         // `GCode.cpp:5538-5546` `add_object_change_labels`: pending
         // object-end labels flush before the layer-end template.
         motion::append_exclude_end(output, state);
+    }
+    // Core-xy BBL renders the timelapse inside the next layer's
+    // CHANGE_LAYER block (`GCode.cpp:5205-5210`).
+    if state.tags.is_bbl() && !traditional {
+        return Ok(());
     }
     timelapse::append_and_track(output, state, context)
 }
