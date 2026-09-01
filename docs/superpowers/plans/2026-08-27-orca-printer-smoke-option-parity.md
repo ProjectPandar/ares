@@ -2355,3 +2355,21 @@ Remaining clusters after `ddd6e36e`: re-run the sweep to re-count
 SET_VELOCITY_LIMIT interleaving on Klipper remains); island lifecycle
 (wipe at island start on BBL; multi-extruder retracts); AvoidCrossing
 Perimeters port (travel geometry counts); marlin-legacy decel feeds.
+
+## 2026-09-01 session (cont 5): no-E wipe moves landed
+
+Landed commit `99feb59f`: Orca's `Wipe::wipe` always runs the stored
+path after the retraction; with `retract_before_wipe = 100%` the full
+retraction is consumed by the `G1 E-<len>` line and the wipe moves
+carry dE = 0, which `extrude_to_xy` emits as plain `G1 X Y` (no E
+word). Ares had skipped the whole wipe block when the during-wipe
+retraction was zero. Chuanying X1 0.25 (wipe=1, retract_before_wipe
+100%): 165 missing wipe moves, file diff 1916 → 386.
+
+Sweep: 340 → 358 of 1001. Cluster shift: the "layer 1 deposition 1"
+feed cluster is gone (51 → 0); travel-geometry-count grew (18+16 →
+39+34) — the wipe XY moves are travels in the semantic parser, so the
+next milestone is the wipe path endpoint/length differences and the
+loop chaining order (Chuanying residue: loop-2 start corner differs,
+`travel to (-4.326,-2.159)` vs direct `(-2.159,-4.326)` — the
+chained_loops ordering family).
