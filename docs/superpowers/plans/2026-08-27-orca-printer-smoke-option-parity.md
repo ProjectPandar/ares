@@ -2766,3 +2766,25 @@ gcode diff dropped 229 -> 209 with zero motion differences left
 (only M73 timing and header lines); the pinned unit expectation
 moved one unit with the new rounding. Suite back to 6910/6911 (only
 the known ksr layer-4 deposition count).
+
+## 2026-09-02 session (cont 11): option 645/649; sweep steady at 390
+
+The FRound fix flipped bottom_surface_pattern (octagramspiral) — option
+coverage is 645/649. The printer sweep stays 390/1001 (the rounding fix
+matters at option-domain granularity; no printer-level first-divergence
+moved). Remaining option domains: raft_layers (raft generation missing),
+sparse_infill_pattern (3dhoneycomb: layer 6 deposition count 25 vs 27),
+top_surface_pattern (octagramspiral emission order — see below),
+wall_generator (arachne dispatch).
+
+Top-surface octagramspiral follow-up: after FRound the cut points match
+exactly; the residual 2-4/44 line diffs are adjacent mirrored-pair
+swaps in the intersection emission order. Empirical sort study on the
+44-fragment dump: Orca's order is NOT (max-Y desc, min-x asc) — a
+spine fragment (0,0)->(4.122,1.598) emits at position 12 between the
+max-Y 3.578 and 3.220 groups, and two mirrored tie groups (+/-4.627 at
+max Y 1.093, +/-5.637 at max Y 0.083) emit +X first while five others
+emit -X first. A uniform tie flip (descending min-x) regressed 4->16
+diff lines, so the emission follows Clipper 6's scan/OutRec allocation
+semantics, not a sortable key; a faithful port needs the scanline
+allocation model, deferred with the avoid-crossing router milestone.
