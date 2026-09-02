@@ -2830,3 +2830,27 @@ speed rounding and layer-6 fragment connect order.
 Added a regression test pinning that intersection_open_polylines
 splits zigzag polylines at boundary crossings (the synthetic
 diagnostic used to rule the engine in/out).
+
+## 2026-09-02 session (cont 14): thread-safe honeycomb dump; f32 check re-verified
+
+The flockfile-serialized INTERSECT dump (honey4 build) settles the
+3dhoneycomb structure: Orca emits exactly 3 fragments per fill
+invocation (117 total) — identical to ares — and the fragment sets
+match across sections (the fill invocation ORDER differs because
+Orca's worker threads race, but per-z content is the same). The
+earlier "orca varies 0..31" was entirely racy-dump interleaving.
+
+Correction to cont 12: the "first-invocation fragments now match
+exactly" claim was a false verification — the diff piped a
+non-existent ares dump file (ARES_DUMP_CHAIN against the honeycomb
+fixture produced no output; diff failed and grep -c counted zero).
+The real thread-safe comparison shows the f32 tri_wave fix landed in
+the right direction (most fragments now match, e.g. -0.536931
+-5.147767 -> 0.536930 5.147775 is identical) but ~1-unit cut-point
+differences remain on roughly a third of the fragments
+(-3.042605/-3.042606 family). The grid row positions match exactly;
+the residual is in the interior zigzag vertices feeding the boundary
+intersection (sub-unit f64 in the critical-point products truncating
+to different integers). Next slice: dump the interior grid vertices
+(both frames) and compare the pre-truncation doubles against
+upstream's makeActualGrid arithmetic.
