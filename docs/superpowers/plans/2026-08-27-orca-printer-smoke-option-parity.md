@@ -2788,3 +2788,26 @@ emit -X first. A uniform tie flip (descending min-x) regressed 4->16
 diff lines, so the emission follows Clipper 6's scan/OutRec allocation
 semantics, not a sortable key; a faithful port needs the scanline
 allocation model, deferred with the avoid-crossing router milestone.
+
+## 2026-09-02 session (cont 12): honeycomb tri_wave is f32 in upstream
+
+Instrumented 3dhoneycomb comparison (ORCA_DUMP_HONEY/ARES_DUMP_HONEY
+patches on Fill3DHoneycomb.cpp and the Rust port): the cut points
+differed by one scaled unit on the first fill invocation. Root cause:
+upstream `triWave` keeps its phase in a C `float`
+(`Fill3DHoneycomb.cpp:29-35`) — the storage rounding and fractional
+extraction happen in single precision; f64 shifts the critical points
+by one unit after truncation. Fixed `tri_wave` to round through f32
+(`(position / (2*grid) + 0.25) as f32`, subtract `(int)t` as f32,
+then the amplitude arithmetic back in f64). First-invocation
+fragments now match exactly; the fixture diff dropped 830 -> 753.
+
+Remaining 3dhoneycomb divergence (structural, next slice): per-fill
+fragment counts — Orca varies by phase (3 3 3 3 2 4 0 0 ... 7 10 11
+31) while ares produces exactly 3 every invocation (117 total on
+both sides). The make_grid phase or grid alignment keeps ares'
+columns from splitting/being filtered at the boundary the way
+Clipper 6 does; the counts match only at the low-amplitude phases.
+Also note upstream's `pl.simplify(5 * spacing)` passes the mm value
+(~2.25) against scaled coordinates — a no-op — and ares'
+`5.0 * params.spacing` (mm) already matches that no-op exactly.

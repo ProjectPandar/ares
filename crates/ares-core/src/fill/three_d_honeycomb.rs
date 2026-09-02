@@ -237,10 +237,14 @@ fn perpendicular_points(critical: &[f64], request: PerpendicularRequest) -> Vec<
     output
 }
 
+// Upstream `triWave` keeps the phase in a C `float` (f32) — the storage
+// rounding and fractional extraction happen in single precision
+// (`Fill3DHoneycomb.cpp:29-35`); f64 here shifts cut points by one
+// scaled unit after truncation.
 fn tri_wave(position: f64, grid: f64) -> f64 {
-    let mut t = position / (2.0 * grid) + 0.25;
-    t -= t as i64 as f64;
-    (1.0 - (8.0 * t - 4.0).abs()) * (grid * 0.25) + grid * 0.25
+    let mut t = (position / (2.0 * grid) + 0.25) as f32;
+    t -= t as i64 as f32;
+    (1.0 - (f64::from(t) * 8.0 - 4.0).abs()) * (grid * 0.25) + grid * 0.25
 }
 
 fn troct_wave(position: f64, grid: f64, z: f64) -> f64 {
