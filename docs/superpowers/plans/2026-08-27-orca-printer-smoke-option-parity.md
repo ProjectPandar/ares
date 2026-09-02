@@ -2895,3 +2895,18 @@ Fix: same form as the siblings. The honeycomb fixture diff drops
 753 -> 323 lines (120 non-timing lines — F894/F895 slowdown rounding
 plus fragment connect order). Suite 6911/6912 (only the known ksr
 layer-4 deposition count).
+
+## 2026-09-02 session (cont 17): honeycomb down to connect-order start selection
+
+After the density fix, the 3dhoneycomb option domain failure moved
+from layer 6 to layer 12 ("deposition count expected 27, actual 25").
+The z=2.4 section shows both slicers emitting ONE connected path
+through the same zigzag vertices — but traversed with different start
+points and rotations: Orca starts at (114.02,108.451) walking
+counterclockwise through the bottom; ares starts at (109.464,114.02)
+walking the same cycle from the top. The deposition count difference
+(27 vs 25) comes from the two extra connect moves Orca makes
+wrapping around the bottom-left corner ((105.98,105.98) →
+(105.98,106.487)) vs ares exiting at (112.165,105.98). Next slice:
+the connect_infill/chain start-point selection (the greedy start or
+the connect ordering input) at honeycomb phases.

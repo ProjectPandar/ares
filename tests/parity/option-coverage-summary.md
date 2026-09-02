@@ -510,7 +510,7 @@
 | PASS | sparse_infill_filament_id | coInt | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4127 |  |
 | PASS | sparse_infill_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:1434 |  |
 | PASS | sparse_infill_line_width | coFloatOrPercent | 3 | 1 | 2 | src/libslic3r/PrintConfig.cpp:4136 | max: orca-slicer failed (exit status: 205): Too small line width; seeded: orca-slicer failed (exit status: 205): Too small line width |
-| FAIL | sparse_infill_pattern | coEnum | 26 | 26 | 0 | src/libslic3r/PrintConfig.cpp:3017 | 3dhoneycomb: layer 6 deposition count differs: expected 25, actual 27 |
+| FAIL | sparse_infill_pattern | coEnum | 26 | 26 | 0 | src/libslic3r/PrintConfig.cpp:3017 | 3dhoneycomb: layer 12 deposition count differs: expected 27, actual 25 |
 | PASS | sparse_infill_rotate_template | coString | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:3993 |  |
 | PASS | sparse_infill_speed | coFloat | 1 | 1 | 0 | src/libslic3r/PrintConfig.cpp:4174 |  |
 | PASS | spiral_finishing_flow_ratio | coFloat | 3 | 3 | 0 | src/libslic3r/PrintConfig.cpp:5868 |  |
