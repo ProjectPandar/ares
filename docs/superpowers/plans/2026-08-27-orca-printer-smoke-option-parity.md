@@ -2520,3 +2520,25 @@ extruder_ams_count echo the raw 2-extruder values in the ref while
 ares echoes the normalized 1) — harness/echo question, plus the
 seam-end clipping family on inner walls (X171.975 E.00617 vs
 X171.961 E.00596 — ares clips the loop one vertex earlier).
+
+## 2026-09-02 session (cont 4): Artillery slowdown divergence isolated to raw-window time
+
+Layer-1 outputs are identical (window time 10.996s measured both sides);
+layer-2 final texts are identical EXCEPT the slowed feeds. Measured at
+their own output feeds the layer-2 windows total ares 4.313s vs ref
+6.951s with the same slow_down config (target 4s, min 10). The ref
+stretched well past the target — so its RAW window time was far below
+ares's (~3.9s): identical final text ⇒ identical raw text is
+impossible to reconcile with the measured totals, so the divergence is
+NOT in the slowdown algorithm but in what each side feeds it — either
+(a) ares's raw layer-2 window carries extra non-adjustable time
+(window boundaries), or (b) Orca's raw wall feeds differed (overhang
+pre-adjustment) — but the ares wall prints one F band (8179 from raw
+9000), ruling out overhang pre-splitting. Next concrete step: extend
+the GT build with a CoolingBuffer dump (per-layer window lines +
+parsed times) and the same env-gated dump on the ares side, then
+diff the two windows line-by-line for layer 2 of this fixture
+(/tmp/art, Artillery M1 Pro 0.2). Supersedes the previous turn's
+E-only-F hypothesis (the F2400 retention on `G1 E-1.3` is a
+downstream symptom: ares's current feedrate was 3600 there, ref's
+2400 — fixing the stretch fixes the retention).
