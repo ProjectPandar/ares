@@ -2442,3 +2442,30 @@ start_travel's route loop (Z-ramped first leg / eased last leg /
 flat middle hops via travel_to_xyz semantics), flip
 detour_emission_ready, validate on Co Print (inner→outer wall
 wipe+detour block) and Anker, then the full sweep.
+
+## 2026-09-02 session (cont): emission branch validated; router gate stays closed
+
+With `detour_emission_ready() = true` measured on Co Print: the FIRST
+wall→wall detour block now matches byte-for-byte — spiral lift over the
+first detour leg (linearized 7-point ramp Z 0.2→0.4 returning to the
+source XY at hop height), flat hops, descend, unretract. The existing
+`emit_pending_lift` machinery already implements the multi-point
+emission correctly; no new emission code was needed.
+
+The remaining Co Print divergences (3157 lines active vs 1348 gated)
+trace to two other families, NOT the emission:
+1. **Route waypoint selection** on the layer-change travel: ref hops
+   directly to (116.405,116.855) while the ported router returns a
+   3-corner detour to (116.405,116.889) — boundary contour fidelity
+   (inner_offset shape at layer 2) or entry/exit pairing.
+2. **Loop chaining start corners**: the travel DESTINATIONS themselves
+   differ (116.855 vs 116.889; the known chained-loop family), which
+   also shifts the spiral direction of the following lift.
+
+Gate restored to false (output unchanged: Co Print 1348 / Anker 1148 /
+H2S byte-identical). Slice 3 = boundary waypoint fidelity against the
+Co Print layer-2 contour + loop-chaining milestone; the two interact
+and should land loop-chaining first (destinations), then re-measure
+the router.
+
+Anker active-router regression (7599) likewise mixes both families.
