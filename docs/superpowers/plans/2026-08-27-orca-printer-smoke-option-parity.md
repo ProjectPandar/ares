@@ -2854,3 +2854,24 @@ intersection (sub-unit f64 in the critical-point products truncating
 to different integers). Next slice: dump the interior grid vertices
 (both frames) and compare the pre-truncation doubles against
 upstream's makeActualGrid arithmetic.
+
+## 2026-09-02 session (cont 15): honeycomb criticals differ by one unit
+
+Full-vertex dumps (honey5 build, ORCA_DUMP_VERT %.17g; ARES_DUMP_VERT
+mirror) localize the residual: the orca column criticals are
+[536930, 3042604, 4116465, 6622139] (local-frame scaled ints) while
+ares produces [536930, 3042604, 4116466, 6622140] — two of four
+criticals one unit higher. The ares values match the formula chain
+computed standalone (triWave f32 phase -> normalized=0.150000095 ->
+grid*normalized=4116466.37 -> truncate), so ares faithfully implements
+the ported arithmetic; orca's pre-truncation doubles must be just
+below the integers (4116465.x, 6622139.x). The z jitter (8.6 vs
+8.6000000000000014) is absorbed by the f32 phase (verified: identical
+output for all z variants), and the row POSITIONS match at 6-decimal
+precision — but a sub-unit grid_size difference would be invisible
+there while shifting every grid*k product by ~1 unit. Prime suspect:
+the flow spacing feeding the grid (ares debug
+spacing=0.40707963705062866; orca's Flow::spacing arithmetic may
+differ in the last ulps) or the iterative zScale/layersPerModule
+adjustment chain. Next: dump orca's spacing/gridSize/zScale at the
+fill entry (one more GT patch printf) and compare the doubles.
