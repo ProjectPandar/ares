@@ -20,7 +20,7 @@ const REFERENCE: &[u8] =
     include_bytes!("../../../../../../tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode");
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
 const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
-const BLOCK_SHA256: &str = "b33c979097a4900700d1e5dfcaa16f1454a79ce5fec48da7eb9458cfa2fdeeb8";
+const BLOCK_SHA256: &str = "6a14052054bfd46b7ea0268917246f8ce0c6388936351816fc4b41a5a6cd6706";
 
 const NIL_OMISSIONS: [&str; 15] = [
     "filament_deretraction_speed",
@@ -60,7 +60,7 @@ const FULL_SENTINELS: [&str; 6] = [
 #[test]
 fn config_export_fixture_freezes_the_committed_reference_block_contract() {
     let block = reference_block();
-    assert_eq!(block.len(), 49_004);
+    assert_eq!(block.len(), 49_005);
     assert_eq!(sha256(block), BLOCK_SHA256);
     assert!(block.starts_with(START));
     assert!(block.ends_with(END));

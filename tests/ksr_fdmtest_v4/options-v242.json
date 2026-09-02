@@ -16235,7 +16235,7 @@
     "static_owner": "print_config",
     "option_type": "coString",
     "nullable": false,
-    "default_serialized": "48x48/PNG,300x300/PNG",
+    "default_serialized": "48x48/PNG, 300x300/PNG",
     "wire_shape": "scalar_string",
     "effective_projections": [],
     "legacy_inputs": [

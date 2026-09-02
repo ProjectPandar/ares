@@ -40,7 +40,7 @@ fn config_export_inventory_preserves_complete_group_json_bytes() {
     assert_eq!(
         actual,
         [
-            ("printer", 32_944, 14_475_837_708_952_230_984),
+            ("printer", 32_945, 28_122_473_580_188_592_08),
             ("process", 10_823, 12_386_891_994_242_524_541),
             ("filament", 6_802, 4_742_530_254_364_489_637),
             ("project", 1_828, 13_102_796_653_342_733_105),

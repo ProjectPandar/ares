@@ -97,6 +97,8 @@ impl MotionOptions {
                     value.sparse_infill_speed.0
                 }),
             skirt_speed: full.process.print.skirt_speed.0,
+            slow_down_layers: full.process.print.slow_down_layers.0.max(0) as u32,
+            raft_layers: full.process.object.raft_layers.0.max(0) as u32,
             internal_solid_infill_speed: region
                 .map_or(full.process.region.internal_solid_infill_speed.0, |value| {
                     value.internal_solid_infill_speed.0

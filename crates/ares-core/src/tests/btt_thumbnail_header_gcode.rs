@@ -6,7 +6,7 @@ async fn btt_thumbnail_suppresses_generated_header_block_only() {
     let output = slice(
         square_pyramid_ascii_stl(),
         serde_json::from_value(json!({
-            "thumbnails": "7x8/BTT_TFT",
+            "thumbnails": "7x8/btt_tft",
             "sparse_infill_density": 0
         }))
         .unwrap(),

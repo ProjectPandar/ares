@@ -93,7 +93,9 @@ fn printer_options_remaining_defaults_match_fixed_tag() {
         assert_eq!(defaults[&row.key], expected_default(row), "{}", row.key);
     }
     let fixture = fixture_fields(REMAINING_KEYS);
-    assert_eq!(remaining.iter().filter(|row| defaults[&row.key] != fixture[&row.key]).count(), 18);
+    // 19: the fixture stores a pre-composite `thumbnails` value, while the
+    // default carries the canonical ", "-joined form.
+    assert_eq!(remaining.iter().filter(|row| defaults[&row.key] != fixture[&row.key]).count(), 19);
     assert_eq!(defaults["bed_exclude_area"], serde_json::json!(["0x0"]));
     assert_eq!(fixture["bed_exclude_area"], serde_json::json!([]));
     assert_eq!(defaults["best_object_pos"], "0.5,0.5");

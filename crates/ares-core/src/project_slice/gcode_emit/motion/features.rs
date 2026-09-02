@@ -96,27 +96,72 @@ impl PathProperties<'_> {
         if let Some(slope) = self.slope {
             return slope.speed;
         }
-        let layer_default = if layer_index == 0 {
-            if matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall") {
-                options.initial_layer_speed
-            } else {
-                options.initial_layer_infill_speed
-            }
-        } else {
-            self.role_speed(options)
-        };
-        // `GCode.cpp:6599-6604`: a positive skirt speed overrides the role
-        // default on every layer; zero keeps the layer default.
-        if self.feature == "Skirt" && options.skirt_speed > 0.0 {
-            options.skirt_speed
-        } else if layer_index > 0
+        let is_perimeter = matches!(self.feature, "Inner wall" | "Outer wall" | "Overhang wall");
+        // The small-perimeter pre-selection replaces the role speed before
+        // the `_extrude` chain runs (`GCode.cpp:5809-5813`).
+        let base = if layer_index > 0
             && matches!(self.feature, "Inner wall" | "Outer wall")
             && path_length <= options.small_perimeter_threshold * 2.0 * std::f64::consts::PI
         {
             options.small_perimeter_speed
         } else {
-            layer_default
+            self.role_speed(options)
+        };
+        let speed = if layer_index == 0 {
+            if is_perimeter {
+                options.initial_layer_speed
+            } else {
+                options.initial_layer_infill_speed
+            }
+        } else {
+            self.slow_down_layer_ramp(options, layer_index, is_perimeter, base)
+        };
+        // `GCode.cpp:6599-6604`: a positive skirt speed overrides the role
+        // default on every layer; zero keeps the layer default.
+        if self.feature == "Skirt" && options.skirt_speed > 0.0 {
+            options.skirt_speed
+        } else {
+            speed
         }
+    }
+
+    /// `GCode.cpp:6569-6588`: with `slow_down_layers > 1`, early layers ramp
+    /// from the first-layer speed toward the configured speed via
+    /// `lerp(first, speed, layer/N)`; the raft variant anchors the ramp
+    /// above the raft layers.
+    fn slow_down_layer_ramp(
+        &self,
+        options: &MotionOptions,
+        layer_index: usize,
+        is_perimeter: bool,
+        speed: f64,
+    ) -> f64 {
+        if options.slow_down_layers <= 1 {
+            return speed;
+        }
+        let ramp_layers = options.slow_down_layers as usize;
+        let offset = if options.raft_layers == 0 {
+            if layer_index == 0 || layer_index >= ramp_layers {
+                return speed;
+            }
+            layer_index
+        } else {
+            let raft_layers = options.raft_layers as usize;
+            if layer_index <= raft_layers || layer_index - raft_layers >= ramp_layers {
+                return speed;
+            }
+            layer_index - raft_layers
+        };
+        let first_layer_speed = if is_perimeter {
+            options.initial_layer_speed
+        } else {
+            options.initial_layer_infill_speed
+        };
+        if first_layer_speed >= speed {
+            return speed;
+        }
+        let factor = offset as f64 / ramp_layers as f64;
+        speed.min(first_layer_speed + factor * (speed - first_layer_speed))
     }
 
     fn role_speed(&self, options: &MotionOptions) -> f64 {

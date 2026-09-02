@@ -39,6 +39,8 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) internal_bridge_speed: f64,
     pub(in crate::project_slice::gcode_emit) sparse_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) skirt_speed: f64,
+    pub(in crate::project_slice::gcode_emit) slow_down_layers: u32,
+    pub(in crate::project_slice::gcode_emit) raft_layers: u32,
     pub(in crate::project_slice::gcode_emit) internal_solid_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) top_surface_speed: f64,
     pub(in crate::project_slice::gcode_emit) ironing_speed: f64,

@@ -32,7 +32,7 @@ fn canonical_and_legacy_thumbnail_inputs_both_trigger_the_composite() {
     ] {
         assert_eq!(
             parse(input).printer.remaining.thumbnails.as_str(),
-            "16x24"
+            "16x24/PNG"
         );
     }
 }
@@ -46,15 +46,13 @@ fn present_empty_thumbnails_remain_empty() {
 
 #[test]
 fn default_format_uses_only_present_input_and_explicit_item_formats_win() {
-    // The default format participates in validation only; the configured
-    // string stays verbatim like Orca's config echo.
     assert_eq!(
         parse(r#"{"thumbnails":"16x24"}"#)
             .printer
             .remaining
             .thumbnails
             .as_str(),
-        "16x24"
+        "16x24/PNG"
     );
 
     for input in [
@@ -63,7 +61,7 @@ fn default_format_uses_only_present_input_and_explicit_item_formats_win() {
     ] {
         assert_eq!(
             parse(input).printer.remaining.thumbnails.as_str(),
-            "16x24"
+            "16x24/QOI"
         );
     }
 
@@ -75,19 +73,19 @@ fn default_format_uses_only_present_input_and_explicit_item_formats_win() {
         .remaining
         .thumbnails
         .as_str(),
-        "16x24/jpg,32x48"
+        "16x24/JPG, 32x48/QOI"
     );
 }
 
 #[test]
-fn multiple_items_round_trip_verbatim_after_validation() {
+fn multiple_items_normalize_fixed_case_separator_and_dimensions() {
     let settings = parse(
         r#"{"thumbnails":" 1.23456789mmx 2.34567891px/png,3x4/jPg, 5x6,0.0000123456789x0.000123456789/png,","thumbnails_format":"QOI"}"#,
     );
 
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        " 1.23456789mmx 2.34567891px/png,3x4/jPg, 5x6,0.0000123456789x0.000123456789/png,"
+        "1.23457x2.34568/PNG, 3x4/JPG, 5x6/QOI, 1.23457e-05x0.000123457/PNG"
     );
 }
 
@@ -99,7 +97,7 @@ fn fixed_parser_keeps_order_duplicates_and_all_formats() {
 
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        "1x2/png,3x4/jpg,5x6/qoi,7x8/btt_tft,9x10/colpic,11x12/png"
+        "1x2/PNG, 3x4/JPG, 5x6/QOI, 7x8/BTT_TFT, 9x10/COLPIC, 11x12/PNG"
     );
 }
 
@@ -131,19 +129,19 @@ fn incomplete_exponents_fail_but_complete_exponents_keep_trailing_junk() {
             .remaining
             .thumbnails
             .as_str(),
-        "1e2mmx2px"
+        "100x2/PNG"
     );
 }
 
 #[test]
-fn extreme_dimensions_round_trip_verbatim() {
+fn defaultfloat_selects_notation_after_six_significant_digit_rounding() {
     let settings = parse(
         r#"{"thumbnails":"0.00009999999x0.0000999988/png,999.9999x2/png"}"#,
     );
 
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        "0.00009999999x0.0000999988/png,999.9999x2/png"
+        "0.0001x9.99988e-05/PNG, 1000x2/PNG"
     );
 }
 
@@ -175,7 +173,7 @@ fn canonical_and_legacy_thumbnail_collisions_remain_strict() {
             .remaining
             .thumbnails
             .as_str(),
-        "16x16"
+        "16x16/PNG"
     );
 }
 
@@ -206,7 +204,7 @@ fn thumbnail_composite_does_not_change_flush_volumes_matrix() {
     );
     assert_eq!(
         settings.printer.remaining.thumbnails.as_str(),
-        "16x16"
+        "16x16/PNG"
     );
 }
 
@@ -214,19 +212,19 @@ fn thumbnail_composite_does_not_change_flush_volumes_matrix() {
 async fn real_project_bytes_are_canonical_after_one_pass_and_reach_the_existing_boundary() {
     let project = load_project(FIXTURE).unwrap();
     let thumbnails = project.settings().printer.remaining.thumbnails.as_str();
-    assert_eq!(thumbnails, "48x48/PNG,300x300/PNG");
+    assert_eq!(thumbnails, "48x48/PNG, 300x300/PNG");
 
     let raw = project_with_thumbnails(" 16x24/png,32x48", "QOI");
     let raw = load_project(&raw).unwrap();
     assert_eq!(
         raw.settings().printer.remaining.thumbnails.as_str(),
-        " 16x24/png,32x48"
+        "16x24/PNG, 32x48/QOI"
     );
     let canonical = project_with_thumbnails("16x24/PNG, 32x48/QOI", "QOI");
     let canonical = load_project(&canonical).unwrap();
     assert_eq!(
         canonical.settings().printer.remaining.thumbnails.as_str(),
-        "16x24/PNG, 32x48/QOI"
+        raw.settings().printer.remaining.thumbnails.as_str()
     );
 
     let output = slice_project(

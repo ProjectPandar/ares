@@ -2663,3 +2663,40 @@ The dynamic-value baseline drops the stale
 signature stays so the scanner finding is unchanged (the ratchet only
 permits baseline shrinks, and a rewritten signature entry counts as a
 grow).
+
+## 2026-09-02 session (cont 8): slow_down_layers ramp + thumbnails canonical form
+
+The Artillery M1 Pro cluster (28 printers, "layer 2 deposition 1") is NOT
+an estimator distance bug. Instrumented dumps (ORCA_DUMP_EST patch on the
+GT build vs an ARES_DUMP_EST mirror in overhang.rs) prove the per-point
+support distances are IDENTICAL — the divergence is the `original_speed`
+fed into the estimator: Orca lerps early layers from the first-layer
+speed (`GCode.cpp:6569-6578`, slow_down_layers=3, initial=30):
+L1 inner lerp(30,150,1/3)=70, L2=110, L1 outer 40, L2 50 — exact match
+to every divergent path. Fixed by porting the ramp into
+features.rs::speed (with the raft variant, `GCode.cpp:6579-6588`) and
+reordering the small-perimeter pre-selection ahead of the `_extrude`
+chain (`GCode.cpp:5809-5813`). Options read from
+full.process.print.slow_down_layers / full.process.object.raft_layers
+(the gcode sub-group must NOT own these keys — the process section's
+wire echoes them from the print/object sub-groups, and a duplicate
+gcode-field steals the 3mf key during deserialization, zeroing the
+echoed value). Artillery fixture: every M201-template and raw speed now
+matches; residual 390 lines are M73 timing + sub-0.001mm move endpoints.
+
+Also corrected the earlier "verbatim thumbnails" conclusion:
+`PrintConfigDef::handle_legacy_composite` (`PrintConfig.cpp:8290-8322`)
+rewrites a loaded non-empty thumbnails value into the canonical
+"{w}x{h}/{EXT}, " form (upper-case enum extensions, six-significant-
+digit dimensions). Verified empirically: the reference AppImage slices
+h2s (preset value without spaces) and the ksr 3mf and echoes the
+", "-joined form for both. Both ares normalizers (typed_legacy and the
+legacy values map) now rewrite to that form; the BTT header probe reads
+the normalized map so the case-sensitive `BTT_TFT` probe matches
+case-insensitive inputs exactly like upstream. The ksr golden's
+thumbnails line and the inventory default (options-v242.json — the
+generator reads commit 8500fcd whose default predates the ", " change;
+the reference tree's PrintConfig.cpp:7127 default carries the space)
+are updated to the reference behavior, along with the frozen sha256
+constants. Suite: 6910/6911 (only the known ksr layer-4 deposition
+1238-vs-1241 remains).

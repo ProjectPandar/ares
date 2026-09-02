@@ -14,11 +14,20 @@ fn five_standalone_groups_are_an_exact_flat_semantic_oracle_for_the_real_fixture
     let serialized = serialized_project_values(&settings);
     assert_eq!(
         fixture.get("thumbnails"),
-        Some(&Value::String("48x48/PNG, 300x300/PNG".to_owned()))
+        Some(&Value::String("48x48/PNG,300x300/PNG".to_owned()))
+    );
+    // `PrintConfigDef::handle_legacy_composite` (`PrintConfig.cpp:8290-8322`)
+    // rewrites a loaded non-empty thumbnails value into the canonical
+    // ", "-joined form, so the round-trip differs from the raw fixture on
+    // exactly this key.
+    let mut roundtrip = fixture.clone();
+    roundtrip.insert(
+        "thumbnails".to_owned(),
+        Value::String("48x48/PNG, 300x300/PNG".to_owned()),
     );
 
     assert_eq!(serialized.len(), 653);
-    assert_eq!(&serialized, fixture);
+    assert_eq!(&serialized, &roundtrip);
     assert!(fixture.values().all(|value| match value {
         Value::String(_) => true,
         Value::Array(values) => values.iter().all(Value::is_string),

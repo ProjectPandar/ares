@@ -13,9 +13,9 @@ use jiff::civil::DateTime;
 use sha2::{Digest, Sha256};
 
 const PROJECT_SHA256: &str = "698f40f13c9075b818abedd3d10f022fbb5d8200aed48fbdde651f6bfb21b8a9";
-const REFERENCE_SHA256: &str = "10aec9a156849f59929b578429a764a61453996a5834056f600c0adbb5d6a1b3";
+const REFERENCE_SHA256: &str = "3f2d028f82b6a50f5244f0bfdb193370975b21c55661575edbf98d78d8aa25e4";
 const NORMALIZED_REFERENCE_SHA256: &str =
-    "c61202df3fa26ffcb3064f2dbc02e06a89f95565b8325b31029ec4ed6cedcdc4";
+    "7d75d933168d4abb959750007832e725221d1caa94ed37ff7be797f0407fbab8";
 
 fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
