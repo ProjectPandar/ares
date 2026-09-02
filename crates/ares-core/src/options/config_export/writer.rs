@@ -40,7 +40,12 @@ pub(crate) fn write_config_block(
         raw_settings,
         &mut scratch,
     )?;
-    write_runtime_tail(&views.runtime, &mut scratch)?;
+    write_runtime_tail(
+        &views.runtime,
+        is_bbl_printer(views),
+        &entries,
+        &mut scratch,
+    )?;
     scratch.extend_from_slice(END);
     output.extend_from_slice(&scratch);
     Ok(())
@@ -118,7 +123,22 @@ pub(crate) fn write_canonical_entries(
     Ok(())
 }
 
-fn write_runtime_tail(runtime: &ProjectSettings, output: &mut Vec<u8>) -> Result<(), SliceError> {
+fn is_bbl_printer(views: &ProjectConfigViews) -> bool {
+    views
+        .full
+        .printer
+        .remaining
+        .printer_model
+        .0
+        .starts_with("Bambu Lab")
+}
+
+fn write_runtime_tail(
+    runtime: &ProjectSettings,
+    bbl_printer: bool,
+    entries: &[ConfigEntry],
+    output: &mut Vec<u8>,
+) -> Result<(), SliceError> {
     let (bed_key, bed_values) = match runtime.project.print.curr_bed_type {
         ProjectBedType::SupertackPlate => (
             "supertack_plate_temp_initial_layer",
@@ -165,7 +185,29 @@ fn write_runtime_tail(runtime: &ProjectSettings, output: &mut Vec<u8>) -> Result
         .first()
         .ok_or_else(|| invalid("nozzle_temperature_initial_layer must not be empty"))?;
     append_line(output, "first_layer_bed_temperature", &bed.0.to_string());
-    append_line(output, "first_layer_temperature", &nozzle.0.to_string());
+    // Upstream appends compatible info after the config keys: the non-BBL
+    // footer also mirrors the printable_area serialization as bed_shape and
+    // re-formats the initial layer print height at %.3f
+    // (`GCode.cpp:3554-3562`); the BBL block stops at the two temperature
+    // lines (`GCode.cpp:2648-2657`).
+    if !bbl_printer {
+        let area = entries
+            .iter()
+            .find(|entry| entry.key == "printable_area")
+            .map(|entry| entry.token.as_str())
+            .unwrap_or_default();
+        append_line(output, "bed_shape", area);
+        append_line(output, "first_layer_temperature", &nozzle.0.to_string());
+        if let Some(height) = entries
+            .iter()
+            .find(|entry| entry.key == "initial_layer_print_height")
+            .and_then(|entry| entry.token.parse::<f64>().ok())
+        {
+            append_line(output, "first_layer_height", &format!("{height:.3}"));
+        }
+    } else {
+        append_line(output, "first_layer_temperature", &nozzle.0.to_string());
+    }
     Ok(())
 }
 

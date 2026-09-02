@@ -122,6 +122,12 @@ fn fill_component(
 }
 
 fn make_grid(z: f64, grid: f64, width: f64, height: f64) -> Result<Vec<Polyline>, ClipperError> {
+    // Upstream `makeActualGrid` takes `size_t boundsX/boundsY` and
+    // `perpendPoints` takes `size_t offsetBase` (`Fill3DHoneycomb.cpp:130,
+    // :105`): the double bounds and grid bases truncate to integers before
+    // the vertex arithmetic, dropping the fractional grid offset.
+    let width = width as i64 as f64;
+    let height = height as i64 as f64;
     let critical = critical_points(z, grid);
     let cycle = (z + 0.5 * grid) % (2.0 * grid) / (2.0 * grid);
     let mut output = Vec::new();
@@ -185,6 +191,29 @@ fn points(x: Vec<f64>, y: Vec<f64>, reverse: bool) -> Result<Polyline, ClipperEr
 fn critical_points(z: f64, grid: f64) -> Vec<f64> {
     let mut output = vec![0.0];
     let normalized = (tri_wave(z, grid) * 0.5).abs() / grid;
+    if let Ok(path) = std::env::var("ARES_DUMP_CRIT") {
+        use std::io::Write as _;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(
+                file,
+                "CRIT z={:.17} grid={:.17} triWave={:.17} half={:.17} perp={:.17} norm={:.17} crits=",
+                z,
+                grid,
+                tri_wave(z, grid),
+                tri_wave(z, grid) * 0.5,
+                (tri_wave(z, grid) * 0.5).abs(),
+                normalized
+            );
+            for c in &output {
+                let _ = write!(file, " {:.17}", c);
+            }
+            let _ = writeln!(file);
+        }
+    }
     if normalized > 0.0 {
         output.extend([
             grid * normalized,
@@ -223,6 +252,9 @@ fn perpendicular_points(critical: &[f64], request: PerpendicularRequest) -> Vec<
         base,
         direction,
     } = request;
+    // Upstream `offsetBase` is `size_t`: the double grid position truncates
+    // before entering the vertex arithmetic (`Fill3DHoneycomb.cpp:105`).
+    let base = base as i64 as f64;
     let mut output = vec![base];
     let mut location = 0.0;
     while location < length {

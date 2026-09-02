@@ -2926,3 +2926,35 @@ invocations — bit-identical criticals). Fixture non-timing divergence is now
 120 lines: (a) F894-vs-F895 cooling feedrate rounding, (b) the z=2.8 fragment
 set: ORCA_DUMP_IS/honey8 shows the orca invocation order is thread-racy so
 index correlation failed; z-tagged fragment dumps land next.
+
+## 2026-09-03 (cont 19): honeycomb at full parity; config tail bed_shape/first_layer_height
+
+Two more upstream-faithful fixes landed:
+
+1. **makeActualGrid integer truncation** (`Fill3DHoneycomb.cpp:86-115`):
+   upstream `colinearPoints(..., size_t gridLength)`, `perpendPoints(...,
+   size_t offsetBase)`, and `makeActualGrid(..., size_t boundsX, size_t
+   boundsY)` pass the double bounds and grid positions through `size_t`
+   (truncation) before the vertex arithmetic. The ares port kept the raw
+   doubles, so every zigzag vertex carried the fractional grid offset
+   (grid=3579535.104...) and after the final `coord_t` truncation 87 of 117
+   fragments drifted by exactly one scaled unit. Truncating bounds at
+   make_grid entry and the perpendicular base at perpendicular_points entry
+   makes all 117 intersection fragments bit-identical to the GT dumps.
+
+2. **Config-block tail compatible info** (`GCode.cpp:3554-3562`): the
+   non-BBL footer appends `bed_shape` (mirroring the printable_area
+   serialization) between the two temperature lines and
+   `first_layer_height` (%.3f of initial_layer_print_height) after them;
+   the BBL block (`GCode.cpp:2648-2657`) stops at the two temperatures.
+   The ares tail now branches on the Bambu Lab printer-model prefix.
+
+Result: the 3dhoneycomb fixture (/tmp/honey/h.3mf) is at FULL semantic
+parity — zero non-timing diff lines (only M73/M74 timing, estimates, and
+the generator header). The option sweep confirms sparse_infill_pattern
+no longer fails at 3dhoneycomb; the domain now stops at adaptivecubic
+(a genuinely missing fill feature, like raft_layers and arachne).
+Remaining FAIL domains: raft_layers (feature), sparse_infill_pattern
+(adaptivecubic feature), top_surface_pattern (octagramspiral layer-50
+emission order), wall_generator (arachne feature). Suite: 6911/6912
+(known ksr layer-4 deposition count 1238 vs 1241).
