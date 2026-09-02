@@ -18,7 +18,7 @@ pub(super) fn append(
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
         angle: fill.params.angle,
-        density: 0.01 * fill.params.density,
+        density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,
         anchor_length_max: fill.params.anchor_length_max,

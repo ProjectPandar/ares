@@ -2875,3 +2875,23 @@ spacing=0.40707963705062866; orca's Flow::spacing arithmetic may
 differ in the last ulps) or the iterative zScale/layersPerModule
 adjustment chain. Next: dump orca's spacing/gridSize/zScale at the
 fill entry (one more GT patch printf) and compare the doubles.
+
+## 2026-09-02 session (cont 16): honeycomb root cause was a f32×f32 density product
+
+The PARAMS dump (honey6 build) pinned it: Orca's runtime
+density=0.15000000596046448 while ares carried 0.14999999403953552.
+Upstream `Fill.cpp:1283` computes `float(0.01 * params.density)` —
+`0.01` is a DOUBLE literal, so C++ promotes the float percent to
+double, multiplies, and rounds back to f32 (→ f32(0.15000000596)). The
+ares dispatch did `0.01 * fill.params.density` in pure f32
+(f32(0.01)×15f32 → 0.14999999403) — a two-ulp-low grid input that
+shifted gridSize 3579535.68 vs Orca's 3579535.104 and every critical
+product by ~one unit. All the sibling fill entities (crosshatch,
+cubic, grid, gyroid, monotonic) already used the correct
+`(0.01_f64 * f64::from(..)) as f32` form; only three_d_honeycomb
+diverged.
+
+Fix: same form as the siblings. The honeycomb fixture diff drops
+753 -> 323 lines (120 non-timing lines — F894/F895 slowdown rounding
+plus fragment connect order). Suite 6911/6912 (only the known ksr
+layer-4 deposition count).
