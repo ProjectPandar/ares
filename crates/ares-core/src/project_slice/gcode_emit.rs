@@ -191,10 +191,13 @@ pub(super) fn emit(
                 !tags.is_bbl() && !runtime_gcode.time_lapse_gcode.0.is_empty();
             layer_gcode::append_before_layer_change_gcode(
                 &mut output,
-                traversal,
-                layer_index,
-                f64::from(layer_z),
-                &layer_change_template,
+                layer_gcode::LayerTemplateContext {
+                    traversal,
+                    layer_index,
+                    layer_z: f64::from(layer_z),
+                    totals: state.extrusion_totals(),
+                    context: &layer_change_template,
+                },
             )?;
             motion::flush_pending_retract_wipe(&mut output, &mut state);
             // Pending object-end labels flush after the layer-change
@@ -223,10 +226,13 @@ pub(super) fn emit(
             spiral.append_layer_z(&mut output, layer_index, f64::from(layer_z));
             layer_gcode::append_layer_change(
                 &mut output,
-                traversal,
-                layer_index,
-                f64::from(layer_z),
-                &layer_change_template,
+                layer_gcode::LayerTemplateContext {
+                    traversal,
+                    layer_index,
+                    layer_z: f64::from(layer_z),
+                    totals: state.extrusion_totals(),
+                    context: &layer_change_template,
+                },
             )?;
             // A deferred previous-layer retraction lifts above the new layer's
             // print Z (`GCodeWriter::travel_to_z` during layer transition).

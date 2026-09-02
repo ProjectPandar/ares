@@ -152,15 +152,33 @@ fn format_pa(value: f64) -> String {
         .to_owned()
 }
 
+pub(super) struct ExtrusionTotals {
+    pub(super) diameter: f64,
+    pub(super) density: f64,
+    pub(super) used_filament: f64,
+}
+
+pub(super) struct LayerTemplateContext<'a> {
+    pub(super) traversal: &'a PreparedPostClassicTraversal,
+    pub(super) layer_index: usize,
+    pub(super) layer_z: f64,
+    pub(super) totals: ExtrusionTotals,
+    pub(super) context: &'a LayerChangeTemplate,
+}
+
 /// Renders `before_layer_change_gcode` with `layer_num`, `layer_z`, and
 /// `max_layer_z` in scope (`GCode.cpp:4631-4641`).
 pub(super) fn append_before_layer_change_gcode(
     output: &mut Vec<u8>,
-    traversal: &PreparedPostClassicTraversal,
-    layer_index: usize,
-    layer_z: f64,
-    context: &LayerChangeTemplate,
+    template_context: LayerTemplateContext<'_>,
 ) -> Result<(), SliceError> {
+    let LayerTemplateContext {
+        traversal,
+        layer_index,
+        layer_z,
+        totals,
+        context,
+    } = template_context;
     let template = traversal
         .resolved
         .views
@@ -179,23 +197,14 @@ pub(super) fn append_before_layer_change_gcode(
         super::placeholders::base_config(traversal, context.metadata, context.first_layer_bounds)?;
     config.insert("layer_num", value::Value::number(layer_index as f64));
     config.insert("layer_z", value::Value::number(layer_z));
-    let filament = &traversal.resolved.views.full.filament.gcode;
-    let diameter = filament
-        .filament_diameter
-        .0
-        .first()
-        .map_or(1.75, |diameter| diameter.0);
-    let density = filament
-        .filament_density
-        .0
-        .first()
-        .map_or(1.24, |density| density.0);
-    let length = super::finish::account_used_filament(output);
-    let volume = length * diameter.powi(2) * 0.25 * std::f64::consts::PI;
+    // Orca's extruded_volume_total is `Extruder::used_filament() *
+    // filament_crossection()` — the writer's cumulative extrusion, not a
+    // G-code re-scan that would include template output.
+    let volume = totals.used_filament * totals.diameter.powi(2) * 0.25 * std::f64::consts::PI;
     config.insert("extruded_volume_total", value::Value::number(volume));
     config.insert(
         "extruded_weight_total",
-        value::Value::number(volume * density * 0.001),
+        value::Value::number(volume * totals.density * 0.001),
     );
     config.insert("max_layer_z", value::Value::number(layer_z));
     let rendered = template::render(template, &mut config).map_err(|error| {
@@ -210,11 +219,15 @@ pub(super) fn append_before_layer_change_gcode(
 
 pub(super) fn append_layer_change(
     output: &mut Vec<u8>,
-    traversal: &PreparedPostClassicTraversal,
-    layer_index: usize,
-    layer_z: f64,
-    context: &LayerChangeTemplate,
+    template_context: LayerTemplateContext<'_>,
 ) -> Result<(), SliceError> {
+    let LayerTemplateContext {
+        traversal,
+        layer_index,
+        layer_z,
+        totals,
+        context,
+    } = template_context;
     let template = &traversal.resolved.views.runtime_gcode.layer_change_gcode.0;
     if !template.is_empty() {
         let mut config = super::placeholders::base_config(
@@ -241,23 +254,11 @@ pub(super) fn append_layer_change(
         // layer-change template as well (`GCode.cpp:1652, 1689`); they are
         // re-scanned from the emitted G-code, which is the accumulated
         // extrusion of every layer printed so far.
-        let filament = &traversal.resolved.views.full.filament.gcode;
-        let diameter = filament
-            .filament_diameter
-            .0
-            .first()
-            .map_or(1.75, |diameter| diameter.0);
-        let density = filament
-            .filament_density
-            .0
-            .first()
-            .map_or(1.24, |density| density.0);
-        let length = super::finish::account_used_filament(output);
-        let volume = length * diameter.powi(2) * 0.25 * std::f64::consts::PI;
+        let volume = totals.used_filament * totals.diameter.powi(2) * 0.25 * std::f64::consts::PI;
         config.insert("extruded_volume_total", value::Value::number(volume));
         config.insert(
             "extruded_weight_total",
-            value::Value::number(volume * density * 0.001),
+            value::Value::number(volume * totals.density * 0.001),
         );
         let rendered = template::render(template, &mut config).map_err(|error| {
             SliceError::InvalidInput(format!(

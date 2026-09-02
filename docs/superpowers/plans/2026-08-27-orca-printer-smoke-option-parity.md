@@ -2569,3 +2569,43 @@ This drives the "layer 2 deposition 1" cluster (28 printers). Next:
 compare the lower-slice polygon geometry for Z0.1 between the two
 slicers (the layer-0 OUTPUT was identical, but the boundary input
 polygon may differ in vertices/density).
+
+## 2026-09-02 session (cont 6): extruded_weight_total placeholder diverges
+
+The Prusa MINIIS M201/M74 template family ("layer 1 control events",
+47 printers) diverges through the `extruded_weight_total` placeholder
+feeding `interpolate_table(...)` in before/after-layer-change gcode.
+
+Root cause: ares computes it by RE-SCANNING the emitted G-code
+(`account_used_filament`), which counts all forward XY+E moves
+including the start g-code's purge lines (template output, 18mm for
+MINIIS). Orca uses `Extruder::used_filament() = m_absolute_E +
+m_retracted` — the writer's cumulative state that only tracks
+extrusion through GCodeWriter::extrude*() calls (NOT template output).
+The start g-code purge goes through `placeholder_parser_process` and
+never touches the extruder state. At the first layer-change template,
+Orca's m_absolute_E reflects only layer-1 object printing; ares' scan
+includes the start g-code purge. Additionally the sign differs because
+change_layer's retract (fired between before_layer_change and
+layer_change templates) updates writer state in ways the scan can't
+mirror.
+
+Fix (implemented): `EmitState.filament_used` accumulates each positive
+extrusion delta in `extrusion::coordinate()` (the writer-state model,
+matching `GCodeWriter::extrude*()` bookkeeping); the layer-change
+templates now render `extruded_volume_total`/`extruded_weight_total`
+from `state.filament_used * filament_crosssection()` instead of the
+G-code re-scan. Both template functions take a `LayerTemplateContext`
+struct (clippy arity). Results: MINIIS first M201 `X4000` now exact;
+fixture diffs unchanged elsewhere (h2s 0, cop 142, MINIIS 575).
+
+Remaining divergence in this family: the first-layer M74 `W` still
+shows `W0` vs ref `W-0.00745637`. The ref value equals the -2.5mm
+change-layer retract converted to grams WITHOUT the compensating
+`m_retracted` term — i.e. at the `layer_change_gcode` template the
+placeholder seems to read `m_absolute_E` only. Later M74/M201 values
+converge (3999.93 vs 3999.96) but stay slightly apart, consistent
+with a small per-layer accumulation delta (wipe/restart_extra not
+mirrored). Next: instrument Orca's `update_from_gcodewriter` to dump
+`m_absolute_E`/`m_retracted` at each template render and compare
+against `state.filament_used` per layer.

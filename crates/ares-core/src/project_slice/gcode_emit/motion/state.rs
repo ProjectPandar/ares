@@ -38,6 +38,9 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) source_layer_z: f64,
     pub(in crate::project_slice::gcode_emit) scarf_z: Option<f64>,
     pub(in crate::project_slice::gcode_emit) retracted: bool,
+    /// Orca `Extruder::used_filament()` = `m_absolute_E + m_retracted` —
+    /// the cumulative forward extrusion through the writer's extrude()
+    /// calls. Template output (start g-code) never touches it.
     pub(in crate::project_slice::gcode_emit) wipe_path: Vec<arc::Point>,
     pub(in crate::project_slice::gcode_emit) wipe_start: Option<arc::Point>,
     pub(in crate::project_slice::gcode_emit) lifted: bool,
@@ -60,6 +63,7 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
         Option<super::arc::Point>,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
+    pub(in crate::project_slice::gcode_emit) filament_used: f64,
     /// Per-layer avoid-crossing routing boundary, built lazily on the first
     /// routed travel and dropped by `begin_layer`
     /// (`AvoidCrossingPerimeters::init_layer`).
@@ -141,6 +145,18 @@ pub(in crate::project_slice::gcode_emit) fn queue_exclude_start(
 pub(in crate::project_slice::gcode_emit) fn queue_exclude_end(state: &mut EmitState, text: String) {
     if state.pending_exclude_start.take().is_none() {
         state.pending_exclude_end = Some(text);
+    }
+}
+
+impl EmitState {
+    pub(in crate::project_slice::gcode_emit) fn extrusion_totals(
+        &self,
+    ) -> crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
+        crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
+            diameter: 1.75,
+            density: 1.24,
+            used_filament: self.filament_used,
+        }
     }
 }
 

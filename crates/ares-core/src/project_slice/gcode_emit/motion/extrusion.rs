@@ -46,6 +46,12 @@ pub(super) fn linear_segment(
 
 pub(super) fn coordinate(state: &mut EmitState, delta: f64) -> f64 {
     state.e_position += delta;
+    // Mirror Orca's Extruder::extrude(): m_absolute_E += dE; positive dE
+    // adds to used_filament (m_absolute_E + m_retracted) since retract /
+    // unretract cancel out. Template output never calls this.
+    if delta > 0.0 {
+        state.filament_used += delta;
+    }
     if state.options.use_relative_e_distances {
         delta
     } else {
