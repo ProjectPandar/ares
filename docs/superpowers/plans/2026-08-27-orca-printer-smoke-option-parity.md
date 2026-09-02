@@ -2417,3 +2417,28 @@ contour), detour planning, `max_travel_detour_distance` clamping, the
 wipe-disable signal, and the re-plan after a wiping retract. Defer:
 support-layer specifics. Validation: Co Print layer-2 window
 byte-compares, Anker/Artillery fixtures, then the full sweep.
+
+## 2026-09-02 session: avoid-crossing port slice 1 landed (infrastructure)
+
+Landed commit `aba5e042` (plumbing + boundary + router, dormant): the
+traversal exposes the current layer's merged slices, perimeter spacing
+and top surfaces; LayerGeometry carries them; the boundary builds
+lazily per layer into a cached Rc. boundary.rs ports
+get_boundary/init_boundary/inner_offset/resample_polygon (the elephant-
+foot distance thresholds feeding variable_offset_inner_ex); router.rs
+ports avoid_perimeters(_inner)/extend_for_closest_lines/
+shortest-direction walk/simplify_travel. The rectangle shell still
+routes all output (`detour_emission_ready() == false`) because detour
+emission needs the multi-point ramp branch of
+`GCodeWriter::travel_to_xyz` (`GCode.cpp:7486-7505`): lift Z over the
+first detour leg, ease it over the last, then flat intermediate hops.
+Measured with the router active before gating: Co Print diff dropped
+to ~1348-level but Anker M5C regressed 1148→7599 (waypoint shapes
+diverge without the ramp), hence the dormancy gate. Suites 6910/6911,
+H2S byte-identical, output byte-for-byte unchanged.
+
+NEXT (slice 2): port the multi-point emission branch into
+start_travel's route loop (Z-ramped first leg / eased last leg /
+flat middle hops via travel_to_xyz semantics), flip
+detour_emission_ready, validate on Co Print (inner→outer wall
+wipe+detour block) and Anker, then the full sweep.
