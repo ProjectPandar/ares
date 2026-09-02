@@ -67,3 +67,18 @@ fn task22o45_intersection_open_polylines_propagates_range_error() {
         Err(ClipperError::CoordinateOutOfRange)
     );
 }
+
+#[test]
+fn zigzag_splits_at_boundary_crossings() {
+    // A zigzag poking out the square's right edge twice: fragment 1 inside
+    // (4.5,0)->(10,2.33); fragment 2 (10,3.56)->(2,8)->(4.4,10).
+    let subject = [polyline(&[(3, -3), (12, 3), (2, 8), (12, 13)])];
+    let clip = [polygon(&[(0, 0), (10, 0), (10, 10), (0, 10)])];
+    let clipped = intersection_open_polylines(&subject, &clip).unwrap();
+    assert!(
+        clipped.len() >= 2,
+        "expected multiple fragments, got {}",
+        clipped.len()
+    );
+    assert!(clipped.iter().all(|path| path.points().len() >= 2));
+}

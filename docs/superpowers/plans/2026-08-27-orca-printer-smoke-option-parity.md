@@ -2811,3 +2811,22 @@ Clipper 6 does; the counts match only at the low-amplitude phases.
 Also note upstream's `pl.simplify(5 * spacing)` passes the mm value
 (~2.25) against scaled coordinates — a no-op — and ares'
 `5.0 * params.spacing` (mm) already matches that no-op exactly.
+
+## 2026-09-02 session (cont 13): honeycomb GT dumps were racy; grids match
+
+The "orca varies / ares always 3" fragment-count divergence was an
+instrumentation artifact: the OrcaSlicer CLI fills surfaces from
+worker threads, and the static FILE* dumps interleaved output across
+concurrent invocations (mixed vertical columns AND horizontal rows in
+one "section", duplicated polylines, impossible section sizes like 77
+or 94 lines). Rebuilding the GT patch with flockfile/funlockfile
+around each section dump produces clean per-invocation records: the
+orca grid is 6-7 polylines per invocation — matching ares' 6-7 — and
+the z=1.2 row positions (translated through the bb.min frame shift)
+and alternation directions match exactly. The remaining honeycomb
+gcode diffs (753 lines, ~200 M73 timing noise) are the F901-vs-F900
+speed rounding and layer-6 fragment connect order.
+
+Added a regression test pinning that intersection_open_polylines
+splits zigzag polylines at boundary crossings (the synthetic
+diagnostic used to rule the engine in/out).
