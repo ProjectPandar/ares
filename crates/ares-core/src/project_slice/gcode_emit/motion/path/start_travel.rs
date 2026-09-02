@@ -76,26 +76,49 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         // TODO(port): Orca arms the boundary on every layer
         // (`GCode.cpp:5345-5347`) and routes the object's first travel with
         // the external-only planner (`use_external_mp_once`, direct when the
-        // destination lies inside the external contour). The rectangle
-        // router below does not model that yet, so keep the first layer
-        // direct until `AvoidCrossingPerimeters` is ported.
+        // destination lies inside the external contour). The boundary router
+        // below ports `AvoidCrossingPerimeters::travel_to`; the first layer
+        // stays direct like upstream (`init_layer` arms the planner on every
+        // layer, `GCode.cpp:5345-5347`).
         let mut route = if state.options.reduce_crossing_wall
             && state.layer_index > 0
             && !matches!(properties.feature, "Skirt" | "Brim")
         {
-            super::avoid_crossing::route(super::avoid_crossing::Request {
-                start: arc::Point {
-                    x: state.x,
-                    y: state.y,
+            let boundary = super::avoid_crossing::routing_active()
+                .then(|| layer_boundary(state, &geometry))
+                .flatten();
+            super::avoid_crossing::route(
+                super::avoid_crossing::Request {
+                    start: arc::Point {
+                        x: state.x,
+                        y: state.y,
+                    },
+                    end: arc::Point {
+                        x: first_x,
+                        y: first_y,
+                    },
+                    geometry,
+                    offset: state.offset,
+                    inset: state.options.crossing_boundary_inset,
+                    after_skirt: state.last_feature == Some("Skirt"),
                 },
-                end: arc::Point {
-                    x: first_x,
-                    y: first_y,
-                },
-                geometry,
-                offset: state.offset,
-                inset: state.options.crossing_boundary_inset,
-                after_skirt: state.last_feature == Some("Skirt"),
+                boundary.as_deref(),
+            )
+            .unwrap_or_else(|| {
+                super::avoid_crossing::rectangle_route(super::avoid_crossing::Request {
+                    start: arc::Point {
+                        x: state.x,
+                        y: state.y,
+                    },
+                    end: arc::Point {
+                        x: first_x,
+                        y: first_y,
+                    },
+                    geometry,
+                    offset: state.offset,
+                    inset: state.options.crossing_boundary_inset,
+                    after_skirt: state.last_feature == Some("Skirt"),
+                })
             })
         } else {
             Vec::new()
@@ -304,4 +327,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         state.lifted = false;
         state.template_lifted = false;
     }
+}
+/// Lazily build (and cache in the emit state) the avoid-crossing boundary
+/// for the current layer; `begin_layer` invalidates it.
+fn layer_boundary(
+    state: &mut EmitState,
+    geometry: &LayerGeometry<'_>,
+) -> Option<std::rc::Rc<super::avoid_crossing::Boundary>> {
+    if state.avoid_boundary.is_none() {
+        state.avoid_boundary =
+            super::avoid_crossing::build_boundary(geometry).map(std::rc::Rc::new);
+    }
+    state.avoid_boundary.clone()
 }

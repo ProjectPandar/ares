@@ -266,6 +266,9 @@ pub(super) fn emit(
                 .collect::<Vec<_>>();
             let lower_boundary = (!lower_boundary_lines.is_empty())
                 .then(|| crate::geometry::LineDistanceTree::new(&lower_boundary_lines));
+            let top_surfaces = traversal.objects[object_index]
+                .top_surfaces(layer_index)
+                .unwrap_or_default();
             let geometry = motion::LayerGeometry {
                 internal_surfaces: island_print_order::internal_surfaces(
                     &prepared.predecessor,
@@ -274,6 +277,15 @@ pub(super) fn emit(
                 ),
                 scale: traversal.scale,
                 previous_layer_boundary: lower_boundary.as_ref(),
+                avoid_crossing: motion::AvoidCrossingGeometry {
+                    layer_slices: traversal.objects[object_index]
+                        .slices(layer_index)
+                        .unwrap_or(&[]),
+                    perimeter_spacing: traversal.objects[object_index]
+                        .perimeter_spacing(layer_index)
+                        .unwrap_or_default(),
+                    top_surfaces: &top_surfaces,
+                },
             };
             // The skirt prints once per layer before any object content
             // (`GCode.cpp:4388+`), on the layers it covers.

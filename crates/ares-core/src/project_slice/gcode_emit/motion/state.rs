@@ -60,6 +60,11 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
         Option<super::arc::Point>,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
+    /// Per-layer avoid-crossing routing boundary, built lazily on the first
+    /// routed travel and dropped by `begin_layer`
+    /// (`AvoidCrossingPerimeters::init_layer`).
+    pub(in crate::project_slice::gcode_emit) avoid_boundary:
+        Option<std::rc::Rc<super::path::Boundary>>,
 }
 
 #[derive(Clone, Copy)]
@@ -69,6 +74,17 @@ pub(in crate::project_slice::gcode_emit) struct LayerGeometry<'a> {
     pub(in crate::project_slice::gcode_emit) scale: crate::geometry::CoordinateScale,
     pub(in crate::project_slice::gcode_emit) previous_layer_boundary:
         Option<&'a crate::geometry::LineDistanceTree<'a>>,
+    /// Current layer's merged slices plus the perimeter spacing and top
+    /// surfaces — the avoid-crossing boundary inputs
+    /// (`AvoidCrossingPerimeters.cpp:1099-1134`).
+    pub(in crate::project_slice::gcode_emit) avoid_crossing: AvoidCrossingGeometry<'a>,
+}
+
+#[derive(Clone, Copy)]
+pub(in crate::project_slice::gcode_emit) struct AvoidCrossingGeometry<'a> {
+    pub(in crate::project_slice::gcode_emit) layer_slices: &'a [crate::geometry::ExPolygon],
+    pub(in crate::project_slice::gcode_emit) perimeter_spacing: f32,
+    pub(in crate::project_slice::gcode_emit) top_surfaces: &'a [&'a crate::geometry::ExPolygon],
 }
 
 pub(in crate::project_slice::gcode_emit) fn begin_layer(
@@ -80,6 +96,7 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
 ) {
     state.layer_index = layer_index;
     state.layer_change_travel_pending = true;
+    state.avoid_boundary = None;
     state.last_height = Some(layer_height as f32);
     state.layer_z = layer_z;
     state.travel_feedrate = if layer_index == 0 {

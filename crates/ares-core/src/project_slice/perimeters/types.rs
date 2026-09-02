@@ -141,6 +141,13 @@ impl PostPerimeterInputPrintObject {
         self.region_surfaces(record.current)
     }
 
+    pub(in crate::project_slice) fn current_slices(
+        &self,
+        record: &PerimeterInputRecord,
+    ) -> &[ExPolygon] {
+        self.layer_slices(record.current.layer_index)
+    }
+
     pub(in crate::project_slice) fn region_options(
         &self,
         record: &PerimeterInputRecord,

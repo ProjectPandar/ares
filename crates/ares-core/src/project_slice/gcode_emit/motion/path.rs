@@ -5,6 +5,9 @@ mod start_travel;
 mod travel_emit;
 mod variable;
 
+pub(in crate::project_slice::gcode_emit) use avoid_crossing::Boundary;
+#[allow(unused_imports)]
+pub(super) use avoid_crossing::build_boundary;
 pub(super) use retraction::can_skip_retraction;
 
 use super::{

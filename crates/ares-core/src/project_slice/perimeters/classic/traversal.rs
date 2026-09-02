@@ -146,6 +146,58 @@ impl PostClassicTraversalPrintObject {
         prelude.object.lower_slices(input)
     }
 
+    /// Current layer's merged slices (`Layer::lslices`), the base of the
+    /// avoid-crossing boundary (`AvoidCrossingPerimeters.cpp:1099-1134`).
+    pub(in crate::project_slice) fn slices(
+        &self,
+        record_index: usize,
+    ) -> Option<&[crate::geometry::ExPolygon]> {
+        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
+        prelude
+            .object
+            .records
+            .get(record_index)
+            .and_then(|record| record.as_ref())
+            .map(|record| prelude.object.current_slices(record))
+    }
+
+    /// Perimeter flow spacing of the record's region in millimetres
+    /// (`get_perimeter_spacing`, `AvoidCrossingPerimeters.cpp:499-512`).
+    pub(in crate::project_slice) fn perimeter_spacing(&self, record_index: usize) -> Option<f32> {
+        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
+        prelude
+            .object
+            .records
+            .get(record_index)
+            .and_then(|record| record.as_ref())
+            .map(|record| record.perimeter_flow.spacing)
+    }
+
+    /// Top fill surfaces of the record's region-layer; the avoid-crossing
+    /// boundary subtracts their inset from the slice union
+    /// (`AvoidCrossingPerimeters.cpp:1122-1132`).
+    pub(in crate::project_slice) fn top_surfaces(
+        &self,
+        record_index: usize,
+    ) -> Option<Vec<&crate::geometry::ExPolygon>> {
+        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
+        let record = prelude.object.records.get(record_index)?.as_ref()?;
+        Some(
+            prelude
+                .object
+                .current_surfaces(record)
+                .iter()
+                .filter(|surface| {
+                    matches!(
+                        surface.as_parts().0,
+                        crate::project_slice::region_slices::RegionSurfaceKind::Top
+                    )
+                })
+                .map(|surface| surface.as_parts().1)
+                .collect(),
+        )
+    }
+
     pub(in crate::project_slice) fn wall_direction(
         &self,
         record_index: usize,
