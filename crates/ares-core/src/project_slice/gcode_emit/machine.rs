@@ -176,7 +176,12 @@ pub(super) fn append_second_layer_transition(
             } else {
                 String::new()
             };
-            output.extend_from_slice(format!("M104 S{temperature}{tool_suffix}\n").as_bytes());
+            // `GCodeWriter::set_temperature` defaults the comment to "set
+            // nozzle temperature" for the non-waiting M104 emission
+            // (`GCodeWriter.cpp:133`).
+            output.extend_from_slice(
+                format!("M104 S{temperature}{tool_suffix} ; set nozzle temperature\n").as_bytes(),
+            );
         }
     }
     let filament = &settings.filament.print;
