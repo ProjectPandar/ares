@@ -2910,3 +2910,19 @@ wrapping around the bottom-left corner ((105.98,105.98) →
 (105.98,106.487)) vs ares exiting at (112.165,105.98). Next slice:
 the connect_infill/chain start-point selection (the greedy start or
 the connect ordering input) at honeycomb phases.
+
+## 2026-09-03 (cont 18): sparse_anchoring honeycomb density + critical chains now bit-identical
+
+Two-sided %.17g dumps (GT builds honey7/honey8 in /tmp/orca-gt, ARES_DUMP_CRIT/
+ARES_DUMP_GRID env dumps) localized the last honeycomb grid divergence to ONE
+rogue fill invocation: the bridge-over-infill sparse_anchoring pass
+(prepare_infill/bridge_over_infill/sparse_anchoring.rs:188) still used the
+pure-f32 `0.01 * fill.params.density` while every sibling pattern used
+`(0.01_f64 * f64::from(..)) as f32`. That single 1-ulp-low density shifted the
+rogue grid to 3579535.68 (vs 3579535.104) and zScale to 1.789767840. After
+aligning the form: all 39 invocations' grid=3579535.10424945643171668 and the
+per-z triWave chain matches Orca EXACTLY (mean/max abs diff 0.000000 across 39
+invocations — bit-identical criticals). Fixture non-timing divergence is now
+120 lines: (a) F894-vs-F895 cooling feedrate rounding, (b) the z=2.8 fragment
+set: ORCA_DUMP_IS/honey8 shows the orca invocation order is thread-racy so
+index correlation failed; z-tagged fragment dumps land next.
