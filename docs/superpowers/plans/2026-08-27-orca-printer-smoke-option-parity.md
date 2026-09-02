@@ -2700,3 +2700,36 @@ the reference tree's PrintConfig.cpp:7127 default carries the space)
 are updated to the reference behavior, along with the frozen sha256
 constants. Suite: 6910/6911 (only the known ksr layer-4 deposition
 1238-vs-1241 remains).
+
+## 2026-09-02 session (cont 9): sweep 390/1001; travel cluster = reduce_crossing_wall routing
+
+The slow_down_layers fix flipped the whole Artillery family: the sweep is
+now 390/1001 (from 362). Remaining top clusters: 103 travel-geometry
+count, 84 control events (M73 timing), 40/35/34 deposition endpoints,
+38 island lifecycle, 31 deposition count.
+
+Travel-geometry root cause: 160 sweep fixtures set
+`reduce_crossing_wall=1` (a Snapmaker/BBL-style preset family), and
+upstream routes travels around perimeters when it is set
+(`GCode.cpp:7415-7434`). ares routes through the temporary rectangle
+shell while the full router is dormant; Orca's AvoidCrossingPerimeters
+decides differently in places (e.g. direct travel where the shell
+detours, Snapmaker A350 layer 2: expected 13/actual 15 travels).
+Experiment: flipping `detour_emission_ready()` to true (real router)
+made the A350 fixture WORSE (1352 -> 2133 diff lines) — the router's
+waypoint fidelity still depends on the loop-start milestone; reverted.
+The cluster needs the avoid-crossing router parity slice.
+
+Option coverage is 644/649. Remaining five domains:
+- octagramspiral (bottom+top_surface_pattern): ares keeps a tiny
+  L-shaped ring-corner fragment (107.36,106.013)->(107.36,107.36)->
+  (106.013,107.36) at the region corner that Orca's Clipper6
+  intersection drops. The ring generator and bbox clipper
+  (InfillPolylineClipper semantics) match upstream byte-for-byte; the
+  divergence is in the classic_clip polygon intersection at
+  borderline corner geometry — the same Clipper6-vs-port family as the
+  ksr layer-4 1238-vs-1241 micro-fragments.
+- 3dhoneycomb (sparse_infill_pattern): layer 6 deposition count 25 vs
+  27 — the same intersection family.
+- raft_layers: unsupported project feature (raft generation missing).
+- wall_generator=arachne: Arachne dispatch milestone.
