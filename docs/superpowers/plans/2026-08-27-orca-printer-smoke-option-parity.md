@@ -2492,3 +2492,31 @@ its waypoint fidelity lands), layer-1 control events 47+20+15
 (SET_VELOCITY_LIMIT interleaving etc.), layer-2 deposition 1 = 28
 (slowdown feeds downstream of travel-time), island lifecycle 24,
 deposition counts 18. Loop-chaining still gates the router flip.
+
+## 2026-09-02 session (cont 3): slowdown-feed family traced to layer-1 start time
+
+Artillery M1 Pro 0.2 (fixture /tmp/art, 2-filament Klipper): layer-2
+GEOMETRY is identical line-for-line; only the cooling-buffer slowdown
+feeds differ (inner wall F8179 vs ref F4200 = the slow_down_min_speed
+floor 70 mm/s; solid infill F8179 vs F5000). ares's slowdown does not
+reach the min-speed floor → its layer-2 window time is LONGER than
+Orca's → the needed stretch is smaller. But layer 2's own geometry is
+identical... the difference enters via layer 1: the start g-code's
+draw-line block (`G1 ... E8;draw line` etc.) sits INSIDE layer 1's
+cooling window, and the M73 P1 boundary sits at different lines
+(ares R20 vs ref R15/R16 — ares's M73 placement after the draw-line
+block differs), so the TYPE_ADJUSTABLE merge / layer-time inputs
+differ. Two concrete sub-bugs:
+1. ares keeps `F2400` on the print-end retract `G1 E-1.3 F2400`
+   where Orca's rewrite removes the redundant F (E-only line, F
+   equals current) — cooling rewrite `remove` path for E-only lines.
+2. M73 P1 placement around the start-gcode draw lines differs
+   (ares emits it after the third G92 E0 block, ref after the first
+   draw line) — start-gcode motion lines in the M73 elapsed lookup.
+
+Also on H2D (13 divergent): config-echo diffs from the 2-filament
+normalization (enable_prime_tower, filament_map, flush_volumes_matrix,
+extruder_ams_count echo the raw 2-extruder values in the ref while
+ares echoes the normalized 1) — harness/echo question, plus the
+seam-end clipping family on inner walls (X171.975 E.00617 vs
+X171.961 E.00596 — ares clips the loop one vertex earlier).
