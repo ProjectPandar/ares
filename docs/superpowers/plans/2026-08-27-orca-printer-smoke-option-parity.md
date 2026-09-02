@@ -2469,3 +2469,26 @@ and should land loop-chaining first (destinations), then re-measure
 the router.
 
 Anker active-router regression (7599) likewise mixes both families.
+
+## 2026-09-02 session (cont 2): routed-length retraction landed — sweep 360
+
+Landed commits `b6c2eb4c` + `7ff42436`:
+- **routed-length retraction**: Orca routes through
+  AvoidCrossingPerimeters FIRST and re-checks `needs_retraction` on the
+  routed polyline length (`GCode.cpp:7424-7425`; `needs_retraction`
+  :7530 uses `Polyline::length`), and re-plans the route after a wiping
+  retract moves the head (:7436-7443). Ares now routes first, decides
+  on the routed length, and re-plans after the wipe. Co Print file diff
+  1348 → 142 (wall→wall blocks now carry wipe-retract + lift ramp +
+  detour hops). Sweep 358 → 360.
+- **M104 default comment**: the second-layer transition M104 carries
+  "; set nozzle temperature" (`GCodeWriter.cpp:133`).
+
+Remaining cluster heads (sweep 360): travel geometry counts 56+34 (the
+rectangle shell's corner projections vs the ref's contour-detour
+waypoints — Anker M5C residue shows the ref routing via TWO projected
+hops where the shell goes direct; this is the ported router's job once
+its waypoint fidelity lands), layer-1 control events 47+20+15
+(SET_VELOCITY_LIMIT interleaving etc.), layer-2 deposition 1 = 28
+(slowdown feeds downstream of travel-time), island lifecycle 24,
+deposition counts 18. Loop-chaining still gates the router flip.
