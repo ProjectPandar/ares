@@ -62,72 +62,25 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             properties.is_perimeter,
             inside_internal_surface,
         );
-        // Orca decides the travel retraction purely on distance, role, and
-        // overhang crossing (`GCode.cpp:7359`, `needs_retraction`); the very
-        // first travel of the print retracts the same way when it is long
-        // enough (the `; printing object` label precedes it and the queued
-        // `M486 S<n>` flushes after the retraction, `GCode.cpp:7467`).
+        // Orca decides the travel retraction on the routed polyline length
+        // (`GCode.cpp:7424-7425` re-checks `needs_retraction` after
+        // `avoid_crossing_perimeters.travel_to`), so route first and then
+        // decide; a wiping retract moves the head and the route is planned
+        // again from the new position (`GCode.cpp:7436-7443`).
+        let mut route = plan_route(state, &geometry, properties.feature, first_x, first_y);
+        let routed_length = polyline_length(state.x, state.y, &route);
         let retract = !state.retracted
-            && travel_distance >= state.options.retraction_minimum_travel
+            && routed_length >= state.options.retraction_minimum_travel
             && !skip_retraction;
         if retract {
+            let head_before = (state.x, state.y);
             travel::retract_and_lift(output, state);
+            if (state.x, state.y) != head_before {
+                // The wipe moved the head; re-plan the route from here
+                // (`GCode.cpp:7436-7443`).
+                route = plan_route(state, &geometry, properties.feature, first_x, first_y);
+            }
         }
-        // TODO(port): Orca arms the boundary on every layer
-        // (`GCode.cpp:5345-5347`) and routes the object's first travel with
-        // the external-only planner (`use_external_mp_once`, direct when the
-        // destination lies inside the external contour). The boundary router
-        // below ports `AvoidCrossingPerimeters::travel_to`; the first layer
-        // stays direct like upstream (`init_layer` arms the planner on every
-        // layer, `GCode.cpp:5345-5347`).
-        let mut route = if state.options.reduce_crossing_wall
-            && state.layer_index > 0
-            && !matches!(properties.feature, "Skirt" | "Brim")
-        {
-            let boundary = super::avoid_crossing::routing_active()
-                .then(|| layer_boundary(state, &geometry))
-                .flatten();
-            super::avoid_crossing::route(
-                super::avoid_crossing::Request {
-                    start: arc::Point {
-                        x: state.x,
-                        y: state.y,
-                    },
-                    end: arc::Point {
-                        x: first_x,
-                        y: first_y,
-                    },
-                    geometry,
-                    offset: state.offset,
-                    inset: state.options.crossing_boundary_inset,
-                    after_skirt: state.last_feature == Some("Skirt"),
-                },
-                boundary.as_deref(),
-            )
-            .unwrap_or_else(|| {
-                super::avoid_crossing::rectangle_route(super::avoid_crossing::Request {
-                    start: arc::Point {
-                        x: state.x,
-                        y: state.y,
-                    },
-                    end: arc::Point {
-                        x: first_x,
-                        y: first_y,
-                    },
-                    geometry,
-                    offset: state.offset,
-                    inset: state.options.crossing_boundary_inset,
-                    after_skirt: state.last_feature == Some("Skirt"),
-                })
-            })
-        } else {
-            Vec::new()
-        };
-        route.push(arc::Point {
-            x: first_x,
-            y: first_y,
-        });
-        route.dedup();
         let first_travel = route[0];
         let (travel_x, travel_y) = (first_travel.x, first_travel.y);
         append_object_start(output, state);
@@ -339,4 +292,76 @@ fn layer_boundary(
             super::avoid_crossing::build_boundary(geometry).map(std::rc::Rc::new);
     }
     state.avoid_boundary.clone()
+}
+
+/// Plan the travel route (detour waypoints plus the destination), routing
+/// through the avoid-crossing boundary when armed (`GCode.cpp:7415-7434`).
+fn plan_route(
+    state: &mut EmitState,
+    geometry: &LayerGeometry<'_>,
+    feature: &str,
+    first_x: f64,
+    first_y: f64,
+) -> Vec<arc::Point> {
+    let mut route = if state.options.reduce_crossing_wall
+        && state.layer_index > 0
+        && !matches!(feature, "Skirt" | "Brim")
+    {
+        let boundary = super::avoid_crossing::routing_active()
+            .then(|| layer_boundary(state, geometry))
+            .flatten();
+        super::avoid_crossing::route(
+            super::avoid_crossing::Request {
+                start: arc::Point {
+                    x: state.x,
+                    y: state.y,
+                },
+                end: arc::Point {
+                    x: first_x,
+                    y: first_y,
+                },
+                geometry: *geometry,
+                offset: state.offset,
+                inset: state.options.crossing_boundary_inset,
+                after_skirt: state.last_feature == Some("Skirt"),
+            },
+            boundary.as_deref(),
+        )
+        .unwrap_or_else(|| {
+            super::avoid_crossing::rectangle_route(super::avoid_crossing::Request {
+                start: arc::Point {
+                    x: state.x,
+                    y: state.y,
+                },
+                end: arc::Point {
+                    x: first_x,
+                    y: first_y,
+                },
+                geometry: *geometry,
+                offset: state.offset,
+                inset: state.options.crossing_boundary_inset,
+                after_skirt: state.last_feature == Some("Skirt"),
+            })
+        })
+    } else {
+        Vec::new()
+    };
+    route.push(arc::Point {
+        x: first_x,
+        y: first_y,
+    });
+    route.dedup();
+    route
+}
+
+/// Total polyline length from the current position through the route
+/// (`Polyline::length` in `needs_retraction`, `GCode.cpp:7530`).
+fn polyline_length(x: f64, y: f64, route: &[arc::Point]) -> f64 {
+    let mut length = 0.0;
+    let mut current = (x, y);
+    for point in route {
+        length += (point.x - current.0).hypot(point.y - current.1);
+        current = (point.x, point.y);
+    }
+    length
 }
