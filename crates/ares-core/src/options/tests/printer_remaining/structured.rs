@@ -14,7 +14,7 @@ fn printer_options_variant_lists_preserve_raw_groups_and_expose_tokens() {
 fn printer_options_thumbnails_preserve_raw_text() {
     for raw in [
         "",
-        "48x48/PNG,300x300/PNG",
+        "48x48/PNG, 300x300/PNG",
         "48x48/png",
         "48x48",
         "0x48/PNG",

@@ -10,7 +10,7 @@ pub(super) const TAIL_TERMINAL_SUFFIX_OPTION_DEFINITIONS: &[OptionDefinition] = 
     definition!("textured_plate_temp_initial_layer", Ints, "45",),
     definition!("thick_bridges", Bool, "false",),
     definition!("thick_internal_bridges", Bool, "true",),
-    definition!("thumbnails", String, "48x48/PNG,300x300/PNG",),
+    definition!("thumbnails", String, "48x48/PNG, 300x300/PNG",),
     definition!("thumbnails_format", Enum, "PNG",),
     definition!("time_cost", Float, "0",),
     definition!("time_lapse_gcode", String, "",),

@@ -2609,3 +2609,57 @@ with a small per-layer accumulation delta (wipe/restart_extra not
 mirrored). Next: instrument Orca's `update_from_gcodewriter` to dump
 `m_absolute_E`/`m_retracted` at each template render and compare
 against `state.filament_used` per layer.
+
+## 2026-09-02 session (cont 7): share-extruder used_filament = m_absolute_E
+
+RESOLVED the M74 W mystery above. Per-mm conversion is
+`cross * density * 0.001` = `pi * 1.75^2/4 * 1.24 * 0.001` =
+0.00298255 g/mm (an earlier arithmetic slip used 0.0029761). The ref
+first-layer `W-0.00745637` = EXACTLY -2.5mm — the change-layer retract
+with NO `m_retracted` compensation. Root cause: MINIIS sets
+`single_extruder_multi_material = 1`, and
+`GCodeWriter.cpp:72` passes it to `Extruder(id, config,
+single_extruder_multi_material)`. In share mode
+`Extruder::used_filament()` (`Extruder.cpp:141-148`) returns
+`m_absolute_E` ONLY (the `m_retracted` term is skipped with a FIXME).
+`m_absolute_E` accumulates every signed writer delta: retracts subtract,
+unretracts add back, so layer-boundary retracts show up negative until
+the next layer's deretraction. Verified against all 84 MINIIS M74
+values: per-window deltas match the emitted signed-E sums exactly.
+
+Fix (implemented):
+- `extrusion::coordinate()` now accumulates SIGNED deltas into
+  `EmitState.filament_used` and tracks the outstanding
+  `retracted_amount` for negative deltas (mirrors `Extruder::extrude`);
+  the unretract site zeroes `retracted_amount` (mirrors
+  `Extruder::unretract`).
+- `MotionOptions.single_extruder_multi_material` (from runtime gcode
+  options) gates `extrusion_totals()`: share mode returns
+  `filament_used`, else `filament_used + retracted_amount`.
+- MINIIS diff 575 -> 247; every M201/M74 template value now matches
+  except two late-print M74 lines that differ in the 6th significant
+  digit (full-precision E-delta accumulation drift vs Orca's formula —
+  pending E-per-mm formula order-of-operations check).
+
+Also fixed in the same pass (config echo parity):
+- `thumbnails` config strings round-trip VERBATIM now (both
+  `typed_legacy::normalize_thumbnails` and
+  `legacy::normalize_legacy_thumbnails` validate only; Orca echoes the
+  `ConfigOptionString` value unchanged — `Preset.cpp:3462` only parses
+  for dirty-flag comparison, and `PrintConfig.cpp:8186` maps legacy
+  `thumbnail_size` by key rename only). Preset styles are mixed
+  (56 use ", " separators, 12 use ","), so any reformat diverges.
+- Default `thumbnails` = "48x48/PNG, 300x300/PNG" WITH space
+  (`PrintConfig.cpp:7127`); ares previously defaulted without the
+  space — h2s fixture regressed 0 -> 2 and is back to 0.
+- BTT header suppression matches Orca's case-sensitive
+  `thumbnails_value.find("BTT_TFT")` (`GCode.cpp:2572`): the test now
+  uses uppercase `7x8/BTT_TFT` (lowercase would NOT suppress in Orca).
+- Fixture diffs: h2s 0, cop 142 -> 140, ankermake 1146 -> 1144.
+
+The dynamic-value baseline drops the stale
+`normalize_legacy_thumbnails@1|path|serde_json::Value::String` entry
+(its `Value::String` construction was removed); the `&mut BTreeMap`
+signature stays so the scanner finding is unchanged (the ratchet only
+permits baseline shrinks, and a rewritten signature entry counts as a
+grow).

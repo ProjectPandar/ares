@@ -43,7 +43,7 @@ declare_option_group! {
         printer_model => "printer_model": PrinterModel = PrinterModel(String::new()),
         z_offset => "z_offset": OrcaFloat = OrcaFloat(0.0),
         nozzle_volume => "nozzle_volume": NullableFloats = nullable_floats(&[0.0]),
-        thumbnails => "thumbnails": ThumbnailDefinitions = ThumbnailDefinitions(string("48x48/PNG,300x300/PNG")),
+        thumbnails => "thumbnails": ThumbnailDefinitions = ThumbnailDefinitions(string("48x48/PNG, 300x300/PNG")),
         grab_length => "grab_length": OrcaFloats = floats(&[0.0]),
         printer_notes => "printer_notes": PrinterNotes = PrinterNotes(String::new()),
         preferred_orientation => "preferred_orientation": OrcaFloat = OrcaFloat(0.0),

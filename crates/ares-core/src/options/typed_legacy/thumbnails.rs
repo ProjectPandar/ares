@@ -6,25 +6,13 @@ pub(crate) fn normalize_thumbnails(
     thumbnails: &ThumbnailDefinitions,
     default_format: Option<GCodeThumbnailFormat>,
 ) -> Result<ThumbnailDefinitions, ThumbnailParseError> {
-    let definitions = parse_fixed_definitions(thumbnails.as_str(), default_format)?;
-    if definitions.is_empty() {
-        return Ok(thumbnails.clone());
-    }
-
-    Ok(ThumbnailDefinitions(crate::OrcaString(
-        definitions
-            .iter()
-            .map(|definition| {
-                format!(
-                    "{}x{}/{}",
-                    format_dimension(definition.width),
-                    format_dimension(definition.height),
-                    definition.format.as_str()
-                )
-            })
-            .collect::<Vec<_>>()
-            .join(","),
-    )))
+    // Orca keeps the configured `thumbnails` string verbatim — the config
+    // dump echoes the `ConfigOptionString` value unchanged, and the
+    // default-format application happens only at thumbnail-generation
+    // time (`GCodeThumbnails::make_and_check_thumbnail_list`). Parsing
+    // here validates the entries without rewriting the value.
+    parse_fixed_definitions(thumbnails.as_str(), default_format)?;
+    Ok(thumbnails.clone())
 }
 
 fn parse_fixed_definitions(
@@ -148,22 +136,5 @@ fn parse_format(extension: &str) -> Result<GCodeThumbnailFormat, ThumbnailParseE
         "BTT_TFT" => Ok(GCodeThumbnailFormat::BttTft),
         "COLPIC" => Ok(GCodeThumbnailFormat::ColPic),
         _ => Err(ThumbnailParseError::InvalidExtension),
-    }
-}
-
-fn format_dimension(value: f64) -> String {
-    let scientific = format!("{value:.5e}");
-    let (mantissa, exponent) = scientific.split_once('e').unwrap();
-    let exponent: i32 = exponent.parse().unwrap();
-    if !(-4..6).contains(&exponent) {
-        let mantissa = mantissa.trim_end_matches('0').trim_end_matches('.');
-        format!("{mantissa}e{exponent:+03}")
-    } else {
-        let precision = usize::try_from(5 - exponent).unwrap();
-        let rounded: f64 = scientific.parse().unwrap();
-        format!("{rounded:.precision$}")
-            .trim_end_matches('0')
-            .trim_end_matches('.')
-            .to_owned()
     }
 }

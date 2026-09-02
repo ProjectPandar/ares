@@ -294,7 +294,6 @@ crates/ares-core/src/options/legacy/sla.rs#normalize_correction@1|type|&mutstd::
 crates/ares-core/src/options/legacy/sla.rs#normalize_legacy_sla@1|type|&mutstd::collections::BTreeMap<String,serde_json::Value>
 crates/ares-core/src/options/legacy/sla.rs#parse_numeric_at_index@1|type|&serde_json::Value
 crates/ares-core/src/options/legacy/thumbnails.rs#crate@1|use|serde_json::Value
-crates/ares-core/src/options/legacy/thumbnails.rs#normalize_legacy_thumbnails@1|path|serde_json::Value::String
 crates/ares-core/src/options/legacy/thumbnails.rs#normalize_legacy_thumbnails@1|path|serde_json::Value::as_str
 crates/ares-core/src/options/legacy/thumbnails.rs#normalize_legacy_thumbnails@1|type|&mutstd::collections::BTreeMap<String,serde_json::Value>
 crates/ares-core/src/options/legacy/thumbnails.rs#normalize_legacy_thumbnails@2|path|serde_json::Value::as_str

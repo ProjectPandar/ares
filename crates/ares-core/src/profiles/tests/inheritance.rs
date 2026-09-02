@@ -301,7 +301,7 @@ fn fragment_input_order_does_not_affect_the_merged_result() {
     let MergedProfile::Machine { options, .. } = ordered else {
         unreachable!()
     };
-    assert_eq!(options.remaining.thumbnails.as_str(), "32x48/QOI");
+    assert_eq!(options.remaining.thumbnails.as_str(), "32x48");
     assert_eq!(options.remaining.thumbnails_format.as_str(), "QOI");
 }
 

@@ -14,7 +14,7 @@ fn five_standalone_groups_are_an_exact_flat_semantic_oracle_for_the_real_fixture
     let serialized = serialized_project_values(&settings);
     assert_eq!(
         fixture.get("thumbnails"),
-        Some(&Value::String("48x48/PNG,300x300/PNG".to_owned()))
+        Some(&Value::String("48x48/PNG, 300x300/PNG".to_owned()))
     );
 
     assert_eq!(serialized.len(), 653);

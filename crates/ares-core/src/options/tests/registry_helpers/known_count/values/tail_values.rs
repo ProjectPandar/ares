@@ -92,7 +92,7 @@ pub(super) fn insert_known_tail_values(values: &mut Map<String, Value>) {
         ("support_top_z_distance", json!(0.2)),
         ("support_type", json!("normal(auto)")),
         ("thick_internal_bridges", json!(true)),
-        ("thumbnails", json!("48x48/PNG,300x300/PNG")),
+        ("thumbnails", json!("48x48/PNG, 300x300/PNG")),
         ("thumbnails_format", json!("PNG")),
         ("timelapse_type", json!("0")),
         ("time_cost", json!(0)),

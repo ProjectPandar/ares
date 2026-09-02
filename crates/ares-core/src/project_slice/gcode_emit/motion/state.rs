@@ -63,7 +63,13 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:
         Option<super::arc::Point>,
     pub(in crate::project_slice::gcode_emit) traditional_timelapse: bool,
+    /// Orca `Extruder` state: `m_absolute_E` (signed cumulative E through
+    /// the writer) and `m_retracted` (outstanding retraction amount).
+    /// `used_filament()` returns `m_absolute_E` on share-extruder printers
+    /// (`single_extruder_multi_material`), else `m_absolute_E +
+    /// m_retracted`. Template output never touches these.
     pub(in crate::project_slice::gcode_emit) filament_used: f64,
+    pub(in crate::project_slice::gcode_emit) retracted_amount: f64,
     /// Per-layer avoid-crossing routing boundary, built lazily on the first
     /// routed travel and dropped by `begin_layer`
     /// (`AvoidCrossingPerimeters::init_layer`).
@@ -152,10 +158,15 @@ impl EmitState {
     pub(in crate::project_slice::gcode_emit) fn extrusion_totals(
         &self,
     ) -> crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
+        let used_filament = if self.options.single_extruder_multi_material {
+            self.filament_used
+        } else {
+            self.filament_used + self.retracted_amount
+        };
         crate::project_slice::gcode_emit::layer_gcode::ExtrusionTotals {
             diameter: 1.75,
             density: 1.24,
-            used_filament: self.filament_used,
+            used_filament,
         }
     }
 }
