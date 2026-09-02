@@ -219,57 +219,74 @@ fn clipper_intersection(
 ) -> Point {
     let first = Edge::new(first_start, first_end);
     let second = Edge::new(second_start, second_end);
-    if first.horizontal {
-        return Point::new(
+    let (x, y) = if first.horizontal {
+        (
             round_clipper(second.x_at(first_start.y() as f64)),
             first_start.y(),
-        );
-    }
-    if second.horizontal {
-        return Point::new(
+        )
+    } else if second.horizontal {
+        (
             round_clipper(first.x_at(second_start.y() as f64)),
             second_start.y(),
-        );
-    }
-    if first.slope == 0.0 {
+        )
+    } else if first.slope == 0.0 {
         let x = first.bottom.x();
         let y = round_clipper(
             x as f64 / second.slope + second.bottom.y() as f64
                 - second.bottom.x() as f64 / second.slope,
         );
-        return Point::new(x, y);
-    }
-    if second.slope == 0.0 {
+        (x, y)
+    } else if second.slope == 0.0 {
         let x = second.bottom.x();
         let y = round_clipper(
             x as f64 / first.slope + first.bottom.y() as f64
                 - first.bottom.x() as f64 / first.slope,
         );
-        return Point::new(x, y);
-    }
-    let first_intercept = first.intercept();
-    let second_intercept = second.intercept();
-    let y = (second_intercept - first_intercept) / (first.slope - second.slope);
-    let x = if first.slope.abs() < second.slope.abs() {
-        first.slope * y + first_intercept
+        (x, y)
     } else {
-        second.slope * y + second_intercept
+        let first_intercept = first.intercept();
+        let second_intercept = second.intercept();
+        let y = (second_intercept - first_intercept) / (first.slope - second.slope);
+        let x = if first.slope.abs() < second.slope.abs() {
+            first.slope * y + first_intercept
+        } else {
+            second.slope * y + second_intercept
+        };
+        (round_clipper(x), round_clipper(y))
     };
-    Point::new(round_clipper(x), round_clipper(y))
+    // Clipper 6 clamps intersections below both edge tops to the higher
+    // top and recomputes x via `TopX` on the more vertical edge
+    // (`clipper.cpp:404-409`); corner-adjacent cut points differ without it.
+    let (mut x, mut y) = (x, y);
+    let top_first = first.top.y();
+    let top_second = second.top.y();
+    if y < top_first || y < top_second {
+        y = top_first.max(top_second);
+        x = top_x(
+            if more_vertical(&first, &second) {
+                &first
+            } else {
+                &second
+            },
+            y,
+        );
+    }
+    Point::new(x, y)
 }
 
 struct Edge {
     bottom: Point,
+    top: Point,
     slope: f64,
     horizontal: bool,
 }
 
 impl Edge {
     fn new(first: Point, second: Point) -> Self {
-        let bottom = if first.y() > second.y() {
-            first
+        let (bottom, top) = if first.y() > second.y() {
+            (first, second)
         } else {
-            second
+            (second, first)
         };
         let horizontal = first.y() == second.y();
         let slope = if horizontal {
@@ -279,6 +296,7 @@ impl Edge {
         };
         Self {
             bottom,
+            top,
             slope,
             horizontal,
         }
@@ -289,15 +307,42 @@ impl Edge {
     }
 
     fn x_at(&self, y: f64) -> f64 {
-        self.slope * y + self.intercept()
+        // Clipper 6's `TopX` association — the exact top coordinate when
+        // asked at the top, otherwise `Bot.x + Dx * (y - Bot.y)` — avoids
+        // the fp re-association flip at half-unit boundaries.
+        if y as i64 == self.top.y() {
+            return self.top.x() as f64;
+        }
+        self.bottom.x() as f64 + self.slope * (y - self.bottom.y() as f64)
     }
 }
 
+// Clipper 6 `FRound` (`clipper.cpp:88-92`): floor-based half-up rounding
+// with the `0.49999999999999994` guard — NOT half-away-from-zero
+// (negative halves round toward +inf: -153013.5 -> -153013).
 fn round_clipper(value: f64) -> i64 {
-    if value < 0.0 {
-        (value - 0.5) as i64
+    if value == 0.499_999_999_999_999_94 {
+        return 0;
+    }
+    (value + 0.5).floor() as i64
+}
+
+// Clipper 6 `TopX` (`clipper.cpp:350-356`).
+fn top_x(edge: &Edge, y: i64) -> i64 {
+    if y == edge.top.y() {
+        edge.top.x()
     } else {
-        (value + 0.5) as i64
+        edge.bottom.x() + round_clipper(edge.slope * (y - edge.bottom.y()) as f64)
+    }
+}
+
+// Clipper 6 compares `|Dx|` to pick the more vertical edge for the clamped
+// x; a horizontal edge carries the `HORIZONTAL` sentinel, so it never wins.
+fn more_vertical(first: &Edge, second: &Edge) -> bool {
+    if first.horizontal {
+        false
+    } else {
+        second.horizontal || first.slope.abs() < second.slope.abs()
     }
 }
 

@@ -2733,3 +2733,36 @@ Option coverage is 644/649. Remaining five domains:
   27 — the same intersection family.
 - raft_layers: unsupported project feature (raft generation missing).
 - wall_generator=arachne: Arachne dispatch milestone.
+
+## 2026-09-02 session (cont 10): octagramspiral is Clipper FRound rounding, not chaining
+
+Instrumented comparison (ORCA_DUMP_CHAIN/ARES_DUMP_CHAIN at
+FillPlanePath::_fill_surface_single, plus ORCA_DUMP_IP/ARES_DUMP_IP
+call-level logs on IntersectPoint) isolated the octagramspiral
+divergence: the fragment SETS and ring geometry are identical, the
+chain inputs differ only by +/-1-unit cut points on six fragments,
+which flipped a sort key into an adjacent fragment swap and then the
+greedy2 chain visited [L, 107.738, 108.115] where Orca visits
+[108.115, 107.738, L] (the downstream retract/wipe difference was a
+consequence of the longer link).
+
+Root cause: the vendored Clipper 6 `Round` is `FRound`
+(`deps_src/clipper/clipper.cpp:88-100`) — `floor(val + 0.5)` with the
+`0.49999999999999994 -> 0` guard — NOT half-away-from-zero. On exact
+negative halves (e.g. -153013.5) floor gives -153013 while
+half-away gives -153014. classic_clip's `round_clipper` used
+half-away; six boundary cut points landed on negative halves and
+rounded differently. The port also lacked the IntersectPoint top
+clamp (`clipper.cpp:404-409` — intersections below both edge tops
+clamp to the higher top and recompute x via TopX on the more
+vertical edge) and TopX's exact-top/`Bot.x + Dx*(y-Bot.y)`
+association.
+
+Fix: round_clipper = FRound semantics, Edge carries top,
+top_x/more_vertical helpers, the top clamp after every branch. The
+oct fixture's intersection output now matches the GT dump 35/37
+lines (one harmless adjacent swap with no downstream effect) and the
+gcode diff dropped 229 -> 209 with zero motion differences left
+(only M73 timing and header lines); the pinned unit expectation
+moved one unit with the new rounding. Suite back to 6910/6911 (only
+the known ksr layer-4 deposition count).

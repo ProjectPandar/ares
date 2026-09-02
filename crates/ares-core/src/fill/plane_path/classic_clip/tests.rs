@@ -20,7 +20,7 @@ fn clipper1_open_intersection_preserves_exact_octagram_boundary_point() {
 
     assert_eq!(
         output[0].points(),
-        [Point::new(0, 4_029_883), Point::new(-827_409, 4_857_292)]
+        [Point::new(0, 4_029_883), Point::new(-827_408, 4_857_292)]
     );
 }
 
