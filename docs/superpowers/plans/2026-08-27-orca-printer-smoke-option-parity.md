@@ -2542,3 +2542,30 @@ diff the two windows line-by-line for layer 2 of this fixture
 E-only-F hypothesis (the F2400 retention on `G1 E-1.3` is a
 downstream symptom: ares's current feedrate was 3600 there, ref's
 2400 — fixing the stretch fixes the retention).
+
+## 2026-09-02 session (cont 5): GT cooling dump decoded — raw wall speeds differ
+
+The GT build with `ORCA_DUMP_COOLING` (CoolingBuffer process_layer dump,
+patch at /tmp/orca-gt/cooling.patch, build at result-cooling/) shows
+Orca's RAW layer-1 (Z0.16) window feeds: inner wall F4200 (70 mm/s)
+vs ares F8179 (136.3 mm/s). These are PRE-cooling — the divergence is
+in the ExtrusionQualityEstimator, not the slowdown algorithm.
+
+Decoded speed: F4200 ⇒ the estimator computed a support distance of
+~0.099 mm (interpolating between the overhang-2-4 and overhang-1-4
+sections), meaning the wall center sits essentially AT the previous
+layer boundary (raw signed distance ≈ −0.011). Ares' F8179 ⇒ distance
+~0.0625 mm (raw ≈ −0.0475) — ares thinks the same wall point is
+deeper inside (better supported) than Orca does. The 0.037 mm
+difference in the computed distance is the root cause. Candidates:
+(a) different lower-slice polygon sets (ares `lower_slices` vs
+`layer->lslices`), (b) the LineDistanceTree distance metric vs the
+upstream AABBTreeLines::LinesDistancer, (c) the previous-layer boundary
+is the layer N-1 slices in both, but the FIRST layer (Z0.1, which
+feeds the Z0.16 estimator) may have different polygon representation
+(first-layer width compensation, elephant foot, etc.).
+
+This drives the "layer 2 deposition 1" cluster (28 printers). Next:
+compare the lower-slice polygon geometry for Z0.1 between the two
+slicers (the layer-0 OUTPUT was identical, but the boundary input
+polygon may differ in vertices/density).
