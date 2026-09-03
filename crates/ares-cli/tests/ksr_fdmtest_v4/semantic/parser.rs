@@ -255,9 +255,12 @@ fn update_fan(line: &str, state: &mut State) -> Result<(), String> {
             speed = Some(canonical_number(value)?);
         }
     }
-    state
-        .fans
-        .insert(fan, speed.ok_or_else(|| "M106 has no S value".to_owned())?);
+    // `M106 P<n> S<v>` sets the speed; `M106 P<n>` alone (Prusa CORE One L
+    // bed/chamber fan commands with R/A/B/N/G parameters) leaves it
+    // unchanged — no state update, the control event still records.
+    if let Some(speed) = speed {
+        state.fans.insert(fan, speed);
+    }
     Ok(())
 }
 

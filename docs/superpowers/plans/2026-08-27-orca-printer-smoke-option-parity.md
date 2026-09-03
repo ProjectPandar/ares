@@ -3367,3 +3367,21 @@ dynamic speed path) differ by one ULP at a band boundary.
 Next: trace the exact speed formula in the ares
 overhang::estimate and compare against Orca's overhang speed
 computation for the same band.
+
+## 2026-09-03 (cont 41): M106-no-S parse fix — Prusa CORE One L
+
+The 8-printer "M106 has no S value" cluster (Prusa CORE One L family)
+was a semantic-parser failure, not an ares divergence: the Prusa CORE
+One L machine-start G-code contains `M106 P5 R A125 B10` (bed fan
+with ramp parameters, no S) and `M106 P3 N76 G3` (chamber fan) —
+both emitted identically by orca and ares. The parser's `update_fan`
+rejected any M106 without an S value, failing the REF parse before
+the comparison could run. Upstream Marlin semantics: `M106 P<n>`
+without S leaves the fan speed unchanged — the fix skips the state
+update (the control event still records).
+
+The fixture at /tmp/prusal shows the Prusa CORE One L now reaches a
+real comparison: 282 non-timing lines (feedrate offsets F1899/F1893
+vs F1876/F1870, z-hop moves missing F720 — the same
+travel_speed_z-on-hop and cooling-buffer families as the Anker M5
+cluster).
