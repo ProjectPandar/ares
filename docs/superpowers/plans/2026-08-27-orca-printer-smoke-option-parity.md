@@ -3516,3 +3516,27 @@ with floor(60*speed+0.5) — but the accumulated time feeding the
 slowdown differs at the last f32 ulp because the line lengths
 differ by ~1µm. Fixing this requires the full Clipper intersection
 precision port (the F1 number-in / Int128 vs f64 intermediates).
+
+## 2026-09-03 (cont 52): timelapse layer-change gating — analysis
+
+The 59-printer "layer 1 control events" cluster (Artillery M1 Pro,
+RatRig, WonderMaker, Snapmaker) shows ares emitting an extra
+`TIMELAPSE_TAKE_FRAME` after "; stop printing object" on layer 1.
+Root cause: the `timelapse_at_layer_change` gate was
+`!tags.is_bbl() && !time_lapse_gcode.is_empty()` — it fired for
+every non-BBL printer with `time_lapse_gcode` set, regardless of
+printer structure. Upstream only inserts layer-change-template
+timelapse under specific conditions:
+- BBL: always (`GCode.cpp:5205-5210`)
+- Traditional (i3 or multi-nozzle): at layer end via the
+  interlude/append path (`GCode.cpp:5264-5300`), not at the
+  layer-change template
+- Non-BBL, non-traditional (e.g. `printer_structure: undefine`
+  Artillery M1 Pro): NEVER
+
+The correct gate is `!tags.is_bbl() && traditional_timelapse` (the
+traditional_timelapse flag already encodes the i3/multi-nozzle
+condition). The fix and test were developed but hit a fragile
+`line_distance_tree` test (LLVM constant-folding shifts with
+different code compilation order) — that test needs to be hardened
+with `black_box` or `std::hint` before the timelapse fix can land.
