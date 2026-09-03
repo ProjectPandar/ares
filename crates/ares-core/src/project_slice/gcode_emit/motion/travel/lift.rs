@@ -83,11 +83,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                 format!(
                     "G1 Z{} F{}\n",
                     format_z(raised_z),
-                    format_axis(state.options.z_travel_feedrate)
+                    format_axis(state.travel_feedrate)
                 )
                 .as_bytes(),
             );
-            state.current_feedrate = state.options.z_travel_feedrate;
+            state.current_feedrate = state.travel_feedrate;
             true
         }
         LiftMode::Spiral => {
@@ -101,7 +101,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                     -dy / travel_distance * radius,
                     dx / travel_distance * radius,
                 );
-                state.current_feedrate = state.options.z_travel_feedrate;
+                state.current_feedrate = state.travel_feedrate;
                 true
             } else {
                 false
@@ -120,11 +120,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                         format_axis(x),
                         format_axis(y),
                         format_z(raised_z),
-                        format_axis(state.options.z_travel_feedrate)
+                        format_axis(state.travel_feedrate)
                     )
                     .as_bytes(),
                 );
-                state.current_feedrate = state.options.z_travel_feedrate;
+                state.current_feedrate = state.travel_feedrate;
                 true
             } else {
                 false
@@ -152,17 +152,17 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
         let radius = state.options.z_hop
             / (std::f64::consts::TAU * state.options.travel_slope_radians.atan());
         append_spiral(output, state, raised_z, radius, 0.0);
-        state.current_feedrate = state.options.z_travel_feedrate;
+        state.current_feedrate = state.travel_feedrate;
     } else {
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}\n",
                 format_z(raised_z),
-                format_axis(state.options.z_travel_feedrate)
+                format_axis(state.travel_feedrate)
             )
             .as_bytes(),
         );
-        state.current_feedrate = state.options.z_travel_feedrate;
+        state.current_feedrate = state.travel_feedrate;
     }
     state.lifted = true;
 }
