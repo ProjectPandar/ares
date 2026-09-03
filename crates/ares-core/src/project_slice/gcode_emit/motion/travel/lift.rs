@@ -83,11 +83,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                 format!(
                     "G1 Z{} F{}\n",
                     format_z(raised_z),
-                    format_axis(state.travel_feedrate)
+                    format_axis(state.options.z_travel_feedrate)
                 )
                 .as_bytes(),
             );
-            state.current_feedrate = state.travel_feedrate;
+            state.current_feedrate = state.options.z_travel_feedrate;
             true
         }
         LiftMode::Spiral => {

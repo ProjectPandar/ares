@@ -72,6 +72,11 @@ impl MotionOptions {
                 .first()
                 .map_or(0.0, |value| value.0),
             travel_feedrate: travel_speed * 60.0,
+            z_travel_feedrate: (if gcode.travel_speed_z.0 > 0.0 {
+                gcode.travel_speed_z.0
+            } else {
+                absolute(gcode.initial_layer_travel_speed, travel_speed)
+            }) * 60.0,
             first_layer_travel_feedrate: absolute(gcode.initial_layer_travel_speed, travel_speed)
                 * 60.0,
             initial_layer_speed: full.process.print.initial_layer_speed.0,
