@@ -215,11 +215,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                     format!(
                         "G1 Z{} F{}\n",
                         format_z(state.layer_z + state.options.z_hop),
-                        format_axis(state.travel_feedrate)
+                        format_axis(state.options.z_travel_feedrate)
                     )
                     .as_bytes(),
                 );
-                state.current_feedrate = state.travel_feedrate;
+                state.current_feedrate = state.options.z_travel_feedrate;
                 travel_emit::xy_without_feed(output, travel_x, travel_y);
             } else {
                 travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
@@ -231,7 +231,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         } else if layer_change_travel {
             if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
                 travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
-                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
+                output.extend_from_slice(
+                    format!(
+                        "G1 Z{} F{}\n",
+                        format_z(target_z),
+                        format_axis(state.options.z_travel_feedrate)
+                    )
+                    .as_bytes(),
+                );
             } else {
                 travel_emit::xyz(output, travel_x, travel_y, target_z, state.travel_feedrate);
             }
@@ -246,7 +253,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             // separate descend (`GCodeWriter.cpp:travel_to_xyz` unclear-
             // position branch emits XY then `_travel_to_z`).
             if first_position {
-                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
+                output.extend_from_slice(
+                    format!(
+                        "G1 Z{} F{}\n",
+                        format_z(target_z),
+                        format_axis(state.options.z_travel_feedrate)
+                    )
+                    .as_bytes(),
+                );
                 unclear_position_travel = true;
             }
         }
@@ -284,7 +298,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     // the unknown-source first travel. The lazy-lift branch's descend above
     // already models it.
     if (eager_lifted_travel || unclear_position_travel) && first_position && !travel_set_layer_z {
-        output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
+        output.extend_from_slice(
+            format!(
+                "G1 Z{} F{}\n",
+                format_z(state.layer_z),
+                format_axis(state.options.z_travel_feedrate)
+            )
+            .as_bytes(),
+        );
     }
     if state.retracted {
         if first_position
@@ -293,13 +314,25 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             && travel::lift_is_allowed_at(state, state.layer_z)
         {
             output.extend_from_slice(
-                format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
+                format!(
+                    "G1 Z{} F{}\n",
+                    format_z(state.layer_z + state.options.z_hop),
+                    format_axis(state.options.z_travel_feedrate)
+                )
+                .as_bytes(),
             );
             state.lifted = true;
         }
         if state.lifted && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
-            output.extend_from_slice(format!("G1 Z{}\n", format_z(z)).as_bytes());
+            output.extend_from_slice(
+                format!(
+                    "G1 Z{} F{}\n",
+                    format_z(z),
+                    format_axis(state.options.z_travel_feedrate)
+                )
+                .as_bytes(),
+            );
             state.scarf_z = slope_start_z;
         }
         let retraction_length = state.options.retraction_length;

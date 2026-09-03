@@ -29,6 +29,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) max_volumetric_speed: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) first_layer_travel_feedrate: f64,
+    /// `_travel_to_z` speed — `travel_speed_z` when non-zero, else the
+    /// first-layer or normal travel speed (`GCodeWriter.cpp:832-842`).
+    pub(in crate::project_slice::gcode_emit) z_travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) initial_layer_speed: f64,
     pub(in crate::project_slice::gcode_emit) initial_layer_infill_speed: f64,
     pub(in crate::project_slice::gcode_emit) inner_wall_speed: f64,

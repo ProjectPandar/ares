@@ -3385,3 +3385,25 @@ real comparison: 282 non-timing lines (feedrate offsets F1899/F1893
 vs F1876/F1870, z-hop moves missing F720 — the same
 travel_speed_z-on-hop and cooling-buffer families as the Anker M5
 cluster).
+
+## 2026-09-03 (cont 42): travel_speed_z on z-hops and descends
+
+Upstream `_travel_to_z` and `_spiral_travel_to_z` use
+`travel_speed_z` when non-zero, else the first-layer/normal travel
+speed (`GCodeWriter.cpp:832-862`). The ares z-hop lifts, descends,
+and spiral/slope moves all used the XY travel speed; printers with a
+distinct `travel_speed_z` (Prusa CORE One L: 12 mm/s → F720) emitted
+z-moves without the correct feedrate.
+
+Added `z_travel_feedrate` to MotionOptions (the same fallback chain
+as upstream) and used it for all z-only outputs: the normal lift, the
+eager lift, the spiral/slope lift, the z-hop re-statement at the
+travel destination, the unclear-position descend, the first-travel
+lift, and the unlift descend. The z-hop *re-statement* after the
+lift+XY move (upstream doesn't emit it at all for the Normal path)
+keeps no-F to avoid an extra semantic event (the Artillery X3 Pro
+control-event regression).
+
+Prusa CORE One L: 282 → 18 non-timing lines (remaining: 6×F1912-vs-
+F1899 cooling offsets + 2 z-hops + 2 retract deltas). All existing
+smoke tests pass; suite 6913/6914 (known ksr layer-4).
