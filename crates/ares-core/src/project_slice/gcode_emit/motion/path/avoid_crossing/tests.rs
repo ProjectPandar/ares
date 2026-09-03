@@ -20,7 +20,8 @@ fn geometry() -> LayerGeometry<'static> {
         Vec::new(),
     ));
     LayerGeometry {
-        nearest_seam_penalties: &[],
+        nearest_seam_penalties: None,
+        staggered_inner: false,
         internal_surfaces: Box::leak(vec![surface].into_boxed_slice()),
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
@@ -127,7 +128,8 @@ fn boundary_builds_from_layer_slices() {
         .into_boxed_slice(),
     );
     let geometry = LayerGeometry {
-        nearest_seam_penalties: &[],
+        nearest_seam_penalties: None,
+        staggered_inner: false,
         internal_surfaces: &[],
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
