@@ -3215,3 +3215,18 @@ direct` simplification is imprecise but net-better (Ender 3 vs 5
 non-timing; Eryone 5). The precise port needs the external boundary
 build (inner_offset of the raw outer contours at 1.5×spacing) routed
 through the same router. Fixtures: /tmp/enderrcw, /tmp/eryone.
+
+## 2026-09-03 (cont 32): external boundary partial port regresses
+
+A minimal external boundary (the slice union inset by spacing/2, no
+hull ring) routed through the same router regressed the Ender fixture
+3 → 9 non-timing: the bigger boundary catches MORE entry travels than
+Orca's. The precise `get_boundary(layer)`
+(`AvoidCrossingPerimeters.cpp:1604-1640`) additionally unions a
+convex-hull ring (hull(contours) offset 2×spacing minus the contours
+at spacing+spacing/2) and the hole insets, plus a missing-parts
+fallback when the spacing/2 inset drops polygons — without those the
+containment geometry differs. Reverted to the simpler after-skirt
+direct rule (net-better: Ender 3, Eryone 5). The full external
+boundary build (hull ring + fallback + holes) is the remaining port
+for exact post-skirt routing.
