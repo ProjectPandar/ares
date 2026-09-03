@@ -3424,3 +3424,15 @@ straight parts. The tolerance comes from `resolution` (the same
 differ — the brim boundary case shows ares merging segments that
 Orca keeps as lines. Next: compare the Circle.hpp `try_create_arc`
 constraints against the ares `arc.rs` `try_arc` conditions.
+
+## 2026-09-03 (cont 47): brim arc exemption reverted — 396 vs 398
+
+The brim/skirt arc-fitting exemption regressed the sweep 398 → 396:
+the WonderMaker ZR Ultra 0.4/0.6 nozzles PASS with brim arcs (they
+previously matched with arcs), while the exemption helped the 0.2
+nozzle and some Flashforge/Snapmaker cases. Reverted — upstream's
+brim entities never enter the simplify stages, so the WonderMaker
+matching arcs must come from a different path (perhaps the brim
+loop points are already collinear enough that both with and without
+fitting produce the same output). The brim start-point divergence
+(Kobra 3 fixture) is the deeper blocker for that cluster.
