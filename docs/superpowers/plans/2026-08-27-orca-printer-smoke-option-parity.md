@@ -3436,3 +3436,25 @@ matching arcs must come from a different path (perhaps the brim
 loop points are already collinear enough that both with and without
 fitting produce the same output). The brim start-point divergence
 (Kobra 3 fixture) is the deeper blocker for that cluster.
+
+## 2026-09-03 (cont 48): Anker feedrate off-by-one — cooling slowdown precision
+
+The 31-printer layer-2 travel geometry cluster (Anker M5 family,
+"expected 9, actual 10") shows cooling-buffer slowdown feedrates
+differing by 1: F3840 vs F3841 (×12) and F2520 vs F2524 (×5). Both
+the ares and Orca cooling buffers round with
+floor(60*speed+0.5) — the rounding is identical. The divergence
+comes from the slowdown target itself: `new_feedrate_to_reach_time_stretch`
+computes in f64 with slightly different accumulated times (the
+`elapsed_time` and `maximum_time` sums use f32 in both, but the
+line lengths/segmentation feeding into those sums may differ at
+the sub-micron level). The `speed_for_distance` in overhang.rs
+also uses round() — matching upstream's round(final_speed). The
+root cause is likely the time accumulation chain producing
+slightly different f32 values. This needs a GT instrument dump of
+the cooling buffer's internal line times to isolate.
+
+Also: the brim arc-fitting exemption was reverted (sweep regressed
+398→396 — the WonderMaker ZR Ultra 0.4/0.6 PASSED with brim arcs,
+suggesting some brim paths DO need fitting in the ares model even
+though upstream's simplify stages don't touch brim entities).
