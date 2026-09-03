@@ -3048,3 +3048,17 @@ moves (0.064/0.08) are not a slope lift (no Z, and the slope distance
 7.63mm exceeds the travel) — next step: GT instrument at
 `travel_to_xy`/the wipe path accounting to find the emitter. Fixture
 kept at /tmp/eryone (case.3mf + ref.gcode + ares.gcode).
+
+## 2026-09-03 (cont 24): travel cluster = reduce_crossing_wall detours
+
+The Eryone/Flashforge split-travel cluster root cause confirmed: the
+fixture sets `reduce_crossing_wall = 1`, and the axis-aligned micro
+moves (+0.064 X, +0.08 Y, then the 45° diagonal) are the
+avoid-crossing-perimeters DETOUR path (`GCode.cpp:7419-7430`:
+`m_avoid_crossing_perimeters.travel_to` plans a multi-segment route when
+`reduce_crossing_wall && !disabled_once && is_current_position_clear()`).
+The ares avoid-crossing port (motion/path/avoid_crossing/) is gated
+dormant via `detour_emission_ready() = false` — the earlier enable
+experiment regressed the sweep 1352→2133 pending waypoint fidelity.
+This cluster (~89 printers) unblocks via: waypoint fidelity work in
+boundary/router/rectangle → flip the gate → sweep.
