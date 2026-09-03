@@ -44,6 +44,7 @@ fn wipe_before_external_uses_the_source_rotated_inner_point() {
         &paths,
         ExtrusionLoopRole::Default,
         LayerGeometry {
+            nearest_seam_penalties: &[],
             internal_surfaces: &[],
             scale: CoordinateScale::Normal,
             previous_layer_boundary: None,

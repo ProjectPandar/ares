@@ -83,6 +83,10 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
 
 #[derive(Clone, Copy)]
 pub(in crate::project_slice::gcode_emit) struct LayerGeometry<'a> {
+    /// Per-loop nearest-seam penalty data — indexed by
+    /// [collection][loop] within the layer's perimeter phase.
+    pub(in crate::project_slice::gcode_emit) nearest_seam_penalties:
+        &'a [crate::project_slice::island_print_order::NearestSeamPenalties],
     pub(in crate::project_slice::gcode_emit) internal_surfaces:
         &'a [crate::project_slice::region_slices::RegionSurface],
     pub(in crate::project_slice::gcode_emit) scale: crate::geometry::CoordinateScale,

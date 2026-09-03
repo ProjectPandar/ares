@@ -33,6 +33,7 @@ fn square() -> Vec<ExtrusionPath> {
 
 fn geometry() -> LayerGeometry<'static> {
     LayerGeometry {
+        nearest_seam_penalties: &[],
         internal_surfaces: &[],
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
