@@ -56,8 +56,15 @@ pub(super) fn route(request: Request<'_>, boundary: Option<&Boundary>) -> Option
         geometry,
         offset,
         inset: _,
-        after_skirt: _,
+        after_skirt,
     } = request;
+    // After the skirt the planner travels between objects — upstream sets
+    // `use_external_mp_once` and routes against the external boundary
+    // (`get_boundary_external`), whose entry travel stays direct
+    // (`AvoidCrossingPerimeters.cpp:1272-1287`).
+    if after_skirt {
+        return Some(Vec::new());
+    }
     let boundary = boundary?;
     let spacing = geometry.avoid_crossing.perimeter_spacing;
     let scale = geometry.scale;

@@ -3174,3 +3174,29 @@ top-layer ring route (ares waypoints via (118.122,114.389)/
 (125.889,114.389) vs orca's single (125.736,114.751)) — the residual
 boundary ring after the top-surface inset differs, or its contour
 direction picks the far side.
+
+## 2026-09-03 (cont 30): router closer — after-skirt direct, miter safe zone
+
+Two more router fixes (both fixtures now within 5/3 non-timing lines
+with detours on; the gate stays env-gated pending the last case):
+
+1. **After the skirt, entry travels stay direct** — upstream arms
+   `use_external_mp_once` at object boundaries and routes against the
+   external boundary (`AvoidCrossingPerimeters.cpp:1272-1287`); the
+   Ender-3 skirt→object travel is direct. `route()` now returns the
+   direct path for `after_skirt` requests (Ender fixture: 5 → 3
+   non-timing).
+
+2. **Safe-zone inset uses the miter join** — upstream `offset_ex`
+   defaults to `jtMiter` (`ClipperUtils.hpp:19 DefaultJoinType`); the
+   round join rounded the inset corners and flipped corner-adjacent
+   containment.
+
+The last blocking case (Ender layer 2, travel (105.674,117.189) →
+(114.325,114.325) from outside the slice into the corner): Orca routes
+one waypoint (114.389,114.325); the ares router's
+`collect_intersections` finds no crossing — the near-corner boundary
+ring intersection is missed (possibly the Line::intersection tolerance
+`denominator.abs() < 1e-4` treating the near-parallel crossing as
+skew, or the ring's corner vertex handling). Reproduce with
+/tmp/enderrcw (case.3mf + ref.gcode).

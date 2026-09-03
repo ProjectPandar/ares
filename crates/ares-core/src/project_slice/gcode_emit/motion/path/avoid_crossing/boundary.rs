@@ -146,7 +146,7 @@ fn safe_zone(
                 .map(|expolygon| (*expolygon).clone())
                 .collect::<Vec<_>>(),
             -(inset as f32),
-            JoinType::Round,
+            JoinType::Miter,
             MITER_LIMIT,
         )?;
         if !offset.is_empty() {
