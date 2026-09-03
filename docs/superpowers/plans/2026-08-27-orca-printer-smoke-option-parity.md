@@ -3706,3 +3706,18 @@ Currently empty — the `seam_placement::apply` fills it and the
 motion.rs emit site consults it for the Nearest mode selection with
 the gaussian distance penalty. Suite 6912/6913, clippy warns the
 fields are unused (expected until wired).
+
+## 2026-09-03 (cont 62): nearest-seam data plumbing + placement_modes
+
+- `placement_modes` (runtime.rs) now maps Nearest → Some(Nearest),
+  adding it to the active seam placement pipeline.
+- `apply_objects` (seam_placement.rs) adds a Nearest arm that stores
+  the per-loop penalty data (NearestSeamPenalties with scores,
+  overhangs, embedded_distances from the LayerPlan) into
+  `prepared.nearest_seam_plans` and skips loop splitting (the
+  seam is picked at emit time with the nozzle position).
+- LayerPlan.scores/overhangs/embedded_distances made pub(super) so
+  seam_placement can extract them.
+- 24/24 parity smoke tests, suite 6912/6913 (known ksr layer-4).
+Next: the emit-time selection in motion.rs using the stored penalties
++ the gaussian distance penalty (SeamPlacer.cpp:784-785).

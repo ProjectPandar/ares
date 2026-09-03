@@ -18,10 +18,10 @@ pub(super) struct LayerPlan {
     pub(super) candidates: LayerSeamCandidates,
     pub(super) choices: Vec<PerimeterChoice>,
     pub(super) collection_perimeters: Vec<Vec<usize>>,
-    scores: Vec<f32>,
+    pub(super) scores: Vec<f32>,
     z: f32,
-    overhangs: Vec<f32>,
-    embedded_distances: Vec<f32>,
+    pub(super) overhangs: Vec<f32>,
+    pub(super) embedded_distances: Vec<f32>,
     positions: Vec<Vec3>,
     point_tree: PointKdTree,
 }
