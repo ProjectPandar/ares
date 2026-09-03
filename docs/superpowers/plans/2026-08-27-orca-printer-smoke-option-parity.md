@@ -2958,3 +2958,42 @@ Remaining FAIL domains: raft_layers (feature), sparse_infill_pattern
 (adaptivecubic feature), top_surface_pattern (octagramspiral layer-50
 emission order), wall_generator (arachne feature). Suite: 6911/6912
 (known ksr layer-4 deposition count 1238 vs 1241).
+
+## 2026-09-03 (cont 20): travel-geometry cluster root cause = Auto z-hop lift-type
+
+The 90-printer "layer 1/2 travel geometry count" cluster (Kobra 3,
+Adventurer 3/4, ...) reproduces at the layer-change travel: ares emits
+`G17` + `G3 Z<raised> I.. J.. P1` (spiral lift) + `G1 X Y Z<raised>`
+where Orca emits a single merged `G1 X Y Z<raised> F..`.
+
+GT instrumentation (result-gw2: fprintf in `GCodeWriter::travel_to_xyz`
+after the m_to_lift merge, and in `lazy_lift`): the lift type consumed by
+each travel_to_xyz, with the Kobra 3's `z_hop_types = Auto Lift`:
+
+- layers 3+: layer-start travels consume **SpiralLift** — scheduled by
+  `change_layer` (`GCode.cpp:5694`, zhtAuto forced to SpiralLift) whose
+  lazy_lift is first-scheduling-wins;
+- the layer-2 first travel consumes **SlopeLift** — scheduled at
+  z=print_z (post-z-set, so NOT by change_layer): the travel's own
+  `needs_retraction` retract, which for zhtAuto computes
+  `is_through_overhang(clipped_travel) ? SpiralLift : SlopeLift`
+  (`GCode.cpp:7595-7648`), and the no-overhang path yields SlopeLift.
+  The slope emission then fails its angle gate
+  (`atan2(dz, dxy) < travel_slope`), leaving only the merged G1.
+
+`is_through_overhang` (`GCode.cpp:7534-7590`): intersects the travel —
+clipped to `max_z_hop / tan(travel_slope)` length — against the
+`loverhangs` expolygons of every layer in `[print_z - 0.4, print_z]`
+(protect_z = 0.4 constant), bounding-box prefiltered per instance.
+
+Ares gaps to close for this cluster (motion/travel/lift.rs `mode_for`):
+1. port `is_through_overhang` (needs the per-layer loverhangs polygons
+   plumbed into the emit state; the existing overhang-speed estimator
+   uses a previous-layer boundary tree instead and cannot substitute);
+2. the Auto travel retract must pick Spiral vs Slope by that check, not
+   always Slope (`GCode.cpp:7607-7648` both the perimeter-leave branch
+   and the general branch);
+3. the layer-change Spiral is only scheduled when `change_layer`'s
+   retract actually runs (`will_move_z`, `GCode.cpp:5690`); a lift
+   already pending from an earlier retract keeps its type
+   (lazy_lift first-scheduling-wins, `GCodeWriter.cpp:639-648`).
