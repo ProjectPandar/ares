@@ -3472,3 +3472,15 @@ ARES_ERROR in the 396 run (the reference generation itself failed).
 The brim arc exemption revert restored the original code; the
 earlier analysis that attributed the regression to the exemption was
 wrong. The true baseline is 396-398 depending on oracle stability.
+
+## 2026-09-03 (cont 50): oracle SIGSEGV root cause — multi-extruder slicing crash
+
+The 11 SIGSEGV printers (Custom/MyToolChanger ×2 with 5 extruders,
+Flashforge Creator 5, Prusa XL 5T, WonderMaker, Snapmaker U1) crash
+the orca-slicer 2.4.2 binary during `--slice` — the 3MF export
+succeeds but slicing segfaults. Reproduced manually:
+`orca-parity.sh --slice 0 --outputdir ... MyToolChanger.3mf` →
+"dumped core". This is an oracle-side bug (multi-extruder tool
+ordering or initialization path), NOT an ares issue — these
+printers will always be ARES_ERROR regardless of ares correctness.
+Excluded from the actionable fix list.
