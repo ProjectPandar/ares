@@ -3661,3 +3661,37 @@ The 31-printer "layer 10 deposition" cluster splits into:
    start.y differs by 1 unit (−1.423 vs −1.422) — the polygon
    vertex rounding itself differs (one vertex 1μm different).
 Both are the same root cause: sub-micron Clipper precision.
+
+## 2026-09-03 (cont 60): nearest-seam port — implementation plan
+
+Studied the full ares seam_placement module (1072 lines across 4 files)
+and the upstream SeamPlacer. The existing ares pipeline already has:
+- `SeamCandidate` (position, perimeter_index, local_ccw_angle) per
+  perimeter vertex — generated from the loop points (seam_candidates.rs)
+- Overhang, embedded_distance, visibility per candidate — populated in
+  alignment/context.rs from mesh analysis
+- Angle penalty (gaussian + sigmoid) — alignment.rs angle_penalty()
+- The `is_better` comparator with overhang → embedded → scores ordering
+- The inner-wall depth-shift with angle-based 1.4142/cos adjustment
+  (place_loop:198-237, mirroring SeamPlacer.cpp:1567-1600)
+
+The missing piece for Nearest is:
+1. `placement_modes` (runtime.rs:16-39) maps Nearest → None — the
+   pipeline skips it entirely, leaving the hard closest-vertex pick
+   at emit (motion.rs:233). Fix: map Nearest → Some(Nearest).
+2. `apply_objects` (seam_placement.rs:92-95) panics on Nearest via
+   `unreachable!`. Fix: add a Nearest arm that prepares LayerPlans
+   but skips alignment (just `best_candidate` without align).
+3. The score used for Nearest must include the gaussian distance
+   penalty from the nozzle position at emit time. Since the pipeline
+   runs before emit, the score for Nearest mode should use
+   ANGLE_IMPORTANCE_NEAREST (1.0) and the emit-time split should be
+   the penalty-based pick, not the hard nearest-vertex.
+
+Design: store the per-layer LayerPlan penalty data alongside the
+prepared objects (in the seam_placement::apply return) and consult it
+at the motion.rs emit site. This requires the plans to outlive
+apply_objects — either store in a side table or embed in the
+ExtrusionLoop metadata.
+
+Estimated: ~200 lines of new code + refactoring the apply return type.
