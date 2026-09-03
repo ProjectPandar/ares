@@ -3393,3 +3393,20 @@ The M106-no-S parse fix and the conservative z-hop travel_speed_z
 that had regressed 23 printers to 373). Remaining top clusters:
 31 layer-2 travel geometry (Anker feedrate offsets), 28 layer-1
 deposition count, 27 layer-1 control events, 15 filament length.
+
+## 2026-09-03 (cont 44): layer-1 deposition cluster = brim arc fitting
+
+The 28-printer layer-1 deposition count cluster (Wanhao France 18,
+Sovol 5, Anycubic 5) reproduces on the Anycubic Kobra 3 0.2 nozzle
+(fixture at /tmp/kobra3): expected 799 vs 371 layer-1 depositions.
+Root cause: the ares arc fitting merges the brim's short segments
+into G3 arcs (e.g., 10 G1 lines → one G3 arc) while Orca keeps them
+as straight segments. Orca's GArcFitting has conditions that reject
+these brim-adjacent segments (likely minimum segment count, radius
+bounds, or chord tolerance) that the ares port doesn't enforce.
+Layer counts: ref 8629 vs ares 8045 G1+E moves, 236 vs 317 G3 arcs.
+The brim starts at X120 (orca, short segments) vs X134 (ares,
+merged arc) — the fitting boundary differs on the first brim
+segment. Next: compare the ares arc fitting conditions against
+OrcaSlicer's ArcFitter (ArcFitUtils) minimum-segment and tolerance
+gates.
