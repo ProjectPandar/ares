@@ -3230,3 +3230,19 @@ containment geometry differs. Reverted to the simpler after-skirt
 direct rule (net-better: Ender 3, Eryone 5). The full external
 boundary build (hull ring + fallback + holes) is the remaining port
 for exact post-skirt routing.
+
+## 2026-09-03 (cont 33): full external boundary still over-routes
+
+Implemented the complete `get_boundary(layer)` external build (the
+spacing/2 inset with the missing-parts fallback, the convex-hull ring
+at 2×spacing minus the contours at spacing+spacing/2, the hole insets,
+unioned — `AvoidCrossingPerimeters.cpp:1604-1640`) and routed the
+after-skirt travels against it: the Ender fixture still regressed
+3 → 9 — the post-skirt entry travels route around the hull ring
+(via its corners) where Orca goes direct or via one nearby waypoint.
+The upstream external branch has lazy per-layer caching with a bbox
+rebuild check (`m_external.bbox.contains(start/end)`,
+`:1277-1285`) that reshapes which travels actually route; pinning it
+needs a GT instrument dump of the external boundary's routing
+decisions (the next session's first step). Reverted to the
+after-skirt→direct rule (Ender 3 / Eryone 5 non-timing — best known).
