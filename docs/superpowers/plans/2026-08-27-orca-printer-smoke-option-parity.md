@@ -3540,3 +3540,18 @@ condition). The fix and test were developed but hit a fragile
 `line_distance_tree` test (LLVM constant-folding shifts with
 different code compilation order) — that test needs to be hardened
 with `black_box` or `std::hint` before the timelapse fix can land.
+
+## 2026-09-03 (cont 53): timelapse layer-change gating fix landed
+
+The layer-change-template timelapse gate is now
+`!tags.is_bbl() && traditional_timelapse` (was
+`!tags.is_bbl() && !time_lapse_gcode.is_empty()`), and the
+layer-end timelapse only fires for the traditional path. Non-BBL,
+non-traditional printers (Artillery M1 Pro family with
+`printer_structure: undefine`, 59 printers) no longer emit a spurious
+`TIMELAPSE_TAKE_FRAME` after "; stop printing object" on layer 1.
+
+Also hardened the `line_distance_tree` test with `black_box` to
+prevent LLVM constant-folding shifts when different code is compiled
+(a cross-test fp fragility that intermittently broke the
+`per_axis_f64` `assert_ne` check).
