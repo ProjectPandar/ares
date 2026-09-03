@@ -337,49 +337,57 @@ fn plan_route(
     first_x: f64,
     first_y: f64,
 ) -> Vec<arc::Point> {
-    let mut route = if state.options.reduce_crossing_wall
-        && state.layer_index > 0
-        && !matches!(feature, "Skirt" | "Brim")
-    {
-        let boundary = super::avoid_crossing::routing_active()
-            .then(|| layer_boundary(state, geometry))
-            .flatten();
-        super::avoid_crossing::route(
-            super::avoid_crossing::Request {
-                start: arc::Point {
-                    x: state.x,
-                    y: state.y,
-                },
-                end: arc::Point {
-                    x: first_x,
-                    y: first_y,
-                },
-                geometry: *geometry,
-                offset: state.offset,
-                inset: state.options.crossing_boundary_inset,
-                after_skirt: state.last_feature == Some("Skirt"),
-            },
-            boundary.as_deref(),
-        )
-        .unwrap_or_else(|| {
-            super::avoid_crossing::rectangle_route(super::avoid_crossing::Request {
-                start: arc::Point {
-                    x: state.x,
-                    y: state.y,
-                },
-                end: arc::Point {
-                    x: first_x,
-                    y: first_y,
-                },
-                geometry: *geometry,
-                offset: state.offset,
-                inset: state.options.crossing_boundary_inset,
-                after_skirt: state.last_feature == Some("Skirt"),
-            })
-        })
+    // Upstream gates routing on `is_current_position_clear()`
+    // (`GCode.cpp:7420`); the rectangle shell keeps its layer gate so the
+    // dormant default matches the previously verified output.
+    let routing = super::avoid_crossing::routing_active();
+    let route_gate = if routing {
+        state.positioned
     } else {
-        Vec::new()
+        state.layer_index > 0
     };
+    let mut route =
+        if state.options.reduce_crossing_wall && route_gate && !matches!(feature, "Skirt" | "Brim")
+        {
+            let boundary = super::avoid_crossing::routing_active()
+                .then(|| layer_boundary(state, geometry))
+                .flatten();
+            super::avoid_crossing::route(
+                super::avoid_crossing::Request {
+                    start: arc::Point {
+                        x: state.x,
+                        y: state.y,
+                    },
+                    end: arc::Point {
+                        x: first_x,
+                        y: first_y,
+                    },
+                    geometry: *geometry,
+                    offset: state.offset,
+                    inset: state.options.crossing_boundary_inset,
+                    after_skirt: state.last_feature == Some("Skirt"),
+                },
+                boundary.as_deref(),
+            )
+            .unwrap_or_else(|| {
+                super::avoid_crossing::rectangle_route(super::avoid_crossing::Request {
+                    start: arc::Point {
+                        x: state.x,
+                        y: state.y,
+                    },
+                    end: arc::Point {
+                        x: first_x,
+                        y: first_y,
+                    },
+                    geometry: *geometry,
+                    offset: state.offset,
+                    inset: state.options.crossing_boundary_inset,
+                    after_skirt: state.last_feature == Some("Skirt"),
+                })
+            })
+        } else {
+            Vec::new()
+        };
     route.push(arc::Point {
         x: first_x,
         y: first_y,

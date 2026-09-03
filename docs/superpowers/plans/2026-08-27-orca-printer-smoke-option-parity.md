@@ -3062,3 +3062,28 @@ dormant via `detour_emission_ready() = false` — the earlier enable
 experiment regressed the sweep 1352→2133 pending waypoint fidelity.
 This cluster (~89 printers) unblocks via: waypoint fidelity work in
 boundary/router/rectangle → flip the gate → sweep.
+
+## 2026-09-03 (cont 25): avoid-crossing router groundwork
+
+Router diagnostics on the Eryone fixture (/tmp/eryone, reduce_crossing_wall=1):
+
+1. **The print's first travel must not route** — upstream gates on
+   `is_current_position_clear()` (`GCode.cpp:7420`); routing from the
+   unknown (0,0) position panicked the router's edge-grid bounds assert.
+   plan_route now gates on `state.positioned` when the router is armed
+   (the dormant rectangle shell keeps its verified layer gate).
+2. **The router path includes the start** — upstream `travel.points[0]`
+   is the start and emission begins at index 1 (`GCode.cpp:7481-7505`);
+   the ares emitted a degenerate move to the current position first. The
+   start point is now dropped (sub-micron tolerance for the scaled
+   roundtrip).
+3. The router produces the exact Orca waypoints for the reproduced
+   inner→outer wall travel: (125.87,114.354)→(125.934,114.354)→
+   (125.934,114.434)→(126.29,114.79).
+
+With `ARES_DETours_ON=1` (env-gated, off by default) the Eryone fixture
+improves 1858→763 diff lines (baseline without detours: 75). Remaining
+divergence: other travels pick different boundary waypoints (e.g. an
+ares detour via 117.51/117.066 where Orca goes direct to 117.243), plus
+the multi-leg emission ordering (upstream: first leg at nominal z via
+travel_to_xyz, middle legs flat, last leg carries the target z).

@@ -81,11 +81,19 @@ pub(super) fn route(request: Request<'_>, boundary: Option<&Boundary>) -> Option
         });
     }
     output.dedup();
-    (output.len() > 2).then_some(output)
+    // Upstream `travel.points` keeps the start at index 0 and emits from
+    // index 1 (`GCode.cpp:7481-7505`); drop it so the first entry is the
+    // first waypoint.
+    if output.first().is_some_and(|point| {
+        (point.x - start.x).abs() < 1.0e-4 && (point.y - start.y).abs() < 1.0e-4
+    }) {
+        output.remove(0);
+    }
+    (output.len() > 1).then_some(output)
 }
 
 fn detour_emission_ready() -> bool {
-    false
+    std::env::var("ARES_DETours_ON").as_deref() == Ok("1")
 }
 
 pub(super) fn routing_active() -> bool {
