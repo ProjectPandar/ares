@@ -146,20 +146,22 @@ fn extract_top_surfaces(
                 .unwrap_or(0);
             let mut layers = vec![Vec::new(); layer_count];
             for (record, input) in object.records.iter().zip(&traversal.records) {
-                let Some(record) = record else {
+                let (Some(record), Some(input)) = (record, input) else {
                     continue;
                 };
-                let Some(input) = input else {
-                    continue;
-                };
-                for surface in &record.fill_surfaces {
-                    if matches!(
-                        surface.as_parts().0,
-                        crate::project_slice::region_slices::RegionSurfaceKind::Top,
-                    ) {
-                        layers[input.layer_id].push(surface.as_parts().1.clone());
-                    }
-                }
+                let layer = &mut layers[input.layer_id];
+                layer.extend(
+                    record
+                        .fill_surfaces
+                        .iter()
+                        .filter(|surface| {
+                            matches!(
+                                surface.as_parts().0,
+                                crate::project_slice::region_slices::RegionSurfaceKind::Top,
+                            )
+                        })
+                        .map(|surface| surface.as_parts().1.clone()),
+                );
             }
             layers
         })

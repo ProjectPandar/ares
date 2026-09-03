@@ -62,19 +62,21 @@ impl RawConfigValue {
                         _ => None,
                     })
                     .collect();
-                (!rendered.is_empty()).then(|| {
-                    // A single empty string element serializes quoted
-                    // (`ConfigOptionString::serialize` wraps
-                    // `escape_string_cstyle`); multi-element joins stay raw.
-                    if rendered.len() == 1 && rendered[0].is_empty() {
-                        return "\"\"".to_owned();
-                    }
-                    rendered.join(";")
-                })
+                (!rendered.is_empty()).then(|| render_list_token(&rendered))
             }
             Self::Object(_) | Self::Null => None,
         }
     }
+}
+
+fn render_list_token(rendered: &[String]) -> String {
+    // A single empty string element serializes quoted
+    // (`ConfigOptionString::serialize` wraps `escape_string_cstyle`);
+    // multi-element joins stay raw.
+    if rendered.len() == 1 && rendered[0].is_empty() {
+        return "\"\"".to_owned();
+    }
+    rendered.join(";")
 }
 
 #[cfg(test)]
