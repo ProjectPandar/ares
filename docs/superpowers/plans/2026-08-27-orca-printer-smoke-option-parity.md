@@ -3033,3 +3033,18 @@ PASS (391/1001). The remaining travel-geometry cluster (55 layer-2 +
 34 layer-1) has mixed directions — Flashforge Adventurer 3 emits 18
 travel moves vs Orca's 20 (the opposite of the Kobra's extra-move case),
 so the Flashforge/Klipper family needs its own fixture investigation.
+
+## 2026-09-03 (cont 23): Eryone/Flashforge travel cluster = split travels
+
+Eryone ER20 0.4 (layer 1 travel count 40 vs 37) reproduces at the
+inner→outer wall transition: Orca splits the 0.604mm travel into THREE
+moves — `+0.064 X` (with F), `+0.08 Y` (axis-aligned, no F), then the
+diagonal to the outer wall start — while ares emits one merged move.
+Config: z_hop 0.4, travel_slope 3, wipe_distance 1, no retraction at
+this travel (0.604mm). The M73 marker stream matches exactly (67
+identical P-values) — only the surrounding move geometry differs, so
+the split is not cooling-marker driven. The two axis-aligned micro
+moves (0.064/0.08) are not a slope lift (no Z, and the slope distance
+7.63mm exceeds the travel) — next step: GT instrument at
+`travel_to_xy`/the wipe path accounting to find the emitter. Fixture
+kept at /tmp/eryone (case.3mf + ref.gcode + ares.gcode).
