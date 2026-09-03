@@ -79,15 +79,20 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     let travel_distance = dx.hypot(dy);
     let emitted = match mode {
         LiftMode::Normal => {
+            // Upstream `_travel_to_z` picks travel_speed_z when non-zero,
+            // else the first-layer or normal travel speed per
+            // `m_is_first_layer` (`GCodeWriter.cpp:832-842`).
+            let feedrate = if state.options.z_travel_feedrate > 0.0 {
+                state.options.z_travel_feedrate
+            } else if state.layer_index == 0 {
+                state.options.first_layer_travel_feedrate
+            } else {
+                state.travel_feedrate
+            };
             output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}\n",
-                    format_z(raised_z),
-                    format_axis(state.options.z_travel_feedrate)
-                )
-                .as_bytes(),
+                format!("G1 Z{} F{}\n", format_z(raised_z), format_axis(feedrate)).as_bytes(),
             );
-            state.current_feedrate = state.options.z_travel_feedrate;
+            state.current_feedrate = feedrate;
             true
         }
         LiftMode::Spiral => {

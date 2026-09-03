@@ -3563,3 +3563,17 @@ through to `append_and_track` — emitting an extra
 template path already emitted at the correct position. Fix: the
 gate is now `!traditional → return` (only the traditional path
 emits at layer end).
+
+## 2026-09-03 (cont 55): z-hop feedrate — layer-aware speed selection
+
+Upstream `_travel_to_z` (`GCodeWriter.cpp:832-842`) picks
+`travel_speed_z` when non-zero, else the **first-layer** or **normal**
+travel speed per `m_is_first_layer` — a per-move runtime selection.
+The ares implementation used a static `z_travel_feedrate` built at
+options time with the `initial_layer_travel_speed` fallback applied
+unconditionally, emitting the wrong feedrate on layers > 0 for
+printers with `initial_layer_travel_speed != 100%` (Snapmaker A250:
+travel_speed=120, initial_layer=80% — ares emitted F5760, Orca
+emits F7200 on layer 2+). The Normal lift now selects at runtime:
+travel_speed_z > 0 → travel_speed_z; layer_index == 0 →
+first_layer_travel_feedrate; else travel_feedrate.
