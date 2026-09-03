@@ -57,19 +57,20 @@ impl RawConfigValue {
                 let rendered: Vec<String> = values
                     .iter()
                     .filter_map(|item| match item {
-                        // An empty string element serializes quoted — upstream
-                        // `ConfigOptionString::serialize` always wraps in
-                        // `escape_string_cstyle`, so `""]` renders as `""`.
-                        Self::Text(text) if text != "nil" => Some(if text.is_empty() {
-                            "\"\"".to_owned()
-                        } else {
-                            text.clone()
-                        }),
+                        Self::Text(text) if text != "nil" => Some(text.clone()),
                         Self::Number(number) => Some(number.to_string()),
                         _ => None,
                     })
                     .collect();
-                (!rendered.is_empty()).then(|| rendered.join(";"))
+                (!rendered.is_empty()).then(|| {
+                    // A single empty string element serializes quoted
+                    // (`ConfigOptionString::serialize` wraps
+                    // `escape_string_cstyle`); multi-element joins stay raw.
+                    if rendered.len() == 1 && rendered[0].is_empty() {
+                        return "\"\"".to_owned();
+                    }
+                    rendered.join(";")
+                })
             }
             Self::Object(_) | Self::Null => None,
         }

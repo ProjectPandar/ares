@@ -41,7 +41,7 @@ fn task22o95_orders_ksr_islands_without_losing_entities() {
     let filled = fill_entities::prepare(graph()).unwrap();
     let islands = extrusion_islands::prepare(filled);
     let expected = source_inventory(&islands.objects[0]);
-    let prepared = island_print_order::prepare(islands);
+    let prepared = island_print_order::prepare(islands, Vec::new());
 
     let inventory = prepared.objects[0].iter().fold(
         (
@@ -144,9 +144,10 @@ fn valid_fill_entity(entity: &FillExtrusionEntity) -> bool {
 #[test]
 fn task22o95_is_repeatable_for_independent_graphs() {
     let prepare = || {
-        island_print_order::prepare(extrusion_islands::prepare(
-            fill_entities::prepare(graph()).unwrap(),
-        ))
+        island_print_order::prepare(
+            extrusion_islands::prepare(fill_entities::prepare(graph()).unwrap()),
+            Vec::new(),
+        )
     };
     let first = prepare();
     let second = prepare();

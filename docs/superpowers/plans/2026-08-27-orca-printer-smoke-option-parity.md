@@ -3154,3 +3154,23 @@ detours and the top-layer route). Next: wire the emit-time surface
 kinds — either surface classification persists in the post-compensation
 region surfaces (verify why `surfaces()` reads empty for Top) or pull
 the top surfaces from the fill-entity layer data the emit already has.
+
+## 2026-09-03 (cont 29): top surfaces wired; detours beat the baseline
+
+The classified surface kinds live only in the surface-type stage's
+output — every later stage drops them. project_slice.rs now holds the
+stage, extracts the Top fill surfaces per object per layer
+(`extract_top_surfaces`), and threads them through
+`island_print_order::prepare` into `PreparedPostIslandPrintOrder`; the
+emit reads them for the boundary subtraction instead of the broken
+traversal accessor (which read the pre-classification internal-only
+surfaces). The raw-settings empty-string quoting also narrowed: only a
+SINGLE empty element serializes `""` (`ConfigOptionString::serialize`);
+multi-element joins stay raw (`["","",""]` → `;;`).
+
+Eryone fixture with detours: 209 → 73 diff lines (5 non-timing) —
+BETTER than the dormant rectangle-shell baseline (75). Remaining: the
+top-layer ring route (ares waypoints via (118.122,114.389)/
+(125.889,114.389) vs orca's single (125.736,114.751)) — the residual
+boundary ring after the top-surface inset differs, or its contour
+direction picks the far side.

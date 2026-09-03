@@ -88,6 +88,17 @@ fn slice_project_sync(
     metadata: GenerationMetadata,
     plate: Option<u32>,
 ) -> Result<Vec<u8>, SliceError> {
+    let staged = prepare_infill::surface_type_detection::prepare(
+        perimeters::prepare_post_layer_region_perimeters(ProjectSource {
+            bytes: project.as_ref(),
+            plate,
+        })?,
+    )?;
+    // The avoid-crossing boundary subtracts the layer's top surfaces
+    // (`get_boundary`, `AvoidCrossingPerimeters.cpp:1122-1132`); the
+    // classified kinds live only in this stage's output, so carry them
+    // to the emit alongside the ordered islands.
+    let top_surfaces = extract_top_surfaces(&staged);
     let external = prepare_infill::external_surfaces::prepare(
         prepare_infill::horizontal_shell_propagation::prepare(
             prepare_infill::horizontal_shell_promotion::prepare(
@@ -97,16 +108,7 @@ fn slice_project_sync(
                             prepare_infill::vertical_shell_trimming::prepare(
                                 prepare_infill::vertical_shell_projection::prepare(
                                     prepare_infill::vertical_shells::prepare(
-                                        prepare_infill::fill_surfaces::prepare(
-                                            prepare_infill::surface_type_detection::prepare(
-                                                perimeters::prepare_post_layer_region_perimeters(
-                                                    ProjectSource {
-                                                        bytes: project.as_ref(),
-                                                        plate,
-                                                    },
-                                                )?,
-                                            )?,
-                                        ),
+                                        prepare_infill::fill_surfaces::prepare(staged),
                                     )?,
                                 )?,
                             )?,
@@ -121,10 +123,47 @@ fn slice_project_sync(
     let prepared = prepare_infill::combine_infill::prepare(bridged)?;
     let filled = fill_entities::prepare(prepared)?;
     let islands = extrusion_islands::prepare(filled);
-    let mut ordered = island_print_order::prepare(islands);
+    let mut ordered = island_print_order::prepare(islands, top_surfaces);
     path_simplification::apply(&mut ordered);
     seam_placement::apply(&mut ordered);
     consume_post_island_print_order(ordered, metadata)
+}
+
+fn extract_top_surfaces(
+    staged: &prepare_infill::surface_type_detection::PreparedPostSurfaceTypeDetection,
+) -> Vec<Vec<Vec<crate::geometry::ExPolygon>>> {
+    staged
+        .objects
+        .iter()
+        .zip(&staged.predecessor.objects)
+        .map(|(object, traversal)| {
+            let layer_count = traversal
+                .records
+                .iter()
+                .flatten()
+                .map(|record| record.layer_id + 1)
+                .max()
+                .unwrap_or(0);
+            let mut layers = vec![Vec::new(); layer_count];
+            for (record, input) in object.records.iter().zip(&traversal.records) {
+                let Some(record) = record else {
+                    continue;
+                };
+                let Some(input) = input else {
+                    continue;
+                };
+                for surface in &record.fill_surfaces {
+                    if matches!(
+                        surface.as_parts().0,
+                        crate::project_slice::region_slices::RegionSurfaceKind::Top,
+                    ) {
+                        layers[input.layer_id].push(surface.as_parts().1.clone());
+                    }
+                }
+            }
+            layers
+        })
+        .collect()
 }
 
 #[inline(never)]

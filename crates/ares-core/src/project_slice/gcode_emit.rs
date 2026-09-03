@@ -276,8 +276,9 @@ pub(super) fn emit(
                 .collect::<Vec<_>>();
             let lower_boundary = (!lower_boundary_lines.is_empty())
                 .then(|| crate::geometry::LineDistanceTree::new(&lower_boundary_lines));
-            let top_surfaces = traversal.objects[object_index]
-                .top_surfaces(layer_index)
+            let top_surfaces = prepared.top_surfaces[object_index]
+                .get(layer_index)
+                .map(|expolygons| expolygons.iter().collect::<Vec<_>>())
                 .unwrap_or_default();
             let geometry = motion::LayerGeometry {
                 internal_surfaces: island_print_order::internal_surfaces(

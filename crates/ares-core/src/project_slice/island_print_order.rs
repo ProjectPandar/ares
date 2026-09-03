@@ -31,10 +31,15 @@ pub(in crate::project_slice) struct OrderedExtrusionLayer {
 pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
     pub(in crate::project_slice) predecessor: PreparedPostExtrusionIslands,
     pub(in crate::project_slice) objects: Vec<Vec<OrderedExtrusionLayer>>,
+    /// Top surfaces per object per layer — the classified kinds from the
+    /// surface-type stage (`get_boundary`'s top subtraction,
+    /// `AvoidCrossingPerimeters.cpp:1122-1132`).
+    pub(in crate::project_slice) top_surfaces: Vec<Vec<Vec<crate::geometry::ExPolygon>>>,
 }
 
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostExtrusionIslands,
+    top_surfaces: Vec<Vec<Vec<crate::geometry::ExPolygon>>>,
 ) -> PreparedPostIslandPrintOrder {
     let infill_first = {
         let traversal = &predecessor
@@ -78,6 +83,7 @@ pub(in crate::project_slice) fn prepare(
     PreparedPostIslandPrintOrder {
         predecessor,
         objects,
+        top_surfaces,
     }
 }
 
