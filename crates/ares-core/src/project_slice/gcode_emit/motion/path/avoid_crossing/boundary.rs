@@ -21,6 +21,10 @@ pub(in crate::project_slice::gcode_emit) struct Boundary {
     pub(super) contours: Vec<Vec<Point>>,
     pub(super) grid: EdgeGrid,
     pub(super) contour_lengths: Vec<Vec<f64>>,
+    /// The safe zone: lslices inset by external_perimeter_width × coeff
+    /// (`init_layer`, `AvoidCrossingPerimeters.cpp:1324-1327`) — travels
+    /// fully inside never route.
+    pub(super) safe_zone: Vec<crate::geometry::ExPolygon>,
 }
 
 impl Boundary {
@@ -30,6 +34,15 @@ impl Boundary {
 
     pub(super) fn lengths(&self, index: usize) -> &[f64] {
         &self.contour_lengths[index]
+    }
+
+    /// A travel segment fully inside any safe-zone expolygon never routes
+    /// (`travel_to`'s `any_expolygon_contains(m_lslices_offset, ...)` gate,
+    /// `AvoidCrossingPerimeters.cpp:1255`).
+    pub(super) fn safe_zone_contains(&self, start: Point, end: Point) -> bool {
+        self.safe_zone
+            .iter()
+            .any(|expolygon| segment_inside_expolygon(start, end, expolygon))
     }
 
     /// `get_boundary` + `init_boundary`: `union_ex(inner_offset(lslices,
@@ -104,12 +117,64 @@ impl Boundary {
             .iter()
             .map(|contour| cumulative_distances(contour))
             .collect();
+        let safe_zone = safe_zone(geometry, scale)?;
         Ok(Some(Boundary {
             contours,
             grid,
             contour_lengths,
+            safe_zone,
         }))
     }
+}
+
+/// `init_layer` safe zone (`AvoidCrossingPerimeters.cpp:1324-1327`): the
+/// layer slices inset by external_perimeter_width × coeff, trying
+/// 0.6/0.5/0.45 until non-empty.
+fn safe_zone(
+    geometry: &AvoidCrossingGeometry<'_>,
+    scale: CoordinateScale,
+) -> Result<Vec<crate::geometry::ExPolygon>, ClipperError> {
+    for coeff in [0.6_f32, 0.5, 0.45] {
+        let Some(inset) = scale.checked_scale(f64::from(geometry.external_perimeter_width * coeff))
+        else {
+            continue;
+        };
+        let offset = offset_expolygons(
+            &geometry
+                .layer_slices
+                .iter()
+                .map(|expolygon| (*expolygon).clone())
+                .collect::<Vec<_>>(),
+            -(inset as f32),
+            JoinType::Round,
+            MITER_LIMIT,
+        )?;
+        if !offset.is_empty() {
+            return Ok(offset);
+        }
+    }
+    Ok(Vec::new())
+}
+
+/// Both endpoints inside the contour (outside every hole) and no contour
+/// edge crossing the segment.
+fn segment_inside_expolygon(start: Point, end: Point, expolygon: &ExPolygon) -> bool {
+    let contour = expolygon.contour();
+    if !contour.contains(&start) || !contour.contains(&end) {
+        return false;
+    }
+    for hole in expolygon.holes() {
+        if hole.contains(&start) || hole.contains(&end) {
+            return false;
+        }
+    }
+    let travel = crate::geometry::Line::new(start, end);
+    let crossing = contour
+        .lines()
+        .into_iter()
+        .chain(expolygon.holes().iter().flat_map(|hole| hole.lines()))
+        .any(|edge| travel.intersection(edge).is_some());
+    !crossing
 }
 
 fn cumulative_distances(contour: &[Point]) -> Vec<f64> {

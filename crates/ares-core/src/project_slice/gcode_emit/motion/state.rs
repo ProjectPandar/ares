@@ -94,6 +94,7 @@ pub(in crate::project_slice::gcode_emit) struct LayerGeometry<'a> {
 pub(in crate::project_slice::gcode_emit) struct AvoidCrossingGeometry<'a> {
     pub(in crate::project_slice::gcode_emit) layer_slices: &'a [crate::geometry::ExPolygon],
     pub(in crate::project_slice::gcode_emit) perimeter_spacing: f32,
+    pub(in crate::project_slice::gcode_emit) external_perimeter_width: f32,
     pub(in crate::project_slice::gcode_emit) top_surfaces: &'a [&'a crate::geometry::ExPolygon],
 }
 

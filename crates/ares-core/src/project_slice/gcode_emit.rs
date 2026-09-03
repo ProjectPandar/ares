@@ -294,6 +294,9 @@ pub(super) fn emit(
                     perimeter_spacing: traversal.objects[object_index]
                         .perimeter_spacing(layer_index)
                         .unwrap_or_default(),
+                    external_perimeter_width: traversal.objects[object_index]
+                        .external_perimeter_width(layer_index)
+                        .unwrap_or_default(),
                     top_surfaces: &top_surfaces,
                 },
             };

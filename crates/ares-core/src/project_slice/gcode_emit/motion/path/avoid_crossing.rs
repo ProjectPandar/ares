@@ -69,6 +69,12 @@ pub(super) fn route(request: Request<'_>, boundary: Option<&Boundary>) -> Option
     };
     let scaled_start = to_scaled(start)?;
     let scaled_end = to_scaled(end)?;
+    // Travels fully inside the lslices safe zone never route
+    // (`any_expolygon_contains(m_lslices_offset, ...)`,
+    // `AvoidCrossingPerimeters.cpp:1255`).
+    if boundary.safe_zone_contains(scaled_start, scaled_end) {
+        return Some(Vec::new());
+    }
     let search_radius = 2.0 * f64::from(spacing);
     let search_radius = scale.checked_scale(search_radius).unwrap_or_default() as f64;
     let (path, _intersections) =
@@ -80,7 +86,9 @@ pub(super) fn route(request: Request<'_>, boundary: Option<&Boundary>) -> Option
             y: scale.unscale(point.y()) + offset.1,
         });
     }
-    output.dedup();
+    output.dedup_by(|next, last| {
+        (next.x - last.x).abs() < 1.0e-4 && (next.y - last.y).abs() < 1.0e-4
+    });
     // Upstream `travel.points` keeps the start at index 0 and emits from
     // index 1 (`GCode.cpp:7481-7505`); drop it so the first entry is the
     // first waypoint.
@@ -89,7 +97,7 @@ pub(super) fn route(request: Request<'_>, boundary: Option<&Boundary>) -> Option
     }) {
         output.remove(0);
     }
-    (output.len() > 1).then_some(output)
+    Some(output)
 }
 
 fn detour_emission_ready() -> bool {

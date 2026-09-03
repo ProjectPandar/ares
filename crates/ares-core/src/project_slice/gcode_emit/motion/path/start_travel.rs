@@ -392,8 +392,16 @@ fn plan_route(
         x: first_x,
         y: first_y,
     });
-    route.dedup();
+    route_dedup(&mut route);
     route
+}
+
+/// Drop consecutive near-duplicate waypoints — the router's scaled
+/// roundtrip leaves sub-micron offsets that exact `dedup` misses.
+fn route_dedup(route: &mut Vec<arc::Point>) {
+    route.dedup_by(|next, last| {
+        (next.x - last.x).abs() < 1.0e-4 && (next.y - last.y).abs() < 1.0e-4
+    });
 }
 
 /// Total polyline length from the current position through the route

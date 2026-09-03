@@ -24,6 +24,7 @@ fn geometry() -> LayerGeometry<'static> {
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
         avoid_crossing: AvoidCrossingGeometry {
+            external_perimeter_width: 0.42,
             layer_slices: &[],
             perimeter_spacing: 0.0,
             top_surfaces: &[],
@@ -129,6 +130,7 @@ fn boundary_builds_from_layer_slices() {
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
         avoid_crossing: AvoidCrossingGeometry {
+            external_perimeter_width: 0.42,
             layer_slices: layer,
             perimeter_spacing: 0.45,
             top_surfaces: &[],

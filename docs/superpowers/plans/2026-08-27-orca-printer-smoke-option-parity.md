@@ -3087,3 +3087,30 @@ divergence: other travels pick different boundary waypoints (e.g. an
 ares detour via 117.51/117.066 where Orca goes direct to 117.243), plus
 the multi-leg emission ordering (upstream: first leg at nominal z via
 travel_to_xyz, middle legs flat, last leg carries the target z).
+
+## 2026-09-03 (cont 26): safe-zone gate + proximity dedup
+
+Two more avoid-crossing ports landed (Eryone fixture detours: 763 → 209
+diff lines, non-timing 85; dormant baseline 75/89-timing):
+
+1. **lslices safe zone** (`init_layer`, `AvoidCrossingPerimeters.cpp:
+   1324-1327`): the layer slices inset by external_perimeter_width ×
+   coeff (0.6, fallback 0.5/0.45) — travels fully inside never route
+   (`any_expolygon_contains` gate, `travel_to` :1255). The Boundary now
+   carries the safe zone (both endpoints inside the contour and outside
+   every hole, with no contour-edge crossing), and route() returns a
+   direct (empty) path for contained travels. The external perimeter
+   width flows through the traversal (`ext_perimeter_flow.width`,
+   mirroring `get_external_perimeter_width` :531-545).
+
+2. **Proximity dedup**: the router's scaled roundtrip leaves sub-micron
+   offsets on the path end, defeating exact dedup against the pushed
+   destination — the final detour leg emitted twice. Consecutive
+   near-duplicates (<1e-4) now collapse both in the route and after the
+   destination push.
+
+Remaining (85 non-timing lines): the top-layer (z=10.4) waypoint
+selection — ares routes via (118.123,114.389) with an extra E1.201
+retract where Orca travels direct to (125.736,114.751); likely a
+boundary contour difference on the top layer or a needs_retraction
+divergence on the longer routed path.

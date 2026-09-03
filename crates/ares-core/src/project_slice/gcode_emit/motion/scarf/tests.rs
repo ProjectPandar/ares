@@ -37,6 +37,7 @@ fn geometry() -> LayerGeometry<'static> {
         scale: CoordinateScale::Normal,
         previous_layer_boundary: None,
         avoid_crossing: super::super::state::AvoidCrossingGeometry {
+            external_perimeter_width: 0.42,
             layer_slices: &[],
             perimeter_spacing: 0.0,
             top_surfaces: &[],

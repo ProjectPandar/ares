@@ -173,6 +173,22 @@ impl PostClassicTraversalPrintObject {
             .map(|record| record.perimeter_flow.spacing)
     }
 
+    /// External perimeter flow width of the record's region in millimetres
+    /// (`get_external_perimeter_width`,
+    /// `AvoidCrossingPerimeters.cpp:531-545`).
+    pub(in crate::project_slice) fn external_perimeter_width(
+        &self,
+        record_index: usize,
+    ) -> Option<f32> {
+        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
+        prelude
+            .object
+            .records
+            .get(record_index)
+            .and_then(|record| record.as_ref())
+            .map(|record| record.ext_perimeter_flow.width)
+    }
+
     /// Top fill surfaces of the record's region-layer; the avoid-crossing
     /// boundary subtracts their inset from the slice union
     /// (`AvoidCrossingPerimeters.cpp:1122-1132`).
