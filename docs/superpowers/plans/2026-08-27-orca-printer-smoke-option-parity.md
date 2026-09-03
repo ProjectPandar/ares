@@ -3695,3 +3695,14 @@ apply_objects — either store in a side table or embed in the
 ExtrusionLoop metadata.
 
 Estimated: ~200 lines of new code + refactoring the apply return type.
+
+## 2026-09-03 (cont 61): nearest-seam plumbing scaffolding landed
+
+Added the `nearest_seam_plans: Vec<Vec<Vec<NearestSeamPenalties>>>`
+field to `PreparedPostIslandPrintOrder` (alongside `top_surfaces`,
+following the same pattern), with per-loop penalty data
+(NearestSeamPenalties { scores, overhangs, embedded_distances }).
+Currently empty — the `seam_placement::apply` fills it and the
+motion.rs emit site consults it for the Nearest mode selection with
+the gaussian distance penalty. Suite 6912/6913, clippy warns the
+fields are unused (expected until wired).

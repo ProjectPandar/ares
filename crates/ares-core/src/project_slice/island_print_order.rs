@@ -35,12 +35,31 @@ pub(in crate::project_slice) struct PreparedPostIslandPrintOrder {
     /// surface-type stage (`get_boundary`'s top subtraction,
     /// `AvoidCrossingPerimeters.cpp:1122-1132`).
     pub(in crate::project_slice) top_surfaces: Vec<Vec<Vec<crate::geometry::ExPolygon>>>,
+    /// Per-object per-layer seam penalty data for the Nearest seam mode
+    /// (`SeamPlacer.cpp:930-940` `pick_nearest_seam_point_index` —
+    /// overhang, embedded distance, visibility + angle penalty per
+    /// candidate, ready for the emit-time gaussian distance penalty).
+    pub(in crate::project_slice) nearest_seam_plans: Vec<Vec<Vec<NearestSeamPenalties>>>,
+}
+
+/// Per-loop penalty data for the Nearest seam selection at emit time.
+#[derive(Default)]
+pub(in crate::project_slice) struct NearestSeamPenalties {
+    /// Penalty score per loop point: `visibility + angle_importance *
+    /// angle_penalty` (`SeamPlacer.cpp:786-793` with
+    /// `angle_importance_nearest = 1.0`).
+    pub(in crate::project_slice) scores: Vec<f32>,
+    /// Overhang distance per loop point (`SeamPlacer.cpp:765-767`).
+    pub(in crate::project_slice) overhangs: Vec<f32>,
+    /// Embedded distance per loop point (`SeamPlacer.cpp:769-774`).
+    pub(in crate::project_slice) embedded_distances: Vec<f32>,
 }
 
 pub(in crate::project_slice) fn prepare(
     mut predecessor: PreparedPostExtrusionIslands,
     top_surfaces: Vec<Vec<Vec<crate::geometry::ExPolygon>>>,
 ) -> PreparedPostIslandPrintOrder {
+    let nearest_seam_plans: Vec<Vec<Vec<NearestSeamPenalties>>> = Vec::new();
     let infill_first = {
         let traversal = &predecessor
             .predecessor
@@ -84,6 +103,7 @@ pub(in crate::project_slice) fn prepare(
         predecessor,
         objects,
         top_surfaces,
+        nearest_seam_plans,
     }
 }
 
