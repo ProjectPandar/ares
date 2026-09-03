@@ -3268,3 +3268,17 @@ ender3); suite 6911/6912 (known ksr layer-4).
 The rectangle shell remains as dead fallback code for the
 `routing_active()`-false case. Eryone stays at 5 non-timing (the
 top-layer ring direction — a separate residual).
+
+## 2026-09-03 (cont 35): sweep 391 unchanged; printer-defaults fixtures differ
+
+The router-enabled sweep stays 391/1001 — the cluster counters are
+byte-identical (55 layer-2 + 34 layer-1 travel). Root observation: the
+sweep fixtures apply `smoke_overrides` (a simplified config) while the
+investigated /tmp/eryone fixture used the printer defaults
+(`build_selection_case`) — different configs, different divergences.
+The /tmp/enderrcw fixture (smoke overrides) is at full parity; the
+sweep's Eryone case ("layer 1 travel count 40 vs 37") needs its own
+fixture dump (build_selection_case + smoke_overrides applied) to
+continue. The 28 exit-239 + 16 SIGSEGV clusters are oracle-side
+failures (the ref generation itself fails) — those need a separate
+look (the runner's timeout/crash handling).
