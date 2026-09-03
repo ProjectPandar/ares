@@ -184,6 +184,12 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
             .iter()
             .map(|candidate| candidate.perimeter_index)
             .collect(),
+        ccw_angles: plan
+            .candidates
+            .points
+            .iter()
+            .map(|candidate| candidate.local_ccw_angle)
+            .collect(),
     }
 }
 

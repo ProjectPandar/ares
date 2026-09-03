@@ -59,6 +59,8 @@ pub(in crate::project_slice) struct NearestSeamLayer {
     pub(in crate::project_slice) perimeter_ranges: Vec<(usize, usize)>,
     /// Per-candidate perimeter index (candidate → perimeter).
     pub(in crate::project_slice) perimeter_of_candidate: Vec<usize>,
+    /// Per-candidate local ccw angle in radians (`SeamCandidate::local_ccw_angle`).
+    pub(in crate::project_slice) ccw_angles: Vec<f32>,
 }
 
 pub(in crate::project_slice) fn prepare(

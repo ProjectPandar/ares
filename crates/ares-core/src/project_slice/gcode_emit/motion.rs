@@ -240,6 +240,7 @@ fn emit_perimeter(
                     &mut loop_.extrusion_loop,
                     cursor,
                     layer,
+                    geometry.staggered_inner,
                     geometry.scale,
                 );
             } else {

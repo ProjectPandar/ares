@@ -284,8 +284,14 @@ pub(super) fn emit(
                 .nearest_seam_plans
                 .get(object_index)
                 .and_then(|plans| plans.get(layer_index));
+            let staggered_inner = nearest_penalties.is_some()
+                && traversal.resolved.objects[object_index]
+                    .object
+                    .staggered_inner_seams
+                    .0;
             let geometry = motion::LayerGeometry {
                 nearest_seam_penalties: nearest_penalties,
+                staggered_inner,
                 internal_surfaces: island_print_order::internal_surfaces(
                     &prepared.predecessor,
                     object_index,

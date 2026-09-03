@@ -3740,3 +3740,22 @@ Next: the emit-time selection in motion.rs using the stored penalties
   (upstream loop polygons carry extra vertices from perimeter
   discretization) or much higher visibility at corners. Next: compare
   the candidate vertex sets directly.
+
+## 2026-09-03 (cont 65): nearest-seam projection + staggered inner seams
+
+Upstream `place_seam` for INNER perimeters (SeamPlacer.cpp:1562-1618):
+project the winning candidate (from external-perimeter polygons) onto
+the inner loop polyline (mid-edge foot), scale depth by
+`beta/sqrt(2)` (beta = cos(ccw_angle/2)), raise to at least the path
+width (cpp:1602 `max(width, depth)`), then stagger-walk that depth
+along the loop (staggered_inner_seams). External loops split directly
+at the candidate.
+
+Implemented in place_nearest_penalized: ccw_angles + staggered flag
+plumbed via NearestSeamLayer / LayerGeometry.staggered_inner;
+walk_along helper for the stagger walk; closest_projection reused.
+
+Wanhao D12: 1052 → 970 → 852 diff lines. The corner-vs-mid-edge
+mystery is solved (projection + width floor). Remaining 852-line
+cluster = wipe_before_external_loop pattern (ref travels to a point
+inside, wipes, then extrudes; 20× per file) — separate feature.

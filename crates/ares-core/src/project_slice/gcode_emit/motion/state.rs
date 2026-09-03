@@ -88,6 +88,8 @@ pub(in crate::project_slice::gcode_emit) struct LayerGeometry<'a> {
     /// (`SeamPlacer.cpp:1500-1560`).
     pub(in crate::project_slice::gcode_emit) nearest_seam_penalties:
         Option<&'a crate::project_slice::island_print_order::NearestSeamLayer>,
+    /// `staggered_inner_seams` from the owning object (`SeamPlacer.cpp:1601`).
+    pub(in crate::project_slice::gcode_emit) staggered_inner: bool,
     pub(in crate::project_slice::gcode_emit) internal_surfaces:
         &'a [crate::project_slice::region_slices::RegionSurface],
     pub(in crate::project_slice::gcode_emit) scale: crate::geometry::CoordinateScale,

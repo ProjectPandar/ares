@@ -165,6 +165,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
     loop_: &mut ExtrusionLoop,
     cursor: Point3,
     layer: &crate::project_slice::island_print_order::NearestSeamLayer,
+    staggered: bool,
     scale: CoordinateScale,
 ) {
     let Some(first) = loop_
@@ -213,11 +214,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             best = index;
         }
     }
-    let Some(&(seam_x, seam_y)) = layer.positions.get(best) else {
-        return;
-    };
-    // Project the winning candidate back to the closest loop vertex
-    // (scaled integer coordinates for split_at).
+    let (seam_x, seam_y) = layer.positions[best];
     let (Some(seam_x), Some(seam_y)) = (
         scale.checked_scale(seam_x as f64),
         scale.checked_scale(seam_y as f64),
@@ -225,6 +222,34 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         return;
     };
     let seam_query = (seam_x, seam_y);
+    // External loops split directly at the candidate; inner loops project
+    // the candidate onto the loop and stagger it (`SeamPlacer.cpp:1562-1618`).
+    if loop_
+        .paths
+        .iter()
+        .all(|path| path.role != ExtrusionRole::ExternalPerimeter)
+    {
+        let projection = super::closest_projection(&loop_.paths, seam_query);
+        let depth = squared_distance((projection.x, projection.y), seam_query).sqrt();
+        let angle = layer.ccw_angles[best];
+        let beta = (angle / 2.0).cos();
+        let depth = if beta.abs() > f32::EPSILON {
+            depth * f64::from(beta) / std::f64::consts::SQRT_2
+        } else {
+            depth
+        };
+        // `SeamPlacer.cpp:1602` — the stagger depth is at least the path
+        // width (it is sometimes strongly underestimated).
+        let width = f64::from(loop_.paths[projection.path].width) / scale.factor();
+        let depth = depth.max(width);
+        let target = if staggered {
+            walk_along(loop_, &projection, depth)
+        } else {
+            (projection.x, projection.y)
+        };
+        split_at(loop_, target, scale);
+        return;
+    }
     let seam = loop_
         .paths
         .iter()
@@ -237,6 +262,46 @@ pub(in crate::project_slice) fn place_nearest_penalized(
     if let Some(seam) = seam {
         split_at(loop_, seam, scale);
     }
+}
+
+/// Walk `distance` (scaled units) forward along the loop from `from`,
+/// wrapping around (`SeamPlacer.cpp:1601-1617`).
+fn walk_along(loop_: &ExtrusionLoop, from: &super::Projection, distance: f64) -> (i64, i64) {
+    let mut remaining = distance;
+    let mut position = (from.x, from.y);
+    let mut started = false;
+    for pass in 0..2 {
+        for (path_index, path) in loop_.paths.iter().enumerate() {
+            for (segment_index, segment) in path.polyline.points.windows(2).enumerate() {
+                if !started {
+                    if path_index == from.path && segment_index == from.segment {
+                        started = true;
+                    } else {
+                        continue;
+                    }
+                }
+                let end = (segment[1].x, segment[1].y);
+                let length = squared_distance(position, end).sqrt();
+                if remaining <= length {
+                    let ratio = if length == 0.0 {
+                        0.0
+                    } else {
+                        remaining / length
+                    };
+                    return (
+                        (position.0 as f64 + (end.0 - position.0) as f64 * ratio) as i64,
+                        (position.1 as f64 + (end.1 - position.1) as f64 * ratio) as i64,
+                    );
+                }
+                remaining -= length;
+                position = end;
+            }
+        }
+        if pass == 1 {
+            break;
+        }
+    }
+    position
 }
 
 pub(in crate::project_slice) fn place_nearest_projection(
