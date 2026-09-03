@@ -3458,3 +3458,17 @@ Also: the brim arc-fitting exemption was reverted (sweep regressed
 398→396 — the WonderMaker ZR Ultra 0.4/0.6 PASSED with brim arcs,
 suggesting some brim paths DO need fitting in the ares model even
 though upstream's simplify stages don't touch brim entities).
+
+## 2026-09-03 (cont 49): sweep flapping = oracle instability
+
+The 398→396 flap after the revert is NOT a code regression: the two
+sweeps ran the same code (6a2b4367 content, the revert commit
+065bef1c is identical). The diff shows printers oscillating between
+ARES_ERROR and DIVERGENT — the oracle-slicer reference generation
+intermittently SIGSEGVs on some presets (WonderMaker ZR Ultra,
+Snapmaker U1, Prusa XL 5T, Flashforge Creator 5 family). The
+WonderMaker ZR Ultra 0.6/S 0.4 that were PASS in the 398 run are
+ARES_ERROR in the 396 run (the reference generation itself failed).
+The brim arc exemption revert restored the original code; the
+earlier analysis that attributed the regression to the exemption was
+wrong. The true baseline is 396-398 depending on oracle stability.
