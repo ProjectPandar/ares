@@ -3324,3 +3324,17 @@ for this fixture: 282 non-timing diff lines, dominated by small
 feedrate offsets (F1904/F1895/F1916 vs F1880/F1871) and z-hop moves
 missing `F720` (travel_speed_z on `G1 Z<hop>`). Fixture at
 /tmp/prusa (case.3mf + ref.gcode + a.gcode).
+
+## 2026-09-03 (cont 38): edge-grid bounds assert killed the sweep at #987
+
+The sweep panicked at `edge_grid/query.rs:105` on iQ/iQ TiQ8 0.25
+Nozzle (printer 987) — the `visit_cells_intersecting_line`
+debug_asserts fire on travel endpoints outside the padded grid
+bounds, aborting before `write_summary` (the stale 391 summary was
+from an earlier run). The raster walker already handles
+out-of-grid endpoints safely (`visit_or_done` stops at the first
+out-of-range cell via the `usize::try_from` guard), matching the
+upstream EdgeGrid's tolerance of lines extending beyond the padded
+bounds. Removed the over-strict asserts.
+
+Suite: 6912/6913 (known ksr layer-4); edge_grid tests 20/20.

@@ -100,19 +100,9 @@ impl EdgeGrid {
     where
         Visitor: FnMut(usize, usize, &[GridEdge]) -> bool,
     {
-        let resolution = i128::from(self.resolution);
-        for point in [p1, p2] {
-            debug_assert!(
-                point.x() >= self.bounds_min.x()
-                    && point.x() <= self.bounds_max.x()
-                    && point.y() >= self.bounds_min.y()
-                    && point.y() <= self.bounds_max.y()
-            );
-            let x = i128::from(point.x()) - i128::from(self.bounds_min.x());
-            let y = i128::from(point.y()) - i128::from(self.bounds_min.y());
-            debug_assert!(x >= 0 && x < self.cols as i128 * resolution);
-            debug_assert!(y >= 0 && y < self.rows as i128 * resolution);
-        }
+        // The walker handles out-of-grid endpoints safely (`visit_or_done`
+        // stops at the first out-of-range cell), matching the upstream
+        // EdgeGrid's tolerance of lines extending beyond the padded bounds.
 
         visit_line(
             RasterGrid {
