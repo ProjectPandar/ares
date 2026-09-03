@@ -3338,3 +3338,14 @@ upstream EdgeGrid's tolerance of lines extending beyond the padded
 bounds. Removed the over-strict asserts.
 
 Suite: 6912/6913 (known ksr layer-4); edge_grid tests 20/20.
+
+## 2026-09-03 (cont 39): sweep 396/1001 — Prusa cluster flipped, full sweep completes
+
+The compatible_printers injection + filament_extruder_id placeholder +
+edge-grid assert removal let the sweep complete all 1001 printers:
+**396 pass** (was 391), **0 exit-239** (the 28 Prusa -17 cluster
+flipped to real comparisons — they now diverge on layer-1 travel
+feed/deposition, the next frontier). Fresh clusters: 31 layer-2
+travel geometry, 28 layer-1 deposition count, 26 layer-1 control
+events, 15 filament length, 13 oracle SIGSEGV, 8 M106-no-S-value,
+8 sparse-infill extrusion off-by-1-ulp (0.02322 vs 0.02321).
