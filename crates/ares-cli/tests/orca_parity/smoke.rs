@@ -149,6 +149,27 @@ fn orca_parity_artillery_x3_pro_smoke() {
 }
 
 #[test]
+fn orca_parity_prusa_core_one_dump() {
+    let Some(runner) = OrcaRunner::from_env() else {
+        eprintln!("skipping: no OrcaSlicer CLI available");
+        return;
+    };
+    let profiles = VendorProfiles::load(&profiles_root(), "Prusa").unwrap();
+    let selection =
+        parity::select_printer(&profiles, "Prusa", "Prusa CORE One 0.4 nozzle").unwrap();
+    let result = parity::build_selection_case(&runner, &profiles, &selection, &cube_model())
+        .map(|case| {
+            let dir = std::path::Path::new("/tmp/prusa");
+            std::fs::create_dir_all(dir).unwrap();
+            std::fs::write(dir.join("case.3mf"), &case.project).unwrap();
+            std::fs::write(dir.join("ref.gcode"), &case.reference).unwrap();
+        })
+        .map_err(|error| error.to_string());
+    eprintln!("RESULT: {result:?}");
+    assert!(result.is_ok());
+}
+
+#[test]
 fn orca_parity_ratrig_vcast_smoke() {
     assert_printer_smoke("Ratrig", "RatRig V-Cast 0.4 nozzle");
 }

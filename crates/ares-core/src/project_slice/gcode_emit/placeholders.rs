@@ -23,6 +23,7 @@ pub(super) fn base_config(
     timestamp::insert(&mut config, metadata);
     insert_runtime_placeholders(&mut config, traversal);
     config.insert("current_extruder", Value::number(0.0));
+    config.insert("filament_extruder_id", Value::number(0.0));
     config.insert("current_hotend", Value::number(-1.0));
     for (target, source) in [
         (

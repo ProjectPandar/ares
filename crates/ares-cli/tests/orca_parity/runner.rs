@@ -61,7 +61,25 @@ impl OrcaRunner {
     ) -> Result<ParityCase, String> {
         let label = inputs.label;
         let machine = apply_override(inputs.machine, overrides, PresetKind::Machine);
-        let process = apply_override(inputs.process, overrides, PresetKind::Process);
+        let mut process = apply_override(inputs.process, overrides, PresetKind::Process);
+        // The CLI's machine-switch compatibility check matches the
+        // process's compatible_printers against the machine name
+        // (`OrcaSlicer.cpp:2579-2585`); presets without a non-empty list
+        // (e.g. the Prusa CORE One chain) fail with
+        // CLI_PROCESS_NOT_COMPATIBLE (-17). Inject the machine name when
+        // the process omits it or resolves it empty.
+        let compatible_empty = process
+            .get("compatible_printers")
+            .and_then(Value::as_array)
+            .is_none_or(|printers| printers.is_empty());
+        if compatible_empty {
+            if let Some(name) = machine.get("name").and_then(Value::as_str) {
+                process.insert(
+                    "compatible_printers".to_owned(),
+                    Value::Array(vec![Value::String(name.to_owned())]),
+                );
+            }
+        }
         let filaments: Vec<Map<String, Value>> = inputs
             .filaments
             .iter()

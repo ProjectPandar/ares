@@ -3298,3 +3298,29 @@ Orca uses one (125.736,114.751, off the edge) — the corner-clipping
 crossing structure (the travel clips the ring corner; Orca's line
 intersection counts the corner once, the ares' counts both adjacent
 edges). Needs a GT dump of the actual intersections for that travel.
+
+## 2026-09-03 (cont 37): Prusa -17 cluster root-caused and unblocked
+
+The 28-printer Prusa exit-239 cluster ("run found error, return -17")
+was two stacked blockers:
+
+1. **Reference generation** — the CLI's machine-switch compatibility
+   check matches the process's `compatible_printers` against the
+   machine name (`OrcaSlicer.cpp:2579-2585`); the Prusa process chain
+   (CORE One → MK4S inherits) resolves the list empty, so the check
+   fails with CLI_PROCESS_NOT_COMPATIBLE. The runner's `build_case`
+   now injects `compatible_printers: [<machine name>]` when the
+   flattened process resolves it absent or empty — verified: the
+   Prusa CORE One reference now generates (out.3mf + ref.gcode).
+
+2. **Ares slicing** — the Prusa machine's filament-start G-code uses
+   `nozzle_diameter[filament_extruder_id]==0.4` in an {if} expression;
+   the template config lacked the `filament_extruder_id` placeholder.
+   Added next to `current_extruder` in `placeholders::base_config`
+   (single-extruder prints: 0).
+
+The Prusa CORE One fixture now slices both sides — first ares output
+for this fixture: 282 non-timing diff lines, dominated by small
+feedrate offsets (F1904/F1895/F1916 vs F1880/F1871) and z-hop moves
+missing `F720` (travel_speed_z on `G1 Z<hop>`). Fixture at
+/tmp/prusa (case.3mf + ref.gcode + a.gcode).
