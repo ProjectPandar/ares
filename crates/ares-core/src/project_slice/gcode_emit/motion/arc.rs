@@ -59,6 +59,12 @@ fn append_line(segments: &mut Vec<Segment>, start: Point, end: Point) {
 
 fn try_arc(points: &[Point], tolerance: f64) -> Option<ArcSegment> {
     let (center, radius) = fit_circle(points, tolerance)?;
+    // Upstream `try_create_arc` rejects circles over 2000 mm
+    // (`DEFAULT_SCALED_MAX_RADIUS`, `Circle.hpp:65`).
+    const MAX_RADIUS: f64 = 2_000_000_000.0;
+    if radius > MAX_RADIUS {
+        return None;
+    }
     let start = points[0];
     let end = points[points.len() - 1];
     let middle = points[((points.len() - 2) / 2) + 1];
