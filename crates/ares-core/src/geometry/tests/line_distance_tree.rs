@@ -166,8 +166,7 @@ fn task22o50_bbox_distance_preserves_mixed_truncation_and_fixed_accumulation() {
         [2_000_000_000.0, 1_000_000_024.0],
     );
     let pinned_fixed = 5_000_000_048_000_000_576_i64 as f64;
-    let per_axis_f64 = std::hint::black_box(2_000_000_000.0_f64).powi(2)
-        + std::hint::black_box(1_000_000_024.0_f64).powi(2);
+    let per_axis_f64 = 2_000_000_000.0_f64.powi(2) + 1_000_000_024.0_f64.powi(2);
     assert_eq!(fixed.to_bits(), pinned_fixed.to_bits());
     assert_ne!(fixed.to_bits(), per_axis_f64.to_bits());
 

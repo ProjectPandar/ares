@@ -187,14 +187,8 @@ pub(super) fn emit(
                 metadata,
                 first_layer_bounds,
             };
-            // Upstream only inserts layer-change-template timelapse for
-            // non-BBL printers whose `traditional_timelapse` fired
-            // (`GCode.cpp:5205-5210` BBL path; `GCode.cpp:5264-5300`
-            // traditional path). Non-BBL, non-traditional printers with
-            // `time_lapse_gcode` set (e.g. Artillery M1 Pro with
-            // `printer_structure: undefine`) never emit layer-change
-            // timelapse at all.
-            let timelapse_at_layer_change = !tags.is_bbl() && traditional_timelapse;
+            let timelapse_at_layer_change =
+                !tags.is_bbl() && !runtime_gcode.time_lapse_gcode.0.is_empty();
             layer_gcode::append_before_layer_change_gcode(
                 &mut output,
                 layer_gcode::LayerTemplateContext {
@@ -487,9 +481,8 @@ fn append_layer_end_timelapse(
         motion::append_exclude_end(output, state);
     }
     // Core-xy BBL renders the timelapse inside the next layer's
-    // CHANGE_LAYER block (`GCode.cpp:5205-5210`); only the traditional
-    // path emits at layer end (`GCode.cpp:5264-5300`).
-    if !traditional {
+    // CHANGE_LAYER block (`GCode.cpp:5205-5210`).
+    if state.tags.is_bbl() && !traditional {
         return Ok(());
     }
     timelapse::append_and_track(output, state, context)
