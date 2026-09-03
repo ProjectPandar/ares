@@ -3540,3 +3540,26 @@ condition). The fix and test were developed but hit a fragile
 `line_distance_tree` test (LLVM constant-folding shifts with
 different code compilation order) — that test needs to be hardened
 with `black_box` or `std::hint` before the timelapse fix can land.
+
+## 2026-09-03 (cont 54): layer-end timelapse — traditional only
+
+The correct upstream model has THREE timelapse insertion points:
+1. Layer-change template (`GCode.cpp:4667-4676`): non-BBL printers
+   with `time_lapse_gcode` set, output between change_layer retract
+   and the layer_change_gcode template. The ares line-223 gate
+   `!tags.is_bbl() && !time_lapse_gcode.is_empty()` is correct.
+2. BBL layer-start (`GCode.cpp:5205-5210`): BBL core-xy printers,
+   inside the new layer's CHANGE_LAYER block after the eager lift.
+   The ares bbl_layer_start gate is correct.
+3. Traditional layer-end (`GCode.cpp:5264-5300`): i3/multi-nozzle
+   prints with toolchanges at the layer end. Only the traditional
+   path fires here.
+
+The bug: the layer-end `append_layer_end_timelapse` gate was
+`is_bbl() && !traditional → return`, which let non-BBL
+non-traditional printers (Artillery M1 Pro, 59 printers) fall
+through to `append_and_track` — emitting an extra
+`TIMELAPSE_TAKE_FRAME` at the layer end that the layer-change
+template path already emitted at the correct position. Fix: the
+gate is now `!traditional → return` (only the traditional path
+emits at layer end).

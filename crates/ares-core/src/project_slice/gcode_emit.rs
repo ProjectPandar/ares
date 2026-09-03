@@ -480,9 +480,12 @@ fn append_layer_end_timelapse(
         // object-end labels flush before the layer-end template.
         motion::append_exclude_end(output, state);
     }
-    // Core-xy BBL renders the timelapse inside the next layer's
-    // CHANGE_LAYER block (`GCode.cpp:5205-5210`).
-    if state.tags.is_bbl() && !traditional {
+    // Only the traditional path emits timelapse at layer end
+    // (`GCode.cpp:5264-5300`). BBL renders it inside the next layer's
+    // CHANGE_LAYER block (`GCode.cpp:5205-5210`); non-BBL non-traditional
+    // already emitted it in the layer-change template
+    // (`GCode.cpp:4667-4676`).
+    if !traditional {
         return Ok(());
     }
     timelapse::append_and_track(output, state, context)
