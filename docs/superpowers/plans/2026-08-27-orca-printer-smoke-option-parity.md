@@ -3025,3 +3025,11 @@ Ares fixes:
 
 Anycubic Kobra 3 fixture: FULL semantic parity (only timing/estimate/
 header lines differ). Suite 6911/6912 (known ksr layer-4).
+
+## 2026-09-03 (cont 22): sweep 391/1001
+
+The layer-change lift gate fix (e7c375a8) flipped Anycubic Kobra 3 to
+PASS (391/1001). The remaining travel-geometry cluster (55 layer-2 +
+34 layer-1) has mixed directions — Flashforge Adventurer 3 emits 18
+travel moves vs Orca's 20 (the opposite of the Kobra's extra-move case),
+so the Flashforge/Klipper family needs its own fixture investigation.
