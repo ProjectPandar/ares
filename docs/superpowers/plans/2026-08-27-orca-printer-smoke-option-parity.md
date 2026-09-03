@@ -3385,3 +3385,11 @@ real comparison: 282 non-timing lines (feedrate offsets F1899/F1893
 vs F1876/F1870, z-hop moves missing F720 — the same
 travel_speed_z-on-hop and cooling-buffer families as the Anker M5
 cluster).
+
+## 2026-09-03 (cont 43): sweep 398/1001
+
+The M106-no-S parse fix and the conservative z-hop travel_speed_z
+(net +7 from 391, after reverting the aggressive Z-move F additions
+that had regressed 23 printers to 373). Remaining top clusters:
+31 layer-2 travel geometry (Anker feedrate offsets), 28 layer-1
+deposition count, 27 layer-1 control events, 15 filament length.
