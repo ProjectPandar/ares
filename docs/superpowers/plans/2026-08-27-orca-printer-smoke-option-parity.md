@@ -3577,3 +3577,22 @@ travel_speed=120, initial_layer=80% — ares emitted F5760, Orca
 emits F7200 on layer 2+). The Normal lift now selects at runtime:
 travel_speed_z > 0 → travel_speed_z; layer_index == 0 →
 first_layer_travel_feedrate; else travel_feedrate.
+
+## 2026-09-03 (cont 56): Wanhao D12 layer-1/2 — inner wall split divergence
+
+The 28-printer layer-1 deposition count cluster (Wanhao France D12 ×18,
+Sovol ×5, Anycubic ×5) reproduces on the Wanhao D12 230 PRO M2 DIRECT
+fixture at /tmp/wanhao. The inner wall (W=0.5) loop is split
+differently: Orca emits the travel-to-start at (111.35, 110.85) and
+then splits the loop into 5 G1+E segments (29052, 30914, 30914, 30914,
+01713 with an endpoint at 111.31); ares travels to (110.85, 110.85)
+and emits 4 segments (30914, 30914, 30914, 30765 with an endpoint at
+110.85 Y110.89). The loop is OPENED at a different position and with
+a different seam — the ares seam is the loop start (110.85, 110.85)
+while Orca starts 0.5mm inward (111.35, 110.85), the same wall-width
+inward from the corner. This suggests the seam placement for the first
+inner wall of each object picks a different anchor — likely the
+`place_nearest` or the object's `last_pos` initialization differs by
+exactly the wall-width step. Extrusion totals: ref 1164 vs ares 1114
+(50 fewer G1+E lines across 100 layers = ~0.5 per layer, matching the
+one-extra-segment-per-loop pattern).
