@@ -3410,3 +3410,17 @@ merged arc) — the fitting boundary differs on the first brim
 segment. Next: compare the ares arc fitting conditions against
 OrcaSlicer's ArcFitter (ArcFitUtils) minimum-segment and tolerance
 gates.
+
+## 2026-09-03 (cont 45): arc fitting — Orca tolerance chain
+
+Orca's `ArcFitter::do_arc_fitting_and_simplify` (ArcFitter.cpp:97-117)
+has two phases: arc fitting (with `try_create_arc` conditions:
+DEFAULT_SCALED_MAX_RADIUS = 2000mm,
+DEFAULT_ARC_LENGTH_PERCENT_TOLERANCE = 5%), then DP simplify on the
+straight parts. The tolerance comes from `resolution` (the same
+`print_config.resolution` used for `m_scaled_resolution`). The ares
+`arc::fit` uses `arc_fitting_tolerance = resolution` too, but the
+`try_create_arc` conditions (max radius, percent tolerance) may
+differ — the brim boundary case shows ares merging segments that
+Orca keeps as lines. Next: compare the Circle.hpp `try_create_arc`
+constraints against the ares `arc.rs` `try_arc` conditions.
