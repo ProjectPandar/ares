@@ -3648,3 +3648,16 @@ The fix plan:
 - Replace the emit-time `place_nearest` call with the full comparator
   using the stored candidate penalties + the gaussian distance penalty
   from the current nozzle position
+
+## 2026-09-03 (cont 59): layer-10 deposition cluster — two subfamilies
+
+The 31-printer "layer 10 deposition" cluster splits into:
+1. **31 printers** (Elegoo Neptune ×7, Snapmaker ×16, etc.): 0.8
+   nozzle sparse infill, extrusion differs by 1 ulp
+   (0.52445 vs 0.52446, or 0.02322 vs 0.02321) — the e-per-mm
+   accumulation rounding drift (the same sub-micron vertex rounding
+   cascade as ksr layer-4).
+2. **7 printers** (SeeMeCNC ×7): 0.5 nozzle, same extrusion but
+   start.y differs by 1 unit (−1.423 vs −1.422) — the polygon
+   vertex rounding itself differs (one vertex 1μm different).
+Both are the same root cause: sub-micron Clipper precision.
