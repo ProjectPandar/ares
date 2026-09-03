@@ -3139,3 +3139,18 @@ into three families:
 
 Next instrument: GT dump of get_boundary()/init_layer per layer
 (contours + safe zone) for the boundary contour comparison.
+
+## 2026-09-03 (cont 28): top-surfaces empty at emit — subtraction never fires
+
+Boundary diagnostics (`ARES_DUMP_BOUNDARY`) show `top_surfaces=0` on
+every layer, including the top: the traversal's `top_surfaces`
+accessor (`classic/traversal.rs:195-213`) reads
+`region_surfaces(record.current)` — the record's *current* state — and
+returns nothing at emit time. So `Boundary::build` never subtracts the
+inset top surfaces from the routing boundary (`get_boundary`,
+`AvoidCrossingPerimeters.cpp:1122-1132`), leaving the full contour set
+that routes travels Orca leaves direct (the spurious single-waypoint
+detours and the top-layer route). Next: wire the emit-time surface
+kinds — either surface classification persists in the post-compensation
+region surfaces (verify why `surfaces()` reads empty for Top) or pull
+the top surfaces from the fill-entity layer data the emit already has.
