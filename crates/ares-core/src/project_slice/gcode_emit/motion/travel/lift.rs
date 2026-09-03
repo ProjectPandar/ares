@@ -4,7 +4,16 @@ use super::super::{
 };
 
 pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
-    if state.options.z_hop <= 0.0 || !is_allowed(state) {
+    schedule_at(state, layer_change, state.layer_z);
+}
+
+/// Upstream `lazy_lift` gates the hop on the writer's *current* z
+/// (`GCodeWriter.cpp:633-639` `retract_lift_above/below` vs `m_pos.z()`);
+/// `change_layer` fires its retract before the layer z move, so the
+/// deferred layer-change lift must evaluate the gate at the previous
+/// layer's z, not the new one.
+pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f64) {
+    if state.options.z_hop <= 0.0 || !is_allowed_at(state, writer_z) {
         return;
     }
     state.pending_lift = Some(mode_for(state, layer_change));
@@ -25,18 +34,25 @@ pub(in crate::project_slice::gcode_emit) fn mode_for(
     }
 }
 
-fn height_is_allowed(state: &EmitState) -> bool {
+fn height_is_allowed_at(state: &EmitState, layer_z: f64) -> bool {
     const EPSILON: f64 = 1.0e-4;
 
-    state.layer_z >= state.options.retract_lift_above - EPSILON
+    layer_z >= state.options.retract_lift_above - EPSILON
         && (state.options.retract_lift_below == 0.0
-            || state.layer_z <= state.options.retract_lift_below + EPSILON)
+            || layer_z <= state.options.retract_lift_below + EPSILON)
 }
 
-pub(in crate::project_slice::gcode_emit::motion) fn is_allowed(state: &EmitState) -> bool {
+fn height_is_allowed(state: &EmitState) -> bool {
+    height_is_allowed_at(state, state.layer_z)
+}
+
+pub(in crate::project_slice::gcode_emit::motion) fn is_allowed_at(
+    state: &EmitState,
+    writer_z: f64,
+) -> bool {
     use crate::RetractLiftEnforce;
 
-    if !height_is_allowed(state) {
+    if !height_is_allowed_at(state, writer_z) {
         return false;
     }
     let bottom = state.layer_index == 0;
@@ -152,7 +168,7 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
 }
 
 pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
-    if state.options.z_hop <= 0.0 || !is_allowed(state) {
+    if state.options.z_hop <= 0.0 || !is_allowed_at(state, state.layer_z) {
         return;
     }
     output.extend_from_slice(

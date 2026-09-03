@@ -1,7 +1,7 @@
 use super::super::{LiftMode, MotionOptions};
 use super::{
     EmitState, emit_pending_lift, flush_pending_retract_lift, inside_internal_surfaces,
-    lift_is_allowed, retract_and_lift, retract_for_print_end, wipe_moves,
+    lift_is_allowed_at, retract_and_lift, retract_for_print_end, wipe_moves,
 };
 use crate::{
     geometry::{CoordinateScale, ExPolygon, Point, Polygon},
@@ -55,9 +55,9 @@ fn top_only_lift_requires_a_top_or_ironing_feature() {
         ..EmitState::default()
     };
 
-    assert!(!lift_is_allowed(&state));
+    assert!(!lift_is_allowed_at(&state, state.layer_z));
     state.last_feature = Some("Top surface");
-    assert!(lift_is_allowed(&state));
+    assert!(lift_is_allowed_at(&state, state.layer_z));
 }
 
 #[test]
@@ -73,7 +73,8 @@ fn deferred_bottom_only_lift_uses_the_target_layer_index() {
         ..EmitState::default()
     };
 
-    flush_pending_retract_lift(&mut Vec::new(), &mut state);
+    let writer_z = state.layer_z;
+    flush_pending_retract_lift(&mut Vec::new(), &mut state, writer_z);
 
     assert_eq!(state.pending_lift, None);
     assert!(state.retracted);

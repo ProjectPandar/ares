@@ -2997,3 +2997,31 @@ Ares gaps to close for this cluster (motion/travel/lift.rs `mode_for`):
    retract actually runs (`will_move_z`, `GCode.cpp:5690`); a lift
    already pending from an earlier retract keeps its type
    (lazy_lift first-scheduling-wins, `GCodeWriter.cpp:639-648`).
+
+## 2026-09-03 (cont 21): layer-change lift gate at the previous z; Kobra 3 at parity
+
+GT instrumentation (result-gcl: change_layer + lazy_lift fprintf builds)
+pinned the full mechanism: `change_layer` (`GCode.cpp:5690-5709`) fires its
+retract BEFORE any z move — `lazy_lift`'s `retract_lift_above/below` gate
+evaluates at the PREVIOUS layer's writer z — and only `m_spiral_vase`
+emits a z move there; otherwise the writer z is silently advanced
+(`m_writer.get_position().z() = z`) and the first `travel_to_xyz` merges
+the raised destination. Kobra 3 trace (retract_lift_above=0.3): the
+layer-2 change (posz=.2 < .3) schedules no hop; its first travel
+schedules a Slope lift through its own retract at the new z=.36 (the
+slope angle gate then fails, leaving a single merged `G1 X Y Z<raised>`),
+while layers 3+ (posz ≥ .3) schedule the change-layer SpiralLift.
+
+Ares fixes:
+1. `flush_pending_retract_lift` now receives the previous layer z and the
+   lift gate (`is_allowed_at`) evaluates there — matching
+   `GCodeWriter.cpp:633-639` (`m_pos.z()` at change_layer).
+2. The layer's first travel (`layer_change_travel`) schedules a lift at
+   the new layer z when the deferred change retract did not (spiral-vase
+   excluded — upstream lifts immediately there).
+3. Raw settings list tokens quote an empty string element
+   (`compatible_process_expression_group: [""]` → `""`), matching
+   `ConfigOptionString::serialize` (escape_string_cstyle).
+
+Anycubic Kobra 3 fixture: FULL semantic parity (only timing/estimate/
+header lines differ). Suite 6911/6912 (known ksr layer-4).

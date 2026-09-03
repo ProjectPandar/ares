@@ -84,6 +84,22 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         let first_travel = route[0];
         let (travel_x, travel_y) = (first_travel.x, first_travel.y);
         append_object_start(output, state);
+        // A layer's first travel whose deferred change-layer retract did not
+        // schedule a hop (the `retract_lift_above/below` gate at the previous
+        // layer z, `GCode.cpp:5693` → `GCodeWriter.cpp:626-648`) schedules it
+        // through its own retract at the new z — upstream `change_layer`
+        // silently advanced the writer z (`GCode.cpp:5705-5709`) and the
+        // first `travel_to_xyz` merges the raised destination.
+        if !first_position
+            && layer_change_travel
+            && !state.spiral_vase
+            && state.pending_lift.is_none()
+            && state.options.z_hop > 0.0
+            && !state.lifted
+            && travel::lift_is_allowed_at(state, state.layer_z)
+        {
+            state.pending_lift = Some(travel::lift_mode_for(state, false));
+        }
         // `GCodeWriter::travel_to_xyz` (`GCodeWriter.cpp:685-707`) only raises
         // the travel destination for a hop scheduled with this travel
         // (`m_to_lift`); a nozzle already lifted by an earlier sequence (the
@@ -97,6 +113,21 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         // (`NormalLift` `slop_move`), and both paths end with the separate
         // `_travel_to_z` re-statement from the unclear-position branch.
         let first_travel_lift = if first_position {
+            // Upstream `change_layer` silently advances the writer z
+            // (`GCode.cpp:5705-5709`) and only `m_spiral_vase` emits the move;
+            // when the deferred change-layer retract did not schedule a hop
+            // (the `retract_lift_above/below` gate at the previous layer z),
+            // the layer's first travel schedules it itself through its own
+            // retract (`needs_retraction` → `lazy_lift` at the new z,
+            // `GCode.cpp:5693` / `GCodeWriter.cpp:626-648`).
+            if state.pending_lift.is_none()
+                && state.options.z_hop > 0.0
+                && !state.spiral_vase
+                && travel::lift_is_allowed_at(state, state.layer_z)
+                && !state.lifted
+            {
+                state.pending_lift = Some(travel::lift_mode_for(state, false));
+            }
             state.pending_lift.take()
         } else {
             travel::emit_pending_lift(
@@ -170,7 +201,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         } else if state.retracted
             && first_position
             && state.options.z_hop > 0.0
-            && travel::lift_is_allowed(state)
+            && travel::lift_is_allowed_at(state, state.layer_z)
         {
             let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
             if mode == LiftMode::Normal {
@@ -253,7 +284,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         if first_position
             && state.options.z_hop > 0.0
             && !state.lifted
-            && travel::lift_is_allowed(state)
+            && travel::lift_is_allowed_at(state, state.layer_z)
         {
             output.extend_from_slice(
                 format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),

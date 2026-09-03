@@ -10,7 +10,8 @@ use super::{
     format::{axis as format_axis, extrusion as format_extrusion},
 };
 pub(super) use lift::{
-    emit_pending as emit_pending_lift, is_allowed as lift_is_allowed, mode_for as lift_mode_for,
+    emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
+    mode_for as lift_mode_for,
 };
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -65,9 +66,10 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
 pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     _output: &mut Vec<u8>,
     state: &mut EmitState,
+    writer_z: f64,
 ) {
     if state.pending_layer_retract && !state.retracted {
-        lift::schedule(state, true);
+        lift::schedule_at(state, true, writer_z);
         state.retracted = true;
     }
     state.pending_layer_retract = false;
