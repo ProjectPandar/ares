@@ -3349,3 +3349,21 @@ feed/deposition, the next frontier). Fresh clusters: 31 layer-2
 travel geometry, 28 layer-1 deposition count, 26 layer-1 control
 events, 15 filament length, 13 oracle SIGSEGV, 8 M106-no-S-value,
 8 sparse-infill extrusion off-by-1-ulp (0.02322 vs 0.02321).
+
+## 2026-09-03 (cont 40): Anker M5 cluster isolated — wall feedrate off-by-one
+
+The 31-printer "layer 2 travel geometry count" cluster (Anker M5
+family, "expected 9, actual 10") reproduced with the fixture at
+/tmp/anker (case.3mf + ref.gcode + a.gcode, printer-default config:
+inner_wall_speed 250, max_volumetric_speed 16, flow_ratio 0.98).
+The dominant divergence: the inner wall feedrate is F3840 (orca)
+vs F3841 (ares) — 12 occurrences — plus F2520 vs F2524 (5) and
+a few extra ares travel moves. The speeds come from the overhang
+speed bands (enable_overhang_speed=1): the F3840 = 64.0 mm/s
+exactly, F3841 = 64.0167 — a band-boundary rounding difference in
+the overhang speed computation. The ares overhang.rs band speeds
+vs Orca's GCode::get_overhang_conical_speed (or the equivalent
+dynamic speed path) differ by one ULP at a band boundary.
+Next: trace the exact speed formula in the ares
+overhang::estimate and compare against Orca's overhang speed
+computation for the same band.
