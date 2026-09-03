@@ -3596,3 +3596,30 @@ inner wall of each object picks a different anchor — likely the
 exactly the wall-width step. Extrusion totals: ref 1164 vs ares 1114
 (50 fewer G1+E lines across 100 layers = ~0.5 per layer, matching the
 one-extra-segment-per-loop pattern).
+
+## 2026-09-03 (cont 57): Wanhao seam = full SeamPlacer `spNearest` comparator
+
+The ares `place_nearest` (seam_placement/runtime.rs:136-154) is a
+pure geometric "closest vertex to cursor" — but the upstream
+`SeamPlacer::place_seam` for `spNearest` uses
+`pick_nearest_seam_point_index` (SeamPlacer.cpp:930-940) which picks
+among the perimeter's SeamCandidate points using the full
+`SeamComparator::is_first_better` penalty (cpp:753-793):
+- enforcer/blocker type (highest priority)
+- overhang distance (lower wins)
+- embedded distance (hidden > 0.5mm inside wins)
+- angle penalty via `compute_angle_penalty(local_ccw_angle)` weighted
+  by `angle_importance_nearest`
+- distance penalty `1 - gauss(dist_to_preferred, 0, 1, 0.005)` —
+  a gaussian centered on the nozzle position with sigma 1mm
+
+The distance penalty is what "nearest" means upstream: it's a SOFT
+gaussian proximity score combined with visibility, angle, and overhang
+penalties — not a hard nearest-vertex pick. The ares nearest-seam
+implementation is a simplification that diverges on every inner wall
+loop where the geometric nearest vertex is not the penalty-optimal
+seam. This affects the 28-printer layer-1 deposition cluster and
+potentially many others (any printer with `seam_position: nearest`).
+The port requires: the SeamCandidate data (overhang, visibility,
+embedded_distance, local_ccw_angle) per vertex, the perimeter-point
+tree for closest-perimeter lookup, and the gauss penalty arithmetic.
