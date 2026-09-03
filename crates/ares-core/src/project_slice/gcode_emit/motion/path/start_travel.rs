@@ -84,6 +84,12 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         let first_travel = route[0];
         let (travel_x, travel_y) = (first_travel.x, first_travel.y);
         append_object_start(output, state);
+        // Consume the one-shot disable after the travel is planned
+        // (`reset_once_modifiers`, `GCode.cpp:7431`) — only routed
+        // travels consume it; the skirt's own travels keep it armed.
+        if !matches!(properties.feature, "Skirt" | "Brim") {
+            state.avoid_crossing_disabled_once = false;
+        }
         // A layer's first travel whose deferred change-layer retract did not
         // schedule a hop (the `retract_lift_above/below` gate at the previous
         // layer z, `GCode.cpp:5693` → `GCodeWriter.cpp:626-648`) schedules it
@@ -346,48 +352,57 @@ fn plan_route(
     } else {
         state.layer_index > 0
     };
-    let mut route =
-        if state.options.reduce_crossing_wall && route_gate && !matches!(feature, "Skirt" | "Brim")
-        {
-            let boundary = super::avoid_crossing::routing_active()
-                .then(|| layer_boundary(state, geometry))
-                .flatten();
-            super::avoid_crossing::route(
-                super::avoid_crossing::Request {
-                    start: arc::Point {
-                        x: state.x,
-                        y: state.y,
-                    },
-                    end: arc::Point {
-                        x: first_x,
-                        y: first_y,
-                    },
-                    geometry: *geometry,
-                    offset: state.offset,
-                    inset: state.options.crossing_boundary_inset,
-                    after_skirt: state.last_feature == Some("Skirt"),
+    // Upstream disables the avoid-crossing once after the first-layer
+    // skirt (`disable_once`, `GCode.cpp:4448-4450`) so the travel to the
+    // first object point is straight. The flag survives the wipe
+    // re-plan within one travel (upstream resets it only after the
+    // emitted travel, `reset_once_modifiers` `GCode.cpp:7431`).
+    let avoid_disabled = state.avoid_crossing_disabled_once;
+    let after_skirt = false;
+    let mut route = if state.options.reduce_crossing_wall
+        && route_gate
+        && !avoid_disabled
+        && !matches!(feature, "Skirt" | "Brim")
+    {
+        let boundary = super::avoid_crossing::routing_active()
+            .then(|| layer_boundary(state, geometry))
+            .flatten();
+        super::avoid_crossing::route(
+            super::avoid_crossing::Request {
+                start: arc::Point {
+                    x: state.x,
+                    y: state.y,
                 },
-                boundary.as_deref(),
-            )
-            .unwrap_or_else(|| {
-                super::avoid_crossing::rectangle_route(super::avoid_crossing::Request {
-                    start: arc::Point {
-                        x: state.x,
-                        y: state.y,
-                    },
-                    end: arc::Point {
-                        x: first_x,
-                        y: first_y,
-                    },
-                    geometry: *geometry,
-                    offset: state.offset,
-                    inset: state.options.crossing_boundary_inset,
-                    after_skirt: state.last_feature == Some("Skirt"),
-                })
+                end: arc::Point {
+                    x: first_x,
+                    y: first_y,
+                },
+                geometry: *geometry,
+                offset: state.offset,
+                inset: state.options.crossing_boundary_inset,
+                after_skirt,
+            },
+            boundary.as_deref(),
+        )
+        .unwrap_or_else(|| {
+            super::avoid_crossing::rectangle_route(super::avoid_crossing::Request {
+                start: arc::Point {
+                    x: state.x,
+                    y: state.y,
+                },
+                end: arc::Point {
+                    x: first_x,
+                    y: first_y,
+                },
+                geometry: *geometry,
+                offset: state.offset,
+                inset: state.options.crossing_boundary_inset,
+                after_skirt,
             })
-        } else {
-            Vec::new()
-        };
+        })
+    } else {
+        Vec::new()
+    };
     route.push(arc::Point {
         x: first_x,
         y: first_y,

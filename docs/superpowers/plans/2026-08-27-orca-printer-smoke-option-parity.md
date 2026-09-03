@@ -3246,3 +3246,25 @@ rebuild check (`m_external.bbox.contains(start/end)`,
 needs a GT instrument dump of the external boundary's routing
 decisions (the next session's first step). Reverted to the
 after-skirt→direct rule (Ender 3 / Eryone 5 non-timing — best known).
+
+## 2026-09-03 (cont 34): ROUTER ENABLED — disable_once after first-layer skirt
+
+The GT external-boundary dump (result-acp, ORCA_DUMP_EXT) pinned the
+last mechanism: the post-skirt direct travels come from
+`disable_once()` — armed after the FIRST-layer skirt
+(`GCode.cpp:4448-4450` "Allow a straight travel move to the first
+object point"), a per-travel flag that survives the wipe re-plan
+(reset only after the emitted travel, `reset_once_modifiers`
+:7431), consumed only by routed (non-skirt) travels.
+
+Ares now arms `avoid_crossing_disabled_once` at the first-layer skirt
+feature emit and gates plan_route on it (consumed in start_travel for
+routed features). The Ender-3 rcw fixture reaches FULL semantic parity
+(0 non-timing lines), and `detour_emission_ready()` is now TRUE — the
+real boundary router replaces the rectangle shell as the default. All
+five smoke tests pass (reduce_crossing_wall, spiral_mode, kobra ×2,
+ender3); suite 6911/6912 (known ksr layer-4).
+
+The rectangle shell remains as dead fallback code for the
+`routing_active()`-false case. Eryone stays at 5 non-timing (the
+top-layer ring direction — a separate residual).

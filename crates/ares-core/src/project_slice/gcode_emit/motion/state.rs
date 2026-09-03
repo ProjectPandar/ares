@@ -58,6 +58,10 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_object_stop_label: Option<u32>,
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
+    /// The one-shot routing disable armed after the first-layer skirt
+    // (`disable_once`, `GCode.cpp:4448-4450`: a straight travel to the
+    // first object point).
+    pub(in crate::project_slice::gcode_emit) avoid_crossing_disabled_once: bool,
     pub(in crate::project_slice::gcode_emit) pending_layer_retract: bool,
     pub(in crate::project_slice::gcode_emit) layer_change_travel_pending: bool,
     pub(in crate::project_slice::gcode_emit) pending_wipe_before_external_target:

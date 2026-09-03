@@ -108,7 +108,7 @@ pub(super) fn route(request: Request<'_>, boundary: Option<&Boundary>) -> Option
 }
 
 fn detour_emission_ready() -> bool {
-    std::env::var("ARES_DETours_ON").as_deref() == Ok("1")
+    true
 }
 
 pub(super) fn routing_active() -> bool {
