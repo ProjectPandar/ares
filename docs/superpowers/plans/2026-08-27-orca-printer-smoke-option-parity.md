@@ -3200,3 +3200,18 @@ ring intersection is missed (possibly the Line::intersection tolerance
 `denominator.abs() < 1e-4` treating the near-parallel crossing as
 skew, or the ring's corner vertex handling). Reproduce with
 /tmp/enderrcw (case.3mf + ref.gcode).
+
+## 2026-09-03 (cont 31): after-skirt precision — external boundary needed
+
+Instrumented route() calls: the Ender layer-1 travel
+((105.674,117.189)→(114.325,114.325), z_hop 0.6 so Z.8 = layer 1) is a
+post-skirt (`after_skirt`) request — the `after_skirt → direct` rule
+fires, but Orca ROUTES it via (114.389,114.325). The earlier Ender
+post-skirt travel Orca leaves direct. Conclusion: upstream's
+`use_external_mp_once` routing against `get_boundary_external` (the
+outer-contour boundary, `AvoidCrossingPerimeters.cpp:1272-1287`) routes
+some entry travels and leaves others direct — the `after_skirt →
+direct` simplification is imprecise but net-better (Ender 3 vs 5
+non-timing; Eryone 5). The precise port needs the external boundary
+build (inner_offset of the raw outer contours at 1.5×spacing) routed
+through the same router. Fixtures: /tmp/enderrcw, /tmp/eryone.
