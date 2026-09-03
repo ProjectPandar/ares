@@ -3114,3 +3114,28 @@ selection — ares routes via (118.123,114.389) with an extra E1.201
 retract where Orca travels direct to (125.736,114.751); likely a
 boundary contour difference on the top layer or a needs_retraction
 divergence on the longer routed path.
+
+## 2026-09-03 (cont 27): remaining detour divergences classified
+
+The Eryone fixture's residual 85 non-timing lines (detours on) split
+into three families:
+
+1. **Top layer (z=10.4) waypoint selection** — both slicers route, but
+   ares picks two far waypoints (via 118.123/125.889 at y=114.389)
+   where Orca uses one nearby (125.736,114.751). The boundary contour
+   or its traversal direction differs on the top layer — where the
+   top-surface subtraction may leave a different contour set.
+2. **Spurious single-waypoint detours near the boundary edge** (e.g.
+   via (125.413,114.389) where Orca travels direct to
+   (125.413,114.681)) — these travels sit just outside the 0.25 mm
+   safe-zone inset, so the ares boundary still routes them; Orca's
+   boundary (the top-surface-subtracted contour) does not. Points at
+   the get_boundary()/top-surface subtraction difference on such
+   layers.
+3. **E counter cascade** — one extra E1.201 retract (from a routed
+   path longer than retraction_minimum_travel) shifts every later E
+   value by a constant (E6.23529 vs E5.0343) and inserts G92 E0
+   resets. Fixing (1)/(2) removes this family.
+
+Next instrument: GT dump of get_boundary()/init_layer per layer
+(contours + safe zone) for the boundary contour comparison.
