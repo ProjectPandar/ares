@@ -283,8 +283,7 @@ pub(super) fn emit(
             let nearest_penalties = prepared
                 .nearest_seam_plans
                 .get(object_index)
-                .and_then(|plans| plans.get(layer_index))
-                .map_or(&[] as &[_], |penalties| penalties.as_slice());
+                .and_then(|plans| plans.get(layer_index));
             let geometry = motion::LayerGeometry {
                 nearest_seam_penalties: nearest_penalties,
                 internal_surfaces: island_print_order::internal_surfaces(

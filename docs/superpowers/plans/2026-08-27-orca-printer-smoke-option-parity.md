@@ -3721,3 +3721,22 @@ fields are unused (expected until wired).
 - 24/24 parity smoke tests, suite 6912/6913 (known ksr layer-4).
 Next: the emit-time selection in motion.rs using the stored penalties
 + the gaussian distance penalty (SeamPlacer.cpp:784-785).
+
+## 2026-09-03 (cont 64): nearest-seam penalty-aware selection + panic fix
+
+- `nearest_plans[object_index]` indexed an empty vec → PANIC on any
+  Nearest printer since 7107e36f. Fixed with resize_with(placements.len()).
+- Implemented `place_nearest_penalized` (runtime.rs): geometric
+  loop→perimeter match via closest candidate, then minimize
+  `overhang + visibility + 1.0·angle_penalty + 1-gauss(dist,0,1,0.005)`
+  over that perimeter's candidates (SeamPlacer.cpp:1500-1560, 930-940).
+- NearestSeamLayer restructured per-layer (positions, scores with
+  importance 1.0, overhangs, perimeter ranges, candidate→perimeter map).
+- Wanhao D12 (nearest): panic → 1052 diff lines. Remaining divergence:
+  ares picks CORNER vertices, Orca picks mid-edge points ~0.45mm from
+  corners (e.g. ref seam (111.095,110.645) vs ares (110.645,110.645)).
+  Corner angle penalty 0.223 < mid-edge 0.497, so corner should win by
+  angle — Orca's pick implies either a different candidate vertex set
+  (upstream loop polygons carry extra vertices from perimeter
+  discretization) or much higher visibility at corners. Next: compare
+  the candidate vertex sets directly.

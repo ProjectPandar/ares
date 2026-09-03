@@ -154,6 +154,91 @@ pub(in crate::project_slice) fn place_nearest(
     }
 }
 
+/// Penalty-aware Nearest seam selection (`SeamPlacer.cpp:1500-1560`):
+/// geometrically match the loop to its perimeter via the closest
+/// candidate, then minimize
+/// `overhang + visibility + 1.0 * angle_penalty + distance_penalty`
+/// over that perimeter's candidates
+/// (`pick_nearest_seam_point_index` cpp:930-940), and split at the loop
+/// vertex nearest the winning candidate.
+pub(in crate::project_slice) fn place_nearest_penalized(
+    loop_: &mut ExtrusionLoop,
+    cursor: Point3,
+    layer: &crate::project_slice::island_print_order::NearestSeamLayer,
+    scale: CoordinateScale,
+) {
+    let Some(first) = loop_
+        .paths
+        .first()
+        .and_then(|path| path.polyline.points.first())
+    else {
+        return;
+    };
+    // Scaled-loop start vertex → unscaled mm query against candidates.
+    let query = (scale.unscale(first.x) as f32, scale.unscale(first.y) as f32);
+    let mut closest = usize::MAX;
+    let mut closest_distance = f32::INFINITY;
+    for (index, &(x, y)) in layer.positions.iter().enumerate() {
+        let distance = (x - query.0).mul_add(x - query.0, (y - query.1) * (y - query.1));
+        if distance < closest_distance {
+            closest_distance = distance;
+            closest = index;
+        }
+    }
+    if closest == usize::MAX {
+        return;
+    }
+    let Some(&(start, end)) = layer
+        .perimeter_of_candidate
+        .get(closest)
+        .and_then(|&perimeter| layer.perimeter_ranges.get(perimeter))
+    else {
+        return;
+    };
+    let cursor = (
+        scale.unscale(cursor.x) as f32,
+        scale.unscale(cursor.y) as f32,
+    );
+    let mut best = usize::MAX;
+    let mut best_penalty = f32::INFINITY;
+    for index in start..end {
+        let (x, y) = layer.positions[index];
+        let distance = ((x - cursor.0) * (x - cursor.0) + (y - cursor.1) * (y - cursor.1)).sqrt();
+        // `SeamPlacer.cpp:784-785`: 1 - gauss(dist, 0, 1, 0.005)
+        let distance_penalty =
+            1.0 - crate::project_slice::seam_placement::gauss_penalty(distance, 0.005);
+        let penalty = layer.overhangs[index] + layer.scores[index] + distance_penalty;
+        if penalty < best_penalty {
+            best_penalty = penalty;
+            best = index;
+        }
+    }
+    let Some(&(seam_x, seam_y)) = layer.positions.get(best) else {
+        return;
+    };
+    // Project the winning candidate back to the closest loop vertex
+    // (scaled integer coordinates for split_at).
+    let (Some(seam_x), Some(seam_y)) = (
+        scale.checked_scale(seam_x as f64),
+        scale.checked_scale(seam_y as f64),
+    ) else {
+        return;
+    };
+    let seam_query = (seam_x, seam_y);
+    let seam = loop_
+        .paths
+        .iter()
+        .flat_map(|path| &path.polyline.points)
+        .min_by(|left, right| {
+            squared_distance((left.x, left.y), seam_query)
+                .total_cmp(&squared_distance((right.x, right.y), seam_query))
+        })
+        .map(|point| (point.x, point.y));
+    if let Some(seam) = seam {
+        split_at(loop_, seam, scale);
+    }
+}
+
 pub(in crate::project_slice) fn place_nearest_projection(
     loop_: &mut ExtrusionLoop,
     cursor: Point3,

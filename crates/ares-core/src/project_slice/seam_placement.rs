@@ -12,7 +12,7 @@ use crate::{
     geometry::CoordinateScale,
     project_slice::{
         island_print_order::{
-            IslandPrintEntity, NearestSeamPenalties, OrderedExtrusionLayer,
+            IslandPrintEntity, NearestSeamLayer, OrderedExtrusionLayer,
             PreparedPostIslandPrintOrder,
         },
         perimeters::classic::{
@@ -27,11 +27,23 @@ use crate::{
 
 const VISIBILITY_SAMPLE_COUNT: usize = 30_000;
 const ANGLE_IMPORTANCE_ALIGNED: f32 = 0.6;
+/// `SeamPlacer.hpp:126` — angle weight for the spNearest comparator.
+const ANGLE_IMPORTANCE_NEAREST: f32 = 1.0;
+
+/// `SeamPlacer.cpp:44-49` — `gauss(value, mean, falloff)` used for the
+/// emit-time distance penalty (`cpp:784-785`).
+fn gauss_penalty(value: f32, falloff_speed: f32) -> f32 {
+    let denominator = falloff_speed * value * value + 1.0;
+    let exponent = 1.0 / denominator;
+    (std::f32::consts::E.exp() - 1.0).recip() * (exponent.exp() - 1.0)
+}
 const SEAM_VERTEX_SNAP_MM: f64 = 0.0015;
 
 #[cfg(test)]
 use runtime::is_closed_axis_rectangle;
-pub(in crate::project_slice) use runtime::{place_nearest, place_nearest_projection};
+pub(in crate::project_slice) use runtime::{
+    place_nearest, place_nearest_penalized, place_nearest_projection,
+};
 
 pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrder) {
     let predecessor = &prepared.predecessor;
@@ -63,6 +75,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
         .first()
         .map_or(0.4, |value| value.0) as f32;
     let mut nearest_seam_plans = std::mem::take(&mut prepared.nearest_seam_plans);
+    nearest_seam_plans.resize_with(placements.len(), Vec::new);
     apply_objects(
         &mut prepared.objects,
         traversal,
@@ -80,7 +93,7 @@ fn apply_objects(
     placements: &[Option<ProcessSeamPosition>],
     visibility: &visibility::GlobalVisibility,
     nozzle_diameter: f32,
-    nearest_plans: &mut [Vec<Vec<NearestSeamPenalties>>],
+    nearest_plans: &mut [Vec<NearestSeamLayer>],
 ) {
     for (object_index, layers) in objects.iter_mut().enumerate() {
         let Some(placement) = placements[object_index] else {
@@ -104,7 +117,7 @@ fn apply_objects(
                 // `pick_nearest_seam_point_index` cpp:930-940). Store the
                 // penalty data for the emit-time selection; no loop splitting
                 // here.
-                nearest_plans[object_index] = nearest_seam_data(&plans);
+                nearest_plans[object_index] = nearest_seam_data(&plans, visibility);
                 continue;
             }
             _ => unreachable!("only active seam placement modes are prepared"),
@@ -123,31 +136,55 @@ fn apply_objects(
     }
 }
 
-fn nearest_seam_data(plans: &[alignment::LayerPlan]) -> Vec<Vec<NearestSeamPenalties>> {
+fn nearest_seam_data(
+    plans: &[alignment::LayerPlan],
+    visibility: &visibility::GlobalVisibility,
+) -> Vec<NearestSeamLayer> {
     plans
         .iter()
         .map(|plan| {
-            plan.collection_perimeters
+            let scores = plan
+                .candidates
+                .points
                 .iter()
-                .map(|perimeter_indices| {
-                    let mut penalties = NearestSeamPenalties::default();
-                    for &index in perimeter_indices {
-                        let perimeter = &plan.candidates.perimeters[index];
-                        penalties.scores.extend_from_slice(
-                            &plan.scores[perimeter.start_index..perimeter.end_index],
-                        );
-                        penalties.overhangs.extend_from_slice(
-                            &plan.overhangs[perimeter.start_index..perimeter.end_index],
-                        );
-                        penalties.embedded_distances.extend_from_slice(
-                            &plan.embedded_distances[perimeter.start_index..perimeter.end_index],
-                        );
-                    }
-                    penalties
+                .map(|candidate| {
+                    let position = mesh::Vec3::new(
+                        candidate.position.x,
+                        candidate.position.y,
+                        candidate.position.z,
+                    );
+                    visibility.at(position)
+                        + ANGLE_IMPORTANCE_NEAREST * angle_penalty(candidate.local_ccw_angle)
                 })
-                .collect()
+                .collect();
+            nearest_seam_layer(plan, scores)
         })
         .collect()
+}
+
+fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestSeamLayer {
+    NearestSeamLayer {
+        positions: plan
+            .candidates
+            .points
+            .iter()
+            .map(|candidate| (candidate.position.x, candidate.position.y))
+            .collect(),
+        scores,
+        overhangs: plan.overhangs.clone(),
+        perimeter_ranges: plan
+            .candidates
+            .perimeters
+            .iter()
+            .map(|perimeter| (perimeter.start_index, perimeter.end_index))
+            .collect(),
+        perimeter_of_candidate: plan
+            .candidates
+            .points
+            .iter()
+            .map(|candidate| candidate.perimeter_index)
+            .collect(),
+    }
 }
 
 fn place_layer(

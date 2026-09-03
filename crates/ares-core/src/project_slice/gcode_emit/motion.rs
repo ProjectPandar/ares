@@ -230,15 +230,25 @@ fn emit_perimeter(
                 geometry.scale,
             );
         } else if state.options.seam_position == crate::ProcessSeamPosition::Nearest {
-            crate::project_slice::seam_placement::place_nearest(
-                &mut loop_.extrusion_loop,
-                crate::project_slice::perimeters::classic::materialize::Point3 {
-                    x: local_cursor(state, geometry).x(),
-                    y: local_cursor(state, geometry).y(),
-                    z: 0,
-                },
-                geometry.scale,
-            );
+            let cursor = crate::project_slice::perimeters::classic::materialize::Point3 {
+                x: local_cursor(state, geometry).x(),
+                y: local_cursor(state, geometry).y(),
+                z: 0,
+            };
+            if let Some(layer) = geometry.nearest_seam_penalties {
+                crate::project_slice::seam_placement::place_nearest_penalized(
+                    &mut loop_.extrusion_loop,
+                    cursor,
+                    layer,
+                    geometry.scale,
+                );
+            } else {
+                crate::project_slice::seam_placement::place_nearest(
+                    &mut loop_.extrusion_loop,
+                    cursor,
+                    geometry.scale,
+                );
+            }
         }
         loop_paths::emit(
             output,
