@@ -34,16 +34,11 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         })
         .collect::<Vec<_>>();
     fan::update_for_constant_path(output, properties, state);
-    // Upstream only simplifies wall/infill extrusion entities with
-    // `simplify_wall_extrusion_path`/`simplify_infill_extrusion_path`
-    // (`PrintObject.cpp:916-950`); brim and skirt entities never enter those
-    // stages and always emit straight segments.
-    let feature_uses_arcs = !matches!(properties.feature, "Brim" | "Skirt");
     let arc_points = points
         .iter()
         .map(|&(x, y)| arc::Point { x, y })
         .collect::<Vec<_>>();
-    let segments = if state.options.enable_arc_fitting && feature_uses_arcs {
+    let segments = if state.options.enable_arc_fitting {
         if fitting.is_empty() {
             arc::fit(&arc_points, state.options.arc_fitting_tolerance)
         } else {

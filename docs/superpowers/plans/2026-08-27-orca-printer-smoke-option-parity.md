@@ -3424,24 +3424,3 @@ straight parts. The tolerance comes from `resolution` (the same
 differ — the brim boundary case shows ares merging segments that
 Orca keeps as lines. Next: compare the Circle.hpp `try_create_arc`
 constraints against the ares `arc.rs` `try_arc` conditions.
-
-## 2026-09-03 (cont 46): brim/skirt exempt from arc fitting
-
-Upstream only calls `simplify_by_fitting_arc` on wall and infill
-extrusion entities (`PrintObject.cpp:916-950`:
-`simplify_wall_extrusion_path` / `simplify_infill_extrusion_path`
-via `LayerRegion::simplify_entity_collection`); brim and skirt
-entities never enter those stages and always emit straight G1
-segments (Brim.cpp has no simplify call). The ares `path::emit`
-applied arc fitting to every feature — brim arcs merged short
-segments that orca keeps linear (the Kobra 3 0.2 fixture showed 10
-G1s → one G3 arc). `constant.rs` now exempts the Brim/Skirt
-features from arc fitting.
-
-Also added the upstream 2000 mm max-radius rejection to `try_arc`
-(`Circle.hpp:65 DEFAULT_SCALED_MAX_RADIUS`) — wasn't the active
-issue here but is a source-cited boundary.
-
-Remaining on this cluster: the brim start point and direction
-differ (orca starts at (120,118.6) CCW; ares at (133.8,118.1) CW —
-the brim seam/orientation placement). Fixture at /tmp/kobra3.
