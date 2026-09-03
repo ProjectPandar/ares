@@ -3484,3 +3484,19 @@ succeeds but slicing segfaults. Reproduced manually:
 ordering or initialization path), NOT an ares issue — these
 printers will always be ARES_ERROR regardless of ares correctness.
 Excluded from the actionable fix list.
+
+## 2026-09-03 (cont 51): ksr layer-4 divergences isolated
+
+The ksr_fdmtest_v4 layer 4 (1-indexed) shows 1219 vs 1214 G1+E
+lines (3 deposition count delta from semantic model). Layers 5-6
+also drift (±2-5 lines). The root cause is polygon vertex rounding
+(Snapmaker A250 shows the same family: X119.376 vs X119.377 on gap
+boundaries). These are sub-micron Clipper offset/intersection
+rounding differences that shift one vertex, cascading into extra
+or fewer gap-fill/infill lines and slightly different cooling
+buffer slowdown feedrates (F1007 vs F1008, F1943 vs F1944). The
+cooling slowdown target is correct — both implementations round
+with floor(60*speed+0.5) — but the accumulated time feeding the
+slowdown differs at the last f32 ulp because the line lengths
+differ by ~1µm. Fixing this requires the full Clipper intersection
+precision port (the F1 number-in / Int128 vs f64 intermediates).
