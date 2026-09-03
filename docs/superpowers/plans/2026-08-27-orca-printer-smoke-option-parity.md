@@ -3282,3 +3282,19 @@ fixture dump (build_selection_case + smoke_overrides applied) to
 continue. The 28 exit-239 + 16 SIGSEGV clusters are oracle-side
 failures (the ref generation itself fails) — those need a separate
 look (the runner's timeout/crash handling).
+
+## 2026-09-03 (cont 36): intersection dedup (AllIntersectionsVisitor port)
+
+Upstream's `AllIntersectionsVisitor` collects each (contour, segment)
+crossing once via `intersection_set` (`AvoidCrossingPerimeters.cpp:76-84`)
+— an edge spanning several grid cells is visited per cell but deduped.
+The ares `collect_intersections` pushed one entry per cell visit; the
+Eryone top-layer travel showed 8 duplicate entries at one point,
+degenerating the contour chain. Deduped with a `(contour, segment)` set.
+
+The Eryone top-layer travel still routes via two waypoints
+((118.122,114.389)/(125.889,114.389), hugging the ring edge) where
+Orca uses one (125.736,114.751, off the edge) — the corner-clipping
+crossing structure (the travel clips the ring corner; Orca's line
+intersection counts the corner once, the ares' counts both adjacent
+edges). Needs a GT dump of the actual intersections for that travel.

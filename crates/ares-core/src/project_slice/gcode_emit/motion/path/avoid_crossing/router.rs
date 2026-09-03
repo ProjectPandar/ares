@@ -172,10 +172,17 @@ fn collect_intersections(
     end: Point,
 ) -> Result<Vec<Intersection>, ClipperError> {
     let mut raw = Vec::new();
+    // Upstream dedups by (contour, segment) — an edge spanning several grid
+    // cells is visited once (`AllIntersectionsVisitor`'s `intersection_set`,
+    // `AvoidCrossingPerimeters.cpp:76-84`).
+    let mut seen = std::collections::HashSet::new();
     boundary
         .grid
         .visit_cells_intersecting_line(start, end, |_, _, edges| {
             for &edge in edges {
+                if !seen.insert((edge.contour_index, edge.segment_index)) {
+                    continue;
+                }
                 let (segment_start, segment_end) = boundary.grid.segment(edge);
                 if let Some(point) = segment_intersection(start, end, segment_start, segment_end) {
                     raw.push((edge.contour_index, edge.segment_index, point));
