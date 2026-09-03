@@ -3623,3 +3623,28 @@ potentially many others (any printer with `seam_position: nearest`).
 The port requires: the SeamCandidate data (overhang, visibility,
 embedded_distance, local_ccw_angle) per vertex, the perimeter-point
 tree for closest-perimeter lookup, and the gauss penalty arithmetic.
+
+## 2026-09-03 (cont 58): nearest-seam port analysis complete
+
+The ares `placement_modes` (seam_placement/runtime.rs:16-39) maps
+Nearest → None (skips the full pipeline); the `place_nearest` at emit
+(motion.rs:233) is a hard closest-vertex. The upstream spNearest uses
+the full SeamPlacer pipeline with three key differences:
+1. `pick_nearest_seam_point_index` (SeamPlacer.cpp:930-940): picks
+   among SeamCandidate points via `is_first_better` with a gaussian
+   distance penalty `1 - gauss(dist, 0, 1, 0.005)` — sigma=1mm
+   falloff from the nozzle, combined with visibility + angle
+   (importance 1.0 for nearest) + overhang + embedded penalties.
+2. The candidates carry overhang/visibility/embedded/angle data from
+   the mesh analysis (already ported in ares alignment/context).
+3. Inner wall special case (SeamPlacer.cpp:1567-1580): projects the
+   chosen seam onto the loop and shifts by angle-based depth.
+
+The fix plan:
+- Add `Nearest` to `placement_modes` → Some(Nearest)
+- In `apply_objects`, add a `Nearest` arm that prepares LayerPlans
+  but skips alignment, then stores the penalty data for emit-time
+  nearest selection
+- Replace the emit-time `place_nearest` call with the full comparator
+  using the stored candidate penalties + the gaussian distance penalty
+  from the current nozzle position
