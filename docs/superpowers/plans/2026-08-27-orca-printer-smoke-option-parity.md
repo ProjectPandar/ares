@@ -5091,3 +5091,20 @@ ACTION: instrument the sweep to keep BOTH outputs for K2Neo (extend
 the runner to dump on env), then diff the sweep's own ref vs my
 ref.gcode — if the oracle is nondeterministic for this printer, the
 420-v-416 is ORACLE noise, not an Ares divergence.
+
+## 2026-09-04 (cont 161): K2Neo root — the ARRANGE nondeterminism
+
+build_case exports the 3MF with `--arrange 1` (runner.rs:118) — the
+ORACLE's arrangement pass is a heuristic packer whose result can vary
+run-to-run (multi-threaded/timing-sensitive in the AppImage). The
+K2Neo case: my dump captured arrangement A (body-identical outputs);
+the sweep's fresh oracle run arranged the object slightly differently
+(B) → 420-vs-416 depositions on layer 1 (object position on the bed
+changes brim/infill geometry). This explains the "nondeterminism"
+without any Ares bug: BOTH outputs are correct for their respective
+3MF arrangements, but the semantic comparator compares MY slice of
+arrangement-A 3MF against the oracle's arrangement-B slice? No — the
+case carries ONE 3MF; both slice the same project. Unless the ORACLE
+re-arranges during --slice. VERIFY: run the oracle --slice twice on
+/tmp/kobra2/case.3mf and diff (if identical, arrangement is fixed at
+export and the nondeterminism is elsewhere).
