@@ -5724,3 +5724,27 @@ priority queue pop (no start_near in fill), FillBase.cpp:1243+
 connect_infill + take_limited. Next: instrument connect_infill input
 segment order for this region on both sides (GT bound dump exists at
 /tmp/orca-gt/result-bound).
+
+## 2026-09-04 (cont 198): ROOT CAUSE FOUND — infill I-line generation order swaps
+
+Built GT dump instrumentation (mutex-protected ORCA_DUMP_FCONNECT in
+FillBase.cpp chain_or_connect_infill; ARES_DUMP_FCONNECT mirror in
+fill/connect.rs) and diffed all 88 connect_infill sections for BBL A1:
+- ALL 814 input I-lines and BOUND sets are IDENTICAL (same multiset)
+- 242/245 output O-polylines byte-identical
+- 3 differing outputs trace to TWO PAIRWISE SWAPS in the I-line
+  ORDER within sections: e.g. n=17 layer section, mine emits
+  [.., I 3.967418.., I 4.781952.., .., I 1.922982.., I 1.108448..]
+  vs GT [.., I 4.781952.., I 3.967418.., .., I 1.108448..,
+  I 1.922982..]. The swapped pairs are near-edge lines of the
+  two-phase (interleaved 1.43-spacing) line family.
+Because greedy2 breaks 0-length endpoint ties by heap/insertion order
+(= input order), the swap flips the chain entry point of the corner
+ring → the ring-rotation divergence (cont 197) and the section-order
+swap (cont 195) both reduce to THIS. Fix target: the I-line emission
+order in the multiline/rectilinear generator (fill/multiline.rs
+generate_family + intersection_open_polylines output order) — match
+upstream FillRectilinear::fill_surface_by_multilines line ordering
+for the interleaved second-phase lines. GT artifacts: /tmp/orca-gt/
+fconnect.patch + result-fconnect; dumps /tmp/bbl/mydump.txt (ares),
+/tmp/bbl/gtdump.txt (GT), diff pairs in /tmp/bbl/o.diff.
