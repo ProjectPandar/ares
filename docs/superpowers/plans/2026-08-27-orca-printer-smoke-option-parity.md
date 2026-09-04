@@ -5523,3 +5523,20 @@ end. My rings are closed (first==last duplicated by points.push
 (points[0])). The complete fix: represent rings as open polylines,
 reverse per upstream, then connect within 2*spacing via
 connect_brim_lines semantics.
+
+## 2026-09-04 (cont 184): K2Neo ring SIZES nearly match — 10 rings both, ±2 moves
+
+After the open-polyline chaining: both files have 10 brim rings of
+comparable sizes (ares 46,46,46,46,45,37,38,38,30,18 vs ref
+47,46,46,46,46,38,38,33,30,20). The connect/reverse landed well —
+the RING SET is now nearly identical! The remaining ±2-move deltas
+are the ring boundary/split placement. The ring ORDER still
+alternates in mine (114.98→104.737→114.947) — the nesting order from
+union_ex returns each ExPolygon's contour+holes flat, and my area
+sort then interleaves rings from different ExPolygons (or the holes
+of the same one). The single-object brim has ONE ExPolygon with 9
+nested holes: outside-in = contour, hole1, hole2, ... in the
+POLYTREE's child order (each hole a child of the containing ring).
+My flat_map contour+holes IS that order — but then the AREA SORT
+re-interleaves them destructively! REMOVE the area sort (the
+union_ex contour+holes order IS the outside-in nesting).

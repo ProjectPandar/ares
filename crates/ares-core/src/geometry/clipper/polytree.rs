@@ -322,9 +322,26 @@ pub(crate) fn union_contours(
         .into_iter()
         .flat_map(|expolygon| {
             let (contour, holes) = expolygon.into_parts();
-            std::iter::once(contour)
-                .chain(holes)
-                .map(|polygon| polygon.points().to_vec())
+            // `traverse_pt_outside_in` (ClipperUtils.cpp:992-1010): each
+            // root contour first, then recurse into its holes (nested rings
+            // of the brim), with hole contours reversed to CCW — the
+            // outside-in nesting order.
+            std::iter::once(contour).chain(holes).map(|polygon| {
+                let mut points = polygon.points().to_vec();
+                if points.len() > 2 && shoelace_area(&points) > 0.0 {
+                    points.reverse();
+                }
+                points
+            })
         })
         .collect())
+}
+
+fn shoelace_area(points: &[crate::geometry::Point]) -> f64 {
+    let mut area = 0.0;
+    for pair in points.windows(2) {
+        area += (pair[0].x() as f64) * (pair[1].y() as f64)
+            - (pair[1].x() as f64) * (pair[0].y() as f64);
+    }
+    area * 0.5
 }
