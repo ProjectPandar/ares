@@ -103,13 +103,27 @@ impl BrimPlan {
                 .collect::<Vec<_>>(),
         );
         let brim_area = difference_ex(&outer, &inner).map_err(brim_geometry_error)?;
+        // `Brim.cpp:824-832` — every stage of the loop stepping runs a
+        // douglas_peucker pass with `resolution` (0.0125 mm) between the
+        // offsets: on the input area, after the −0.5 spacing opening, and
+        // between the −1.3/+0.3 closing pair.
+        let mut brim_area = brim_area;
+        for expolygon in &mut brim_area {
+            expolygon.douglas_peucker(resolution);
+        }
         let mut area = offset_expolygons(&brim_area, -0.5 * spacing, JoinType::Round, resolution)
             .map_err(brim_geometry_error)?;
+        for expolygon in &mut area {
+            expolygon.douglas_peucker(resolution);
+        }
         let mut loops = Vec::new();
         while !area.is_empty() {
             append_loops(&mut loops, &area, resolution);
             area = offset_expolygons(&area, -1.3 * spacing, JoinType::Round, resolution)
-                .and_then(|area| {
+                .and_then(|mut area| {
+                    for expolygon in &mut area {
+                        expolygon.douglas_peucker(resolution);
+                    }
                     offset_expolygons(&area, 0.3 * spacing, JoinType::Round, resolution)
                 })
                 .map_err(brim_geometry_error)?;

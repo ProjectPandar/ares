@@ -3773,3 +3773,18 @@ Removed the fallback: `fitting.is_empty() → straight segments`, like
 upstream. Kobra 2 Neo: arcs 380=380, E-lines 103=103, layer-1
 deposition 420 vs 433 (was 420 vs 190). Remaining: brim rounded-corner
 vertex discretization (sub-0.1mm position/count drift, ±13 records).
+
+## 2026-09-04 (cont 67): brim loop stepping douglas_peucker passes
+
+`Brim.cpp:824-832` runs douglas_peucker(resolution=0.0125mm) at every
+stage of the loop stepping: on the input area, after the −0.5·spacing
+opening, and between the −1.3/+0.3 closing pair. My chain only
+simplified at append time. Added the intermediate DP passes via
+ExPolygon::douglas_peucker. Kobra 2 Neo: 1602 → 1457 diff lines.
+
+Tried ceil vs round for the DoRound step count (upstream
+clipper.offset.cpp:294 uses ceil): DP+round = 1457, DP+ceil = 1508 on
+this fixture — kept round (the current behavior); the upstream ceil
+interacts with other sub-micron differences, revisit with the full
+sweep. Remaining: 1μm rounding drift in the arc rotation chain
+(X136.366 vs X136.367) and per-corner step-count boundaries.
