@@ -96,22 +96,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         if !matches!(properties.feature, "Skirt" | "Brim") {
             state.avoid_crossing_disabled_once = false;
         }
-        // A layer's first travel whose deferred change-layer retract did not
-        // schedule a hop (the `retract_lift_above/below` gate at the previous
-        // layer z, `GCode.cpp:5693` → `GCodeWriter.cpp:626-648`) schedules it
-        // through its own retract at the new z — upstream `change_layer`
-        // silently advanced the writer z (`GCode.cpp:5705-5709`) and the
-        // first `travel_to_xyz` merges the raised destination.
-        if !first_position
-            && layer_change_travel
-            && !state.spiral_vase
-            && state.pending_lift.is_none()
-            && state.options.z_hop > 0.0
-            && !state.lifted
-            && travel::lift_is_allowed_at(state, state.layer_z)
-        {
-            state.pending_lift = Some(travel::lift_mode_for(state, false));
-        }
+        // Upstream never schedules a layer-start lift without a retraction
+        // (`GCode.cpp:5692-5698`: `change_layer`'s own retract — gated on
+        // `retract_when_changing_layer` — is the only deferral source; with
+        // it off, `m_to_lift` stays 0 and `travel_to_xyz` leaves the
+        // destination at the layer z, `GCodeWriter.cpp:701-710`).
         // `GCodeWriter::travel_to_xyz` (`GCodeWriter.cpp:685-707`) only raises
         // the travel destination for a hop scheduled with this travel
         // (`m_to_lift`); a nozzle already lifted by an earlier sequence (the
@@ -236,7 +225,15 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             );
             state.lifted = true;
         } else if layer_change_travel {
-            if state.options.z_hop > 0.0 && retraction::uses_sloped_lift(state.options.z_hop_type) {
+            // The sloped split only applies when a lift actually exists
+            // (`GCodeWriter.cpp:725-757`: slope/spiral moves come from the
+            // `m_to_lift` block; with no lift the plain combined XYZ path
+            // emits the destination directly).
+            let has_lift = state.lifted || state.pending_lift.is_some();
+            if has_lift
+                && state.options.z_hop > 0.0
+                && retraction::uses_sloped_lift(state.options.z_hop_type)
+            {
                 travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
                 output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
             } else {

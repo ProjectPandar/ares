@@ -3961,3 +3961,19 @@ The Wanhao 852 cluster bottoms out in layer-1 endpoint parity
 retract decisions. The e4fdf4e6 needs_lift gate stays
 (upstream-faithful) but the Wanhao fix needs the seam/endpoint parity
 first.
+
+## 2026-09-04 (cont 78): Wanhao layer-start lift chain FIXED (852→788)
+
+Byte-identical layer 1 proved the divergence was purely the layer-2
+start travel: no retract (short 1.31mm travel) in either file, yet
+ares raised Z.8. Two coordinated fixes:
+1. Removed the layer_change_travel lift scheduling block — upstream
+   defers a lift only via change_layer's own retract
+   (retract_when_changing_layer); nothing else schedules one.
+2. The sloped-lift XY+Z split in the layer_change_travel branch now
+   requires an actual lift (lifted || pending); with no lift the plain
+   combined XYZ path emits the destination directly
+   (GCodeWriter.cpp:725-757 slope moves come from the m_to_lift block).
+Wanhao 852→788; Eryone 73, Kobra 1463, M1Pro 1200 — no regressions;
+25/25 smoke. Remaining Wanhao 788: M73 progress-line emission
+differences plus the seam-corner cluster.
