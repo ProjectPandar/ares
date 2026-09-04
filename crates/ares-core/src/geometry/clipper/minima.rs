@@ -1,5 +1,5 @@
 use super::Clipper;
-use super::ordering::fixed_msvc_sort_by;
+use super::ordering::fixed_gcc_sort_by;
 use super::predicates::slopes_equal_four;
 use super::types::{EdgeId, ExecutionConfig, Join, LocalMinimum, OutputIndex};
 
@@ -8,7 +8,7 @@ impl Clipper {
         self.maxima.clear();
         #[cfg(test)]
         self.collected_maxima_for_test.clear();
-        fixed_msvc_sort_by(&mut self.minima, |first, second| first.y < second.y);
+        fixed_gcc_sort_by(&mut self.minima, |first, second| first.y < second.y);
         for minimum in self.minima.iter().copied() {
             if let Some(left_id) = minimum.left {
                 let left_bottom = self.edges.edge(left_id).bottom;

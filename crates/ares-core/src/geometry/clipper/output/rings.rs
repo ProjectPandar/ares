@@ -177,10 +177,21 @@ impl Clipper {
     ) -> OutPointId {
         match self.edges.edge(edge_id).output {
             OutputIndex::Unassigned | OutputIndex::Skipped => {
+                let is_open = self.edges.edge(edge_id).wind_delta == 0;
+                if is_open && let Ok(path) = std::env::var("ARES_DUMP_OUTPT") {
+                    use std::io::Write;
+                    if let Ok(mut file) = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(path)
+                    {
+                        let _ = writeln!(file, "C {} {}", point.xy.x(), point.xy.y());
+                    }
+                }
                 let out_rec = self.create_out_rec();
                 let out_point = self.out_points.allocate(out_rec, point);
                 self.out_recs[out_rec.0].points = Some(out_point);
-                self.out_recs[out_rec.0].is_open = self.edges.edge(edge_id).wind_delta == 0;
+                self.out_recs[out_rec.0].is_open = is_open;
                 if !self.out_recs[out_rec.0].is_open {
                     self.set_hole_state(edge_id, out_rec);
                 }

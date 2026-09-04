@@ -5765,3 +5765,30 @@ ordering/gcc.rs OutRec creation/seq ordering) to match Clipper 6
 when two outrecs' sweep anchors tie. Verification loop is fast now:
 rebuild ares, ARES_DUMP_FCONNECT + slice, diff m.o vs g.o → expect
 0 diffs, then re-run BBL cluster fixture.
+
+## 2026-09-05 (cont 200): FIXED — minima sort = GCC libstdc++ introsort; BBL connect_infill byte-identical
+
+Empirical GT proof (ORCA_DUMP_OUTPT creation dump vs ARES_DUMP_OUTPT):
+at every equal-Y creation band my sweep emitted open-outrec creations
+in ASCENDING x while the real Clipper (libstdc++ std::sort, ties
+unstable) emits DESCENDING x. Root cause: clipper.cpp:975 sorts the
+local-minima list by Y ONLY with std::sort (introsort); equal-Y
+order = deterministic introsort permutation of the reference
+toolchain (libstdc++ = GCC). My port used the MSVC sort replica
+(fixed_msvc_sort_by) for minima.rs. Switched minima.rs to the
+existing fixed_gcc_sort_by (libstdc++ introsort port).
+Result: BBL A1 all 88 connect_infill sections byte-identical to the
+GT binary (O-diff = 0), including the corner-ring chain that caused
+the layer-2 cluster. BBL gcode diff now 115 lines (headers/M73
+excluded), remaining divergence = EMIT-stage entity chain picking
+section order/direction (narrow-vs-solid order + polyline reversal
+in motion.rs chain_and_reorder_entities), no longer fill generation.
+KNOWN REGRESSION: orca_parity_bottom_hilbert_smoke now fails (layer-1
+deposition 418 vs 417 — one polyline merged). The plane-path
+pipeline (chain_polylines_multifragment seam / classic_clip) was
+previously tuned against MSVC-order output; it must be re-verified
+with the same GT-dump methodology (extend ORCA_DUMP_FCONNECT to
+FillPlanePath or use result-chain instrumentation) — upstream has
+ONE sort, so hilbert needs its compensating diff found, not the sort
+reverted. NEXT: (1) hilbert GT dump + fix plane-path seam, (2) BBL
+emit-stage chain order, (3) fleet sweep.
