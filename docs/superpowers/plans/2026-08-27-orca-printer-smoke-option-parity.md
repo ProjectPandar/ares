@@ -5748,3 +5748,20 @@ upstream FillRectilinear::fill_surface_by_multilines line ordering
 for the interleaved second-phase lines. GT artifacts: /tmp/orca-gt/
 fconnect.patch + result-fconnect; dumps /tmp/bbl/mydump.txt (ares),
 /tmp/bbl/gtdump.txt (GT), diff pairs in /tmp/bbl/o.diff.
+
+## 2026-09-04 (cont 199): refined — swap survives intersection_pl; order = Clipper open-path output order
+
+The swapped I-lines are 2-point segments emitted by make_fill_lines
+(vline.pos ascending) then reordered by `intersection_pl(fill_lines,
+contracted_surface)`. The GT input order (0.037, 1.466, -1.163, 2.896,
+-2.593, ... descending-by-band serpentine, top of diamond first) is
+Clipper 6's PolyTree open-path OUTPUT order (sweep/OutRec creation
+order), not the generator's ascending-x order. My clipper port's
+into_open_polylines produces the same order in 242/245 cases; the 2
+pair swaps (3.967/4.781 and 1.108/1.922 within the n=17 section) are
+OutRec ordering ties in my sweep. Fix target refined:
+geometry/clipper ordering for open-path output (polytree.rs /
+ordering/gcc.rs OutRec creation/seq ordering) to match Clipper 6
+when two outrecs' sweep anchors tie. Verification loop is fast now:
+rebuild ares, ARES_DUMP_FCONNECT + slice, diff m.o vs g.o → expect
+0 diffs, then re-run BBL cluster fixture.
