@@ -4495,3 +4495,16 @@ lift (schedule with layer_change=true, gated on z_hop>0 &&
 retraction_length>0 && !lifted && pend none) — the c7ea935f lesson
 holds: NO already-retracted mid-print deferrals (only this
 layer-change site).
+
+## 2026-09-04 (cont 117): sweep 411 (noise band); the 49's lift source found
+
+The gated layer-retract defer didn't fire for the 49 (their
+retract_when_changing_layer resolves nil — flag never sets; sweep
+411±noise, travel-geometry still 49). Their layer-2 travel state is
+retracted=true lifted=false — upstream's equivalent is m_lifted>0
+(STILL LIFTED from an earlier travel's lift; upstream only unlifts at
+the destination/de-retract). My pipeline unlifts earlier, losing the
+lifted state the split needs. Fix direction: audit the unlift sites
+(when does my pipeline clear state.lifted vs upstream's
+m_lifted->0 at unlift-after-destination) — align the unlift lifetime
+so retracted long travels carry lifted=true into the next travel.
