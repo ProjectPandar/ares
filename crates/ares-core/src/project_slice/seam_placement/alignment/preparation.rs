@@ -40,6 +40,7 @@ pub(in crate::project_slice::seam_placement) fn prepare(
         traversal.scale,
     );
     for plan in &mut plans {
+        dump_seam_candidates(plan);
         plan.choices = plan
             .candidates
             .perimeters
@@ -52,6 +53,36 @@ pub(in crate::project_slice::seam_placement) fn prepare(
             .collect();
     }
     plans
+}
+
+fn dump_seam_candidates(plan: &LayerPlan) {
+    let Ok(path) = std::env::var("ARES_DUMP_SEAM") else {
+        return;
+    };
+    use std::io::Write;
+    let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    else {
+        return;
+    };
+    for perimeter in &plan.candidates.perimeters {
+        let _ = writeln!(
+            file,
+            "PERIM first={} n={}",
+            perimeter.start_index,
+            perimeter.end_index - perimeter.start_index
+        );
+        for index in perimeter.start_index..perimeter.end_index {
+            let position = plan.positions[index];
+            let _ = writeln!(
+                file,
+                "C {:.6} {:.6} {:.6} vis={:.8} overhang={:.8}",
+                position.x, position.y, position.z, plan.scores[index], plan.overhangs[index]
+            );
+        }
+    }
 }
 
 fn embedding_layers(
