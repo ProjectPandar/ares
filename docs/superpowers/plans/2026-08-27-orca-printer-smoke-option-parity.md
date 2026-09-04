@@ -4091,3 +4091,20 @@ same 34.2. The bug is in the group-splitting/termination of the
 solver, not rounding. Next: compare the loop's group boundaries and
 done-branch (maximum_stretch >= time_stretch → refine vs split)
 against upstream CoolBuffer line by line.
+
+## 2026-09-04 (cont 87): upstream solver loop mapped (CoolingBuffer.cpp:562-641)
+
+Upstream extruder_range_slow_down_non_proportional: per-iteration (1)
+extend idx_line_end over lines with feedrate > feedrate-EPSILON,
+(2) feedrate_next = next highest, (3) limit = max(next, min_speed);
+time_stretch_max SUMMED over ALL remaining extruders/lines from adj to
+END via time_stretch_when_slowing_down_to_feedrate; if >= stretch →
+refine (new_feedrate_to_reach_time_stretch, 20 iters) → slow ALL
+remaining to the refined limit → DONE. My version groups by the
+pre-sorted feedrate order and processes one group per iteration — the
+observed two-value split (34.19/34.22) means my first group's computed
+max stretch fell short while upstream's (summing from adj to END over
+the same physical lines) reached it. Next: align my group iteration
+with upstream's exact span semantics (stretch computed over ALL lines
+from the current group start to the end of adjustable, not just the
+current feedrate group).
