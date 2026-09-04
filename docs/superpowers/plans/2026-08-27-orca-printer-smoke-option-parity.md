@@ -5565,3 +5565,17 @@ starting vertices at opposite corners. THIS IS EXPECTED for nested
 rings (each inner ring's Clipper walk starts elsewhere). The
 remaining fix: the emitted ring order from the CONNECT step decides
 the walk. Debug the connected paths next.
+
+## 2026-09-04 (cont 186): K2Neo connect works pairwise — union anchor alternation blocks full chaining
+
+BRIMCONNECT probe: 6 connected paths from 10 rings — pairwise joins
+(rings 1+2, 3+4, 7+8, 9+10). The reversal+connect logic is correct;
+the blocker is the union walk ANCHOR: consecutive rings start at
+ALTERNATING corners (+x,-x,+x,...) from the EvenOdd PolyTree contour/
+hole alternation. When a ring's first≈last (walk anchored at one
+corner), the reversal tie breaks arbitrarily and the ring's end lands
+far from the next ring's start (opposite corner > 2*spacing gap).
+Upstream's rings anchor at the SAME corner (their ref walk ascends
+102.253→102.53→102.807 monotonically). Fix: rotate each union contour
+so its walk starts at the lowest-left vertex (or match the Clipper2
+walk anchor upstream uses) before the reversal+connect chain.
