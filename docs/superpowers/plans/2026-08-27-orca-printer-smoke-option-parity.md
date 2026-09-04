@@ -4754,3 +4754,14 @@ region_perimeters.size()>1 — one of these fails for Anker's layer-1
 first wall after the brim; likely region_perimeters or the seam-gap
 clipped path sizes). Next: check my gate (loop_paths.rs:109-118)
 against the four upstream conditions on this exact loop.
+
+## 2026-09-04 (cont 139): open — which upstream gate condition fails
+
+The Anker wipe hop fires right before `G1 E1.5 F3600` + `;TYPE:Inner
+wall` — the de-retract of the FIRST (inner) wall. My gate requires
+first.role==ExternalPerimeter yet the wipe fired — either the
+collection's first path carries the external role (loop split
+remnant) or my gate sees a different paths slice than the emitted
+loop. Next: print first.role + the paths' roles at the wipe gate for
+this loop (one instrument run), then align whichever of the four
+upstream conditions differs.
