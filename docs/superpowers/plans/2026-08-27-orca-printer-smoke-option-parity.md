@@ -5461,3 +5461,24 @@ nozzle position at brim start (101.978,101.802 — the layer-change
 travel target). The nozzle at brim start IS at the travel target
 (101.978,101.802): upstream's last_pos at extrude_loop time is that
 travel's destination. My state.x/y must carry that target.
+
+## 2026-09-04 (cont 181): K2Neo — the layer-1 travel target decoded
+
+The `G1 X115.634 Y100.637 F18000` travel before the brim in MY
+output comes from the FIRST brim ring's path::emit → start_travel —
+whose target is the ring's first vertex (115.634...,100.637 is close
+to my ring start 116.255,100.779 — actually it's route[0]). In
+upstream, the pre-brim travel targets (101.978,101.802) — a point
+OUTSIDE the brim ring on the ring's edge — because their ring 1
+starts at the split point (102.116,101.664) and the travel arrives
+at (101.978,101.802) — the split_at(last_pos) behavior projects the
+arrival. The chain: upstream ring vertex order starts at
+(102.116,101.664)-area, the travel targets that start, then the
+split rotates by the arrival projection. My ring's first vertex
+(116.255,100.779) → travel targets route[0] near it. The RING
+VERTEX ORDER difference is the single remaining variable — everything
+downstream (travel, split) follows from the first vertex. The union_
+contours walk lands the first vertex differently. NEXT: compare my
+union_contours ring-1 first vertex vs the GT bounddump ring-1 first
+vertex (both dumps exist) to see whether the difference is in the
+union or earlier (offset chain vertex).
