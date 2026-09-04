@@ -4801,3 +4801,16 @@ islands (a pure entry travel) or counts crossings (entry = the LAST
 crossing allowed). Next: read upstream AvoidCrossingPerimeters.cpp
 travel_to's crossing decision precisely (the need_detour /
 crosses_external logic) before re-gating.
+
+## 2026-09-04 (cont 143): router trace — the detour travels are PAIRED crossings
+
+ROUTER trace: the detour-producing travels have ninter=2 (paired
+enter+exit on contour 0) — the enter-only fix doesn't apply; my
+paired routing fires and both slicers SHOULD detour per the pairing
+rule. The layer-1 detour travel must be one of these — but upstream
+went direct, so UPSTREAM'S INTERSECTION SET OR BOUNDARY differs for
+it (their boundary has no crossing there — different contour set or
+the intersection collection radius). Next: map the debug coords via
+the object offset to identify WHICH trace line is the layer-1 travel,
+then compare upstream's boundary construction (get_boundary vs my
+layer_boundary contours) for that layer.
