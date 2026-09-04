@@ -5482,3 +5482,27 @@ contours walk lands the first vertex differently. NEXT: compare my
 union_contours ring-1 first vertex vs the GT bounddump ring-1 first
 vertex (both dumps exist) to see whether the difference is in the
 union or earlier (offset chain vertex).
+
+## 2026-09-04 (cont 182): K2Neo — the travel IS the brim's own start_travel
+
+The G1 X115.634 F18000 travel (line 60) is emitted by MY brim ring 1's
+own start_travel (path::emit → start_travel::emit → route[0] near my
+ring first vertex 116.255,100.779). Upstream's equivalent travel
+targets (101.978,101.802) — near THEIR ring 1 first vertex
+(102.116,101.664). The vertex (102.116,101.664) EXISTS in my ring at
+position 39 — same vertex set, rotated. The ONLY remaining question:
+what makes upstream's union_pt walk start the ring at
+(102.116,101.664)? Their union_pt uses pftEvenOdd + PolyTree — the
+PolyTree contour begins at the lowest-left vertex of the PROCESSED
+path (Clipper's walk). (102.116,101.664) vs (116.255,100.779) —
+neither is the absolute lowest-left of the ring (the ring spans
+100.589-119.411; lowest-left is ~(100.589,104.98)). So neither is
+the Clipper walk start! The first vertex must come from
+traverse_pt_outside_in's chain ordering + to_polylines + the ring
+reversal — i.e. the ring's first vertex is a downstream artifact of
+the chaining, not the union. The chain_clipper_polynodes nearest-
+endpoint chain picks rings in spatial order; each ring's INTERNAL
+start stays at the Clipper contour start... unless
+optimize_polylines_by_reversing + connect_brim_lines joined them.
+DEFERRED: this needs the GT ring dump (bounddump extension) —
+instrument cycle next session.
