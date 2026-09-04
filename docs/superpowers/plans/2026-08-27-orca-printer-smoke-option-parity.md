@@ -4467,3 +4467,18 @@ before the travel, or never defers it).
 Fixtures: Kobra3-0.4 9→6, Anker 79→77, Wanhao 758 / Eryone 73 / M1Pro
 1200 stable; 25/25 smoke. Next sweep to quantify the 49-regression
 recovery.
+
+## 2026-09-04 (cont 115): lift-deferral fixes REVERTED (fleet 412→385)
+
+The c7ea935f changes (timelapse defer + already-retracted branch)
+improved the local fixtures (Kobra3-0.4 9→6, Anker 79→77) but the
+fleet sweep dropped 412→385 with travel-geometry rising 49→79 — the
+changes fire where upstream's m_to_lift was already consumed
+(upstream clears m_to_lift after each travel; a second long-travel
+while retracted mid-print must NOT re-defer when the nozzle state
+differs). Both changes reverted to the acb792ab state (412 baseline,
+25/25 smoke). The 49-regression needs the precise m_to_lift LIFETIME
+model (set by retract, consumed by the NEXT travel, cleared — plus
+m_lifted interplay), not per-case gates. Next: model the to_lift
+lifetime explicitly in EmitState (a to_lift counter cleared at each
+travel_to_xyz) instead of inferring from lifted/pending.

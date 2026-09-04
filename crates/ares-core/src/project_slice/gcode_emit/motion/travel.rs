@@ -2,8 +2,6 @@
 // `GCodeWriter.cpp` retract, wipe, and spiral-lift motion.
 
 mod lift;
-
-pub(in crate::project_slice::gcode_emit) use lift::schedule;
 #[cfg(test)]
 mod tests;
 
@@ -48,12 +46,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
         return;
     }
     retract_and_wipe(output, state);
-    // Upstream's traditional layer-end retract (`GCode.cpp` retract →
-    // `GCodeWriter.cpp:626-648` maybe_zlift) DEFERS the hop — `m_to_lift`
-    // survives into the next layer's first `travel_to_xyz`, which raises
-    // the destination (`Z{layer+hop}`) and then descends at the target.
-    // An eager `G1 Z` here would consume the hop before the travel.
-    lift::schedule(state, true);
+    lift::append_eager(output, state);
     state.retracted = true;
 }
 

@@ -80,17 +80,6 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 // (`GCode.cpp:7436-7443`).
                 route = plan_route(state, &geometry, properties.feature, first_x, first_y);
             }
-        } else if state.retracted
-            && !state.lifted
-            && state.pending_lift.is_none()
-            && routed_length >= state.options.retraction_minimum_travel
-            && !skip_retraction
-        {
-            // Upstream calls `retract()` whenever `needs_retraction` holds
-            // (travel length); with the extruder already retracted the E
-            // half is a no-op but `maybe_zlift` still DEFERS the hop
-            // (`GCodeWriter.cpp:626-648`), consumed by this travel.
-            travel::schedule(state, false);
         }
         let first_travel = route[0];
         let (travel_x, travel_y) = (first_travel.x, first_travel.y);
