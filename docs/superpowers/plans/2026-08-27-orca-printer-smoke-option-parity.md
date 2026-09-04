@@ -5979,3 +5979,15 @@ top_split/first_outer.rs / onion/iterate.rs smaller_width) vs
 upstream offset_ex ring start; fix the ring anchor so TL/BR ties
 resolve like upstream. Then the solid2 ring + 20-printer family
 should converge.
+
+Analysis addendum: upstream ring (from offset_ex, ring anchored at
+BottomPt = lowest-y, tie->leftmost) = CW [BL,TL,BR] (BL=124.547,
+124.547 lowest; BL/BR share y so leftmost BL wins). Tie TL(idx1) vs
+BR(idx2); ref picks BR = the LATER index. My emitted pick TL suggests
+either my ring anchor differs (starts elsewhere than BL) or my
+seam pick tie-break (alignment.rs:45 is_better uses strict < =
+first-minimal) differs from upstream SeamPlacer's comparator. Next:
+(1) verify my offset ring anchor for the two-equal-lowest-y case in
+clipper offset BottomPt selection (GetBottomPt tie->leftmost port),
+(2) check upstream SeamPlacer gather/pick comparator for the
+last-vs-first minimal on equal scores.
