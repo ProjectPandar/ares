@@ -4272,3 +4272,14 @@ block. Next: print the per-layer block byte ranges (line.start/end
 for SET_SPEED entries) in both (GT patch ext + my debug) and find
 which move my block absorbs — likely my EXTRUDE_END detection or a
 nested SET_SPEED without END handling.
+
+## 2026-09-04 (cont 100): +0.414mm ≈ the Z.4 dimension
+
+The f=30 block's 4 wall moves total 38.28mm → 1.276s (upstream exact).
+Mine: 38.694mm (+0.414mm) — suspiciously equal to the Z.4 layer
+offset. Hypothesis: my parse folds a Z component into a block move's
+length (3D distance via distance_squared including dZ, parse.rs
+measure_movement: distance uses xyz?) where upstream's dxy2 handles
+XY-only for the block entry. Next: audit measure_movement's distance
+computation (dxy vs dxyz) against upstream's dif[] handling for
+intrablock moves.
