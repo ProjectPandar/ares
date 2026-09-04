@@ -4920,3 +4920,18 @@ emit_skirt_loop / path.rs wall end), the walk emits the extra hop.
 Next: instrument wipe_moves' segment count + total_length vs
 configured_distance at the layer-1 retract (the E-.48 retract after
 the brim).
+
+## 2026-09-04 (cont 152): wipe_on_loops decoded — the hop is the "move inwards before travel"
+
+GCode.cpp:5992-6035: `wipe_on_loops` (NOT wipe_before_external_loop)
+— after the wipe-path accumulation, when the LAST path is an
+ExternalPerimeter && wall_loops>1 && front.size()>=2 &&
+back.size()>=3, upstream computes an inward point (p1 + 0.2·v rotated
+by angle/3) and emits `extrude_to_xy(pt, 0, "move inwards before
+travel")` — the FAKE-path hop with mm3=0 (no E). The Anker extra
+waypoint (120.187,121.889) = THIS move. Ref's travel to the seam
+means upstream's wipe_on_loops did NOT fire for Anker (its gate:
+wipe_on_loops option — check the config!) OR the hop's E=0 and it
+merged into the travel. Check: does Anker set wipe_on_loops=1? If
+so, my emission of the hop as a BARE G1 X Y (no E) vs upstream's
+extrude_to_xy with E... compare the emitted lines.
