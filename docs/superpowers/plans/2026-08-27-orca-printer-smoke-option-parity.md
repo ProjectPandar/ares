@@ -5003,3 +5003,20 @@ synthesizing the phantom detour pairs. Anker 77 → 4 lines; fleet
 their own next divergence; the Anker residual 4 = the F3841/F2524
 feedrates now head-of-list). Trajectory: 415 → 411 → 412 → 421 → 423
 → 431.
+
+## 2026-09-04 (cont 157): Kobra2Neo + Anker fixtures at SEMANTIC PARITY
+
+Post-01b54d92 state on the local fixtures:
+- Anker: only the generated-by + estimated-time header comments
+  differ — semantically ignored → PASS.
+- Kobra 2 Neo (/tmp/kobra2, fresh oracle re-slice): only header +
+  estimated printing time (6m58s vs 7m47s) + first-layer time
+  (0.612s vs 1s) — the semantic comparator flags "layer 1 deposition
+  count 420 vs 416" in the SWEEP but the local fresh comparison
+  shows body-identical output. The sweep's ref may be an older
+  cached reference (the runner caches refs in target dirs). The
+  estimated times differ (motion-planner timing, known-deferred) and
+  are ignored semantically. ACTION: the sweep runner's cached refs
+  need invalidation (the build_selection_case caches by
+  reference_path.exists()) — next sweep run should clear the cache
+  dirs first.
