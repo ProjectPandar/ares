@@ -5337,3 +5337,22 @@ update last_scaled_position/state.x). The nozzle at brim start is at
 (101.978,101.802) — the travel target from the layer-change template.
 FIX: capture the layer-change travel target into EmitState (the
 template emission sets state.x/y) and pass that as the split target.
+
+## 2026-09-04 (cont 174): K2Neo layer-1 travel — NOT a template; it's between_objects_gcode?
+
+The layer-1 travel `G1 X101.978 Y101.802 F18000` is not in the
+layer_change/before_layer templates (those are G92 + comments). In
+upstream this travel is emitted by `GCode::process_layer`'s
+between-objects/nozzle-position logic — the "first travel of a new
+layer for an object with brim" path (GCode.cpp:4400+ generate_skirt /
+emit_brim with `use_external_mp`): the travel to the brim start is
+planned by avoid_crossing with `use_external_mp` (world coordinates)
+— and the ORACLE's target (101.978,101.802) is the WORLD coordinate
+of the brim ring's first point AFTER connect_brim_lines/union walk.
+So: the travel target = the brim's own first point (post-chaining),
+and my emitted travel target (115.634,100.637) is my brim ring's
+first point. The ring start points themselves differ — upstream's
+ring 1 first vertex is (102.116-ish area) because their union_pt
+contour traversal order/first vertex differs from mine. CONCLUSION
+stands: match the union_pt contour walk order (start vertex) — that
+is the whole fix for this family.
