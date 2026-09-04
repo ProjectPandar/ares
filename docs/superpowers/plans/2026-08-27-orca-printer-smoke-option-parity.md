@@ -6089,3 +6089,23 @@ reorder list/first-points differ (or my cursor). NEXT: dump my
 equivalent (collection list + first points + cursor at the infill
 reorder in motion.rs) with ARES_DUMP_IORDER and diff against gtio
 line 3; fix the collection composition/first-entity to match.
+
+## 2026-09-05 (cont 216): iorder mirror pinpoint — narrow collection FIRST ENTITY differs
+
+ARES_DUMP_IORDER (motion.rs dump_infill_reorder) vs GT gtio line 2,
+SAME cursor (2.890,4.874) and n=3: GT second entity =
+openNR(-3.025,-3.453) = the narrow collection whose first ring
+starts at the INNER ring's acute corner; MY second entity =
+openNR(-3.677,-2.483) — a ring my arachne generated BETWEEN the
+outer (-3.876..-2.004) and the gcode ring (-3.453..-3.025). So my
+ConcentricInternal arachne produces a DIFFERENT ring set/order for
+the corner triangle (mine appears to have 3 rings; upstream's first
+ring starts at the inner ring's rotated corner). GT instrument
+rebuilt against the CORRECT file (FillConcentricInternal.cpp —
+the earlier conc.patch hit FillConcentric.cpp which is never
+called): ORCA_DUMP_CI at the real override, build running as
+result-ci. Next: compare my concentric ring dump
+(myconc.txt rings for the negative-corner triangle) with the GT
+CI dump ring-for-ring; the ring SET or arachne inset count differs
+(loops_count = max(bbox)/min_spacing+1 with min_spacing =
+params.flow.scaled_spacing() — check my spacing source).
