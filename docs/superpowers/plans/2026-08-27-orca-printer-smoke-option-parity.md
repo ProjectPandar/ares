@@ -4386,3 +4386,15 @@ dump on the Anker fixture layer for the 3840 case (likely the same
 block-composition family — check the f=0 lines or a remaining
 attribution difference), then the cluster check / sweep to quantify
 flips.
+
+## 2026-09-04 (cont 109): Anker residual isolated — layer-1 1.9ms; layer-0 identical
+
+Anker per-layer parse totals vs GT: layer0 BOTH 7.271276 n=32 ✓;
+layer1 mine 1.452495 vs upstream 1.450583 (1.9ms); layers 2-3
+identical. Yet the F3841/3840 divergence sits in LAYER 0's output —
+with identical layer-0 inputs the solver gives identical results, so
+the F3841 likely comes from the SPEED CHAIN (emitter), not the
+cooling buffer: 3840 = 64mm/s exact; 3841 = 64.0183 — check the
+layer-0 wall speed computation (initial_layer_speed chain) vs the
+ref, and separately the layer-1 1.9ms parse delta. Full sweep running
+(session bg, /tmp/sweep2.log) to quantify flips.
