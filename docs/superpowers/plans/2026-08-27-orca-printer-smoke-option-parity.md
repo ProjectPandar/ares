@@ -3931,3 +3931,18 @@ the pending_lift setter is elsewhere — next session instruments every
 pending_lift assignment site (lift.rs:19 is gated; start_travel 107/
 135 both gated) — one more assignment path must exist or the resolved
 retraction_length is > 0 (nil → profile default).
+
+## 2026-09-04 (cont 76): nil retraction_length resolution gap
+
+Empirically final: ref emits NO retract/lift before the Wanhao first
+travel and travels combined Z.4 — upstream needs_lift=false, meaning
+upstream's resolved filament retraction_length for this project is 0.
+The 3mf has filament_retraction_length: "nil" (absent); my options
+resolve a preset default (>0), so my e4fdf4e6 gate passes and the lift
+schedules. needs_retraction has no length gate (GCode.cpp:7528+), and
+the raise math (GCodeWriter.cpp:706) would give Z.8 with any deferred
+lift — ref's Z.4 proves m_to_lift was 0. Fix direction: audit how
+`filament_retraction_length: nil` resolves through my option chain vs
+upstream (the nil must resolve to 0/no-retraction for this project,
+likely via the Wanhao base filament preset chain), then the existing
+e4fdf4e6 gate handles the rest.
