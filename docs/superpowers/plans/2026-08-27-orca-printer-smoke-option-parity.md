@@ -5191,3 +5191,19 @@ layer-0 start may need the object-based angle too. Next: trace the
 brim loop's seam selection at layer 0 vs upstream make_brim's
 loop.split_at_first_point (upstream starts brim loops at the
 polygon's first point after the concave-hull walk).
+
+## 2026-09-04 (cont 167): the K2Neo brim path — makeBrimInfillImpl decoded
+
+Upstream brim loop generation (Brim.cpp:836-875 makeBrimInfillImpl):
+(1) tryExPolygonOffset produces the loops (my -0.5/-1.3/+0.3 chain,
+landed); (2) union_pt_chained_outside_in — the OUTER-IN CHAINED
+order (my sort_by area is an approximation: upstream chains by
+closest-first-point, not by area!); (3) chain_polylines per loop;
+(4) optimize_polylines_by_reversing (travel-minimizing flips); (5)
+connect_brim_lines (merging collinear segments across the 2x spacing
+gap). My pipeline approximates (2) with area sort and lacks (3)-(5).
+The K2Neo start-point diff (mid-corner vs vertex) + the 5-line count
+diff come from the chain/reverse/connect steps. FIX: port
+union_pt_chained_outside_in (chain by contour front points,
+outside-in recursion) + optimize_polylines_by_reversing +
+connect_brim_lines.
