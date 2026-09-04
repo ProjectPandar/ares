@@ -5792,3 +5792,18 @@ FillPlanePath or use result-chain instrumentation) — upstream has
 ONE sort, so hilbert needs its compensating diff found, not the sort
 reverted. NEXT: (1) hilbert GT dump + fix plane-path seam, (2) BBL
 emit-stage chain order, (3) fleet sweep.
+
+## 2026-09-05 (cont 201): hilbert regression scoped — boundary-crossing split vertex missing
+
+bottom_hilbert (Ender-3, bottom_surface_pattern=hilbertcurve) now
+differs by exactly 3 gcode lines: ref splits a collinear 3-step run
+into 2+1 at (110.509,112.133) with separate E values; mine emits one
+3-step move. The fill I/O dump vs the nix GT is 0-diff but VACUOUS
+here (nix GT geometry has no such vertex — the known nix-vs-AppImage
+binary divergence). The split vertex is where the hilbert path
+crosses the region boundary mid-segment; ref's boundary geometry
+creates the crossing at that point, mine does not — same family as
+the earlier "boundary inset vertex" 0.02 finding. Next: dump the
+bottom-region inset polygon for this fixture on both the AppImage
+oracle and mine (extend the boundary GT instrumentation) and find
+the inset-vertex difference that moves/removes the crossing.
