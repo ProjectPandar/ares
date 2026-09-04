@@ -5123,3 +5123,23 @@ case.3mf from a fresh cluster-check run (CLUSTER_DUMP overwrites
 case.3mf — if the exports differ, the oracle's arrangement varies
 per-process and the sweep comparison needs the export pinned
 (deterministic arrangement or a fixed plate position).
+
+## 2026-09-04 (cont 163): K2Neo FULLY at parity — 3MF + body identical
+
+Decisive: the re-dumped 3MF is IDENTICAL to the previous, the oracle
+double-run is byte-stable, and ref vs inproc differ only in header +
+estimated-time comments. Layer-1 extrusion counts equal (2092 = 2092).
+Yet the cluster check (same code path!) reports 420-vs-416. The ONLY
+remaining variable: the cluster check compares against a DIFFERENT
+oracle run than the dump wrote... no — same runner, same case. UNLESS
+the cluster check's DUMP branch runs the oracle but the COMPARE
+branch's fresh case (a new PID dir) re-exports and re-slices — the
+export is deterministic (verified) and the slice is deterministic
+(verified) → the compare branch MUST see identical outputs. The
+420-vs-416 must come from the semantic PARSER reading something
+beyond the body (e.g. it parses the "1s" first-layer estimate as a
+deposition record? The ares line "0s" vs "0.612047s"!). ACTION:
+inspect semantic::parser for estimated-time handling — the
+"; estimated first layer printing time" line may feed the layer-1
+timing model that adjusts deposition counts. A 1s-vs-0.612s estimate
+difference with a parser bug could shift 4 deposition records.
