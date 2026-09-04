@@ -4451,3 +4451,19 @@ its layer-2 first travel printing lifted/pending/pending_layer_retract
 and find which flag upstream's surviving m_to_lift corresponds to
 (mine likely executes the layer-end lift eagerly and then UNLIFTS
 before the travel, or never defers it).
+
+## 2026-09-04 (cont 114): two lift-deferral fixes for the 49-regression
+
+1. retract_for_timelapse now DEFERS the hop (lift::schedule) instead
+   of the eager append — upstream's traditional layer-end retract
+   defers into the next travel (GCodeWriter.cpp:626-648), which raises
+   to layer+hop and descends at the target.
+2. A long travel with the extruder ALREADY retracted (e.g. the print's
+   first travel after the start gcode's retract) still defers the hop:
+   upstream calls retract() whenever needs_retraction (length) holds —
+   dE is a no-op but maybe_zlift defers. Added the guarded branch
+   (retracted && !lifted && pending none && length ≥ min → schedule).
+   Unguarded it regressed Kobra 9→190; with guards 9→6.
+Fixtures: Kobra3-0.4 9→6, Anker 79→77, Wanhao 758 / Eryone 73 / M1Pro
+1200 stable; 25/25 smoke. Next sweep to quantify the 49-regression
+recovery.

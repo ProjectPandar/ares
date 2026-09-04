@@ -3,7 +3,7 @@ use super::super::{
     format::{axis as format_axis, offset as format_offset, z as format_z},
 };
 
-pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
+pub(in crate::project_slice::gcode_emit) fn schedule(state: &mut EmitState, layer_change: bool) {
     schedule_at(state, layer_change, state.layer_z);
 }
 
