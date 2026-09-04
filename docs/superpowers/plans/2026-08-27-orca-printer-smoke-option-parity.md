@@ -4765,3 +4765,16 @@ remnant) or my gate sees a different paths slice than the emitted
 loop. Next: print first.role + the paths' roles at the wipe gate for
 this loop (one instrument run), then align whichever of the four
 upstream conditions differs.
+
+## 2026-09-04 (cont 140): correction — the detour IS real; the diff was blind to it
+
+WIPEGATE probe: wipe_opt=false for Anker — my wipe gate correctly
+skips. The two travels (121.29,121.889 -> 120.187,121.889 ->
+120.187,121.005) are the ROUTER DETOUR: the first segment is BARE (no
+F word), invisible to my earlier F18000-line diff. Cont 134's
+original conclusion was RIGHT: my avoid-crossing router detours where
+upstream goes direct (1.4135mm). Next: at that travel (layer-1, after
+the brim, to the wall seam 120.187,121.005), trace the router's
+boundary/crossing test — my boundary at layer 1 likely marks a
+crossing upstream doesn't (stale boundary or different island
+membership).
