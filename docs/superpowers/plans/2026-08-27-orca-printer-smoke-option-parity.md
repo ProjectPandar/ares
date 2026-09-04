@@ -4991,3 +4991,15 @@ non-empty (upstream only when empty); (2) my search radius 2.0 vs
 upstream 1.5. Compare extend_for_closest_lines' upstream counterpart
 (cpp:180-210) precisely — it runs after the visitor, gated on
 intersections.empty().
+
+## 2026-09-04 (cont 156): ROUTER SEARCH-RADIUS FIX — fleet 431 (+9), Anker 77→4
+
+01b54d92: my extend_for_closest_lines call passed 2.0 x
+search_radius (= 4.0 x spacing) where upstream passes the
+spacing-doubled value unchanged (2.0 x spacing, cpp:592-595) —
+pulling boundary lines twice as far into the intersection set and
+synthesizing the phantom detour pairs. Anker 77 → 4 lines; fleet
+422 → 431 (+9); layer-2-deposition cluster still 118 (those need
+their own next divergence; the Anker residual 4 = the F3841/F2524
+feedrates now head-of-list). Trajectory: 415 → 411 → 412 → 421 → 423
+→ 431.
