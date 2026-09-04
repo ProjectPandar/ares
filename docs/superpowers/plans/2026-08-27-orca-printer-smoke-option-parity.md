@@ -4534,3 +4534,14 @@ the output — the fp branch chain itself drops the lift/Z. Next: trace
 which branch the fp travel takes (the state.retracted && first_position
 branch at ~line 230) and why its Z emission is absent — likely the
 branch's `mode` unwrap or an early return.
+
+## 2026-09-04 (cont 120): fp branch never reached — the travel routes elsewhere
+
+The retracted&&first_position branch (and its condition debug) NEVER
+fires for Kobra's layer-0 travel — an earlier path emitted the
+XY-only move. The branch chain in start_travel is bypassed entirely;
+the emitting site is elsewhere (another travel_to path or the
+needs_travel=false tail). Next: grep which code emits the first
+travel's `G1 X.. Y.. F21000` for fp (add a debug print at each
+travel_emit::xy call site or breakpoint by coordinates) and route
+that path through the lift logic.
