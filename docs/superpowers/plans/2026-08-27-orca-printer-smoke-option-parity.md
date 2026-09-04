@@ -4363,3 +4363,14 @@ loop_speed must equal the upcoming wall's speed (compute via the
 features.rs speed() chain for an Outer-wall property at
 first.width — or defer by emitting after path properties are known;
 simplest: compute the kinematics here with a synthetic property).
+
+## 2026-09-04 (cont 107): WIPE WRAPPER FIXED — ±1 feedrate RESOLVED
+
+The pt→seam wipe move (path.rs pending target) now closes its block
+(`;_EXTRUDE_END`) and re-opens with extrusion::speed, matching
+upstream's own-block structure (GCode.cpp:5884-5893). The 0.3996mm
+wipe time lands in its own cooling entry: Wanhao line 308 now
+G1 F2052 (exactly ref) — the ±1 cluster from cont 77 is RESOLVED.
+Wanhao 788 → 758 (the 15 F-pairs fixed); Eryone 73, Kobra 1463,
+M1Pro 1200 stable; 25/25 smoke. The Anker 31-printer cluster shares
+this mechanism — verify with the cluster check next.

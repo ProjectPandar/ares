@@ -155,6 +155,14 @@ pub(super) fn emit(
         state.x = target.x;
         state.y = target.y;
         state.wipe_start = Some(target);
+        // Upstream wraps the fake wipe path in its own
+        // `;_EXTRUDE_SET_SPEED..;_EXTRUDE_END` block (`GCode.cpp:5884-5893` —
+        // `extrude_path` on the force-no-extrusion polyline), then the wall
+        // loop opens a fresh block; the cooling buffer therefore attributes
+        // the wipe move's time to its own entry instead of the wall block.
+        output.extend_from_slice(b";_EXTRUDE_END\n");
+        extrusion::speed(output, state.extrusion_feedrate, properties);
+        state.current_feedrate = state.extrusion_feedrate;
     }
     if let Some(slope) = properties.slope {
         let wipe_points = local_points
