@@ -4711,3 +4711,15 @@ delta, propagating to all late-layer feedrates (F2524/F2520) and the
 the detour decision (my plan_route's boundary state at layer 1 vs
 upstream's avoid_crossing_perimeters — likely my layer-1 boundary is
 stale/complete where upstream's isn't, or the crossing test differs).
+
+## 2026-09-04 (cont 135): output travel lines IDENTICAL — the split is in parse accounting
+
+All F18000 travel lines are byte-identical between my output and ref
+(diff empty). The two-segment vs one-segment difference is INSIDE the
+cooling parse's entry accounting for the same output lines (entries
+around the brim-loop travels at file lines 116/124: X121.625 and
+X122.075). Next: instrument my parse at the layer-1 region printing
+each pushed line's source text alongside len/f/t and identify which
+output line produces my extra entry vs upstream's single (suspect: a
+wipe or M205-adjacent move my parser splits, or the brim-loop
+boundary emission emitting a hidden positioning move).
