@@ -4572,3 +4572,15 @@ retract fired between the skirt and the wall — sequence: start gcode
 → skirt → object-start retract (defers to_lift) → wall travel
 (raises). Next: locate my object-start retract (between skirt and
 wall) and defer its lift there so the wall travel consumes it.
+
+## 2026-09-04 (cont 123): already-retracted defer — Kobra 6 but Anker 296
+
+The guarded already-retracted deferral fixed Kobra (9→6) but Anker
+regressed 77→296 — mid-print travels where upstream's m_lifted>0
+blocks the defer while my state.lifted=false allows it. A layer-0
+gate neutralized Anker but also Kobra (its travel site doesn't match
+the gate — likely the skirt consumed the retracted window). REVERTED.
+CONCLUSION: this needs the true m_lifted/m_to_lift lifetime pair in
+EmitState (my lifted/pending flags diverge from upstream's lifetime
+at de-retract boundaries) — the refactor from cont 116 stands as the
+way forward; per-case gates cannot capture it.
