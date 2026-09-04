@@ -4622,3 +4622,9 @@ Refactor step 1 landed: lifted_amount: f64 added to EmitState
 next: maintain the amount at the 6 set-sites (lift.rs 146/179/195,
 start_travel 222/299) with (layer_z + z_hop) - dest-z semantics and
 the clears.
+
+Refactor step 2 landed: lifted_amount maintained at all 6 set-sites
+(z_hop) and both clears (0.0); behavior unchanged (bool still drives
+reads), 25/25 smoke, fixtures stable. Step 3: migrate the defer gates
+to lifted_amount (the maybe_zlift gate) + add partial reduction at
+in-band z moves; step 4: delete the bool.
