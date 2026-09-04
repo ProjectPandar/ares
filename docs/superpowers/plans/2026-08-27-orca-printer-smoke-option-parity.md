@@ -4296,3 +4296,18 @@ accumulation (measure_and_aggregate) to print each aggregated move's
 length + source text for the second f=30 block, and diff against the
 expected 9.58/9.58/9.58/9.54 — the outlier move pins the stale-
 position source.
+
+## 2026-09-04 (cont 102): the move found — 0.3996mm wipe aggregated wrong
+
+Per-move audit: the 4 wall moves aggregate EXACTLY right (9.580×3 +
+9.540 = 38.28 ✓). The +0.414 is the 0.3996mm no-E wipe-before-seam
+move (`G1 X110.21 Y119.79` after the FIRST outer SET_SPEED) whose
+0.0133s lands in the SAME entry as the 4 wall moves (my big f=30 block
+= 1.2898 = 1.2765+0.0133) — upstream keeps it as a separate small
+entry. The wipe belongs to block 1 (between its SET_SPEED and its
+EXTRUDE_END); my parse merges it into the wall block — i.e. my
+first-block SET_SPEED or its EXTRUDE_END is not creating/consuming the
+modifier as expected (the POST dump lacks the separate 0.0133 entry).
+Next: trace active_speed_modifier indices across the two outer blocks
+(print lines.len() + modifier at each SET_SPEED/END) to find the
+merge point.
