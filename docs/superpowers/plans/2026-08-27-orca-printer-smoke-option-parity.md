@@ -4853,3 +4853,16 @@ boundary contours for layer 1 (one eprintln in Boundary::build) and
 compare against the GT's layer-1 contours — if mine has the inner
 contour where GT layer 1 does not (or vice versa), that is the
 119-cluster root.
+
+## 2026-09-04 (cont 147): boundary contours MATCH (GT vs mine)
+
+My layer boundaries: c0 = ±4389391 (outer, 50 layers), c1 =
+±3601901 (inner, 1 layer) — the GT dump shows the same two contours
+(±4389382 outer, ±3601901 inner). The boundary construction MATCHES;
+the detour divergence is NOT the boundary geometry. Remaining suspect
+for the 119 cluster: the intersection COLLECTION or the safe-zone
+(lslice-offset) test gating WHICH travels reach the router (my
+safe_zone_contains vs upstream any_expolygon_contains(m_lslices_offset,
+travel) — segment-inside vs endpoint-inside semantics). Next: compare
+the m_lslices_offset gate: upstream tests the whole SEGMENT inside;
+if my safe_zone test differs, different travels reach avoid_perimeters.
