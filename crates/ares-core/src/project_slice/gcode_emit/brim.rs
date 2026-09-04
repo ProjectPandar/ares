@@ -141,16 +141,12 @@ impl BrimPlan {
         )
         .map_err(brim_geometry_error)?;
         let mut loops = unified;
-        // Chain outside-in on the contour front points
-        // (`traverse_pt_outside_in`, ClipperUtils.cpp:992).
-        {
-            let fronts = loops.iter().map(|points| points[0]).collect::<Vec<_>>();
-            let order = crate::geometry::chain_points(&fronts);
-            loops = order
-                .into_iter()
-                .map(|index| loops[index].clone())
-                .collect();
-        }
+        // `traverse_pt_outside_in` (ClipperUtils.cpp:992): the outermost
+        // contours first, recursing into holes — the nesting order, NOT
+        // nearest-neighbor chaining (which zig-zags between nested rings).
+        loops.sort_by(|left, right| {
+            polygon_area(right).total_cmp(&polygon_area(left))
+        });
         // `optimize_polylines_by_reversing` (Brim.cpp:861): flip each
         // loop so its END is closer to the next loop's start — the brim
         // is one continuous walk; each ring is emitted from the point

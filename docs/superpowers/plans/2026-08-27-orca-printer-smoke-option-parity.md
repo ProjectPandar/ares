@@ -5419,3 +5419,27 @@ traverse_pt_outside_in visits the OUTER rings first then recurses
 into children. My chain_points does nearest-neighbor on front points,
 which zig-zags. FIX: replace chain_points with a true outside-in
 traversal (sort by area descending, grouping nested children).
+
+## 2026-09-04 (cont 179): area sort didn't change the ring set
+
+The area-descending sort landed (upstream traverse_pt_outside_in) but
+the FIRST RING is still my large outer ring (start 116.255, end
+114.98 — covering the full brim) while ref's first ring is SMALL
+(102.2→102.5, one offset step). The RING SET itself differs: ref's
+rings are per-step concentric rings (each ~0.65mm apart) while mine
+has fewer, merged rings. Since I now union first then split by area,
+the union is MERGING adjacent step contours into single contours.
+The offset steps produce OVERLAPPING contours (step n's inner offset
+overlaps step n+1's outer), and the union merges them into one big
+blob contour per island. Upstream's union_pt with pftEvenOdd ALSO
+unions... but their loops come from polygons_append per step — and
+overlapping even-odd polygons union into a single outer contour
+PLUS the interior rings vanish. Actually upstream's connect_brim_
+lines bridges them as OPEN polylines (each loop becomes an open
+polyline via chain_polylines) — chain_polylines({single loop}) makes
+an OPEN polyline! Then optimize + connect joins consecutive OPEN
+rings end-to-end when within 2*spacing AND the connector doesn't
+cross brim centerlines. THE RING STRUCTURE comes from the CONNECT
+step: it joins the concentric step rings into one long spiral-ish
+path. My implementation emits each step ring separately as a CLOSED
+loop. That's the structural gap.
