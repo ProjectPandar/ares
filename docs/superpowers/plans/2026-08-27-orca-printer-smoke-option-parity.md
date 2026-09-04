@@ -4824,3 +4824,12 @@ appears deeper in the trace. Next: grep the full trace for end values
 near 4660000/4740000 (or dump all ROUTER lines to a file and find the
 layer-1 detour by elimination), then compare that travel's boundary
 contours with upstream's.
+
+## 2026-09-04 (cont 145): session-arc state at 423
+
+Corrected upstream semantics: enter-only crossings DO emit the single
+offset entry waypoint (revert 5a1b6660; reduce_crossing_wall smoke
+guards this — upstream pushes the entry middle point BEFORE the exit
+check). The Anker detour (119 printers) needs the boundary-
+construction comparison, not the pairing rule. All 81 parity tests
+green; fleet 423.
