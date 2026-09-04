@@ -4178,3 +4178,16 @@ iteration dynamics. Next: instrument the PASS COUNT and per-pass
 stretch to see where the trajectories fork; compare against upstream's
 single-pass-per-layer loop (its calculate_layer_slowdown runs ONCE per
 layer — if my buffer iterates, find why).
+
+## 2026-09-04 (cont 93): fork quantified at 3.6ms; GT instrument needed
+
+Full layer-2 group trace: g1 (4 lines @90→60, maxstr 1.058), then
+refine (5 lines @60, stretch_left 2.8283 → 34.2198). Upstream's 34.2
+requires stretch_left 2.8319 — a 3.6ms layer-time delta (total 4.1217
+vs ~4.1181, 0.09%). All group math/sorting verified equal; the delta
+is a per-line time difference in the 24-line parse. Wall-clock
+analysis is exhausted — next step: GT instrument build (like
+/tmp/orca-gt) patching CoolingBuffer to dump per-line time/length/feedrate
+for layer 2, diffing against my parse's 24 lines to find the 3.6ms
+line. That single line explains the ±1, the Anker cluster, and the
+solver two-value split.
