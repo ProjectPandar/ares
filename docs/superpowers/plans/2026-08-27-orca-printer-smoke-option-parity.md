@@ -5322,3 +5322,18 @@ order) — so the nearest projection differs. Verify by printing the
 ring's first/last points before split and the chosen seam. If the
 ring's own vertex set is fine, the difference is upstream's ring
 vertex ORDER (union_pt walk start vertex).
+
+## 2026-09-04 (cont 173): K2Neo ring 1 — ref 46 moves vs ares 45; start vertex
+
+Precise measurement: ref ring 1 = 46 moves starting at the
+(102.116,101.664) mid-edge projection; ares ring 1 = 45 moves starting
+at vertex (116.255,100.779). The +1 move in ref = the split inserts a
+vertex (the projection) — ares' split_at_nearest is NOT applying to
+the brim ring (the nozzle position passed must be wrong: my last_
+scaled_position at brim time is the previous ring's end, not the
+nozzle position before the brim started — the layer-change travel
+(101.978,101.802) is emitted by the layer template, which does NOT
+update last_scaled_position/state.x). The nozzle at brim start is at
+(101.978,101.802) — the travel target from the layer-change template.
+FIX: capture the layer-change travel target into EmitState (the
+template emission sets state.x/y) and pass that as the split target.
