@@ -4191,3 +4191,16 @@ analysis is exhausted — next step: GT instrument build (like
 for layer 2, diffing against my parse's 24 lines to find the 3.6ms
 line. That single line explains the ±1, the Anker cluster, and the
 solver two-value split.
+
+## 2026-09-04 (cont 94): upstream layer text dumped (GT cooling patch works)
+
+Ran the GT cooling binary on the Wanhao fixture with
+ORCA_DUMP_COOLING=/tmp/wanhao/upstream.cool — captures each layer's
+pre-slowdown text + per-extruder totals (totals print 0: populated
+later by calculate_layer_slowdown). Layer indices are 0-based object
+layers: layer 2 = ;Z:0.6 (the 3rd). Next steps: (1) extract
+upstream's layer-2 text and byte-compare against my pre-slowdown
+layer 2 — if identical, the 3.6ms delta is a PARSE RULE difference
+(leading suspect: G2/G3 arc length math, arc_length fn); (2) if
+needed, extend the GT patch to dump per-line time/length after
+parse_layer_gcode and rebuild result-cooling.
