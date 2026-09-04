@@ -5579,3 +5579,16 @@ Upstream's rings anchor at the SAME corner (their ref walk ascends
 102.253→102.53→102.807 monotonically). Fix: rotate each union contour
 so its walk starts at the lowest-left vertex (or match the Clipper2
 walk anchor upstream uses) before the reversal+connect chain.
+
+## 2026-09-04 (cont 187): sweep 432 (+2) — brim ring pipeline banked
+
+The full brim ring pipeline (open polylines + reversal + connect +
+lowest-left anchoring) is upstream-faithful and fleet-positive:
+432/1001 (was 430). The K2Neo brim walk still alternates vs ref's
+monotonic corner ascent — root: the brim emit-time split target
+(state.x/y = 0 at layer-0 brim, not the actual start-gcode nozzle
+position). Upstream's nozzle at brim time = the start gcode's final
+XY (e.g. X120 from the purge wipe); mine defaults to 0. The layer-1
+deposition cluster (with the brim family) needs the start-gcode-final-
+position tracked into EmitState for the split target. NEXT: parse the
+final XY of the machine start gcode into state.x/y at emit start.
