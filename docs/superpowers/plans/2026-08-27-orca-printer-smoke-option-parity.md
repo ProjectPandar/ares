@@ -4204,3 +4204,17 @@ layer 2 — if identical, the 3.6ms delta is a PARSE RULE difference
 (leading suspect: G2/G3 arc length math, arc_length fn); (2) if
 needed, extend the GT patch to dump per-line time/length after
 parse_layer_gcode and rebuild result-cooling.
+
+## 2026-09-04 (cont 95): GOLD — upstream per-line dump; 26 vs 24 lines
+
+GT build result-coolines (coolines.patch) dumps per-line
+length/feedrate/time. Upstream layer 1: total=4.122141, nlines=26; my
+parse: total=4.1217, n=24 — 2 EXTRA LINES upstream counts. Feedrate
+composition (upstream): 8× f=0 (zero-length/non-move lines that
+upstream still records), 5× f=30, 7× f=400, 1× f=60, 1× f=70, 4×
+f=90. My parser likely skips lines with zero length/feedrate state
+(upstream keeps them as type-tagged entries with t=0 — harmless
+individually, but 2 of my missing lines may carry time, e.g. E-only
+or Z-only moves at the layer transition). Next: dump my parse's line
+list in the same format and diff to find the 2 lines and their time
+contribution (the stretch delta).
