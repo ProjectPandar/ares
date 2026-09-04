@@ -4687,3 +4687,15 @@ insertion point; the "len 1.103 vs 1.413" pair may not be the same
 G-code line. Next: re-align by FEEDRATE-and-order with the offset
 (insert the missing line at its position first — find which G-code
 line my dump has that upstream lacks or vice versa, THEN diff times).
+
+## 2026-09-04 (cont 133): the extra entry is a layer-boundary attribution
+
+Feed sequences aligned: my layer-1 parse has ONE extra f=300 entry
+(position 24) upstream lacks; whole-file F18000 travel counts are
+EQUAL (238=238) — no extra output line. My parser attributes a
+boundary travel to layer 1 that upstream attributes elsewhere (or
+splits an entry). Layer-0 totals matched, so the shifted entry carries
+~0 time (a zero-length or same-layer-split entry). Next: print the
+extra entry's length/time (mine pos 24: the f=300 after the two
+f=300s) and locate its G-code source line; likely the layer-change
+travel split or an M205/segment boundary in my parse.
