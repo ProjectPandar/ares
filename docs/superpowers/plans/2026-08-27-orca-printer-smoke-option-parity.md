@@ -5620,3 +5620,14 @@ construction while upstream's PolyTree walk alternates, so the
 inter-ring reversal chain lands on alternating corners for the 3
 unconnected rings. Full fix needs the upstream to_polylines direction
 matching; documented for the next session.
+
+## 2026-09-04 (cont 191): cluster triage — layer-2 is the extrusion-ulp family
+
+The layer-2 deposition cluster (117 printers) first divergences are
+tiny E-value differences on Internal solid infill (e.g. BBL A1 0.2:
+0.00966 vs 0.0095 at identical positions/feeds) — the extrusion
+accumulation ulp family, systemic across layers 2-10. The structural
+divergences (brim, travel geometry, router) are resolved or isolated;
+what remains at scale is per-move volumetric/extrusion rounding
+precision plus the ksr layer-4 sub-micron case. Suite state:
+6913/6914 (documented ksr layer-4 1238-vs-1241).
