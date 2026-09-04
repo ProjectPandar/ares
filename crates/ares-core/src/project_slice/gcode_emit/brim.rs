@@ -141,10 +141,9 @@ impl BrimPlan {
         )
         .map_err(brim_geometry_error)?;
         let mut loops = unified;
-        // `traverse_pt_outside_in` (ClipperUtils.cpp:992): the outermost
-        // contours first, recursing into holes — the nesting order, NOT
-        // nearest-neighbor chaining (which zig-zags between nested rings).
-        loops.sort_by(|left, right| polygon_area(right).total_cmp(&polygon_area(left)));
+        // The union's contour-then-holes order IS the outside-in nesting
+        // (`traverse_pt_outside_in` recursion — the area sort would
+        // re-interleave nested rings destructively).
         // `makeBrimInfillImpl` (Brim.cpp:843-849): each ring becomes an
         // OPEN polyline (to_polylines of a closed polygon drops the
         // closing duplication), then `optimize_polylines_by_reversing`

@@ -5540,3 +5540,28 @@ POLYTREE's child order (each hole a child of the containing ring).
 My flat_map contour+holes IS that order — but then the AREA SORT
 re-interleaves them destructively! REMOVE the area sort (the
 union_ex contour+holes order IS the outside-in nesting).
+
+## 2026-09-04 (cont 185): union returns rings in ZIG-ZAG order — separate ExPolygons
+
+The BRIMRING dump: 10 rings whose first vertices ALTERNATE
+(+x,-y),(−x,-y),(+x,-y),... — the union produced alternating
+contour/hole nesting rather than one contour + 9 nested holes. The
+rings alternate between TWO coordinate families — the union_ex
+returned multiple ExPolygons whose flatten order interleaves. Root
+cause candidate: the EvenOdd fill rule with overlapping concentric
+rings — each ring overlaps its neighbor, so EvenOdd toggles
+containment and produces alternating contours/holes. Upstream's
+union_pt also uses pftEvenOdd... but their CONCENTRIC stepped rings
+DON'T overlap (each step inset by 1.3*spacing then out 0.3*spacing =
+net 1.0*spacing gap > 0), so each ring nests cleanly. MY offset
+chain uses the same -1.3/+0.3... so the rings shouldn't overlap
+either. The alternating first vertices (+x then −x) suggest the rings
+have OPPOSITE orientations (CW/CCW alternating) — each hole is
+reversed relative to its contour. The flat contour+holes order gives
+contour,h1,h2,... but the ALTERNATION in first-vertex x-sign shows
+consecutive rings face opposite sides — meaning nesting IS in the
+output but my read of the emission order shows they're emitted with
+starting vertices at opposite corners. THIS IS EXPECTED for nested
+rings (each inner ring's Clipper walk starts elsewhere). The
+remaining fix: the emitted ring order from the CONNECT step decides
+the walk. Debug the connected paths next.
