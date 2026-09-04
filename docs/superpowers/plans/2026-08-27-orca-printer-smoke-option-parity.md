@@ -5927,3 +5927,20 @@ ring walk direction for inward walls (skeletal trapezoidation
 ordering) vs upstream — awaiting ORCA_DUMP_CONC GT build
 (result-conc, /tmp/orca-gt/conc.patch) to confirm the exact upstream
 vertex sequence before flipping.
+
+## 2026-09-05 (cont 208): GT dump does NOT fire — upstream narrow fill avoids arachne branch
+
+result-conc (ORCA_DUMP_CONC inside the arachne thick overload of
+FillConcentric::_fill_surface_single) contains the literal in
+.orca-slicer-wrapped and slices fine, but NO dump file is produced
+for the BBL narrow region: the arachne branch
+(`params.density > 0.9999f && !params.dont_adjust`) is NOT taken
+for ConcentricInternal narrow fills. My implementation RUNS the
+arachne path (ARES_DUMP_CONC fired 71 rings) — wrong branch! The
+upstream narrow ring comes from the NON-arachne FillConcentric
+branch (offset2 contour-parallel rings + union_pt_chained_outside_in
++ split_at_index(last_pos.nearest) + clip_end), whose ring vertex
+order/direction explains the tie difference (cont 207). Next: find
+why density <= 0.9999f for the narrow split (surface_fills density
+for stInternalSolid in Fill.cpp) and port the non-arachne branch for
+ConcentricInternal, replacing my arachne dispatch for that pattern.
