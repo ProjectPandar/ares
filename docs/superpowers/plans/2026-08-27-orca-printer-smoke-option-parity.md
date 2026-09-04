@@ -5174,3 +5174,20 @@ when the target list included K3-0.2 (cont 139 edit changed the list
 to K3-0.4). The /tmp/kobra2/case.3mf may be K3-0.2's case! ACTION:
 slice the K2Neo dump case and compare against its ref (this is the
 real 420-vs-416 investigation, now with the correct case).
+
+## 2026-09-04 (cont 166): K2Neo divergence = brim start-point rotation
+
+The K2Neo case: brim_width=5, outer_only, gap 0.15. Layer 1 brim:
+ref 390 lines, ares 385; both end at (114.675,114.675); ref STARTS
+at (102.116,101.664) near the lower-left with an initial 0.00845
+half-move; ares starts at (116.255,100.779) lower-RIGHT with full
+0.02763 moves. The brim loop's START POINT (seam) differs — ref's
+seam is mid-corner (partial first segment), mine at a rounded-corner
+vertex. This is the BRIM SEAM/start-point selection
+(split_at_first_point / find_start_point with start_angle) — my skirt
+seam_target uses last_scaled_position for layers>0 but
+find_start_point(start_angle) for layer 0 — for a BRIM (no skirt) the
+layer-0 start may need the object-based angle too. Next: trace the
+brim loop's seam selection at layer 0 vs upstream make_brim's
+loop.split_at_first_point (upstream starts brim loops at the
+polygon's first point after the concave-hull walk).
