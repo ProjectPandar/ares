@@ -4374,3 +4374,15 @@ G1 F2052 (exactly ref) — the ±1 cluster from cont 77 is RESOLVED.
 Wanhao 788 → 758 (the 15 F-pairs fixed); Eryone 73, Kobra 1463,
 M1Pro 1200 stable; 25/25 smoke. The Anker 31-printer cluster shares
 this mechanism — verify with the cluster check next.
+
+## 2026-09-04 (cont 108): Anker massively improved by the wipe fix
+
+/tmp/anker after d7b584cb: 79 diff lines total (was hundreds of
+±1 feedrate lines) — 12× F3841/F3840 (±1) + 5× F2524/F2520 (±4) + 2
+positions. The wipe wrapper resolved the dominant Anker divergence
+too. Remaining: a second, smaller boundary (3840 vs 3841 — round-down
+vs up at a different group) and a ±4. Next: rerun the GT per-line
+dump on the Anker fixture layer for the 3840 case (likely the same
+block-composition family — check the f=0 lines or a remaining
+attribution difference), then the cluster check / sweep to quantify
+flips.
