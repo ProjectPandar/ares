@@ -4425,3 +4425,15 @@ when m_to_lift existed OR the sloped type applies with any pending
 lift source; check GCodeWriter.cpp:725-757 — the slope applies when
 delta.z > 0, i.e. when the DESTINATION z exceeds current — maybe gate
 on (destination_z > current_z) instead of lifted state).
+
+## 2026-09-04 (cont 112): force_z revert — unclear positions always split
+
+The b085ab31 force_z merge combined Z for first-position travels, but
+upstream's unclear-position branch (GCodeWriter.cpp:754+) ALWAYS
+splits XY then _travel_to_z regardless of force_z. Reverted the
+first_position combined branch (always split). Wanhao 758 unchanged
+(its fix lives in the layer_change_travel branch), Eryone 73 stable,
+Kobra3 1463→1461. The 49-printer layer-2 travel regression may need
+more than this — next sweep pass will quantify; if the regression
+persists, trace the layer-change-retract (retract_when_changing_layer)
+lift deferral for those printers.

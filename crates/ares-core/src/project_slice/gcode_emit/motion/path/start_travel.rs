@@ -22,12 +22,6 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         geometry,
     } = request;
     let first_position = !state.positioned;
-    // `force_z` semantics (`GCode.cpp:7482` passes
-    // `m_need_change_layer_lift_z` — set by every `change_layer`): a
-    // first travel that follows a layer change merges the layer Z into
-    // the move; other first travels (e.g. a start-gcode purge travel)
-    // keep the XY + separate `_travel_to_z` split.
-    let first_position_force_z = state.layer_change_travel_pending;
     let layer_change_travel = state.layer_change_travel_pending && !first_position;
     let slope_start_z = properties
         .slope
@@ -245,16 +239,13 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             travel_set_layer_z = true;
         } else {
             travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
-            // The print\x27s first travel from an unknown position keeps the
-            // Orca cannot fold Z into the XY move and re-states it as a
-            // separate descend (`GCodeWriter.cpp:travel_to_xyz` unclear-
-            // position branch emits XY then `_travel_to_z`).
+            // The print's first travel from an unknown position always
+            // splits: the unclear-position branch of `travel_to_xyz`
+            // (`GCodeWriter.cpp:754+`) emits XY then `_travel_to_z`
+            // separately — `force_z` only merges Z for CLEAR-position
+            // travels.
             if first_position {
-                if first_position_force_z {
-                    travel_emit::xyz(output, travel_x, travel_y, target_z, state.travel_feedrate);
-                } else {
-                    output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
-                }
+                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
                 unclear_position_travel = true;
             }
         }
