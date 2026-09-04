@@ -4137,3 +4137,18 @@ adjustable lines with feedrate > limit INCLUDING the group-1 lines
 slowed to 60; check whether my iteration-1's lines at 60 participate
 in the iteration-2 refine numerator (new_feedrate_to_reach_time_stretch
 over feedrate > min_feedrate=refined limit inputs).
+
+## 2026-09-04 (cont 90): refine verified equal; stretch input differs
+
+Upstream's new_feedrate_to_reach_time_stretch spans ALL adjustable
+lines (i < n_lines_adjustable from 0) with feedrate > min_feedrate —
+my call site matches (&lines[..adjustable]). With all 5 lines at 60
+the refine is 60·Σt/(stretch+Σt): identical math, so the differing
+output (34.2 vs 34.2198) means the INPUT stretch differs — mine
+2.8282657 vs upstream's (landing exactly at 34.2). The stretch =
+target_time − total_time where total_time comes from the PARSE stage's
+line-time model (length/feedrate + possibly acceleration modeling,
+CoolingBuffer.cpp process_line). Final checkpoint: compare the
+layer-2 parse time model (parse.rs time accumulation, travel vs
+extrusion speeds, acceleration) against upstream's; a small
+per-layer time delta explains everything downstream.
