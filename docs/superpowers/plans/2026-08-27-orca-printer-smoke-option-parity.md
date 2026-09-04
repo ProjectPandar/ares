@@ -4322,3 +4322,13 @@ correct. The merge of the 0.3996 wipe move into the wall-block entry
 remains unexplained by static reading — next: empirically print the
 modifier index at every SET_SPEED/EXTRUDE_END/aggregation in layer 1
 and watch the index the 0.3996 move lands in.
+
+## 2026-09-04 (cont 104): trace machinery proven (PUSH/OPEN/CLOSE)
+
+Layer-0 trace decoded: block(6)=SET_SPEED..END(7), travel(8),
+block(9)=walls..END(10), wipe moves AFTER (11=F-move, 12=F1800;_WIPE)
+— layer 0's structure is CLEAN. The merge is layer-1-specific (the
+wipe-before-seam move sits INSIDE the first outer block there). The
+PUSH/OPEN/CLOSE/AGG instrument set is proven; next run filters to
+layer 1 (second layer's debug lines) and reads the index the 0.3996
+move lands in directly.
