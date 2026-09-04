@@ -4022,3 +4022,17 @@ first divergence). Next: the ±1 cooling-buffer feedrate rounding
 (cooling/feedrate/slowdown.rs) — likely a float precision/rounding
 mode difference; fixes 15 Wanhao lines AND potentially the Anker
 31-printer cluster.
+
+## 2026-09-04 (cont 82): ±1 feedrate reproduction state
+
+Wanhao config: inner_wall_speed=60, slow_down_for_layer_cooling=1,
+slow_down_min_speed=20. Layer 1 feeds match exactly (F1618 both);
+layer 2 inner wall: ref F2052 (=34.2·60 exactly), ares F2051 — the
+cooling slowdown factor ~0.57 differs at/below the rounding boundary.
+Since layers 1-2 content is identical, the buffer INPUTS match; the ±1
+is in the slowdown arithmetic itself (likely f32 vs f64 accumulation
+or the final mm/s→mm/min rounding). Reproduction: /tmp/wanhao line
+308 (G1 F2052 vs F2051). Compare the slowdown factor computation in
+cooling/feedrate/slowdown.rs against upstream CoolBuffer
+(GCodeProcessor.cpp) at f64 bit level; the Anker cluster (31 printers)
+shares this arithmetic.
