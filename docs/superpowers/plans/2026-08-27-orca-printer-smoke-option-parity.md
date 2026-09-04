@@ -4677,3 +4677,13 @@ start position is identical — the difference is the avoid-crossing
 router's intermediate point at layer 1. Next: instrument the router's
 detour selection at layer 1 (plan_route output points) vs upstream's
 travel polyline (GT trace has role=2 travels).
+
+## 2026-09-04 (cont 132): correction — the per-line pairing misaligned
+
+Re-check: BOTH layer-1 outputs show SINGLE-line travels (no detour
+segments visible) — the +0.31mm cannot be a detour. The pairwise
+paste diff misaligned because n=32 vs 31 shifts every pair after the
+insertion point; the "len 1.103 vs 1.413" pair may not be the same
+G-code line. Next: re-align by FEEDRATE-and-order with the offset
+(insert the missing line at its position first — find which G-code
+line my dump has that upstream lacks or vice versa, THEN diff times).
