@@ -4398,3 +4398,16 @@ cooling buffer: 3840 = 64mm/s exact; 3841 = 64.0183 — check the
 layer-0 wall speed computation (initial_layer_speed chain) vs the
 ref, and separately the layer-1 1.9ms parse delta. Full sweep running
 (session bg, /tmp/sweep2.log) to quantify flips.
+
+## 2026-09-04 (cont 110): GT CAVEAT — nix-debug orca differs from the oracle
+
+Fresh oracle re-slice of /tmp/anker/case.3mf (AppImage via
+orca-parity.sh) matches ref.gcode (2 header lines only) and my output
+at 79 diff lines — ref is NOT stale. BUT the GT binary
+(result-coolines, nixpkgs debug build) slices the SAME case with
+different wall geometry (X113.782 vs oracle's X113.552; F3000 vs
+F3840) — different compiler flags/optimization. GT per-line dumps are
+valid for MECHANISM analysis (solver/parse behavior; 3 of 4 layer
+totals matched to 1e-6) but NOT byte-faithful geometry. The residual
+Anker ±1 (12×) + ±4 (5×) must be analyzed against the true oracle,
+not the GT build. Full sweep still running (/tmp/sweep2.log).
