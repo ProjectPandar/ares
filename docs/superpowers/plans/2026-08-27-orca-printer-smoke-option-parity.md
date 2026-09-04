@@ -4723,3 +4723,13 @@ each pushed line's source text alongside len/f/t and identify which
 output line produces my extra entry vs upstream's single (suspect: a
 wipe or M205-adjacent move my parser splits, or the brim-loop
 boundary emission emitting a hidden positioning move).
+
+## 2026-09-04 (cont 136): Anker layer-1 split narrowed to the parse boundary
+
+The brim-loop travels (X121.625, X122.075 at file lines 116/124) are
+identical output lines — my parse splits the same journey into two
+entries where upstream keeps one. The split coincides with the
+brim-loop emission boundary. Next: print per-pushed-line source+time
+in that region and find the emission construct (likely a wipe or
+seam-clip move with F18000 semantics) my parser counts as a separate
+entry.
