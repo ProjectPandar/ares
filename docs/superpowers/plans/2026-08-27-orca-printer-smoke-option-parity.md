@@ -5631,3 +5631,16 @@ divergences (brim, travel geometry, router) are resolved or isolated;
 what remains at scale is per-move volumetric/extrusion rounding
 precision plus the ksr layer-4 sub-micron case. Suite state:
 6913/6914 (documented ksr layer-4 1238-vs-1241).
+
+## 2026-09-04 (cont 192): BBL A1 real fixture — 0.02mm infill vertex + ±2 feedrate
+
+CORRECTION to cont 191's "0 diffs": that comparison used the WRONG
+case (the CLUSTER_DUMP path overwrites /tmp/*/case.3mf with the LAST
+target — the same fixture-overwrite bug as cont 165). The per-label
+dump (BBL_Bambu Lab A1 0.2 nozzle_*) shows the real state: 359 diff
+lines = 0.02mm infill vertex difference (Y125.517 vs Y125.497 on
+Internal solid infill, ~1.7% E delta) + 9× ±2 feedrate (F3296 vs
+F3294) + M204 ordering. The infill END VERTEX difference (0.02mm) is
+the structural item — the layer-2 solid infill boundary computation
+(one line endpoint) — NOT a pure ulp. Family: infill boundary vertex
+precision (solid infill line endpoints), plus the cooling ±2 residual.
