@@ -4637,3 +4637,11 @@ stable (the amount distinguishes what the bool could not), fleet
 trajectory: 415 (arc start) → 411 → 412 → 421 → 423. Step 4 (delete
 the bool) next, then the partial-reduction semantics at in-band z
 moves for the residual 45.
+
+## 2026-09-04 (cont 128): Kobra3-0.4 semantically at parity
+
+The Kobra3-0.4 fixture's remaining 6 raw lines = the generated-by
+header + estimated-printing-time comments only — the G-code body is
+byte-identical. The semantic comparison ignores these; the printer
+effectively reached parity through the arc-fallback + restart-extra +
+amount-gated-defer chain.
