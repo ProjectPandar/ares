@@ -5261,3 +5261,17 @@ contour's first point — the union_pt (PolyTree) reorders contour
 points! FIX: my loops must pass through a PolyTree union to acquire
 upstream's contour point order — i.e. implement union_pt (not just
 my area sort).
+
+## 2026-09-04 (cont 171): the union_pt contour order — my PolyTree preserves it
+
+My clipper has a PolyTree (polytree.rs) with union paths executed in
+the same two-pass scheme; the CONTOUR point order in the Clipper
+output differs from the raw offset contour's order (the Clipper walk
+starts at the lowest-left vertex of the processed path). To acquire
+upstream's brim contour order, my brim loops must run through the
+same union (execute the offset loops through the Clipper union) and
+then chain outside-in on the CONTOUR FRONT POINTS (not area sort).
+Concrete plan: brim.rs loops → Clipper union (EvenOdd like
+union_pt) → collect contours → chain by front points (chain_points
+helper) outside-in → the reversal walk. This changes both ring order
+AND ring start points to upstream's.
