@@ -4121,3 +4121,19 @@ ares marks a line adjustable that upstream excludes (or vice versa),
 the group boundaries and the refine result shift. Compare the
 line-kind classification (cooling/feedrate.rs type bits) against
 CoolingBuffer.cpp's role tests for the layer-2 line set.
+
+## 2026-09-04 (cont 89): solver trace captured; dont_slow_down_outer_wall=0
+
+Wanhao has dont_slow_down_outer_wall=0 (external walls adjustable —
+that option isn't the Wanhao diff, though it's UNIMPLEMENTED in ares'
+cooling path and needed for printers that set it). Layer-2 solver
+trace: iteration 1 group=4 lines @feedrate 90 (limit 60, split
+branch), iteration 2 group=1 line @60 (refined to 34.2198, done). The
+interplay of the iteration-1 slowdown-to-60 and iteration-2 re-slow
+produces 34.1898/34.2197; upstream yields uniform 34.2. Next: verify
+upstream's iteration-2 limit computation — its feedrate_next scan
+starts from idx_line_end but its slow_down_to_feedrate applies to ALL
+adjustable lines with feedrate > limit INCLUDING the group-1 lines
+slowed to 60; check whether my iteration-1's lines at 60 participate
+in the iteration-2 refine numerator (new_feedrate_to_reach_time_stretch
+over feedrate > min_feedrate=refined limit inputs).
