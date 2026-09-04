@@ -4508,3 +4508,16 @@ lifted state the split needs. Fix direction: audit the unlift sites
 (when does my pipeline clear state.lifted vs upstream's
 m_lifted->0 at unlift-after-destination) — align the unlift lifetime
 so retracted long travels carry lifted=true into the next travel.
+
+## 2026-09-04 (cont 118): unlift audit — single site, correct pairing
+
+state.lifted clears at exactly ONE site (start_travel.rs:319, the
+de-retract) — matching upstream's unretract+unlift pairing. So the
+49's `retracted=true lifted=false` at the layer-2 travel means the
+retracted state arose WITHOUT a lift ever firing (a retract path that
+skips the lift) — candidates: the layer-1 last travel's retract via a
+path that schedules but the emit consumed it, or the object-start
+sequence's parsed start-gcode retract. Next: trace layer-1's LAST
+travel of Kobra3-0.4 (retract site + whether lift::schedule ran and
+where pending_lift went — if consumed by an intermediate travel
+before the layer end, upstream's m_lifted would persist instead).
