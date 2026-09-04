@@ -4165,3 +4165,16 @@ layer change and the first extrusion, the layer_had_extrusion reset
 timing across layers, or the G4/wipe tower lines). Next: dump my
 layer-2 parsed line count + total time and compare against the
 upstream-equivalent arithmetic over the identical G-code text.
+
+## 2026-09-04 (cont 92): layer-2 measured — multi-pass iteration dynamics
+
+My parse of layer 2: total=4.1217s, adj_t=3.9859, n=24 lines. Initial
+stretch = 8.008−4.1217 = 3.886, but the solver debug showed 2.8283 —
+the buffer runs MULTIPLE apply passes (converging iterations), each
+recomputing. Upstream's structure (calculate_layer_slowdown:660-693)
+matches (total = elapsed_time_total0 + Σ adj->time_total). The ~7.6ms
+final-pass delta computed from the 34.2 target propagates through the
+iteration dynamics. Next: instrument the PASS COUNT and per-pass
+stretch to see where the trajectories fork; compare against upstream's
+single-pass-per-layer loop (its calculate_layer_slowdown runs ONCE per
+layer — if my buffer iterates, find why).
