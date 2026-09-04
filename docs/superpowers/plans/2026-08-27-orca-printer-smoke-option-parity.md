@@ -4733,3 +4733,11 @@ brim-loop emission boundary. Next: print per-pushed-line source+time
 in that region and find the emission construct (likely a wipe or
 seam-clip move with F18000 semantics) my parser counts as a separate
 entry.
+
+## 2026-09-04 (cont 137): SRC debug captured (byte arrays)
+
+The per-line SRC+len/f/t dump works (/tmp/anker/src.lines, 1392
+entries) but prints the source as a byte array (text is &[u8]). Next
+run: String::from_utf8_lossy for readable sources, then locate my
+entries 21-22 (the 1.103/0.884 pair) in the SRC stream to identify
+the exact G-code lines producing the split entries.
