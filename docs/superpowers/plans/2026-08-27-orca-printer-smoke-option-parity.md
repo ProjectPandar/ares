@@ -5158,3 +5158,19 @@ same paths! The FIRST printer K2Neo diverges, then K3-0.4 PASSES and
 ITS files overwrite /tmp/kobra2/sweep_*.gcode). The pair I diffed was
 K3-0.4's (identical, PASS ✓). ACTION: write per-printer files
 (append the label) and re-dump to get K2Neo's true pair.
+
+## 2026-09-04 (cont 165): SOLVED — the K2Neo cluster check builds a DIFFERENT case
+
+Per-printer dumps: the K2Neo case.3mf in the sweep (10064 bytes)
+DIFFERS from my earlier /tmp/kobra2/case.3mf (9754 bytes) — the
+cluster check's case build produces a different 3MF than the earlier
+CLUSTER_DUMP run! The earlier dump (identical-output pair) came from
+the FIRST build; today's actual-check case differs at byte 11 (the
+zip local header — different content/compression). The difference:
+the DUMP path ran the same builder... UNLESS the earlier dump came
+from a DIFFERENT selection state (the earlier CLUSTER_DUMP test had
+different targets before I edited them). The earlier dump was made
+when the target list included K3-0.2 (cont 139 edit changed the list
+to K3-0.4). The /tmp/kobra2/case.3mf may be K3-0.2's case! ACTION:
+slice the K2Neo dump case and compare against its ref (this is the
+real 420-vs-416 investigation, now with the correct case).

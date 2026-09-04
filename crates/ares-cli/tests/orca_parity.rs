@@ -49,8 +49,10 @@ pub(crate) fn compare_case(case: &ParityCase) -> ParityOutcome {
     });
     if std::env::var("CLUSTER_DUMP_ACTUAL").is_ok() {
         if let Ok(gcode) = &actual {
-            let _ = std::fs::write("/tmp/kobra2/sweep_actual.gcode", gcode);
-            let _ = std::fs::write("/tmp/kobra2/sweep_ref.gcode", &case.reference);
+            let slug = case.label.replace('/', "_");
+            let _ = std::fs::write(format!("/tmp/kobra2/{slug}_actual.gcode"), gcode);
+            let _ = std::fs::write(format!("/tmp/kobra2/{slug}_ref.gcode"), &case.reference);
+            let _ = std::fs::write(format!("/tmp/kobra2/{slug}_case.3mf"), &case.project);
         }
     }
     match actual {
