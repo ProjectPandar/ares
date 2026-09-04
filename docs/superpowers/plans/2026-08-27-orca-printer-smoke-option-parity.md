@@ -5388,3 +5388,21 @@ start vertex produced by the offset+union walk. This confirms the fix
 is entirely in matching the ring's first-vertex selection (contour
 point order). The instrument cycle (GT ring points vs my ring points
 side by side) remains the next concrete step.
+
+## 2026-09-04 (cont 177): K2Neo brim — the RINGS THEMSELVES are different geometry
+
+Deep diff: ares ring1 = 94 moves (65-158) ending (114.92,101.038) —
+it's a LARGE ring. ref ring1 = 67 moves ending near (102.2,102.2) —
+a SMALL ring. The ring decomposition itself differs: ares merged
+multiple offset steps into one big contour (94 moves covering the
+full brim width) while ref has distinct smaller rings (67, then
+more). The per-step ring structure differs — my offset chain
+(-0.5/-1.3/+0.3 with the union walk) produces fewer, larger rings
+than upstream's. This matches the count diff (420 vs 416 layer-1
+depositions) and the 5-line ring-count difference. The root is in
+the offset loop STRUCTURE, not point order: my union step may be
+merging adjacent-step contours that upstream keeps separate (upstream
+appends polygons_append(loops, ...) per step WITHOUT union — the
+loops from different steps stay separate even when overlapping!).
+FIX: remove the union between steps in my brim loop generation —
+keep each step's contours separate as upstream does.
