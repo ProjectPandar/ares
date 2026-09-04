@@ -310,3 +310,21 @@ fn append_expolygon(
         }
     }
 }
+
+/// `union_pt` + contour extraction (`ClipperUtils.cpp:955`): the union
+/// executed with `pftEvenOdd`, contours returned in the PolyTree walk
+/// order (which reorders each contour's points relative to the input).
+pub(crate) fn union_contours(
+    polygons: &[Polygon],
+) -> Result<Vec<Vec<crate::geometry::Point>>, ClipperError> {
+    let expolygons = union_ex(polygons, FillRule::EvenOdd)?;
+    Ok(expolygons
+        .into_iter()
+        .flat_map(|expolygon| {
+            let (contour, holes) = expolygon.into_parts();
+            std::iter::once(contour)
+                .chain(holes)
+                .map(|polygon| polygon.points().to_vec())
+        })
+        .collect())
+}

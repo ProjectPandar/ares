@@ -129,12 +129,29 @@ impl BrimPlan {
                 .map_err(brim_geometry_error)?;
         }
         // `makeBrimInfillImpl` (Brim.cpp:839): union_pt_chained_outside_in
-        // orders loops by chaining on contour front points, outside-in.
-        // The loops from the stepped offsets arrive grouped outer-first
-        // per island step already; within each step the generation order
-        // matches upstream's chained traversal for the single-object
-        // smoke case, so the area sort is retained as the approximation.
-        loops.sort_by(|left, right| polygon_area(right).total_cmp(&polygon_area(left)));
+        // — the loops pass through the Clipper union (EvenOdd) which
+        // REORDERS each contour (starting at the processed path's
+        // lowest-left vertex), then chain outside-in on the contour
+        // front points. My raw offset contours carry the offsetter's
+        // point order; the union walk acquires upstream's.
+        let unified = crate::geometry::union_contours(
+            &loops
+                .iter()
+                .map(|points| crate::geometry::Polygon::new(points.clone()))
+                .collect::<Vec<_>>(),
+        )
+        .map_err(brim_geometry_error)?;
+        let mut loops = unified;
+        // Chain outside-in on the contour front points
+        // (`traverse_pt_outside_in`, ClipperUtils.cpp:992).
+        {
+            let fronts = loops.iter().map(|points| points[0]).collect::<Vec<_>>();
+            let order = crate::geometry::chain_points(&fronts);
+            loops = order
+                .into_iter()
+                .map(|index| loops[index].clone())
+                .collect();
+        }
         // `optimize_polylines_by_reversing` (Brim.cpp:861): flip each
         // loop so its END is closer to the next loop's start — the brim
         // is one continuous walk; each ring is emitted from the point

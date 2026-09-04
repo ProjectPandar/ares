@@ -68,7 +68,7 @@ pub(crate) use polyline::{
 };
 #[cfg(test)]
 pub(crate) use polytree::PolyNode;
-pub(crate) use polytree::{PolyTree, union_ex};
+pub(crate) use polytree::{PolyTree, union_contours, union_ex};
 pub(crate) use predicates::{fixed_round, slopes_equal};
 pub(super) use simplify::simplify_polygons;
 #[cfg(test)]
