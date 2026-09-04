@@ -4905,3 +4905,18 @@ from a DIFFERENT emitter: the wipe-while-retracting hop
 post-retract wipe path accumulation. Next: find which emitter outputs
 the (120.187,121.889) line (grep the wipe/wipe-path emission paths
 in loop start travel).
+
+## 2026-09-04 (cont 151): wipe path emission decoded — hop candidate
+
+The wipe emission (retract_and_wipe_with → wipe_moves) walks
+state.wipe_path (accumulated from the previous loop's points,
+REVERSED at loop end) emitting G1 X Y [E-] moves. The extra waypoint
+(120.187,121.889) matches the wipe-path's LAST segment — mine walks
+the full accumulated wipe_path (loop points reversed) where upstream
+CLIPS the walk at wipe_distance. My clip loop exists (214-215) —
+verify the Anker case: if my wipe_path contains an extra segment the
+loop's reverse accumulated (the loop_paths wipe_path.reverse at
+emit_skirt_loop / path.rs wall end), the walk emits the extra hop.
+Next: instrument wipe_moves' segment count + total_length vs
+configured_distance at the layer-1 retract (the E-.48 retract after
+the brim).
