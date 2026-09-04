@@ -6052,3 +6052,22 @@ children in the parent reorder (ExtrusionEntityCollection::
 chained_path_from recursion skips no_sort children ordering but
 their INDEX in the parent may still be honored differently), and
 mirror the no_sort handling in my motion.rs emit chain.
+
+## 2026-09-05 (cont 214): emit-order analysis — greedy contradicted on all cursor hypotheses
+
+Reconstructed endpoints (BBL layer-2, frame->world via center (128,128)
+R(135deg)): monotonic solid2 collection first_point = world
+(127.386,123.896) (the O-13 chain start); narrow collection
+first_point = BR (124.975,124.547). Ref emission = [big-solid,
+narrow, solid2]. Greedy checks: cursor (127.016,123.806) [end of the
+E.03569 move] -> solid2 first (0.381 vs 2.171) contradicts ref;
+cursor (123.896,126.926) [before all fills] -> narrow first but then
+big-solid would be last, contradicting its first position. Also both
+collections are no_sort (can_reverse=false for the outer chain), so
+only first_points compete. Remaining unknown = the ISLAND /
+by-region grouping upstream: big-solid may be its own island and the
+[narrow, solid2] order within the second island still needs
+explaining (cursor (127.016,123.806) prefers solid2). NEXT: GT dump
+of GCode.cpp extrude_infill per (island, region) entity lists +
+m_last_pos at each reorder (patch the chain_and_reorder call site)
+to see the actual grouping and cursor; then mirror in motion.rs.
