@@ -5372,3 +5372,19 @@ Both require an instrumented side-by-side of the ring's vertex list
 (my union_contours output vs the GT m_internal.boundaries Polyline).
 This is the next instrument cycle (extend bounddump to print the ring
 points sorted the same way as my PLINE dump).
+
+## 2026-09-04 (cont 176): the layer-1 travel source found — process_layers arrange block
+
+The layer-1 travel `G1 X101.978 Y101.802 F18000` originates in
+process_layers' per-layer travel (the object-start travel emitted
+BEFORE the brim, inside the process_layers loop that calls
+process_layer → generate_object_brim). In upstream, that travel's
+target IS the brim ring's first point (the ring starts at
+(102.116,101.664)-ish, so the travel goes there). In mine, the travel
+target is (115.634,100.637) — MY ring's first vertex — and both are
+self-consistent: the whole chain (ring start → travel → split) is
+internally consistent in each slicer; the DIFFERENCE is the ring's
+start vertex produced by the offset+union walk. This confirms the fix
+is entirely in matching the ring's first-vertex selection (contour
+point order). The instrument cycle (GT ring points vs my ring points
+side by side) remains the next concrete step.
