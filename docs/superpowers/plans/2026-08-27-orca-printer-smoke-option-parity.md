@@ -4699,3 +4699,15 @@ splits an entry). Layer-0 totals matched, so the shifted entry carries
 extra entry's length/time (mine pos 24: the f=300 after the two
 f=300s) and locate its G-code source line; likely the layer-change
 travel split or an M205/segment boundary in my parse.
+
+## 2026-09-04 (cont 134): ROOT — my router detours where upstream goes direct
+
+Aligned: mine 0.365@300 then TWO travels (1.103+0.884=1.987mm);
+upstream 0.365@300 then ONE travel (1.4135mm) — the same journey: my
+avoid-crossing router inserts an intermediate detour point upstream
+doesn't. Detour cost +0.574mm ≈ 1.9ms at 300mm/s — the exact layer-1
+delta, propagating to all late-layer feedrates (F2524/F2520) and the
+119-printer layer-2-deposition cluster. Next: at that travel, compare
+the detour decision (my plan_route's boundary state at layer 1 vs
+upstream's avoid_crossing_perimeters — likely my layer-1 boundary is
+stale/complete where upstream's isn't, or the crossing test differs).
