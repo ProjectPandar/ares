@@ -5891,3 +5891,23 @@ ConcentricInternal pattern is served by the regular concentric
 generator over the triangular region (hence the 45deg hypotenuse
 side). The ring start/direction is the concentric generator's ring
 anchor or the infill-loop split at emission.
+
+## 2026-09-05 (cont 206): narrow ring — arachne path is correct; ring vertex order tie
+
+Upstream ConcentricInternal = FillConcentric WITH use_arachne
+(Fill.cpp:1289): WallToolPaths -> all_extrusions -> start_at_index
+(last_pos.nearest_point_index) [last_pos starts (0,0), chains
+ring-to-ring] -> clip_end. My fill_entities/concentric.rs mirrors
+this (nearest_to_origin + clip_end), and my tie-break (<=, last
+minimal) MATCHES upstream nearest_point_index (Point.cpp:190 — the
+`d > distance continue` form keeps the last minimal). Remaining
+divergence: the arachne ExtrusionLine VERTEX ORDER — the two
+origin-tied ring vertices appear in different list order, so the
+same last-minimal rule picks different vertices. Next: GT-dump the
+thick_polylines_out of FillConcentric (extend fconnect.patch or new
+concentric patch: dump per-ring point sequences) for the BBL
+layer-2 narrow region and compare with my generate_thick_polylines
+output to find where the arachne walk start vertex differs (skeletal
+traversal seed). Also note latent bug: mine uses nearest_to_origin
+for EVERY ring; upstream chains last_pos — only matters for
+multi-ring regions.
