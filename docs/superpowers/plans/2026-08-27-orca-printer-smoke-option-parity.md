@@ -5673,3 +5673,18 @@ infill line chaining (fill/connect or the monotonic line ordering).
 NEXT: compare the polyline anchor selection (the connect_infill
 chain's start point choice) against upstream Fill::connect / the
 zigzag chain anchor.
+
+## 2026-09-04 (cont 195): BBL A1 — narrow/solid section ORDER swapped
+
+Upstream Fill.cpp:1153-1245 (detect_narrow_internal_solid_infill):
+split_solid_surface divides the InternalSolid surfaces into normal
+(kept in surface_fills[i]) and narrow (APPENDED as a new
+surface_fills entry with ipConcentricInternal). The ref's EMITTED
+order is narrow(0.271893)→solid(0.219999); mine emits
+solid→narrow — both sections exist with matching widths, but the
+chain/travel ordering places them opposite, and each section's
+polyline walks in reverse direction. Fix targets: (1) the fill
+section emission order (my narrow/solid arrangement), (2) the
+per-section polyline direction. The narrow fill = concentric-internal
+pattern after the split; verify my split produces the same region
+sets and the chain orders narrow first at the top-left corner.
