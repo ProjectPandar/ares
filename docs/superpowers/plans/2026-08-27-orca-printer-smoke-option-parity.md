@@ -5040,3 +5040,18 @@ case) but oracle(dump case) == ares(dump case)?? Both cases should
 be identical (same builder!). Unless the ORACLE is nondeterministic
 (SIGSEGV retries aside). ACTION: re-run cluster check twice to test
 oracle determinism.
+
+## 2026-09-04 (cont 158): Kobra2Neo mystery — smoke_case_overrides!
+
+The sweep/cluster comparison applies smoke_case_overrides(&machine,
+&process) on top of the presets BEFORE the case build — my local
+/tmp/kobra2 fixture dump was built WITH those overrides (the dump path
+goes through the same builder) — so the cases should match... BUT the
+fresh-oracle comparison showed body-identical output. The remaining
+difference: the cluster check's "actual" runs ares via
+ares_core::slice_project IN-PROCESS (with GenerationMetadata::
+deterministic) while my local run used the ares CLI binary. If the
+in-process slice differs from the CLI (e.g. the CLI applies extra
+normalization), the 420-vs-416 could come from THAT. ACTION: compare
+ares CLI output vs slice_project output on the same case.3mf — if
+they differ, the divergence is in the CLI wrapper, not the core.
