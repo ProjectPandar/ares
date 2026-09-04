@@ -4559,3 +4559,16 @@ from the object-start sequence, later than the wipe. Next: emit the
 object-start retract BEFORE the first path's wipe (or track the start
 gcode's retracted state) so the wipe hop sees retracted=true and
 lifts.
+
+## 2026-09-04 (cont 122): wipe never fires on Kobra layer-0 — it's the post-skirt wall travel
+
+WIPE debug never printed: the wipe-before-external does NOT fire for
+Kobra's layer-0 wall. The XY-only move is start_travel's FINAL ELSE
+(plain XY) — the earlier SKIRT travel consumed positioned/
+layer_change_travel_pending, so the wall travel has fp=false lct=false
+and falls through every lift branch to bare XY. Upstream's wall
+travel carried m_to_lift deferred across the skirt (the object-start
+retract fired between the skirt and the wall — sequence: start gcode
+→ skirt → object-start retract (defers to_lift) → wall travel
+(raises). Next: locate my object-start retract (between skirt and
+wall) and defer its lift there so the wall travel consumes it.
