@@ -4791,3 +4791,13 @@ island's own boundary (the detour point 120.187,121.889 = the top
 edge). FIX: in plan_route (or route()), when the END lies inside the
 boundary polygon → return the direct route (no detour). One
 point-in-polygon test on the boundary.
+
+## 2026-09-04 (cont 142): end-inside gate TOO BROAD — reverted
+
+The end-inside-safe-zone direct gate regressed Anker 77→773 and Eryone
+73→354 (restored). Upstream's destination-entry semantics are NARROWER
+than "end inside any zone": likely requires the START outside all
+islands (a pure entry travel) or counts crossings (entry = the LAST
+crossing allowed). Next: read upstream AvoidCrossingPerimeters.cpp
+travel_to's crossing decision precisely (the need_detour /
+crosses_external logic) before re-gating.
