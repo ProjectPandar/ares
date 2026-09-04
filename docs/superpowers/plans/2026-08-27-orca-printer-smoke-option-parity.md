@@ -4108,3 +4108,16 @@ the same physical lines) reached it. Next: align my group iteration
 with upstream's exact span semantics (stretch computed over ALL lines
 from the current group start to the end of adjustable, not just the
 current feedrate group).
+
+## 2026-09-04 (cont 88): solver semantics match; adjustable-set suspect
+
+Helpers and EPSILON (1e-4) match exactly; upstream ALSO can end with
+two groups (group 1 refined + group 2 untouched at its own slower
+feedrate). So the two-value outcome isn't inherently wrong — the
+question is why MY groups differ from ref's uniform F2052 on those
+specific lines. Next checkpoint: the TYPE_ADJUSTABLE classification
+of layer-2's lines (which roles enter the solver as adjustable) — if
+ares marks a line adjustable that upstream excludes (or vice versa),
+the group boundaries and the refine result shift. Compare the
+line-kind classification (cooling/feedrate.rs type bits) against
+CoolingBuffer.cpp's role tests for the layer-2 line set.
