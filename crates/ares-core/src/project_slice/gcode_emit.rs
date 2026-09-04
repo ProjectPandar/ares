@@ -153,6 +153,13 @@ pub(super) fn emit(
                 // `GCodeWriter::m_pos(2)` for the `change_layer`
                 // `will_move_z` gate (`GCode.cpp:5693`).
                 state.writer_z = Some(trailing_gcode_z(&output));
+                // The brim split target (`loop.split_at(last_pos)`) uses
+                // the nozzle XY the start g-code left — track it in the
+                // live gcode coordinates.
+                if let Some((x, y)) = trailing_gcode_xy(&output) {
+                    state.x = x;
+                    state.y = y;
+                }
             }
             let layer_output_start = output.len();
             cooling.begin_layer(&mut output, layer_index);
@@ -488,6 +495,33 @@ fn trailing_gcode_z(output: &[u8]) -> f64 {
             })
         })
         .unwrap_or(0.0)
+}
+
+/// The final XY the start g-code left the nozzle at — mirrors
+/// `GCodeWriter::m_pos.head<2>()` after the start g-code renders. X
+/// and Y words apply independently (a move may update only one).
+fn trailing_gcode_xy(output: &[u8]) -> Option<(f64, f64)> {
+    let text = std::str::from_utf8(output).ok()?;
+    let mut x = None;
+    let mut y = None;
+    for line in text.lines() {
+        let code = line.split(';').next()?.trim();
+        let command = code.split_whitespace().next()?;
+        if !matches!(command, "G0" | "G1") {
+            continue;
+        }
+        for word in code.split_whitespace() {
+            if let Some(value) = word.strip_prefix('X') {
+                x = value.parse::<f64>().ok();
+            } else if let Some(value) = word.strip_prefix('Y') {
+                y = value.parse::<f64>().ok();
+            }
+        }
+    }
+    match (x, y) {
+        (Some(x), Some(y)) => Some((x, y)),
+        _ => None,
+    }
 }
 
 fn append_layer_end_timelapse(

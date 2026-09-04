@@ -258,56 +258,22 @@ impl BrimPlan {
         state: &mut EmitState,
     ) {
         for path in &self.paths {
-            // `GCode::extrude_entity("brim")` → `extrude_loop` →
-            let nozzle = state.last_scaled_position.unwrap_or_else(|| {
-                // The pre-brim travel (layer-change block) does not go
-                // through the path emitter; derive the scaled nozzle
-                // position from the live gcode coordinates
-                // (`state.x/y` minus the object offset).
-                let x = geometry
-                    .scale
-                    .checked_scale(state.x - state.offset.0)
-                    .unwrap_or_default();
-                let y = geometry
-                    .scale
-                    .checked_scale(state.y - state.offset.1)
-                    .unwrap_or_default();
-                (x, y)
-            });
-            if nozzle != (0, 0) || state.last_scaled_position.is_some() {
-                // `loop.split_at(last_pos, false)` (GCode.cpp:5775): the brim
-                // ring is SPLIT AT THE POINT NEAREST THE CURRENT NOZZLE
-                // POSITION — a mid-edge projection, not a vertex. Reuse the
-                // skirt's split_at_nearest (the same ExtrusionLoop::split_at
-                // semantics).
-                let split = super::skirt::split_at_nearest_for_brim(
-                    path,
-                    crate::geometry::Point::new(nozzle.0, nozzle.1),
-                );
-                motion::emit_brim_loop(
-                    output,
-                    split.iter().map(|point| (point.x(), point.y())),
-                    motion::SkirtLoopFlow {
-                        width: self.width,
-                        height: self.height,
-                        mm3_per_mm: self.mm3_per_mm,
-                    },
-                    geometry,
-                    state,
-                );
-            } else {
-                motion::emit_brim_loop(
-                    output,
-                    path.iter().map(|point| (point.x(), point.y())),
-                    motion::SkirtLoopFlow {
-                        width: self.width,
-                        height: self.height,
-                        mm3_per_mm: self.mm3_per_mm,
-                    },
-                    geometry,
-                    state,
-                );
-            }
+            // Upstream emits the brim from the ring's natural (anchored)
+            // start: the layer-change travel targets the loop's first
+            // point, and `split_at(last_pos)` at the arrival is then
+            // nearly a no-op (arrival ≈ ring start). Pre-splitting at
+            // the PRE-travel nozzle position picks the wrong corner.
+            motion::emit_brim_loop(
+                output,
+                path.iter().map(|point| (point.x(), point.y())),
+                motion::SkirtLoopFlow {
+                    width: self.width,
+                    height: self.height,
+                    mm3_per_mm: self.mm3_per_mm,
+                },
+                geometry,
+                state,
+            );
         }
     }
 }
