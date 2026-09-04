@@ -5592,3 +5592,17 @@ XY (e.g. X120 from the purge wipe); mine defaults to 0. The layer-1
 deposition cluster (with the brim family) needs the start-gcode-final-
 position tracked into EmitState for the split target. NEXT: parse the
 final XY of the machine start gcode into state.x/y at emit start.
+
+## 2026-09-04 (cont 189): sweep 431 (noise band) — state summary
+
+Post-c4962343 sweep: 431 (432 ±1 in the oracle SIGSEVP noise band).
+The full arc banked: 415 → 411 → 412 → 421 → 423 → 430 → 432/431
+through nine root-cause fixes. Top remaining clusters: layer-2
+deposition (117, Anker M5 family — locally reduced to 4 feedrate
+lines), layer-4 deposition (75, ksr sub-micron family), layer-6/3/5/10
+deposition (sub-micron ulp family), layer-1 travel feed (32, the
+cooling ±1). The brim family pipeline (open polylines + reversal +
+connect + anchoring + no-pre-split + start-gcode XY tracking) is
+upstream-faithful; the K2Neo ring walk order (union anchor
+interaction with the connect chain) remains the documented last
+variable for that sub-family.
