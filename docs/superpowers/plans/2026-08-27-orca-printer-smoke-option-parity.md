@@ -4348,3 +4348,18 @@ wrapper in loop_paths/append_wipe_before_external (matching upstream
 GCode.cpp:5884-5893's extrude_path with the force_no_extrusion path)
 — this moves the 0.0133s into its own entry, fixing the stretch, the
 refine value, and the ±1.
+
+## 2026-09-04 (cont 106): upstream wipe emission fully decoded
+
+Upstream fake wipe path = Polyline{pt → current_point} through
+extrude_path: (1) TRAVEL to pt `G1 X.. Y.. F24000` (my current
+emission ✓), (2) block `G1 F{loop_speed};_EXTRUDE_SET_SPEED;
+_EXTERNAL_PERIMETER`, (3) the single no-E move pt→seam, (4)
+`;_EXTRUDE_END`, (5) the wall loop's own block. My emission lacks
+(2)-(4) — the wrapped pt→seam move. Implementation: in
+append_wipe_before_external after the travel, emit the wrapper + the
+move to the seam (current point, unscaled+offset) + END; the
+loop_speed must equal the upcoming wall's speed (compute via the
+features.rs speed() chain for an Outer-wall property at
+first.width — or defer by emitting after path properties are known;
+simplest: compute the kinematics here with a synthetic property).
