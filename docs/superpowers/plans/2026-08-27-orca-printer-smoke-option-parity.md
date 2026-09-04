@@ -5807,3 +5807,21 @@ the earlier "boundary inset vertex" 0.02 finding. Next: dump the
 bottom-region inset polygon for this fixture on both the AppImage
 oracle and mine (extend the boundary GT instrumentation) and find
 the inset-vertex difference that moves/removes the crossing.
+
+## 2026-09-05 (cont 202): hilbert split vertex decoded — self-touch of the open subject
+
+The missing split (110.509,112.133) is NOT on the region boundary:
+my plane-bound dump (ARES_DUMP_PLANEBOUND) shows the layer-1 bottom
+region = clean 4-vertex diamond (radius 5.6847, direction 135deg),
+and the point is interior. The vertex appears exactly ONCE in the
+whole ref gcode: the hilbert lattice walk self-touches there (U-turn
+touching a previously visited grid point), and Clipper 6 SPLITS the
+open subject at the self-touch into two outrecs; ref emits two
+collinear segments with separate E. My clipper merges/keeps them as
+one path after the minima-sort change (previously it split — the
+MSVC order happened to split it). Fix target: self-touching open
+subject handling in my clipper (the touch point must produce two
+outrecs — likely the maxima/join bookkeeping at a shared vertex
+between two subject edges). Repro: Ender-3 hilbert fixture
+/tmp/ares-parity-483535/72ea...3mf, diff = 1 line pair at
+(110.509,112.133). Sweep running in background (logs /tmp/sweep-*).
