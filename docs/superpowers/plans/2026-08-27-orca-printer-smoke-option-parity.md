@@ -3788,3 +3788,17 @@ this fixture — kept round (the current behavior); the upstream ceil
 interacts with other sub-micron differences, revisit with the full
 sweep. Remaining: 1μm rounding drift in the arc rotation chain
 (X136.366 vs X136.367) and per-corner step-count boundaries.
+
+## 2026-09-04 (cont 68): Wanhao outer-wall loop orientation reversed
+
+The wipe_before_external_loop implementation EXISTS in ares and fires
+with the same count (49 no-E wipe moves in both files). The remaining
+852-line Wanhao cluster is the OUTER WALL LOOP ORIENTATION: ref
+extrudes counterclockwise from the bottom-right seam
+(119.79,110.21 → up → left → down), ares extrudes clockwise from the
+top-left seam (110.21,119.79 → down → right → up). Same corners, same
+E per side (.29437), reversed order — the classic perimeter generator
+(or the wall_direction default) emits the opposite orientation, which
+moves the nearest-seam pick to the mirrored corner and reverses every
+side. Root cause candidate: loop orientation in the perimeter
+materialization vs upstream `make_counter_clockwise` for outer walls.
