@@ -5207,3 +5207,22 @@ diff come from the chain/reverse/connect steps. FIX: port
 union_pt_chained_outside_in (chain by contour front points,
 outside-in recursion) + optimize_polylines_by_reversing +
 connect_brim_lines.
+
+## 2026-09-04 (cont 168): reverse-flip landed — no change; the start point is fixed earlier
+
+The optimize_polylines_by_reversing port (ring end nearest the next
+ring's start) landed but the K2Neo brim start is unchanged: ares
+still starts at (116.255,100.779) where ref starts mid-corner at
+(102.116,101.664). The REVERSING only flips a ring's direction —
+the START POINT of the FIRST ring comes from the loop generation
+itself (which contour vertex the offset produced first / the
+douglas_peucker first point) or the emission's seam_target split. My
+skirt.rs emit_skirt_loop splits at split_at_nearest(seam_target) —
+check whether the BRIM path emission also applies a split (the brim
+uses the same skirt loop emitter? brim paths go through motion::
+emit_skirt_loop with feature Brim). The seam_target for layer 0 =
+find_start_point(start_angle) — the ANGLE-based start. Upstream's
+brim loops are NOT split by angle — they start at the contour's
+natural first point. FIX CANDIDATE: brim loops must bypass the
+angle-based split (or the split target must be the brim's own first
+point).

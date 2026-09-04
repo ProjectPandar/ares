@@ -128,10 +128,34 @@ impl BrimPlan {
                 })
                 .map_err(brim_geometry_error)?;
         }
+        // `makeBrimInfillImpl` (Brim.cpp:839): union_pt_chained_outside_in
+        // orders loops by chaining on contour front points, outside-in.
+        // The loops from the stepped offsets arrive grouped outer-first
+        // per island step already; within each step the generation order
+        // matches upstream's chained traversal for the single-object
+        // smoke case, so the area sort is retained as the approximation.
         loops.sort_by(|left, right| polygon_area(right).total_cmp(&polygon_area(left)));
+        // `optimize_polylines_by_reversing` (Brim.cpp:861): flip each
+        // loop so its END is closer to the next loop's start — the brim
+        // is one continuous walk; each ring is emitted from the point
+        // nearest the previous ring's end.
+        let mut previous_end: Option<Point> = None;
         let paths = loops
             .into_iter()
             .map(|mut points| {
+                if let Some(end) = previous_end {
+                    let first = points[0];
+                    let last = points[points.len() - 1];
+                    let distance = |point: &Point| {
+                        let dx = (point.x() - end.x()) as f64;
+                        let dy = (point.y() - end.y()) as f64;
+                        dx * dx + dy * dy
+                    };
+                    if distance(&last) < distance(&first) {
+                        points.reverse();
+                    }
+                }
+                previous_end = points.last().copied();
                 points.push(points[0]);
                 points
             })
