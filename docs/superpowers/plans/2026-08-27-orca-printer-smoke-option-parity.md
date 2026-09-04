@@ -3977,3 +3977,15 @@ ares raised Z.8. Two coordinated fixes:
 Wanhao 852→788; Eryone 73, Kobra 1463, M1Pro 1200 — no regressions;
 25/25 smoke. Remaining Wanhao 788: M73 progress-line emission
 differences plus the seam-corner cluster.
+
+## 2026-09-04 (cont 79): Wanhao 788 = outer-wall wipe shape (extra segment)
+
+After the lift fix, the Wanhao 788 remaining lines: 28 M73 timing
+(ignored semantically) + 20× per file outer-wall seam/wipe shape.
+Ref: travel → wipe no-E to pt (119.79,110.21) → a SECOND no-E move
+(119.769,110.287 — the wipe-while-retracting path segment) → extrude
+back (119.75,110.21). Ares: travel → wipe no-E → extrudes through,
+missing the intermediate wipe segment. Upstream
+fake_path_wipe(pt→current, GCode.cpp:5884-5893) plus the wipe path
+(wipe_distance) emits the intermediate point; next: match the
+two-segment wipe emission in append_wipe_before_external.
