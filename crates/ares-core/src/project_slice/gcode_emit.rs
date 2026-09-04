@@ -199,7 +199,21 @@ pub(super) fn emit(
                     context: &layer_change_template,
                 },
             )?;
+            // Upstream's `change_layer` retract (`retract_when_changing_layer`)
+            // also DEFERS the hop (`maybe_zlift`, `GCodeWriter.cpp:626-648`):
+            // `m_to_lift` survives into the new layer's first travel, which
+            // raises to layer+hop and descends at the target. Capture the
+            // flag BEFORE the wipe flush consumes it; defer only here (the
+            // c7ea935f lesson: no already-retracted mid-print deferrals).
+            let layer_retract_pending = state.pending_layer_retract
+                && state.options.z_hop > 0.0
+                && state.options.retraction_length > 0.0
+                && !state.lifted
+                && state.pending_lift.is_none();
             motion::flush_pending_retract_wipe(&mut output, &mut state);
+            if layer_retract_pending {
+                motion::defer_layer_change_lift(&mut state);
+            }
             // Pending object-end labels flush after the layer-change
             // retract/wipe, before the layer-change gcode
             // (`GCode.cpp:5699` `change_layer`).

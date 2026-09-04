@@ -299,3 +299,10 @@ pub(super) fn inside_internal_surfaces(
         ) && crate::geometry::open_polyline_inside_expolygon(&travel, region).unwrap()
     })
 }
+
+/// Defer the layer-change hop: upstream's `change_layer` retract runs
+/// `maybe_zlift` (`GCodeWriter.cpp:626-648`) and `m_to_lift` survives into
+/// the new layer's first travel, which raises to layer+hop and descends.
+pub(in crate::project_slice::gcode_emit) fn defer_layer_change_lift(state: &mut EmitState) {
+    lift::schedule(state, true);
+}

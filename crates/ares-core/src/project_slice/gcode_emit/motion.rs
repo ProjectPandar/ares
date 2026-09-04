@@ -58,6 +58,13 @@ pub(super) fn defer_layer_retraction(state: &mut EmitState) {
     }
 }
 
+/// Defer the layer-change hop: upstream's `change_layer` retract runs
+/// `maybe_zlift` (`GCodeWriter.cpp:626-648`) and `m_to_lift` survives into
+/// the new layer's first travel, which raises to layer+hop and descends.
+pub(super) fn defer_layer_change_lift(state: &mut EmitState) {
+    travel::defer_layer_change_lift(state);
+}
+
 pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.retract_when_changing_layer && state.positioned {
         if state.traditional_timelapse {
