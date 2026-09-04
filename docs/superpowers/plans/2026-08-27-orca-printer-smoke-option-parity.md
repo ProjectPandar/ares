@@ -4645,3 +4645,13 @@ header + estimated-printing-time comments only — the G-code body is
 byte-identical. The semantic comparison ignores these; the printer
 effectively reached parity through the arc-fallback + restart-extra +
 amount-gated-defer chain.
+
+## 2026-09-04 (cont 129): top cluster = Anker-family layer-2 deposition (119)
+
+The remaining top cluster (layer 2 deposition, ~119 mostly Anker
+variants) reduces on the fixture to mid-print inner-wall feedrates
+F2524 vs F2520 (identical positions/E) — the cooling solver's
+late-layer output shifted by the UNRESOLVED layer-1 1.9ms parse delta
+(cont 110: mine 1.452495 vs upstream 1.450583, n=31 both). Fix path:
+the same per-line GT diff on layer 1 (the Wanhao methodology that
+found the wipe wrapper) — one instrument cycle on the Anker fixture.
