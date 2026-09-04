@@ -4067,3 +4067,14 @@ the volumetric cap (max_volumetric_speed chain in
 motion/path.rs kinematics) than the cooling buffer. Next: trace the
 F2052 computation through properties.kinematics (mm3_per_mm × speed
 → feedrate) at f64 bit level.
+
+## 2026-09-04 (cont 85): ±1 eliminations complete
+
+slow_down_layers=1 (ramp OFF), so F2052/34.2 is definitively the
+cooling-buffer rewrite (60→34.2 for layer time). Inputs are
+byte-identical, f64 widening landed, yet F2051 persists — the
+remaining difference is the factor→feedrate conversion or operation
+ORDER in the rewrite path (cooling/feedrate/rewrite.rs parse+apply),
+not the slowdown math. Next: bit-compare my computed slowdown factor
+against upstream CoolBuffer's for layer 2 (both derivable from the
+identical layer lines).
