@@ -5243,3 +5243,21 @@ start-point semantics: the emission happens to arrive via the travel
 vertex-ish point. NEXT: implement connect_brim_lines — its core
 effect is exactly this start-point chaining (each ring begins where
 the previous/connecting segment lands).
+
+## 2026-09-04 (cont 170): connect_brim_lines decoded — connects OPEN polylines only
+
+Upstream connect_brim_lines (Brim.cpp:735-808): connects successive
+polylines ONLY when BOTH are OPEN (not closed rings!), their gap ≤
+2x spacing, and the straight connector doesn't cross the brim
+centerlines (EdgeGrid check). My brim paths are CLOSED rings (the
+offset chain yields closed contours) — for the single-object smoke
+case the rings stay closed → connect_brim_lines is a NO-OP there.
+The K2Neo start-point difference therefore does NOT come from
+connect — it comes from to_polylines/chain_polylines (each loop
+becomes a Polyline whose START = the contour's first point after
+union_pt_chained_outside_in's Clipper PolyTree traversal). The
+Clipper union CONTOUR's first point differs from my raw offset
+contour's first point — the union_pt (PolyTree) reorders contour
+points! FIX: my loops must pass through a PolyTree union to acquire
+upstream's contour point order — i.e. implement union_pt (not just
+my area sort).
