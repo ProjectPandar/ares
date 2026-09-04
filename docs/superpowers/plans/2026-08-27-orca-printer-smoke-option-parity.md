@@ -4833,3 +4833,12 @@ guards this — upstream pushes the entry middle point BEFORE the exit
 check). The Anker detour (119 printers) needs the boundary-
 construction comparison, not the pairing rule. All 81 parity tests
 green; fleet 423.
+
+Upstream get_boundary decoded: union(inner_offset(lslices, 1.5 *
+spacing)) minus inset(1.2 * spacing/2) of the layer's TOP fill
+surfaces. My build matches structurally. For the Anker layer-1
+detour: next compare the actual contour polygons (dump my layer-1
+boundary contours vs the GT binary's m_internal.boundaries via an
+extended patch) — the geometry diff (which contour the travel's pair
+crosses) pinpoints whether lslices or the top-surface subtraction
+differs.
