@@ -3841,3 +3841,20 @@ else with layer_change_travel=false AND state.retracted=false AND
 first_position=false — the branch chain (lifted/retracted/
 layer_change/slope/first_position) needs re-mapping against which
 flags the layer-1/2 travels actually carry. Restored 852 baseline.
+
+## 2026-09-04 (cont 71): Wanhao wall-travel raise condition pinned
+
+Instrumented start_travel final-else (ARES_DEBUG_TRAVEL): the layer-1/2
+INFILL travels carry fp=false lct=false retracted=false lifted=false.
+The WALL travel (the `Z.8` divergence, after M486 S0) carries
+fp=true lct=false — it takes the `state.lifted && pending_lift` branch
+(line ~168: xyz at layer_z + z_hop after a feed change), driven by the
+print-start retract's deferred lift.
+
+Upstream for the same travel: the raise comparison is
+`m_to_lift + m_pos(2) > point(2)` (GCodeWriter.cpp:707) — for layer 1
+to_lift(.4) + prev_z(0) == dest(.4) → NO raise → travels at Z.4
+combined. My branch raises unconditionally to layer_z + z_hop. The fix:
+apply the upstream comparison (raise only when to_lift + prev_z
+strictly exceeds the destination z) in the lifted-branch raise —
+prev_z is the writer z before the layer change silently advanced it.
