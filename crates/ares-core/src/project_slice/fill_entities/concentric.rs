@@ -51,6 +51,7 @@ pub(super) fn append(
                 &mut polylines,
                 first_polyline,
                 fill.params.loop_clipping as f64,
+                scale,
             );
         }
         let entities = variable_width::convert_with_role(
@@ -150,11 +151,31 @@ fn finalize_polylines(
     polylines: &mut Vec<ThickPolyline>,
     first_polyline: usize,
     loop_clipping: f64,
+    scale: CoordinateScale,
 ) {
     for polyline in &mut polylines[first_polyline..] {
         if polyline.points.first() == polyline.points.last()
             && polyline.width.first() == polyline.width.last()
         {
+            if let Ok(path) = std::env::var("ARES_DUMP_CONC") {
+                use std::io::Write;
+                if let Ok(mut file) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    let _ = write!(file, "E closed=1 n={}:", polyline.points.len());
+                    for point in &polyline.points {
+                        let _ = write!(
+                            file,
+                            " ({:.6},{:.6})",
+                            scale.unscale(point.x()),
+                            scale.unscale(point.y())
+                        );
+                    }
+                    let _ = writeln!(file);
+                }
+            }
             polyline.start_at_index(nearest_to_origin(&polyline.points));
         }
     }

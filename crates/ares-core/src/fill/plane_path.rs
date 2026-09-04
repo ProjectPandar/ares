@@ -142,7 +142,11 @@ fn fill_component(
     let clip = expolygon_polygons(&rotated);
     if let Ok(path) = std::env::var("ARES_DUMP_PLANEBOUND") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(file, "D {direction}");
             for polygon in &clip {
                 for point in polygon.points() {
@@ -163,7 +167,11 @@ fn fill_component(
     };
     if let Ok(path) = std::env::var("ARES_DUMP_PLANECLIP") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(file, "CLIP n={}", clipped.len());
             for polyline in &clipped {
                 let _ = write!(file, "P {}:", polyline.points().len());
