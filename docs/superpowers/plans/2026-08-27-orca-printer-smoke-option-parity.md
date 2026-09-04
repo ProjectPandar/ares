@@ -4437,3 +4437,17 @@ Kobra3 1463→1461. The 49-printer layer-2 travel regression may need
 more than this — next sweep pass will quantify; if the regression
 persists, trace the layer-change-retract (retract_when_changing_layer)
 lift deferral for those printers.
+
+## 2026-09-04 (cont 113): verification sweep 412 (+1); 49-regression persists
+
+The force_z revert gained +1 (412/1001) but the 49-printer
+`layer 2 travel geometry 4 vs 3` regression persists — one travel
+record missing = the Z-split (XY+Z, 2 records) collapsed to 1. The
+has_lift gate is the collapse point: those printers' upstream
+m_to_lift survives from the LAYER-1-END retract into the layer-2
+first travel (traditional retract_when_changing_layer=1 family). Next:
+instrument one regressed printer (Kobra 3 0.4 — build a fixture) at
+its layer-2 first travel printing lifted/pending/pending_layer_retract
+and find which flag upstream's surviving m_to_lift corresponds to
+(mine likely executes the layer-end lift eagerly and then UNLIFTS
+before the travel, or never defers it).
