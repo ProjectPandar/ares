@@ -6027,3 +6027,28 @@ observed: my candidate generator only emits ~5 corner points per
 loop vs upstream's vertices+oversampling — check gather density
 after fixing membership. GT result-seam build running for the
 upstream-side score comparison.
+
+## 2026-09-05 (cont 213): upstream override found; ring anchor CORRECT; residual = emit order
+
+The narrow fill's real implementation = FillConcentricInternal::
+fill_surface_extrusion (FillConcentricInternal.cpp:11-80, a
+COMPLETE override — FillConcentric is never called, which is why
+ORCA_DUMP_CONC never fired). It uses arachne with
+wall_transition_length=0.4, min_spacing=params.flow.scaled_spacing()
+(=0.271893 width), then pop_back the closing duplicate ->
+nearest_point_index over the shortened list -> std::rotate points
+AND width -> emplace_back(front) to re-close -> clip_end. My
+generate_with_mode already matches the arachne params; my ring
+anchor also lands on the same vertex as ref (dump ring
+[TL,BR,BL,closed], tie TL/BR -> last-minimal -> BR ✓ same as ref
+walk start). REMAINING divergence = emit-stage entity order: ref
+emits [big-solid, NARROW, solid2]; mine [big-solid, solid2, NARROW].
+Greedy proximity from the cursor (127.016,123.806) prefers solid2
+(1.586) over narrow (2.171) — ref emits narrow FIRST anyway, so the
+fill-collection ordering is NOT plain greedy for the no_sort
+ConcentricInternal collection (no_sort=true per FillConcentric
+Internal.hpp:17). Next: check upstream chain behavior for no_sort
+children in the parent reorder (ExtrusionEntityCollection::
+chained_path_from recursion skips no_sort children ordering but
+their INDEX in the parent may still be honored differently), and
+mirror the no_sort handling in my motion.rs emit chain.
