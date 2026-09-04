@@ -5307,3 +5307,18 @@ code order is brim.emit() THEN emit_layer? Check gcode_emit.rs:347
 (brim) vs the layer-change block position), (2) state.x/y may still
 hold layer-0's last position at that point. Verify emission order in
 gcode_emit.rs around line 330-352.
+
+## 2026-09-04 (cont 173): brim nozzle position — state.x IS updated by the wall
+
+path.rs:179 sets state.last_scaled_position = Some(last_scaled) after
+each wall loop; start_travel.rs:278 also sets it. So at brim.emit()
+time state.last_scaled_position IS the last position of the previous
+wall — for Kobra layer 1 that is (114.675,114.675) ref / equivalent in
+mine. The split_at_nearest should then pick the ring point nearest
+(114.675,114.675) — but my emitted start is (116.255,100.779). The
+remaining possibility: the split IS happening but the RING ITSELF
+starts its point list at a different vertex (the union-walk contour
+order) — so the nearest projection differs. Verify by printing the
+ring's first/last points before split and the chosen seam. If the
+ring's own vertex set is fine, the difference is upstream's ring
+vertex ORDER (union_pt walk start vertex).
