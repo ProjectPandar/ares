@@ -159,12 +159,18 @@ fn safe_zone(
 /// Both endpoints inside the contour (outside every hole) and no contour
 /// edge crossing the segment.
 fn segment_inside_expolygon(start: Point, end: Point, expolygon: &ExPolygon) -> bool {
+    // Upstream `any_expolygon_contains` (AvoidCrossingPerimeters.cpp:
+    // 716-736): with no grid-cell edge intersection along the line, the
+    // test is `bbox.contains(a) && bbox.contains(b) &&
+    // ex_polygon.contains(travel.a)` — ONLY the START point must lie
+    // inside the polygon (both inside the bbox). A travel starting
+    // inside and ending outside without crossing edges is SAFE.
     let contour = expolygon.contour();
-    if !contour.contains(&start) || !contour.contains(&end) {
+    if !contour.contains(&start) {
         return false;
     }
     for hole in expolygon.holes() {
-        if hole.contains(&start) || hole.contains(&end) {
+        if hole.contains(&start) {
             return false;
         }
     }
