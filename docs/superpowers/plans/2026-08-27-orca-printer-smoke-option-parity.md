@@ -5644,3 +5644,17 @@ F3294) + M204 ordering. The infill END VERTEX difference (0.02mm) is
 the structural item — the layer-2 solid infill boundary computation
 (one line endpoint) — NOT a pure ulp. Family: infill boundary vertex
 precision (solid infill line endpoints), plus the cooling ±2 residual.
+
+## 2026-09-04 (cont 193): BBL A1 — start matches, END clips 0.02 high
+
+The deposition-38 comparison: BOTH start at (124.323,124.323); the
+END differs — ref Y125.517 vs ares Y125.497. The solid infill line's
+far-end CLIP at the region top boundary differs by 0.02mm: the
+boundary polygon vertex (inset) precision. The line starts correctly;
+only the top clip differs. Root: solid infill boundary inset vertex
+(one corner of the internal solid infill region) — likely the
+infill_boundary expolygon inset rounding (0.02 = 2x the 0.01mm gcode
+grid). NEXT: reproduce the inset polygon for layer 2's internal solid
+region (the BBL fixture case.3mf exists) and compare the top-boundary
+vertex against upstream's Clipper inset (surface inset path,
+PerimeterGenerator solid infill area).
