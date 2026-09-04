@@ -4814,3 +4814,13 @@ the intersection collection radius). Next: map the debug coords via
 the object offset to identify WHICH trace line is the layer-1 travel,
 then compare upstream's boundary construction (get_boundary vs my
 layer_boundary contours) for that layer.
+
+## 2026-09-04 (cont 144): router trace dominated by a repeating corner pattern
+
+The ROUTER trace head is a repeating pattern: (4355,4315)->(4790,
+4790) then (4790,4750)->far-corner — brim-loop travels, not the wall
+detour. The layer-1 detour travel (est local end ~4660000,4660000)
+appears deeper in the trace. Next: grep the full trace for end values
+near 4660000/4740000 (or dump all ROUTER lines to a file and find the
+layer-1 detour by elimination), then compare that travel's boundary
+contours with upstream's.
