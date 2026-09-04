@@ -5944,3 +5944,19 @@ order/direction explains the tie difference (cont 207). Next: find
 why density <= 0.9999f for the narrow split (surface_fills density
 for stInternalSolid in Fill.cpp) and port the non-arachne branch for
 ConcentricInternal, replacing my arachne dispatch for that pattern.
+
+## 2026-09-05 (cont 209): narrow ring = SEAM VERTEX choice, not orientation
+
+The 0.271893 ring decoded: it is the BBS narrow-external-perimeter
+loop (PerimeterGenerator.cpp:1270-1283 offsets_with_smaller_width),
+NOT a fill — emitted at the same sequence position in both (the
+earlier order issue is already gone in bbl5.gcode). Both walks are
+CW (shoelace-verified); same 3-vertex triangle ring; ONLY the
+split/seam vertex differs: ref splits at BR=(124.975,124.547),
+mine at TL=(124.547,124.975). So the residual = seam placement on
+the tiny external loop (seam_position aligned/default for BBL A1).
+Next: trace my seam pick for this loop (external perimeter seam
+scoring / nearest-corner tie) vs upstream SeamPlacer; the solid2
+ring after it likely follows (chain picks differently once the seam
+moves). The CONC/arachne branch hypothesis is dead (dump never
+fires; ring is a perimeter).
