@@ -4411,3 +4411,17 @@ valid for MECHANISM analysis (solver/parse behavior; 3 of 4 layer
 totals matched to 1e-6) but NOT byte-faithful geometry. The residual
 Anker ±1 (12×) + ±4 (5×) must be analyzed against the true oracle,
 not the GT build. Full sweep still running (/tmp/sweep2.log).
+
+## 2026-09-04 (cont 111): SWEEP 411/1001 (was 415) — arc fix gains, lift regression
+
+New sweep (688s): 411 PASS. Kobra arc cluster massively improved
+(799v371 → 799v805 nearly exact) but a NEW regression from the
+d7c8829a lift chain: `layer 2 travel geometry expected 4, actual 3`
+on printers that previously passed (Kobra 3 0.4/Max/S1, Phrozen
+Arco, WonderMaker ZR...) — the sloped-split has_lift gate removed a
+legitimate split when the lift state was false but upstream still
+splits. Fix direction: refine the has_lift condition (upstream splits
+when m_to_lift existed OR the sloped type applies with any pending
+lift source; check GCodeWriter.cpp:725-757 — the slope applies when
+delta.z > 0, i.e. when the DESTINATION z exceeds current — maybe gate
+on (destination_z > current_z) instead of lifted state).
