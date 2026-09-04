@@ -4152,3 +4152,16 @@ CoolingBuffer.cpp process_line). Final checkpoint: compare the
 layer-2 parse time model (parse.rs time accumulation, travel vs
 extrusion speeds, acceleration) against upstream's; a small
 per-layer time delta explains everything downstream.
+
+## 2026-09-04 (cont 91): target verified; line-set segmentation remains
+
+slow_down_layer_time=8s; upstream multiplies ×1.001f (line 672) — my
+apply() matches. The parse time model matches line-for-line
+(length/feedrate, no acceleration, layer_had_extrusion zeroing
+implemented). With target and model equal, the differing stretch
+comes from WHICH lines are attributed to layer 2's total time —
+candidates: the layer-boundary segmentation (travels between the
+layer change and the first extrusion, the layer_had_extrusion reset
+timing across layers, or the G4/wipe tower lines). Next: dump my
+layer-2 parsed line count + total time and compare against the
+upstream-equivalent arithmetic over the identical G-code text.
