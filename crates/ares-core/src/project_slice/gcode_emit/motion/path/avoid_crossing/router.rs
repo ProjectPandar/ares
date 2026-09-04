@@ -74,7 +74,7 @@ pub(super) fn avoid_perimeters(
     }
     if !intersections.is_empty() {
         intersections =
-            extend_for_closest_lines(boundary, intersections, start, end, 2.0 * search_radius);
+            extend_for_closest_lines(boundary, intersections, start, end, search_radius);
     }
 
     let mut result = vec![TravelPoint {
