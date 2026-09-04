@@ -6009,3 +6009,21 @@ way). Next: dump my visibility scores for the 3 corners of this
 loop vs upstream's (SeamPlacer ray-set hash / hilbert sampling
 seeds, SeamPlacer.cpp visibility) — a targeted visibility-parity
 check.
+
+## 2026-09-05 (cont 212): FOUND — narrow loop has NO seam candidates in my gather
+
+ARES_DUMP_SEAM (alignment/preparation.rs, mirrors the GT
+ORCA_DUMP_SEAM patch rebuilding as result-seam): all 500 candidates
+sit at the 4 outer-corner positions (+/-4.8, +/-4.89 obj coords)
+across 100 PERIM blocks — the BBS narrow-width triangle loop
+(world 124.5-125.0 -> obj -3.5..-3.0) has ZERO candidates. So my
+seam planner never places its seam; the emitted split falls back to
+the loop polygon's natural start (TL). Upstream gathers external
+loops incl. the smaller-width one (role ExternalPerimeter in both).
+Fix: find why the narrow loop is missing from the layer's Perimeter
+collections at prepare time (island membership, collection
+source_order, or the loop's materialized role differs). Also
+observed: my candidate generator only emits ~5 corner points per
+loop vs upstream's vertices+oversampling — check gather density
+after fixing membership. GT result-seam build running for the
+upstream-side score comparison.
