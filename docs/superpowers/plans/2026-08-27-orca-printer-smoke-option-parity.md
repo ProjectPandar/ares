@@ -4616,3 +4616,9 @@ alongside the bool, maintaining the amount at each set/clear; (2)
 migrate the maybe_zlift-style gates to lifted_amount > 0; (3) add the
 partial-reduction at in-band z moves; (4) delete the bool. Each step
 builds + fixture-verifies (5 fixtures) before the next.
+
+Refactor step 1 landed: lifted_amount: f64 added to EmitState
+(defaults 0.0, builds + tests clean, behavior unchanged). Step 2
+next: maintain the amount at the 6 set-sites (lift.rs 146/179/195,
+start_travel 222/299) with (layer_z + z_hop) - dest-z semantics and
+the clears.

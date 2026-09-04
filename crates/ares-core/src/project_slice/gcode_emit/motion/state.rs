@@ -44,6 +44,10 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) wipe_path: Vec<arc::Point>,
     pub(in crate::project_slice::gcode_emit) wipe_start: Option<arc::Point>,
     pub(in crate::project_slice::gcode_emit) lifted: bool,
+    /// Upstream `m_lifted` as a DISTANCE (`GCodeWriter.cpp:770-830`):
+    /// reduced by in-band z deltas, cleared on real z moves — the bool
+    /// above cannot represent partial reduction.
+    pub(in crate::project_slice::gcode_emit) lifted_amount: f64,
     pub(in crate::project_slice::gcode_emit) template_lifted: bool,
     pub(in crate::project_slice::gcode_emit) pending_lift: Option<LiftMode>,
     pub(in crate::project_slice::gcode_emit) part_fan_speed: u8,
