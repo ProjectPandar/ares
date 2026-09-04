@@ -4078,3 +4078,16 @@ ORDER in the rewrite path (cooling/feedrate/rewrite.rs parse+apply),
 not the slowdown math. Next: bit-compare my computed slowdown factor
 against upstream CoolBuffer's for layer 2 (both derivable from the
 identical layer lines).
+
+## 2026-09-04 (cont 86): ±1 = solver group-split vs upstream uniform 34.2
+
+Instrumented the rewrite: layer 2's slowdown produces TWO different
+feedrates in my run — 34.189853668 → F2051 (inner wall) and
+34.219772339 → F2053 (another group) — where upstream yields a uniform
+34.2 → F2052 for both. My slow_down_non_proportional loop terminates
+with two groups at different limits; upstream's iterative solve
+(new_feedrate_to_reach_time_stretch equivalent) converges both to the
+same 34.2. The bug is in the group-splitting/termination of the
+solver, not rounding. Next: compare the loop's group boundaries and
+done-branch (maximum_stretch >= time_stretch → refine vs split)
+against upstream CoolBuffer line by line.
