@@ -22,6 +22,12 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         geometry,
     } = request;
     let first_position = !state.positioned;
+    // `force_z` semantics (`GCode.cpp:7482` passes
+    // `m_need_change_layer_lift_z` — set by every `change_layer`): a
+    // first travel that follows a layer change merges the layer Z into
+    // the move; other first travels (e.g. a start-gcode purge travel)
+    // keep the XY + separate `_travel_to_z` split.
+    let first_position_force_z = state.layer_change_travel_pending;
     let layer_change_travel = state.layer_change_travel_pending && !first_position;
     let slope_start_z = properties
         .slope
@@ -119,14 +125,15 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         // (`NormalLift` `slop_move`), and both paths end with the separate
         // `_travel_to_z` re-statement from the unclear-position branch.
         let first_travel_lift = if first_position {
-            // Upstream `change_layer` silently advances the writer z
-            // (`GCode.cpp:5705-5709`) and only `m_spiral_vase` emits the move;
-            // when the deferred change-layer retract did not schedule a hop
-            // (the `retract_lift_above/below` gate at the previous layer z),
-            // the layer's first travel schedules it itself through its own
-            // retract (`needs_retraction` → `lazy_lift` at the new z,
-            // `GCode.cpp:5693` / `GCodeWriter.cpp:626-648`).
-            if state.pending_lift.is_none()
+            // Upstream: a first-travel lift exists ONLY via the travel's
+            // own retraction (`GCode.cpp:7440` needs_retraction →
+            // `GCodeWriter.cpp:626-648` maybe_zlift defers `m_to_lift`);
+            // when the travel does not retract (short travel, or
+            // `retract_when_changing_layer` off as on Wanhao), no lift is
+            // scheduled and the travel emits combined XYZ at the layer z
+            // (`GCodeWriter.cpp:701-710` no-raise when `m_to_lift == 0`).
+            if retract
+                && state.pending_lift.is_none()
                 && state.options.z_hop > 0.0
                 && !state.spiral_vase
                 && travel::lift_is_allowed_at(state, state.layer_z)
@@ -241,12 +248,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             travel_set_layer_z = true;
         } else {
             travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
-            // The print's first travel starts from an unknown position, so
+            // The print\x27s first travel from an unknown position keeps the
             // Orca cannot fold Z into the XY move and re-states it as a
             // separate descend (`GCodeWriter.cpp:travel_to_xyz` unclear-
             // position branch emits XY then `_travel_to_z`).
             if first_position {
-                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
+                if first_position_force_z {
+                    travel_emit::xyz(output, travel_x, travel_y, target_z, state.travel_feedrate);
+                } else {
+                    output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
+                }
                 unclear_position_travel = true;
             }
         }

@@ -3898,3 +3898,20 @@ regression):
    Eryome's split case does not. Gate the combined emission on
    layer_change_travel_pending (the flag as-of entry), not
    layer_change_travel.
+
+## 2026-09-04 (cont 74): first-travel lift gating + force_z merged (partial)
+
+Applied the scoped fix: (1) the first_position lift scheduling block
+now requires the travel's own `retract` flag; (2) first_position
+travels following a layer change (pre-entry layer_change_travel_pending
+= force_z) emit combined XYZ, others keep the XY+Z split. No fixture
+regressions (Eryone 73 ✓, Wanhao 852, Kobra 1459 (−2)); 25/25 smoke.
+
+The Wanhao wall travel is UNAFFECTED — it enters start_travel already
+lifted+pending (Z.8/Z1 for layers 1/2 persist). Wanhao HAS a brim
+(TYPE:Brim), so the brim's travel consumed first_position and
+layer_change_travel_pending; the wall travel enters with fp=false
+lct=false lifted=true pending=Some — set by the brim emission's
+travel/lift lifecycle (the brim's lift appears not to unlift at the
+brim path start). Next: trace the brim travel's lift → brim
+de-retract/unlift → wall travel state to find the unlift gap.
