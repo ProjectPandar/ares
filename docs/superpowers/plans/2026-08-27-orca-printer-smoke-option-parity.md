@@ -5825,3 +5825,26 @@ outrecs — likely the maxima/join bookkeeping at a shared vertex
 between two subject edges). Repro: Ender-3 hilbert fixture
 /tmp/ares-parity-483535/72ea...3mf, diff = 1 line pair at
 (110.509,112.133). Sweep running in background (logs /tmp/sweep-*).
+
+## 2026-09-05 (cont 203): hilbert T decoded — tangential boundary touch, region NOT plain diamond
+
+Transform solved exactly (C=(118.507,109.998), dir 135deg; verified on
+two grid points): world split T=(110.509,112.133) = frame
+(7.164513,4.147876), a plain interior grid point of the serpentine's
+straight vertical run. Ref emits TWO polylines meeting at T (2-step
+piece + 1-step piece; both hops collinear; ref also merges collinear
+grid steps elsewhere, e.g. skips (110.242,111.866)). Upstream clip
+input is ONE generated polyline (FillPlanePath.cpp:117-129), so the
+split at T is clip-side. My clip output (ARES_DUMP_PLANECLIP) keeps
+one polyline through T with all vertices; my gcode then merges the
+collinear run into one E.03476 move (a per-polyline simplify that
+ref's split protects). The split in Clipper 6 requires the subject
+to cross something AT T: with no self-touch in the clipped output
+and no visible second lattice pass, the remaining explanation is a
+TANGENTIAL BOUNDARY TOUCH — upstream's surface expolygon has a
+vertex/notch whose apex touches the path at T (both polylines share
+T as entry/exit). My region = clean 4-vertex diamond (BOUND n=1, no
+holes). Next: find the upstream surface expolygon's extra vertex at
+T — the bottom-surface region construction (perimeter -> infill
+boundary chain) must keep a collinear apex vertex mine drops, or a
+hole/notch mine lacks. Sweep still running in background.

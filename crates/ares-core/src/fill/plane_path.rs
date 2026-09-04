@@ -161,6 +161,24 @@ fn fill_component(
     } else {
         intersection_open_polylines(&polylines, &clip)?
     };
+    if let Ok(path) = std::env::var("ARES_DUMP_PLANECLIP") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(file, "CLIP n={}", clipped.len());
+            for polyline in &clipped {
+                let _ = write!(file, "P {}:", polyline.points().len());
+                for point in polyline.points() {
+                    let _ = write!(
+                        file,
+                        " ({:.6},{:.6})",
+                        scale.unscale(point.x()),
+                        scale.unscale(point.y())
+                    );
+                }
+                let _ = writeln!(file);
+            }
+        }
+    }
     if clipped.is_empty() {
         return Ok(Vec::new());
     }
