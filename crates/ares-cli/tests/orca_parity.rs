@@ -47,6 +47,12 @@ pub(crate) fn compare_case(case: &ParityCase) -> ParityOutcome {
         )
         .await
     });
+    if std::env::var("CLUSTER_DUMP_ACTUAL").is_ok() {
+        if let Ok(gcode) = &actual {
+            let _ = std::fs::write("/tmp/kobra2/sweep_actual.gcode", gcode);
+            let _ = std::fs::write("/tmp/kobra2/sweep_ref.gcode", &case.reference);
+        }
+    }
     match actual {
         Ok(actual) => match semantic::compare_ignoring_time(&case.reference, &actual) {
             Ok(()) => pass(&case.label),

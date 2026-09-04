@@ -5143,3 +5143,18 @@ inspect semantic::parser for estimated-time handling — the
 "; estimated first layer printing time" line may feed the layer-1
 timing model that adjusts deposition counts. A 1s-vs-0.612s estimate
 difference with a parser bug could shift 4 deposition records.
+
+## 2026-09-04 (cont 164): K2Neo pairs BYTE-IDENTICAL — a comparison-env bug
+
+The dumped sweep pair (sweep_ref.gcode vs sweep_actual.gcode) differs
+ONLY in header + estimated-time comments — G1 bodies identical, layer
+boundaries identical, layer-1 G1 counts identical (54=54). Yet
+compare_case on the SAME pair (it wrote these files) reported
+420-vs-416. The difference must occur INSIDE compare_case BEFORE the
+dump... check the dump placement: the env write happens AFTER the
+slice but the files could be from a PREVIOUS iteration (the cluster
+check loops 2 printers; K3-0.4 (PASS) overwrote? No — both write the
+same paths! The FIRST printer K2Neo diverges, then K3-0.4 PASSES and
+ITS files overwrite /tmp/kobra2/sweep_*.gcode). The pair I diffed was
+K3-0.4's (identical, PASS ✓). ACTION: write per-printer files
+(append the label) and re-dump to get K2Neo's true pair.
