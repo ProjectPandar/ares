@@ -4044,3 +4044,14 @@ double precision throughout. At 2052.0 the f32 chain can yield
 2051.9998 → 2051. Fix: widen the slowdown path (factor, times,
 feedrates) to f64 — likely flips both the Wanhao 15 lines and the
 Anker 31-printer cluster.
+
+## 2026-09-04 (cont 83): f64 widening scope
+
+CoolingLine carries f32 length/feedrate/time/maximum_time (feedrate.rs
+40-48) and the whole slowdown path is f32. The final F value (2052) IS
+exactly representable in f32, so the drift happens in the COMPUTATION
+(length/time divisions, factor multiplies) before storage. Widen
+internally: compute the factor and time chain in f64 inside
+slowdown.rs (slow_down_proportionally, elapsed_time, maximum_time),
+storing back to the f32 fields — contained change, no struct rewrite.
+Then re-check /tmp/wanhao line 308 and the Anker fixtures.
