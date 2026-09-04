@@ -129,11 +129,10 @@ impl BrimPlan {
                 .map_err(brim_geometry_error)?;
         }
         // `makeBrimInfillImpl` (Brim.cpp:839): union_pt_chained_outside_in
-        // — the loops pass through the Clipper union (EvenOdd) which
-        // REORDERS each contour (starting at the processed path's
-        // lowest-left vertex), then chain outside-in on the contour
-        // front points. My raw offset contours carry the offsetter's
-        // point order; the union walk acquires upstream's.
+        // — upstream runs the stepped loops through union_pt (EvenOdd
+        // PolyTree), which reorders each contour to the processed walk's
+        // start vertex, then chains outside-in on the contour front
+        // points. Reproduce that here.
         let unified = crate::geometry::union_contours(
             &loops
                 .iter()

@@ -5406,3 +5406,16 @@ appends polygons_append(loops, ...) per step WITHOUT union — the
 loops from different steps stay separate even when overlapping!).
 FIX: remove the union between steps in my brim loop generation —
 keep each step's contours separate as upstream does.
+
+## 2026-09-04 (cont 178): K2Neo brim — ring-to-ring traversal differs
+
+Both slicers: 390 total brim moves. The inter-ring travels reveal
+the difference: ref walks rings in one consistent direction
+(102.253→102.53→102.807... ascending — OUTSIDE-IN, same corner each
+time), while ares alternates between far corners
+(114.98→104.737→114.947→104.805...) — my chain_points ordering
+visits rings in a zig-zag rather than outside-in nesting. Upstream's
+traverse_pt_outside_in visits the OUTER rings first then recurses
+into children. My chain_points does nearest-neighbor on front points,
+which zig-zags. FIX: replace chain_points with a true outside-in
+traversal (sort by area descending, grouping nested children).
