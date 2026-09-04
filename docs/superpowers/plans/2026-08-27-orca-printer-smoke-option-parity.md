@@ -4741,3 +4741,16 @@ entries) but prints the source as a byte array (text is &[u8]). Next
 run: String::from_utf8_lossy for readable sources, then locate my
 entries 21-22 (the 1.103/0.884 pair) in the SRC stream to identify
 the exact G-code lines producing the split entries.
+
+## 2026-09-04 (cont 138): the extra line IS the wipe hop — gate mismatch
+
+Decoded: my output emits travel->wipe pt (120.187,121.889) THEN
+->seam (120.187,121.005); ref emits ONE direct travel to the seam
+(1.4135mm from 121.29,121.889). My wipe-before-external fires where
+upstream's does NOT — the gate conditions differ (upstream
+GCode.cpp:5823: wipe_before_external_loop && paths.front().size()>1 &&
+paths.back().size()>1 && role==ExternalPerimeter &&
+region_perimeters.size()>1 — one of these fails for Anker's layer-1
+first wall after the brim; likely region_perimeters or the seam-gap
+clipped path sizes). Next: check my gate (loop_paths.rs:109-118)
+against the four upstream conditions on this exact loop.
