@@ -3858,3 +3858,18 @@ combined. My branch raises unconditionally to layer_z + z_hop. The fix:
 apply the upstream comparison (raise only when to_lift + prev_z
 strictly exceeds the destination z) in the lifted-branch raise —
 prev_z is the writer z before the layer change silently advanced it.
+
+## 2026-09-04 (cont 72): Z.8 lift source narrowed to print-start
+
+The skirt/brim emission (skirt.rs emit → motion::emit_skirt_loop →
+path::emit) performs NO retract/lift/travel — it cannot set
+lifted/pending_lift. Therefore the wall travel's lifted+pending_lift
+state (which drives the Z.8 raise) originates in the PRINT-START
+sequence (file_start.rs / machine start handling): my start emits a
+retract+lift where upstream's raw custom start gcode for Wanhao does
+not (ref has no retract/lift before `G1 X.. Z.4`). Next: audit
+file_start.rs retract/lift against upstream start-gcode processing —
+upstream emits the start gcode verbatim (no maybe_zlift call), so any
+lift state must come only from actual start-gcode-analyzed retract
+moves; the layer-1 wall travel then has NO deferred lift and travels
+combined XYZ at the layer z.
