@@ -5275,3 +5275,21 @@ Concrete plan: brim.rs loops → Clipper union (EvenOdd like
 union_pt) → collect contours → chain by front points (chain_points
 helper) outside-in → the reversal walk. This changes both ring order
 AND ring start points to upstream's.
+
+## 2026-09-04 (cont 172): K2Neo brim start — extrude_entity has NO split
+
+The full upstream brim emission chain decoded: makeBrimInfillImpl →
+extrusion_entities_append_loops_and_paths (closed polyline →
+ExtrusionLoop, point order PRESERVED from the connect output) →
+GCode::extrude_entity("brim") → extrude_loop. extrude_loop calls
+place_seam ONLY for description=="perimeter" (GCode.cpp:5772) — for
+"brim" it falls to `loop.split_at(last_pos, false)` (5775): the
+loop is SPLIT AT THE POINT NEAREST THE CURRENT NOZZLE POSITION at
+emission time! That's the mid-edge start: the nozzle arrives from
+the travel (101.978,101.802) and the brim ring's nearest point is
+(102.116,101.664) — a projection onto an edge, mid-segment. MY brim
+emission (emit_brim_loop → path::emit) does NOT split at the
+nozzle: it starts at the contour's first vertex. FIX: split each
+brim ring at the point nearest the current nozzle position before
+emission (ExtrusionLoop::split_at semantics: nearest-point
+projection, mid-edge allowed).
