@@ -4666,3 +4666,14 @@ This is the travel-routing family (avoid-crossing/start-point
 selection), NOT the cooling parse. Next: dump the f=300 travel's
 source coordinates in both (my line 2 vs upstream's) to see the route
 segments — the router's start-point or detour choice at layer 1.
+
+## 2026-09-04 (cont 131): Anker layer-1 — travel coords identical; route differs
+
+The layer-1 G-code travel lines are byte-identical in both
+(X121.448/Z.4 and X121.855 F18000) — the +0.31mm is inside the
+ROUTE (a detour segment: start->detour->target where my detour point
+differs by 0.31mm), not the endpoints. Layer-0 totals matched so the
+start position is identical — the difference is the avoid-crossing
+router's intermediate point at layer 1. Next: instrument the router's
+detour selection at layer 1 (plan_route output points) vs upstream's
+travel polyline (GT trace has role=2 travels).
