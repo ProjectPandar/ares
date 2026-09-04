@@ -4036,3 +4036,11 @@ or the final mm/s→mm/min rounding). Reproduction: /tmp/wanhao line
 cooling/feedrate/slowdown.rs against upstream CoolBuffer
 (GCodeProcessor.cpp) at f64 bit level; the Anker cluster (31 printers)
 shares this arithmetic.
+
+Root cause candidate found: cooling/feedrate/slowdown.rs uses f32 for
+the slowdown factor and time math (`factor: f32`,
+`line.time * factor`); upstream GCodeProcessor's CoolBuffer uses
+double precision throughout. At 2052.0 the f32 chain can yield
+2051.9998 → 2051. Fix: widen the slowdown path (factor, times,
+feedrates) to f64 — likely flips both the Wanhao 15 lines and the
+Anker 31-printer cluster.
