@@ -5701,3 +5701,26 @@ entities). Next: compare the chain arrangement for the narrow/solid
 pair (the anchor choice in the chain, likely the fill/connect
 graph's endpoint selection or the chain_closest seed) — the region
 sets and widths already match.
+
+## 2026-09-04 (cont 197): BBL A1 — solid section is a RING-ROTATION, not a reorder
+
+Decoded the solid(0.219999) section divergence exactly. The section
+is ONE polyline made of the 45° infill diagonal + two boundary anchor
+arcs (bottom edge + left edge) sharing vertices A(125.517,124.323),
+B(124.323,124.323), C(124.323,125.517):
+- ref walks  A→B (bottom) → B→C (left) → C→D (diagonal PARTIAL,
+  D=(125.503,124.337) mid-diagonal) — diagonal LAST, clipped short
+- mine walks C→A (diagonal FULL) → A→B (bottom) → B→C' (left
+  PARTIAL, C'=(124.323,125.497) 0.02 short of C) — diagonal FIRST
+Same cyclic ring, same rotation direction (A→B→C), DIFFERENT entry:
+the greedy2 seed tie-break. All three ring connections are 0-length
+(the arcs share vertices), so the popped order follows endpoint
+heap/insertion order = the input segment GENERATION ORDER. Root
+cause candidates: (a) the diagonal vs bottom-arc segment index order
+entering the chain (generation order of infill lines vs arc merge in
+connect_infill), (b) which end of the merged polyline take_limited
+clips. Upstream: ShortestPath.cpp:491-1015 greedy2 seeds via
+priority queue pop (no start_near in fill), FillBase.cpp:1243+
+connect_infill + take_limited. Next: instrument connect_infill input
+segment order for this region on both sides (GT bound dump exists at
+/tmp/orca-gt/result-bound).
