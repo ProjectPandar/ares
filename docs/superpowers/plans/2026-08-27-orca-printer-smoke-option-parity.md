@@ -4005,3 +4005,20 @@ minimization (visibility/angle scores at the winning candidate vs the
 runner-up) or the previous-entity cursor. Next: dump the layer-7
 candidate penalties (scores, overhangs, distance) for the winning and
 actual picks to see which component differs.
+
+## 2026-09-04 (cont 81): Wanhao 758 = ±1 feedrate + seam cascade
+
+After the lift fix, Wanhao's first divergence is now line 308:
+`G1 F2052` (ref) vs `G1 F2051` (ares) — the layer-2 inner-wall
+feedrate, ±1 mm/min (the same rounding family as the Anker cooling
+cluster, 31 printers). Decomposition of the 758 non-timing lines:
+15× ±1 feedrate (F2052/F2051), 122× F24000 travel positions (the
+seam-corner cascade from cont 80), and mirrored travel targets.
+Seam debug: all corner candidates have IDENTICAL scores (symmetric
+cube: score=1.5264784 everywhere) — the pick follows the cursor
+correctly; the seam cascade stems from cursor differences earlier in
+the chain (the ±1 feedrate divergence at line 308 is now the true
+first divergence). Next: the ±1 cooling-buffer feedrate rounding
+(cooling/feedrate/slowdown.rs) — likely a float precision/rounding
+mode difference; fixes 15 Wanhao lines AND potentially the Anker
+31-printer cluster.
