@@ -4892,3 +4892,16 @@ other diffs cleared. The 119-cluster persists: the layer-1 Anker
 detour needs the safe-zone vs m_lslices_offset equivalence verified
 (next: instrument WHICH travels my safe_zone_contains rejects vs
 upstream's any_expolygon_contains at layer 1).
+
+## 2026-09-04 (cont 150): the layer-1 waypoint persists — router not in the path
+
+After the start-only fix the layer-1 detour remains: mine emits
+(121.29,121.889) -> (120.187,121.889) -> (120.187,121.005); ref goes
+direct (121.29,121.889) -> (120.187,121.005). The ROUTER debug
+printed NOTHING for this travel — the detour is NOT produced by
+router::avoid_perimeters. The extra waypoint (120.187,121.889) comes
+from a DIFFERENT emitter: the wipe-while-retracting hop
+(;WIPE_START/;_WIPE — the wipe path continues into the travel) or the
+post-retract wipe path accumulation. Next: find which emitter outputs
+the (120.187,121.889) line (grep the wipe/wipe-path emission paths
+in loop start travel).
