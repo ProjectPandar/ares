@@ -3989,3 +3989,19 @@ missing the intermediate wipe segment. Upstream
 fake_path_wipe(pt→current, GCode.cpp:5884-5893) plus the wipe path
 (wipe_distance) emits the intermediate point; next: match the
 two-segment wipe emission in append_wipe_before_external.
+
+## 2026-09-04 (cont 80): Wanhao divergence origin = layer-7 inner seam pick
+
+Correction to cont 79: both files have the SAME wipe shape (2 no-E
+moves around every outer loop). Layers 1-6 are byte-identical. The
+first divergence (line 676, layer ~7): the INNER wall seam — ref ends
+at (119.355,111.055) [bottom-right], ares at (110.645,118.945)
+[top-left]; both then pick the nearest outer corner to their own
+cursor, cascading 20× per file. Root: the layer-7 inner-wall
+nearest-seam stagger pick differs (the projection+depth+stagger
+sequence in place_nearest_penalized). Since layers 1-6 match exactly,
+the algorithm is close — the layer-7 divergence is in the penalty
+minimization (visibility/angle scores at the winning candidate vs the
+runner-up) or the previous-entity cursor. Next: dump the layer-7
+candidate penalties (scores, overhangs, distance) for the winning and
+actual picks to see which component differs.
