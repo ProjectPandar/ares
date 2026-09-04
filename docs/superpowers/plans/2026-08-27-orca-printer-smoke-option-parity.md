@@ -5226,3 +5226,20 @@ brim loops are NOT split by angle — they start at the contour's
 natural first point. FIX CANDIDATE: brim loops must bypass the
 angle-based split (or the split target must be the brim's own first
 point).
+
+## 2026-09-04 (cont 169): K2Neo brim — ref STARTS mid-ring at a vertex NEAR the travel end
+
+Key geometric reading: the ref brim's FIRST ring starts at
+(102.116,101.664) — NOT the ring's natural vertex — and the same
+coordinates (116.255,100.779) appear LATER in the ref's walk (line
+74-76) — meaning ref's ring starts at a point split mid-edge while
+mine starts at the offset contour's first vertex. The ref start
+(102.116,101.664) is close to the travel-arrival (101.978,101.802):
+upstream's brim loops connect via connect_brim_lines which SPLITS
+rings at connection points; also chain_polylines({loop}) rotates the
+closed ring's start. My ring reversal didn't move the start. The
+start-point semantics: the emission happens to arrive via the travel
+(101.978,101.802) and upstream's first ring starts at the closest
+vertex-ish point. NEXT: implement connect_brim_lines — its core
+effect is exactly this start-point chaining (each ring begins where
+the previous/connecting segment lands).
