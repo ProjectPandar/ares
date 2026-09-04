@@ -4606,3 +4606,13 @@ reduction — hence every gate approximation failed. REFACTOR SPEC:
 lifted: bool → lifted_amount: f64; set to (to_lift + pos.z − dest.z)
 at the raise; reduced by in-band z deltas; cleared on real z moves;
 the maybe_zlift gate becomes lifted_amount==0 && pending none.
+
+## 2026-09-04 (cont 126): refactor site survey
+
+state.lifted: 16 references across 4 files (travel/lift.rs 3 sets,
+path/start_travel.rs sets/reads/clears, loop_paths.rs read+clear,
+timelapse.rs read). Implementation order: (1) add lifted_amount: f64
+alongside the bool, maintaining the amount at each set/clear; (2)
+migrate the maybe_zlift-style gates to lifted_amount > 0; (3) add the
+partial-reduction at in-band z moves; (4) delete the bool. Each step
+builds + fixture-verifies (5 fixtures) before the next.
