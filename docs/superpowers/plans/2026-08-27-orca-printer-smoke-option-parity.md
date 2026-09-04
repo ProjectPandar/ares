@@ -4879,3 +4879,16 @@ upstream says SAFE (start-only test) while mine says NOT SAFE → my
 router fires where upstream's doesn't. FIX: test only the START point
 (upstream semantics: ex_polygon.contains(travel.a) with the bbox
 short-circuit), keeping the no-crossing grid check.
+
+## 2026-09-04 (cont 149): start-only containment landed — sweep 422 (-1, noise)
+
+The start-only safe-zone containment (5973a962) is upstream-faithful;
+fixtures and 81/81 smoke stable. Sweep 422 (was 423 — within the ±2
+oracle SIGSEGV noise band; the layer-2-deposition cluster 119→118).
+New divergences surfaced for a few multi-extruder Prusa XL 5T
+(island lifecycle: E-0.8 retract ordering) and Flashforge Creator 5
+(sparse infill zigzag start) — likely pre-existing, newly-visible as
+other diffs cleared. The 119-cluster persists: the layer-1 Anker
+detour needs the safe-zone vs m_lslices_offset equivalence verified
+(next: instrument WHICH travels my safe_zone_contains rejects vs
+upstream's any_expolygon_contains at layer 1).
