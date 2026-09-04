@@ -4584,3 +4584,12 @@ CONCLUSION: this needs the true m_lifted/m_to_lift lifetime pair in
 EmitState (my lifted/pending flags diverge from upstream's lifetime
 at de-retract boundaries) — the refactor from cont 116 stands as the
 way forward; per-case gates cannot capture it.
+
+## 2026-09-04 (cont 124): restart-extra fix flips +10 (fleet 421)
+
+Verification sweep after c601d6d7: 421/1001 (was 411) — the
+retract_restart_extra fix flipped ~10 printers whose only divergence
+was the de-retract E amount (island-lifecycle cluster 26→25 as
+single-divergence printers graduated to PASS; others reveal their
+next-level divergence). Fleet trajectory: 415 (arc start) → 411 →
+412 → 421.
