@@ -5848,3 +5848,20 @@ holes). Next: find the upstream surface expolygon's extra vertex at
 T — the bottom-surface region construction (perimeter -> infill
 boundary chain) must keep a collinear apex vertex mine drops, or a
 hole/notch mine lacks. Sweep still running in background.
+
+## 2026-09-05 (cont 204): sweep after GCC-sort fix = 430/1001; residual 0.02 family is GT-binary-vs-AppImage
+
+Fresh full sweep (05:30, includes e1f52c35): 430/1001 (was 431; -1 =
+the hilbert-family flip, known regression). The BBL layer-2 residual
+(grep "125.497": 20 printers, all 0.2-nozzle-style corner triangles)
+still shows end y=125.497 vs oracle 125.517 — BUT my connect_infill
+outputs are byte-identical to the nix GT BINARY, so the nix binary
+presumably also emits 125.497 and the AppImage oracle emits 125.517:
+an upstream-internal FP divergence between the two reference builds
+(candidate: ExPolygonWithOffset's float delta in
+fill_surface_by_multilines / the contracted-surface inset). Top
+clusters now: layer4-d9 32, layer3-d5 22, layer4-d10 19, layer6-d17
+18, layer5-d11 18, layer2-d1 18. Next queue: (1) hilbert tangential
+boundary touch (cont 203), (2) decide the 0.02 family approach —
+replicate the AppImage's FP path in my inset computation, (3) BBL
+emit-stage narrow/solid order, (4) layer4/3 sub-micron clusters.
