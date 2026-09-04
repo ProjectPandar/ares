@@ -77,6 +77,13 @@ pub(super) fn find_start_point(points: &[Point], start_angle_deg: f64) -> Point 
 
 /// `ExtrusionLoop::split_at` with `Point::projection_onto` endpoint clamping.
 pub(super) fn split_at_nearest(points: &[Point], target: Point) -> Vec<Point> {
+    split_at_nearest_for_brim(points, target)
+}
+
+pub(in crate::project_slice::gcode_emit) fn split_at_nearest_for_brim(
+    points: &[Point],
+    target: Point,
+) -> Vec<Point> {
     if points.len() < 2 {
         return points.to_vec();
     }

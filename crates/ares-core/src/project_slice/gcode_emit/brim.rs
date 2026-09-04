@@ -224,17 +224,44 @@ impl BrimPlan {
         state: &mut EmitState,
     ) {
         for path in &self.paths {
-            motion::emit_brim_loop(
-                output,
-                path.iter().map(|point| (point.x(), point.y())),
-                motion::SkirtLoopFlow {
-                    width: self.width,
-                    height: self.height,
-                    mm3_per_mm: self.mm3_per_mm,
-                },
-                geometry,
-                state,
-            );
+            // `GCode::extrude_entity("brim")` → `extrude_loop` →
+            let nozzle = state
+                .last_scaled_position
+                .unwrap_or_else(|| (i64::MIN, i64::MIN));
+            if nozzle.0 != i64::MIN {
+                // `loop.split_at(last_pos, false)` (GCode.cpp:5775): the brim
+                // ring is SPLIT AT THE POINT NEAREST THE CURRENT NOZZLE
+                // POSITION — a mid-edge projection, not a vertex. Reuse the
+                // skirt's split_at_nearest (the same ExtrusionLoop::split_at
+                // semantics).
+                let split = super::skirt::split_at_nearest_for_brim(
+                    path,
+                    crate::geometry::Point::new(nozzle.0, nozzle.1),
+                );
+                motion::emit_brim_loop(
+                    output,
+                    split.iter().map(|point| (point.x(), point.y())),
+                    motion::SkirtLoopFlow {
+                        width: self.width,
+                        height: self.height,
+                        mm3_per_mm: self.mm3_per_mm,
+                    },
+                    geometry,
+                    state,
+                );
+            } else {
+                motion::emit_brim_loop(
+                    output,
+                    path.iter().map(|point| (point.x(), point.y())),
+                    motion::SkirtLoopFlow {
+                        width: self.width,
+                        height: self.height,
+                        mm3_per_mm: self.mm3_per_mm,
+                    },
+                    geometry,
+                    state,
+                );
+            }
         }
     }
 }
