@@ -4258,3 +4258,17 @@ accumulation finishes, while the GT dump prints post-parse totals.
 Next: print the lines AFTER parse::layer returns (post-accumulation,
 matching the GT dump) and redo the pairwise t= diff to get the true
 0.44ms location.
+
+## 2026-09-04 (cont 99): the delta lives in the f=30 infill block
+
+Post-parse dumps aligned: my f=30 block t=1.289775 vs upstream
+t=1.276453 — a 13.3ms delta ≈ 0.4mm of extra path at 30mm/s absorbed
+into MY block. All other entries match (f=60 0.580, f=90 2.033269,
+travels identical). Since the layer text is byte-identical, the
+difference is BLOCK BOUNDARIES: my ;_EXTRUDE_SET_SPEED..;_EXTRUDE_END
+pairing swallows a move (~0.4mm, likely a short travel or seam-gap
+clip move between infill lines) that upstream leaves OUTSIDE the
+block. Next: print the per-layer block byte ranges (line.start/end
+for SET_SPEED entries) in both (GT patch ext + my debug) and find
+which move my block absorbs — likely my EXTRUDE_END detection or a
+nested SET_SPEED without END handling.
