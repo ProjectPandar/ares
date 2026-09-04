@@ -5960,3 +5960,22 @@ scoring / nearest-corner tie) vs upstream SeamPlacer; the solid2
 ring after it likely follows (chain picks differently once the seam
 moves). The CONC/arachne branch hypothesis is dead (dump never
 fires; ring is a perimeter).
+
+## 2026-09-05 (cont 210): narrow ring = SYMMETRIC SEAM TIE on layer 1
+
+Layer-1 (line ~1680) already splits differently: ref at
+BR=(124.975,124.547), mine at TL=(124.547,124.975) — so the base
+seam scoring (not alignment propagation) decides. The triangle's TL
+and BR are MIRRORS across the y=x diagonal through the island
+(the 90deg corner BL=(124.547,124.547) sits ON the diagonal): by
+symmetry TL and BR have IDENTICAL seam scores — a pure tie broken
+by candidate enumeration order = the perimeter loop polygon's
+vertex order = the offset ring start vertex (same family as the
+fill-ring start vertex, cont 207). The mirrored triangle at
+(124.5,131.4) matches both sides (its asymmetric context breaks the
+tie identically). Next: dump my perimeter loop polygon vertex order
+for the small-width loop (offsets_with_smaller_width path:
+top_split/first_outer.rs / onion/iterate.rs smaller_width) vs
+upstream offset_ex ring start; fix the ring anchor so TL/BR ties
+resolve like upstream. Then the solid2 ring + 20-printer family
+should converge.
