@@ -3915,3 +3915,19 @@ lct=false lifted=true pending=Some — set by the brim emission's
 travel/lift lifecycle (the brim's lift appears not to unlift at the
 brim path start). Next: trace the brim travel's lift → brim
 de-retract/unlift → wall travel state to find the unlift gap.
+
+## 2026-09-04 (cont 75): needs_lift gate (retraction_length > 0)
+
+`GCode.cpp:7678-7681`: `needs_lift = toolchange ||
+retraction_length() > 0 || use_firmware_retraction` — with Wanhao's
+`filament_retraction_length: nil`, maybe_zlift never runs. Added the
+equivalent gate to lift::schedule_at (retraction_length <= 0 && !layer_change
+→ no deferred hop). 25/25 smoke, no fixture regressions; Wanhao still
+852 — its wall-travel Z.8 pending_lift comes from neither
+retract_and_lift (now gated) nor the first-position block (retract-
+gated). Remaining source: the start gcode's own E-5 retract (line 54,
+machine template) is emitted verbatim (file_start renders only), so
+the pending_lift setter is elsewhere — next session instruments every
+pending_lift assignment site (lift.rs:19 is gated; start_travel 107/
+135 both gated) — one more assignment path must exist or the resolved
+retraction_length is > 0 (nil → profile default).

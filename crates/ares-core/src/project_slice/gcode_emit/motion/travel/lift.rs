@@ -13,6 +13,13 @@ pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
 /// deferred layer-change lift must evaluate the gate at the previous
 /// layer's z, not the new one.
 pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f64) {
+    // `GCode.cpp:7678-7681` — `needs_lift` requires a non-zero retraction
+    // length (or firmware retraction / toolchange): with retraction
+    // disabled (nil length, e.g. Wanhao), `maybe_zlift` never runs and
+    // no hop is ever deferred.
+    if state.options.retraction_length <= 0.0 && !layer_change {
+        return;
+    }
     if state.options.z_hop <= 0.0 || !is_allowed_at(state, writer_z) {
         return;
     }
