@@ -5293,3 +5293,17 @@ nozzle: it starts at the contour's first vertex. FIX: split each
 brim ring at the point nearest the current nozzle position before
 emission (ExtrusionLoop::split_at semantics: nearest-point
 projection, mid-edge allowed).
+
+## 2026-09-04 (cont 172): brim nozzle derivation — wait for re-check
+
+The pre-brim travel (X115.634) IS emitted through start_travel (the
+route[0] continuation sets state.x/y at :271). The brim nozzle
+derivation from state.x/y should therefore work — but the K2Neo pair
+still shows the un-split start (X116.255 first). Two open items:
+(1) the layer-0 brim is emitted BEFORE the first start_travel of that
+layer? (brim emit comes before motion::emit_layer in gcode_emit.rs —
+the X115.634 travel is emitted BEFORE the brim in the OUTPUT but the
+code order is brim.emit() THEN emit_layer? Check gcode_emit.rs:347
+(brim) vs the layer-change block position), (2) state.x/y may still
+hold layer-0's last position at that point. Verify emission order in
+gcode_emit.rs around line 330-352.

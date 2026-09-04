@@ -225,10 +225,22 @@ impl BrimPlan {
     ) {
         for path in &self.paths {
             // `GCode::extrude_entity("brim")` → `extrude_loop` →
-            let nozzle = state
-                .last_scaled_position
-                .unwrap_or_else(|| (i64::MIN, i64::MIN));
-            if nozzle.0 != i64::MIN {
+            let nozzle = state.last_scaled_position.unwrap_or_else(|| {
+                // The pre-brim travel (layer-change block) does not go
+                // through the path emitter; derive the scaled nozzle
+                // position from the live gcode coordinates
+                // (`state.x/y` minus the object offset).
+                let x = geometry
+                    .scale
+                    .checked_scale(state.x - state.offset.0)
+                    .unwrap_or_default();
+                let y = geometry
+                    .scale
+                    .checked_scale(state.y - state.offset.1)
+                    .unwrap_or_default();
+                (x, y)
+            });
+            if nozzle != (0, 0) || state.last_scaled_position.is_some() {
                 // `loop.split_at(last_pos, false)` (GCode.cpp:5775): the brim
                 // ring is SPLIT AT THE POINT NEAREST THE CURRENT NOZZLE
                 // POSITION — a mid-edge projection, not a vertex. Reuse the
