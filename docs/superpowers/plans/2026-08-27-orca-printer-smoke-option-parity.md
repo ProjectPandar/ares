@@ -4866,3 +4866,16 @@ safe_zone_contains vs upstream any_expolygon_contains(m_lslices_offset,
 travel) — segment-inside vs endpoint-inside semantics). Next: compare
 the m_lslices_offset gate: upstream tests the whole SEGMENT inside;
 if my safe_zone test differs, different travels reach avoid_perimeters.
+
+## 2026-09-04 (cont 148): safe-zone gate — the CRITICAL semantic diff found
+
+Upstream any_expolygon_contains (cpp:716-736): grid visits the line;
+if NO grid cell edge intersection AND both endpoints in the bbox AND
+ex_polygon.contains(travel.a) — ONLY THE START POINT is tested for
+containment! My segment_inside_expolygon requires BOTH endpoints in
+the contour + no crossing. For a travel starting INSIDE the safe zone
+and ending OUTSIDE (but not crossing grid cells — diagonal exits!),
+upstream says SAFE (start-only test) while mine says NOT SAFE → my
+router fires where upstream's doesn't. FIX: test only the START point
+(upstream semantics: ex_polygon.contains(travel.a) with the bbox
+short-circuit), keeping the no-crossing grid check.
