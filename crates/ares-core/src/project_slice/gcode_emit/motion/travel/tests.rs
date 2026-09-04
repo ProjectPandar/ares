@@ -85,6 +85,9 @@ fn slope_type_schedules_a_slope_lift() {
     let mut state = EmitState {
         layer_z: 0.4,
         options: MotionOptions {
+            // `maybe_zlift` requires `needs_lift` (retraction_length > 0,
+            // GCode.cpp:7678-7681).
+            retraction_length: 1.0,
             z_hop: 0.4,
             z_hop_type: crate::ZHopType::Slope,
             ..MotionOptions::default()
