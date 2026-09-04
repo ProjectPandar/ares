@@ -5108,3 +5108,18 @@ case carries ONE 3MF; both slice the same project. Unless the ORACLE
 re-arranges during --slice. VERIFY: run the oracle --slice twice on
 /tmp/kobra2/case.3mf and diff (if identical, arrangement is fixed at
 export and the nondeterminism is elsewhere).
+
+## 2026-09-04 (cont 162): oracle DETERMINISTIC on the dumped case — hypothesis rejected
+
+Two oracle runs on /tmp/kobra2/case.3mf are byte-identical (0 diffs)
+and identical to both ref.gcode and my in-process output. The
+nondeterminism is NOT in the oracle slice of a FIXED case. Therefore
+the sweep's K2Neo case differs from my dumped case — the 3MF
+EXPORT (--arrange 1) must produce a different arrangement in the
+sweep's PID dir vs my dump run (the arrangement heuristic IS
+timing-sensitive across processes). VERIFY: dump the sweep's K2Neo
+case.3mf from a fresh cluster-check run (CLUSTER_DUMP overwrites
+/tmp/kobra2/case.3mf each run) and compare against the CURRENT
+case.3mf — if the exports differ, the oracle's arrangement varies
+per-process and the sweep comparison needs the export pinned
+(deterministic arrangement or a fixed plate position).
