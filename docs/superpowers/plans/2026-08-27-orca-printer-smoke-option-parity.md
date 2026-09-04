@@ -5991,3 +5991,21 @@ first-minimal) differs from upstream SeamPlacer's comparator. Next:
 clipper offset BottomPt selection (GetBottomPt tie->leftmost port),
 (2) check upstream SeamPlacer gather/pick comparator for the
 last-vs-first minimal on equal scores.
+
+## 2026-09-05 (cont 211): ring anchor CORRECT; tie broken by visibility asymmetry
+
+Corrections from code reading: (1) Clipper 6 GetBottomPt anchors at
+MAX y, tie->min x (clipper.cpp:530-560) — for this triangle the
+unique max-y vertex is TL, so BOTH rings = CW [TL,BR,BL]; my anchor
+matches. (2) pick_seam_point keeps the FIRST tied index
+(is_first_better, SeamPlacer.cpp:915-927) — my alignment.rs:45
+strict < matches. So the tie is NOT exact: upstream's visibility
+scoring (spherical Fibonacci ray set — inherently asymmetric) must
+score BR better than TL, while my port scores TL better (or equal).
+Residual = per-point visibility score difference for the two acute
+corners of this corner triangle on the BBL A1 layer-1 loop (and the
+mirrored loop matches because its context breaks symmetry the same
+way). Next: dump my visibility scores for the 3 corners of this
+loop vs upstream's (SeamPlacer ray-set hash / hilbert sampling
+seeds, SeamPlacer.cpp visibility) — a targeted visibility-parity
+check.
