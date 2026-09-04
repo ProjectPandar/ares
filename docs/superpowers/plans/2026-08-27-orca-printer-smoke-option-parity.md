@@ -6071,3 +6071,21 @@ explaining (cursor (127.016,123.806) prefers solid2). NEXT: GT dump
 of GCode.cpp extrude_infill per (island, region) entity lists +
 m_last_pos at each reorder (patch the chain_and_reorder call site)
 to see the actual grouping and cursor; then mirror in motion.rs.
+
+## 2026-09-05 (cont 215): GT iorder dump SOLVES the order puzzle
+
+result-iorder (ORCA_DUMP_IORDER at GCode.cpp extrude_infill
+chain_and_reorder): line 3 = cursor obj(-0.984,-4.194) = world
+(127.016,123.806) [the E.03569 move end] with n=3 openNR entities:
+(1.860,4.194) | narrow(-3.025,-3.453) | (3.170,3.639). Greedy:
+narrow d=2.171 vs others 8.85/8.87 -> NARROW FIRST = ref order
+explained. The monotonic solid2 collection (predicted first point
+obj(-0.614,-4.104), d=0.381) is NOT in this reorder list — the
+region's fill entity list at this stage contains only 3 collections
+(two solid fills at 8.8+ and the narrow); the solid2 walk observed
+later in the gcode must be the INNER chained order of one of these
+or a later region. My implementation emits solid2 first, so MY
+reorder list/first-points differ (or my cursor). NEXT: dump my
+equivalent (collection list + first points + cursor at the infill
+reorder in motion.rs) with ARES_DUMP_IORDER and diff against gtio
+line 3; fix the collection composition/first-entity to match.
