@@ -4055,3 +4055,15 @@ internally: compute the factor and time chain in f64 inside
 slowdown.rs (slow_down_proportionally, elapsed_time, maximum_time),
 storing back to the f32 fields — contained change, no struct rewrite.
 Then re-check /tmp/wanhao line 308 and the Anker fixtures.
+
+## 2026-09-04 (cont 84): slowdown f64 widening landed (upstream-faithful, not the ±1 cause)
+
+Widened the slowdown chain to f64 internally (slow_down_proportionally,
+time_stretch_to_feedrate, slow_down_to_feedrate, elapsed_time) —
+upstream-faithful, no fixture regressions, 25/25 smoke. BUT Wanhao
+line 308 still F2051: the f32 slowdown math was NOT the ±1 source.
+F2052 = 34.2 mm/s = 57% of the 60 mm/s inner_wall_speed — more likely
+the volumetric cap (max_volumetric_speed chain in
+motion/path.rs kinematics) than the cooling buffer. Next: trace the
+F2052 computation through properties.kinematics (mm3_per_mm × speed
+→ feedrate) at f64 bit level.

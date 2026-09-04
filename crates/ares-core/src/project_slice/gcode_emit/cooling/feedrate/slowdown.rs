@@ -39,7 +39,9 @@ pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
 }
 
 fn elapsed_time(lines: &[CoolingLine]) -> f32 {
-    lines.iter().fold(0.0, |total, line| total + line.time)
+    lines
+        .iter()
+        .fold(0.0_f64, |total, line| total + f64::from(line.time)) as f32
 }
 
 fn maximum_time(lines: &[CoolingLine]) -> f32 {
@@ -118,32 +120,40 @@ fn slow_down_non_proportional(
 }
 
 fn slow_down_proportionally(lines: &mut [CoolingLine], factor: f32) {
+    // Upstream computes the slowdown chain in double precision
+    // (`CoolBuffer::slow_down_proportionally`); the f32 round-trips here
+    // land feedrates like 2052.0 at 2051.999x before the final rounding.
+    let factor = f64::from(factor);
     for line in lines {
         if line.adjustable() {
             line.slowed = true;
-            line.time = line.maximum_time.min(line.time * factor);
+            line.time = f64::from(line.maximum_time).min(f64::from(line.time) * factor) as f32;
             if line.time > 0.0 {
-                line.feedrate = line.length / line.time;
+                line.feedrate = (f64::from(line.length) / f64::from(line.time)) as f32;
             }
         }
     }
 }
 
 fn time_stretch_to_feedrate(lines: &[CoolingLine], minimum_feedrate: f32) -> f32 {
-    let mut stretch = 0.0;
+    let minimum_feedrate = f64::from(minimum_feedrate);
+    let mut stretch = 0.0_f64;
     for line in lines {
-        if line.feedrate > minimum_feedrate {
-            stretch += line.time * (line.feedrate / minimum_feedrate - 1.0);
+        if f64::from(line.feedrate) > minimum_feedrate {
+            stretch += f64::from(line.time) * (f64::from(line.feedrate) / minimum_feedrate - 1.0);
         }
     }
-    stretch
+    stretch as f32
 }
 
 fn slow_down_to_feedrate(lines: &mut [CoolingLine], minimum_feedrate: f32) {
+    let minimum_feedrate = f64::from(minimum_feedrate);
     for line in lines {
-        if line.feedrate > minimum_feedrate {
-            line.time *= (line.feedrate / minimum_feedrate).max(1.0);
-            line.feedrate = minimum_feedrate;
+        if f64::from(line.feedrate) > minimum_feedrate {
+            line.time = (f64::from(line.time)
+                * (f64::from(line.feedrate) / minimum_feedrate).max(1.0))
+                as f32;
+            line.feedrate = minimum_feedrate as f32;
             line.slowed = true;
         }
     }
