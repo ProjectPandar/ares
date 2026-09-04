@@ -1,7 +1,10 @@
 #[cfg(test)]
 mod tests;
 
-use super::{EmitState, LayerGeometry, format::axis as format_axis};
+use super::{
+    EmitState, LayerGeometry,
+    format::{axis as format_axis, z as format_z},
+};
 use crate::project_slice::perimeters::classic::{
     chained_loops::ExtrusionLoopRole,
     materialize::{ExtrusionPath, ExtrusionRole, Point3},
@@ -157,15 +160,43 @@ fn append_wipe_before_external(
         "Outer wall",
         (x - state.x).hypot(y - state.y),
     );
-    output.extend_from_slice(
-        format!(
-            "G1 X{} Y{} F{}\n",
-            format_axis(x),
-            format_axis(y),
-            format_axis(state.travel_feedrate)
-        )
-        .as_bytes(),
-    );
+    // The wipe hop is a `travel_to` (`GCode.cpp:5884-5893`): a lift
+    // deferred by the preceding retract (e.g. the start gcode's) is
+    // consumed HERE. With the nozzle already retracted and no lift
+    // deferred yet, upstream's `retract()` (needs_retraction always
+    // holds from the unclear start position) defers one — same here.
+    let lift_here = state.pending_lift.is_some()
+        || (state.retracted
+            && state.options.z_hop > 0.0
+            && state.options.retraction_length > 0.0
+            && !state.lifted
+            && super::travel::lift_is_allowed_at(state, state.layer_z));
+    if lift_here {
+        let raised = state.layer_z + state.options.z_hop;
+        output.extend_from_slice(
+            format!(
+                "G1 X{} Y{} Z{} F{}\n",
+                format_axis(x),
+                format_axis(y),
+                format_z(raised),
+                format_axis(state.travel_feedrate)
+            )
+            .as_bytes(),
+        );
+        output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
+        state.lifted = false;
+        state.pending_lift = None;
+    } else {
+        output.extend_from_slice(
+            format!(
+                "G1 X{} Y{} F{}\n",
+                format_axis(x),
+                format_axis(y),
+                format_axis(state.travel_feedrate)
+            )
+            .as_bytes(),
+        );
+    }
     state.x = x;
     state.y = y;
     state.current_feedrate = state.travel_feedrate;

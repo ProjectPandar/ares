@@ -4545,3 +4545,17 @@ needs_travel=false tail). Next: grep which code emits the first
 travel's `G1 X.. Y.. F21000` for fp (add a debug print at each
 travel_emit::xy call site or breakpoint by coordinates) and route
 that path through the lift logic.
+
+## 2026-09-04 (cont 121): the XY is the WIPE hop; retracted not tracked there
+
+The layer-0 `G1 X131.889 Y131.889 F21000` is the wipe-before-external
+hop (loop_paths.rs) — not a start_travel path at all. Added
+lift-consumption to the wipe hop (pending_lift → raise+descend;
+upstream travel_to semantics): no fixture regression, but Kobra still
+9 because state.retracted is FALSE at the wipe — the machine start
+gcode's retract is RAW TEXT (file_start renders verbatim, no state
+parsing), so the retracted state the earlier TRV trace showed comes
+from the object-start sequence, later than the wipe. Next: emit the
+object-start retract BEFORE the first path's wipe (or track the start
+gcode's retracted state) so the wipe hop sees retracted=true and
+lifts.
