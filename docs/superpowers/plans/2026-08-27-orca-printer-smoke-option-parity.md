@@ -5020,3 +5020,23 @@ Post-01b54d92 state on the local fixtures:
   need invalidation (the build_selection_case caches by
   reference_path.exists()) — next sweep run should clear the cache
   dirs first.
+
+Sweep cache analysis: work = /tmp/ares-parity-<PID> — the sweep uses
+ONE runner (one PID) for all 1001 printers, and reference_path.exists
+CACHES the first oracle output per printer slug. Each sweep run gets
+a new PID dir, so refs are fresh per sweep — the "stale ref" theory
+is WRONG. The Kobra2Neo sweep flag (420 vs 416) vs my local fresh
+comparison (body-identical) must differ via the CASE the sweep builds
+(cube10.stl + preset overrides) vs my dumped case.3mf. Next: run the
+sweep's own comparison for Kobra 2 Neo via the cluster check WITHOUT
+CLUSTER_DUMP (it printed the same 420 vs 416) — wait, the cluster
+check DID print 420 vs 416! But my /tmp/kobra2 dump re-slice showed
+body-identical. The difference: the cluster check builds a FRESH case
+(same as sweep) — so the fresh-case output differs from the dumped
+case's. The dump (CLUSTER_DUMP) wrote case.3mf to /tmp/kobra2 — and
+ITS reference is oracle(git case.3mf). The cluster check without dump
+builds its own case in the PID dir. So: oracle(PID case) != ares(PID
+case) but oracle(dump case) == ares(dump case)?? Both cases should
+be identical (same builder!). Unless the ORACLE is nondeterministic
+(SIGSEGV retries aside). ACTION: re-run cluster check twice to test
+oracle determinism.
