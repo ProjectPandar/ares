@@ -72,6 +72,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         let retract = !state.retracted
             && routed_length >= state.options.retraction_minimum_travel
             && !skip_retraction;
+        // Upstream `retract()` also runs for a long travel with the
+        // extruder already retracted — dE is a no-op but `maybe_zlift`
+        // defers, gated on m_lifted == 0 && m_to_lift == 0
+        // (GCodeWriter.cpp:637). The lifted_amount model mirrors
+        // m_lifted's distance semantics.
+        let defer_lift_for_retracted_travel = state.retracted
+            && state.lifted_amount == 0.0
+            && state.pending_lift.is_none()
+            && routed_length >= state.options.retraction_minimum_travel
+            && !skip_retraction;
         if retract {
             let head_before = (state.x, state.y);
             travel::retract_and_lift(output, state);
@@ -80,6 +90,12 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 // (`GCode.cpp:7436-7443`).
                 route = plan_route(state, &geometry, properties.feature, first_x, first_y);
             }
+        } else if defer_lift_for_retracted_travel
+            && state.options.z_hop > 0.0
+            && state.options.retraction_length > 0.0
+            && travel::lift_is_allowed_at(state, state.layer_z)
+        {
+            state.pending_lift = Some(travel::lift_mode_for(state, false));
         }
         let first_travel = route[0];
         let (travel_x, travel_y) = (first_travel.x, first_travel.y);
