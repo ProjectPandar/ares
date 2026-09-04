@@ -4218,3 +4218,15 @@ individually, but 2 of my missing lines may carry time, e.g. E-only
 or Z-only moves at the layer transition). Next: dump my parse's line
 list in the same format and diff to find the 2 lines and their time
 contribution (the stretch delta).
+
+## 2026-09-04 (cont 96): line-sequence diff — upstream has extra f=0 entries
+
+My layer-1 sequence (24 lines) aligns with upstream's 26 except TWO
+extra f=0.0000 entries upstream records (inside the f=30 group and
+one more) — zero-feedrate lines carrying no time. The totals: upstream
+4.122141 vs mine 4.121727 — a 0.44ms delta on real (f≠0) lines. The
+refine sensitivity (~5.2 mm/s per second of stretch) maps 0.44ms to
+only ~0.002 mm/s — not the full 34.2 vs 34.2198 gap, so a per-line
+time diff must also exist. Next: pairwise-diff the f≠0 lines' times
+(t= fields) between /tmp/wanhao/up.lines layer 1 and my dump to find
+the 0.44ms line and any Σt composition shift feeding the refine.
