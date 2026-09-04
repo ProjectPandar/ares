@@ -144,30 +144,54 @@ impl BrimPlan {
         // `traverse_pt_outside_in` (ClipperUtils.cpp:992): the outermost
         // contours first, recursing into holes — the nesting order, NOT
         // nearest-neighbor chaining (which zig-zags between nested rings).
-        loops.sort_by(|left, right| {
-            polygon_area(right).total_cmp(&polygon_area(left))
-        });
-        // `optimize_polylines_by_reversing` (Brim.cpp:861): flip each
-        // loop so its END is closer to the next loop's start — the brim
-        // is one continuous walk; each ring is emitted from the point
-        // nearest the previous ring's end.
+        loops.sort_by(|left, right| polygon_area(right).total_cmp(&polygon_area(left)));
+        // `makeBrimInfillImpl` (Brim.cpp:843-849): each ring becomes an
+        // OPEN polyline (to_polylines of a closed polygon drops the
+        // closing duplication), then `optimize_polylines_by_reversing`
+        // (cpp:719-733) flips each ring so its END is nearer the previous
+        // ring's END, then `connect_brim_lines` (cpp:735-808) joins
+        // successive rings end-to-end when the gap ≤ 2x spacing and the
+        // connector does not cross brim centerlines (an EdgeGrid check;
+        // approximated here by the gap test alone for the single-object
+        // brim whose rings are concentric and connector-safe).
         let mut previous_end: Option<Point> = None;
-        let paths = loops
+        let mut connected: Vec<Vec<Point>> = Vec::new();
+        for mut points in loops {
+            // drop the closing duplication — rings are open polylines
+            if points.len() > 1 && points.first() == points.last() {
+                points.pop();
+            }
+            if let Some(end) = previous_end {
+                let distance = |point: &Point| {
+                    let dx = (point.x() - end.x()) as f64;
+                    let dy = (point.y() - end.y()) as f64;
+                    dx * dx + dy * dy
+                };
+                let first = points[0];
+                let last = points[points.len() - 1];
+                if distance(&last) < distance(&first) {
+                    points.reverse();
+                }
+            }
+            let spacing_squared = f64::from(spacing) * f64::from(spacing) * 4.0;
+            let gap_ok = previous_end.is_some_and(|end| {
+                let start = points[0];
+                let dx = (start.x() - end.x()) as f64;
+                let dy = (start.y() - end.y()) as f64;
+                dx.mul_add(dx, dy * dy) <= spacing_squared
+            });
+            if gap_ok {
+                let tail = connected.last_mut().expect("gap_ok implies a tail");
+                tail.extend_from_slice(&points);
+            } else {
+                connected.push(points);
+            }
+            previous_end = connected.last().and_then(|points| points.last().copied());
+        }
+        // Re-close each connected path for emission.
+        let paths = connected
             .into_iter()
             .map(|mut points| {
-                if let Some(end) = previous_end {
-                    let first = points[0];
-                    let last = points[points.len() - 1];
-                    let distance = |point: &Point| {
-                        let dx = (point.x() - end.x()) as f64;
-                        let dy = (point.y() - end.y()) as f64;
-                        dx * dx + dy * dy
-                    };
-                    if distance(&last) < distance(&first) {
-                        points.reverse();
-                    }
-                }
-                previous_end = points.last().copied();
                 points.push(points[0]);
                 points
             })
