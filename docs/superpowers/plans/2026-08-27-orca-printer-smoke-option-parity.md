@@ -4655,3 +4655,14 @@ late-layer output shifted by the UNRESOLVED layer-1 1.9ms parse delta
 (cont 110: mine 1.452495 vs upstream 1.450583, n=31 both). Fix path:
 the same per-line GT diff on layer 1 (the Wanhao methodology that
 found the wipe wrapper) — one instrument cycle on the Anker fixture.
+
+## 2026-09-04 (cont 130): Anker layer-1 delta = a travel-route length diff
+
+Per-line layer-1 diff: my line 2 travel f=300 len=1.103004 vs
+upstream len=1.413534 (same feedrate, +0.31mm) — a TRAVEL ROUTE
+difference at layer 1 (my route shorter by 0.31mm; n=32 vs 31 —
+different segmentation). The 1.9ms ≈ the extra distance at 300mm/s.
+This is the travel-routing family (avoid-crossing/start-point
+selection), NOT the cooling parse. Next: dump the f=300 travel's
+source coordinates in both (my line 2 vs upstream's) to see the route
+segments — the router's start-point or detour choice at layer 1.
