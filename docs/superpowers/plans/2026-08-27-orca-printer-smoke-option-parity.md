@@ -4246,3 +4246,15 @@ speed_modifier.time += line.time) against upstream's block handling
 (CoolingBuffer.cpp:472-485): upstream only pushes the block entry at
 the block END and intrablock G1s don't become individual lines; check
 why my blocks split.
+
+## 2026-09-04 (cont 98): accumulation verified; dump artifact identified
+
+parse.rs SET_SPEED handling verified line-for-line against upstream
+(modifier index = the SET_SPEED entry itself; intrablock G1/G2/G3
+aggregate into it; kind=0 discards). The observed "per-move
+granularity" in my dump is a DUMP ARTIFACT: my debug printed each
+entry at PUSH time — the SET_SPEED entries print t=0 before
+accumulation finishes, while the GT dump prints post-parse totals.
+Next: print the lines AFTER parse::layer returns (post-accumulation,
+matching the GT dump) and redo the pairwise t= diff to get the true
+0.44ms location.
