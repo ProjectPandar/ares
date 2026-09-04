@@ -283,6 +283,11 @@ impl MotionOptions {
                 .0
                 .first()
                 .map_or(0.0, |value| value.0),
+            retract_restart_extra: gcode
+                .retract_restart_extra
+                .0
+                .first()
+                .map_or(0.0, |value| value.0),
             deretraction_feedrate: deretraction_speed * 60.0,
             z_hop: gcode.z_hop.0.first().map_or(0.0, |value| value.0),
             retract_lift_above: gcode

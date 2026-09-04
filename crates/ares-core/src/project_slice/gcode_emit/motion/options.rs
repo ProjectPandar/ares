@@ -87,6 +87,10 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) accel_to_decel_enable: bool,
     pub(in crate::project_slice::gcode_emit) accel_to_decel_factor: f64,
     pub(in crate::project_slice::gcode_emit) retraction_length: f64,
+    /// `filament_retract_restart_extra` — added to the retraction length
+    /// on de-retract (`Extruder::unretract`: `dE = m_retracted +
+    /// m_restart_extra`).
+    pub(in crate::project_slice::gcode_emit) retract_restart_extra: f64,
     pub(in crate::project_slice::gcode_emit) deretraction_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) z_hop: f64,
     pub(in crate::project_slice::gcode_emit) retract_lift_above: f64,

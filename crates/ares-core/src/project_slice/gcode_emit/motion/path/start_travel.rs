@@ -304,7 +304,10 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             state.scarf_z = slope_start_z;
         }
         let retraction_length = state.options.retraction_length;
-        let unretract = extrusion::coordinate(state, retraction_length);
+        let unretract = extrusion::coordinate(
+            state,
+            retraction_length + state.options.retract_restart_extra,
+        );
         // `Extruder::unretract()` zeroes `m_retracted` after the extrude;
         // `coordinate` only accumulates it for negative deltas.
         state.retracted_amount = 0.0;
