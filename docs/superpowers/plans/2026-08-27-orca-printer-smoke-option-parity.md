@@ -5606,3 +5606,17 @@ connect + anchoring + no-pre-split + start-gcode XY tracking) is
 upstream-faithful; the K2Neo ring walk order (union anchor
 interaction with the connect chain) remains the documented last
 variable for that sub-family.
+
+## 2026-09-04 (cont 190): anchor verified correct — ring walk K2Neo trace complete
+
+BRIMLOOP probe (reverted): every ring's first vertex == its min-x
+(anchor works), and the rings are in ascending outside-in nesting
+order (min-x values -9410697 < -8961800 < -8513284 ... ascend as
+rings shrink). The connect chain joins 7 of 10 rings into path 0
+starting at the anchored vertex. The remaining walk divergence vs
+ref's monotonic corner ascent is in the PER-RING walk direction
+(upstream to_polylines walk order) — my anchored rings walk CCW by
+construction while upstream's PolyTree walk alternates, so the
+inter-ring reversal chain lands on alternating corners for the 3
+unconnected rings. Full fix needs the upstream to_polylines direction
+matching; documented for the next session.
