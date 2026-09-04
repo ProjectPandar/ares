@@ -5865,3 +5865,21 @@ clusters now: layer4-d9 32, layer3-d5 22, layer4-d10 19, layer6-d17
 boundary touch (cont 203), (2) decide the 0.02 family approach —
 replicate the AppImage's FP path in my inset computation, (3) BBL
 emit-stage narrow/solid order, (4) layer4/3 sub-micron clusters.
+
+## 2026-09-05 (cont 205): 0.02 family is MY bug, not binary FP — narrow ring seam point
+
+CORRECTION of cont 204: the nix GT binary DOES emit Y125.517
+(gtdir/plate_1.gcode:1692, matches AppImage). Both references agree;
+the 0.02 residual is my emit-stage. Two components:
+(a) NARROW ring (0.271893 concentric-internal): ref walk
+    (124.975,124.547)->(124.547,124.547)->(124.547,124.975)->
+    (124.961,124.561) = inset-triangle ring SPLIT at the bottom-right
+    vertex; mine is the same ring split at the top-left vertex and
+    walked reversed. My narrow_internal::concentric_internal_segments
+    is an approximation — must match upstream ExtrusionLoop split /
+    seam selection for infill loops (GCode.cpp extrude_loop seam or
+    the concentric generator's ring start).
+(b) SOLID ring: after the narrow fix the entity-chain order
+    (narrow-vs-solid) may follow; verified connect_infill outputs are
+    byte-identical to GT so the fill geometry is right — only
+    entity-level order/rotation at emission remains.
