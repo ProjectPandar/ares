@@ -4628,3 +4628,12 @@ Refactor step 2 landed: lifted_amount maintained at all 6 set-sites
 reads), 25/25 smoke, fixtures stable. Step 3: migrate the defer gates
 to lifted_amount (the maybe_zlift gate) + add partial reduction at
 in-band z moves; step 4: delete the bool.
+
+## 2026-09-04 (cont 127): step 3 lands — fleet 423, regression 49→45
+
+The lifted_amount-gated defer (0312f108): Kobra3-0.4 9→6 with Anker
+stable (the amount distinguishes what the bool could not), fleet
+423/1001 (was 421), travel-geometry regression 49→45. Fleet
+trajectory: 415 (arc start) → 411 → 412 → 421 → 423. Step 4 (delete
+the bool) next, then the partial-reduction semantics at in-band z
+moves for the residual 45.
