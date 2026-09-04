@@ -3873,3 +3873,28 @@ upstream emits the start gcode verbatim (no maybe_zlift call), so any
 lift state must come only from actual start-gcode-analyzed retract
 moves; the layer-1 wall travel then has NO deferred lift and travels
 combined XYZ at the layer z.
+
+## 2026-09-04 (cont 73): Z.8 source = first-position lift block; fix scoped
+
+Wanhao ref has NO skirt (0 TYPE:Skirt) — layer 1 goes start gcode →
+wall directly, so the wall travel IS the print's first travel
+(fp=true). The Z.8 comes from the first_position scheduling block
+(start_travel.rs ~125-135): it schedules pending_lift whenever
+z_hop>0 && allowed && !lifted — unconditionally, without requiring the
+travel's own retraction. Upstream: a first-travel lift exists ONLY via
+its own needs_retraction→retract→maybe_zlift (ref has no retract
+before the Z.4 travel → no lift → combined XYZ at layer z).
+
+Fix (two coordinated gates, verified against the attempt-b Eryone
+regression):
+1. first_position block: add `&& retract` (the travel's own
+   retraction flag, line ~71).
+2. final-else first_position: emit combined XYZ — but Eryone regressed
+   (73→767) with this in attempt (b), so the Eryone first travel must
+   legitimately split XY+Z (upstream unclear-position branch without
+   force_z — e.g. a start-gcode purge travel NOT following a layer
+   change). The distinction: force_z = m_need_change_layer_lift_z is
+   only true after change_layer; the layer-1 wall travel follows it,
+   Eryome's split case does not. Gate the combined emission on
+   layer_change_travel_pending (the flag as-of entry), not
+   layer_change_travel.
