@@ -85,18 +85,6 @@ pub(super) fn avoid_perimeters(
     let mut index = 0;
     while index < intersections.len() {
         let first = intersections[index];
-        // The farthest later intersection on the same contour is the exit.
-        let exit = intersections[index + 1..]
-            .iter()
-            .rposition(|intersection| intersection.contour == first.contour)
-            .map(|offset| index + 1 + offset);
-        // A boundary is routed around only when the travel CROSSES it
-        // (enters AND exits, paired intersections). Entering without
-        // exiting (the destination lies inside) is a direct entry:
-        // no waypoints.
-        let Some(exit_index) = exit else {
-            break;
-        };
         let left = first.segment;
         let right = (first.segment + 1) % boundary.contour(first.contour).len();
         result.push(TravelPoint {
@@ -104,7 +92,12 @@ pub(super) fn avoid_perimeters(
             contour: first.contour as i32,
             do_not_remove: first.do_not_remove,
         });
-        {
+        // The farthest later intersection on the same contour is the exit.
+        let exit = intersections[index + 1..]
+            .iter()
+            .rposition(|intersection| intersection.contour == first.contour)
+            .map(|offset| index + 1 + offset);
+        if let Some(exit_index) = exit {
             let second = intersections[exit_index];
             let forward = shortest_direction_is_forward(boundary, first, second);
             let contour = boundary.contour(first.contour);
