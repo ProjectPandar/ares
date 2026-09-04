@@ -4521,3 +4521,16 @@ sequence's parsed start-gcode retract. Next: trace layer-1's LAST
 travel of Kobra3-0.4 (retract site + whether lift::schedule ran and
 where pending_lift went — if consumed by an intermediate travel
 before the layer end, upstream's m_lifted would persist instead).
+
+## 2026-09-04 (cont 119): first-travel deferral attempts — fp emission skips Z entirely
+
+Kobra layer-2 defer (fbc5ee2c) confirmed WORKING via SCHED/EMITPEND
+trace (pend set at the change, consumed with Spiral at the travel).
+The residual 9 lines = LAYER 0's first travel: my output emits
+XY-only + de-retract with NO Z raise NOR descend — the fp emission
+path skips the lift AND the separate Z. Two deferral-condition
+attempts (length-gated, then unconditional for fp) did not change
+the output — the fp branch chain itself drops the lift/Z. Next: trace
+which branch the fp travel takes (the state.retracted && first_position
+branch at ~line 230) and why its Z emission is absent — likely the
+branch's `mode` unwrap or an early return.

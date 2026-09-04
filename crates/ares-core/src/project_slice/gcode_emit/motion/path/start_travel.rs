@@ -108,14 +108,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         // (`NormalLift` `slop_move`), and both paths end with the separate
         // `_travel_to_z` re-statement from the unclear-position branch.
         let first_travel_lift = if first_position {
-            // Upstream: a first-travel lift exists ONLY via the travel's
-            // own retraction (`GCode.cpp:7440` needs_retraction →
-            // `GCodeWriter.cpp:626-648` maybe_zlift defers `m_to_lift`);
-            // when the travel does not retract (short travel, or
-            // `retract_when_changing_layer` off as on Wanhao), no lift is
-            // scheduled and the travel emits combined XYZ at the layer z
-            // (`GCodeWriter.cpp:701-710` no-raise when `m_to_lift == 0`).
-            if retract
+            // Upstream: a first-travel lift exists via the travel's own
+            // retraction (`GCode.cpp:7440` needs_retraction →
+            // `GCodeWriter.cpp:626-648` maybe_zlift defers `m_to_lift`).
+            // With the nozzle ALREADY retracted (the start gcode's
+            // retract, e.g. Kobra), `retract()` still runs — dE is a
+            // no-op but maybe_zlift defers. And with an UNCLEAR source
+            // position upstream's travel polyline starts at (0,0), so
+            // needs_retraction ALWAYS holds for the first travel — no
+            // length check here.
+            if !skip_retraction
                 && state.pending_lift.is_none()
                 && state.options.z_hop > 0.0
                 && !state.spiral_vase
