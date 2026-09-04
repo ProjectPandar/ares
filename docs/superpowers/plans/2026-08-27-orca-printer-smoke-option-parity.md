@@ -4974,3 +4974,20 @@ active (the revert was reverted? No — 5a1b6660 reverted it). Then the
 waypoint source: collect_intersections' extend_for_closest_lines
 adds phantom intersections. Next: instrument collect_intersections
 for this travel (start 121.29,121.889 → target 120.187,121.005).
+
+## 2026-09-04 (cont 155): RAWINT — all direct intersections are n=1
+
+147 RAWINT calls: every non-zero direct intersection count is n=1
+(ONE crossing per routed travel — enter-only!). The paired detours in
+the ROUTER trace came AFTER extend_for_closest_lines synthesizes the
+SECOND intersection (the start_shared/end_shared branch or the
+closest-line fallback): with raw n=1, the extend adds phantom pairs
+that route the travel around. Upstream's equivalent
+(avoid_perimeters_inner cpp:563-583): the closest-line retry only
+runs when intersections are EMPTY, and uses radius 1.5*spacing vs my
+2.0*spacing search_radius (start_travel passes 2.0*spacing at
+router.rs:74!). FIX CANDIDATES: (1) my extend runs even when raw is
+non-empty (upstream only when empty); (2) my search radius 2.0 vs
+upstream 1.5. Compare extend_for_closest_lines' upstream counterpart
+(cpp:180-210) precisely — it runs after the visitor, gated on
+intersections.empty().
