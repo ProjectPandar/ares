@@ -3802,3 +3802,22 @@ E per side (.29437), reversed order — the classic perimeter generator
 moves the nearest-seam pick to the mirrored corner and reverses every
 side. Root cause candidate: loop orientation in the perimeter
 materialization vs upstream `make_counter_clockwise` for outer walls.
+
+## 2026-09-04 (cont 69): Wanhao first divergence = layer-1 start-travel hop
+
+CORRECTION to cont 68: both loops are CCW (interior-left verified by
+cross product); the "reversed orientation" was a misread — both files
+travel the same direction, the seam CORNER differs only.
+
+The actual FIRST Wanhao divergence (before any seam): the layer-1
+object-start travel `G1 X110.645 Y118.905 Z.4 F24000` (ref) vs
+`Z.8` (ares) — same XY, ares adds a 0.4 z-hop on the FIRST travel of
+layer 1; ref travels at the layer Z. My start_travel.rs schedules the
+hop when `layer_change_travel && z_hop > 0 && !lifted &&
+lift_is_allowed_at(layer_z)`. Upstream (GCode.cpp:5693,
+GCodeWriter.cpp:685-707) only merges the raised destination when a hop
+was DEFERRED by the layer-change retract (the retract_lift_above/below
+gate at the PREVIOUS z); layer 1 has no prior retract so no hop fires.
+The downstream 852-line cluster (seam corners, wipe targets) likely
+cascades from this travel staging. Next: reproduce the layer-1 gate in
+lift_is_allowed_at (first layer has no deferred layer-change lift).
