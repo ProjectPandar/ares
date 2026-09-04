@@ -5658,3 +5658,18 @@ grid). NEXT: reproduce the inset polygon for layer 2's internal solid
 region (the BBL fixture case.3mf exists) and compare the top-boundary
 vertex against upstream's Clipper inset (surface inset path,
 PerimeterGenerator solid infill area).
+
+## 2026-09-04 (cont 194): BBL A1 — infill polyline ROTATED one segment + end clip
+
+Ref: travel→(125.517,124.323); extrude (124.323,124.323)→
+(124.323,125.517)→(125.503,124.337). Mine: travel→(124.323,125.517);
+extrude (125.517,124.323)→(124.323,124.323)→(124.323,125.497). The
+SAME polyline, ROTATED one segment: mine starts at C and re-walks C→A
+(0.01366 extra first diagonal) where ref starts at A. Plus the final
+endpoint clips 0.02 short (125.497 vs 125.517). Two components:
+(1) the zigzag/connect_infill polyline anchor rotation (which segment
+starts the chain), (2) the far-end clip 0.02. Both in the solid
+infill line chaining (fill/connect or the monotonic line ordering).
+NEXT: compare the polyline anchor selection (the connect_infill
+chain's start point choice) against upstream Fill::connect / the
+zigzag chain anchor.
