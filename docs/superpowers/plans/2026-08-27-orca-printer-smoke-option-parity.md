@@ -5883,3 +5883,11 @@ the 0.02 residual is my emit-stage. Two components:
     (narrow-vs-solid) may follow; verified connect_infill outputs are
     byte-identical to GT so the fill geometry is right — only
     entity-level order/rotation at emission remains.
+
+Correction to (a): the narrow section does NOT go through
+narrow_internal.rs (rectangle approximation) — the narrow region
+comes from the group_fills/narrow.rs SPLIT and its
+ConcentricInternal pattern is served by the regular concentric
+generator over the triangular region (hence the 45deg hypotenuse
+side). The ring start/direction is the concentric generator's ring
+anchor or the infill-loop split at emission.
