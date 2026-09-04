@@ -5356,3 +5356,19 @@ ring 1 first vertex is (102.116-ish area) because their union_pt
 contour traversal order/first vertex differs from mine. CONCLUSION
 stands: match the union_pt contour walk order (start vertex) — that
 is the whole fix for this family.
+
+## 2026-09-04 (cont 175): K2Neo brim start — investigation state saved
+
+Current understanding: the K2Neo brim ring start differs (ref starts
+at a mid-edge split near (102.1,101.6), ares at the vertex
+(116.255,100.779)); ref has 46 moves vs ares 45. The union_contours
+walk landed (rings reordered) but the ring's internal START VERTEX
+still differs — Clipper's PolyTree contour begins at the lowest-left
+vertex of the processed path. Remaining hypothesis: my Douglas-
+Peucker simplification (0.0125) merges/removes a vertex that
+upstream keeps, shifting the vertex sequence — OR upstream's
+traverse_pt_outside_in orients contours differently before chaining.
+Both require an instrumented side-by-side of the ring's vertex list
+(my union_contours output vs the GT m_internal.boundaries Polyline).
+This is the next instrument cycle (extend bounddump to print the ring
+points sorted the same way as my PLINE dump).
