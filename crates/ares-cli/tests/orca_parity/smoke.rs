@@ -40,6 +40,24 @@ fn orca_parity_nearest_cluster_check() {
                             std::fs::create_dir_all(dir).unwrap();
                             std::fs::write(dir.join("case.3mf"), &case.project).unwrap();
                             std::fs::write(dir.join("ref.gcode"), &case.reference).unwrap();
+                            let runtime = tokio::runtime::Builder::new_current_thread()
+                                .build()
+                                .expect("tokio runtime");
+                            match runtime.block_on(async {
+                                ares_core::slice_project(
+                                    &case.project,
+                                    ares_core::GenerationMetadata::deterministic(
+                                        2026, 8, 27, 0, 0, 0,
+                                    ),
+                                )
+                                .await
+                            }) {
+                                Ok(gcode) => {
+                                    let _ = std::fs::write(dir.join("inproc.gcode"), &gcode);
+                                    eprintln!("INPROC {} bytes", gcode.len());
+                                }
+                                Err(error) => eprintln!("INPROC failed: {error}"),
+                            }
                         })
                         .map_err(|error| error.to_string());
                     eprintln!("DUMP: {case:?}");

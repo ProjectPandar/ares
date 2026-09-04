@@ -5055,3 +5055,25 @@ in-process slice differs from the CLI (e.g. the CLI applies extra
 normalization), the 420-vs-416 could come from THAT. ACTION: compare
 ares CLI output vs slice_project output on the same case.3mf — if
 they differ, the divergence is in the CLI wrapper, not the core.
+
+## 2026-09-04 (cont 159): CLI == in-process; K2Neo's 420-vs-416 NOT in the output
+
+The in-process slice (deterministic metadata) vs the CLI differ only
+in the generated-by timestamp line. The K2Neo case's inproc vs its
+own ref: 6 lines — header + estimated times only. So the SWEEP's
+420-vs-416 is NOT from a body difference in the CURRENT code. The
+sweep last ran BEFORE 01b54d92? No — sweep9 ran after (fleet 431).
+The K2Neo entry in the CURRENT summary still says 420 vs 416 — but
+the cluster check TODAY prints the same. Yet the inproc-vs-ref
+comparison shows body-identical. The remaining difference: the
+semantic parser produces DIFFERENT deposition counts from
+body-identical text?? No — unless the parser sees the estimated-time
+line "; estimated first layer printing time = 1s" (ares) vs "0.612s"
+(ref) — NO, that's a comment. OR the cluster check's comparison uses
+case.reference from a FRESH oracle run (deterministic? the oracle is
+the AppImage — same binary, same case → same output as ref.gcode
+which I verified). CONCLUSION: rerun the cluster check once more and
+diff its per-target outputs — the 420-v-416 may be from a DIFFERENT
+printer in the 2-entry list (K3-0.4 passes!). K2Neo's local case is
+at parity; the summary line may be stale within the same sweep run
+(from an earlier target). ACTION: full sweep re-run to refresh.
