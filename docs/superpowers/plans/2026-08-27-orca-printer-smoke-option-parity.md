@@ -4842,3 +4842,14 @@ boundary contours vs the GT binary's m_internal.boundaries via an
 extended patch) — the geometry diff (which contour the travel's pair
 crosses) pinpoints whether lslices or the top-surface subtraction
 differs.
+
+## 2026-09-04 (cont 146): GT boundary dump works — inner contour found
+
+result-bound (bounddump.patch) dumps m_internal.boundaries. The trace:
+most layers have ONE 4-pt contour (±4389382 = the outer boundary);
+deeper layers show a SECOND contour (±3601901 = the INNER wall
+boundary). The dump repeats per travel (static FILE). Next: dump MY
+boundary contours for layer 1 (one eprintln in Boundary::build) and
+compare against the GT's layer-1 contours — if mine has the inner
+contour where GT layer 1 does not (or vice versa), that is the
+119-cluster root.
