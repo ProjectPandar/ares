@@ -4778,3 +4778,16 @@ the brim, to the wall seam 120.187,121.005), trace the router's
 boundary/crossing test — my boundary at layer 1 likely marks a
 crossing upstream doesn't (stale boundary or different island
 membership).
+
+## 2026-09-04 (cont 141): router detour root — destination-inside test missing
+
+Anker has reduce_crossing_wall=1 (both routable). The travel
+(121.29,121.889 -> wall seam 120.187,121.005): the END is INSIDE the
+destination island. Upstream's AvoidCrossingPerimeters detours only
+around boundaries the travel crosses where the destination ISN'T
+inside — entering the destination island is direct. My route() uses
+the layer boundary (all walls) and detours around the destination
+island's own boundary (the detour point 120.187,121.889 = the top
+edge). FIX: in plan_route (or route()), when the END lies inside the
+boundary polygon → return the direct route (no detour). One
+point-in-polygon test on the boundary.
