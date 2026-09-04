@@ -4283,3 +4283,16 @@ measure_movement: distance uses xyz?) where upstream's dxy2 handles
 XY-only for the block entry. Next: audit measure_movement's distance
 computation (dxy vs dxyz) against upstream's dif[] handling for
 intrablock moves.
+
+## 2026-09-04 (cont 101): 3D distance verified equal; per-move audit next
+
+measure_movement uses xy²+dz² (3D) exactly like upstream's
+dxyz2 — both handle arcs and E-only fallback identically, so the Z
+hypothesis is WRONG (a folded 0.4 z would add only ~0.008mm to a
+9.58mm move, not 0.414). The +0.414mm must be ONE move's length
+measured ~0.414mm longer (stale position or mis-mapped coordinate),
+not a squared-distance effect. Next: instrument the block
+accumulation (measure_and_aggregate) to print each aggregated move's
+length + source text for the second f=30 block, and diff against the
+expected 9.58/9.58/9.58/9.54 — the outlier move pins the stale-
+position source.
