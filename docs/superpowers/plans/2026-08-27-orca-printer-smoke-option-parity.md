@@ -3821,3 +3821,23 @@ gate at the PREVIOUS z); layer 1 has no prior retract so no hop fires.
 The downstream 852-line cluster (seam corners, wipe targets) likely
 cascades from this travel staging. Next: reproduce the layer-1 gate in
 lift_is_allowed_at (first layer has no deferred layer-change lift).
+
+## 2026-09-04 (cont 70): layer-start z-hop trace complete (fix reverted)
+
+Full upstream trace (source-verified):
+- Wanhao has retract_when_changing_layer=0, z_hop=0.4
+- change_layer (GCode.cpp:5692): no retract → no deferred m_to_lift
+- First travel: GCode::travel_to (7350) → its own needs_retraction only;
+  travel_to_xyz(dest3d, force_z=m_need_change_layer_lift_z) (7482)
+- GCodeWriter::travel_to_xyz (701-710): raises ONLY when m_to_lift>0;
+  with force_z the Z is merged into the travel line → ref's
+  `G1 X.. Y.. Z<layer_z> F..` combined output.
+
+Two ares attempts reverted (both regressed: Wanhao 852→922→1014,
+Eryone 73→767): (a) removing the pending_lift scheduling lost the
+Z-merge (split XY+Z); (b) merging Z in the final else broke mid-layer
+XY-only travels. The blocker: BOTH layer travels fall into the final
+else with layer_change_travel=false AND state.retracted=false AND
+first_position=false — the branch chain (lifted/retracted/
+layer_change/slope/first_position) needs re-mapping against which
+flags the layer-1/2 travels actually carry. Restored 852 baseline.
