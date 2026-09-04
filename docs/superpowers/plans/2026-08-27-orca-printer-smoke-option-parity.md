@@ -4230,3 +4230,19 @@ only ~0.002 mm/s — not the full 34.2 vs 34.2198 gap, so a per-line
 time diff must also exist. Next: pairwise-diff the f≠0 lines' times
 (t= fields) between /tmp/wanhao/up.lines layer 1 and my dump to find
 the 0.44ms line and any Σt composition shift feeding the refine.
+
+## 2026-09-04 (cont 97): structural granularity diff in the parse
+
+Pairwise time diff: upstream's f≠0 layer-1 entries (18) carry BLOCK
+totals (0.58, 1.276, 2.033s — the ;_EXTRUDE_SET_SPEED block time
+accumulated into the speed_modifier entry); my 24 entries split some
+of those blocks into per-move times (0.064, 0.018...). The sums are
+close (0.44ms apart) but the line GRANULARITY differs — my blocks
+aren't accumulating the same way (18 upstream entries vs my
+per-move-level splits). The 0.44ms and any refine-composition shift
+live in this accumulation difference. Next: compare my
+active_speed_modifier accumulation (parse.rs:169-176
+speed_modifier.time += line.time) against upstream's block handling
+(CoolingBuffer.cpp:472-485): upstream only pushes the block entry at
+the block END and intrablock G1s don't become individual lines; check
+why my blocks split.
