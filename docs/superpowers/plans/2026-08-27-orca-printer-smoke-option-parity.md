@@ -4593,3 +4593,16 @@ was the de-retract E amount (island-lifecycle cluster 26→25 as
 single-divergence printers graduated to PASS; others reveal their
 next-level divergence). Fleet trajectory: 415 (arc start) → 411 →
 412 → 421.
+
+## 2026-09-04 (cont 125): the missing piece — m_lifted is an AMOUNT with partial reduction
+
+GCodeWriter.cpp:770-830 decoded: m_lifted is a DISTANCE, not a bool.
+When a travel's dest z is within the current lift band
+(!will_move_z): `nominal_z = pos.z - m_lifted; m_lifted -= (dest.z -
+nominal_z)` — the lift is REDUCED by the z delta (a partial descend
+keeps a residual lift). A real z move (travel_to_z) fully clears it
+(|m_lifted|<eps → 0). My bool lifted cannot represent partial
+reduction — hence every gate approximation failed. REFACTOR SPEC:
+lifted: bool → lifted_amount: f64; set to (to_lift + pos.z − dest.z)
+at the raise; reduced by in-band z deltas; cleared on real z moves;
+the maybe_zlift gate becomes lifted_amount==0 && pending none.
