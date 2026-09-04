@@ -5077,3 +5077,17 @@ diff its per-target outputs — the 420-v-416 may be from a DIFFERENT
 printer in the 2-entry list (K3-0.4 passes!). K2Neo's local case is
 at parity; the summary line may be stale within the same sweep run
 (from an earlier target). ACTION: full sweep re-run to refresh.
+
+## 2026-09-04 (cont 160): sweep 430 — K2Neo still flagged; case-level parity
+
+Sweep re-run: 430 (from 431 — the ±2 oracle SIGSEGV band). K2Neo
+STILL flagged 420-vs-416 despite the local case being body-identical.
+The sweep's case ≠ my dumped case even though both go through
+build_selection_case: the sweep's ORACLE RUN happens in a fresh PID
+dir each sweep, and the sweep's oracle output for K2Neo genuinely
+differs from ref.gcode (nondeterministic oracle output for this
+printer — SIGSEGV-retry artifacts or a genuine nondeterminism).
+ACTION: instrument the sweep to keep BOTH outputs for K2Neo (extend
+the runner to dump on env), then diff the sweep's own ref vs my
+ref.gcode — if the oracle is nondeterministic for this printer, the
+420-v-416 is ORACLE noise, not an Ares divergence.
