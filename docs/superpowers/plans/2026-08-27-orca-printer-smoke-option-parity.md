@@ -5688,3 +5688,16 @@ section emission order (my narrow/solid arrangement), (2) the
 per-section polyline direction. The narrow fill = concentric-internal
 pattern after the split; verify my split produces the same region
 sets and the chain orders narrow first at the top-left corner.
+
+## 2026-09-04 (cont 196): narrow split order MATCHES upstream — divergence is the chain
+
+Verified my group_fills/narrow.rs mirrors upstream Fill.cpp:1153-
+1245 exactly (normal stays at fills[index], narrow appended at the
+END with ConcentricInternal). The surface_fills order is NOT the
+cause. The emitted order divergence (ref narrow-first, mine
+solid-first at the top-left corner) comes from the fill ENTITY
+CHAINING (the shortest-path reorder that arranges the fill
+entities). Next: compare the chain arrangement for the narrow/solid
+pair (the anchor choice in the chain, likely the fill/connect
+graph's endpoint selection or the chain_closest seed) — the region
+sets and widths already match.
