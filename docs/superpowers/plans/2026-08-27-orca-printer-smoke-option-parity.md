@@ -5443,3 +5443,21 @@ cross brim centerlines. THE RING STRUCTURE comes from the CONNECT
 step: it joins the concentric step rings into one long spiral-ish
 path. My implementation emits each step ring separately as a CLOSED
 loop. That's the structural gap.
+
+## 2026-09-04 (cont 180): K2Neo ring 1 — SAME VERTEX SET, rotated + partial first move
+
+DECISIVE: ares ring 1 has the exact same vertex sequence as ref, but
+ROTATED: ares starts at (116.255,100.779) — the vertex at ref's
+position 8 — and wraps to end at (115.574,100.633). Ref starts mid-
+edge at the projection (102.116,101.664) — the SPLIT target — with
+a partial move E.00845, then follows the same vertex sequence (102.
+624, 103.443, ..., wrapping). My split_at_nearest IS rotating to
+(116.255...) — but the WRONG vertex! The projection (102.116,
+101.664) exists in my ring too (I emit X102.116 Y101.664 mid-ring at
+position 40). So my split_at_nearest is selecting a different
+segment — likely because the nozzle target is wrong: it's using
+last_scaled_position (the previous ring's END) rather than the true
+nozzle position at brim start (101.978,101.802 — the layer-change
+travel target). The nozzle at brim start IS at the travel target
+(101.978,101.802): upstream's last_pos at extrude_loop time is that
+travel's destination. My state.x/y must carry that target.
