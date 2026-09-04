@@ -3946,3 +3946,18 @@ lift — ref's Z.4 proves m_to_lift was 0. Fix direction: audit how
 upstream (the nil must resolve to 0/no-retraction for this project,
 likely via the Wanhao base filament preset chain), then the existing
 e4fdf4e6 gate handles the rest.
+
+## 2026-09-04 (cont 77): Wanhao Z.4 = SHORT travel, retraction IS active
+
+Key correction: the Z.4 divergence (line 178) is the LAYER-2 start
+(;Z:0.4). Layer 1 (;Z:0.2) DOES retract (G1 E-2 F4200) with a hop
+(travel XY + Z.6) — retraction is ACTIVE (effective 2mm; machine json
+says 5, override chain resolves 2). At the layer-2 start the travel
+is SHORT (< retraction_minimum_travel 2mm: layer 1 ended near the wall
+start) → no retract → no lift → combined Z.4. My Z.8 there means my
+layer-1 END POSITION differs (travel computes long → retract → lift).
+The Wanhao 852 cluster bottoms out in layer-1 endpoint parity
+(nearest-seam/extrusion end), cascading into travel lengths and
+retract decisions. The e4fdf4e6 needs_lift gate stays
+(upstream-faithful) but the Wanhao fix needs the seam/endpoint parity
+first.
