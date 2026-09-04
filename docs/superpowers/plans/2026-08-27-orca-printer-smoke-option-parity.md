@@ -5911,3 +5911,19 @@ output to find where the arachne walk start vertex differs (skeletal
 traversal seed). Also note latent bug: mine uses nearest_to_origin
 for EVERY ring; upstream chains last_pos — only matters for
 multi-ring regions.
+
+## 2026-09-05 (cont 207): narrow ring = arachne ExtrusionLine DIRECTION reversed
+
+My ring (ARES_DUMP_CONC, object coords): [(4.074388,4.074388),
+(4.074388,2.119133), (2.119133,4.074388)] — right-angle corner
+first, then down, then diagonal back. Tied origin-nearest pair =
+idx1 (4.074,2.119) vs idx2 (2.119,4.074); last-minimal (matches
+upstream) picks idx2. Ref's split at the OTHER tied vertex means
+upstream's ring visits the corner then the OTHER side first — i.e.
+upstream's arachne ExtrusionLine walks the ring in the OPPOSITE
+direction (same cyclic vertex set, reversed traversal), so its
+last-minimal pick lands on the other vertex. Fix target: my arachne
+ring walk direction for inward walls (skeletal trapezoidation
+ordering) vs upstream — awaiting ORCA_DUMP_CONC GT build
+(result-conc, /tmp/orca-gt/conc.patch) to confirm the exact upstream
+vertex sequence before flipping.
