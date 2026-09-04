@@ -135,7 +135,11 @@ fn prepare_layer(
     source_order.sort_unstable_by_key(|&index| collections[index].source_order);
     if let Ok(path) = std::env::var("ARES_DUMP_SEAM") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(file, "LAYER z={z}");
             for collection in &collections {
                 let _ = writeln!(
@@ -148,11 +152,7 @@ fn prepare_layer(
                         .map(|entity| {
                             format!(
                                 "{:?}/{}",
-                                entity
-                                    .extrusion_loop
-                                    .paths
-                                    .first()
-                                    .map(|path| path.role),
+                                entity.extrusion_loop.paths.first().map(|path| path.role),
                                 entity
                                     .extrusion_loop
                                     .paths

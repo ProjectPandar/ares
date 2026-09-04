@@ -286,6 +286,7 @@ fn emit_infills(
             index += 1;
         }
     }
+    dump_infill_reorder(entities, state, geometry);
     chain_and_reorder_entities(entities, local_cursor(state, geometry));
     entities.append(&mut ironing);
     for entity in entities.drain(..) {
@@ -386,4 +387,50 @@ fn local_cursor(state: &EmitState, geometry: LayerGeometry<'_>) -> Point {
             .checked_scale(state.y - state.offset.1)
             .expect("emitted Y remains in the coordinate domain"),
     )
+}
+
+fn dump_infill_reorder(
+    entities: &[IslandPrintEntity],
+    state: &EmitState,
+    geometry: LayerGeometry<'_>,
+) {
+    let Ok(path) = std::env::var("ARES_DUMP_IORDER") else {
+        return;
+    };
+    use std::io::Write;
+    let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    else {
+        return;
+    };
+    let cursor = local_cursor(state, geometry);
+    let _ = write!(
+        file,
+        "REORDER cursor={:.3},{:.3} n={}",
+        geometry.scale.unscale(cursor.x()),
+        geometry.scale.unscale(cursor.y()),
+        entities.len()
+    );
+    for entity in entities {
+        let (first, reversible) = match entity {
+            IslandPrintEntity::Fill(entity) => {
+                use crate::project_slice::perimeters::classic::shortest_path::ChainEntity;
+                (entity.first_point(), true)
+            }
+            IslandPrintEntity::FillCollection(collection) => {
+                (collection.first_point(), !collection.no_sort)
+            }
+            IslandPrintEntity::Thin(_) | IslandPrintEntity::Perimeter(_) => continue,
+        };
+        let _ = write!(
+            file,
+            " | open{}({:.3},{:.3})",
+            if reversible { "" } else { "NR" },
+            geometry.scale.unscale(first.x()),
+            geometry.scale.unscale(first.y())
+        );
+    }
+    let _ = writeln!(file);
 }
