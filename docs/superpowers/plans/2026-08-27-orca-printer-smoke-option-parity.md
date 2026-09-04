@@ -4482,3 +4482,16 @@ model (set by retract, consumed by the NEXT travel, cleared — plus
 m_lifted interplay), not per-case gates. Next: model the to_lift
 lifetime explicitly in EmitState (a to_lift counter cleared at each
 travel_to_xyz) instead of inferring from lifted/pending.
+
+## 2026-09-04 (cont 116): layer-2 travel flags traced; defer ordering found
+
+Kobra3-0.4 layer-2 travel: lct=true retracted=true lifted=false
+pend=false pend_lr=false — the layer-end retract consumed the flag
+WITHOUT deferring a lift. First attempt (defer after
+flush_pending_retract_wipe) was inert: the flush already cleared
+pending_layer_retract, so the gate never fired. FIX (next): capture
+the pending_layer_retract flag BEFORE the wipe flush, then defer the
+lift (schedule with layer_change=true, gated on z_hop>0 &&
+retraction_length>0 && !lifted && pend none) — the c7ea935f lesson
+holds: NO already-retracted mid-print deferrals (only this
+layer-change site).
