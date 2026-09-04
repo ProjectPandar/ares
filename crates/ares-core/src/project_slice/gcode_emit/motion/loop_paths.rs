@@ -185,6 +185,7 @@ fn append_wipe_before_external(
         );
         output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
         state.lifted = false;
+        state.lifted_amount = 0.0;
         state.pending_lift = None;
     } else {
         output.extend_from_slice(

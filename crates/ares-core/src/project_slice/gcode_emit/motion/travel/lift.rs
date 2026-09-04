@@ -144,6 +144,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
         }
     };
     state.lifted = true;
+    state.lifted_amount = state.options.z_hop;
     emitted
 }
 
@@ -177,6 +178,7 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
         state.current_feedrate = state.travel_feedrate;
     }
     state.lifted = true;
+    state.lifted_amount = state.options.z_hop;
 }
 
 pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
@@ -193,6 +195,7 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     );
     state.current_feedrate = state.travel_feedrate;
     state.lifted = true;
+    state.lifted_amount = state.options.z_hop;
 }
 
 fn append_spiral(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64, j: f64) {

@@ -220,6 +220,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
             );
             state.lifted = true;
+            state.lifted_amount = state.options.z_hop;
         } else if layer_change_travel {
             // The sloped split only applies when a lift actually exists
             // (`GCodeWriter.cpp:725-757`: slope/spiral moves come from the
@@ -297,6 +298,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
             );
             state.lifted = true;
+            state.lifted_amount = state.options.z_hop;
         }
         if state.lifted && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
@@ -322,6 +324,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         state.current_feedrate = state.options.deretraction_feedrate;
         state.retracted = false;
         state.lifted = false;
+        state.lifted_amount = 0.0;
         state.template_lifted = false;
     }
 }
