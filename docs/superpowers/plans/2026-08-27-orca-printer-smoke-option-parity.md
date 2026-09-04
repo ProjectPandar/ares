@@ -5506,3 +5506,20 @@ start stays at the Clipper contour start... unless
 optimize_polylines_by_reversing + connect_brim_lines joined them.
 DEFERRED: this needs the GT ring dump (bounddump extension) —
 instrument cycle next session.
+
+## 2026-09-04 (cont 183): K2Neo — reversal only for OPEN polylines; my rings stay closed
+
+DECISIVE: upstream's optimize_polylines_by_reversing only flips
+`!next.is_closed()` polylines — but loops from makeBrimInfillImpl
+(to_polylines of closed rings) ARE closed... wait, loops_pl_by_
+levels uses chain_polylines which returns Polylines — a closed ring
+converted to a Polyline is NOT is_closed() unless last==first
+(duplicated). The step in Brim.cpp:843: `loops_pl_by_levels[i] =
+chain_polylines({ std::move(loops_pl[i]) })` — to_polylines of a
+closed Polygon produces a polyline whose last point != first (open
+representation!). So ALL brim rings are OPEN polylines in upstream,
+the reversal applies, and connect_brim_lines then JOINS them end-to-
+end. My rings are closed (first==last duplicated by points.push
+(points[0])). The complete fix: represent rings as open polylines,
+reverse per upstream, then connect within 2*spacing via
+connect_brim_lines semantics.
