@@ -4311,3 +4311,14 @@ modifier as expected (the POST dump lacks the separate 0.0133 entry).
 Next: trace active_speed_modifier indices across the two outer blocks
 (print lines.len() + modifier at each SET_SPEED/END) to find the
 merge point.
+
+## 2026-09-04 (cont 103): !wipe gate verified equal; merge still unlocated
+
+My `set_speed && !wipe` gate matches upstream exactly (per-line
+contains ";_WIPE", CoolingBuffer.cpp:419); neither outer block's
+SET_SPEED line carries ;_WIPE so both modifiers open. The SET_SPEED
+self-aggregation guard (index >= lines.len() → return) is also
+correct. The merge of the 0.3996 wipe move into the wall-block entry
+remains unexplained by static reading — next: empirically print the
+modifier index at every SET_SPEED/EXTRUDE_END/aggregation in layer 1
+and watch the index the 0.3996 move lands in.
