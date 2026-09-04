@@ -3759,3 +3759,17 @@ Wanhao D12: 1052 → 970 → 852 diff lines. The corner-vs-mid-edge
 mystery is solved (projection + width floor). Remaining 852-line
 cluster = wipe_before_external_loop pattern (ref travels to a point
 inside, wipes, then extrudes; 20× per file) — separate feature.
+
+## 2026-09-04 (cont 66): emit-time arc fitting fallback removed
+
+Upstream never arc-fits at G-code export: `GCode.cpp:6992` replays the
+precomputed `path.polyline.fitting_result` and falls back to G1 lines
+when it is empty (brim, skirt, clipped tails — entities that never
+pass through `LayerRegion::simplify_*`). My constant::emit had an
+`arc::fit` fallback when fitting was empty, which fitted the brim's
+rounded-corner chords into arcs (501 vs 380 arcs on Kobra 2 Neo).
+
+Removed the fallback: `fitting.is_empty() → straight segments`, like
+upstream. Kobra 2 Neo: arcs 380=380, E-lines 103=103, layer-1
+deposition 420 vs 433 (was 420 vs 190). Remaining: brim rounded-corner
+vertex discretization (sub-0.1mm position/count drift, ±13 records).

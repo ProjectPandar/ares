@@ -8,6 +8,58 @@ use crate::{
     runner::{self, CaseInputs, OrcaRunner},
 };
 
+/// Focused re-check of the nearest-seam / layer-1 deposition cluster
+/// after seam-placement changes (env-gated, prints outcomes).
+#[test]
+fn orca_parity_nearest_cluster_check() {
+    if std::env::var("ARES_PARITY_CLUSTER").as_deref() != Ok("1") {
+        eprintln!("skipping: set ARES_PARITY_CLUSTER=1");
+        return;
+    }
+    let Some(runner) = OrcaRunner::from_env() else {
+        eprintln!("skipping: no OrcaSlicer CLI available");
+        return;
+    };
+    let targets = [
+        ("Anycubic", "Anycubic Kobra 2 Neo 0.4 nozzle"),
+        ("Anycubic", "Anycubic Kobra 3 0.2 nozzle"),
+    ];
+    let root = profiles_root();
+    let model = cube_model();
+    for (vendor, printer) in targets {
+        let Ok(profiles) = VendorProfiles::load(&root, vendor) else {
+            eprintln!("SKIP {vendor}/{printer}: load failed");
+            continue;
+        };
+        let outcome = match parity::select_printer(&profiles, vendor, printer) {
+            Ok(selection) => {
+                if std::env::var("CLUSTER_DUMP").is_ok() {
+                    let case = parity::build_selection_case(&runner, &profiles, &selection, &model)
+                        .map(|case| {
+                            let dir = std::path::Path::new("/tmp/kobra2");
+                            std::fs::create_dir_all(dir).unwrap();
+                            std::fs::write(dir.join("case.3mf"), &case.project).unwrap();
+                            std::fs::write(dir.join("ref.gcode"), &case.reference).unwrap();
+                        })
+                        .map_err(|error| error.to_string());
+                    eprintln!("DUMP: {case:?}");
+                    assert!(case.is_ok());
+                    continue;
+                }
+                match parity::build_selection_case(&runner, &profiles, &selection, &model) {
+                    Ok(case) => parity::compare_case(&case),
+                    Err(error) => parity::ares_error(&format!("{vendor}/{printer}"), error),
+                }
+            }
+            Err(error) => parity::ares_error(&format!("{vendor}/{printer}"), error),
+        };
+        eprintln!(
+            "CLUSTER {} {} | {}",
+            outcome.status, outcome.label, outcome.detail
+        );
+    }
+}
+
 fn profiles_root() -> PathBuf {
     runner::repo_root().join("OrcaSlicer/resources/profiles")
 }

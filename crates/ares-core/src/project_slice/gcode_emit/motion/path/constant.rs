@@ -38,12 +38,11 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
         .iter()
         .map(|&(x, y)| arc::Point { x, y })
         .collect::<Vec<_>>();
-    let segments = if state.options.enable_arc_fitting {
-        if fitting.is_empty() {
-            arc::fit(&arc_points, state.options.arc_fitting_tolerance)
-        } else {
-            arc::from_fitting(&arc_points, fitting, state.offset)
-        }
+    let segments = if state.options.enable_arc_fitting && !fitting.is_empty() {
+        // Upstream replays the precomputed fitting result at export time
+        // (`GCode.cpp:6992`); paths with no fitting (brim, skirt, clipped
+        // tails) emit straight segments and are never fitted here.
+        arc::from_fitting(&arc_points, fitting, state.offset)
     } else {
         points
             .windows(2)
