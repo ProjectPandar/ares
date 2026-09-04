@@ -4935,3 +4935,19 @@ wipe_on_loops option — check the config!) OR the hop's E=0 and it
 merged into the travel. Check: does Anker set wipe_on_loops=1? If
 so, my emission of the hop as a BARE G1 X Y (no E) vs upstream's
 extrude_to_xy with E... compare the emitted lines.
+
+## 2026-09-04 (cont 153): Anker wipe_on_loops=0 — hop is NOT wipe_on_loops
+
+Anker: wipe=1, wipe_on_loops=0 — the append_inward_move gate
+(wipe_on_loops) correctly SKIPS. Yet the hop persists. The remaining
+emitters of a bare `G1 X Y` near a loop end: (1) my wipe-hop
+consumption at the WIPE (travel.rs:161-164, the wipe move's last
+segment), (2) the start_travel route[1..] continuation lines, (3)
+retract_and_wipe's segments themselves. The hop line sits BETWEEN
+`G1 X121.29 Y121.889 F18000` (the travel) and `G1 X120.187 Y121.005`
+(the next travel target) — i.e. it's part of the TRAVEL route's
+continuation (route[1..] loop at start_travel:272) — the router
+returned a 2-point route! But the ROUTER debug printed nothing —
+meaning the route came from a DIFFERENT plan_route call or the router
+debug env didn't reach that call. Next: instrument plan_route's
+output (route length) for travels to (120.187,121.005).
