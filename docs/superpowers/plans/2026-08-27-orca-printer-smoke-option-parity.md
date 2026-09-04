@@ -4951,3 +4951,26 @@ returned a 2-point route! But the ROUTER debug printed nothing —
 meaning the route came from a DIFFERENT plan_route call or the router
 debug env didn't reach that call. Next: instrument plan_route's
 output (route length) for travels to (120.187,121.005).
+
+## 2026-09-04 (cont 154): CAUGHT — the route emits BOTH target AND waypoint
+
+ROUTE2 probe: `first=(121.290,121.889) n=3 pts=(120.187,121.889)
+(120.187,121.005)` — the route array CONTAINS THE FINAL TARGET as
+its last element (120.187,121.005) AND the waypoint before it. The
+`travel_emit::xy_without_feed` loop over route[1..] then emits BOTH
+lines: the waypoint AND the target — while the FIRST point handling
+(travel_x/travel_y = route[0] = the detour's first move
+(121.29→...wait route[0]=(121.290,121.889)=the START). So the route
+= [start, waypoint, target]; route[0] emitted as the F-travel, then
+route[1..] = [waypoint, target] as continuation lines. Upstream's
+travel.points = [start, ..., target] and emits from index 1 — the
+SAME. The DETOUR waypoint itself is the issue: upstream has NO
+waypoint for this travel (their route = direct). My router returned
+the waypoint — but the ROUTER probe printed nothing?? The router
+debug was placed inside avoid_perimeters' while loop — it only fires
+for PAIRED crossings; the waypoint here came from the ENTER-ONLY
+push... wait that was reverted. Actually the enter-only push IS
+active (the revert was reverted? No — 5a1b6660 reverted it). Then the
+waypoint source: collect_intersections' extend_for_closest_lines
+adds phantom intersections. Next: instrument collect_intersections
+for this travel (start 121.29,121.889 → target 120.187,121.005).
