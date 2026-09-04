@@ -4332,3 +4332,19 @@ wipe-before-seam move sits INSIDE the first outer block there). The
 PUSH/OPEN/CLOSE/AGG instrument set is proven; next run filters to
 layer 1 (second layer's debug lines) and reads the index the 0.3996
 move lands in directly.
+
+## 2026-09-04 (cont 105): TRACE PROOF — my wipe lacks the SET_SPEED wrapper
+
+Layer-1 trace: OPEN 2..CLOSE, OPEN 5, then AGG 5 len=0.399648
+followed by the 4 walls — the wipe-before-seam move aggregates INTO
+the wall block (index 5). REF's text wraps the wipe in its OWN
+;_EXTRUDE_SET_SPEED..;_EXTRUDE_END block (upstream emits the fake
+wipe path inside the block; that's why upstream shows a separate small
+f=30 entry). MY EMISSION lacks the wrapper around the wipe move — the
+earlier "byte-identical layers" conclusion compared post-slowdown
+outputs where the marker comments still differ. FIX: emit the
+wipe-before-external move inside its own SET_SPEED..EXTRUDE_END
+wrapper in loop_paths/append_wipe_before_external (matching upstream
+GCode.cpp:5884-5893's extrude_path with the force_no_extrusion path)
+— this moves the 0.0133s into its own entry, fixing the stretch, the
+refine value, and the ±1.
