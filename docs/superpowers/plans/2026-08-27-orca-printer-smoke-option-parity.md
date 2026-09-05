@@ -7481,3 +7481,18 @@ family (57 printers at the cont-276 measurement) is largely resolved.
 Remaining: sparse cubic/gyroid variants, inner-wall feed family (82),
 bottom surface, skirt, and the ksr_fdmtest_v4 0.19mm filament-length
 regression from the grid endpoint micro-deltas.
+
+## 2026-09-05 (cont 297): ksr_fdmtest_v4 regression = object-relative layer parity
+
+ksr semantic test fails: filament length 11335.74 vs 11335.55mm and
+31520 gcode diff lines = TWO roots: (a) an E accumulator ±1e-5 first
+visible at line 3337 (retract E-.04514/-.04515) — a hidden 1e-6-level
+endpoint divergence in early layers; (b) grid regions (line 5810+)
+walked in the OPPOSITE direction: GT right→left, mine left→right —
+the ksr fixture is MULTI-OBJECT, and upstream FillGrid::fill_surface's
+layer_id is the OBJECT's own layer index (each object counts from its
+first layer), while my grid::append receives the GLOBAL plan layer.id.
+The KSM single-object fixture validated %2==1; multi-object fixtures
+need the object-relative index (layer_index − object first layer).
+NEXT: thread the object-relative layer id to grid::append (from the
+prelude/traversal object context), re-test ksr + KSM + fleet.
