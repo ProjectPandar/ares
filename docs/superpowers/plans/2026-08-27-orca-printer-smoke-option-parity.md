@@ -7724,3 +7724,14 @@ the ares-parity-1018086 KSM runner dir — the authoritative replay
 source is now /tmp/ares-parity-1851777 (the complete pre-fix sweep dir
 with all 1001 case 3mfs). Remaining per the pre-fix breakdown: gyroid
 28, grid 26, cubic residual, inner-wall/bottom/skirt families.
+
+## 2026-09-05 (cont 315): gyroid family = ±1-quantum vertex flips (28 printers)
+
+Gyroid case replay (Kobra 3 Max): only 10 diff lines, ALL ±1-quantum
+flips (X 215.153↔215.154, Y 212.174↔212.175, E ±1e-5) — the gyroid
+vertices sit exactly ON the 0.0005 print-rounding boundary and my
+internal sub-quantum arithmetic differs. Upstream FillGyroid uses the
+coordr_t→to_coord(x*rsize) integer chain + (point*scaleFactor).cast
+for wave samples; my gyroid.rs uses f64→checked_point directly. NEXT:
+port FillGyroid's exact coordinate chain (coordr_t rsize grid, to_Point
+rounding, wave-sample scaling) to eliminate the sub-quantum drift.
