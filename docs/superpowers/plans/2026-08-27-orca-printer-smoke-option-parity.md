@@ -7145,3 +7145,20 @@ both sides (GT GRID patch exists) and compare — the anchor
 difference would pinpoint which sweep's bounding box/align_to_grid
 lands differently. Alternatively: check whether the 0.4 case uses
 crosshatch code path (its own fill_surface) instead of grid.
+
+## 2026-09-05 (cont 274): KSM 0.4 config decoded — 0.45 width, 6.0mm spacing, 2 lines/family
+
+The 0.4 case process: sparse_infill_line_width 0.45, density
+15% (7.5%/family), spacing 6.0mm, lh 0.2, grid. With ~7mm fill
+area = 2 lines/family (vs 0.6 case's 8.27mm spacing = 1
+line/family). The layer-4 divergence = first sparse layer. The
+grid anchor (first_x = align_to_grid(rotated_bbox.min_x, spacing,
+ref_x)) determines line positions; with 2+ lines, a 1-unit
+anchor difference shifts all lines. The rotation sign experiment
+(cont 273) proved the CONVENTION is not the issue — the anchor
+computation differs at specific spacing/size ratios. NEXT: dump
+the GRID call's first_x for both spacings (ARES_DUMP_IORDER
+already logs angle; add first_x) and compare against GT's
+vline.pos values (the fconnect2 dump's I lines give world
+positions) — the first differing line position pinpoints the
+anchor delta.
