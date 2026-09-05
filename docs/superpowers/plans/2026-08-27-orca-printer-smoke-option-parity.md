@@ -7038,3 +7038,19 @@ variable_width conversion so the ring's first/last widths coincide
 (or handle the mismatch like upstream's to_thick_polyline by
 copying the first width to the last). This is the LAST bug for
 both clusters (~42 printers).
+
+## 2026-09-05 (cont 266): BOTH CLUSTERS CONVERGED — pop-before-scan fix landed
+
+The one-line root fix (pop the ThickPolyline closing duplicate
+before nearest_to_origin, mirroring FillConcentricInternal.cpp:67-
+70) resolved:
+- AD5X sweep case: 79 -> 4 lines (estimated-time comments only,
+  movement byte-identical)
+- BBL A1 0.2 nozzle fixture: 115+ -> 0 lines (movement identical)
+Sweep4 running to measure fleet impact (expect +20 to +42
+printers). The width.first==width.last() hypothesis from cont 265
+was WRONG (all widths match=true); the actual bug was the
+duplicate-index no-op in start_at_index. Remaining clusters to
+re-prioritize after the sweep: KSM grid (414 lines, monotonic/
+emission chain), hilbert tangential boundary touch (1 printer),
+layer4/5/6 sub-micron families.
