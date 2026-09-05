@@ -6572,3 +6572,24 @@ generator (I-lines match). Fix targets: connect.rs chain seed
 tie-break at 0.02mm-scale and the take_limited/clip_end precision.
 This is more tractable than corner forensics; the KSM I-line 1-2
 unit tails are a SEPARATE sub-1% residue.
+
+## 2026-09-05 (cont 242): AD5X exact case — connect outputs IDENTICAL; divergence = emit orientation pick
+
+Dumps on the exact sweep AD5X case: I-lines AND O-polylines
+byte-identical between mine and the GT binary (0 diffs both; the
+nix GT gcode also matches the AppImage oracle 0 diffs). The 79
+gcode divergence lines = DOWNSTREAM of connect: the emission-stage
+entity orientation. The 16-vertex connected polyline's two ends
+sit 9.25 vs 9.27mm from the previous position; GT walks from the
+CLOSER end (112.626,106.482 — correct greedy), mine from the
+farther (113.518,107.374) — MY CHAIN PICKS THE FARTHER ENDPOINT,
+suggesting my endpoint-distance comparison or the entity
+first/last mapping is off for this fill entity (not a tie-break —
+a selection bug at 0.02mm scale, or my computed first/last differ
+from the true polyline ends). FIX TARGET: motion.rs
+chain_and_reorder_entities / entity_chain could_reverse path for
+monotonic fill collections (no_sort=false) — verify the entity
+endpoints used in the greedy and the reversal application.
+Verification loop: replay the sweep case 3mf directly (runner dir
+/tmp/ares-parity-1018086), diff gcode; expect the 79 lines to
+collapse and layer3-d5 (22 printers) to converge.
