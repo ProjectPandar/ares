@@ -7097,3 +7097,19 @@ cluster (30) = this family. NEXT for d9: align the multiline
 contract-then-offset chain (expand by float delta) to match
 ExPolygonWithOffset's corner integers — the corner forensics from
 cont 239 apply directly.
+
+## 2026-09-05 (cont 270): KSM 0.4 first divergence = extrusion rounding ±0.00001
+
+The KSM 0.4 replay (908 lines) starts with E 0.37995 vs 0.37996 —
+a ±1e-5 extrusion ROUNDING difference at the same line position.
+The geometry is aligned; the extrusion volume calculation (flow ×
+segment_length) differs in the last digit. This is the "sub-micron"
+family: the mm3_per_mm × length computation rounding path. NEXT:
+(1) trace the E computation for this line (the line at
+(170.95,179.05) with E .37995/.37996) — check whether the width/
+height/spacing values differ or the double-to-string formatting
+truncation; (2) the extrusion formula uses material_ratio or
+filament_area × mm3_per_mm — check the precision at each step. The
+layer4-d9 cluster (30 printers) may share this root with the
+subsequent segment-structure differences being cascading effects
+of the first rounding.
