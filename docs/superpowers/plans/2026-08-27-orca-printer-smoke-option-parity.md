@@ -7751,3 +7751,16 @@ NEXT per family: gyroid = port marchsq (Grid/Ring/float get_scalar);
 cubic/grid = hunt the 100-unit vertex deltas (FGRID SRC contour
 comparison shows ±1-3 unit contour diffs already — the deltas may come
 from the boundary expansion/offset rounding in the fill clip).
+
+## 2026-09-05 (cont 317): cubic structural block found at Z9.6 (56 vs 46 lines)
+
+The daf4ca69 cubic case also has a STRUCTURAL diff: lines 1243-1298
+(Z9.6, layer 48) — GT emits 56 segments, mine 46 (a fill region where
+the ±100-unit vertex deltas change which spans fit the x-margin /
+survive the minlength filter). So the cubic residual = both E±1e-5
+flips AND margin-edge span drops. Fix approach: for each failing cubic
+layer, FGRID-dump both sides and compare first_x/margins — the anchor
+is now sign-correct but the bbox-derived margin still differs
+(GT bbmin includes the full-spacing align merge; mine uses the raw
+bbox for x_min/x_max — check whether upstream's post-merge bbox
+changes x_min/x_max!).
