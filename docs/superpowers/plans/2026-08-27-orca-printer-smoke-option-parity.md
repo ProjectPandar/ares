@@ -6246,3 +6246,23 @@ order; a GT dump of layerm->slices expolygon firsts would settle
 it). Full verified trace now: GCC sort -> fills byte-identical ->
 split inert -> island order (HERE) -> reorder cursor -> narrow/
 solid2 order -> ring walk -> 115-line cluster -> 20 printers.
+
+## 2026-09-05 (cont 225): SOLVED THE PUZZLE — collection grouping (combine_infill)
+
+Layer markers + AFTER dumps settled everything: my reorder greedy
+[serp, X(-3.677,-2.483), mirror] IS correct and matches GT's pick
+order. The residual = COLLECTION GROUPING: my layer-2 fills = 3
+collections {serp} {solid2+NARROW} {mirror} (4 assigns, n=3 — one
+is ironing); GT = {serp} {NARROW} {mirror+SOLID2}. My slot-2
+collection chains [solid2(1.585) then narrow(2.73)] emitting
+[solid2, narrow]; GT's slot-2 = the lone narrow collection (2.17)
+then slot-3 chains [solid2, mirror]. Both greedy orders are
+"correct" for their grouping — the grouping is the divergence.
+Next: combine_infill (fill_entities.rs) merges surface fills into
+collections — find why mine merges solid2+narrow while upstream's
+monotonic and ConcentricInternal fills stay separate (upstream
+grouping likely keyed on pattern/flow/batch boundary that treats
+ipConcentricInternal as its own collection; check Fill.cpp make_
+fills' eec push-per-surface_fill — one collection per surface_fill,
+NO merging — vs my combine_infill merging adjacent compatible
+fills). Fix the merge rule to keep ConcentricInternal separate.

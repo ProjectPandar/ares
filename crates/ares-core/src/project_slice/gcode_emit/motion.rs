@@ -179,6 +179,16 @@ where
     F: FnMut(&mut Vec<u8>, &mut EmitState) -> Result<bool, SliceError>,
 {
     let mut interlude_emitted = false;
+    if let Ok(path) = std::env::var("ARES_DUMP_IORDER") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "LAYER z={}", state.layer_z);
+        }
+    }
     for island in &mut layer.islands {
         let mut entities = std::mem::take(&mut island.entities);
         let infill_first = matches!(
@@ -288,6 +298,35 @@ fn emit_infills(
     }
     dump_infill_reorder(entities, state, geometry);
     chain_and_reorder_entities(entities, local_cursor(state, geometry));
+    if let Ok(path) = std::env::var("ARES_DUMP_IORDER") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(file, "AFTER");
+            for entity in entities.iter() {
+                let (first, _) = match entity {
+                    IslandPrintEntity::Fill(entity) => {
+                        use crate::project_slice::perimeters::classic::shortest_path::ChainEntity;
+                        (entity.first_point(), true)
+                    }
+                    IslandPrintEntity::FillCollection(collection) => {
+                        (collection.first_point(), !collection.no_sort)
+                    }
+                    IslandPrintEntity::Thin(_) | IslandPrintEntity::Perimeter(_) => continue,
+                };
+                let _ = write!(
+                    file,
+                    " ({:.3},{:.3})",
+                    geometry.scale.unscale(first.x()),
+                    geometry.scale.unscale(first.y())
+                );
+            }
+            let _ = writeln!(file);
+        }
+    }
     entities.append(&mut ironing);
     for entity in entities.drain(..) {
         match entity {
