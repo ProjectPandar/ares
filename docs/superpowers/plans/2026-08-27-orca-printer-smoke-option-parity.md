@@ -7598,3 +7598,17 @@ merge epsilon. NEXT: dump MY per-layer slice polygon COUNT for the ksr
 layers with 3-fold surfaces (compare against GT's 3) at successive
 pipeline stages (raw mesh slices → region slices → grouped surfaces) to
 find the collapse point.
+
+## 2026-09-05 (cont 305): slicing-union verified disjoint-preserving; collapse in surface stage
+
+My pre_closing_unions applies union_layer_polygons per slicing-mode
+fill rule — disjoint shells stay separate (same as upstream). The
+3µm-apart SURF surfaces are POST-PERIMETER artifacts: the shells likely
+overlap slightly in the mesh, union merges to ONE region, perimeters
+generate walls, and the post-offset surface decomposition produces the
+3 nearly-identical pieces whose fills duplicate spans. My surface
+decomposition collapses them — the divergence lives in the perimeter-
+offset → surface-area split (the narrow/split machinery or the
+fill_surfaces assembly), not the slicing union. NEXT: dump MY grouped
+fill surfaces (group_fills output count per layer) vs GT's 2218 SURF
+count to find the layer where 3→1, then trace that layer's split.
