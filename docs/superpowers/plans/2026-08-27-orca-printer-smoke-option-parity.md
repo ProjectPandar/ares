@@ -7715,3 +7715,12 @@ Neptune cubic: 110→2 (one ±1e-5 E rounding line remains, the noise
 family). KSM grid cases unaffected (grid shift=0). fill 1270/1270,
 smoke 80/81. NEXT: full sweep to quantify the cubic-family jump
 (estimated ~100 printers), then gyroid 28.
+
+## 2026-09-05 (cont 314): fleet 622/1001 after cubic shift fix (+30)
+
+Sweep (683s): 622 of 1001 pass (was 592; +30 from the cubic refpt shift
+sign). Session total: 496→622 (+126). NOTE: /tmp cleaner also removed
+the ares-parity-1018086 KSM runner dir — the authoritative replay
+source is now /tmp/ares-parity-1851777 (the complete pre-fix sweep dir
+with all 1001 case 3mfs). Remaining per the pre-fix breakdown: gyroid
+28, grid 26, cubic residual, inner-wall/bottom/skirt families.
