@@ -6553,3 +6553,22 @@ endpoint precision family on 0.30mm-layer processes — the SAME
 root as KSM; the AD5X @FF 0.18mm preset already passes. The
 multiline endpoint unit-exactness (corner forensics + vline
 switch) remains THE multiplier fix for layer3/4/5/6 clusters.
+
+## 2026-09-05 (cont 241): AD5X EXACT sweep case decoded — connect_infill chain ties, NOT generator
+
+Found the sweep's real AD5X case 3mf in the sweep3 runner dir
+(/tmp/ares-parity-1018086/1be67397...3mf; hand fixtures placed the
+object differently — arrange differences — so they weren't the
+sweep case; both hand presets pass movement-level). The EXACT case
+reproduces 79 diff lines. Layer-2-end internal solid infill:
+GT walks [diag, down, left-partial] entering at (112.626,106.482);
+mine [down, left, diag-back] entering at (113.518,107.374). The
+two candidate entries sit 9.25 vs 9.27mm from the previous
+position — a 0.02mm NEAR-TIE in the chain seed selection. Plus my
+final diagonal ends 0.025 short (113.493,107.348 vs 113.518,
+107.374) = the take/clip arithmetic. So layer3-d5 (22 printers) =
+CONNECT_INFILL chain seed near-ties + anchor clip — NOT the vline
+generator (I-lines match). Fix targets: connect.rs chain seed
+tie-break at 0.02mm-scale and the take_limited/clip_end precision.
+This is more tractable than corner forensics; the KSM I-line 1-2
+unit tails are a SEPARATE sub-1% residue.
