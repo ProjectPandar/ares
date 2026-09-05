@@ -7357,3 +7357,19 @@ rounding). fill 1270/1270, smoke 80/81. NOTE: fleet flapping ±10
 between sweeps makes single-printer attribution unreliable; the
 definitive metric stays the KSM 0.4 anchor case (861 lines, direction
 + order verified matching) plus the committed sweep summary rows.
+
+## 2026-09-05 (cont 288): anchoring +π/2; chain-endpoint selection isolated
+
+sparse_anchoring GRID/TRIANGLE sweeps now carry the +π/2 frame like
+grid/cubic/triangles. KSM 0.4 stays 861 (anchoring output feeds
+decisions, not direct emission). PRECISE REMAINING ROOT ISOLATED for
+the KSM 0.4 861: (a) gcode layer 6 — both sides' connect output
+(O-line) starts at the SAME vertex, but the EMISSION chain picks the
+opposite end of the connected path (GT emits from the O-line start,
+mine from its end) — the grid COLLECTION chain-endpoint selection
+(nearest-to-previous-end) differs in my emission ordering stage;
+(b) ±3-unit endpoint noise cascading to E ±1e-5 (0.37995 vs 0.37996).
+NEXT: instrument the grid collection's chain-endpoint pick at the
+gcode emission stage vs upstream ExtrusionEntityCollection ordering
+(this is the emission-stage chain, distinct from the already-verified
+connect_infill chain).
