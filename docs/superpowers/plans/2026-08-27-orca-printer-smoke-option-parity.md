@@ -7735,3 +7735,19 @@ coordr_t→to_coord(x*rsize) integer chain + (point*scaleFactor).cast
 for wave samples; my gyroid.rs uses f64→checked_point directly. NEXT:
 port FillGyroid's exact coordinate chain (coordr_t rsize grid, to_Point
 rounding, wave-sample scaling) to eliminate the sub-quantum drift.
+
+## 2026-09-05 (cont 316): remaining sparse families all ±1e-5 E flips (~0.0001mm vertices)
+
+Sampled 2nd cubic case (daf4ca69): 110 diffs, first = E.0872 vs E.08719.
+Working the numbers: ΔE 1e-5 on a 2mm segment ⇒ ΔL ≈ 2.3e-4 mm ⇒ the
+internal vertices differ by ~100 scaled units (0.0001mm), NOT sub-
+print-quantum — real micro-geometry differences whose sum flips the
+5-decimal E. The three remaining sparse families (cubic 57, gyroid 28,
+grid 26) all share this signature. Gyroid additionally needs the
+marching-squares port (upstream marchsq::execute_with_policy on the
+GyroidField 0.004mm grid — my gyroid.rs uses an analytic wave
+generator, a different algorithm agreeing only at print precision).
+NEXT per family: gyroid = port marchsq (Grid/Ring/float get_scalar);
+cubic/grid = hunt the 100-unit vertex deltas (FGRID SRC contour
+comparison shows ±1-3 unit contour diffs already — the deltas may come
+from the boundary expansion/offset rounding in the fill clip).
