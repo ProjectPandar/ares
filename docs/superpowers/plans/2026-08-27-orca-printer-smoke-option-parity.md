@@ -7344,3 +7344,16 @@ Neptune 1.0 case (cubic? grid?) and diff against the old-pipeline
 behavior; the regression isolates the restructure component —
 either the per-family→single intersection change or the boundary
 normalization — since the rotation sign is now GT-verified.
+
+## 2026-09-05 (cont 287): cubic/triangles +π/2 frame fix; sweep 479 rows
+
+Applied the +π/2 infill frame angle (FillBase.cpp:329) to cubic and
+triangles sweep lists (upstream FillCubic/FillTriangles sweep bases
+{0, π/3, 2π/3} ride on the +90° frame). Neptune cubic case: 118→110
+gcode diff lines. Full sweep: 479 DIVERGENT rows (was 480, ±flap);
+Neptune count stable at 53. The cubic remaining divergence is the
+same ±3-unit family as grid (intersection noise + downstream E
+rounding). fill 1270/1270, smoke 80/81. NOTE: fleet flapping ±10
+between sweeps makes single-printer attribution unreliable; the
+definitive metric stays the KSM 0.4 anchor case (861 lines, direction
++ order verified matching) plus the committed sweep summary rows.

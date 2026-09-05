@@ -18,14 +18,19 @@ pub(super) fn append(
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let shift = (std::f64::consts::FRAC_1_SQRT_2 * print_z) as f32;
+    // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to the frame
+    // angle; upstream sweep bases {0, π/3, 2π/3} ride on that frame.
     let sweeps = [
-        Sweep { angle: 0.0, shift },
         Sweep {
-            angle: std::f32::consts::FRAC_PI_3,
+            angle: std::f32::consts::FRAC_PI_2,
+            shift,
+        },
+        Sweep {
+            angle: std::f32::consts::FRAC_PI_2 + std::f32::consts::FRAC_PI_3,
             shift: -shift,
         },
         Sweep {
-            angle: 2.0 * std::f32::consts::FRAC_PI_3,
+            angle: std::f32::consts::FRAC_PI_2 + 2.0 * std::f32::consts::FRAC_PI_3,
             shift,
         },
     ];

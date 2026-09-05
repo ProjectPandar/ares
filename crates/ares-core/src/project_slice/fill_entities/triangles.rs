@@ -13,15 +13,17 @@ use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, Lay
 
 const SWEEPS: [Sweep; 3] = [
     Sweep {
-        angle: 0.0,
+        // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to the frame
+        // angle; upstream sweep bases {0, π/3, 2π/3} ride on that frame.
+        angle: std::f32::consts::FRAC_PI_2,
         shift: 0.0,
     },
     Sweep {
-        angle: std::f32::consts::FRAC_PI_3,
+        angle: std::f32::consts::FRAC_PI_2 + std::f32::consts::FRAC_PI_3,
         shift: 0.0,
     },
     Sweep {
-        angle: 2.0 * std::f32::consts::FRAC_PI_3,
+        angle: std::f32::consts::FRAC_PI_2 + 2.0 * std::f32::consts::FRAC_PI_3,
         shift: 0.0,
     },
 ];
