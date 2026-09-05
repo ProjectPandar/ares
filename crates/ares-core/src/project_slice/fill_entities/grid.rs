@@ -16,11 +16,16 @@ use crate::{
 
 const SWEEPS: [Sweep; 2] = [
     Sweep {
-        angle: 0.0,
+        // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to every
+        // infill angle, so the frame base is base+90°; sweeps {0, π/2} in
+        // that frame give family totals base+90° and base+180°.
+        angle: std::f32::consts::FRAC_PI_2,
         shift: 0.0,
     },
     Sweep {
-        angle: -std::f32::consts::FRAC_PI_2,
+        // f32(pi/2 + pi/2): keeps the sweep-add arithmetic to a single f32
+        // operation per sweep, mirroring the upstream accumulation order.
+        angle: std::f32::consts::PI,
         shift: 0.0,
     },
 ];

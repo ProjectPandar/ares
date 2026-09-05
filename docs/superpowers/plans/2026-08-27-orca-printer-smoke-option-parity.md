@@ -7310,3 +7310,20 @@ rotation for the same family. NEXT: align the subject direction of
 family-2 (mirror in generate_family's rotate-back for the second
 sweep) OR replicate ClipperLib's open-path output direction
 semantics; then re-tune the sweep list sign.
+
+## 2026-09-05 (cont 285): THE MISSING +π/2 FOUND — grid directions now MATCH
+
+Upstream `Fill::_infill_direction` ends with `out_angle += float(M_PI/2.)`
+(FillBase.cpp:329) — every infill angle gets +90°. The original SWEEPS
+[π/2, π] encoded exactly that (family totals base+90°, base+180°);
+restored after the sweep-sign experiments. VERIFIED: fconnect section-1
+I-lines now match GT in DIRECTION AND ORDER (all 43 sections within
+±4e-6); O-lines (connect output) structurally identical. Remaining
+410-line gcode diff = ±3 scaled-unit noise at the Clipper clip
+intersection points (my port's intersection arithmetic vs ClipperLib's
+double-precision edge parametrization), cascading to E ±1e-5
+(0.37995 vs 0.37996) and occasional travel splits. The rotation
+formulas, round-half-away, pos() rational rounding, and f32 angle
+accumulation were verified bit-identical. NEXT: align the open-path
+clip intersection arithmetic (subject×clip edge parametrization) in
+the Clipper port to kill the ±3-unit endpoint noise.
