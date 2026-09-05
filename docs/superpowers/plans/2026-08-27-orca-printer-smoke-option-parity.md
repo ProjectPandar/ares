@@ -6902,3 +6902,21 @@ collection) or the phony-outer-pair emission. NEXT: dump the fill
 entities per collection AFTER gap_residual append
 (gap_residual::append_residual) on both sides for layer 0.66 and
 identify which entity owns the final walk in each.
+
+## 2026-09-05 (cont 258): GAPRES dump live; monotonic collections carry 1 entity
+
+ARES_DUMP_GAPRES dumps each monotonic collection post-residual:
+9 collections; the InternalSolid ones carry exactly n=1 entity =
+the monotonic polyline (gap residual appends nothing here — P31/
+P33 match the M-dump polylines). The layer-0.66 chain's THREE
+entities = three collections (three surface fills). The final
+divergent walk's entity = one of these; GT's vertex order uses a
+diagonal that is NOT an edge of my monotonic polyline — since the
+monotonic emit is byte-identical, GT's entity likely = a
+DIFFERENT traversal = phony-outer split pieces (insert_phony_
+outer_pairs produces extra intersection pairs that can split the
+final polyline at a pinch) OR the 3-opt... (empty). NEXT: dump
+GT-side the same per-collection entities (patch
+fill_surface_extrusion / the eec push in Fill.cpp make_fills —
+one more GT build) and diff against ARES_DUMP_GAPRES; the first
+differing polyline pinpoints the stage (emit vs packaging).
