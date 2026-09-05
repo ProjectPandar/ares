@@ -211,9 +211,16 @@ fn build_ant_path(
         }
         let selected_index = select_candidate(&candidates, rng);
         let selected = candidates[selected_index];
-        for next in direct {
-            if next != selected.region && !queue.contains(&next) {
-                queue.push(next);
+        // cpp:2494-2496 pushes every direct-neighbor candidate whose region
+        // differs from the queue tail (the second of each region pair is
+        // filtered by the tail check, but regions already deeper in the queue
+        // ARE pushed again — duplicates are legal and change later draw
+        // ranges).
+        for candidate in &candidates[..direct.len() * 2] {
+            if (queue.is_empty() || queue.last() != Some(&candidate.region))
+                && candidate.region != selected.region
+            {
+                queue.push(candidate.region);
             }
         }
         if !selected.direct {
