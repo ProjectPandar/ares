@@ -7187,3 +7187,17 @@ divergences. The cubic sweeps differ (cubic uses rotated
 patterns per layer). NEXT: (1) grid anchor alignment via first_x
 dump (the 0.4 case is the template), (2) cubic sweep alignment,
 (3) gyroid (separate generator).
+
+## 2026-09-05 (cont 277): full divergence breakdown by feature
+
+Total: 495 divergent. By feature:
+- Sparse infill 466 (grid 57%, cubic 30%, gyroid 12%, crosshatch 1%)
+- Inner wall 84 (spread across layers 3-9, all "deposition 1" =
+  wall entry/seam position)
+- Bottom surface 26, Skirt 16, Internal solid 6, Gap infill 2
+IMPACT PRIORITY: (1) grid+cubic via multiline path (~87 printers,
+one code path), (2) inner wall entry/seam (84, likely a seam
+placement family), (3) gyroid (12, separate generator), (4) bottom
+surface (26), (5) skirt (16). The inner wall family being "first
+deposition" suggests the wall START vertex choice (seam/entry
+point) — the concentric ring anchor fix pattern may apply.
