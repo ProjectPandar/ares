@@ -7162,3 +7162,17 @@ already logs angle; add first_x) and compare against GT's
 vline.pos values (the fconnect2 dump's I lines give world
 positions) — the first differing line position pinpoints the
 anchor delta.
+
+## 2026-09-05 (cont 275): KSM 0.4 fconnect — line SETS differ (598 vs 555)
+
+The 0.4 case fconnect dump: GT 555 lines vs mine 598 — the line
+SETS already differ (not just ordering). GT has multiline-like
+pairs at ±3.626/±4.049 (0.423 apart ≈ line width) and center
+lines at ±3.672 — these are the solid infill and narrow-split
+fills mixed with the grid lines. The extra 43 lines on my side =
+different narrow-split or solid boundary generation. The grid
+anchor comparison needs the grid-specific lines isolated (6mm
+spacing). NEXT: filter the fconnect dumps to grid-only blocks
+(the BOUND sections with the grid diamond) and compare those
+I-lines; or add a GRID-tagged dump that includes first_x and the
+generated line positions per sweep.
