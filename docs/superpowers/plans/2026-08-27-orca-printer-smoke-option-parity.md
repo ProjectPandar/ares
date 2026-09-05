@@ -7227,3 +7227,21 @@ Clipper intersection (904 baseline restored, fill tests 1269/
 1269). The 0.4 grid issue is NOT the intersection arithmetic —
 it's the ANCHOR (first_x) or the expanded-boundary geometry
 itself differing at the 6mm spacing. Status: fleet 506/1001.
+
+## 2026-09-05 (cont 280): vline switch negative result recorded; anchor is the root
+
+Full session arc: the vline exact-rational slicer port is ready
+and unit-tested, but switching generate_family to it WORSENS the
+KSM 0.4 case (904 -> 1240) while keeping 0.6 at 0. The Clipper
+intersection stays live. The 0.4 divergence is the grid ANCHOR
+(first_x from the rotated bbox + align_to_grid) at 6mm spacing
+(2 lines/family), NOT the intersection arithmetic. The exhaustive
+KSM/AD5X investigation series has now verified byte-parity for:
+connect_infill outputs, ant RNG sequences, monotonic emit
+polylines, entity chain order — all matching. The remaining
+divergences trace to (1) grid anchor at specific spacings, (2)
+cooling feed ±12 (84 printers, time estimator precision), (3)
+gyroid (12). NEXT SESSION: focus the grid anchor by comparing
+the I-line WORLD POSITIONS (not counts) between fconnect dumps —
+if positions match, the anchor is fine and the issue is
+narrow-split/boundary; if positions differ, the anchor differs.
