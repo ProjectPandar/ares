@@ -6467,3 +6467,22 @@ lines:2938-2955). My split.rs has the LinesDistacer variant
 THIS SegmentIntersection variant. Files: new
 crates/ares-core/src/fill/multiline/vline.rs, wired from
 generate_family replacing the clipper call.
+
+## 2026-09-05 (cont 236): vline vertex-branch math fixed — spurious crossings gone
+
+Reading the exact indentation of FillRectilinear.cpp:806-845: the
+rational tail formula (pos_p *= dy; pos_p += y1*q) lives ONLY in
+the general-position else branch; the vertex branches (p1.x or
+p2.x on the line) set pos directly with q=1, and the p2-vertex
+touching check is (p3.x-p2.x)*(p1.x-p2.x) in that order. Fixed in
+vline.rs. Result on KSM: I-line structure now matches (46+1 A, 47
+B, counts equal; the anchoring block included), spurious (0,0)
+crossings GONE, endpoint tails 2 -> 1 unit. Residual 1-unit tail
+traces to the CONTRACTED boundary itself: my contraction
+(offset_expolygon at f32 delta) vs upstream's
+float(scale_(overlap + 0.5*spacing*multiline)) offset of the
+ROTATED polygon — a 1-unit side difference moves the rotated
+corners. NEXT: align the contraction (rotate FIRST, then offset
+with the upstream float delta and miter — my current order offsets
+before rotation), then switch generate_family to the vline path
+and re-measure (walks will re-chain; expect convergence).
