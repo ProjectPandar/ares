@@ -7373,3 +7373,18 @@ NEXT: instrument the grid collection's chain-endpoint pick at the
 gcode emission stage vs upstream ExtrusionEntityCollection ordering
 (this is the emission-stage chain, distinct from the already-verified
 connect_infill chain).
+
+## 2026-09-05 (cont 289): f32 sweep accumulation order aligned (all multiline callers)
+
+Upstream computes the frame once (f32(base+π/2) in _infill_direction)
+then adds each RAW sweep base with its own f32 rounding. Folded the +π/2
+into params.angle for grid/cubic/triangles/sparse_anchoring with raw
+sweep bases — eliminating a potential 1-ulp angle divergence (≈2.4
+scaled units at 1e7 radius). KSM 0.4 unchanged at 861 (this fixture's
+accumulation happens to agree); the layer-6 chain-start flip and E±1e-5
+noise persist — the residual ±3-unit endpoint noise is NOT the angle
+accumulation. Remaining candidates: my open-path Clipper out-point
+arithmetic detail (dx/scanline-dependent snapshot) — needs a targeted
+two-line experiment: extract the exact span+boundary pair from the
+layer-6 section, run both ClipperLib formula and my port on the same
+integers, and compare.

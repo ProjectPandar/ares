@@ -15,17 +15,16 @@ use crate::{
 };
 
 const SWEEPS: [Sweep; 2] = [
+    // Raw upstream sweep bases {0, π/2}; the +π/2 frame offset from
+    // `Fill::_infill_direction` (FillBase.cpp:329) is folded into
+    // `params.angle` below so each family total reproduces upstream's f32
+    // accumulation order (frame rounding first, then the sweep-base add).
     Sweep {
-        // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to every
-        // infill angle, so the frame base is base+90°; sweeps {0, π/2} in
-        // that frame give family totals base+90° and base+180°.
-        angle: std::f32::consts::FRAC_PI_2,
+        angle: 0.0,
         shift: 0.0,
     },
     Sweep {
-        // f32(pi/2 + pi/2): keeps the sweep-add arithmetic to a single f32
-        // operation per sweep, mirroring the upstream accumulation order.
-        angle: std::f32::consts::PI,
+        angle: std::f32::consts::FRAC_PI_2,
         shift: 0.0,
     },
 ];
@@ -85,10 +84,10 @@ fn grid_polylines_inner(
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
-        // `Fill::_infill_direction` (FillBase.cpp:318) adds pi/2 to the frame
-        // angle; the sweeps below carry that and the family split so each
-        // per-sweep total is a single f32 add (upstream accumulation order).
-        angle: fill.params.angle,
+        // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to the frame
+        // angle once per fill call; the sweep bases ride on that frame, so
+        // fold the offset here to reproduce upstream's f32 accumulation.
+        angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,

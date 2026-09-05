@@ -12,18 +12,20 @@ use crate::{
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
 const SWEEPS: [Sweep; 3] = [
+    // Raw upstream sweep bases {0, π/3, 2π/3}; the +π/2 frame offset from
+    // `Fill::_infill_direction` (FillBase.cpp:329) is folded into
+    // `params.angle` at the call site to reproduce upstream's f32
+    // accumulation order.
     Sweep {
-        // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to the frame
-        // angle; upstream sweep bases {0, π/3, 2π/3} ride on that frame.
-        angle: std::f32::consts::FRAC_PI_2,
+        angle: 0.0,
         shift: 0.0,
     },
     Sweep {
-        angle: std::f32::consts::FRAC_PI_2 + std::f32::consts::FRAC_PI_3,
+        angle: std::f32::consts::FRAC_PI_3,
         shift: 0.0,
     },
     Sweep {
-        angle: std::f32::consts::FRAC_PI_2 + 2.0 * std::f32::consts::FRAC_PI_3,
+        angle: 2.0 * std::f32::consts::FRAC_PI_3,
         shift: 0.0,
     },
 ];
@@ -36,7 +38,7 @@ pub(super) fn append(
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
-        angle: fill.params.angle,
+        angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,

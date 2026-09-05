@@ -17,27 +17,25 @@ use crate::{
 
 const GRID_SWEEPS: [Sweep; 2] = [
     Sweep {
-        // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to every
-        // frame angle; upstream sweep bases {0, π/2} ride on that frame.
-        angle: std::f32::consts::FRAC_PI_2,
+        angle: 0.0,
         shift: 0.0,
     },
     Sweep {
-        angle: std::f32::consts::PI,
+        angle: std::f32::consts::FRAC_PI_2,
         shift: 0.0,
     },
 ];
 const TRIANGLE_SWEEPS: [Sweep; 3] = [
     Sweep {
-        angle: std::f32::consts::FRAC_PI_2,
+        angle: 0.0,
         shift: 0.0,
     },
     Sweep {
-        angle: std::f32::consts::FRAC_PI_2 + std::f32::consts::FRAC_PI_3,
+        angle: std::f32::consts::FRAC_PI_3,
         shift: 0.0,
     },
     Sweep {
-        angle: std::f32::consts::FRAC_PI_2 + 2.0 * std::f32::consts::FRAC_PI_3,
+        angle: 2.0 * std::f32::consts::FRAC_PI_3,
         shift: 0.0,
     },
 ];
@@ -90,7 +88,9 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
                     overlap: 0.0,
-                    angle: fill.params.angle,
+                    // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2
+                    // to the frame angle once per fill call.
+                    angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,
@@ -108,7 +108,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
                     overlap: 0.0,
-                    angle: fill.params.angle,
+                    angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,

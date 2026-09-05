@@ -18,26 +18,26 @@ pub(super) fn append(
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let shift = (std::f64::consts::FRAC_1_SQRT_2 * print_z) as f32;
-    // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to the frame
-    // angle; upstream sweep bases {0, π/3, 2π/3} ride on that frame.
+    // Raw upstream sweep bases {0, π/3, 2π/3}; the +π/2 frame offset from
+    // `Fill::_infill_direction` (FillBase.cpp:329) is folded into
+    // `params.angle` below to reproduce upstream's f32 accumulation order.
     let sweeps = [
+        Sweep { angle: 0.0, shift },
         Sweep {
-            angle: std::f32::consts::FRAC_PI_2,
-            shift,
-        },
-        Sweep {
-            angle: std::f32::consts::FRAC_PI_2 + std::f32::consts::FRAC_PI_3,
+            angle: std::f32::consts::FRAC_PI_3,
             shift: -shift,
         },
         Sweep {
-            angle: std::f32::consts::FRAC_PI_2 + 2.0 * std::f32::consts::FRAC_PI_3,
+            angle: 2.0 * std::f32::consts::FRAC_PI_3,
             shift,
         },
     ];
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
-        angle: fill.params.angle,
+        // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to the frame
+        // angle once per fill call; the sweep bases ride on that frame.
+        angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,
