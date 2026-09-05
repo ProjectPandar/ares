@@ -6277,3 +6277,26 @@ and compare with upstream make_fills' one-eec-per-surface_fill rule
 (Fill.cpp:1354 fill_surface_extrusion per surface, each pushing
 its own ExtrusionEntityCollection into layerm->fills). The fix:
 one collection per surface_fill, no cross-fill entity merging.
+
+## 2026-09-05 (cont 226): slot-2 = gap-residual collection; split classification IS causal
+
+ASSIGN kinds dump: layer-2 collections = {P0.220}, {V,V,V} (the CI
+rings), {V,V,V,V} (gap residual), {P0.220}. The slot-2 entity
+X(-3.677,-2.483) = the 4-entity GAP-RESIDUAL collection whose
+chained first = a variable-width entity printing 0.219999 (the
+"solid2" walk!) then the 0.271893 narrow ring. So the corner solid
+walk in MY pipeline is a gap-residual (medial-axis) entity, NOT a
+monotonic path. Cause chain closes: my split carves MORE area into
+narrow at the BL corner (narrow=4 vs AppImage 1) -> the corner's
+normal area shrinks/degenerates -> its monotonic fill vanishes ->
+gap residual covers it -> collection composition and emission order
+diverge. The earlier "inert" call was wrong: the classification
+difference IS causal through the residual path. Root of the split
+difference = the reconstructed sections at the 45deg corner
+(opening(2s,3s) + vertical-section lengths crossing the
+> scaled_spacing threshold) — sub-0.02 offset precision at 45deg
+corners (same family as the original Y125.497 boundary finding).
+Next: reproduce the corner's inner_area/sections with a unit
+harness; compare miter-join rounding at 45deg corners between my
+offset and Clipper 6 (AppImage behavior); the fixture target = the
+ref gcode's normal lines reaching (124.323,125.517).

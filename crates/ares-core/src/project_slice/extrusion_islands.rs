@@ -93,7 +93,21 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
                 .append(true)
                 .open(path)
             {
-                let _ = writeln!(file, "ASSIGN island={}", island);
+                let _ = writeln!(
+                    file,
+                    "ASSIGN island={} n={} kinds={}",
+                    island,
+                    collection.entities.len(),
+                    collection
+                        .entities
+                        .iter()
+                        .map(|entity| match entity {
+                            FillExtrusionEntity::Path(path) => format!("P{:.3}", path.width),
+                            FillExtrusionEntity::VariableWidth(_) => "V".to_owned(),
+                        })
+                        .collect::<Vec<_>>()
+                        .join(",")
+                );
             }
         }
         if collection.no_sort {
