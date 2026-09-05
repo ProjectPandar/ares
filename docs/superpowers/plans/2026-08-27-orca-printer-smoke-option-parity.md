@@ -7637,3 +7637,20 @@ NEXT: compare the fconnect BOUND polygons (per-section boundary) sets
 for one duplicated-span section (s0049's boundary) — if the boundaries
 match too, the difference is inside the fill generation for that
 surface pair (crosshatch generator on near-duplicate surfaces).
+
+## 2026-09-05 (cont 308): BOUND diff isolated — my surface is the UNION
+
+GT s0049 boundary starts (−33.914511,−2.546726); my corresponding
+s0023 boundary starts (−34.110206,−2.366978) — TWO EXTRA leading
+vertices extending 0.2mm further — my crosshatch surface is the UNION
+of GT's two near-duplicate surfaces (GT fills each separately with its
+own smaller boundary; the duplicated spans are the overlap of the two
+fills). Total surface counts still match (2218) because other splits
+compensate. The divergence is in the crosshatch-path surface assembly:
+upstream keeps the near-duplicate (3µm apart) surfaces separate for
+the sparse fill; my group_fills/crosshatch input merges this pair.
+NEXT: dump my crosshatch fill surfaces specifically (pattern filter)
+and compare against GT's crosshatch SURF entries to find the layer
+where 2 GT crosshatch surfaces = 1 mine; then trace which upstream
+stage (fill_surfaces assembly vs Fill.cpp surface_fills grouping)
+preserves them.
