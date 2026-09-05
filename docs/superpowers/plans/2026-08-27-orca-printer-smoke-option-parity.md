@@ -6966,3 +6966,22 @@ eigen-5.0.1 static assertion — an environment-level regression
 nixpkgs to the revision the earlier builds used (check result-rng
 drv hash), or fix by adding a compile flag. The patch itself is
 ready at /tmp/orca-gt/eec.patch + eec.nix.
+
+## 2026-09-05 (cont 262): EEC GT dump LIVE — divergent entity exists as P4 in GT
+
+result-eec built (simplified dump avoiding the eigen Vec2/Vec3
+constructor pitfall: dump only front/back per path). AD5X: 68 EECs,
+87 paths; 7 P4 entities exist in GT. The divergent walk appears as
+GT: P 4 (2.626188,-3.518085) → (2.662188,-3.518085) — enters at
+v2, tail-clips the LEFT edge (2.662). My equivalent entity = P 4
+(3.518,-2.626) → (3.493,-2.652) — enters at v0, tail-clips the
+DIAGONAL. Same ring, different polyline — the ENTITY ITSELF differs
+(different start vertex + different tail clip). Since the M dump
+(monotonic emit, pre-rotation) is byte-identical, this entity
+comes from a different collection (the EEC sequence includes V
+collections and P4s that aren't in the monotonic GAPRES n=1 P31/
+P33 collections). NEXT: identify the producing collection by
+correlating the EEC dump order (68 entries) with my GAPRES/ASSIGN
+order; check insert_phony_outer_pairs and the gap-residual V
+entities — the 4-vertex shape is consistent with a phony-outer
+split of the monotonic path at a pinch.
