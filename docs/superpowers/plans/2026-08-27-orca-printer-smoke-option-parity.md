@@ -6357,3 +6357,21 @@ divergence moved to line 326 = the old +/-2 feedrate family
 tests pass). NOTE: other fill_surface_by_multilines users
 (triangles/stars/cubic/line) each have their own _layer_angle —
 audit them the same way when their fixtures appear.
+
+## 2026-09-05 (cont 230): KSM remaining — I-line per-block state mapped
+
+Post grid-fix I-line state (myf3 vs gtf2, per-sweep connect blocks,
+48 total = 24 layers x 2 sweeps): GT = constant [A=(3.61,3.61)->
+(-3.61,-3.61), B=(-3.61,3.61)->(3.61,-3.61)] every layer. Mine:
+block 1 = [A_REVERSED, B]; blocks >=2 = [B, A]. NOTE the odd-layer
+grid reversal was ALREADY ported (grid.rs:80 — last turn's "revert"
+restored it, it was never my addition). With the +pi/2 the sweeps
+land as [B,A] on later layers (swapped vs GT) and the first grid
+layer keeps [A_rev,B]. Also the F784/782 feed divergence at line
+336 is CONSEQUENCE not cause (the layer-4 total-time estimate
+differs due to later geometric diffs). NEXT: (1) make sweep0
+produce A and sweep1 produce B (the sweeps are 90deg off: either
+the +pi/2 belongs on the sweep angle list instead of params.angle,
+or the first-grid-layer path skips something), (2) fix the c==1
+A-direction, then re-measure the 558. Sweep2 running for fleet
+impact of the grid fix.
