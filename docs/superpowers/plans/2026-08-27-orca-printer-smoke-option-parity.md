@@ -7459,3 +7459,16 @@ triangles no_sort regressed the Neptune case (110→115), reverted —
 their upstream emission differs (sortable collections or multi-entity
 walks). fill 1270/1270, smoke 80/81. Remaining KSM 0.4 484: ±1-unit
 clip noise (E ±1e-5 on the long diagonals) + residual travel splits.
+
+## 2026-09-05 (cont 295): KSM 0.4 FULL PARITY — 484→0 (grid parity flip)
+
+The layer-parity reversal condition was inverted for the effective
+layer.id convention: flipped to `layer_id % 2 == 1`. KSM 0.4 now
+matches OrcaSlicer EXACTLY (0 G-code diff lines) — completing the
+7-step grid chain: (1) vline comparator mixed-sign, (2) make_fill_lines
+pipeline restructure, (3) rotation sign, (4) +π/2 frame with raw sweep
+bases, (5) object bbox center anchor, (6) no_sort bare-path emission,
+(7) layer parity. fill 1270/1270. NOTE: ksr_fdmtest_v4 semantic now
+fails on filament length 11335.74 vs 11335.55mm (0.0017% — the grid
+endpoint micro-deltas summed); bottom_hilbert remains the known smoke
+failure. NEXT: sweep to quantify the fleet jump, then the ksr 0.19mm.

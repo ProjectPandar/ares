@@ -103,7 +103,7 @@ fn grid_polylines_inner(
         // Odd UPSTREAM layer ids (0-based) reverse the grid polylines
         // (FillRectilinear.cpp:3441); our layer ids are 1-based, so the flip is
         // on even ids.
-        if layer_id % 2 == 0 {
+        if layer_id % 2 == 1 {
             for polyline in &mut polylines {
                 polyline.reverse();
             }
