@@ -6679,3 +6679,24 @@ both sides for one layer's monotonic chain (first differing draw),
 or static diff of the final-region handling in chain.rs/emit.rs
 vs cpp:2420-2520 (the flip rng() > max/2 at :2427 and the
 remaining-endpoint emission).
+
+## 2026-09-05 (cont 247): ant-flow audit — constants/reinforce/3opt all match
+
+Static diff round: num_rounds=25, no_change_exit=8, num_ants=
+min(regions,10), initial pheromone 0.5, evaporation/diversification
+0.1/0.1, take_best 0.9, alpha/beta 1/2 — ALL match my chain.rs
+constants. monotonic_3_opt upstream = EMPTY (comments only) — not
+a factor. Reinforce: same formula ((1-e)*phero + e/(best+EPS)),
+same edge (windows(2) == link.next), and the subtle
+reinforcement_path-after-swap semantics match (reinforce with
+`path` post-swap = old best when improved, last ant's path
+otherwise). The desync therefore lives INSIDE build_ant_path:
+candidate collection order (num_direct_neighbors split), the
+queue-move side effects (cpp:2496-2508), or the per-edge
+diversification update timing (cpp:2539-2540, inside the loop —
+verify my build_ant_path applies take-path pheromone
+diversification at the same point). NEXT: line-by-line diff of
+build_ant_path vs cpp:2414-2540 focusing on (1) num_direct_
+neighbors split & queue append order, (2) the diversification
+update placement, (3) AntPath length/visibility computation
+(path_matrix.rs).
