@@ -7472,3 +7472,12 @@ bases, (5) object bbox center anchor, (6) no_sort bare-path emission,
 fails on filament length 11335.74 vs 11335.55mm (0.0017% — the grid
 endpoint micro-deltas summed); bottom_hilbert remains the known smoke
 failure. NEXT: sweep to quantify the fleet jump, then the ksr 0.19mm.
+
+## 2026-09-05 (cont 296): fleet sweep after grid completion — 592/1001 (+77)
+
+Sweep (705s): 592 of 1001 pass (was 515; +77 from the grid parity flip
++ no_sort emission; +96 total across today's three sweeps). The grid
+family (57 printers at the cont-276 measurement) is largely resolved.
+Remaining: sparse cubic/gyroid variants, inner-wall feed family (82),
+bottom surface, skirt, and the ksr_fdmtest_v4 0.19mm filament-length
+regression from the grid endpoint micro-deltas.
