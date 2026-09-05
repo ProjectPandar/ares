@@ -7680,3 +7680,16 @@ long-standing divergence families, not regressions). Today's grid work
 (KSM 0.4 → full parity, fleet 496→592) is a strict improvement. The ksr
 roots remain: (a) near-duplicate contour preservation in the offset
 chain (crosshatch), (b) the E ±1e-5 accumulator flip at line 3337.
+
+## 2026-09-05 (cont 311): ksr first-divergence = WIPE tail E step ±1e-5
+
+Filtered-stream line 3337 = the last WIPE segment
+(132.993,88.973)->(132.892,88.922) E-.04514 (GT) vs E-.04515 (mine):
+the wipe path's tail E step differs by 1e-5 (segment length 0.113mm,
+ratio 0.3988). Root = the wipe path point set / accumulated wipe
+length differing at the 1e-5 level (the ±1-unit geometry noise family
+feeding the wipe arithmetic). All pre-wipe extrusion E values match at
+5-decimal print precision — the divergence is sub-print-precision until
+this step's rounding boundary. This is the same noise family as the
+KSM residual; fixing it means matching the upstream wipe-path source
+geometry to the unit.
