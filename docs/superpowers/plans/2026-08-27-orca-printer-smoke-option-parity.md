@@ -6160,3 +6160,19 @@ calls vs my 11. Next: line-by-line audit of my split.rs against
 cpp:630-780 (the section tracing + reconnection geometry and the
 final narrow/normal reconstruction), then iorder re-diff. Suite
 remains 80/81 (hilbert).
+
+## 2026-09-05 (cont 220): band theory + GT split dump building
+
+My split.rs port verified faithful against cpp:630-830 (incl. the
+"merge very small areas" absorption loop). Working theory for the
+21-vs-11 CI calls: GT call-1 = an ALL-NARROW thin BAND region
+(internal-solid ring between the sparse crosshatch core and the
+perimeters, layer 1, bottom_shell_thickness=0 smoke override) whose
+traced sections come out empty -> whole band -> ConcentricInternal
+(the single 9-vertex ring). My pipeline lacks this call (my band
+probably classified normal or grouped differently). GT
+ORCA_DUMP_SPLIT instrument (split_solid_surface entry: layer,
+spacing, expolygon count) building as result-split (~20min);
+compare with my split inputs (add ARES_DUMP_SPLIT in
+group_fills/narrow.rs apply) to find which surface_fill inputs
+differ, then fix the band's classification chain.
