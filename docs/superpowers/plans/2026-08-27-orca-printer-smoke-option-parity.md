@@ -6765,3 +6765,39 @@ emit polylines (pre-rotation, pre-entity) on both sides for the
 divergent layer (add ORCA_DUMP_MONTONIC after
 polylines_from_paths + ARES mirror after emit_monotonic_polylines)
 and diff — the vertex-level mismatch pinpoints the emit branch.
+
+## 2026-09-05 (cont 252): monotonic EMIT polylines IDENTICAL — divergence = entity-chain orientation pick
+
+ORCA_DUMP_MONOTONIC (after polylines_from_paths, pre-rotation) vs
+ARES_DUMP_MONOTONIC: all 28 polylines IDENTICAL except +-1e-6
+y-tails on the M31 region (the same corner-rounding residue).
+The M33/M2 polylines byte-equal. CONCLUSION: monotonic emission
+output matches; the layer-end walk divergence is introduced AFTER
+the fill generation — at the ENTITY-CHAIN emission stage: the
+chain must pick the entity orientation (can_reverse), GT picks the
+nearer end (9.25mm), mine picks the farther (9.27mm) — a greedy
+endpoint-distance issue in chain_and_reorder_entities /
+entity_chain.rs for the monotonic fill entities (0.02mm margin!).
+NEXT: instrument my chain greedy on the AD5X layer-2 entity set
+(dump both endpoint distances + the chosen one per entity) and
+compare with upstream chain_extrusion_entities for the same set;
+the bug is in my greedy's endpoint selection or its
+previous-position input.
+
+## 2026-09-05 (cont 252): monotonic EMIT polylines IDENTICAL — divergence = entity-chain orientation pick
+
+ORCA_DUMP_MONOTONIC (after polylines_from_paths, pre-rotation) vs
+ARES_DUMP_MONOTONIC: all 28 polylines IDENTICAL except +-1e-6
+y-tails on the M31 region (the same corner-rounding residue).
+The M33/M2 polylines byte-equal. CONCLUSION: monotonic emission
+output matches; the layer-end walk divergence is introduced AFTER
+the fill generation — at the ENTITY-CHAIN emission stage: the
+chain must pick the entity orientation (can_reverse), GT picks the
+nearer end (9.25mm), mine picks the farther (9.27mm) — a greedy
+endpoint-distance issue in chain_and_reorder_entities /
+entity_chain.rs for the monotonic fill entities (0.02mm margin!).
+NEXT: instrument my chain greedy on the AD5X layer-2 entity set
+(dump both endpoint distances + the chosen one per entity) and
+compare with upstream chain_extrusion_entities for the same set;
+the bug is in my greedy's endpoint selection or its
+previous-position input.
