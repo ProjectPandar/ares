@@ -152,7 +152,7 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
     let spacing = ((params.spacing / scale.factor()) * f64::from(params.multiline)
         / f64::from(density)) as i64;
     let shift = scale
-        .checked_scale(-f64::from(sweep.shift))
+        .checked_scale(f64::from(sweep.shift))
         .ok_or(ClipperError::CoordinateOutOfRange)?
         % spacing;
     let reference_x = rotated_reference

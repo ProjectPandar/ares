@@ -7702,3 +7702,16 @@ consistent with the wipe-path source polyline differing at unit level
 in curved regions (arc-fit source = the same polylines). The
 region-geometry micro-edge family persists as the deepest root for
 both the ksr E-noise and the arc-count deltas.
+
+## 2026-09-05 (cont 313): CUBIC SHIFT SIGN FIXED — Neptune 110→2
+
+Corrected sparse-divergence breakdown (161 printers): cubic=105,
+gyroid=28, grid=26, triangles=1, crosshatch=1 — CUBIC dominates.
+FGRID anchor comparison on the Neptune cubic case exposed the root:
+generate_family computed the refpt shift from the NEGATED sweep shift,
+inverting upstream's `refpt.x -= pattern_shift` phase for negative
+pattern shifts (cubic's ±dx per family). Dropped the negation —
+Neptune cubic: 110→2 (one ±1e-5 E rounding line remains, the noise
+family). KSM grid cases unaffected (grid shift=0). fill 1270/1270,
+smoke 80/81. NEXT: full sweep to quantify the cubic-family jump
+(estimated ~100 printers), then gyroid 28.
