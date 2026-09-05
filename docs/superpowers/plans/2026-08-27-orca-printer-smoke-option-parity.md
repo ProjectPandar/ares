@@ -7764,3 +7764,18 @@ is now sign-correct but the bbox-derived margin still differs
 (GT bbmin includes the full-spacing align merge; mine uses the raw
 bbox for x_min/x_max — check whether upstream's post-merge bbox
 changes x_min/x_max!).
+
+## 2026-09-05 (cont 318): cubic boundaries EXACT; the ±1-unit is in the EXPANDED offset
+
+Cubic fixture (daf4ca69) full comparison: BOUND polygons (contracted
+surface) match EXACTLY (0 diff, 168=168); FGRID margins match; the
+anchor matches — yet the rotated EXPANDED contour (SRC) differs by ±1
+unit on every vertex. Root: my offset(surface, +expansion) rounds
+miter corners ±1 unit vs upstream ClipperOffset (the −contraction
+offset happens to match). This ±1 expanded polygon shifts near-
+boundary spans → E ±1e-5 flips + occasional minlength-filter drops
+(the Z9.6 56-vs-46 structural block). FIX = matching ClipperOffset's
+miter vertex arithmetic exactly in offset_expolygon (the corner
+formula's rounding for arbitrary offsets/directions); KSM's exact
+BOUND match shows the port is close — the expansion-direction path
+needs the same fidelity.
