@@ -7445,3 +7445,17 @@ at the layer-7 infill (ORCA_DUMP_EEC / new patch in extrude_infill
 printing m_last_pos + entity endpoints before/after chained_path_from)
 vs my IORDER REORDER line — pinpoint which side's effective
 start_near or entity set differs.
+
+## 2026-09-05 (cont 294): GT EINF instrument — grid = BARE path emitted as-is; 692→484
+
+New GT instrument (ORCA_DUMP_EINFILL in extrude_infill): the grid's
+connected path reaches the emission as a BARE ExtrusionPath [P] (not a
+sortable collection), direction alternating per layer from FillGrid's
+own layer-parity reversal — extrude_entity emits it AS-IS with no
+nearest-end re-chain. My pipeline re-chained the grid collection
+(nearest-end), flipping the emission start. FIX: grid collection
+no_sort=true (skips both chain levels). KSM 0.4: 692→484. cubic/
+triangles no_sort regressed the Neptune case (110→115), reverted —
+their upstream emission differs (sortable collections or multi-entity
+walks). fill 1270/1270, smoke 80/81. Remaining KSM 0.4 484: ±1-unit
+clip noise (E ±1e-5 on the long diagonals) + residual travel splits.
