@@ -7064,3 +7064,19 @@ now 506/1001 (was 430). Remaining 495 divergent. Top clusters to
 re-scan from the new summary: check what the top first-divergence
 families are now (the old layer3-d5 and BBL 0.2-nozzle clusters
 should be gone). Next: re-prioritize from the fresh summary.
+
+## 2026-09-05 (cont 268): fresh cluster map after +76 jump
+
+New top clusters (post-sweep4, 506/1001):
+- layer4-d9 (30): KSM grid direction flip (same coords, H vs V
+  segment) — the KSM grid frame angle + sweep family (cont 228+)
+- layer6-d17 (27): SAME start/end (170.913..171.793) but
+  extrusion 0.049 vs 0.011 and feed 3089 vs 3098 — different
+  entity length at same position (chain/entity selection or
+  monotonic emission)
+- layer5-d12 (18), layer8-d12 (17), layer6-d1 (17), layer10-d11
+  (17): likely same sparse-infill family
+The grid fix (bd1a17dd + 1768c2f3) is already landed but sweep4
+may have run with a stale binary — verify; the d17 family = the
+next target (dump the entity sets for a K2 Plus case from the
+sweep runner dir).
