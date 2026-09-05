@@ -7612,3 +7612,14 @@ offset → surface-area split (the narrow/split machinery or the
 fill_surfaces assembly), not the slicing union. NEXT: dump MY grouped
 fill surfaces (group_fills output count per layer) vs GT's 2218 SURF
 count to find the layer where 3→1, then trace that layer's split.
+
+## 2026-09-05 (cont 306): /tmp cleaner ate the oracle AppImage — restored
+
+A /tmp cleaner deleted /tmp/squashfs-root (partial), orca-parity-libs
+.cache, and some GT patch files mid-session, making 22 smoke tests fail
+with "orca-slicer not found". RESTORE PROCEDURE: re-download
+OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.4.2.AppImage from the SoftFever
+v2.4.2 release, --appimage-extract to /tmp/squashfs-root, delete the
+stale /tmp/orca-parity-libs.cache (it regenerates on first run).
+Smoke restored to 80/81 (bottom_hilbert the known failure). ALSO: copy
+GT patch files from /nix/store when /tmp/orca-gt loses them.
