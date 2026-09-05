@@ -6844,3 +6844,22 @@ ExtrusionEntityCollection::chained_path_from or infer from the
 emitted gcode walk); ALSO trace the 1-unit start difference (the
 previous wipe endpoint) — it may itself be the root (wipe = my
 wipe-implementation rounding).
+
+## 2026-09-05 (cont 255): layer-0.66 walks verified identical except the LAST
+
+Layer 0.66 internal-solid walks are line-identical from the
+section start through ~12 polylines (the big serpentine), diverging
+ONLY at the final polyline (gcode 328+). Combined with M-dump
+(pre-rotation emit identical), chain-level output identical, and
+RNG identical: the divergence is introduced between the monotonic
+emit dump and the gcode for exactly the final polyline — the
+rotate-back or the entity packaging of the LAST emitted polyline,
+OR the last polyline belongs to a different collection whose
+chained_path_from picks the other orientation. The 1-unit chain
+start difference (4690000 vs 4689999) comes from the preceding
+wipe endpoint. NEXT: (1) dump post-rotate-back polylines on both
+sides (extend the M dumps after the rotate loop), (2) if those
+match, the divergence is the entity packaging/collection split of
+the final polyline — check whether the final walk is entity E1 or
+E2 and which collection it lands in; (3) trace the 1-unit wipe
+endpoint difference.
