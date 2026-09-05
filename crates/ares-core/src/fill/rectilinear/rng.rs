@@ -39,16 +39,29 @@ impl Mt19937_64 {
         value ^ (value >> 43)
     }
 
+    /// libstdc++ `std::uniform_int_distribution<>::operator()` for the
+    /// full u64 range: scaling-rejection (`scaling = urngrange / uerange`,
+    /// redraw while `ret >= past`, then `ret / scaling`). The upstream
+    /// monotonic chain consumes draws through this exact algorithm; Lemire
+    /// multiplication would desynchronize the walk.
     pub(super) fn index(&mut self, upper_exclusive: usize) -> usize {
-        let range = upper_exclusive as u64;
+        let urange = upper_exclusive as u64 - 1; // b - a with a = 0
+        let uerange = urange + 1;
+        let urngrange = u64::MAX; // urngmax - urngmin
+        if urngrange <= urange {
+            // Degenerate fallback: single modulo draw (never hit with u64).
+            return (self.next() % uerange) as usize;
+        }
+        let scaling = urngrange / uerange;
+        let past = uerange * scaling;
+        let mut ret;
         loop {
-            let product = u128::from(self.next()) * u128::from(range);
-            let low = product as u64;
-            let threshold = range.wrapping_neg() % range;
-            if low >= range || low >= threshold {
-                return (product >> 64) as usize;
+            ret = self.next();
+            if ret < past {
+                break;
             }
         }
+        (ret / scaling) as usize
     }
 
     pub(super) fn unit_f32(&mut self) -> f32 {

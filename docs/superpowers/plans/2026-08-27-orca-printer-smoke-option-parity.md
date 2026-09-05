@@ -6645,3 +6645,22 @@ the anchor take applies in my monotonic port, (3) align both the
 clip stage AND the entry selection. The KSM grid and this AD5X
 monotonic case = two faces of the same connect/monotonic emission
 family (layer3-d5 + layer4-d9 ~54 printers).
+
+## 2026-09-05 (cont 245): monotonic chain = ANT COLONY RNG; libstdc++ uniform_int aligned
+
+ROOT DECODED: chain_monotonic_regions (FillRectilinear.cpp:2220+)
+= ANT COLONY OPTIMIZATION driven by std::mt19937_64 (default seed
+5489) with std::uniform_int_distribution + dice/threshold draws —
+the monotonic walk order is RNG-path-deterministic; ONE differing
+draw desynchronizes everything (entry vertex, tail clip). My port
+(fill/rectilinear/, 2590 LOC) has the mt19937_64 replica (verified
+default seed) but used LEMIRE index() — replaced with the exact
+libstdc++ scaling-rejection algorithm (scaling=urngrange/uerange,
+redraw while ret>=past, ret/scaling). select_candidate's dice/
+threshold structure verified identical (same f32 op order). The
+AD5X case still 79 lines -> the desync is in the ANT LOGIC
+DETAILS (probability computation path_probability/pheromone,
+num_direct_neighbors queue handling, or another rng consumer) —
+audit chain.rs against cpp:2300-2520 draw-by-draw (log each rng()
+call sequence on both sides for the AD5X layer-0.66 monotonic
+section; the first differing draw pinpoints the divergent line).
