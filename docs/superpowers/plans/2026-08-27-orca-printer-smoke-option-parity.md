@@ -7327,3 +7327,20 @@ formulas, round-half-away, pos() rational rounding, and f32 angle
 accumulation were verified bit-identical. NEXT: align the open-path
 clip intersection arithmetic (subject×clip edge parametrization) in
 the Clipper port to kill the ±3-unit endpoint noise.
+
+## 2026-09-05 (cont 286): full sweep after grid fixes — 496/1001 pass (regression +9)
+
+Sweep (685s): 505 divergent (was 495). Newly passing: MyToolChanger
+0.8, Prusa XL 5T 0.3/0.4, Snapmaker U1. Newly divergent (+13):
+Elegoo Neptune ×7 (1.0-nozzle family), MyToolChanger 0.4/0.6,
+Flashforge Creator 5 Pro ×2, Prusa XL 5T 0.25, +2 more. Analysis:
+the rotation-sign + pipeline restructure is verified CORRECT against
+GT I-lines (KSM 0.4: direction+order match, 904→861 gcode lines),
+but the multiline restructure changed behavior for OTHER sparse
+patterns sharing fill_surface (cubic, large nozzles). The boundary
+orientation normalization (outer CCW) may also affect cubic's clip
+inputs. Sparse feature mentions 466→500. NEXT: replay one regressed
+Neptune 1.0 case (cubic? grid?) and diff against the old-pipeline
+behavior; the regression isolates the restructure component —
+either the per-family→single intersection change or the boundary
+normalization — since the rotation sign is now GT-verified.
