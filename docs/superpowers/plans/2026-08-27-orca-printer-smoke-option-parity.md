@@ -7004,3 +7004,20 @@ ConcentricInternal (crates/ares-core/src/project_slice/
 fill_entities/concentric.rs + arachne): match the ExtrusionLine
 traversal start so the ring enters at v2 and clips the left edge.
 This converges both clusters (~42 printers) with one fix.
+
+## 2026-09-05 (cont 264): ring tie analysis — v0/v2 equidistant; vertex list order decides
+
+The AD5X P4 triangle ring vertices: v0(3.518,-2.626) d≈4.39,
+v1(3.518,-3.518) d≈4.97, v2(2.626,-3.518) d≈4.39 — v0 and v2
+TIED at d≈4.39 (mirror across the diagonal, same as BBL). GT
+starts at v2; I start at v0. My nearest_to_origin uses <= (last-
+minimal): if my arachne vertex list = [v0,v1,v2], last pick = v2
+(GT's choice ✓). If my list = [v2,v0,v1], last pick = v0 (my
+observed choice ✓ the bug). So MY ARACHNE EMITS THE RING IN THE
+ROTATED ORDER vs GT's. The fix = the arachne ExtrusionLine vertex
+SEQUENCE for this corner triangle: compare my ARES_DUMP_CI ring
+vertex lists against the GT's (from the P4 EEC entry) and correct
+the skeletal traversal start/rotation so [v0,v1,v2] ordering
+emerges; the existing <= tie-break then picks v2 correctly.
+Verification: AD5X replay diff (79 lines expected to collapse) +
+BBL A1 fixture re-diff + sweep for both clusters (~42 printers).
