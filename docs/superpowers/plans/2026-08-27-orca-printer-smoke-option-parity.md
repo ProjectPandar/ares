@@ -6126,3 +6126,22 @@ dump per-collection ring membership on both sides (extend CI dumps
 with a collection header line; add the same to my append), then
 align the arachne extrusion order + clip_end filtering so the
 narrow collection's first entity matches.
+
+## 2026-09-05 (cont 218): CI call structure differs 21 vs 11 — narrow split partitioning
+
+GT ci2 dump (CALL headers, result-ci2) vs mine (ARES_DUMP_CI with
+CALL header): GT = 21 fill_surface_extrusion calls for
+ConcentricInternal, mine = 11. GT call-1 = ONE ring, the 9-vertex
+full-square region (an all-narrow classification of a whole-layer
+solid region that my split does not produce); my calls merge
+multiple corner triangles per call (top-right 3 rings + bottom-left
+4 rings in one call). Ring sets are globally identical, but the
+SURFACE/EXPOLYGON partition from split_solid_surface differs
+(line-based branch for monotonic, Fill.cpp:597-...: base_angle
+alternation, connect_extrusions, distance_limit_reconnection).
+This partitioning decides collection first_points (the iorder
+entity list). NEXT: port-check my group_fills/narrow/split.rs
+line-based branch against Fill.cpp:630+ (the narrow_area /
+normal_fill_areas computation): reproduce the per-expolygon split
+that yields 21 pieces incl. the full-square case, then re-diff
+iorder.

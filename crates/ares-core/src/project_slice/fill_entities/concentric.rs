@@ -25,6 +25,16 @@ pub(super) fn append(
     minimum_nozzle_diameter: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
+    if let Ok(path) = std::env::var("ARES_DUMP_CI") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "CALL");
+        }
+    }
     let spacing = scale
         .checked_scale(f64::from(fill.params.flow.spacing))
         .ok_or_else(|| SliceError::InvalidInput("concentric spacing is out of range".into()))?;
@@ -157,7 +167,7 @@ fn finalize_polylines(
         if polyline.points.first() == polyline.points.last()
             && polyline.width.first() == polyline.width.last()
         {
-            if let Ok(path) = std::env::var("ARES_DUMP_CONC") {
+            if let Ok(path) = std::env::var("ARES_DUMP_CI") {
                 use std::io::Write;
                 if let Ok(mut file) = std::fs::OpenOptions::new()
                     .create(true)
