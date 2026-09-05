@@ -6266,3 +6266,14 @@ ipConcentricInternal as its own collection; check Fill.cpp make_
 fills' eec push-per-surface_fill — one collection per surface_fill,
 NO merging — vs my combine_infill merging adjacent compatible
 fills). Fix the merge rule to keep ConcentricInternal separate.
+
+Addendum: combine_infill (prepare_infill) is thick-sparse-layer
+logic, NOT the collection merger — wrong lead. The mixed collection
+X (slot-2: chains a 0.219999 monotonic walk then the 0.271893
+narrow ring) is assembled in fill_entities::generate_layer's
+collection flow. Next: read generate_layer (fill_entities.rs) —
+which appends entities into ONE collection across surface fills —
+and compare with upstream make_fills' one-eec-per-surface_fill rule
+(Fill.cpp:1354 fill_surface_extrusion per surface, each pushing
+its own ExtrusionEntityCollection into layerm->fills). The fix:
+one collection per surface_fill, no cross-fill entity merging.
