@@ -270,6 +270,40 @@ pub(in crate::project_slice) fn chain_segments_constrained(
     start_near: [crate::geometry::Coord; 2],
     can_reverse: &[bool],
 ) -> Vec<(usize, bool)> {
+    let result = chain_segments_constrained_inner(endpoints, start_near, can_reverse);
+    if let Ok(path) = std::env::var("ARES_DUMP_CHAIN") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "C start=({},{})", start_near[0], start_near[1]);
+            for entity in 0..endpoints.len() {
+                let _ = writeln!(
+                    file,
+                    "E {} f=({},{}) l=({},{}) rev={}",
+                    entity,
+                    endpoints[entity][0][0],
+                    endpoints[entity][0][1],
+                    endpoints[entity][1][0],
+                    endpoints[entity][1][1],
+                    can_reverse[entity]
+                );
+            }
+            for (index, reverse) in &result {
+                let _ = writeln!(file, "O {index} rev={reverse}");
+            }
+        }
+    }
+    result
+}
+
+fn chain_segments_constrained_inner(
+    endpoints: &[[[crate::geometry::Coord; 2]; 2]],
+    start_near: [crate::geometry::Coord; 2],
+    can_reverse: &[bool],
+) -> Vec<(usize, bool)> {
     debug_assert_eq!(endpoints.len(), can_reverse.len());
     match endpoints.len() {
         0 => Vec::new(),
