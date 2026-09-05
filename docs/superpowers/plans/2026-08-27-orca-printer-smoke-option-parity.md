@@ -7113,3 +7113,19 @@ filament_area × mm3_per_mm — check the precision at each step. The
 layer4-d9 cluster (30 printers) may share this root with the
 subsequent segment-structure differences being cascading effects
 of the first rounding.
+
+## 2026-09-05 (cont 272): grid family swap = ROTATION SIGN convention opposite
+
+Upstream (fill_surface_by_multilines): `ExPolygonWithOffset(base,
+-angle)` — rotates by the NEGATIVE total angle (rotate_vector.first
++ sweep.angle_base). My generate_family: rotates by the POSITIVE
+(params.angle + sweep.angle). The two conventions are 180° apart
+for the same sweep — same line directions but MIRRORED bounding
+boxes → different first_x anchors → different vline positions.
+The 0.6 case (1 line/family) worked because both families had
+exactly one line at the center (anchor-insensitive). The 0.4 case
+(multi-line/family) exposes the anchor difference. FIX: align the
+rotation SIGN so the bounding box anchor matches upstream exactly —
+either flip the rotation direction or negate the angle accumulation
+in generate_family. This replaces the sweep-order workaround
+(1768c2f3) with the true convention fix.
