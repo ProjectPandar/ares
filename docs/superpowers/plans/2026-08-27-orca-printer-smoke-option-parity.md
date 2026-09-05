@@ -7583,3 +7583,18 @@ unions them). NEXT: identify the upstream stage that turns the
 overlapping shells into 3 separate surfaces (MeshBoolean/TriangleMesh
 slicing or surface MedialAxis?), and reproduce the per-shell surface
 retention in my region pipeline.
+
+## 2026-09-05 (cont 304): shells are DISJOINT by ~3µm (not overlapping)
+
+Refined reading of the SURF dump: the three surfaces' first vertices
+differ by ~3302-27383 units = 3-27µm — three shells a few µm APART
+(parallel, DISJOINT). Upstream slicing keeps them as 3 separate loops
+(disjoint never merges under nonzero union) → 3 separate surfaces →
+near-identical fill spans ±1e-6 at their shared boundaries. MY pipeline
+collapses them into 1 surface somewhere: candidates (a) mesh-slice
+vertex quantization snapping the shells together, (b) perimeter/surface
+epsilon-merge (simplify/cleanup tolerance), (c) region union with a
+merge epsilon. NEXT: dump MY per-layer slice polygon COUNT for the ksr
+layers with 3-fold surfaces (compare against GT's 3) at successive
+pipeline stages (raw mesh slices → region slices → grouped surfaces) to
+find the collapse point.
