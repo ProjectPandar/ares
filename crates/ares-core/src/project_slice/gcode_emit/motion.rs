@@ -307,7 +307,7 @@ fn emit_infills(
         {
             let _ = write!(file, "AFTER");
             for entity in entities.iter() {
-                let (first, _) = match entity {
+                let (first, reversible) = match entity {
                     IslandPrintEntity::Fill(entity) => {
                         use crate::project_slice::perimeters::classic::shortest_path::ChainEntity;
                         (entity.first_point(), true)
@@ -317,11 +317,22 @@ fn emit_infills(
                     }
                     IslandPrintEntity::Thin(_) | IslandPrintEntity::Perimeter(_) => continue,
                 };
+                let last = match entity {
+                    IslandPrintEntity::Fill(entity) => {
+                        use crate::project_slice::perimeters::classic::shortest_path::ChainEntity;
+                        entity.last_point()
+                    }
+                    IslandPrintEntity::FillCollection(collection) => collection.last_point(),
+                    IslandPrintEntity::Thin(_) | IslandPrintEntity::Perimeter(_) => continue,
+                };
+                let _ = reversible;
                 let _ = write!(
                     file,
-                    " ({:.3},{:.3})",
+                    " ({:.3},{:.3}|L{:.3},{:.3})",
                     geometry.scale.unscale(first.x()),
-                    geometry.scale.unscale(first.y())
+                    geometry.scale.unscale(first.y()),
+                    geometry.scale.unscale(last.x()),
+                    geometry.scale.unscale(last.y())
                 );
             }
             let _ = writeln!(file);

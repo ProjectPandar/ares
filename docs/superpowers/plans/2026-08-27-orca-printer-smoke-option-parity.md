@@ -6593,3 +6593,21 @@ endpoints used in the greedy and the reversal application.
 Verification loop: replay the sweep case 3mf directly (runner dir
 /tmp/ares-parity-1018086), diff gcode; expect the 79 lines to
 collapse and layer3-d5 (22 printers) to converge.
+
+## 2026-09-05 (cont 243): AD5X last-infill decoded — GT enters at a MIDDLE vertex; monotonic post-pass
+
+Orientation dump: layer-0.66 entity 3 (the last internal-solid
+polyline) has both ends 0.033mm apart: (3.518,-2.626)/(3.493,
+-2.652) object coords — identical in mine and GT (O dump). GT's
+walk starts at (2.626,-3.518) = a MIDDLE vertex of that polyline
+(the L-corner), not an end! My walk starts at the (3.518,-2.626)
+end. GT's cycle: diag + down + left-partial; mine: down + left +
+diag-partial — same cycle, entry at different vertices. Since the
+connect outputs are identical, GT's emission enters mid-polyline =>
+UPSTREAM SPLITS OR REORDERS THE POLYLINE AFTER connect: the
+MONOTONIC fill post-pass (FillMonotonic make_line_monotonic /
+fill ordering) or the monotonic emission. FIX TARGET: my monotonic
+pipeline (fill_entities/monotonic.rs + fill_monotonic_surface):
+port/verify the post-connect monotonic reordering that decides the
+walk entry (upstream FillMonotonic.cpp). Replay loop: sweep case
+3mf + gcode diff (79 lines expected to collapse).
