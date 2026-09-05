@@ -36,7 +36,18 @@ impl Mt19937_64 {
         value ^= (value >> 29) & 0x5555_5555_5555_5555;
         value ^= (value << 17) & 0x71D6_7FFF_EDA6_0000;
         value ^= (value << 37) & 0xFFF7_EEE0_0000_0000;
-        value ^ (value >> 43)
+        let result = value ^ (value >> 43);
+        if let Ok(path) = std::env::var("ARES_DUMP_RNG") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(file, "R {result}");
+            }
+        }
+        result
     }
 
     /// libstdc++ `std::uniform_int_distribution<>::operator()` for the
