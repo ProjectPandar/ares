@@ -6342,3 +6342,18 @@ order in the multiline generator (crates/ares-core/src/fill/
 multiline.rs generate_family), re-dump KSM (expect I-line
 directions to match, O-diff 96 -> ~0, gcode 756 -> collapse), then
 re-check the 32-printer layer4-d9 family.
+
+## 2026-09-05 (cont 229): FIXED grid angle — KSM 756 -> 558 diff lines
+
+Root: Fill::_infill_direction (FillBase.cpp:318) adds pi/2 to the
+configured angle at fill time; FillGrid keeps _layer_angle = 0
+(constant). My grid.rs passed the RAW config angle to the multiline
+generator (crosshatch's convention — FillCrossHatch rotates by the
+raw angle directly, which is why the BBL crosshatch dumps matched).
+Added +FRAC_PI_2 in grid_polylines_inner. KSM fixture: the mirrored
+grid-walk cluster at line 303 GONE (756 -> 558 diff lines; first
+divergence moved to line 326 = the old +/-2 feedrate family
+(F784/F782) + a Z1.42 travel move family). Suite green (1268 fill
+tests pass). NOTE: other fill_surface_by_multilines users
+(triangles/stars/cubic/line) each have their own _layer_angle —
+audit them the same way when their fixtures appear.

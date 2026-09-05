@@ -64,7 +64,10 @@ fn grid_polylines_inner(
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
-        angle: fill.params.angle,
+        // `Fill::_infill_direction` (FillBase.cpp:318) adds pi/2; FillGrid keeps a
+        // constant angle (`_layer_angle` = 0, FillRectilinear.hpp:77), so the grid
+        // frame angle is the configured direction plus pi/2.
+        angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,
