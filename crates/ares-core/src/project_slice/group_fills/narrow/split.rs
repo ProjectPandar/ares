@@ -156,9 +156,26 @@ fn split_lines(
         reconstructed.extend(trace::reconstruct(&sections, spacing));
     }
     reconstructed = rotate_polygons(&reconstructed, -aligning_angle);
+    if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(file, "RECON n={}", reconstructed.len());
+        }
+    }
 
     let mut normal = union_safety_offset_ex(&reconstructed)?;
     let mut narrow = difference_ex(&fill.expolygons, &normal)?;
+    if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(
+                file,
+                "SPLITOUT normal={} narrow={}",
+                normal.len(),
+                narrow.len()
+            );
+        }
+    }
     let mut index = 0;
     while index < narrow.len() {
         let shrunk = offset_expolygon(
