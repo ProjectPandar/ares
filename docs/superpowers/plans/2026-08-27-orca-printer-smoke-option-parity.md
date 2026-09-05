@@ -6321,3 +6321,24 @@ dumps; build running as result-fconnect2. Next: dump both sides of
 the KSM fixture, find the grid I-line order/chain divergence (48
 O-diff lines on my-only sample vs missing GT baseline), fix, then
 re-check the 32-printer family.
+
+## 2026-09-05 (cont 228): KSM grid — line DIRECTION from generator; parity reversal ruled out
+
+fconnect2 (hooking the real internal Fill::connect_infill at
+FillBase.cpp:1580) reproduces the KSM grid divergence at the
+connect-input level: both sides get the same two diagonal I-lines
+in the same order, but EVERY line's DIRECTION is reversed (GT
+starts at the positive corner, mine at the negative). The
+FillGrid odd-layer post-reversal (FillRectilinear.cpp:3441-3) was
+tested in both parities — NO effect on the gcode (the emission
+chain reorients freely); reverted. The direction difference is in
+the GENERATOR: make_fill_lines emits (pos,low)->(pos,high) then
+rotates by +angle (`.rotated(cos_a, sin_a)`); my multiline
+generate_family port must rotate by the OPPOSITE sign (or map
+low/high swapped), flipping every grid line's direction. The
+mirrored walks in the gcode follow from connect_infill chaining
+direction-sensitive inputs. NEXT: fix the rotation sign / endpoint
+order in the multiline generator (crates/ares-core/src/fill/
+multiline.rs generate_family), re-dump KSM (expect I-line
+directions to match, O-diff 96 -> ~0, gcode 756 -> collapse), then
+re-check the 32-printer layer4-d9 family.
