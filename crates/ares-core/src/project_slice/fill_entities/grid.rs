@@ -72,11 +72,9 @@ fn grid_polylines_inner(
         {
             let _ = writeln!(
                 file,
-                "GRID layer={} angle={:.3} spacing={:.3} first_x={:.3}",
+                "GRID layer={} angle={:.3} expolygons={}",
                 layer_id,
                 fill.params.angle,
-                ((fill.params.spacing * 1.0 / (0.01 * fill.params.density / 2.0)) * 1.0e6) as i64,
-                0,
                 fill.expolygons.len()
             );
         }
