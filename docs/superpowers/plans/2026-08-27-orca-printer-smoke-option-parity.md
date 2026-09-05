@@ -6229,3 +6229,20 @@ rings. NEXT: find the layer-2 island/region ordering in my
 island_print_order vs upstream chain_first_entity (GCode.cpp layer
 entity ordering) for two same-size regions — tie-break at the
 layer's first entity pick.
+
+## 2026-09-05 (cont 224): island order traced to slice expolygon order
+
+My islands (extrusion_islands.rs assign_layer) derive from the
+layer's SLICE expolygons in their given order (area-sorted only for
+containment tests, not for emission). The emission order = the
+slices vector order = volume_slices/region_slices output. Upstream:
+by_extruder islands indexed by the layer's slice order (GCode.cpp
+process_layer). So the BL-before-TR divergence = the slice
+expolygon ORDER in the layer's region slices (another
+clipper-output-order family, or a sort upstream applies to
+LayerRegion slices that I miss — check PrintObject.cpp
+surfaces/slices ordering + my region_slices vs the GT-side slice
+order; a GT dump of layerm->slices expolygon firsts would settle
+it). Full verified trace now: GCC sort -> fills byte-identical ->
+split inert -> island order (HERE) -> reorder cursor -> narrow/
+solid2 order -> ring walk -> 115-line cluster -> 20 printers.
