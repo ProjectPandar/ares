@@ -7261,3 +7261,21 @@ at the 0.4 spacing — specifically the narrow-split detection
 narrow regions). NEXT: diff the BOUND sections of the fconnect
 dump to identify which boundary polygons differ (narrow-split vs
 solid), then align the boundary generation.
+
+## 2026-09-05 (cont 282): vline comparator mixed-sign bug FIXED; multiline pipeline restructured
+
+Root-caused the dropped spans: `Intersection::below` (vline.rs) compared
+SIGNED cross-products, so negative positions sorted ABOVE positive ones
+(upstream operator< sign-normalizes then inverts). Fixed to the exact
+upstream algorithm; diamond fixture corrected to CCW (upstream
+orientation convention). generate_family restructured to the upstream
+make_fill_lines pipeline: exact-rational vline spans, immediate
+rotate-back, x-margin filter; multiline_offset + single contracted
+Clipper intersection moved to fill_surface (upstream
+fill_surface_by_multilines order). Orientation normalization (outer CCW)
+added for the scan clip. Results: fill 7/7 multiline tests, KSM 0.6 = 0
+(pass), KSM 0.4 line SET complete (254 = GT 254) — remaining 904-line
+diff = intersection_pl OUTPUT ORDER/DIRECTION only (same 6 lines per
+section, some reversed/permuted). NEXT: align my Clipper open-path
+solution ordering (outRec creation order = scanline-ascending) with
+ClipperLib BuildResult.

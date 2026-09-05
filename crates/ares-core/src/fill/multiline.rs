@@ -67,9 +67,8 @@ pub(crate) fn fill_surface(
         .ok_or(ClipperError::CoordinateOutOfRange)?;
     let mut lines = Vec::new();
     for sweep in sweeps {
-        let mut family = Vec::new();
         for component in &expanded {
-            family.extend(generate_family(FamilyRequest {
+            lines.extend(generate_family(FamilyRequest {
                 component,
                 source: surface,
                 reference,
@@ -80,11 +79,15 @@ pub(crate) fn fill_surface(
                 scale,
             })?);
         }
-        lines.extend(intersection_open_polylines(&family, &boundaries)?);
     }
     if lines.is_empty() {
         return Ok(Vec::new());
     }
+    // Upstream `fill_surface_by_multilines` (FillRectilinear.cpp:3023-3033):
+    // apply the multiline offset after all sweeps, then clip once against the
+    // contracted surface.
+    lines = super::multiline_offset::apply(lines, params.multiline, params.spacing, scale)?;
+    let lines = intersection_open_polylines(&lines, &boundaries)?;
     let bbox = BoundingBox::from_expolygon(surface)
         .expect("the multiline fill surface contour must be nonempty");
     connect_infill_polygons(
@@ -142,15 +145,6 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
         .checked_sub(if shift >= 0 { shift } else { spacing + shift })
         .ok_or(ClipperError::CoordinateOutOfRange)?;
     let first_x = align_to_grid(minimum.x(), spacing, reference_x)?;
-    let height_padding = spacing;
-    let start_y = minimum
-        .y()
-        .checked_sub(height_padding)
-        .ok_or(ClipperError::CoordinateOutOfRange)?;
-    let end_y = maximum
-        .y()
-        .checked_add(height_padding)
-        .ok_or(ClipperError::CoordinateOutOfRange)?;
     let count = usize::try_from(
         (i128::from(maximum.x()) - i128::from(first_x)).div_euclid(i128::from(spacing)) + 1,
     )
@@ -167,33 +161,26 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
     let mut clip = Vec::with_capacity(holes.len() + 1);
     clip.push(contour);
     clip.extend(holes);
-    // NOTE: the exact-rational scanline slicer (`vline::vertical_spans`, the
-    // port of slice_region_by_vertical_lines) is wired but produces one
-    // spurious crossing at the rotated-square center on the KSM fixture
-    // (947 vs 558 diff lines); the Clipper intersection stays live until the
-    // tangency handling is debugged against the fixture intersection set.
-    let _ = &clip;
-    let mut lines = (0..count)
-        .map(|index| {
-            let x = i64::try_from(index)
-                .ok()
-                .and_then(|index| index.checked_mul(spacing))
-                .and_then(|delta| first_x.checked_add(delta))
-                .ok_or(ClipperError::CoordinateOutOfRange)?;
-            Ok((x >= x_min && x <= x_max)
-                .then(|| Polyline::new(vec![Point::new(x, start_y), Point::new(x, end_y)])))
-        })
-        .collect::<Result<Vec<_>, _>>()?
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
-    lines = super::multiline_offset::apply(lines, params.multiline, params.spacing, scale)?;
-    lines = intersection_open_polylines(&lines, &clip)?;
-    for line in &mut lines {
-        if line.points().first().unwrap().y() > line.points().last().unwrap().y() {
-            line.reverse();
+    // The scanline slicer requires upstream's orientation convention (outer
+    // CCW, holes CW) for the OUTER_LOW/OUTER_HIGH pairing; normalize the
+    // offset output which may arrive flipped.
+    for index in 0..clip.len() {
+        let needs_ccw = index == 0;
+        if (clip[index].area() >= 0.0) != needs_ccw {
+            clip[index].reverse();
         }
     }
+    // Exact-rational scanline slicer (`slice_region_by_vertical_lines`,
+    // FillRectilinear.cpp:2936-2955): per vertical line, emit the paired
+    // (x, low) -> (x, high) spans and rotate the points back immediately
+    // (upstream `make_fill_lines` `.rotated(cos_a, sin_a)`).
+    let mut lines = vline::vertical_spans(&clip, first_x, spacing, count)
+        .into_iter()
+        .filter(|span| {
+            let x = span.points().first().expect("vline span has a start").x();
+            x >= x_min && x <= x_max
+        })
+        .collect::<Vec<_>>();
     rotate_polylines(&mut lines, f64::from(angle))?;
     Ok(lines)
 }

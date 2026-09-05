@@ -33,17 +33,23 @@ impl Intersection {
     }
 
     /// `SegmentIntersection::operator<` (FillRectilinear.cpp:275-318): exact
-    /// cross-multiplied rational comparison.
+    /// cross-multiplied rational comparison with sign-normalized nominators.
     fn below(&self, other: &Self) -> bool {
         if self.pos_p == 0 || other.pos_p == 0 {
             return self.pos_p < other.pos_p;
         }
-        let left = i128::from(self.pos_p) * i128::from(other.pos_q);
-        let right = i128::from(other.pos_p) * i128::from(self.pos_q);
-        if self.pos_p > 0 {
-            left < right
-        } else {
+        let sign1 = if self.pos_p > 0 { 1i32 } else { -1 };
+        let sign2 = if other.pos_p > 0 { 1i32 } else { -1 };
+        if sign1 * sign2 < 0 {
+            // Mixed signs: the negative nominator is the smaller position.
+            return sign1 < 0;
+        }
+        let left = i128::from(self.pos_p.unsigned_abs()) * i128::from(other.pos_q);
+        let right = i128::from(other.pos_p.unsigned_abs()) * i128::from(self.pos_q);
+        if sign1 < 0 {
             left > right
+        } else {
+            left < right
         }
     }
 }
@@ -224,13 +230,14 @@ mod tests {
     #[test]
     fn center_line_spans_the_diamond() {
         // Rounded diamond (as the rotated square produces after integer
-        // rotation) so no vertex lies exactly on the sliced line.
+        // rotation) so no vertex lies exactly on the sliced line. CCW like
+        // the upstream polygon orientation convention.
         let radius = 5_112_000;
         let diamond = Polygon::new(vec![
             Point::new(3_797, radius),
-            Point::new(radius, -3_797),
-            Point::new(-3_797, -radius),
             Point::new(-radius, 3_797),
+            Point::new(-3_797, -radius),
+            Point::new(radius, -3_797),
         ]);
         let spans = vertical_spans(&[diamond], -6_000_000, 3_000_000, 5);
         let center = spans
@@ -247,5 +254,39 @@ mod tests {
                 .count(),
             1
         );
+    }
+}
+
+#[cfg(test)]
+mod mixed_sign_rational_ordering {
+    use super::*;
+
+    #[test]
+    fn negative_position_sorts_below_positive() {
+        // The rounded-diamond center vline: top crossing positive, bottom
+        // crossing negative — the mixed-sign case of `operator<`.
+        let radius = 5_112_000;
+        let diamond = Polygon::new(vec![
+            Point::new(3_797, radius),
+            Point::new(-radius, 3_797),
+            Point::new(-3_797, -radius),
+            Point::new(radius, -3_797),
+        ]);
+        let raw = line_intersections(&[diamond], 0);
+        assert_eq!(raw.len(), 2);
+        let mut sorted = raw.clone();
+        sorted.sort_by(|left, right| {
+            if left.below(right) {
+                std::cmp::Ordering::Less
+            } else if right.below(left) {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        });
+        // The OUTER_LOW (entering, `low`) crossing sorts first at the
+        // geometrically lower position.
+        assert!(sorted[0].low);
+        assert!(!sorted[1].low);
     }
 }
