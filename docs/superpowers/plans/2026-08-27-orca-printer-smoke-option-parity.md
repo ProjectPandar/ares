@@ -6418,3 +6418,22 @@ reverted. NEXT: tag my connect dump with the fill kind/role to
 identify the one block, then fix its generator's direction.
 KSM: 558 total diff lines = this block's walk + travels + F784
 (time-estimate consequence).
+
+## 2026-09-05 (cont 234): KSM residual = 2e-6 endpoint precision in line-boundary intersection
+
+Deep-dive result: all 47 grid connect inputs correct in shape/
+order/direction; the residual sorted-I diff = (a) ONE analysis-only
+anchoring block (bridge_over_infill sparse_anchoring via
+cross_hatch:: — no gcode impact, comparison noise), (b) line
+ENDPOINT y-tails differing by 2 units (2e-6 mm): mine
+(3.614463,-3.614463) vs GT (3.614463,-3.614461). Those 2-unit
+endpoint diffs flip the connect boundary-graph walk (GT's O walk
+passes through the boundary vertex; mine jumps), producing the 414
+geometric lines + F784. Tried restructuring the f32 sweep-angle
+accumulation to the upstream single-add order — NO effect (the
+endpoints unchanged): the 2-unit diff comes from the region
+ROTATION or the open-path intersection arithmetic, not the angle
+accumulation. Next: compare rotate_expolygon corner rounding
+(upstream ExPolygonWithOffset vs mine) for the rotated square —
+one rotated corner's y differs by 2 units; that is the last
+precision layer of this cluster.

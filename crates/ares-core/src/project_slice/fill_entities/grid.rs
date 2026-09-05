@@ -20,7 +20,9 @@ const SWEEPS: [Sweep; 2] = [
         shift: 0.0,
     },
     Sweep {
-        angle: 0.0,
+        // f32(pi/2 + pi/2): keeps the sweep-add arithmetic to a single f32
+        // operation per sweep, mirroring the upstream accumulation order.
+        angle: std::f32::consts::PI,
         shift: 0.0,
     },
 ];
@@ -63,7 +65,11 @@ fn grid_polylines_inner(
 ) -> Result<Vec<Polyline>, SliceError> {
     if let Ok(path) = std::env::var("ARES_DUMP_IORDER") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(
                 file,
                 "GRID layer={} angle={:.3} expolygons={}",
@@ -76,10 +82,10 @@ fn grid_polylines_inner(
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
-        // `Fill::_infill_direction` (FillBase.cpp:318) adds pi/2; FillGrid keeps a
-        // constant angle (`_layer_angle` = 0, FillRectilinear.hpp:77), so the grid
-        // frame angle is the configured direction plus pi/2.
-        angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+        // `Fill::_infill_direction` (FillBase.cpp:318) adds pi/2 to the frame
+        // angle; the sweeps below carry that and the family split so each
+        // per-sweep total is a single f32 add (upstream accumulation order).
+        angle: fill.params.angle,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,
