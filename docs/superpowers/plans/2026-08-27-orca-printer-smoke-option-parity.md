@@ -7021,3 +7021,20 @@ the skeletal traversal start/rotation so [v0,v1,v2] ordering
 emerges; the existing <= tie-break then picks v2 correctly.
 Verification: AD5X replay diff (79 lines expected to collapse) +
 BBL A1 fixture re-diff + sweep for both clusters (~42 printers).
+
+## 2026-09-05 (cont 265): ROOT = ThickPolyline width.first()!=width.last() blocks start_at_index
+
+My CI dump: ring = [v0(3.518085,-2.626188), v1(3.518085,-3.518085),
+v2(2.626188,-3.518085), v0] — v0/v2 EXACTLY tied (d²=19273785478569
+both). nearest_to_origin with <= correctly returns index 2 (v2).
+BUT the P4/AFTER output starts at v0 — start_at_index DIDN'T FIRE.
+The gate: points.first()==points.last() AND width.first()==
+width.last(). The ring IS closed on points but the WIDTHS at the
+junction differ (my arachne ThickPolyline's first/last width
+values don't match). Upstream requires BOTH to match (FillConcentric
+Internal.cpp:63-66); GT's ring passes → rotates to v2; mine fails
+→ stays at v0. FIX = match the arachne to_thick_polyline /
+variable_width conversion so the ring's first/last widths coincide
+(or handle the mismatch like upstream's to_thick_polyline by
+copying the first width to the last). This is the LAST bug for
+both clusters (~42 printers).
