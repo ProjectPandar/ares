@@ -26,7 +26,7 @@ pub(super) fn append(
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let spacing = scale
-        .checked_scale(fill.params.spacing)
+        .checked_scale(f64::from(fill.params.flow.spacing))
         .ok_or_else(|| SliceError::InvalidInput("concentric spacing is out of range".into()))?;
     if spacing <= 0 {
         return Err(SliceError::InvalidInput(

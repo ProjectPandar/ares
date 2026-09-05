@@ -6109,3 +6109,20 @@ result-ci. Next: compare my concentric ring dump
 CI dump ring-for-ring; the ring SET or arachne inset count differs
 (loops_count = max(bbox)/min_spacing+1 with min_spacing =
 params.flow.scaled_spacing() — check my spacing source).
+
+## 2026-09-05 (cont 217): GT ci dump live — ring SETS identical, composition/order question left
+
+result-ci (ORCA_DUMP_CI in the REAL FillConcentricInternal override)
+works: 71 rings, ring SET identical to mine (sorted ringdiff = 0,
+flow.spacing change was numerically neutral). Ring ORDER differs
+(GT starts with the 9-vertex full-region ring; per-corner groups
+outer->inner, e.g. bottom-left outer at gtci:17, middle 18, inner
+19). Remaining puzzle: GT iorder's narrow collection first_point =
+(-3.025,-3.453) = the INNER ring's rotated corner, not the outer
+ring's tie corner (-2.004,-3.876) — so the collection's first
+entity is the INNER ring: either outer/middle rings land in OTHER
+collections (one surface_fill per corner?) or get dropped. NEXT:
+dump per-collection ring membership on both sides (extend CI dumps
+with a collection header line; add the same to my append), then
+align the arachne extrusion order + clip_end filtering so the
+narrow collection's first entity matches.
