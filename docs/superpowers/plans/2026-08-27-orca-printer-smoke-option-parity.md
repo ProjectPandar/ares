@@ -6823,3 +6823,24 @@ downstream shifts — but layers 1..N-1 walks matched, so the
 cursor should match; the divergence being per-layer-final-region
 suggests instead the ORIENTATION pick on E1/E2 at one of the two
 chain levels).
+
+## 2026-09-05 (cont 254): GT chain output IDENTICAL [1,0,2] no-rev; start differs 1 unit
+
+result-chaindump (patched chain_and_reorder_extrusion_entities in
+ShortestPath.cpp, dump before+after): the layer-0.66 entity set =
+the SAME three entities (E0/E1/E2 endpoints identical), and GT's
+chain output = [1,0,2] ALL no-reverse — IDENTICAL to mine. BUT
+the chain INPUT start differs by 1 unit: GT (4690000,4654000) vs
+mine (4689999,4653999) — the previous emission ended 1 unit apart
+(wipe end or rounding). Since both chains agree at the entity
+level, the walk divergence must come from (a) the COLLECTION-level
+chained_path_from inside each fill collection (my AFTER dump point
+in motion.rs) where the 1-unit-different m_last_pos could flip a
+near-tie orientation on the 0.033mm entity, or (b) an inner
+entity reversal. NEXT: compare the collection-level chain (dump
+inside chained_path_from — my motion.rs AFTER dump already exists
+for it) with the GT equivalent (patch
+ExtrusionEntityCollection::chained_path_from or infer from the
+emitted gcode walk); ALSO trace the 1-unit start difference (the
+previous wipe endpoint) — it may itself be the root (wipe = my
+wipe-implementation rounding).
