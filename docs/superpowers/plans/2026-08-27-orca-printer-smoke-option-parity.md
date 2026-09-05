@@ -6437,3 +6437,20 @@ accumulation. Next: compare rotate_expolygon corner rounding
 (upstream ExPolygonWithOffset vs mine) for the rotated square —
 one rotated corner's y differs by 2 units; that is the last
 precision layer of this cluster.
+
+## 2026-09-05 (cont 235): 2e-6 endpoints = my clipper intersection vs upstream vline slicer
+
+Rotation math verified identical (f64 cos/sin + round both sides;
+ExPolygonWithOffset rotates via MultiPoint::rotate, FillRectilinear
+.cpp:399-404). The endpoint precision difference comes from the
+CLIPPING arithmetic: upstream make_fill_lines intersects the
+vertical lines via slice_region_by_vertical_lines (dedicated
+scanline slicer computing SegmentIntersection positions directly),
+while my multiline.rs uses intersection_open_polylines (general
+clipper open-path clipping) — different arithmetic at the rotated
+miter-corner crossings gives the 2-unit endpoint tails, flipping
+the connect boundary-graph walks. FIX = port the
+slice_region_by_vertical_lines arithmetic (FillRectilinear.cpp
+vline/SegmentIntersection machinery) into my multiline generator
+so endpoints come from the same scanline math. This is the last
+known layer of the KSM/layer4-d9 cluster (32 printers).
