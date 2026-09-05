@@ -80,6 +80,30 @@ pub(super) fn append(
             expolygon: &expolygon,
             scale,
         })?;
+        if let Ok(path) = std::env::var("ARES_DUMP_GAPRES") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(file, "GAPRES kind={:?} n={}", fill_kind, entities.len());
+                for entity in &entities {
+                    if let FillExtrusionEntity::Path(path) = entity {
+                        let _ = write!(file, "P {}:", path.polyline.points().len());
+                        for point in path.polyline.points() {
+                            let _ = write!(
+                                file,
+                                " ({:.6},{:.6})",
+                                scale.unscale(point.x()),
+                                scale.unscale(point.y())
+                            );
+                        }
+                        let _ = writeln!(file);
+                    }
+                }
+            }
+        }
         output.collections.push(FillExtrusionCollection {
             entities,
             no_sort: matches!(
