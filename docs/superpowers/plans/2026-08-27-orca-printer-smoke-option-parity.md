@@ -6801,3 +6801,25 @@ NEXT: instrument my chain greedy on the AD5X layer-2 entity set
 compare with upstream chain_extrusion_entities for the same set;
 the bug is in my greedy's endpoint selection or its
 previous-position input.
+
+## 2026-09-05 (cont 253): chain greedy dump live; layer-0.66 entity set captured
+
+ARES_DUMP_CHAIN logs the greedy input (start, entity endpoints,
+can_reverse) and output (order + reversal). Layer-0.66 (the
+divergent layer): start=(4689999,4653999); E0 f=(1908261,
+3866520) l=(-1869277,-3866520); E1 f=(2626188,3518085) l=
+(2651643,3492629) [the 0.033mm near-tie entity]; E2 f=(-3449570,
+-3549667) l=(-3430931,-3455031). MY chain output: [1,0,2] all
+rev=false. REMEMBER upstream chains TWICE (entity list level +
+chained_path_from inside each collection) — the orientation may
+be decided at either level; my motion.rs mirrors the structure.
+NEXT: build the GT-side chain dump (patch chain_extrusion_
+entities / ExtrusionEntityCollection::chained_path_from in
+ShortestPath.cpp) OR first check the simpler hypothesis — the
+start position: start=(4689999,4653999) is the position AFTER the
+previous entity; verify it matches GT's m_last_pos at the same
+point (if the previous walk ended elsewhere in GT, everything
+downstream shifts — but layers 1..N-1 walks matched, so the
+cursor should match; the divergence being per-layer-final-region
+suggests instead the ORIENTATION pick on E1/E2 at one of the two
+chain levels).
