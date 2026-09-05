@@ -6937,3 +6937,20 @@ NEXT: (1) extend the ASSIGN kinds dump to AD5X (it exists — rerun
 with ARES_DUMP_IORDER) to list ALL collections with kinds and
 sizes for layer 0.66; (2) find which collection owns the 4-vertex
 entity; (3) GT-side per-collection dump for that collection.
+
+## 2026-09-05 (cont 260): layer-0.66 AFTER orientation mapped; GT entry is NOT my entity's end
+
+m2 dump: layer-0.66 chain = [(3.867,-1.908) L(-3.867,1.869),
+(-3.450,3.423) L(-3.431,3.517), (3.518,-2.626) L(3.493,-2.652)] —
+the 3rd entity = the 0.033mm pair; its first point (3.518,-2.626)
+= world (113.518,107.374) = MY walk entry; its last (3.493,
+-2.652) = my walk end. GT's entry (2.626,-3.518) offset = a
+MIDDLE vertex of that ring — GT's corresponding entity must be a
+DIFFERENT polyline of the same ring (starting v2). Since the
+monotonic emit (M dump) is byte-identical, GT's 3rd entity comes
+from a different collection or its collection splits/reorders the
+polylines differently. DECISIVE NEXT: GT-side per-collection
+entity dump (patch fill_surface_extrusion's eec push in
+make_fills, Fill.cpp:1354 area — one more GT build) and diff
+against my GAPRES dump; focus on the collection containing the
+4-vertex ring.
