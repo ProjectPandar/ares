@@ -6882,3 +6882,23 @@ reconstruct GT's from the gcode walk order: the gcode directly
 shows which end GT entered). Direct check: does the GT final walk
 = my entity reversed? If yes => collection chain flipped it =>
 check the inner greedy's tie handling at the 1-unit-shifted start.
+
+## 2026-09-05 (cont 257): final-walk vertex-order analysis — not a plain reversal
+
+The divergent final polyline (4 vertices v0..v3): mine = [v0,v1,
+v2,v3-diag-clip]; GT = [v2, v0, v1, left-clip] — the walk uses
+edge v2->v0 (a diagonal) which is NOT an edge of my polyline
+(mine: v0-v1, v1-v2, v2-v3). A reversal cannot produce this.
+Either (a) GT's entity is a DIFFERENT polyline traversing the same
+ring (different collection / gap-residual / phony-outer split),
+or (b) my vertex order differs from GT's at the M dump and the
+earlier "identical" comparison passed only because sorted-diff
+masked rotation... NOTE the earlier M-dump comparison was a plain
+diff (not sorted) and passed — so GT's monotonic emit = my emit
+as ordered lists. Therefore GT's divergent walk entity comes from
+OUTSIDE the monotonic emit — likely the gap_residual (my earlier
+finding: layer-2 solid2+ring = the 4-entity GAP RESIDUAL
+collection) or the phony-outer-pair emission. NEXT: dump the fill
+entities per collection AFTER gap_residual append
+(gap_residual::append_residual) on both sides for layer 0.66 and
+identify which entity owns the final walk in each.
