@@ -20,7 +20,7 @@ pub(in crate::project_slice) use types::{
 
 use crate::{
     ExtrusionRole, ProcessInfillPattern, SliceError,
-    geometry::{CoordinateScale, ExPolygon, Point},
+    geometry::{ExPolygon, Point},
     project_slice::{
         group_fills::{SurfaceFillPattern, group_fills},
         prepare_infill::{
