@@ -6717,3 +6717,20 @@ its total_length changes pheromone_initial_deposit → all
 probabilities), (4) f32 EPSILON value in total_cost (SOURCE_
 EPSILON vs float(EPSILON) = 1e-4 scaled?). The next audit =
 path_matrix.rs + greedy_initial_deposit against cpp:2330-2395.
+
+## 2026-09-05 (cont 249): region costs audited; ant machinery fully aligned statically
+
+costs.rs region_path_cost mirrors montonous_region_path_length
+(cpp:1991-2060) incl. the subtract-smaller normalization and
+split-gap handling; lengths[2] == len1/len2 semantics match
+(cpp:2173-2181). path_length/reinforce lazily compute the same
+edges as upstream's accumulate/pointer reads. STATIC AUDIT
+COMPLETE: every audited ant-chain aspect (uniform_int, queue-push,
+contour-length branch, constants, reinforce, greedy seed, region
+costs, 3-opt-empty) is now faithful. The AD5X 79-line residual
+requires the DYNAMIC method: log each rng() call (value + call
+site) on both sides for one monotonic layer (GT patch on
+chain_monotonic_regions entry + my chain.rs), diff the sequences,
+the first mismatch pinpoints the line. Remaining unaudited (static
+parity unproven): emit_monotonic_polylines vs polylines_from_paths
+(cpp:2610-2700) — the emission tail-clip.
