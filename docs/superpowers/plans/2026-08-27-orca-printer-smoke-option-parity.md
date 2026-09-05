@@ -6502,3 +6502,20 @@ compute clip = rotate(surface, -theta) then offset with delta =
 (needs measuring the caller inset), or restructure fill_surface to
 pass the raw surface and expand upstream-style. Then switch
 generate_family to vline and re-measure walks.
+
+## 2026-09-05 (cont 238): boundary corners confirmed same-net; residual = rotated corner units
+
+BOUND dumps match at print precision (both +-3.614463 diamond);
+the I-line endpoints at the corner region differ 1-2 units: the
+crossing x sits at/near the rotated diamond VERTEX (the vertex
+branch of the slicer fires on one side, general position on the
+other) — so the rotated CORNER integers differ by 1-2 units. Same
+input region, upstream expands +0.5sp then rotates; my caller pre-
+insets by the equivalent 0.5sp and I contract — the nets cancel
+but the two offset chains round the pre-rotation square corners
+differently. FINAL ALIGNMENT: make generate_family clip = rotate
+(raw region) then offset(+overlap+0.5*spacing*multiline) exactly
+like ExPolygonWithOffset — requires threading the raw (non-pre-
+inset) region into grid/multiline or re-expanding by the exact
+caller inset amount at the same f32 precision. Then the vertex
+integers match, the slicer branch matches, endpoints unit-exact.
