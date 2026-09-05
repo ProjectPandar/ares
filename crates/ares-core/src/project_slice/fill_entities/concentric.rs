@@ -186,7 +186,28 @@ fn finalize_polylines(
                     let _ = writeln!(file);
                 }
             }
-            polyline.start_at_index(nearest_to_origin(&polyline.points));
+            if let Ok(path) = std::env::var("ARES_DUMP_CI") {
+                use std::io::Write;
+                if let Ok(mut file) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    let _ = write!(
+                        file,
+                        "W n={} first={:?} last={:?} match={}",
+                        polyline.width.len(),
+                        polyline.width.first(),
+                        polyline.width.last(),
+                        polyline.width.first() == polyline.width.last()
+                    );
+                    let _ = writeln!(file);
+                }
+            }
+            polyline.points.pop();
+            let start = nearest_to_origin(&polyline.points);
+            polyline.points.push(polyline.points[0]);
+            polyline.start_at_index(start);
         }
     }
     let mut write_index = first_polyline;
