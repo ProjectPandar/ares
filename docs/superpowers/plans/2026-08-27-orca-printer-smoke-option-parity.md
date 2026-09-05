@@ -6863,3 +6863,22 @@ match, the divergence is the entity packaging/collection split of
 the final polyline — check whether the final walk is entity E1 or
 E2 and which collection it lands in; (3) trace the 1-unit wipe
 endpoint difference.
+
+## 2026-09-05 (cont 256): rotate-back dedup ported; AD5X final-walk suspects remain
+
+Ported remove_duplicate_points after the monotonic rotate-back
+(FillRectilinear.cpp:2899) — no AD5X gcode change (the walk's
+points don't round-collide on this fixture) but faithful. The
+layer-0.66 final-walk divergence remains 79 lines. REMAINING
+SUSPECTS by elimination: (1) the collection-level
+chained_path_from orientation (upstream extrude_infill re-chains
+each eec from m_last_pos; the 1-unit-different start may flip the
+0.033mm entity's orientation INSIDE the collection), (2) the 1-unit
+wipe endpoint (trace my wipe vs upstream's), (3) the final
+polyline's entity packaging. NEXT: patch GT
+ExtrusionEntityCollection::chained_path_from with a dump (or dump
+my collection chain in motion.rs AFTER — already exists — and
+reconstruct GT's from the gcode walk order: the gcode directly
+shows which end GT entered). Direct check: does the GT final walk
+= my entity reversed? If yes => collection chain flipped it =>
+check the inner greedy's tie handling at the 1-unit-shifted start.
