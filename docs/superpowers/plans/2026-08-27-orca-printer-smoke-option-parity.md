@@ -7521,3 +7521,17 @@ I-line sets (sort/hash), then diff the aligned pairs to find (a) fills
 present in one side only (the 928 vs 983 delta = 55 extra sections on
 mine — possibly split differently per island), (b) per-fill walk
 differences. Dumps saved at /tmp/ksm/ksr_{gt,my}_fc.txt.
+
+## 2026-09-05 (cont 300): ksr content alignment — 749/928 sections EXACT; 47 GT keys unmatched
+
+Corrected analysis (earlier zero-match was a grep-pattern bug):
+749 of 928 GT ksr sections match some MY section EXACTLY (byte-identical
+I-line sets). 47 GT content keys (≈179 section instances) are unmatched,
+e.g. s0022 (69 lines), s0024 (23, curved diagonal region), s0037/38 (9),
+s0049-51 (3-4), s0242/47 (50-51). These unmatched regions are the ksr
+divergence core (fills missing or differently generated on my side; the
+983−928 excess = extra my-side sections, likely different surface
+splitting). Section files at /tmp/ksm/{gtsecs,mysecs}/. NEXT: replay
+s0024's surface (identify by coordinates in the 3mf layers), diff the
+surface input; the small 3-9-line sections are likely narrow-region
+fills where my generation drops/changes lines.
