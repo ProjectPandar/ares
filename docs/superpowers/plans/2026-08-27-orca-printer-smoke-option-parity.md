@@ -6519,3 +6519,21 @@ like ExPolygonWithOffset — requires threading the raw (non-pre-
 inset) region into grid/multiline or re-expanding by the exact
 caller inset amount at the same f32 precision. Then the vertex
 integers match, the slicer branch matches, endpoints unit-exact.
+
+## 2026-09-05 (cont 239): trunc-delta experiment — reverted; corner map recorded
+
+Tried integer-truncated offset deltas (scale_ semantics): corners
+moved 3.614463 -> 3.614464 (WORSE match; GT A-corner = 3.614463,
+B-corner y = 3.614461 — the GT corners themselves differ by units
+among positions from per-corner rotation rounding). Reverted to the
+f32 delta (A-corner exact match, B-corner 1-2 off, 558 diff).
+Corner map for the final alignment: GT = A(3.614463,3.614463)
+B-start y 3.614461; mine(f32) = A exact, B y 3.614463. The
+remaining work = deriving the exact pre-rotation square (whose
+rotated corners round to GT's map) — i.e. the precise f64/f32
+arithmetic of upstream's offset on the KSM numbers (offset 99270.x
+units, corners 7228926.x/7228927.x pre-rotation). Unit-level
+forensics; alternative = accept the 1-2 unit tails and instead fix
+the CONNECT side to be robust to them (the walks diverge because
+the boundary graph snapping differs at the tail — match upstream's
+snap tolerance there).
