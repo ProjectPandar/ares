@@ -107,7 +107,12 @@ fn fill_surface(
     };
     let polylines: Vec<Polyline> = generated
         .into_iter()
-        .map(|polyline| rotate_polyline(polyline, f64::from(direction)))
+        .map(|polyline| {
+            let rotated = rotate_polyline(polyline, f64::from(direction))?;
+            // `fill_surface_by_lines` (FillRectilinear.cpp:2899) drops
+            // consecutive points that collide after the rotate-back.
+            Ok(remove_duplicate_consecutive(rotated))
+        })
         .collect::<Result<_, _>>()?;
     Ok(MonotonicFillOutput {
         polylines,
@@ -200,4 +205,19 @@ fn rotate_polyline(polyline: Polyline, angle: f64) -> Result<Polyline, ClipperEr
         polyline.into_points(),
         angle,
     )?))
+}
+
+/// `Polyline::remove_duplicate_points` after the rotate-back: consecutive
+/// points that round onto the same integer coordinate are dropped.
+fn remove_duplicate_consecutive(mut polyline: Polyline) -> Polyline {
+    let mut points = polyline.into_points();
+    let mut write = 0;
+    for read in 0..points.len() {
+        if write == 0 || points[read] != points[write - 1] {
+            points.swap(write, read);
+            write += 1;
+        }
+    }
+    points.truncate(write);
+    Polyline::new(points)
 }
