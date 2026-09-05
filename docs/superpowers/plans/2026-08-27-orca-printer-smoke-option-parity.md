@@ -6300,3 +6300,24 @@ Next: reproduce the corner's inner_area/sections with a unit
 harness; compare miter-join rounding at 45deg corners between my
 offset and Clipper 6 (AppImage behavior); the fixture target = the
 ref gcode's normal lines reaching (124.323,125.517).
+
+## 2026-09-05 (cont 227): pivot to bigger cluster — KSM 0.6 grid fixture + connect_infill hook
+
+Strategic pivot: the 0.02 family root is binary-FP-level (the two
+reference builds themselves disagree at the split); parked with
+full trace. Now attacking the layer4-d9 cluster (32 printers) via
+a hand-built Kobra S1 Max 0.6 fixture (/tmp/ksm: machine+process
+(0.18mm Standard, grid) + Generic PLA + smoke overrides; 756 diff
+lines; first divergence = layer-1 sparse grid lines walked in
+MIRRORED order (ref starts bottom-left horizontal, mine top-left
+vertical)). KEY discovery: grid/rectilinear-multilines fills call
+the DIRECT Fill::connect_infill (FillRectilinear.cpp:3040) — the
+5-arg Polygons overload — which the fconnect.patch NEVER hooked
+(it hooked chain_or_connect_infill, used by the by-lines/planes
+paths); that is why the BBL grid-family cases were never covered
+by the byte-identical dumps. GT fconnect2.patch now hooks the real
+internal connect_infill (FillBase.cpp:1580) with input+output
+dumps; build running as result-fconnect2. Next: dump both sides of
+the KSM fixture, find the grid I-line order/chain divergence (48
+O-diff lines on my-only sample vs missing GT baseline), fix, then
+re-check the 32-printer family.
