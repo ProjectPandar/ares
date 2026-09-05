@@ -7417,3 +7417,16 @@ Remaining KSM 0.4 692: emission chain-start flips on symmetric
 near-ties (now with EXACT coordinates, the ties are genuine — the chain
 pick logic itself may differ from upstream chained_path_from) + the
 travel split pattern.
+
+## 2026-09-05 (cont 292): fleet sweep after object-center anchor — 515/1001 (+19)
+
+Sweep (734s): 515 of 1001 pass (was 496). The object bbox center anchor
+fix (upstream Fill::bounding_box semantics) gained +19 printers fleet-
+wide, on top of the direction/order restoration. KSM 0.4 at 692 lines
+with FGRID anchor dump byte-exact. Remaining KSM 0.4 root refined:
+layer-7 grid chain — GT STARTS at the FAR endpoint (170.95,173.002)
+while nearest-end logic picks (179.05,173.002): the upstream grid
+emission single-entity chain does NOT apply nearest-end selection at
+that stage (or the layer-7 fill is multi-entity and the order differs).
+NEXT: dump the layer-7 grid collection ENTITY COUNT + the chained
+emission decision (GT ORCA_DUMP_EEC on the collection) vs mine.
