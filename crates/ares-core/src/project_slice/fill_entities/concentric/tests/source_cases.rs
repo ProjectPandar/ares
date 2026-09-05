@@ -66,7 +66,12 @@ fn concentric_arachne_preserves_source_short_variable_width_branch() {
     );
     let mut output =
         generate_thick_polylines(domain, 377_079, 200_000, 0.4, CoordinateScale::Normal).unwrap();
-    finalize_polylines(&mut output, 0, 40_000.0);
+    finalize_polylines(
+        &mut output,
+        0,
+        40_000.0,
+        crate::geometry::CoordinateScale::Normal,
+    );
 
     assert!(output.contains(&ThickPolyline {
         points: vec![
