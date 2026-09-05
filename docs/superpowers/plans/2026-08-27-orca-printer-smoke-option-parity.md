@@ -7654,3 +7654,18 @@ and compare against GT's crosshatch SURF entries to find the layer
 where 2 GT crosshatch surfaces = 1 mine; then trace which upstream
 stage (fill_surfaces assembly vs Fill.cpp surface_fills grouping)
 preserves them.
+
+## 2026-09-05 (cont 309): duplication = near-dup CONTOURS in one clip set
+
+Refined: the GT duplicated spans sit in ONE connect call (one section,
+4 lines = 2 spans × 2) — one surface's clip polygon set contains TWO
+CONTOURS 1e-6 apart (kept from the 3µm mesh shells after perimeter
+rounding); a pattern line crosses BOTH → clipped into 2 near-identical
+segments. My equivalent surface merged the contours (boundary 2
+vertices shorter, 0.2mm longer start). Crosshatch surface COUNTS also
+match (912 = 912). The merge is inside MY perimeter→surface offset
+chain for near-duplicate contours (~1 unit apart after rounding);
+candidates: offset epsilon-merge or remove_duplicate/overlap cleanup.
+NEXT: reproduce with a unit test — offset a polygon pair 1-2 units
+apart with my offset_expolygon vs upstream ClipperOffset jtMiter and
+check whether upstream preserves both contours.
