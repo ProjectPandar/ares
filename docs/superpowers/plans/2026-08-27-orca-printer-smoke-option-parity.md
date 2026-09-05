@@ -7054,3 +7054,13 @@ duplicate-index no-op in start_at_index. Remaining clusters to
 re-prioritize after the sweep: KSM grid (414 lines, monotonic/
 emission chain), hilbert tangential boundary touch (1 printer),
 layer4/5/6 sub-micron families.
+
+## 2026-09-05 (cont 267): SWEEP4 RESULT — fleet 430 -> 506 (+76 printers!)
+
+The ConcentricInternal pop-before-scan fix resolved FAR more than
+the expected ~42 printers: cascading unblocked many models where
+the narrow-ring entry divergence was the FIRST divergence. Fleet
+now 506/1001 (was 430). Remaining 495 divergent. Top clusters to
+re-scan from the new summary: check what the top first-divergence
+families are now (the old layer3-d5 and BBL 0.2-nozzle clusters
+should be gone). Next: re-prioritize from the fresh summary.
