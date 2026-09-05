@@ -6537,3 +6537,19 @@ forensics; alternative = accept the 1-2 unit tails and instead fix
 the CONNECT side to be robust to them (the walks diverge because
 the boundary graph snapping differs at the tail — match upstream's
 snap tolerance there).
+
+## 2026-09-05 (cont 240): AD5X fixture recon — cluster = 0.30mm-layer process; movement-level near-pass on FF preset
+
+Built /tmp/ad5x (Flashforge AD5X 0.6, 0.18mm Fine @FF AD5X): the
+gcode matches the oracle at MOVEMENT level (only estimated-time
+comment lines differ). The sweep's divergence ("layer 3 deposition
+5", width 0.561089, endpoint 0.025mm off) comes from the DEFAULT
+process selection: machine default_print_profile = "0.30mm
+Standard @Flashforge AD5M Pro 0.6 Nozzle" (direct load fails with
+error -17 — likely a validation; the harness's pick_preset falls
+back to the first COMPATIBLE process). The 0.561 width implies a
+0.30mm-layer preset. So layer3-d5 (22 printers) = the multiline
+endpoint precision family on 0.30mm-layer processes — the SAME
+root as KSM; the AD5X @FF 0.18mm preset already passes. The
+multiline endpoint unit-exactness (corner forensics + vline
+switch) remains THE multiplier fix for layer3/4/5/6 clusters.
