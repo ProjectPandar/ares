@@ -7245,3 +7245,19 @@ gyroid (12). NEXT SESSION: focus the grid anchor by comparing
 the I-line WORLD POSITIONS (not counts) between fconnect dumps —
 if positions match, the anchor is fine and the issue is
 narrow-split/boundary; if positions differ, the anchor differs.
+
+## 2026-05 (cont 281): CRITICAL — grid anchor FINE; extra 43 lines are the root
+
+I-line position comparison: positions differ by only ±1 unit (e.g.
+-3.626310 vs -3.626311). The anchor is ESSENTIALLY CORRECT.
+The real difference: 598 vs 555 = 43 EXTRA lines on my side.
+These extra lines come from different narrow-split/solid boundary
+generation (the same boundary chain issue from cont 237-238), not
+the grid anchor. The extra lines cascade through connect_infill
+into different walks. FIX TARGET CORRECTED: the multiline
+boundary chain (expand/contract) produces different polygon sets
+at the 0.4 spacing — specifically the narrow-split detection
+(solid_infill_line_width 0.42 vs sparse 0.45 creates different
+narrow regions). NEXT: diff the BOUND sections of the fconnect
+dump to identify which boundary polygons differ (narrow-split vs
+solid), then align the boundary generation.
