@@ -6387,3 +6387,16 @@ directions) matching GT; geometric diff lines 558 -> 414 G1-X lines
 connect input direction anomaly only; (2) the F784/782 feed family
 (consequence of residual geometric diffs via the layer time
 estimate). pi (180) variant tested = worse (944), reverted.
+
+## 2026-09-05 (cont 232): parity mapping fixed (semantics); block-1 = first-sparse-layer anomaly
+
+Grid parity reversal mapped faithfully to 1-based ids (even = odd
+0-based). No output change (chain reorients) but semantics now
+mirror FillRectilinear.cpp:3441. Block-1 (first grid layer)
+[A_REVERSED, B] anomaly is NOT parity — hypothesis: the first
+sparse layer's fill takes the bridge-angle override path
+(FillBase.cpp:307 out_angle = surface->bridge_angle for internal
+bridge over the bottom shell), changing that one layer's frame.
+Sweep3 running (includes both grid fixes: pi/2 angle + sweep
+order) to measure the layer4-d9 family impact. KSM geometric
+residual: 414 G1-X lines (block-1 walk + travels) + F784 family.
