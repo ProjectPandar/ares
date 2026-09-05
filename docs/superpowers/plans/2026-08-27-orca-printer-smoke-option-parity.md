@@ -7388,3 +7388,17 @@ arithmetic detail (dx/scanline-dependent snapshot) — needs a targeted
 two-line experiment: extract the exact span+boundary pair from the
 layer-6 section, run both ClipperLib formula and my port on the same
 integers, and compare.
+
+## 2026-09-05 (cont 290): noise localized to SPAN LINE offset (not the clip)
+
+Collinearity check: GT sec1 I-line (3.626311,4.049656)→(4.049656,3.626311)
+lies on x+y = 7.675967; my corresponding subject span lies on
+x+y = 7.675970 — THE SPAN LINES THEMSELVES differ by 3 scaled units, so
+the noise enters BEFORE the Clipper intersection (not in the clip math).
+Remaining candidates for the ~2-unit rotated-frame x shift:
+first_x (align_to_grid of the rotated source bbox min.x — bounds are
+the same formula) OR the reference point: mine = center(surface), but
+upstream out_shift = the PRINT OBJECT bounding box center
+(Fill::_infill_direction). NEXT: instrument first_x / rotated bbox /
+reference on both sides (new ORCA_DUMP_FILLGRID GT patch in
+fill_surface_by_multilines) and compare directly.
