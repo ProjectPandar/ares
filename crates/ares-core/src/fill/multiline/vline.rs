@@ -120,7 +120,7 @@ fn line_intersections(polygons: &[Polygon], x: Coord) -> Vec<Intersection> {
             if !(left <= x && x <= right) {
                 continue;
             }
-            let (pos_p, pos_q) = if p1.x() == x {
+            let (mut pos_p, mut pos_q) = if p1.x() == x {
                 if p2.x() == x {
                     // Strictly vertical segments are ignored.
                     continue;
@@ -134,25 +134,34 @@ fn line_intersections(polygons: &[Polygon], x: Coord) -> Vec<Intersection> {
                     // Contour touches the line from one side.
                     continue;
                 }
-                (p1.y() as i64, 1)
+                (p1.y() as i64, 1u64)
             } else if p2.x() == x {
                 let p3 = points[(segment + 1) % points.len()];
-                if (p1.x() as i64 - p2.x() as i64) * (p3.x() as i64 - p2.x() as i64) > 0 {
+                if (p3.x() as i64 - p2.x() as i64) * (p1.x() as i64 - p2.x() as i64) > 0 {
                     continue;
                 }
-                (p1.x() as i64 - x as i64, p1.x() as i64 - p2.x() as i64)
+                (p2.y() as i64, 1u64)
             } else {
-                (p1.x() as i64 - x as i64, p1.x() as i64 - p2.x() as i64)
+                // General position: the rational parameter t in (0, 1) with a
+                // positive denominator, then pos = t * (p2.y - p1.y) + p1.y.
+                let (numerator, denominator) = if p2.x() > p1.x() {
+                    (x as i64 - p1.x() as i64, p2.x() as i64 - p1.x() as i64)
+                } else {
+                    (p1.x() as i64 - x as i64, p1.x() as i64 - p2.x() as i64)
+                };
+                (
+                    numerator
+                        .saturating_mul(p2.y() as i64 - p1.y() as i64)
+                        .saturating_add(p1.y() as i64 * denominator),
+                    denominator as u64,
+                )
             };
-            let denominator = p1.x() as i64 - p2.x() as i64;
-            let pos_q = denominator.unsigned_abs();
-            let pos_p = if denominator < 0 { -pos_p } else { pos_p };
-            let pos_p = pos_p
-                .saturating_mul(p2.y() as i64 - p1.y() as i64)
-                .saturating_add(p1.y() as i64 * pos_q as i64);
+            if pos_q == 0 {
+                pos_q = 1;
+            }
             intersections.push(Intersection {
                 pos_p,
-                pos_q: pos_q.max(1) as u32,
+                pos_q: pos_q as u32,
                 low: p2.x() > p1.x(),
                 contour: contour_index,
                 segment,
