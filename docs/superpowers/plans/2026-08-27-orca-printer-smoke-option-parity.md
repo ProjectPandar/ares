@@ -7216,3 +7216,14 @@ time estimation feeds the slowdown factor; a sub-1% time
 difference cascades to ALL feeds in that layer. Root: the time
 estimator (acceleration model / jerk / segment timing) differs at
 the sub-percent level.
+
+## 2026-09-05 (cont 279): vline switch for 0.4 = WORSE (1240 vs 904); reverted
+
+Tested switching generate_family from the Clipper intersection to
+the vline::vertical_spans exact-rational slicer: KSM 0.6 stays at
+0 (pass), but KSM 0.4 WORSENS (904 -> 1240). The vline path is
+not the fix for the 0.4 anchor divergence. REVERTED to the
+Clipper intersection (904 baseline restored, fill tests 1269/
+1269). The 0.4 grid issue is NOT the intersection arithmetic —
+it's the ANCHOR (first_x) or the expanded-boundary geometry
+itself differing at the 6mm spacing. Status: fleet 506/1001.
