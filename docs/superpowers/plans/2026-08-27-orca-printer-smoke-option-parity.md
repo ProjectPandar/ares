@@ -7402,3 +7402,18 @@ upstream out_shift = the PRINT OBJECT bounding box center
 (Fill::_infill_direction). NEXT: instrument first_x / rotated bbox /
 reference on both sides (new ORCA_DUMP_FILLGRID GT patch in
 fill_surface_by_multilines) and compare directly.
+
+## 2026-09-05 (cont 291): THE ANCHOR ROOT FIXED — object bbox center; 861→692
+
+New GT instrument (ORCA_DUMP_FGRID in make_fill_lines) revealed the
+final anchor discrepancy: upstream anchors the grid on the PRINT OBJECT
+bounding box center (refpt=0,0), my code used the surface center
+((0,-3) rotated) — shifting family-2 first_x by 3 units (−10855459 vs
+GT −10855456). Fix: object_center() computed from the object slices and
+threaded through MultilineFillParams.reference to grid/cubic/triangles/
+sparse_anchoring. FGRID dump now matches GT EXACTLY (refpt, first_x,
+spacing, margins, both families). KSM 0.4: 861→692. fill 1270/1270.
+Remaining KSM 0.4 692: emission chain-start flips on symmetric
+near-ties (now with EXACT coordinates, the ties are genuine — the chain
+pick logic itself may differ from upstream chained_path_from) + the
+travel split pattern.

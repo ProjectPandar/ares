@@ -55,9 +55,10 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
         .predecessor
         .object;
     let (compensated, _) = prelude.as_parts();
-    let (post_regions, _) = compensated.as_parts();
+    let (post_regions, object_slices) = compensated.as_parts();
     let (plan, _, _) = post_regions.as_parts();
     let z = plan.layers[layer_index].print_z;
+    let object_reference = crate::project_slice::fill_entities::object_center(object_slices);
     let mut result = Vec::new();
 
     for fill in grouped.surface_fills {
@@ -91,6 +92,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2
                     // to the frame angle once per fill call.
                     angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+                    reference: object_reference,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,
@@ -109,6 +111,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     spacing: fill.params.spacing,
                     overlap: 0.0,
                     angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+                    reference: object_reference,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,
@@ -144,6 +147,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     spacing: fill.params.spacing,
                     overlap: 0.0,
                     angle: fill.params.angle,
+                    reference: object_reference,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,
                     anchor_length: fill.params.anchor_length,

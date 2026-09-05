@@ -16,6 +16,7 @@ pub(super) fn append(
     fill: SurfaceFill,
     print_z: f64,
     scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
     let shift = (std::f64::consts::FRAC_1_SQRT_2 * print_z) as f32;
     // Raw upstream sweep bases {0, π/3, 2π/3}; the +π/2 frame offset from
@@ -38,6 +39,7 @@ pub(super) fn append(
         // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to the frame
         // angle once per fill call; the sweep bases ride on that frame.
         angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+        reference: object_reference,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,

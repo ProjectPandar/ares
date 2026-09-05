@@ -34,8 +34,9 @@ pub(super) fn append(
     fill: SurfaceFill,
     layer_id: usize,
     scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
-    let polylines = grid_polylines_inner(&fill, scale, layer_id)?;
+    let polylines = grid_polylines_inner(&fill, scale, layer_id, object_reference)?;
     if polylines.is_empty() {
         return Ok(());
     }
@@ -64,6 +65,7 @@ fn grid_polylines_inner(
     fill: &SurfaceFill,
     scale: crate::geometry::CoordinateScale,
     layer_id: usize,
+    object_reference: crate::geometry::Point,
 ) -> Result<Vec<Polyline>, SliceError> {
     if let Ok(path) = std::env::var("ARES_DUMP_IORDER") {
         use std::io::Write;
@@ -88,6 +90,7 @@ fn grid_polylines_inner(
         // angle once per fill call; the sweep bases ride on that frame, so
         // fold the offset here to reproduce upstream's f32 accumulation.
         angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+        reference: object_reference,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,

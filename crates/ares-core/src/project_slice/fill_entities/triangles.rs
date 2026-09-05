@@ -34,11 +34,13 @@ pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
     scale: CoordinateScale,
+    object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
         angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+        reference: object_reference,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         anchor_length: fill.params.anchor_length,

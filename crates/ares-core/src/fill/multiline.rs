@@ -16,6 +16,10 @@ pub(crate) struct MultilineFillParams {
     pub(crate) spacing: f64,
     pub(crate) overlap: f64,
     pub(crate) angle: f32,
+    /// Anchor for the infill grid — the PRINT OBJECT bounding box center
+    /// (`Fill::bounding_box`, FillBase.cpp:297-301), rotated into each
+    /// family frame like upstream `refpt`.
+    pub(crate) reference: Point,
     pub(crate) density: f32,
     pub(crate) multiline: i32,
     pub(crate) anchor_length: f32,
@@ -36,7 +40,7 @@ pub(crate) fn fill_surface(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     debug_assert!(!sweeps.is_empty());
-    let reference = center(surface);
+    let reference = params.reference;
     let expansion =
         (params.overlap + 0.5 * f64::from(params.multiline) * params.spacing) / scale.factor();
     let expanded = offset_expolygon(surface, expansion as f32, JoinType::Miter, 3.0)?;
@@ -179,6 +183,37 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
         let needs_ccw = index == 0;
         if (clip[index].area() >= 0.0) != needs_ccw {
             clip[index].reverse();
+        }
+    }
+    if let Ok(path) = std::env::var("ARES_DUMP_FGRID") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(
+                file,
+                "FGRID angle={:.9} bbmin={},{} bbmax={},{} refpt={},{} spacing={} first_x={} count={} xmin={} xmax={}",
+                angle,
+                minimum.x(),
+                minimum.y(),
+                maximum.x(),
+                maximum.y(),
+                rotated_reference.x(),
+                rotated_reference.y(),
+                spacing,
+                first_x,
+                count,
+                x_min,
+                x_max
+            );
+            let points = clip[0].points();
+            let _ = write!(file, "SRC n={}", points.len());
+            for point in points.iter().take(6) {
+                let _ = write!(file, " {},{}", point.x(), point.y());
+            }
+            let _ = writeln!(file);
         }
     }
     // Exact-rational scanline slicer (`slice_region_by_vertical_lines`,

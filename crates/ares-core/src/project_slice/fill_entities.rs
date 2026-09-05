@@ -20,6 +20,7 @@ pub(in crate::project_slice) use types::{
 
 use crate::{
     ExtrusionRole, ProcessInfillPattern, SliceError,
+    geometry::{CoordinateScale, ExPolygon, Point},
     project_slice::{
         group_fills::{SurfaceFillPattern, group_fills},
         prepare_infill::{
@@ -173,6 +174,9 @@ pub(in crate::project_slice) fn generate_layer(
     let object_options = &resolved_object.object;
     let mut output = LayerFillEntities::default();
     let mut plane_path_bounding_box = None;
+    // `Fill::_infill_direction` anchors the infill grid on the PRINT OBJECT
+    // bounding box center (FillBase.cpp:297-301), not the surface center.
+    let object_reference = object_center(object_slices);
 
     for fill in grouped.surface_fills {
         match fill.params.pattern {
@@ -180,13 +184,25 @@ pub(in crate::project_slice) fn generate_layer(
                 crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Grid) => {
-                grid::append(&mut output, fill, layer.id, traversal.scale)?;
+                grid::append(
+                    &mut output,
+                    fill,
+                    layer.id,
+                    traversal.scale,
+                    object_reference,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Cubic) => {
-                cubic::append(&mut output, fill, layer.print_z, traversal.scale)?;
+                cubic::append(
+                    &mut output,
+                    fill,
+                    layer.print_z,
+                    traversal.scale,
+                    object_reference,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
-                triangles::append(&mut output, fill, traversal.scale)?;
+                triangles::append(&mut output, fill, traversal.scale, object_reference)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
                 gyroid::append(&mut output, fill, layer.print_z, traversal.scale)?;
@@ -313,4 +329,31 @@ fn geometry_error(error: crate::geometry::ClipperError) -> SliceError {
             unreachable!("fill generators use valid open subjects and closed clips")
         }
     }
+}
+
+/// Center of the whole-object bounding box in scaled coordinates — the
+/// upstream `Fill::bounding_box` anchor (`Fill::_infill_direction`,
+/// FillBase.cpp:297-301).
+pub(in crate::project_slice) fn object_center(object_slices: &[Vec<ExPolygon>]) -> Point {
+    let mut minimum_x = i64::MAX;
+    let mut minimum_y = i64::MAX;
+    let mut maximum_x = i64::MIN;
+    let mut maximum_y = i64::MIN;
+    for layer in object_slices {
+        for expolygon in layer {
+            for point in expolygon.contour().points() {
+                minimum_x = minimum_x.min(point.x());
+                minimum_y = minimum_y.min(point.y());
+                maximum_x = maximum_x.max(point.x());
+                maximum_y = maximum_y.max(point.y());
+            }
+        }
+    }
+    if minimum_x > maximum_x {
+        return Point::new(0, 0);
+    }
+    Point::new(
+        minimum_x + (maximum_x - minimum_x) / 2,
+        minimum_y + (maximum_y - minimum_y) / 2,
+    )
 }
