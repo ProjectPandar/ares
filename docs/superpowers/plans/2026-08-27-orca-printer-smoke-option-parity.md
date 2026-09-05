@@ -6747,3 +6747,21 @@ the R sequences — the first mismatching draw pinpoints the exact
 divergent line in the ant chain; draws match => the divergence is
 in the non-rng path (emit/greedy arithmetic) and the walk diff
 narrows to those.
+
+## 2026-09-05 (cont 251): DECISIVE — RNG sequences IDENTICAL; divergence is in emission
+
+result-rng (OrcaRngLog proxy; its gcode matches the oracle 0 diffs,
+build verified non-invasive): the AD5X case monotonic chain draws
+are IDENTICAL on both sides — all 18 draws, 0 diff. The ant chain
+consumes the same randoms and (given take-best 0.9 dominance)
+almost surely produces the same region order and flips. Therefore
+the AD5X layer-end walk divergence (ring entry + tail clip) lives
+in the NON-random path: emit_monotonic_polylines vs
+polylines_from_paths (cpp:2610-2700) — specifically the final
+region's walk construction (the connection of the LAST path
+segment, its outer-point extension at cpp:2653-2660, and the
+finish_polyline merge at cpp:2613-2633). NEXT: dump the monotonic
+emit polylines (pre-rotation, pre-entity) on both sides for the
+divergent layer (add ORCA_DUMP_MONTONIC after
+polylines_from_paths + ARES mirror after emit_monotonic_polylines)
+and diff — the vertex-level mismatch pinpoints the emit branch.
