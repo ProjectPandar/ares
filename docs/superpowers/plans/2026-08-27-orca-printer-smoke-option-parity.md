@@ -7080,3 +7080,20 @@ The grid fix (bd1a17dd + 1768c2f3) is already landed but sweep4
 may have run with a stale binary — verify; the d17 family = the
 next target (dump the entity sets for a K2 Plus case from the
 sweep runner dir).
+
+## 2026-09-05 (cont 269): KSM 0.4 replay — 908 lines; grid path structure differs
+
+The KSM 0.6 sweep case now passes at movement level (4 lines =
+estimated-time comments only, the concentric ring fix covered it).
+The KSM 0.4 case (a737ee9...3mf, width 0.45, lh 0.18) still shows
+908 lines: first divergence = E±0.00001 (0.37995 vs 0.37996
+extrusion rounding), then segment structure differences at
+366+ (different polyline order at the boundary). The grid fix
+(angle+sweep) helped but this nozzle/width/spacing combination
+produces different polyline positions — the multiline boundary
+alignment (2-unit corner rounding from the offset chain) remains
+the blocking layer for the 0.4-class grid cases. The layer4-d9
+cluster (30) = this family. NEXT for d9: align the multiline
+contract-then-offset chain (expand by float delta) to match
+ExPolygonWithOffset's corner integers — the corner forensics from
+cont 239 apply directly.
