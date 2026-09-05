@@ -24,6 +24,22 @@ pub(super) fn apply(fills: &mut Vec<SurfaceFill>, context: Context) -> Result<()
         if fills[index].representative.kind != RegionSurfaceKind::InternalSolid {
             continue;
         }
+        if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(
+                    file,
+                    "SPLIT layer={} spacing={:.6} in={}",
+                    context.layer_id,
+                    fills[index].params.spacing,
+                    fills[index].expolygons.len()
+                );
+            }
+        }
         let (normal, narrow) =
             split::split(context.layer_id, &fills[index], context.scale).map_err(geometry_error)?;
         if narrow.is_empty() {
