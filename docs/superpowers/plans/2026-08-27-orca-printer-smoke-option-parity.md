@@ -7129,3 +7129,19 @@ rotation SIGN so the bounding box anchor matches upstream exactly —
 either flip the rotation direction or negate the angle accumulation
 in generate_family. This replaces the sweep-order workaround
 (1768c2f3) with the true convention fix.
+
+## 2026-09-05 (cont 273): rotation sign flip REVERTED — 0.4 worse (1075 vs 904)
+
+Tested flipping the rotation sign in generate_family (angle =
+positive sum, matching upstream ExPolygonWithOffset(-angle)) and
+reverting SWEEPS to [0, pi/2]: KSM 0.6 stayed at 4 (pass ✓) but
+KSM 0.4 WORSENED (904 -> 1075 movement lines). REVERTED. The
+original convention (angle = negative sum, SWEEPS = [pi/2, 0]) is
+correct for most cases — the 0.4 divergence is NOT a simple sign
+flip. The family swap at 0.4 must come from a spacing-dependent
+anchor position, not the rotation convention. NEXT: dump the
+actual vline positions (first_x values) for the 0.4 spacing on
+both sides (GT GRID patch exists) and compare — the anchor
+difference would pinpoint which sweep's bounding box/align_to_grid
+lands differently. Alternatively: check whether the 0.4 case uses
+crosshatch code path (its own fill_surface) instead of grid.
