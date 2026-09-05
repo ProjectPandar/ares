@@ -158,7 +158,11 @@ fn split_lines(
     reconstructed = rotate_polygons(&reconstructed, -aligning_angle);
     if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(file, "RECON n={}", reconstructed.len());
         }
     }
@@ -167,7 +171,11 @@ fn split_lines(
     let mut narrow = difference_ex(&fill.expolygons, &normal)?;
     if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(
                 file,
                 "SPLITOUT normal={} narrow={}",
