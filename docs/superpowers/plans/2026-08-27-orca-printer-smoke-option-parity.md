@@ -6920,3 +6920,20 @@ GT-side the same per-collection entities (patch
 fill_surface_extrusion / the eec push in Fill.cpp make_fills —
 one more GT build) and diff against ARES_DUMP_GAPRES; the first
 differing polyline pinpoints the stage (emit vs packaging).
+
+## 2026-09-05 (cont 259): final-walk entity NOT from the monotonic collections
+
+Vertex analysis: both walks traverse the SAME 3-edge ring (diag
+v2-v0, vert v0-v1, horiz v1-v2 + a partial third edge); mine
+starts at v0 (vert first), GT at v2 (diag first) — different
+polyline orderings. But the monotonic GAPRES collections carry
+only P31/P33 polylines (31/33 vertices); the final walk has 4
+vertices — NOT from the monotonic::append collections! The
+0.561089-width walk comes from a collection built elsewhere:
+candidates = the narrow-split ConcentricInternal appends, the
+gap-residual collections of OTHER fill kinds, or a second
+monotonic surface whose GAPRES dump ordering needs correlating.
+NEXT: (1) extend the ASSIGN kinds dump to AD5X (it exists — rerun
+with ARES_DUMP_IORDER) to list ALL collections with kinds and
+sizes for layer 0.66; (2) find which collection owns the 4-vertex
+entity; (3) GT-side per-collection dump for that collection.
