@@ -6985,3 +6985,22 @@ correlating the EEC dump order (68 entries) with my GAPRES/ASSIGN
 order; check insert_phony_outer_pairs and the gap-residual V
 entities — the 4-vertex shape is consistent with a phony-outer
 split of the monotonic path at a pinch.
+
+## 2026-09-05 (cont 263): DECISIVE — divergent P4 = ConcentricInternal narrow-split ring (same as BBL!)
+
+The EEC dump shows the divergent walk = EEC nosort=1 P4 (2.626188,
+-3.518085)→(2.662188,-3.518085) — a NARROW-SPLIT ConcentricInternal
+entity (nosort=1, 4 vertices, the arachne ring for the corner
+triangle). My equivalent = (3.518,-2.626)→(3.493,-2.652). The
+divergence = the ARACHNE RING ANCHOR/SEAM (ring entry + tail clip)
+— EXACTLY the same root as the BBL narrow-ring cluster (cont
+209-226)! The P6 entities = adjacent narrow regions. BOTH clusters
+(layer3-d5 = 22 printers AND the BBL 0.2-nozzle family = 20
+printers) = the SAME ConcentricInternal ring-anchor divergence.
+The complete monotonic/chain/RNG investigation on AD5X was a full
+verification that everything ELSE matches — the residual is the
+single known root. FIX = one change: the arachne ring anchor for
+ConcentricInternal (crates/ares-core/src/project_slice/
+fill_entities/concentric.rs + arachne): match the ExtrusionLine
+traversal start so the ring enters at v2 and clips the left edge.
+This converges both clusters (~42 printers) with one fix.
