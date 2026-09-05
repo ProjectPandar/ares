@@ -7693,3 +7693,12 @@ feeding the wipe arithmetic). All pre-wipe extrusion E values match at
 this step's rounding boundary. This is the same noise family as the
 KSM residual; fixing it means matching the upstream wipe-path source
 geometry to the unit.
+
+## 2026-09-05 (cont 312): ksr arc-fitting also differs (13364 vs 13369 arcs)
+
+GT emits 13364 G2/G3 arcs on ksr, mine 13369 (+5); 3115 arc lines
+differ. The arc simplification splits differently (5 extra arcs) —
+consistent with the wipe-path source polyline differing at unit level
+in curved regions (arc-fit source = the same polylines). The
+region-geometry micro-edge family persists as the deepest root for
+both the ksr E-noise and the arc-count deltas.
