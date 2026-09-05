@@ -6176,3 +6176,16 @@ spacing, expolygon count) building as result-split (~20min);
 compare with my split inputs (add ARES_DUMP_SPLIT in
 group_fills/narrow.rs apply) to find which surface_fill inputs
 differ, then fix the band's classification chain.
+
+## 2026-09-05 (cont 221): split INPUTS identical — outputs differ (fragment count)
+
+result-split live: 11 SPLIT calls, layer multiset {1,2,3,4,91,93,
+96,97,...}, spacing 0.198540, in=1 each — IDENTICAL to my
+ARES_DUMP_SPLIT (thread-order aside). Therefore the 21-vs-11 CI
+call difference comes from the split OUTPUTS: GT's narrow sets
+carry 21 expolygons total vs my 11 — GT carves more fragments per
+layer (e.g. the layer-1 band + corners vs my single piece).
+Remaining audit target: my trace::reconstruct + filter::apply in
+group_fills/narrow/split.rs vs cpp:700-772 (TracedPoly lows/highs
+extension, upper_bound candidate windows, the not-closed flush and
+the reconstruction), plus the section-merging widths (a -= 0.5*spacing).
