@@ -6954,3 +6954,15 @@ entity dump (patch fill_surface_extrusion's eec push in
 make_fills, Fill.cpp:1354 area — one more GT build) and diff
 against my GAPRES dump; focus on the collection containing the
 4-vertex ring.
+
+## 2026-09-05 (cont 261): EEC GT dump build blocked by environment Eigen failure
+
+The ORCA_DUMP_EEC patch (per-collection entity dump at the
+fill_surface_extrusion push, Fill.cpp:1354) compiles (Fill.cpp.o
+built at 29%) but the BUILD fails later in WipeTower.cpp with an
+eigen-5.0.1 static assertion — an environment-level regression
+(nixpkgs eigen update) unrelated to the patch; earlier GT builds
+(rng/mon/chaindump) predate it. Workarounds next session: pin
+nixpkgs to the revision the earlier builds used (check result-rng
+drv hash), or fix by adding a compile flag. The patch itself is
+ready at /tmp/orca-gt/eec.patch + eec.nix.
