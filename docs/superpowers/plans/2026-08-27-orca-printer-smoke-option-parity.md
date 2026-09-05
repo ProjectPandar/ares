@@ -6625,3 +6625,23 @@ internal call chain), or a post-connect transform splits/simplifies
 (the rotate-back cannot). NEXT: dump my emitted monotonic entity
 vertices for the section and diff against GT's 4-vertex walk to
 find which stage produces it.
+
+## 2026-09-05 (cont 244): AD5X walks decoded = classic ring rotation at the last-infill entity
+
+Both walks share the 3 core vertices [(2.626,-3.518),(3.518,-2.626),
+(3.518,-3.518)]; GT enters at the left-corner (clip lands on the
+LEFT tail, 2.662); mine enters at the diag-top (clip lands on the
+DIAG tail, 3.493). Same ring, rotated entry, tail-clip follows the
+entry — the SAME ring-rotation pattern as the BBL narrow/solid
+cluster. My entity's ends per the AFTER dump = (3.518,-2.626)/
+(3.493,-2.652) — i.e. MY ring is ALREADY tail-clipped at the diag
+(the clip lives in MY connect output), while GT's ring appears
+unclipped pre-emission (its O ends differ) — the two pipelines
+apply the tail clip at DIFFERENT STAGES (mine in connect_infill's
+take, GT at/after emission or with a different anchor take), and
+the entry rotation compounds it. NEXT: (1) locate GT's tail-clip
+stage (upstream make_line_monotonic / emission), (2) compare where
+the anchor take applies in my monotonic port, (3) align both the
+clip stage AND the entry selection. The KSM grid and this AD5X
+monotonic case = two faces of the same connect/monotonic emission
+family (layer3-d5 + layer4-d9 ~54 printers).
