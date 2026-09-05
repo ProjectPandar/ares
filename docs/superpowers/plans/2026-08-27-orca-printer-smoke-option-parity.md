@@ -7669,3 +7669,14 @@ candidates: offset epsilon-merge or remove_duplicate/overlap cleanup.
 NEXT: reproduce with a unit test — offset a polygon pair 1-2 units
 apart with my offset_expolygon vs upstream ClipperOffset jtMiter and
 check whether upstream preserves both contours.
+
+## 2026-09-05 (cont 310): ksr failure is PRE-EXISTING — not a grid regression
+
+Old-build verification (ced6312d worktree, before this session's grid
+chain): the ksr fixture has the SAME 31520 diff lines as the current
+build — the ksr semantic failure predates today's grid fixes (the
+E-accumulator flip at line 3337 + the near-dup-contour regions are
+long-standing divergence families, not regressions). Today's grid work
+(KSM 0.4 → full parity, fleet 496→592) is a strict improvement. The ksr
+roots remain: (a) near-duplicate contour preservation in the offset
+chain (crosshatch), (b) the E ±1e-5 accumulator flip at line 3337.
