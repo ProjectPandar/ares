@@ -6664,3 +6664,18 @@ num_direct_neighbors queue handling, or another rng consumer) —
 audit chain.rs against cpp:2300-2520 draw-by-draw (log each rng()
 call sequence on both sides for the AD5X layer-0.66 monotonic
 section; the first differing draw pinpoints the divergent line).
+
+## 2026-09-05 (cont 246): AD5X diff structure = ~8 layer-end walk divergences + wipe cascades
+
+The 79 lines = 16 hunk groups: the LAST monotonic walk of each
+layer (z=0.66, 0.84, ...) diverges the same way (ring entry) + the
+following WIPE moves differ (the wipe follows the last extrusion
+end — pure cascade). So the ant chain agrees on ~all regions per
+layer and diverges ONLY at the final region/flip — a systematic
+per-layer late choice, not an early rng desync. Prime suspects:
+the LAST region's flip decision, or the emission of the final
+region (the tail-clip stage). NEXT: rng-call-sequence logging on
+both sides for one layer's monotonic chain (first differing draw),
+or static diff of the final-region handling in chain.rs/emit.rs
+vs cpp:2420-2520 (the flip rng() > max/2 at :2427 and the
+remaining-endpoint emission).
