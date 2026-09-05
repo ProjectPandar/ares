@@ -7176,3 +7176,14 @@ spacing). NEXT: filter the fconnect dumps to grid-only blocks
 (the BOUND sections with the grid diamond) and compare those
 I-lines; or add a GRID-tagged dump that includes first_x and the
 generated line positions per sweep.
+
+## 2026-09-05 (cont 276): sparse-infill divergence pattern breakdown (first 100)
+
+Of 233 divergent "Sparse infill" printers (first 100 sampled):
+grid=57, cubic=30, gyroid=12, crosshatch=1, others=0. Grid and
+cubic share the multiline code path (fill_surface_by_multilines)
+— a single fix to that path could impact ~87% of the sparse
+divergences. The cubic sweeps differ (cubic uses rotated
+patterns per layer). NEXT: (1) grid anchor alignment via first_x
+dump (the 0.4 case is the template), (2) cubic sweep alignment,
+(3) gyroid (separate generator).
