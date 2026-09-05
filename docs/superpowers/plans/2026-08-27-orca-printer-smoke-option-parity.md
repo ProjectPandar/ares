@@ -6611,3 +6611,17 @@ pipeline (fill_entities/monotonic.rs + fill_monotonic_surface):
 port/verify the post-connect monotonic reordering that decides the
 walk entry (upstream FillMonotonic.cpp). Replay loop: sweep case
 3mf + gcode diff (79 lines expected to collapse).
+
+Addendum: Monotonic = fill_surface_by_lines (NOT by_multilines):
+INFILL_OVERLAP_OVER_SPACING=0.45 shrink, monotonic-region
+machinery (FillRectilinear.cpp:1857-2100), 0.5sp contraction,
+0.8sp short-segment removal, one connect, rotate back. The
+section's O outputs = 8/16/8-vertex polylines; GT's LAST entity
+walk = 4 vertices [(2.626,-3.518),(3.518,-2.626),(3.518,-3.518),
+(2.662,-3.518)] — matching NEITHER an O8 nor a mid-entry of O16.
+So GT's emitted last polyline is NOT any dumped connect output:
+either a connect call is unhooked (verify: monotonic path's
+internal call chain), or a post-connect transform splits/simplifies
+(the rotate-back cannot). NEXT: dump my emitted monotonic entity
+vertices for the section and diff against GT's 4-vertex walk to
+find which stage produces it.
