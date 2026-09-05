@@ -7430,3 +7430,18 @@ emission single-entity chain does NOT apply nearest-end selection at
 that stage (or the layer-7 fill is multi-entity and the order differs).
 NEXT: dump the layer-7 grid collection ENTITY COUNT + the chained
 emission decision (GT ORCA_DUMP_EEC on the collection) vs mine.
+
+## 2026-09-05 (cont 293): chain-start flip traced to emission tie context
+
+Layer-7 analysis: both sides' connect output (O-line) now matches in
+structure AND start vertex (±1-unit noise only). GT EMITS from the
+O-line START; mine from the O-line END (nearest-end). Upstream single-
+entity chain (ShortestPath.cpp:101-105) = nearest-end too, so GT's
+far-end start implies a different effective start_near (the position
+after layer-7 walls, both sides matching through line 202) or a
+multi-entity collection walk. local_cursor verified correct (actual
+last emitted − island offset). NEXT: dump the GT collection structure
+at the layer-7 infill (ORCA_DUMP_EEC / new patch in extrude_infill
+printing m_last_pos + entity endpoints before/after chained_path_from)
+vs my IORDER REORDER line — pinpoint which side's effective
+start_near or entity set differs.
