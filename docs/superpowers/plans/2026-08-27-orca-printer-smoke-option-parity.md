@@ -6210,3 +6210,22 @@ the input expolygon AREAS against the AppImage's implied geometry
 (the ref's normal monotonic lines reaching each corner = which
 corners stayed normal), then fix my region polygon; the GT split
 patch files remain for mechanism checks.
+
+## 2026-09-05 (cont 223): THE cursor layer — my fill reorder runs at the wrong cursor
+
+myio2 full-scan: my layer-2 bottom-left fill reorder NEVER sees
+cursor (-0.984,-4.194) [world (127.016,123.806) = after the layer's
+last perimeter, where GT's reorder runs]; ALL my layer-2 reorders
+run at cursor (2.890,4.874) = world (130.89,132.87) = AFTER my
+top-right region's fills already emitted. So MY layer emits the
+TOP-RIGHT fill region BEFORE the bottom-left one; GT the reverse.
+ROOT = the layer's ISLAND/REGION emission order (chain_first_entity
+from the layer start) — mine picks the mirrored region first,
+cascading every later cursor/order (the narrow-vs-solid2 order,
+the ring walk direction, the 115-line cluster). Also note: the
+split narrow-count difference (4 vs 1) is INERT — both gcodes emit
+exactly 10 narrow sections (1/layer); the extra pieces yield no
+rings. NEXT: find the layer-2 island/region ordering in my
+island_print_order vs upstream chain_first_entity (GCode.cpp layer
+entity ordering) for two same-size regions — tie-break at the
+layer's first entity pick.
