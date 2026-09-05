@@ -6734,3 +6734,16 @@ chain_monotonic_regions entry + my chain.rs), diff the sequences,
 the first mismatch pinpoints the line. Remaining unaudited (static
 parity unproven): emit_monotonic_polylines vs polylines_from_paths
 (cpp:2610-2700) — the emission tail-clip.
+
+## 2026-09-05 (cont 250): dynamic rng logging live on both sides
+
+My side: ARES_DUMP_RNG logs every mt19937_64 draw (18 draws for
+the AD5X case; first draws 14514284786278117030, 4620546740167642908
+= the standard default-seed sequence). GT side: rng.patch wraps the
+two chain_monotonic_regions rng declarations with an OrcaRngLog
+proxy (satisfies URNG so uniform_int_distribution composes), build
+running as result-rng. NEXT: ORCA_DUMP_RNG on the AD5X case, diff
+the R sequences — the first mismatching draw pinpoints the exact
+divergent line in the ant chain; draws match => the divergence is
+in the non-rng path (emit/greedy arithmetic) and the walk diff
+narrows to those.
