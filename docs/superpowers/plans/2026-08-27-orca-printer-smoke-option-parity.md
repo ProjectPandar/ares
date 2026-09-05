@@ -7565,3 +7565,21 @@ per-region fill_surfaces expolygons entering make_fill (Fill.cpp
 fill_surface_extrusion caller) with layer + surface type; compare the
 surface SETS (count/areas) vs my group_fills output to find which
 classification stage splits them.
+
+## 2026-09-05 (cont 303): SURF instrument CONFIRMS overlapping stInternal surfaces
+
+GT ORCA_DUMP_SURF (result-surf build, Fill.cpp fill_surface_extrusion
+caller): 2218 surfaces; type=5 (stInternalSolid) 1190, type=4
+(stInternal/sparse) 912. The FIRST three entries are THREE nearly
+identical n=18 stInternal surfaces with first vertices
+(35479734,-34209160), (35483036,-34209010), (35507117,-34208747) —
+three overlapping copies within ~0.3mm → duplicated fill spans in the
+overlap ✓✓ THE KSR ROOT CONFIRMED. The 3mf = ONE mesh, ONE part
+(identity matrix, one <item>) — the three overlapping surfaces arise
+UPSTREAM during slicing/surface preparation (likely from the mesh's
+SELF-OVERLAPPING shells: the ksr mesh has overlapping closed shells;
+upstream meshes/volumes split produce 3 region copies; my pipeline
+unions them). NEXT: identify the upstream stage that turns the
+overlapping shells into 3 separate surfaces (MeshBoolean/TriangleMesh
+slicing or surface MedialAxis?), and reproduce the per-shell surface
+retention in my region pipeline.
