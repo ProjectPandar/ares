@@ -17,6 +17,37 @@ pub(crate) fn emit_monotonic_polylines(
     slice: &RectilinearSlice,
     scale: CoordinateScale,
 ) -> Vec<Polyline> {
+    let output = emit_monotonic_polylines_inner(path, regions, slice, scale);
+    if let Ok(dump) = std::env::var("ARES_DUMP_MONOTONIC") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(dump)
+        {
+            for polyline in &output {
+                let _ = write!(file, "M {}:", polyline.points().len());
+                for point in polyline.points() {
+                    let _ = write!(
+                        file,
+                        " ({:.6},{:.6})",
+                        scale.unscale(point.x()),
+                        scale.unscale(point.y())
+                    );
+                }
+                let _ = writeln!(file);
+            }
+        }
+    }
+    output
+}
+
+fn emit_monotonic_polylines_inner(
+    path: &[MonotonicRegionLink],
+    regions: &[MonotonicRegion],
+    slice: &RectilinearSlice,
+    scale: CoordinateScale,
+) -> Vec<Polyline> {
     if path.is_empty() {
         return Vec::new();
     }
