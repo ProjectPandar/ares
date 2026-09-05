@@ -7292,3 +7292,21 @@ still inverted (lines 2/4/6). fill 1270/1270; KSM 0.6 = 0 pass.
 NEXT: the remaining family-2 direction inversion per layer — likely
 the per-layer sweep sign alternation (odd layers swap family order or
 direction per FillGrid::fill_surface layer_id%2 reversal interplay).
+
+## 2026-09-05 (cont 284): grid family-2 direction — two-caller discovery; 734
+
+Instrumented generate_family (FAM dump): the fconnect section 1 comes
+from the BRIDGE-OVER-INFILL sparse anchoring path
+(sparse_anchoring.rs GRID_SWEEPS=[0,+π/2]), sections 2+ from
+grid.rs. GT section 1 lines 1/3/5 match, 2/4/6 reversed — the
+family-2 SUBJECT direction maps opposite through my rotation
+convention. Boundary orientation normalization (outer CCW, holes CW
+per upstream offset_ex) added to fill_surface — no change in count.
+Sweep-sign experiments: [0,−π/2]=734 < [0,+π/2]=861. REMAINING ROOT:
+my intersection_open_polylines reverses some subject polylines where
+ClipperLib preserves subject direction; the family-2 subject lines
+arrive direction-flipped relative to upstream's make_fill_lines
+rotation for the same family. NEXT: align the subject direction of
+family-2 (mirror in generate_family's rotate-back for the second
+sweep) OR replicate ClipperLib's open-path output direction
+semantics; then re-tune the sweep list sign.

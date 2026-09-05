@@ -50,9 +50,20 @@ pub(crate) fn fill_surface(
     }
     let mut boundaries = Vec::new();
     for component in contracted {
-        let (contour, holes) = component.into_parts();
+        let (mut contour, holes) = component.into_parts();
+        // Upstream's `offset_ex` (ClipperLib) always returns outer contours
+        // CCW and holes CW; the open-path intersection output direction
+        // depends on that convention, so normalize ours the same way.
+        if contour.area() < 0.0 {
+            contour.reverse();
+        }
         boundaries.push(contour);
-        boundaries.extend(holes);
+        for mut hole in holes {
+            if hole.area() >= 0.0 {
+                hole.reverse();
+            }
+            boundaries.push(hole);
+        }
     }
 
     let family_density = params.density / sweeps.len() as f32;
