@@ -6375,3 +6375,15 @@ the +pi/2 belongs on the sweep angle list instead of params.angle,
 or the first-grid-layer path skips something), (2) fix the c==1
 A-direction, then re-measure the 558. Sweep2 running for fleet
 impact of the grid fix.
+
+## 2026-09-05 (cont 231): grid sweep order swapped — connect inputs [A,B] on layers 5+
+
+With the +pi/2 angle, my sweep0 generated the B family (90deg off
+upstream's sweep0=A). SWAPS: SWEEPS = [FRAC_PI_2, 0] — all connect
+blocks from the second grid layer on now EXACTLY [A,B] (order AND
+directions) matching GT; geometric diff lines 558 -> 414 G1-X lines
+(total 558 incl. F784 feed family + travels). Remaining: (1) block
+1 (the FIRST grid layer, layer 4) still [A_REVERSED, B] — its
+connect input direction anomaly only; (2) the F784/782 feed family
+(consequence of residual geometric diffs via the layer time
+estimate). pi (180) variant tested = worse (944), reverted.

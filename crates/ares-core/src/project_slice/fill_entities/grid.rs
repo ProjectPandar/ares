@@ -16,11 +16,11 @@ use crate::{
 
 const SWEEPS: [Sweep; 2] = [
     Sweep {
-        angle: 0.0,
+        angle: std::f32::consts::FRAC_PI_2,
         shift: 0.0,
     },
     Sweep {
-        angle: std::f32::consts::FRAC_PI_2,
+        angle: 0.0,
         shift: 0.0,
     },
 ];
