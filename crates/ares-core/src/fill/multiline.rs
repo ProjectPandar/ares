@@ -163,6 +163,16 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
         .x()
         .checked_sub(x_margin)
         .ok_or(ClipperError::CoordinateOutOfRange)?;
+    let (contour, holes) = rotated.into_parts();
+    let mut clip = Vec::with_capacity(holes.len() + 1);
+    clip.push(contour);
+    clip.extend(holes);
+    // NOTE: the exact-rational scanline slicer (`vline::vertical_spans`, the
+    // port of slice_region_by_vertical_lines) is wired but produces one
+    // spurious crossing at the rotated-square center on the KSM fixture
+    // (947 vs 558 diff lines); the Clipper intersection stays live until the
+    // tangency handling is debugged against the fixture intersection set.
+    let _ = &clip;
     let mut lines = (0..count)
         .map(|index| {
             let x = i64::try_from(index)
@@ -178,10 +188,6 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
         .flatten()
         .collect::<Vec<_>>();
     lines = super::multiline_offset::apply(lines, params.multiline, params.spacing, scale)?;
-    let (contour, holes) = rotated.into_parts();
-    let mut clip = Vec::with_capacity(holes.len() + 1);
-    clip.push(contour);
-    clip.extend(holes);
     lines = intersection_open_polylines(&lines, &clip)?;
     for line in &mut lines {
         if line.points().first().unwrap().y() > line.points().last().unwrap().y() {
@@ -250,6 +256,8 @@ fn rotate_polylines(polylines: &mut [Polyline], angle: f64) -> Result<(), Clippe
     }
     Ok(())
 }
+
+mod vline;
 
 #[cfg(test)]
 mod tests;
