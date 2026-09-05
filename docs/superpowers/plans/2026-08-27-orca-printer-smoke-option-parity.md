@@ -7496,3 +7496,16 @@ The KSM single-object fixture validated %2==1; multi-object fixtures
 need the object-relative index (layer_index − object first layer).
 NEXT: thread the object-relative layer id to grid::append (from the
 prelude/traversal object context), re-test ksr + KSM + fleet.
+
+## 2026-09-05 (cont 298): ksr layer-5810 region = same 0-based layer 2 as KSM
+
+The ksr failing grid region sits at M73 L3 (= 0-based layer 2), the
+SAME layer index as the KSM first grid layer (which now matches GT
+exactly with layer.id%2==1). The ksr segment-E assignment differs
+(GT: E.1375 ends at (150.206,99.999); mine: E.1375 starts there) —
+the connect walk around this region covers segments in a different
+ORDER, not merely reversed — a chain-link or linkage break difference
+in the ksr multi-part geometry, downstream of (or independent from)
+the object-relative parity hypothesis. Both roots (E-accumulator ±1e-5
+at line 3337, walk-order at 5810) need the ksr-specific connect dump
+(GT fconnect binary on the ksr 3mf vs ARES_DUMP_FCONNECT) to isolate.
