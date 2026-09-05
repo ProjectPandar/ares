@@ -7551,3 +7551,17 @@ the 47 unmatched GT keys. NEXT: find which upstream stage produces the
 two overlapping fill surfaces for the ksr crosshatch region (compare
 the expolygon sets entering crosshatch fill — surface_type_detection /
 group_fills splitting) and reproduce the same split.
+
+## 2026-09-05 (cont 302): ksr = SINGLE part; overlap comes from surface classification
+
+The ksr 3mf has ONE object / ONE part (identity matrix) — the
+duplicated spans are NOT from overlapping volumes. Upstream's layer
+fill_surfaces must contain TWO OVERLAPPING stInternal surfaces for the
+curved region (surface classification / prepare_infill keeps them
+separate; _make_infill fills each; the overlap area gets duplicate
+spans ±1e-6 from independent perimeter rounding per surface). My
+pipeline merges them into one surface. NEXT instrument: GT dump of the
+per-region fill_surfaces expolygons entering make_fill (Fill.cpp
+fill_surface_extrusion caller) with layer + surface type; compare the
+surface SETS (count/areas) vs my group_fills output to find which
+classification stage splits them.
