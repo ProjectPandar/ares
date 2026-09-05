@@ -7201,3 +7201,18 @@ placement family), (3) gyroid (12, separate generator), (4) bottom
 surface (26), (5) skirt (16). The inner wall family being "first
 deposition" suggests the wall START vertex choice (seam/entry
 point) — the concentric ring anchor fix pattern may apply.
+
+## 2026-09-05 (cont 278): inner wall cluster = FEED RATE (cooling slowdown) family
+
+The 84-printer "Inner wall" cluster: same start/end/extrusion,
+feed differs (1578 vs 1590 = 0.76%) — the cooling slowdown
+factor differs by a small delta (the estimated layer time
+differs slightly). This is the cooling buffer / slowdown chain
+precision — the SAME family as the earlier F782/F784 and
+F3089/F3098 residuals. PRIORITY UPDATE: (1) grid+cubic ~87,
+(2) cooling feed ±12 → 84 printers, (3) gyroid 12, (4) bottom
+surface 26, (5) skirt 16. The cooling feed family: the layer
+time estimation feeds the slowdown factor; a sub-1% time
+difference cascades to ALL feeds in that layer. Root: the time
+estimator (acceleration model / jerk / segment timing) differs at
+the sub-percent level.
