@@ -6145,3 +6145,18 @@ line-based branch against Fill.cpp:630+ (the narrow_area /
 normal_fill_areas computation): reproduce the per-expolygon split
 that yields 21 pieces incl. the full-square case, then re-diff
 iorder.
+
+## 2026-09-05 (cont 219): profile decoded; single visible divergence cluster remains
+
+bblA vs ref = 115 diff lines, ALL from the one cluster (narrow ring
+before/after solid2 + ring walk direction at the bottom-left
+corner). Profile: bottom_shell_thickness=0 (smoke overrides),
+bottom=monotonic, top=monotonicline, sparse=crosshatch 15%. The
+upstream line-based split (Fill.cpp:630-780: rotate, opening(2s,3s)
+core, LinesDistancer vertical sections, TracedPoly lows/highs
+reconnection with squared_distance_limit 2s, then normal/narrow
+reconstruction) is the algorithm whose partition yields GT's 21 CI
+calls vs my 11. Next: line-by-line audit of my split.rs against
+cpp:630-780 (the section tracing + reconnection geometry and the
+final narrow/normal reconstruction), then iorder re-diff. Suite
+remains 80/81 (hilbert).
