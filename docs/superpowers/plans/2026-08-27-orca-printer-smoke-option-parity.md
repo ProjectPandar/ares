@@ -6189,3 +6189,24 @@ Remaining audit target: my trace::reconstruct + filter::apply in
 group_fills/narrow/split.rs vs cpp:700-772 (TracedPoly lows/highs
 extension, upper_bound candidate windows, the not-closed flush and
 the reconstruction), plus the section-merging widths (a -= 0.5*spacing).
+
+## 2026-09-05 (cont 222): three-way split outputs — the GT binary diverges from AppImage here too
+
+result-split2 (SPLITOUT/RECON dumps): nix GT = narrow=2/layer for
+10 layers + layer-1 ALL-NARROW (RECON n=0, normal=0 narrow=1 ->
+in-place ConcentricInternal = the 21 CI calls explained: 20 + 1).
+MY split = narrow=4/layer (all four corners), RECON n=1. The
+AppImage ref gcode shows only TEN 0.271893 sections total = ONE
+narrow corner per layer — the AppImage's split classifies just the
+bottom-left corner narrow. All three differ -> the nix GT binary's
+geometry diverges from the AppImage at the split inputs too, so
+the GT split dumps are mechanism-only here. My over-classification
+(4 vs 1) points at my sections/inner_area at the three other
+corners surviving where the AppImage's do not — most plausibly the
+split INPUT GEOMETRY (internal-solid region polygon) differs at
+the sub-0.02 level (the same family as the Y125.497 boundary
+precision issue), flipping corner classifications. Next: verify
+the input expolygon AREAS against the AppImage's implied geometry
+(the ref's normal monotonic lines reaching each corner = which
+corners stayed normal), then fix my region polygon; the GT split
+patch files remain for mechanism checks.
