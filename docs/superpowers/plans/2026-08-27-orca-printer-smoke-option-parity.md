@@ -7535,3 +7535,19 @@ splitting). Section files at /tmp/ksm/{gtsecs,mysecs}/. NEXT: replay
 s0024's surface (identify by coordinates in the 3mf layers), diff the
 surface input; the small 3-9-line sections are likely narrow-region
 fills where my generation drops/changes lines.
+
+## 2026-09-05 (cont 301): ksr root found — duplicated spans = overlapping surfaces
+
+Minimal case isolated (GT s0049 vs MY s0023): GT's section contains
+each span TWICE at ±1e-6 (e.g. (-29.397186,0)->(-34.949780,0) AND
+(-29.397187,0)->(-34.949781,0)); mine has ONE. ksr config:
+pattern=crosshatch, density=15%, fill_multiline=1. The duplication =
+the fill ran over TWO OVERLAPPING surfaces (upstream expolygon split
+leaves two nearly-identical components; my pipeline merged them), OR
+the crosshatch repeat-layer emits two passes. The line positions match
+otherwise (±1e-6). This surface-splitting/overlap difference explains
+the 983 vs 928 section-count delta and the duplicated-line sections in
+the 47 unmatched GT keys. NEXT: find which upstream stage produces the
+two overlapping fill surfaces for the ksr crosshatch region (compare
+the expolygon sets entering crosshatch fill — surface_type_detection /
+group_fills splitting) and reproduce the same split.
