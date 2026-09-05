@@ -6400,3 +6400,21 @@ bridge over the bottom shell), changing that one layer's frame.
 Sweep3 running (includes both grid fixes: pi/2 angle + sweep
 order) to measure the layer4-d9 family impact. KSM geometric
 residual: 414 G1-X lines (block-1 walk + travels) + F784 family.
+
+## 2026-09-05 (cont 233): grid connects ALL correct; one non-grid block left
+
+Layer-tagged combined dump (GRID + IN in one file): my grid connect
+inputs are ALL [A,B] on every layer (the earlier "block 1" was a
+DIFFERENT fill's connect that runs BEFORE the first GRID call — my
+block-to-block comparison with GT was invalid anyway because the GT
+dump interleaves TBB threads). Sorted I-line diff: exactly ONE
+block on the 3.614 region has A reversed; everything else matches
+within 1e-6 float noise. That block = a NON-grid fill on the sparse
+region (pre-first-GRID connect; candidates: internal bridge over
+infill anchoring, or the layer-3 transition internal solid).
+Tried +90 on the bridge fixed angle (upstream adds pi/2 after the
+bridge override) — no effect on this block (not that path);
+reverted. NEXT: tag my connect dump with the fill kind/role to
+identify the one block, then fix its generator's direction.
+KSM: 558 total diff lines = this block's walk + travels + F784
+(time-estimate consequence).
