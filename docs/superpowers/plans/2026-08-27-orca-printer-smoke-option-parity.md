@@ -6454,3 +6454,16 @@ slice_region_by_vertical_lines arithmetic (FillRectilinear.cpp
 vline/SegmentIntersection machinery) into my multiline generator
 so endpoints come from the same scanline math. This is the last
 known layer of the KSM/layer4-d9 cluster (32 printers).
+
+Addendum (port plan): the fix = replace intersection_open_polylines
+in fill/multiline.rs generate_family with a port of
+slice_region_by_vertical_lines (FillRectilinear.cpp:759-880):
+per-contour segment scan -> pos_p/pos_q EXACT INTEGER rational
+intersections (p/q arithmetic at :837-844) -> sort -> LOW/HIGH
+typing with tangency removal (:851-880) -> emit (pos, low)->
+(pos, high) polylines per OUTER_LOW..OUTER_HIGH pair (make_fill_
+lines:2938-2955). My split.rs has the LinesDistacer variant
+(upstream's split uses AABBTreeLines); the multiline path needs
+THIS SegmentIntersection variant. Files: new
+crates/ares-core/src/fill/multiline/vline.rs, wired from
+generate_family replacing the clipper call.
