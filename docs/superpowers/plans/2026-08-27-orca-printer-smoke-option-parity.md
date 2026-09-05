@@ -6486,3 +6486,19 @@ corners. NEXT: align the contraction (rotate FIRST, then offset
 with the upstream float delta and miter — my current order offsets
 before rotation), then switch generate_family to the vline path
 and re-measure (walks will re-chain; expect convergence).
+
+## 2026-09-05 (cont 237): upstream boundary chain decoded (expand-then-rotate)
+
+fill_surface_by_multilines: ExPolygonWithOffset(surface, 0,
+float(scale_(overlap + 0.5*multiline*spacing))) = EXPANSION
+(includes overlap, POSITIVE), then per sweep
+ExPolygonWithOffset(base, -angle) rotates the ALREADY-EXPANDED
+contours; make_fill_lines intersects the vlines against the
+EXPANDED outer polygons. My fill_surface contracts the source by
+-0.5*spacing before rotation (my caller pre-insets by the overlap,
+so the net lands within 1-2 units — but not exact). Aligning:
+compute clip = rotate(surface, -theta) then offset with delta =
+(overlap + 0.5*spacing*multiline) MINUS the caller's pre-inset
+(needs measuring the caller inset), or restructure fill_surface to
+pass the raw surface and expand upstream-style. Then switch
+generate_family to vline and re-measure walks.
