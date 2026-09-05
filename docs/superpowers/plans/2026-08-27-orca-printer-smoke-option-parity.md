@@ -6700,3 +6700,20 @@ build_ant_path vs cpp:2414-2540 focusing on (1) num_direct_
 neighbors split & queue append order, (2) the diversification
 update placement, (3) AntPath length/visibility computation
 (path_matrix.rs).
+
+## 2026-09-05 (cont 248): queue-push semantics aligned; remaining suspects
+
+Aligned the direct-neighbor queue push to cpp:2494-2496 (tail-check
+only, not whole-queue contains; pair entries self-dedupe; deeper
+duplicates legal). max_element first-max ✓ mine matches. Loop
+condition: upstream while(!queue.empty() || !right_neighbors.
+empty()) vs mine path.len()<regions.len() — likely equivalent.
+AD5X still 79 lines. REMAINING SUSPECTS in rng-path order:
+(1) path_matrix AntPath length/visibility computation
+(path_matrix.rs vs AntPathMatrix ctor cpp:2330-2370 — the
+visibility = 1/length? rounding), (2) region.length() f32
+arithmetic, (3) the initial greedy path (greedy_initial_deposit —
+its total_length changes pheromone_initial_deposit → all
+probabilities), (4) f32 EPSILON value in total_cost (SOURCE_
+EPSILON vs float(EPSILON) = 1e-4 scaled?). The next audit =
+path_matrix.rs + greedy_initial_deposit against cpp:2330-2395.
