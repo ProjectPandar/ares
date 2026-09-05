@@ -7623,3 +7623,17 @@ v2.4.2 release, --appimage-extract to /tmp/squashfs-root, delete the
 stale /tmp/orca-parity-libs.cache (it regenerates on first run).
 Smoke restored to 80/81 (bottom_hilbert the known failure). ALSO: copy
 GT patch files from /nix/store when /tmp/orca-gt loses them.
+
+## 2026-09-05 (cont 307): surface COUNTS match exactly (2218 = 2218)
+
+ARES_DUMP_SURF added to the fill dispatcher: my ksr fill surfaces =
+2218 — EXACTLY the GT SURF count. The merge-collapse hypothesis is
+refuted at the surface level: both pipelines feed the same number of
+surfaces into the fill stage (ordering differs; the 3µm-apart surfaces
+exist on both sides). The ksr divergence therefore lies in the
+per-surface fill processing / section GROUPING: GT 928 vs my 983
+connect_infill calls, with 749/928 GT sections exactly matching mine.
+NEXT: compare the fconnect BOUND polygons (per-section boundary) sets
+for one duplicated-span section (s0049's boundary) — if the boundaries
+match too, the difference is inside the fill generation for that
+surface pair (crosshatch generator on near-duplicate surfaces).

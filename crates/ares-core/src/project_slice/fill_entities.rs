@@ -179,6 +179,26 @@ pub(in crate::project_slice) fn generate_layer(
     let object_reference = object_center(object_slices);
 
     for fill in grouped.surface_fills {
+        if let Ok(path) = std::env::var("ARES_DUMP_SURF") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                for expolygon in &fill.expolygons {
+                    let points = expolygon.contour().points();
+                    let head = points
+                        .iter()
+                        .take(3)
+                        .map(|point| format!(",{},{}", point.x(), point.y()))
+                        .collect::<String>();
+                    let _ = writeln!(
+                        file,
+                        "SURF pattern={:?} n={} {}",
+                        fill.params.pattern,
+                        points.len(),
+                        head
+                    );
+                }
+            }
+        }
         match fill.params.pattern {
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
                 crosshatch::append(&mut output, fill, layer.print_z, traversal.scale)?;
