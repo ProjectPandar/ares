@@ -7509,3 +7509,15 @@ in the ksr multi-part geometry, downstream of (or independent from)
 the object-relative parity hypothesis. Both roots (E-accumulator ±1e-5
 at line 3337, walk-order at 5810) need the ksr-specific connect dump
 (GT fconnect binary on the ksr 3mf vs ARES_DUMP_FCONNECT) to isolate.
+
+## 2026-09-05 (cont 299): ksr fconnect dumps captured; sections need content alignment
+
+GT ksr fconnect = 928 sections, mine = 983; section ORDERS differ
+wholesale (my sec1 = a diagonal fill, GT sec1 = the first grid family
+with n=18 horizontal lines at y=2.931 spacing 2.93 = the 15% grid).
+My dump CONTAINS GT's exact sec1 lines (line 6429) — the same fills
+exist, differently ordered. NEXT: content-align sections by their
+I-line sets (sort/hash), then diff the aligned pairs to find (a) fills
+present in one side only (the 928 vs 983 delta = 55 extra sections on
+mine — possibly split differently per island), (b) per-fill walk
+differences. Dumps saved at /tmp/ksm/ksr_{gt,my}_fc.txt.
