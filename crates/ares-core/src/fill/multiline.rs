@@ -129,7 +129,7 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
         x_margin,
         scale,
     } = request;
-    let angle = -(params.angle + sweep.angle);
+    let angle = params.angle + sweep.angle;
     let rotated_reference = rotate_points(vec![reference], -f64::from(angle))?[0];
     let rotated_source = rotate_expolygon(source, -f64::from(angle))?;
     let (minimum, maximum) = bounds(&rotated_source);

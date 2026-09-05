@@ -7279,3 +7279,16 @@ diff = intersection_pl OUTPUT ORDER/DIRECTION only (same 6 lines per
 section, some reversed/permuted). NEXT: align my Clipper open-path
 solution ordering (outRec creation order = scanline-ascending) with
 ClipperLib BuildResult.
+
+## 2026-09-05 (cont 283): rotation sign + sweep order experiments — 904 → 734
+
+Two more grid fixes: (1) generate_family rotation sign aligned to
+upstream make_fill_lines (rotate-in by -angle_total, rotate-back by
++angle_total) — 904→861; (2) grid sweep1 sign flipped to -π/2 (the
+second family's rotated frame is 180°-flipped upstream, inverting the
+span emission direction) — 861→734. Section-1 order now IDENTICAL to
+GT; lines 1/3/5 exact; the family-2 span direction in some layers
+still inverted (lines 2/4/6). fill 1270/1270; KSM 0.6 = 0 pass.
+NEXT: the remaining family-2 direction inversion per layer — likely
+the per-layer sweep sign alternation (odd layers swap family order or
+direction per FillGrid::fill_surface layer_id%2 reversal interplay).

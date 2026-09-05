@@ -16,13 +16,11 @@ use crate::{
 
 const SWEEPS: [Sweep; 2] = [
     Sweep {
-        angle: std::f32::consts::FRAC_PI_2,
+        angle: 0.0,
         shift: 0.0,
     },
     Sweep {
-        // f32(pi/2 + pi/2): keeps the sweep-add arithmetic to a single f32
-        // operation per sweep, mirroring the upstream accumulation order.
-        angle: std::f32::consts::PI,
+        angle: -std::f32::consts::FRAC_PI_2,
         shift: 0.0,
     },
 ];
