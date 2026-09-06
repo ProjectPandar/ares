@@ -140,6 +140,20 @@ impl CoolingState {
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
         let layer_time = feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
         let layer_index = self.pending_layer_index.take().unwrap();
+        if let Ok(path) = std::env::var("ARES_DUMP_FAN") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(
+                    file,
+                    "LAYERFAN layer={layer_index} time={layer_time:.4} old={} initial_pending={}",
+                    self.part_speed, self.emit_initial_fan
+                );
+            }
+        }
         let part_speed = self
             .part_fan_ramp
             .speed_for_layer_time(layer_index, Some(f64::from(layer_time)))
@@ -204,6 +218,20 @@ impl CoolingState {
                 )
             };
             let replacement = if force || target != self.physical_part_speed {
+                if let Ok(path) = std::env::var("ARES_DUMP_FAN") {
+                    use std::io::Write;
+                    let _ = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(path)
+                        .and_then(|mut file| {
+                            writeln!(
+                                file,
+                                "FANBLOCK target={target} force={force} physical={}",
+                                self.physical_part_speed
+                            )
+                        });
+                }
                 self.physical_part_speed = target;
                 let emitted = clamped_part_speed(target, self.part_cooling_fan_min_pwm);
                 format!("M106 S{}\n", part_fan_pwm(emitted)).into_bytes()

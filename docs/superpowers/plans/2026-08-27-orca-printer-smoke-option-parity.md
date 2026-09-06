@@ -9241,3 +9241,24 @@ Anchor 0e56ebfb post-epsilon state: all geometry/travel/wipe diffs
 cleared; remaining = M73 placement + fan spam + 4 header-metadata
 lines (flush_volumes_matrix/flus_multiplier multi-extruder formats,
 extruder_ams_count empty, estimated time 10m30s vs 10m54s −3.7%).
+
+## 2026-09-06 (cont 430): fan flow fully decoded — FanMover gate (4 machines)
+
+GT fan instrument (fandump.patch, ORCA_DUMP_FAN2 at the emit block +
+LAYERFAN at change_extruder_set_fan) vs ARES_DUMP_FAN:
+- GT's fan emit block runs 63× per print (exactly like my 63 FANBLOCK
+  emissions!) — mine mirrors upstream 1:1 at this level.
+- The 63 emitted M106 collapse to 5 in the file because these
+  machines run the **FanMover** post-pass (fan_speedup_time=0.3,
+  GCode.cpp:3731-3740 gate `fan_speedup_time != 0 || fan_kickstart >
+  0`): a time-buffered rewriter (FanMover.cpp, 521 lines) that delays
+  fan commands by nb_seconds_delay, kickstarts, and dedupes via
+  _remove_slow_fan (erases queued slower commands).
+- Fleet scan: only **4/991 machines** have FanMover active (incl.
+  anchor 0e56ebfb). The earlier −535 failed landing confirms the
+  per-layer force-Baseline emission IS upstream behavior for the
+  other 987 machines.
+NEXT: port FanMover.cpp as a gcode text post-pass module
+(gcode_emit/fan_mover.rs, buffer/kickstart/delay/_remove_slow_fan),
+wired only when fan_speedup_time≠0/kickstart>0 — 4-case family.
+Priority order vs M73 placement family (larger).

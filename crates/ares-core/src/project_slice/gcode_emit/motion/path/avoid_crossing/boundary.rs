@@ -64,7 +64,11 @@ impl Boundary {
         let mut boundary = inner_offset(geometry.layer_slices, offset_dis, scale)?;
         if let Ok(path) = std::env::var("ARES_DUMP_BOUNDARY") {
             use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
                 for expolygon in &boundary {
                     let _ = write!(file, "EP");
                     for point in expolygon.contour().points() {
