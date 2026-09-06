@@ -8739,3 +8739,18 @@ pre-extrusion exclusion. The line-splitting + sort + slowdown chain
 remaining unverified surface — needs the bilateral line-set dump
 (GT hook in append_gcode; my dump in parse) on the Ginger layer-1
 skirt. 398 entries; 703 high-water.
+
+## 2026-09-06 (cont 399): CLINES bilateral dump LIVE — line-set deltas found
+
+ARES_DUMP_CLINES (parse push site) + ORCA_DUMP_CLINES (CoolingBuffer
+emplace site) both live. Ginger layer dump: MY 159 lines vs GT 377
+(2.4x more on GT!) AND kind mismatches — my line 4: kind=0x20
+len=687.2 f=250; GT: kind=0x120 (G2|ADJUSTABLE) same len/f. TWO
+structural deltas: (1) GT splits into 2.4x more cooling lines — my
+measure_and_aggregation is MORE aggressive (or GT splits at F-changes
+my parse merges); (2) my kind bits miss the arc TYPE_G2/TYPE_G3 bits
+on arc lines (0x20 vs 0x120). Both deltas change the sort order, the
+adjustable set, and the total/max times → the slowdown factor
+(F843/F629). NEXT: align the split points (find where GT splits that
+I merge — likely each F word or each TYPE_HAS_F) and the arc type
+bits in parse_position.

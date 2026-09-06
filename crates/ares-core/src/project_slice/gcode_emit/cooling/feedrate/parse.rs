@@ -73,6 +73,20 @@ pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
             line.maximum_time = 0.0;
         }
         if line.kind != 0 {
+            if let Ok(path) = std::env::var("ARES_DUMP_CLINES") {
+                use std::io::Write;
+                if let Ok(mut file) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    let _ = writeln!(
+                        file,
+                        "CL kind={:x} len={:.6} f={:.3} t={:.9} tmax={:.9}",
+                        line.kind, line.length, line.feedrate, line.time, line.maximum_time
+                    );
+                }
+            }
             lines.push(line);
         }
         start = end;
