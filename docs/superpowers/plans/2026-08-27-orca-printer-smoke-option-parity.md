@@ -7973,3 +7973,16 @@ width along the loop) → the +0.25 wall-start family. NEXT: align the
 visibility score computation (find where my score multiplies the
 extra ~1.316 factor — likely a normalized visibility vs raw ratio)
 then verify the pick flips to GT's vertex.
+
+## 2026-09-06 (cont 336): vis column = TOTAL PENALTY (dump format), not a score bug
+
+Decoded: my vis=1.31588709 = visibility(1.0) + 0.6·angle_penalty(π/2
+corner)=0.31574 — my dump prints the COMBINED candidate_penalty while
+GT prints raw visibility. The underlying computation matches (1.0
+base). The +1-vertex split therefore comes from the place_loop /
+closest_projection stage: the seam projection lands between two
+vertices of the 45°-chamfered corner and the two sides snap to
+different vertices (133.518 vs 133.768 = one width apart). NEXT:
+compare place_loop's closest_projection tie-breaking against upstream
+SeamPlacer's loop split (the vertex-snap when the projection is
+mid-segment).
