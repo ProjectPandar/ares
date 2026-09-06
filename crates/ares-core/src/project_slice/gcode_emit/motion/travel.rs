@@ -11,7 +11,7 @@ use super::{
 };
 pub(super) use lift::{
     emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
-    mode_for as lift_mode_for,
+    mode_for as lift_mode_for, z_feedrate as lift_z_feedrate,
 };
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {

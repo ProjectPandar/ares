@@ -219,21 +219,27 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         {
             let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
             if mode == LiftMode::Normal {
+                let feedrate = travel::lift_z_feedrate(state);
                 output.extend_from_slice(
                     format!(
                         "G1 Z{} F{}\n",
                         format_z(state.layer_z + state.options.z_hop),
-                        format_axis(state.travel_feedrate)
+                        format_axis(feedrate)
                     )
                     .as_bytes(),
                 );
-                state.current_feedrate = state.travel_feedrate;
+                state.current_feedrate = feedrate;
                 travel_emit::xy_without_feed(output, travel_x, travel_y);
             } else {
                 travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
             }
             output.extend_from_slice(
-                format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
+                format!(
+                    "G1 Z{} F{}\n",
+                    format_z(state.layer_z + state.options.z_hop),
+                    format_axis(travel::lift_z_feedrate(state))
+                )
+                .as_bytes(),
             );
             state.lifted = true;
             state.lifted_amount = state.options.z_hop;
@@ -248,7 +254,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 && retraction::uses_sloped_lift(state.options.z_hop_type)
             {
                 travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
-                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
+                let z_feedrate = travel::lift_z_feedrate(state);
+                output.extend_from_slice(
+                    format!("G1 Z{} F{}\n", format_z(target_z), format_axis(z_feedrate)).as_bytes(),
+                );
+                state.current_feedrate = z_feedrate;
             } else {
                 travel_emit::xyz(output, travel_x, travel_y, target_z, state.travel_feedrate);
             }
@@ -264,7 +274,11 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             // separately — `force_z` only merges Z for CLEAR-position
             // travels.
             if first_position {
-                output.extend_from_slice(format!("G1 Z{}\n", format_z(target_z)).as_bytes());
+                let z_feedrate = travel::lift_z_feedrate(state);
+                output.extend_from_slice(
+                    format!("G1 Z{} F{}\n", format_z(target_z), format_axis(z_feedrate)).as_bytes(),
+                );
+                state.current_feedrate = z_feedrate;
                 unclear_position_travel = true;
             }
         }
@@ -279,16 +293,12 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         state.positioned = true;
         state.current_feedrate = state.travel_feedrate;
     } else if layer_change_travel {
+        let z_feedrate = travel::lift_z_feedrate(state);
         output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}\n",
-                format_z(target_z),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
+            format!("G1 Z{} F{}\n", format_z(target_z), format_axis(z_feedrate)).as_bytes(),
         );
         travel_set_layer_z = true;
-        state.current_feedrate = state.travel_feedrate;
+        state.current_feedrate = z_feedrate;
     }
     if let Some(z) = slope_start_z {
         state.scarf_z = Some(z);
@@ -302,7 +312,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     // the unknown-source first travel. The lazy-lift branch's descend above
     // already models it.
     if (eager_lifted_travel || unclear_position_travel) && first_position && !travel_set_layer_z {
-        output.extend_from_slice(format!("G1 Z{}\n", format_z(state.layer_z)).as_bytes());
+        let z_feedrate = travel::lift_z_feedrate(state);
+        output.extend_from_slice(
+            format!(
+                "G1 Z{} F{}\n",
+                format_z(state.layer_z),
+                format_axis(z_feedrate)
+            )
+            .as_bytes(),
+        );
+        state.current_feedrate = z_feedrate;
     }
     if state.retracted {
         if first_position
@@ -310,15 +329,26 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             && !state.lifted
             && travel::lift_is_allowed_at(state, state.layer_z)
         {
+            let z_feedrate = travel::lift_z_feedrate(state);
             output.extend_from_slice(
-                format!("G1 Z{}\n", format_z(state.layer_z + state.options.z_hop)).as_bytes(),
+                format!(
+                    "G1 Z{} F{}\n",
+                    format_z(state.layer_z + state.options.z_hop),
+                    format_axis(z_feedrate)
+                )
+                .as_bytes(),
             );
+            state.current_feedrate = z_feedrate;
             state.lifted = true;
             state.lifted_amount = state.options.z_hop;
         }
         if state.lifted && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
-            output.extend_from_slice(format!("G1 Z{}\n", format_z(z)).as_bytes());
+            let z_feedrate = travel::lift_z_feedrate(state);
+            output.extend_from_slice(
+                format!("G1 Z{} F{}\n", format_z(z), format_axis(z_feedrate)).as_bytes(),
+            );
+            state.current_feedrate = z_feedrate;
             state.scarf_z = slope_start_z;
         }
         let retraction_length = state.options.retraction_length;

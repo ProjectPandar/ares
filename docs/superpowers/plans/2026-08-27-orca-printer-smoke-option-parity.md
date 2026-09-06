@@ -8972,3 +8972,25 @@ Fleet replay: **700 → 712/987** (+12). Next family: travel feed
 differs 32 + travel geometry count 31 — GT z-hop travels carry
 acceleration "4000"/"6000"/"7000" (per-printer travel-accel M204
 emit on travels) that mine lacks.
+
+## 2026-09-06 (cont 417): standalone Z travels carry the z feedrate (GCodeWriter.cpp:832-842)
+
+The travel-feed family root: upstream `_travel_to_z` ALWAYS emits
+F = travel_speed_z×60 (fallback first-layer/travel speed) on every
+standalone `G1 Z` lift/descend; the cooling pass then strips
+redundant F words (CoolingBuffer.cpp:904-960: `new_feedrate ==
+current_feedrate` → remove). My emitters omitted F entirely on
+~8 sites (start_travel.rs eager/lazy/descend branches, loop_paths
+wipe-hop descend) or used the XY travel feedrate (lift.rs eager/
+spiral-vase, start_travel first-travel branch).
+
+Added `lift::z_feedrate` (the `_travel_to_z` chain) and applied at
+all standalone-Z sites; the cooling F-strip (already ported in
+rewrite.rs) now produces the GT-identical output.
+
+Case 1169efe8 (travel-feed family): raw diff **604 → 4 lines**;
+remaining: `G1 F2544` vs GT `G1 F2560` (slowdown feedrate, ±0.6%)
++ M73 R4 placement off 3 lines. The slowdown inputs (per-line
+Σtime) must differ slightly from GT — needs a bilateral CoolingBuffer
+per-line dump patch (length/feedrate/time per line + layer total)
+to diff. Fleet replay held 712/987 (gated by the slowdown F).

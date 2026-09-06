@@ -349,27 +349,30 @@ async fn task22o162_project_emits_filament_statistics() {
     let output = std::str::from_utf8(&output).unwrap();
 
     let footer = output.rsplit_once("; EXECUTABLE_BLOCK_END\n").unwrap().1;
-    let values = footer
+    let filament_lines: Vec<_> = footer
         .lines()
         .filter(|line| line.starts_with("; filament"))
+        .collect();
+    assert_eq!(filament_lines.len(), 4);
+    // `GCode.cpp:2349-2368`: the [g]/cost values only cover extruders with
+    // positive weight/cost, so a print using just extruder 0 has a single
+    // value there, while [mm]/[cm3] always cover every extruder.
+    assert!(filament_lines[0].ends_with(", 0.00"));
+    assert!(filament_lines[1].ends_with(", 0.00"));
+    assert!(!filament_lines[2].contains(','));
+    assert!(!filament_lines[3].contains(','));
+    let values = filament_lines
+        .iter()
         .map(|line| {
-            line.split_once(" = ")
-                .unwrap()
-                .1
+            let value = line.split_once(" = ").unwrap().1;
+            value
                 .split_once(',')
-                .unwrap()
-                .0
+                .map_or(value, |(first, _)| first)
                 .parse::<f64>()
                 .unwrap()
         })
         .collect::<Vec<_>>();
     assert_eq!(values.len(), 4);
-    assert!(
-        footer
-            .lines()
-            .filter(|line| line.starts_with("; filament"))
-            .all(|line| line.ends_with(", 0.00"))
-    );
     let filament_area = std::f64::consts::PI * (1.75_f64 * 0.5).powi(2);
     assert!((values[1] - values[0] * filament_area / 1_000.0).abs() <= 0.01);
     assert!((values[2] - values[1] * 1.26).abs() <= 0.02);

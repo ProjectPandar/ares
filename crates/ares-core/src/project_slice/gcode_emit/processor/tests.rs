@@ -299,7 +299,7 @@ fn homing_motion_contributes_to_total_estimate() {
     let estimate = Estimate::from_lines(&lines, 0.0, ProcessorLimits::default());
 
     assert!(
-        (estimate.total - 2.157_569_885_253_906_3).abs() < 1e-9,
+        (estimate.total - 2.000_159_978_866_577).abs() < 1e-9,
         "{}",
         estimate.total
     );

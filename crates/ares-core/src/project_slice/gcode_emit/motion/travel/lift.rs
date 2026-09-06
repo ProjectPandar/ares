@@ -72,6 +72,19 @@ pub(in crate::project_slice::gcode_emit::motion) fn is_allowed_at(
     }
 }
 
+/// Upstream `_travel_to_z` feedrate (`GCodeWriter.cpp:832-842`):
+/// `travel_speed_z` when non-zero, else the first-layer or normal travel
+/// speed per `m_is_first_layer`. Every standalone `G1 Z` travel carries it.
+pub(in crate::project_slice::gcode_emit) fn z_feedrate(state: &EmitState) -> f64 {
+    if state.options.z_travel_feedrate > 0.0 {
+        state.options.z_travel_feedrate
+    } else if state.layer_index == 0 {
+        state.options.first_layer_travel_feedrate
+    } else {
+        state.travel_feedrate
+    }
+}
+
 pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     output: &mut Vec<u8>,
     target: arc::Point,
@@ -86,16 +99,7 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     let travel_distance = dx.hypot(dy);
     let emitted = match mode {
         LiftMode::Normal => {
-            // Upstream `_travel_to_z` picks travel_speed_z when non-zero,
-            // else the first-layer or normal travel speed per
-            // `m_is_first_layer` (`GCodeWriter.cpp:832-842`).
-            let feedrate = if state.options.z_travel_feedrate > 0.0 {
-                state.options.z_travel_feedrate
-            } else if state.layer_index == 0 {
-                state.options.first_layer_travel_feedrate
-            } else {
-                state.travel_feedrate
-            };
+            let feedrate = z_feedrate(state);
             output.extend_from_slice(
                 format!("G1 Z{} F{}\n", format_z(raised_z), format_axis(feedrate)).as_bytes(),
             );
@@ -167,15 +171,11 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
         append_spiral(output, state, raised_z, radius, 0.0);
         state.current_feedrate = state.travel_feedrate;
     } else {
+        let feedrate = z_feedrate(state);
         output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}\n",
-                format_z(raised_z),
-                format_axis(state.travel_feedrate)
-            )
-            .as_bytes(),
+            format!("G1 Z{} F{}\n", format_z(raised_z), format_axis(feedrate)).as_bytes(),
         );
-        state.current_feedrate = state.travel_feedrate;
+        state.current_feedrate = feedrate;
     }
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
@@ -185,15 +185,16 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.z_hop <= 0.0 || !is_allowed_at(state, state.layer_z) {
         return;
     }
+    let feedrate = z_feedrate(state);
     output.extend_from_slice(
         format!(
             "G1 Z{} F{}\n",
             format_z(state.layer_z + state.options.z_hop),
-            format_axis(state.travel_feedrate)
+            format_axis(feedrate)
         )
         .as_bytes(),
     );
-    state.current_feedrate = state.travel_feedrate;
+    state.current_feedrate = feedrate;
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;
 }
