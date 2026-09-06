@@ -9173,3 +9173,23 @@ NEXT: dump middle_point_offset/vertex_offset inputs+outputs for the
 divergent waypoint (ARES side) + matching GT patch on
 avoid_perimeters_inner's TravelPoint construction; check the
 offset/origin quantization (int-exact round-trip vs my f64 offset).
+
+## 2026-09-06 (cont 426): SCALED_EPSILON was 1e6x too small
+
+Route dump comparison exposed it: my router's SCALED_EPSILON was
+1.0e-4 (scaled units); upstream `#define SCALED_EPSILON
+scale_(EPSILON)` = 1e-4 mm = **100 scaled units**. The inward
+vertex/middle-point offsets were effectively zero — my waypoints sat
+ON the boundary (4376514 = corner) instead of 100 units inward
+(GT 4376436 = 4376506 - 70 = corner - 100*0.707 EXACT match), and
+the 1e-4-unit nudge retry could never find missed intersections.
+Fixed to 100.0. Post-fix waypoints align within the boundary's own
+±9 units.
+
+The anchor still fails on the NEXT layer's root: travel-2's route
+START differs (mine 4712727,4769295 vs GT 4790001,4730001) — the
+previous path's end position (wall-chain ordering) diverges — a
+separate root, next anchor point.
+
+Fleet 757/987 (epsilon alone gates nothing); ares-core 6785/6785;
+smoke 81/82.

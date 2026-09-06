@@ -6,7 +6,9 @@ use crate::geometry::{ClipperError, Coord, EdgeGrid, Point};
 
 use super::boundary::Boundary;
 
-const SCALED_EPSILON: f64 = 1.0e-4;
+/// Upstream `#define SCALED_EPSILON scale_(EPSILON)` — 1e-4 mm in scaled
+/// coordinates (SCALING_FACTOR 1e-6 → 100 units).
+const SCALED_EPSILON: f64 = 100.0;
 
 #[derive(Clone, Copy, Debug)]
 struct Intersection {
