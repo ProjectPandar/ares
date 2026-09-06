@@ -8228,3 +8228,20 @@ re-land the SEEDED-AMOUNT-ONLY fix (machine_retracted_amount gating
 the unretract value) WITHOUT setting state.retracted (leave the
 retract decision untouched) — that avoids the travel-path coupling
 that caused the −78.
+
+## 2026-09-06 (cont 356): FULL upstream E-sync mechanism pinned (GCode.cpp:3898)
+
+The writer sync: process_custom_gcode (GCode.cpp:3898-3921) compares
+the GCodeProcessor's parsed e_retracted/e_position (from the machine
+gcode TEXT) against the writer extruder and calls
+set_retracted(ppi.opt_e_retracted, ...). The retract no-op:
+Extruder::retract cpp:77 `to_retract = max(0, length − m_retracted)`
+— a seeded 1.2 ≥ 0.8 emits NOTHING; unretract cpp:98 =
+m_retracted + m_restart_extra (recovers 1.2). My first attempt failed
+because state.retracted=true changed the TRAVEL decision; the correct
+re-land keeps travel logic untouched and only (a) gates the retract
+EMISSION on max(0, length − state.retracted_amount) — retract_before_layer
+(motion.rs:88) and the start-travel path (start_travel.rs), (b)
+unretract = retracted_amount + restart_extra. My start_travel.rs:131
+comment even documents this Kobra case already — the emission gating
+is the missing piece.
