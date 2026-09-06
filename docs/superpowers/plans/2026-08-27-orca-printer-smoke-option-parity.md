@@ -8245,3 +8245,20 @@ EMISSION on max(0, length − state.retracted_amount) — retract_before_layer
 unretract = retracted_amount + restart_extra. My start_travel.rs:131
 comment even documents this Kobra case already — the emission gating
 is the missing piece.
+
+## 2026-09-06 (cont 357): second amount-only landing ALSO regressed — reverted to 669
+
+Re-landed with the pinned gating (retract emission max(0, length−
+retracted_amount), unretract = retracted_amount + restart_extra,
+amount-only seeding): MyToolChanger 6→31 (WORSE), Kobra 27→24, Anker
+10 — the seeded amount leaks into LATER layer-change retracts
+(retract_before_layer called twice before an unretract: first call
+consumes the budget, second call emits nothing but still flips state,
+desyncing the writer E). REVERTED to the clean 669 baseline. The
+mechanism requires modeling upstream's Extruder state machine
+(m_retracted/m_restart_extra pair with unretract() zeroing BOTH at
+the actual unretract site) as a unit — the emit-side has multiple
+retract call sites whose interactions need a single-state redesign,
+not incremental gating. Next session: introduce a proper
+`retracted_outstanding` state updated ONLY at retract()/unretract()
+mirroring Extruder.cpp, then re-land.
