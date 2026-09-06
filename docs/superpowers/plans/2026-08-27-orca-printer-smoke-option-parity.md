@@ -7924,3 +7924,16 @@ make_wave's clamp/swap order, the ceil(width/distance) param rounding).
 NEXT: dump both sides' gyroid polylines pre-clip (new GT instrument in
 make_gyroid_waves) and diff the vertex streams to find the remaining
 sub-quantum source.
+
+## 2026-09-06 (cont 332): gyroid fixture diffs are WALL/wipe micro-edges, not gyroid
+
+The gyroid fixture's remaining 10 lines: the first (filtered-1078) is a
+WIPE vertex (X ±1e-3) — the wipe source = the just-printed WALL
+polyline, i.e., the perimeter micro-edge family, NOT the gyroid
+generator. The E±1e-5 lines similarly ride on wall/infill rounding
+boundaries. The gyroid generator itself may already be exact after the
+hypot fix — the fixture's residual is the same region-geometry micro-
+edge family as inner-wall/bottom. CONCLUSION: the sparse-family
+residuals (gyroid 28 / grid 26 / cubic leftover) largely share the
+wall-vertex micro-edge root; the next lever is the perimeter vertex
+chain, not the fill generators.
