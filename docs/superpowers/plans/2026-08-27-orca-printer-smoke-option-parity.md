@@ -7835,3 +7835,13 @@ revert verdict stands and this line is closed. The expanded-SRC ±1 for
 cubic lies in the positive-delta offset path (miter/normals) — separate
 grind. Remaining fleet families at 622: cubic 57, gyroid 28, grid 26,
 inner-wall/bottom/skirt.
+
+## 2026-09-06 (cont 324): cubic expanded ±1 localized to the DoSquare corner path
+
+The SRC ±1 pattern (my expanded corners 1 unit LARGER on each axis)
+with identical inputs/deltas: 90° corners take the DoSquare branch
+(upstream DoOffset: cosA=0 → not >0.5 → square/bevel, not miter), so
+the ±1 lives in my do_square tangent arithmetic vs upstream's DoSquare.
+NEXT: compare my do_square's two vertex formulas against upstream
+ClipperOffset::DoSquare (both push two points per corner — verify the
+tangent sign/order and the second point's normal pair j/k selection).
