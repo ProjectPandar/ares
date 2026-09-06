@@ -8015,3 +8015,16 @@ foot while mine... also inserts via projected_parts. The remaining
 difference is in the depth-walk arithmetic or the seam_point
 scale_position f32→i64 truncation. NEXT: dump the seam_point (before
 split) on both sides for the Creality layer-1 wall.
+
+## 2026-09-06 (cont 339): SEAMPT dumps — my seam points ON THE DIAGONAL, GT walks the loop
+
+New SPT instruments (GT ORCA_DUMP_SEAMPT in place_loop; ARES_DUMP_SEAMPT
+before my split): counts match (397=397) but MY seam points are all
+symmetric (x==y — the diagonal bisector) while GT's first three are
+off-diagonal (3.517943,4.017924 etc. — positions ALONG the chamfered
+corner segments). ROOT: my place_loop depth-walk moves along the
+bisector direction; upstream walks ALONG THE LOOP's polyline points
+(the projected_point foot_pt chain over the perimeter). This IS the
+inner-wall +0.25 family. FIX: port upstream place_loop's depth walk
+(walk the loop vertices, accumulate dist > depth, foot_pt snap) —
+SeamPlacer.cpp ~1590-1620.
