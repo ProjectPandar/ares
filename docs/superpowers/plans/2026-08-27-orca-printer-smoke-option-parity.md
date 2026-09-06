@@ -8700,3 +8700,16 @@ flipped segment is a WIPE vertex — wall chain) or the refinement
 midpoint decisions; the f() itself is ruled out. NEXT: point the
 investigation at the wall polyline that feeds the wipe (the known
 wall-vertex family), NOT the gyroid generator. 395 entries; 703.
+
+## 2026-09-06 (cont 396): Ginger G1 slowdown signature = FEED-ONLY (E identical)
+
+The Ginger G1 divergence is feed-only: skirt layer-1 F843 (GT) vs
+F629 (mine), every E and XY identical (E2.17012 line-for-line).
+Both run slow_down_for_layer_cooling=1 (target 50s, min 1). The
+slowdown FACTOR differs 1.34x → the estimated layer TIME differs →
+the cooling-buffer time estimator (motion-planner accel/jerk
+integration) produces a different estimate. This is the SAME root as
+the inner-wall-22 family (cont 365). Fix = the cooling time-model
+parity (CoolingBuffer::apply_layer_cooldown's time integral) — a
+major grind; instrument = dump per-layer slowdown factor + estimated
+time on both sides (GT hook in apply_layer_cooldown).
