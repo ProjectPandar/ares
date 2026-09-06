@@ -8332,3 +8332,16 @@ BEYOND this ulp — next: the mm-domain vs scaled-int domain
 difference: mine unscales to f64 mm first then measures; upstream
 measures scaled ints then ×1e-6 — the SECOND domain difference
 remains). lib 6754/6754, smoke 80/81.
+
+## 2026-09-06 (cont 364): scaled-domain length threading REVERTED (index misalignment)
+
+Attempted to thread the scaled-int segment lengths into the constant
+emission (upstream `line.length()*SCALING_FACTOR` on scaled ints) —
+Kobra 27→927, MyToolChanger 6→314: the `points` at the emission site
+are the CLIPPED/OVERHANG-RESAMPLED points while scaled_lengths were
+computed from the ORIGINAL scaled points — index misalignment on any
+resampled path. REVERTED to the stable sqrt-on-mm (ea03e14d state).
+Correct approach if ever needed: re-derive per-segment scaled lengths
+AT the emission site from quantized axis coords (round(local/1e-6))
+— or carry the scaled domain through clip/overhang. Not worth it for
+the current 1e-16 floor; parked.
