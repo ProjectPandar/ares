@@ -8073,3 +8073,15 @@ family is dominated by this pure-noise signature: geometry exact, E
 accumulator crossing print boundaries. Fixing = the last micro-noise
 hunt (mm3_per_mm precision or the length sum order); the fleet jump
 from eliminating it could be large (most of the 96).
+
+## 2026-09-06 (cont 344): E values match at non-boundary lines — terminal noise confirmed
+
+Around the diff zone, E values match EXACTLY for many consecutive
+lines (1.87696, 1.91975, ...) — mm3_per_mm and the accumulator match;
+the ±1e-5 flips occur ONLY at exact print-boundary lines (true value
+x.xxxx5). This is the TERMINAL noise family: sub-1e-5 internal
+differences (length sqrt rounding or accumulation order at the 1e-9
+level) flipping only at boundaries. Each affected printer has 1-5
+such lines. Session arc closes here; future work: the boundary-flip
+elimination (length/accumulation bit-order hunt), bottom-surface 24,
+skirt 16, the 4 feature options, ksr noise, then the review thread.
