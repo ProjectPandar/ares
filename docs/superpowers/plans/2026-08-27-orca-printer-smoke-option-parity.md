@@ -8805,3 +8805,19 @@ consecutive same-type lines, skips some markers, or my cooling window
 (layer_start..end) is narrower. NEXT: 1:1 diff the first CLLAYER
 block vs the GT dump head (both start from layer 0) to list exactly
 which G-code lines GT records that mine skips.
+
+## 2026-09-06 (cont 405): line-9 divergence — G-code ORDER differs pre-slowdown
+
+1:1 first-layer diff: lines 1-8 IDENTICAL (incl. the 687mm travel
+and the 55mm F50 block). Line 9 diverges: MINE kind=120
+(SET_SPEED|G1) len=1.1697 f=250; GT kind=160 (G1|ADJ|HAS_F) len=
+2.17012 f=50 — the emission ORDER differs (GT's next line is a
+50mm/min wipe-adjacent adjustable; mine a 250 SET_SPEED marker).
+Also line 4: the 687mm travel is kind=20 (G0) mine vs 120 (G1|F)
+GT — the SAME move classified G0 vs G1+HAS_F. Both deltas are in
+the LAYER G-CODE itself (pre-slowdown), consistent with the
+F843/F629 root being different layer content/order feeding the
+cooling buffer. NEXT: diff MY final gcode layer-1 vs GT layer-1
+line-by-line (the 139-line output diff, now understood as content,
+not just feed) — the slowdown family resolves once the layer
+emission matches.
