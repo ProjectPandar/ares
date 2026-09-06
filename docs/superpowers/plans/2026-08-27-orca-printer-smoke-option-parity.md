@@ -8319,3 +8319,16 @@ dispatch: PerimeterDispatch::Arachne → unsupported("wall_generator")
 wall/loop chain as classic), not a quick fix. Same class as the other
 three option gaps (raft_layers, adaptivecubic, octagramspiral). These
 four remain the feature-level work after the noise-floor grind.
+
+## 2026-09-06 (cont 363): extrusion length hypot→sqrt(dx²+dy²) aligned
+
+Upstream per-line length = `line.length() * SCALING_FACTOR` where
+Line::length() = (b-a).cast<double>().norm() = sqrt(dx²+dy²) on the
+scaled ints — my emission used hypot (ulp-different). Aligned the
+three emission sites (constant.rs segment length, path.rs
+source_length, variable.rs per-point length) to sqrt(dx²+dy²). Case
+matrix unchanged at the 669-known states (the E boundary flips are
+BEYOND this ulp — next: the mm-domain vs scaled-int domain
+difference: mine unscales to f64 mm first then measures; upstream
+measures scaled ints then ×1e-6 — the SECOND domain difference
+remains). lib 6754/6754, smoke 80/81.

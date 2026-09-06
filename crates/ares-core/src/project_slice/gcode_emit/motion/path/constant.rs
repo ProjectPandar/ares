@@ -51,7 +51,9 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
                     x: pair[1].0,
                     y: pair[1].1,
                 },
-                length: (pair[1].0 - pair[0].0).hypot(pair[1].1 - pair[0].1),
+                length: ((pair[1].0 - pair[0].0) * (pair[1].0 - pair[0].0)
+                    + (pair[1].1 - pair[0].1) * (pair[1].1 - pair[0].1))
+                    .sqrt(),
             })
             .collect()
     };

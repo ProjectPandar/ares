@@ -35,7 +35,9 @@ pub(super) fn emit(command: Emission<'_>) {
             processed[index],
             state,
         );
-        let length = (end.x - previous.0).hypot(end.y - previous.1);
+        let length = ((end.x - previous.0) * (end.x - previous.0)
+            + (end.y - previous.1) * (end.y - previous.1))
+            .sqrt();
         if length < SOURCE_EPSILON_MM {
             continue;
         }

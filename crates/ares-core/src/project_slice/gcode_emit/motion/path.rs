@@ -30,7 +30,7 @@ pub(super) fn emit(
         .map(|pair| {
             let dx = (pair[1].0 - pair[0].0) as f64;
             let dy = (pair[1].1 - pair[0].1) as f64;
-            dx.hypot(dy) * geometry.scale.factor()
+            (dx * dx + dy * dy).sqrt() * geometry.scale.factor()
         })
         .sum();
     clip::clip_end(
