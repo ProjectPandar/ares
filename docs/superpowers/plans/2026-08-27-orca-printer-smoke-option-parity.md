@@ -7876,3 +7876,13 @@ scale_ truncation). SESSION TOTAL: 496→668 (+172). Remaining: the
 gyroid family (marchsq port), grid/cubic residuals, inner-wall feed,
 bottom/skirt, and the 4 feature gaps (raft/adaptivecubic/octagram/
 arachne).
+
+## 2026-09-06 (cont 328): family analysis at 668 — crosshatch noise verified GREEN
+
+The name-pattern mapping overstates crosshatch (130) — direct case
+replay of a crosshatch fixture = 0 diff (green). Real distribution at
+668/1001: Sparse ~96 (cubic residual, gyroid ~32 = marchsq port,
+grid ~32), Inner wall 24, Bottom 24, Skirt 16. Largest well-defined
+remaining task = the gyroid marchsq (marching squares) port; the
+cubic/grid residuals share the micro-noise family. fill 1270/1270,
+smoke 80/81.
