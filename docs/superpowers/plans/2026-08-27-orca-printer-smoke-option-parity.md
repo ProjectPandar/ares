@@ -8210,3 +8210,21 @@ the travel/avoid-crossing split). REVERTED to the 669 baseline
 mechanism (from GCode.cpp source — the processor/writer state
 machine), not reverse-engineered seeding; re-land with the mechanism
 pinned and a multi-printer A/B before the next sweep.
+
+## 2026-09-06 (cont 355): upstream needs_retraction has NO retracted flag
+
+needs_retraction (GCode.cpp:7359+) is purely distance+role+lift based
+— no retracted-state check. The GT first-travel retract skip after
+machine gcode must come from the travel DISTANCE being under
+retraction_minimum_travel OR the writer state path; and GT's `G1 E1.2
+F1800` (F1800 = deretraction feedrate → a real unretract of 1.2)
+recovers the MACHINE amount — the GCodeProcessor's e_retracked
+placeholder (GCode.cpp:1672-1690, opt_e_retracted) feeds the machine
+gcode's E state back into the writer. RE-LAND PLAN: (1) check the
+first-travel distance vs retraction_minimum_travel on the MyToolChanger
+case (may need NO fix at all — just the unretract amount), (2) the
+unretract amount = the machine retract via the processor state —
+re-land the SEEDED-AMOUNT-ONLY fix (machine_retracted_amount gating
+the unretract value) WITHOUT setting state.retracted (leave the
+retract decision untouched) — that avoids the travel-path coupling
+that caused the −78.
