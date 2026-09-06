@@ -134,6 +134,27 @@ pub(super) fn avoid_perimeters(
     if count > 0 {
         result = simplify_travel(boundary, &result);
     }
+    if let Ok(path) = std::env::var("ARES_DUMP_ROUTE") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(
+                file,
+                "AP start={},{} end={},{} n={count} path=",
+                start.x(),
+                start.y(),
+                end.x(),
+                end.y()
+            );
+            for point in &result {
+                let _ = write!(file, "({},{})", point.point.x(), point.point.y());
+            }
+            let _ = writeln!(file);
+        }
+    }
     Ok((result.into_iter().map(|point| point.point).collect(), count))
 }
 

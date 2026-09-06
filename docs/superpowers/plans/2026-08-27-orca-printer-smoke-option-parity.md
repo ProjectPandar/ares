@@ -9108,3 +9108,30 @@ flag travels) is the missing piece. That's the next slice for the
 travel-geometry family (25 first-divergences).
 
 Fleet: 757/987; ares-core 6785/6785; smoke 81/82.
+
+## 2026-09-06 (cont 423): travel-geometry family root = ±1 polygon-vertex class
+
+Bilateral router instrument (routedump.patch on nix, ARES_DUMP_ROUTE
+on router.rs): 595 travels, both n=; structural mismatch on only 16
+(n=2 vs n=1). The anchor's travel start differs by exactly ±1 scaled
+unit from BOTH the nix and AppImage GT builds (which agree with each
+other here — 2-line diff) — a grazing boundary crossing flips with
+the ±1 start, cascading to the whole corridor choice. Same ±1
+polygon-vertex class as deposition-1 (166.377-vs-166.376 wall-vertex
+rounding): the remaining big families (travel-geometry 25,
+deposition-1 21) both trace to MY offset/clipper wall-vertex rounding
+differing by one scaled unit from upstream — NOT to router/seam/
+slowdown logic (all verified exact vs source this session).
+
+Also hardened: the avoid-crossing boundary now unions every volume
+occurrence's slices per layer (`Layer::lslices` spans all instances;
+occurrence_slices accessor through the traversal chain; per-layer
+Rc cache). No fleet change (757/987 — single-occurrence identity)
+but correct for multi-copy models.
+
+Fleet: 757/987; ares-core 6785/6785; smoke 81/82.
+
+NEXT (the big rock): bilateral clipper-offset vertex dump — pin WHERE
+the ±1 first appears (slicing? offsetting? perimeter generation?) on
+the deposition-1 anchor (0e56ebfb, wall corner 166.377/166.376) and
+align the float-op order with upstream ClipperLib for that stage.

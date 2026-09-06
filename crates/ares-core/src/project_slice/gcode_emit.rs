@@ -1,3 +1,4 @@
+use crate::geometry::ExPolygon;
 use crate::project_slice::{
     extruders,
     island_print_order::{self, PreparedPostIslandPrintOrder},
@@ -135,6 +136,12 @@ pub(super) fn emit(
     state.traditional_timelapse = traditional_timelapse;
     let mut second_layer_done = false;
     let object_count = prepared.objects.len();
+    // Avoid-crossing boundaries are built per slice_z across every object
+    // (`Layer::lslices` covers all instances of the print object;
+    // `AvoidCrossingPerimeters.cpp:1100`). Copies of one source share the
+    // layer layout, so records are matched by slice_z.
+    let mut layer_boundary_cache: std::collections::HashMap<usize, std::rc::Rc<[ExPolygon]>> =
+        std::collections::HashMap::new();
     for (object_index, object) in prepared.objects.iter_mut().enumerate() {
         let labels = object::ObjectLabels::from_traversal(traversal, object_index);
         let object_layer_count = object.len();
@@ -327,9 +334,12 @@ pub(super) fn emit(
                 scale: traversal.scale,
                 previous_layer_boundary: lower_boundary.as_ref(),
                 avoid_crossing: motion::AvoidCrossingGeometry {
-                    layer_slices: traversal.objects[object_index]
-                        .slices(layer_index)
-                        .unwrap_or(&[]),
+                    layer_slices: layer_boundary_slices(
+                        traversal,
+                        object_index,
+                        layer_index,
+                        &mut layer_boundary_cache,
+                    ),
                     perimeter_spacing: traversal.objects[object_index]
                         .perimeter_spacing(layer_index)
                         .unwrap_or_default(),
@@ -485,6 +495,36 @@ pub(super) fn emit(
 /// The Z of the last G0/G1 move in the emitted prefix — what the
 /// `GCodeWriter`'s Z position would be after emitting the same g-code
 /// (feeds the `change_layer` `will_move_z` gate).
+/// The avoid-crossing boundary covers every object's slices at the layer's
+/// slice_z (`Layer::lslices`, `AvoidCrossingPerimeters.cpp:1100`): copies
+/// of one source object are separate traversal objects here, but one
+/// PrintObject upstream — their islands union into one boundary. The
+/// cache holds one union per layer_index (all copies share the layout).
+fn layer_boundary_slices<'a>(
+    traversal: &'a PreparedPostClassicTraversal,
+    object_index: usize,
+    layer_index: usize,
+    cache: &'a mut std::collections::HashMap<usize, std::rc::Rc<[ExPolygon]>>,
+) -> &'a [ExPolygon] {
+    let Some(record) = traversal.objects[object_index]
+        .records
+        .get(layer_index)
+        .and_then(Option::as_ref)
+    else {
+        return traversal.objects[object_index]
+            .slices(layer_index)
+            .unwrap_or(&[]);
+    };
+    let _ = record;
+    cache.entry(layer_index).or_insert_with(|| {
+        let mut all: Vec<ExPolygon> = Vec::new();
+        for slices in traversal.objects[object_index].occurrence_slices(layer_index) {
+            all.extend(slices.iter().cloned());
+        }
+        std::rc::Rc::from(crate::geometry::union_expolygons(&all, &[]).unwrap_or_default())
+    })
+}
+
 fn trailing_gcode_z(output: &[u8]) -> f64 {
     std::str::from_utf8(output)
         .ok()

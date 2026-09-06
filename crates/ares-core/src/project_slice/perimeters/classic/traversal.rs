@@ -161,6 +161,17 @@ impl PostClassicTraversalPrintObject {
             .map(|record| prelude.object.current_slices(record))
     }
 
+    /// Slices of every volume occurrence at the layer (`Layer::lslices`
+    /// spans all instances of the print object; each arranged copy is a
+    /// separate occurrence here).
+    pub(in crate::project_slice) fn occurrence_slices(
+        &self,
+        record_index: usize,
+    ) -> Vec<&[crate::geometry::ExPolygon]> {
+        let prelude = &self.predecessor.predecessor.predecessor.predecessor;
+        prelude.object.occurrence_slices(record_index)
+    }
+
     /// Perimeter flow spacing of the record's region in millimetres
     /// (`get_perimeter_spacing`, `AvoidCrossingPerimeters.cpp:499-512`).
     pub(in crate::project_slice) fn perimeter_spacing(&self, record_index: usize) -> Option<f32> {
