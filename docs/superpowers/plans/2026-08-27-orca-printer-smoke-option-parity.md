@@ -7986,3 +7986,18 @@ different vertices (133.518 vs 133.768 = one width apart). NEXT:
 compare place_loop's closest_projection tie-breaking against upstream
 SeamPlacer's loop split (the vertex-snap when the projection is
 mid-segment).
+
+## 2026-09-06 (cont 337): upstream splits at VERTEX first (split_at_vertex) — my path differs
+
+SeamPlacer.cpp:1624-29: upstream FIRST tries
+split_at_vertex(seam_point, 1.5µm) and only falls back to the full
+split_at(seam_point, prefer_non_overhang=true) if that fails. The
+seam_point = projected_point.foot_pt (from the depth-walk along the
+loop) — for corner seams this IS the corner vertex, so upstream splits
+AT the existing vertex (no new point inserted). My place_loop goes
+straight to my split_at (SEAM_VERTEX_SNAP_MM=0.0015 ✓ same tolerance)
+whose closest_projection iterates SEGMENTS independently — the tie
+between the two segments sharing the corner vertex resolves to my
+earlier-segment rule vs upstream's whole-path foot_pt rule → the +1
+vertex (+1 width) split. FIX: port the split_at_vertex-first sequence
+(upstream foot_pt over whole paths + the vertex split precedence).
