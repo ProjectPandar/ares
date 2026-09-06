@@ -122,17 +122,13 @@ fn apply_objects(
             }
             _ => unreachable!("only active seam placement modes are prepared"),
         }
+        let staggered = traversal.resolved.objects[object_index]
+            .object
+            .staggered_inner_seams
+            .0;
         for (layer, plan) in layers.iter_mut().zip(&plans) {
-            place_layer(layer, plan, traversal.scale);
+            place_layer(layer, plan, staggered, traversal.scale);
         }
-        runtime::stagger_inner_seams(
-            layers,
-            traversal.resolved.objects[object_index]
-                .object
-                .staggered_inner_seams
-                .0,
-            traversal.scale,
-        );
     }
 }
 
@@ -196,6 +192,7 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
 fn place_layer(
     layer: &mut OrderedExtrusionLayer,
     plan: &alignment::LayerPlan,
+    staggered: bool,
     scale: CoordinateScale,
 ) {
     let collections = layer
@@ -209,7 +206,7 @@ fn place_layer(
             | IslandPrintEntity::Thin(_) => None,
         });
     for (collection, perimeter_indices) in collections.zip(&plan.collection_perimeters) {
-        place_collection(collection, perimeter_indices, plan, scale);
+        place_collection(collection, perimeter_indices, plan, staggered, scale);
     }
 }
 
@@ -217,6 +214,7 @@ fn place_collection(
     collection: &mut ExtrusionEntityCollection,
     perimeter_indices: &[usize],
     plan: &alignment::LayerPlan,
+    staggered: bool,
     scale: CoordinateScale,
 ) {
     for (entity, &perimeter_index) in collection.entities.iter_mut().zip(perimeter_indices) {
@@ -248,6 +246,7 @@ fn place_collection(
                     )
                 }),
             },
+            staggered,
             scale,
         );
     }
@@ -280,7 +279,12 @@ fn angle_penalty(angle: f32) -> f32 {
     clippy::approx_constant,
     reason = "OrcaSlicer uses the literal 1.4142 seam-depth coefficient"
 )]
-fn place_loop(loop_: &mut ExtrusionLoop, placement: Placement<'_>, scale: CoordinateScale) {
+fn place_loop(
+    loop_: &mut ExtrusionLoop,
+    placement: Placement<'_>,
+    staggered: bool,
+    scale: CoordinateScale,
+) {
     let selected = placement.selected.position;
     let mut seam = scale_position((placement.position.x, placement.position.y), scale);
     if loop_.paths[0].role == ExtrusionRole::Perimeter {
@@ -318,12 +322,41 @@ fn place_loop(loop_: &mut ExtrusionLoop, placement: Placement<'_>, scale: Coordi
                 scale,
             );
             projection = closest_projection(&loop_.paths, seam);
+        } else {
+            // Convex corner: the perpendicular depth, not the distance to
+            // the nearest point (upstream place_loop, SeamPlacer.cpp:1594).
+            depth *= (angle * 0.5).cos() / 1.4142;
         }
         seam = (projection.x, projection.y);
+        // Stagger inner seams inside the placement pass — upstream walks the
+        // loop points from the projected position (SeamPlacer.cpp:1607-1620),
+        // not a separate re-split pass.
+        if staggered {
+            let mut point = projection;
+            depth = loop_.paths[point.path].width.max(depth);
+            while depth > 0.0 {
+                let mut next = next_loop_point(loop_, &point);
+                let a = (point.x, point.y);
+                let b = (next.x, next.y);
+                let dist = scale.unscale(a.0 - b.0).hypot(scale.unscale(a.1 - b.1)) as f32;
+                if dist > depth {
+                    let ratio = depth / dist;
+                    next.x = (a.0 as f64 + f64::from(ratio) * (b.0 - a.0) as f64) as i64;
+                    next.y = (a.1 as f64 + f64::from(ratio) * (b.1 - a.1) as f64) as i64;
+                }
+                depth -= dist;
+                point = next;
+            }
+            seam = (point.x, point.y);
+        }
     }
     if let Ok(path) = std::env::var("ARES_DUMP_SEAMPT") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(
                 file,
                 "SPT {} {}",
@@ -352,6 +385,24 @@ struct Projection {
     segment: usize,
     x: i64,
     y: i64,
+}
+
+/// `get_next_loop_point` (SeamPlacer.cpp:1511-1519): advance to the next
+/// polyline point, wrapping across paths.
+fn next_loop_point(loop_: &ExtrusionLoop, mut current: &Projection) -> Projection {
+    let mut segment = current.segment + 1;
+    let mut path = current.path;
+    if segment >= loop_.paths[path].polyline.points.len() {
+        path = (path + 1) % loop_.paths.len();
+        segment = 0;
+    }
+    let point = loop_.paths[path].polyline.points[segment];
+    Projection {
+        path,
+        segment,
+        x: point.x,
+        y: point.y,
+    }
 }
 
 fn closest_projection(paths: &[ExtrusionPath], target: (i64, i64)) -> Projection {

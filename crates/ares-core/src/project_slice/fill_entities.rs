@@ -181,7 +181,11 @@ pub(in crate::project_slice) fn generate_layer(
     for fill in grouped.surface_fills {
         if let Ok(path) = std::env::var("ARES_DUMP_SURF") {
             use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
                 for expolygon in &fill.expolygons {
                     let points = expolygon.contour().points();
                     let head = points

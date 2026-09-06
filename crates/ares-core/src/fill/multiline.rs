@@ -45,18 +45,16 @@ pub(crate) fn fill_surface(
     // ctor's coord_t parameter TRUNCATES the scaled expansion before the
     // offset (the contracted path passes float directly and does NOT
     // truncate — verified empirically both ways).
-    let expansion_scaled =
-        ((params.overlap + 0.5 * f64::from(params.multiline) * params.spacing) / scale.factor())
-            as i64;
-    let expanded = offset_expolygon(
-        surface,
-        expansion_scaled as f32,
-        JoinType::Miter,
-        3.0,
-    )?;
+    let expansion_scaled = ((params.overlap + 0.5 * f64::from(params.multiline) * params.spacing)
+        / scale.factor()) as i64;
+    let expanded = offset_expolygon(surface, expansion_scaled as f32, JoinType::Miter, 3.0)?;
     if let Ok(path) = std::env::var("ARES_DUMP_PREXP") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             for component in &expanded {
                 for point in component.contour().points() {
                     let _ = writeln!(file, "P {},{}", point.x(), point.y());

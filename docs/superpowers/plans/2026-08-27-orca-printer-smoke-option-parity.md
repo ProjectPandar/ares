@@ -8043,3 +8043,14 @@ off-diagonal vs diagonal seam points. FIX: merge the stagger into
 place_loop with the exact upstream chain (depth carryover from the
 concave stage, get_next_loop_point sequence, foot_pt partial
 interpolation); remove the separate pass.
+
+## 2026-09-06 (cont 341): STAGGER MERGED INTO place_loop — Creality Hi 1188→0
+
+Ported upstream's one-pass stagger (SeamPlacer.cpp:1607-20): the walk
+runs inside place_loop after the concave/convex projection with depth
+carryover (convex: depth·cos/1.4142 added), get_next_loop_point chain
+over the polyline points with partial-distance interpolation, single
+split; removed the separate runtime::stagger_inner_seams pass. The
+SPT seam points now match GT's off-diagonal walk. Creality Hi:
+1188→0 (FULL PARITY). lib 6754/6754, smoke 80/81. The inner-wall
+family (24) should largely resolve — sweep next.
