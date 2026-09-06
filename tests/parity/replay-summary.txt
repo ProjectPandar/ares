@@ -118,12 +118,6 @@ layer 50 travel geometry count differs: expected 37, actual 38
 3115e7e8de6ccd88-92abf3bc4ee6c0ce
 layer 1 deposition 20 differs: expected Deposition { feature: "Bottom surface", width: "0.404451", motion: MotionRecord { command: "G1", start: Position { x: "-12.887", y: "3.738", z: "0.1" }, end: Position { x: "-18.738", y: "-2.113", z: "0.1" }, arc_center: [None, None], turns: None }, extrusion: "4.78393", feed: 1500.0, acceleration: "1500", fans: "0:0" }, actual Deposition { feature: "Bottom surface", width: "0.404451", motion: MotionRecord { command: "G1", start: Position { x: "-12.887", y: "3.738", z: "0.1" }, end: Position { x: "-18.738", y: "-2.113", z: "0.1" }, arc_center: [None, None], turns: None }, extrusion: "4.78392", feed: 1500.0, acceleration: "1500", fans: "0:0" }
 
-328e31027e75180d-e6209f9988275137
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M104 S205", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M104 S205", "M486 S0"]
-
-331ddc8c58af8f76-e350b9f128a2e743
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 33a49714355b1849-8d224b945ad83625
 layer 1 deposition 1 differs: expected Deposition { feature: "Bottom surface", width: "0.821767", motion: MotionRecord { command: "G1", start: Position { x: "158.897", y: "100.11", z: "0.3" }, end: Position { x: "158.897", y: "101.181", z: "0.3" }, arc_center: [None, None], turns: None }, extrusion: "0.11899", feed: 1003.0, acceleration: "500", fans: "0:255" }, actual Deposition { feature: "Bottom surface", width: "0.821767", motion: MotionRecord { command: "G1", start: Position { x: "158.897", y: "100.11", z: "0.3" }, end: Position { x: "158.897", y: "101.181", z: "0.3" }, arc_center: [None, None], turns: None }, extrusion: "0.11899", feed: 1003.0, acceleration: "500", fans: "0:0" }
 
@@ -132,9 +126,6 @@ layer 45 deposition count differs: expected 30, actual 29
 
 373f69efc4d6be94-c97bf3735c444e7d
 layer 18 deposition 17 differs: expected Deposition { feature: "Sparse infill", width: "0.22", motion: MotionRecord { command: "G1", start: Position { x: "110.871", y: "123.664", z: "2.58" }, end: Position { x: "116.336", y: "129.129", z: "2.58" }, arc_center: [None, None], turns: None }, extrusion: "0.08117", feed: 1595.0, acceleration: "1100", fans: "0:255" }, actual Deposition { feature: "Sparse infill", width: "0.22", motion: MotionRecord { command: "G1", start: Position { x: "110.871", y: "123.664", z: "2.58" }, end: Position { x: "110.871", y: "124.062", z: "2.58" }, arc_center: [None, None], turns: None }, extrusion: "0.00418", feed: 1592.0, acceleration: "1100", fans: "0:255" }
-
-3770e4cba5eb075d-ed9fb2d3f60d8d4f
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
 
 380b046821e46f74-9bc4a9b6dac46b0f
 layer 100 travel geometry count differs: expected 69, actual 72
@@ -150,9 +141,6 @@ layer 1 island lifecycle differs: expected [[Extruder { extrusion: "0.8", feed: 
 
 39676bbfd9c092fe-f5d002bef72ca71e
 preamble differs at line 10: expected Some("; external perimeters extrusion width = 0.23mm"), actual Some("; external perimeters extrusion width = 0.22mm")
-
-3977b1caac244951-b29c1a2360317850
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
 
 39a144ae82cf0a78-991ca50e76d1dd0a
 layer 1 control events differs: expected ["G92 E0", ";======== X2D layer_change gcode ==========", ";===== 2025/04/08 =====", "", "", "", "", "", "", "", "M106 P2 S102", "M106 P10 S102", "", ";not reset fan", "", "", "", "; update layer progress", "M991 S0 P0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "; start printing object, unique label id: 14", "M624 AQAAAAAAAAA=", "G17", "; stop printing object cube10.stl id:0 copy 0", "G17", "; stop printing object, unique label id: 14", "M625", ";======== X2D timelapse gcode ========", ";======== 2025/08/15 ========", "; SKIPPABLE_START", "; SKIPTYPE: timelapse", "M622.1 S1", "", "M1002 judge_flag timelapse_record_flag", "", "M622 J1", "", "", "", "", "M9711 M0 E1 X186 Y130 Z0.5 S11 C10 O0 T3000", "", "", "", "", "M623", "; SKIPPABLE_END", "", "M106 S255", "M106 P2 S178"], actual ["G92 E0", ";======== X2D layer_change gcode ==========", ";===== 2025/04/08 =====", "", "", "", "", "", "", "", "M106 P2 S102", "M106 P10 S102", "", ";not reset fan", "", "", "", "; update layer progress", "M991 S0 P0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "; start printing object, unique label id: 14", "M624 AQAAAAAAAAA=", "G17", "; stop printing object cube10.stl id:0 copy 0", "G17", "; stop printing object, unique label id: 14", "M625", ";======== X2D timelapse gcode ========", ";======== 2025/08/15 ========", "; SKIPPABLE_START", "; SKIPTYPE: timelapse", "M622.1 S1", "", "M1002 judge_flag timelapse_record_flag", "", "M622 J1", "", "", "", "", "M9711 M0 E1 X140 Y175 Z0.5 S11 C10 O0 T3000", "", "", "", "", "M623", "; SKIPPABLE_END", "", "M106 S255", "M106 P2 S178"]
@@ -172,15 +160,6 @@ layer 18 deposition 17 differs: expected Deposition { feature: "Sparse infill", 
 404522a0331ef6b2-d775cef8bb352ec5
 layer 98 travel geometry differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "151.393", y: "146.668", z: "10" }, end: Position { x: "151.413", y: "146.313", z: "10.0187" }, arc_center: [None, None], turns: None }, feed: 30000.0, acceleration: "" }
 
-408288f5edc94a82-68138265f28db24b
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", ";LAYER:2", "SET_PRINT_STATS_INFO TOTAL_LAYER=50 CURRENT_LAYER=2", ";_SET_FAN_SPEED_CHANGING_LAYER", "SET_VELOCITY_LIMIT ACCEL=10000", "M140 S35", "", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000"], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", ";LAYER:2", "SET_PRINT_STATS_INFO TOTAL_LAYER=50 CURRENT_LAYER=2", ";_SET_FAN_SPEED_CHANGING_LAYER", "SET_VELOCITY_LIMIT ACCEL=10000", "M140 S35", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000"]
-
-420eed201d104cb7-7c970ea63d1d9aaa
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
-4251d8b9cf784f09-4cb898e3173d4bbe
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 43fc0bfd6801b6f0-369370881b6f19b8
 layer 1 deposition 46 differs: expected Deposition { feature: "Inner wall", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "108.064", y: "101.936", z: "0.15" }, end: Position { x: "108.064", y: "108.064", z: "0.15" }, arc_center: [None, None], turns: None }, extrusion: "0.13777", feed: 2400.0, acceleration: "500", fans: "0:0" }, actual Deposition { feature: "Inner wall", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "108.064", y: "101.936", z: "0.15" }, end: Position { x: "108.064", y: "108.034", z: "0.15" }, arc_center: [None, None], turns: None }, extrusion: "0.13709", feed: 2400.0, acceleration: "500", fans: "0:0" }
 
@@ -189,9 +168,6 @@ layer 19 deposition 41 differs: expected Deposition { feature: "Sparse infill", 
 
 459dc8bfc35b34c7-92a297928124efc9
 layer 8 deposition 18 differs: expected Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "-2.105", y: "3.474", z: "1.6" }, end: Position { x: "-2.51", y: "4.007", z: "1.6" }, arc_center: [None, None], turns: None }, extrusion: "0.02219", feed: 4800.0, acceleration: "", fans: "0:255,3:255" }, actual Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "-2.105", y: "3.474", z: "1.6" }, end: Position { x: "-2.509", y: "4.007", z: "1.6" }, arc_center: [None, None], turns: None }, extrusion: "0.02219", feed: 4800.0, acceleration: "", fans: "0:255,3:255" }
-
-46711515dc72b51f-4cf8e99f3c166a37
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
 
 48f69875f2d868a2-c4aa0a0bdfbb210c
 layer 99 control events differs: expected [";BEFORE_LAYER_CHANGE", ";9.95", "G92 E0", "", "EXCLUDE_OBJECT_END NAME=cube10.stl_id_0_copy_0", ";LAYER:99", "SET_PRINT_STATS_INFO TOTAL_LAYER=100 CURRENT_LAYER=99", ";_SET_FAN_SPEED_CHANGING_LAYER", "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0", "G17", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000"], actual [";BEFORE_LAYER_CHANGE", ";9.95", "G92 E0", "", "EXCLUDE_OBJECT_END NAME=cube10.stl_id_0_copy_0", ";LAYER:99", "SET_PRINT_STATS_INFO TOTAL_LAYER=100 CURRENT_LAYER=99", ";_SET_FAN_SPEED_CHANGING_LAYER", "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0", "G17", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000", "M106 S250"]
@@ -256,9 +232,6 @@ filament 1 length differs: expected 3165.03mm, actual 3209.87mm
 5c98e225a6d505f6-c76c30b1d7f139c1
 filament 1 length differs: expected 363.42mm, actual 362.26mm
 
-5cd8cebab7c1459f-8d1e9255755b70d2
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 5d8f33fbf6de1689-a9156e6b299cd545
 preamble differs at line 10: expected Some("; external perimeters extrusion width = 0.23mm"), actual Some("; external perimeters extrusion width = 0.22mm")
 
@@ -313,9 +286,6 @@ layer 3 deposition 1 differs: expected Deposition { feature: "Inner wall", width
 6f4d913ff70962d2-f9e234fb2812172d
 layer 15 deposition 41 differs: expected Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "502.3", y: "504.007", z: "3" }, end: Position { x: "503.928", y: "504.007", z: "3" }, arc_center: [None, None], turns: None }, extrusion: "0.05401", feed: 1700.0, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "502.3", y: "504.007", z: "3" }, end: Position { x: "503.929", y: "504.007", z: "3" }, arc_center: [None, None], turns: None }, extrusion: "0.05401", feed: 1700.0, acceleration: "", fans: "0:255" }
 
-709102a65019c53f-a4cb438b1a24bb4d
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 71b69a3d5b7bf977-a6a7ac67769b5dcf
 layer 15 deposition 41 differs: expected Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "502.3", y: "504.007", z: "3" }, end: Position { x: "503.928", y: "504.007", z: "3" }, arc_center: [None, None], turns: None }, extrusion: "0.05401", feed: 1700.0, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Sparse infill", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "502.3", y: "504.007", z: "3" }, end: Position { x: "503.929", y: "504.007", z: "3" }, arc_center: [None, None], turns: None }, extrusion: "0.05401", feed: 1700.0, acceleration: "", fans: "0:255" }
 
@@ -334,9 +304,6 @@ layer 18 deposition 17 differs: expected Deposition { feature: "Sparse infill", 
 7438a45def40d418-b407cfe32b60f981
 layer 2 island lifecycle differs: expected [[Extruder { extrusion: "-0.30909", feed: "1800" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.247", y: "128.615", z: "0.6" }, end: Position { x: "125.135", y: "129.503", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "-0.68528", feed: "3300" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "125.135", y: "129.503", z: "0.6" }, end: Position { x: "125.879", y: "129.503", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "-0.40563", feed: "3300" }, WipeEnd], [Extruder { extrusion: "1.4", feed: "1800" }], [Extruder { extrusion: "1.4", feed: "1800" }, Extruder { extrusion: "-1.4", feed: "1800" }]], actual [[Extruder { extrusion: "-0.30909", feed: "1800" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.247", y: "128.615", z: "0.6" }, end: Position { x: "125.135", y: "129.503", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "-0.68528", feed: "3300" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "125.135", y: "129.503", z: "0.6" }, end: Position { x: "125.879", y: "129.503", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "-0.40563", feed: "3300" }, WipeEnd], [Extruder { extrusion: "1.4", feed: "1800" }]]
 
-74790e6cb0627a8a-cdcd4a94de19089d
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 74ec91630f78e0bd-e159dce200521477
 reference gcode unreadable
 
@@ -351,9 +318,6 @@ layer 3 deposition 1 differs: expected Deposition { feature: "Inner wall", width
 
 7d45be1a5f28cb4c-6d05e7c376091642
 layer 92 control events differs: expected [";BEFORE_LAYER_CHANGE", ";9.25", "G92 E0", "", "EXCLUDE_OBJECT_END NAME=cube10.stl_id_0_copy_0", "SET_PRINT_STATS_INFO TOTAL_LAYER=100 CURRENT_LAYER=92", ";_SET_FAN_SPEED_CHANGING_LAYER", "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0", "G17", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000"], actual [";BEFORE_LAYER_CHANGE", ";9.25", "G92 E0", "", "EXCLUDE_OBJECT_END NAME=cube10.stl_id_0_copy_0", "SET_PRINT_STATS_INFO TOTAL_LAYER=100 CURRENT_LAYER=92", ";_SET_FAN_SPEED_CHANGING_LAYER", "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0", "G17", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000", "M106 S250"]
-
-7eb23b5d686e78a2-9fac08e951e21109
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
 
 7f6892374e11ddfd-f94aadc86cd4f0df
 layer 18 deposition 17 differs: expected Deposition { feature: "Sparse infill", width: "0.22", motion: MotionRecord { command: "G1", start: Position { x: "195.871", y: "198.664", z: "2.58" }, end: Position { x: "201.336", y: "204.129", z: "2.58" }, arc_center: [None, None], turns: None }, extrusion: "0.08117", feed: 1582.0, acceleration: "2000", fans: "0:255" }, actual Deposition { feature: "Sparse infill", width: "0.22", motion: MotionRecord { command: "G1", start: Position { x: "195.871", y: "198.664", z: "2.58" }, end: Position { x: "195.871", y: "199.062", z: "2.58" }, arc_center: [None, None], turns: None }, extrusion: "0.00418", feed: 1580.0, acceleration: "2000", fans: "0:255" }
@@ -442,9 +406,6 @@ layer 1 deposition 1 differs: expected Deposition { feature: "Inner wall", width
 9d510331e428f98e-3f02fcde9eee74e4
 layer 1 travel feed differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "145.7", y: "145.78", z: "0.45" }, end: Position { x: "153.013", y: "148.932", z: "0.45" }, arc_center: [None, None], turns: None }, feed: 21000.0, acceleration: "6000" }
 
-9fafdc060f8d9695-05e33f839b22d7fe
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M104 S205", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M104 S205", "M486 S0"]
-
 a0be32185c2a189e-d793ba115771a517
 layer 1 control events differs: expected ["G92 E0", ";======== H2D Pro 20250725 layer_change ========", "; layer num/total_layer_count: 1/33", "; update layer progress", "M991 S0 P0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "; start printing object, unique label id: 14", "M624 AQAAAAAAAAA=", "; stop printing object cube10.stl id:0 copy 0", "G17", "; stop printing object, unique label id: 14", "M625", ";======== H2D Pro 20250818========", "; SKIPPABLE_START", "; SKIPTYPE: timelapse", "M622.1 S1", "", "M1002 judge_flag timelapse_record_flag", "", "M622 J1", "M993 A2 B2 C2", "M993 A0 B0 C0", "", "", "", "", "M9711 M0 E0 X177 Y233 Z0.7 S11 C10 O0 T3000", "", "", "", "M993 A3 B3 C3", "", "M623", "; SKIPPABLE_END", "", "M106 S252"], actual ["G92 E0", ";======== H2D Pro 20250725 layer_change ========", "; layer num/total_layer_count: 1/33", "; update layer progress", "M991 S0 P0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "; start printing object, unique label id: 14", "M624 AQAAAAAAAAA=", "; stop printing object cube10.stl id:0 copy 0", "G17", "; stop printing object, unique label id: 14", "M625", ";======== H2D Pro 20250818========", "; SKIPPABLE_START", "; SKIPTYPE: timelapse", "M622.1 S1", "", "M1002 judge_flag timelapse_record_flag", "", "M622 J1", "M993 A2 B2 C2", "M993 A0 B0 C0", "", "", "", "", "M9711 M0 E1 X177 Y232 Z0.7 S11 C10 O0 T3000", "", "", "", "M993 A3 B3 C3", "", "M623", "; SKIPPABLE_END", "", "M106 S252"]
 
@@ -505,9 +466,6 @@ layer 25 travel geometry differs: no match for Travel { motion: MotionRecord { c
 addde63a2de8813f-bbc1686de7786a46
 layer 3 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "165.6", y: "145.6", z: "0.7" }, end: Position { x: "174.4", y: "145.6", z: "0.7" }, arc_center: [None, None], turns: None }, extrusion: "0.25606", feed: 1800.0, acceleration: "1000", fans: "0:255,2:150" }, actual Deposition { feature: "Inner wall", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "165.6", y: "145.6", z: "0.7" }, end: Position { x: "174.4", y: "145.6", z: "0.7" }, arc_center: [None, None], turns: None }, extrusion: "0.25606", feed: 1800.0, acceleration: "1000", fans: "0:255,2:100" }
 
-ae23365b49d6890f-b6ecfc8a9556305c
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 afd14740482759b3-f74faeb6001f9a4d
 postamble differs at line 371: expected Some("G1 X290.636 Y304.364"), actual Some("G1 X290.24 Y304.76")
 
@@ -529,9 +487,6 @@ filament 1 length differs: expected 377.03mm, actual 375.51mm
 b352fb1bbf270801-120cca38b4cf678b
 layer 2 island lifecycle differs: expected [[Extruder { extrusion: "0.4", feed: "1800" }], [Extruder { extrusion: "0.4", feed: "1800" }, Extruder { extrusion: "-0.4", feed: "1800" }], [Extruder { extrusion: "0.4", feed: "1800" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "132.89", y: "130.87", z: "0.2" }, end: Position { x: "130.89", y: "130.874", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.4", feed: "6167.477" }, WipeEnd], [WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.051", y: "129.487", z: "0.2" }, end: Position { x: "124.41", y: "129.847", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.10162", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.41", y: "129.847", z: "0.2" }, end: Position { x: "124.733", y: "129.847", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.06467", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.733", y: "129.847", z: "0.2" }, end: Position { x: "124.153", y: "129.267", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.16398", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.153", y: "129.267", z: "0.2" }, end: Position { x: "124.153", y: "128.943", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.06467", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.153", y: "128.943", z: "0.2" }, end: Position { x: "124.171", y: "128.961", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.00507", feed: "4200" }, WipeEnd]], actual [[Extruder { extrusion: "0.4", feed: "1800" }], [Extruder { extrusion: "0.4", feed: "1800" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "132.89", y: "130.87", z: "0.2" }, end: Position { x: "130.89", y: "130.874", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.4", feed: "6167.477" }, WipeEnd], [WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.051", y: "129.487", z: "0.2" }, end: Position { x: "124.41", y: "129.847", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.10162", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.41", y: "129.847", z: "0.2" }, end: Position { x: "124.733", y: "129.847", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.06467", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.733", y: "129.847", z: "0.2" }, end: Position { x: "124.153", y: "129.267", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.16398", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.153", y: "129.267", z: "0.2" }, end: Position { x: "124.153", y: "128.943", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.06467", feed: "4200" }, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "124.153", y: "128.943", z: "0.2" }, end: Position { x: "124.171", y: "128.961", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.00507", feed: "4200" }, WipeEnd]]
 
-b3fbe8467d8fd807-b6e8d1cb5df11c73
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 b44b9290b43917c2-349a30cae94b8239
 filament 1 length differs: expected 362.95mm, actual 360.98mm
 
@@ -550,9 +505,6 @@ filament 1 length differs: expected 2708.46mm, actual 2760.35mm
 b91a8f020122fac1-b50dce392ea2eef6
 layer 33 travel geometry count differs: expected 26, actual 29
 
-b985579ea8c876de-38b241324fd24ee8
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 b9aff0b77c6f9abb-562b15851de85b87
 layer 6 deposition 27 differs: expected Deposition { feature: "Sparse infill", width: "0.52", motion: MotionRecord { command: "G1", start: Position { x: "120.589", y: "106.219", z: "1.45" }, end: Position { x: "120.965", y: "106.444", z: "1.45" }, arc_center: [None, None], turns: None }, extrusion: "2.25552", feed: 6175.626, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Sparse infill", width: "0.52", motion: MotionRecord { command: "G1", start: Position { x: "120.589", y: "106.219", z: "1.45" }, end: Position { x: "120.965", y: "106.444", z: "1.45" }, arc_center: [None, None], turns: None }, extrusion: "2.25553", feed: 6175.626, acceleration: "", fans: "0:255" }
 
@@ -567,9 +519,6 @@ layer 11 travel geometry count differs: expected 12, actual 11
 
 bcad30f84064b0fd-d44a75f57878fbee
 layer 3 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "120.675", y: "105.675", z: "0.6" }, end: Position { x: "129.325", y: "105.675", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.29279", feed: 1916.0, acceleration: "6000", fans: "0:252" }, actual Deposition { feature: "Inner wall", width: "0.45", motion: MotionRecord { command: "G1", start: Position { x: "120.675", y: "105.675", z: "0.6" }, end: Position { x: "129.325", y: "105.675", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.29279", feed: 1904.0, acceleration: "6000", fans: "0:252" }
-
-bfc2f3f0fdbc51dd-29dcce617a9209dc
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.8", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
 
 c046ba68a69210ed-662af2b997bcc279
 layer 1 island lifecycle differs: expected [WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd, WipeStart, WipeEnd], actual [Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }, WipeStart, WipeEnd, Extruder { extrusion: "0", feed: "1800" }]
@@ -589,9 +538,6 @@ layer 18 deposition 17 differs: expected Deposition { feature: "Sparse infill", 
 c610ba55ebab0eee-3b4df9dbb7c9a1bc
 layer 5 deposition 13 differs: expected Deposition { feature: "Sparse infill", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "118.626", y: "108.922", z: "1.5" }, end: Position { x: "119.074", y: "108.86", z: "1.5" }, arc_center: [None, None], turns: None }, extrusion: "1.68246", feed: 4319.503, acceleration: "", fans: "0:255" }, actual Deposition { feature: "Sparse infill", width: "0.62", motion: MotionRecord { command: "G1", start: Position { x: "118.626", y: "108.922", z: "1.5" }, end: Position { x: "119.074", y: "108.86", z: "1.5" }, arc_center: [None, None], turns: None }, extrusion: "1.68247", feed: 4319.503, acceleration: "", fans: "0:255" }
 
-c628b2fffb9213e3-750af1e1d84ec611
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", ";LAYER:2", "SET_PRINT_STATS_INFO TOTAL_LAYER=50 CURRENT_LAYER=2", ";_SET_FAN_SPEED_CHANGING_LAYER", "SET_VELOCITY_LIMIT ACCEL=10000", "M140 S35", "", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000"], actual [";BEFORE_LAYER_CHANGE", ";0.4", "G92 E0", "", ";LAYER:2", "SET_PRINT_STATS_INFO TOTAL_LAYER=50 CURRENT_LAYER=2", ";_SET_FAN_SPEED_CHANGING_LAYER", "SET_VELOCITY_LIMIT ACCEL=10000", "M140 S35", "SET_VELOCITY_LIMIT ACCEL=5000", "SET_VELOCITY_LIMIT ACCEL=10000"]
-
 c6e7655005cfee3f-5838137775a740d3
 layer 1 travel feed differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "145.7", y: "145.78", z: "0.45" }, end: Position { x: "153.013", y: "148.932", z: "0.45" }, arc_center: [None, None], turns: None }, feed: 21000.0, acceleration: "6000" }
 
@@ -609,9 +555,6 @@ layer 1 control events differs: expected ["G92 E0", ";======== H2D 20250710 laye
 
 d394da05b17ab7f1-3e428760bbf76200
 layer 1 island lifecycle differs: expected [[Extruder { extrusion: "0.8", feed: "1800" }], [Extruder { extrusion: "1.2", feed: "1800" }, Extruder { extrusion: "-0.64", feed: "2100" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "175.7", y: "175.78", z: "0.2" }, end: Position { x: "176.7", y: "175.771", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.16", feed: "1500" }, WipeEnd]], actual [[Extruder { extrusion: "-0.8", feed: "2100" }], [Extruder { extrusion: "0.8", feed: "1800" }], [Extruder { extrusion: "0.8", feed: "1800" }, Extruder { extrusion: "-0.64", feed: "2100" }, WipeStart, Wipe { motion: MotionRecord { command: "G1", start: Position { x: "175.7", y: "175.78", z: "0.2" }, end: Position { x: "176.7", y: "175.771", z: "0.2" }, arc_center: [None, None], turns: None }, extrusion: "-0.16", feed: "1500" }, WipeEnd]]
-
-d4032c78ad4fb209-4ebb4ed8636f9fde
-layer 48 control events differs: expected [";BEFORE_LAYER_CHANGE", ";9.6", "G92 E0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "", "M106 S255", "; stop printing object cube10.stl id:0 copy 0"], actual [";BEFORE_LAYER_CHANGE", ";9.6", "G92 E0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "M106 S255", "; stop printing object cube10.stl id:0 copy 0"]
 
 d457920f65fde04a-5045567148628ddd
 layer 3 deposition 1 differs: expected Deposition { feature: "Gap infill", width: "0.449968", motion: MotionRecord { command: "G1", start: Position { x: "176.62", y: "184.121", z: "0.6" }, end: Position { x: "175.879", y: "183.38", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.03549", feed: 1513.0, acceleration: "2500", fans: "0:255" }, actual Deposition { feature: "Gap infill", width: "0.449968", motion: MotionRecord { command: "G1", start: Position { x: "176.62", y: "184.121", z: "0.6" }, end: Position { x: "175.879", y: "183.38", z: "0.6" }, arc_center: [None, None], turns: None }, extrusion: "0.03549", feed: 1496.0, acceleration: "2500", fans: "0:255" }
@@ -667,9 +610,6 @@ layer 18 deposition 17 differs: expected Deposition { feature: "Sparse infill", 
 e3b8b40560fd2d44-523951969f911afd
 layer 14 deposition 74 differs: expected Deposition { feature: "Sparse infill", width: "0.22", motion: MotionRecord { command: "G1", start: Position { x: "131.371", y: "135.593", z: "0.88" }, end: Position { x: "129.468", y: "135.593", z: "0.88" }, arc_center: [None, None], turns: None }, extrusion: "0.00964", feed: 3124.0, acceleration: "", fans: "0:255,1:255,2:127.5,3:255" }, actual Deposition { feature: "Sparse infill", width: "0.22", motion: MotionRecord { command: "G1", start: Position { x: "131.372", y: "135.593", z: "0.88" }, end: Position { x: "129.468", y: "135.593", z: "0.88" }, arc_center: [None, None], turns: None }, extrusion: "0.00964", feed: 3124.0, acceleration: "", fans: "0:255,1:255,2:127.5,3:255" }
 
-e472b39a021d1b04-8a6ab9eeaf9ba541
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
-
 e4a5848af22b7e0b-749cdec82c9e3fb2
 layer 1 travel feed differs: no match for Travel { motion: MotionRecord { command: "G1", start: Position { x: "180", y: "-3", z: "0.25" }, end: Position { x: "83.148", y: "83.213", z: "0.25" }, arc_center: [None, None], turns: None }, feed: 9000.0, acceleration: "" }
 
@@ -721,14 +661,8 @@ layer 2 deposition 27 differs: expected Deposition { feature: "Internal solid in
 ef6a8d7d8fdf2bea-e16b9f9e96442350
 filament 1 length differs: expected 305.85mm, actual 303.60mm
 
-ef9e87db2c30fe34-2cdf1d38ad08ed19
-layer 48 control events differs: expected [";BEFORE_LAYER_CHANGE", ";9.6", "G92 E0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "", "M106 S255", "; stop printing object cube10.stl id:0 copy 0"], actual [";BEFORE_LAYER_CHANGE", ";9.6", "G92 E0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "M106 S255", "; stop printing object cube10.stl id:0 copy 0"]
-
 f001b8b713747fee-f8e2de32decb0265
 layer 3 deposition 1 differs: expected Deposition { feature: "Inner wall", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "165.6", y: "145.6", z: "0.7" }, end: Position { x: "174.4", y: "145.6", z: "0.7" }, arc_center: [None, None], turns: None }, extrusion: "0.25606", feed: 1800.0, acceleration: "1000", fans: "0:255,2:150" }, actual Deposition { feature: "Inner wall", width: "0.4", motion: MotionRecord { command: "G1", start: Position { x: "165.6", y: "145.6", z: "0.7" }, end: Position { x: "174.4", y: "145.6", z: "0.7" }, arc_center: [None, None], turns: None }, extrusion: "0.25606", feed: 1800.0, acceleration: "1000", fans: "0:255,2:100" }
-
-f37102d021d75d71-ed470db516680d10
-layer 2 control events differs: expected [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0", ""], actual [";BEFORE_LAYER_CHANGE", ";0.6", "G92 E0", "", "M486 S-1", ";LAYER:2", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "M486 S0"]
 
 f44c3cc33bbb7fa4-48af4d832aadc0a5
 layer 1 control events differs: expected ["G92 E0", ";======== H2D 20250710 layer_change ========", "; layer num/total_layer_count: 1/25", "; update layer progress", "M991 S0 P0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "; start printing object, unique label id: 14", "M624 AQAAAAAAAAA=", "G17", "G17", "; stop printing object cube10.stl id:0 copy 0", "G17", "; stop printing object, unique label id: 14", "M625", ";======== H2D 20250818========", "; SKIPPABLE_START", "; SKIPTYPE: timelapse", "M622.1 S1", "", "M1002 judge_flag timelapse_record_flag", "", "M622 J1", "M993 A2 B2 C2", "M993 A0 B0 C0", "", "", "", "", "M9711 M0 E0 X177 Y233 Z0.8 S11 C10 O0 T3000", "", "", "", "M993 A3 B3 C3", "", "M623", "; SKIPPABLE_END", "", "M106 S201", "M106 P2 S191"], actual ["G92 E0", ";======== H2D 20250710 layer_change ========", "; layer num/total_layer_count: 1/25", "; update layer progress", "M991 S0 P0", "", ";_SET_FAN_SPEED_CHANGING_LAYER", "; printing object cube10.stl id:0 copy 0", "; start printing object, unique label id: 14", "M624 AQAAAAAAAAA=", "G17", "G17", "; stop printing object cube10.stl id:0 copy 0", "G17", "; stop printing object, unique label id: 14", "M625", ";======== H2D 20250818========", "; SKIPPABLE_START", "; SKIPTYPE: timelapse", "M622.1 S1", "", "M1002 judge_flag timelapse_record_flag", "", "M622 J1", "M993 A2 B2 C2", "M993 A0 B0 C0", "", "", "", "", "M9711 M0 E1 X177 Y232 Z0.8 S11 C10 O0 T3000", "", "", "", "M993 A3 B3 C3", "", "M623", "; SKIPPABLE_END", "", "M106 S201", "M106 P2 S191"]

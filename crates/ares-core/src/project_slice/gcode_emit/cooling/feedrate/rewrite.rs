@@ -62,7 +62,16 @@ pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLin
                 position = line.end;
                 continue;
             }
-            output.extend_from_slice(&command[..word_start]);
+            // Upstream's BBS branch (`CoolingBuffer.cpp:944-948`): when the
+            // feedrate was the only word, nothing precedes the tail, so an
+            // F-only line reduces to a blank line.
+            let head = &command[..word_start];
+            let head = if head == b"G1" || head == b"G0" {
+                &command[..0]
+            } else {
+                head
+            };
+            output.extend_from_slice(head);
             output.extend_from_slice(&command[value_end..]);
         } else if line.slowed {
             output.extend_from_slice(&command[..value_start]);

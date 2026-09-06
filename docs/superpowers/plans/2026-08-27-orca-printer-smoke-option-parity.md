@@ -9066,3 +9066,24 @@ divergence — same class as nix-vs-AppImage geometry bits.
 Instruments: ARES_DUMP_SLOWDOWN (per-layer total/max/target/min_speed),
 GT CLINES verified bilateral. Remaining actionable families:
 travel geometry count 25, deposition-1 21, filament-1-length 16.
+
+## 2026-09-06 (cont 421): F-only collision lines become blank lines (BBS branch)
+
+Case 3770e4cb exposed the next cooling-rewrite divergence: an F-only
+line (`G1 F12000`) whose F equals the current feedrate reduces to a
+BLANK line upstream — the BBS branch (`CoolingBuffer.cpp:944-948`)
+appends nothing before the F word, then the tail append carries just
+the trailing newline. My strip path kept the `G1` word → stray bare
+`G1` lines (49 in the anchor). Ported the BBS check (head == "G1"/
+"G0" → emit nothing). Bare G1s 49 → 3.
+
+Also verified bilaterally (result-clines vs ARES_DUMP_CLINES):
+- Seam points for the deposition-1 anchor all match to 1e-9; the
+  ±0.001mm diffs are polygon-vertex ulp class (offset/clipper),
+  distinct from seam placement.
+- Slowdown arithmetic: Ares == nix source build exactly.
+
+Fleet replay: **735 → 757/987 (+22)**; ares-core 6785/6785; smoke
+81/82 (bottom_hilbert known). ~230 remaining failures; classifier:
+~12 dominated by numeric-mask ulp diffs, rest structural (largest
+cases 3-6k diff lines — geometry families).
