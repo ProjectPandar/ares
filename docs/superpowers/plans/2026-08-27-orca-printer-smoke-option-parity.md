@@ -8876,3 +8876,15 @@ arc-segment motion blocks) likely overestimates. NEXT: dump per-block
 times for the first arc-containing layer (the ORCA_DUMP_TIMES
 instrument exists at /tmp/ab/orca_time_ab.cpp) and compare against
 GT's per-block cache to find the arc-time formula delta.
+
+## 2026-09-06 (cont 411): time-model family consolidated
+
+The Ginger +27% time overestimate unifies the remaining fleet
+families: the inner-wall slowdown (22), skirt F-flips, M73 placement,
+and the estimated-time header all trace to the motion-planner time
+model. The arc-time integration (G2/G3 segments in the
+processor's Estimate) is the prime suspect. NEXT: build a GT
+ORCA_DUMP_TIMES instrument (dump per-block times in the
+GCodeProcessor TimeMachine::simulate), run the Ginger fixture, and
+diff per-block against my scheduled_times output to isolate the arc
+formula delta. 411 entries; 703 high-water.
