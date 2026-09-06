@@ -8888,3 +8888,14 @@ ORCA_DUMP_TIMES instrument (dump per-block times in the
 GCodeProcessor TimeMachine::simulate), run the Ginger fixture, and
 diff per-block against my scheduled_times output to isolate the arc
 formula delta. 411 entries; 703 high-water.
+
+## 2026-09-06 (cont 412): arc ruled out — only ONE G2/G3 in the Ginger gcode
+
+The Ginger gcode has exactly 1 arc line per side — arcs are NOT the
++27% source. The time delta lives in the acceleration-simulated
+MotionState totals (my processor Estimate vs GT TimeMachine), most
+likely in the many F50 wipe segments or the 687mm travels
+(machine_max_acceleration_travel=20000). NEXT: the per-block time
+dump (GT hook in TimeMachine + my scheduled_times debug print) on
+the Ginger — diff the first 50 block times to find which motion
+class (travel vs wipe vs extrusion) over-accumulates.
