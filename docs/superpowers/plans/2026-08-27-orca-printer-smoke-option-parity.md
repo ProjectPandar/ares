@@ -8062,3 +8062,14 @@ Hi fixture (1188→0) but only +1 fleet-wide — the remaining inner-wall
 22 have other roots (likely the feed-rate/time-estimator family and
 per-layer seam variants). Remaining: sparse 96, bottom 24, inner 22,
 skirt 16. Session total: 496→669 (+173).
+
+## 2026-09-06 (cont 343): sparse 96 residual = pure E ±1e-5 flips (geometry identical)
+
+Kobra 2 Plus (crosshatch, e81fa1fc): 27 diff lines, ALL are E±1e-5
+rounding flips (every X/Y identical) — cumulative-E boundary noise on
+long crosshatch lines (E1.90651 vs E1.9065 = the 5th decimal flip
+from sub-quantum internal path-length differences). The sparse-96
+family is dominated by this pure-noise signature: geometry exact, E
+accumulator crossing print boundaries. Fixing = the last micro-noise
+hunt (mm3_per_mm precision or the length sum order); the fleet jump
+from eliminating it could be large (most of the 96).
