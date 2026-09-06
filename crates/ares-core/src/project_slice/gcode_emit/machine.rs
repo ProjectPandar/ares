@@ -354,3 +354,35 @@ pub(super) fn append_flavor_preamble(
         }
     }
 }
+
+/// Seed the writer retraction state from the rendered machine start G-code:
+/// upstream's processor tracks the machine G-code's E moves, so a machine
+/// retract suppresses the first-travel retract and the next prime recovers
+/// the machine amount (`Extruder::m_retracted` semantics).
+pub(super) fn sync_retraction_from_start(state: &mut super::motion::EmitState, output: &[u8]) {
+    let text = std::str::from_utf8(output).unwrap_or("");
+    let mut retracted_amount = 0.0f64;
+    for line in text.lines().rev() {
+        let Some(e_index) = line.find('E') else {
+            continue;
+        };
+        let tail = &line[e_index + 1..];
+        let value: f64 = tail
+            .chars()
+            .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == '-' || *c == '+')
+            .collect::<String>()
+            .parse()
+            .unwrap_or(0.0);
+        if value < 0.0 {
+            retracted_amount = -value;
+            break;
+        }
+        if value > 0.0 {
+            break;
+        }
+    }
+    if retracted_amount > 0.0 {
+        state.retracted = true;
+        state.retracted_amount = retracted_amount;
+    }
+}

@@ -181,7 +181,11 @@ pub(in crate::project_slice) fn generate_layer(
     for fill in grouped.surface_fills {
         if let Ok(path) = std::env::var("ARES_DUMP_FLOW") {
             use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
                 let _ = writeln!(
                     file,
                     "FLOW w={:016b} h={:016b} mm3={:016b}",

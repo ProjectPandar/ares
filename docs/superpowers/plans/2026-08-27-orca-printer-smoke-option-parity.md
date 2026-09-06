@@ -8177,3 +8177,13 @@ my writer's E position + retracted flag (last negative E = retracted);
 skip the first-travel retract when already retracted and prime the
 recorded amount. Covers the 24-printer bottom family subset with
 retraction in start gcode.
+
+## 2026-09-06 (cont 352): machine-retract sync implemented — MyToolChanger 6→1
+
+sync_retraction_from_start parses the rendered machine start gcode's
+E moves (last negative E = retracted, seeding state.retracted +
+retracted_amount) and the unretract now recovers max(retracted_amount,
+retraction_length) + restart_extra. MyToolChanger: 6→1 (only the lift
+Z.6 line placement remains — GT fuses/orders it one line differently).
+lib 6754/6754, smoke 80/81. Sweep next to quantify the bottom-family
+gain.
