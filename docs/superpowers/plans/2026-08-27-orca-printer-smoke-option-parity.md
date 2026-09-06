@@ -8597,3 +8597,17 @@ for overhang-resampled points the resampler must emit scaled coords
 natively (it currently emits mm). This is a path-pipeline refactor
 (~3 files) — land with the case matrix + sweep, NOT incrementally
 (cont 364 misalignment precedent). 387 entries; 703 high-water.
+
+## 2026-09-06 (cont 388): scaled-recovery variant FAILED (gyroid mm points non-integer)
+
+Attempted the scaled recovery at the emission site (round(mm·1e6))
+to reconstruct exact integer deltas — Kobra3Max exploded 10→5036:
+the gyroid's mm points come from FLOAT ops (rotate-back, connect
+chaining), NOT from unscale(int); the nm-rounding shifts every
+length. Reverted (10 restored). CONFIRMED: the E-flip fix requires
+carrying true scaled integers from the SOURCE (the fill generators
+emit ints; the mm conversion happens in the polyline chain) — a
+deep-pipeline change (polyline chain → clip → overhang → emission
+all in scaled domain), not an emission-site patch. Fifth failed
+landing in this family; the design note at cont 387 stands as the
+only safe path.
