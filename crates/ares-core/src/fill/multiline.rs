@@ -41,13 +41,21 @@ pub(crate) fn fill_surface(
 ) -> Result<Vec<Polyline>, ClipperError> {
     debug_assert!(!sweeps.is_empty());
     let reference = params.reference;
-    let expansion =
-        (params.overlap + 0.5 * f64::from(params.multiline) * params.spacing) / scale.factor();
-    let expanded = offset_expolygon(surface, expansion as f32, JoinType::Miter, 3.0)?;
+    // Upstream `ExPolygonWithOffset(surface, 0, float(scale_(...)))` — the
+    // expansion is TRUNCATED to integer scaled units (scale_) before the
+    // offset, so the miter vertices round against an integer delta.
+    let expansion_scaled = ((params.overlap + 0.5 * f64::from(params.multiline) * params.spacing)
+        / scale.factor()) as i64;
+    let expanded = offset_expolygon(
+        surface,
+        expansion_scaled as f32,
+        JoinType::Miter,
+        3.0,
+    )?;
     if expanded.is_empty() {
         return Ok(Vec::new());
     }
-    let contraction = (-0.5 * params.spacing / scale.factor()) as f32;
+    let contraction = ((-0.5 * params.spacing / scale.factor()) as i64) as f32;
     let mut contracted = offset_expolygon(surface, contraction, JoinType::Miter, 3.0)?;
     if contracted.is_empty() {
         contracted.push(surface.clone());

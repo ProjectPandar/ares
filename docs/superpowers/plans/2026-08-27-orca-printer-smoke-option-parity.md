@@ -7779,3 +7779,15 @@ miter vertex arithmetic exactly in offset_expolygon (the corner
 formula's rounding for arbitrary offsets/directions); KSM's exact
 BOUND match shows the port is close — the expansion-direction path
 needs the same fidelity.
+
+## 2026-09-06 (cont 319): offset delta truncated to integer scaled units (upstream scale_)
+
+Verified upstream Round/FRound/GetUnitNormal/DoMiter match my port
+bit-for-bit. The residual ±1: upstream passes the offset as
+`float(scale_(x))` — TRUNCATED to integer scaled units before
+offsetting; my expansion/contraction used the raw f32. Applied the
+scale_ truncation to both. Neptune 2→4 (noise-level flip, same
+family), daf4ca69 unchanged 110 — its ±100-unit deltas come from
+elsewhere (next: dump the daf4ca69 SRC/expanded contour pre-rotation
+to see whether the offset input polygon itself differs). fill
+1270/1270, smoke 80/81.
