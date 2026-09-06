@@ -8573,3 +8573,13 @@ grind); (5) the four feature options (arachne wiring is the largest
 single unlock). The established pattern (instrument both sides →
 diff → align one arithmetic detail → case-verify → sweep) has
 delivered +207 printers over this session.
+
+## 2026-09-06 (cont 386): gyroid residual = pure E±1e-5 on identical coords
+
+Kobra 3 Max (gyroid): 10 lines = 5 pairs, ALL pure E flips (X/Y
+identical) — the per-segment e_per_mm×length accumulation boundary
+class (the mm-domain length measure vs upstream scaled-int domain,
+same as the cont 363/364 analysis). The gyroid geometry is exact;
+only the E print boundary flips. This is the fleet-wide terminal
+noise family — fixing it means the scaled-domain length threading
+(parked at cont 364 due to resample index misalignment).
