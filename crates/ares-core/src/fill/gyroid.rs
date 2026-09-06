@@ -144,7 +144,10 @@ impl WaveContext {
             let b = -self.z_cos;
             let result =
                 self.z_sin * (x + phase + if flip { std::f64::consts::PI } else { 0.0 }).cos();
-            (a / a.hypot(b)).asin() + (result / a.hypot(b)).asin() + std::f64::consts::PI
+            // Upstream f() computes r = sqrt(sqr(a)+sqr(b)) — NOT hypot (which
+            // rounds differently); match the exact expression.
+            let radius = (a * a + b * b).sqrt();
+            (a / radius).asin() + (result / radius).asin() + std::f64::consts::PI
         } else {
             let phase = if self.z_sin < 0.0 {
                 std::f64::consts::PI
@@ -155,7 +158,8 @@ impl WaveContext {
             let b = -self.z_sin;
             let result =
                 self.z_cos * (x + phase + if flip { 0.0 } else { std::f64::consts::PI }).sin();
-            (a / a.hypot(b)).asin() + (result / a.hypot(b)).asin() + std::f64::consts::FRAC_PI_2
+            let radius = (a * a + b * b).sqrt();
+            (a / radius).asin() + (result / radius).asin() + std::f64::consts::FRAC_PI_2
         }
     }
 }

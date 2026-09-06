@@ -7913,3 +7913,14 @@ paths in make_one_period's step count) and the f() asin/sin/cos
 evaluation order. Fix path: compare my make_one_period's point count
 per period against GT on a failing fixture (dump both polylines pre-
 clip), then align the tolerance/step arithmetic.
+
+## 2026-09-06 (cont 331): gyroid hypot→sqrt(a²+b²) aligned (ulp-level)
+
+WaveContext::value now computes r = sqrt(a*a+b*b) exactly like
+upstream f() (hypot rounds differently) — upstream-faithful though the
+sampled fixture stays at 10 diff lines (more ulp-level differences
+remain: candidates = sin_cos vs separate sin/cos evaluation,
+make_wave's clamp/swap order, the ceil(width/distance) param rounding).
+NEXT: dump both sides' gyroid polylines pre-clip (new GT instrument in
+make_gyroid_waves) and diff the vertex streams to find the remaining
+sub-quantum source.
