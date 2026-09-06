@@ -8054,3 +8054,11 @@ split; removed the separate runtime::stagger_inner_seams pass. The
 SPT seam points now match GT's off-diagonal walk. Creality Hi:
 1188→0 (FULL PARITY). lib 6754/6754, smoke 80/81. The inner-wall
 family (24) should largely resolve — sweep next.
+
+## 2026-09-06 (cont 342): fleet 669/1001 after stagger merge (+1)
+
+Sweep (685s): 669 of 1001. The stagger merge fully fixed the Creality
+Hi fixture (1188→0) but only +1 fleet-wide — the remaining inner-wall
+22 have other roots (likely the feed-rate/time-estimator family and
+per-layer seam variants). Remaining: sparse 96, bottom 24, inner 22,
+skirt 16. Session total: 496→669 (+173).
