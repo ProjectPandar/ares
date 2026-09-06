@@ -7824,3 +7824,14 @@ sparse_infill_pattern (adaptivecubic pattern), top_surface_pattern
 wall_generator (arachne not wired into the smoke override pipeline).
 All four are FEATURE implementations, not option-coverage mechanics.
 Session fleet high-water: 622/1001.
+
+## 2026-09-06 (cont 323): scale_ semantics DEFINITIVE — macro, no truncation
+
+libslic3r.h:93: `#define scale_(val) ((val) / SCALING_FACTOR)` — scale_ is
+a MACRO returning double (the coord_t-cast variants exist only at
+Point::new_scale call sites). `float(scale_(x))` = the f32-rounded
+untruncated value — my ORIGINAL (reverted) code is correct; the A/B
+revert verdict stands and this line is closed. The expanded-SRC ±1 for
+cubic lies in the positive-delta offset path (miter/normals) — separate
+grind. Remaining fleet families at 622: cubic 57, gyroid 28, grid 26,
+inner-wall/bottom/skirt.
