@@ -8359,3 +8359,17 @@ time model (accel/jerk integration per the CoolingBuffer) — a major
 grind comparable to the monotonic chain. Remaining families at 669:
 sparse 96 (E-flip noise), bottom 24 (retract, parked), inner 11-22
 (slowdown feed), skirt 16 (boundary flips).
+
+## 2026-09-06 (cont 366): layer-18 sparse cluster = CUBIC family X-MIRRORED about center
+
+OrangeStorm Giga (cubic, 120 diffs): the Z9.65 infill block starts at
+(408.724,406.731) GT vs (401.276,406.731) mine — 408.724+401.276 =
+810 = 2×405 = the CUBE CENTER: my family lines are X-MIRRORED about
+the object center (line set {c±k·spacing} emitted with the opposite
+sign — the family anchor lands at center−k where GT has center+k).
+Same E increments per segment (E.82091 etc. identical) — only the
+line PHASE is mirrored. This is the residual cubic mirror variant of
+the refpt-shift family (cont 313 fixed the sign; a per-sweep parity
+variant persists). NEXT: on this fixture dump FGRID both sides for
+the layer-18 family — check refpt/first_x signs per sweep to find
+which sweep mirrors.
