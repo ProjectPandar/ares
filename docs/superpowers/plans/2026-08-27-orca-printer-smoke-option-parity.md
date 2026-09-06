@@ -8488,3 +8488,15 @@ spacing=0.3570796 density=1. The 0.362 observed line delta includes
 skipped short lines; the true grid = 0.35708. The flip is sub-unit
 in this chain (align residue / boundary clip). Instrument committed
 for the GT-side comparison when needed. 377 entries; 703.
+
+## 2026-09-06 (cont 378): CoLiDo residual = 1-unit rotate-back crossing the print boundary
+
+The single remaining CoLiDo pair (X149.029/149.030, both Y/E equal):
+the vline x is an exact integer in the rotated frame; the world X =
+rotate-back (f64 cos/sin of the f32 direction) ± 1 unit can cross the
+x.xx95 print-rounding boundary when the true value sits within 1 unit
+of it. The candidates: the f32 direction accumulation differing 1ulp
+(config angle → +π/2 chain) or the emission quantize step. Both
+rotate formulas verified identical (cont 318) — needs the f32 angle
+bit-compare (dump {:a} of direction on both sides) at the monotonic
+entry. 378 entries; 703.
