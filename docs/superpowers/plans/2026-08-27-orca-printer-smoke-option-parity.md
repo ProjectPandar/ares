@@ -8672,3 +8672,15 @@ copy: cp the store source, apply gpts.patch, sed -n '170,190p' and
 '240,260p' to see the actual placement), fix the anchor or drop the
 `break;` (harmless: the loop then re-sorts and exits by itself).
 393 entries; 703.
+
+## 2026-09-06 (cont 394): GPTS brace diagnosis — patch seems balanced; suspect fuzz placement
+
+Local-copy attempt hit read-only store. The inserted block is brace-
+balanced (verified by count); original 234-235 (compute_omega_factor)
+is where the compiler reports the nested function — consistent with
+the hook landing ONE SCOPE TOO DEEP (fuzz-1 relaxed match) closing
+make_one_period early. NEXT (recipe): cp store source to /tmp (writable),
+apply gpts.patch, sed the patched 170-200 range to see the true
+placement; if fuzz misplaced it, use the exact 174 anchor with NO
+fuzz (patch --fuzz=0 in a preTest nix patchPhase or match more
+context lines from the ORIGINAL line numbers).
