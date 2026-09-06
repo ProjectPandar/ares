@@ -76,8 +76,14 @@ pub(super) struct MotionBlock {
 }
 
 impl MotionState {
+    /// `GCodeProcessor.cpp:2110-2122`: the current accelerations are
+    /// seeded from the machine limits at configure time (falling back to
+    /// the upstream Prusa defaults when a limit is unset), not zero.
     pub(super) fn with_acceleration_limits(print: f64, retract: f64, travel: f64) -> Self {
         Self {
+            acceleration: if print > 0.0 { print } else { 1500.0 },
+            retract_acceleration: if retract > 0.0 { retract } else { 1500.0 },
+            travel_acceleration: if travel > 0.0 { travel } else { 1250.0 },
             max_print_acceleration: print,
             max_retract_acceleration: retract,
             max_travel_acceleration: travel,

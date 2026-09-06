@@ -8927,3 +8927,34 @@ simulation. 17 layers × ~8.4s ≈ 143s of the +175s total. NEXT:
 instrument my scheduled_times per-block in that window (print E-only
 block times separately) — the unretract E-only block timing is the
 prime suspect.
+
+## 2026-09-06 (cont 415): TIME MODEL SOLVED — accel seeding (GCodeProcessor.cpp:2110-2122)
+
+Root cause of the +175s time divergence: upstream SEEDS the current
+accelerations from the machine limits at configure time
+(`acceleration = max>0 ? max : 1500`, same shape for retract/travel
+with 1500/1250 defaults); Ares left them 0.0 → E-only retract blocks
+floored to accel=1.0 → retract timed 5.01s instead of 0.178s (28x).
+Fix: `with_acceleration_limits` now seeds like upstream.
+
+Verification (same-input experiment, ARES_ESTIMATE_ONLY instrument):
+my estimator over the GT Ginger gcode = 639.61s vs GT 640.82s —
+**−1.21s (−0.2%)**. Remaining residue: −0.37s at purge junctions
+(entry 8.48/exit 30 accel-500-class vs mine 2500) + −0.02/layer
+drift; cosmetic cache-entry count difference (mine 293 vs GT 275
+E-only/Z-move attribution).
+
+Conclusion: the "+27% slower" was ~entirely the acceleration-class
+zero-seed (E-only + junction accel classes). The Ginger fixture's
+remaining total-time gap (+152s on its own gcode) is gcode-content
+divergence (Ginger is a residual failing printer: different wall
+segment splits), NOT the time model. The "inner 22 + skirt 18"
+families' F629/F843 rewrites trace to gcode content feeding the
+cooling buffer, not the estimator.
+
+Also added `orca_parity_replay_sweep` (ARES_PARITY_REPLAY=<root>):
+re-slices cached sweep fixtures and semantic-compares vs cached GT —
+fleet replay in ~7s (debug, 987 fixtures). Current: **700/987**.
+Top failure families (first-divergence detail): travel feed 32,
+travel geometry count 31, deposition layer-1 20, filament-1 length
+16, deposition layer-17 19.

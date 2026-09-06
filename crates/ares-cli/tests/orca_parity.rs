@@ -9,6 +9,8 @@
 mod option_coverage;
 #[path = "orca_parity/presets.rs"]
 mod presets;
+#[path = "orca_parity/replay.rs"]
+mod replay;
 #[path = "orca_parity/runner.rs"]
 mod runner;
 #[path = "orca_parity/smoke.rs"]

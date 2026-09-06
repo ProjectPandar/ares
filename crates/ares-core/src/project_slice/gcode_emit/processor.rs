@@ -31,6 +31,14 @@ pub(super) fn process(
     limits: ProcessorLimits,
 ) -> Vec<u8> {
     let text = String::from_utf8(std::mem::take(&mut output)).expect("generated G-code is UTF-8");
+    // Debug instrument: estimate times over an external g-code file instead
+    // of the freshly sliced output (ARES_ESTIMATE_ONLY=path).
+    let text = match std::env::var("ARES_ESTIMATE_ONLY") {
+        Ok(path) if !path.is_empty() => {
+            std::fs::read_to_string(path).expect("ARES_ESTIMATE_ONLY file readable")
+        }
+        _ => text,
+    };
     let lines = text.lines().map(str::to_owned).collect::<Vec<_>>();
     let estimate = Estimate::from_lines(&lines, machine_load_filament_time, limits);
     let mut result = String::with_capacity(text.len() + text.len() / 100);
@@ -252,7 +260,39 @@ impl Estimate {
         }
         let (times, trailing_delay) = scheduled_times(&blocks, &events);
         debug_assert_eq!(block_line_ids.len(), times.len());
+        let block_line_ids_original = block_line_ids.clone();
         let mut cumulative = 0.0;
+        if let Ok(path) = std::env::var("ARES_DUMP_EBLOCKS") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let mut running = 0.0;
+                for ((id, time), block) in block_line_ids_original
+                    .iter()
+                    .zip(times.iter())
+                    .zip(blocks.iter())
+                {
+                    running += *time;
+                    if block.e_only {
+                        let _ = writeln!(
+                            file,
+                            "EBLOCK id={id} t={:.6} dist={:.6} v={:.3} accel={:.3} jerk=({:.1},{:.1},{:.1},{:.1})",
+                            running,
+                            block.distance,
+                            block.speed,
+                            block.acceleration,
+                            block.jerk[0],
+                            block.jerk[1],
+                            block.jerk[2],
+                            block.jerk[3]
+                        );
+                    }
+                }
+            }
+        }
         let cache = block_line_ids
             .into_iter()
             .zip(&times)
