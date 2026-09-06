@@ -8437,3 +8437,14 @@ monotonicLINE path). Each remaining flip is its own anchor/vertex
 dump-compare-fix cycle (the established pattern: instrument both
 sides, diff, align one arithmetic detail, case-verify, sweep).
 Session state committed at 703/1001 with 372 archive entries.
+
+## 2026-09-06 (cont 373): CoLiDo grid FGRID — counts match, one GT order anomaly
+
+GT/mine both emit 44×2.356 + 44×3.927 (counts identical); the ORDER
+differs — GT has one anomalous [A,A] pair early (positions 3-4) where
+mine is uniform [A,B] per layer. The pairing may drift across layers
+with differing call counts (multi-island layers). The layer-50
+top-surface X flip (149.029/149.030) remains the monotonicLINE anchor
+— needs its own instrument on the monotonic path (FGRID hooks
+make_fill_lines = the multiline grid path, NOT the monotonic
+fill_surface_by_lines path). NEXT: a monotonic-path anchor dump.
