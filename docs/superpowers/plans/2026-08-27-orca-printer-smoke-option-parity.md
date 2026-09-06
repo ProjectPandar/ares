@@ -8913,3 +8913,17 @@ prepare-time exclusion in the per-line cache or extra blocks before
 it). NEXT: (1) align the per-move acceleration-class assignment (GT
 500 = likely the default accel for E-only/wipe moves at that point);
 (2) check which pre-line-2 blocks GT excludes from the cumulative.
+
+## 2026-09-06 (cont 414): the +175s = per-window deltas; BIGGEST at line 8 (+8.4s)
+
+Per-entry delta analysis: line2 first-cum offset +4.64s (pre-line-2
+blocks), then deltas MATCH lines 3-7 (2.84 ✓ 0.044 ✓), but line-8
+delta MINE 9.106s vs GT 0.670s — +8.4s accumulated between the last
+pre-skirt entry and the skirt start. That window contains the E55
+unretract (G1 E55 F12000 = 0.275s physical) + SET_VELOCITY_LIMIT +
+;TYPE:Skirt markers. +8.4s for a 0.275s move window = the E-only
+block or a speed-class transition is wildly mistimed in my
+simulation. 17 layers × ~8.4s ≈ 143s of the +175s total. NEXT:
+instrument my scheduled_times per-block in that window (print E-only
+block times separately) — the unretract E-only block timing is the
+prime suspect.
