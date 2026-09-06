@@ -8821,3 +8821,18 @@ cooling buffer. NEXT: diff MY final gcode layer-1 vs GT layer-1
 line-by-line (the 139-line output diff, now understood as content,
 not just feed) — the slowdown family resolves once the layer
 emission matches.
+
+## 2026-09-06 (cont 406): Ginger output near-identical; F843/629 + M73 extra
+
+Layer-1 outputs match line-for-line through the skirt sequence
+(X488.064→X490.948→X495→...) with THREE deltas: (a) F843 vs F629
+(the slowdown feed); (b) MY extra "M73 P2 R13" progress marker
+mid-skirt (GT doesn't have it there — M73 placement logic differs);
+(c) E2.07182 vs E2.07183 later (the E-flip noise). The cooling
+line-9 delta seen earlier traces to the DIFFERENT SET_SPEED window
+content: my window at that point holds an F250 segment (a wall) vs
+GT's F50 (wipe segment) — the layer-internal feature order within
+the skirt differs slightly (my skirt runs after/interleaved with a
+wall block). NEXT: (1) the M73 placement parity (my mid-skirt M73
+vs GT's absent — M73 emission threshold); (2) reconcile why my
+cooling window sees an F250 wall before the skirt completes.
