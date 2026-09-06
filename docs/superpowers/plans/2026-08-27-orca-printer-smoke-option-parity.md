@@ -9282,3 +9282,9 @@ Fix: position/e updates moved before the feedrate gate.
 
 Fleet held 757/987 (the fix unblocks within already-failing cases);
 ares-core 6785/6785; smoke 81/82.
+
+Post-fix family scan: top remaining first-divergences unchanged
+(travel-geometry 25 — the 06d991de anchor still routes direct; its
+route start differs from GT by ±1 scaled unit at the WIPE-END clip
+interpolation, flipping a grazing crossing — the ulp family).
+Fleet 757/987 steady.
