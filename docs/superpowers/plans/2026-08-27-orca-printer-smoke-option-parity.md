@@ -7803,3 +7803,15 @@ geometry itself. The remaining cubic ±1/±100-unit deltas need a fresh
 same-build A/B: dump B + I + SRC from ONE build and compare section-
 aligned. The per-family grind continues (cubic 57, gyroid 28, grid 26
 at the 622 sweep).
+
+## 2026-09-06 (cont 321): scale_ truncation REVERTED (empirically wrong)
+
+A/B verdict: with the truncation, daf4ca69's contracted BOUNDARY
+shifted ±1 (336 B-diffs) and Neptune regressed to 4; reverted, the
+BOUND matches EXACTLY (0) and Neptune is back at 2. Upstream's
+effective delta on this path is the UNTRUNCATED f32 (the truncation
+analysis missed fractional scaled spacings where trunc ≠ f32-round;
+the upstream source presumably rounds via the float conversion
+elsewhere). daf4ca69 stays 110 with an EXACT boundary — its residual
+is INSIDE the spans (the expanded/rotated polygon ±1 from the SRC
+dump), plus the Z9.6 structural block needing a separate look.
