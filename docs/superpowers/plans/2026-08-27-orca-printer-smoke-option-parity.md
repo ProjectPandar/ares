@@ -7886,3 +7886,17 @@ grid ~32), Inner wall 24, Bottom 24, Skirt 16. Largest well-defined
 remaining task = the gyroid marchsq (marching squares) port; the
 cubic/grid residuals share the micro-noise family. fill 1270/1270,
 smoke 80/81.
+
+## 2026-09-06 (cont 329): gyroid marchsq port plan (next major task)
+
+MarchingSquares.hpp = 652 lines: bitmap grid (uint32-packed <cbda>
+corner tags, little-endian, one cleared border cell), <urdl> exit-
+direction encoding, CCW ring marching with direction-bit clearing,
+two ambiguous diagonal cases with consistent exit choice. Port plan:
+(1) crates/ares-core/src/fill/gyroid/marchsq.rs — the grid/dirs/ring
+machinery (GridTraits over GyroidField: rows/cols/get scalar float);
+(2) gyroid/field.rs — GyroidField (gsizef 0.40, rsizef 0.004, float
+get_scalar sin/cos chain, to_coord/to_Point with offs);
+(3) wire into fill/gyroid.rs replacing the analytic wave generator,
+keeping the polyline simplify(tolerance) + downstream clip. Target:
+the 28-32 gyroid fleet printers.
