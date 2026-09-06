@@ -7815,3 +7815,12 @@ the upstream source presumably rounds via the float conversion
 elsewhere). daf4ca69 stays 110 with an EXACT boundary — its residual
 is INSIDE the spans (the expanded/rotated polygon ±1 from the SRC
 dump), plus the Z9.6 structural block needing a separate look.
+
+## 2026-09-06 (cont 322): option coverage = 645/649; the 4 FAILs are feature gaps
+
+Remaining option-coverage FAILs: raft_layers (raft feature), 
+sparse_infill_pattern (adaptivecubic pattern), top_surface_pattern
+(octagramspiral — the bottom_hilbert/octagram spiral family), 
+wall_generator (arachne not wired into the smoke override pipeline).
+All four are FEATURE implementations, not option-coverage mechanics.
+Session fleet high-water: 622/1001.
