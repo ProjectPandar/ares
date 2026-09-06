@@ -8458,3 +8458,14 @@ excluded (single-line flip only) — the layer-50 flip is sub-unit in
 the same anchor arithmetic (align_to_grid residue). Next instrument:
 dump the monotonic path's first_x (surface.rs line ~70 area) both
 sides for the CoLiDo layer-50. Session at 703; 374 entries.
+
+## 2026-09-06 (cont 375): MONO instrument live; the flip is a BOUNDARY CROSSING not the anchor
+
+ARES_DUMP_MONO (surface.rs align site): the CoLiDo top surface = ONE
+call, dir=225°, min_x=-6300000, spacing=450000, ref=0. The flipped
+vertex X149.0295→local −970500 is NOT on the vline grid (−970500+
+6300000 mod 450000 ≠ 0) — it is a boundary CLIP crossing point (the
+line endpoint where the vline exits the region), i.e. the
+expanded-offset/corner rounding family again, not the anchor. The
+monotonic anchor chain (dir/min_x/spacing/ref) is instrumented and
+ready for GT-side comparison if ever needed. 375 entries.

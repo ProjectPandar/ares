@@ -68,7 +68,18 @@ fn fill_surface(
         source_minimum_x
     } else {
         let reference = rotate_point(params.reference_point, -f64::from(direction))?;
-        align_to_grid(source_minimum_x, line_spacing, reference.x())?
+        let minimum_x = align_to_grid(source_minimum_x, line_spacing, reference.x())?;
+        if let Ok(path) = std::env::var("ARES_DUMP_MONO") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                let _ = writeln!(
+                    file,
+                    "MONO dir={direction} min_x={minimum_x} spacing={line_spacing} ref={}",
+                    reference.x()
+                );
+            }
+        }
+        minimum_x
     };
     let grid_spacing = (line_spacing as f64 * scale.factor()) as f32;
     let width = maximum_x - minimum_x;
