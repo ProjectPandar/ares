@@ -8500,3 +8500,13 @@ of it. The candidates: the f32 direction accumulation differing 1ulp
 rotate formulas verified identical (cont 318) — needs the f32 angle
 bit-compare (dump {:a} of direction on both sides) at the monotonic
 entry. 378 entries; 703.
+
+## 2026-09-06 (cont 379): quantize_axis ≈ %.3f verified — the flip is in the point value
+
+quantize_axis = (v·1000).round()/1000 (half-away) vs upstream's raw
+%.3f (nearest-even): both agree for non-exact-half doubles like
+149.0295⁻/⁺ (both give 149.029/149.030 respectively from the same
+double). The flip therefore lives in the underlying POINT value
+(sub-unit) — the monotonic rotate-back or vline x. Next (when
+resumed): the f32-direction bit-compare at the monotonic entry.
+379 entries; 703.
