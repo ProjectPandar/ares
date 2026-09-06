@@ -8849,3 +8849,16 @@ cadence differs. NEXT: port the upstream g1_times_cache emission
 cadence (M73 fires when the cache lookup crosses the percent
 boundary at specific g1_line_ids) — small family, worth landing
 after the slowdown/order families.
+
+## 2026-09-06 (cont 409): upstream M73 cadence fully mapped (block-cache)
+
+Upstream GCodeProcessor.cpp:1225-1262 process_line_move: M73 emits
+ONLY at g1 lines whose id matches a g1_times_cache ENTRY (one entry
+per MOTION BLOCK, filled at cpp:574 with the block-end elapsed
+time); percent = int(100·cache_elapsed/machine.time). My processor
+emits after EVERY G0/G1/G2/G3 with a per-line elapsed estimate —
+the intra-block flips produce the extra markers (106 vs 103). FIX:
+emit M73 only at block-boundary lines (the block_line_ids my
+simulation already tracks!) with the block-end elapsed time — the
+data already exists in my Estimate structure (blocks +
+block_line_ids). Land as a standalone change + Ginger M73 diff check.
