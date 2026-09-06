@@ -8197,3 +8197,16 @@ family). All remaining families (sparse E flips, skirt 16, inner 22)
 are boundary-level micro-noise at the port's precision floor; the
 bottom-family retract-sync fix is the latest structural win awaiting
 its sweep.
+
+## 2026-09-06 (cont 354): machine-retract seeding REVERTED (−78 regression)
+
+Sweep after the retract-sync fix: 591/1001 (−78). The seeding
+(state.retracted=true from the machine gcode's last negative E)
+wrongly suppressed the first-travel retract for ~78 printers AND
+changed their travel paths (the Anker M5 case: GT takes a 3-move
+corner path, mine went straight — the retracted state couples into
+the travel/avoid-crossing split). REVERTED to the 669 baseline
+(MyToolChanger back to 6). The fix needs upstream's ACTUAL E-sync
+mechanism (from GCode.cpp source — the processor/writer state
+machine), not reverse-engineered seeding; re-land with the mechanism
+pinned and a multi-printer A/B before the next sweep.
