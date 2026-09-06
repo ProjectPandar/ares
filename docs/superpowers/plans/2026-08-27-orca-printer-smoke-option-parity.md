@@ -8393,3 +8393,13 @@ Sweep (682s): 703 of 1001 (was 669; +34 from the anchoring-path cubic
 +π/2 fold). SESSION TOTAL: 496→703 (+207). Remaining: sparse 96
 (E-flip noise + residual), bottom 24 (retract, parked), inner 22
 (slowdown feed), skirt 18, internal solid 6, top 2.
+
+## 2026-09-06 (cont 369): sparse-48 at 703 = gyroid 28 (wipe/wall micro-edge) + cubic 19 (E flips)
+
+Post-sweep distribution: gyroid 28 (confirmed by direct replay —
+Kobra 3 Max still 10 lines, all wipe-vertex ±1e-3 flips, the wall
+micro-edge family from cont 332), cubic 19 (E±1e-5 boundary flips),
+crosshatch 1. The gyroid generator itself is believed exact (cont
+331-332); its divergences ride on the WALL vertex chain feeding the
+wipe paths. Next levers by size: gyroid/wall micro-edge 28, cubic E
+flips 19, bottom 24 (retract parked), inner 22 (slowdown feed).
