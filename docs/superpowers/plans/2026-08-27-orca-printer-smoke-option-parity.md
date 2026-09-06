@@ -8521,3 +8521,11 @@ spacing differs a unit (the earlier mod-arithmetic used the WRONG
 call's spacing 450000; with 357080 the residue test needs the correct
 object offset — not yet dumped). Next: dump the actual local frame
 offset + the layer-49 min_x together. 380 entries; 703.
+
+## 2026-09-06 (cont 381): MONO hook fires only non-full branch; top = adjust_solid_spacing path
+
+The MONO align dump fires only in the else (non-full-infill) branch —
+the layer-49 top surface (density=1) takes the adjust_solid_spacing
+branch (minimum_x = source_minimum_x, spacing adjusted). Its flip is
+in adjust_solid_spacing or the src_min — both now dumpable via the
+same site extended to the full-infill branch. 381 entries; 703.

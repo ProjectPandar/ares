@@ -51,13 +51,15 @@ fn fill_surface(
 ) -> Result<MonotonicFillOutput, ClipperError> {
     if let Ok(path) = std::env::var("ARES_DUMP_MONOALL") {
         use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = writeln!(
                 file,
                 "MONOALL monotonic={monotonic} spacing={} density={} layer={}",
-                params.spacing,
-                params.density,
-                params.layer_index
+                params.spacing, params.density, params.layer_index
             );
         }
     }
@@ -83,10 +85,14 @@ fn fill_surface(
         let minimum_x = align_to_grid(source_minimum_x, line_spacing, reference.x())?;
         if let Ok(path) = std::env::var("ARES_DUMP_MONO") {
             use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
                 let _ = writeln!(
                     file,
-                    "MONO dir={direction} min_x={minimum_x} spacing={line_spacing} ref={}",
+                    "MONO dir={direction} min_x={minimum_x} spacing={line_spacing} ref={} src_min={source_minimum_x} src_max={maximum_x}",
                     reference.x()
                 );
             }
