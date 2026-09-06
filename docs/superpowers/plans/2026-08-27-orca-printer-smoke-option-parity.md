@@ -8793,3 +8793,15 @@ where feedrate.rs is invoked per layer and what condition skips
 layers (likely: only layers with slowdown candidates or
 fan_changes); (2) compare layer-1 line sets specifically (first
 CLLAYER block vs GT head).
+
+## 2026-09-06 (cont 403): CORRECTION — both outputs 17 layers; GT line set is 2.4x DENSER per layer
+
+The GT Ginger header ALSO says "total layer number: 17" — the earlier
+~40-layer estimate was wrong. The delta is per-line: GT ≈ 22
+lines/layer vs my ≈ 9 (377 vs 159 total). Biggest deltas: 0x2
+(EXTRUDE_END) 146 vs 37 and 0x160 (G1|ADJ|HAS_F) 98 vs 20. My
+cooling parse records FEWER lines per layer — either my parse merges
+consecutive same-type lines, skips some markers, or my cooling window
+(layer_start..end) is narrower. NEXT: 1:1 diff the first CLLAYER
+block vs the GT dump head (both start from layer 0) to list exactly
+which G-code lines GT records that mine skips.
