@@ -8540,3 +8540,14 @@ integer min_x or spacing differs ≥1 unit from GT — i.e. the
 adjust_solid_spacing result or the rotated source bbox differs.
 NEXT: the GT-side MONOFULL instrument (one patch) to see which
 integer differs. 382 entries; 703.
+
+## 2026-09-06 (cont 383): f32 scan-origin round-trip REMOVED (upstream integer-only)
+
+Upstream fill_surface_by_lines cpp:2810-2816: x0 += integer
+arith ONLY (horiz_move path is coord_t). My (x0 as f32) as i64
+round-trip was a misreading pinned by an outdated test — removed both
+(the goal explicitly drops outdated source-pinning). Exact for
+|x0|<16.7M anyway (CoLiDo unchanged 4); prevents 32-unit quantization
+on large beds (OrangeStorm-class 4.1e8 scaled). Case matrix: CoLiDo
+4, OrangeStorm 2, Creality 0 (unchanged). fill 1269→... (39/39
+rectilinear). lib sweep next session.

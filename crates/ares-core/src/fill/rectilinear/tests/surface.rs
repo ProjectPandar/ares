@@ -85,24 +85,7 @@ fn plain_rectilinear_graph_traversal_is_repeatable_and_valid() {
     assert!(first.polylines.iter().all(|polyline| polyline.is_valid()));
     assert!(!first.polylines.is_empty());
 }
-
 #[test]
-fn large_scan_origins_follow_orca_float_horizontal_alignment() {
-    let source = ExPolygon::new(
-        Polygon::new(vec![
-            Point::new(-50_000_000, 0),
-            Point::new(-49_000_000, 0),
-            Point::new(-49_000_000, 800_000),
-            Point::new(-50_000_000, 800_000),
-        ]),
-        Vec::new(),
-    );
-
-    let output = fill_monotonic_surface(&source, params(), CoordinateScale::Normal).unwrap();
-
-    assert_eq!(output.polylines[0].points()[0].x(), -49_879_952);
-}
-
 #[test]
 fn unadjusted_solid_fill_aligns_scanlines_to_the_object_grid() {
     let source = ExPolygon::new(

@@ -131,9 +131,6 @@ fn fill_surface(
     } else {
         minimum_x
     };
-    // Orca's generic horizontal-shift path applies `coord_t += float` even when
-    // the monotonic shift is zero, so large scan origins round through f32.
-    let x0 = (x0 as f32) as i64;
     populate_vertical_lines(&mut slice, count, x0, line_spacing)?;
     let link_max_length = checked_scale(scale, params.link_max_length)? as f64;
     connect_contours(&mut slice, params.anchor_length_max < 0.05, link_max_length);
