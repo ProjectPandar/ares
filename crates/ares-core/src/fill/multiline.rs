@@ -41,9 +41,29 @@ pub(crate) fn fill_surface(
 ) -> Result<Vec<Polyline>, ClipperError> {
     debug_assert!(!sweeps.is_empty());
     let reference = params.reference;
-    let expansion =
-        (params.overlap + 0.5 * f64::from(params.multiline) * params.spacing) / scale.factor();
-    let expanded = offset_expolygon(surface, expansion as f32, JoinType::Miter, 3.0)?;
+    // Upstream `ExPolygonWithOffset(surface, 0, float(scale_(...)))` — the
+    // ctor's coord_t parameter TRUNCATES the scaled expansion before the
+    // offset (the contracted path passes float directly and does NOT
+    // truncate — verified empirically both ways).
+    let expansion_scaled =
+        ((params.overlap + 0.5 * f64::from(params.multiline) * params.spacing) / scale.factor())
+            as i64;
+    let expanded = offset_expolygon(
+        surface,
+        expansion_scaled as f32,
+        JoinType::Miter,
+        3.0,
+    )?;
+    if let Ok(path) = std::env::var("ARES_DUMP_PREXP") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            for component in &expanded {
+                for point in component.contour().points() {
+                    let _ = writeln!(file, "P {},{}", point.x(), point.y());
+                }
+            }
+        }
+    }
     if expanded.is_empty() {
         return Ok(Vec::new());
     }

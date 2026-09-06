@@ -7856,3 +7856,15 @@ EXPANDED polygon PRE-rotation (dump in fill_surface before
 generate_family) and compare against a GT pre-rotation dump (new
 instrument in ExPolygonWithOffset's ctor after offset) to split the
 offset vs rotation hypotheses.
+
+## 2026-09-06 (cont 326): EXPANSION truncation isolated — Neptune cubic 0 diff
+
+Pre-rotation A/B (new ORCA_DUMP_PREXP GT instrument + ARES_DUMP_PREXP)
+PROVED the ±1 lives in the expansion offset: my expanded polygon was
+exactly 1 unit larger. Root: upstream's expansion goes through
+ExPolygonWithOffset's coord_t ctor param (TRUNCATES the f32, e.g.
+446349.5 → 446349) while the contracted path passes float directly
+(offset_ex, NO truncation). Applying truncation to the expansion ONLY:
+Neptune cubic 2→0 (FULL PARITY), daf4ca69 110→102, gyroid unchanged.
+This closes the "why did truncation break contraction but look right"
+puzzle — the two paths have DIFFERENT upstream semantics.
