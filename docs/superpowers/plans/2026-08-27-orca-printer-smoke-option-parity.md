@@ -8647,3 +8647,15 @@ INPUTS are exact — the E-flip source is inside the wave SAMPLING
 evaluation). NEXT: dump the per-point (x,y) stream on both sides
 (make_one_period return), diff at 17 digits to find the first
 diverging sample. 391 entries; 703 high-water.
+
+## 2026-09-06 (cont 392): ARES GP point-stream instrument live; GT patch landed wrong scope
+
+ARES_DUMP_GPTS committed (make_one_period return, 17 digits, first
+reading: 1298 points, x from 0 by π/2 steps, y=2.37... for the first
+sample). GT ORCA_DUMP_GPTS attempts: multi-context hunks fail with
+systematic +1 line-offset rejection (gwave needed the exact line +
+single-context); the single-context "{" hunk compiled WRONG (function
+definition not allowed — landed inside a nested scope). NEXT: anchor
+the GT hook on the unique line `size_t size = points.size();` (in
+the piecewise loop) with @@ -N,1 single-context, matching the gwave
+success recipe. 392 entries; 703.

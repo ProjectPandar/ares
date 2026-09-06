@@ -238,6 +238,23 @@ fn make_gyroid_waves(
 }
 
 fn make_one_period(width: f64, context: WaveContext, flip: bool) -> Vec<(f64, f64)> {
+    let points = make_one_period_inner(width, context, flip);
+    if let Ok(path) = std::env::var("ARES_DUMP_GPTS") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for (x, y) in &points {
+                let _ = writeln!(file, "GP {x:.17e} {y:.17e}");
+            }
+        }
+    }
+    points
+}
+
+fn make_one_period_inner(width: f64, context: WaveContext, flip: bool) -> Vec<(f64, f64)> {
     let limit = (2.0 * std::f64::consts::PI).min(width);
     let mut points = Vec::new();
     let mut x = 0.0;
