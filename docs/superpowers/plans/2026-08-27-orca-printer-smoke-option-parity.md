@@ -8635,3 +8635,15 @@ placements rejected) — next session: fetch the nixpkgs source file
 (nix-build the unpacked source or nix-store --query), diff against
 the repo tree to find the context offset, then land the GT hook.
 390 entries; 703 high-water.
+
+## 2026-09-06 (cont 391): GT GWAVE instrument LIVE — wave inputs BIT-IDENTICAL
+
+GT ORCA_DUMP_GWAVE landed (result-gwave build; the failing hunk was a
+line-number miscount — tolerance const is at 248, not 246). All 43
+Kobra3Max calls: sf/tol/z/den/sp bit-identical to mine (only the
+exponent PRINT format differs: Rust e6 vs C e+06). The gyroid wave
+INPUTS are exact — the E-flip source is inside the wave SAMPLING
+(make_one_period's point stream: the asin/period-replication
+evaluation). NEXT: dump the per-point (x,y) stream on both sides
+(make_one_period return), diff at 17 digits to find the first
+diverging sample. 391 entries; 703 high-water.
