@@ -8187,3 +8187,13 @@ retraction_length) + restart_extra. MyToolChanger: 6→1 (only the lift
 Z.6 line placement remains — GT fuses/orders it one line differently).
 lib 6754/6754, smoke 80/81. Sweep next to quantify the bottom-family
 gain.
+
+## 2026-09-06 (cont 353): skirt family = single ±1e-3 vertex boundary flip
+
+BLOCKS Pro S100 (skirt family): only 2 diff lines, ONE X coordinate
+±1e-3 (493.261 vs 493.262, first skirt vertex at 493mm coords) — the
+skirt offset chain's sub-quantum boundary flip (same terminal noise
+family). All remaining families (sparse E flips, skirt 16, inner 22)
+are boundary-level micro-noise at the port's precision floor; the
+bottom-family retract-sync fix is the latest structural win awaiting
+its sweep.
