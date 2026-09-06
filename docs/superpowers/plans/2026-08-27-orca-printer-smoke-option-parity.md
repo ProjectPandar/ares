@@ -9047,3 +9047,22 @@ ares-core 6785/6785; smoke 81/82; **replay 729 → 735/987**.
 
 NEXT: slowdown feedrate ±0.6% (needs bilateral CoolingBuffer dump),
 M73 cadence, deposition-1 family 21, filament-1-length 16.
+
+## 2026-09-06 (cont 420): slowdown-F resolved — Ares == nix source build; AppImage diverges by build
+
+Bilateral CoolingBuffer dump (ORCA_DUMP_CLINES on result-clines vs
+ARES_DUMP_CLINES) for the F2560-vs-F2544 anchor (1169efe8):
+- The nix-built OrcaSlicer (byte-identical source) emits **F2544/2524**
+  — EXACTLY matching Ares. The cached AppImage emits F2560/2544.
+- The nix build's own gcode differs from the AppImage plate by 907
+  lines (geometry float rounding), and its cooling-line parse shows
+  ±0.03% Σt noise.
+Conclusion: the slowdown arithmetic port is EXACT vs source; the
+AppImage residual is compiler/float-rounding between builds (the
+iterative new_feedrate_to_reach_time_stretch converges to a slightly
+different fixpoint). These 2 gated cases are build-noise, not source
+divergence — same class as nix-vs-AppImage geometry bits.
+
+Instruments: ARES_DUMP_SLOWDOWN (per-layer total/max/target/min_speed),
+GT CLINES verified bilateral. Remaining actionable families:
+travel geometry count 25, deposition-1 21, filament-1-length 16.

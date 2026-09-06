@@ -22,6 +22,13 @@ pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
     });
     let adjustable = lines.iter().take_while(|line| line.adjustable()).count();
     let target_time = config.target_time * 1.001;
+    if std::env::var("ARES_DUMP_SLOWDOWN").is_ok() {
+        eprintln!(
+            "SD total={total_time:.6} max={maximum_time:.6} target={target_time:.6} min_speed={:.3} lines={}",
+            config.minimum_speed,
+            lines.len()
+        );
+    }
     if total_time > target_time {
         return total_time;
     }
