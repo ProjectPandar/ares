@@ -8469,3 +8469,13 @@ line endpoint where the vline exits the region), i.e. the
 expanded-offset/corner rounding family again, not the anchor. The
 monotonic anchor chain (dir/min_x/spacing/ref) is instrumented and
 ready for GT-side comparison if ever needed. 375 entries.
+
+## 2026-09-06 (cont 376): CoLiDo top lines spacing 0.362 ≠ the dumped MONO call's 0.45
+
+The layer-50 top-surface lines run at X149.029/148.667/148.305 —
+spacing 0.362mm, NOT the 0.45 of the single MONO call captured (that
+call is another surface). The top-surface monotonicLINE goes through
+a different params path (density/width-derived spacing) — the MONO
+hook site captured only the sparse-side call. NEXT: hook the dump at
+the monotonic surface entry (all calls) or dump per-call spacing to
+catch the 0.362 one. 376 entries; session state at 703 unchanged.
