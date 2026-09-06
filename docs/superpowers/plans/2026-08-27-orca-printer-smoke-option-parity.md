@@ -8559,3 +8559,17 @@ flake band; the integer-only change is behavior-identical for these
 bed magnitudes (all <16.7M exact-f32 range) and future-proofs large
 beds. lib 6753/6753 after the pinning-test removal. Session totals:
 496→703 (+207 high-water), 384 archive entries.
+
+## 2026-09-06 (cont 385): next-lever priority list (standalone)
+
+From the 702/703 state, ranked by expected fleet impact per unit of
+work: (1) gyroid/wall micro-edge 28 — needs the perimeter vertex
+chain bit-audit (deepest); (2) bottom 24-26 — the retract state
+machine redesign (full spec at cont 358, four failed landings
+documented; needs the writer-level A/B harness first); (3) inner 22 —
+the cooling-slowdown time model (motion-planner accel/jerk
+integration); (4) skirt 18 — single boundary flips (per-vertex
+grind); (5) the four feature options (arachne wiring is the largest
+single unlock). The established pattern (instrument both sides →
+diff → align one arithmetic detail → case-verify → sweep) has
+delivered +207 printers over this session.
