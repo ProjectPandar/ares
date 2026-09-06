@@ -8754,3 +8754,14 @@ adjustable set, and the total/max times → the slowdown factor
 (F843/F629). NEXT: align the split points (find where GT splits that
 I merge — likely each F word or each TYPE_HAS_F) and the arc type
 bits in parse_position.
+
+## 2026-09-06 (cont 400): cooling TYPE encodings IDENTICAL; count q open
+
+Verified CoolingBuffer.cpp:50-70 enum == my constants bit-for-bit
+(G1=0x20, ADJUSTABLE=0x40, HAS_F=0x100, G2=0x1000...). My dump
+line-4 kind=0x20 (G1 move) vs GT 0x120 (G1|HAS_F — a move WITH an
+F word). The 159-vs-377 count: both dump only kind!=0 lines;
+upstream must create more non-zero lines per layer (marker comment
+lines TYPE_SET_TOOL/fan starts etc., or the per-adjustment splits).
+NEXT: histogram the kind values on both sides (kind counts by value)
+to see WHICH line kinds account for the 218 extra GT lines.
