@@ -8138,3 +8138,14 @@ with_flow_ratio differently: with_cross_section(mm3·ratio) which
 RE-DERIVES width from the new area!) or the gcode_emit E arithmetic.
 NEXT: bit-compare the POST-ratio mm3 on both sides (GT dump is
 pre-ratio; the gcode E values imply the effective mm3).
+
+## 2026-09-06 (cont 349): E emit chain verified op-for-op; drift at the 1e-16 level
+
+My extrusion::for_length matches upstream GCode.cpp:6468-6515 op-for-
+op (mm3·print_ratio, ×filament_ratio, e_per_mm3 = ratio/area, product,
+÷ratio, ×length). With flow bits identical and the chain aligned, the
+remaining E boundary flips live at the 1e-16 accumulation level (the
+writer's per-line += ordering or the role-ratio chain conditions).
+This is the terminal precision floor of the current port — each fix
+from here is an op-order audit of a specific boundary line. Fleet
+669/1001; the archive holds 349 entries of verified roots.
