@@ -7950,3 +7950,14 @@ family (24) = the seam/loop-start placement chain, NOT a micro-edge.
 NEXT: dump the seam candidate / loop split for layer 1 of this
 fixture (GT ORCA_DUMP_SEAM exists; add the loop-split start dump on
 both sides) and compare the seam pick for the 0.25-offset loops.
+
+## 2026-09-06 (cont 334): seam dumps captured at different granularities
+
+GT ORCA_DUMP_SEAM = seam CANDIDATES per perimeter (C lines with
+vis/overhang/ccw/emb — e.g. layer z=0.05: 4 square corners ±4.725 +
+repeat); my ARES_DUMP_SEAM = collection structure (LAYER/COLL roles
+with widths — Creality Hi walls at 0.25 on layer 1, 0.22 after).
+Aligning needs a matching candidate dump on my side (my seam module
+dumps a different stage) — next session adds the candidate-level dump
+to seam_placement and diffs the per-layer candidate sets + the chosen
+split for the +0.25-offset loops.
