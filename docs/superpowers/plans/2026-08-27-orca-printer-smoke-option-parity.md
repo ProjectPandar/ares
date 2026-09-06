@@ -8583,3 +8583,17 @@ same as the cont 363/364 analysis). The gyroid geometry is exact;
 only the E print boundary flips. This is the fleet-wide terminal
 noise family — fixing it means the scaled-domain length threading
 (parked at cont 364 due to resample index misalignment).
+
+## 2026-09-06 (cont 387): E-flip fix design finalized (scaled-delta threading)
+
+The exact fix for the fleet-wide E±1e-5 family: the per-segment length
+must be computed from the SCALED integer deltas — (a·1e-6 − b·1e-6) ≠
+(a−b)·1e-6 in IEEE754, so mm-domain deltas lose the last bits that
+upstream's scaled-domain measure keeps. DESIGN: thread the scaled
+points (or their delta vec) alongside local_points through
+path.rs → constant.rs; for clipped tails recompute the clipped
+endpoint's scaled coord (clip_end works in scaled domain already);
+for overhang-resampled points the resampler must emit scaled coords
+natively (it currently emits mm). This is a path-pipeline refactor
+(~3 files) — land with the case matrix + sweep, NOT incrementally
+(cont 364 misalignment precedent). 387 entries; 703 high-water.
