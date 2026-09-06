@@ -8028,3 +8028,18 @@ bisector direction; upstream walks ALONG THE LOOP's polyline points
 inner-wall +0.25 family. FIX: port upstream place_loop's depth walk
 (walk the loop vertices, accumulate dist > depth, foot_pt snap) —
 SeamPlacer.cpp ~1590-1620.
+
+## 2026-09-06 (cont 340): stagger is INSIDE upstream place_loop; mine is a 2nd pass
+
+Upstream (SeamPlacer.cpp:1607-1620): the stagger walk runs INSIDE
+place_loop right after the concave-corner projection — one pass with
+depth = max(path.width, depth), walking get_next_loop_point chain with
+partial-distance interpolation, seam_point = final foot_pt. MY design:
+place_loop (concave walk + split) then a SEPARATE
+runtime::stagger_inner_seams pass that re-splits the already-split
+loop with its own width-based walk — different chain origin (splits
+twice, walks from the loop start not the projected point) → the
+off-diagonal vs diagonal seam points. FIX: merge the stagger into
+place_loop with the exact upstream chain (depth carryover from the
+concave stage, get_next_loop_point sequence, foot_pt partial
+interpolation); remove the separate pass.
