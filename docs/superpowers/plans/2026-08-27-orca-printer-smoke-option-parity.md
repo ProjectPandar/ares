@@ -9218,3 +9218,26 @@ resolve_role_fans or the part-fan re-assertion gate). NEXT: dump
 part_speed/role-fan decisions per layer (my cooling.rs) vs GT's
 CoolingBuffer fan logic; check the `part_speed != self.part_speed`
 gate and the ramp's layer-time input.
+
+## 2026-09-06 (cont 429): FAILED LANDING — baseline role-fan force removal (−535)
+
+Attempted: resolve_role_fans BASE branch force=true→false (emit only
+when baseline != physical_part_speed) to kill the anchor's 64× M106
+S255 spam. REGRESSION: fleet 757 → 222/987 (smoke 19 failures) — the
+force-restore IS load-bearing across the fleet (physical_part_speed
+tracking diverges from the emitted clamped value in flows where the
+forced re-assert is what matches GT). REVERTED (verified 757/987,
+81/82 restored).
+
+The anchor's fan spam root is at MARKER PLACEMENT (per-layer
+Baseline markers from overhang/bridge toggles) vs upstream's
+CoolingBuffer fan block which emits only on fan_speed_new !=
+m_fan_speed AFTER the role-request merge (CoolingBuffer.cpp:800-830).
+Correct fix needs the upstream fan-emit gate ported as a whole
+(m_fan_speed tracking incl. clamped values + the request map), not a
+local force flip.
+
+Anchor 0e56ebfb post-epsilon state: all geometry/travel/wipe diffs
+cleared; remaining = M73 placement + fan spam + 4 header-metadata
+lines (flush_volumes_matrix/flus_multiplier multi-extruder formats,
+extruder_ams_count empty, estimated time 10m30s vs 10m54s −3.7%).
