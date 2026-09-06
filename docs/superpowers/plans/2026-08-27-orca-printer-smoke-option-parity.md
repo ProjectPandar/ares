@@ -8099,3 +8099,16 @@ vs upstream Flow::mm3_per_mm accumulates ~1e-11/line → 1e-5 after
 thousands of lines → boundary flips. FIX = bit-parity port of
 Flow::mm3_per_mm (Flow.cpp cross_section / rounded_rectangle_area:
 the exact float ops order, the float vs double width/height inputs).
+
+## 2026-09-06 (cont 346): mm3_per_mm formula verified TYPE-IDENTICAL; inputs are next
+
+Upstream `float(m_height*(m_width - m_height*(1. - 0.25*PI)))`: the
+inner factor is DOUBLE (1. and PI double literals), float×double →
+double chain, single float() cast at the end — my ordinary_volume has
+the identical type structure (f64 chain + final as f32) ✓ NOT the
+drift source. The last-bit difference is in the WIDTH/HEIGHT f32
+INPUTS — the Flow derivation chain (new_from_config_width / spacing /
+rounded_rectangle_extrusion_spacing). NEXT: bit-compare my flow
+construction inputs vs upstream Flow.cpp for the crosshatch width
+0.45/height 0.2 case (a small unit dump of the constructed Flow on
+both sides at the fill_surface entry).
