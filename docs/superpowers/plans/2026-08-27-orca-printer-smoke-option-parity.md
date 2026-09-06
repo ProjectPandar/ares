@@ -8448,3 +8448,13 @@ top-surface X flip (149.029/149.030) remains the monotonicLINE anchor
 — needs its own instrument on the monotonic path (FGRID hooks
 make_fill_lines = the multiline grid path, NOT the monotonic
 fill_surface_by_lines path). NEXT: a monotonic-path anchor dump.
+
+## 2026-09-06 (cont 374): monotonic anchor chain reviewed — reference (0,0) OK
+
+The monotonicLINE path passes layer_index=layer_id with (idx/TH)&1
+alternation and reference_point=(0,0) (the object-bbox-center
+convention matching the cont-291 object-anchor fix). A 90° error is
+excluded (single-line flip only) — the layer-50 flip is sub-unit in
+the same anchor arithmetic (align_to_grid residue). Next instrument:
+dump the monotonic path's first_x (surface.rs line ~70 area) both
+sides for the CoLiDo layer-50. Session at 703; 374 entries.
