@@ -8862,3 +8862,17 @@ emit M73 only at block-boundary lines (the block_line_ids my
 simulation already tracks!) with the block-end elapsed time — the
 data already exists in my Estimate structure (blocks +
 block_line_ids). Land as a standalone change + Ginger M73 diff check.
+
+## 2026-09-06 (cont 410): THE Ginger root — my time model 13m35s vs GT 10m40s (+27%)
+
+The Ginger M73 R-values reveal the primary root: my processor's
+estimated printing time = 13m 35s vs GT 10m 40s — a +27%
+OVERESTIMATE. This drives BOTH the slowdown factor (F629 vs F843:
+longer layer times → different slow_down math) AND the M73
+placement (extra percent transitions, missing P1). The Ginger's
+distinguishing feature vs the passing fixtures: ARC-HEAVY gcode
+(G2/G3 wipes + long travels) — my arc time integration (the
+arc-segment motion blocks) likely overestimates. NEXT: dump per-block
+times for the first arc-containing layer (the ORCA_DUMP_TIMES
+instrument exists at /tmp/ab/orca_time_ab.cpp) and compare against
+GT's per-block cache to find the arc-time formula delta.
