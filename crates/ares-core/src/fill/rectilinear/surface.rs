@@ -79,6 +79,19 @@ fn fill_surface(
     let full_infill = params.density > 0.9999;
     let minimum_x = if full_infill && !params.dont_adjust {
         line_spacing = adjust_solid_spacing(source_width, line_spacing);
+        if let Ok(path) = std::env::var("ARES_DUMP_MONO") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(
+                    file,
+                    "MONOFULL dir={direction} min_x={source_minimum_x} spacing={line_spacing} src_min={source_minimum_x} src_max={maximum_x}"
+                );
+            }
+        }
         source_minimum_x
     } else {
         let reference = rotate_point(params.reference_point, -f64::from(direction))?;

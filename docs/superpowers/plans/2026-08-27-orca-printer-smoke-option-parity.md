@@ -8529,3 +8529,14 @@ the layer-49 top surface (density=1) takes the adjust_solid_spacing
 branch (minimum_x = source_minimum_x, spacing adjusted). Its flip is
 in adjust_solid_spacing or the src_min — both now dumpable via the
 same site extended to the full-infill branch. 381 entries; 703.
+
+## 2026-09-06 (cont 382): MONOFULL captured — layer-49 top: dir=180°, min=-4710731, spacing=362363
+
+The layer-49 top-surface call: dir=3.1415927 (exact 180° — integer
+negation, NO rounding in the rotate), min_x=-4710731,
+spacing=362363 (matches the observed 0.362 line delta ✓). With an
+exact-integer chain, the printed flip (149.029/149.030) means the
+integer min_x or spacing differs ≥1 unit from GT — i.e. the
+adjust_solid_spacing result or the rotated source bbox differs.
+NEXT: the GT-side MONOFULL instrument (one patch) to see which
+integer differs. 382 entries; 703.
