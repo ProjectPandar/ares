@@ -146,7 +146,9 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 let params = MultilineFillParams {
                     spacing: fill.params.spacing,
                     overlap: 0.0,
-                    angle: fill.params.angle,
+                    // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2 to
+                    // the frame angle once per fill call.
+                    angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
                     reference: object_reference,
                     density: (0.01_f64 * f64::from(fill.params.density)) as f32,
                     multiline: fill.params.multiline,

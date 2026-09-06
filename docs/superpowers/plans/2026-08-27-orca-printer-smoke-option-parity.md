@@ -8373,3 +8373,16 @@ the refpt-shift family (cont 313 fixed the sign; a per-sweep parity
 variant persists). NEXT: on this fixture dump FGRID both sides for
 the layer-18 family — check refpt/first_x signs per sweep to find
 which sweep mirrors.
+
+## 2026-09-06 (cont 367): THE layer-1 cubic mirror ROOT — anchoring path missed the +π/2
+
+FGRID angle histogram PROVED it: only my LAYER-1 cubic trio uses the
+45°-base (0.785/1.833/2.880); all 41 later layers + all 42 GT layers
+use the 135°-base trio. Layer 1's sparse fill goes through the
+bridge-over-infill ANCHORING path (sparse_anchoring.rs runs only on
+the first sparse layer), whose Cubic branch lacked the +π/2 frame
+fold. One-line fix: angle: fill.params.angle + FRAC_PI_2. OrangeStorm
+Giga: 120→2 (the remaining 2 = E flips). Anchoring case matrix:
+Neptune 0, Creality 0. lib 6754/6754, smoke 80/81. This likely
+clears much of the layer-18 sparse cluster (9) and other cubic
+anchoring divergences. Sweep next.
