@@ -7868,3 +7868,11 @@ ExPolygonWithOffset's coord_t ctor param (TRUNCATES the f32, e.g.
 Neptune cubic 2→0 (FULL PARITY), daf4ca69 110→102, gyroid unchanged.
 This closes the "why did truncation break contraction but look right"
 puzzle — the two paths have DIFFERENT upstream semantics.
+
+## 2026-09-06 (cont 327): fleet 668/1001 after expansion truncation (+46)
+
+Sweep (683s): 668 of 1001 pass (was 622; +46 from the expansion-only
+scale_ truncation). SESSION TOTAL: 496→668 (+172). Remaining: the
+gyroid family (marchsq port), grid/cubic residuals, inner-wall feed,
+bottom/skirt, and the 4 feature gaps (raft/adaptivecubic/octagram/
+arachne).
