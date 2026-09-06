@@ -8163,3 +8163,17 @@ amount, leaving E 0.4 off. FIX: parse the machine gcode's E deltas
 first-travel retract is skipped and the prime covers the machine
 retract. This likely covers much of the 24-printer bottom family
 (those with retraction in machine start gcode).
+
+## 2026-09-06 (cont 351): machine-start pass-through located; E-state sync fix scoped
+
+append_start (machine.rs:215-254) renders the machine start gcode
+RAW (citing GCode.cpp:3118-3140 "never parses G0/G1") — yet GT's
+behavior after its machine retract (-1.2): next travel NO re-retract,
+prime E1.2 = full recovery of the machine amount. Upstream's writer E
+state IS synced to the machine gcode E (via the GCodeProcessor path
+or the m_writer placeholder handling — mechanism to pin down).
+FIX SCOPE: parse E moves in the rendered machine start gcode, seed
+my writer's E position + retracted flag (last negative E = retracted);
+skip the first-travel retract when already retracted and prime the
+recorded amount. Covers the 24-printer bottom family subset with
+retraction in start gcode.
