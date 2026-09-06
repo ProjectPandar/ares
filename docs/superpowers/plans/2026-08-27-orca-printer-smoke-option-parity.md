@@ -9262,3 +9262,23 @@ NEXT: port FanMover.cpp as a gcode text post-pass module
 (gcode_emit/fan_mover.rs, buffer/kickstart/delay/_remove_slow_fan),
 wired only when fan_speedup_time≠0/kickstart>0 — 4-case family.
 Priority order vs M73 placement family (larger).
+
+## 2026-09-06 (cont 431): position tracking survives zero feedrate — total time EXACT
+
+Bilateral TIMES dump exposed: GT's `G0 Z1.6 F240` block = 98.4mm
+(Z descended from the start gcode's `G0 Z100.0`, 24.2s at F240);
+mine = 1.6mm — my MotionState SKIPPED position updates when
+feedrate <= 0 (the no-F `G0 Z100.0` never moved the tracked Z).
+Upstream always tracks position; a non-positive feedrate only
+suppresses the time block.
+
+Fix: position/e updates moved before the feedrate gate.
+- Anchor total: 630.30 → **654.50 == GT's 654.5 EXACT** (the
+  10m30s-vs-10m54s gap was this 24.2s phantom move).
+- ALL M73 placement/value diffs cleared for the anchor (the cache
+  line ids aligned once the phantom block existed).
+- Anchor now gated ONLY by the FanMover M106 family + 3 header
+  metadata lines.
+
+Fleet held 757/987 (the fix unblocks within already-failing cases);
+ares-core 6785/6785; smoke 81/82.

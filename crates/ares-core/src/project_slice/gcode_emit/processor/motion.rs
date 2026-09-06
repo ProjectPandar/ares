@@ -224,9 +224,6 @@ impl MotionState {
         if let Some(value) = word(code, 'F') {
             self.feedrate = value / 60.0;
         }
-        if self.feedrate <= 0.0 {
-            return None;
-        }
         let old = self.position;
         let mut next = old;
         for (axis, letter) in ['X', 'Y', 'Z'].into_iter().enumerate() {
@@ -248,6 +245,12 @@ impl MotionState {
             }
         });
         self.e_position = old_e + e_delta;
+        self.position = next;
+        // Upstream always tracks the position; a non-positive feedrate only
+        // suppresses the motion block (no time contribution).
+        if self.feedrate <= 0.0 {
+            return None;
+        }
         let mut delta = [
             next[0] - old[0],
             next[1] - old[1],
