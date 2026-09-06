@@ -8386,3 +8386,10 @@ Giga: 120→2 (the remaining 2 = E flips). Anchoring case matrix:
 Neptune 0, Creality 0. lib 6754/6754, smoke 80/81. This likely
 clears much of the layer-18 sparse cluster (9) and other cubic
 anchoring divergences. Sweep next.
+
+## 2026-09-06 (cont 368): fleet 703/1001 after anchoring cubic fold (+34)
+
+Sweep (682s): 703 of 1001 (was 669; +34 from the anchoring-path cubic
++π/2 fold). SESSION TOTAL: 496→703 (+207). Remaining: sparse 96
+(E-flip noise + residual), bottom 24 (retract, parked), inner 22
+(slowdown feed), skirt 18, internal solid 6, top 2.
