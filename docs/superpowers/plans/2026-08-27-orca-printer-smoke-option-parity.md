@@ -8278,3 +8278,17 @@ The Extruder-state refactor map (next session opening task):
   route all sites through them, seed outstanding from
   sync_retraction_from_start (amount only). Baseline 669 restored and
   the summary un-staled.
+
+## 2026-09-06 (cont 359): third landing attempt aborted pre-flight; baseline preserved
+
+Began the state-machine wiring (EmitState fields + extruder_retract/
+extruder_unretract_amount helpers + the travel.rs before-wipe gate),
+then recognized the wipe path's during-segment retracts also share
+the outstanding budget and the dual retracted_amount/retracted_
+outstanding state duplicates — half-wiring risks a THIRD regression.
+Reverted to the clean 669 baseline (verified: smoke 80/81, summary
+669). The refactor needs ONE dedicated session: unify
+retracted_amount INTO retracted_outstanding (single field, updated
+only in the two helpers, wipe during-segments registered through the
+helper), seed from sync_retraction_from_start, then the full case
+matrix + sweep. Do not land incrementally.
