@@ -8292,3 +8292,19 @@ retracted_amount INTO retracted_outstanding (single field, updated
 only in the two helpers, wipe during-segments registered through the
 helper), seed from sync_retraction_from_start, then the full case
 matrix + sweep. Do not land incrementally.
+
+## 2026-09-06 (cont 361): fourth landing ALSO fleet-negative — reverted (595 vs 669)
+
+The unified gating landed clean on the case matrix (MyToolChanger 1,
+no local regressions) but the full sweep: 595/1001 (−74; bottom
+24→30, skirt 16→18). The unretract formula (retracted_amount instead
+of retraction_length) diverges on the fleet's wipe/restart-extra
+variants — the during-wipe accumulation path makes retracted_amount
+≠ retraction_length in flows where the old fixed-length prime was
+correct (upstream's m_restart_extra is per-RETRACT-CALL, not the
+config constant). REVERTED (git revert); 669 baseline restored and
+verified. CONCLUSION after 4 attempts: the retract-state fix requires
+modeling m_restart_extra as genuinely per-call state across ALL
+retract sites with writer-level A/B against the GT writer output
+BEFORE any fleet sweep — do not land without a dedicated
+writer-parity harness.
