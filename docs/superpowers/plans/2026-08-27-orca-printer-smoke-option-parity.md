@@ -8836,3 +8836,16 @@ the skirt differs slightly (my skirt runs after/interleaved with a
 wall block). NEXT: (1) the M73 placement parity (my mid-skirt M73
 vs GT's absent — M73 emission threshold); (2) reconcile why my
 cooling window sees an F250 wall before the skirt completes.
+
+## 2026-09-06 (cont 408): M73 emission logic mapped — per-line percent vs g1_times_cache
+
+My processor.rs:82-102 emits M73 after each progress-motion line when
+(percent, remaining) changes; Ginger shows 106 M73 lines vs GT 103,
+with MY "M73 P2 R13" landing mid-skirt where GT has none. Upstream
+GCodeProcessor::process_gcode_line emits M73 from g1_times_cache
+lookups at discrete line ids (the time cache filled per G1 during the
+same pass) — the trigger line ids differ because the cache update
+cadence differs. NEXT: port the upstream g1_times_cache emission
+cadence (M73 fires when the cache lookup crosses the percent
+boundary at specific g1_line_ids) — small family, worth landing
+after the slowdown/order families.
