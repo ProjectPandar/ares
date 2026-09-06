@@ -8713,3 +8713,18 @@ the inner-wall-22 family (cont 365). Fix = the cooling time-model
 parity (CoolingBuffer::apply_layer_cooldown's time integral) — a
 major grind; instrument = dump per-layer slowdown factor + estimated
 time on both sides (GT hook in apply_layer_cooldown).
+
+## 2026-09-06 (cont 397): upstream cooling = SAME length/feedrate model — divergence is line-level
+
+Verified CoolingBuffer.cpp:471: upstream line.time = length/feedrate
+IDENTICAL simple model (no accel/jerk integration in the cooling
+pass). My parse.rs matches. The F843/F629 factor difference must
+come from the LINE SET: different line segmentation, TYPE_ADJUSTABLE
+marking, or the ";_EXTRUDE_SET_SPEED" block handling (upstream 480:
+no G1 F inside extrude blocks — the adjustable set depends on the
+marker boundaries). ALSO upstream 545: `layer_had_extrusion` — moves
+before the layer's FIRST extrusion are EXCLUDED from the time calc.
+NEXT: dump my per-layer line set (kind/length/feedrate/time) and the
+GT CoolingBuffer lines (a GT hook in append_gcode) for the Ginger
+layer-1 skirt, diff the line sets to find the segmentation/marking
+delta feeding different totals.
