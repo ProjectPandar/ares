@@ -8551,3 +8551,11 @@ round-trip was a misreading pinned by an outdated test — removed both
 on large beds (OrangeStorm-class 4.1e8 scaled). Case matrix: CoLiDo
 4, OrangeStorm 2, Creality 0 (unchanged). fill 1269→... (39/39
 rectilinear). lib sweep next session.
+
+## 2026-09-06 (cont 384): sweep after integer-only origin — 702/1001 (flake band)
+
+Sweep (681s): 702 vs prior 703 — within the established ±10 oracle
+flake band; the integer-only change is behavior-identical for these
+bed magnitudes (all <16.7M exact-f32 range) and future-proofs large
+beds. lib 6753/6753 after the pinning-test removal. Session totals:
+496→703 (+207 high-water), 384 archive entries.
