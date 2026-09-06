@@ -173,6 +173,19 @@ fn make_gyroid_waves(
 ) -> Result<Vec<Polyline>, ClipperError> {
     let scale_factor = spacing / scale.factor() / density;
     let tolerance = (spacing / 2.0).min(PATTERN_TOLERANCE) / (scale_factor * scale.factor());
+    if let Ok(path) = std::env::var("ARES_DUMP_GWAVE") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(
+                file,
+                "GWAVE sf={scale_factor:.17e} tol={tolerance:.17e} z={grid_z:.17e} den={density:.17e} sp={spacing:.17e}"
+            );
+        }
+    }
     let z = grid_z / scale_factor;
     let (z_sin, z_cos) = z.sin_cos();
     let context = WaveContext {

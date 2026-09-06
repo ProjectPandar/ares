@@ -8623,3 +8623,15 @@ beyond the cont-331 sqrt fix; e.g. the make_wave terminal point or
 the period replication adds). Fix path: bit-compare the wave point
 stream against a GT gyroid dump (new instrument in
 make_gyroid_waves) — the last un-instrumented generator.
+
+## 2026-09-06 (cont 390): ARES GWAVE instrument live; GT-side patch context mismatch
+
+ARES_DUMP_GWAVE (make_gyroid_waves entry) committed: dumps
+sf/tol/z/den/sp at 17 digits. First Kobra3Max reading:
+sf=1.11223940129709803e6 tol=1.79817402410631405e-1 — GT-side
+ORCA_DUMP_GWAVE patch written but the nix-source FillGyroid.cpp
+context at line 242-246 does not match the repo tree (two hunk
+placements rejected) — next session: fetch the nixpkgs source file
+(nix-build the unpacked source or nix-store --query), diff against
+the repo tree to find the context offset, then land the GT hook.
+390 entries; 703 high-water.
