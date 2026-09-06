@@ -9019,3 +9019,31 @@ NEXT (gated families, in order):
    diff the layer-time inputs. Unblocks travel-feed family remnants.
 2. M73 cadence off-by-3-lines placement (g1_times_cache attribution).
 3. deposition layer-1 20 + filament-1 length 16 families.
+
+## 2026-09-06 (cont 419): layer-change lift gate evaluates at the writer z
+
+Three-part root cause for the "travel geometry count" family (RatRig
+anchor 13a4f812): upstream evaluates the `retract_lift_above/below`
+gate (`GCodeWriter.cpp:633-639`) against `m_pos.z()` — the writer's
+z AT RETRACT TIME (still the previous layer's z; `change_layer` never
+moves z). Mine gated on the NEW layer z:
+- layer .3 vs retract_lift_below .2 → wrongly denied → no lift →
+  XY-first travel instead of GT's Z-lift-first (unclear position).
+
+Fixes:
+1. `defer_layer_change_lift` now schedules with the writer z
+   (`state.writer_z`), which is now maintained per layer (previous
+   layer's z; start-gcode z stays authoritative for layer 0).
+2. `retract_before_layer` (the first-layer `retract_when_changing_layer`
+   path) now defers the lift like upstream `retract()`.
+3. The first-travel eager branch no longer re-evaluates the gate when
+   a lift was already deferred (`first_travel_lift.is_some()`).
+Also: after timelapse g-code, `state.positioned = false`
+(`GCode.cpp:5171-5178` set_current_position_clear(false)) so the next
+travel takes the separate first-position form.
+
+RatRig case: lift/XY/Z-sync/descend sequence now GT-identical.
+ares-core 6785/6785; smoke 81/82; **replay 729 → 735/987**.
+
+NEXT: slowdown feedrate ±0.6% (needs bilateral CoolingBuffer dump),
+M73 cadence, deposition-1 family 21, filament-1-length 16.

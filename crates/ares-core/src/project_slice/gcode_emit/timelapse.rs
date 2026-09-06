@@ -34,6 +34,10 @@ pub(super) fn append_and_track(
     )? {
         state.lifted = z > context.layer.z + f64::EPSILON;
         state.template_lifted = state.lifted;
+        // The timelapse g-code parks the head; upstream marks the writer
+        // position unclear (`GCode.cpp:5171-5178`) so the next travel takes
+        // the separate first-position form.
+        state.positioned = false;
     }
     Ok(())
 }

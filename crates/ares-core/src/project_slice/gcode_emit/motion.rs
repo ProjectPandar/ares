@@ -104,6 +104,10 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     }
     state.current_feedrate = state.options.retraction_feedrate;
     state.retracted = true;
+    // The layer-start retract defers the z-hop like upstream `retract()`
+    // (needs_lift && can_lift → `lazy_lift` above/below gate at the
+    // current writer z, `GCodeWriter.cpp:626-648`).
+    travel::defer_layer_change_lift(state);
 }
 
 #[derive(Clone, Copy)]

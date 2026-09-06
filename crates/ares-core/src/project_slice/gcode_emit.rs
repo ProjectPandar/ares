@@ -177,6 +177,12 @@ pub(super) fn emit(
             precise_layer_z += record_layer_height;
             let layer_z = precise_layer_z as f32;
             let layer_height = layer_z - previous_layer_z;
+            // Upstream's writer z at the layer-change retract is still the
+            // previous layer's z (`change_layer` does not move z); the
+            // start-gcode z remains authoritative for the first layer.
+            if layer_index > 0 {
+                state.writer_z = Some(f64::from(previous_layer_z));
+            }
             previous_layer_z = layer_z;
             let header = format!(
                 "{}\n{}\n",

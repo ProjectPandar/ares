@@ -215,7 +215,7 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         } else if state.retracted
             && first_position
             && state.options.z_hop > 0.0
-            && travel::lift_is_allowed_at(state, state.layer_z)
+            && (first_travel_lift.is_some() || travel::lift_is_allowed_at(state, state.layer_z))
         {
             let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
             if mode == LiftMode::Normal {
