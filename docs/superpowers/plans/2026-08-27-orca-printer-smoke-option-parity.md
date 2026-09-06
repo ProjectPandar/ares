@@ -9152,3 +9152,24 @@ NEXT: vertex-level bilateral dump of inner_offset output for the
 anchor layer (my offset/generate.rs vs Clipper2 InsetPaths via a nix
 patch on get_boundary), then align the offset float-op order (Clipper2
  InflatePaths: normal building in double + scaling round vs my path).
+
+## 2026-09-06 (cont 425): boundary bilateral dump — offset vertex ±1 RULED OUT
+
+New instrument: ORCA_DUMP_BOUNDARY (boundarydump.patch on nix
+result-boundarydump; dumps get_boundary's post-inner_offset ExPolygons
+at BOTH return paths) vs ARES_DUMP_BOUNDARY (Boundary::build, same
+format, post-inner_offset).
+Result for anchor 0e56ebfb: matching layers differ by only ±9 SCALED
+units (9e-6 mm — 100x below print precision). The clipper-offset
+vertex rounding hypothesis is DEAD for this anchor.
+The divergent route waypoint (±1000 scaled = ±1 print milli-unit)
+must come from the waypoint composition: my offset (bbox-center −
+extruder-offset, off-grid float) vs upstream's origin (per-instance
+scaled-int shift, `set_origin(unscale(offset))` GCode.cpp:5385;
+route math quantizes origin via Point::new_scale — int-exact
+round-trip). Also my dump has one EXTRA first-layer boundary build
+GT lacks (spacing 0.2478 vs 0.2593 layer-1 flow) — separate minor.
+NEXT: dump middle_point_offset/vertex_offset inputs+outputs for the
+divergent waypoint (ARES side) + matching GT patch on
+avoid_perimeters_inner's TravelPoint construction; check the
+offset/origin quantization (int-exact round-trip vs my f64 offset).

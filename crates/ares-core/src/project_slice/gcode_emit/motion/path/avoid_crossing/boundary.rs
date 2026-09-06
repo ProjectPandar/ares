@@ -62,6 +62,18 @@ impl Boundary {
         };
         let offset_dis = offset_dis as f64;
         let mut boundary = inner_offset(geometry.layer_slices, offset_dis, scale)?;
+        if let Ok(path) = std::env::var("ARES_DUMP_BOUNDARY") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                for expolygon in &boundary {
+                    let _ = write!(file, "EP");
+                    for point in expolygon.contour().points() {
+                        let _ = write!(file, " ({},{})", point.x(), point.y());
+                    }
+                    let _ = writeln!(file);
+                }
+            }
+        }
         if !geometry.top_surfaces.is_empty() {
             // perimeter_offset = spacing / 2; the diff insets the top
             // surfaces by 1.2 * perimeter_offset.
