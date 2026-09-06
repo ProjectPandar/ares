@@ -117,9 +117,6 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
     let during = (state.options.retraction_feedrate / 60.0 * retraction_distance / wipe_speed)
         .min(remaining);
     let before = state.options.retraction_length - during;
-    // `Extruder::retract` gating: an outstanding retraction (seeded from
-    // the machine start G-code or a prior retract) emits nothing.
-    let before = extrusion::gated_retract_delta(state, before);
     if before > f64::EPSILON {
         let retract = extrusion::coordinate(state, -before);
         output.extend_from_slice(

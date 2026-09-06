@@ -354,35 +354,3 @@ pub(super) fn append_flavor_preamble(
         }
     }
 }
-
-/// Seed the outstanding retraction amount from the rendered machine start
-/// G-code's last negative E move (`process_custom_gcode`, GCode.cpp:3898-
-/// 3921 syncs the processor-parsed `e_retracted` into the writer extruder).
-/// Amount only — travel/retract flow decisions stay untouched; the
-/// `Extruder::retract` max(0, ·) gating suppresses the redundant emission.
-pub(super) fn sync_retraction_from_start(state: &mut super::motion::EmitState, output: &[u8]) {
-    let text = std::str::from_utf8(output).unwrap_or("");
-    let mut retracted_amount = 0.0f64;
-    for line in text.lines().rev() {
-        let Some(e_index) = line.find('E') else {
-            continue;
-        };
-        let tail = &line[e_index + 1..];
-        let value: f64 = tail
-            .chars()
-            .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == '-' || *c == '+')
-            .collect::<String>()
-            .parse()
-            .unwrap_or(0.0);
-        if value < 0.0 {
-            retracted_amount = -value;
-            break;
-        }
-        if value > 0.0 {
-            break;
-        }
-    }
-    if retracted_amount > 0.0 {
-        state.retracted_amount = retracted_amount;
-    }
-}

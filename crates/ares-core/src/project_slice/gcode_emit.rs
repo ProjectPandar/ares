@@ -93,7 +93,6 @@ pub(super) fn emit(
         spiral_vase: traversal.resolved.views.full.process.print.spiral_mode.0,
         ..Default::default()
     };
-    machine::sync_retraction_from_start(&mut state, &output);
     let emit_labels = traversal
         .resolved
         .views

@@ -85,8 +85,7 @@ pub(super) fn end_layer_for_timelapse(output: &mut Vec<u8>, state: &mut EmitStat
 /// Configured retraction at the start of the first layer — matches the
 /// GCodeWriter `retract()` formatting (`GCodeWriter.cpp`).
 pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) {
-    // `Extruder::retract` gating — an outstanding retraction emits nothing.
-    let length = extrusion::gated_retract_delta(state, state.options.retraction_length);
+    let length = state.options.retraction_length;
     if length <= 0.0 {
         return;
     }

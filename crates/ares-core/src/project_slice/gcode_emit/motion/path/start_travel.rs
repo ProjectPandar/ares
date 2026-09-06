@@ -321,14 +321,13 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             output.extend_from_slice(format!("G1 Z{}\n", format_z(z)).as_bytes());
             state.scarf_z = slope_start_z;
         }
-        // `Extruder::unretract` cpp:98: `dE = m_retracted + m_restart_extra`
-        // — recovers the full outstanding amount (including a machine-seeded
-        // retraction), then zeroes both.
-        let retraction_length = state.retracted_amount;
+        let retraction_length = state.options.retraction_length;
         let unretract = extrusion::coordinate(
             state,
             retraction_length + state.options.retract_restart_extra,
         );
+        // `Extruder::unretract()` zeroes `m_retracted` after the extrude;
+        // `coordinate` only accumulates it for negative deltas.
         state.retracted_amount = 0.0;
         output.extend_from_slice(
             format!(
