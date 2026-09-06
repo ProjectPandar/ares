@@ -8262,3 +8262,19 @@ retract call sites whose interactions need a single-state redesign,
 not incremental gating. Next session: introduce a proper
 `retracted_outstanding` state updated ONLY at retract()/unretract()
 mirroring Extruder.cpp, then re-land.
+
+## 2026-09-06 (cont 358): retract emission sites mapped for the state machine
+
+The Extruder-state refactor map (next session opening task):
+- retract emission sites: retract_and_wipe_with (travel.rs:98+,
+  before-wipe + during-wipe segments), retract_before_layer
+  (motion.rs:88), the start-travel first path; unretract at
+  start_travel.rs:324. Flow flag state.retracted set at 6 sites
+  (travel.rs:24,33,50,73,88; motion.rs:106), cleared at
+  start_travel.rs:341. Design: add retracted_outstanding/restart_extra
+  to EmitState updated ONLY in two Extruder-mirroring helpers
+  (retract(length, extra): to=max(0,length−outstanding), emit if >0,
+  outstanding+=to; unretract(): dE=outstanding+extra, emit, zero both),
+  route all sites through them, seed outstanding from
+  sync_retraction_from_start (amount only). Baseline 669 restored and
+  the summary un-staled.
