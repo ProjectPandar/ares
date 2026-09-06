@@ -8728,3 +8728,14 @@ NEXT: dump my per-layer line set (kind/length/feedrate/time) and the
 GT CoolingBuffer lines (a GT hook in append_gcode) for the Ginger
 layer-1 skirt, diff the line sets to find the segmentation/marking
 delta feeding different totals.
+
+## 2026-09-06 (cont 398): cooling parse logic verified line-for-line
+
+My parse.rs matches CoolingBuffer.cpp:418-436 exactly: SET_SPEED sets
+layer_had_extrusion; adjustable marking = SET_SPEED && !wipe &&
+!dont_slow_down_outer_wall(external); G4 dwell S/P parsing; the
+pre-extrusion exclusion. The line-splitting + sort + slowdown chain
+(slow_down_non_proportional / time_stretch_to_feedrate) is the
+remaining unverified surface — needs the bilateral line-set dump
+(GT hook in append_gcode; my dump in parse) on the Ginger layer-1
+skirt. 398 entries; 703 high-water.
