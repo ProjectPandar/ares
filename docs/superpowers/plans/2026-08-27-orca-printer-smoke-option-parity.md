@@ -8427,3 +8427,13 @@ arithmetic difference needing the vertex-level dump-compare-fix
 cycle for each occurrence. All remaining fleet divergences are this
 class or its E-accumulator cousin. Session arc complete at 703;
 the deep grind continues per-vertex from here.
+
+## 2026-09-06 (cont 372): top-surface flip = monotonic line-start vertex (fill anchor unit)
+
+CoLiDo DIY layer-50: X149.029 (GT) vs 149.030 (mine) is the START
+vertex of a monotonicline top-surface line — the vline x anchor at
+unit level (the same anchor-class as the grid family, on the
+monotonicLINE path). Each remaining flip is its own anchor/vertex
+dump-compare-fix cycle (the established pattern: instrument both
+sides, diff, align one arithmetic detail, case-verify, sweep).
+Session state committed at 703/1001 with 372 archive entries.
