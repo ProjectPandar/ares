@@ -9206,3 +9206,15 @@ out, GCode.cpp:7434-7437) — the wipe decision is purely
 needs_retraction on the routed polyline, matching my gate.
 NEXT: bilateral wipe-path dump (my retract_and_wipe vs upstream
 Wipe::wipe path construction), anchor layer 2 of 0e56ebfb.
+
+## 2026-09-06 (cont 428): epsilon fix cleared the anchor — remaining = M106 fan spam
+
+Post-fix anchor 0e56ebfb: routes/wipes/coordinates ALL match (all 124
+wipes byte-identical; the 166.377/166.376 route lines GONE). Remaining
+263 diff lines = M73 placement + fan spam: mine emits M106 S0 ×2 +
+M106 S255 ×64 vs GT's ×1/×2 — per-layer S0+S255 toggles, suspect the
+role-fan / deferred_role_fans resolution (finish_layer's
+resolve_role_fans or the part-fan re-assertion gate). NEXT: dump
+part_speed/role-fan decisions per layer (my cooling.rs) vs GT's
+CoolingBuffer fan logic; check the `part_speed != self.part_speed`
+gate and the ramp's layer-time input.
