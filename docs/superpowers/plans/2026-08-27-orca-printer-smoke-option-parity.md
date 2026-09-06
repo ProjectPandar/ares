@@ -8112,3 +8112,16 @@ rounded_rectangle_extrusion_spacing). NEXT: bit-compare my flow
 construction inputs vs upstream Flow.cpp for the crosshatch width
 0.45/height 0.2 case (a small unit dump of the constructed Flow on
 both sides at the fill_surface entry).
+
+## 2026-09-06 (cont 347): FLOW dumps — THE TERMINAL NOISE ROOT: f32 vs f64 width
+
+GT flow hex: w=3ee66666 (= 0.449999988, FLOAT), h=3e4ccccd (0.2),
+mm3=3da6bd65. MY dump (f64 fields): w bits = 0.45000000000000001
+(f64!). Upstream Flow stores width/height as FLOAT and computes
+mm3_per_mm FROM the f32 values (0.449999988 ≠ 0.45 at 2.7e-8 relative
+→ mm3 drifts → E boundary flips accumulate). MY Flow keeps f64
+width/height — the entire mm3 chain differs in the last bits. FIX:
+round width/height to f32 at Flow construction (or compute mm3 from
+the f32-rounded inputs) — upstream Flow.hpp: `float m_width,
+m_height`. This is likely worth a large fleet jump (the E-flip family
+across sparse/inner/bottom).

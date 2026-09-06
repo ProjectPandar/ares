@@ -179,6 +179,18 @@ pub(in crate::project_slice) fn generate_layer(
     let object_reference = object_center(object_slices);
 
     for fill in grouped.surface_fills {
+        if let Ok(path) = std::env::var("ARES_DUMP_FLOW") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                let _ = writeln!(
+                    file,
+                    "FLOW w={:016b} h={:016b} mm3={:016b}",
+                    fill.params.flow.width.to_bits(),
+                    fill.params.flow.height.to_bits(),
+                    fill.params.flow.mm3_per_mm.to_bits()
+                );
+            }
+        }
         if let Ok(path) = std::env::var("ARES_DUMP_SURF") {
             use std::io::Write;
             if let Ok(mut file) = std::fs::OpenOptions::new()
