@@ -7937,3 +7937,16 @@ edge family as inner-wall/bottom. CONCLUSION: the sparse-family
 residuals (gyroid 28 / grid 26 / cubic leftover) largely share the
 wall-vertex micro-edge root; the next lever is the perimeter vertex
 chain, not the fill generators.
+
+## 2026-09-06 (cont 333): inner-wall family = loop split start ±1 width
+
+Creality Hi 0.2 (0243ec85, 1188 diffs): the FIRST inner wall on layer
+1 starts at X133.768 (mine) vs X133.518 (GT) — exactly +0.25 = ONE
+LINE WIDTH; my wall is 0.25mm longer (E .07028 vs .06802, same
+ratio). Same +0.088/+0.25 offsets on the second wall loop. This is
+the wall-LOOP SPLIT/SEAM START selection (seam_position=aligned)
+differing by one width segment on 0.2-nozzle prints — the inner-wall
+family (24) = the seam/loop-start placement chain, NOT a micro-edge.
+NEXT: dump the seam candidate / loop split for layer 1 of this
+fixture (GT ORCA_DUMP_SEAM exists; add the loop-split start dump on
+both sides) and compare the seam pick for the 0.25-offset loops.
