@@ -7961,3 +7961,15 @@ Aligning needs a matching candidate dump on my side (my seam module
 dumps a different stage) — next session adds the candidate-level dump
 to seam_placement and diffs the per-layer candidate sets + the chosen
 split for the +0.25-offset loops.
+
+## 2026-09-06 (cont 335): seam candidates IDENTICAL; visibility score differs (1.0 vs 1.3159)
+
+My PERIM/C dump exists (interleaved with LAYER/COLL): candidate
+POSITIONS match GT exactly (4.725 corners, 100 perimeters). The
+difference: my vis=1.31588709 vs GT vis=1.00000000 on every corner —
+the VISIBILITY SCORE has an extra factor (my seam score chain), and
+the seam CHOICE lands one vertex off (split 133.768 vs 133.518 = one
+width along the loop) → the +0.25 wall-start family. NEXT: align the
+visibility score computation (find where my score multiplies the
+extra ~1.316 factor — likely a normalized visibility vs raw ratio)
+then verify the pick flips to GT's vertex.
