@@ -8403,3 +8403,16 @@ crosshatch 1. The gyroid generator itself is believed exact (cont
 331-332); its divergences ride on the WALL vertex chain feeding the
 wipe paths. Next levers by size: gyroid/wall micro-edge 28, cubic E
 flips 19, bottom 24 (retract parked), inner 22 (slowdown feed).
+
+## 2026-09-06 (cont 370): remaining families ALL boundary flips at 703
+
+Sampled: gyroid Kobra 3 Max (10 lines = wipe-vertex ±1e-3 + E±1e-5);
+top-surface CoLiDo DIY (4 lines = single X ±1e-3 flip at layer 50);
+internal-solid 6 similar. Every remaining fleet family (sparse 48,
+bottom 24, inner 22, skirt 18, solid 6, top 2) is boundary-level
+flips rooted in the WALL/perimeter vertex micro-edge chain — the
+1e-16 accumulation floor documented at cont 349 plus the perimeter
+vertex rounding. The structural work remaining: (1) the perimeter
+vertex chain (the deepest grind), (2) the retract state machine
+(parked with full spec), (3) the slowdown time model, (4) the four
+feature options. Session stands at 496→703 (+207).
