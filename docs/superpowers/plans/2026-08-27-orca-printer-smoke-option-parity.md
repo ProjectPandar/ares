@@ -7900,3 +7900,16 @@ get_scalar sin/cos chain, to_coord/to_Point with offs);
 (3) wire into fill/gyroid.rs replacing the analytic wave generator,
 keeping the polyline simplify(tolerance) + downstream clip. Target:
 the 28-32 gyroid fleet printers.
+
+## 2026-09-06 (cont 330): PIVOTAL — marchsq NOT needed; gyroid fleet = analytic path
+
+`gyroid_optimized` defaults to FALSE (PrintConfig.cpp:3014) — the
+standard fleet's gyroid uses the ANALYTIC wave generator which my
+gyroid.rs already ports; the marchsq port is only needed for the
+opt-in experimental option. The gyroid ±1-quantum fleet diffs come
+from the analytic chain's float details: next candidates = the
+sampling tolerance (PatternTolerance/SCALED_SPARSE_INFILL_RESOLUTION
+paths in make_one_period's step count) and the f() asin/sin/cos
+evaluation order. Fix path: compare my make_one_period's point count
+per period against GT on a failing fixture (dump both polylines pre-
+clip), then align the tolerance/step arithmetic.
