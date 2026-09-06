@@ -8345,3 +8345,17 @@ Correct approach if ever needed: re-derive per-segment scaled lengths
 AT the emission site from quantized axis coords (round(local/1e-6))
 — or carry the scaled domain through clip/overhang. Not worth it for
 the current 1e-16 floor; parked.
+
+## 2026-09-06 (cont 365): Ginger G1 (inner-wall 11) = slowdown feed + E flips
+
+Ginger G1 1.2 (slow_down_for_layer_cooling=1, target 50s, min 1):
+139 diffs = TWO components — (a) cooling slowdown feed F843 (GT) vs
+F629 (mine) throughout (the time-estimator → slowdown factor family,
+matching the feed family identified at cont 278 — the Ginger's huge
+walls at 1.2 nozzle make the layer time land on a different slowdown
+bracket), and (b) E±1e-5 flips (E2.07182/3 at line 36 — the same
+noise family). The slowdown family needs the exact motion-planner
+time model (accel/jerk integration per the CoolingBuffer) — a major
+grind comparable to the monotonic chain. Remaining families at 669:
+sparse 96 (E-flip noise), bottom 24 (retract, parked), inner 11-22
+(slowdown feed), skirt 16 (boundary flips).
