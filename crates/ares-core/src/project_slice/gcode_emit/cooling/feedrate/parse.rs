@@ -8,6 +8,16 @@ const EXTERNAL_PERIMETER: &[u8] = b";_EXTERNAL_PERIMETER";
 const WIPE: &[u8] = b";_WIPE";
 
 pub(super) fn layer(gcode: &[u8], state: &mut State) -> Vec<CoolingLine> {
+    if let Ok(path) = std::env::var("ARES_DUMP_CLINES") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "CLLAYER");
+        }
+    }
     let mut lines: Vec<CoolingLine> = Vec::new();
     let mut active_speed_modifier = None;
     let mut layer_had_extrusion = false;

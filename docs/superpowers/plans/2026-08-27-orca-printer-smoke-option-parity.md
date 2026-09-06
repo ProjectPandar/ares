@@ -8779,3 +8779,17 @@ per-layer invocation gate differs — upstream processes EVERY layer).
 NEXT: dump the layer id with each batch (add layer= to CL) and
 count layers per side; if mine skips layers, find the invocation
 gate delta in feedrate.rs.
+
+## 2026-09-06 (cont 402): my cooling processes 17 layers — GT ~40 (gate delta)
+
+With layer markers: MY cooling pass runs on 17 of 50 layers (159
+lines); GT's 377 lines ≈ 40 layers at the same per-layer rate. The
+COOLING INVOCATION GATE differs — mine skips ~2/3 of layers. Since
+the skirt divergence is layer 1 (processed by both), the factor
+difference there is still the line-set/slowdown arithmetic, but the
+missing layers mean other layers may also diverge (unprocessed =
+no slowdown applied where GT slows). NEXT: (1) find the layer gate —
+where feedrate.rs is invoked per layer and what condition skips
+layers (likely: only layers with slowdown candidates or
+fan_changes); (2) compare layer-1 line sets specifically (first
+CLLAYER block vs GT head).
