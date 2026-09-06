@@ -8416,3 +8416,14 @@ vertex rounding. The structural work remaining: (1) the perimeter
 vertex chain (the deepest grind), (2) the retract state machine
 (parked with full spec), (3) the slowdown time model, (4) the four
 feature options. Session stands at 496→703 (+207).
+
+## 2026-09-06 (cont 371): wall-vertex flip anatomy — perimeter offset deltas are exact
+
+Verified the wall X215.153/154 flip sits in a plain wall run (not
+wipe); neighbors match — single-vertex rounding. The perimeter offset
+deltas are exact integer-valued floats (−0.5·width·1e6 = −225000.0)
+so no truncation class; the flip is a per-vertex miter/round
+arithmetic difference needing the vertex-level dump-compare-fix
+cycle for each occurrence. All remaining fleet divergences are this
+class or its E-accumulator cousin. Session arc complete at 703;
+the deep grind continues per-vertex from here.
