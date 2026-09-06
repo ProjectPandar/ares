@@ -8308,3 +8308,14 @@ modeling m_restart_extra as genuinely per-call state across ALL
 retract sites with writer-level A/B against the GT writer output
 BEFORE any fleet sweep — do not land without a dedicated
 writer-parity harness.
+
+## 2026-09-06 (cont 362): wall_generator=arachne gap scoped — pipeline wiring needed
+
+The arachne crate EXISTS (beading/skeletal/trapezoidation/wall_toolpaths,
+unit-tested) but is NOT wired into the project_slice perimeter
+dispatch: PerimeterDispatch::Arachne → unsupported("wall_generator")
+(classic/preflight.rs:103). Wiring it = a milestone-scale integration
+(PerimeterGenerator input → wall_toolpaths → the same downstream
+wall/loop chain as classic), not a quick fix. Same class as the other
+three option gaps (raft_layers, adaptivecubic, octagramspiral). These
+four remain the feature-level work after the noise-floor grind.
