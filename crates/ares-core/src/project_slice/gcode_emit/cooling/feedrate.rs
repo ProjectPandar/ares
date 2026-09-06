@@ -69,8 +69,54 @@ impl CoolingLine {
 
 pub(super) fn rewrite_layer(output: &mut Vec<u8>, layer_start: usize, state: &mut State) -> f32 {
     let layer = output.split_off(layer_start);
+    if let Ok(path) = std::env::var("ARES_DUMP_PRECOOLING") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = file.write_all(b"=== LAYER ===\n");
+            let _ = file.write_all(&layer);
+        }
+    }
     let mut lines = parse::layer(&layer, state);
     let layer_time = slowdown::apply(&mut lines, state.config);
+    if let Ok(path) = std::env::var("ARES_DUMP_PRECOOLING") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = file.write_all(b"=== SLOWDOWN ===\n");
+            for line in &lines {
+                let _ = writeln!(
+                    file,
+                    "kind={:x} len={:.4} feed={:.4} time={:.5} slowed={} start={} end={}",
+                    line.kind,
+                    line.length,
+                    line.feedrate,
+                    line.time,
+                    line.slowed,
+                    line.start,
+                    line.end
+                );
+            }
+        }
+    }
+    let pre_append = output.len();
     rewrite::append(output, &layer, &mut lines);
+    if let Ok(path) = std::env::var("ARES_DUMP_PRECOOLING") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = file.write_all(b"=== POSTCOOLING ===\n");
+            let _ = file.write_all(&output[pre_append..]);
+        }
+    }
     layer_time
 }

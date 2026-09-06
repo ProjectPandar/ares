@@ -8994,3 +8994,28 @@ remaining: `G1 F2544` vs GT `G1 F2560` (slowdown feedrate, ±0.6%)
 Σtime) must differ slightly from GT — needs a bilateral CoolingBuffer
 per-line dump patch (length/feedrate/time per line + layer total)
 to diff. Fleet replay held 712/987 (gated by the slowdown F).
+
+## 2026-09-06 (cont 418): zero-length F-collision drop left a stray newline
+
+The Z-F fix exposed a latent cooling-rewrite bug: for a non-adjustable
+F-bearing line whose F equals the current feedrate AND whose length is
+0 (the duplicated-eager-lift `G1 Z.65 F18000`), my length==0 path
+emitted `command[value_end..]` — which is the trailing "\n" (the
+command slice runs to source.len(), including the line terminator) →
+stray blank line. Upstream drops the complete line including the
+newline (`CoolingBuffer.cpp:911-913`: `end = line_end`). Fixed by
+emitting nothing on that path.
+
+Instruments added (env-gated): ARES_DUMP_PRECOOLING (pre/post cooling
+per layer + per-line kind/len/feed/time), ARES_DUMP_REWRITE (per
+rewrite iteration), ARES_DUMP_EBLOCKS (E-only block times).
+
+Fleet replay: **712 → 729/987 (+17)**; smoke 81/82 (bottom_hilbert
+known). Fleet high-water ≈ 730/1001-equivalent.
+
+NEXT (gated families, in order):
+1. Slowdown feedrate ±0.6% (2544 vs 2560) — needs bilateral
+   CoolingBuffer per-line Σtime dump (GT patch on the times build) to
+   diff the layer-time inputs. Unblocks travel-feed family remnants.
+2. M73 cadence off-by-3-lines placement (g1_times_cache attribution).
+3. deposition layer-1 20 + filament-1 length 16 families.

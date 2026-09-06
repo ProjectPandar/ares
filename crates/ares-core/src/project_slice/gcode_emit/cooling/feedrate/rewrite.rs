@@ -16,6 +16,17 @@ pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLin
             output.extend_from_slice(&gcode[position..line.start]);
         }
         let source = &gcode[line.start..line.end];
+        if std::env::var("ARES_DUMP_REWRITE").is_ok() {
+            eprintln!(
+                "RW start={} end={} kind={:x} len={:.4} slowed={} src={:?}",
+                line.start,
+                line.end,
+                line.kind,
+                line.length,
+                line.slowed,
+                String::from_utf8_lossy(&source[..source.len().min(40)])
+            );
+        }
         if line.kind & TYPE_EXTRUDE_END != 0 {
             position = line.end;
             continue;
@@ -46,7 +57,8 @@ pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLin
                 continue;
             }
             if line.length == 0.0 {
-                output.extend_from_slice(&command[value_end..]);
+                // Upstream drops the complete line including its newline
+                // (`CoolingBuffer.cpp:911-913`: `end = line_end`).
                 position = line.end;
                 continue;
             }
