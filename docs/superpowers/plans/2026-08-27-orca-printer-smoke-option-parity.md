@@ -9135,3 +9135,20 @@ NEXT (the big rock): bilateral clipper-offset vertex dump — pin WHERE
 the ±1 first appears (slicing? offsetting? perimeter generation?) on
 the deposition-1 anchor (0e56ebfb, wall corner 166.377/166.376) and
 align the float-op order with upstream ClipperLib for that stage.
+
+## 2026-09-06 (cont 424): ±1 vertex birthplace pinned — clipper-offset boundary vertices
+
+Deposition-1 anchor's "wall hook" re-read: the divergent points are a
+ROUTED TRAVEL (start-nudge (166.376,104.295) + waypoint
+(166.376,104.376) → outer-wall seam (166.79,104.79)); the waypoint is
+an inner_offset(lslices, 1.5*spacing) boundary vertex — the ±1 is born
+in MY clipper offset vertex rounding vs upstream Clipper2. Same class
+feeds travel-geometry (16/595 n-mismatches via grazing flips).
+
+Status at turn end: ares-core 6785/6785; smoke 81/82 (hilbert known);
+replay 757/987; HEAD e45051e7 (pushed).
+
+NEXT: vertex-level bilateral dump of inner_offset output for the
+anchor layer (my offset/generate.rs vs Clipper2 InsetPaths via a nix
+patch on get_boundary), then align the offset float-op order (Clipper2
+ InflatePaths: normal building in double + scaling round vs my path).
