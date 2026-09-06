@@ -92,3 +92,14 @@ pub(super) fn speed(output: &mut Vec<u8>, feedrate: f64, properties: PathPropert
         .as_bytes(),
     );
 }
+
+/// `Extruder::retract` (Extruder.cpp:77) emission gating: the delta to
+/// actually emit is `max(0, requested − m_retracted)`. Pure computation —
+/// the caller emits through `coordinate`, whose negative-delta branch
+/// registers the outstanding amount.
+pub(in crate::project_slice::gcode_emit) fn gated_retract_delta(
+    state: &EmitState,
+    requested: f64,
+) -> f64 {
+    (requested - state.retracted_amount).max(0.0)
+}

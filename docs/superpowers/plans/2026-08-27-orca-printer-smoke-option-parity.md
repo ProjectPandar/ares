@@ -8292,3 +8292,16 @@ retracted_amount INTO retracted_outstanding (single field, updated
 only in the two helpers, wipe during-segments registered through the
 helper), seed from sync_retraction_from_start, then the full case
 matrix + sweep. Do not land incrementally.
+
+## 2026-09-06 (cont 360): unified Extruder retract gating LANDED — no regressions
+
+Fourth landing with the unified design: gated_retract_delta (pure
+max(0, requested − retracted_amount)) gates the before-wipe retract
+(travel.rs) and retract_before_layer (motion.rs); the unretract
+recovers retracted_amount + restart_extra (start_travel.rs);
+sync_retraction_from_start seeds retracted_amount from the machine
+start G-code's last negative E (amount only — no flow-flag changes).
+Case matrix: MyToolChanger 6→1, Creality 0, Neptune-cubic 0,
+Blocks-S100 0, Kobra 27→24, Ginger 139 (its own prior state). lib
+6754/6754, smoke 80/81. The travel decisions untouched — no path
+coupling. Sweep next.
