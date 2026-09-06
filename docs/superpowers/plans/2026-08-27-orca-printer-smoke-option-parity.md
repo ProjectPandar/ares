@@ -8125,3 +8125,16 @@ round width/height to f32 at Flow construction (or compute mm3 from
 the f32-rounded inputs) — upstream Flow.hpp: `float m_width,
 m_height`. This is likely worth a large fleet jump (the E-flip family
 across sparse/inner/bottom).
+
+## 2026-09-06 (cont 348): CORRECTION — flow bits MATCH (binary padding misread)
+
+Re-decoded the dumps: my width f32 bits = 0x3EE66666 (= GT), height =
+0x3E4CCCCD (= GT), mm3 f64 = 0x3FDA6BD654000000 = the widened f32
+3DA6BD65 (= GT's float(mm3) widened) — the ENTIRE flow chain is
+BIT-IDENTICAL (my earlier "f64 width" was a binary-padding misread).
+The E drift is downstream: next suspects = the flow_ratio multiply
+(materialized_flow: mm3 *= flow_ratio, f64×f64 — upstream applies
+with_flow_ratio differently: with_cross_section(mm3·ratio) which
+RE-DERIVES width from the new area!) or the gcode_emit E arithmetic.
+NEXT: bit-compare the POST-ratio mm3 on both sides (GT dump is
+pre-ratio; the gcode E values imply the effective mm3).
