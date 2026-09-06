@@ -9087,3 +9087,24 @@ Fleet replay: **735 → 757/987 (+22)**; ares-core 6785/6785; smoke
 81/82 (bottom_hilbert known). ~230 remaining failures; classifier:
 ~12 dominated by numeric-mask ulp diffs, rest structural (largest
 cases 3-6k diff lines — geometry families).
+
+## 2026-09-06 (cont 422): avoid-crossing after_skirt skip removed; router-boundary gap pinned
+
+reduce_crossing_wall family (anchor 06d991de): my `route()` blanket-
+skipped all post-skirt travels ("after_skirt → direct"); upstream
+only marks SPECIFIC travels `use_external_mp_once` (6 call sites,
+GCode.cpp:758/1114/1179/1394/3306/5383) and still ROUTES them —
+against the EXTERNAL boundary (get_boundary_external + world-space
+origin translation, AvoidCrossingPerimeters.cpp:1548-1585).
+Removed the blanket skip (no fleet change: 757/987 held; the
+internal-boundary router gives identical results where both apply).
+
+Pinned with ARES_DEBUG_ROUTE: the router FIRES for the anchor's
+between-objects travel and returns a 3-point path, but via a
+DIFFERENT corridor than GT (mine: 1 waypoint at the target corner;
+GT: 2 waypoints around the first object's left side) — the external
+boundary port (get_boundary_external/init_boundary for the once-
+flag travels) is the missing piece. That's the next slice for the
+travel-geometry family (25 first-divergences).
+
+Fleet: 757/987; ares-core 6785/6785; smoke 81/82.
