@@ -8611,3 +8611,15 @@ deep-pipeline change (polyline chain → clip → overhang → emission
 all in scaled domain), not an emission-site patch. Fifth failed
 landing in this family; the design note at cont 387 stands as the
 only safe path.
+
+## 2026-09-06 (cont 389): gyroid E-flip magnitude → internal coord 4th-decimal diff
+
+The flipped segment (215.516→216.586, E.04466/7): ΔE 1e-5 at
+mm3_per_mm≈0.0327 → internal length diff ≈1.5e-4mm = 150 scaled
+units → the gyroid generator's internal mm coords differ at the 4th
+decimal (print agrees at 3). Source: the remaining ulp-level
+differences in the analytic wave chain (asin/a/r evaluation orders
+beyond the cont-331 sqrt fix; e.g. the make_wave terminal point or
+the period replication adds). Fix path: bit-compare the wave point
+stream against a GT gyroid dump (new instrument in
+make_gyroid_waves) — the last un-instrumented generator.
