@@ -7791,3 +7791,15 @@ family), daf4ca69 unchanged 110 — its ±100-unit deltas come from
 elsewhere (next: dump the daf4ca69 SRC/expanded contour pre-rotation
 to see whether the offset input polygon itself differs). fill
 1270/1270, smoke 80/81.
+
+## 2026-09-06 (cont 320): scale_ truncation is a no-op (f32 rounds tiny epsilons); boundary ±1 re-analysis
+
+Analysis: for all realistic spacing values the f32 rounding of the
+untruncated delta equals the truncation (|delta| < 2^24, fractional
+epsilon rounds away) — the scale_ change is a no-op, and the ±1 BOUND
+shift between the two daf4ca69 dumps came from the intervening cubic
+shift fix changing WHICH sections interleave, not the boundary
+geometry itself. The remaining cubic ±1/±100-unit deltas need a fresh
+same-build A/B: dump B + I + SRC from ONE build and compare section-
+aligned. The per-family grind continues (cubic 57, gyroid 28, grid 26
+at the 622 sweep).
