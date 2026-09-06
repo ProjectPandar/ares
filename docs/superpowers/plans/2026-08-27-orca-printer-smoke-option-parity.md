@@ -8684,3 +8684,19 @@ apply gpts.patch, sed the patched 170-200 range to see the true
 placement; if fuzz misplaced it, use the exact 174 anchor with NO
 fuzz (patch --fuzz=0 in a preTest nix patchPhase or match more
 context lines from the ORIGINAL line numbers).
+
+## 2026-09-06 (cont 395): GT GPTS LIVE — wave lattice BIT-IDENTICAL at 17 digits
+
+GT ORCA_DUMP_GPTS landed (patch built via awk-generated diff — the
+hand-written hunks failed on a trailing space at the "// piecewise"
+line; RECIPE: always generate GT patches with `diff -u` on modified
+copies, never hand-write). GT dumps the INITIAL π/2 lattice (break
+before refinement): first block (0, 2.37046522580304231),
+(π/2, 1.32597007141019096), (π, 0.771127...), (3π/2, 1.81562...),
+(2π, 2.37046522580304231) — my refined stream contains these EXACT
+values at the same x, bit-identical at 17 digits. The gyroid f()
+chain is EXACT. The E-flips come from downstream (per cont 332 the
+flipped segment is a WIPE vertex — wall chain) or the refinement
+midpoint decisions; the f() itself is ruled out. NEXT: point the
+investigation at the wall polyline that feeds the wipe (the known
+wall-vertex family), NOT the gyroid generator. 395 entries; 703.
