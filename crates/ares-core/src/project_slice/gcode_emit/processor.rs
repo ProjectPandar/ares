@@ -325,6 +325,13 @@ impl Estimate {
                     cumulative + trailing_delay,
                     blocks.len()
                 );
+                for ((id, time), block) in cache.iter().zip(blocks.iter().filter(|b| !b.e_only)) {
+                    let _ = writeln!(
+                        file,
+                        "line {} {:.6} dist {:.6} accel {:.3}",
+                        id, time, block.distance, block.acceleration
+                    );
+                }
             }
         }
         Self {

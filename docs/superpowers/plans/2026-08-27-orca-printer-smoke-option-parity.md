@@ -8899,3 +8899,17 @@ likely in the many F50 wipe segments or the 687mm travels
 dump (GT hook in TimeMachine + my scheduled_times debug print) on
 the Ginger — diff the first 50 block times to find which motion
 class (travel vs wipe vs extrusion) over-accumulates.
+
+## 2026-09-06 (cont 413): per-line time dumps LIVE — divergence at LINE 2 (accel 500 vs 2500)
+
+GT's existing dump.patch instrument gives per-line cumulative times
+("line N cum entry cruise exit dist accel", 275 lines, total 640.8);
+my ARES_DUMP_TIMES extended to per-cache-entry lines (290 blocks,
+total 815.7). FIRST DIVERGENCE AT LINE 2 (the 2.1mm purge move): GT
+cum=0.428s accel=500 cruise=12; MINE cum=5.065s accel=2500. The
+acceleration CLASS for that move differs (GT assigns 500, mine 2500)
+— and my cumulative already +4.6s at line 2 (likely a missing
+prepare-time exclusion in the per-line cache or extra blocks before
+it). NEXT: (1) align the per-move acceleration-class assignment (GT
+500 = likely the default accel for E-only/wipe moves at that point);
+(2) check which pre-line-2 blocks GT excludes from the cumulative.
