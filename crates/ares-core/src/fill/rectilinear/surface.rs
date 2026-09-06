@@ -49,6 +49,18 @@ fn fill_surface(
     scale: CoordinateScale,
     monotonic: bool,
 ) -> Result<MonotonicFillOutput, ClipperError> {
+    if let Ok(path) = std::env::var("ARES_DUMP_MONOALL") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(
+                file,
+                "MONOALL monotonic={monotonic} spacing={} density={} layer={}",
+                params.spacing,
+                params.density,
+                params.layer_index
+            );
+        }
+    }
     let direction = infill_direction(params);
     let (outer_offset, inner_offset) = scaled_offsets(scale, params.overlap, params.spacing)?;
     let mut slice =

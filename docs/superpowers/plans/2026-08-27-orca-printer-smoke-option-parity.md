@@ -8479,3 +8479,12 @@ a different params path (density/width-derived spacing) — the MONO
 hook site captured only the sparse-side call. NEXT: hook the dump at
 the monotonic surface entry (all calls) or dump per-call spacing to
 catch the 0.362 one. 376 entries; session state at 703 unchanged.
+
+## 2026-09-06 (cont 377): MONOALL instrument — layer-49 top call spacing 0.35708
+
+ARES_DUMP_MONOALL at the monotonic surface entry captures ALL calls:
+layer-49 (0-based, = printed layer 50) top surface = monotonic=true
+spacing=0.3570796 density=1. The 0.362 observed line delta includes
+skipped short lines; the true grid = 0.35708. The flip is sub-unit
+in this chain (align residue / boundary clip). Instrument committed
+for the GT-side comparison when needed. 377 entries; 703.
