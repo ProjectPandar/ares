@@ -7845,3 +7845,14 @@ the ±1 lives in my do_square tangent arithmetic vs upstream's DoSquare.
 NEXT: compare my do_square's two vertex formulas against upstream
 ClipperOffset::DoSquare (both push two points per corner — verify the
 tangent sign/order and the second point's normal pair j/k selection).
+
+## 2026-09-06 (cont 325): DoSquare formulas verified identical; next = rotation A/B
+
+DoSquare/DoMiter/unit_normal/Round/fixed_round all verified formula-
+identical against upstream clipper.cpp. The ±1-outward pattern on
+every SRC vertex also fits a 1-unit delta difference OR a rotation
+difference on identical pre-rotation polygons. NEXT: instrument the
+EXPANDED polygon PRE-rotation (dump in fill_surface before
+generate_family) and compare against a GT pre-rotation dump (new
+instrument in ExPolygonWithOffset's ctor after offset) to split the
+offset vs rotation hypotheses.
