@@ -4,6 +4,7 @@ use crate::{Nullable, OrcaFloat};
 mod extruder_offset;
 mod filament_end;
 mod filament_start;
+mod filament_stats;
 mod flow_ratio;
 mod layer_placeholders;
 mod object_labels;

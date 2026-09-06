@@ -8958,3 +8958,17 @@ fleet replay in ~7s (debug, 987 fixtures). Current: **700/987**.
 Top failure families (first-divergence detail): travel feed 32,
 travel geometry count 31, deposition layer-1 20, filament-1 length
 16, deposition layer-17 19.
+
+## 2026-09-06 (cont 416): per-filament cost line suppression (GCode.cpp:2349-2368)
+
+Replay summary exposed: my footer emitted "; filament cost = 0.00"
+unconditionally; upstream appends the per-extruder [g]/cost values
+only when weight/cost > 0 (zero-fill for skipped slots, whole line
+drops when no extruder contributed — `append` GCode.cpp:2336-2346).
+Ported to `append_filament_stats` (finish.rs) incl. the sparse
+zero-fill join. Pinned by `unset_cost_omits_per_filament_cost_line`.
+
+Fleet replay: **700 → 712/987** (+12). Next family: travel feed
+differs 32 + travel geometry count 31 — GT z-hop travels carry
+acceleration "4000"/"6000"/"7000" (per-printer travel-accel M204
+emit on travels) that mine lacks.

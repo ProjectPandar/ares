@@ -172,8 +172,11 @@ pub(super) fn append_filament_stats(
     let filament = &traversal.resolved.views.full.filament.gcode;
     let mut used_mm = Vec::with_capacity(filament.filament_diameter.0.len());
     let mut used_cm3 = Vec::with_capacity(filament.filament_diameter.0.len());
-    let mut used_g = Vec::with_capacity(filament.filament_diameter.0.len());
-    let mut costs = Vec::with_capacity(filament.filament_diameter.0.len());
+    // `GCode.cpp:2349-2368`: the [g]/cost values are only appended for
+    // extruders with positive weight/cost; skipped slots fill with `0` and
+    // the whole line drops when no extruder contributed.
+    let mut used_g = vec![None; filament.filament_diameter.0.len()];
+    let mut costs = vec![None; filament.filament_diameter.0.len()];
     let mut total_weight = 0.0;
     let mut total_cost = 0.0;
     for (index, diameter) in filament.filament_diameter.0.iter().enumerate() {
@@ -195,24 +198,41 @@ pub(super) fn append_filament_stats(
             .0;
         let weight = volume * density * 0.001;
         let material_cost = weight * cost * 0.001;
-        total_weight += weight;
-        total_cost += material_cost;
         used_mm.push(format!("{length:.2}"));
         used_cm3.push(format!("{:.2}", volume * 0.001));
-        used_g.push(format!("{weight:.2}"));
-        costs.push(format!("{material_cost:.2}"));
+        if weight > 0.0 {
+            total_weight += weight;
+            used_g[index] = Some(format!("{weight:.2}"));
+            if material_cost > 0.0 {
+                total_cost += material_cost;
+                costs[index] = Some(format!("{material_cost:.2}"));
+            }
+        }
     }
-    output.extend_from_slice(
-        format!(
-            "; filament used [mm] = {}\n; filament used [cm3] = {}\n; filament used [g] = {}\n; filament cost = {}\n",
-            used_mm.join(", "),
-            used_cm3.join(", "),
-            used_g.join(", "),
-            costs.join(", "),
-        )
-        .as_bytes(),
+    let mut stats = format!(
+        "; filament used [mm] = {}\n; filament used [cm3] = {}\n",
+        used_mm.join(", "),
+        used_cm3.join(", "),
     );
+    if let Some(grams) = join_sparse(&used_g) {
+        stats.push_str(&format!("; filament used [g] = {grams}\n"));
+    }
+    if let Some(costs) = join_sparse(&costs) {
+        stats.push_str(&format!("; filament cost = {costs}\n"));
+    }
+    output.extend_from_slice(stats.as_bytes());
     (total_weight, total_cost)
+}
+
+/// Joins per-extruder optional values like upstream's `append` zero-fill
+/// (`GCode.cpp:2336-2346`); returns `None` when no extruder contributed.
+fn join_sparse(values: &[Option<String>]) -> Option<String> {
+    let last = values.iter().rposition(Option::is_some)?;
+    let parts = values[..=last]
+        .iter()
+        .map(|value| value.clone().unwrap_or_else(|| "0".into()))
+        .collect::<Vec<_>>();
+    Some(parts.join(", "))
 }
 
 fn append_template(
