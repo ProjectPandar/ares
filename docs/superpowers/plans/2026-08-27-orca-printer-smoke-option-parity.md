@@ -8765,3 +8765,17 @@ upstream must create more non-zero lines per layer (marker comment
 lines TYPE_SET_TOOL/fan starts etc., or the per-adjustment splits).
 NEXT: histogram the kind values on both sides (kind counts by value)
 to see WHICH line kinds account for the 218 extra GT lines.
+
+## 2026-09-06 (cont 401): kind histogram — UNIFORM ~4x ratio across kinds
+
+MY: 40×0x120, 37×0x2, 27×0x20, 20×0x160, 17×0x800, 17×0x1e0.
+GT: 146×0x2, 98×0x160, 48×0x1e0, 45×0x120, 22×0x20, 17×0x800.
+The ratios are UNIFORM (~4x on the big kinds, EQUAL on 0x800/0x320)
+— consistent with GT processing ~4x MORE LAYERS through the cooling
+pass (0x800=G4 dwell and 0x320 appear once/equal → per-print
+entries), NOT different per-line splitting. Suspect: my cooling runs
+on fewer layers (e.g. only layers with slowdown candidates, or the
+per-layer invocation gate differs — upstream processes EVERY layer).
+NEXT: dump the layer id with each batch (add layer= to CL) and
+count layers per side; if mine skips layers, find the invocation
+gate delta in feedrate.rs.
