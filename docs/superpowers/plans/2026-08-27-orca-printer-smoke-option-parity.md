@@ -8149,3 +8149,17 @@ writer's per-line += ordering or the role-ratio chain conditions).
 This is the terminal precision floor of the current port — each fix
 from here is an op-order audit of a specific boundary line. Fleet
 669/1001; the archive holds 349 entries of verified roots.
+
+## 2026-09-06 (cont 350): bottom-surface family root = DOUBLE RETRACT at start
+
+MyToolChanger (bottom family): only 6 diffs — after the machine gcode's
+own `G1 E-1.2 F2400 ; retract`, MY emission adds a SECOND retract
+`E-.8 F1800` + lift, then primes only E.8; GT lifts directly and
+primes E1.2 (recovering the machine retract). ROOT: my writer does
+not recognize the machine/start gcode's retract as retraction state —
+it re-retracts (0.8) at the first travel and primes only its own
+amount, leaving E 0.4 off. FIX: parse the machine gcode's E deltas
+(or seed the retraction state from the start-gcode retract) so the
+first-travel retract is skipped and the prime covers the machine
+retract. This likely covers much of the 24-printer bottom family
+(those with retraction in machine start gcode).
