@@ -9193,3 +9193,16 @@ separate root, next anchor point.
 
 Fleet 757/987 (epsilon alone gates nothing); ares-core 6785/6785;
 smoke 81/82.
+
+## 2026-09-06 (cont 427): next anchor — wipe path direction
+
+Post-epsilon-fix, the anchor's remaining route divergence: both sides
+wipe before travel-2, but GT's wipe runs FORWARD down the next wall
+edge ((4790001,4790001)→(4790001,4730001), straight) while mine walks
+a diagonal (4712727,4769295) — the wipe path's consumed segment /
+direction selection differs (the wall gcode itself matches). Wipe
+note: Orca DISABLED the could_be_wipe_disabled wipe-reset (commented
+out, GCode.cpp:7434-7437) — the wipe decision is purely
+needs_retraction on the routed polyline, matching my gate.
+NEXT: bilateral wipe-path dump (my retract_and_wipe vs upstream
+Wipe::wipe path construction), anchor layer 2 of 0e56ebfb.
