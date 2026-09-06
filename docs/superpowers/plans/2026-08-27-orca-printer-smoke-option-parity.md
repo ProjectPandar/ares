@@ -8510,3 +8510,14 @@ double). The flip therefore lives in the underlying POINT value
 (sub-unit) — the monotonic rotate-back or vline x. Next (when
 resumed): the f32-direction bit-compare at the monotonic entry.
 379 entries; 703.
+
+## 2026-09-06 (cont 380): rotate chain bit-verified; the flipped point re-classified
+
+checked_rotate formula/rounding = upstream Point::rotate (round
+half-away) ✓; angle accumulation (config f32 + one π/2 add) ✓ — the
+chain is bit-identical GIVEN equal inputs. A vertical vline point's x
+IS the vline x (on-grid integer), so a flip means either min_x or
+spacing differs a unit (the earlier mod-arithmetic used the WRONG
+call's spacing 450000; with 357080 the residue test needs the correct
+object offset — not yet dumped). Next: dump the actual local frame
+offset + the layer-49 min_x together. 380 entries; 703.
