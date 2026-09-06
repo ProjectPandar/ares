@@ -8001,3 +8001,17 @@ between the two segments sharing the corner vertex resolves to my
 earlier-segment rule vs upstream's whole-path foot_pt rule → the +1
 vertex (+1 width) split. FIX: port the split_at_vertex-first sequence
 (upstream foot_pt over whole paths + the vertex split precedence).
+
+## 2026-09-06 (cont 338): tie-break flip = no effect; the split vertex is chosen earlier
+
+Empirical: flipping closest_projection's tie-break (< vs <=) changes
+nothing (1188 stable) — the +0.25 split vertex is NOT a projection
+tie; it comes from the seam_point ORIGIN: upstream's seam_point is the
+depth-walk foot_pt (the 1.4142-depth walk can land mid-segment, then
+split_at_vertex fails → split_at INSERTS a vertex), while my flow
+snaps the depth-walk result to a nearby vertex (0.0015) — for
+mid-segment landings >1.5µm from a vertex, upstream inserts the exact
+foot while mine... also inserts via projected_parts. The remaining
+difference is in the depth-walk arithmetic or the seam_point
+scale_position f32→i64 truncation. NEXT: dump the seam_point (before
+split) on both sides for the Creality layer-1 wall.
