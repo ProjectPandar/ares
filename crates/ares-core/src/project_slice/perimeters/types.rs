@@ -163,18 +163,6 @@ impl PostPerimeterInputPrintObject {
             return Vec::new();
         };
         let (post_region, _) = self.object.as_parts();
-        if std::env::var("ARES_DUMP_BND").is_ok() {
-            eprintln!(
-                "OCC occurrences={} records={} layers0={}",
-                post_region.volume_slices.len(),
-                self.records.len(),
-                post_region
-                    .volume_slices
-                    .first()
-                    .map(|v| v.layers.len())
-                    .unwrap_or(0)
-            );
-        }
         post_region
             .volume_slices
             .iter()
