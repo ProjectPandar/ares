@@ -8659,3 +8659,16 @@ definition not allowed — landed inside a nested scope). NEXT: anchor
 the GT hook on the unique line `size_t size = points.size();` (in
 the piecewise loop) with @@ -N,1 single-context, matching the gwave
 success recipe. 392 entries; 703.
+
+## 2026-09-06 (cont 393): GT GPTS hunk applies (fuzz 1) but compile fails at 247
+
+The @@ -174,1 anchor (`size_t size = points.size();`) applies with
+fuzz 1 per dry-run, but the nix build fails "function definition is
+not allowed here" at patched lines 247/255 — identical to the
+previous wrong-scope failure, indicating the hook lands with a brace
+imbalance OR the fuzz-1 offset puts it in a nested scope. NEXT: dump
+the PATCHED file (nix log has only errors; instead patch a local
+copy: cp the store source, apply gpts.patch, sed -n '170,190p' and
+'240,260p' to see the actual placement), fix the anchor or drop the
+`break;` (harmless: the loop then re-sorts and exits by itself).
+393 entries; 703.
