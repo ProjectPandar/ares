@@ -312,6 +312,21 @@ impl Estimate {
             .zip(prepare_stages)
             .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
             .sum();
+        if let Ok(path) = std::env::var("ARES_DUMP_TIMES") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(
+                    file,
+                    "ESTIMATE total {} blocks {}",
+                    cumulative + trailing_delay,
+                    blocks.len()
+                );
+            }
+        }
         Self {
             total: cumulative + trailing_delay,
             prepare,
