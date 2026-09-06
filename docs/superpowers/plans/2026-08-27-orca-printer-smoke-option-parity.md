@@ -8085,3 +8085,17 @@ level) flipping only at boundaries. Each affected printer has 1-5
 such lines. Session arc closes here; future work: the boundary-flip
 elimination (length/accumulation bit-order hunt), bottom-surface 24,
 skirt 16, the 4 feature options, ksr noise, then the review thread.
+
+## 2026-09-06 (cont 345): boundary-flip derivation → Flow::mm3_per_mm bit parity
+
+The boundary line (155.95,156.231)->(156.118,156.891): GT incr
+0.02191 vs mine 0.02190 (mm3_per_mm = 0.03217.., len 0.68105). The
+NEXT line's increments are also asymmetric (0.03517/0.03518) — the
+INTERNAL accumulator drifts sub-print from line to line while the
+printed values coincide. Lengths derive from identical scaled
+integers (exact) — the drift = mm3_per_mm differing at the LAST BIT:
+the flow cross-section (rounded-rectangle area) computed on my side
+vs upstream Flow::mm3_per_mm accumulates ~1e-11/line → 1e-5 after
+thousands of lines → boundary flips. FIX = bit-parity port of
+Flow::mm3_per_mm (Flow.cpp cross_section / rounded_rectangle_area:
+the exact float ops order, the float vs double width/height inputs).
