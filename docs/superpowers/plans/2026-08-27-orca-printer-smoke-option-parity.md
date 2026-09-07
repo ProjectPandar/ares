@@ -9443,3 +9443,14 @@ lexicographic `sort` before `comm` (sort -n breaks comm); the earlier
 1882 mine-only figure was a comm-ordering artifact — real extra count
 is 59. The extra-entry class + the flush-lag hypothesis remain open;
 the arc-id fix (4b507990) already removed the N-1-per-arc skew.
+
+M73 block-count note: upstream pushes a cache entry for EVERY block
+(unconditional, GCodeProcessor.cpp:574) — GT's 2461 vs my 2520 UNIQUE
+dump ids are a block-count difference, not filtering. 3 G28s explain
+only ~6 extra (my homing expansion). Next-turn methodology: diff the
+per-entry (id, time) STREAMS (not id sets), locate the first
+structural divergence, and check the `G1 F` speed-marker blocks and
+arc remaining_internal_g1_lines semantics (upstream's export advances
+the counter by the entry's remaining_internal_g1_lines — my arcs now
+share one id but my emission must skip that many subsequent G1 lines
+for the INTERNAL discretized lines the writer DIDN'T emit).
