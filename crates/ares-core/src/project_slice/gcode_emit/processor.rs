@@ -237,6 +237,8 @@ impl Estimate {
                 });
             }
             let command = code.split_whitespace().next().unwrap_or_default();
+            let arc_internal = matches!(command, "G2" | "G3")
+                .then(|| arc_internal_g1_lines(code, command, &state));
             let motion_blocks = state.motions(code);
             match command {
                 "G0" | "G1" | "G28" => {
@@ -248,14 +250,15 @@ impl Estimate {
                 }
                 "G2" | "G3" => {
                     let count = motion_blocks.len();
-                    arc_segment_counts[index] = count;
+                    arc_segment_counts[index] = arc_internal.unwrap_or(0);
                     blocks.extend(motion_blocks);
-                    // One g1 line id per arc LINE (upstream increments
-                    // `m_g1_line_id` once per G2/G3 command, regardless of
-                    // how many planner segments the arc splits into).
+                    // The arc line plus its internal discretized G1s consume
+                    // `1 + internal` g1 line ids; all planner segments carry
+                    // the arc line's own id.
                     g1_line_id += 1;
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                    g1_line_id += arc_internal.unwrap_or(0);
                 }
                 _ => debug_assert!(motion_blocks.is_empty()),
             }
@@ -327,7 +330,7 @@ impl Estimate {
                 }
                 "G2" | "G3" => {
                     let id = exported_g1_lines;
-                    exported_g1_lines += 1;
+                    exported_g1_lines += 1 + arc_segment_counts[index];
                     Some(id)
                 }
                 "G28" => {
@@ -386,6 +389,78 @@ impl Estimate {
     fn elapsed_at(&self, line: usize) -> Option<f64> {
         self.elapsed.get(line).copied().flatten()
     }
+}
+
+/// Upstream discretizes G2/G3 into `segments` internal G1s during
+/// processing (`GCodeProcessor::process_G2_G3`), each incrementing the g1
+/// line counter; the FILE still carries the single arc line, so the export
+/// advances the counter by `1 + internal`. Segment count per flavor:
+/// - MarlinFirmware: `plan_arc` (`GCodeProcessor.cpp:1690-1700`)
+/// - otherwise: `ArcWelder::arc_discretization_steps` at 0.0125 tolerance
+///   (`ArcWelder.hpp:48-64`)
+fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionState) -> usize {
+    let i = word(code, 'I').unwrap_or(0.0);
+    let j = word(code, 'J').unwrap_or(0.0);
+    let radius = (i * i + j * j).sqrt();
+    let (end_x, end_y) = (word(code, 'X'), word(code, 'Y'));
+    let start = state.position;
+    let end_x = end_x.map_or(start[0], |value| {
+        if state.relative {
+            start[0] + value
+        } else {
+            value
+        }
+    });
+    let end_y = end_y.map_or(start[1], |value| {
+        if state.relative {
+            start[1] + value
+        } else {
+            value
+        }
+    });
+    let rel_start = (-i, -j);
+    let rel_end = (end_x - (start[0] + i), end_y - (start[1] + j));
+    let mut angle = (rel_start.0 * rel_end.1 - rel_start.1 * rel_end.0)
+        .atan2(rel_start.0 * rel_end.0 + rel_start.1 * rel_end.1);
+    if angle < 0.0 {
+        angle += std::f64::consts::TAU;
+    }
+    if command == "G2" {
+        angle -= std::f64::consts::TAU;
+    }
+    let angle = angle.abs().min(std::f64::consts::TAU);
+    let feedrate_mm_s = word(code, 'F').map_or(state.feedrate, |value| value / 60.0) as f32;
+    let segments = if state.gcode_flavor == crate::GCodeFlavor::MarlinFirmware {
+        const MAX_ARC_DEVIATION: f32 = 0.02;
+        const MIN_ARC_SEGMENTS_PER_SEC: f32 = 50.0;
+        const MIN_ARC_SEGMENT_MM: f32 = 0.1;
+        const MAX_ARC_SEGMENT_MM: f32 = 2.0;
+        let radius_mm = radius as f32;
+        let segment_mm = ((8.0 * radius_mm * MAX_ARC_DEVIATION)
+            .sqrt()
+            .min(feedrate_mm_s / MIN_ARC_SEGMENTS_PER_SEC))
+        .clamp(MIN_ARC_SEGMENT_MM, MAX_ARC_SEGMENT_MM);
+        let flat_mm = radius_mm * angle as f32;
+        ((flat_mm / segment_mm + 0.8) as usize).max(1)
+    } else {
+        const GCODE_ARC_TOLERANCE: f64 = 0.0125;
+        let d = radius - GCODE_ARC_TOLERANCE;
+        if d < f64::EPSILON {
+            // Radius smaller than the deviation: acute angles interpolate
+            // with one segment; obtuse angles test the center distance.
+            if angle < std::f64::consts::PI
+                || radius * (1.0 + (std::f64::consts::PI - 0.5 * angle).cos()) < GCODE_ARC_TOLERANCE
+            {
+                1
+            } else {
+                2
+            }
+        } else {
+            (angle / (2.0 * (d / radius).acos())).ceil() as usize
+        }
+        .max(1)
+    };
+    segments.saturating_sub(1)
 }
 
 fn scheduled_times(blocks: &[MotionBlock], events: &[FlushEvent]) -> (Vec<f64>, f64) {
