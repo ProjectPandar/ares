@@ -9432,3 +9432,14 @@ themselves (flush-lag). Fleet steady 757/987.
 Also this turn: arcs consume one g1 line id (4b507990) — upstream
 increments once per G2/G3 command; the per-segment ids had skewed
 M73s by N-1 per arc.
+
+## 2026-09-07 (cont 440): M73 cache id-set comparison (method note)
+
+Anchor 0845f329 bilateral TIMES dumps: GT 2461 cache entries vs mine
+2520 (59 extra; mine has id 42 where GT skips to 44 — both skip
+e_only ids like 37 and post-wall 48-49). G10/G11 nearly absent
+fleet-wide (1 fixture) — not the root. NOTE: comparing id sets needs
+lexicographic `sort` before `comm` (sort -n breaks comm); the earlier
+1882 mine-only figure was a comm-ordering artifact — real extra count
+is 59. The extra-entry class + the flush-lag hypothesis remain open;
+the arc-id fix (4b507990) already removed the N-1-per-arc skew.
