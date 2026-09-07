@@ -9388,3 +9388,14 @@ Fleet 757/987; smoke 81/82 (hilbert known); ares-core 6785/6785.
 NOTE: orca_parity smoke has a parallel-load flake (top_concentric
 fails in full-suite runs occasionally, passes alone/paired) — shared
 runner work-dir collision suspected, uninvestigated.
+
+## 2026-09-07 (cont 437): post-metadata sweep — M73 one-line skew family
+
+With the metadata fix landed, the multi-extruder failing set's
+smallest cases are down to 2-4 diff lines — all M73 PLACEMENT (same
+values, one G1 earlier than GT; anchor 0845f329: mine after
+`G1 X204.355 Y195.645`, GT one line later). Root = the g1 line-id
+counter attribution (which lines increment it) in processor.rs —
+a counting audit vs GCodeProcessor's line walk is the next bounded
+slice for this family. Full diff ladder of the multi-extruder set:
+4,4,12,14,16,151,158,190 lines.
