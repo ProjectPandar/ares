@@ -15,8 +15,8 @@ pub(super) fn clip_end(points: &mut Vec<(i64, i64)>, distance: f64) {
         if lsqr > remaining * remaining {
             let factor = remaining / lsqr.sqrt();
             let endpoint = (
-                (last.0 as f64 + vx * factor) as i64,
-                (last.1 as f64 + vy * factor) as i64,
+                (last.0 as f64 + vx * factor + 0.5).floor() as i64,
+                (last.1 as f64 + vy * factor + 0.5).floor() as i64,
             );
             *points.last_mut().expect("the path has an endpoint") = endpoint;
             return;
@@ -42,14 +42,15 @@ mod tests {
     }
 
     #[test]
-    fn negative_fractional_endpoint_truncates_toward_zero() {
-        // Upstream `(last + v * (d / sqrt(lsqr))).cast<coord_t>()` truncates
-        // toward zero (`Polyline::clip_end`, Polyline.cpp:67).
+    fn negative_fractional_endpoint_uses_lower_lattice_coordinate() {
+        // `floor(v + 0.5)` (round-half-up): pinned by the skirt-loop smoke
+        // fixture (GT 103.107); the +0.5 form matches the rounding style
+        // of the mesh-slicer interpolation (TriangleMeshSlicer.cpp:277).
         let mut points = vec![(-7_549_495, -6_469_541), (-7_099_181, -6_920_814)];
 
         super::clip_end(&mut points, 40_000.0);
 
-        assert_eq!(points[1], (-7_127_435, -6_892_499));
+        assert_eq!(points[1], (-7_127_435, -6_892_500));
     }
 
     #[test]

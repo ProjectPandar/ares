@@ -188,7 +188,7 @@ layer 1 travel feed differs: no match for Travel { motion: MotionRecord { comman
 layer 50 travel geometry count differs: expected 36, actual 39
 
 5025f8353116296d-45ee3ba0016f32f2
-layer 2 deposition count differs: expected 104, actual 103
+layer 1 deposition 78 differs: expected Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "142.848", y: "142.786", z: "0.24" }, end: Position { x: "143.293", y: "142.312", z: "0.24" }, arc_center: [None, None], turns: None }, extrusion: "4.56202", feed: 3000.0, acceleration: "", fans: "" }, actual Deposition { feature: "Skirt", width: "0.42", motion: MotionRecord { command: "G1", start: Position { x: "142.848", y: "142.786", z: "0.24" }, end: Position { x: "143.293", y: "142.312", z: "0.24" }, arc_center: [None, None], turns: None }, extrusion: "4.56201", feed: 3000.0, acceleration: "", fans: "" }
 
 50c299cb8ea17b2c-786fc14c470812a8
 layer 4 travel geometry count differs: expected 9, actual 10

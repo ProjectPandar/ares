@@ -9363,3 +9363,28 @@ Fleet 757/987 steady; ares-core 6785/6785.
 Port plan: replicate the CLI's multi-extruder config prep in the
 ares config resolution (ams injection + flush resize) before the
 config echo — bounded slice, 16-case family.
+
+## 2026-09-07 (cont 436): site-specific clip rounding + CLI multi-extruder prep
+
+Two landings:
+1. **Clip rounding is SITE-SPECIFIC** (empirically pinned): the path
+   clip (loop/skirt starts) uses floor(v+0.5) round-half-up (skirt
+   smoke pins it: GT 103.107); the wipe clip truncates. Both keep the
+   upstream sqrt-formula op order (lsqr compare, d/sqrt(lsqr)).
+   Intermediate finding: trunc on the path clip broke skirt_loops
+   smoke (regression shipped in 03ccd2fd, now fixed); +0.5-floor on
+   the wipe clip cost 5 fleet cases (752) — the split restores 757.
+2. **CLI multi-extruder config prep** (OrcaSlicer.cpp:5993-6022):
+   when extruder_count > 1 && filament_map_mode != Manual && the
+   existing extruder_ams_count is empty, inject "1#0|4#1" per
+   extruder, resize flush_multiplier (fill 1.0), and collapse
+   flush_volumes_matrix to a zero diagonal (single-filament prints
+   only — the multi-filament matrix computation stays out of scope).
+   Anchor 0e56ebfb: all three metadata lines now GT-identical.
+   KSR-style projects that carry ams values are skipped (fixture
+   byte-exactness preserved).
+
+Fleet 757/987; smoke 81/82 (hilbert known); ares-core 6785/6785.
+NOTE: orca_parity smoke has a parallel-load flake (top_concentric
+fails in full-suite runs occasionally, passes alone/paired) — shared
+runner work-dir collision suspected, uninvestigated.
