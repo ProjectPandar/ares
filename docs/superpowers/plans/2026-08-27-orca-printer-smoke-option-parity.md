@@ -9399,3 +9399,20 @@ counter attribution (which lines increment it) in processor.rs —
 a counting audit vs GCodeProcessor's line walk is the next bounded
 slice for this family. Full diff ladder of the multi-extruder set:
 4,4,12,14,16,151,158,190 lines.
+
+## 2026-09-07 (cont 438): arcs consume one g1 line id; M73 root = flush-lag semantics
+
+Fix: G2/G3 lines bump the g1 line counter by exactly 1 (upstream
+increments `m_g1_line_id` once per arc COMMAND; my per-segment ids
+skewed every later M73 by N-1 per arc). All planner segments of an
+arc share the arc's id.
+
+The remaining M73 placement skew (anchor 0845f329: same values, one
+line early) is NOT counting — total G-line counts match (3176=3176).
+Root: my cache entries carry each block's time at the block's OWN
+line; upstream's g1_times_cache records the cumulative at the line
+where the planner RETIRED the block (lookahead flush lag) — the value
+lands on a later line. Modeling that = attach cache entries at flush
+boundaries in scheduled_times (a planner/cache semantic rework).
+
+Fleet 757/987; smoke 81/82; ares-core 6785/6785.

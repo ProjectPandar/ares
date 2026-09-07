@@ -250,9 +250,12 @@ impl Estimate {
                     let count = motion_blocks.len();
                     arc_segment_counts[index] = count;
                     blocks.extend(motion_blocks);
-                    block_line_ids.extend((0..count).map(|offset| g1_line_id + offset + 1));
+                    // One g1 line id per arc LINE (upstream increments
+                    // `m_g1_line_id` once per G2/G3 command, regardless of
+                    // how many planner segments the arc splits into).
+                    g1_line_id += 1;
+                    block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
-                    g1_line_id += count;
                 }
                 _ => debug_assert!(motion_blocks.is_empty()),
             }
@@ -323,9 +326,8 @@ impl Estimate {
                     Some(id)
                 }
                 "G2" | "G3" => {
-                    let internal = arc_segment_counts[index].saturating_sub(1);
-                    let id = exported_g1_lines + internal;
-                    exported_g1_lines += internal + 1;
+                    let id = exported_g1_lines;
+                    exported_g1_lines += 1;
                     Some(id)
                 }
                 "G28" => {
