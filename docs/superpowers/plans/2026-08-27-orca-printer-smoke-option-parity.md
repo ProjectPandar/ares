@@ -9534,3 +9534,16 @@ erase/reset paths (`blocks.erase` at :605 and any TimeMachine reset)
 to dump block ids/g1 ids being dropped — the vanishing site is the
 missing semantic (candidates: a retention-erase bug upstream, or a
 reset invoked mid-print e.g. by toolchange/G92-without-E sync).
+
+## 2026-09-07 (cont 446): F-only lines consume ids; cross-build doubt
+
+From the linedump: id 1003 (Retract) jumps to 1005 — id 1004 = an
+F-only G1 that upstream COUNTS (m_g1_line_id++) but returns before
+block creation (max_abs_delta==0). My pass-1/emission both already
+count F-only lines ✓ no change needed.
+CROSS-BUILD DOUBT: P id=1007 type=8 vs push id=1007 type=10 from two
+SEPARATE builds (result-mtypedump vs result-linedump) — the block
+streams appear inconsistent (push#800 vs P#881 offsets don't
+reconcile with the 189 filtered). Next turn: ONE nix build carrying
+BOTH patches (linedump + mtypedump) and re-diff in a single run
+before drawing further conclusions.
