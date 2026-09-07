@@ -342,6 +342,20 @@ impl Estimate {
             let Some(lookup_id) = lookup_id else {
                 continue;
             };
+            if let Ok(path) = std::env::var("ARES_DUMP_LMAP") {
+                use std::io::Write;
+                if let Ok(mut file) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    let _ = writeln!(
+                        file,
+                        "LM idx={index} id={lookup_id} line={}",
+                        line.split(';').next().unwrap_or_default().trim()
+                    );
+                }
+            }
             while cache_index < cache.len() && cache[cache_index].0 < lookup_id {
                 cache_index += 1;
             }

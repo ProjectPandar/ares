@@ -9486,3 +9486,17 @@ start-gcode purge block: `G1 X0 E8.73079 F6840`, M83 relative-E,
 G92 E0 resets). NEXT: instrument both processors' per-line position
 after the purge block; suspect my G92 E handling with M83, or the
 X0 purge move resolution.
+
+## 2026-09-07 (cont 443): pass-1 vs emission counter divergence isolated
+
+New ARES_DUMP_LMAP instrument maps emission ids to gcode file lines.
+Anchor 0845f329: the 0.0863mm block (`G1 X204.523 Y204.579`, a wipe
+move at file idx 151) carries EMISSION id 41 but PASS-1 id 42 — the
+two counters diverge by exactly one somewhere before idx 151. Both
+count G0/G1/G2/G3(+N)/G28 identically by construction; the extra
+pass-1 increment source not yet identified (candidates: an arm
+reaching the counter twice, or the tool-change push path). NEXT: add
+ARES_DUMP_LMAP2 in the pass-1 loop printing (index, g1_line_id) per
+line; diff LMAP vs LMAP2 to catch the first diverging line. Note
+GT's cache agrees with my EMISSION ids (41/44...), so fixing pass-1
+to match emission aligns the cache with GT.
