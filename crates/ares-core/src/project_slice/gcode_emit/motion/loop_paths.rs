@@ -75,6 +75,21 @@ pub(super) fn emit(
         }
     }
     state.wipe_path = emitted_loop_path;
+    if let Ok(path) = std::env::var("ARES_DUMP_PATH") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(file, "LP");
+            for point in &state.wipe_path {
+                let scaled = super::travel::scaled_position(*point, state);
+                let _ = write!(file, " ({},{})", scaled.0, scaled.1);
+            }
+            let _ = writeln!(file);
+        }
+    }
     append_inward_move(output, paths, loop_role, geometry, state);
 }
 

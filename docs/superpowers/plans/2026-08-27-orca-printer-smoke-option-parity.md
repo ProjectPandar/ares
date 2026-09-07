@@ -9288,3 +9288,24 @@ Post-fix family scan: top remaining first-divergences unchanged
 route start differs from GT by ±1 scaled unit at the WIPE-END clip
 interpolation, flipping a grazing crossing — the ulp family).
 Fleet 757/987 steady.
+
+## 2026-09-07 (cont 432): bilateral extrusion-path dump — GT ⊆ mine
+
+New instruments: ORCA_DUMP_PATH (pathdump.patch on result-pathdump,
+extrude_path's path.polyline, all roles) vs ARES_DUMP_PATH
+(loop_paths/constant/variable emission wipe-path equivalents, LP/CP/VP
+lines). Anchor 06d991de:
+- GT vertices (4822) are a SUBSET of mine (4896): GT-only = 0.
+- Mine-only = 74 vertices — sub-micron extras (my paths pass through
+  both ±1 variants where GT has one) + arc-fitted path vertices offset
+  ~76 units (0.000076mm, sub-print-precision).
+- The wipe-path bilateral dump (ORCA_DUMP_WIPE, post-clip_end): 3/399
+  wipes differ by exactly ±1 — inherited from these input vertices.
+
+Reading: the perimeter paths themselves are equivalent within print
+precision; the print-visible ±1-milli-unit diffs arise where the
+sub-mic extras/offsets land on %.3f rounding boundaries (seam clips,
+arc endpoints). Next: align the SOURCE of the 74 extras (suspect:
+arc fitting + the seam-clip interpolation in loop_paths remaining_
+clip) — each is individually sub-mic; the fleet-visible cases are the
+boundary-straddlers.

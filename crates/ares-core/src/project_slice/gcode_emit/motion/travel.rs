@@ -227,6 +227,20 @@ fn wipe_moves(state: &EmitState) -> WipePath {
         }
         clip -= length;
     }
+    if let Ok(path) = std::env::var("ARES_DUMP_WIPE") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(file, "WP");
+            for point in &points {
+                let _ = write!(file, " ({},{})", point.0, point.1);
+            }
+            let _ = writeln!(file);
+        }
+    }
     let segments = points
         .windows(2)
         .filter_map(|segment| {
@@ -258,7 +272,10 @@ fn scaled_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
     (dx * dx + dy * dy).sqrt()
 }
 
-fn scaled_position(point: arc::Point, state: &EmitState) -> (i64, i64) {
+pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(
+    point: arc::Point,
+    state: &EmitState,
+) -> (i64, i64) {
     (
         ((point.x - state.offset.0) / state.scale_factor).round() as i64,
         ((point.y - state.offset.1) / state.scale_factor).round() as i64,

@@ -96,5 +96,20 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     output.extend_from_slice(b";_EXTRUDE_END\n");
     state.wipe_path = wipe_points.into_iter().rev().collect();
     state.last_scaled_position = Some(last_scaled);
+    if let Ok(path) = std::env::var("ARES_DUMP_PATH") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(file, "CP");
+            for point in &state.wipe_path {
+                let scaled = super::super::travel::scaled_position(*point, state);
+                let _ = write!(file, " ({},{})", scaled.0, scaled.1);
+            }
+            let _ = writeln!(file);
+        }
+    }
     state.scarf_z = Some(state.layer_z);
 }

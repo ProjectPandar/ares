@@ -67,4 +67,19 @@ pub(super) fn emit(command: Emission<'_>) {
             y: y + state.offset.1,
         })
         .collect();
+    if let Ok(path) = std::env::var("ARES_DUMP_PATH") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(file, "VP");
+            for point in &state.wipe_path {
+                let scaled = super::super::travel::scaled_position(*point, state);
+                let _ = write!(file, " ({},{})", scaled.0, scaled.1);
+            }
+            let _ = writeln!(file);
+        }
+    }
 }
