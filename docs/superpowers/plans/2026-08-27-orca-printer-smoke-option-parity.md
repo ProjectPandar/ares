@@ -9326,3 +9326,26 @@ only) — the skirt emission goes through a different upstream call —
 next instrumentation point if pursued.
 
 Fleet 757/987; ares-core 6785/6785.
+
+## 2026-09-07 (cont 434): offset/slicing formulas verified; skirt hull SOURCE differs
+
+Verification results (all against upstream source):
+1. `interpolate_coordinate` in mesh_slicer/intersection.rs ==
+   TriangleMeshSlicer.cpp:277 EXACTLY (t, floor(+0.5) both axes) —
+   the slice-level formula is not the ±1 source.
+2. FAILED LANDING: do_round with upstream's ceil steps (#448) +
+   truncating arc vertices — massively reshapes arcs (3000-unit
+   shifts from step-count changes); my round+fixed_round arc is
+   empirically ±1-close (3/399 wipes). REVERTED; the AppImage's
+   offset path does NOT follow the checked-in clipper2 DoRound
+   verbatim (different Clipper build/version). Do not retry.
+3. **Skirt hull source differs**: my skirt hull = convex_hull of
+   first-layer slice points + douglas_peucker(0.1); upstream
+   `_make_skirt` (Print.cpp:2646+) uses `object_convex_hulls` from
+   ModelObject::convex_hull_2d (the MODEL mesh hull, no DP). For
+   boxes both give the same square (fleet passes); the residual ±1
+   skirt vertices trace to this difference. A full port means
+   plumbing model-level 2D hulls into the skirt — multi-hour, only
+   worth it if the ulp family grows.
+
+Fleet 757/987 steady; ares-core 6785/6785.
