@@ -9349,3 +9349,17 @@ Verification results (all against upstream source):
    worth it if the ulp family grows.
 
 Fleet 757/987 steady; ares-core 6785/6785.
+
+## 2026-09-07 (cont 435): IDEX metadata family pinned — CLI print-config prep
+
+16/60 failing cases show the header metadata diffs. Upstream source:
+- `extruder_ams_count = 1#0|4#1;...` — INJECTED by the CLI slicing
+  path for every extruder when extruder_count > 1 and
+  filament_map_mode < fmmManual (OrcaSlicer.cpp:5993-6022). Vendor
+  presets don't carry it.
+- `flush_multiplier`/`flush_volumes_matrix` resized/recomputed to
+  the actual extruder count (OrcaSlicer.cpp:3351-3498,
+  get_flush_volumes_matrix with nozzle_volume_type).
+Port plan: replicate the CLI's multi-extruder config prep in the
+ares config resolution (ams injection + flush resize) before the
+config echo — bounded slice, 16-case family.
