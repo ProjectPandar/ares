@@ -212,20 +212,23 @@ fn wipe_moves(state: &EmitState) -> WipePath {
     let configured_distance = state.options.wipe_distance / state.scale_factor;
     let retraction_distance = total_length.min(configured_distance) * state.scale_factor;
     let mut clip = total_length - configured_distance;
+    // Upstream `Polyline::clip_end` math: squared comparison, sqrt divisor,
+    // truncating cast (`Polyline.cpp:52-72`).
     while clip > 0.0 {
         let last = points.pop().unwrap();
         let previous = *points.last().unwrap();
-        let dx = (previous.0 - last.0) as f64;
-        let dy = (previous.1 - last.1) as f64;
-        let length = scaled_distance(last, previous);
-        if length > clip {
+        let vx = (previous.0 - last.0) as f64;
+        let vy = (previous.1 - last.1) as f64;
+        let lsqr = vx * vx + vy * vy;
+        if lsqr > clip * clip {
+            let factor = clip / lsqr.sqrt();
             points.push((
-                (last.0 as f64 + dx * (clip / length)) as i64,
-                (last.1 as f64 + dy * (clip / length)) as i64,
+                (last.0 as f64 + vx * factor) as i64,
+                (last.1 as f64 + vy * factor) as i64,
             ));
             break;
         }
-        clip -= length;
+        clip -= lsqr.sqrt();
     }
     if let Ok(path) = std::env::var("ARES_DUMP_WIPE") {
         use std::io::Write;

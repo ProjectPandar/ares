@@ -6,22 +6,23 @@ pub(super) fn clip_end(points: &mut Vec<(i64, i64)>, distance: f64) {
     while points.len() > 1 {
         let last = points[points.len() - 1];
         let previous = points[points.len() - 2];
-        let dx = (previous.0 - last.0) as f64;
-        let dy = (previous.1 - last.1) as f64;
-        let segment_length = dx.hypot(dy);
-        if segment_length > remaining {
-            let ratio = remaining / segment_length;
-            // The Linux 2.4.2 runtime keeps the lower lattice coordinate for
-            // negative fractional vector-cast results.
+        // Upstream `Polyline::clip_end` (`Polyline.cpp:52-72`): the squared
+        // comparison and the sqrt division order match exactly; the final
+        // `cast<coord_t>()` truncates toward zero.
+        let vx = (previous.0 - last.0) as f64;
+        let vy = (previous.1 - last.1) as f64;
+        let lsqr = vx * vx + vy * vy;
+        if lsqr > remaining * remaining {
+            let factor = remaining / lsqr.sqrt();
             let endpoint = (
-                (last.0 as f64 + dx * ratio).floor() as i64,
-                (last.1 as f64 + dy * ratio).floor() as i64,
+                (last.0 as f64 + vx * factor) as i64,
+                (last.1 as f64 + vy * factor) as i64,
             );
             *points.last_mut().expect("the path has an endpoint") = endpoint;
             return;
         }
         points.pop();
-        remaining -= segment_length;
+        remaining -= lsqr.sqrt();
         if remaining <= f64::EPSILON {
             return;
         }
@@ -41,12 +42,14 @@ mod tests {
     }
 
     #[test]
-    fn negative_fractional_endpoint_uses_lower_lattice_coordinate() {
+    fn negative_fractional_endpoint_truncates_toward_zero() {
+        // Upstream `(last + v * (d / sqrt(lsqr))).cast<coord_t>()` truncates
+        // toward zero (`Polyline::clip_end`, Polyline.cpp:67).
         let mut points = vec![(-7_549_495, -6_469_541), (-7_099_181, -6_920_814)];
 
         super::clip_end(&mut points, 40_000.0);
 
-        assert_eq!(points[1], (-7_127_436, -6_892_500));
+        assert_eq!(points[1], (-7_127_435, -6_892_499));
     }
 
     #[test]

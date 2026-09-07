@@ -9309,3 +9309,20 @@ arc endpoints). Next: align the SOURCE of the 74 extras (suspect:
 arc fitting + the seam-clip interpolation in loop_paths remaining_
 clip) — each is individually sub-mic; the fleet-visible cases are the
 boundary-straddlers.
+
+## 2026-09-07 (cont 433): clip_end formulas aligned to Polyline.cpp:52-72
+
+Both clip sites (motion/clip.rs path-end clip and travel.rs
+wipe_moves clip) now use upstream's exact op order: squared norm
+comparison (`lsqr > d*d`), `d / sqrt(lsqr)` factor, and truncating
+cast (Eigen `cast<coord_t>` = static_cast, toward zero). The old code
+used hypot + precomputed ratio + floor (the floor pin was my-formula-
+specific; test re-pinned to trunc semantics).
+Wipe diffs unchanged (3/399 — they come from the RAW wall vertices,
+not the clips). The 3 divergent wipe inputs trace to skirt-path
+vertices (my CP line 25: skirt start -2296476 vs GT's wipe-path
+-2296477); GT's extrude_path dump lacks the skirt path (EP roles
+only) — the skirt emission goes through a different upstream call —
+next instrumentation point if pursued.
+
+Fleet 757/987; ares-core 6785/6785.
