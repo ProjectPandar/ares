@@ -9470,3 +9470,19 @@ any other-typed block get NO entry. My extra id-42 entry (dist
 patch dumping block.move_type alongside the cache push to identify
 which type the wall-tail 0.086mm segment gets (likely from the
 type-derivation in process_G1's move classification).
+
+## 2026-09-07 (cont 442): GT cache type dump — id 42 has NO BLOCK upstream
+
+New instrument: mtypedump.patch (result-mtypedump, ORCA_DUMP_MTYPE)
+prints every g1_times_cache push with id/remaining/time/TYPE/keep.
+Anchor 0845f329: all 2476 pushes are types 8/9/10 (Travel/Wipe/
+Extrude) — confirms the :487 filter. Crucially GT NEVER pushes id 42
+(not even filtered) ⇒ upstream has NO BLOCK for that line:
+`max_abs_delta == 0` after its position update (process_G1 returns
+before block creation, GCodeProcessor.cpp:4303-4305). My id-42 block
+(dist 0.086324 accel 3000) = the SAME gcode line with a nonzero
+delta ⇒ a POSITION-TRACKING divergence in the preceding region (the
+start-gcode purge block: `G1 X0 E8.73079 F6840`, M83 relative-E,
+G92 E0 resets). NEXT: instrument both processors' per-line position
+after the purge block; suspect my G92 E handling with M83, or the
+X0 purge move resolution.
