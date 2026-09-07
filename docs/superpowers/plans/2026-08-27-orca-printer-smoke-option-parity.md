@@ -9518,3 +9518,19 @@ so accidental matches occur. Concrete next step: unit-test
 Estimate::from_lines with a 3-line case and assert which line each
 cache entry lands on, then align to GT's export counter semantics
 (process_line_move(g1_lines_counter++) — post-increment, 0-start).
+
+## 2026-09-07 (cont 445): 66 blocks vanish between creation and cache push
+
+New linedump.patch (result-linedump, ORCA_DUMP_LINES): P-dump at the
+internal process_G1 (id/type/deltas — 2727 processed G1s: 1621
+Extrude, 714 Travel, 203 Wipe, 127 Retract, 62 Unretract).
+Cross-check vs mtype dump (2472 pushes: 1618 E + 651 T + 203 W):
+**66 pushable blocks (3 Extrude + 63 Travel, incl. anchor id 42 =
+the 0.0863mm wipe tail) never reach the :574 push** — they vanish
+between blocks.push_back (:4184) and calculate_time's processing.
+The P-dump fires before the machine.enabled loop; block creation is
+inside it; no static skip explains Travel vanishing. NEXT: patch the
+erase/reset paths (`blocks.erase` at :605 and any TimeMachine reset)
+to dump block ids/g1 ids being dropped — the vanishing site is the
+missing semantic (candidates: a retention-erase bug upstream, or a
+reset invoked mid-print e.g. by toolchange/G92-without-E sync).
