@@ -9416,3 +9416,19 @@ lands on a later line. Modeling that = attach cache entries at flush
 boundaries in scheduled_times (a planner/cache semantic rework).
 
 Fleet 757/987; smoke 81/82; ares-core 6785/6785.
+
+## 2026-09-07 (cont 439): M73 lookup-shift experiment failed; alignment confirmed
+
+Tried shifting the G0/G1 cache lookup by +1 (upstream's export loop
+uses the pre-increment 0-based counter vs the 1-based pass-1 ids,
+which by source reading should attach M73s one line later) — the
+anchor got WORSE (more/different M73 mismatches). My existing
+alignment (1-based ids, pre-increment lookup) is empirically optimal;
+the residual 2-pair skew in 0845f329 has a subtler root — candidates:
+the G10/G11 emulation decrements upstream applies to m_g1_line_id
+(GCodeProcessor.cpp:4874-4892), or the cache elapsed values
+themselves (flush-lag). Fleet steady 757/987.
+
+Also this turn: arcs consume one g1 line id (4b507990) — upstream
+increments once per G2/G3 command; the per-segment ids had skewed
+M73s by N-1 per arc.
