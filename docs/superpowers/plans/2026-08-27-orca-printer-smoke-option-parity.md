@@ -9454,3 +9454,19 @@ arc remaining_internal_g1_lines semantics (upstream's export advances
 the counter by the entry's remaining_internal_g1_lines — my arcs now
 share one id but my emission must skip that many subsequent G1 lines
 for the INTERNAL discretized lines the writer DIDN'T emit).
+
+## 2026-09-07 (cont 441): arc id model complete; cache push is TYPE-FILTERED
+
+Landed ddd54917: arcs consume 1+N g1 ids via the upstream
+discretization formulas (MarlinFirmware plan_arc vs ArcWelder 0.0125
+elsewhere); fleet steady 757/987.
+
+Next root pinned while diffing anchor 0845f329: upstream's
+g1_times_cache push (GCodeProcessor.cpp:574) sits AFTER a
+`continue` at :487 that skips every block whose move type is not
+Extrude/Travel/Wipe — so Retract/Unretract (my e_only filter ✓) AND
+any other-typed block get NO entry. My extra id-42 entry (dist
+0.0863, accel 3000) = a block upstream typed as non-E/T/W. NEXT: GT
+patch dumping block.move_type alongside the cache push to identify
+which type the wall-tail 0.086mm segment gets (likely from the
+type-derivation in process_G1's move classification).
