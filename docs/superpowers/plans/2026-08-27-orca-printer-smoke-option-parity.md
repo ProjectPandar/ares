@@ -9500,3 +9500,21 @@ ARES_DUMP_LMAP2 in the pass-1 loop printing (index, g1_line_id) per
 line; diff LMAP vs LMAP2 to catch the first diverging line. Note
 GT's cache agrees with my EMISSION ids (41/44...), so fixing pass-1
 to match emission aligns the cache with GT.
+
+## 2026-09-07 (cont 444): counters are 1-based vs 0-based — systematic off-by-one
+
+ARES_DUMP_LMAP2 (pass-1 pre-increment id per line) vs LMAP (emission
+id): pass-1 assigns ids AFTER increment (1-based; G28 at idx48 makes
+id 1), emission looks up with PRE-increment 0-based ids. GT's cache
+is 1-based (m_g1_line_id incremented before block creation,
+GCodeProcessor.cpp:3868→4003) ⇒ my pass-1 block ids match GT, and
+my emission systematically looks up one id EARLY. Open question for
+next turn: why the naive +1 emission lookup experiment made things
+worse — trace one M73 through: elapsed[] entries land at
+elapsed[index+1] via `cache.0 == lookup_id`; with 0-based lookups
+the FIRST cache entry (id 1) can never match line 1's lookup 0 —
+unless earlier start-gcode gaps (purge e_only lines) shift the cache
+so accidental matches occur. Concrete next step: unit-test
+Estimate::from_lines with a 3-line case and assert which line each
+cache entry lands on, then align to GT's export counter semantics
+(process_line_move(g1_lines_counter++) — post-increment, 0-start).

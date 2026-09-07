@@ -237,6 +237,16 @@ impl Estimate {
                 });
             }
             let command = code.split_whitespace().next().unwrap_or_default();
+            if let Ok(path) = std::env::var("ARES_DUMP_LMAP2") {
+                use std::io::Write;
+                if let Ok(mut file) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    let _ = writeln!(file, "P1 idx={index} id={g1_line_id} line={code}");
+                }
+            }
             let arc_internal = matches!(command, "G2" | "G3")
                 .then(|| arc_internal_g1_lines(code, command, &state));
             let motion_blocks = state.motions(code);
