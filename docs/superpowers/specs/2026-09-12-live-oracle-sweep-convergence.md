@@ -109,3 +109,10 @@ BBL tail + knife edges — needs the T-block removal for the initial tool
 load fold per the P1P replay evidence), `enable_prime_tower` producer
 history (8), BBL first-layer-time header (8), loop geometry ±1 scaled int,
 arachne necks, 4 unported options.
+
+Negative result (2026-09-13, post-844): making ares's g1_times_cache
+entries unconditional (upstream's push is unfiltered, GCodeProcessor.cpp:576)
+REGRESSED 49 printers — the e_only/seam_vertex eligibility filter
+compensates for id-accounting differences on zero-displacement lines and
+synthetic blocks. Do not retry without first reconciling the id chain
+(T block removal, zero-displacement G1 counting) as one slice.
