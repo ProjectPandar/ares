@@ -63,7 +63,11 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     if mesh.triangles.is_empty() {
         return;
     }
-    let visibility = visibility::GlobalVisibility::from_mesh(mesh, VISIBILITY_SAMPLE_COUNT);
+    let front_bias = placements.iter().any(|placement| {
+        placement.is_some_and(|mode| mode == crate::ProcessSeamPosition::AlignedBack)
+    });
+    let visibility =
+        visibility::GlobalVisibility::from_mesh(mesh, VISIBILITY_SAMPLE_COUNT, front_bias);
     let nozzle_diameter = traversal
         .resolved
         .views
@@ -108,7 +112,9 @@ fn apply_objects(
             visibility,
         );
         match placement {
-            ProcessSeamPosition::Aligned => alignment::align(&mut plans),
+            ProcessSeamPosition::Aligned | ProcessSeamPosition::AlignedBack => {
+                alignment::align(&mut plans)
+            }
             ProcessSeamPosition::Random => alignment::randomize(&mut plans),
             ProcessSeamPosition::Nearest => {
                 // `SeamPlacer.cpp:1465` skips `pick_seam_point` for spNearest —

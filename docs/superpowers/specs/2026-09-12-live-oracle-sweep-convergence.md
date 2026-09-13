@@ -525,3 +525,15 @@ arc: 845 → 858 (timelapse picker + nullable echo) → 867 (curl port
 held 856 through oracle flake, then the hop gate + f32 nozzle width
 echoes). The E3NG 0.3 case is byte-identical; the RH3D family's
 missing inter-chunk retract was also its M73 driver.
+
+## aligned_back seam placement (2026-09-15)
+
+Ares's seam placement skipped `seam_position = aligned_back` entirely
+(`placement_modes` `_ => None`) and the visibility lacked
+spAlignedBack's front bias (`SeamPlacer.cpp:165-170`: samples facing
+-Y get up to +1.0 visibility so the seam prefers the back). Both are
+now ported: AlignedBack enters the aligned placement path and the
+mesh-sample visibility adds the front adjustment. WEMAKE3D TinyBotV1
+0.4 collapses from a 4814-line seam-driven content diff to 65 lines
+(the M73 knife-edge family); the passing aligned_back cases (TinyBot
+0.6, Peacock V2) stay byte-identical.

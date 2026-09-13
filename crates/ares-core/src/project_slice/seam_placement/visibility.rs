@@ -17,7 +17,10 @@ pub(super) struct GlobalVisibility {
 }
 
 impl GlobalVisibility {
-    pub(super) fn from_mesh(mesh: TriangleMesh, sample_count: usize) -> Self {
+    /// `front_bias` mirrors spAlignedBack's visibility adjustment
+    /// (`SeamPlacer.cpp:165-170`): samples facing the front (-Y) get up to
+    /// +1.0 visibility penalty so the seam prefers the back.
+    pub(super) fn from_mesh(mesh: TriangleMesh, sample_count: usize, front_bias: bool) -> Self {
         let samples = sample_uniform(&mesh, sample_count);
         let tree = TriangleBvh::new(&mesh);
         let directions = hemisphere_directions();
@@ -25,7 +28,15 @@ impl GlobalVisibility {
             .positions
             .iter()
             .zip(&samples.normals)
-            .map(|(&center, &normal)| sample_visibility(&mesh, &tree, center, normal, &directions))
+            .map(|(&center, &normal)| {
+                let visibility = sample_visibility(&mesh, &tree, center, normal, &directions);
+                if front_bias {
+                    let front_adjustment = ((-normal.y + 1.2) * 0.5).clamp(0.0, 1.0);
+                    visibility + front_adjustment
+                } else {
+                    visibility
+                }
+            })
             .collect();
         let density = sample_count as f32 / samples.total_area;
         let search_area = 4.0 / (-0.9_f32.ln() * density);

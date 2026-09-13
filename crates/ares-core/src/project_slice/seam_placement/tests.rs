@@ -70,7 +70,8 @@ fn task22o128_uniform_samples_are_deterministic_and_area_weighted() {
 
 #[test]
 fn task22o128_occluding_surface_lowers_visibility() {
-    let open = GlobalVisibility::from_mesh(TriangleMesh::new(vec![upward_triangle(0.0)]), 2_000);
+    let open =
+        GlobalVisibility::from_mesh(TriangleMesh::new(vec![upward_triangle(0.0)]), 2_000, false);
     let occluded = GlobalVisibility::from_mesh(
         TriangleMesh::new(vec![
             upward_triangle(0.0),
@@ -81,6 +82,7 @@ fn task22o128_occluding_surface_lowers_visibility() {
             ),
         ]),
         2_000,
+        false,
     );
     let point = Vec3::new(0.0, 0.0, 0.0);
 
