@@ -27,6 +27,14 @@ impl ProjectSettingsRaw {
             .iter()
             .map(|(key, value)| (key.as_str(), value.token()))
     }
+
+    /// Renders the export token of only the first `count` list items
+    /// (scalar values render like `token()`). Orca trims preset vectors to
+    /// the active extruder count, so trailing preset slots must not count
+    /// toward nil-ness checks.
+    pub(crate) fn token_prefix(&self, key: &str, count: usize) -> Option<String> {
+        self.0.get(key).and_then(|value| value.token_prefix(count))
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
@@ -65,6 +73,30 @@ impl RawConfigValue {
                 (!rendered.is_empty()).then(|| render_list_token(&rendered))
             }
             Self::Object(_) | Self::Null => None,
+        }
+    }
+
+    /// `token()` over only the first `count` list items.
+    fn token_prefix(&self, count: usize) -> Option<String> {
+        match self {
+            Self::List(values) => {
+                let rendered: Vec<String> = values
+                    .iter()
+                    .take(count)
+                    .filter_map(|item| match item {
+                        Self::Text(text) if text != "nil" => Some(text.clone()),
+                        Self::Number(number) => Some(number.to_string()),
+                        Self::Flag(flag) => Some(if *flag {
+                            "1".to_owned()
+                        } else {
+                            "0".to_owned()
+                        }),
+                        _ => None,
+                    })
+                    .collect();
+                (!rendered.is_empty()).then(|| render_list_token(&rendered))
+            }
+            other => other.token(),
         }
     }
 }

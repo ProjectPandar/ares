@@ -8,6 +8,30 @@ use super::{
 };
 use crate::options::project_config_views::ProjectConfigViews;
 use crate::project::raw_settings::ProjectSettingsRaw;
+/// Nullable filament extruder-override options
+/// (`PrintConfig.cpp:63-80`, `filament_extruder_override_keys`). Upstream
+/// serializes them from the full print config, whose vector is nil when the
+/// project never set a per-filament override, and the echo loop's `is_nil`
+/// filter (all values nil) then skips the key — a nil override never falls
+/// back to the resolved machine value in the echo block.
+const FILAMENT_EXTRUDER_OVERRIDE_KEYS: &[&str] = &[
+    "filament_retraction_length",
+    "filament_z_hop",
+    "filament_z_hop_types",
+    "filament_retract_lift_above",
+    "filament_retract_lift_below",
+    "filament_retract_lift_enforce",
+    "filament_retraction_speed",
+    "filament_deretraction_speed",
+    "filament_retract_restart_extra",
+    "filament_retraction_minimum_travel",
+    "filament_wipe_distance",
+    "filament_retract_when_changing_layer",
+    "filament_wipe",
+    "filament_retract_before_wipe",
+    "filament_long_retractions_when_cut",
+    "filament_retraction_distances_when_cut",
+];
 
 /// CLI-oracle export state the interactive `Print::apply` passes never
 /// observe (see `transform::apply_cli_oracle_state`).
@@ -101,6 +125,11 @@ pub(crate) fn write_canonical_entries(
     // plus any key the project presets define (`GCode.cpp:5636-5643`).
     // Ares registry keys outside that set only appear when the project
     // presets set them.
+    let filament_count = entries
+        .iter()
+        .find(|entry| entry.key == "filament_diameter")
+        .map(|entry| entry.token.split(';').count())
+        .unwrap_or(1);
     let mut lines: Vec<(String, String)> = Vec::new();
     fn emit(lines: &mut Vec<(String, String)>, key: &str, token: String, is_nil: bool) {
         if BANNED_KEYS.contains(&key) || is_nil || token == "nil" {
@@ -133,6 +162,16 @@ pub(crate) fn write_canonical_entries(
         if !known {
             continue;
         }
+        // Nullable per-filament overrides echo only when the project set
+        // them (`GCode.cpp:5642` `is_nil` filter over the full config,
+        // vectors trimmed to the active filament count).
+        if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&entry.key.as_str())
+            && raw_settings
+                .token_prefix(&entry.key, entry.token.split(';').count().max(1))
+                .is_none()
+        {
+            continue;
+        }
         if entry.key == "extruder_colour" {
             let colour = serialize_config_value(&settings.filament.gcode.filament_colour)
                 .map_err(config_error)?;
@@ -146,6 +185,13 @@ pub(crate) fn write_canonical_entries(
             continue;
         }
         if lines.iter().any(|(existing, _)| existing.as_str() == key) {
+            continue;
+        }
+        // The same trimmed `is_nil` filter as the canonical entries:
+        // all-nil active-slot overrides never echo.
+        if FILAMENT_EXTRUDER_OVERRIDE_KEYS.contains(&key)
+            && raw_settings.token_prefix(key, filament_count).is_none()
+        {
             continue;
         }
         let Some(rendered) = token else {
