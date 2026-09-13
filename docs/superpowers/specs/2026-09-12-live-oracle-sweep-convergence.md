@@ -375,3 +375,17 @@ the MK4S knife-edge in the opposite direction). The 55-case
 "geometry/motion" bucket over-counts; several rows are M73
 reorderings. The M73 slice (sub-40ms total-time alignment) therefore
 remains the highest-leverage next fix.
+
+## Replay block over-count root cause: arc discretization (2026-09-15 final)
+
+The MK4S gcode carries 38 G2/G3 arcs (46 in the no-slowdown build) —
+the F1200-region infill connectors are arc-fitted. The replay tool
+splits each arc into many straight segments (legacy discretization),
+creating 2632 blocks for 1841 movement lines and paying junction
+decelerations at every split point — the +33s tail excess. Ares's F1200
+wall blocks match the replay to 1e-4 (0.4340/0.4337s), so the wall
+physics agree; the divergence is purely the arc-segment chaining.
+Next slice: mirror upstream's G2/G3 handling in the replay's time model
+(single-arc trapezoids or the same discretization the engines use),
+then arbitrate the ≤40ms M73 total gap (which also gates the VS30
+Stage 2 pair and the wider M73 reordering bucket).
