@@ -365,3 +365,13 @@ orca's f32 boundary arithmetic on that layer's lslices, and requires
 bit-identical lslices/junction processing to replicate. Parked in favor
 of the broader buckets; revisit with an object-position sweep if the
 geometry/motion bucket shrinks to this signature.
+
+## Geometry bucket recount: VS30 pair is M73 (2026-09-15 addendum)
+
+Volumic VS30SC2/VS30MK3 Stage 2 (case-17xPwp) — the "geometry" diff is
+one MOVED line: `G1 X146.507 Y96.507 E.0742` swaps position with
+`M73 P18 R3` (ares attaches the M73 one G1 earlier, orca one later —
+the MK4S knife-edge in the opposite direction). The 55-case
+"geometry/motion" bucket over-counts; several rows are M73
+reorderings. The M73 slice (sub-40ms total-time alignment) therefore
+remains the highest-leverage next fix.
