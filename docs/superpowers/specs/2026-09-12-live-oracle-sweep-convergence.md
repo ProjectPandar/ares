@@ -52,7 +52,24 @@ This wave's accepted slices:
   Next unit: audit the junction between a pure-XY block and a pure-Z
   block (no shared axes, jerk-0/SET_VELOCITY_LIMIT configs) in
   `planner/{mod,trapezoid}.rs` against upstream
-  `GCodeProcessor.cpp:316-395` junction/factor handling.
+  `GCode/GCodeProcessor.cpp:316-395` junction/factor handling.
+  Refined same day: on Qidi Q1 Pro the drift is NOT a boundary knife
+  edge — ares totals 5m53s vs orca 5m57s (~1% fast) on a
+  byte-identical motion stream, so the estimator itself is ~1% fast
+  wherever split travels with a Z-axis speed cap
+  (`machine_max_speed_z=10`) appear; V-Core (cap 200) matches
+  exactly. Verified NOT the cause: `axis_jerk` reversal branch
+  (already `(-exit).max(entry)`), per-axis accel/feedrate caps
+  (equivalent formulas), the `min_feedrate_factor` scaling, G4 delay
+  accounting (3s G4 P3000 counted once), and the f32-vs-f64 cache
+  question (upstream stores `float(time)` from the double chain,
+  `GCode/GCodeProcessor.cpp:576`; an f32-chain experiment regressed
+  ~140 printers and was reverted in `09e2502e`). The oracle binary
+  has ELF symbols but no DWARF, so gdb struct dumps are impractical;
+  the next unit is a standalone C++ replay harness embedding upstream
+  `TimeMachine`/`Planner` (`GCodeProcessor.cpp:100-600`) over the
+  gcode text to produce per-block ground truth for `ARES_DUMP_BLOCKS`
+  diffs.
 - GCodeProcessor time-estimation parity (model printing time, M73
   placement) — the largest remaining divergence bucket; needs per-block
   trapezoid parity work.
