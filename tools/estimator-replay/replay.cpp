@@ -632,7 +632,7 @@ int main(int argc, char** argv)
             double travel_length = std::sqrt(length * length + dz * dz);
             if (travel_length < 0.001) { start_position = end_pos; continue; }
             std::optional<float> arc_feedrate;
-            if (auto f = word_value('F')) arc_feedrate = float(*f) / 60.0f;
+            if (auto f = word_value('F')) arc_feedrate = float(*f); // mm/min — process_G1 divides by MMMIN_TO_MMSEC
             std::optional<float> extrusion;
             if (auto ev = word_value('E')) extrusion = end_pos[E] - start_position[E];
             // ArcWelder::arc_discretization_steps(radius, |angle|, 0.0125)
