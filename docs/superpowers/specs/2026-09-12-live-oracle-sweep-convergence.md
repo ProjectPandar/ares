@@ -351,3 +351,17 @@ through (ares's merged-chain time ≈ 0.019s/segment vs the replay's
 chaining (GCodeProcessor.cpp:419 calculate_time / the planner's
 keep_last_n_blocks batching) before it can arbitrate the remaining
 <40ms M73 total gap; both engines otherwise agree on waits and chains.
+
+## Overhang-estimator anomaly localized to one wall (2026-09-15 addendum)
+
+The canary-band run (overhang_1_4_speed=10%) shows exactly THREE
+anomalous speed words — F9420/F9540/F9780 at lines 336/338/341 — all
+inside the layer-3 OUTER wall block (the same block as the baseline
+F10020). Inverted distances: 0.0507/0.0499/0.0481, i.e. orca's estimate
+for that one wall sits 3-6µm above the 0.1×width threshold while every
+other wall in the print sits at ≤0.045 (ares: ~0.000001 everywhere).
+The anomaly is a knife-edge on ONE layer's ONE wall — consistent with
+orca's f32 boundary arithmetic on that layer's lslices, and requires
+bit-identical lslices/junction processing to replicate. Parked in favor
+of the broader buckets; revisit with an object-position sweep if the
+geometry/motion bucket shrinks to this signature.
