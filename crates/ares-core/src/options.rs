@@ -14,6 +14,7 @@ mod gcode_fields;
 mod gcode_options;
 #[rustfmt::skip]
 option_modules!(pub(crate) filament_config_export, filament_count, filament_type, flow_ratios, gap_fill, hardware, infill, small_area_infill_flow);
+pub(crate) mod filament_map_recommend;
 mod filament_options;
 pub(crate) use filament_options::FilamentOptionsBuilder;
 #[rustfmt::skip]

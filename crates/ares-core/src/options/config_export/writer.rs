@@ -1,4 +1,4 @@
-use crate::{ProjectBedType, ProjectSettings, SliceError};
+use crate::{OrcaBool, ProjectBedType, ProjectFilamentMapMode, ProjectSettings, SliceError};
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},
@@ -8,6 +8,40 @@ use super::{
 };
 use crate::options::project_config_views::ProjectConfigViews;
 use crate::project::raw_settings::ProjectSettingsRaw;
+
+/// CLI-oracle export state the interactive `Print::apply` passes never
+/// observe (see `transform::apply_cli_oracle_state`).
+#[derive(Default)]
+pub(super) struct ExportOverrides {
+    /// Raw preset `enable_prime_tower` (None when the raw settings lack
+    /// the key — keep the resolved value).
+    pub(super) enable_prime_tower: Option<OrcaBool>,
+    pub(super) filament_map_mode: ProjectFilamentMapMode,
+    pub(super) is_bbl: bool,
+}
+
+impl ExportOverrides {
+    fn from_raw(
+        raw_settings: &ProjectSettingsRaw,
+        filament_map_mode: ProjectFilamentMapMode,
+        is_bbl: bool,
+    ) -> Self {
+        let enable_prime_tower = raw_settings
+            .iter()
+            .find(|(key, _)| *key == "enable_prime_tower")
+            .and_then(|(_, token)| token)
+            .and_then(|token| match token.as_str() {
+                "1" | "true" => Some(OrcaBool(true)),
+                "0" | "false" => Some(OrcaBool(false)),
+                _ => None,
+            });
+        Self {
+            enable_prime_tower,
+            filament_map_mode,
+            is_bbl,
+        }
+    }
+}
 
 const START: &[u8] = b"; CONFIG_BLOCK_START\n";
 const END: &[u8] = b"; CONFIG_BLOCK_END\n\n";
@@ -29,7 +63,14 @@ pub(crate) fn write_config_block(
     plate_index: usize,
     output: &mut Vec<u8>,
 ) -> Result<(), SliceError> {
-    let transformed = transformed_for_export(&views.full)?;
+    let transformed = transformed_for_export(
+        &views.full,
+        &ExportOverrides::from_raw(
+            raw_settings,
+            views.full.project.gcode.filament_map_mode,
+            is_bbl_printer(views),
+        ),
+    )?;
     let entries = collect_config_entries(&transformed).map_err(config_error)?;
     let mut scratch = Vec::new();
     scratch.extend_from_slice(START);

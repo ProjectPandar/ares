@@ -1,15 +1,31 @@
 use crate::{OrcaFloat, ProjectSettings, SliceError};
 
+use super::writer::ExportOverrides;
+
 const MATRIX_ERROR: &str = "Flush volumes matrix do not match to the correct size!";
 
 pub(super) fn transformed_for_export(
     source: &ProjectSettings,
+    overrides: &ExportOverrides,
 ) -> Result<ProjectSettings, SliceError> {
     let mut transformed = source.clone();
     prepare_multi_extruder_cli_defaults(&mut transformed);
     apply_scarf_joint_seam(&mut transformed);
+    apply_cli_oracle_state(&mut transformed, overrides);
     scale_flush_matrix(&mut transformed)?;
     Ok(transformed)
+}
+
+/// The CLI oracle's config export carries the RAW preset
+/// `enable_prime_tower`: both `Print::apply` `normalize_fdm_2` passes on
+/// a fresh slice see `extruders().size() == 0` (print regions do not
+/// exist yet, `PrintApply.cpp:1128-1132` / `:1620-1621`), so the
+/// used-filament disable never fires. (The filament map re-derives in
+/// the resolved config — `filament_map_recommend` — before export.)
+fn apply_cli_oracle_state(settings: &mut ProjectSettings, overrides: &ExportOverrides) {
+    if let Some(raw) = overrides.enable_prime_tower {
+        settings.process.print.enable_prime_tower = raw;
+    }
 }
 
 /// `PrintApply.cpp:1148-1161`: `has_scarf_joint_seam` turns true when any

@@ -51,22 +51,13 @@ pub(super) fn resolve(traversal: &PreparedPostClassicTraversal) -> (value::Value
         }
     }
 
-    let heterogeneous = settings
-        .printer
-        .gcode
-        .extruder_type
-        .0
-        .windows(2)
-        .any(|pair| pair[0] != pair[1]);
-    first = apply_physical_map(
-        first,
-        &settings.printer.gcode.physical_extruder_map,
-        heterogeneous,
-    );
+    // `GCode.cpp:2834-2842` applies the physical-extruder remap
+    // UNCONDITIONALLY (`physical[map.get_at(i)] = filaments[i]`) — no
+    // heterogeneous-extruder gate.
+    first = apply_physical_map(first, &settings.printer.gcode.physical_extruder_map);
     first_non_support = apply_physical_map(
         first_non_support,
         &settings.printer.gcode.physical_extruder_map,
-        heterogeneous,
     );
 
     (as_value(first), as_value(first_non_support))
@@ -80,14 +71,7 @@ fn int_at(values: &OrcaInts, index: usize) -> i32 {
         .map_or(0, |value| value.0)
 }
 
-fn apply_physical_map(
-    filaments: Vec<i32>,
-    physical_map: &OrcaInts,
-    heterogeneous: bool,
-) -> Vec<i32> {
-    if !heterogeneous {
-        return filaments;
-    }
+fn apply_physical_map(filaments: Vec<i32>, physical_map: &OrcaInts) -> Vec<i32> {
     let mut remapped = vec![-1; filaments.len()];
     for (index, filament) in filaments.into_iter().enumerate() {
         let target = int_at(physical_map, index);

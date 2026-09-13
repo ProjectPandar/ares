@@ -136,6 +136,11 @@ fn resolve_with_observer(
         (project, &grouped),
         observer,
     )?;
+    // `ToolOrdering::initialize` re-derives the filament map under
+    // `filament_map_mode < Manual` and writes it back into the print
+    // config before G-code export (`ToolOrdering.cpp:1288-1303`,
+    // `Print::update_filament_maps_to_config`).
+    crate::options::filament_map_recommend::apply_recommended_filament_map(&mut second);
     observer.resolve_views(&second);
     let views = resolve_project_config_views(second)?;
 
