@@ -127,6 +127,7 @@ fn pick_pos_internal(current: Point, safe_areas: &[ExPolygon]) -> Option<(i64, i
 
 /// The picture-extruder safe-area position for a by-layer print; `None`
 /// leaves the default (0, 0) placeholders.
+#[allow(dead_code)]
 pub(super) fn position(
     traversal: &PreparedPostClassicTraversal,
     picture_extruder: usize,
