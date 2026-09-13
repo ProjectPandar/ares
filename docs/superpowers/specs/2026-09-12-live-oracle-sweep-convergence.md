@@ -319,3 +319,20 @@ feedrate — ~800mm of tail travel at 20 vs 300 mm/s ≈ +37s). Next slice:
 content-aligned (not id-joined) block diff of the tail to find whether
 the replay or ares mishandles the post-slowdown feedrate inheritance,
 then re-derive the <40ms ares excess.
+
+## M73 time-model architecture insight (2026-09-15, final note this pass)
+
+Replaying the PRE-slowdown gcode (slow_down_for_layer_cooling=0 run)
+gives TOTAL motion 130.83s; the post-slowdown physics (real gcode,
+F1200-rewritten) totals 350.02s. Both engines' M73-driving totals
+(~1876.8 = 1560 waits + ~316.8 motion) match NEITHER — the time model
+that places M73s sees partially-rewritten speeds (ares's block dump
+shows 8.65mm walls at cruise 42.07/42.4 = the layer-2/3 slowdown values,
+not 20 or 170). So the estimator interleaves with the cooling rewrite
+rather than analyzing either pure speed set. The replay tool therefore
+cannot arbitrate the remaining <40ms ares-vs-orca total gap until the
+exact rewrite/simulation interleaving is pinned down (next slice: read
+the GCode::do_export → CoolingBuffer → GCodeProcessor pass order, then
+mirror which F words each estimator pass sees). Everything else this
+pass: waits (6×G29 +260, first attributed to the preceding block) and
+the crossing-region chains are PROVEN identical.
