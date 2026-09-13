@@ -480,3 +480,20 @@ pre-existing ~40ms total-time gap (M73 + F2544-vs-F2560 slowdown
 residual) — separate, tracked below. Also fixed the stale
 first_filaments unit tests (the unconditional-remap commit dropped the
 third argument).
+
+## Curl-port sweep result (2026-09-15)
+
+856 PASS / 116 DIVERGENT / 19 ORCA_ERROR / 10 VENDOR_INCOMPLETE.
+All row transitions vs the 858 baseline are within the known
+oracle-crash families (Cubicon, MyToolChanger, Flashforge C5, Prusa
+XL 5T, Snapmaker U1, WonderMaker — 19 crashes this run, up from 15):
+no stable printer changed status in either direction. The curl port
+changes no stable-printer output (their curls stay below the 0.045
+band), and the MK4S-class anomaly walls now slow identically to the
+oracle (canary-validated) — the remaining 116 DIVERGENT are the
+M73/total-time family and the other tracked buckets. The M73 total
+window recomputed with the correct time_in_minutes rounding puts
+orca's motion in [315.77, 316.55] vs ares 316.789 and the single-arc
+replay 316.695 — orca sits BELOW the theoretical single-arc minimum,
+so either its wait attribution differs by ~30ms or the bucket analysis
+needs orca-side instrumentation; parked as the next slice.
