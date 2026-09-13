@@ -427,3 +427,18 @@ exit-speed details where ares emits 8.338507 vs 10 at purge-line
 junctions). Fix order: (1) the overhang estimator δ model (one wall,
 3-6µm above threshold), (2) re-diff the time chains — the M73 bucket
 should collapse once the layer-3 speeds agree.
+
+## F10020 δ source: closing radius ruled out (2026-09-15 close-out)
+
+slice_closing_radius=0 (0.049 default) leaves the canary anomaly
+F9420/F9540/F9780 byte-identical — the ~0.05 estimator-boundary inset
+is NOT the slice closing. Also ruled out: elephant foot (not set; and
+the anomaly block is at print_z 0.6 = layer 3, whose prev layer 2 has
+normal slices), mesh draft/chamfer (E values identical every layer),
+frame mismatch (magnitude), ref-cap and band tables (verified equal).
+Confirmed: layer-3 outer wall only, δ = 0.048-0.051 = signed −0.175
+against a boundary at slice−0.05 while ares measures −0.225 against
+the slice contour. Next session: object position/size sweep through
+the oracle to test intrinsic-vs-proportional, then read
+PrintObject::make_slices call sites (lslices may be rebuilt from
+post-perimeter region slices in some path).
