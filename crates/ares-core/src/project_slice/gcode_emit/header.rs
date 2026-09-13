@@ -240,17 +240,28 @@ fn resolved_width(
 ) -> f32 {
     width(configured, nozzle)
         .or_else(|| width(fallback, nozzle))
-        .unwrap_or((automatic_ratio * nozzle) as f32)
+        .unwrap_or_else(|| auto_width(automatic_ratio, nozzle))
 }
 
 fn width(value: crate::FloatOrPercent, nozzle: f64) -> Option<f32> {
     match value {
         crate::FloatOrPercent::Float(value) if value > 0.0 => Some(value as f32),
         crate::FloatOrPercent::Percent(value) if value.0 > 0.0 => {
-            Some((value.0 * nozzle / 100.0) as f32)
+            // `Flow::new_from_config_width` (`Flow.cpp:129-144`) takes the
+            // nozzle as FLOAT and resolves the percent through
+            // `get_abs_value(double)` — the nozzle f32 round-trip moves
+            // boundary cases like 0.3×115% across the 0.345 rounding edge
+            // (0.34500001 → "0.35" instead of 0.345 → "0.34").
+            Some((value.0 * f64::from(nozzle as f32) / 100.0) as f32)
         }
         _ => None,
     }
+}
+
+/// `Flow::auto_extrusion_width` (`Flow.cpp`): the automatic ratio
+/// multiplies in FLOAT.
+fn auto_width(automatic_ratio: f64, nozzle: f64) -> f32 {
+    (automatic_ratio as f32) * (nozzle as f32)
 }
 
 #[cfg(test)]
@@ -259,7 +270,9 @@ mod tests {
     fn automatic_role_widths_match_upstream_defaults() {
         let auto = crate::FloatOrPercent::Float(0.0);
 
-        assert_eq!(super::resolved_width(auto, auto, 0.4, 1.125), 0.45);
+        // `Flow::auto_extrusion_width` multiplies in FLOAT: 1.125f × 0.4f
+        // = 0.45000002, not the f64 0.45.
+        assert_eq!(super::resolved_width(auto, auto, 0.4, 1.125), 0.45000002);
         assert_eq!(super::resolved_width(auto, auto, 0.4, 1.0), 0.4);
         assert_eq!(super::width(auto, 0.4), None);
     }
