@@ -162,3 +162,30 @@ overhang/curled dynamic-speed ref_speed shifted; open follow-up).
 
 Remaining in this bucket: TimelapsePosPicker port (H2D/X2D timelapse_pos
 x/y, the only divergence left on those 12 printers), Snapmaker U1 ref_speed.
+
+## TimelapsePosPicker port plan (next slice, 12 printers)
+
+H2D/H2D Pro/X2D now diverge ONLY on the M9711 timelapse x/y. Port
+`GCode/TimelapsePosPicker.cpp` (by-layer path — H2D timelapse_type=0 uses
+`pick_pos_for_curr_layer`, not the all-layer variant):
+
+1. init: bed polygon from `printable_area`; `bed_exclude_area` polygon;
+   per-extruder `extruder_printable_area` (PointsGroups option, already in
+   the registry) intersected with bed − exclude (fake wipe tower bbox is
+   empty for the 1-filament corpus); clearance radius from
+   `extruder_clearance_radius`.
+2. per-layer unplaceable = union(object bbox projections offset by
+   clearance/2, camera limit polygons = first-quadrant bbox inflated by
+   √2·clearance/2); rod limits only apply in by-object mode (skip).
+3. safe = extruder_printable_area[picture_extruder] − unplaceable, then
+   `opening_ex` by scale_(5) (ares clipper has offset/opening/union).
+4. `pick_pos_internal`: objects-center containment check; else scan every
+   safe-area polygon edge — vertices plus 5mm L1 steps — with penalty
+   |curr−cand|₁ − ⅓·|cand|₁ (camera at origin); top-5 max-heap; by-layer
+   mode returns the best (no path-collision check).
+5. Picture extruder = the most-used physical extruder already computed for
+   `most_used_physical_extruder_id`.
+
+Snapmaker U1 0.4's F2400/F3000 was oracle NONDETERMINISM, not a regression:
+the pre-slice binary mismatches the newly generated orca.gcode the same
+way (verified via worktree build at ca3c604d).
