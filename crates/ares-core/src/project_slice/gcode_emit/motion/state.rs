@@ -97,6 +97,9 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// (`AvoidCrossingPerimeters::init_layer`).
     pub(in crate::project_slice::gcode_emit) avoid_boundary:
         Option<std::rc::Rc<super::path::Boundary>>,
+    /// Curled-perimeter tracker feeding the overhang estimator's
+    /// artificial distance (`SupportSpotsGenerator.cpp:141-196`).
+    pub(in crate::project_slice::gcode_emit) curl: super::overhang::CurlTracker,
 }
 
 #[derive(Clone, Copy)]

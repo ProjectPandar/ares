@@ -1,6 +1,10 @@
 #[cfg(test)]
 mod tests;
 
+mod curl;
+
+pub(super) use curl::CurlTracker;
+
 use super::{LayerGeometry, MotionOptions, features::PathProperties};
 use crate::{FloatOrPercent, geometry::Point};
 
@@ -14,6 +18,7 @@ pub(super) struct EstimateRequest<'a> {
     pub(super) options: &'a MotionOptions,
     pub(super) layer_index: usize,
     pub(super) original_speed: f64,
+    pub(super) curl: &'a mut CurlTracker,
 }
 
 #[derive(Clone, Copy)]
@@ -39,6 +44,20 @@ struct BoundaryContext<'a> {
 }
 
 pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoint>> {
+    // `estimate_malformations` (`PrintObject.cpp:900-914`) runs over every
+    // layer's external perimeters while overhang speed is enabled —
+    // including the first layer, whose curl state feeds the next layer's
+    // artificial distance (`SupportSpotsGenerator.cpp:141-196`).
+    if request.options.enable_overhang_speed && request.properties.feature == "Outer wall" {
+        request.curl.collect(
+            request.layer_index,
+            request.points,
+            request.properties.width,
+            request.properties.height,
+            request.geometry.previous_layer_boundary,
+            request.geometry.scale,
+        );
+    }
     let boundary = request.geometry.previous_layer_boundary?;
     if !request.options.enable_overhang_speed
         || request.layer_index == 0
@@ -89,24 +108,44 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     };
     let extended = context.add_boundary_intersections(request.points);
     let extended = context.add_segmentation_points(&extended, minimum_slowdown_distance);
+    // The artificial curl distance (`ExtrusionProcessor.hpp:415-418`):
+    // min() the curl speed into the pair speed like the boundary bands.
+    let curled_lines = if request.options.slowdown_for_curled_perimeters {
+        let curled = request.curl.previous_curled(request.layer_index);
+        (!curled.is_empty()).then_some(curled)
+    } else {
+        None
+    };
     if let Ok(level) = std::env::var("ARES_DUMP_OVERHANG") {
         eprintln!(
-            "OH layer={} feature={} width={:.4} ref={:.4} orig={:.4} minsd={:.4} pts={} variable",
+            "OH layer={} feature={} width={:.4} ref={:.4} orig={:.4} minsd={:.4} pts={} curled={} variable",
             request.layer_index,
             request.properties.feature,
             request.properties.width,
             reference_speed,
             request.original_speed,
             minimum_slowdown_distance,
-            extended.len()
+            extended.len(),
+            curled_lines.map_or(0, <[curl::CurledLine]>::len),
         );
         if level == "2" {
             for (index, point) in extended.iter().enumerate() {
+                let artificial = curled_lines.map_or(0.0, |curled| {
+                    let next = extended.get(index + 1).copied().unwrap_or(*point);
+                    curl::artificial_distance(
+                        curled,
+                        (point.x, point.y),
+                        (next.x, next.y),
+                        request.properties.width,
+                        request.properties.height,
+                    )
+                });
                 eprintln!(
-                    "OHL {index:03} x={:.4} y={:.4} dist={:.6} speed={:.3}",
+                    "OHL {index:03} x={:.4} y={:.4} dist={:.6} artificial={:.6} speed={:.3}",
                     point.x,
                     point.y,
                     point.distance,
+                    artificial,
                     speed_for_distance(point.distance, &sections, original_speed)
                 );
             }
@@ -118,9 +157,19 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     for index in 0..extended.len() {
         let current = extended[index];
         let next = extended.get(index + 1).copied().unwrap_or(current);
-        let speed = speed_for_distance(current.distance, &sections, original_speed)
+        let mut speed = speed_for_distance(current.distance, &sections, original_speed)
             .min(speed_for_distance(next.distance, &sections, original_speed))
             .min(original_speed);
+        if let Some(curled) = curled_lines {
+            let artificial = curl::artificial_distance(
+                curled,
+                (current.x, current.y),
+                (next.x, next.y),
+                request.properties.width,
+                request.properties.height,
+            );
+            speed = speed.min(speed_for_distance(artificial, &sections, original_speed));
+        }
         variable |= (f64::from(speed) - request.original_speed).abs() > 1.0;
         let width_inverse = 1.0_f32 / request.properties.width;
         processed.push(ProcessedPoint {

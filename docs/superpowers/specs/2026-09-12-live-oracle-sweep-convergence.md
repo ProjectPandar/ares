@@ -460,3 +460,23 @@ specificity = layer 1's curl state. Everything previously "ruled out"
 out — the signal was never the geometry boundary. Fix: port the
 curled-lines estimation + the artificial distance into ares's overhang
 estimator (motion/overhang.rs); the slowdown→M73 chain then collapses.
+
+## Curled-perimeter port landed (2026-09-15)
+
+`motion/overhang/curl.rs` + `curl/geometry.rs` port
+`SupportSpotsGenerator.cpp:102-196` (per-layer external-wall chain:
+signed malformation distance + windowed curvature → chained curl
+heights, tolerance 0.1) and `ExtrusionProcessor.hpp:375-420` (the
+artificial distance `width·(1−d/(10·width))²·curled/(height·10)` with
+the projected-length influence box), collected during emission and
+min()ed into the overhang band speeds when
+`slowdown_for_curled_perimeters` is on. The end-to-end MK4S canary
+(10% band + closing 0) is byte-identical to the oracle — the port is
+EXACT, including the Liang-Barsky boundary case (segments ON the box
+edge clip to full extent; the naive edge-ordering clipped them to zero)
+and the IEEE `atan2(+0, −0) = π` curvature artifact at the seam-start
+zero tangent (faithful to upstream). The baseline MK4S still shows the
+pre-existing ~40ms total-time gap (M73 + F2544-vs-F2560 slowdown
+residual) — separate, tracked below. Also fixed the stale
+first_filaments unit tests (the unconditional-remap commit dropped the
+third argument).

@@ -117,6 +117,7 @@ pub(super) fn emit(
         options: &state.options,
         layer_index: state.layer_index,
         original_speed,
+        curl: &mut state.curl,
     });
     let points = processed.as_ref().map_or_else(
         || {
