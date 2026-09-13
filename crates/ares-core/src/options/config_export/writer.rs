@@ -1,4 +1,4 @@
-use crate::{OrcaBool, ProjectBedType, ProjectFilamentMapMode, ProjectSettings, SliceError};
+use crate::{OrcaBool, ProjectBedType, ProjectSettings, SliceError};
 
 use super::{
     collector::{ConfigEntry, collect_config_entries},

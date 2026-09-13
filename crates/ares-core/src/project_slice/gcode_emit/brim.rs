@@ -6,7 +6,6 @@ use crate::{
     ProcessBrimType, SliceError,
     geometry::{
         CoordinateScale, ExPolygon, JoinType, Point, Polygon, difference_ex, offset_expolygons,
-        simplify_closed_points,
     },
     project_slice::{
         gcode_emit::motion::{self, EmitState, LayerGeometry},

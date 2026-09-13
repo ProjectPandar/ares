@@ -18,13 +18,21 @@ use super::footprint;
 const FILTER_THRESHOLD_MM: f64 = 5.0;
 const CANDIDATE_SEGMENT_MM: f64 = 5.0;
 
-/// Scaled millimeters (`Slic3r::scale_`, SCALING_FACTOR 1e-6).
+/// Scaled millimeters (`Slic3r::scale_`, SCALING_FACTOR 1e-6). Upstream
+/// `coord_t(scale_(...))` sites truncate; `Point{scale_(...)}`
+/// brace-init selects `Point(double, double)`, which ROUNDS.
 fn scale(value: f64) -> i64 {
     (value * 1.0e6) as i64
 }
 
-fn unscale_trunc(value: i64) -> i64 {
-    (f64::from(value as i32) * 1.0e-6) as i64
+fn scale_round(value: f64) -> i64 {
+    (value * 1.0e6).round() as i64
+}
+
+/// `Point{unscale_(res.x()), unscale_(res.y())}` selects the
+/// `Point(double, double)` constructor — rounding, not truncation.
+fn unscale(value: i64) -> i64 {
+    (value as f64 * 1.0e-6).round() as i64
 }
 
 fn scaled_polygon(points: &[(f64, f64)]) -> Polygon {
@@ -39,10 +47,10 @@ fn scaled_polygon(points: &[(f64, f64)]) -> Polygon {
 fn bounding_box_polygon(bounds: (f64, f64, f64, f64)) -> Polygon {
     let (min_x, min_y, max_x, max_y) = bounds;
     Polygon::new(vec![
-        Point::new(scale(min_x), scale(min_y)),
-        Point::new(scale(max_x), scale(min_y)),
-        Point::new(scale(max_x), scale(max_y)),
-        Point::new(scale(min_x), scale(max_y)),
+        Point::new(scale_round(min_x), scale_round(min_y)),
+        Point::new(scale_round(max_x), scale_round(min_y)),
+        Point::new(scale_round(max_x), scale_round(max_y)),
+        Point::new(scale_round(min_x), scale_round(max_y)),
     ])
 }
 
@@ -58,9 +66,9 @@ fn camera_limit_polygon(bounds: (f64, f64, f64, f64), clearance_radius: f64) -> 
     );
     Polygon::new(vec![
         Point::new(0, 0),
-        Point::new(scale(max_x), scale(min_y)),
-        Point::new(scale(max_x), scale(max_y)),
-        Point::new(scale(min_x), scale(max_y)),
+        Point::new(scale_round(max_x), scale_round(min_y)),
+        Point::new(scale_round(max_x), scale_round(max_y)),
+        Point::new(scale_round(min_x), scale_round(max_y)),
     ])
 }
 
@@ -80,7 +88,7 @@ fn pick_pos_internal(current: Point, safe_areas: &[ExPolygon]) -> Option<(i64, i
         .iter()
         .any(|area| expolygon_contains(area, current))
     {
-        return Some((unscale_trunc(current.x()), unscale_trunc(current.y())));
+        return Some((unscale(current.x()), unscale(current.y())));
     }
 
     let segment = scale(CANDIDATE_SEGMENT_MM) as f64;
@@ -122,12 +130,11 @@ fn pick_pos_internal(current: Point, safe_areas: &[ExPolygon]) -> Option<(i64, i
             }
         }
     }
-    best.map(|(_, point)| (unscale_trunc(point.x()), unscale_trunc(point.y())))
+    best.map(|(_, point)| (unscale(point.x()), unscale(point.y())))
 }
 
 /// The picture-extruder safe-area position for a by-layer print; `None`
 /// leaves the default (0, 0) placeholders.
-#[allow(dead_code)]
 pub(super) fn position(
     traversal: &PreparedPostClassicTraversal,
     picture_extruder: usize,
@@ -213,8 +220,8 @@ pub(super) fn position(
     }
 
     let center = Point::new(
-        scale((model_bounds.0 + model_bounds.2) * 0.5),
-        scale((model_bounds.1 + model_bounds.3) * 0.5),
+        scale_round((model_bounds.0 + model_bounds.2) * 0.5),
+        scale_round((model_bounds.1 + model_bounds.3) * 0.5),
     );
     pick_pos_internal(center, &safe).map(|(x, y)| (x as i32, y as i32))
 }

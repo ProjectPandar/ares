@@ -94,7 +94,6 @@ pub(super) fn append(
         traditional_timelapse && runtime_gcode.printer_structure == crate::PrinterStructure::I3;
     state.traditional_timelapse = traditional_timelapse;
     let mut second_layer_done = false;
-    let object_count = objects.len();
     // Avoid-crossing boundaries are built per slice_z across every object
     // (`Layer::lslices` covers all instances of the print object;
     // `AvoidCrossingPerimeters.cpp:1100`). Copies of one source share the
