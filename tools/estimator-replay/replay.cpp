@@ -439,7 +439,7 @@ int main(int argc, char** argv)
                 float xy_len = std::sqrt(sqr(delta_pos[X]) + sqr(delta_pos[Y]));
                 float r = xy_len * 0.5f / sin_theta_2;
                 float acc = machine.acceleration;
-                curr.feedrate = std::min(curr.feedrate, std::sqrt(acc * r));
+                { curr.feedrate = std::min(curr.feedrate, std::sqrt(acc * r)); if (getenv("REPLAY_TRACE_G1") && curr.feedrate < 1.0f) std::fprintf(stderr, "CENTRI acc=%.2f r=%.8f nd=%.5f newf=%.5f\n", acc, r, norm_diff, curr.feedrate); }
             }
         }
 
@@ -455,6 +455,7 @@ int main(int argc, char** argv)
             }
         }
         curr.feedrate *= min_feedrate_factor;
+        if (getenv("REPLAY_TRACE_G1") && curr.feedrate < 1.0f) std::fprintf(stderr, "FACTOR f=%.6f af=%.4f,%.4f,%.4f,%.4f\n", min_feedrate_factor, curr.axis_feedrate[0], curr.axis_feedrate[1], curr.axis_feedrate[2], curr.axis_feedrate[3]);
         block.feedrate_profile.cruise = curr.feedrate;
         if (min_feedrate_factor < 1.0f) {
             for (unsigned char a = X; a <= E; ++a) {
@@ -544,6 +545,7 @@ int main(int argc, char** argv)
         block.safe_feedrate = curr.safe_feedrate;
         block.calculate_trapezoid();
 
+        if (getenv("REPLAY_TRACE_G1") && std::fabs(distance - 0.20798) < 0.001) std::fprintf(stderr, "BLOCK d=%.5f cruise=%.5f mf=%.5f factor? entry=%.5f\n", distance, block.feedrate_profile.cruise, m_feedrate, block.feedrate_profile.entry);
         machine.prev = machine.curr;
         blocks.push_back(block);
 
@@ -632,7 +634,7 @@ int main(int argc, char** argv)
             double travel_length = std::sqrt(length * length + dz * dz);
             if (travel_length < 0.001) { start_position = end_pos; continue; }
             std::optional<float> arc_feedrate;
-            if (auto f = word_value('F')) arc_feedrate = float(*f); // mm/min — process_G1 divides by MMMIN_TO_MMSEC
+            if (auto f = word_value('F')) { arc_feedrate = float(*f); if (getenv("REPLAY_TRACE_G1")) std::fprintf(stderr, "ARC F=%.1f segments=%zu r=%.3f angle=%.4f\n", *f, 0, radius, angle); }
             std::optional<float> extrusion;
             if (auto ev = word_value('E')) extrusion = end_pos[E] - start_position[E];
             // ArcWelder::arc_discretization_steps(radius, |angle|, 0.0125)
@@ -666,9 +668,11 @@ int main(int argc, char** argv)
                     axes[X] = target[X] - start_position[X]; axes[Y] = target[Y] - start_position[Y];
                     axes[Z] = target[Z] - start_position[Z];
                 }
-                // adjust_target: E goes relative when the extruder is in
-                // relative mode (M83), else absolute
-                axes[E] = e_relative ? std::optional<double>(target[E] - start_position[E]) : std::optional<double>(target[E]);
+                // adjust_target sets E only when the ARC line carried an
+                // E word (GCodeProcessor.cpp:4701 `if (extrusion.has_value())`);
+                // E-less arcs leave the axis unset so the position carries.
+                if (extrusion.has_value())
+                    axes[E] = e_relative ? std::optional<double>(target[E] - start_position[E]) : std::optional<double>(target[E]);
                 process_G1(axes, seg_feedrate.has_value() ? std::optional<double>(double(*seg_feedrate)) : std::nullopt);
             };
             for (size_t i = 1; i < segments; ++i) {
@@ -687,6 +691,7 @@ int main(int argc, char** argv)
                 arc_target[Y] = float(cy + rely);
                 arc_target[Z] = float(arc_target[Z] + z_per_segment);
                 arc_target[E] = float(arc_target[E] + extruder_per_segment);
+                if (i == 1 && getenv("REPLAY_TRACE_G1")) std::fprintf(stderr, "SEG1 feed=%s target=%.4f,%.4f start=%.4f,%.4f m_f=%.4f\n", arc_feedrate.has_value() ? std::to_string(*arc_feedrate).c_str() : "none", arc_target[X], arc_target[Y], start_position[X], start_position[Y], m_feedrate);
                 emit_seg(arc_target, (i == 1) ? arc_feedrate : std::nullopt);
             }
             emit_seg(end_pos, (segments == 1) ? arc_feedrate : std::nullopt);
