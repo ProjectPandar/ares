@@ -161,6 +161,7 @@ struct MachineLimits {
     float max_speed[4]{ 0, 0, 0, 0 };
     float max_accel[4]{ 0, 0, 0, 0 };
     float max_jerk[4]{ 0, 0, 0, 0 };
+    float junction_deviation{ 0.0f };
     float min_extruding{ 0.0f };
     float min_travel{ 0.0f };
 };
@@ -313,6 +314,7 @@ int main(int argc, char** argv)
             else if (key == "max_jerk_y") limits.max_jerk[Y] = float(value);
             else if (key == "max_jerk_z") limits.max_jerk[Z] = float(value);
             else if (key == "max_jerk_e") limits.max_jerk[E] = float(value);
+            else if (key == "junction_deviation") limits.junction_deviation = float(value);
             else if (key == "min_extruding") limits.min_extruding = float(value);
             else if (key == "min_travel") limits.min_travel = float(value);
             else if (key == "accel") accel_init = float(value);
@@ -476,9 +478,26 @@ int main(int argc, char** argv)
         block.acceleration = acceleration;
 
         // safe feedrate (GCodeProcessor.cpp:4078-4086)
+        // MarlinFirmware with a positive machine_max_junction_deviation derives
+        // the per-axis jerk limit from the junction deviation and the current
+        // machine acceleration clamped by the per-axis maximum
+        // (GCodeProcessor.cpp:5798-5806, 5771-5792); classic M205 jerks apply
+        // otherwise.
+        float effective_max_jerk[4];
+        for (unsigned char a = X; a <= E; ++a) {
+            if (limits.junction_deviation > 0.0f) {
+                float eff_acc = machine.acceleration;
+                float axis_max_acc = limits.max_accel[a];
+                if (axis_max_acc > 0.0f)
+                    eff_acc = (eff_acc > 0.0f) ? std::min(eff_acc, axis_max_acc) : axis_max_acc;
+                effective_max_jerk[a] = (eff_acc > 0.0f) ? std::sqrt(limits.junction_deviation * eff_acc * 2.5f) : 0.0f;
+            } else {
+                effective_max_jerk[a] = limits.max_jerk[a];
+            }
+        }
         curr.safe_feedrate = block.feedrate_profile.cruise;
         for (unsigned char a = X; a <= E; ++a) {
-            float axis_max_jerk = limits.max_jerk[a];
+            float axis_max_jerk = effective_max_jerk[a];
             if (curr.abs_axis_feedrate[a] > axis_max_jerk)
                 curr.safe_feedrate = std::min(curr.safe_feedrate, axis_max_jerk);
         }
@@ -501,7 +520,7 @@ int main(int argc, char** argv)
                 if (prev_speed_larger) { exit_v[0] *= smaller_speed_factor; exit_v[1] *= smaller_speed_factor; exit_v[2] *= smaller_speed_factor; }
                 float entry_v[3] = { block.feedrate_profile.cruise * curr.enter_direction[0], block.feedrate_profile.cruise * curr.enter_direction[1], block.feedrate_profile.cruise * curr.enter_direction[2] };
                 float jerk_v[3] = { std::fabs(entry_v[0] - exit_v[0]), std::fabs(entry_v[1] - exit_v[1]), std::fabs(entry_v[2] - exit_v[2]) };
-                float max_xyz_jerk_v[3] = { limits.max_jerk[X], limits.max_jerk[Y], limits.max_jerk[Z] };
+                float max_xyz_jerk_v[3] = { effective_max_jerk[X], effective_max_jerk[Y], effective_max_jerk[Z] };
                 for (int i = 0; i < 3; ++i) {
                     if (jerk_v[i] > max_xyz_jerk_v[i]) {
                         v_factor *= max_xyz_jerk_v[i] / jerk_v[i];
@@ -520,7 +539,7 @@ int main(int argc, char** argv)
                     (v_exit > v_entry) ?
                         (((v_entry > 0.0f) || (v_exit < 0.0f)) ? (v_exit - v_entry) : std::max(v_exit, -v_entry)) :
                         (((v_entry < 0.0f) || (v_exit > 0.0f)) ? (v_entry - v_exit) : std::max(-v_exit, v_entry));
-                float axis_max_jerk = limits.max_jerk[E];
+                float axis_max_jerk = effective_max_jerk[E];
                 if (jerk > axis_max_jerk) {
                     v_factor *= axis_max_jerk / jerk;
                     limited = true;

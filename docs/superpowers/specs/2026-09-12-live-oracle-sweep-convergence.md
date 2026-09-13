@@ -257,3 +257,27 @@ diagnostic hooks landed with this slice. The M73 line shifts in the
 same case occur BEFORE the first speed difference (layer 2's M73 moved
 with no layer-2 speed diffs), so the 52-case M73 bucket has an
 independent root cause and is the next slice.
+
+## M73 knife-edge root-cause progress (2026-09-14/15)
+
+The MK4S M73 P84 R4 line lands two G1s later in ares (after the layer-2
+Z-move vs orca's retract). Chain forensics with ARES_DUMP_ELAPSED, the
+block dumps and the replay tool:
+
+- Ares's planner is FAITHFUL where it matters: the replay tool was
+  missing `machine_max_junction_deviation` support (MK4S: 0.01 →
+  per-axis jerk sqrt(jd·min(accel, axis_max)·2.5), GCodeProcessor.cpp
+  :5798-5806). With `junction_deviation` added to the limits file the
+  replay reproduces ares's blocks to 1e-6 (block 0 safe √5 = 2.236068,
+  E-jerk √62.5 = 7.905694) and the elapsed chains agree to ~3µs through
+  the whole M73 knife-edge region (ids 315-335, constant wait offset
+  1560.028065).
+- Therefore the M73 shift is a TOTAL-time effect: orca's machine total
+  must sit in [1875.80, 1876.58] (derived from the P84 R5 / P84 R4 /
+  P85 R4 bucket constraints plus the crossing position) while ares's is
+  1876.817 — a 0.24-1.0s gap that lives in the tail (the slow-down
+  F1200 layers, ~2000 moves past id 490), or in the wait mass.
+- The replay's own tail is off by ~33s (it simulates the 0.615mm F1200
+  segments at 0.0307s where the engines land ~0.019-0.023s; id spaces
+  also drift a few entries in the 335-490 window) — the replay needs a
+  tail fix before it can arbitrate per-move differences there.
