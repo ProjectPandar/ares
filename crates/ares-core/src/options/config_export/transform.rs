@@ -7,8 +7,20 @@ pub(super) fn transformed_for_export(
 ) -> Result<ProjectSettings, SliceError> {
     let mut transformed = source.clone();
     prepare_multi_extruder_cli_defaults(&mut transformed);
+    apply_scarf_joint_seam(&mut transformed);
     scale_flush_matrix(&mut transformed)?;
     Ok(transformed)
+}
+
+/// `PrintApply.cpp:1148-1161`: `has_scarf_joint_seam` turns true when any
+/// resolved `seam_slope_type` is not `none` (object, volume, layer-range or
+/// the inherited default); the CLI export then carries the flag in the
+/// `;CONFIG_BLOCK` comment.
+fn apply_scarf_joint_seam(settings: &mut ProjectSettings) {
+    use crate::ProcessSeamScarfType;
+    if settings.process.region.seam_slope_type != ProcessSeamScarfType::None {
+        settings.project.gcode.has_scarf_joint_seam = crate::OrcaBool(true);
+    }
 }
 
 /// The OrcaSlicer CLI slicing path fills per-extruder defaults for

@@ -29,6 +29,18 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
         let e_ratio = slope.e_begin + (slope.e_end - slope.e_begin) * ratio;
         let z =
             state.layer_z - f64::from(properties.height) + f64::from(properties.height) * z_ratio;
+        // Upstream splits the loop at the scarf boundary: only the ramp is
+        // `ExtrusionPathSloped` and every ramp move carries Z (including the
+        // final move that reaches the layer top); the saturated body is a
+        // plain path whose moves carry no Z word. Emit Z only when it
+        // changes from the previous segment: the last ramp move keeps its
+        // word, the body drops it.
+        let previous_z = state.scarf_z;
+        let z_word = if previous_z.is_some_and(|last| (z - last).abs() < 1.0e-9) {
+            String::new()
+        } else {
+            format!(" Z{}", format_z(z))
+        };
         let extrusion = extrusion::for_length(
             length,
             properties.mm3_per_mm,
@@ -47,10 +59,10 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
         };
         output.extend_from_slice(
             format!(
-                "G1 X{} Y{} Z{} E{}\n",
+                "G1 X{} Y{}{} E{}\n",
                 format_axis(end.x),
                 format_axis(end.y),
-                format_z(z),
+                z_word,
                 format_extrusion(extrusion)
             )
             .as_bytes(),
