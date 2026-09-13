@@ -426,6 +426,7 @@ fn emit_variable_width_entity(
                 crate::project_slice::perimeters::classic::chained_loops::ExtrusionLoopRole::Internal,
                 geometry,
                 state,
+                &[],
             )
         }
     }

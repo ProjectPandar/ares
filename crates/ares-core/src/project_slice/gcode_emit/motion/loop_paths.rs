@@ -16,8 +16,9 @@ pub(super) fn emit(
     loop_role: ExtrusionLoopRole,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
+    region_perimeters: &[Vec<(i64, i64)>],
 ) {
-    append_wipe_before_external(output, paths, loop_role, geometry, state);
+    append_wipe_before_external(output, paths, loop_role, geometry, state, region_perimeters);
     if !state.spiral_vase
         && let Some(scarf) = super::scarf::build(
             paths,
@@ -104,6 +105,7 @@ fn append_wipe_before_external(
     loop_role: ExtrusionLoopRole,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
+    region_perimeters: &[Vec<(i64, i64)>],
 ) {
     let Some(first) = paths.first() else {
         return;
@@ -111,7 +113,7 @@ fn append_wipe_before_external(
     let last = paths.last().unwrap();
     if !state.options.wipe_before_external_loop
         || first.role != ExtrusionRole::ExternalPerimeter
-        || state.options.wall_loops <= 1
+        || region_perimeters.len() <= 1
         || first.polyline.points.len() < 2
         || last.polyline.points.len() < 2
     {
@@ -148,6 +150,26 @@ fn append_wipe_before_external(
         + sine * (base_x - current.x as f64)
         + cosine * (base_y - current.y as f64);
     let point = crate::geometry::Point::new(x.round() as i64, y.round() as i64);
+    // `discoveredTouchingLines > 1` (`GCode.cpp:5867-5883`): the hop
+    // only de-retracts when the point sits inside the model — at least
+    // two region perimeter entities must have a segment within one
+    // nozzle diameter of it (the wall itself plus a neighbour).
+    let nozzle_radius = state.options.nozzle_diameter / geometry.scale.factor();
+    let mut touching = 0;
+    for polyline in region_perimeters {
+        if polyline
+            .windows(2)
+            .any(|segment| point_segment_distance(point, segment) <= nozzle_radius)
+        {
+            touching += 1;
+            if touching > 1 {
+                break;
+            }
+        }
+    }
+    if touching <= 1 {
+        return;
+    }
     let x = geometry.scale.unscale(point.x()) + state.origin.0 - state.extruder_offset.0;
     let y = geometry.scale.unscale(point.y()) + state.origin.1 - state.extruder_offset.1;
     // Orca routes this hop through `travel_to` inside the fake
@@ -346,4 +368,20 @@ fn path_length(path: &ExtrusionPath, geometry: LayerGeometry<'_>) -> f64 {
                 .hypot(geometry.scale.unscale(segment[1].y - segment[0].y))
         })
         .sum()
+}
+
+/// Distance from a scaled point to a scaled segment
+/// (`AABBTreeLines::all_lines_in_radius` semantics for one segment).
+fn point_segment_distance(point: crate::geometry::Point, segment: &[(i64, i64)]) -> f64 {
+    let (ax, ay) = (segment[0].0 as f64, segment[0].1 as f64);
+    let (bx, by) = (segment[1].0 as f64, segment[1].1 as f64);
+    let (px, py) = (point.x() as f64, point.y() as f64);
+    let dx = bx - ax;
+    let dy = by - ay;
+    let length_squared = dx * dx + dy * dy;
+    if length_squared <= 0.0 {
+        return (px - ax).hypot(py - ay);
+    }
+    let t = (((px - ax) * dx + (py - ay) * dy) / length_squared).clamp(0.0, 1.0);
+    (px - (ax + t * dx)).hypot(py - (ay + t * dy))
 }

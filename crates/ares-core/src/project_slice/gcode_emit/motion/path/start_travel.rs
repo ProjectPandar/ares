@@ -83,6 +83,25 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         let retract = !state.retracted
             && routed_length >= state.options.retraction_minimum_travel
             && !skip_retraction;
+        if std::env::var("ARES_DUMP_TRAVEL").is_ok() {
+            eprintln!(
+                "TV layer={} feat={} from=({:.3},{:.3}) to=({:.3},{:.3}) routed={:.3} min={:.3} retracted={} skip={} retract={} ext_once={} disabled_once={} first_pos={}",
+                state.layer_index,
+                properties.feature,
+                state.x,
+                state.y,
+                first_x,
+                first_y,
+                routed_length,
+                state.options.retraction_minimum_travel,
+                state.retracted,
+                skip_retraction,
+                retract,
+                state.use_external_mp_once,
+                state.avoid_crossing_disabled_once,
+                first_position,
+            );
+        }
         // Upstream `retract()` also runs for a long travel with the
         // extruder already retracted — dE is a no-op but `maybe_zlift`
         // defers, gated on m_lifted == 0 && m_to_lift == 0

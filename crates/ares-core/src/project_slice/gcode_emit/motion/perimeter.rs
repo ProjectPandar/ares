@@ -17,6 +17,23 @@ pub(super) fn emit_perimeter(
     let IslandPrintEntity::Perimeter(collection) = entity else {
         unreachable!("perimeter phase contains only perimeter entities");
     };
+    // `region.perimeters` feeds the wipe-before-external hop's
+    // touching-lines gate (`GCode.cpp:6144, 5824, 5871-5882`): each
+    // entity counts once when any of its polyline segments lies within
+    // one nozzle diameter of the de-retraction point.
+    let region_perimeters: Vec<Vec<(i64, i64)>> = collection
+        .entities
+        .iter()
+        .map(|entity| match entity {
+            ExtrusionEntity::Loop(loop_) => loop_
+                .extrusion_loop
+                .paths
+                .iter()
+                .flat_map(|path| path.polyline.points.iter().map(|point| (point.x, point.y)))
+                .collect(),
+            _ => Vec::new(),
+        })
+        .collect();
     for entity in collection.entities {
         let ExtrusionEntity::Loop(mut loop_) = entity else {
             // `GCode::extrude_multi_path` (`GCode.cpp:6038`) is not ported yet;
@@ -64,6 +81,7 @@ pub(super) fn emit_perimeter(
             loop_.extrusion_loop.role,
             geometry,
             state,
+            &region_perimeters,
         );
     }
 }

@@ -497,3 +497,22 @@ orca's motion in [315.77, 316.55] vs ares 316.789 and the single-arc
 replay 316.695 — orca sits BELOW the theoretical single-arc minimum,
 so either its wait attribution differs by ~30ms or the bucket analysis
 needs orca-side instrumentation; parked as the next slice.
+
+## Wipe-before-external hop gate + E3NG byte-identical (2026-09-15)
+
+`GCode.cpp:5824` gates the wipe-before-external hop on
+`region_perimeters.size() > 1` AND `discoveredTouchingLines > 1`
+(`:5867-5883`: at least two region perimeter entities with a segment
+within one nozzle diameter of the de-retraction point) — the hop only
+de-retracts where the point sits inside the model with a neighbouring
+perimeter. Ares fired the hop on `wall_loops > 1` alone, so at
+object-chunk boundaries it replaced the normal travel with an
+unretracted hop (RH3D E3NG: missing retract+wipe before the inter-chunk
+travel, hop-point travel at print speed, and the downstream M73/time
+shifts). The region perimeter polylines now flow from
+emit_perimeter into the hop gate (the Internal-role skirt caller passes
+an empty region like upstream's skirt `GCode.cpp:4438-4441`), and the
+per-segment distance check mirrors `all_lines_in_radius`. E3NG 0.3 is
+now byte-identical (2 timestamp lines); the missing retract was also
+the M73 driver for that family. Also adds the ARES_DUMP_TRAVEL
+diagnostic (the travel retract decision trace used to find the bypass).

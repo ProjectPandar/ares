@@ -39,6 +39,16 @@ fn wipe_before_external_uses_the_source_rotated_inner_point() {
         ..EmitState::default()
     };
     let mut output = Vec::new();
+    // Two touching region perimeter entities satisfy the
+    // `discoveredTouchingLines > 1` gate (`GCode.cpp:5867-5883`).
+    let square = vec![
+        (4_690_000, 4_690_000),
+        (-4_690_000, 4_690_000),
+        (-4_690_000, -4_690_000),
+        (4_690_000, -4_690_000),
+        (4_690_000, 4_690_000),
+    ];
+    let region_perimeters = vec![square.clone(), square];
 
     append_wipe_before_external(
         &mut output,
@@ -60,6 +70,7 @@ fn wipe_before_external_uses_the_source_rotated_inner_point() {
             },
         },
         &mut state,
+        &region_perimeters,
     );
 
     assert_eq!(output, b"G1 X114.49 Y114.344 F9000\n");
