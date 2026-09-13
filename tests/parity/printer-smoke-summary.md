@@ -1,6 +1,6 @@
 # OrcaSlicer printer smoke summary
 
-818 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
+844 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
 
 Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference), `ORCA_ERROR` (the upstream OrcaSlicer 2.4.2 reference binary itself failed, so no reference stream exists), `VENDOR_INCOMPLETE` (the vendor profile tree does not ship the machine's referenced default process preset), `ARES_ERROR` (Ares failed to load or slice the case).
 
@@ -242,9 +242,9 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | Creality/Creality SPARKX i7 0.6 nozzle | first difference at byte 2217 (line 107, column 1; expected 104151 bytes, actual 104148 bytes) context:   line 106: "G1 X134.123 Y127.322 E.1484"   line 107: expected "M73 P13 R4"; actual "G1 X134.123 Y128.122 E.05811"   line 108: expected "G1 X134.123 Y128.122 E.05811"; actual "M73 P13 R4" |
 | DIVERGENT | Creality/Creality SPARKX i7 0.8 nozzle | first difference at byte 954 (line 46, column 7; expected 88493 bytes, actual 88503 bytes) context:   line 45: "G1 X115 E.3742  F1600"   line 46: expected "M73 P15 R3"; actual "M73 P14 R3"   line 47: "G1 X110 E.3742  F6400" |
 | DIVERGENT | Creality/Creality Sermoon V1 0.4 nozzle | first difference at byte 703 (line 27, column 8; expected 162827 bytes, actual 121944 bytes) context:   line 26: "M205 X8.00 Y8.00 Z0.40 E5.00 ; sets the jerk limits, mm/sec"   line 27: expected "M106 S0 ; disable fan"; actual "M106 S0"   line 28: expected "M106 P2 S0 ; disable additional fan "; actual "M106 P2 S0" |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-WNB2do") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-AjYEVM") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-2TWl2l") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-uZOEWb") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-GugfDS") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-PrDeAW") |
 | PASS | Custom/MyKlipper 0.2 nozzle |  |
 | PASS | Custom/MyKlipper 0.4 nozzle |  |
 | PASS | Custom/MyKlipper 0.6 nozzle |  |
@@ -253,8 +253,8 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Custom/MyRRF 0.4 nozzle |  |
 | PASS | Custom/MyRepetier 0.4 nozzle |  |
 | DIVERGENT | Custom/MyToolChanger 0.2 nozzle | first difference at byte 209688 (line 8001, column 1; expected 462943 bytes, actual 462943 bytes) context:   line 8000: "G1 X170.662 Y177.272 E.0618"   line 8001: expected "G1 X170.662 Y176.461 E.00536"; actual "M73 P50 R5"   line 8002: expected "M73 P50 R5"; actual "G1 X170.662 Y176.461 E.00536" |
-| PASS | Custom/MyToolChanger 0.4 nozzle |  |
-| ORCA_ERROR | Custom/MyToolChanger 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-mnoSVr") |
+| ORCA_ERROR | Custom/MyToolChanger 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-R5QpFJ") |
+| ORCA_ERROR | Custom/MyToolChanger 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-xTGcTg") |
 | PASS | Custom/MyToolChanger 0.8 nozzle |  |
 | PASS | DeltaMaker/DeltaMaker 2 0.35 nozzle |  |
 | PASS | DeltaMaker/DeltaMaker 2T 0.5 nozzle |  |
@@ -372,12 +372,12 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle |  |
 | PASS | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle |  |
 | DIVERGENT | Flashforge/Flashforge Artemis 0.4 Nozzle | first difference at byte 5282 (line 252, column 15; expected 110781 bytes, actual 112430 bytes) context:   line 251: "G1 X4.458 Y4.458 F6000"   line 252: expected "G1 X4.458 Y4.439"; actual "G1 X4.458 Y4.458"   line 253: expected "G1 X4.439 Y4.439"; actual "G1 X4.458 Y4.439" |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-ialKMw") |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-PUHkjP") |
-| PASS | Flashforge/Flashforge Creator 5 0.8 nozzle |  |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-ogxmI0") |
-| PASS | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle |  |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-a3wYZr") |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-fhfFlf") |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-j4u7jA") |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-rejV1Y") |
+| PASS | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle |  |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-YX82xd") |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-ngrYF4") |
 | PASS | Flashforge/Flashforge Guider 2s 0.4 nozzle |  |
 | PASS | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle |  |
 | PASS | Flashforge/Flashforge Guider 3 Ultra 0.6 Nozzle |  |
@@ -554,12 +554,12 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Prusa/Prusa XL 0.5 nozzle |  |
 | PASS | Prusa/Prusa XL 0.6 nozzle |  |
 | DIVERGENT | Prusa/Prusa XL 0.8 nozzle | first difference at byte 4422 (line 198, column 22; expected 53778 bytes, actual 53824 bytes) context:   line 197: ";WIPE_END"   line 198: expected "G1 X181.559 Y183.324 F24000"; actual "G1 X181.559 Y183.324 Z1 F24000"   line 199: expected "G1 E.6 F1800"; actual "G1 Z.6" |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.25 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-sdBA7w") |
+| PASS | Prusa/Prusa XL 5T 0.25 nozzle |  |
 | DIVERGENT | Prusa/Prusa XL 5T 0.3 nozzle | first difference at byte 7601 (line 353, column 1; expected 136093 bytes, actual 136141 bytes) context:   line 352: "G1 X183.94 Y176.494 E.01038"   line 353: expected "M73 P78 R8"; actual "G1 X176.494 Y183.94 E.26012"   line 354: expected "G1 X176.494 Y183.94 E.26012"; actual "G1 X176.074 Y183.94 E.01038" |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-aoYW5O") |
-| PASS | Prusa/Prusa XL 5T 0.5 nozzle |  |
+| DIVERGENT | Prusa/Prusa XL 5T 0.4 nozzle | first difference at byte 3333 (line 168, column 1; expected 103701 bytes, actual 103749 bytes) context:   line 167: "G1 X184.55 Y184.55 F24000"   line 168: expected "M73 P83 R6"; actual ";TYPE:Outer wall"   line 169: expected ";TYPE:Outer wall"; actual "G1 F1238" |
+| ORCA_ERROR | Prusa/Prusa XL 5T 0.5 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-9huq3x") |
 | PASS | Prusa/Prusa XL 5T 0.6 nozzle |  |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-Tc44IV") |
+| ORCA_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-O8HBlj") |
 | PASS | Qidi/Qidi Q1 Pro 0.2 nozzle |  |
 | PASS | Qidi/Qidi Q1 Pro 0.4 nozzle |  |
 | PASS | Qidi/Qidi Q1 Pro 0.6 nozzle |  |
@@ -680,34 +680,34 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | RolohaunDesign/Rook MK1 LDO 0.8 nozzle |  |
 | PASS | SecKit/SecKit Go3 0.4 nozzle |  |
 | PASS | SecKit/SecKit SK-Tank 0.4 nozzle |  |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.4 nozzle | first difference at byte 1498 (line 47, column 9; expected 150664 bytes, actual 150695 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P1 R8"; actual "M73 P1 R7"   line 48: "G3 X50 Y-129.9 R139.2 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.5 nozzle | first difference at byte 511 (line 20, column 9; expected 112668 bytes, actual 112689 bytes) context:   line 19: "M486 S-1"   line 20: expected "M73 P0 R6"; actual "M73 P0 R5"   line 21: "M201 X5000 Y5000 Z5000 E5000" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.7 nozzle | first difference at byte 1288 (line 42, column 1; expected 77483 bytes, actual 77524 bytes) context:   line 41: "G1 E160.5 F3000  ; Retract 160mm"   line 42: expected "G92 E0"; actual "M73 P0 R3"   line 43: expected "; --- PURGE LINE (curved arc near front edge, 290mm bed) ---"; actual "G92 E0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 1.0 nozzle | first difference at byte 1573 (line 49, column 1; expected 60435 bytes, actual 60475 bytes) context:   line 48: "G3 X50 Y-129.9 R139.2 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion"   line 49: expected "M73 P10 R2"; actual "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"   line 50: expected "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"; actual "G1 X65 Y-119.9 Z0.2 F6000     ; Wipe move at Z0.2" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.4 nozzle | first difference at byte 1504 (line 47, column 9; expected 150680 bytes, actual 150711 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P1 R8"; actual "M73 P1 R7"   line 48: "G3 X50 Y-135.0 R144.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.5 nozzle | first difference at byte 511 (line 20, column 9; expected 112684 bytes, actual 112705 bytes) context:   line 19: "M486 S-1"   line 20: expected "M73 P0 R6"; actual "M73 P0 R5"   line 21: "M201 X5000 Y5000 Z5000 E5000" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.7 nozzle | first difference at byte 1294 (line 42, column 1; expected 77500 bytes, actual 77540 bytes) context:   line 41: "G1 E160.5 F3000  ; Retract 160mm"   line 42: expected "G92 E0"; actual "M73 P0 R3"   line 43: expected "; --- PURGE LINE (curved arc near front edge, 300mm bed) ---"; actual "G92 E0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 1.0 nozzle | first difference at byte 1579 (line 49, column 1; expected 60451 bytes, actual 60491 bytes) context:   line 48: "G3 X50 Y-135.0 R144.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion"   line 49: expected "M73 P10 R2"; actual "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"   line 50: expected "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"; actual "G1 X65 Y-125.0 Z0.2 F6000     ; Wipe move at Z0.2" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.4 nozzle | first difference at byte 1508 (line 47, column 9; expected 150729 bytes, actual 150738 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P2 R8"; actual "M73 P2 R7"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.5 nozzle | first difference at byte 1508 (line 47, column 9; expected 112723 bytes, actual 112753 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P2 R6"; actual "M73 P2 R5"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.7 nozzle | first difference at byte 1508 (line 47, column 9; expected 77548 bytes, actual 77567 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P4 R4"; actual "M73 P4 R3"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 1.0 nozzle | first difference at byte 510 (line 20, column 9; expected 60488 bytes, actual 60530 bytes) context:   line 19: "M486 S-1"   line 20: expected "M73 P0 R3"; actual "M73 P0 R2"   line 21: "M201 X5000 Y5000 Z5000 E5000" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.4 nozzle | first difference at byte 1508 (line 47, column 9; expected 150720 bytes, actual 150740 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P2 R8"; actual "M73 P2 R7"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.5 nozzle | first difference at byte 1508 (line 47, column 9; expected 112725 bytes, actual 112755 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P2 R6"; actual "M73 P2 R5"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.7 nozzle | first difference at byte 1508 (line 47, column 9; expected 77540 bytes, actual 77569 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P4 R4"; actual "M73 P4 R3"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 1.0 nozzle | first difference at byte 510 (line 20, column 9; expected 60468 bytes, actual 60532 bytes) context:   line 19: "M486 S-1"   line 20: expected "M73 P0 R3"; actual "M73 P0 R2"   line 21: "M201 X5000 Y5000 Z5000 E5000" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.4 nozzle | first difference at byte 1508 (line 47, column 9; expected 150720 bytes, actual 150740 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P2 R8"; actual "M73 P2 R7"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.5 nozzle | first difference at byte 1508 (line 47, column 9; expected 112725 bytes, actual 112755 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P2 R6"; actual "M73 P2 R5"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.7 nozzle | first difference at byte 1508 (line 47, column 9; expected 77540 bytes, actual 77569 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P4 R4"; actual "M73 P4 R3"   line 48: "G3 X50 Y-234.7 R240.0 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 1.0 nozzle | first difference at byte 510 (line 20, column 9; expected 60468 bytes, actual 60532 bytes) context:   line 19: "M486 S-1"   line 20: expected "M73 P0 R3"; actual "M73 P0 R2"   line 21: "M201 X5000 Y5000 Z5000 E5000" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.4 nozzle | first difference at byte 1506 (line 47, column 9; expected 150698 bytes, actual 150729 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P1 R8"; actual "M73 P1 R7"   line 48: "G3 X50 Y-119.6 R129.6 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.5 nozzle | first difference at byte 511 (line 20, column 9; expected 112703 bytes, actual 112724 bytes) context:   line 19: "M486 S-1"   line 20: expected "M73 P0 R6"; actual "M73 P0 R5"   line 21: "M201 X5000 Y5000 Z5000 E5000" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.7 nozzle | first difference at byte 1296 (line 42, column 1; expected 77517 bytes, actual 77547 bytes) context:   line 41: "G1 E160.5 F3000  ; Retract 160mm"   line 42: expected "G92 E0"; actual "M73 P0 R3"   line 43: expected "; --- PURGE LINE (curved arc near front edge, 270mm bed) ---"; actual "G92 E0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 1.0 nozzle | first difference at byte 1581 (line 49, column 1; expected 60470 bytes, actual 60510 bytes) context:   line 48: "G3 X50 Y-119.6 R129.6 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion"   line 49: expected "M73 P10 R2"; actual "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"   line 50: expected "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"; actual "G1 X65 Y-109.6 Z0.2 F6000     ; Wipe move at Z0.2" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.4 nozzle | first difference at byte 1504 (line 47, column 9; expected 150680 bytes, actual 150711 bytes) context:   line 46: "G1 Z0.3 F1000                    ; Drop to prime height"   line 47: expected "M73 P1 R8"; actual "M73 P1 R7"   line 48: "G3 X50 Y-124.8 R134.4 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.5 nozzle | first difference at byte 511 (line 20, column 9; expected 112684 bytes, actual 112705 bytes) context:   line 19: "M486 S-1"   line 20: expected "M73 P0 R6"; actual "M73 P0 R5"   line 21: "M201 X5000 Y5000 Z5000 E5000" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.7 nozzle | first difference at byte 1294 (line 42, column 1; expected 77499 bytes, actual 77529 bytes) context:   line 41: "G1 E160.5 F3000  ; Retract 160mm"   line 42: expected "G92 E0"; actual "M73 P0 R3"   line 43: expected "; --- PURGE LINE (curved arc near front edge, 280mm bed) ---"; actual "G92 E0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 1.0 nozzle | first difference at byte 1579 (line 49, column 1; expected 60451 bytes, actual 60491 bytes) context:   line 48: "G3 X50 Y-124.8 R134.4 E40 F600  ; Arc purge, 100mm sweep, heavy extrusion"   line 49: expected "M73 P10 R2"; actual "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"   line 50: expected "G1 E38 F4500                     ; Retract 2mm before wipe (Bowden)"; actual "G1 X65 Y-114.8 Z0.2 F6000     ; Wipe move at Z0.2" |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 1.0 nozzle |  |
 | PASS | Snapmaker/Snapmaker A250 (0.2 nozzle) |  |
 | PASS | Snapmaker/Snapmaker A250 (0.4 nozzle) |  |
 | PASS | Snapmaker/Snapmaker A250 (0.6 nozzle) |  |
@@ -781,10 +781,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Snapmaker/Snapmaker J1 (0.6 nozzle) |  |
 | PASS | Snapmaker/Snapmaker J1 (0.8 nozzle) |  |
 | PASS | Snapmaker/Snapmaker U1 (0.2 nozzle) |  |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-DWMZOU") |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-3lgV26") |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-W5jqKy") |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-unBz8U") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-312kos") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-fs19Cj") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-WijZ14") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-nEzllW") |
 | PASS | Sovol/Sovol SV01 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV01 Pro 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV02 0.4 nozzle |  |
@@ -952,11 +952,11 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | WonderMaker/WonderMaker ZR 0.4 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR 0.6 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR 0.8 nozzle |  |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-YRSfup") |
-| PASS | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle |  |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-ss2wTl") |
 | PASS | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle |  |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-7OPRlU/command-UDBF47") |
-| PASS | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle |  |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-PE9ZRn/command-8W3Ki9") |
 | PASS | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle |  |
