@@ -302,3 +302,20 @@ replay tool's own tail is off there (+33s vs both engines; it simulates
 per-move arbitration is unusable until that modeling bug is fixed). Next
 slice: repair the replay tail, then diff per-move to localize ares's
 0.2-1.0s excess.
+
+## M73 knife-edge refined to a <40ms total gap (2026-09-15, continued)
+
+Corrected the time_in_minutes rounding (int((T−e+0.5)/60)) and the
+id-vs-line-number mapping: the P84 R5 → P84 R4 transition happens at
+elapsed = T−299.5 (R component first), and the emission window between
+the layer-2 retract and its Z-move is only ~40ms wide. With the
+elapsed chains matching at 5ms tolerance through the crossing region,
+orca's machine total must be 0–40ms BELOW ares's 1876.817 — i.e. a
+0.002% total-motion discrepancy accumulated in sub-5ms per-block
+differences (most plausibly the same slowdown F1200 tail where the
+replay tool diverges by +33s: its tail reads 268.6s vs ares 235.4s, a
+delta consistent with travels being simulated at the rewritten wall
+feedrate — ~800mm of tail travel at 20 vs 300 mm/s ≈ +37s). Next slice:
+content-aligned (not id-joined) block diff of the tail to find whether
+the replay or ares mishandles the post-slowdown feedrate inheritance,
+then re-derive the <40ms ares excess.
