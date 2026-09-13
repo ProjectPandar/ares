@@ -76,3 +76,19 @@ fn empty_axis_acceleration_array_clamps_linear_and_arc_blocks_to_zero() {
         assert_eq!(block.acceleration, 0.0);
     }
 }
+
+#[test]
+fn r_fitted_arc_discretizes_into_internal_segments() {
+    // SeeMeCNC purge arc: G3 X50 Y-129.9 R139.2 E40 F600 from
+    // (-50,-129.9) — upstream computes the center via ArcWelder::arc_center
+    // and discretizes by the recomputed start radius
+    // (`GCodeProcessor.cpp:4571-4592`).
+    let mut s = state(&[5000.0]);
+    s.motion("G0 X-50 Y-129.9 Z0.3 F5000").unwrap();
+    let blocks = s.motions("G3 X50 Y-129.9 R139.2 E40 F600");
+    assert!(
+        blocks.len() > 8,
+        "R arc must discretize, got {}",
+        blocks.len()
+    );
+}

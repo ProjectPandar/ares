@@ -1,4 +1,4 @@
-mod arc;
+pub(super) mod arc;
 #[cfg(test)]
 mod axis_acceleration_tests;
 mod limits;
@@ -280,9 +280,30 @@ impl MotionState {
         let e_only = xyz_distance <= f64::EPSILON;
         let mut distance = if e_only { e_delta.abs() } else { xyz_distance };
         if matches!(command, "G2" | "G3") {
-            let i = word(code, 'I').unwrap_or(0.0);
-            let j = word(code, 'J').unwrap_or(0.0);
-            let radius = (i * i + j * j).sqrt();
+            // R fitting takes precedence (`GCodeProcessor.cpp:4557-4592`):
+            // the center/radius come from `ArcWelder::arc_center`.
+            let (i, j, radius) = match word(code, 'R').filter(|r| *r != 0.0) {
+                Some(r) => {
+                    match arc::center_from_radius(
+                        [old[0], old[1]],
+                        [next[0], next[1]],
+                        r,
+                        command != "G2",
+                    ) {
+                        Some(center) => (
+                            center[0] - old[0],
+                            center[1] - old[1],
+                            ((old[0] - center[0]).powi(2) + (old[1] - center[1]).powi(2)).sqrt(),
+                        ),
+                        None => (0.0, 0.0, 0.0),
+                    }
+                }
+                None => {
+                    let i = word(code, 'I').unwrap_or(0.0);
+                    let j = word(code, 'J').unwrap_or(0.0);
+                    (i, j, (i * i + j * j).sqrt())
+                }
+            };
             let same_xy = delta[0].abs() <= f64::EPSILON && delta[1].abs() <= f64::EPSILON;
             let mut sweep = if same_xy {
                 0.0

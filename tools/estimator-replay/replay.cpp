@@ -595,10 +595,10 @@ int main(int argc, char** argv)
             // non-MarlinFirmware discretization)
             auto ijc = word_value('I');
             auto jjc = word_value('J');
-            if (!ijc.has_value() && !jjc.has_value())
+            auto rword = word_value('R');
+            if (!ijc.has_value() && !jjc.has_value() && !(rword.has_value() && *rword != 0.0))
                 continue;
-            float rel_cx = float(ijc.value_or(0.0));
-            float rel_cy = float(jjc.value_or(0.0));
+            float rel_cx, rel_cy;
             AxisCoords end_pos = start_position;
             {
                 std::array<std::optional<double>, 4> axes{ std::nullopt, std::nullopt, std::nullopt, std::nullopt };
@@ -617,6 +617,23 @@ int main(int argc, char** argv)
             }
             double cx = start_position[X] + rel_cx;
             double cy = start_position[Y] + rel_cy;
+            if (rword.has_value() && *rword != 0.0) {
+                // ArcWelder::arc_center (ArcWelder.hpp:23-42)
+                double vx = end_pos[X] - start_position[X], vy = end_pos[Y] - start_position[Y];
+                double q2 = vx * vx + vy * vy;
+                double t2 = (*rword) * (*rword) / q2 - 0.25;
+                double t = t2 > 0 ? std::sqrt(t2) : 0.0;
+                double mx = 0.5 * (start_position[X] + end_pos[X]), my = 0.5 * (start_position[Y] + end_pos[Y]);
+                double vpx = -vy * t, vpy = vx * t;
+                bool ccw = !clockwise;
+                cx = ((*rword) > 0.0) == ccw ? mx + vpx : mx - vpx;
+                cy = ((*rword) > 0.0) == ccw ? my + vpy : my - vpy;
+                rel_cx = float(cx - start_position[X]);
+                rel_cy = float(cy - start_position[Y]);
+            } else {
+                rel_cx = float(ijc.value_or(0.0));
+                rel_cy = float(jjc.value_or(0.0));
+            }
             double rsx = start_position[X] - cx, rsy = start_position[Y] - cy;
             double rex = end_pos[X] - cx, rey = end_pos[Y] - cy;
             double angle;
@@ -760,11 +777,14 @@ int main(int argc, char** argv)
             if (auto v = word_value('Z')) limits.max_accel[Z] = float(*v);
             if (auto v = word_value('E')) limits.max_accel[E] = float(*v);
         } else if (word == "M203") {
-            // klipper/marlin factor 1.0 (mm/s); others mm/min — flavor assumed marlin/klipper here
-            if (auto v = word_value('X')) limits.max_speed[X] = float(*v);
-            if (auto v = word_value('Y')) limits.max_speed[Y] = float(*v);
-            if (auto v = word_value('Z')) limits.max_speed[Z] = float(*v);
-            if (auto v = word_value('E')) limits.max_speed[E] = float(*v);
+            // RepRapFirmware expresses M203 in mm/min; Marlin/Klipper/Smoothie
+            // in mm/s (`GCodeProcessor.cpp:5184` factor). This replay assumes
+            // the RepRap form when the values exceed plausible mm/s.
+            auto factor = [](double v) { return v > 1000.0 ? 1.0 / 60.0 : 1.0; };
+            if (auto v = word_value('X')) limits.max_speed[X] = float(*v * factor(*v));
+            if (auto v = word_value('Y')) limits.max_speed[Y] = float(*v * factor(*v));
+            if (auto v = word_value('Z')) limits.max_speed[Z] = float(*v * factor(*v));
+            if (auto v = word_value('E')) limits.max_speed[E] = float(*v * factor(*v));
         } else if (word == "M205") {
             if (auto v = word_value('X')) { limits.max_jerk[X] = float(*v); limits.max_jerk[Y] = float(*v); }
             if (auto v = word_value('Y')) limits.max_jerk[Y] = float(*v);

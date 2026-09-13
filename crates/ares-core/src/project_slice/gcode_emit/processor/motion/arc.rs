@@ -1,6 +1,32 @@
 use super::word;
 use crate::options::GCodeFlavor;
 
+/// `Geometry::ArcWelder::arc_center` (`ArcWelder.hpp:23-42`): the center of
+/// an arc through `start`/`end` with signed radius `r`; positive radius and
+/// CCW pick one side, the other combination the mirror. Returns None when
+/// the endpoints coincide.
+pub(in crate::project_slice::gcode_emit::processor) fn center_from_radius(
+    start: [f64; 2],
+    end: [f64; 2],
+    radius: f64,
+    ccw: bool,
+) -> Option<[f64; 2]> {
+    let v = [end[0] - start[0], end[1] - start[1]];
+    let q2 = v[0] * v[0] + v[1] * v[1];
+    if q2 <= 0.0 {
+        return None;
+    }
+    let t2 = radius * radius / q2 - 0.25;
+    let t = if t2 > 0.0 { t2.sqrt() } else { 0.0 };
+    let mid = [0.5 * (start[0] + end[0]), 0.5 * (start[1] + end[1])];
+    let vp = [-v[1] * t, v[0] * t];
+    Some(if (radius > 0.0) == ccw {
+        [mid[0] + vp[0], mid[1] + vp[1]]
+    } else {
+        [mid[0] - vp[0], mid[1] - vp[1]]
+    })
+}
+
 pub(super) struct ArcMotion {
     pub(super) start: [f64; 3],
     pub(super) end: [f64; 3],
@@ -17,9 +43,28 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
         feedrate,
         gcode_flavor,
     } = motion;
-    let i = word(code, 'I').unwrap_or(0.0) as f32;
-    let j = word(code, 'J').unwrap_or(0.0) as f32;
-    let radius = (i * i + j * j).sqrt();
+    // `process_G2_G3` prefers R fitting over IJ when the R word is present
+    // (`GCodeProcessor.cpp:4557-4592`); the center comes from
+    // `ArcWelder::arc_center` and the discretization radius is the
+    // recomputed start radius, not the nominal R.
+    let (i, j, radius) = match word(code, 'R').filter(|r| *r != 0.0) {
+        Some(r) => {
+            match center_from_radius([start[0], start[1]], [end[0], end[1]], r, command != "G2") {
+                Some(center) => (
+                    (center[0] - start[0]) as f32,
+                    (center[1] - start[1]) as f32,
+                    (((start[0] - center[0]).powi(2) + (start[1] - center[1]).powi(2)).sqrt())
+                        as f32,
+                ),
+                None => return None,
+            }
+        }
+        None => {
+            let i = word(code, 'I').unwrap_or(0.0) as f32;
+            let j = word(code, 'J').unwrap_or(0.0) as f32;
+            (i, j, (i * i + j * j).sqrt())
+        }
+    };
     if radius <= f32::EPSILON {
         return None;
     }

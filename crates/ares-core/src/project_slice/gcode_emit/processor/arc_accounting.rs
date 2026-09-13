@@ -9,9 +9,47 @@ use super::motion_util::word;
 /// - otherwise: `ArcWelder::arc_discretization_steps` at 0.0125 tolerance
 ///   (`ArcWelder.hpp:48-64`)
 pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionState) -> usize {
-    let i = word(code, 'I').unwrap_or(0.0);
-    let j = word(code, 'J').unwrap_or(0.0);
-    let radius = (i * i + j * j).sqrt();
+    // R fitting takes precedence (`GCodeProcessor.cpp:4557-4592`); the
+    // center/radius come from `ArcWelder::arc_center`.
+    let (i, j, radius) = match word(code, 'R').filter(|r| *r != 0.0) {
+        Some(r) => {
+            let start = state.position;
+            let (end_x, end_y) = (word(code, 'X'), word(code, 'Y'));
+            let end_x = end_x.map_or(start[0], |value| {
+                if state.relative {
+                    start[0] + value
+                } else {
+                    value
+                }
+            });
+            let end_y = end_y.map_or(start[1], |value| {
+                if state.relative {
+                    start[1] + value
+                } else {
+                    value
+                }
+            });
+            match super::motion::arc::center_from_radius(
+                [start[0], start[1]],
+                [end_x, end_y],
+                r,
+                command != "G2",
+            ) {
+                Some(center) => (
+                    center[0] - start[0],
+                    center[1] - start[1],
+                    ((start[0] - center[0]).powi(2) + (start[1] - center[1]).powi(2)).sqrt(),
+                ),
+                // Degenerate R arc (coincident endpoints): no segments.
+                None => return 0,
+            }
+        }
+        None => {
+            let i = word(code, 'I').unwrap_or(0.0);
+            let j = word(code, 'J').unwrap_or(0.0);
+            (i, j, (i * i + j * j).sqrt())
+        }
+    };
     let (end_x, end_y) = (word(code, 'X'), word(code, 'Y'));
     let start = state.position;
     let end_x = end_x.map_or(start[0], |value| {
