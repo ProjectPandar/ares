@@ -149,7 +149,7 @@ fn append(
         "curr_physical_extruder_id",
         value::Value::number(physical_extruder as f64),
     );
-    let position = safe_position(traversal);
+    let position = safe_position(traversal, most_used);
     config.insert(
         "has_timelapse_safe_pos",
         value::Value::option_bool(position.is_some()),
@@ -187,47 +187,9 @@ fn last_motion_z(gcode: &str) -> Option<f64> {
     })
 }
 
-fn safe_position(traversal: &PreparedPostClassicTraversal) -> Option<(i32, i32)> {
-    let (object_min_x, object_min_y, object_max_x, object_max_y) =
-        footprint::model_bounds(traversal)?;
-    let printer = &traversal.resolved.views.full.printer.remaining;
-    let first = printer.printable_area.0.first()?;
-    let (bed_min_x, bed_min_y, bed_max_x, bed_max_y) =
-        printer.printable_area.0.iter().skip(1).fold(
-            (first.x, first.y, first.x, first.y),
-            |bounds, point| {
-                (
-                    bounds.0.min(point.x),
-                    bounds.1.min(point.y),
-                    bounds.2.max(point.x),
-                    bounds.3.max(point.y),
-                )
-            },
-        );
-    let camera_clearance = printer.extruder_clearance_radius.0 * std::f64::consts::FRAC_1_SQRT_2;
-    let y = object_max_y + camera_clearance;
-    if y < bed_min_y || y > bed_max_y {
-        return None;
-    }
-    let line_start = (object_min_x - camera_clearance).max(bed_min_x);
-    let line_end = (object_max_x + camera_clearance).min(bed_max_x);
-    if line_start > line_end {
-        return None;
-    }
-
-    let current_x = (object_min_x + object_max_x) * 0.5;
-    let current_y = (object_min_y + object_max_y) * 0.5;
-    let steps = ((line_end - line_start) / 5.0).floor() as usize;
-    let mut best = line_start;
-    let mut best_penalty = f64::MAX;
-    for step in 0..=steps {
-        let candidate = line_start + step as f64 * 5.0;
-        let penalty = (current_x - candidate).abs() + (current_y - y).abs()
-            - (candidate.abs() + y.abs()) / 3.0;
-        if penalty < best_penalty {
-            best_penalty = penalty;
-            best = candidate;
-        }
-    }
-    Some((best as i32, y as i32))
+fn safe_position(
+    traversal: &PreparedPostClassicTraversal,
+    picture_extruder: Option<usize>,
+) -> Option<(i32, i32)> {
+    picture_extruder.and_then(|extruder| super::timelapse_pos::position(traversal, extruder))
 }

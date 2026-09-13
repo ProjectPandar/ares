@@ -30,6 +30,7 @@ mod template;
 #[cfg(test)]
 mod tests;
 mod timelapse;
+mod timelapse_pos;
 
 #[cfg(test)]
 mod timelapse_tests;
