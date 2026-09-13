@@ -203,3 +203,23 @@ positions for a net sweep loss, so the heuristic stays until the unit is
 explained. The follow-sweep after unwiring showed ZERO divergent churn
 (the PASS dip to 841 was oracle flakiness — 23 ORCA_ERROR crashes under
 repeated-sweep load; the 845 baseline summary is restored).
+
+## TimelapsePosPicker + nullable echo fixes (2026-09-14)
+
+`4397a0f5` rewired the picker with the missing rounding semantics:
+upstream `unscale_`/`scale_` are double-returning macros and
+`Point(double,double)` rounds via `coord_t(std::round(x))` — the picked
+position, camera polygon, projection bbox and objects center all ROUND,
+while `coord_t(scale_(...))` sites truncate. H2D Y 232→233 mystery
+solved. `d59e8a46` fixed the nullable filament-override echo (16 keys,
+`PrintConfig.cpp:63-80`): raw 3mf arrays carry preset tail slots
+([nil,nil,5,5]); orca trims to the active filament count and the `is_nil`
+filter skips all-nil vectors — X2D 0.2 echoed 3 extra config lines.
+
+Sweep: the whole 12-printer timelapse family (H2D ×4, H2D Pro ×4,
+X2D ×4) now PASSES. 858 PASS / 118 DIVERGENT / 15 ORCA_ERROR (oracle
+crashes flap ±10 run to run: MyToolChanger 0.6/0.8, XL 5T 0.5/0.6, U1,
+Flashforge C5, Cubicon, WonderMaker). XL 5T 0.3/0.8 diverge only against
+freshly-regenerated orca.gcode (M73 line shift + a Z1 site): ares is
+stable across commits, the oracle flip-flops run-to-run like Snapmaker
+U1 — flaky-oracle bucket.
