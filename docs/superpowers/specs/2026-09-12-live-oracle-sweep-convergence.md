@@ -140,3 +140,25 @@ Next slice: port `get_recommended_filament_maps` + the
 physical/geometric unprintable collectors as one unit feeding ares's
 existing staged filament-map states, and keep the exported
 enable_prime_tower at the raw value on the fresh-slice path.
+
+## Auto filament-map slice (2026-09-13, 844 -> 845)
+
+Landed (`9d2dd4fd`, `4a9273a3`, `a6d48aa5`):
+- `filament_map_recommend`: `ToolOrdering::get_recommended_filament_maps`
+  corpus-visible branches applied to the resolved config (single nozzle ->
+  master; non-BBL multi-nozzle -> identity; dual-nozzle BBL -> master).
+- `first_filaments` physical remap now unconditional
+  (`GCode.cpp:2834-2842`) — fixes the H2D M620.17 hotend-load lines.
+- Raw `enable_prime_tower` export exactly when
+  `update_filament_maps_to_config` rebuilt from raw (map CHANGED,
+  `Print.cpp:3170`): H2D (1->2) keeps raw 1, X2D (unchanged) exports the
+  disabled 0. Two intermediate wrong rules (always-raw: -61 printers;
+  dual-BBL-only: X2D regression) each caught by the sweep.
+
+Net sweep: +12 fixed (H2D family through config block + M620.17 +
+most_used E id, MyToolChanger 0.2, Prusa XL 5T 0.3 flip to PASS), -1
+regression (Snapmaker U1 0.4: first outer wall F2400 vs F3000 — the
+overhang/curled dynamic-speed ref_speed shifted; open follow-up).
+
+Remaining in this bucket: TimelapsePosPicker port (H2D/X2D timelapse_pos
+x/y, the only divergence left on those 12 printers), Snapmaker U1 ref_speed.
