@@ -258,7 +258,10 @@ pub(super) fn append(
             0.0
         };
         let layer_z = group_z;
-        let layer_height = layer_z - previous_layer_z;
+        // The HEIGHT header keeps the f32-difference quirk (upstream
+        // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
+        // f64 print_z for template comparisons.
+        let layer_height = f64::from(layer_z as f32) - f64::from(previous_layer_z as f32);
         let boundary = boundary::append(
             output,
             state,

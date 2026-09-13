@@ -23,7 +23,7 @@ pub(super) struct Boundary<'a> {
 pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     state: &mut motion::EmitState,
     precise_layer_z: f64,
-    layer_z: f32,
+    layer_z: f64,
     layer_index: usize,
     layer_retract_pending: bool,
 ) {
@@ -36,8 +36,8 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
 }
 
 pub(super) struct BoundaryAdvance<'a> {
-    pub layer_z: f32,
-    pub layer_height: f32,
+    pub layer_z: f64,
+    pub layer_height: f64,
     pub timelapse_context: timelapse::Context<'a>,
 }
 
@@ -55,9 +55,9 @@ pub(super) fn append<'a>(
         first_layer_bounds,
     }: Boundary<'a>,
     layer_index: usize,
-    previous_layer_z: f32,
-    layer_z: f32,
-    layer_height: f32,
+    previous_layer_z: f64,
+    layer_z: f64,
+    layer_height: f64,
     second_layer_done: &mut bool,
     bed_cache: i32,
 ) -> Result<BoundaryAdvance<'a>, SliceError> {

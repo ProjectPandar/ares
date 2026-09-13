@@ -390,15 +390,21 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         // `Extruder::unretract()` zeroes `m_retracted` after the extrude;
         // `coordinate` only accumulates it for negative deltas.
         state.retracted_amount = 0.0;
-        output.extend_from_slice(
-            format!(
-                "G1 E{} F{}\n",
-                format_extrusion(unretract),
-                format_axis(state.options.deretraction_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = state.options.deretraction_feedrate;
+        // `GCodeWriter::unretract` emits the G1 only for a non-zero dE
+        // (`GCodeProcessor`-side is_zero guard, `GCodeWriter.cpp:1063`):
+        // a zero-length retraction (retraction_length=0 with wipe)
+        // deretracts silently.
+        if unretract.abs() > 0.0 {
+            output.extend_from_slice(
+                format!(
+                    "G1 E{} F{}\n",
+                    format_extrusion(unretract),
+                    format_axis(state.options.deretraction_feedrate)
+                )
+                .as_bytes(),
+            );
+            state.current_feedrate = state.options.deretraction_feedrate;
+        }
         state.retracted = false;
         state.lifted = false;
         state.lifted_amount = 0.0;

@@ -8,10 +8,10 @@ use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTra
 
 pub(super) struct Schedule {
     /// Cumulative print z per object per layer.
-    pub(super) per_object_z: Vec<Vec<f32>>,
+    pub(super) per_object_z: Vec<Vec<f64>>,
     /// `(z, object_index, layer_index)` for every object layer, sorted by
     /// print z (`collect_layers_to_print`'s ordering).
-    pub(super) merged: Vec<(f32, usize, usize)>,
+    pub(super) merged: Vec<(f64, usize, usize)>,
     /// Chained print order over the print objects, reversed
     /// (`GCode.cpp:5120-5125`).
     pub(super) print_position: Vec<usize>,
@@ -25,7 +25,7 @@ pub(super) fn build(
     objects: &[Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>],
 ) -> Schedule {
     let object_count = objects.len();
-    let per_object_z: Vec<Vec<f32>> = traversal
+    let per_object_z: Vec<Vec<f64>> = traversal
         .objects
         .iter()
         .map(|object| {
@@ -35,19 +35,24 @@ pub(super) fn build(
                 .filter_map(|record| record.as_ref())
                 .scan(0.0_f64, |precise, record| {
                     *precise += record.layer_height;
-                    Some(*precise as f32)
+                    // Upstream accumulates print_z in double precision
+                    // (Print::Layer::print_z); the old f32 truncation made
+                    // template comparisons like `layer_z >=
+                    // initial_layer_print_height + layer_height * 2` fail on
+                    // ULP boundaries (Raise3D Pro3 M106 P2 ramp).
+                    Some(*precise)
                 })
                 .collect()
         })
         .collect();
-    let mut merged: Vec<(f32, usize, usize)> = objects
+    let mut merged: Vec<(f64, usize, usize)> = objects
         .iter()
         .enumerate()
         .flat_map(|(object_index, object)| {
             let z = &per_object_z[object_index];
             (0..object.len()).map(move |layer_index| {
                 (
-                    z.get(layer_index).copied().unwrap_or(f32::MAX),
+                    z.get(layer_index).copied().unwrap_or(f64::MAX),
                     object_index,
                     layer_index,
                 )
