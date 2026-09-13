@@ -333,6 +333,8 @@ int main(int argc, char** argv)
 
     bool absolute = true;
     bool e_relative = false;
+    bool bbl_printer = getenv("REPLAY_BBL") != nullptr;
+    bool measure_g29_time = false;
     AxisCoords start_position{ 0, 0, 0, 0 };
     AxisCoords end_position{ 0, 0, 0, 0 };
     float origin[4]{ 0, 0, 0, 0 };
@@ -582,6 +584,127 @@ int main(int argc, char** argv)
             axes[Z] = word_value('Z');
             axes[E] = word_value('E');
             process_G1(axes, word_value('F'));
+        } else if (word == "G2" || word == "G3") {
+            const bool clockwise = (word == "G2");
+            // GCodeProcessor.cpp:4548-4846 process_G2_G3 (IJ fitting, legacy
+            // non-MarlinFirmware discretization)
+            auto ijc = word_value('I');
+            auto jjc = word_value('J');
+            if (!ijc.has_value() && !jjc.has_value())
+                continue;
+            float rel_cx = float(ijc.value_or(0.0));
+            float rel_cy = float(jjc.value_or(0.0));
+            AxisCoords end_pos = start_position;
+            {
+                std::array<std::optional<double>, 4> axes{ std::nullopt, std::nullopt, std::nullopt, std::nullopt };
+                axes[X] = word_value('X');
+                axes[Y] = word_value('Y');
+                axes[Z] = word_value('Z');
+                axes[E] = word_value('E');
+                for (unsigned char a = X; a <= E; ++a) {
+                    const auto& value = axes[a];
+                    if (value.has_value()) {
+                        bool is_relative = !absolute;
+                        if (Axis(a) == E && e_relative) is_relative = true;
+                        end_pos[a] = float(is_relative ? start_position[a] + *value : origin[a] + *value);
+                    }
+                }
+            }
+            double cx = start_position[X] + rel_cx;
+            double cy = start_position[Y] + rel_cy;
+            double rsx = start_position[X] - cx, rsy = start_position[Y] - cy;
+            double rex = end_pos[X] - cx, rey = end_pos[Y] - cy;
+            double angle;
+            bool full_circle = std::fabs(end_pos[X] - start_position[X]) < 1e-4 && std::fabs(end_pos[Y] - start_position[Y]) < 1e-4;
+            if (full_circle)
+                angle = 2.0 * M_PI;
+            else {
+                angle = std::atan2(rsx * rey - rsy * rex, rsx * rex + rsy * rey);
+                if (angle < 0.0) angle += 2.0 * M_PI;
+                if (clockwise) angle -= 2.0 * M_PI;
+            }
+            double dz = end_pos[Z] - start_position[Z];
+            double radius = std::sqrt(rsx * rsx + rsy * rsy);
+            double length = angle * radius;
+            double travel_length = std::sqrt(length * length + dz * dz);
+            if (travel_length < 0.001) { start_position = end_pos; continue; }
+            std::optional<float> arc_feedrate;
+            if (auto f = word_value('F')) arc_feedrate = float(*f) / 60.0f;
+            std::optional<float> extrusion;
+            if (auto ev = word_value('E')) extrusion = end_pos[E] - start_position[E];
+            // ArcWelder::arc_discretization_steps(radius, |angle|, 0.0125)
+            static const double gcode_arc_tolerance = 0.0125;
+            size_t segments;
+            {
+                double d = radius - gcode_arc_tolerance;
+                if (d < 1e-4) {
+                    segments = (std::fabs(angle) < M_PI || radius * (1.0 + cos(M_PI - 0.5 * std::fabs(angle))) < gcode_arc_tolerance) ? 1 : 2;
+                } else
+                    segments = size_t(std::ceil(std::fabs(angle) / (2.0 * std::acos(d / radius))));
+                if (segments == 0) segments = 1;
+            }
+            const double inv_segment = 1.0 / double(segments);
+            const double theta_per_segment = angle * inv_segment;
+            const double z_per_segment = dz * inv_segment;
+            const double extruder_per_segment = extrusion.has_value() ? double(*extrusion) * inv_segment : 0.0;
+            const double sq_theta = theta_per_segment * theta_per_segment;
+            const double cos_T = 1.0 - 0.5 * sq_theta;
+            const double sin_T = theta_per_segment - sq_theta * theta_per_segment / 6.0;
+            AxisCoords arc_target = start_position;
+            static const size_t N_ARC_CORRECTION = 25;
+            double relx = rsx, rely = rsy;
+            size_t count = N_ARC_CORRECTION;
+            auto emit_seg = [&](const AxisCoords& target, std::optional<float> seg_feedrate) {
+                // adjust_target + internal_only_g1_line: absolute or relative
+                std::array<std::optional<double>, 4> axes{ std::nullopt, std::nullopt, std::nullopt, std::nullopt };
+                if (absolute) {
+                    axes[X] = target[X]; axes[Y] = target[Y]; axes[Z] = target[Z];
+                } else {
+                    axes[X] = target[X] - start_position[X]; axes[Y] = target[Y] - start_position[Y];
+                    axes[Z] = target[Z] - start_position[Z];
+                }
+                // adjust_target: E goes relative when the extruder is in
+                // relative mode (M83), else absolute
+                axes[E] = e_relative ? std::optional<double>(target[E] - start_position[E]) : std::optional<double>(target[E]);
+                process_G1(axes, seg_feedrate.has_value() ? std::optional<double>(double(*seg_feedrate)) : std::nullopt);
+            };
+            for (size_t i = 1; i < segments; ++i) {
+                if (count-- == 0) {
+                    const double cos_Ti = std::cos(i * theta_per_segment);
+                    const double sin_Ti = std::sin(i * theta_per_segment);
+                    relx = -double(rel_cx) * cos_Ti + double(rel_cy) * sin_Ti;
+                    rely = -double(rel_cx) * sin_Ti - double(rel_cy) * cos_Ti;
+                    count = N_ARC_CORRECTION;
+                } else {
+                    const double r_axisi = relx * sin_T + rely * cos_T;
+                    relx = relx * cos_T - rely * sin_T;
+                    rely = r_axisi;
+                }
+                arc_target[X] = float(cx + relx);
+                arc_target[Y] = float(cy + rely);
+                arc_target[Z] = float(arc_target[Z] + z_per_segment);
+                arc_target[E] = float(arc_target[E] + extruder_per_segment);
+                emit_seg(arc_target, (i == 1) ? arc_feedrate : std::nullopt);
+            }
+            emit_seg(end_pos, (segments == 1) ? arc_feedrate : std::nullopt);
+        } else if (word == "G29") {
+            // GCodeProcessor.cpp:4856-4868 (BBL gate via M622 J1/M623)
+            if ((getenv("REPLAY_G29") && !bbl_printer) || (bbl_printer && measure_g29_time))
+                simulate_st_synchronize(260.0f);
+        } else if (word == "M191") {
+            if (auto s = word_value('S'); s.has_value() && *s > 40.0)
+                simulate_st_synchronize(720.0f);
+        } else if (word == "SYNC") {
+            if (auto t = word_value('T'))
+                simulate_st_synchronize(float(*t));
+        } else if (word == "M702") {
+            if (code.find('C') != std::string::npos)
+                simulate_st_synchronize(0.0f); // filament unload time; zero for non-MMU
+        } else if (word == "M622") {
+            if (auto j = word_value('J'); j.has_value() && std::round(*j) == 1.0)
+                measure_g29_time = true;
+        } else if (word == "M623") {
+            measure_g29_time = false;
         } else if (word == "G4" || word == "M400") {
             float s = float(word_value('S').value_or(0.0));
             float p = float(word_value('P').value_or(0.0));
