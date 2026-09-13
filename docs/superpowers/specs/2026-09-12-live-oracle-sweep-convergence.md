@@ -281,3 +281,24 @@ block dumps and the replay tool:
   segments at 0.0307s where the engines land ~0.019-0.023s; id spaces
   also drift a few entries in the 335-490 window) — the replay needs a
   tail fix before it can arbitrate per-move differences there.
+
+## M73 wait-mass ruled out; gap isolated to motion total (2026-09-15)
+
+Continued MK4S forensics: the start gcode carries SIX G29 commands
+(lines 60/73/74/75/76/77), each +260s upstream (`process_G29`,
+GCodeProcessor.cpp:4859-4870, non-BBL unconditional); M109/M190 add no
+time and G28 only becomes a synthetic G1 move. The P13 R26 M73 at g1 id
+2 pins the FIRST G29's +260 to the PRECEDING block (the retract) via the
+additional-time buffer, and the remaining five (+1300) land by g1 id 4 —
+exactly ares's distribution (260.5724 at id 2, 1561.6971 at id 4). The
+wait mass (1560.028) and its attribution MATCH; no literal M73s exist in
+the machine_start_gcode template (verified: 0 matches).
+
+Therefore the 0.24-1.0s total gap (orca in [1875.80, 1876.58] vs ares
+1876.817, from the P84 R5/P84 R4/P85 R4 bucket constraints) is entirely
+MOTION accumulated after g1 id 335 — the slowdown F1200 tail. The
+replay tool's own tail is off there (+33s vs both engines; it simulates
+0.615mm F1200 segments at 0.0307s where the engines land ~0.019s, so its
+per-move arbitration is unusable until that modeling bug is fixed). Next
+slice: repair the replay tail, then diff per-move to localize ares's
+0.2-1.0s excess.
