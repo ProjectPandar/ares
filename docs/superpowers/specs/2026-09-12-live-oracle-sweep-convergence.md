@@ -86,3 +86,26 @@ Each slice lands with a focused red-first unit or printer smoke test,
 `cargo nextest`/`cargo fmt`/`cargo clippy` clean, the golden
 `ksr_fdmtest_v4` byte test green, and a full fresh printer sweep showing
 the claimed PASS delta with zero regressions. Docs land with the code.
+
+## 2026-09-13 convergence log
+
+789 -> 818 -> 844 / 1001 across four root-caused fixes:
+
+- `1c6a44bf` scarf body drops the Z word (ExtrusionPathSloped covers only
+  the ramp) + `has_scarf_joint_seam` derives from seam_slope_type.
+- `4a6a33b6` machine-start `e_retracted[0] = ...` template assignments
+  seed the extruder state (GCode.cpp:3905-3918); layer-change retracts
+  dedupe like Extruder::retract; unretract restores the tracked amount.
+- `9951ed9f` layer print_z stays f64 (upstream Print layer print_z) for
+  template ULP guards; HEIGHT keeps the f32-difference quirk; zero-length
+  deretracts emit nothing (GCodeWriter::unretract is_zero guard).
+- `12efeaea` R-fitted G2/G3 arcs discretize (ArcWelder::arc_center +
+  recomputed start radius) across motion()/arc::deltas/
+  arc_internal_g1_lines; the replay harness gains R support and the
+  RepRapFirmware M203 mm/min factor.
+
+Remaining top buckets at 844: M73/time-model drift (~56 cases, mostly
+BBL tail + knife edges — needs the T-block removal for the initial tool
+load fold per the P1P replay evidence), `enable_prime_tower` producer
+history (8), BBL first-layer-time header (8), loop geometry ±1 scaled int,
+arachne necks, 4 unported options.
