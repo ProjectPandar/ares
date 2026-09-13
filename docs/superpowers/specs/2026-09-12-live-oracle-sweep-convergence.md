@@ -116,3 +116,27 @@ REGRESSED 49 printers — the e_only/seam_vertex eligibility filter
 compensates for id-accounting differences on zero-displacement lines and
 synthetic blocks. Do not retry without first reconciling the id chain
 (T block removal, zero-displacement G1 counting) as one slice.
+
+## H2D prime-tower/filament-map bucket diagnosis (2026-09-13)
+
+The 8 H2D cases differ on two CONFIG_BLOCK lines (`enable_prime_tower = 1`
+vs 0, `filament_map = 2` vs 1), both now root-caused:
+
+1. `enable_prime_tower` stays the RAW preset value in the CLI oracle
+   because both `Print::apply` normalize_fdm_2 passes see
+   `this->extruders(true).size() == 0` — on a fresh slice the print
+   regions do not exist yet when apply runs (PrintApply.cpp:1128-1132
+   pre-object sync; :1620-1621 regions still unassigned after sync), so
+   the `used_filaments > 0` gate skips the disable. ares's
+   FirstLate/SecondEarly phases pass real used counts and disable it.
+2. `filament_map = 2` comes from `ToolOrdering::initialize`
+   (ToolOrdering.cpp:1288-1303): for by-layer prints with
+   `filament_map_mode < Manual` it recomputes via
+   `get_recommended_filament_maps` (ToolOrdering.cpp:1107+) and writes
+   back through `Print::update_filament_maps_to_config` (Print.cpp:3166),
+   which updates m_config BEFORE the CONFIG_BLOCK export.
+
+Next slice: port `get_recommended_filament_maps` + the
+physical/geometric unprintable collectors as one unit feeding ares's
+existing staged filament-map states, and keep the exported
+enable_prime_tower at the raw value on the fresh-slice path.
