@@ -92,7 +92,13 @@ impl Estimate {
                 events.push(FlushEvent {
                     block_count: blocks.len(),
                     delay: Some(PendingDelay {
-                        target: DelayTarget::ToolChange,
+                        // Upstream folds the initial tool load through
+                        // `simulate_st_synchronize(load_time)`
+                        // (`GCodeProcessor.cpp:5541` process_filament_change
+                        // initialize branch) — a Noop-target delay that attaches
+                        // to the FIRST block of the next planner pass, not to a
+                        // toolchange-kind block.
+                        target: DelayTarget::Any,
                         seconds: machine_load_filament_time as f32,
                     }),
                 });
