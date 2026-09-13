@@ -516,3 +516,12 @@ per-segment distance check mirrors `all_lines_in_radius`. E3NG 0.3 is
 now byte-identical (2 timestamp lines); the missing retract was also
 the M73 driver for that family. Also adds the ARES_DUMP_TRAVEL
 diagnostic (the travel retract decision trace used to find the bypass).
+
+## Sweep 867 PASS (2026-09-15)
+
+The wipe-hop gate + width-echo fixes land 867/1001 PASS
+(108 DIVERGENT / 16 ORCA_ERROR / 10 VENDOR_INCOMPLETE). Session
+arc: 845 → 858 (timelapse picker + nullable echo) → 867 (curl port
+held 856 through oracle flake, then the hop gate + f32 nozzle width
+echoes). The E3NG 0.3 case is byte-identical; the RH3D family's
+missing inter-chunk retract was also its M73 driver.

@@ -1,6 +1,6 @@
 # OrcaSlicer printer smoke summary
 
-856 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
+867 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
 
 Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference), `ORCA_ERROR` (the upstream OrcaSlicer 2.4.2 reference binary itself failed, so no reference stream exists), `VENDOR_INCOMPLETE` (the vendor profile tree does not ship the machine's referenced default process preset), `ARES_ERROR` (Ares failed to load or slice the case).
 
@@ -177,7 +177,7 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Creality/Creality Ender-3 V2 Neo 0.4 nozzle |  |
 | PASS | Creality/Creality Ender-3 V3 0.4 nozzle |  |
 | PASS | Creality/Creality Ender-3 V3 0.6 nozzle |  |
-| DIVERGENT | Creality/Creality Ender-3 V3 KE 0.2 nozzle | first difference at byte 279 (line 11, column 35; expected 171903 bytes, actual 171903 bytes) context:   line 10: "; external perimeters extrusion width = 0.21mm"   line 11: expected "; perimeters extrusion width = 0.23mm"; actual "; perimeters extrusion width = 0.22mm"   line 12: expected "; infill extrusion width = 0.23mm"; actual "; infill extrusion width = 0.22mm" |
+| PASS | Creality/Creality Ender-3 V3 KE 0.2 nozzle |  |
 | PASS | Creality/Creality Ender-3 V3 KE 0.4 nozzle |  |
 | PASS | Creality/Creality Ender-3 V3 KE 0.6 nozzle |  |
 | PASS | Creality/Creality Ender-3 V3 KE 0.8 nozzle |  |
@@ -242,9 +242,9 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | Creality/Creality SPARKX i7 0.6 nozzle | first difference at byte 2217 (line 107, column 1; expected 104151 bytes, actual 104148 bytes) context:   line 106: "G1 X134.123 Y127.322 E.1484"   line 107: expected "M73 P13 R4"; actual "G1 X134.123 Y128.122 E.05811"   line 108: expected "G1 X134.123 Y128.122 E.05811"; actual "M73 P13 R4" |
 | DIVERGENT | Creality/Creality SPARKX i7 0.8 nozzle | first difference at byte 954 (line 46, column 7; expected 88493 bytes, actual 88503 bytes) context:   line 45: "G1 X115 E.3742  F1600"   line 46: expected "M73 P15 R3"; actual "M73 P14 R3"   line 47: "G1 X110 E.3742  F6400" |
 | DIVERGENT | Creality/Creality Sermoon V1 0.4 nozzle | first difference at byte 703 (line 27, column 8; expected 162827 bytes, actual 121937 bytes) context:   line 26: "M205 X8.00 Y8.00 Z0.40 E5.00 ; sets the jerk limits, mm/sec"   line 27: expected "M106 S0 ; disable fan"; actual "M106 S0"   line 28: expected "M106 P2 S0 ; disable additional fan "; actual "M106 P2 S0" |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-ukD0Du") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-6akyON") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-eGRqp0") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-Jx8eiA") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-YTQyIe") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-SKStih") |
 | PASS | Custom/MyKlipper 0.2 nozzle |  |
 | PASS | Custom/MyKlipper 0.4 nozzle |  |
 | PASS | Custom/MyKlipper 0.6 nozzle |  |
@@ -252,10 +252,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Custom/MyMarlin 0.4 nozzle |  |
 | PASS | Custom/MyRRF 0.4 nozzle |  |
 | PASS | Custom/MyRepetier 0.4 nozzle |  |
-| ORCA_ERROR | Custom/MyToolChanger 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-KGpUJV") |
-| ORCA_ERROR | Custom/MyToolChanger 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-VDZNuM") |
+| DIVERGENT | Custom/MyToolChanger 0.2 nozzle | first difference at byte 209688 (line 8001, column 1; expected 462943 bytes, actual 462943 bytes) context:   line 8000: "G1 X170.662 Y177.272 E.0618"   line 8001: expected "G1 X170.662 Y176.461 E.00536"; actual "M73 P50 R5"   line 8002: expected "M73 P50 R5"; actual "G1 X170.662 Y176.461 E.00536" |
+| ORCA_ERROR | Custom/MyToolChanger 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-BUYdKP") |
 | PASS | Custom/MyToolChanger 0.6 nozzle |  |
-| ORCA_ERROR | Custom/MyToolChanger 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-8cSHOg") |
+| ORCA_ERROR | Custom/MyToolChanger 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-e5rFby") |
 | PASS | DeltaMaker/DeltaMaker 2 0.35 nozzle |  |
 | PASS | DeltaMaker/DeltaMaker 2T 0.5 nozzle |  |
 | PASS | DeltaMaker/DeltaMaker 2XT 0.5 nozzle |  |
@@ -372,10 +372,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle |  |
 | PASS | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle |  |
 | DIVERGENT | Flashforge/Flashforge Artemis 0.4 Nozzle | first difference at byte 5282 (line 252, column 15; expected 110781 bytes, actual 112430 bytes) context:   line 251: "G1 X4.458 Y4.458 F6000"   line 252: expected "G1 X4.458 Y4.439"; actual "G1 X4.458 Y4.458"   line 253: expected "G1 X4.439 Y4.439"; actual "G1 X4.458 Y4.439" |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-w59XaQ") |
+| PASS | Flashforge/Flashforge Creator 5 0.4 nozzle |  |
 | PASS | Flashforge/Flashforge Creator 5 0.6 nozzle |  |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-qqnBVP") |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-HYw5JS") |
+| PASS | Flashforge/Flashforge Creator 5 0.8 nozzle |  |
+| PASS | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle |  |
 | PASS | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle |  |
 | PASS | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle |  |
 | PASS | Flashforge/Flashforge Guider 2s 0.4 nozzle |  |
@@ -462,11 +462,11 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | Kingroon/Kingroon KP3S V1 0.4 nozzle | first difference at byte 5243 (line 217, column 5; expected 107950 bytes, actual 107939 bytes) context:   line 216: "G1 F4075"   line 217: expected "G1 X94.398 Y85.602 E.29177"; actual "G1 X85.602 Y94.398 E.29177"   line 218: "G1 X85.602 Y85.602 E.29177" |
 | PASS | LH/LH Stinger 0.4 nozzle |  |
 | DIVERGENT | LH/LH Stinger MMU 0.4 nozzle | first difference at byte 627 (line 23, column 1; expected 135321 bytes, actual 135322 bytes) context:   line 22: ";TYPE:Custom"   line 23: expected "_SP_PRINT_START LANE=0 TEMP=230"; actual " _SP_PRINT_START LANE=0 TEMP=230"   line 24: "" |
-| DIVERGENT | LONGER/LONGER LK10 (0.2 nozzle) | first difference at byte 241 (line 10, column 44; expected 191970 bytes, actual 191970 bytes) context:   line 9: ""   line 10: expected "; external perimeters extrusion width = 0.23mm"; actual "; external perimeters extrusion width = 0.22mm"   line 11: "; perimeters extrusion width = 0.25mm" |
+| PASS | LONGER/LONGER LK10 (0.2 nozzle) |  |
 | PASS | LONGER/LONGER LK10 (0.4 nozzle) |  |
 | PASS | LONGER/LONGER LK10 (0.6 nozzle) |  |
 | DIVERGENT | LONGER/LONGER LK10 (0.8 nozzle) | first difference at byte 51264 (line 2164, column 29; expected 103095 bytes, actual 103095 bytes) context:   line 2163: "G1 X110.137 Y110.137 E-.05789"   line 2164: expected "G1 X110.944 Y110.137 E-.24211"; actual "G1 X110.944 Y110.137 E-.24212"   line 2165: ";WIPE_END" |
-| DIVERGENT | LONGER/LONGER LK10 Plus (0.2 nozzle) | first difference at byte 241 (line 10, column 44; expected 191918 bytes, actual 191918 bytes) context:   line 9: ""   line 10: expected "; external perimeters extrusion width = 0.23mm"; actual "; external perimeters extrusion width = 0.22mm"   line 11: "; perimeters extrusion width = 0.25mm" |
+| PASS | LONGER/LONGER LK10 Plus (0.2 nozzle) |  |
 | PASS | LONGER/LONGER LK10 Plus (0.4 nozzle) |  |
 | PASS | LONGER/LONGER LK10 Plus (0.6 nozzle) |  |
 | DIVERGENT | LONGER/LONGER LK10 Plus (0.8 nozzle) | first difference at byte 51208 (line 2164, column 29; expected 103059 bytes, actual 103059 bytes) context:   line 2163: "G1 X157.637 Y157.637 E-.05789"   line 2164: expected "G1 X158.444 Y157.637 E-.24211"; actual "G1 X158.444 Y157.637 E-.24212"   line 2165: ";WIPE_END" |
@@ -554,12 +554,12 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Prusa/Prusa XL 0.5 nozzle |  |
 | PASS | Prusa/Prusa XL 0.6 nozzle |  |
 | DIVERGENT | Prusa/Prusa XL 0.8 nozzle | first difference at byte 4422 (line 198, column 22; expected 53778 bytes, actual 53824 bytes) context:   line 197: ";WIPE_END"   line 198: expected "G1 X181.559 Y183.324 F24000"; actual "G1 X181.559 Y183.324 Z1 F24000"   line 199: expected "G1 E.6 F1800"; actual "G1 Z.6" |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.25 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-qMxo3r") |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.3 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-nHC9Dt") |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-uwYwJj") |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.5 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-NeloOv") |
-| ORCA_ERROR | Prusa/Prusa XL 5T 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-Mjjp78") |
-| DIVERGENT | Prusa/Prusa XL 5T 0.8 nozzle | first difference at byte 4856 (line 248, column 22; expected 64354 bytes, actual 64400 bytes) context:   line 247: ";WIPE_END"   line 248: expected "G1 X181.559 Y183.324 F24000"; actual "G1 X181.559 Y183.324 Z1 F24000"   line 249: expected "G1 E.8 F1800"; actual "G1 Z.6" |
+| PASS | Prusa/Prusa XL 5T 0.25 nozzle |  |
+| ORCA_ERROR | Prusa/Prusa XL 5T 0.3 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-PIKIwt") |
+| ORCA_ERROR | Prusa/Prusa XL 5T 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-CZIecM") |
+| PASS | Prusa/Prusa XL 5T 0.5 nozzle |  |
+| PASS | Prusa/Prusa XL 5T 0.6 nozzle |  |
+| ORCA_ERROR | Prusa/Prusa XL 5T 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-dssE6J") |
 | PASS | Qidi/Qidi Q1 Pro 0.2 nozzle |  |
 | PASS | Qidi/Qidi Q1 Pro 0.4 nozzle |  |
 | PASS | Qidi/Qidi Q1 Pro 0.6 nozzle |  |
@@ -595,11 +595,11 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Qidi/Qidi X-Smart 3 0.4 nozzle |  |
 | PASS | Qidi/Qidi X-Smart 3 0.6 nozzle |  |
 | PASS | Qidi/Qidi X-Smart 3 0.8 nozzle |  |
-| DIVERGENT | RH3D/E3NG v1.2S - 0.2 nozzle | first difference at byte 13777 (line 523, column 11; expected 291096 bytes, actual 291053 bytes) context:   line 522: "G1 X121 Y105.338 E.10775"   line 523: expected "G1 X123.081 Y105.734 E.02283"; actual "G1 X123.082 Y105.734 E.02283"   line 524: "G1 X124.872 Y106.868 E.02283" |
-| DIVERGENT | RH3D/E3NG v1.2S - 0.3 nozzle | first difference at byte 312 (line 12, column 31; expected 165499 bytes, actual 165455 bytes) context:   line 11: "; perimeters extrusion width = 0.33mm"   line 12: expected "; infill extrusion width = 0.35mm"; actual "; infill extrusion width = 0.34mm"   line 13: "; solid infill extrusion width = 0.33mm" |
-| DIVERGENT | RH3D/E3NG v1.2S - 0.4 nozzle | first difference at byte 9145 (line 353, column 1; expected 120711 bytes, actual 120678 bytes) context:   line 352: "G1 X121 Y108.404 E.30376"   line 353: expected "G1 X122.372 Y108.797 E.04335"; actual "M73 P6 R5"   line 354: expected "M73 P6 R5"; actual "G1 X122.372 Y108.797 E.04335" |
-| DIVERGENT | RH3D/E3NG v1.2S - 0.5 nozzle | first difference at byte 6247 (line 241, column 1; expected 111310 bytes, actual 111267 bytes) context:   line 240: "G1 X107.113 Y109.203 E.07137"   line 241: expected "G1 X107.911 Y108.153 E.05116"; actual "M73 P4 R5"   line 242: expected "M73 P4 R5"; actual "G1 X107.911 Y108.153 E.05116" |
-| DIVERGENT | RH3D/E3NG v1.2S - 0.6 nozzle | first difference at byte 5646 (line 220, column 4; expected 85574 bytes, actual 85529 bytes) context:   line 219: "; printing object cube10.stl id:0 copy 0"   line 220: expected "G1 E-.48 F2400"; actual "G1 X120.27 Y120.05 F24000"   line 221: expected ";WIPE_START"; actual "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0" |
+| DIVERGENT | RH3D/E3NG v1.2S - 0.2 nozzle | first difference at byte 13777 (line 523, column 11; expected 291096 bytes, actual 291096 bytes) context:   line 522: "G1 X121 Y105.338 E.10775"   line 523: expected "G1 X123.081 Y105.734 E.02283"; actual "G1 X123.082 Y105.734 E.02283"   line 524: "G1 X124.872 Y106.868 E.02283" |
+| PASS | RH3D/E3NG v1.2S - 0.3 nozzle |  |
+| PASS | RH3D/E3NG v1.2S - 0.4 nozzle |  |
+| PASS | RH3D/E3NG v1.2S - 0.5 nozzle |  |
+| PASS | RH3D/E3NG v1.2S - 0.6 nozzle |  |
 | PASS | Raise3D/Raise3D Pro3 0.4 nozzle (Dual) |  |
 | PASS | Raise3D/Raise3D Pro3 0.4 nozzle (Left) |  |
 | PASS | Raise3D/Raise3D Pro3 0.4 nozzle (Right) |  |
@@ -781,10 +781,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Snapmaker/Snapmaker J1 (0.6 nozzle) |  |
 | PASS | Snapmaker/Snapmaker J1 (0.8 nozzle) |  |
 | PASS | Snapmaker/Snapmaker U1 (0.2 nozzle) |  |
-| DIVERGENT | Snapmaker/Snapmaker U1 (0.4 nozzle) | first difference at byte 3792 (line 158, column 5; expected 248533 bytes, actual 248533 bytes) context:   line 157: ";TYPE:Outer wall"   line 158: expected "G1 F2400"; actual "G1 F3000"   line 159: "G1 X130.9 Y140.6 E.34267" |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-lw20v7") |
-| PASS | Snapmaker/Snapmaker U1 (0.6 nozzle) |  |
-| PASS | Snapmaker/Snapmaker U1 (0.8 nozzle) |  |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-eImGyW") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-cqhaKK") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.6 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-5q21cB") |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-U0xNX9") |
 | PASS | Sovol/Sovol SV01 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV01 Pro 0.4 nozzle |  |
 | PASS | Sovol/Sovol SV02 0.4 nozzle |  |
@@ -952,12 +952,12 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | WonderMaker/WonderMaker ZR 0.4 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR 0.6 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR 0.8 nozzle |  |
-| PASS | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle |  |
-| PASS | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle |  |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-Yk1Tto") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-9lfciK") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-GzPhXh") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-0J3fEW/command-4gC6e7") |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-wxNfd4") |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-OYGedD") |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle |  |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-LClEC4") |
+| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-K3VIlX/command-RHGtfF") |
+| PASS | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle |  |
 | PASS | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle |  |
 | PASS | Z-Bolt/Z-Bolt S1000 0.4 nozzle |  |
