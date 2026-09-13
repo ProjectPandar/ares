@@ -442,3 +442,21 @@ the slice contour. Next session: object position/size sweep through
 the oracle to test intrinsic-vs-proportional, then read
 PrintObject::make_slices call sites (lslices may be rebuilt from
 post-perimeter region slices in some path).
+
+## F10020 ROOT CAUSE FOUND: curled-perimeter artificial distance (2026-09-15)
+
+The decisive experiment: with slowdown_for_curled_perimeters="0" (the
+earlier array-format edit was void — the key is a SCALAR string in
+project_settings), the canary anomalies F9420/F9540/F9780 and the
+baseline F10020 COMPLETELY DISAPPEAR (0 matches). The MK4S one-wall
+overhang slowdown is the artificial curl distance
+(ExtrusionProcessor.hpp:375-420): `prev_curled_extrusions` distancer
+over the PREVIOUS layer's `curled_lines` (SupportSpotsGenerator
+output), dist = width × (1−d/(10·width))² × curled_height/(height·10),
+clamped into the speed table via min(). The per-point δ variation
+(0.048-0.051) = distances to specific curled segments; the one-layer
+specificity = layer 1's curl state. Everything previously "ruled out"
+(closing radius, elephant foot, lslices mutation) was correct to rule
+out — the signal was never the geometry boundary. Fix: port the
+curled-lines estimation + the artificial distance into ares's overhang
+estimator (motion/overhang.rs); the slowdown→M73 chain then collapses.
