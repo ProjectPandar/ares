@@ -16,16 +16,28 @@ pub(super) fn transformed_for_export(
     Ok(transformed)
 }
 
-/// The CLI oracle's config export carries the RAW preset
-/// `enable_prime_tower` for dual-nozzle BBL printers: the auto filament-map
-/// recompute (`ToolOrdering.cpp:1288-1303`) runs for exactly those and
-/// `Print::update_filament_maps_to_config` (`Print.cpp:3166`) rebuilds
-/// `m_full_print_config` from `m_ori_full_print_config` (the raw preset
-/// config). Every other printer's export reflects the `normalize_fdm_2`
-/// used-filament disable (single-filament → 0).
+/// `Print::update_filament_maps_to_config` (`Print.cpp:3166-3170`) only
+/// rebuilds `m_full_print_config` from the RAW `m_ori_full_print_config`
+/// when the re-derived map actually CHANGED — the raw
+/// `enable_prime_tower` resurfaces exactly then (H2D: map 1→2 keeps the
+/// raw 1; X2D: map unchanged 1 exports the normalize_fdm_2-disabled 0).
 fn apply_cli_oracle_state(settings: &mut ProjectSettings, overrides: &ExportOverrides) {
-    let dual_nozzle_bbl = overrides.is_bbl && settings.project.print.nozzle_diameter.0.len() == 2;
-    if dual_nozzle_bbl && let Some(raw) = overrides.enable_prime_tower {
+    let map_changed = match overrides.raw_filament_map_token.as_deref() {
+        Some(raw) => {
+            let derived = &settings.project.gcode.filament_map.0;
+            let raw_list = raw
+                .split(';')
+                .filter_map(|token| token.trim().parse::<i32>().ok())
+                .map(crate::OrcaInt)
+                .collect::<Vec<_>>();
+            raw_list != *derived
+                && !(raw_list.len() == 1
+                    && derived.len() > 1
+                    && derived.iter().all(|value| value == &raw_list[0]))
+        }
+        None => false,
+    };
+    if map_changed && let Some(raw) = overrides.enable_prime_tower {
         settings.process.print.enable_prime_tower = raw;
     }
 }

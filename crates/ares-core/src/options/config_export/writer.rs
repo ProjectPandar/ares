@@ -16,16 +16,14 @@ pub(super) struct ExportOverrides {
     /// Raw preset `enable_prime_tower` (None when the raw settings lack
     /// the key — keep the resolved value).
     pub(super) enable_prime_tower: Option<OrcaBool>,
-    pub(super) filament_map_mode: ProjectFilamentMapMode,
+    /// Raw preset `filament_map` token (joined `;` list).
+    pub(super) raw_filament_map_token: Option<String>,
+    #[allow(dead_code)]
     pub(super) is_bbl: bool,
 }
 
 impl ExportOverrides {
-    fn from_raw(
-        raw_settings: &ProjectSettingsRaw,
-        filament_map_mode: ProjectFilamentMapMode,
-        is_bbl: bool,
-    ) -> Self {
+    fn from_raw(raw_settings: &ProjectSettingsRaw, is_bbl: bool) -> Self {
         let enable_prime_tower = raw_settings
             .iter()
             .find(|(key, _)| *key == "enable_prime_tower")
@@ -35,9 +33,13 @@ impl ExportOverrides {
                 "0" | "false" => Some(OrcaBool(false)),
                 _ => None,
             });
+        let raw_filament_map_token = raw_settings
+            .iter()
+            .find(|(key, _)| *key == "filament_map")
+            .and_then(|(_, token)| token.to_owned());
         Self {
             enable_prime_tower,
-            filament_map_mode,
+            raw_filament_map_token,
             is_bbl,
         }
     }
@@ -65,11 +67,7 @@ pub(crate) fn write_config_block(
 ) -> Result<(), SliceError> {
     let transformed = transformed_for_export(
         &views.full,
-        &ExportOverrides::from_raw(
-            raw_settings,
-            views.full.project.gcode.filament_map_mode,
-            is_bbl_printer(views),
-        ),
+        &ExportOverrides::from_raw(raw_settings, is_bbl_printer(views)),
     )?;
     let entries = collect_config_entries(&transformed).map_err(config_error)?;
     let mut scratch = Vec::new();

@@ -1,74 +1,74 @@
 # OrcaSlicer printer smoke summary
 
-77 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
+852 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
 
 Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference), `ORCA_ERROR` (the upstream OrcaSlicer 2.4.2 reference binary itself failed, so no reference stream exists), `VENDOR_INCOMPLETE` (the vendor profile tree does not ship the machine's referenced default process preset), `ARES_ERROR` (Ares failed to load or slice the case).
 
 | status | printer | first divergence |
 |---|---|---|
-| DIVERGENT | Afinia/Afinia H+1(HS) 0.4 nozzle | first difference at byte 90156 (line 3698, column 24; expected 107605 bytes, actual 107605 bytes) context:   line 3697: "; enable_pressure_advance = 0"   line 3698: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3699: "; enable_support = 0" |
-| DIVERGENT | Afinia/Afinia H+1(HS) 0.6 nozzle | first difference at byte 63985 (line 2540, column 24; expected 81449 bytes, actual 81449 bytes) context:   line 2539: "; enable_pressure_advance = 0"   line 2540: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2541: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 0.2 nozzle | first difference at byte 531093 (line 23519, column 24; expected 548181 bytes, actual 548181 bytes) context:   line 23518: "; enable_pressure_advance = 0"   line 23519: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 23520: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 0.25 nozzle | first difference at byte 463717 (line 20752, column 24; expected 480813 bytes, actual 480813 bytes) context:   line 20751: "; enable_pressure_advance = 0"   line 20752: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 20753: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 0.4 nozzle | first difference at byte 89868 (line 4388, column 24; expected 106930 bytes, actual 106930 bytes) context:   line 4387: "; enable_pressure_advance = 0"   line 4388: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4389: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 0.6 nozzle | first difference at byte 79429 (line 3951, column 24; expected 96502 bytes, actual 96502 bytes) context:   line 3950: "; enable_pressure_advance = 0"   line 3951: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3952: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 All-Metal 0.2 nozzle | first difference at byte 523926 (line 23125, column 24; expected 541041 bytes, actual 541041 bytes) context:   line 23124: "; enable_pressure_advance = 0"   line 23125: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 23126: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 All-Metal 0.25 nozzle | first difference at byte 459732 (line 20529, column 24; expected 476855 bytes, actual 476855 bytes) context:   line 20528: "; enable_pressure_advance = 0"   line 20529: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 20530: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 All-Metal 0.4 nozzle | first difference at byte 89595 (line 4382, column 24; expected 106685 bytes, actual 106685 bytes) context:   line 4381: "; enable_pressure_advance = 0"   line 4382: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4383: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5 All-Metal 0.6 nozzle | first difference at byte 79137 (line 3944, column 24; expected 96238 bytes, actual 96238 bytes) context:   line 3943: "; enable_pressure_advance = 0"   line 3944: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3945: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5C 0.2 nozzle | first difference at byte 527385 (line 23319, column 24; expected 544474 bytes, actual 544474 bytes) context:   line 23318: "; enable_pressure_advance = 0"   line 23319: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 23320: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5C 0.25 nozzle | first difference at byte 460034 (line 20553, column 24; expected 477131 bytes, actual 477131 bytes) context:   line 20552: "; enable_pressure_advance = 0"   line 20553: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 20554: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5C 0.4 nozzle | first difference at byte 89585 (line 4384, column 24; expected 106649 bytes, actual 106649 bytes) context:   line 4383: "; enable_pressure_advance = 0"   line 4384: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4385: "; enable_support = 0" |
-| DIVERGENT | Anker/Anker M5C 0.6 nozzle | first difference at byte 79107 (line 3944, column 24; expected 96182 bytes, actual 96182 bytes) context:   line 3943: "; enable_pressure_advance = 0"   line 3944: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3945: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic 4Max Pro 0.4 nozzle | first difference at byte 83350 (line 4106, column 24; expected 100651 bytes, actual 100651 bytes) context:   line 4105: "; enable_pressure_advance = 0"   line 4106: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4107: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic 4Max Pro 2 0.4 nozzle | first difference at byte 86873 (line 4122, column 24; expected 105731 bytes, actual 105731 bytes) context:   line 4121: "; enable_pressure_advance = 0"   line 4122: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4123: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Chiron 0.4 nozzle | first difference at byte 83775 (line 3958, column 24; expected 101353 bytes, actual 101353 bytes) context:   line 3957: "; enable_pressure_advance = 0"   line 3958: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3959: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 0.4 nozzle | first difference at byte 96835 (line 4500, column 24; expected 114602 bytes, actual 114602 bytes) context:   line 4499: "; enable_pressure_advance = 0"   line 4500: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4501: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 2 0.4 nozzle | first difference at byte 82117 (line 3929, column 24; expected 99710 bytes, actual 99710 bytes) context:   line 3928: "; enable_pressure_advance = 0"   line 3929: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3930: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 2 Max 0.4 nozzle | first difference at byte 84793 (line 3440, column 24; expected 103216 bytes, actual 103216 bytes) context:   line 3439: "; enable_pressure_advance = 0"   line 3440: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3441: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 2 Neo 0.4 nozzle | first difference at byte 85374 (line 3459, column 24; expected 103523 bytes, actual 103523 bytes) context:   line 3458: "; enable_pressure_advance = 0"   line 3459: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3460: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 2 Plus 0.4 nozzle | first difference at byte 89666 (line 3542, column 24; expected 107897 bytes, actual 107897 bytes) context:   line 3541: "; enable_pressure_advance = 1"   line 3542: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3543: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 2 Pro 0.4 nozzle | first difference at byte 101284 (line 4105, column 24; expected 119446 bytes, actual 119446 bytes) context:   line 4104: "; enable_pressure_advance = 1"   line 4105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4106: "; enable_support = 0" |
+| PASS | Afinia/Afinia H+1(HS) 0.4 nozzle |  |
+| PASS | Afinia/Afinia H+1(HS) 0.6 nozzle |  |
+| PASS | Anker/Anker M5 0.2 nozzle |  |
+| PASS | Anker/Anker M5 0.25 nozzle |  |
+| PASS | Anker/Anker M5 0.4 nozzle |  |
+| PASS | Anker/Anker M5 0.6 nozzle |  |
+| PASS | Anker/Anker M5 All-Metal 0.2 nozzle |  |
+| PASS | Anker/Anker M5 All-Metal 0.25 nozzle |  |
+| PASS | Anker/Anker M5 All-Metal 0.4 nozzle |  |
+| PASS | Anker/Anker M5 All-Metal 0.6 nozzle |  |
+| PASS | Anker/Anker M5C 0.2 nozzle |  |
+| PASS | Anker/Anker M5C 0.25 nozzle |  |
+| PASS | Anker/Anker M5C 0.4 nozzle |  |
+| PASS | Anker/Anker M5C 0.6 nozzle |  |
+| PASS | Anycubic/Anycubic 4Max Pro 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic 4Max Pro 2 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Chiron 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 2 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 2 Max 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 2 Neo 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 2 Plus 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 2 Pro 0.4 nozzle |  |
 | DIVERGENT | Anycubic/Anycubic Kobra 3 0.2 nozzle | first difference at byte 18994 (line 661, column 29; expected 454235 bytes, actual 454235 bytes) context:   line 660: ";WIPE_START"   line 661: expected "G1 X121.761 Y120.566 E-.70072"; actual "G1 X121.761 Y120.566 E-.70071"   line 662: expected "G1 X121.88 Y120.53 E-.09928"; actual "G1 X121.88 Y120.53 E-.09929" |
-| DIVERGENT | Anycubic/Anycubic Kobra 3 0.4 nozzle | first difference at byte 119777 (line 4439, column 24; expected 137120 bytes, actual 137120 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 3 0.6 nozzle | first difference at byte 69477 (line 2503, column 24; expected 86777 bytes, actual 86777 bytes) context:   line 2502: "; enable_pressure_advance = 0"   line 2503: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2504: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 3 0.8 nozzle | first difference at byte 53169 (line 1975, column 24; expected 70465 bytes, actual 70465 bytes) context:   line 1974: "; enable_pressure_advance = 0"   line 1975: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1976: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 3 Max 0.4 nozzle | first difference at byte 137491 (line 5159, column 24; expected 155907 bytes, actual 155907 bytes) context:   line 5158: "; enable_pressure_advance = 1"   line 5159: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5160: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 3 Max 0.6 nozzle | first difference at byte 68082 (line 2704, column 24; expected 85927 bytes, actual 85927 bytes) context:   line 2703: "; enable_pressure_advance = 1"   line 2704: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2705: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra 3 Max 0.8 nozzle | first difference at byte 53145 (line 2073, column 24; expected 71001 bytes, actual 71001 bytes) context:   line 2072: "; enable_pressure_advance = 1"   line 2073: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2074: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra Max 0.4 nozzle | first difference at byte 95229 (line 4342, column 24; expected 112752 bytes, actual 112752 bytes) context:   line 4341: "; enable_pressure_advance = 0"   line 4342: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4343: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra Neo 0.4 nozzle | first difference at byte 85072 (line 3459, column 24; expected 102931 bytes, actual 102931 bytes) context:   line 3458: "; enable_pressure_advance = 0"   line 3459: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3460: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra Plus 0.4 nozzle | first difference at byte 95219 (line 4341, column 24; expected 112746 bytes, actual 112746 bytes) context:   line 4340: "; enable_pressure_advance = 0"   line 4341: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4342: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra S1 0.4 nozzle | first difference at byte 89264 (line 3310, column 24; expected 106726 bytes, actual 106726 bytes) context:   line 3309: "; enable_pressure_advance = 1"   line 3310: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3311: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra S1 Max 0.25 nozzle | first difference at byte 484803 (line 17609, column 24; expected 502796 bytes, actual 502796 bytes) context:   line 17608: "; enable_pressure_advance = 1"   line 17609: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 17610: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra S1 Max 0.4 nozzle | first difference at byte 88264 (line 3587, column 24; expected 106302 bytes, actual 106302 bytes) context:   line 3586: "; enable_pressure_advance = 1"   line 3587: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3588: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra S1 Max 0.6 nozzle | first difference at byte 55132 (line 2161, column 24; expected 73130 bytes, actual 73130 bytes) context:   line 2160: "; enable_pressure_advance = 1"   line 2161: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2162: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra S1 Max 0.8 nozzle | first difference at byte 45392 (line 1822, column 24; expected 63358 bytes, actual 63358 bytes) context:   line 1821: "; enable_pressure_advance = 1"   line 1822: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1823: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Kobra X 0.4 nozzle | first difference at byte 140553 (line 5110, column 24; expected 158264 bytes, actual 158264 bytes) context:   line 5109: "; enable_pressure_advance = 1"   line 5110: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5111: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Predator 0.4 nozzle | first difference at byte 70372 (line 3528, column 24; expected 90644 bytes, actual 90644 bytes) context:   line 3527: "; enable_pressure_advance = 0"   line 3528: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3529: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic Vyper 0.4 nozzle | first difference at byte 97738 (line 4470, column 24; expected 115377 bytes, actual 115377 bytes) context:   line 4469: "; enable_pressure_advance = 0"   line 4470: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4471: "; enable_support = 0" |
-| DIVERGENT | Anycubic/Anycubic i3 Mega S 0.4 nozzle | first difference at byte 83533 (line 3960, column 24; expected 101329 bytes, actual 101329 bytes) context:   line 3959: "; enable_pressure_advance = 0"   line 3960: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3961: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery Genius 0.4 nozzle | first difference at byte 86055 (line 3841, column 24; expected 103678 bytes, actual 103678 bytes) context:   line 3840: "; enable_pressure_advance = 0"   line 3841: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3842: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery Genius Pro 0.4 nozzle | first difference at byte 69984 (line 3187, column 24; expected 87746 bytes, actual 87746 bytes) context:   line 3186: "; enable_pressure_advance = 0"   line 3187: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3188: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery Hornet 0.4 nozzle | first difference at byte 88443 (line 4054, column 24; expected 106435 bytes, actual 106435 bytes) context:   line 4053: "; enable_pressure_advance = 0"   line 4054: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4055: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.2 nozzle | first difference at byte 879641 (line 33126, column 24; expected 907371 bytes, actual 907371 bytes) context:   line 33125: "; enable_pressure_advance = 1"   line 33126: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 33127: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.4 nozzle | first difference at byte 104522 (line 4347, column 24; expected 125688 bytes, actual 125688 bytes) context:   line 4346: "; enable_pressure_advance = 1"   line 4347: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4348: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.6 nozzle | first difference at byte 69137 (line 3242, column 24; expected 96861 bytes, actual 96861 bytes) context:   line 3241: "; enable_pressure_advance = 1"   line 3242: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3243: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery M1 Pro 0.8 nozzle | first difference at byte 55370 (line 2650, column 24; expected 83088 bytes, actual 83088 bytes) context:   line 2649: "; enable_pressure_advance = 1"   line 2650: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2651: "; enable_support = 0" |
+| PASS | Anycubic/Anycubic Kobra 3 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 3 0.6 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 3 0.8 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 3 Max 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 3 Max 0.6 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra 3 Max 0.8 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra Max 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra Neo 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra Plus 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra S1 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra S1 Max 0.25 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra S1 Max 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra S1 Max 0.6 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra S1 Max 0.8 nozzle |  |
+| PASS | Anycubic/Anycubic Kobra X 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Predator 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic Vyper 0.4 nozzle |  |
+| PASS | Anycubic/Anycubic i3 Mega S 0.4 nozzle |  |
+| PASS | Artillery/Artillery Genius 0.4 nozzle |  |
+| PASS | Artillery/Artillery Genius Pro 0.4 nozzle |  |
+| PASS | Artillery/Artillery Hornet 0.4 nozzle |  |
+| PASS | Artillery/Artillery M1 Pro 0.2 nozzle |  |
+| PASS | Artillery/Artillery M1 Pro 0.4 nozzle |  |
+| PASS | Artillery/Artillery M1 Pro 0.6 nozzle |  |
+| PASS | Artillery/Artillery M1 Pro 0.8 nozzle |  |
 | DIVERGENT | Artillery/Artillery Sidewinder X1 0.4 nozzle | first difference at byte 4008 (line 167, column 1; expected 104247 bytes, actual 104247 bytes) context:   line 166: "G1 X154.75 Y145.25 E.43192"   line 167: expected "M73 P4 R8"; actual "G1 X154.75 Y154.71 E.4301"   line 168: expected "G1 X154.75 Y154.71 E.4301"; actual "M73 P4 R8" |
 | DIVERGENT | Artillery/Artillery Sidewinder X2 0.4 nozzle | first difference at byte 2306 (line 97, column 1; expected 104344 bytes, actual 104344 bytes) context:   line 96: "G1 X156.641 Y157.649 E.0712"   line 97: expected "M73 P36 R8"; actual "G1 X155 Y158.116 E.07757"   line 98: expected "G1 X155 Y158.116 E.07757"; actual "M73 P36 R8" |
-| DIVERGENT | Artillery/Artillery Sidewinder X3 Plus 0.4 nozzle | first difference at byte 80564 (line 3605, column 24; expected 97955 bytes, actual 97955 bytes) context:   line 3604: "; enable_pressure_advance = 1"   line 3605: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3606: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery Sidewinder X3 Pro 0.4 nozzle | first difference at byte 77507 (line 3317, column 24; expected 94901 bytes, actual 94901 bytes) context:   line 3316: "; enable_pressure_advance = 1"   line 3317: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3318: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery Sidewinder X4 Plus 0.4 nozzle | first difference at byte 72744 (line 3309, column 24; expected 90783 bytes, actual 90783 bytes) context:   line 3308: "; enable_pressure_advance = 1"   line 3309: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3310: "; enable_support = 0" |
-| DIVERGENT | Artillery/Artillery Sidewinder X4 Pro 0.4 nozzle | first difference at byte 72741 (line 3309, column 24; expected 90773 bytes, actual 90773 bytes) context:   line 3308: "; enable_pressure_advance = 1"   line 3309: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3310: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 0.2 nozzle | first difference at byte 9757 (line 105, column 24; expected 480853 bytes, actual 480853 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 0.4 nozzle | first difference at byte 9733 (line 105, column 24; expected 199921 bytes, actual 199921 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 0.6 nozzle | first difference at byte 9743 (line 105, column 24; expected 153133 bytes, actual 153133 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 0.8 nozzle | first difference at byte 9743 (line 105, column 24; expected 120847 bytes, actual 120847 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 mini 0.2 nozzle | first difference at byte 9719 (line 105, column 24; expected 458436 bytes, actual 458436 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 mini 0.4 nozzle | first difference at byte 9696 (line 105, column 24; expected 193672 bytes, actual 193672 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 mini 0.6 nozzle | first difference at byte 9706 (line 105, column 24; expected 139267 bytes, actual 139267 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab A1 mini 0.8 nozzle | first difference at byte 9704 (line 105, column 24; expected 118329 bytes, actual 118329 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
+| PASS | Artillery/Artillery Sidewinder X3 Plus 0.4 nozzle |  |
+| PASS | Artillery/Artillery Sidewinder X3 Pro 0.4 nozzle |  |
+| PASS | Artillery/Artillery Sidewinder X4 Plus 0.4 nozzle |  |
+| PASS | Artillery/Artillery Sidewinder X4 Pro 0.4 nozzle |  |
+| PASS | BBL/Bambu Lab A1 0.2 nozzle |  |
+| PASS | BBL/Bambu Lab A1 0.4 nozzle |  |
+| PASS | BBL/Bambu Lab A1 0.6 nozzle |  |
+| PASS | BBL/Bambu Lab A1 0.8 nozzle |  |
+| PASS | BBL/Bambu Lab A1 mini 0.2 nozzle |  |
+| PASS | BBL/Bambu Lab A1 mini 0.4 nozzle |  |
+| PASS | BBL/Bambu Lab A1 mini 0.6 nozzle |  |
+| PASS | BBL/Bambu Lab A1 mini 0.8 nozzle |  |
 | DIVERGENT | BBL/Bambu Lab H2D 0.2 nozzle | first difference at byte 58307 (line 1331, column 25; expected 403760 bytes, actual 403760 bytes) context:   line 1330: ""   line 1331: expected "    M9711 M0 E0 X177 Y233 Z0.5 S11 C10 O0 T3000"; actual "    M9711 M0 E0 X177 Y232 Z0.5 S11 C10 O0 T3000"   line 1332: "" |
 | DIVERGENT | BBL/Bambu Lab H2D 0.4 nozzle | first difference at byte 56529 (line 1270, column 25; expected 162460 bytes, actual 162460 bytes) context:   line 1269: ""   line 1270: expected "    M9711 M0 E0 X177 Y233 Z0.6 S11 C10 O0 T3000"; actual "    M9711 M0 E0 X177 Y232 Z0.6 S11 C10 O0 T3000"   line 1271: "" |
 | DIVERGENT | BBL/Bambu Lab H2D 0.6 nozzle | first difference at byte 56286 (line 1261, column 25; expected 120090 bytes, actual 120090 bytes) context:   line 1260: ""   line 1261: expected "    M9711 M0 E0 X177 Y233 Z0.7 S11 C10 O0 T3000"; actual "    M9711 M0 E0 X177 Y232 Z0.7 S11 C10 O0 T3000"   line 1262: "" |
@@ -77,10 +77,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | BBL/Bambu Lab H2D Pro 0.4 nozzle | first difference at byte 56562 (line 1271, column 25; expected 162935 bytes, actual 162935 bytes) context:   line 1270: ""   line 1271: expected "    M9711 M0 E0 X177 Y233 Z0.6 S11 C10 O0 T3000"; actual "    M9711 M0 E0 X177 Y232 Z0.6 S11 C10 O0 T3000"   line 1272: "" |
 | DIVERGENT | BBL/Bambu Lab H2D Pro 0.6 nozzle | first difference at byte 56197 (line 1256, column 25; expected 119636 bytes, actual 119636 bytes) context:   line 1255: ""   line 1256: expected "    M9711 M0 E0 X177 Y233 Z0.7 S11 C10 O0 T3000"; actual "    M9711 M0 E0 X177 Y232 Z0.7 S11 C10 O0 T3000"   line 1257: "" |
 | DIVERGENT | BBL/Bambu Lab H2D Pro 0.8 nozzle | first difference at byte 56065 (line 1257, column 25; expected 104058 bytes, actual 104058 bytes) context:   line 1256: ""   line 1257: expected "    M9711 M0 E0 X177 Y233 Z0.8 S11 C10 O0 T3000"; actual "    M9711 M0 E0 X177 Y232 Z0.8 S11 C10 O0 T3000"   line 1258: "" |
-| DIVERGENT | BBL/Bambu Lab H2S 0.2 nozzle | first difference at byte 6524 (line 105, column 24; expected 375146 bytes, actual 375146 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab H2S 0.4 nozzle | first difference at byte 6499 (line 105, column 24; expected 147902 bytes, actual 147902 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab H2S 0.6 nozzle | first difference at byte 6521 (line 105, column 24; expected 107036 bytes, actual 107036 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab H2S 0.8 nozzle | first difference at byte 6522 (line 105, column 24; expected 91732 bytes, actual 91732 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
+| PASS | BBL/Bambu Lab H2S 0.2 nozzle |  |
+| PASS | BBL/Bambu Lab H2S 0.4 nozzle |  |
+| PASS | BBL/Bambu Lab H2S 0.6 nozzle |  |
+| PASS | BBL/Bambu Lab H2S 0.8 nozzle |  |
 | DIVERGENT | BBL/Bambu Lab P1P 0.2 nozzle | first difference at byte 93 (line 3, column 28; expected 371083 bytes, actual 371106 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 8m 36s; total estimated time: 15m 25s"; actual "; model printing time: 8m 39s; total estimated time: 15m 28s"   line 4: "; estimated first layer printing time (normal mode) = 6m 48s" |
 | DIVERGENT | BBL/Bambu Lab P1P 0.4 nozzle | first difference at byte 93 (line 3, column 28; expected 143837 bytes, actual 143848 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 5m 37s; total estimated time: 11m 52s"; actual "; model printing time: 5m 39s; total estimated time: 11m 54s"   line 4: "; estimated first layer printing time (normal mode) = 6m 14s" |
 | DIVERGENT | BBL/Bambu Lab P1P 0.6 nozzle | first difference at byte 93 (line 3, column 28; expected 101993 bytes, actual 101993 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 3m 42s; total estimated time: 9m 56s"; actual "; model printing time: 3m 44s; total estimated time: 9m 57s"   line 4: "; estimated first layer printing time (normal mode) = 6m 13s" |
@@ -89,10 +89,10 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | BBL/Bambu Lab P1S 0.4 nozzle | first difference at byte 92 (line 3, column 27; expected 143988 bytes, actual 143988 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 4m 5s; total estimated time: 10m 20s"; actual "; model printing time: 4m 8s; total estimated time: 10m 23s"   line 4: "; estimated first layer printing time (normal mode) = 6m 14s" |
 | DIVERGENT | BBL/Bambu Lab P1S 0.6 nozzle | first difference at byte 93 (line 3, column 28; expected 102134 bytes, actual 102145 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 2m 46s; total estimated time: 9m 0s"; actual "; model printing time: 2m 48s; total estimated time: 9m 2s"   line 4: "; estimated first layer printing time (normal mode) = 6m 13s" |
 | DIVERGENT | BBL/Bambu Lab P1S 0.8 nozzle | first difference at byte 92 (line 3, column 27; expected 87316 bytes, actual 87327 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 2m 7s; total estimated time: 8m 25s"; actual "; model printing time: 2m 9s; total estimated time: 8m 27s"   line 4: "; estimated first layer printing time (normal mode) = 6m 17s" |
-| DIVERGENT | BBL/Bambu Lab P2S 0.2 nozzle | first difference at byte 9573 (line 105, column 24; expected 438236 bytes, actual 438236 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab P2S 0.4 nozzle | first difference at byte 9550 (line 105, column 24; expected 171470 bytes, actual 171470 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab P2S 0.6 nozzle | first difference at byte 9571 (line 105, column 24; expected 124609 bytes, actual 124609 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BBL/Bambu Lab P2S 0.8 nozzle | first difference at byte 9572 (line 105, column 24; expected 119990 bytes, actual 119990 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
+| PASS | BBL/Bambu Lab P2S 0.2 nozzle |  |
+| PASS | BBL/Bambu Lab P2S 0.4 nozzle |  |
+| PASS | BBL/Bambu Lab P2S 0.6 nozzle |  |
+| PASS | BBL/Bambu Lab P2S 0.8 nozzle |  |
 | DIVERGENT | BBL/Bambu Lab X1 0.2 nozzle | first difference at byte 92 (line 3, column 27; expected 396001 bytes, actual 395885 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 8m 37s; total estimated time: 18m 36s"; actual "; model printing time: 8m 40s; total estimated time: 18m 39s"   line 4: "; estimated first layer printing time (normal mode) = 9m 58s" |
 | DIVERGENT | BBL/Bambu Lab X1 0.4 nozzle | first difference at byte 92 (line 3, column 27; expected 169245 bytes, actual 169164 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 5m 38s; total estimated time: 12m 54s"; actual "; model printing time: 5m 40s; total estimated time: 12m 57s"   line 4: "; estimated first layer printing time (normal mode) = 7m 16s" |
 | DIVERGENT | BBL/Bambu Lab X1 0.6 nozzle | first difference at byte 93 (line 3, column 28; expected 127211 bytes, actual 127139 bytes) context:   line 2: "; generated by <SLICER> 2.4.2 on <TIMESTAMP>"   line 3: expected "; model printing time: 3m 43s; total estimated time: 11m 1s"; actual "; model printing time: 3m 45s; total estimated time: 11m 2s"   line 4: "; estimated first layer printing time (normal mode) = 7m 17s" |
@@ -109,175 +109,175 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | BBL/Bambu Lab X2D 0.4 nozzle | first difference at byte 10000 (line 105, column 24; expected 163233 bytes, actual 163233 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
 | DIVERGENT | BBL/Bambu Lab X2D 0.6 nozzle | first difference at byte 9999 (line 105, column 24; expected 121840 bytes, actual 121840 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
 | DIVERGENT | BBL/Bambu Lab X2D 0.8 nozzle | first difference at byte 10000 (line 105, column 24; expected 106134 bytes, actual 106134 bytes) context:   line 104: "; enable_pressure_advance = 0"   line 105: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 106: "; enable_support = 0" |
-| DIVERGENT | BIQU/BIQU B1 (0.4 nozzle) | first difference at byte 85923 (line 4182, column 24; expected 103803 bytes, actual 103803 bytes) context:   line 4181: "; enable_pressure_advance = 0"   line 4182: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4183: "; enable_support = 0" |
-| DIVERGENT | BIQU/BIQU BX (0.4 nozzle) | first difference at byte 85663 (line 4146, column 24; expected 104046 bytes, actual 104046 bytes) context:   line 4145: "; enable_pressure_advance = 0"   line 4146: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4147: "; enable_support = 0" |
-| DIVERGENT | BIQU/BIQU Hurakan (0.4 nozzle) | first difference at byte 98212 (line 4047, column 24; expected 115084 bytes, actual 115084 bytes) context:   line 4046: "; enable_pressure_advance = 0"   line 4047: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4048: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS Pro S100 0.4 nozzle | first difference at byte 111316 (line 4539, column 24; expected 128216 bytes, actual 128216 bytes) context:   line 4538: "; enable_pressure_advance = 0"   line 4539: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4540: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS Pro S100 0.6 nozzle | first difference at byte 67851 (line 2870, column 24; expected 84699 bytes, actual 84699 bytes) context:   line 2869: "; enable_pressure_advance = 0"   line 2870: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2871: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS Pro S100 0.8 nozzle | first difference at byte 58359 (line 2626, column 24; expected 75208 bytes, actual 75208 bytes) context:   line 2625: "; enable_pressure_advance = 0"   line 2626: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2627: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS Pro S100 1.0 nozzle | first difference at byte 48613 (line 2192, column 24; expected 65459 bytes, actual 65459 bytes) context:   line 2191: "; enable_pressure_advance = 0"   line 2192: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2193: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS Pro S100 1.2 nozzle | first difference at byte 38825 (line 1740, column 24; expected 55673 bytes, actual 55673 bytes) context:   line 1739: "; enable_pressure_advance = 0"   line 1740: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1741: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS RD50 V2 0.4 nozzle | first difference at byte 111085 (line 4538, column 24; expected 127984 bytes, actual 127984 bytes) context:   line 4537: "; enable_pressure_advance = 0"   line 4538: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4539: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS RD50 V2 0.6 nozzle | first difference at byte 79684 (line 3352, column 24; expected 96532 bytes, actual 96532 bytes) context:   line 3351: "; enable_pressure_advance = 0"   line 3352: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3353: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS RD50 V2 0.8 nozzle | first difference at byte 62846 (line 2825, column 24; expected 79694 bytes, actual 79694 bytes) context:   line 2824: "; enable_pressure_advance = 0"   line 2825: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2826: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS RF50 0.4 nozzle | first difference at byte 105047 (line 4193, column 24; expected 121907 bytes, actual 121907 bytes) context:   line 4192: "; enable_pressure_advance = 0"   line 4193: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4194: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS RF50 0.6 nozzle | first difference at byte 78699 (line 3167, column 24; expected 95587 bytes, actual 95587 bytes) context:   line 3166: "; enable_pressure_advance = 0"   line 3167: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3168: "; enable_support = 0" |
-| DIVERGENT | Blocks/BLOCKS RF50 0.8 nozzle | first difference at byte 58068 (line 2433, column 24; expected 74927 bytes, actual 74927 bytes) context:   line 2432: "; enable_pressure_advance = 0"   line 2433: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2434: "; enable_support = 0" |
-| DIVERGENT | CONSTRUCT3D/Construct 1 0.4 nozzle | first difference at byte 104936 (line 5078, column 24; expected 122804 bytes, actual 122804 bytes) context:   line 5077: "; enable_pressure_advance = 0"   line 5078: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5079: "; enable_support = 0" |
-| DIVERGENT | CONSTRUCT3D/Construct 1 XL 0.6 nozzle | first difference at byte 70159 (line 3449, column 24; expected 88044 bytes, actual 88044 bytes) context:   line 3448: "; enable_pressure_advance = 0"   line 3449: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3450: "; enable_support = 0" |
-| DIVERGENT | Chuanying/Chuanying X1 0.25 Nozzle | first difference at byte 162489 (line 7824, column 24; expected 179640 bytes, actual 179640 bytes) context:   line 7823: "; enable_pressure_advance = 1"   line 7824: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7825: "; enable_support = 0" |
-| DIVERGENT | Chuanying/Chuanying X1 0.4 Nozzle | first difference at byte 76441 (line 3877, column 24; expected 93650 bytes, actual 93650 bytes) context:   line 3876: "; enable_pressure_advance = 1"   line 3877: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3878: "; enable_support = 0" |
-| DIVERGENT | Chuanying/Chuanying X1 0.6 Nozzle | first difference at byte 48677 (line 2481, column 24; expected 65885 bytes, actual 65885 bytes) context:   line 2480: "; enable_pressure_advance = 1"   line 2481: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2482: "; enable_support = 0" |
-| DIVERGENT | Chuanying/Chuanying X1 0.8 Nozzle | first difference at byte 36394 (line 1901, column 24; expected 53512 bytes, actual 53512 bytes) context:   line 1900: "; enable_pressure_advance = 1"   line 1901: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1902: "; enable_support = 0" |
-| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle | first difference at byte 140421 (line 5617, column 24; expected 157364 bytes, actual 157364 bytes) context:   line 5616: "; enable_pressure_advance = 1"   line 5617: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5618: "; enable_support = 0" |
-| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 | first difference at byte 135914 (line 5617, column 24; expected 152870 bytes, actual 152870 bytes) context:   line 5616: "; enable_pressure_advance = 1"   line 5617: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5618: "; enable_support = 0" |
-| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 Plus | first difference at byte 140383 (line 5617, column 24; expected 157344 bytes, actual 157344 bytes) context:   line 5616: "; enable_pressure_advance = 1"   line 5617: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5618: "; enable_support = 0" |
-| DIVERGENT | Co Print/Co Print ChromaSet 0.4 nozzle fast | first difference at byte 142692 (line 5764, column 24; expected 159648 bytes, actual 159648 bytes) context:   line 5763: "; enable_pressure_advance = 1"   line 5764: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5765: "; enable_support = 0" |
-| DIVERGENT | CoLiDo/CoLiDo 160 V2 0.4 nozzle | first difference at byte 64449 (line 3058, column 24; expected 82117 bytes, actual 82117 bytes) context:   line 3057: "; enable_pressure_advance = 0"   line 3058: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3059: "; enable_support = 0" |
-| DIVERGENT | CoLiDo/CoLiDo DIY 4.0 0.4 nozzle | first difference at byte 86472 (line 3939, column 24; expected 103600 bytes, actual 103600 bytes) context:   line 3938: "; enable_pressure_advance = 0"   line 3939: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3940: "; enable_support = 0" |
-| DIVERGENT | CoLiDo/CoLiDo DIY 4.0 V2 0.4 nozzle | first difference at byte 106844 (line 4106, column 24; expected 123937 bytes, actual 123937 bytes) context:   line 4105: "; enable_pressure_advance = 1"   line 4106: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4107: "; enable_support = 1" |
-| DIVERGENT | CoLiDo/CoLiDo SR1 0.4 nozzle | first difference at byte 106615 (line 4103, column 24; expected 123637 bytes, actual 123637 bytes) context:   line 4102: "; enable_pressure_advance = 0"   line 4103: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4104: "; enable_support = 1" |
-| DIVERGENT | CoLiDo/CoLiDo X16 0.4 nozzle | first difference at byte 64449 (line 3058, column 24; expected 82105 bytes, actual 82105 bytes) context:   line 3057: "; enable_pressure_advance = 0"   line 3058: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3059: "; enable_support = 0" |
-| DIVERGENT | Comgrow/Comgrow T300 0.4 nozzle | first difference at byte 90074 (line 3775, column 24; expected 107602 bytes, actual 107602 bytes) context:   line 3774: "; enable_pressure_advance = 0"   line 3775: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3776: "; enable_support = 0" |
-| DIVERGENT | Comgrow/Comgrow T500 0.4 nozzle | first difference at byte 89204 (line 3866, column 24; expected 107055 bytes, actual 107055 bytes) context:   line 3865: "; enable_pressure_advance = 0"   line 3866: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3867: "; enable_support = 0" |
-| DIVERGENT | Comgrow/Comgrow T500 0.6 nozzle | first difference at byte 70244 (line 3206, column 24; expected 88093 bytes, actual 88093 bytes) context:   line 3205: "; enable_pressure_advance = 0"   line 3206: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3207: "; enable_support = 0" |
-| DIVERGENT | Comgrow/Comgrow T500 0.8 nozzle | first difference at byte 56436 (line 2754, column 24; expected 74281 bytes, actual 74281 bytes) context:   line 2753: "; enable_pressure_advance = 0"   line 2754: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2755: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-10 Max 0.4 nozzle | first difference at byte 84917 (line 4211, column 24; expected 102790 bytes, actual 102790 bytes) context:   line 4210: "; enable_pressure_advance = 0"   line 4211: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4212: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-10 SE 0.2 nozzle | first difference at byte 135250 (line 5516, column 24; expected 152997 bytes, actual 152997 bytes) context:   line 5515: "; enable_pressure_advance = 0"   line 5516: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5517: "; enable_support = 0" |
+| PASS | BIQU/BIQU B1 (0.4 nozzle) |  |
+| PASS | BIQU/BIQU BX (0.4 nozzle) |  |
+| PASS | BIQU/BIQU Hurakan (0.4 nozzle) |  |
+| PASS | Blocks/BLOCKS Pro S100 0.4 nozzle |  |
+| PASS | Blocks/BLOCKS Pro S100 0.6 nozzle |  |
+| PASS | Blocks/BLOCKS Pro S100 0.8 nozzle |  |
+| PASS | Blocks/BLOCKS Pro S100 1.0 nozzle |  |
+| PASS | Blocks/BLOCKS Pro S100 1.2 nozzle |  |
+| PASS | Blocks/BLOCKS RD50 V2 0.4 nozzle |  |
+| PASS | Blocks/BLOCKS RD50 V2 0.6 nozzle |  |
+| PASS | Blocks/BLOCKS RD50 V2 0.8 nozzle |  |
+| PASS | Blocks/BLOCKS RF50 0.4 nozzle |  |
+| PASS | Blocks/BLOCKS RF50 0.6 nozzle |  |
+| PASS | Blocks/BLOCKS RF50 0.8 nozzle |  |
+| PASS | CONSTRUCT3D/Construct 1 0.4 nozzle |  |
+| PASS | CONSTRUCT3D/Construct 1 XL 0.6 nozzle |  |
+| PASS | Chuanying/Chuanying X1 0.25 Nozzle |  |
+| PASS | Chuanying/Chuanying X1 0.4 Nozzle |  |
+| PASS | Chuanying/Chuanying X1 0.6 Nozzle |  |
+| PASS | Chuanying/Chuanying X1 0.8 Nozzle |  |
+| PASS | Co Print/Co Print ChromaSet 0.4 nozzle |  |
+| PASS | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 |  |
+| PASS | Co Print/Co Print ChromaSet 0.4 nozzle - Ender-3 V3 Plus |  |
+| PASS | Co Print/Co Print ChromaSet 0.4 nozzle fast |  |
+| PASS | CoLiDo/CoLiDo 160 V2 0.4 nozzle |  |
+| PASS | CoLiDo/CoLiDo DIY 4.0 0.4 nozzle |  |
+| PASS | CoLiDo/CoLiDo DIY 4.0 V2 0.4 nozzle |  |
+| PASS | CoLiDo/CoLiDo SR1 0.4 nozzle |  |
+| PASS | CoLiDo/CoLiDo X16 0.4 nozzle |  |
+| PASS | Comgrow/Comgrow T300 0.4 nozzle |  |
+| PASS | Comgrow/Comgrow T500 0.4 nozzle |  |
+| PASS | Comgrow/Comgrow T500 0.6 nozzle |  |
+| PASS | Comgrow/Comgrow T500 0.8 nozzle |  |
+| PASS | Creality/Creality CR-10 Max 0.4 nozzle |  |
+| PASS | Creality/Creality CR-10 SE 0.2 nozzle |  |
 | DIVERGENT | Creality/Creality CR-10 SE 0.4 nozzle | first difference at byte 55029 (line 2554, column 1; expected 89542 bytes, actual 89542 bytes) context:   line 2553: "G1 X114.79 Y114.75 E.29314"   line 2554: expected "G1 E-.61523 F1800"; actual "M73 P88 R0"   line 2555: expected "M73 P88 R0"; actual "G1 E-.61523 F1800" |
-| DIVERGENT | Creality/Creality CR-10 SE 0.6 nozzle | first difference at byte 59574 (line 2692, column 24; expected 77327 bytes, actual 77327 bytes) context:   line 2691: "; enable_pressure_advance = 0"   line 2692: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2693: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-10 SE 0.8 nozzle | first difference at byte 54618 (line 2524, column 24; expected 72371 bytes, actual 72371 bytes) context:   line 2523: "; enable_pressure_advance = 0"   line 2524: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2525: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-10 V2 0.4 nozzle | first difference at byte 82652 (line 3819, column 24; expected 100244 bytes, actual 100244 bytes) context:   line 3818: "; enable_pressure_advance = 0"   line 3819: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3820: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-10 V3 0.4 nozzle | first difference at byte 82692 (line 3814, column 24; expected 100419 bytes, actual 100419 bytes) context:   line 3813: "; enable_pressure_advance = 0"   line 3814: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3815: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-10 V3 0.6 nozzle | first difference at byte 68882 (line 3344, column 24; expected 86612 bytes, actual 86612 bytes) context:   line 3343: "; enable_pressure_advance = 0"   line 3344: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3345: "; enable_support = 0" |
+| PASS | Creality/Creality CR-10 SE 0.6 nozzle |  |
+| PASS | Creality/Creality CR-10 SE 0.8 nozzle |  |
+| PASS | Creality/Creality CR-10 V2 0.4 nozzle |  |
+| PASS | Creality/Creality CR-10 V3 0.4 nozzle |  |
+| PASS | Creality/Creality CR-10 V3 0.6 nozzle |  |
 | DIVERGENT | Creality/Creality CR-6 Max 0.2 nozzle | first difference at byte 7041 (line 291, column 29; expected 394066 bytes, actual 394066 bytes) context:   line 290: "G1 X195.605 Y204.196 E-.58892"   line 291: expected "G1 X195.605 Y203.947 E-.37351"; actual "G1 X195.605 Y203.947 E-.37352"   line 292: "G1 X195.858 Y204.2 E-.53756" |
-| DIVERGENT | Creality/Creality CR-6 Max 0.4 nozzle | first difference at byte 84929 (line 4212, column 24; expected 102827 bytes, actual 102827 bytes) context:   line 4211: "; enable_pressure_advance = 0"   line 4212: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4213: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-6 Max 0.6 nozzle | first difference at byte 68746 (line 3560, column 24; expected 86650 bytes, actual 86650 bytes) context:   line 3559: "; enable_pressure_advance = 0"   line 3560: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3561: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-6 Max 0.8 nozzle | first difference at byte 45245 (line 2349, column 24; expected 63143 bytes, actual 63143 bytes) context:   line 2348: "; enable_pressure_advance = 0"   line 2349: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2350: "; enable_support = 0" |
+| PASS | Creality/Creality CR-6 Max 0.4 nozzle |  |
+| PASS | Creality/Creality CR-6 Max 0.6 nozzle |  |
+| PASS | Creality/Creality CR-6 Max 0.8 nozzle |  |
 | DIVERGENT | Creality/Creality CR-6 SE 0.2 nozzle | first difference at byte 7068 (line 292, column 29; expected 394163 bytes, actual 394163 bytes) context:   line 291: "G1 X113.105 Y121.696 E-.58892"   line 292: expected "G1 X113.105 Y121.447 E-.37351"; actual "G1 X113.105 Y121.447 E-.37352"   line 293: "G1 X113.358 Y121.7 E-.53756" |
-| DIVERGENT | Creality/Creality CR-6 SE 0.4 nozzle | first difference at byte 84956 (line 4213, column 24; expected 102854 bytes, actual 102854 bytes) context:   line 4212: "; enable_pressure_advance = 0"   line 4213: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4214: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-6 SE 0.6 nozzle | first difference at byte 68751 (line 3559, column 24; expected 86655 bytes, actual 86655 bytes) context:   line 3558: "; enable_pressure_advance = 0"   line 3559: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3560: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-6 SE 0.8 nozzle | first difference at byte 45272 (line 2350, column 24; expected 63170 bytes, actual 63170 bytes) context:   line 2349: "; enable_pressure_advance = 0"   line 2350: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2351: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality CR-M4 0.4 nozzle | first difference at byte 84784 (line 4167, column 24; expected 102539 bytes, actual 102539 bytes) context:   line 4166: "; enable_pressure_advance = 0"   line 4167: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4168: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 0.2 nozzle | first difference at byte 138145 (line 5730, column 24; expected 155994 bytes, actual 155994 bytes) context:   line 5729: "; enable_pressure_advance = 0"   line 5730: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5731: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 0.4 nozzle | first difference at byte 82867 (line 3819, column 24; expected 100727 bytes, actual 100727 bytes) context:   line 3818: "; enable_pressure_advance = 0"   line 3819: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3820: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 0.6 nozzle | first difference at byte 69055 (line 3348, column 24; expected 86918 bytes, actual 86918 bytes) context:   line 3347: "; enable_pressure_advance = 0"   line 3348: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3349: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 0.8 nozzle | first difference at byte 58243 (line 2893, column 24; expected 76105 bytes, actual 76105 bytes) context:   line 2892: "; enable_pressure_advance = 0"   line 2893: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2894: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 Pro 0.2 nozzle | first difference at byte 138149 (line 5730, column 24; expected 156014 bytes, actual 156014 bytes) context:   line 5729: "; enable_pressure_advance = 0"   line 5730: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5731: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 Pro 0.4 nozzle | first difference at byte 82875 (line 3819, column 24; expected 100751 bytes, actual 100751 bytes) context:   line 3818: "; enable_pressure_advance = 0"   line 3819: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3820: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 Pro 0.6 nozzle | first difference at byte 69059 (line 3348, column 24; expected 86938 bytes, actual 86938 bytes) context:   line 3347: "; enable_pressure_advance = 0"   line 3348: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3349: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 Pro 0.8 nozzle | first difference at byte 58247 (line 2893, column 24; expected 76125 bytes, actual 76125 bytes) context:   line 2892: "; enable_pressure_advance = 0"   line 2893: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2894: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 S1 0.4 nozzle | first difference at byte 82825 (line 3819, column 24; expected 100715 bytes, actual 100715 bytes) context:   line 3818: "; enable_pressure_advance = 0"   line 3819: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3820: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 S1 Plus 0.2 nozzle | first difference at byte 147155 (line 6123, column 24; expected 165128 bytes, actual 165128 bytes) context:   line 6122: "; enable_pressure_advance = 0"   line 6123: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6124: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 S1 Plus 0.4 nozzle | first difference at byte 72336 (line 3336, column 24; expected 90319 bytes, actual 90319 bytes) context:   line 3335: "; enable_pressure_advance = 0"   line 3336: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3337: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 S1 Plus 0.6 nozzle | first difference at byte 62306 (line 2908, column 24; expected 80291 bytes, actual 80291 bytes) context:   line 2907: "; enable_pressure_advance = 0"   line 2908: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2909: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 S1 Plus 0.8 nozzle | first difference at byte 60825 (line 3074, column 24; expected 78810 bytes, actual 78810 bytes) context:   line 3073: "; enable_pressure_advance = 0"   line 3074: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3075: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 S1 Pro 0.4 nozzle | first difference at byte 83409 (line 3856, column 24; expected 101353 bytes, actual 101353 bytes) context:   line 3855: "; enable_pressure_advance = 0"   line 3856: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3857: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V2 0.4 nozzle | first difference at byte 84298 (line 4182, column 24; expected 102181 bytes, actual 102181 bytes) context:   line 4181: "; enable_pressure_advance = 0"   line 4182: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4183: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V2 Neo 0.4 nozzle | first difference at byte 84855 (line 4191, column 24; expected 102754 bytes, actual 102754 bytes) context:   line 4190: "; enable_pressure_advance = 0"   line 4191: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4192: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 0.4 nozzle | first difference at byte 102766 (line 4366, column 24; expected 119685 bytes, actual 119685 bytes) context:   line 4365: "; enable_pressure_advance = 0"   line 4366: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4367: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 0.6 nozzle | first difference at byte 69403 (line 3067, column 24; expected 86321 bytes, actual 86321 bytes) context:   line 3066: "; enable_pressure_advance = 0"   line 3067: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3068: "; enable_support = 0" |
+| PASS | Creality/Creality CR-6 SE 0.4 nozzle |  |
+| PASS | Creality/Creality CR-6 SE 0.6 nozzle |  |
+| PASS | Creality/Creality CR-6 SE 0.8 nozzle |  |
+| PASS | Creality/Creality CR-M4 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 0.2 nozzle |  |
+| PASS | Creality/Creality Ender-3 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-3 0.8 nozzle |  |
+| PASS | Creality/Creality Ender-3 Pro 0.2 nozzle |  |
+| PASS | Creality/Creality Ender-3 Pro 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 Pro 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-3 Pro 0.8 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Plus 0.2 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Plus 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Plus 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Plus 0.8 nozzle |  |
+| PASS | Creality/Creality Ender-3 S1 Pro 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 V2 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 V2 Neo 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 0.6 nozzle |  |
 | DIVERGENT | Creality/Creality Ender-3 V3 KE 0.2 nozzle | first difference at byte 279 (line 11, column 35; expected 171903 bytes, actual 171903 bytes) context:   line 10: "; external perimeters extrusion width = 0.21mm"   line 11: expected "; perimeters extrusion width = 0.23mm"; actual "; perimeters extrusion width = 0.22mm"   line 12: expected "; infill extrusion width = 0.23mm"; actual "; infill extrusion width = 0.22mm" |
-| DIVERGENT | Creality/Creality Ender-3 V3 KE 0.4 nozzle | first difference at byte 85317 (line 3904, column 24; expected 103386 bytes, actual 103386 bytes) context:   line 3903: "; enable_pressure_advance = 0"   line 3904: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3905: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 KE 0.6 nozzle | first difference at byte 69301 (line 3048, column 24; expected 87377 bytes, actual 87377 bytes) context:   line 3047: "; enable_pressure_advance = 0"   line 3048: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3049: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 KE 0.8 nozzle | first difference at byte 57883 (line 2695, column 24; expected 75959 bytes, actual 75959 bytes) context:   line 2694: "; enable_pressure_advance = 0"   line 2695: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2696: "; enable_support = 0" |
+| PASS | Creality/Creality Ender-3 V3 KE 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 KE 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 KE 0.8 nozzle |  |
 | DIVERGENT | Creality/Creality Ender-3 V3 Plus 0.4 nozzle | first difference at byte 22406 (line 893, column 1; expected 123624 bytes, actual 123624 bytes) context:   line 892: "G1 X146.052 Y146.052 E.26192"   line 893: expected "M73 P21 R4"; actual "G1 X153.948 Y146.052 E.26192"   line 894: expected "G1 X153.948 Y146.052 E.26192"; actual "M73 P21 R4" |
-| DIVERGENT | Creality/Creality Ender-3 V3 Plus 0.6 nozzle | first difference at byte 77943 (line 3055, column 24; expected 94867 bytes, actual 94867 bytes) context:   line 3054: "; enable_pressure_advance = 0"   line 3055: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3056: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.2 nozzle | first difference at byte 157424 (line 6533, column 24; expected 175280 bytes, actual 175280 bytes) context:   line 6532: "; enable_pressure_advance = 0"   line 6533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6534: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.4 nozzle | first difference at byte 99617 (line 4501, column 24; expected 117482 bytes, actual 117482 bytes) context:   line 4500: "; enable_pressure_advance = 0"   line 4501: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4502: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.6 nozzle | first difference at byte 89486 (line 4129, column 24; expected 107351 bytes, actual 107351 bytes) context:   line 4128: "; enable_pressure_advance = 0"   line 4129: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4130: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V3 SE 0.8 nozzle | first difference at byte 79620 (line 3777, column 24; expected 97485 bytes, actual 97485 bytes) context:   line 3776: "; enable_pressure_advance = 0"   line 3777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3778: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-3 V4 0.4 nozzle | first difference at byte 90505 (line 3845, column 24; expected 108165 bytes, actual 108165 bytes) context:   line 3844: "; enable_pressure_advance = 0"   line 3845: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3846: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 0.4 nozzle | first difference at byte 82815 (line 3814, column 24; expected 100696 bytes, actual 100696 bytes) context:   line 3813: "; enable_pressure_advance = 0"   line 3814: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3815: "; enable_support = 0" |
+| PASS | Creality/Creality Ender-3 V3 Plus 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 SE 0.2 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 SE 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 SE 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-3 V3 SE 0.8 nozzle |  |
+| PASS | Creality/Creality Ender-3 V4 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-5 0.4 nozzle |  |
 | PASS | Creality/Creality Ender-5 Max 0.4 nozzle |  |
 | PASS | Creality/Creality Ender-5 Max 0.6 nozzle |  |
 | PASS | Creality/Creality Ender-5 Max 0.8 nozzle |  |
-| DIVERGENT | Creality/Creality Ender-5 Plus 0.4 nozzle | first difference at byte 82691 (line 3807, column 24; expected 100465 bytes, actual 100465 bytes) context:   line 3806: "; enable_pressure_advance = 0"   line 3807: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3808: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.2 nozzle | first difference at byte 218967 (line 9870, column 24; expected 236889 bytes, actual 236889 bytes) context:   line 9869: "; enable_pressure_advance = 0"   line 9870: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 9871: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.25 nozzle | first difference at byte 142606 (line 6596, column 24; expected 160535 bytes, actual 160535 bytes) context:   line 6595: "; enable_pressure_advance = 0"   line 6596: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6597: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.3 nozzle | first difference at byte 113988 (line 5324, column 24; expected 131911 bytes, actual 131911 bytes) context:   line 5323: "; enable_pressure_advance = 0"   line 5324: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5325: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.4 nozzle | first difference at byte 84937 (line 4212, column 24; expected 102851 bytes, actual 102851 bytes) context:   line 4211: "; enable_pressure_advance = 0"   line 4212: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4213: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.5 nozzle | first difference at byte 80651 (line 4043, column 24; expected 98573 bytes, actual 98573 bytes) context:   line 4042: "; enable_pressure_advance = 0"   line 4043: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4044: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.6 nozzle | first difference at byte 69850 (line 3552, column 24; expected 87773 bytes, actual 87773 bytes) context:   line 3551: "; enable_pressure_advance = 0"   line 3552: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3553: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 0.8 nozzle | first difference at byte 61603 (line 3235, column 24; expected 79526 bytes, actual 79526 bytes) context:   line 3234: "; enable_pressure_advance = 0"   line 3235: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3236: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 Pro (2019) 1.0 nozzle | first difference at byte 40631 (line 2125, column 24; expected 58548 bytes, actual 58548 bytes) context:   line 2124: "; enable_pressure_advance = 0"   line 2125: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2126: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5 S1 0.4 nozzle | first difference at byte 82912 (line 3814, column 24; expected 100844 bytes, actual 100844 bytes) context:   line 3813: "; enable_pressure_advance = 0"   line 3814: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3815: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-5S 0.4 nozzle | first difference at byte 82892 (line 3816, column 24; expected 100775 bytes, actual 100775 bytes) context:   line 3815: "; enable_pressure_advance = 0"   line 3816: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3817: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Ender-6 0.4 nozzle | first difference at byte 82797 (line 3813, column 24; expected 100559 bytes, actual 100559 bytes) context:   line 3812: "; enable_pressure_advance = 0"   line 3813: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3814: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Hi 0.2 nozzle | first difference at byte 324788 (line 13111, column 24; expected 342635 bytes, actual 342635 bytes) context:   line 13110: "; enable_pressure_advance = 1"   line 13111: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 13112: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Hi 0.4 nozzle | first difference at byte 142509 (line 6041, column 24; expected 160401 bytes, actual 160401 bytes) context:   line 6040: "; enable_pressure_advance = 0"   line 6041: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6042: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Hi 0.6 nozzle | first difference at byte 81931 (line 3578, column 24; expected 99821 bytes, actual 99821 bytes) context:   line 3577: "; enable_pressure_advance = 0"   line 3578: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3579: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality Hi 0.8 nozzle | first difference at byte 63659 (line 2801, column 24; expected 81519 bytes, actual 81519 bytes) context:   line 2800: "; enable_pressure_advance = 0"   line 2801: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2802: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K1 (0.4 nozzle) | first difference at byte 95800 (line 4098, column 24; expected 112938 bytes, actual 112938 bytes) context:   line 4097: "; enable_pressure_advance = 0"   line 4098: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4099: "; enable_support = 0" |
+| PASS | Creality/Creality Ender-5 Plus 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.2 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.25 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.3 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.5 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.6 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 0.8 nozzle |  |
+| PASS | Creality/Creality Ender-5 Pro (2019) 1.0 nozzle |  |
+| PASS | Creality/Creality Ender-5 S1 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-5S 0.4 nozzle |  |
+| PASS | Creality/Creality Ender-6 0.4 nozzle |  |
+| PASS | Creality/Creality Hi 0.2 nozzle |  |
+| PASS | Creality/Creality Hi 0.4 nozzle |  |
+| PASS | Creality/Creality Hi 0.6 nozzle |  |
+| PASS | Creality/Creality Hi 0.8 nozzle |  |
+| PASS | Creality/Creality K1 (0.4 nozzle) |  |
 | PASS | Creality/Creality K1 (0.6 nozzle) |  |
 | PASS | Creality/Creality K1 (0.8 nozzle) |  |
-| DIVERGENT | Creality/Creality K1 Max (0.4 nozzle) | first difference at byte 95802 (line 4098, column 24; expected 112955 bytes, actual 112955 bytes) context:   line 4097: "; enable_pressure_advance = 0"   line 4098: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4099: "; enable_support = 0" |
+| PASS | Creality/Creality K1 Max (0.4 nozzle) |  |
 | PASS | Creality/Creality K1 Max (0.6 nozzle) |  |
 | PASS | Creality/Creality K1 Max (0.8 nozzle) |  |
 | DIVERGENT | Creality/Creality K1 Max_CFS-C 0.4 nozzle | first difference at byte 91995 (line 3951, column 8; expected 112889 bytes, actual 112865 bytes) context:   line 3950: "END_PRINT"   line 3951: expected "M141 S0;set chamber_temperature"; actual "M141 S0"   line 3952: "M73 P100 R0" |
-| DIVERGENT | Creality/Creality K1 SE 0.4 nozzle | first difference at byte 98930 (line 4087, column 24; expected 116076 bytes, actual 116076 bytes) context:   line 4086: "; enable_pressure_advance = 0"   line 4087: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4088: "; enable_support = 0" |
+| PASS | Creality/Creality K1 SE 0.4 nozzle |  |
 | PASS | Creality/Creality K1 SE 0.6 nozzle |  |
 | VENDOR_INCOMPLETE | Creality/Creality K1 SE 0.8 nozzle | Creality/Creality K1 SE 0.8 nozzle process: default preset "0.40mm Standard @Creality K1 SE 0.8 nozzle" not found |
-| DIVERGENT | Creality/Creality K1 SE_CFS-C 0.4 nozzle | first difference at byte 98647 (line 4095, column 24; expected 116018 bytes, actual 116018 bytes) context:   line 4094: "; enable_pressure_advance = 0"   line 4095: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4096: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K1C 0.4 nozzle | first difference at byte 100073 (line 4099, column 24; expected 117197 bytes, actual 117197 bytes) context:   line 4098: "; enable_pressure_advance = 0"   line 4099: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4100: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K1C 0.6 nozzle | first difference at byte 75991 (line 3059, column 24; expected 93154 bytes, actual 93154 bytes) context:   line 3058: "; enable_pressure_advance = 0"   line 3059: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3060: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K1C 0.8 nozzle | first difference at byte 55471 (line 2246, column 24; expected 72630 bytes, actual 72630 bytes) context:   line 2245: "; enable_pressure_advance = 0"   line 2246: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2247: "; enable_support = 0" |
+| PASS | Creality/Creality K1 SE_CFS-C 0.4 nozzle |  |
+| PASS | Creality/Creality K1C 0.4 nozzle |  |
+| PASS | Creality/Creality K1C 0.6 nozzle |  |
+| PASS | Creality/Creality K1C 0.8 nozzle |  |
 | DIVERGENT | Creality/Creality K1C_CFS-C 0.4 nozzle | first difference at byte 96253 (line 3952, column 8; expected 117121 bytes, actual 117097 bytes) context:   line 3951: "END_PRINT"   line 3952: expected "M141 S0;set chamber_temperature"; actual "M141 S0"   line 3953: "M73 P100 R0" |
 | DIVERGENT | Creality/Creality K1_CFS-C 0.4 nozzle | first difference at byte 91994 (line 3950, column 8; expected 112859 bytes, actual 112835 bytes) context:   line 3949: "END_PRINT"   line 3950: expected "M141 S0;set chamber_temperature"; actual "M141 S0"   line 3951: "M73 P100 R0" |
-| DIVERGENT | Creality/Creality K2 0.2 nozzle | first difference at byte 372577 (line 13903, column 24; expected 390336 bytes, actual 390336 bytes) context:   line 13902: "; enable_pressure_advance = 0"   line 13903: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 13904: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 0.4 nozzle | first difference at byte 99263 (line 4000, column 24; expected 117151 bytes, actual 117151 bytes) context:   line 3999: "; enable_pressure_advance = 0"   line 4000: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4001: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 0.6 nozzle | first difference at byte 57704 (line 2291, column 24; expected 75615 bytes, actual 75615 bytes) context:   line 2290: "; enable_pressure_advance = 0"   line 2291: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2292: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 0.8 nozzle | first difference at byte 48026 (line 1818, column 24; expected 65935 bytes, actual 65935 bytes) context:   line 1817: "; enable_pressure_advance = 0"   line 1818: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1819: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 Plus 0.2 nozzle | first difference at byte 210801 (line 7663, column 24; expected 228539 bytes, actual 228539 bytes) context:   line 7662: "; enable_pressure_advance = 0"   line 7663: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7664: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 Plus 0.4 nozzle | first difference at byte 116735 (line 4756, column 24; expected 134475 bytes, actual 134475 bytes) context:   line 4755: "; enable_pressure_advance = 0"   line 4756: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4757: "; enable_support = 0" |
+| PASS | Creality/Creality K2 0.2 nozzle |  |
+| PASS | Creality/Creality K2 0.4 nozzle |  |
+| PASS | Creality/Creality K2 0.6 nozzle |  |
+| PASS | Creality/Creality K2 0.8 nozzle |  |
+| PASS | Creality/Creality K2 Plus 0.2 nozzle |  |
+| PASS | Creality/Creality K2 Plus 0.4 nozzle |  |
 | DIVERGENT | Creality/Creality K2 Plus 0.6 nozzle | first difference at byte 3372 (line 142, column 1; expected 95769 bytes, actual 95769 bytes) context:   line 141: "G1 X174.52 Y178.568 E.29616"   line 142: expected "G1 X173.71 Y178.568 E.05491"; actual "M73 P16 R3"   line 143: expected "M73 P16 R3"; actual "G1 X173.71 Y178.568 E.05491" |
 | DIVERGENT | Creality/Creality K2 Plus 0.8 nozzle | first difference at byte 5106 (line 218, column 1; expected 79002 bytes, actual 79002 bytes) context:   line 217: "G1 X175.467 Y178.313 E.38216"   line 218: expected "M73 P20 R2"; actual "G1 X174.404 Y178.313 E.1009"   line 219: expected "G1 X174.404 Y178.313 E.1009"; actual "M73 P20 R2" |
-| DIVERGENT | Creality/Creality K2 Pro 0.2 nozzle | first difference at byte 372033 (line 13893, column 24; expected 390282 bytes, actual 390282 bytes) context:   line 13892: "; enable_pressure_advance = 0"   line 13893: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 13894: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 Pro 0.4 nozzle | first difference at byte 99245 (line 3998, column 24; expected 117177 bytes, actual 117177 bytes) context:   line 3997: "; enable_pressure_advance = 0"   line 3998: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3999: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 Pro 0.6 nozzle | first difference at byte 57797 (line 2297, column 24; expected 75726 bytes, actual 75726 bytes) context:   line 2296: "; enable_pressure_advance = 0"   line 2297: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2298: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 Pro 0.8 nozzle | first difference at byte 45554 (line 1821, column 24; expected 63480 bytes, actual 63480 bytes) context:   line 1820: "; enable_pressure_advance = 0"   line 1821: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1822: "; enable_support = 0" |
-| DIVERGENT | Creality/Creality K2 SE 0.4 nozzle | first difference at byte 99056 (line 4108, column 24; expected 116917 bytes, actual 116917 bytes) context:   line 4107: "; enable_pressure_advance = 0"   line 4108: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4109: "; enable_support = 0" |
+| PASS | Creality/Creality K2 Pro 0.2 nozzle |  |
+| PASS | Creality/Creality K2 Pro 0.4 nozzle |  |
+| PASS | Creality/Creality K2 Pro 0.6 nozzle |  |
+| PASS | Creality/Creality K2 Pro 0.8 nozzle |  |
+| PASS | Creality/Creality K2 SE 0.4 nozzle |  |
 | DIVERGENT | Creality/Creality SPARKX i7 0.2 nozzle | first difference at byte 22156 (line 808, column 1; expected 361674 bytes, actual 361673 bytes) context:   line 807: "G1 X134.126 Y129.358 E.00227"   line 808: expected "M73 P8 R13"; actual "G1 X129.358 Y134.126 E.05455"   line 809: expected "G1 X129.358 Y134.126 E.05455"; actual "G1 X129.077 Y134.126 E.00227" |
 | DIVERGENT | Creality/Creality SPARKX i7 0.4 nozzle | first difference at byte 2827 (line 132, column 1; expected 137363 bytes, actual 137362 bytes) context:   line 131: "G1 X129.221 Y126.2 E.26305"   line 132: expected "M73 P9 R6"; actual "G1 X128.55 Y126.2 E.02728"   line 133: expected "G1 X128.55 Y126.2 E.02728"; actual "M73 P9 R6" |
 | DIVERGENT | Creality/Creality SPARKX i7 0.6 nozzle | first difference at byte 2217 (line 107, column 1; expected 104151 bytes, actual 104148 bytes) context:   line 106: "G1 X134.123 Y127.322 E.1484"   line 107: expected "M73 P13 R4"; actual "G1 X134.123 Y128.122 E.05811"   line 108: expected "G1 X134.123 Y128.122 E.05811"; actual "M73 P13 R4" |
 | DIVERGENT | Creality/Creality SPARKX i7 0.8 nozzle | first difference at byte 954 (line 46, column 7; expected 88493 bytes, actual 88503 bytes) context:   line 45: "G1 X115 E.3742  F1600"   line 46: expected "M73 P15 R3"; actual "M73 P14 R3"   line 47: "G1 X110 E.3742  F6400" |
 | DIVERGENT | Creality/Creality Sermoon V1 0.4 nozzle | first difference at byte 703 (line 27, column 8; expected 162827 bytes, actual 121944 bytes) context:   line 26: "M205 X8.00 Y8.00 Z0.40 E5.00 ; sets the jerk limits, mm/sec"   line 27: expected "M106 S0 ; disable fan"; actual "M106 S0"   line 28: expected "M106 P2 S0 ; disable additional fan "; actual "M106 P2 S0" |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-rGd7Db") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-BPTtFm") |
-| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-zAyJCh") |
-| DIVERGENT | Custom/MyKlipper 0.2 nozzle | first difference at byte 436901 (line 16531, column 24; expected 453943 bytes, actual 453943 bytes) context:   line 16530: "; enable_pressure_advance = 0"   line 16531: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 16532: "; enable_support = 0" |
-| DIVERGENT | Custom/MyKlipper 0.4 nozzle | first difference at byte 107671 (line 4432, column 24; expected 124708 bytes, actual 124708 bytes) context:   line 4431: "; enable_pressure_advance = 0"   line 4432: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4433: "; enable_support = 0" |
-| DIVERGENT | Custom/MyKlipper 0.6 nozzle | first difference at byte 92494 (line 3916, column 24; expected 109530 bytes, actual 109530 bytes) context:   line 3915: "; enable_pressure_advance = 0"   line 3916: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3917: "; enable_support = 0" |
-| DIVERGENT | Custom/MyKlipper 0.8 nozzle | first difference at byte 101073 (line 4611, column 24; expected 118108 bytes, actual 118108 bytes) context:   line 4610: "; enable_pressure_advance = 0"   line 4611: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4612: "; enable_support = 0" |
-| DIVERGENT | Custom/MyMarlin 0.4 nozzle | first difference at byte 76233 (line 3467, column 24; expected 93854 bytes, actual 93854 bytes) context:   line 3466: "; enable_pressure_advance = 0"   line 3467: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3468: "; enable_support = 0" |
-| DIVERGENT | Custom/MyRRF 0.4 nozzle | first difference at byte 85255 (line 4176, column 24; expected 103099 bytes, actual 103099 bytes) context:   line 4175: "; enable_pressure_advance = 0"   line 4176: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4177: "; enable_support = 0" |
-| DIVERGENT | Custom/MyRepetier 0.4 nozzle | first difference at byte 80023 (line 3797, column 24; expected 96944 bytes, actual 96944 bytes) context:   line 3796: "; enable_pressure_advance = 0"   line 3797: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3798: "; enable_support = 0" |
-| ORCA_ERROR | Custom/MyToolChanger 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-HS7VRK") |
-| DIVERGENT | Custom/MyToolChanger 0.4 nozzle | first difference at byte 108159 (line 4457, column 24; expected 133736 bytes, actual 133736 bytes) context:   line 4456: "; enable_pressure_advance = 0"   line 4457: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4458: "; enable_support = 0" |
-| DIVERGENT | Custom/MyToolChanger 0.6 nozzle | first difference at byte 92982 (line 3941, column 24; expected 118518 bytes, actual 118518 bytes) context:   line 3940: "; enable_pressure_advance = 0"   line 3941: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3942: "; enable_support = 0" |
-| ORCA_ERROR | Custom/MyToolChanger 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-HjFcfI") |
-| DIVERGENT | DeltaMaker/DeltaMaker 2 0.35 nozzle | first difference at byte 169782 (line 7274, column 24; expected 187126 bytes, actual 187126 bytes) context:   line 7273: "; enable_pressure_advance = 0"   line 7274: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7275: "; enable_support = 0" |
-| DIVERGENT | DeltaMaker/DeltaMaker 2T 0.5 nozzle | first difference at byte 117828 (line 5313, column 24; expected 135171 bytes, actual 135171 bytes) context:   line 5312: "; enable_pressure_advance = 0"   line 5313: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5314: "; enable_support = 0" |
-| DIVERGENT | DeltaMaker/DeltaMaker 2XT 0.5 nozzle | first difference at byte 109322 (line 4774, column 24; expected 126664 bytes, actual 126664 bytes) context:   line 4773: "; enable_pressure_advance = 0"   line 4774: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4775: "; enable_support = 0" |
-| DIVERGENT | Dremel/Dremel 3D20 0.4 nozzle | first difference at byte 74791 (line 3475, column 24; expected 91798 bytes, actual 91798 bytes) context:   line 3474: "; enable_pressure_advance = 0"   line 3475: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3476: "; enable_support = 1" |
-| DIVERGENT | Dremel/Dremel 3D40 0.4 nozzle | first difference at byte 87071 (line 3844, column 24; expected 104124 bytes, actual 104124 bytes) context:   line 3843: "; enable_pressure_advance = 0"   line 3844: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3845: "; enable_support = 1" |
-| DIVERGENT | Dremel/Dremel 3D45 0.4 nozzle | first difference at byte 96223 (line 4607, column 24; expected 113300 bytes, actual 113300 bytes) context:   line 4606: "; enable_pressure_advance = 0"   line 4607: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4608: "; enable_support = 1" |
-| DIVERGENT | Elegoo/Elegoo Centauri 0.2 nozzle | first difference at byte 218038 (line 9487, column 24; expected 238613 bytes, actual 238613 bytes) context:   line 9486: "; enable_pressure_advance = 0"   line 9487: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 9488: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri 0.4 nozzle | first difference at byte 80635 (line 3724, column 24; expected 101211 bytes, actual 101211 bytes) context:   line 3723: "; enable_pressure_advance = 0"   line 3724: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3725: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri 0.6 nozzle | first difference at byte 49508 (line 2316, column 24; expected 70084 bytes, actual 70084 bytes) context:   line 2315: "; enable_pressure_advance = 0"   line 2316: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2317: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri 0.8 nozzle | first difference at byte 37140 (line 1737, column 24; expected 57715 bytes, actual 57715 bytes) context:   line 1736: "; enable_pressure_advance = 0"   line 1737: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1738: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri 2 0.2 nozzle | first difference at byte 230801 (line 10418, column 24; expected 250208 bytes, actual 250208 bytes) context:   line 10417: "; enable_pressure_advance = 1"   line 10418: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10419: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri 2 0.4 nozzle | first difference at byte 87402 (line 4121, column 24; expected 106814 bytes, actual 106814 bytes) context:   line 4120: "; enable_pressure_advance = 1"   line 4121: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4122: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri 2 0.6 nozzle | first difference at byte 50347 (line 2378, column 24; expected 69758 bytes, actual 69758 bytes) context:   line 2377: "; enable_pressure_advance = 1"   line 2378: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2379: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri 2 0.8 nozzle | first difference at byte 37578 (line 1762, column 24; expected 56988 bytes, actual 56988 bytes) context:   line 1761: "; enable_pressure_advance = 1"   line 1762: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1763: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.2 nozzle | first difference at byte 218567 (line 9493, column 24; expected 239469 bytes, actual 239469 bytes) context:   line 9492: "; enable_pressure_advance = 0"   line 9493: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 9494: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.4 nozzle | first difference at byte 81127 (line 3726, column 24; expected 102030 bytes, actual 102030 bytes) context:   line 3725: "; enable_pressure_advance = 0"   line 3726: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3727: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.6 nozzle | first difference at byte 49943 (line 2313, column 24; expected 70846 bytes, actual 70846 bytes) context:   line 2312: "; enable_pressure_advance = 0"   line 2313: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2314: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 0.8 nozzle | first difference at byte 37522 (line 1729, column 24; expected 58424 bytes, actual 58424 bytes) context:   line 1728: "; enable_pressure_advance = 0"   line 1729: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1730: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.2 nozzle | first difference at byte 230806 (line 10418, column 24; expected 250239 bytes, actual 250239 bytes) context:   line 10417: "; enable_pressure_advance = 1"   line 10418: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10419: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.4 nozzle | first difference at byte 87407 (line 4121, column 24; expected 106845 bytes, actual 106845 bytes) context:   line 4120: "; enable_pressure_advance = 1"   line 4121: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4122: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.6 nozzle | first difference at byte 50352 (line 2378, column 24; expected 69789 bytes, actual 69789 bytes) context:   line 2377: "; enable_pressure_advance = 1"   line 2378: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2379: "; enable_support = 0" |
-| DIVERGENT | Elegoo/Elegoo Centauri Carbon 2 0.8 nozzle | first difference at byte 37583 (line 1762, column 24; expected 57019 bytes, actual 57019 bytes) context:   line 1761: "; enable_pressure_advance = 1"   line 1762: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1763: "; enable_support = 0" |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-I 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-7wqofz") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Mini 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-lvlDVe") |
+| ORCA_ERROR | Cubicon/Cubicon xCeler-Plus 0.4 nozzle | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-dCWOVJ") |
+| PASS | Custom/MyKlipper 0.2 nozzle |  |
+| PASS | Custom/MyKlipper 0.4 nozzle |  |
+| PASS | Custom/MyKlipper 0.6 nozzle |  |
+| PASS | Custom/MyKlipper 0.8 nozzle |  |
+| PASS | Custom/MyMarlin 0.4 nozzle |  |
+| PASS | Custom/MyRRF 0.4 nozzle |  |
+| PASS | Custom/MyRepetier 0.4 nozzle |  |
+| DIVERGENT | Custom/MyToolChanger 0.2 nozzle | first difference at byte 209688 (line 8001, column 1; expected 462943 bytes, actual 462943 bytes) context:   line 8000: "G1 X170.662 Y177.272 E.0618"   line 8001: expected "G1 X170.662 Y176.461 E.00536"; actual "M73 P50 R5"   line 8002: expected "M73 P50 R5"; actual "G1 X170.662 Y176.461 E.00536" |
+| PASS | Custom/MyToolChanger 0.4 nozzle |  |
+| ORCA_ERROR | Custom/MyToolChanger 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-bE6Ff7") |
+| PASS | Custom/MyToolChanger 0.8 nozzle |  |
+| PASS | DeltaMaker/DeltaMaker 2 0.35 nozzle |  |
+| PASS | DeltaMaker/DeltaMaker 2T 0.5 nozzle |  |
+| PASS | DeltaMaker/DeltaMaker 2XT 0.5 nozzle |  |
+| PASS | Dremel/Dremel 3D20 0.4 nozzle |  |
+| PASS | Dremel/Dremel 3D40 0.4 nozzle |  |
+| PASS | Dremel/Dremel 3D45 0.4 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 0.2 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 0.4 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 0.6 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 0.8 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 2 0.2 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 2 0.4 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 2 0.6 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri 2 0.8 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 0.2 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 0.4 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 0.6 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 0.8 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 2 0.2 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 2 0.4 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 2 0.6 nozzle |  |
+| PASS | Elegoo/Elegoo Centauri Carbon 2 0.8 nozzle |  |
 | PASS | Elegoo/Elegoo Neptune 0.4 nozzle |  |
 | PASS | Elegoo/Elegoo Neptune 0.6 nozzle |  |
 | PASS | Elegoo/Elegoo Neptune 0.8 nozzle |  |
@@ -335,181 +335,181 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | PASS | Elegoo/Elegoo OrangeStorm Giga 0.6 nozzle |  |
 | PASS | Elegoo/Elegoo OrangeStorm Giga 0.8 nozzle |  |
 | PASS | Elegoo/Elegoo OrangeStorm Giga 1.0 nozzle |  |
-| DIVERGENT | Eryone/Eryone ER20 0.2 nozzle | first difference at byte 734615 (line 28687, column 24; expected 752495 bytes, actual 752495 bytes) context:   line 28686: "; enable_pressure_advance = 0"   line 28687: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 28688: "; enable_support = 0" |
-| DIVERGENT | Eryone/Eryone ER20 0.4 nozzle | first difference at byte 143916 (line 6558, column 24; expected 161785 bytes, actual 161785 bytes) context:   line 6557: "; enable_pressure_advance = 0"   line 6558: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6559: "; enable_support = 0" |
+| PASS | Eryone/Eryone ER20 0.2 nozzle |  |
+| PASS | Eryone/Eryone ER20 0.4 nozzle |  |
 | DIVERGENT | Eryone/Eryone ER20 0.5 nozzle | first difference at byte 2090 (line 90, column 7; expected 112154 bytes, actual 113351 bytes) context:   line 89: "G1 X125.739 Y114.239"   line 90: expected "G1 X126.225 Y114.725"; actual "G1 X125.739 Y114.239"   line 91: expected "M205 X9 Y9"; actual "G1 X126.225 Y114.725" |
 | DIVERGENT | Eryone/Eryone ER20 0.6 nozzle | first difference at byte 2079 (line 90, column 7; expected 93467 bytes, actual 94160 bytes) context:   line 89: "G1 X125.667 Y114.167"   line 90: expected "G1 X126.19 Y114.69"; actual "G1 X125.667 Y114.167"   line 91: expected "M205 X9 Y9"; actual "G1 X126.19 Y114.69" |
 | DIVERGENT | Eryone/Eryone ER20 0.8 nozzle | first difference at byte 2110 (line 92, column 7; expected 67425 bytes, actual 67929 bytes) context:   line 91: "G1 X125.399 Y113.899"   line 92: expected "G1 X126.09 Y114.59"; actual "G1 X125.399 Y113.899"   line 93: expected "G1 Z.4"; actual "G1 X126.09 Y114.59" |
-| DIVERGENT | Eryone/Eryone ER20 Klipper 0.2 nozzle | first difference at byte 819634 (line 27927, column 24; expected 836708 bytes, actual 836708 bytes) context:   line 27926: "; enable_pressure_advance = 0"   line 27927: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 27928: "; enable_support = 0" |
-| DIVERGENT | Eryone/Eryone ER20 Klipper 0.4 nozzle | first difference at byte 186519 (line 6596, column 24; expected 203582 bytes, actual 203582 bytes) context:   line 6595: "; enable_pressure_advance = 0"   line 6596: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6597: "; enable_support = 0" |
+| PASS | Eryone/Eryone ER20 Klipper 0.2 nozzle |  |
+| PASS | Eryone/Eryone ER20 Klipper 0.4 nozzle |  |
 | DIVERGENT | Eryone/Eryone ER20 Klipper 0.5 nozzle | first difference at byte 1564 (line 60, column 7; expected 144405 bytes, actual 145287 bytes) context:   line 59: "G1 X125.784 Y114.284"   line 60: expected "G1 X126.24 Y114.74"; actual "G1 X125.784 Y114.284"   line 61: expected "SET_VELOCITY_LIMIT ACCEL=500 ACCEL_TO_DECEL=250 SQUARE_CORNER_VELOCITY=9"; actual "G1 X126.24 Y114.74" |
 | DIVERGENT | Eryone/Eryone ER20 Klipper 0.6 nozzle | first difference at byte 1571 (line 61, column 7; expected 114496 bytes, actual 115504 bytes) context:   line 60: "G1 X125.667 Y114.167"   line 61: expected "G1 X126.19 Y114.69"; actual "G1 X125.667 Y114.167"   line 62: expected "SET_VELOCITY_LIMIT ACCEL=500 ACCEL_TO_DECEL=250 SQUARE_CORNER_VELOCITY=9"; actual "G1 X126.19 Y114.69" |
 | DIVERGENT | Eryone/Eryone ER20 Klipper 0.8 nozzle | first difference at byte 1602 (line 63, column 7; expected 80922 bytes, actual 81741 bytes) context:   line 62: "G1 X125.399 Y113.899"   line 63: expected "G1 X126.09 Y114.59"; actual "G1 X125.399 Y113.899"   line 64: expected "G1 Z.4"; actual "G1 X126.09 Y114.59" |
-| DIVERGENT | Eryone/Thinker X400 0.2 nozzle | first difference at byte 318529 (line 12354, column 24; expected 336566 bytes, actual 336566 bytes) context:   line 12353: "; enable_pressure_advance = 0"   line 12354: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12355: "; enable_support = 0" |
-| DIVERGENT | Eryone/Thinker X400 0.4 nozzle | first difference at byte 86815 (line 3849, column 24; expected 104831 bytes, actual 104831 bytes) context:   line 3848: "; enable_pressure_advance = 0"   line 3849: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3850: "; enable_support = 0" |
-| DIVERGENT | FLSun/FLSun Q5 0.4 nozzle | first difference at byte 80095 (line 4078, column 24; expected 99699 bytes, actual 99699 bytes) context:   line 4077: "; enable_pressure_advance = 0"   line 4078: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4079: "; enable_support = 0" |
+| PASS | Eryone/Thinker X400 0.2 nozzle |  |
+| PASS | Eryone/Thinker X400 0.4 nozzle |  |
+| PASS | FLSun/FLSun Q5 0.4 nozzle |  |
 | DIVERGENT | FLSun/FLSun QQ-S Pro 0.4 nozzle | first difference at byte 37122 (line 1903, column 1; expected 103931 bytes, actual 103931 bytes) context:   line 1902: "G1 X4.325 Y4.325 F9000"   line 1903: expected "M73 P48 R3"; actual "G1 F1148"   line 1904: expected "G1 F1148"; actual "M73 P48 R3" |
-| DIVERGENT | FLSun/FLSun S1 0.4 nozzle | first difference at byte 118945 (line 4654, column 24; expected 139037 bytes, actual 139037 bytes) context:   line 4653: "; enable_pressure_advance = 0"   line 4654: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4655: "; enable_support = 0" |
+| PASS | FLSun/FLSun S1 0.4 nozzle |  |
 | DIVERGENT | FLSun/FLSun Super Racer 0.4 nozzle | first difference at byte 2574 (line 105, column 1; expected 104847 bytes, actual 104847 bytes) context:   line 104: "G1 X5 Y10.611 E.08056"   line 105: expected "M73 P5 R7"; actual "G1 X-5 Y10.611 E.33172"   line 106: expected "G1 X-5 Y10.611 E.33172"; actual "G1 X-7.072 Y10.214 E.06996" |
-| DIVERGENT | FLSun/FLSun T1 0.4 nozzle | first difference at byte 119532 (line 4730, column 24; expected 138895 bytes, actual 138895 bytes) context:   line 4729: "; enable_pressure_advance = 0"   line 4730: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4731: "; enable_support = 0" |
-| DIVERGENT | FLSun/FLSun V400 0.4 nozzle | first difference at byte 102629 (line 4342, column 24; expected 122071 bytes, actual 122071 bytes) context:   line 4341: "; enable_pressure_advance = 0"   line 4342: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4343: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge AD5X 0.25 nozzle | first difference at byte 241866 (line 10329, column 24; expected 259115 bytes, actual 259115 bytes) context:   line 10328: "; enable_pressure_advance = 1"   line 10329: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10330: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge AD5X 0.4 nozzle | first difference at byte 95688 (line 4256, column 24; expected 112887 bytes, actual 112887 bytes) context:   line 4255: "; enable_pressure_advance = 1"   line 4256: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4257: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge AD5X 0.6 nozzle | first difference at byte 90812 (line 4100, column 24; expected 108034 bytes, actual 108034 bytes) context:   line 4099: "; enable_pressure_advance = 1"   line 4100: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4101: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge AD5X 0.8 nozzle | first difference at byte 61168 (line 2842, column 24; expected 78390 bytes, actual 78390 bytes) context:   line 2841: "; enable_pressure_advance = 1"   line 2842: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2843: "; enable_support = 0" |
+| PASS | FLSun/FLSun T1 0.4 nozzle |  |
+| PASS | FLSun/FLSun V400 0.4 nozzle |  |
+| PASS | Flashforge/Flashforge AD5X 0.25 nozzle |  |
+| PASS | Flashforge/Flashforge AD5X 0.4 nozzle |  |
+| PASS | Flashforge/Flashforge AD5X 0.6 nozzle |  |
+| PASS | Flashforge/Flashforge AD5X 0.8 nozzle |  |
 | DIVERGENT | Flashforge/Flashforge Adventurer 3 Series 0.4 Nozzle | first difference at byte 5552 (line 276, column 15; expected 106902 bytes, actual 107888 bytes) context:   line 275: "G1 X4.464 Y4.464 F4800"   line 276: expected "G1 X4.464 Y4.443"; actual "G1 X4.464 Y4.464"   line 277: expected "G1 X4.443 Y4.443"; actual "G1 X4.464 Y4.443" |
 | DIVERGENT | Flashforge/Flashforge Adventurer 3 Series 0.6 Nozzle | first difference at byte 4936 (line 253, column 9; expected 71444 bytes, actual 72396 bytes) context:   line 252: "G1 X4.197 Y4.197 F6000"   line 253: expected "G1 X4.196 Y4.164"; actual "G1 X4.197 Y4.197"   line 254: expected "G1 X4.164 Y4.164"; actual "G1 X4.196 Y4.164" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.3 Nozzle | first difference at byte 138375 (line 6588, column 24; expected 155591 bytes, actual 155591 bytes) context:   line 6587: "; enable_pressure_advance = 1"   line 6588: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6589: "; enable_support = 0" |
+| PASS | Flashforge/Flashforge Adventurer 4 Series 0.3 Nozzle |  |
 | DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.4 Nozzle | first difference at byte 5126 (line 242, column 15; expected 92980 bytes, actual 94238 bytes) context:   line 241: "G1 X4.464 Y4.464 F4800"   line 242: expected "G1 X4.464 Y4.443"; actual "G1 X4.464 Y4.464"   line 243: expected "G1 X4.443 Y4.443"; actual "G1 X4.464 Y4.443" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 4 Series 0.6 Nozzle | first difference at byte 44604 (line 2318, column 24; expected 61824 bytes, actual 61824 bytes) context:   line 2317: "; enable_pressure_advance = 1"   line 2318: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2319: "; enable_support = 0" |
+| PASS | Flashforge/Flashforge Adventurer 4 Series 0.6 Nozzle |  |
 | DIVERGENT | Flashforge/Flashforge Adventurer 4 Series HS Nozzle | first difference at byte 5404 (line 256, column 15; expected 103767 bytes, actual 105025 bytes) context:   line 255: "G1 X4.464 Y4.464 F9000"   line 256: expected "G1 X4.464 Y4.443"; actual "G1 X4.464 Y4.464"   line 257: expected "G1 X4.443 Y4.443"; actual "G1 X4.464 Y4.443" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.25 Nozzle | first difference at byte 179292 (line 8381, column 24; expected 196496 bytes, actual 196496 bytes) context:   line 8380: "; enable_pressure_advance = 1"   line 8381: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 8382: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.4 Nozzle | first difference at byte 84949 (line 4154, column 24; expected 102200 bytes, actual 102200 bytes) context:   line 4153: "; enable_pressure_advance = 1"   line 4154: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4155: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.6 Nozzle | first difference at byte 54258 (line 2651, column 24; expected 71509 bytes, actual 71509 bytes) context:   line 2650: "; enable_pressure_advance = 1"   line 2651: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2652: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M 0.8 Nozzle | first difference at byte 36668 (line 1915, column 24; expected 53838 bytes, actual 53838 bytes) context:   line 1914: "; enable_pressure_advance = 1"   line 1915: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1916: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.25 Nozzle | first difference at byte 179296 (line 8381, column 24; expected 196516 bytes, actual 196516 bytes) context:   line 8380: "; enable_pressure_advance = 1"   line 8381: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 8382: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.4 Nozzle | first difference at byte 84953 (line 4154, column 24; expected 102209 bytes, actual 102209 bytes) context:   line 4153: "; enable_pressure_advance = 1"   line 4154: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4155: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle | first difference at byte 54262 (line 2651, column 24; expected 71529 bytes, actual 71529 bytes) context:   line 2650: "; enable_pressure_advance = 1"   line 2651: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2652: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle | first difference at byte 36672 (line 1915, column 24; expected 53858 bytes, actual 53858 bytes) context:   line 1914: "; enable_pressure_advance = 1"   line 1915: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1916: "; enable_support = 0" |
+| PASS | Flashforge/Flashforge Adventurer 5M 0.25 Nozzle |  |
+| PASS | Flashforge/Flashforge Adventurer 5M 0.4 Nozzle |  |
+| PASS | Flashforge/Flashforge Adventurer 5M 0.6 Nozzle |  |
+| PASS | Flashforge/Flashforge Adventurer 5M 0.8 Nozzle |  |
+| PASS | Flashforge/Flashforge Adventurer 5M Pro 0.25 Nozzle |  |
+| PASS | Flashforge/Flashforge Adventurer 5M Pro 0.4 Nozzle |  |
+| PASS | Flashforge/Flashforge Adventurer 5M Pro 0.6 Nozzle |  |
+| PASS | Flashforge/Flashforge Adventurer 5M Pro 0.8 Nozzle |  |
 | DIVERGENT | Flashforge/Flashforge Artemis 0.4 Nozzle | first difference at byte 5282 (line 252, column 15; expected 110781 bytes, actual 112430 bytes) context:   line 251: "G1 X4.458 Y4.458 F6000"   line 252: expected "G1 X4.458 Y4.439"; actual "G1 X4.458 Y4.458"   line 253: expected "G1 X4.439 Y4.439"; actual "G1 X4.458 Y4.439" |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-d2GWEN") |
-| DIVERGENT | Flashforge/Flashforge Creator 5 0.6 nozzle | first difference at byte 68527 (line 3333, column 24; expected 87009 bytes, actual 87009 bytes) context:   line 3332: "; enable_pressure_advance = 1"   line 3333: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3334: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Creator 5 0.8 nozzle | first difference at byte 31094 (line 1446, column 24; expected 49566 bytes, actual 49566 bytes) context:   line 1445: "; enable_pressure_advance = 1"   line 1446: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1447: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle | first difference at byte 80035 (line 3728, column 24; expected 98511 bytes, actual 98511 bytes) context:   line 3727: "; enable_pressure_advance = 1"   line 3728: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3729: "; enable_support = 0" |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-kWkZD2") |
-| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-csJVU7") |
-| DIVERGENT | Flashforge/Flashforge Guider 2s 0.4 nozzle | first difference at byte 65700 (line 3176, column 24; expected 83421 bytes, actual 83421 bytes) context:   line 3175: "; enable_pressure_advance = 1"   line 3176: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3177: "; enable_support = 1" |
-| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle | first difference at byte 77937 (line 3950, column 24; expected 96491 bytes, actual 96491 bytes) context:   line 3949: "; enable_pressure_advance = 1"   line 3950: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3951: "; enable_support = 1" |
-| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.6 Nozzle | first difference at byte 65388 (line 3000, column 24; expected 83769 bytes, actual 83769 bytes) context:   line 2999: "; enable_pressure_advance = 1"   line 3000: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3001: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider 3 Ultra 0.8 Nozzle | first difference at byte 48022 (line 2231, column 24; expected 66400 bytes, actual 66400 bytes) context:   line 2230: "; enable_pressure_advance = 1"   line 2231: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2232: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.25 nozzle | first difference at byte 267217 (line 11297, column 24; expected 284427 bytes, actual 284427 bytes) context:   line 11296: "; enable_pressure_advance = 1"   line 11297: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11298: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.4 HF nozzle | first difference at byte 105102 (line 4682, column 24; expected 122285 bytes, actual 122285 bytes) context:   line 4681: "; enable_pressure_advance = 1"   line 4682: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4683: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.4 nozzle | first difference at byte 98820 (line 4339, column 24; expected 116029 bytes, actual 116029 bytes) context:   line 4338: "; enable_pressure_advance = 1"   line 4339: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4340: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.6 HF nozzle | first difference at byte 64752 (line 2964, column 24; expected 82170 bytes, actual 82170 bytes) context:   line 2963: "; enable_pressure_advance = 1"   line 2964: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2965: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.6 nozzle | first difference at byte 61431 (line 2775, column 24; expected 78653 bytes, actual 78653 bytes) context:   line 2774: "; enable_pressure_advance = 1"   line 2775: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2776: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 0.8 HF nozzle | first difference at byte 44534 (line 2041, column 24; expected 61771 bytes, actual 61771 bytes) context:   line 2040: "; enable_pressure_advance = 1"   line 2041: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2042: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.25 nozzle | first difference at byte 211832 (line 9277, column 24; expected 229091 bytes, actual 229091 bytes) context:   line 9276: "; enable_pressure_advance = 1"   line 9277: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 9278: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.4 HF nozzle | first difference at byte 83779 (line 3908, column 24; expected 101010 bytes, actual 101010 bytes) context:   line 3907: "; enable_pressure_advance = 1"   line 3908: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3909: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.4 nozzle | first difference at byte 88309 (line 3977, column 24; expected 105540 bytes, actual 105540 bytes) context:   line 3976: "; enable_pressure_advance = 1"   line 3977: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3978: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.6 HF nozzle | first difference at byte 64752 (line 2964, column 24; expected 82184 bytes, actual 82184 bytes) context:   line 2963: "; enable_pressure_advance = 1"   line 2964: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2965: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.6 nozzle | first difference at byte 68916 (line 3031, column 24; expected 86149 bytes, actual 86149 bytes) context:   line 3030: "; enable_pressure_advance = 1"   line 3031: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3032: "; enable_support = 0" |
-| DIVERGENT | Flashforge/Flashforge Guider4 Pro 0.8 HF nozzle | first difference at byte 44534 (line 2041, column 24; expected 61785 bytes, actual 61785 bytes) context:   line 2040: "; enable_pressure_advance = 1"   line 2041: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2042: "; enable_support = 0" |
-| DIVERGENT | FlyingBear/FlyingBear Ghost 6 0.4 nozzle | first difference at byte 79359 (line 3841, column 24; expected 97273 bytes, actual 97273 bytes) context:   line 3840: "; enable_pressure_advance = 0"   line 3841: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3842: "; enable_support = 0" |
-| DIVERGENT | FlyingBear/FlyingBear Ghost7 0.4 nozzle | first difference at byte 84585 (line 3905, column 24; expected 102743 bytes, actual 102743 bytes) context:   line 3904: "; enable_pressure_advance = 1"   line 3905: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3906: "; enable_support = 0" |
-| DIVERGENT | FlyingBear/FlyingBear Reborn3 0.4 nozzle | first difference at byte 96286 (line 4231, column 24; expected 113446 bytes, actual 113446 bytes) context:   line 4230: "; enable_pressure_advance = 0"   line 4231: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4232: "; enable_support = 0" |
-| DIVERGENT | FlyingBear/FlyingBear S1 0.4 nozzle | first difference at byte 88030 (line 3982, column 24; expected 106574 bytes, actual 106574 bytes) context:   line 3981: "; enable_pressure_advance = 0"   line 3982: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3983: "; enable_support = 0" |
-| DIVERGENT | Folgertech/Folgertech FT-5 0.4 nozzle | first difference at byte 78785 (line 3804, column 24; expected 95822 bytes, actual 95822 bytes) context:   line 3803: "; enable_pressure_advance = 0"   line 3804: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3805: "; enable_support = 0" |
-| DIVERGENT | Folgertech/Folgertech FT-5 0.6 nozzle | first difference at byte 75588 (line 3695, column 24; expected 92627 bytes, actual 92627 bytes) context:   line 3694: "; enable_pressure_advance = 0"   line 3695: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3696: "; enable_support = 0" |
-| DIVERGENT | Folgertech/Folgertech FT-6 0.4 nozzle | first difference at byte 78545 (line 3802, column 24; expected 95580 bytes, actual 95580 bytes) context:   line 3801: "; enable_pressure_advance = 0"   line 3802: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3803: "; enable_support = 0" |
-| DIVERGENT | Folgertech/Folgertech FT-6 0.6 nozzle | first difference at byte 74487 (line 3641, column 24; expected 91524 bytes, actual 91524 bytes) context:   line 3640: "; enable_pressure_advance = 0"   line 3641: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3642: "; enable_support = 0" |
-| DIVERGENT | Folgertech/Folgertech i3 0.4 nozzle | first difference at byte 77015 (line 3802, column 24; expected 94049 bytes, actual 94049 bytes) context:   line 3801: "; enable_pressure_advance = 0"   line 3802: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3803: "; enable_support = 0" |
-| DIVERGENT | Folgertech/Folgertech i3 0.6 nozzle | first difference at byte 67823 (line 3437, column 24; expected 84857 bytes, actual 84857 bytes) context:   line 3436: "; enable_pressure_advance = 0"   line 3437: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3438: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A10 M 0.4 nozzle | first difference at byte 93299 (line 4141, column 24; expected 112135 bytes, actual 112135 bytes) context:   line 4140: "; enable_pressure_advance = 0"   line 4141: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4142: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A10 Pro 0.2 nozzle | first difference at byte 297636 (line 12396, column 24; expected 315905 bytes, actual 315905 bytes) context:   line 12395: "; enable_pressure_advance = 0"   line 12396: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12397: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A10 Pro 0.4 nozzle | first difference at byte 93005 (line 4140, column 24; expected 111455 bytes, actual 111455 bytes) context:   line 4139: "; enable_pressure_advance = 0"   line 4140: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4141: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A10 Pro 0.6 nozzle | first difference at byte 55265 (line 2486, column 24; expected 73534 bytes, actual 73534 bytes) context:   line 2485: "; enable_pressure_advance = 0"   line 2486: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2487: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A10 Pro 0.8 nozzle | first difference at byte 40077 (line 1835, column 24; expected 58346 bytes, actual 58346 bytes) context:   line 1834: "; enable_pressure_advance = 0"   line 1835: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1836: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A10 T 0.4 nozzle | first difference at byte 93211 (line 4141, column 24; expected 111959 bytes, actual 111959 bytes) context:   line 4140: "; enable_pressure_advance = 0"   line 4141: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4142: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A20 0.2 nozzle | first difference at byte 297684 (line 12397, column 24; expected 316102 bytes, actual 316102 bytes) context:   line 12396: "; enable_pressure_advance = 0"   line 12397: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12398: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A20 0.4 nozzle | first difference at byte 93064 (line 4142, column 24; expected 111663 bytes, actual 111663 bytes) context:   line 4141: "; enable_pressure_advance = 0"   line 4142: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4143: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A20 0.6 nozzle | first difference at byte 55335 (line 2489, column 24; expected 73753 bytes, actual 73753 bytes) context:   line 2488: "; enable_pressure_advance = 0"   line 2489: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2490: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A20 0.8 nozzle | first difference at byte 40125 (line 1836, column 24; expected 58543 bytes, actual 58543 bytes) context:   line 1835: "; enable_pressure_advance = 0"   line 1836: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1837: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A20 M 0.4 nozzle | first difference at byte 93299 (line 4141, column 24; expected 112135 bytes, actual 112135 bytes) context:   line 4140: "; enable_pressure_advance = 0"   line 4141: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4142: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A20 T 0.4 nozzle | first difference at byte 93211 (line 4141, column 24; expected 111959 bytes, actual 111959 bytes) context:   line 4140: "; enable_pressure_advance = 0"   line 4141: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4142: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A30 M 0.4 nozzle | first difference at byte 93192 (line 4144, column 24; expected 111715 bytes, actual 111715 bytes) context:   line 4143: "; enable_pressure_advance = 0"   line 4144: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4145: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A30 Pro 0.2 nozzle | first difference at byte 297624 (line 12395, column 24; expected 315891 bytes, actual 315891 bytes) context:   line 12394: "; enable_pressure_advance = 0"   line 12395: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12396: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A30 Pro 0.4 nozzle | first difference at byte 93005 (line 4140, column 24; expected 111453 bytes, actual 111453 bytes) context:   line 4139: "; enable_pressure_advance = 0"   line 4140: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4141: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A30 Pro 0.6 nozzle | first difference at byte 55287 (line 2488, column 24; expected 73554 bytes, actual 73554 bytes) context:   line 2487: "; enable_pressure_advance = 0"   line 2488: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2489: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A30 Pro 0.8 nozzle | first difference at byte 40055 (line 1833, column 24; expected 58322 bytes, actual 58322 bytes) context:   line 1832: "; enable_pressure_advance = 0"   line 1833: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1834: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech A30 T 0.4 nozzle | first difference at byte 93192 (line 4144, column 24; expected 111715 bytes, actual 111715 bytes) context:   line 4143: "; enable_pressure_advance = 0"   line 4144: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4145: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech M1 0.2 nozzle | first difference at byte 278702 (line 12000, column 24; expected 297109 bytes, actual 297109 bytes) context:   line 11999: "; enable_pressure_advance = 0"   line 12000: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12001: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech M1 0.4 nozzle | first difference at byte 87914 (line 4000, column 24; expected 106300 bytes, actual 106300 bytes) context:   line 3999: "; enable_pressure_advance = 0"   line 4000: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4001: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech M1 0.6 nozzle | first difference at byte 52666 (line 2422, column 24; expected 71073 bytes, actual 71073 bytes) context:   line 2421: "; enable_pressure_advance = 0"   line 2422: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2423: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech M1 0.8 nozzle | first difference at byte 40397 (line 1852, column 24; expected 58802 bytes, actual 58802 bytes) context:   line 1851: "; enable_pressure_advance = 0"   line 1852: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1853: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar 0.2 nozzle | first difference at byte 297658 (line 12395, column 24; expected 316128 bytes, actual 316128 bytes) context:   line 12394: "; enable_pressure_advance = 0"   line 12395: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12396: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar 0.4 nozzle | first difference at byte 93006 (line 4137, column 24; expected 111657 bytes, actual 111657 bytes) context:   line 4136: "; enable_pressure_advance = 0"   line 4137: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4138: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar 0.6 nozzle | first difference at byte 55288 (line 2485, column 24; expected 73758 bytes, actual 73758 bytes) context:   line 2484: "; enable_pressure_advance = 0"   line 2485: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2486: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar 0.8 nozzle | first difference at byte 40044 (line 1829, column 24; expected 58514 bytes, actual 58514 bytes) context:   line 1828: "; enable_pressure_advance = 0"   line 1829: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1830: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar M 0.4 nozzle | first difference at byte 93028 (line 4137, column 24; expected 111689 bytes, actual 111689 bytes) context:   line 4136: "; enable_pressure_advance = 0"   line 4137: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4138: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Max 0.2 nozzle | first difference at byte 297570 (line 12393, column 24; expected 315981 bytes, actual 315981 bytes) context:   line 12392: "; enable_pressure_advance = 0"   line 12393: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12394: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Max 0.4 nozzle | first difference at byte 92928 (line 4136, column 24; expected 111520 bytes, actual 111520 bytes) context:   line 4135: "; enable_pressure_advance = 0"   line 4136: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4137: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Max 0.6 nozzle | first difference at byte 55177 (line 2481, column 24; expected 73588 bytes, actual 73588 bytes) context:   line 2480: "; enable_pressure_advance = 0"   line 2481: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2482: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Max 0.8 nozzle | first difference at byte 39955 (line 1827, column 24; expected 58366 bytes, actual 58366 bytes) context:   line 1826: "; enable_pressure_advance = 0"   line 1827: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1828: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.2 nozzle | first difference at byte 297688 (line 12395, column 24; expected 316196 bytes, actual 316196 bytes) context:   line 12394: "; enable_pressure_advance = 0"   line 12395: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12396: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.4 nozzle | first difference at byte 93036 (line 4137, column 24; expected 111725 bytes, actual 111725 bytes) context:   line 4136: "; enable_pressure_advance = 0"   line 4137: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4138: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.6 nozzle | first difference at byte 55318 (line 2485, column 24; expected 73826 bytes, actual 73826 bytes) context:   line 2484: "; enable_pressure_advance = 0"   line 2485: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2486: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar Pro 0.8 nozzle | first difference at byte 40074 (line 1829, column 24; expected 58582 bytes, actual 58582 bytes) context:   line 1828: "; enable_pressure_advance = 0"   line 1829: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1830: "; enable_support = 0" |
+| PASS | Flashforge/Flashforge Creator 5 0.4 nozzle |  |
+| PASS | Flashforge/Flashforge Creator 5 0.6 nozzle |  |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 0.8 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-xcRSEt") |
+| PASS | Flashforge/Flashforge Creator 5 Pro 0.4 nozzle |  |
+| ORCA_ERROR | Flashforge/Flashforge Creator 5 Pro 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-hPtSrW") |
+| PASS | Flashforge/Flashforge Creator 5 Pro 0.8 nozzle |  |
+| PASS | Flashforge/Flashforge Guider 2s 0.4 nozzle |  |
+| PASS | Flashforge/Flashforge Guider 3 Ultra 0.4 Nozzle |  |
+| PASS | Flashforge/Flashforge Guider 3 Ultra 0.6 Nozzle |  |
+| PASS | Flashforge/Flashforge Guider 3 Ultra 0.8 Nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 0.25 nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 0.4 HF nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 0.4 nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 0.6 HF nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 0.6 nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 0.8 HF nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 Pro 0.25 nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 Pro 0.4 HF nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 Pro 0.4 nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 Pro 0.6 HF nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 Pro 0.6 nozzle |  |
+| PASS | Flashforge/Flashforge Guider4 Pro 0.8 HF nozzle |  |
+| PASS | FlyingBear/FlyingBear Ghost 6 0.4 nozzle |  |
+| PASS | FlyingBear/FlyingBear Ghost7 0.4 nozzle |  |
+| PASS | FlyingBear/FlyingBear Reborn3 0.4 nozzle |  |
+| PASS | FlyingBear/FlyingBear S1 0.4 nozzle |  |
+| PASS | Folgertech/Folgertech FT-5 0.4 nozzle |  |
+| PASS | Folgertech/Folgertech FT-5 0.6 nozzle |  |
+| PASS | Folgertech/Folgertech FT-6 0.4 nozzle |  |
+| PASS | Folgertech/Folgertech FT-6 0.6 nozzle |  |
+| PASS | Folgertech/Folgertech i3 0.4 nozzle |  |
+| PASS | Folgertech/Folgertech i3 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech A10 M 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A10 Pro 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech A10 Pro 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A10 Pro 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech A10 Pro 0.8 nozzle |  |
+| PASS | Geeetech/Geeetech A10 T 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A20 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech A20 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A20 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech A20 0.8 nozzle |  |
+| PASS | Geeetech/Geeetech A20 M 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A20 T 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A30 M 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A30 Pro 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech A30 Pro 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech A30 Pro 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech A30 Pro 0.8 nozzle |  |
+| PASS | Geeetech/Geeetech A30 T 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech M1 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech M1 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech M1 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech M1 0.8 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar 0.8 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar M 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Max 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Max 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Max 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Max 0.8 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Pro 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Pro 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Pro 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar Pro 0.8 nozzle |  |
 | DIVERGENT | Geeetech/Geeetech Mizar S 0.2 nozzle | first difference at byte 54428 (line 2284, column 1; expected 316240 bytes, actual 316240 bytes) context:   line 2283: "G1 X125.256 Y128.005 E.00324"   line 2284: expected "M73 P19 R13"; actual "G1 X125.7 Y126.995 E.00893"   line 2285: expected "G1 X125.7 Y126.995 E.00893"; actual "M73 P19 R13" |
-| DIVERGENT | Geeetech/Geeetech Mizar S 0.4 nozzle | first difference at byte 93048 (line 4137, column 24; expected 111729 bytes, actual 111729 bytes) context:   line 4136: "; enable_pressure_advance = 0"   line 4137: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4138: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar S 0.6 nozzle | first difference at byte 55350 (line 2485, column 24; expected 73850 bytes, actual 73850 bytes) context:   line 2484: "; enable_pressure_advance = 0"   line 2485: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2486: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Mizar S 0.8 nozzle | first difference at byte 40097 (line 1830, column 24; expected 58597 bytes, actual 58597 bytes) context:   line 1829: "; enable_pressure_advance = 0"   line 1830: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1831: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Thunder 0.2 nozzle | first difference at byte 365536 (line 15727, column 24; expected 383879 bytes, actual 383879 bytes) context:   line 15726: "; enable_pressure_advance = 0"   line 15727: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 15728: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Thunder 0.4 nozzle | first difference at byte 91635 (line 4104, column 24; expected 109961 bytes, actual 109961 bytes) context:   line 4103: "; enable_pressure_advance = 0"   line 4104: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4105: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Thunder 0.6 nozzle | first difference at byte 58662 (line 2701, column 24; expected 77005 bytes, actual 77005 bytes) context:   line 2700: "; enable_pressure_advance = 0"   line 2701: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2702: "; enable_support = 0" |
-| DIVERGENT | Geeetech/Geeetech Thunder 0.8 nozzle | first difference at byte 44882 (line 2052, column 24; expected 63223 bytes, actual 63223 bytes) context:   line 2051: "; enable_pressure_advance = 0"   line 2052: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2053: "; enable_support = 0" |
+| PASS | Geeetech/Geeetech Mizar S 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar S 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech Mizar S 0.8 nozzle |  |
+| PASS | Geeetech/Geeetech Thunder 0.2 nozzle |  |
+| PASS | Geeetech/Geeetech Thunder 0.4 nozzle |  |
+| PASS | Geeetech/Geeetech Thunder 0.6 nozzle |  |
+| PASS | Geeetech/Geeetech Thunder 0.8 nozzle |  |
 | DIVERGENT | Ginger Additive/Ginger G1 1.2 nozzle | first difference at byte 597 (line 19, column 10; expected 39732 bytes, actual 39519 bytes) context:   line 18: "EXCLUDE_OBJECT_DEFINE NAME=cube10.stl_id_0_copy_0 CENTER=500,500 POLYGON=[[495,495],[505,495],[505,505],[495,505],[495,495]]"   line 19: expected "M73 P0 R10"; actual "M73 P0 R13"   line 20: ";TYPE:Custom" |
-| DIVERGENT | Ginger Additive/Ginger G1 3.0 nozzle | first difference at byte 24463 (line 887, column 24; expected 41855 bytes, actual 41855 bytes) context:   line 886: "; enable_pressure_advance = 1"   line 887: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 888: "; enable_support = 0" |
-| DIVERGENT | Ginger Additive/Ginger G1 5.0 nozzle | first difference at byte 13868 (line 518, column 24; expected 31261 bytes, actual 31261 bytes) context:   line 517: "; enable_pressure_advance = 1"   line 518: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 519: "; enable_support = 0" |
-| DIVERGENT | Ginger Additive/Ginger G1 8.0 nozzle | first difference at byte 24120 (line 866, column 24; expected 41509 bytes, actual 41509 bytes) context:   line 865: "; enable_pressure_advance = 1"   line 866: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 867: "; enable_support = 0" |
-| DIVERGENT | InfiMech/InfiMech EX 0.4 nozzle | first difference at byte 84273 (line 3905, column 24; expected 102399 bytes, actual 102399 bytes) context:   line 3904: "; enable_pressure_advance = 1"   line 3905: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3906: "; enable_support = 0" |
-| DIVERGENT | InfiMech/InfiMech EX+APS 0.4 nozzle | first difference at byte 84481 (line 3905, column 24; expected 102627 bytes, actual 102627 bytes) context:   line 3904: "; enable_pressure_advance = 1"   line 3905: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3906: "; enable_support = 0" |
-| DIVERGENT | InfiMech/InfiMech TX 0.4 nozzle | first difference at byte 88001 (line 3981, column 24; expected 106620 bytes, actual 106620 bytes) context:   line 3980: "; enable_pressure_advance = 0"   line 3981: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3982: "; enable_support = 0" |
-| DIVERGENT | InfiMech/InfiMech TX HSN 0.4 nozzle | first difference at byte 88001 (line 3981, column 24; expected 106650 bytes, actual 106650 bytes) context:   line 3980: "; enable_pressure_advance = 0"   line 3981: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3982: "; enable_support = 0" |
-| DIVERGENT | Kingroon/Kingroon KLP1 0.4 nozzle | first difference at byte 94664 (line 4134, column 24; expected 112310 bytes, actual 112310 bytes) context:   line 4133: "; enable_pressure_advance = 0"   line 4134: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4135: "; enable_support = 1" |
+| PASS | Ginger Additive/Ginger G1 3.0 nozzle |  |
+| PASS | Ginger Additive/Ginger G1 5.0 nozzle |  |
+| PASS | Ginger Additive/Ginger G1 8.0 nozzle |  |
+| PASS | InfiMech/InfiMech EX 0.4 nozzle |  |
+| PASS | InfiMech/InfiMech EX+APS 0.4 nozzle |  |
+| PASS | InfiMech/InfiMech TX 0.4 nozzle |  |
+| PASS | InfiMech/InfiMech TX HSN 0.4 nozzle |  |
+| PASS | Kingroon/Kingroon KLP1 0.4 nozzle |  |
 | DIVERGENT | Kingroon/Kingroon KP3S 3.0 0.4 nozzle | first difference at byte 1703 (line 76, column 9; expected 92286 bytes, actual 89403 bytes) context:   line 75: "G1 X96.258 Y83.173 E.07012"   line 76: expected "M73 P7 R2"; actual "M73 P7 R3"   line 77: "G1 X97.072 Y84.208 E.07012" |
-| DIVERGENT | Kingroon/Kingroon KP3S PRO S1 0.4 nozzle | first difference at byte 83898 (line 4132, column 24; expected 101858 bytes, actual 101858 bytes) context:   line 4131: "; enable_pressure_advance = 0"   line 4132: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4133: "; enable_support = 1" |
+| PASS | Kingroon/Kingroon KP3S PRO S1 0.4 nozzle |  |
 | DIVERGENT | Kingroon/Kingroon KP3S PRO V2 0.4 nozzle | first difference at byte 940 (line 39, column 3; expected 103623 bytes, actual 103327 bytes) context:   line 38: ""   line 39: expected "G10 ; retract"; actual "G1 E-.8 F2700"   line 40: ";AFTER_LAYER_CHANGE" |
 | DIVERGENT | Kingroon/Kingroon KP3S V1 0.4 nozzle | first difference at byte 5243 (line 217, column 5; expected 107950 bytes, actual 107939 bytes) context:   line 216: "G1 F4075"   line 217: expected "G1 X94.398 Y85.602 E.29177"; actual "G1 X85.602 Y94.398 E.29177"   line 218: "G1 X85.602 Y85.602 E.29177" |
-| DIVERGENT | LH/LH Stinger 0.4 nozzle | first difference at byte 117978 (line 4911, column 24; expected 135127 bytes, actual 135127 bytes) context:   line 4910: "; enable_pressure_advance = 1"   line 4911: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4912: "; enable_support = 0" |
+| PASS | LH/LH Stinger 0.4 nozzle |  |
 | DIVERGENT | LH/LH Stinger MMU 0.4 nozzle | first difference at byte 627 (line 23, column 1; expected 135321 bytes, actual 135322 bytes) context:   line 22: ";TYPE:Custom"   line 23: expected "_SP_PRINT_START LANE=0 TEMP=230"; actual " _SP_PRINT_START LANE=0 TEMP=230"   line 24: "" |
 | DIVERGENT | LONGER/LONGER LK10 (0.2 nozzle) | first difference at byte 241 (line 10, column 44; expected 191970 bytes, actual 191970 bytes) context:   line 9: ""   line 10: expected "; external perimeters extrusion width = 0.23mm"; actual "; external perimeters extrusion width = 0.22mm"   line 11: "; perimeters extrusion width = 0.25mm" |
-| DIVERGENT | LONGER/LONGER LK10 (0.4 nozzle) | first difference at byte 107443 (line 4240, column 24; expected 124559 bytes, actual 124559 bytes) context:   line 4239: "; enable_pressure_advance = 0"   line 4240: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4241: "; enable_support = 0" |
-| DIVERGENT | LONGER/LONGER LK10 (0.6 nozzle) | first difference at byte 92409 (line 3765, column 24; expected 109525 bytes, actual 109525 bytes) context:   line 3764: "; enable_pressure_advance = 0"   line 3765: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3766: "; enable_support = 0" |
+| PASS | LONGER/LONGER LK10 (0.4 nozzle) |  |
+| PASS | LONGER/LONGER LK10 (0.6 nozzle) |  |
 | DIVERGENT | LONGER/LONGER LK10 (0.8 nozzle) | first difference at byte 51264 (line 2164, column 29; expected 103095 bytes, actual 103095 bytes) context:   line 2163: "G1 X110.137 Y110.137 E-.05789"   line 2164: expected "G1 X110.944 Y110.137 E-.24211"; actual "G1 X110.944 Y110.137 E-.24212"   line 2165: ";WIPE_END" |
 | DIVERGENT | LONGER/LONGER LK10 Plus (0.2 nozzle) | first difference at byte 241 (line 10, column 44; expected 191918 bytes, actual 191918 bytes) context:   line 9: ""   line 10: expected "; external perimeters extrusion width = 0.23mm"; actual "; external perimeters extrusion width = 0.22mm"   line 11: "; perimeters extrusion width = 0.25mm" |
-| DIVERGENT | LONGER/LONGER LK10 Plus (0.4 nozzle) | first difference at byte 107401 (line 4241, column 24; expected 124532 bytes, actual 124532 bytes) context:   line 4240: "; enable_pressure_advance = 0"   line 4241: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4242: "; enable_support = 0" |
-| DIVERGENT | LONGER/LONGER LK10 Plus (0.6 nozzle) | first difference at byte 92366 (line 3765, column 24; expected 109497 bytes, actual 109497 bytes) context:   line 3764: "; enable_pressure_advance = 0"   line 3765: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3766: "; enable_support = 0" |
+| PASS | LONGER/LONGER LK10 Plus (0.4 nozzle) |  |
+| PASS | LONGER/LONGER LK10 Plus (0.6 nozzle) |  |
 | DIVERGENT | LONGER/LONGER LK10 Plus (0.8 nozzle) | first difference at byte 51208 (line 2164, column 29; expected 103059 bytes, actual 103059 bytes) context:   line 2163: "G1 X157.637 Y157.637 E-.05789"   line 2164: expected "G1 X158.444 Y157.637 E-.24211"; actual "G1 X158.444 Y157.637 E-.24212"   line 2165: ";WIPE_END" |
-| DIVERGENT | Lulzbot/Lulzbot Taz 4 or 5 0.5 nozzle | first difference at byte 70039 (line 2951, column 24; expected 88107 bytes, actual 88107 bytes) context:   line 2950: "; enable_pressure_advance = 0"   line 2951: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2952: "; enable_support = 0" |
-| DIVERGENT | Lulzbot/Lulzbot Taz 6 0.5 nozzle | first difference at byte 70211 (line 2925, column 24; expected 93806 bytes, actual 93806 bytes) context:   line 2924: "; enable_pressure_advance = 0"   line 2925: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2926: "; enable_support = 0" |
-| DIVERGENT | Lulzbot/Lulzbot Taz Pro Dual 0.5 nozzle | first difference at byte 74667 (line 3217, column 24; expected 101010 bytes, actual 101010 bytes) context:   line 3216: "; enable_pressure_advance = 0"   line 3217: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3218: "; enable_support = 0" |
-| DIVERGENT | Lulzbot/Lulzbot Taz Pro S 0.5 nozzle | first difference at byte 74242 (line 3174, column 24; expected 102748 bytes, actual 102748 bytes) context:   line 3173: "; enable_pressure_advance = 0"   line 3174: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3175: "; enable_support = 0" |
-| DIVERGENT | M3D/M3D Enabler D8500 MM | first difference at byte 57864 (line 2723, column 24; expected 76882 bytes, actual 76882 bytes) context:   line 2722: "; enable_pressure_advance = 0"   line 2723: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2724: "; enable_support = 1" |
-| DIVERGENT | MagicMaker/MM BoneKing 0.4 nozzle | first difference at byte 186465 (line 7927, column 24; expected 203961 bytes, actual 203961 bytes) context:   line 7926: "; enable_pressure_advance = 0"   line 7927: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7928: "; enable_support = 1" |
-| DIVERGENT | MagicMaker/MM hj SK 0.4 nozzle | first difference at byte 185348 (line 7870, column 24; expected 203085 bytes, actual 203085 bytes) context:   line 7869: "; enable_pressure_advance = 0"   line 7870: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7871: "; enable_support = 1" |
-| DIVERGENT | MagicMaker/MM hqs SF 0.4 nozzle | first difference at byte 163098 (line 7803, column 24; expected 180583 bytes, actual 180583 bytes) context:   line 7802: "; enable_pressure_advance = 0"   line 7803: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7804: "; enable_support = 1" |
-| DIVERGENT | MagicMaker/MM hqs hj 0.4 nozzle | first difference at byte 165285 (line 7853, column 24; expected 182771 bytes, actual 182771 bytes) context:   line 7852: "; enable_pressure_advance = 0"   line 7853: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7854: "; enable_support = 1" |
-| DIVERGENT | MagicMaker/MM slb 0.4 nozzle | first difference at byte 156800 (line 7869, column 24; expected 174196 bytes, actual 174196 bytes) context:   line 7868: "; enable_pressure_advance = 0"   line 7869: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7870: "; enable_support = 1" |
+| PASS | Lulzbot/Lulzbot Taz 4 or 5 0.5 nozzle |  |
+| PASS | Lulzbot/Lulzbot Taz 6 0.5 nozzle |  |
+| PASS | Lulzbot/Lulzbot Taz Pro Dual 0.5 nozzle |  |
+| PASS | Lulzbot/Lulzbot Taz Pro S 0.5 nozzle |  |
+| PASS | M3D/M3D Enabler D8500 MM |  |
+| PASS | MagicMaker/MM BoneKing 0.4 nozzle |  |
+| PASS | MagicMaker/MM hj SK 0.4 nozzle |  |
+| PASS | MagicMaker/MM hqs SF 0.4 nozzle |  |
+| PASS | MagicMaker/MM hqs hj 0.4 nozzle |  |
+| PASS | MagicMaker/MM slb 0.4 nozzle |  |
 | DIVERGENT | Mellow/M1 0.2 nozzle | first difference at byte 375170 (line 15639, column 62; expected 395090 bytes, actual 395090 bytes) context:   line 15638: "; estimated printing time (normal mode) = 10m 11s"   line 15639: expected "; estimated first layer printing time (normal mode) = 0.438319s"; actual "; estimated first layer printing time (normal mode) = 0.438318s"   line 15640: "" |
-| DIVERGENT | Mellow/M1 0.4 nozzle | first difference at byte 97924 (line 4311, column 24; expected 114901 bytes, actual 114901 bytes) context:   line 4310: "; enable_pressure_advance = 0"   line 4311: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4312: "; enable_support = 0" |
-| DIVERGENT | Mellow/M1 0.6 nozzle | first difference at byte 84086 (line 3800, column 24; expected 101062 bytes, actual 101062 bytes) context:   line 3799: "; enable_pressure_advance = 0"   line 3800: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3801: "; enable_support = 0" |
-| DIVERGENT | Mellow/M1 0.8 nozzle | first difference at byte 93015 (line 4501, column 24; expected 109990 bytes, actual 109990 bytes) context:   line 4500: "; enable_pressure_advance = 0"   line 4501: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4502: "; enable_support = 0" |
-| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.2 nozzle | first difference at byte 295006 (line 11050, column 24; expected 313034 bytes, actual 313034 bytes) context:   line 11049: "; enable_pressure_advance = 0"   line 11050: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11051: "; enable_support = 0" |
-| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.4 nozzle | first difference at byte 109348 (line 4381, column 24; expected 127362 bytes, actual 127362 bytes) context:   line 4380: "; enable_pressure_advance = 0"   line 4381: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4382: "; enable_support = 0" |
-| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.6 nozzle | first difference at byte 64445 (line 2611, column 24; expected 82475 bytes, actual 82475 bytes) context:   line 2610: "; enable_pressure_advance = 0"   line 2611: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2612: "; enable_support = 0" |
-| DIVERGENT | OpenEYE/OpenEYE Peacock V2 0.8 nozzle | first difference at byte 51350 (line 2151, column 24; expected 69374 bytes, actual 69374 bytes) context:   line 2150: "; enable_pressure_advance = 0"   line 2151: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2152: "; enable_support = 0" |
-| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.2 nozzle | first difference at byte 313332 (line 11845, column 24; expected 330598 bytes, actual 330598 bytes) context:   line 11844: "; enable_pressure_advance = 0"   line 11845: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11846: "; enable_support = 0" |
-| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.4 nozzle | first difference at byte 95184 (line 4145, column 24; expected 112429 bytes, actual 112429 bytes) context:   line 4144: "; enable_pressure_advance = 0"   line 4145: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4146: "; enable_support = 0" |
-| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.6 nozzle | first difference at byte 61007 (line 2659, column 24; expected 78262 bytes, actual 78262 bytes) context:   line 2658: "; enable_pressure_advance = 0"   line 2659: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2660: "; enable_support = 0" |
-| DIVERGENT | OrcaArena/Orca Arena X1 Carbon 0.8 nozzle | first difference at byte 54444 (line 2520, column 24; expected 71707 bytes, actual 71707 bytes) context:   line 2519: "; enable_pressure_advance = 0"   line 2520: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2521: "; enable_support = 0" |
+| PASS | Mellow/M1 0.4 nozzle |  |
+| PASS | Mellow/M1 0.6 nozzle |  |
+| PASS | Mellow/M1 0.8 nozzle |  |
+| PASS | OpenEYE/OpenEYE Peacock V2 0.2 nozzle |  |
+| PASS | OpenEYE/OpenEYE Peacock V2 0.4 nozzle |  |
+| PASS | OpenEYE/OpenEYE Peacock V2 0.6 nozzle |  |
+| PASS | OpenEYE/OpenEYE Peacock V2 0.8 nozzle |  |
+| PASS | OrcaArena/Orca Arena X1 Carbon 0.2 nozzle |  |
+| PASS | OrcaArena/Orca Arena X1 Carbon 0.4 nozzle |  |
+| PASS | OrcaArena/Orca Arena X1 Carbon 0.6 nozzle |  |
+| PASS | OrcaArena/Orca Arena X1 Carbon 0.8 nozzle |  |
 | DIVERGENT | Peopoly/Peopoly Magneto X 0.4 nozzle | first difference at byte 185662 (line 6677, column 62; expected 206009 bytes, actual 206009 bytes) context:   line 6676: "; estimated printing time (normal mode) = 7m 15s"   line 6677: expected "; estimated first layer printing time (normal mode) = 0.874670s"; actual "; estimated first layer printing time (normal mode) = 0.874671s"   line 6678: "" |
-| DIVERGENT | Peopoly/Peopoly Magneto X 0.6 nozzle | first difference at byte 188611 (line 6770, column 24; expected 206004 bytes, actual 206004 bytes) context:   line 6769: "; enable_pressure_advance = 1"   line 6770: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6771: "; enable_support = 0" |
-| DIVERGENT | Peopoly/Peopoly Magneto X 0.8 nozzle | first difference at byte 187284 (line 6722, column 24; expected 204677 bytes, actual 204677 bytes) context:   line 6721: "; enable_pressure_advance = 1"   line 6722: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6723: "; enable_support = 0" |
-| DIVERGENT | Phrozen/Phrozen Arco 0.4 nozzle | first difference at byte 98649 (line 3705, column 24; expected 115969 bytes, actual 115969 bytes) context:   line 3704: "; enable_pressure_advance = 1"   line 3705: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3706: "; enable_support = 0" |
-| DIVERGENT | Positron3D/The Positron 0.2 nozzle | first difference at byte 433770 (line 16533, column 24; expected 450810 bytes, actual 450810 bytes) context:   line 16532: "; enable_pressure_advance = 0"   line 16533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 16534: "; enable_support = 0" |
-| DIVERGENT | Positron3D/The Positron 0.4 nozzle | first difference at byte 110533 (line 4433, column 24; expected 127568 bytes, actual 127568 bytes) context:   line 4432: "; enable_pressure_advance = 0"   line 4433: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4434: "; enable_support = 0" |
-| DIVERGENT | Positron3D/The Positron 0.6 nozzle | first difference at byte 95552 (line 3915, column 24; expected 112586 bytes, actual 112586 bytes) context:   line 3914: "; enable_pressure_advance = 0"   line 3915: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3916: "; enable_support = 0" |
-| DIVERGENT | Positron3D/The Positron 0.8 nozzle | first difference at byte 106330 (line 4611, column 24; expected 123363 bytes, actual 123363 bytes) context:   line 4610: "; enable_pressure_advance = 0"   line 4611: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4612: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa CORE One 0.25 nozzle | first difference at byte 190262 (line 7987, column 24; expected 212562 bytes, actual 212562 bytes) context:   line 7986: "; enable_pressure_advance = 0"   line 7987: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7988: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa CORE One 0.3 nozzle | first difference at byte 117170 (line 5159, column 24; expected 139461 bytes, actual 139461 bytes) context:   line 5158: "; enable_pressure_advance = 0"   line 5159: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5160: "; enable_support = 0" |
+| PASS | Peopoly/Peopoly Magneto X 0.6 nozzle |  |
+| PASS | Peopoly/Peopoly Magneto X 0.8 nozzle |  |
+| PASS | Phrozen/Phrozen Arco 0.4 nozzle |  |
+| PASS | Positron3D/The Positron 0.2 nozzle |  |
+| PASS | Positron3D/The Positron 0.4 nozzle |  |
+| PASS | Positron3D/The Positron 0.6 nozzle |  |
+| PASS | Positron3D/The Positron 0.8 nozzle |  |
+| PASS | Prusa/Prusa CORE One 0.25 nozzle |  |
+| PASS | Prusa/Prusa CORE One 0.3 nozzle |  |
 | DIVERGENT | Prusa/Prusa CORE One 0.4 nozzle | first difference at byte 6667 (line 300, column 1; expected 96233 bytes, actual 96233 bytes) context:   line 299: "G1 X121.021 Y111.083 E.24231"   line 300: expected "M73 P86 R4"; actual "G1 X121.021 Y110.507 E.01949"   line 301: expected "G1 X121.021 Y110.507 E.01949"; actual "M73 P86 R4" |
-| DIVERGENT | Prusa/Prusa CORE One 0.5 nozzle | first difference at byte 75896 (line 3601, column 24; expected 98188 bytes, actual 98188 bytes) context:   line 3600: "; enable_pressure_advance = 0"   line 3601: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3602: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa CORE One 0.6 nozzle | first difference at byte 59690 (line 2869, column 24; expected 81995 bytes, actual 81995 bytes) context:   line 2868: "; enable_pressure_advance = 0"   line 2869: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2870: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa CORE One 0.8 nozzle | first difference at byte 33771 (line 1672, column 24; expected 56063 bytes, actual 56063 bytes) context:   line 1671: "; enable_pressure_advance = 0"   line 1672: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1673: "; enable_support = 0" |
+| PASS | Prusa/Prusa CORE One 0.5 nozzle |  |
+| PASS | Prusa/Prusa CORE One 0.6 nozzle |  |
+| PASS | Prusa/Prusa CORE One 0.8 nozzle |  |
 | DIVERGENT | Prusa/Prusa CORE One HF 0.4 nozzle | first difference at byte 6631 (line 297, column 1; expected 95737 bytes, actual 95737 bytes) context:   line 296: "G1 X121.021 Y111.083 E.24231"   line 297: expected "M73 P86 R4"; actual "G1 X121.021 Y110.507 E.01949"   line 298: expected "G1 X121.021 Y110.507 E.01949"; actual "M73 P86 R4" |
-| DIVERGENT | Prusa/Prusa CORE One HF 0.5 nozzle | first difference at byte 74480 (line 3542, column 24; expected 96309 bytes, actual 96309 bytes) context:   line 3541: "; enable_pressure_advance = 0"   line 3542: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3543: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa CORE One HF 0.6 nozzle | first difference at byte 49947 (line 2408, column 24; expected 71781 bytes, actual 71781 bytes) context:   line 2407: "; enable_pressure_advance = 0"   line 2408: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2409: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa CORE One HF 0.8 nozzle | first difference at byte 32985 (line 1618, column 24; expected 54810 bytes, actual 54810 bytes) context:   line 1617: "; enable_pressure_advance = 0"   line 1618: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1619: "; enable_support = 0" |
+| PASS | Prusa/Prusa CORE One HF 0.5 nozzle |  |
+| PASS | Prusa/Prusa CORE One HF 0.6 nozzle |  |
+| PASS | Prusa/Prusa CORE One HF 0.8 nozzle |  |
 | DIVERGENT | Prusa/Prusa CORE One L 0.4 nozzle | first difference at byte 7475 (line 343, column 6; expected 96077 bytes, actual 96077 bytes) context:   line 342: ";WIDTH:0.45"   line 343: expected "G1 F1912"; actual "G1 F1899"   line 344: "G1 X145.675 Y154.325 E.29279" |
 | DIVERGENT | Prusa/Prusa CORE One L 0.5 nozzle | first difference at byte 514 (line 21, column 9; expected 90693 bytes, actual 90702 bytes) context:   line 20: "M486 S-1"   line 21: expected "M73 P0 R29"; actual "M73 P0 R30"   line 22: "M201 X10000 Y10000 Z400 E5000" |
 | DIVERGENT | Prusa/Prusa CORE One L 0.6 nozzle | first difference at byte 2106 (line 106, column 7; expected 75897 bytes, actual 75886 bytes) context:   line 105: "G1 E2 F2400 ; deretraction after the initial one"   line 106: expected "M73 P89 R3"; actual "M73 P88 R3"   line 107: "G0 E5 X235 Z0.2 F500 ; purge" |
@@ -518,477 +518,477 @@ Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference)
 | DIVERGENT | Prusa/Prusa CORE One L HF 0.5 nozzle | first difference at byte 514 (line 21, column 9; expected 89688 bytes, actual 89697 bytes) context:   line 20: "M486 S-1"   line 21: expected "M73 P0 R29"; actual "M73 P0 R30"   line 22: "M201 X10000 Y10000 Z400 E5000" |
 | DIVERGENT | Prusa/Prusa CORE One L HF 0.6 nozzle | first difference at byte 2107 (line 106, column 7; expected 67236 bytes, actual 67235 bytes) context:   line 105: "G1 E2 F2400 ; deretraction after the initial one"   line 106: expected "M73 P91 R2"; actual "M73 P90 R2"   line 107: "G0 E5 X235 Z0.2 F500 ; purge" |
 | DIVERGENT | Prusa/Prusa CORE One L HF 0.8 nozzle | first difference at byte 2106 (line 106, column 7; expected 51902 bytes, actual 51901 bytes) context:   line 105: "G1 E2 F2400 ; deretraction after the initial one"   line 106: expected "M73 P93 R1"; actual "M73 P92 R2"   line 107: "G0 E5 X235 Z0.2 F500 ; purge" |
-| DIVERGENT | Prusa/Prusa MINI 0.25 nozzle | first difference at byte 123350 (line 5910, column 24; expected 142190 bytes, actual 142190 bytes) context:   line 5909: "; enable_pressure_advance = 0"   line 5910: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5911: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MINI 0.4 nozzle | first difference at byte 84011 (line 4437, column 24; expected 102841 bytes, actual 102841 bytes) context:   line 4436: "; enable_pressure_advance = 0"   line 4437: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4438: "; enable_support = 0" |
+| PASS | Prusa/Prusa MINI 0.25 nozzle |  |
+| PASS | Prusa/Prusa MINI 0.4 nozzle |  |
 | DIVERGENT | Prusa/Prusa MINI 0.6 nozzle | first difference at byte 21606 (line 1187, column 2; expected 89826 bytes, actual 89826 bytes) context:   line 1186: "G1 E3.2 F1800"   line 1187: expected "M73 P57 R4"; actual "M205 X8 Y8"   line 1188: expected "M205 X8 Y8"; actual ";TYPE:Inner wall" |
-| DIVERGENT | Prusa/Prusa MINI 0.8 nozzle | first difference at byte 66296 (line 3669, column 24; expected 85130 bytes, actual 85130 bytes) context:   line 3668: "; enable_pressure_advance = 0"   line 3669: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3670: "; enable_support = 0" |
+| PASS | Prusa/Prusa MINI 0.8 nozzle |  |
 | DIVERGENT | Prusa/Prusa MINIIS 0.25 nozzle | first difference at byte 21777 (line 975, column 1; expected 215474 bytes, actual 215474 bytes) context:   line 974: "G1 X89.28 Y94.131 E.00421"   line 975: expected "M73 P29 R13"; actual "G1 X94.131 Y89.28 E.0836"   line 976: expected "G1 X94.131 Y89.28 E.0836"; actual "M73 P29 R13" |
 | DIVERGENT | Prusa/Prusa MINIIS 0.4 nozzle | first difference at byte 2782 (line 133, column 1; expected 107296 bytes, actual 107307 bytes) context:   line 132: "G1 X92.051 Y86.75 E.06609"   line 133: expected "M73 P35 R8"; actual "G1 X91.388 Y86.75 E.02581"   line 134: expected "G1 X91.388 Y86.75 E.02581"; actual "M73 P35 R8" |
-| DIVERGENT | Prusa/Prusa MINIIS 0.6 nozzle | first difference at byte 59599 (line 3129, column 24; expected 78246 bytes, actual 78246 bytes) context:   line 3128: "; enable_pressure_advance = 1"   line 3129: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3130: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MINIIS 0.8 nozzle | first difference at byte 36672 (line 1930, column 24; expected 55310 bytes, actual 55310 bytes) context:   line 1929: "; enable_pressure_advance = 1"   line 1930: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1931: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK3.5 0.25 nozzle | first difference at byte 207802 (line 9359, column 24; expected 226919 bytes, actual 226919 bytes) context:   line 9358: "; enable_pressure_advance = 1"   line 9359: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 9360: "; enable_support = 0" |
+| PASS | Prusa/Prusa MINIIS 0.6 nozzle |  |
+| PASS | Prusa/Prusa MINIIS 0.8 nozzle |  |
+| PASS | Prusa/Prusa MK3.5 0.25 nozzle |  |
 | DIVERGENT | Prusa/Prusa MK3.5 0.4 nozzle | first difference at byte 4896 (line 228, column 1; expected 111095 bytes, actual 111095 bytes) context:   line 227: "G1 X129.775 Y100.225 E.32326"   line 228: expected "M73 P72 R8"; actual "G1 X129.775 Y109.735 E.3219"   line 229: expected "G1 X129.775 Y109.735 E.3219"; actual "M73 P72 R8" |
-| DIVERGENT | Prusa/Prusa MK3.5 0.6 nozzle | first difference at byte 61150 (line 3141, column 24; expected 80260 bytes, actual 80260 bytes) context:   line 3140: "; enable_pressure_advance = 1"   line 3141: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3142: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK3.5 0.8 nozzle | first difference at byte 37612 (line 1933, column 24; expected 56714 bytes, actual 56714 bytes) context:   line 1932: "; enable_pressure_advance = 1"   line 1933: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1934: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK3S 0.25 nozzle | first difference at byte 290833 (line 13065, column 24; expected 309822 bytes, actual 309822 bytes) context:   line 13064: "; enable_pressure_advance = 0"   line 13065: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 13066: "; enable_support = 0" |
+| PASS | Prusa/Prusa MK3.5 0.6 nozzle |  |
+| PASS | Prusa/Prusa MK3.5 0.8 nozzle |  |
+| PASS | Prusa/Prusa MK3S 0.25 nozzle |  |
 | DIVERGENT | Prusa/Prusa MK3S 0.4 nozzle | first difference at byte 55392 (line 2695, column 1; expected 95415 bytes, actual 95415 bytes) context:   line 2694: "G1 X129.368 Y109.328 E.28846"   line 2695: expected "M73 P85 R1"; actual "; stop printing object cube10.stl id:0 copy 0"   line 2696: expected "; stop printing object cube10.stl id:0 copy 0"; actual ";LAYER_CHANGE" |
-| DIVERGENT | Prusa/Prusa MK3S 0.6 nozzle | first difference at byte 51311 (line 2443, column 24; expected 70287 bytes, actual 70287 bytes) context:   line 2442: "; enable_pressure_advance = 0"   line 2443: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2444: "; enable_support = 0" |
+| PASS | Prusa/Prusa MK3S 0.6 nozzle |  |
 | DIVERGENT | Prusa/Prusa MK3S 0.8 nozzle | first difference at byte 3732 (line 178, column 1; expected 64861 bytes, actual 64861 bytes) context:   line 177: "G1 X120 Y97.582 E.10208"   line 178: expected "G1 X130 Y97.582 E1.02139"; actual "M73 P6 R4"   line 179: expected "M73 P6 R4"; actual "G1 X130 Y97.582 E1.02139" |
-| DIVERGENT | Prusa/Prusa MK4 0.25 nozzle | first difference at byte 292047 (line 13095, column 24; expected 312715 bytes, actual 312715 bytes) context:   line 13094: "; enable_pressure_advance = 0"   line 13095: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 13096: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4 0.4 nozzle | first difference at byte 90116 (line 4410, column 24; expected 110799 bytes, actual 110799 bytes) context:   line 4409: "; enable_pressure_advance = 0"   line 4410: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4411: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4 0.6 nozzle | first difference at byte 54061 (line 2702, column 24; expected 74747 bytes, actual 74747 bytes) context:   line 2701: "; enable_pressure_advance = 0"   line 2702: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2703: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4 0.8 nozzle | first difference at byte 46694 (line 2473, column 24; expected 67355 bytes, actual 67355 bytes) context:   line 2472: "; enable_pressure_advance = 0"   line 2473: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2474: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4S 0.25 nozzle | first difference at byte 193171 (line 8217, column 24; expected 214246 bytes, actual 214246 bytes) context:   line 8216: "; enable_pressure_advance = 0"   line 8217: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 8218: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4S 0.3 nozzle | first difference at byte 117552 (line 5260, column 24; expected 138617 bytes, actual 138617 bytes) context:   line 5259: "; enable_pressure_advance = 0"   line 5260: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5261: "; enable_support = 0" |
+| PASS | Prusa/Prusa MK4 0.25 nozzle |  |
+| PASS | Prusa/Prusa MK4 0.4 nozzle |  |
+| PASS | Prusa/Prusa MK4 0.6 nozzle |  |
+| PASS | Prusa/Prusa MK4 0.8 nozzle |  |
+| PASS | Prusa/Prusa MK4S 0.25 nozzle |  |
+| PASS | Prusa/Prusa MK4S 0.3 nozzle |  |
 | DIVERGENT | Prusa/Prusa MK4S 0.4 nozzle | first difference at byte 4519 (line 213, column 2; expected 92830 bytes, actual 92830 bytes) context:   line 212: "G1 E-.7 F2100"   line 213: expected "M73 P84 R4"; actual "M486 S0"   line 214: expected "M486 S0"; actual "G1 X129.325 Y109.325 Z.6 F18000" |
-| DIVERGENT | Prusa/Prusa MK4S 0.5 nozzle | first difference at byte 76329 (line 3699, column 24; expected 97391 bytes, actual 97391 bytes) context:   line 3698: "; enable_pressure_advance = 0"   line 3699: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3700: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4S 0.6 nozzle | first difference at byte 59960 (line 2941, column 24; expected 81033 bytes, actual 81033 bytes) context:   line 2940: "; enable_pressure_advance = 0"   line 2941: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2942: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4S 0.8 nozzle | first difference at byte 31270 (line 1552, column 24; expected 52333 bytes, actual 52333 bytes) context:   line 1551: "; enable_pressure_advance = 0"   line 1552: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1553: "; enable_support = 0" |
+| PASS | Prusa/Prusa MK4S 0.5 nozzle |  |
+| PASS | Prusa/Prusa MK4S 0.6 nozzle |  |
+| PASS | Prusa/Prusa MK4S 0.8 nozzle |  |
 | DIVERGENT | Prusa/Prusa MK4S HF0.4 nozzle | first difference at byte 7240 (line 326, column 7; expected 92234 bytes, actual 92234 bytes) context:   line 325: ";WIDTH:0.45"   line 326: expected "G1 F2560"; actual "G1 F2544"   line 327: "G1 X120.675 Y109.325 E.29279" |
-| DIVERGENT | Prusa/Prusa MK4S HF0.5 nozzle | first difference at byte 72410 (line 3411, column 24; expected 92899 bytes, actual 92899 bytes) context:   line 3410: "; enable_pressure_advance = 0"   line 3411: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3412: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4S HF0.6 nozzle | first difference at byte 48608 (line 2329, column 24; expected 69103 bytes, actual 69103 bytes) context:   line 2328: "; enable_pressure_advance = 0"   line 2329: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2330: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa MK4S HF0.8 nozzle | first difference at byte 30932 (line 1519, column 24; expected 51419 bytes, actual 51419 bytes) context:   line 1518: "; enable_pressure_advance = 0"   line 1519: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1520: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa XL 0.25 nozzle | first difference at byte 163792 (line 7057, column 24; expected 185522 bytes, actual 185522 bytes) context:   line 7056: "; enable_pressure_advance = 0"   line 7057: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7058: "; enable_support = 0" |
+| PASS | Prusa/Prusa MK4S HF0.5 nozzle |  |
+| PASS | Prusa/Prusa MK4S HF0.6 nozzle |  |
+| PASS | Prusa/Prusa MK4S HF0.8 nozzle |  |
+| PASS | Prusa/Prusa XL 0.25 nozzle |  |
 | DIVERGENT | Prusa/Prusa XL 0.3 nozzle | first difference at byte 2216 (line 81, column 1; expected 125488 bytes, actual 125536 bytes) context:   line 80: "G0 X73 Z0.05 F8000 ; wipe, move close to the bed"   line 81: expected "M73 P77 R9"; actual "G0 X76 Z0.2 F8000 ; wipe, move quickly away from the bed"   line 82: expected "G0 X76 Z0.2 F8000 ; wipe, move quickly away from the bed"; actual "G92 E0 ; reset extruder position" |
 | DIVERGENT | Prusa/Prusa XL 0.4 nozzle | first difference at byte 3176 (line 135, column 1; expected 93107 bytes, actual 93155 bytes) context:   line 134: "G1 E.8 F1800"   line 135: expected "M73 P83 R6"; actual ";TYPE:Bottom surface"   line 136: expected ";TYPE:Bottom surface"; actual ";WIDTH:0.50675" |
-| DIVERGENT | Prusa/Prusa XL 0.5 nozzle | first difference at byte 54773 (line 2581, column 24; expected 76498 bytes, actual 76498 bytes) context:   line 2580: "; enable_pressure_advance = 0"   line 2581: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2582: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa XL 0.6 nozzle | first difference at byte 49036 (line 2351, column 24; expected 70759 bytes, actual 70759 bytes) context:   line 2350: "; enable_pressure_advance = 0"   line 2351: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2352: "; enable_support = 0" |
+| PASS | Prusa/Prusa XL 0.5 nozzle |  |
+| PASS | Prusa/Prusa XL 0.6 nozzle |  |
 | DIVERGENT | Prusa/Prusa XL 0.8 nozzle | first difference at byte 4422 (line 198, column 22; expected 53778 bytes, actual 53824 bytes) context:   line 197: ";WIPE_END"   line 198: expected "G1 X181.559 Y183.324 F24000"; actual "G1 X181.559 Y183.324 Z1 F24000"   line 199: expected "G1 E.6 F1800"; actual "G1 Z.6" |
-| DIVERGENT | Prusa/Prusa XL 5T 0.25 nozzle | first difference at byte 165062 (line 7179, column 24; expected 196136 bytes, actual 196136 bytes) context:   line 7178: "; enable_pressure_advance = 0"   line 7179: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7180: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa XL 5T 0.3 nozzle | first difference at byte 7601 (line 353, column 1; expected 136093 bytes, actual 136141 bytes) context:   line 352: "G1 X183.94 Y176.494 E.01038"   line 353: expected "M73 P78 R8"; actual "G1 X176.494 Y183.94 E.26012"   line 354: expected "G1 X176.494 Y183.94 E.26012"; actual "G1 X176.074 Y183.94 E.01038" |
+| PASS | Prusa/Prusa XL 5T 0.25 nozzle |  |
+| ORCA_ERROR | Prusa/Prusa XL 5T 0.3 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-oRK78i") |
 | DIVERGENT | Prusa/Prusa XL 5T 0.4 nozzle | first difference at byte 3333 (line 168, column 1; expected 103701 bytes, actual 103749 bytes) context:   line 167: "G1 X184.55 Y184.55 F24000"   line 168: expected "M73 P83 R6"; actual ";TYPE:Outer wall"   line 169: expected ";TYPE:Outer wall"; actual "G1 F1238" |
-| DIVERGENT | Prusa/Prusa XL 5T 0.5 nozzle | first difference at byte 56017 (line 2677, column 24; expected 87082 bytes, actual 87082 bytes) context:   line 2676: "; enable_pressure_advance = 0"   line 2677: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2678: "; enable_support = 0" |
-| DIVERGENT | Prusa/Prusa XL 5T 0.6 nozzle | first difference at byte 50273 (line 2439, column 24; expected 81336 bytes, actual 81336 bytes) context:   line 2438: "; enable_pressure_advance = 0"   line 2439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2440: "; enable_support = 0" |
+| PASS | Prusa/Prusa XL 5T 0.5 nozzle |  |
+| ORCA_ERROR | Prusa/Prusa XL 5T 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-gkeLF1") |
 | DIVERGENT | Prusa/Prusa XL 5T 0.8 nozzle | first difference at byte 4856 (line 248, column 22; expected 64354 bytes, actual 64400 bytes) context:   line 247: ";WIPE_END"   line 248: expected "G1 X181.559 Y183.324 F24000"; actual "G1 X181.559 Y183.324 Z1 F24000"   line 249: expected "G1 E.8 F1800"; actual "G1 Z.6" |
-| DIVERGENT | Qidi/Qidi Q1 Pro 0.2 nozzle | first difference at byte 284476 (line 11506, column 24; expected 302914 bytes, actual 302914 bytes) context:   line 11505: "; enable_pressure_advance = 1"   line 11506: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11507: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q1 Pro 0.4 nozzle | first difference at byte 105118 (line 4683, column 24; expected 123544 bytes, actual 123544 bytes) context:   line 4682: "; enable_pressure_advance = 1"   line 4683: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4684: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q1 Pro 0.6 nozzle | first difference at byte 59605 (line 2679, column 24; expected 78043 bytes, actual 78043 bytes) context:   line 2678: "; enable_pressure_advance = 1"   line 2679: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2680: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q1 Pro 0.8 nozzle | first difference at byte 52227 (line 2410, column 24; expected 70663 bytes, actual 70663 bytes) context:   line 2409: "; enable_pressure_advance = 1"   line 2410: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2411: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2 0.2 nozzle | first difference at byte 470615 (line 18013, column 24; expected 489604 bytes, actual 489604 bytes) context:   line 18012: "; enable_pressure_advance = 1"   line 18013: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18014: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2 0.4 nozzle | first difference at byte 109414 (line 4495, column 24; expected 128393 bytes, actual 128393 bytes) context:   line 4494: "; enable_pressure_advance = 1"   line 4495: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4496: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2 0.6 nozzle | first difference at byte 96755 (line 3985, column 24; expected 115745 bytes, actual 115745 bytes) context:   line 3984: "; enable_pressure_advance = 1"   line 3985: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3986: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2 0.8 nozzle | first difference at byte 82076 (line 3481, column 24; expected 101063 bytes, actual 101063 bytes) context:   line 3480: "; enable_pressure_advance = 1"   line 3481: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3482: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2C 0.2 nozzle | first difference at byte 461703 (line 17523, column 24; expected 480272 bytes, actual 480272 bytes) context:   line 17522: "; enable_pressure_advance = 1"   line 17523: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 17524: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2C 0.4 nozzle | first difference at byte 106781 (line 4355, column 24; expected 125340 bytes, actual 125340 bytes) context:   line 4354: "; enable_pressure_advance = 1"   line 4355: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4356: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2C 0.6 nozzle | first difference at byte 93848 (line 3830, column 24; expected 112418 bytes, actual 112418 bytes) context:   line 3829: "; enable_pressure_advance = 1"   line 3830: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3831: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi Q2C 0.8 nozzle | first difference at byte 79923 (line 3368, column 24; expected 98490 bytes, actual 98490 bytes) context:   line 3367: "; enable_pressure_advance = 1"   line 3368: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3369: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-CF Pro 0.4 nozzle | first difference at byte 89233 (line 4144, column 24; expected 106159 bytes, actual 106159 bytes) context:   line 4143: "; enable_pressure_advance = 1"   line 4144: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4145: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Max 0.4 nozzle | first difference at byte 88727 (line 4089, column 24; expected 105599 bytes, actual 105599 bytes) context:   line 4088: "; enable_pressure_advance = 1"   line 4089: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4090: "; enable_support = 0" |
+| PASS | Qidi/Qidi Q1 Pro 0.2 nozzle |  |
+| PASS | Qidi/Qidi Q1 Pro 0.4 nozzle |  |
+| PASS | Qidi/Qidi Q1 Pro 0.6 nozzle |  |
+| PASS | Qidi/Qidi Q1 Pro 0.8 nozzle |  |
+| PASS | Qidi/Qidi Q2 0.2 nozzle |  |
+| PASS | Qidi/Qidi Q2 0.4 nozzle |  |
+| PASS | Qidi/Qidi Q2 0.6 nozzle |  |
+| PASS | Qidi/Qidi Q2 0.8 nozzle |  |
+| PASS | Qidi/Qidi Q2C 0.2 nozzle |  |
+| PASS | Qidi/Qidi Q2C 0.4 nozzle |  |
+| PASS | Qidi/Qidi Q2C 0.6 nozzle |  |
+| PASS | Qidi/Qidi Q2C 0.8 nozzle |  |
+| PASS | Qidi/Qidi X-CF Pro 0.4 nozzle |  |
+| PASS | Qidi/Qidi X-Max 0.4 nozzle |  |
 | DIVERGENT | Qidi/Qidi X-Max 3 0.2 nozzle | first difference at byte 23738 (line 930, column 1; expected 299355 bytes, actual 299357 bytes) context:   line 929: "G1 X166.626 Y163.985 E.00227"   line 930: expected "M73 P28 R13"; actual "G1 X161.015 Y158.374 E.06418"   line 931: expected "G1 X161.015 Y158.374 E.06418"; actual "G1 X160.734 Y158.374 E.00227" |
 | DIVERGENT | Qidi/Qidi X-Max 3 0.4 nozzle | first difference at byte 15161 (line 656, column 1; expected 121136 bytes, actual 121138 bytes) context:   line 655: "G1 X167.29 Y157.71 E.29437"   line 656: expected "M73 P52 R5"; actual "G1 X167.29 Y167.23 E.29252"   line 657: expected "G1 X167.29 Y167.23 E.29252"; actual "M73 P52 R5" |
 | DIVERGENT | Qidi/Qidi X-Max 3 0.6 nozzle | first difference at byte 3973 (line 173, column 1; expected 75688 bytes, actual 75690 bytes) context:   line 172: "G1 Z.6"   line 173: expected "M73 P58 R3"; actual "G1 E1.4 F1800"   line 174: expected "G1 E1.4 F1800"; actual "M73 P58 R3" |
 | DIVERGENT | Qidi/Qidi X-Max 3 0.8 nozzle | first difference at byte 2982 (line 134, column 1; expected 69152 bytes, actual 69154 bytes) context:   line 133: "G1 X161.32 Y165.655 E.34889"   line 134: expected "M73 P63 R2"; actual "G1 X160.236 Y165.655 E.13536"   line 135: expected "G1 X160.236 Y165.655 E.13536"; actual "M73 P63 R2" |
-| DIVERGENT | Qidi/Qidi X-Max 4 0.2 nozzle | first difference at byte 291058 (line 11155, column 24; expected 311359 bytes, actual 311359 bytes) context:   line 11154: "; enable_pressure_advance = 1"   line 11155: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11156: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Max 4 0.4 nozzle | first difference at byte 108958 (line 4564, column 24; expected 129250 bytes, actual 129250 bytes) context:   line 4563: "; enable_pressure_advance = 1"   line 4564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4565: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Max 4 0.6 nozzle | first difference at byte 62812 (line 2609, column 24; expected 83117 bytes, actual 83117 bytes) context:   line 2608: "; enable_pressure_advance = 1"   line 2609: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2610: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Max 4 0.8 nozzle | first difference at byte 53697 (line 2275, column 24; expected 73994 bytes, actual 73994 bytes) context:   line 2274: "; enable_pressure_advance = 1"   line 2275: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2276: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 0.4 nozzle | first difference at byte 87895 (line 4091, column 24; expected 104771 bytes, actual 104771 bytes) context:   line 4090: "; enable_pressure_advance = 1"   line 4091: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4092: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 3 0.2 nozzle | first difference at byte 280856 (line 10993, column 24; expected 299323 bytes, actual 299323 bytes) context:   line 10992: "; enable_pressure_advance = 1"   line 10993: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10994: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 3 0.4 nozzle | first difference at byte 102623 (line 4402, column 24; expected 121051 bytes, actual 121051 bytes) context:   line 4401: "; enable_pressure_advance = 1"   line 4402: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4403: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 3 0.6 nozzle | first difference at byte 57189 (line 2475, column 24; expected 75640 bytes, actual 75640 bytes) context:   line 2474: "; enable_pressure_advance = 1"   line 2475: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2476: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 3 0.8 nozzle | first difference at byte 50677 (line 2243, column 24; expected 69126 bytes, actual 69126 bytes) context:   line 2242: "; enable_pressure_advance = 1"   line 2243: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2244: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 4 0.2 nozzle | first difference at byte 297853 (line 11613, column 24; expected 317388 bytes, actual 317388 bytes) context:   line 11612: "; enable_pressure_advance = 1"   line 11613: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11614: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 4 0.4 nozzle | first difference at byte 113505 (line 4741, column 24; expected 133029 bytes, actual 133029 bytes) context:   line 4740: "; enable_pressure_advance = 1"   line 4741: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4742: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 4 0.6 nozzle | first difference at byte 66450 (line 2720, column 24; expected 85986 bytes, actual 85986 bytes) context:   line 2719: "; enable_pressure_advance = 1"   line 2720: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2721: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Plus 4 0.8 nozzle | first difference at byte 58343 (line 2442, column 24; expected 77877 bytes, actual 77877 bytes) context:   line 2441: "; enable_pressure_advance = 1"   line 2442: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2443: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Smart 3 0.2 nozzle | first difference at byte 269249 (line 10993, column 24; expected 287721 bytes, actual 287721 bytes) context:   line 10992: "; enable_pressure_advance = 1"   line 10993: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10994: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Smart 3 0.4 nozzle | first difference at byte 99331 (line 4402, column 24; expected 117765 bytes, actual 117765 bytes) context:   line 4401: "; enable_pressure_advance = 1"   line 4402: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4403: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Smart 3 0.6 nozzle | first difference at byte 55577 (line 2476, column 24; expected 74032 bytes, actual 74032 bytes) context:   line 2475: "; enable_pressure_advance = 1"   line 2476: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2477: "; enable_support = 0" |
-| DIVERGENT | Qidi/Qidi X-Smart 3 0.8 nozzle | first difference at byte 49353 (line 2244, column 24; expected 67805 bytes, actual 67805 bytes) context:   line 2243: "; enable_pressure_advance = 1"   line 2244: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2245: "; enable_support = 0" |
+| PASS | Qidi/Qidi X-Max 4 0.2 nozzle |  |
+| PASS | Qidi/Qidi X-Max 4 0.4 nozzle |  |
+| PASS | Qidi/Qidi X-Max 4 0.6 nozzle |  |
+| PASS | Qidi/Qidi X-Max 4 0.8 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 0.4 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 3 0.2 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 3 0.4 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 3 0.6 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 3 0.8 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 4 0.2 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 4 0.4 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 4 0.6 nozzle |  |
+| PASS | Qidi/Qidi X-Plus 4 0.8 nozzle |  |
+| PASS | Qidi/Qidi X-Smart 3 0.2 nozzle |  |
+| PASS | Qidi/Qidi X-Smart 3 0.4 nozzle |  |
+| PASS | Qidi/Qidi X-Smart 3 0.6 nozzle |  |
+| PASS | Qidi/Qidi X-Smart 3 0.8 nozzle |  |
 | DIVERGENT | RH3D/E3NG v1.2S - 0.2 nozzle | first difference at byte 13777 (line 523, column 11; expected 291096 bytes, actual 291053 bytes) context:   line 522: "G1 X121 Y105.338 E.10775"   line 523: expected "G1 X123.081 Y105.734 E.02283"; actual "G1 X123.082 Y105.734 E.02283"   line 524: "G1 X124.872 Y106.868 E.02283" |
 | DIVERGENT | RH3D/E3NG v1.2S - 0.3 nozzle | first difference at byte 312 (line 12, column 31; expected 165499 bytes, actual 165455 bytes) context:   line 11: "; perimeters extrusion width = 0.33mm"   line 12: expected "; infill extrusion width = 0.35mm"; actual "; infill extrusion width = 0.34mm"   line 13: "; solid infill extrusion width = 0.33mm" |
 | DIVERGENT | RH3D/E3NG v1.2S - 0.4 nozzle | first difference at byte 9145 (line 353, column 1; expected 120711 bytes, actual 120678 bytes) context:   line 352: "G1 X121 Y108.404 E.30376"   line 353: expected "G1 X122.372 Y108.797 E.04335"; actual "M73 P6 R5"   line 354: expected "M73 P6 R5"; actual "G1 X122.372 Y108.797 E.04335" |
 | DIVERGENT | RH3D/E3NG v1.2S - 0.5 nozzle | first difference at byte 6247 (line 241, column 1; expected 111310 bytes, actual 111267 bytes) context:   line 240: "G1 X107.113 Y109.203 E.07137"   line 241: expected "G1 X107.911 Y108.153 E.05116"; actual "M73 P4 R5"   line 242: expected "M73 P4 R5"; actual "G1 X107.911 Y108.153 E.05116" |
 | DIVERGENT | RH3D/E3NG v1.2S - 0.6 nozzle | first difference at byte 5646 (line 220, column 4; expected 85574 bytes, actual 85529 bytes) context:   line 219: "; printing object cube10.stl id:0 copy 0"   line 220: expected "G1 E-.48 F2400"; actual "G1 X120.27 Y120.05 F24000"   line 221: expected ";WIPE_START"; actual "EXCLUDE_OBJECT_START NAME=cube10.stl_id_0_copy_0" |
-| DIVERGENT | Raise3D/Raise3D Pro3 0.4 nozzle (Dual) | first difference at byte 91873 (line 4314, column 24; expected 110489 bytes, actual 110489 bytes) context:   line 4313: "; enable_pressure_advance = 0"   line 4314: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4315: "; enable_support = 0" |
-| DIVERGENT | Raise3D/Raise3D Pro3 0.4 nozzle (Left) | first difference at byte 92356 (line 4358, column 24; expected 110669 bytes, actual 110669 bytes) context:   line 4357: "; enable_pressure_advance = 0"   line 4358: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4359: "; enable_support = 0" |
-| DIVERGENT | Raise3D/Raise3D Pro3 0.4 nozzle (Right) | first difference at byte 92371 (line 4359, column 24; expected 110707 bytes, actual 110707 bytes) context:   line 4358: "; enable_pressure_advance = 0"   line 4359: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4360: "; enable_support = 0" |
-| DIVERGENT | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Dual) | first difference at byte 91877 (line 4314, column 24; expected 110522 bytes, actual 110522 bytes) context:   line 4313: "; enable_pressure_advance = 0"   line 4314: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4315: "; enable_support = 0" |
-| DIVERGENT | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Left) | first difference at byte 92360 (line 4358, column 24; expected 110702 bytes, actual 110702 bytes) context:   line 4357: "; enable_pressure_advance = 0"   line 4358: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4359: "; enable_support = 0" |
-| DIVERGENT | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Right) | first difference at byte 92375 (line 4359, column 24; expected 110740 bytes, actual 110740 bytes) context:   line 4358: "; enable_pressure_advance = 0"   line 4359: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4360: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Cast 0.4 nozzle | first difference at byte 98825 (line 4165, column 24; expected 115897 bytes, actual 115897 bytes) context:   line 4164: "; enable_pressure_advance = 1"   line 4165: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4166: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Cast 0.6 nozzle | first difference at byte 98288 (line 4140, column 24; expected 115360 bytes, actual 115360 bytes) context:   line 4139: "; enable_pressure_advance = 1"   line 4140: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4141: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 3 200 0.4 nozzle | first difference at byte 96887 (line 4165, column 24; expected 113971 bytes, actual 113971 bytes) context:   line 4164: "; enable_pressure_advance = 1"   line 4165: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4166: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 3 300 0.4 nozzle | first difference at byte 98825 (line 4165, column 24; expected 115909 bytes, actual 115909 bytes) context:   line 4164: "; enable_pressure_advance = 1"   line 4165: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4166: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 3 400 0.4 nozzle | first difference at byte 98818 (line 4165, column 24; expected 115902 bytes, actual 115902 bytes) context:   line 4164: "; enable_pressure_advance = 1"   line 4165: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4166: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 3 500 0.4 nozzle | first difference at byte 98807 (line 4164, column 24; expected 115891 bytes, actual 115891 bytes) context:   line 4163: "; enable_pressure_advance = 1"   line 4164: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4165: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 300 0.4 nozzle | first difference at byte 97024 (line 3828, column 24; expected 114206 bytes, actual 114206 bytes) context:   line 3827: "; enable_pressure_advance = 1"   line 3828: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3829: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 300 0.5 nozzle | first difference at byte 91203 (line 3698, column 24; expected 108386 bytes, actual 108386 bytes) context:   line 3697: "; enable_pressure_advance = 1"   line 3698: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3699: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 300 0.6 nozzle | first difference at byte 72124 (line 2885, column 24; expected 89313 bytes, actual 89313 bytes) context:   line 2884: "; enable_pressure_advance = 1"   line 2885: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2886: "; enable_support = 0" |
+| PASS | Raise3D/Raise3D Pro3 0.4 nozzle (Dual) |  |
+| PASS | Raise3D/Raise3D Pro3 0.4 nozzle (Left) |  |
+| PASS | Raise3D/Raise3D Pro3 0.4 nozzle (Right) |  |
+| PASS | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Dual) |  |
+| PASS | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Left) |  |
+| PASS | Raise3D/Raise3D Pro3 Plus 0.4 nozzle (Right) |  |
+| PASS | Ratrig/RatRig V-Cast 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Cast 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 3 200 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 3 300 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 3 400 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 3 500 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 300 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 300 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 300 0.6 nozzle |  |
 | VENDOR_INCOMPLETE | Ratrig/RatRig V-Core 4 300 0.8 nozzle | Ratrig/RatRig V-Core 4 300 0.8 nozzle process: no compatible preset |
-| DIVERGENT | Ratrig/RatRig V-Core 4 400 0.4 nozzle | first difference at byte 97013 (line 3827, column 24; expected 114195 bytes, actual 114195 bytes) context:   line 3826: "; enable_pressure_advance = 1"   line 3827: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3828: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 400 0.5 nozzle | first difference at byte 91203 (line 3698, column 24; expected 108386 bytes, actual 108386 bytes) context:   line 3697: "; enable_pressure_advance = 1"   line 3698: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3699: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 400 0.6 nozzle | first difference at byte 72014 (line 2885, column 24; expected 89201 bytes, actual 89201 bytes) context:   line 2884: "; enable_pressure_advance = 1"   line 2885: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2886: "; enable_support = 0" |
+| PASS | Ratrig/RatRig V-Core 4 400 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 400 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 400 0.6 nozzle |  |
 | VENDOR_INCOMPLETE | Ratrig/RatRig V-Core 4 400 0.8 nozzle | Ratrig/RatRig V-Core 4 400 0.8 nozzle process: no compatible preset |
-| DIVERGENT | Ratrig/RatRig V-Core 4 500 0.4 nozzle | first difference at byte 97024 (line 3828, column 24; expected 114206 bytes, actual 114206 bytes) context:   line 3827: "; enable_pressure_advance = 1"   line 3828: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3829: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 500 0.5 nozzle | first difference at byte 91203 (line 3698, column 24; expected 108387 bytes, actual 108387 bytes) context:   line 3697: "; enable_pressure_advance = 1"   line 3698: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3699: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 500 0.6 nozzle | first difference at byte 72124 (line 2885, column 24; expected 89313 bytes, actual 89313 bytes) context:   line 2884: "; enable_pressure_advance = 1"   line 2885: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2886: "; enable_support = 0" |
+| PASS | Ratrig/RatRig V-Core 4 500 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 500 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 500 0.6 nozzle |  |
 | VENDOR_INCOMPLETE | Ratrig/RatRig V-Core 4 500 0.8 nozzle | Ratrig/RatRig V-Core 4 500 0.8 nozzle process: no compatible preset |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.4 nozzle | first difference at byte 98179 (line 3878, column 24; expected 115437 bytes, actual 115437 bytes) context:   line 3877: "; enable_pressure_advance = 1"   line 3878: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3879: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.5 nozzle | first difference at byte 92358 (line 3748, column 24; expected 109617 bytes, actual 109617 bytes) context:   line 3747: "; enable_pressure_advance = 1"   line 3748: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3749: "; enable_support = 0" |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 300 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 300 0.5 nozzle |  |
 | DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.6 nozzle | first difference at byte 82618 (line 3381, column 61; expected 102863 bytes, actual 102863 bytes) context:   line 3380: "; estimated printing time (normal mode) = 2m 45s"   line 3381: expected "; estimated first layer printing time (normal mode) = 0.455069s"; actual "; estimated first layer printing time (normal mode) = 0.455037s"   line 3382: "" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 300 0.8 nozzle | first difference at byte 65875 (line 2582, column 24; expected 83137 bytes, actual 83137 bytes) context:   line 2581: "; enable_pressure_advance = 0"   line 2582: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2583: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.4 nozzle | first difference at byte 98179 (line 3878, column 24; expected 115437 bytes, actual 115437 bytes) context:   line 3877: "; enable_pressure_advance = 1"   line 3878: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3879: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.5 nozzle | first difference at byte 92358 (line 3748, column 24; expected 109617 bytes, actual 109617 bytes) context:   line 3747: "; enable_pressure_advance = 1"   line 3748: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3749: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.6 nozzle | first difference at byte 85611 (line 3474, column 24; expected 102863 bytes, actual 102863 bytes) context:   line 3473: "; enable_pressure_advance = 1"   line 3474: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3475: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 400 0.8 nozzle | first difference at byte 65864 (line 2581, column 24; expected 83126 bytes, actual 83126 bytes) context:   line 2580: "; enable_pressure_advance = 0"   line 2581: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2582: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.4 nozzle | first difference at byte 98179 (line 3878, column 24; expected 115437 bytes, actual 115437 bytes) context:   line 3877: "; enable_pressure_advance = 1"   line 3878: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3879: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.5 nozzle | first difference at byte 92358 (line 3748, column 24; expected 109618 bytes, actual 109618 bytes) context:   line 3747: "; enable_pressure_advance = 1"   line 3748: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3749: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.6 nozzle | first difference at byte 85600 (line 3473, column 24; expected 102852 bytes, actual 102852 bytes) context:   line 3472: "; enable_pressure_advance = 1"   line 3473: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3474: "; enable_support = 0" |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 300 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 400 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 400 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 400 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 400 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 500 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 500 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 HYBRID 500 0.6 nozzle |  |
 | DIVERGENT | Ratrig/RatRig V-Core 4 HYBRID 500 0.8 nozzle | first difference at byte 62871 (line 2488, column 61; expected 83126 bytes, actual 83126 bytes) context:   line 2487: "; estimated printing time (normal mode) = 2m 48s"   line 2488: expected "; estimated first layer printing time (normal mode) = 0.736964s"; actual "; estimated first layer printing time (normal mode) = 0.736947s"   line 2489: "" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 0.4 nozzle | first difference at byte 101716 (line 4052, column 24; expected 119592 bytes, actual 119592 bytes) context:   line 4051: "; enable_pressure_advance = 1"   line 4052: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4053: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 0.5 nozzle | first difference at byte 93608 (line 3847, column 24; expected 111488 bytes, actual 111488 bytes) context:   line 3846: "; enable_pressure_advance = 1"   line 3847: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3848: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 0.6 nozzle | first difference at byte 86783 (line 3573, column 24; expected 104653 bytes, actual 104653 bytes) context:   line 3572: "; enable_pressure_advance = 1"   line 3573: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3574: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 0.8 nozzle | first difference at byte 66872 (line 2659, column 24; expected 84753 bytes, actual 84753 bytes) context:   line 2658: "; enable_pressure_advance = 0"   line 2659: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2660: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.4 nozzle | first difference at byte 95913 (line 3706, column 24; expected 113834 bytes, actual 113834 bytes) context:   line 3705: "; enable_pressure_advance = 0"   line 3706: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3707: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.5 nozzle | first difference at byte 88227 (line 3518, column 24; expected 106149 bytes, actual 106149 bytes) context:   line 3517: "; enable_pressure_advance = 0"   line 3518: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3519: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.6 nozzle | first difference at byte 81170 (line 3257, column 24; expected 99086 bytes, actual 99086 bytes) context:   line 3256: "; enable_pressure_advance = 0"   line 3257: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3258: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.8 nozzle | first difference at byte 66886 (line 2661, column 24; expected 84807 bytes, actual 84807 bytes) context:   line 2660: "; enable_pressure_advance = 0"   line 2661: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2662: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.4 nozzle | first difference at byte 95915 (line 3706, column 24; expected 113842 bytes, actual 113842 bytes) context:   line 3705: "; enable_pressure_advance = 0"   line 3706: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3707: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.5 nozzle | first difference at byte 88229 (line 3518, column 24; expected 106157 bytes, actual 106157 bytes) context:   line 3517: "; enable_pressure_advance = 0"   line 3518: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3519: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.6 nozzle | first difference at byte 81172 (line 3257, column 24; expected 99094 bytes, actual 99094 bytes) context:   line 3256: "; enable_pressure_advance = 0"   line 3257: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3258: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.8 nozzle | first difference at byte 66888 (line 2661, column 24; expected 84815 bytes, actual 84815 bytes) context:   line 2660: "; enable_pressure_advance = 0"   line 2661: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2662: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 0.4 nozzle | first difference at byte 101716 (line 4052, column 24; expected 119592 bytes, actual 119592 bytes) context:   line 4051: "; enable_pressure_advance = 1"   line 4052: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4053: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 0.5 nozzle | first difference at byte 93608 (line 3847, column 24; expected 111488 bytes, actual 111488 bytes) context:   line 3846: "; enable_pressure_advance = 1"   line 3847: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3848: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 0.6 nozzle | first difference at byte 86783 (line 3573, column 24; expected 104653 bytes, actual 104653 bytes) context:   line 3572: "; enable_pressure_advance = 1"   line 3573: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3574: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 0.8 nozzle | first difference at byte 66872 (line 2659, column 24; expected 84753 bytes, actual 84753 bytes) context:   line 2658: "; enable_pressure_advance = 0"   line 2659: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2660: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.4 nozzle | first difference at byte 95902 (line 3705, column 24; expected 113827 bytes, actual 113827 bytes) context:   line 3704: "; enable_pressure_advance = 0"   line 3705: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3706: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.5 nozzle | first difference at byte 88238 (line 3519, column 24; expected 106164 bytes, actual 106164 bytes) context:   line 3518: "; enable_pressure_advance = 0"   line 3519: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3520: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.6 nozzle | first difference at byte 81170 (line 3257, column 24; expected 99090 bytes, actual 99090 bytes) context:   line 3256: "; enable_pressure_advance = 0"   line 3257: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3258: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.8 nozzle | first difference at byte 66886 (line 2661, column 24; expected 84811 bytes, actual 84811 bytes) context:   line 2660: "; enable_pressure_advance = 0"   line 2661: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2662: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.4 nozzle | first difference at byte 95904 (line 3705, column 24; expected 113835 bytes, actual 113835 bytes) context:   line 3704: "; enable_pressure_advance = 0"   line 3705: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3706: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.5 nozzle | first difference at byte 88240 (line 3519, column 24; expected 106172 bytes, actual 106172 bytes) context:   line 3518: "; enable_pressure_advance = 0"   line 3519: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3520: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.6 nozzle | first difference at byte 81172 (line 3257, column 24; expected 99098 bytes, actual 99098 bytes) context:   line 3256: "; enable_pressure_advance = 0"   line 3257: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3258: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.8 nozzle | first difference at byte 66888 (line 2661, column 24; expected 84819 bytes, actual 84819 bytes) context:   line 2660: "; enable_pressure_advance = 0"   line 2661: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2662: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 0.4 nozzle | first difference at byte 101705 (line 4051, column 24; expected 119581 bytes, actual 119581 bytes) context:   line 4050: "; enable_pressure_advance = 1"   line 4051: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4052: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 0.5 nozzle | first difference at byte 93608 (line 3847, column 24; expected 111488 bytes, actual 111488 bytes) context:   line 3846: "; enable_pressure_advance = 1"   line 3847: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3848: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 0.6 nozzle | first difference at byte 86783 (line 3573, column 24; expected 104653 bytes, actual 104653 bytes) context:   line 3572: "; enable_pressure_advance = 1"   line 3573: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3574: "; enable_support = 0" |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 COPY MODE 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 300 MIRROR MODE 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 COPY MODE 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 400 MIRROR MODE 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 0.6 nozzle |  |
 | DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 0.8 nozzle | first difference at byte 63890 (line 2567, column 61; expected 84764 bytes, actual 84764 bytes) context:   line 2566: "; estimated printing time (normal mode) = 2m 48s"   line 2567: expected "; estimated first layer printing time (normal mode) = 0.736964s"; actual "; estimated first layer printing time (normal mode) = 0.736947s"   line 2568: "" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.4 nozzle | first difference at byte 95902 (line 3705, column 24; expected 113827 bytes, actual 113827 bytes) context:   line 3704: "; enable_pressure_advance = 0"   line 3705: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3706: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.5 nozzle | first difference at byte 88238 (line 3519, column 24; expected 106164 bytes, actual 106164 bytes) context:   line 3518: "; enable_pressure_advance = 0"   line 3519: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3520: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.6 nozzle | first difference at byte 81170 (line 3257, column 24; expected 99090 bytes, actual 99090 bytes) context:   line 3256: "; enable_pressure_advance = 0"   line 3257: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3258: "; enable_support = 0" |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.6 nozzle |  |
 | DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 COPY MODE 0.8 nozzle | first difference at byte 63904 (line 2569, column 61; expected 84822 bytes, actual 84822 bytes) context:   line 2568: "; estimated printing time (normal mode) = 2m 48s"   line 2569: expected "; estimated first layer printing time (normal mode) = 0.736964s"; actual "; estimated first layer printing time (normal mode) = 0.736947s"   line 2570: "" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.4 nozzle | first difference at byte 95904 (line 3705, column 24; expected 113835 bytes, actual 113835 bytes) context:   line 3704: "; enable_pressure_advance = 0"   line 3705: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3706: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.5 nozzle | first difference at byte 88240 (line 3519, column 24; expected 106172 bytes, actual 106172 bytes) context:   line 3518: "; enable_pressure_advance = 0"   line 3519: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3520: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.6 nozzle | first difference at byte 81172 (line 3257, column 24; expected 99098 bytes, actual 99098 bytes) context:   line 3256: "; enable_pressure_advance = 0"   line 3257: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3258: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.8 nozzle | first difference at byte 66899 (line 2662, column 24; expected 84830 bytes, actual 84830 bytes) context:   line 2661: "; enable_pressure_advance = 0"   line 2662: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2663: "; enable_support = 0" |
-| DIVERGENT | Ratrig/RatRig V-Minion 0.4 nozzle | first difference at byte 94583 (line 4165, column 24; expected 111659 bytes, actual 111659 bytes) context:   line 4164: "; enable_pressure_advance = 1"   line 4165: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4166: "; enable_support = 0" |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.4 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.5 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.6 nozzle |  |
+| PASS | Ratrig/RatRig V-Core 4 IDEX 500 MIRROR MODE 0.8 nozzle |  |
+| PASS | Ratrig/RatRig V-Minion 0.4 nozzle |  |
 | DIVERGENT | RolohaunDesign/Rolohaun Delta Flyer Refit 0.4 nozzle | first difference at byte 86654 (line 3704, column 16; expected 126094 bytes, actual 126094 bytes) context:   line 3703: "G1 X-1.055 Y6.015 E.00391"   line 3704: expected "G1 X5.877 Y6.014 E.19257"; actual "G1 X5.877 Y6.013 E.19257"   line 3705: "G1 X5.986 Y5.986 E.00312" |
-| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.2 nozzle | first difference at byte 383021 (line 15734, column 24; expected 400064 bytes, actual 400064 bytes) context:   line 15733: "; enable_pressure_advance = 0"   line 15734: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 15735: "; enable_support = 0" |
-| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.4 nozzle | first difference at byte 100026 (line 4314, column 24; expected 117064 bytes, actual 117064 bytes) context:   line 4313: "; enable_pressure_advance = 0"   line 4314: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4315: "; enable_support = 0" |
-| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.6 nozzle | first difference at byte 85626 (line 3803, column 24; expected 102663 bytes, actual 102663 bytes) context:   line 3802: "; enable_pressure_advance = 0"   line 3803: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3804: "; enable_support = 0" |
-| DIVERGENT | RolohaunDesign/Rook MK1 LDO 0.8 nozzle | first difference at byte 95169 (line 4504, column 24; expected 112205 bytes, actual 112205 bytes) context:   line 4503: "; enable_pressure_advance = 0"   line 4504: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4505: "; enable_support = 0" |
-| DIVERGENT | SecKit/SecKit Go3 0.4 nozzle | first difference at byte 94060 (line 4015, column 24; expected 111003 bytes, actual 111003 bytes) context:   line 4014: "; enable_pressure_advance = 1"   line 4015: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4016: "; enable_support = 0" |
-| DIVERGENT | SecKit/SecKit SK-Tank 0.4 nozzle | first difference at byte 94060 (line 4015, column 24; expected 111005 bytes, actual 111005 bytes) context:   line 4014: "; enable_pressure_advance = 1"   line 4015: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4016: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.4 nozzle | first difference at byte 128985 (line 6411, column 24; expected 150664 bytes, actual 150664 bytes) context:   line 6410: "; enable_pressure_advance = 1"   line 6411: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6412: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.5 nozzle | first difference at byte 90989 (line 4643, column 24; expected 112668 bytes, actual 112668 bytes) context:   line 4642: "; enable_pressure_advance = 1"   line 4643: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4644: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 0.7 nozzle | first difference at byte 55802 (line 2960, column 24; expected 77483 bytes, actual 77483 bytes) context:   line 2959: "; enable_pressure_advance = 1"   line 2960: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2961: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC Artemis 1.0 nozzle | first difference at byte 38769 (line 2132, column 24; expected 60435 bytes, actual 60435 bytes) context:   line 2131: "; enable_pressure_advance = 1"   line 2132: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2133: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.4 nozzle | first difference at byte 129003 (line 6411, column 24; expected 150680 bytes, actual 150680 bytes) context:   line 6410: "; enable_pressure_advance = 1"   line 6411: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6412: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.5 nozzle | first difference at byte 91007 (line 4643, column 24; expected 112684 bytes, actual 112684 bytes) context:   line 4642: "; enable_pressure_advance = 1"   line 4643: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4644: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.7 nozzle | first difference at byte 55821 (line 2960, column 24; expected 77500 bytes, actual 77500 bytes) context:   line 2959: "; enable_pressure_advance = 1"   line 2960: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2961: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 300 1.0 nozzle | first difference at byte 38787 (line 2132, column 24; expected 60451 bytes, actual 60451 bytes) context:   line 2131: "; enable_pressure_advance = 1"   line 2132: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2133: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.4 nozzle | first difference at byte 129022 (line 6411, column 24; expected 150729 bytes, actual 150729 bytes) context:   line 6410: "; enable_pressure_advance = 1"   line 6411: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6412: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.5 nozzle | first difference at byte 91015 (line 4642, column 24; expected 112723 bytes, actual 112723 bytes) context:   line 4641: "; enable_pressure_advance = 1"   line 4642: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4643: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.7 nozzle | first difference at byte 55839 (line 2960, column 24; expected 77548 bytes, actual 77548 bytes) context:   line 2959: "; enable_pressure_advance = 1"   line 2960: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2961: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 1.0 nozzle | first difference at byte 38793 (line 2131, column 24; expected 60488 bytes, actual 60488 bytes) context:   line 2130: "; enable_pressure_advance = 1"   line 2131: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2132: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.4 nozzle | first difference at byte 129011 (line 6410, column 24; expected 150720 bytes, actual 150720 bytes) context:   line 6409: "; enable_pressure_advance = 1"   line 6410: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6411: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.5 nozzle | first difference at byte 91015 (line 4642, column 24; expected 112725 bytes, actual 112725 bytes) context:   line 4641: "; enable_pressure_advance = 1"   line 4642: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4643: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.7 nozzle | first difference at byte 55829 (line 2959, column 24; expected 77540 bytes, actual 77540 bytes) context:   line 2958: "; enable_pressure_advance = 1"   line 2959: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2960: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 1.0 nozzle | first difference at byte 38771 (line 2129, column 24; expected 60468 bytes, actual 60468 bytes) context:   line 2128: "; enable_pressure_advance = 1"   line 2129: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2130: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.4 nozzle | first difference at byte 129011 (line 6410, column 24; expected 150720 bytes, actual 150720 bytes) context:   line 6409: "; enable_pressure_advance = 1"   line 6410: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6411: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.5 nozzle | first difference at byte 91015 (line 4642, column 24; expected 112725 bytes, actual 112725 bytes) context:   line 4641: "; enable_pressure_advance = 1"   line 4642: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4643: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.7 nozzle | first difference at byte 55829 (line 2959, column 24; expected 77540 bytes, actual 77540 bytes) context:   line 2958: "; enable_pressure_advance = 1"   line 2959: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2960: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 1.0 nozzle | first difference at byte 38771 (line 2129, column 24; expected 60468 bytes, actual 60468 bytes) context:   line 2128: "; enable_pressure_advance = 1"   line 2129: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2130: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.4 nozzle | first difference at byte 129009 (line 6411, column 24; expected 150698 bytes, actual 150698 bytes) context:   line 6410: "; enable_pressure_advance = 1"   line 6411: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6412: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.5 nozzle | first difference at byte 91013 (line 4643, column 24; expected 112703 bytes, actual 112703 bytes) context:   line 4642: "; enable_pressure_advance = 1"   line 4643: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4644: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.7 nozzle | first difference at byte 55826 (line 2960, column 24; expected 77517 bytes, actual 77517 bytes) context:   line 2959: "; enable_pressure_advance = 1"   line 2960: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2961: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v3.2 1.0 nozzle | first difference at byte 38793 (line 2132, column 24; expected 60470 bytes, actual 60470 bytes) context:   line 2131: "; enable_pressure_advance = 1"   line 2132: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2133: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.4 nozzle | first difference at byte 129003 (line 6411, column 24; expected 150680 bytes, actual 150680 bytes) context:   line 6410: "; enable_pressure_advance = 1"   line 6411: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 6412: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.5 nozzle | first difference at byte 91007 (line 4643, column 24; expected 112684 bytes, actual 112684 bytes) context:   line 4642: "; enable_pressure_advance = 1"   line 4643: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4644: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 0.7 nozzle | first difference at byte 55820 (line 2960, column 24; expected 77499 bytes, actual 77499 bytes) context:   line 2959: "; enable_pressure_advance = 1"   line 2960: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2961: "; enable_support = 0" |
-| DIVERGENT | SeeMeCNC/SeeMeCNC RostockMAX v4 1.0 nozzle | first difference at byte 38787 (line 2132, column 24; expected 60451 bytes, actual 60451 bytes) context:   line 2131: "; enable_pressure_advance = 1"   line 2132: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2133: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 (0.2 nozzle) | first difference at byte 166324 (line 7422, column 24; expected 186245 bytes, actual 186245 bytes) context:   line 7421: "; enable_pressure_advance = 1"   line 7422: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7423: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 (0.4 nozzle) | first difference at byte 97816 (line 4683, column 24; expected 117732 bytes, actual 117732 bytes) context:   line 4682: "; enable_pressure_advance = 1"   line 4683: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4684: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 (0.6 nozzle) | first difference at byte 72850 (line 3767, column 24; expected 92768 bytes, actual 92768 bytes) context:   line 3766: "; enable_pressure_advance = 1"   line 3767: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3768: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 (0.8 nozzle) | first difference at byte 53675 (line 2729, column 24; expected 73592 bytes, actual 73592 bytes) context:   line 2728: "; enable_pressure_advance = 1"   line 2729: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2730: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.2 nozzle) | first difference at byte 166329 (line 7422, column 24; expected 186302 bytes, actual 186302 bytes) context:   line 7421: "; enable_pressure_advance = 1"   line 7422: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7423: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.4 nozzle) | first difference at byte 97821 (line 4683, column 24; expected 117789 bytes, actual 117789 bytes) context:   line 4682: "; enable_pressure_advance = 1"   line 4683: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4684: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.6 nozzle) | first difference at byte 72866 (line 3768, column 24; expected 92836 bytes, actual 92836 bytes) context:   line 3767: "; enable_pressure_advance = 1"   line 3768: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3769: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 BKit (0.8 nozzle) | first difference at byte 53659 (line 2727, column 24; expected 73628 bytes, actual 73628 bytes) context:   line 2726: "; enable_pressure_advance = 1"   line 2727: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2728: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.2 nozzle) | first difference at byte 168525 (line 7430, column 24; expected 194111 bytes, actual 194111 bytes) context:   line 7429: "; enable_pressure_advance = 1"   line 7430: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7431: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.4 nozzle) | first difference at byte 98858 (line 4704, column 24; expected 124392 bytes, actual 124392 bytes) context:   line 4703: "; enable_pressure_advance = 1"   line 4704: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4705: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.6 nozzle) | first difference at byte 73799 (line 3787, column 24; expected 99335 bytes, actual 99335 bytes) context:   line 3786: "; enable_pressure_advance = 1"   line 3787: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3788: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual (0.8 nozzle) | first difference at byte 54696 (line 2748, column 24; expected 80231 bytes, actual 80231 bytes) context:   line 2747: "; enable_pressure_advance = 1"   line 2748: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2749: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.2 nozzle) | first difference at byte 168508 (line 7428, column 24; expected 194154 bytes, actual 194154 bytes) context:   line 7427: "; enable_pressure_advance = 1"   line 7428: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7429: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.4 nozzle) | first difference at byte 98874 (line 4705, column 24; expected 124468 bytes, actual 124468 bytes) context:   line 4704: "; enable_pressure_advance = 1"   line 4705: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4706: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.6 nozzle) | first difference at byte 73817 (line 3788, column 24; expected 99413 bytes, actual 99413 bytes) context:   line 3787: "; enable_pressure_advance = 1"   line 3788: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3789: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual BKit (0.8 nozzle) | first difference at byte 54713 (line 2749, column 24; expected 80308 bytes, actual 80308 bytes) context:   line 2748: "; enable_pressure_advance = 1"   line 2749: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2750: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.2 nozzle) | first difference at byte 168512 (line 7428, column 24; expected 194214 bytes, actual 194214 bytes) context:   line 7427: "; enable_pressure_advance = 1"   line 7428: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7429: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.4 nozzle) | first difference at byte 98878 (line 4705, column 24; expected 124528 bytes, actual 124528 bytes) context:   line 4704: "; enable_pressure_advance = 1"   line 4705: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4706: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.6 nozzle) | first difference at byte 73821 (line 3788, column 24; expected 99473 bytes, actual 99473 bytes) context:   line 3787: "; enable_pressure_advance = 1"   line 3788: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3789: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.8 nozzle) | first difference at byte 54717 (line 2749, column 24; expected 80368 bytes, actual 80368 bytes) context:   line 2748: "; enable_pressure_advance = 1"   line 2749: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2750: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.2 nozzle) | first difference at byte 168531 (line 7430, column 24; expected 194177 bytes, actual 194177 bytes) context:   line 7429: "; enable_pressure_advance = 1"   line 7430: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7431: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.4 nozzle) | first difference at byte 98864 (line 4704, column 24; expected 124458 bytes, actual 124458 bytes) context:   line 4703: "; enable_pressure_advance = 1"   line 4704: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4705: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.6 nozzle) | first difference at byte 73805 (line 3787, column 24; expected 99401 bytes, actual 99401 bytes) context:   line 3786: "; enable_pressure_advance = 1"   line 3787: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3788: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 Dual QSKit (0.8 nozzle) | first difference at byte 54702 (line 2748, column 24; expected 80297 bytes, actual 80297 bytes) context:   line 2747: "; enable_pressure_advance = 1"   line 2748: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2749: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.2 nozzle) | first difference at byte 166333 (line 7422, column 24; expected 186357 bytes, actual 186357 bytes) context:   line 7421: "; enable_pressure_advance = 1"   line 7422: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7423: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.4 nozzle) | first difference at byte 97825 (line 4683, column 24; expected 117844 bytes, actual 117844 bytes) context:   line 4682: "; enable_pressure_advance = 1"   line 4683: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4684: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.6 nozzle) | first difference at byte 72870 (line 3768, column 24; expected 92891 bytes, actual 92891 bytes) context:   line 3767: "; enable_pressure_advance = 1"   line 3768: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3769: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QS+B Kit (0.8 nozzle) | first difference at byte 53663 (line 2727, column 24; expected 73683 bytes, actual 73683 bytes) context:   line 2726: "; enable_pressure_advance = 1"   line 2727: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2728: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.2 nozzle) | first difference at byte 166330 (line 7422, column 24; expected 186306 bytes, actual 186306 bytes) context:   line 7421: "; enable_pressure_advance = 1"   line 7422: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7423: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.4 nozzle) | first difference at byte 97822 (line 4683, column 24; expected 117793 bytes, actual 117793 bytes) context:   line 4682: "; enable_pressure_advance = 1"   line 4683: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4684: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.6 nozzle) | first difference at byte 72856 (line 3767, column 24; expected 92829 bytes, actual 92829 bytes) context:   line 3766: "; enable_pressure_advance = 1"   line 3767: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3768: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A250 QSKit (0.8 nozzle) | first difference at byte 53681 (line 2729, column 24; expected 73653 bytes, actual 73653 bytes) context:   line 2728: "; enable_pressure_advance = 1"   line 2729: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2730: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 (0.2 nozzle) | first difference at byte 166304 (line 7420, column 24; expected 186226 bytes, actual 186226 bytes) context:   line 7419: "; enable_pressure_advance = 1"   line 7420: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7421: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 (0.4 nozzle) | first difference at byte 97778 (line 4679, column 24; expected 117695 bytes, actual 117695 bytes) context:   line 4678: "; enable_pressure_advance = 1"   line 4679: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4680: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 (0.6 nozzle) | first difference at byte 72798 (line 3762, column 24; expected 92717 bytes, actual 92717 bytes) context:   line 3761: "; enable_pressure_advance = 1"   line 3762: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3763: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 (0.8 nozzle) | first difference at byte 53599 (line 2722, column 24; expected 73517 bytes, actual 73517 bytes) context:   line 2721: "; enable_pressure_advance = 1"   line 2722: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2723: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.2 nozzle) | first difference at byte 166299 (line 7419, column 24; expected 186273 bytes, actual 186273 bytes) context:   line 7418: "; enable_pressure_advance = 1"   line 7419: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7420: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.4 nozzle) | first difference at byte 97794 (line 4680, column 24; expected 117763 bytes, actual 117763 bytes) context:   line 4679: "; enable_pressure_advance = 1"   line 4680: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4681: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.6 nozzle) | first difference at byte 72793 (line 3761, column 24; expected 92764 bytes, actual 92764 bytes) context:   line 3760: "; enable_pressure_advance = 1"   line 3761: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3762: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 BKit (0.8 nozzle) | first difference at byte 53605 (line 2722, column 24; expected 73575 bytes, actual 73575 bytes) context:   line 2721: "; enable_pressure_advance = 1"   line 2722: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2723: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.2 nozzle) | first difference at byte 168506 (line 7428, column 24; expected 194095 bytes, actual 194095 bytes) context:   line 7427: "; enable_pressure_advance = 1"   line 7428: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7429: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.4 nozzle) | first difference at byte 98842 (line 4702, column 24; expected 124379 bytes, actual 124379 bytes) context:   line 4701: "; enable_pressure_advance = 1"   line 4702: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4703: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.6 nozzle) | first difference at byte 73748 (line 3782, column 24; expected 99287 bytes, actual 99287 bytes) context:   line 3781: "; enable_pressure_advance = 1"   line 3782: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3783: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual (0.8 nozzle) | first difference at byte 54642 (line 2743, column 24; expected 80180 bytes, actual 80180 bytes) context:   line 2742: "; enable_pressure_advance = 1"   line 2743: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2744: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.2 nozzle) | first difference at byte 168512 (line 7428, column 24; expected 194161 bytes, actual 194161 bytes) context:   line 7427: "; enable_pressure_advance = 1"   line 7428: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7429: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.4 nozzle) | first difference at byte 98836 (line 4701, column 24; expected 124433 bytes, actual 124433 bytes) context:   line 4700: "; enable_pressure_advance = 1"   line 4701: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4702: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.6 nozzle) | first difference at byte 73754 (line 3782, column 24; expected 99353 bytes, actual 99353 bytes) context:   line 3781: "; enable_pressure_advance = 1"   line 3782: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3783: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual BKit (0.8 nozzle) | first difference at byte 54637 (line 2742, column 24; expected 80235 bytes, actual 80235 bytes) context:   line 2741: "; enable_pressure_advance = 1"   line 2742: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2743: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.2 nozzle) | first difference at byte 168516 (line 7428, column 24; expected 194221 bytes, actual 194221 bytes) context:   line 7427: "; enable_pressure_advance = 1"   line 7428: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7429: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.4 nozzle) | first difference at byte 98840 (line 4701, column 24; expected 124493 bytes, actual 124493 bytes) context:   line 4700: "; enable_pressure_advance = 1"   line 4701: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4702: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.6 nozzle) | first difference at byte 73758 (line 3782, column 24; expected 99413 bytes, actual 99413 bytes) context:   line 3781: "; enable_pressure_advance = 1"   line 3782: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3783: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.8 nozzle) | first difference at byte 54641 (line 2742, column 24; expected 80295 bytes, actual 80295 bytes) context:   line 2741: "; enable_pressure_advance = 1"   line 2742: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2743: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.2 nozzle) | first difference at byte 168512 (line 7428, column 24; expected 194161 bytes, actual 194161 bytes) context:   line 7427: "; enable_pressure_advance = 1"   line 7428: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7429: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.4 nozzle) | first difference at byte 98848 (line 4702, column 24; expected 124445 bytes, actual 124445 bytes) context:   line 4701: "; enable_pressure_advance = 1"   line 4702: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4703: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.6 nozzle) | first difference at byte 73754 (line 3782, column 24; expected 99353 bytes, actual 99353 bytes) context:   line 3781: "; enable_pressure_advance = 1"   line 3782: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3783: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 Dual QSKit (0.8 nozzle) | first difference at byte 54648 (line 2743, column 24; expected 80246 bytes, actual 80246 bytes) context:   line 2742: "; enable_pressure_advance = 1"   line 2743: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2744: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.2 nozzle) | first difference at byte 166303 (line 7419, column 24; expected 186328 bytes, actual 186328 bytes) context:   line 7418: "; enable_pressure_advance = 1"   line 7419: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7420: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.4 nozzle) | first difference at byte 97798 (line 4680, column 24; expected 117818 bytes, actual 117818 bytes) context:   line 4679: "; enable_pressure_advance = 1"   line 4680: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4681: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.6 nozzle) | first difference at byte 72797 (line 3761, column 24; expected 92819 bytes, actual 92819 bytes) context:   line 3760: "; enable_pressure_advance = 1"   line 3761: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3762: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QS+B Kit (0.8 nozzle) | first difference at byte 53609 (line 2722, column 24; expected 73630 bytes, actual 73630 bytes) context:   line 2721: "; enable_pressure_advance = 1"   line 2722: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2723: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.2 nozzle) | first difference at byte 166310 (line 7420, column 24; expected 186287 bytes, actual 186287 bytes) context:   line 7419: "; enable_pressure_advance = 1"   line 7420: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7421: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.4 nozzle) | first difference at byte 97784 (line 4679, column 24; expected 117756 bytes, actual 117756 bytes) context:   line 4678: "; enable_pressure_advance = 1"   line 4679: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4680: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.6 nozzle) | first difference at byte 72804 (line 3762, column 24; expected 92778 bytes, actual 92778 bytes) context:   line 3761: "; enable_pressure_advance = 1"   line 3762: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3763: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker A350 QSKit (0.8 nozzle) | first difference at byte 53605 (line 2722, column 24; expected 73578 bytes, actual 73578 bytes) context:   line 2721: "; enable_pressure_advance = 1"   line 2722: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2723: "; enable_support = 0" |
+| PASS | RolohaunDesign/Rook MK1 LDO 0.2 nozzle |  |
+| PASS | RolohaunDesign/Rook MK1 LDO 0.4 nozzle |  |
+| PASS | RolohaunDesign/Rook MK1 LDO 0.6 nozzle |  |
+| PASS | RolohaunDesign/Rook MK1 LDO 0.8 nozzle |  |
+| PASS | SecKit/SecKit Go3 0.4 nozzle |  |
+| PASS | SecKit/SecKit SK-Tank 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC Artemis 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 300 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0505 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0510 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC BOSSdelta 500 0521 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v3.2 1.0 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 0.4 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 0.5 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 0.7 nozzle |  |
+| PASS | SeeMeCNC/SeeMeCNC RostockMAX v4 1.0 nozzle |  |
+| PASS | Snapmaker/Snapmaker A250 (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 BKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 BKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 BKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 BKit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual BKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual BKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual BKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual BKit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QS+B Kit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QSKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QSKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QSKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 Dual QSKit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QS+B Kit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QS+B Kit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QS+B Kit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QS+B Kit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QSKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QSKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QSKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A250 QSKit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 BKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 BKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 BKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 BKit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual BKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual BKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual BKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual BKit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QS+B Kit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QSKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QSKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QSKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 Dual QSKit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QS+B Kit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QS+B Kit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QS+B Kit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QS+B Kit (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QSKit (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QSKit (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QSKit (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker A350 QSKit (0.8 nozzle) |  |
 | DIVERGENT | Snapmaker/Snapmaker Artisan (0.2 nozzle) | first difference at byte 13345 (line 589, column 1; expected 188207 bytes, actual 188207 bytes) context:   line 588: "G1 X204.129 Y204.114 E.00282"   line 589: expected "G1 X195.871 Y195.871 E.12255"; actual "M73 P12 R11"   line 590: expected "M73 P12 R11"; actual "G1 X195.871 Y195.871 E.12255" |
-| DIVERGENT | Snapmaker/Snapmaker Artisan (0.4 nozzle) | first difference at byte 101372 (line 4817, column 24; expected 126689 bytes, actual 126689 bytes) context:   line 4816: "; enable_pressure_advance = 1"   line 4817: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4818: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker Artisan (0.6 nozzle) | first difference at byte 74050 (line 3773, column 24; expected 99369 bytes, actual 99369 bytes) context:   line 3772: "; enable_pressure_advance = 1"   line 3773: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3774: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker Artisan (0.8 nozzle) | first difference at byte 54769 (line 2743, column 24; expected 80088 bytes, actual 80088 bytes) context:   line 2742: "; enable_pressure_advance = 1"   line 2743: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2744: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker J1 (0.2 nozzle) | first difference at byte 162509 (line 7293, column 24; expected 188274 bytes, actual 188274 bytes) context:   line 7292: "; enable_pressure_advance = 1"   line 7293: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 7294: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker J1 (0.4 nozzle) | first difference at byte 102599 (line 4849, column 24; expected 128362 bytes, actual 128362 bytes) context:   line 4848: "; enable_pressure_advance = 1"   line 4849: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4850: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker J1 (0.6 nozzle) | first difference at byte 74007 (line 3728, column 24; expected 99772 bytes, actual 99772 bytes) context:   line 3727: "; enable_pressure_advance = 1"   line 3728: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3729: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker J1 (0.8 nozzle) | first difference at byte 54803 (line 2716, column 24; expected 80568 bytes, actual 80568 bytes) context:   line 2715: "; enable_pressure_advance = 1"   line 2716: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2717: "; enable_support = 0" |
-| DIVERGENT | Snapmaker/Snapmaker U1 (0.2 nozzle) | first difference at byte 304775 (line 11970, column 24; expected 330074 bytes, actual 330074 bytes) context:   line 11969: "; enable_pressure_advance = 0"   line 11970: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11971: "; enable_support = 0" |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-vJmLRp") |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-prCSGP") |
-| DIVERGENT | Snapmaker/Snapmaker U1 (0.6 nozzle) | first difference at byte 78211 (line 3329, column 24; expected 103679 bytes, actual 103679 bytes) context:   line 3328: "; enable_pressure_advance = 0"   line 3329: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3330: "; enable_support = 0" |
-| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.8 nozzle) | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-VofIgT") |
-| DIVERGENT | Sovol/Sovol SV01 0.4 nozzle | first difference at byte 80958 (line 3673, column 24; expected 98814 bytes, actual 98814 bytes) context:   line 3672: "; enable_pressure_advance = 0"   line 3673: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3674: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV01 Pro 0.4 nozzle | first difference at byte 80961 (line 3673, column 24; expected 98832 bytes, actual 98832 bytes) context:   line 3672: "; enable_pressure_advance = 0"   line 3673: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3674: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV02 0.4 nozzle | first difference at byte 81045 (line 3693, column 24; expected 98966 bytes, actual 98966 bytes) context:   line 3692: "; enable_pressure_advance = 0"   line 3693: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3694: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV05 0.4 nozzle | first difference at byte 81013 (line 3669, column 24; expected 98870 bytes, actual 98870 bytes) context:   line 3668: "; enable_pressure_advance = 0"   line 3669: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3670: "; enable_support = 0" |
+| PASS | Snapmaker/Snapmaker Artisan (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker Artisan (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker Artisan (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker J1 (0.2 nozzle) |  |
+| PASS | Snapmaker/Snapmaker J1 (0.4 nozzle) |  |
+| PASS | Snapmaker/Snapmaker J1 (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker J1 (0.8 nozzle) |  |
+| PASS | Snapmaker/Snapmaker U1 (0.2 nozzle) |  |
+| DIVERGENT | Snapmaker/Snapmaker U1 (0.4 nozzle) | first difference at byte 3792 (line 158, column 5; expected 248533 bytes, actual 248533 bytes) context:   line 157: ";TYPE:Outer wall"   line 158: expected "G1 F2400"; actual "G1 F3000"   line 159: "G1 X130.9 Y140.6 E.34267" |
+| ORCA_ERROR | Snapmaker/Snapmaker U1 (0.4+0.6 nozzle) | Export/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-XWHnCM/command-JAtkjO") |
+| PASS | Snapmaker/Snapmaker U1 (0.6 nozzle) |  |
+| PASS | Snapmaker/Snapmaker U1 (0.8 nozzle) |  |
+| PASS | Sovol/Sovol SV01 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV01 Pro 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV02 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV05 0.4 nozzle |  |
 | DIVERGENT | Sovol/Sovol SV06 0.4 High-Speed nozzle | first difference at byte 1666 (line 90, column 19; expected 101958 bytes, actual 101958 bytes) context:   line 89: "G1 X117.495 Y97.735 E.05224"   line 90: expected "G1 X118.551 Y98.188 E.05224"; actual "G1 X118.551 Y98.189 E.05224"   line 91: "G1 X119.527 Y98.794 E.05224" |
-| DIVERGENT | Sovol/Sovol SV06 0.4 nozzle | first difference at byte 81863 (line 3796, column 24; expected 99596 bytes, actual 99596 bytes) context:   line 3795: "; enable_pressure_advance = 0"   line 3796: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3797: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV06 ACE 0.2 nozzle | first difference at byte 226609 (line 9371, column 24; expected 244271 bytes, actual 244271 bytes) context:   line 9370: "; enable_pressure_advance = 0"   line 9371: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 9372: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV06 ACE 0.4 nozzle | first difference at byte 93961 (line 4096, column 24; expected 111609 bytes, actual 111609 bytes) context:   line 4095: "; enable_pressure_advance = 0"   line 4096: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4097: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV06 ACE 0.6 nozzle | first difference at byte 56999 (line 2560, column 24; expected 74659 bytes, actual 74659 bytes) context:   line 2559: "; enable_pressure_advance = 0"   line 2560: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2561: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV06 ACE 0.8 nozzle | first difference at byte 44068 (line 1976, column 24; expected 61729 bytes, actual 61729 bytes) context:   line 1975: "; enable_pressure_advance = 0"   line 1976: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1977: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV06 Plus 0.4 nozzle | first difference at byte 87904 (line 4194, column 24; expected 105664 bytes, actual 105664 bytes) context:   line 4193: "; enable_pressure_advance = 0"   line 4194: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4195: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV06 Plus ACE 0.4 nozzle | first difference at byte 95757 (line 4167, column 24; expected 113414 bytes, actual 113414 bytes) context:   line 4166: "; enable_pressure_advance = 0"   line 4167: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4168: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV07 0.4 nozzle | first difference at byte 76210 (line 3518, column 24; expected 93542 bytes, actual 93542 bytes) context:   line 3517: "; enable_pressure_advance = 0"   line 3518: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3519: "; enable_support = 0" |
+| PASS | Sovol/Sovol SV06 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV06 ACE 0.2 nozzle |  |
+| PASS | Sovol/Sovol SV06 ACE 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV06 ACE 0.6 nozzle |  |
+| PASS | Sovol/Sovol SV06 ACE 0.8 nozzle |  |
+| PASS | Sovol/Sovol SV06 Plus 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV06 Plus ACE 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV07 0.4 nozzle |  |
 | DIVERGENT | Sovol/Sovol SV07 Plus 0.4 nozzle | first difference at byte 4032 (line 174, column 1; expected 107311 bytes, actual 107311 bytes) context:   line 173: "G1 X146.375 Y150.578 E5.51963"   line 174: expected "G1 X149.422 Y153.625 E5.67617"; actual "M106 S255"   line 175: expected "G1 X148.896 Y153.625 E5.69525"; actual "G1 X149.422 Y153.625 E5.67617" |
-| DIVERGENT | Sovol/Sovol SV08 0.2 nozzle | first difference at byte 292245 (line 11151, column 24; expected 309661 bytes, actual 309661 bytes) context:   line 11150: "; enable_pressure_advance = 0"   line 11151: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 11152: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV08 0.4 nozzle | first difference at byte 101341 (line 3926, column 24; expected 118734 bytes, actual 118734 bytes) context:   line 3925: "; enable_pressure_advance = 0"   line 3926: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3927: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV08 0.6 nozzle | first difference at byte 64433 (line 2655, column 24; expected 81822 bytes, actual 81822 bytes) context:   line 2654: "; enable_pressure_advance = 0"   line 2655: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2656: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV08 0.8 nozzle | first difference at byte 52857 (line 2270, column 24; expected 70246 bytes, actual 70246 bytes) context:   line 2269: "; enable_pressure_advance = 0"   line 2270: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2271: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV08 MAX 0.4 nozzle | first difference at byte 103672 (line 4406, column 24; expected 122260 bytes, actual 122260 bytes) context:   line 4405: "; enable_pressure_advance = 1"   line 4406: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4407: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV08 MAX 0.6 nozzle | first difference at byte 68666 (line 2869, column 24; expected 87245 bytes, actual 87245 bytes) context:   line 2868: "; enable_pressure_advance = 1"   line 2869: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2870: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol SV08 MAX 0.8 nozzle | first difference at byte 51972 (line 2182, column 24; expected 70548 bytes, actual 70548 bytes) context:   line 2181: "; enable_pressure_advance = 1"   line 2182: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2183: "; enable_support = 0" |
-| DIVERGENT | Sovol/Sovol Zero 0.4 nozzle | first difference at byte 100472 (line 4543, column 24; expected 124438 bytes, actual 124438 bytes) context:   line 4542: "; enable_pressure_advance = 1"   line 4543: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4544: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP300 HS 0.4 nozzle | first difference at byte 90157 (line 3698, column 24; expected 107553 bytes, actual 107553 bytes) context:   line 3697: "; enable_pressure_advance = 0"   line 3698: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3699: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP310 Pro 0.4 nozzle | first difference at byte 91378 (line 3699, column 24; expected 108779 bytes, actual 108779 bytes) context:   line 3698: "; enable_pressure_advance = 0"   line 3699: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3700: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP400 Pro 0.4 nozzle | first difference at byte 89684 (line 3637, column 24; expected 107087 bytes, actual 107087 bytes) context:   line 3636: "; enable_pressure_advance = 0"   line 3637: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3638: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP400 Pro 0.6 nozzle | first difference at byte 87307 (line 3566, column 24; expected 104721 bytes, actual 104721 bytes) context:   line 3565: "; enable_pressure_advance = 0"   line 3566: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3567: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP400 Pro 0.8 nozzle | first difference at byte 67035 (line 2941, column 24; expected 84445 bytes, actual 84445 bytes) context:   line 2940: "; enable_pressure_advance = 0"   line 2941: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2942: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP600 HS 0.4 nozzle | first difference at byte 90657 (line 3699, column 24; expected 108053 bytes, actual 108053 bytes) context:   line 3698: "; enable_pressure_advance = 0"   line 3699: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3700: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP600 HS 0.6 nozzle | first difference at byte 87230 (line 3564, column 24; expected 104639 bytes, actual 104639 bytes) context:   line 3563: "; enable_pressure_advance = 0"   line 3564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3565: "; enable_support = 0" |
-| DIVERGENT | Tiertime/Tiertime UP600 HS 0.8 nozzle | first difference at byte 67041 (line 2940, column 24; expected 84446 bytes, actual 84446 bytes) context:   line 2939: "; enable_pressure_advance = 0"   line 2940: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2941: "; enable_support = 0" |
-| DIVERGENT | Tronxy/Tronxy X5SA 400 0.4 nozzle | first difference at byte 77609 (line 3717, column 24; expected 94961 bytes, actual 94961 bytes) context:   line 3716: "; enable_pressure_advance = 0"   line 3717: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3718: "; enable_support = 0" |
+| PASS | Sovol/Sovol SV08 0.2 nozzle |  |
+| PASS | Sovol/Sovol SV08 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV08 0.6 nozzle |  |
+| PASS | Sovol/Sovol SV08 0.8 nozzle |  |
+| PASS | Sovol/Sovol SV08 MAX 0.4 nozzle |  |
+| PASS | Sovol/Sovol SV08 MAX 0.6 nozzle |  |
+| PASS | Sovol/Sovol SV08 MAX 0.8 nozzle |  |
+| PASS | Sovol/Sovol Zero 0.4 nozzle |  |
+| PASS | Tiertime/Tiertime UP300 HS 0.4 nozzle |  |
+| PASS | Tiertime/Tiertime UP310 Pro 0.4 nozzle |  |
+| PASS | Tiertime/Tiertime UP400 Pro 0.4 nozzle |  |
+| PASS | Tiertime/Tiertime UP400 Pro 0.6 nozzle |  |
+| PASS | Tiertime/Tiertime UP400 Pro 0.8 nozzle |  |
+| PASS | Tiertime/Tiertime UP600 HS 0.4 nozzle |  |
+| PASS | Tiertime/Tiertime UP600 HS 0.6 nozzle |  |
+| PASS | Tiertime/Tiertime UP600 HS 0.8 nozzle |  |
+| PASS | Tronxy/Tronxy X5SA 400 0.4 nozzle |  |
 | DIVERGENT | TwoTrees/TwoTrees SK1 0.4 nozzle | first difference at byte 1414 (line 60, column 1; expected 101783 bytes, actual 102276 bytes) context:   line 59: "G1 X190 Y12 F6000 ;Wipe"   line 60: expected "M73 P66 R2"; actual "G1 X180 Y8 F6000 ;Wipe"   line 61: expected "G1 X180 Y8 F6000 ;Wipe"; actual "G1 X170 Y12 F6000 ;Wipe" |
-| DIVERGENT | TwoTrees/TwoTrees SP-5 Klipper 0.4 nozzle | first difference at byte 92020 (line 3772, column 24; expected 108915 bytes, actual 108915 bytes) context:   line 3771: "; enable_pressure_advance = 0"   line 3772: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3773: "; enable_support = 0" |
-| DIVERGENT | UltiMaker/UltiMaker 2 0.4 nozzle | first difference at byte 96116 (line 4218, column 24; expected 114516 bytes, actual 114516 bytes) context:   line 4217: "; enable_pressure_advance = 0"   line 4218: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4219: "; enable_support = 0" |
-| DIVERGENT | Vivedino/Troodon 2.0 Klipper 0.4 nozzle | first difference at byte 108490 (line 4427, column 24; expected 125492 bytes, actual 125492 bytes) context:   line 4426: "; enable_pressure_advance = 0"   line 4427: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4428: "; enable_support = 0" |
-| DIVERGENT | Vivedino/Troodon 2.0 RRF 0.4 nozzle | first difference at byte 85211 (line 4198, column 24; expected 102269 bytes, actual 102269 bytes) context:   line 4197: "; enable_pressure_advance = 0"   line 4198: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4199: "; enable_support = 0" |
+| PASS | TwoTrees/TwoTrees SP-5 Klipper 0.4 nozzle |  |
+| PASS | UltiMaker/UltiMaker 2 0.4 nozzle |  |
+| PASS | Vivedino/Troodon 2.0 Klipper 0.4 nozzle |  |
+| PASS | Vivedino/Troodon 2.0 RRF 0.4 nozzle |  |
 | DIVERGENT | Volumic/EXO42 (0.4 nozzle) | first difference at byte 40140 (line 1760, column 1; expected 120293 bytes, actual 120292 bytes) context:   line 1759: "G1 X214.328 Y205.672"   line 1760: expected "M73 P38 R3"; actual "G1 X208.497 Y205.672"   line 1761: expected "G1 X208.497 Y205.672"; actual "M73 P38 R3" |
-| DIVERGENT | Volumic/EXO42 IDRE (0.4 nozzle) | first difference at byte 85287 (line 3750, column 24; expected 102983 bytes, actual 102983 bytes) context:   line 3749: "; enable_pressure_advance = 0"   line 3750: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3751: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO42 IDRE COPY MODE (0.4 nozzle) | first difference at byte 85201 (line 3751, column 24; expected 102946 bytes, actual 102946 bytes) context:   line 3750: "; enable_pressure_advance = 0"   line 3751: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3752: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO42 IDRE MIRROR MODE (0.4 nozzle) | first difference at byte 85194 (line 3751, column 24; expected 102943 bytes, actual 102943 bytes) context:   line 3750: "; enable_pressure_advance = 0"   line 3751: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3752: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO42 Performance (0.4 nozzle) | first difference at byte 85159 (line 3750, column 24; expected 102672 bytes, actual 102672 bytes) context:   line 3749: "; enable_pressure_advance = 0"   line 3750: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3751: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO42 Stage 2 (0.4 nozzle) | first difference at byte 86498 (line 3796, column 24; expected 103350 bytes, actual 103350 bytes) context:   line 3795: "; enable_pressure_advance = 0"   line 3796: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3797: "; enable_support = 0" |
+| PASS | Volumic/EXO42 IDRE (0.4 nozzle) |  |
+| PASS | Volumic/EXO42 IDRE COPY MODE (0.4 nozzle) |  |
+| PASS | Volumic/EXO42 IDRE MIRROR MODE (0.4 nozzle) |  |
+| PASS | Volumic/EXO42 Performance (0.4 nozzle) |  |
+| PASS | Volumic/EXO42 Stage 2 (0.4 nozzle) |  |
 | DIVERGENT | Volumic/EXO65 (0.6 nozzle) | first difference at byte 39837 (line 1917, column 1; expected 115024 bytes, actual 115034 bytes) context:   line 1916: "G1 X328.968 Y328.968"   line 1917: expected "M73 P41 R2"; actual "G1 X329.64 Y329.64"   line 1918: expected "G1 X329.64 Y329.64"; actual "M73 P41 R2" |
-| DIVERGENT | Volumic/EXO65 IDRE (0.4 nozzle) | first difference at byte 85277 (line 3749, column 24; expected 102973 bytes, actual 102973 bytes) context:   line 3748: "; enable_pressure_advance = 0"   line 3749: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3750: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO65 IDRE COPY MODE (0.4 nozzle) | first difference at byte 85172 (line 3749, column 24; expected 102917 bytes, actual 102917 bytes) context:   line 3748: "; enable_pressure_advance = 0"   line 3749: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3750: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO65 IDRE MIRROR MODE (0.4 nozzle) | first difference at byte 85174 (line 3749, column 24; expected 102923 bytes, actual 102923 bytes) context:   line 3748: "; enable_pressure_advance = 0"   line 3749: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3750: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO65 Performance (0.4 nozzle) | first difference at byte 85138 (line 3748, column 24; expected 102651 bytes, actual 102651 bytes) context:   line 3747: "; enable_pressure_advance = 0"   line 3748: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3749: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO65 Performance (0.6 nozzle) | first difference at byte 72186 (line 3568, column 24; expected 89698 bytes, actual 89698 bytes) context:   line 3567: "; enable_pressure_advance = 0"   line 3568: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3569: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO65 Performance (0.8 nozzle) | first difference at byte 67673 (line 3379, column 24; expected 85185 bytes, actual 85185 bytes) context:   line 3378: "; enable_pressure_advance = 0"   line 3379: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3380: "; enable_support = 0" |
-| DIVERGENT | Volumic/EXO65 Stage 2 (0.6 nozzle) | first difference at byte 74153 (line 3572, column 24; expected 91004 bytes, actual 91004 bytes) context:   line 3571: "; enable_pressure_advance = 0"   line 3572: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3573: "; enable_support = 0" |
+| PASS | Volumic/EXO65 IDRE (0.4 nozzle) |  |
+| PASS | Volumic/EXO65 IDRE COPY MODE (0.4 nozzle) |  |
+| PASS | Volumic/EXO65 IDRE MIRROR MODE (0.4 nozzle) |  |
+| PASS | Volumic/EXO65 Performance (0.4 nozzle) |  |
+| PASS | Volumic/EXO65 Performance (0.6 nozzle) |  |
+| PASS | Volumic/EXO65 Performance (0.8 nozzle) |  |
+| PASS | Volumic/EXO65 Stage 2 (0.6 nozzle) |  |
 | DIVERGENT | Volumic/SH65 (0.4 nozzle) | first difference at byte 4836 (line 220, column 1; expected 120290 bytes, actual 120290 bytes) context:   line 219: "G1 X328.474 Y148.946 E.01769"   line 220: expected "M73 P4 R4"; actual "G1 X323.946 Y153.474 E.17881"   line 221: expected "G1 X323.946 Y153.474 E.17881"; actual "M73 P4 R4" |
-| DIVERGENT | Volumic/SH65 IDRE (0.4 nozzle) | first difference at byte 85287 (line 3750, column 24; expected 102981 bytes, actual 102981 bytes) context:   line 3749: "; enable_pressure_advance = 0"   line 3750: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3751: "; enable_support = 0" |
-| DIVERGENT | Volumic/SH65 IDRE COPY MODE (0.4 nozzle) | first difference at byte 85193 (line 3751, column 24; expected 102936 bytes, actual 102936 bytes) context:   line 3750: "; enable_pressure_advance = 0"   line 3751: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3752: "; enable_support = 0" |
-| DIVERGENT | Volumic/SH65 IDRE MIRROR MODE (0.4 nozzle) | first difference at byte 85195 (line 3751, column 24; expected 102942 bytes, actual 102942 bytes) context:   line 3750: "; enable_pressure_advance = 0"   line 3751: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3752: "; enable_support = 0" |
-| DIVERGENT | Volumic/SH65 Performance (0.4 nozzle) | first difference at byte 85159 (line 3750, column 24; expected 102670 bytes, actual 102670 bytes) context:   line 3749: "; enable_pressure_advance = 0"   line 3750: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3751: "; enable_support = 0" |
-| DIVERGENT | Volumic/SH65 Stage 2 (0.4 nozzle) | first difference at byte 86498 (line 3796, column 24; expected 103348 bytes, actual 103348 bytes) context:   line 3795: "; enable_pressure_advance = 0"   line 3796: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3797: "; enable_support = 0" |
-| DIVERGENT | Volumic/VS20MK2 (0.4 nozzle) | first difference at byte 99101 (line 4468, column 24; expected 116726 bytes, actual 116726 bytes) context:   line 4467: "; enable_pressure_advance = 0"   line 4468: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4469: "; enable_support = 0" |
-| DIVERGENT | Volumic/VS30MK2 (0.4 nozzle) | first difference at byte 100178 (line 4469, column 24; expected 117803 bytes, actual 117803 bytes) context:   line 4468: "; enable_pressure_advance = 0"   line 4469: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4470: "; enable_support = 0" |
-| DIVERGENT | Volumic/VS30MK3 (0.4 nozzle) | first difference at byte 102024 (line 4529, column 24; expected 119020 bytes, actual 119020 bytes) context:   line 4528: "; enable_pressure_advance = 0"   line 4529: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4530: "; enable_support = 0" |
+| PASS | Volumic/SH65 IDRE (0.4 nozzle) |  |
+| PASS | Volumic/SH65 IDRE COPY MODE (0.4 nozzle) |  |
+| PASS | Volumic/SH65 IDRE MIRROR MODE (0.4 nozzle) |  |
+| PASS | Volumic/SH65 Performance (0.4 nozzle) |  |
+| PASS | Volumic/SH65 Stage 2 (0.4 nozzle) |  |
+| PASS | Volumic/VS20MK2 (0.4 nozzle) |  |
+| PASS | Volumic/VS30MK2 (0.4 nozzle) |  |
+| PASS | Volumic/VS30MK3 (0.4 nozzle) |  |
 | DIVERGENT | Volumic/VS30MK3 Stage 2 (0.4 nozzle) | first difference at byte 18421 (line 801, column 1; expected 101231 bytes, actual 101231 bytes) context:   line 800: "G1 X146.507 Y98.548 E.10493"   line 801: expected "G1 X146.507 Y96.507 E.0742"; actual "M73 P18 R3"   line 802: expected "M73 P18 R3"; actual "G1 X146.507 Y96.507 E.0742" |
-| DIVERGENT | Volumic/VS30SC (0.4 nozzle) | first difference at byte 102024 (line 4529, column 24; expected 119018 bytes, actual 119018 bytes) context:   line 4528: "; enable_pressure_advance = 0"   line 4529: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4530: "; enable_support = 0" |
-| DIVERGENT | Volumic/VS30SC2 (0.4 nozzle) | first difference at byte 102024 (line 4529, column 24; expected 119020 bytes, actual 119020 bytes) context:   line 4528: "; enable_pressure_advance = 0"   line 4529: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4530: "; enable_support = 0" |
-| DIVERGENT | Volumic/VS30SC2 Performance (0.4 nozzle) | first difference at byte 84226 (line 3745, column 24; expected 100967 bytes, actual 100967 bytes) context:   line 3744: "; enable_pressure_advance = 0"   line 3745: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3746: "; enable_support = 0" |
+| PASS | Volumic/VS30SC (0.4 nozzle) |  |
+| PASS | Volumic/VS30SC2 (0.4 nozzle) |  |
+| PASS | Volumic/VS30SC2 Performance (0.4 nozzle) |  |
 | DIVERGENT | Volumic/VS30SC2 Stage 2 (0.4 nozzle) | first difference at byte 18421 (line 801, column 1; expected 101231 bytes, actual 101231 bytes) context:   line 800: "G1 X146.507 Y98.548 E.10493"   line 801: expected "G1 X146.507 Y96.507 E.0742"; actual "M73 P18 R3"   line 802: expected "M73 P18 R3"; actual "G1 X146.507 Y96.507 E.0742" |
-| DIVERGENT | Volumic/VS30ULTRA (0.4 nozzle) | first difference at byte 102034 (line 4530, column 24; expected 119013 bytes, actual 119013 bytes) context:   line 4529: "; enable_pressure_advance = 0"   line 4530: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4531: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 0.1 0.15 nozzle | first difference at byte 499313 (line 18564, column 24; expected 516853 bytes, actual 516853 bytes) context:   line 18563: "; enable_pressure_advance = 0"   line 18564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18565: "; enable_support = 0" |
+| PASS | Volumic/VS30ULTRA (0.4 nozzle) |  |
+| PASS | Voron/Voron 0.1 0.15 nozzle |  |
 | DIVERGENT | Voron/Voron 0.1 0.2 nozzle | first difference at byte 333887 (line 12739, column 62; expected 354370 bytes, actual 354370 bytes) context:   line 12738: "; estimated printing time (normal mode) = 8m 24s"   line 12739: expected "; estimated first layer printing time (normal mode) = 0.486746s"; actual "; estimated first layer printing time (normal mode) = 0.486747s"   line 12740: "" |
-| DIVERGENT | Voron/Voron 0.1 0.25 nozzle | first difference at byte 286442 (line 10993, column 24; expected 303982 bytes, actual 303982 bytes) context:   line 10992: "; enable_pressure_advance = 0"   line 10993: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10994: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 0.1 0.4 nozzle | first difference at byte 110572 (line 4440, column 24; expected 128081 bytes, actual 128081 bytes) context:   line 4439: "; enable_pressure_advance = 0"   line 4440: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4441: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 0.1 0.5 nozzle | first difference at byte 86513 (line 3404, column 24; expected 104041 bytes, actual 104041 bytes) context:   line 3403: "; enable_pressure_advance = 0"   line 3404: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3405: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 0.1 0.6 nozzle | first difference at byte 70048 (line 2777, column 24; expected 87576 bytes, actual 87576 bytes) context:   line 2776: "; enable_pressure_advance = 0"   line 2777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2778: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 0.1 0.8 nozzle | first difference at byte 59970 (line 2533, column 24; expected 77497 bytes, actual 77497 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 0.1 1.0 nozzle | first difference at byte 48327 (line 2033, column 24; expected 65852 bytes, actual 65852 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 0.15 nozzle | first difference at byte 524697 (line 18564, column 24; expected 542244 bytes, actual 542244 bytes) context:   line 18563: "; enable_pressure_advance = 0"   line 18564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18565: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 0.2 nozzle | first difference at byte 352388 (line 12832, column 24; expected 369923 bytes, actual 369923 bytes) context:   line 12831: "; enable_pressure_advance = 0"   line 12832: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12833: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 0.25 nozzle | first difference at byte 298481 (line 10994, column 24; expected 316030 bytes, actual 316030 bytes) context:   line 10993: "; enable_pressure_advance = 0"   line 10994: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10995: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 0.4 nozzle | first difference at byte 114281 (line 4439, column 24; expected 131798 bytes, actual 131798 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 0.5 nozzle | first difference at byte 89257 (line 3404, column 24; expected 106793 bytes, actual 106793 bytes) context:   line 3403: "; enable_pressure_advance = 0"   line 3404: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3405: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 0.6 nozzle | first difference at byte 72178 (line 2777, column 24; expected 89714 bytes, actual 89714 bytes) context:   line 2776: "; enable_pressure_advance = 0"   line 2777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2778: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 0.8 nozzle | first difference at byte 61474 (line 2533, column 24; expected 79008 bytes, actual 79008 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 250 1.0 nozzle | first difference at byte 49449 (line 2033, column 24; expected 66982 bytes, actual 66982 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 0.15 nozzle | first difference at byte 524697 (line 18564, column 24; expected 542244 bytes, actual 542244 bytes) context:   line 18563: "; enable_pressure_advance = 0"   line 18564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18565: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 0.2 nozzle | first difference at byte 352388 (line 12832, column 24; expected 369923 bytes, actual 369923 bytes) context:   line 12831: "; enable_pressure_advance = 0"   line 12832: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12833: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 0.25 nozzle | first difference at byte 298481 (line 10994, column 24; expected 316030 bytes, actual 316030 bytes) context:   line 10993: "; enable_pressure_advance = 0"   line 10994: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10995: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 0.4 nozzle | first difference at byte 114281 (line 4439, column 24; expected 131798 bytes, actual 131798 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 0.5 nozzle | first difference at byte 89247 (line 3403, column 24; expected 106783 bytes, actual 106783 bytes) context:   line 3402: "; enable_pressure_advance = 0"   line 3403: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3404: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 0.6 nozzle | first difference at byte 72178 (line 2777, column 24; expected 89714 bytes, actual 89714 bytes) context:   line 2776: "; enable_pressure_advance = 0"   line 2777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2778: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 0.8 nozzle | first difference at byte 61474 (line 2533, column 24; expected 79008 bytes, actual 79008 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 300 1.0 nozzle | first difference at byte 49449 (line 2033, column 24; expected 66982 bytes, actual 66982 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 0.15 nozzle | first difference at byte 524708 (line 18565, column 24; expected 542255 bytes, actual 542255 bytes) context:   line 18564: "; enable_pressure_advance = 0"   line 18565: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18566: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 0.2 nozzle | first difference at byte 352388 (line 12832, column 24; expected 369923 bytes, actual 369923 bytes) context:   line 12831: "; enable_pressure_advance = 0"   line 12832: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12833: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 0.25 nozzle | first difference at byte 298481 (line 10994, column 24; expected 316030 bytes, actual 316030 bytes) context:   line 10993: "; enable_pressure_advance = 0"   line 10994: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10995: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 0.4 nozzle | first difference at byte 114281 (line 4439, column 24; expected 131798 bytes, actual 131798 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 0.5 nozzle | first difference at byte 89247 (line 3403, column 24; expected 106783 bytes, actual 106783 bytes) context:   line 3402: "; enable_pressure_advance = 0"   line 3403: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3404: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 0.6 nozzle | first difference at byte 72167 (line 2776, column 24; expected 89703 bytes, actual 89703 bytes) context:   line 2775: "; enable_pressure_advance = 0"   line 2776: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2777: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 0.8 nozzle | first difference at byte 61474 (line 2533, column 24; expected 79008 bytes, actual 79008 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron 2.4 350 1.0 nozzle | first difference at byte 49449 (line 2033, column 24; expected 66982 bytes, actual 66982 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 0.15 nozzle | first difference at byte 524696 (line 18564, column 24; expected 542258 bytes, actual 542258 bytes) context:   line 18563: "; enable_pressure_advance = 0"   line 18564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18565: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 0.2 nozzle | first difference at byte 352387 (line 12832, column 24; expected 369937 bytes, actual 369937 bytes) context:   line 12831: "; enable_pressure_advance = 0"   line 12832: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12833: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 0.25 nozzle | first difference at byte 298480 (line 10994, column 24; expected 316042 bytes, actual 316042 bytes) context:   line 10993: "; enable_pressure_advance = 0"   line 10994: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10995: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 0.4 nozzle | first difference at byte 114280 (line 4439, column 24; expected 131811 bytes, actual 131811 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 0.5 nozzle | first difference at byte 89245 (line 3403, column 24; expected 106795 bytes, actual 106795 bytes) context:   line 3402: "; enable_pressure_advance = 0"   line 3403: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3404: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 0.6 nozzle | first difference at byte 72177 (line 2777, column 24; expected 89727 bytes, actual 89727 bytes) context:   line 2776: "; enable_pressure_advance = 0"   line 2777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2778: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 0.8 nozzle | first difference at byte 61473 (line 2533, column 24; expected 79022 bytes, actual 79022 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Switchwire 250 1.0 nozzle | first difference at byte 49448 (line 2033, column 24; expected 66995 bytes, actual 66995 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 0.15 nozzle | first difference at byte 524697 (line 18564, column 24; expected 542253 bytes, actual 542253 bytes) context:   line 18563: "; enable_pressure_advance = 0"   line 18564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18565: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 0.2 nozzle | first difference at byte 352388 (line 12832, column 24; expected 369932 bytes, actual 369932 bytes) context:   line 12831: "; enable_pressure_advance = 0"   line 12832: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12833: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 0.25 nozzle | first difference at byte 298481 (line 10994, column 24; expected 316037 bytes, actual 316037 bytes) context:   line 10993: "; enable_pressure_advance = 0"   line 10994: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10995: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 0.4 nozzle | first difference at byte 114281 (line 4439, column 24; expected 131806 bytes, actual 131806 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 0.5 nozzle | first difference at byte 89257 (line 3404, column 24; expected 106801 bytes, actual 106801 bytes) context:   line 3403: "; enable_pressure_advance = 0"   line 3404: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3405: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 0.6 nozzle | first difference at byte 72178 (line 2777, column 24; expected 89722 bytes, actual 89722 bytes) context:   line 2776: "; enable_pressure_advance = 0"   line 2777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2778: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 0.8 nozzle | first difference at byte 61474 (line 2533, column 24; expected 79017 bytes, actual 79017 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 250 1.0 nozzle | first difference at byte 49449 (line 2033, column 24; expected 66990 bytes, actual 66990 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 0.15 nozzle | first difference at byte 524697 (line 18564, column 24; expected 542253 bytes, actual 542253 bytes) context:   line 18563: "; enable_pressure_advance = 0"   line 18564: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18565: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 0.2 nozzle | first difference at byte 352388 (line 12832, column 24; expected 369932 bytes, actual 369932 bytes) context:   line 12831: "; enable_pressure_advance = 0"   line 12832: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12833: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 0.25 nozzle | first difference at byte 298481 (line 10994, column 24; expected 316037 bytes, actual 316037 bytes) context:   line 10993: "; enable_pressure_advance = 0"   line 10994: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10995: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 0.4 nozzle | first difference at byte 114281 (line 4439, column 24; expected 131806 bytes, actual 131806 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 0.5 nozzle | first difference at byte 89247 (line 3403, column 24; expected 106791 bytes, actual 106791 bytes) context:   line 3402: "; enable_pressure_advance = 0"   line 3403: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3404: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 0.6 nozzle | first difference at byte 72178 (line 2777, column 24; expected 89722 bytes, actual 89722 bytes) context:   line 2776: "; enable_pressure_advance = 0"   line 2777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2778: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 0.8 nozzle | first difference at byte 61474 (line 2533, column 24; expected 79017 bytes, actual 79017 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 300 1.0 nozzle | first difference at byte 49449 (line 2033, column 24; expected 66990 bytes, actual 66990 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 0.15 nozzle | first difference at byte 524708 (line 18565, column 24; expected 542264 bytes, actual 542264 bytes) context:   line 18564: "; enable_pressure_advance = 0"   line 18565: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 18566: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 0.2 nozzle | first difference at byte 352388 (line 12832, column 24; expected 369932 bytes, actual 369932 bytes) context:   line 12831: "; enable_pressure_advance = 0"   line 12832: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 12833: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 0.25 nozzle | first difference at byte 298481 (line 10994, column 24; expected 316037 bytes, actual 316037 bytes) context:   line 10993: "; enable_pressure_advance = 0"   line 10994: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10995: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 0.4 nozzle | first difference at byte 114281 (line 4439, column 24; expected 131806 bytes, actual 131806 bytes) context:   line 4438: "; enable_pressure_advance = 0"   line 4439: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4440: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 0.5 nozzle | first difference at byte 107052 (line 4091, column 24; expected 124594 bytes, actual 124594 bytes) context:   line 4090: "; enable_pressure_advance = 0"   line 4091: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4092: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 0.6 nozzle | first difference at byte 72167 (line 2776, column 24; expected 89711 bytes, actual 89711 bytes) context:   line 2775: "; enable_pressure_advance = 0"   line 2776: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2777: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 0.8 nozzle | first difference at byte 61474 (line 2533, column 24; expected 79017 bytes, actual 79017 bytes) context:   line 2532: "; enable_pressure_advance = 0"   line 2533: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2534: "; enable_support = 0" |
-| DIVERGENT | Voron/Voron Trident 350 1.0 nozzle | first difference at byte 49449 (line 2033, column 24; expected 66990 bytes, actual 66990 bytes) context:   line 2032: "; enable_pressure_advance = 0"   line 2033: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2034: "; enable_support = 0" |
-| DIVERGENT | Voxelab/Voxelab Aquila X2 0.4 nozzle | first difference at byte 77966 (line 3547, column 24; expected 95829 bytes, actual 95829 bytes) context:   line 3546: "; enable_pressure_advance = 0"   line 3547: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3548: "; enable_support = 0" |
-| DIVERGENT | Vzbot/Vzbot 235 AWD 0.4 nozzle | first difference at byte 107653 (line 4181, column 24; expected 125240 bytes, actual 125240 bytes) context:   line 4180: "; enable_pressure_advance = 0"   line 4181: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4182: "; enable_support = 0" |
-| DIVERGENT | Vzbot/Vzbot 235 AWD 0.5 nozzle | first difference at byte 99353 (line 3932, column 24; expected 116951 bytes, actual 116951 bytes) context:   line 3931: "; enable_pressure_advance = 0"   line 3932: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3933: "; enable_support = 0" |
-| DIVERGENT | Vzbot/Vzbot 235 AWD 0.6 nozzle | first difference at byte 92642 (line 3689, column 24; expected 110240 bytes, actual 110240 bytes) context:   line 3688: "; enable_pressure_advance = 0"   line 3689: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3690: "; enable_support = 0" |
-| DIVERGENT | Vzbot/Vzbot 330 AWD 0.4 nozzle | first difference at byte 107605 (line 4181, column 24; expected 125192 bytes, actual 125192 bytes) context:   line 4180: "; enable_pressure_advance = 0"   line 4181: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4182: "; enable_support = 0" |
-| DIVERGENT | Vzbot/Vzbot 330 AWD 0.5 nozzle | first difference at byte 99313 (line 3932, column 24; expected 116911 bytes, actual 116911 bytes) context:   line 3931: "; enable_pressure_advance = 0"   line 3932: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3933: "; enable_support = 0" |
-| DIVERGENT | Vzbot/Vzbot 330 AWD 0.6 nozzle | first difference at byte 92602 (line 3689, column 24; expected 110200 bytes, actual 110200 bytes) context:   line 3688: "; enable_pressure_advance = 0"   line 3689: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3690: "; enable_support = 0" |
-| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.2mm nozzle | first difference at byte 195466 (line 8639, column 24; expected 213124 bytes, actual 213124 bytes) context:   line 8638: "; enable_pressure_advance = 0"   line 8639: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 8640: "; enable_support = 0" |
+| PASS | Voron/Voron 0.1 0.25 nozzle |  |
+| PASS | Voron/Voron 0.1 0.4 nozzle |  |
+| PASS | Voron/Voron 0.1 0.5 nozzle |  |
+| PASS | Voron/Voron 0.1 0.6 nozzle |  |
+| PASS | Voron/Voron 0.1 0.8 nozzle |  |
+| PASS | Voron/Voron 0.1 1.0 nozzle |  |
+| PASS | Voron/Voron 2.4 250 0.15 nozzle |  |
+| PASS | Voron/Voron 2.4 250 0.2 nozzle |  |
+| PASS | Voron/Voron 2.4 250 0.25 nozzle |  |
+| PASS | Voron/Voron 2.4 250 0.4 nozzle |  |
+| PASS | Voron/Voron 2.4 250 0.5 nozzle |  |
+| PASS | Voron/Voron 2.4 250 0.6 nozzle |  |
+| PASS | Voron/Voron 2.4 250 0.8 nozzle |  |
+| PASS | Voron/Voron 2.4 250 1.0 nozzle |  |
+| PASS | Voron/Voron 2.4 300 0.15 nozzle |  |
+| PASS | Voron/Voron 2.4 300 0.2 nozzle |  |
+| PASS | Voron/Voron 2.4 300 0.25 nozzle |  |
+| PASS | Voron/Voron 2.4 300 0.4 nozzle |  |
+| PASS | Voron/Voron 2.4 300 0.5 nozzle |  |
+| PASS | Voron/Voron 2.4 300 0.6 nozzle |  |
+| PASS | Voron/Voron 2.4 300 0.8 nozzle |  |
+| PASS | Voron/Voron 2.4 300 1.0 nozzle |  |
+| PASS | Voron/Voron 2.4 350 0.15 nozzle |  |
+| PASS | Voron/Voron 2.4 350 0.2 nozzle |  |
+| PASS | Voron/Voron 2.4 350 0.25 nozzle |  |
+| PASS | Voron/Voron 2.4 350 0.4 nozzle |  |
+| PASS | Voron/Voron 2.4 350 0.5 nozzle |  |
+| PASS | Voron/Voron 2.4 350 0.6 nozzle |  |
+| PASS | Voron/Voron 2.4 350 0.8 nozzle |  |
+| PASS | Voron/Voron 2.4 350 1.0 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 0.15 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 0.2 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 0.25 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 0.4 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 0.5 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 0.6 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 0.8 nozzle |  |
+| PASS | Voron/Voron Switchwire 250 1.0 nozzle |  |
+| PASS | Voron/Voron Trident 250 0.15 nozzle |  |
+| PASS | Voron/Voron Trident 250 0.2 nozzle |  |
+| PASS | Voron/Voron Trident 250 0.25 nozzle |  |
+| PASS | Voron/Voron Trident 250 0.4 nozzle |  |
+| PASS | Voron/Voron Trident 250 0.5 nozzle |  |
+| PASS | Voron/Voron Trident 250 0.6 nozzle |  |
+| PASS | Voron/Voron Trident 250 0.8 nozzle |  |
+| PASS | Voron/Voron Trident 250 1.0 nozzle |  |
+| PASS | Voron/Voron Trident 300 0.15 nozzle |  |
+| PASS | Voron/Voron Trident 300 0.2 nozzle |  |
+| PASS | Voron/Voron Trident 300 0.25 nozzle |  |
+| PASS | Voron/Voron Trident 300 0.4 nozzle |  |
+| PASS | Voron/Voron Trident 300 0.5 nozzle |  |
+| PASS | Voron/Voron Trident 300 0.6 nozzle |  |
+| PASS | Voron/Voron Trident 300 0.8 nozzle |  |
+| PASS | Voron/Voron Trident 300 1.0 nozzle |  |
+| PASS | Voron/Voron Trident 350 0.15 nozzle |  |
+| PASS | Voron/Voron Trident 350 0.2 nozzle |  |
+| PASS | Voron/Voron Trident 350 0.25 nozzle |  |
+| PASS | Voron/Voron Trident 350 0.4 nozzle |  |
+| PASS | Voron/Voron Trident 350 0.5 nozzle |  |
+| PASS | Voron/Voron Trident 350 0.6 nozzle |  |
+| PASS | Voron/Voron Trident 350 0.8 nozzle |  |
+| PASS | Voron/Voron Trident 350 1.0 nozzle |  |
+| PASS | Voxelab/Voxelab Aquila X2 0.4 nozzle |  |
+| PASS | Vzbot/Vzbot 235 AWD 0.4 nozzle |  |
+| PASS | Vzbot/Vzbot 235 AWD 0.5 nozzle |  |
+| PASS | Vzbot/Vzbot 235 AWD 0.6 nozzle |  |
+| PASS | Vzbot/Vzbot 330 AWD 0.4 nozzle |  |
+| PASS | Vzbot/Vzbot 330 AWD 0.5 nozzle |  |
+| PASS | Vzbot/Vzbot 330 AWD 0.6 nozzle |  |
+| PASS | WEMAKE3D/WEMAKE3D PhoenixProV1 0.2mm nozzle |  |
 | DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.3mm nozzle | first difference at byte 2070 (line 97, column 1; expected 246953 bytes, actual 247092 bytes) context:   line 96: "G1 X156.463 Y142.474 E.03406"   line 97: expected "G1 X157.532 Y143.547 E.03406"; actual "M73 P27 R13"   line 98: expected "G1 X157.92 Y145 E.0338"; actual "G1 X157.532 Y143.547 E.03406" |
-| DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.4mm nozzle | first difference at byte 106115 (line 4936, column 24; expected 123779 bytes, actual 123779 bytes) context:   line 4935: "; enable_pressure_advance = 0"   line 4936: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4937: "; enable_support = 0" |
+| PASS | WEMAKE3D/WEMAKE3D PhoenixProV1 0.4mm nozzle |  |
 | DIVERGENT | WEMAKE3D/WEMAKE3D PhoenixProV1 0.6mm nozzle | first difference at byte 1690 (line 83, column 1; expected 109754 bytes, actual 109765 bytes) context:   line 82: "G1 X157.576 Y156.477 E.10062"   line 83: expected "M73 P44 R6"; actual "G1 X156.501 Y157.562 E.10062"   line 84: expected "G1 X156.501 Y157.562 E.10062"; actual "M73 P44 R6" |
 | DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.2mm nozzle | first difference at byte 3712 (line 165, column 1; expected 139401 bytes, actual 139535 bytes) context:   line 164: "G1 X101.566 Y101.566 E.16373"   line 165: expected "M73 P43 R6"; actual "G1 X108.434 Y101.566 E.16373"   line 166: expected "G1 X108.434 Y101.566 E.16373"; actual "M73 P43 R6" |
 | DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.3mm nozzle | first difference at byte 1505 (line 75, column 1; expected 242589 bytes, actual 242717 bytes) context:   line 74: "G1 X100 Y96.713 E.04238"   line 75: expected "M73 P27 R13"; actual "G1 X110 Y96.713 E.22479"   line 76: expected "G1 X110 Y96.713 E.22479"; actual "M73 P27 R13" |
 | DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.4mm nozzle | first difference at byte 2009 (line 96, column 1; expected 132655 bytes, actual 132654 bytes) context:   line 95: "G1 X110 Y97.784 E.56236"   line 96: expected "M73 P43 R6"; actual "G1 X111.257 Y98.175 E.07402"   line 97: expected "G1 X111.257 Y98.175 E.07402"; actual "M73 P43 R6" |
-| DIVERGENT | WEMAKE3D/WEMAKE3D TinyBotV1 0.6mm nozzle | first difference at byte 89953 (line 4255, column 24; expected 107568 bytes, actual 107568 bytes) context:   line 4254: "; enable_pressure_advance = 0"   line 4255: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4256: "; enable_support = 0" |
-| DIVERGENT | Wanhao/Wanhao D12-300 0.4 nozzle | first difference at byte 110484 (line 5210, column 24; expected 129750 bytes, actual 129750 bytes) context:   line 5209: "; enable_pressure_advance = 0"   line 5210: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5211: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 230 PRO M2 DIRECT 0.4 nozzle | first difference at byte 74155 (line 3584, column 24; expected 93771 bytes, actual 93771 bytes) context:   line 3583: "; enable_pressure_advance = 1"   line 3584: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3585: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle | first difference at byte 75424 (line 3641, column 24; expected 95041 bytes, actual 95041 bytes) context:   line 3640: "; enable_pressure_advance = 0"   line 3641: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3642: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle PoopTool | first difference at byte 77612 (line 3641, column 24; expected 97197 bytes, actual 97197 bytes) context:   line 3640: "; enable_pressure_advance = 0"   line 3641: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3642: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 230 PRO SMARTPAD DIRECT 0.4 nozzle | first difference at byte 95778 (line 3482, column 24; expected 115402 bytes, actual 115402 bytes) context:   line 3481: "; enable_pressure_advance = 0"   line 3482: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3483: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle | first difference at byte 97090 (line 3539, column 24; expected 116720 bytes, actual 116720 bytes) context:   line 3538: "; enable_pressure_advance = 0"   line 3539: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3540: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle PoopTool | first difference at byte 99449 (line 3539, column 24; expected 119047 bytes, actual 119047 bytes) context:   line 3538: "; enable_pressure_advance = 0"   line 3539: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3540: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 300 PRO M2 DIRECT 0.4 nozzle | first difference at byte 74094 (line 3582, column 24; expected 93705 bytes, actual 93705 bytes) context:   line 3581: "; enable_pressure_advance = 0"   line 3582: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3583: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 300 PRO M2 MONO DUAL 0.4 nozzle | first difference at byte 75426 (line 3641, column 24; expected 95043 bytes, actual 95043 bytes) context:   line 3640: "; enable_pressure_advance = 0"   line 3641: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3642: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 300 PRO M2 MONO DUAL PoopTool 0.4 nozzle | first difference at byte 77614 (line 3641, column 24; expected 97199 bytes, actual 97199 bytes) context:   line 3640: "; enable_pressure_advance = 0"   line 3641: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3642: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 300 PRO SMARTPAD DIRECT 0.4 nozzle | first difference at byte 95769 (line 3481, column 24; expected 115393 bytes, actual 115393 bytes) context:   line 3480: "; enable_pressure_advance = 0"   line 3481: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3482: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL 0.4 nozzle | first difference at byte 97096 (line 3539, column 24; expected 116726 bytes, actual 116726 bytes) context:   line 3538: "; enable_pressure_advance = 0"   line 3539: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3540: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle | first difference at byte 99451 (line 3539, column 24; expected 119049 bytes, actual 119049 bytes) context:   line 3538: "; enable_pressure_advance = 0"   line 3539: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3540: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 500 PRO M2 DIRECT 0.4 nozzle | first difference at byte 74015 (line 3584, column 24; expected 93630 bytes, actual 93630 bytes) context:   line 3583: "; enable_pressure_advance = 0"   line 3584: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3585: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 500 PRO M2 MONO DUAL 0.4 nozzle | first difference at byte 75327 (line 3641, column 24; expected 94942 bytes, actual 94942 bytes) context:   line 3640: "; enable_pressure_advance = 0"   line 3641: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3642: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 500 PRO M2 MONO DUAL PoopTool 0.4 nozzle | first difference at byte 77603 (line 3640, column 24; expected 97187 bytes, actual 97187 bytes) context:   line 3639: "; enable_pressure_advance = 0"   line 3640: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3641: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 500 PRO SMARTPAD DIRECT 0.4 nozzle | first difference at byte 98025 (line 3529, column 24; expected 117647 bytes, actual 117647 bytes) context:   line 3528: "; enable_pressure_advance = 0"   line 3529: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3530: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL 0.4 nozzle | first difference at byte 99362 (line 3588, column 24; expected 118990 bytes, actual 118990 bytes) context:   line 3587: "; enable_pressure_advance = 0"   line 3588: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3589: "; enable_support = 0" |
-| DIVERGENT | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle | first difference at byte 99295 (line 3538, column 24; expected 118892 bytes, actual 118892 bytes) context:   line 3537: "; enable_pressure_advance = 0"   line 3538: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3539: "; enable_support = 0" |
-| DIVERGENT | WonderMaker/WonderMaker ZR 0.2 nozzle | first difference at byte 256342 (line 10609, column 24; expected 273491 bytes, actual 273491 bytes) context:   line 10608: "; enable_pressure_advance = 0"   line 10609: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10610: "; enable_support = 0" |
-| DIVERGENT | WonderMaker/WonderMaker ZR 0.4 nozzle | first difference at byte 106357 (line 4794, column 24; expected 123495 bytes, actual 123495 bytes) context:   line 4793: "; enable_pressure_advance = 0"   line 4794: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4795: "; enable_support = 0" |
-| DIVERGENT | WonderMaker/WonderMaker ZR 0.6 nozzle | first difference at byte 56958 (line 2516, column 24; expected 74106 bytes, actual 74106 bytes) context:   line 2515: "; enable_pressure_advance = 0"   line 2516: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2517: "; enable_support = 0" |
-| DIVERGENT | WonderMaker/WonderMaker ZR 0.8 nozzle | first difference at byte 45073 (line 2043, column 24; expected 62216 bytes, actual 62216 bytes) context:   line 2042: "; enable_pressure_advance = 0"   line 2043: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2044: "; enable_support = 0" |
-| DIVERGENT | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle | first difference at byte 258591 (line 10711, column 24; expected 276573 bytes, actual 276573 bytes) context:   line 10710: "; enable_pressure_advance = 0"   line 10711: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 10712: "; enable_support = 0" |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-mSmcn9") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-a0LcNl") |
-| DIVERGENT | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle | first difference at byte 41111 (line 1784, column 24; expected 59081 bytes, actual 59081 bytes) context:   line 1783: "; enable_pressure_advance = 0"   line 1784: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1785: "; enable_support = 0" |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-vzzSAt") |
-| ORCA_ERROR | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle | Slice/Process: unsuccessful Orca process; evidence Some("/tmp/ares-parity-artifacts/orca-runner-xgqUoU/command-UmCyRY") |
-| DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle | first difference at byte 56860 (line 2516, column 24; expected 74105 bytes, actual 74105 bytes) context:   line 2515: "; enable_pressure_advance = 0"   line 2516: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2517: "; enable_support = 0" |
-| DIVERGENT | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle | first difference at byte 44881 (line 2043, column 24; expected 62113 bytes, actual 62113 bytes) context:   line 2042: "; enable_pressure_advance = 0"   line 2043: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2044: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S1000 0.4 nozzle | first difference at byte 127811 (line 5241, column 24; expected 145035 bytes, actual 145035 bytes) context:   line 5240: "; enable_pressure_advance = 0"   line 5241: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5242: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S1000 0.6 nozzle | first difference at byte 91055 (line 3908, column 24; expected 108284 bytes, actual 108284 bytes) context:   line 3907: "; enable_pressure_advance = 0"   line 3908: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3909: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S1000 0.8 nozzle | first difference at byte 62136 (line 2762, column 24; expected 79358 bytes, actual 79358 bytes) context:   line 2761: "; enable_pressure_advance = 0"   line 2762: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2763: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S1000 Dual 0.4 nozzle | first difference at byte 127867 (line 5241, column 24; expected 145487 bytes, actual 145487 bytes) context:   line 5240: "; enable_pressure_advance = 0"   line 5241: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5242: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S1000 Dual 0.6 nozzle | first difference at byte 91111 (line 3908, column 24; expected 108736 bytes, actual 108736 bytes) context:   line 3907: "; enable_pressure_advance = 0"   line 3908: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 3909: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S1000 Dual 0.8 nozzle | first difference at byte 62192 (line 2762, column 24; expected 79810 bytes, actual 79810 bytes) context:   line 2761: "; enable_pressure_advance = 0"   line 2762: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2763: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S300 0.4 nozzle | first difference at byte 132904 (line 5341, column 24; expected 150093 bytes, actual 150093 bytes) context:   line 5340: "; enable_pressure_advance = 0"   line 5341: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5342: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S300 0.6 nozzle | first difference at byte 68874 (line 2845, column 24; expected 85873 bytes, actual 85873 bytes) context:   line 2844: "; enable_pressure_advance = 0"   line 2845: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2846: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S300 0.8 nozzle | first difference at byte 43336 (line 1851, column 24; expected 60328 bytes, actual 60328 bytes) context:   line 1850: "; enable_pressure_advance = 0"   line 1851: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1852: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S300 Dual 0.4 nozzle | first difference at byte 132985 (line 5343, column 24; expected 150574 bytes, actual 150574 bytes) context:   line 5342: "; enable_pressure_advance = 0"   line 5343: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5344: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S300 Dual 0.6 nozzle | first difference at byte 68930 (line 2845, column 24; expected 86329 bytes, actual 86329 bytes) context:   line 2844: "; enable_pressure_advance = 0"   line 2845: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2846: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S300 Dual 0.8 nozzle | first difference at byte 43392 (line 1851, column 24; expected 60782 bytes, actual 60782 bytes) context:   line 1850: "; enable_pressure_advance = 0"   line 1851: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1852: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S400 0.4 nozzle | first difference at byte 132897 (line 5341, column 24; expected 150084 bytes, actual 150084 bytes) context:   line 5340: "; enable_pressure_advance = 0"   line 5341: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5342: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S400 0.6 nozzle | first difference at byte 68885 (line 2846, column 24; expected 85882 bytes, actual 85882 bytes) context:   line 2845: "; enable_pressure_advance = 0"   line 2846: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2847: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S400 0.8 nozzle | first difference at byte 43347 (line 1852, column 24; expected 60337 bytes, actual 60337 bytes) context:   line 1851: "; enable_pressure_advance = 0"   line 1852: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1853: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S400 Dual 0.4 nozzle | first difference at byte 132978 (line 5343, column 24; expected 150563 bytes, actual 150563 bytes) context:   line 5342: "; enable_pressure_advance = 0"   line 5343: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5344: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S400 Dual 0.6 nozzle | first difference at byte 68941 (line 2846, column 24; expected 86336 bytes, actual 86336 bytes) context:   line 2845: "; enable_pressure_advance = 0"   line 2846: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2847: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S400 Dual 0.8 nozzle | first difference at byte 43403 (line 1852, column 24; expected 60789 bytes, actual 60789 bytes) context:   line 1851: "; enable_pressure_advance = 0"   line 1852: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1853: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S600 0.4 nozzle | first difference at byte 127821 (line 5242, column 24; expected 145006 bytes, actual 145006 bytes) context:   line 5241: "; enable_pressure_advance = 0"   line 5242: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5243: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S600 0.6 nozzle | first difference at byte 65528 (line 2780, column 24; expected 82580 bytes, actual 82580 bytes) context:   line 2779: "; enable_pressure_advance = 0"   line 2780: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2781: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S600 0.8 nozzle | first difference at byte 40816 (line 1802, column 24; expected 57861 bytes, actual 57861 bytes) context:   line 1801: "; enable_pressure_advance = 0"   line 1802: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1803: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S600 Dual 0.4 nozzle | first difference at byte 127902 (line 5244, column 24; expected 145483 bytes, actual 145483 bytes) context:   line 5243: "; enable_pressure_advance = 0"   line 5244: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5245: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S600 Dual 0.6 nozzle | first difference at byte 65584 (line 2780, column 24; expected 83032 bytes, actual 83032 bytes) context:   line 2779: "; enable_pressure_advance = 0"   line 2780: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2781: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S600 Dual 0.8 nozzle | first difference at byte 40872 (line 1802, column 24; expected 58311 bytes, actual 58311 bytes) context:   line 1801: "; enable_pressure_advance = 0"   line 1802: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1803: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S800 Dual 0.4 nozzle | first difference at byte 128038 (line 5241, column 24; expected 145643 bytes, actual 145643 bytes) context:   line 5240: "; enable_pressure_advance = 0"   line 5241: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 5242: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S800 Dual 0.6 nozzle | first difference at byte 65484 (line 2777, column 24; expected 82874 bytes, actual 82874 bytes) context:   line 2776: "; enable_pressure_advance = 0"   line 2777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 2778: "; enable_support = 0" |
-| DIVERGENT | Z-Bolt/Z-Bolt S800 Dual 0.8 nozzle | first difference at byte 40859 (line 1802, column 24; expected 58244 bytes, actual 58244 bytes) context:   line 1801: "; enable_pressure_advance = 0"   line 1802: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 1803: "; enable_support = 0" |
+| PASS | WEMAKE3D/WEMAKE3D TinyBotV1 0.6mm nozzle |  |
+| PASS | Wanhao/Wanhao D12-300 0.4 nozzle |  |
+| PASS | Wanhao France/D12 230 PRO M2 DIRECT 0.4 nozzle |  |
+| PASS | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle |  |
+| PASS | Wanhao France/D12 230 PRO M2 MONO DUAL 0.4 nozzle PoopTool |  |
+| PASS | Wanhao France/D12 230 PRO SMARTPAD DIRECT 0.4 nozzle |  |
+| PASS | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle |  |
+| PASS | Wanhao France/D12 230 PRO SMARTPAD MONO DUAL 0.4 nozzle PoopTool |  |
+| PASS | Wanhao France/D12 300 PRO M2 DIRECT 0.4 nozzle |  |
+| PASS | Wanhao France/D12 300 PRO M2 MONO DUAL 0.4 nozzle |  |
+| PASS | Wanhao France/D12 300 PRO M2 MONO DUAL PoopTool 0.4 nozzle |  |
+| PASS | Wanhao France/D12 300 PRO SMARTPAD DIRECT 0.4 nozzle |  |
+| PASS | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL 0.4 nozzle |  |
+| PASS | Wanhao France/D12 300 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle |  |
+| PASS | Wanhao France/D12 500 PRO M2 DIRECT 0.4 nozzle |  |
+| PASS | Wanhao France/D12 500 PRO M2 MONO DUAL 0.4 nozzle |  |
+| PASS | Wanhao France/D12 500 PRO M2 MONO DUAL PoopTool 0.4 nozzle |  |
+| PASS | Wanhao France/D12 500 PRO SMARTPAD DIRECT 0.4 nozzle |  |
+| PASS | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL 0.4 nozzle |  |
+| PASS | Wanhao France/D12 500 PRO SMARTPAD MONO DUAL PoopTool 0.4 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR 0.2 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR 0.4 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR 0.6 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR 0.8 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.2 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.4 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.6 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra 0.8 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra S 0.2 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra S 0.4 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra S 0.6 nozzle |  |
+| PASS | WonderMaker/WonderMaker ZR Ultra S 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S1000 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S1000 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S1000 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S1000 Dual 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S1000 Dual 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S1000 Dual 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S300 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S300 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S300 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S300 Dual 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S300 Dual 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S300 Dual 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S400 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S400 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S400 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S400 Dual 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S400 Dual 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S400 Dual 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S600 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S600 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S600 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S600 Dual 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S600 Dual 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S600 Dual 0.8 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S800 Dual 0.4 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S800 Dual 0.6 nozzle |  |
+| PASS | Z-Bolt/Z-Bolt S800 Dual 0.8 nozzle |  |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ2 0.25 Nozzle | iQ/iQ TiQ2 0.25 Nozzle process: no compatible preset |
-| DIVERGENT | iQ/iQ TiQ2 0.4 Nozzle | first difference at byte 95515 (line 4777, column 24; expected 113944 bytes, actual 113944 bytes) context:   line 4776: "; enable_pressure_advance = 0"   line 4777: expected "; enable_prime_tower = 0"; actual "; enable_prime_tower = 1"   line 4778: "; enable_support = 1" |
+| PASS | iQ/iQ TiQ2 0.4 Nozzle |  |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ2 0.6 Nozzle | iQ/iQ TiQ2 0.6 Nozzle process: no compatible preset |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ2 0.8 Nozzle | iQ/iQ TiQ2 0.8 Nozzle process: no compatible preset |
 | VENDOR_INCOMPLETE | iQ/iQ TiQ8 0.25 Nozzle | iQ/iQ TiQ8 0.25 Nozzle process: no compatible preset |
