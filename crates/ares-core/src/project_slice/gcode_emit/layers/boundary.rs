@@ -138,7 +138,9 @@ pub(super) fn append<'a>(
         motion::retract_before_layer(output, state);
     }
     if timelapse_at_layer_change {
-        timelapse::append_and_track(output, state, timelapse_context)?;
+        // Non-BBL layer-start render (`GCode.cpp:4667`): no position-clear,
+        // no Z adoption — those belong to the lambda inserts only.
+        timelapse::append_untracked(output, timelapse_context)?;
     }
     spiral.append_layer_z(output, layer_index, f64::from(layer_z));
     layer_gcode::append_layer_change(
