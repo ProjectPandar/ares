@@ -70,7 +70,7 @@ pub(super) fn emit(
     // The Marlin-family machine envelope prints before the start G-code
     // (`GCode.cpp:2819`), followed by the start G-code (`GCode.cpp:3137`).
     machine::append_limits(&mut output, traversal);
-    let (bed_cache, start_position) =
+    let (bed_cache, start_position, start_retract) =
         machine::append_start(&mut output, traversal, metadata, first_layer_bounds)?;
     let options = motion::MotionOptions::from_traversal(traversal);
     let small_area_flow = small_area::from_traversal(traversal)?;
@@ -101,6 +101,14 @@ pub(super) fn emit(
         spiral_vase: traversal.resolved.views.full.process.print.spiral_mode.0,
         ..Default::default()
     };
+    // The machine-start template's `e_retracted[0]` assignment seeds the
+    // extruder state (`GCode.cpp:3905-3918`): a pre-retracted nozzle skips
+    // the layer-change retract and the first unretract restores exactly the
+    // assigned amount.
+    if let Some(retract) = &start_retract {
+        state.retracted = retract.retracted > 0.0;
+        state.retracted_amount = retract.retracted;
+    }
     let fan_layers_start = output.len();
     let (max_layer_z, mut fan_mover_handle) = layers::append(
         prepared,

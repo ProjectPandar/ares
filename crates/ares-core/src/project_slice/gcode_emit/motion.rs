@@ -89,7 +89,15 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     if length <= 0.0 {
         return;
     }
-    let retract = extrusion::coordinate(state, -length);
+    // `Extruder::retract` only retracts the REMAINING distance
+    // (`to_retract = max(0, length - m_retracted)`, `Extruder.cpp:77`):
+    // a nozzle already fully retracted — e.g. by a start-gcode
+    // `e_retracted` assignment — emits nothing but still defers the lift.
+    if state.retracted_amount >= length {
+        travel::defer_layer_change_lift(state);
+        return;
+    }
+    let retract = extrusion::coordinate(state, -(length - state.retracted_amount));
     output.extend_from_slice(
         format!(
             "G1 E{} F{}\n",

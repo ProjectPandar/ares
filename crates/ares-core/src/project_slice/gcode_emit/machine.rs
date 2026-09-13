@@ -213,15 +213,24 @@ pub(super) fn append_second_layer_transition(
     }
 }
 
+pub(super) struct StartRetractState {
+    /// `e_retracted[0]` assigned by the machine-start template
+    /// (`GCode.cpp:3905-3918` feeds assigned output variables back into the
+    /// extruder via `Extruder::set_retracted`).
+    pub(super) retracted: f64,
+    /// `e_restart_extra[0]` assigned by the template (0 unless set).
+    pub(super) restart_extra: f64,
+}
+
 pub(super) fn append_start(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
-) -> Result<(i32, Option<value::Value>), SliceError> {
+) -> Result<(i32, Option<value::Value>, Option<StartRetractState>), SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    let (rendered, position) = if template.is_empty() {
-        (String::new(), None)
+    let (rendered, position, retract_state) = if template.is_empty() {
+        (String::new(), None, None)
     } else {
         let mut config = self_start_config(traversal, metadata, first_layer_bounds)?;
         let rendered = template::render(template, &mut config).map_err(|error| {
@@ -229,7 +238,20 @@ pub(super) fn append_start(
         })?;
         // `GCode.cpp:3118-3140` lets explicit template assignments update
         // GCodeWriter position, but never parses G0/G1 text back into it.
-        (rendered, config.get("position").cloned())
+        // `GCode.cpp:3905-3918` additionally feeds assigned `e_retracted` /
+        // `e_restart_extra` back into the extruder (`set_retracted`).
+        let number_at = |key: &str| -> Option<f64> {
+            config
+                .get(key)
+                .and_then(|value| value.index(0))
+                .and_then(|value| value.as_number())
+        };
+        let retracted = number_at("e_retracted");
+        let retract_state = retracted.map(|retracted| StartRetractState {
+            retracted,
+            restart_extra: number_at("e_restart_extra").unwrap_or(0.0),
+        });
+        (rendered, config.get("position").cloned(), retract_state)
     };
     let bed_cache = temperature::append_startup(output, traversal, &rendered);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
@@ -247,7 +269,7 @@ pub(super) fn append_start(
     if !super::tags::Tags::of(traversal).is_bbl() {
         append_flavor_preamble(output, traversal);
     }
-    Ok((bed_cache, position))
+    Ok((bed_cache, position, retract_state))
 }
 
 pub(super) fn append_completion_controls(

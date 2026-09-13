@@ -379,10 +379,13 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             state.current_feedrate = z_feedrate;
             state.scarf_z = slope_start_z;
         }
-        let retraction_length = state.options.retraction_length;
+        // `Extruder::unretract()` restores the TRACKED `m_retracted` plus
+        // `m_restart_extra` — not the configured retraction length — so a
+        // nozzle pre-retracted by start-gcode assignments restores exactly
+        // what the template retracted.
         let unretract = extrusion::coordinate(
             state,
-            retraction_length + state.options.retract_restart_extra,
+            state.retracted_amount + state.options.retract_restart_extra,
         );
         // `Extruder::unretract()` zeroes `m_retracted` after the extrude;
         // `coordinate` only accumulates it for negative deltas.
