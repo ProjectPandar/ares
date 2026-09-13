@@ -412,3 +412,18 @@ retract's elapsed, ares's 1876.817 puts its 25ms later. The remaining
 work is per-block alignment of ares's time model in the bouncing
 regions (slowdown onset layers and the arc-bearing infill layers) —
 sub-ms per block, spread over ~2000 blocks.
+
+## M73 chain closed: the F10020 anomaly feeds it (2026-09-15 final)
+
+Block-level comparison (single-arc replay vs ares blocks) shows the
+~0.55% per-block relative time diffs in the layer-3 region are the
+F2544-vs-F2560 slowdown cruises (42.4 vs 42.6667 mm/s) — ares's layer-3
+slowdown rewrite differs from orca's BECAUSE of the F10020 overhang-
+estimator anomaly (orca's pre-slowdown wall speed 167 vs ares's 170
+shifts the cooling buffer's layer-3 stretch computation). The MK4S M73
+line shift is therefore downstream of the same one-wall estimator
+knife-edge, compounded by ±8ms region bounces elsewhere (junction
+exit-speed details where ares emits 8.338507 vs 10 at purge-line
+junctions). Fix order: (1) the overhang estimator δ model (one wall,
+3-6µm above threshold), (2) re-diff the time chains — the M73 bucket
+should collapse once the layer-3 speeds agree.
