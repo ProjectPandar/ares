@@ -89,6 +89,29 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
     };
     let extended = context.add_boundary_intersections(request.points);
     let extended = context.add_segmentation_points(&extended, minimum_slowdown_distance);
+    if let Ok(level) = std::env::var("ARES_DUMP_OVERHANG") {
+        eprintln!(
+            "OH layer={} feature={} width={:.4} ref={:.4} orig={:.4} minsd={:.4} pts={} variable",
+            request.layer_index,
+            request.properties.feature,
+            request.properties.width,
+            reference_speed,
+            request.original_speed,
+            minimum_slowdown_distance,
+            extended.len()
+        );
+        if level == "2" {
+            for (index, point) in extended.iter().enumerate() {
+                eprintln!(
+                    "OHL {index:03} x={:.4} y={:.4} dist={:.6} speed={:.3}",
+                    point.x,
+                    point.y,
+                    point.distance,
+                    speed_for_distance(point.distance, &sections, original_speed)
+                );
+            }
+        }
+    }
 
     let mut processed = Vec::with_capacity(extended.len());
     let mut variable = false;

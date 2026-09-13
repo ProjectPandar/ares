@@ -22,12 +22,24 @@ pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
     });
     let adjustable = lines.iter().take_while(|line| line.adjustable()).count();
     let target_time = config.target_time * 1.001;
-    if std::env::var("ARES_DUMP_SLOWDOWN").is_ok() {
+    if let Ok(level) = std::env::var("ARES_DUMP_SLOWDOWN") {
         eprintln!(
             "SD total={total_time:.6} max={maximum_time:.6} target={target_time:.6} min_speed={:.3} lines={}",
             config.minimum_speed,
             lines.len()
         );
+        if level == "2" {
+            for (index, line) in lines.iter().enumerate() {
+                eprintln!(
+                    "SDL {index:03} adj={} length={:.4} feed={:.4} time={:.6} max_time={:.6}",
+                    line.adjustable(),
+                    line.length,
+                    line.feedrate,
+                    line.time,
+                    line.maximum_time
+                );
+            }
+        }
     }
     if total_time > target_time {
         return total_time;

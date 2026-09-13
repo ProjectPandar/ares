@@ -223,3 +223,37 @@ Flashforge C5, Cubicon, WonderMaker). XL 5T 0.3/0.8 diverge only against
 freshly-regenerated orca.gcode (M73 line shift + a Z1 site): ares is
 stable across commits, the oracle flip-flops run-to-run like Snapmaker
 U1 — flaky-oracle bucket.
+
+## Dynamic-overhang estimator distance anomaly (2026-09-14, OPEN)
+
+Prusa MK4S 0.4 (case-1XWJSm) root-cause chain, isolated via five
+config-swap oracle runs (slow_down_for_layer_cooling=0 keeps it;
+slowdown_for_curled_perimeters=0 keeps it; enable_overhang_speed=0
+removes it → the `GCode.cpp:6654+` estimator; maxvol 15→16 keeps it
+while infill speeds move to the 16-based cap → ref stays 170;
+outer_wall_line_width 0.45→0.5 turns it into F9845.112 on 49 blocks;
+overhang_1_4_speed 80%→10% splits it into F9420/F9540/F9780):
+
+- The single `G1 F10020` (167 mm/s) on the layer-3 outer wall is the
+  distance-band interpolation: orca's wall-point distances sit at
+  δ ≈ 0.048–0.051 (inverted from the 10%-band run), just above the
+  0.1×width = 0.045 threshold, with ref_speed = 170 (volumetric cap not
+  binding). round(lerp) lands on 167; |167−170| > 1 trips
+  `variable_speed`, and the whole path re-emits at the per-point speed.
+- Ares's estimator (motion/overhang.rs, wired via ARES_DUMP_OVERHANG=2)
+  computes δ ≈ 0.000001 for the same points: the boundary tree passes
+  exactly half a width (0.225) from the wall centerline, i.e. the raw
+  slice contour. Orca's effective `prev_layer_boundaries` geometry
+  behaves as if inset a further ~0.05 — provenance unknown: lslices are
+  built from the region slices at make_slices time (Layer.cpp:33-66)
+  and the wall/slice geometry is byte-identical every layer (E values
+  match), so the layer-3 specificity is unexplained by static geometry.
+  Suspects left unverified: per-layer lslices mutation between
+  make_slices and prepare_for_new_layer, or LinesDistancer signed-
+  distance semantics differing from ares's polygon containment test.
+
+ARES_DUMP_SLOWDOWN=2 (per-line) and ARES_DUMP_OVERHANG=2 (per-point)
+diagnostic hooks landed with this slice. The M73 line shifts in the
+same case occur BEFORE the first speed difference (layer 2's M73 moved
+with no layer-2 speed diffs), so the 52-case M73 bucket has an
+independent root cause and is the next slice.
