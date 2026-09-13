@@ -189,3 +189,17 @@ H2D/H2D Pro/X2D now diverge ONLY on the M9711 timelapse x/y. Port
 Snapmaker U1 0.4's F2400/F3000 was oracle NONDETERMINISM, not a regression:
 the pre-slice binary mismatches the newly generated orca.gcode the same
 way (verified via worktree build at ca3c604d).
+
+## TimelapsePosPicker status (2026-09-13 end of day)
+
+The by-layer picker port is COMPLETE in `timelapse_pos.rs` but stays
+test-gated (4244f688): H2D's x coordinate and E/P fields now match, but
+the final y is one unit off (232 vs 233) — upstream's exact candidate
+source for that unit is unresolved (camera top edge computes 232.88 →
+trunc 232; orca emits 233, so its picked boundary sits ≥233.0 — suspect
+the fake-wipe-tower subtraction or a bbox source difference). Wiring the
+picker while y is off shifted MyToolChanger 0.2 / XL 5T 0.3 / 0.8
+positions for a net sweep loss, so the heuristic stays until the unit is
+explained. The follow-sweep after unwiring showed ZERO divergent churn
+(the PASS dip to 841 was oracle flakiness — 23 ORCA_ERROR crashes under
+repeated-sweep load; the 845 baseline summary is restored).
