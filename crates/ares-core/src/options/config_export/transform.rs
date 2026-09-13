@@ -17,13 +17,15 @@ pub(super) fn transformed_for_export(
 }
 
 /// The CLI oracle's config export carries the RAW preset
-/// `enable_prime_tower`: both `Print::apply` `normalize_fdm_2` passes on
-/// a fresh slice see `extruders().size() == 0` (print regions do not
-/// exist yet, `PrintApply.cpp:1128-1132` / `:1620-1621`), so the
-/// used-filament disable never fires. (The filament map re-derives in
-/// the resolved config — `filament_map_recommend` — before export.)
+/// `enable_prime_tower` for dual-nozzle BBL printers: the auto filament-map
+/// recompute (`ToolOrdering.cpp:1288-1303`) runs for exactly those and
+/// `Print::update_filament_maps_to_config` (`Print.cpp:3166`) rebuilds
+/// `m_full_print_config` from `m_ori_full_print_config` (the raw preset
+/// config). Every other printer's export reflects the `normalize_fdm_2`
+/// used-filament disable (single-filament → 0).
 fn apply_cli_oracle_state(settings: &mut ProjectSettings, overrides: &ExportOverrides) {
-    if let Some(raw) = overrides.enable_prime_tower {
+    let dual_nozzle_bbl = overrides.is_bbl && settings.project.print.nozzle_diameter.0.len() == 2;
+    if dual_nozzle_bbl && let Some(raw) = overrides.enable_prime_tower {
         settings.process.print.enable_prime_tower = raw;
     }
 }
