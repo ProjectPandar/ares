@@ -673,16 +673,34 @@ int main(int argc, char** argv)
             if (auto f = word_value('F')) { arc_feedrate = float(*f); if (getenv("REPLAY_TRACE_G1")) std::fprintf(stderr, "ARC F=%.1f segments=%zu r=%.3f angle=%.4f\n", *f, 0, radius, angle); }
             std::optional<float> extrusion;
             if (auto ev = word_value('E')) extrusion = end_pos[E] - start_position[E];
-            // ArcWelder::arc_discretization_steps(radius, |angle|, 0.0125)
-            static const double gcode_arc_tolerance = 0.0125;
+            // GCodeProcessor.cpp:4712-4726: gcfMarlinFirmware plan_arc
+            // discretization (MAX_ARC_DEVIATION 0.02, min 50 segments/s,
+            // segment length clamped to [0.1, 2.0] mm). The legacy
+            // ArcWelder rule (tolerance 0.0125) stays available via
+            // REPLAY_LEGACY_ARCS=1 for non-MarlinFirmware flavors.
             size_t segments;
-            {
+            if (getenv("REPLAY_SINGLE_ARCS")) {
+                // Diagnostic: treat each arc as one move (arc-length distance).
+                segments = 1;
+            } else if (getenv("REPLAY_LEGACY_ARCS")) {
+                static const double gcode_arc_tolerance = 0.0125;
                 double d = radius - gcode_arc_tolerance;
                 if (d < 1e-4) {
                     segments = (std::fabs(angle) < M_PI || radius * (1.0 + cos(M_PI - 0.5 * std::fabs(angle))) < gcode_arc_tolerance) ? 1 : 2;
                 } else
                     segments = size_t(std::ceil(std::fabs(angle) / (2.0 * std::acos(d / radius))));
                 if (segments == 0) segments = 1;
+            } else {
+                static const float MAX_ARC_DEVIATION = 0.02f;
+                static const float MIN_ARC_SEGMENTS_PER_SEC = 50;
+                static const float MIN_ARC_SEGMENT_MM = 0.1f;
+                static const float MAX_ARC_SEGMENT_MM = 2.0f;
+                const float feedrate_mm_s = arc_feedrate.has_value() ? *arc_feedrate / 60.0f : m_feedrate;
+                const float radius_mm = float(radius);
+                float segment_mm = std::min(std::sqrt(8.0f * radius_mm * MAX_ARC_DEVIATION), feedrate_mm_s / MIN_ARC_SEGMENTS_PER_SEC);
+                segment_mm = std::max(std::min(segment_mm, MAX_ARC_SEGMENT_MM), MIN_ARC_SEGMENT_MM);
+                const float flat_mm = radius_mm * float(std::fabs(angle));
+                segments = std::max<size_t>(size_t(flat_mm / segment_mm + 0.8f), size_t(1));
             }
             const double inv_segment = 1.0 / double(segments);
             const double theta_per_segment = angle * inv_segment;

@@ -389,3 +389,26 @@ Next slice: mirror upstream's G2/G3 handling in the replay's time model
 (single-arc trapezoids or the same discretization the engines use),
 then arbitrate the ≤40ms M73 total gap (which also gates the VS30
 Stage 2 pair and the wider M73 reordering bucket).
+
+## M73 total gap ARBITRATED: arcs are single blocks (2026-09-15 close-out)
+
+REPLAY_SINGLE_ARCS=1 (each G2/G3 as one arc-length move) reproduces the
+engines' motion total — 316.6949s vs ares 316.789s — while both
+upstream discretization branches (MarlinFirmware plan_arc at 350.71s /
+ArcWelder legacy at 350.02s) do not match orca's own 31m16s footer.
+Both replay arc branches are faithful ports of GCodeProcessor.cpp
+:4712-4776/:4778-4846, so the oracle's estimator evidently treats arcs
+as single blocks despite the source's internal-G1 discretization —
+consistent with ares's model (1987 blocks). The tool now defaults to
+the MarlinFirmware rule with REPLAY_LEGACY_ARCS / REPLAY_SINGLE_ARCS
+overrides.
+
+Per-id offsets (ares − single-arc replay): flat 1560.000 through the
+M73 crossing region (ids ≤162), then region-dependent bounces (−4ms by
+id 519, −8ms at 1283, back to −1.6ms by 1839, +0.12s net at the end).
+The M73 P84 R4 shift is fully explained: orca's total ≈ 1876.695
+(= replay-single + waits) puts its R4 threshold 0.12ms below the
+retract's elapsed, ares's 1876.817 puts its 25ms later. The remaining
+work is per-block alignment of ares's time model in the bouncing
+regions (slowdown onset layers and the arc-bearing infill layers) —
+sub-ms per block, spread over ~2000 blocks.
