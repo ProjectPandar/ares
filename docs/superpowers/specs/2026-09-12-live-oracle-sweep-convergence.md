@@ -336,3 +336,18 @@ the GCode::do_export → CoolingBuffer → GCodeProcessor pass order, then
 mirror which F words each estimator pass sees). Everything else this
 pass: waits (6×G29 +260, first attributed to the preceding block) and
 the crossing-region chains are PROVEN identical.
+
+## Replay block-count mismatch blocks M73 arbitration (2026-09-15 addendum)
+
+Sanity check on the tail arithmetic: slow_down_to_minimum layers take
+exactly max_time (5.53s) by construction, so the post-slowdown physics
+IS ~316.8s of motion — matching BOTH engines' totals (ares 316.789;
+orca footer 31m16s). The replay's 350.02s is therefore the outlier:
+its planner produces 2632 blocks where ares produces 1987 — ~645 extra
+blocks, ≈ the count of 0.615mm infill segments — i.e. the replay
+decelerates at junctions (entry 10) that the engines' planners chain
+through (ares's merged-chain time ≈ 0.019s/segment vs the replay's
+0.031). The replay must mirror upstream's block creation/junction
+chaining (GCodeProcessor.cpp:419 calculate_time / the planner's
+keep_last_n_blocks batching) before it can arbitrate the remaining
+<40ms M73 total gap; both engines otherwise agree on waits and chains.
