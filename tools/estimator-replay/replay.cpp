@@ -554,7 +554,7 @@ int main(int argc, char** argv)
     };
 
     auto simulate_st_synchronize = [&](float additional_time) {
-        machine.calculate_time(0, additional_time, EMoveType::Noop, false);
+        machine.calculate_time(0, additional_time, EMoveType::Noop, false); if (additional_time > 0) std::fprintf(stderr, "DELAY %.3f at id=%u\n", additional_time, g1_line_id);
     };
 
     std::string line;
@@ -583,6 +583,9 @@ int main(int argc, char** argv)
             axes[Y] = word_value('Y');
             axes[Z] = word_value('Z');
             axes[E] = word_value('E');
+            if (getenv("REPLAY_TRACE_G1"))
+                std::fprintf(stderr, "G1 id=%u line=[%s] pos=%.3f,%.3f,%.3f F=%.2f\n", g1_line_id + 1, code.c_str(),
+                    start_position[X], start_position[Y], start_position[Z], m_feedrate);
             process_G1(axes, word_value('F'));
         } else if (word == "G2" || word == "G3") {
             const bool clockwise = (word == "G2");
@@ -711,10 +714,18 @@ int main(int argc, char** argv)
             if (word_value('S').has_value() || word_value('P').has_value())
                 simulate_st_synchronize(s + p * 0.001f);
         } else if (word == "G28") {
+            // upstream reparses `G28 X..` with the axis word PRESENCE
+            // (GCodeProcessor.cpp:4915-4938), not its value
+            auto has_word = [&](char axis) {
+                for (size_t pos = 0; pos < code.size(); ++pos)
+                    if (code[pos] == axis && (pos == 0 || isspace((unsigned char)code[pos - 1])))
+                        return true;
+                return false;
+            };
             std::array<std::optional<double>, 4> axes{ std::nullopt, std::nullopt, std::nullopt, std::nullopt };
-            if (word_value('X').has_value()) axes[X] = 0.0;
-            if (word_value('Y').has_value()) axes[Y] = 0.0;
-            if (word_value('Z').has_value()) axes[Z] = 0.0;
+            if (has_word('X')) axes[X] = 0.0;
+            if (has_word('Y')) axes[Y] = 0.0;
+            if (has_word('Z')) axes[Z] = 0.0;
             if (!axes[X].has_value() && !axes[Y].has_value() && !axes[Z].has_value()) {
                 axes[X] = 0.0; axes[Y] = 0.0; axes[Z] = 0.0;
             }
