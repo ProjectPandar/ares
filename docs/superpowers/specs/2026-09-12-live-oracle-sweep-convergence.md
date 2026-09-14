@@ -740,3 +740,18 @@ M73 timing family (pre-slowdown estimate divergence, tooling ready),
 3 un-ported option domains (tracked spec), octagramspiral
 lattice-blocked (closed milestone), 18 oracle crashes + 10
 vendor-incomplete (not ares-fixable).
+
+## 2bDWHY estimator gap quantified (2026-09-15, #97)
+
+ARES_DUMP_SLOWDOWN=2 on layer 0: ares' internal pre-slowdown total =
+10.26 s for the 31 adjustable lines, target 50.05 s → 4.9× stretch →
+F3000/4.9 ≈ F612 (matches the emitted F629). Orca's F843 (0.281×)
+implies its internal estimate ≈ 50.05/3.56 ≈ 14.1 s — a ~38% estimator
+gap for identical content. The physical replay of the whole layer at
+nominal speeds = 25.62 s for BOTH engines (content and motion model
+agree). Root: ares' block-time model underestimates these lines vs
+orca's GCodeTimeEstimator (Klipper SET_VELOCITY_LIMIT printer; both
+engines' post-slowdown claims are 50.05 s but the physical replay gives
+78.9 s — the estimator-vs-replay model gap is large on this flavor).
+Next slice: ARES_DUMP_BLOCKS diff for the 31 lines (accel? junction
+deviation?) against orca's implied per-line times.
