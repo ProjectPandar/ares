@@ -537,3 +537,39 @@ mesh-sample visibility adds the front adjustment. WEMAKE3D TinyBotV1
 0.4 collapses from a 4814-line seam-driven content diff to 65 lines
 (the M73 knife-edge family); the passing aligned_back cases (TinyBot
 0.6, Peacock V2) stay byte-identical.
+
+## octagramspiral top-surface fill order (2026-09-15)
+
+The `top_surface_pattern=octagramspiral` option-coverage case diverges
+only in fill ORDER (both engines emit the identical 304-segment set on
+the last layer; `comm` over the sorted extrusions is empty). The
+divergence shows up at the second corner fragment group: orca traverses
+tiny-to-big, ares big-to-tiny.
+
+Differential isolation with the new `tools/chain-probe` probes
+(upstream ShortestPath.cpp extracted verbatim and run on ares dumps):
+
+- Inner chain: upstream `chain_polylines` (greedy2 + two-exchange) on
+  the exact 73-fragment `ARES_DUMP_PLANECLIP` list reproduces ares's
+  chain order AND flips 1:1. Port is exact.
+- Emission reorder: upstream v1 `chain_segments_greedy_constrained_
+  reversals` on ares's `ARES_DUMP_CHAIN` block 71 (73 entities + seed)
+  reproduces ares's recorded order with zero diffs. Port is exact.
+- Seed check: ares's reorder seed decodes to the last wall extrusion
+  end (164.89,179.86), matching upstream's m_last_pos semantics
+  (m_last_pos tracks the last path end, not the wipe end).
+
+Remaining suspect: the fragment list itself. Ares's octagram branch
+uses `classic_clip` (the Clipper 6 scanbeam emulation from commit
+010c55eb) whose output ORDER/ORIENTATION feeds greedy2's KD-tree
+endpoint insertion order — a different list from orca's `intersection_pl`
+flips downstream tie-breaking. Next slice: replicate `intersection_pl`
+(ClipperLib open-path clip) on the same spiral+region and diff the
+fragment list; then fix the emulation or route octagram through the
+shared clipper port.
+
+Note on frames: ares geometry runs at 1e6/mm centered-frame ints while
+orca uses 4096/mm world ints. Both produce exact integer squared
+distances for the greedy stages, so the frame alone cannot explain the
+0.4 mm-scale divergence observed; the fragment-list hypothesis remains
+primary.

@@ -183,6 +183,10 @@ fn fill_component(
                         scale.unscale(point.y())
                     );
                 }
+                let _ = write!(file, "  R");
+                for point in polyline.points() {
+                    let _ = write!(file, " ({},{})", point.x(), point.y());
+                }
                 let _ = writeln!(file);
             }
         }
