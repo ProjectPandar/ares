@@ -34,3 +34,13 @@ Findings so far (2026-09-14, octagramspiral top-surface case):
 - the remaining octagramspiral divergence is therefore in the fragment
   list entering those stages — the `classic_clip` scanbeam emulation's
   output order/orientation versus orca's `intersection_pl` output.
+
+probe4: `g++ -O1 -std=c++17 -I. -I<nix eigen>/include/eigen3 probe4.cpp -o probe4`
+(needs `nix-shell -p gcc -p eigen`) — runs the vendored Clipper 6.2.6
+open-path intersection (`ctIntersection`, pftNonZero, PolyTreeToPolylines)
+on an `ARES_DUMP_PLANESUBJECT` subject + `ARES_DUMP_PLANEBOUND` clip
+region and prints the fragment list for tie-order comparison against
+ares's classic_clip output. `clipper.cpp`/`clipper.hpp` at the top level
+and the `boost/`, `oneapi/`, `libslic3r/` stub dirs exist only to satisfy
+the vendored header's include chain; `clipper/` holds the pristine
+vendor sources.

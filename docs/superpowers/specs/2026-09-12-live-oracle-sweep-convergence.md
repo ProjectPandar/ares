@@ -573,3 +573,37 @@ orca uses 4096/mm world ints. Both produce exact integer squared
 distances for the greedy stages, so the frame alone cannot explain the
 0.4 mm-scale divergence observed; the fragment-list hypothesis remains
 primary.
+
+## octagramspiral follow-up: the lattice boundary (2026-09-15, later)
+
+probe4 (`tools/chain-probe/probe4.cpp`) runs the vendored Clipper 6.2.6
+(`OrcaSlicer/deps_src/clipper`) on ares's own subject/region dumps and
+compares the fragment list with ares's classic_clip emulation:
+
+- 71/73 fragments identical; the one exact-max-Y tie pair (the two star
+  tips at y=±1186666) is ordered oppositely. The vendor's local-minima
+  list is sorted with a Y-only `std::sort` (unstable), so equal-Y ties
+  resolve through libstdc++ introsort internals — not a local rule.
+- Routing octagram through the shared `intersection_open_polylines`
+  (the real clipper port) reproduces the vendor fragment list 73/73 on
+  ares's inputs, but (a) the final G-code still diverges — the emission
+  reorder's greedy distances amplify the ±1 lattice differences between
+  ares's 1e6/mm centered ints and orca's 4096/mm world ints (a probe
+  run with 4096-rounded inputs matches orca's first six fragment picks
+  exactly, then flips at position 9) — and (b) it breaks the previously
+  green `tests/parity/arachne/default-prisms` fixture (sparse octagram
+  fill), whose orca reference matches the classic_clip tie order. The
+  route change was therefore REVERTED.
+
+Conclusion: the octagramspiral option domain is blocked on a
+coordinate-lattice boundary, not on an algorithm port. Matching the
+fill emission order byte-for-byte requires computing the fill pipeline
+on orca's fixed 4096/mm lattice (SCALING_FACTOR) instead of the dynamic
+1e6/mm grid — an architectural change needing its own milestone with
+full golden+sweep validation.
+
+Note: `arachne_default_prisms::process_arachne_actual_default_prisms_
+full_output` and `timelapse_tests::most_used_physical_extruder_follows_
+the_filament_map` fail at HEAD and at their own introduction commits
+(verified by correct-filter bisect); they belong to the known
+un-ported-arachne bucket, not to the octagram work.

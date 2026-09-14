@@ -1,0 +1,1 @@
+#define SLIC3R_VERSION "2.4.2"
