@@ -57,6 +57,13 @@ impl CoordinateScale {
         }
     }
 
+    /// Orca's `scale_` macro divides without rounding: offset deltas and
+    /// epsilon amounts stay fractional doubles (`libslic3r.h:94-95`), e.g.
+    /// `float(SCALED_EPSILON) = 0.4096` at the 4096 lattice.
+    pub(crate) fn scaled_delta(self, millimeters: f64) -> f64 {
+        millimeters / self.factor()
+    }
+
     /// Like `checked_scale`, but rounding to the nearest lattice unit. Used
     /// where an mm value round-trips back to the integer it came from
     /// (`unscale(int) + offset` loses a unit to a truncating cast).

@@ -55,10 +55,7 @@ pub(in crate::project_slice) fn gather_deep_sparse_infill_area(
         }
     }
 
-    let scaled_epsilon = scale
-        .checked_scale(EPSILON)
-        .expect("the fixed slicer epsilon fits every coordinate scale")
-        as f32;
+    let scaled_epsilon = scale.scaled_delta(EPSILON) as f32;
     let sparse = union_expolygons(&sparse, &[])?;
     let sparse = closing_ex(&sparse, scaled_epsilon, JoinType::Miter, MITER_LIMIT)?;
     let non_sparse = union_expolygons(&non_sparse, &[])?;
