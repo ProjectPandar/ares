@@ -147,6 +147,20 @@ impl PressureEqualizerPass {
     }
 
     fn emit_all(&mut self) -> String {
+        if std::env::var("ARES_DUMP_PEDECISIONS").is_ok() {
+            for (i, l) in self.lines.iter().enumerate() {
+                if l.extruding() {
+                    eprintln!(
+                        "RATE {i} rate={:.3} start={:.3} end={:.3} mod={} adj={}",
+                        l.volumetric_extrusion_rate,
+                        l.volumetric_extrusion_rate_start,
+                        l.volumetric_extrusion_rate_end,
+                        l.modified,
+                        l.adjustable_flow
+                    );
+                }
+            }
+        }
         let mut buffer = OutputBuffer::default();
         for line in &mut self.lines {
             output_gcode_line(
@@ -162,3 +176,95 @@ impl PressureEqualizerPass {
 }
 
 mod tests;
+
+#[cfg(test)]
+mod debug_dump {
+    use super::*;
+    use crate::project_slice::pressure_equalizer::line::LineParser;
+
+    #[test]
+    fn dump_skirt_decisions() {
+        let layer = ";_EXTRUSION_ROLE:12\n\
+                     G1 F3000;_EXTRUDE_SET_SPEED\n\
+                     G1 X488.064 Y484.209 E2.17012\n\
+                     G1 X490.948 Y482.829 E2.17012\n\
+                     G1 X495 Y482.172 E2.78599\n\
+                     G1 X505 Y482.172 E6.78742\n\
+                     G1 X508.172 Y482.57 E2.17012\n\
+                     G1 X511.148 Y483.741 E2.17012\n\
+                     G1 X513.741 Y485.611 E2.17012\n\
+                     ;_EXTRUDE_END\n";
+        let mut pass = PressureEqualizerPass::new(100.0, 2.0, false, &[1.75], true);
+        pass.process_layer(layer);
+        let out = pass.flush().expect("layer");
+        eprintln!("SKIRT OUT:\n{out}");
+    }
+
+    #[test]
+    fn dump_real_layer0() {
+        let layer = ";_EXTRUSION_ROLE:12\nSET_VELOCITY_LIMIT ACCEL=2500 SQUARE_CORNER_VELOCITY=7\nG1 E-20 F12000\nG1 Z2.1 F15000\nG1 X485.611 Y486.259\nG1 Z2.1\nG1 Z.6\nG1 E55 F12000\nSET_VELOCITY_LIMIT ACCEL=1000 SQUARE_CORNER_VELOCITY=5\nG1 F3000;_EXTRUDE_SET_SPEED\nG1 X488.064 Y484.209 E2.17012\nG1 X490.948 Y482.829 E2.17012\nG1 X495 Y482.172 E2.78599\nG1 X505 Y482.172 E6.78742\nG1 X508.172 Y482.57 E2.17012\n;_EXTRUDE_END\n";
+        let mut pass = PressureEqualizerPass::new(100.0, 2.0, false, &[1.75], true);
+        pass.process_layer(layer);
+        let out = pass.flush().expect("layer");
+        eprintln!("REAL OUT:\n{out}");
+    }
+
+    #[test]
+    fn dump_layer0_decisions() {
+        let layer = ";_EXTRUSION_ROLE:1\n\
+                     G1 F3000;_EXTRUDE_SET_SPEED\n\
+                     G1 X10 Y0 E1\n\
+                     G1 X10 Y10 E2\n\
+                     G1 X0 Y10 E3\n\
+                     G1 X0 Y1 E4\n\
+                     ;_EXTRUDE_END\n";
+        let mut pass = PressureEqualizerPass::new(100.0, 2.0, false, &[1.75], false);
+        pass.process_layer(layer);
+        let out = pass.flush().expect("layer");
+        eprintln!("OUT:\n{out}");
+    }
+}
+
+#[cfg(test)]
+mod decisions {
+    use super::*;
+    use crate::project_slice::pressure_equalizer::line::LineParser;
+
+    /// Rate table on the real layer-0 skirt input: every extrusion line
+    /// has the identical volumetric rate (the mm3/mm is constant), so the
+    /// limiter must mark nothing modified.
+    #[test]
+    fn real_skirt_rates_are_uniform() {
+        let layer = ";_EXTRUSION_ROLE:12\n\
+                     G1 E-20 F12000\n\
+                     G1 Z2.1 F15000\n\
+                     G1 X485.611 Y486.259\n\
+                     G1 Z.6\n\
+                     G1 E55 F12000\n\
+                     G1 F3000;_EXTRUDE_SET_SPEED\n\
+                     G1 X488.064 Y484.209 E2.17012\n\
+                     G1 X490.948 Y482.829 E2.17012\n\
+                     G1 X495 Y482.172 E2.78599\n\
+                     G1 X505 Y482.172 E6.78742\n\
+                     G1 X508.172 Y482.57 E2.17012\n\
+                     ;_EXTRUDE_END\n";
+        let mut pass = PressureEqualizerPass::new(100.0, 2.0, false, &[1.75], true);
+        pass.process_layer(layer);
+        for (i, l) in pass.lines.iter().enumerate() {
+            eprintln!(
+                "RATE {i} type={:?} rate={:.3} start={:.3} end={:.3} mod={} adj={}",
+                l.line_type,
+                l.volumetric_extrusion_rate,
+                l.volumetric_extrusion_rate_start,
+                l.volumetric_extrusion_rate_end,
+                l.modified,
+                l.adjustable_flow
+            );
+        }
+        let out = pass.flush().expect("layer");
+        // With uniform rates the block re-emits as the raw passthrough
+        // (single marker pair).
+        let sets = out.matches(";_EXTRUDE_SET_SPEED").count();
+        assert_eq!(sets, 1, "unexpected rewrite:\n{out}");
+    }
+}

@@ -176,7 +176,21 @@ impl CoolingState {
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
         let layer_time = feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
         if let Some(pass) = self.equalizer.as_mut() {
+            if std::env::var("ARES_DUMP_PEDECISIONS").is_ok() {
+                eprintln!("PE decisions this layer");
+            }
             let layer = output.split_off(layer_start);
+            if let Ok(path) = std::env::var("ARES_DUMP_PEINPUT") {
+                use std::io::Write;
+                if let Ok(mut file) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    let _ = file.write_all(b"=== LAYER ===\n");
+                    let _ = file.write_all(&layer);
+                }
+            }
             pass.process_layer(&String::from_utf8_lossy(&layer));
             let rewritten = pass
                 .flush()

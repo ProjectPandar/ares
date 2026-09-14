@@ -98,12 +98,17 @@ impl GCodeLine {
         self.pos_end[F]
     }
 
+    /// `volumetric_correction_avg` (`PressureEqualizer.hpp:132-137`):
+    /// capped to `[0.05, 1.00000001]` (upstream clamps; a bare division
+    /// can exceed 1 when the limited start/end rates average above the
+    /// original — the skirt tie case).
     pub(crate) fn volumetric_correction_avg(&self) -> f32 {
         if self.volumetric_extrusion_rate == 0.0 {
             1.0
         } else {
-            0.5 * (self.volumetric_extrusion_rate_start + self.volumetric_extrusion_rate_end)
-                / self.volumetric_extrusion_rate
+            (0.5 * (self.volumetric_extrusion_rate_start + self.volumetric_extrusion_rate_end)
+                / self.volumetric_extrusion_rate)
+                .clamp(0.05, 1.000_001)
         }
     }
 }
