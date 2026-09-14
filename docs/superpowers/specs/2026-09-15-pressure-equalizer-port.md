@@ -82,3 +82,22 @@ plan (next slice):
    ;_EXTRUDE_END/;_EXTERNAL_PERIMETER` tags stripped (upstream consumes
    them in the processor; the final exported G-code carries none —
    verified on the 2bDWHY oracle output).
+
+## First wired sweep (2026-09-15, #107)
+
+865 PASS / 108 DIVERGENT / 18 ORCA_ERROR (baseline 866/107/18) — the
+pass is wired end-to-end and processing (78 slope-enabled cases flow
+through it), but net -1: the modified-line F-emission structure still
+diverges. Trace on the 2bDWHY layer-0 skirt: the limiter legitimately
+fires on sub-unit f32 rate ties (forward-pass start clamp 4897.361 vs
+4897.696 — the mm3/mm is constant but the f32 ratios differ), each
+modified line re-emits through push_line_to_output → an F line per
+segment; the oracle output shows ONE F per block for the skirt (its
+lines appear unmodified) yet full F ladders on the inner wall.
+
+Open question for the next slice: whether the oracle's raw input rates
+are exactly equal (no ties) because its emission splits lines
+differently, or whether the trivial-delta path should not re-emit F
+when the quantized feedrate is unchanged. Also: revert-or-keep the -1
+regression case (identify it via HEAD~1 comparison) pending the
+structure fix.
