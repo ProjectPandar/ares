@@ -18,6 +18,7 @@ pub(crate) const MAX_LOOK_BACK_LIMIT: usize = 128;
 /// `max_ignored_gap_between_extruding_segments` (`PressureEqualizer.cpp:70`).
 pub(crate) const MAX_IGNORED_GAP_BETWEEN_EXTRUDING_SEGMENTS: f64 = 3.0;
 
+mod emitter;
 mod limiter;
 mod line;
 mod tests;
