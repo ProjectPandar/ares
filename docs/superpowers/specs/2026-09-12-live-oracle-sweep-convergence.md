@@ -729,3 +729,14 @@ The read-only review thread returned a 12-item fix list. Dispositions:
   (`cw_input_offset_negates_delta_and_reverses_output`).
 - **[11/test LOW]** covered with item 1.
 - **[12/edge LOW] simplify.rs expect**: invariant comment added.
+
+## Review loop closed: round 2 re-verification PASS (2026-09-15, #97)
+
+All five round-2 checks passed (clip_end guard + test, dead-code
+removals, orientation pin test, docs, golden); no new issues. The
+goal's review cycle (independent 6-dimension review → fix list →
+main-thread fixes → re-review) is complete. Remaining ledger: 88-case
+M73 timing family (pre-slowdown estimate divergence, tooling ready),
+3 un-ported option domains (tracked spec), octagramspiral
+lattice-blocked (closed milestone), 18 oracle crashes + 10
+vendor-incomplete (not ares-fixable).
