@@ -229,5 +229,4 @@ mod debug_dump {
 mod decisions {
     use super::*;
     use crate::project_slice::pressure_equalizer::line::LineParser;
-
 }

@@ -175,6 +175,7 @@ impl CoolingState {
 
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
         let layer_time = feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
+        if let Some(pass) = self.equalizer.as_mut() {
             let layer = output.split_off(layer_start);
             if let Ok(path) = std::env::var("ARES_DUMP_PEINPUT") {
                 use std::io::Write;
