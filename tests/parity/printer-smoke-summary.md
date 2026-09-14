@@ -2,6 +2,8 @@
 
 866 of 1001 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
 
+See `docs/superpowers/specs/2026-09-12-live-oracle-sweep-convergence.md` for the divergent-bucket root-cause ledger.
+
 Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference), `ORCA_ERROR` (the upstream OrcaSlicer 2.4.2 reference binary itself failed, so no reference stream exists), `VENDOR_INCOMPLETE` (the vendor profile tree does not ship the machine's referenced default process preset), `ARES_ERROR` (Ares failed to load or slice the case).
 
 | status | printer | first divergence |

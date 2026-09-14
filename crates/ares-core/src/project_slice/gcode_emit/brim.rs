@@ -420,10 +420,6 @@ fn append_loops(output: &mut Vec<Vec<Point>>, area: &[ExPolygon]) {
     output.retain(|points| points.len() >= 3);
 }
 
-fn polygon_area(points: &[Point]) -> f64 {
-    Polygon::new(points.to_vec()).area().abs()
-}
-
 fn scaled_f32(scale: CoordinateScale, value: f64) -> Result<f32, SliceError> {
     scale
         .checked_scale(value)

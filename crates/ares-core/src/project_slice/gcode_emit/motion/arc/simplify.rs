@@ -110,6 +110,9 @@ pub(super) fn fit_ranges(points: &[Point], tolerance: f64, units_per_mm: f64) ->
             }
         } else {
             if back - front > 2 {
+                // Invariant: the loop only shrinks `back` after an arc fit
+                // succeeded on the previous span, so `last_arc` is always
+                // populated on this branch.
                 ranges.push(FittedRange {
                     start: front,
                     end: back - 1,

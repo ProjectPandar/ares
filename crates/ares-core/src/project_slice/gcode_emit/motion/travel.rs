@@ -223,8 +223,9 @@ fn wipe_moves(state: &EmitState) -> WipePath {
     let retraction_distance = total_length.min(configured_distance) * state.scale_factor;
     let mut clip = total_length - configured_distance;
     // Upstream `Polyline::clip_end` math: squared comparison, sqrt divisor,
-    // truncating cast (`Polyline.cpp:52-72`).
-    while clip > 0.0 {
+    // truncating cast (`Polyline.cpp:52-72`); the loop guard keeps the last
+    // point (`Polyline.cpp:56-59` returns when the polyline empties).
+    while clip > 0.0 && points.len() > 1 {
         let last = points.pop().unwrap();
         let previous = *points.last().unwrap();
         let vx = (previous.0 - last.0) as f64;

@@ -672,5 +672,4 @@ fn role_from_str(role: &str) -> ExtrusionRole {
 #[cfg(test)]
 mod corpus;
 #[cfg(test)]
-#[cfg(test)]
 mod tests;

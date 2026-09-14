@@ -6,7 +6,7 @@ pub(super) struct MoveComments {
     pub(super) z_lift: Option<&'static str>,
     pub(super) z_restore: Option<&'static str>,
     pub(super) travel: Option<&'static str>,
-    pub(super) extrude: Option<&'static str>,
+
     pub(super) retract: Option<&'static str>,
     pub(super) unretract: Option<&'static str>,
 }
@@ -21,7 +21,6 @@ impl MoveComments {
             z_lift: enabled.then_some("lift Z"),
             z_restore: enabled.then_some("restore layer Z"),
             travel: enabled.then_some("travel"),
-            extrude: enabled.then_some("extrude"),
             retract: enabled.then_some("retract"),
             unretract: enabled.then_some("unretract"),
         }

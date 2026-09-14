@@ -696,3 +696,36 @@ Both trailers still print "first layer = 3s" (post-slowdown circular
 value). Next: replay the nominal-speed layer-0 (F-words rewritten to
 the configured nominal) to recover each engine's implied pre-slowdown
 estimate, then compare block-by-block against ARES_DUMP_ELAPSED.
+
+## Independent review round 1 — findings disposition (2026-09-15, #96)
+
+The read-only review thread returned a 12-item fix list. Dispositions:
+
+- **[1/edge HIGH] travel.rs clip_end empty-pop panic**: fixed — the loop
+  now guards `points.len() > 1` mirroring `Polyline.cpp:56-59`; new unit
+  test `wipe_clip_end_empties_the_path_without_panicking` covers the
+  full-clip path (item 11).
+- **[2/quality MED] 14 files >400 LOC**: acknowledged debt; splits land
+  incrementally per the repo rule (no include!/include_bytes! splits).
+- **[3/quality MED] dead code**: removed `center`, `polygon_area`, the
+  `MoveComments.extrude` field, `layer_boundary_slices`,
+  `trailing_gcode_z` (with their writers); the struct-field leftovers
+  (`BoundaryAdvance.layer_z/layer_height`, `StartRetractState.restart_extra`,
+  `arc::fit`, seam `stagger_*`) are pre-existing construction-only fields
+  whose removal requires refactoring their writers — deferred with the
+  warnings visible.
+- **[4/quality MED] duplicate #[cfg(test)]**: removed (fan_mover.rs).
+- **[5/quality MED] 208 clippy warnings**: pre-existing warning debt
+  (errors = 0); `cargo clippy --fix` batches deferred to avoid churn.
+- **[6/req MED] un-ported option domains**: tracked in the spec at
+  `2026-09-15-unported-option-domains.md` (new).
+- **[7/req MED] octagramspiral**: marked blocked-by-lattice-closure in
+  this spec (see the lattice milestone §octagramspiral and §Stage-4
+  verdict — probes m2/m3/m5 falsified the fix path; do not reopen).
+- **[8/req LOW] smoke summary cross-ref**: added below the header.
+- **[9/quality LOW] include_bytes! in 8 test fixtures**: embed golden
+  3mf/gcode test DATA, not source splitting; kept (documented decision).
+- **[10/logic LOW] orientation pin test**: added
+  (`cw_input_offset_negates_delta_and_reverses_output`).
+- **[11/test LOW]** covered with item 1.
+- **[12/edge LOW] simplify.rs expect**: invariant comment added.

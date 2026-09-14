@@ -296,3 +296,29 @@ fn wipe_distribution_uses_configured_distance_when_clipping_rounds_long() {
     assert_eq!(path.retraction_distance, 1.0);
     assert_eq!(path.distribution_distance, 1_000_000.0);
 }
+
+#[test]
+fn wipe_clip_end_empties_the_path_without_panicking() {
+    // A configured wipe distance shorter than every segment consumes all
+    // points; `Polyline::clip_end` (`Polyline.cpp:56-59`) returns an empty
+    // polyline rather than popping the final point.
+    let state = EmitState {
+        scale_factor: 0.000_001,
+        options: MotionOptions {
+            wipe: true,
+            wipe_distance: 0.0005,
+            ..MotionOptions::default()
+        },
+        wipe_start: Some(arc::Point { x: 0.0, y: 0.0 }),
+        wipe_path: vec![
+            arc::Point { x: 0.0, y: 0.0 },
+            arc::Point { x: 0.2, y: 0.0 },
+            arc::Point { x: 0.5, y: 0.0 },
+        ],
+        ..EmitState::default()
+    };
+
+    let path = wipe_moves(&state);
+
+    assert!(path.segments.iter().map(|(_, len)| *len).sum::<f64>() <= 500.0 + 1.0e-6);
+}

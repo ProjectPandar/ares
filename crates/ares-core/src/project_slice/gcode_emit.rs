@@ -242,49 +242,6 @@ fn layer_boundary_slices_rc(
         .clone()
 }
 
-fn layer_boundary_slices<'a>(
-    traversal: &'a PreparedPostClassicTraversal,
-    object_index: usize,
-    layer_index: usize,
-    cache: &'a mut std::collections::HashMap<usize, std::rc::Rc<[ExPolygon]>>,
-) -> &'a [ExPolygon] {
-    let Some(record) = traversal.objects[object_index]
-        .records
-        .get(layer_index)
-        .and_then(Option::as_ref)
-    else {
-        return traversal.objects[object_index]
-            .slices(layer_index)
-            .unwrap_or(&[]);
-    };
-    let _ = record;
-    cache.entry(layer_index).or_insert_with(|| {
-        let mut all: Vec<ExPolygon> = Vec::new();
-        for slices in traversal.objects[object_index].occurrence_slices(layer_index) {
-            all.extend(slices.iter().cloned());
-        }
-        std::rc::Rc::from(crate::geometry::union_expolygons(&all, &[]).unwrap_or_default())
-    })
-}
-
-fn trailing_gcode_z(output: &[u8]) -> f64 {
-    std::str::from_utf8(output)
-        .ok()
-        .and_then(|text| {
-            text.lines().rev().find_map(|line| {
-                let code = line.split(';').next()?.trim();
-                let command = code.split_whitespace().next()?;
-                if !matches!(command, "G0" | "G1") {
-                    return None;
-                }
-                code.split_whitespace()
-                    .find_map(|word| word.strip_prefix('Z'))
-                    .and_then(|value| value.parse::<f64>().ok())
-            })
-        })
-        .unwrap_or(0.0)
-}
-
 /// The final XY the start g-code left the nozzle at — mirrors
 /// `GCodeWriter::m_pos.head<2>()` after the start g-code renders. X
 /// and Y words apply independently (a move may update only one).

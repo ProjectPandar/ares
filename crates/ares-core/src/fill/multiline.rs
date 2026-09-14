@@ -249,14 +249,6 @@ fn generate_family(request: FamilyRequest<'_>) -> Result<Vec<Polyline>, ClipperE
     Ok(lines)
 }
 
-fn center(expolygon: &ExPolygon) -> Point {
-    let (minimum, maximum) = bounds(expolygon);
-    Point::new(
-        minimum.x() + (maximum.x() - minimum.x()) / 2,
-        minimum.y() + (maximum.y() - minimum.y()) / 2,
-    )
-}
-
 fn bounds(expolygon: &ExPolygon) -> (Point, Point) {
     expolygon
         .contour()
