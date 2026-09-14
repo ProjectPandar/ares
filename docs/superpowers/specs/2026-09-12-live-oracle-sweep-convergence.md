@@ -774,3 +774,23 @@ off, orca's M73 P/R sequence exposes its per-layer time beliefs
 directly, and ares' ARES_DUMP_ELAPSED cumulative chain gives its own;
 the first diverging layer isolates the estimator gap on nominal content
 without the slowdown feedback loop.
+
+## 2bDWHY no-slowdown experiment: structural layer-1 wall divergence (2026-09-15, #98)
+
+With `slow_down_for_layer_cooling=0` in both engines, the outputs are
+84 diff lines: ~12 M73 position shifts, ~58 E last-digit flips — and a
+STRUCTURAL divergence at layer 1's inner wall. Orca emits the loop as
+eight short segments, each carrying the Z word (Z1.2 per line) and a
+per-segment F ladder (F4320→4560→4980→5040→5280→5580→5700→6000) with
+sub-print-resolution absolute-E deltas (E1.46552 printed six times,
+then growing); ares emits the same loop as three long segments at a
+single F6000 without Z words. Config: seam_slope_type=none,
+scarf settings off — NOT the scarf joint. The signature (Z-word per
+extrusion + per-segment F + near-zero E deltas) points at orca's
+z_contoured emission (`GCode.cpp:6374,6389`,
+`ExtrusionEntity.hpp:166 z_contoured`) combined with a per-segment
+feedrate feature; ContourZ.cpp sets the flag. Next slice: identify the
+per-segment-F source and whether ContourZ applies to this geometry;
+then port the emission (z-word + segment chain). This is a CONTENT
+divergence, not timing — the M73 shifts in this region are downstream
+of it.
