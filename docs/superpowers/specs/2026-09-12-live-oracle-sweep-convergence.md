@@ -650,3 +650,22 @@ Z re-statement carries its own "ensure Z matches planned layer height"
 (GCode.cpp:6383) with no F word. All wired through
 travel_emit::xy/xyz_with_comment and the route loop. Sermoon V1 drops to
 1169 residual lines; comments-off fixtures byte-stable.
+
+## M73 family quantification (2026-09-15, #93)
+
+Across the divergent corpus the M73 P0 R-values (the TOTAL print time
+estimate in minutes) split the family:
+
+- Most divergent cases: P0 matches, mid-print transitions shift by one
+  line (the knife-edge class).
+- A substantial set: P0 R differs by ±1 minute (e.g. orca R29 vs ares
+  R30) — the total crossing a minute boundary; drift bidirectional, no
+  single systematic bias.
+- Outliers with structural drift: case-2bDWHY shows R10 vs R13 (≈20-30%
+  total drift) driven by a large slowdown-feedrate difference (G1 F843
+  vs F629 on matching content) — that layer's time estimate differs far
+  beyond knife-edge, pointing at a per-layer block-time divergence
+  class rather than accumulation.
+
+The replay toolchain (estimator-replay + ARES_DUMP_BLOCKS/ELAPSED)
+remains the instrument for the block-level comparison on the outliers.
