@@ -216,3 +216,17 @@ are not yet). The two-point scale rounding audit (checked_scale
 truncation vs `Point::new_scale` truncating / `Point(double,double)`
 rounding — both ctors exist upstream) remains the mechanical
 prerequisite.
+
+## Rounding-mode audit resolved (2026-09-15, continuation #87)
+
+`Point.hpp:662-668`: the dominant conversion `scaled<coord_t>(v)` is
+`Tout(v / SCALING_FACTOR)` — an explicit TRUNCATION; the rounding
+variant is commented out upstream with a TODO. `Point::new_scale` also
+truncates; only the direct `Point(double,double)` constructor rounds.
+ares's `checked_scale` (truncating) is therefore faithful to the
+dominant pattern — the rounding precondition for stage 4 is already
+satisfied. The only per-site check left is where upstream constructs
+Points directly from doubles (the bbox-offset family already handled in
+stage 2). Stage 4 reduces to: flip the constants, fix the fallout
+empirically (the E 5th-decimal / sub-3-decimal chain), validate golden
++ sweep.
