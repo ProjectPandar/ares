@@ -128,3 +128,14 @@ Next slice: compile the vendored upstream PressureEqualizer
 (tools/chain-probe has the sources) as probe6 and feed it the exact
 ARES_DUMP_PEINPUT layer text — the byte-level verdict on where the
 clamp decisions diverge.
+
+## Post-dedup state (2026-09-15, #109)
+
+Sweep 866/107/18 — the 866 baseline restored with the equalizer live
+on all 78 slope-enabled cases. The full-fixture 2bDWHY (slowdown ON)
+still diverges through the timing family: the pre-equalizer cooling
+feedrate is F629 in ares vs F843 in orca (the #94 estimator gap —
+10.26s vs ~14.1s internal layer-time belief), which then propagates
+into every downstream F. The equalizer structure itself is byte-exact
+(vindicated by probe6). Next slice: close the estimator gap or
+continue on the other buckets.
