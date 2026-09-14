@@ -28,7 +28,7 @@ fn enabled_wipe_before_external_loop_moves_inward_and_returns_before_external_ex
             "G1 X0 Y0 F7200 ; travel",
             "G1 X0.141 Y0.141 F3600 ; wipe before external loop",
             "G1 X0 Y0 F3600 ; wipe before external loop",
-            "G1 X4 Y0 E0.11876 ; extrude",
+            "G1 X4 Y0 E0.11877 ; perimeter",
         ],
     );
     assert!(enabled.contains(";MOVE:print:external_perimeter:0,0"));
@@ -56,8 +56,8 @@ fn disabled_wipe_before_external_loop_preserves_external_perimeter_gcode() {
     }))
     .unwrap();
 
-    assert!(absent.contains("G1 X4 Y0 E0.11876 ; extrude"));
-    assert!(disabled.contains("G1 X4 Y0 E0.11876 ; extrude"));
+    assert!(absent.contains("G1 X4 Y0 E0.11877 ; perimeter"));
+    assert!(disabled.contains("G1 X4 Y0 E0.11877 ; perimeter"));
     assert!(!disabled.contains("wipe before external loop"));
 }
 

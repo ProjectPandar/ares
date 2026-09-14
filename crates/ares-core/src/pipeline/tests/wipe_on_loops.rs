@@ -27,7 +27,7 @@ fn enabled_wipe_on_loops_moves_inward_after_external_loop_before_internal_travel
     assert_ordered(
         &enabled,
         &[
-            "G1 X0 Y0 E0.11877 ; extrude",
+            "G1 X0 Y0 E0.11877 ; perimeter",
             "G1 X0.069 Y0.04 F3600 ; move inwards before travel",
             "G1 X0.357 Y0.357 F7200 ; travel",
         ],
@@ -56,8 +56,8 @@ fn missing_or_disabled_wipe_on_loops_preserves_output() {
 
     assert!(!absent.contains("move inwards before travel"));
     assert!(!disabled.contains("move inwards before travel"));
-    assert!(absent.contains("G1 X0 Y0 E0.11877 ; extrude"));
-    assert!(disabled.contains("G1 X0 Y0 E0.11877 ; extrude"));
+    assert!(absent.contains("G1 X0 Y0 E0.11877 ; perimeter"));
+    assert!(disabled.contains("G1 X0 Y0 E0.11877 ; perimeter"));
 }
 
 #[test]

@@ -64,7 +64,7 @@ async fn slice_emits_speed_feedrates_on_path_commands() {
     assert_speed_move_command_block(
         &output,
         ";SPEED:print:external_perimeter:-0.5,0:1800",
-        ";EXTRUSION:print:external_perimeter:-0.5,0:0.772716",
+        ";EXTRUSION:print:external_perimeter:-0.5,0:0.772715",
         ";MOVE:print:external_perimeter:-0.5,0",
         "G1 X-0.5 Y0 E0.02393",
     );

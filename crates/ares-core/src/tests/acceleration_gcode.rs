@@ -247,7 +247,7 @@ async fn gcode_comments_apply_to_acceleration_commands() {
     assert!(
         output
             .lines()
-            .any(|line| line == "G1 X-0.5 Y0 E0.02393 ; extrude")
+            .any(|line| line == "G1 X-0.5 Y0 E0.02393 ; perimeter")
     );
 }
 

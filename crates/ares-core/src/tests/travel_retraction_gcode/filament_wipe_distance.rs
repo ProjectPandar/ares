@@ -54,7 +54,7 @@ fn filament_wipe_distance_overrides_short_unprefixed_wipe_distance() {
     assert_ordered(
         &output,
         &[
-            "G1 X1 Y0 E0.03385 ; extrude",
+            "G1 X1 Y0 E0.03385 ; infill",
             "G1 E-0.55 F1800 ; retract",
             "G1 X0.5 Y0 E-0.25 F3600 ; wipe and retract",
             "G1 X2 Y0 F7200 ; travel",

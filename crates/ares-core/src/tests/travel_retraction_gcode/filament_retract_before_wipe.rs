@@ -54,7 +54,7 @@ fn filament_retract_before_wipe_zero_moves_speed_allowed_retraction_into_wipe() 
     assert_ordered(
         &output,
         &[
-            "G1 X1 Y0 E0.03385 ; extrude",
+            "G1 X1 Y0 E0.03385 ; infill",
             "G1 E-0.675 F1800 ; retract",
             "G1 X0.75 Y0 E-0.125 F3600 ; wipe and retract",
             "G1 X2 Y0 F7200 ; travel",
@@ -81,7 +81,7 @@ fn filament_retract_before_wipe_full_moves_all_retraction_before_wipe() {
     assert_ordered(
         &output,
         &[
-            "G1 X1 Y0 E0.03385 ; extrude",
+            "G1 X1 Y0 E0.03385 ; infill",
             "G1 E-0.8 F1800 ; retract",
             "G1 X0.5 Y0 F3600 ; wipe and retract",
             "G1 X2 Y0 F7200 ; travel",

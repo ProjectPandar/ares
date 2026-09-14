@@ -272,10 +272,16 @@ fn generated_extrusion_moves_apply_first_layer_flow_only_on_layer_zero() {
 
     let output = generate_extrusion_moves(&layers, &moves, options).unwrap();
 
-    assert_eq!(output[0].moves()[1].e_position(), Some(0.011366));
-    assert_eq!(output[1].moves()[1].e_position(), Some(0.034098));
-    assert_eq!(output[0].total_extrusion_mm(), 0.011366);
-    assert_eq!(output[1].total_extrusion_mm(), 0.022732);
+    assert_eq!(
+        output[0].moves()[1].e_position(),
+        Some(0.011366197723675815)
+    );
+    assert_eq!(
+        output[1].moves()[1].e_position(),
+        Some(0.034098593171027446)
+    );
+    assert_eq!(output[0].total_extrusion_mm(), 0.011366197723675815);
+    assert_eq!(output[1].total_extrusion_mm(), 0.02273239544735163);
 }
 
 #[test]

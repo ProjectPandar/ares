@@ -81,7 +81,7 @@ async fn slice_emits_layer_aware_gcode() {
     assert!(
         output
             .lines()
-            .any(|line| line == "; total_extrusion_mm = 1.050284")
+            .any(|line| line == "; total_extrusion_mm = 1.050287")
     );
     assert!(output.lines().any(|line| line == "; empty_layer_count = 0"));
     assert!(output.contains(";LAYER_CHANGE\n;LAYER:0\n;Z:0.2\nG1 Z0.2"));
@@ -159,7 +159,7 @@ async fn slice_emits_layer_aware_gcode() {
     assert!(
         output
             .lines()
-            .any(|line| line == "; extrusion_mm = 0.26035")
+            .any(|line| line == "; extrusion_mm = 0.260353")
     );
     assert_eq!(
         output
@@ -262,7 +262,7 @@ async fn slice_emits_layer_aware_gcode() {
     );
     assert_extrusion_move_command_block(
         &output,
-        ";EXTRUSION:print:external_perimeter:-0.5,0:0.772716",
+        ";EXTRUSION:print:external_perimeter:-0.5,0:0.772715",
         "G1 X-0.5 Y0 E0.02393",
     );
     assert_extrusion_move_command_block(
@@ -272,7 +272,7 @@ async fn slice_emits_layer_aware_gcode() {
     );
     assert_extrusion_move_command_block(
         &output,
-        ";EXTRUSION:print:external_perimeter:-1,0:1.050284",
+        ";EXTRUSION:print:external_perimeter:-1,0:1.050287",
         "G1 X-1 Y0 E0.04787",
     );
     assert_move_command_pair(

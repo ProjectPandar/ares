@@ -100,7 +100,7 @@ async fn gcode_comments_true_adds_inline_command_comments_only() {
     assert!(
         commented
             .lines()
-            .any(|line| line == "G1 X-0.5 Y0 E0.02393 ; extrude")
+            .any(|line| line == "G1 X-0.5 Y0 E0.02393 ; perimeter")
     );
     assert_eq!(
         commented
