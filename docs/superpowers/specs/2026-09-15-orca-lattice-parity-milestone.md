@@ -289,3 +289,18 @@ union_paths/negative_paths ports evidently differ in that final
 orientation for this class. Point-exactness removes the offset port
 from stage 4's suspect list; the orientation question (whether the
 mirrored traversal reaches the G-code) is a small separate slice.
+
+## Orientation-mirror slice closed as deliberate (2026-09-15, #90)
+
+Removing the per-path delta negation + output reversal (making
+raw_offset_paths match the vendor's single-path Execute semantics)
+drives the offset differential to 912/912 without reverse allowance —
+but BREAKS the corpus: the golden drops to failing coverage and the
+octagram/H2D fixtures diverge (325/156 lines). The manual
+negate-and-reverse is therefore load-bearing: it emulates orca's
+real multi-path ClipperOffset::Execute (one AddPaths per layer with
+FixOrientations + a single union) inside ares's per-path offsetting,
+and the 866-case corpus is byte-matched around it. The 6 mirrored
+dump records are not a divergence driver; the orientation question is
+closed as deliberate emulation. Stage-4 preconditions are now fully
+cleared — the remaining work is the empirical 4096 switch itself.
