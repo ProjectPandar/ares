@@ -21,6 +21,11 @@ pub(super) struct Config {
     pub(super) minimum_speed: f32,
     pub(super) keep_outer_wall_speed: bool,
     pub(super) relative_e: bool,
+    /// Preserve the `;_EXTRUDE_SET_SPEED` / `;_EXTRUDE_END` marker
+    /// scaffolding for the PressureEqualizer pass (upstream keeps the
+    /// markers through the cooling buffer; only the processor strips
+    /// them after the equalizer consumed them).
+    pub(super) keep_markers: bool,
 }
 
 pub(super) struct State {
@@ -106,7 +111,7 @@ pub(super) fn rewrite_layer(output: &mut Vec<u8>, layer_start: usize, state: &mu
         }
     }
     let pre_append = output.len();
-    rewrite::append(output, &layer, &mut lines);
+    rewrite::append(output, &layer, &mut lines, state.config.keep_markers);
     if let Ok(path) = std::env::var("ARES_DUMP_PRECOOLING") {
         use std::io::Write;
         if let Ok(mut file) = std::fs::OpenOptions::new()

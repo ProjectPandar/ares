@@ -6,7 +6,12 @@ const SET_SPEED: &[u8] = b";_EXTRUDE_SET_SPEED";
 const EXTERNAL_PERIMETER: &[u8] = b";_EXTERNAL_PERIMETER";
 const WIPE: &[u8] = b";_WIPE";
 
-pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLine]) {
+pub(super) fn append(
+    output: &mut Vec<u8>,
+    gcode: &[u8],
+    lines: &mut [CoolingLine],
+    keep_markers: bool,
+) {
     lines.sort_unstable_by_key(|line| line.start);
     let mut position = 0;
     let mut current_feedrate = 0;
@@ -28,6 +33,9 @@ pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLin
             );
         }
         if line.kind & TYPE_EXTRUDE_END != 0 {
+            if keep_markers {
+                output.extend_from_slice(b";_EXTRUDE_END\n");
+            }
             position = line.end;
             continue;
         }
@@ -53,6 +61,15 @@ pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLin
 
         if new_feedrate == current_feedrate {
             if line.kind & (TYPE_ADJUSTABLE | TYPE_EXTERNAL_PERIMETER | TYPE_WIPE) != 0 {
+                if keep_markers {
+                    output.extend_from_slice(b"G1 F");
+                    output.extend_from_slice(new_feedrate.to_string().as_bytes());
+                    output.extend_from_slice(b";_EXTRUDE_SET_SPEED");
+                    if line.kind & TYPE_EXTERNAL_PERIMETER != 0 {
+                        output.extend_from_slice(b";_EXTERNAL_PERIMETER");
+                    }
+                    output.extend_from_slice(b"\n");
+                }
                 position = line.end;
                 continue;
             }
@@ -84,7 +101,9 @@ pub(super) fn append(output: &mut Vec<u8>, gcode: &[u8], lines: &mut [CoolingLin
         }
 
         if comment_start < source.len() {
-            if line.kind & (TYPE_ADJUSTABLE | TYPE_EXTERNAL_PERIMETER | TYPE_WIPE) != 0 {
+            if line.kind & (TYPE_ADJUSTABLE | TYPE_EXTERNAL_PERIMETER | TYPE_WIPE) != 0
+                && !keep_markers
+            {
                 append_clean_comment(output, &source[comment_start..], line.kind);
             } else {
                 output.extend_from_slice(&source[comment_start..]);

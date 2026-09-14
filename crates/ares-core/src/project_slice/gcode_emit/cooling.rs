@@ -102,6 +102,7 @@ impl CoolingState {
                         .map_or(0.0, |value| value.0 as f32),
                     keep_outer_wall_speed: first_bool(&filament.dont_slow_down_outer_wall.0),
                     relative_e: runtime.use_relative_e_distances.0,
+                    keep_markers: false,
                 },
                 runtime.travel_speed.0,
             ),

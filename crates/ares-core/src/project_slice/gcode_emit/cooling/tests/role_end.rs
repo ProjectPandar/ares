@@ -31,6 +31,7 @@ fn cooling_state() -> CoolingState {
                 minimum_speed: 0.0,
                 keep_outer_wall_speed: false,
                 relative_e: true,
+                keep_markers: false,
             },
             120.0,
         ),
