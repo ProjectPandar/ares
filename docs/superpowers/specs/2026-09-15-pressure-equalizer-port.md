@@ -101,3 +101,30 @@ differently, or whether the trivial-delta path should not re-emit F
 when the quantized feedrate is unchanged. Also: revert-or-keep the -1
 regression case (identify it via HEAD~1 comparison) pending the
 structure fix.
+
+## Decisive oracle experiment (2026-09-15, #108)
+
+Re-sliced 2bDWHY with `max_volumetric_extrusion_rate_slope` 100 vs 0
+(everything else identical):
+
+- **slope=0**: layer-1 inner wall = raw emission (4 long lines, one
+  F6000, no Z words, full-line E 4.39657); the ONLY differences vs
+  slope=100 are E last-digit flips (~86 lines total).
+- **slope=100**: layer-1 inner wall = the equalizer rewrite (split
+  segments X498.92→X501.08→… each carrying interpolated E 1.46552, a
+  Z1.2 word, and the F ladder F4320→4560→4980→5040→5280→5580→5700→6000)
+  — the exact structure my emitter port produces.
+- **The skirt stays UNREWRITTEN at slope=100**: orca emits one F3000
+  for the whole skirt block, raw lines passthrough. My port rewrites it
+  (sub-unit f32 rate ties → clamps fire). Identical input text,
+  identical deterministic math — contradiction unresolved by reasoning.
+
+Also: the wired-sweep net -1 is pure oracle-flake churn (Flashforge
+Creator 5 ×4, WonderMaker ×3, MyToolChanger, Prusa XL 5T families;
++5 PASS −6 PASS +1 ORCA_ERROR) — NO stable-case regression from the
+equalizer wiring.
+
+Next slice: compile the vendored upstream PressureEqualizer
+(tools/chain-probe has the sources) as probe6 and feed it the exact
+ARES_DUMP_PEINPUT layer text — the byte-level verdict on where the
+clamp decisions diverge.
