@@ -251,9 +251,5 @@ fn distance(start: Point2, end: Point2) -> f64 {
     ((end.x() - start.x()).powi(2) + (end.y() - start.y()).powi(2)).sqrt()
 }
 
-fn round_6(value: f64) -> f64 {
-    (value * 1_000_000.0).round() / 1_000_000.0
-}
-
 #[cfg(test)]
 mod tests;
