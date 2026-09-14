@@ -2,8 +2,8 @@ use crate::Point2dList;
 
 pub(crate) type Coord = i64;
 
-const NORMAL_SCALE: f64 = 0.000_001;
-const LARGE_BED_SCALE: f64 = 0.000_01;
+const NORMAL_SCALE: f64 = 1.0 / 4096.0;
+const LARGE_BED_SCALE: f64 = 1.0 / 4096.0;
 const LARGE_BED_THRESHOLD_MM: f64 = 2_147.0;
 const MIN_COORD_QUOTIENT: f64 = i64::MIN as f64;
 const MAX_COORD_QUOTIENT_EXCLUSIVE: f64 = -MIN_COORD_QUOTIENT;

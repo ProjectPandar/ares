@@ -304,3 +304,34 @@ and the 866-case corpus is byte-matched around it. The 6 mirrored
 dump records are not a divergence driver; the orientation question is
 closed as deliberate emulation. Stage-4 preconditions are now fully
 cleared — the remaining work is the empirical 4096 switch itself.
+
+## Stage-4 verdict: the switch is empirically net-negative — milestone closed (2026-09-15, #91)
+
+The m5 probe (post stages 1-3, E-accumulation fix, offset-port
+verification) flipped the constants and measured:
+
+- Sermoon (divergent case): 3851 lines — unchanged from m3; the stage
+  work did not move the 4096 divergence further.
+- H2D case-2IMLD1 (byte-identical at 1e6): 0 → 3506 lines.
+- Octagram fixture: 7664 lines; E values flip at the 3rd-4th decimal
+  (E.14804 vs E.14803) — the geometry chain at 4096 still does not
+  reproduce orca's integers.
+
+Falsified premise: ares's byte-parity at 1e6 is NOT lattice
+coincidence — it is built on deliberate per-stage emulation (the
+orientation mirror being the proven example: removing it breaks the
+corpus). Switching the lattice discards those tunings wholesale while
+the 4096 chain still diverges upstream of them. Every probe iteration
+(m2 5485 → m3 3851 → m5 3851 on Sermoon; H2D 0 → 3506) confirms the
+switch regresses the corpus without converging the divergent cases.
+
+The milestone is closed as investigated-and-rejected. The individual
+stage fixes that were behavior-neutral at 1e6 (unrounded epsilon
+deltas, scale-threaded simplification/arc fitting, raw f64 E
+accumulation) remain landed as exactness improvements. The octagramspiral
+option domain and the Loop ±1 / elephant-foot / Flashforge-waypoint
+families stay on the divergent ledger with their lattice-boundary
+root cause documented; pursuing them further would mean rebuilding the
+emulation layers on the 4096 lattice from scratch, which the evidence
+does not support over fixing the remaining independent buckets (M73
+timing family, un-ported options).
