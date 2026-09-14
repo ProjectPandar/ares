@@ -607,3 +607,14 @@ full_output` and `timelapse_tests::most_used_physical_extruder_follows_
 the_filament_map` fail at HEAD and at their own introduction commits
 (verified by correct-filter bisect); they belong to the known
 un-ported-arachne bucket, not to the octagram work.
+
+## lattice milestone proposed (2026-09-15)
+
+The lattice-probe branch (deleted after probing) confirmed the 4096
+switch is blocked on delta semantics: orca's `scale_` macro divides
+WITHOUT rounding (`libslic3r.h:94-95`), so `SCALED_EPSILON = 0.4096`
+stays fractional while ares's `checked_scale` quantizes — at 4096/mm
+the epsilon rounds to 0 and `closing_ex` asserts. Milestone spec at
+`docs/superpowers/specs/2026-09-15-orca-lattice-parity-milestone.md`
+(classify ~156 conversion sites, fix delta semantics first — a
+lattice-independent exactness win — then switch).
