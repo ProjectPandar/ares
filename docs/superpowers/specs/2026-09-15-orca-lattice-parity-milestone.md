@@ -251,3 +251,22 @@ lattice. The 4096 E 5th-decimal flips therefore originate DOWNSTREAM —
 in the perimeter/infill offsetting chain (float spacing deltas into the
 clipper ports), not in slicing. Stage 4's remaining work is the
 offsetting-chain int comparison at 4096.
+
+## Offset-port differential finding (2026-09-15, #89)
+
+probe5 (`tools/chain-probe/probe5.cpp`) runs the vendored Clipper 6
+ClipperOffset on `ARES_DUMP_OFFSET` records (raw_offset_paths now dumps
+input path + applied delta + output; `geometry/clipper/offset/execute.rs`).
+First Sermoon slice at 1e6: 906 offsets, **11 mismatched**.
+
+The failing class (e.g. delta=269112.969 on the axis-aligned square
+(3783543,3783543)..(3783543,-3783539)): the vendor miters the 90°
+corners (4-point square); ares squares them (8-point octagon, chamfer =
+delta×(2−√2) exactly). The miter branch requires r = 1+dot(normals) ≥
+0.2222, so ares's corner dot ≈ −0.78 ⇒ its normal pairing at the corner
+sees ~141° instead of 90°. The miter/dot formulas themselves match
+upstream (`clipper.cpp:3700-3730` vs generate.rs:225-244) — the defect
+is in the previous/current normal pairing of the path walk in
+`offset/generate.rs` for this path class. Positive and negative deltas
+both mostly match (895/906), so the walk is correct for the common
+cases; the failing pairing is shape-specific.

@@ -34,6 +34,7 @@ pub(crate) fn raw_offset_paths(
     join_type: JoinType,
     miter_limit: f64,
 ) -> Result<Vec<Polygon>, ClipperError> {
+    let dump = std::env::var("ARES_DUMP_OFFSET").ok();
     let mut output = Vec::with_capacity(paths.len());
     for path in paths {
         let mut offset = configured_offset(delta, join_type, miter_limit);
@@ -44,6 +45,31 @@ pub(crate) fn raw_offset_paths(
         if !counter_clockwise {
             for path in &mut path_output {
                 path.reverse();
+            }
+        }
+        if let Some(ref dump_path) = dump {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(dump_path)
+            {
+                let _ = write!(
+                    file,
+                    "O delta={applied_delta:.9} join={miter_limit:.4} n={}",
+                    path.points().len()
+                );
+                for point in path.points() {
+                    let _ = write!(file, " ({},{})", point.x(), point.y());
+                }
+                let _ = writeln!(file);
+                for polygon in &path_output {
+                    let _ = write!(file, "R n={}", polygon.points().len());
+                    for point in polygon.points() {
+                        let _ = write!(file, " ({},{})", point.x(), point.y());
+                    }
+                    let _ = writeln!(file);
+                }
             }
         }
         output.append(&mut path_output);
