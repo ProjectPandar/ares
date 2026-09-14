@@ -191,7 +191,7 @@ pub fn generate_extrusion_moves(
                             distance,
                         },
                     )?;
-                    e_position = round_6(e_position + delta);
+                    e_position += delta;
                     Some(e_position)
                 }
             };
@@ -213,7 +213,7 @@ pub fn generate_extrusion_moves(
             layer.id(),
             layer.print_z(),
             extrusion_moves,
-            round_6(e_position - layer_start_e),
+            e_position - layer_start_e,
         ));
     }
 
