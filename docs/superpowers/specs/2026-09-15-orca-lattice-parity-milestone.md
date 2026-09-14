@@ -168,3 +168,24 @@ The switch-blocking µm hardcodings are in the G-code emit layer:
 
 None of these affect the current 1e6 outputs; they join the stage-4
 precondition list alongside the m2 priming-anchor drift.
+
+## Stage-3 code completion (2026-09-15, continuation #86)
+
+All live µm hardcodings now follow the active CoordinateScale:
+
+- path simplification (`3fe01d57`): Douglas-Peucker tolerance² and point
+  comparisons take `units_per_mm` from the caller's scale
+  (path_simplification.rs, classic materialize path).
+- arc circle fitting (`2740ecab`): try_arc/fit_circle/circle_from_three/
+  deviation_sum/quantize take `units_per_mm`; the parallel-area threshold
+  is now derived as 1e-4 mm² in lattice units² (matching Circle.cpp's
+  `scale_(scale_(0.0001))`) instead of the literal 1e8 µm². The center
+  reconstruction keeps `x * (1.0/SCALE)` — the `/SCALE` form differs by
+  an ulp and flips the zero-axis arc split (pinned by the arc test).
+- avoid_crossing/boundary.rs `unit()` was already scale-aware; its
+  `unwrap_or(1_000_000)` is an unreachable overflow fallback.
+
+Everything is behavior-identical at 1e6 (arc tests 83/83, fixtures
+byte-stable, golden green). Stage-4 preconditions remaining: the m2
+priming-anchor drift hunt and the checked_scale rounding-mode audit
+(truncation today vs the Point(double) constructor's rounding).
