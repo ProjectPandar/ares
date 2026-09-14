@@ -98,7 +98,7 @@ pub(super) fn fit_ranges(points: &[Point], tolerance: f64, units_per_mm: f64) ->
         if back - front < 2 {
             continue;
         }
-        if let Some(arc) = try_arc(&points[front..=back], tolerance) {
+        if let Some(arc) = try_arc(&points[front..=back], tolerance, units_per_mm) {
             last_arc = Some(arc);
             if back + 1 == points.len() {
                 ranges.push(FittedRange {

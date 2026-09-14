@@ -78,6 +78,7 @@ fn circle_center_rounds_to_source_coordinate_grid() {
             y: 0.0,
         },
         Point { x: 1.0, y: 2.0 },
+        1_000_000.0,
     )
     .unwrap();
 

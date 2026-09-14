@@ -57,8 +57,8 @@ fn append_line(segments: &mut Vec<Segment>, start: Point, end: Point) {
     });
 }
 
-fn try_arc(points: &[Point], tolerance: f64) -> Option<ArcSegment> {
-    let (center, radius) = fit_circle(points, tolerance)?;
+fn try_arc(points: &[Point], tolerance: f64, units_per_mm: f64) -> Option<ArcSegment> {
+    let (center, radius) = fit_circle(points, tolerance, units_per_mm)?;
     let start = points[0];
     let end = points[points.len() - 1];
     let middle = points[((points.len() - 2) / 2) + 1];
@@ -101,17 +101,22 @@ fn try_arc(points: &[Point], tolerance: f64) -> Option<ArcSegment> {
     })
 }
 
-fn fit_circle(points: &[Point], tolerance: f64) -> Option<(Point, f64)> {
+fn fit_circle(points: &[Point], tolerance: f64, units_per_mm: f64) -> Option<(Point, f64)> {
     let middle_index = points.len() / 2;
     let middle = if points.len() == 3 {
         points[middle_index]
     } else if points.len().is_multiple_of(2) {
-        scaled_midpoint(points[middle_index], points[middle_index - 1])
+        scaled_midpoint(points[middle_index], points[middle_index - 1], units_per_mm)
     } else {
-        scaled_midpoint(points[middle_index - 1], points[middle_index + 1])
+        scaled_midpoint(
+            points[middle_index - 1],
+            points[middle_index + 1],
+            units_per_mm,
+        )
     };
-    if let Some(circle) = circle_from_three(points[0], middle, points[points.len() - 1])
-        && deviation_sum(points, circle, tolerance).is_some()
+    if let Some(circle) =
+        circle_from_three(points[0], middle, points[points.len() - 1], units_per_mm)
+        && deviation_sum(points, circle, tolerance, units_per_mm).is_some()
     {
         return Some(circle);
     }
@@ -120,10 +125,12 @@ fn fit_circle(points: &[Point], tolerance: f64) -> Option<(Point, f64)> {
         if index + 1 == middle_index {
             continue;
         }
-        let Some(circle) = circle_from_three(points[0], candidate, points[points.len() - 1]) else {
+        let Some(circle) =
+            circle_from_three(points[0], candidate, points[points.len() - 1], units_per_mm)
+        else {
             continue;
         };
-        let Some(deviation) = deviation_sum(points, circle, tolerance) else {
+        let Some(deviation) = deviation_sum(points, circle, tolerance, units_per_mm) else {
             continue;
         };
         if best.is_none_or(|(_, best_deviation)| deviation < best_deviation) {
@@ -133,14 +140,21 @@ fn fit_circle(points: &[Point], tolerance: f64) -> Option<(Point, f64)> {
     best.map(|(circle, _)| circle)
 }
 
-fn circle_from_three(first: Point, middle: Point, last: Point) -> Option<(Point, f64)> {
-    const SCALE: f64 = 1_000_000.0;
-    let first = scaled_point(first);
-    let middle = scaled_point(middle);
-    let last = scaled_point(last);
+fn circle_from_three(
+    first: Point,
+    middle: Point,
+    last: Point,
+    units_per_mm: f64,
+) -> Option<(Point, f64)> {
+    const PARALLEL_AREA_MM2: f64 = 1.0e-4;
+    let scale = scaled_point(Point { x: 1.0, y: 0.0 }, units_per_mm).x;
+    let parallel_area_threshold = PARALLEL_AREA_MM2 * scale * scale;
+    let first = scaled_point(first, units_per_mm);
+    let middle = scaled_point(middle, units_per_mm);
+    let last = scaled_point(last, units_per_mm);
     let area =
         (first.y - middle.y) * (first.x - last.x) - (first.y - last.y) * (first.x - middle.x);
-    if area.abs() <= 100_000_000.0 {
+    if area.abs() <= parallel_area_threshold {
         return None;
     }
     let a = first.x * (middle.y - last.y) - first.y * (middle.x - last.x) + middle.x * last.y
@@ -159,17 +173,22 @@ fn circle_from_three(first: Point, middle: Point, last: Point) -> Option<(Point,
         + last_square * (first.x - middle.x);
     let center_x = -b / (2.0 * a);
     let center_y = -c / (2.0 * a);
-    let radius = (center_x - first.x).hypot(center_y - first.y) / SCALE;
+    let radius = (center_x - first.x).hypot(center_y - first.y) / scale;
     (radius <= 2_000.0).then_some((
         Point {
-            x: center_x.round() * (1.0 / SCALE),
-            y: center_y.round() * (1.0 / SCALE),
+            x: center_x.round() * (1.0 / scale),
+            y: center_y.round() * (1.0 / scale),
         },
         radius,
     ))
 }
 
-fn deviation_sum(points: &[Point], circle: (Point, f64), tolerance: f64) -> Option<f64> {
+fn deviation_sum(
+    points: &[Point],
+    circle: (Point, f64),
+    tolerance: f64,
+    units_per_mm: f64,
+) -> Option<f64> {
     let (center, radius) = circle;
     let mut total = 0.0;
     for point in &points[1..points.len() - 1] {
@@ -188,8 +207,8 @@ fn deviation_sum(points: &[Point], circle: (Point, f64), tolerance: f64) -> Opti
             continue;
         }
         let closest = Point {
-            x: quantize(pair[0].x + parameter * dx),
-            y: quantize(pair[0].y + parameter * dy),
+            x: quantize(pair[0].x + parameter * dx, units_per_mm),
+            y: quantize(pair[0].y + parameter * dy, units_per_mm),
         };
         let deviation = (distance(center, closest) - radius).abs();
         if deviation > tolerance {
@@ -340,25 +359,24 @@ fn polar(center: Point, point: Point) -> f64 {
         .rem_euclid(std::f64::consts::TAU)
 }
 
-fn scaled_point(point: Point) -> Point {
+fn scaled_point(point: Point, units_per_mm: f64) -> Point {
     Point {
-        x: (point.x * 1_000_000.0).round(),
-        y: (point.y * 1_000_000.0).round(),
+        x: (point.x * units_per_mm).round(),
+        y: (point.y * units_per_mm).round(),
     }
 }
 
-fn scaled_midpoint(left: Point, right: Point) -> Point {
-    const SCALE: f64 = 1_000_000.0;
-    let left = scaled_point(left);
-    let right = scaled_point(right);
+fn scaled_midpoint(left: Point, right: Point, units_per_mm: f64) -> Point {
+    let left = scaled_point(left, units_per_mm);
+    let right = scaled_point(right, units_per_mm);
     Point {
-        x: ((left.x as i64 + right.x as i64) / 2) as f64 / SCALE,
-        y: ((left.y as i64 + right.y as i64) / 2) as f64 / SCALE,
+        x: ((left.x as i64 + right.x as i64) / 2) as f64 / units_per_mm,
+        y: ((left.y as i64 + right.y as i64) / 2) as f64 / units_per_mm,
     }
 }
 
-fn quantize(value: f64) -> f64 {
-    (value * 1_000_000.0).trunc() / 1_000_000.0
+fn quantize(value: f64, units_per_mm: f64) -> f64 {
+    (value * units_per_mm).trunc() / units_per_mm
 }
 
 fn distance(left: Point, right: Point) -> f64 {
