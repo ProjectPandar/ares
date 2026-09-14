@@ -65,6 +65,7 @@ pub(crate) fn format_gcode(
         accel_to_decel_config,
         part_cooling_fan_min_pwm,
         options.use_relative_e_distances()?,
+        gcode_comments,
     );
     let max_print_z = context::max_print_z(layers);
     let mut gcode =
@@ -346,7 +347,7 @@ pub(crate) fn format_gcode(
                     acceleration_comment: comments.acceleration,
                     jerk_comment: comments.jerk,
                     travel_comment: comments.travel,
-                    extrude_comment: comments.extrude,
+                    extrude_comment: extrude_description(gcode_comments, extrusion_move.role()),
                     travel_lift,
                 })?;
             move_output.push_str(&emitted_move_gcode);
@@ -396,4 +397,23 @@ pub(crate) fn format_gcode(
         layer_speed_moves,
     )?;
     Ok(gcode.into_bytes())
+}
+
+/// `GCode.cpp:6144/6160/4438/4503` — the extrude description passed per
+/// entity family; the G1 comment is emitted only under `gcode_comments`.
+fn extrude_description(gcode_comments: bool, role: PrintPathRole) -> Option<&'static str> {
+    if !gcode_comments {
+        return None;
+    }
+    Some(match role {
+        PrintPathRole::Skirt => "skirt",
+        PrintPathRole::Brim => "brim",
+        PrintPathRole::ExternalPerimeter
+        | PrintPathRole::OverhangPerimeter
+        | PrintPathRole::InternalPerimeter => "perimeter",
+        PrintPathRole::Ironing => "ironing",
+        PrintPathRole::SupportMaterial => "support material",
+        PrintPathRole::SupportMaterialInterface => "support material interface",
+        _ => "infill",
+    })
 }

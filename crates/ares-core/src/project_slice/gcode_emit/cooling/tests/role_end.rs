@@ -23,6 +23,7 @@ fn cooling_state() -> CoolingState {
         part_cooling_fan_min_pwm: 0,
         emit_initial_fan: false,
         fan_mover_enabled: false,
+        gcode_comments: false,
         feedrate: feedrate::State::new(
             feedrate::Config {
                 enabled: false,

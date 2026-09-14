@@ -2,7 +2,7 @@ use super::Slope;
 use crate::project_slice::gcode_emit::motion::extrusion;
 use crate::project_slice::gcode_emit::motion::{
     EmitState, arc,
-    features::PathProperties,
+    features::{PathProperties, feature_description},
     format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
 };
 
@@ -59,11 +59,16 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
         };
         output.extend_from_slice(
             format!(
-                "G1 X{} Y{}{} E{}\n",
+                "G1 X{} Y{}{} E{}{}\n",
                 format_axis(end.x),
                 format_axis(end.y),
                 z_word,
-                format_extrusion(extrusion)
+                format_extrusion(extrusion),
+                state
+                    .options
+                    .gcode_comments
+                    .then(|| format!(" ; {}", feature_description(properties.feature)))
+                    .unwrap_or_default()
             )
             .as_bytes(),
         );

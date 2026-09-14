@@ -46,7 +46,16 @@ pub(super) fn append_limits(output: &mut Vec<u8>, traversal: &PreparedPostClassi
         .first()
         .is_some_and(|value| value.0 > 0);
     if settings.printer.gcode.auxiliary_fan.0 && close_fan {
-        output.extend_from_slice(b"M106 S0\nM106 P2 S0\n");
+        let comments = settings.process.print.gcode_comments.0;
+        let fan_comment = if comments { " ; disable fan" } else { "" };
+        let aux_comment = if comments {
+            " ; disable additional fan "
+        } else {
+            ""
+        };
+        output.extend_from_slice(
+            format!("M106 S0{fan_comment}\nM106 P2 S0{aux_comment}\n").as_bytes(),
+        );
     }
 }
 

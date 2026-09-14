@@ -45,6 +45,7 @@ pub(super) struct CoolingState {
     /// boundary; BBL machines carry it inside their start sequence.
     emit_initial_fan: bool,
     fan_mover_enabled: bool,
+    gcode_comments: bool,
     feedrate: feedrate::State,
 }
 
@@ -89,6 +90,7 @@ impl CoolingState {
             part_cooling_fan_min_pwm: runtime.part_cooling_fan_min_pwm.0.clamp(0, 100) as u8,
             emit_initial_fan: !super::tags::Tags::of(traversal).is_bbl(),
             fan_mover_enabled: runtime.fan_speedup_time.0 != 0.0 || runtime.fan_kickstart.0 > 0.0,
+            gcode_comments: full.process.print.gcode_comments.0,
             feedrate: feedrate::State::new(
                 feedrate::Config {
                     enabled: first_bool(&filament.slow_down_for_layer_cooling.0),
@@ -128,8 +130,22 @@ impl CoolingState {
                 || (layer_index == 0 && self.emit_initial_fan))
         {
             self.additional_speed = additional_speed;
+            let comment = self
+                .gcode_comments
+                .then(|| {
+                    if additional_speed == 0 {
+                        " ; disable additional fan "
+                    } else {
+                        " ; enable additional fan "
+                    }
+                })
+                .unwrap_or("");
             output.extend_from_slice(
-                format!("M106 P2 S{}\n", additional_fan_pwm(additional_speed)).as_bytes(),
+                format!(
+                    "M106 P2 S{}{comment}\n",
+                    additional_fan_pwm(additional_speed)
+                )
+                .as_bytes(),
             );
         }
     }
@@ -153,7 +169,17 @@ impl CoolingState {
         );
         let replacement = if part_speed != self.part_speed || initial {
             let speed = clamped_part_speed(part_speed, self.part_cooling_fan_min_pwm);
-            format!("M106 S{}\n", part_fan_pwm(speed)).into_bytes()
+            let comment = self
+                .gcode_comments
+                .then(|| {
+                    if speed == 0 {
+                        " ; disable fan"
+                    } else {
+                        " ; enable fan"
+                    }
+                })
+                .unwrap_or("");
+            format!("M106 S{}{comment}\n", part_fan_pwm(speed)).into_bytes()
         } else {
             Vec::new()
         };
@@ -212,7 +238,17 @@ impl CoolingState {
             let replacement = if force {
                 self.physical_part_speed = target;
                 let emitted = clamped_part_speed(target, self.part_cooling_fan_min_pwm);
-                format!("M106 S{}\n", part_fan_pwm(emitted)).into_bytes()
+                let comment = self
+                    .gcode_comments
+                    .then(|| {
+                        if emitted == 0 {
+                            " ; disable fan"
+                        } else {
+                            " ; enable fan"
+                        }
+                    })
+                    .unwrap_or("");
+                format!("M106 S{}{comment}\n", part_fan_pwm(emitted)).into_bytes()
             } else {
                 Vec::new()
             };

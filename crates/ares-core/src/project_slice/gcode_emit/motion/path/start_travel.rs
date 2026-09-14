@@ -414,9 +414,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         // a zero-length retraction (retraction_length=0 with wipe)
         // deretracts silently.
         if unretract.abs() > 0.0 {
+            let comment = state
+                .options
+                .gcode_comments
+                .then_some(" ;  ; unretract")
+                .unwrap_or("");
             output.extend_from_slice(
                 format!(
-                    "G1 E{} F{}\n",
+                    "G1 E{} F{}{comment}\n",
                     format_extrusion(unretract),
                     format_axis(state.options.deretraction_feedrate)
                 )

@@ -203,3 +203,17 @@ pub(super) fn for_fill(role: ExtrusionRole) -> &'static str {
         ExtrusionRole::None | ExtrusionRole::Mixed => "Mixed",
     }
 }
+
+/// The extrude descriptions upstream passes per entity family
+/// (`GCode.cpp:6144/6160/4438/4503`); only emitted under `gcode_comments`.
+pub(super) fn feature_description(feature: &str) -> &'static str {
+    match feature {
+        "Skirt" => "skirt",
+        "Brim" => "brim",
+        "Inner wall" | "Outer wall" | "Overhang wall" => "perimeter",
+        "Ironing" => "ironing",
+        "Support" => "support material",
+        "Support interface" => "support material interface",
+        _ => "infill",
+    }
+}

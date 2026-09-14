@@ -98,9 +98,14 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         return;
     }
     let retract = extrusion::coordinate(state, -(length - state.retracted_amount));
+    let comment = state
+        .options
+        .gcode_comments
+        .then_some(" ; retract")
+        .unwrap_or("");
     output.extend_from_slice(
         format!(
-            "G1 E{} F{}\n",
+            "G1 E{} F{}{comment}\n",
             format::extrusion(retract),
             format::axis(state.options.retraction_feedrate)
         )

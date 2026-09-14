@@ -119,9 +119,14 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
     let before = state.options.retraction_length - during;
     if before > f64::EPSILON {
         let retract = extrusion::coordinate(state, -before);
+        let comment = state
+            .options
+            .gcode_comments
+            .then_some(" ; retract")
+            .unwrap_or("");
         output.extend_from_slice(
             format!(
-                "G1 E{} F{}\n",
+                "G1 E{} F{}{comment}\n",
                 format_extrusion(retract),
                 format_axis(state.options.retraction_feedrate)
             )
@@ -150,8 +155,13 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
             // distribute during the wipe).
             let line = if retraction > f64::EPSILON {
                 let retract = extrusion::coordinate(state, -retraction);
+                let comment = state
+                    .options
+                    .gcode_comments
+                    .then_some(" ; wipe and retract")
+                    .unwrap_or("");
                 format!(
-                    "G1 X{} Y{} E{}\n",
+                    "G1 X{} Y{} E{}{comment}\n",
                     format_axis(point.x),
                     format_axis(point.y),
                     format_extrusion(retract)

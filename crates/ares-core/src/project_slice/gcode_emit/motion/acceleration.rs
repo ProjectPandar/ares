@@ -7,6 +7,11 @@ mod tests;
 use super::{EmitState, format, jerk};
 
 fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u32, travel: bool) {
+    let comment = if state.options.gcode_comments {
+        " ; adjust acceleration"
+    } else {
+        ""
+    };
     let separate_travel = travel
         && matches!(
             state.options.gcode_flavor,
@@ -37,22 +42,26 @@ fn set_acceleration(output: &mut Vec<u8>, state: &mut EmitState, acceleration: u
     let line = match state.options.gcode_flavor {
         crate::GCodeFlavor::Repetier => {
             let code = if separate_travel { "M202" } else { "M201" };
-            format!("{code} X{acceleration} Y{acceleration}\n")
+            format!("{code} X{acceleration} Y{acceleration}{comment}\n")
         }
         crate::GCodeFlavor::RepRapFirmware | crate::GCodeFlavor::MarlinFirmware => {
             let code = if separate_travel { "M204 T" } else { "M204 P" };
-            format!("{code}{acceleration}\n")
+            format!("{code}{acceleration}{comment}\n")
         }
         crate::GCodeFlavor::Klipper => {
             let mut line = format!("SET_VELOCITY_LIMIT ACCEL={acceleration}");
             if state.options.accel_to_decel_enable {
                 let decel = acceleration as f64 * state.options.accel_to_decel_factor / 100.0;
                 line.push_str(&format!(" ACCEL_TO_DECEL={}", format::axis(decel)));
+                if state.options.gcode_comments {
+                    line.push_str(" ; adjust ACCEL_TO_DECEL");
+                }
             }
+            line.push_str(comment);
             line.push('\n');
             line
         }
-        _ => format!("M204 S{acceleration}\n"),
+        _ => format!("M204 S{acceleration}{comment}\n"),
     };
     output.extend_from_slice(line.as_bytes());
     *last = Some(acceleration);

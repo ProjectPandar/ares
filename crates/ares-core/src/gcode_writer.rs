@@ -28,6 +28,7 @@ pub(crate) struct GCodeWriter {
     gcode_flavor: GCodeFlavor,
     accel_to_decel_config: AccelToDecelConfig,
     part_cooling_fan_min_pwm: u8,
+    full_gcode_comment: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -49,7 +50,12 @@ impl GCodeWriter {
             gcode_flavor: GCodeFlavor::MarlinLegacy,
             accel_to_decel_config: AccelToDecelConfig::new(true, 50.0),
             part_cooling_fan_min_pwm: 0,
+            full_gcode_comment: false,
         }
+    }
+
+    pub(crate) fn set_full_gcode_comment(&mut self, enabled: bool) {
+        self.full_gcode_comment = enabled;
     }
 
     pub(crate) fn set_gcode_flavor(&mut self, flavor: GCodeFlavor) {
@@ -182,23 +188,59 @@ impl GCodeWriter {
         } else {
             speed
         };
+        let comment = self
+            .full_gcode_comment
+            .then(|| {
+                if speed == 0 {
+                    " ; disable fan"
+                } else {
+                    " ; enable fan"
+                }
+            })
+            .unwrap_or("");
         match (self.gcode_flavor, speed) {
-            (GCodeFlavor::MakerWare | GCodeFlavor::Sailfish, 0) => "M127\n".to_owned(),
-            (GCodeFlavor::MakerWare | GCodeFlavor::Sailfish, _) => "M126\n".to_owned(),
-            (GCodeFlavor::Mach3 | GCodeFlavor::Machinekit, 0) => "M106 S0\n".to_owned(),
-            (GCodeFlavor::Mach3 | GCodeFlavor::Machinekit, _) => {
-                format!("M106 P{}\n", fan_pwm(speed))
+            (GCodeFlavor::MakerWare | GCodeFlavor::Sailfish, 0) => {
+                format!("M127{comment}\n")
             }
-            _ => format!("M106 S{}\n", fan_pwm(speed)),
+            (GCodeFlavor::MakerWare | GCodeFlavor::Sailfish, _) => {
+                format!("M126{comment}\n")
+            }
+            (GCodeFlavor::Mach3 | GCodeFlavor::Machinekit, 0) => {
+                format!("M106 S0{comment}\n")
+            }
+            (GCodeFlavor::Mach3 | GCodeFlavor::Machinekit, _) => {
+                format!("M106 P{}{comment}\n", fan_pwm(speed))
+            }
+            _ => format!("M106 S{}{comment}\n", fan_pwm(speed)),
         }
     }
 
     pub(crate) fn set_exhaust_fan(&self, speed: u8) -> String {
-        format!("M106 P3 S{}\n", exhaust_fan_pwm(speed))
+        let comment = self
+            .full_gcode_comment
+            .then(|| {
+                if speed == 0 {
+                    " ; disable exhaust fan "
+                } else {
+                    " ; enable exhaust fan "
+                }
+            })
+            .unwrap_or("");
+        format!("M106 P3 S{}{comment}\n", exhaust_fan_pwm(speed))
     }
 
     pub(crate) fn set_additional_fan(&self, speed: u8) -> String {
-        format!("M106 P2 S{}\n", additional_fan_pwm(speed))
+        let comment = self
+            .full_gcode_comment
+            .then(|| {
+                if speed == 0 {
+                    " ; disable additional fan "
+                } else {
+                    " ; enable additional fan "
+                }
+            })
+            .unwrap_or("");
+        format!("M106 P2 S{}{comment}\n", additional_fan_pwm(speed))
     }
 
     pub(crate) fn set_pressure_advance(&self, pressure_advance: f64) -> String {

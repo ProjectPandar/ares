@@ -38,6 +38,9 @@ pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
                     format::axis(state.options.max_jerk_e)
                 ));
             }
+            if state.options.gcode_comments {
+                command.push_str(" ; adjust jerk");
+            }
             command.push('\n');
             output.extend_from_slice(command.as_bytes());
         }

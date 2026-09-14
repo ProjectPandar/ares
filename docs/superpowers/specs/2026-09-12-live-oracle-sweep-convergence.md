@@ -618,3 +618,24 @@ the epsilon rounds to 0 and `closing_ex` asserts. Milestone spec at
 `docs/superpowers/specs/2026-09-15-orca-lattice-parity-milestone.md`
 (classify ~156 conversion sites, fix delta semantics first — a
 lattice-independent exactness win — then switch).
+
+## gcode_comments (full_gcode_comment) trail (2026-09-15)
+
+Upstream gates a large comment family on `full_gcode_comment`
+(`GCodeWriter::full_gcode_comment = gcode_comments`, GCode.cpp:2038):
+fan commands (` ; disable/enable fan`, ` ; disable/enable additional
+fan ` / exhaust, with upstream's trailing spaces on the aux/exhaust
+variants), M204 ` ; adjust acceleration` (+ ` ; adjust ACCEL_TO_DECEL`
+on Klipper), M205 ` ; adjust jerk`, retract ` ; retract`, unretract
+` ;  ; unretract` (upstream's comment string starts with " ; ", and
+emit_comment prepends another), per-role extrude descriptions
+(perimeter/skirt/brim/infill/ironing/support labels — NOT role-specific
+wall names), and wipe ` ; wipe and retract`. All are now ported across
+the writer, machine/finish fan-offs, cooling initial-fan, M204/M205
+emission, retract/unretract, scarf and linear extrusion paths.
+
+Creality Sermoon V1 collapses from ~988-line to ~1045-line diffs
+(5157 → 1045 over the fix sequence); the residuals are the known
+lattice routing (first-approach waypoint count) and timing (top-surface
+F2604/F2613 slowdown) families. Comments-off fixtures are byte-stable
+(octagram and H2D case-2IMLD1 verified unchanged).

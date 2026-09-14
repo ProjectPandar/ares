@@ -148,7 +148,7 @@ async fn z_offset_composes_with_gcode_comments() {
     assert!(
         output
             .lines()
-            .any(|line| line == "G1 X-0.5 Y0 E0.02393 ; extrude")
+            .any(|line| line == "G1 X-0.5 Y0 E0.02393 ; perimeter")
     );
 }
 

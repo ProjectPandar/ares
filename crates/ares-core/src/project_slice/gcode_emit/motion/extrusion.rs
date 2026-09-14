@@ -3,7 +3,7 @@ mod tests;
 
 use super::{
     EmitState, arc,
-    features::PathProperties,
+    features::{PathProperties, feature_description},
     format::{axis as format_axis, extrusion as format_extrusion},
 };
 
@@ -29,9 +29,14 @@ pub(super) fn linear_segment(
         );
     } else {
         let extrusion = coordinate(state, extrusion);
+        let comment = state
+            .options
+            .gcode_comments
+            .then(|| format!(" ; {}", feature_description(properties.feature)))
+            .unwrap_or_default();
         output.extend_from_slice(
             format!(
-                "G1 X{} Y{} E{}\n",
+                "G1 X{} Y{} E{}{comment}\n",
                 format_axis(end.x),
                 format_axis(end.y),
                 format_extrusion(extrusion)
