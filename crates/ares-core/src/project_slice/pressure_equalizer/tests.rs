@@ -1,4 +1,6 @@
+use super::line::{E, X};
 use super::*;
+use crate::ExtrusionRole;
 
 fn parser() -> LineParser {
     LineParser::new(&[1.75], false)
