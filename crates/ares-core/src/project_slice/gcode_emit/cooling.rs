@@ -46,6 +46,7 @@ pub(super) struct CoolingState {
     emit_initial_fan: bool,
     fan_mover_enabled: bool,
     gcode_comments: bool,
+    equalizer: Option<crate::project_slice::pressure_equalizer::PressureEqualizerPass>,
     feedrate: feedrate::State,
 }
 
@@ -78,7 +79,24 @@ impl CoolingState {
             fan_kickstart_s: runtime.fan_kickstart.0,
             reduce_fan_stop_start_freq: first_bool(&filament.reduce_fan_stop_start_freq.0),
         });
+        let gcode = &traversal.resolved.views.runtime_gcode;
+        let slope = gcode.max_volumetric_extrusion_rate_slope.0;
+        let equalizer = (slope > 0.0).then(|| {
+            crate::project_slice::pressure_equalizer::PressureEqualizerPass::new(
+                slope,
+                gcode.max_volumetric_extrusion_rate_slope_segment_length.0,
+                gcode.extrusion_rate_smoothing_external_perimeter_only.0,
+                &gcode
+                    .filament_diameter
+                    .0
+                    .iter()
+                    .map(|value| f64::from(value.0))
+                    .collect::<Vec<f64>>(),
+                gcode.use_relative_e_distances.0,
+            )
+        });
         Self {
+            equalizer,
             part_speed: 0,
             physical_part_speed: 0,
             provisional_part_speed: 0,
@@ -102,7 +120,7 @@ impl CoolingState {
                         .map_or(0.0, |value| value.0 as f32),
                     keep_outer_wall_speed: first_bool(&filament.dont_slow_down_outer_wall.0),
                     relative_e: runtime.use_relative_e_distances.0,
-                    keep_markers: false,
+                    keep_markers: slope > 0.0,
                 },
                 runtime.travel_speed.0,
             ),
@@ -157,6 +175,15 @@ impl CoolingState {
 
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
         let layer_time = feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
+        if let Some(pass) = self.equalizer.as_mut() {
+            let layer = output.split_off(layer_start);
+            pass.process_layer(&String::from_utf8_lossy(&layer));
+            let rewritten = pass
+                .flush()
+                .map(|text| strip_pressure_markers(&text))
+                .unwrap_or_default();
+            output.extend_from_slice(rewritten.as_bytes());
+        }
         let layer_index = self.pending_layer_index.take().unwrap();
         let part_speed = self
             .part_fan_ramp
@@ -297,4 +324,45 @@ fn part_fan_pwm(speed: u8) -> u32 {
 
 fn additional_fan_pwm(speed: u8) -> u32 {
     (255.0 * f64::from(speed) / 100.0).floor() as u32
+}
+
+/// Remove the `;_EXTRUDE_SET_SPEED` / `;_EXTRUDE_END` /
+/// `;_EXTERNAL_PERIMETER` / `;_EXTRUSION_ROLE` / `;_WIPE` scaffolding —
+/// upstream's processor consumes the tags after the PressureEqualizer
+/// (`GCodeProcessor` treats them as internal markers; the exported file
+/// carries none).
+fn strip_pressure_markers(gcode: &str) -> String {
+    const TAGS: [&str; 5] = [
+        ";_EXTRUDE_SET_SPEED",
+        ";_EXTERNAL_PERIMETER",
+        ";_EXTRUDE_END",
+        ";_EXTRUSION_ROLE",
+        ";_WIPE",
+    ];
+    let mut out = String::with_capacity(gcode.len());
+    for line in gcode.lines() {
+        if line == ";_EXTRUDE_END" {
+            continue;
+        }
+        let mut cleaned = line.to_owned();
+        let mut changed = false;
+        for tag in TAGS {
+            if cleaned.contains(tag) {
+                cleaned = cleaned.replace(tag, "");
+                changed = true;
+            }
+        }
+        if changed {
+            cleaned = cleaned.trim_end().to_owned();
+            if cleaned.is_empty() {
+                continue;
+            }
+            out.push_str(&cleaned);
+            out.push('\n');
+        } else {
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    out
 }

@@ -25,3 +25,4 @@ mod pass;
 mod tests;
 
 pub(crate) use line::{GCodeLine, GCodeLineType, LineParser};
+pub(crate) use pass::PressureEqualizerPass;

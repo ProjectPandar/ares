@@ -39,6 +39,10 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// the first generated path (start G-code supplies the initial writer XY).
     pub(in crate::project_slice::gcode_emit) last_scaled_position: Option<(i64, i64)>,
     pub(in crate::project_slice::gcode_emit) last_feature: Option<&'static str>,
+    /// `;_EXTRUSION_ROLE:n` emission gate (`m_enable_extrusion_role_markers`,
+    /// `GCode.cpp:2544` — on when the PressureEqualizer is in the pipeline).
+    pub(in crate::project_slice::gcode_emit) extrusion_role_markers: bool,
+    pub(in crate::project_slice::gcode_emit) last_extrusion_role: Option<u32>,
     pub(in crate::project_slice::gcode_emit) last_width: Option<f32>,
     pub(in crate::project_slice::gcode_emit) last_height: Option<f32>,
     pub(in crate::project_slice::gcode_emit) last_acceleration: Option<u32>,

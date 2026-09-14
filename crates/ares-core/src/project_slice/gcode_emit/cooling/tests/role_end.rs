@@ -4,6 +4,7 @@ use super::super::*;
 
 fn cooling_state() -> CoolingState {
     CoolingState {
+        equalizer: None,
         part_speed: 100,
         physical_part_speed: 100,
         provisional_part_speed: 100,

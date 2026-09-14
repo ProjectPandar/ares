@@ -5,6 +5,30 @@ use super::MotionOptions;
 use crate::ExtrusionRole;
 use crate::project_slice::perimeters::classic::materialize::FittedMove;
 
+/// Feature string → the upstream `ExtrusionRole` discriminant used by the
+/// `;_EXTRUSION_ROLE:n` markers (`GCode.cpp:6774`,
+/// `ExtrusionEntity.hpp` enumerator order).
+pub(super) fn role_id(feature: &str) -> u32 {
+    match feature {
+        "Inner wall" => 1,
+        "Outer wall" => 2,
+        "Overhang wall" => 3,
+        "Sparse infill" => 4,
+        "Solid infill" => 5,
+        "Top surface" => 6,
+        "Bottom surface" => 7,
+        "Ironing" => 8,
+        "Bridge" => 9,
+        "Internal bridge" => 10,
+        "Gap fill" => 11,
+        "Skirt" => 12,
+        "Brim" => 13,
+        "Support" => 14,
+        "Support interface" => 15,
+        _ => 0,
+    }
+}
+
 #[derive(Clone, Copy)]
 pub(super) struct PathProperties<'a> {
     pub(super) mm3_per_mm: f64,

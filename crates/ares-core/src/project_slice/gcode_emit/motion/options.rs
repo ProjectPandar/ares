@@ -81,6 +81,7 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) max_jerk_e: f64,
     pub(in crate::project_slice::gcode_emit) gcode_flavor: crate::GCodeFlavor,
     pub(in crate::project_slice::gcode_emit) gcode_comments: bool,
+    pub(in crate::project_slice::gcode_emit) extrusion_role_markers: bool,
     pub(in crate::project_slice::gcode_emit) use_relative_e_distances: bool,
     pub(in crate::project_slice::gcode_emit) single_extruder_multi_material: bool,
     pub(in crate::project_slice::gcode_emit) max_acceleration: u32,

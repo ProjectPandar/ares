@@ -100,6 +100,7 @@ pub(super) fn emit(
         small_area_flow,
         tags: tags::Tags::of(traversal),
         spiral_vase: traversal.resolved.views.full.process.print.spiral_mode.0,
+        extrusion_role_markers: options.extrusion_role_markers,
         ..Default::default()
     };
     // The machine-start template's `e_retracted[0]` assignment seeds the

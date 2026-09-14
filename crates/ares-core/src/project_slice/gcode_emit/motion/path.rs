@@ -12,7 +12,7 @@ pub(super) use retraction::can_skip_retraction;
 
 use super::{
     EmitState, LayerGeometry, arc, clip, extrusion, fan, features::PathProperties,
-    format::axis as format_axis, overhang, set_accel_and_jerk,
+    features::role_id, format::axis as format_axis, overhang, set_accel_and_jerk,
 };
 
 pub(super) const SOURCE_EPSILON_MM: f64 = 1e-4;
@@ -24,6 +24,13 @@ pub(super) fn emit(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
+    if state.extrusion_role_markers {
+        let role = role_id(properties.feature);
+        if state.last_extrusion_role != Some(role) {
+            output.extend_from_slice(format!(";_EXTRUSION_ROLE:{role}\n").as_bytes());
+            state.last_extrusion_role = Some(role);
+        }
+    }
     let mut scaled_points = points.collect::<Vec<_>>();
     if let Ok(path) = std::env::var("ARES_DUMP_PATH") {
         use std::io::Write;

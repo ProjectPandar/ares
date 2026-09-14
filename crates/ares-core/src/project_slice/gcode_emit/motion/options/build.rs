@@ -262,6 +262,7 @@ impl MotionOptions {
             max_jerk_e: first_float(&full.printer.machine.machine_max_jerk_e),
             gcode_flavor: full.printer.gcode.gcode_flavor,
             gcode_comments: full.process.print.gcode_comments.0,
+            extrusion_role_markers: full.process.gcode.max_volumetric_extrusion_rate_slope.0 > 0.0,
             use_relative_e_distances: gcode.use_relative_e_distances.0,
             single_extruder_multi_material: gcode.single_extruder_multi_material.0,
             max_acceleration: machine_acceleration_limit(full),
