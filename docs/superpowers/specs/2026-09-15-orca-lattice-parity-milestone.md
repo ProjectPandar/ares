@@ -143,3 +143,28 @@ ctor rounding, explicit `coord_t()` truncation):
 
 Behavior-neutral at 1e6/mm (all values integral): octagram and H2D
 fixtures byte-stable, golden green, bridge_over 244 tests green.
+
+## Stage-3 audit (2026-09-15, continuation #86)
+
+The mesh-slice µm quantization is SMALLER than the milestone assumed:
+`contours.rs scaled()` quantizes only the stitching IDENTITY keys
+(PointKey/SegmentKey for dedup and adjacency); the contour geometry
+stays f64 end-to-end. Orca's stitcher compares floats directly, so the
+µm keys are an ares-internal merge tolerance, not an output-geometry
+lattice.
+
+The switch-blocking µm hardcodings are in the G-code emit layer:
+
+- `motion/arc.rs`: circle fitting runs at a hardcoded 1e6/mm scale
+  (`SCALE = 1_000_000`, collinearity area `1e8` µm², `quantize`
+  truncation). The physical values match upstream
+  (`Circle.cpp:14-27`: `scale_(scale_(Parallel_area_threshold))` =
+  1e-4 mm²), but the constants bake in µm units — the CoordinateScale
+  must thread through for any lattice switch.
+- `motion/arc/simplify.rs`: `COORDINATE_UNITS_PER_MILLIMETER = 1e6`
+  in the tolerance² distance test.
+- `avoid_crossing/boundary.rs`: `unit(1.0).unwrap_or(1_000_000)` grid
+  resolution fallbacks.
+
+None of these affect the current 1e6 outputs; they join the stage-4
+precondition list alongside the m2 priming-anchor drift.
