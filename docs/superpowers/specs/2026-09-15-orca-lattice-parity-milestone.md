@@ -270,3 +270,22 @@ is in the previous/current normal pairing of the path walk in
 `offset/generate.rs` for this path class. Positive and negative deltas
 both mostly match (895/906), so the walk is correct for the common
 cases; the failing pairing is shape-specific.
+
+## Offset port verdict (2026-09-15, #89, follow-up)
+
+With the join type dumped and replayed faithfully (probe5 now maps
+miter/square/round and compares cyclically), the earlier "11/906
+squared corners" were a probe artifact (the join type was not recorded;
+the failing records were round joins). The remaining 6 mismatches are
+ORIENTATION-ONLY: identical point sets, reversed traversal. With
+`allow-reversed`, probe5 reports **906/906 point-set identical** —
+ares's ClipperOffset port is point-exact against the vendored Clipper 6
+at 1e6.
+
+The 6 reversed cases share CW-input closed paths. Upstream's Execute
+reverses solutions for negative deltas via `ReverseSolution(true)` plus
+the bounding frame (`clipper.cpp:Execute`); ares's
+union_paths/negative_paths ports evidently differ in that final
+orientation for this class. Point-exactness removes the offset port
+from stage 4's suspect list; the orientation question (whether the
+mirrored traversal reaches the G-code) is a small separate slice.

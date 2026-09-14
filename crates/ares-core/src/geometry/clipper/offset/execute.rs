@@ -54,9 +54,14 @@ pub(crate) fn raw_offset_paths(
                 .append(true)
                 .open(dump_path)
             {
+                let join_label = match join_type {
+                    JoinType::Miter => "miter",
+                    JoinType::Square => "square",
+                    JoinType::Round => "round",
+                };
                 let _ = write!(
                     file,
-                    "O delta={applied_delta:.9} join={miter_limit:.4} n={}",
+                    "O delta={applied_delta:.9} join={join_label} miter={miter_limit:.4} n={}",
                     path.points().len()
                 );
                 for point in path.points() {
