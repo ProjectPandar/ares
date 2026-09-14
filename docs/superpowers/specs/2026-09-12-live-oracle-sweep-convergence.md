@@ -794,3 +794,28 @@ per-segment-F source and whether ContourZ applies to this geometry;
 then port the emission (z-word + segment chain). This is a CONTENT
 divergence, not timing — the M73 shifts in this region are downstream
 of it.
+
+## DECISIVE: 78/107 divergent printers enable extrusion-rate smoothing (2026-09-15, #99)
+
+Corpus scan (manifest labels × divergent summary × input 3mf configs):
+**78 of the 107 DIVERGENT printers set
+`max_volumetric_extrusion_rate_slope > 0`** (the 2bDWHY root cause
+generalizes to 73% of the remaining divergence). Upstream gate
+(`GCode.cpp:2542-2545`): a positive slope instantiates
+`PressureEqualizer` (`GCode/PressureEqualizer.cpp`, 955 LOC + 211 hpp),
+which post-processes each layer's G-code: it re-chains extrusion
+segments into rate-transition sub-moves with per-segment F ladders and
+z-carrying lines — exactly the 2bDWHY layer-1 signature, and a
+mechanism that shifts every per-line time (hence the M73 P/R sequences)
+and the emitted geometry chain.
+
+This is the highest-impact remaining slice: porting PressureEqualizer
+addresses the majority of the M73-family AND geometry-family
+divergence in one source-cited milestone. Port boundary:
+`GCode/PressureEqualizer.cpp/.hpp` → ares post-emission layer pass;
+included = the full equalizer state machine (the
+max_volumetric_extrusion_rate_slope /
+max_volumetric_extrusion_rate_slope_segment_length /
+extrusion_rate_smoothing_external_perimeter_only option trio already
+exists in ares's registry); deferred = PRESSURE_EQUALIZER_STATISTIC
+debug blocks.
