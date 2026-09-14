@@ -8,7 +8,6 @@ pub(super) fn generate_capped_speed_moves(
     options: SpeedOptions,
 ) -> Vec<LayerSpeedMoves> {
     let mut volumetric_cap = VolumetricSpeedCap::new(options);
-    let mut volumetric_rate_smoothing = VolumetricRateSmoothing::new(options);
     let mut layer_time_slowdown = super::layer_time::LayerTimeSlowdown::new(options);
     layers
         .iter()
@@ -33,13 +32,10 @@ pub(super) fn generate_capped_speed_moves(
                     super::resonance_avoidance::adjusted_speed(&options, move_, capped_speed)
                 })
                 .collect::<Vec<_>>();
-            let smoothed_speeds = layer
-                .moves()
-                .iter()
-                .zip(capped_speeds)
-                .map(|(move_, speed)| volumetric_rate_smoothing.apply(move_, speed))
-                .collect::<Vec<_>>();
-            let final_speeds = layer_time_slowdown.apply(layer.moves(), smoothed_speeds);
+            // Extrusion-rate smoothing moved to the PressureEqualizer
+            // per-layer text pass (upstream `GCode/PressureEqualizer.cpp`);
+            // the pre-emission adjuster diverged from it.
+            let final_speeds = layer_time_slowdown.apply(layer.moves(), capped_speeds);
             let moves = layer
                 .moves()
                 .iter()
@@ -107,94 +103,6 @@ impl PrintFlow {
             rate_mm3_s: mm3_per_mm * speed_mm_s,
             duration_s: distance_mm / speed_mm_s,
         })
-    }
-}
-
-struct VolumetricRateSmoothing {
-    filament_area_mm2: f64,
-    max_slope_mm3_s2: f64,
-    external_only: bool,
-    last_point: Option<Point2>,
-    last_print_e: f64,
-    previous_eligible: Option<PrintFlow>,
-}
-
-impl VolumetricRateSmoothing {
-    fn new(options: SpeedOptions) -> Self {
-        Self {
-            filament_area_mm2: std::f64::consts::PI
-                * (options.filament_diameter_mm() / 2.0).powi(2),
-            max_slope_mm3_s2: options.max_volumetric_extrusion_rate_slope_mm3_s2(),
-            external_only: options.extrusion_rate_smoothing_external_perimeter_only(),
-            last_point: None,
-            last_print_e: 0.0,
-            previous_eligible: None,
-        }
-    }
-
-    fn apply(&mut self, move_: &ExtrusionMove, speed_mm_s: f64) -> f64 {
-        match move_.kind() {
-            ToolpathMoveKind::Travel => {
-                self.last_point = Some(move_.point());
-                speed_mm_s
-            }
-            ToolpathMoveKind::Print => {
-                let flow_at_speed = self.print_flow(move_, speed_mm_s);
-                self.last_point = Some(move_.point());
-                if self.max_slope_mm3_s2 <= 0.0 || !self.is_eligible(move_) {
-                    return speed_mm_s;
-                }
-                let Some(flow_at_speed) = flow_at_speed else {
-                    return speed_mm_s;
-                };
-                let Some(previous) = self.previous_eligible else {
-                    self.previous_eligible = Some(flow_at_speed);
-                    return speed_mm_s;
-                };
-                let allowed_rate =
-                    previous.rate_mm3_s + self.max_slope_mm3_s2 * previous.duration_s;
-                if flow_at_speed.rate_mm3_s <= allowed_rate {
-                    self.previous_eligible = Some(flow_at_speed);
-                    return speed_mm_s;
-                }
-                let smoothed_speed = speed_mm_s * allowed_rate / flow_at_speed.rate_mm3_s;
-                if let Some(smoothed_flow) = PrintFlow::at_speed(
-                    flow_at_speed.mm3_per_mm,
-                    flow_at_speed.distance_mm,
-                    smoothed_speed,
-                ) {
-                    self.previous_eligible = Some(smoothed_flow);
-                }
-                smoothed_speed
-            }
-        }
-    }
-
-    fn print_flow(&mut self, move_: &ExtrusionMove, speed_mm_s: f64) -> Option<PrintFlow> {
-        let point = move_.point();
-        let start = self.last_point.unwrap_or(point);
-        let distance_mm = distance(start, point);
-        let e_position = move_
-            .e_position()
-            .expect("print speed move must have E position");
-        let delta_e = e_position - self.last_print_e;
-        self.last_print_e = e_position;
-        if distance_mm <= 0.0 || delta_e <= 0.0 {
-            return None;
-        }
-        PrintFlow::at_speed(
-            delta_e * self.filament_area_mm2 / distance_mm,
-            distance_mm,
-            speed_mm_s,
-        )
-    }
-
-    fn is_eligible(&self, move_: &ExtrusionMove) -> bool {
-        !self.external_only
-            || matches!(
-                move_.role(),
-                crate::PrintPathRole::ExternalPerimeter | crate::PrintPathRole::OverhangPerimeter
-            )
     }
 }
 
