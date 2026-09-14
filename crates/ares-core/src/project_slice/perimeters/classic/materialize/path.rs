@@ -61,11 +61,10 @@ pub(in crate::project_slice) fn materialize_overhang_from_lower(
     let polygon = fuzzy_polygon(record, seed, scale)?;
     let mut bounds = BoundingBox::from_polygon(&polygon)
         .expect("a fuzzified traversal polygon remains source-valid");
-    bounds.offset(scale.checked_scale(EPSILON_MM).ok_or_else(|| {
-        SliceError::InvalidInput(
-            "classic perimeter scaled epsilon is outside the supported coordinate range".into(),
-        )
-    })?);
+    // `GCode.cpp:7559`: `instance_bbox.offset(scale_(EPSILON))` — the bbox
+    // offset rounds the fractional delta through the `Point(double,double)`
+    // constructor (`Point.hpp:197`).
+    bounds.offset(scale.scaled_delta(EPSILON_MM).round() as i64);
     let filtered = clip_clipper_polygons_with_subject_bbox(lower, bounds);
     let subject = std::slice::from_ref(&polygon);
     let inside = intersection_pl(subject, &filtered).map_err(map_clipper_error)?;

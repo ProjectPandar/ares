@@ -54,10 +54,7 @@ fn gather_layer(
 ) -> Result<Vec<CandidateSurface>, ClipperError> {
     let spacing = current.solid_infill_spacing as f64;
     let spacing_f32 = spacing as f32;
-    let scaled_epsilon = scale
-        .checked_scale(UNSCALED_EPSILON)
-        .expect("the fixed slicer epsilon fits every coordinate scale")
-        as f32;
+    let scaled_epsilon = scale.scaled_delta(UNSCALED_EPSILON) as f32;
     let multiplier = match filter {
         ProcessInternalBridgeFilter::Disabled => 3.0,
         ProcessInternalBridgeFilter::Limited | ProcessInternalBridgeFilter::NoFilter => 1.0,

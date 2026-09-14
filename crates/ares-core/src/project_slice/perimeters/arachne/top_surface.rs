@@ -54,11 +54,10 @@ pub(in crate::project_slice) fn regenerate(
 ) -> Result<GeneratedSurfaceWalls, SliceError> {
     let mut bounds = BoundingBox::from_expolygons(&infill_contour);
     if let Some(bounds) = bounds.as_mut() {
-        bounds.offset(
-            scale
-                .checked_scale(1e-4)
-                .ok_or_else(|| invalid("Arachne epsilon exceeds the coordinate range"))?,
-        );
+        // `PerimeterGenerator.cpp:160 bbox.offset(SCALED_EPSILON)` — the
+        // bbox offset rounds the fractional delta through the
+        // `Point(double,double)` constructor.
+        bounds.offset(scale.scaled_delta(1e-4).round() as i64);
     }
     let upper_clipped = match bounds {
         Some(bounds) => {

@@ -120,3 +120,26 @@ Two further semantic mismatches surfaced during the audit:
 Sweep re-baseline at this point: 866 PASS / 107 DIVERGENT / 18
 ORCA_ERROR (comment-trail work introduced no regressions; the churn
 stayed inside the known oracle-crash families).
+
+## Stage-2 completion (2026-09-15, continuation #85)
+
+The remaining sub-unit epsilon sites fixed per their upstream cast mode
+(three modes exist: fractional doubles into clipper, `Point(double)`
+ctor rounding, explicit `coord_t()` truncation):
+
+- `bridge_over_infill/candidates.rs` (both): `PrintObject.cpp:2527
+  closing(area, float(SCALED_EPSILON))` — fractional clipper delta →
+  `scaled_delta`.
+- `perimeters/classic/materialize/path.rs` (fuzzy bbox): `GCode.cpp:7559
+  instance_bbox.offset(scale_(EPSILON))` — the bbox offset rounds the
+  delta through the Point(double,double) ctor →
+  `scaled_delta(..).round()`.
+- `perimeters/arachne/top_surface.rs`: `PerimeterGenerator.cpp:160
+  bbox.offset(SCALED_EPSILON)` — same rounded-bbox mode.
+- `fill/multiline.rs` (x_margin): `FillRectilinear.cpp:3017
+  line_width + coord_t(SCALED_EPSILON)` — an EXPLICIT truncating cast;
+  the existing `checked_scale` (truncating) is already faithful. No
+  change.
+
+Behavior-neutral at 1e6/mm (all values integral): octagram and H2D
+fixtures byte-stable, golden green, bridge_over 244 tests green.
