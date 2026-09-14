@@ -669,3 +669,15 @@ estimate in minutes) split the family:
 
 The replay toolchain (estimator-replay + ARES_DUMP_BLOCKS/ELAPSED)
 remains the instrument for the block-level comparison on the outliers.
+
+## 2bDWHY outlier deep-dive (2026-09-15, #94)
+
+Klipper KAMP case: totals 10m40s (orca) vs 13m14s (ares) = 154s over 17
+layers. The start G-code = real G1 moves (not an opaque macro); the
+elapsed chain's start segment ≈ 6.1s and matches move-for-move. The
+divergence surfaces at the FIRST-LAYER skirt slowdown: F843 (orca) vs
+F629 (ares) — the pre-slowdown first-layer estimate differed (the
+trailer's matching "first layer = 3s" is the POST-slowdown value,
+circular). Next instrument: replay orca's first layer through
+tools/estimator-replay and diff the block times against
+ARES_DUMP_ELAPSED/ARES_DUMP_BLOCKS.
