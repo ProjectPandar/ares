@@ -230,3 +230,24 @@ Points directly from doubles (the bbox-offset family already handled in
 stage 2). Stage 4 reduces to: flip the constants, fix the fallout
 empirically (the E 5th-decimal / sub-3-decimal chain), validate golden
 + sweep.
+
+## Stage-4 kickoff: mesh-slicing chain verified faithful (2026-09-15, #88)
+
+The mesh→intersection chain is architecturally identical to upstream:
+
+- `TriangleMeshSlicer.cpp:1827-1833 make_trafo_for_slicing`: the
+  transform is pre-scaled by (1/SCALING_FACTOR, 1/SCALING_FACTOR, 1) and
+  applied in f32 with NO vertex rounding; ares's `prescaled_xy(factor)`
+  (project/transform.rs:71) matches.
+- Intersections: `TriangleMeshSlicer.cpp:277-278` =
+  `coord_t(floor(b + (a-b)*t + 0.5))`; ares `interpolate_coordinate`
+  (mesh_slicer/intersection.rs:168) is the same formula.
+- On-layer (inherited) points: upstream assigns the float-scaled vertex
+  into a coord_t (truncation); ares `inherited_point` casts the same
+  f32-scaled vertex `as i64`.
+
+Exact-coordinate meshes (the parity cube) slice identically at any
+lattice. The 4096 E 5th-decimal flips therefore originate DOWNSTREAM —
+in the perimeter/infill offsetting chain (float spacing deltas into the
+clipper ports), not in slicing. Stage 4's remaining work is the
+offsetting-chain int comparison at 4096.
