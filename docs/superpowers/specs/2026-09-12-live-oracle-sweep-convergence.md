@@ -755,3 +755,22 @@ engines' post-slowdown claims are 50.05 s but the physical replay gives
 78.9 s — the estimator-vs-replay model gap is large on this flavor).
 Next slice: ARES_DUMP_BLOCKS diff for the 31 lines (accel? junction
 deviation?) against orca's implied per-line times.
+
+## 2bDWHY block-dump semantics + next experiment (2026-09-15, #98)
+
+`ARES_DUMP_BLOCKS` fires in the planner's `process()` (planner/mod.rs:72)
+which runs in the processor pass over the FINAL text — post-slowdown
+(the layer-0 skirt blocks show cruise 10.483 = the slowed F629), so it
+cannot directly yield pre-slowdown estimator times. The replay tool's
+`REPLAY_DUMP_BLOCKS` (same 8-column format: id/distance/cruise/accel/
+entry/exit/safe/time) on the nominal layer-0 gives 107 blocks totaling
+25.62 s. Note the replay model itself diverges from BOTH estimators on
+this Klipper JD printer (replay 78.9 s for orca's slowed layer vs
+orca's believed 50.05), so replay is not the oracle here.
+
+Decisive next experiment (queued): re-slice the 2bDWHY 3mf with
+`slow_down_for_layer_cooling` disabled in both engines — with slowdown
+off, orca's M73 P/R sequence exposes its per-layer time beliefs
+directly, and ares' ARES_DUMP_ELAPSED cumulative chain gives its own;
+the first diverging layer isolates the estimator gap on nominal content
+without the slowdown feedback loop.
