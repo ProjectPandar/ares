@@ -90,3 +90,33 @@ ares and OrcaSlicer 2.4.2:
   units). At least one upstream-faithful stage still computes
   differently on the new lattice — the switch requires the full audit
   table (stage 1) plus per-stage anchoring before flipping.
+
+## Stage-1 audit findings (2026-09-15, continuation #84)
+
+119 `checked_scale` sites inventoried. The sub-unit epsilon class
+(1e-4 mm = 0.41 units at 4096) that would round to zero:
+
+- `perimeters/classic/materialize/path.rs:64` (fuzzy bbox, upstream
+  `GCode.cpp:7559 instance_bbox.offset(scale_(EPSILON))`)
+- `prepare_infill/bridge_over_infill/candidates.rs:58,142` (spacing
+  multipliers / offset expansion)
+- `fill/multiline.rs:96` (line-width bbox margin)
+- `perimeters/arachne/top_surface.rs:59` (clip bbox)
+
+Two further semantic mismatches surfaced during the audit:
+
+1. **Rounding mode**: `CoordinateScale::checked_scale` truncates
+   (`quotient as Coord`), but orca's `Point(double,double)` constructor
+   ROUNDS (`Point.hpp:197 coord_t(std::round(x))`) — every coordinate
+   conversion that flows through a Point construction upstream rounds.
+   At 1e6/mm the quotients are integral (no observable difference); a
+   4096 switch must switch to rounding to stay faithful.
+2. **BoundingBox offsets**: upstream `BoundingBoxBase::offset` takes
+   `coordf_t` (double) and constructs `Point(delta, delta)` — the
+   double ctor rounds each component. So
+   `bbox.offset(scale_(EPSILON))` at 4096 offsets by round(0.4096)=0,
+   not by a fractional amount and not by truncation.
+
+Sweep re-baseline at this point: 866 PASS / 107 DIVERGENT / 18
+ORCA_ERROR (comment-trail work introduced no regressions; the churn
+stayed inside the known oracle-crash families).
