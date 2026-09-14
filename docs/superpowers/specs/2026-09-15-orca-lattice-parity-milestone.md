@@ -189,3 +189,30 @@ Everything is behavior-identical at 1e6 (arc tests 83/83, fixtures
 byte-stable, golden green). Stage-4 preconditions remaining: the m2
 priming-anchor drift hunt and the checked_scale rounding-mode audit
 (truncation today vs the Point(double) constructor's rounding).
+
+## m3 probe (2026-09-15, continuation #87)
+
+Post stage-2/3, the 4096 probe's Sermoon diff drops 5485 → 3851 lines
+(the epsilon/delta and scale-threading fixes helped). The priming-anchor
+"drift" is now understood: skirt_loops=0, so the first travel targets the
+outer wall SEAM — the 0.002 mm shift is seam-placement lattice noise (the
+Loop ±1 family), not a distinct unfaithful stage. The remaining
+divergence taxonomy at 4096:
+
+1. E-value 5th-decimal flips (E.40045 vs E.40044) with IDENTICAL printed
+   XY — the extrusion chain (length in mm from the lattice ints ×
+   mm3_per_mm) differs sub-3-decimal.
+2. Wipe/intermediate points off by 0.001.
+3. Comment placement following route differences (the first-travel
+   comment lands on a different hop than upstream's because the route
+   differs; the comment logic itself matches
+   `GCode.cpp:7488-7504`, including the middle-hop `travel_to_xy(point,
+   comment)`).
+
+Conclusion: stage 4 is now a pure geometry-lattice-chain audit — every
+mesh→lattice→perimeter→extrusion intermediate must reproduce orca's
+4096 ints exactly (the clipper ports are verified faithful; the inputs
+are not yet). The two-point scale rounding audit (checked_scale
+truncation vs `Point::new_scale` truncating / `Point(double,double)`
+rounding — both ctors exist upstream) remains the mechanical
+prerequisite.
