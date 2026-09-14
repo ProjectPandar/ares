@@ -21,6 +21,7 @@ pub(crate) const MAX_IGNORED_GAP_BETWEEN_EXTRUDING_SEGMENTS: f64 = 3.0;
 mod emitter;
 mod limiter;
 mod line;
+mod pass;
 mod tests;
 
 pub(crate) use line::{GCodeLine, GCodeLineType, LineParser};

@@ -56,3 +56,29 @@ Deferred: `PRESSURE_EQUALIZER_STATISTIC` debug blocks.
    F-laddered segment chain byte-for-byte.
 3. Full printer sweep: expect a large PASS jump from 866 (78 enabled
    cases move; some may retain other divergences).
+
+## Slice 4 + wiring plan (2026-09-15, #103)
+
+The pass driver landed (`pass.rs`): layer text → parsed lines →
+continuous extrusion segments with the ≤3mm small-gap bridge →
+look-back-windowed `adjust_volumetric_rate` → marker re-emission, with
+the upstream previous-layer buffering.
+
+**Critical wiring discovery**: ares already has a `VolumetricRateSmoothing`
+(`speeds/volumetric.rs:113-190`) — a pre-emission, acceleration-only
+speed adjuster that never splits lines. It is NOT the upstream pass
+(one-directional, no deceleration, no F-ladder re-emission,
+layer-agnostic) and explains the 78-case divergence exactly. Wiring
+plan (next slice):
+
+1. Remove `VolumetricRateSmoothing` from speed generation (would
+   double-apply).
+2. When `max_volumetric_extrusion_rate_slope > 0`, the emission side
+   inserts the markers (`GCode.cpp:6774` `;_EXTRUSION_ROLE:n` on role
+   change; the `;_EXTRUDE_SET_SPEED`/`;_EXTRUDE_END` cooling markers).
+3. The layer text runs through `PressureEqualizerPass` (previous-layer
+   buffering + flush after the last layer).
+4. The pass output has its `;_EXTRUSION_ROLE/;_EXTRUDE_SET_SPEED/
+   ;_EXTRUDE_END/;_EXTERNAL_PERIMETER` tags stripped (upstream consumes
+   them in the processor; the final exported G-code carries none —
+   verified on the 2bDWHY oracle output).
