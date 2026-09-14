@@ -190,6 +190,7 @@ fn fuzzy_polygon(
     crate::project_slice::gcode_emit::motion::simplify_linear_points(
         &mut points,
         record.simplification_tolerance,
+        scale.factor().recip(),
     );
     Ok(Polygon::new(
         points

@@ -81,6 +81,7 @@ fn simplify_fill_entity(entity: &mut FillExtrusionEntity, scale: CoordinateScale
             path.fitting = gcode_emit::motion::simplify_points(
                 &mut points,
                 fill_tolerance(path.role, tolerance),
+                units_per_mm(scale),
             );
             path.polyline = Polyline::new(
                 points
@@ -114,6 +115,10 @@ fn fill_tolerance(role: crate::ExtrusionRole, configured: f64) -> f64 {
     }
 }
 
+fn units_per_mm(scale: CoordinateScale) -> f64 {
+    scale.factor().recip()
+}
+
 fn scaled_point((x, y): (f64, f64), scale: CoordinateScale) -> Point {
     Point::new(
         (x / scale.factor()).round() as i64,
@@ -128,7 +133,7 @@ fn simplify_path3(path: &mut ExtrusionPath, scale: CoordinateScale, tolerance: f
         .iter()
         .map(|point| (scale.unscale(point.x), scale.unscale(point.y)))
         .collect::<Vec<_>>();
-    let fitting = gcode_emit::motion::simplify_points(&mut points, tolerance);
+    let fitting = gcode_emit::motion::simplify_points(&mut points, tolerance, units_per_mm(scale));
     path.polyline = Polyline3 {
         points: points
             .into_iter()

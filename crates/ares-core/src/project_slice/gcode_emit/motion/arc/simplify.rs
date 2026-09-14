@@ -8,12 +8,16 @@ pub(super) struct FittedRange {
     pub(super) arc: Option<ArcSegment>,
 }
 
-pub(super) fn fit_and_simplify(points: &[Point], tolerance: f64) -> (Vec<Point>, Vec<FittedRange>) {
+pub(super) fn fit_and_simplify(
+    points: &[Point],
+    tolerance: f64,
+    units_per_mm: f64,
+) -> (Vec<Point>, Vec<FittedRange>) {
     if points.len() < 2 {
         return (points.to_vec(), Vec::new());
     }
     let ranges = if tolerance.abs() > 0.0001 {
-        fit_ranges(points, tolerance)
+        fit_ranges(points, tolerance, units_per_mm)
     } else {
         vec![FittedRange {
             start: 0,
@@ -25,7 +29,7 @@ pub(super) fn fit_and_simplify(points: &[Point], tolerance: f64) -> (Vec<Point>,
     simplified.push(points[0]);
     let mut simplified_ranges = Vec::with_capacity(ranges.len());
     for range in ranges {
-        let part = douglas_peucker(&points[range.start..=range.end], tolerance);
+        let part = douglas_peucker(&points[range.start..=range.end], tolerance, units_per_mm);
         let start = simplified.len() - 1;
         simplified.extend_from_slice(&part[1..]);
         simplified_ranges.push(FittedRange {
@@ -40,12 +44,13 @@ pub(super) fn fit_and_simplify(points: &[Point], tolerance: f64) -> (Vec<Point>,
 pub(in crate::project_slice) fn simplify_linear_points(
     points: &mut Vec<(f64, f64)>,
     tolerance: f64,
+    units_per_mm: f64,
 ) {
     let converted = points
         .iter()
         .map(|&(x, y)| Point { x, y })
         .collect::<Vec<_>>();
-    let converted = douglas_peucker(&converted, tolerance);
+    let converted = douglas_peucker(&converted, tolerance, units_per_mm);
     points.clear();
     points.extend(converted.into_iter().map(|point| (point.x, point.y)));
 }
@@ -53,12 +58,13 @@ pub(in crate::project_slice) fn simplify_linear_points(
 pub(in crate::project_slice) fn simplify_points(
     points: &mut Vec<(f64, f64)>,
     tolerance: f64,
+    units_per_mm: f64,
 ) -> Vec<FittedMove> {
     let converted = points
         .iter()
         .map(|&(x, y)| Point { x, y })
         .collect::<Vec<_>>();
-    let (converted, ranges) = fit_and_simplify(&converted, tolerance);
+    let (converted, ranges) = fit_and_simplify(&converted, tolerance, units_per_mm);
     let fitting = ranges
         .into_iter()
         .map(|range| FittedMove {
@@ -77,7 +83,7 @@ pub(in crate::project_slice) fn simplify_points(
     fitting
 }
 
-pub(super) fn fit_ranges(points: &[Point], tolerance: f64) -> Vec<FittedRange> {
+pub(super) fn fit_ranges(points: &[Point], tolerance: f64, units_per_mm: f64) -> Vec<FittedRange> {
     if points.len() < 3 {
         return vec![FittedRange {
             start: 0,
@@ -136,7 +142,7 @@ fn append_linear_range(ranges: &mut Vec<FittedRange>, start: usize, end: usize) 
     }
 }
 
-fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
+fn douglas_peucker(points: &[Point], tolerance: f64, units_per_mm: f64) -> Vec<Point> {
     let Some(&first) = points.first() else {
         return Vec::new();
     };
@@ -146,7 +152,7 @@ fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
         return result;
     }
 
-    let tolerance_squared = (tolerance * COORDINATE_UNITS_PER_MILLIMETER).powi(2);
+    let tolerance_squared = (tolerance * units_per_mm).powi(2);
     let mut anchor = 0;
     let mut floater = points.len() - 1;
     let mut endpoints = Vec::with_capacity(points.len());
@@ -155,8 +161,12 @@ fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
         let mut maximum = 0.0;
         let mut farthest = anchor;
         for index in anchor + 1..floater {
-            let distance =
-                point_segment_distance_squared(points[index], points[anchor], points[floater]);
+            let distance = point_segment_distance_squared(
+                points[index],
+                points[anchor],
+                points[floater],
+                units_per_mm,
+            );
             if distance > maximum {
                 maximum = distance;
                 farthest = index;
@@ -178,12 +188,15 @@ fn douglas_peucker(points: &[Point], tolerance: f64) -> Vec<Point> {
     result
 }
 
-const COORDINATE_UNITS_PER_MILLIMETER: f64 = 1_000_000.0;
-
-fn point_segment_distance_squared(point: Point, start: Point, end: Point) -> f64 {
-    let [point_x, point_y] = scaled_coordinates(point);
-    let [start_x, start_y] = scaled_coordinates(start);
-    let [end_x, end_y] = scaled_coordinates(end);
+fn point_segment_distance_squared(
+    point: Point,
+    start: Point,
+    end: Point,
+    units_per_mm: f64,
+) -> f64 {
+    let [point_x, point_y] = scaled_coordinates(point, units_per_mm);
+    let [start_x, start_y] = scaled_coordinates(start, units_per_mm);
+    let [end_x, end_y] = scaled_coordinates(end, units_per_mm);
     let vector_x = (end_x - start_x) as f64;
     let vector_y = (end_y - start_y) as f64;
     let point_x = (point_x - start_x) as f64;
@@ -206,9 +219,9 @@ fn point_segment_distance_squared(point: Point, start: Point, end: Point) -> f64
     }
 }
 
-fn scaled_coordinates(point: Point) -> [i64; 2] {
+fn scaled_coordinates(point: Point, units_per_mm: f64) -> [i64; 2] {
     [
-        (point.x * COORDINATE_UNITS_PER_MILLIMETER).round() as i64,
-        (point.y * COORDINATE_UNITS_PER_MILLIMETER).round() as i64,
+        (point.x * units_per_mm).round() as i64,
+        (point.y * units_per_mm).round() as i64,
     ]
 }

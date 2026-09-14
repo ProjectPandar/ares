@@ -36,7 +36,7 @@ pub(super) enum Segment {
 }
 
 pub(super) fn fit(points: &[Point], tolerance: f64) -> Vec<Segment> {
-    let ranges = simplify::fit_ranges(points, tolerance);
+    let ranges = simplify::fit_ranges(points, tolerance, 1_000_000.0);
     let mut segments = Vec::with_capacity(points.len());
     for range in ranges {
         if let Some(arc) = range.arc {

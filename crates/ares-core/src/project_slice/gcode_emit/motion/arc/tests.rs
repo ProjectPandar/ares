@@ -6,7 +6,7 @@ use super::{
 fn linear_simplification_runs_without_arc_fitting() {
     let mut points = vec![(0.0, 0.0), (1.0, 0.001), (2.0, 0.0)];
 
-    simplify_linear_points(&mut points, 0.012);
+    simplify_linear_points(&mut points, 0.012, 1_000_000.0);
 
     assert_eq!(points, vec![(0.0, 0.0), (2.0, 0.0)]);
 }
