@@ -74,3 +74,19 @@ ares and OrcaSlicer 2.4.2:
 - WASM/Windows i64 arithmetic unchanged (coords stay i64).
 - Effort: the inventory classification is mechanical; the fixture
   regeneration is the bulk.
+
+## Probe results (2026-09-15, continuation #81)
+
+- Fourth lattice family confirmed: the Flashforge Adventurer X4.464
+  group (6+ cases) — ares emits a duplicate travel waypoint whose two
+  positions differ by sub-4096 amounts at the 1e6 lattice (both print
+  as X4.464 Y4.464), while orca's 4096 lattice collapses them to one
+  integer and the router's consecutive-duplicate skip
+  (`router.rs` `to_polyline` emulation) drops the hop.
+- Second lattice probe (lattice-m2, deleted): after the stage-2 delta
+  fix, the 4096 switch no longer panics on the Flashforge case, but the
+  output diverges WORSE (5485 vs ~988 lines) starting at the priming
+  anchor (`G1 X-9.007` → `X-9.009`, a 0.002 mm shift = 8 lattice
+  units). At least one upstream-faithful stage still computes
+  differently on the new lattice — the switch requires the full audit
+  table (stage 1) plus per-stage anchoring before flipping.
