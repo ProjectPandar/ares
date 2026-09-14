@@ -681,3 +681,18 @@ trailer's matching "first layer = 3s" is the POST-slowdown value,
 circular). Next instrument: replay orca's first layer through
 tools/estimator-replay and diff the block times against
 ARES_DUMP_ELAPSED/ARES_DUMP_BLOCKS.
+
+## 2bDWHY replay measurements (2026-09-15, #96)
+
+Layer-0 replay (identical geometry, only the slowdown F differs):
+
+- orca F843 → 78.91 s
+- ares F629 → 105.02 s
+
+The slowdown's non-proportional iteration picked different target
+feedrates, meaning the PRE-slowdown layer-time estimates already
+diverged (ares estimated the layer faster than target → slowed more).
+Both trailers still print "first layer = 3s" (post-slowdown circular
+value). Next: replay the nominal-speed layer-0 (F-words rewritten to
+the configured nominal) to recover each engine's implied pre-slowdown
+estimate, then compare block-by-block against ARES_DUMP_ELAPSED.
