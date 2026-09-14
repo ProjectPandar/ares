@@ -639,3 +639,14 @@ Creality Sermoon V1 collapses from ~988-line to ~1045-line diffs
 lattice routing (first-approach waypoint count) and timing (top-surface
 F2604/F2613 slowdown) families. Comments-off fixtures are byte-stable
 (octagram and H2D case-2IMLD1 verified unchanged).
+
+## first-travel comments (2026-09-15)
+
+`GCode.cpp:6378`: a path's first travel carries "move to first
+{description} point" (the same per-family description as the extrude
+comments) on every hop — the multi-waypoint loop passes the comment to
+each travel_to_xyz, including the split Z leg. The `_last_pos_undefined`
+Z re-statement carries its own "ensure Z matches planned layer height"
+(GCode.cpp:6383) with no F word. All wired through
+travel_emit::xy/xyz_with_comment and the route loop. Sermoon V1 drops to
+1169 residual lines; comments-off fixtures byte-stable.

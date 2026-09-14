@@ -3,6 +3,7 @@ mod route;
 use route::{plan_route, polyline_length};
 
 use super::{PathProperties, retraction, travel_emit};
+use crate::project_slice::gcode_emit::motion::features::feature_description;
 use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, LiftMode, append_object_start, arc, begin_path_travel, extrusion,
     format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
@@ -53,6 +54,19 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     let mut unclear_position_travel = false;
     if needs_travel {
         begin_path_travel(output, state, properties.feature, travel_distance);
+        // `GCode.cpp:6378`: the path's first travel carries
+        // "move to first {description} point" under `gcode_comments`.
+        let first_travel_comment = state
+            .options
+            .gcode_comments
+            .then(|| {
+                format!(
+                    " ; move to first {} point",
+                    feature_description(properties.feature)
+                )
+            })
+            .unwrap_or_default();
+        let first_travel_comment = first_travel_comment.as_str();
         let inside_internal_surface = travel::inside_internal_surfaces(
             geometry.internal_surfaces,
             arc::Point {
@@ -192,33 +206,47 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 || (state.source_layer_z + state.options.z_hop) - state.options.z_hop
                     > state.source_layer_z)
         {
-            travel_emit::xyz(
+            travel_emit::xyz_with_comment(
                 output,
                 travel_x,
                 travel_y,
                 state.layer_z,
                 state.travel_feedrate,
+                first_travel_comment,
             );
             travel_set_layer_z = true;
         } else if state.template_lifted && state.lifted && !first_position {
-            travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
+            travel_emit::xy_with_comment(
+                output,
+                travel_x,
+                travel_y,
+                state.travel_feedrate,
+                first_travel_comment,
+            );
             state.template_lifted = false;
         } else if state.lifted {
             eager_lifted_travel = true;
             if !lifted_for_travel {
-                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
+                travel_emit::xy_with_comment(
+                    output,
+                    travel_x,
+                    travel_y,
+                    state.travel_feedrate,
+                    first_travel_comment,
+                );
             } else if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
-                travel_emit::xyz(
+                travel_emit::xyz_with_comment(
                     output,
                     travel_x,
                     travel_y,
                     state.layer_z + state.options.z_hop,
                     state.travel_feedrate,
+                    first_travel_comment,
                 );
             } else {
                 output.extend_from_slice(
                     format!(
-                        "G1 X{} Y{} Z{}\n",
+                        "G1 X{} Y{} Z{}{first_travel_comment}\n",
                         format_axis(travel_x),
                         format_axis(travel_y),
                         format_z(state.layer_z + state.options.z_hop)
@@ -232,7 +260,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             // with no hop in play (the enforce gate blocked the
             // change-layer hop), `m_need_change_layer_lift_z`
             // (`GCode.cpp:7479-7482`) forces the plain combined xyz move.
-            travel_emit::xyz(output, travel_x, travel_y, target_z, state.travel_feedrate);
+            travel_emit::xyz_with_comment(
+                output,
+                travel_x,
+                travel_y,
+                target_z,
+                state.travel_feedrate,
+                first_travel_comment,
+            );
             travel_set_layer_z = true;
         } else if state.retracted
             && first_position
@@ -253,7 +288,13 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 state.current_feedrate = feedrate;
                 travel_emit::xy_without_feed(output, travel_x, travel_y);
             } else {
-                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
+                travel_emit::xy_with_comment(
+                    output,
+                    travel_x,
+                    travel_y,
+                    state.travel_feedrate,
+                    first_travel_comment,
+                );
             }
             output.extend_from_slice(
                 format!(
@@ -275,7 +316,13 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 && state.options.z_hop > 0.0
                 && retraction::uses_sloped_lift(state.options.z_hop_type)
             {
-                travel_emit::xy(output, travel_x, travel_y, state.travel_feedrate);
+                travel_emit::xy_with_comment(
+                    output,
+                    travel_x,
+                    travel_y,
+                    state.travel_feedrate,
+                    first_travel_comment,
+                );
                 let z_feedrate = travel::lift_z_feedrate(state);
                 output.extend_from_slice(
                     format!("G1 Z{} F{}\n", format_z(target_z), format_axis(z_feedrate)).as_bytes(),
@@ -286,17 +333,25 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 // the combined move at `config.travel_speed` UNCONDITIONALLY
                 // (`GCodeWriter.cpp:783-806`) — the first-layer travel speed
                 // does not apply to a layer-change approach that carries Z.
-                travel_emit::xyz(
+                travel_emit::xyz_with_comment(
                     output,
                     travel_x,
                     travel_y,
                     target_z,
                     state.options.travel_feedrate,
+                    first_travel_comment,
                 );
             }
             travel_set_layer_z = true;
         } else if let Some(z) = slope_start_z {
-            travel_emit::xyz(output, travel_x, travel_y, z, state.travel_feedrate);
+            travel_emit::xyz_with_comment(
+                output,
+                travel_x,
+                travel_y,
+                z,
+                state.travel_feedrate,
+                first_travel_comment,
+            );
             travel_set_layer_z = true;
         } else {
             // Same `travel_to_xyz` else-branch: the unclear-position split
@@ -307,7 +362,13 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             } else {
                 state.travel_feedrate
             };
-            travel_emit::xy(output, travel_x, travel_y, xy_feedrate);
+            travel_emit::xy_with_comment(
+                output,
+                travel_x,
+                travel_y,
+                xy_feedrate,
+                first_travel_comment,
+            );
             // The print's first travel from an unknown position always
             // splits: the unclear-position branch of `travel_to_xyz`
             // (`GCodeWriter.cpp:754+`) emits XY then `_travel_to_z`
@@ -316,7 +377,12 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
             if first_position {
                 let z_feedrate = travel::lift_z_feedrate(state);
                 output.extend_from_slice(
-                    format!("G1 Z{} F{}\n", format_z(target_z), format_axis(z_feedrate)).as_bytes(),
+                    format!(
+                        "G1 Z{} F{}{first_travel_comment}\n",
+                        format_z(target_z),
+                        format_axis(z_feedrate)
+                    )
+                    .as_bytes(),
                 );
                 state.current_feedrate = z_feedrate;
                 unclear_position_travel = true;
@@ -324,8 +390,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         }
         state.x = travel_x;
         state.y = travel_y;
+        let route_comment = first_travel_comment.to_string();
         for point in &route[1..] {
-            travel_emit::xy_without_feed(output, point.x, point.y);
+            output.extend_from_slice(
+                format!(
+                    "G1 X{} Y{}{route_comment}\n",
+                    format_axis(point.x),
+                    format_axis(point.y)
+                )
+                .as_bytes(),
+            );
             state.x = point.x;
             state.y = point.y;
         }
@@ -360,9 +434,14 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     let needs_z_restate = never_positioned && (eager_lifted_travel || unclear_position_travel);
     if needs_z_restate && !travel_set_layer_z {
         let z_feedrate = travel::lift_z_feedrate(state);
+        let z_comment = state
+            .options
+            .gcode_comments
+            .then_some(" ; ensure Z matches planned layer height")
+            .unwrap_or("");
         output.extend_from_slice(
             format!(
-                "G1 Z{} F{}\n",
+                "G1 Z{} F{}{z_comment}\n",
                 format_z(state.layer_z),
                 format_axis(z_feedrate)
             )

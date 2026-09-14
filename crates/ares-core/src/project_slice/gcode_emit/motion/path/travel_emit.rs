@@ -6,9 +6,13 @@ pub(super) fn quantize_axis(value: f64) -> f64 {
 }
 
 pub(super) fn xy(output: &mut Vec<u8>, x: f64, y: f64, feedrate: f64) {
+    xy_with_comment(output, x, y, feedrate, "");
+}
+
+pub(super) fn xy_with_comment(output: &mut Vec<u8>, x: f64, y: f64, feedrate: f64, comment: &str) {
     output.extend_from_slice(
         format!(
-            "G1 X{} Y{} F{}\n",
+            "G1 X{} Y{} F{}{comment}\n",
             format_axis(x),
             format_axis(y),
             format_axis(feedrate)
@@ -22,9 +26,20 @@ pub(super) fn xy_without_feed(output: &mut Vec<u8>, x: f64, y: f64) {
 }
 
 pub(super) fn xyz(output: &mut Vec<u8>, x: f64, y: f64, z: f64, feedrate: f64) {
+    xyz_with_comment(output, x, y, z, feedrate, "");
+}
+
+pub(super) fn xyz_with_comment(
+    output: &mut Vec<u8>,
+    x: f64,
+    y: f64,
+    z: f64,
+    feedrate: f64,
+    comment: &str,
+) {
     output.extend_from_slice(
         format!(
-            "G1 X{} Y{} Z{} F{}\n",
+            "G1 X{} Y{} Z{} F{}{comment}\n",
             format_axis(x),
             format_axis(y),
             format_z(z),
