@@ -41,6 +41,7 @@ mod perimeters;
 mod planning;
 mod pre_closing_unions;
 mod prepare_infill;
+mod pressure_equalizer;
 mod profile;
 mod raw_intersections;
 mod region_slices;
