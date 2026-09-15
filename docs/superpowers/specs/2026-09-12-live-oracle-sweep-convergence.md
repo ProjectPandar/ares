@@ -843,3 +843,25 @@ families are the known estimator timing header, three header-comment
 emission gaps (`different_settings_to_system`/`inherits_group` empty
 lines dropped, `extruder_ams_count` slot flag), and the last-digit
 E/coordinate rounding family.
+
+## The three ksr header lines are a GUI-vs-CLI artifact class (#167)
+
+The no-arc CLI oracle emits three header lines the stored golden
+reference (a GUI-sliced artifact) lacks or values differently:
+
+- `; extruder_ams_count = 1#0|4#1;...` — the CLI default fill
+  (OrcaSlicer.cpp:5988-6022) overwrites every slot with `1#0|4#1` when
+  extruder_count > 1 and `filament_map_mode < Manual`, ignoring existing
+  values; the GUI keeps the project's `1#0|4#0`. ares keeps the project
+  value, matching golden.
+- `; different_settings_to_system = ;;;` / `; inherits_group = ;;;` —
+  the CLI synthesizes these when loading ksr's machine settings; the
+  GUI reference omits both lines; ares omits, matching golden.
+
+Decisive evidence this is artifact class, not an ares gap: the smoke
+suite is CLI-vs-CLI and 875 printers pass byte-exact WITH these lines —
+e.g. case-001L7G has `; different_settings_to_system = ;;`,
+`; inherits_group = ;;`, `; extruder_ams_count = ` identical on both
+sides. ares emits the lines when the loaded config carries them; the
+ksr divergence is the CLI preset-loading path only. Per the golden
+contract (fixture wins over live CLI), no ares change.
