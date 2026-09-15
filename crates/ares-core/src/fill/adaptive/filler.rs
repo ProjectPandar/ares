@@ -219,6 +219,21 @@ pub(crate) fn fill_surface(
                 *polyline = Polyline::new(vec![*points.first().unwrap(), *points.last().unwrap()]);
             }
         }
+        // `FillAdaptive.cpp:1399-1401`: hooks before the chain/connect
+        // tail (in scaled units, matching the polylines' lattice).
+        if all_polylines.len() > 1 {
+            let scaled_spacing = spacing / scale.factor();
+            let hook_length = (f64::from(anchor_length) / scale.factor()).min(i64::MAX as f64);
+            let hook_length_max =
+                (f64::from(anchor_length_max) / scale.factor()).min(i64::MAX as f64);
+            all_polylines = crate::fill::adaptive::hooks::connect_lines_using_hooks(
+                all_polylines,
+                surface,
+                scaled_spacing,
+                hook_length,
+                hook_length_max,
+            );
+        }
     }
 
     super::super::connect::connect_infill(
