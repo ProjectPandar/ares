@@ -103,11 +103,11 @@ fn generate_infill_lines_recursive(
         let zdist = properties.line_z_distance;
         let from_x = 0.5 * properties.diagonal_length * (zdist - z_diff_abs) / zdist;
         let from_y = properties.line_xy_distance - (zdist + z_diff) / 2.0f64.sqrt();
-        let (from_x, from_y) = context.rotate(from_x, from_y);
-        let (to_x, to_y) = context.rotate(-from_x, from_y);
+        let (rot_from_x, rot_from_y) = context.rotate(from_x, from_y);
+        let (rot_to_x, rot_to_y) = context.rotate(-from_x, from_y);
         let offset = (cube.center()[0], cube.center()[1]);
-        let from = (from_x + offset.0, from_y + offset.1);
-        let to = (to_x + offset.0, to_y + offset.1);
+        let from = (rot_from_x + offset.0, rot_from_y + offset.1);
+        let to = (rot_to_x + offset.0, rot_to_y + offset.1);
         // Either extend an existing line or start a new one.
         let new_a = Point::new(
             context
