@@ -45,8 +45,15 @@ fn count_bytes(haystack: &[u8], needle: &[u8]) -> usize {
 }
 
 fn compare_actual(actual: &[u8]) {
-    golden::compare_ordered_bytes_generator_only(&reference(), &normalize_object_ids(actual))
-        .unwrap_or_else(|error| panic!("{error}"));
+    // Normalize BOTH sides: the strict comparator must see the same
+    // per-run identity class on reference and actual, or the id lines
+    // can never match (reference keeps its numeric ids while the
+    // actual is rewritten to <ID>).
+    golden::compare_ordered_bytes_generator_only(
+        &normalize_object_ids(&reference()),
+        &normalize_object_ids(actual),
+    )
+    .unwrap_or_else(|error| panic!("{error}"));
 }
 
 /// `; (stop )?printing object <name> id:<N> copy <M>` — the id is
