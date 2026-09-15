@@ -53,6 +53,7 @@ pub(crate) fn connect_lines_using_hooks(
     spacing: f64,
     hook_length: f64,
     hook_length_max: f64,
+    _units_per_mm: f64,
 ) -> Vec<Polyline> {
     if lines.len() <= 1 || hook_length <= 0.0 {
         return lines;
@@ -392,10 +393,20 @@ fn add_hook(
     ) else {
         return;
     };
-    let start = (
-        joint.intersect_point.x() as f64 + dir_x * scaled_offset,
-        joint.intersect_point.y() as f64 + dir_y * scaled_offset,
-    );
+    // `FillAdaptive.cpp:688-696`: the hook start is where the SOURCE
+    // line (intersect_line) crosses the offset version of the closest
+    // line — a point inside the region by construction, unlike the
+    // naive `point + offset·dir` push that can overshoot the boundary.
+    let offset_crossing = create_offset_line(crossing.a, crossing.b, joint.left, scaled_offset);
+    let hook_start = segment_line_intersection(source[joint.intersect_line], offset_crossing)
+        .unwrap_or_else(|| {
+            // Lines parallel: fall back to the projected offset point.
+            Point::new(
+                (joint.intersect_point.x() as f64 + dir_x * scaled_offset).round() as i64,
+                (joint.intersect_point.y() as f64 + dir_y * scaled_offset).round() as i64,
+            )
+        });
+    let start = (hook_start.x() as f64, hook_start.y() as f64);
     let mut forward = hook_length;
     for (index, candidate) in source.iter().enumerate() {
         if index == joint.closest_line {
@@ -408,6 +419,7 @@ fn add_hook(
             }
         }
     }
+
     let mut backward = 0.0_f64;
     if forward < hook_length {
         backward = hook_length;
@@ -432,7 +444,7 @@ fn add_hook(
         (start.0 + length * dir_x).round() as i64,
         (start.1 + length * dir_y).round() as i64,
     );
-    let start_point = Point::new(start.0.round() as i64, start.1.round() as i64);
+    let start_point = hook_start;
     let points = &mut working[joint.intersect_pl];
     if points.is_empty() {
         return;
