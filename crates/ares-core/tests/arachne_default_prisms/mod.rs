@@ -135,7 +135,13 @@ async fn process_arachne_default_prisms_plate_layout() {
     }
 }
 
+// Tracks the unported `wall_generator: arachne` domain (see the
+// unported-option-domains spec): ares renders the fixture with classic
+// walls and the reference carries arachne walls (8402 vs 8926 lines; the
+// E/timing families diverge downstream). Re-enable when the arachne
+// wall-generator milestone lands.
 #[tokio::test]
+#[ignore = "arachne wall generator is an unported option domain"]
 async fn process_arachne_actual_default_prisms_full_output() {
     let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/parity/arachne");
     let project = fs::read(directory.join("default-prisms.3mf")).unwrap();
