@@ -1,3 +1,4 @@
+pub(crate) mod adaptive;
 pub(crate) mod checked_rotate;
 pub(crate) mod connect;
 pub(crate) mod cross_hatch;
