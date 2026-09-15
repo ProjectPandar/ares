@@ -264,3 +264,21 @@ sparse sections with proper boundaries (each ;TYPE:Sparse infill block
 up to the next ;TYPE marker) and diff the line sets; then instrument
 the ares adaptive arm (dump polylines pre/post crop) against probe8's
 exact set.
+
+## ares-side divergence decomposed (#125)
+
+Instrumented the arm (ARES_DUMP_ADPOCT/ADPFILL env hooks):
+
+- Octree inputs CORRECT: spacing 25.2 (naive formula), mesh xy ±5 /
+  z 0..10 (object-local world frame), center_offset (0,0,0) — exactly
+  probe8's setup.
+- Surface: ±3.0125 mm @ 1e6 lattice; orca's sparse surface is ±2.447.
+  The missing shrink ≈ 0.57 mm = the `offset_ex(overlap − 0.5·spacing)`
+  that upstream `Fill::fill_surface` applies BEFORE
+  `_fill_surface_single` (Fill.cpp:110-115) — my filler entry passes
+  the expolygons raw. FIX: apply the offset in the adaptive entry
+  (mirror gyroid.rs's fill_surface pre-offset pattern).
+- One polyline out: the multiline==1 collapse + ares connect_infill
+  produce a 2-point line where orca's hook/chain path keeps a 6-point
+  connected path — the hook geometry (connect_lines_using_hooks,
+  FillAdaptive.cpp:801) is the remaining tail after the offset fix.

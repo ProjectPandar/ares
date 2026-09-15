@@ -69,6 +69,23 @@ pub(super) fn append(
             .map_err(clipper_error)?,
         );
     }
+    if std::env::var("ARES_DUMP_ADPOCT").is_ok() {
+        let pts: Vec<(f64, f64)> = fill
+            .expolygons
+            .iter()
+            .flat_map(|e| {
+                e.contour()
+                    .points()
+                    .iter()
+                    .map(|p| (p.x() as f64, p.y() as f64))
+            })
+            .collect();
+        eprintln!(
+            "ADPFILL z={print_z:.3} polys={} first_surface_pts={pts:?} scaled_by={}",
+            polylines.len(),
+            scale.factor()
+        );
+    }
     if polylines.is_empty() {
         return Ok(());
     }
@@ -154,6 +171,19 @@ fn build_object_octree(
             )
         })
         .collect();
+    if std::env::var("ARES_DUMP_ADPOCT").is_ok() {
+        let zmin = world.iter().map(|v| v[2]).fold(f64::INFINITY, f64::min);
+        let zmax = world.iter().map(|v| v[2]).fold(f64::NEG_INFINITY, f64::max);
+        eprintln!(
+            "ADPOCT spacing={line_spacing:.4} verts={} tris={} xy=[{:.2},{:.2}]-[{:.2},{:.2}] z=[{zmin:.2},{zmax:.2}] center_offset={center_offset:?}",
+            world.len(),
+            triangles.len(),
+            min[0],
+            min[1],
+            max[0],
+            max[1]
+        );
+    }
     octree::build_octree(
         &rotated,
         &triangles,
