@@ -76,7 +76,7 @@ pub(super) fn append_chamber_shutdown(
 ) {
     let (active, temperature) = chamber_settings(traversal);
     if active && temperature > 0 {
-        output.extend_from_slice(b"M141 S0\n");
+        output.extend_from_slice(b"M141 S0;set chamber_temperature\n");
     }
 }
 
