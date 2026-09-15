@@ -139,3 +139,31 @@ feedrate is F629 in ares vs F843 in orca (the #94 estimator gap —
 into every downstream F. The equalizer structure itself is byte-exact
 (vindicated by probe6). Next slice: close the estimator gap or
 continue on the other buckets.
+
+## Timing-family deep dive (#111): parse model PROVEN faithful, gap localized to the slowdown walk
+
+Method: dumped ares's per-measured-line model (new `ARES_DUMP_CLALL` hook)
+on the 2bDWHY no-slowdown fixture's marker-bearing layer text
+(`ARES_DUMP_PEINPUT`) and re-implemented upstream
+`CoolingBuffer::parse_layer_gcode` semantics in python — including the
+subtle quirks:
+
+- relative-E: new_pos[3] = the E word's value (not accumulated); a
+  line WITHOUT an E word inherits the previous delta → the
+  `;_EXTRUDE_SET_SPEED` line measures a PHANTOM E-only length
+  (e.g. len=4.31512 at the wall block head). Upstream does this too
+  (CoolingBuffer.cpp:440-460, dif[3] vs reset-to-zero current_pos) —
+  ares matches bitwise.
+- feedrate stored as mm/s (`new_pos[4] /= 60`), layer times in seconds.
+
+**Result: 327/327 lines match exactly (len/f/time)** — the estimator
+parse is NOT the divergence source. The layer-0 total 10.2608s
+(upstream-equivalent) reproduces ares's belief.
+
+The F600-vs-F843 (slow_down_layer_time=50s, min=1mm/s) divergence is
+inside `calculate_layer_slowdown` → `extruder_range_slow_down_non_proportional`:
+ares's layer-0 adjustable set = 5 sm entries (2×70mm/s len 120, 3×50mm/s
+len 398); my upstream-walk reconstruction solves the final group to
+~8.46mm/s (F508) — ares emits F600, orca F843. Next slice: line-by-line
+port comparison of the non-proportional walk + the
+`new_feedrate_to_reach_time_stretch` solver (CoolingBuffer.cpp:560-636).
