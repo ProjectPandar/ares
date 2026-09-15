@@ -120,7 +120,7 @@ impl CoolingState {
                         .map_or(0.0, |value| value.0 as f32),
                     keep_outer_wall_speed: first_bool(&filament.dont_slow_down_outer_wall.0),
                     relative_e: runtime.use_relative_e_distances.0,
-                    keep_markers: true,
+                    keep_markers: slope > 0.0,
                 },
                 runtime.travel_speed.0,
             ),
@@ -180,7 +180,9 @@ impl CoolingState {
         // cooling buffer, which runs its slowdown on the equalized text;
         // the final marker strip happens after the cooling.
         let mut layer = output.split_off(layer_start);
+        let mut equalized = false;
         if let Some(pass) = self.equalizer.as_mut() {
+            equalized = true;
             if let Ok(path) = std::env::var("ARES_DUMP_PEINPUT") {
                 use std::io::Write;
                 if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -198,20 +200,13 @@ impl CoolingState {
                 .map(|text| text.into_bytes())
                 .unwrap_or_default();
         }
-        if let Ok(path) = std::env::var("ARES_DUMP_CBIN") {
-            use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = file.write_all(b"=== LAYER ===\n");
-                let _ = file.write_all(&layer);
-            }
-        }
+        let had_equalizer = equalized;
         let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
-        let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));
-        output.extend_from_slice(stripped.as_bytes());
+        if had_equalizer {
+            let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));
+            layer = stripped.into_bytes();
+        }
+        output.extend_from_slice(&layer);
         let layer_index = self.pending_layer_index.take().unwrap();
         let part_speed = self
             .part_fan_ramp
