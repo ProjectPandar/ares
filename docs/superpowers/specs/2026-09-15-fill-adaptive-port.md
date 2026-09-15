@@ -378,3 +378,21 @@ materialized_flow for the sparse role.
 Status: GEOMETRY COMPLETE + VALIDATED (s0 oracle); adaptivecubic
 generates byte-identical movement except the one reversed path; E
 last-digits documented as knife-edge.
+
+## Reversal root-cause refined (#132)
+
+The z=2.4 zigzag: orca and ares emit the IDENTICAL segments with
+IDENTICAL E values (E2.64221, E3.83548, E.80936, E3.83548, E.14775...)
+in opposite traversal order — orca enters at X501.664 (horizontal
+connector to the LEFT diagonal first), ares at X498.336 (connector to
+the RIGHT diagonal first). Pure polyline-direction selection in the
+hook/chain stage.
+
+The faithful fix is the full drop/anchor decision block
+(`FillAdaptive.cpp:887-1010`: line_len_threshold_drop/anchor for
+both/single sides with `scaled_offset·(2/cos(π/6)+0.5)` etc., the
+tjoint_front/back gating, and the trim-and-anchor application), which
+my first-tranche hooks port simplifies. Port that block verbatim, then
+re-verify: (a) the s0 fixture full-file diff → expect only the E
+last-digit family; (b) golden; (c) the full sweep (the hooks module is
+adaptive-only — no shared-machinery risk).
