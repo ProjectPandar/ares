@@ -86,3 +86,20 @@ artifact/build reproducibility, regression correctness, and architecture/
 portability/maintainability. Findings require bounded fixes, original+changed
 case re-verification and independent review again until all axes are green.
 This wave is not overall completion or publication approval.
+
+## LOC debt final state (#156)
+
+24 files split under the 400-line rule over turns #138–#155 (fan_mover,
+seam_placement, gyroid, adaptive hooks/octree, avoid-crossing boundary,
+motion, brim, pressure_equalizer emitter/line, shortest_path chain,
+layers, gcode, fill_entities, processor motion, options build, cooling,
+spiral vase, overhang, start_travel ×3). One file remains over:
+`gcode_emit/motion/path/start_travel.rs` at 437 (37 over) after the
+restate (110) and retract (44) extractions. The third extraction
+(the travel emission if-chain) was attempted and REVERTED — the chain's
+brace structure is entangled with the enclosing `if needs_travel`
+block (the extracted region nets depth −1; the if-chain's first branch
+starts before `if state.spiral_vase`), and a byte-identical golden
+takes precedence over forcing the split. A future split must carry the
+needs_travel guard into the extracted function or extract from a
+balanced sub-boundary.
