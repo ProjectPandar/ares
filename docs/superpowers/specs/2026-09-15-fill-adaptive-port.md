@@ -252,3 +252,15 @@ must be inside the ares octree build/filler path. Next slice: run the
 ares pipeline on the /tmp/adp fixture, dump the generated sparse
 polylines, and diff against probe8's exact set to find the ares-side
 divergence.
+
+## ares-side first measurement (#124)
+
+The z=1.8 walls match orca exactly (inner ±3.239, outer ±4.370), so the
+wall/surface prep is aligned. The ares sparse-section extraction shows
+points at ±3.239/±4.370 — the wall-square coordinates — indicating the
+section-extraction awk was off (ares section indexing differs) or the
+adaptive arm is emitting near-boundary loops. Next: extract both sides'
+sparse sections with proper boundaries (each ;TYPE:Sparse infill block
+up to the next ;TYPE marker) and diff the line sets; then instrument
+the ares adaptive arm (dump polylines pre/post crop) against probe8's
+exact set.
