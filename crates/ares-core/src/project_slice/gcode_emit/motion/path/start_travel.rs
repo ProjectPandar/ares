@@ -1,3 +1,4 @@
+mod restate;
 mod route;
 
 use route::{plan_route, polyline_length};
@@ -431,86 +432,16 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
     // A merely-uncleared position (post-timelapse/toolchange) does NOT get
     // the re-statement. The retracted path below descends an eager-lifted
     // nozzle itself (`state.lifted && !travel_set_layer_z`).
-    let needs_z_restate = never_positioned && (eager_lifted_travel || unclear_position_travel);
-    if needs_z_restate && !travel_set_layer_z {
-        let z_feedrate = travel::lift_z_feedrate(state);
-        let z_comment = state
-            .options
-            .gcode_comments
-            .then_some(" ; ensure Z matches planned layer height")
-            .unwrap_or("");
-        output.extend_from_slice(
-            format!(
-                "G1 Z{} F{}{z_comment}\n",
-                format_z(state.layer_z),
-                format_axis(z_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = z_feedrate;
-    }
-    if state.retracted {
-        if first_position
-            && state.options.z_hop > 0.0
-            && !state.lifted
-            && travel::lift_is_allowed_at(state, state.layer_z)
-        {
-            let z_feedrate = travel::lift_z_feedrate(state);
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}\n",
-                    format_z(state.layer_z + state.options.z_hop),
-                    format_axis(z_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = z_feedrate;
-            state.lifted = true;
-            state.lifted_amount = state.options.z_hop;
-        }
-        if state.lifted && !travel_set_layer_z {
-            let z = slope_start_z.unwrap_or(state.layer_z);
-            let z_feedrate = travel::lift_z_feedrate(state);
-            output.extend_from_slice(
-                format!("G1 Z{} F{}\n", format_z(z), format_axis(z_feedrate)).as_bytes(),
-            );
-            state.current_feedrate = z_feedrate;
-            state.scarf_z = slope_start_z;
-        }
-        // `Extruder::unretract()` restores the TRACKED `m_retracted` plus
-        // `m_restart_extra` — not the configured retraction length — so a
-        // nozzle pre-retracted by start-gcode assignments restores exactly
-        // what the template retracted.
-        let unretract = extrusion::coordinate(
-            state,
-            state.retracted_amount + state.options.retract_restart_extra,
-        );
-        // `Extruder::unretract()` zeroes `m_retracted` after the extrude;
-        // `coordinate` only accumulates it for negative deltas.
-        state.retracted_amount = 0.0;
-        // `GCodeWriter::unretract` emits the G1 only for a non-zero dE
-        // (`GCodeProcessor`-side is_zero guard, `GCodeWriter.cpp:1063`):
-        // a zero-length retraction (retraction_length=0 with wipe)
-        // deretracts silently.
-        if unretract.abs() > 0.0 {
-            let comment = state
-                .options
-                .gcode_comments
-                .then_some(" ;  ; unretract")
-                .unwrap_or("");
-            output.extend_from_slice(
-                format!(
-                    "G1 E{} F{}{comment}\n",
-                    format_extrusion(unretract),
-                    format_axis(state.options.deretraction_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = state.options.deretraction_feedrate;
-        }
-        state.retracted = false;
-        state.lifted = false;
-        state.lifted_amount = 0.0;
-        state.template_lifted = false;
-    }
+    restate::restate(
+        output,
+        state,
+        restate::RestateContext {
+            slope_start_z,
+            never_positioned,
+            first_position,
+            travel_set_layer_z,
+            eager_lifted_travel,
+            unclear_position_travel,
+        },
+    );
 }
