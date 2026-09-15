@@ -180,17 +180,6 @@ impl CoolingState {
         // cooling buffer, which runs its slowdown on the equalized text;
         // the final marker strip happens after the cooling.
         let mut layer = output.split_off(layer_start);
-        if let Ok(path) = std::env::var("ARES_DUMP_CBIN") {
-            use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                let _ = file.write_all(b"=== LAYER ===\n");
-                let _ = file.write_all(&layer);
-            }
-        }
         if let Some(pass) = self.equalizer.as_mut() {
             if let Ok(path) = std::env::var("ARES_DUMP_PEINPUT") {
                 use std::io::Write;
@@ -208,6 +197,17 @@ impl CoolingState {
                 .flush()
                 .map(|text| text.into_bytes())
                 .unwrap_or_default();
+        }
+        if let Ok(path) = std::env::var("ARES_DUMP_CBIN") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = file.write_all(b"=== LAYER ===\n");
+                let _ = file.write_all(&layer);
+            }
         }
         let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
         let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));

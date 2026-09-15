@@ -77,6 +77,15 @@ fn format_axis(value: f64, digits: usize) -> String {
     if text.ends_with('.') {
         text.pop();
     }
+    // Upstream `GCodeFormatter::emit_axis` (`GCodeWriter.cpp:1248-1261`)
+    // writes the scaled integer and inserts the decimal point before the
+    // last `digits` digits, so 0 < |v| < 1 has NO leading zero (".58733",
+    // "-.37351"); only a bare zero keeps it.
+    if let Some(rest) = text.strip_prefix("0.") {
+        text = format!(".{rest}");
+    } else if let Some(rest) = text.strip_prefix("-0.") {
+        text = format!("-.{rest}");
+    }
     text
 }
 
