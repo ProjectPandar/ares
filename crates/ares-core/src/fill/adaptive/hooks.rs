@@ -53,6 +53,9 @@ pub(crate) fn connect_lines_using_hooks(
     spacing: f64,
     hook_length: f64,
     hook_length_max: f64,
+    // Lattice units per millimeter — upstream constants (1000, 1200) are
+    // 25mm/30mm at the 40/mm lattice and must be rescaled.
+    units_per_mm: f64,
 ) -> Vec<Polyline> {
     if lines.len() <= 1 || hook_length <= 0.0 {
         return lines;
@@ -60,6 +63,8 @@ pub(crate) fn connect_lines_using_hooks(
     // `:809-811`: 19% overlap; 25% trim.
     let scaled_offset = 0.81 * spacing;
     let scaled_trim_distance = 0.5 * spacing * 0.75;
+    let tjoint_radius = 25.0 * units_per_mm;
+    let _ = hook_length_max;
 
     // The 2-point source lines for geometry tests (`lines_src`).
     let source: Vec<Line> = lines
@@ -82,14 +87,18 @@ pub(crate) fn connect_lines_using_hooks(
                     continue;
                 }
                 let d2 = distance_point_to_segment_squared(endpoint, candidate);
-                if d2 <= 1000.0 * 1000.0 && d2 < best_d2 && projects_interior(endpoint, candidate) {
+                if d2 <= tjoint_radius * tjoint_radius
+                    && d2 < best_d2
+                    && projects_interior(endpoint, candidate)
+                {
                     best = Some(other);
                     best_d2 = d2;
                 }
             }
             let Some(closest) = best else { continue };
             let line_len = length(line);
-            let num_tjoints_other = has_other_tjoint(source.as_slice(), index, !front, 1000.0);
+            let num_tjoints_other =
+                has_other_tjoint(source.as_slice(), index, !front, tjoint_radius);
             if num_tjoints_other {
                 // Both endpoints have T-joints.
                 if line_len < thresholds.drop_both_sides {
