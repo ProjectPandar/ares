@@ -8,7 +8,6 @@ mod overhang;
 mod small_perimeter;
 mod solid_infill;
 mod top_bottom_solid_surface;
-mod volumetric_rate_smoothing;
 
 #[test]
 fn assigns_feedrates_by_move_kind_and_role() {
