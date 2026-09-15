@@ -198,6 +198,30 @@ pub(crate) fn fill_surface(
         .map(|l| Polyline::new(vec![l.a, l.b]))
         .collect();
 
+    if let Ok(path) = std::env::var("ARES_DUMP_ADPLINES") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "RAW z={z:.3} n={}", all_polylines.len());
+            for polyline in &all_polylines {
+                let pts = polyline.points();
+                if let (Some(a), Some(b)) = (pts.first(), pts.last()) {
+                    let _ = writeln!(
+                        file,
+                        "L {:+.4} {:+.4} -> {:+.4} {:+.4}",
+                        a.x() as f64 * scale.factor(),
+                        a.y() as f64 * scale.factor(),
+                        b.x() as f64 * scale.factor(),
+                        b.y() as f64 * scale.factor()
+                    );
+                }
+            }
+        }
+    }
+
     // Apply multiline offset if needed (`FillAdaptive.cpp:1380`).
     all_polylines =
         super::super::multiline_offset::apply(all_polylines, multiline, spacing, scale)?;
@@ -205,6 +229,31 @@ pub(crate) fn fill_surface(
     // Crop all polylines (`FillAdaptive.cpp:1383`).
     let clip = expolygon_polygons(surface);
     all_polylines = crate::geometry::intersection_open_polylines(&all_polylines, &clip)?;
+
+    if let Ok(path) = std::env::var("ARES_DUMP_ADPLINES") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "CROP z={z:.3} n={}", all_polylines.len());
+            for polyline in &all_polylines {
+                let pts = polyline.points();
+                if let (Some(a), Some(b)) = (pts.first(), pts.last()) {
+                    let _ = writeln!(
+                        file,
+                        "C {:+.4} {:+.4} -> {:+.4} {:+.4} pts={}",
+                        a.x() as f64 * scale.factor(),
+                        a.y() as f64 * scale.factor(),
+                        b.x() as f64 * scale.factor(),
+                        b.y() as f64 * scale.factor(),
+                        pts.len()
+                    );
+                }
+            }
+        }
+    }
 
     if all_polylines.len() <= 1 {
         return Ok(all_polylines);
