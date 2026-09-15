@@ -54,20 +54,33 @@ pub(super) fn append(
     });
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(
-            filler::fill_surface(
-                &octree,
-                expolygon,
-                print_z,
-                fill.params.spacing,
-                fill.params.multiline,
-                fill.params.anchor_length,
-                fill.params.anchor_length_max,
-                false,
-                scale,
-            )
-            .map_err(clipper_error)?,
-        );
+        // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
+        // surface by (overlap − 0.5·spacing) before the per-component
+        // adaptive fill.
+        let delta = ((fill.params.overlap - 0.5 * fill.params.spacing) / scale.factor()) as f32;
+        let components = crate::geometry::offset_expolygon(
+            expolygon,
+            delta,
+            crate::geometry::JoinType::Miter,
+            3.0,
+        )
+        .map_err(clipper_error)?;
+        for component in components {
+            polylines.extend(
+                filler::fill_surface(
+                    &octree,
+                    &component,
+                    print_z,
+                    fill.params.spacing,
+                    fill.params.multiline,
+                    fill.params.anchor_length,
+                    fill.params.anchor_length_max,
+                    false,
+                    scale,
+                )
+                .map_err(clipper_error)?,
+            );
+        }
     }
     if std::env::var("ARES_DUMP_ADPOCT").is_ok() {
         let pts: Vec<(f64, f64)> = fill
