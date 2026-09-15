@@ -2,6 +2,7 @@
 //! (`GCodeWriter::apply_print_config` equivalents).
 
 mod crossing;
+mod region;
 mod retraction;
 mod scarf;
 use super::MotionOptions;
@@ -33,31 +34,12 @@ impl MotionOptions {
             .map_or(full.process.object.travel_acceleration.0, |value| {
                 value.object.travel_acceleration.0
             });
-        let bridge_speed = region.map_or(full.process.region.bridge_speed.0, |value| {
-            value.bridge_speed.0
-        });
-        let outer_wall_speed = region.map_or(full.process.region.outer_wall_speed.0, |value| {
-            value.outer_wall_speed.0
-        });
-        let small_perimeter = region.map_or(full.process.region.small_perimeter_speed, |region| {
-            region.small_perimeter_speed
-        });
-        let configured_small_perimeter_speed = absolute(small_perimeter, outer_wall_speed);
-        let small_perimeter_speed = if configured_small_perimeter_speed > 0.0 {
-            configured_small_perimeter_speed
-        } else {
-            0.5 * outer_wall_speed
-        };
-        let outer_wall_acceleration = acceleration(
-            object.map(|value| &value.object),
-            full.process.object.outer_wall_acceleration.0,
-            |value| value.outer_wall_acceleration.0,
-        );
-        let default_acceleration = acceleration(
-            object.map(|value| &value.object),
-            full.process.object.default_acceleration.0,
-            |value| value.default_acceleration.0,
-        );
+        let speeds = region::region_speeds(full, object, region);
+        let bridge_speed = speeds.bridge_speed;
+        let outer_wall_speed = speeds.outer_wall_speed;
+        let small_perimeter_speed = speeds.small_perimeter_speed;
+        let outer_wall_acceleration = speeds.outer_wall_acceleration;
+        let default_acceleration = speeds.default_acceleration;
 
         let (retraction_speed, deretraction_speed) = retraction::speeds(gcode);
         Self {
