@@ -819,3 +819,27 @@ max_volumetric_extrusion_rate_slope_segment_length /
 extrusion_rate_smoothing_external_perimeter_only option trio already
 exists in ares's registry); deferred = PRESSURE_EQUALIZER_STATISTIC
 debug blocks.
+
+## No-arc ksr root cause: the simplify phase never skipped (#167)
+
+A live-oracle experiment on the ksr fixture with `enable_arc_fitting=0`
+keyed out the arc fitter: the first ~1477 lines matched byte-exactly,
+then ares SPLIT single upstream moves through an extra intermediate
+vertex (endpoints and E sums identical) — 36288+34804 diff lines of the
+same pattern. Root cause: `path_simplification::apply` returned early
+when arc fitting was disabled or spiral mode was on, but upstream
+`LayerRegion::simplify_path` (`LayerRegion.cpp:1071-1100`) runs a PLAIN
+Douglas-Peucker simplify at `scaled(resolution)` in that branch — the
+phase only switches to arc-fitting when `enable_arc_fitting && !
+spiral_mode`. The coarse 0.04 sparse-infill tolerance
+(`SCALED_SPARSE_INFILL_RESOLUTION`, libslic3r.h:78) applies only in the
+arc branch.
+
+Fix: two-branch `apply` — arc branch unchanged; the else branch runs
+`simplify_linear_points` at the printer resolution for every entity
+(perimeters loops/multipaths, fills, gap fill; fitting empty). The
+no-arc oracle diff collapses 6563→2016 non-equal opcodes; the residual
+families are the known estimator timing header, three header-comment
+emission gaps (`different_settings_to_system`/`inherits_group` empty
+lines dropped, `extruder_ams_count` slot flag), and the last-digit
+E/coordinate rounding family.
