@@ -142,6 +142,23 @@ impl Estimate {
         }
         let (times, trailing_delay) = scheduled_times(&blocks, &events);
         debug_assert_eq!(block_line_ids.len(), times.len());
+        // Per-block signature dump (id, cumulative, distance, speed) for
+        // sequence alignment against the GT oracle's ORCA_DUMP_TIMES — env
+        // gated like the cache dump.
+        if let Ok(path) = std::env::var("ARES_DUMP_BLOCKS") {
+            use std::io::Write;
+            let mut out = std::fs::File::create(&path).unwrap();
+            let mut running = 0.0;
+            for ((block, id), time) in blocks.iter().zip(&block_line_ids).zip(&times) {
+                running += time;
+                writeln!(
+                    out,
+                    "{id} {running:.6} {:.6} {:.3}",
+                    block.distance, block.speed
+                )
+                .unwrap();
+            }
+        }
         // Upstream's cache entries store `float(time)` from the double
         // accumulator (`GCodeProcessor.cpp:576`), so the M73 boundary chain
         // accumulates in f64 and rounds to f32 per entry.

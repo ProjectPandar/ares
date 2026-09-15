@@ -1079,3 +1079,23 @@ estimator: sequence-align the two block streams by (dist, cruise,
 entry) signatures (difflib over quantized tuples), then diff times on
 the aligned pairs; or diff ares against a GUI-side GT dump if one can
 be produced.
+
+## Estimator block-math exonerated by anchored alignment (#172)
+
+ARES_DUMP_BLOCKS (estimate.rs) dumps per-block (id, cumulative,
+distance, speed). Anchor-windowed alignment against the GT
+ORCA_DUMP_TIMES stream (anchors = the 274 long travels dist>=60,
+all matched; difflib per window on (dist, cruise) signatures):
+46370 aligned same-signature blocks differ in time by a TOTAL of
+only −0.156s (sum|.| 0.323s; 91 blocks >=1e-2, worst −0.0095s on
+repeated (dist=0.366, cruise=50) segments at cumulative 316-321s —
+a slow-move class worth one look). The block-level estimator math is
+therefore near-exact on matched moves.
+
+The remaining total gap (ares 6180.3 vs GT-manual 6172.5 = +7.7s;
++3s vs the GUI reference) lives in the UNALIGNED stream: ares emits
+~10k MORE planner blocks than GT on the same print (314027 vs
+304169) — a block-SEGMENTATION/stream difference, not time math.
+Next slice: find why ares' planner produces ~3% more blocks (extra
+junction splitting? discretization?) and whether the GUI-reference
+stream (where ares is byte-identical in gcode) shows the same count.
