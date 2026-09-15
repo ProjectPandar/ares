@@ -229,3 +229,26 @@ numerically (1.26/(0.15·⅓)=25.2; auto_extrusion_width=1.35; nozzle
 1.2). Next slice: scan w-scaling (0.8/2.0 fixtures) for s(w) and
 identify the upstream source — likely a different config field feeding
 `adaptive_fill_line_spacing` than the naive read.
+
+## probe8 SOLVED (#123): spacing = the naive formula; orca's lines are ROOT-cube walls (spacing-independent)
+
+The #122 "s≈2.89" was an artifact of the wrong mesh z phase (probe8's
+mesh still spanned z ±5; upstream keeps world z 0..10). With the mesh
+at z∈[0,10]:
+
+- probe8 @ **s = 25.2** (width/((density/100)·⅓), the naive formula)
+  reproduces orca's z=1.8 pattern EXACTLY: top horizontal y≈2.27 vs
+  orca 2.263, diagonals (±1.206,−2.447)/(2.447,−0.298) vs orca
+  (±1.2,−2.447)/(2.447,−0.287) — 0.012 residuals = the 40/mm
+  center_offset rounding.
+- **Density/width independence explained**: the emitted lines are the
+  ROOT cube's walls; the root line y = (root_z − z)/√2 — a pure
+  function of the layer z and mesh center, independent of the ladder
+  spacing (the root edge scales out: E/√6 − E/√6 ≡ 0).
+
+The ares wiring's spacing formula and mesh frame are therefore correct
+per source; the remaining ares-vs-orca line-count gap (13 vs varying)
+must be inside the ares octree build/filler path. Next slice: run the
+ares pipeline on the /tmp/adp fixture, dump the generated sparse
+polylines, and diff against probe8's exact set to find the ares-side
+divergence.

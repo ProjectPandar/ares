@@ -39,8 +39,8 @@ int main(int argc, char **argv) {
     // (here z in [0,10] for the cube10 fixture).
     const double hz = 5.0;
     Vec3d verts[8] = {
-        {-h,-h,-5.0},{h,-h,-5.0},{h,h,-5.0},{-h,h,-5.0},
-        {-h,-h,hz},{h,-h,hz},{h,h,hz},{-h,h,hz}};
+        {-h,-h,0.0},{h,-h,0.0},{h,h,0.0},{-h,h,0.0},
+        {-h,-h,10.0},{h,-h,10.0},{h,h,10.0},{-h,h,10.0}};
     int tris[12][3] = {
         {0,1,2},{0,2,3},{4,6,5},{4,7,6},
         {0,4,5},{0,5,1},{1,5,6},{1,6,2},

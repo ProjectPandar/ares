@@ -111,6 +111,7 @@ static void generate_infill_lines_recursive(
         return;
 
     if (z_diff_abs < cubes_properties[depth].line_z_distance) {
+        std::fprintf(stderr, "EMIT depth=%d center=(%.4f,%.4f,%.4f) zdiff=%.4f props_edge=%.4f\n", depth, cube->center.x(), cube->center.y(), cube->center.z(), z_diff, cubes_properties[depth].edge_length);
         // Discretize a single wall splitting the cube into two.
         const double zdist = cubes_properties[depth].line_z_distance;
         Vec2d from(
