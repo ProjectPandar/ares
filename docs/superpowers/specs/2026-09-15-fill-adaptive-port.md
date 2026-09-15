@@ -440,3 +440,20 @@ first_i.left by scaled_offset along perp of the closest line.
 
 This is the full remaining port (~450 LOC incl. tests); the hooks
 module is adaptive-only (sweep-safe).
+
+## FINAL FINDING (#137): the z=6.6 tie is a WALL SEAM difference, not infill
+
+The last 8 non-E lines are at z=6.6 in the INNER/OUTER WALL blocks:
+orca's wall loop starts at (496.761, 503.239) while ares starts at
+(503.239, 503.239) — a perimeter seam/start-point selection tie for
+this layer only (earlier layers match). The adaptive infill blocks at
+z=6.6 match. This moves the last reversal OUT of the FillAdaptive
+milestone into the seam-placement family.
+
+**Milestone status: COMPLETE.** adaptivecubic generates
+movement-identical sparse infill to OrcaSlicer on the s0 oracle; the
+remaining fixture diff is entirely (a) E last-digits (knife-edge
+family, documented) and (b) one wall-seam tie at z=6.6 (seam family,
+tracked separately). The deferred items (25mm T-joint radius with the
+full boundary rtree, the union-find endpoint merges) remain recorded
+above for the day the last-digit families are tackled.
