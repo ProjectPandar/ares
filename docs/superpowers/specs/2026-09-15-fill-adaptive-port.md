@@ -457,3 +457,28 @@ family, documented) and (b) one wall-seam tie at z=6.6 (seam family,
 tracked separately). The deferred items (25mm T-joint radius with the
 full boundary rtree, the union-find endpoint merges) remain recorded
 above for the day the last-digit families are tackled.
+
+## Independent review round 1 (#164–#165) and fixes
+
+The six-axis read-only reviewer over d43a28c7..b303d8cb found 9
+concrete FillAdaptive/harness defects (all source-verified against
+upstream before fixing):
+
+| # | Defect | Fix |
+|---|--------|-----|
+| 1 | `create_offset_line` perp was `(y,-x)` (upstream `-y,x`) — anchor offset to the wrong side | `a3aaded3` |
+| 2 | `ray_segment_hit` u negated — every crossing-side hit returned None | `a3aaded3` |
+| 3 | T-joint phase: same endpoint tested twice, drop/trim were no-ops | both endpoints via nearest-tjoint scan; drop clears the polyline; trim pulls 1.155·trim; dropped-line intersections removed (`a3aaded3`) |
+| 4 | `nearest_fresh` hardcoded prev on both-fresh; split_at reordered current/neighbor | upstream projection rule + caller-order borrow (`a3aaded3`) |
+| 5 | reversed tail skipped the first element (`[1..].rev()` vs `rbegin()+1`); same-polyline `!front` branch identical to front; trim_start/trim_end absent | skip-last reverse, swap-on-!front, other_hook trims, merged_with chain + front refresh (`a3aaded3`) |
+| 6 | octree TLS cache keyed by ordinal only, never cleared | key (object, spacing bits) + clear at `fill_entities::prepare` (`542640f5`) |
+| 7 | `resolved.objects[identity.0]` source-identity indexing (panic path with nonprintable groups) | find by `source_object_index` (`542640f5`) |
+| 8 | ksr id normalization applied to actual only | both sides (`f26f0738`) |
+| 9 | truncation vs rounding in offset/extend/trim/point-intersection casts | Eigen `cast<coord_t>` truncation semantics (`a3aaded3`) |
+
+s0 fixture unchanged (48/8 — the corrected paths are not exercised by
+that geometry); workspace stays 7117/1 (ksr semantic +3s estimator
+family). Known deferred (reviewer-excluded, predate the range): the
+F-only dedup not tracking F on motion lines; per-layer PE flush/driver
+splitting; collinear-segment rtree merge + endpoint-touch merge phases
+(`:812-880`, `:1044-1104`) which need the rtree pre-pass.
