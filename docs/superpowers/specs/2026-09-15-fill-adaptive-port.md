@@ -165,3 +165,25 @@ Empirical oracle findings on the 2bDWHY-derived adaptive fixture:
   upstream FillAdaptive standalone, feed the fixture mesh + candidate
   spacings, and identify which spacing reproduces orca's observed
   pattern — then fix the ares spacing source accordingly.
+
+## probe8 harness built and validated (#120)
+
+`tools/chain-probe/probe8.cpp` + `p8impl.cpp` + `p8shim.hpp` +
+`p8body.inc` (vendored FillAdaptive.cpp octree/line-generation body,
+single-TU): builds the octree for a 10mm cube at a given spacing and z,
+prints the three-direction wall lines.
+
+Measurements (z=1.8):
+- spacing 25.2 (formula @ w1.26/d15%) → 9 lines
+- spacing 6.3 (@60%) → 9 lines
+- spacing 2.19 → 20 lines, pitch 1.79 — **matches orca's observed
+  pattern** (22 lines/section after crop, pitch 1.7905).
+
+So orca's effective octree spacing ≈ 2.19 at width 1.26, density
+INDEPENDENT (15/30/60 identical). The naive
+width/((density/100)·⅓) reading of FillAdaptive.cpp:337-354 does not
+explain it. Next: identify the actual spacing source (candidate:
+`Flow::auto_extrusion_width` interplay / a different config field) and
+the grid phase (orca's instance transform, incl. any rotation, phases
+the octree; probe8 must use the fixture's real transform for exact
+geometry comparison).
