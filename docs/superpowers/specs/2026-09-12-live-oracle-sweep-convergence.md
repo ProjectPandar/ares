@@ -1032,3 +1032,14 @@ CLI-config-overwrite artifact class. The remaining REAL no-arc
 residuals are exactly two families: the estimator timing header/M73
 drift (+6s) and the last-digit rounding noise (221 ±0.001 coordinate
 flips + ~37 5th-decimal E), both previously characterized.
+
+## Post-fix sweep verification (#171)
+
+Full 1001-printer sweep re-run after the plain-DP simplification fix
+(#167) and the lslices surface-order fix (#169): 870 PASS vs the 875
+baseline — all five lost printers are `ORCA_ERROR` (the oracle binary
+itself crashed this run: Prusa XL 5T 0.25/0.5/0.6, Snapmaker U1 0.2,
+WonderMaker ZR Ultra 0.8 — the documented flaky-oracle class), so the
+effective pass count is unchanged at 875. Both behavior fixes are
+smoke-neutral on the cube model, as expected: the cube is a single
+island per layer and most vendor defaults keep arc fitting on.
