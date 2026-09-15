@@ -968,3 +968,32 @@ probe-alignment corrections recorded: the ARES_DUMP_IORDER/LSLICES
 dumps are internal 0-based layer groups (gcode CHANGE_LAYER N = group
 N-1), and the IORDER stream interleaves perimeter and infill
 collections per layer.
+
+## chain_points equivalence audit — algorithm exonerated (#170)
+
+Line-by-line audit of ares `geometry/chain_points.rs` (+ kd_tree.rs,
+priority_queue.rs) against upstream `ShortestPath.cpp:92-410` +
+`MutablePriorityQueue.hpp` + `KDTreeIndirect.hpp` found the chain
+machinery EQUIVALENT in every observable respect:
+
+- heap: remove = move-last-into-hole then sift down+up, both sides;
+  sift-up swaps when parent NOT strictly less (ties swap); sift-down
+  picks the RIGHT child on ties. Identical.
+- kd-tree build: median-of-three bubble + quickselect partition, same
+  pivot stashing at right-1, same loop guards; identical tree shape.
+- kd-tree search: acceptance replaces on ties (upstream
+  lower_bound+rotate with K=1 replaces equal-distance candidates —
+  last-visited wins, same as ares `<=`); pruning
+  `plane² < best + EPSILON` with EPSILON=1e-4 on BOTH sides; pre-order
+  left-then-right descent on both.
+- greedy loop: same valid/connect rules, chain-id merge table, final
+  two-endpoint walk with no-seed `first_point = queue.top()`.
+
+Therefore the ksr island-order group swap does NOT come from the chain
+algorithm. The remaining hypothesis: the chain INPUTS differ — the
+region surface geometry/centers themselves (i.e., the divergence
+originates in slicing or surface classification for this .drc mesh).
+Next probe: dump ares' prelude chain inputs (surface bbox centers per
+layer) and run the same centers through a vendored upstream
+chain_points harness; agreement there moves the divergence to the
+slicing/classification stage.
