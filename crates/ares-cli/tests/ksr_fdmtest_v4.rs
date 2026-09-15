@@ -45,9 +45,17 @@ fn count_bytes(haystack: &[u8], needle: &[u8]) -> usize {
 }
 
 fn compare_actual(actual: &[u8]) {
-    golden::compare_ordered_bytes_generator_only(&reference(), actual)
+    golden::compare_ordered_bytes_generator_only(&reference(), &normalize_object_ids(actual))
         .unwrap_or_else(|error| panic!("{error}"));
 }
+
+/// `; (stop )?printing object <name> id:<N> copy <M>` — the id is
+/// `PrintObject::get_id()` (an ObjectBase sequential counter seeded per
+/// process). Two back-to-back OrcaSlicer CLI runs on the same fixture
+/// produce different ids (verified 2026-09-15 on ksr_fdmtest_v4:
+/// 4575657221408423936 vs the stored reference's 13965068898260364096),
+/// so the semantic comparison normalizes the per-run id while the strict
+/// comparator keeps comparing ids between mutations of one stream.
 
 fn local_now_to_second() -> DateTime {
     let now = jiff::Zoned::now().datetime();
@@ -71,4 +79,12 @@ fn generated_at(bytes: &[u8]) -> DateTime {
         .find_map(|line| line.strip_prefix(prefix))
         .unwrap();
     line.replace(" at ", " ").parse().unwrap()
+}
+fn normalize_object_ids(bytes: &[u8]) -> Vec<u8> {
+    let text = String::from_utf8_lossy(bytes);
+    let object_id = regex::Regex::new(r"(; (?:stop )?printing object .+ id:)\d+( copy )").unwrap();
+    object_id
+        .replace_all(&text, "${1}<ID>${2}")
+        .into_owned()
+        .into_bytes()
 }
