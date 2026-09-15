@@ -312,3 +312,22 @@ ares infrastructure: `geometry/line_distance_tree.rs` (150 LOC,
 nearest-line queries) partially replaces boost::geometry::rtree;
 segment-intersection tests exist in clipper utils. The hook port lands
 in `fill/adaptive/hooks.rs` (<400 LOC + tests).
+
+## Post-double-rotation state (#129): line sets IDENTICAL; only split points differ
+
+Per-section point-by-point comparison (z=1.8): ares and orca share the
+identical 9-point path except orca splits the top horizontal at (0,
+2.26) — the same line, one extra collinear point. z=1.2: orca splits
+the right vertical at y=0.66 and the bottom at x=0 (three extra
+collinear points); every real vertex matches.
+
+Two candidate mechanisms for the split placement:
+1. The temp_lines subtree-boundary flush (left/right address chains
+   emitted as separate collinear segments that upstream's hook-stage
+   merge — FillAdaptive.cpp:823-880, r2_close=1200², |cos|>0.99 —
+   apparently does NOT merge in orca's actual run).
+2. The equalizer's rate-crossing split (slope=100 on this fixture).
+
+Discriminator for the next slice: run the s0 fixture (slope=0) — if
+the split points persist, it is the temp_lines boundary; if they
+vanish, it is the equalizer.
