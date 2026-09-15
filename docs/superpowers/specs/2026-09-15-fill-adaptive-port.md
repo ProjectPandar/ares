@@ -396,3 +396,18 @@ my first-tranche hooks port simplifies. Port that block verbatim, then
 re-verify: (a) the s0 fixture full-file diff → expect only the E
 last-digit family; (b) golden; (c) the full sweep (the hooks module is
 adaptive-only — no shared-machinery risk).
+
+## Full-port scope read (#133) — the remaining hook body
+
+Read through `FillAdaptive.cpp:1130+`: after the T-joint thresholds
+(:887-1010, already inventoried), the tail adds: the
+lexicographic-intersection sort (:1017-1022), the boundary-segment
+rtree insert (:1029-1041), the union-find `merged_with` +
+`update_merged_polyline` (endpoint-touch merges with the reverse
+decision d11/d12/d21/d22 + midpoint snap, :1046-1097), and the
+per-closest-line grouping loop (:1102+: project T-joints onto the line,
+sort along line_dir, then the pairing/hook application with
+`get_nearest_intersection` walking). Estimate ~400 LOC of Rust for the
+faithful remainder (`hooks/merge.rs` + extending `hooks.rs`, each
+<400 LOC). Verification stays: s0 fixture diff → golden → full sweep
+(hooks is adaptive-only).
