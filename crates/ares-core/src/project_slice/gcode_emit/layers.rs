@@ -7,14 +7,16 @@ mod fan_setup;
 pub(super) use context::Context;
 mod object_order;
 mod schedule;
+mod timelapse;
 
 use entry::EntryGeometry;
 use schedule::Schedule;
 
+use super::timelapse as timelapse_core;
 use super::{
     GenerationMetadata, PreparedPostIslandPrintOrder, SliceError, append_layer_end_timelapse, brim,
     cooling, fan_mover, footprint, island_print_order, layer_boundary_slices_rc, layer_gcode,
-    motion, object, skirt, spiral_vase, timelapse, trailing_gcode_xy, value,
+    motion, object, skirt, spiral_vase, trailing_gcode_xy, value,
 };
 use crate::geometry::ExPolygon;
 
@@ -68,25 +70,9 @@ pub(super) fn append(
     let layer_change_template =
         layer_gcode::LayerChangeTemplate::new(traversal, metadata, first_layer_bounds);
     let runtime_gcode = &traversal.resolved.views.runtime_gcode;
-    let traditional_timelapse = !runtime_gcode.time_lapse_gcode.0.is_empty()
-        && ((runtime_gcode.printer_structure == crate::PrinterStructure::I3
-            && !traversal.resolved.views.full.process.print.spiral_mode.0)
-            || traversal
-                .resolved
-                .views
-                .full
-                .project
-                .print
-                .nozzle_diameter
-                .0
-                .len()
-                > 1);
-    // The mid-layer insert only fires on I3 printers (`GCode.cpp:5455-5461`);
-    // corexy/multi-nozzle traditional prints fall through to the layer-end
-    // sequence (`GCode.cpp:5527-5546`).
-    let traditional_interlude =
-        traditional_timelapse && runtime_gcode.printer_structure == crate::PrinterStructure::I3;
-    state.traditional_timelapse = traditional_timelapse;
+    let timelapse_gate = timelapse::gate(traversal, state);
+    let traditional_timelapse = timelapse_gate.traditional_timelapse;
+    let traditional_interlude = timelapse_gate.traditional_interlude;
     let mut second_layer_done = false;
     // Avoid-crossing boundaries are built per slice_z across every object
     // (`Layer::lslices` covers all instances of the print object;
@@ -355,7 +341,7 @@ pub(super) fn append(
             }
             let timelapse_inserted =
                 motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
-                    timelapse::append_traditional(
+                    timelapse_core::append_traditional(
                         traditional_interlude,
                         output,
                         state,
@@ -383,7 +369,7 @@ pub(super) fn append(
                     output,
                     state,
                     timelapse_inserted,
-                    traditional_timelapse,
+                    timelapse_gate.traditional_timelapse,
                     timelapse_context,
                 )?;
             }
