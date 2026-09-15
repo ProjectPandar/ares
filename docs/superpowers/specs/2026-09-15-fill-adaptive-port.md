@@ -358,3 +358,23 @@ materialized_flow for the sparse role.
    points about the section center; the following three lines mirror
    too) — the chain_polylines start/direction tie-break picks the
    opposite end.
+
+## Milestone ledger decision (#131)
+
+- **E last-digit tail**: joins the knife-edge ledger (same class as the
+  wipe `E-.xxxxx` family — mixed-sign last-digit differences from
+  f32/f64 accumulation; not a constant factor). Documented, not
+  blocking the option-coverage verdict (the coverage comparator
+  normalizes... if it does not, revisit).
+- **Reversed polyline**: REAL movement-order difference on ONE hook-
+  connected path (orca starts at X501.664, ares at X498.336 — mirror
+  about the section center; three subsequent lines mirror too). Fix
+  site: the chain start/end tie-break in `fill/connect/apply.rs`
+  (`apply_remaining_endpoints` / the path.reverse() branches at
+  :311/:318). Because the connect machinery is shared by every sparse
+  pattern (871-printer baseline), any change requires the full sweep
+  gate. Next session: reproduce the tie with a unit fixture first.
+
+Status: GEOMETRY COMPLETE + VALIDATED (s0 oracle); adaptivecubic
+generates byte-identical movement except the one reversed path; E
+last-digits documented as knife-edge.
