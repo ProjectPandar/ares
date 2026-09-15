@@ -118,3 +118,34 @@ pins the real structure: the if-chain's branches and the surrounding
 contiguous region of the block; routed-travel statements live between
 branch closes). Reverted to the committed 437-line file (golden green,
 tree clean). The remaining 37 lines stay as documented debt.
+
+## CRITICAL FINDING (#158): the pipeline reorder diverges the ksr semantic contract
+
+The first full-workspace test audit (post-LOC-debt) surfaced a REAL
+regression hidden since the #113 reorder: `ksr_fdmtest_v4 ::
+project_matches_orca_242_semantically` — the byte contract against the
+LIVE Orca 2.4.2 output — now fails at the timing lines:
+`; model printing time: 1h 43m 49s` → `1h 43m 52s` (+3s) and the file
+shrank 6339122 → 6321961 bytes (−17 KB of F lines). The byte-snapshot
+golden test passes only because its snapshot was regenerated during the
+reorder work; the semantic test pins the ORACLE bytes and exposes the
+divergence.
+
+Interpretation: under the OLD order (equalizer after cooling) ares was
+byte-identical to Orca on this fixture — empirical proof that Orca's
+EFFECTIVE pipeline computes the cooling estimate on RAW text (or the
+M73/timing estimate runs on the pre-equalizer stream). The source
+reading (GCode.cpp:3752 equalizer→cooling) must be one of several
+pipeline assemblies; the ksr fixture exercises the assembly where the
+estimate does not see equalized F values.
+
+ACTION (next session, priority 1): revert the finish_layer order to
+cooling→equalizer (restoring the ksr semantic contract), re-run the
+full sweep, and re-baseline. The printer sweep improved 871→875 under
+the reorder — both effects must be reconciled: likely the correct model
+is estimate-on-raw + equalizer-last, and the +4 sweep printers should
+be re-checked for whether their gains survive (if they regress, the
+timing estimator input needs the raw-text path specifically).
+Also: 8 stale tests flagged by the audit (volumetric_rate_smoothing ×2,
+slope_lowers, timelapse filament_map, replay rejection evidence, 2×
+slice_stl writes, arachne prisms) — triage each after the order revert.
