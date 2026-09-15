@@ -331,3 +331,17 @@ Two candidate mechanisms for the split placement:
 Discriminator for the next slice: run the s0 fixture (slope=0) — if
 the split points persist, it is the temp_lines boundary; if they
 vanish, it is the equalizer.
+
+## MILESTONE VALIDATED (#129): adaptive geometry BYTE-EXACT on the s0 oracle
+
+The discriminator run settled it: with slope=0 (equalizer off), orca's
+sparse sections at z=0.6/1.2/1.8 are EXACTLY the ares point sets —
+including z=1.2 (8 points) and z=1.8 (9 points) matching verbatim. The
+slope=100 splits ((0,2.26) etc.) are the equalizer's rate-crossing
+splits, not infill geometry.
+
+Full-file s0 diff: 48 lines, ALL of them `E.36601 vs E.366`-style
+extrusion-value rendering differences on the adaptive entities (no
+geometry, no ordering, no M73). Next slice: the sparse-infill
+FillExtrusionPath mm3_per_mm / E formatting — likely a rounded
+materialized_flow for the sparse role.
