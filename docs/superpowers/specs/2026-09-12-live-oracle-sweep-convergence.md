@@ -1043,3 +1043,39 @@ WonderMaker ZR Ultra 0.8 — the documented flaky-oracle class), so the
 effective pass count is unchanged at 875. Both behavior fixes are
 smoke-neutral on the cube model, as expected: the cube is a single
 island per layer and most vendor defaults keep arc fitting on.
+
+## Estimator ground-truth infrastructure revived; id-alignment confounded (#171)
+
+The patched GT oracle (ORCA_DUMP_TIMES, /tmp/orca-gt/result-times) was
+revived and dumped per-block times for the ksr arc-on fixture (304108
+blocks) plus a filament_map_mode=Manual copy (304169) alongside ares'
+ARES_DUMP_ELAPSED dumps (304237). Verdict on method: id-equality
+per-block comparison is CONFOUNDED — even in Manual mode the CLI
+stream differs from ares/GUI by 35k lines (more CLI-only config paths
+beyond the auto-map fill), and the ±1.05s toolchange-load-delay pairs
+land at different ids on the two sides, masking the background. The
+same-stream M73 comparison (ares vs the GUI reference) is minute-
+resolution and shows the R values track identically through the print
+(the +3s total is invisible at that granularity). Next slice for the
+estimator: sequence-align the two block streams by (dist, cruise,
+entry) signatures (difflib over quantized tuples), then diff times on
+the aligned pairs; or diff ares against a GUI-side GT dump if one can
+be produced.
+
+## Estimator ground-truth infrastructure revived; id-alignment confounded (#171)
+
+The patched GT oracle (ORCA_DUMP_TIMES, /tmp/orca-gt/result-times) was
+revived and dumped per-block times for the ksr arc-on fixture (304108
+blocks) plus a filament_map_mode=Manual copy (304169) alongside ares'
+ARES_DUMP_ELAPSED dumps (304237). Verdict on method: id-equality
+per-block comparison is CONFOUNDED — even in Manual mode the CLI
+stream differs from ares/GUI by 35k lines (more CLI-only config paths
+beyond the auto-map fill), and the ±1.05s toolchange-load-delay pairs
+land at different ids on the two sides, masking the background. The
+same-stream M73 comparison (ares vs the GUI reference) is minute-
+resolution and shows the R values track identically through the print
+(the +3s total is invisible at that granularity). Next slice for the
+estimator: sequence-align the two block streams by (dist, cruise,
+entry) signatures (difflib over quantized tuples), then diff times on
+the aligned pairs; or diff ares against a GUI-side GT dump if one can
+be produced.
