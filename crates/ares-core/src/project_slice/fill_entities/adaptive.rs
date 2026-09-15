@@ -16,14 +16,21 @@ use crate::{
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
 thread_local! {
-    /// Octrees keyed by traversal print-object index — the build is
-    /// deterministic, so one tree per (instance) object serves every layer.
-    static OCTREES: RefCell<HashMap<usize, Arc<octree::Octree>>> = RefCell::new(HashMap::new());
+    /// Octrees keyed by (source identity, line spacing) — the build is
+    /// deterministic per (object, spacing), so one tree serves every
+    /// layer of that fill. Cleared at each `fill_entities::prepare` so
+    /// consecutive slices in one process never reuse stale trees.
+    static OCTREES: RefCell<HashMap<(usize, u64), Arc<octree::Octree>>> =
+        RefCell::new(HashMap::new());
+}
+
+pub(super) fn clear_cache() {
+    OCTREES.with(|cache| cache.borrow_mut().clear());
 }
 
 #[cfg(test)]
 pub(super) fn reset_cache() {
-    OCTREES.with(|cache| cache.borrow_mut().clear());
+    clear_cache();
 }
 
 pub(super) fn append(
@@ -45,13 +52,7 @@ pub(super) fn append(
             "sparse_infill_pattern".to_owned(),
         ));
     }
-    let octree = OCTREES.with(|cache| {
-        let mut cache = cache.borrow_mut();
-        cache
-            .entry(object_index)
-            .or_insert_with(|| Arc::new(build_object_octree(traversal, object_index, line_spacing)))
-            .clone()
-    });
+    let octree = octree_for(traversal, object_index, line_spacing)?;
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
@@ -125,11 +126,34 @@ pub(super) fn append(
 
 /// `PrintObject.cpp:984` — `to_octree * trafo_centered` over the object's
 /// ModelPart volumes, then the octree build (`FillAdaptive.cpp:1483`).
+/// The cache key includes the line spacing: upstream builds one octree
+/// per PrintObject with the region-averaged spacing; per-fill spacing
+/// would otherwise alias a different-density tree onto the first one.
+fn octree_for(
+    traversal: &PreparedPostClassicTraversal,
+    object_index: usize,
+    line_spacing: f64,
+) -> Result<Arc<octree::Octree>, SliceError> {
+    let key = (object_index, line_spacing.to_bits());
+    Ok(OCTREES.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        cache
+            .entry(key)
+            .or_insert_with(|| {
+                Arc::new(
+                    build_object_octree(traversal, object_index, line_spacing)
+                        .expect("resolved group"),
+                )
+            })
+            .clone()
+    }))
+}
+
 fn build_object_octree(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     line_spacing: f64,
-) -> octree::Octree {
+) -> Result<octree::Octree, SliceError> {
     let traversal_object = &traversal.objects[object_index];
     let identity = traversal_object
         .predecessor
@@ -138,7 +162,15 @@ fn build_object_octree(
         .predecessor
         .object
         .identity();
-    let resolved = &traversal.resolved.objects[identity.0];
+    // `resolved.objects` is a filtered list (nonprintable groups are
+    // dropped by candidates.rs), so look the group up by source index
+    // instead of indexing with it.
+    let resolved = traversal
+        .resolved
+        .objects
+        .iter()
+        .find(|object| object.source_object_index == identity.0)
+        .ok_or_else(|| SliceError::UnsupportedProjectFeature("adaptive_infill".to_owned()))?;
     let object_transform = resolved.print_objects[identity.1].transform;
     let source = &traversal.project.objects()[identity.0];
 
@@ -197,14 +229,14 @@ fn build_object_octree(
             max[1]
         );
     }
-    octree::build_octree(
+    Ok(octree::build_octree(
         &rotated,
         &triangles,
         &[],
         line_spacing,
         false,
         center_offset,
-    )
+    ))
 }
 
 fn clipper_error(error: crate::geometry::ClipperError) -> SliceError {
@@ -228,13 +260,7 @@ pub(in crate::project_slice) fn anchoring_lines(
             "sparse_infill_pattern".to_owned(),
         ));
     }
-    let octree = OCTREES.with(|cache| {
-        let mut cache = cache.borrow_mut();
-        cache
-            .entry(object_index)
-            .or_insert_with(|| Arc::new(build_object_octree(traversal, object_index, line_spacing)))
-            .clone()
-    });
+    let octree = octree_for(traversal, object_index, line_spacing)?;
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         polylines.extend(
