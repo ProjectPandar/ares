@@ -2,6 +2,7 @@ pub(in crate::project_slice) mod adaptive;
 mod concentric;
 mod crosshatch;
 mod cubic;
+mod flow;
 mod gap_residual;
 mod grid;
 mod gyroid;
@@ -9,6 +10,9 @@ mod ironing;
 mod monotonic;
 mod plane_path;
 mod simplify;
+
+pub(in crate::project_slice) use flow::{materialized_flow, object_center};
+
 #[cfg(test)]
 mod tests;
 mod three_d_honeycomb;
@@ -99,19 +103,6 @@ fn move_thin_fills(
             }
         }
     }
-}
-
-fn materialized_flow(
-    params: crate::project_slice::group_fills::SurfaceFillParams,
-    spacing: f32,
-) -> crate::project_slice::perimeters::types::Flow {
-    let mut flow = if params.extrusion_role == ExtrusionRole::InternalInfill && !params.bridge {
-        params.flow
-    } else {
-        crate::project_slice::perimeters::flow::with_spacing(params.flow, spacing)
-    };
-    flow.mm3_per_mm *= params.flow_ratio;
-    flow
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostFillEntities) {
@@ -384,31 +375,4 @@ fn geometry_error(error: crate::geometry::ClipperError) -> SliceError {
             unreachable!("fill generators use valid open subjects and closed clips")
         }
     }
-}
-
-/// Center of the whole-object bounding box in scaled coordinates — the
-/// upstream `Fill::bounding_box` anchor (`Fill::_infill_direction`,
-/// FillBase.cpp:297-301).
-pub(in crate::project_slice) fn object_center(object_slices: &[Vec<ExPolygon>]) -> Point {
-    let mut minimum_x = i64::MAX;
-    let mut minimum_y = i64::MAX;
-    let mut maximum_x = i64::MIN;
-    let mut maximum_y = i64::MIN;
-    for layer in object_slices {
-        for expolygon in layer {
-            for point in expolygon.contour().points() {
-                minimum_x = minimum_x.min(point.x());
-                minimum_y = minimum_y.min(point.y());
-                maximum_x = maximum_x.max(point.x());
-                maximum_y = maximum_y.max(point.y());
-            }
-        }
-    }
-    if minimum_x > maximum_x {
-        return Point::new(0, 0);
-    }
-    Point::new(
-        minimum_x + (maximum_x - minimum_x) / 2,
-        minimum_y + (maximum_y - minimum_y) / 2,
-    )
 }
