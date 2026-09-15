@@ -282,3 +282,33 @@ Instrumented the arm (ARES_DUMP_ADPOCT/ADPFILL env hooks):
   produce a 2-point line where orca's hook/chain path keeps a 6-point
   connected path — the hook geometry (connect_lines_using_hooks,
   FillAdaptive.cpp:801) is the remaining tail after the offset fix.
+
+## Final slice inventory: connect_lines_using_hooks (#127)
+
+The last missing piece of the adaptive tail. Upstream
+`FillAdaptive.cpp:670-1050`:
+
+1. `struct Intersection` (`:562-618`) — T-junction record: intersect
+   point, closest/intersect lines, polyline front/back, other_hook link.
+2. `add_hook` (`:670-778`) — L-shaped hook extension from a T-joint:
+   trim the hook start by the crossed line (offset by 0.81·spacing),
+   extend forward `hook_length + 1.16·trim`, query rtree collisions,
+   `max_hook_length` with `shift_from_thick_line`
+   (0.75·½spacing·|cross|), fall back to the backward side, take the
+   longer, then write [hook_end, hook_start] into the polyline end.
+3. `connect_lines_using_hooks` (`:801-1050`) — rtree insert of the
+   2-point lines; collinear-merge of segments split by tiny gaps
+   (r2_close = 1200², collinearity |d|>0.99) collecting
+   lines_touching_at_endpoints; per-line T-joint detection at both ends
+   (`distance_to_squared ≤ 1000²` against the nearest line, filtered by
+   endpoint-connection pairs); drop/anchor/extend decisions
+   (`num_tjoints`, line_len vs hook lengths); then `add_hook` per
+   junction; finally `chain_or_connect_infill` over the hooked lines.
+4. Filler flow (`:1388-1428`): collapse (already ported) →
+   `connect_lines_using_hooks` (when multiline==1 and lines>1) →
+   `chain_or_connect_infill` (ares `connect_infill` exists ✓).
+
+ares infrastructure: `geometry/line_distance_tree.rs` (150 LOC,
+nearest-line queries) partially replaces boost::geometry::rtree;
+segment-intersection tests exist in clipper utils. The hook port lands
+in `fill/adaptive/hooks.rs` (<400 LOC + tests).
