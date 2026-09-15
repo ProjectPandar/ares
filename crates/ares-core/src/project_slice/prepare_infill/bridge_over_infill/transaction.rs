@@ -67,42 +67,7 @@ fn validate_capabilities(
     predecessor: &PreparedPostExternalSurfaces,
     objects: &[BridgeCandidateObject],
 ) -> Result<(), SliceError> {
-    let traversal = &predecessor.predecessor.predecessor;
-
     if objects.iter().any(|object| object.has_lightning_infill) {
-        return Err(unsupported("sparse_infill_pattern"));
-    }
-    let horizontal = &predecessor.predecessor;
-    if traversal
-        .objects
-        .iter()
-        .zip(&horizontal.objects)
-        .any(|(object, horizontal)| {
-            let prelude = &object
-                .predecessor
-                .predecessor
-                .predecessor
-                .predecessor
-                .object;
-            let (compensated, _) = prelude.as_parts();
-            let (post_regions, _) = compensated.as_parts();
-            let (_, _, regions) = post_regions.as_parts();
-            let needs_adaptive_octree = regions.iter().any(|region| {
-                let options = region.as_parts().1;
-                matches!(
-                    options.sparse_infill_pattern,
-                    crate::ProcessInfillPattern::AdaptiveCubic
-                        | crate::ProcessInfillPattern::SupportCubic
-                ) && options.sparse_infill_density.0 > 0.0
-            });
-            needs_adaptive_octree
-                && horizontal
-                    .records
-                    .iter()
-                    .flatten()
-                    .any(|record| !record.fill_surfaces.is_empty())
-        })
-    {
         return Err(unsupported("sparse_infill_pattern"));
     }
     Ok(())

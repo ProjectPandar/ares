@@ -14,7 +14,9 @@ fn task22o71_deferred_pattern_fails_without_fallback() {
 }
 
 #[test]
-fn task22o71_adaptive_octree_pattern_fails_even_without_candidates() {
+fn task22o71_adaptive_patterns_admitted_without_candidates() {
+    // The octree gate is gone (FillAdaptive port); with no fill surfaces
+    // the transaction completes for both adaptive patterns.
     for pattern in ["adaptivecubic", "supportcubic"] {
         let mut archive = KsrArchive::new();
         archive.replace_unique(
@@ -26,7 +28,12 @@ fn task22o71_adaptive_octree_pattern_fails_even_without_candidates() {
         for object in &mut raw.objects {
             object.surfaces_by_layer.clear();
         }
-        super::assert_unsupported_raw(raw, "sparse_infill_pattern");
+        let prepared = transaction::prepare(raw);
+        assert!(
+            prepared.is_ok(),
+            "{pattern} should pass the transaction without fill surfaces"
+        );
+        transaction::dispose(prepared.unwrap());
     }
 }
 

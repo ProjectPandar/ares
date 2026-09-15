@@ -116,6 +116,10 @@ pub(crate) fn build_octree(
     overhang_triangles: &[[f64; 3]],
     line_spacing: f64,
     support_overhangs_only: bool,
+    // The XY world-frame bbox center the caller subtracted before
+    // rotating the vertices (upstream `m_center_offset`,
+    // PrintObject.cpp:110); added back to the rotated cube centers.
+    world_offset: [f64; 3],
 ) -> Octree {
     let mut bbox_min = [f64::INFINITY; 3];
     let mut bbox_max = [f64::NEG_INFINITY; 3];
@@ -190,8 +194,32 @@ pub(crate) fn build_octree(
                 max_depth,
             );
         }
+        // `FillAdaptive.cpp:1524-1528` — rotate the centers back to world
+        // coordinates and add the centering translation back so the cube
+        // centers share the frame of the layer surfaces.
+        let rot = octree_rotation_to_world();
+        let offset = world_offset;
+        transform_center(&mut octree.root_cube, rot, offset);
+        octree.origin = rotate_point(rot, octree.origin);
     }
     octree
+}
+
+/// `FillAdaptive.cpp:1472-1480` — recursive center transform, plus the
+/// centering translation the upstream build applies through the mesh
+/// transform (the caller passed centered vertices).
+fn transform_center(cube: &mut Cube, rot: Matrix3, offset: [f64; 3]) {
+    let rotated = rotate_point(rot, cube.center);
+    cube.center = [
+        rotated[0] + offset[0],
+        rotated[1] + offset[1],
+        rotated[2] + offset[2],
+    ];
+    for child in &mut cube.children {
+        if let Some(child) = child {
+            transform_center(child, rot, offset);
+        }
+    }
 }
 
 /// `FillAdaptive.cpp:1533-1566` — recursive subdivision; the expanded
@@ -256,7 +284,7 @@ pub(crate) fn octree_rotation_to_world() -> Matrix3 {
 }
 
 /// `AngleAxisd(-rot0, x) * AngleAxisd(-rot1, y) * AngleAxisd(-rot2, z)`
-fn octree_rotation_to_octree() -> Matrix3 {
+pub(crate) fn octree_rotation_to_octree() -> Matrix3 {
     mat_mul(
         mat_mul(
             rotate_axis(0, -OCTREE_ROT[0]),

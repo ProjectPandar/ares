@@ -45,7 +45,8 @@ fn cube_mesh(half: f64) -> (Vec<[f64; 3]>, Vec<[u32; 3]>) {
 fn generates_lines_on_midplane() {
     let scale = CoordinateScale::Normal;
     let (vertices, triangles) = cube_mesh(5.0);
-    let octree = super::super::octree::build_octree(&vertices, &triangles, &[], 0.5, false);
+    let octree =
+        super::super::octree::build_octree(&vertices, &triangles, &[], 0.5, false, [0.0; 3]);
     let surface = square_surface(scale, 6.0);
     let polylines = fill_surface(&octree, &surface, 0.0, 0.5, 1, 1.0, 1.0, false, scale).unwrap();
     assert!(
@@ -61,7 +62,8 @@ fn generates_lines_on_midplane() {
 fn empty_above_the_octree() {
     let scale = CoordinateScale::Normal;
     let (vertices, triangles) = cube_mesh(5.0);
-    let octree = super::super::octree::build_octree(&vertices, &triangles, &[], 0.5, false);
+    let octree =
+        super::super::octree::build_octree(&vertices, &triangles, &[], 0.5, false, [0.0; 3]);
     let surface = square_surface(scale, 6.0);
     let polylines = fill_surface(&octree, &surface, 100.0, 0.5, 1, 1.0, 1.0, false, scale).unwrap();
     assert!(

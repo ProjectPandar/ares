@@ -232,6 +232,23 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 }
             }
             SurfaceFillPattern::Configured(
+                pattern
+                @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
+            ) => {
+                for expolygon in &fill.expolygons {
+                    let _ = expolygon;
+                }
+                let anchored = crate::project_slice::fill_entities::adaptive::anchoring_lines(
+                    traversal,
+                    object_index,
+                    &fill,
+                    z,
+                    traversal.scale,
+                )?;
+                result.extend(anchored);
+                let _ = pattern;
+            }
+            SurfaceFillPattern::Configured(
                 ProcessInfillPattern::Monotonic
                 | ProcessInfillPattern::MonotonicLine
                 | ProcessInfillPattern::AlignedRectilinear
@@ -239,9 +256,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::LockedZag
                 | ProcessInfillPattern::Line
                 | ProcessInfillPattern::TriHexagon
-                | ProcessInfillPattern::AdaptiveCubic
                 | ProcessInfillPattern::QuarterCubic
-                | ProcessInfillPattern::SupportCubic
                 | ProcessInfillPattern::Lightning
                 | ProcessInfillPattern::Honeycomb
                 | ProcessInfillPattern::LateralHoneycomb

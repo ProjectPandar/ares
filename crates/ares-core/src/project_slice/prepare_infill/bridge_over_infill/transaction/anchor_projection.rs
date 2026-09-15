@@ -26,6 +26,8 @@ pub(super) fn validate(
             | ProcessInfillPattern::ThreeDHoneycomb
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::ZigZag
+            | ProcessInfillPattern::AdaptiveCubic
+            | ProcessInfillPattern::SupportCubic
     ) {
         return unsupported("sparse_infill_pattern");
     }

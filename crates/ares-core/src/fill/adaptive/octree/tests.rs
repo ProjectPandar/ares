@@ -22,7 +22,7 @@ fn cubes_properties_minimum_two_levels() {
 #[test]
 fn octree_root_survives_without_triangles() {
     let vertices = [[0.0; 3], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
-    let octree = build_octree(&vertices, &[], &[], 0.4, false);
+    let octree = build_octree(&vertices, &[], &[], 0.4, false, [0.0; 3]);
     assert_eq!(octree.cubes_properties.len(), 2);
     assert!(octree.root_cube.children.iter().all(|c| c.is_none()));
     assert_eq!(octree.cubes_properties.last().unwrap().edge_length, 1.6);
@@ -37,7 +37,7 @@ fn octree_inserts_triangle_through_levels() {
         [0.0, 0.0, 10.0],
     ];
     let triangles = [[0u32, 1, 2], [0, 2, 3], [0, 1, 3]];
-    let octree = build_octree(&vertices, &triangles, &[], 0.4, false);
+    let octree = build_octree(&vertices, &triangles, &[], 0.4, false, [0.0; 3]);
     let children = octree
         .root_cube
         .children

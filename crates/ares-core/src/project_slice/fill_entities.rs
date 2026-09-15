@@ -1,3 +1,4 @@
+pub(in crate::project_slice) mod adaptive;
 mod concentric;
 mod crosshatch;
 mod cubic;
@@ -246,6 +247,20 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
                 gyroid::append(&mut output, fill, layer.print_z, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(
+                pattern
+                @ (ProcessInfillPattern::AdaptiveCubic | ProcessInfillPattern::SupportCubic),
+            ) => {
+                let _ = pattern;
+                adaptive::append(
+                    &mut output,
+                    fill,
+                    layer.print_z,
+                    traversal,
+                    object_index,
+                    traversal.scale,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::ThreeDHoneycomb) => {
                 three_d_honeycomb::append(&mut output, fill, layer.print_z, traversal.scale)?;

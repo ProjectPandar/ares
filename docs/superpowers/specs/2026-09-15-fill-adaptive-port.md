@@ -141,3 +141,27 @@ side already exists).
   build is deterministic either way.
 
 No open questions remain for slice 3.
+
+## Slice 3 landed (#119) — adaptivecubic generates; byte-parity open
+
+Wiring: `fill_entities/adaptive.rs` (octree build from the resolved
+per-instance transform × volume transforms over ModelPart meshes, the
+centered `to_octree` frame with the plate-frame round trip, spacing =
+width/((density/100)·⅓)·multiline, thread-local per-object octree
+cache) + the dispatch arm + the sparse-anchoring arm
+(`anchoring_lines`) + gate removal (transaction validate_capabilities +
+anchor_projection allow-list). The outdated pinning test
+(`task22o71_adaptive_octree_pattern_fails_even_without_candidates`)
+was updated to assert admission.
+
+Empirical oracle findings on the 2bDWHY-derived adaptive fixture:
+- orca generates 19-25 infill lines/layer vs ares 13 — orca's octree
+  is FINER than width/((density/100)·⅓) predicts (observed pitch
+  1.79mm at width 1.26 ⇒ implied spacing 2.19, not 25.2).
+- **orca's pattern is DENSITY-INDEPENDENT** (15%/30%/60% byte-identical)
+  and weakly width-dependent (w0.8→pitch 1.94, w1.26→1.79, w2.0→1.149).
+- This contradicts a naive read of `adaptive_fill_line_spacing`
+  (FillAdaptive.cpp:275-356); the next slice is probe8: compile the
+  upstream FillAdaptive standalone, feed the fixture mesh + candidate
+  spacings, and identify which spacing reproduces orca's observed
+  pattern — then fix the ares spacing source accordingly.
