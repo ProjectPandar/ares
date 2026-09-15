@@ -167,3 +167,30 @@ len 398); my upstream-walk reconstruction solves the final group to
 ~8.46mm/s (F508) — ares emits F600, orca F843. Next slice: line-by-line
 port comparison of the non-proportional walk + the
 `new_feedrate_to_reach_time_stretch` solver (CoolingBuffer.cpp:560-636).
+
+## Timing-family deep dive pt.2 (#112): the walk is proven faithful too — divergence is orca's INPUT
+
+Implemented upstream `extruder_range_slow_down_non_proportional` +
+`new_feedrate_to_reach_time_stretch` (CoolingBuffer.cpp:184-316) in
+python and walked it over ares's own layer-0 adjustable set
+(SDL dump: 2×70mm/s len 119.95, 3×50mm/s len 398.27, total 10.2608s,
+target 50.05s): solves to **10.4758 mm/s = F628.55 — exactly what ares
+emits** (the visible F600 is the equalizer's 60-quantization of 628.55;
+10.4758→round→10×60=600). So parse ✓ AND walk ✓: ares's cooling
+pipeline is internally upstream-faithful.
+
+orca emits F843 (not 60-quantized → it is the cooling's own solved
+`G1 F843;_EXTRUDE_SET_SPEED` header, unmodified by the equalizer).
+Inverting the solve puts orca's layer-0 time at ~23.5s vs ares's
+10.26s — orca's cooling INPUT must carry ~13s more time than ares's
+raw emission, despite the final-output text being equal.
+
+Also established: slope=0 (s0 fixture) disables `;_EXTRUDE_SET_SPEED`
+marker emission entirely → NO line is TYPE_ADJUSTABLE → orca performs
+zero slowdown (skirt stays F3000). The cooling rewrite only exists in
+marker-bearing mode.
+
+Next slice (probe7): compile upstream CoolingBuffer standalone (like
+probe6 for the equalizer) and feed it ares's raw layer-0 text +
+Ginger config; diff its per-line set/times against the SDL dump to
+find where orca's ~13s extra comes from.
