@@ -114,3 +114,30 @@ thread to the `fill_entities.rs` dispatch arm (new
 `options/infill/patterns.rs:96` and `InfillPattern` also need the
 AdaptiveCubic/SupportCubic variants (the ProcessInfillPattern serde
 side already exists).
+
+## Slice 3 frame derivation (complete, #118)
+
+- Per-instance transform: `traversal.resolved.objects[source]
+  .print_objects[transform_index].transform` (with z-shrinkage, already
+  the world/plate frame). `prelude.identity()` returns exactly
+  (source_object_index, transform_index) (`perimeters/types.rs:113`).
+- World point per vertex: `instance.then(volume.transform())
+  .transform_point(vertex)` over ModelPart volumes (the pattern of
+  `project_slice/bounds.rs:20-27`).
+- Upstream octree frame (`PrintObject.cpp:984`): `to_octree *
+  trafo_centered`, where `m_center_offset` = XY bbox center of the
+  transformed mesh WITHOUT translation (`PrintObject.cpp:110`). So the
+  octree operates on `to_octree × (world_point - [cx, cy, 0])`. Replicate
+  in ares: compute cx/cy from the transformed mesh XY bbox, translate,
+  rotate by to_octree, build; after the final rotate-back add [cx, cy, 0]
+  so cube centers land in the plate frame — matching the layer surfaces
+  and `layer.print_z` (z untouched by the centering).
+- Spacing: `adaptive_fill_line_spacing` = FillAdaptive.cpp:275-356
+  (region density/line-width averages × fill_multiline). Overhang
+  triangles (internal-bridge surfaces with layer bottom_z) can be passed
+  empty initially and validated against the oracle.
+- Build lazily at the `fill_entities.rs` dispatch (the
+  `plane_path_bounding_box` lazy pattern) or memoized per object — the
+  build is deterministic either way.
+
+No open questions remain for slice 3.
