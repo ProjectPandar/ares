@@ -61,3 +61,34 @@ same pipeline.
   coverage sweep (byte-identical to OrcaSlicer on the ksr fixture).
 - `cargo nextest run --workspace` green; clippy/fmt clean; no file
   >400 LOC.
+
+## Slice 3 wiring map (discovered #116, ready to execute)
+
+1. **Option parse** — `crates/ares-core/src/options/infill/patterns.rs:96`
+   rejects `"adaptivecubic"` (lumped with the unimplemented group).
+   Add `InfillPattern::AdaptiveCubic` + `SupportCubic` variants to
+   `options/infill.rs:32` and accept them here (upstream
+   `PrintConfig.cpp:3017`). Keep the other unimplemented names
+   rejecting.
+2. **Serde enum exists** — `ProcessInfillPattern::AdaptiveCubic`
+   (serde "adaptivecubic") and `SupportCubic` are already in
+   `options/process_options/object_source/enums.rs:157+`; role-id map
+   at `group_fills/coalesce.rs:163,165` (12 / 14) already covers them.
+3. **Dispatch** — `project_slice/fill_entities.rs:223+` match on
+   `fill.params.pattern`; add an `AdaptiveCubic | SupportCubic` arm
+   calling a new `fill_entities/adaptive.rs` modeled on
+   `fill_entities/gyroid.rs` (SurfaceFill → fill::adaptive::filler::
+   fill_surface with z=layer.print_z).
+4. **Octree state** — the filler needs the per-object octree. Build it
+   lazily per object in the dispatch context (mesh from
+   `project/model_xml.rs:99 ModelObject.mesh`; transform with
+   `to_octree * trafo_centered` semantics from
+   `PrintObject.cpp:994-996`; spacing from `adaptive_fill_line_spacing`
+   = `FillAdaptive.cpp:275-356` — region density/line-width averages ×
+   fill_multiline; overhang triangles from internal-bridge surfaces
+   deferred: pass empty first, validate against the oracle).
+5. **Frames** — octree cube centers are WORLD coords after the build's
+   final `transform_center` (`FillAdaptive.cpp:1524-1528`); the
+   surfaces fed to the filler must be in the same frame as the gcode
+   layer coordinates (the other 3D patterns — cubic/three_d_honeycomb —
+   already use `layer.print_z` in that frame).
