@@ -18,7 +18,25 @@ pub(crate) mod filament_map_recommend;
 mod filament_options;
 pub(crate) use filament_options::FilamentOptionsBuilder;
 #[rustfmt::skip]
-option_modules!(auxiliary_fan, bed_temperature, chamber_temperature, custom_gcode, filament_change, exhaust_fan, fan_speedup, filament_cooling_before_tower, flush_placeholders, gcode_flavor, gcode_output, nozzle_temperature, part_cooling_fan, preheat, timelapse_type, temperature_vector, temperature_vitrification);
+pub(crate) mod auxiliary_fan;
+option_modules!(
+    bed_temperature,
+    chamber_temperature,
+    custom_gcode,
+    filament_change,
+    exhaust_fan,
+    fan_speedup,
+    filament_cooling_before_tower,
+    flush_placeholders,
+    gcode_flavor,
+    gcode_output,
+    nozzle_temperature,
+    part_cooling_fan,
+    preheat,
+    timelapse_type,
+    temperature_vector,
+    temperature_vitrification
+);
 
 #[rustfmt::skip]
 option_modules!(input_shaping, pub(crate) ironing_flow, pub(crate) ironing_type);

@@ -1,5 +1,6 @@
 mod context;
 mod descriptions;
+mod tail;
 
 use descriptions::extrude_description;
 
@@ -371,33 +372,24 @@ pub(crate) fn format_gcode(
         #[rustfmt::skip]
         gcode.push_str(&spiral_vase.finish_layer(spiral_vase_layer_state, &mut writer, gcode_comments));
     }
-    gcode.push_str(object_label_state.after_last_object_move());
-    let auxiliary_fan_completion_enabled =
-        auxiliary_fan_control.completion_shutdown_speed().is_some();
-    gcode.push_str(&role_fan_state.finish(&writer));
-    gcode.push_str(&crate::gcode_finish::finish_output(
-        gcode_comments,
-        power_loss_recovery_state,
-        crate::gcode_finish::FinishGCodeCommand {
-            writer: &writer,
-            options,
-            gcode_flavor,
-            chamber_temperature_control,
-            exhaust_fan_control,
-            auxiliary_fan_completion_enabled,
-            auxiliary_fan_state,
-            layer_extrusion_moves,
-            layer_speed_moves,
-            hardware_options: &hardware_options,
-            layer_num: last_layer.0,
-            layer_z: &last_layer.1,
-        },
-    )?);
-    let gcode = crate::gcode_stat_placeholders::finish(
-        options,
+    let gcode = tail::finish(tail::FinishTail {
         gcode,
+        writer: &writer,
+        options,
+        gcode_comments,
+        gcode_flavor,
+        object_label_state: &mut object_label_state,
+        role_fan_state: &mut role_fan_state,
+        power_loss_recovery_state,
+        chamber_temperature_control,
+        exhaust_fan_control,
+        auxiliary_fan_control: &auxiliary_fan_control,
+        auxiliary_fan_state,
+
         layer_extrusion_moves,
         layer_speed_moves,
-    )?;
+        hardware_options: &hardware_options,
+        last_layer,
+    })?;
     Ok(gcode.into_bytes())
 }
