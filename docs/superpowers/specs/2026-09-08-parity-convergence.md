@@ -149,3 +149,30 @@ timing estimator input needs the raw-text path specifically).
 Also: 8 stale tests flagged by the audit (volumetric_rate_smoothing ×2,
 slope_lowers, timelapse filament_map, replay rejection evidence, 2×
 slice_stl writes, arachne prisms) — triage each after the order revert.
+
+## CORRECTION to the #158 finding (#159): NOT a reorder regression
+
+Forensics: the `; printing object <name> id:<N> copy <M>` emission is a
+HARDCODED STUB since the July squash commit (5977b66b):
+`gcode_object_labels.rs` emits `ares-object-0 id:0` — the file has zero
+commits after the squash. The ksr semantic test (added 2026-08-26,
+0aa6662a) has therefore NEVER passed against the fixture reference
+(which carries Orca's `id:13965068898260364096`); it was not part of
+the default test set and its failure predates the equalizer work. The
+#113 reorder is correct per BOTH upstream pipeline assemblies
+(GCode.cpp:3752 AND :3850-3857 — identical order in the two-path and
+layer-loop variants). The order-revert is CANCELLED.
+
+Real buckets in the 9 workspace failures:
+1. Object-label identity stub (semantic test + arachne prisms test):
+   the `id:N` is `PrintObject::get_id()` — a global sequential ObjectID
+   counter (ObjectID.hpp:86, `++s_last_id`) assigned at model load;
+   the huge value for ksr implies deterministic id derivation through
+   the 3mf load path (needs the loader's object-creation order ported).
+   The `copy M` matches (0). The object NAME is already correct.
+2. Removed VolumetricRateSmoothing unit tests (×2) + slope_lowers: the
+   smoothing was deleted in #104 (#d07553fa); the slope test's SPEED
+   markers reflect pre-equalizer values by design under the new order
+   — these three pin removed behavior.
+3. slice_stl writes ×2 / replay rejection evidence / timelapse
+   filament_map: triage pending.
