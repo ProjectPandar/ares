@@ -1,6 +1,10 @@
 //! GCode.cpp layer-chunk emission, extracted without changing command ordering.
 mod boundary;
+mod context;
 mod entry;
+mod fan_setup;
+
+pub(super) use context::Context;
 mod object_order;
 mod schedule;
 
@@ -13,16 +17,6 @@ use super::{
     motion, object, skirt, spiral_vase, timelapse, trailing_gcode_xy, value,
 };
 use crate::geometry::ExPolygon;
-
-pub(super) struct Context<'a> {
-    pub metadata: GenerationMetadata,
-    pub first_layer_bounds: Option<footprint::FirstLayerBounds>,
-    pub start_position: Option<value::Value>,
-    pub bed_cache: i32,
-    pub extruder_offset: (f64, f64),
-    pub brim: &'a Option<brim::BrimPlan>,
-    pub skirt: &'a Option<skirt::SkirtPlan>,
-}
 
 pub(super) fn append(
     prepared: &mut PreparedPostIslandPrintOrder,
@@ -104,22 +98,7 @@ pub(super) fn append(
     > = std::collections::HashMap::new();
     // FanMover construction mirrors GCode.cpp:3727-3740 (gate:
     // fan_speedup_time != 0 || fan_kickstart > 0).
-    let fan_mover_gate = (|| {
-        let gcode = &traversal.resolved.views.full.printer.gcode;
-        let speedup_time = gcode.fan_speedup_time.0;
-        let kickstart = gcode.fan_kickstart.0;
-        (speedup_time != 0.0 || kickstart > 0.0).then(|| {
-            let relative_e = gcode.use_relative_e_distances.0;
-            fan_mover::FanMover::new(
-                speedup_time,
-                kickstart,
-                gcode.fan_speedup_overhangs.0,
-                relative_e,
-                gcode.gcode_flavor,
-            )
-        })
-    })();
-    let fan_mover_handle = fan_mover_gate;
+    let fan_mover_handle = fan_setup::gate(traversal);
 
     // `collect_layers_to_print(Print)` (`GCode.cpp:1835-1870`): every print
     // The merged layer-chunk schedule (`layers/schedule.rs`): every print
