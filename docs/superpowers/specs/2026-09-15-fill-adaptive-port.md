@@ -208,3 +208,24 @@ effective grid (from the vertex lattice) to find the phase origin
 (candidate: the 40/mm Point::new_scale rounding of the from/to points,
 or the upstream `Fill::_infill_direction` angle application the port
 may have missed in the filler context).
+
+## probe8 BREAKTHROUGH (#122): orca's octree spacing ≈ 2.89-2.90
+
+Two fixes found the match:
+1. **z-frame**: upstream `trafo_centered` centers XY only — the mesh
+   keeps its world z (the cube10 fixture spans z 0..10, not ±5). probe8
+   now places the mesh accordingly.
+2. Fine spacing scan with boundary clipping: **s ∈ [2.89, 2.90]**
+   reproduces orca's ENTIRE z=1.8 hexagon within 0.012:
+   - horizontal at y=2.275 (orca 2.263)
+   - diagonal endpoints (−0.054, 2.447)/(−1.207,−2.447)/(2.447,−0.298)
+     vs orca (0,2.447-ish)/(−1.2,−2.447)/(2.447,−0.287)
+   - the extra y=−1.275 horizontal is likely orca's second polyline
+     (the earlier awk stopped at the first '; stop printing').
+
+Empirical facts to reconcile with the formula: s≈2.895 at w=1.26,
+density-INDEPENDENT (15/30/60% identical). Candidates so far don't fit
+numerically (1.26/(0.15·⅓)=25.2; auto_extrusion_width=1.35; nozzle
+1.2). Next slice: scan w-scaling (0.8/2.0 fixtures) for s(w) and
+identify the upstream source — likely a different config field feeding
+`adaptive_fill_line_spacing` than the naive read.

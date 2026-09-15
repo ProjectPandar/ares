@@ -35,9 +35,12 @@ int main(int argc, char **argv) {
 
     // 10mm cube centered at the origin (trafo_centered equivalent).
     const double h = 5.0;
+    // Upstream trafo_centered centers XY only — the mesh keeps its world z
+    // (here z in [0,10] for the cube10 fixture).
+    const double hz = 5.0;
     Vec3d verts[8] = {
-        {-h,-h,-h},{h,-h,-h},{h,h,-h},{-h,h,-h},
-        {-h,-h,h},{h,-h,h},{h,h,h},{-h,h,h}};
+        {-h,-h,-5.0},{h,-h,-5.0},{h,h,-5.0},{-h,h,-5.0},
+        {-h,-h,hz},{h,-h,hz},{h,h,hz},{-h,h,hz}};
     int tris[12][3] = {
         {0,1,2},{0,2,3},{4,6,5},{4,7,6},
         {0,4,5},{0,5,1},{1,5,6},{1,6,2},
