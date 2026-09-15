@@ -22,6 +22,7 @@ pub(super) fn consume_boxed_post_classic_traversal(
         resolved,
         config_block,
         scale,
+        adaptive_octrees: _,
         objects,
         #[cfg(test)]
         drop_probe,

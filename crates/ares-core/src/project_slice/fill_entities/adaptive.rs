@@ -1,10 +1,6 @@
 //! Adaptive/support cubic sparse infill entry (`FillAdaptive.cpp:1483`,
 //! `PrintObject.cpp:984`, `:275-356`).
 
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use crate::{
     ProjectVolumeType, SliceError,
     fill::adaptive::{filler, octree},
@@ -14,30 +10,6 @@ use crate::{
 };
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
-
-thread_local! {
-    /// Octrees keyed by (object, line spacing) — the build is
-    /// deterministic per (object, spacing), so one tree serves every
-    /// layer of that fill. Cleared at each slice entry so consecutive
-    /// slices in one process never reuse stale trees.
-    static OCTREES: RefCell<HashMap<(usize, u64), Arc<octree::Octree>>> =
-        RefCell::new(HashMap::new());
-}
-
-fn clear_cache() {
-    OCTREES.with(|cache| cache.borrow_mut().clear());
-}
-
-/// Slice-entry cache reset (also covers the bridge-over-infill anchoring
-/// phase, which runs before `fill_entities::prepare`).
-pub(in crate::project_slice) fn reset_slice_cache() {
-    clear_cache();
-}
-
-#[cfg(test)]
-pub(super) fn reset_cache() {
-    clear_cache();
-}
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
@@ -58,7 +30,7 @@ pub(super) fn append(
             "sparse_infill_pattern".to_owned(),
         ));
     }
-    let octree = octree_for(traversal, object_index, line_spacing)?;
+    let octree = octree_for(traversal, object_index, line_spacing);
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         // `Fill::fill_surface` (`FillBase.cpp:105-108`) offsets each
@@ -135,24 +107,21 @@ pub(super) fn append(
 /// The cache key includes the line spacing: upstream builds one octree
 /// per PrintObject with the region-averaged spacing; per-fill spacing
 /// would otherwise alias a different-density tree onto the first one.
+/// `PrintObject.cpp:984` — the per-slice octree cache on the traversal
+/// context; key includes the line spacing so regions with different
+/// densities never alias onto the first region's tree (upstream builds
+/// one octree per PrintObject with the region-averaged spacing,
+/// `FillAdaptive.cpp:276-354`).
 fn octree_for(
     traversal: &PreparedPostClassicTraversal,
     object_index: usize,
     line_spacing: f64,
-) -> Result<Arc<octree::Octree>, SliceError> {
-    let key = (object_index, line_spacing.to_bits());
-    Ok(OCTREES.with(|cache| {
-        let mut cache = cache.borrow_mut();
-        cache
-            .entry(key)
-            .or_insert_with(|| {
-                Arc::new(
-                    build_object_octree(traversal, object_index, line_spacing)
-                        .expect("resolved group"),
-                )
-            })
-            .clone()
-    }))
+) -> std::sync::Arc<octree::Octree> {
+    traversal
+        .adaptive_octrees
+        .get_or_build((object_index, line_spacing.to_bits()), || {
+            build_object_octree(traversal, object_index, line_spacing).expect("resolved group")
+        })
 }
 
 fn build_object_octree(
@@ -266,7 +235,7 @@ pub(in crate::project_slice) fn anchoring_lines(
             "sparse_infill_pattern".to_owned(),
         ));
     }
-    let octree = octree_for(traversal, object_index, line_spacing)?;
+    let octree = octree_for(traversal, object_index, line_spacing);
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
         polylines.extend(

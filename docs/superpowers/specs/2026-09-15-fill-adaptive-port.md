@@ -482,3 +482,20 @@ family). Known deferred (reviewer-excluded, predate the range): the
 F-only dedup not tracking F on motion lines; per-layer PE flush/driver
 splitting; collinear-segment rtree merge + endpoint-touch merge phases
 (`:812-880`, `:1044-1104`) which need the rtree pre-pass.
+
+## Context-bound octree cache (user request, #166)
+
+The octree cache no longer lives in thread-local storage: it is a
+`RefCell<HashMap<(object, spacing-bits), Arc<Octree>>>` on the slice
+context (`PreparedPostClassicTraversal::adaptive_octrees`,
+`fill/adaptive::AdaptiveOctreeCache`). Every `slice_project` call builds
+its own traversal, so repeated API calls with multiple projects are
+structurally isolated — no global reset, no cross-call leakage, no
+cross-thread hazards. The TLS block, `reset_slice_cache`, and the
+slice-entry clear are deleted.
+
+Regression coverage: `adaptive_isolation` slices two adaptive projects
+at different densities (15%/30%) twice each, interleaved, and asserts
+byte-identical output per project (fixed metadata makes a slice fully
+deterministic, so any leak flips the second slice). s0 fixture stays
+48/8; workspace 7118/1.

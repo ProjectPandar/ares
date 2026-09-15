@@ -10,6 +10,9 @@ pub(in crate::project_slice) struct PreparedPostClassicTraversal {
     pub(in crate::project_slice) config_block: Option<Vec<u8>>,
     pub(in crate::project_slice) scale: CoordinateScale,
     pub(in crate::project_slice) objects: Vec<PostClassicTraversalPrintObject>,
+    /// Per-slice adaptive octree cache — replaces global thread-local
+    /// state so repeated slice calls with multiple projects are isolated.
+    pub(in crate::project_slice) adaptive_octrees: crate::fill::adaptive::AdaptiveOctreeCache,
     #[cfg(test)]
     pub(in crate::project_slice) drop_probe: TraversalDropProbe,
 }

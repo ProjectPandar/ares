@@ -47,6 +47,7 @@ pub(super) fn finish(prepared: PreparedPostClassicHierarchy) -> PreparedPostClas
         resolved,
         config_block,
         scale,
+        adaptive_octrees: crate::fill::adaptive::AdaptiveOctreeCache::new(),
         objects: predecessors
             .into_iter()
             .zip(objects)
