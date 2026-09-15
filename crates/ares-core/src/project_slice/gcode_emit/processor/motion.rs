@@ -1,26 +1,15 @@
 pub(super) mod arc;
 #[cfg(test)]
 mod axis_acceleration_tests;
+#[cfg(test)]
+mod test_hooks;
+#[cfg(test)]
+pub(in crate::project_slice) use test_hooks::{planned_times, planned_trapezoid_time};
 mod limits;
 use super::motion_util::{MMMIN_TO_MMSEC, assignment, clamp, clamped_word, norm, scale, word};
 use crate::options::GCodeFlavor;
 mod planner;
 pub(super) use planner::RollingPlanner;
-#[cfg(test)]
-pub(super) fn planned_times(blocks: &[MotionBlock]) -> Vec<f64> {
-    planner::planned_times(blocks)
-}
-#[cfg(test)]
-pub(super) fn planned_trapezoid_time(
-    distance: f32,
-    cruise: f32,
-    entry: f32,
-    exit: f32,
-    acceleration: f32,
-) -> f32 {
-    planner::planned_trapezoid_time(distance, cruise, entry, exit, acceleration)
-}
-
 use std::f64::consts::PI;
 
 pub(super) struct MotionState {
