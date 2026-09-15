@@ -1008,3 +1008,27 @@ chain, heap, and kd-tree are now empirically (not just audited)
 equivalent, and the ksr island-order group swap originates one stage
 earlier — the surface set itself (slicing or surface classification
 for this .drc mesh). That is the next (deeper) slice.
+
+## Island-order family CLOSED: CLI config-overwrite artifact (#171)
+
+Decisive three-way comparison (layer-3 wipe entries, and every layer):
+
+- ARES arc-on == stored GUI reference on ALL layers (exact entry
+  sequences; this is why the golden ordered_bytes test passes).
+- The live CLI oracle (no-arc) emits a different order from BOTH
+  ([123.7,113.7,141,146] vs [141,146,·,113] at positions 3-6).
+
+The CLI oracle run had the OrcaSlicer.cpp:5988-6022 multi-extruder
+auto-map default fill ACTIVE (the same rewrite that flipped
+`extruder_ams_count` to `1#0|4#1` in the header — verified in the
+oracle output), i.e. the CLI slices with an EFFECTIVE CONFIG different
+from the project's, which perturbs the surface chain. ares, like the
+GUI/KSR product path, consumes the project config directly and matches
+the GUI reference everywhere.
+
+Verdict per the golden contract (fixture wins over live CLI): ares is
+CORRECT; the island-order family joins the 3 header lines as the
+CLI-config-overwrite artifact class. The remaining REAL no-arc
+residuals are exactly two families: the estimator timing header/M73
+drift (+6s) and the last-digit rounding noise (221 ±0.001 coordinate
+flips + ~37 5th-decimal E), both previously characterized.
