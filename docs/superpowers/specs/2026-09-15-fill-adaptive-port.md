@@ -92,3 +92,25 @@ same pipeline.
    surfaces fed to the filler must be in the same frame as the gcode
    layer coordinates (the other 3D patterns — cubic/three_d_honeycomb —
    already use `layer.print_z` in that frame).
+
+## Slice 3 build site located (#116)
+
+The runtime reject is NOT the option parser — it is
+`prepare_infill/bridge_over_infill/transaction.rs:73,106`
+(`validate_capabilities`): "needs_adaptive_octree" detection (region
+AdaptiveCubic/SupportCubic with density > 0 and non-empty fill
+surfaces) already exists there and currently errors. Upstream builds
+the octrees at exactly this phase (`PrintObject.cpp:2734`:
+`prepare_adaptive_infill_data(surfaces_w_bottom_z)` inside the
+bridge-over-infill anchor section; the candidate surfaces carry
+`layer->bottom_z()` for the internal-bridge overhang triangles).
+
+Slice 3 therefore: at that gate, build the adaptive + support octrees
+(mesh from the object prelude, spacing via
+`adaptive_fill_line_spacing` = FillAdaptive.cpp:275-356, transform
+`to_octree * trafo_centered`), store them on the phase output, and
+thread to the `fill_entities.rs` dispatch arm (new
+`fill_entities/adaptive.rs`). The `sparse_infill_pattern` string in
+`options/infill/patterns.rs:96` and `InfillPattern` also need the
+AdaptiveCubic/SupportCubic variants (the ProcessInfillPattern serde
+side already exists).
