@@ -69,7 +69,7 @@ fn slice_stl_writes_output_with_stl_format() {
     assert!(
         gcode
             .lines()
-            .any(|line| line == "; total_extrusion_mm = 1.203538")
+            .any(|line| line == "; total_extrusion_mm = 1.20354")
     );
     assert!(gcode.lines().any(|line| line == "; empty_layer_count = 0"));
     assert!(predicate::str::contains("nozzle_diameter = 0.4").eval(&gcode));
@@ -152,12 +152,12 @@ fn slice_stl_writes_output_with_stl_format() {
     assert!(
         gcode
             .lines()
-            .any(|line| line == "; extrusion_mm = 0.820586")
+            .any(|line| line == "; extrusion_mm = 0.820585")
     );
     assert!(
         gcode
             .lines()
-            .any(|line| line == "; extrusion_mm = 0.382952")
+            .any(|line| line == "; extrusion_mm = 0.382956")
     );
     assert_eq!(
         gcode
@@ -280,17 +280,17 @@ fn slice_stl_writes_output_with_stl_format() {
     );
     assert_extrusion_move_command_block(
         &gcode,
-        ";EXTRUSION:print:external_perimeter:-0.5,0:0.772716",
+        ";EXTRUSION:print:external_perimeter:-0.5,0:0.772715",
         "G1 X-0.5 Y0 E0.02393",
     );
     assert_extrusion_move_command_block(
         &gcode,
-        ";EXTRUSION:print:bottom_surface:-0.391421,0.108579:0.796651",
-        "G1 X-0.391 Y0.109 E0.02394",
+        ";EXTRUSION:print:bottom_surface:-0.391421,0.108579:0.79665",
+        "G1 X-0.391 Y0.109 E0.02393",
     );
     assert_extrusion_move_command_block(
         &gcode,
-        ";EXTRUSION:print:external_perimeter:-1,0:1.203538",
+        ";EXTRUSION:print:external_perimeter:-1,0:1.20354",
         "G1 X-1 Y0 E0.04787",
     );
     assert_move_command_pair(

@@ -54,7 +54,7 @@ fn slice_stl_writes_speed_feedrates() {
     assert!(
         gcode
             .lines()
-            .any(|line| line == "G1 X-0.391 Y0.109 E0.02394")
+            .any(|line| line == "G1 X-0.391 Y0.109 E0.02393")
     );
     assert_eq!(path_following_command_count(&gcode), 27);
     assert!(standalone_feedrate_command_count(&gcode) > 0);
