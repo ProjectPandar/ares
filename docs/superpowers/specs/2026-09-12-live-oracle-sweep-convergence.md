@@ -889,3 +889,38 @@ opcodes share the driver. The ±0.001 half-boundary flips (221) and
 Next slice: align the layer object visit order with upstream's object
 print ordering (the island_print_order stage feeding
 layers/object_order.rs), then re-measure both no-arc and arc-on diffs.
+
+## Island-order investigation: mechanism map and narrowed hypothesis (#168)
+
+The ksr project is a SINGLE object/instance (`model_settings.config`:
+one object, extruder=1) whose .drc mesh has multiple disjoint islands;
+the layer loop runs a single extruder (both gcodes have exactly 7
+`M620 S` lines, all in start/end templates). The divergence is NOT the
+object order, NOT the chain seed (15 vs the project's 165 proven
+inert), and NOT per-extruder grouping.
+
+Upstream mechanism (verified by reading):
+- `Layer::make_slices` (Layer.cpp:40-67): lslices ordered by
+  `chain_points(first contour points)`.
+- `GCode.cpp:5010-5068`: per region per entity type, each collection
+  goes to `islands[lslices_index]` (first-point containment, tests in
+  bbox-area ascending order); islands vectors are per extruder.
+- Emission `GCode.cpp:5434-5465`: islands in lslices order; per island
+  perimeters(non-infill-first regions) → infill → perimeters(infill-
+  first regions) → ironing, each iterating `by_region` in region order.
+
+ares matches this shape (`slice_ordering.rs` chains first contour
+points; `extrusion_islands.rs` assigns by area-ordered containment;
+islands emitted in lslices order). Precise divergence signature (wipe-
+travel entry sequences, layer 3): first 3 entries and entries 8+
+IDENTICAL; only positions 4-7 swap the groups [124.3, 114.3] ↔
+[140.0, 147.2] — a LOCAL group-order difference inside the layer, not
+a global reorder.
+
+ARES_DUMP_LSLICES/ARES_DUMP_IORDER probes (this commit) show layer 3:
+6 lslices islands; island 0 receives SEVEN perimeter collections
+(12 entities) while islands 1-5 receive one each — the collections
+within an island (and their order) are where the swap must live.
+Next slice: dump upstream's per-collection first points for layer 3
+(vendored probe) and diff ares' collection ORDER inside islands 1-5 —
+the swapped groups sit at the island 4/5 vs 1/2 boundary.

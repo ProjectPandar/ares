@@ -75,6 +75,24 @@ pub(in crate::project_slice) fn prepare(
 }
 
 fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExtrusionIslands {
+    if let Ok(path) = std::env::var("ARES_DUMP_LSLICES") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let points = slices
+                .iter()
+                .map(|s| {
+                    let p = s.contour().points()[0];
+                    format!("({},{})", p.x(), p.y())
+                })
+                .collect::<Vec<_>>()
+                .join(" ");
+            let _ = writeln!(file, "LSLICES n={} pts={}", slices.len(), points);
+        }
+    }
     let bounds = slices.iter().map(contour_bounds).collect::<Vec<_>>();
     let mut order = (0..slices.len()).collect::<Vec<_>>();
     fixed_gcc_sort_by(&mut order, |left, right| {
