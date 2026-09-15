@@ -411,3 +411,32 @@ sort along line_dir, then the pairing/hook application with
 faithful remainder (`hooks/merge.rs` + extending `hooks.rs`, each
 <400 LOC). Verification stays: s0 fixture diff → golden → full sweep
 (hooks is adaptive-only).
+
+## Complete algorithm read (#134) — the connect core that fixes the reversal
+
+`FillAdaptive.cpp:801-1262` fully read. The direction-determining core
+(:1150-1240): per closest-line T-joint groups sorted along line_dir:
+
+1. Single intersection → `add_hook` only.
+2. Pairs (first_i × nearest neighbor on the same line):
+   - `create_offset_line(first.intersect_point, nearest.intersect_point,
+     first_i, scaled_offset)` = the anchor line offset to first_i's side
+     (left ? +offset : −offset along perp).
+   - `could_connect` = both intersect_lines cross the offset line AND
+     |nearest_pt − first_pt|² ≤ hook_length_max² AND no third source
+     line intersects the anchor segment (rtree).
+   - Same-polyline (loop close): front/back point replacement + one
+     extra point. Different polylines: reverse first if front, trim
+     with other_hook_intersects when the polyline has 3 points
+     (a hooked one), join first+second honoring each intersection's
+     front flag, keep the lower index slot (merged_with).
+   - Not connected → `add_hook`.
+
+Intersection record needs: closest_line, intersect_line, intersect_pl
+(index), intersect_point, front, left, used, other_hook (the 3rd point
+of a hooked polyline), fresh() = !used && intersect_pl nonempty.
+`create_offset_line` (:642-657): offset the segment to the side of
+first_i.left by scaled_offset along perp of the closest line.
+
+This is the full remaining port (~450 LOC incl. tests); the hooks
+module is adaptive-only (sweep-safe).
