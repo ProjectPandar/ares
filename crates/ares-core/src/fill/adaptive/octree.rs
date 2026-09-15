@@ -8,7 +8,7 @@
 
 /// `FillAdaptive.cpp:238-246`
 #[derive(Debug)]
-struct Cube {
+pub(crate) struct Cube {
     center: [f64; 3],
     children: [Option<Box<Cube>>; 8],
 }
@@ -38,6 +38,22 @@ pub(crate) struct Octree {
     root_cube: Box<Cube>,
     pub(crate) origin: [f64; 3],
     pub(crate) cubes_properties: Vec<CubeProperties>,
+}
+
+impl Octree {
+    pub(crate) fn root(&self) -> &Cube {
+        &self.root_cube
+    }
+}
+
+impl Cube {
+    pub(crate) fn center(&self) -> [f64; 3] {
+        self.center
+    }
+
+    pub(crate) fn child(&self, index: usize) -> Option<&Cube> {
+        self.children[index].as_deref()
+    }
 }
 
 /// `FillAdaptive.cpp:226-229` — ordering of children cubes.
