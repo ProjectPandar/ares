@@ -1,4 +1,4 @@
-use super::{split_at, squared_distance};
+use super::split::{split_at, squared_distance};
 use crate::{
     ProcessSeamPosition,
     geometry::CoordinateScale,
@@ -245,7 +245,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         .iter()
         .all(|path| path.role != ExtrusionRole::ExternalPerimeter)
     {
-        let projection = super::closest_projection(&loop_.paths, seam_query);
+        let projection = super::split::closest_projection(&loop_.paths, seam_query);
         let depth = squared_distance((projection.x, projection.y), seam_query).sqrt();
         let angle = layer.ccw_angles[best];
         let beta = (angle / 2.0).cos();
@@ -282,7 +282,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
 
 /// Walk `distance` (scaled units) forward along the loop from `from`,
 /// wrapping around (`SeamPlacer.cpp:1601-1617`).
-fn walk_along(loop_: &ExtrusionLoop, from: &super::Projection, distance: f64) -> (i64, i64) {
+fn walk_along(loop_: &ExtrusionLoop, from: &super::split::Projection, distance: f64) -> (i64, i64) {
     let mut remaining = distance;
     let mut position = (from.x, from.y);
     let mut started = false;
