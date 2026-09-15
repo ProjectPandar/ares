@@ -3,10 +3,19 @@
 //! Active only when `fan_speedup_time != 0 || fan_kickstart > 0`
 //! (`GCode.cpp:3731-3740`).
 
+mod fan;
+mod helpers;
+
 use crate::{ExtrusionRole, GCodeFlavor};
 
+use helpers::fan_pwm;
+
+use helpers::{
+    LineMotion, parse_motion, read_fan_speed, role_from_str, set_fan_line, split_line, word,
+};
+
 #[derive(Clone, Debug, PartialEq)]
-struct BufferData {
+pub(super) struct BufferData {
     raw: String,
     time: f32,
     fan_speed: i16,
@@ -24,7 +33,7 @@ struct BufferData {
 }
 
 impl BufferData {
-    fn new(raw: String, time: f32, fan_speed: i16, is_kickstart: bool) -> Self {
+    pub(super) fn new(raw: String, time: f32, fan_speed: i16, is_kickstart: bool) -> Self {
         Self {
             raw,
             time,
@@ -43,26 +52,9 @@ impl BufferData {
 }
 
 #[derive(Clone, Copy)]
-struct Kickstart {
+pub(super) struct Kickstart {
     fan_speed: i16,
     time: f32,
-}
-
-/// The position/speed state FanMover needs to track per line — filled by
-/// the caller's line walk (upstream reads these off the GCodeReader).
-#[derive(Clone, Copy, Default)]
-pub(crate) struct LineMotion {
-    pub(crate) has_f: bool,
-    pub(crate) f_mm_s: f32,
-    pub(crate) dist: f32,
-    pub(crate) x: Option<f32>,
-    pub(crate) y: Option<f32>,
-    pub(crate) z: Option<f32>,
-    pub(crate) e: Option<f32>,
-    pub(crate) dx: f32,
-    pub(crate) dy: f32,
-    pub(crate) dz: f32,
-    pub(crate) de: f32,
 }
 
 pub(crate) struct FanMover {
@@ -322,353 +314,7 @@ impl FanMover {
             }
         }
     }
-
-    fn process_fan_command(&mut self, raw: &str, fan_speed: i16, time: &mut f32) {
-        if self.back_buffer_fan_speed >= fan_speed {
-            return;
-        }
-        if self.nb_seconds_delay > 0.0
-            && (!self.only_overhangs || self.current_role == ExtrusionRole::OverhangPerimeter)
-        {
-            *time = -1.0;
-            if self.kickstart > 0.0 && fan_speed > self.front_buffer_fan_speed {
-                self.current_kickstart = None;
-                self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
-                self.remove_slow_fan(255, self.kickstart);
-                if !self.buffer.is_empty()
-                    && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
-                {
-                    self.print_in_middle(
-                        0,
-                        self.buffer_time_size - self.nb_seconds_delay,
-                        &set_fan_line(100),
-                    );
-                } else {
-                    self.output.push_str(&set_fan_line(100));
-                }
-                let kickstart_duration =
-                    self.kickstart * f32::from(fan_speed - self.front_buffer_fan_speed) / 100.0;
-                let mut time_count = kickstart_duration;
-                let mut index = 0;
-                while index < self.buffer.len() && time_count > 0.0 {
-                    time_count -= self.buffer[index].time;
-                    if time_count < 0.0 {
-                        let data = BufferData::new(raw.to_owned(), 0.0, fan_speed, true);
-                        self.put_in_middle(index, self.buffer[index].time + time_count, data);
-                        break;
-                    }
-                    index += 1;
-                }
-                if time_count > 0.0 {
-                    self.current_kickstart = Some(Kickstart {
-                        fan_speed,
-                        time: time_count,
-                    });
-                    self.current_kickstart_raw = raw.to_owned();
-                }
-                self.front_buffer_fan_speed = fan_speed;
-            } else {
-                self.remove_slow_fan(fan_speed, self.buffer_time_size + 1.0);
-                if !self.buffer.is_empty()
-                    && (self.buffer_time_size - self.buffer[0].time * 0.1) > self.nb_seconds_delay
-                {
-                    self.print_in_middle(0, self.buffer_time_size - self.nb_seconds_delay, raw);
-                } else {
-                    self.output.push_str(raw);
-                    self.output.push('\n');
-                }
-                self.front_buffer_fan_speed = fan_speed;
-            }
-        } else if self.kickstart <= 0.0 {
-            // Nothing to do — printed in the buffer as other lines are.
-        } else if self.current_kickstart.is_some() {
-            if let Some(kick) = &mut self.current_kickstart {
-                if self.back_buffer_fan_speed >= fan_speed {
-                    self.current_kickstart = None;
-                } else {
-                    let kickstart_duration =
-                        self.kickstart * f32::from(fan_speed - self.back_buffer_fan_speed) / 100.0;
-                    kick.fan_speed = fan_speed;
-                    kick.time += kickstart_duration;
-                    self.current_kickstart = Some(*kick);
-                    self.current_kickstart_raw = raw.to_owned();
-                    *time = -1.0;
-                }
-            }
-        } else if self.back_buffer_fan_speed < fan_speed - 10 {
-            *time = -1.0;
-            let kickstart_duration =
-                self.kickstart * f32::from(fan_speed - self.back_buffer_fan_speed) / 100.0;
-            self.push_buffer(
-                BufferData::new(set_fan_line(100), 0.0, fan_speed, true),
-                &LineMotion::default(),
-                self.position,
-                self.e_position,
-            );
-            self.current_kickstart = Some(Kickstart {
-                fan_speed,
-                time: kickstart_duration,
-            });
-            self.current_kickstart_raw = raw.to_owned();
-        }
-    }
-
-    fn push_buffer(
-        &mut self,
-        data: BufferData,
-        motion: &LineMotion,
-        start: [f32; 3],
-        e_start: f32,
-    ) {
-        self.buffer_time_size += data.time;
-        let mut data = data;
-        // FanMover.cpp:444-449 stores the START coordinate (reader position
-        // before the move) plus the delta; the split math `x + dx*percent`
-        // interpolates within the segment.
-        if motion.x.is_some() {
-            data.x = start[0];
-            data.dx = motion.dx;
-        }
-        if motion.y.is_some() {
-            data.y = start[1];
-            data.dy = motion.dy;
-        }
-        if motion.z.is_some() {
-            data.z = start[2];
-            data.dz = motion.dz;
-        }
-        if motion.e.is_some() {
-            data.e = e_start;
-            data.de = motion.de;
-        }
-        self.buffer.push(data);
-    }
-
-    /// `_put_in_middle_G1` (FanMover.cpp:124-140): split the buffered line
-    /// at `nb_sec` from its start, inserting the fan line between.
-    fn put_in_middle(&mut self, index: usize, nb_sec: f32, line: BufferData) {
-        let item_time = self.buffer[index].time;
-        if nb_sec > item_time * 0.9 {
-            self.buffer.insert(index + 1, line);
-        } else if nb_sec < item_time * 0.1 || item_time == 0.0 {
-            self.buffer.insert(index, line);
-        } else {
-            let percent = nb_sec / item_time;
-            let (before_raw, after_raw) =
-                split_line(&mut self.buffer[index], percent, self.relative_e);
-            let before = BufferData::new(before_raw, nb_sec, -1, false);
-            let after_time = item_time - nb_sec;
-            // FanMover.cpp:131-142: advance the remaining item's start
-            // coordinates by the consumed prefix delta.
-            let (dx, dy, dz, de) = (
-                self.buffer[index].dx,
-                self.buffer[index].dy,
-                self.buffer[index].dz,
-                self.buffer[index].de,
-            );
-            self.buffer[index].x += dx * percent;
-            self.buffer[index].y += dy * percent;
-            self.buffer[index].z += dz * percent;
-            if !self.relative_e {
-                self.buffer[index].e += de * percent;
-            }
-            self.buffer[index].raw = after_raw;
-            self.buffer[index].time = after_time;
-            self.buffer[index].dx = dx * (1.0 - percent);
-            self.buffer[index].dy = dy * (1.0 - percent);
-            self.buffer[index].dz = dz * (1.0 - percent);
-            self.buffer[index].de = de * (1.0 - percent);
-            self.buffer.insert(index, line);
-            self.buffer.insert(index, before);
-            self.buffer_time_size += 0.0;
-        }
-    }
-
-    /// `_print_in_middle_G1` (FanMover.cpp:171-212): flush the front line
-    /// (optionally split) with the fan command inside.
-    fn print_in_middle(&mut self, index: usize, nb_sec: f32, fan_line: &str) {
-        let item = self.buffer.remove(index);
-        self.buffer_time_size -= item.time;
-        if nb_sec < item.time * 0.1 {
-            self.output.push_str(&item.raw);
-            self.output.push('\n');
-            self.output.push_str(fan_line);
-            if !fan_line.ends_with('\n') {
-                self.output.push('\n');
-            }
-        } else if nb_sec > item.time * 0.9 || !item.raw.starts_with("G1 ") {
-            self.output.push_str(fan_line);
-            if !fan_line.ends_with('\n') {
-                self.output.push('\n');
-            }
-            self.output.push_str(&item.raw);
-            self.output.push('\n');
-        } else {
-            let percent = nb_sec / item.time;
-            let mut item = item;
-            let (before, after) = split_line(&mut item, percent, self.relative_e);
-            self.output.push_str(&before);
-            self.output.push('\n');
-            self.output.push_str(fan_line);
-            if !fan_line.ends_with('\n') {
-                self.output.push('\n');
-            }
-            self.output.push_str(&after);
-            self.output.push('\n');
-        }
-    }
-
-    /// `_remove_slow_fan` (FanMover.cpp:214-227).
-    fn remove_slow_fan(&mut self, min_speed: i16, mut past_sec: f32) {
-        let mut index = 0;
-        while index < self.buffer.len() && past_sec > 0.0 {
-            past_sec -= self.buffer[index].time;
-            if self.buffer[index].fan_speed >= 0 && self.buffer[index].fan_speed < min_speed {
-                let removed = self.buffer.remove(index);
-                self.buffer_time_size -= removed.time;
-            } else {
-                index += 1;
-            }
-        }
-    }
 }
-
-fn set_fan_line(percent: i16) -> String {
-    // `GCodeWriter::set_fan` (GCodeWriter.cpp:1114) terminates the command
-    // with a newline; a buffered kickstart line then flushes as `raw + "\n"`
-    // leaving a blank line after the command, matching upstream.
-    format!("M106 S{}\n", fan_pwm(percent))
-}
-
-fn fan_pwm(percent: i16) -> u32 {
-    (255.5 * f32::from(percent) / 100.0) as u32
-}
-
-fn read_fan_speed(code: &str, flavor: GCodeFlavor) -> i16 {
-    let command = code.split_whitespace().next().unwrap_or_default();
-    if command == "M106" {
-        let p = word(code, 'P');
-        if let Some(p) = p {
-            if flavor != GCodeFlavor::Mach3 && flavor != GCodeFlavor::Machinekit && p != 1.0 {
-                return -1;
-            }
-        }
-        word(code, 'S').map_or(-1, |s| (100.0 * s / 255.0) as i16)
-    } else if command == "M127" || command == "M107" {
-        0
-    } else if command == "M126"
-        && (flavor == GCodeFlavor::MakerWare || flavor == GCodeFlavor::Sailfish)
-    {
-        word(code, 'T').map_or(-1, |t| (100.0 * t / 255.0) as i16)
-    } else {
-        -1
-    }
-}
-
-fn word(code: &str, letter: char) -> Option<f32> {
-    code.split_whitespace().find_map(|token| {
-        let mut characters = token.chars();
-        let first = characters.next()?;
-        (first.eq_ignore_ascii_case(&letter))
-            .then(|| characters.as_str().parse::<f32>().ok())
-            .flatten()
-    })
-}
-
-fn parse_motion(code: &str) -> LineMotion {
-    let mut motion = LineMotion::default();
-    let mut x = None;
-    let mut y = None;
-    let mut z = None;
-    let mut e = None;
-    for token in code.split_whitespace().skip(1) {
-        let mut characters = token.chars();
-        let Some(first) = characters.next() else {
-            continue;
-        };
-        let Ok(value) = characters.as_str().parse::<f32>() else {
-            continue;
-        };
-        match first {
-            'F' | 'f' => {
-                motion.has_f = true;
-                motion.f_mm_s = value / 60.0;
-            }
-            'X' | 'x' => x = Some(value),
-            'Y' | 'y' => y = Some(value),
-            'Z' | 'z' => z = Some(value),
-            'E' | 'e' => e = Some(value),
-            _ => {}
-        }
-    }
-    motion.x = x;
-    motion.y = y;
-    motion.z = z;
-    motion.e = e;
-    motion
-}
-
-/// Splits a buffered G0/G1 line at `percent`, rewriting the axis words of
-/// both halves (`change_axis_value`, FanMover.cpp:74-89). Returns
-/// `(before, after)`.
-fn split_line(data: &mut BufferData, percent: f32, relative_e: bool) -> (String, String) {
-    let mut before = data.raw.clone();
-    if data.dx != 0.0 {
-        before = replace_word(&before, 'X', data.x + data.dx * percent, 3);
-    }
-    if data.dy != 0.0 {
-        before = replace_word(&before, 'Y', data.y + data.dy * percent, 3);
-    }
-    if data.dz != 0.0 {
-        before = replace_word(&before, 'Z', data.z + data.dz * percent, 3);
-    }
-    let mut after = data.raw.clone();
-    if data.de != 0.0 {
-        if relative_e {
-            before = replace_word(&before, 'E', data.de * percent, 5);
-            after = replace_word(&after, 'E', data.de * (1.0 - percent), 5);
-        } else {
-            before = replace_word(&before, 'E', data.e + data.de * percent, 5);
-        }
-    }
-    (before, after)
-}
-
-fn replace_word(line: &str, axis: char, value: f32, digits: usize) -> String {
-    let mut result = String::with_capacity(line.len() + 8);
-    let code = line.split(';').next().unwrap_or(line);
-    let comment = &line[code.len()..];
-    let mut replaced = false;
-    for token in code.split_whitespace() {
-        if !result.is_empty() {
-            result.push(' ');
-        }
-        if !replaced {
-            let mut characters = token.chars();
-            if let Some(first) = characters.next() {
-                if first.eq_ignore_ascii_case(&axis) && characters.as_str().parse::<f32>().is_ok() {
-                    result.push(first);
-                    result.push_str(&format!("{value:.digits$}"));
-                    replaced = true;
-                    continue;
-                }
-            }
-        }
-        result.push_str(token);
-    }
-    result.push_str(comment);
-    result
-}
-
-fn role_from_str(role: &str) -> ExtrusionRole {
-    match role.trim() {
-        "Outer wall" => ExtrusionRole::ExternalPerimeter,
-        "Inner wall" => ExtrusionRole::Perimeter,
-        "Overhang wall" => ExtrusionRole::OverhangPerimeter,
-        _ => ExtrusionRole::None,
-    }
-}
-
 #[cfg(test)]
 mod corpus;
 #[cfg(test)]

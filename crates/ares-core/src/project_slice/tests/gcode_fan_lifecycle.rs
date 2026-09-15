@@ -82,7 +82,7 @@ async fn non_bbl_fans_follow_orca_print_start_layer_and_finish_order() {
     assert!(part_off < auxiliary_off);
     assert!(auxiliary_off < machine_end);
     assert!(!lines.iter().any(|line| line.starts_with("M981 ")));
-    let chamber_off = position(&lines, "M141 S0");
+    let chamber_off = position(&lines, "M141 S0;set chamber_temperature");
     let completion_exhaust = position(&lines, "M106 P3 S204");
     let executable_end = position(&lines, "; EXECUTABLE_BLOCK_END");
     assert!(machine_end < chamber_off);
