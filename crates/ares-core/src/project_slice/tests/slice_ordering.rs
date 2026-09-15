@@ -37,8 +37,8 @@ fn task22m_slice_ordering_uses_contour_first_points_and_preserves_holes() {
 #[test]
 fn task22m_slice_ordering_keeps_exact_layer_count_for_empty_and_multiple_layers() {
     let input = markers(&[(10, 0), (0, 0), (20, 0), (0, 10), (10, 10)]);
-    let object = object(vec![Vec::new(), input.clone()]);
-    let output = make_single_region_slices(&object);
+    let mut object = object(vec![Vec::new(), input.clone()]);
+    let output = make_single_region_slices(&mut object);
 
     assert_eq!(output.len(), 2);
     assert!(output[0].is_empty());
@@ -53,8 +53,11 @@ fn task22m_slice_ordering_keeps_exact_layer_count_for_empty_and_multiple_layers(
         ]
     );
 
-    let empty = object_with_regions(2, Vec::new());
-    assert_eq!(make_single_region_slices(&empty), [Vec::new(), Vec::new()]);
+    let mut empty = object_with_regions(2, Vec::new());
+    assert_eq!(
+        make_single_region_slices(&mut empty),
+        [Vec::new(), Vec::new()]
+    );
 }
 
 #[test]
@@ -116,7 +119,10 @@ fn task22m_apply_signed_raft_and_disabled_objects_preserve_complete_current_stat
     let sidecars = objects.iter().map(sidecar_snapshot).collect::<Vec<_>>();
     let regions = objects.iter().map(region_snapshot).collect::<Vec<_>>();
     let surfaces = objects.iter().map(surface_snapshot).collect::<Vec<_>>();
-    let lslices = objects.iter().map(make_single_region_slices).collect::<Vec<_>>();
+    let lslices = objects
+        .iter_mut()
+        .map(|object| make_single_region_slices(object))
+        .collect::<Vec<_>>();
     let resolved = [
         resolved(8, compensation_options(0.15, 1, -1), vec![region()]),
         resolved(0, compensation_options(0.0, 1, 0), vec![region()]),

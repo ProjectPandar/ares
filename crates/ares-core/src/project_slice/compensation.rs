@@ -257,7 +257,7 @@ fn apply_object_compensation(
     let mut lslices = if object.plan.layers.is_empty() {
         Vec::new()
     } else {
-        make_single_region_slices(&object)
+        make_single_region_slices(&mut object)
     };
     for (layer_index, raw) in backups.into_iter().enumerate() {
         lslices[layer_index] = order_expolygons(raw);

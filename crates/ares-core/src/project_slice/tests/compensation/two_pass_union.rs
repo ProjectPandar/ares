@@ -70,15 +70,19 @@ fn task22m_two_pass_union_preserves_discriminant_geometry() {
     assert_eq!(
         surfaces,
         vec![vec![
+            // `Layer::make_slices` chains the compensated surfaces' first
+            // contour points (`Layer.cpp:60-67`) and sets the region's
+            // slices to the same order (`Layer.cpp:93`): the chain over
+            // [(60,60), (40,40), (160,60)] walks (160,60)->(60,60)->(40,40).
+            expolygon(
+                &[(160, 60), (100, 60), (100, 0), (160, 0)],
+                &[&[(110, 10), (110, 50), (150, 50), (150, 10)]],
+            ),
             expolygon(
                 &[(60, 60), (0, 60), (0, 0), (60, 0)],
                 &[&[(10, 10), (10, 50), (50, 50), (50, 10)]],
             ),
             expolygon(&[(40, 40), (20, 40), (20, 20), (40, 20)], &[]),
-            expolygon(
-                &[(160, 60), (100, 60), (100, 0), (160, 0)],
-                &[&[(110, 10), (110, 50), (150, 50), (150, 10)]],
-            ),
         ]]
     );
 }

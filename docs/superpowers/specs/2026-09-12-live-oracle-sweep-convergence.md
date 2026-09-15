@@ -948,3 +948,23 @@ upstream = PerimeterGenerator's surface processing order; ares =
 perimeters/classic materialization order). Next slice: diff the two
 generation orders (upstream PerimeterGenerator.cpp island/surface loop
 vs ares perimeters phase) for multi-collection giant islands.
+
+## Region surfaces now carry the lslices order (#169)
+
+`make_single_region_slices` now sets the region's own surfaces to the
+chained lslices order in place, matching upstream `Layer::make_slices`
+(`Layer.cpp:93` `m_regions.front()->slices.set(this->lslices,
+stInternal)`): the perimeter generator's BBS surface chain
+(`PerimeterGenerator.cpp:1214-1224`, chain_expolygons over bbox
+centers) chains from the lslices order, and its lowest-index tie breaks
+make the input order observable. Previously ares chained the raw
+slicing order.
+
+Honest result: this did NOT fix the ksr layer-3 group swap (the
+no-arc output is bit-identical — the chain tie-break hypothesis is
+falsified for this fixture), but the ordering is upstream-faithful and
+the two_pass_union expectation now documents the chained order. Two
+probe-alignment corrections recorded: the ARES_DUMP_IORDER/LSLICES
+dumps are internal 0-based layer groups (gcode CHANGE_LAYER N = group
+N-1), and the IORDER stream interleaves perimeter and infill
+collections per layer.
