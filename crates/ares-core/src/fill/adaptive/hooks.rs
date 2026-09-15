@@ -65,14 +65,16 @@ pub(crate) fn connect_lines_using_hooks(
     spacing: f64,
     hook_length: f64,
     hook_length_max: f64,
-    _units_per_mm: f64,
+    units_per_mm: f64,
 ) -> Vec<Polyline> {
     if lines.len() <= 1 || hook_length <= 0.0 {
         return lines;
     }
-    // `:809-811`: 19% overlap; 25% trim.
+    // `:809-811`: 19% overlap; 25% trim. `SCALED_EPSILON` =
+    // `scale_(1e-4 mm)` (`libslic3r.h:96`).
     let scaled_offset = 0.81 * spacing;
     let scaled_trim_distance = 0.5 * spacing * 0.75;
+    let scaled_epsilon = 1e-4 * units_per_mm;
 
     // The immutable 2-point source lines (`lines_src`, `:864-868`).
     let source: Vec<Line> = lines
@@ -87,7 +89,7 @@ pub(crate) fn connect_lines_using_hooks(
 
     // T-joints (`:887-1010`): per endpoint the nearest line whose
     // interior projects the point; thresholds drop/anchor/trim.
-    let thresholds = Thresholds::new(scaled_offset);
+    let thresholds = Thresholds::new(scaled_offset, scaled_epsilon);
     let mut joints: Vec<Joint> = Vec::new();
     for (index, line) in source.iter().enumerate() {
         let tjoint_front = nearest_tjoint(&source, &working, index, line.a);
@@ -187,11 +189,10 @@ pub(crate) fn connect_lines_using_hooks(
         for idx in 0..group.len() {
             // `update_merged_polyline` (`:1066-1076`): follow the merge
             // chain, then refresh `front` from the surviving polyline.
-            resolve_merged(&mut merged_with, &mut group[idx]);
+            resolve_merged(&mut merged_with, &mut group[idx], &working);
             if group[idx].used || working[group[idx].intersect_pl].is_empty() {
                 continue;
             }
-            group[idx].front = working[group[idx].intersect_pl][0] == group[idx].intersect_point;
             if group.len() == 1 {
                 add_hook(
                     &mut group[idx],
@@ -203,6 +204,14 @@ pub(crate) fn connect_lines_using_hooks(
                 );
                 group[idx].used = true;
                 continue;
+            }
+            // Resolve both neighbors BEFORE choosing (`:1156-1158`) so
+            // their freshness and `front` reflect merged polylines.
+            if idx > 0 {
+                resolve_merged(&mut merged_with, &mut group[idx - 1], &working);
+            }
+            if idx + 1 < group.len() {
+                resolve_merged(&mut merged_with, &mut group[idx + 1], &working);
             }
             // Nearest neighbor (`get_nearest_intersection`, `:620-637`).
             let nearest_idx = nearest_fresh(group, &working, idx, dir);
@@ -218,8 +227,8 @@ pub(crate) fn connect_lines_using_hooks(
                 group[idx].used = true;
                 continue;
             };
-            resolve_merged(&mut merged_with, &mut group[nearest_idx]);
-            // `:1181-1184`: could_connect requires a fresh neighbor.
+            // `:1181-1184`: could_connect requires a fresh neighbor
+            // (the selection may still pick a used one).
             if group[nearest_idx].used || working[group[nearest_idx].intersect_pl].is_empty() {
                 add_hook(
                     &mut group[idx],

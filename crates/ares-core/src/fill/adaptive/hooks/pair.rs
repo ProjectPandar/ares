@@ -113,12 +113,16 @@ pub(super) fn connect_pair(
         }
         let first_pl = first.intersect_pl;
         let nearest_pl = nearest.intersect_pl;
-        // `trim_start/trim_end` (`:1218-1228`): `other_hook` yields None
-        // unless the polyline is a just-hooked 3-pointer.
-        let pt_start =
-            other_hook(first, &working[first_pl]).and_then(|hook| line_line_point(hook, l));
-        let pt_end =
-            other_hook(nearest, &working[nearest_pl]).and_then(|hook| line_line_point(hook, l));
+        // `trim_start/trim_end` (`:1218-1228`): only a JUST-HOOKED
+        // 3-pointer has an `other_hook` for trimming.
+        let pt_start = (working[first_pl].len() == 3)
+            .then(|| other_hook(first, &working[first_pl]))
+            .flatten()
+            .and_then(|hook| line_line_point(hook, l));
+        let pt_end = (working[nearest_pl].len() == 3)
+            .then(|| other_hook(nearest, &working[nearest_pl]))
+            .flatten()
+            .and_then(|hook| line_line_point(hook, l));
 
         let mut first_points = std::mem::take(&mut working[first_pl]);
         let second_points = &working[nearest_pl];
@@ -179,9 +183,10 @@ fn line_line_point(hook: Line, l: Line) -> Option<Point> {
     segment_line_intersection(l, hook)
 }
 
-/// `update_merged_polyline_idx` (`:1049-1060`): follow the merge chain
-/// to the surviving polyline slot (with path compression).
-pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint) {
+/// `update_merged_polyline_idx` (`:1049-1076`): follow the merge chain
+/// to the surviving polyline slot (with path compression) and refresh
+/// `front` against the surviving polyline when the joint is still fresh.
+pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint, working: &[Vec<Point>]) {
     let mut last = joint.intersect_pl;
     loop {
         let lower = merged_with[last];
@@ -192,6 +197,9 @@ pub(super) fn resolve_merged(merged_with: &mut [usize], joint: &mut Joint) {
     }
     merged_with[joint.intersect_pl] = last;
     joint.intersect_pl = last;
+    if !joint.used && !working[last].is_empty() {
+        joint.front = working[last][0] == joint.intersect_point;
+    }
 }
 
 /// Borrow the `idx` and `other` joints in caller order (`first` is

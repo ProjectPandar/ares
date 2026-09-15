@@ -21,9 +21,14 @@ pub(super) struct Thresholds {
 }
 
 impl Thresholds {
-    pub(super) fn new(scaled_offset: f64) -> Self {
-        let drop_both = scaled_offset * (2.0 / (std::f64::consts::FRAC_PI_6).cos() + 0.5);
-        let drop_single = scaled_offset * (1.0 / (std::f64::consts::FRAC_PI_6).cos() + 1.5);
+    /// `FillAdaptive.cpp:888-891` — the drop thresholds carry
+    /// `+SCALED_EPSILON` and the anchor thresholds build on the drop
+    /// values (epsilon propagates).
+    pub(super) fn new(scaled_offset: f64, scaled_epsilon: f64) -> Self {
+        let drop_both =
+            scaled_offset * (2.0 / (std::f64::consts::FRAC_PI_6).cos() + 0.5) + scaled_epsilon;
+        let drop_single =
+            scaled_offset * (1.0 / (std::f64::consts::FRAC_PI_6).cos() + 1.5) + scaled_epsilon;
         Self {
             drop_both_sides: drop_both,
             anchor_both_sides: drop_both + scaled_offset,

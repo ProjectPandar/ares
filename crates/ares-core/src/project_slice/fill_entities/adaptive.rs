@@ -16,16 +16,22 @@ use crate::{
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
 
 thread_local! {
-    /// Octrees keyed by (source identity, line spacing) — the build is
+    /// Octrees keyed by (object, line spacing) — the build is
     /// deterministic per (object, spacing), so one tree serves every
-    /// layer of that fill. Cleared at each `fill_entities::prepare` so
-    /// consecutive slices in one process never reuse stale trees.
+    /// layer of that fill. Cleared at each slice entry so consecutive
+    /// slices in one process never reuse stale trees.
     static OCTREES: RefCell<HashMap<(usize, u64), Arc<octree::Octree>>> =
         RefCell::new(HashMap::new());
 }
 
-pub(super) fn clear_cache() {
+fn clear_cache() {
     OCTREES.with(|cache| cache.borrow_mut().clear());
+}
+
+/// Slice-entry cache reset (also covers the bridge-over-infill anchoring
+/// phase, which runs before `fill_entities::prepare`).
+pub(in crate::project_slice) fn reset_slice_cache() {
+    clear_cache();
 }
 
 #[cfg(test)]

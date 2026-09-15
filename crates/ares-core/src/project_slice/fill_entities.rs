@@ -51,9 +51,6 @@ pub(in crate::project_slice) fn prepare(
 ) -> Result<PreparedPostFillEntities, SliceError> {
     #[cfg(test)]
     INVOCATIONS.with(|count| count.set(count.get() + 1));
-    // Adaptive octrees are per-slice artifacts; drop stale trees from any
-    // previous slice in this process.
-    adaptive::clear_cache();
     let result = {
         let external = &predecessor.predecessor.predecessor;
         let traversal = &external.predecessor.predecessor;
