@@ -865,3 +865,27 @@ e.g. case-001L7G has `; different_settings_to_system = ;;`,
 sides. ares emits the lines when the loaded config carries them; the
 ksr divergence is the CLI preset-loading path only. Per the golden
 contract (fixture wins over live CLI), no ares change.
+
+## No-arc residual root: per-layer object visit order (#167)
+
+After the plain-DP fix, the dominant no-arc body family (319 structural
+wipe-block opcodes, the 6699+2817 XY cascades concentrated in
+WIPE_START/END sections) is NOT wipe arithmetic: it is the object visit
+order inside a layer. Decisive context (oracle line ~7226, ares ~7223,
+after the shared wipe at X133.875):
+
+- oracle travels X133→X123.669 (object @123) → 113 (@113) → 140 → 146
+- ares travels X133→X140.954 (@140, nearest at 7mm) → 146 → 123 → 113
+
+ares picks the NEAREST next object per layer (from 133 that is 140 at
+7mm); oracle follows a fixed object sequence (123 first even though it
+is 10mm away) — i.e. upstream's object print order is decided once
+(object-major, stable across layers) while ares re-orders per layer by
+proximity. Every later wipe/E/coordinate diff in the region is the
+cascade of this reordering; the arc-on golden comparison's 3806 aligned
+opcodes share the driver. The ±0.001 half-boundary flips (221) and
+5th-decimal E noise (~37) are the only true rounding residue.
+
+Next slice: align the layer object visit order with upstream's object
+print ordering (the island_print_order stage feeding
+layers/object_order.rs), then re-measure both no-arc and arc-on diffs.
