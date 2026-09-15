@@ -48,7 +48,7 @@ fn generates_lines_on_midplane() {
     let octree =
         super::super::octree::build_octree(&vertices, &triangles, &[], 0.5, false, [0.0; 3]);
     let surface = square_surface(scale, 6.0);
-    let polylines = fill_surface(&octree, &surface, 0.0, 0.5, 1, 1.0, 1.0, false, scale).unwrap();
+    let polylines = fill_surface(&octree, &surface, 5.0, 0.5, 1, 1.0, 1.0, false, scale).unwrap();
     assert!(
         !polylines.is_empty(),
         "mid-plane through a full cube mesh must produce infill lines"
@@ -65,7 +65,7 @@ fn empty_above_the_octree() {
     let octree =
         super::super::octree::build_octree(&vertices, &triangles, &[], 0.5, false, [0.0; 3]);
     let surface = square_surface(scale, 6.0);
-    let polylines = fill_surface(&octree, &surface, 100.0, 0.5, 1, 1.0, 1.0, false, scale).unwrap();
+    let polylines = fill_surface(&octree, &surface, 500.0, 0.5, 1, 1.0, 1.0, false, scale).unwrap();
     assert!(
         polylines.is_empty(),
         "z far above the octree produces no lines"
