@@ -997,3 +997,14 @@ Next probe: dump ares' prelude chain inputs (surface bbox centers per
 layer) and run the same centers through a vendored upstream
 chain_points harness; agreement there moves the divergence to the
 slicing/classification stage.
+
+## Empirical exoneration of the chain (#170)
+
+ARES_DUMP_PRELUDE dumps each layer's surface bbox centers plus the
+prelude chain order. Feeding the divergent layer's exact six centers
+through the vendored upstream `chain_points` (tools/chain-probe/
+probe9-chain.cpp) prints the SAME order ares produced. Conclusion: the
+chain, heap, and kd-tree are now empirically (not just audited)
+equivalent, and the ksr island-order group swap originates one stage
+earlier — the surface set itself (slicing or surface classification
+for this .drc mesh). That is the next (deeper) slice.

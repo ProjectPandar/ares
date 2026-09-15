@@ -44,3 +44,18 @@ ares's classic_clip output. `clipper.cpp`/`clipper.hpp` at the top level
 and the `boost/`, `oneapi/`, `libslic3r/` stub dirs exist only to satisfy
 the vendored header's include chain; `clipper/` holds the pristine
 vendor sources.
+
+## probe9-chain.cpp — vendored upstream chain_points (same-input oracle)
+
+Assembles upstream's `chain_points` verbatim (ShortestPath.cpp:44-1012
+template chain + MutablePriorityQueue.hpp + KDTreeIndirect.hpp) with a
+mini Vec2d shim; reads `x y` pairs on stdin, prints the chained order.
+Decisive use (ksr gcode layer 3, #170): ares' six surface bbox centers
+from ARES_DUMP_PRELUDE feed in unchanged, and the upstream binary
+prints `0 1 2 3 4 5` — identical to ares' own chain. The chain
+machinery is therefore empirically exonerated: the island-order group
+swap can only come from the chain INPUTS (the surface set/centers),
+i.e. a slicing or surface-classification divergence on this .drc mesh.
+
+Build: see the file header (g++ -O2 -std=c++17 -DNDEBUG with the stub
+Utils.hpp providing next_highest_power_of_2).

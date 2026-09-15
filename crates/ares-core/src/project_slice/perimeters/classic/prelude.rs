@@ -128,6 +128,35 @@ fn prepare_surfaces(
         .map(|surface| surface.as_parts().1.clone())
         .collect::<Vec<ExPolygon>>();
     let order = chain_expolygons_order(&geometry);
+    if let Ok(path) = std::env::var("ARES_DUMP_PRELUDE") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let centers = geometry
+                .iter()
+                .map(|expolygon| {
+                    let bounds = crate::geometry::BoundingBox::from_expolygon(expolygon)
+                        .expect("a region surface ExPolygon contour must be nonempty");
+                    let center = bounds.center();
+                    format!("({},{})", center.x(), center.y())
+                })
+                .collect::<Vec<_>>()
+                .join(" ");
+            let chain = order
+                .iter()
+                .map(|index| index.to_string())
+                .collect::<Vec<_>>()
+                .join(",");
+            let _ = writeln!(
+                file,
+                "PRELUDE n={} centers={centers} chain={chain}",
+                geometry.len()
+            );
+        }
+    }
     order
         .into_iter()
         .map(|source_index| {
