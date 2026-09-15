@@ -1,7 +1,6 @@
 //! Hook/intersect geometry helpers (`FillAdaptive.cpp:733-748` thick-line
 //! shift, :562-618 direction predicates, :642-657 segment math).
 
-use super::Joint;
 use crate::geometry::{Line, Point};
 
 pub(super) fn shift_from_thick_line(dir_x: f64, dir_y: f64, line: &Line, trim: f64) -> f64 {
@@ -32,22 +31,6 @@ impl Thresholds {
             anchor_single_side: drop_single + scaled_offset,
         }
     }
-}
-
-pub(super) fn has_other_tjoint(source: &[Line], index: usize, front: bool, radius: f64) -> bool {
-    let line = &source[index];
-    let endpoint = if front { line.b } else { line.a };
-    for (other, candidate) in source.iter().enumerate() {
-        if other == index {
-            continue;
-        }
-        if distance_point_to_segment_squared(endpoint, candidate) <= radius * radius
-            && projects_interior(endpoint, candidate)
-        {
-            return true;
-        }
-    }
-    false
 }
 
 pub(super) fn projects_interior(point: Point, line: &Line) -> bool {
@@ -128,8 +111,9 @@ pub(super) fn normalize(x: i64, y: i64) -> Option<(f64, f64)> {
 }
 
 pub(super) fn segment_line_intersection(line: Line, other: Line) -> Option<Point> {
-    segments_cross(line.a, line.b, other.a, other.b)
-        .map(|(x, y)| Point::new(x.round() as i64, y.round() as i64))
+    // `line_alg::intersection` (`Line.hpp:123-148`): segment-clamped,
+    // truncating `cast<coord_t>` on the result.
+    segments_cross(line.a, line.b, other.a, other.b).map(|(x, y)| Point::new(x as i64, y as i64))
 }
 
 pub(super) fn segments_cross(a1: Point, a2: Point, b1: Point, b2: Point) -> Option<(f64, f64)> {
@@ -161,8 +145,10 @@ pub(super) fn ray_segment_hit(origin: (f64, f64), dir: (f64, f64), line: &Line) 
     if denom.abs() < 1e-12 {
         return None;
     }
+    // t = cross(a, d)/cross(D, d), u = cross(a, D)/cross(D, d) — the
+    // segment parameter shares the denominator's sign (no negation).
     let t = (ax * dy - ay * dx) / denom;
-    let u = (ax * dir.1 - ay * dir.0) / -denom;
+    let u = (ax * dir.1 - ay * dir.0) / denom;
     if t > 0.0 && (0.0..=1.0).contains(&u) {
         Some(t)
     } else {
