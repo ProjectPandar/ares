@@ -1,7 +1,15 @@
+mod reorder;
+mod search;
+
+pub(in crate::project_slice) use reorder::{
+    chain_and_reorder_extrusion_paths, reorder_extrusion_paths,
+};
+
 use super::{kd_tree::KdTree, priority_queue::MutablePriorityQueue};
 use crate::project_slice::perimeters::classic::{
     chained_loops::ExtrusionLoop, materialize::ExtrusionPath,
 };
+use search::CandidateSearch;
 
 pub(super) struct EndPoint {
     pub(super) chain_id: usize,
@@ -21,7 +29,7 @@ impl EndPoint {
     }
 }
 
-struct EquivalentChains {
+pub(super) struct EquivalentChains {
     equivalent_with: Vec<usize>,
 }
 
@@ -337,64 +345,6 @@ fn merged_chain_id(first: usize, second: usize, equivalents: &mut EquivalentChai
     }
 }
 
-struct CandidateSearch<'a> {
-    tree: &'a KdTree,
-    positions: &'a [[f64; 2]],
-}
-
-impl CandidateSearch<'_> {
-    fn update(
-        &self,
-        first: usize,
-        endpoints: &mut [EndPoint],
-        equivalents: &mut EquivalentChains,
-        queue: &mut MutablePriorityQueue,
-    ) {
-        endpoints[first].edge_out = None;
-        let next = self
-            .tree
-            .find_closest(self.positions, self.positions[first], |candidate| {
-                if (candidate ^ first) <= 1 || endpoints[candidate].chain_id != 0 {
-                    return false;
-                }
-                let chain1 = equivalents.equivalent(endpoints[first ^ 1].chain_id);
-                let chain2 = equivalents.equivalent(endpoints[candidate ^ 1].chain_id);
-                chain1 == 0 || chain1 != chain2
-            });
-        endpoints[first].edge_out = Some(next);
-        endpoints[first].distance_out =
-            squared_distance(self.positions[first], self.positions[next]);
-        queue.update(endpoints[first].heap_idx, endpoints);
-    }
-}
-
-pub(in crate::project_slice) fn reorder_extrusion_paths(
-    paths: &mut Vec<ExtrusionPath>,
-    chain: &[(usize, bool)],
-) {
-    debug_assert_eq!(paths.len(), chain.len());
-    if paths.is_empty() {
-        return;
-    }
-    let mut source: Vec<_> = std::mem::take(paths).into_iter().map(Some).collect();
-    paths.reserve(chain.len());
-    for &(index, reverse) in chain {
-        let mut path = source[index].take().expect("chain indices are unique");
-        if reverse {
-            path.reverse();
-        }
-        paths.push(path);
-    }
-}
-
-pub(in crate::project_slice) fn chain_and_reorder_extrusion_paths(
-    paths: &mut Vec<ExtrusionPath>,
-    start_near: [crate::geometry::Coord; 2],
-) {
-    let chain = chain_extrusion_paths(paths, Some(start_near));
-    reorder_extrusion_paths(paths, &chain);
-}
-
 fn coord_to_f64(point: [crate::geometry::Coord; 2]) -> [f64; 2] {
     [point[0] as f64, point[1] as f64]
 }
@@ -426,7 +376,7 @@ fn squared_coord_delta(
     dx * dx + dy * dy
 }
 
-fn squared_distance(first: [f64; 2], second: [f64; 2]) -> f64 {
+pub(super) fn squared_distance(first: [f64; 2], second: [f64; 2]) -> f64 {
     let dx = first[0] - second[0];
     let dy = first[1] - second[1];
     dx * dx + dy * dy
