@@ -187,3 +187,24 @@ explain it. Next: identify the actual spacing source (candidate:
 the grid phase (orca's instance transform, incl. any rotation, phases
 the octree; probe8 must use the fixture's real transform for exact
 geometry comparison).
+
+## probe8 refinement (#121): orca z=1.8 = 6-segment connected hexagon; spacing bracket [2.52, 1.89] but PHASE differs
+
+Extracted orca's exact sparse polyline at z=1.8 (centered, instance
+transform = identity rotation + (500,500,5)): a 6-segment open path
+with vertices (−2.447,2.263) (0,2.263) (2.447,2.263) (2.447,−0.287)
+(1.2,−2.447) (−1.2,−2.447) (−2.447,−0.287) — a mix of D-lines and
+chain_or_connect connectors (the vertical edge is a connector; the
+octree directions project to 0°/±60°).
+
+probe8 clipping to the ±2.447 surface reproduces the segment COUNT (6)
+for spacing ∈ [1.89, 2.52] but NOT the vertex positions: probe8's D0
+horizontals sit at y≈±1.3-1.7 while orca's sit at y=+2.263/−2.447 — a
+grid PHASE difference, not a spacing difference. Rotation composition
+(Rx·Ry·Rz vs Eigen order) verified equivalent; the cube-center source
+(rotated-bbox center) is the vendored code. Next: instrument probe8 to
+print the octree root/child centers and compare against orca's
+effective grid (from the vertex lattice) to find the phase origin
+(candidate: the 40/mm Point::new_scale rounding of the from/to points,
+or the upstream `Fill::_infill_direction` angle application the port
+may have missed in the filler context).
