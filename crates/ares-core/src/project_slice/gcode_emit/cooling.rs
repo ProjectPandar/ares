@@ -120,7 +120,7 @@ impl CoolingState {
                         .map_or(0.0, |value| value.0 as f32),
                     keep_outer_wall_speed: first_bool(&filament.dont_slow_down_outer_wall.0),
                     relative_e: runtime.use_relative_e_distances.0,
-                    keep_markers: slope > 0.0,
+                    keep_markers: true,
                 },
                 runtime.travel_speed.0,
             ),
@@ -174,9 +174,24 @@ impl CoolingState {
     }
 
     pub(super) fn finish_layer(&mut self, output: &mut Vec<u8>, layer_start: usize) {
-        let layer_time = feedrate::rewrite_layer(output, layer_start, &mut self.feedrate);
+        // Upstream pipeline order (GCode.cpp:3752): generator →
+        // PressureEqualizer → CoolingBuffer → fan logic. The equalizer
+        // re-emits the `;_EXTRUDE_SET_SPEED`/`;_EXTRUDE_END` markers for the
+        // cooling buffer, which runs its slowdown on the equalized text;
+        // the final marker strip happens after the cooling.
+        let mut layer = output.split_off(layer_start);
+        if let Ok(path) = std::env::var("ARES_DUMP_CBIN") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = file.write_all(b"=== LAYER ===\n");
+                let _ = file.write_all(&layer);
+            }
+        }
         if let Some(pass) = self.equalizer.as_mut() {
-            let layer = output.split_off(layer_start);
             if let Ok(path) = std::env::var("ARES_DUMP_PEINPUT") {
                 use std::io::Write;
                 if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -189,12 +204,14 @@ impl CoolingState {
                 }
             }
             pass.process_layer(&String::from_utf8_lossy(&layer));
-            let rewritten = pass
+            layer = pass
                 .flush()
-                .map(|text| strip_pressure_markers(&text))
+                .map(|text| text.into_bytes())
                 .unwrap_or_default();
-            output.extend_from_slice(rewritten.as_bytes());
         }
+        let layer_time = feedrate::rewrite_layer(&mut layer, 0, &mut self.feedrate);
+        let stripped = strip_pressure_markers(&String::from_utf8_lossy(&layer));
+        output.extend_from_slice(stripped.as_bytes());
         let layer_index = self.pending_layer_index.take().unwrap();
         let part_speed = self
             .part_fan_ramp
