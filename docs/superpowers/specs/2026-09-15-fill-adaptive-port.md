@@ -345,3 +345,16 @@ extrusion-value rendering differences on the adaptive entities (no
 geometry, no ordering, no M73). Next slice: the sparse-infill
 FillExtrusionPath mm3_per_mm / E formatting — likely a rounded
 materialized_flow for the sparse role.
+
+## Remaining tail inventory (#130): 48 lines, two families
+
+1. **E last-digit** (~24 lines): `E.36601 vs E.366`, `.76138 vs .76139` —
+   the sparse FillExtrusionPath mm3_per_mm differs in the last digit
+   (ares `materialized_flow(fill.params, spacing)` vs upstream's
+   role-flow; note orca prints a genuine 5-decimal value where ares
+   lands on a rounder number — a flow-precision input, not formatting).
+2. **One reversed polyline** (~24 lines): a hook-connected path is
+   traversed end-for-end by ares (X501.664 vs X498.336 are mirror
+   points about the section center; the following three lines mirror
+   too) — the chain_polylines start/direction tie-break picks the
+   opposite end.
