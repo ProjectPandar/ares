@@ -89,10 +89,6 @@ fn slice_project_sync(
     metadata: GenerationMetadata,
     plate: Option<u32>,
 ) -> Result<Vec<u8>, SliceError> {
-    // Adaptive octrees are per-slice artifacts (consumed by both the
-    // bridge-over-infill anchoring phase and fill_entities); drop stale
-    // trees from any previous slice in this process before any phase
-    // can read the cache.
     let staged = prepare_infill::surface_type_detection::prepare(
         perimeters::prepare_post_layer_region_perimeters(ProjectSource {
             bytes: project.as_ref(),
