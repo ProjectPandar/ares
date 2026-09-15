@@ -281,7 +281,6 @@ pub(crate) fn fill_surface(
                 scaled_spacing,
                 hook_length,
                 hook_length_max,
-                1.0 / scale.factor(),
             );
         }
     }
