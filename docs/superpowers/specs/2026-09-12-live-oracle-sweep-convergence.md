@@ -924,3 +924,27 @@ within an island (and their order) are where the swap must live.
 Next slice: dump upstream's per-collection first points for layer 3
 (vendored probe) and diff ares' collection ORDER inside islands 1-5 —
 the swapped groups sit at the island 4/5 vs 1/2 boundary.
+
+## Island-order root cause pinned: perimeter-collection order inside giant island 0 (#168)
+
+The joint ARES_DUMP_LSLICES + ARES_DUMP_IORDER probe (first points per
+collection) settled it. Layer 3 structure on both sides: lslices[0] is
+a giant merged expolygon (local first point (-30.8,-34.9)) whose
+contour receives SEVEN perimeter collections (first points spanning
+local x -18..36, y -18..29 — the whole footprint), plus five small
+islands (y≈-21 row) filling its holes. Emission on BOTH sides: island
+0's seven collections first, then islands 1-5 — identical structure.
+
+The divergence is ONLY the order of those seven collections inside
+island 0 (wipe-entry positions, layer 3):
+
+- oracle: [113.9, 133.7, 123.7, 113.7, 141.0, 146.6, 136.7]
+- ares:   [113.9, 133.7, 141.0, 146.6, 123.7, 113.7, 136.7]
+
+First two and last identical; the middle four swap as pairs
+[123.7,113.7] <-> [141.0,146.6]. The collection order within an island
+is the perimeter-generation output order (`layerm->perimeters.entities`
+upstream = PerimeterGenerator's surface processing order; ares =
+perimeters/classic materialization order). Next slice: diff the two
+generation orders (upstream PerimeterGenerator.cpp island/surface loop
+vs ares perimeters phase) for multi-collection giant islands.

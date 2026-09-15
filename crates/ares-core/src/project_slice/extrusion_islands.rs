@@ -104,6 +104,7 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
 
     for collection in std::mem::take(&mut layer.collections) {
         let island = island_index(collection.first_point(), slices, &bounds, &order);
+        let probe_point = collection.first_point();
         if let Ok(path) = std::env::var("ARES_DUMP_IORDER") {
             use std::io::Write;
             if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -113,9 +114,11 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
             {
                 let _ = writeln!(
                     file,
-                    "ASSIGN island={} n={} kinds={}",
+                    "ASSIGN island={} n={} first=({},{}) kinds={}",
                     island,
                     collection.entities.len(),
+                    probe_point.x(),
+                    probe_point.y(),
                     collection
                         .entities
                         .iter()
