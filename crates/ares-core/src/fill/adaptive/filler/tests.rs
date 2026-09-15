@@ -15,14 +15,14 @@ fn square_surface(scale: CoordinateScale, half_mm: f64) -> ExPolygon {
 fn cube_mesh(half: f64) -> (Vec<[f64; 3]>, Vec<[u32; 3]>) {
     (
         vec![
-            [-half, -half, -half],
-            [half, -half, -half],
-            [half, half, -half],
-            [-half, half, -half],
-            [-half, -half, half],
-            [half, -half, half],
-            [half, half, half],
-            [-half, half, half],
+            [-half, -half, 0.0],
+            [half, -half, 0.0],
+            [half, half, 0.0],
+            [-half, half, 0.0],
+            [-half, -half, 2.0 * half],
+            [half, -half, 2.0 * half],
+            [half, half, 2.0 * half],
+            [-half, half, 2.0 * half],
         ],
         vec![
             [0, 1, 2],
