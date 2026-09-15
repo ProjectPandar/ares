@@ -103,3 +103,18 @@ starts before `if state.spiral_vase`), and a byte-identical golden
 takes precedence over forcing the split. A future split must carry the
 needs_travel guard into the extracted function or extract from a
 balanced sub-boundary.
+
+## start_travel.rs body-extraction attempt #2 also reverted (#157)
+
+A second, differently-bounded extraction (the whole balanced
+`if needs_travel {}` block into `start_travel/body.rs` with the guard
+converted to a conditional call) was built and wired, but the block's
+internal `} else if layer_change_travel` chain continuation does not
+survive the wrapper-brace removal — the routed-travel section's final
+`}` closes the wrong level and the parser rejects the `else`. Both the
+guard-included and guard-stripped variants hit the same wall, which
+pins the real structure: the if-chain's branches and the surrounding
+`needs_travel` body interleave at TWO brace levels (the chain is not a
+contiguous region of the block; routed-travel statements live between
+branch closes). Reverted to the committed 437-line file (golden green,
+tree clean). The remaining 37 lines stay as documented debt.
