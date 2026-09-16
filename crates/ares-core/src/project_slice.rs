@@ -34,6 +34,7 @@ mod layers;
 mod looped_intersections;
 mod parameters;
 mod path_simplification;
+mod raft;
 pub(crate) use perimeters::classic::shortest_path::{
     chain_polylines, chain_polylines_multifragment,
 };
