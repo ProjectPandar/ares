@@ -1454,3 +1454,16 @@ The estimator investigation's reliable ledger: block math exact
 +3.24s. Next: unify the three arc-math derivations (fixes the id
 replay AND the long-standing maintenance hazard) — that is the
 prerequisite for any id-based structural diff.
+
+## Arc math unified — blocks and id accounting share ONE derivation (#183)
+
+`parse_arc` + `arc_discretization_steps` (motion/arc.rs) are now the
+single source of the arc geometry; both the block generator (`deltas`)
+and the id counter (`arc_internal_g1_lines`) consume them — the
+three-parallel-derivations hazard (review round 1, revisited at
+d41288c3) is closed for 2 of 3 sites; motion.rs's whole-arc first
+block still carries its own (P-word) sweep derivation but that block
+is discarded when segments exist (only the fallback path uses it).
+Behavior verified unchanged on ksr (same 304237 cache entries, same
+6180.252066). The id->line replay for structural diffs can now be
+built on the unified counts.
