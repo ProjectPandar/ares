@@ -53,7 +53,13 @@ pub(crate) fn raft_layer_fill(
             inner_offset,
         )?;
         if std::env::var("ARES_RAFT_DEBUG").is_ok() {
-            eprintln!("RAFTDBG contours={}", slice.contours.len());
+            for (ci, c) in slice.contours.iter().enumerate() {
+                eprintln!(
+                    "RAFTDBG contour {ci} inner={} pts={}",
+                    c.inner,
+                    c.polygon.points().len()
+                );
+            }
         }
         // Upstream `connect_base_support(..., poly_with_offset.polygons_outer,
         // ...)` — `polygons_outer` there is the DELTA-shrunk fill boundary
