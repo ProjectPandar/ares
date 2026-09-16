@@ -748,3 +748,19 @@ start than the AppImage). Not raft regressions.
 STATUS: all code committed/pushed; ares-core 6988/6988; ksr golden
 1/1 PASS; the raft milestone (95 commits) has the complete pipeline
 with the over-merge as the single remaining calibration item.
+
+## #264 FINAL root cause: chain fragmentation (14 chains vs 1 serpent)
+
+CONNECTDBG: base layers produce 14 chains of 65 pts each (fill lines
+PRESENT — 53 long E.63358 moves exist ✓). The issue is NOT missing
+fill lines but chain FRAGMENTATION: 14 separate chains instead of
+the oracle's 1 continuous serpent. 13 F9000 travels = gaps between
+the 14 chains. Total 833 moves = 14 × ~60 segments per chain (each
+chain repeats boundary arch walks that the serpent would visit once).
+
+The vertical X=102.518 moves in the earlier reading were the LEFT
+boundary arch steps within each chain — misread as fill lines.
+Fix: the take_next calls must link chain-to-chain, not just
+line-to-line within a pair. The cost-selection phase
+(evaluate_support_arches) is the upstream mechanism for this —
+verify it fires on the live input.

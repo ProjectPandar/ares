@@ -117,6 +117,8 @@ pub(crate) fn raft_layer_fill(
         // +(angle+π/2) (`FillSupportBase::fill_surface:3627-3633`).
         let rotate_back = spec.angle + std::f64::consts::FRAC_PI_2;
         let (cos_a, sin_a) = (rotate_back.cos(), rotate_back.sin());
+        #[allow(unused_variables)]
+        let pre_connect_count = fill_lines.len();
         let connected = connect_base_support(
             fill_lines,
             &boundary,
@@ -125,6 +127,17 @@ pub(crate) fn raft_layer_fill(
             spec.density,
             scale,
         )?;
+        #[allow(unused_variables)]
+        if std::env::var("ARES_RAFT_DEBUG").is_ok() {
+            eprintln!(
+                "CONNECTDBG pre={pre_connect_count} post={} pts={:?}",
+                connected.len(),
+                connected
+                    .iter()
+                    .map(|p| p.points().len())
+                    .collect::<Vec<_>>()
+            );
+        }
         out.extend(connected.into_iter().map(|polyline| {
             let rotated = polyline
                 .points()
