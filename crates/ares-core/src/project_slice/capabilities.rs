@@ -20,12 +20,6 @@ pub(super) fn validate(
     }) {
         return unsupported("layer_height");
     }
-    if resolved_objects
-        .iter()
-        .any(|resolved| resolved.object.raft_layers.0 != 0)
-    {
-        return unsupported("raft_layers");
-    }
     if resolved_objects.iter().any(|resolved| {
         zaa_requested(source_objects, resolved)
             && !zaa_is_provably_inactive(&source_objects[resolved.source_object_index], resolved)
