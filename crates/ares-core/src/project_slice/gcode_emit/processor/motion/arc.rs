@@ -241,11 +241,8 @@ fn marlin_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
 fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
     // `Arc::start_radius()` is Eigen's `.norm()` = the naive sqrt of the
     // squared sum — not the compensated `hypot` — and the discretization
-    // ceil sees the exact double it produces.
-    let radius = (arc.start_radius[0] * arc.start_radius[0]
-        + arc.start_radius[1] * arc.start_radius[1])
-        .sqrt();
-    let segments = arc_discretization_steps(radius, arc.sweep.abs(), 0.0125);
+    // ceil sees the exact double it produces (carried from the parse).
+    let segments = arc_discretization_steps(arc.radius, arc.sweep.abs(), 0.0125);
     if let Ok(path) = std::env::var("ARES_DUMP_ARCS") {
         use std::io::Write;
         if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -255,7 +252,8 @@ fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
         {
             let _ = writeln!(
                 file,
-                "ARC n={segments} r={radius:.9} a={:.9}",
+                "ARC n={segments} r={:.9} a={:.9}",
+                arc.radius,
                 arc.sweep.abs()
             );
         }
