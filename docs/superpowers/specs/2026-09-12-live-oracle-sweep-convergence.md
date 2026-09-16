@@ -1230,3 +1230,16 @@ partial+P arcs, and a maintenance hazard. Next slice: run the same
 minimal spiral file through ares' Estimate::from_lines in a unit
 harness (it is a pure function of lines+limits) and diff the block
 streams against the GT dump above.
+
+## Bisect attempt; the --process-gcode oracle segfaults on some variants (#175)
+
+The 13-line bisect variant (dropping M622.1 S0, M1002 x2, M983.3)
+still reproduces +0.1993s — those commands are NOT the source; the
+remaining candidates are M622 J1, M400, G1 Z3 F60, and the E-extrusion
+line. The further command-level bisect stalled: the patched
+--process-gcode oracle SEGFAULTS on some variant files (first seen on
+the tc-e variant — M622 J1 + M400 adjacent), leaving stale dumps that
+made a bash-loop GT sweep read identical totals. Next slice: gdb the
+oracle segfault (likely an uninitialized processor field in the
+standalone path — e.g. m_result.moves or the producer-detection
+state), then resume the per-command bisect.
