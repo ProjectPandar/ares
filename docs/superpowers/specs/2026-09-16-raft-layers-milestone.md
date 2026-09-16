@@ -429,3 +429,20 @@ Fix: bridge `first_layer_flow_spacing` (and flange width_mm for the
 sheath WIDTH comment) = initial_layer_line_width (0.42) — need the
 first-layer width derivation: initial_layer_line_width > 0 else
 line_width.
+
+## #237 estimator root cause FOUND (block-level proof)
+
+GT oracle processes the SAME ares gcode → 2726s (1.4× oracle 1907s
+— consistent with the line-count gap). ares own estimate: 136s.
+Block dump (ARES_DUMP_BLOCKS): the cumulative reaches **1891s
+(≈oracle 1907s ✓ the main body is CORRECT)**, then **66 blocks with
+NEGATIVE speed (−0.066)** drag it down to 136s. First bad block id
+13612 starts at a modal `G1 F2400` line with dist 0.4879/speed
+−0.066 — the modal-F cache is poisoned (−0.066 smells like an
+E-value leak into the F slot). Downstream: M73 P1149 R0 artifacts
+(percent>100 from the shrunken total).
+
+Fix next: the modal-F/word parsing in estimate.rs (or the block
+builder consuming a stale/negative feedrate) — then the estimator
+converges 136s→1891s in one shot, collapsing M73 frequency, R
+values, and the P>100 artifacts together.
