@@ -469,3 +469,56 @@ mod chain_probe {
         );
     }
 }
+
+#[cfg(test)]
+mod arch_probe {
+    #[test]
+    fn probe_every_other_arch() {
+        use super::*;
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        let lines: Vec<Polyline> = (-13..=13)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let graph = crate::fill::connect::graph::build_working_graph(
+            lines.clone(),
+            &[polygon.clone()],
+            bbox,
+            0.407,
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        // Dump the vertical-consumption decisions: for each unconsumed
+        // intersection, print prev/next candidates and vertical flags.
+        for index in 0..graph.intersections.len() {
+            let i = &graph.intersections[index];
+            let Some(ci) = i.contour_index else { continue };
+            let pt = graph.boundary[ci].points[i.point_index];
+            let flag = |other: Option<usize>| {
+                other.map(|o| {
+                    let j = &graph.intersections[o];
+                    let p2 = graph.boundary[j.contour_index.unwrap()].points[j.point_index];
+                    format!("{}(dy={})", o, p2.y() == pt.y())
+                })
+            };
+            eprintln!(
+                "ARCH idx={index} pt=({},{}) prev={:?} next={:?}",
+                pt.x(),
+                pt.y(),
+                flag(i.prev),
+                flag(i.next),
+            );
+        }
+    }
+}
