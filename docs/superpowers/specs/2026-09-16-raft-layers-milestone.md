@@ -199,3 +199,34 @@ infill line orientation); `append_full` replaces take_cw/ccw_full.
 Next: `fill/base_support/connect.rs` implementing 2+3+5+6 on top of
 the existing connect module + emit_loops_in_band, then 4c fills and
 the emission wiring.
+
+## 4b COMPLETE (`7785e12b` + `196d9565`); fills recipe locked (#211)
+
+connect_base_support fully ported (fill suite 1289/1289), split into
+connect.rs (358) + arches.rs (230).
+
+`raft/fills.rs` recipe (FillSupportBase::fill_surface
+`FillRectilinear.cpp:3610-3634` + make_fill_lines `:2920-2961` +
+_infill_direction `FillBase.cpp:275-291`):
+1. Per layer: angle per kind (fill_params.rs), spacing per layer
+   (flange: first_layer_flow.spacing; others: support flow spacing),
+   density per layer (flange: raft_first_layer_density·0.01; base:
+   support_density; interface: raft_interface_density).
+2. union(layer polygons) → expolygons; offset each by
+   `overlap(0) − 0.5·spacing` (inner inset only; ares
+   prepare_rectilinear_contours(expolygon, −angle, 0.0, −0.5·spacing)).
+3. refpt = OBJECT bbox center (`set_bounding_box(bbox_object)` —
+   SupportCommon.cpp:1454) rotated by −angle → grid anchor:
+   align bbox.min to spacing via refpt; n_vlines = ceil(w/spacing);
+   lines at bbox.min.x + i·spacing.
+4. Emit ONLY OuterLow→OuterHigh pairs as 2-point vertical polylines
+   (inner-hole intersections skipped, `:2948-2960`); x ∈ [bbox±0
+   margin]; rotate back by angle.
+5. connect_base_support(polylines, boundary=layer polygons as
+   polygons_outer (the OFFSET outer contours!), bbox, spacing,
+   density) — note: boundary_src = poly_with_offset.polygons_outer
+   (the inset outer contours), NOT the raw layer polygons.
+6. link_max_length = spacing·link_max_length_factor/density
+   (factor 3? upstream FillParams::link_max_length default).
+
+Next: implement fills.rs + emission wiring (5), then gate removal.
