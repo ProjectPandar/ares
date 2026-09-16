@@ -161,3 +161,41 @@ Remaining slices:
     skirt on raft layer 1, wipe/retract transitions.
 6.  Gate removal + oracle byte-parity loop on case-u7sdch +
     `option/raft_layers/seeded`; full sweep; docs close-out.
+
+## Slice 4b in progress — structure mapping for connect_base_support (#208)
+
+Upstream `connect_base_support` (`FillBase.cpp:2247-2480`) decomposes
+into (all citations `FillBase.cpp`):
+1. `create_boundary_infill_graph` — ares: `connect::graph::
+   build_working_graph` ✓ EXISTS.
+2. `mark_boundary_segments_overlapping_infill` — MISSING in ares
+   (only the touching pass exists); uses
+   `rounded_thick_segment_collision` — ares HAS it
+   (`connect/collision.rs:174`).
+3. Empty-contour perimeter loops (`:2281-2296`): contours with zero
+   infill endpoints and perimeter > trim_length + 0.5·line_spacing
+   emit a clipped perimeter loop.
+4. Excess arches via `emit_loops_in_band` (`:2298-2324`) — PORTED
+   (`6d8d4e88`), band = [x + half_width, x + line_spacing −
+   half_width] oriented by `graph.first(cp)`.
+5. `base_support_extend_infill_lines` (`:1834-1948`): walk the
+   contour next/prev while |Δx| ≤ 0.33·line_spacing stopping at the
+   neighbor's point_idx; extend when Δy (sign-flipped for `first`)
+   > 0.5·line_spacing and the arc fits in contour_not_taken_length;
+   prefer the longer Δy side; `take_cw_full`/`take_ccw_full` = ares
+   `connect::contour::append_full`; trims the taken side, and the
+   non-trimmed side re-derives via closed_contour_distance_ccw.
+6. Main connection loop (`:2326-2480`): merged_with union-find,
+   take_next(take_first) with trimmed/T-joint/self-loop/closing-loop
+   handling (`path_length_along_contour_ccw`), vertical-arch
+   preference (`take_vertical_prev`: prefer untrimmed, else longer).
+
+ares adaptations needed: `first(cp)` = endpoint parity (idx & 1 ==
+0, exists as path_index_for_intersection); `next_vertical`/
+`prev_vertical` need the Up/Down direction classification added to
+the graph build (upstream BoundaryInfillGraph::Direction from
+infill line orientation); `append_full` replaces take_cw/ccw_full.
+
+Next: `fill/base_support/connect.rs` implementing 2+3+5+6 on top of
+the existing connect module + emit_loops_in_band, then 4c fills and
+the emission wiring.
