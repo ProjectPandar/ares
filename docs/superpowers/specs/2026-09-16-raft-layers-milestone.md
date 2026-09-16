@@ -392,3 +392,22 @@ the fill emission's layer index source.
 Grid-phase residual: contact span 14.30 vs oracle 14.371-0.07 band
 — sub-cell; defer until speeds/line positions re-measured after the
 speed fix (F affects nothing geometric).
+
+## #232 speed CONVERGED; estimator/layer-count next
+
+Flange F2100 ✓ (initial_layer_infill_speed 35 — the F600 was a stale
+pre-sheath-fix reading). Sheath loop + fills now carry the correct
+layer-0 speed chain.
+
+Remaining oracle diffs (live):
+1. `; total layer number: 50` vs 150 — the header layer count counts
+   only object layers; the 100 raft layers missing (header source
+   reads object records — needs the raft count added).
+2. Estimator: 2m25s vs 31m47s — the M73 chain (R2 vs R31). Root
+   suspects: (a) the header/estimator layer model missing raft
+   layers (same source as #1), (b) raft fill E/time not reaching the
+   estimator blocks.
+3. M106 S255 vs S0 on the flange — first-layer fan-off rule not
+   applying at the raft flange layer.
+4. Extrusion segment count 5916 vs 9051 (~1.5×) — fill line count /
+  line-position µ-residuals (contact span 14.30 vs 14.37 band).
