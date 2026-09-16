@@ -137,7 +137,7 @@ pub(crate) fn build_raft_stream(
     };
     let fill_params = fill_inputs.derive();
 
-    let scaled = |mm: f64| (mm * MICRONS_PER_MM).round() as i64;
+    let scaled = |mm: f64| (mm / scale.factor()).round() as i64;
     let grid_resolution = scaled(support_base_pattern_spacing(options) + support_flow_spacing);
     let grid = SupportGridParams::new(grid_resolution, scaled(support_flow_spacing));
 
@@ -148,6 +148,9 @@ pub(crate) fn build_raft_stream(
             raft_expansion: scaled(options.raft_expansion_mm()?),
             first_layer_expansion: scaled(options.raft_first_layer_expansion_mm()?),
             raft_layers,
+            scale: crate::project_slice::raft::polygons::RaftPolygonScale {
+                units_per_mm: 1.0 / scale.factor(),
+            },
             grid,
         },
     )
@@ -252,7 +255,7 @@ pub(crate) fn build_project_raft(
     };
     let fill_params = fill_inputs.derive();
 
-    let scaled = |mm: f64| (mm * MICRONS_PER_MM).round() as i64;
+    let scaled = |mm: f64| (mm / scale.factor()).round() as i64;
     let grid = SupportGridParams::new(
         scaled(object.support_base_pattern_spacing.0 + support_flow_spacing),
         scaled(support_flow_spacing),
@@ -264,6 +267,9 @@ pub(crate) fn build_project_raft(
             raft_expansion: scaled(object.raft_expansion.0),
             first_layer_expansion: scaled(object.raft_first_layer_expansion.0),
             raft_layers,
+            scale: crate::project_slice::raft::polygons::RaftPolygonScale {
+                units_per_mm: 1.0 / scale.factor(),
+            },
             grid,
         },
     )

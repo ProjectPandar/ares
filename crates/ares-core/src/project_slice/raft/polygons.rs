@@ -24,8 +24,13 @@ use crate::geometry::{
 };
 
 /// Scaled millimeters (`scale_`).
-const MICRONS_PER_MM: Coord = 1000;
 const INFLATE_FACTOR_FINE_MM: f64 = 0.5;
+
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct RaftPolygonScale {
+    /// Lattice units per millimetre (`CoordinateScale::factor()`).
+    pub(crate) units_per_mm: f64,
+}
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct RaftPolygons {
@@ -41,12 +46,13 @@ pub(crate) struct RaftPolygons {
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct RaftPolygonParams {
-    /// `raft_expansion` in scaled mm.
+    /// `raft_expansion` in lattice units.
     pub(crate) raft_expansion: Coord,
-    /// `raft_first_layer_expansion` in scaled mm.
+    /// `raft_first_layer_expansion` in lattice units.
     pub(crate) first_layer_expansion: Coord,
     pub(crate) raft_layers: usize,
     pub(crate) grid: SupportGridParams,
+    pub(crate) scale: RaftPolygonScale,
 }
 
 pub(crate) fn raft_polygons(
@@ -87,11 +93,7 @@ pub(crate) fn raft_polygons(
         pattern.extract_support(&contacts_input, &[], params.grid.expansion_to_slice, true);
 
     // 4) Interface expansion (`SupportCommon.cpp:295-331`).
-    let fine = if params.raft_layers > 1 {
-        INFLATE_FACTOR_FINE_MM * MICRONS_PER_MM as f64
-    } else {
-        0.0
-    } as Coord;
+    let fine = (INFLATE_FACTOR_FINE_MM * params.scale.units_per_mm) as Coord;
     let interface = if fine > 0 {
         expand_square(&contact, fine)?
     } else {
