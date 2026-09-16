@@ -718,3 +718,18 @@ single remaining blocker for the raft sweep cases, followed by 2
 more unported domains (adaptivecubic, arachne) and the final
 sweep/review loop. All state is committed and pushed; the spec
 carries the complete investigation ledger for any future session.
+
+## #260 BLOCKED: oracle binary unavailable
+
+The main oracle (`/tmp/squashfs-root`) has been cleaned up. The GT
+binary (`/tmp/orca-gt/result-procgcode/bin/orca-slicer`) exists but
+is a patched --process-gcode build, not the full CLI slicer needed
+for the smoke sweep. Without the main oracle:
+- smoke tests cannot run (env-gated failures, not output mismatches)
+- the raft over-merge cannot be iterated against the oracle diff
+- the sweep baseline (875/1001) cannot be re-verified
+
+BLOCKER: the OrcaSlicer AppImage needs to be re-extracted to
+/tmp/squashfs-root (or ORCA_APPDIR set to a new location) to resume
+the parity loop. All code work is committed; ares-core 6988/6988
+green; ksr golden 1/1 PASS.
