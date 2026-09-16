@@ -1145,3 +1145,20 @@ question. The delta32 fix makes ares' zero-classification semantics
 identical to upstream's Noop rule (f32 position subtraction); the
 remaining +3s can only be measured on the SAME stream, which needs a
 GUI-side (or reference-gcode-fed) GT processor run — the next slice.
+
+## Same-stream GT: the +3s is 2-3 discrete delay steps (#173)
+
+The patched oracle now has a `--process-gcode <file>` mode (procgcode
+patch; the processor's FLAVOR/config self-detection from comments
+suffices): feeding the ksr REFERENCE gcode gives total 6538.005s =
+exactly the reference header's "1h 48m 58s" — the same-stream ground
+truth works. Anchored drift (176 long-travel anchors, (dist) matched):
+0.0000s through cum 469s (prepare + early layers PERFECT), then the
+total +3s decomposes as discrete steps — about +1.55s somewhere
+between cum 977-3207 and about +1.35s after cum 4412 — with the
+trajectory FLAT (+1.652s) across the 3400s mid-print. Conclusion: the
+estimator residual is NOT accumulated motion noise; it is 2-3
+discrete delay-accounting events (command_delay / toolchange-load /
+G4-M400 class) attached at different points or amounts. Next slice:
+localize the exact delay blocks at the two step regions and align the
+ares delay schedule with upstream's.
