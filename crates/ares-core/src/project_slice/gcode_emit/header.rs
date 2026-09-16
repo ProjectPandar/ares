@@ -84,6 +84,22 @@ pub(super) fn plate_layer_count(traversal: &PreparedPostClassicTraversal) -> usi
             .as_parts();
         let (plan, _, _) = post_region.as_parts();
         zs.extend(plan.layers.iter().map(|layer| layer.print_z));
+        // Raft layers precede the object layers (`PrintObject::layers()`
+        // carries the raft offset); their print z's join the plate grid.
+        if let Ok(Some(stream)) = crate::project_slice::raft::bridge::build_project_raft(
+            &traversal.resolved.views.full,
+            &traversal.resolved.objects[traversal
+                .objects
+                .iter()
+                .position(|candidate| std::ptr::eq(candidate, object))
+                .unwrap_or(0)]
+            .object,
+            zs.iter().sum(),
+            &[],
+            traversal.scale,
+        ) {
+            zs.extend(stream.plans.iter().map(|plan| plan.z.print_z));
+        }
     }
     zs.sort_by(f64::total_cmp);
     let mut count = 0;
