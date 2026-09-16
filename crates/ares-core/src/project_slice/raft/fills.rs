@@ -46,7 +46,15 @@ pub(crate) fn raft_layer_fill(
         if line_spacing <= 0 {
             continue;
         }
-        let mut slice = prepare_rectilinear_contours(&expolygon, -(spec.angle + std::f64::consts::FRAC_PI_2), 0.0, inner_offset)?;
+        let mut slice = prepare_rectilinear_contours(
+            &expolygon,
+            -(spec.angle + std::f64::consts::FRAC_PI_2),
+            0.0,
+            inner_offset,
+        )?;
+        if std::env::var("ARES_RAFT_DEBUG").is_ok() {
+            eprintln!("RAFTDBG contours={}", slice.contours.len());
+        }
         let boundary: Vec<Polygon> = slice
             .contours
             .iter()
@@ -67,6 +75,16 @@ pub(crate) fn raft_layer_fill(
         let width = source_bounds.max().x() - aligned_min_x;
         let count = usize::try_from((width + line_spacing - 1) / line_spacing).unwrap_or(0);
         populate_vertical_lines(&mut slice, count, aligned_min_x, line_spacing)?;
+        if std::env::var("ARES_RAFT_DEBUG").is_ok() {
+            eprintln!(
+                "RAFTDBG count={count} nonempty={}",
+                slice
+                    .lines
+                    .iter()
+                    .filter(|l| !l.intersections.is_empty())
+                    .count()
+            );
+        }
 
         let mut fill_lines = Vec::new();
         for line in &slice.lines {
@@ -133,4 +151,33 @@ fn checked_scale_f32(scale: CoordinateScale, value: f64) -> Result<f32, ClipperE
         .checked_scale(value)
         .ok_or(ClipperError::CoordinateOutOfRange)?;
     Ok(scaled as f32)
+}
+
+#[cfg(test)]
+mod raft_fill_probe {
+    use super::*;
+    use crate::geometry::Polygon;
+
+    #[test]
+    fn probe_flange_live() {
+        let polygon = Polygon::new(vec![
+            Point::new(101_059_000, 101_059_000),
+            Point::new(118_941_000, 101_059_000),
+            Point::new(118_941_000, 118_941_000),
+            Point::new(101_059_000, 118_941_000),
+        ]);
+        let spec = RaftFillSpec {
+            angle: std::f64::consts::FRAC_PI_2,
+            spacing: 0.407_086_4,
+            density: 0.9,
+        };
+        let out = raft_layer_fill(
+            &[polygon],
+            spec,
+            Point::new(0, 0),
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        eprintln!("FLANGE polylines={}", out.len());
+    }
 }

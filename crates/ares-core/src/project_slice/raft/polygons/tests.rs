@@ -30,6 +30,9 @@ fn params(raft_layers: usize, raft_expansion_microns: Coord) -> RaftPolygonParam
         raft_expansion: raft_expansion_microns,
         first_layer_expansion: 0,
         raft_layers,
+        scale: super::super::polygons::RaftPolygonScale {
+            units_per_mm: 1000.0,
+        },
         grid: SupportGridParams::new(2440, 420),
     }
 }
