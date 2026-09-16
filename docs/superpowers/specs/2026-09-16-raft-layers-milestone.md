@@ -76,3 +76,29 @@ verified against the live 2.4.2 oracle artifact
 - Unit tests source-cite upstream lines; no golden weakening.
 - Final: `option/raft_layers/max|seeded` PASS in the sweep; ksr
   golden untouched; workspace nextest green.
+
+## Slice progress + oracle calibration (#204)
+
+- `e93270ff`: EdgeGrid SDF + `contours_simplified`
+  (`EdgeGrid.cpp:672-886`, `:1283-1400`) — geometry primitive 1.
+- `e64bbd4a`: `SupportGridPattern` smsGrid port
+  (`SupportMaterial.cpp:637-836`) — geometry primitive 2 (grid
+  stretching + island sample filter).
+
+Oracle calibration (case-u7sdch, cube lslices ≈ 105..115mm):
+- raft 1st layer fill span 101.059..118.941 (17.882) —
+  grid-cell-snapped `expand(lslices, raft_expansion=1.5)` (13mm
+  input) grown to full grid cells; implies grid_resolution ≈ 2.4mm+
+  (support_base_pattern_spacing + flow spacing — exact value to be
+  wired from SupportParameters in the emission slice).
+- interface layers fill 102.518..117.482+ — = contact + 0.5
+  (`inflate_factor_fine`, jtSquare).
+- contact layer (z=29.9) fill 103.018..117.482 — the grid-extracted
+  contact silhouette (NOT +0.5'd).
+- object first layer outer-wall centerline 105.225..114.775 (10mm
+  cube at center 110).
+- Skirt on raft layer 1: 99.245..120.755.
+
+Next: `raft/polygons.rs` chain (first ⊇ base = union(interface) ⊇
+interface = expand(contact, 0.5, jtSquare) ⊇ contact), wired to
+SupportParameters in emission; then fills + emission + gate removal.
