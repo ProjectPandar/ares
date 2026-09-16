@@ -1294,3 +1294,28 @@ GT dump (1500 even after M204 P/R/T=10000) could not be reconciled by
 code reading alone and needs one more targeted probe (an M204 R-only
 variant). The -109ms is now the single tracked repro; the ignored pin
 carries both numbers.
+
+## The -109ms repro is a default-config artifact (#177)
+
+M204 variant matrix on the oracle (default-constructed PrintConfig):
+
+| M204 | extrude | wipe | travel |
+|---|---|---|---|
+| none | 1500 | 1500 | 1250 |
+| R9000 | 1500 | 1500 | 1250 |
+| T7000 | 1500 | 1500 | 7000 |
+| S10000 T8000 | 1500 | 1500 | 10000 |
+| P6000 | 1500 | 1500 | 1250 |
+
+Extrude AND wipe accel stay pinned at 1500 (= the
+machine_max_acceleration_extruding DEFAULT capping set_acceleration)
+while travel follows S/T uncapped — so ares (which applies the M204
+print accel to wipes, 10000) diverges from GT (capped 1500) by design
+OF THE DEFAULT CONFIG. With the ksr X2D's real machine limits the cap
+does not bind (both sides 10000+) — consistent with the real
+same-stream drift being flat mid-print, NOT -109ms x 327. The
+faithful-Z repro therefore cannot reproduce the real +3s residual;
+the microbench line of attack closes with this artifact
+documented. Next: patch the oracle's --process-gcode to apply the
+ksr's ACTUAL machine limits (or resume the same-stream block
+alignment for the +612 tail-block family).
