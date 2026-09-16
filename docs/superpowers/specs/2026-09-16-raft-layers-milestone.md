@@ -375,3 +375,20 @@ in the ares port.
 Skirt hull now uses fill points (was polygons); residual ~0.2mm
 offset under investigation (hull span arithmetic: oracle hull ≈
 19.43 vs fills 18.2 — unaccounted +1.2mm source TBD).
+
+## #231 speed convergence analysis
+
+Oracle flange F2100 = initial_layer_infill_speed 35 (KSR setting
+confirmed; slow_down_layers=0 so the ramp is inert — the plain
+layer-0 rule applies). features.rs `speed()` already returns
+initial_layer_infill_speed at layer_index 0 ✓. ares emitted F600
+(10mm/s) — the raft fill emission path is not reaching features::
+speed with layer_index 0 (or hits a different default). Next:
+trace motion.rs fill emission → features::for_fill(SupportMaterial)
+→ speed(options, state.layer_index, ..) for the raft entities; the
+boundary sets state.layer_index = raft_index ✓ so the suspect is
+the fill emission's layer index source.
+
+Grid-phase residual: contact span 14.30 vs oracle 14.371-0.07 band
+— sub-cell; defer until speeds/line positions re-measured after the
+speed fix (F affects nothing geometric).
