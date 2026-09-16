@@ -215,3 +215,59 @@ fn next_index_modulo(index: usize, count: usize) -> usize {
 fn prev_index_modulo(index: usize, count: usize) -> usize {
     if index == 0 { count - 1 } else { index - 1 }
 }
+
+#[cfg(test)]
+mod walk_probe {
+    #[test]
+    fn probe_extend_decisions() {
+        use super::*;
+        use crate::fill::connect::graph::build_working_graph;
+        use crate::geometry::{CoordinateScale, Polyline};
+
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        let lines: Vec<Polyline> = (-1..=1)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let graph = build_working_graph(
+            lines,
+            &[polygon.clone()],
+            bbox,
+            0.407,
+            CoordinateScale::Normal,
+        )
+        .unwrap();
+        let mut paths: Vec<Option<Vec<crate::geometry::Point>>> = (0..3)
+            .map(|k| Some(graph.paths.iter().flatten().nth(k).cloned().unwrap()))
+            .collect();
+        let mut intersections = graph.intersections.clone();
+        base_support_extend_infill_lines(
+            &mut paths,
+            &graph.boundary,
+            &mut intersections,
+            407_086.0,
+            0.67,
+        );
+        for (n, p) in paths.iter().enumerate() {
+            if let Some(pts) = p {
+                eprintln!(
+                    "WALK #{n} len={} last=({},{})",
+                    pts.len(),
+                    pts.last().map(|q| q.x()).unwrap_or(0),
+                    pts.last().map(|q| q.y()).unwrap_or(0)
+                );
+            }
+        }
+    }
+}
