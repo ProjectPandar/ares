@@ -1,61 +1,17 @@
 use super::motion::MotionState;
+use super::motion::arc::{arc_discretization_steps, parse_arc};
 use super::motion_util::word;
 
 /// Upstream discretizes G2/G3 into `segments` internal G1s during
 /// processing (`GCodeProcessor::process_G2_G3`), each incrementing the g1
 /// line counter; the FILE still carries the single arc line, so the export
-/// advances the counter by `1 + internal`. Segment count per flavor:
-/// - MarlinFirmware: `plan_arc` (`GCodeProcessor.cpp:1690-1700`)
-/// - otherwise: `ArcWelder::arc_discretization_steps` at 0.0125 tolerance
-///   (`ArcWelder.hpp:48-64`)
+/// advances the counter by `1 + internal`. The geometry and the tolerance
+/// branch come from the ONE shared derivation (`motion::arc::parse_arc` +
+/// `arc_discretization_steps`) so the id accounting can never disagree
+/// with the block-generating segment count.
 pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionState) -> usize {
-    // R fitting takes precedence (`GCodeProcessor.cpp:4557-4592`); the
-    // center/radius come from `ArcWelder::arc_center`.
-    let (i, j, radius) = match word(code, 'R').filter(|r| *r != 0.0) {
-        Some(r) => {
-            let start = state.position;
-            let (end_x, end_y) = (word(code, 'X'), word(code, 'Y'));
-            let end_x = end_x.map_or(start[0], |value| {
-                if state.relative {
-                    start[0] + value
-                } else {
-                    value
-                }
-            });
-            let end_y = end_y.map_or(start[1], |value| {
-                if state.relative {
-                    start[1] + value
-                } else {
-                    value
-                }
-            });
-            match super::motion::arc::center_from_radius(
-                [start[0], start[1]],
-                [end_x, end_y],
-                r,
-                command != "G2",
-            ) {
-                Some(center) => (
-                    center[0] - start[0],
-                    center[1] - start[1],
-                    ((start[0] - center[0]).powi(2) + (start[1] - center[1]).powi(2)).sqrt(),
-                ),
-                // Degenerate R arc (coincident endpoints): no segments.
-                None => return 0,
-            }
-        }
-        None => {
-            // `Vec3f rel_center` (`GCodeProcessor.cpp:4590-4596`): the I/J
-            // words parse into an f32 center; the radius/angle below then
-            // derive on the f32-rounded offsets, so borderline arcs' ceil
-            // segmentation must see the same rounded values.
-            let i = word(code, 'I').unwrap_or(0.0) as f32 as f64;
-            let j = word(code, 'J').unwrap_or(0.0) as f32 as f64;
-            (i, j, (i * i + j * j).sqrt())
-        }
-    };
-    let (end_x, end_y) = (word(code, 'X'), word(code, 'Y'));
     let start = state.position;
+    let (end_x, end_y) = (word(code, 'X'), word(code, 'Y'));
     let end_x = end_x.map_or(start[0], |value| {
         if state.relative {
             start[0] + value
@@ -70,37 +26,29 @@ pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionSta
             value
         }
     });
-    let rel_start = (-i, -j);
-    let rel_end = (end_x - (start[0] + i), end_y - (start[1] + j));
-    // `is_full_circle()` pins the sweep to a full turn before the clockwise
-    // adjustment (`GCodeProcessor.cpp:4660-4669`).
-    let full_circle = (end_x - start[0]).abs() < 1.0e-4 && (end_y - start[1]).abs() < 1.0e-4;
-    let angle = if full_circle {
-        std::f64::consts::TAU
-    } else {
-        let angle = (rel_start.0 * rel_end.1 - rel_start.1 * rel_end.0)
-            .atan2(rel_start.0 * rel_end.0 + rel_start.1 * rel_end.1);
-        let angle = if angle < 0.0 {
-            angle + std::f64::consts::TAU
-        } else {
-            angle
-        };
-        if command == "G2" {
-            angle - std::f64::consts::TAU
-        } else {
-            angle
-        }
+    // Degenerate R arc (coincident endpoints): `center_from_radius`
+    // returns None and upstream's process_G2_G3 falls through without
+    // segments.
+    let Some(parsed) = parse_arc(
+        command,
+        code,
+        start,
+        [end_x, end_y, start[2]],
+        state.relative,
+    ) else {
+        return 0;
     };
-    let angle = angle.abs().min(std::f64::consts::TAU);
+    let angle = parsed.sweep.abs().min(std::f64::consts::TAU);
     let feedrate_mm_s = word(code, 'F').map_or(state.feedrate, |value| {
         f64::from(value as f32 * super::motion_util::MMMIN_TO_MMSEC)
     }) as f32;
     let segments = if state.gcode_flavor == crate::GCodeFlavor::MarlinFirmware {
+        // `plan_arc` (`GCodeProcessor.cpp:1690-1700`)
         const MAX_ARC_DEVIATION: f32 = 0.02;
         const MIN_ARC_SEGMENTS_PER_SEC: f32 = 50.0;
         const MIN_ARC_SEGMENT_MM: f32 = 0.1;
         const MAX_ARC_SEGMENT_MM: f32 = 2.0;
-        let radius_mm = radius as f32;
+        let radius_mm = parsed.radius as f32;
         let segment_mm = ((8.0 * radius_mm * MAX_ARC_DEVIATION)
             .sqrt()
             .min(feedrate_mm_s / MIN_ARC_SEGMENTS_PER_SEC))
@@ -108,22 +56,7 @@ pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionSta
         let flat_mm = radius_mm * angle as f32;
         ((flat_mm / segment_mm + 0.8) as usize).max(1)
     } else {
-        const GCODE_ARC_TOLERANCE: f64 = 0.0125;
-        let d = radius - GCODE_ARC_TOLERANCE;
-        if d < f64::EPSILON {
-            // Radius smaller than the deviation: acute angles interpolate
-            // with one segment; obtuse angles test the center distance.
-            if angle < std::f64::consts::PI
-                || radius * (1.0 + (std::f64::consts::PI - 0.5 * angle).cos()) < GCODE_ARC_TOLERANCE
-            {
-                1
-            } else {
-                2
-            }
-        } else {
-            (angle / (2.0 * (d / radius).acos())).ceil() as usize
-        }
-        .max(1)
+        arc_discretization_steps(parsed.radius, angle, 0.0125).max(1)
     };
     segments.saturating_sub(1)
 }

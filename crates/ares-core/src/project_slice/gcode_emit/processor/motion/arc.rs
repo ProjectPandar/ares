@@ -35,43 +35,48 @@ pub(super) struct ArcMotion {
     pub(super) gcode_flavor: GCodeFlavor,
 }
 
-pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec<[f64; 4]>> {
-    let ArcMotion {
-        start,
-        end,
-        e_delta,
-        feedrate,
-        gcode_flavor,
-    } = motion;
-    // `process_G2_G3` prefers R fitting over IJ when the R word is present
-    // (`GCodeProcessor.cpp:4557-4592`); the center comes from
-    // `ArcWelder::arc_center` and the discretization radius is the
-    // recomputed start radius, not the nominal R.
-    let (i, j, radius) = match word(code, 'R').filter(|r| *r != 0.0) {
-        Some(r) => {
-            match center_from_radius([start[0], start[1]], [end[0], end[1]], r, command != "G2") {
-                Some(center) => (
-                    (center[0] - start[0]) as f32,
-                    (center[1] - start[1]) as f32,
-                    (((start[0] - center[0]).powi(2) + (start[1] - center[1]).powi(2)).sqrt())
-                        as f32,
-                ),
-                None => return None,
-            }
-        }
-        None => {
-            let i = word(code, 'I').unwrap_or(0.0) as f32;
-            let j = word(code, 'J').unwrap_or(0.0) as f32;
-            (i, j, (i * i + j * j).sqrt())
-        }
-    };
-    if radius <= f32::EPSILON {
-        return None;
-    }
+/// The shared arc geometry (`process_G2_G3`, `GCodeProcessor.cpp:4548-
+/// 4670`): the f32 center (`Vec3f rel_center`), the f64 start radius
+/// (Eigen `.norm()` = the naive sqrt of the squared sum), and the signed
+/// sweep — full circle (`|delta| < 1e-4`) pins 2*pi before the
+/// clockwise adjustment. ONE derivation for the block generator, the id
+/// counter, and the whole-arc first block.
+pub(in crate::project_slice::gcode_emit::processor) struct ParsedArc {
+    pub(in crate::project_slice::gcode_emit::processor) center: [f64; 2],
+    pub(in crate::project_slice::gcode_emit::processor) start_radius: [f64; 2],
+    pub(in crate::project_slice::gcode_emit::processor) radius: f64,
+    pub(in crate::project_slice::gcode_emit::processor) sweep: f64,
+}
 
+pub(in crate::project_slice::gcode_emit::processor) fn parse_arc(
+    command: &str,
+    code: &str,
+    start: [f64; 3],
+    end: [f64; 3],
+    relative: bool,
+) -> Option<ParsedArc> {
+    let (i, j) = match word(code, 'R').filter(|r| *r != 0.0) {
+        Some(r) => {
+            let center =
+                center_from_radius([start[0], start[1]], [end[0], end[1]], r, command != "G2")?;
+            ((center[0] - start[0]) as f32, (center[1] - start[1]) as f32)
+        }
+        None => (
+            word(code, 'I').unwrap_or(0.0) as f32,
+            word(code, 'J').unwrap_or(0.0) as f32,
+        ),
+    };
+    let _ = relative;
     let center = [start[0] + f64::from(i), start[1] + f64::from(j)];
     let start_radius = [start[0] - center[0], start[1] - center[1]];
     let end_radius = [end[0] - center[0], end[1] - center[1]];
+    // `Arc::start_radius()` is Eigen's `.norm()` = the naive sqrt of the
+    // squared sum — not the compensated `hypot` — and the discretization
+    // ceil sees the exact double it produces.
+    let radius = (start_radius[0] * start_radius[0] + start_radius[1] * start_radius[1]).sqrt();
+    if radius <= f64::EPSILON {
+        return None;
+    }
     let full_circle = (end[0] - start[0]).abs() < 1.0e-4 && (end[1] - start[1]).abs() < 1.0e-4;
     let sweep = if full_circle {
         std::f64::consts::TAU
@@ -87,6 +92,53 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
         }
         angle
     };
+    Some(ParsedArc {
+        center,
+        start_radius,
+        radius,
+        sweep,
+    })
+}
+
+/// `ArcWelder::arc_discretization_steps` (`ArcWelder.hpp:48-64`) — the
+/// non-MarlinFirmware segment count at the 0.0125mm gcode tolerance.
+pub(in crate::project_slice::gcode_emit::processor) fn arc_discretization_steps(
+    radius: f64,
+    angle: f64,
+    deviation: f64,
+) -> usize {
+    let distance = radius - deviation;
+    if distance < 1.0e-4 {
+        if angle < std::f64::consts::PI
+            || radius * (1.0 + (std::f64::consts::PI - 0.5 * angle).cos()) < deviation
+        {
+            1
+        } else {
+            2
+        }
+    } else {
+        (angle / (2.0 * (distance / radius).acos())).ceil() as usize
+    }
+}
+
+pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec<[f64; 4]>> {
+    let ArcMotion {
+        start,
+        end,
+        e_delta,
+        feedrate,
+        gcode_flavor,
+    } = motion;
+    let parsed = parse_arc(command, code, start, end, false)?;
+    let ParsedArc {
+        center,
+        start_radius,
+        radius: radius_f64,
+        sweep,
+    } = parsed;
+    let radius = radius_f64 as f32;
+    let i = (center[0] - start[0]) as f32;
+    let j = (center[1] - start[1]) as f32;
     let arc = ArcGeometry {
         start,
         end,
@@ -259,19 +311,4 @@ fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
         delta32(current[3], previous[3]),
     ]);
     deltas
-}
-
-fn arc_discretization_steps(radius: f64, angle: f64, deviation: f64) -> usize {
-    let distance = radius - deviation;
-    if distance < 1.0e-4 {
-        if angle < std::f64::consts::PI
-            || radius * (1.0 + (std::f64::consts::PI - 0.5 * angle).cos()) < deviation
-        {
-            1
-        } else {
-            2
-        }
-    } else {
-        (angle / (2.0 * (distance / radius).acos())).ceil() as usize
-    }
 }
