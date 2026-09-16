@@ -1243,3 +1243,18 @@ made a bash-loop GT sweep read identical totals. Next slice: gdb the
 oracle segfault (likely an uninitialized processor field in the
 standalone path — e.g. m_result.moves or the producer-detection
 state), then resume the per-command bisect.
+
+## Oracle crash FIXED; toolchange bisect clean (#175)
+
+The standalone-oracle segfault root-caused: no apply_config → empty
+per-extruder arrays → E-extrusion width computation reads out of
+bounds. The fixed --process-gcode (default PrintConfig applied; patch
+committed at tools/chain-probe/procgcode.patch) re-measured:
+toolchange 5.630681s (ares 5.8204 — the +0.19s residual is REAL, not
+a crash artifact), spiraltest2 3.015093s (pre-config 2.988959 — the
+committed spiral pin needs re-baselining), full ksr reference
+6538.005371s (unchanged — all same-stream findings stand). Clean
+bisect: M622 J1 and M400-without-S/P add ZERO delay in GT; the whole
+total is plain motion time; the ares +0.19 must sit in the motion
+blocks themselves (Z3 block or the X20 junction) — next slice: ares
+per-variant totals on the same 5-step ladder.

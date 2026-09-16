@@ -1,0 +1,29 @@
+--- a/src/OrcaSlicer.cpp
++++ b/src/OrcaSlicer.cpp
+@@ -7534,6 +7534,26 @@
+ int main(int argc, char **argv)
+ {
++    for (int i = 1; i < argc; ++i) {
++        if (strcmp(argv[i], "--process-gcode") == 0 && i + 1 < argc) {
++            Slic3r::GCodeProcessor processor;
++            Slic3r::PrintConfig config;
++            config.gcode_flavor.value = Slic3r::gcfMarlinLegacy;
++            config.filament_diameter.values = { 1.75f };
++            config.filament_type.values = { "PLA" };
++            config.nozzle_diameter.values = { 0.4f };
++            config.single_extruder_multi_material.value = false;
++            processor.apply_config(config);
++            processor.process_file(argv[i + 1]);
++            const auto& result = processor.get_result();
++            for (int m = 0; m < static_cast<int>(PrintEstimatedStatistics::ETimeMode::Count); ++m) {
++                auto mode = static_cast<PrintEstimatedStatistics::ETimeMode>(m);
++                if (result.print_statistics.modes[(size_t)mode].time > 0.0f)
++                    printf("TIME mode=%d total=%f\n", m, result.print_statistics.modes[(size_t)mode].time);
++            }
++            return 0;
++        }
++    }
+ #ifndef _WIN32
+     // Ignore SIGPIPE so a write to a closed socket (e.g. a dropped printer
+     // network connection) returns EPIPE to the caller instead of terminating
+     // the whole process. Without this, losing the printer link kills

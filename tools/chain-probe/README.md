@@ -59,3 +59,17 @@ i.e. a slicing or surface-classification divergence on this .drc mesh.
 
 Build: see the file header (g++ -O2 -std=c++17 -DNDEBUG with the stub
 Utils.hpp providing next_highest_power_of_2).
+
+## procgcode.patch — standalone GCodeProcessor oracle (--process-gcode)
+
+Patches the CLI main with a `--process-gcode <file>` mode: applies a
+default PrintConfig (marlin legacy, 1.75 PLA, 0.4 nozzle) before
+process_file — without it the processor's per-extruder arrays are
+empty and E-extrusion lines SEGFAULT (deterministic 5/5 on minimal
+files; the full ksr reference never crashed because its comment
+self-detection populates enough state). Build: same nix pattern as the
+other patches (see /tmp/orca-gt/procgcode.nix). Verified outputs:
+toolchange microbench 5.630681s, spiraltest2 3.015093s (the pre-config
+binary gave 2.988959 — the spiral pin in processor/tests.rs needs
+re-baselining), full ksr reference 6538.005371s (UNCHANGED by the
+config — the same-stream ground truth stands).
