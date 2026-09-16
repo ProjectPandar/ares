@@ -1177,3 +1177,16 @@ exactly this one insertion pair. The +3s steps (cum 977-3207 and
 after 4412) remain to be localized against this same-stream pair —
 next slice: extend the ARES_DUMP_BLOCKS with the gcode-line text per
 delay block to name the exact commands at the two step regions.
+
+## +3s localized: +612 extra ~5ms blocks in the final region (#173)
+
+Fine-grid cumulative sampling (same-stream pair): the body drift stays
+within ±0.15s through cum 6000; the final tail triples match exactly
+(0.751/2.405/0.210s) but ares reaches them +3.25s later. Region
+cum>6100: GT has 5502 tail blocks summing 72.976s; ares has 6114
+blocks summing 80.378s — +612 blocks × ~5ms each = the +3.2s. The
+extra blocks are small (~5ms, likely the dist 0.4 / cruise 30 class
+seen twice at the start too). Next slice: dump the gcode source lines
+for the cum>6100 region blocks and name the commands that produce the
+612 extra planner blocks (final-layer arc segments or end-gcode
+command class), then align ares' block creation there.
