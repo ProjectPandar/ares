@@ -46,7 +46,7 @@ pub(crate) fn raft_layer_fill(
         if line_spacing <= 0 {
             continue;
         }
-        let mut slice = prepare_rectilinear_contours(&expolygon, -spec.angle, 0.0, inner_offset)?;
+        let mut slice = prepare_rectilinear_contours(&expolygon, -(spec.angle + std::f64::consts::FRAC_PI_2), 0.0, inner_offset)?;
         let boundary: Vec<Polygon> = slice
             .contours
             .iter()
