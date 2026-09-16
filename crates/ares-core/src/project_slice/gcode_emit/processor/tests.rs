@@ -563,7 +563,7 @@ fn toolchange_tail_delays_match_gt_oracle() {
 /// over 34 blocks. This is the true repro context for the +3s tail
 /// residual; keep pinned until ares matches.
 #[test]
-#[ignore = "spiral-in-context: ares 39.3064 vs GT 39.3589 (-52ms: Z-limited junctions under-penalized)"]
+#[ignore = "spiral-in-context faithful-Z: ares 34.4096 vs GT 34.5190 (-109ms)"]
 fn spiral_in_toolchange_context_matches_gt() {
     let lines: Vec<String> = [
         ";FLAVOR:Marlin",
@@ -573,7 +573,7 @@ fn spiral_in_toolchange_context_matches_gt() {
         "G90",
         "M82",
         "G21",
-        "G1 X10 Y10 F600",
+        "G1 X135.299 Y100.752 Z83.6 F600",
         "G1 X135.299 Y101.232 E.01476",
         "G1 X135.299 Y100.752 E.01476",
         "G1 X135.739 Y100.752 E.01353",
@@ -613,7 +613,13 @@ fn spiral_in_toolchange_context_matches_gt() {
     };
     let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
     let expected = 39.358_932;
-    panic!("ares total {} vs GT {expected}", estimate.total);
+    // GT with the faithful Z baseline (spiral climbs 83.6 -> 84):
+    // 34.518993s. ares: 34.409561 (-109ms).
+    let expected2 = 34.518_993;
+    panic!(
+        "ares total {} vs GT {expected} (bad-Z) / {expected2} (faithful)",
+        estimate.total
+    );
 }
 
 /// Ares-side ladder for the toolchange-tail bisect (GT values captured

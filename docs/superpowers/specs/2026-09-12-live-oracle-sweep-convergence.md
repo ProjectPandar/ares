@@ -1276,3 +1276,21 @@ Z-containing moves (`MotionState::planned_times` / junction code) vs
 upstream's `planner_reverse_pass_kernel` axis-limit clamping — fixing
 the Z-clamp likely closes the ladder (+0.19) and the per-toolchange
 (-52ms) divergences together.
+
+## Faithful-Z spiral-context repro; per-block captures (#177)
+
+The context repro's Z baseline was wrong (the extracted segment starts
+at Z=83.6, not 0 — the original repro made the spiral climb 84mm
+instead of 0.4mm). With the faithful baseline (a preceding
+G1 ... Z83.6): GT 34.518993s vs ares 34.409561 = **-109ms per
+toolchange** (ares faster). Per-block captures now exist on both
+sides: the GT block dump (sctx2) and ares' estimator dump
+(ARES_DUMP_BLOCKS from the test run, 39 lines vs GT's 34 — ares keeps
+the E-only retract and F-only blocks that upstream's cache skips).
+Upstream accel selection re-read at both sites (GCodeProcessor.cpp
+:4060 and :4418): Travel→travel, extrusion-only→retract, else print —
+ares' segment.rs matches this shape; the wipe-accel attribution in the
+GT dump (1500 even after M204 P/R/T=10000) could not be reconciled by
+code reading alone and needs one more targeted probe (an M204 R-only
+variant). The -109ms is now the single tracked repro; the ignored pin
+carries both numbers.
