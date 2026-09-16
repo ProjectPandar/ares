@@ -113,9 +113,11 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
                 let segment = F64Segment::from_points(contour[i], contour[j]);
                 let distance = point_line_distance_squared(&infill_line, contour[j]);
                 if distance >= radius * radius {
+                    // Same argument order as the next arc (upstream
+                    // `:1375`): the CONTOUR segment is the line.
                     if let Some(interval) = rounded_thick_segment_collision(
-                        infill_line,
                         segment,
+                        infill_line,
                         radius,
                         scaled_epsilon,
                     ) {
@@ -252,5 +254,31 @@ mod radius_probe {
             d as f64 / 1e6,
             0.5 * (0.407_086_4 + 0.0001)
         );
+    }
+}
+
+#[cfg(test)]
+mod collision_probe {
+    #[test]
+    fn probe_top_arch_collision() {
+        use crate::fill::connect::collision::{F64Segment, rounded_thick_segment_collision};
+        // Contour segment: (-537000, 7650601) -> (0, 7650601) (top arch).
+        // Infill line 0: (-537000, 7650601) -> (-537000, -7650601).
+        let line = F64Segment::from_points(
+            crate::geometry::Point::new(-537_000, 7_650_601),
+            crate::geometry::Point::new(0, 7_650_601),
+        );
+        let infill = F64Segment::from_points(
+            crate::geometry::Point::new(-537_000, 7_650_601),
+            crate::geometry::Point::new(-537_000, -7_650_601),
+        );
+        let radius = 0.5 * (407_086.4 + 100.0);
+        match rounded_thick_segment_collision(line, infill, radius, 100.0) {
+            Some(interval) => eprintln!(
+                "COLLIDE Some(start={}, end={})",
+                interval.start, interval.end
+            ),
+            None => eprintln!("COLLIDE None"),
+        }
     }
 }
