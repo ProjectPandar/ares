@@ -707,3 +707,14 @@ square for a square input (Miter join doesn't add vertices on
 convex corners); if ares' offset adds vertices on the straight
 edges (midpoints from the rasterization), that's the delta. Verify
 the inner contour vertex count on the live boundary vs 4+N.
+
+## #258 context budget note
+
+The conversation has reached ~258 continuations with extensive
+compaction. The raft milestone is 94 commits deep with the full
+pipeline implemented and all upstream semantic deltas fixed. The
+over-merge calibration (inner-offset boundary vertex chain) is the
+single remaining blocker for the raft sweep cases, followed by 2
+more unported domains (adaptivecubic, arachne) and the final
+sweep/review loop. All state is committed and pushed; the spec
+carries the complete investigation ledger for any future session.
