@@ -477,3 +477,37 @@ fn feedrate_converts_through_f32_reciprocal() {
     let _ = state.motions("G1 F21000");
     assert_eq!(state.feedrate, 350.000_030_517_578_1);
 }
+
+/// Spiral-lift arc microbench against the GT `--process-gcode` oracle
+/// (2026-09-16): upstream creates all 22 segment blocks for a
+/// `G3 Z.. I.. J.. P1` full-circle arc with ~7ms times under
+/// M201/M204=10000, M205 XY=10. This test pins the same stream through
+/// `Estimate::from_lines` so the block-count semantics stay observable.
+#[test]
+fn spiral_lift_arc_creates_all_segment_blocks() {
+    let lines: Vec<String> = [
+        ";FLAVOR:Marlin",
+        "M201 X10000 Y10000",
+        "M204 P10000 R10000 T10000",
+        "M205 X10 Y10",
+        "G90",
+        "M82",
+        "G21",
+        "G1 X10 Y10 F600",
+        "G3 Z0.6 I1.019 J0.665 P1 F60000",
+        "G1 X20 Y20 F600",
+    ]
+    .into_iter()
+    .map(str::to_owned)
+    .collect();
+    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+    // GT total for the same stream: 2.988959s (line 1 = 1.414634, arc
+    // blocks ~0.0106+0.0066..., line 24 = 1.414213).
+    let expected = 2.988_959;
+    let diff = (estimate.total - expected).abs();
+    assert!(
+        diff < 0.02,
+        "spiral-arc total {total} vs GT {expected} (diff {diff})",
+        total = estimate.total
+    );
+}
