@@ -622,6 +622,60 @@ fn spiral_in_toolchange_context_matches_gt() {
     );
 }
 
+/// Outer-wall-after-F60000-travel microbench — ares matches the GT v2
+/// oracle EXACTLY (20.524401s): the four F1200 extrudes at 0.0599s
+/// each (cruise 20) after the M204 S5000 + F60000 travel + F1200 modal
+/// reset. The full-stream id-290984 ramp is therefore NOT reproduced
+/// by this context — the residual is scale-emergent, not in this
+/// modal-transition handling.
+#[test]
+fn wall_ramp_after_travel_matches_gt() {
+    let lines: Vec<String> = [
+        ";FLAVOR:Marlin",
+        "M201 X10000 Y10000",
+        "M204 P10000 R10000 T10000",
+        "M205 X10 Y10",
+        "G90",
+        "M82",
+        "G21",
+        "G1 X165.653 Y115.838 F600",
+        "G1 X165.653 Y115.838 E.00891",
+        "M204 S5000",
+        "G1 X166.128 Y115.403 F60000",
+        "G1 F1200",
+        "G1 X166.128 Y116.581 E.03621",
+        "G1 X164.95 Y116.581 E.03621",
+        "G1 X164.95 Y115.403 E.03621",
+        "G1 X166.088 Y115.403 E.03498",
+        "M204 S10000",
+        "G1 E-.25 F1800",
+        "G1 F12000",
+        "G1 X166.122 Y116.402 E-.15",
+        "G1 X166.128 Y116.581 F600",
+    ]
+    .into_iter()
+    .map(str::to_owned)
+    .collect();
+    let limits = ProcessorLimits {
+        print_acceleration: 10000.0,
+        retract_acceleration: 10000.0,
+        travel_acceleration: 10000.0,
+        gcode_flavor: crate::GCodeFlavor::MarlinLegacy,
+        bbl_printer: false,
+        junction_deviation: 0.0,
+        max_feedrate: [500.0, 500.0, 12.0, 120.0],
+        max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
+        jerk: [10.0, 10.0, 0.2, 2.5],
+    };
+    let estimate = Estimate::from_lines(&lines, 0.0, limits);
+    let expected = 20.524_401;
+    assert!(
+        (estimate.total - expected).abs() < 0.001,
+        "wall-ramp total {total} vs GT {expected}",
+        total = estimate.total
+    );
+}
+
 /// Ares-side ladder for the toolchange-tail bisect (GT values captured
 /// 2026-09-16 with the FIXED --process-gcode oracle):
 /// no_e 2.819025, with_e 2.826729, +M622 2.826729, +M400 2.826729,

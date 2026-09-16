@@ -1483,3 +1483,18 @@ divergence class; the F60000->F1200 modal transition neighborhood is
 the fix target. (Caveat recorded: whether GT's id 290984 is the same
 LINE is supported by the cumulative agreement to that point, not by
 an independent GT-side replay.)
+
+## Fourth microbench GREEN: the wall-ramp context matches exactly (#185)
+
+The id-290984 ramp-head context (M204 S5000, F60000 travel, F1200
+modal reset, four outer-wall extrudes, retract, wipe) in isolation:
+ares 20.524401006638072 vs GT 20.524401 — EXACT to the microsecond.
+The full-stream ramp is therefore NOT this modal-transition handling;
+the +3s residual is SCALE-EMERGENT (manifests only over thousands of
+planner flushes/windows, not in any extractable context). Microbench
+family status: spiral-isolated GREEN, spiral-in-toolchange-context
+GREEN, wall-ramp GREEN, ladder no_e rung exact. The block math is
+repeatedly proven exact at every reproducible scale; the residual
+lives in long-horizon planner state (rolling-window boundary
+interactions across ~50k flush cycles) — the remaining known
+estimator gap, documented as such.
