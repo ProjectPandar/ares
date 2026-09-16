@@ -1352,3 +1352,18 @@ false lead. The faithful repro's -12ms/toolchange lives entirely in
 the final prime/travel junction blocks (GT id33's Z-drop block at
 cruise 0.2 + the post-M204 extrude junctions); that is the remaining
 estimator slice.
+
+## PERFECT MATCH: the toolchange-context repro closes green (#179)
+
+Root cause of the -12ms: a HARNESS BUG — the extracted context's last
+line lacked a trailing newline, so the GT file fused
+`...E.01476G1 X20 Y20 F600` into one malformed line (GT silently
+dropped the third extrude and mis-measured the final travel from the
+wrong start). With the correctly-newlined file, the v2 oracle gives
+**34.409561s — ares matches to the microsecond**. The estimator is now
+proven exact on: the isolated spiral arc, and the real toolchange
+context (wipe retract, spiral lift, travel, Z-drop, E.4 prime, M204
+flip, extrudes, final travel). The spiral-in-context test is GREEN and
+committed as a permanent pin. The remaining real ksr +3s residual is
+NOT in per-block motion timing — it lives in the additional-time/
+delay accounting or the block-count family outside this context.

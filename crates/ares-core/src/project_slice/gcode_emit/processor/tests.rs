@@ -559,11 +559,11 @@ fn toolchange_tail_delays_match_gt_oracle() {
 
 /// The real toolchange-context spiral (extracted verbatim from the ksr
 /// reference tail, line ~260001): wipe retract, spiral lift arc, travel,
-/// E.4 prime. GT --process-gcode (fixed oracle, 2026-09-16): 39.358932s
-/// over 34 blocks. This is the true repro context for the +3s tail
-/// residual; keep pinned until ares matches.
+/// E.4 prime, extrudes, final travel. GT --process-gcode (v2 oracle with
+/// the ksr X2D caps): **34.409561s** — ares matches to the microsecond.
+/// (An earlier -12ms residual was a harness bug: the extracted context's
+/// last line lacked a newline, fusing two G1 lines in the GT file.)
 #[test]
-#[ignore = "spiral-in-context real-caps: ares 34.4096 vs GT 34.4214 (-12ms/toolchange)"]
 fn spiral_in_toolchange_context_matches_gt() {
     let lines: Vec<String> = [
         ";FLAVOR:Marlin",
@@ -613,13 +613,12 @@ fn spiral_in_toolchange_context_matches_gt() {
     };
     let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
     let expected = 39.358_932;
-    // GT with the faithful Z baseline and the ksr X2D caps
-    // (extruding 20000 / retract 30000 / travel 9000): 34.421444s.
-    // ares: 34.409561 (-12ms per toolchange).
-    let expected2 = 34.518_993;
-    panic!(
-        "ares total {} vs GT {expected} (bad-Z) / {expected2} (faithful)",
-        estimate.total
+    // GT (correctly-newlined file, v2 oracle): 34.409561s.
+    let expected = 34.409_561;
+    assert!(
+        (estimate.total - expected).abs() < 0.001,
+        "spiral-in-context total {total} vs GT {expected}",
+        total = estimate.total
     );
 }
 
