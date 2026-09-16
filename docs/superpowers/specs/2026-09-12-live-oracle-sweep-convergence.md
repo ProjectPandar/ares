@@ -1389,3 +1389,20 @@ reference stream — both caches, same scope, id-aligned. Findings:
   replayed id->line mapping needs the exact arc-internal counts) and
   align ares' `scheduled_times` delay-attachment rule with upstream's
   first-matching-move-type block in `calculate_time` (`:464-472`).
+
+## Delay-schedule semantics audit: top-level rules MATCH (#180)
+
+Side-by-side of ares' `scheduled_times` against upstream
+`calculate_time` (`:419-480`): planner thresholds MATCH (refresh at
+>256 = queue_size 4x, keep 64 = queue_size — `GCodeProcessor.hpp:631-
+634`); the sync flush processes all blocks (keep=0) on BOTH sides;
+the pending-delay merge rule matches (adjacent same-target entries
+sum, `merge_adjacent_additional_time_blocks` :399-417); the Noop/Any
+target attaches to the first processed block and unmatched entries
+carry to the next flush on both. The top-level attachment RULES are
+aligned — the observed attachment-id divergence (paired +/-0.53-0.86s
+cache jumps) must come from block-level state differences (which
+blocks are queued when the M400 fires — block-push ordering around
+toolchange/G28/arc-internal ids), not from the schedule rules. Next
+slice: trace one 81342-window M400's block queue position on both
+sides (block-count at flush time).
