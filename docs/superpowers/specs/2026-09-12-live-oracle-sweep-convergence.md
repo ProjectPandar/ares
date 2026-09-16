@@ -1438,3 +1438,19 @@ signature opcodes = blocks present on one side only (the long-known
 slice: sum the time carried by the unmatched blocks on each side from
 the alignment opcodes (insert-only vs delete-only time), which should
 account for the +3s directly.
+
+## Signature-join structural decomposition: precision limit reached (#182)
+
+The unmatched-block time accounting from the (dist, cruise) signature
+join is UNRELIABLE: it sums to +159.9s while the true total
+difference is +3.24s — the 2-tuple signature is far from unique over
+304k blocks (difflib aligns wrong same-signature blocks, spilling
+real times into wrong buckets). Conclusion stands from the reliable
+part: ALIGNED-pair times are near-exact (+0.162s / 101,943 pairs);
+the structural accounting needs a stronger signature (dist, cruise,
+accel, kind) or the exact id->line replay via unified arc internals.
+The estimator investigation's reliable ledger: block math exact
+(microbench + aligned pairs), extra blocks ~9.9k (block-count), totals
++3.24s. Next: unify the three arc-math derivations (fixes the id
+replay AND the long-standing maintenance hazard) — that is the
+prerequisite for any id-based structural diff.
