@@ -153,8 +153,14 @@ impl Estimate {
                 running += time;
                 writeln!(
                     out,
-                    "{id} {running:.6} {:.6} {:.3}",
-                    block.distance, block.speed
+                    "{id} {running:.6} {:.6} {:.3} {}",
+                    block.distance,
+                    block.speed,
+                    match block.kind {
+                        MotionKind::Regular => "reg",
+                        MotionKind::Unretract => "unretract",
+                        MotionKind::ToolChange => "tool",
+                    }
                 )
                 .unwrap();
             }

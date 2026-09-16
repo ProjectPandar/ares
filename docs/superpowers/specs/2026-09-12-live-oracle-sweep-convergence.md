@@ -1190,3 +1190,14 @@ seen twice at the start too). Next slice: dump the gcode source lines
 for the cum>6100 region blocks and name the commands that produce the
 612 extra planner blocks (final-layer arc segments or end-gcode
 command class), then align ares' block creation there.
+
+## Tail block kinds: the +612 are reg-class arc-chord blocks (#174)
+
+ARES_DUMP_BLOCKS now annotates the block kind. The cum>6100 tail:
+5934 reg + 180 unretract; the reg blocks cluster at dist≈0.3457-0.3469
+(ARC-CHORD lengths — final-layer arc segments). The +612 extra tail
+blocks with real ~5ms times are arc-segment blocks that upstream does
+not create there, while the ~9k extra body blocks contribute ~net-zero
+time (sub-ms). Next slice: identify why the FINAL-region arc segments
+create blocks in ares but not upstream (wipe/prime-tower arcs at the
+end may take a different path in the Noop classification).
