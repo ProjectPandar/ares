@@ -509,3 +509,29 @@ per arch step > threshold only across one arch) → line ends WALK the
 entire edge, chaining the serpent via point_idx updates. THAT is the
 likely serpent engine. Next: verify extend on the fixture (print
 extend_next/extend_prev decisions).
+
+## #249 oracle structure read: SINGLE continuous serpent CONFIRMED
+
+The oracle z=0.5 Support section is ONE continuous polyline: entry
+corner clip (117.482,102.712)→(117.288,102.518), bottom edge sweep,
+corner, then pure horizontal zigzag X117.482↔102.518 with Y stepping
+0.537, arch moves at each turn (E.02072 = arch, E.57729 = long line),
+closing with the reverse corner clip at the top. **ZERO F9000
+travels in the whole section** (only one M73). So the serpent is a
+single polyline built by take()/take_limited during the consumption
+phases — the take() helper (FillBase.cpp:531-576) chains pl1+arc+pl2
+and the arcs at BOTH ends of each line pair up: the vertical
+consumption loop's BOTTOM arch merges pair (n, n+1); when the loop
+reaches the TOP endpoint of line n, the arc to line n+1's top is
+UNTRIMMED (not_taken=16.6mm full edge) → take() path fires and the
+chain grows. The ares break is that the loop's gate for the top
+endpoints evaluates prev_trimmed (true) BEFORE the not_taken check —
+but upstream's gate is `!cp.prev_trimmed || not_taken > min_arch`,
+not_taken at the TOP endpoints = full edge 16.6mm >> 0.79 → passes!
+=> ares' top endpoints report not_taken=0: the mark/extend phases
+over-trimmed them. NEXT: why ares idx=1 prev_len=0 while upstream's
+top-arch not_taken is the full edge — check mark's inside-loop
+len_out test for the square (the corner vertices lie INSIDE the
+tube, so the loop keeps 'inside' until the neighbor endpoint, and
+the not_taken stays the full edge; ares' walk stops early or the
+trim threshold differs).
