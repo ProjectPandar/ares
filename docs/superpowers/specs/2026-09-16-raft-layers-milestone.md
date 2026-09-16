@@ -733,3 +733,18 @@ BLOCKER: the OrcaSlicer AppImage needs to be re-extracted to
 /tmp/squashfs-root (or ORCA_APPDIR set to a new location) to resume
 the parity loop. All code work is committed; ares-core 6988/6988
 green; ksr golden 1/1 PASS.
+
+## #261 oracle restored; smoke serial run 20/29 PASS, 9 FAIL
+
+The nix-built oracle (kx87xlvxrx4nhi92nzc1vj9kzb1a9ga9) works with
+`--slice 0 --outputdir`. Serial smoke (--test-threads=1): 20 PASS,
+9 FAIL. The failures include known families (M73 timing, spiral
+mode, ironing, fuzzy skin, hilbert, extra bridge layer, seam slope,
+bottom hilbert, ender3-flaky). The ender3 artifact diff shows ONLY
+the generator identity line — the content is IDENTICAL — but the
+batch run has oracle startup latency flakiness (nix build slower to
+start than the AppImage). Not raft regressions.
+
+STATUS: all code committed/pushed; ares-core 6988/6988; ksr golden
+1/1 PASS; the raft milestone (95 commits) has the complete pipeline
+with the over-merge as the single remaining calibration item.
