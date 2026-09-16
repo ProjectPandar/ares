@@ -535,3 +535,31 @@ len_out test for the square (the corner vertices lie INSIDE the
 tube, so the loop keeps 'inside' until the neighbor endpoint, and
 the not_taken stays the full edge; ares' walk stops early or the
 trim threshold differs).
+
+## #249b root cause FOUND: prev-index swap in the take_next(prev, false) call
+
+ORDR idx=1: prev_trim=true prev_len=0, but the gate is
+`!prev_trimmed || not_taken_prev > min_arch` — prev_len=0 fails BOTH
+→ skip. Upstream idx=1: cp.prev_on_contour=idx3, the top arch — BUT
+upstream evaluates cp=idx1 whose prev_trimmed should ALSO be true...
+
+Wait: idx=1 prev=Some("3") per the ARCH probe. Upstream calls
+`take_next(*cp.prev_on_contour /* = idx3 */, false)` — the GATE is on
+**cp** (idx1: prev_trim/len) but take_next receives **idx3** as its
+`cp` → inside, cp1 = next_of(idx3) = idx1, cp2 = idx3. ares passes
+`prev` (=idx3) ✓ same. So the gate values must match upstream —
+unless upstream idx1's prev_trimmed is FALSE. ares' idx1 prev_trim
+came from mark: the top arch (0.537mm) lies fully inside the tube of
+line 0 (endpoints on the line's tube) → inside stays true → trim(0).
+Upstream mark: same walk, same trim. BUT upstream's touching pass
+(run BEFORE overlapping in build_working_graph) may have already set
+not_taken differently, and crucially upstream's **arch order on the
+contour** differs: the top edge runs X+ direction, endpoints sorted
+ccw; ares' split_boundary_working_copy may order next/prev along the
+OPPOSITE orientation, so what ares calls the 0.537 "prev" arch of
+idx1 is upstream's 16.6mm "next" arch. Evidence: ares idx=1
+next_len=16.6m (the FULL edge) — upstream idx1's NEXT should be the
+0.537 arch and PREV the 16.6m. The prev/next orientation is
+INVERTED in ares' graph for this contour. Fix: verify the split
+orientation (ccw vs cw point insertion) in graph.rs vs upstream's
+split_boundary_working_copy; likely flip.
