@@ -1591,3 +1591,19 @@ blocks vs attached additional_time on a matching block), and the
 packaging itself carries a small time bias because separate blocks
 re-plan junctions while attached delays ride an existing block's
 trapezoid.
+
+## Tool-block attachment experiment: FALSIFIED by the replay evidence (#190)
+
+Tested the #189 decomposition theory — remove the initial-T
+placeholder block so the machine-load delay attaches like upstream's
+additional_time. Result: 5 seam/envelope replay tests broke
+(first M73 mismatch at byte 8438 on two-walls) even with
+machine_load_filament_time=0 — the zero-distance ToolChange block
+participates in the junction chain / prepare accounting in a way the
+real-Orca references depend on (5 fixtures replay byte-exact WITH the
+block). The replay tests carry REAL Orca-output byte parity —
+stronger evidence than the ksr-prefix decomposition. Reverted; the
+#189 conclusion about block-layout differences stands as an
+observation, but the tool-block removal is NOT the fix. The +3s
+estimator residual remains the documented known family with its
+complete investigation ledger.
