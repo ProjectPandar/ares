@@ -664,14 +664,8 @@ mod orient_probe {
             })
             .collect();
         let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
-        let graph = build_working_graph(
-            lines,
-            &[polygon],
-            bbox,
-            0.407,
-            CoordinateScale::Normal,
-        )
-        .unwrap();
+        let graph =
+            build_working_graph(lines, &[polygon], bbox, 0.407, CoordinateScale::Normal).unwrap();
         let pts = &graph.boundary[0].points;
         eprintln!(
             "ORIENT contour first5={:?}",

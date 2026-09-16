@@ -234,14 +234,8 @@ mod touch_probe {
             })
             .collect();
         let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
-        let graph = build_working_graph(
-            lines,
-            &[polygon],
-            bbox,
-            0.407,
-            CoordinateScale::Normal,
-        )
-        .unwrap();
+        let graph =
+            build_working_graph(lines, &[polygon], bbox, 0.407, CoordinateScale::Normal).unwrap();
         for idx in 0..6 {
             let i = &graph.intersections[idx];
             if i.contour_index.is_some() {
