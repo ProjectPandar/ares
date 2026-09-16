@@ -359,3 +359,19 @@ Diff inventory vs case-u7sdch oracle:
 
 Next: 5c raft skirts (oracle loops at 98.494 = raft polys + skirt
 distance), then speeds/M73/wipe convergence.
+
+## #228 flange structure finding (oracle)
+
+Oracle z=0.2 TYPE:Support opens with ONE FULL BOUNDARY LOOP of the
+raft first-layer polygon (101.059..118.941, 45° corner cuts at
+1.049), then the inner zig-zag. ares emits zig-zag only. Candidate
+sources: connect_base_support's closing-loop / single-endpoint case
+(take_next trimmed branch with cp1==cp2 → full contour loop), or the
+flange taking the boundary arch between the outermost verticals.
+Next session: trace which upstream branch emits the full-loop-first
+structure (SupportCommon flange call chain + take_next), then mirror
+in the ares port.
+
+Skirt hull now uses fill points (was polygons); residual ~0.2mm
+offset under investigation (hull span arithmetic: oracle hull ≈
+19.43 vs fills 18.2 — unaccounted +1.2mm source TBD).
