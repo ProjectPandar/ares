@@ -1337,3 +1337,18 @@ final prime/travel junction blocks. The estimator's block-time math is
 therefore near-exact on the real config; the remaining REAL +3s ksr
 residual lives in the block-count family (extra blocks the upstream
 cache never records), not in per-block timing.
+
+## The E-only retract block is cache-skipped on BOTH sides (#178)
+
+Minimal probe (`G1 E-.25 F1800` between two travels): upstream's dump
+pushes only the surrounding ids — the retract block gets NO
+g1_times_cache push, but its time (~12ms) IS in the machine cumulative.
+ares' estimate does the same: `cache_eligible = !block.e_only &&
+!seam_vertex` marks E-only blocks cache-ineligible while the planner
+still counts their time. The "extra retract block" in the ARES_DUMP_
+BLOCKS-vs-GT comparison was therefore a dump-SCOPE artifact (all
+blocks vs cache pushes), not a divergence — same class as the arc
+false lead. The faithful repro's -12ms/toolchange lives entirely in
+the final prime/travel junction blocks (GT id33's Z-drop block at
+cruise 0.2 + the post-M204 extrude junctions); that is the remaining
+estimator slice.
