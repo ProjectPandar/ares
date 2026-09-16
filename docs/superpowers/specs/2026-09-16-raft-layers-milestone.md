@@ -642,3 +642,23 @@ starts the walk) at the FAR end (idx3's point, on line 1) = 0.537
 > 2·radius=0.41 → NOT inside → no trim. ares' overlapping pass
 trims it → the delta IS in the overlapping pass walk for the TOP
 arches. NEXT: probe the overlapping pass alone on the fixture.
+
+## #255 over-merge state (5x lines, boundary-only chains)
+
+After the PREV-arc fix (correct upstream parity), the base layer emits
+833 lines/layer vs oracle 95: every move is E.02335 = one 0.537mm
+arch segment (vertical X-stepping at fixed Y = boundary walk only).
+The fill LINES (E.57729, 15.3mm horizontal) are MISSING from the
+chains — take() appends boundary arcs but the infill polylines get
+lost in the merge (same-chain take() returns empty for the second
+path). Root: the vertical loop now takes LONG wrap-around arcs
+(29.5mm) via the untrimmed prev gate — take_next(prev, false) fires
+the same-chain closure (both endpoints resolve to one chain after
+early merges) and appends only boundary points. Fix next: the
+take() full-arc must append polyline2's POINTS after the arc —
+the no-trim branch take_full_arc(merged, &polyline2, ...) does this,
+but only when polyline1/polyline2 come from DIFFERENT chains; the
+same-chain case must also carry the fill segments. Verify with the
+27-line ORDER27 probe (chains 61 pts = includes fill segments ✓
+fixture works; the live pipeline difference: multiple ExPolygons or
+the angle difference produces different chain roots).
