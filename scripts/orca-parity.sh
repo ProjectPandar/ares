@@ -7,7 +7,7 @@
 # ARES_ORCA_BIN.
 set -euo pipefail
 
-APPDIR="${ORCA_APPDIR:-/tmp/squashfs-root}"
+APPDIR="${ORCA_APPDIR:-/nix/store/kx87xlvxrx4nhi92nzc1vj9kzb1a9ga9-orca-slicer-2.4.2}"
 
 if [ ! -x "$APPDIR/bin/orca-slicer" ]; then
     echo "orca-slicer not found under $APPDIR (set ORCA_APPDIR)" >&2
