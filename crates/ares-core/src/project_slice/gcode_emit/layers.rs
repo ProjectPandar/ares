@@ -100,12 +100,17 @@ pub(super) fn append(
     let Schedule {
         per_object_z,
         merged,
+        mut raft,
         print_position,
         labels,
         object_layer_counts,
         last_entry,
-        ..
     } = schedule;
+    let mut raft_layers = raft
+        .as_mut()
+        .map(|raft| std::mem::take(&mut raft.layers))
+        .unwrap_or_default();
+    let raft_plans = raft.as_ref().map(|raft| &raft.plans);
 
     let mut entry_geometry = |object_index: usize,
                               layer_index: usize,
@@ -214,13 +219,37 @@ pub(super) fn append(
         state.part_fan_speed = cooling.provisional_part_speed();
         // The change-layer block uses the merged chunk's leading entry
         // (`change_layer` runs once per layer chunk, `GCode.cpp:5685`).
-        let previous_layer_z = if first_layer > 0 {
-            per_object_z[first_object]
-                .get(first_layer - 1)
-                .copied()
-                .unwrap_or(0.0)
-        } else {
-            0.0
+        // Raft chunks use the raft grid for the previous z and the raft
+        // layer index for the CHANGE_LAYER numbering (the raft flange is
+        // print layer 0).
+        let leading_raft = raft
+            .as_ref()
+            .and_then(|raft| raft_schedule::classify(first_layer).ok().flatten())
+            .map(|raft_index| (raft_index, first_object));
+        let (previous_layer_z, boundary_layer_index) = match leading_raft {
+            Some((raft_index, _)) => {
+                let previous = if raft_index == 0 {
+                    0.0
+                } else {
+                    raft_plans
+                        .and_then(|plans| plans.get(first_object))
+                        .and_then(|plans| plans.get(raft_index - 1))
+                        .map(|plan| plan.z.print_z)
+                        .unwrap_or(0.0)
+                };
+                (previous, raft_index)
+            }
+            None => {
+                let previous = if first_layer > 0 {
+                    per_object_z[first_object]
+                        .get(first_layer - 1)
+                        .copied()
+                        .unwrap_or(0.0)
+                } else {
+                    0.0
+                };
+                (previous, first_layer)
+            }
         };
         let layer_z = group_z;
         // The HEIGHT header keeps the f32-difference quirk (upstream
@@ -237,7 +266,7 @@ pub(super) fn append(
                 metadata,
                 first_layer_bounds,
             },
-            first_layer,
+            boundary_layer_index,
             previous_layer_z,
             layer_z,
             layer_height,
@@ -246,11 +275,14 @@ pub(super) fn append(
         )?;
         let timelapse_context = boundary.timelapse_context;
         // The skirt prints once per layer before any object content
-        // (`GCode.cpp:4388+`), on the layers it covers.
-        if let (Some(&(_, skirt_layer)), Some(plan)) = (
-            entries.iter().find(|&&(object_index, _)| object_index == 0),
-            &skirt,
-        ) {
+        // (`GCode.cpp:4388+`), on the layers it covers. Raft chunks skip
+        // the object skirt path (raft skirts are their own slice).
+        if leading_raft.is_none()
+            && let (Some(&(_, skirt_layer)), Some(plan)) = (
+                entries.iter().find(|&&(object_index, _)| object_index == 0),
+                &skirt,
+            )
+        {
             let geometry = entry_geometry(0, skirt_layer, &chunk_slices, chunk_perimeter_spacing);
             let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
                 .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
@@ -267,6 +299,7 @@ pub(super) fn append(
         }
         for (entry_position, &(object_index, layer_index)) in entries.iter().enumerate() {
             let is_group_end = entry_position + 1 == entries.len();
+            let raft_index = raft_schedule::classify(layer_index).ok().flatten();
             let (source_object_index, _) = traversal.objects[object_index]
                 .predecessor
                 .predecessor
@@ -279,6 +312,52 @@ pub(super) fn append(
             {
                 state.origin = (center_x, center_y);
                 state.offset = (center_x - extruder_offset.0, center_y - extruder_offset.1);
+            }
+            // Raft chunks emit the materialized raft layer; the motion
+            // machinery (travel/Z/TYPE/wipe/retract) is identical to the
+            // object path.
+            if let Some(raft_index) = raft_index {
+                let Some(layer) = raft_layers
+                    .get_mut(object_index)
+                    .and_then(|layers| layers.get_mut(raft_index))
+                else {
+                    continue;
+                };
+                let raft_polygons = raft
+                    .as_ref()
+                    .and_then(|raft| raft.plans.get(object_index))
+                    .and_then(|plans| plans.get(raft_index))
+                    .map(|plan| {
+                        plan.polygons
+                            .iter()
+                            .map(|polygon| {
+                                crate::geometry::ExPolygon::new(polygon.clone(), Vec::new())
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                let geometry = EntryGeometry {
+                    top_surfaces: Vec::new(),
+                    lower_boundary_lines: Vec::new(),
+                    nearest_penalties: None,
+                    layer_slices: raft_polygons.clone().into(),
+                    internal_surfaces: &[],
+                    chunk_slices: raft_polygons,
+                    chunk_perimeter_spacing: 0.0,
+                };
+                let motion_geometry = geometry.view_raft(traversal.scale);
+                motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
+                    timelapse_core::append_traditional(
+                        traditional_interlude,
+                        output,
+                        state,
+                        timelapse_context,
+                    )
+                })?;
+                if is_group_end {
+                    motion::end_layer_for_timelapse(output, state);
+                }
+                continue;
             }
             // Upstream re-initializes the avoid-crossing boundaries for
             // every instance's layer (`init_layer(*m_layer)` per

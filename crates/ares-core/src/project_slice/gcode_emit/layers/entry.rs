@@ -16,6 +16,31 @@ pub(super) struct EntryGeometry<'a> {
 }
 
 impl EntryGeometry<'_> {
+    /// Raft variant: no traversal lookups (no lower boundary, no seam
+    /// plans, no internal surfaces); the chunk slices are the raft
+    /// polygons and the external spacing is unused (support-only
+    /// layers do not run the perimeter-crossing planner).
+    pub(super) fn view_raft<'a>(
+        &'a self,
+        scale: crate::geometry::CoordinateScale,
+    ) -> motion::LayerGeometry<'a> {
+        motion::LayerGeometry {
+            nearest_seam_penalties: None,
+            staggered_inner: false,
+            internal_surfaces: &[],
+            scale,
+            previous_layer_boundary: None,
+            avoid_crossing: motion::AvoidCrossingGeometry {
+                layer_slices: &self.layer_slices,
+                perimeter_spacing: 0.0,
+                external_perimeter_width: 0.0,
+                top_surfaces: &self.top_surfaces,
+                chunk_slices: &self.chunk_slices,
+                chunk_perimeter_spacing: self.chunk_perimeter_spacing,
+            },
+        }
+    }
+
     /// Builds the emit-time geometry view; the distance tree borrows the
     /// owned lines for the duration of one emission.
     pub(super) fn view<'a>(
