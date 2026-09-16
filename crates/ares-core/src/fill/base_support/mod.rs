@@ -9,8 +9,9 @@
 
 use crate::geometry::{Coord, Point, Polyline};
 
-#[cfg(test)]
-#[expect(dead_code, reason = "wired by connect_base_support in the next slice")]
+#[expect(dead_code, reason = "wired by the raft fills slice")]
+mod arches;
+#[expect(dead_code, reason = "wired by the raft fills slice")]
 mod connect;
 mod extend;
 mod mark;
