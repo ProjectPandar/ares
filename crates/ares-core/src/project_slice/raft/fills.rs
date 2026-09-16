@@ -94,10 +94,7 @@ pub(crate) fn raft_layer_fill(
             if line.x > source_bounds.max().x() {
                 break;
             }
-            fill_lines.extend(vertical_segments(
-                line,
-                spec.angle + std::f64::consts::FRAC_PI_2,
-            ));
+            fill_lines.extend(vertical_segments(line));
         }
         if fill_lines.is_empty() {
             continue;
@@ -105,14 +102,33 @@ pub(crate) fn raft_layer_fill(
 
         let bbox =
             BoundingBox::from_polygons(&boundary).ok_or(ClipperError::CoordinateOutOfRange)?;
-        out.extend(connect_base_support(
+        // Connect in the SLICE frame (upstream connects before the
+        // rotate-back), then rotate the connected output back by
+        // +(angle+π/2) (`FillSupportBase::fill_surface:3627-3633`).
+        let rotate_back = spec.angle + std::f64::consts::FRAC_PI_2;
+        let (cos_a, sin_a) = (rotate_back.cos(), rotate_back.sin());
+        let connected = connect_base_support(
             fill_lines,
             &boundary,
             bbox,
             spec.spacing,
             spec.density,
             scale,
-        )?);
+        )?;
+        out.extend(connected.into_iter().map(|polyline| {
+            let rotated = polyline
+                .points()
+                .iter()
+                .map(|point| {
+                    let (x, y) = (point.x() as f64, point.y() as f64);
+                    crate::geometry::Point::new(
+                        (x * cos_a - y * sin_a).round() as i64,
+                        (x * sin_a + y * cos_a).round() as i64,
+                    )
+                })
+                .collect::<Vec<_>>();
+            crate::geometry::Polyline::new(rotated)
+        }));
     }
     Ok(out)
 }
@@ -120,17 +136,7 @@ pub(crate) fn raft_layer_fill(
 /// Emit OuterLow→OuterHigh pairs as 2-point polylines
 /// (`make_fill_lines:2948-2960`); the slice frame already carries the
 /// back-rotated points.
-fn vertical_segments(line: &SegmentedLine, rotate_back: f64) -> Vec<Polyline> {
-    // The slice frame rotates by −(angle+π/2); the world-frame points
-    // rotate back by +(angle+π/2) (`make_fill_lines:2955-2958`).
-    let (cos_a, sin_a) = (rotate_back.cos(), rotate_back.sin());
-    let rotate = |point: crate::geometry::Point| {
-        let (x, y) = (point.x() as f64, point.y() as f64);
-        crate::geometry::Point::new(
-            (x * cos_a - y * sin_a).round() as i64,
-            (x * sin_a + y * cos_a).round() as i64,
-        )
-    };
+fn vertical_segments(line: &SegmentedLine) -> Vec<Polyline> {
     let mut out = Vec::new();
     let mut index = 0;
     while index < line.intersections.len() {
@@ -143,7 +149,7 @@ fn vertical_segments(line: &SegmentedLine, rotate_back: f64) -> Vec<Polyline> {
             break;
         };
         if high.kind == IntersectionKind::InnerHigh {
-            out.push(Polyline::new(vec![rotate(low.point), rotate(high.point)]));
+            out.push(Polyline::new(vec![low.point, high.point]));
             index += 2;
         } else {
             index += 1;
