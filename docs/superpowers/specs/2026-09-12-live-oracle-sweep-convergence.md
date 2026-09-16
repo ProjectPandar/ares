@@ -1538,3 +1538,29 @@ recomputation — closed by 3c79a5d7). The full round-4 arc:
 The ksr stream (all Legacy) verified unchanged throughout
 (304237 cache entries, 6180.252066). Round-4 review loop CLOSED
 PASS.
+
+## Prefix-bisect: the +3s is a ~0.03ms-per-move LINEAR drift (#188)
+
+Gcode-prefix sweep (GT --process-gcode vs ares' estimate on the same
+prefixes; ares via the ARES_KSR_PREFIX probe test):
+
+| lines | GT (s) | ares (s) | drift |
+|---|---|---|---|
+| 2000 | 385.832184 | 385.846955 | +0.0148 |
+| 3000 | 456.106598 | 456.160783 | +0.0542 |
+| 4000 | 476.707031 | 476.788101 | +0.0811 |
+| 5000 | 506.332642 | 506.437229 | +0.1046 |
+| 6000 | 520.937683 | 521.077524 | +0.1398 |
+| 8000 | 568.215027 | 568.391474 | +0.1764 |
+| 32000 | 991.533142 | 992.517229 | +0.9841 |
+
+The drift is a steady ~0.03ms per motion line (0.033s per 1k lines;
+862 moves in the 2k prefix, 6121 in the 8k) — NOT discrete steps and
+NOT scale-emergent threshold behavior; it accumulates from the very
+start (already +15ms at 2k lines). This revises the "scale-emergent"
+characterization: the residual is a small CONSTANT per-move bias in
+block timing (or per-block time accounting) that the microbenches'
+whole-file assertions could not resolve (a 22-block context carries
+~0.0007s). Next slice: per-block diff on the 2k-line prefix (small
+enough to attribute reliably by id — the prefix contains no
+arc-internal drift if cut between features).

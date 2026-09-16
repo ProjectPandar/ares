@@ -675,6 +675,34 @@ fn wall_ramp_after_travel_matches_gt() {
     );
 }
 
+/// Prefix-drift probe (review/estimator): reads gcode prefixes from
+/// ARES_KSR_PREFIX and prints ares' estimate total for the drift hunt.
+#[test]
+#[ignore = "prefix probe"]
+fn ksr_prefix_total() {
+    let Some(path) = std::env::var_os("ARES_KSR_PREFIX") else {
+        panic!("set ARES_KSR_PREFIX");
+    };
+    let project = std::fs::read(path).unwrap();
+    let lines: Vec<String> = String::from_utf8_lossy(&project)
+        .lines()
+        .map(str::to_owned)
+        .collect();
+    let limits = ProcessorLimits {
+        print_acceleration: 10000.0,
+        retract_acceleration: 10000.0,
+        travel_acceleration: 10000.0,
+        gcode_flavor: crate::GCodeFlavor::MarlinLegacy,
+        bbl_printer: true,
+        junction_deviation: 0.0,
+        max_feedrate: [1000.0, 1000.0, 20.0, 30.0],
+        max_acceleration: [20000.0, 20000.0, 500.0, 30000.0],
+        jerk: [9.0, 9.0, 3.0, 2.5],
+    };
+    let estimate = Estimate::from_lines(&lines, 29.0, limits);
+    panic!("prefix-total {}", estimate.total);
+}
+
 /// Ares-side ladder for the toolchange-tail bisect (GT values captured
 /// 2026-09-16 with the FIXED --process-gcode oracle):
 /// no_e 2.819025, with_e 2.826729, +M622 2.826729, +M400 2.826729,
