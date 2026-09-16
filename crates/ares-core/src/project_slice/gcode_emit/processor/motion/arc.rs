@@ -53,7 +53,6 @@ pub(in crate::project_slice::gcode_emit::processor) fn parse_arc(
     code: &str,
     start: [f64; 3],
     end: [f64; 3],
-    relative: bool,
 ) -> Option<ParsedArc> {
     let (i, j) = match word(code, 'R').filter(|r| *r != 0.0) {
         Some(r) => {
@@ -66,7 +65,6 @@ pub(in crate::project_slice::gcode_emit::processor) fn parse_arc(
             word(code, 'J').unwrap_or(0.0) as f32,
         ),
     };
-    let _ = relative;
     let center = [start[0] + f64::from(i), start[1] + f64::from(j)];
     let start_radius = [start[0] - center[0], start[1] - center[1]];
     let end_radius = [end[0] - center[0], end[1] - center[1]];
@@ -129,7 +127,7 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
         feedrate,
         gcode_flavor,
     } = motion;
-    let parsed = parse_arc(command, code, start, end, false)?;
+    let parsed = parse_arc(command, code, start, end)?;
     let ParsedArc {
         center,
         start_radius,
@@ -173,11 +171,18 @@ struct ArcGeometry {
 }
 
 fn marlin_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
-    let segment_mm = (8.0_f32 * arc.radius * 0.02)
+    // `radius_mm = rel_center.norm()` (`GCodeProcessor.cpp:4723`): the
+    // Marlin segment math runs on the Vec3f (f32) norm of the I/J
+    // offsets — NOT the Vec3d `start_radius()` the legacy branch uses.
+    // Keeping the two derivations separate preserves boundary-exact
+    // segment counts (verified at the F458.1401 boundary where the
+    // f64 radius flips the ceil by one).
+    let radius_mm = (arc.i * arc.i + arc.j * arc.j).sqrt();
+    let segment_mm = (8.0_f32 * radius_mm * 0.02)
         .sqrt()
         .min(arc.feedrate as f32 * (1.0 / 50.0))
         .clamp(0.1, 2.0);
-    let flat_mm = (f64::from(arc.radius) * arc.sweep.abs()) as f32;
+    let flat_mm = (f64::from(radius_mm) * arc.sweep.abs()) as f32;
     let segments = ((flat_mm / segment_mm + 0.8) as usize).max(1);
     let inv_segments = 1.0_f32 / segments as f32;
     let theta = arc.sweep as f32 * inv_segments;

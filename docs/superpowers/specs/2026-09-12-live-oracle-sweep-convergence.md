@@ -1498,3 +1498,23 @@ repeatedly proven exact at every reproducible scale; the residual
 lives in long-horizon planner state (rolling-window boundary
 interactions across ~50k flush cycles) — the remaining known
 estimator gap, documented as such.
+
+## Review round 4: Marlin arc-segment boundary regression found and FIXED (#186)
+
+The round-4 reviewer derived an exact counterexample to the arc-math
+unification: at `G3 I0.1 J0.2 F458.1401` (MarlinFirmware), upstream's
+segment math runs on `radius_mm = rel_center.norm()` (Vec3f, f32
+chain, GCodeProcessor.cpp:4723) while the unification fed it the
+Vec3d `start_radius()` (f64 norm) — flipping the segment count 10->9
+at the boundary (feed = f32(F)*f32(1/60) = 7.635668754577637,
+segment_mm = 0.1527133733034134, adjacent f32 flats). The probe
+chain: my F/60 sweeps missed it (double division ≠ the pinned f32
+reciprocal path); the reviewer's source-proven arithmetic was
+correct. Fix: marlin_deltas computes its radius as the f32 norm of
+(i,j) (the Vec3f path); legacy keeps the f64 start_radius — upstream
+uses BOTH derivations by design. A boundary pin test asserts the
+f32 behavior (3.009443s; the f64 variant measures 2.989248s). Also
+fixed: the shadowed `expected` in the spiral-context test, the
+unused `relative` param on parse_arc, and the stale README -12ms/
+E-only-block text superseded by the #178-#179 corrections. The ksr
+stream (all Legacy) is unchanged: 6180.252066.

@@ -612,7 +612,6 @@ fn spiral_in_toolchange_context_matches_gt() {
         jerk: [10.0, 10.0, 0.2, 2.5],
     };
     let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
-    let expected = 39.358_932;
     // GT (correctly-newlined file, v2 oracle): 34.409561s.
     let expected = 34.409_561;
     assert!(
@@ -729,4 +728,50 @@ fn toolchange_ladder_totals() {
         totals.push(format!("{name} {}", estimate.total));
     }
     panic!("{}", totals.join(" | "));
+}
+
+/// MarlinFirmware arc-segment boundary pin (review round 4): the
+/// segment math must run on the Vec3f (f32) rel_center.norm(), not the
+/// Vec3d start_radius — at `G3 I0.1 J0.2 F458.1401` the f64 radius
+/// flips the ceil by one segment (10 -> 9). The GT-equivalent count
+/// derivation: feed = f32(F)*f32(1/60) = 7.635668754577637,
+/// segment_mm = 0.1527133733034134, flat = 1.4049630165100098.
+#[test]
+fn marlin_arc_segment_boundary_uses_f32_radius() {
+    let lines: Vec<String> = [
+        ";FLAVOR:MarlinFirmware",
+        "M201 X10000 Y10000",
+        "M204 P10000 R10000 T10000",
+        "M205 X10 Y10",
+        "G90",
+        "M82",
+        "G21",
+        "G1 X10 Y10 F600",
+        "G3 I0.1 J0.2 F458.1401",
+        "G1 X20 Y20 F600",
+    ]
+    .into_iter()
+    .map(str::to_owned)
+    .collect();
+    let limits = ProcessorLimits {
+        print_acceleration: 10000.0,
+        retract_acceleration: 10000.0,
+        travel_acceleration: 10000.0,
+        gcode_flavor: crate::GCodeFlavor::MarlinFirmware,
+        bbl_printer: false,
+        junction_deviation: 0.0,
+        max_feedrate: [500.0, 500.0, 12.0, 120.0],
+        max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
+        jerk: [10.0, 10.0, 0.2, 2.5],
+    };
+    let estimate = Estimate::from_lines(&lines, 0.0, limits);
+    // Pinned to the f32-radius behavior (9 internal segments); the
+    // f64-radius variant of the same stream measures 2.989248s (8
+    // internal segments) — the boundary is the assertion.
+    let expected = 3.009_443;
+    assert!(
+        (estimate.total - expected).abs() < 0.001,
+        "marlin arc boundary total {total} vs f32-radius pin {expected}",
+        total = estimate.total
+    );
 }

@@ -76,12 +76,14 @@ config — the same-stream ground truth stands).
 
 ## procgcode patch v2: ksr X2D machine caps
 
-The --process-gcode config now sets the ksr's real caps
-(extruding 20000 / retract 30000 / travel 9000) so the default-cap
-artifact (wipe/extrude accel pinned at 1500) does not bind. Re-measured:
-full ksr reference 6538.005371 (unchanged — real M204s dominate),
-faithful spiral-ctx2 34.421444 (ares 34.409561, -12ms), spiraltest2
-2.988959, toolchange 5.621093. Per-block comparison of the faithful
-repro: ids 1-17 match EXACTLY to the microsecond; the residuals are
-ares keeping the E-only retract block (+14ms) and ~-26ms in the final
-prime/travel junctions.
+The --process-gcode config sets the ksr's real caps (extruding
+20000 / retract 30000 / travel 9000) so the default-cap artifact does
+not bind. Measured: full ksr reference 6538.005371; spiraltest2
+2.988959; toolchange 5.621093. CORRECTIONS (supersede the earlier
+-12ms/-26ms figures recorded here): the -12ms residual was a harness
+newline bug (a fused G1 line in the GT file); with the correctly-
+newlined file the toolchange-context spiral matches ares EXACTLY
+(34.409561 both), and the "E-only retract block" difference is a
+dump-scope artifact — upstream skips the cache push but counts the
+time, same as ares. See the convergence spec #178-#179 for the full
+correction chain.

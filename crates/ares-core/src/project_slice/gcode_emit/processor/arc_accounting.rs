@@ -29,13 +29,7 @@ pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionSta
     // Degenerate R arc (coincident endpoints): `center_from_radius`
     // returns None and upstream's process_G2_G3 falls through without
     // segments.
-    let Some(parsed) = parse_arc(
-        command,
-        code,
-        start,
-        [end_x, end_y, start[2]],
-        state.relative,
-    ) else {
+    let Some(parsed) = parse_arc(command, code, start, [end_x, end_y, start[2]]) else {
         return 0;
     };
     let angle = parsed.sweep.abs().min(std::f64::consts::TAU);
