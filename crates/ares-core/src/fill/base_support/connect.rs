@@ -300,12 +300,40 @@ fn take_next(
     }
     if trimmed {
         // `take_limited` with a 1e10 budget (`:2411-2414`), applied to
-        // polyline1 (take_first) resp. polyline2.
+        // polyline1 (take_first) resp. polyline2. In the SAME-CHAIN
+        // case (`polyline_idx1 == polyline_idx2`) the arch closes the
+        // loop: its start sits at the chain head, not the tail —
+        // `append_limited`'s tail assertion does not hold, so append
+        // the arch points directly (upstream's take_limited has no
+        // such guard; Release just appends).
         let target_path = if take_first {
             polyline_idx1
         } else {
             polyline_idx2
         };
+        if polyline_idx1 == polyline_idx2 {
+            // Same-chain arch closes the loop: start sits at the chain
+            // head. Reverse the chain so the arch appends at the tail
+            // (upstream's take()/take_limited pair handles direction
+            // implicitly by appending to whichever end matches).
+            if let Some(path) = paths[target_path].as_mut() {
+                if path.last() != Some(&contour.points[intersections[cp1].point_index]) {
+                    path.reverse();
+                }
+                if path.last() == Some(&contour.points[intersections[cp1].point_index]) {
+                    append_full(
+                        path,
+                        &contour.points,
+                        intersections[cp1].point_index,
+                        intersections[cp2].point_index,
+                        false,
+                    );
+                }
+            }
+            intersections[cp1].consume_next();
+            intersections[cp2].consume_prev();
+            return;
+        }
         let (start, end, clockwise) = if take_first {
             (cp1, cp2, false)
         } else {
@@ -518,6 +546,50 @@ mod arch_probe {
                 pt.y(),
                 flag(i.prev),
                 flag(i.next),
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod merge_probe {
+    #[test]
+    fn probe_same_chain_append() {
+        use super::*;
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        // 3 lines only: chain growth over idx 0..5.
+        let lines: Vec<Polyline> = (-1..=1)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let out = connect_base_support(
+            lines,
+            &[polygon],
+            bbox,
+            0.407,
+            0.67,
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        for (n, p) in out.iter().enumerate() {
+            eprintln!(
+                "MERGE #{n} pts={}",
+                p.points()
+                    .iter()
+                    .map(|pt| format!("({},{})", pt.x(), pt.y()))
+                    .collect::<Vec<_>>()
+                    .join(" ")
             );
         }
     }
