@@ -13,7 +13,7 @@ mod polygon;
 mod polyline;
 mod region_expansion;
 mod simplification;
-mod support_grid;
+pub(crate) mod support_grid;
 
 pub(crate) use bbox_clip::{
     clip_clipper_expolygons_with_subject_bbox, clip_clipper_polygons_with_subject_bbox,
