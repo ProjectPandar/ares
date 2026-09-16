@@ -1,6 +1,6 @@
 --- a/src/OrcaSlicer.cpp
 +++ b/src/OrcaSlicer.cpp
-@@ -7534,6 +7534,26 @@
+@@ -7534,6 +7534,31 @@
  int main(int argc, char **argv)
  {
 +    for (int i = 1; i < argc; ++i) {
@@ -12,6 +12,11 @@
 +            config.filament_type.values = { "PLA" };
 +            config.nozzle_diameter.values = { 0.4f };
 +            config.single_extruder_multi_material.value = false;
++            // ksr X2D machine caps (project_settings.config) so the
++            // extruding/retract/travel caps match the real flow.
++            config.machine_max_acceleration_extruding.values = { 20000.f, 20000.f, 20000.f };
++            config.machine_max_acceleration_retracting.values = { 30000.f, 5000.f, 30000.f };
++            config.machine_max_acceleration_travel.values = { 9000.f, 9000.f, 9000.f };
 +            processor.apply_config(config);
 +            processor.process_file(argv[i + 1]);
 +            const auto& result = processor.get_result();

@@ -1319,3 +1319,21 @@ the microbench line of attack closes with this artifact
 documented. Next: patch the oracle's --process-gcode to apply the
 ksr's ACTUAL machine limits (or resume the same-stream block
 alignment for the +612 tail-block family).
+
+## Oracle v2 with real caps: per-block parity to the microsecond (#178)
+
+The --process-gcode oracle now applies the ksr X2D's real machine caps
+(extruding 20000 / retract 30000 / travel 9000 — from
+project_settings.config), removing the default-cap artifact. Re-measured:
+full ksr reference 6538.005371 (UNCHANGED — the real M204s in the
+machine gcode dominate, so config caps never bind on the real stream);
+faithful spiral-ctx2 GT 34.421444 vs ares 34.409561 = **-12ms per
+toolchange** (was -109ms under default caps). Per-block comparison on
+the faithful repro: **ids 1-17 match EXACTLY to the microsecond**
+(travel, extrudes, wipes, spiral segments: ares_t 0.009240 vs GT
+0.009241 etc.); the -12ms decomposes as ares keeping the E-only
+retract block upstream's cache skips (+13.8ms) and ~-26ms in the
+final prime/travel junction blocks. The estimator's block-time math is
+therefore near-exact on the real config; the remaining REAL +3s ksr
+residual lives in the block-count family (extra blocks the upstream
+cache never records), not in per-block timing.

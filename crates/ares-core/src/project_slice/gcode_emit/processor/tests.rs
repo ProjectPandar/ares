@@ -563,7 +563,7 @@ fn toolchange_tail_delays_match_gt_oracle() {
 /// over 34 blocks. This is the true repro context for the +3s tail
 /// residual; keep pinned until ares matches.
 #[test]
-#[ignore = "spiral-in-context faithful-Z: ares 34.4096 vs GT 34.5190 (-109ms)"]
+#[ignore = "spiral-in-context real-caps: ares 34.4096 vs GT 34.4214 (-12ms/toolchange)"]
 fn spiral_in_toolchange_context_matches_gt() {
     let lines: Vec<String> = [
         ";FLAVOR:Marlin",
@@ -613,8 +613,9 @@ fn spiral_in_toolchange_context_matches_gt() {
     };
     let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
     let expected = 39.358_932;
-    // GT with the faithful Z baseline (spiral climbs 83.6 -> 84):
-    // 34.518993s. ares: 34.409561 (-109ms).
+    // GT with the faithful Z baseline and the ksr X2D caps
+    // (extruding 20000 / retract 30000 / travel 9000): 34.421444s.
+    // ares: 34.409561 (-12ms per toolchange).
     let expected2 = 34.518_993;
     panic!(
         "ares total {} vs GT {expected} (bad-Z) / {expected2} (faithful)",
