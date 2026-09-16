@@ -662,3 +662,31 @@ same-chain case must also carry the fill segments. Verify with the
 27-line ORDER27 probe (chains 61 pts = includes fill segments ✓
 fixture works; the live pipeline difference: multiple ExPolygons or
 the angle difference produces different chain roots).
+
+## #256 session handoff — current state and remaining work
+
+DONE (92 commits, all upstream-cited):
+- Full raft pipeline: z-grid, polygons (grid-snap + expansions), fill
+  params (angles/densities/flows), FillSupportBase fills, connect
+  phases (overlapping-mark, extend, vertical-consume, cost-select),
+  sheath, skirts, layer schedule + emission, speed chain, header
+  count, estimator chain — all with per-phase probe evidence.
+- All upstream semantic deltas found and fixed: lattice scale 1e6,
+  angle +π/2 convention, InnerLow/InnerHigh pairing, boundary naming
+  inversion, collision argument order (both walks), SCALED_EPSILON=100,
+  same-chain arch closure, merge-slot semantics.
+
+REMAINING (in order):
+1. Over-merge calibration: the base layer emits boundary-only chains
+   (fill lines missing from the take() merge). The 27-line fixture
+   chains correctly (61 pts incl. fill); the live pipeline diverges
+   (multi-contour boundary or the interface angle path produces
+   different chain roots). Trace the live take() calls vs fixture.
+2. After 1: line-count/estimator convergence (currently 46370 vs
+   oracle 9051; estimate 55m vs 31m47s).
+3. First-layer fan (M106 S255 vs S0).
+4. Grid-phase start residual (0.376mm on fill line positions).
+5. Full sweep + ksr golden regression + review loop.
+
+The gate is OPEN (raft_layers accepted) but the live output has the
+over-merge — the sweep would fail on the raft cases until #1 lands.
