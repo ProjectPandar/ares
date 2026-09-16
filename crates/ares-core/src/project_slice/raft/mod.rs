@@ -1,3 +1,4 @@
+mod bridge;
 mod emit;
 mod fill_params;
 mod fills;
