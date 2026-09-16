@@ -1,4 +1,4 @@
-mod bridge;
+pub(crate) mod bridge;
 mod emit;
 mod fill_params;
 mod fills;
