@@ -2,9 +2,9 @@ use super::scale::coord_from_completed;
 use crate::geometry::{ClipperError, Point};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct F64Point {
-    pub(super) x: f64,
-    pub(super) y: f64,
+pub(in crate::fill) struct F64Point {
+    pub(in crate::fill) x: f64,
+    pub(in crate::fill) y: f64,
 }
 
 impl F64Point {
@@ -46,9 +46,9 @@ impl F64Point {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct F64Segment {
-    pub(super) a: F64Point,
-    pub(super) b: F64Point,
+pub(in crate::fill) struct F64Segment {
+    pub(in crate::fill) a: F64Point,
+    pub(in crate::fill) b: F64Point,
 }
 
 impl F64Segment {
@@ -56,7 +56,7 @@ impl F64Segment {
         Self { a, b }
     }
 
-    pub(super) fn from_points(a: Point, b: Point) -> Self {
+    pub(in crate::fill) fn from_points(a: Point, b: Point) -> Self {
         Self::new(F64Point::from_point(a), F64Point::from_point(b))
     }
 
@@ -66,9 +66,9 @@ impl F64Segment {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) struct EuclideanInterval {
-    pub(super) start: f64,
-    pub(super) end: f64,
+pub(in crate::fill) struct EuclideanInterval {
+    pub(in crate::fill) start: f64,
+    pub(in crate::fill) end: f64,
 }
 
 #[derive(Clone, Copy)]
@@ -171,7 +171,7 @@ fn fractional_bounds_overlap(boundary: F64Segment, infill: F64Segment, delta: f6
         || cpp_min(infill.a.y, infill.b.y) - delta > cpp_max(boundary.a.y, boundary.b.y))
 }
 
-pub(super) fn rounded_thick_segment_collision(
+pub(in crate::fill) fn rounded_thick_segment_collision(
     line: F64Segment,
     segment: F64Segment,
     offset: f64,

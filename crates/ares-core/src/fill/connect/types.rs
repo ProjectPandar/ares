@@ -1,23 +1,23 @@
 use crate::geometry::Point;
 
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct BoundaryContour {
-    pub(super) points: Vec<Point>,
-    pub(super) params: Vec<f64>,
+pub(in crate::fill) struct BoundaryContour {
+    pub(in crate::fill) points: Vec<Point>,
+    pub(in crate::fill) params: Vec<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct Intersection {
-    pub(super) contour_index: Option<usize>,
-    pub(super) point_index: usize,
-    pub(super) param: f64,
-    pub(super) prev: Option<usize>,
-    pub(super) next: Option<usize>,
-    pub(super) not_taken_prev: f64,
-    pub(super) not_taken_next: f64,
-    pub(super) consumed: bool,
-    pub(super) prev_trimmed: bool,
-    pub(super) next_trimmed: bool,
+pub(in crate::fill) struct Intersection {
+    pub(in crate::fill) contour_index: Option<usize>,
+    pub(in crate::fill) point_index: usize,
+    pub(in crate::fill) param: f64,
+    pub(in crate::fill) prev: Option<usize>,
+    pub(in crate::fill) next: Option<usize>,
+    pub(in crate::fill) not_taken_prev: f64,
+    pub(in crate::fill) not_taken_next: f64,
+    pub(in crate::fill) consumed: bool,
+    pub(in crate::fill) prev_trimmed: bool,
+    pub(in crate::fill) next_trimmed: bool,
 }
 
 impl Intersection {
@@ -44,43 +44,43 @@ impl Intersection {
         }
     }
 
-    pub(super) fn consume_prev(&mut self) {
+    pub(in crate::fill) fn consume_prev(&mut self) {
         self.not_taken_prev = 0.0;
         self.prev_trimmed = true;
         self.consumed = true;
     }
 
-    pub(super) fn consume_next(&mut self) {
+    pub(in crate::fill) fn consume_next(&mut self) {
         self.not_taken_next = 0.0;
         self.next_trimmed = true;
         self.consumed = true;
     }
 
-    pub(super) fn trim_prev(&mut self, new_length: f64) {
+    pub(in crate::fill) fn trim_prev(&mut self, new_length: f64) {
         if new_length < self.not_taken_prev {
             self.not_taken_prev = new_length;
             self.prev_trimmed = true;
         }
     }
 
-    pub(super) fn trim_next(&mut self, new_length: f64) {
+    pub(in crate::fill) fn trim_next(&mut self, new_length: f64) {
         if new_length < self.not_taken_next {
             self.not_taken_next = new_length;
             self.next_trimmed = true;
         }
     }
 
-    pub(super) fn could_take_prev(&self, scaled_epsilon: f64) -> bool {
+    pub(in crate::fill) fn could_take_prev(&self, scaled_epsilon: f64) -> bool {
         !self.consumed && self.not_taken_prev > scaled_epsilon
     }
 
-    pub(super) fn could_take_next(&self, scaled_epsilon: f64) -> bool {
+    pub(in crate::fill) fn could_take_next(&self, scaled_epsilon: f64) -> bool {
         !self.consumed && self.not_taken_next > scaled_epsilon
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(super) struct WorkingGraph {
+pub(in crate::fill) struct WorkingGraph {
     pub(super) boundary: Vec<BoundaryContour>,
     pub(super) intersections: Vec<Intersection>,
     pub(super) paths: Vec<Option<Vec<Point>>>,
@@ -97,7 +97,7 @@ impl WorkingGraph {
         .points[intersection.point_index]
     }
 
-    pub(super) const fn path_index_for_intersection(intersection_index: usize) -> usize {
+    pub(in crate::fill) const fn path_index_for_intersection(intersection_index: usize) -> usize {
         intersection_index / 2
     }
 

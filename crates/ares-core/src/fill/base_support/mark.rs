@@ -162,8 +162,8 @@ fn prev_index_modulo(index: usize, count: usize) -> usize {
 
 /// `line_alg::distance_to_squared(line, point)`.
 fn point_line_distance_squared(line: &F64Segment, point: Point) -> f64 {
-    let (ax, ay) = line.a;
-    let (bx, by) = line.b;
+    let (ax, ay) = (line.a.x, line.a.y);
+    let (bx, by) = (line.b.x, line.b.y);
     let (px, py) = (point.x() as f64, point.y() as f64);
     let (dx, dy) = (bx - ax, by - ay);
     let length_squared = dx * dx + dy * dy;

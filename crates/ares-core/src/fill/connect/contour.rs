@@ -17,7 +17,11 @@ pub(super) fn contour_parameters(points: &[Point]) -> Vec<f64> {
     params
 }
 
-pub(super) fn closed_contour_distance_ccw(param1: f64, param2: f64, contour_length: f64) -> f64 {
+pub(in crate::fill) fn closed_contour_distance_ccw(
+    param1: f64,
+    param2: f64,
+    contour_length: f64,
+) -> f64 {
     debug_assert!((0.0..=contour_length).contains(&param1));
     debug_assert!((0.0..=contour_length).contains(&param2));
     let distance = param2 - param1;
@@ -28,7 +32,11 @@ pub(super) fn closed_contour_distance_ccw(param1: f64, param2: f64, contour_leng
     }
 }
 
-pub(super) fn closed_contour_distance_cw(param1: f64, param2: f64, contour_length: f64) -> f64 {
+pub(in crate::fill) fn closed_contour_distance_cw(
+    param1: f64,
+    param2: f64,
+    contour_length: f64,
+) -> f64 {
     closed_contour_distance_ccw(param2, param1, contour_length)
 }
 
@@ -50,7 +58,7 @@ pub(super) fn lerp_truncating(start: Point, end: Point, t: f64) -> Point {
     )
 }
 
-pub(super) fn append_full(
+pub(in crate::fill) fn append_full(
     output: &mut Vec<Point>,
     contour: &[Point],
     start_index: usize,

@@ -1,10 +1,10 @@
 mod apply;
-mod collision;
-mod contour;
+pub(super) mod collision;
+pub(super) mod contour;
 mod graph;
 mod scale;
 mod touching;
-mod types;
+pub(super) mod types;
 
 use crate::geometry::{BoundingBox, ClipperError, CoordinateScale, ExPolygon, Polygon, Polyline};
 use apply::apply_connections;
