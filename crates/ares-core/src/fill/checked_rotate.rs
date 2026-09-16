@@ -18,7 +18,7 @@ fn checked_round(value: f64) -> Result<i64, ClipperError> {
     }
 }
 
-pub(super) fn rotate_point(point: Point, cosine: f64, sine: f64) -> Result<Point, ClipperError> {
+pub(crate) fn rotate_point(point: Point, cosine: f64, sine: f64) -> Result<Point, ClipperError> {
     let x = point.x() as f64;
     let y = point.y() as f64;
     checked_point(cosine * x - sine * y, cosine * y + sine * x)

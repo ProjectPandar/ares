@@ -22,7 +22,7 @@ use crate::geometry::{BoundingBox, Point, Polyline};
 const SCALED_EPSILON: f64 = 16.0;
 
 #[expect(dead_code, reason = "wired by the raft fills slice")]
-pub(super) fn connect_base_support(
+pub(crate) fn connect_base_support(
     infill_ordered: Vec<Polyline>,
     boundary_source: &[crate::geometry::Polygon],
     bbox: BoundingBox,

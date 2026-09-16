@@ -109,7 +109,7 @@ pub(crate) fn prepare_rectilinear_slice(
     Ok(slice)
 }
 
-pub(super) fn prepare_rectilinear_contours(
+pub(crate) fn prepare_rectilinear_contours(
     expolygon: &ExPolygon,
     angle: f64,
     outer_offset: f32,
@@ -127,7 +127,7 @@ pub(super) fn prepare_rectilinear_contours(
     clippy::excessive_nesting,
     reason = "source slicing walks retained contours, segments, then vertical lines"
 )]
-pub(super) fn populate_vertical_lines(
+pub(crate) fn populate_vertical_lines(
     slice: &mut RectilinearSlice,
     count: usize,
     x0: i64,

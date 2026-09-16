@@ -8,7 +8,7 @@ mod perimeter;
 mod pinch;
 mod regions;
 mod rng;
-mod segments;
+pub(crate) mod segments;
 mod surface;
 mod traverse;
 

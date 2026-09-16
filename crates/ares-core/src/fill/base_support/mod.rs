@@ -12,6 +12,7 @@ use crate::geometry::{Coord, Point, Polyline};
 #[expect(dead_code, reason = "wired by the raft fills slice")]
 mod arches;
 #[expect(dead_code, reason = "wired by the raft fills slice")]
+pub(crate) use connect::connect_base_support;
 mod connect;
 mod extend;
 mod mark;
