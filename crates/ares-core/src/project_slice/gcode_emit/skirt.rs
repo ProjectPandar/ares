@@ -119,8 +119,18 @@ impl SkirtPlan {
                 traversal.scale,
             ) {
                 for plan in &stream.plans {
-                    for polygon in &plan.polygons {
-                        occupied.extend(polygon.points().iter().copied());
+                    // `support_fills.collect_points` (`Print.cpp:2693`):
+                    // the hull takes the FILL polyline points, which sit
+                    // inside the polygons by the 0.5·spacing inset.
+                    if let Ok(polylines) = crate::project_slice::raft::fills::raft_layer_fill(
+                        &plan.polygons,
+                        plan.spec,
+                        crate::geometry::Point::new(0, 0),
+                        traversal.scale,
+                    ) {
+                        for polyline in &polylines {
+                            occupied.extend(polyline.points().iter().copied());
+                        }
                     }
                 }
             }
