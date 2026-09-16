@@ -44,6 +44,9 @@ pub(super) struct ArcMotion {
 pub(in crate::project_slice::gcode_emit::processor) struct ParsedArc {
     pub(in crate::project_slice::gcode_emit::processor) center: [f64; 2],
     pub(in crate::project_slice::gcode_emit::processor) start_radius: [f64; 2],
+    /// The f32 (i, j) offsets — the Vec3f `rel_center` the MarlinFirmware
+    /// segment math derives its radius from.
+    pub(in crate::project_slice::gcode_emit::processor) rel_center: (f32, f32),
     pub(in crate::project_slice::gcode_emit::processor) radius: f64,
     pub(in crate::project_slice::gcode_emit::processor) sweep: f64,
 }
@@ -93,6 +96,7 @@ pub(in crate::project_slice::gcode_emit::processor) fn parse_arc(
     Some(ParsedArc {
         center,
         start_radius,
+        rel_center: (i, j),
         radius,
         sweep,
     })
@@ -131,22 +135,20 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
     let ParsedArc {
         center,
         start_radius,
-        radius: radius_f64,
+        radius,
         sweep,
+        rel_center: (i, j),
     } = parsed;
-    let radius = radius_f64 as f32;
-    let i = (center[0] - start[0]) as f32;
-    let j = (center[1] - start[1]) as f32;
     let arc = ArcGeometry {
         start,
         end,
         center,
         start_radius,
+        radius,
         e_delta,
         feedrate,
         i,
         j,
-        radius,
         sweep,
     };
     Some(if gcode_flavor == GCodeFlavor::MarlinFirmware {
@@ -162,11 +164,12 @@ struct ArcGeometry {
     end: [f64; 3],
     center: [f64; 2],
     start_radius: [f64; 2],
+    /// Vec3d `start_radius()` norm — legacy branch only.
+    radius: f64,
     e_delta: f64,
     feedrate: f64,
     i: f32,
     j: f32,
-    radius: f32,
     sweep: f64,
 }
 

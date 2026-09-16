@@ -37,17 +37,23 @@ pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionSta
         f64::from(value as f32 * super::motion_util::MMMIN_TO_MMSEC)
     }) as f32;
     let segments = if state.gcode_flavor == crate::GCodeFlavor::MarlinFirmware {
-        // `plan_arc` (`GCodeProcessor.cpp:1690-1700`)
+        // `plan_arc` (`GCodeProcessor.cpp:1690-1700`): the WHOLE count
+        // formula mirrors `marlin_deltas` exactly — f32 rel_center norm
+        // radius, feed*(1/50), f64-radius*sweep -> f32 flat — so the id
+        // counter and the block generator can never disagree at an f32
+        // boundary (the db1dc75c partial fix left a 10-vs-9 mismatch at
+        // G2 I0.1 J0.2 F343.605).
         const MAX_ARC_DEVIATION: f32 = 0.02;
         const MIN_ARC_SEGMENTS_PER_SEC: f32 = 50.0;
         const MIN_ARC_SEGMENT_MM: f32 = 0.1;
         const MAX_ARC_SEGMENT_MM: f32 = 2.0;
-        let radius_mm = parsed.radius as f32;
+        let (ci, cj) = parsed.rel_center;
+        let radius_mm = (ci * ci + cj * cj).sqrt();
         let segment_mm = ((8.0 * radius_mm * MAX_ARC_DEVIATION)
             .sqrt()
-            .min(feedrate_mm_s / MIN_ARC_SEGMENTS_PER_SEC))
+            .min(feedrate_mm_s * (1.0 / MIN_ARC_SEGMENTS_PER_SEC)))
         .clamp(MIN_ARC_SEGMENT_MM, MAX_ARC_SEGMENT_MM);
-        let flat_mm = radius_mm * angle as f32;
+        let flat_mm = (f64::from(radius_mm) * angle) as f32;
         ((flat_mm / segment_mm + 0.8) as usize).max(1)
     } else {
         arc_discretization_steps(parsed.radius, angle, 0.0125).max(1)
