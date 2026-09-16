@@ -240,7 +240,17 @@ pub(crate) fn build_project_raft(
     let spacing = |width: f64, height: f64| width - height * (1.0 - std::f64::consts::FRAC_PI_4);
     let support_flow_spacing = spacing(support_width, layer_height);
     let interface_flow_spacing = spacing(interface_width, layer_height);
-    let first_layer_flow_spacing = spacing(support_width, first_height);
+    // First-layer support flow follows the FIRST-LAYER width chain
+    // (`initial_layer_line_width` else `line_width`, header.rs:214),
+    // not `support_line_width` (oracle flange pitch 0.419 =
+    // spacing(0.42)/0.9).
+    let first_layer_width = explicit_width(
+        settings.process.print.initial_layer_line_width,
+        support_nozzle,
+    )
+    .or_else(|| explicit_width(object.line_width, support_nozzle))
+    .unwrap_or(support_width);
+    let first_layer_flow_spacing = spacing(first_layer_width, first_height);
 
     let fill_inputs = RaftFillInputs {
         support_flow_spacing,
@@ -304,7 +314,7 @@ pub(crate) fn build_project_raft(
         support_flow_spacing,
         first_layer_flow_spacing,
         object.raft_first_layer_density.0,
-        support_width,
+        first_layer_width,
         interface_width,
         first_height,
     );
