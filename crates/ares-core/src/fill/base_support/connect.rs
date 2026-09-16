@@ -342,11 +342,17 @@ fn take_next(
             false,
         );
         if polyline_idx2 < polyline_idx1 {
-            paths[polyline_idx2] = Some(merged);
-            merged_with[polyline_idx1] = merged_with[polyline_idx2];
-        } else {
+            // Upstream `:2425-2427`: the merged chain lands in polyline2's
+            // slot, polyline1 clears, and idx1 follows idx2.
             paths[polyline_idx2] = Some(merged);
             paths[polyline_idx1] = None;
+            merged_with[polyline_idx1] = merged_with[polyline_idx2];
+        } else {
+            // Upstream `:2428-2430`: take() appended into polyline1 —
+            // the merged chain stays in polyline1's slot, polyline2
+            // clears, and idx2 follows idx1.
+            paths[polyline_idx1] = Some(merged);
+            paths[polyline_idx2] = None;
             merged_with[polyline_idx2] = merged_with[polyline_idx1];
         }
     }
