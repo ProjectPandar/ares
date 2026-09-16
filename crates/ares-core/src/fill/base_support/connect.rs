@@ -401,3 +401,65 @@ mod vprobe {
         );
     }
 }
+
+#[cfg(test)]
+mod chain_probe {
+    #[test]
+    fn probe_intersection_chain() {
+        use super::*;
+        // Square boundary at ±7650601, 27 vertical lines whose endpoints
+        // sit EXACTLY on the top/bottom edges.
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        let lines: Vec<Polyline> = (-13..=13)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let graph = crate::fill::connect::graph::build_working_graph(
+            lines.clone(),
+            &[polygon.clone()],
+            bbox,
+            0.407,
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        let connected = graph
+            .intersections
+            .iter()
+            .filter(|i| i.contour_index.is_some())
+            .count();
+        let with_next = graph
+            .intersections
+            .iter()
+            .filter(|i| i.next.is_some())
+            .count();
+        eprintln!(
+            "CHAIN hits={connected} with_next={with_next} total={}",
+            graph.intersections.len()
+        );
+        let out = connect_base_support(
+            lines,
+            &[polygon],
+            bbox,
+            0.407,
+            0.67,
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        eprintln!(
+            "CHAIN out={} lens={:?}",
+            out.len(),
+            out.iter().map(|p| p.points().len()).collect::<Vec<_>>()
+        );
+    }
+}

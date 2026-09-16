@@ -59,7 +59,6 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
                         radius,
                         scaled_epsilon,
                     ) {
-                        debug_assert_eq!(interval.start, 0.0);
                         let len_out = closed_contour_distance_ccw(
                             contour_params[point_index],
                             contour_params[i],
@@ -114,7 +113,6 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
                         radius,
                         scaled_epsilon,
                     ) {
-                        debug_assert_eq!(interval.start, 0.0);
                         let len_out = closed_contour_distance_cw(
                             contour_params[point_index],
                             contour_params[i],
