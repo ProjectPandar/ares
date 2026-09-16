@@ -6,6 +6,7 @@ mod fan_setup;
 
 pub(super) use context::Context;
 mod object_order;
+mod raft_schedule;
 mod schedule;
 mod timelapse;
 

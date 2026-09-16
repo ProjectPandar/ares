@@ -1,5 +1,6 @@
 pub(crate) mod bridge;
 mod emit;
+pub(crate) use emit::RaftLayerPlan;
 mod fill_params;
 mod fills;
 mod grid;
