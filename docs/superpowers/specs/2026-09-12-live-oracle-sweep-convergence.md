@@ -1162,3 +1162,18 @@ discrete delay-accounting events (command_delay / toolchange-load /
 G4-M400 class) attached at different points or amounts. Next slice:
 localize the exact delay blocks at the two step regions and align the
 ares delay schedule with upstream's.
+
+## Same-stream block-level layout: start-gcode delay packing differs (#173)
+
+Block streams (GT-ref vs ares on the identical reference gcode): both
+reach cum 301.508s at the 260s G29 trapezoid block, but the LAYOUT
+differs — upstream attaches ~39.6s of extra start-gcode delays as
+`additional_time` to the sync block (cum jump 299.7s on a 260.099s
+block), while ares emits them as separate blocks (a 29.000s
+zero-distance block + a 10.601s/3mm block). Same total, different
+block layout — plus two extra 0.014s (cruise 30, dist 0.4) blocks in
+ares around idx 13/17. The delay-sequence diff (>0.3s blocks) shows
+exactly this one insertion pair. The +3s steps (cum 977-3207 and
+after 4412) remain to be localized against this same-stream pair —
+next slice: extend the ARES_DUMP_BLOCKS with the gcode-line text per
+delay block to name the exact commands at the two step regions.
