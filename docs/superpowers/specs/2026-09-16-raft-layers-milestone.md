@@ -471,3 +471,19 @@ likely the take_next trimmed branch appends (1e10 limited) instead of
 merging polylines, or the loop ordering skips every second arc.
 Next: probe the consumption loop on the 27-line square (CHAIN fixture
 merges 26→14×4-pt: same every-other signature ✓ reproducible).
+
+## #245 take_next walk-through (root cause narrowed to the same-chain arch)
+
+Fixture indices: idx 2k = line-k BOTTOM, 2k+1 = line-k TOP.
+- idx=0: next=2 (bottom arch) → take_next(0,true) merges line0+line1
+  via take_full_arc; consumed {0,2}; chain lives in slot 0.
+- idx=1 (line0 top): prev=3 (top arch) → take_next(3,false):
+  cp1=1, cp2=3; resolve_merged(1)=resolve_merged(3)=**slot 0** (both
+  ends already on the SAME chain) → the `polyline_idx1==polyline_idx2`
+  trimmed branch fires → take_limited appends the top arch to the
+  chain. This is EXACTLY upstream's same-chain/self-loop case
+  (`:2405-2414`). If the append is a no-op (empty/direction guard),
+  the chain misses every top arch → the observed every-other break.
+Next: verify append_limited actually extends the chain in this branch
+(assert the output len grows per arch; suspect the second take() on
+the same slot returns default-empty and the arc lands on a lost vec).
