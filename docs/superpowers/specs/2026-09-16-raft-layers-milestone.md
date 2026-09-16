@@ -102,3 +102,33 @@ Oracle calibration (case-u7sdch, cube lslices ≈ 105..115mm):
 Next: `raft/polygons.rs` chain (first ⊇ base = union(interface) ⊇
 interface = expand(contact, 0.5, jtSquare) ⊇ contact), wired to
 SupportParameters in emission; then fills + emission + gate removal.
+
+## Slice 3 done (`5bf73c40`) + fill map for slice 4 (#205)
+
+Polygon chain ported and oracle-consistent: contact 102249..117319,
+interface = contact ± 500 (jtSquare), base = interface, first =
+base ± (first_exp − fine). Holes grid-filled. ares-core 6965/6965.
+
+Raft fill map (`SupportCommon.cpp:1440-1523`, per raft layer):
+- Layer 0 (base flange): pattern `raft_interface_fill_pattern`,
+  angle `raft_angle_1st_layer`, spacing `first_layer_flow.spacing()`,
+  density `raft_first_layer_density` (90%), role erSupportMaterial,
+  flow `first_layer_flow`.
+- Layers 1..base_raft_layers: pattern `base_fill_pattern`
+  (support_base_pattern), angle `raft_angle_base`, spacing
+  `support_material_flow.spacing()`, density `support_density`,
+  role erSupportMaterial, with_sheath.
+- Interface layers (>= base_raft_layers incl. contact): pattern
+  `raft_interface_fill_pattern`, angle `raft_interface_angle(
+  interface_id)` (alternating per layer), spacing
+  `support_material_flow.spacing()`, density
+  `raft_interface_density`, flow `raft_interface_flow`, role
+  erSupportMaterialInterface.
+- link_max_length = spacing * link_max_length_factor / density.
+- Interface-layer fills use base polys (`raft_layer.polygons`) but
+  base-layer loop infills base polys via `to_infill_polygons`;
+  tree cut-through deferred (no trees in KSR raft-only).
+
+Next: port SupportParameters raft fields (SupportParameters.hpp),
+fill emission via existing rectilinear machinery, then wire layers
+into the emission stream (ids shift by raft_layers) + gate removal.
