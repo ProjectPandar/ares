@@ -640,3 +640,68 @@ mod order_probe {
         );
     }
 }
+
+#[cfg(test)]
+mod orient_probe {
+    #[test]
+    fn probe_contour_orientation() {
+        use crate::fill::connect::graph::build_working_graph;
+        use crate::geometry::{CoordinateScale, Polyline};
+
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        let lines: Vec<Polyline> = (-1..=1)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let graph = build_working_graph(
+            lines,
+            &[polygon],
+            bbox,
+            0.407,
+            CoordinateScale::Normal,
+        )
+        .unwrap();
+        let pts = &graph.boundary[0].points;
+        eprintln!(
+            "ORIENT contour first5={:?}",
+            pts.iter()
+                .take(5)
+                .map(|p| (p.x(), p.y()))
+                .collect::<Vec<_>>()
+        );
+        for idx in 0..6 {
+            let i = &graph.intersections[idx];
+            if let Some(ci) = i.contour_index {
+                let p = graph.boundary[ci].points[i.point_index];
+                eprintln!(
+                    "ORIENT idx={idx} pt=({},{}) prev={} prev_pt={:?} next={} next_pt={:?}",
+                    p.x(),
+                    p.y(),
+                    i.prev.unwrap_or(usize::MAX),
+                    i.prev.map(|o| {
+                        let j = &graph.intersections[o];
+                        let q = graph.boundary[j.contour_index.unwrap()].points[j.point_index];
+                        (q.x(), q.y())
+                    }),
+                    i.next.unwrap_or(usize::MAX),
+                    i.next.map(|o| {
+                        let j = &graph.intersections[o];
+                        let q = graph.boundary[j.contour_index.unwrap()].points[j.point_index];
+                        (q.x(), q.y())
+                    }),
+                );
+            }
+        }
+    }
+}

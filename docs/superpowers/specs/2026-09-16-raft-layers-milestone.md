@@ -563,3 +563,49 @@ next_len=16.6m (the FULL edge) — upstream idx1's NEXT should be the
 INVERTED in ares' graph for this contour. Fix: verify the split
 orientation (ccw vs cw point insertion) in graph.rs vs upstream's
 split_boundary_working_copy; likely flip.
+
+## #250 orientation NOT inverted — trim lengths themselves match upstream
+
+ORIENT probe: idx=1 prev=3 (x=0 top, ADJACENT), next=0 (own bottom) —
+per the square's ccw order (top edge runs X+), idx1's contour
+neighbors are idx3 (X=0) and... wait idx1=(-537000,top): next_on_contour
+walking ccw = idx0 (-537000,bottom)?? No — the ccw point ORDER is
+[(-7650601,-7650601) bottom-left → (-537000,bottom) → (0,bottom) →
+(537000,bottom) → (7650601,-7650601) → right edge up → top edge X-
+→ left edge down]. So the bottom hits come BEFORE the top hits; the
+LAST bottom hit's ccw-next runs up the right edge, across the whole
+top edge (all top hits in REVERSE X), down the left edge back to the
+FIRST bottom hit. idx1 (first top hit in X) therefore has prev=3
+(the X=0 top, 0.537 away) and next=0 (wrapping down the left edge,
+16.6m away) — **ares' graph matches upstream exactly**. Not
+inverted. Then upstream idx1's prev arc (0.537 to idx3) is the SAME
+short top arch — upstream's gate `!prev_trimmed || 0.537*1e6 >
+0.79*1e6` — 537000 < 789100 → upstream ALSO skips. UNLESS upstream's
+prev_trimmed for idx1 is FALSE: upstream's mark_boundary_segments_
+touching_infill (the FIRST trim pass, with clip 1.7·spacing /
+colliding 0.8·spacing) trims boundary arcs COLLIDING with infill
+tubes of OTHER lines. The 0.537 top arch lies in the tube of BOTH
+end lines?? The arch is BETWEEN two adjacent lines' endpoints —
+distance to either line = 0 (endpoints on the lines) but the arch
+MIDPOINT is 0.5·0.537=0.27 from either line > tube radius 0.204 →
+not fully inside either tube → NOT trimmed by the touching pass;
+the overlapping pass (radius 0.5·(spacing+eps)=0.204, checks SEGMENT
+ENDPOINTS inside the tube): endpoint = the OTHER intersection
+point (on the neighbor line) → distance 0 → inside → walk
+continues... loop until `closed_contour_distance(...) >=
+not_taken_next` — the walk covers the whole 0.537 arch → inside
+stays true → trim(0). Upstream same math → also trims. So how does
+upstream connect? => the serpent must come from the LAST bottom
+hit's NEXT direction: idx=52/54 (last bottom) next arc = up-right-
+edge + across whole top + down-left = 16.6+16.6+16.6 ≈ 50m arch,
+not trimmed, length >> min_arch → take_next(last_bottom, true) with
+take_first=true → cp1=last bottom, cp2=first top — take() FULL arc
+SWALLOWS the whole top edge including all top endpoints → one huge
+polyline serpentine... then the bottom pairs chain into it. The
+ares loop never reaches this because it takes SHORT arches first
+(idx=0's 0.537 next) consuming endpoints so the long arch's cp2 is
+already consumed. Upstream iterates in the same order... but
+upstream's idx=0 gate: !next_trimmed(0.537 SHORT arch, next_trim
+likely TRUE after touching pass) || 537000 > 789100 → skip → the
+long arch survives. THE DELTA: ares idx0 next_trim=FALSE. Root
+cause: the touching pass should trim the short bottom arches too.
