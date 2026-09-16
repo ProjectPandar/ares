@@ -10,6 +10,8 @@
 use crate::geometry::{Coord, Point, Polyline};
 
 #[cfg(test)]
+#[expect(dead_code, reason = "wired by connect_base_support in the next slice")]
+mod mark;
 mod tests;
 
 /// Port of `emit_loops_in_band` (`FillBase.cpp:1952`).
