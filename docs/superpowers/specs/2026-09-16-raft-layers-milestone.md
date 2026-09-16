@@ -446,3 +446,16 @@ Fix next: the modal-F/word parsing in estimate.rs (or the block
 builder consuming a stale/negative feedrate) — then the estimator
 converges 136s→1891s in one shot, collapsing M73 frequency, R
 values, and the P>100 artifacts together.
+
+## #238 negative-F SOURCE FOUND (emission, not estimator)
+
+`grep F-` → exactly 2 lines: `G1 F-3.986` on the OBJECT first layer's
+Skirt wipe sequence (z=30.3, `;TYPE:Skirt` → `G1 F-3.986` then
+`G1 X.. E-36.67986 / E-75.169` huge negative wipe E). −3.986/60 =
+−0.066 = the poisoning feedrate; the modal F stays negative until
+the next F word → 66 negative-speed blocks ✓ fully consistent.
+
+Fix: the skirt-wipe feedrate computation in the emission path
+(cooling/wipe F derives from a ratio over the negative wipe E —
+upstream uses the absolute value). NOT an estimator bug; the
+estimator correctly mirrors whatever F the gcode carries.

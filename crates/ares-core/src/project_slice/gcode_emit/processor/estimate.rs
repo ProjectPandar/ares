@@ -281,3 +281,50 @@ fn selects_initial_tool(code: &str, active_tool: &mut Option<u8>) -> bool {
     };
     active_tool.replace(tool).is_none()
 }
+
+#[cfg(test)]
+mod neg_speed_probe {
+    #[test]
+    fn probe_negative_speed_blocks() {
+        let lines = [
+            "G1 X104.092 Y105.327 F9000",
+            "G1 F2400",
+            "G1 X104.092 Y114.673 E.36058",
+            "G1 X104.629 Y115.21 F9000",
+            "G1 F2400",
+            "G1 X104.629 Y104.79 E.40202",
+        ]
+        .map(str::to_owned);
+        let est = super::Estimate::from_lines(&lines, 0.0, crate::project_slice::gcode_emit::processor::ProcessorLimits::default());
+        eprintln!("EST total={} prepare={}", est.total, est.prepare);
+    }
+}
+
+#[cfg(test)]
+mod neg_probe2 {
+    #[test]
+    fn probe_with_wipe() {
+        unsafe { std::env::set_var("ARES_DUMP_BLOCKS", "/tmp/pe/pb.txt") };
+        let lines = [
+            "G1 X104.092 Y105.327 F9000",
+            "G1 F2400",
+            "G1 X104.092 Y114.673 E.36058",
+            "G1 X104.629 Y115.21 F9000",
+            "G1 F2400",
+            "G1 X104.629 Y104.79 E.40202",
+            "G1 E-2.8 F3600",
+            ";WIPE_START",
+            "G1 F2400",
+            "G1 X105.166 Y104.253 E-.48790",
+            ";WIPE_END",
+            "G1 F2400",
+            "G1 X105.166 Y115.747 E.44346",
+        ]
+        .map(str::to_owned);
+        let _ = super::Estimate::from_lines(
+            &lines,
+            0.0,
+            crate::project_slice::gcode_emit::processor::ProcessorLimits::default(),
+        );
+    }
+}
