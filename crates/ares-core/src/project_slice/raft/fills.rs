@@ -94,7 +94,10 @@ pub(crate) fn raft_layer_fill(
             if line.x > source_bounds.max().x() {
                 break;
             }
-            fill_lines.extend(vertical_segments(line));
+            fill_lines.extend(vertical_segments(
+                line,
+                spec.angle + std::f64::consts::FRAC_PI_2,
+            ));
         }
         if fill_lines.is_empty() {
             continue;
@@ -117,7 +120,17 @@ pub(crate) fn raft_layer_fill(
 /// Emit OuterLow→OuterHigh pairs as 2-point polylines
 /// (`make_fill_lines:2948-2960`); the slice frame already carries the
 /// back-rotated points.
-fn vertical_segments(line: &SegmentedLine) -> Vec<Polyline> {
+fn vertical_segments(line: &SegmentedLine, rotate_back: f64) -> Vec<Polyline> {
+    // The slice frame rotates by −(angle+π/2); the world-frame points
+    // rotate back by +(angle+π/2) (`make_fill_lines:2955-2958`).
+    let (cos_a, sin_a) = (rotate_back.cos(), rotate_back.sin());
+    let rotate = |point: crate::geometry::Point| {
+        let (x, y) = (point.x() as f64, point.y() as f64);
+        crate::geometry::Point::new(
+            (x * cos_a - y * sin_a).round() as i64,
+            (x * sin_a + y * cos_a).round() as i64,
+        )
+    };
     let mut out = Vec::new();
     let mut index = 0;
     while index < line.intersections.len() {
@@ -130,7 +143,7 @@ fn vertical_segments(line: &SegmentedLine) -> Vec<Polyline> {
             break;
         };
         if high.kind == IntersectionKind::InnerHigh {
-            out.push(Polyline::new(vec![low.point, high.point]));
+            out.push(Polyline::new(vec![rotate(low.point), rotate(high.point)]));
             index += 2;
         } else {
             index += 1;
