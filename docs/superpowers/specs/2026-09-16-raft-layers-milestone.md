@@ -1,6 +1,22 @@
 # Raft Layers Milestone (raft_layers option domain)
 
-## Status: IN PROGRESS — slice 1 (z-grid + silhouette expansion) committed
+## Status: IN PROGRESS — slice 2 (z-grid) committed (`8aa31fd3`)
+
+Additional upstream anchors confirmed while porting the grid:
+- Contact layer z: `new_contact_layer` raft branch
+  (`SupportMaterial.cpp:1738-1746`): `print_z = raft_contact_top_z`,
+  `bottom_z = raft_interface_top_z`, `height = contact_raft_layer_height`.
+- Contact silhouette: `detect_contacts` layer_id==0 branch
+  (`SupportMaterial.cpp:1573-1577`): `expand(overhang_polygons,
+  raft_expansion)` — the overhangs for layer 0 (empty lower layer) are
+  the whole first-object-layer lslices.
+- Object layer ids shift by `raft_layers()` (`SupportMaterial.cpp:2130`
+  comment: "layer->id incorporates the raft layers") — ares'
+  `apply_raft_expansion` (print_paths/support_interface.rs:72) already
+  assumes this id layout.
+- `raft_layers()==1` degenerate case: no generate_raft_base layer
+  push at all; the single contact layer comes from top_contacts
+  (`Slicing.cpp:208-211`).
 
 Goal: un-gate `raft_layers` (capabilities.rs rejects nonzero today) with
 byte-parity raft emission on the KSR sweep cases
