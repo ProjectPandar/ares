@@ -1518,3 +1518,23 @@ fixed: the shadowed `expected` in the spiral-context test, the
 unused `relative` param on parse_arc, and the stale README -12ms/
 E-only-block text superseded by the #178-#179 corrections. The ksr
 stream (all Legacy) is unchanged: 6180.252066.
+
+## Review round 4 CLOSED: PASS with all fixes landed (#187)
+
+Round-4 final verdict: PASS (the reviewer's only remaining note — the
+unused ArcGeometry.radius with legacy_deltas' redundant norm
+recomputation — closed by 3c79a5d7). The full round-4 arc:
+1. P1 (unification collapsed upstream's two radius derivations ->
+   f32 boundary flips) — found by the reviewer's source-derived
+   counterexample (G3 I0.1 J0.2 F458.1401), fixed at db1dc75c.
+2. P1-followup (the partial fix left the id-counter Marlin branch on
+   the f64 radius -> generator/counter segment mismatch 10-vs-9 at
+   F343.605 -> duplicate block ids) — found by the round-4 recheck,
+   fixed at 883205b2 (the accounting branch mirrors marlin_deltas
+   verbatim: f32 rel_center norm radius, feed*(1/50), f64-radius
+   flat).
+3. P2s (shadowed expected, unused relative param, stale README,
+   orphaned radius field) — all fixed.
+The ksr stream (all Legacy) verified unchanged throughout
+(304237 cache entries, 6180.252066). Round-4 review loop CLOSED
+PASS.
