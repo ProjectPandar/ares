@@ -275,15 +275,41 @@ pub(super) fn append(
         )?;
         let timelapse_context = boundary.timelapse_context;
         // The skirt prints once per layer before any object content
-        // (`GCode.cpp:4388+`), on the layers it covers. Raft chunks skip
-        // the object skirt path (raft skirts are their own slice).
-        if leading_raft.is_none()
-            && let (Some(&(_, skirt_layer)), Some(plan)) = (
-                entries.iter().find(|&&(object_index, _)| object_index == 0),
-                &skirt,
-            )
-        {
-            let geometry = entry_geometry(0, skirt_layer, &chunk_slices, chunk_perimeter_spacing);
+        // (`GCode.cpp:4388+`), on the layers it covers. Raft chunks emit
+        // the skirt around the raft polygons (the skirt layer index is
+        // the raft layer index — with a raft, the covered layers start
+        // at the raft flange).
+        if let (Some(&(_, skirt_layer)), Some(plan)) = (
+            entries.iter().find(|&&(object_index, _)| object_index == 0),
+            &skirt,
+        ) {
+            let skirt_layer = leading_raft.map_or(skirt_layer, |(raft_index, _)| raft_index);
+            let geometry = if let Some((raft_index, _)) = leading_raft {
+                let raft_polygons = raft
+                    .as_ref()
+                    .and_then(|raft| raft.plans.get(0))
+                    .and_then(|plans| plans.get(raft_index))
+                    .map(|plan| {
+                        plan.polygons
+                            .iter()
+                            .map(|polygon| {
+                                crate::geometry::ExPolygon::new(polygon.clone(), Vec::new())
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                EntryGeometry {
+                    top_surfaces: Vec::new(),
+                    lower_boundary_lines: Vec::new(),
+                    nearest_penalties: None,
+                    layer_slices: raft_polygons.clone().into(),
+                    internal_surfaces: &[],
+                    chunk_slices: raft_polygons,
+                    chunk_perimeter_spacing: 0.0,
+                }
+            } else {
+                entry_geometry(0, skirt_layer, &chunk_slices, chunk_perimeter_spacing)
+            };
             let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
                 .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
             let motion_geometry = geometry.view(traversal, 0, skirt_layer, lower_boundary.as_ref());

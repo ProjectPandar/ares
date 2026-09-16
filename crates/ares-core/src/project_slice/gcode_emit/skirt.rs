@@ -92,6 +92,39 @@ impl SkirtPlan {
         if let Some(brim) = brim {
             occupied.extend_from_slice(brim.covered_hull());
         }
+        // With a raft, the support fills (the raft) contribute to the
+        // occupied hull (`Print.cpp:2687-2694` — support layers up to
+        // skirt_height_z collect their fill points). The raft polygons
+        // bound the fills, so their contours stand in for the fill
+        // points.
+        for (object_index, resolved) in traversal.resolved.objects.iter().enumerate() {
+            if resolved.object.raft_layers.0 <= 0 {
+                continue;
+            }
+            let lslices = traversal.objects[object_index]
+                .slices(0)
+                .unwrap_or(&[])
+                .to_vec();
+            let object_height = traversal.objects[object_index]
+                .records
+                .iter()
+                .filter_map(|record| record.as_ref())
+                .map(|record| record.layer_height)
+                .sum();
+            if let Ok(Some(stream)) = crate::project_slice::raft::bridge::build_project_raft(
+                &traversal.resolved.views.full,
+                &resolved.object,
+                object_height,
+                &lslices,
+                traversal.scale,
+            ) {
+                for plan in &stream.plans {
+                    for polygon in &plan.polygons {
+                        occupied.extend(polygon.points().iter().copied());
+                    }
+                }
+            }
+        }
         let hull = convex_hull(&occupied);
         if hull.len() < 3 {
             return Ok(None);
