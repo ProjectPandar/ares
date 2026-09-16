@@ -310,7 +310,7 @@ fn rounded_width(spacing: f32, height: f32) -> f32 {
     (f64::from(spacing) + f64::from(height) * ROUNDED_RECTANGLE_FACTOR) as f32
 }
 
-fn ordinary_volume(width: f32, height: f32) -> f64 {
+pub(in crate::project_slice) fn ordinary_volume(width: f32, height: f32) -> f64 {
     f64::from(
         (f64::from(height) * (f64::from(width) - f64::from(height) * ROUNDED_RECTANGLE_FACTOR))
             as f32,

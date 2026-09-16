@@ -21,6 +21,10 @@ pub(crate) struct RaftLayerPlan {
     pub(crate) z: RaftLayerZ,
     pub(crate) polygons: Vec<Polygon>,
     pub(crate) spec: RaftFillSpec,
+    /// Extrusion width in mm (support / interface role width).
+    pub(crate) width_mm: f64,
+    /// Layer height in mm.
+    pub(crate) height_mm: f64,
 }
 
 /// Build the raft layer plans for one object
@@ -34,6 +38,9 @@ pub(crate) fn raft_layer_plans(
     support_flow_spacing_mm: f64,
     first_layer_flow_spacing_mm: f64,
     first_layer_density_percent: f64,
+    support_width_mm: f64,
+    interface_width_mm: f64,
+    first_layer_height_mm: f64,
 ) -> Vec<RaftLayerPlan> {
     let mut plans = Vec::with_capacity(raft_grid.len());
     let mut interface_id = 0usize;
@@ -75,6 +82,16 @@ pub(crate) fn raft_layer_plans(
             z: *z,
             polygons,
             spec,
+            width_mm: if z.kind == RaftLayerKind::Base {
+                support_width_mm
+            } else {
+                interface_width_mm
+            },
+            height_mm: if index == 0 {
+                first_layer_height_mm
+            } else {
+                z.height
+            },
         });
     }
     plans

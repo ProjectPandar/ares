@@ -22,6 +22,8 @@ pub(super) struct RaftSchedule {
     pub(super) entries: Vec<(f64, usize, usize)>,
     /// Per-object raft layer plans, `[object][raft_layer]`.
     pub(super) plans: Vec<Vec<RaftLayerPlan>>,
+    /// Per-object materialized raft layers, `[object][raft_layer]`.
+    pub(super) layers: Vec<Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>>,
     /// Per-object object-layer z shift.
     pub(super) object_z_shift: Vec<f64>,
     /// Total raft layer count per object (0 = no raft).
@@ -48,6 +50,9 @@ pub(super) fn build(
     let object_count = objects.len();
     let mut entries = Vec::new();
     let mut plans = vec![Vec::new(); object_count];
+    let mut layers = (0..object_count)
+        .map(|_: usize| Vec::new())
+        .collect::<Vec<_>>();
     let mut object_z_shift = vec![0.0; object_count];
     let mut counts = vec![0usize; object_count];
     for object_index in 0..object_count {
@@ -82,6 +87,10 @@ pub(super) fn build(
         counts[object_index] = stream.plans.len();
         plans[object_index] = stream.plans;
         object_z_shift[object_index] = stream.object_print_z_min;
+        layers[object_index] = plans[object_index]
+            .iter()
+            .filter_map(|plan| materialize_layer(plan, scale))
+            .collect();
     }
     if entries.is_empty() {
         return Ok(None);
@@ -90,6 +99,7 @@ pub(super) fn build(
     Ok(Some(RaftSchedule {
         entries,
         plans,
+        layers,
         object_z_shift,
         counts,
     }))
@@ -102,4 +112,65 @@ pub(super) fn classify(layer_index: usize) -> Result<Option<usize>, crate::Slice
     }
     let raft_index = layer_index - RAFT_SENTINEL_BASE;
     Ok(Some(raft_index))
+}
+
+/// Materialize one raft layer plan into an `OrderedExtrusionLayer`
+/// (fill entities with support roles — the motion machinery emits
+/// travel/Z/TYPE/wipe exactly like object layers).
+fn materialize_layer(
+    plan: &RaftLayerPlan,
+    scale: crate::geometry::CoordinateScale,
+) -> Option<crate::project_slice::island_print_order::OrderedExtrusionLayer> {
+    use crate::project_slice::fill_entities::{
+        FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath,
+    };
+    use crate::project_slice::island_print_order::{IslandPrintEntity, OrderedExtrusionIsland};
+    use crate::project_slice::raft::fills::raft_layer_fill;
+    use crate::{ExtrusionRole, geometry::Point};
+
+    let polylines = raft_layer_fill(
+        &plan.polygons,
+        crate::project_slice::raft::RaftFillSpec {
+            angle: plan.spec.angle,
+            spacing: plan.spec.spacing,
+            density: plan.spec.density,
+        },
+        Point::new(0, 0),
+        scale,
+    )
+    .ok()?;
+    if polylines.is_empty() {
+        return None;
+    }
+    let role = if plan.z.kind == crate::project_slice::raft::RaftLayerKind::Base {
+        ExtrusionRole::SupportMaterial
+    } else {
+        ExtrusionRole::SupportMaterialInterface
+    };
+    let width = plan.width_mm as f32;
+    let height = plan.height_mm as f32;
+    let mm3_per_mm = crate::project_slice::perimeters::flow::ordinary_volume(width, height);
+    Some(
+        crate::project_slice::island_print_order::OrderedExtrusionLayer {
+            islands: vec![OrderedExtrusionIsland {
+                entities: vec![IslandPrintEntity::FillCollection(FillExtrusionCollection {
+                    entities: polylines
+                        .into_iter()
+                        .map(|polyline| {
+                            FillExtrusionEntity::Path(FillExtrusionPath {
+                                polyline,
+                                fitting: Vec::new(),
+                                role,
+                                mm3_per_mm,
+                                width,
+                                height,
+                            })
+                        })
+                        .collect(),
+                    no_sort: false,
+                    simplify_reversed: false,
+                })],
+            }],
+        },
+    )
 }

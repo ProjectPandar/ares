@@ -158,9 +158,12 @@ pub(crate) fn build_raft_stream(
         &raft_grid,
         &polygons,
         &fill_params,
-        support_flow_spacing,     // support_flow_spacing,
-        first_layer_flow_spacing, // first_layer_flow_spacing,
+        support_flow_spacing,
+        first_layer_flow_spacing,
         options.raft_first_layer_density_percent()?,
+        support_width,
+        interface_width,
+        first_height,
     );
 
     Ok(Some(RaftStream {
@@ -273,6 +276,9 @@ pub(crate) fn build_project_raft(
         support_flow_spacing,
         first_layer_flow_spacing,
         object.raft_first_layer_density.0,
+        support_width,
+        interface_width,
+        first_height,
     );
 
     Ok(Some(RaftStream {
