@@ -1423,3 +1423,18 @@ analysis from the naive join is UNRELIABLE; the true comparison needs
 the exact per-arc internal counts replayed to build both id->line
 maps (or a signature join on (dist, cruise)). This also re-motivates
 unifying the three arc-math derivations into one.
+
+## Signature join: aligned-block drift is only +0.16s (#181)
+
+Joining the two same-stream block dumps by (dist, cruise) signature
+(quantized 3dp/2dp; difflib over 304k-vs-314k blocks): 101,943
+signature-equal blocks align, and their TOTAL time difference is
+**+0.162s** — 13,780 blocks differ by <1ms, 859 by <10ms, 2 by
+<100ms; the worst single block is -16.5ms. Per-block motion timing on
+aligned blocks is therefore near-exact across the WHOLE print. The
++3s ksr residual lives in the STRUCTURAL regions: 24,623 non-equal
+signature opcodes = blocks present on one side only (the long-known
+~9.9k extra ares blocks plus signature-fragmented windows). Next
+slice: sum the time carried by the unmatched blocks on each side from
+the alignment opcodes (insert-only vs delete-only time), which should
+account for the +3s directly.
