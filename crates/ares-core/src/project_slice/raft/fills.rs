@@ -55,10 +55,14 @@ pub(crate) fn raft_layer_fill(
         if std::env::var("ARES_RAFT_DEBUG").is_ok() {
             eprintln!("RAFTDBG contours={}", slice.contours.len());
         }
+        // Upstream `connect_base_support(..., poly_with_offset.polygons_outer,
+        // ...)` — `polygons_outer` there is the DELTA-shrunk fill boundary
+        // (where the infill endpoints sit), which is ares' `inner`
+        // contour (`ExPolygonWithOffset` naming is inverted vs ares').
         let boundary: Vec<Polygon> = slice
             .contours
             .iter()
-            .filter(|contour| !contour.inner)
+            .filter(|contour| contour.inner)
             .map(|contour| contour.polygon.clone())
             .collect();
         if boundary.is_empty() {
