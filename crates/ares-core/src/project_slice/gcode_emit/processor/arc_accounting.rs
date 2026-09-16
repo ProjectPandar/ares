@@ -45,8 +45,12 @@ pub(super) fn arc_internal_g1_lines(code: &str, command: &str, state: &MotionSta
             }
         }
         None => {
-            let i = word(code, 'I').unwrap_or(0.0);
-            let j = word(code, 'J').unwrap_or(0.0);
+            // `Vec3f rel_center` (`GCodeProcessor.cpp:4590-4596`): the I/J
+            // words parse into an f32 center; the radius/angle below then
+            // derive on the f32-rounded offsets, so borderline arcs' ceil
+            // segmentation must see the same rounded values.
+            let i = word(code, 'I').unwrap_or(0.0) as f32 as f64;
+            let j = word(code, 'J').unwrap_or(0.0) as f32 as f64;
             (i, j, (i * i + j * j).sqrt())
         }
     };

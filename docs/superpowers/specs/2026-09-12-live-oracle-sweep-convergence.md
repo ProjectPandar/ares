@@ -1099,3 +1099,21 @@ The remaining total gap (ares 6180.3 vs GT-manual 6172.5 = +7.7s;
 Next slice: find why ares' planner produces ~3% more blocks (extra
 junction splitting? discretization?) and whether the GUI-reference
 stream (where ares is byte-identical in gcode) shows the same count.
+
+## Arc segmentation EXONERATED; the residual is per-segment zero-block filtering (#172)
+
+Per-arc dumps (new GT arcseg patch at the true nix-source context —
+the earlier one-hunk patch MISLANDED into the trapezoid planner
+because the nixpkgs source line layout differs from the repo tree;
+an ENTER probe at process_G2_G3 entry fired 13368/13368 first) prove
+the arc segmentation IDENTICAL: 145440 total segments on BOTH sides,
+zero per-arc count differences (1238 radius / 55 angle word-parse
+ULP diffs notwithstanding). The +9919 "extra blocks" was a dump-
+methodology artifact: the GT ORCA_DUMP_TIMES records g1_times_cache
+pushes (113894 arc entries) while ARES_DUMP_BLOCKS records every
+planner block (123813 arc-segment blocks). The real divergence: for
+~9.9k identical segments ares CREATES a planner block where upstream
+drops it (zero-distance / segment_block filtering), each adding
+junction overhead to the total — the ~+3-7s estimator residual.
+Next slice: align ares' per-segment zero-delta filtering with
+upstream's internal G1 block path.
