@@ -1406,3 +1406,20 @@ blocks are queued when the M400 fires — block-push ordering around
 toolchange/G28/arc-internal ids), not from the schedule rules. Next
 slice: trace one 81342-window M400's block queue position on both
 sides (block-count at flush time).
+
+## CORRECTION: the naive cache-id join is polluted by id misalignment (#180)
+
+Raw GT dump lines for the "jump" window: GT id 81342 = a 25mm travel
+(dist 25.05, cruise 50, t 0.514) while ares id 81342 = a tiny extrude
+— the two caches' id N maps to DIFFERENT gcode lines. The naive
+id-equality join produced block-time "differences" that are actually
+different blocks. The id spaces drift because the arc-internal
+accounting diverges somewhere (ares increments by
+`1 + arc_internal_g1_lines` per arc; upstream by one per internal
+process_G1 — the counts agree on total segments, but any per-arc
+disagreement between the three parallel ares arc-math derivations
+shifts the alignment from that arc onward). The earlier drift/jump
+analysis from the naive join is UNRELIABLE; the true comparison needs
+the exact per-arc internal counts replayed to build both id->line
+maps (or a signature join on (dist, cruise)). This also re-motivates
+unifying the three arc-math derivations into one.
