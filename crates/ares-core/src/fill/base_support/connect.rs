@@ -80,6 +80,14 @@ pub(crate) fn connect_base_support(
 
     // Vertical-arch consumption (`:2425-2455`).
     for index in 0..intersections.len() {
+        #[cfg(test)]
+        if std::env::var("ARES_ORDER_DEBUG").is_ok() && index < 8 {
+            let i = &intersections[index];
+            eprintln!(
+                "ORDR idx={index} consumed={} prev_trim={} prev_len={:.3} next_trim={} next_len={:.3}",
+                i.consumed, i.prev_trimmed, i.not_taken_prev, i.next_trimmed, i.not_taken_next
+            );
+        }
         if intersections[index].consumed {
             continue;
         }
@@ -592,5 +600,43 @@ mod merge_probe {
                     .join(" ")
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod order_probe {
+    #[test]
+    fn probe_27_line_order() {
+        use super::*;
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        let lines: Vec<Polyline> = (-13..=13)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let out = connect_base_support(
+            lines,
+            &[polygon],
+            bbox,
+            0.407,
+            0.67,
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        eprintln!(
+            "ORDER27 out={} lens={:?}",
+            out.len(),
+            out.iter().map(|p| p.points().len()).collect::<Vec<_>>()
+        );
     }
 }
