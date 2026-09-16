@@ -1201,3 +1201,16 @@ not create there, while the ~9k extra body blocks contribute ~net-zero
 time (sub-ms). Next slice: identify why the FINAL-region arc segments
 create blocks in ares but not upstream (wipe/prime-tower arcs at the
 end may take a different path in the Noop classification).
+
+## +612 tail blocks = the 327 spiral-lift toolchange arcs (#174)
+
+The tail region (gcode line 261266+, the wipe-heavy dual-extrusion
+endgame) contains 327 `G2/G3 Z.. I.. J.. P1` spiral-lift arcs (the
+change_filament_gcode template's z-hop spiral) — 327 × ~2 extra
+blocks ≈ the +612 extra ~5ms tail blocks (+3.2s). These arcs are
+full-circle XY sweeps (start==end XY, Z climbs): the per-arc dumps
+show identical TOTAL segments, so the divergence is again per-segment
+block creation for this arc class (Z-only endpoint + full-circle
+sweep). Next slice: compare one spiral arc's per-segment block stream
+(ares kinds dump vs GT) — likely the final-segment/f32-Noop handling
+on the degenerate XY-equal endpoint.
