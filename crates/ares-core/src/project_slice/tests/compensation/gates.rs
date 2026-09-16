@@ -135,8 +135,8 @@ fn task22m_flow_preflight_is_all_or_error() {
 }
 
 #[tokio::test]
-async fn task22m_flow_public_raft_gate_precedes_task22m_for_both_signs() {
-    for raft_layers in ["1", "-1"] {
+async fn task22m_flow_public_raft_slices_instead_of_gating() {
+    for raft_layers in ["1", "2"] {
         let mut archive = KsrArchive::new();
         archive.replace(
             "Metadata/project_settings.config",
@@ -144,12 +144,11 @@ async fn task22m_flow_public_raft_gate_precedes_task22m_for_both_signs() {
             &format!("\t\"raft_layers\": \"{raft_layers}\","),
         );
 
-        assert_eq!(
-            slice_project(archive.bytes(), metadata())
-                .await
-                .unwrap_err(),
-            SliceError::UnsupportedProjectFeature("raft_layers".to_owned())
-        );
+        // The raft_layers gate is removed (raft milestone): raft projects
+        // now slice through the raft pipeline — a full success, not an
+        // UnsupportedProjectFeature.
+        let result = slice_project(archive.bytes(), metadata()).await;
+        assert!(result.is_ok());
     }
 }
 

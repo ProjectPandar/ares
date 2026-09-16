@@ -40,9 +40,11 @@ fn task22a_capability_gates_each_named_feature() {
 
     let source = source_object(Default::default(), Vec::new(), Vec::new());
     let object = with_object(|value| value.raft_layers = OrcaInt(1));
-    assert_unsupported(
+    // The raft gate is removed (raft milestone): raft_layers no longer
+    // crosses the capability boundary.
+    assert_eq!(
         validate(false, &[source], &[resolved(0, object, Vec::new())]),
-        "raft_layers",
+        Ok(())
     );
 }
 
@@ -73,7 +75,8 @@ fn task22a_capability_gate_order_is_project_key_major() {
         source_object(Default::default(), Vec::new(), Vec::new()),
         source_object(Default::default(), Vec::new(), Vec::new()),
     ];
-    assert_unsupported(validate(false, &sources, &resolved_objects), "raft_layers");
+    // The raft gate is removed: raft_layers=1 validates clean.
+    assert_eq!(validate(false, &sources, &resolved_objects), Ok(()));
     first.raft_layers = OrcaInt(0);
     resolved_objects[0].object = first;
     assert_eq!(validate(false, &sources, &resolved_objects), Ok(()));
@@ -98,9 +101,10 @@ fn task22o18_global_spiral_crosses_the_capability_boundary_after_earlier_gates()
 
     let source = source_object(Default::default(), Vec::new(), Vec::new());
     let object = with_object(|value| value.raft_layers = OrcaInt(1));
-    assert_unsupported(
+    // The raft gate is removed: only spiral_mode gates here.
+    assert_eq!(
         validate_capabilities(false, &[source], &[resolved(0, object, Vec::new())], true),
-        "raft_layers",
+        Ok(())
     );
 }
 

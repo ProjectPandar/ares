@@ -101,7 +101,7 @@ async fn only_one_wall_first_layer_reduces_first_layer_perimeters() {
 }
 
 #[tokio::test]
-async fn task22o1_preflight_keeps_earlier_raft_gate_precedence() {
+async fn task22o1_preflight_raft_no_longer_gates_arachne() {
     let mut archive = KsrArchive::new();
     archive.replace_unique(
         "Metadata/project_settings.config",
@@ -113,10 +113,13 @@ async fn task22o1_preflight_keeps_earlier_raft_gate_precedence() {
         "\t\"wall_generator\": \"classic\",",
         "\t\"wall_generator\": \"arachne\",",
     );
+    // The raft_layers gate is removed (raft milestone); arachne gates on
+    // its own — the raft no longer shadows it.
+    let error = slice_project(archive.bytes(), metadata())
+        .await
+        .unwrap_err();
     assert_eq!(
-        slice_project(archive.bytes(), metadata())
-            .await
-            .unwrap_err(),
-        SliceError::UnsupportedProjectFeature("raft_layers".to_owned())
+        error,
+        SliceError::UnsupportedProjectFeature("detect_overhang_wall".to_owned())
     );
 }

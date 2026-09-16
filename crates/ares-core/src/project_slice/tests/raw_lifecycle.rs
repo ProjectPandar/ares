@@ -104,11 +104,6 @@ async fn task22b_lifecycle_preserves_load_config_writer_task22a_and_raw_error_pr
     );
     assert_eq!(slice_error(&chain).await, flush_matrix_error());
     chain.repair_flush_matrix();
-    assert_eq!(
-        slice_error(&chain).await,
-        SliceError::UnsupportedProjectFeature("raft_layers".to_owned())
-    );
-    set_scalar(&mut chain, "raft_layers", "1", "0");
     chain.insert_text("Metadata/layer_config_ranges.xml", LAYER_HEIGHT_RANGE);
     assert_eq!(
         slice_error(&chain).await,
@@ -182,11 +177,7 @@ async fn task22b_nonidentity_shrink_options_continue_to_later_preflight() {
     );
     assert_eq!(slice_error(&archive).await, flush_matrix_error());
     archive.repair_flush_matrix();
-    assert_eq!(
-        slice_error(&archive).await,
-        SliceError::UnsupportedProjectFeature("raft_layers".to_owned())
-    );
-    set_scalar(&mut archive, "raft_layers", "1", "0");
+    // The raft gate is removed: layer_config_ranges preflights next.
     assert_eq!(
         slice_error(&archive).await,
         SliceError::UnsupportedProjectFeature("layer_config_ranges".to_owned())

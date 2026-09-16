@@ -93,7 +93,11 @@ pub(crate) fn raft_polygons(
         pattern.extract_support(&contacts_input, &[], params.grid.expansion_to_slice, true);
 
     // 4) Interface expansion (`SupportCommon.cpp:295-331`).
-    let fine = (INFLATE_FACTOR_FINE_MM * params.scale.units_per_mm) as Coord;
+    let fine = if params.raft_layers > 1 {
+        (INFLATE_FACTOR_FINE_MM * params.scale.units_per_mm) as Coord
+    } else {
+        0
+    };
     let interface = if fine > 0 {
         expand_square(&contact, fine)?
     } else {

@@ -97,12 +97,6 @@ async fn task22a_lifecycle_reaches_planning_error_precedence() {
     archive.repair_flush_matrix();
     assert_eq!(
         slice_error(&archive).await,
-        SliceError::UnsupportedProjectFeature("raft_layers".to_owned())
-    );
-
-    set_scalar(&mut archive, "raft_layers", "1", "0");
-    assert_eq!(
-        slice_error(&archive).await,
         SliceError::InvalidInput("invalid Orca option layer_height".to_owned())
     );
 }
@@ -119,12 +113,6 @@ async fn task22a_non_bambu_writes_config_block_and_runs_planning() {
     assert_eq!(slice_error(&archive).await, flush_matrix_error());
 
     archive.repair_flush_matrix();
-    assert_eq!(
-        slice_error(&archive).await,
-        SliceError::UnsupportedProjectFeature("raft_layers".to_owned())
-    );
-
-    set_scalar(&mut archive, "raft_layers", "1", "0");
     assert_eq!(
         slice_error(&archive).await,
         SliceError::InvalidInput("invalid Orca option layer_height".to_owned())
