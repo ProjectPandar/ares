@@ -1214,3 +1214,19 @@ block creation for this arc class (Z-only endpoint + full-circle
 sweep). Next slice: compare one spiral arc's per-segment block stream
 (ares kinds dump vs GT) — likely the final-segment/f32-Noop handling
 on the degenerate XY-equal endpoint.
+
+## Spiral-arc microbench; dual arc-math inconsistency noted (#174)
+
+A minimal `G3 Z.. I.. J.. P1 F60000` file through the GT
+--process-gcode (with M201/M204/M205 limits) creates ALL 22 segment
+blocks (~7ms each — the tail-block class) — upstream does not drop
+spiral segments, so the +612 tail extras are not per-segment drops.
+Also documented: the ares processor carries THREE parallel arc-math
+derivations — motion.rs:272-316 (the arc's first block; has P-word
+turns handling), arc/arc.rs deltas() (per-segment blocks; full-circle
+only, NO P), and arc_accounting.rs (id counting; NO P) — consistent
+for the ksr's full-circle spiral arcs but divergent for hypothetical
+partial+P arcs, and a maintenance hazard. Next slice: run the same
+minimal spiral file through ares' Estimate::from_lines in a unit
+harness (it is a pure function of lines+limits) and diff the block
+streams against the GT dump above.
