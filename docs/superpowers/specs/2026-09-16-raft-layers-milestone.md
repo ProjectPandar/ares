@@ -286,3 +286,25 @@ layer heights from 0 (`scan(0.0)`); `merged` = sorted
 
 Next turn: implement RaftSchedule + merged-entry extension (5a
 scope), then the emit-loop raft branch (5b).
+
+## #216 remaining question for 5a implementation
+
+`ObjectOptions` carries all raft fields (raft_layers/raft_expansion/
+raft_first_layer_density/raft_first_layer_expansion/
+raft_contact_distance/support_base_pattern_spacing/
+support_interface_spacing — object_fields.rs:22-51) ✓. The project
+side should call `parameters::slicing_parameters(settings,
+&resolved.object, height, extruders)` directly (correct types, no
+SliceOptions adapter).
+
+OPEN: support/interface flow WIDTH sourcing in the project path
+(upstream support_material_flow: explicit support width → else
+line_width default). KSR needs 0.45 (line_width) — verify which
+ProjectSettings field carries process line_width
+(raw_settings/effective_config exploration pending). The width feeds
+Flow::spacing (width − h·(1−π/4)) for both grid resolution and fill
+spacing.
+
+5a order: (1) resolve the width source, (2) build_project_raft in
+bridge.rs (project types), (3) raft_schedule.rs (written once, was
+ahead of the API — dropped), (4) layers.rs emit branch.
