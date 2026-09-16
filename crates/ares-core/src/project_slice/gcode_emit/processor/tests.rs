@@ -556,3 +556,117 @@ fn toolchange_tail_delays_match_gt_oracle() {
         total = estimate.total
     );
 }
+
+/// The real toolchange-context spiral (extracted verbatim from the ksr
+/// reference tail, line ~260001): wipe retract, spiral lift arc, travel,
+/// E.4 prime. GT --process-gcode (fixed oracle, 2026-09-16): 39.358932s
+/// over 34 blocks. This is the true repro context for the +3s tail
+/// residual; keep pinned until ares matches.
+#[test]
+#[ignore = "spiral-in-context: ares 39.3064 vs GT 39.3589 (-52ms: Z-limited junctions under-penalized)"]
+fn spiral_in_toolchange_context_matches_gt() {
+    let lines: Vec<String> = [
+        ";FLAVOR:Marlin",
+        "M201 X10000 Y10000",
+        "M204 P10000 R10000 T10000",
+        "M205 X10 Y10",
+        "G90",
+        "M82",
+        "G21",
+        "G1 X10 Y10 F600",
+        "G1 X135.299 Y101.232 E.01476",
+        "G1 X135.299 Y100.752 E.01476",
+        "G1 X135.739 Y100.752 E.01353",
+        "M204 S10000",
+        "G1 E-.25 F1800",
+        "; WIPE_START",
+        "G1 F12000",
+        "G1 X135.779 Y101.232 E-.0723",
+        "G1 X135.299 Y101.232 E-.07205",
+        "G1 X135.299 Y101.195 E-.00565",
+        "; WIPE_END",
+        "G17",
+        "G3 Z84 I-1.217 J0 P1  F60000",
+        "G1 X135.299 Y115.752 Z84",
+        "G1 Z83.6",
+        "G1 E.4 F1800",
+        "M204 S5000",
+        "G1 F1200",
+        "G1 X135.779 Y115.752 E.01476",
+        "G1 X135.779 Y116.232 E.01476",
+        "G1 X135.299 Y116.232 E.01476",
+        "G1 X20 Y20 F600",
+    ]
+    .into_iter()
+    .map(str::to_owned)
+    .collect();
+    let gt_defaults = ProcessorLimits {
+        print_acceleration: 10000.0,
+        retract_acceleration: 10000.0,
+        travel_acceleration: 10000.0,
+        gcode_flavor: crate::GCodeFlavor::MarlinLegacy,
+        bbl_printer: false,
+        junction_deviation: 0.0,
+        max_feedrate: [500.0, 500.0, 12.0, 120.0],
+        max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
+        jerk: [10.0, 10.0, 0.2, 2.5],
+    };
+    let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
+    let expected = 39.358_932;
+    panic!("ares total {} vs GT {expected}", estimate.total);
+}
+
+/// Ares-side ladder for the toolchange-tail bisect (GT values captured
+/// 2026-09-16 with the FIXED --process-gcode oracle):
+/// no_e 2.819025, with_e 2.826729, +M622 2.826729, +M400 2.826729,
+/// +Z3 5.630681. Prints ares' rung totals for the comparison; flip to
+/// an assert once the +0.19s rung is fixed.
+#[test]
+#[ignore = "ladder probe: ares 2.8190/2.8200/2.8200/2.8200/5.8211 vs GT 2.8190/2.8267/2.8267/2.8267/5.6307"]
+fn toolchange_ladder_totals() {
+    let base = [
+        ";FLAVOR:Marlin",
+        "M201 X10000 Y10000",
+        "M204 P10000 R10000 T10000",
+        "M205 X10 Y10",
+        "G90",
+        "M82",
+        "G21",
+        "G1 X10 Y10 F600",
+    ];
+    let rungs: &[(&str, &[&str])] = &[
+        ("no_e", &["G1 X10.5 Y10 F1200"]),
+        ("with_e", &["G1 X10.5 Y10 E.2 F1200"]),
+        ("with_e_m622", &["G1 X10.5 Y10 E.2 F1200", "M622 J1"]),
+        (
+            "with_e_m622_m400",
+            &["G1 X10.5 Y10 E.2 F1200", "M622 J1", "M400"],
+        ),
+        (
+            "with_e_m622_m400_z3",
+            &["G1 X10.5 Y10 E.2 F1200", "M622 J1", "M400", "G1 Z3 F60"],
+        ),
+    ];
+    let mut totals = Vec::new();
+    for (name, tail) in rungs {
+        let mut lines: Vec<String> = base.iter().map(|s| s.to_string()).collect();
+        lines.extend(tail.iter().map(|s| s.to_string()));
+        lines.push("G1 X20 Y20 F600".to_string());
+        // GT defaults for uncovered axes (PrintConfig.cpp:4505-4512):
+        // Z/E accel 500/5000, speeds 12/120, jerks 0.2/2.5.
+        let gt_defaults = ProcessorLimits {
+            print_acceleration: 10000.0,
+            retract_acceleration: 10000.0,
+            travel_acceleration: 10000.0,
+            gcode_flavor: crate::GCodeFlavor::MarlinLegacy,
+            bbl_printer: false,
+            junction_deviation: 0.0,
+            max_feedrate: [500.0, 500.0, 12.0, 120.0],
+            max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
+            jerk: [10.0, 10.0, 0.2, 2.5],
+        };
+        let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
+        totals.push(format!("{name} {}", estimate.total));
+    }
+    panic!("{}", totals.join(" | "));
+}

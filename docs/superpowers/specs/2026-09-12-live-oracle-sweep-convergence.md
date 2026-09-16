@@ -1258,3 +1258,21 @@ bisect: M622 J1 and M400-without-S/P add ZERO delay in GT; the whole
 total is plain motion time; the ares +0.19 must sit in the motion
 blocks themselves (Z3 block or the X20 junction) — next slice: ares
 per-variant totals on the same 5-step ladder.
+
+## Ladder + spiral-in-context repros; the sign flips (#176)
+
+Ares-side ladder (GT-default limits for uncovered axes: Z/E accel
+500/5000, speeds 12/120, jerks 0.2/2.5 — PrintConfig.cpp:4505-4512):
+no_e EXACT (2.819025), with_e -0.0067 (ares faster on the E block),
++Z3 +0.19 (ares 5.8211 vs GT 5.6307 — the Z3 block junction entry/exit
+speeds; GT dist 2.8 vs ares 3.0 suggests GT's initial Z differs, to
+pin down). The REAL toolchange-context spiral (verbatim from the ksr
+tail: wipe retract, G3 P1 spiral, travel, E.4 prime) FLIPS THE SIGN:
+ares 39.3064 vs GT 39.3589 = **ares -52ms per toolchange** — ares
+UNDER-penalizes the Z-limited junctions (Z jerk 0.2 / Z accel 500) on
+Z-climbing moves. Both repros committed as ignored pins with the
+numbers recorded. Next slice: the ares junction-speed clamp for
+Z-containing moves (`MotionState::planned_times` / junction code) vs
+upstream's `planner_reverse_pass_kernel` axis-limit clamping — fixing
+the Z-clamp likely closes the ladder (+0.19) and the per-toolchange
+(-52ms) divergences together.
