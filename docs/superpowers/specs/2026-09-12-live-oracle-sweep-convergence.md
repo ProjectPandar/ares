@@ -1367,3 +1367,25 @@ flip, extrudes, final travel). The spiral-in-context test is GREEN and
 committed as a permanent pin. The remaining real ksr +3s residual is
 NOT in per-block motion timing — it lives in the additional-time/
 delay accounting or the block-count family outside this context.
+
+## Cache-vs-cache: the same-scope instrument; drift = -1.07s (#179)
+
+Comparing ARES_DUMP_ELAPSED (ares' g1_times_cache) against the GT
+oracle's ORCA_DUMP_TIMES (upstream's g1_times_cache) on the SAME
+reference stream — both caches, same scope, id-aligned. Findings:
+
+- final cache drift: **-1.07s** (ares FASTER — a different quantity
+  from the +3s header total, which includes trailing delays);
+- ~26k ids differ in membership each way (windows where one cache
+  records ids the other skips — E-only/F-only-adjacent membership);
+- per-id drift oscillates ±1-40s in dense runs (ids 81342-81866:
+  ~100 consecutive -0.53s jumps on plain extrude lines; ids
+  266995-267207: alternating ±0.76/0.55) — the signature of DELAY
+  ATTACHMENT POSITION differences: M400 S/P additional-time blocks
+  landing on different cache ids on each side, creating paired -/+
+  jumps that cancel in the total but shift which id carries which
+  delay. The delay VALUES match; the attachment id often does not.
+- next slice: name the commands in the 81342-81866 window (the
+  replayed id->line mapping needs the exact arc-internal counts) and
+  align ares' `scheduled_times` delay-attachment rule with upstream's
+  first-matching-move-type block in `calculate_time` (`:464-472`).
