@@ -1564,3 +1564,30 @@ whole-file assertions could not resolve (a 22-block context carries
 ~0.0007s). Next slice: per-block diff on the 2k-line prefix (small
 enough to attribute reliably by id — the prefix contains no
 arc-internal drift if cut between features).
+
+## 2k-prefix per-block diff: shared blocks EXACT, drift = 13 ares-only delay blocks vs GT attached (#189)
+
+Per-block comparison on the 2k-line prefix (GT 1,230 cache blocks vs
+ares 1,243): all 1,230 SHARED-id blocks match to <0.01ms (177 blocks
+differ by <=0.002ms — f32 rounding; sum -0.0000s). The entire
++14.8ms prefix drift comes from 13 ares-only blocks (total 39.7597s
+vs the GT-side attached equivalent 39.7449s): the initial-T load
+(29s), the two G29 bedding delays attached to the id-6 block in GT
+(260s×1 — the M622 J1 gate region), and 6 retract/unretract
+E-only/F-only blocks whose cache membership differs (dump-scope, but
+their TIMES are the bias carriers here). The classes:
+- tool id4 (29s machine_load): GT attaches it to the G29 block's
+  additional_time; ares emits a separate zero-distance block.
+- reg id5 (10.603s): the G29 measured delay's motion block (3mm at
+  30mm/s = 0.1s in GT... the 10.6s is the extra M191/G29 attachment
+  region difference).
+- 6 x ~15.8ms reg/unretract: retract/prime motion blocks around
+  the start-gcode transitions whose GT counterparts are attached
+  elsewhere.
+=> the +3s full-stream drift decomposes as the sum of these
+block-layout-vs-attached-delay differences over 327 toolchange
+regions. The DELAY VALUES match; the packaging differs (separate
+blocks vs attached additional_time on a matching block), and the
+packaging itself carries a small time bias because separate blocks
+re-plan junctions while attached delays ride an existing block's
+trapezoid.
