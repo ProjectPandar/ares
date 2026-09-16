@@ -459,3 +459,15 @@ Fix: the skirt-wipe feedrate computation in the emission path
 (cooling/wipe F derives from a ratio over the negative wipe E —
 upstream uses the absolute value). NOT an estimator bug; the
 estimator correctly mirrors whatever F the gcode carries.
+
+## #244 chain-merge state (live, raw-diff 23,046 lines)
+
+Connection merges pairs (line+arch) but breaks every OTHER arch:
+right-boundary arches connect, left-boundary arches leave an F9000
+travel (13/layer). Oracle = one continuous serpent per layer.
+Suspect: the vertical-consumption loop takes one direction per pair
+and the opposite-arch's endpoints are already consumed when reached —
+likely the take_next trimmed branch appends (1e10 limited) instead of
+merging polylines, or the loop ordering skips every second arc.
+Next: probe the consumption loop on the 27-line square (CHAIN fixture
+merges 26→14×4-pt: same every-other signature ✓ reproducible).
