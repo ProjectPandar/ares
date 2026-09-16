@@ -1467,3 +1467,19 @@ is discarded when segments exist (only the fallback path uses it).
 Behavior verified unchanged on ksr (same 304237 cache entries, same
 6180.252066). The id->line replay for structural diffs can now be
 built on the unified counts.
+
+## Id-replay built on unified arcs: the +3s ramp starts at line 238731 (#184)
+
+Exact id->line replay (ares per-arc segment dump driving the
+gcode-side counter; 13,363 arcs consumed, final gid 335,547): the
+cumulative drift is <0.05s through id 290983 (line 238730) and ramps
+from id 290984 (line 238731 `G1 X164.95 Y116.581 E.03621` — the
+second outer-wall extrude after `M204 S5000` + `G1 ... F60000`
+travel + `G1 F1200` modal reset) growing to +2.25s by id 335565,
+then -3.1s in the last two ids. Per-block at the ramphead: ares
+0.077s vs GT 0.0069s on a 1.18mm extrude (~10x slower) — the
+outer-wall-after-travel junction/feedrate handling is the concrete
+divergence class; the F60000->F1200 modal transition neighborhood is
+the fix target. (Caveat recorded: whether GT's id 290984 is the same
+LINE is supported by the cumulative agreement to that point, not by
+an independent GT-side replay.)
