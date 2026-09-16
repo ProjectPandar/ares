@@ -609,3 +609,36 @@ upstream's idx=0 gate: !next_trimmed(0.537 SHORT arch, next_trim
 likely TRUE after touching pass) || 537000 > 789100 → skip → the
 long arch survives. THE DELTA: ares idx0 next_trim=FALSE. Root
 cause: the touching pass should trim the short bottom arches too.
+
+## #251 TOUCH probe: the touching pass trims NOTHING on the fixture
+
+TOUCH probe (graph after build_working_graph): all 6 endpoints report
+next_trim=prev_trim=false — the touching pass did not trim the 0.537
+bottom arches, contradicting the upstream-behavior hypothesis. Either
+upstream ALSO leaves them untrimmed (and the serpent comes from
+elsewhere — the long 29.5m wrap arches ARE present: idx0.prev_len /
+idx1.next_len = 29528404), or upstream's Visitor radius/geometry
+differs. KEY OBSERVATION: the long arches exist and pass the gate
+(29.5m >> 0.79). The vertical loop at idx=0: can_take_next on the
+0.537 SHORT arch (untrimmed → gate passes) → takes it, consuming
+idx2, BEFORE the loop reaches idx=52 whose LONG prev arch would
+swallow everything. Upstream ordering is the same 0..N BUT upstream
+idx0's next arch = 0.537 short → gate `!next_trimmed` TRUE →
+upstream ALSO takes it first! So upstream also consumes the short
+arches pairwise — which yields the observed oracle structure: the
+oracle serpent IS the pairwise-chained short arches + the boundary
+segments BETWEEN pairs taken as FULL arcs by later iterations
+(idx3 prev=idx1's top arch...). The oracle's E.02072 arch moves =
+0.537-length arches, i.e. the SHORT arches ARE the connecting moves
+— they were TAKEN. ares takes them too (the merged 4-pt chains!).
+The break is that ares' pairs don't chain FURTHER: after idx0-2
+merge, idx1's prev arch (top, 0.537) has prev_trim=true len=0 (from
+the OVERLAPPING pass, radius 0.204: the arch endpoints lie ON the
+lines... the arch midpoint is 0.268 off the tube — but the
+overlapping pass trims when the WALK stays inside the tube the whole
+arch: the arch hugs the boundary edge BETWEEN two line endpoints;
+its distance to the OWNING line (line 0, the infill whose endpoint
+starts the walk) at the FAR end (idx3's point, on line 1) = 0.537
+> 2·radius=0.41 → NOT inside → no trim. ares' overlapping pass
+trims it → the delta IS in the overlapping pass walk for the TOP
+arches. NEXT: probe the overlapping pass alone on the fixture.

@@ -210,3 +210,46 @@ fn link_and_measure_intersections(
         intersections[intersection_index].not_taken_next = not_taken_next;
     }
 }
+
+#[cfg(test)]
+mod touch_probe {
+    #[test]
+    fn probe_touch_trims_short_arches() {
+        use super::*;
+        use crate::geometry::{CoordinateScale, Polyline};
+
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        let lines: Vec<Polyline> = (-1..=1)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let graph = build_working_graph(
+            lines,
+            &[polygon],
+            bbox,
+            0.407,
+            CoordinateScale::Normal,
+        )
+        .unwrap();
+        for idx in 0..6 {
+            let i = &graph.intersections[idx];
+            if i.contour_index.is_some() {
+                eprintln!(
+                    "TOUCH idx={idx} next_trim={} next_len={:.0} prev_trim={} prev_len={:.0}",
+                    i.next_trimmed, i.not_taken_next, i.prev_trimmed, i.not_taken_prev
+                );
+            }
+        }
+    }
+}
