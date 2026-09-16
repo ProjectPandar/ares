@@ -511,3 +511,46 @@ fn spiral_lift_arc_creates_all_segment_blocks() {
         total = estimate.total
     );
 }
+
+/// The ksr toolchange tail microbench (GT oracle 2026-09-16): the total
+/// is 5.621093s — the G1 Z3 F60 block is a plain 2.8mm/1mm-s move
+/// (2.80s, no attached delay); M622.1/M1002/M983.3 add none. ares
+#[test]
+/// over-estimates by +0.199s (the ksr tail residual in miniature) —
+/// bisect next; kept as the reproduction.
+#[ignore = "reproduces the +0.199s estimator residual (ares 5.8204 vs GT 5.6211)"]
+fn toolchange_tail_delays_match_gt_oracle() {
+    let lines: Vec<String> = [
+        ";FLAVOR:Marlin",
+        "M201 X10000 Y10000",
+        "M204 P10000 R10000 T10000",
+        "M205 X10 Y10",
+        "G90",
+        "M82",
+        "G21",
+        "G1 X10 Y10 F600",
+        "G1 X10.5 Y10 E.2 F1200",
+        "M622.1 S0",
+        "M1002 judge_flag powerloss_resume_flag",
+        "M622 J1",
+        "M983.3 F5.8 A0.4 R1.1",
+        "M400",
+        "G1 Z3 F60",
+        "M1002 set_flag powerloss_resume_flag=0",
+        "M623",
+        "G1 X20 Y20 F600",
+    ]
+    .into_iter()
+    .map(str::to_owned)
+    .collect();
+    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+    // GT total: 5.621093s (1.441142 + 1.414142 + 2.800640 + 1.379311 -
+    // overlapping block/additional split as measured by the oracle).
+    let expected = 5.621_093;
+    let diff = (estimate.total - expected).abs();
+    assert!(
+        diff < 0.05,
+        "toolchange tail total {total} vs GT {expected} (diff {diff})",
+        total = estimate.total
+    );
+}
