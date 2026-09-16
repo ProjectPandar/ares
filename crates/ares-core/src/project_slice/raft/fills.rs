@@ -200,3 +200,37 @@ mod raft_fill_probe {
         eprintln!("FLANGE polylines={}", out.len());
     }
 }
+
+#[cfg(test)]
+mod connect_probe {
+    use super::*;
+    use crate::geometry::Polygon;
+
+    /// KSR base layer at real lattice units.
+    #[test]
+    fn probe_base_connect() {
+        let polygon = Polygon::new(vec![
+            Point::new(-7_650_601, -7_650_601),
+            Point::new(7_650_601, -7_650_601),
+            Point::new(7_650_601, 7_650_601),
+            Point::new(-7_650_601, 7_650_601),
+        ]);
+        let spec = RaftFillSpec {
+            angle: 0.0,
+            spacing: 0.407_086_4,
+            density: 0.67,
+        };
+        let out = raft_layer_fill(
+            &[polygon],
+            spec,
+            Point::new(0, 0),
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        eprintln!(
+            "BASECONNECT polylines={} lens={:?}",
+            out.len(),
+            out.iter().map(|p| p.points().len()).collect::<Vec<_>>()
+        );
+    }
+}

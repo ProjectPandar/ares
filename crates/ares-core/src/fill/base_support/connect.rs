@@ -214,11 +214,17 @@ fn vertical_dir(
     index: usize,
     neighbor: usize,
 ) -> bool {
+    // Upstream keeps the slice frame UNROTATED (angle applies only to
+    // the final points), so the infill lines stay vertical and the
+    // left/right contour arches are vertical (same x). Ares rotates the
+    // slice by −(angle+π/2) to carry the world direction, which turns
+    // those arches horizontal — the equivalent predicate in this frame
+    // is equal y (`FillBase.cpp:1342` semantics).
     let contour = &graph.boundary[intersections[index]
         .contour_index
         .expect("connected intersection")];
-    contour.points[intersections[index].point_index].x()
-        == contour.points[intersections[neighbor].point_index].x()
+    contour.points[intersections[index].point_index].y()
+        == contour.points[intersections[neighbor].point_index].y()
 }
 
 /// `take_vertical_prev` (`:2353-2359`): prefer the untrimmed side,
@@ -354,5 +360,44 @@ fn resolve_merged(merged_with: &[usize], index: usize) -> usize {
             return last;
         }
         last = lower;
+    }
+}
+
+#[cfg(test)]
+mod vprobe {
+    #[test]
+    fn probe_vertical_counts() {
+        use super::*;
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        // 13 vertical lines at pitch 537000 spanning ±7650601.
+        let lines: Vec<Polyline> = (-14..=14)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_000_000),
+                    crate::geometry::Point::new(x, 7_000_000),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let out = connect_base_support(
+            lines,
+            &[polygon],
+            bbox,
+            0.407,
+            0.67,
+            crate::geometry::CoordinateScale::Normal,
+        )
+        .unwrap();
+        eprintln!(
+            "VPROBE out={} lens={:?}",
+            out.len(),
+            out.iter().map(|p| p.points().len()).collect::<Vec<_>>()
+        );
     }
 }

@@ -43,7 +43,7 @@ pub(super) fn base_support_extend_infill_lines(
         let next = intersections[index].next;
         let next_point_index = next.map(|next| intersections[next].point_index);
         let next_vertical = next_point_index
-            .is_some_and(|other| boundary[contour_index].points[other].x() == point.x());
+            .is_some_and(|other| boundary[contour_index].points[other].y() == point.y());
         if !next_vertical {
             let contour = &boundary[contour_index];
             let mut i = point_index;
@@ -75,7 +75,7 @@ pub(super) fn base_support_extend_infill_lines(
         let prev = intersections[index].prev;
         let prev_point_index = prev.map(|prev| intersections[prev].point_index);
         let prev_vertical = prev_point_index
-            .is_some_and(|other| boundary[contour_index].points[other].x() == point.x());
+            .is_some_and(|other| boundary[contour_index].points[other].y() == point.y());
         if !prev_vertical {
             let contour = &boundary[contour_index];
             let mut i = point_index;
