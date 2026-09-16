@@ -295,7 +295,11 @@ mod neg_speed_probe {
             "G1 X104.629 Y104.79 E.40202",
         ]
         .map(str::to_owned);
-        let est = super::Estimate::from_lines(&lines, 0.0, crate::project_slice::gcode_emit::processor::ProcessorLimits::default());
+        let est = super::Estimate::from_lines(
+            &lines,
+            0.0,
+            crate::project_slice::gcode_emit::processor::ProcessorLimits::default(),
+        );
         eprintln!("EST total={} prepare={}", est.total, est.prepare);
     }
 }

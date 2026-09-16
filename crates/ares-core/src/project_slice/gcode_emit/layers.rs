@@ -283,7 +283,19 @@ pub(super) fn append(
             entries.iter().find(|&&(object_index, _)| object_index == 0),
             &skirt,
         ) {
-            let skirt_layer = leading_raft.map_or(skirt_layer, |(raft_index, _)| raft_index);
+            // With a raft, the object layer indices carry the raft
+            // offset (`layer->id()` semantics) — the skirt already ran on
+            // the raft layers, so a re-run on the object first layer (its
+            // object-relative index 0) must not emit again.
+            let raft_offset = raft
+                .as_ref()
+                .map(|raft| raft.counts.first().copied().unwrap_or(0))
+                .unwrap_or(0);
+            // `plan.emit` returns early when `layer.index >= layer_count`,
+            // but the geometry below still indexes the OBJECT layer — keep
+            // them separate.
+            let skirt_plan_index =
+                leading_raft.map_or(skirt_layer + raft_offset, |(raft_index, _)| raft_index);
             let geometry = if let Some((raft_index, _)) = leading_raft {
                 let raft_polygons = raft
                     .as_ref()
@@ -316,7 +328,7 @@ pub(super) fn append(
             plan.emit(
                 output,
                 skirt::SkirtLayer {
-                    index: skirt_layer,
+                    index: skirt_plan_index,
                     height_mm: f64::from(layer_height),
                 },
                 motion_geometry,
