@@ -30,6 +30,9 @@ impl Polyline {
         self.points.reverse();
     }
 
+    pub(crate) fn append_points(&mut self, points: impl IntoIterator<Item = Point>) {
+        self.points.extend(points);
+    }
     pub(crate) fn is_valid(&self) -> bool {
         self.points.len() >= 2
     }
