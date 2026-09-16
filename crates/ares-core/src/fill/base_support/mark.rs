@@ -11,8 +11,8 @@ use crate::fill::connect::contour::{closed_contour_distance_ccw, closed_contour_
 use crate::fill::connect::types::{Intersection, WorkingGraph};
 use crate::geometry::{Point, Polyline};
 
-/// SCALED_EPSILON equivalent in scaled units.
-const SCALED_EPSILON: f64 = 16.0;
+/// SCALED_EPSILON = scale_(EPSILON) = 1e-4 / 1e-6 = 100 lattice units.
+const SCALED_EPSILON: f64 = 100.0;
 
 #[expect(
     clippy::too_many_arguments,
@@ -33,6 +33,9 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
         let point_index = intersections[index].point_index;
         let polyline = &infill[WorkingGraph::path_index_for_intersection(index)];
         debug_assert_eq!(polyline.points().len(), 2);
+        // Upstream `Linef infill_line{points.front(), points.back()}`
+        // — a full LINE for distance tests, but the COLLISION call
+        // passes `infill_line.a`/`.b` as the SEGMENT arguments.
         let infill_line = F64Segment::from_points(polyline.points()[0], polyline.points()[1]);
         let contour = boundary[contour_index].points.clone();
         let contour_params = boundary[contour_index].params.clone();
@@ -53,9 +56,12 @@ pub(super) fn mark_boundary_segments_overlapping_infill(
                 let distance = point_line_distance_squared(&infill_line, contour[j]);
                 if distance >= radius * radius {
                     // Not fully inside the tube: is it colliding?
+                    // Upstream `:1375` passes the CONTOUR segment as the
+                    // `line` and the INFILL as the `segment` — the
+                    // interval is measured along the CONTOUR segment.
                     if let Some(interval) = rounded_thick_segment_collision(
-                        infill_line,
                         segment,
+                        infill_line,
                         radius,
                         scaled_epsilon,
                     ) {
@@ -176,3 +182,75 @@ fn point_line_distance_squared(line: &F64Segment, point: Point) -> f64 {
 }
 
 // Silence unused warnings until the caller lands in the next slice.
+
+#[cfg(test)]
+mod overlap_probe {
+    #[test]
+    fn probe_overlap_walk_on_top_arch() {
+        use super::*;
+        use crate::fill::connect::graph::build_working_graph;
+        use crate::geometry::{CoordinateScale, Polyline};
+
+        let polygon = crate::geometry::Polygon::new(vec![
+            crate::geometry::Point::new(-7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, -7_650_601),
+            crate::geometry::Point::new(7_650_601, 7_650_601),
+            crate::geometry::Point::new(-7_650_601, 7_650_601),
+        ]);
+        let lines: Vec<Polyline> = (-1..=1)
+            .map(|i| {
+                let x = i * 537_000;
+                Polyline::new(vec![
+                    crate::geometry::Point::new(x, -7_650_601),
+                    crate::geometry::Point::new(x, 7_650_601),
+                ])
+            })
+            .collect();
+        let bbox = crate::geometry::BoundingBox::from_polygon(&polygon).unwrap();
+        let graph = build_working_graph(
+            lines.clone(),
+            &[polygon],
+            bbox,
+            0.407,
+            CoordinateScale::Normal,
+        )
+        .unwrap();
+        let mut intersections = graph.intersections.clone();
+        mark_boundary_segments_overlapping_infill(
+            &graph.boundary,
+            &mut intersections,
+            &lines,
+            407_086.0,
+            100.0,
+        );
+        for idx in 0..6 {
+            let i = &intersections[idx];
+            if i.contour_index.is_some() {
+                eprintln!(
+                    "OVL idx={idx} next_trim={} next_len={:.0} prev_trim={} prev_len={:.0}",
+                    i.next_trimmed, i.not_taken_next, i.prev_trimmed, i.not_taken_prev
+                );
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod radius_probe {
+    #[test]
+    fn probe_top_arch_distances() {
+        // idx=1 = (-537000, 7650601) top of line 0. Its PREV arch ends
+        // at idx=3 = (0, 7650601) top of line 1. Distance of that
+        // endpoint to line 0 (the walk's final segment endpoint):
+        let line_a = (crate::geometry::Point::new(-537_000, 7_650_601),);
+        let line_b = crate::geometry::Point::new(-537_000, -7_650_601);
+        let endpoint = crate::geometry::Point::new(0, 7_650_601);
+        let d = (endpoint.x() - line_a.0.x()).abs();
+        eprintln!(
+            "RAD dist from line0 to idx3 endpoint = {} lattice = {} mm; radius = {} mm",
+            d,
+            d as f64 / 1e6,
+            0.5 * (0.407_086_4 + 0.0001)
+        );
+    }
+}
