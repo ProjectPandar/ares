@@ -237,20 +237,26 @@ fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
             z,
             e,
         ];
+        // The processor's position slots are `AxisCoords` (float), so the
+        // per-segment delta upstream is float(end) - float(start)
+        // (`GCodeProcessor.cpp:3900` delta_pos arithmetic): segments whose
+        // delta vanishes in f32 land as Noop and never become blocks.
+        let delta32 = |current: f64, previous: f64| (current as f32 - previous as f32) as f64;
         deltas.push([
-            current[0] - previous[0],
-            current[1] - previous[1],
-            current[2] - previous[2],
-            current[3] - previous[3],
+            delta32(current[0], previous[0]),
+            delta32(current[1], previous[1]),
+            delta32(current[2], previous[2]),
+            delta32(current[3], previous[3]),
         ]);
         previous = current;
     }
     let current = [arc.end[0], arc.end[1], arc.end[2], arc.e_delta];
+    let delta32 = |current: f64, previous: f64| (current as f32 - previous as f32) as f64;
     deltas.push([
-        current[0] - previous[0],
-        current[1] - previous[1],
-        current[2] - previous[2],
-        current[3] - previous[3],
+        delta32(current[0], previous[0]),
+        delta32(current[1], previous[1]),
+        delta32(current[2], previous[2]),
+        delta32(current[3], previous[3]),
     ]);
     deltas
 }

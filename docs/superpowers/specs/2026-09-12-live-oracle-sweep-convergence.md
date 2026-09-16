@@ -1117,3 +1117,19 @@ drops it (zero-distance / segment_block filtering), each adding
 junction overhead to the total — the ~+3-7s estimator residual.
 Next slice: align ares' per-segment zero-delta filtering with
 upstream's internal G1 block path.
+
+## f32 position-delta semantics for arc segments (#172)
+
+Upstream's processor position slots are `AxisCoords` (float), so the
+per-segment delta is `float(current) - float(previous)` — the f32
+subtraction of f32-rounded positions. ares' arc deltas now go through
+`delta32` ((current as f32 - previous as f32) as f64) in
+`legacy_deltas`/`marlin_deltas`, matching that semantic exactly. The
+ksr block count is UNCHANGED by both the f32(a-b) and f32(a)-f32(b)
+variants (314027; the gcode differs by 2 lines) — the arc segment
+deltas do not vanish in f32 on either side, so the 123813-vs-113894
+arc-entry difference between ARES_DUMP_BLOCKS (all planner blocks)
+and the GT ORCA_DUMP_TIMES (g1_times_cache pushes) is a SCOPE
+question about which internal-segment blocks upstream's
+calculate_time actually records, not about delta rounding. That
+scope question is the next estimator slice.
