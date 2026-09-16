@@ -264,3 +264,25 @@ Remaining inventory (unchanged semantics, corrected target):
   polylines → extrusion moves).
 - 5c. skirt on raft layers.
 - 5d. gate flip + oracle byte-parity loop (case-u7sdch).
+
+## 5a integration surface mapped (#215 cont.)
+
+`gcode_emit/layers/schedule.rs build()`: `per_object_z` accumulates
+layer heights from 0 (`scan(0.0)`); `merged` = sorted
+`(z, object, layer)` triples; the layer CONTENT comes from
+`objects[object][layer]` (OrderedExtrusionLayer). Integration:
+- `Schedule` gains `raft: Option<RaftSchedule>` (per-object raft grid
+  z's + fill extrusions + object_print_z_min).
+- `merged` gains raft entries `(raft_z, object, RAFT_LAYER_SENTINEL)`
+  and object z's shift by `object_print_z_min`.
+- The emit loop (layers.rs) must handle raft entries: emit the raft
+  fills as extrusions (SupportMaterial roles → TYPE comments),
+  first-layer speed semantics at raft flange (z == first raft z),
+  skirt on raft layers 0..skirt_height, wipe/retract between raft
+  regions (existing machinery driven by the layer-change seam).
+- `per_object_z` shift: the accumulation `scan(0.0)` starts at
+  `object_print_z_min` when raft is active (upstream
+  `PrintObject::layers()` print_z carries the raft offset).
+
+Next turn: implement RaftSchedule + merged-entry extension (5a
+scope), then the emit-loop raft branch (5b).
