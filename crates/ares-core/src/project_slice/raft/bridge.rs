@@ -274,6 +274,28 @@ pub(crate) fn build_project_raft(
         },
     )
     .map_err(raft_geometry_error)?;
+    if std::env::var("ARES_RAFT_DEBUG").is_ok() {
+        let span = |polygons: &[_]| {
+            let xs = polygons
+                .iter()
+                .flat_map(|polygon: &crate::geometry::Polygon| polygon.points())
+                .map(|point| point.x())
+                .collect::<Vec<_>>();
+            if xs.is_empty() {
+                (0, 0)
+            } else {
+                (*xs.iter().min().unwrap(), *xs.iter().max().unwrap())
+            }
+        };
+        eprintln!(
+            "RAFTPOLY contact={:?} interface={:?} base={:?} first={:?} (units/mm {})",
+            span(&polygons.contact),
+            span(&polygons.interface),
+            span(&polygons.base),
+            span(&polygons.first_layer),
+            1.0 / scale.factor()
+        );
+    }
     let plans = raft_layer_plans(
         first_layer_lslices,
         &raft_grid,
