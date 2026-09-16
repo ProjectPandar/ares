@@ -690,3 +690,20 @@ REMAINING (in order):
 
 The gate is OPEN (raft_layers accepted) but the live output has the
 over-merge — the sweep would fail on the raft cases until #1 lands.
+
+## #257 live contour-vertex delta identified
+
+The live boundary (from prepare_rectilinear_contours' inner offset)
+has MORE vertices than the fixture's 4-corner square: the offset
+operation (Miter join at reflex corners) adds intermediate contour
+vertices between the fill endpoints. With intermediate vertices, the
+arch walks in mark/extend have extra segments to traverse — changing
+the inside/collision outcomes per vertex, and critically the
+take() full-arc paths emit the boundary VERTICES between the fill
+endpoints as individual G1 moves (the E.02335 arch segments).
+=> the live boundary vertex chain is the over-emission source.
+Fix direction: the offset inner boundary should be a simple 4-point
+square for a square input (Miter join doesn't add vertices on
+convex corners); if ares' offset adds vertices on the straight
+edges (midpoints from the rasterization), that's the delta. Verify
+the inner contour vertex count on the live boundary vs 4+N.
