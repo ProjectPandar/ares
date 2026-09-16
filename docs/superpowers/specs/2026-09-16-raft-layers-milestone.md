@@ -411,3 +411,21 @@ Remaining oracle diffs (live):
    applying at the raft flange layer.
 4. Extrusion segment count 5916 vs 9051 (~1.5×) — fill line count /
   line-position µ-residuals (contact span 14.30 vs 14.37 band).
+
+## #235 estimator = downstream of fill density; flange spacing root cause
+
+M73 频率(1437 vs 131)与时长(2m25 vs 31m47)都是估计器对行数
+的正确响应：挤出段 5916 vs 9051（1.53×）× ~0.4s/段 ≈ 29min
+差。根因是填充密度。
+
+法兰 zigzag 间距: ares 0.375 vs oracle 0.419。
+0.419 = spacing/0.9 → spacing = 0.377 = first-layer support flow
+spacing with width **0.42** = KSR `initial_layer_line_width` ("0.42")
+— not 0.38 (`support_line_width`). The flange flow follows the
+FIRST-LAYER width chain (upstream first_layer_flow uses
+first_layer_line_width fallback), same for the skirt WIDTH:0.42.
+
+Fix: bridge `first_layer_flow_spacing` (and flange width_mm for the
+sheath WIDTH comment) = initial_layer_line_width (0.42) — need the
+first-layer width derivation: initial_layer_line_width > 0 else
+line_width.
