@@ -487,3 +487,25 @@ Fixture indices: idx 2k = line-k BOTTOM, 2k+1 = line-k TOP.
 Next: verify append_limited actually extends the chain in this branch
 (assert the output len grows per arch; suspect the second take() on
 the same slot returns default-empty and the arc lands on a lost vec).
+
+## #248 verdict: connection comes from the cost-selection phase
+
+ORDR probe closed the vertical-consumption question: the top arches
+are prev_trim=true/len=0 (inside the tube) and upstream's SAME gate
+skips them. The oracle's full serpent must come from the COST
+selection phase (`:2462-2502`): for each unconsumed cp it evaluates
+prev/next arch costs (`evaluate_support_arches` — the trimmed arch
+walk uses take_cw/ccw_limited with not_taken), filters
+cost_max >= cost_low && cost_min <= cost_high && rel_diff >= 0.25,
+sorts by cost desc, and take_next()s them. On the KSR base layer the
+arch cost = max deviation from the chord — a straight square edge
+arch has cost 0 → cost_max(0) < cost_low → NOT selected either.
+
+Remaining suspect: `base_support_extend_infill_lines` — the
+contour-walk extension (0.33·spacing x-tolerance, 0.5·spacing
+y-threshold) extends each line END along the boundary; on the square
+the whole edge qualifies (dist_max_x=0 along the edge, dist_y=0.537
+per arch step > threshold only across one arch) → line ends WALK the
+entire edge, chaining the serpent via point_idx updates. THAT is the
+likely serpent engine. Next: verify extend on the fixture (print
+extend_next/extend_prev decisions).
