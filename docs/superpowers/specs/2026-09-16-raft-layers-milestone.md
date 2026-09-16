@@ -335,3 +335,27 @@ Polylines ✓ matching the fill machinery):
 
 Next: implement the raft OrderedExtrusionLayer construction in
 raft_schedule.rs + the layers.rs emit branch.
+
+## #226 oracle convergence status (live diff running)
+
+Fill pairing fixed (InnerLow→InnerHigh — ares' inner = upstream's
+fill-boundary "outer"). Live: 19397 lines, raft fills on all layers.
+
+Diff inventory vs case-u7sdch oracle:
+1. SKIRT on raft layers missing in ares (oracle: 2 skirt loops
+   98.494..121.506 on z=0.2, then again z=0.5) — 5c.
+2. Flange pitch 0.374 (spacing from width 0.38 at first-layer
+   height) ✓ plausible; oracle pitch TBD after skirt separation.
+3. ares zig-zags directly line-to-line; oracle shows wipe/retract
+   between fill groups (entity ordering + wipe behavior at the
+   motion layer).
+4. M73 timing (layer count change) + M106 first-layer fan gate.
+5. Speeds: ares F600 flange vs oracle F2100 — support first-layer
+   speed chain (initial_layer speed for SupportMaterial role).
+6. flange = `fill_expolygons_with_sheath_generate_paths` with
+   with_sheath = tree_support_wall_count > 0 = FALSE for KSR → plain
+   path; the concentric rectangles in my earlier dump were the SKIRT
+   loops, not a sheath. No sheath needed for KSR.
+
+Next: 5c raft skirts (oracle loops at 98.494 = raft polys + skirt
+distance), then speeds/M73/wipe convergence.
