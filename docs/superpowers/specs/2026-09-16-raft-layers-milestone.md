@@ -230,3 +230,37 @@ _infill_direction `FillBase.cpp:275-291`):
    (factor 3? upstream FillParams::link_max_length default).
 
 Next: implement fills.rs + emission wiring (5), then gate removal.
+
+## #215 architectural finding: TWO pipelines, raft must land in the project one
+
+ares has two slicing entry paths:
+- `pipeline.rs` (model-based, `LayerPrintPaths` stream, hosts the
+  `print_paths` support machinery incl.
+  `apply_raft_expansion`) — NOT exercised by the KSR sweep.
+- `project_slice.rs` (3mf project path — what the sweep/ksr tests
+  use): closing → slicing → perimeters/infills as project entities →
+  `gcode_emit/layers.rs` emission over islands (`Layer::lslices`).
+
+Therefore: `raft/emit.rs`'s LayerPrintPaths transform targets the
+wrong stream for sweep parity. The raft integration point is the
+PROJECT pipeline's `gcode_emit` layer loop:
+1. `bridge::build_raft_stream(options, first-layer lslices, scale)`
+   is pipeline-agnostic ✓ (works as-is; contours adapter added).
+2. gcode_emit needs: raft layers prepended to its layer schedule
+   (absolute print_z from the grid; object layers shift z by
+   `object_print_z_min` — check where gcode_emit derives print_z:
+   likely `gcode_emit/layers/schedule.rs` + `entry.rs`), the raft
+   fill polylines emitted as support extrusions (SupportMaterial /
+   SupportMaterialInterface roles → `;TYPE:Support` /
+   `;TYPE:Support interface` via features.rs:219 ✓), skirt extension
+   for raft layers 0..skirt_height-1 around raft polygons.
+3. The object layer z shift must also flow into the layer PLANNING
+   (`project_slice/layers.rs` generate_layer_pairs start) — or be
+   applied at the gcode_emit layer-entry boundary.
+
+Remaining inventory (unchanged semantics, corrected target):
+- 5a. gcode_emit raft layer schedule + z shift.
+- 5b. raft fill emission as support entities (bridge plans →
+  polylines → extrusion moves).
+- 5c. skirt on raft layers.
+- 5d. gate flip + oracle byte-parity loop (case-u7sdch).
