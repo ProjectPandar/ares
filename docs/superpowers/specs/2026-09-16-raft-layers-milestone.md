@@ -308,3 +308,30 @@ spacing.
 5a order: (1) resolve the width source, (2) build_project_raft in
 bridge.rs (project types), (3) raft_schedule.rs (written once, was
 ahead of the API — dropped), (4) layers.rs emit branch.
+
+## 5b construction recipe locked (#219)
+
+Raft fills integrate as ordinary fill entities (fills output scaled-µ
+Polylines ✓ matching the fill machinery):
+- `FillExtrusionPath { polyline, fitting: vec![] (regular fills are
+  empty — fill_entities/grid.rs:50), role:
+  ExtrusionRole::SupportMaterial/SupportMaterialInterface,
+  mm3_per_mm: ordinary_volume(support_width, height), width:
+  support_width (0.45), height }` — `Flow`/`ordinary_volume` from
+  `perimeters/flow.rs:244+`.
+- Wrap per raft layer: `OrderedExtrusionLayer { islands:
+  [OrderedExtrusionIsland { entities: [Fill(FillExtrusionEntity::
+  Path(...))] }] }` → `motion::emit_layer` handles travel/Z/TYPE/
+  wipe/retract exactly like object layers (IslandPrintEntity enum,
+  island_print_order.rs:14-29).
+- layers.rs entry loop: `raft_schedule::classify(layer_index)` →
+  Some(raft_index) → emit the pre-built raft OrderedExtrusionLayer
+  with a raft EntryGeometry variant (chunk_slices = raft polygons,
+  lower boundary empty, spacing = support flow spacing).
+- first_group/boundary: for raft entries `previous_layer_z` comes
+  from the raft grid (raft_index−1, 0 for index 0) — the
+  `per_object_z[first_object].get(first_layer - 1)` lookup only
+  covers object entries.
+
+Next: implement the raft OrderedExtrusionLayer construction in
+raft_schedule.rs + the layers.rs emit branch.
