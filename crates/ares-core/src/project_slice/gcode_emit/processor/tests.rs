@@ -513,11 +513,13 @@ fn spiral_lift_arc_creates_all_segment_blocks() {
 }
 
 /// The ksr toolchange tail microbench (GT oracle 2026-09-16): the total
-/// is 5.621093s — the G1 Z3 F60 block is a plain 2.8mm/1mm-s move
+/// (SUSPECT — see below) is 5.621093s — the G1 Z3 F60 block is a plain 2.8mm/1mm-s move
 /// (2.80s, no attached delay); M622.1/M1002/M983.3 add none. ares
 #[test]
-/// over-estimates by +0.199s (the ksr tail residual in miniature) —
-/// bisect next; kept as the reproduction.
+/// over-estimates by +0.199s. CAVEAT (2026-09-16): the oracle run that
+/// be a partial-stream figure; fix the oracle crash (M622 J1 finalize
+/// in the standalone path) before trusting the delta.
+/// produced 5.621093 SEGFAULTED mid-stream (partial dump); the value may
 #[ignore = "reproduces the +0.199s estimator residual (ares 5.8204 vs GT 5.6211)"]
 fn toolchange_tail_delays_match_gt_oracle() {
     let lines: Vec<String> = [
