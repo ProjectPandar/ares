@@ -132,3 +132,32 @@ Raft fill map (`SupportCommon.cpp:1440-1523`, per raft layer):
 Next: port SupportParameters raft fields (SupportParameters.hpp),
 fill emission via existing rectilinear machinery, then wire layers
 into the emission stream (ids shift by raft_layers) + gate removal.
+
+## Slice 4a done (`0f100e5c`) + remaining inventory refined (#207)
+
+`raft/fill_params.rs`: densities/patterns/angles derivation with
+per-layer ±45° interface alternation. One port bug fixed in-review:
+the even-`interface_raft_layers` +90° rotation applies ONLY to
+`raft_angle_interface`, never to the flange (`:153-158`). KSR values:
+flange 90°, base 0°, interface π ± π/4, densities 0.407/0.607.
+
+Key structural finding: `FillSupportBase::fill_surface`
+(`FillRectilinear.cpp:3610-3634`) does NOT use the plain
+rectilinear connection — it uses `connect_base_support`
+(`FillBase.cpp:2247` + `emit_loops_in_band` `:1952`), a distinct
+algorithm (contour-band arch emission) from `connect_infill`
+(plain rectilinear, `:3038-3041`). ares' rectilinear port implements
+the connect_infill family; the support-base variant must be ported.
+
+Remaining slices:
+4b. `fill/base_support.rs`: connect_base_support + emit_loops_in_band
+    port (FillBase.cpp:1952-2300, ~350 LOC upstream).
+4c. `raft/fills.rs`: per-layer fill assembly — vertical lines at
+    spacing/density, angle per layer kind, roles/flows/widths, via
+    4b; flange uses first_layer_flow, interface uses
+    raft_interface_flow (SupportCommon.cpp:1440-1523).
+5.  Emission wiring: raft layers prepend to the layer stream
+    (object layer ids shift by raft_layers, print_z absolute),
+    skirt on raft layer 1, wipe/retract transitions.
+6.  Gate removal + oracle byte-parity loop on case-u7sdch +
+    `option/raft_layers/seeded`; full sweep; docs close-out.
