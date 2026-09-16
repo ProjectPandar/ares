@@ -81,9 +81,9 @@ impl Intersection {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(in crate::fill) struct WorkingGraph {
-    pub(super) boundary: Vec<BoundaryContour>,
-    pub(super) intersections: Vec<Intersection>,
-    pub(super) paths: Vec<Option<Vec<Point>>>,
+    pub(in crate::fill) boundary: Vec<BoundaryContour>,
+    pub(in crate::fill) intersections: Vec<Intersection>,
+    pub(in crate::fill) paths: Vec<Option<Vec<Point>>>,
     pub(super) parents: Vec<usize>,
     pub(super) line_half_width: f64,
 }

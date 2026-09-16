@@ -1,7 +1,7 @@
 mod apply;
 pub(super) mod collision;
 pub(super) mod contour;
-mod graph;
+pub(super) mod graph;
 mod scale;
 mod touching;
 pub(super) mod types;

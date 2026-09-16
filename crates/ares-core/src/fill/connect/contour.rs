@@ -40,7 +40,7 @@ pub(in crate::fill) fn closed_contour_distance_cw(
     closed_contour_distance_ccw(param2, param1, contour_length)
 }
 
-pub(super) fn path_length_along_contour_ccw(
+pub(in crate::fill) fn path_length_along_contour_ccw(
     start: &Intersection,
     end: &Intersection,
     contour_length: f64,
@@ -78,7 +78,7 @@ pub(in crate::fill) fn append_full(
     clippy::too_many_arguments,
     reason = "the source contour interpolation keeps both endpoints, direction, and limit explicit"
 )]
-pub(super) fn append_limited(
+pub(in crate::fill) fn append_limited(
     output: &mut Vec<Point>,
     contour: &BoundaryContour,
     start_index: usize,
@@ -124,7 +124,7 @@ pub(super) fn append_limited(
     clippy::too_many_arguments,
     reason = "the source full-arc mutation names both paths and both endpoint records"
 )]
-pub(super) fn take_full_arc(
+pub(in crate::fill) fn take_full_arc(
     output: &mut Vec<Point>,
     second: &[Point],
     contour: &[Point],

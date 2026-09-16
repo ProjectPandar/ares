@@ -11,6 +11,7 @@ use crate::geometry::{Coord, Point, Polyline};
 
 #[cfg(test)]
 #[expect(dead_code, reason = "wired by connect_base_support in the next slice")]
+mod connect;
 mod extend;
 mod mark;
 mod tests;

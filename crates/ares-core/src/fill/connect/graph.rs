@@ -20,7 +20,7 @@ pub(super) struct EndpointHit {
     pub(super) endpoint_index: usize,
 }
 
-pub(super) fn build_working_graph(
+pub(in crate::fill) fn build_working_graph(
     infill_ordered: Vec<Polyline>,
     boundary_source: &[Polygon],
     boundary_bbox: BoundingBox,
