@@ -1133,3 +1133,15 @@ and the GT ORCA_DUMP_TIMES (g1_times_cache pushes) is a SCOPE
 question about which internal-segment blocks upstream's
 calculate_time actually records, not about delta rounding. That
 scope question is the next estimator slice.
+
+## Cross-stream id comparison ruled invalid (#173)
+
+The GT dump covers ids to 335506 with 31397 missing; ares to 335675
+with 21648 missing — but the two id SPACES number different streams
+(169-id offset from the CLI config-overwrite deltas), so id-set
+differences (gt_only 16234 / ares_only 26153, mostly dist>=1e-2 =
+stream misalignment, not zero-blocks) cannot isolate the drop-semantics
+question. The delta32 fix makes ares' zero-classification semantics
+identical to upstream's Noop rule (f32 position subtraction); the
+remaining +3s can only be measured on the SAME stream, which needs a
+GUI-side (or reference-gcode-fed) GT processor run — the next slice.
