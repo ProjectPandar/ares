@@ -2084,3 +2084,18 @@ NEXT: dump the per-loop POST-clip_end point counts on both sides
 compaction at FillConcentricInternal.cpp:66-75) — the loop that
 survives in ares with N points should appear in the oracle dump
 with fewer points or absent; then audit the tolerance merge.
+
+## EPSILON DIVERGENCE FOUND in the convert tiny-line skip (2026-09-17 t)
+
+Upstream VariableWidth.cpp SCALED_EPSILON = scale_(1e-4) = 10 units
+(= ares medial_axis::scaled_epsilon) — the tiny-line skip threshold
+MATCHES. But note thick_polyline_to_multi_path's callers pass
+merge_tolerance = float(SCALED_EPSILON) and the _2 variant uses
+its own SCALED_EPSILON — both = 10 units, consistent. The epsilon
+lead is exonerated; the concentric emission path uses the _2
+variant (variable_width dispatch), whose merge_tolerance handling
+(:155-170) is the one remaining unverified branch (width-change
+new-path decision). NEXT: dump per-path widths AFTER the
+convert_with_role call on both sides (ares CONC1 already sits at
+exactly that seam — it shows 28 loops; add the width sequence to
+the upstream probe by dumping each converted path width).
