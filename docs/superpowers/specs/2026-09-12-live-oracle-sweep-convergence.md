@@ -1903,3 +1903,24 @@ port of boost::voronoi's site handling is the prerequisite for any
 of them. Everything above that layer (graph construction,
 beading, transitions, concentric emission, variable_width) has been
 audited equivalent on this path.
+
+## Voronoi site-dedup root CONFIRMED in crate source (2026-09-17 k)
+
+boostvoronoi-0.12.1 src/predicate.rs event_comparison_ii carries the
+author's own note: "ordering of identical point sites is random in
+C++ boost" (commented-out initial_index tiebreak). The structural
+cell difference (ares point cells at src 0/2 vs oracle at src 3) is
+the site-dedup survivor selection: C++ dedups after libstdc++
+UNSTABLE introsort (which of two geometrically-equal sites survives
+is the implementation's permutation), the crate after a STABLE sort
+(insertion order survivor). Deterministic on both sides, but
+different.
+FULL FIX SPEC (candidate multi-session): vendor boostvoronoi via
+[patch.crates-io], replace init_sites_queue's sort with a Rust port
+of libstdc++ introsort (quicksort partition sequence + final
+insertion sort) so equal-key survivors match the oracle's
+libstdc++, then re-run the cell dump comparison — 93/124 must drop
+to 0/124 before the downstream (graph order → toolpath order →
+WIDTH comments) can converge. All instrumentation for this
+verification loop is already committed (ARES_DUMP_CELLS + the
+SkeletalTrapezoidation.cpp probe build in /tmp/medial-probe).
