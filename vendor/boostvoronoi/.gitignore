@@ -1,0 +1,25 @@
+/target
+**/.settings
+**/.cproject
+**/.proj
+**/*.rs.bk
+**.autosave
+**.DS_Store
+boostvoronoi.iml
+.vscode
+.project
+Cargo.lock
+.idea
+
+# Some C++ comparison stuff:
+*.log
+*.txt
+
+/find_and_replace.py
+/flamegraph.svg
+/find_and_replace2.py
+/diff_sections.py
+/run_main_compare.sh
+/skipdiff.py
+/sync_files.py
+/diff_viewer.py

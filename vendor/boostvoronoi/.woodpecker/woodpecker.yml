@@ -1,0 +1,22 @@
+when:
+  event: [push, tag, pull_request, manual]
+  branch: main
+
+matrix:
+  platform:
+    - linux/amd64
+  RUST: [stable, nightly]
+  
+steps:
+  test:
+    image: rust
+    environment:
+      CARGO_TERM_COLOR: always
+    commands:
+      - apt-get update
+      - apt-get install -y build-essential cmake libpango1.0-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev
+      - rustup update
+      - rustup component add clippy
+      - cargo clippy-all
+      - cargo test-all && cargo test-corruption && cargo test-console
+

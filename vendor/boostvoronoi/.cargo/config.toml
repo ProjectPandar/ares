@@ -1,0 +1,8 @@
+[alias]
+test-all = "test --all --features=geo,cgmath,mint,glam,nalgebra"
+test-corruption = "test --all --features=geo,cgmath,mint,glam,ce_corruption_check,nalgebra"
+test-console = "test --features=console_debug,geo"
+clippy-all = "clippy --all --all-targets"
+fmt-all = "fmt --all"
+run-gui = "run --example fltk_gui --features=geo"
+doc-all = "rustdoc --features=nalgebra,cgmath,mint,geo,serde"

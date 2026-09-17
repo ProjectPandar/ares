@@ -1924,3 +1924,23 @@ to 0/124 before the downstream (graph order → toolpath order →
 WIDTH comments) can converge. All instrumentation for this
 verification loop is already committed (ARES_DUMP_CELLS + the
 SkeletalTrapezoidation.cpp probe build in /tmp/medial-probe).
+
+## Vendored boostvoronoi + libstdc++ introsort: STRUCTURAL fix landed (2026-09-17 l)
+
+Vendor path: vendor/boostvoronoi ([patch.crates-io] in Cargo.toml;
+fltk dev-dep + example stripped; [workspace] isolation).
+init_sites_queue now sorts with a faithful libstdc++ introsort port
+(libstdcxx_sort.rs: introsort_loop/unguarded_partition_pivot/
+move_median_to_first/final_insertion_sort/insertion_sort/
+unguarded_linear_insert/heapsort fallback with __adjust_heap; unit
+tests green; ares-core 6988/6988 green).
+RESULT on case-05rNdj: the (pt,src) multiset is now EQUAL on both
+sides (was unequal — extra point cells at src 0/2 gone). The dedup
+survivor selection matches C++.
+REMAINING: 93/124 positional mismatches — the DIAGRAM CELL
+ENUMERATION ORDER still differs (head shows orca dominated by src-1
+cells, ares by src-0; [40:48] identical → localized reordering).
+Next layer: the crate's diagram cell array construction/iteration
+vs C++ cell insertion order (boost appends a cell per site event
+processed, in sweep order — audit Diagram::new/process_site_event
+in the vendor vs boost voronoi_builder/voronoi_diagram).
