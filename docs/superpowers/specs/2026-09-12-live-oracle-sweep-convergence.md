@@ -1676,3 +1676,25 @@ NEXT UNIT: align GT's consumption cadence with the FlushEvent pin
 the GT refresh-threshold placement vs upstream :570 post-push check),
 then re-diff — the M73 line-shift family should collapse to shared
 blocks once the delay landing blocks agree.
+
+## Option-coverage full sweep (2026-09-17): 371 FAIL / 279 INCOMPLETE, dominated by ONE boundary
+
+Full artifact-root run (1314 generated, 1265 compared): 275/371 FAILs
+share the exact first-diff `M73 P10 R7` at line ~137 (ender3 fixture);
+the totals MATCH (8m55s both sides). Two stacked root causes on the
+ender3 option-injection cases:
+1. ESTIMATOR: at the R8->7 crossing (threshold elapsed 115.589s),
+   ares's Z.2-line entry = 115.358 vs oracle-proxy GT 115.67 —
+   a ~0.3s cumulative drift concentrated in ids 263-560 (per-block
+   deltas 0.1-4s with matching block totals — the ID STREAMS
+   misalign mid-file).
+2. EMISSION: the two files differ in CONTENT — ares emits 18 extra
+   motion lines (2655 vs 2637: tiny gap-fill moves like
+   `G1 X106.024 Y106.072 E.00264`, repeated `G1 F2005` speed-only
+   lines where the oracle has F2002 or omits them). The baseline
+   ender3 cube passes byte-identical; the option-INJECTED cases
+   perturb the speed/small-area path.
+NEXT: (a) trace the id-stream misalignment from id 261 (no arcs on
+this fixture — pure G1 counting; ARES_TRACE_ARCS/REPLAY_TRACE_ARCS
+hooks committed); (b) root-cause the 18 extra motion lines on the
+activate_air_filtration case (`G1 F2005` repetition + 0.09mm moves).

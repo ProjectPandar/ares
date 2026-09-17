@@ -708,7 +708,7 @@ int main(int argc, char** argv)
             double travel_length = std::sqrt(length * length + dz * dz);
             if (travel_length < 0.001) { start_position = end_pos; continue; }
             std::optional<float> arc_feedrate;
-            if (auto f = word_value('F')) { arc_feedrate = float(*f); if (getenv("REPLAY_TRACE_G1")) std::fprintf(stderr, "ARC F=%.1f segments=%zu r=%.3f angle=%.4f\n", *f, 0, radius, angle); }
+            if (auto f = word_value('F')) { arc_feedrate = float(*f); }
             std::optional<float> extrusion;
             if (auto ev = word_value('E')) extrusion = end_pos[E] - start_position[E];
             // GCodeProcessor.cpp:4784-4790: the legacy (non-MarlinFirmware)
@@ -743,6 +743,7 @@ int main(int argc, char** argv)
                     segments = size_t(std::ceil(std::fabs(angle) / (2.0 * std::acos(d / radius))));
                 if (segments == 0) segments = 1;
             }
+            if (getenv("REPLAY_TRACE_ARCS")) std::fprintf(stderr, "ARC id=%u segments=%zu r=%.6f angle=%.6f\n", g1_line_id, segments, radius, angle);
             const double inv_segment = 1.0 / double(segments);
             const double theta_per_segment = angle * inv_segment;
             const double z_per_segment = dz * inv_segment;

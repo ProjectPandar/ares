@@ -100,6 +100,12 @@ impl Estimate {
             let command = code.split_whitespace().next().unwrap_or_default();
             let arc_internal = matches!(command, "G2" | "G3")
                 .then(|| arc_internal_g1_lines(code, command, &state));
+            #[cfg(test)]
+            if let Some(count) = arc_internal
+                && std::env::var("ARES_TRACE_ARCS").is_ok()
+            {
+                eprintln!("ARC id={g1_line_id} segments={count}");
+            }
             let motion_blocks = state.motions(code);
             // Linear commands produce at most one block; only arcs subdivide.
             if matches!(command, "G0" | "G1" | "G28")
