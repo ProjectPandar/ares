@@ -260,11 +260,11 @@ fn take_next(
     trim_length: f64,
 ) {
     let next = intersections[index].next.expect("connected arc");
-    let (cp1, cp2) = if take_first {
-        (index, next)
-    } else {
-        (next, index)
-    };
+    // Upstream `:2384-2386`: cp1 = the passed index, cp2 = its
+    // next_on_contour — ALWAYS, regardless of take_first. The
+    // take_first flag only controls the trim direction and which
+    // polyline receives the arc, NOT the cp1/cp2 assignment.
+    let (cp1, cp2) = (index, next);
     if intersections[if take_first { cp1 } else { cp2 }].consumed {
         return;
     }
