@@ -54,6 +54,9 @@ impl BeadingStrategy for DistributedBeadingStrategy {
     }
 
     fn compute(&self, thickness: i64, bead_count: i64) -> Beading {
+        if std::env::var("ARES_DUMP_BEADING").is_ok() {
+            eprintln!("BEAD t={thickness} n={bead_count}");
+        }
         let mut result = Beading::empty(thickness);
         match bead_count {
             count if count > 2 => return self.compute_many(thickness, bead_count),

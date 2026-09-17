@@ -1811,3 +1811,27 @@ NEXT: dump (thickness, bead_count, widths) tuples at the compute()
 entry on both sides (ares hook + upstream probe at the same seam),
 diff the first divergent tuple, then walk into
 SkeletalTrapezoidation edge-length/transition math.
+
+## Beading dump DECISIVE: tuples identical, ORDER differs (2026-09-17 g)
+
+Both sides dump 9 compute() calls with the SAME tuples
+(t=362756/362758, n=1) — only the processing SEQUENCE differs
+(ares: 56,58,56,58,58,56,58,56,58 vs oracle two positions
+shifted). The junction widths (386626/386624) therefore come from
+the TRANSITION-SMOOTHING stage: smoothing averages neighboring
+beads, and the different edge-processing order (different graph
+traversal sequence entering Redistribute/transition code) shifts a
+junction by 2 scaled units. The raw beading inputs and math are
+proven identical.
+ROOT: the skeletal graph EDGE ORDER — upstream iterates boost
+voronoi edges (SkeletalTrapezoidation::generateJoins' node queue
+fed in boost's edge enumeration order); ares's diagram::build
+enumerates its own Voronoi implementation's edges in a different
+order. FIX: align the diagram edge enumeration order with
+boost::voronoi (half-edge pairing/traversal), or sort the join-
+processing queue the way the upstream node-priority queue resolves
+the same input.
+NEXT: instrument the trapezoidation node-processing order
+(dump node ids/thickness sequence at generateJoins entry) and the
+diagram edge list order; align ares diagram::build's edge
+enumeration with boost's (or arachne/skeletal walk order).
