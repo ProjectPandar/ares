@@ -2068,3 +2068,19 @@ stands: neither side runs the _create_gap_fill residual on
 case-05rNdj (0 calls both), so the extra 0.429546 loop is a
 CONCENTRIC loop surviving ares's clip/compaction — revisit via a
 per-loop clip_end survivor dump rather than the last_pos chain.
+
+## loop_clipping provenance verified; survivor hunt narrows to variable_width (2026-09-17 s)
+
+ares loop_clipping = scale(seam_gap abs) (group_fills/params/
+projection.rs:141) = upstream Fill.cpp (seam_gap 10% of nozzle =
+0.04mm/4000 units; PrintConfig.cpp:5515). The pre-clip multisets
+being identical while the gcode differs at layers 1/4/8/9 means
+the drop happens BETWEEN clip_end and emission — the remaining
+unaudited stage is `thick_polyline_to_multi_path`
+(ExtrusionLine.cpp:224-227, tolerance scaled(0.05)) which merges/
+drops tiny lines, and the variable_width convert chain.
+NEXT: dump the per-loop POST-clip_end point counts on both sides
+(ares: after finalize's retain; upstream: after the caller
+compaction at FillConcentricInternal.cpp:66-75) — the loop that
+survives in ares with N points should appear in the oracle dump
+with fewer points or absent; then audit the tolerance merge.
