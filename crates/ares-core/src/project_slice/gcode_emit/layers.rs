@@ -384,14 +384,29 @@ pub(super) fn append(
                     chunk_perimeter_spacing: 0.0,
                 };
                 let motion_geometry = geometry.view_raft(traversal.scale);
-                motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
-                    timelapse_core::append_traditional(
-                        traditional_interlude,
+                // Raft layers belong to the same print instance and
+                // carry its object labels (`GCode.cpp:5348-5352` fires
+                // per `instance_to_print`, raft layers included).
+                if let Some(labels) = &labels[object_index] {
+                    labels.queue_start(output, state, emit_labels);
+                }
+                let timelapse_inserted =
+                    motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
+                        timelapse_core::append_traditional(
+                            traditional_interlude,
+                            output,
+                            state,
+                            timelapse_context,
+                        )
+                    })?;
+                if let Some(labels) = &labels[object_index] {
+                    labels.queue_stop(
                         output,
                         state,
-                        timelapse_context,
-                    )
-                })?;
+                        emit_labels,
+                        timelapse_inserted && is_group_end,
+                    );
+                }
                 if is_group_end {
                     motion::end_layer_for_timelapse(output, state);
                 }
