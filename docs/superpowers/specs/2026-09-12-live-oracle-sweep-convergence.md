@@ -1887,3 +1887,19 @@ voronoi's exact event ordering into diagram construction; (b)
 replace stable sort with a port of libstdc++ introsort's partition
 sequence for this one sort site (deterministic given identical
 input order, so (a) is still the prerequisite).
+
+## Cell dump multiset analysis (2026-09-17 j): diagrams differ STRUCTURALLY
+
+The (contains_point, source_index) multisets are NOT equal: ares has
+one extra point cell each at src 0 and src 2; the oracle has two
+extra point cells at src 3. So the boostvoronoi Rust crate and
+boost C++ assign point-site cells differently (site indexing /
+endpoint-site creation differs), on top of the enumeration order
+difference. The concentric-order family therefore has a THREE-layer
+root: (1) site-cell structural difference, (2) beach-line
+enumeration order, (3) stable-vs-unstable sort ties. All three live
+in/behind the third-party boostvoronoi crate — a faithful-order
+port of boost::voronoi's site handling is the prerequisite for any
+of them. Everything above that layer (graph construction,
+beading, transitions, concentric emission, variable_width) has been
+audited equivalent on this path.
