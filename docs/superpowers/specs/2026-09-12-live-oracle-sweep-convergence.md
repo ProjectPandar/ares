@@ -2031,3 +2031,22 @@ the covered-polygons set (which depends on the just-emitted solid
 infill lines incl. the 429546-width concentric loops that DO
 match). Probe: ARES_DUMP_RESID hook at gap_residual.rs entry
 printing gapfill_areas point counts; upstream at :207.
+
+## Covered-path reconstruction audit: fully equivalent (2026-09-17 q)
+
+ares gap_residual.rs append_covered_path/coverage_delta vs upstream
+ExtrusionPath::polygons_covered_by_spacing (:73-82): delta
+0.5*scaled_spacing + eps(10) via Flow(width, height, 0) — equal;
+join jtSquare (DefaultLineJoinType, ClipperUtils.hpp:29) + miter 0
+(ignored for square) + end etOpenButt (DefaultEndType :21) —
+ares offset_open_paths → add_open_path(EndType::OpenButt) with
+JoinType::Square/miter 0 — ALL equivalent. The residual-pass
+machinery is exonerated; the layer-2 divergence is in the pass
+INPUT: which `out` entities/no-overlap domain feed it at that call
+site (the domain intersects the SURFACE — Fill.cpp:1328
+intersection with the current expolygon — and the surface split
+itself differs in the layer-4/8/9 ordering cases).
+NEXT: ARES_DUMP_RESID at gap_residual entry (per call: domain
+contour count/pts, covered polygon count, gapfill_areas count/pts)
++ the upstream twin at :207; diff per-CALL (not concatenated —
+sort by first point to defeat TBB interleaving).
