@@ -1964,3 +1964,24 @@ voronoi_builder.hpp init_beach_line (the skip / pairing loop,
 ~:184-230) — that is where the cell append order diverges from
 sorted order; align the vendor's edge-insertion calls so cell
 appends match.
+
+## Inputs PROVEN identical; stderr dumps interleave under TBB (2026-09-17 n)
+
+STPOLY probes on both sides of case-05rNdj: EXACTLY the same 19
+trapezoidation invocations (18x polys=1/pts=3 + 1x polys=2/pts=8).
+The earlier "36 oracle runs" was a segmentation artifact — orca
+slices with TBB parallelism and per-cell stderr lines interleave
+across threads, so cell-order dumps are unreliable (ids like
+0,1,0,1,2,3,2,3 within one run are interleaving, not topology).
+Gcode-level WIDTH sequences are the authoritative order signal:
+10/14 layers byte-identical; layer 1 shows ares emitting an EXTRA
+trailing 0.429546-width concentric loop where the oracle's sequence
+ends at 0.449999 (the oracle drops/clips that last loop —
+filter_out_gap_fill/loop_clipping boundary, not ordering).
+REVISED remaining root: same inputs, same width multiset, same
+order on 10/14 layers — the divergence is a boundary decision on
+which loops survive (loop_clipping/length filter) at ~4 layers,
+plus the emitted-order effects downstream of any survivor change.
+Parallel-interleaved dumps must not be compared positionally; use
+gcode WIDTH sequences or per-run captured dumps (serial -j1 slice)
+for the next audit.
