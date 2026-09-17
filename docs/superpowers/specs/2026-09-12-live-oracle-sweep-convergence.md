@@ -1607,3 +1607,26 @@ stronger evidence than the ksr-prefix decomposition. Reverted; the
 observation, but the tool-block removal is NOT the fix. The +3s
 estimator residual remains the documented known family with its
 complete investigation ledger.
+
+## Upstream 2.4.2 HAS the zero-distance tool-change block (2026-09-17, supersedes part of #189)
+
+Direct source read of vanilla 2.4.2
+(`GCodeProcessor.cpp` end of `process_filament_change`, the
+`store_move_vertex(EMoveType::Tool_change)` + "Construct a
+zero-distance time block for the tool-change move on each enabled
+machine so the synchronize below can land the delay on it" block):
+upstream ITSELF constructs a zero-distance Tool_change block and
+lands the filament load/unload/tool-change delay on it — exactly the
+layout ares implements. ares's block layout is upstream-correct;
+the GT replay harness (`tools/estimator-replay/replay.cpp`) has NO
+T-line handling at all (no `process_T`, no machine_load entry —
+only M622/G29/M191/SYNC/G4), so the #189 "GT attaches to
+additional_time" comparison was a harness artifact on the tool class.
+
+NEXT UNIT (estimator family): (1) port the 2.4.2 `process_T` chain
+into replay.cpp (zero-distance Tool_change block + load/unload times
+via `get_filament_load_time` from the limits file), rebuild, re-run
+the 2k-prefix block diff — expect the tool id4/id5 classes to
+vanish; (2) the remaining G29-attached and retract/prime classes;
+(3) the Qidi Z-cap ~1% residual (5m53 vs 5m57 oracle header) is
+INDEPENDENT of GT (measured against the real oracle header).
