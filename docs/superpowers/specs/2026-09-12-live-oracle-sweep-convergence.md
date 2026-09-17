@@ -1835,3 +1835,30 @@ NEXT: instrument the trapezoidation node-processing order
 (dump node ids/thickness sequence at generateJoins entry) and the
 diagram edge list order; align ares diagram::build's edge
 enumeration with boost's (or arachne/skeletal walk order).
+
+## CONCLUSIVE: concentric loop widths identical as MULTISETS, only ORDER differs (2026-09-17 h)
+
+Per-loop width dumps on both sides of case-05rNdj (ares CONC1 hook
+vs the upstream FillConcentricInternal.cpp probe): 28 loops each,
+multisets IDENTICAL ({407079:9, 362758:5, 386624:5, 386626:4,
+362756:4, 340000:1}) — only the EMISSION ORDER differs. The gcode
+WIDTH-comment count difference (9 vs 7 blocks) is an artifact of
+order (more alternation = more width-change comments). The cell-
+order dump (ARES_DUMP_CELLS vs the SkeletalTrapezoidation.cpp
+probe) shows 93/124 cell-enumeration mismatches — the boostvoronoi
+Rust port's sweep order differs from boost C++, which reorders the
+graph node insertion, which reorders the emitted concentric loops.
+ROOT (single): the concentric loop emission order, ultimately from
+the Voronoi cell enumeration order. FIX OPTIONS: (a) port boost's
+exact beach-line event order into the graph construction (deep);
+(b) match the final ordering where it becomes observable — the
+WallToolPaths::getToolPaths() ExtrusionLine order feeding the
+nearest-neighbor walk (all_extrusions ordering + last_pos start_at_
+index chain) — audit ares wall_toolpaths ordering against
+WallToolPaths.cpp first; the reorder_by_shortest_traverse/
+nearest-neighbor logic may be order-insensitive by construction if
+given the same input set, making (b) a smaller fix than it looks.
+NEXT: dump the ExtrusionLine sequence (first-point coords) after
+WallToolPaths::getToolPaths on both sides; if those differ only by
+order, align the ares toolpath ordering with
+WallToolPaths.cpp's inset/region emission order.

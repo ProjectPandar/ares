@@ -18,6 +18,14 @@ impl SkeletalTrapezoidation<'_> {
         let segments = collect_segments(polygons);
         let vd = voronoi::build(polygons, &segments)?;
         for cell in vd.cells() {
+            if std::env::var("ARES_DUMP_CELLS").is_ok() {
+                eprintln!(
+                    "CELL id={:?} pt={} src={:?}",
+                    cell.id(),
+                    cell.contains_point(),
+                    cell.source_index()
+                );
+            }
             let Some(range) = voronoi::cell_range(&vd, cell.id(), polygons, &segments)? else {
                 continue;
             };
