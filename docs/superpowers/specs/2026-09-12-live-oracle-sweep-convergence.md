@@ -1758,3 +1758,16 @@ Note: the medial-axis audit (previous entry) stands — gap-fill
 widths still differ at 1e-5 on other cases; this wipe fix addresses
 the option-case first-diff chain (F2005/E-3.7986/extra lines/M73
 shifts).
+
+## Wipe port sweep result (2026-09-17, bb6cea0b): 630/1001, +159/-165
+
+The multi-segment wipe (upstream-correct per Wipe::wipe) fixed 159
+printers outright. The 165 newly-divergent are NOT wipe regressions:
+their old single-segment wipe matched BY ACCIDENT (long final
+segments); the new walk reaches fragmented gap-fill tails and
+diverges on the already-documented medial-axis width family
+(case-twGvtX: ares tail = 2x0.05mm segments from a 0.439082-width
+island where the oracle consolidated; oracle retract E-1.2/wipe
+E-.3 vs ares E-1.44838/2x0.026). The medial-axis probe build
+(substituteInPlace postPatch dumping ThickPolylines at PG:1588) is
+preparing; both fixes must land for the clean delta.
