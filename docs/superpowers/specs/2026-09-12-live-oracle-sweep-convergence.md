@@ -1655,3 +1655,24 @@ G29/tool region — limits must carry machine_load 29 for the KSR
 effective value). Reproduce: build /tmp/ksr-replay.limits from the
 3mf + machine preset, run replay vs ARES_DUMP_ELAPSED, diff caches;
 use REPLAY_TRACE_G1 to dump one arc's segment count on each side.
+
+## KSR block-level GT/ares diff: shared geometry EXACT, delay landing block differs (2026-09-17)
+
+Per-block REPLAY_DUMP_BLOCKS vs ARES_DUMP_BLOCKS on the KSR stream:
+- ids 1-5: identical geometry and times (block 2 = 1.5042161s on both).
+- The KSR gcode has TWO indented `G29 A1/A2` bed-leveling commands and
+  TWO indented `T0 H0` lines (leading whitespace — plain `^G29` greps
+  miss them); no plain G28-homing surprises.
+- The G29 260s delay lands on DIFFERENT blocks: ares id-6 (16mm block,
+  259.799s) vs GT id-8 (88mm block, 260.098s). The same-extruder T0
+  load (29s): ares lands it on the id-4 tool block (upstream-correct
+  per the same-extruder branch adding unload+load); my GT T-port still
+  lands misc small M400 delays there (29 missed) — the GT
+  refresh-threshold consumption cadence eats blocks 6-8 before the G29
+  flush where the ares FlushEvent pin (block_count at command time)
+  holds them.
+NEXT UNIT: align GT's consumption cadence with the FlushEvent pin
+(consume only up to the pinned block_count at delay commands; check
+the GT refresh-threshold placement vs upstream :570 post-push check),
+then re-diff — the M73 line-shift family should collapse to shared
+blocks once the delay landing blocks agree.
