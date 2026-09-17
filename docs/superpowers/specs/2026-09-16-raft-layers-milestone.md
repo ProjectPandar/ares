@@ -788,3 +788,30 @@ mechanism is still unidentified. Candidates:
    (maybe it processes chain endpoints, not raw indices)
 3. The upstream take() appending to a SHARED polyline rather than
    per-pair chains (reference semantics vs our value semantics)
+
+## #268 inter-pair linking analysis (deep dive)
+
+Walked the upstream vertical loop step-by-step on the fixture:
+- idx=0 takes bottom arch (line-0↔line-1), consumes {0,2}
+- idx=1 takes top arch (line-0↔line-1 via prev=idx3), consumes {1,3}  
+- Result: chain-A = closed loop (lines 0,1), all 4 endpoints consumed
+- idx=4 takes bottom arch (line-2↔line-3), consumes {4,6}
+- idx=5: can_take_prev=true (idx7), but !can_take_next=true →
+  condition passes → takes top arch → same-chain closure
+- Result: chain-B = closed loop (lines 2,3)
+- Pairs never connect through the vertical loop.
+
+The oracle's serpent: bottom-edge sweep (boundary walk) → arch →
+fill → arch → fill → ... → exit. This is ONE polyline that includes
+both boundary walks and fill lines. The mechanism that produces this
+single chain is NOT the vertical loop alone — it requires either:
+(a) the cost phase selecting inter-pair arches (but cost=0 on
+straight edges → below cost_low → not selected), OR
+(b) a chain-growth mechanism where OPEN chains (not closed loops)
+extend by successive takes, OR  
+(c) the upstream take() reference semantics enabling incremental
+chain growth that our value-based slot model doesn't replicate.
+
+NEXT SESSION: instrument the upstream C++ with a breakpoint on
+`take()` to trace the actual chain growth sequence on the KSR
+input, then replicate that sequence in the Rust port.
