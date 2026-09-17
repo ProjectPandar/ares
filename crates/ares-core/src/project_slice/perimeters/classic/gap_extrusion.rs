@@ -163,6 +163,32 @@ fn stage_surface(
         .unwrap_or_default();
     let gap_fill = variable_width::convert(&retained, validated.flow, scale)
         .map_err(|_| SliceError::InvalidInput(FLOW_ERROR.to_owned()))?;
+    if let Ok(path) = std::env::var("ARES_DUMP_MEDIAL")
+        && !retained.is_empty()
+    {
+        use std::io::Write;
+        if let Ok(mut out) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for polyline in &retained {
+                let points = polyline
+                    .points
+                    .iter()
+                    .map(|point| format!("({},{})", point.x(), point.y()))
+                    .collect::<Vec<_>>()
+                    .join("");
+                let widths = polyline
+                    .width
+                    .iter()
+                    .map(|width| format!("{width}"))
+                    .collect::<Vec<_>>()
+                    .join(",");
+                let _ = writeln!(out, "TP P{points} W{widths}");
+            }
+        }
+    }
     let covered = coverage::covered_polygons(&gap_fill, scale)
         .map_err(|_| SliceError::InvalidInput(GEOMETRY_ERROR.to_owned()))?;
     let remaining = if retained.is_empty() {

@@ -115,6 +115,32 @@ pub(super) fn append_configured(
             )?);
         }
         finalize_standard_polylines(&mut polylines, params.loop_clipping as f64);
+        if let Ok(path) = std::env::var("ARES_DUMP_MEDIAL")
+            && !polylines.is_empty()
+        {
+            use std::io::Write;
+            if let Ok(mut out) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                for polyline in &polylines {
+                    let points = polyline
+                        .points
+                        .iter()
+                        .map(|point| format!("({},{})", point.x(), point.y()))
+                        .collect::<Vec<_>>()
+                        .join("");
+                    let widths = polyline
+                        .width
+                        .iter()
+                        .map(|width| format!("{width}"))
+                        .collect::<Vec<_>>()
+                        .join(",");
+                    let _ = writeln!(out, "CONC P{points} W{widths}");
+                }
+            }
+        }
         let materialized_role = match params.extrusion_role {
             crate::ExtrusionRole::TopSolidInfill => MaterializedRole::TopSolidInfill,
             crate::ExtrusionRole::BottomSurface => MaterializedRole::BottomSurface,
