@@ -1698,3 +1698,19 @@ NEXT: (a) trace the id-stream misalignment from id 261 (no arcs on
 this fixture — pure G1 counting; ARES_TRACE_ARCS/REPLAY_TRACE_ARCS
 hooks committed); (b) root-cause the 18 extra motion lines on the
 activate_air_filtration case (`G1 F2005` repetition + 0.09mm moves).
+
+## Refinement: the 18 extra lines root = gap-fill width 6th-decimal (2026-09-17 b)
+
+Layer-3 diff on the option case: the divergent region is a GAP-FILL
+block (`;WIDTH:0.429546` ares vs `0.429544` oracle — NOT the 0.45
+wall width; the tiny 0.09mm moves are gap-fill segments). The chain:
+gap-fill width +2e-6 -> mm3/E deltas -> pressure-equalizer re-split
+(F2005 vs F2002, E-3.79861 vs E-2.8 retract) -> 18 extra motion
+lines -> id-stream shift -> M73 boundary shifts.
+NEXT: diff the variable-width gap-fill flow derivation
+(`perimeters/classic/variable_width.rs` + `gap_extrusion.rs`)
+against upstream `ExtrusionEntityCollection::infill_gaps`/
+`VariableWidth` flow math for a 2e-6 rounding-order divergence
+(f32 vs f64 or multiply order) under this config (nozzle 0.4, h 0.2,
+wall 0.45). The baseline cube's gaps apparently avoid the sensitive
+path; the option-injected configs hit it.
