@@ -2050,3 +2050,21 @@ NEXT: ARES_DUMP_RESID at gap_residual entry (per call: domain
 contour count/pts, covered polygon count, gapfill_areas count/pts)
 + the upstream twin at :207; diff per-CALL (not concatenated —
 sort by first point to defeat TBB interleaving).
+
+## last_pos chaining experiment: REVERTED (2026-09-17 r)
+
+Implemented the verbatim FillConcentricInternal.cpp:50-65 last_pos
+chain (rotation anchored to the previous loop's last point, per-
+fill_surface scope) + the Point::nearest_point_index last-wins tie
+break (Point.cpp:199-220 strict d > distance). REVERTED: the ksr
+project's Z19.2 inner-wall slowdown moved F12997 -> F13075,
+diverging from the stored orca reference (F12997). The ares
+site-1 finalize is evidently NOT the FillConcentricInternal twin it
+was labeled as (the surface family reaching it on these projects
+differs — likely the FillConcentric.cpp main variant, whose
+last_pos chain at :113-121 does NOT pop the closing point and
+only rotates closed extrusions differently). The RESID dump result
+stands: neither side runs the _create_gap_fill residual on
+case-05rNdj (0 calls both), so the extra 0.429546 loop is a
+CONCENTRIC loop surviving ares's clip/compaction — revisit via a
+per-loop clip_end survivor dump rather than the last_pos chain.

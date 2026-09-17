@@ -60,6 +60,29 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
     if no_overlap_expolygons.is_empty() || params.density < 100.0 {
         return Ok(());
     }
+    if let Ok(path) = std::env::var("ARES_DUMP_RESID") {
+        use std::io::Write;
+        if let Ok(mut out) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let domain_pts = no_overlap_expolygons
+                .iter()
+                .map(|ex| ex.contour().points().len())
+                .sum::<usize>();
+            let surface_pts = expolygon.contour().points().len();
+            let entities = output_entities.len();
+            let _ = writeln!(
+                out,
+                "RESID domain_n={} domain_pts={} surf_pts={} out_n={}",
+                no_overlap_expolygons.len(),
+                domain_pts,
+                surface_pts,
+                entities
+            );
+        }
+    }
     // Fill.cpp:1328 intersects the no-overlap domain with the surface using a
     // safety offset.
     let domain =
