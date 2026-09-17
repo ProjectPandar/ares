@@ -1714,3 +1714,25 @@ against upstream `ExtrusionEntityCollection::infill_gaps`/
 (f32 vs f64 or multiply order) under this config (nozzle 0.4, h 0.2,
 wall 0.45). The baseline cube's gaps apparently avoid the sensitive
 path; the option-injected configs hit it.
+
+## Gap-fill width chain fully audited (2026-09-17 c): formula matches; input widths differ
+
+Line-by-line audit of ares
+`gap_extrusion/variable_width.rs` vs upstream `VariableWidth.cpp`
+(thick_polyline_to_extrusion_paths_2): the exported gap-fill path
+matches — group loop, split_line interpolation
+(`w = a + j·seg_len·(b−a)/len`), and the width formula type chain
+(unscale<float> = `f32(w)·f32(1e-5)`; height is f32 in both Flows;
+all-f32 like upstream). The 0.429546-vs-0.429544 delta therefore
+comes from the INPUT ThickPolyline widths — the medial-axis
+(Voronoi) gap geometry differs at ~1e-5 scaled units on some gap
+shapes. Exposure note: the option-injection normalization sets wall
+widths to 0.45 (baseline ender3 smoke uses its printer defaults), so
+this config's gaps were never exercised by the byte-identical
+baseline — the divergence is in ares's medial_axis edge widths, not
+the injection machinery.
+NEXT: dump one divergent gap's ThickPolyline (ares
+ARES_DUMP_THICKLINES-style hook vs an upstream probe on
+`create_medial_axis`/`gap_fill_polylines` input) and diff edge
+widths; the audit scope is medial_gap.rs / the Voronoi vertex
+widths.
