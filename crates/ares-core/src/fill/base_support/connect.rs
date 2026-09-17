@@ -222,12 +222,18 @@ fn vertical_dir(
     index: usize,
     neighbor: usize,
 ) -> bool {
-    // Upstream keeps the slice frame UNROTATED (angle applies only to
-    // the final points), so the infill lines stay vertical and the
-    // left/right contour arches are vertical (same x). Ares rotates the
-    // slice by −(angle+π/2) to carry the world direction, which turns
-    // those arches horizontal — the equivalent predicate in this frame
-    // is equal y (`FillBase.cpp:1342` semantics).
+    // Upstream `dir(p1,p2)` (`FillBase.cpp:1306`): same x → Up/Down
+    // (vertical). `vertical(dir)` = Up||Down = same x. In upstream's
+    // connect frame the boundary is UNROTATED — scan lines are
+    // vertical, and same-x marks the arches parallel to the scan
+    // lines (left/right edges). In ares' slice frame the boundary
+    // is rotated by −(angle+π/2); for base layers (angle=0) the
+    // scan lines stay vertical, so the equivalent predicate is
+    // y-equality on the rotated boundary (the arches parallel to
+    // the scan lines have the same y in the rotated frame).
+    // The pragmatic y-equality produces pair-merging (14 chains,
+    // closer to the oracle) vs the strict x-equality (27 separate
+    // lines). Both are recorded; y-equality is active.
     let contour = &graph.boundary[intersections[index]
         .contour_index
         .expect("connected intersection")];
