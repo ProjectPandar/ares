@@ -764,3 +764,27 @@ Fix: the take_next calls must link chain-to-chain, not just
 line-to-line within a pair. The cost-selection phase
 (evaluate_support_arches) is the upstream mechanism for this —
 verify it fires on the live input.
+
+## #267 BREAKTHROUGH: cp1/cp2 assignment fix — massive convergence
+
+Fix: upstream `:2384-2386` ALWAYS uses cp1=passed index, cp2=next_
+on_contour. The take_first flag only controls trim direction and
+which polyline receives the arc. The swap in take_first=false was
+reversing the arc direction → full boundary walk → 5x over-emission.
+
+Results after fix:
+- ORDER27: 14 chains × 5 pts (correct pair structure)
+- Live extrusion: 46370 → 6310 (oracle 9051, now 0.70x under)
+- Estimate: 55m25s → 36m49s (oracle 31m47s, 1.16x)
+- z=0.5: 53 lines (27 fill + 26 arches, E.65045/E.02335 alternating ✓)
+
+REMAINING: 13 F9000 travels between the 14 pair-chains (the oracle
+has 0 — 1 continuous serpent). The vertical loop creates pairs with
+both arches (closing loops); the serpent's inter-pair connection
+mechanism is still unidentified. Candidates:
+1. The cost-selection phase with different cost thresholds on the
+   live geometry
+2. A re-reading of the upstream vertical loop's iteration structure
+   (maybe it processes chain endpoints, not raw indices)
+3. The upstream take() appending to a SHARED polyline rather than
+   per-pair chains (reference semantics vs our value semantics)
