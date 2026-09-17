@@ -121,9 +121,9 @@ fn emit_long_arc(
         intersections[index].trim_next(0.0);
     }
     clip_start(&mut points, line_half_width);
-    if points.len() > 1 {
-        polylines_out.push(Polyline::new(points));
-    }
+    // Upstream `emplace_back`s unconditionally (`:2690`); a degenerate
+    // arc surviving `clip_start` stays in `polylines_out`.
+    polylines_out.push(Polyline::new(points));
 }
 
 /// `Polyline::clip_start` (`Polyline.cpp:95-101`) — drop `distance`

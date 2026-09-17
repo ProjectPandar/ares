@@ -590,13 +590,17 @@ int main(int argc, char** argv)
     // line constructs a zero-distance Tool_change block carrying the
     // CURRENT g1_line_id (not advanced), then lands the filament-change
     // delay on it via synchronize targeting Tool_change. Single-extruder
-    // replay: the first T initializes (load time); later T lines with the
-    // same extruder+filament add nothing.
+    // replay: the first T initializes (load time); a later T on the SAME
+    // extruder+filament still adds unload+load (the upstream same-extruder
+    // branch unconditionally accumulates both — a filament change may be
+    // needed even without an extruder switch).
     auto process_T = [&](int eid) {
         float extra = 0.0f;
         if (!extruder_initialized) {
             extruder_initialized = true;
             extra = limits.machine_load_filament_time;
+        } else {
+            extra = /* unload */ 0.0f + limits.machine_load_filament_time;
         }
         (void)eid;
         {
