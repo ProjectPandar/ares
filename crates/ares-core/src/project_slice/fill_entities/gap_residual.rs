@@ -129,6 +129,32 @@ pub(super) fn append_residual(input: ResidualInput<'_>) -> Result<(), SliceError
         );
     }
     polylines.retain(|polyline| polyline.length() >= minimum_length);
+    if let Ok(path) = std::env::var("ARES_DUMP_MEDIAL")
+        && !polylines.is_empty()
+    {
+        use std::io::Write;
+        if let Ok(mut out) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for polyline in &polylines {
+                let points = polyline
+                    .points
+                    .iter()
+                    .map(|point| format!("({},{})", point.x(), point.y()))
+                    .collect::<Vec<_>>()
+                    .join("");
+                let widths = polyline
+                    .width
+                    .iter()
+                    .map(|width| format!("{width}"))
+                    .collect::<Vec<_>>()
+                    .join(",");
+                let _ = writeln!(out, "RES P{points} W{widths}");
+            }
+        }
+    }
     if polylines.is_empty() {
         return Ok(());
     }

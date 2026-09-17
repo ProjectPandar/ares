@@ -65,7 +65,29 @@ pub(super) fn append(
             );
         }
         let entities = variable_width::convert_with_role(
-            &polylines,
+            {
+                if let Ok(path) = std::env::var("ARES_DUMP_MEDIAL")
+                    && !polylines.is_empty()
+                {
+                    use std::io::Write;
+                    if let Ok(mut out) = std::fs::OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(path)
+                    {
+                        for polyline in &polylines {
+                            let widths = polyline
+                                .width
+                                .iter()
+                                .map(|width| format!("{width}"))
+                                .collect::<Vec<_>>()
+                                .join(",");
+                            let _ = writeln!(out, "CONC1 W{widths}");
+                        }
+                    }
+                }
+                &polylines
+            },
             with_spacing(fill.params.flow, fill.params.spacing as f32),
             scale,
             MaterializedRole::SolidInfill,

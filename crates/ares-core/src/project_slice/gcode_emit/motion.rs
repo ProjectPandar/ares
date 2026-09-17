@@ -275,6 +275,10 @@ fn emit_variable_width_entity(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
+    if std::env::var("ARES_DUMP_MEDIAL").is_ok() {
+        let first = entity.first_point();
+        eprintln!("VW_EMIT at ({},{})", first.x(), first.y());
+    }
     match entity {
         GapFillEntity::Path(path) => materialized::emit_flat(output, path, 0.0, geometry, state),
         GapFillEntity::Loop(paths) => {

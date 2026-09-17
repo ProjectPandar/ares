@@ -1771,3 +1771,28 @@ island where the oracle consolidated; oracle retract E-1.2/wipe
 E-.3 vs ares E-1.44838/2x0.026). The medial-axis probe build
 (substituteInPlace postPatch dumping ThickPolylines at PG:1588) is
 preparing; both fixes must land for the clean delta.
+
+## 0.429546-family producer FOUND: concentric site-1 Arachne widths (2026-09-17 e)
+
+Fifth relocation of the dump hook: the WIDTH:0.429546 erGapFill-style
+blocks come from `fill_entities/concentric.rs:67` — the density>0.9999
+solid-infill branch (upstream `FillConcentric.cpp:75-148`
+fill_surface_arachne over ThickPolylines). The gap-fill hooks
+(medial_gap, gap_extrusion, gap_residual) and the concentric
+second-site hook NEVER fire on the ender3 cube option cases; the
+emission hook (gcode_emit motion.rs VW_EMIT) confirms 28 variable-
+width entities per slice.
+Dumped thick-polyline widths: ares mixes 386626/386624 scaled units
+on neighboring loops (oracle mean implies 386624.x); the
+variable_width mean then lands 0.429546 vs the oracle's 0.429544.
+ROOT: the Arachne beading-strategy junction widths differ by ~2
+scaled units (2e-5 mm) — audit the DistributedBeadingStrategy bead-
+width float math and the coord_t conversion against upstream
+BeadingStrategy/ (the RawWallToolPathConfig inputs were verified
+item-by-item against FillConcentric.cpp:92-100 — all match,
+including the unset min_length_factor note).
+NEXT: dump junction widths at the beading layer (ares
+arachne/BeadingStrategy port vs upstream), find the 2-unit float
+divergence; the upstream probe should hook
+FillConcentric.cpp:112-118 (thick_polylines_out) instead of the
+PerimeterGenerator gap site.
