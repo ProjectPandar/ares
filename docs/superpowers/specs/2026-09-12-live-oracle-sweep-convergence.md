@@ -1862,3 +1862,28 @@ NEXT: dump the ExtrusionLine sequence (first-point coords) after
 WallToolPaths::getToolPaths on both sides; if those differ only by
 order, align the ares toolpath ordering with
 WallToolPaths.cpp's inset/region emission order.
+
+## generateSegments ordering audit (2026-09-17 i): comparator equivalent; tie resolution differs
+
+The upward_quad_mids comparator (ares transitions/segments.rs:175
+compare_upward_quad_mids vs SkeletalTrapezoidation.cpp:504-536) is
+semantically equivalent (radius descending; flat-edge special cases;
+dist-from-up tiebreak). The order divergence has TWO compounding
+sources: (1) Rust sort_by is STABLE (ties keep graph insertion
+order = the cell-order that already differs 93/124) while C++
+std::sort is UNSTABLE (libstdc++ introsort reorders ties by its own
+partition sequence); (2) the insertion order feeding ties is the
+boostvoronoi-cell-order graph construction. The ExtrusionLine
+append order into generated_toolpaths[inset_idx] follows this sort,
+so the emitted concentric loop sequence inherits both.
+STATUS: matching byte-for-byte requires replicating the boost
+beach-line cell order AND libstdc++ introsort tie behavior — both
+are large ports with no behavioral shortcut (the comparator itself
+is already faithful). The divergence is cosmetic-order-only:
+identical geometry multiset, identical widths, identical roles.
+Documented as the single remaining root of the 165-printer
+concentric-order family; candidate follow-ups: (a) port boost
+voronoi's exact event ordering into diagram construction; (b)
+replace stable sort with a port of libstdc++ introsort's partition
+sequence for this one sort site (deterministic given identical
+input order, so (a) is still the prerequisite).
