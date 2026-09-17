@@ -248,6 +248,14 @@ impl<I: InputType> Builder<I> {
 
         // Remove duplicates.
         self.site_events_.dedup();
+        if let Ok(path) = std::env::var("ARES_DUMP_SITES") {
+            use std::io::Write;
+            if let Ok(mut out) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                for s in &self.site_events_ {
+                    let _ = writeln!(out, "SITE init={:?} pt={}", s.initial_index(), !s.is_segment());
+                }
+            }
+        }
 
         // Index sites.
         for (cur, s) in self.site_events_.iter_mut().enumerate() {

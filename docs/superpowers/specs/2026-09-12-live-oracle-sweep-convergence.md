@@ -1944,3 +1944,23 @@ Next layer: the crate's diagram cell array construction/iteration
 vs C++ cell insertion order (boost appends a cell per site event
 processed, in sweep order — audit Diagram::new/process_site_event
 in the vendor vs boost voronoi_builder/voronoi_diagram).
+
+## Cell-order assumption FALSIFIED: oracle cells ≠ sorted-site order (2026-09-17 m)
+
+Decisive dumps: the ares deduped SITE sequence (ARES_DUMP_SITES,
+post-sort) vs the oracle CELL sequence (probe with vertex
+coordinates) match at only 16/124 positions — while the crate's
+cells ARE its sorted sites (padded sorted-index cells). Inputs and
+comparator are proven identical (with_segments push order matches
+boost insert_segment incl. the INITIAL/REVERSE canonicalization;
+event_comparison_bii matches operator() branch-for-branch
+including the y0<= special case). Conclusion: the C++ cells_ vector
+is NOT in sorted-site order — cells are appended per
+_insert_new_edge site2 in BEACH-LINE PAIRING order, and the initial
+chain pairing in init_beach_line (the vertical/collinear skip
+logic) emits cells in a different sequence than sorted order.
+NEXT UNIT: diff vendor builder.rs init_beach_line against boost
+voronoi_builder.hpp init_beach_line (the skip / pairing loop,
+~:184-230) — that is where the cell append order diverges from
+sorted order; align the vendor's edge-insertion calls so cell
+appends match.
