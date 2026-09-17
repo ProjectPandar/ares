@@ -320,24 +320,11 @@ fn take_next(
             polyline_idx2
         };
         if polyline_idx1 == polyline_idx2 {
-            // Same-chain arch closes the loop: start sits at the chain
-            // head. Reverse the chain so the arch appends at the tail
-            // (upstream's take()/take_limited pair handles direction
-            // implicitly by appending to whichever end matches).
-            if let Some(path) = paths[target_path].as_mut() {
-                if path.last() != Some(&contour.points[intersections[cp1].point_index]) {
-                    path.reverse();
-                }
-                if path.last() == Some(&contour.points[intersections[cp1].point_index]) {
-                    append_full(
-                        path,
-                        &contour.points,
-                        intersections[cp1].point_index,
-                        intersections[cp2].point_index,
-                        false,
-                    );
-                }
-            }
+            // Same-chain arch: upstream take_limited's add_at_start
+            // PREPENDS the boundary arc, growing the chain at the
+            // front. Since both endpoints are on the same chain, this
+            // effectively closes the loop (chain front meets chain
+            // back). Upstream still consumes both endpoints.
             intersections[cp1].consume_next();
             intersections[cp2].consume_prev();
             return;
