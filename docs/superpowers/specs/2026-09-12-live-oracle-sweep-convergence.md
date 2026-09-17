@@ -1985,3 +1985,25 @@ plus the emitted-order effects downstream of any survivor change.
 Parallel-interleaved dumps must not be compared positionally; use
 gcode WIDTH sequences or per-run captured dumps (serial -j1 slice)
 for the next audit.
+
+## Layer-level gap-fill emission boundary (2026-09-17 o)
+
+Per-layer WIDTH sequences (case-05rNdj, authoritative gcode signal):
+10/14 layers identical. Divergent layers 1/4/8/9: ares emits ONE
+extra small-width (0.429544/0.429546) concentric/gap-fill loop that
+the oracle omits (layer 4: orca emits two consecutive 0.449999 with
+no small loop between; layer 8: orca ends without ares's trailing
+0.405678). The clip_end(loop_clipping)+is_valid(>=2 points)
+semantics were audited line-by-line (ares
+concentric.rs::finalize_polylines/standard vs
+FillConcentricInternal.cpp:55-70 caller loop + MultiPoint.hpp:44) —
+equivalent. The surviving loop must be dropped by a DIFFERENT
+boundary upstream (candidates: the residual `_create_gap_fill`
+minimum_length filter interaction, the
+reorder_by_shortest_traverse input set, or the wall MaximumDeviation
+simplification removing the junction loop before emission).
+NEXT: dump the per-layer ThickPolyline set BEFORE clip_end on both
+sides (extend CONC1 hook to pre-clip; upstream probe before the
+caller clip loop) — if pre-clip sets match, the drop is downstream
+(variable_width convert or simplify); if they differ, it is the
+medial-axis/gap residual boundary.
