@@ -110,6 +110,22 @@ pub(super) fn append(
         .as_mut()
         .map(|raft| std::mem::take(&mut raft.layers))
         .unwrap_or_default();
+    // Raft support paths pass through the same DP simplification as
+    // object support paths (`PrintObject::simplify_extrusion_path` /
+    // `simplify_support_extrusion_path` over the support layers).
+    {
+        let process = &traversal.resolved.views.full.process;
+        let arc_fitting = process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0;
+        let tolerance = process.print.resolution.0;
+        for object_layers in &mut raft_layers {
+            crate::project_slice::path_simplification::simplify_layers(
+                object_layers,
+                traversal.scale,
+                tolerance,
+                arc_fitting,
+            );
+        }
+    }
     let raft_plans = raft.as_ref().map(|raft| &raft.plans);
 
     let mut entry_geometry = |object_index: usize,

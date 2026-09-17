@@ -36,7 +36,7 @@ pub(in crate::project_slice) fn apply(prepared: &mut PreparedPostIslandPrintOrde
     }
 }
 
-fn simplify_layers(
+pub(in crate::project_slice) fn simplify_layers(
     layers: &mut [OrderedExtrusionLayer],
     scale: CoordinateScale,
     tolerance: f64,
