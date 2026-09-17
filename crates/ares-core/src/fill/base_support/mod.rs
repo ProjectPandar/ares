@@ -13,9 +13,13 @@ use crate::geometry::{Coord, Point, Polyline};
 mod arches;
 #[expect(dead_code, reason = "wired by the raft fills slice")]
 pub(crate) use connect::connect_base_support;
+mod caps;
 mod connect;
 mod extend;
+mod link;
 mod mark;
+mod probes;
+mod take;
 mod tests;
 
 /// Port of `emit_loops_in_band` (`FillBase.cpp:1952`).

@@ -114,6 +114,14 @@ pub(crate) fn build_raft_stream(
 
     // Flow spacings (`Flow::spacing` = width − height·(1 − π/4)).
     let extrusion_options = options.extrusion_options()?;
+    if std::env::var("ARES_RAFT_DEBUG").is_ok() {
+        eprintln!(
+            "RAFTRAW support_line_width={:?} line_width={:?} initial={:?}",
+            options.values().get("support_line_width"),
+            options.values().get("line_width"),
+            options.values().get("initial_layer_line_width")
+        );
+    }
     let support_width =
         extrusion_options.width_for_role(crate::print_paths::PrintPathRole::SupportMaterial);
     let interface_width = extrusion_options
@@ -166,6 +174,8 @@ pub(crate) fn build_raft_stream(
         options.raft_first_layer_density_percent()?,
         support_width,
         interface_width,
+        extrusion_options
+            .width_for_role_and_layer(crate::print_paths::PrintPathRole::SupportMaterial, true),
         first_height,
     );
 
@@ -314,8 +324,9 @@ pub(crate) fn build_project_raft(
         support_flow_spacing,
         first_layer_flow_spacing,
         object.raft_first_layer_density.0,
-        first_layer_width,
+        support_width,
         interface_width,
+        first_layer_width,
         first_height,
     );
 

@@ -40,6 +40,7 @@ pub(crate) fn raft_layer_plans(
     first_layer_density_percent: f64,
     support_width_mm: f64,
     interface_width_mm: f64,
+    first_layer_width_mm: f64,
     first_layer_height_mm: f64,
 ) -> Vec<RaftLayerPlan> {
     let mut plans = Vec::with_capacity(raft_grid.len());
@@ -82,9 +83,17 @@ pub(crate) fn raft_layer_plans(
             z: *z,
             polygons,
             spec,
-            width_mm: if z.kind == RaftLayerKind::Base {
+            width_mm: if index == 0 {
+                // Base flange: `first_layer_flow` width
+                // (`SupportCommon.cpp:1501-1504`).
+                first_layer_width_mm
+            } else if z.kind == RaftLayerKind::Base {
+                // Base: `support_material_flow.width()`
+                // (`:1481`).
                 support_width_mm
             } else {
+                // Interface/contact: `raft_interface_flow.width()`
+                // (`:1512`).
                 interface_width_mm
             },
             height_mm: if index == 0 {
