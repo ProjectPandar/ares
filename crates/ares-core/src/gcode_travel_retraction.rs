@@ -9,7 +9,83 @@ use crate::{
     options::{RetractLiftEnforce, ZHopLiftMode},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// The accumulated last extrusion path for wiping — upstream `Wipe::path`
+/// (`GCode.hpp:59-71`, fed per extruded path at `GCode.cpp:5980-5990`,
+/// reset after wiping at `:496`).
+#[derive(Debug, Default)]
+struct WipePath {
+    points: Vec<Point2>,
+    feedrate: f64,
+}
+
+impl WipePath {
+    fn observe_print_move(&mut self, start: Point2, end: Point2, feedrate: f64) {
+        if distance(start, end) <= f64::EPSILON {
+            return;
+        }
+        match self.points.last() {
+            Some(&last) if last == start => {
+                // `GCode.cpp:5984-5988`: don't save duplicated points.
+                if self.points.last() != Some(&end) {
+                    self.points.push(end);
+                }
+                self.feedrate = feedrate;
+            }
+            _ => {
+                // A new path begins (travel gap or fresh start): replace.
+                self.points = vec![start, end];
+                self.feedrate = feedrate;
+            }
+        }
+    }
+
+    /// `Wipe::wipe` `:450-453`: `[last_pos] + path.points[1..]` over the
+    /// REVERSED path (the wipe walks backward from the current position;
+    /// `m_wipe.path` stores the reversed emission order).
+    fn with_current_position(&self, current: Point2) -> Vec<Point2> {
+        let mut points: Vec<Point2> = self.points.iter().rev().copied().collect();
+        if let Some(first) = points.first_mut() {
+            *first = current;
+        }
+        points
+    }
+
+    fn length(points: &[Point2]) -> f64 {
+        points
+            .windows(2)
+            .map(|pair| distance(pair[0], pair[1]))
+            .sum()
+    }
+
+    /// `Polyline::clip_end(len - wipe_dist)` (`:456`) over the REVERSED
+    /// path: remove `(len - wipe_dist)` from the END, keeping the leading
+    /// `wipe_dist` (the backward walk starts at the current position).
+    fn clip_to_length(points: &[Point2], keep: f64) -> Vec<Point2> {
+        let total = Self::length(points);
+        if total <= keep || points.len() < 2 {
+            return points.to_vec();
+        }
+        let mut kept = Vec::with_capacity(points.len());
+        kept.push(points[0]);
+        let mut remaining = keep;
+        for pair in points.windows(2) {
+            let segment = distance(pair[0], pair[1]);
+            if segment <= remaining {
+                remaining -= segment;
+                kept.push(pair[1]);
+                continue;
+            }
+            let ratio = remaining / segment;
+            kept.push(Point2::new(
+                pair[0].x() + (pair[1].x() - pair[0].x()) * ratio,
+                pair[0].y() + (pair[1].y() - pair[0].y()) * ratio,
+            ));
+            break;
+        }
+        kept
+    }
+}
+
 struct PreviousPrintSegment {
     start: Point2,
     end: Point2,
@@ -17,13 +93,13 @@ struct PreviousPrintSegment {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct RetractionSplitInput {
+struct RetractionSplitInput<'a> {
     length: f64,
     retract_before_wipe: f64,
     retract_feedrate: f64,
     wipe_feedrate: f64,
     wipe_distance: f64,
-    segment: PreviousPrintSegment,
+    path: &'a [Point2],
 }
 
 pub(crate) struct TravelRetractionCommand<'a> {
@@ -71,7 +147,7 @@ pub(crate) struct TravelRetractionState {
     pending_unretract: bool,
     pending_z_restore: Option<f64>,
     pending_travel_lift: Option<TravelLiftMove>,
-    previous_print_segment: Option<PreviousPrintSegment>,
+    wipe_path: Option<WipePath>,
     z_hop_lift: ZHopLiftMode,
     resolution: f64,
 }
@@ -83,7 +159,7 @@ impl TravelRetractionState {
             pending_unretract: false,
             pending_z_restore: None,
             pending_travel_lift: None,
-            previous_print_segment: None,
+            wipe_path: None,
             z_hop_lift,
             resolution,
         }
@@ -123,18 +199,26 @@ impl TravelRetractionState {
             target,
             ..
         } = command;
-        let wipe_segment = (wipe && wipe_distance > 0.0 && !use_firmware)
+        let wipe_path = (wipe && wipe_distance > 0.0 && !use_firmware)
             .then_some(())
-            .and(self.previous_print_segment);
-        let (before_wipe, during_wipe) = if let Some(segment) = wipe_segment {
-            let feedrate = selected_wipe_feedrate(segment, role_based_wipe_speed, wipe_feedrate);
+            .and(self.wipe_path.take());
+        let (before_wipe, during_wipe) = if let Some(path) = wipe_path.as_ref() {
+            let feedrate = selected_wipe_feedrate(
+                PreviousPrintSegment {
+                    start: *path.points.first().unwrap_or(&Point2::new(0.0, 0.0)),
+                    end: *path.points.last().unwrap_or(&Point2::new(0.0, 0.0)),
+                    feedrate: path.feedrate,
+                },
+                role_based_wipe_speed,
+                wipe_feedrate,
+            );
             retraction_split(RetractionSplitInput {
                 length,
                 retract_before_wipe,
                 retract_feedrate,
                 wipe_feedrate: feedrate,
                 wipe_distance,
-                segment,
+                path: &path.points,
             })
         } else {
             (length, 0.0)
@@ -151,10 +235,25 @@ impl TravelRetractionState {
                 retract_comment,
             ));
         }
-        if let Some(segment) = wipe_segment {
-            let feedrate = selected_wipe_feedrate(segment, role_based_wipe_speed, wipe_feedrate);
-            let wipe_gcode =
-                Self::wipe_gcode(writer, segment, wipe_distance, during_wipe, feedrate);
+        if let Some(path) = wipe_path.as_ref() {
+            let feedrate = selected_wipe_feedrate(
+                PreviousPrintSegment {
+                    start: *path.points.first().unwrap_or(&Point2::new(0.0, 0.0)),
+                    end: *path.points.last().unwrap_or(&Point2::new(0.0, 0.0)),
+                    feedrate: path.feedrate,
+                },
+                role_based_wipe_speed,
+                wipe_feedrate,
+            );
+            let current = writer.current_position();
+            let wipe_gcode = Self::wipe_gcode(
+                writer,
+                path,
+                Point2::new(current.0, current.1),
+                wipe_distance,
+                during_wipe,
+                feedrate,
+            );
             gcode.push_str(&wipe_gcode);
         }
         let z_restore = if z_hop > 0.0
@@ -190,7 +289,6 @@ impl TravelRetractionState {
         };
         self.pending_unretract = true;
         self.pending_z_restore = z_restore;
-        self.previous_print_segment = None;
         gcode
     }
 
@@ -238,35 +336,53 @@ impl TravelRetractionState {
         feedrate: f64,
     ) {
         if kind == ToolpathMoveKind::Print {
-            if distance(start, end) > f64::EPSILON {
-                self.previous_print_segment = Some(PreviousPrintSegment {
-                    start,
-                    end,
-                    feedrate,
-                });
-            }
+            // Upstream keeps the wipe path across travels (`Wipe::path` is
+            // only reset by the wipe itself and the special sites,
+            // `GCode.cpp:496/831/1107/1199/1388`); a print move after a gap
+            // starts a fresh path (`:5980-5990` replaces per path).
+            self.wipe_path
+                .get_or_insert_with(WipePath::default)
+                .observe_print_move(start, end, feedrate);
             self.has_printed_move = true;
-        } else {
-            self.previous_print_segment = None;
         }
     }
 
     fn wipe_gcode(
         writer: &mut GCodeWriter,
-        segment: PreviousPrintSegment,
+        path: &WipePath,
+        current: Point2,
         wipe_distance: f64,
         during_wipe: f64,
         feedrate: f64,
     ) -> String {
-        let Some((target, _)) = wipe_target(segment, wipe_distance) else {
+        // `Wipe::wipe` `:450-462`: substitute the current position for the
+        // first point, clip to the trailing `wipe_dist`, and distribute
+        // the during-wipe retraction proportionally per segment `:473-475`.
+        let wipe_path = path.with_current_position(current);
+        if wipe_path.len() < 2 {
             return String::new();
-        };
-        writer.extrude_to_xy_with_feedrate_and_comment(
-            target,
-            -during_wipe,
-            feedrate,
-            Some("wipe and retract"),
-        )
+        }
+        let mut wipe_dist = WipePath::length(&wipe_path).min(wipe_distance);
+        if wipe_dist <= f64::EPSILON {
+            return String::new();
+        }
+        let clipped = WipePath::clip_to_length(&wipe_path, wipe_dist);
+        let actual = WipePath::length(&clipped);
+        if actual < wipe_dist {
+            wipe_dist = actual.max(f64::EPSILON);
+        }
+        let mut gcode = String::new();
+        for pair in clipped.windows(2) {
+            let segment_length = distance(pair[0], pair[1]);
+            let delta_e = during_wipe * (segment_length / wipe_dist);
+            gcode.push_str(&writer.extrude_to_xy_with_feedrate_and_comment(
+                pair[1],
+                -delta_e,
+                feedrate,
+                Some("wipe and retract"),
+            ));
+        }
+        gcode
     }
 
     fn should_retract(&self, command: &TravelRetractionCommand<'_>) -> bool {
@@ -283,22 +399,6 @@ impl TravelRetractionState {
 
         should_retract && !reduce_infill_retraction_applies(command)
     }
-}
-
-fn wipe_target(segment: PreviousPrintSegment, wipe_distance: f64) -> Option<(Point2, f64)> {
-    let length = distance(segment.start, segment.end);
-    if length <= f64::EPSILON || wipe_distance <= 0.0 {
-        return None;
-    }
-    let used = wipe_distance.min(length);
-    let ratio = used / length;
-    Some((
-        Point2::new(
-            segment.end.x() + (segment.start.x() - segment.end.x()) * ratio,
-            segment.end.y() + (segment.start.y() - segment.end.y()) * ratio,
-        ),
-        used,
-    ))
 }
 
 fn selected_wipe_feedrate(
@@ -321,11 +421,11 @@ fn retraction_split(input: RetractionSplitInput) -> (f64, f64) {
         retract_feedrate,
         wipe_feedrate,
         wipe_distance,
-        segment,
+        path,
     } = input;
     let base_before = length * retract_before_wipe;
     let remaining = length - base_before;
-    let available = wipe_distance.min(distance(segment.start, segment.end));
+    let available = wipe_distance.min(WipePath::length(path));
     let max_during = retract_feedrate * available / wipe_feedrate;
     let during = remaining.min(max_during);
     (base_before + (remaining - during), during)
