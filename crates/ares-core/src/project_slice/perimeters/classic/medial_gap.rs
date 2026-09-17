@@ -116,6 +116,38 @@ fn stage_surface(
                         .map_err(|_| SliceError::InvalidInput(VORONOI_ERROR.to_owned()))?,
                 );
             }
+            if let Ok(path) = std::env::var("ARES_DUMP_MEDIAL") {
+                use std::io::Write;
+                if let Ok(mut out) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    let _ = writeln!(
+                        out,
+                        "MEDIAL n={} min={:.4} max={:.4}",
+                        output.len(),
+                        domain.min,
+                        domain.max
+                    );
+                    for polyline in &output {
+                        let points = polyline
+                            .points
+                            .iter()
+                            .map(|point| format!("({},{})", point.x(), point.y()))
+                            .collect::<Vec<_>>()
+                            .join("");
+                        let widths = polyline
+                            .width
+                            .iter()
+                            .map(|width| format!("{width}"))
+                            .collect::<Vec<_>>()
+                            .join(",");
+                        let _ = writeln!(out, "  P {points}");
+                        let _ = writeln!(out, "  W {widths}");
+                    }
+                }
+            }
             Ok(output)
         })
         .transpose()?;

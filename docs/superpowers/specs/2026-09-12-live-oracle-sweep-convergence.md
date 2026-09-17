@@ -1736,3 +1736,25 @@ ARES_DUMP_THICKLINES-style hook vs an upstream probe on
 `create_medial_axis`/`gap_fill_polylines` input) and diff edge
 widths; the audit scope is medial_gap.rs / the Voronoi vertex
 widths.
+
+## CORRECTION + true root: the 18 extra lines = single-segment WIPE (2026-09-17 d)
+
+The layer-3 divergent block is the LAYER-CHANGE WIPE, not gap fill
+(the 0.4295 WIDTH block was elsewhere in the diff stream). Both
+sides retract the SAME total (4.0 = oracle 2.8+1.2 vs ares
+3.7986+0.2014); the split differs because ares's wipe stops at the
+LAST SEGMENT (0.09mm tail pieces) while upstream `Wipe::wipe`
+(GCode.cpp:426-490) keeps the last `wipe_distance` mm of the
+ACCUMULATED path (`clip_end(len - wipe_dist)`), then distributes
+the during-wipe retraction proportionally per segment
+(`dE = length * seg_len / wipe_dist`). ares
+`gcode_travel_retraction.rs::wipe_target/retraction_split` carries
+only a single `PreviousPrintSegment`.
+FIX (next unit): port the Wipe path accumulator (Wipe::path appended
+per extruded move, reset_path after wiping) + the multi-segment
+clip_end wipe + proportional dE split; the single-segment fast path
+degenerates correctly when the last segment >= wipe_distance.
+Note: the medial-axis audit (previous entry) stands — gap-fill
+widths still differ at 1e-5 on other cases; this wipe fix addresses
+the option-case first-diff chain (F2005/E-3.7986/extra lines/M73
+shifts).
