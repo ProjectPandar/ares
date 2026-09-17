@@ -1796,3 +1796,18 @@ arachne/BeadingStrategy port vs upstream), find the 2-unit float
 divergence; the upstream probe should hook
 FillConcentric.cpp:112-118 (thick_polylines_out) instead of the
 PerimeterGenerator gap site.
+
+## Beading math audit: identical; divergence is in the thickness INPUT (2026-09-17 f)
+
+DistributedBeadingStrategy::compute (ares beading/distributed.rs vs
+upstream :29-91) compared line-by-line: the weights, total_weight
+(f32 accumulate), weight_fraction, `to_be_divided * fraction` with
+coord_t truncation, last-bead remainder — ALL match. The 2-unit
+junction-width divergence therefore enters as the `thickness`
+argument — the SkeletalTrapezoidation's measured edge thickness
+(Voronoi node distances / transition positions) differs from
+upstream by ~2 scaled units on some edges.
+NEXT: dump (thickness, bead_count, widths) tuples at the compute()
+entry on both sides (ares hook + upstream probe at the same seam),
+diff the first divergent tuple, then walk into
+SkeletalTrapezoidation edge-length/transition math.
