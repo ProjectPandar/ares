@@ -2007,3 +2007,27 @@ sides (extend CONC1 hook to pre-clip; upstream probe before the
 caller clip loop) — if pre-clip sets match, the drop is downstream
 (variable_width convert or simplify); if they differ, it is the
 medial-axis/gap residual boundary.
+
+## Pre-clip concentric sets IDENTICAL; extra loop = gap-fill RESIDUAL boundary (2026-09-17 p)
+
+PRECLIP probes (n, w0 per ExtrusionLine/ThickPolyline, post-
+WallToolPaths pre-clip_end): 28 lines both sides, multiset YES
+(9x407079, 5x386624, 5x362758, 4x386626, 4x362756, 1x340000).
+Layer-2 gcode localization: the ares-extra 0.429546 block sits at
+the very END of the internal-solid-infill (after the last
+solid line G1 X105.797, a TRAVEL F9000 to X106.096, then the tiny
+0.09mm gap-fill pair) — i.e., it is produced by the Fill::
+_create_gap_fill RESIDUAL pass (FillBase.cpp:195-247), not by the
+concentric generator itself. The pass gates were audited equivalent
+(gap_fill_target/bridge/density; covered-polygons reconstruction
+via polygons_covered_by_spacing with 0.5*spacing+eps offsets).
+The residual pass fires per-fill-surfaces-call — the layer-2
+oracle emits NO gap-fill there, ares emits one two-segment polyline.
+NEXT: instrument the residual pass inputs per call (gapfill_areas
+contours + covered polygons counts) on both sides for layer 2 —
+the divergence is in `unextruded = diff(no_overlap, covered)` or
+the opening/offset2 gap-window at that specific site, most likely
+the covered-polygons set (which depends on the just-emitted solid
+infill lines incl. the 429546-width concentric loops that DO
+match). Probe: ARES_DUMP_RESID hook at gap_residual.rs entry
+printing gapfill_areas point counts; upstream at :207.

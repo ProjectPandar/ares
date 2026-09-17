@@ -48,7 +48,7 @@ pub(super) fn append(
         let mut polylines = Vec::new();
         for domain in intersect_no_overlap_domains(&fill.no_overlap_expolygons, &expolygon)? {
             let first_polyline = polylines.len();
-            polylines.extend(generate_thick_polylines(
+            let generated = generate_thick_polylines(
                 domain,
                 spacing,
                 scale
@@ -56,7 +56,27 @@ pub(super) fn append(
                     .unwrap(),
                 minimum_nozzle_diameter,
                 scale,
-            )?);
+            )?;
+            if let Ok(path) = std::env::var("ARES_DUMP_PRECLIP")
+                && !generated.is_empty()
+            {
+                use std::io::Write;
+                if let Ok(mut out) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                {
+                    for polyline in &generated {
+                        let _ = writeln!(
+                            out,
+                            "PRECLIP n={} w0={}",
+                            polyline.points.len(),
+                            polyline.width.first().copied().unwrap_or_default()
+                        );
+                    }
+                }
+            }
+            polylines.extend(generated);
             finalize_polylines(
                 &mut polylines,
                 first_polyline,
