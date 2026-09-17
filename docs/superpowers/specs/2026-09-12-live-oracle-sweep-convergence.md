@@ -1630,3 +1630,28 @@ the 2k-prefix block diff — expect the tool id4/id5 classes to
 vanish; (2) the remaining G29-attached and retract/prime classes;
 (3) the Qidi Z-cap ~1% residual (5m53 vs 5m57 oracle header) is
 INDEPENDENT of GT (measured against the real oracle header).
+
+## GT replay harness aligned to 2.4.2 (2026-09-17, second session)
+
+Four source-cited fixes to tools/estimator-replay/replay.cpp:
+1. T-line handling ported (zero-distance Tool_change block, current
+   g1_line_id not advanced, delay targets Tool_change; load time from
+   limits `machine_load_filament_time`).
+2. g1_times_cache filtered to Extrude/Travel/Wipe blocks
+   (:483-487 continue guard) — the harness previously cached every
+   block; #189's "6 retract/unretract cache-membership" class was a
+   harness artifact.
+3. G29: non-BBL applies the 260s UNCONDITIONALLY (:4866-4868 else
+   branch); was gated behind REPLAY_G29.
+4. Arc default flipped to the legacy ArcWelder rule (tolerance
+   0.0125, :4784-4790); the MarlinFirmware plan_arc rule now sits
+   behind REPLAY_MARLIN2_ARCS=1 for gcfMarlinFirmware flavors only.
+
+OPEN (next unit): the KSR full-stream cache counts still disagree
+(ares 304,237 entries / last id 335,675 vs GT 438,273 / 462,561) —
+~134K extra GT arc segments (~10/arc over 13,368 arcs). The first
+divergence is before the arcs (id 6: ares +289s vs GT +260s at the
+G29/tool region — limits must carry machine_load 29 for the KSR
+effective value). Reproduce: build /tmp/ksr-replay.limits from the
+3mf + machine preset, run replay vs ARES_DUMP_ELAPSED, diff caches;
+use REPLAY_TRACE_G1 to dump one arc's segment count on each side.

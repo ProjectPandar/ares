@@ -34,7 +34,7 @@
 enum Axis { X = 0, Y = 1, Z = 2, E = 3 };
 using AxisCoords = std::array<float, 4>;
 
-enum class EMoveType { Noop, Retract, Unretract, Extrude, Travel, Wipe };
+enum class EMoveType { Noop, Retract, Unretract, Extrude, Travel, Wipe, Tool_change };
 
 static inline float sqr(float v) { return v * v; }
 
@@ -164,6 +164,8 @@ struct MachineLimits {
     float junction_deviation{ 0.0f };
     float min_extruding{ 0.0f };
     float min_travel{ 0.0f };
+    // process_filament_change times (GCodeProcessor.cpp process_T chain)
+    float machine_load_filament_time{ 0.0f };
 };
 
 struct State {
@@ -258,7 +260,11 @@ public:
                 }
             }
             time += double(block_time);
-            g1_times_cache.push_back({ block.g1_line_id, float(time) });
+            // GCodeProcessor.cpp:483-487: the g1_times_cache only
+            // carries blocks whose move vertex is Extrude/Travel/Wipe;
+            // Retract/Unretract/Noop/Tool_change blocks are skipped.
+            if (block.move_type == EMoveType::Extrude || block.move_type == EMoveType::Travel || block.move_type == EMoveType::Wipe)
+                g1_times_cache.push_back({ block.g1_line_id, float(time) });
             if (getenv("REPLAY_DUMP_BLOCKS"))
                 std::fprintf(stderr, "%u %.8g %.8g %.8g %.8g %.8g %.8g %.8g\n",
                     block.g1_line_id, block.distance, block.feedrate_profile.cruise, block.acceleration,
@@ -317,6 +323,7 @@ int main(int argc, char** argv)
             else if (key == "junction_deviation") limits.junction_deviation = float(value);
             else if (key == "min_extruding") limits.min_extruding = float(value);
             else if (key == "min_travel") limits.min_travel = float(value);
+            else if (key == "machine_load_filament_time") limits.machine_load_filament_time = float(value);
             else if (key == "accel") accel_init = float(value);
             else if (key == "travel_accel") travel_accel_init = float(value);
             else if (key == "retract_accel") retract_accel_init = float(value);
@@ -574,8 +581,35 @@ int main(int argc, char** argv)
         start_position = end_position;
     };
 
-    auto simulate_st_synchronize = [&](float additional_time) {
-        machine.calculate_time(0, additional_time, EMoveType::Noop, false); if (additional_time > 0) std::fprintf(stderr, "DELAY %.3f at id=%u\n", additional_time, g1_line_id);
+    auto simulate_st_synchronize = [&](float additional_time, EMoveType target = EMoveType::Noop) {
+        machine.calculate_time(0, additional_time, target, false); if (additional_time > 0) std::fprintf(stderr, "DELAY %.3f at id=%u\n", additional_time, g1_line_id);
+    };
+
+    bool extruder_initialized = false;
+    // 2.4.2 `process_filament_change` tail (GCodeProcessor.cpp): the T
+    // line constructs a zero-distance Tool_change block carrying the
+    // CURRENT g1_line_id (not advanced), then lands the filament-change
+    // delay on it via synchronize targeting Tool_change. Single-extruder
+    // replay: the first T initializes (load time); later T lines with the
+    // same extruder+filament add nothing.
+    auto process_T = [&](int eid) {
+        float extra = 0.0f;
+        if (!extruder_initialized) {
+            extruder_initialized = true;
+            extra = limits.machine_load_filament_time;
+        }
+        (void)eid;
+        {
+            TimeBlock block;
+            block.move_type = EMoveType::Tool_change;
+            block.g1_line_id = g1_line_id;
+            block.distance = 0.0f;
+            block.calculate_trapezoid();
+            machine.blocks.push_back(block);
+            if (machine.blocks.size() > TimeMachine::refresh_threshold)
+                machine.calculate_time(TimeMachine::queue_size, 0.0f, EMoveType::Noop, false);
+        }
+        simulate_st_synchronize(extra, EMoveType::Tool_change);
     };
 
     std::string line;
@@ -673,16 +707,30 @@ int main(int argc, char** argv)
             if (auto f = word_value('F')) { arc_feedrate = float(*f); if (getenv("REPLAY_TRACE_G1")) std::fprintf(stderr, "ARC F=%.1f segments=%zu r=%.3f angle=%.4f\n", *f, 0, radius, angle); }
             std::optional<float> extrusion;
             if (auto ev = word_value('E')) extrusion = end_pos[E] - start_position[E];
-            // GCodeProcessor.cpp:4712-4726: gcfMarlinFirmware plan_arc
-            // discretization (MAX_ARC_DEVIATION 0.02, min 50 segments/s,
-            // segment length clamped to [0.1, 2.0] mm). The legacy
-            // ArcWelder rule (tolerance 0.0125) stays available via
-            // REPLAY_LEGACY_ARCS=1 for non-MarlinFirmware flavors.
+            // GCodeProcessor.cpp:4784-4790: the legacy (non-MarlinFirmware)
+            // branch discretizes via ArcWelder::arc_discretization_steps
+            // at tolerance 0.0125. The gcfMarlinFirmware plan_arc rule
+            // (MAX_ARC_DEVIATION 0.02, min 50 segments/s, segment length
+            // clamped to [0.1, 2.0] mm) applies ONLY to Marlin2 firmware
+            // flavors — available via REPLAY_MARLIN2_ARCS=1.
             size_t segments;
             if (getenv("REPLAY_SINGLE_ARCS")) {
                 // Diagnostic: treat each arc as one move (arc-length distance).
                 segments = 1;
-            } else if (getenv("REPLAY_LEGACY_ARCS")) {
+            } else if (getenv("REPLAY_MARLIN2_ARCS")) {
+                // gcfMarlinFirmware plan_arc rule (GCodeProcessor.cpp:4712-4726).
+                static const float MAX_ARC_DEVIATION = 0.02f;
+                static const float MIN_ARC_SEGMENTS_PER_SEC = 50;
+                static const float MIN_ARC_SEGMENT_MM = 0.1f;
+                static const float MAX_ARC_SEGMENT_MM = 2.0f;
+                float feedrate_mm_s = arc_feedrate.value_or(m_feedrate);
+                float segment_mm = std::clamp(std::min(std::sqrt(8.0f * float(radius) * MAX_ARC_DEVIATION), feedrate_mm_s * (1.0f / MIN_ARC_SEGMENTS_PER_SEC)), MIN_ARC_SEGMENT_MM, MAX_ARC_SEGMENT_MM);
+                float flat_mm = float(radius) * float(std::fabs(angle));
+                segments = std::max<size_t>(size_t(flat_mm / segment_mm + 0.8f), 1);
+            } else {
+                // Default: legacy ArcWelder discretization at tolerance
+                // 0.0125 (GCodeProcessor.cpp:4784-4790 + ArcWelder.hpp
+                // arc_discretization_steps).
                 static const double gcode_arc_tolerance = 0.0125;
                 double d = radius - gcode_arc_tolerance;
                 if (d < 1e-4) {
@@ -690,17 +738,6 @@ int main(int argc, char** argv)
                 } else
                     segments = size_t(std::ceil(std::fabs(angle) / (2.0 * std::acos(d / radius))));
                 if (segments == 0) segments = 1;
-            } else {
-                static const float MAX_ARC_DEVIATION = 0.02f;
-                static const float MIN_ARC_SEGMENTS_PER_SEC = 50;
-                static const float MIN_ARC_SEGMENT_MM = 0.1f;
-                static const float MAX_ARC_SEGMENT_MM = 2.0f;
-                const float feedrate_mm_s = arc_feedrate.has_value() ? *arc_feedrate / 60.0f : m_feedrate;
-                const float radius_mm = float(radius);
-                float segment_mm = std::min(std::sqrt(8.0f * radius_mm * MAX_ARC_DEVIATION), feedrate_mm_s / MIN_ARC_SEGMENTS_PER_SEC);
-                segment_mm = std::max(std::min(segment_mm, MAX_ARC_SEGMENT_MM), MIN_ARC_SEGMENT_MM);
-                const float flat_mm = radius_mm * float(std::fabs(angle));
-                segments = std::max<size_t>(size_t(flat_mm / segment_mm + 0.8f), size_t(1));
             }
             const double inv_segment = 1.0 / double(segments);
             const double theta_per_segment = angle * inv_segment;
@@ -750,8 +787,10 @@ int main(int argc, char** argv)
             }
             emit_seg(end_pos, (segments == 1) ? arc_feedrate : std::nullopt);
         } else if (word == "G29") {
-            // GCodeProcessor.cpp:4856-4868 (BBL gate via M622 J1/M623)
-            if ((getenv("REPLAY_G29") && !bbl_printer) || (bbl_printer && measure_g29_time))
+            // GCodeProcessor.cpp:4856-4868: BBL gates on M622 J1/M623;
+            // every other flavor applies the hardcoded 260s
+            // UNCONDITIONALLY (the else branch).
+            if (bbl_printer ? measure_g29_time : true)
                 simulate_st_synchronize(260.0f);
         } else if (word == "M191") {
             if (auto s = word_value('S'); s.has_value() && *s > 40.0)
@@ -789,6 +828,8 @@ int main(int argc, char** argv)
                 axes[X] = 0.0; axes[Y] = 0.0; axes[Z] = 0.0;
             }
             process_G1(axes, std::nullopt);
+        } else if (!word.empty() && word[0] == 'T' && word.size() > 1 && isdigit((unsigned char)word[1])) {
+            process_T(atoi(word.c_str() + 1));
         } else if (word == "G90") absolute = true;
         else if (word == "G91") absolute = false;
         else if (word == "M82") e_relative = false;
