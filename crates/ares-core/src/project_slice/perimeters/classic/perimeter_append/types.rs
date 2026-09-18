@@ -33,15 +33,15 @@ pub(in crate::project_slice) struct AppendedPerimeterCollections {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(in crate::project_slice) struct InactivePostCollectionBranches {
-    pub(in crate::project_slice) overhang_reorientation: InactiveOverhangReorientation,
     pub(in crate::project_slice) wall_reordering: InactiveWallReordering,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(in crate::project_slice) enum InactiveOverhangReorientation {
-    Disabled {
-        overhang_reverse_internal_only: bool,
-    },
+/// Per-surface steep-overhang flags carried across one `traverse_loops`
+/// call (`PerimeterGenerator.cpp:1438-1453`).
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub(in crate::project_slice) struct SteepOverhang {
+    pub(in crate::project_slice) contour: bool,
+    pub(in crate::project_slice) hole: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

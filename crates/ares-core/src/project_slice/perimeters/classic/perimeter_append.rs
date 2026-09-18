@@ -1,17 +1,18 @@
 // Inactive post-traversal ordering and nonempty append from OrcaSlicer v2.4.2
 // `PerimeterGenerator.cpp:1451-1569`.
 
+mod reorient;
 #[cfg(test)]
 mod tests;
 mod types;
 
 pub(in crate::project_slice) use types::{
-    AppendedPerimeterCollections, InactiveOuterBrimReordering, InactiveOverhangReorientation,
-    InactivePostCollectionBranches, InactiveWallReordering, PreparedPerimeterAppendObject,
-    PreparedPerimeterAppendRecord, PreparedPerimeterAppendSurface,
-    PreparedPostClassicPerimeterAppend,
+    AppendedPerimeterCollections, InactiveOuterBrimReordering, InactivePostCollectionBranches,
+    InactiveWallReordering, PreparedPerimeterAppendObject, PreparedPerimeterAppendRecord,
+    PreparedPerimeterAppendSurface, PreparedPostClassicPerimeterAppend,
 };
 
+use crate::geometry::{CoordinateScale, ExPolygon};
 use crate::{ObjectOptions, ProcessBrimType, ProcessWallSequence, RegionOptions};
 
 use super::{
@@ -50,7 +51,7 @@ pub(in crate::project_slice) fn finish(
                 .find(|object| object.source_object_index == source_object_index)
                 .expect("an O10 object retains its resolved source object")
                 .object;
-            transform_object(source, traversal, object_options)
+            transform_object(source, traversal, object_options, predecessor.scale)
         })
         .collect();
     PreparedPostClassicPerimeterAppend {
@@ -63,6 +64,7 @@ fn transform_object(
     source: PreparedEntityCollectionObject,
     traversal: &PostClassicTraversalPrintObject,
     object_options: &ObjectOptions,
+    scale: CoordinateScale,
 ) -> PreparedPerimeterAppendObject {
     assert_eq!(source.records.len(), traversal.records.len());
     let records = source
@@ -74,7 +76,7 @@ fn transform_object(
                 (None, None) => None,
                 (Some(source), Some(traversal_record)) => {
                     let region = region_options(traversal, index);
-                    let inactive = classify_inactive(traversal_record, region, object_options);
+                    let inactive = classify_inactive(traversal_record, object_options);
                     let wall_sequence = if index == 0
                         && object_options.brim_type == ProcessBrimType::OuterOnly
                         && object_options.brim_width.0 > 0.0
@@ -83,7 +85,19 @@ fn transform_object(
                     } else {
                         region.wall_sequence
                     };
-                    Some(transform_record(source, inactive, wall_sequence, index))
+                    let reorient = SurfaceReorient {
+                        record: traversal_record,
+                        region,
+                        lower: traversal.lower_slices(index),
+                        scale,
+                    };
+                    Some(transform_record(
+                        source,
+                        inactive,
+                        wall_sequence,
+                        index,
+                        reorient,
+                    ))
                 }
                 _ => panic!("O9/O5 optional record alignment is invariant"),
             },
@@ -97,11 +111,23 @@ fn transform_record(
     inactive: InactivePostCollectionBranches,
     wall_sequence: ProcessWallSequence,
     layer_id: usize,
+    reorient: SurfaceReorient<'_>,
 ) -> PreparedPerimeterAppendRecord {
     let surfaces = source
         .surfaces
         .into_iter()
-        .map(|surface| transform_surface(surface, inactive, wall_sequence, layer_id))
+        .enumerate()
+        .map(|(index, mut surface)| {
+            // Steep-overhang reversal runs on each surface collection
+            // right after `traverse_loops` (`PerimeterGenerator.cpp:1446-1453`).
+            reorient::ReorientPlan::new(reorient.record, reorient.region).apply(
+                &mut surface.collection,
+                &reorient.record.surfaces[index].roots,
+                reorient.lower,
+                reorient.scale,
+            );
+            transform_surface(surface, inactive, wall_sequence, layer_id)
+        })
         .collect();
     PreparedPerimeterAppendRecord { surfaces }
 }
@@ -131,9 +157,18 @@ fn region_options(
     prelude.object.region_options(input)
 }
 
+/// Borrow bundle keeping `transform_record` below the clippy argument
+/// limit while the steep-overhang reversal needs record, region, lower
+/// slices and scale at the surface seam.
+struct SurfaceReorient<'a> {
+    record: &'a ClassicTraversalRecord,
+    region: &'a RegionOptions,
+    lower: Option<&'a [ExPolygon]>,
+    scale: CoordinateScale,
+}
+
 fn classify_inactive(
     record: &ClassicTraversalRecord,
-    region: &RegionOptions,
     object: &ObjectOptions,
 ) -> InactivePostCollectionBranches {
     let layer_id = match record.branch {
@@ -157,9 +192,6 @@ fn classify_inactive(
         }
     };
     InactivePostCollectionBranches {
-        overhang_reorientation: InactiveOverhangReorientation::Disabled {
-            overhang_reverse_internal_only: region.overhang_reverse_internal_only.0,
-        },
         wall_reordering: InactiveWallReordering::InnerOuter { outer_brim },
     }
 }

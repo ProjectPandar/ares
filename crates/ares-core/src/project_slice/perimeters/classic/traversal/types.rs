@@ -77,7 +77,6 @@ pub(in crate::project_slice) struct ClassicTraversalRecord {
     pub(in crate::project_slice) simplification_tolerance: f64,
     pub(in crate::project_slice) overhang_flow: Flow,
     pub(in crate::project_slice) branch: PendingPathBranch,
-    pub(in crate::project_slice) overhang_reverse: InactiveOverhangReverse,
 }
 
 #[derive(Debug, PartialEq)]
@@ -118,13 +117,6 @@ pub(in crate::project_slice) enum PendingPathBranch {
         layer_id: usize,
         raft_layers: i32,
     },
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(in crate::project_slice) struct InactiveOverhangReverse {
-    pub(in crate::project_slice) configured: bool,
-    pub(in crate::project_slice) odd_layer: bool,
-    pub(in crate::project_slice) active: bool,
 }
 
 #[derive(Debug, PartialEq)]

@@ -3,14 +3,14 @@ use super::{
         chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
         entity_collections::{ExtrusionEntity, ExtrusionEntityCollection, OrderedExtrusionLoop},
         materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
-        traversal::{ClassicTraversalRecord, InactiveOverhangReverse, PendingPathBranch},
+        traversal::{ClassicTraversalRecord, PendingPathBranch},
     },
-    InactiveOuterBrimReordering, InactiveOverhangReorientation, InactivePostCollectionBranches,
-    InactiveWallReordering, append_nonempty, classify_inactive, reorder_walls,
+    InactiveOuterBrimReordering, InactivePostCollectionBranches, InactiveWallReordering,
+    append_nonempty, classify_inactive, reorder_walls,
 };
 use crate::{
-    ObjectOptions, OrcaBool, OrcaFloat, ProcessBrimType, ProcessWallSequence, ProjectSettings,
-    RegionOptions, project_slice::perimeters::types::Flow,
+    ObjectOptions, OrcaFloat, ProcessBrimType, ProcessWallSequence, ProjectSettings,
+    project_slice::perimeters::types::Flow,
 };
 
 #[test]
@@ -77,14 +77,11 @@ fn task22o10_nonempty_collection_keeps_nested_boundary_order_and_allocations() {
 
 #[test]
 fn task22o10_inactive_provenance_exhausts_accepted_outer_brim_reasons() {
-    let mut region = RegionOptions::from_base(&ProjectSettings::default().process.region);
-    region.overhang_reverse_internal_only = OrcaBool(true);
     let mut object = ObjectOptions::from_base(&ProjectSettings::default().process.object);
 
     object.brim_type = ProcessBrimType::OuterOnly;
     object.brim_width = OrcaFloat(5.0);
-    let (internal_only, reason) = inactive_parts(classify_inactive(&record(1), &region, &object));
-    assert!(internal_only);
+    let reason = inactive_parts(classify_inactive(&record(1), &object));
     assert!(matches!(
         reason,
         InactiveOuterBrimReordering::LaterLayer {
@@ -95,7 +92,7 @@ fn task22o10_inactive_provenance_exhausts_accepted_outer_brim_reasons() {
     ));
 
     object.brim_type = ProcessBrimType::AutoBrim;
-    let (_, reason) = inactive_parts(classify_inactive(&record(0), &region, &object));
+    let reason = inactive_parts(classify_inactive(&record(0), &object));
     assert!(matches!(
         reason,
         InactiveOuterBrimReordering::DifferentBrimType {
@@ -106,19 +103,16 @@ fn task22o10_inactive_provenance_exhausts_accepted_outer_brim_reasons() {
 
     object.brim_type = ProcessBrimType::OuterOnly;
     object.brim_width = OrcaFloat(0.0);
-    let (_, reason) = inactive_parts(classify_inactive(&record(0), &region, &object));
+    let reason = inactive_parts(classify_inactive(&record(0), &object));
     assert!(matches!(
         reason,
         InactiveOuterBrimReordering::WidthNotPositive { brim_width: 0.0 }
     ));
 }
 
-fn inactive_parts(inactive: InactivePostCollectionBranches) -> (bool, InactiveOuterBrimReordering) {
-    let InactiveOverhangReorientation::Disabled {
-        overhang_reverse_internal_only,
-    } = inactive.overhang_reorientation;
+fn inactive_parts(inactive: InactivePostCollectionBranches) -> InactiveOuterBrimReordering {
     let InactiveWallReordering::InnerOuter { outer_brim } = inactive.wall_reordering;
-    (overhang_reverse_internal_only, outer_brim)
+    outer_brim
 }
 
 fn record(layer_id: usize) -> ClassicTraversalRecord {
@@ -134,11 +128,6 @@ fn record(layer_id: usize) -> ClassicTraversalRecord {
             detect_overhang_wall: false,
             layer_id,
             raft_layers: 0,
-        },
-        overhang_reverse: InactiveOverhangReverse {
-            configured: false,
-            odd_layer: layer_id % 2 == 1,
-            active: false,
         },
     }
 }

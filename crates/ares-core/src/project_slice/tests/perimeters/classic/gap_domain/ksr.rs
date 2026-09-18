@@ -7,8 +7,7 @@ use crate::{
             gap_domain,
             materialize::{ExtrusionPath, ExtrusionRole},
             perimeter_append::{
-                InactiveOuterBrimReordering, InactiveOverhangReorientation,
-                InactivePostCollectionBranches, InactiveWallReordering,
+                InactiveOuterBrimReordering, InactivePostCollectionBranches, InactiveWallReordering,
             },
         },
         prepare_post_classic_gap_domain, prepare_post_classic_perimeter_append,
@@ -173,10 +172,6 @@ fn checksum_polygon(checksum: &mut i128, polygon: &crate::geometry::Polygon) {
 }
 
 fn checksum_inactive(checksum: &mut i128, inactive: InactivePostCollectionBranches) {
-    let InactiveOverhangReorientation::Disabled {
-        overhang_reverse_internal_only,
-    } = inactive.overhang_reorientation;
-    mix(checksum, i128::from(overhang_reverse_internal_only));
     let InactiveWallReordering::InnerOuter { outer_brim } = inactive.wall_reordering;
     checksum_outer_brim(checksum, outer_brim);
 }

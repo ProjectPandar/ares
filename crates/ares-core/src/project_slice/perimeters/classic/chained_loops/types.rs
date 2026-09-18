@@ -40,3 +40,14 @@ pub(in crate::project_slice) struct ExtrusionLoop {
     pub(in crate::project_slice) paths: Vec<ExtrusionPath>,
     pub(in crate::project_slice) role: ExtrusionLoopRole,
 }
+
+impl ExtrusionLoop {
+    /// `ExtrusionLoop::reverse` (`ExtrusionEntity.cpp`): reverse the path
+    /// order, then reverse every path.
+    pub(in crate::project_slice) fn reverse(&mut self) {
+        self.paths.reverse();
+        for path in &mut self.paths {
+            path.reverse();
+        }
+    }
+}

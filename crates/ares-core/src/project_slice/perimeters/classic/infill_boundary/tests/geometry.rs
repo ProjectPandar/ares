@@ -4,7 +4,7 @@ use crate::{
         gap_extrusion::{GapFillCollection, PreparedGapExtrusionSurface},
         perimeter_append::{
             AppendedPerimeterCollections, InactiveOuterBrimReordering,
-            InactiveOverhangReorientation, InactivePostCollectionBranches, InactiveWallReordering,
+            InactivePostCollectionBranches, InactiveWallReordering,
         },
         top_split::{PreparedTopSplitSurface, TopSplitOutcome, TopSplitUpperSource},
     },
@@ -150,9 +150,6 @@ fn source(remaining: Vec<ExPolygon>) -> PreparedGapExtrusionSurface {
     PreparedGapExtrusionSurface {
         source_index: 7,
         inactive: InactivePostCollectionBranches {
-            overhang_reorientation: InactiveOverhangReorientation::Disabled {
-                overhang_reverse_internal_only: false,
-            },
             wall_reordering: InactiveWallReordering::InnerOuter {
                 outer_brim: InactiveOuterBrimReordering::WidthNotPositive { brim_width: 0.0 },
             },

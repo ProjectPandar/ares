@@ -2659,3 +2659,45 @@ the suspect is the CP loop-tree contour flag derivation
 NEXT: dump the CP loop tree node flags (is_contour/children) at
 :252-261 for layer 1 in the oracle and compare with the ares
 traverse's equivalent classification.
+
+## KP3S V1 ROOT CAUSE FIXED: overhang_reverse port (2026-09-18 ww)
+
+The loop-direction class is CLOSED. Root cause chain (all
+`PerimeterGenerator.cpp` unless noted):
+- :111-113 `overhangs_reverse = overhang_reverse && layer_id % 2 == 1`
+- detect_steep_overhang :58-99: resolved threshold < EPSILON (1e-4 mm)
+  → special case sets the steep flag for ANY loop — no geometry. The
+  KP3S profile sets overhang_reverse_threshold=0% → every odd layer.
+- :219-223 detect_overhang_wall=0 branch: flags set wholesale above raft.
+- :1438-1453 per-surface flags; reorient_perimeters :1117-1145 reverses
+  every non-external loop (internal_only exempts loops containing
+  erExternalPerimeter paths) → layer-1 inner wall walks CW while layer-0
+  (even) stays CCW. Exactly the decoded KP3S divergence.
+
+Port (source-cited):
+- `classic/perimeter_append/reorient.rs` (new): ReorientPlan with the
+  odd-layer gate, OverhangClipping vs OrdinaryUnsplit branch split,
+  fuzzy flag mapping (`FuzzySkin.cpp:458-464` = should_fuzzify proxies),
+  threshold< EPSILON special case, threshold>0 geometry path (bbox clip
+  + offset by threshold−width/2 + diff_pl), and reorient_perimeters
+  (Hole-role keyed to steep_hole, external-path exemption).
+- `chained_loops/types.rs`: ExtrusionLoop::reverse (paths reverse + each
+  path reverse — ExtrusionEntity.cpp).
+- perimeter_append wiring: reversal runs per-surface right before
+  reorder_walls (:1446-1453 order). InactiveOverhangReorientation and
+  the traversal record's InactiveOverhangReverse scaffolding removed
+  (complete deletion, no fallback). preflight overhang_reverse gate
+  removed (classic now implements it; arachne gate stays).
+- +4 unit tests (odd/even layer, external exemption, hole-flag routing,
+  ordinary-unsplit above raft).
+
+VERIFICATION (case-zhgaf4, fresh 6-run oracle):
+- Before: ares matched NONE of 6 oracle runs (337/337/337/417/420/337
+  diff lines); loop walk divergent at every odd layer.
+- After: walk directions byte-identical; diff lines 108/108/108/211/120/
+  108 — the majority oracle variant. Residual classes decompose as
+  45 M73-placement + 6 slowdown-F + 6 E-dust lines — i.e. the KNOWN
+  global families (52× M73 knife, 6× slowdown-F, 1× E-rounding), not
+  KP3S-specific behavior. KP3S reclassified from "structural loop-order
+  family" to "global micro-knife tail".
+- ares-core: 6992/6992 green (+4 reorient tests).

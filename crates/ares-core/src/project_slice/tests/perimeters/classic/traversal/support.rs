@@ -45,11 +45,7 @@ pub(super) fn assert_record_alignment(input: impl AsRef<[u8]>) {
                 saw_non_roundtripping_height |=
                     input.layer_height != f64::from(input.layer_height as f32);
 
-                let configured = input_object.region_options(input).overhang_reverse.0;
                 let odd_layer = input.layer_id % 2 == 1;
-                assert_eq!(traversal.overhang_reverse.configured, configured);
-                assert_eq!(traversal.overhang_reverse.odd_layer, odd_layer);
-                assert_eq!(traversal.overhang_reverse.active, configured && odd_layer);
                 saw_odd_layer |= odd_layer;
                 saw_even_layer |= !odd_layer;
             }

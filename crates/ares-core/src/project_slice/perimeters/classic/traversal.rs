@@ -2,9 +2,9 @@ mod classify;
 pub(in crate::project_slice) mod types;
 
 pub(in crate::project_slice) use types::{
-    ClassicTraversalRecord, InactiveOverhangReverse, LowerFlowRoute, PendingExtrusionRole,
-    PendingLoopRole, PendingPathBranch, PostClassicTraversalPrintObject,
-    PreparedPostClassicTraversal, PreparedTraversalSurface, TraversalSeed,
+    ClassicTraversalRecord, LowerFlowRoute, PendingExtrusionRole, PendingLoopRole,
+    PendingPathBranch, PostClassicTraversalPrintObject, PreparedPostClassicTraversal,
+    PreparedTraversalSurface, TraversalSeed,
 };
 
 use super::hierarchy::{PostClassicHierarchyPrintObject, PreparedPostClassicHierarchy};
@@ -81,7 +81,6 @@ fn prepare_object(
             match (hierarchy_record, prelude_record, input) {
                 (Some(hierarchy_record), Some(prelude), Some(input)) => {
                     let region = input_object.region_options(input);
-                    let odd_layer = input.layer_id % 2 == 1;
                     let flows = RouteFlows {
                         perimeter: input.perimeter_flow,
                         external: input.ext_perimeter_flow,
@@ -108,11 +107,6 @@ fn prepare_object(
                             input.layer_id,
                             raft_layers,
                         ),
-                        overhang_reverse: InactiveOverhangReverse {
-                            configured: region.overhang_reverse.0,
-                            odd_layer,
-                            active: region.overhang_reverse.0 && odd_layer,
-                        },
                     })
                 }
                 (None, None, None) => None,

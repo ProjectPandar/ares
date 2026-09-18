@@ -12,8 +12,7 @@ use crate::{
                 materialize::{ExtrusionPath, ExtrusionRole, Point3, Polyline3},
                 perimeter_append::{
                     AppendedPerimeterCollections, InactiveOuterBrimReordering,
-                    InactiveOverhangReorientation, InactivePostCollectionBranches,
-                    InactiveWallReordering,
+                    InactivePostCollectionBranches, InactiveWallReordering,
                 },
             },
             layer_region::materialize_record,
@@ -245,9 +244,6 @@ fn surface(
     PreparedGapExtrusionSurface {
         source_index,
         inactive: InactivePostCollectionBranches {
-            overhang_reorientation: InactiveOverhangReorientation::Disabled {
-                overhang_reverse_internal_only: false,
-            },
             wall_reordering: InactiveWallReordering::InnerOuter {
                 outer_brim: InactiveOuterBrimReordering::WidthNotPositive { brim_width: 0.0 },
             },

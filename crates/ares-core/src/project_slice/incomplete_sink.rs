@@ -166,10 +166,6 @@ fn consume_pre_medial_gap_domain(pre_medial: perimeters::classic::gap_domain::Pr
 fn consume_inactive_post_collection(
     inactive: perimeters::classic::perimeter_append::InactivePostCollectionBranches,
 ) {
-    let perimeters::classic::perimeter_append::InactiveOverhangReorientation::Disabled {
-        overhang_reverse_internal_only,
-    } = inactive.overhang_reorientation;
-    let _ = overhang_reverse_internal_only;
     let perimeters::classic::perimeter_append::InactiveWallReordering::InnerOuter { outer_brim } =
         inactive.wall_reordering;
     match outer_brim {
@@ -247,12 +243,7 @@ pub(super) fn consume_traversal_object(
     }
     let (hierarchy_object, records) = object.into_parts();
     for record in records.into_iter().flatten() {
-        let _ = (
-            record.layer_height,
-            record.overhang_flow,
-            record.branch,
-            record.overhang_reverse,
-        );
+        let _ = (record.layer_height, record.overhang_flow, record.branch);
         for surface in record.surfaces {
             let _ = surface.source_index;
             consume_seeds(surface.roots);

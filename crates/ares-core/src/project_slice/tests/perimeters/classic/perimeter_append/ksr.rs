@@ -6,8 +6,7 @@ use crate::{
             entity_collections::ExtrusionEntity,
             materialize::{ExtrusionPath, ExtrusionRole},
             perimeter_append::{
-                InactiveOuterBrimReordering, InactiveOverhangReorientation, InactiveWallReordering,
-                PreparedPerimeterAppendRecord,
+                InactiveOuterBrimReordering, InactiveWallReordering, PreparedPerimeterAppendRecord,
             },
         },
         prepare_post_classic_entity_collections, prepare_post_classic_perimeter_append,
@@ -80,10 +79,6 @@ fn accumulate_record(record: &PreparedPerimeterAppendRecord, checksum: &mut i128
     mix(checksum, record.surfaces.len() as i128);
     for surface in &record.surfaces {
         mix(checksum, surface.source_index as i128);
-        let InactiveOverhangReorientation::Disabled {
-            overhang_reverse_internal_only,
-        } = surface.inactive.overhang_reorientation;
-        mix(checksum, i128::from(overhang_reverse_internal_only));
         let InactiveWallReordering::InnerOuter { outer_brim } = surface.inactive.wall_reordering;
         accumulate_outer_brim(outer_brim, checksum);
         mix(checksum, surface.appended.collections.len() as i128);

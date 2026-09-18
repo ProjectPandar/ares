@@ -105,9 +105,6 @@ fn validate_record(
     {
         return Err(unsupported("detect_thin_wall"));
     }
-    if region.overhang_reverse.0 && has_layer_overhang(object, record) {
-        return Err(unsupported("overhang_reverse"));
-    }
     if region.extra_perimeters_on_overhangs.0
         && object.lower_slices(record).is_some()
         && region.detect_overhang_wall.0

@@ -8,8 +8,8 @@ use crate::{
                 types::ExtrusionRole,
             },
             traversal::{
-                ClassicTraversalRecord, InactiveOverhangReverse, LowerFlowRoute,
-                PendingExtrusionRole, PendingLoopRole, PendingPathBranch, TraversalSeed,
+                ClassicTraversalRecord, LowerFlowRoute, PendingExtrusionRole, PendingLoopRole,
+                PendingPathBranch, TraversalSeed,
             },
         },
         types::Flow,
@@ -62,11 +62,6 @@ fn record() -> ClassicTraversalRecord {
             detect_overhang_wall: true,
             layer_id: 2,
             raft_layers: 0,
-        },
-        overhang_reverse: InactiveOverhangReverse {
-            configured: false,
-            odd_layer: false,
-            active: false,
         },
     }
 }
