@@ -383,11 +383,19 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         state.y = travel_y;
         let route_comment = first_travel_comment.to_string();
         for point in &route[1..] {
+            // Upstream emits every route waypoint through
+            // `GCodeWriter::travel_to_xy` (`GCode.cpp:7501`) WITH the F
+            // word; the cooling buffer then strips the feedrate (unchanged)
+            // or DROPS zero-length same-text waypoints
+            // (`CoolingBuffer.cpp:911-913`). Emitting without F here
+            // bypasses that drop and keeps near-duplicate waypoints the
+            // oracle never ships.
             output.extend_from_slice(
                 format!(
-                    "G1 X{} Y{}{route_comment}\n",
+                    "G1 X{} Y{} F{}{route_comment}\n",
                     format_axis(point.x),
-                    format_axis(point.y)
+                    format_axis(point.y),
+                    format_axis(state.travel_feedrate)
                 )
                 .as_bytes(),
             );

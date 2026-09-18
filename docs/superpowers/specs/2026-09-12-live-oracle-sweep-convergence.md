@@ -2517,3 +2517,22 @@ are all root-caused with probes + recipes committed:
 - 9× slowdown-F 0.1%, 5× estimator-header, 2× scan-M976, wipe-E knives
 Next session: router graph node-merge fix (the only actionable class
 with a clear upstream twin).
+
+## ER20/Flashforge FIXED: route waypoints must carry F (2026-09-18 nn)
+
+The TVEMIT probe (emission-time travel polyline dump) showed the oracle's
+route polylines DO carry the near-duplicate waypoint
+((4239312,4239312)/(4239382,4239382) — 70 units apart, identical at 3dp).
+The resolution is downstream: upstream emits EVERY waypoint via
+`GCodeWriter::travel_to_xy` (`GCode.cpp:7501`) WITH the F word; the
+cooling buffer then strips unchanged feedrates OR DROPS zero-length
+same-printed-position lines entirely (`CoolingBuffer.cpp:911-913`,
+`line.length == 0.` branch — the parse reads the printed 3dp text, so
+the duplicate computes length 0 and the line vanishes).
+
+The ares emitted route[1..] without F, bypassing the cooling drop.
+Fix: `start_travel.rs` route loop now emits `G1 X Y F<travel_feedrate>`
+like `travel_to_xy` — verified byte-exact against fresh oracle runs on
+ER20 0.5 (114→0 lines), ER20 Klipper 0.6 and Flashforge AD3 0.6 (both
+→0). The whole ER20/Flashforge router family (~14 printers) collapses.
+ares-core 6988/6988, ksr golden green.
