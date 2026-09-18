@@ -119,7 +119,7 @@ pub(super) fn planned_trapezoid_time(
     })
 }
 
-/// Diagnostic per-block dump gated by `ARES_DUMP_BLOCKS`: appends
+/// Diagnostic per-block dump gated by `ARES_DUMP_PLANNER`: appends
 /// `<ordinal> <distance> <speed> <accel> <entry> <exit> <safe> <time>` per
 /// finalized block so the planner's junction chain can be compared against
 /// upstream `TimeEstimator` instrumentation. No effect when unset.
@@ -127,7 +127,7 @@ fn dump_blocks(blocks: &[PlannedBlock]) {
     use std::io::Write;
     static DUMP_PATH: std::sync::OnceLock<Option<String>> = std::sync::OnceLock::new();
     let Some(path) = DUMP_PATH
-        .get_or_init(|| std::env::var("ARES_DUMP_BLOCKS").ok())
+        .get_or_init(|| std::env::var("ARES_DUMP_PLANNER").ok())
         .as_ref()
     else {
         return;
@@ -297,6 +297,28 @@ fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> f32 {
         axis_feedrate,
         safe,
     } = current;
+    let debug = std::env::var("ARES_DEBUG_JUNCTION").is_ok();
+    if debug
+        && let Ok(mut out) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("/tmp/ares-junction.txt")
+    {
+        use std::io::Write;
+        let _ = writeln!(
+            out,
+            "J prev_cruise={:.4} cruise={:.4} prev_dir={:?} dir={:?} prev_af={:?} af={:?} prev_safe={:.4} safe={:.4} jerk={:?}",
+            previous.cruise,
+            cruise,
+            previous.direction,
+            direction,
+            previous.axis_feedrate,
+            axis_feedrate,
+            previous.safe,
+            safe,
+            jerk
+        );
+    }
     if previous.cruise <= 0.000_1 {
         return safe;
     }

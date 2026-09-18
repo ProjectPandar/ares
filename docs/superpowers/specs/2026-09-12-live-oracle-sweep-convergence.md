@@ -2223,3 +2223,38 @@ Sweeps relaunched under the ARES_ORCA_RUNS=3 multi-run protocol
 (printer sweep first, then option coverage) — authoritative
 reclassification pending; note parallel test runs flake on oracle
 contention, serial (--test-threads=1) is authoritative.
+
+## Full sweeps under the multi-run protocol (2026-09-18 y)
+
+- PRINTER SWEEP (ARES_ORCA_RUNS=3, serial): **853/1001 PASS** (was 630).
+  122 DIVERGENT + 16 ORCA_ERROR + 10 VENDOR_INCOMPLETE. Class breakdown of
+  the 122: 57 M73-shift, 20 estimator-time-header (BBL family, ~2s drift),
+  44 vendor-scattered (Eryone 6, Flashforge 5, Prusa 5, Ratrig 5, Creality
+  4, Elegoo 3, ...), 1 wipe-E rounding (Kobra 3 0.2: E-.70072/-.09928 vs
+  -.70071/-.09929 — 1e-5 in the proportional wipe split).
+- OPTION COVERAGE: **645/649 domains PASS** (1308 cases, 1282 compared, 26
+  rejected upstream; was 371 FAIL / 279 INCOMPLETE). The 4 FAILs:
+  raft_layers (max case hits an unsupported-project-feature rejection),
+  sparse_infill_pattern (adaptivecubic value), wall_generator (arachne),
+  top_surface_pattern (octagramspiral layer-50 island lifecycle ordering).
+
+## Estimator block-level ground truth via ORCA_DUMP_BLOCKS probe (2026-09-18 z)
+
+New upstream probes (nix, /tmp/medial-probe/): g1cache.nix dumps the full
+g1_times_cache (id elapsed) from finalize; orcablocks.nix dumps per-block
+`g1_id dist cruise accel entry exit safe time` from calculate_time.
+New ares hook: ARES_DUMP_PLANNER (the planner dump previously collided
+with ARES_DUMP_BLOCKS — estimate's File::create truncated it).
+
+BBL P1P 0.4 (case-1roJ2z): cache STRUCTURE matches EXACTLY (3204 entries,
+last id 3713 on the majority oracle run) — only block TIMES drift: 2.28s
+total, 358 discrete positive steps, first at g1 id ~209 (+3.95ms) in the
+slow-zigzag region (F1979 slowdown layer; the slowdown feedrate itself is
+coupled to the estimate — circular). Per-block join shows ares junction
+entries collapsing to jerk_e (2.5) where orca keeps 5.0+ — but the naive
+ordinal pairing is unreliable (block ORDER differs around E-only/Z-only
+moves; ares junction debug: the 209→210 junction is Z-only(20)→E-only(5),
+safe=2.5 from the E-jerk clamp — upstream formula reading gives neither
+2.5 nor 5.0, so the exact upstream site for this junction class needs
+identification before fixing). NEXT: key the block join by (g1_id, dist,
+cruise), then audit the extrusion-only-move junction site upstream.
