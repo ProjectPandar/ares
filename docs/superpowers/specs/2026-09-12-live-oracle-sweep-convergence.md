@@ -2465,3 +2465,24 @@ identical). Two real divergences:
    z-hop descent combines with the first post-wipe travel
    (GCodeWriter::travel_to_xy with m_to_lift → XYZ combined); ares emits
    the descent elsewhere (net motion equal, line split differs).
+
+## Wipe path local-frame fix committed (2026-09-18 kk)
+
+02c5a3a9: all wipe_path constructions (constant/variable/path-slope/
+loop_paths/skirt_brim) now store LOCAL-frame points (unscaled mm of the
+raw scaled path points — no origin/extruder-offset addition), and
+wipe_moves converts them with the local scale only — the int round-trip
+is exact (upstream Wipe::path semantics). The skirt_brim site still
+carried origin-offsets (the corrupting global point in the WM trace —
+first=local last=machine 119mm); after de-globalizing, the Kobra-3 case
+went 118 → 6 diff lines (the wipe now walks the correct geometry; only
+the 5th-decimal E split knife E-.70071/-.70072 remains — the upstream
+dE = length × (segment/wipe_dist) with wipe_dist = the CONFIGURED
+scaled int exactly 1e6 while ares's distribution_distance = the clipped
+path's float sum 1000000.2 → the 1.4e-6 ratio knife). ares-core
+6988/6988 green, ksr golden green.
+
+Remaining wipe-E knife fix: use the exact configured wipe_distance
+(scaled int) as the distribution denominator when the clipped path
+length ≥ configured (upstream `if (wipe_path.length() < wipe_dist)
+wipe_dist = wipe_path.length()` keeps the CONFIG value otherwise).
