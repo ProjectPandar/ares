@@ -2553,3 +2553,21 @@ estimator-header, 2 scan-M976, 1 wipe-E. The "other" 23 break down as:
   template line), Prusa XL (Z1 extra in ares travel), WEMAKE3D Phoenix
   (travel target), iQ TiQ8 (layer-change position), Sovol SV07 Plus
   (E5.67617 vs M106 fan), Snapmaker Artisan (travel target 0.5mm off).
+
+## KP3S V1 first-travel F placement decoded (2026-09-18 pp)
+
+case-zhgaf4 (KP3S V1: travel_speed=150→F9000, initial_layer_travel=200→
+F12000, z_hop=0, travel_speed_z=0). Oracle emits
+[G1 X.. Y.. F9000][G1 Z.25 F12000][G1 Z.25]; ares emits
+[G1 X.. Y.. F12000][G1 Z.25][G1 Z.25]. Cooling-strip reconstruction:
+both sides emitted THREE F-carrying lines; the oracle's XY leg carries
+the PLAIN travel speed (9000) and the Z leg F12000 (differing → kept,
+then the third line's unchanged F stripped); the ares' XY leg carries
+the first-layer override (12000) so both Z lines' Fs strip.
+Upstream source: the UNCLEAR-position branch of `travel_to_xyz`
+(GCodeWriter.cpp:793-798, the post-lift-block fall-through) emits XY at
+`config.travel_speed.value` — NEVER the first-layer override — then
+`_travel_to_z` at its own speed. NEXT: trace which ares branch owns
+this emission (suspect `layer_change_travel && state.retracted` at
+state.travel_feedrate) and switch its XY leg to the plain
+options.travel_feedrate at layer 0; verify KP3S V1 byte-exact.
