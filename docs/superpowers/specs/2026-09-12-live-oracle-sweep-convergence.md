@@ -2296,3 +2296,22 @@ too — its one-line merge was downstream of the slowdown coupling; the
 single remaining failure in the batch run was an oracle-race flake that
 passes standalone). Remaining P1P diff: 40 lines of slowdown feedrates
 (F1979 vs F1977) — the cooling line-time aggregation's last 0.1%.
+
+## Wipe split int-space port + sort revert (2026-09-18 cc)
+
+- The remaining wipe E knife edge (E-.38885 vs -.38886) sits in the
+  layer-change wipe (motion/travel.rs wipe_moves — ALREADY a verbatim
+  int-space port). The travel-retraction wipe (gcode_travel_retraction)
+  now also uses scaled-integer lengths + the upstream clip_end
+  truncation; wipe_gcode keeps scaled units throughout.
+- The cooling slowdown sort reverted to fixed_gcc_sort_by (the introsort
+  swap flipped ~37 printers — tie order differs from the actual 2.4.2
+  build's std::sort; NOT equivalent for this workload).
+- Serial live smoke suite + ares-core 6988/6988 + ksr green.
+- Option coverage rerun (serial): 645/649 unchanged; the
+  sparse_infill_pattern domain's remaining diff = ONE wipe E value
+  (case-976q3C: 4 diff lines). 3 of 4 domains are structural
+  (adaptivecubic/arachne/raft max — unimplemented values), octagramspiral
+  = island lifecycle ordering.
+- Full printer sweep rerun landed 849 PASS / 127 DIVERGENT under
+  PARALLEL sweep contention; needs the authoritative SERIAL rerun.

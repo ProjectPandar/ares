@@ -18,6 +18,16 @@ struct WipePath {
     feedrate: f64,
 }
 
+/// Scaled-coordinate space of `libslic3r` points (1e6 units per mm).
+const SCALE: f64 = 1_000_000.0;
+
+/// `Line::length()`: `sqrt(dx² + dy²)` over scaled integer coordinates.
+fn scaled_length(start: Point2, end: Point2) -> f64 {
+    let dx = (end.x() - start.x()) * SCALE;
+    let dy = (end.y() - start.y()) * SCALE;
+    (dx * dx + dy * dy).sqrt()
+}
+
 impl WipePath {
     fn observe_print_move(&mut self, start: Point2, end: Point2, feedrate: f64) {
         if distance(start, end) <= f64::EPSILON {
@@ -51,36 +61,53 @@ impl WipePath {
     }
 
     fn length(points: &[Point2]) -> f64 {
+        // `MultiPoint::length` sums `Line::length()` — `sqrt(dx²+dy²)` over
+        // the SCALED INTEGER points (`Polyline.cpp`), not the compensated
+        // `hypot` over millimetres.
         points
             .windows(2)
-            .map(|pair| distance(pair[0], pair[1]))
+            .map(|pair| scaled_length(pair[0], pair[1]))
             .sum()
     }
 
-    /// `Polyline::clip_end(len - wipe_dist)` (`:456`) over the REVERSED
-    /// path: remove `(len - wipe_dist)` from the END, keeping the leading
-    /// `wipe_dist` (the backward walk starts at the current position).
+    /// `Polyline::clip_end(len - wipe_dist)` (`:456`): walk from the END,
+    /// interpolate the boundary point onto the INTEGER lattice (the C++
+    /// `cast<coord_t>()` truncates toward zero) — the truncated endpoint
+    /// shifts the segment ratio and flips 5th-decimal E knife edges.
     fn clip_to_length(points: &[Point2], keep: f64) -> Vec<Point2> {
         let total = Self::length(points);
         if total <= keep || points.len() < 2 {
             return points.to_vec();
         }
-        let mut kept = Vec::with_capacity(points.len());
-        kept.push(points[0]);
-        let mut remaining = keep;
-        for pair in points.windows(2) {
-            let segment = distance(pair[0], pair[1]);
-            if segment <= remaining {
-                remaining -= segment;
-                kept.push(pair[1]);
-                continue;
+        // `clip_end(total - keep)` removes from the tail; equivalently keep
+        // the leading `keep` millimetres, interpolating the final point with
+        // the upstream backward formula truncated onto the lattice.
+        let mut kept: Vec<Point2> = points.to_vec();
+        let mut distance = total - keep;
+        while distance > 0.0 {
+            let Some(last_point) = kept.pop() else {
+                return Vec::new();
+            };
+            if kept.is_empty() {
+                return Vec::new();
             }
-            let ratio = remaining / segment;
-            kept.push(Point2::new(
-                pair[0].x() + (pair[1].x() - pair[0].x()) * ratio,
-                pair[0].y() + (pair[1].y() - pair[0].y()) * ratio,
-            ));
-            break;
+            let previous = *kept.last().expect("checked non-empty");
+            let v = (
+                (previous.x() - last_point.x()) * SCALE,
+                (previous.y() - last_point.y()) * SCALE,
+            );
+            let lsqr = v.0 * v.0 + v.1 * v.1;
+            if lsqr > distance * distance {
+                let factor = distance / lsqr.sqrt();
+                let x = last_point.x() * SCALE + v.0 * factor;
+                let y = last_point.y() * SCALE + v.1 * factor;
+                kept.push(Point2::new(
+                    x.trunc() as i64 as f64 / SCALE,
+                    y.trunc() as i64 as f64 / SCALE,
+                ));
+                break;
+            }
+            distance -= lsqr.sqrt();
         }
         kept
     }
@@ -362,7 +389,10 @@ impl TravelRetractionState {
         if wipe_path.len() < 2 {
             return String::new();
         }
-        let mut wipe_dist = WipePath::length(&wipe_path).min(wipe_distance);
+        // Upstream works entirely in scaled units: `wipe_dist =
+        // scale_(wipe_distance)` (`GCode.cpp:444-446`) and lengths over the
+        // integer points.
+        let mut wipe_dist = WipePath::length(&wipe_path).min(wipe_distance * SCALE);
         if wipe_dist <= f64::EPSILON {
             return String::new();
         }
@@ -373,7 +403,7 @@ impl TravelRetractionState {
         }
         let mut gcode = String::new();
         for pair in clipped.windows(2) {
-            let segment_length = distance(pair[0], pair[1]);
+            let segment_length = scaled_length(pair[0], pair[1]);
             let delta_e = during_wipe * (segment_length / wipe_dist);
             gcode.push_str(&writer.extrude_to_xy_with_feedrate_and_comment(
                 pair[1],
