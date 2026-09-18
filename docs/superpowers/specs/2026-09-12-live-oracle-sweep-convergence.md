@@ -2315,3 +2315,24 @@ passes standalone). Remaining P1P diff: 40 lines of slowdown feedrates
   = island lifecycle ordering.
 - Full printer sweep rerun landed 849 PASS / 127 DIVERGENT under
   PARALLEL sweep contention; needs the authoritative SERIAL rerun.
+
+## Serial printer sweep after M221+wipe fixes (2026-09-18 dd)
+
+**857/1001 PASS** (authoritative serial; 119 DIVERGENT + 15 ORCA_ERROR +
+10 VENDOR_INCOMPLETE). Classes of the 119: 69 M73-shift (all in the
+START-GCODE region — P43/P49 around the wipe/leveling macros → the
+delay-landing cadence class, NOT the estimator totals which now match
+at 7µs), 34 other (Eryone ER20 wipe-path XY offsets ~0.5mm; BBL X1
+missing M976 scan-model template line; Elegoo travel targets), 13
+slowdown-F (0.1% feedrate residue), 2 estimator-header, 1 wipe-E knife.
+
+Remaining ledger (priority order):
+1. M73 delay-landing cadence (69 printers) — the FlushEvent/block-count
+   pin vs upstream's refresh-threshold consumption in the start-gcode
+   G29/M400 region.
+2. Eryone ER20 wipe-path point divergence (~0.5mm offsets).
+3. BBL X1 M976 scan-model template emission.
+4. slowdown-F 0.1% residue (the cooling line-time aggregation).
+5. Option domains: adaptivecubic/arachne/raft-max (unimplemented
+   values), octagramspiral island lifecycle, sparse_infill_pattern's
+   last wipe-E knife.
