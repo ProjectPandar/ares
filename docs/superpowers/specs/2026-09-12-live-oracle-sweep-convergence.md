@@ -2536,3 +2536,20 @@ like `travel_to_xy` — verified byte-exact against fresh oracle runs on
 ER20 0.5 (114→0 lines), ER20 Klipper 0.6 and Flashforge AD3 0.6 (both
 →0). The whole ER20/Flashforge router family (~14 printers) collapses.
 ares-core 6988/6988, ksr golden green.
+
+## Post-F-word-fix budget-6 sweep: 892/1001 (2026-09-18 oo)
+
+Clean serial budget-6 with 7654e6d7: **892 PASS / 82 DIVERGENT / 17
+ORCA_ERROR / 10 VENDOR_INCOMPLETE** (was 886 — +6 direct from the route-F
+fix). Remaining 82: 52 M73-shift (f32 knife), 23 other, 4
+estimator-header, 2 scan-M976, 1 wipe-E. The "other" 23 break down as:
+- 8 wipe-E/path micro-knives (E-.70071/2, X123.081/2, Y6.014/3,
+  Y98.188/9 classes — sub-µm point dust)
+- 6 slowdown-F (Prusa CORE One L ×2, MK4S, LONGER, V-Core IDEX COPY,
+  MK3S F2930.735/6 1-ulp)
+- 3 estimator-trailer (Mellow M1, Ratrig ×2)
+- 6 structural: Kingroon PRO V2 (G10 firmware retract vs G1), KP3S V1
+  (XY swap — path start order), LH Stinger MMU (leading-space in
+  template line), Prusa XL (Z1 extra in ares travel), WEMAKE3D Phoenix
+  (travel target), iQ TiQ8 (layer-change position), Sovol SV07 Plus
+  (E5.67617 vs M106 fan), Snapmaker Artisan (travel target 0.5mm off).
