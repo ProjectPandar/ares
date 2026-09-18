@@ -266,11 +266,16 @@ fn wipe_moves(state: &EmitState) -> WipePath {
             (length > f64::EPSILON).then(|| (unscaled_position(segment[1], state), length))
         })
         .collect::<Vec<_>>();
-    let distribution_distance = segments
-        .iter()
-        .map(|(_, length)| length)
-        .sum::<f64>()
-        .min(configured_distance);
+    // Upstream `Wipe::wipe` (`GCode.cpp:456-462`): `wipe_dist` stays the
+    // CONFIGURED scaled value when the clipped path is at least as long
+    // (`if (wipe_path.length() < wipe_dist) wipe_dist = …`); the dE
+    // denominator is the exact config value, not the clipped float sum.
+    let distribution_distance =
+        if segments.iter().map(|(_, length)| length).sum::<f64>() < configured_distance {
+            segments.iter().map(|(_, length)| length).sum::<f64>()
+        } else {
+            configured_distance
+        };
     if std::env::var_os("ARES_WIPE_DEBUG").is_some() {
         eprintln!(
             "WIPE_PATH_DEBUG points={points:?} total={total_length:.17} cfg={configured_distance:.17} clip_left={clip:.17} start_mm=({:.6},{:.6})",
