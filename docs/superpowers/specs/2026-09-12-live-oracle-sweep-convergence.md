@@ -2140,3 +2140,26 @@ left (all three re-verified across 5-8 fresh oracle runs):
 
 NEXT: the estimator M73 boundary fix, then hilbert/staggered_inner_seams,
 then full re-sweep under ARES_ORCA_RUNS=3.
+
+## M73 knife-edge: f64 promotion in the percent division (2026-09-18 v)
+
+`option/ironing_type/solid` was stable-DIVERGENT with identical G1 streams:
+only `M73 P68 R6` sat one G1 later in ares. The m73_profile harness + the
+elapsed dump pinned it: at id 4251 ares cum=812.507207 vs the 68% boundary
+812.507198 — a +9e-6 s margin over an 812 s accumulation. Upstream computes
+`int(100.0f * elapsed_f32 / machine.time)` where machine.time is DOUBLE
+(GCodeProcessor.hpp:526 "accumulate in doubles"): the 100× product stays f32
+but the DIVISION promotes to f64; ares divided in f32 (and subtracted the
+remaining time in f32 too). Fixed in `processor.rs` to the source-cited
+promotion (`f64::from(100.0_f32 * elapsed) / total`, `total - elapsed` in
+f64). ironing_solid AND staggered_inner_seams flipped to byte-exact PASS;
+live smoke suite 115/118.
+
+Remaining stable: bottom_hilbert (ares merges two collinear-looking hilbert
+moves, orca keeps the middle point). The new ARES_DUMP_SIMPLIFY hook dumps
+fill-path PRE/POST simplify points; replaying upstream's iterative DP
+(MultiPoint.cpp:164) over the ares PRE points reproduces ares's POST on all
+108 blocks — ares's DP is upstream-faithful, so orca's PRE point set for
+that path must differ (likely a path-split at the kept point). Upstream
+probe: /tmp/medial-probe/simppre.nix dumps LayerRegion::simplify_path /
+simplify_multi_path PRE points (scaled ints) for the per-path diff.

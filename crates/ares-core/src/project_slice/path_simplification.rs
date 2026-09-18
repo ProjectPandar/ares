@@ -92,6 +92,19 @@ fn simplify_fill_entity(
                 .iter()
                 .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
                 .collect::<Vec<_>>();
+            if let Ok(dump) = std::env::var("ARES_DUMP_SIMPLIFY") {
+                use std::io::Write;
+                if let Ok(mut out) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&dump)
+                {
+                    let _ = writeln!(out, "PRE role={:?} n={}", path.role, points.len());
+                    for (x, y) in &points {
+                        let _ = writeln!(out, "P {x:.6} {y:.6}");
+                    }
+                }
+            }
             // The coarse sparse-infill tolerance applies only in the
             // arc-fitting branch (`LayerRegion.cpp:1081`).
             let tolerance = if arc_fitting {
@@ -112,6 +125,19 @@ fn simplify_fill_entity(
                     units_per_mm(scale),
                 );
                 path.fitting = Vec::new();
+            }
+            if let Ok(dump) = std::env::var("ARES_DUMP_SIMPLIFY") {
+                use std::io::Write;
+                if let Ok(mut out) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&dump)
+                {
+                    let _ = writeln!(out, "POST n={}", points.len());
+                    for (x, y) in &points {
+                        let _ = writeln!(out, "P {x:.6} {y:.6}");
+                    }
+                }
             }
             path.polyline = Polyline::new(
                 points
