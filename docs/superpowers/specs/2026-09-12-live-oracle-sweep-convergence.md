@@ -2486,3 +2486,21 @@ Remaining wipe-E knife fix: use the exact configured wipe_distance
 (scaled int) as the distribution denominator when the clipped path
 length ≥ configured (upstream `if (wipe_path.length() < wipe_dist)
 wipe_dist = wipe_path.length()` keeps the CONFIG value otherwise).
+
+## ER20 family: router emits an extra near-duplicate waypoint (2026-09-18 ll)
+
+Eryone ER20 0.5 (case-q1FWTL, wipe_before_external_loop=0,
+reduce_crossing_wall=1): fresh-oracle diff = 114 lines, ALL of them the
+same class — the avoid-crossing ROUTE for the travel between the inner
+and outer wall carries one EXTRA waypoint: ares route
+[125.739,114.155(F), 125.739,114.239a, 125.739,114.239b, 126.225,114.725]
+where a≠b at ULP level but format identically at 3dp; upstream has ONE
+114.239 waypoint. A `dedup()` at plan_route did not collapse them
+(float-distinct). The extra waypoint is a router-graph artifact — two
+boundary-graph projections (likely entry corner + exit projection)
+landing on adjacent floats where upstream's graph produces a single node.
+NEXT: dump the router graph path for this travel (router.rs), compare
+with upstream AvoidCrossingPerimeters::travel_to's node sequence, and fix
+the entry/exit projection to merge onto the same node. Same family:
+Flashforge AD3/AD4/Artemis (4 printers, 4.19-4.4 XY targets = the same
+inward-corner travel), ER20 Klipper variants (4).
