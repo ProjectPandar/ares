@@ -2394,3 +2394,31 @@ NEXT: audit all upstream calculate_time/simulate_st_synchronize call
 sites (process_M400/M191/G29/M620/M621/G92-E/tool changes) vs ares's
 `events` construction in estimate.rs; align the flush set so the H2D
 lands the same 5th second deterministically.
+
+## Clean budget-6 sweep: 886/1001 + M73 boundary mechanism (2026-09-18 hh)
+
+CLEAN serial budget-6 sweep (the previous 876 was contaminated by the
+uncommitted M976 experiment compiled into the test binary):
+**886 PASS / 90 DIVERGENT / 15 ORCA_ERROR / 10 VENDOR_INCOMPLETE.**
+
+H2D deep-dive (the M73-shift exemplar): the whole estimator now matches
+— machine.time 993.303205 vs oracle 993.303295 (90µs), cache 10786
+entries, per-id elapsed < 0.5ms, byte-identical non-M73 content, and 55
+of 56 M73 emissions at IDENTICAL file positions. The ONE divergence:
+the (P94,R1) emission — oracle emits it at the pct-94 crossing line
+(cache id 10892, elapsed 933.705) and (P94,R0) one line later; ares
+emits only (P94,R0) one line late. Mechanism found: the ares EXPORT
+lookup misses cache id 10892 at that line (elapsed_at → None) — the
+cache iterator has already advanced past it. The same miss pattern
+starts earlier: at the layer boundary after the wipe/spiral-lift, the
+oracle block stream carries a NO-BLOCK id (zero-delta G1 — the
+feedrate-only "G1 F6167.477" slowdown line consumes an id, creates no
+block, upstream `++m_g1_line_id` at GCodeProcessor.cpp:3868 then
+`max_abs_delta == 0 → return`), and the ares export counter assigns
+the FOLLOWING extrude the id upstream gave the F-only line (one lower
+than the oracle's). The caches stay identical (both keyed the same);
+the EXPORT line→id walk diverges by one around these boundaries —
+next: instrument the ares export lookup misses (ARES_DEBUG_M73MISS
+hook, 17 misses on H2D) and fix the F-only-G1 id consumption ordering
+in estimate.rs's export counter to restore the +1 (the block generator
+already counts them correctly — the cache proves it).
