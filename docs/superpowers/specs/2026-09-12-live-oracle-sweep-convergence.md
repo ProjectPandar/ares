@@ -2422,3 +2422,27 @@ next: instrument the ares export lookup misses (ARES_DEBUG_M73MISS
 hook, 17 misses on H2D) and fix the F-only-G1 id consumption ordering
 in estimate.rs's export counter to restore the +1 (the block generator
 already counts them correctly — the cache proves it).
+
+## M73-shift final mechanism: f32-accumulation knife edge (2026-09-18 ii)
+
+The ORCA_DUMP_EXPORTIDS probe (per-G0/G1 export counter dump) proves the
+ares and oracle export counters are IDENTICAL — all 8744 G0/G1 lookup
+ids agree (no id-mapping divergence; the earlier F-only-G1 lead was a
+red herring from misaligned index bases). The caches match per-id
+(<0.5ms everywhere). The H2D's ONE missing (P94,R1) emission is an
+ACCUMULATED-DUST KNIFE EDGE:
+- id 10892: ares elapsed 933.705017 vs oracle 933.705139 (122µs apart);
+  totals 993.303205 vs 993.303295 (90µs) — relative drift 1.2e-7.
+- The 94% threshold sits BETWEEN: ares margin +4.3µs, oracle +41.7µs.
+- The f32 product (100f×elapsed_f32) then rounds ares's to 93370.5
+  (→ pct 93) vs oracle's 93370.5156 (→ pct 94).
+Both sides compute the pair with identical source-cited arithmetic; the
+residual is f32 accumulation-order dust through 10892 blocks (1.2e-7
+relative). The 46-printer M73-shift class = these knife edges at
+percent boundaries. Closing them fully requires bit-exact f32
+accumulation of the whole planner chain (block time sums, delay
+landings, prepare-time folds — every intermediate rounding site), i.e.
+replicating the exact upstream float evaluation order end to end.
+
+Current verified state: 886/1001 printers (budget-6 serial), option
+coverage 645/649 domains, ares-core 6988/6988, ksr golden green.
