@@ -1,4 +1,4 @@
-use crate::geometry::fixed_gcc_sort_by;
+use boostvoronoi::libstdcxx_sort;
 
 use super::{Config, CoolingLine};
 
@@ -11,7 +11,10 @@ pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
         return total_time;
     }
 
-    fixed_gcc_sort_by(lines, |left, right| {
+    // Upstream sorts with `std::sort` (libstdc++ introsort,
+    // `CoolingBuffer.cpp:184-189`); tie order between equal-feedrate lines
+    // decides the non-proportional stretch groups.
+    libstdcxx_sort::sort(lines, &|left: &CoolingLine, right: &CoolingLine| {
         let left_adjustable = left.adjustable();
         let right_adjustable = right.adjustable();
         if left_adjustable == right_adjustable {

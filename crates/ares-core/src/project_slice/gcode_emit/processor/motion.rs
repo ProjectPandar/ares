@@ -26,6 +26,10 @@ pub(super) struct MotionState {
     pub(super) max_feedrate: [f64; 4],
     pub(super) jerk: [f64; 4],
     pub(super) junction_deviation: f64,
+    /// `M221` extrude factor override (`TimeMachine::
+    /// extrude_factor_override_percentage`), applied to the E-axis
+    /// feedrate before the safe/jerk limits (`GCodeProcessor.cpp:4040`).
+    pub(super) extrude_factor: f64,
     pub(super) relative: bool,
     pub(super) e_relative: bool,
     pub(super) wiping: bool,
@@ -48,6 +52,7 @@ impl Default for MotionState {
             max_feedrate: [0.0; 4],
             jerk: [9.0, 9.0, 3.0, 2.5],
             junction_deviation: 0.0,
+            extrude_factor: 1.0,
             relative: false,
             e_relative: false,
             gcode_flavor: GCodeFlavor::MarlinLegacy,
@@ -70,6 +75,9 @@ pub(super) struct MotionBlock {
     pub(super) centripetal_acceleration: f64,
     pub(super) jerk: [f64; 4],
     pub(super) direction: [f64; 4],
+    /// `M221` extrude factor override carried per block so the planner
+    /// can scale the E-axis feedrate like `GCodeProcessor.cpp:4040`.
+    pub(super) extrude_factor: f64,
     /// Whether XYZ displacement is zero; cache eligibility also depends on
     /// the upstream move classification and inserted seam vertex.
     pub(super) e_only: bool,
@@ -185,6 +193,17 @@ impl MotionState {
         if code.starts_with("M205") {
             for (axis, letter) in ['X', 'Y', 'Z', 'E'].into_iter().enumerate() {
                 self.jerk[axis] = word(code, letter).unwrap_or(self.jerk[axis]);
+            }
+            return None;
+        }
+        if code.starts_with("M221") {
+            // `GCodeProcessor::process_M221` (`GCodeProcessor.cpp:5317-
+            // 5326`): an S word without a T word rescales the E-axis
+            // feedrate. Upstream's parser reads a BARE `S` word as 0
+            // (empirically verified: BBL start gcode `M221 S;` zeroes the
+            // factor for the rest of the stream).
+            if code.contains('S') && !code.contains('T') {
+                self.extrude_factor = word(code, 'S').unwrap_or(0.0) * 0.01;
             }
             return None;
         }
@@ -346,6 +365,7 @@ impl MotionState {
             centripetal_acceleration: self.acceleration.max(1.0),
             jerk: self.effective_jerk(),
             direction: scale(delta, 1.0 / distance),
+            extrude_factor: self.extrude_factor,
             kind: if !self.wiping && e_only && e_delta > 0.0 {
                 MotionKind::Unretract
             } else {

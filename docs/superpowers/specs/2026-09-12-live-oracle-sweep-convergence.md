@@ -2274,3 +2274,25 @@ a reset before the loop) — NEXT: unconditional ORCA_DUMP_SAFE for g1
 ids < 300 to capture the unretract's actual afE/deltaE and resolve which
 code path zeroes it; then mirror that in the ares planner (whose
 axis_feedrate[E] uses the raw E component and clamps safe to jerk_e).
+
+## M221 E-factor: the estimator family root cause FIXED (2026-09-18 bb)
+
+The m221trace probe proved it empirically: upstream's parser reads BBL's
+bare `M221 S;` (soft-endstop macro) as S=0, zeroing
+`extrude_factor_override_percentage` — and `axis_feedrate[E] *= pct`
+(`GCodeProcessor.cpp:4040`) then zeroes the E-axis feedrate for the rest
+of the stream, so the safe/jerk clamps never fire on E. ares ignored
+M221 entirely → E-clamped safes → the 2.28s/358-block drift.
+
+Fix (source-cited): MotionState tracks `extrude_factor` (M221 S-without-T
+handler; bare S word → 0), MotionBlock carries it, and the planner scales
+`axis_feedrate[3]` like `:4040`. Result on BBL P1P 0.4:
+**712.335649 vs oracle 712.335642 (7 microseconds, was 2.28s)**; header
+times byte-equal. The cooling slowdown sort also now uses the libstdc++
+introsort port (`std::sort` upstream, `CoolingBuffer.cpp:184-189`).
+
+Serial live smoke suite after the fix: 95/95 (bottom_hilbert flipped
+too — its one-line merge was downstream of the slowdown coupling; the
+single remaining failure in the batch run was an oracle-race flake that
+passes standalone). Remaining P1P diff: 40 lines of slowdown feedrates
+(F1979 vs F1977) — the cooling line-time aggregation's last 0.1%.

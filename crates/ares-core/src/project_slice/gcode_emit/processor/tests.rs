@@ -255,6 +255,7 @@ fn collinear_blocks_keep_speed_at_the_shared_junction() {
         centripetal_acceleration: 100.0,
         jerk: [10.0; 4],
         direction: [1.0, 0.0, 0.0, 0.0],
+        extrude_factor: 1.0,
         kind: super::motion::MotionKind::Regular,
         e_only: false,
     };
@@ -273,6 +274,7 @@ fn tool_change_block_resets_the_following_junction() {
         centripetal_acceleration: 0.0,
         jerk: [0.0; 4],
         direction: [0.0; 4],
+        extrude_factor: 1.0,
         kind: super::motion::MotionKind::ToolChange,
         e_only: false,
     };
@@ -283,6 +285,7 @@ fn tool_change_block_resets_the_following_junction() {
         centripetal_acceleration: 10_000.0,
         jerk: [9.0, 9.0, 3.0, 2.5],
         direction: [0.0, 0.0, 0.0, -1.0],
+        extrude_factor: 1.0,
         kind: super::motion::MotionKind::Regular,
         e_only: false,
     };
@@ -302,6 +305,7 @@ fn isolated_block_uses_firmware_safe_entry_speed() {
         centripetal_acceleration: 100.0,
         jerk: [9.0, 9.0, 3.0, 2.5],
         direction: [1.0, 0.0, 0.0, 0.0],
+        extrude_factor: 1.0,
         kind: super::motion::MotionKind::Regular,
         e_only: false,
     };

@@ -20,7 +20,7 @@ const fn lg(mut n: usize) -> usize {
 const S_THRESHOLD: usize = 16;
 
 /// `std::sort(first, last, comp)` — comp is strict-weak `is_less`.
-pub(crate) fn sort<T: Copy, F: Fn(&T, &T) -> bool>(slice: &mut [T], comp: &F) {
+pub fn sort<T: Copy, F: Fn(&T, &T) -> bool>(slice: &mut [T], comp: &F) {
     if slice.is_empty() {
         return;
     }

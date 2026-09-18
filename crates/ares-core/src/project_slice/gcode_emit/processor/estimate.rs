@@ -78,6 +78,7 @@ impl Estimate {
                     centripetal_acceleration: 0.0,
                     jerk: [0.0; 4],
                     direction: [0.0; 4],
+                    extrude_factor: 1.0,
                     // The tool-change block lands no `g1_times_cache` entry
                     // (verified against the `ORCA_DUMP_TIMES` dump: the
                     // initial `T0`'s load delay reaches the machine total via

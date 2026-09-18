@@ -57,7 +57,8 @@ mod end_point;
 pub mod geometry;
 pub(crate) mod predicate;
 mod site_event;
-pub(crate) mod libstdcxx_sort;
+#[doc(hidden)]
+pub mod libstdcxx_sort;
 
 #[doc(hidden)]
 pub mod utils {

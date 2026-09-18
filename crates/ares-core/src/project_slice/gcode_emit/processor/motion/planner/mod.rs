@@ -248,7 +248,13 @@ fn prepare(
         }
     }
 
-    let axis_feedrate = direction.map(|direction| cruise * direction);
+    let axis_feedrate = {
+        let mut feedrates = direction.map(|direction| cruise * direction);
+        // `GCodeProcessor.cpp:4040`: the E-axis feedrate carries the M221
+        // extrude-factor override (a bare `M221 S` word reads as 0).
+        feedrates[3] *= block.extrude_factor as f32;
+        feedrates
+    };
     let safe = axis_feedrate
         .iter()
         .zip(jerk)

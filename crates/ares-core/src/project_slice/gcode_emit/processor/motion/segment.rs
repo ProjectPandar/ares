@@ -39,6 +39,7 @@ impl MotionState {
             centripetal_acceleration: self.acceleration.max(1.0),
             jerk: self.effective_jerk(),
             direction: scale(delta, 1.0 / distance),
+            extrude_factor: self.extrude_factor,
             kind: if !self.wiping && e_only && delta[3] > 0.0 {
                 MotionKind::Unretract
             } else {
