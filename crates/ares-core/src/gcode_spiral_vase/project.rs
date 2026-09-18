@@ -58,6 +58,18 @@ impl ProjectSpiralVaseRunState {
             .expect("generated G-code is UTF-8")
             .to_owned();
         let enabled = self.config.enabled && layer.enabled;
+        if std::env::var("ARES_SPIRAL_DEBUG").is_ok() {
+            eprintln!(
+                "SPIRAL layer enabled={} body={} final={} rel_e={} vase_on={} z={} input_len={}",
+                self.config.enabled,
+                layer.enabled,
+                layer.final_layer,
+                self.config.relative_e,
+                self.vase_enabled,
+                layer.z,
+                output.len() - layer.start
+            );
+        }
         if !enabled {
             self.vase_enabled = false;
             self.observe(&input);
@@ -285,24 +297,25 @@ fn total_extrusion_length(input: &str, initial: &ReaderState, relative_e: bool) 
 }
 
 fn set_word(line: &str, letter: char, value: String) -> String {
-    let (code, comment) = line
-        .split_once(';')
-        .map_or((line, None), |(code, comment)| (code, Some(comment)));
-    let mut words = code
-        .split_whitespace()
-        .map(str::to_owned)
-        .collect::<Vec<_>>();
-    if let Some(word) = words.iter_mut().find(|word| word.starts_with(letter)) {
-        *word = format!("{letter}{value}");
+    // Port of `GCodeReader::GCodeLine::set` (`GCodeReader.cpp:323-357`):
+    // an existing ` L` word's numeric text is replaced in place; a missing
+    // word is inserted directly after the command (the first space).
+    let needle = format!(" {letter}");
+    let mut raw = line.to_owned();
+    if let Some(pos) = raw.find(&needle) {
+        let start = pos + needle.len();
+        let end = raw[start..]
+            .find(' ')
+            .map_or(raw.len(), |offset| start + offset);
+        raw.replace_range(start..end, &value);
     } else {
-        words.push(format!("{letter}{value}"));
+        let insertion = format!("{needle}{value}");
+        match raw.find(' ') {
+            Some(pos) => raw.insert_str(pos, &insertion),
+            None => raw.push_str(&insertion),
+        }
     }
-    let mut output = words.join(" ");
-    if let Some(comment) = comment {
-        output.push_str(" ;");
-        output.push_str(comment);
-    }
-    output
+    raw
 }
 
 fn word_value(line: &str, letter: char) -> Option<f64> {
@@ -340,10 +353,12 @@ fn format_axis(value: f64) -> String {
     trim_fixed(value, 3, false)
 }
 fn format_z(value: f64) -> String {
-    trim_fixed(value, 3, true)
+    // `GCodeLine::set` default `decimal_digits = 3` with `std::fixed`.
+    format!("{value:.3}")
 }
 fn format_e(value: f64) -> String {
-    trim_fixed(value, 5, true)
+    // `line.set(E, .., 5)` — fixed 5 decimals, leading zero kept.
+    format!("{value:.5}")
 }
 
 fn trim_fixed(value: f64, precision: usize, omit_leading_zero: bool) -> String {

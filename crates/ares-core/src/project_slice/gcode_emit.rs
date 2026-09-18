@@ -135,8 +135,23 @@ pub(super) fn emit(
         .predecessor
         .predecessor;
     let fan_layers_end = output.len();
-    let emitted_layer_count =
-        header::finalize_layer_count(&mut output, header::plate_layer_count(traversal));
+    // `GCodeProcessor.cpp:2139-2142`: in spiral vase mode the processor
+    // counts layers from the `;LAYER_CHANGE` tags in the emitted stream
+    // (`m_detect_layer_based_on_tag`), so the transition_out pseudo-layer
+    // (its duplicated header) counts as a layer.
+    let layer_count = if traversal.resolved.views.full.process.print.spiral_mode.0 {
+        output
+            .windows(header::LAYER_CHANGE_TAG.len())
+            .filter(|window| *window == header::LAYER_CHANGE_TAG)
+            .count()
+    } else {
+        header::plate_layer_count(traversal)
+    };
+    let emitted_layer_count = header::finalize_layer_count(&mut output, layer_count);
+    // The compatible tail's `; total layers count` prints `m_layer_count`
+    // (`GCode.cpp:3542`) — the sliced layer count, NOT the processor's
+    // tag-based count the header placeholder carries.
+    let tail_layer_count = header::plate_layer_count(traversal);
     // The final compatible layer has no following layer marker to flush its
     // deferred retraction. Flush only retract/wipe (not a travel lift) before
     // end G-code (`GCode.cpp` final object teardown).
@@ -159,7 +174,7 @@ pub(super) fn emit(
         traversal,
         total_weight,
         total_cost,
-        emitted_layer_count,
+        tail_layer_count,
     );
     output.push(b'\n');
     // Upstream applies FanMover ONLY to layer-chunk output (the tbb

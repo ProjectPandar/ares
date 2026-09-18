@@ -4,7 +4,7 @@ pub(super) mod clip;
 mod extrusion;
 mod fan;
 mod features;
-mod format;
+pub(in crate::project_slice::gcode_emit) mod format;
 mod jerk;
 mod loop_paths;
 mod materialized;

@@ -128,6 +128,10 @@ pub(super) fn plate_layer_count(traversal: &PreparedPostClassicTraversal) -> usi
 /// close layer print_z values.
 const EPSILON: f64 = 1e-4;
 
+/// The layer-change tag the GCodeProcessor counts when
+/// `m_detect_layer_based_on_tag` is set (spiral vase mode).
+pub(super) const LAYER_CHANGE_TAG: &[u8] = b";LAYER_CHANGE\n";
+
 pub(super) fn finalize_layer_count(output: &mut Vec<u8>, layers: usize) -> usize {
     let prefix = b"; total layer number: ";
     let start = output

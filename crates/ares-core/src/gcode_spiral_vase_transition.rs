@@ -95,6 +95,14 @@ impl SpiralVaseTransitionOutState {
     }
 
     pub(crate) fn finish(&self, writer: &mut GCodeWriter, gcode_comments: bool) -> String {
+        if std::env::var("ARES_SPIRAL_DEBUG").is_ok() {
+            eprintln!(
+                "TRANSOUT enabled={} moves={} total_xy={}",
+                self.enabled,
+                self.moves.len(),
+                self.total_xy
+            );
+        }
         if !self.enabled {
             return String::new();
         }

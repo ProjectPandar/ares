@@ -2163,3 +2163,36 @@ fill-path PRE/POST simplify points; replaying upstream's iterative DP
 that path must differ (likely a path-split at the kept point). Upstream
 probe: /tmp/medial-probe/simppre.nix dumps LayerRegion::simplify_path /
 simplify_multi_path PRE points (scaled ints) for the per-path diff.
+
+## Spiral vase transition_out + change_layer Z + GCodeLine::set port (2026-09-18 w)
+
+`option/spiral_mode/1` was 50 vs 51 layers. Root causes (all source-cited):
+
+1. The spiral filter consumed only the per-ENTRY buffer, so the
+   transition_out pseudo-layer (the ramped-down E clone layer,
+   `SpiralVase.cpp:169-178,205-208`) lacked the duplicated layer header.
+   The filter now consumes the whole layer CHUNK (header + Z move +
+   content) — `layers.rs` passes `layer_output_start` when spiral covers
+   the chunk. This also makes the chunk's Z-only move the one rewritten
+   to base_z and drops the entry's duplicate.
+2. `change_layer` travels to the new print Z unconditionally; the ares
+   `spiral_vase::append_layer_z` skipped layer 0 (`layer_index > 0`) —
+   now emits for every layer, formatted via `motion::format::z` (".2").
+3. `GCodeReader::GCodeLine::set` (`GCodeReader.cpp:323-357`) ports
+   verbatim now: missing words INSERT right after the command (Z lands
+   first), values `std::fixed` — Z `{:.3}` ("1.000"), E `{:.5}`
+   ("0.06585") — no leading-zero strip, no trailing-zero trim. The old
+   word-append + trim formatting flipped every body-layer line.
+4. Header `; total layer number` counts `;LAYER_CHANGE` tags in spiral
+   mode (`GCodeProcessor.cpp:2139-2142` `m_detect_layer_based_on_tag`) —
+   51 with the pseudo-layer — while the tail's `; total layers count`
+   keeps printing `m_layer_count` (50) (`GCode.cpp:3542`).
+
+spiral_mode now byte-exact (generator line only). Serial live suite:
+95/96 PASS — the sole stable divergence left in the smoke suite is
+bottom_hilbert (ares merges two near-collinear hilbert moves; the DP
+replay over ares PRE points is upstream-exact on all 108 blocks, so the
+PRE point sets differ upstream — hilbert fill generation hunt via the
+simppre probe). Parallel suite runs flake on oracle contention (each
+test spawns its own oracle; TBB races amplify) — authoritative counts
+run with `--test-threads=1`.

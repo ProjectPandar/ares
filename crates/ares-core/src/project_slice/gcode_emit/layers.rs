@@ -525,7 +525,16 @@ pub(super) fn append(
             spiral.process_layer(
                 output,
                 spiral_vase::Layer {
-                    start: entry_output_start,
+                    // The upstream filter consumes the FULL layer chunk
+                    // (change_layer header + Z move + content): the header
+                    // lines duplicate into the transition_out layer and the
+                    // chunk's Z-only move is the one rewritten to base_z
+                    // (`SpiralVase.cpp:137-141`, `:184-187`).
+                    start: if spiral.covers_chunk() {
+                        layer_output_start
+                    } else {
+                        entry_output_start
+                    },
                     enabled: spiral_body_layer,
                     final_layer: is_last_entry
                         && layer_index + 1 == object_layer_counts[object_index],

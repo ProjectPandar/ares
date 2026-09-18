@@ -22,7 +22,7 @@ pub(super) fn offset(value: f64) -> String {
     }
 }
 
-pub(super) fn z(value: f64) -> String {
+pub(in crate::project_slice::gcode_emit) fn z(value: f64) -> String {
     offset(value)
 }
 

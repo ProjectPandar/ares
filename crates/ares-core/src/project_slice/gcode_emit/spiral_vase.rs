@@ -97,11 +97,15 @@ impl SpiralVaseFilter {
     }
 
     pub(super) fn append_layer_z(&self, output: &mut Vec<u8>, layer_index: usize, layer_z: f64) {
-        if self.enabled && layer_index > 0 {
+        // `GCode.cpp` `change_layer` unconditionally travels to the new
+        // print Z (the SpiralVase filter only rewrites it for body layers;
+        // layer 0 and the bottom layers pass it through untouched).
+        let _ = layer_index;
+        if self.enabled {
             output.extend_from_slice(
                 format!(
                     "G1 Z{} F{}\n",
-                    super::format_processor_float(layer_z),
+                    super::motion::format::z(layer_z),
                     super::format_processor_float(self.travel_feedrate)
                 )
                 .as_bytes(),
@@ -111,6 +115,12 @@ impl SpiralVaseFilter {
 
     pub(super) fn process_layer(&mut self, output: &mut Vec<u8>, layer: ProjectSpiralVaseLayer) {
         self.run.process_layer(output, layer);
+    }
+
+    /// Whether the spiral filter consumes whole layer chunks (spiral vase
+    /// enabled for this project).
+    pub(super) fn covers_chunk(&self) -> bool {
+        self.enabled
     }
 }
 
