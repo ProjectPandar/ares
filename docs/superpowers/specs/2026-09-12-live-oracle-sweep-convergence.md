@@ -2336,3 +2336,31 @@ Remaining ledger (priority order):
 5. Option domains: adaptivecubic/arachne/raft-max (unimplemented
    values), octagramspiral island lifecycle, sparse_infill_pattern's
    last wipe-E knife.
+
+## Budget-6 serial sweep: 876/1001 (2026-09-18 ee)
+
+ARES_ORCA_RUNS=6 serial printer sweep: **876 PASS / 94 DIVERGENT / 21
+ORCA_ERROR / 10 VENDOR_INCOMPLETE** (was 857 at budget 3 — the M73
+oracle-race knife edges absorb with more runs). Remaining 94 classes:
+- 51 M73-shift (start-gcode delay-landing boundary)
+- 26 other: wipe-E knife (Kobra 3 E-.70071/-.70072, LONGER ×2), wipe-path
+  XY offsets (Eryone ER20 family ×7 — the wipe path POINTS differ ~0.5mm;
+  Flashforge AD/Artemis ×4), travel targets (Elegoo Neptune 3), firmware
+  retract (Kingroon KP3S Pro V2 G10 vs G1), template leading space (LH
+  Stinger MMU), trailer time (Mellow/Peopoly)
+- 9 slowdown-F, 5 estimator-header, 2 scan-M976 (X1), 1 wipe-E.
+
+## M976/X1 decode (block reverted; full picture recorded) (2026-09-18 ff)
+
+The X1 second-layer region decodes as: [wipe at layer END] [stop labels]
+[layer template M991/fan] [M976 S1 P1 + M400 P100 + unretract E.4 —
+GCode.cpp:4784-4792 scan block] [M204 accel] [G1 E-.4 — the :5693
+change_layer re-retract, NO F word in oracle output — the only known
+no-F retract; not from GCodeWriter._retract which always emits F] [G17
+G3 Z.6 I1.217 — the SPIRAL-LIFT z-hop arc, NOT a timelapse template
+render] [timelapse template]. A boundary scan-block port was implemented
+(M976/M400 + unretract via retracted_amount) but REVERTED: it cleared
+pending_layer_retract and the spiral lift disappeared — the block needs
+the wipe placement (layer-end immediate vs deferred flush) solved first,
+which is coupled to the labels/timelapse insert ordering. The Eryone
+wipe-path XY class is the same family (wipe path point reconstruction).
