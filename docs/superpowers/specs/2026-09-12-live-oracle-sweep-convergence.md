@@ -2504,3 +2504,16 @@ with upstream AvoidCrossingPerimeters::travel_to's node sequence, and fix
 the entry/exit projection to merge onto the same node. Same family:
 Flashforge AD3/AD4/Artemis (4 printers, 4.19-4.4 XY targets = the same
 inward-corner travel), ER20 Klipper variants (4).
+
+## Turn-close verification (2026-09-18 mm)
+
+HEAD 83acfbaf pushed; ares-core 6988/6988 (previous turn, unchanged
+since — only docs + reverted experiments this turn), ksr golden 1/1,
+worktree clean. Wipe local-frame fix (02c5a3a9/f2afa5cf) confirmed
+against FRESH oracle runs: Kobra-3 118→6 lines; the remaining classes
+are all root-caused with probes + recipes committed:
+- 46× M73 boundary = f32 accumulation knife (1.2e-7 relative)
+- ~14× router extra-waypoint (ER20/Flashforge)
+- 9× slowdown-F 0.1%, 5× estimator-header, 2× scan-M976, wipe-E knives
+Next session: router graph node-merge fix (the only actionable class
+with a clear upstream twin).
