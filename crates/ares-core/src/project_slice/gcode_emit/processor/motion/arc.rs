@@ -30,6 +30,11 @@ pub(in crate::project_slice::gcode_emit::processor) fn center_from_radius(
 pub(super) struct ArcMotion {
     pub(super) start: [f64; 3],
     pub(super) end: [f64; 3],
+    /// Absolute E at the arc start (`m_start_position[E]`): the Marlin
+    /// firmware branch accumulates `arc_target[E]` from this value in
+    /// f32 (`GCodeProcessor.cpp:4741`), so the E deltas round at
+    /// absolute magnitude like upstream.
+    pub(super) start_e: f64,
     pub(super) e_delta: f64,
     pub(super) feedrate: f64,
     pub(super) gcode_flavor: GCodeFlavor,
@@ -127,6 +132,7 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
     let ArcMotion {
         start,
         end,
+        start_e,
         e_delta,
         feedrate,
         gcode_flavor,
@@ -142,6 +148,7 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
     let arc = ArcGeometry {
         start,
         end,
+        start_e,
         center,
         start_radius,
         radius,
@@ -162,6 +169,7 @@ pub(super) fn deltas(command: &str, code: &str, motion: ArcMotion) -> Option<Vec
 struct ArcGeometry {
     start: [f64; 3],
     end: [f64; 3],
+    start_e: f64,
     center: [f64; 2],
     start_radius: [f64; 2],
     /// Vec3d `start_radius()` norm — legacy branch only.
@@ -192,12 +200,20 @@ fn marlin_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
     let cos_theta = theta.cos();
     let sin_theta = theta.sin();
     let z_step = ((arc.end[2] - arc.start[2]) * f64::from(inv_segments)) as f32;
-    let e_step = arc.e_delta as f32 * inv_segments;
+    // `extruder_per_segment = *extrusion * inv_segments` multiplies the
+    // double extrusion delta by the promoted float inverse in double
+    // before the single float store.
+    let e_step = (arc.e_delta * f64::from(inv_segments)) as f32;
     let mut rvec = [-arc.i, -arc.j];
     let mut correction = 25;
-    let mut previous = [arc.start[0], arc.start[1], arc.start[2], 0.0];
+    // `AxisCoords` is `std::array<double, 4>` (`GCodeProcessor.hpp:392`):
+    // `arc_target[X/Y] = center + rvec` stores the double sum directly,
+    // and `arc_target[Z/E] += float step` accumulates into the double
+    // slots from `m_start_position[Z/E]` (`GCodeProcessor.cpp:4741-4756`).
+    // Deltas stay double; only the rotation runs in f32 (`Vec2f rvec`).
+    let mut previous = [arc.start[0], arc.start[1], arc.start[2], arc.start_e];
     let mut z = arc.start[2];
-    let mut e = 0.0;
+    let mut e = arc.start_e;
     let mut deltas = Vec::with_capacity(segments);
 
     for segment in 1..segments {
@@ -228,7 +244,12 @@ fn marlin_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
         ]);
         previous = current;
     }
-    let current = [arc.end[0], arc.end[1], arc.end[2], arc.e_delta];
+    let current = [
+        arc.end[0],
+        arc.end[1],
+        arc.end[2],
+        arc.start_e + arc.e_delta,
+    ];
     deltas.push([
         current[0] - previous[0],
         current[1] - previous[1],
@@ -261,15 +282,22 @@ fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
     let inv_segments = 1.0 / segments as f64;
     let theta = arc.sweep * inv_segments;
     let z_step = (arc.end[2] - arc.start[2]) * inv_segments;
-    let e_step = f64::from(arc.e_delta as f32) * inv_segments;
+    // `extruder_per_segment = *extrusion * inv_segment` is a pure double
+    // product — no float pre-rounding of the extrusion delta
+    // (`GCodeProcessor.cpp:4796`).
+    let e_step = arc.e_delta * inv_segments;
     let squared_theta = theta * theta;
     let cos_theta = 1.0 - 0.5 * squared_theta;
     let sin_theta = theta - squared_theta * theta / 6.0;
     let mut radius_vector = arc.start_radius;
     let mut correction = 25;
-    let mut previous = [arc.start[0], arc.start[1], arc.start[2], 0.0];
+    // `AxisCoords arc_target` is a double array (`GCodeProcessor.hpp:392`):
+    // the double Taylor chain accumulates `arc_target[Z/E]` from
+    // `m_start_position[Z/E]` with double steps, and only the rotation's
+    // `r_axisi` takes the float round trip (`GCodeProcessor.cpp:4809-4841`).
+    let mut previous = [arc.start[0], arc.start[1], arc.start[2], arc.start_e];
     let mut z = arc.start[2];
-    let mut e = 0.0;
+    let mut e = arc.start_e;
     let mut deltas = Vec::with_capacity(segments);
 
     for segment in 1..segments {
@@ -295,26 +323,25 @@ fn legacy_deltas(arc: ArcGeometry) -> Vec<[f64; 4]> {
             z,
             e,
         ];
-        // The processor's position slots are `AxisCoords` (float), so the
-        // per-segment delta upstream is float(end) - float(start)
-        // (`GCodeProcessor.cpp:3900` delta_pos arithmetic): segments whose
-        // delta vanishes in f32 land as Noop and never become blocks.
-        let delta32 = |current: f64, previous: f64| (current as f32 - previous as f32) as f64;
         deltas.push([
-            delta32(current[0], previous[0]),
-            delta32(current[1], previous[1]),
-            delta32(current[2], previous[2]),
-            delta32(current[3], previous[3]),
+            current[0] - previous[0],
+            current[1] - previous[1],
+            current[2] - previous[2],
+            current[3] - previous[3],
         ]);
         previous = current;
     }
-    let current = [arc.end[0], arc.end[1], arc.end[2], arc.e_delta];
-    let delta32 = |current: f64, previous: f64| (current as f32 - previous as f32) as f64;
+    let current = [
+        arc.end[0],
+        arc.end[1],
+        arc.end[2],
+        arc.start_e + arc.e_delta,
+    ];
     deltas.push([
-        delta32(current[0], previous[0]),
-        delta32(current[1], previous[1]),
-        delta32(current[2], previous[2]),
-        delta32(current[3], previous[3]),
+        current[0] - previous[0],
+        current[1] - previous[1],
+        current[2] - previous[2],
+        current[3] - previous[3],
     ]);
     deltas
 }

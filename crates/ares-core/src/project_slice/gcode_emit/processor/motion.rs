@@ -120,6 +120,7 @@ impl MotionState {
             arc::ArcMotion {
                 start,
                 end: self.position,
+                start_e,
                 e_delta: self.e_position - start_e,
                 feedrate: self.feedrate,
                 gcode_flavor: self.gcode_flavor,
@@ -254,21 +255,18 @@ impl MotionState {
             let Some(value) = word(code, letter) else {
                 continue;
             };
-            let offset = match self.relative {
-                true => value,
-                false => value - old[axis],
+            next[axis] = match self.relative {
+                true => old[axis] + value,
+                false => value,
             };
-            next[axis] = old[axis] + offset;
         }
         let old_e = self.e_position;
-        let e_delta = word(code, 'E').map_or(0.0, |value| {
-            if self.e_relative {
-                value
-            } else {
-                value - old_e
-            }
-        });
-        self.e_position = old_e + e_delta;
+        let (e_delta, next_e) = match word(code, 'E') {
+            Some(value) if self.e_relative => (value, old_e + value),
+            Some(value) => (value - old_e, value),
+            None => (0.0, old_e),
+        };
+        self.e_position = next_e;
         self.position = next;
         // Upstream always tracks the position; a non-positive feedrate only
         // Upstream always tracks the position and creates the TimeBlock for

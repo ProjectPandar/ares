@@ -47,6 +47,7 @@ fn sub_unit_axis_acceleration_is_preserved_in_arc_segments() {
         arc::ArcMotion {
             start: [0.0; 3],
             end: [10.0, 10.0, 100.0],
+            start_e: 0.0,
             e_delta: 0.0,
             feedrate: 10.0,
             gcode_flavor: GCodeFlavor::Klipper,

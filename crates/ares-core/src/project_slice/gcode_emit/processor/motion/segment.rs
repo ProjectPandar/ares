@@ -5,9 +5,17 @@ use super::{GCodeFlavor, MotionBlock, MotionKind, MotionState};
 
 impl MotionState {
     pub(super) fn segment_block(&self, delta: [f64; 4]) -> Option<MotionBlock> {
-        let xyz_distance = norm([delta[0], delta[1], delta[2], 0.0]);
-        let e_only = xyz_distance <= f64::EPSILON;
-        let distance = if e_only { delta[3].abs() } else { xyz_distance };
+        // `move_length` (`GCodeProcessor.cpp:3965-3968`): the squared sum
+        // accumulates in double, stores once into `float sq_xyz_length`,
+        // and the square root is the float sqrt of the stored sum; an
+        // E-only move returns `float(|E|)`.
+        let sq_xyz = (delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]) as f32;
+        let e_only = sq_xyz <= 0.0;
+        let distance = if e_only {
+            delta[3].abs() as f32 as f64
+        } else {
+            f64::from(sq_xyz.sqrt())
+        };
         if distance <= f64::EPSILON {
             return None;
         }

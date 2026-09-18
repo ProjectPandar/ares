@@ -2701,3 +2701,55 @@ VERIFICATION (case-zhgaf4, fresh 6-run oracle):
   KP3S-specific behavior. KP3S reclassified from "structural loop-order
   family" to "global micro-knife tail".
 - ares-core: 6992/6992 green (+4 reorient tests).
+
+## M73 KNIFE ROOT CAUSE FIXED: estimator arc/distance f32 model (2026-09-18 xx)
+
+The 52-printer M73 class is closed at its dominant layer. Root chain
+(probe-verified on H2D case-D4o2QF):
+- The oracle g1_times_cache comparison showed the f64 cumulative chains
+  genuinely diverge (oracle 358.546448 vs ares 358.546462 at id=6).
+- Per-block planner dumps (ARES_DUMP_PLANNER vs orcablocks, f32-exact
+  python join) localized the first divergence to block oid=22+ = the
+  internal segments of the BBL nozzle-load arc `G91 G3 Z0.4 I1.217 J0
+  P1 F60000` (full circle, 22 segments, chord ≈0.3476).
+- Authoritative upstream semantics (`GCodeProcessor.hpp:392`):
+  `AxisCoords = std::array<double, 4>` — positions are DOUBLE arrays,
+  not float. `move_length` (:3965-3968) computes the squared sum in
+  double, stores ONCE into `float sq_xyz_length`, and takes the f32
+  sqrt; E-only returns float(|E|).
+- The ares legacy_deltas quantized every arc position and delta to f32
+  (a misport of "AxisCoords"): at position magnitude ~290mm the f32
+  rounding injects ~1.5e-6 per delta → the observed 41-ulp distance
+  errors on ~0.347mm chords → cumulative M73 drift.
+
+Port (all source-cited):
+- arc.rs legacy_deltas: `AxisCoords` double model — Vec3d radius vector
+  chain in f64 with ONLY the rotation's `r_axisi` float round-trip
+  (:4809-4841); `arc_target[Z/E]` accumulate double steps from
+  `m_start_position[Z/E]` (start_e threaded through ArcMotion);
+  `extruder_per_segment` is the pure double product (no f32
+  pre-rounding); positions/deltas stay f64.
+- arc.rs marlin_deltas: same double position model; the rotation stays
+  f32 (`Vec2f rvec`, f32 cos/sin of the f32 theta); `z/e` accumulate
+  f64::from(f32 step) from absolute starts; e_step keeps its single
+  f32 store of the double product (:4728-4734).
+- segment.rs segment_block: `move_length` port — double squared sum →
+  single f32 store → f32 sqrt; E-only `float(|E|)`.
+- motion.rs: absolute position words store the parsed value directly
+  (upstream `m_origin[a] + ret`), relative store `old + value`; E
+  likewise — removing the old `old + (value - old)` double-rounding.
+- Position quantization experiments REVERTED (AxisCoords is double; the
+  quantization regressed block 18 and was removed).
+
+VERIFICATION:
+- H2D case-D4o2QF: full-text diff vs FRESH oracle = 0 lines (was 1
+  flipped `M73 P94 R1`); the M73 boundary now lands bit-exactly.
+- Planner f32-exact comparison: distance mismatches 5460 → 0 (block 18
+  and every oid=22+ chord fixed). Remaining 4387 block mismatches are
+  1-2 ulp SPEED-field differences (entry/exit/cruise/accel — the
+  junction/centripetal-acceleration chain is still f64 in ares vs f32
+  upstream, GCodeProcessor.cpp:4016-4041); they stay below the M73
+  flip threshold on this case (byte-equal output proves it).
+- ares-core 6992/6992 green; ksr golden 1/1 green; clippy/fmt clean.
+NEXT layer: the junction-speed chain f32 port (4387 speed ulps), then
+re-sweep (expect the 52-printer M73 class to collapse).
