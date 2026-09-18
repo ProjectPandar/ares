@@ -2196,3 +2196,30 @@ PRE point sets differ upstream — hilbert fill generation hunt via the
 simppre probe). Parallel suite runs flake on oracle contention (each
 test spawns its own oracle; TBB races amplify) — authoritative counts
 run with `--test-threads=1`.
+
+## bottom_hilbert PRE-dump: path SPLIT structure differs, output converges to 1 line (2026-09-18 x)
+
+The simppre upstream probe (LayerRegion::simplify_path / simplify_multi_path
+entry, /tmp/medial-probe/simppre.nix → simppreresult) vs the ares
+ARES_DUMP_SIMPLIFY hook on option/bottom_surface_pattern/hilbertcurve:
+
+- Identical lattice step (0.3771/0.5757/1.6283 segments on both sides) and
+  matching per-role path classes for the big monotonic/top-surface paths
+  (role5 n=49 ×9, role6 n=2 ×31, role7 n=3 ×10, role10 n=53 ×1 all equal).
+- The PATH SEGMENTATION differs: sparse role4 splits 21×n=8 (ares) vs
+  13×n=8 + 8×n=9 (orca); orca additionally has 23× role5 n=4 + 1× n=13
+  paths ares lacks; the hilbert (role7 BottomSurface) path splits differ
+  (ares up to n=102 chained vs orca up to n=129 with more small paths).
+- Post-DP the emitted G-code differs by exactly ONE merged pair of moves —
+  the DP trees over the differently-split paths land on a knife edge at
+  the kept point.
+
+So the remaining divergence class is the fill CONNECT/CHAIN stage
+(Fill.cpp connect_infill / chain_polylines path grouping), not the DP or
+the hilbert generator itself. NEXT: port-audit connect_infill path
+grouping (the n=4/n=9 split classes) against Fill.cpp.
+
+Sweeps relaunched under the ARES_ORCA_RUNS=3 multi-run protocol
+(printer sweep first, then option coverage) — authoritative
+reclassification pending; note parallel test runs flake on oracle
+contention, serial (--test-threads=1) is authoritative.
