@@ -2603,3 +2603,20 @@ Fresh-oracle reruns of 7 sampled rows (stale-artifact protocol from qq):
 Confirmed: the M73-shift majority is the f32 accumulation knife; the
 wipe-E and trailer classes are single-value knives. The KP3S loop-order
 class is the only STRUCTURAL divergence sampled.
+
+## KP3S V1 loop walk decoded: opposite DIRECTION + rotated seam gap (2026-09-18 ss)
+
+Both sides start the inner wall at the same seam corner
+(94.398,94.398) and close 0.1 short of it, but:
+- oracle walks (94.398,94.398)→(94.398,85.602)→(85.602,85.602)→
+  (85.602,94.398)→(94.298,94.398) — down the right edge first, gap on
+  the TOP edge (approach along X at Y=94.398);
+- ares walks (94.398,94.398)→(85.602,94.398)→(85.602,85.602)→
+  (94.398,85.602)→(94.398,94.298) — left along the top edge first, gap
+  on the RIGHT edge (approach along Y at X=94.398).
+The loop walk DIRECTION is opposite and the clipped seam gap lands one
+edge apart. NEXT: audit the direction decision in `GCode::extrude_loop`
+(the could_split/no_conflict_with_external chain and the
+`split_at_index` orientation) against the ares loop split; the seam
+corner itself agrees, so the hunt is the walk orientation + the
+gap-side choice.
