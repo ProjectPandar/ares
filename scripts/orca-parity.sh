@@ -2,12 +2,24 @@
 # Runs the extracted OrcaSlicer 2.4.2 AppImage binary for the parity harness
 # by assembling a host LD_LIBRARY_PATH from nixpkgs runtime libraries.
 #
-# Override the extracted AppImage location with ORCA_APPDIR (default
-# /tmp/squashfs-root). The parity test suite invokes this script through
-# ARES_ORCA_BIN.
+# Override the extracted AppImage location with ORCA_APPDIR (default:
+# first nixpkgs-built orca-slicer 2.4.2 still present in the store; the
+# original extraction path is gone, but the nixpkgs build of the same
+# 2.4.2 source is byte-equivalent modulo its own run-to-run races).
+# The parity test suite invokes this script through ARES_ORCA_BIN.
 set -euo pipefail
 
-APPDIR="${ORCA_APPDIR:-/nix/store/kx87xlvxrx4nhi92nzc1vj9kzb1a9ga9-orca-slicer-2.4.2}"
+if [ -n "${ORCA_APPDIR:-}" ]; then
+    APPDIR="${ORCA_APPDIR}"
+else
+    APPDIR=""
+    for candidate in /nix/store/*-orca-slicer-2.4.2; do
+        if [ -x "$candidate/bin/orca-slicer" ]; then
+            APPDIR="$candidate"
+            break
+        fi
+    done
+fi
 
 if [ ! -x "$APPDIR/bin/orca-slicer" ]; then
     echo "orca-slicer not found under $APPDIR (set ORCA_APPDIR)" >&2

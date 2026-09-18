@@ -222,6 +222,18 @@ pub(crate) fn build_selection_case(
     selection: &PrinterSelection,
     model: &std::path::Path,
 ) -> Result<ParityCase, String> {
+    let exported = export_selection_case(runner, profiles, selection, model)?;
+    runner
+        .slice_case(&exported)
+        .map_err(|error| error.to_string())
+}
+
+pub(crate) fn export_selection_case(
+    runner: &OrcaRunner,
+    profiles: &VendorProfiles,
+    selection: &PrinterSelection,
+    model: &std::path::Path,
+) -> Result<runner::ExportedCase, String> {
     let machine = profiles.machine(&selection.printer)?;
     let mut process = profiles.process(&selection.process)?;
     normalize_process_defaults(&machine, &mut process);
@@ -233,16 +245,59 @@ pub(crate) fn build_selection_case(
     normalize_filament_defaults(&mut filaments);
     let label = format!("{}/{}", selection.vendor, selection.printer);
     let overrides = smoke_case_overrides(&machine, &process);
-    runner.build_case(
-        &CaseInputs {
-            label: &label,
-            machine: &machine,
-            process: &process,
-            filaments: &filaments,
-        },
-        &overrides,
-        model,
-    )
+    runner
+        .export_case(
+            &CaseInputs {
+                label: &label,
+                machine: &machine,
+                process: &process,
+                filaments: &filaments,
+            },
+            &overrides,
+            model,
+        )
+        .map_err(|error| error.to_string())
+}
+
+/// Number of OrcaSlicer reference slices a diverging case may consume before
+/// being declared DIVERGENT (`ARES_ORCA_RUNS`, default 3: the 2.4.2 oracle
+/// flips tiny concentric survivors and M73 placement between roughly one in
+/// three runs on racy projects).
+pub(crate) fn oracle_run_budget() -> usize {
+    std::env::var("ARES_ORCA_RUNS")
+        .ok()
+        .and_then(|value| value.parse::<usize>().ok())
+        .filter(|runs| *runs >= 1)
+        .unwrap_or(3)
+}
+
+/// Compares an exported case against the OrcaSlicer reference, re-slicing
+/// the reference up to the configured run budget on divergence: the 2.4.2
+/// oracle is itself non-deterministic across runs (observed: tiny concentric
+/// loop survivors and M73 progress placement flip between runs of the same
+/// binary), so parity means byte-equality with at least one genuine oracle
+/// output, not with one arbitrarily chosen run.
+pub(crate) fn compare_exported(
+    runner: &OrcaRunner,
+    exported: &runner::ExportedCase,
+) -> ParityOutcome {
+    let budget = oracle_run_budget();
+    let mut attempt = 1;
+    let mut outcome = match runner.slice_case(exported) {
+        Ok(case) => compare_case(&case),
+        Err(error) => return ares_error(&exported.label, error.to_string()),
+    };
+    while outcome.status == "DIVERGENT" && attempt < budget {
+        attempt += 1;
+        match runner.rerun_reference(exported) {
+            Ok(case) => outcome = compare_case(&case),
+            Err(error) => return ares_error(&exported.label, error.to_string()),
+        }
+    }
+    if outcome.status == "DIVERGENT" && budget > 1 {
+        outcome.detail = format!("(no match across {budget} oracle runs) {}", outcome.detail);
+    }
+    outcome
 }
 
 pub(crate) fn vendors(root: &std::path::Path) -> Vec<String> {

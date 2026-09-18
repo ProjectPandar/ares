@@ -2099,3 +2099,44 @@ new-path decision). NEXT: dump per-path widths AFTER the
 convert_with_role call on both sides (ares CONC1 already sits at
 exactly that seam — it shows 28 loops; add the width sequence to
 the upstream probe by dumping each converted path width).
+
+## ORACLE NON-DETERMINISM DISCOVERED: the concentric "divergence" is an upstream race (2026-09-18 u)
+
+The /OrcaSlicer tree and the original AppImage extraction vanished from the
+host (nix store GC). Recovery: the nixpkgs 2.4.2 source still lives at
+/nix/store/2gy2q7lqy8vhgwdx3s0k4hhgbqr7jdsb-source and 32 nix-built
+orca-slicer-2.4.2 outputs remain in the store (all env-gated probe builds;
+byte-equivalent to the original binary when their ORCA_DUMP_* vars are unset).
+scripts/orca-parity.sh now auto-picks any surviving store build
+(ORCA_APPDIR still overrides).
+
+Validation runs exposed the real story behind the `_2` merge_tolerance lead:
+THE ORACLE ITSELF IS NON-DETERMINISTIC.
+- ksr case-u7sdch: same binary, run1 dropped the WIDTH:0.429544 concentric
+  loop (22 lines gone, F1998 elsewhere), run2 byte-matched the stored
+  reference exactly.
+- case-05rNdj: 3 fresh runs = 4191/4250/4228 lines (WIDTH:0.429546 x1/x4/x4).
+  Ares matches run2 BYTE-EXACTLY (unstripped diff = the generator line only).
+  The stored oracle.gcode (4332 lines, x3) was simply an unlucky run.
+
+So the "layers 1/4/8/9 extra small-width loop" was never an ares bug: the
+ares port deterministically produces the majority oracle outcome, and the
+TBB fill race inside OrcaSlicer 2.4.2 flips tiny concentric survivors
+(between-runs) plus M73 placement. Every value-level audit that came back
+identical was correct.
+
+Harness change: `ARES_ORCA_RUNS` (default 3) — on DIVERGENT the runner
+re-slices the reference (plate_1.gcode cache deleted) and re-compares; PASS
+if any genuine oracle run byte-matches. The strict byte comparator itself is
+untouched. `runner.slice_case` now borrows ExportedCase; new
+`runner.rerun_reference`; new `parity::compare_exported` / `export_selection_case`.
+
+Live smoke suite after the change: 113/118 PASS. Stable real divergences
+left (all three re-verified across 5-8 fresh oracle runs):
+1. option/ironing_type/solid: G1 stream identical; M73 P68 R6 emitted one
+   line later in ares (estimator boundary family, ledger item #2).
+2. bottom_hilbert: line 127 (ares +544 bytes).
+3. staggered_inner_seams: line 543 col 9 (ares -29 bytes).
+
+NEXT: the estimator M73 boundary fix, then hilbert/staggered_inner_seams,
+then full re-sweep under ARES_ORCA_RUNS=3.

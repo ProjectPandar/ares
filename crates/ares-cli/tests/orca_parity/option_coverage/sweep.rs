@@ -96,11 +96,11 @@ fn execute_plan(
                     parity::artifacts::write(&file, &serde_json::to_vec_pretty(&proof).unwrap())
                         .map_err(io_error)?;
                 }
-                runner.slice_case(exported)
+                Ok(exported)
             });
         match built {
-            Ok(built) => {
-                let outcome = parity::compare_case(&built);
+            Ok(exported) => {
+                let outcome = parity::compare_exported(runner, &exported);
                 compared += usize::from(strict_comparator_ran(outcome.status));
                 eprintln!("[option] {} {label}", outcome.status);
                 if outcome.status != "PASS" && first_failure.is_none() {

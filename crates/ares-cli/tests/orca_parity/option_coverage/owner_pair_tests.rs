@@ -79,7 +79,7 @@ fn actual_orca_owner_pair_exports_distinct_typed_widths() {
         .unwrap();
         let project_hash = hash(&exported.project);
         // Reference slicing and producer comparison are recorded independently from application.
-        let result = match runner.slice_case(exported) {
+        let result = match runner.slice_case(&exported) {
             Ok(case) => {
                 let config = String::from_utf8_lossy(&case.reference)
                     .lines()

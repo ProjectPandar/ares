@@ -105,7 +105,7 @@ impl OrcaRunner {
         model: &Path,
     ) -> Result<ParityCase, StageError> {
         let exported = self.export_case(inputs, overrides, model)?;
-        self.slice_case(exported)
+        self.slice_case(&exported)
     }
 
     pub(super) fn export_case(
@@ -188,7 +188,7 @@ impl OrcaRunner {
         })
     }
 
-    pub(super) fn slice_case(&self, exported: ExportedCase) -> Result<ParityCase, StageError> {
+    pub(super) fn slice_case(&self, exported: &ExportedCase) -> Result<ParityCase, StageError> {
         let ExportedCase {
             label,
             project,
@@ -216,9 +216,27 @@ impl OrcaRunner {
         let reference = stages::read(&reference_path, Stage::Slice)?;
         Ok(ParityCase {
             label: label.to_owned(),
-            project,
+            project: project.to_vec(),
             reference,
         })
+    }
+
+    /// Re-slices the OrcaSlicer reference for an already-exported case: the
+    /// 2.4.2 CLI itself is non-deterministic across runs (parallel fill
+    /// ordering flips tiny concentric survivors and M73 placement), so a
+    /// diverging comparison may legitimately match a fresh oracle run.
+    pub(super) fn rerun_reference(
+        &self,
+        exported: &ExportedCase,
+    ) -> Result<ParityCase, StageError> {
+        match std::fs::remove_file(exported.output_dir.join("plate_1.gcode")) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => {
+                return Err(StageError::new(Stage::Slice, FailureKind::Io, error));
+            }
+        }
+        self.slice_case(exported)
     }
 }
 

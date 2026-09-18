@@ -255,8 +255,9 @@ fn assert_printer_smoke(vendor: &str, printer: &str) {
     };
     let profiles = VendorProfiles::load(&profiles_root(), vendor).unwrap();
     let selection = parity::select_printer(&profiles, vendor, printer).unwrap();
-    let case = parity::build_selection_case(&runner, &profiles, &selection, &cube_model()).unwrap();
-    let outcome = parity::compare_case(&case);
+    let exported =
+        parity::export_selection_case(&runner, &profiles, &selection, &cube_model()).unwrap();
+    let outcome = parity::compare_exported(&runner, &exported);
     eprintln!(
         "printer smoke: {} {} {}",
         outcome.status, outcome.label, outcome.detail
@@ -283,8 +284,8 @@ fn assert_process_option_smoke(key: &str, value: &str) {
     parity::normalize_filament_defaults(&mut filaments);
     let mut overrides = parity::smoke_overrides();
     overrides.remove(key);
-    let case = runner
-        .build_case(
+    let exported = runner
+        .export_case(
             &CaseInputs {
                 label: &format!("option/{key}/{value}"),
                 machine: &machine,
@@ -295,7 +296,7 @@ fn assert_process_option_smoke(key: &str, value: &str) {
             &cube_model(),
         )
         .unwrap();
-    let outcome = parity::compare_case(&case);
+    let outcome = parity::compare_exported(&runner, &exported);
     assert_eq!(outcome.status, "PASS", "{}", outcome.detail);
 }
 
@@ -334,11 +335,11 @@ fn orca_parity_printer_sweep() {
                     continue;
                 }
             };
-            let outcome = match parity::build_selection_case(&runner, &profiles, &selection, &model)
-            {
-                Ok(case) => parity::compare_case(&case),
-                Err(error) => parity::ares_error(&format!("{vendor}/{printer}"), error),
-            };
+            let outcome =
+                match parity::export_selection_case(&runner, &profiles, &selection, &model) {
+                    Ok(exported) => parity::compare_exported(&runner, &exported),
+                    Err(error) => parity::ares_error(&format!("{vendor}/{printer}"), error),
+                };
             eprintln!(
                 "[{}/sweep] {} {}",
                 outcomes.len() + 1,
