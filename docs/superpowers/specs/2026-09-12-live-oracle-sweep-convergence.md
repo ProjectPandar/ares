@@ -2571,3 +2571,18 @@ Upstream source: the UNCLEAR-position branch of `travel_to_xyz`
 this emission (suspect `layer_change_travel && state.retracted` at
 state.travel_feedrate) and switch its XY leg to the plain
 options.travel_feedrate at layer 0; verify KP3S V1 byte-exact.
+
+## KP3S V1: F placement was a STALE ARTIFACT; real class = loop seam order (2026-09-18 qq)
+
+The stored case-zhgaf4 ares.gcode (F12000 on the first-travel XY leg)
+was STALE — a current build emits [G1 X.. F9000][G1 Z.25 F12000]
+[G1 Z.25], byte-identical to the oracle's first-travel block. (The sweep
+reuses case dirs by digest; old ares.gcode files persist.) The REAL
+fresh-oracle divergence (376 lines): the outer-wall loop's split ORDER —
+oracle emits [94.398,85.602]→[85.602,85.602]→[85.602,94.398]→
+[94.298,94.398] (a mirrored final corner X94.298 Y94.398) while ares
+emits the same loop walked from the opposite direction with the corner
+as X94.398 Y94.298 — a loop START/ROTATION choice (seam split order),
+same family as the iQ TiQ8 layer-change position. NOTE: sweep summaries
+must be treated as stale until the next full re-slice; individual
+DIVERGENT rows need fresh-oracle verification before hunting.
