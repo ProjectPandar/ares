@@ -2364,3 +2364,33 @@ pending_layer_retract and the spiral lift disappeared — the block needs
 the wipe placement (layer-end immediate vs deferred flush) solved first,
 which is coupled to the labels/timelapse insert ordering. The Eryone
 wipe-path XY class is the same family (wipe path point reconstruction).
+
+## M73-shift root: M400 S-second delay-landing race (2026-09-18 gg)
+
+The M73EMIT probe (per-emission id/pct/R/elapsed/total from the export
+pass) on H2D 0.2 (case-D4o2QF): machine.time RACES between
+992.303295 and 993.303295 — EXACTLY 1.000000s apart across oracle runs.
+The start gcode carries "M400 S1" sites (upstream process_M400 →
+simulate_st_synchronize(S) → calculate_time(additional_time=1.0)); whether
+a delay lands or carries depends on block availability at each flush —
+coupled to the oracle's CONTENT race. ares deterministically produces
+992.303205 — matching the oracle-992 variant to 90µs (cache 10786
+entries, last id 12057, per-id elapsed < 0.5ms everywhere).
+
+At the 94% crossing with total=993.303: elapsed 933.705 → (P94, R1)
+emitted, next line R flips → (P94, R0) — the oracle's TWO-M73 sequence.
+With total=992.303 the first P94 emission is directly R0 — ares's
+single-M73 sequence. The sweep references are biased toward the 993
+variant (oracle lands one MORE M400 S1 than ares), so budget-6 rarely
+samples ares's variant → the 51-printer M73-shift class.
+
+FINDING: ares lands 4 of the 5 M400 S-seconds where the oracle (usually)
+lands 5 — the known flush-cadence divergence (upstream also flushes the
+planner at sites ares does not — the ledger's "GT refresh-threshold
+consumption cadence"; when no block is available at the M400, upstream
+carries the additional_time to the NEXT calculate_time pass and lands it
+on a LATER block; ares's FlushEvent pins block_count at the command).
+NEXT: audit all upstream calculate_time/simulate_st_synchronize call
+sites (process_M400/M191/G29/M620/M621/G92-E/tool changes) vs ares's
+`events` construction in estimate.rs; align the flush set so the H2D
+lands the same 5th second deterministically.
