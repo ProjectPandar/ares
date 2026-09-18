@@ -239,10 +239,7 @@ pub(super) fn emit(
     if let Some(slope) = properties.slope {
         let wipe_points = local_points
             .iter()
-            .map(|&(x, y)| arc::Point {
-                x: x + state.origin.0 - state.extruder_offset.0,
-                y: y + state.origin.1 - state.extruder_offset.1,
-            })
+            .map(|&(x, y)| arc::Point { x, y })
             .collect::<Vec<_>>();
         fan::update_for_constant_path(output, properties, state);
         super::scarf::emit_segments(output, &points, slope, properties, state);

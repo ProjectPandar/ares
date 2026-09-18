@@ -55,6 +55,11 @@ pub(super) fn emit(command: Emission<'_>) {
         previous = (end.x, end.y);
     }
     state.extrusion_feedrate = last_feedrate;
+    // The PATH points are local mm (raw scaled points, like upstream
+    // `Wipe::path`); `wipe_moves` converts them with the local scale only
+    // so the int round-trip is exact. The CURRENT-position anchor stays
+    // in the emitted (global) frame — `scaled_position` inverts the
+    // emitter's own conversion exactly.
     state.wipe_start = wipe_points.last().map(|&(x, y)| arc::Point {
         x: x + state.origin.0 - state.extruder_offset.0,
         y: y + state.origin.1 - state.extruder_offset.1,
@@ -62,10 +67,7 @@ pub(super) fn emit(command: Emission<'_>) {
     state.wipe_path = wipe_points
         .iter()
         .rev()
-        .map(|&(x, y)| arc::Point {
-            x: x + state.origin.0 - state.extruder_offset.0,
-            y: y + state.origin.1 - state.extruder_offset.1,
-        })
+        .map(|&(x, y)| arc::Point { x, y })
         .collect();
     if let Ok(path) = std::env::var("ARES_DUMP_PATH") {
         use std::io::Write;

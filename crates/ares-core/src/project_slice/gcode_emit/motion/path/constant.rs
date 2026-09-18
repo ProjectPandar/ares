@@ -30,10 +30,7 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     } = emission;
     let wipe_points = local_points
         .iter()
-        .map(|&(x, y)| arc::Point {
-            x: x + state.origin.0 - state.extruder_offset.0,
-            y: y + state.origin.1 - state.extruder_offset.1,
-        })
+        .map(|&(x, y)| arc::Point { x, y })
         .collect::<Vec<_>>();
     fan::update_for_constant_path(output, properties, state);
     let arc_points = points

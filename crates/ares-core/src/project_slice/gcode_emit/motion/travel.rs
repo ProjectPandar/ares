@@ -207,14 +207,18 @@ fn wipe_moves(state: &EmitState) -> WipePath {
         y: state.y,
     });
     let mut points = Vec::with_capacity(state.wipe_path.len());
+    // Upstream substitutes `gcodegen.last_pos()` — the LOCAL scaled int of
+    // the last emitted point. `last_scaled_position` carries exactly that
+    // int; the wipe path points are local mm (raw scaled points like
+    // `Wipe::path`), converted with the local scale only so the int
+    // round-trip is exact.
     points.push(scaled_position(start, state));
-    points.extend(
-        state
-            .wipe_path
-            .iter()
-            .skip(1)
-            .map(|&point| scaled_position(point, state)),
-    );
+    points.extend(state.wipe_path.iter().skip(1).map(|&point| {
+        (
+            (point.x / state.scale_factor).round() as i64,
+            (point.y / state.scale_factor).round() as i64,
+        )
+    }));
     let total_length = points
         .windows(2)
         .map(|segment| scaled_distance(segment[0], segment[1]))

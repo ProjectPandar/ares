@@ -40,7 +40,7 @@ pub(super) fn emit(
                 },
             );
         }
-        state.wipe_path = wipe_points(&scarf.wipe_paths, geometry, state.offset);
+        state.wipe_path = wipe_points(&scarf.wipe_paths, geometry);
         append_inward_move(output, &scarf.wipe_paths, loop_role, geometry, state);
         return;
     }
@@ -79,17 +79,13 @@ pub(super) fn emit(
     append_inward_move(output, paths, loop_role, geometry, state);
 }
 
-fn wipe_points(
-    paths: &[ExtrusionPath],
-    geometry: LayerGeometry<'_>,
-    offset: (f64, f64),
-) -> Vec<super::arc::Point> {
+fn wipe_points(paths: &[ExtrusionPath], geometry: LayerGeometry<'_>) -> Vec<super::arc::Point> {
     let mut points = Vec::new();
     for path in paths {
         for point in &path.polyline.points {
             let point = super::arc::Point {
-                x: geometry.scale.unscale(point.x) + offset.0,
-                y: geometry.scale.unscale(point.y) + offset.1,
+                x: geometry.scale.unscale(point.x),
+                y: geometry.scale.unscale(point.y),
             };
             if points.last() != Some(&point) {
                 points.push(point);

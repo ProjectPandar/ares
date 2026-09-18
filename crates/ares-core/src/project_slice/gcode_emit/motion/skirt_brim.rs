@@ -59,10 +59,8 @@ pub(in crate::project_slice) fn emit_brim_loop(
         state.wipe_path = split
             .iter()
             .map(|point| arc::Point {
-                x: geometry.scale.unscale(point.x() - offset.0) + state.origin.0
-                    - state.extruder_offset.0,
-                y: geometry.scale.unscale(point.y() - offset.1) + state.origin.1
-                    - state.extruder_offset.1,
+                x: geometry.scale.unscale(point.x() - offset.0),
+                y: geometry.scale.unscale(point.y() - offset.1),
             })
             .collect::<Vec<_>>();
         return;
