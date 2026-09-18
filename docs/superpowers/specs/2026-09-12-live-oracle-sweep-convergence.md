@@ -2446,3 +2446,22 @@ replicating the exact upstream float evaluation order end to end.
 
 Current verified state: 886/1001 printers (budget-6 serial), option
 coverage 645/649 domains, ares-core 6988/6988, ksr golden green.
+
+## Kobra-3 wipe-E root: wipe path POINTS differ ~150-200 units (2026-09-18 jj)
+
+Kobra 3 0.2 (case-jb3fSh): 10 stable diff lines (4 fresh oracle runs
+identical). Two real divergences:
+1. Wipe E split (E-.70071/-.09929 vs oracle -.70072/-.09928): the ares
+   wipe path INT points differ from the oracle's by ~150-200 units
+   (2e-4 mm) — e.g. segment delta (724151,-492742) vs oracle's
+   (724000,-493000). The EMITTED XY coincide (3dp mm rounding), but the
+   dE ratio (computed on the int paths) inherits a 1.4e-5 relative
+   difference → the 5th-decimal E knife. ROOT: the ares wipe accumulator
+   observes EMITTED move endpoints (mm floats → scaled ints, ±0.5-unit
+   round-trip noise); upstream's Wipe::path holds the EXTRUSION PATH's
+   own scaled points directly. Fix = feed the accumulator from the path
+   points in scaled space before the mm conversion.
+2. `G1 X131.794 Y131.794 F21000` missing `Z.2`: upstream's deferred
+   z-hop descent combines with the first post-wipe travel
+   (GCodeWriter::travel_to_xy with m_to_lift → XYZ combined); ares emits
+   the descent elsewhere (net motion equal, line split differs).
