@@ -2586,3 +2586,20 @@ as X94.398 Y94.298 — a loop START/ROTATION choice (seam split order),
 same family as the iQ TiQ8 layer-change position. NOTE: sweep summaries
 must be treated as stale until the next full re-slice; individual
 DIVERGENT rows need fresh-oracle verification before hunting.
+
+## Fresh-oracle verification of representative DIVERGENT rows (2026-09-18 rr)
+
+Fresh-oracle reruns of 7 sampled rows (stale-artifact protocol from qq):
+- ER20 0.8 (M73 row): 36 lines — M73 one-line shifts (f32 knife).
+- SPARKX i7 0.8 (M73): 48 — M73 shifts.
+- EXO65 0.6 (M73): 26 — M73 shifts.
+- X1E 0.2 (M73): 66 — M73 shifts.
+- KP3S V1 0.4 (slowF row): 337 — the loop seam/split order class
+  (mirrored corner + rotated walk), NOT slowdown-F.
+- Voron 0.1 0.2 (trailer): exactly 1 value — first-layer estimate
+  0.486747s vs 0.486746s (1µs dust in the trailer sum).
+- CR-6 Max 0.2 (wipeE): exactly 1 value — wipe E-.37352 vs -.37351
+  (same 5th-decimal knife as Kobra 3).
+Confirmed: the M73-shift majority is the f32 accumulation knife; the
+wipe-E and trailer classes are single-value knives. The KP3S loop-order
+class is the only STRUCTURAL divergence sampled.
