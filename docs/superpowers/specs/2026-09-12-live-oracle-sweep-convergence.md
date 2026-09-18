@@ -2753,3 +2753,19 @@ VERIFICATION:
 - ares-core 6992/6992 green; ksr golden 1/1 green; clippy/fmt clean.
 NEXT layer: the junction-speed chain f32 port (4387 speed ulps), then
 re-sweep (expect the 52-printer M73 class to collapse).
+
+## Post-fix sweep baseline (2026-09-18 yy)
+
+After the overhang_reverse port (8c8577b6) + the estimator
+AxisCoords-double arc/distance fix (a73d324d):
+- smoke sweep (budget-6): 894 PASS (+2) / 78 DIVERGENT (-4) /
+  10 VENDOR_INCOMPLETE / 19 ORCA_ERROR (oracle-side races; was 17).
+- bottom_hilbert failed once in-suite, PASSED on isolated rerun —
+  oracle race flake, not an ares regression.
+- The M73 class improved less than the H2D evidence alone suggested:
+  the residual junction-speed ulp layer (4387 blocks with 1-2 ulp
+  entry/exit/cruise/accel differences — ares planner computes junction
+  speeds in f64 vs upstream's f32 chain at GCodeProcessor.cpp:4016-
+  4041 and the axis-feedrate/min_feedrate_factor chain) still flips
+  M73 boundaries on other printers. NEXT: port the junction/centripetal
+  chain to f32.
