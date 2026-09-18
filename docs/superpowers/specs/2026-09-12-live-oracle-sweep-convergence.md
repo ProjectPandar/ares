@@ -2620,3 +2620,16 @@ edge apart. NEXT: audit the direction decision in `GCode::extrude_loop`
 `split_at_index` orientation) against the ares loop split; the seam
 corner itself agrees, so the hunt is the walk orientation + the
 gap-side choice.
+
+## KP3S V1 loop walk: mixed race + persistent ares variant (2026-09-18 tt)
+
+Six fresh oracle runs on case-zhgaf4: the oracle itself differs from
+itself by 64 lines across runs (two loop-order variants), BUT ares
+matches NONE of the six (337/337/337/417/420/337) — the loop-order
+divergence is a REAL ares bug with an oracle race ON TOP. Layer-1 inner
+walls match byte-exactly; the flip fires only on later-layer loops.
+wall_direction=ccw at project level; the ares orient_loop site mirrors
+PerimeterGenerator.cpp:260 — next: determine which collection path owns
+the flipped loop (the :529 split site with the
+`pg_extrusions.size() == 2` condition is the prime suspect) or whether
+a post-orientation stage reverses on the oracle side.
