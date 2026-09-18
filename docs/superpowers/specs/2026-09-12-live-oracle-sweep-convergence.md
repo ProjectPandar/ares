@@ -2633,3 +2633,29 @@ PerimeterGenerator.cpp:260 — next: determine which collection path owns
 the flipped loop (the :529 split site with the
 `pg_extrusions.size() == 2` condition is the prime suspect) or whether
 a post-orientation stage reverses on the oracle side.
+
+## KP3S V1 DECISIVE: oracle keeps layer-1 OUTER wall CW at entry (2026-09-18 vv)
+
+The AFTER_SEAM probe (loopdir2.nix → loopdir2result, dump at the
+extrude_loop clip_end anchor) on case-zhgaf4:
+- layer=1 role=1 (outer, ±4.398 local): area=+154733708161298 ccw=0
+  p0=(4397923,4397923) p1=(4397923,-4397920) p2=(-4397920,-4397920)
+  — the oracle's layer-1 OUTER wall ARRIVES CW at extrude_loop ENTRY
+  (entry probe confirms) and stays CW through place_seam; its p0/p1/p2
+  EXACTLY match the oracle gcode walk (94.398,94.398 → 94.398,85.602
+  → 85.602,85.602 = TR→BR→BL). NO post-loop reversal exists — the gcode
+  IS the after-seam loop.
+- layer=1 role=2 (inner, ±4.79 local): ccw=1 (CCW), p0→p1 = TR→TL.
+- The ARES gcode walks the ±4.398 loop CCW (its own orient classified
+  the node contour → CCW per wall_direction=ccw).
+
+ROOT NARROWED: the divergence is the PerimeterGenerator LOOP-TREE
+`is_contour` classification for the layer-1 OUTER wall node — upstream
+resolved it to non-contour (→ make_clockwise at :260 despite
+wall_direction=ccw), ares to contour (→ CCW). With wall_sequence
+"inner wall/outer wall" + wall_loops=2 + only_one_wall_first_layer=0,
+the suspect is the CP loop-tree contour flag derivation
+(reverse_thin_wall_hole / children classification chain at :252-261).
+NEXT: dump the CP loop tree node flags (is_contour/children) at
+:252-261 for layer 1 in the oracle and compare with the ares
+traverse's equivalent classification.
