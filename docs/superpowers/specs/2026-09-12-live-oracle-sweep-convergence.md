@@ -2258,3 +2258,19 @@ safe=2.5 from the E-jerk clamp — upstream formula reading gives neither
 2.5 nor 5.0, so the exact upstream site for this junction class needs
 identification before fixing). NEXT: key the block join by (g1_id, dist,
 cruise), then audit the extrusion-only-move junction site upstream.
+
+## Estimator safe-loop probe: afE=0 mystery (2026-09-18 aa)
+
+The ORCA_DUMP_SAFE probe (safedump.nix) shows every safe-clamped block on
+the P1P case has `afE=0.0000` — upstream's `axis_feedrate[E]` reads ZERO
+for E-extruding moves — and clamps only ever come from X/Y (9) or Z (3),
+never E. The unretract block (`G0 E2 F300`, d=2.0, cruise 5) has
+safe=5.0 (NOT clamped by jerk_e=2.5) — consistent with afE≈0 there too,
+but CONTRARY to the source reading of
+`axis_feedrate[a] = feedrate * delta_pos[a] * inv_distance` (which gives
+afE=5 for an E-only move). The E-axis delta seen by the time-estimator
+loop must be zeroed somewhere upstream (volumetric/virtual-E handling or
+a reset before the loop) — NEXT: unconditional ORCA_DUMP_SAFE for g1
+ids < 300 to capture the unretract's actual afE/deltaE and resolve which
+code path zeroes it; then mirror that in the ares planner (whose
+axis_feedrate[E] uses the raw E component and clamps safe to jerk_e).
