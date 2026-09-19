@@ -2821,29 +2821,3 @@ DIVERGENT on the single `; estimated first layer printing time` line
 bottom_hilbert hilbertcurve geometry failure persists (2 smoke fails:
 bottom_hilbert + printer_sweep). NEXT: the first-layer prepare-time
 estimator chain (blocks RatRag 6), then hilbertcurve.
-
-## F-word exact-division conversion fix (2026-09-19 ccc)
-
-The RatRag V-Core4 6-printer 36µs first-layer prepare-time blocker
-CLOSED. Root chain (probe-verified):
-- The oracle's m_feedrate for F48000 is 800.0 EXACT: the first-layer
-  XY travel cruise (707.106811523 = f32(500/565.685424805) x 800.0)
-  requires the exact feedrate; the ares f32-reciprocal multiply
-  (`value as f32 * MMMIN_TO_MMSEC`, motion_util.rs:36) produced
-  800.000061 -> axis feedrate 565.685486 -> cruise 707.106750 -> the
-  35µs block-time delta on the 215.233mm first-layer travel.
-- The upstream source line (`static const float MMMIN_TO_MMSEC =
-  1.0f/60.0f`, GCodeProcessor.cpp:41) reads like an f32 multiply, but
-  the compiled oracle behaves as exact division (probe attempts on the
-  nested TimeMachine scope could not read m_feedrate directly; the
-  cruise algebra above is the authoritative evidence).
-- Fix: motion.rs F parse now computes `value / 60.0` in f64 (one final
-  f32 rounding happens at `block.speed as f32` in the planner, matching
-  the single-rounding store into the float m_feedrate).
-
-VERIFICATION: RatRag case-0eQ3hI full-text diff vs fresh oracle = 0
-(was 4-line estimator-only); H2D case-D4o2QF = 0 (unchanged); ksr
-golden 1/1; ares-core 6992/6992 (3 feedrate expectations updated to
-the exact-division values). The remaining MMMIN_TO_MMSEC sites
-(limits.rs:89 M205 jerk, arc_accounting.rs:37 arc F) stay on the f32
-reciprocal until a probe shows oracle divergence there.

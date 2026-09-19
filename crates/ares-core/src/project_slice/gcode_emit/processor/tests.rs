@@ -179,7 +179,7 @@ fn collinear_cruise_time_is_not_zeroed_by_default_jerk() {
 
     let times = planned_times(&[first, second]);
 
-    assert!((times.iter().sum::<f64>() - 20.043_351_173_400_88).abs() < 1e-6);
+    assert!((times.iter().sum::<f64>() - 20.043_349_266_052_246).abs() < 1e-6);
 }
 
 #[test]
@@ -330,7 +330,7 @@ fn single_block_synchronization_waits_for_next_motion() {
     let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
 
     assert!(
-        (estimate.total - 20.043_351_173_400_88).abs() < 1e-6,
+        (estimate.total - 20.043_349_266_052_246).abs() < 1e-6,
         "{}",
         estimate.total
     );
@@ -398,9 +398,9 @@ fn unsupported_commands_do_not_change_motion_feedrate() {
 
     let block = state.motion("G1 X2").unwrap();
 
-    // The oracle's effective F conversion divides exactly (F600 -> 10.0);
-    // empirically verified via the RatRag F48000 -> 800.0 probe evidence.
-    assert_eq!(block.speed, 10.0);
+    // F600 through the f32 reciprocal lands at 10.000001 mm/s
+    // (`GCodeProcessor.cpp:41`).
+    assert_eq!(block.speed, 10.000_000_953_674_316);
 }
 #[test]
 fn arc_p_word_adds_full_turns() {
@@ -480,15 +480,14 @@ fn leading_plus_word_carries_no_value() {
     assert_eq!(state.position, [0.0, 0.0, 0.0]);
 }
 
-// The oracle's effective F conversion divides exactly (F21000 -> 350.0);
-// empirically verified via the RatRag F48000 -> 800.0 probe evidence — only
-// the exact-division chain reproduces the oracle's axis-limited cruises.
+// `m_feedrate = line.f() * MMMIN_TO_MMSEC` multiplies by the f32 reciprocal
+// (`GCodeProcessor.cpp:41`), so F21000 lands at 350.000031 mm/s, not 350.0.
 #[test]
-fn feedrate_converts_through_exact_division() {
+fn feedrate_converts_through_f32_reciprocal() {
     use super::motion::MotionState;
     let mut state = MotionState::default();
     let _ = state.motions("G1 F21000");
-    assert_eq!(state.feedrate, 350.0);
+    assert_eq!(state.feedrate, 350.000_030_517_578_1);
 }
 
 /// Spiral-lift arc microbench against the GT `--process-gcode` oracle
