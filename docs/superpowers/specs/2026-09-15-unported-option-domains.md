@@ -111,3 +111,16 @@ High Flow nozzles (the flush volume model in
 `Print::set_flush_volumes_matrix`/filament-map recommend chain) —
 a deep flush-model port (filament_map_recommend.rs owns the ares side).
 Same family as the M73 estimator chain: needs its own milestone.
+
+## bottom_hilbert: clipping/simplification point knife (2026-09-19 hhh)
+
+The hilbertcurve diff (case-MFcSVc, 166 lines) decomposes into: M73
+placement shifts, F1982-vs-F1977 slowdown ulps, line-order transpositions
+(hilbert visit order at specific cells), and ONE segment-split knife:
+ares emits `G1 X110.775 Y112.4 E.03476` where the oracle emits TWO
+segments `X110.509 Y112.133 E.02317` + `X110.775 Y112.4 E.01159`
+(.02317+.01159=.03476 — the same total path, one merged segment).
+The intermediate point (110.509,112.133) is a clip-boundary intersection
+that ares's path simplification drops (deviation-vs-tolerance knife).
+NEXT: compare the simplify_path deviation computation for this vertex
+against ClipperLib/DP upstream at the same tolerance.
