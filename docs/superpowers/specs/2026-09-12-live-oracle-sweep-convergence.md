@@ -3111,3 +3111,21 @@ the per-point overlaps for the top-layer walls (oracle: outer
 [1.909,1.910,1.910,1.914,1.875], inner [0.887,0.889,0.889,0.893,
 0.831]); align the LinesDistancer/edge-grid distance query at the
 seam-adjacent point.
+
+## Ares prev-boundary distance diverges (2026-09-20 viii)
+
+ARES_DUMP_OVERHANG=2 layer-49 comparison (the top layer):
+- oracle ±4.325 wall: overlaps [1.909,1.910,1.910,1.914,1.875] —
+  slightly-reduced support at EVERY point (≈0.02-0.04mm off the prev
+  layer's lines) and a bigger dip at the seam-adjacent last point
+  (1.875 ≈ 0.036mm) → var=1 → the per-segment marker cascade.
+- ares ±4.325 wall: dist=−0.449998 at EVERY point — the extended
+  distance (raw+width/2) = −0.45 → RAW signed distance = −0.675 —
+  the ares's nearest prev-boundary line sits 0.675mm from a point
+  that lies ON the previous layer's same-wall line. THE PREV-BOUNDARY
+  TREE CONTENT DIFFERS (wrong line set: distances should be ~0.02).
+NEXT: compare the prev-layer boundary tree contents (line count,
+geometry, source) for layer 49 — the ares's previous_layer_boundary
+provider vs upstream prev_layer_boundaries (ExtrusionProcessor.hpp:
+296, filled per object per layer); fix the tree's line set; the
+overlap jitter then reproduces and the marker/F/M73 chain closes.
