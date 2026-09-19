@@ -3001,3 +3001,29 @@ DECISIVE probes built (committed methodology):
 NEXT: perimeter-gap probe — dump gaps_ex contours + medial polylines
 at PerimeterGenerator.cpp:1574-1592 for the MK4S island; align with
 ARES_DUMP_MEDIAL; find the extra 0.29mm polyline's birth site.
+
+## Narrow-split traced to ares ClipperOffset spike contour (2026-09-20 iii — dea0c5bc)
+
+The Prusa/MK4S narrow-split chain is now PROVEN identical up to the
+union: sections byte-identical (oracle ORCA_DUMP_SECT vs ares
+ARES_DUMP_SECT: 180 SEC lines, same multiset), reconstruction polygon
+byte-identical (52 points, exact sequence match, rotated frame,
+RPR/RP dumps). The divergence is the per-path ClipperOffset: the
+reconstruction polygon (a spiked square — corner caps from the trace
+detour path) offsets to ONE 20-gon in native ClipperLib
+(pieces=1, area 6.5853488e13, verified with a standalone
+/tmp/offtest.cpp build of deps_src/clipper/clipper.cpp) but TWO
+pieces (20-gon + spurious 12-gon spike fragment) in the ares. The
+spurious fragment survives the ares's Positive-union; ClipperLib's
+pftPositive Execute drops it (negative/degenerate winding).
+ALSO FIXED en route: split.rs rotate now uses fast_round_up
+(libslic3r.h:413: floor(a+0.5), 0.49999999999999994 special case),
+not round-half-away.
+NEXT: Rust unit repro with the 52-point polygon (recorded in
+/tmp/offtest.cpp); fix the ares offset's Positive union/spike contour
+generation until 1 piece; then the MK4S narrow=4 collapses to 2, the
+slowdown factors re-align (F2520/F2560), and the M73/M74 anchors
+follow. Probes: sect2result (ORCA_DUMP_SECT SEC+RP), nsplitresult
+(ORCA_DUMP_NSPLIT NSP/NSN); ares: ARES_DUMP_SPLIT
+(SPLITOUT/ASN/ANORM/RECON), ARES_DUMP_SECT (SEC/RPR),
+ARES_DUMP_OFFSET (O/R).
