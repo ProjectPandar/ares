@@ -102,3 +102,12 @@ gate (extruder filament_density state at the CLI export path) needs a
 probe at the m_writer.extruders() site; ares currently emits both
 lines (finish.rs join_sparse path) and diverges. NEXT: probe the
 oracle's extruder density at do_export to find the zero source.
+
+## nozzle_volume_type High Flow: flush matrix model (2026-09-19 ggg)
+
+Expected `; flush_volumes_matrix = 0` (single 0) vs ares's full default
+16-value 280 matrix. The upstream recalibrates the flush matrix for
+High Flow nozzles (the flush volume model in
+`Print::set_flush_volumes_matrix`/filament-map recommend chain) —
+a deep flush-model port (filament_map_recommend.rs owns the ares side).
+Same family as the M73 estimator chain: needs its own milestone.
