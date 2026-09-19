@@ -2821,3 +2821,28 @@ DIVERGENT on the single `; estimated first layer printing time` line
 bottom_hilbert hilbertcurve geometry failure persists (2 smoke fails:
 bottom_hilbert + printer_sweep). NEXT: the first-layer prepare-time
 estimator chain (blocks RatRag 6), then hilbertcurve.
+
+## F-conversion OPEN QUESTION: oracle has mixed behavior (2026-09-19 ddd)
+
+The exact-division F fix (d46b27c4) was REVERTED (37d06416) after the
+authoritative serial sweep showed 685/287 vs the 893/83 reciprocal
+baseline: the division chain matches the RatRag 6 (+1) but breaks 210
+others (Anker family first-layer prepare-time trailers diverge).
+- The RatRag evidence: the Z-block cruise 199.999984741 algebraically
+  requires feed=800.0 exact (the f32 reciprocal gives 800.000061 ->
+  199.99996948).
+- The Anker evidence: the oracle's first-layer prepare time matches the
+  reciprocal chain, not the division.
+- CONCLUSION: the compiled oracle exhibits BOTH behaviors — likely two
+  different compiled paths for the F word (the :4290 multiply vs some
+  division site, or compiler-dependent evaluation). Discriminating the
+  two groups (flavor? start-gcode shape? F magnitude?) needs a fresh
+  oracle probe at the m_feedrate store; the nested-TimeMachine probe
+  attempts failed on scope access. The RatRag 6 stay DIVERGENT on the
+  single prepare-time line under the reciprocal chain (structural
+  z_hop fix a22c88ab unaffected).
+- The parallel (num-cpus) sweep ALSO showed ~209 spurious DIVERGENT
+  verdicts from oracle TBB corruption under load (fresh manual runs
+  byte-match the same artifacts) — parallel sweeps remain unreliable
+  for verdicts; serial --test-threads=1 is authoritative (as the ledger
+  already documented).
