@@ -2965,3 +2965,39 @@ ares-core 6992/6992, ksr 1/1. Serial budget-6 sweep:
 899 PASS / 72 DIVERGENT / 20 ORCA_ERROR / 10 VENDOR — 11 DIVERGENT→PASS
 (4 RatRig V-Core4, 2 K2 Plus, 2 Artisan, ER20, M1, Phoenix Pro),
 0 regressions.
+
+## MK4S/Prusa family root-caused to ONE gap-fill loop (2026-09-20 ii)
+
+Prusa (20 printers) diff anatomy via case-twCWO9 (MK4S): the ONLY
+content root is one tiny variable-width gap-fill loop (WIDTH 0.477236,
+len≈0.29mm + its 1.13mm travel) that ares emits at the island's
+perimeter-gap site and the oracle does not. Everything else cascades:
+the slowdown input gains an adjustable line + travel → the stretch
+factor shifts (F2524-vs-F2520 layer 2, F2544-vs-F2560 layer 3) →
+estimator per-block times shift → M73/M74 anchors shift by a few ids
+(one-line M73 moves; R4 anchor 19 lines later). The fill-side
+residual is NOT the source: gap_fill_target=nowhere gates it in both
+(ares fill_entities/gap_residual.rs:62-70 mirrors FillBase.cpp:
+201-203). The loop comes from the PERIMETER-side gap fill
+(PerimeterGenerator.cpp:1570-1623): ares gap_domain.rs:133-135 already
+matches the ORCA min formula (0.2×min(pw,epw)×(1-INSET_OVERLAP_
+TOLERANCE)). Remaining suspects: the gaps accumulation set, the DP
+simplify epsilon (surface_simplify_resolution), or medial_axis pruning
+of a ~0.1mm-corner region.
+
+DECISIVE probes built (committed methodology):
+- ORCA_DUMP_SLOW (/tmp/medial-probe/slowprobe.nix → slowproberesult):
+  per-layer SLOW total/max/tgt/nonadj + per-line SLW len/feed/time —
+  layer 2 oracle: total=5.858593 nonadj=0.147408 n=25 with slow feed
+  41.9982 (F2520); ares layer 2 has 2 extra lines (adjustable 0.2904
+  + travel 1.1328) → its stretch yields 42.0749 (F2524).
+- ARES_DUMP_PRECOOLING dumps the pre/post-cooling layer text + the
+  parsed CoolingLine table (feed/time/slowed) — aligned against
+  ORCA_DUMP_SLOW.
+- Estimator-side note: the oracle's OWN text F2560 vs its estimator
+  cruise 42.6167 (F2557-ish) mismatch is an upstream internal quirk
+  of the slowdown rewrite ordering; do not chase it in ares (the
+  oracle estimator re-reads pre-final text).
+NEXT: perimeter-gap probe — dump gaps_ex contours + medial polylines
+at PerimeterGenerator.cpp:1574-1592 for the MK4S island; align with
+ARES_DUMP_MEDIAL; find the extra 0.29mm polyline's birth site.
