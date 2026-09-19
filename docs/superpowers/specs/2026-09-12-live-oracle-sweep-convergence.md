@@ -2811,3 +2811,13 @@ VERIFICATION (RatRag case-0eQ3hI, fresh 6-run oracle): structural diff
 lines = the `; estimated first layer printing time` estimator value
 (0.536911 vs 0.536947 — 36µs first-layer prepare-time ulps, the junction
 layer). ares-core 6992/6992; ksr golden 1/1.
+
+## Post-z_hop-fix sweep baseline (2026-09-19 bbb)
+
+After the z_hop combined-XYZ emission fix (a22c88ab): 893 PASS / 83
+DIVERGENT / 15 ORCA_ERROR / 10 VENDOR_INCOMPLETE. The RatRag 6 stay
+DIVERGENT on the single `; estimated first layer printing time` line
+(0.536911 vs 0.536947 — 36µs first-layer prepare-time ulps). The
+bottom_hilbert hilbertcurve geometry failure persists (2 smoke fails:
+bottom_hilbert + printer_sweep). NEXT: the first-layer prepare-time
+estimator chain (blocks RatRag 6), then hilbertcurve.
