@@ -2925,3 +2925,24 @@ Probe chain verification: f32(800.000061035 x 152.192993164 x
 0.004646119) = 565.685472783 -> f32(500/that) = 0.883883417 ->
 f32(800.000061035 x 0.883883417) = 707.106811 — reproduces the
 oracle bit-exactly with the origin-carrying dx.
+
+## F32 axis-word quantization landed (2026-09-19 lll — c823361b)
+
+The GCodeReader::x() f32 quantization (the m_origin hypothesis
+disproved: orgX=0, startX=0, endX=152.192993164 — the f32 of the
+parsed word, no origin involved) is committed: the ares estimator
+now rounds X/Y/Z/E words through f32 before the position/delta math
+(GCodeReader.hpp:70). VERIFIED: RatRag case-0eQ3hI chain reproduces
+the oracle cruise 707.106811 bit-exactly (probe algebra: f32(800.000061
+x 152.192993164 x 0.004646119) = 565.685472783 -> factor 0.883883417 ->
+cruise 707.106811); H2D 0 diff (unchanged); Anker M5 0 (unchanged);
+ksr golden 1/1; ares-core 6992/6992. Post-fix serial sweep baseline:
+891 PASS / 81 DIVERGENT / 19 ORCA_ERROR / 10 VENDOR (0 PASS->DIV,
+0 DIV->PASS vs the 888/81/22 pre-fix sweep — the count deltas are
+oracle error variance; the f32 fix neither regressed nor flipped any
+printer at the sweep level).
+
+The RatRag 6 remain on the single first-layer-time trailer line
+(0.536911 vs 0.536947 — a residual estimator ulp, not the axis
+chain). The remaining 81-divergent mass is the M73 timing /
+E-word / slowdown families the ledger already classifies.
