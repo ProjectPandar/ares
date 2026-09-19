@@ -3090,3 +3090,24 @@ NEXT: probe the oracle's per-point speeds (estimate_extrusion_quality
 return) for the layer-3 inner wall vs the ares's estimate; align the
 EdgeGrid/overlap parity in the estimator port; then the whole MK4S/
 Prusa family chain (markers → cooling lines → F → M73) follows.
+
+## Overhang estimator variance located: the TOP layer's seam-adjacent point (2026-09-20 vii)
+
+ORCA_DUMP_OHQ (ohqresult probe): across the whole print only TWO wall
+paths get variable_speed=1 — the TOP layer's outer wall (role=1:
+overlaps 1.909-1.914 uniform, LAST point 1.875 → speed 164 vs 170)
+and the TOP layer's inner wall (role=2: overlaps 0.887-0.893, last
+point 0.831 → 154; one 168). All other 96 walls var=0 (uniform 170).
+The var=1 walls are what triggers the per-segment `set_speed` marker
+emission (GCode.cpp:7185-7190) → the CoolingBuffer per-marker
+adjustable lines → the F2560-vs-F2544 slowdown divergence chain.
+BUT NOTE: the pre-cooling dump showed the markers on the LAYER-2
+inner wall — the marker granularity per layer must be re-verified
+against this probe's layer attribution in the next pass (the OHQ
+probe dumps no layer id; the ±4.325M/±4.775M coordinates = the top
+layer's outer/inner walls).
+NEXT: add ARES_DUMP_OHQ to the ares overhang::estimate port; compare
+the per-point overlaps for the top-layer walls (oracle: outer
+[1.909,1.910,1.910,1.914,1.875], inner [0.887,0.889,0.889,0.893,
+0.831]); align the LinesDistancer/edge-grid distance query at the
+seam-adjacent point.
