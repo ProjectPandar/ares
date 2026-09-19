@@ -259,13 +259,19 @@ impl MotionState {
             let Some(value) = word(code, letter) else {
                 continue;
             };
+            // `GCodeReader::GCodeLine::x() const { return m_axis[X]; }`
+            // returns FLOAT (`GCodeReader.hpp:70`): every axis word is
+            // f32-quantized before the position/delta math — the text
+            // 152.193 becomes 152.1929931640625, and the whole estimator
+            // chain (distances, axis feedrates, cruises) follows.
+            let value = f64::from(value as f32);
             next[axis] = match self.relative {
                 true => old[axis] + value,
                 false => value,
             };
         }
         let old_e = self.e_position;
-        let (e_delta, next_e) = match word(code, 'E') {
+        let (e_delta, next_e) = match word(code, 'E').map(|value| f64::from(value as f32)) {
             Some(value) if self.e_relative => (value, old_e + value),
             Some(value) => (value - old_e, value),
             None => (0.0, old_e),
