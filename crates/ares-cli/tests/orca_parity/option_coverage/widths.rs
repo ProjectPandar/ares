@@ -32,6 +32,15 @@ pub(in crate::option_coverage) fn generate(
         let seed = seeded_interior(&format!("{key}/{unit}"), minimum, maximum, false);
         for (label, value) in [("zero", 0.0), ("context-max", maximum), ("interior", seed)] {
             let rendered = render(value, suffix);
+            if label == "zero" && !suffix.is_empty() && !bridge {
+                // A percent-form zero has no mm-zero "auto" fallback: the
+                // oracle CLI dies on the resolved-zero width (exit 156),
+                // so the sentinel is a non-executed probe.
+                probes.push(json!({"wire": rendered,
+                    "expected": "oracle-process-failure", "validation_sentinel": true,
+                    "execute": false}));
+                continue;
+            }
             cases.push(case(&format!("{unit}-{label}"), &rendered, entry));
         }
         units.push(json!({

@@ -15,10 +15,20 @@ fn float_percent_plans_emit_distinct_units_and_contextual_maxima() {
             .filter_map(|case| case.value.as_ref())
             .filter_map(serde_json::Value::as_str)
             .collect::<Vec<_>>();
-        for required in ["0", "0%", maximum, percent_maximum] {
+        for required in ["0", maximum, percent_maximum] {
             assert!(
                 values.contains(&required),
                 "{key}: missing {required} in {values:?}"
+            );
+        }
+        // The percent-form zero is a validation sentinel with no auto
+        // fallback for non-bridge widths (the oracle CLI exits 156 on
+        // the resolved-zero width); the bridge zero keeps its
+        // solid-infill fallback and executes as a case.
+        if key == "line_width" {
+            assert!(
+                !values.contains(&"0%"),
+                "{key}: percent zero must be a probe"
             );
         }
     }
