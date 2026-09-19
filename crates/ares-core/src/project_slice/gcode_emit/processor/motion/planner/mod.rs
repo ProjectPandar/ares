@@ -226,40 +226,91 @@ fn prepare(
         };
     }
     let distance = block.distance as f32;
-    let acceleration = block.acceleration as f32;
-    let centripetal_acceleration = block.centripetal_acceleration as f32;
-    let direction = block.direction.map(|component| component as f32);
+    let delta = block.delta;
     let jerk = block.jerk.map(|component| component as f32);
-    let mut cruise = block.speed as f32;
+    let mut feedrate = block.speed as f32;
+    // Enter direction (`GCodeProcessor.cpp:4000-4007`): the f32 delta
+    // vector normalized by the naive f32 norm unless the move is
+    // extrusion-only.
+    let mut direction = [delta[0] as f32, delta[1] as f32, delta[2] as f32, 0.0];
+    let direction_norm =
+        (direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2])
+            .sqrt();
+    if !block.e_only {
+        direction[0] /= direction_norm;
+        direction[1] /= direction_norm;
+        direction[2] /= direction_norm;
+    }
+    // Centripetal cruise limit (`GCodeProcessor.cpp:4016-4041`):
+    // XY-projected unit vectors via the naive norm, the junction angle
+    // from double `atan2` cast to float, and the radius from the raw XY
+    // deltas.
     if let Some(previous) = previous {
         let previous_xy = xy_unit(previous.direction);
         let current_xy = xy_unit(direction);
         if let (Some(previous_xy), Some(current_xy)) = (previous_xy, current_xy) {
-            let difference = (current_xy[0] - previous_xy[0]).hypot(current_xy[1] - previous_xy[1]);
+            let difference_x = current_xy[0] - previous_xy[0];
+            let difference_y = current_xy[1] - previous_xy[1];
+            let difference = (difference_x * difference_x + difference_y * difference_y).sqrt();
             if difference < 0.5 && difference > 0.000_01 {
                 let dot = previous_xy[0] * current_xy[0] + previous_xy[1] * current_xy[1];
                 let cross = previous_xy[0] * current_xy[1] - previous_xy[1] * current_xy[0];
-                let angle = cross.atan2(dot);
+                let angle = f64::from(cross).atan2(f64::from(dot)) as f32;
                 let sin_half = ((1.0 - angle.cos()) * 0.5).sqrt();
-                let xy_distance = distance * direction[0].hypot(direction[1]);
-                let radius = xy_distance * 0.5 / sin_half;
-                cruise = cruise.min((centripetal_acceleration * radius).sqrt());
+                let radius = ((delta[0] * delta[0] + delta[1] * delta[1]).sqrt() * 0.5
+                    / f64::from(sin_half)) as f32;
+                feedrate = feedrate.min(((block.centripetal_acceleration as f32) * radius).sqrt());
             }
         }
     }
-
-    let axis_feedrate = {
-        let mut feedrates = direction.map(|direction| cruise * direction);
-        // `GCodeProcessor.cpp:4040`: the E-axis feedrate carries the M221
-        // extrude-factor override (a bare `M221 S` word reads as 0).
-        feedrates[3] *= block.extrude_factor as f32;
-        feedrates
-    };
-    let safe = axis_feedrate
-        .iter()
-        .zip(jerk)
-        .filter(|(feedrate, jerk)| feedrate.abs() > *jerk)
-        .fold(cruise, |safe, (_, jerk)| safe.min(jerk));
+    // Axis feedrates (`GCodeProcessor.cpp:4034-4041`): `feedrate * delta
+    // * inv_distance` multiplies in double with a single float store; the
+    // E axis carries the M221 extrude-factor override (a bare `M221 S`
+    // word reads as 0).
+    let inv_distance = 1.0 / distance;
+    let mut axis_feedrate = [
+        (f64::from(feedrate) * delta[0] * f64::from(inv_distance)) as f32,
+        (f64::from(feedrate) * delta[1] * f64::from(inv_distance)) as f32,
+        (f64::from(feedrate) * delta[2] * f64::from(inv_distance)) as f32,
+        (f64::from(feedrate) * delta[3] * f64::from(inv_distance)) as f32,
+    ];
+    axis_feedrate[3] *= block.extrude_factor as f32;
+    let mut abs_axis_feedrate = axis_feedrate.map(f32::abs);
+    // `min_feedrate_factor` and the axis-limited cruise
+    // (`GCodeProcessor.cpp:4043-4053`).
+    let mut factor = 1.0_f32;
+    for axis in 0..4 {
+        if abs_axis_feedrate[axis] != 0.0 {
+            let max = block.max_feedrate[axis] as f32;
+            if max != 0.0 {
+                factor = factor.min(max / abs_axis_feedrate[axis]);
+            }
+        }
+    }
+    feedrate *= factor;
+    let cruise = feedrate;
+    if factor < 1.0 {
+        for axis in 0..4 {
+            axis_feedrate[axis] *= factor;
+            abs_axis_feedrate[axis] *= factor;
+        }
+    }
+    // Acceleration axis limits (`GCodeProcessor.cpp:4065-4071`).
+    let mut acceleration = block.acceleration as f32;
+    for axis in 0..4 {
+        let max = block.max_acceleration[axis] as f32;
+        let component = delta[axis].abs() * f64::from(inv_distance);
+        if f64::from(acceleration) * component > f64::from(max) {
+            acceleration = (f64::from(max) / component) as f32;
+        }
+    }
+    // Safe feedrate from the jerk limits (`GCodeProcessor.cpp:4074-4080`).
+    let mut safe = cruise;
+    for axis in 0..4 {
+        if abs_axis_feedrate[axis] > jerk[axis] {
+            safe = safe.min(jerk[axis]);
+        }
+    }
     let max_entry = if has_junction {
         junction_speed(
             previous.expect("queued block has a predecessor"),
@@ -396,7 +447,7 @@ fn axis_jerk(exit: f32, entry: f32) -> f32 {
 }
 
 fn xy_unit(direction: [f32; 4]) -> Option<[f32; 2]> {
-    let norm = direction[0].hypot(direction[1]);
+    let norm = (direction[0] * direction[0] + direction[1] * direction[1]).sqrt();
     (norm > 0.0).then(|| [direction[0] / norm, direction[1] / norm])
 }
 

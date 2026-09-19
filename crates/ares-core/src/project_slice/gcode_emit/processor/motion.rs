@@ -70,11 +70,15 @@ pub(super) enum MotionKind {
 
 pub(super) struct MotionBlock {
     pub(super) distance: f64,
+    /// Raw axis deltas (upstream `AxisCoords delta_pos` doubles,
+    /// `GCodeProcessor.hpp:392`).
+    pub(super) delta: [f64; 4],
     pub(super) speed: f64,
     pub(super) acceleration: f64,
     pub(super) centripetal_acceleration: f64,
+    pub(super) max_feedrate: [f64; 4],
+    pub(super) max_acceleration: [f64; 4],
     pub(super) jerk: [f64; 4],
-    pub(super) direction: [f64; 4],
     /// `M221` extrude factor override carried per block so the planner
     /// can scale the E-axis feedrate like `GCodeProcessor.cpp:4040`.
     pub(super) extrude_factor: f64,
@@ -336,33 +340,25 @@ impl MotionState {
             return None;
         }
         let has_xy = delta[0] != 0.0 || delta[1] != 0.0;
-        let mut acceleration = if e_only {
+        let acceleration = if e_only {
             self.retract_acceleration
         } else if self.wiping || (e_delta > 0.0 && has_xy) {
             self.acceleration
         } else {
             self.travel_acceleration
         };
-        let mut speed = self.feedrate;
-        for (axis, delta) in delta.iter().enumerate() {
-            let ratio = (delta / distance).abs();
-            if ratio == 0.0 {
-                continue;
-            }
-            let max_feedrate = self.max_feedrate[axis];
-            if max_feedrate > 0.0 {
-                speed = speed.min(max_feedrate / ratio);
-            }
-            let max_acceleration = self.max_acceleration[axis];
-            acceleration = acceleration.min(max_acceleration / ratio);
-        }
+        // The axis factor chain and centripetal limit run in the
+        // planner's `prepare` in upstream order
+        // (`GCodeProcessor.cpp:3993-4080`); the raw F travels here.
         Some(MotionBlock {
             distance,
-            speed,
+            delta,
+            speed: self.feedrate,
             acceleration,
             centripetal_acceleration: self.acceleration.max(1.0),
+            max_feedrate: self.max_feedrate,
+            max_acceleration: self.max_acceleration,
             jerk: self.effective_jerk(),
-            direction: scale(delta, 1.0 / distance),
             extrude_factor: self.extrude_factor,
             kind: if !self.wiping && e_only && e_delta > 0.0 {
                 MotionKind::Unretract

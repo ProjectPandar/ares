@@ -218,7 +218,7 @@ fn machine_max_acceleration_limits_motion_block() {
 
     let block = state.motion("G1 E10 F3600").unwrap();
 
-    assert_eq!(block.acceleration, 100.0);
+    assert_eq!(block.max_acceleration[3], 100.0);
 }
 
 #[test]
@@ -250,11 +250,13 @@ fn travel_blocks_retain_print_acceleration_for_centripetal_limits() {
 fn collinear_blocks_keep_speed_at_the_shared_junction() {
     let block = || MotionBlock {
         distance: 10.0,
+        delta: [10.0, 0.0, 0.0, 0.0],
         speed: 10.0,
         acceleration: 100.0,
         centripetal_acceleration: 100.0,
+        max_feedrate: [0.0; 4],
+        max_acceleration: [f64::INFINITY; 4],
         jerk: [10.0; 4],
-        direction: [1.0, 0.0, 0.0, 0.0],
         extrude_factor: 1.0,
         kind: super::motion::MotionKind::Regular,
         e_only: false,
@@ -269,25 +271,29 @@ fn collinear_blocks_keep_speed_at_the_shared_junction() {
 fn tool_change_block_resets_the_following_junction() {
     let tool_change = MotionBlock {
         distance: 0.0,
+        delta: [0.0; 4],
         speed: 0.0,
         acceleration: 0.0,
         centripetal_acceleration: 0.0,
+        max_feedrate: [0.0; 4],
+        max_acceleration: [f64::INFINITY; 4],
         jerk: [0.0; 4],
-        direction: [0.0; 4],
         extrude_factor: 1.0,
         kind: super::motion::MotionKind::ToolChange,
         e_only: false,
     };
     let retract = MotionBlock {
         distance: 3.0,
+        delta: [0.0, 0.0, 0.0, -3.0],
         speed: 30.0,
         acceleration: 30_000.0,
         centripetal_acceleration: 10_000.0,
+        max_feedrate: [0.0; 4],
+        max_acceleration: [f64::INFINITY; 4],
         jerk: [9.0, 9.0, 3.0, 2.5],
-        direction: [0.0, 0.0, 0.0, -1.0],
         extrude_factor: 1.0,
         kind: super::motion::MotionKind::Regular,
-        e_only: false,
+        e_only: true,
     };
 
     let times = planned_times(&[tool_change, retract]);
@@ -300,11 +306,13 @@ fn tool_change_block_resets_the_following_junction() {
 fn isolated_block_uses_firmware_safe_entry_speed() {
     let block = MotionBlock {
         distance: 10.0,
+        delta: [10.0, 0.0, 0.0, 0.0],
         speed: 10.0,
         acceleration: 100.0,
         centripetal_acceleration: 100.0,
+        max_feedrate: [0.0; 4],
+        max_acceleration: [f64::INFINITY; 4],
         jerk: [9.0, 9.0, 3.0, 2.5],
-        direction: [1.0, 0.0, 0.0, 0.0],
         extrude_factor: 1.0,
         kind: super::motion::MotionKind::Regular,
         e_only: false,

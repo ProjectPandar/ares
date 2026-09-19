@@ -60,7 +60,7 @@ fn zero_acceleration_helical_segments_have_cruise_only_times_and_complete_output
     assert!(blocks.len() > 1);
     let times = planned_times(&blocks);
     for (block, time) in blocks.iter().zip(&times) {
-        assert_eq!(block.acceleration, 0.0);
+        assert_eq!(block.max_acceleration[2], 0.0);
         assert!(time.is_finite());
         // Upstream f32 cruise-distance / feedrate; no accel/decel contribution.
         assert_eq!(*time, f64::from(block.distance as f32 / block.speed as f32));

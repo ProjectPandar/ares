@@ -27,14 +27,14 @@ fn afinia_first_retract_and_z_use_config_without_emitted_envelope() {
     let mut state = MotionState::with_limits(limits);
     state.motion("M83");
     let retract = state.motion("G1 E-.8 F1800").unwrap();
-    assert_eq!(retract.speed, 25.0);
+    assert_eq!(retract.max_feedrate[3], 25.0);
     assert_eq!(retract.acceleration, 5000.0);
     assert_eq!(retract.jerk, [9.0, 9.0, f64::from(0.2_f32), 2.5]);
     state.motion("SET_VELOCITY_LIMIT ACCEL=500 ACCEL_TO_DECEL=250");
     state.motion("SET_VELOCITY_LIMIT ACCEL=4000 ACCEL_TO_DECEL=2000");
     let z = state.motion("G1 Z.6 F12000").unwrap();
-    assert_eq!(z.speed, 12.0);
-    assert_eq!(z.acceleration, 500.0);
+    assert_eq!(z.max_feedrate[2], 12.0);
+    assert_eq!(z.max_acceleration[2], 500.0);
     assert_eq!(state.max_travel_acceleration, 0.0);
     assert_eq!(state.travel_acceleration, 4000.0);
 }
@@ -69,9 +69,10 @@ fn artillery_second_displacement_is_z_limited_not_travel_config_limited() {
         state.motion(line);
     }
     let block = state.motion("G1 X5 Y-0.5 Z10 F18000").unwrap();
-    let z_ratio = ((10.0 - f64::from(0.2_f32)) / block.distance).abs();
-    assert_eq!(block.speed, 20.0 / z_ratio);
-    assert_eq!(block.acceleration, 500.0 / z_ratio);
+    // The axis clamp runs in the planner's `prepare`; the block carries
+    // the configured per-axis limits that produce the Z-limited cruise.
+    assert_eq!(block.max_feedrate[2], 20.0);
+    assert_eq!(block.max_acceleration[2], 500.0);
     assert_eq!(state.travel_acceleration, 6000.0);
     assert_eq!(state.max_travel_acceleration, 0.0);
     assert_eq!(&block.jerk[..2], &[5.0, 5.0]);
@@ -91,8 +92,8 @@ fn emitted_axis_commands_override_configured_values() {
     assert_eq!(state.max_feedrate, [500.0, 500.0, 10.0, 60.0]);
     assert_eq!(state.jerk, [10.0, 10.0, f64::from(0.3_f32), 5.0]);
     let z = state.motion("G1 Z10 F12000").unwrap();
-    assert_eq!(z.speed, 10.0);
-    assert_eq!(z.acceleration, 100.0);
+    assert_eq!(z.max_feedrate[2], 10.0);
+    assert_eq!(z.max_acceleration[2], 100.0);
 }
 
 #[test]

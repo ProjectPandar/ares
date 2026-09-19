@@ -2769,3 +2769,27 @@ AxisCoords-double arc/distance fix (a73d324d):
   4041 and the axis-feedrate/min_feedrate_factor chain) still flips
   M73 boundaries on other printers. NEXT: port the junction/centripetal
   chain to f32.
+
+## Junction/speed chain upstream-order port (2026-09-18 zz)
+
+The block-construction chain moved into the planner's `prepare` in
+upstream order with f32 semantics (the 4387 speed-ulp layer):
+- MotionBlock now carries the raw axis deltas (upstream `AxisCoords
+  delta_pos` doubles), the raw F, and the per-axis feedrate/acceleration
+  limits; segment_block no longer pre-clamps per axis (upstream applies
+  everything inside one chain, GCodeProcessor.cpp:3993-4080).
+- prepare (:3993-4080 port): f32 enter-direction normalized by the naive
+  f32 norm (not hypot); centripetal limit with XY-projected naive norms,
+  `float(atan2(double, double))` and the radius from the RAW XY deltas;
+  axis feedrates as `f32(feed * delta * inv_distance)` with the M221
+  E-factor; `min_feedrate_factor` single-factor cruise limiting (not
+  per-axis mins); acceleration axis limits in the upstream comparison
+  form; safe from jerk against post-factor abs axis feedrates.
+- Tests updated to assert the passthrough semantics (max_acceleration
+  0 == "clamp to zero" is upstream behavior, verified by the empty-array
+  envelope tests); fixtures use INFINITY limits where the old chain
+  clamped nothing.
+
+VERIFICATION: planner f32-exact compare 4387 -> 2362 mismatched blocks
+(residual = sub-ulp entry/exit on ~10% of blocks); H2D full-text diff
+vs FRESH oracle = 0; ares-core 6992/6992; ksr golden 1/1.

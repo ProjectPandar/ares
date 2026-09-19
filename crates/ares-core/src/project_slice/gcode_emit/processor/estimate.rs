@@ -73,11 +73,13 @@ impl Estimate {
             if selects_initial_tool(code, &mut active_tool) {
                 blocks.push(MotionBlock {
                     distance: 0.0,
+                    delta: [0.0; 4],
                     speed: 0.0,
                     acceleration: 0.0,
                     centripetal_acceleration: 0.0,
+                    max_feedrate: [0.0; 4],
+                    max_acceleration: [0.0; 4],
                     jerk: [0.0; 4],
-                    direction: [0.0; 4],
                     extrude_factor: 1.0,
                     // The tool-change block lands no `g1_times_cache` entry
                     // (verified against the `ORCA_DUMP_TIMES` dump: the
@@ -113,8 +115,8 @@ impl Estimate {
                 && let Some(block) = motion_blocks.first()
             {
                 let extruding = !state.wiping
-                    && block.direction[3] > 0.0
-                    && (block.direction[0] != 0.0 || block.direction[1] != 0.0);
+                    && block.delta[3] > 0.0
+                    && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
                 let seam_vertex = seams.associate(extruding, state.position);
                 cache_eligible.push(!block.e_only && !seam_vertex);
             } else if !motion_blocks.is_empty() {
