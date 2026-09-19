@@ -2874,3 +2874,22 @@ The Anker family's first-layer-time divergences likewise live
 downstream. NEXT: extend the probe to dump the travel block's
 curr.axis_feedrate + cruise and diff the per-block chain against the
 ares (reciprocal) dumps.
+
+## Probe feedf5: per-block cruise chain (2026-09-19 jjj)
+
+The feedf5 probe (F3 at :3880 + per-block cruise at the
+g1_times_cache push) on RatRag case-0eQ3hI:
+- block 2 (Z.4): cruise=199.999984741; block 3 (215.23 XY travel):
+  cruise=707.106811523 — with m_feedrate=800.000061 (from the F3 dump).
+- The 1-ulp algebra: oracle cruise 707.106811 requires the axis X
+  feedrate 565.685424805 (the 800.0-product) while m_feedrate is
+  800.000061 (whose product my quick Python rounds to 565.685485840).
+  The difference concentrates in the f32 inv_distance resolution —
+  the correct bit-level f32 chain (not my ad-hoc Python) decides which
+  grid point 1.0f/distance lands on. The probe values are the
+  ground truth: feed=800.000061 -> cruise=707.106811.
+
+NEXT: a bit-exact Rust/python f32 emulation of the block chain
+(feedrate x delta x inv, factor, cruise) seeded with the oracle's own
+dump values; diff each intermediate against the ares (reciprocal)
+planner dumps; the first differing intermediate is the fix site.
