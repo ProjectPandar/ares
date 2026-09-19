@@ -20,6 +20,23 @@ pub(in crate::project_slice) fn convert_with_role(
     scale: CoordinateScale,
     role: ExtrusionRole,
 ) -> Result<GapFillCollection, SliceError> {
+    if let Ok(path) = std::env::var("ARES_DUMP_VW") {
+        use std::io::Write;
+        if let Ok(mut out) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for polyline in polylines {
+                let _ = writeln!(
+                    out,
+                    "VWCALL n={} w0={}",
+                    polyline.points.len(),
+                    polyline.width.first().copied().unwrap_or_default()
+                );
+            }
+        }
+    }
     let tolerance = (0.05 / scale.factor()) as f32;
     let mut entities = Vec::new();
     for polyline in polylines {
