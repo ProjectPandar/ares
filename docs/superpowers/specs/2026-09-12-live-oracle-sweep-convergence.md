@@ -3064,3 +3064,29 @@ the oracle's 3; VW_EMIT 27 vs 25). NEXT: align the
 FillConcentricInternal variable-width emission for the corner
 triangles (fill_entities/concentric.rs vs FillConcentricInternal.cpp:
 10-101) — likely a per-triangle extra loop on 1-2 layers.
+
+## MK4S chain resolved to the overhang speed estimator (2026-09-20 vi)
+
+ORCA_DUMP_PRECOOL (precoolresult probe) settled the F2560/F2544 root:
+the oracle's PRE-cooling layer text carries `;_EXTRUDE_SET_SPEED`
+BEFORE EVERY inner-wall segment (plus a duplicate at the start) while
+the outer wall has ONE marker. That is the `variable_speed` branch
+(GCode.cpp:7185-7190): when `estimate_extrusion_quality` returns any
+point with |p.speed − speed| > 1mm/s, set_speed (with the cooling
+marker) is emitted PER SEGMENT — both branches call set_speed per
+point. Consequences cascade: the CoolingBuffer opens one adjustable
+line per marker (oracle: 4×~9mm wall lines + extra 0.7 E-line vs ares
+1×35.26) → different slowdown deficit/stretch → F2560 vs F2544 →
+estimator block times → M73 anchors.
+THE GAP: the ares's overhang speed estimate (overhang::estimate /
+ExtrusionQualityEstimator port) returns uniform speeds on the layer-3
+inner wall; the oracle's returns >1mm/s variation. NOTE max_volumetric_
+extrusion_rate_slope=0 (PE limiting disabled — the markers are from
+GCode emission, NOT the PE; the PE !modified pass-through matches).
+ALSO: the oracle is RACY at the concentric-fill level (loops 5/5/5/5/
+2/3 across 6 fresh runs; the ares matches the 5-loop majority — the
+sweep's stored orca.gcode was a 3-loop sample).
+NEXT: probe the oracle's per-point speeds (estimate_extrusion_quality
+return) for the layer-3 inner wall vs the ares's estimate; align the
+EdgeGrid/overlap parity in the estimator port; then the whole MK4S/
+Prusa family chain (markers → cooling lines → F → M73) follows.
