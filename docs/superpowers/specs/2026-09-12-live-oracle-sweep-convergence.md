@@ -2855,3 +2855,22 @@ the 893-baseline: 0 PASS->DIV and 0 DIV->PASS — the count deltas
 (893->888 PASS, 15->22 ORCA_ERROR) are oracle-side error variance
 (transient timeouts/races), not ares regressions. The z_hop fix
 (a22c88ab) holds; the F-conversion stays on the reciprocal chain.
+
+## F-conversion SOLVED: oracle m_feedrate = 800.000061 (2026-09-19 iii)
+
+The feedf4 probe (anchored at the :3880 site `m_feedrate =
+(*feedrate) * MMMIN_TO_MMSEC`, the ACTUAL G1 dispatch — the earlier
+feedf3 anchor at :4290 was a dead path) dumps the oracle's own
+m_feedrate on RatRag case-0eQ3hI:
+- F7200 -> m_feedrate=120.000007629
+- F48000 -> m_feedrate=800.000061035 (repeatedly)
+CONCLUSION: the oracle's F conversion IS the f32 reciprocal chain —
+identical to the ares reciprocal. The "exact division" hypothesis is
+DISPROVEN. The RatRag layer-1 travel cruise (707.106811 vs ares
+707.106750) diverges DOWNSTREAM of m_feedrate — in the axis-feedrate
+chain arithmetic (curr.feedrate x delta x inv_distance, the exact
+f32/double promotion order or the machine X-axis limit resolution).
+The Anker family's first-layer-time divergences likewise live
+downstream. NEXT: extend the probe to dump the travel block's
+curr.axis_feedrate + cruise and diff the per-block chain against the
+ares (reciprocal) dumps.
