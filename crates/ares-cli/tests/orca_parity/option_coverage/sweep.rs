@@ -93,8 +93,11 @@ fn execute_plan(
                     )?;
                     let root = parity::artifacts::root_from_env().map_err(io_error)?;
                     let file = root.join(format!("{}-{}-application.json", plan.key, case.label));
-                    parity::artifacts::write(&file, &serde_json::to_vec_pretty(&proof).unwrap())
-                        .map_err(io_error)?;
+                    parity::artifacts::overwrite(
+                        &file,
+                        &serde_json::to_vec_pretty(&proof).unwrap(),
+                    )
+                    .map_err(io_error)?;
                 }
                 Ok(exported)
             });
