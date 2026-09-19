@@ -3027,3 +3027,25 @@ follow. Probes: sect2result (ORCA_DUMP_SECT SEC+RP), nsplitresult
 (ORCA_DUMP_NSPLIT NSP/NSN); ares: ARES_DUMP_SPLIT
 (SPLITOUT/ASN/ANORM/RECON), ARES_DUMP_SECT (SEC/RPR),
 ARES_DUMP_OFFSET (O/R).
+
+## Narrow-split chain closed to the fill-surface polygons (2026-09-20 iv)
+
+Progressive oracle/ares alignment for case-twCWO9 layer 1 (probes:
+ORCA_DUMP_SECT/NSPLIT vs ARES_DUMP_SECT/SPLIT):
+- scanline sections: IDENTICAL (multiset match, 180 lines)
+- reconstruction polygon: IDENTICAL (52 points, exact sequence,
+  rotated frame)
+- post-union normal: IDENTICAL 20-gon per layer (ONORM == ANORM
+  byte-for-byte)
+- per-path ClipperOffset: NOT the bug (each P52 path offsets to one
+  piece; the earlier 2-piece readout was two layers' paths)
+⇒ the narrow=4-vs-2 divergence comes from `difference_ex(fill.
+expolygons, normal)`: the ares keeps 60µm bands along the top/bottom
+edges (y ±4122921..±4182525) that the oracle's diff eliminates —
+with identical normals the FILL EXPOLYGONS must differ (the ares fill
+surface extends ~60µm further). NEXT: dump `fill.expolygons` on both
+sides (the SurfaceFill input to split_solid_surface) and trace the
+fill-surface construction diff (perimeters/surfaces pipeline).
+Unit repro kept at
+geometry/tests/clipper/spiked_offset.rs (currently passing — the
+union machinery is proven correct on this input).

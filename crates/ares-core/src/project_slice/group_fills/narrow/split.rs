@@ -173,7 +173,25 @@ fn split_lines(
             }
         }
     }
+    if let Ok(path) = std::env::var("ARES_DUMP_SECT") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            for polygon in &reconstructed {
+                let points = polygon.points().iter().map(|point| format!("({},{})", point.x(), point.y())).collect::<Vec<_>>().join("");
+                let _ = writeln!(file, "RPU {points}");
+            }
+        }
+    }
     reconstructed = rotate_polygons(&reconstructed, -aligning_angle);
+    if let Ok(path) = std::env::var("ARES_DUMP_SECT") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            for polygon in &reconstructed {
+                let points = polygon.points().iter().map(|point| format!("({},{})", point.x(), point.y())).collect::<Vec<_>>().join("");
+                let _ = writeln!(file, "RPU2 {points}");
+            }
+        }
+    }
     if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
         use std::io::Write;
         if let Ok(mut file) = std::fs::OpenOptions::new()

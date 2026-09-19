@@ -11,6 +11,24 @@ const SHORTEST_EDGE_FACTOR: f64 = 0.005;
 impl ClipperOffset {
     pub(crate) fn execute_paths(&mut self, delta: f64) -> Result<Vec<Polygon>, ClipperError> {
         let generated = self.generate_raw(delta);
+        if let Ok(path) = std::env::var("ARES_DUMP_RAWOFF") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                for polygon in &generated {
+                    let points = polygon
+                        .points()
+                        .iter()
+                        .map(|point| format!("({},{})", point.x(), point.y()))
+                        .collect::<Vec<_>>()
+                        .join("");
+                    let _ = writeln!(file, "RAW {} n={}", points, polygon.points().len());
+                }
+            }
+        }
         if delta > 0.0 {
             union_paths(&generated, FillRule::Positive)
         } else {
