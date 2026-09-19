@@ -155,6 +155,24 @@ fn split_lines(
         let sections = filter::apply(sections, maximum_short);
         reconstructed.extend(trace::reconstruct(&sections, spacing));
     }
+    if let Ok(path) = std::env::var("ARES_DUMP_SECT") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for polygon in &reconstructed {
+                let points = polygon
+                    .points()
+                    .iter()
+                    .map(|point| format!("({},{})", point.x(), point.y()))
+                    .collect::<Vec<_>>()
+                    .join("");
+                let _ = writeln!(file, "RPR {points}");
+            }
+        }
+    }
     reconstructed = rotate_polygons(&reconstructed, -aligning_angle);
     if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
         use std::io::Write;
@@ -169,6 +187,25 @@ fn split_lines(
 
     let mut normal = union_safety_offset_ex(&reconstructed)?;
     let mut narrow = difference_ex(&fill.expolygons, &normal)?;
+    if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for expolygon in &normal {
+                let points = expolygon
+                    .contour()
+                    .points()
+                    .iter()
+                    .map(|point| format!("({},{})", point.x(), point.y()))
+                    .collect::<Vec<_>>()
+                    .join("");
+                let _ = writeln!(file, "ANORM {points}");
+            }
+        }
+    }
     if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
         use std::io::Write;
         if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -255,12 +292,23 @@ fn rotate_polygons(polygons: &[Polygon], angle: f64) -> Vec<Polygon> {
                         let x = point.x() as f64;
                         let y = point.y() as f64;
                         Point::new(
-                            (cosine * x - sine * y).round() as i64,
-                            (cosine * y + sine * x).round() as i64,
+                            fast_round_up(cosine * x - sine * y),
+                            fast_round_up(cosine * y + sine * x),
                         )
                     })
                     .collect(),
             )
         })
         .collect()
+}
+
+/// `libslic3r.h:413-420`: `fast_round_up` = floor(a + 0.5) with the
+/// 0.49999999999999994 Java-round special case — round-half-up, not Rust's
+/// round-half-away-from-zero (they differ on negative halves).
+fn fast_round_up(value: f64) -> i64 {
+    if value == 0.499_999_999_999_999_94 {
+        0
+    } else {
+        (value + 0.5).floor() as i64
+    }
 }
