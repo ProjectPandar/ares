@@ -89,3 +89,16 @@ The 24 FAIL decompose:
 The 319 legacy-unverified domains need the width-domain
 application-proof infrastructure extended to every option family —
 the next structural milestone for full option coverage.
+
+## print_flow_ratio min: oracle omits per-extruder [g]/[cost] (2026-09-19 fff)
+
+The oracle's plate_1.gcode for print_flow_ratio/min (density 1.24,
+22.42mm, 0.05cm3, total 0.07g) skips the per-extruder
+`; filament used [g]` and `; filament cost` lines while KEEPING the
+totals — despite update_print_stats_and_format_filament_stats
+(GCode.cpp:2336-2346) appending [g] whenever filament_weight > 0 and
+the total (0.07 > 0) proving the weight accumulated. The exact oracle
+gate (extruder filament_density state at the CLI export path) needs a
+probe at the m_writer.extruders() site; ares currently emits both
+lines (finish.rs join_sparse path) and diverges. NEXT: probe the
+oracle's extruder density at do_export to find the zero source.
