@@ -64,3 +64,28 @@ dispositioned:
 
 Final state: 7117 passed / 1 failed (ksr semantic estimator family) /
 smoke excluded (live-oracle env).
+
+## Option sweep fresh state (2026-09-19)
+
+The option-coverage infrastructure now writes fresh summaries (overwrite
+semantics, cab06230/27a98773) and the width-domain application fixtures
+match the oracle export (percent 3-decimal render, mm 5-decimal,
+thick_internal_bridges=true default expectation). Fresh sweep:
+1/650 PASS, 24 FAIL, 625 INCOMPLETE (319 legacy-unverified by design,
+302 not-all-compared).
+
+The 24 FAIL decompose:
+- ~10 oracle-process failures on validation-sentinel cases (percent
+  zero / max-width extremes crash the oracle CLI, exit 156) — those
+  cases should become non-executed probes.
+- ~8 M73 P10 R7 placement differences (the estimator timing family,
+  same root as the printer sweep's 45-printer M73 class).
+- hilbertcurve/sparse_infill/top_surface pattern byte diffs (the
+  geometry/E-word families).
+- gcode_comments=true, nozzle_volume_type High Flow flush_multiplier,
+  print_flow_ratio trailer, raft_layers max_z_height header (each a
+  small distinct emission divergence).
+
+The 319 legacy-unverified domains need the width-domain
+application-proof infrastructure extended to every option family —
+the next structural milestone for full option coverage.
