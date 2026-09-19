@@ -45,6 +45,20 @@ pub(super) fn write(path: &Path, bytes: &[u8]) -> Result<(), String> {
         .map_err(|e| format!("{path:?}: {e}"))
 }
 
+/// Summary outputs are per-run documents: unlike case artifacts they must
+/// replace any previous run's file instead of failing on `create_new`.
+pub(super) fn overwrite(path: &Path, bytes: &[u8]) -> Result<(), String> {
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(path)
+        .map_err(|e| format!("{path:?}: {e}"))?;
+    file.write_all(bytes)
+        .and_then(|()| file.sync_all())
+        .map_err(|e| format!("{path:?}: {e}"))
+}
+
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }

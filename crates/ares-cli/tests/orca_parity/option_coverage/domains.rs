@@ -53,7 +53,7 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let mut width_domain = None;
     let (values, omission) = if matches!(key.as_str(), "line_width" | "bridge_line_width") {
         let raw = raw_numeric_bounds(&block).expect("width schema must have explicit raw bounds");
-        let (domain, values) = widths::generate(&key, entry, raw, false, false);
+        let (domain, values) = widths::generate(&key, entry, raw, false, true);
         width_domain = Some(domain);
         (values, None)
     } else if matches!(option_type.as_str(), "coBool" | "coBools") {

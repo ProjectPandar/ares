@@ -185,12 +185,13 @@ fn write_summary(outcomes: &[OptionOutcome]) {
         ));
     }
     let root = parity::artifacts::root_from_env().unwrap();
-    parity::artifacts::write(&root.join("option-coverage-summary.md"), output.as_bytes()).unwrap();
+    parity::artifacts::overwrite(&root.join("option-coverage-summary.md"), output.as_bytes())
+        .unwrap();
     let plans = domains::load(&runner::repo_root());
     let widths = plans.iter().filter_map(|plan| plan.width_domain.as_ref().map(|domain| {
         serde_json::json!({"key": plan.key, "domain": domain.metadata, "nonexecuted_probes": domain.probes})
     })).collect::<Vec<_>>();
-    parity::artifacts::write(
+    parity::artifacts::overwrite(
         &root.join("width-domains.json"),
         &serde_json::to_vec_pretty(&widths).unwrap(),
     )

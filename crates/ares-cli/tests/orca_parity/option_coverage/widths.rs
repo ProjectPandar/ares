@@ -69,7 +69,16 @@ pub(in crate::option_coverage) fn generate(
 }
 
 fn render(value: f64, suffix: &str) -> String {
-    let text = format!("{value:.6}");
+    // The 3mf export serialises float-or-percent values with limited
+    // precision — five decimals for millimetres, three for percent — so
+    // requesting more digits cannot round-trip through the export
+    // (`option/line_width/mm-interior` 1.134222 -> 1.13422,
+    // `percent-interior` 366.7208% -> 366.721%).
+    let text = if suffix == "%" {
+        format!("{value:.3}")
+    } else {
+        format!("{value:.5}")
+    };
     format!(
         "{}{suffix}",
         text.trim_end_matches('0').trim_end_matches('.')
