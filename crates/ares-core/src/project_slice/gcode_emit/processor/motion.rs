@@ -251,7 +251,11 @@ impl MotionState {
             return None;
         }
         if let Some(value) = word(code, 'F') {
-            self.feedrate = f64::from(value as f32 * MMMIN_TO_MMSEC);
+            // The oracle's effective F conversion divides exactly (F48000 ->
+            // 800.0); an f32 multiply through the 1/60 reciprocal accumulates
+            // one extra rounding (800.000061) that survives into per-axis
+            // limited cruises (RatRag V-Core4 707.106811 vs 707.106750).
+            self.feedrate = value / 60.0;
         }
         let old = self.position;
         let mut next = old;
