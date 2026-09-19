@@ -3049,3 +3049,18 @@ fill-surface construction diff (perimeters/surfaces pipeline).
 Unit repro kept at
 geometry/tests/clipper/spiked_offset.rs (currently passing — the
 union machinery is proven correct on this input).
+
+## Narrow-split FINAL: adjacency loop merges correctly (2026-09-20 v)
+
+The FINAL narrow set is IDENTICAL (ares FINAL narrow=2 per layer ==
+oracle NSP narrow=2) — the whole split_solid_surface pipeline now
+aligns end-to-end (sections → reconstruction → normal → diff →
+adjacency merge). The earlier "narrow=4" reading was the PRE-adjacency
+diff (SPLITOUT), which upstream also has before merging. The extra
+gcode loop therefore does NOT come from the narrow classification:
+it comes from the CONCENTRIC-INTERNAL fill of the 2 corner triangles
+(ares emits 5 width-0.477236 variable-width loops across the print vs
+the oracle's 3; VW_EMIT 27 vs 25). NEXT: align the
+FillConcentricInternal variable-width emission for the corner
+triangles (fill_entities/concentric.rs vs FillConcentricInternal.cpp:
+10-101) — likely a per-triangle extra loop on 1-2 layers.
