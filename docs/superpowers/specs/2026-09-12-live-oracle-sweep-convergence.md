@@ -2946,3 +2946,22 @@ The RatRag 6 remain on the single first-layer-time trailer line
 (0.536911 vs 0.536947 — a residual estimator ulp, not the axis
 chain). The remaining 81-divergent mass is the M73 timing /
 E-word / slowdown families the ledger already classifies.
+
+## F64 axis_feedrate landed (2026-09-20 i — 4d3166f2)
+
+The State's AxisCoords is DOUBLE (GCodeProcessor.hpp:392):
+`curr.axis_feedrate[a] = curr.feedrate * delta_pos[a] * inv_distance`
+stores the product UNROUNDED; the first f32 rounding is the factor's
+std::min<float>(factor, max/abs_axis) conversion (:4045). The ares
+planner rounded the product to f32 one step early — the remaining
+1-ulp knife in every axis-limited cruise. Algebra (block 3, RatRag
+travel): double product 565.685472783 (matches the probe printout —
+NOT on the f32 grid), f32(500/565.685472783)=0.883883417,
+f32(800.000061×0.883883417)=707.106811 = the oracle cruise exactly.
+planner mod: axis_feedrate/abs_axis_feedrate as [f64;4], factor
+conversion at the min only, e-jerk store f32 at axis_jerk call.
+VERIFIED: RatRag byte-exact vs 3/6 fresh oracle runs (races), H2D 0,
+ares-core 6992/6992, ksr 1/1. Serial budget-6 sweep:
+899 PASS / 72 DIVERGENT / 20 ORCA_ERROR / 10 VENDOR — 11 DIVERGENT→PASS
+(4 RatRig V-Core4, 2 K2 Plus, 2 Artisan, ER20, M1, Phoenix Pro),
+0 regressions.
