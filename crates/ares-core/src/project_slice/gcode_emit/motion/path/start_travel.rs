@@ -277,7 +277,37 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                     .as_bytes(),
                 );
                 state.current_feedrate = feedrate;
-                travel_emit::xy_without_feed(output, travel_x, travel_y);
+                if never_positioned {
+                    // Genuinely unclear position (the start gcode's first
+                    // travel): upstream's unclear-position branch emits XY
+                    // then the separate `_travel_to_z` re-statement
+                    // (`GCodeWriter.cpp:768-777`).
+                    travel_emit::xy_without_feed(output, travel_x, travel_y);
+                    output.extend_from_slice(
+                        format!(
+                            "G1 Z{} F{}\n",
+                            format_z(state.layer_z + state.options.z_hop),
+                            format_axis(travel::lift_z_feedrate(state))
+                        )
+                        .as_bytes(),
+                    );
+                } else {
+                    // Clear position: upstream `travel_to_xyz` NormalLift
+                    // emits the plain lift (`slop_move`) then ONE
+                    // combined `G1 X{} Y{} Z{}` move (`xy_z_move`,
+                    // `GCodeWriter.cpp:748-768`); the redundant F drops
+                    // in the cooling rewrite like any unchanged feedrate
+                    // word.
+                    travel_emit::xyz_with_comment(
+                        output,
+                        travel_x,
+                        travel_y,
+                        state.layer_z + state.options.z_hop,
+                        state.travel_feedrate,
+                        first_travel_comment,
+                    );
+                    state.current_feedrate = state.travel_feedrate;
+                }
             } else {
                 travel_emit::xy_with_comment(
                     output,
@@ -286,15 +316,15 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                     state.travel_feedrate,
                     first_travel_comment,
                 );
+                output.extend_from_slice(
+                    format!(
+                        "G1 Z{} F{}\n",
+                        format_z(state.layer_z + state.options.z_hop),
+                        format_axis(travel::lift_z_feedrate(state))
+                    )
+                    .as_bytes(),
+                );
             }
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}\n",
-                    format_z(state.layer_z + state.options.z_hop),
-                    format_axis(travel::lift_z_feedrate(state))
-                )
-                .as_bytes(),
-            );
             state.lifted = true;
             state.lifted_amount = state.options.z_hop;
         } else if layer_change_travel {

@@ -2793,3 +2793,21 @@ upstream order with f32 semantics (the 4387 speed-ulp layer):
 VERIFICATION: planner f32-exact compare 4387 -> 2362 mismatched blocks
 (residual = sub-ulp entry/exit on ~10% of blocks); H2D full-text diff
 vs FRESH oracle = 0; ares-core 6992/6992; ksr golden 1/1.
+
+## z_hop travel combined-XYZ emission fix (2026-09-18 aaa)
+
+The RatRag V-Core4 0.8 family (6 printers) regression root-caused: the
+layer-start first travel with a Normal z_hop lift split the move into
+`G1 X{} Y{}` + a separate `G1 Z{hop}`, while upstream `travel_to_xyz`
+(GCodeWriter.cpp:748-768) emits the plain lift (`slop_move`) then ONE
+combined `G1 X{} Y{} Z{}` move (`xy_z_move`) whenever the position is
+clear; only the genuinely-unclear first travel (start gcode,
+`never_positioned`) takes the split branch (XY then `_travel_to_z`,
+:768-777). start_travel.rs now gates the combined emission on
+`never_positioned`, restoring the split for the genuine first travel.
+
+VERIFICATION (RatRag case-0eQ3hI, fresh 6-run oracle): structural diff
+277 -> 4 lines (3/6 runs; the rest are oracle M73 races). Remaining 4
+lines = the `; estimated first layer printing time` estimator value
+(0.536911 vs 0.536947 — 36µs first-layer prepare-time ulps, the junction
+layer). ares-core 6992/6992; ksr golden 1/1.
