@@ -7,7 +7,8 @@ pub(super) fn append_header(
     traversal: &PreparedPostClassicTraversal,
 ) {
     let (year, month, day, hour, minute, second) = metadata.timestamp();
-    let layers = plate_layer_count(traversal);
+    let plate_zs = plate_layer_zs(traversal);
+    let layers = plate_zs.len();
     let label_id = traversal
         .project
         .objects()
@@ -34,14 +35,9 @@ pub(super) fn append_header(
             .filament_diameter
             .0,
     );
-    let max_z = traversal
-        .objects
-        .first()
-        .into_iter()
-        .flat_map(|object| object.records.iter())
-        .filter_map(|record| record.as_ref())
-        .map(|record| record.layer_height)
-        .sum::<f64>();
+    // `GCode.cpp:2612-2618`: the max print z over every object's last
+    // layer (raft layers included through the shifted object z chain).
+    let max_z = plate_zs.last().copied().unwrap_or(0.0);
     let filament_count = traversal.resolved.usage.supported_used_filaments.len();
     output.extend_from_slice(b"; HEADER_BLOCK_START\n");
     output.extend_from_slice(
@@ -71,7 +67,7 @@ pub(super) fn append_header(
 /// `GCode.cpp:2513-2527` (default print sequence): the plate layer count
 /// merges every print object's layer print_z values into one sorted unique
 /// set, rather than summing per-object layer counts.
-pub(super) fn plate_layer_count(traversal: &PreparedPostClassicTraversal) -> usize {
+pub(super) fn plate_layer_zs(traversal: &PreparedPostClassicTraversal) -> Vec<f64> {
     let mut zs = Vec::new();
     for object in &traversal.objects {
         let (post_region, _) = object
@@ -113,15 +109,19 @@ pub(super) fn plate_layer_count(traversal: &PreparedPostClassicTraversal) -> usi
         zs.extend(raft_zs);
     }
     zs.sort_by(f64::total_cmp);
-    let mut count = 0;
+    let mut unique = Vec::new();
     let mut previous: Option<f64> = None;
     for z in zs {
         if previous.is_none_or(|previous| (z - previous).abs() >= EPSILON) {
-            count += 1;
+            unique.push(z);
             previous = Some(z);
         }
     }
-    count
+    unique
+}
+
+pub(super) fn plate_layer_count(traversal: &PreparedPostClassicTraversal) -> usize {
+    plate_layer_zs(traversal).len()
 }
 
 /// `libslic3r` `EPSILON` used by `GCode.cpp:2523` to merge numerically
