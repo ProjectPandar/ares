@@ -2893,3 +2893,35 @@ NEXT: a bit-exact Rust/python f32 emulation of the block chain
 (feedrate x delta x inv, factor, cruise) seeded with the oracle's own
 dump values; diff each intermediate against the ares (reciprocal)
 planner dumps; the first differing intermediate is the fix site.
+
+## ESTIMATOR ROOT CAUSE: m_origin lattice residue in delta_pos (2026-09-19 kkk)
+
+The feedf6 chain probe (at the cruise assignment, :4049) on RatRag
+block 3 — the oracle's OWN values:
+- prefeed=800.000061035 dist=215.233398438 inv=0.004646119
+- dx=152.192993164  <<< NOT 152.193!
+- afx=565.685472783 factor=0.883883417 cruise=707.106811523
+
+dx = 152.192993164 = m_origin[X] + 152.193 where m_origin ~ -6.8e-6 —
+the ORIGIN LATTICE RESIDUE from the object instance placement (the
+int-lattice remainder of the object offset). The oracle's
+`extract_absolute_position_on_axis` adds `m_origin[axis]` to every
+absolute word (GCodeProcessor.cpp:3869), reconstructing the
+object-frame coordinate; the ares estimator tracks the parsed text
+value (152.193) without the origin — the delta differs by the origin
+residue, the axis feedrate lands on a different f32, the cruise
+differs by 1 ulp (707.106811 vs 707.106750), and the whole
+first-layer trailer family (M73 percent/minutes, estimated times)
+follows.
+
+THIS ONE ROOT explains: the RatRag 6 (cruise knife), the Anker
+family first-layer-time divergences, and likely a large share of the
+45-printer M73 class. NEXT: port m_origin (the object-origin offset
+added to absolute positions) into the ares estimator's position
+tracking; the origin comes from the gcode writer's object placement
+(int lattice).
+
+Probe chain verification: f32(800.000061035 x 152.192993164 x
+0.004646119) = 565.685472783 -> f32(500/that) = 0.883883417 ->
+f32(800.000061035 x 0.883883417) = 707.106811 — reproduces the
+oracle bit-exactly with the origin-carrying dx.
