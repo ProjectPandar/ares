@@ -2846,3 +2846,12 @@ others (Anker family first-layer prepare-time trailers diverge).
   byte-match the same artifacts) — parallel sweeps remain unreliable
   for verdicts; serial --test-threads=1 is authoritative (as the ledger
   already documented).
+
+## Post-revert serial baseline (2026-09-19 eee)
+
+Serial authoritative sweep on the reverted (reciprocal) code: 888 PASS /
+81 DIVERGENT / 22 ORCA_ERROR / 10 VENDOR_INCOMPLETE. Flip analysis vs
+the 893-baseline: 0 PASS->DIV and 0 DIV->PASS — the count deltas
+(893->888 PASS, 15->22 ORCA_ERROR) are oracle-side error variance
+(transient timeouts/races), not ares regressions. The z_hop fix
+(a22c88ab) holds; the F-conversion stays on the reciprocal chain.
