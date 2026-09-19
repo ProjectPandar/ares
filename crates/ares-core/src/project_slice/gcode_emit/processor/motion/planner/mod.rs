@@ -15,14 +15,14 @@ struct PlannedBlock {
     nominal_length: bool,
     recalculate: bool,
     direction: [f32; 4],
-    axis_feedrate: [f32; 4],
+    axis_feedrate: [f64; 4],
 }
 
 struct JunctionInput {
     direction: [f32; 4],
     jerk: [f32; 4],
     cruise: f32,
-    axis_feedrate: [f32; 4],
+    axis_feedrate: [f64; 4],
     safe: f32,
 }
 
@@ -269,13 +269,13 @@ fn prepare(
     // word reads as 0).
     let inv_distance = 1.0 / distance;
     let mut axis_feedrate = [
-        (f64::from(feedrate) * delta[0] * f64::from(inv_distance)) as f32,
-        (f64::from(feedrate) * delta[1] * f64::from(inv_distance)) as f32,
-        (f64::from(feedrate) * delta[2] * f64::from(inv_distance)) as f32,
-        (f64::from(feedrate) * delta[3] * f64::from(inv_distance)) as f32,
+        f64::from(feedrate) * delta[0] * f64::from(inv_distance),
+        f64::from(feedrate) * delta[1] * f64::from(inv_distance),
+        f64::from(feedrate) * delta[2] * f64::from(inv_distance),
+        f64::from(feedrate) * delta[3] * f64::from(inv_distance),
     ];
-    axis_feedrate[3] *= block.extrude_factor as f32;
-    let mut abs_axis_feedrate = axis_feedrate.map(f32::abs);
+    axis_feedrate[3] *= f64::from(block.extrude_factor as f32);
+    let mut abs_axis_feedrate = axis_feedrate.map(f64::abs);
     // `min_feedrate_factor` and the axis-limited cruise
     // (`GCodeProcessor.cpp:4043-4053`).
     let mut factor = 1.0_f32;
@@ -283,7 +283,7 @@ fn prepare(
         if abs_axis_feedrate[axis] != 0.0 {
             let max = block.max_feedrate[axis] as f32;
             if max != 0.0 {
-                factor = factor.min(max / abs_axis_feedrate[axis]);
+                factor = factor.min((f64::from(max) / abs_axis_feedrate[axis]) as f32);
             }
         }
     }
@@ -291,8 +291,8 @@ fn prepare(
     let cruise = feedrate;
     if factor < 1.0 {
         for axis in 0..4 {
-            axis_feedrate[axis] *= factor;
-            abs_axis_feedrate[axis] *= factor;
+            axis_feedrate[axis] *= f64::from(factor);
+            abs_axis_feedrate[axis] *= f64::from(factor);
         }
     }
     // Acceleration axis limits (`GCodeProcessor.cpp:4065-4071`).
@@ -307,7 +307,7 @@ fn prepare(
     // Safe feedrate from the jerk limits (`GCodeProcessor.cpp:4074-4080`).
     let mut safe = cruise;
     for axis in 0..4 {
-        if abs_axis_feedrate[axis] > jerk[axis] {
+        if abs_axis_feedrate[axis] > f64::from(jerk[axis]) {
             safe = safe.min(jerk[axis]);
         }
     }
@@ -411,13 +411,13 @@ fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> f32 {
     let mut e_exit = previous.axis_feedrate[3];
     let mut e_entry = axis_feedrate[3];
     if previous_larger {
-        e_exit *= smaller_factor;
+        e_exit *= f64::from(smaller_factor);
     }
     if limited {
-        e_exit *= factor;
-        e_entry *= factor;
+        e_exit *= f64::from(factor);
+        e_entry *= f64::from(factor);
     }
-    let e_jerk = axis_jerk(e_exit, e_entry);
+    let e_jerk = axis_jerk(e_exit as f32, e_entry as f32);
     if e_jerk > jerk[3] {
         factor *= jerk[3] / e_jerk;
         limited = true;
