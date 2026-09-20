@@ -3604,3 +3604,16 @@ byte-identical vs 7/8 fresh oracle runs (run5 = the known 134-line
 oracle race variant). All 47-line layer-2 parse-order folds and the
 sorted arrays verified bit-identical along the way (PRESORT/SDL
 %.9g dumps).
+
+### Post-fix sweep (fb6ec9fb)
+
+**933 PASS / 41 DIVERGENT / 17 ORCA_ERROR / 10 VENDOR** (was 932/44/15/10).
+- Ender-5 Pro 0.8 → PASS (the standing race resolved by the skirt fix).
+- MyToolChanger 0.4 → PASS (was ORCA_ERROR flake).
+- BLOCKS RF50: the F3157/3162 skirt knife is GONE — only the
+  first-layer-time estimator trailer remains.
+- Elegoo Centauri 2 0.2 flipped PASS→DIVERGENT in this run but
+  matches 3/4 fresh oracle runs (racebatch) — oracle race, not a
+  regression.
+- The +2 ORCA_ERROR (Cubicon xCeler family, Creator 5) are oracle
+  process flakes (`unsuccessful Orca process`), re-runnable.
