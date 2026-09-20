@@ -3199,3 +3199,18 @@ timelapse layer-start z-move/retract ordering (GCode.cpp:5205-5210
 and the change_layer BBL branch), then the X1 family (12 BBL
 divergents) should close together with the M73 anchors that follow
 from the estimator.
+
+## BBL family CLOSED (2026-09-20 xiii — 40260995)
+
+The X1-family chain closed with two fixes: (1) the M976 scan block
+(`GCode.cpp:4780-4790`) and (2) the BBL non-traditional layer-start
+retract firing at EVERY layer boundary (`GCode.cpp:5205-5210` —
+labeled layers never arm the ares pending flag; the upstream
+`retract()` there finds NO stored wipe path so the retraction is a
+plain full-length one, not the wipe distribution). X1 case
+BYTE-IDENTICAL vs 2/6 fresh runs (races).
+SWEEP: 920 PASS / 54 DIVERGENT — 13 DIVERGENT→PASS (the whole BBL
+X1/X1C/X1E family ×12 + K1_CFS race resolved), 1 PASS→DIVERGENT
+(Prusa MK3.5 0.25: an M73-anchor shift at line 124 with a divergent
+inner-wall split — fresh-oracle check pending, likely the
+small-nozzle variant of a known class).
