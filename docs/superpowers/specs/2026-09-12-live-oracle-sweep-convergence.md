@@ -3837,3 +3837,17 @@ fields filled from the runtime gcode view.
 KP3S PRO V2 byte-identical vs o1 (o2-o4 = oracle races); MK3S r7,
 XL 0.4, CORE One L, E3V3+, X-Max 3 0.2 unchanged; ares-core
 6993/6993; ksr 1 passed.
+
+## KP3S 3.0 scoped — fan-split of a long extrusion + F-word travels (2026-09-20 xliii)
+
+KP3S 3.0 0.4 (match=0/4, 13s estimator gap from the structural
+diffs): (1) the oracle keeps `G1 X93.679 Y93.679 E.39176` as ONE
+move while the ares splits it at the layer-1→2 fan transition
+(`G1 X93.679 Y90.453 E0.22001` + `M106 S255` + the remainder) — the
+fan-speed change must land at a MOVE BOUNDARY the ares computes
+differently (the `_SET_FAN_SPEED_CHANGING_LAYER` site); (2) missing
+`G1 F1200`/`F3000` speed lines on some travels (feedrate state
+tracking); (3) a wipe-restate travel target difference
+(`X94.35 Y94.204` vs `X94.55 Y94.55`). NEXT: trace the fan-change
+emission point against `FanMover`/`_SET_FAN_SPEED_CHANGING_LAYER`
+upstream and the wipe-restate target.
