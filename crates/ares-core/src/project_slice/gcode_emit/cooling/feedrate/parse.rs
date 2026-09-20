@@ -151,7 +151,12 @@ fn parse_position(
             b'Z' => position[2] = value,
             b'E' => position[3] = value,
             b'F' => {
-                position[4] = value / 60.0;
+                // `CoolingBuffer.cpp:408-412`: `new_pos[4] = float(atof(...));
+                // ... new_pos[4] /= 60.f;` — the value parses to f32 FIRST,
+                // then the division rounds in f32 (a single-precision
+                // divide; an f64 divide would double-round and shift the
+                // cooling feedrates by 1 ulp — the slowdown knife).
+                position[4] = value / 60.0_f32;
                 if *kind & TYPE_G92 == 0 {
                     *kind |= TYPE_HAS_F;
                 }
