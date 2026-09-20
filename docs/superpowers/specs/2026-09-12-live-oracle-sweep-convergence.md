@@ -3871,3 +3871,18 @@ the oracle defers it past `; stop printing object` to the layer
 boundary. NEXT: audit the FanMover chunk-boundary handling — the
 target-speed change must not fire inside the closing chunk's last
 extrusion (`FanMover.cpp` process order vs the layer-chunk flush).
+
+## FanMover per-layer chunk flush (2026-09-20 xlv)
+
+The mover now processes the layers span one `process_gcode(chunk,
+flush=true)` call per `;LAYER_CHANGE` chunk (matching the upstream
+per-layer tbb pipeline, `GCode.cpp:3749`) instead of one call over
+the whole span. No regressions (MK3S r6/r8, XL, KP3S PRO V2, X-Max
+3, ares-core 6993/6993). The KP3S 3.0 split PERSISTS: its `M106
+S255` sits at the TAIL of layer-1's chunk in the ares's raw stream
+(the mover then moves it back one `fan_speedup_time` into the last
+extrusion) while upstream's lands at the HEAD of layer-2's chunk
+(fresh buffer → immediate). NEXT: move the layer-2 fan application
+across the `;LAYER_CHANGE` boundary — the `_SET_FAN_SPEED_CHANGING_
+LAYER`/cooling fan line must open the NEXT chunk, not close the
+previous one.

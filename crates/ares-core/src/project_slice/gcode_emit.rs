@@ -180,12 +180,24 @@ pub(super) fn emit(
     output.push(b'\n');
     // Upstream applies FanMover ONLY to layer-chunk output (the tbb
     // pipeline after the cooling filter, GCode.cpp:3749), never to the
-    // machine start g-code; a pending buffer is flushed per chunk.
+    // machine start g-code; a pending buffer is flushed per chunk — one
+    // call per layer, split at `;LAYER_CHANGE` (a fan-speedup backward
+    // move must not cross a layer boundary into the previous chunk).
     if let Some(mover) = fan_mover_handle.as_mut() {
         let mut layers = output.split_off(fan_layers_start);
         let tail = layers.split_off(fan_layers_end - fan_layers_start);
         let text = String::from_utf8(layers).expect("generated G-code is UTF-8");
-        let flushed = mover.process_gcode(&text, true);
+        let mut flushed = String::with_capacity(text.len());
+        let mut chunk_start = 0;
+        for (offset, line) in text.match_indices("\n;") {
+            let line_end = offset + 1;
+            if text[line_end..].starts_with(";LAYER_CHANGE") {
+                let chunk = &text[chunk_start..line_end];
+                flushed.push_str(&mover.process_gcode(chunk, true));
+                chunk_start = line_end;
+            }
+        }
+        flushed.push_str(&mover.process_gcode(&text[chunk_start..], true));
         output.extend(flushed.into_bytes());
         output.extend(tail);
     }
