@@ -3777,3 +3777,16 @@ o1 sample was itself a race variant); ares-core 6993/6993.
 948/26/17/10). The raw retract_lift boundary flipped the Prusa XL
 0.4/0.8 (+1 more) to byte-exact. Session total: 933 → 951 (+18
 byte-exact printers across four root-caused fixes).
+
+### Correction (972a1762 → targeted)
+
+The blanket integer-typing of ALL config-block scalars regressed the
+BBL family (start-gcode templates divide coFloat values as floats:
+`scalar_variable_to_expr` types by the option kind — only `coInt`
+becomes TYPE_INT). The X-Max 3 case is specifically
+`max_print_height`: upstream sets it as `ConfigOptionInt`
+(`GCode.cpp:3045`). Fix reverted to: parse scalars as f64 again +
+insert `max_print_height` as `Value::Integer(printable_height as
+i64)` at the placeholder layer. X-Max 3 0.2 byte-identical 4/4; BBL
+H2D 0.4 / P2S 0.4 back to 3/4; XL/CORE One/E3V3+/MK3S(r7) unchanged;
+ares-core 6993/6993.

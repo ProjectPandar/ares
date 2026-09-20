@@ -30,7 +30,6 @@ pub(super) fn base_config(
             "first_layer_temperature",
             "nozzle_temperature_initial_layer",
         ),
-        ("max_print_height", "printable_height"),
         ("print_preset", "print_settings_id"),
         ("filament_preset", "filament_settings_id"),
         ("printer_preset", "printer_settings_id"),
@@ -39,6 +38,20 @@ pub(super) fn base_config(
         if let Some(value) = config.get(source).cloned() {
             config.insert(target, value);
         }
+    }
+    // `max_print_height` is an INT placeholder upstream
+    // (`GCode.cpp:3045`: `ConfigOptionInt(printable_height)`) — its
+    // template arithmetic divides as integer division
+    // (`PlaceholderParser.cpp:496-503`), e.g.
+    // `{max_print_height / 2 + 10}` truncates.
+    if let Some(height) = config
+        .get("printable_height")
+        .and_then(value::Value::as_number)
+    {
+        config.insert(
+            "max_print_height",
+            value::Value::Integer(height as i64),
+        );
     }
     let first_layer_temperatures = value::Value::List(
         traversal
