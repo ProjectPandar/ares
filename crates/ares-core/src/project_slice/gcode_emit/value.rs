@@ -218,6 +218,13 @@ fn parse_scalar(raw: &str, is_bool: bool) -> Value {
     let raw = raw.trim().trim_matches('"');
     if is_bool && matches!(raw, "0" | "1" | "false" | "true") {
         Value::option_bool(matches!(raw, "1" | "true"))
+    } else if let Ok(value) = raw.parse::<i64>() {
+        // Upstream's placeholder engine types integer-looking scalars as
+        // `TYPE_INT` (`PlaceholderParser.cpp:496-503`: `/` between ints is
+        // integer division) — a config value like `printable_height = 315`
+        // must divide as an int or `min/max_print_height` template math
+        // shifts by the fractional remainder.
+        Value::Integer(value)
     } else if let Ok(value) = raw.parse::<f64>() {
         Value::Number(value)
     } else if raw == "true" || raw == "false" {
