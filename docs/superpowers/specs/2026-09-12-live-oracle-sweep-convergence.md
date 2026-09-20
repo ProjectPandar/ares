@@ -3149,3 +3149,25 @@ unclear — EPP dump has no layer marker). NEXT: dump the oracle's
 calculate_speed INPUTS (curr.distance, next.distance, artificial) for
 the layer-2 walls; identify which input crosses 0.045; align the ares
 speed mapping. Then the var=1 marker cascade closes.
+
+## THE PRUSA FAMILY CLOSED: degenerate curl line (2026-09-20 x — 0d0d0c5a)
+
+THE one-line fix that closed the entire 20-printer chain: the ares's
+curl collection iterated `windows(2)` while upstream
+`SupportSpotsGenerator.cpp:166-170` iterates
+`a = i > 0 ? annotated[i-1] : annotated[i]` — the i=0 pair is
+DEGENERATE (p0,p0) and carries the CORNER curvature (π/4 →
+h=0.344696). The missing line starved layer-2's artificial curled
+distances below the first speed-section threshold (0.045), so the
+oracle's speeds 164/167/154 (variable_speed=true → per-segment
+;_EXTRUDE_SET_SPEED markers → per-marker cooling lines → the slowdown
+deficit → F2560 vs F2544 → estimator times → M73 anchors) never fired
+in ares. With the degenerate pair added, the layer-1 curled set is
+byte-identical ([0.344696, 0.225447, 0.222485, 0.222485, 0.213351])
+and case-twCWO9 (MK4S) is BYTE-IDENTICAL vs the majority (5-loop)
+oracle runs. VERIFIED: ares-core 6993/6993, ksr 1/1.
+SWEEP: 911 PASS / 64 DIVERGENT / 16 ORCA_ERROR / 10 VENDOR —
+9 DIVERGENT→PASS (8 Prusa: CORE One ×4, MINIIS, MK3.5, MK4S ×2;
+Kingroon KP3S V1), 1 PASS→DIVERGENT (Creality K1 CFS: F1365-vs-F1367
+slowdown knife at line 312 — needs fresh-oracle verification, likely
+the same class or a race sample).
