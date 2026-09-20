@@ -3181,3 +3181,21 @@ branch (119/123). The ares output IS a genuine oracle outcome; the
 sweep's 6-run budget sampled only the racing branch. Net sweep
 outcome of the degenerate-curl fix: +9 PASS (8 Prusa + KP3S V1), the
 K1_CFS flap is race noise (flips between runs).
+
+## BBL M976 scan block landed (2026-09-20 xii — a75d4f62)
+
+The BBL X1-family scan block (`GCode.cpp:4780-4790`) — missing M976
+S1 P1 + M400 P100 between the layer-change gcode and the M204
+acceleration reset — now emitted (motion::scan_first_layer_block:
+retract only when not already retracted, unretract restores the
+tracked amount + restart_extra at the deretraction feedrate, both
+with the G92-E0 absolute-E handling). The option reads from
+`printer.gcode.scan_first_layer` (it was ALREADY declared there —
+the remaining-section duplicate was a red herring). X1 case diff
+after the fix: only the M73 anchors + the BBL timelapse layer-start
+ordering ([M204][G1 E-.8][G17][G3 Z.8] BEFORE the timelapse skip
+window vs ares's window-first structure) remain. NEXT: the BBL
+timelapse layer-start z-move/retract ordering (GCode.cpp:5205-5210
+and the change_layer BBL branch), then the X1 family (12 BBL
+divergents) should close together with the M73 anchors that follow
+from the estimator.
