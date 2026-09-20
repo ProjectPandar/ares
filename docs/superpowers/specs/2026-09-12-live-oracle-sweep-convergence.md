@@ -3800,3 +3800,21 @@ total: 933 → 953 (+20 byte-exact printers across six root-caused
 fixes: skirt f64 height, move-length f32 sum, first-travel F word,
 raw retract_lift boundary, INT max_print_height, plus the earlier
 cooling-chain work).
+
+## Sermoon V1 scoped — next-loop travel target/routing + role labels (2026-09-20 xli)
+
+The Sermoon V1 0.4 (match=0/4) has three stacked issues:
+1. `; move to first {infill,perimeter} point` label sequence
+   differs — the ares labels some path-start travels "infill" where
+   the oracle says "perimeter" (feature_description at path starts).
+2. After the layer's last inner perimeter the next-loop travel
+   differs: oracle `G1 X91.599 Y91.511 F11700` (0.064mm, flat) vs
+   ares `G1 X91.649 Y91.511 Z.2 F11700` (0.114mm + hop) — the
+   travel TARGET (91.649 vs 91.599, Δ0.05mm) and the hop decision
+   differ at the perimeter-loop boundary (the wipe-before-external
+   fake-path target selection).
+3. Total time 7m13s vs 7m14s follows from (2)'s different blocks.
+NEXT: trace the loop-start travel target for the next outer-wall
+loop (the fake-path pt selection `GCode.cpp:5860-5884` — the
+`current_pos + vec_dist * (2 * dist / vec_norm)` rotation) and the
+perimeter/infill description source.
