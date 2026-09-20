@@ -3241,3 +3241,16 @@ slowdown family (a layer-time estimate off by ~0.1% changes the
 slowdown F, changing every subsequent block time). The per-block
 model is aligned; hunt the layer-time / slowdown factor delta (the
 SPARKX 0.6 F1435-vs-F1441 is the smallest reproducible instance).
+
+## F-knife smallest instance (SPARKX 0.6) pinned (2026-09-20 xvi)
+
+Layer-3 slowdown comparison (ORCA_DUMP_SLOW vs ARES_DUMP_PRECOOLING):
+the adjustable line SETS and LENGTHS are IDENTICAL (0.3385, 38.26,
+33.812, 113.067, 1.186, 1.356) and both totals pre-slowdown agree to
+1e-5 — but the post-slowdown feeds differ: oracle 23.9775 (F1435)
+vs ares 24.0203 (F1441) — a 0.18% stretch difference inside
+slow_down_non_proportional. NEXT: dump the pre-slowdown per-line
+(len, feed, time) table on both sides (the oracle probe prints
+POST-slowdown; extend it to print the pre-slowdown table + the
+deficit/max_time inputs) and diff the algorithm inputs; the deficit
+or the line-time model differs by ~0.2% at this layer.
