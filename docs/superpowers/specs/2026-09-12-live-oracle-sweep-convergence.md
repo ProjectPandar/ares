@@ -3171,3 +3171,13 @@ SWEEP: 911 PASS / 64 DIVERGENT / 16 ORCA_ERROR / 10 VENDOR —
 Kingroon KP3S V1), 1 PASS→DIVERGENT (Creality K1 CFS: F1365-vs-F1367
 slowdown knife at line 312 — needs fresh-oracle verification, likely
 the same class or a race sample).
+
+## K1_CFS flip = oracle race (2026-09-20 xi)
+
+Fresh-oracle verification of the single PASS→DIVERGENT entry (Creality
+K1_CFS-C, F1365-vs-F1367): 3 fresh oracle runs on the rebuilt case →
+run1 BYTE-IDENTICAL to ares (0 diff), runs 2-3 race to the other
+branch (119/123). The ares output IS a genuine oracle outcome; the
+sweep's 6-run budget sampled only the racing branch. Net sweep
+outcome of the degenerate-curl fix: +9 PASS (8 Prusa + KP3S V1), the
+K1_CFS flap is race noise (flips between runs).
