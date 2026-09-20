@@ -163,6 +163,7 @@ pub(super) fn emit(
         max_layer_z,
         metadata,
         first_layer_bounds,
+        (state.x, state.y, state.layer_z),
     )?;
     machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");

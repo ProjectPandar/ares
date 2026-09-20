@@ -14,9 +14,22 @@ pub(super) fn append(
     max_layer_z: f64,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
+    position: (f64, f64, f64),
 ) -> Result<(), SliceError> {
     let gcode = &traversal.resolved.views.runtime_gcode;
     let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
+    // The `position` placeholder carries the writer's position at print
+    // end (`GCode.cpp:3470-3493` end g-code — the parser's live position,
+    // e.g. SPARKX's `G2 Z{position[2]+3}` spiral lift resolves against the
+    // final layer z, not zero).
+    config.insert(
+        "position",
+        value::Value::List(vec![
+            value::Value::number(position.0),
+            value::Value::number(position.1),
+            value::Value::number(position.2),
+        ]),
+    );
     config.insert("current_extruder", value::Value::number(0.0));
     config.insert(
         "layer_num",
