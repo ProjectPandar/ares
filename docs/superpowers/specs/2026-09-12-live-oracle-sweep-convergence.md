@@ -3425,3 +3425,20 @@ port" — estimate: fit_circle/circle_from_three → int domain
 (emission can keep mm for text), project_to_circle on ints, and the
 DP simplify tolerance already matches. After the port, re-verify:
 KSR first-layer G3 endpoints, bottom_hilbert, and the sweep.
+
+### Port blueprint (Circle.cpp:16-56 read)
+
+Upstream `Circle::try_create_circle(p1,p2,p3)`:
+- collinearity gate: |(y1−y2)(x1−x3) − (y1−y3)(x1−x2)| ≤
+  scale_(scale_(Parallel_area_threshold)) on SCALED ints
+- circumcenter in f64 from the int coordinates (the a/b/c formulas)
+- radius = hypot(f64_center − p1) BEFORE truncation
+- center STORED as Point(center_x, center_y) — double→coord_t
+  TRUNCATION; membership/projection use the truncated int center
+⇒ the ares port: keep the mm emission path, but circle creation,
+arc membership (`is_point_inside`/`are_points_within_slice` polar
+checks), and the clip re-projection must run on scaled ints with
+the same truncate-on-store center. try_create_circle(Points) keeps
+its middle-point strategy ((p[m]+p[m−1])/2 int midpoint, matching
+the existing scaled_midpoint) and the least-deviation fallback
+(get_deviation_sum_squared on ints).
