@@ -333,7 +333,11 @@ impl MotionOptions {
                 .retract_before_wipe
                 .0
                 .first()
-                .map_or(0.0, |value| value.0 / 100.0),
+                // `Extruder::retract_before_wipe` (`Extruder.cpp:171`):
+                // `value * 0.01`, not `value / 100` — the inexact 0.01
+                // shifts the wipe distribution by 1 ulp (a half-way E
+                // rounds differently).
+                .map_or(0.0, |value| value.0 * 0.01),
             role_based_wipe_speed: full.process.region.role_based_wipe_speed.0,
             wipe_speed: absolute(
                 region.map_or(full.process.region.wipe_speed, |value| value.wipe_speed),
