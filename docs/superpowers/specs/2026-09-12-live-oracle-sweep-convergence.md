@@ -3770,3 +3770,10 @@ has no tolerance). Prusa XL 0.4 byte-identical vs 3/4 fresh oracle
 runs (o2 = race variant); MK3S/E3V3+/CORE One L/L HF unchanged
 (MK3S matches fresh runs r6-r8 byte-exactly; the earlier racebatch
 o1 sample was itself a race variant); ares-core 6993/6993.
+
+### Post-fix sweep (8aa260b2)
+
+**951 PASS / 24 DIVERGENT / 16 ORCA_ERROR / 10 VENDOR** (from
+948/26/17/10). The raw retract_lift boundary flipped the Prusa XL
+0.4/0.8 (+1 more) to byte-exact. Session total: 933 → 951 (+18
+byte-exact printers across four root-caused fixes).
