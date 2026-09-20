@@ -3379,3 +3379,28 @@ NEXT: dump the ares's fit inputs (the wall-path points feeding
 simplify_path3) alongside ORCA_DUMP_ARCFIT, map the local frame,
 and align the first diverging fit (the KSR first-layer wall whose
 G3 endpoint lands at X104.960/104.961).
+
+## 1µm arc knife = the seam-clip re-projection domain (2026-09-20 xxiii)
+
+The KSR's first content divergence (G3 X104.96 vs 104.961) sits on
+the wall loop's LAST arc — the one clipped by
+`ExtrusionLoop::clip_end(seam_gap)` (`GCode.cpp:5804`). The clip
+chain: `Polyline3::clip_end` truncates the point list, and when the
+last fitting segment is an arc, `ArcSegment::clip_end(last_point)`
+re-projects the endpoint via `Circle::get_closest_point`
+(`Circle.hpp:24-27`):
+    v = (input − center).cast<double>().normalized()   [scaled ints]
+    end = center + (v × radius).cast<coord_t>()        [TRUNCATING cast,
+                                                        int-space add]
+The ares `retained.rs::project_to_circle` computes
+    end_mm = center_mm + unscale((dx_mm·r_mm/d_mm)/factor as i64)
+— an mm-domain f64 product whose truncation lands a different unit
+than upstream's int-domain offset add. The I/J words match (the arc
+center is identical to 3dp); ONLY the re-projected endpoint differs
+by exactly 1 scaled unit.
+FAITHFUL FIX (deep port): `project_to_circle` must operate in the
+scaled-int domain — truncate (point−center) to ints first, compute
+the unit vector in double from the int delta, truncate the offset,
+and add in int space. For full parity the whole arc chain
+(`try_create_circle` centers are int upstream, f64 mm in ares)
+needs the same treatment — the same conclusion as the xxii entry.
