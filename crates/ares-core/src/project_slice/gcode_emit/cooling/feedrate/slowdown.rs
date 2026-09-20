@@ -5,6 +5,11 @@ use super::{Config, CoolingLine};
 const EPSILON: f64 = 1e-4;
 
 pub(super) fn apply(lines: &mut [CoolingLine], config: Config) -> f32 {
+    // `calculate_layer_slowdown` computes elapsed_time_total() and
+    // maximum_time_after_slowdown() BEFORE sort_lines_by_decreasing_
+    // feedrate() (`CoolingBuffer.cpp:650-657`) — the totals fold over
+    // the PARSE-ORDER array (the f32 rounding is order-sensitive, and
+    // upstream folds pre-sort).
     let total_time = elapsed_time(lines);
     let maximum_time = maximum_time(lines);
     if !config.enabled || lines.is_empty() {
@@ -67,7 +72,7 @@ fn elapsed_time(lines: &[CoolingLine]) -> f32 {
 }
 
 fn maximum_time(lines: &[CoolingLine]) -> f32 {
-    let mut total = 0.0;
+    let mut total = 0.0_f32;
     for line in lines {
         if line.adjustable() {
             if line.maximum_time == f32::MAX {

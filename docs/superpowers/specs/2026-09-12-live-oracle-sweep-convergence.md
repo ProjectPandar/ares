@@ -3535,3 +3535,18 @@ order (not only adjustable) + build the ares equivalent PRE dump
 the sequences; the differing position(s) pinpoint the order gap
 (likely the marker line's aggregation position or the wipe/retract
 line placement relative to the marker).
+
+## Pre-sort fold CONFIRMED + last-ulp dump-precision limit (2026-09-20 xxxi)
+
+Source-verified order (`CoolingBuffer.cpp:650-657`):
+elapsed_time_total() and maximum_time_after_slowdown() run BEFORE
+sort_lines_by_decreasing_feedrate() — the deficit totals fold the
+PARSE-ORDER array (the ares's original order was right; a post-sort
+fold experiment was made and reverted). The ORCA_DUMP_SLOWALL probe
+(full per-line arrays, array order) confirms BOTH engines produce
+IDENTICAL line sets in IDENTICAL sorted order with times equal at
+6 decimals. The remaining 1-ulp total delta can only be resolved
+with %.9f dumps (6dp loses the distinguishing ulps) — the fold of
+6dp-rounded values re-quantizes the sum. NEXT (precise): re-dump
+with %.9g and diff digit-exact; alternatively instrument the f32
+fold on both sides at the accumulate site.
