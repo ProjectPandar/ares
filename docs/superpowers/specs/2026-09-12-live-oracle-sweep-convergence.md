@@ -3222,3 +3222,22 @@ Fresh-oracle verification: 4/6 fresh runs BYTE-IDENTICAL to ares
 race noise; the ares output is a genuine oracle outcome. Effective
 state after the BBL/M976 + layer-start-retract fixes:
 921-equivalent PASS / ~53 DIVERGENT with race absorption.
+
+## M73-anchor class root: total-time delta, not per-block times (2026-09-20 xv)
+
+Fresh decisive probe (ORCA_DUMP_TB — tbresult, anchored at the REAL
+calculate_time block loop `:462`): the Volumic EXO42 oracle blocks
+id=105-112 have cruise 60.666668 / time 0.126329690 — **IDENTICAL to
+ares** (the ares dump shows the same). The earlier ORCA_DUMP_BLOCKS
+orcablocksresult dump's 60.4333/0.126817 rows for the same ids are an
+ARTIFACT of the older built probe variant (its 8-field format anchors
+elsewhere — likely the second machine/stealth loop or an older site;
+do NOT use orcablocksresult for cruise alignment; tbresult is
+authoritative).
+⇒ The M73 one-line anchor shifts in this class come from small
+TOTAL-time deltas (±1-2ms over ~1900s) shifting the percent/remaining
+threshold crossings by one block — the same knife as the F1435/F1441
+slowdown family (a layer-time estimate off by ~0.1% changes the
+slowdown F, changing every subsequent block time). The per-block
+model is aligned; hunt the layer-time / slowdown factor delta (the
+SPARKX 0.6 F1435-vs-F1441 is the smallest reproducible instance).
