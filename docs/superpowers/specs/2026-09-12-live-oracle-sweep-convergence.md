@@ -3790,3 +3790,13 @@ insert `max_print_height` as `Value::Integer(printable_height as
 i64)` at the placeholder layer. X-Max 3 0.2 byte-identical 4/4; BBL
 H2D 0.4 / P2S 0.4 back to 3/4; XL/CORE One/E3V3+/MK3S(r7) unchanged;
 ares-core 6993/6993.
+
+### Post-fix sweep (8938c32d)
+
+**953 PASS / 20 DIVERGENT / 18 ORCA_ERROR / 10 VENDOR** (from
+951/24/16/10). The targeted `max_print_height` INT placeholder
+flipped the Qidi X-Max 3 family without the BBL regression. Session
+total: 933 → 953 (+20 byte-exact printers across six root-caused
+fixes: skirt f64 height, move-length f32 sum, first-travel F word,
+raw retract_lift boundary, INT max_print_height, plus the earlier
+cooling-chain work).
