@@ -3859,3 +3859,15 @@ upstream and the wipe-restate target.
 The seam_slope smoke failure in this sweep run passes in isolation
 (oracle race). Session total: 933 → 956 (+23 byte-exact printers
 across seven root-caused fixes).
+
+## Option-coverage health check (2026-09-20 xliv)
+
+`option_coverage` suite: 13/13 passed (plan completeness, seeded
+range repeatability, upstream-rejection isolation). The KP3S 3.0 /
+SV07 Plus residuals share the fan family: `fan_speedup_time = 1`
+triggers the FanMover ramp — the ares lands the `M106 S255` change
+MID-MOVE (splitting the layer's last extrusion at Y90.453) while
+the oracle defers it past `; stop printing object` to the layer
+boundary. NEXT: audit the FanMover chunk-boundary handling — the
+target-speed change must not fire inside the closing chunk's last
+extrusion (`FanMover.cpp` process order vs the layer-chunk flush).
