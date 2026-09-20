@@ -3688,3 +3688,15 @@ junction exit/entry vectors also round per-component in f32
 Ender-3 V3 Plus byte-identical vs 3/4 fresh oracle runs (o2 = the
 104-line race variant); MK3S still byte-identical (no regression);
 ares-core 6993/6993.
+
+### Post-fix sweep (53ac5108)
+
+**942 PASS / 31 DIVERGENT / 18 ORCA_ERROR / 10 VENDOR** (from
+933/41/17/10). The f32 move-length fix flipped 10 printers to
+byte-exact: BLOCKS RF50, Ender-3 V3 Plus, Elegoo Centauri 2, Peopoly
+Magneto X, RatRig V-Core 4 HYBRID 300/400, V-Core 4 IDEX 400 (+COPY),
+Volumic VS30MK3/VS30SC2. Four PASS→ORCA_ERROR flips are oracle
+process flakes (Creator 5 family, MyToolChanger 0.4). Remaining
+DIVERGENT families: Prusa CORE One (M73 percent value — total-time
+estimate differs ~1%), Prusa XL, Qidi X-Max 3 (F3843/3824 knife +
+M73 anchors), first-layer-time trailers, singletons.
