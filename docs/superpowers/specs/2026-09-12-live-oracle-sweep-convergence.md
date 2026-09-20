@@ -3490,3 +3490,9 @@ Remaining 44 profile (from the racebatch analysis): ~24 M73-anchor
 (estimator total-time), 6 first-layer-time trailer, ~10 G1
 E-word/geometry singletons, 2 F-knife (Ender-3 V3 Plus F1948,
 MK3S F2930.735), plus the LH Stinger template and PRO V2 G10.
+
+## Ender-5 Pro flip = race (2026-09-20 xxviii)
+
+Fresh-oracle verification: 3/4 runs byte-identical to ares. The
+sweep's Ender-5 Pro PASS→DIVERGENT is oracle race noise. Effective
+state: 933-equivalent PASS / 44-with-race DIVERGENT.
