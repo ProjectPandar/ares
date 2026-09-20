@@ -3578,3 +3578,29 @@ the PRE-SORT aggregated arrays on both sides (upstream: extend the
 ALL probe to also dump before sort_lines_by_decreasing_feedrate at
 :656; ares: dump the lines array before the sort in apply()) and
 diff the interleavings position-by-position.
+
+## MK3S F2930.735/736 CLOSED — skirt flow height f64-difference (2026-09-20 xxxiii)
+
+Root cause chain (proved with ORCA_DUMP_SETSPEED / ORCA_DUMP_CAP probes
+plus ares SKIRTSPD instrumentation): the wipe's `G1 F2930.735` is the
+SKIRT path's volumetric-capped speed (`GCode.cpp:6615-6617`
+`min(speed, 12/_mm3_per_mm)`; filament_max_volumetric_speed=12,
+filament_flow_ratio=0.98, skirt w=0.9, layer_height=0.3). Upstream
+rescales the skirt flow per layer with the RAW f64 print_z difference
+cast to f32 once at the end (`GCode.cpp:4417` —
+`with_height(float(skirt_done.back() - skirt_done[size-2]))`):
+layer 3 = float(0.89999999999999997 - 0.59999999999999998) =
+0.300000012 → mm3 0.250685841 → speed 48.845590632 → F2930.735.
+The ares pre-cast each z to f32 (`layers.rs:274`): f32(0.9)-f32(0.6) =
+0.299999952 (one f32 ulp low) → mm3 0.250685781 → F2930.736, which
+then shifted the cooling-buffer wipe-line time (0.0114646973 vs
+0.0114647001) and the whole parse-order fold by 1 ulp — the
+F2930.735/736 knife plus its 3 trailing M73 anchor lines.
+
+Fix: `skirt_height = f64::from((layer_z - previous_layer_z) as f32)`
+(layers.rs) — difference the raw f64 print_z pair, single final f32
+cast; the ;HEIGHT header keeps the separate f32-diff quirk. MK3S now
+byte-identical vs 7/8 fresh oracle runs (run5 = the known 134-line
+oracle race variant). All 47-line layer-2 parse-order folds and the
+sorted arrays verified bit-identical along the way (PRESORT/SDL
+%.9g dumps).

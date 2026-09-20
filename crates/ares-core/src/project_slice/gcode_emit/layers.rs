@@ -272,6 +272,12 @@ pub(super) fn append(
         // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
         // f64 print_z for template comparisons.
         let layer_height = f64::from(layer_z as f32) - f64::from(previous_layer_z as f32);
+        // The skirt flow height differences the RAW f64 print_z pair and
+        // casts to f32 only at the end (`GCode.cpp:4417` —
+        // `with_height(float(skirt_done.back() - skirt_done[size-2]))`);
+        // pre-casting each z to f32 shifts the layer-3 skirt `mm3_per_mm`
+        // one f32 ulp and flips the wipe F2930.735/736 boundary.
+        let skirt_height = f64::from((layer_z - previous_layer_z) as f32);
         let boundary = boundary::append(
             output,
             state,
@@ -345,7 +351,7 @@ pub(super) fn append(
                 output,
                 skirt::SkirtLayer {
                     index: skirt_plan_index,
-                    height_mm: f64::from(layer_height),
+                    height_mm: skirt_height,
                 },
                 motion_geometry,
                 state,
