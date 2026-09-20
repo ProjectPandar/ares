@@ -3818,3 +3818,22 @@ NEXT: trace the loop-start travel target for the next outer-wall
 loop (the fake-path pt selection `GCode.cpp:5860-5884` — the
 `current_pos + vec_dist * (2 * dist / vec_norm)` rotation) and the
 perimeter/infill description source.
+
+## Kingroon KP3S PRO V2 CLOSED — firmware retraction (2026-09-20 xlii)
+
+`use_firmware_retraction` printers emit `G10 ; retract` / `G11 ;
+unretract` (or `G22`/`G23` for Machinekit) instead of E moves
+(`GCodeWriter.cpp:1022-1044` unretract `:1066-1070`): implemented in
+the layer-change retract (motion.rs), the travel retract paths
+(travel.rs plain/wipe), and the unretract (restate.rs) — the fake
+length 1 keeps the retracted tracking so the zero-dE guards still
+fire. The ESTIMATOR also emulates them (`GCodeProcessor.cpp:4873-
+4893`): G10/G11 expand to fake G1s with E = ±retraction length (+
+restart extra on G11) and the retraction/deretraction feedrates, and
+the fake G1 occupies NO g1 line id (upstream `--m_g1_line_id`). The
+retraction values reach the estimator through new ProcessorLimits
+fields filled from the runtime gcode view.
+
+KP3S PRO V2 byte-identical vs o1 (o2-o4 = oracle races); MK3S r7,
+XL 0.4, CORE One L, E3V3+, X-Max 3 0.2 unchanged; ares-core
+6993/6993; ksr 1 passed.

@@ -23,6 +23,12 @@ pub(super) struct ProcessorLimits {
     pub(super) max_feedrate: [f64; 4],
     pub(super) max_acceleration: [f64; 4],
     pub(super) jerk: [f64; 4],
+    /// Firmware-retraction emulation inputs (`GCodeProcessor.cpp:4873-
+    /// 4893`: G10/G11 expand to fake G1s with these E/F words).
+    pub(super) retraction_length: f64,
+    pub(super) retract_restart_extra: f64,
+    pub(super) retraction_feedrate: f64,
+    pub(super) deretraction_feedrate: f64,
 }
 
 #[cfg(test)]
@@ -38,6 +44,10 @@ impl Default for ProcessorLimits {
             max_feedrate: [0.0; 4],
             max_acceleration: [0.0; 4],
             jerk: [9.0, 9.0, 3.0, 2.5],
+            retraction_length: 0.0,
+            retract_restart_extra: 0.0,
+            retraction_feedrate: 0.0,
+            deretraction_feedrate: 0.0,
         }
     }
 }

@@ -82,25 +82,41 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         // `Extruder::unretract()` zeroes `m_retracted` after the extrude;
         // `coordinate` only accumulates it for negative deltas.
         state.retracted_amount = 0.0;
-        // `GCodeWriter::unretract` emits the G1 only for a non-zero dE
-        // (`GCodeProcessor`-side is_zero guard, `GCodeWriter.cpp:1063`):
+        // `GCodeWriter::unretract`-side is_zero guard, `GCodeWriter.cpp:1063`):
         // a zero-length retraction (retraction_length=0 with wipe)
         // deretracts silently.
         if unretract.abs() > 0.0 {
-            let comment = state
-                .options
-                .gcode_comments
-                .then_some(" ;  ; unretract")
-                .unwrap_or("");
-            output.extend_from_slice(
-                format!(
-                    "G1 E{} F{}{comment}\n",
-                    format_extrusion(unretract),
-                    format_axis(state.options.deretraction_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = state.options.deretraction_feedrate;
+            if state.options.use_firmware_retraction {
+                // `GCodeWriter::unretract` with `use_firmware_retraction`:
+                // the bare `G11 ; unretract` (or `G23`) plus `reset_e()`
+                // (`GCodeWriter.cpp:1066-1070`).
+                output.extend_from_slice(
+                    if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
+                        b"G23 ; unretract\n"
+                    } else {
+                        b"G11 ; unretract\n"
+                    },
+                );
+                if !state.options.use_relative_e_distances {
+                    output.extend_from_slice(b"G92 E0\n");
+                    state.e_position = 0.0;
+                }
+            } else {
+                let comment = state
+                    .options
+                    .gcode_comments
+                    .then_some(" ;  ; unretract")
+                    .unwrap_or("");
+                output.extend_from_slice(
+                    format!(
+                        "G1 E{} F{}{comment}\n",
+                        format_extrusion(unretract),
+                        format_axis(state.options.deretraction_feedrate)
+                    )
+                    .as_bytes(),
+                );
+                state.current_feedrate = state.options.deretraction_feedrate;
+            }
         }
         state.retracted = false;
         state.lifted = false;

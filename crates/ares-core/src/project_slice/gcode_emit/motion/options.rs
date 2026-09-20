@@ -89,6 +89,9 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) accel_to_decel_enable: bool,
     pub(in crate::project_slice::gcode_emit) accel_to_decel_factor: f64,
     pub(in crate::project_slice::gcode_emit) retraction_length: f64,
+    /// `GCodeWriter::_retract` swaps the E move for `G10`/`G22` when
+    /// `use_firmware_retraction` is set (and `unretract` for `G11`/`G23`).
+    pub(in crate::project_slice::gcode_emit) use_firmware_retraction: bool,
     /// `filament_retract_restart_extra` — added to the retraction length
     /// on de-retract (`Extruder::unretract`: `dE = m_retracted +
     /// m_restart_extra`).

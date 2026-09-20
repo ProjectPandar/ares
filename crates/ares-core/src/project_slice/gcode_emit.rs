@@ -201,11 +201,61 @@ pub(super) fn emit(
             .machine_load_filament_time
             .0,
         used_filament,
-        processor::ProcessorLimits::from_config(
-            &traversal.resolved.views.full.printer.machine,
-            traversal.resolved.views.full.printer.gcode.gcode_flavor,
-            state.tags.is_bbl(),
-        ),
+        processor::ProcessorLimits {
+            retraction_length: traversal
+                .resolved
+                .views
+                .runtime_gcode
+                .retraction_length
+                .0
+                .first()
+                .map_or(0.0, |value| value.0),
+            retract_restart_extra: traversal
+                .resolved
+                .views
+                .runtime_gcode
+                .retract_restart_extra
+                .0
+                .first()
+                .map_or(0.0, |value| value.0),
+            retraction_feedrate: traversal
+                .resolved
+                .views
+                .runtime_gcode
+                .retraction_speed
+                .0
+                .first()
+                .map_or(0.0, |value| value.0)
+                * 60.0,
+            deretraction_feedrate: {
+                let retraction = traversal
+                    .resolved
+                    .views
+                    .runtime_gcode
+                    .retraction_speed
+                    .0
+                    .first()
+                    .map_or(0.0, |value| value.0);
+                let deretraction = traversal
+                    .resolved
+                    .views
+                    .runtime_gcode
+                    .deretraction_speed
+                    .0
+                    .first()
+                    .map_or(0.0, |value| value.0);
+                (if deretraction > 0.0 {
+                    deretraction
+                } else {
+                    retraction
+                }) * 60.0
+            },
+            ..processor::ProcessorLimits::from_config(
+                &traversal.resolved.views.full.printer.machine,
+                traversal.resolved.views.full.printer.gcode.gcode_flavor,
+                state.tags.is_bbl(),
+            )
+        },
     ))
 }
 /// The Z of the last G0/G1 move in the emitted prefix — what the

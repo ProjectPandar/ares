@@ -622,6 +622,10 @@ fn spiral_in_toolchange_context_matches_gt() {
         max_feedrate: [500.0, 500.0, 12.0, 120.0],
         max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
         jerk: [10.0, 10.0, 0.2, 2.5],
+        retraction_length: 0.0,
+        retract_restart_extra: 0.0,
+        retraction_feedrate: 0.0,
+        deretraction_feedrate: 0.0,
     };
     let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
     // GT (correctly-newlined file, v2 oracle): 34.409561s.
@@ -677,6 +681,10 @@ fn wall_ramp_after_travel_matches_gt() {
         max_feedrate: [500.0, 500.0, 12.0, 120.0],
         max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
         jerk: [10.0, 10.0, 0.2, 2.5],
+        retraction_length: 0.0,
+        retract_restart_extra: 0.0,
+        retraction_feedrate: 0.0,
+        deretraction_feedrate: 0.0,
     };
     let estimate = Estimate::from_lines(&lines, 0.0, limits);
     let expected = 20.524_401;
@@ -710,6 +718,10 @@ fn ksr_prefix_total() {
         max_feedrate: [1000.0, 1000.0, 20.0, 30.0],
         max_acceleration: [20000.0, 20000.0, 500.0, 30000.0],
         jerk: [9.0, 9.0, 3.0, 2.5],
+        retraction_length: 0.0,
+        retract_restart_extra: 0.0,
+        retraction_feedrate: 0.0,
+        deretraction_feedrate: 0.0,
     };
     let estimate = Estimate::from_lines(&lines, 29.0, limits);
     panic!("prefix-total {}", estimate.total);
@@ -763,6 +775,10 @@ fn toolchange_ladder_totals() {
             max_feedrate: [500.0, 500.0, 12.0, 120.0],
             max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
             jerk: [10.0, 10.0, 0.2, 2.5],
+            retraction_length: 0.0,
+            retract_restart_extra: 0.0,
+            retraction_feedrate: 0.0,
+            deretraction_feedrate: 0.0,
         };
         let estimate = Estimate::from_lines(&lines, 0.0, gt_defaults);
         totals.push(format!("{name} {}", estimate.total));
@@ -803,6 +819,10 @@ fn marlin_arc_segment_boundary_uses_f32_radius() {
         max_feedrate: [500.0, 500.0, 12.0, 120.0],
         max_acceleration: [10000.0, 10000.0, 500.0, 5000.0],
         jerk: [10.0, 10.0, 0.2, 2.5],
+        retraction_length: 0.0,
+        retract_restart_extra: 0.0,
+        retraction_feedrate: 0.0,
+        deretraction_feedrate: 0.0,
     };
     let estimate = Estimate::from_lines(&lines, 0.0, limits);
     // Pinned to the f32-radius behavior (9 internal segments); the

@@ -18,6 +18,10 @@ impl MotionState {
             max_feedrate: limits.max_feedrate,
             max_acceleration: limits.max_acceleration,
             jerk: limits.jerk,
+            retraction_length: limits.retraction_length,
+            retract_restart_extra: limits.retract_restart_extra,
+            retraction_feedrate: limits.retraction_feedrate,
+            deretraction_feedrate: limits.deretraction_feedrate,
             ..Self::with_acceleration_limits(
                 limits.print_acceleration,
                 limits.retract_acceleration,

@@ -267,6 +267,7 @@ impl MotionOptions {
                 .0
                 .first()
                 .map_or(0.0, |value| value.0),
+            use_firmware_retraction: gcode.use_firmware_retraction.0,
             retract_restart_extra: gcode
                 .retract_restart_extra
                 .0

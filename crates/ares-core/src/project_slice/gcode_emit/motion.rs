@@ -99,6 +99,22 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         travel::defer_layer_change_lift(state);
         return;
     }
+    if state.options.use_firmware_retraction {
+        // `GCodeWriter::_retract` firmware branch (`GCodeWriter.cpp:1022-
+        // 1044`): the fake length 1 emits the bare `G10 ; retract`
+        // (`G22` for Machinekit) with the hardcoded comment.
+        output.extend_from_slice(
+            if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
+                b"G22 ; retract\n"
+            } else {
+                b"G10 ; retract\n"
+            },
+        );
+        state.retracted_amount = 1.0;
+        state.retracted = true;
+        travel::defer_layer_change_lift(state);
+        return;
+    }
     let retract = extrusion::coordinate(state, -(length - state.retracted_amount));
     let comment = state
         .options

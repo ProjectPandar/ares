@@ -26,6 +26,13 @@ impl ProcessorLimits {
         Self {
             print_acceleration: normal(&machine.machine_max_acceleration_extruding),
             retract_acceleration: normal(&machine.machine_max_acceleration_retracting),
+            // The retraction emulation inputs default to zero here; the
+            // caller fills them from the gcode view (firmware-retraction
+            // printers only).
+            retraction_length: 0.0,
+            retract_restart_extra: 0.0,
+            retraction_feedrate: 0.0,
+            deretraction_feedrate: 0.0,
             travel_acceleration: if gcode_flavor.supports_separate_travel_acceleration() {
                 normal(&machine.machine_max_acceleration_travel)
             } else {

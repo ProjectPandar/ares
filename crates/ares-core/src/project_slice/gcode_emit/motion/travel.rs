@@ -123,6 +123,10 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
 }
 
 fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
+    if state.options.use_firmware_retraction {
+        firmware_retract(output, state);
+        return;
+    }
     let remaining = (state.options.retraction_length - state.retracted_amount).max(0.0);
     if remaining <= 0.0 {
         return;
@@ -148,6 +152,24 @@ fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
     state.current_feedrate = state.options.retraction_feedrate;
 }
 
+/// `GCodeWriter::_retract` with `use_firmware_retraction`: the length is
+/// a fake non-zero 1 and the output is the bare `G10 ; retract` (or `G22`
+/// for Machinekit) with a hardcoded comment — no E word, no F word
+/// (`GCodeWriter.cpp:1022-1044`).
+fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
+    let remaining = (1.0 - state.retracted_amount).max(0.0);
+    if remaining <= 0.0 {
+        return;
+    }
+    output.extend_from_slice(if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
+        b"G22 ; retract\n"
+    } else {
+        b"G10 ; retract\n"
+    });
+    state.retracted_amount = 1.0;
+    state.retracted = true;
+}
+
 fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_marker: bool) {
     let WipePath {
         segments,
@@ -165,7 +187,10 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
     let during = (state.options.retraction_feedrate / 60.0 * retraction_distance / wipe_speed)
         .min(remaining);
     let before = state.options.retraction_length - during;
-    if before > f64::EPSILON {
+    if state.options.use_firmware_retraction {
+        firmware_retract(output, state);
+        state.retracted = true;
+    } else if before > f64::EPSILON {
         let retract = extrusion::coordinate(state, -before);
         let comment = state
             .options

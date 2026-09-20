@@ -34,6 +34,12 @@ pub(super) struct MotionState {
     pub(super) e_relative: bool,
     pub(super) wiping: bool,
     pub(super) gcode_flavor: GCodeFlavor,
+    /// Firmware-retraction emulation values for G10/G11
+    /// (`GCodeProcessor.cpp:4873-4893`).
+    pub(super) retraction_length: f64,
+    pub(super) retract_restart_extra: f64,
+    pub(super) retraction_feedrate: f64,
+    pub(super) deretraction_feedrate: f64,
 }
 
 impl Default for MotionState {
@@ -57,6 +63,10 @@ impl Default for MotionState {
             e_relative: false,
             gcode_flavor: GCodeFlavor::MarlinLegacy,
             wiping: false,
+            retraction_length: 0.0,
+            retract_restart_extra: 0.0,
+            retraction_feedrate: 0.0,
+            deretraction_feedrate: 0.0,
         }
     }
 }
@@ -234,6 +244,37 @@ impl MotionState {
             return None;
         }
         let command = code.split_whitespace().next()?;
+        if command == "G10" || command == "G11" {
+            // `GCodeProcessor::process_G10/G11` (`GCodeProcessor.cpp:4873-
+            // 4893`): emulate a G1 with the retraction E delta and the
+            // retraction/deretraction feedrate — the fake G1's line id was
+            // already decremented upstream so the M73 cache alignment is
+            // unchanged.
+            let (e_delta, feedrate) = if command == "G10" {
+                (-self.retraction_length, self.retraction_feedrate)
+            } else {
+                (
+                    self.retraction_length + self.retract_restart_extra,
+                    self.deretraction_feedrate,
+                )
+            };
+            let mut fake = String::from("G1");
+            if !self.e_relative {
+                let absolute = self.e_position + e_delta;
+                fake.push_str(&format!(" E{absolute}"));
+            } else {
+                fake.push_str(&format!(" E{e_delta}"));
+            }
+            fake.push_str(&format!(" F{feedrate}"));
+            return self.motion(&fake).map(|mut block| {
+                block.kind = if command == "G10" {
+                    MotionKind::Regular
+                } else {
+                    MotionKind::Unretract
+                };
+                block
+            });
+        }
         if command == "G28" {
             let has_axis = ['X', 'Y', 'Z'].iter().any(|&axis| code.contains(axis));
             let mut homing = String::from("G1");

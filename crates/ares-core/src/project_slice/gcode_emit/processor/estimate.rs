@@ -132,6 +132,16 @@ impl Estimate {
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
                 }
+                // `GCodeProcessor::process_G10/G11` decrements the fake
+                // G1's line id (`GCodeProcessor.cpp:4873-4893`), so a
+                // firmware retract occupies NO g1 line id — the M73 cache
+                // alignment skips over it.
+                "G10" | "G11" => {
+                    let count = motion_blocks.len();
+                    blocks.extend(motion_blocks);
+                    block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
+                    prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                }
                 "G2" | "G3" => {
                     let count = motion_blocks.len();
                     arc_segment_counts[index] = arc_internal.unwrap_or(0);
