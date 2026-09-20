@@ -3496,3 +3496,17 @@ MK3S F2930.735), plus the LH Stinger template and PRO V2 G10.
 Fresh-oracle verification: 3/4 runs byte-identical to ares. The
 sweep's Ender-5 Pro PASS→DIVERGENT is oracle race noise. Effective
 state: 933-equivalent PASS / 44-with-race DIVERGENT.
+
+## MK3S 0.8 F-knife = upstream content difference (2026-09-20 xxix)
+
+The F2930.735/736 case decomposed: the layer-1 cooling tables
+share max_time EXACTLY (17.650911, 18.351397, 18.338203, 6.901152,
+8.462182 on five layers) but the adjustable LINE SETS differ:
+oracle 55.7274+50.9983+28.832+35.52 (feeds 25.1281/20.0) vs ares
+55.7276+52.9174+1.2775+30.432+37.12 — the wall/infill path LENGTHS
+themselves differ (oracle adjustable total 171.08 vs ares 177.47mm).
+⇒ a geometry/content divergence upstream of the cooling (not a
+slowdown arithmetic knife); belongs with the wall-path family (the
+same class as the KSR 1µm arcs). The M73-anchor + first-layer-time
+families (~30 printers) all reduce to this same content-then-time
+chain per the xxvi profile.
