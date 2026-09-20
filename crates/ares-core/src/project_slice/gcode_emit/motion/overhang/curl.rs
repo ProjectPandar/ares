@@ -102,6 +102,21 @@ impl CurlTracker {
                 width,
                 bottom_height,
             );
+            if let Ok(path) = std::env::var("ARES_DUMP_CURL") {
+                eprintln!(
+                    "ACURL layer={} seg=({:.4},{:.4})-({:.4},{:.4}) dist={:.6} sign={:.1} curv={:.6} bottom={:.6} curled={:.6}",
+                    layer_index,
+                    a.0,
+                    a.1,
+                    b.0,
+                    b.1,
+                    distance,
+                    sign,
+                    0.5 * (curvature[index] + curvature[index + 1]),
+                    bottom_height,
+                    curled
+                );
+            }
             self.current.push(ExternalLine {
                 x0: a.0,
                 y0: a.1,

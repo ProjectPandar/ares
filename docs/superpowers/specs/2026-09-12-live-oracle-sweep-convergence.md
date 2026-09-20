@@ -3129,3 +3129,23 @@ geometry, source) for layer 49 — the ares's previous_layer_boundary
 provider vs upstream prev_layer_boundaries (ExtrusionProcessor.hpp:
 296, filled per object per layer); fix the tree's line set; the
 overlap jitter then reproduces and the marker/F/M73 chain closes.
+
+## Curl artificial distances EXACTLY match; speed mapping remains (2026-09-20 ix)
+
+DECISIVE ALIGNMENT: the ares's layer-2 artificial curled distances are
+BYTE-IDENTICAL to the oracle's derived values (inner wall
+0.041088/0.040548/0.040548/0.038883/0.040280; outer 0.050726/
+0.050059/0.050059/0.048004/0.049828 — matches the oracle OHQ overlap
+deltas exactly). The curled heights match too (0.225447/0.222485/
+0.213351 = oracle layer-1 CL lines). The ares's collection pipeline is
+CORRECT. The remaining delta is the SPEED mapping: with identical
+(dist=−0.45, artificial=0.0411) inputs, the oracle computes 164/167/
+168/154 where the ares computes 170 — the oracle's calculate_speed
+must see an input above the first section threshold (0.045) somewhere
+(the curled_speed path or a different effective distance). Open
+question recorded from EPP probe: the ±4.775 wall's ext dist showed
++0.318 with a 5-line tree in some EPP entries (layer attribution
+unclear — EPP dump has no layer marker). NEXT: dump the oracle's
+calculate_speed INPUTS (curr.distance, next.distance, artificial) for
+the layer-2 walls; identify which input crosses 0.045; align the ares
+speed mapping. Then the var=1 marker cascade closes.
