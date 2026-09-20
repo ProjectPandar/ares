@@ -3617,3 +3617,24 @@ sorted arrays verified bit-identical along the way (PRESORT/SDL
   regression.
 - The +2 ORCA_ERROR (Cubicon xCeler family, Creator 5) are oracle
   process flakes (`unsuccessful Orca process`), re-runnable.
+
+## M73-anchor family scoped (2026-09-20 xxxiv)
+
+The ~24 remaining M73-anchor DIVERGENTs (Ender-3 V3 Plus, MyToolChanger
+0.2, Magneto X, CORE One, ...) share one signature: an `M73 P<n>` fires
+one G1 later in the ares than in the oracle. The anchor mechanics were
+re-verified against source: upstream fires the M73 AFTER appending the
+G1 with the pre-increment counter (`GCodeProcessor.cpp:1455-1460`
+`process_line_move(g1_lines_counter++)`), matching the ares's
+after-line `elapsed_at(index + 1)` placement, and the cache entries
+carry the block-inclusive elapsed (`:574`). G2/G3 lines additionally
+advance by `remaining_internal_g1_lines` (arc-split blocks); the ares's
+`is_progress_motion` covers G0-G3 but not G28 (upstream counts G28 in
+the g1 counter — irrelevant for these mid-print anchors).
+CONCLUSION: the placement LOGIC matches; the one-G1 shift comes from
+the cumulative elapsed crossing the percent boundary one line earlier
+in the oracle — i.e., a time-estimator value difference at the
+crossing G1 (the same class as the MK3S skirt ulp just closed).
+NEXT: for Ender-3 V3 Plus, dump the ares Estimate elapsed table vs the
+oracle g1_times_cache (ORCA_DUMP_G1CACHE probe exists) and diff the
+cumulative times around the M73 P21 crossing at gcode line 893.
