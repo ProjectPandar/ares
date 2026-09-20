@@ -3341,3 +3341,24 @@ calculate_time/simulate_st_synchronize call sites
 which blocks (upstream carries additional_time to the NEXT
 calculate_time pass when no block is available; the ares pins
 block_count at the command).
+
+## KSR drift CORRECTED: content-level 1µm arc geometry (2026-09-20 xxi)
+
+Correction of the xx entry: the 27k ">50ms" per-block deltas are NOT
+delay-landing — windowed sums (50-block) still show the first real
+window at ids 27800-27853 (oracle 1.557s vs ares 1.668s) and 14,685
+10-block windows diverge: REAL time differences across the whole
+tail. The CONTENT diff vs a fresh oracle run pins the true root —
+the ares emits 1µm-different ARC geometry on the first layer:
+  G3 X104.96  vs G3 X104.961   (arc endpoint)
+  G1 X156.233 vs G1 X156.234   (path point)
+  I-3.393     vs I-3.392       (arc center)
+  J-1.229     vs J-1.23        (arc offset)
+  E.03177     vs E.03178
+The arc-fitted prime/purge tower geometry differs by 1 scaled unit
+→ different lengths → the estimator drifts → the M73 anchors and the
+6.5s total. NEXT: align the arc-fitting chain on the KSR first-layer
+lines (path simplification → G2/G3 fit — the same family as the
+bottom_hilbert 'simplify tolerance knife'; ARES_DUMP_SIMPLIFY exists)
+— dump both engines' fitted arcs for the first-layer tower and diff
+the fit inputs (points after simplify).
