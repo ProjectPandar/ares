@@ -3750,3 +3750,23 @@ Prusa CORE One family (L 0.5/0.6/0.8, L HF 0.5/0.6/0.8) plus the
 Creality Sermoon V1 to byte-exact. Session total: 933 → 948
 (+15 byte-exact printers across the skirt-height, move-length f32,
 and first-travel F-word fixes).
+
+## Prusa XL CLOSED — retract_lift boundary needs the raw comparison (2026-09-20 xxxix)
+
+The XL's post-wipe z-hop divergence: the ORCA_DUMP_LIFT probe showed
+`lazy_lift` computing `target_lift = 0` from layer 3 on — the
+effective `retract_lift_below` is the FILAMENT-scoped
+`filament_retract_lift_below = 0.6` (overriding the machine copy 1.5
+via the extruder-retract overlay, already ported in
+`project_config_views/retract.rs`), and the writer's `m_pos.z()` is
+the full-precision accumulated print z: 0.2+0.2+0.2 =
+0.6000000000000001 > 0.6 → `z <= below` fails RAW → no lift from
+layer 3 up. The ares's `height_is_allowed_at` carried a ±1e-4
+epsilon that kept those layers lifting.
+
+Fix: drop the epsilon — raw `z >= above && (below == 0 || z <=
+below)` on the accumulated f64 layer z (`GCodeWriter.cpp:633-639`
+has no tolerance). Prusa XL 0.4 byte-identical vs 3/4 fresh oracle
+runs (o2 = race variant); MK3S/E3V3+/CORE One L/L HF unchanged
+(MK3S matches fresh runs r6-r8 byte-exactly; the earlier racebatch
+o1 sample was itself a race variant); ares-core 6993/6993.

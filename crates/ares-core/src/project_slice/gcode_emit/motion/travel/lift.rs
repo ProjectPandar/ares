@@ -45,11 +45,15 @@ pub(in crate::project_slice::gcode_emit) fn mode_for(
 }
 
 fn height_is_allowed_at(state: &EmitState, layer_z: f64) -> bool {
-    const EPSILON: f64 = 1.0e-4;
-
-    layer_z >= state.options.retract_lift_above - EPSILON
+    // Raw comparisons (`GCodeWriter.cpp:633-639` gates on `m_pos.z()` with
+    // no tolerance): the writer's z is the full-precision accumulated
+    // print z, so a layer exactly at `retract_lift_below` (0.2+0.2+0.2 =
+    // 0.6000000000000001 > 0.6) is ABOVE the boundary and must not lift.
+    // An epsilon tolerance keeps those layers lifting and desyncs every
+    // following travel.
+    layer_z >= state.options.retract_lift_above
         && (state.options.retract_lift_below == 0.0
-            || layer_z <= state.options.retract_lift_below + EPSILON)
+            || layer_z <= state.options.retract_lift_below)
 }
 
 fn height_is_allowed(state: &EmitState) -> bool {
