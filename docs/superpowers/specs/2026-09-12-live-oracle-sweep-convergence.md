@@ -3700,3 +3700,18 @@ process flakes (Creator 5 family, MyToolChanger 0.4). Remaining
 DIVERGENT families: Prusa CORE One (M73 percent value — total-time
 estimate differs ~1%), Prusa XL, Qidi X-Max 3 (F3843/3824 knife +
 M73 anchors), first-layer-time trailers, singletons.
+
+## Prusa CORE One scoped — first-travel F-word drop + 1% total-time drift (2026-09-20 xxxvii)
+
+The CORE One L 0.6 case (match=0/4): (1) the object-start travel
+sequence omits F words — oracle emits `G1 Z.4 F720` /
+`G1 X153.78 Y153.78 F21000` / `G1 Z.4 F720`, the ares drops F21000
+from the XY travel AND F720 from the second Z move (its
+current-feedrate state tracking goes stale across the start-gcode →
+first-travel transition), which also displaces the following M73
+anchors; (2) `M73 P89 R3` vs `P88 R3` at line 104 — the total-time
+estimate still differs ~1% for this printer family (a larger drift
+than the closed wipe-junction class; check the machine-envelope /
+custom start-gcode time attribution). NEXT: instrument
+`start_travel`/`travel_emit` state updates at the start-gcode
+boundary and the estimate.total chain for the CORE One envelope.
