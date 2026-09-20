@@ -3316,3 +3316,28 @@ decide the KSR test's contract (byte-strict vs the "nearly
 identical" semantic contract per the goal); (2) if byte-strict,
 regenerate the golden with the CURRENT oracle or close the residual
 families (the 3s estimator drift + 1µm arc/simplify chain).
+
+## KSR 6.5s drift = the M400 delay-landing flush cadence (2026-09-20 xx)
+
+Decisive alignment on the KSR project (304k cache entries both
+engines; oracle machine.time 6173.727 vs the ares cache tail
+6180.25): the per-id cumulative deltas are FLAT between ~0.02-0.05s
+until id 32162, then the ORACLE pulls ahead in discrete +0.1-0.4s
+JUMPS at specific ids (32182/32184/32193/32204/32213/32220/32250/
+32278/32280/32292…) while the ares chain stays smooth — the oracle
+LANDS additional_time seconds (the KSR's 16 M400 S-sites: 4×S1,
+4×S180, 2×S3, 6×S5) on those blocks; the ares lands fewer/differently
+(the remaining seconds surface only in the trailing total → the ares
+total is 6.5s HIGHER while its landed chain is LOWER). This is
+EXACTLY the 2026-09-18 gg diagonal (ares lands 4/5 M400 seconds,
+oracle 5/5) now measured on the full KSR project. Fresh-oracle
+verification: 6 runs of the CURRENT KSR project race between
+1h43m27-49 vs the ares 1h43m52 — the ares sits outside the oracle's
+race band by ~4s: a REAL flush-cadence divergence, not a stale
+golden. NEXT (the recorded audit): enumerate upstream
+calculate_time/simulate_st_synchronize call sites
+(process_M400/M191/G29/M620/M621/G92-E/tool-change) vs the ares
+`events` construction in estimate.rs; align which delays LAND on
+which blocks (upstream carries additional_time to the NEXT
+calculate_time pass when no block is available; the ares pins
+block_count at the command).
