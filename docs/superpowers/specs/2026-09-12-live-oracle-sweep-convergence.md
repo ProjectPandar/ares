@@ -3851,3 +3851,11 @@ tracking); (3) a wipe-restate travel target difference
 (`X94.35 Y94.204` vs `X94.55 Y94.55`). NEXT: trace the fan-change
 emission point against `FanMover`/`_SET_FAN_SPEED_CHANGING_LAYER`
 upstream and the wipe-restate target.
+
+### Post-fix sweep (5effcc0b)
+
+**956 PASS / 18 DIVERGENT / 17 ORCA_ERROR / 10 VENDOR** (from
+953/20/16/10). The firmware-retraction fix flipped 3 more printers.
+The seam_slope smoke failure in this sweep run passes in isolation
+(oracle race). Session total: 933 → 956 (+23 byte-exact printers
+across seven root-caused fixes).
