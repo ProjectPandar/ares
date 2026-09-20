@@ -3886,3 +3886,17 @@ extrusion) while upstream's lands at the HEAD of layer-2's chunk
 across the `;LAYER_CHANGE` boundary — the `_SET_FAN_SPEED_CHANGING_
 LAYER`/cooling fan line must open the NEXT chunk, not close the
 previous one.
+
+## SV07 Plus fan family detail (2026-09-20 xlvi)
+
+The SV07 Plus shows the mover's backward placement DUPLICATING the
+fan line: the ares emits `M106 S255` at 172 AND a split-inserted
+copy at 175-176 (`G1 X147.365 Y152.094 E5.77392` = a point ON the
+E5.67617→E5.8248 segment) where the oracle has neither at that
+position — the oracle's `M106 S255` lands at 183 (after the layer's
+moves). The moved-back line + the duplicate suggest the ares's
+`process_fan_command` emits the raw line once (else-branch
+`output.push_str(raw)`) AND the print_in_middle copy. NEXT: unit-run
+the SV07 layer chunk through `fan_mover/corpus.rs` against the
+oracle mover output (ORCA-side FanMover dump) to pin the duplicate
+emission path.
