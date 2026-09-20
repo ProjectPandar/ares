@@ -3362,3 +3362,20 @@ lines (path simplification → G2/G3 fit — the same family as the
 bottom_hilbert 'simplify tolerance knife'; ARES_DUMP_SIMPLIFY exists)
 — dump both engines' fitted arcs for the first-layer tower and diff
 the fit inputs (points after simplify).
+
+## Arc-fitting probe landed (2026-09-20 xxii)
+
+ORCA_DUMP_ARCFIT (arcfitresult probe — ArcFitter.cpp:do_arc_fitting
+input points + the final RANGE/type table): 16,325 arc-fit calls on
+the KSR project. The oracle fits arcs on SCALED ints in the LOCAL
+object frame (e.g. the first wall: n=45 points tol=12000 scaled).
+The ares's simplify chain (path_simplification.rs → arc/simplify.rs
+fit_ranges → arc.rs try_arc) works in UNSCALED mm f64 with
+units_per_mm conversion — the 1µm endpoint/center differences (G3
+X104.96 vs 104.961) most likely come from this f64-vs-scaled-int
+representation or the try_arc internals (fit_circle midpoint
+selection: `points.len()/2` with scaled_midpoint neighbors).
+NEXT: dump the ares's fit inputs (the wall-path points feeding
+simplify_path3) alongside ORCA_DUMP_ARCFIT, map the local frame,
+and align the first diverging fit (the KSR first-layer wall whose
+G3 endpoint lands at X104.960/104.961).
