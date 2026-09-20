@@ -3404,3 +3404,24 @@ the unit vector in double from the int delta, truncate the offset,
 and add in int space. For full parity the whole arc chain
 (`try_create_circle` centers are int upstream, f64 mm in ares)
 needs the same treatment — the same conclusion as the xxii entry.
+
+## Arc-chain audit complete — the port scope (2026-09-20 xxiv)
+
+The ares loop-clip flow (path.rs:65-103): clip::clip_end on SCALED
+ints (faithful) → unscale to local mm → arc::clip_fitting_end whose
+project_to_circle works in the mm domain. Upstream does both in ONE
+Polyline3::clip_end on the same scaled ints; the arc re-projection
+(Circle::get_closest_point) truncates in int space. The ares CANNOT
+replicate by fixing project_to_circle alone: its FittedArc.center is
+an f64 mm value from try_arc's fit_circle (mm-domain circle
+creation), while upstream's center is an INT from
+Circle::try_create_circle (int-domain creation). Truncating the f64
+center lands a different unit than upstream's int arithmetic — the
+full parity port must move circle creation (try_create_circle/
+create_circle_by_three_points?), try_arc, and the clip re-projection
+into the scaled-int domain together. MILESTONE: "arc-fitting int
+port" — estimate: fit_circle/circle_from_three → int domain
+(mirroring Circle.cpp), try_arc on ints, from_fitting unchanged
+(emission can keep mm for text), project_to_circle on ints, and the
+DP simplify tolerance already matches. After the port, re-verify:
+KSR first-layer G3 endpoints, bottom_hilbert, and the sweep.
