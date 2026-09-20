@@ -3476,3 +3476,17 @@ knives landed. The next full sweep should absorb them (~929 expected
 PASS). The remaining 45 are genuine 0/4 divergences dominated by the
 M73-anchor and first-layer-time families (the Qidi/Ratrig/Volumic/
 Peopoly first lines are all M73/estimator-trailer).
+
+## SWEEP BASELINE 932/44 (2026-09-20 xxvii)
+
+Full budget-6 serial sweep with all this session's knives: 932 PASS /
+44 DIVERGENT / 15 ORCA_ERROR / 10 VENDOR — 9 DIVERGENT→PASS
+(SPARKX ×4, CR-6 Max/SE, LK10/LK10 Plus, MK3.5 0.25 — exactly the
+racebatch prediction), 1 PASS→DIVERGENT (Ender-5 Pro 2019 0.8: an
+M73 anchor at line 117 — the same estimator family, likely a race
+sample as usual; the byte spread 77963 vs 79526 suggests content
+differences too — fresh-oracle check pending).
+Remaining 44 profile (from the racebatch analysis): ~24 M73-anchor
+(estimator total-time), 6 first-layer-time trailer, ~10 G1
+E-word/geometry singletons, 2 F-knife (Ender-3 V3 Plus F1948,
+MK3S F2930.735), plus the LH Stinger template and PRO V2 G10.
