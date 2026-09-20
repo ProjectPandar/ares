@@ -203,7 +203,7 @@ pub(super) fn append<'a>(
     // layer's window, after the layer-change acceleration.
     let bbl_layer_start = state.tags.is_bbl() && !state.traditional_timelapse;
     if bbl_layer_start && state.options.retract_when_changing_layer {
-        motion::flush_pending_retract_eager(output, state);
+        motion::flush_pending_retract_eager_forced(output, state);
     }
     if bbl_layer_start {
         timelapse::append_and_track(output, state, timelapse_context)?;

@@ -83,8 +83,30 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager(
     output: &mut Vec<u8>,
     state: &mut EmitState,
 ) {
-    if state.pending_layer_retract && !state.retracted {
-        retract_and_wipe(output, state);
+    flush_pending_retract_eager_with(output, state, false);
+}
+
+/// Mirrors `GCode.cpp:5205-5210`: the BBL non-traditional layer-start
+/// fires `retract()` at EVERY change regardless of the pending flag
+/// (labeled layers never arm it); `Extruder::retract` still emits
+/// nothing once fully retracted.
+pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager_forced(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    flush_pending_retract_eager_with(output, state, true);
+}
+
+fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState, force: bool) {
+    if (force || state.pending_layer_retract) && !state.retracted {
+        if force {
+            // The BBL layer-start `retract()` finds no stored wipe path
+            // there (`GCode.cpp:5205-5210`); the plain retraction emits
+            // the full remaining length at the retraction feedrate.
+            plain_retract(output, state);
+        } else {
+            retract_and_wipe(output, state);
+        }
         state.retracted = true;
     }
     state.pending_layer_retract = false;
@@ -98,6 +120,32 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager(
 
 fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe_with(output, state, true);
+}
+
+fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
+    let remaining = (state.options.retraction_length - state.retracted_amount).max(0.0);
+    if remaining <= 0.0 {
+        return;
+    }
+    let retract = super::extrusion::coordinate(state, -remaining);
+    let comment = state
+        .options
+        .gcode_comments
+        .then_some(" ; retract")
+        .unwrap_or("");
+    output.extend_from_slice(
+        format!(
+            "G1 E{} F{}{comment}\n",
+            format_extrusion(retract),
+            format_axis(state.options.retraction_feedrate)
+        )
+        .as_bytes(),
+    );
+    if !state.options.use_relative_e_distances {
+        output.extend_from_slice(b"G92 E0\n");
+        state.e_position = 0.0;
+    }
+    state.current_feedrate = state.options.retraction_feedrate;
 }
 
 fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_marker: bool) {

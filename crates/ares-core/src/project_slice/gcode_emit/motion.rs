@@ -31,8 +31,8 @@ pub(super) use state::{
     queue_object_start, queue_object_stop_label,
 };
 pub(super) use travel::{
-    flush_pending_retract_eager, flush_pending_retract_lift, flush_pending_retract_wipe,
-    retract_for_print_end,
+    flush_pending_retract_eager, flush_pending_retract_eager_forced, flush_pending_retract_lift,
+    flush_pending_retract_wipe, retract_for_print_end,
 };
 
 use features::PathProperties;
