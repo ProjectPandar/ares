@@ -3274,3 +3274,22 @@ the ares's f64 intermediates vs upstream f32 chain: upstream
 time_stretch_when_slowing_down_to_feedrate and slow_down_to_feedrate
 accumulate in FLOAT, the ares in f64 — reconcile after the deficit
 aligns).
+
+## TWO ulp knives closed (2026-09-20 xviii — f185315c, aa9bc4db)
+
+1. **The F/60 double-rounding knife (f185315c)**: the cooling-buffer's
+   F parse must divide in SINGLE precision (`CoolingBuffer.cpp:408-412`:
+   `float(atof) /= 60.f`) — the ares's f64 divide double-rounded the
+   feedrates by 1 ulp, which flips the DISCRETE line-set membership in
+   `new_feedrate_to_reach_time_stretch`'s iteration and shifts the
+   stretched feed by 0.18% (F1435 vs F1441). SPARKX 0.6 → byte-identical
+   to 3/4 fresh runs.
+2. **The wipe 0.01 knife (aa9bc4db)**: `retract_before_wipe` resolves as
+   `value × 0.01` (`Extruder.cpp:171`), NOT `value / 100` — the inexact
+   0.01 gives 0.7000000000000001, before-wipe 3.5000000000000004,
+   remaining 1.4999999999999996, and the half-way wipe E 0.373515
+   rounds DOWN like the oracle (.37351). CR-6 Max → byte-identical to
+   2/4 fresh runs.
+Both knives feed the M73-anchor family (a 1-ulp chain moves the percent
+crossings by one G1). CR-6 SE now shows a 2-line M73 shift — the same
+class at a deeper link.
