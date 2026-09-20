@@ -20,8 +20,7 @@ fn orca_parity_nearest_cluster_check() {
         .unwrap_or_else(|e| panic!("{e}"))
         .expect("explicit cluster requires an Orca executable");
     let targets = [
-        ("Anycubic", "Anycubic Kobra 2 Neo 0.4 nozzle"),
-        ("Anycubic", "Anycubic Kobra 3 0.4 nozzle"),
+        ("BBL", "Bambu Lab X1 0.4 nozzle"),
     ];
     let root = profiles_root();
     let model = cube_model();

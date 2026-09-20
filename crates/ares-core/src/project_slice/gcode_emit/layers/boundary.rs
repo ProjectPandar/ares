@@ -167,6 +167,23 @@ pub(super) fn append<'a>(
         layer_retract_pending,
     );
     motion::flush_pending_retract_lift(output, state, previous_state_layer_z);
+    // The BBL first-layer-inspection scan (`GCode.cpp:4780-4790`) opens
+    // between the layer-change gcode and the acceleration reset, so it
+    // precedes `begin_layer`'s M204.
+    if layer_index == 1
+        && !*second_layer_done
+        && state.tags.is_bbl()
+        && traversal
+            .resolved
+            .views
+            .full
+            .printer
+            .gcode
+            .scan_first_layer
+            .0
+    {
+        motion::scan_first_layer_block(output, state);
+    }
     motion::begin_layer(
         output,
         state,

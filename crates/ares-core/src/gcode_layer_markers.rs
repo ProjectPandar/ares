@@ -7,6 +7,9 @@ pub(crate) fn push(
     layer: (usize, usize, &str),
 ) -> Result<(), SliceError> {
     let (layer_index, layer_num, layer_z) = layer;
+    if std::env::var("ARES_SCAN_DBG").is_ok() {
+        eprintln!("MARKDBG idx={} num={}", layer_index, layer_num);
+    }
     gcode.push_str(&crate::gcode_wrapping_detection::layer_command(
         options, layer_num, layer_z,
     )?);
