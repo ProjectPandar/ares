@@ -3550,3 +3550,17 @@ with %.9f dumps (6dp loses the distinguishing ulps) — the fold of
 6dp-rounded values re-quantizes the sum. NEXT (precise): re-dump
 with %.9g and diff digit-exact; alternatively instrument the f32
 fold on both sides at the accumulate site.
+
+### %.9g finding: layer-3 line COUNTS differ (34 oracle vs 45 ares)
+
+The oracle's layer-3 array has 34 lines, the ares 45 — 11 extra
+non-adjustable ares lines. Oracle type histogram (layer 3): 4×
+type=2 (SET_TOOL/EXTRUDE_END-ish markers), 1×2048, 17×288 (travel),
+4×32 (G4), 3×352 (wall marker), 1×480 (external marker), 4×800
+(G4-flag). The ares keeps 40 non-adjustable lines vs the oracle's
+29. The adjustable 5/5 match. The extra 11 lines carry near-zero
+times but change the fold count and possibly the zero-time folding
+(the ares shows 31 time=0 vs oracle 11). NEXT: identify WHICH
+lines the upstream parse omits for this layer (compare type
+histograms per position — likely the toolchange/marker lines the
+ares emits as separate CoolingLines that upstream folds or skips).
