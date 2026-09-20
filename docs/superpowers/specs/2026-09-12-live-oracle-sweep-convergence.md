@@ -3523,3 +3523,15 @@ differently. NEXT: dump the ares's per-line PRE table (length,
 feed, time at 6+dp) in ARRAY order for MK3S layer 3 vs the oracle
 PRE table and diff the ORDER (not just values); align the parse's
 line-append order (marker aggregation position).
+
+### Order-sensitivity math verified (xxx cont.)
+
+f32 fold of the 5 adjustable PRE times: array order 4.6695623, sorted
+desc 4.6695619 — the order DOES move the sum. The full-layer fold
+interleaves ~40 non-adjustable lines whose order isn't dumped. NEXT
+PROBE: extend ORCA_DUMP_SLOWPRE to dump ALL line times in ARRAY
+order (not only adjustable) + build the ares equivalent PRE dump
+(aggregated marker lines + non-adjustable, in parse order); diff
+the sequences; the differing position(s) pinpoint the order gap
+(likely the marker line's aggregation position or the wipe/retract
+line placement relative to the marker).
