@@ -95,6 +95,17 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
         .slope
         .map_or(reference_speed, |slope| reference_speed.min(slope.speed));
     let sections = speed_sections(request.properties.width, reference_speed, request.options);
+    if let Ok(level) = std::env::var("ARES_DUMP_OVERHANG")
+        && level == "3"
+    {
+        eprintln!(
+            "SECTIONS {:?}",
+            sections
+                .iter()
+                .map(|section| (section.0, section.1))
+                .collect::<Vec<_>>()
+        );
+    }
     let original_speed = request.original_speed as f32;
     let minimum_slowdown_distance = sections
         .iter()
@@ -173,6 +184,30 @@ pub(super) fn estimate(request: EstimateRequest<'_>) -> Option<Vec<ProcessedPoin
             speed = speed.min(speed_for_distance(artificial, &sections, original_speed));
         }
         variable |= (f64::from(speed) - request.original_speed).abs() > 1.0;
+        if let Ok(level) = std::env::var("ARES_DUMP_OVERHANG")
+            && level == "3"
+        {
+            eprintln!(
+                "FINAL idx={} cur_dist={:.6} art_speed={:?} speed={:.3} var={}",
+                index,
+                current.distance,
+                curled_lines.map(|curled| {
+                    speed_for_distance(
+                        curl::artificial_distance(
+                            curled,
+                            (current.x, current.y),
+                            (next.x, next.y),
+                            request.properties.width,
+                            request.properties.height,
+                        ),
+                        &sections,
+                        original_speed,
+                    )
+                }),
+                speed,
+                variable
+            );
+        }
         let width_inverse = 1.0_f32 / request.properties.width;
         processed.push(ProcessedPoint {
             x: context.scale.unscale(scale_trunc(current.x, context.scale)),

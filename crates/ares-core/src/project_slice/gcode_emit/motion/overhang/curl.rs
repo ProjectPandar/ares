@@ -84,8 +84,14 @@ impl CurlTracker {
             return;
         }
         let curvature = curvatures(points);
-        for (index, pair) in points.windows(2).enumerate() {
-            let (a, b) = (pair[0], pair[1]);
+        // `SupportSpotsGenerator.cpp:166-170`: `a = i > 0 ? annotated[i - 1]
+        // : annotated[i]` — the i == 0 pair is DEGENERATE (a == b == the
+        // first point) and still produces a line with the corner curvature
+        // (the oracle's first curled line (p0, p0) with the π/4 corner
+        // curvature); `windows(2)` alone would skip it.
+        for index in 0..points.len() {
+            let previous = index.saturating_sub(1);
+            let (a, b) = (points[previous], points[index]);
             let middle = ((a.0 + b.0) * 0.5, (a.1 + b.1) * 0.5);
             let (distance, bottom_height) = self.nearest_previous(middle);
             let sign = boundary.map_or(1.0, |tree| {
@@ -97,7 +103,7 @@ impl CurlTracker {
             });
             let curled = estimate_curled_up_height(
                 distance * sign,
-                0.5 * (curvature[index] + curvature[index + 1]),
+                0.5 * (curvature[previous] + curvature[index]),
                 height,
                 width,
                 bottom_height,
@@ -112,7 +118,7 @@ impl CurlTracker {
                     b.1,
                     distance,
                     sign,
-                    0.5 * (curvature[index] + curvature[index + 1]),
+                    0.5 * (curvature[previous] + curvature[index]),
                     bottom_height,
                     curled
                 );
