@@ -3564,3 +3564,17 @@ times but change the fold count and possibly the zero-time folding
 lines the upstream parse omits for this layer (compare type
 histograms per position — likely the toolchange/marker lines the
 ares emits as separate CoolingLines that upstream folds or skips).
+
+## MK3S ulp closed to the parse-order interleave (2026-09-20 xxxii)
+
+%.9g both sides (ares SDL format widened temporarily): the 47 layer-2
+line values are IDENTICAL to 9 decimals, the sorted fold differs by
+exactly 1 ulp (oracle 5.27343178, ares 5.27343225), and the SD
+deficit implies the oracle's PRE-SORT parse-order fold is 5.273431 —
+the ares's parse-order fold = 5.273432. Identical values + 1-ulp
+fold difference => the PARSE-ORDER interleave of the marker/accumulated
+lines differs from upstream's CoolingBuffer append order. NEXT: dump
+the PRE-SORT aggregated arrays on both sides (upstream: extend the
+ALL probe to also dump before sort_lines_by_decreasing_feedrate at
+:656; ares: dump the lines array before the sort in apply()) and
+diff the interleavings position-by-position.
