@@ -19,12 +19,23 @@ fn orca_parity_nearest_cluster_check() {
     let runner = OrcaRunner::from_env()
         .unwrap_or_else(|e| panic!("{e}"))
         .expect("explicit cluster requires an Orca executable");
-    let targets = [
-        ("BBL", "Bambu Lab X1 0.4 nozzle"),
-    ];
+    // `ARES_RACE_TARGET="vendor|printer"` drives a single case dump for
+    // the fresh-oracle race-batch script; the default runs the cluster pair.
+    let targets: Vec<(String, String)> = std::env::var("ARES_RACE_TARGET")
+        .ok()
+        .and_then(|spec| {
+            let (vendor, printer) = spec.split_once('|')?;
+            Some(vec![(vendor.to_owned(), printer.to_owned())])
+        })
+        .unwrap_or_else(|| {
+            vec![
+                ("Anycubic".to_owned(), "Anycubic Kobra 2 Neo 0.4 nozzle".to_owned()),
+                ("Anycubic".to_owned(), "Anycubic Kobra 3 0.4 nozzle".to_owned()),
+            ]
+        });
     let root = profiles_root();
     let model = cube_model();
-    for (vendor, printer) in targets {
+    for (vendor, printer) in &targets {
         let Ok(profiles) = VendorProfiles::load(&root, vendor) else {
             eprintln!("SKIP {vendor}/{printer}: load failed");
             continue;
