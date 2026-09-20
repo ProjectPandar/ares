@@ -3715,3 +3715,29 @@ than the closed wipe-junction class; check the machine-envelope /
 custom start-gcode time attribution). NEXT: instrument
 `start_travel`/`travel_emit` state updates at the start-gcode
 boundary and the estimate.total chain for the CORE One envelope.
+
+## Prusa CORE One CLOSED — unclear-position first-travel F word (2026-09-20 xxxviii)
+
+Root cause: the ares's `never_positioned` branch (start_travel.rs)
+emitted the first XY travel WITHOUT the feedrate word; upstream's
+unclear-position branch emits `w0.emit_xy(..); w0.emit_f(travel_speed
+* 60.0)` before the `_travel_to_z` re-statement
+(`GCodeWriter.cpp:768-777`). The missing F21000 desynced the stream:
+the following `G1 Z.4 F720` then read as redundant and the cooling
+rewrite dropped it — which ALSO fed the estimator different feeds
+(the "1% total-time drift" was these missing Fs) and displaced every
+following M73 anchor.
+
+Fix: `xy_with_comment(.., state.travel_feedrate, ..)` in the
+never_positioned branch. Verified: CORE One L 0.6 byte-identical
+(3/4 fresh oracle runs, o2 = race variant); L 0.8 3/4; L HF 0.5
+o1/o2 byte-identical; HF 0.6 3/4; MK3S + E3V3+ still byte-identical
+(no regressions); ares-core 6993/6993.
+
+Prusa XL 0.4 residual (scoped): a z-hop decision difference — after
+`;WIPE_END` the oracle emits the flat `G1 X184.162 Y177.847 F24000`
+(upstream `travel_to_xyz` `!force_z && !will_move_z` → travel_to_xy)
+while the ares hops (`G1 X.. Y.. Z1 F24000` + `G1 Z.6`); the
+`m_lifted`/`will_move_z` state after the wipe differs. NEXT: align
+the post-wipe travel's lift decision with upstream's m_lifted
+tracking (`GCodeWriter.cpp:751-757`).

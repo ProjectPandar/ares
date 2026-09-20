@@ -280,9 +280,19 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 if never_positioned {
                     // Genuinely unclear position (the start gcode's first
                     // travel): upstream's unclear-position branch emits XY
-                    // then the separate `_travel_to_z` re-statement
-                    // (`GCodeWriter.cpp:768-777`).
-                    travel_emit::xy_without_feed(output, travel_x, travel_y);
+                    // WITH the travel feedrate word then the separate
+                    // `_travel_to_z` re-statement (`GCodeWriter.cpp:768-
+                    // 777`: `w0.emit_xy(..); w0.emit_f(travel_speed*60)`).
+                    // Omitting the F word desyncs the stream feedrate —
+                    // the following Z's F then reads as redundant and the
+                    // cooling rewrite drops it.
+                    travel_emit::xy_with_comment(
+                        output,
+                        travel_x,
+                        travel_y,
+                        state.travel_feedrate,
+                        first_travel_comment,
+                    );
                     output.extend_from_slice(
                         format!(
                             "G1 Z{} F{}\n",
