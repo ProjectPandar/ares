@@ -3214,3 +3214,11 @@ X1/X1C/X1E family ×12 + K1_CFS race resolved), 1 PASS→DIVERGENT
 (Prusa MK3.5 0.25: an M73-anchor shift at line 124 with a divergent
 inner-wall split — fresh-oracle check pending, likely the
 small-nozzle variant of a known class).
+
+## MK3.5 0.25 flip = race (2026-09-20 xiv)
+
+Fresh-oracle verification: 4/6 fresh runs BYTE-IDENTICAL to ares
+(runs 3/5/6 race). The MK3.5 0.25 PASS→DIVERGENT flip is oracle
+race noise; the ares output is a genuine oracle outcome. Effective
+state after the BBL/M976 + layer-start-retract fixes:
+921-equivalent PASS / ~53 DIVERGENT with race absorption.
