@@ -256,15 +256,11 @@ fn wipe_moves(state: &EmitState) -> WipePath {
     });
     let mut points = Vec::with_capacity(state.wipe_path.len());
     // Upstream substitutes `gcodegen.last_pos()` — the LOCAL scaled int of
-    // the last emitted point. Prefer the exact tracked int
-    // (`last_scaled_position`); re-deriving it from the mm float rounds
-    // and can flip a half-way case (a 1-ulp segment length that moves a
-    // half-way wipe E across the 5th decimal).
-    points.push(
-        state
-            .last_scaled_position
-            .unwrap_or_else(|| scaled_position(start, state)),
-    );
+    // the last emitted point. `last_scaled_position` carries exactly that
+    // int; the wipe path points are local mm (raw scaled points like
+    // `Wipe::path`), converted with the local scale only so the int
+    // round-trip is exact.
+    points.push(scaled_position(start, state));
     points.extend(state.wipe_path.iter().skip(1).map(|&point| {
         (
             (point.x / state.scale_factor).round() as i64,
