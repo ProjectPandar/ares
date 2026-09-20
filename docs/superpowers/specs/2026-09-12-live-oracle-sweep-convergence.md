@@ -3461,3 +3461,18 @@ chain (as the xxiv milestone scoped). The band spread across
 oracle runs (40-57k) also shows the KSR races heavily at the
 content level — multi-run comparison required for any future arc
 verdict.
+
+## Fresh-binary racebatch: 9 of 54 sweep-divergents now match (2026-09-20 xxvi)
+
+Re-verifying the 54-divergent list from the 920-sweep with the
+CURRENT binary (all knives through the wipe 0.01 fix) against the
+fresh racebatch oracles (n≤2 criterion — identical files score 0,
+generator-only 2): 9 printers match fresh oracle runs:
+  CR-6 Max 3/4, CR-6 SE 2/4, SPARKX 0.2 4/4 (!), SPARKX 0.4 2/4,
+  SPARKX 0.6 2/4, SPARKX 0.8 2/4, LK10 3/4, LK10 Plus 3/4,
+  MK3.5 0.25 4/4.
+These were stale-sweep rows: the sweep ran before the wipe-0.01/F60
+knives landed. The next full sweep should absorb them (~929 expected
+PASS). The remaining 45 are genuine 0/4 divergences dominated by the
+M73-anchor and first-layer-time families (the Qidi/Ratrig/Volumic/
+Peopoly first lines are all M73/estimator-trailer).
