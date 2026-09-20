@@ -3442,3 +3442,22 @@ the same truncate-on-store center. try_create_circle(Points) keeps
 its middle-point strategy ((p[m]+p[m−1])/2 int midpoint, matching
 the existing scaled_midpoint) and the least-deviation fallback
 (get_deviation_sum_squared on ints).
+
+## Truncation experiment REVERTED (2026-09-20 xxv)
+
+Ported `Circle::try_create_circle`'s center-store truncation
+(`Point(center_x, center_y)` = double→coord_t truncation, not
+nearest-round) and `Circle::get_closest_point`'s int-space clip
+re-projection. KSR fresh-oracle diff: WORSE (41215-56765 vs the
+reverted 40518-44818 band) and the wipe E-.18094 case regressed
+to -.18095 (the truncated circle flips the fit span on one wall →
+different kept points → the wipe distribution shifts 1 ulp). The
+oracle's own behavior cannot be reproduced by truncating ONE
+store: upstream fits arcs on scaled-int INPUTS end-to-end (points,
+circumcenter arithmetic, deviation, membership all in the int
+domain), so the ares's mm-input fit with any post-hoc rounding
+mixes domains. REVERTED; the int-domain port must be the full
+chain (as the xxiv milestone scoped). The band spread across
+oracle runs (40-57k) also shows the KSR races heavily at the
+content level — multi-run comparison required for any future arc
+verdict.
