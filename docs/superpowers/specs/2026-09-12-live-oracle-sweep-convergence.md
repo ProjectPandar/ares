@@ -3921,3 +3921,25 @@ emission path.
   earlier front-emission). NEXT: probe the oracle's mover state at
   the M106 (ORCA_DUMP_FANMOVER patch printing is_custom/buffer
   size/front times at each M106) to close the branch divergence.
+
+## SV07/KP3S fan family ROOT-CAUSED via ORCA_DUMP_FANMOVER (2026-09-20 xlviii)
+
+The oracle mover probe (per-line custom/front/back/bts/bufN) shows:
+- the buffer TRIMS per line (`while ... bts − front.time > delay −
+  EPSILON` emits the front, FanMover.cpp:496-519) — bufN oscillates
+  3..25, bts ≈ 0.5-0.9s;
+- at the chunk-1 `M106 S255` the oracle's state is
+  `front=100 back=100 bts=0.508 bufN=4` — `fan_speed > front` is
+  FALSE so the whole kickstart/move-back branch is SKIPPED and the
+  line flushes normally at the chunk end.
+The ares reaches its `M106 S255` with `front = 0` → `100 > 0` →
+the kickstart branch fires → the double S255 + split. The ares's
+trim loop exists and updates `front_buffer_fan_speed` the same way,
+so the difference is UPSTREAM OF THE MOVER: the oracle's pre-mover
+layer-1 text carries an EARLIER M106 S255 (emitted and then silently
+eaten when equal to front) that seeds front=100; the ares's layer-1
+text has only the closing M106. NEXT: diff the pre-mover layer texts
+M106-by-M106 (the oracle's mover INPUT can be reconstructed: its
+chunk outputs minus the mover's known transformations, or add an
+ORCA_DUMP_FANIN probe at the fan_mover filter entry) and align the
+cooling's layer-1 fan emission sequence.
