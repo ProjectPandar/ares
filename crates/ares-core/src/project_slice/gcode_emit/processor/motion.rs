@@ -294,7 +294,19 @@ impl MotionState {
         ];
         let xyz_distance = norm([delta[0], delta[1], delta[2], 0.0]);
         let e_only = xyz_distance <= f64::EPSILON;
-        let mut distance = if e_only { e_delta.abs() } else { xyz_distance };
+        // `move_length` (`GCodeProcessor.cpp:3963-3968`): the squared
+        // components sum in f64 but the SUM STORES TO FLOAT before the
+        // sqrt — `float sq_xyz_length = sqr(dx)+sqr(dy)+sqr(dz)`.
+        // Skipping the intermediate f32 rounding shifts single-axis Z
+        // moves by ~1 f32 ulp, which flips the following junction's
+        // per-axis jerk comparison (the wipe→travel junction 3.5355 vs
+        // the oracle's 2.0).
+        let sum_squared = delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2];
+        let mut distance = if sum_squared > 0.0 {
+            f64::from((sum_squared as f32).sqrt())
+        } else {
+            f64::from(delta[3].abs() as f32)
+        };
         if matches!(command, "G2" | "G3") {
             // R fitting takes precedence (`GCodeProcessor.cpp:4557-4592`):
             // the center/radius come from `ArcWelder::arc_center`.

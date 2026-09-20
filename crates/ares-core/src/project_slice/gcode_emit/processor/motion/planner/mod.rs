@@ -354,28 +354,6 @@ fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> f32 {
         axis_feedrate,
         safe,
     } = current;
-    let debug = std::env::var("ARES_DEBUG_JUNCTION").is_ok();
-    if debug
-        && let Ok(mut out) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open("/tmp/ares-junction.txt")
-    {
-        use std::io::Write;
-        let _ = writeln!(
-            out,
-            "J prev_cruise={:.4} cruise={:.4} prev_dir={:?} dir={:?} prev_af={:?} af={:?} prev_safe={:.4} safe={:.4} jerk={:?}",
-            previous.cruise,
-            cruise,
-            previous.direction,
-            direction,
-            previous.axis_feedrate,
-            axis_feedrate,
-            previous.safe,
-            safe,
-            jerk
-        );
-    }
     if previous.cruise <= 0.000_1 {
         return safe;
     }
@@ -389,16 +367,24 @@ fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> f32 {
     let mut factor = 1.0;
     let mut limited = false;
 
+    // Upstream's junction vectors are `Vec3f` (`GCodeProcessor.cpp:4091-
+    // 4097`): `exit_v = prev.feedrate * prev.exit_direction` multiplies
+    // f32×f32 with a single rounding per component. Computing the exit
+    // through the f64 direction keeps a different last ulp that flips the
+    // following axis' `> jerk` comparison (12.000001 vs 11.999999) and
+    // rescales the jerk vector twice — inflating the junction speed
+    // (3.5355 vs the oracle's 2.0 on the Ender-3 V3 wipe→travel
+    // junction).
     let mut exit = previous
         .direction
-        .map(|direction| previous.cruise * direction);
+        .map(|direction| previous.cruise * direction as f32);
     if previous_larger {
         exit.iter_mut().for_each(|value| *value *= smaller_factor);
     }
     let mut difference = [
-        (cruise * direction[0] - exit[0]).abs(),
-        (cruise * direction[1] - exit[1]).abs(),
-        (cruise * direction[2] - exit[2]).abs(),
+        (cruise * direction[0] as f32 - exit[0]).abs(),
+        (cruise * direction[1] as f32 - exit[1]).abs(),
+        (cruise * direction[2] as f32 - exit[2]).abs(),
     ];
     for axis in 0..3 {
         if difference[axis] > jerk[axis] {

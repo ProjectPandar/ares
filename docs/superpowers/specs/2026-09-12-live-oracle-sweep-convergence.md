@@ -3662,3 +3662,29 @@ classification bug. NEXT: dump the wipe block's trapezoid
 ORCA_DUMP_TB / the ares planner dump) for ids 71-72 and align the
 Wipe-move entry-speed chain. This −5ms class plausibly explains a
 large share of the remaining ~24 M73-anchor DIVERGENTs.
+
+## M73-anchor family root cause CLOSED — f32 sum-of-squares in move_length (2026-09-20 xxxvi)
+
+The one-G1-late M73 anchors trace to a single f32 rounding site:
+upstream `move_length` (`GCodeProcessor.cpp:3963-3968`) stores the
+squared-component sum to a FLOAT before the sqrt —
+`float sq_xyz_length = sqr(dx)+sqr(dy)+sqr(dz)`. The ares took the
+f64 sqrt of the f64 sum; for the Ender-3 V3 Plus wipe→travel junction
+(Z-move 0.52→0.2): sum 0.1023999858856206 → f32 0.10239998251199722 →
+sqrt 0.31999996304512024 (the ares's direct f64 path gives
+0.31999998). The 1-ulp distance shifts abs_axis_feedrate →
+min_feedrate_factor (0.0599999912 vs 0.06) → cruise 29.9999981 vs
+30.000002 → the junction exit 21.21320152282715 vs 21.21320343017578
+→ the NEXT axis' `> jerk` comparison flips (11.999999 ≤ 12 vs
+12.000001 > 12) → the jerk vector rescales twice → junction 2.0 vs
+3.5355 → a −4.9ms cumulative estimator drift that moves every percent
+boundary one G1.
+
+Fix (motion.rs): `distance = f64::from((sum_squared as f32).sqrt())`
+with the E-only fallback `f64::from(delta[3].abs() as f32)`. The
+junction exit/entry vectors also round per-component in f32
+(`previous.cruise * direction as f32`,
+`cruise * direction[0] as f32`, upstream `Vec3f exit_v/entry_v`).
+Ender-3 V3 Plus byte-identical vs 3/4 fresh oracle runs (o2 = the
+104-line race variant); MK3S still byte-identical (no regression);
+ares-core 6993/6993.
