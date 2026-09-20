@@ -3638,3 +3638,27 @@ crossing G1 (the same class as the MK3S skirt ulp just closed).
 NEXT: for Ender-3 V3 Plus, dump the ares Estimate elapsed table vs the
 oracle g1_times_cache (ORCA_DUMP_G1CACHE probe exists) and diff the
 cumulative times around the M73 P21 crossing at gcode line 893.
+
+## Ender-3 V3 Plus M73 anchor root-caused to a wipe-move trapezoid drift (2026-09-20 xxxv)
+
+Methodology: ARES_DUMP_ELAPSED vs ORCA_DUMP_G1CACHE (both print
+`id cumulative` pairs). The id SETS match through id 2424 (the probe
+dumps before the oracle's final calculate_time pass — the last 132
+ids are pending blocks at dump time, an artifact, not a divergence).
+Cumulative times are identical until id 70; at ids 71-72 the ares
+loses 2.37ms+2.51ms (then tracks at a constant −4.889ms offset).
+The M73 P21 boundary (21% of 367.680618 = 77.2129s) sits between the
+oracle's id-547 (77.215492 → P21) and the ares's id-547 (77.210603 →
+P20) — the one-G1 anchor shift.
+
+The differing blocks: id 71 = `G1 X147.741 Y153.118 E-.07731` (a
+WIPE move, 0.2574mm, no F word — inherits F6300) and id 72 = the
+following `G1 Z.52 F30000` travel. Oracle time for id 71 = 33.555ms
+(7.67mm/s effective), ares = 31.185ms (8.25mm/s) — a short-move
+trapezoid difference (entry speed / acceleration model for
+EMoveType::Wipe blocks) in the estimator's planner, not a feedrate
+classification bug. NEXT: dump the wipe block's trapezoid
+(cruise/entry/exit speeds, accel) on both sides (extend
+ORCA_DUMP_TB / the ares planner dump) for ids 71-72 and align the
+Wipe-move entry-speed chain. This −5ms class plausibly explains a
+large share of the remaining ~24 M73-anchor DIVERGENTs.
