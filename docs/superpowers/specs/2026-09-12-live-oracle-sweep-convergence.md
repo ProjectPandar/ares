@@ -3510,3 +3510,16 @@ slowdown arithmetic knife); belongs with the wall-path family (the
 same class as the KSR 1µm arcs). The M73-anchor + first-layer-time
 families (~30 printers) all reduce to this same content-then-time
 chain per the xxvi profile.
+
+## MK3S last-ulp lead: line-order-dependent f32 fold (2026-09-20 xxx)
+
+After the f32-chain fixes (68286cfe), the MK3S layer-3 deficit is
+1 ulp off (ares 2.747697 vs oracle 2.747696; totals 5.260303 vs
+5.260304) with IDENTICAL line lengths/feeds in the PRE table. The
+elapsed_time_total f32 fold is order-sensitive: if the ares's
+cooling-line array orders the marker/accumulated lines differently
+than upstream's CoolingBuffer append order, the fold rounds
+differently. NEXT: dump the ares's per-line PRE table (length,
+feed, time at 6+dp) in ARRAY order for MK3S layer 3 vs the oracle
+PRE table and diff the ORDER (not just values); align the parse's
+line-append order (marker aggregation position).
