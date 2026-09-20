@@ -318,4 +318,6 @@ impl FanMover {
 #[cfg(test)]
 mod corpus;
 #[cfg(test)]
+mod repro;
+#[cfg(test)]
 mod tests;

@@ -3900,3 +3900,24 @@ moves). The moved-back line + the duplicate suggest the ares's
 the SV07 layer chunk through `fan_mover/corpus.rs` against the
 oracle mover output (ORCA-side FanMover dump) to pin the duplicate
 emission path.
+
+## FanMover repro harness + semantics notes (2026-09-20 xlvii)
+
+- `ARES_DUMP_PREFAN` dumps the pre-mover layer span; the ignored
+  `sv07_chunk1_repro` test replays a dumped chunk through the mover
+  (reproduces the double `M106 S255` with the REAL params
+  0.5/0.2/klipper — with wrong params (1.0/0.0) it emits one).
+- `fan_pwm(100) = 255`: the kickstart's `_set_fan(100)` IS an
+  `M106 S255` line — the "duplicate" is kickstart+target by design.
+- Upstream `_print_in_middle_G1(front, nb_sec, line)` places the
+  fan line relative to the BUFFER FRONT with `nb_sec` compared
+  against the FRONT's own time (`<0.1×` after / `>0.9×` before /
+  else split) — and the caller then removes ONLY the front. With
+  the whole-chunk buffer (no mid-chunk trim) this is a HEAD-relative
+  placement, not "delay before end". The oracle's chunk-1 output
+  keeps its `M106 S255` at the chunk's LAST line — the oracle's
+  mover did NOT relocate it, so its branch/state at that line
+  differs from what the raw text suggests (custom-gcode flag or an
+  earlier front-emission). NEXT: probe the oracle's mover state at
+  the M106 (ORCA_DUMP_FANMOVER patch printing is_custom/buffer
+  size/front times at each M106) to close the branch divergence.

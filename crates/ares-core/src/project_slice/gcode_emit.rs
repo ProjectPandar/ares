@@ -187,6 +187,9 @@ pub(super) fn emit(
         let mut layers = output.split_off(fan_layers_start);
         let tail = layers.split_off(fan_layers_end - fan_layers_start);
         let text = String::from_utf8(layers).expect("generated G-code is UTF-8");
+        if let Ok(path) = std::env::var("ARES_DUMP_PREFAN") {
+            let _ = std::fs::write(path, &text);
+        }
         let mut flushed = String::with_capacity(text.len());
         let mut chunk_start = 0;
         for (offset, line) in text.match_indices("\n;") {
