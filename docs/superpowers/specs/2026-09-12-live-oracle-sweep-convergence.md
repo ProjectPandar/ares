@@ -3254,3 +3254,23 @@ slow_down_non_proportional. NEXT: dump the pre-slowdown per-line
 POST-slowdown; extend it to print the pre-slowdown table + the
 deficit/max_time inputs) and diff the algorithm inputs; the deficit
 or the line-time model differs by ~0.2% at this layer.
+
+## F-knife probe-alignment correction (2026-09-20 xvii)
+
+The SD/SLOW header comparison exposed a probe artifact: the oracle
+ORCA_DUMP_SLOW header prints the POST-slowdown state (total=7.8275 at
+the slowed feeds) while the ares SD header prints PRE (total=2.1165 at
+the original feeds) — layer 3 of SPARKX 0.6: ares pre=2.116540
+lines=39 max=18.982439; oracle post total=7.827548 n=39 — SAME line
+count (39) and the SAME maximum_time (18.982439 EXACT). The stretch
+inputs that remain unverified: the oracle's PRE-slowdown total
+(deficit = 8.008 − pre). Both targets agree (8×1.001; the oracle
+header prints the pre-multiplier 8.000 — cosmetic). NEXT: extend the
+oracle probe to print the PRE-slowdown per-line table + deficit right
+before slow_down_non_proportional (anchor at :680-685 with the
+pre-state), diff against the ares PRE table, then compare the
+new_feedrate_to_reach_time_stretch iteration (the 20-iter bisection —
+the ares's f64 intermediates vs upstream f32 chain: upstream
+time_stretch_when_slowing_down_to_feedrate and slow_down_to_feedrate
+accumulate in FLOAT, the ares in f64 — reconcile after the deficit
+aligns).
