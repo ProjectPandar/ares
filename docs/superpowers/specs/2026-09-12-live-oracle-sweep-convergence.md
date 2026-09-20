@@ -3741,3 +3741,12 @@ while the ares hops (`G1 X.. Y.. Z1 F24000` + `G1 Z.6`); the
 `m_lifted`/`will_move_z` state after the wipe differs. NEXT: align
 the post-wipe travel's lift decision with upstream's m_lifted
 tracking (`GCodeWriter.cpp:751-757`).
+
+### Post-fix sweep (3804fed6)
+
+**948 PASS / 26 DIVERGENT / 17 ORCA_ERROR / 10 VENDOR** (from
+942/31/18/10). The unclear-position F-word fix flipped the whole
+Prusa CORE One family (L 0.5/0.6/0.8, L HF 0.5/0.6/0.8) plus the
+Creality Sermoon V1 to byte-exact. Session total: 933 → 948
+(+15 byte-exact printers across the skirt-height, move-length f32,
+and first-travel F-word fixes).
