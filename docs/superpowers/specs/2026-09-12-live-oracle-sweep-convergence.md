@@ -4372,3 +4372,28 @@ provably-legal coverage.
   `; infill`/`; perimeter` role-comment positional mismatches. gcode_comments
   is an off-by-default debug option, so these do not affect the default
   printer smoke tests.
+
+## Option-sweep attributable rejections + wipe_tower_filament (2026-09-21 lvii)
+
+Full sweep now reports 459/650 bounded domains complete (was 452). 52 FAILs:
+39 are the recurring M73 race (P/R byte ordering), 13 looked real. Of those:
+- `default_jerk` fixed (M205 6-sig-fig ostream format).
+- `wipe_tower_filament` fixed: upstream only consumes the selector when a
+  wipe tower is emitted AND extruders.size() > 1 (Print.cpp:540); ares's
+  selector_validation rejected out-of-range unconditionally. Now gated on
+  has_wipe_tower && logical_count > 1. wtf=5 slices byte-identically.
+- `layer_height`/`initial_layer_print_height`/`skin_infill_line_width`/
+  `skeleton_infill_line_width` seeded values rejected by upstream validate()
+  ("Layer height cannot exceed nozzle diameter." Print.cpp:1654/1659;
+  "Too small line width" Print.cpp:1549/1687) — now attributed INPUT_REJECTED
+  so the domain reports INCOMPLETE, not FAIL.
+- `timelapse_type=1` (tlSmooth) exits -102 silently — oracle capability
+  limitation, stays unclassified.
+- `nozzle_volume_type` (flush_volumes_matrix serialization), `print_flow_ratio`
+  (total-filament stats footer), `filament_map_mode` (config echo
+  normalization), `gcode_comments` (comment threading), `sparse_infill_pattern`
+  (16 unimplemented Fill*.cpp generators), `enable_wrapping_detection`
+  (label/lift ordering on re-lifting travel) remain real divergences.
+
+INCOMPLETE rows (~139) are mostly multi-value/string/point domains that never
+received provably-legal coverage — not failures, just uncovered.
