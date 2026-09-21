@@ -903,7 +903,7 @@ int main(int argc, char** argv)
             }
             for (size_t pos = code.find("VELOCITY"); pos != std::string::npos; pos = code.find("VELOCITY", pos + 1)) {
                 // SQUARE_CORNER_VELOCITY already handled; skip it
-                if (pos >= 19 && code.compare(pos - 19, 19, "SQUARE_CORNER_VELOC") == 0) continue;
+                if (pos > 0 && !isspace((unsigned char)code[pos - 1])) continue;
                 std::string num;
                 size_t s = code.find('=', pos);
                 if (s == std::string::npos) break;
