@@ -4173,3 +4173,30 @@ FAILs are real feature-parity gaps (gcode_comments inline comments,
 nozzle_volume_type flush matrix serialization, print_flow_ratio stats
 label, raft_layers max_z_height, sparse_infill_pattern 1-ulp E) plus
 M73-placement oracle races.
+
+### raft_layers real divergence (post width-fix re-run)
+
+`raft_layers=100` now slices on both sides (the earlier "max_z 10 vs
+40" was a stale oracle-error artifact). Real residual diffs:
+- `max_z_height 40.08` vs `40.10` (raft top 0.02mm).
+- Raft-start fan/placeholder: oracle emits `; Filament gcode\nM106 S0`
+  (the `filament_start_gcode` template body) before the first raft
+  layer; ares emits bare `M106 S255` — the template emission ordering
+  at the raft/first-layer boundary differs.
+- Raft outline geometry: oracle's first raft move `X95.696 Y95.696`
+  vs ares `X90.938 Y91.062` — the raft expansion polygon differs,
+  cascading into all raft infill coords (~10k diff lines).
+Z-spacing matches (0.32/0.62/0.92); the divergence is raft polygon
+expansion + first-layer template/fan ordering, not layer height.
+
+### gcode_comments scope
+
+`gcode_comments=1` decorates ~3000 lines across every role (infill,
+perimeter, retract, fan, temp, custom gcode) via comment params threaded
+through `GCodeWriter::_travel_to_z`/`extrude`/`move`. Ares emits some
+(`move to first X point`, `normal lift Z` partially wired in
+`approach.rs`/`restate.rs`) but `lift.rs:emit_pending` `LiftMode::*`
+emit bare `G1 Z` without ` ; normal lift Z`/` ; spiral lift Z`, and the
+per-role extrusion comments (`; infill`, `; perimeter`) are not
+emitted. Full parity = threading a description string through the
+whole emit surface — a large feature port for an off-by-default option.
