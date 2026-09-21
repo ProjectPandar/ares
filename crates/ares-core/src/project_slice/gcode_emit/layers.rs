@@ -1,23 +1,28 @@
 //! GCode.cpp layer-chunk emission, extracted without changing command ordering.
 mod boundary;
+mod brim_emit;
 mod context;
 mod entry;
+mod entry_builder;
 mod fan_setup;
+mod layer_end;
 
 pub(super) use context::Context;
+mod object_entry;
 mod object_order;
+mod preamble;
+mod raft_entry;
 mod raft_schedule;
 mod schedule;
+mod skirt_emit;
 mod timelapse;
 
-use entry::EntryGeometry;
+use entry_builder::EntryBuilder;
 use schedule::Schedule;
 
-use super::timelapse as timelapse_core;
 use super::{
-    GenerationMetadata, PreparedPostIslandPrintOrder, SliceError, append_layer_end_timelapse, brim,
-    cooling, fan_mover, footprint, island_print_order, layer_boundary_slices_rc, layer_gcode,
-    motion, object, skirt, spiral_vase, trailing_gcode_xy, value,
+    GenerationMetadata, PreparedPostIslandPrintOrder, SliceError, cooling, fan_mover, footprint,
+    layer_gcode, motion, object, spiral_vase,
 };
 use crate::geometry::ExPolygon;
 
@@ -78,11 +83,10 @@ pub(super) fn append(
     // Avoid-crossing boundaries are built per slice_z across every object
     // (`Layer::lslices` covers all instances of the print object;
     // `AvoidCrossingPerimeters.cpp:1100`). Copies of one source share the
-    // layer layout, so records are matched by slice_z.
-    let mut layer_boundary_cache: std::collections::HashMap<
-        (usize, usize),
-        std::rc::Rc<[ExPolygon]>,
-    > = std::collections::HashMap::new();
+    // layer layout, so records are matched by slice_z. The boundary cache
+    // lives inside the entry builder.
+    let mut entry_builder =
+        EntryBuilder::new(traversal, top_surfaces, nearest_seam_plans, island_predecessor);
     // FanMover construction mirrors GCode.cpp:3727-3740 (gate:
     // fan_speedup_time != 0 || fan_kickstart > 0).
     let fan_mover_handle = fan_setup::gate(traversal);
@@ -113,56 +117,8 @@ pub(super) fn append(
     // Raft support paths pass through the same DP simplification as
     // object support paths (`PrintObject::simplify_extrusion_path` /
     // `simplify_support_extrusion_path` over the support layers).
-    {
-        let process = &traversal.resolved.views.full.process;
-        let arc_fitting = process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0;
-        let tolerance = process.print.resolution.0;
-        for object_layers in &mut raft_layers {
-            crate::project_slice::path_simplification::simplify_layers(
-                object_layers,
-                traversal.scale,
-                tolerance,
-                arc_fitting,
-            );
-        }
-    }
+    raft_schedule::simplify_layers(traversal, &mut raft_layers);
     let raft_plans = raft.as_ref().map(|raft| &raft.plans);
-
-    let mut entry_geometry = |object_index: usize,
-                              layer_index: usize,
-                              chunk_slices: &[ExPolygon],
-                              chunk_perimeter_spacing: f64|
-     -> EntryGeometry<'_> {
-        let lower_boundary_lines = traversal.objects[object_index]
-            .lower_slices(layer_index)
-            .into_iter()
-            .flatten()
-            .flat_map(ExPolygon::lines)
-            .collect::<Vec<_>>();
-        EntryGeometry {
-            top_surfaces: top_surfaces[object_index]
-                .get(layer_index)
-                .map(|expolygons| expolygons.iter().collect::<Vec<_>>())
-                .unwrap_or_default(),
-            lower_boundary_lines,
-            nearest_penalties: nearest_seam_plans
-                .get(object_index)
-                .and_then(|plans| plans.get(layer_index)),
-            layer_slices: layer_boundary_slices_rc(
-                traversal,
-                object_index,
-                layer_index,
-                &mut layer_boundary_cache,
-            ),
-            internal_surfaces: island_print_order::internal_surfaces(
-                island_predecessor,
-                object_index,
-                layer_index,
-            ),
-            chunk_slices: chunk_slices.to_vec(),
-            chunk_perimeter_spacing,
-        }
-    };
 
     let mut group_start = 0;
     let mut first_group = true;
@@ -211,21 +167,14 @@ pub(super) fn append(
         };
         let (first_object, first_layer) = entries[0];
         if first_group && first_layer == 0 {
-            layer_gcode::append_print_preamble(
+            preamble::emit(
                 output,
+                state,
                 traversal,
                 metadata,
                 start_position.as_ref(),
                 first_layer_bounds,
             )?;
-            // Upstream's writer does NOT know the Z after the start g-code
-            // (`GCode.cpp:3139-3140`), so `writer_z` stays unset
-            // (`GCode.cpp:5693`). The brim split target uses the nozzle XY
-            // the start g-code left — track it in live gcode coordinates.
-            if let Some((x, y)) = trailing_gcode_xy(output) {
-                state.x = x;
-                state.y = y;
-            }
             first_group = false;
         }
         // The cooling rewrite window opens after the preamble (the start
@@ -301,62 +250,19 @@ pub(super) fn append(
         // the skirt around the raft polygons (the skirt layer index is
         // the raft layer index — with a raft, the covered layers start
         // at the raft flange).
-        if let (Some(&(_, skirt_layer)), Some(plan)) = (
-            entries.iter().find(|&&(object_index, _)| object_index == 0),
-            &skirt,
-        ) {
-            // With a raft, the object layer indices carry the raft
-            // offset (`layer->id()` semantics) — the skirt already ran on
-            // the raft layers, so a re-run on the object first layer (its
-            // object-relative index 0) must not emit again.
-            let raft_offset = raft
-                .as_ref()
-                .map(|raft| raft.counts.first().copied().unwrap_or(0))
-                .unwrap_or(0);
-            // `plan.emit` returns early when `layer.index >= layer_count`,
-            // but the geometry below still indexes the OBJECT layer — keep
-            // them separate.
-            let skirt_plan_index =
-                leading_raft.map_or(skirt_layer + raft_offset, |(raft_index, _)| raft_index);
-            let geometry = if let Some((raft_index, _)) = leading_raft {
-                let raft_polygons = raft
-                    .as_ref()
-                    .and_then(|raft| raft.plans.get(0))
-                    .and_then(|plans| plans.get(raft_index))
-                    .map(|plan| {
-                        plan.polygons
-                            .iter()
-                            .map(|polygon| {
-                                crate::geometry::ExPolygon::new(polygon.clone(), Vec::new())
-                            })
-                            .collect::<Vec<_>>()
-                    })
-                    .unwrap_or_default();
-                EntryGeometry {
-                    top_surfaces: Vec::new(),
-                    lower_boundary_lines: Vec::new(),
-                    nearest_penalties: None,
-                    layer_slices: raft_polygons.clone().into(),
-                    internal_surfaces: &[],
-                    chunk_slices: raft_polygons,
-                    chunk_perimeter_spacing: 0.0,
-                }
-            } else {
-                entry_geometry(0, skirt_layer, &chunk_slices, chunk_perimeter_spacing)
-            };
-            let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
-                .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
-            let motion_geometry = geometry.view(traversal, 0, skirt_layer, lower_boundary.as_ref());
-            plan.emit(
-                output,
-                skirt::SkirtLayer {
-                    index: skirt_plan_index,
-                    height_mm: skirt_height,
-                },
-                motion_geometry,
-                state,
-            );
-        }
+        skirt_emit::emit(
+            output,
+            state,
+            &entries,
+            skirt,
+            &raft,
+            leading_raft,
+            skirt_height,
+            &mut entry_builder,
+            traversal,
+            &chunk_slices,
+            chunk_perimeter_spacing,
+        );
         for (entry_position, &(object_index, layer_index)) in entries.iter().enumerate() {
             let is_group_end = entry_position + 1 == entries.len();
             let raft_index = raft_schedule::classify(layer_index).ok().flatten();
@@ -377,61 +283,20 @@ pub(super) fn append(
             // machinery (travel/Z/TYPE/wipe/retract) is identical to the
             // object path.
             if let Some(raft_index) = raft_index {
-                let Some(layer) = raft_layers
-                    .get_mut(object_index)
-                    .and_then(|layers| layers.get_mut(raft_index))
-                else {
-                    continue;
-                };
-                let raft_polygons = raft
-                    .as_ref()
-                    .and_then(|raft| raft.plans.get(object_index))
-                    .and_then(|plans| plans.get(raft_index))
-                    .map(|plan| {
-                        plan.polygons
-                            .iter()
-                            .map(|polygon| {
-                                crate::geometry::ExPolygon::new(polygon.clone(), Vec::new())
-                            })
-                            .collect::<Vec<_>>()
-                    })
-                    .unwrap_or_default();
-                let geometry = EntryGeometry {
-                    top_surfaces: Vec::new(),
-                    lower_boundary_lines: Vec::new(),
-                    nearest_penalties: None,
-                    layer_slices: raft_polygons.clone().into(),
-                    internal_surfaces: &[],
-                    chunk_slices: raft_polygons,
-                    chunk_perimeter_spacing: 0.0,
-                };
-                let motion_geometry = geometry.view_raft(traversal.scale);
-                // Raft layers belong to the same print instance and
-                // carry its object labels (`GCode.cpp:5348-5352` fires
-                // per `instance_to_print`, raft layers included).
-                if let Some(labels) = &labels[object_index] {
-                    labels.queue_start(output, state, emit_labels);
-                }
-                let timelapse_inserted =
-                    motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
-                        timelapse_core::append_traditional(
-                            traditional_interlude,
-                            output,
-                            state,
-                            timelapse_context,
-                        )
-                    })?;
-                if let Some(labels) = &labels[object_index] {
-                    labels.queue_stop(
-                        output,
-                        state,
-                        emit_labels,
-                        timelapse_inserted && is_group_end,
-                    );
-                }
-                if is_group_end {
-                    motion::end_layer_for_timelapse(output, state);
-                }
+                raft_entry::emit(
+                    output,
+                    state,
+                    &mut raft_layers,
+                    &raft,
+                    traversal,
+                    object_index,
+                    raft_index,
+                    &labels,
+                    emit_labels,
+                    traditional_interlude,
+                    timelapse_context,
+                    is_group_end,
+                )?;
                 continue;
             }
             // Upstream re-initializes the avoid-crossing boundaries for
@@ -446,108 +311,44 @@ pub(super) fn append(
                 state.use_external_mp_once = true;
                 last_object_copy = Some(object_index);
             }
-            if object_index == 0
-                && layer_index == 0
-                && let Some(plan) = &brim
-            {
-                let geometry = entry_geometry(
-                    object_index,
-                    layer_index,
-                    &chunk_slices,
-                    chunk_perimeter_spacing,
-                );
-                let lower_boundary = (!geometry.lower_boundary_lines.is_empty()).then(|| {
-                    crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines)
-                });
-                plan.emit(
-                    output,
-                    geometry.view(
-                        traversal,
-                        object_index,
-                        layer_index,
-                        lower_boundary.as_ref(),
-                    ),
-                    state,
-                );
-            }
+            brim_emit::emit(
+                output,
+                state,
+                brim,
+                object_index,
+                layer_index,
+                &mut entry_builder,
+                traversal,
+                &chunk_slices,
+                chunk_perimeter_spacing,
+            );
             let object = &mut objects[object_index];
             let Some(layer) = object.get_mut(layer_index) else {
                 continue;
             };
-            let spiral_body_layer = spiral.is_body_layer(layer, layer_index, f64::from(layer_z));
-            state.spiral_vase_layer = spiral_body_layer;
-            let geometry = entry_geometry(
+            object_entry::emit(
+                output,
+                state,
+                layer,
+                &mut spiral,
+                &mut entry_builder,
+                traversal,
                 object_index,
                 layer_index,
                 &chunk_slices,
                 chunk_perimeter_spacing,
-            );
-            let lower_boundary = (!geometry.lower_boundary_lines.is_empty())
-                .then(|| crate::geometry::LineDistanceTree::new(&geometry.lower_boundary_lines));
-            let motion_geometry = geometry.view(
-                traversal,
-                object_index,
-                layer_index,
-                lower_boundary.as_ref(),
-            );
-            let entry_output_start = output.len();
-            if let Some(labels) = &labels[object_index] {
-                labels.queue_start(output, state, emit_labels);
-            }
-            let timelapse_inserted =
-                motion::emit_layer(output, layer, motion_geometry, state, |output, state| {
-                    timelapse_core::append_traditional(
-                        traditional_interlude,
-                        output,
-                        state,
-                        timelapse_context,
-                    )
-                })?;
-            let is_last_entry = Some((object_index, layer_index)) == last_entry;
-            if let Some(labels) = &labels[object_index] {
-                labels.queue_stop(
-                    output,
-                    state,
-                    emit_labels,
-                    timelapse_inserted && is_group_end,
-                );
-            }
-            if is_group_end {
-                // The layer-end timelapse sequence closes every layer chunk
-                // (`GCode.cpp:5527-5546`), after all of the chunk's objects.
-                if labels[object_index].is_none() && timelapse_inserted {
-                    motion::defer_layer_retraction(state);
-                } else if labels[object_index].is_none() {
-                    motion::end_layer_for_timelapse(output, state);
-                }
-                append_layer_end_timelapse(
-                    output,
-                    state,
-                    timelapse_inserted,
-                    timelapse_gate.traditional_timelapse,
-                    timelapse_context,
-                )?;
-            }
-            spiral.process_layer(
-                output,
-                spiral_vase::Layer {
-                    // The upstream filter consumes the FULL layer chunk
-                    // (change_layer header + Z move + content): the header
-                    // lines duplicate into the transition_out layer and the
-                    // chunk's Z-only move is the one rewritten to base_z
-                    // (`SpiralVase.cpp:137-141`, `:184-187`).
-                    start: if spiral.covers_chunk() {
-                        layer_output_start
-                    } else {
-                        entry_output_start
-                    },
-                    enabled: spiral_body_layer,
-                    final_layer: is_last_entry
-                        && layer_index + 1 == object_layer_counts[object_index],
-                    z: f64::from(layer_z),
-                    height: f64::from(layer_height),
-                },
-            );
+                &labels,
+                emit_labels,
+                traditional_interlude,
+                timelapse_gate.traditional_timelapse,
+                timelapse_context,
+                layer_z,
+                layer_height,
+                &object_layer_counts,
+                last_entry,
+                is_group_end,
+                layer_output_start,
+            )?;
         }
         cooling.finish_layer(output, layer_output_start);
     }

@@ -225,6 +225,26 @@ fn materialize_layer(
     )
 }
 
+/// Raft support paths pass through the same DP simplification as object
+/// support paths (`PrintObject::simplify_extrusion_path` /
+/// `simplify_support_extrusion_path` over the support layers).
+pub(super) fn simplify_layers(
+    traversal: &crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal,
+    raft_layers: &mut [Vec<crate::project_slice::island_print_order::OrderedExtrusionLayer>],
+) {
+    let process = &traversal.resolved.views.full.process;
+    let arc_fitting = process.gcode.enable_arc_fitting.0 && !process.print.spiral_mode.0;
+    let tolerance = process.print.resolution.0;
+    for object_layers in raft_layers {
+        crate::project_slice::path_simplification::simplify_layers(
+            object_layers,
+            traversal.scale,
+            tolerance,
+            arc_fitting,
+        );
+    }
+}
+
 /// `Polyline::clip_end` (`ClipperZUtils`/`Polyline.cpp`): shorten the
 /// polyline tail by `distance`, dropping exhausted segments.
 fn clip_polyline_end(polyline: &mut crate::geometry::Polyline, distance: f64) {
