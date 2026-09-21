@@ -148,6 +148,42 @@ fn upstream_rejection_does_not_mask_compared_case_parity() {
 }
 
 #[test]
+fn width_options_use_context_bounded_domain() {
+    // `coFloatOrPercent` `*_line_width` options validate `max` against
+    // percent and `max_literal` against mm (`PrintConfig.cpp`
+    // `is_value_valid`); the reachable slicing bound is far below both
+    // (`Print::validate` caps width by nozzle/flow — `10`/`10%`/`1000%`
+    // all fail the oracle, `500%` passes). They must route through
+    // `widths::generate`'s context-max model (mm `2.0` / percent `500`),
+    // not the raw schema bound.
+    let plans = domains::load(&runner::repo_root());
+    for key in [
+        "outer_wall_line_width",
+        "inner_wall_line_width",
+        "initial_layer_line_width",
+        "sparse_infill_line_width",
+        "top_surface_line_width",
+        "internal_solid_infill_line_width",
+        "support_line_width",
+    ] {
+        let plan = plans.iter().find(|plan| plan.key == key).unwrap();
+        assert!(
+            plan.width_domain.is_some(),
+            "{key} must carry a context-bounded width_domain"
+        );
+        let labels: Vec<_> = plan.cases.iter().map(|case| case.label.as_str()).collect();
+        assert!(
+            labels.iter().all(|label| *label != "max"),
+            "{key} must not emit a raw-schema `max` case: {labels:?}"
+        );
+        assert!(
+            labels.contains(&"mm-context-max") && labels.contains(&"percent-context-max"),
+            "{key} must emit context-max cases: {labels:?}"
+        );
+    }
+}
+
+#[test]
 fn seeded_range_values_are_repeatable() {
     let first = domains::load(&runner::repo_root());
     let second = domains::load(&runner::repo_root());

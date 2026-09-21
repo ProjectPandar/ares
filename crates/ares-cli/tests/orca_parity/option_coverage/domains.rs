@@ -51,7 +51,7 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let source = format!("{}:{}", definition.get("path")?.as_str()?, line);
     let block = definition_block(lines, &key, line);
     let mut width_domain = None;
-    let (values, omission) = if matches!(key.as_str(), "line_width" | "bridge_line_width") {
+    let (values, omission) = if is_width_option(&key) {
         let raw = raw_numeric_bounds(&block).expect("width schema must have explicit raw bounds");
         let (domain, values) = widths::generate(&key, entry, raw, false, true);
         width_domain = Some(domain);
@@ -97,6 +97,25 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         omission,
         width_domain,
     })
+}
+
+// `coFloatOrPercent` line-width options share the single-nozzle context
+// bound modeled by `widths::generate` (`Print::validate` caps the feasible
+// width relative to the nozzle, far below the raw `max`/`max_literal`
+// schema bound — `outer_wall_line_width=10` or `10%` both fail the oracle).
+fn is_width_option(key: &str) -> bool {
+    matches!(
+        key,
+        "line_width"
+            | "bridge_line_width"
+            | "outer_wall_line_width"
+            | "inner_wall_line_width"
+            | "initial_layer_line_width"
+            | "sparse_infill_line_width"
+            | "internal_solid_infill_line_width"
+            | "support_line_width"
+            | "top_surface_line_width"
+    )
 }
 
 fn definition_block(lines: &[&str], key: &str, reported_line: usize) -> String {

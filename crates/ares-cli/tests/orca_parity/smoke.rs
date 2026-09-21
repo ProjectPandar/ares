@@ -29,8 +29,14 @@ fn orca_parity_nearest_cluster_check() {
         })
         .unwrap_or_else(|| {
             vec![
-                ("Anycubic".to_owned(), "Anycubic Kobra 2 Neo 0.4 nozzle".to_owned()),
-                ("Anycubic".to_owned(), "Anycubic Kobra 3 0.4 nozzle".to_owned()),
+                (
+                    "Anycubic".to_owned(),
+                    "Anycubic Kobra 2 Neo 0.4 nozzle".to_owned(),
+                ),
+                (
+                    "Anycubic".to_owned(),
+                    "Anycubic Kobra 3 0.4 nozzle".to_owned(),
+                ),
             ]
         });
     let root = profiles_root();
