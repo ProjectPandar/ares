@@ -6,6 +6,10 @@
 
 mod geometry;
 mod pair;
+mod trim;
+
+#[cfg(test)]
+mod tests;
 
 use crate::geometry::{ExPolygon, Line, Point, Polyline};
 use geometry::{
@@ -14,6 +18,7 @@ use geometry::{
     shift_from_thick_line,
 };
 use pair::{connect_pair, nearest_fresh, resolve_merged, split_at};
+use trim::{polyline_length, trim_endpoint};
 
 /// `FillAdaptive.cpp:562-570`.
 #[derive(Clone, Copy, Debug)]
@@ -287,47 +292,6 @@ fn nearest_tjoint(
     best
 }
 
-fn polyline_length(points: &[Point]) -> f64 {
-    points
-        .windows(2)
-        .map(|pair| length(&Line::new(pair[0], pair[1])))
-        .sum()
-}
-
-/// `:993-1000` — move `points`' front (or back) endpoint inward by
-/// `1.155·trim` toward the current opposite endpoint (truncating casts).
-fn trim_endpoint(points: &mut [Point], front: bool, active: bool, scaled_trim_distance: f64) {
-    if !active || points.len() < 2 {
-        return;
-    }
-    let endpoint = if front {
-        points[0]
-    } else {
-        points[points.len() - 1]
-    };
-    let other = if front {
-        points[points.len() - 1]
-    } else {
-        points[0]
-    };
-    let dx = (other.x() - endpoint.x()) as f64;
-    let dy = (other.y() - endpoint.y()) as f64;
-    let n = (dx * dx + dy * dy).sqrt();
-    if n <= 0.0 {
-        return;
-    }
-    let step = 1.155 * scaled_trim_distance;
-    let mx = (dx / n * step) as i64;
-    let my = (dy / n * step) as i64;
-    let moved = Point::new(endpoint.x() + mx, endpoint.y() + my);
-    if front {
-        points[0] = moved;
-    } else {
-        let last = points.len() - 1;
-        points[last] = moved;
-    }
-}
-
 #[allow(clippy::too_many_arguments)]
 fn add_hook(
     joint: &mut Joint,
@@ -410,5 +374,3 @@ fn add_hook(
     }
 }
 
-#[cfg(test)]
-mod tests;
