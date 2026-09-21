@@ -1,8 +1,8 @@
 //! Wipe path construction (`Wipe::wipe`, `GCode.cpp:440-500`) — the
 //! stored path → scaled int points → clip_end → segment/dE split.
 
-use super::arc;
 use super::super::state::EmitState;
+use super::arc;
 
 pub(super) struct WipePath {
     pub(super) segments: Vec<(arc::Point, f64)>,
@@ -111,7 +111,10 @@ fn scaled_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
     (dx * dx + dy * dy).sqrt()
 }
 
-pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(point: arc::Point, state: &EmitState) -> (i64, i64) {
+pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(
+    point: arc::Point,
+    state: &EmitState,
+) -> (i64, i64) {
     (
         ((point.x - state.offset.0) / state.scale_factor).round() as i64,
         ((point.y - state.offset.1) / state.scale_factor).round() as i64,

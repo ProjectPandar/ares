@@ -2,8 +2,8 @@
 //! object content (`GCode.cpp` emits it ahead of the layer's object
 //! entries).
 
-use super::entry_builder::EntryBuilder;
 use super::super::{brim, motion};
+use super::entry_builder::EntryBuilder;
 use crate::geometry::ExPolygon;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 

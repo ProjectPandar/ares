@@ -22,8 +22,8 @@ fn preserves_libstdcxx_equal_key_permutation() {
 #[test]
 fn preserves_libstdcxx_grouped_key_permutation() {
     let keys = [
-        2, 1, 2, 1, 0, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1,
-        2, 0, 1, 2,
+        2, 1, 2, 1, 0, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
+        0, 1, 2,
     ];
     let mut values = keys
         .into_iter()
@@ -34,8 +34,8 @@ fn preserves_libstdcxx_grouped_key_permutation() {
     assert_eq!(
         values.into_iter().map(|(_, id)| id).collect::<Vec<_>>(),
         vec![
-            30, 4, 27, 6, 24, 9, 21, 12, 18, 15, 1, 31, 28, 25, 22, 19, 13, 10, 3, 16, 7, 8,
-            32, 0, 2, 29, 5, 26, 23, 11, 20, 14, 17,
+            30, 4, 27, 6, 24, 9, 21, 12, 18, 15, 1, 31, 28, 25, 22, 19, 13, 10, 3, 16, 7, 8, 32, 0,
+            2, 29, 5, 26, 23, 11, 20, 14, 17,
         ]
     );
 }
@@ -47,8 +47,8 @@ fn heap_fallback_preserves_libstdcxx_equal_key_permutation() {
     assert_eq!(
         values.into_iter().map(|(_, id)| id).collect::<Vec<_>>(),
         vec![
-            18, 22, 10, 16, 26, 8, 20, 4, 24, 12, 32, 28, 7, 17, 3, 19, 9, 21, 1, 23, 11, 25,
-            5, 27, 13, 31, 29, 15, 0, 2, 6, 14, 30,
+            18, 22, 10, 16, 26, 8, 20, 4, 24, 12, 32, 28, 7, 17, 3, 19, 9, 21, 1, 23, 11, 25, 5,
+            27, 13, 31, 29, 15, 0, 2, 6, 14, 30,
         ]
     );
 }

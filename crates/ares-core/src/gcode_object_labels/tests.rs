@@ -65,8 +65,7 @@ fn enabled_state_emits_labels_before_exclusion_commands() {
 #[test]
 fn exclude_object_defaults_to_disabled() {
     let config =
-        ObjectLabelConfig::from_options(&SliceOptions::default(), GCodeFlavor::Klipper)
-            .unwrap();
+        ObjectLabelConfig::from_options(&SliceOptions::default(), GCodeFlavor::Klipper).unwrap();
 
     assert!(config.labels_enabled);
     assert_eq!(config.object_definition(&[]), "");
@@ -102,8 +101,7 @@ fn exclude_object_reads_boolean_value_for_klipper() {
 #[test]
 fn exclude_object_false_suppresses_exclusion_commands() {
     let options = options_with_json(serde_json::json!({ "exclude_object": false }));
-    let config =
-        ObjectLabelConfig::from_options(&options, GCodeFlavor::MarlinFirmware).unwrap();
+    let config = ObjectLabelConfig::from_options(&options, GCodeFlavor::MarlinFirmware).unwrap();
 
     assert_eq!(config.object_definition(&[]), "");
     let mut state = ObjectLabelState::new(config);

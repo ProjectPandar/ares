@@ -1,7 +1,7 @@
 use super::{MotionBlock, MotionKind};
 mod junction;
 mod trapezoid;
-use junction::{max_allowable_speed, junction_speed};
+use junction::{junction_speed, max_allowable_speed};
 use trapezoid::block_time;
 
 #[derive(Clone, Copy)]
@@ -352,5 +352,3 @@ fn xy_unit(direction: [f32; 4]) -> Option<[f32; 2]> {
     let norm = (direction[0] * direction[0] + direction[1] * direction[1]).sqrt();
     (norm > 0.0).then(|| [direction[0] / norm, direction[1] / norm])
 }
-
-

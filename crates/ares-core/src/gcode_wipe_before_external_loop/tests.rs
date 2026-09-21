@@ -98,11 +98,7 @@ fn skips_without_internal_segment_coincident_projection_or_effective_width() {
     let speed_move_with_width = speed_move(4.0, 0.0, Some(0.4));
     let speed_move_without_width = speed_move(4.0, 0.0, None);
     assert_eq!(
-        loop_wipe(true, &empty_paths, &moves, None).gcode(
-            &mut writer,
-            1,
-            &speed_move_with_width
-        ),
+        loop_wipe(true, &empty_paths, &moves, None).gcode(&mut writer, 1, &speed_move_with_width),
         ""
     );
     assert_eq!(

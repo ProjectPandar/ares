@@ -13,8 +13,7 @@ pub(super) struct EntryBuilder<'a> {
     top_surfaces: &'a [Vec<Vec<ExPolygon>>],
     nearest_seam_plans: &'a [Vec<NearestSeamLayer>],
     island_predecessor: &'a PreparedPostExtrusionIslands,
-    layer_boundary_cache:
-        std::collections::HashMap<(usize, usize), std::rc::Rc<[ExPolygon]>>,
+    layer_boundary_cache: std::collections::HashMap<(usize, usize), std::rc::Rc<[ExPolygon]>>,
 }
 
 impl<'a> EntryBuilder<'a> {

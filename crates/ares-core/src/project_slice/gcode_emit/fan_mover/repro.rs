@@ -38,7 +38,11 @@ fn sv07_full_replay() {
     let mut out = String::new();
     for (n, chunk) in chunks.iter().enumerate() {
         if n < 4 {
-            eprintln!("chunk {n}: {} lines, head={:?}", chunk.lines().count(), chunk.lines().next());
+            eprintln!(
+                "chunk {n}: {} lines, head={:?}",
+                chunk.lines().count(),
+                chunk.lines().next()
+            );
         }
         out.push_str(&mover.process_gcode(chunk, true));
     }

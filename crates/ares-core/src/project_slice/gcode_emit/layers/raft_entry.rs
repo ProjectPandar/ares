@@ -2,9 +2,9 @@
 //! emit the materialized raft layer; the motion machinery
 //! (travel/Z/TYPE/wipe/retract) is identical to the object path.
 
+use super::super::{SliceError, motion, object::ObjectLabels, timelapse as timelapse_core};
 use super::entry::EntryGeometry;
 use super::raft_schedule::RaftSchedule;
-use super::super::{SliceError, motion, object::ObjectLabels, timelapse as timelapse_core};
 use crate::project_slice::island_print_order::OrderedExtrusionLayer;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
@@ -39,9 +39,7 @@ pub(super) fn emit(
         .map(|plan| {
             plan.polygons
                 .iter()
-                .map(|polygon| {
-                    crate::geometry::ExPolygon::new(polygon.clone(), Vec::new())
-                })
+                .map(|polygon| crate::geometry::ExPolygon::new(polygon.clone(), Vec::new()))
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();

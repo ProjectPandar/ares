@@ -10,12 +10,12 @@ use super::{
     EmitState, arc, extrusion,
     format::{axis as format_axis, extrusion as format_extrusion},
 };
-pub(in crate::project_slice::gcode_emit::motion) use wipe_path::scaled_position;
-use wipe_path::{WipePath, wipe_moves};
 pub(super) use lift::{
     emit_pending as emit_pending_lift, is_allowed_at as lift_is_allowed_at,
     mode_for as lift_mode_for, z_feedrate as lift_z_feedrate,
 };
+pub(in crate::project_slice::gcode_emit::motion) use wipe_path::scaled_position;
+use wipe_path::{WipePath, wipe_moves};
 
 pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe(output, state);
@@ -164,11 +164,13 @@ fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
     if remaining <= 0.0 {
         return;
     }
-    output.extend_from_slice(if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
-        b"G22 ; retract\n"
-    } else {
-        b"G10 ; retract\n"
-    });
+    output.extend_from_slice(
+        if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
+            b"G22 ; retract\n"
+        } else {
+            b"G10 ; retract\n"
+        },
+    );
     state.retracted_amount = 1.0;
     state.retracted = true;
 }
@@ -266,7 +268,6 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
         state.e_position = 0.0;
     }
 }
-
 
 fn unscaled_position(point: (i64, i64), state: &EmitState) -> arc::Point {
     arc::Point {

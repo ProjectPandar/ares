@@ -10,9 +10,7 @@ fn tokens(json: &str) -> Vec<(String, Option<String>)> {
 #[test]
 fn scalars_render_their_export_tokens() {
     assert_eq!(
-        tokens(
-            r#"{"text":"0.42","flag":true,"off":false,"int":-5,"float":3.0,"precise":0.45}"#
-        ),
+        tokens(r#"{"text":"0.42","flag":true,"off":false,"int":-5,"float":3.0,"precise":0.45}"#),
         vec![
             ("flag".to_owned(), Some("1".to_owned())),
             ("float".to_owned(), Some("3.0".to_owned())),

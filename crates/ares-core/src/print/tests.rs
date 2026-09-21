@@ -3,8 +3,7 @@ use crate::{Contour, Point2, PrintPath, PrintPathRole};
 
 #[test]
 fn builds_default_print_object_region_layers_and_surfaces() {
-    let print =
-        build_print_domain(&sample_layers(), &sample_contours(), &sample_paths()).unwrap();
+    let print = build_print_domain(&sample_layers(), &sample_contours(), &sample_paths()).unwrap();
 
     assert_eq!(print.objects().len(), 1);
     assert_eq!(print.regions(), &[PrintRegion::new(0)]);

@@ -1,10 +1,10 @@
 //! First-travel approach emission — the `needs_travel` branch of
 //! `start_travel::emit` (`GCode.cpp:6378-7501`, `GCodeWriter.cpp:685-806`).
 
-use super::retract;
-use super::dispatch;
-use super::route::{plan_route, polyline_length};
 use super::super::{PathProperties, retraction, travel_emit};
+use super::dispatch;
+use super::retract;
+use super::route::{plan_route, polyline_length};
 use crate::project_slice::gcode_emit::motion::features::feature_description;
 use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel,
@@ -376,5 +376,9 @@ pub(super) fn emit_needs_travel(
     state.positioned = true;
     state.current_feedrate = state.travel_feedrate;
 
-    (travel_set_layer_z, eager_lifted_travel, unclear_position_travel)
+    (
+        travel_set_layer_z,
+        eager_lifted_travel,
+        unclear_position_travel,
+    )
 }

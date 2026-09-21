@@ -48,10 +48,7 @@ pub(super) fn base_config(
         .get("printable_height")
         .and_then(value::Value::as_number)
     {
-        config.insert(
-            "max_print_height",
-            value::Value::Integer(height as i64),
-        );
+        config.insert("max_print_height", value::Value::Integer(height as i64));
     }
     let first_layer_temperatures = value::Value::List(
         traversal

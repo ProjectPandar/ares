@@ -85,8 +85,12 @@ pub(super) fn append(
     // `AvoidCrossingPerimeters.cpp:1100`). Copies of one source share the
     // layer layout, so records are matched by slice_z. The boundary cache
     // lives inside the entry builder.
-    let mut entry_builder =
-        EntryBuilder::new(traversal, top_surfaces, nearest_seam_plans, island_predecessor);
+    let mut entry_builder = EntryBuilder::new(
+        traversal,
+        top_surfaces,
+        nearest_seam_plans,
+        island_predecessor,
+    );
     // FanMover construction mirrors GCode.cpp:3727-3740 (gate:
     // fan_speedup_time != 0 || fan_kickstart > 0).
     let fan_mover_handle = fan_setup::gate(traversal);

@@ -4,10 +4,10 @@
 //! is the raft layer index — with a raft, the covered layers start at
 //! the raft flange).
 
+use super::super::{motion, skirt};
 use super::entry::EntryGeometry;
 use super::entry_builder::EntryBuilder;
 use super::raft_schedule::RaftSchedule;
-use super::super::{motion, skirt};
 use crate::geometry::ExPolygon;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
 
@@ -49,9 +49,7 @@ pub(super) fn emit(
                 .map(|plan| {
                     plan.polygons
                         .iter()
-                        .map(|polygon| {
-                            crate::geometry::ExPolygon::new(polygon.clone(), Vec::new())
-                        })
+                        .map(|polygon| crate::geometry::ExPolygon::new(polygon.clone(), Vec::new()))
                         .collect::<Vec<_>>()
                 })
                 .unwrap_or_default();

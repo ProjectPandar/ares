@@ -1,7 +1,9 @@
 //! Layer-end timelapse + retraction tail for a chunk's last object entry
 //! (`GCode.cpp:5527-5546`).
 
-use super::super::{SliceError, append_layer_end_timelapse, motion, object::ObjectLabels, timelapse};
+use super::super::{
+    SliceError, append_layer_end_timelapse, motion, object::ObjectLabels, timelapse,
+};
 
 pub(super) fn emit(
     output: &mut Vec<u8>,

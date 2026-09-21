@@ -52,8 +52,7 @@ fn height_is_allowed_at(state: &EmitState, layer_z: f64) -> bool {
     // An epsilon tolerance keeps those layers lifting and desyncs every
     // following travel.
     layer_z >= state.options.retract_lift_above
-        && (state.options.retract_lift_below == 0.0
-            || layer_z <= state.options.retract_lift_below)
+        && (state.options.retract_lift_below == 0.0 || layer_z <= state.options.retract_lift_below)
 }
 
 fn height_is_allowed(state: &EmitState) -> bool {

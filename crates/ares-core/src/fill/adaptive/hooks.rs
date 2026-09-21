@@ -373,4 +373,3 @@ fn add_hook(
         points.push(end);
     }
 }
-

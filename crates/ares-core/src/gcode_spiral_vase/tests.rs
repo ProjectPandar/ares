@@ -9,8 +9,8 @@ fn spiral_starting_flow_ratio_uses_print_xy_only_but_observes_travel_start() {
         printed_xy: 0.0,
         previous_point: None,
         transition_in: true,
-        transition_out:
-            crate::gcode_spiral_vase_transition::SpiralVaseTransitionOutState::disabled(),
+        transition_out: crate::gcode_spiral_vase_transition::SpiralVaseTransitionOutState::disabled(
+        ),
         smooth_xy: false,
         max_xy_smoothing: 0.0,
         previous_layer_points: Vec::new(),

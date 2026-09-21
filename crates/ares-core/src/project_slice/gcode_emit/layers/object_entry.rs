@@ -2,11 +2,11 @@
 //! build, labels, `emit_layer`, layer-end timelapse, and the spiral-vase
 //! layer accounting (`GCode.cpp:5380-5560`, `SpiralVase.cpp:137-187`).
 
-use super::entry_builder::EntryBuilder;
-use super::layer_end;
 use super::super::{
     SliceError, motion, object::ObjectLabels, spiral_vase, timelapse as timelapse_core,
 };
+use super::entry_builder::EntryBuilder;
+use super::layer_end;
 use crate::geometry::ExPolygon;
 use crate::project_slice::island_print_order::OrderedExtrusionLayer;
 use crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal;
@@ -100,8 +100,7 @@ pub(super) fn emit(
                 entry_output_start
             },
             enabled: spiral_body_layer,
-            final_layer: is_last_entry
-                && layer_index + 1 == object_layer_counts[object_index],
+            final_layer: is_last_entry && layer_index + 1 == object_layer_counts[object_index],
             z: f64::from(layer_z),
             height: f64::from(layer_height),
         },

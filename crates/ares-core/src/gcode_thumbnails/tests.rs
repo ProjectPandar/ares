@@ -91,11 +91,8 @@ fn distinguishes_thumbnail_parse_errors() {
 #[test]
 fn exposes_upstream_error_message_fragments() {
     assert!(
-        thumbnail_error_string(ThumbnailParseError::InvalidValue)
-            .contains("Invalid input format")
+        thumbnail_error_string(ThumbnailParseError::InvalidValue).contains("Invalid input format")
     );
     assert!(thumbnail_error_string(ThumbnailParseError::OutOfRange).contains("out of range"));
-    assert!(
-        thumbnail_error_string(ThumbnailParseError::InvalidExtension).contains("extension")
-    );
+    assert!(thumbnail_error_string(ThumbnailParseError::InvalidExtension).contains("extension"));
 }
