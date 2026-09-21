@@ -22,7 +22,16 @@ fn orca_parity_option_coverage() {
         .map(|name| profiles.filament(name).unwrap())
         .collect::<Vec<_>>();
     parity::normalize_filament_defaults(&mut filaments);
+    // `ARES_OPTION_KEYS=a,b,c` narrows the sweep to named options for
+    // targeted re-verification; unset sweeps the whole inventory.
+    let only: Option<std::collections::BTreeSet<String>> = std::env::var("ARES_OPTION_KEYS")
+        .ok()
+        .map(|list| list.split(',').map(str::trim).map(str::to_owned).collect());
     let plans = domains::load(&runner::repo_root());
+    let plans: Vec<_> = plans
+        .into_iter()
+        .filter(|plan| only.as_ref().is_none_or(|set| set.contains(&plan.key)))
+        .collect();
     let outcomes = plans
         .iter()
         .map(|plan| execute_plan(&runner, plan, &machine, &process, &filaments))
@@ -103,7 +112,12 @@ fn execute_plan(
             });
         match built {
             Ok(exported) => {
-                let outcome = parity::compare_exported(runner, &exported);
+                let outcome = parity::compare_exported_for(runner, &exported, Some(&plan.key));
+                if outcome.status == "INPUT_REJECTED" {
+                    rejected.push(format!("{}: {}", case.label, outcome.detail));
+                    eprintln!("[option] INPUT_REJECTED {label}");
+                    continue;
+                }
                 compared += usize::from(strict_comparator_ran(outcome.status));
                 eprintln!("[option] {} {label}", outcome.status);
                 if outcome.status != "PASS" && first_failure.is_none() {

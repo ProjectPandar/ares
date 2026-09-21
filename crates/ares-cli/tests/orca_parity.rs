@@ -281,11 +281,35 @@ pub(crate) fn compare_exported(
     runner: &OrcaRunner,
     exported: &runner::ExportedCase,
 ) -> ParityOutcome {
+    compare_exported_for(runner, exported, None)
+}
+
+/// `compare_exported` with an optional option key: when the oracle itself
+/// rejects the slice with a diagnostic attributable to that key
+/// (`stages::attributable`), the case is a legitimate input rejection, not
+/// a divergence or an oracle-process error. The option sweep passes its key
+/// so schema-legal-but-infeasible values (absolute-E `use_relative_e_`
+/// `distances`, below-model `printable_height`) classify as rejections.
+pub(crate) fn compare_exported_for(
+    runner: &OrcaRunner,
+    exported: &runner::ExportedCase,
+    option_key: Option<&str>,
+) -> ParityOutcome {
     let budget = oracle_run_budget();
     let mut attempt = 1;
     let mut outcome = match runner.slice_case(exported) {
         Ok(case) => compare_case(&case),
-        Err(error) => return ares_error(&exported.label, error.to_string()),
+        Err(error) => {
+            if option_key.is_some_and(|key| error.input_rejection(key)) {
+                return ParityOutcome {
+                    label: exported.label.clone(),
+                    status: "INPUT_REJECTED",
+                    detail: error.to_string(),
+                    artifacts: None,
+                };
+            }
+            return ares_error(&exported.label, error.to_string());
+        }
     };
     while outcome.status == "DIVERGENT" && attempt < budget {
         attempt += 1;
