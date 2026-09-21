@@ -4055,3 +4055,8 @@ Current verified singletons (fresh oracle runs):
 - Kobra 3 0.2: 6 lines (wipe dE split 1e-5)
 - Sermoon V1: 1890 (avoid-crossing detour routing)
 ares-core 6993/6993.
+
+### Post-fix sweep (619f2140)
+
+**956 PASS / 18 DIVERGENT / 17 ORCA_ERROR / 10 VENDOR** (1001 total).
+Session total: 933 → 956 (+23 byte-exact printers across the fixes).
