@@ -65,8 +65,26 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         if state.lifted && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
             let z_feedrate = travel::lift_z_feedrate(state);
+            // `_extrude` re-states Z: on the print's first extrusion
+            // (`_last_pos_undefined`) the comment is "ensure Z matches planned
+            // layer height" (`GCode.cpp:6382`); otherwise the post-contour
+            // reset uses "reset Z after contouring" (`GCode.cpp:6399`).
+            let reset_comment = if state.options.gcode_comments {
+                if never_positioned {
+                    " ; ensure Z matches planned layer height"
+                } else {
+                    " ; reset Z after contouring"
+                }
+            } else {
+                ""
+            };
             output.extend_from_slice(
-                format!("G1 Z{} F{}\n", format_z(z), format_axis(z_feedrate)).as_bytes(),
+                format!(
+                    "G1 Z{} F{}{reset_comment}\n",
+                    format_z(z),
+                    format_axis(z_feedrate)
+                )
+                .as_bytes(),
             );
             state.current_feedrate = z_feedrate;
             state.scarf_z = slope_start_z;

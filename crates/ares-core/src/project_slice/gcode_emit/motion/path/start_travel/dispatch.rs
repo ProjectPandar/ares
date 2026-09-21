@@ -22,11 +22,19 @@ pub(super) fn emit_retracted_first_travel(
     never_positioned: bool,
 ) {
     let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
+    // `travel_to_xyz` NormalLift emits the lift via
+    // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:678`),
+    // trailing the ` ; normal lift Z` comment under `gcode_comments`.
+    let lift_comment = state
+        .options
+        .gcode_comments
+        .then_some(" ; normal lift Z")
+        .unwrap_or("");
     if mode == LiftMode::Normal {
         let feedrate = travel::lift_z_feedrate(state);
         output.extend_from_slice(
             format!(
-                "G1 Z{} F{}\n",
+                "G1 Z{} F{}{lift_comment}\n",
                 format_z(state.layer_z + state.options.z_hop),
                 format_axis(feedrate)
             )
@@ -49,9 +57,11 @@ pub(super) fn emit_retracted_first_travel(
                 state.travel_feedrate,
                 first_travel_comment,
             );
+            // `_travel_to_z(.., comment)` repeats the travel comment on the
+            // re-statement (`GCodeWriter.cpp:777`).
             output.extend_from_slice(
                 format!(
-                    "G1 Z{} F{}\n",
+                    "G1 Z{} F{}{first_travel_comment}\n",
                     format_z(state.layer_z + state.options.z_hop),
                     format_axis(travel::lift_z_feedrate(state))
                 )
@@ -84,7 +94,7 @@ pub(super) fn emit_retracted_first_travel(
         );
         output.extend_from_slice(
             format!(
-                "G1 Z{} F{}\n",
+                "G1 Z{} F{}{first_travel_comment}\n",
                 format_z(state.layer_z + state.options.z_hop),
                 format_axis(travel::lift_z_feedrate(state))
             )
