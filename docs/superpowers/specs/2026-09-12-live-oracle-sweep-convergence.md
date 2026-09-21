@@ -3943,3 +3943,21 @@ M106-by-M106 (the oracle's mover INPUT can be reconstructed: its
 chunk outputs minus the mover's known transformations, or add an
 ORCA_DUMP_FANIN probe at the fan_mover filter entry) and align the
 cooling's layer-1 fan emission sequence.
+
+## FanMover chunk boundary walks back over the leading fan lines (2026-09-20 xlix)
+
+ORCA_DUMP_FANIN (a probe at the fan_mover filter entry) shows the
+upstream chunk layout: the cooling's layer fan line PREPENDS the
+rebuilt layer text (`change_extruder_set_fan(true)`,
+`CoolingBuffer.cpp:824`) — chunk N starts `[M106 ...][;LAYER_CHANGE
+...]` — while the ares emitted its marker-replaced M106 before the
+tag too, but the mover's `;LAYER_CHANGE` split left those lines in
+the PREVIOUS chunk. The boundary now walks back over the
+immediately-preceding M106/M107 lines so they open the next chunk.
+
+SV07 Plus: 1329 → 10 diff lines (deterministic across 4 fresh
+oracle runs) — the residue is the kickstart-pair placement
+arithmetic (both engines emit the S100/S255 pair, at slightly
+different split positions). No regressions: MK3S r6/r8, XL 0.4,
+KP3S PRO V2, X-Max 3 byte-identical; KP3S 3.0 unchanged (its own
+tail-M106 layout); ares-core 6993/6993.

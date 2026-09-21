@@ -195,9 +195,28 @@ pub(super) fn emit(
         for (offset, line) in text.match_indices("\n;") {
             let line_end = offset + 1;
             if text[line_end..].starts_with(";LAYER_CHANGE") {
-                let chunk = &text[chunk_start..line_end];
+                // The cooling's layer fan line(s) precede the `;LAYER_CHANGE`
+                // tag (upstream `change_extruder_set_fan(true)` prepends to
+                // the rebuilt layer text) — they belong to THIS layer's
+                // chunk head, so the boundary walks back over them.
+                let mut boundary = line_end;
+                let bytes = text.as_bytes();
+                while boundary > chunk_start {
+                    let mut prev = boundary;
+                    while prev > chunk_start && bytes[prev - 1] != b'\n' {
+                        prev -= 1;
+                    }
+                    if prev == boundary
+                        || (!text[prev..boundary].starts_with("M106")
+                            && !text[prev..boundary].starts_with("M107"))
+                    {
+                        break;
+                    }
+                    boundary = prev;
+                }
+                let chunk = &text[chunk_start..boundary];
                 flushed.push_str(&mover.process_gcode(chunk, true));
-                chunk_start = line_end;
+                chunk_start = boundary;
             }
         }
         flushed.push_str(&mover.process_gcode(&text[chunk_start..], true));
