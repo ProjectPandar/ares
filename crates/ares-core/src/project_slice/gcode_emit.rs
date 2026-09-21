@@ -202,13 +202,14 @@ pub(super) fn emit(
                 let mut boundary = line_end;
                 let bytes = text.as_bytes();
                 while boundary > chunk_start {
-                    let mut prev = boundary;
+                    // Step back over the newline into the previous line, then
+                    // scan to its start.
+                    let mut prev = boundary - 1;
                     while prev > chunk_start && bytes[prev - 1] != b'\n' {
                         prev -= 1;
                     }
-                    if prev == boundary
-                        || (!text[prev..boundary].starts_with("M106")
-                            && !text[prev..boundary].starts_with("M107"))
+                    if !text[prev..boundary].starts_with("M106")
+                        && !text[prev..boundary].starts_with("M107")
                     {
                         break;
                     }

@@ -3961,3 +3961,16 @@ arithmetic (both engines emit the S100/S255 pair, at slightly
 different split positions). No regressions: MK3S r6/r8, XL 0.4,
 KP3S PRO V2, X-Max 3 byte-identical; KP3S 3.0 unchanged (its own
 tail-M106 layout); ares-core 6993/6993.
+
+## FanMover walk-back off-by-one fixed — SV07 CLOSED (2026-09-20 l)
+
+The walk-back's line scan started AT the boundary, so the first
+`bytes[prev-1] != '\\n'` check saw the newline ending the fan line
+and stopped immediately (`prev == boundary` → break) — the M106
+never moved into the next chunk (the chunk debug showed heads of
+`;LAYER_CHANGE` with the M106 still closing the previous chunk).
+Fixed by starting the scan at `boundary - 1` (step over the
+newline first). SV07 Plus byte-identical 4/4 fresh oracle runs;
+SV07 0.4 2/4 (races); MK3S r6-class/XL/KP3S PRO V2/X-Max 3/E3V3+/
+CORE One unchanged; KP3S 3.0 unchanged (1323 — its own layout);
+ares-core 6993/6993.
