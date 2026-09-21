@@ -4060,3 +4060,36 @@ ares-core 6993/6993.
 
 **956 PASS / 18 DIVERGENT / 17 ORCA_ERROR / 10 VENDOR** (1001 total).
 Session total: 933 → 956 (+23 byte-exact printers across the fixes).
+
+## Cooling-slowdown + estimator isolation (2026-09-21, Ginger G1)
+
+Ginger G1 1.2 diverges on cooling-slowdown feedrates (`G1 F843` oracle
+vs `F841` ares) and the downstream `M73`/`estimated printing time`
+(oracle 10m40s vs ares 11m39s, ~59s). Isolated each stage:
+
+- **Estimator is byte-exact.** Fixed a `replay.cpp` diagnostic bug
+  (SQUARE_CORNER_VELOCITY=7 matched the bare `VELOCITY=` search and
+  corrupted max_speed_x/y); re-running upstream-verbatim replay on
+  ares's gcode yields TOTAL=699.98 == ares's own 699.98. The M73
+  over-estimate is a *consequence* of ares emitting slower feedrates,
+  not an estimator bug.
+- **Cooling slowdown is byte-exact vs vendored buffer.** probe7
+  (vendored upstream CoolingBuffer, Ginger config) on ares's
+  pre-cooling layer-0 produces F841 — identical to ares. The
+  pre-cooling move set is byte-identical to oracle's emitted moves
+  (only M73/F differ downstream). So the oracle's *real* CoolingBuffer
+  must see a different layer input — most likely a line the oracle
+  counts into layer-0 `time_total` that ares excludes (or vice versa),
+  worth ~0.34s of layer time. Candidate: an `adjustable`/`time_max`
+  marking difference on a boundary line (external perimeter or the
+  speed-modifier aggregation), not resolvable from the post-cooling
+  bytes alone.
+
+Remaining unverified lead: diff the cooling `adjustable()` marking —
+`dont_slow_down_outer_wall` and the `_EXTRUDE_SET_SPEED` speed-modifier
+aggregation for the prime/unretract (`G1 E55`) and Z-hop lines may mark
+one extra line adjustable in oracle's build.
+
+SV06 0.4 High-Speed is a separate single-coordinate ULP: `Y98.188` vs
+`Y98.189` on an outer-wall vertex (precise_outer_wall=1,
+resolution=0.012) — a 1-Coord-unit perimeter intersection difference.
