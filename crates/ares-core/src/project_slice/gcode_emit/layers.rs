@@ -170,7 +170,11 @@ pub(super) fn append(
                 / entries.len() as f64
         };
         let (first_object, first_layer) = entries[0];
-        if first_group && first_layer == 0 {
+        // The preamble fires on the first PHYSICAL layer chunk — raft layer
+        // 0 included (`first_layer` is a sentinel there, so the check keys
+        // off `first_group`, not `first_layer == 0`). Upstream emits the
+        // filament-start g-code at the raft base, not the object base.
+        if first_group {
             preamble::emit(
                 output,
                 state,
@@ -181,10 +185,26 @@ pub(super) fn append(
             )?;
             first_group = false;
         }
+        // Raft chunks carry a `RAFT_SENTINEL_BASE + raft_index` layer index;
+        // the cooling fan ramp counts raft layers as the literal first
+        // physical layers (raft base = layer 0), so map the sentinel back
+        // to the raft index, and shift object layers by the raft count
+        // (object layer 0 follows the last raft layer).
+        let cooling_layer_index = match raft_schedule::classify(first_layer).ok().flatten() {
+            Some(raft_index) => raft_index,
+            None => {
+                first_layer
+                    + raft
+                        .as_ref()
+                        .and_then(|raft| raft.counts.get(first_object))
+                        .copied()
+                        .unwrap_or(0)
+            }
+        };
         // The cooling rewrite window opens after the preamble (the start
         // g-code is not part of the layer's buffered extrusions).
         let layer_output_start = output.len();
-        cooling.begin_layer(output, first_layer);
+        cooling.begin_layer(output, cooling_layer_index);
         state.part_fan_speed = cooling.provisional_part_speed();
         // The change-layer block uses the merged chunk's leading entry
         // (`change_layer` runs once per layer chunk, `GCode.cpp:5685`).

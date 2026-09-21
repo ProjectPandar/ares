@@ -1,4 +1,3 @@
-
 use super::ReorientPlan;
 use crate::geometry::{CoordinateScale, Point, Polygon};
 use crate::{
