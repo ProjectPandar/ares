@@ -4003,3 +4003,29 @@ went ORCA_ERROR (Cubicon/MyToolChanger/Creator 5 export flakes,
 17→19) and Neptune 4 Max 0.2 went DIVERGENT in the 6-run window but
 matches 4/4 fresh runs (race). Excluding flakes: 960 effective PASS
 / 933 session start = +27 byte-exact printers.
+
+## KP3S 3.0 CLOSED — seam-gap next-point fallback + equalizer blank lines (2026-09-20 lii)
+
+Two stacked root causes (both found with WIPEGATE / PEINPUT /
+PRECOOLING dumps):
+
+1. `clipped_loop_end` with `seam_gap = 0` returns the loop's closing
+   point == the start → the wipe-before-external gate's displacement
+   is zero → early return, so the de-retraction fake path never
+   emitted (the two-stage travel `X94.35 Y94.204 F15000` +
+   `G1 X94.55 Y94.55`). Upstream falls back to the SECOND-TO-LAST
+   point of the last path when `next_point == current_point`
+   (`GCode.cpp:5838-5841`) — same now.
+2. The pressure equalizer dropped EMPTY lines on parse
+   (`if raw.is_empty() { continue; }`) while upstream keeps them as
+   GCODELINETYPE_OTHER (`PressureEqualizer::process_line` only
+   rejects the EXTRUSION_ROLE tag) — the before-layer-change
+   template's trailing blank line vanished. Fixed by iterating
+   `lines()` and pushing empty lines through as OTHER lines
+   (`.lines()` also correctly drops the split-trailing terminator
+   empty that an earlier `.split('\n')` version re-added at the
+   chunk end).
+
+KP3S 3.0 byte-identical 4/4 fresh oracle runs (1323 → 66 → 0);
+MK3S/XL/KP3S PRO V2/X-Max 3/SV07 Plus/E3V3+/CORE One unchanged;
+ares-core 6993/6993.

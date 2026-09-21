@@ -77,16 +77,15 @@ impl PressureEqualizerPass {
     }
 
     fn process_layer_lines(&mut self, gcode: &str) {
-        for raw in gcode.split('\n') {
-            if raw.is_empty() {
-                continue;
-            }
+        for raw in gcode.lines() {
+            // Upstream keeps EMPTY lines through the equalizer as
+            // GCODELINETYPE_OTHER (`PressureEqualizer::process_line` only
+            // rejects the EXTRUSION_ROLE tag) — a blank line inside a layer
+            // template survives to the serialized output.
             let mut line = GCodeLine::default();
-            if self.parser.parse_line(raw, &mut line).is_some() {
+            if raw.is_empty() || self.parser.parse_line(raw, &mut line).is_some() {
                 self.lines.push(line);
             }
-            // Marker lines (`;_EXTRUSION_ROLE:`) are filtered out —
-            // they only update the parser's role state.
         }
 
         let mut idx_end_current_extrusion = 0;
