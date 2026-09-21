@@ -2,6 +2,7 @@ pub(super) mod arc;
 #[cfg(test)]
 mod axis_acceleration_tests;
 mod firmware;
+mod homing;
 mod segment;
 mod test_hooks;
 #[cfg(test)]
@@ -254,17 +255,7 @@ impl MotionState {
             return firmware::emulate_firmware_retraction(self, command);
         }
         if command == "G28" {
-            let has_axis = ['X', 'Y', 'Z'].iter().any(|&axis| code.contains(axis));
-            let mut homing = String::from("G1");
-            let axes = ['X', 'Y', 'Z']
-                .into_iter()
-                .filter(|axis| !has_axis || code.contains(*axis));
-            for axis in axes {
-                homing.push(' ');
-                homing.push(axis);
-                homing.push('0');
-            }
-            return self.motion(&homing);
+            return self.motion(&homing::homing_g1(code));
         }
         if !matches!(command, "G0" | "G1" | "G2" | "G3") {
             return None;
