@@ -4200,3 +4200,21 @@ emit bare `G1 Z` without ` ; normal lift Z`/` ; spiral lift Z`, and the
 per-role extrusion comments (`; infill`, `; perimeter`) are not
 emitted. Full parity = threading a description string through the
 whole emit surface — a large feature port for an off-by-default option.
+
+### print_flow_ratio footer is a misalignment, not a label bug
+
+Re-ran the case: ares's footer order matches oracle exactly
+(`[mm],[cm3],[g],[cost],total[g],total[cost],layers,time`). The
+reported `"; total filament used [g]" vs "; filament used [g]"` diff at
+byte 79889 is a diff-alignment artifact — ares emits one extra/one
+fewer line earlier in the file (per-extruder vs total block offset),
+so the comparator paired the wrong labels. The real divergence is a
+line-count delta upstream of the footer, not a missing "total" prefix.
+
+Confirmed `print_flow_ratio`, `gcode_comments`, `raft_layers`,
+`nozzle_volume_type`, `use_relative_e_distances`, `timelapse_type`,
+`printable_height`, and the pattern options are all entangled
+feature-parity or oracle-process-failure gaps — none are surgical
+footer/label fixes. They each require porting the corresponding
+upstream emission block (comment threading, raft polygon expansion,
+flush-matrix serialization, absolute-E stats path).
