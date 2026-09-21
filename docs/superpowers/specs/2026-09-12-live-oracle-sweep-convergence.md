@@ -4142,3 +4142,34 @@ corner tie-break that differs means a sub-ULP difference in the angle
 penalty or a `central_enforcer` flag — same deep-geometry class as the
 sub-ULP perimeter-vertex group. Not a missing feature; a precision
 frontier inside an already-ported subsystem.
+
+## Option-coverage harness: provably-legal gate (2026-09-21)
+
+Audited the option-coverage suite (the goal's bool/enum/range
+contract). Found and fixed two coverage-model gaps:
+
+1. `coFloatOrPercent` `*_line_width` options emitted a raw-schema `max`
+   case (`min(max=1000, max_literal=10) = 10`, rendered `10%`) that the
+   oracle rejects — the slicing-feasible bound is the nozzle-relative
+   context max (`Print::validate`), far below both schema bounds.
+   Routed all 9 width options (`line_width`, `bridge_line_width`,
+   `outer/inner_wall`, `initial_layer`, `sparse_infill`,
+   `internal_solid_infill`, `support`, `top_surface`) through
+   `widths::generate`'s context-bound model (mm `2.0` / `500%`).
+2. Replaced the `width_domain.is_some()` PASS gate with a
+   `provably_legal` flag on `OptionPlan`: bool/enum exhaust their
+   declared value set, `min`+`max`-bounded numerics cover the schema
+   range, and `min`-only-bounded numerics (`[min,∞)` — e.g.
+   `outer_wall_speed min=1`, `travel_speed`, `layer_height`) now
+   generate `min`+`seeded` (previously baseline-only). Provably-legal
+   coverage went 348→519 of 650. The remaining 131 are genuinely
+   unbounded (coString/coPoints/gcode blobs/symbolic bounds like
+   `min=-max_temp`) — correctly baseline-only; no schema min/max exists
+   to exercise.
+
+Commits `5ff8ac47`, `6675d82e`. The reclassified options now actually
+execute against the oracle under `ARES_PARITY_OPTIONS=1`; the residual
+FAILs are real feature-parity gaps (gcode_comments inline comments,
+nozzle_volume_type flush matrix serialization, print_flow_ratio stats
+label, raft_layers max_z_height, sparse_infill_pattern 1-ulp E) plus
+M73-placement oracle races.
