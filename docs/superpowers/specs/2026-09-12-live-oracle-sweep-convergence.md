@@ -4127,3 +4127,18 @@ Kobra 3, E3NG, Delta Flyer), (c) cooling-buffer layer-input marking
 M73 off-by-one that may partly be oracle race noise (X-Max3 proved
 2/4). Items (a)/(b) are the same deep-geometry class the ledger already
 flags as needing oracle-internal frame introspection.
+
+### TinyBotV1 seam-classification detail
+
+TinyBotV1 uses `seam_position=aligned_back` → `spAlignedBack`. Ares
+ports it (`visibility.rs:34` `front_adjustment` mirrors the
+`clamp((normal·(0,-1,0)+1.2)*0.5)` bias; `alignment.rs:is_better`
+mirrors `SeamComparator` overhang→embedded→score ordering). The
+divergence is which of two *symmetric back corners* of the cube wins:
+oracle picks `(107.887,102.113)`, ares picks `(107.887,107.887)`. Both
+satisfy "back"; the tie is broken by the per-vertex `score` (angle
+penalty + central_enforcer + accumulated visibility). A symmetric-cube
+corner tie-break that differs means a sub-ULP difference in the angle
+penalty or a `central_enforcer` flag — same deep-geometry class as the
+sub-ULP perimeter-vertex group. Not a missing feature; a precision
+frontier inside an already-ported subsystem.
