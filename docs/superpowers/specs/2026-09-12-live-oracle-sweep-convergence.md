@@ -3994,3 +3994,12 @@ lines restored. Remaining: the two-stage travel
 Sermoon V1 class), a blank line at 55, and the M73 cascade. No
 regressions: MK3S/XL/KP3S PRO V2/X-Max 3/SV07 Plus/E3V3+ all
 unchanged; ares-core 6993/6993.
+
+### Post-fix sweep (e92c2da0)
+
+**953 PASS / 19 DIVERGENT / 19 ORCA_ERROR / 10 VENDOR** — SV07 Plus
+flipped PASS ✓; the apparent -3 vs 956 is oracle churn: 7 printers
+went ORCA_ERROR (Cubicon/MyToolChanger/Creator 5 export flakes,
+17→19) and Neptune 4 Max 0.2 went DIVERGENT in the 6-run window but
+matches 4/4 fresh runs (race). Excluding flakes: 960 effective PASS
+/ 933 session start = +27 byte-exact printers.
