@@ -111,8 +111,20 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     let emitted = match mode {
         LiftMode::Normal => {
             let feedrate = z_feedrate(state);
+            // `GCodeWriter::_travel_to_z` (`GCodeWriter.cpp:841`): the lift
+            // carries a trailing ` ; normal lift Z` under `gcode_comments`.
+            let comment = state
+                .options
+                .gcode_comments
+                .then_some(" ; normal lift Z")
+                .unwrap_or("");
             output.extend_from_slice(
-                format!("G1 Z{} F{}\n", format_z(raised_z), format_axis(feedrate)).as_bytes(),
+                format!(
+                    "G1 Z{} F{}{comment}\n",
+                    format_z(raised_z),
+                    format_axis(feedrate)
+                )
+                .as_bytes(),
             );
             state.current_feedrate = feedrate;
             true
@@ -141,9 +153,16 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
                 let slope_distance = state.options.z_hop / slope.tan();
                 let x = state.x + dx * slope_distance / travel_distance;
                 let y = state.y + dy * slope_distance / travel_distance;
+                // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:747`)
+                // trails the slope XYZ move under `gcode_comments`.
+                let comment = state
+                    .options
+                    .gcode_comments
+                    .then_some(" ; normal lift Z")
+                    .unwrap_or("");
                 output.extend_from_slice(
                     format!(
-                        "G1 X{} Y{} Z{} F{}\n",
+                        "G1 X{} Y{} Z{} F{}{comment}\n",
                         format_axis(x),
                         format_axis(y),
                         format_z(raised_z),
@@ -186,8 +205,18 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
         state.current_feedrate = state.travel_feedrate;
     } else {
         let feedrate = z_feedrate(state);
+        let comment = state
+            .options
+            .gcode_comments
+            .then_some(" ; normal lift Z")
+            .unwrap_or("");
         output.extend_from_slice(
-            format!("G1 Z{} F{}\n", format_z(raised_z), format_axis(feedrate)).as_bytes(),
+            format!(
+                "G1 Z{} F{}{comment}\n",
+                format_z(raised_z),
+                format_axis(feedrate)
+            )
+            .as_bytes(),
         );
         state.current_feedrate = feedrate;
     }
@@ -214,8 +243,15 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
 }
 
 fn append_spiral(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64, j: f64) {
+    // `_spiral_travel_to_z` (`GCodeWriter.cpp:881`): under
+    // `gcode_comments` the comment is a standalone `;spiral lift Z` line
+    // before the feedrate set (arc-fitting uses ` ; XY plane for arc`).
     if state.options.enable_arc_fitting {
-        output.extend_from_slice(b"G17\n");
+        if state.options.gcode_comments {
+            output.extend_from_slice(b"G17 ; XY plane for arc\n");
+        } else {
+            output.extend_from_slice(b"G17\n");
+        }
         output.extend_from_slice(
             format!(
                 "G3 Z{} I{} J{} P1  F{}\n",
@@ -229,6 +265,9 @@ fn append_spiral(output: &mut Vec<u8>, state: &EmitState, raised_z: f64, i: f64,
         return;
     }
 
+    if state.options.gcode_comments {
+        output.extend_from_slice(b";spiral lift Z\n");
+    }
     output.extend_from_slice(format!("G1 F{}\n", format_axis(state.travel_feedrate)).as_bytes());
     let segments = (8.0 * (0.01 / state.options.arc_fitting_tolerance))
         .round()
