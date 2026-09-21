@@ -17,6 +17,12 @@ struct Arm {
 }
 
 pub(super) fn render(template: &str, config: &mut Config) -> Result<String, String> {
+    // Upstream `process_macro` calls `qi::phrase_parse` with the ASCII
+    // whitespace skipper (`PlaceholderParser.cpp:2510-2517`), which runs
+    // `skip_over` BEFORE the grammar — the template's leading
+    // ' '/'\t'/'\r'/'\n' never reach the output (the MMU start gcode's
+    // `" _SP_PRINT_START"` loses its leading space).
+    let template = template.trim_start_matches([' ', '\t', '\r', '\n']);
     let nodes = parse(template)?;
     render_nodes(&nodes, config)
 }
