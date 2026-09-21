@@ -4093,3 +4093,37 @@ one extra line adjustable in oracle's build.
 SV06 0.4 High-Speed is a separate single-coordinate ULP: `Y98.188` vs
 `Y98.189` on an outer-wall vertex (precise_outer_wall=1,
 resolution=0.012) — a 1-Coord-unit perimeter intersection difference.
+
+## M73 placement + remaining-divergence root causes (2026-09-21 cont)
+
+Multi-run racebatch on the M73 group revealed the stale summary was
+misleading: **Qidi X-Max 3 0.4 matched 2/4 fresh oracle runs** (the
+M73 placement is oracle-non-deterministic — TBB reordering moves the
+marker between the crossing move and the next). So X-Max 3 is
+effectively converged under the multi-run rule, not a real bug.
+
+Upstream M73 emission (`GCodeProcessor.cpp:1455-1467`): for each
+emitted G1 it writes the line then calls `process_line_move(
+g1_lines_counter++)`; the `g1_times_cache` stores `{g1_line_id,
+remaining_internal_g1_lines, cumulative_time}` per motion block where
+`g1_line_id` is pre-incremented (`++m_g1_line_id` at :3868/:4278 before
+`block.g1_line_id = m_g1_line_id`). Ares mirrors this with
+`elapsed[index+1]` keyed on a sequential `exported_g1_lines` id — the
+schemes align, so residual M73 shifts are boundary-line races or a
+block-classification count difference (G28/M83/toolchange g1 ids).
+
+**TinyBotV1 0.4mm (0/4)** is a real divergence, not a race: the
+post-retract travel picks a different avoid-crossing waypoint
+(oracle `X105.515 Y101.24` two-hop vs ares `X103.821 Y103.928`), and
+the inner-wall loop's closing vertex differs (`107.847,102.113` vs
+`107.887,107.847`) — a seam/loop-orientation + avoid-crossing routing
+difference, same family as Sermoon V1's known avoid-crossing detour.
+
+Net: the genuinely-open defects reduce to (a) avoid-crossing travel
+routing (Sermoon V1, TinyBotV1, SK1 wipe-reorder, PhoenixProV1, iQ
+TiQ8), (b) sub-ULP perimeter-vertex geometry (SV06 `Y98.188/.189`,
+Kobra 3, E3NG, Delta Flyer), (c) cooling-buffer layer-input marking
+~0.28s (Ginger G1 feedrate + its M73/time tail), and (d) a residual
+M73 off-by-one that may partly be oracle race noise (X-Max3 proved
+2/4). Items (a)/(b) are the same deep-geometry class the ledger already
+flags as needing oracle-internal frame introspection.
