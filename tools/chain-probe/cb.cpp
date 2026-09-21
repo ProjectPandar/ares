@@ -328,7 +328,7 @@ std::string CoolingBuffer::process_layer(std::string &&gcode, size_t layer_id, b
         for (const auto &a : per_extruder_adjustments) {
             std::fprintf(stderr, "ADJ extr=%u cool=%d lines=%zu\n", a.extruder_id, (int)a.cooling_slow_down_enabled, a.lines.size());
             for (const auto &l : a.lines)
-                std::fprintf(stderr, "P7L type=%x len=%.6f f=%.4f t=%.9f tmax=%.9f\n", l.type, l.length, l.feedrate, l.time, l.time_max);
+                std::fprintf(stderr, "P7L type=%x len=%.6f f=%.4f t=%.9f tmax=%.9f | %.*s\n", l.type, l.length, l.feedrate, l.time, l.time_max, (int)(l.line_end-l.line_start), gcode.c_str()+l.line_start);
         }
         float layer_time_stretched = this->calculate_layer_slowdown(per_extruder_adjustments);
         std::fprintf(stderr, "PL slowed %f, cooldown...\n", layer_time_stretched);
