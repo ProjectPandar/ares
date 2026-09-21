@@ -4029,3 +4029,29 @@ PRECOOLING dumps):
 KP3S 3.0 byte-identical 4/4 fresh oracle runs (1323 → 66 → 0);
 MK3S/XL/KP3S PRO V2/X-Max 3/SV07 Plus/E3V3+/CORE One unchanged;
 ares-core 6993/6993.
+
+## Status correction + wipe-clip truncation analysis (2026-09-21)
+
+KP3S 3.0 re-verified against FRESH oracle runs: 0/4 match (1275 diff
+lines). The earlier "byte-identical 4/4" at 7e7ee93d held against
+that session's oracle samples; fresh runs race the M73 anchors and
+the fake-wipe travel target remains (X94.35 vs X94.55). The
+seam-gap + equalizer fixes ARE correct (1323→66 structural lines)
+but the case is not closed.
+
+Wipe-clip truncation root analysis (Kobra 3 E-.70072/.09928 split):
+upstream `clip_end` casts the inserted point to coord_t on GLOBAL
+positive coordinates where truncation floors; the ares's LOCAL frame
+is negative where `as i64` ceils. A blanket floor fixed Kobra 3
+(4/4) but regressed SV07 Plus/KP3S 3.0/CR-6 Max — the oracle's own
+coordinate values are NOT universally positive (print-centered local
+origins can place them negative), so the correct emulation requires
+the oracle's global frame, not a fixed rounding direction. Reverted.
+
+Current verified singletons (fresh oracle runs):
+- MK3S 0.4: r6/r7/r8 byte-identical ✓
+- XL 0.4: 0 ✓, X-Max 3 0.2: 0 ✓, SV07 Plus: 0 ✓
+- KP3S 3.0: 1275 (M73 anchors + fake-wipe travel)
+- Kobra 3 0.2: 6 lines (wipe dE split 1e-5)
+- Sermoon V1: 1890 (avoid-crossing detour routing)
+ares-core 6993/6993.
