@@ -30,7 +30,10 @@ pub(super) fn set(output: &mut Vec<u8>, state: &mut EmitState, jerk: f64) {
             output.extend_from_slice(format!("M207 X{}\n", format::axis(x)).as_bytes());
         }
         _ => {
-            let mut command = format!("M205 X{} Y{}", format::axis(x), format::axis(y));
+            // `GCodeWriter::set_jerk_xy` (`GCodeWriter.cpp:295`) writes
+            // `M205 X.. Y..` with the stream-default 6-significant-digit
+            // format, not the 3-decimal axis quantizer (`1.9624`, not `1.962`).
+            let mut command = format!("M205 X{} Y{}", format::ostream(x), format::ostream(y));
             if state.tags.is_bbl() {
                 command.push_str(&format!(
                     " Z{} E{}",

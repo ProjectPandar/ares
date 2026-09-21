@@ -1,4 +1,4 @@
-use super::{axis, extrusion, offset, z};
+use super::{axis, extrusion, offset, ostream, z};
 #[test]
 fn zero_axis_words_remain_valid_gcode_numbers() {
     assert_eq!(axis(0.0), "0");
@@ -36,4 +36,17 @@ fn extrusion_uses_relative_e_precision_and_leading_zero_style() {
     assert_eq!(extrusion(0.4), ".4");
     assert_eq!(extrusion(-0.4), "-.4");
     assert_eq!(extrusion(1.234_567), "1.23457");
+}
+
+#[test]
+fn ostream_uses_six_significant_digits_without_axis_quantization() {
+    // `GCodeWriter::set_jerk_xy` (`GCodeWriter.cpp:295`) writes jerk with
+    // the stream default `<<`, not the axis quantizer.
+    assert_eq!(ostream(1.962_4), "1.9624");
+    assert_eq!(ostream(8.0), "8");
+    assert_eq!(ostream(0.5), "0.5");
+    // More than six significant digits round to the sixth.
+    assert_eq!(ostream(1.962_399), "1.9624");
+    assert_eq!(ostream(12.345_678), "12.3457");
+    assert_eq!(ostream(0.0), "0");
 }

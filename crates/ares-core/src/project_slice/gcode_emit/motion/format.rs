@@ -51,5 +51,21 @@ fn trim_fixed(value: f64, precision: usize) -> String {
         value
     }
 }
+
+/// C++ ostream default `operator<<` for a double: 6 significant digits,
+/// trailing zeros dropped (`GCodeWriter.cpp:295` `<< jerk_x`). Used for the
+/// M205 XY jerk values, which upstream formats with the stream default, not
+/// the 3-decimal axis quantizer. Jerks stay well inside `%g`'s fixed-notation
+/// range, so a fixed-precision 6-significant-digit render suffices.
+pub(super) fn ostream(value: f64) -> String {
+    if value == 0.0 {
+        return "0".to_owned();
+    }
+    // Number of digits after the point needed for 6 significant figures:
+    // `5 - floor(log10(|v|))`, clamped so sub-unit values still get digits.
+    let exponent = value.abs().log10().floor() as i32;
+    let decimals = (5 - exponent).clamp(0, 6) as usize;
+    trim_fixed(value, decimals)
+}
 #[cfg(test)]
 mod tests;
