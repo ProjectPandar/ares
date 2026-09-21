@@ -8,6 +8,7 @@ use crate::project_slice::{
 mod brim;
 mod cooling;
 mod expression;
+mod fan_chunks;
 mod fan_mover;
 mod file_start;
 mod finish;
@@ -180,48 +181,12 @@ pub(super) fn emit(
     output.push(b'\n');
     // Upstream applies FanMover ONLY to layer-chunk output (the tbb
     // pipeline after the cooling filter, GCode.cpp:3749), never to the
-    // machine start g-code; a pending buffer is flushed per chunk — one
-    // call per layer, split at `;LAYER_CHANGE` (a fan-speedup backward
-    // move must not cross a layer boundary into the previous chunk).
+    // machine start g-code.
     if let Some(mover) = fan_mover_handle.as_mut() {
         let mut layers = output.split_off(fan_layers_start);
         let tail = layers.split_off(fan_layers_end - fan_layers_start);
-        let text = String::from_utf8(layers).expect("generated G-code is UTF-8");
-        if let Ok(path) = std::env::var("ARES_DUMP_PREFAN") {
-            let _ = std::fs::write(path, &text);
-        }
-        let mut flushed = String::with_capacity(text.len());
-        let mut chunk_start = 0;
-        for (offset, line) in text.match_indices("\n;") {
-            let line_end = offset + 1;
-            if text[line_end..].starts_with(";LAYER_CHANGE") {
-                // The cooling's layer fan line(s) precede the `;LAYER_CHANGE`
-                // tag (upstream `change_extruder_set_fan(true)` prepends to
-                // the rebuilt layer text) — they belong to THIS layer's
-                // chunk head, so the boundary walks back over them.
-                let mut boundary = line_end;
-                let bytes = text.as_bytes();
-                while boundary > chunk_start {
-                    // Step back over the newline into the previous line, then
-                    // scan to its start.
-                    let mut prev = boundary - 1;
-                    while prev > chunk_start && bytes[prev - 1] != b'\n' {
-                        prev -= 1;
-                    }
-                    if !text[prev..boundary].starts_with("M106")
-                        && !text[prev..boundary].starts_with("M107")
-                    {
-                        break;
-                    }
-                    boundary = prev;
-                }
-                let chunk = &text[chunk_start..boundary];
-                flushed.push_str(&mover.process_gcode(chunk, true));
-                chunk_start = boundary;
-            }
-        }
-        flushed.push_str(&mover.process_gcode(&text[chunk_start..], true));
-        output.extend(flushed.into_bytes());
+        let processed = fan_chunks::process_layer_chunks(mover, layers);
+        output.extend(processed);
         output.extend(tail);
     }
     Ok(processor::process(
