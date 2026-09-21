@@ -120,20 +120,5 @@ fn point_segment_distance(point: (f32, f32), start: (f32, f32), end: (f32, f32))
     let closest = (start.0 + projection * edge.0, start.1 + projection * edge.1);
     (point.0 - closest.0).hypot(point.1 - closest.1)
 }
-
 #[cfg(test)]
-mod tests {
-    use super::point_segment_distance;
-
-    #[test]
-    fn task22o129_segment_distance_clamps_to_endpoints() {
-        assert_eq!(
-            point_segment_distance((0.5, 1.0), (0.0, 0.0), (1.0, 0.0)),
-            1.0
-        );
-        assert_eq!(
-            point_segment_distance((2.0, 0.0), (0.0, 0.0), (1.0, 0.0)),
-            1.0
-        );
-    }
-}
+mod tests;

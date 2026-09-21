@@ -146,20 +146,5 @@ fn probe_count(size: f64, distance: f64) -> u32 {
     let distance = distance.max(1.0);
     ((size / distance).ceil() as u32 + 1).max(3)
 }
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::SliceOptions;
-
-    #[test]
-    fn empty_first_layer_paths_fall_back_to_configured_mesh_bounds() {
-        let placeholders =
-            placeholders(&SliceOptions::default(), GCodeFlavor::MarlinLegacy, &[]).unwrap();
-
-        assert_eq!(placeholders.min_list(), "-99999,-99999");
-        assert_eq!(placeholders.max_list(), "99999,99999");
-        assert_eq!(placeholders.probe_count_list(), "4001,4001");
-        assert_eq!(placeholders.algorithm(), "bicubic");
-    }
-}
+mod tests;

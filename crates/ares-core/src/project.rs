@@ -23,17 +23,5 @@ pub use domain::{
 pub use layer_config_ranges::LayerConfigRange;
 pub use load::load_project;
 pub use transform::Transform3d;
-
 #[cfg(test)]
-mod tests {
-    mod archive;
-    mod documents;
-    mod effective_config;
-    mod layer_config_ranges;
-    mod model;
-    mod orca_cli_export;
-    mod path;
-    mod task22b_transform;
-    mod transform;
-    mod xml_limits;
-}
+mod tests;
