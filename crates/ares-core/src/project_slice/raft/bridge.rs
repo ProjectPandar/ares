@@ -45,10 +45,27 @@ pub(crate) fn build_raft_stream(
     let base_layers = raft_layers - interface_layers;
     let heights = f64::max(layer_height, 0.75 * nozzle);
 
-    // `Slicing.cpp:166-172` gap rounding (independent support layer
-    // height not configured for the KSR sweep profile).
-    let gap_raft_object =
-        (raft_contact_distance(options) / layer_height + f64::EPSILON).round() * layer_height;
+    // `Slicing.cpp:153-160`: `gap_raft_object` is the raw
+    // `raft_contact_distance`, rounded to a layer_height multiple ONLY
+    // when `independent_support_layer_height` is off. With independent
+    // heights the gap stays the raw distance.
+    // `Slicing.cpp:153-160` (parallel to `slicing_parameters`): the raw
+    // `raft_contact_distance`, rounded only when `independent_support_`
+    // `layer_height` is off. This SliceOptions path reads the raw value.
+    let independent_support_layer_height = options
+        .values()
+        .get("independent_support_layer_height")
+        .map(|value| {
+            value
+                .as_bool()
+                .unwrap_or_else(|| matches!(value.as_str(), Some("1") | Some("true")))
+        })
+        .unwrap_or(false);
+    let gap_raft_object = if independent_support_layer_height {
+        raft_contact_distance(options)
+    } else {
+        (raft_contact_distance(options) / layer_height + f64::EPSILON).round() * layer_height
+    };
 
     let parameters = SlicingParameters {
         base_raft_layers: base_layers,

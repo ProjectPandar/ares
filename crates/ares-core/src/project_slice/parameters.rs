@@ -100,12 +100,16 @@ pub(super) fn slicing_parameters(
             (0.0, 0.0, 0.0)
         };
     let total_raft_layers = base_raft_layers + interface_raft_layers;
-    // `Slicing.cpp:169-183` gap rounding (independent support layer
-    // height not configured → round to the object layer grid).
-    let gap_raft_object = if total_raft_layers > 0 {
-        (object.raft_contact_distance.0 / layer_height + f64::EPSILON).round() * layer_height
-    } else {
+    // `Slicing.cpp:153-160`: `gap_raft_object` is the raw
+    // `raft_contact_distance`, rounded to a `layer_height` multiple only
+    // when `independent_support_layer_height` is off. With independent
+    // heights the gap stays the raw distance.
+    let gap_raft_object = if total_raft_layers == 0 {
         0.0
+    } else if settings.process.print.independent_support_layer_height.0 {
+        object.raft_contact_distance.0
+    } else {
+        (object.raft_contact_distance.0 / layer_height + f64::EPSILON).round() * layer_height
     };
     let (first_object_layer_height, first_object_layer_bridging) = if total_raft_layers > 0 {
         (layer_height, false)
