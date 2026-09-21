@@ -4319,3 +4319,35 @@ interface/first-layer `expand_square` chain producing rounded joins and a
 larger expansion. Needs the upstream SupportMaterial raft-base polygon
 chain traced against the ares offset path — deferred as a deep clipper
 boundary, not a join-type slip.
+
+## Option-sweep real-FAIL fixes + harness merge (2026-09-21 liv)
+
+Re-ran the full option sweep (452/650 bounded domains complete, up from ~390).
+Of the 198 non-PASS rows: ~150 are INCOMPLETE multi-value/string domains that
+never got provably-legal coverage; ~39 FAILs are the recurring M73 race
+(`M73 P10 R7` vs `R8`) rather than real divergences. Three real fixes landed:
+
+- `default_jerk` seeded case: `M205 X1.9624` was emitted `X1.962`. Upstream
+  `GCodeWriter::set_jerk_xy` (GCodeWriter.cpp:295) writes jerk via ostream
+  `<<` (6 significant figures), not the 3-decimal axis quantizer. Added
+  `format::ostream` (6-sig-fig, trailing-zero-trimmed) for M205 X/Y. PASS.
+- `gcode_comments` lift comments: `; normal lift Z` trails the normal and
+  slope Z-lift lines; `;spiral lift Z` is a standalone line before the spiral
+  feedrate; arc-fitting spiral uses `G17 ; XY plane for arc`. Applied to
+  emit_pending/append_eager/append_spiral. Partial — role comments and the
+  move-to-first Z-drop placement still differ.
+- `; printing object` label ordering: ares wrote it at object entry before
+  the retract; upstream queues it (set_object_start_str) and flushes inside
+  travel_to between the retract/lift and the XY move (GCode.cpp:7467). Now
+  queued in pending_object_comment and emitted by append_object_start.
+  Fixes the enable_wrapping_detection label misplacement.
+
+Harness: write_summary now merges filtered ARES_OPTION_KEYS results over the
+prior summary (previously a targeted run clobbered the full-sweep baseline).
+
+Remaining real divergences after this batch: travel `G1 X..Y..Z..` vs bare
+`G1 X..Y..` (deferred-lift Z re-statement timing under wrapping detection),
+bottom/top_surface_pattern hilbert/octagramspiral fill geometry, cooling
+F2001-vs-F2005 feedrate cap, wipe-segment E sub-ULP, 16 unimplemented sparse
+fill patterns, and the ~150 INCOMPLETE multi-value/string domains awaiting
+provably-legal coverage.
