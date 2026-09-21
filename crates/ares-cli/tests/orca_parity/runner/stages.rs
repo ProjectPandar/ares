@@ -92,13 +92,34 @@ pub(crate) fn attributable(output: &Captured, key: &str) -> bool {
                 .lines()
                 .any(|line| line.starts_with(&format!("{key}: ")));
     }
-    // Print::validate omits opt_key for -51. Generic "Too small line width"
-    // is not attributable; only this unique bridge diagnostic qualifies.
-    output.code == Some(code(-51))
-        && key == "bridge_line_width"
-        && text
-            .lines()
-            .any(|line| line == "Bridge line width must not exceed nozzle diameter")
+    // Print::validate omits opt_key for -51, so each diagnostic line is
+    // matched to its option key explicitly.
+    if output.code == Some(code(-51)) {
+        // `Print.cpp:1740-1746`: `G92 E0` in any layer-change gcode is
+        // rejected when `use_relative_e_distances` is off (absolute E).
+        if key == "use_relative_e_distances"
+            && text
+                .lines()
+                .any(|line| line.ends_with("incompatible with absolute extruder addressing."))
+        {
+            return true;
+        }
+        // `Print.cpp:1389`: a schema-legal `printable_height` below the
+        // model height is a feasibility rejection, not a value error.
+        if key == "printable_height"
+            && text
+                .lines()
+                .any(|line| line.ends_with("exceeds the maximum build volume height."))
+        {
+            return true;
+        }
+        // `bridge_line_width`: the unique line-width-vs-nozzle diagnostic.
+        return key == "bridge_line_width"
+            && text
+                .lines()
+                .any(|line| line == "Bridge line width must not exceed nozzle diameter");
+    }
+    false
 }
 
 pub(crate) fn run(

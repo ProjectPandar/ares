@@ -51,6 +51,30 @@ fn validation_status_requires_source_attributable_diagnostic() {
             false,
         ),
         (
+            Some(-51),
+            "\"G92 E0\" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing.",
+            "use_relative_e_distances",
+            true,
+        ),
+        (
+            Some(-51),
+            "\"G92 E0\" was found in before_layer_change_gcode, which is incompatible with absolute extruder addressing.",
+            "line_width",
+            false,
+        ),
+        (
+            Some(-51),
+            "The object cube10.stl exceeds the maximum build volume height.",
+            "printable_height",
+            true,
+        ),
+        (
+            Some(-51),
+            "The object cube10.stl exceeds the maximum build volume height.",
+            "layer_height",
+            false,
+        ),
+        (
             Some(0),
             "Param values in 3mf/config error:\nline_width: error",
             "line_width",
