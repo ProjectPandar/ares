@@ -16,8 +16,8 @@ async fn ksr_object_travel_acceleration_follows_object_comment() {
         .unwrap();
 
     assert_eq!(lines[label - 4], "M204 S500");
-    assert_eq!(lines[label - 3], "M204 S6000");
-    assert!(lines[label - 2].starts_with("; printing object "));
+    assert!(lines[label - 3].starts_with("; printing object "));
+    assert_eq!(lines[label - 2], "M204 S6000");
     assert_eq!(
         lines[label - 1],
         "; start printing object, unique label id: 133"

@@ -72,11 +72,6 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) pending_object_start: Option<(u32, [u8; 12])>,
     pub(in crate::project_slice::gcode_emit) last_travel_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_start: Option<String>,
-    /// The `; printing object <name>` comment is queued like the label
-    /// strings (`set_object_start_str`, `GCode.cpp:5356-5372`) and flushed
-    /// inside `travel_to` after the lift, before the XY move
-    /// (`GCode.cpp:7467`), not at the object-entry point.
-    pub(in crate::project_slice::gcode_emit) pending_object_comment: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_exclude_end: Option<String>,
     pub(in crate::project_slice::gcode_emit) pending_object_stop_label: Option<u32>,
     pub(in crate::project_slice::gcode_emit) tags: super::super::tags::Tags,
@@ -205,13 +200,6 @@ pub(in crate::project_slice::gcode_emit) fn queue_exclude_start(
     state.pending_exclude_start = Some(text);
 }
 
-pub(in crate::project_slice::gcode_emit) fn queue_object_comment(
-    state: &mut EmitState,
-    text: String,
-) {
-    state.pending_object_comment = Some(text);
-}
-
 /// Mirrors `GCode.cpp:5478-5494`: an unflushed start label is dropped
 /// (empty instance) and only then does the end label get armed.
 pub(in crate::project_slice::gcode_emit) fn queue_exclude_end(state: &mut EmitState, text: String) {
@@ -268,9 +256,6 @@ pub(in crate::project_slice::gcode_emit) fn append_object_start(
     // `add_object_change_labels` writes the end label before the start label
     // (`GCodeWriter.cpp:1197-1201`).
     append_exclude_end(output, state);
-    if let Some(comment) = state.pending_object_comment.take() {
-        output.extend_from_slice(comment.as_bytes());
-    }
     if let Some((label_id, encoded_labels)) = state.pending_object_start.take() {
         output.extend_from_slice(
             format!("; start printing object, unique label id: {label_id}\nM624 ").as_bytes(),
