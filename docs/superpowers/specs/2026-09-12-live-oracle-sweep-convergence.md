@@ -4351,3 +4351,24 @@ bottom/top_surface_pattern hilbert/octagramspiral fill geometry, cooling
 F2001-vs-F2005 feedrate cap, wipe-segment E sub-ULP, 16 unimplemented sparse
 fill patterns, and the ~150 INCOMPLETE multi-value/string domains awaiting
 provably-legal coverage.
+
+## gcode_comments port progress + label revert (2026-09-21 lvi)
+
+- `emit_retracted_first_travel` lift now trails ` ; normal lift Z`
+  (GCodeWriter.cpp:678) and the unclear-position Z re-statement repeats the
+  `move to first X point` comment (GCodeWriter.cpp:777). restate.rs emits
+  `ensure Z matches planned layer height` on the first extrusion
+  (_last_pos_undefined, GCode.cpp:6382) and `reset Z after contouring`
+  otherwise (GCode.cpp:6399). Diff 1364 -> 556 non-M73 lines.
+- REVERTED the `; printing object` label move (b226fbf6 -> 6bfdf989): the
+  label flush point is genuinely upstream-faithful at object-entry in the
+  common path; the travel_to after-lift placement only matched the wrap case
+  where the continuing travel re-lifted. The real rule — flush at the first
+  add_object_change_labels after set_object_start_str — depends on which
+  feature's travel runs first and is not yet modeled.
+- Residual gcode_comments gaps: `move to first X point` over-applied to
+  contiguous/multi-island intra-feature travels (ares comments every path's
+  approach; upstream only comments genuine _extrude-entry travels), and some
+  `; infill`/`; perimeter` role-comment positional mismatches. gcode_comments
+  is an off-by-default debug option, so these do not affect the default
+  printer smoke tests.
