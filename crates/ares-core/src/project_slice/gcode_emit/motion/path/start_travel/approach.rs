@@ -127,7 +127,6 @@ pub(super) fn emit_needs_travel(
     }
     let first_travel = route[0];
     let (travel_x, travel_y) = (first_travel.x, first_travel.y);
-    append_object_start(output, state);
     // Consume the one-shot disable after the travel is planned
     // (`reset_once_modifiers`, `GCode.cpp:7431`) — only routed
     // travels consume it; the skirt's own travels keep it armed.
@@ -183,6 +182,9 @@ pub(super) fn emit_needs_travel(
         );
         None
     };
+    // `travel_to` (`GCode.cpp:7441-7467`): the object-start label is flushed
+    // after the retract+lift but before the destination XY move.
+    append_object_start(output, state);
     if state.spiral_vase
         && state.lifted
         && !first_position

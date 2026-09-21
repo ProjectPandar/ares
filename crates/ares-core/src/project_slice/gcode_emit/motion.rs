@@ -29,7 +29,7 @@ pub(in crate::project_slice) use skirt_brim::{emit_brim_loop, emit_skirt_loop};
 pub(super) use state::{
     AvoidCrossingGeometry, EmitState, LayerGeometry, LiftMode, append_exclude_end,
     append_object_start, begin_layer, begin_path_travel, queue_exclude_end, queue_exclude_start,
-    queue_object_start, queue_object_stop_label,
+    queue_object_comment, queue_object_start, queue_object_stop_label,
 };
 pub(super) use travel::{
     flush_pending_retract_eager, flush_pending_retract_eager_forced, flush_pending_retract_lift,

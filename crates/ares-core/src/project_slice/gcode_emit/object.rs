@@ -68,16 +68,6 @@ impl ObjectLabels {
         })
     }
 
-    pub(super) fn append_printing(&self, output: &mut Vec<u8>) {
-        output.extend_from_slice(
-            format!(
-                "; printing object {} id:{} copy {}\n",
-                self.name, self.object_id, self.copy_id,
-            )
-            .as_bytes(),
-        );
-    }
-
     pub(super) const fn start_label_data(&self) -> (u32, [u8; 12]) {
         (self.label_id, self.encoded_labels)
     }
@@ -98,12 +88,21 @@ impl ObjectLabels {
     /// (`GCode.cpp:5348-5352`).
     pub(super) fn queue_start(
         &self,
-        output: &mut Vec<u8>,
+        _output: &mut Vec<u8>,
         state: &mut super::motion::EmitState,
         emit_comments: bool,
     ) {
         if emit_comments {
-            self.append_printing(output);
+            // Defer the `; printing object` comment into the pending queue so
+            // it flushes inside `travel_to` after the lift (`GCode.cpp:7467`),
+            // not at object entry.
+            super::motion::queue_object_comment(
+                state,
+                format!(
+                    "; printing object {} id:{} copy {}\n",
+                    self.name, self.object_id, self.copy_id,
+                ),
+            );
         }
         if state.tags.is_bbl() {
             let (label_id, encoded_labels) = self.start_label_data();
