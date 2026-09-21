@@ -1,5 +1,7 @@
 use super::{MotionBlock, MotionKind};
+mod junction;
 mod trapezoid;
+use junction::{max_allowable_speed, junction_speed};
 use trapezoid::block_time;
 
 #[derive(Clone, Copy)]
@@ -346,97 +348,9 @@ fn prepare(
     planned
 }
 
-fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> f32 {
-    let JunctionInput {
-        direction,
-        jerk,
-        cruise,
-        axis_feedrate,
-        safe,
-    } = current;
-    if previous.cruise <= 0.000_1 {
-        return safe;
-    }
-    let previous_larger = previous.cruise > cruise;
-    let smaller_factor = if previous_larger {
-        cruise / previous.cruise
-    } else {
-        previous.cruise / cruise
-    };
-    let mut maximum = previous.cruise.min(cruise);
-    let mut factor = 1.0;
-    let mut limited = false;
-
-    // Upstream's junction vectors are `Vec3f` (`GCodeProcessor.cpp:4091-
-    // 4097`): `exit_v = prev.feedrate * prev.exit_direction` multiplies
-    // f32×f32 with a single rounding per component. Computing the exit
-    // through the f64 direction keeps a different last ulp that flips the
-    // following axis' `> jerk` comparison (12.000001 vs 11.999999) and
-    // rescales the jerk vector twice — inflating the junction speed
-    // (3.5355 vs the oracle's 2.0 on the Ender-3 V3 wipe→travel
-    // junction).
-    let mut exit = previous
-        .direction
-        .map(|direction| previous.cruise * direction as f32);
-    if previous_larger {
-        exit.iter_mut().for_each(|value| *value *= smaller_factor);
-    }
-    let mut difference = [
-        (cruise * direction[0] as f32 - exit[0]).abs(),
-        (cruise * direction[1] as f32 - exit[1]).abs(),
-        (cruise * direction[2] as f32 - exit[2]).abs(),
-    ];
-    for axis in 0..3 {
-        if difference[axis] > jerk[axis] {
-            factor *= jerk[axis] / difference[axis];
-            difference.iter_mut().for_each(|value| *value *= factor);
-            limited = true;
-        }
-    }
-
-    let mut e_exit = previous.axis_feedrate[3];
-    let mut e_entry = axis_feedrate[3];
-    if previous_larger {
-        e_exit *= f64::from(smaller_factor);
-    }
-    if limited {
-        e_exit *= f64::from(factor);
-        e_entry *= f64::from(factor);
-    }
-    let e_jerk = axis_jerk(e_exit as f32, e_entry as f32);
-    if e_jerk > jerk[3] {
-        factor *= jerk[3] / e_jerk;
-        limited = true;
-    }
-    if limited {
-        maximum *= factor;
-    }
-    if previous.safe > maximum * 0.99 && safe > maximum * 0.99 {
-        safe
-    } else {
-        maximum
-    }
-}
-
-fn axis_jerk(exit: f32, entry: f32) -> f32 {
-    if exit > entry {
-        if entry > 0.0 || exit < 0.0 {
-            exit - entry
-        } else {
-            exit.max(-entry)
-        }
-    } else if entry < 0.0 || exit > 0.0 {
-        entry - exit
-    } else {
-        (-exit).max(entry)
-    }
-}
-
 fn xy_unit(direction: [f32; 4]) -> Option<[f32; 2]> {
     let norm = (direction[0] * direction[0] + direction[1] * direction[1]).sqrt();
     (norm > 0.0).then(|| [direction[0] / norm, direction[1] / norm])
 }
 
-fn max_allowable_speed(acceleration: f32, target: f32, distance: f32) -> f32 {
-    (target * target + 2.0 * acceleration * distance).sqrt()
-}
+
