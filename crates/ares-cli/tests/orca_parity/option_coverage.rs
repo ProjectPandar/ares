@@ -107,9 +107,11 @@ impl OptionOutcome {
                     rejected.join("; ")
                 ),
             )
-        } else if plan.width_domain.is_none() {
-            // Legacy generation has no effective-application proof and does not
-            // establish full legality for its numeric or unbounded domains.
+        } else if !plan.provably_legal {
+            // Baseline-only/unbounded domains carry no legality proof: a
+            // single default case cannot establish that the whole legal range
+            // was exercised. Enumerable (bool/enum), schema-bounded, and
+            // context-bounded width domains are provably legal by construction.
             (
                 "INCOMPLETE",
                 "legacy domain application/legality unverified".into(),

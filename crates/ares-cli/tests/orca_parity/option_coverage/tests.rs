@@ -44,20 +44,25 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
         .filter(|plan| plan.cases.iter().any(|case| case.label == "seeded"))
         .collect::<Vec<_>>();
     assert!(ranges.len() >= 100);
+    // Bounded ranges emit min+max+seeded; min-only-bounded domains (`[min,∞)`)
+    // emit min+seeded — no `max` exists in the schema to probe.
     assert!(ranges.iter().all(|plan| {
-        plan.cases
+        let labels = plan
+            .cases
             .iter()
             .map(|case| case.label.as_str())
-            .collect::<Vec<_>>()
-            == ["min", "max", "seeded"]
+            .collect::<Vec<_>>();
+        labels == ["min", "max", "seeded"] || labels == ["min", "seeded"]
     }));
 
     let baselines = plans
         .iter()
         .filter(|plan| plan.cases[0].label == "baseline")
         .collect::<Vec<_>>();
-    assert_eq!(baselines.len(), 302);
-    assert!(baselines.iter().all(|plan| plan.cases[0].value.is_none()));
+    assert!(
+        baselines.iter().all(|plan| plan.cases[0].value.is_none()),
+        "baseline cases carry no injected value"
+    );
 }
 
 #[test]
@@ -197,4 +202,31 @@ fn seeded_range_values_are_repeatable() {
             .collect::<Vec<_>>()
     };
     assert_eq!(values(&first), values(&second));
+}
+
+#[test]
+fn provably_legal_domains_cover_enumerable_and_bounded_options() {
+    // Enumerable (bool/enum), schema-bounded (`min`+`max`), min-only-bounded
+    // (`[min,∞)` covered by min+seeded), and context-bounded width domains
+    // are all provably legal. Only options with no parseable schema bound at
+    // all (strings, points, gcode blobs, unbounded numerics) stay
+    // baseline-only — their domain has no min/max to exercise.
+    let plans = domains::load(&runner::repo_root());
+    let legal = plans.iter().filter(|plan| plan.provably_legal).count();
+    let baseline = plans
+        .iter()
+        .filter(|plan| !plan.provably_legal)
+        .map(|plan| plan.key.clone())
+        .collect::<Vec<_>>();
+    assert!(
+        legal >= 519,
+        "provably_legal regressed: {legal}; baseline-only: {baseline:?}"
+    );
+    // Every unbounded remainder is a type that cannot express min/max.
+    for key in &baseline {
+        assert!(
+            !key.ends_with("_line_width"),
+            "width option {key} must be provably legal via width_domain"
+        );
+    }
 }

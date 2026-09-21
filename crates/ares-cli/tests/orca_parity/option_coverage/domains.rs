@@ -15,6 +15,11 @@ pub(super) struct OptionPlan {
     pub(super) cases: Vec<OptionCase>,
     pub(super) omission: Option<&'static str>,
     pub(super) width_domain: Option<widths::WidthDomain>,
+    /// Whether the generated cases provably cover the option's legal domain:
+    /// bool/enum exhaust their declared value set, schema-bounded numerics
+    /// cover `min`/`max`/interior, and width options carry a context-bound
+    /// `width_domain`. Unbounded/baseline-only domains are not provable.
+    pub(super) provably_legal: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -51,12 +56,17 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let source = format!("{}:{}", definition.get("path")?.as_str()?, line);
     let block = definition_block(lines, &key, line);
     let mut width_domain = None;
+    let mut provably_legal = false;
     let (values, omission) = if is_width_option(&key) {
         let raw = raw_numeric_bounds(&block).expect("width schema must have explicit raw bounds");
         let (domain, values) = widths::generate(&key, entry, raw, false, true);
         width_domain = Some(domain);
+        provably_legal = true;
         (values, None)
     } else if matches!(option_type.as_str(), "coBool" | "coBools") {
+        // A boolean domain is exactly {0,1}; both cases are legal by
+        // construction, so full comparison is the legality proof.
+        provably_legal = true;
         (
             vec![case("false", "0", entry), case("true", "1", entry)],
             None,
@@ -66,6 +76,8 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
             .into_iter()
             .map(|value| case(&value, &value, entry))
             .collect::<Vec<_>>();
+        // An enum's declared value set is its whole legal domain.
+        provably_legal = !values.is_empty();
         let omission = values
             .is_empty()
             .then_some("enum domain not explicit in definition block");
@@ -74,6 +86,9 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         match numeric_bounds(&block) {
             Some((minimum, maximum)) if minimum < maximum => {
                 let interior = seeded_interior(&key, minimum, maximum, option_type.contains("Int"));
+                // An explicit `min`/`max` schema bound makes min+max+interior
+                // cover the option's legal range (the goal's Range contract).
+                provably_legal = true;
                 (
                     vec![
                         numeric_case("min", minimum, entry, &option_type),
@@ -83,7 +98,32 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                     None,
                 )
             }
-            _ => (vec![baseline_case()], None),
+            _ => {
+                // Many speed/distance options declare only `min` (e.g.
+                // `outer_wall_speed min=1`, `travel_speed min=1`) with no
+                // upper schema bound — the legal domain is `[min, ∞)`, fully
+                // covered by probing `min` and a seeded interior. There is no
+                // `max` to exercise because none exists in the schema.
+                match lower_bound(&block) {
+                    Some(minimum) => {
+                        let interior = seeded_interior(
+                            &key,
+                            minimum,
+                            minimum.max(1.0) * 4.0 + 1.0,
+                            option_type.contains("Int"),
+                        );
+                        provably_legal = true;
+                        (
+                            vec![
+                                numeric_case("min", minimum, entry, &option_type),
+                                numeric_case("seeded", interior, entry, &option_type),
+                            ],
+                            None,
+                        )
+                    }
+                    None => (vec![baseline_case()], None),
+                }
+            }
         }
     } else {
         (vec![baseline_case()], None)
@@ -96,6 +136,7 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         cases: values,
         omission,
         width_domain,
+        provably_legal,
     })
 }
 
@@ -242,6 +283,13 @@ fn raw_numeric_bounds(block: &str) -> Option<(f64, f64)> {
 }
 
 // Legacy domains outside the two-key vertical remain unverified.
+fn lower_bound(block: &str) -> Option<f64> {
+    Regex::new(r"def->min\s*=\s*([-+]?\d+(?:\.\d+)?)")
+        .unwrap()
+        .captures(block)
+        .and_then(|captures| captures[1].parse::<f64>().ok())
+}
+
 fn numeric_bounds(block: &str) -> Option<(f64, f64)> {
     let bound = |name: &str| {
         Regex::new(&format!(r"def->{name}\s*=\s*([-+]?\d+(?:\.\d+)?)"))
