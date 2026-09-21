@@ -1,6 +1,7 @@
 pub(super) mod arc;
 #[cfg(test)]
 mod axis_acceleration_tests;
+mod firmware;
 mod segment;
 mod test_hooks;
 #[cfg(test)]
@@ -250,30 +251,7 @@ impl MotionState {
             // retraction/deretraction feedrate — the fake G1's line id was
             // already decremented upstream so the M73 cache alignment is
             // unchanged.
-            let (e_delta, feedrate) = if command == "G10" {
-                (-self.retraction_length, self.retraction_feedrate)
-            } else {
-                (
-                    self.retraction_length + self.retract_restart_extra,
-                    self.deretraction_feedrate,
-                )
-            };
-            let mut fake = String::from("G1");
-            if !self.e_relative {
-                let absolute = self.e_position + e_delta;
-                fake.push_str(&format!(" E{absolute}"));
-            } else {
-                fake.push_str(&format!(" E{e_delta}"));
-            }
-            fake.push_str(&format!(" F{feedrate}"));
-            return self.motion(&fake).map(|mut block| {
-                block.kind = if command == "G10" {
-                    MotionKind::Regular
-                } else {
-                    MotionKind::Unretract
-                };
-                block
-            });
+            return firmware::emulate_firmware_retraction(self, command);
         }
         if command == "G28" {
             let has_axis = ['X', 'Y', 'Z'].iter().any(|&axis| code.contains(axis));
