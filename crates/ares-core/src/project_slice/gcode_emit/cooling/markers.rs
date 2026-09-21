@@ -40,8 +40,13 @@ pub(super) fn strip_pressure_markers(gcode: &str) -> String {
                 continue;
             }
         }
-        if let Some(feedrate) = bare_feedrate_word(&cleaned) {
-            if current_feedrate == Some(feedrate) {
+        // The processor-side modal feedrate tracks EVERY F word (the
+        // GCodeReader updates `m_feedrate` on any G0/G1 carrying F —
+        // travels included), so a travel's `F15000` between two `G1
+        // F1200` lines keeps the second one: it changes the modal rate
+        // back from 15000.
+        if let Some(feedrate) = line_feedrate_word(&cleaned) {
+            if bare_feedrate_word(&cleaned).is_some() && current_feedrate == Some(feedrate) {
                 continue;
             }
             current_feedrate = Some(feedrate);
@@ -60,4 +65,20 @@ pub(super) fn bare_feedrate_word(line: &str) -> Option<i64> {
         return None;
     }
     rest.parse().ok()
+}
+
+/// The F word of any G0/G1 line (the processor's modal feedrate source —
+/// the F may sit after other axis words, e.g. `G1 X10 Y10 F1500`).
+fn line_feedrate_word(line: &str) -> Option<i64> {
+    let rest = line
+        .strip_prefix("G0")
+        .or_else(|| line.strip_prefix("G1"))?;
+    for word in rest.split_whitespace() {
+        if let Some(digits) = word.strip_prefix('F') {
+            if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) {
+                return digits.parse().ok();
+            }
+        }
+    }
+    None
 }

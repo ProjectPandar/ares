@@ -3974,3 +3974,23 @@ newline first). SV07 Plus byte-identical 4/4 fresh oracle runs;
 SV07 0.4 2/4 (races); MK3S r6-class/XL/KP3S PRO V2/X-Max 3/E3V3+/
 CORE One unchanged; KP3S 3.0 unchanged (1323 — its own layout);
 ares-core 6993/6993.
+
+## Marker-strip modal feedrate tracks every F word (2026-09-20 li)
+
+`strip_pressure_markers`' F-only dedup compared bare `G1 F<n>` lines
+against a tracker that ONLY bare-F lines updated — a travel's
+`G1 X.. Y.. F15000` between two `G1 F1200` lines left the tracker
+stale at 1200 and the second speed line was dropped (the KP3S 3.0's
+walls then inherited the travel feedrate — a 13s estimator gap).
+Upstream's processor updates the modal feedrate on every G0/G1 F
+word, so the tracker now scans any F word on G0/G1 lines (the F may
+follow axis words) and only bare-F lines can be dropped.
+
+KP3S 3.0: 2m59s → 3m13s total (oracle 3m12s — the last second rides
+on the travel-target class below); the three `G1 F1200` wall speed
+lines restored. Remaining: the two-stage travel
+`X94.35 Y94.204 F15000` + `X94.55 Y94.55` vs the ares's direct
+`X94.55 Y94.55 F15000` (the fake-wipe restate point — the same
+Sermoon V1 class), a blank line at 55, and the M73 cascade. No
+regressions: MK3S/XL/KP3S PRO V2/X-Max 3/SV07 Plus/E3V3+ all
+unchanged; ares-core 6993/6993.
