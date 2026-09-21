@@ -4281,3 +4281,41 @@ echoes `Auto For Flush` (the default), ares echoes the input value. For a
 single-filament print oracle normalizes the mode back to fmmAutoForFlush.
 Comment-only, zero functional impact; the upstream normalization site is in
 the 3mf→Print config path, not yet pinpointed.
+
+## raft_layers — fan/preamble/Z schedule fixed; polygon outline remains (2026-09-21 liv)
+
+Three real `raft_layers` bugs fixed (commits 123f0022, c2dc8640):
+
+- **filament-start gcode + fan at raft base.** The schedule's first entry
+  is a raft chunk carrying `RAFT_SENTINEL_BASE + raft_index`, so the print
+  preamble (`filament_start_gcode`) deferred to the first OBJECT layer and
+  `cooling.begin_layer` saw a u32::MAX layer index → part fan emitted
+  `M106 S255` instead of `M106 S0` (close_fan_the_first_x_layers). Fix:
+  the preamble fires on `first_group` (first PHYSICAL chunk), and the
+  cooling layer index maps raft sentinels → raft index, object layers →
+  `layer_index + raft_count`. Oracle now matches: `; filament start gcode`
+  + `M106 S0` at raft base, `M106 S255` at the raft→object boundary.
+- **gap_raft_object honors independent_support_layer_height.** Upstream
+  Slicing.cpp:153-160 only rounds the raft→object gap to a layer_height
+  multiple when `independent_support_layer_height` is OFF; with it on
+  (the KSR profile sets '1') the gap stays the raw raft_contact_distance.
+  Both `slicing_parameters` and the SliceOptions raft path rounded
+  unconditionally → object first layer at Z0.9 instead of 0.8 and
+  max_z_height 10.70 vs 10.60. Fixed in both paths.
+
+After these, the raft Z schedule (0.2/0.5/0.8/1.0), max_z_height, fan
+sequence, and filament-start placement all match the oracle.
+
+### remaining: raft base polygon outline geometry
+
+The raft base flange outline diverges (~2000 cascading lines): oracle
+produces a chamfered square (single `jtSquare`/`jtMiter` corner vertex,
+`X118.941→117.892`), ares produces a larger, rounded-arc outline with
+4-5 corner segments (`X119.361→119.1→118.326→117.698`, extends to 119.36
+vs 118.94). The `raft_expansion` jtMiter offset is faithful
+(DefaultJoinType=miter, limit=3); the divergence is in the
+`SupportGridPattern::extract_support` contact silhouette or the
+interface/first-layer `expand_square` chain producing rounded joins and a
+larger expansion. Needs the upstream SupportMaterial raft-base polygon
+chain traced against the ares offset path — deferred as a deep clipper
+boundary, not a join-type slip.
