@@ -1,0 +1,126 @@
+//! Wipe path construction (`Wipe::wipe`, `GCode.cpp:440-500`) — the
+//! stored path → scaled int points → clip_end → segment/dE split.
+
+use super::arc;
+use super::super::state::EmitState;
+
+pub(super) struct WipePath {
+    pub(super) segments: Vec<(arc::Point, f64)>,
+    pub(super) retraction_distance: f64,
+    pub(super) distribution_distance: f64,
+}
+
+impl Default for WipePath {
+    fn default() -> Self {
+        Self {
+            segments: Vec::new(),
+            retraction_distance: 0.0,
+            distribution_distance: 0.0,
+        }
+    }
+}
+
+pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
+    if !state.options.wipe || state.options.wipe_distance <= 0.0 {
+        return WipePath::default();
+    }
+    let start = state.wipe_start.unwrap_or(arc::Point {
+        x: state.x,
+        y: state.y,
+    });
+    let mut points = Vec::with_capacity(state.wipe_path.len());
+    // Upstream substitutes `gcodegen.last_pos()` — the LOCAL scaled int of
+    // the last emitted point. `last_scaled_position` carries exactly that
+    // int; the wipe path points are local mm (raw scaled points like
+    // `Wipe::path`), converted with the local scale only so the int
+    // round-trip is exact.
+    points.push(scaled_position(start, state));
+    points.extend(state.wipe_path.iter().skip(1).map(|&point| {
+        (
+            (point.x / state.scale_factor).round() as i64,
+            (point.y / state.scale_factor).round() as i64,
+        )
+    }));
+    let total_length = points
+        .windows(2)
+        .map(|segment| scaled_distance(segment[0], segment[1]))
+        .sum::<f64>();
+    let configured_distance = state.options.wipe_distance / state.scale_factor;
+    let retraction_distance = total_length.min(configured_distance) * state.scale_factor;
+    let mut clip = total_length - configured_distance;
+    // Upstream `Polyline::clip_end` math: squared comparison, sqrt divisor,
+    // truncating cast (`Polyline.cpp:52-72`); the loop guard keeps the last
+    // point (`Polyline.cpp:56-59` returns when the polyline empties).
+    while clip > 0.0 && points.len() > 1 {
+        let last = points.pop().unwrap();
+        let previous = *points.last().unwrap();
+        let vx = (previous.0 - last.0) as f64;
+        let vy = (previous.1 - last.1) as f64;
+        let lsqr = vx * vx + vy * vy;
+        if lsqr > clip * clip {
+            let factor = clip / lsqr.sqrt();
+            points.push((
+                (last.0 as f64 + vx * factor) as i64,
+                (last.1 as f64 + vy * factor) as i64,
+            ));
+            break;
+        }
+        clip -= lsqr.sqrt();
+    }
+    if let Ok(path) = std::env::var("ARES_DUMP_WIPE") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = write!(file, "WP");
+            for point in &points {
+                let _ = write!(file, " ({},{})", point.0, point.1);
+            }
+            let _ = writeln!(file);
+        }
+    }
+    let segments = points
+        .windows(2)
+        .filter_map(|segment| {
+            let length = scaled_distance(segment[0], segment[1]);
+            (length > f64::EPSILON).then(|| (unscaled_position(segment[1], state), length))
+        })
+        .collect::<Vec<_>>();
+    // Upstream `Wipe::wipe` (`GCode.cpp:456-462`): `wipe_dist` stays the
+    // CONFIGURED scaled value when the clipped path is at least as long
+    // (`if (wipe_path.length() < wipe_dist) wipe_dist = …`); the dE
+    // denominator is the exact config value, not the clipped float sum.
+    let distribution_distance =
+        if segments.iter().map(|(_, length)| length).sum::<f64>() < configured_distance {
+            segments.iter().map(|(_, length)| length).sum::<f64>()
+        } else {
+            configured_distance
+        };
+    WipePath {
+        segments,
+        retraction_distance,
+        distribution_distance,
+    }
+}
+
+fn scaled_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
+    let dx = (left.0 - right.0) as f64;
+    let dy = (left.1 - right.1) as f64;
+    (dx * dx + dy * dy).sqrt()
+}
+
+pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(point: arc::Point, state: &EmitState) -> (i64, i64) {
+    (
+        ((point.x - state.offset.0) / state.scale_factor).round() as i64,
+        ((point.y - state.offset.1) / state.scale_factor).round() as i64,
+    )
+}
+
+fn unscaled_position(point: (i64, i64), state: &EmitState) -> arc::Point {
+    arc::Point {
+        x: point.0 as f64 * state.scale_factor + state.origin.0 - state.extruder_offset.0,
+        y: point.1 as f64 * state.scale_factor + state.origin.1 - state.extruder_offset.1,
+    }
+}
