@@ -4218,3 +4218,66 @@ feature-parity or oracle-process-failure gaps — none are surgical
 footer/label fixes. They each require porting the corresponding
 upstream emission block (comment threading, raft polygon expansion,
 flush-matrix serialization, absolute-E stats path).
+
+## Option-coverage targeted re-verification + attributable slice rejections (2026-09-21 liii)
+
+Fresh `ARES_OPTION_KEYS`-scoped sweeps (ARES_ORCA_RUNS=8) on the Ender-3
+fixture re-classified several earlier FAIL entries that were stale or
+oracle-race noise, and surfaced which are genuine gaps:
+
+- **host_type / input_shaping_type / infill_combination / machine_max_jerk_e
+  — all PASS now.** Earlier "no match across N runs" verdicts were the M73
+  placement race resolving unluckily; on re-run ares byte-matches the common
+  oracle ordering (host_type=octoprint matched 3/4 fresh runs, diff=0).
+- **bottom_surface_pattern 7/8 PASS** (only `hilbertcurve` DIVERGENT);
+  **top_surface_pattern 7/8 PASS** (only `octagramspiral` DIVERGENT) — both
+  residual diffs are the wipe-segment sub-ULP E below, not feature gaps.
+- **outer_wall_line_width / initial_layer_line_width all PASS** — the
+  `widths::generate` context-bounded domain fix holds.
+- **use_relative_e_distances/false, printable_height/min — INPUT_REJECTED.**
+  Oracle `Print::validate` rejects them: `use_relative_e_distances=0` with a
+  `G92 E0` in `before_layer_change_gcode` → -51 "incompatible with absolute
+  extruder addressing" (Print.cpp:1740-1746); `printable_height=0` → -51
+  "object exceeds the maximum build volume height" (Print.cpp:1389). These
+  are schema-legal values that are infeasible on the cube fixture, not
+  slicing-parity failures.
+
+Harness changes (commits 3a8bb115, c3a7417b):
+- `stages::attributable` now recognizes the two -51 diagnostics above, keyed
+  to `use_relative_e_distances` / `printable_height`.
+- New `compare_exported_for(key)` classifies a slice-stage attributable
+  rejection as an `INPUT_REJECTED` outcome (was ORCA_ERROR — the oracle
+  error surfaced inside compare_exported before input_rejection ran);
+  execute_plan counts it as a rejected case → domain INCOMPLETE on the
+  fixture, which is the honest verdict.
+- `ARES_OPTION_KEYS=a,b,c` env narrows the sweep for targeted re-verification.
+
+### sparse_infill_pattern — genuine capability gap
+
+16 of 26 values are `ARES_ERROR`: ares `parse_sparse_infill_pattern`
+(patterns.rs:100) returns InvalidInput "not implemented" for
+concentric, honeycomb, 3dhoneycomb, gyroid, tpmsd, tpmsfk, lightning,
+lateral-*, alignedrectilinear, archimedeanchords, hilbertcurve, crosszag,
+lockedzag, line, octagramspiral, quartercubic, tri-hexagon. Each is a
+separate upstream fill generator port — a large deferred body, not a
+surgical fix. `zigzag` (1573-line geometry diff) is a real divergence.
+
+### sub-ULP wipe-segment E (adaptivecubic / supportcubic)
+
+`adaptivecubic`/`supportcubic` differ by ONE line: `G1 X114.02 Y106.369
+E-.38885` (oracle) vs `-.38886` (ares) — the second wipe segment's dE.
+`Wipe::wipe` (GCode.cpp:~470): `dE = length * (segment_length / wipe_dist)`,
+per-segment delta-E. First segment matches (`-.61115`), so `length`/`during`
+agrees; the residual is `segment_length` for the clipped segment — the
+`clip_end` truncating-cast boundary point or int `Line::length` rounding
+differs by 1 ulp. Same class as the SV06 `Y98.188/.189` perimeter sub-ULP;
+needs byte-exact `Polyline::clip_end` + `Line::length` f64/int semantics.
+
+### filament_map_mode — config-block echo normalization
+
+`Auto For Match`/`Manual` produce identical G-code (same byte length); the
+sole diff is the `; filament_map_mode = ` CONFIG_BLOCK comment: oracle
+echoes `Auto For Flush` (the default), ares echoes the input value. For a
+single-filament print oracle normalizes the mode back to fmmAutoForFlush.
+Comment-only, zero functional impact; the upstream normalization site is in
+the 3mf→Print config path, not yet pinpointed.
