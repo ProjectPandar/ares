@@ -15,19 +15,38 @@ fn wipe_tower_filament_zero_is_allowed_and_negative_is_rejected() {
 
 #[test]
 fn wipe_tower_filament_checks_distinct_unequal_physical_and_logical_bounds() {
+    // The selector is only validated when a wipe tower is actually emitted
+    // (`Print.cpp:540`); the test enables the prime tower so the bound checks
+    // run at all.
     let project = valid_project();
+    let tower = |s: &mut crate::ProjectSettings| {
+        s.process.print.enable_prime_tower = crate::OrcaBool(true);
+    };
 
     let mut valid = valid_settings(4, 2);
+    tower(&mut valid);
     valid.process.print.wipe_tower_filament = OrcaInt(2);
     validate(&valid, &project).unwrap();
 
     let mut physical_invalid = valid_settings(2, 4);
+    tower(&mut physical_invalid);
     physical_invalid.process.print.wipe_tower_filament = OrcaInt(2);
     assert_invalid_key(validate(&physical_invalid, &project), "wipe_tower_filament");
 
     let mut logical_invalid = valid_settings(4, 2);
+    tower(&mut logical_invalid);
     logical_invalid.process.print.wipe_tower_filament = OrcaInt(3);
     assert_invalid_key(validate(&logical_invalid, &project), "wipe_tower_filament");
+}
+
+#[test]
+fn wipe_tower_filament_is_ignored_without_a_wipe_tower() {
+    // Single-filament, no prime tower: upstream ignores the selector
+    // (`Print.cpp:540` requires `has_wipe_tower() && extruders.size() > 1`).
+    let project = valid_project();
+    let mut settings = valid_settings(1, 1);
+    settings.process.print.wipe_tower_filament = OrcaInt(5);
+    validate(&settings, &project).unwrap();
 }
 
 #[test]

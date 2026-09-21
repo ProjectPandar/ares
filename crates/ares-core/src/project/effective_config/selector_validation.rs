@@ -54,6 +54,17 @@ fn validate_wipe_tower(
         return Err(invalid_option("wipe_tower_filament"));
     }
 
+    // Upstream only consumes the selector when a wipe tower is actually
+    // emitted and more than one extruder is in play
+    // (`Print.cpp:540`: `has_wipe_tower() && wipe_tower_filament != 0 &&
+    // extruders.size() > 1`); on a single-filament no-tower print the value
+    // is ignored entirely, so an out-of-range index is not an error there.
+    if !super::usage::has_wipe_tower(settings, validated.logical_filament_count)
+        || validated.logical_filament_count <= 1
+    {
+        return Ok(());
+    }
+
     let selector = selector as usize;
     if selector >= validated.physical_extruder_count || selector > validated.logical_filament_count
     {
