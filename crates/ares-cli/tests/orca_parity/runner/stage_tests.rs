@@ -75,6 +75,30 @@ fn validation_status_requires_source_attributable_diagnostic() {
             false,
         ),
         (
+            Some(-51),
+            "Layer height cannot exceed nozzle diameter.",
+            "layer_height",
+            true,
+        ),
+        (
+            Some(-51),
+            "Layer height cannot exceed nozzle diameter.",
+            "initial_layer_print_height",
+            true,
+        ),
+        (
+            Some(-51),
+            "Too small line width",
+            "skin_infill_line_width",
+            true,
+        ),
+        (
+            Some(-51),
+            "Too small line width",
+            "skeleton_infill_line_width",
+            true,
+        ),
+        (
             Some(0),
             "Param values in 3mf/config error:\nline_width: error",
             "line_width",

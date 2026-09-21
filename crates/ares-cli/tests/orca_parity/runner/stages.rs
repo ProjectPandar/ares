@@ -113,6 +113,23 @@ pub(crate) fn attributable(output: &Captured, key: &str) -> bool {
         {
             return true;
         }
+        // `Print.cpp:1654/1659`: a schema-legal layer height above the
+        // nozzle diameter is a feasibility rejection, not a value error.
+        if matches!(key, "layer_height" | "initial_layer_print_height")
+            && text
+                .lines()
+                .any(|line| line == "Layer height cannot exceed nozzle diameter.")
+        {
+            return true;
+        }
+        // `Print.cpp:1549/1687`: a line-width percent that resolves below the
+        // extrusion minimum. Both skin/skeleton infill widths share the
+        // generic diagnostic (the opt_key is not echoed in the -51 text).
+        if matches!(key, "skin_infill_line_width" | "skeleton_infill_line_width")
+            && text.lines().any(|line| line == "Too small line width")
+        {
+            return true;
+        }
         // `bridge_line_width`: the unique line-width-vs-nozzle diagnostic.
         return key == "bridge_line_width"
             && text
