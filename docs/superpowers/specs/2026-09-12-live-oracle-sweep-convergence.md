@@ -4424,3 +4424,25 @@ visitor: unwrap element 0, drain the rest. Empty arrays still reject via
 test to use `[{}]` (object element — still rejected upstream, `parse_str_arr`
 returns false) instead of `["1"]`. All 1660 options tests pass; this unblocks
 every option the sweep injector writes as a scalar array.
+
+## Sweep status after array-tolerance + matrix fixes (2026-09-22 lx)
+
+Bounded-domain verdicts now 471 PASS / 36 FAIL / 143 INCOMPLETE (was
+459/52/139). The scalar-as-array fix flipped a broad class of `coFloat`,
+`coInt`, `coBool`, `coPercent`, `coFloatOrPercent` options that the GUI (and
+sweep injector) store as single-element arrays. The residual FAIL rows that are
+NOT the M73 ordering class reduce to: `sparse_infill_pattern`/`bottom_surface_pattern`/
+`top_surface_pattern`/`support_base_pattern` unimplemented Fill*.cpp generators
+(archimedeanchords, octagramspiral, concentric, honeycomb, 3dhoneycomb, gyroid,
+tpmsd, tpmsfk, lightning, lateral-*, crosszag, lockedzag, line, quartercubic,
+tri-hexagon, hilbertcurve); `timelapse_type=1` silent -102 (oracle limitation);
+`enable_wrapping_detection` label/lift ordering on re-lifting travel;
+`filament_map_mode` config-echo normalization; `gcode_comments` partial port.
+
+The dominant residual is the M73 boundary ordering: `M73 P<R>` lands 1-2 G1
+lines late because ares's per-block estimated times accumulate marginally
+slower than the oracle's `g1_times_cache` boundary chain — the same estimator
+precision class already tracked for the cooling ~0.28s divergence. Several
+option FAILs (`wipe_tower_filament`, `skin_infill_line_width`, `print_flow_ratio`,
+`top_surface_line_width`, `tree_support_brim_width`) are M73-only diffs, not
+content divergences.
