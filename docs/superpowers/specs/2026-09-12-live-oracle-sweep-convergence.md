@@ -4708,3 +4708,15 @@ then shifts the segment `length` → `E` by 1 ulp (`E.73354` vs `.73353`). Next:
 `take_limited`'s `line_half_width`-capped walk (`:616,633,1684-1685,1742-1743`) and
 `ray_circle_intersection_interval_extend` (`:761,811`) for the boundary-arch endpoints; the
 residual lives in the connect graph (`link.rs`/`connect.rs`), not the fill-line slicing.
+
+### lxxii. raft residual — take_limited anchor budget (post-7fd75c4f)
+Traced the 1-ulp connect endpoints further: `take_limited`/`append_limited`/`lerp` all
+faithfully port upstream (`lerp_truncating` = `(1-t)*a + t*b` truncating cast,
+`Point.hpp:420`); `contour_parameters`/`point_distance` = `v.norm()` cumulative; inputs
+`anchor_length=scale_(1000)` (default `FillParams`), `line_half_width=0.5*scale_(spacing)`,
+`line_spacing=scale_(spacing)/density` all match. The remaining suspect for `X103.277` vs
+`103.278` is `Intersection.param`/`not_taken_prev|next` (`connect/types.rs:13-17` vs
+`ContourIntersectionPoint` `FillBase.cpp:328-355`): the arc-length parameter of the
+intersection point and the consumed-budget feeding `length_to_go` → `t` → `lerp` endpoint.
+Next: oracle `support_fills` polyline dump for one divergent zigzag to isolate which
+`take_limited`/`take_full_arc`/`emit_loops_in_band` call produces the 1-unit endpoint.
