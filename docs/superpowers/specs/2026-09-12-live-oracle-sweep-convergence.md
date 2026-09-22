@@ -5265,3 +5265,14 @@ race floor, so a real residual remains. Decomposition:
 - Conclusion: residual = `connect_base_support` zigzag SEGMENTATION parity
   (how a zigzag between boundary points is subdivided/emitted) — a real
   milestone-sized port gap, not a race and not flow math.
+
+### cxiii. zigzag residual root-caused to graph cp ordering
+The ~600-diff `connect_base_support` segmentation is NOT in `take_next`/
+`append_limited`/`take_full_arc` (all faithful per-vertex emitters). It is
+the ORDER `link_zigzag` iterates `map_infill_end_point_to_boundary` — which
+pairs are connected depends on cp index order in the working graph. If
+`build_working_graph` orders boundary intersections differently than
+upstream, `take_next` pairs different infill lines → same endpoints but a
+different chain topology → different per-segment E. NEXT MILESTONE: match
+upstream's boundary-intersection ordering (the order intersections are
+recorded per contour in `FillRectilinear`/`graph build`).
