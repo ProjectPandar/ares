@@ -5168,3 +5168,18 @@ is far smaller than the raw FAIL count suggests.
   via a boundary arch the ares port misses.
 The remaining raft `top_contacts`/`columns_base`/`interface_layers` upstream
 slice is a separate, still-open structural piece (raft over supported geometry).
+
+### cvi. connect_base_support edge-linking — outermost fill lines orphaned
+`ARES_CONN_DUMP` on `raft_layers/seeded` shows the base-layer fill produces
+`CONN n=3`: the leftmost (`-8601213`) and rightmost (`+8601213`) vertical fill
+lines as standalone `n=2` polylines, plus the `n=88` zigzag. Upstream chains the
+edge lines into the zigzag via boundary arches (so the rightmost edge is drawn
+continuously, then the zigzag follows). ares's `LinkPhases` pipeline
+(`consume_vertical_arches` → `link_zigzag` → `close_left_caps` →
+`connect_t_joints` → `emit_very_long_arches`) leaves them unlinked — the
+outermost lines' ends either have no `prev`/`next` neighbor on the boundary
+side or their arch cost/trim gates reject the link. This is a faithful-structure
+port of `Fill::connect_base_support` (`FillRectilinear.cpp:2203-2697`) — the
+divergence is in the arch evaluation/link gating for boundary-adjacent lines,
+needs a focused `evaluate_support_arches`/`build_working_graph` trace for the
+outermost intersections.
