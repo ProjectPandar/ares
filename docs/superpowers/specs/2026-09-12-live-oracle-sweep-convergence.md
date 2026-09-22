@@ -5419,3 +5419,17 @@ tiny regions. Candidates: (a) object sparse infill routed through `ipSupportBase
 doesn't generate. ares's `cross_hatch` uses `connect_infill` (correct for
 crosshatch). NEXT: probe WHICH surface/layer the 0.407 FillSupportBase calls
 run on (z or surface id) to identify the unported `ipSupportBase` consumer.
+
+### cxxiv. The 0.407 calls are the LOWEST-z (raft base) connects
+`CIN` order: 39 `infill=3 boundary=1 spacing=0.407080` calls FIRST, then the
+raft interface `infill=39/27 spacing=0.337080` calls. So the 0.407 calls are
+the raft BASE layer (lowest z) — `filler_support`/`first_layer_flow`. But
+`spacing(0.45,0.2)=0.407` = `line_width`, while `first_layer_flow` =
+`initial_layer_line_width`(0.42) → 0.377. The 0.407 = `line_width`(0.45) —
+the raft base filler->spacing resolves to `line_width`, not
+`initial_layer_line_width`/`support_line_width`. `infill=3` per call = the
+raft base boundary splits into many small contours (39 blobs each ~3 lines).
+NEXT: `first_layer_flow`/`filler_support` spacing for raft layer-0 should be
+`line_width`-derived (0.45), not `initial_layer_line_width` (0.42→0.377) —
+the 1st-layer support flow width chain resolves differently than ares's
+`first_layer_width` (which uses `initial_layer_line_width`).
