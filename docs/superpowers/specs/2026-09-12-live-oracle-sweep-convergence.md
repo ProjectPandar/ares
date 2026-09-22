@@ -4554,3 +4554,15 @@ rounded outline that pokes past the chamfer line. The `extract_support` SDF
 corner-shrink / marching-squares corner pick (`edge_grid/simplify.rs`,
 `EdgeGrid.cpp:1283-1400`) or the `raft_expansion` `expand` join path needs an
 oracle contact-polygon dump to align.
+
+#### raft contact extract offset ruled out (lxiii follow-up 4)
+
+Swapping the raft `extract_support` offset from `expansion_to_slice` to
+`expansion_to_propagate` (-3) made the diff *worse* (17465 vs ~4600 stripped
+lines), so `expansion_to_slice` is correct for the contact silhouette. The
+rounded-vs-chamfered corner difference is therefore inside
+`EdgeGrid::contours_simplified` marching-squares corner handling or the
+`contacts_input` = `expand(overhangs, raft_expansion, jtMiter, 3.0)` step — not
+the extract offset. Needs an oracle `contact_polygons`/`extract_support` dump
+to diff the raw contour; add a nix probe in `SupportMaterial.cpp` around
+`detect_contacts` layer 0.
