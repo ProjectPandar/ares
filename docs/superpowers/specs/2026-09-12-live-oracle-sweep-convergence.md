@@ -4926,3 +4926,16 @@ can't reproduce. `concentric_internal_override` misfires on corner slivers that
 are rectangles-but-not-narrow. Fix = port `split_solid_surface` line-based path
 (vertical_lines sections → `filter_vibrating_extrusions` → `TracedPoly` reconstruct
 → `union_safety_offset_ex`/`diff_ex` split → touch-merge) into `detect_narrow`.
+
+### lxxxviii. correction — split_solid_surface IS ported (group_fills/narrow/split.rs)
+Correction to lxxxvi/lxxxvii: `split_solid_surface` IS ported as
+`group_fills/narrow/split.rs` — `split_lines` is a faithful line-based port
+(`opening(2·spacing,3·spacing)` + `shrink(spacing·0.5−overlap)` + `LineDistanceTree`
+vertical sections + `filter::apply`(filter_vibrating_extrusions) +
+`trace::reconstruct`(TracedPoly) + `union_safety_offset_ex`/`diff_ex` + touch-merge).
+The residual is a SUBTLE reconstruction divergence — `intersections_sorted`/`outside`/
+`filter`/`trace` producing an extra narrow sliver on some layers — not a missing port.
+Verified faithful: `scaled` truncating (`scale_`/`scaled<coord_t>`), `base_angle`
+(`+π/2` + odd-layer `+π/2` unless AlignedRectilinear), `aligning_angle`, section
+`outside<0 && |Δy|>spacing`, touch-merge thresholds (`-0.5·spacing` shrink /
+`+0.3·spacing` expand), final `expand(+0.5·spacing) ∩ fill.expolygons`.
