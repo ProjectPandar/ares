@@ -148,7 +148,12 @@ pub(crate) fn build_raft_stream(
     // line width fallback), not the plain support width.
     let first_layer_width = extrusion_options
         .width_for_role_and_layer(crate::print_paths::PrintPathRole::SupportMaterial, true);
-    let spacing = |width: f64, height: f64| width - height * (1.0 - std::f64::consts::FRAC_PI_4);
+    // `rounded_rectangle_extrusion_spacing` (`Flow.cpp:200-206`) computes
+    // `width - height·float(1 − 0.25·π)` in f32 — keep the f32 rounding so
+    // `line_half_width`/`length_to_go`/`lerp t` match oracle endpoints.
+    let spacing = |width: f64, height: f64| {
+        (width as f32 - height as f32 * (1.0f32 - 0.25 * std::f32::consts::PI)) as f64
+    };
     let support_flow_spacing = spacing(support_width, layer_height);
     let interface_flow_spacing = spacing(interface_width, layer_height);
     let first_layer_flow_spacing = spacing(first_layer_width, first_height);
@@ -268,7 +273,12 @@ pub(crate) fn build_project_raft(
 
     let layer_height = parameters.layer_height;
     let first_height = parameters.first_print_layer_height;
-    let spacing = |width: f64, height: f64| width - height * (1.0 - std::f64::consts::FRAC_PI_4);
+    // `rounded_rectangle_extrusion_spacing` (`Flow.cpp:200-206`) computes
+    // `width - height·float(1 − 0.25·π)` in f32 — keep the f32 rounding so
+    // `line_half_width`/`length_to_go`/`lerp t` match oracle endpoints.
+    let spacing = |width: f64, height: f64| {
+        (width as f32 - height as f32 * (1.0f32 - 0.25 * std::f32::consts::PI)) as f64
+    };
     let support_flow_spacing = spacing(support_width, layer_height);
     let interface_flow_spacing = spacing(interface_width, layer_height);
     // First-layer support flow follows the FIRST-LAYER width chain

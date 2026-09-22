@@ -138,6 +138,9 @@ pub(crate) fn raft_layer_fill(
     let expolygons = union_ex(layer_polygons, FillRule::NonZero)?;
     let mut out = Vec::new();
     for expolygon in expolygons {
+        // `aoffset1 = coord_t(scale_(overlap − 0.5·spacing))`
+        // (`FillRectilinear.cpp:3613`, `FillBase.cpp:394`) truncates to an
+        // integer lattice unit, matching `checked_scale`.
         let inner_offset = checked_scale_f32(scale, -0.5 * spec.spacing)?;
         let line_spacing = scale
             .checked_scale(spec.spacing / f64::from(spec.density))

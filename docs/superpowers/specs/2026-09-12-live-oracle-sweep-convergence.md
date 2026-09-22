@@ -4720,3 +4720,17 @@ faithfully port upstream (`lerp_truncating` = `(1-t)*a + t*b` truncating cast,
 intersection point and the consumed-budget feeding `length_to_go` → `t` → `lerp` endpoint.
 Next: oracle `support_fills` polyline dump for one divergent zigzag to isolate which
 `take_limited`/`take_full_arc`/`emit_loops_in_band` call produces the 1-unit endpoint.
+
+### lxxiii. raft residual — vertex-tangency dedup in fill-line slicing (post-57d3a1c7)
+Ruled out every scalar input: `rounded_rectangle_extrusion_spacing` now f32
+(`Flow.cpp:200-206`, `bridge.rs`), `aoffset1 = coord_t(scale_(overlap−0.5·spacing))`
+integer-truncated (reverted the fractional `inner_offset` — `FillBase.cpp:394` `coord_t`),
+`line_spacing`, `anchor_length`, `line_half_width`, `lerp` truncating cast,
+`contour_parameters`/`point_distance` (`v.norm()`), `Intersection.param`/`not_taken`.
+The `X102.518 Y103.277` vs `Y103.278` endpoint is a vertical-line↔inner-contour
+intersection whose `pos()` picks a segment/vertex 1 unit off — the dedup in
+`populate_vertical_lines`/`at_segment_vertex` (`segments.rs:266-300`) keeps a different
+of two nearly-equal `pos()` values at a contour-vertex tangency than upstream's
+`slice_region_by_vertical_lines` dedup (`FillRectilinear.cpp:842-880`). Next: dump
+ares `inner` contour + `line.intersections` for one x=102.518 line vs oracle
+`support_fills` to isolate the kept-vs-dropped intersection.
