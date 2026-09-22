@@ -5108,3 +5108,18 @@ segments oracle merges into closed loops. The single `OSEG fnew` divergence
 (`f=3942611,-3942607,357704 t=3816144,-3968799,340000 odd=1`: ares fnew=1/nlines=0,
 oracle fnew=0) → different line split → stitch produces different groupings. Added
 fpi/tpi/inset to OSEG to check perimeter_index mismatch at that segment.
+
+### cii. RESOLVED: narrow-region `;WIDTH` divergence = ORACLE NON-DETERMINISM (TBB/hash race)
+Root-caused through 6 instrumented oracle builds + ares dumps, all byte-identical:
+`ONODE`/`OSTORE`/`bead_widths`/`toolpath_locations`/`OLMAX emit`/`OSEG` — dist, bc,
+junction points, widths, segment list all match. The ONLY divergence is the
+`connectJunctions` `unprocessed_quad_starts` (`ankerl::unordered_dense::set`)
+ITERATION ORDER — a hash/pointer-order race. PROOF: two identical oracle runs of
+case-OxtTzz produce different `OQUAD` quad order (64 diff lines) AND different
+gcode `;WIDTH` counts: `0.405676` 4/1/4, `0.405678` 3/5/5, `0.429544` 4/5/5.
+ares's output (0.405676×4, 0.405678×5, 0.429544×5) falls INSIDE the oracle
+variance envelope (matches run1/run3 for 0.405676, run2/run3 for 0.405678/0.429544).
+The `detect_narrow`/`ConcentricInternal` narrow slivers + cooling-F knock-on are
+NOT a port bug — ares is byte-deterministic within oracle's TBB non-determinism,
+same class as the confirmed M73 race. No fix needed; comparator should treat
+narrow-infill `;WIDTH`/cooling-F variance as oracle-race noise for detect_narrow cases.
