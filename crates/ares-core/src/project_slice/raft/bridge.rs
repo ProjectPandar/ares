@@ -348,6 +348,27 @@ pub(crate) fn build_project_raft(
                     .join(" ");
                 eprintln!("RAFTVERT contact[{i}] n={} {}", poly.points().len(), vs);
             }
+            for (name, polys) in [
+                ("interface", &polygons.interface),
+                ("base", &polygons.base),
+                ("first", &polygons.first_layer),
+            ] {
+                for (i, poly) in polys.iter().enumerate() {
+                    let vs = poly
+                        .points()
+                        .iter()
+                        .map(|p| {
+                            format!(
+                                "({:.3},{:.3})",
+                                p.x() as f64 * scale.factor(),
+                                p.y() as f64 * scale.factor()
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    eprintln!("RAFTVERT {name}[{i}] n={} {}", poly.points().len(), vs);
+                }
+            }
         }
     }
     let plans = raft_layer_plans(

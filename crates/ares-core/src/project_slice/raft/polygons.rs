@@ -107,10 +107,13 @@ pub(crate) fn raft_polygons(
     // 5) Base = union(interface) (raft-only: no columns to merge).
     let base = interface.clone();
 
-    // 6) 1st layer expansion (`:279-281`, `:366-371`).
+    // 6) 1st layer expansion (`SupportCommon.cpp:347` uses the default
+    // `jtMiter`/`DefaultMiterLimit` `expand`, NOT `SUPPORT_SURFACES_OFFSET_PARAMETERS`
+    // — that param pair only applies to the interface/contact expands at
+    // `:308-312`).
     let first_inflate = (params.first_layer_expansion - fine).max(0);
     let first_layer = if first_inflate > 0 {
-        expand_square(&base, first_inflate)?
+        expand_default(&base, first_inflate)?
     } else {
         base.clone()
     };
@@ -129,8 +132,26 @@ fn expand_square(
     polygons: &[Polygon],
     delta: Coord,
 ) -> Result<Vec<Polygon>, crate::geometry::ClipperError> {
+    expand_join(polygons, delta, JoinType::Square, 0.0)
+}
+
+/// `expand(polygons, delta)` — default `jtMiter` + `DefaultMiterLimit` (3.0)
+/// (`ClipperUtils.hpp:19,27,379`).
+fn expand_default(
+    polygons: &[Polygon],
+    delta: Coord,
+) -> Result<Vec<Polygon>, crate::geometry::ClipperError> {
+    expand_join(polygons, delta, JoinType::Miter, 3.0)
+}
+
+fn expand_join(
+    polygons: &[Polygon],
+    delta: Coord,
+    join_type: JoinType,
+    miter_limit: f64,
+) -> Result<Vec<Polygon>, crate::geometry::ClipperError> {
     let expolygons = union_ex(polygons, FillRule::NonZero)?;
-    let expanded = offset_expolygons(&expolygons, delta as f32, JoinType::Square, 0.0)?;
+    let expanded = offset_expolygons(&expolygons, delta as f32, join_type, miter_limit)?;
     Ok(expanded
         .into_iter()
         .flat_map(|expolygon| {
