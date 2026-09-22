@@ -5099,3 +5099,12 @@ verified faithful; the residual is the quad `next`/`prev`/`twin` topology —
 `transferEdge`/`makeRib`/`insertRib`/`connectTwins`/`collapseSmallEdges` linking
 produces a slightly different quad chain for this corner. NEXT: dump the
 quad_start→quad_end→next_unconnected chain per domain to find the topology diff.
+
+### ci. OLMAX emit counts identical — divergence is stitch/merge of odd segments
+Oracle `OLMAX emit=1` counts == ares exactly (bc=3 588458×5/588457×4, bc=1
+193313×4/193312×5; bc=1 178852 cen=1 emit=0 both). local_maxima hexagons identical.
+The `odd=true n=4` sliver lines are the hexagons post-stitch/simplify, OR odd
+segments oracle merges into closed loops. The single `OSEG fnew` divergence
+(`f=3942611,-3942607,357704 t=3816144,-3968799,340000 odd=1`: ares fnew=1/nlines=0,
+oracle fnew=0) → different line split → stitch produces different groupings. Added
+fpi/tpi/inset to OSEG to check perimeter_index mismatch at that segment.
