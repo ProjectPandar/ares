@@ -102,3 +102,17 @@ verified to compile, then removed because it was dead code — the primitives it
 added (`Polygon::rotate`/`first_point`, `ExPolygon::rotate`/`to_polygons`,
 `BoundingBox::merge_point`, `Polyline::points_mut`) must land together with the
 wired `fill_entities`/`sparse_anchoring` arms, not orphaned.
+
+## `line` port probe — geometry mismatch, reverted (2026-09-22)
+
+A full `fill/line.rs` port + wiring (whitelist, `sparse_anchoring` Line arm,
+`fill_entities/line.rs`) was implemented and sliced `sparse_infill_pattern=line`
+successfully — but the sparse-infill geometry is wrong: oracle emits short
+connected segments that jog 90° at each `_can_connect` boundary, while the port
+emitted long straight diagonal runs. Likely the rotated frame / `_line` grid or
+`chain_polylines` ordering is off, or `FillLine` isn't actually the generator
+upstream dispatches `line` to (check `Fill::new_from_type` — `line` may map to
+`FillRectilinear`/`FillLine` differently than assumed). The wiring was reverted
+to keep the honest `unsupported` rejection; do not re-add `fill/line.rs` without
+a `FillLine` oracle probe (`ARES_DUMP_*` or a C++ dump of `_fill_surface_single`
+polylines) to diff the raw segment list. Rejected beats wrong.
