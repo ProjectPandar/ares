@@ -5209,3 +5209,22 @@ Full bit-parity needs the π/2 convention offset removed (use upstream's exact
 `cos(angle)`/`sin(angle)` args end-to-end) — a deeper fill-pipeline refactor.
 `raft_layers/min` residual after the edge-line fix is the narrow-region oracle
 race (`;WIDTH:0.405676` sliver + F1982/1977), not a real defect.
+
+### cix. Broad FAIL re-verification — races dominate, raft edge fix landed
+Fresh re-slice of FAIL domains with the excess-arch fix + f32 angles:
+- `bottom_surface_pattern/monotonic`, `top_surface_pattern/monotonic`,
+  `gcode_comments/false`, `seam_slope_type/none`, `cool_plate_temp/min`,
+  `sparse_infill_pattern/rectilinear`, `top_surface_pattern/archimedeanchords`
+  → **byte-identical** (stale fixtures in the summary).
+- `support_base_pattern/default`, `gcode_flavor/marlin2`,
+  `activate_air_filtration_during_print`, `raft_layers/min` → diff signature is
+  `WIDTH:0.405676/0.405678` medial slivers + `F1977/1982/2002/2005` cooling +
+  `M73` — the CONFIRMED oracle TBB/hash races (narrow-region ordering + M73).
+- `raft_layers/seeded` → excess edge lines FIXED (emitted as n=2 chains, now
+  gone); residual = interface zigzag 1-unit endpoint rounding (π/2 trig-arg
+  convention) + M73.
+Remaining actionable: (a) remove the π/2 trig-arg convention offset for
+bit-exact interface endpoints; (b) gcode_comments `move to first` on lifted
+travels; (c) the raft `top_contacts`/`columns_base` upstream slice; (d) zigzag
+`traverse` start residual. Everything else in the sweep tail is oracle-race
+noise or stale fixtures.
