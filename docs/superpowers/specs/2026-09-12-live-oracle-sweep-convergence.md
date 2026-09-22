@@ -4566,3 +4566,17 @@ rounded-vs-chamfered corner difference is therefore inside
 the extract offset. Needs an oracle `contact_polygons`/`extract_support` dump
 to diff the raw contour; add a nix probe in `SupportMaterial.cpp` around
 `detect_contacts` layer 0.
+
+#### raft grid resolution (lxiii follow-up 5)
+
+`RAFTDBG` shows ares contact `contour 0 inner=false pts=16` (octagonal/rounded,
+16 pts) where oracle emits an 8-vertex chamfered rectangle. The contact outline
+comes from `SupportGridPattern::extract_support` → `EdgeGrid::contours_simplified`
+at `grid_resolution = scale_(support_base_pattern_spacing(2.5) +
+support_flow_spacing)` where `support_flow_spacing = support_width - layer_height
+*(1-π/4)`. If ares's `support_width`/`layer_height`/`support_flow_spacing` for the
+raft differ from upstream `support_material_flow.spacing()`, the SDF grid
+resolution changes → different corner quantization (rounded vs chamfered). Next:
+dump upstream `grid_resolution`/`m_pixel_size` for the raft contact (probe at
+`SupportMaterial.cpp:620`/`extract_support` `:735`) and the raw `contact_polygons`
+to compare the lattice-resolution corner handling vertex-for-vertex.
