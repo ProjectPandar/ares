@@ -5009,3 +5009,18 @@ returns `thickness` — so the divergence is NOT beading `compute` but the node
 `SkeletalTrapezoidation` `node.data.distance_to_boundary`/`bead_count` and
 `get_or_create_beading` `optimal_bead_count(distance*2)` / `compute(radius*2,count)`
 — the medial node's radius differs, so the bead width differs.
+
+### xciv. Arachne junction width → dist2boundary node radius (voronoi medial placement)
+`distance_to_boundary` is the medial node's perpendicular distance to its source
+boundary segment — set in `SkeletalTrapezoidationGraph::makeRib` (`:326`,
+`dist = (prev_edge->to->p - p).norm()` where `p` = `distance_to_infinite_squared`
+projection onto `Line(start_source,end_source)`) and `insertRib` (`:365`). ares
+`operations.rs` `make_rib`/`insert_rib`/`project`/`point_distance` verified faithful.
+Oracle junction `w=407079` ↔ `dist2boundary=203540` (≈optimal_width/2); ares
+`w=362756` ↔ `dist2boundary=181378`. So the divergence is upstream of beading: the
+voronoi medial NODE POSITION/`distance_to_boundary` differs — `SkeletalTrapezoidation::
+discretize`/`transferEdge`/`makeNode` (boost::polygon::voronoi → medial vertices)
+produces a node at a different radius for the narrow corner region. Next probe:
+dump `node.p`/`distance_to_boundary` per voronoi vertex for the narrow region and
+compare to ares's skeletal graph — isolates whether the voronoi vertex set or the
+discretization/bead_count differs.
