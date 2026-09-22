@@ -151,3 +151,14 @@ any non-support consumers; verify which path each caller needs.
 The AGG anti-aliased coverage (`scanline_aa`) is the hard part — coverage must
 match `!= 0` semantics for partial cells. A byte-exact port needs AGG's exact
 subpixel coverage, not a point-in-polygon test.
+
+### AGG coverage semantics (precision detail)
+
+AGG `rasterizer_scanline_aa` computes per-cell coverage in subpixel units:
+`poly_subpixel_shift = 8` (256 subpixels/cell axis), `aa_shift = 8`
+(coverage 0-255). `cover = area >> (2*8 + 1 - 8)` = `area >> 9`, then
+clamped/alpha'd. So `cell != 0` iff covered area ≥ 2^9 subpixel² = 1/512 of a
+cell — NOT "any coverage". Cells with < 1/512 coverage give `cover == 0` →
+not marked. A byte-exact port must reproduce this threshold (conservative
+rasterization with a 1/512 area floor), not just "any intersection". A
+sampling or naive conservative rasterizer diverges at sliver cells.
