@@ -5250,3 +5250,18 @@ perimeter residual is therefore NOT a flow-precision bug — on the seeded
 `raft_layers` case it survives both formulations, confirming it is a
 connectJunctions ordering artifact (oracle hash race) on a width-changing
 segment, not flow math. No code change needed; revert kept.
+
+### cxii. raft_layers seeded-case residual decomposed (oracle race + real gap)
+`case-59tGO2` (raft_layers>1): oracle self-diff across two identical runs =
+**223 lines** (confirmed TBB race floor). ares vs oracle ≈ 3609 — beyond the
+race floor, so a real residual remains. Decomposition:
+- Raft INTERFACE zigzag (lines ~295-362): 63 segments, **0 endpoint diffs** —
+  `emit_loops_in_band` fix + f32 angles landed; geometry correct.
+- ~600 extrusions differ (X∈[105,120] support region, spread across layers):
+  same endpoints but different segmentation/E per line — `connect_base_support`
+  zigzag produces equal endpoints with different internal segment splitting →
+  per-line E differs though total is conserved. Plus M73 ordering race and
+  `E.04556/57`/`E-.37619/20`/`E-.5661/9` sub-µm chamfer/wipe E.
+- Conclusion: residual = `connect_base_support` zigzag SEGMENTATION parity
+  (how a zigzag between boundary points is subdivided/emitted) — a real
+  milestone-sized port gap, not a race and not flow math.
