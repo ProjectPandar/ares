@@ -5362,3 +5362,16 @@ spacing from `support_line_width` → 0.337, producing wrong line_spacing/trim
 → ~600-line connect divergence. NEXT: pin the exact `filler->spacing` for the
 raft interface filler in `fill_expolygons_with_sheath_generate_paths` — it is
 `line_width`-derived (0.45→0.407), not support-derived.
+
+### cxx. spacing 0.407 is this->spacing (=filler->spacing) — flow spacing itself
+`connect_base_support(..., this->spacing)` — `this->spacing` is `Fill::spacing`
+=`filler->spacing`, set to `support_material_interface_flow.spacing()` for
+interface (`:1722`) / `raft_interface_flow.spacing()` for contact. ORCA_FLOW
+showed `smi/raft_i=0.337`. So `filler->spacing` should be 0.337 — but the
+connect dump shows 0.407. Either (a) `support_material_interface_flow.width()`
+resolves to `line_width` (0.45) because `support_line_width` "0.38" is a
+`coFloatOrPercent` whose `>0`/abs resolution differs from ares's, OR (b) the
+filler spacing is overwritten between `:1722` and the connect call. NEXT:
+probe `filler->spacing` (not `flow.spacing()`) right before
+`fill_expolygons_with_sheath_generate_paths` — the Flow-vs-Fill `spacing`
+distinction is the gap. ares uses `support_line_width`-derived spacing.
