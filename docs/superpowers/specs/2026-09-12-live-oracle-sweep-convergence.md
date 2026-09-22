@@ -5238,3 +5238,15 @@ not the f32-truncated `m_width` upstream stores; casting a nearby f64 to f32 at
 the accessor gives a wrong f32. Correct fix would propagate the f32 `Flow`
 width from construction (`Flow::new_from_config_width` / `with_spacing`),
 not truncate at `mm3_per_mm`. Deferred — sub-µm E residual.
+
+### cxi. mm3_per_mm already f32-correct — E.04556 is ordering, not math
+`perimeters/flow.rs::ordinary_volume` + `Flow::with_width` already compute
+`mm3_per_mm` as `float(h*(w - h*(1-0.25*PI)))` (f32 operands, f64 expr, f32
+result — exact `Flow.cpp:219-228` lattice). `path.mm3_per_mm` is therefore
+already the f32 value feeding `for_length`. The accessor
+`extrusion_per_mm_for_layer_with_width` (toolpath path) is a SEPARATE
+pipeline; its f64 mm3 does not feed the emitted G-code `E`. The `E.04556/57`
+perimeter residual is therefore NOT a flow-precision bug — on the seeded
+`raft_layers` case it survives both formulations, confirming it is a
+connectJunctions ordering artifact (oracle hash race) on a width-changing
+segment, not flow math. No code change needed; revert kept.
