@@ -1,3 +1,4 @@
+mod agg_raster;
 mod bbox_clip;
 mod bounding_box;
 mod bridge_direction;

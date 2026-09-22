@@ -12,22 +12,32 @@
 //! Deferred: `support_angle != 0` rotation (KSR default 0°),
 //! non-grid styles, and the AGG rasterizer variant.
 
+use crate::geometry::agg_raster;
 use crate::geometry::clipper::{
     FillRule, JoinType, difference_ex_polygons, intersection_ex, offset_expolygons, union_ex,
 };
-use crate::geometry::edge_grid::{EdgeGrid, SignedDistanceField};
 use crate::geometry::{Coord, ExPolygon, Point, Polygon};
 
+/// The AGG-rasterizer `SupportGridPattern` state (`SupportMaterial.cpp` with
+/// `SUPPORT_USE_AGG_RASTERIZER` defined at `:21`): a byte grid `grid2`
+/// rasterized at `pixel_size` over `bbox`, seed-filled to the dilated
+/// trimming mask. `extract_support` walks it with the static
+/// `contours_simplified`.
 pub(crate) struct SupportGridPattern {
-    grid: EdgeGrid,
-    field: SignedDistanceField,
+    grid2: Vec<u8>,
+    grid_w: usize,
+    grid_h: usize,
+    pixel_size: f64,
+    left_bottom: Point,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct SupportGridParams {
     /// `support_base_pattern_spacing + flow.spacing()`
-    /// (`SupportMaterial.cpp:620`).
+    /// (`SupportMaterial.cpp:620`) — `m_support_spacing`.
     pub(crate) grid_resolution: Coord,
+    /// `flow.scaled_spacing()` — `m_extrusion_width` (`:622`).
+    pub(crate) extrusion_width: Coord,
     /// `flow.scaled_spacing() / 2 + 5` (`:625`).
     pub(crate) expansion_to_slice: Coord,
     /// `-3` (`:626`).
@@ -38,6 +48,7 @@ impl SupportGridParams {
     pub(crate) fn new(grid_resolution: Coord, flow_spacing: Coord) -> Self {
         Self {
             grid_resolution,
+            extrusion_width: flow_spacing,
             expansion_to_slice: flow_spacing / 2 + 5,
             expansion_to_propagate: -3,
         }
@@ -55,24 +66,60 @@ impl SupportGridPattern {
         let (min_x, min_y) = (min_x - 20, min_y - 20);
         let (max_x, max_y) = (max_x + 20, max_y + 20);
         let resolution = params.grid_resolution.max(1);
-        let min_x = align_down(min_x, resolution);
-        let min_y = align_down(min_y, resolution);
-        let max_x = min_x + div_ceil(max_x - min_x, resolution) * resolution;
-        let max_y = min_y + div_ceil(max_y - min_y, resolution) * resolution;
+        let mut bx0 = align_down(min_x, resolution);
+        let mut by0 = align_down(min_y, resolution);
+        let mut bx1 = bx0 + div_ceil(max_x - bx0, resolution) * resolution;
+        let mut by1 = by0 + div_ceil(max_y - by0, resolution) * resolution;
 
-        let contours = support_polygons
-            .iter()
-            .chain(trimming_polygons)
-            .map(|polygon| polygon.points().to_vec())
-            .collect::<Vec<_>>();
-        let grid = EdgeGrid::new_from_contours(
-            contours.iter().map(Vec::as_slice),
-            Point::new(min_x, min_y),
-            Point::new(max_x, max_y),
-            resolution,
-        )?;
-        let field = grid.calculate_sdf();
-        Ok(Self { grid, field })
+        // AGG path (`:676-696`): oversample the grid.
+        let extrusion_width_scaled = params.extrusion_width.max(1);
+        let oversampling =
+            ((params.grid_resolution as i64) / (extrusion_width_scaled + 100)).clamp(1, 8) as usize;
+        let pixel_size = ((extrusion_width_scaled + 21) as f64)
+            .max(params.grid_resolution as f64 / oversampling as f64);
+        // `m_bbox.offset(m_pixel_size)`.
+        bx0 -= pixel_size as Coord;
+        by0 -= pixel_size as Coord;
+        bx1 += pixel_size as Coord;
+        by1 += pixel_size as Coord;
+        let grid_w_raw = (((bx1 - bx0) as f64) / pixel_size).ceil() as usize;
+        let grid_h_raw = (((by1 - by0) as f64) / pixel_size).ceil() as usize;
+        let grid_blocks_x = (grid_w_raw + oversampling - 1 - 2) / oversampling;
+        let grid_blocks_y = (grid_h_raw + oversampling - 1 - 2) / oversampling;
+        let grid_w = grid_blocks_x * oversampling + 2;
+        let grid_h = grid_blocks_y * oversampling + 2;
+        let left_bottom = Point::new(bx0, by0);
+
+        let mut grid2 = agg_raster::rasterize_polygons(
+            grid_w,
+            grid_h,
+            pixel_size,
+            left_bottom,
+            support_polygons,
+        );
+        let trimming_grid = agg_raster::rasterize_polygons(
+            grid_w,
+            grid_h,
+            pixel_size,
+            left_bottom,
+            trimming_polygons,
+        );
+        let dilated = agg_raster::dilate_trimming_region(&trimming_grid, grid_w, grid_h);
+        agg_raster::seed_fill_block(
+            &mut grid2,
+            grid_w,
+            &dilated,
+            grid_blocks_x,
+            grid_blocks_y,
+            oversampling,
+        );
+        Ok(Self {
+            grid2,
+            grid_w,
+            grid_h,
+            pixel_size,
+            left_bottom,
+        })
     }
 
     /// `extract_support` (`SupportMaterial.cpp:739`): grid-snapped,
@@ -84,9 +131,15 @@ impl SupportGridPattern {
         offset_in_grid: Coord,
         fill_holes: bool,
     ) -> Vec<Polygon> {
-        let simplified = self
-            .grid
-            .contours_simplified(&self.field, offset_in_grid, fill_holes);
+        let simplified = agg_raster::contours_simplified(
+            self.grid_w,
+            self.grid_h,
+            self.pixel_size,
+            self.left_bottom,
+            &self.grid2,
+            offset_in_grid,
+            fill_holes,
+        );
         if simplified.is_empty() {
             return simplified;
         }

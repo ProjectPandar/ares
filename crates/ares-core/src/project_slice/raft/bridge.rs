@@ -332,6 +332,23 @@ pub(crate) fn build_project_raft(
             span(&polygons.first_layer),
             1.0 / scale.factor()
         );
+        if std::env::var("ARES_RAFT_VERTS").is_ok() {
+            for (i, poly) in polygons.contact.iter().enumerate() {
+                let vs = poly
+                    .points()
+                    .iter()
+                    .map(|p| {
+                        format!(
+                            "({:.3},{:.3})",
+                            p.x() as f64 * scale.factor(),
+                            p.y() as f64 * scale.factor()
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                eprintln!("RAFTVERT contact[{i}] n={} {}", poly.points().len(), vs);
+            }
+        }
     }
     let plans = raft_layer_plans(
         first_layer_lslices,
