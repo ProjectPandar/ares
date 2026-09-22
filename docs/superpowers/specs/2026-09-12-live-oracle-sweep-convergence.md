@@ -4617,3 +4617,15 @@ divergence is the round-join segment count for the hull corner — likely
 `do_round` step count (`fixed_round(steps_per_radian * angle)`) or the
 occupied hull's corner vertex differing (raft first_layer vs oracle's
 `convex_hull(group.points)` input). Needs a `DoRound` steps comparison.
+
+#### AGG rasterizer verified — raft_layers/min byte-identical (lxvi)
+
+`raft_layers/min` (`case-j3o1ut`) now diffs to **0 lines** after the AGG
+rasterizer port — `extract_support` produces the correct contact outline. The
+`max`/`seeded` cases (multi-layer rafts) still diverge on the skirt `jtRound`
+corner segment count (oracle emits a single 45° chamfer, ares a multi-segment
+arc). Both use `jtRound` + `scale_(0.1)`; the divergence is in the occupied
+hull input to the skirt offset or the round-step count for the hull corner.
+
+`agg_raster` split into `mod/cells/grid_ops/contours` (all <400 LOC). 260
+related tests pass, 0 failures.
