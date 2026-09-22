@@ -4912,3 +4912,17 @@ core-erode (`:605-626`). ares `concentric_internal_override`/`all_narrow_rectang
 (`infills/narrow_internal.rs`) is a single-rectangle-bounds shortcut — diverges on
 any non-rectangle narrow region. Also produces extra `; infill`/`; move to first
 infill point` comments. Port `split_solid_surface` line-based detection.
+
+### lxxxvii. narrow-internal concentric override misfires (detect_narrow default on)
+`detect_narrow_internal_solid_infill:1` is DEFAULT — present in all divergent
+cases. ares `concentric_internal_override` (`infills.rs:298` → `narrow_internal.rs`)
+fires `ConcentricInternal` via `all_narrow_rectangle_bounds` (single 4-pt-rectangle
+contour, `min(w,h) <= 2·solid_line_width`), emitting `WIDTH:0.405676` concentric
+slivers oracle doesn't (`OxtTzz`: oracle 2 occurrences vs ares 4 — extra on
+non-narrow layers). Upstream `split_solid_surface` (`Fill.cpp:597`) for LINE
+patterns (monotonic/rectilinear) computes `normal_fill_areas` via vertical-section
+analysis + `opening` core-erode — a region a whole-level rectangle-bounds test
+can't reproduce. `concentric_internal_override` misfires on corner slivers that
+are rectangles-but-not-narrow. Fix = port `split_solid_surface` line-based path
+(vertical_lines sections → `filter_vibrating_extrusions` → `TracedPoly` reconstruct
+→ `union_safety_offset_ex`/`diff_ex` split → touch-merge) into `detect_narrow`.
