@@ -52,30 +52,39 @@ concentric path does not carry the sparse-density semantics. A correct port
 needs the sparse `_fill_surface_single` spacing/density path, not just the
 anchor-projection plumbing — reverted to the honest `unsupported` rejection.
 
-## FillLine port prerequisites (2026-09-22)
+## FillLine port prerequisites (2026-09-22, corrected flow)
 
 `FillLine::_fill_surface_single` (FillLine.cpp:38) is the simplest remaining
-fill generator but needs geometry primitives that do not yet exist in
-`ares-core::geometry`:
-- `ExPolygon::rotate(angle, Point center)` — rotate contour+holes.
-- `Polygon::bounding_box()` — the rotated outer-contour bbox.
-- `ExPolygon` → `Polygons` extraction (`affine_transform`/`out`).
-- `intersection_ln(Lines, Polygon)` — clip open lines to a polygon.
-- `offset(Polygon, delta) → Polygons` — polygon (not expolygon) offset.
-- `ExPolygon::contains(Line)` — does the expolygon fully contain a segment.
+fill generator. Reading the actual upstream source, the flow is:
+1. `expolygon.rotate(-direction.first)` so infill is vertical.
+2. `_min_spacing = scale_(spacing)`; `_line_spacing = min_spacing/density`
+   (or `_adjust_solid_spacing(bbox.size(0), line_spacing)` at full density).
+3. Non-full-density: `bounding_box.merge(align_to_grid(bbox.min, spacing,
+   direction.second.rotated(-direction.first)))` — anchor to the rotated
+   reference point exactly like monotonic.
+4. Build a vertical `Lines` grid `x` from `bbox.min(0)` to `bbox.max(0)+EPS`
+   stepping `_line_spacing`; each `_line(i, x, ymin, ymax)`.
+5. `intersection_pl(polylines_src, offset(expolygon, scale_(0.02)))` — clip
+   the open lines against the *slightly-expanded* expolygon (keeps edge lines
+   on skewed/vertical sides). `offset(expolygon)` returns `Polygons`.
+6. Extend each surviving segment's endpoints by `extra =
+   floor(min_spacing*0.3 + 0.5)` (the `INFILL_OVERLAP_OVER_SPACING` term),
+   swapping so the low-Y end is extended down and high-Y up.
+7. `chain_polylines(polylines)` then `_can_connect(dx, dy) &&
+   expolygon_off.contains(Line(last, first))` — where `expolygon_off =
+   offset_ex(expolygon, min_spacing/2)` — to append connected segments into
+   one `ThickPolyline` per run.
+8. `it->rotate(direction.first)` to rotate each output polyline back.
 
-Upstream flow: rotate expolygon so infill is vertical → shrink the rotated
-outer contour by `min_spacing` → build the bounding box → `intersection_ln` a
-vertical `Lines` grid against the shrunk contour (with `x0` centered on the
-bbox and `scale_(params.reference_point)` for the `center_infill` anchor
-exactly like the rectilinear/monotonic anchor) → un-rotate each surviving
-segment → drop any segment whose line is not contained in the original
-expolygon → extend endpoints by `min_length/2` → `_can_connect` chain.
-
-The `_fill_surface_single` returns a `ThickPolyline` per run of connected
-vertical segments; `line.zigzag`/`line` reuse the existing
-`fill::checked_rotate` helpers for the point rotations, but the polygon-level
-rotate/bbox/offset/intersection_ln/contains primitives must be ported first.
-The existing `rectilinear::prepare_rectilinear_contours` produces
-`MonotonicRegion`s, not raw `Lines`, so it cannot be reused for the raw
-segment list `FillLine` consumes.
+ares primitives already available: `chain_polylines`
+(`project_slice/perimeters/classic/shortest_path/polyline_chain.rs`),
+`adjust_solid_spacing` (`fill/rectilinear/surface.rs:198`), `align_to_grid`
+(`fill/multiline.rs:272`), `rotate_expolygon`/`rotate_polylines`,
+`offset_expolygons`/`offset_expolygon`, `intersection_open_polylines`
+(`geometry/clipper/polyline.rs`), `open_polyline_inside_expolygon`
+(= `ExPolygon::contains(Line)`). Still needed: `Polygon::rotate(angle,center)`,
+`ExPolygon::rotate`, `ExPolygon::to_polygons` (contour+holes flatten for the
+`offset(expolygon)` clip arg), `Polygon::first_point`, `Polyline::rotate`, and
+a `Line`-grid builder + `_can_connect` (distance ≤ `_diagonal_distance` and
+not over `_line_oscillation`/`_min_spacing`). These land with `fill/line.rs`
+together so no dead helpers are committed.
