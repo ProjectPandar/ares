@@ -4695,3 +4695,16 @@ Residual: systematic 1-ulp E (`E.73354` vs `.73353`) + occasional 1-unit fill
 endpoint (`X103.277` vs `X103.278`) — `connect_base_support` zigzag endpoint
 precision in the slice frame. Geometry (vertices, ordering, retract split, speeds)
 now matches; the residual is pure f32 endpoint/length rounding feeding E.
+
+### lxxi. raft residual — connect-graph boundary-arch endpoints (post-6a1dc00c)
+Verified the rational intersection (`intersection_position`/`RationalPosition::rounded`,
+`segments.rs`) faithfully ports upstream `pos()` (`p ± q/2`/`p/q`, `FillRectilinear.cpp:130-136`)
+— the 1-ulp endpoint diffs (`X103.277` vs `103.278`, `X102.518 Y103.277` etc) are NOT the
+vertical-line↔contour intersection rounding. They are the **connect-path boundary-arch
+endpoints**: `connect_base_support`'s `take_limited`/`ray_circle_intersection_interval_extend`
+(`FillRectilinear.cpp:757-811`) walking the `inner` contour between `ContourIntersectionPoint`s.
+These are horizontal/diagonal connect segments whose endpoints land 1 scaled unit off, which
+then shifts the segment `length` → `E` by 1 ulp (`E.73354` vs `.73353`). Next: port-check
+`take_limited`'s `line_half_width`-capped walk (`:616,633,1684-1685,1742-1743`) and
+`ray_circle_intersection_interval_extend` (`:761,811`) for the boundary-arch endpoints; the
+residual lives in the connect graph (`link.rs`/`connect.rs`), not the fill-line slicing.
