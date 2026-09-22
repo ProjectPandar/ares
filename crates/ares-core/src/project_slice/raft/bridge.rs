@@ -143,7 +143,11 @@ pub(crate) fn build_raft_stream(
         extrusion_options.width_for_role(crate::print_paths::PrintPathRole::SupportMaterial);
     let interface_width = extrusion_options
         .width_for_role(crate::print_paths::PrintPathRole::SupportMaterialInterface);
-    let first_layer_width = support_width;
+    // `support_material_1st_layer_flow` (`Flow.cpp:250-260`): the raft
+    // flange uses `initial_layer_line_width` when > 0 (else the support
+    // line width fallback), not the plain support width.
+    let first_layer_width = extrusion_options
+        .width_for_role_and_layer(crate::print_paths::PrintPathRole::SupportMaterial, true);
     let spacing = |width: f64, height: f64| width - height * (1.0 - std::f64::consts::FRAC_PI_4);
     let support_flow_spacing = spacing(support_width, layer_height);
     let interface_flow_spacing = spacing(interface_width, layer_height);
