@@ -209,16 +209,25 @@ fn generate_corner(
     prepared: &PreparedOffset,
     output: &mut Vec<Point>,
 ) -> bool {
-    // Clipper2 `ClipperOffset::OffsetPoint` (`clipper.offset.cpp:308-365`):
-    // `sin_a = CrossProduct(norms[k], norms[j])`, `cos_a = DotProduct` — ares'
-    // `corner.previous`/`corner.current` are `norms[k]`/`norms[j]` (incoming /
-    // outgoing edge normals).
-    corner.sin_a = corner.sin_a.clamp(-1.0, 1.0);
+    // Clipper1 `ClipperOffset::OffsetPoint` (`deps_src/clipper/clipper.cpp:
+    // 3693-3730`): near-flat/spike (`fabs(sinA·delta) < 1`) with `cosA > 0`
+    // emits the incoming-edge offset point and does NOT advance `k` (the
+    // `return false` / no `k = j`); otherwise `sinA·delta < 0` is the 3-point
+    // concave emit, else miter (`r = 1 + dot >= miterLim`) / square / round.
+    if (corner.sin_a * prepared.delta).abs() < 1.0 {
+        if corner.dot > 0.0 {
+            output.push(offset_point_with_normal(
+                corner.point,
+                corner.previous,
+                prepared.delta,
+            ));
+            return false;
+        }
+    } else {
+        corner.sin_a = corner.sin_a.clamp(-1.0, 1.0);
+    }
 
-    // Concavity first (`:333`): `cos_a > -0.999 && sin_a * delta < 0` — a
-    // near-spike corner (`cos_a <= -0.999`) does NOT take the concave 3-point
-    // branch even when `sin_a * delta < 0`.
-    if corner.dot > -0.999 && corner.sin_a * prepared.delta < 0.0 {
+    if corner.sin_a * prepared.delta < 0.0 {
         output.push(offset_point_with_normal(
             corner.point,
             corner.previous,
@@ -230,15 +239,11 @@ fn generate_corner(
             corner.current,
             prepared.delta,
         ));
-    } else if corner.dot > 0.999 && join_type != JoinType::Round {
-        // Almost straight — less than ~2.5° (`:346`): force a miter.
-        do_miter(corner, prepared.delta, 1.0 + corner.dot, output);
     } else {
         match join_type {
             JoinType::Miter => {
-                // `cos_a > temp_lim - 1` (`:358`) ⇔ `1 + cos_a > temp_lim`.
                 let ratio = 1.0 + corner.dot;
-                if ratio > prepared.miter_threshold {
+                if ratio >= prepared.miter_threshold {
                     do_miter(corner, prepared.delta, ratio, output);
                 } else {
                     do_square(corner, prepared.delta, output);
