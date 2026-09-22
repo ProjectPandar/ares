@@ -5301,3 +5301,15 @@ zigzag/T-joint chain topology. Needs an instrumented upstream build
 (INFILL_DEBUG_OUTPUT SVG or a dump probe of `take_next` pairing) to compare
 chain topology directly; the stable-vs-unstable `std::sort` hypothesis is one
 candidate but unproven. This is the next concrete milestone.
+
+### cxvi. connect chain divergence — could_take gate ruled out
+Probed: `vertical_dir` lacked upstream's `could_take_*` (`not_taken >
+SCALED_EPSILON`) gate — added it, **no change** (3609 diff): the vertical
+arches all satisfy the gate in this case. Reverted (no-effect change). Chain
+histogram confirmed: oracle `n=86`/`n=79` vs ares `n=88` — ares connects one
+extra infill line into the n=86 chain AND misses upstream's n=79 chain.
+Upstream probe `/tmp/connprobe-bin` (ORCA_DUMP_CONN) + ares ARES_CONN_DUMP now
+dump per-chain topology. NEXT: per-`take_next` decision trace — dump
+(cp1,cp2,consumed,merged) at each take on both sides, find first divergent
+pairing. Likely in select_support_arches cost ordering or connect_t_joints
+unstable-sort order.
