@@ -4828,3 +4828,19 @@ parity here requires Clipper2 `ClipperBase` scanline `IntersectPoint`/`Round`/
 `Execute` fidelity — the deepest primitive in the port; also the missing
 `9874100` support connect (one layer's `connect_base_support` empty in ares)
 warrants a follow-up. All higher-level raft/connect logic verified faithful.
+
+### lxxxi. raft residual — AGG raster asymmetric contact (TRUE root cause, post-ac85da2a)
+CORRECTED the clipper assumption: Orca uses **Clipper1** (`src/libslic3r/clipper.cpp`
+wraps `deps_src/clipper/clipper.cpp`, `Slic3r::ClipperLib`), NOT Clipper2 — my
+Clipper2 `generate_corner`/`intersect_point`/`top_x` ports were reverted; ares's
+Clipper1 `OffsetPoint`/`IntersectPoint`/`TopX`/`Round`/`fixed_round`/`do_miter`/
+`do_square` are ALL byte-faithful to `deps_src/clipper/clipper.cpp:3693-3760`.
+TRUE root cause: oracle `first_layer` (FPOLY) is **asymmetric** —
+`9150587/-9150572` x, chamfer `7979014/-7978999`; ares's is symmetric
+`±9150585`/`±7979012`. Per-vertex delta `+2`/`+13` (asymmetric). Traced to
+`agg_raster::rasterize_polygons` producing a symmetric `contact` raster where
+oracle's AGG scanline coverage is ~1px asymmetric (`extract_support`→
+`contours_simplified` grid snap → `first_layer`→`closing`→`fill_region`→`inner`
+cascade). `contours_simplified` scaling `(gx*pixel_size)+left_bottom` truncating
+cast verified faithful (`:303-307`). Residual = AGG rasterizer subpixel scanline
+coverage asymmetry — deepest primitive; byte-exact AGG is the remaining work.

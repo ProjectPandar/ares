@@ -57,6 +57,17 @@ pub(crate) fn raft_layer_polylines(
     // just inside the polygon boundary. `SCALED_EPSILON = scale_(1e-4)`
     // and `float(SCALED_EPSILON)` keeps the fractional 0.4096 units
     // (`libslic3r.h:52,96`).
+    if std::env::var("ARES_INNER_CONTOUR").is_ok() {
+        for (i, p) in layer_polygons.iter().enumerate() {
+            let pts = p
+                .points()
+                .iter()
+                .map(|pt| format!("{},{}", pt.x(), pt.y()))
+                .collect::<Vec<_>>()
+                .join(" ");
+            eprintln!("FIRSTL {i} {}", pts);
+        }
+    }
     let epsilon = scale.scaled_delta(1e-4) as f32;
     let erode = (((0.5 * spec.width_mm) + 0.000_001) * units) as f32;
     let closing = crate::geometry::offset2_ex(
