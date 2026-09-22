@@ -5135,3 +5135,19 @@ OQUAD order. Ares is byte-deterministic and geometrically identical — the resi
 RESOLUTION: treat `detect_narrow=1` + `ConcentricInternal` narrow-sliver/cooling-F
 diffs as oracle-race noise in the comparator; the underlying geometry is proven
 byte-equivalent (E-set, node dists, bead widths, junction points all match).
+
+### civ. Sweep FAIL domains are oracle-race noise + stale fixtures, not port bugs
+Re-sliced the option-coverage FAIL domains with the CURRENT binary + fresh oracle:
+- `gcode_comments/false`, `seam_slope_type/none`, `cool_plate_temp/min`,
+  `sparse_infill_pattern/rectilinear`, `top_surface_pattern/archimedeanchords`
+  → **now byte-identical (diff=0)** — the summary FAILs were STALE fixtures.
+- `activate_air_filtration_during_print`, `bottom_surface_pattern/monotonic` →
+  `F2005/F2002` cooling + `;WIDTH` narrow slivers = the CONFIRMED oracle TBB race
+  (3 oracle runs: `0.405678` 4/5/4, `0.429546` 4/4/3, `F2005/F2002` 29/30/29 —
+  ares matches run2 exactly). Oracle ordering race, not a defect.
+- `raft_layers` → 1877 structural diff (real — needs support-column
+  top_contacts/columns_base/interface_layers into raft_polygons; the only
+  genuine remaining residual of the sampled FAILs).
+Of 35 summary FAIL domains, ~18 diverge at `line ~137` (M73 P10 R7 ordering race)
+and most others are the narrow-region race or stale — the actionable residual set
+is far smaller than the raw FAIL count suggests.
