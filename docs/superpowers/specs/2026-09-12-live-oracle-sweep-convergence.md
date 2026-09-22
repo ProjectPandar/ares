@@ -4874,3 +4874,17 @@ ares `raft_polygons` fabricates `contact`/`interface`/`base`/`first_layer` from
 the support-column layer generation (detect_contacts + propagate + support layers)
 fed into `raft_polygons` — a substantive `SupportMaterial`/`SupportCommon` port
 slice, not a quick fix.
+
+### lxxxiv. config-echo `sparse_infill_pattern` canonical value + zigzag connect residual
+`case-rubl2p`/`8AsS4U`/`03RaeG` (sparse_infill_pattern=zigzag): ares echoed
+`sparse_infill_pattern = zig-zag` (the serde `rename` on `enums.rs:167`); Orca's
+canonical enum label is `zigzag` (`PrintConfig.cpp:3024,7770`; `zig-zag` is a
+legacy input alias `:8206`). Fixed `rename = "zigzag", alias = "zig-zag"` —
+serialize canonical, accept both. Residual (~946→944): the `internal_solid_infill`
+monotonic serpentine on odd layers emits the zigzag connect rotated 90°
+(`X113.656 Y114.02` horizontal vs `X114.02 Y113.656` vertical) — a
+`map_infill_end_point_to_boundary`/`take_next` traversal-direction divergence in
+`connect_infill`, not the zigzag link logic (`link_zigzag` index-parity is faithful
+`FillBase.cpp:2584-2596`) and not `_layer_angle` (`FillZigZag` doesn't override →
+alternates 90°, ares `keeps_layer_angle_fixed=false` correct). Also a 1-line
+`estimated printing time` diff (8m55s vs 8m54s, estimator rounding) and F943/F944.

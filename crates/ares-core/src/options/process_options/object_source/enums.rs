@@ -164,7 +164,10 @@ pub enum ProcessInfillPattern {
     Rectilinear,
     #[serde(rename = "alignedrectilinear")]
     AlignedRectilinear,
-    #[serde(rename = "zig-zag", alias = "zigzag")]
+    // Orca's canonical enum label is `zigzag` (`PrintConfig.cpp:3024`);
+    // `zig-zag` is a legacy input alias (`PrintConfig.cpp:8206`). Serialize as
+    // `zigzag` for config-echo parity, accept both on input.
+    #[serde(rename = "zigzag", alias = "zig-zag")]
     ZigZag,
     #[serde(rename = "crosszag")]
     CrossZag,
