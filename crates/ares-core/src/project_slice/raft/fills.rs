@@ -173,6 +173,11 @@ pub(crate) fn raft_layer_fill(
             .filter(|contour| contour.inner)
             .map(|contour| contour.polygon.clone())
             .collect();
+        if std::env::var("ARES_INNER_CONTOUR").is_ok() {
+            for (bi, b) in boundary.iter().enumerate() {
+                eprintln!("INNER {bi} n={}", b.points().len());
+            }
+        }
         if boundary.is_empty() {
             continue;
         }
