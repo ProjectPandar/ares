@@ -4629,3 +4629,26 @@ hull input to the skirt offset or the round-step count for the hull corner.
 
 `agg_raster` split into `mod/cells/grid_ops/contours` (all <400 LOC). 260
 related tests pass, 0 failures.
+
+#### raft polygons now match oracle byte-for-byte (lxvii — probe-verified)
+
+Oracle probe dump (`/tmp/raftprobe.nix`, `ORCA_DUMP_RAFT`) of
+`generate_raft_base` confirms ares's raft polygons are now EXACT:
+- `first_layer` = 8-vertex chamfered square `±9150587/±7979014` — ares
+  produces `(±9.151,±7.979)` identical
+- `interface`/`base` = 8-vertex chamfered `±7650587/±7357694` — identical
+- `contact` = 4-vertex square `±7.151` — identical (AGG rasterizer)
+
+`first_layer` uses default `jtMiter` `expand` (`SupportCommon.cpp:347`), NOT
+`jtSquare` — fixed `3b6c6513`.
+
+**Residual `raft_layers/max`/`seeded` divergence**: the skirt hull.
+`convex_hull(occupied)` where `occupied` includes raft fill polyline endpoints
+(`collect_points` = `polyline.points`). Oracle's skirt hull is the chamfered
+square (2 intermediate vertices per corner → `jtRound` chamfer); ares's is a
+20-vertex rounded rect → multi-segment arc corners. For `raft_layers/min` the
+fill endpoints produce matching rounded hulls (byte-identical); for `max`/
+`seeded` ares's fill endpoints near chamfered corners trace a rounded boundary
+where oracle's reach the chamfer corners. Root: raft fill endpoint placement /
+`connect_base_support` boundary tracing near corners for the base/interface
+layer fills.
