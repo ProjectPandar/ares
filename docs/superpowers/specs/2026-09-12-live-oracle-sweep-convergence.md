@@ -4800,3 +4800,18 @@ vertices fanning into every zigzag arch endpoint. Also oracle emits a `9874100`
 support connect (idx 127332, `PL n=79`) ares does not produce — one support layer's
 `connect_base_support` yields empty in ares. Next: oracle `inner`-contour vertex dump
 vs ares `offset_expolygons` `do_miter` to isolate the corner formula.
+
+### lxxix. raft residual — Clipper2 offset corner primitives (post-66b75989)
+Ported `generate_corner` → Clipper2 `OffsetPoint` (`clipper.offset.cpp:308-365`):
+`cos_a > -0.999 && sin_a·delta < 0` concave guard (near-spike no longer forced
+concave), `cos_a > 0.999 && join!=Round` almost-straight miter, miter threshold
+`cos_a > temp_lim−1` ⇔ `1+cos_a > 2/ml²`. Same 3106 diff — classification was
+already equivalent for the octagon's ~135° chamfer (`cos_a≈-0.707 > -0.778` →
+DoMiter). Verified `do_miter` (`q=delta/(cos_a+1)`, `norms[k]+norms[j]`) and
+`fixed_round` (`+0.5 floor` — `std::round` regressed 3106→3536, reverted).
+REMAINING primitive gap: upstream `DoSquare`/`DoRound`/`DoBevel` are Clipper2
+segment-intersection + `GetAvgUnitVector`/`ReflectPoint` constructions
+(`:215-250`), NOT Clipper1's `tan(atan2/4)` — ares still ports Clipper1 `do_square`.
+If the closing/fill_region/inner chain hits DoSquare (acute `cos_a<temp_lim−1`) the
+vertices diverge. Residual is the accumulated offset-chain vertex rounding;
+`DoSquare`/`DoRound` Clipper2 port is the next fidelity step.
