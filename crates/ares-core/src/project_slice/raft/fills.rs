@@ -203,12 +203,19 @@ pub(crate) fn raft_layer_fill(
             );
         }
 
+        // `x_margin = line_width + SCALED_EPSILON` (`make_fill_lines:2924-2925,
+        // 3016-3017`, `line_width = coord_t(scale_(spacing))`): lines fully
+        // overlapping the infill perimeter (within one line-width of the bbox
+        // edge) are not produced.
+        let x_margin = scale.scaled_delta(spec.spacing) + scale.scaled_delta(1e-4);
+        let x_min = source_bounds.min().x() as f64 + x_margin;
+        let x_max = source_bounds.max().x() as f64 - x_margin;
         let mut fill_lines = Vec::new();
         for line in &slice.lines {
-            if line.x < source_bounds.min().x() {
+            if (line.x as f64) < x_min {
                 continue;
             }
-            if line.x > source_bounds.max().x() {
+            if (line.x as f64) > x_max {
                 break;
             }
             fill_lines.extend(vertical_segments(line));
