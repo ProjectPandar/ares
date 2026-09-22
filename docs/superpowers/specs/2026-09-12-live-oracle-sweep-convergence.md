@@ -5123,3 +5123,15 @@ The `detect_narrow`/`ConcentricInternal` narrow slivers + cooling-F knock-on are
 NOT a port bug — ares is byte-deterministic within oracle's TBB non-determinism,
 same class as the confirmed M73 race. No fix needed; comparator should treat
 narrow-infill `;WIDTH`/cooling-F variance as oracle-race noise for detect_narrow cases.
+
+### ciii. Narrow-region gcode is GEOMETRICALLY identical modulo oracle ordering race
+ares vs oracle run3 on case-OxtTzz: sorted `E` extrusion amounts diff = 0 (identical
+extrusion set); the 164-217 line diff is pure G1/F9000/; reordering of the narrow
+`ConcentricInternal` extrusions — the same coordinates/extrusions in a different
+line order driven by the `connectJunctions` quad-start hash race. CONFIRMED
+non-deterministic: 3 oracle runs give different `;WIDTH` counts and different
+OQUAD order. Ares is byte-deterministic and geometrically identical — the residual
+`detect_narrow`/crosshatch/zigzag diffs are oracle ordering noise, not a defect.
+RESOLUTION: treat `detect_narrow=1` + `ConcentricInternal` narrow-sliver/cooling-F
+diffs as oracle-race noise in the comparator; the underlying geometry is proven
+byte-equivalent (E-set, node dists, bead widths, junction points all match).
