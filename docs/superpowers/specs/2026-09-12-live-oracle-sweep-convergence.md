@@ -4682,3 +4682,16 @@ sheath + inset fill for the flange, plain `-0.5` fill otherwise — shared by
 `support_fills.collect_points` (`Print.cpp:2693`) sees identical points. Result:
 skirt hull byte-exact `±8.941/±7.892` octagon, `raft_layers/min` still 0-diff,
 `max` diff 3804→3452.
+
+### lxx. raft residual — interface speed + wipe split (288ff17e)
+`role_speed` (`motion/features.rs`) mapped `"Support interface"` to the
+`inner_wall_speed` catch-all; upstream `GCode.cpp:6548-6550` uses
+`support_interface_speed` for `erSupportMaterialInterface`. Added
+`support_interface_speed` to `MotionOptions` + the `role_speed` arm. This fixed the
+wipe split (`role_based_wipe_speed=1` → `wipe_speed = current_speed`): interface
+layers now retract `E-3.25`+wipe at `F4800`/`F3381` matching oracle; base layers
+keep `E-2.8`/`F2400` (`support_speed`). `max` diff 3452→3106.
+Residual: systematic 1-ulp E (`E.73354` vs `.73353`) + occasional 1-unit fill
+endpoint (`X103.277` vs `X103.278`) — `connect_base_support` zigzag endpoint
+precision in the slice frame. Geometry (vertices, ordering, retract split, speeds)
+now matches; the residual is pure f32 endpoint/length rounding feeding E.
