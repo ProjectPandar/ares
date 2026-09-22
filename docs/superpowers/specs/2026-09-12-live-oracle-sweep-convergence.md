@@ -5072,3 +5072,16 @@ branches). So the extra `;WIDTH:0.405678/0.429544` open segments are from
 `generateSegments`/`connectJunctions`/`connectQuadJunctions` — the quad-start edge
 walk (`connectJunctions` `:1934+`, `generateQuadStart`/`generateTransitionEnd`) that
 emits different per-edge junction sets / segment groupings, not the beading values.
+
+### xcix. Extra slivers = generate_local_maxima hexagons on nodes oracle filters
+`OSEG` (add_toolpath_segment) shows only w∈{340000,357704,407079} — the extra
+`;WIDTH:0.405676/0.429544` (w=362756/386624/386626) come from
+`generate_local_maxima_single_beads` (`local_maxima.rs`, upstream
+`generateLocalMaximaSingleBeads` `:2056`): bc=3 middle bead 362758/362756 and
+bc=1 386624/386626. Counts: ares 362758×5/386624×5/386626×4 vs oracle
+362758×4/386624×3/386626×2 — ares emits extra hexagons for bc=1/bc=3 nodes.
+`generate_local_maxima` + `node_is_central` + `node_is_local_maximum` all verified
+faithful (incl `!isCentral` check and `canGoUp(strict)`). So the skeletal GRAPH has
+extra local-max nodes — a trapezoidation construction divergence upstream of
+beading (update_is_central / filterCentral / generateTransitionEnd / isEndOfCentral
+edge flags, or voronoi node set). Next: dump per-node isLocalMaximum/isCentral.
