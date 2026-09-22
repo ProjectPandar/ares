@@ -4666,3 +4666,19 @@ traces a rounded boundary arc where oracle's fill reaches the chamfer corners.
 Root is `connect_base_support` (`FillBase.cpp:2247`) boundary/arch emission
 near corners for the base/interface fills — needs a fill-polyline oracle dump
 (`ORCA_DUMP_FILL`-style on the raft `support_fills`) to align.
+
+### lxix. raft residual — flange sheath + skirt hull byte-exact (00f9dbfa)
+The `raft_layers/max` residual decomposed: (1) `first_layer` flow width must use
+`initial_layer_line_width` via `width_for_role_and_layer(SupportMaterial, is_first_layer)`
+(`support_material_1st_layer_flow`, `Flow.cpp:250-260`), not the plain support width;
+(2) the flange (`bottom_z < EPSILON`) emits `with_sheath = true`
+(`fill_expolygons_with_sheath_generate_paths`, `SupportCommon.cpp:705-757`) — a
+perimeter loop of `closing_ex(polygons, SCALED_EPSILON, SCALED_EPSILON + 0.5·width)`
+(net `-0.5·width` shrink: dilate `ε`, erode `ε + 0.5·width`, `ClipperUtils.cpp:599`)
+clipped by `0.15·spacing`, then the fill on `offset(-0.4·spacing)` of the SAME closing
+region. `raft_layer_polylines` (`raft/fills.rs`) now returns the emitted polylines —
+sheath + inset fill for the flange, plain `-0.5` fill otherwise — shared by
+`raft_schedule::materialize_layer` (G-code) and `skirt.rs` `occupied` (hull), so
+`support_fills.collect_points` (`Print.cpp:2693`) sees identical points. Result:
+skirt hull byte-exact `±8.941/±7.892` octagon, `raft_layers/min` still 0-diff,
+`max` diff 3804→3452.
