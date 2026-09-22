@@ -4599,3 +4599,21 @@ the `oversampling` macro-block sizing (`:676-684`), and the simple
 `contours_simplified` (`:204-330`). ares has no scanline-AA rasterizer; this is
 a real port, and it affects all `extract_support` consumers (raft + support),
 not just raft. See `fill`/`support_grid` for the seam.
+
+#### AGG rasterizer ported; residual = skirt round-join segment count (lxv)
+
+The `extract_support` AGG rasterizer port (`geometry/agg_raster.rs`,
+`82ecd1eb`) is a faithful `rasterizer_cells_aa`+`sweep_scanline` port —
+the raft contact polygon is now a clean 4-vertex square `(±7.151)` where the
+EdgeGrid SDF produced a 16-vertex rounded outline. The contact polygon is
+correct now.
+
+The remaining `raft_layers` byte divergence is the **skirt outline**:
+ares `jtRound` offsets the occupied hull to a multi-segment arc corner
+(`X120.714 Y100.28`, `X121.364 Y101.987`) while oracle emits a single 45°
+chamfer (`X120.755 Y100.294` → `X121.506 Y102.108`). Both use `jtRound` +
+`scale_(0.1)` arc tolerance (`Print.cpp:2736` vs `skirt.rs:192`). The
+divergence is the round-join segment count for the hull corner — likely
+`do_round` step count (`fixed_round(steps_per_radian * angle)`) or the
+occupied hull's corner vertex differing (raft first_layer vs oracle's
+`convex_hull(group.points)` input). Needs a `DoRound` steps comparison.
