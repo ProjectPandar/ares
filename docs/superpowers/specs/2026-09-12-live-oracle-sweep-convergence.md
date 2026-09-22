@@ -4888,3 +4888,14 @@ monotonic serpentine on odd layers emits the zigzag connect rotated 90°
 `FillBase.cpp:2584-2596`) and not `_layer_angle` (`FillZigZag` doesn't override →
 alternates 90°, ares `keeps_layer_angle_fixed=false` correct). Also a 1-line
 `estimated printing time` diff (8m55s vs 8m54s, estimator rounding) and F943/F944.
+
+### lxxxv. zigzag sparse serpentine transpose — connect_base_support chain direction
+`case-rubl2p`/`8AsS4U` `;TYPE:Sparse infill` (zigzag 15%): the same 9-segment
+zigzag emitted rotated 90° — oracle `X113.656 Y114.02→X109.818` (top-edge
+horizontal start) vs ares `X114.02 Y113.656→X114.02 Y109.818` (right-edge vertical
+start). Fill lines match (`X114.02 Y*`); the `connect_base_support` chain emission
+order/direction transposes the serpentine. `connect.rs` phase order is faithful
+(`:24-120` mirrors `FillBase.cpp:2281-2697`); residual is in `take_next`/`take`/
+`link_zigzag` chain traversal direction OR `build_working_graph`/
+`map_infill_end_point_to_boundary` ordering. Same connect-depth class as the raft
+residual — the emit direction of the merged zigzag chains.
