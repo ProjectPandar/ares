@@ -88,3 +88,17 @@ ares primitives already available: `chain_polylines`
 a `Line`-grid builder + `_can_connect` (distance ≤ `_diagonal_distance` and
 not over `_line_oscillation`/`_min_spacing`). These land with `fill/line.rs`
 together so no dead helpers are committed.
+
+## `line` is the next confirmed target (2026-09-22)
+
+Confirmed: oracle slices `sparse_infill_pattern=line` cleanly (exit 0) while
+ares rejects `UnsupportedProjectFeature`. The rejection gate is
+`anchor_projection::validate` (`transaction/anchor_projection.rs:20`) whose
+whitelist omits `Line`. To port: add `Line` to that whitelist, add a
+`sparse_anchoring` arm that calls a new `fill::line::fill_surface` (the
+`FillLine::_fill_surface_single` port returning `Vec<ThickPolyline>`), and add
+the `fill_entities` `Line` dispatch arm. A `fill/line.rs` draft was written and
+verified to compile, then removed because it was dead code — the primitives it
+added (`Polygon::rotate`/`first_point`, `ExPolygon::rotate`/`to_polygons`,
+`BoundingBox::merge_point`, `Polyline::points_mut`) must land together with the
+wired `fill_entities`/`sparse_anchoring` arms, not orphaned.
