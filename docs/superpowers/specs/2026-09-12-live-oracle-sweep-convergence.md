@@ -5405,3 +5405,17 @@ flow uses the base `line_width`, not `support_line_width`). ares passes
 for the CONNECT spacing specifically (the extruded `;WIDTH`/flow stays
 interface-flow). This is a single width-source fix: `raft_layer_plans`
 interface `spec.spacing` should be `spacing(line_width, height)`.
+
+### cxxiii. The 0.407 calls are 39 MISSING FillSupportBase connects (infill=3)
+ORCA_CIN: `connect_base_support` receives 39 calls with
+`infill=3 boundary=1 spacing=0.407080` — `spacing(0.45,0.2)=0.407` =
+`line_width`. ares emits ZERO connect_base_support calls with 0.407 — the
+raft interface/contact fillers use `support_line_width`-derived 0.337 (the
+`filler->spacing` for raft interface is CONFIRMED 0.337 by ORCA_IF probe,
+`raft_contact=1`). So the 0.407 `FillSupportBase` calls are a DIFFERENT
+surface — `ipSupportBase` fill with `line_width`-spacing, `infill=3`/`boundary=1`
+tiny regions. Candidates: (a) object sparse infill routed through `ipSupportBase`
+(sparse_infill_line_width=0.45 → 0.407), (b) a support/bridge sub-region ares
+doesn't generate. ares's `cross_hatch` uses `connect_infill` (correct for
+crosshatch). NEXT: probe WHICH surface/layer the 0.407 FillSupportBase calls
+run on (z or surface id) to identify the unported `ipSupportBase` consumer.
