@@ -5332,3 +5332,19 @@ ARES_CONN_DUMP/ARES_TAKE_TRACE. Findings:
   sequences differ in structure between ares (processes many cps/call) and
   oracle (repeats low cp indices per call), suggesting ares groups more
   infill ends into a single connect call's boundary set.
+
+### cxviii. residual = missing contact-layer connect calls (spacing 0.407)
+CIN/CONN probes: oracle `connect_base_support` inputs include
+`infill=3/7 spacing=0.407080` calls (×38) that ares NEVER emits — ares uses
+spacing=0.337 (`support_material_flow.spacing()` = `spacing(support_line_width
+0.38, h 0.2)`) for all interface+contact layers. `0.407` = `spacing(0.45,0.2)`
+= `line_width` (0.45) — the CONTACT/top-contact layer's `raft_interface_flow`
+resolves to `line_width` (not `support_line_width`) for this config, OR a
+separate `interface` flow path. ares's `interface_width = support_width`
+(`bridge.rs:272`) collapses the distinction → contact layer gets 0.337 not
+0.407, so those ~38 contact fills produce wrong spacing/lines → the ~600-line
+E/segment divergence. FIX: `raft_interface_flow`/`contact` flow must resolve
+its own width chain (`support_line_width>0 ? support_line_width : line_width`
+per `Flow.cpp:262-267` — but the 0.407 implies `line_width` path); verify the
+exact width source upstream then wire `interface_flow_spacing`/`contact
+spacing` into `raft_layer_plans` for `RaftLayerKind::Contact`.
