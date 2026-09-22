@@ -150,12 +150,20 @@ fn generate_with_mode(
                         .collect::<Vec<_>>()
                         .join(",");
                     let first = &line.junctions[0].point;
+                    let idxs = line
+                        .junctions
+                        .iter()
+                        .map(|junction| junction.perimeter_index.to_string())
+                        .collect::<Vec<_>>()
+                        .join(",");
                     let _ = writeln!(
                         out,
-                        "ARESCI closed={} n={} w=[{}] p0={},{}",
+                        "ARESCI closed={} odd={} n={} w=[{}] idx=[{}] p0={},{}",
                         line.is_closed,
+                        line.is_odd,
                         line.junctions.len(),
                         widths,
+                        idxs,
                         first.x(),
                         first.y()
                     );

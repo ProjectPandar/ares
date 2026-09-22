@@ -47,7 +47,7 @@ impl SkeletalTrapezoidation<'_> {
                     use std::io::Write;
                     writeln!(
                         f,
-                        "OSEG f={},{},{} t={},{},{} odd={} fnew={} f3w={} t3w={} nlines={}",
+                        "OSEG f={},{},{} t={},{},{} odd={} fnew={} f3w={} t3w={} nlines={} fpi={} tpi={} inset={}",
                         from.point.x(),
                         from.point.y(),
                         from.width,
@@ -58,7 +58,10 @@ impl SkeletalTrapezoidation<'_> {
                         force_new_path,
                         from_is_three_way,
                         to_is_three_way,
-                        lines.len()
+                        lines.len(),
+                        from.perimeter_index,
+                        to.perimeter_index,
+                        inset_index
                     )
                 });
         }
