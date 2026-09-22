@@ -199,6 +199,9 @@ impl PathProperties<'_> {
             "Internal solid infill" => options.internal_solid_infill_speed,
             "Gap infill" => options.gap_infill_speed,
             "Brim" | "Support" => options.support_speed,
+            // `GCode.cpp:6548-6550`: interface paths use
+            // `support_interface_speed`, not the support speed.
+            "Support interface" => options.support_interface_speed,
             _ => options.inner_wall_speed,
         }
     }

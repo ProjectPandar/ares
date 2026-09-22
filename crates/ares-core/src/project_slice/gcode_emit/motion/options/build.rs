@@ -98,6 +98,10 @@ impl MotionOptions {
             support_speed: object.map_or(full.process.object.support_speed.0, |value| {
                 value.object.support_speed.0
             }),
+            support_interface_speed: object
+                .map_or(full.process.object.support_interface_speed.0, |value| {
+                    value.object.support_interface_speed.0
+                }),
             enable_overhang_speed: region
                 .map_or(full.process.region.enable_overhang_speed.0, |value| {
                     value.enable_overhang_speed.0
