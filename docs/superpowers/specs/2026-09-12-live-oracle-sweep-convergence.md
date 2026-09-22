@@ -5348,3 +5348,17 @@ its own width chain (`support_line_width>0 ? support_line_width : line_width`
 per `Flow.cpp:262-267` — but the 0.407 implies `line_width` path); verify the
 exact width source upstream then wire `interface_flow_spacing`/`contact
 spacing` into `raft_layer_plans` for `RaftLayerKind::Contact`.
+
+### cxix. contact spacing = line_width-derived (0.407), ares uses support (0.337)
+ORCA_FLOW probe: `sm/smi/raft_i=0.337080, first=0.377080` — the FLOWS are all
+0.337. Yet `connect_base_support` gets `spacing=0.407` for the `infill=3`
+calls (raft interface) — so `filler->spacing` for those calls is NOT any flow
+spacing; it is `spacing(line_width=0.45, h=0.2)=0.407` = the GENERIC
+`line_width`. The raft interface filler spacing resolves to `line_width`
+(0.45) not `support_line_width` (0.38) — meaning the connect `spacing` is the
+fill `spacing` = `line_width`-based, OR the interface filler gets
+`line_width` spacing via a path I have not pinned. ares computes interface
+spacing from `support_line_width` → 0.337, producing wrong line_spacing/trim
+→ ~600-line connect divergence. NEXT: pin the exact `filler->spacing` for the
+raft interface filler in `fill_expolygons_with_sheath_generate_paths` — it is
+`line_width`-derived (0.45→0.407), not support-derived.
