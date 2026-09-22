@@ -5388,3 +5388,20 @@ MISSING connect calls (ares doesn't route some ipSupportBase fill through
 connect_base_support), not a spacing bug. NEXT: which surfaces route to
 FillSupportBase vs connect_infill — ares's sparse/support routing is missing
 the ipSupportBase→connect_base_support path for the object infill region.
+
+### cxxii. FINAL localization — interface connect spacing is line_width (0.45)
+ORCA_FS: `FillSupportBase::fill_surface` gets `this->spacing=0.337/0.377`
+(flange+base). But `connect_base_support` receives `spacing=0.407080` for the
+`infill=3` calls — these are the raft INTERFACE layers (`ipSupportBase`
+filler). `spacing(0.45,0.2)=0.40708` = `line_width` (0.45) — so the interface
+filler's `spacing` resolves to `line_width`, NOT `support_line_width` (0.38→
+0.337). Upstream `support_material_interface_flow` width =
+`support_line_width>0 ? support_line_width : line_width`; the 0.407 value
+implies the interface filler spacing uses `line_width` — i.e. ares resolves
+`support_line_width` for interface where upstream effectively uses
+`line_width` (likely a `FloatOrPercent` resolution or the `raft_interface`
+flow uses the base `line_width`, not `support_line_width`). ares passes
+`interface_width = support_width` → 0.337; needs `line_width` (0.45) → 0.407
+for the CONNECT spacing specifically (the extruded `;WIDTH`/flow stays
+interface-flow). This is a single width-source fix: `raft_layer_plans`
+interface `spec.spacing` should be `spacing(line_width, height)`.
