@@ -4952,3 +4952,17 @@ has_consistent_pattern()` (`enums.rs`) threaded into `MonotonicFillParams::
 consistent_pattern` → `traverse::generate`. `case-rubl2p` 946→28, `8AsS4U`
 1004→90. Residual: a z=9 sparse-layer transpose + `WIDTH:0.405678` narrow sliver +
 F2005 cooling (separate classes). `OxtTzz`/`JBIbxQ` (crosshatch) unaffected.
+
+### xc. crosshatch/cooling residual classes isolated (post-zigzag-fix)
+After the `has_consistent_pattern` fix (`20e25676`), the dominant sweep divergence
+is **crosshatch** (48+ of first 50 divergent cases; `case-OxtTzz`/`JBIbxQ`/`uJRapD`).
+Stripping comments, the crosshatch diff is almost entirely **cooling feedrate**
+(`F2005`/`F2002`, `F1982`/`F1973`, `F1998`, `F3000`) — the crosshatch FILL geometry
+matches byte-for-byte; the residual is `CoolingBuffer::adjust`'s `new_feedrate`.
+`slowdown.rs`/`measure_movement`/`parse.rs` verified faithful (`line.time =
+length/feedrate`, f32 `F/60`, `elapsed_time`/`maximum_time` pre-sort, gcc-stable
+adjustable-first+feedrate-desc sort, `new_feedrate_to_reach_time_stretch` 20-iter
+double nomin/denom). Residual = a per-line `time`/`adjustable` input diff needing
+an oracle `CoolingBuffer` line-dump probe. Secondary: ares over-emits `; move to
+first X point` travel comments under `gcode_comments=1` (only 2 sweep cases; oracle
+emits bare travel). `lockedzag`/`crosszag` are honest INPUT_REJECTED (unported).
