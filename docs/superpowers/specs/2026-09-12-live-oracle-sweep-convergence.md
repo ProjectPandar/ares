@@ -5183,3 +5183,14 @@ port of `Fill::connect_base_support` (`FillRectilinear.cpp:2203-2697`) — the
 divergence is in the arch evaluation/link gating for boundary-adjacent lines,
 needs a focused `evaluate_support_arches`/`build_working_graph` trace for the
 outermost intersections.
+
+### cvii. FIX — emit_loops_in_band finalize erased inner run (raft edge excess)
+`BandState::finalize` (`fill/base_support/mod.rs`) skipped the truncate when
+`polyline_end == 0`; upstream `State::finalize` (`FillBase.cpp:2072`) erases
+`points[polyline_end..]` UNCONDITIONALLY — an arch that stays inside the band
+the whole trace (`polyline_end == 0`) discards everything. ares emitted the
+full inner-boundary edge (±8.6mm lines) as "excess" arches; oracle emits none.
+Fix: always `truncate(polyline_end)`. raft_layers/seeded excess edge lines gone;
+remaining diff = interface-layer 1-unit E/coord rounding + M73 race.
+`band_trace_keeps_boundary_run` pinned the buggy behavior — updated to assert
+empty output matching upstream semantics.

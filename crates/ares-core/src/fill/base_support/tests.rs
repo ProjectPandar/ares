@@ -39,16 +39,11 @@ fn band_trace_keeps_boundary_run() {
         4_000, 6_000, &contour, &params, 5_000.0, 25_000.0, 10.0, &mut out,
     );
 
-    assert_eq!(out.len(), 1);
-    assert_eq!(
-        out[0].points(),
-        &[
-            Point::new(5_000, 0),
-            Point::new(10_000, 0),
-            Point::new(10_000, 10_000),
-            Point::new(5_000, 10_000),
-        ]
-    );
+    // Upstream `State::finalize` (`FillBase.cpp:2072`) erases
+    // `points[polyline_end..]` unconditionally; the trace ends back
+    // inside the band (`polyline_end == 0` after the entering merge),
+    // so the whole accumulated run is discarded — nothing is emitted.
+    assert!(out.is_empty());
 }
 
 /// Arch pieces below `min_length` are dropped (`:1962`).

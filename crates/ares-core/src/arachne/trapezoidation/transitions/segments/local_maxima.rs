@@ -37,10 +37,7 @@ impl SkeletalTrapezoidation<'_> {
                         )
                     });
             }
-            if beading.beading.bead_widths.len() % 2 == 0
-                || !is_max
-                || is_central
-            {
+            if beading.beading.bead_widths.len() % 2 == 0 || !is_max || is_central {
                 continue;
             }
             let inset_index = beading.beading.bead_widths.len() / 2;

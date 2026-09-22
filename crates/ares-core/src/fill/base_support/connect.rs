@@ -48,6 +48,7 @@ pub(crate) fn connect_base_support(
     );
 
     let mut polylines_out = Vec::new();
+    let dbg = std::env::var("ARES_CONN_PHASES").is_ok();
 
     // Empty-contour perimeter loops (`:2281-2296`).
     emit_empty_contour_perimeters(
@@ -58,6 +59,10 @@ pub(crate) fn connect_base_support(
         &mut polylines_out,
     );
 
+    if dbg {
+        eprintln!("CPHASE after_empty n={}", polylines_out.len());
+    }
+
     // Excess arches (`:2298-2324`).
     emit_excess_arches(
         &graph.boundary,
@@ -66,6 +71,20 @@ pub(crate) fn connect_base_support(
         line_spacing,
         &mut polylines_out,
     );
+    if dbg {
+        eprintln!("CPHASE after_excess n={}", polylines_out.len());
+        for p in &polylines_out {
+            eprintln!(
+                "CPL n={} {}",
+                p.points().len(),
+                p.points()
+                    .iter()
+                    .map(|pt| format!("{},{}", pt.x(), pt.y()))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            );
+        }
+    }
 
     base_support_extend_infill_lines(
         &mut paths,
@@ -105,6 +124,9 @@ pub(crate) fn connect_base_support(
     linker.connect_t_joints(&arches);
 
     // Very long arches and reasonably long caps (`:2648-2691`).
+    if dbg {
+        eprintln!("CPHASE before_verylong n={}", polylines_out.len());
+    }
     emit_very_long_arches(
         &graph.boundary,
         &mut intersections,
@@ -113,6 +135,9 @@ pub(crate) fn connect_base_support(
         line_half_width,
         line_spacing,
     );
+    if dbg {
+        eprintln!("CPHASE after_verylong n={}", polylines_out.len());
+    }
 
     // Final assembly (`:2693-2697`): the connected chains follow the
     // emitted loops/arches.

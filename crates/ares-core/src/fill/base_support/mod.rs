@@ -250,9 +250,11 @@ impl<'a> BandState<'a> {
     }
 
     fn finalize(&mut self) {
-        if self.polyline_end > 0 {
-            self.polyline.truncate(self.polyline_end);
-        }
+        // Upstream erases `points[polyline_end..]` unconditionally
+        // (`FillBase.cpp:2072`): when the trace never left the band
+        // (`polyline_end == 0`) the whole accumulated polyline is
+        // dropped — an arch fully inside the band is not "excess".
+        self.polyline.truncate(self.polyline_end);
         if self.polyline.len() > 1 {
             let merge_with_last = self.polylines_out.last().is_some_and(|last| {
                 let a = last.points().last().expect("non-empty polyline");
