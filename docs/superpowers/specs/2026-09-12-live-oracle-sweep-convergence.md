@@ -4446,3 +4446,34 @@ precision class already tracked for the cooling ~0.28s divergence. Several
 option FAILs (`wipe_tower_filament`, `skin_infill_line_width`, `print_flow_ratio`,
 `top_surface_line_width`, `tree_support_brim_width`) are M73-only diffs, not
 content divergences.
+
+## sparse_infill_pattern true state (2026-09-22 lxi)
+
+Direct oracle+ares sweep over all 27 `sparse_infill_pattern` values on the
+Ender-3 fixture (after the scalar-array fix):
+
+- Byte-identical (diff = generated header only): rectilinear, grid,
+  crosshatch, triangles, 3dhoneycomb, gyroid.
+- Rejected `UnsupportedProjectFeature` (the `bridge_over_infill`
+  `anchor_projection::validate` whitelist gates anchoring, AND
+  `sparse_anchoring.rs` has an explicit `unreachable!` arm for the rest):
+  alignedrectilinear, line, crosszag, lockedzag, tri-hexagon, quartercubic,
+  lightning, honeycomb, lateral-honeycomb, lateral-lattice, tpmsd, tpmsfk,
+  concentric, hilbertcurve, archimedeanchords, octagramspiral. Whitelisting
+  alone is NOT sufficient — `generate_sparse_infill_polylines_for_anchoring`
+  (`sparse_anchoring.rs:262` `unreachable!`) needs a per-pattern anchoring
+  generator; each also needs the `Fill*.cpp` generator itself where absent.
+- Real content divergence (slices but feedrate/E differs): zigzag, cubic,
+  adaptivecubic, supportcubic — all trace to the cooling/estimator feedrate
+  chain (sorted-content diff shows `G1 F943` count divergence), the same
+  documented estimator-precision class as the M73 ordering.
+- `monotonic` sparse: oracle emits nothing for this model (no output file),
+  ares rejects — both fail; excluded.
+
+Confirmed the M73 placement is a genuine oracle TBB race: two identical oracle
+runs emit `M73 P10 R7` at line 143 vs 145; ares matches run2 byte-for-byte.
+So M73-gated FAILs are races, not divergences — a re-run can flip them.
+
+The fill-generator + anchoring ports are the dominant real remaining option
+work: each rejected pattern needs its `Fill*.cpp` `fill_surface` generator
+AND a `sparse_anchoring` arm for the bridge-over-infill path.
