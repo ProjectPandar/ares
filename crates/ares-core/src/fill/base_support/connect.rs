@@ -141,13 +141,26 @@ pub(crate) fn connect_base_support(
 
     // Final assembly (`:2693-2697`): the connected chains follow the
     // emitted loops/arches.
-    polylines_out.extend(
-        paths
-            .into_iter()
-            .flatten()
-            .filter(|points| points.len() > 1)
-            .map(Polyline::new),
-    );
+    let final_paths: Vec<Vec<Point>> = paths
+        .into_iter()
+        .flatten()
+        .filter(|points| points.len() > 1)
+        .collect();
+    if std::env::var("ARES_CONN_DUMP").is_ok() {
+        for (i, points) in final_paths.iter().enumerate() {
+            let f = points.first().unwrap();
+            let l = points.last().unwrap();
+            eprintln!(
+                "ACONN{i} n={} f={},{} l={},{}",
+                points.len(),
+                f.x(),
+                f.y(),
+                l.x(),
+                l.y()
+            );
+        }
+    }
+    polylines_out.extend(final_paths.into_iter().map(Polyline::new));
     Ok(polylines_out)
 }
 
