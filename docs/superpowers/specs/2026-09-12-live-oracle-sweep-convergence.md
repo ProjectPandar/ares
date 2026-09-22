@@ -4525,3 +4525,16 @@ treatment differs — likely a different offset/join type or expansion radius in
 the raft outline generator (`project_slice/raft/`). Each `;TYPE:Support` raft
 section runs ~60-70 lines longer in ares. Fix the raft outline corner/offset
 first; the R-value 2-min overestimate is downstream of the longer toolpath.
+
+#### raft skirt start vertex (lxiii follow-up 2)
+
+The first `raft_layers` divergence is the **skirt start vertex**, not the raft
+interior: oracle moves to `G1 X99.77 Y99.77`, ares to `G1 X99.703 Y99.834`
+(~0.09mm off). The skirt outline is `convex_hull(occupied)` where `occupied`
+includes raft fill points when `raft_layers>0` (`gcode_emit/skirt.rs:97-125`),
+then `find_start_point`/`skirt_start_angle` picks the start. The hull or the
+start-point pick differs because the raft polygon corners feeding the hull are
+slightly different. Also ares drops the `M73 P2 R30` that oracle emits after
+`G1 Z.6`/`G1 Z.2` before `;TYPE:Skirt` — a separate M73 boundary placement on
+the raft layer. Trace `raft::bridge::build_project_raft` fill points vs the
+oracle raft outline to find the corner delta.
