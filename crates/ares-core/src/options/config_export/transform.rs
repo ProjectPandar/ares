@@ -113,6 +113,22 @@ fn scale_flush_matrix(settings: &mut ProjectSettings) -> Result<(), SliceError> 
         }
         Ok(())
     } else if filament_count == 1 {
+        // `OrcaSlicer.cpp:3351,3429`: when the CLI overrides
+        // `nozzle_volume_type` (or the matrix is otherwise missing), the
+        // flush matrix is recomputed and resized to
+        // `filament_count^2 * extruder_count` zeros — for a single filament
+        // that collapses the project matrix to `[0]`.
+        if matrix.len() != 1
+            && settings
+                .project
+                .gcode
+                .nozzle_volume_type
+                .0
+                .iter()
+                .any(|t| *t != crate::NozzleVolumeType::Standard)
+        {
+            matrix.resize(1, 0.0);
+        }
         Ok(())
     } else {
         Err(matrix_error())
