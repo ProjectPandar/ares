@@ -4899,3 +4899,16 @@ order/direction transposes the serpentine. `connect.rs` phase order is faithful
 `link_zigzag` chain traversal direction OR `build_working_graph`/
 `map_infill_end_point_to_boundary` ordering. Same connect-depth class as the raft
 residual — the emit direction of the merged zigzag chains.
+
+### lxxxvi. narrow-region infill — split_solid_surface line-based detection unported
+`case-OxtTzz`/`JBIbxQ`/`uJRapD` (crosshatch + monotonic internal solid): ares emits
+extra `WIDTH:0.405676` tiny infill segments (`X113.488 Y113.533`/`X113.558 Y113.568`,
+~E.0023) oracle skips. Upstream `detect_narrow_internal_solid_infill` →
+`split_solid_surface` (`Fill.cpp:597-814`): for LINE-based patterns
+(rectilinear/monotonic/monotonicline/alignedrectilinear) it runs fill-line analysis
+(`connect_extrusions`, `base_angle = fill.params.angle + M_PI/2`, `:628+`) to split
+`narrow_infill`/`normal_infill` geometrically; non-line patterns use a `opening`
+core-erode (`:605-626`). ares `concentric_internal_override`/`all_narrow_rectangle_bounds`
+(`infills/narrow_internal.rs`) is a single-rectangle-bounds shortcut — diverges on
+any non-rectangle narrow region. Also produces extra `; infill`/`; move to first
+infill point` comments. Port `split_solid_surface` line-based detection.
