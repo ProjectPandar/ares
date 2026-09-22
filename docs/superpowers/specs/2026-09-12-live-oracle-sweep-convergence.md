@@ -4966,3 +4966,16 @@ double nomin/denom). Residual = a per-line `time`/`adjustable` input diff needin
 an oracle `CoolingBuffer` line-dump probe. Secondary: ares over-emits `; move to
 first X point` travel comments under `gcode_comments=1` (only 2 sweep cases; oracle
 emits bare travel). `lockedzag`/`crosszag` are honest INPUT_REJECTED (unported).
+
+### xci. cooling F-divergence root-caused to ConcentricInternal medial width (NOT the solver)
+Oracle CoolingBuffer probes (coolprobe{,2,3}.nix dumping LOOP/ADJ/SDTF/NFR/LAYER/BRANCH):
+`new_feedrate_to_reach_time_stretch` nomin/denom/nfr, LOOP fr/nextfr/stretch, SDTF limits,
+and per-layer `total`/`max`/`nlines`/`BRANCH` are BYTE-IDENTICAL between ares and oracle.
+The `F2005`/`F2002`/`F1998`/`F2001`/`F1973` diffs are a KNOCK-ON of extra gcode lines:
+ares emits ~18 `;WIDTH:0.405676/0.405678/0.429544/0.429546` narrow-infill blocks vs oracle ~6,
+which shifts the cooling `lines`/`total`/`stretch` → different solver output. The narrow
+regions themselves match (oracle `OFINAL normal=1 narrow=2` == ares `SPLITOUT/FINAL`);
+the divergence is `ConcentricInternal`/`generate_thick_polylines` (Arachne WallToolPaths)
+emitting 2-point slivers at slightly-different medial widths (0.405676 vs 0.405678, 2nm) and
+on layers oracle emits normal-width. The medial-axis bead-width f32/segmentation detail is
+the next port-verify slice — split/is_valid/clip_end are all confirmed faithful.
