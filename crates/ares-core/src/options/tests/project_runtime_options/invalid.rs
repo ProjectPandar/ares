@@ -11,7 +11,11 @@ use super::{assert_keyed_bounded_error, child_error, parent_error};
 #[test]
 fn every_real_field_rejects_null_wrong_shape_and_invalid_elements_with_key() {
     for field in &REAL_FIELDS {
-        let wrong_shape = if field.is_array { json!("1") } else { json!(["1"]) };
+        // A scalar field fed a one-or-more-element array unwraps to element 0
+        // (Orca's `parse_str_arr` flattens `["1"]` to the CSV string `"1"`,
+        // which a `coFloat`/`coInt` deserializes as element 0), so `["1"]` is
+        // NOT a wrong shape anymore — an array whose element is an object is.
+        let wrong_shape = if field.is_array { json!("1") } else { json!([{}]) };
         for invalid in [Value::Null, wrong_shape, json!({})] {
             let input = Value::Object(Map::from_iter([(field.key.to_owned(), invalid)]));
             assert_keyed_bounded_error(&child_error(field, input.clone()), field.key);

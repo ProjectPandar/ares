@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
-    de::{Error, Visitor},
+    de::{Error, SeqAccess, Visitor},
 };
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -44,6 +44,17 @@ impl<'de> Deserialize<'de> for OrcaBool {
                     "1" => Ok(OrcaBool(true)),
                     _ => Err(E::custom("expected Orca boolean 0 or 1")),
                 }
+            }
+
+            fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let first = sequence
+                    .next_element::<OrcaBool>()?
+                    .ok_or_else(|| A::Error::custom("expected Orca boolean 0 or 1"))?;
+                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                Ok(first)
             }
         }
 
@@ -102,6 +113,17 @@ macro_rules! integer_type {
                         <$inner>::try_from(value)
                             .map($name)
                             .map_err(|_| E::custom($expecting))
+                    }
+
+                    fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+                    where
+                        A: SeqAccess<'de>,
+                    {
+                        let first = sequence.next_element::<$name>()?.ok_or_else(|| {
+                            A::Error::invalid_type(serde::de::Unexpected::Seq, &self)
+                        })?;
+                        while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                        Ok(first)
                     }
                 }
 

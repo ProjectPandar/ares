@@ -4410,3 +4410,17 @@ received provably-legal coverage — not failures, just uncovered.
   unwraps element 0, matching `ConfigOptionFloat::deserialize`. Ares previously
   rejected sequences; Orca accepts and uses the element. Empty arrays still
   reject (matches upstream). This unblocks the whole scalar-as-array sweep class.
+
+## Scalar-as-array tolerance broadened (2026-09-22 lix)
+
+Orca's `ConfigBase::load_from_json` flattens a JSON array value to a CSV string
+(`parse_str_arr`, Config.cpp:831-866) then `set_deserialize`s it — a scalar
+`coFloat`/`coInt`/`coBool`/`coPercent`/`coFloatOrPercent` therefore accepts
+`["0.9"]` (and even `["0.8","0.7"]`, parsing element 0). Ares previously
+rejected any sequence for scalar fields. `visit_seq` added to `OrcaFloat`
+(→ `Millimeters`), `Percent`, `FloatOrPercent`, `OrcaBool`, and the integer
+visitor: unwrap element 0, drain the rest. Empty arrays still reject via
+`invalid_type(Seq)`. Updated the over-strict `project_runtime_options::invalid`
+test to use `[{}]` (object element — still rejected upstream, `parse_str_arr`
+returns false) instead of `["1"]`. All 1660 options tests pass; this unblocks
+every option the sweep injector writes as a scalar array.

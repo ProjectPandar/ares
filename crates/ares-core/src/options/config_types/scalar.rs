@@ -76,9 +76,13 @@ impl<'de> Deserialize<'de> for OrcaFloat {
             where
                 A: SeqAccess<'de>,
             {
-                sequence
+                let first = sequence
                     .next_element::<OrcaFloat>()?
-                    .ok_or_else(|| A::Error::custom("expected a finite Orca float"))
+                    .ok_or_else(|| A::Error::custom("expected a finite Orca float"))?;
+                // Orca's `ConfigOptionFloat` keeps element 0 and ignores any
+                // trailing entries in a scalar-as-array project value.
+                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                Ok(first)
             }
         }
 
@@ -175,6 +179,17 @@ impl<'de> Deserialize<'de> for Percent {
                     .map_err(E::custom)
                     .and_then(|value| self.visit_f64(value))
             }
+
+            fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let first = sequence
+                    .next_element::<Percent>()?
+                    .ok_or_else(|| A::Error::custom("expected a finite Orca percentage"))?;
+                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                Ok(first)
+            }
         }
 
         deserializer.deserialize_any(PercentVisitor)
@@ -248,6 +263,17 @@ impl<'de> Deserialize<'de> for FloatOrPercent {
                 E: Error,
             {
                 parse_float_or_percent(value)
+            }
+
+            fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let first = sequence
+                    .next_element::<FloatOrPercent>()?
+                    .ok_or_else(|| A::Error::custom("expected a finite float or percentage"))?;
+                while sequence.next_element::<serde::de::IgnoredAny>()?.is_some() {}
+                Ok(first)
             }
         }
 
