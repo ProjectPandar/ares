@@ -165,6 +165,13 @@ pub(crate) fn raft_layer_fill(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     let expolygons = union_ex(layer_polygons, FillRule::NonZero)?;
+    if std::env::var("ARES_RAFT_DEBUG").is_ok() {
+        eprintln!(
+            "RAFTDBG expolygons={} in={}",
+            expolygons.len(),
+            layer_polygons.len()
+        );
+    }
     let mut out = Vec::new();
     for expolygon in expolygons {
         // `aoffset1 = coord_t(scale_(overlap − 0.5·spacing))`
