@@ -4758,3 +4758,14 @@ INCLUSION (not a connect-graph or ordering bug). Ported `make_fill_lines`'s
 for the perimeter-overlap edge case — faithful port, does not change this case's
 borderline inclusion. Residual remains the `offset`/`closing` vertex precision at
 the fill-region edge.
+
+### lxxvi. raft residual — sheath-adjacent connect-arch coverage (post-d835df63)
+Corrected the `X118.601` analysis: `118.601` IS a shared grid position (oracle has it
+as fill-line endpoints `Y118.601`) and is well inside the `-0.4·spacing` fill region
+(`~118.815`), NOT a borderline. ares emits `X118.601 Y117.537` as a standalone fill
+line + separate wipe; oracle instead covers that right-edge span inside the sheath
+connect (retracts from `X118.193`). So the diff is a `connect_infill` arch-selection
+difference: ares's connect graph leaves `x=118.601` as its own chained fill line where
+oracle consumes it into an earlier arch/loop — a `take_limited`/`take_full_arc`/
+`emit_loops_in_band` coverage decision in the connect graph, adjacent to the sheath.
+Combined with the verified 1-ulp endpoint class this is the last raft-fill divergence.
