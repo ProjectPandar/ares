@@ -81,6 +81,9 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                 dont_adjust: true,
                 anchor_length_max: 1000.0,
                 link_max_length: 3.0 * spacing,
+                // `fill_surface_ironing`/`FillMonotonicLine`-style ironing is not
+                // a consistent-pattern fill — the monotonic path ignores it.
+                consistent_pattern: false,
             },
             input.scale,
         )

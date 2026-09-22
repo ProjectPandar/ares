@@ -207,7 +207,8 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 }
             }
             SurfaceFillPattern::Configured(
-                ProcessInfillPattern::Rectilinear | ProcessInfillPattern::ZigZag,
+                pattern
+                @ (ProcessInfillPattern::Rectilinear | ProcessInfillPattern::ZigZag),
             ) => {
                 let params = MonotonicFillParams {
                     spacing: fill.params.spacing,
@@ -222,6 +223,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     dont_adjust: false,
                     anchor_length_max: fill.params.anchor_length_max,
                     link_max_length: 0.0,
+                    consistent_pattern: pattern.has_consistent_pattern(),
                 };
                 for expolygon in fill.expolygons {
                     result.extend(

@@ -31,6 +31,7 @@ fn params() -> MonotonicFillParams {
         dont_adjust: false,
         anchor_length_max: 1_000.0,
         link_max_length: 0.6,
+        consistent_pattern: false,
     }
 }
 

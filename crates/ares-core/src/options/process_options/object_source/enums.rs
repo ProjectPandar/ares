@@ -216,3 +216,13 @@ pub enum ProcessInfillPattern {
     #[serde(rename = "octagramspiral")]
     OctagramSpiral,
 }
+
+impl ProcessInfillPattern {
+    /// `Fill::has_consistent_pattern` (`FillRectilinear.hpp:198,207,219`) —
+    /// `FillZigZag`/`FillCrossZag`/`FillLockedZag` override it to `true`; the
+    /// rectilinear/monotonic defaults are `false`. It gates the per-layer
+    /// consistent zig-zag serpentine direction in `traverse_graph_generate_polylines`.
+    pub(crate) const fn has_consistent_pattern(self) -> bool {
+        matches!(self, Self::ZigZag | Self::CrossZag | Self::LockedZag)
+    }
+}

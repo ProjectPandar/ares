@@ -39,6 +39,7 @@ pub(super) fn append(
         dont_adjust: fill.params.bridge,
         anchor_length_max,
         link_max_length: 0.0,
+        consistent_pattern: pattern.has_consistent_pattern(),
     };
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;

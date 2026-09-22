@@ -20,6 +20,12 @@ pub(crate) struct MonotonicFillParams {
     pub(crate) dont_adjust: bool,
     pub(crate) anchor_length_max: f32,
     pub(crate) link_max_length: f64,
+    /// `has_consistent_pattern` (`FillRectilinear.cpp:2874` passes it to
+    /// `traverse_graph_generate_polylines`; `FillZigZag`/`FillCrossZag`/
+    /// `FillLockedZag` override it to `true`, `FillRectilinear`/`FillMonotonic`
+    /// default `false`). It makes `next_start` alternate the per-line
+    /// direction so the zig-zag serpentine stays consistent across layers.
+    pub(crate) consistent_pattern: bool,
 }
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct MonotonicFillOutput {
@@ -142,7 +148,7 @@ fn fill_surface(
         let path = chain_monotonic_regions(&regions, &slice, scale);
         emit_monotonic_polylines(&path, &regions, &slice, scale)
     } else {
-        super::traverse::generate(&slice, false)
+        super::traverse::generate(&slice, params.consistent_pattern)
     };
     let polylines: Vec<Polyline> = generated
         .into_iter()

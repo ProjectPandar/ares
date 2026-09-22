@@ -4939,3 +4939,16 @@ Verified faithful: `scaled` truncating (`scale_`/`scaled<coord_t>`), `base_angle
 (`+π/2` + odd-layer `+π/2` unless AlignedRectilinear), `aligning_angle`, section
 `outside<0 && |Δy|>spacing`, touch-merge thresholds (`-0.5·spacing` shrink /
 `+0.3·spacing` expand), final `expand(+0.5·spacing) ∩ fill.expolygons`.
+
+### lxxxix. zigzag serpentine transpose = has_consistent_pattern not threaded (FIXED)
+`FillZigZag`/`FillCrossZag`/`FillLockedZag` override `has_consistent_pattern()=true`
+(`FillRectilinear.hpp:198,207,219`); `fill_surface_by_lines` passes it to
+`traverse_graph_generate_polylines` (`FillRectilinear.cpp:2874`) which alternates
+the per-line serpentine direction (`next_start` `i_vline2 & 1`, `connect_horizontal`
+left-only, `:1401-1489`) AND anchors the fill bbox on `extended_object_bounding_box`
+(`:2785`). ares hard-coded `traverse::generate(slice, false)` — no alternation →
+the zigzag serpentine emitted rotated 90°. Fix: `ProcessInfillPattern::
+has_consistent_pattern()` (`enums.rs`) threaded into `MonotonicFillParams::
+consistent_pattern` → `traverse::generate`. `case-rubl2p` 946→28, `8AsS4U`
+1004→90. Residual: a z=9 sparse-layer transpose + `WIDTH:0.405678` narrow sliver +
+F2005 cooling (separate classes). `OxtTzz`/`JBIbxQ` (crosshatch) unaffected.
