@@ -177,12 +177,13 @@ pub(crate) fn raft_layer_fill(
         if line_spacing <= 0 {
             continue;
         }
-        let mut slice = prepare_rectilinear_contours(
-            &expolygon,
-            -(spec.angle + std::f64::consts::FRAC_PI_2),
-            0.0,
-            inner_offset,
-        )?;
+        // Upstream `ExPolygonWithOffset(expoly, -rotate_vector.first, ...)`
+        // rotates by the f32 `float` angle; the extra FRAC_PI_2 below is
+        // ares' vertical-line convention translation. Round the combined
+        // argument through f32 so the trig matches upstream's `float`
+        // precision bit-for-bit.
+        let rotate_by = f64::from(-((spec.angle as f32) + std::f32::consts::FRAC_PI_2));
+        let mut slice = prepare_rectilinear_contours(&expolygon, rotate_by, 0.0, inner_offset)?;
         if std::env::var("ARES_RAFT_DEBUG").is_ok() {
             for (ci, c) in slice.contours.iter().enumerate() {
                 eprintln!(
@@ -222,7 +223,9 @@ pub(crate) fn raft_layer_fill(
         // reference point.
         let source_bounds =
             BoundingBox::from_expolygon(&slice.source).ok_or(ClipperError::CoordinateOutOfRange)?;
-        let reference = rotate_point(reference, (-spec.angle).cos(), (-spec.angle).sin())?;
+        // `-rotate_vector.first` in upstream is the negated f32 angle.
+        let neg_angle = f64::from(-(spec.angle as f32));
+        let reference = rotate_point(reference, neg_angle.cos(), neg_angle.sin())?;
         let aligned_min_x = align_to_grid(source_bounds.min().x(), line_spacing, reference.x())?;
         let width = source_bounds.max().x() - aligned_min_x;
         let count = usize::try_from((width + line_spacing - 1) / line_spacing).unwrap_or(0);
@@ -264,7 +267,9 @@ pub(crate) fn raft_layer_fill(
         // Connect in the SLICE frame (upstream connects before the
         // rotate-back), then rotate the connected output back by
         // +(angle+π/2) (`FillSupportBase::fill_surface:3627-3633`).
-        let rotate_back = spec.angle + std::f64::consts::FRAC_PI_2;
+        // `pt.rotate(cos_a, sin_a)` with `cos_a = cos(rotate_vector.first)`
+        // — f64 cos of the f32 angle (`FillRectilinear.cpp:3627-3633`).
+        let rotate_back = f64::from((spec.angle as f32) + std::f32::consts::FRAC_PI_2);
         let (cos_a, sin_a) = (rotate_back.cos(), rotate_back.sin());
         #[allow(unused_variables)]
         let pre_connect_count = fill_lines.len();

@@ -84,21 +84,32 @@ impl RaftFillInputs {
             RaftFillPattern::SupportBase
         };
 
-        // Angles (`SupportParameters.hpp:147-175`).
-        let base_angle = self.support_angle_degrees.to_radians();
-        let interface_angle = (self.support_angle_degrees + 90.0).to_radians();
+        // Angles (`SupportParameters.hpp:147-175`). Upstream stores
+        // `base_angle`/`interface_angle`/`raft_angle_*` as `float` and
+        // does the ±π/2 / ±π/4 arithmetic in f32; the cos/sin used by
+        // `Point::rotate` and `ExPolygonWithOffset` are f64 of that
+        // f32 angle, so ares must round-trip through f32 to keep the
+        // rotated intersection endpoints on the same lattice unit.
+        let base_angle = f64::from((self.support_angle_degrees as f32).to_radians());
+        let interface_angle = f64::from(((self.support_angle_degrees + 90.0) as f32).to_radians());
+        // Upstream assigns `interface_angle + 0.5 * M_PI` to a `float`
+        // field: the addition is f64 (float lhs promoted), then the
+        // result is truncated to f32. Model as `f32(f64(f32) + f64)`.
+        let rotate_quarter = |angle_f32_bits: f64| -> f64 {
+            f64::from(((angle_f32_bits) + 0.5 * std::f64::consts::PI) as f32)
+        };
         let (flange_angle, interface_angle) = if self.base_raft_layers > 1 {
             // Only the interface angle gets the even-layer rotation;
             // the flange keeps the plain interface angle
             // (`SupportParameters.hpp:153-158`).
             let adjusted = if self.interface_raft_layers % 2 == 0 {
-                interface_angle + FRAC_PI_2
+                rotate_quarter(interface_angle)
             } else {
                 interface_angle
             };
             (interface_angle, adjusted)
         } else if self.base_raft_layers == 1 || self.interface_raft_layers > 1 {
-            (base_angle, interface_angle + FRAC_PI_2)
+            (base_angle, rotate_quarter(interface_angle))
         } else {
             (FRAC_PI_2, FRAC_PI_2)
         };
@@ -118,13 +129,15 @@ impl RaftFillInputs {
 impl RaftFillParams {
     /// `raft_interface_angle(interface_id)`
     /// (`SupportParameters.hpp:284-285`): ±45° per layer parity.
+    /// Upstream adds `float(±M_PI/4)` to the `float` field — f32
+    /// arithmetic all the way.
     pub(crate) fn interface_angle_for_layer(&self, interface_id: usize) -> f64 {
         let toggle = if interface_id & 1 == 0 {
-            FRAC_PI_4
+            std::f32::consts::FRAC_PI_4
         } else {
-            -FRAC_PI_4
+            -std::f32::consts::FRAC_PI_4
         };
-        self.interface_angle + toggle
+        f64::from((self.interface_angle as f32) + toggle)
     }
 }
 

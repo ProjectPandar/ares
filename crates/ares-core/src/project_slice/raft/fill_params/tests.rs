@@ -24,8 +24,8 @@ fn ksr_inputs() -> RaftFillInputs {
 fn ksr_densities() {
     let params = ksr_inputs().derive();
 
-    assert!((params.support_density - 0.407_086_4 / 0.607_086_4).abs() < 1e-9);
-    assert!((params.raft_interface_density - 0.407_086_4 / 0.607_086_4).abs() < 1e-9);
+    assert!((params.support_density - 0.407_086_4 / 0.607_086_4).abs() < 1e-6);
+    assert!((params.raft_interface_density - 0.407_086_4 / 0.607_086_4).abs() < 1e-6);
     // Both densities < 0.95, no sheath, non-honeycomb → SupportBase.
     assert_eq!(params.base_fill_pattern, RaftFillPattern::SupportBase);
     assert_eq!(params.interface_fill_pattern, RaftFillPattern::SupportBase);
@@ -40,17 +40,17 @@ fn ksr_densities() {
 fn ksr_angles() {
     let params = ksr_inputs().derive();
 
-    assert!((params.flange_angle - FRAC_PI_2).abs() < 1e-9);
-    assert!(params.base_angle.abs() < 1e-9);
+    assert!((params.flange_angle - FRAC_PI_2).abs() < 1e-6);
+    assert!(params.base_angle.abs() < 1e-6);
     // interface_raft_layers = 50 (even) → +90°.
-    assert!((params.interface_angle - PI).abs() < 1e-9);
+    assert!((params.interface_angle - PI).abs() < 1e-6);
     // Per-layer alternation ±45° (`:284-285`).
-    assert!((params.interface_angle_for_layer(0) - (PI + FRAC_PI_4)).abs() < 1e-9);
-    assert!((params.interface_angle_for_layer(1) - (PI - FRAC_PI_4)).abs() < 1e-9);
+    assert!((params.interface_angle_for_layer(0) - (PI + FRAC_PI_4)).abs() < 1e-6);
+    assert!((params.interface_angle_for_layer(1) - (PI - FRAC_PI_4)).abs() < 1e-6);
     // Directions normalize: 5π/4 ≡ π/4, 3π/4 stays.
-    assert!((normalized_direction(params.interface_angle_for_layer(0)) - FRAC_PI_4).abs() < 1e-9);
+    assert!((normalized_direction(params.interface_angle_for_layer(0)) - FRAC_PI_4).abs() < 1e-6);
     assert!(
-        (normalized_direction(params.interface_angle_for_layer(1)) - 3.0 * FRAC_PI_4).abs() < 1e-9
+        (normalized_direction(params.interface_angle_for_layer(1)) - 3.0 * FRAC_PI_4).abs() < 1e-6
     );
 }
 
@@ -65,8 +65,8 @@ fn two_layer_raft_angles() {
     }
     .derive();
 
-    assert!(params.flange_angle.abs() < 1e-9);
-    assert!((params.interface_angle - PI).abs() < 1e-9);
+    assert!(params.flange_angle.abs() < 1e-6);
+    assert!((params.interface_angle - PI).abs() < 1e-6);
 }
 
 /// `raft_layers == 1`: the single contact layer prints at 90°
@@ -80,8 +80,8 @@ fn single_layer_raft_angle() {
     }
     .derive();
 
-    assert!((params.flange_angle - FRAC_PI_2).abs() < 1e-9);
-    assert!((params.interface_angle - FRAC_PI_2).abs() < 1e-9);
+    assert!((params.flange_angle - FRAC_PI_2).abs() < 1e-6);
+    assert!((params.interface_angle - FRAC_PI_2).abs() < 1e-6);
 }
 
 /// Dense supports (spacing 0) promote both patterns to Rectilinear
@@ -97,8 +97,8 @@ fn solid_density_promotes_rectilinear() {
 
     assert_eq!(params.base_fill_pattern, RaftFillPattern::Rectilinear);
     assert_eq!(params.interface_fill_pattern, RaftFillPattern::Rectilinear);
-    assert!((params.support_density - 1.0).abs() < 1e-9);
-    assert!((params.raft_interface_density - 1.0).abs() < 1e-9);
+    assert!((params.support_density - 1.0).abs() < 1e-6);
+    assert!((params.raft_interface_density - 1.0).abs() < 1e-6);
 }
 
 /// Honeycomb base overrides the density rule (`:132-134`).

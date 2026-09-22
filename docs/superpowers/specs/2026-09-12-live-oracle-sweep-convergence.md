@@ -5194,3 +5194,18 @@ Fix: always `truncate(polyline_end)`. raft_layers/seeded excess edge lines gone;
 remaining diff = interface-layer 1-unit E/coord rounding + M73 race.
 `band_trace_keeps_boundary_run` pinned the buggy behavior — updated to assert
 empty output matching upstream semantics.
+
+### cviii. raft interface residual — f32 angle quantization applied; π/2 trig-arg offset remains
+Upstream stores `base_angle`/`interface_angle`/`raft_angle_*` as `float` and
+computes `cos(float_angle)` (f64 of the f32 angle). Port now round-trips all
+raft angles through f32 (`fill_params.rs`, `fills.rs` rotate/rotate_back/
+reference). This trimmed some endpoint diffs (3689→3609) but the interface
+zigzag endpoints still differ by 1 unit (`X111.632` vs `X111.633` etc.):
+ares's pipeline rotates contours by `-(angle + π/2)` and rotates back by
+`+(angle + π/2)` (its vertical-line convention), while upstream uses
+`cos(±angle)` directly — `cos(θ+π/2)` vs `-sin(θ)` differ in the last f64 bit,
+so rotated-back endpoints land one lattice unit apart at rounding boundaries.
+Full bit-parity needs the π/2 convention offset removed (use upstream's exact
+`cos(angle)`/`sin(angle)` args end-to-end) — a deeper fill-pipeline refactor.
+`raft_layers/min` residual after the edge-line fix is the narrow-region oracle
+race (`;WIDTH:0.405676` sliver + F1982/1977), not a real defect.
