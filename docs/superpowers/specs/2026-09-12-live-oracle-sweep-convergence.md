@@ -5228,3 +5228,13 @@ bit-exact interface endpoints; (b) gcode_comments `move to first` on lifted
 travels; (c) the raft `top_contacts`/`columns_base` upstream slice; (d) zigzag
 `traverse` start residual. Everything else in the sweep tail is oracle-race
 noise or stale fixtures.
+
+### cx. mm3_per_mm f32 experiment — REVERTED
+Tried casting `mm3_per_mm` operands through f32 (`Flow.cpp:219-228` computes
+`float(m_height*(m_width - m_height*(1-0.25*PI)))`). REVERTED: it broke
+`generates_absolute_e`/`first_layer_flow` tests (`0.0100000005` vs `0.01`) and
+did NOT fix the `E.04556/57` perimeter diff — because ares's `width` input is
+not the f32-truncated `m_width` upstream stores; casting a nearby f64 to f32 at
+the accessor gives a wrong f32. Correct fix would propagate the f32 `Flow`
+width from construction (`Flow::new_from_config_width` / `with_spacing`),
+not truncate at `mm3_per_mm`. Deferred — sub-µm E residual.
