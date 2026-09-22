@@ -40,3 +40,14 @@ projection (`generate_sparse_infill_polylines_for_anchoring`,
 - `surface`/`internal_solid`/`top`/`bottom` pattern enums likewise.
 - All new generators cited to their `Fill*.cpp` source boundary; each file
   <400 LOC with tests in a separate `tests.rs` mod.
+
+## Concentric sparse probe (2026-09-22)
+
+Wiring `Concentric` into the `anchor_projection` whitelist + a
+`sparse_anchoring` arm reusing `fill_entities::concentric` generation slices
+but diverges ~3935 non-M73 lines: the emitted sparse infill uses
+density-scaled spacing (`FillConcentric` spacing = `flow.spacing` at reduced
+density), and the wipe/retract chain differs. The `append_configured` surface
+concentric path does not carry the sparse-density semantics. A correct port
+needs the sparse `_fill_surface_single` spacing/density path, not just the
+anchor-projection plumbing — reverted to the honest `unsupported` rejection.
