@@ -91,6 +91,26 @@ pub(crate) fn raft_polygons(
     let pattern = SupportGridPattern::new(&contacts_input, &[], &params.grid)?;
     let contact =
         pattern.extract_support(&contacts_input, &[], params.grid.expansion_to_slice, true);
+    if std::env::var("ARES_INNER_CONTOUR").is_ok() {
+        for (i, p) in contact.iter().enumerate() {
+            let pts = p
+                .points()
+                .iter()
+                .map(|pt| format!("{},{}", pt.x(), pt.y()))
+                .collect::<Vec<_>>()
+                .join(" ");
+            eprintln!("CONTACT {i} {}", pts);
+        }
+        for (i, p) in contacts_input.iter().enumerate() {
+            let pts = p
+                .points()
+                .iter()
+                .map(|pt| format!("{},{}", pt.x(), pt.y()))
+                .collect::<Vec<_>>()
+                .join(" ");
+            eprintln!("CONTACTIN {i} {}", pts);
+        }
+    }
 
     // 4) Interface expansion (`SupportCommon.cpp:295-331`).
     let fine = if params.raft_layers > 1 {

@@ -4856,3 +4856,21 @@ yields a ~1px asymmetric `contact`. ares's `agg_raster` `line()`/`sweep_scanline
 cover/area accumulation is symmetric where oracle's is not. Residual = AGG
 scanline AA subpixel coverage asymmetry — the deepest primitive; the raft
 connect/offset/clipper layers above it are ALL byte-faithful Clipper1.
+
+### lxxxiii. raft residual — STRUCTURAL: first_layer/base built from support-generator layers, not footprint extract
+`enable_support:0`, `raft_layers:100`. ares `contact`/`first_layer` symmetric
+(`±7150585`/`±9150585`); oracle `first_layer`/`interface` asymmetric
+(`9150587/-9150572`). Root cause is STRUCTURAL, not AGG: upstream
+`generate_raft_base` (`SupportCommon.cpp:244-390`) builds raft polygons from the
+SUPPORT GENERATOR's layers — `top_contacts`/`interface_layers`/
+`base_interface_layers`/`base_layers` (`columns_base`). With raft on, the support
+generator produces these even with `enable_support:0`. `interface_polygons =
+union(expand(top_contacts,fine), expand(interfaces,fine), expand(base_interfaces,fine))`
+(`:302-311`); `first_layer = union(columns_base.polygons, union(base, interface_polygons))`
+(`:347`). The asymmetry is the support-column contact region, NOT `extract_support`.
+ares `raft_polygons` fabricates `contact`/`interface`/`base`/`first_layer` from
+`extract_support(first_layer_lslices)` — a symmetric footprint raster — and has NO
+`top_contacts`/`base_layers`/`interfaces`/`columns_base` inputs. Closing this needs
+the support-column layer generation (detect_contacts + propagate + support layers)
+fed into `raft_polygons` — a substantive `SupportMaterial`/`SupportCommon` port
+slice, not a quick fix.
