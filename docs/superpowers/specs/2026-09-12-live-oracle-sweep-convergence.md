@@ -4815,3 +4815,16 @@ segment-intersection + `GetAvgUnitVector`/`ReflectPoint` constructions
 If the closing/fill_region/inner chain hits DoSquare (acute `cos_a<temp_lim−1`) the
 vertices diverge. Residual is the accumulated offset-chain vertex rounding;
 `DoSquare`/`DoRound` Clipper2 port is the next fidelity step.
+
+### lxxx. raft residual — Clipper boolean-union vertex precision (deepest layer)
+Both raft offsets use `JoinType::Miter`, so only `do_miter` fires — and it is
+verified byte-faithful (`q=delta/(cos_a+1)`, `norms[k]+norms[j]`, `fixed_round`).
+The residual `inner`-contour vertices (`7751459` vs `7751455`, ~4-15u) therefore
+come from `execute_paths`'s finishing `union_paths`/`negative_paths`
+(`offset/execute.rs:33,37`) — the Clipper **boolean union** scanline
+`IntersectPoint`/`Round` cleanup after `generate_raw`, accumulated across the
+3-level `first_layer→closing→fill_region→inner` offset+union chain. Bit-exact
+parity here requires Clipper2 `ClipperBase` scanline `IntersectPoint`/`Round`/
+`Execute` fidelity — the deepest primitive in the port; also the missing
+`9874100` support connect (one layer's `connect_base_support` empty in ares)
+warrants a follow-up. All higher-level raft/connect logic verified faithful.
