@@ -5151,3 +5151,20 @@ Re-sliced the option-coverage FAIL domains with the CURRENT binary + fresh oracl
 Of 35 summary FAIL domains, ~18 diverge at `line ~137` (M73 P10 R7 ordering race)
 and most others are the narrow-region race or stale — the actionable residual set
 is far smaller than the raw FAIL count suggests.
+
+### cv. raft_layers residual decomposed — connect_base_support edge-linking
+`raft_layers` (1877-line diff) decomposes into:
+- `M73 P3 R26` ordering race (line 67/70) — the known M73 race.
+- `E.04556`/`E.04557` — a `fixed_round` boundary rounding (raft outline).
+- **Structural**: `connect_base_support` (the `Fill::connect_base_support` /
+  `FillRectilinear` port) leaves the leftmost/rightmost fill lines
+  (`±8601213` = ±8.6mm) UNCHAINED as `n=2` polylines, so ares emits the
+  rightmost edge (`X118.601→117.537 E.46316`) as a separate travel+extrude+wipe
+  where oracle chains it into the zigzag. `ARES_CONN_DUMP`: `CONN n=3` =
+  left-edge + right-edge + zigzag (should be ONE chain). The `x_margin`
+  filter (`make_fill_lines:2924`) drops boundary-adjacent lines, and
+  `link_zigzag`/`close_left_caps`/`connect_t_joints`/`emit_very_long_arches`
+  do not recover the orphaned edge lines — upstream's connection links them
+  via a boundary arch the ares port misses.
+The remaining raft `top_contacts`/`columns_base`/`interface_layers` upstream
+slice is a separate, still-open structural piece (raft over supported geometry).
