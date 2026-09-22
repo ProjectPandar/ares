@@ -4734,3 +4734,15 @@ of two nearly-equal `pos()` values at a contour-vertex tangency than upstream's
 `slice_region_by_vertical_lines` dedup (`FillRectilinear.cpp:842-880`). Next: dump
 ares `inner` contour + `line.intersections` for one x=102.518 line vs oracle
 `support_fills` to isolate the kept-vs-dropped intersection.
+
+### lxxiv. raft residual — inner-contour jtMiter vertex, not dedup (post-7d790ccd)
+Verified `remove_overlapping_vertices` (`segments.rs:265-294`) faithfully ports upstream's
+`slice_region_by_vertical_lines` dedup (`FillRectilinear.cpp:842-880`): `at_segment_vertex`
+≈ `pos_q==1`, `point.y()==point.y()` ≈ `pos_p==pos2_p`, `kind` low/high ↔ `low`/`dir>0`
+Z-path keep-first/keep-second. The `X102.518 Y103.277` vs `Y103.278` endpoint is therefore
+the **`-0.5·spacing` inner-contour vertex itself** — a `jtMiter` `ClipperOffset` chamfer
+vertex landing 1 unit off (`do_miter`/`AddPath` integer corner math, `offset/generate.rs`
+vs `clipper.cpp`). Same residual class as the fill-line `intersection_position` (already
+exact): the contour VERTEX feeding it, not the intersection or dedup. Deepest residual —
+single-unit Clipper-offset corner; needs an `inner`-contour vertex dump vs oracle
+`poly_with_offset.polygons_outer` to isolate the divergent `do_miter` corner.
