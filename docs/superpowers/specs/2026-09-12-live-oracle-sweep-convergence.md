@@ -4477,3 +4477,15 @@ So M73-gated FAILs are races, not divergences — a re-run can flip them.
 The fill-generator + anchoring ports are the dominant real remaining option
 work: each rejected pattern needs its `Fill*.cpp` `fill_surface` generator
 AND a `sparse_anchoring` arm for the bridge-over-infill path.
+
+## Missing slice-time rejections wired (2026-09-22 lxii)
+
+`use_firmware_retraction=1`+wipe and `use_relative_e_distances=0`(absolute)+`G92 E0`
+in before/layer_change_gcode now reject with upstream's messages —
+`PrintConfig.cpp:10391-10394` (firmware-retraction × wipe) and
+`Print.cpp:1694-1745` (absolute-E `G92 E0` regex). Implemented in
+`effective_config/selector_validation.rs` (`validate_firmware_retraction`,
+`validate_extruder_addressing`) so the project slice path rejects what the
+oracle rejects — both were `unsuccessful Orca process` INCOMPLETE rows because
+ares accepted inputs the oracle refuses. The `(?m)` multi-line flag matches
+boost's per-line `^`/`$` behaviour on the multi-line gcode templates.
