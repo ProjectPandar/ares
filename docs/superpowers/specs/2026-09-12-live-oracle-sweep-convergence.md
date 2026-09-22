@@ -4769,3 +4769,17 @@ difference: ares's connect graph leaves `x=118.601` as its own chained fill line
 oracle consumes it into an earlier arch/loop — a `take_limited`/`take_full_arc`/
 `emit_loops_in_band` coverage decision in the connect graph, adjacent to the sheath.
 Combined with the verified 1-ulp endpoint class this is the last raft-fill divergence.
+
+### lxxvii. raft residual — shared arch-endpoint class, not ordering (post-86244cd0)
+Quantified the diff: ~3106 lines reduce to a small set of repeated contour
+coordinates (`X117.482 Y102.712`×74, `X102.518 Y103.051`×49, `X116.7 Y102.518`×48,
+`X114.02`/`X105.98`×28) — a handful of inner-contour arch/fill endpoints 1 unit off
+cascading through every zigzag that touches them. Verified `intersection_position`
+(`FillRectilinear.cpp:805-836`) and `pos()` rounding (`:131-137`) are byte-identical
+ports (`segments.rs:306-353`, `RationalPosition::rounded`): same `p1.x==this_x`/
+`p2.x==this_x` vertex arms, same `pos_p/pos_q` cross-term, same `±pos_q>>1` truncating
+round. `X114.02`/`Y105.98` (4.02mm from centre) is NOT the sheath inner octagon
+(7.48/7.29mm) — it is a second contour's segment; the residual is which inner-contour
+segment a fill line lands on at a shared x. Needs oracle `support_fills` polyline
+dump to pin the exact contour/segment. Structural `X118.601` is the sheath-adjacent
+`emit_loops_in_band`/`take_next` coverage edge (upstream `FillBase.cpp:1955,2280-2420`).
