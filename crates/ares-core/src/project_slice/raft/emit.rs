@@ -48,13 +48,16 @@ pub(crate) fn raft_layer_plans(
     for (index, z) in raft_grid.iter().enumerate() {
         let (polygons, spec) = match z.kind {
             RaftLayerKind::Base if index == 0 => {
-                // Base flange (`SupportCommon.cpp:1496-1500`).
+                // Base flange (`SupportCommon.cpp:1496-1500`),
+                // `with_sheath = true` (`:1516`).
                 (
                     raft_polygons.first_layer.clone(),
                     RaftFillSpec {
                         angle: fill_params.flange_angle,
                         spacing: first_layer_flow_spacing_mm,
                         density: (first_layer_density_percent * 0.01) as f32,
+                        sheath: true,
+                        width_mm: first_layer_width_mm,
                     },
                 )
             }
@@ -64,6 +67,8 @@ pub(crate) fn raft_layer_plans(
                     angle: fill_params.base_angle,
                     spacing: support_flow_spacing_mm,
                     density: fill_params.support_density as f32,
+                    sheath: false,
+                    width_mm: support_width_mm,
                 },
             ),
             RaftLayerKind::Interface | RaftLayerKind::Contact => {
@@ -75,6 +80,8 @@ pub(crate) fn raft_layer_plans(
                         angle,
                         spacing: support_flow_spacing_mm,
                         density: fill_params.raft_interface_density as f32,
+                        sheath: false,
+                        width_mm: interface_width_mm,
                     },
                 )
             }

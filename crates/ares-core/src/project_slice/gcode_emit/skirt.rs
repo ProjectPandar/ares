@@ -120,12 +120,12 @@ impl SkirtPlan {
             ) {
                 for plan in &stream.plans {
                     // `support_fills.collect_points` (`Print.cpp:2693`):
-                    // the hull takes the FILL polyline points, which sit
-                    // inside the polygons by the 0.5·spacing inset.
-                    if let Ok(polylines) = crate::project_slice::raft::fills::raft_layer_fill(
+                    // the hull takes the EMITTED fill polyline points —
+                    // the flange sheath perimeter plus the `-0.4·spacing`
+                    // fill (`fill_expolygons_with_sheath_generate_paths`).
+                    if let Ok(polylines) = crate::project_slice::raft::fills::raft_layer_polylines(
                         &plan.polygons,
                         plan.spec,
-                        crate::geometry::Point::new(0, 0),
                         traversal.scale,
                     ) {
                         for polyline in &polylines {
@@ -133,6 +133,12 @@ impl SkirtPlan {
                         }
                     }
                 }
+            }
+        }
+        if std::env::var("ARES_OCCUPIED_DUMP").is_ok() {
+            eprintln!("OCCUPIED n={}", occupied.len());
+            for p in &occupied {
+                eprintln!("OPT {},{}", p.x(), p.y());
             }
         }
         let hull = convex_hull(&occupied);

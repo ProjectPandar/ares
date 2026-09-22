@@ -123,12 +123,12 @@ fn materialize_layer(
     scale: crate::geometry::CoordinateScale,
     flange: bool,
 ) -> Option<crate::project_slice::island_print_order::OrderedExtrusionLayer> {
+    use crate::ExtrusionRole;
     use crate::project_slice::fill_entities::{
         FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath,
     };
     use crate::project_slice::island_print_order::{IslandPrintEntity, OrderedExtrusionIsland};
-    use crate::project_slice::raft::fills::raft_layer_fill;
-    use crate::{ExtrusionRole, geometry::Point};
+    use crate::project_slice::raft::fills::raft_layer_polylines;
 
     let role = if plan.z.kind == crate::project_slice::raft::RaftLayerKind::Base {
         ExtrusionRole::SupportMaterial
@@ -150,68 +150,15 @@ fn materialize_layer(
     };
 
     // Flange (raft layer 0): `with_sheath = no_sort = true`
-    // (`SupportCommon.cpp:1516-1517`) — a perimeter loop of the
-    // `closing_ex(polygons, ε, ε + 0.5·width)` region
-    // (`draw_perimeters` with a `0.15·spacing` end clip) followed by
-    // the fill on `offset(−0.4·spacing)` of the same region
+    // (`SupportCommon.cpp:1516-1517`); `raft_layer_polylines` returns the
+    // sheath perimeter then the `-0.4·spacing` fill
     // (`fill_expolygons_with_sheath_generate_paths:705-757`).
-    let (fill_polygons, entities_extra, no_sort) = if flange {
-        let units = 1.0 / scale.factor();
-        let inflate = ((0.5 * plan.width_mm + 0.000_001) * units).round() as i64;
-        let closing = crate::geometry::offset_expolygons(
-            &plan
-                .polygons
-                .iter()
-                .map(|polygon| crate::geometry::ExPolygon::new(polygon.clone(), Vec::new()))
-                .collect::<Vec<_>>(),
-            inflate as f32,
-            crate::geometry::JoinType::Miter,
-            3.0,
-        )
-        .ok()?;
-        let clip = (0.15 * plan.spec.spacing * units) as f64;
-        let mut sheath = Vec::new();
-        for expolygon in &closing {
-            let mut points = expolygon.contour().points().to_vec();
-            points.push(points[0]);
-            let mut polyline = crate::geometry::Polyline::new(points);
-            clip_polyline_end(&mut polyline, clip);
-            if polyline.points().len() > 1 {
-                sheath.push(make_path(polyline));
-            }
-        }
-        let fill_region = crate::geometry::offset_expolygons(
-            &closing,
-            -((0.4 * plan.spec.spacing) * units) as f32,
-            crate::geometry::JoinType::Miter,
-            3.0,
-        )
-        .ok()?;
-        let fill_polygons = fill_region
-            .iter()
-            .map(|expolygon| expolygon.contour().clone())
-            .collect::<Vec<_>>();
-        (fill_polygons, sheath, true)
-    } else {
-        (plan.polygons.clone(), Vec::new(), false)
-    };
-
-    let polylines = raft_layer_fill(
-        &fill_polygons,
-        crate::project_slice::raft::RaftFillSpec {
-            angle: plan.spec.angle,
-            spacing: plan.spec.spacing,
-            density: plan.spec.density,
-        },
-        Point::new(0, 0),
-        scale,
-    )
-    .ok()?;
-    if polylines.is_empty() && entities_extra.is_empty() {
+    let no_sort = flange;
+    let polylines = raft_layer_polylines(&plan.polygons, plan.spec, scale).ok()?;
+    if polylines.is_empty() {
         return None;
     }
-    let mut entities = entities_extra;
-    entities.extend(polylines.into_iter().map(make_path));
+    let entities: Vec<_> = polylines.into_iter().map(make_path).collect();
     Some(
         crate::project_slice::island_print_order::OrderedExtrusionLayer {
             islands: vec![OrderedExtrusionIsland {
@@ -243,32 +190,4 @@ pub(super) fn simplify_layers(
             arc_fitting,
         );
     }
-}
-
-/// `Polyline::clip_end` (`ClipperZUtils`/`Polyline.cpp`): shorten the
-/// polyline tail by `distance`, dropping exhausted segments.
-fn clip_polyline_end(polyline: &mut crate::geometry::Polyline, distance: f64) {
-    let mut points = polyline.clone().into_points();
-    let mut remaining = distance;
-    while points.len() > 1 {
-        let last = points.len() - 1;
-        let (dx, dy) = (
-            points[last].x() - points[last - 1].x(),
-            points[last].y() - points[last - 1].y(),
-        );
-        let length = ((dx * dx + dy * dy) as f64).sqrt();
-        if length > remaining {
-            let ratio = (length - remaining) / length;
-            let x = points[last - 1].x()
-                + ((points[last].x() - points[last - 1].x()) as f64 * ratio).round() as i64;
-            let y = points[last - 1].y()
-                + ((points[last].y() - points[last - 1].y()) as f64 * ratio).round() as i64;
-            points[last] = crate::geometry::Point::new(x, y);
-            *polyline = crate::geometry::Polyline::new(points);
-            return;
-        }
-        remaining -= length;
-        points.pop();
-    }
-    *polyline = crate::geometry::Polyline::new(points);
 }

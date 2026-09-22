@@ -26,6 +26,105 @@ pub(crate) struct RaftFillSpec {
     pub(crate) spacing: f64,
     /// Density in [0, 1].
     pub(crate) density: f32,
+    /// `with_sheath` (`SupportCommon.cpp:1516`): the flange (raft layer 0)
+    /// draws a perimeter loop before the fill.
+    pub(crate) sheath: bool,
+    /// `first_layer_flow.width()` for the flange `closing_ex` inflate
+    /// (`0.5·width`), mm.
+    pub(crate) width_mm: f64,
+}
+
+/// The emitted raft-layer polylines (sheath + fill) in source order
+/// (`fill_expolygons_with_sheath_generate_paths`,
+/// `SupportCommon.cpp:705-757`). For the flange this is the sheath
+/// perimeter (`closing_ex(polygons, ε, ε + 0.5·width)` contour closed and
+/// clipped by `0.15·spacing`) followed by the fill on
+/// `offset(-0.4·spacing)` of the same region; other layers just take the
+/// fill on the `-0.5·spacing` inset. `Print.cpp:2693` collects these
+/// points for the skirt hull.
+pub(crate) fn raft_layer_polylines(
+    layer_polygons: &[Polygon],
+    spec: RaftFillSpec,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    if !spec.sheath {
+        return raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale);
+    }
+    let units = 1.0 / scale.factor();
+    // `closing_ex(polygons, SCALED_EPSILON, SCALED_EPSILON + 0.5·width)`
+    // (`SupportCommon.cpp:728`): dilate by `ε` then erode by
+    // `ε + 0.5·width` — net shrink of `0.5·width`, so the sheath sits
+    // just inside the polygon boundary. `SCALED_EPSILON = scale_(1e-4)`
+    // and `float(SCALED_EPSILON)` keeps the fractional 0.4096 units
+    // (`libslic3r.h:52,96`).
+    let epsilon = scale.scaled_delta(1e-4) as f32;
+    let erode = (((0.5 * spec.width_mm) + 0.000_001) * units) as f32;
+    let closing = crate::geometry::offset2_ex(
+        &layer_polygons
+            .iter()
+            .map(|polygon| crate::geometry::ExPolygon::new(polygon.clone(), Vec::new()))
+            .collect::<Vec<_>>(),
+        epsilon,
+        -(epsilon + erode),
+        crate::geometry::JoinType::Miter,
+        3.0,
+    )?;
+    let clip = 0.15 * spec.spacing * units;
+    let mut out = Vec::new();
+    for expolygon in &closing {
+        let mut points = expolygon.contour().points().to_vec();
+        points.push(points[0]);
+        let mut polyline = Polyline::new(points);
+        clip_polyline_end(&mut polyline, clip);
+        if polyline.points().len() > 1 {
+            out.push(polyline);
+        }
+    }
+    let fill_region = crate::geometry::offset_expolygons(
+        &closing,
+        -((0.4 * spec.spacing) * units) as f32,
+        crate::geometry::JoinType::Miter,
+        3.0,
+    )?;
+    let fill_polygons = fill_region
+        .iter()
+        .map(|expolygon| expolygon.contour().clone())
+        .collect::<Vec<_>>();
+    out.extend(raft_layer_fill(
+        &fill_polygons,
+        spec,
+        Point::new(0, 0),
+        scale,
+    )?);
+    Ok(out)
+}
+
+/// `Polyline::clip_end` (`Polyline.cpp`): shorten the polyline tail by
+/// `distance`, dropping exhausted segments.
+fn clip_polyline_end(polyline: &mut Polyline, distance: f64) {
+    let mut points = polyline.clone().into_points();
+    let mut remaining = distance;
+    while points.len() > 1 {
+        let last = points.len() - 1;
+        let (dx, dy) = (
+            points[last].x() - points[last - 1].x(),
+            points[last].y() - points[last - 1].y(),
+        );
+        let length = ((dx * dx + dy * dy) as f64).sqrt();
+        if length > remaining {
+            let ratio = (length - remaining) / length;
+            let x = points[last - 1].x()
+                + ((points[last].x() - points[last - 1].x()) as f64 * ratio).round() as i64;
+            let y = points[last - 1].y()
+                + ((points[last].y() - points[last - 1].y()) as f64 * ratio).round() as i64;
+            points[last] = Point::new(x, y);
+            *polyline = Polyline::new(points);
+            return;
+        }
+        remaining -= length;
+        points.pop();
+    }
+    *polyline = Polyline::new(points);
 }
 
 /// Fill one raft layer (`FillSupportBase::fill_surface`).
@@ -212,6 +311,8 @@ mod raft_fill_probe {
             angle: std::f64::consts::FRAC_PI_2,
             spacing: 0.407_086_4,
             density: 0.9,
+            sheath: false,
+            width_mm: 0.42,
         };
         let out = raft_layer_fill(
             &[polygon],
@@ -242,6 +343,8 @@ mod connect_probe {
             angle: 0.0,
             spacing: 0.407_086_4,
             density: 0.67,
+            sheath: false,
+            width_mm: 0.42,
         };
         let out = raft_layer_fill(
             &[polygon],
