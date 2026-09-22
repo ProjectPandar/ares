@@ -5289,3 +5289,15 @@ different order → different chains → same endpoints, different segmentation.
 FIX: emulate upstream sort order (either make cost strictly ordered by adding
 index tie-break matching upstream's pointer ordering, or reproduce the
 introsort permutation — needs a probe of upstream's actual sort output order).
+
+### cxv. residual lives in OBJECT sparse-infill connect, not raft support
+`case-59tGO2` ~600-diff extrusions sit at lines 3537+ (object sparse infill,
+~layer 40), NOT the raft (lines <362). Same XY endpoints, different per-line
+E — e.g. `X116.19 Y102.518` alternating `E.07051`/`E.0293` — meaning ares
+splits a zigzag run into different sub-segments than upstream (same total,
+different per-line E). `ARES_CONN_PHASES` shows raft support n=0 (tiny region)
+— the divergence is in the OBJECT's sparse-infill `connect_base_support`
+zigzag/T-joint chain topology. Needs an instrumented upstream build
+(INFILL_DEBUG_OUTPUT SVG or a dump probe of `take_next` pairing) to compare
+chain topology directly; the stable-vs-unstable `std::sort` hypothesis is one
+candidate but unproven. This is the next concrete milestone.
