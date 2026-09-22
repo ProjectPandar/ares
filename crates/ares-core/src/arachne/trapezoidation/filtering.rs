@@ -109,6 +109,24 @@ impl SkeletalTrapezoidation<'_> {
                 let thickness = self.graph.node(to).data.distance_to_boundary * 2;
                 self.graph.node_mut(to).data.bead_count =
                     self.beading_strategy.optimal_bead_count(thickness);
+                if let Ok(path) = std::env::var("ARES_DUMP_DIST") {
+                    let node = self.graph.node(to);
+                    let _ = std::fs::OpenOptions::new()
+                        .append(true)
+                        .create(true)
+                        .open(&path)
+                        .and_then(|mut f| {
+                            use std::io::Write;
+                            write!(
+                                f,
+                                "ONODE p={},{} dist={} bc={}\n",
+                                node.point.x(),
+                                node.point.y(),
+                                node.data.distance_to_boundary,
+                                node.data.bead_count
+                            )
+                        });
+                }
             }
         }
         let nodes = self.graph.active_nodes().collect::<Vec<_>>();

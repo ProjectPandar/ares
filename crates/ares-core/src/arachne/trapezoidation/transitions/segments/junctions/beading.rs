@@ -35,9 +35,27 @@ impl SkeletalTrapezoidation<'_> {
             self.graph.node_mut(node).data.bead_count = bead_count;
         }
         let radius = self.graph.node(node).data.distance_to_boundary;
-        let storage = Rc::new(RefCell::new(BeadingPropagation::new(
-            self.beading_strategy.compute(radius * 2, bead_count),
-        )));
+        let beading = self.beading_strategy.compute(radius * 2, bead_count);
+        if let Ok(path) = std::env::var("ARES_DUMP_DIST") {
+            let node_ref = self.graph.node(node);
+            let _ = std::fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(&path)
+                .and_then(|mut f| {
+                    use std::io::Write;
+                    write!(
+                        f,
+                        "OBEAD p={},{} radius={} bc={} w={:?}\n",
+                        node_ref.point.x(),
+                        node_ref.point.y(),
+                        radius,
+                        bead_count,
+                        beading.bead_widths
+                    )
+                });
+        }
+        let storage = Rc::new(RefCell::new(BeadingPropagation::new(beading)));
         self.graph.node_mut(node).data.set_beading(&storage);
         self.beading_storage.push(Rc::clone(&storage));
         storage

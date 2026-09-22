@@ -5024,3 +5024,19 @@ produces a node at a different radius for the narrow corner region. Next probe:
 dump `node.p`/`distance_to_boundary` per voronoi vertex for the narrow region and
 compare to ares's skeletal graph — isolates whether the voronoi vertex set or the
 discretization/bead_count differs.
+
+### xcv. Junction width = store_node_beadings bead_widths, not get_or_create_beading
+`update_bead_count` `ONODE` dist values are byte-identical oracle↔ares
+(152660/153815/153817) — medial `distance_to_boundary` for central nodes is correct.
+`OBEAD` (in `get_or_create_beading`) never fires: upward-edge `to` nodes hit the
+`beading()` early-return because `store_node_beadings` (`segments.rs:31`, upstream
+`storeNodeBeadings` `:1470`) already set `beading` = `compute(dist·2, bc)` /
+`interpolate_beading(lower,1-ratio,higher)`. ares `OSTORE` dumps:
+- `dist=588458 bc=3 w=[407079, 362758, 407079]` — middle bead 362758/362756
+- `dist=193313 bc=1 w=[386626]`, `dist=178852 bc=1 w=[357704]`, `dist=152660 bc=1 w=[340000]`
+The `;WIDTH:0.405676`↔`w=362756` is the MIDDLE bead of the 3-bead `dist=588458` node;
+oracle junction `w=407079` is the OUTER bead (`bead_widths[0]`/`[2]`). So the
+divergence is `junction_index`/`toolpath_locations` selection in
+`junctions.rs:224-265` (`generateEdgeBeading`), not the beading values — ares picks
+the middle bead (362756) where oracle picks the outer (407079). Awaiting storeprobe
+oracle OSTORE to confirm bc/dist parity, then compare junction_index selection.
