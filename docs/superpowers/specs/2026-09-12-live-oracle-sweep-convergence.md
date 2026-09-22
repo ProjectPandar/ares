@@ -4746,3 +4746,15 @@ vs `clipper.cpp`). Same residual class as the fill-line `intersection_position` 
 exact): the contour VERTEX feeding it, not the intersection or dedup. Deepest residual —
 single-unit Clipper-offset corner; needs an `inner`-contour vertex dump vs oracle
 `poly_with_offset.polygons_outer` to isolate the divergent `do_miter` corner.
+
+### lxxv. raft residual — borderline edge fill line in the sheath fill region (post-437955cc)
+Isolated a structural diff beyond the 1-ulp endpoints: ares emits a spurious
+right-edge zigzag `X118.601 Y117.537` the oracle does not — oracle ends the sheath
+at `X118.901` and retracts. The line is inside ares's `offset(closing,-0.4·spacing)`
+fill region (~`118.60`) but outside oracle's by a sub-µm boundary — the same
+`closing`/`do_miter` chamfer-corner 1-unit class feeding a borderline fill-line
+INCLUSION (not a connect-graph or ordering bug). Ported `make_fill_lines`'s
+`x_margin = line_width + SCALED_EPSILON` culling (`FillRectilinear.cpp:2924-2925`)
+for the perimeter-overlap edge case — faithful port, does not change this case's
+borderline inclusion. Residual remains the `offset`/`closing` vertex precision at
+the fill-region edge.
