@@ -4783,3 +4783,20 @@ round. `X114.02`/`Y105.98` (4.02mm from centre) is NOT the sheath inner octagon
 segment a fill line lands on at a shared x. Needs oracle `support_fills` polyline
 dump to pin the exact contour/segment. Structural `X118.601` is the sheath-adjacent
 `emit_loops_in_band`/`take_next` coverage edge (upstream `FillBase.cpp:1955,2280-2420`).
+
+### lxxviii. raft residual — inner-contour do_miter chamfer vertices ~4-15 units off (post-bcb98cdf)
+Built oracle probe `/tmp/filldump.nix` dumping `connect_base_support`'s `polylines_out`
+(`ORCA_DUMP_CONNECT`, `FillBase.cpp` final-assembly tail). Aligned ares `ARES_CONN_DUMP`
+(pre-rotate). Oracle connect extents `{7482048×49, 10443907×25, 10443896×24, 8601200,
+9874100}`; ares `{8601213×2, 7482046×98, 10443915×100}` — ares runs connect 2×
+(gcode + skirt-hull `occupied`, wasteful but output-identical; could dedupe).
+Root cause pinned: the flange `inner` contour (`offset(fill_region,-0.5·spacing)`)
+**chamfer vertices differ ~4-15 units** — oracle `8601200,-7751459 / 8379540,-7973119 /
+7960563,8392081` vs ares `8601213,-7751455 / 8379540,-7973128 / 7960563,-8392096`.
+`inner_offset` is correct (`-0.5·first_layer_flow_spacing=188539`, `spacing=0.377`=
+`0.42-0.2·(1-0.25π)`); the diff is `ClipperOffset` `do_miter` corner math producing
+vertices a few units off — the cascaded ~3100-line residual is these few shared
+vertices fanning into every zigzag arch endpoint. Also oracle emits a `9874100`
+support connect (idx 127332, `PL n=79`) ares does not produce — one support layer's
+`connect_base_support` yields empty in ares. Next: oracle `inner`-contour vertex dump
+vs ares `offset_expolygons` `do_miter` to isolate the corner formula.

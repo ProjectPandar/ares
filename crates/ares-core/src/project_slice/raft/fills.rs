@@ -90,6 +90,16 @@ pub(crate) fn raft_layer_polylines(
         .iter()
         .map(|expolygon| expolygon.contour().clone())
         .collect::<Vec<_>>();
+    if std::env::var("ARES_INNER_CONTOUR").is_ok() {
+        for (i, e) in closing.iter().enumerate() {
+            let xs = e.contour().points().iter().map(|p| p.x());
+            eprintln!("CLOSING {i} x={}..{}", xs.clone().min().unwrap_or(0), xs.max().unwrap_or(0));
+        }
+        for (i, e) in fill_region.iter().enumerate() {
+            let xs = e.contour().points().iter().map(|p| p.x());
+            eprintln!("FILLREG {i} x={}..{}", xs.clone().min().unwrap_or(0), xs.max().unwrap_or(0));
+        }
+    }
     out.extend(raft_layer_fill(
         &fill_polygons,
         spec,
@@ -175,7 +185,8 @@ pub(crate) fn raft_layer_fill(
             .collect();
         if std::env::var("ARES_INNER_CONTOUR").is_ok() {
             for (bi, b) in boundary.iter().enumerate() {
-                eprintln!("INNER {bi} n={}", b.points().len());
+                let xs = b.points().iter().map(|p| p.x());
+                eprintln!("INNER {bi} n={} x={}..{}", b.points().len(), xs.clone().min().unwrap_or(0), xs.max().unwrap_or(0));
             }
         }
         if boundary.is_empty() {
@@ -241,6 +252,19 @@ pub(crate) fn raft_layer_fill(
             spec.density,
             scale,
         )?;
+        if std::env::var("ARES_CONN_DUMP").is_ok() {
+            eprintln!("CONN n={}", connected.len());
+            for p in &connected {
+                let pts = p
+                    .points()
+                    .iter()
+                    .map(|pt| format!("{},{}", pt.x(), pt.y()))
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                eprintln!("PL n={} {}", p.points().len(), pts);
+            }
+            eprintln!("CONNEND");
+        }
         #[allow(unused_variables)]
         if std::env::var("ARES_RAFT_DEBUG").is_ok() {
             eprintln!(
