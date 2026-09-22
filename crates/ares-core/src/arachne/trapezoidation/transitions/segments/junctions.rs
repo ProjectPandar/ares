@@ -89,6 +89,25 @@ impl SkeletalTrapezoidation<'_> {
         force_new_path: bool,
         passed_odd_edges: &mut HashSet<EdgeId>,
     ) {
+        if let Ok(path) = std::env::var("ARES_DUMP_QUAD") {
+            let qs = self.graph.edge(quad_start);
+            let _ = std::fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(&path)
+                .and_then(|mut f| {
+                    use std::io::Write;
+                    let fp = qs.from.map(|n| self.graph.node(n).point);
+                    let tp = qs.to.map(|n| self.graph.node(n).point);
+                    writeln!(
+                        f,
+                        "OQUAD qs_from={:?} qs_to={:?} fnew={}",
+                        fp.map(|p| (p.x(), p.y())),
+                        tp.map(|p| (p.x(), p.y())),
+                        force_new_path
+                    )
+                });
+        }
         let sides = self.quad_junction_sides(quad_start);
         assert!(sides.from.len().abs_diff(sides.to.len()) <= 1);
         let segment_count = sides.from.len().min(sides.to.len());
