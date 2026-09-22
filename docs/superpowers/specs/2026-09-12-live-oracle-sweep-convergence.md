@@ -4580,3 +4580,22 @@ resolution changes → different corner quantization (rounded vs chamfered). Nex
 dump upstream `grid_resolution`/`m_pixel_size` for the raft contact (probe at
 `SupportMaterial.cpp:620`/`extract_support` `:735`) and the raw `contact_polygons`
 to compare the lattice-resolution corner handling vertex-for-vertex.
+
+#### raft contact = AGG rasterizer, not EdgeGrid SDF (lxiv — root cause)
+
+**Confirmed the real divergence**: `SUPPORT_USE_AGG_RASTERIZER` is `#define`d at
+`SupportMaterial.cpp:21`, so `extract_support` (`:751-760`) uses the **AGG
+scanline-AA rasterizer** path — `rasterize_polygons` → `m_grid2` (gray8 coverage
+bytes) → `contours_simplified` (`:204`, the *static* grid-walk version, NOT the
+EdgeGrid `m_grid.contours_simplified`) — plus `seed_fill_block` (`:1001`) and
+`dilate_trimming_region` (`:980`) macro-block propagation. ares instead ported
+`EdgeGrid::contours_simplified` (`edge_grid/simplify.rs`, the `#else` branch),
+which produces rounded SDF corners where the AGG path produces grid-aligned
+chamfered corners. That is exactly the raft contact outline divergence.
+
+Fix = port the AGG path: `rasterize_polygons` (anti-aliased gray8 coverage —
+`!= 0` means any partial coverage), `seed_fill_block`, `dilate_trimming_region`,
+the `oversampling` macro-block sizing (`:676-684`), and the simple
+`contours_simplified` (`:204-330`). ares has no scanline-AA rasterizer; this is
+a real port, and it affects all `extract_support` consumers (raft + support),
+not just raft. See `fill`/`support_grid` for the seam.
