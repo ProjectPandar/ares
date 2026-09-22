@@ -5050,3 +5050,16 @@ extrusions are a `generateSegments`/`to_thick_polyline` ASSEMBLY divergence: whi
 junctions connect into which `ExtrusionLine`, upward/downward edge traversal, or
 `connectJunctions`/`connectLines`/`addToPolyline`. Next: compare the ExtrusionLine
 count/segment connectivity, not the widths.
+
+### xcvii. ExtrusionLine COUNTS differ — generateSegments edge-grouping divergence
+ARESCI vs OTHICK on case-OxtTzz (identical bead_widths, OSTORE byte-match):
+| width/closed | ares | oracle |
+| 362758 open n=4 | 5 | 4 |
+| 386624 open n=4 | 5 | 3 |
+| 386626 open n=4 | 4 | 2 |
+| 407079 closed n=4 | 5 | 9 |
+| 13-pt loop | 1 | 1 |
+ares emits MORE open sliver segments (386624/386626/362758) and FEWER closed
+407079 loops. bead_widths are identical, so `generateSegments`' edge→ExtrusionLine
+traversal groups edges differently — ares breaks the closed 407079 loops into
+extra open sliver segments. Next: `generateSegments`/`walk_edge`/loop-closure.
