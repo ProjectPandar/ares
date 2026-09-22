@@ -5276,3 +5276,16 @@ upstream, `take_next` pairs different infill lines → same endpoints but a
 different chain topology → different per-segment E. NEXT MILESTONE: match
 upstream's boundary-intersection ordering (the order intersections are
 recorded per contour in `FillRectilinear`/`graph build`).
+
+### cxiv. zigzag residual narrowed to connect_t_joints sort tie-break
+`link_zigzag`/`close_left_caps`/`take_next`/`append_limited` all verified
+structurally faithful (iteration = endpoint_index order, `index^1` other-end,
+per-vertex boundary emit). The remaining ~600-line divergence localizes to
+`connect_t_joints` (`FillBase.cpp:2625-2645`): upstream `std::sort` on
+`SupportArcCost*` by `cost` DESCENDING is UNSTABLE — equal-cost candidates
+reorder by libstdc++ introsort pointer movement. ares `sort_by` is STABLE,
+preserving index order on ties. Equal-cost T-joint ties therefore resolve in
+different order → different chains → same endpoints, different segmentation.
+FIX: emulate upstream sort order (either make cost strictly ordered by adding
+index tie-break matching upstream's pointer ordering, or reproduce the
+introsort permutation — needs a probe of upstream's actual sort output order).
