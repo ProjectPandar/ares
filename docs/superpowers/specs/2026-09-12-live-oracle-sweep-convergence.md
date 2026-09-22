@@ -4514,3 +4514,14 @@ Real content divergences remaining after M73 stripping (stripped-diff >2):
 `timelapse_type` is the only non-`no match` FAIL (oracle silent -102 /
 capability limitation). The dominant real divergence is `raft_layers` — the
 raft toolpath generator needs a focused fix pass, not the M73/feedrate class.
+
+### raft_layers divergence detail (lxiii follow-up)
+
+First raft difference is at the contact/support outline, not the infill: oracle
+emits `G1 X99.77 Y99.77` (square-ish corner) where ares emits
+`G1 X99.703 Y99.834` then a rounded-corner chain
+(`X100.432 Y99.18` → `X101.058 Y98.809` → …). The raft base polygon corner
+treatment differs — likely a different offset/join type or expansion radius in
+the raft outline generator (`project_slice/raft/`). Each `;TYPE:Support` raft
+section runs ~60-70 lines longer in ares. Fix the raft outline corner/offset
+first; the R-value 2-min overestimate is downstream of the longer toolpath.
