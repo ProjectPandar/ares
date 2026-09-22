@@ -5085,3 +5085,17 @@ faithful (incl `!isCentral` check and `canGoUp(strict)`). So the skeletal GRAPH 
 extra local-max nodes — a trapezoidation construction divergence upstream of
 beading (update_is_central / filterCentral / generateTransitionEnd / isEndOfCentral
 edge flags, or voronoi node set). Next: dump per-node isLocalMaximum/isCentral.
+
+### c. Single force_new_path divergence → quad domain boundary
+`OSEG` (addToolpathSegment) oracle↔ares are byte-identical except ONE segment:
+`f=3942611,-3942607,357704 t=3816144,-3968799,340000 odd=1` — ares `fnew=1 nlines=0`
+(domain start, empty lines[inset]), oracle `fnew=0` (appended to existing line).
+So `bead_widths`/`dist`/`junction points`/`is_odd`/`3way` ALL match; the divergence
+is the `connectJunctions` domain walk — `quad_start`/`getNextUnconnected`/`next->twin`
+quad chaining produces a different domain boundary, so ares starts a new ExtrusionLine
+where oracle continues the previous one → the extra `;WIDTH` open slivers + cooling-F.
+`connect_junction_domain`/`DenseEdgeSet`/`next_unconnected`/`add_toolpath_segment`
+verified faithful; the residual is the quad `next`/`prev`/`twin` topology —
+`transferEdge`/`makeRib`/`insertRib`/`connectTwins`/`collapseSmallEdges` linking
+produces a slightly different quad chain for this corner. NEXT: dump the
+quad_start→quad_end→next_unconnected chain per domain to find the topology diff.
