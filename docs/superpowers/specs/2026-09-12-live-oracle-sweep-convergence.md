@@ -4652,3 +4652,17 @@ fill endpoints produce matching rounded hulls (byte-identical); for `max`/
 where oracle's reach the chamfer corners. Root: raft fill endpoint placement /
 `connect_base_support` boundary tracing near corners for the base/interface
 layer fills.
+
+#### raft fill endpoints → rounded skirt hull (lxviii)
+
+`raft_layers/max`/`seeded` residual (~3.8-4.1k stripped lines): the skirt hull
+`convex_hull(occupied)` is a 20-vertex rounded rect in ares vs oracle's
+chamfered square (2 intermediate verts per `jtRound` corner). `occupied`
+includes raft `support_fills.collect_points` = fill `polyline.points`
+(`ExtrusionEntity.hpp:290`). For `raft_layers/min` the fill endpoints produce
+a matching rounded hull (skirt byte-identical); for `max`/`seeded` the
+base/interface-layer fills' endpoints near the chamfered corners differ — ares
+traces a rounded boundary arc where oracle's fill reaches the chamfer corners.
+Root is `connect_base_support` (`FillBase.cpp:2247`) boundary/arch emission
+near corners for the base/interface fills — needs a fill-polyline oracle dump
+(`ORCA_DUMP_FILL`-style on the raft `support_fills`) to align.
