@@ -4397,3 +4397,16 @@ Full sweep now reports 459/650 bounded domains complete (was 452). 52 FAILs:
 
 INCOMPLETE rows (~139) are mostly multi-value/string/point domains that never
 received provably-legal coverage — not failures, just uncovered.
+
+## nozzle_volume_type + scalar-array tolerance (2026-09-22 lviii)
+
+- `nozzle_volume_type` non-Standard on a single-filament print now collapses
+  `flush_volumes_matrix` to `[0]` — upstream recomputes the matrix and resizes
+  it to `filament_count^2 * extruder_count` zeros when `nozzle_volume_type`
+  changes (OrcaSlicer.cpp:3351 trigger, :3429 resize). Byte-identical for
+  `nozzle_volume_type=High Flow`.
+- `print_flow_ratio` (and every scalar `OrcaFloat`/`Millimeters`) now tolerates
+  the GUI's single-element-array storage (`["0.9"]`) — `FloatVisitor::visit_seq`
+  unwraps element 0, matching `ConfigOptionFloat::deserialize`. Ares previously
+  rejected sequences; Orca accepts and uses the element. Empty arrays still
+  reject (matches upstream). This unblocks the whole scalar-as-array sweep class.

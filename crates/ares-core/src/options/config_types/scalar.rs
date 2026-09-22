@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
-    de::{Error, IntoDeserializer, Visitor},
+    de::{Error, IntoDeserializer, SeqAccess, Visitor},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -66,6 +66,19 @@ impl<'de> Deserialize<'de> for OrcaFloat {
                     .parse::<f64>()
                     .map_err(E::custom)
                     .and_then(|value| self.visit_f64(value))
+            }
+
+            // Orca's scalar `ConfigOptionFloat::deserialize` tolerates a
+            // single-element array (`["0.9"]`) by unwrapping the first
+            // element; projects written by the GUI store some scalar keys
+            // as one-element lists.
+            fn visit_seq<A>(self, mut sequence: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                sequence
+                    .next_element::<OrcaFloat>()?
+                    .ok_or_else(|| A::Error::custom("expected a finite Orca float"))
             }
         }
 
