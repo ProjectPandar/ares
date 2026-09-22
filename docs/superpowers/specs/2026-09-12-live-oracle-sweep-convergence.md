@@ -5040,3 +5040,13 @@ divergence is `junction_index`/`toolpath_locations` selection in
 `junctions.rs:224-265` (`generateEdgeBeading`), not the beading values — ares picks
 the middle bead (362756) where oracle picks the outer (407079). Awaiting storeprobe
 oracle OSTORE to confirm bc/dist parity, then compare junction_index selection.
+
+### xcvi. OSTORE beading byte-identical — divergence is segment/polyline assembly
+storeprobe oracle `OSTORE` == ares `OSTORE` byte-for-byte: `dist=588458 bc=3
+w=[407079,362758,407079]`, `193313→386626`, `178852→357704`, `152660→340000`,
+`153817→340000` — `beading`/`compute`/`interpolate_beading`/`junction_index` all
+correct. So `bead_widths` are identical; the extra `;WIDTH:0.405676/0.429544`
+extrusions are a `generateSegments`/`to_thick_polyline` ASSEMBLY divergence: which
+junctions connect into which `ExtrusionLine`, upward/downward edge traversal, or
+`connectJunctions`/`connectLines`/`addToPolyline`. Next: compare the ExtrusionLine
+count/segment connectivity, not the widths.
