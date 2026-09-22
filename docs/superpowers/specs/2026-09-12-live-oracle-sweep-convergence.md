@@ -4538,3 +4538,19 @@ slightly different. Also ares drops the `M73 P2 R30` that oracle emits after
 `G1 Z.6`/`G1 Z.2` before `;TYPE:Skirt` — a separate M73 boundary placement on
 the raft layer. Trace `raft::bridge::build_project_raft` fill points vs the
 oracle raft outline to find the corner delta.
+
+#### raft contact outline corner shape (lxiii follow-up 3)
+
+Root cause narrowed further: the raft **contact outline** (`SupportGridPattern::
+extract_support` → `EdgeGrid::contours_simplified` marching-squares SDF) emits
+**rounded/octagonal** corners (ares `X100.639…X119.361`, multi-step) while oracle
+emits a **chamfered rectangle** (`X101.059…X118.941`, single 45° corner cut).
+ares's contact is ~0.42mm larger AND rounded. `RAFTPOLY` debug shows ares
+contact half-extent ±7150601 (7.15mm) — but oracle contact is ~±8.94mm, so the
+ares raft contact is actually *smaller* than oracle in X-extent while the gcode
+outline extends further — the discrepancy is the corner geometry, not the
+extent: oracle chamfers the corner (removes the rounded bulge), ares keeps a
+rounded outline that pokes past the chamfer line. The `extract_support` SDF
+corner-shrink / marching-squares corner pick (`edge_grid/simplify.rs`,
+`EdgeGrid.cpp:1283-1400`) or the `raft_expansion` `expand` join path needs an
+oracle contact-polygon dump to align.
