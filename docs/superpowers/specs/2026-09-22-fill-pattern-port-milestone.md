@@ -116,3 +116,38 @@ upstream dispatches `line` to (check `Fill::new_from_type` — `line` may map to
 to keep the honest `unsupported` rejection; do not re-add `fill/line.rs` without
 a `FillLine` oracle probe (`ARES_DUMP_*` or a C++ dump of `_fill_surface_single`
 polylines) to diff the raw segment list. Rejected beats wrong.
+
+## extract_support AGG rasterizer port (raft + support) — 2026-09-22
+
+`SupportGridPattern::extract_support` upstream uses the **AGG scanline-AA
+rasterizer** (`SUPPORT_USE_AGG_RASTERIZER` defined at `SupportMaterial.cpp:21`),
+not the EdgeGrid SDF ares ported (`geometry/edge_grid/simplify.rs`). This is the
+`raft_layers` contact-outline divergence (rounded vs chamfered) AND likely
+affects every support/`extract_support` consumer.
+
+Upstream pieces to port (`SupportMaterial.cpp`):
+- `rasterize_polygons` (`:169-203`): AGG `rasterizer_scanline_aa` + `pixfmt_gray8`
+  → gray8 coverage byte grid; `cell_inside` = `byte != 0` (any coverage).
+- Grid setup (`:668-684`): `m_pixel_size = max(extrusion_width_scaled + 21,
+  scale_(support_spacing/oversampling))`, `oversampling =
+  clamp(scale_(support_spacing)/(extrusion_width_scaled+100), 1, 8)`, bbox
+  `offset(20)`+`align_to_grid`+`offset(m_pixel_size)`, `grid_blocks` macro cells,
+  `m_grid_size = grid_blocks*oversampling + (2,2)`.
+- `dilate_trimming_region` (`:980`): 8-neighborhood AND across 3 rows.
+- `seed_fill_block` (`:1001`): per-(oversampling×oversampling)-block flood
+  propagation up to the dilated trimming mask.
+- `contours_simplified` (`:204-330`): the *static* grid-walk version —
+  `cell_inside` from the byte grid, marching-squares line collect, chain via
+  `start_point_to_line_idx` sorted set, corner pick on `cross > 0`, scale back
+  `p *= pixel_size; p += left_bottom`, then corner-shrink `offset` and
+  collinear-point drop.
+
+Destination: a new `geometry/agg_raster.rs` (or `support_grid` raster variant)
+providing `rasterize`/`seed_fill_block`/`dilate_trimming_region`/
+`contours_simplified`, then switch `SupportGridPattern::new`/`extract_support`
+(`geometry/support_grid.rs`) to the AGG path. The EdgeGrid SDF port stays for
+any non-support consumers; verify which path each caller needs.
+
+The AGG anti-aliased coverage (`scanline_aa`) is the hard part — coverage must
+match `!= 0` semantics for partial cells. A byte-exact port needs AGG's exact
+subpixel coverage, not a point-in-polygon test.
