@@ -4979,3 +4979,17 @@ the divergence is `ConcentricInternal`/`generate_thick_polylines` (Arachne WallT
 emitting 2-point slivers at slightly-different medial widths (0.405676 vs 0.405678, 2nm) and
 on layers oracle emits normal-width. The medial-axis bead-width f32/segmentation detail is
 the next port-verify slice — split/is_valid/clip_end are all confirmed faithful.
+
+### xcii. narrow-region geometry confirmed byte-exact — divergence is Arachne medial width
+Oracle `splitprobe2.nix` `OFINAL` dump proves `split_solid_surface` produces IDENTICAL
+regions: oracle `normal=1 narrow=2` on 9 layers + `narrow=1` on 1 == ares `SPLITOUT
+normal=1 FINAL narrow=2`/`narrow=1`. The diff is the FILL of those regions: ares's
+`ConcentricInternal`/`generate_thick_polylines` (Arachne `WallToolPaths`) emits the
+corner sliver `X113.488→X113.558` at `WIDTH:0.405676` on the BOTTOM layers (Z=0.4)
+where oracle emits a normal `WIDTH:0.449999` diagonal covering the same area. Both
+have `narrow=2`; the Arachne medial bead-width on the narrow corner triangle yields a
+`0.405676` sliver in ares vs a `0.45`-width normal-width loop in oracle — a
+WallToolPaths width/segmentation precision diff, not a split or is_valid/clip_end bug.
+This is the deepest remaining per-layer divergence (drives the WIDTH-count + cooling-F
+knock-on across crosshatch/zigzag/monotonic cases). Requires an Arachne
+`WallToolPaths`/`ExtrusionLine` width probe — `width` is `coordf_t` (f64) upstream.
