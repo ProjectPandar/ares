@@ -13,9 +13,33 @@ impl SkeletalTrapezoidation<'_> {
                 continue;
             };
             let beading = beading_storage.borrow();
+            let is_max = self.graph.node_is_local_maximum(node, true);
+            let is_central = self.graph.node_is_central(node);
+            if let Ok(path) = std::env::var("ARES_DUMP_LMAX") {
+                let node_ref = self.graph.node(node);
+                let _ = std::fs::OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(&path)
+                    .and_then(|mut f| {
+                        use std::io::Write;
+                        writeln!(
+                            f,
+                            "OLMAX p={},{} dist={} bc={} max={} cen={} wl={} emit={}",
+                            node_ref.point.x(),
+                            node_ref.point.y(),
+                            node_ref.data.distance_to_boundary,
+                            node_ref.data.bead_count,
+                            is_max,
+                            is_central,
+                            beading.beading.bead_widths.len(),
+                            beading.beading.bead_widths.len() % 2 == 1 && is_max && !is_central
+                        )
+                    });
+            }
             if beading.beading.bead_widths.len() % 2 == 0
-                || !self.graph.node_is_local_maximum(node, true)
-                || self.graph.node_is_central(node)
+                || !is_max
+                || is_central
             {
                 continue;
             }
