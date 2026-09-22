@@ -51,3 +51,31 @@ density), and the wipe/retract chain differs. The `append_configured` surface
 concentric path does not carry the sparse-density semantics. A correct port
 needs the sparse `_fill_surface_single` spacing/density path, not just the
 anchor-projection plumbing — reverted to the honest `unsupported` rejection.
+
+## FillLine port prerequisites (2026-09-22)
+
+`FillLine::_fill_surface_single` (FillLine.cpp:38) is the simplest remaining
+fill generator but needs geometry primitives that do not yet exist in
+`ares-core::geometry`:
+- `ExPolygon::rotate(angle, Point center)` — rotate contour+holes.
+- `Polygon::bounding_box()` — the rotated outer-contour bbox.
+- `ExPolygon` → `Polygons` extraction (`affine_transform`/`out`).
+- `intersection_ln(Lines, Polygon)` — clip open lines to a polygon.
+- `offset(Polygon, delta) → Polygons` — polygon (not expolygon) offset.
+- `ExPolygon::contains(Line)` — does the expolygon fully contain a segment.
+
+Upstream flow: rotate expolygon so infill is vertical → shrink the rotated
+outer contour by `min_spacing` → build the bounding box → `intersection_ln` a
+vertical `Lines` grid against the shrunk contour (with `x0` centered on the
+bbox and `scale_(params.reference_point)` for the `center_infill` anchor
+exactly like the rectilinear/monotonic anchor) → un-rotate each surviving
+segment → drop any segment whose line is not contained in the original
+expolygon → extend endpoints by `min_length/2` → `_can_connect` chain.
+
+The `_fill_surface_single` returns a `ThickPolyline` per run of connected
+vertical segments; `line.zigzag`/`line` reuse the existing
+`fill::checked_rotate` helpers for the point rotations, but the polygon-level
+rotate/bbox/offset/intersection_ln/contains primitives must be ported first.
+The existing `rectilinear::prepare_rectilinear_contours` produces
+`MonotonicRegion`s, not raw `Lines`, so it cannot be reused for the raw
+segment list `FillLine` consumes.
