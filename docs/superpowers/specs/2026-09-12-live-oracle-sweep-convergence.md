@@ -4844,3 +4844,15 @@ oracle's AGG scanline coverage is ~1px asymmetric (`extract_support`→
 cascade). `contours_simplified` scaling `(gx*pixel_size)+left_bottom` truncating
 cast verified faithful (`:303-307`). Residual = AGG rasterizer subpixel scanline
 coverage asymmetry — deepest primitive; byte-exact AGG is the remaining work.
+
+### lxxxii. raft residual — first_layer asymmetry is upstream input, not AGG (post-d8e98eff)
+`upscale`→`iround` (round-half-away, `agg_basics.h:188`) applied — faithful, no
+change (subpixel coords here don't hit `.5`). ares `first_layer` is symmetric
+`±9150585`/`±7979012`; oracle's is asymmetric `9150587/-9150572`, `7979014/-7978999`.
+Since `first_layer = expand(expand_square(contact,fine), first_inflate)` and the
+object footprint is symmetric, the asymmetry enters via the AGG `rasterizer_scanline_aa`
+scanline AA cell-coverage — oracle's `extract_support` raster of a symmetric polygon
+yields a ~1px asymmetric `contact`. ares's `agg_raster` `line()`/`sweep_scanline`
+cover/area accumulation is symmetric where oracle's is not. Residual = AGG
+scanline AA subpixel coverage asymmetry — the deepest primitive; the raft
+connect/offset/clipper layers above it are ALL byte-faithful Clipper1.

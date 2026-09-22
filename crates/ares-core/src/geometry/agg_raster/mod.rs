@@ -27,8 +27,13 @@ pub(super) const AA_MASK: i32 = (1 << AA_SHIFT) - 1;
 pub(super) const DX_LIMIT: i64 = 16384 << SUBPIXEL_SHIFT;
 
 /// `iround` (`agg_basics.h:131`): round-half-away to the subpixel grid.
+/// `ras_conv_int::upscale` (`agg_rasterizer_sl_clip.h:38`) =
+/// `iround(v * poly_subpixel_scale)`, where `iround` (`agg_basics.h:188`) is
+/// `int(v < 0 ? v - 0.5 : v + 0.5)` — round-half-AWAY-from-zero, not
+/// `+0.5 floor` (which truncates negative halves toward zero).
 pub(super) fn upscale(v: f64) -> i32 {
-    (v * SUBPIXEL_SCALE as f64 + 0.5) as i32
+    let scaled = v * SUBPIXEL_SCALE as f64;
+    (if scaled < 0.0 { scaled - 0.5 } else { scaled + 0.5 }) as i32
 }
 fn calculate_alpha(area: i64) -> i64 {
     let mut cover = area >> ((SUBPIXEL_SHIFT * 2 + 1) - AA_SHIFT);
