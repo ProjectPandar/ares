@@ -5433,3 +5433,21 @@ NEXT: `first_layer_flow`/`filler_support` spacing for raft layer-0 should be
 `line_width`-derived (0.45), not `initial_layer_line_width` (0.42→0.377) —
 the 1st-layer support flow width chain resolves differently than ares's
 `first_layer_width` (which uses `initial_layer_line_width`).
+
+### cxxv. spacing=0.407 = line_width — but spec.spacing conflation
+The raft BASE connect calls get `spacing=0.407080` = `line_width`(0.45)
+(`spacing(0.45,0.2)`). ares uses `support_flow_spacing_mm`=0.337 for the base
+`spec.spacing`. Setting base `spec.spacing`=`connect_spacing`=0.407 made the
+diff WORSE (8227 vs 3609) because `spec.spacing` feeds `inner_offset`,
+`line_spacing`(=`spacing/density`), and `x_margin` — all shift the zigzag
+geometry, not just the connect. Upstream `FillSupportBase::fill_surface`
+computes `line_spacing = scale_(this->spacing)/density` AND passes
+`this->spacing` to `connect_base_support` — so `this->spacing`=0.407 for base
+would change `line_spacing` too. Since oracle's base geometry matched ares's
+0.337-spacing better, upstream's `line_spacing` uses 0.337 while the connect
+`spacing` arg is 0.407 — meaning `FillSupportBase` splits `line_spacing` from
+`this->spacing`, OR the connect `spacing` is `filler->spacing` post-modified.
+NEXT: dump `line_spacing` (the zigzag pitch) in oracle `FillSupportBase` for
+the base layer vs the `spacing` passed to connect — if they differ, ares's
+`spec.spacing` must split into `line_spacing` (0.337) and `connect_spacing`
+(0.407).
