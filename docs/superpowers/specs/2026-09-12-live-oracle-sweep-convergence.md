@@ -5063,3 +5063,12 @@ ares emits MORE open sliver segments (386624/386626/362758) and FEWER closed
 407079 loops. bead_widths are identical, so `generateSegments`' edge→ExtrusionLine
 traversal groups edges differently — ares breaks the closed 407079 loops into
 extra open sliver segments. Next: `generateSegments`/`walk_edge`/loop-closure.
+
+### xcviii. toolpath_locations/beading fully identical → segment GRAPH traversal diverges
+ares `OSTORE loc` for bc=3 node = `[203539, 588458, 973377]` (bead radii); w/loc/dist/bc
+all byte-match oracle. `add_toolpath_segment` (`toolpaths.rs`) verified faithful to
+upstream `addToolpathSegment` (`:1887-1931`, both `from`-join and `to`-reversal
+branches). So the extra `;WIDTH:0.405678/0.429544` open segments are from
+`generateSegments`/`connectJunctions`/`connectQuadJunctions` — the quad-start edge
+walk (`connectJunctions` `:1934+`, `generateQuadStart`/`generateTransitionEnd`) that
+emits different per-edge junction sets / segment groupings, not the beading values.

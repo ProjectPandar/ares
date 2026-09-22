@@ -54,13 +54,14 @@ impl SkeletalTrapezoidation<'_> {
                         use std::io::Write;
                         write!(
                             f,
-                            "OSTORE p={},{} dist={} bc={} ratio={} w={:?}\n",
+                            "OSTORE p={},{} dist={} bc={} ratio={} w={:?} loc={:?}\n",
                             node_ref.point.x(),
                             node_ref.point.y(),
                             data.distance_to_boundary,
                             data.bead_count,
                             data.transition_ratio,
-                            beading.bead_widths
+                            beading.bead_widths,
+                            beading.toolpath_locations
                         )
                     });
             }
