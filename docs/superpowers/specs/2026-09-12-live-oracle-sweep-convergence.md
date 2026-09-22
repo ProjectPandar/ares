@@ -5375,3 +5375,16 @@ filler spacing is overwritten between `:1722` and the connect call. NEXT:
 probe `filler->spacing` (not `flow.spacing()`) right before
 `fill_expolygons_with_sheath_generate_paths` — the Flow-vs-Fill `spacing`
 distinction is the gap. ares uses `support_line_width`-derived spacing.
+
+### cxxi. spacing resolution — connect gets this->spacing = filler->spacing
+ORCA_FS probe (this->spacing at FillSupportBase::fill_surface) shows
+`0.337080`/`0.377080` — the RAFT interface connect spacing IS 0.337 (matches
+ares). So the `infill=3 spacing=0.407` connect_base_support calls are NOT raft
+interface — `connect_base_support` is called ONLY at FillRectilinear.cpp:3623
+(FillSupportBase). The 0.407 calls with infill=3 are therefore a DIFFERENT
+connect_base_support caller OR FillSupportBase on a different surface
+(object-level support infill). ares emits NO such calls → the ~600 diff is
+MISSING connect calls (ares doesn't route some ipSupportBase fill through
+connect_base_support), not a spacing bug. NEXT: which surfaces route to
+FillSupportBase vs connect_infill — ares's sparse/support routing is missing
+the ipSupportBase→connect_base_support path for the object infill region.
