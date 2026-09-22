@@ -5313,3 +5313,22 @@ dump per-chain topology. NEXT: per-`take_next` decision trace — dump
 (cp1,cp2,consumed,merged) at each take on both sides, find first divergent
 pairing. Likely in select_support_arches cost ordering or connect_t_joints
 unstable-sort order.
+
+### cxvii. connect trace — call-count parity, chain inventory diverges
+Built paired traces: oracle `connprobe`/`takeprobe` (ORCA_DUMP_CONN/
+ORCA_TAKE_TRACE — global `cn` counter, NOT per-call reset) + ares
+ARES_CONN_DUMP/ARES_TAKE_TRACE. Findings:
+- `union_ex` returns **1 expolygon per raft layer** (expolygons=1 in=1) —
+  no island-splitting. Connect invoked once per fill.
+- ares chain inventory `n=64`(76)+`n=86`(80); oracle `n=64`+`n=86`+`n=88`+`n=79`
+  — ares produces n=86 where oracle has n=86 AND n=79/88 variants. Same
+  endpoints, different internal vertex count → chain pairing diverges.
+- `could_take_*` gate on `vertical_dir` added+reverted (no effect). Base-vs-
+  interface `ipSupportBase`/`ipRectilinear` pattern gating made diff WORSE
+  (reverted — raft layers route to connect regardless of the pattern field
+  in this port).
+- Residual = connect_base_support chain PAIRING (which cp connects to which)
+  — needs aligned per-take_next cp-index trace diff; `TAKE cp1=`/`cp2=`
+  sequences differ in structure between ares (processes many cps/call) and
+  oracle (repeats low cp indices per call), suggesting ares groups more
+  infill ends into a single connect call's boundary set.
