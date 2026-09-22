@@ -4993,3 +4993,19 @@ WallToolPaths width/segmentation precision diff, not a split or is_valid/clip_en
 This is the deepest remaining per-layer divergence (drives the WIDTH-count + cooling-F
 knock-on across crosshatch/zigzag/monotonic cases). Requires an Arachne
 `WallToolPaths`/`ExtrusionLine` width probe — `width` is `coordf_t` (f64) upstream.
+
+### xciii. Arachne medial junction width: oracle 407079 vs ares 362756 (dist2boundary/bead)
+`splitprobe2`/`arachneprobe` prove the `split_solid_surface` narrow regions are
+BYTE-IDENTICAL (`ONAR`==`FNARROW` corner triangles). The output `;WIDTH:0.405676`
+=`unscale(medial_w)+height*(1-π/4)` (`VariableWidth.cpp:38` `with_width`), so
+medial `w`=362756↔0.405676. Oracle `OTHICK` junction width = 407079 (≈optimal_width
+=spacing 0.407) — oracle's `SkeletalTrapezoidation` assigns the narrow corner's
+junction `w`=optimal_width; ares assigns 362756 (=region thickness via
+`WideningBeadingStrategy::compute` returning `thickness.max(min_output_width)`).
+Upstream `WideningBeadingStrategy::compute` (`WideningBeadingStrategy.cpp`) also
+returns `thickness` — so the divergence is NOT beading `compute` but the node
+`dist2boundary`/`radius`/`bead_count` feeding it: oracle's medial node `radius·2`
+=407079 (a `dist2boundary` reflecting optimal_width) vs ares's =362756. Next probe:
+`SkeletalTrapezoidation` `node.data.distance_to_boundary`/`bead_count` and
+`get_or_create_beading` `optimal_bead_count(distance*2)` / `compute(radius*2,count)`
+— the medial node's radius differs, so the bead width differs.
