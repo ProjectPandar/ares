@@ -64,3 +64,32 @@ On a 20-case random dual-fresh sample + targeted re-verification:
   strict byte comparator or add tolerances.
 - Option-coverage sweep (Boolean/Enum every value, Range min/max/interior)
   runs through `option_coverage/` against the live oracle.
+
+5. **lightning propagated-tree branch retention** (`case-IdM3Br`, layers 6-19).
+   After round-4 (`stable_sort_by` + `coord_t` width cast + `EPSILON` 1e-4),
+   propagated trees now retain children during `propagateToNextLayer`
+   (PROPAGATE debug: `children=1` most layers) and the tree roots propagate
+   continuously 42→6 (cur_roots=4). The residual: layers 6-19 emit **0**
+   sparse infill lines while oracle emits a steady 5-6/layer. Diagnosis: the
+   model shrinks going UP, so `overhang_per_layer` (shrunk infill minus the
+   *wider* layer above) is empty on those layers → `generateNewTrees` seeds
+   nothing; oracle's 5/layer therefore comes entirely from propagated-tree
+   branches retained by `realign`. Ares's `realign` lifts every child that
+   exits the shrunk outline into `rerooted_parts` and clears the parent's
+   `children`, and on a monotonically-shrinking outline *all* children exit →
+   the lifted roots arrive leaf-less (`C2LT children=[]`) → `convert_to_polylines`
+   emits 0. The divergence is inside `prune`/`straighten`/`realign` numerics —
+   upstream retains enough branch to emit ~5/layer. `prune` endpoint + `straighten`
+   single-child move + colinear-removal were verified faithful to
+   `TreeNode.cpp:313,235`; the remaining suspect is `realign`'s
+   `line_segment_polygons_intersection` threshold (`outline_locator.resolution()*2`)
+   vs upstream `TreeNode.cpp:196-228`, or `reconnectRoots` failing to re-ground
+   lifted parts back into the boundary where upstream keeps them attached.
+
+6. **detect_thin_wall** — CLOSED. `first_outer::thin_wall_offsets` extraction
+   (PerimeterGenerator.cpp:1251-1266) plumbed record-level through
+   onion→traversal→raw→chained and materialized in `traverse_loops` via
+   `gap_extrusion::variable_width::convert_paths` as `ExtrusionEntity::Path`
+   after the outermost frame (:231). Verified end-to-end on a 0.7mm thin-wall
+   plate → near-byte-identical to OrcaSlicer 2.4.2 (only generator-name +
+   one ±0.001mm skirt-travel coord differ).
