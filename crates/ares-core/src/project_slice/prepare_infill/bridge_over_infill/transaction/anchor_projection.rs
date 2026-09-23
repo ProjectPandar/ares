@@ -33,6 +33,7 @@ pub(super) fn validate(
             | ProcessInfillPattern::CrossZag
             | ProcessInfillPattern::LockedZag
             | ProcessInfillPattern::Concentric
+            | ProcessInfillPattern::Honeycomb
             | ProcessInfillPattern::HilbertCurve
             | ProcessInfillPattern::ArchimedeanChords
             | ProcessInfillPattern::OctagramSpiral

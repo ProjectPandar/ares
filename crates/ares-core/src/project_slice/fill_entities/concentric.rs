@@ -141,7 +141,57 @@ pub(super) fn append_configured(
         .ok_or_else(|| SliceError::InvalidInput("concentric spacing is out of range".into()))?;
     let params = fill.params;
     let kind = fill.representative.kind;
+    // `FillConcentric::_fill_surface_single` density dispatch
+    // (`FillConcentric.cpp:22`): the Arachne variable-width generator runs only
+    // at full density; below `density > 0.9999` upstream uses the plain
+    // `offset2_ex` ring loop emitting fixed-width `Polyline` entities.
+    let density_fraction = 0.01 * params.density;
+    let sparse = !(density_fraction > 0.9999 && !params.bridge);
     for expolygon in fill.expolygons {
+        if sparse {
+            let polylines = crate::fill::concentric_sparse::fill_concentric_sparse(
+                &expolygon,
+                params.spacing,
+                density_fraction,
+                params.multiline,
+                params.loop_clipping,
+                scale,
+            )
+            .map_err(geometry_error)?;
+            if polylines.is_empty() {
+                continue;
+            }
+            let flow = super::materialized_flow(params, params.spacing as f32);
+            let mut entities: Vec<FillExtrusionEntity> = polylines
+                .into_iter()
+                .map(|polyline| {
+                    FillExtrusionEntity::Path(super::FillExtrusionPath {
+                        polyline,
+                        fitting: Vec::new(),
+                        role: params.extrusion_role,
+                        mm3_per_mm: flow.mm3_per_mm,
+                        width: flow.width,
+                        height: flow.height,
+                    })
+                })
+                .collect();
+            super::gap_residual::append_residual(super::gap_residual::ResidualInput {
+                output_entities: &mut entities,
+                no_overlap_expolygons: &fill.no_overlap_expolygons,
+                params,
+                kind,
+                expolygon: &expolygon,
+                scale,
+            })?;
+            if !entities.is_empty() {
+                output.collections.push(FillExtrusionCollection {
+                    entities,
+                    no_sort: true,
+                    simplify_reversed: false,
+                });
+            }
+            continue;
+        }
         let generation_domains = offset_expolygon(
             &expolygon,
             ((params.overlap - 0.5 * params.spacing) / scale.factor()) as f32,

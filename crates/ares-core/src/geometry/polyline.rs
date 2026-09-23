@@ -36,6 +36,34 @@ impl Polyline {
     pub(crate) fn is_valid(&self) -> bool {
         self.points.len() >= 2
     }
+
+    /// `Polyline::clip_end` (`Polyline.cpp:50-68`) — removes `distance` from the
+    /// polyline tail, walking back whole segments and interpolating the final
+    /// partial segment with `.cast<coord_t>()` (truncation). Plain `Polyline`
+    /// carries no `fitting_result`, so the arc-clip bookkeeping is omitted.
+    pub(crate) fn clip_end(&mut self, mut distance: f64) {
+        while distance > 0.0 {
+            let Some(last_point) = self.points.last().copied() else {
+                return;
+            };
+            self.points.pop();
+            let Some(new_last) = self.points.last().copied() else {
+                return;
+            };
+            let vx = (new_last.x() - last_point.x()) as f64;
+            let vy = (new_last.y() - last_point.y()) as f64;
+            let lsqr = vx * vx + vy * vy;
+            if lsqr > distance * distance {
+                let t = distance / lsqr.sqrt();
+                self.points.push(Point::new(
+                    (last_point.x() as f64 + vx * t) as i64,
+                    (last_point.y() as f64 + vy * t) as i64,
+                ));
+                break;
+            }
+            distance -= lsqr.sqrt();
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]

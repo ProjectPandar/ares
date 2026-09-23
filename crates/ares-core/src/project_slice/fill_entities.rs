@@ -6,6 +6,7 @@ mod flow;
 mod gap_residual;
 mod grid;
 mod gyroid;
+mod honeycomb;
 mod ironing;
 mod monotonic;
 mod plane_path;
@@ -256,6 +257,9 @@ pub(in crate::project_slice) fn generate_layer(
             SurfaceFillPattern::Configured(ProcessInfillPattern::ThreeDHoneycomb) => {
                 three_d_honeycomb::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
+                honeycomb::append(&mut output, fill, traversal.scale)?;
+            }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear
                 | ProcessInfillPattern::AlignedRectilinear
@@ -275,6 +279,10 @@ pub(in crate::project_slice) fn generate_layer(
                     ExtrusionRole::TopSolidInfill
                         | ExtrusionRole::BottomSurface
                         | ExtrusionRole::SolidInfill
+                        // Sparse infill (sparse_infill_pattern=hilbertcurve/
+                        // archimedeanchords/octagramspiral) is InternalInfill
+                        // and must still emit the plane-path fill.
+                        | ExtrusionRole::InternalInfill
                 ) {
                     let object_bounding_box = *plane_path_bounding_box
                         .get_or_insert_with(|| plane_path_object_bounding_box(object_slices));

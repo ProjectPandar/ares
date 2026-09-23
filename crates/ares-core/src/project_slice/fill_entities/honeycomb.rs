@@ -1,0 +1,68 @@
+use crate::{
+    ProcessInfillPattern, SliceError,
+    fill::honeycomb::{HoneycombFillParams, fill_honeycomb},
+    geometry::CoordinateScale,
+    project_slice::group_fills::SurfaceFill,
+};
+
+use super::{
+    FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities,
+    geometry_error,
+};
+
+/// Emitted sparse fill for `ProcessInfillPattern::Honeycomb` — wraps
+/// `fill::honeycomb::fill_honeycomb` (port of `FillHoneycomb::_fill_surface_single`,
+/// which already runs `chain_or_connect_infill`).
+pub(super) fn append(
+    output: &mut LayerFillEntities,
+    fill: SurfaceFill,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    let params = HoneycombFillParams {
+        spacing: fill.params.spacing,
+        density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+        multiline: fill.params.multiline,
+        angle: fill.params.angle,
+        anchor_length: fill.params.anchor_length,
+        anchor_length_max: fill.params.anchor_length_max,
+    };
+    let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
+    let fill_params = fill.params;
+    let fill_kind = fill.representative.kind;
+    for expolygon in fill.expolygons {
+        let polylines = fill_honeycomb(&expolygon, params, scale).map_err(geometry_error)?;
+        if polylines.is_empty() {
+            continue;
+        }
+        let flow = super::materialized_flow(fill_params, fill_params.spacing as f32);
+        let mut entities: Vec<FillExtrusionEntity> = polylines
+            .iter()
+            .cloned()
+            .map(|polyline| {
+                FillExtrusionEntity::Path(FillExtrusionPath {
+                    polyline,
+                    fitting: Vec::new(),
+                    role: fill_params.extrusion_role,
+                    mm3_per_mm: flow.mm3_per_mm,
+                    width: flow.width,
+                    height: flow.height,
+                })
+            })
+            .collect();
+        super::gap_residual::append_residual(super::gap_residual::ResidualInput {
+            output_entities: &mut entities,
+            no_overlap_expolygons: &no_overlap_expolygons,
+            params: fill_params,
+            kind: fill_kind,
+            expolygon: &expolygon,
+            scale,
+        })?;
+        output.collections.push(FillExtrusionCollection {
+            entities,
+            no_sort: false,
+            simplify_reversed: false,
+        });
+    }
+    let _ = ProcessInfillPattern::Honeycomb;
+    Ok(())
+}
