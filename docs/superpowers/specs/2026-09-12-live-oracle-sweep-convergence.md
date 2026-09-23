@@ -6343,3 +6343,24 @@ the correct 8.94 sheath, so either (a) the flange emit path draws a separate
 from the `raft_polygons.first_layer` that fed the dump. NEXT: instrument the
 emitted sheath polyline at the `materialize_layer`→`FillExtrusionPath`→motion
 boundary to confirm whether `out[0]` (8.94) reaches the writer or is replaced.
+
+### clxxxvi. BOTH sweep sides stale — current binary fixes raft flange sheath
+**The stored `ares.gcode` is as stale as `orca.gcode`.** Re-slicing
+`case-n4acJn` with the CURRENT ares binary: `diff(current, stored_ares)=2362`.
+The flange sheath that appeared "emitted at +0.5·width" in §clxxxv is now
+BYTE-IDENTICAL to fresh oracle (`X118.941 Y117.892 E.485`) — the raft
+flange-sheath residual was an old-build artifact, already fixed in-tree.
+
+Current-binary vs fresh-oracle on `n4acJn`: total diff 3182 (was 4818 stale),
+non-M73 2929. Breakdown: ~614 ares lines share XY with an oracle line
+(E-rounding `E.04556`/`E.04557` last-digit + reordering), ~994 lines have no
+matching oracle XY (real geometry). The REAL residual on raft cases is now
+E-rounding last-digit + ordering + a smaller geometry delta — NOT the flange
+footprint.
+
+METHODOLOGY CORRECTED: any parity measurement MUST regenerate BOTH sides with
+current binaries (fresh oracle + fresh ares), because OrcaSlicer is
+non-deterministic AND the ares output changes as fixes land. All prior sweep
+diff counts (incl. the 61.5%/94% figures) are lower bounds distorted by
+staleness on both sides. A full dual-fresh re-slice is required for the true
+per-case pass map.
