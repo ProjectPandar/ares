@@ -93,6 +93,9 @@ pub(crate) fn parse_sparse_infill_pattern(
         "crosszag" => Ok(InfillPattern::CrossZag),
         "lockedzag" => Ok(InfillPattern::LockedZag),
         "crosshatch" => Ok(InfillPattern::CrossHatch),
+        // The STL `InfillPattern` subset only covers the options enum variants;
+        // the advanced patterns are exercised through the 3MF `ProcessInfillPattern`
+        // path where every generator is ported. `lightning` remains unported.
         "triangles" | "tri-hexagon" | "cubic" | "adaptivecubic" | "quartercubic"
         | "supportcubic" | "lightning" | "honeycomb" | "3dhoneycomb" | "lateral-honeycomb"
         | "lateral-lattice" | "tpmsd" | "tpmsfk" | "gyroid" | "concentric" | "hilbertcurve"

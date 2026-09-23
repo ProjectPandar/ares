@@ -6811,3 +6811,12 @@ connect_infill/perimeter-int/estimator residual, not direction.
 - tpmsfk marchsq raster (rsize=0.004mm → ~25000×25000 px field) is slow; added
   scan_rings degenerate-direction guard + residual-dir clear (marching_squares)
   against a possible non-terminating ring march; verification pending.
+
+## §ccxiii interpolate_edge binary search + InfillPattern STL subset clarified
+- marching_squares::interpolate_edge switched from a linear edge walk to a
+  lower_bound binary search over the edge's raster pixels (MarchingSquares.hpp
+  lower_bound(e.from,e.to,v)) — O(log window) field evals per ring vertex
+  instead of O(window); Coord::manhattan_along added for the edge length.
+- Confirmed options::InfillPattern (STL path) is a 12-variant subset; the
+  advanced patterns parse via ProcessInfillPattern on the 3MF/project path,
+  which is what the sparse_infill_pattern sweep exercises. tpmsfk emits there.

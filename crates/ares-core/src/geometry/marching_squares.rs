@@ -22,6 +22,17 @@ impl Coord {
     fn seq(self, res: Coord) -> usize {
         (self.r * res.c + self.c) as usize
     }
+
+    // Raster-pixel distance from `self` to `other` along the single axis that
+    // `dir` walks (Left/Right change `c`, Up/Down change `r`).
+    fn manhattan_along(self, dir: Dir) -> i64 {
+        let d = match dir {
+            Dir::Left | Dir::Right => self.c,
+            Dir::Up | Dir::Down => self.r,
+            _ => 0,
+        };
+        d.abs()
+    }
 }
 
 /// `marchsq::Dir` — the `<urdl>` cell-exit direction bits.
@@ -274,7 +285,13 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
             let mut ring = Vec::new();
             let mut idx = startidx;
             let mut next = self.next_dir(idx, Dir::All);
-            loop {
+            // Guard: a well-formed grid always closes the ring back at
+            // startidx; bail on a degenerate/stuck direction to avoid a hang.
+            let max_steps = self.gridlen * 4 + 64;
+            for _ in 0..max_steps {
+                if next == Dir::None || next == Dir::All {
+                    break;
+                }
                 ring.push(Coord {
                     r: idx as i64,
                     c: next as i64,
@@ -285,6 +302,11 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
                 if idx == startidx {
                     break;
                 }
+            }
+            // Clear any residual direction on the current cell so the outer
+            // search advances past a degenerate ring instead of revisiting it.
+            if next != Dir::All {
+                self.clr_dirs(idx, Dir::from_bits(0b1111));
             }
             if ring.len() > 1 {
                 rings.push(ring);
@@ -346,24 +368,34 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
         )
     }
 
-    // `interpolate_edge` — binary-search (`lower_bound`) the field values along
-    // the edge for the first point >= isoval, then shift bottom/right out by
-    // one to account for raster pixel width.
+    // `lower_bound`-style binary search along the edge for the first raster
+    // point whose value >= isoval, then shift bottom/right out by one to
+    // account for raster pixel width (`interpolate_edge`, MarchingSquares.hpp).
     fn interpolate_edge(&self, ecrd: &mut Coord, isoval: f32) {
         let (from, to, dir) = self.edge(*ecrd);
-        // Walk `from` toward `to` stepping by `dir`, stopping at the first
-        // raster point whose value >= isoval (lower_bound semantics).
-        let mut cur = from;
-        let result = loop {
-            if self.is_within(cur) && self.isoval(cur) >= isoval {
-                break cur;
+        // Distance (in raster-pixel steps) from `from` to `to` along `dir`.
+        let len = (Coord { r: to.r - from.r, c: to.c - from.c }).manhattan_along(dir);
+        let mut lo = 0i64;
+        let mut hi = len; // count of steps before the first `>= isoval`
+        let mut first = from;
+        // `lower_bound(first, to, isoval)`: partition [0,len) by `isoval < v`.
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            let mut probe = from;
+            step(&mut probe, dir, mid);
+            let v = if self.is_within(probe) {
+                self.isoval(probe)
+            } else {
+                f32::MIN
+            };
+            if v < isoval {
+                lo = mid + 1;
+            } else {
+                hi = mid;
             }
-            if cur == to {
-                break to;
-            }
-            step(&mut cur, dir, 1);
-        };
-        let mut ec = result;
+        }
+        step(&mut first, dir, lo);
+        let mut ec = first;
         if dir == Dir::Up {
             ec.r += 1;
         } else if dir == Dir::Left {
