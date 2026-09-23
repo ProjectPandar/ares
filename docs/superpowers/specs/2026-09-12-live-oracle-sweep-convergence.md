@@ -5678,3 +5678,15 @@ the `as f32` cast + `first_layer_flow` width/height. Oracle `E.04557` vs ares
 is a `Flow::mm3_per_mm` f32-vs-f64 or width-source issue in the skirt emit —
 NOT the raft connect spacing=0.407. RESIDUAL: identify the skirt `mm3_per_mm`
 width (first_layer_flow vs line_width) and f32 rounding — `E` differs by 1ulp.
+
+### cxl. Skirt E.04556/57 — mm3_per_mm=0.0307 (NOT first_layer_flow 0.0754)
+The skirt move `E.04556` on a 1.4835mm diagonal → `mm3_per_mm=0.030711`. ares
+`mm3_per_mm = height·(width − height·0.2146)` — for `first_layer_flow`
+(w=0.42,h=0.2) that's 0.0754, NOT 0.0307. The skirt `mm3_per_mm` resolves to
+0.0307 — `width≈0.196` (h=0.2) or `height≈0.078` (w=0.42) — a DIFFERENT
+width/height source than `first_layer_flow`. Oracle `E.04557` → `mm3_per_mm`
+0.03073 (1ulp higher). The skirt `mm3_per_mm` `width`/`height` is wrong —
+`self.width`/`layer.height_mm` source differs from oracle's skirt flow. This
+is a skirt flow `mm3_per_mm` resolution bug, not connect spacing. RESIDUAL:
+skirt `mm3_per_mm` should be `spacing(width,height)` where the skirt uses a
+non-first-layer width/height (likely `line_width` or `skirt`-specific flow).
