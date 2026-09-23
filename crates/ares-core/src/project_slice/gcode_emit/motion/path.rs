@@ -96,6 +96,13 @@ pub(super) fn emit(
         .into_iter()
         .map(|(x, y)| (geometry.scale.unscale(x), geometry.scale.unscale(y)))
         .collect::<Vec<_>>();
+    // Upstream stores the wipe path from the RAW `path.polyline.points`
+    // (`m_wipe.path = path.polyline.to_polyline()`, `GCode.cpp:6111`) — the
+    // extrusion path's scaled ints BEFORE `clip_fitting_end` projects the
+    // last point onto a fitted arc. Snapshot the unmodified mm points for the
+    // wipe path so `Wipe::wipe`'s segment lengths match `path.polyline`, not
+    // the post-arc-fit tail.
+    let wipe_points_source = local_points.clone();
     let mut fitting = properties.fitting.to_vec();
     if properties.end_clip > 0.0 {
         arc::clip_fitting_end(&mut local_points, &mut fitting, geometry.scale);
@@ -237,7 +244,7 @@ pub(super) fn emit(
         state.current_feedrate = state.extrusion_feedrate;
     }
     if let Some(slope) = properties.slope {
-        let wipe_points = local_points
+        let wipe_points = wipe_points_source
             .iter()
             .map(|&(x, y)| arc::Point { x, y })
             .collect::<Vec<_>>();
@@ -252,7 +259,7 @@ pub(super) fn emit(
         variable::emit(variable::Emission {
             output,
             points: &points,
-            wipe_points: &local_points,
+            wipe_points: &wipe_points_source,
             processed: &processed,
             original_speed,
             properties,
@@ -266,7 +273,7 @@ pub(super) fn emit(
     constant::emit(constant::Emission {
         output,
         points: &points,
-        local_points: &local_points,
+        wipe_points: &wipe_points_source,
         segment_lengths: &segment_lengths,
         fitting: &fitting,
         last_scaled,

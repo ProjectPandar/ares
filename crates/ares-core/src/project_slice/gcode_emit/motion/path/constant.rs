@@ -9,7 +9,10 @@ use crate::project_slice::perimeters::classic::materialize::FittedMove;
 pub(super) struct Emission<'a, 'b> {
     pub(super) output: &'a mut Vec<u8>,
     pub(super) points: &'a [(f64, f64)],
-    pub(super) local_points: &'a [(f64, f64)],
+    // The RAW pre-arc-fit path points (upstream `path.polyline`,
+    // `GCode.cpp:6111`) used to build the wipe path — not the post
+    // `clip_fitting_end` `local_points`.
+    pub(super) wipe_points: &'a [(f64, f64)],
     pub(super) segment_lengths: &'a [f64],
     pub(super) fitting: &'a [FittedMove],
     pub(super) last_scaled: (i64, i64),
@@ -21,14 +24,14 @@ pub(super) fn emit(emission: Emission<'_, '_>) {
     let Emission {
         output,
         points,
-        local_points,
+        wipe_points,
         segment_lengths,
         fitting,
         last_scaled,
         properties,
         state,
     } = emission;
-    let wipe_points = local_points
+    let wipe_points = wipe_points
         .iter()
         .map(|&(x, y)| arc::Point { x, y })
         .collect::<Vec<_>>();

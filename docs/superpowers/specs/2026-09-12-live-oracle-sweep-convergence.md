@@ -6484,3 +6484,21 @@ runs. Fixing requires the loop-path point list to match upstream at scaled-int
 precision — a PerimeterGenerator-path parity issue, not a wipe-emit bug.
 The `ARES_WIPE_SEG`/`ORCA_WIPEDUMP` dumps (both built and verified) give a
 direct per-segment harness for re-verifying after any path-selection fix.
+
+### cxciv. wipe-path source corrected to raw path.polyline; residual = perimeter int quantization
+Option-coverage re-run (`raft_layers` domain): min PASS, max/seeded DIVERGENT
+— but the divergence is the SAME wipe-path `dE` ±1e-5 + M73-ordering family as
+case-59tGO2, NOT a raft_layers gate (the earlier summary's "unsupported" was
+stale). Fixed the wipe-path SOURCE: `state.wipe_path` was built from
+`local_points` AFTER `arc::clip_fitting_end` may `project_to_circle` the last
+point (non-lattice mm); upstream stores the raw `path.polyline.points`
+(`GCode.cpp:6111`). Now `wipe_points_source` = the pre-clip `local_points`
+snapshot feeding all three wipe-path consumers (`path.rs` slope branch,
+`variable::emit`, `constant::emit` whose `local_points` field was renamed
+`wipe_points`). Verified no regression: case-090y6B still byte-identical,
+case-03RaeG still matches an oracle run byte-exact. This did NOT fix
+case-59tGO2 (clip_fitting_end doesn't fire on its paths) — the residual
+there is the perimeter loop's scaled-int points differing ~1-11 units from
+oracle's `path.polyline` (PerimeterGenerator/ExtrusionPath int quantization),
+a deeper path-generation parity issue, not a wipe-emit bug. Correctness fix
+kept: arc-fitted paths now wipe on the raw polyline like upstream.
