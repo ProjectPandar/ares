@@ -48,7 +48,9 @@ fn record_allocations(
         for entity in &collection.entities {
             let paths = match entity {
                 ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-                ExtrusionEntity::MultiPath(_) => panic!("classic collections keep loop entities"),
+                ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                    panic!("classic collections keep loop entities")
+                }
             };
             output.extend([paths.as_ptr() as usize, paths.len()]);
             for path in paths {

@@ -199,6 +199,7 @@ fn external_flow_width(collections: &[ExtrusionEntityCollection]) -> f32 {
         .flat_map(|entity| match entity {
             ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
             ExtrusionEntity::MultiPath(multi_path) => &multi_path.paths,
+            ExtrusionEntity::Path(path) => std::slice::from_ref(path),
         })
         .find(|path| path.role == ExtrusionRole::ExternalPerimeter)
         .expect("KSR layers have an external perimeter")

@@ -78,6 +78,7 @@ pub(in crate::project_slice::tests::prepare_infill) fn all_predecessor_points(
                 .flat_map(|entity| match entity {
                     ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
                     ExtrusionEntity::MultiPath(multi_path) => &multi_path.paths,
+                    ExtrusionEntity::Path(path) => std::slice::from_ref(path),
                 })
                 .map(|path| path.polyline.points.as_ptr() as usize),
         );

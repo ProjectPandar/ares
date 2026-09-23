@@ -29,6 +29,15 @@ fn record(smaller_width_mm: f32) -> ClassicPreludeRecord {
         external_minimum_spacing: 300_000,
         smaller_external_minimum_spacing: 300_000,
         has_gap_fill: true,
+        detect_thin_wall: false,
+        ext_perimeter_flow: Flow {
+            width: 0.45,
+            height: 0.2,
+            spacing: 0.45,
+            nozzle_diameter: 0.4,
+            bridge: false,
+            mm3_per_mm: 0.09,
+        },
         smaller_external_flow: Flow {
             width: smaller_width_mm,
             height: 0.2,

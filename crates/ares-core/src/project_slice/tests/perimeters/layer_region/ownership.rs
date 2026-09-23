@@ -136,7 +136,9 @@ fn collection_allocations(collection: &ExtrusionEntityCollection) -> Vec<usize> 
         .chain(collection.entities.iter().flat_map(|entity| {
             let paths = match entity {
                 ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-                ExtrusionEntity::MultiPath(_) => panic!("classic collections keep loop entities"),
+                ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                    panic!("classic collections keep loop entities")
+                }
             };
             std::iter::once(paths.as_ptr() as usize).chain(
                 paths

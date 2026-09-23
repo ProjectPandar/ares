@@ -10,6 +10,7 @@ fn entity_sub_paths(
     match entity {
         ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
         ExtrusionEntity::MultiPath(multi_path) => &multi_path.paths,
+        ExtrusionEntity::Path(path) => std::slice::from_ref(path),
     }
 }
 

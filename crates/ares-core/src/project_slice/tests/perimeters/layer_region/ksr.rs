@@ -118,7 +118,9 @@ fn checksum_record(checksum: &mut i128, record: &PreparedLayerRegionPerimeterRec
             mix(checksum, LOOP);
             let ordered = match entity {
                 ExtrusionEntity::Loop(ordered) => ordered,
-                ExtrusionEntity::MultiPath(_) => panic!("classic traversal emits loop entities"),
+                ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                    panic!("classic traversal emits loop entities")
+                }
             };
             mix(checksum, i128::from(ordered.inset_idx));
             mix(

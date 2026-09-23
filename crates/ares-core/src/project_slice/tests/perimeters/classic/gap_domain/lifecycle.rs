@@ -151,7 +151,9 @@ fn collect_entity_allocations(
     for entity in &collection.entities {
         let paths = match entity {
             ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-            ExtrusionEntity::MultiPath(_) => panic!("classic collections keep loop entities"),
+            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                panic!("classic collections keep loop entities")
+            }
         };
         pointers.path_buffers.push(paths.as_ptr() as usize);
         pointers.point_buffers.extend(

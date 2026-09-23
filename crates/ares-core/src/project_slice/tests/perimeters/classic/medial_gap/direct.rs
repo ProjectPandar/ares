@@ -193,7 +193,9 @@ fn collection_allocations_medial(
 fn loop_path_allocations(entity: &ExtrusionEntity) -> impl Iterator<Item = usize> + '_ {
     let paths = match entity {
         ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-        ExtrusionEntity::MultiPath(_) => panic!("classic collections keep loop entities"),
+        ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+            panic!("classic collections keep loop entities")
+        }
     };
     std::iter::once(paths.as_ptr() as usize).chain(
         paths

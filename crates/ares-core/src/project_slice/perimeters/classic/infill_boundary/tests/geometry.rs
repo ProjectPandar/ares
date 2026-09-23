@@ -168,6 +168,7 @@ fn top(top_fills: Vec<ExPolygon>, fill_clip: Vec<ExPolygon>) -> PreparedTopSplit
         effective_loop_number: 0,
         normal_first_offset: Vec::new(),
         smaller_first_offset: Vec::new(),
+        thin_walls: Vec::new(),
         remaining: Vec::new(),
         top_fills,
         fill_clip,

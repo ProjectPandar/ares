@@ -64,7 +64,7 @@ fn task22o16_materializes_five_fields_in_source_append_order_and_moves_nested_st
                 collection.entities.first().map(|entity| {
                     let paths = match entity {
                         ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-                        ExtrusionEntity::MultiPath(_) => {
+                        ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
                             panic!("classic append keeps loop entities")
                         }
                     };
@@ -165,7 +165,9 @@ fn task22o16_materializes_five_fields_in_source_append_order_and_moves_nested_st
         if let (Some(entity), Some((paths, points))) = (collection.entities.first(), expected.1) {
             let entity_paths = match entity {
                 ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-                ExtrusionEntity::MultiPath(_) => panic!("classic append keeps loop entities"),
+                ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                    panic!("classic append keeps loop entities")
+                }
             };
             assert_eq!(entity_paths.as_ptr(), paths);
             assert_eq!(entity_paths[0].polyline.points.as_ptr(), points);
@@ -258,7 +260,9 @@ fn surface(
 fn collection_loop(collection: &ExtrusionEntityCollection, index: usize) -> &ExtrusionLoop {
     match &collection.entities[index] {
         ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop,
-        ExtrusionEntity::MultiPath(_) => panic!("classic append keeps loop entities"),
+        ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+            panic!("classic append keeps loop entities")
+        }
     }
 }
 

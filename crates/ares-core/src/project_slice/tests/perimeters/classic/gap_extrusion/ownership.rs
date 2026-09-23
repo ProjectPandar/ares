@@ -78,7 +78,7 @@ fn collection_allocations(
                 collection.entities.iter().flat_map(|entity| {
                     let paths = match entity {
                         ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
-                        ExtrusionEntity::MultiPath(_) => {
+                        ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
                             panic!("classic collections keep loop entities")
                         }
                     };

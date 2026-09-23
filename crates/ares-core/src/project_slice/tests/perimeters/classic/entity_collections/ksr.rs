@@ -72,7 +72,9 @@ fn inspect_entities(
     for entity in entities {
         let ordered = match entity {
             ExtrusionEntity::Loop(ordered) => ordered,
-            ExtrusionEntity::MultiPath(_) => panic!("classic traversal emits loop entities"),
+            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                panic!("classic traversal emits loop entities")
+            }
         };
         *entity_count += 1;
         roles[match ordered.extrusion_loop.role {
@@ -116,7 +118,9 @@ fn accumulate_entities(entities: &[ExtrusionEntity], checksum: &mut i128) {
     for entity in entities {
         let ordered = match entity {
             ExtrusionEntity::Loop(ordered) => ordered,
-            ExtrusionEntity::MultiPath(_) => panic!("classic traversal emits loop entities"),
+            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                panic!("classic traversal emits loop entities")
+            }
         };
         mix(checksum, i128::from(ordered.inset_idx));
         mix(

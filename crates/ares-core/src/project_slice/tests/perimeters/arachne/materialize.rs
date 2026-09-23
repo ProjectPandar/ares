@@ -49,6 +49,7 @@ fn task22w17_fixture_materializes_real_arachne_perimeters() {
                     multipaths += 1;
                     &multi_path.paths
                 }
+                ExtrusionEntity::Path(path) => std::slice::from_ref(path),
             };
             count_loop(paths, &mut variable_widths, &mut walls);
         }

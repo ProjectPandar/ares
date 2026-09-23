@@ -161,7 +161,9 @@ fn checksum_untouched_record(
         for entity in &collection.entities {
             let ordered = match entity {
                 ExtrusionEntity::Loop(ordered) => ordered,
-                ExtrusionEntity::MultiPath(_) => panic!("classic traversal emits loop entities"),
+                ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+                    panic!("classic traversal emits loop entities")
+                }
             };
             mix(checksum, i128::from(ordered.inset_idx));
             mix(

@@ -58,6 +58,15 @@ fn record() -> ClassicTraversalRecord {
             bridge: true,
             mm3_per_mm: 0.765_432_1,
         },
+        ext_perimeter_flow: Flow {
+            width: 0.45,
+            height: 0.2,
+            spacing: 0.45,
+            nozzle_diameter: 0.4,
+            bridge: false,
+            mm3_per_mm: 0.09,
+        },
+        scale: normal_scale(),
         branch: PendingPathBranch::OverhangClipping {
             detect_overhang_wall: true,
             layer_id: 2,

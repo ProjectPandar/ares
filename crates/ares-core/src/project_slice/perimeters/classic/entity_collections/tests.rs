@@ -11,8 +11,23 @@ use super::{
 };
 use crate::{
     ProcessWallDirection,
-    geometry::{Point, Polygon},
+    geometry::{CoordinateScale, Point, Polygon},
 };
+
+/// The unit traversal fixtures never produce thin walls, so `traverse_loops` is
+/// exercised with an empty `thin_walls` slice and a placeholder
+/// `ext_perimeter_flow`/`scale` (unused while `thin_walls.is_empty()`).
+fn test_flow() -> crate::project_slice::perimeters::types::Flow {
+    crate::project_slice::perimeters::types::Flow {
+        width: 0.45,
+        height: 0.2,
+        spacing: 0.45,
+        nozzle_diameter: 0.4,
+        bridge: false,
+        mm3_per_mm: 0.09,
+    }
+}
+const TEST_SCALE: CoordinateScale = CoordinateScale::Normal;
 
 #[test]
 fn task22o9_loop_entity_chain_uses_zero_and_clears_reversals() {
@@ -150,7 +165,14 @@ fn task22o9_preserves_source_compact_entity_against_original_loop_indexing() {
         seed(false, 7, vec![seed(false, 8, Vec::new())]),
         seed(true, 2, Vec::new()),
     ];
-    let collection = traverse_loops(nodes, &seeds, ProcessWallDirection::CounterClockwise);
+    let collection = traverse_loops(
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        &[],
+        test_flow(),
+        TEST_SCALE,
+    );
     assert_eq!(collection.entities.len(), 2);
     let [ExtrusionEntity::Loop(first), ExtrusionEntity::Loop(second)] = &collection.entities[..]
     else {
@@ -179,7 +201,14 @@ fn task22o9_contours_emit_children_first_and_holes_emit_parent_first() {
         0,
         vec![seed(false, 1, vec![seed(true, 2, Vec::new())])],
     )];
-    let collection = traverse_loops(nodes, &seeds, ProcessWallDirection::CounterClockwise);
+    let collection = traverse_loops(
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        &[],
+        test_flow(),
+        TEST_SCALE,
+    );
     assert_eq!(
         collection
             .entities
@@ -200,6 +229,9 @@ fn task22o9_deep_traversal_and_cleanup_fit_a_constrained_stack() {
                 vec![node],
                 std::slice::from_ref(&root_seed),
                 ProcessWallDirection::CounterClockwise,
+                &[],
+                test_flow(),
+                TEST_SCALE,
             );
             assert_eq!(collection.entities.len(), 2_000);
             drain_seeds(vec![root_seed]);
@@ -211,6 +243,9 @@ fn task22o9_deep_traversal_and_cleanup_fit_a_constrained_stack() {
                 vec![skipped],
                 std::slice::from_ref(&skipped_seed),
                 ProcessWallDirection::CounterClockwise,
+                &[],
+                test_flow(),
+                TEST_SCALE,
             );
             assert!(collection.entities.is_empty());
             drain_seeds(vec![skipped_seed]);

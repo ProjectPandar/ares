@@ -124,6 +124,8 @@ fn record(layer_id: usize) -> ClassicTraversalRecord {
         fuzzy_skin: crate::perimeters::FuzzySkinConfig::disabled(),
         simplification_tolerance: 0.012,
         overhang_flow: flow(),
+        ext_perimeter_flow: flow(),
+        scale: crate::geometry::CoordinateScale::Normal,
         branch: PendingPathBranch::OrdinaryUnsplit {
             detect_overhang_wall: false,
             layer_id,
@@ -146,7 +148,9 @@ fn flow() -> Flow {
 fn collection_loop(collection: &ExtrusionEntityCollection, index: usize) -> &ExtrusionLoop {
     match &collection.entities[index] {
         ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop,
-        ExtrusionEntity::MultiPath(_) => panic!("classic append keeps loop entities"),
+        ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => {
+            panic!("classic append keeps loop entities")
+        }
     }
 }
 
