@@ -6323,3 +6323,23 @@ support/object gcode region. NEXT: probe `generate_raft_base`/raft-layer-0
 polygon expansion (`SupportCommon.cpp:279-281,366-371`) to find the extra
 ~0.42mm term — likely `first_layer_expansion` applied on top of an
 already-expanded base, or a `0.5·width`/`spacing` boundary term ares double-adds.
+
+### clxxxv. raft flange sheath emitted at +0.5·width (GROW) not −0.5·width (SHRINK)
+`case-n4acJn` deep trace (ARES_INNER_CONTOUR dump + gcode inspection):
+- ares `raft_polygons.first_layer` octagon = ±9.15mm flat edges (18.30mm).
+- `raft_layer_polylines` computes `closing = offset2_ex(first_layer, +ε,
+  −(ε+0.5·width))` = **8.94mm radius — CORRECT**, matching oracle sheath
+  (`X101.059–118.941`). The sheath polyline out[0] = closing contour = 8.94.
+- BUT the emitted `;TYPE:Support` (Z:0.2 flange) sheath outline = a ROUNDED
+  RECT at radius **9.361** (= `first_layer 9.15 + 0.5·width` = `closing 8.94 +
+  width 0.42`), with corner arcs — i.e. `first_layer` DILATED by +0.5·width
+  with round joins, NOT the `closing` eroded contour.
+- The SECOND `;TYPE:Support` block (base raft layers, `WIDTH:0.38`) is
+  byte-identical to oracle — only the flange/layer-0 sheath diverges.
+ROOT: the emitted flange sheath is drawn on `first_layer` offset +0.5·width
+(round), not on `closing`. `materialize_layer`/`raft_layer_polylines` produces
+the correct 8.94 sheath, so either (a) the flange emit path draws a separate
+`first_layer`-boundary perimeter, or (b) `plan.polygons` reaching emit differs
+from the `raft_polygons.first_layer` that fed the dump. NEXT: instrument the
+emitted sheath polyline at the `materialize_layer`→`FillExtrusionPath`→motion
+boundary to confirm whether `out[0]` (8.94) reaches the writer or is replaced.
