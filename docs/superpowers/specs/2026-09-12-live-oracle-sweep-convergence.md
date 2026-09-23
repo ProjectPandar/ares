@@ -6970,3 +6970,7 @@ Oracle sweep (complex obj case-IdM3Br): trees propagate to all layers 5..42 (7 r
 ## §ccxxix FillLightning — propagated trees are root→1child (correct), convert emits pts=[2]
 
 PROPAGATE: children=1 each (root→1child 2-node, correct for cube/simple obj — upstream generateNewTrees seeds boundary→cell pairs). convert_to_polylines → pts=[2] lines. So trees+convert work; the 1-section emit means group_fills/Configured(Lightning) classification or connect_infill drops the 2-pt lines on most layers. children=0 (pruned leaf) → pts=[1] dropped — rare. Residual moved from tree-depth to connect_infill/fill-classification stage.
+
+## §ccxxx FillLightning — convert emits lines on 17/39 layers, intersection drops 22
+
+C2L: convert_to_lines→intersection_pl emits lines on 17 layers (1-7 each), lines=0 on 22. convert_to_polylines makes pts=[2] lines (root→1child correct) but intersection_open_polylines drops them → root ON outline boundary → open-polyline intersection drops endpoint-touching lines. THE RESIDUAL: intersection_open_polylines boundary-touch semantics — upstream intersection_pl keeps endpoint-touching interior lines (or tree roots sit interior not on-boundary). Emits but sparse section count low vs oracle 38.
