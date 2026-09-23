@@ -6260,3 +6260,18 @@ in the extrusion-emit grouping that decides when to open a fresh SET_SPEED
 block (`motion/extrusion.rs::speed`, `motion/path.rs`). Next probe: dump
 oracle's `;_EXTRUDE_SET_SPEED` block open/close decisions (`GCode.cpp`
 `extrude_path`/`_add_speed_change`) to find the merge condition ares misses.
+
+### clxxxii. bare-F root cause CONFIRMED = upstream infill path-grouping, not cooling
+Follow-up on §clxxxi: the extra `len=0.2236 fr=50` `_EXTRUDE_SET_SPEED` block
+is ares emitting a **two-segment corner micro-fragment**
+(`X106.024 Y113.928 E.00264` + `X106.1 Y113.963 E.00265`, `;WIDTH:0.429544`)
+preceded by a `F9000` reposition — a narrow-region/gap-fill fragment oracle
+does NOT emit as a separate path. Oracle covers the same X106/Y114 region with
+a contiguous crosshatch/grid infill (alternating full-diagonal lines). So the
+extra cooling line is a SYMPTOM of an upstream **infill/narrow-region path-
+grouping divergence** (the documented narrow-region `split_lines`
+reconstruction residual, todo #6), which then shifts the slowdown Newton
+feedrate. The cooling-buffer port (`slowdown.rs`,`parse.rs`) is verified
+correct against oracle inputs — do NOT re-tune it. Real fix lives in the
+infill path entity grouping (`fill/`/`prepare_infill`/`narrow`), same locus as
+the narrow-region residual.
