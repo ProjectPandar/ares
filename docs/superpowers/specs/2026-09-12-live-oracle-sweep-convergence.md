@@ -5760,3 +5760,15 @@ skirt flow's `width`/`height`/`spacing` resolves to a non-`first_layer_flow`
 value — `width≈0.196` ≈ `nozzle·0.49` or a skirt-specific width, OR
 `height≈0.076` (raft flange `raft_layer.height`). RESIDUAL: skirt `mm3_per_mm`
 `width`/`height` source — likely `skirt`-specific flow or raft-flange height.
+
+### cxlvii. Skirt mm3_per_mm = spacing(0.45)·0.0754 = 0.0307
+`mm3_per_mm=0.0307` = `0.407·0.0754` = `spacing(line_width=0.45,0.2)` ×
+`mm3_per_mm(first_layer_flow=0.42,0.2)`. The skirt `mm3_per_mm` = `spacing`
+(line_width-derived 0.407) × `height` (first_layer mm3 0.0754) — OR
+`mm3_per_mm` = `h·(w−h·rr)` with `w`/`h` mixed. ares uses
+`height·(width−height·rr)` with `height=0.2,width=0.42` → 0.0754. The oracle
+skirt `mm3_per_mm`=0.0307 — `spacing(0.45,0.2)·first_layer_mm3` or a
+`line_width`-spacing × `first_layer`-height product. RESIDUAL: skirt
+`mm3_per_mm` source — likely `mm3_per_mm = spacing(line_width)·height` where
+`height` is the raft flange `raft_layer.height`/`first_layer` (0.0754) — a
+skirt-specific flow formula, not `first_layer_flow.mm3_per_mm()`.
