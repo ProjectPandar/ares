@@ -5856,3 +5856,13 @@ flight (~10min). Expected: `flow.width`≈0.196/`spacing`≈0.1536/`mm3`≈0.030
 confirming the skirt `width` resolves to a non-`initial_layer_line_width`
 value (or `height`/`spacing` differs). This closes the skirt `mm3_per_mm`
 residual's identity question.
+
+### cliv. ORCA_SF probe — captures skirt_flow Flow directly (fixed recursion)
+Fixed the probe: `Flow _sf = Flow::new_from_config_width(...)` captures the
+return value, then `fprintf` dumps `_sf.width/spacing()/height/mm3_per_mm()`
+and `return _sf`. Build in flight. This resolves whether the oracle skirt
+`flow.width` is ~0.196 (a non-`initial_layer_line_width` source) or the
+`height`/`spacing` diverges — closing the `mm3_per_mm=0.0307` residual's
+identity. Prior probes (`ORCA_FBS`/`ORCA_CIN`) located the `spacing=0.407`
+`connect_base_support` calls at `infill=3` but not their `filler`/`this`
+identity — this skirt probe is the next targeted identity check.
