@@ -7060,3 +7060,43 @@ Rebutted (reviewer claim incorrect): `layer_geom.rs` candidate-tie (`cd == curre
 Open (milestone-scale): `detect_thin_wall` thin-wall port (`PerimeterGenerator.cpp:1243-1266` onion `i==0` `offset2_ex`+`opening_ex`+`medial_axis`→`ThickPolylines`, `traverse_loops` `variable_width` materialization at `:231`). Primitives exist (`medial_axis`, `ThickPolyline`, `offset2_ex`, `opening_ex`, `variable_width::convert`); the port is the perimeter-pipeline plumbing, deferred to its own milestone.
 Open (deferred): ~227 env/`ARES_`-gated debug `eprintln`/`File`/`env::var` instrumentation sites in ares-core — inert-by-default, WASM-safe (`env::var` returns Err on wasm → dead path), retained as active debugging tooling for the remaining parity residuals; to be feature-gated or stripped in a dedicated cleanup.
 Open: lightning 26→38 residual (root-only propagated trees on layers 5-41), tpmsfk perf, estimator/M73/E±1e-5, sweep activation fixtures (all options still on `cube10.stl`).
+
+## §ccxxxviii Round-3 review fix ledger
+
+Applied (commit `b48d38a6`, option_coverage 15/15 green):
+- **P0 regression fix** — `distance_field.rs` `unsupported_points.sort_by` used
+  `b.abs() - a.abs()` (abs-per-operand) AND a `Vec::sort_by` total-order-checked
+  sort on a comparator upstream keeps non-transitive (`DistanceField.cpp:72-77`
+  `stable_sort`). Now: `abs(b.dist - a.dist)` (abs of the difference) via
+  `fixed_gcc_sort_by` (GCC `stable_sort` emulation tolerating the upstream
+  non-strict-weak-order). Resolves the `smallsort` total-order panic that the
+  round-3 width/tie fixes triggered on the complex object.
+- **Lightning boundary-tie** — `get_best_grounding_location`: a tree candidate
+  tied with the INITIAL boundary distance can no longer win (strict `<` for the
+  first candidate, upstream `Layer.cpp:171` `candidate_dist < local_current_dist`);
+  grid-addr tie-break only ranks already-winning candidates.
+- **`m_infill_extrusion_width`** — now `scaled<float>` scale-domain f32
+  (`f32(0.42*1e6)=420000.0`, not the `coord_t`-truncated 419999), with the
+  upstream `EPSILON` fallback to `line_width.get_abs_value` or
+  `Flow::auto_extrusion_width` (1.125*nozzle). `Generator::new` takes
+  `sparse`/`line_width`/`nozzle` f64 `get_abs_value` args.
+- **Anchoring multiline re-clip** — `intersection_pl` after `multiline_fill`
+  (`FillLightning.cpp:23`), matching the emit path.
+- **Coverage test** — accepts `seeded-literal` labels; min-only
+  `coFloatOrPercent` (e.g. `overhang_reverse_threshold`) emits an
+  absolute-literal case bounded by `max_literal`.
+
+Verified post-fix: cube `I5aCx8` sparse 38/38; complex `IdM3Br` sparse 23/38
+(the tie/width fixes shifted tree grounding — residual is the propagated-tree
+depth issue, still narrowing).
+
+Deferred (documented milestones, not silent drops):
+- `detect_thin_wall` — `i==0` medial-axis extraction implemented
+  (`first_outer::thin_wall_offsets`) but the `thin_walls`→`traverse_loops`
+  `variable_width` materialization plumbing is not threaded; preflight gate
+  retained so it can't silently drop extracted walls.
+- ares-core debug I/O (~145 env-gated `eprintln`/`File`/`env::var` sites) —
+  inert-by-default + WASM-safe, retained as active parity-debug tooling;
+  reviewer accepts mitigation but keeps it open as an architecture-boundary
+  refactor milestone (move dumps behind an adapter-provided tracer/return).
+- lightning 23→38 residual, tpmsfk perf, estimator/M73/E±1e-5, sweep fixtures.
