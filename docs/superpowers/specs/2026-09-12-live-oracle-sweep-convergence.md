@@ -5690,3 +5690,14 @@ width/height source than `first_layer_flow`. Oracle `E.04557` → `mm3_per_mm`
 is a skirt flow `mm3_per_mm` resolution bug, not connect spacing. RESIDUAL:
 skirt `mm3_per_mm` should be `spacing(width,height)` where the skirt uses a
 non-first-layer width/height (likely `line_width` or `skirt`-specific flow).
+
+### cxli. Skirt mm3_per_mm height = raft flange height (~0.076), not 0.2
+`mm3_per_mm=0.0307` for the skirt → `height·(0.42−height·0.2146)=0.0307` →
+`height≈0.076`. ares uses `layer.height_mm`=`first_print_layer_height`(0.2) →
+0.0754. The skirt layer height should be the RAFT flange `raft_layer.height`
+(the first printed layer's height when a raft compresses layer-0), NOT
+`first_print_layer_height`. Oracle skirt `mm3_per_mm`=0.0307 (height≈0.076)
+vs ares 0.0754 (height 0.2) → `E.04557` vs `E.04556`. FIX: skirt
+`layer.height_mm` for layer-0 should resolve to the raft base `raft_layer.height`
+(`slicing_params.first_print_layer_height` may differ from the raft flange
+height) — the skirt is emitted at the raft base Z with the raft flange height.
