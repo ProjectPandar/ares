@@ -6617,3 +6617,33 @@ honeycomb (FillHoneycomb), tri-hexagon (FillTriHexagon), quartercubic
 FillLateralLattice), tpmsd/tpmsfk (FillTpmsD/FillTpmsFK MarchingSquares),
 lightning (FillLightning Lightning::Generator) — no ares scaffolding exists for
 any of these.
+
+§ccii — INDEPENDENT REVIEW (reviewer agent, read-only, six-axis) returned a
+prioritized fix list. Applied this turn (commits f24d0ca2, 7c9e735f):
+- concentric anchoring REWRITTEN: density was passed as percent (should be
+  0..1 fraction → 100x spacing bug), offsets were double-divided by
+  scale.factor(), nearest_point_index picked FIRST min not LAST-improving,
+  last_pos used contour last vertex not split-polyline end, and it omitted
+  multiline_fill + clip_end(loop_clipping). Extracted to
+  fill/concentric_sparse.rs as a faithful FillConcentric::_fill_surface_single
+  sub-density-branch port; Polyline::clip_end ported to geometry/polyline.rs.
+- concentric EMIT: append_configured now density-dispatches — sparse
+  (density<0.9999) → plain offset rings as InternalInfill Path entities;
+  full-density → existing Arachne path.
+- sparse plane-path EMIT: fill_entities plane-path arm now admits
+  InternalInfill — hilbertcurve/archimedeanchords/octagramspiral sparse infill
+  now EMIT and PASS (were emitting nothing → ARES_ERROR/drop).
+- fill::honeycomb ported (FillHoneycomb hex lattice + align_to_grid(Point) +
+  center-rotate + multiline_offset + intersection_open + connect_infill);
+  wired to fill_entities emit + sparse_anchoring. Now DIVERGENT (was
+  ARES_ERROR).
+- sparse_anchoring split into dir (mod.rs 377 LOC <400) + projected.rs helpers.
+- MonotonicLine anchor_length_max=0 (FillRectilinear.cpp:3676).
+sparse_infill_pattern live: 9 PASS / 9 DIVERGENT / 7 ARES_ERROR.
+REMAINING review items: Line needs FillLine (oscillating) not rectilinear;
+CrossZag/LockedZag need FillCrossZag/FillLockedZag subclasses; plane-path
+object_bounding_box should be centered-mesh bbox not slice-contour bounds;
+wipe snapshot post-clip ordering (P1); 7 unported generators (lateral-h/l,
+lightning, quartercubic, tpmsd, tpmsfk, tri-hexagon); union_contours sibling-
+chaining equivalence; production filesystem probes in path.rs/wipe_path.rs
+violate the no-FS core boundary.
