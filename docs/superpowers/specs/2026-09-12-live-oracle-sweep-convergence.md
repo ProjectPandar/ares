@@ -6006,3 +6006,17 @@ line_width-spacing, height holds a first_layer mm3_per_mm). RESIDUAL: skirt `E`
 mm3_per_mm(first_layer)=0.0754 — the `G1 E` emit `flow` has `spacing`/`height`
 swapped from `skirt_flow` (spacing=0.377, height=0.2). Identify the emit-path
 `flow` construction that produces `spacing=0.407`/`height=0.0754`.
+
+### clxvi. case-59tGO2 — both residuals fully characterized, probe-blocked
+FINAL STATE after 7+ turns of probing:
+1. `connect_base_support` `spacing=0.407` (39 `infill=3` raft-base blobs) —
+   `FillSupportBase`/`ipSupportBase` `filler->spacing`=`line_width`(0.45) via an
+   unprobed path (FBS showed `this->spacing`=0.337/0.377 for nl=27/37/39/41;
+   the nl=3 calls come from a `filler`/`spacing` source outside those sites).
+2. Skirt `E` `mm3_per_mm`=0.0307 — emit-path `flow` has `spacing`=
+   `spacing(line_width)=0.407` and `height`=`mm3_per_mm(first_layer)=0.0754` —
+   a `spacing·mm3` product where `spacing`/`height` are crossed from
+   `skirt_flow`(spacing=0.377,height=0.2). `skirt_flow` itself is correct.
+Both are `line_width`-fallback/`spacing`-crossing bugs in the raft/skirt emit
+paths. Baseline 3609 held through all reverts; tests green; all probes/ledger
+committed through `c2aa55f0`. NEXT: emit-path `flow`/`spacing`/`filler` probes.
