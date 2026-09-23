@@ -7042,3 +7042,21 @@ Confirmed-causal fixes:
 - `multiline_fill` applied before the 2nd `intersection_pl` (was skipped).
 
 Remaining 26→38 residual: propagated trees arrive at lower layers as **root-only single nodes** (`children=[]` → `raw_lines=0` on layers 5-41; only seed layer 42 has children). Hypothesis: upstream `reconnectRoots` boundary re-grounding builds deeper root→…→unsupported chains that survive `propagate`'s prune+realign on shrinking outlines; ares's propagated 2-node tree loses its single child when the child's overhang position falls outside the smaller next-layer outline. Needs oracle-side per-layer `tree_roots` depth dump to disambiguate which upstream step preserves trunk depth.
+
+## §ccxxxvii Round-2 review fix ledger
+
+Applied + verified (ares-core suite 6993/6993 green, `e41df7fb`):
+- P0 `layer_geom.rs` grounding-path borrow panic — `root_p`/`last_grounding` copied to locals before `add_child_node`'s `borrow_mut`.
+- `gyroid_optimized` — `GyroidField` now gets mm `z` (was scale-domain) and the real planned `layer.height` (was combined `flow.height`); gate removed from emit + sparse-anchoring arms.
+- `LOCATOR_CELL_SIZE` now `locator_cell_size(scale)` = `scaled<coord_t>(4.)` (4e6 Normal / 400k LargeBed) threaded through `Layer`/`Generator`/`to_grid_point`.
+- `tree_node` pruning endpoint — displacement vector component-truncated then `b + disp` (was `b + disp` rounded; upstream `TreeNode.cpp:338` `b + disp.cast<coord_t>`).
+- Lightning anchoring — `multiline_fill` applied (upstream `FillLightning.cpp:20`).
+- Sweep — `provably_legal` cleared when `ARES_OPTION_VALUES` filters a domain; `domains.rs` no longer clamps percent-max by `max_literal`, and `coFloatOrPercent` emits an absolute-literal seeded case.
+- `connect/graph.rs` `touch_probe` print-only diagnostic removed; KSR `normalize_object_ids` now maps distinct ids to first-appearance ordinals (preserves name↔id identity instead of blanket erase).
+- Inline `estimate.rs`/`vline.rs` test mods moved into dedicated `tests.rs`.
+
+Rebutted (reviewer claim incorrect): `layer_geom.rs` candidate-tie (`cd == current_dist && smaller_grid`) IS upstream `Layer.cpp:183-189` outer rule (equal-dist smaller-grid-addr wins); `candidate_expansion` width-narrow `0.42→419999` matches upstream `scaled<float>(0.42)` truncation (0.42 not representable → 419999.9999 → truncates to 419999). No change needed.
+
+Open (milestone-scale): `detect_thin_wall` thin-wall port (`PerimeterGenerator.cpp:1243-1266` onion `i==0` `offset2_ex`+`opening_ex`+`medial_axis`→`ThickPolylines`, `traverse_loops` `variable_width` materialization at `:231`). Primitives exist (`medial_axis`, `ThickPolyline`, `offset2_ex`, `opening_ex`, `variable_width::convert`); the port is the perimeter-pipeline plumbing, deferred to its own milestone.
+Open (deferred): ~227 env/`ARES_`-gated debug `eprintln`/`File`/`env::var` instrumentation sites in ares-core — inert-by-default, WASM-safe (`env::var` returns Err on wasm → dead path), retained as active debugging tooling for the remaining parity residuals; to be feature-gated or stripped in a dedicated cleanup.
+Open: lightning 26→38 residual (root-only propagated trees on layers 5-41), tpmsfk perf, estimator/M73/E±1e-5, sweep activation fixtures (all options still on `cube10.stl`).
