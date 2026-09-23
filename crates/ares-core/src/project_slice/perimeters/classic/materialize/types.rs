@@ -21,6 +21,8 @@ pub(in crate::project_slice) struct PreparedRawPathRecord {
 pub(in crate::project_slice) struct PreparedRawPathSurface {
     pub(in crate::project_slice) source_index: usize,
     pub(in crate::project_slice) roots: Vec<RawPathNode>,
+    /// `thin_walls` — `detect_thin_wall` extractions for `traverse_loops`.
+    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
 }
 
 #[derive(Debug, PartialEq)]

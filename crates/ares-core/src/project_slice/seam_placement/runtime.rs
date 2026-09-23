@@ -75,8 +75,8 @@ pub(super) fn stagger_inner_seams(
             // generation stays typed-rejected before materialization, so no
             // multi-path can reach staggering.
             ExtrusionEntity::Loop(ordered) => &mut ordered.extrusion_loop,
-            ExtrusionEntity::MultiPath(_) => unreachable!(
-                "multi-path seam staggering lands with the arachne materialization seam"
+            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => unreachable!(
+                "multi-path/variable-width seam staggering lands with the arachne materialization seam"
             ),
         })
     {
@@ -125,8 +125,8 @@ pub(super) fn prepared_cw_rectangles_have_source_seams(layers: &[OrderedExtrusio
         .flat_map(|collection| &collection.entities)
         .map(|entity| match entity {
             ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop,
-            ExtrusionEntity::MultiPath(_) => unreachable!(
-                "multi-path seam staggering lands with the arachne materialization seam"
+            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => unreachable!(
+                "multi-path/variable-width seam staggering lands with the arachne materialization seam"
             ),
         })
     {

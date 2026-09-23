@@ -93,6 +93,7 @@ fn extract_collection(
                 multi_path.paths.first().map(|path| path.role),
                 Some(ExtrusionRole::ExternalPerimeter)
             ),
+            ExtrusionEntity::Path(path) => path.role == ExtrusionRole::ExternalPerimeter,
         };
         if !external {
             continue;
@@ -102,6 +103,7 @@ fn extract_collection(
             // `ExtrusionEntity::collect_points` (`ExtrusionEntity.hpp`) appends
             // every multi-path sub-path point.
             ExtrusionEntity::MultiPath(multi_path) => &multi_path.paths,
+            ExtrusionEntity::Path(path) => std::slice::from_ref(path),
         };
         polygons.push(SourcePerimeterPolygon {
             points: collect_loop_points(paths),
@@ -117,6 +119,7 @@ fn extract_collection(
                     collect_loop_points(&ordered.extrusion_loop.paths)
                 }
                 ExtrusionEntity::MultiPath(multi_path) => collect_loop_points(&multi_path.paths),
+                ExtrusionEntity::Path(path) => collect_loop_points(std::slice::from_ref(path)),
             })
             .collect::<Vec<_>>();
         if !points.is_empty() {

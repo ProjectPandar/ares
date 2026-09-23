@@ -1,6 +1,69 @@
 mod gcc;
 pub(crate) use gcc::fixed_gcc_sort_by;
 
+/// Stable merge sort matching `std::stable_sort` semantics — preserves the
+/// input order of comparator-equal elements. Unlike `fixed_gcc_sort_by`
+/// (unstable introsort), this is required where upstream calls
+/// `std::stable_sort` (e.g. `DistanceField.cpp:72`) on a comparator that is
+/// not a strict-weak-order (which `Vec::sort_by` would reject with a
+/// total-order panic).
+pub(crate) fn stable_sort_by<T, F>(items: &mut [T], mut less: F)
+where
+    T: Clone,
+    F: FnMut(&T, &T) -> bool,
+{
+    let len = items.len();
+    if len < 2 {
+        return;
+    }
+    let mut buffer: Vec<T> = items.to_vec();
+    let mut width = 1;
+    while width < len {
+        let mut start = 0;
+        while start < len {
+            let mid = (start + width).min(len);
+            let end = (start + 2 * width).min(len);
+            merge_pass(items, &mut buffer, start, mid, end, &mut less);
+            start += 2 * width;
+        }
+        items.clone_from_slice(&buffer);
+        width *= 2;
+    }
+}
+
+fn merge_pass<T: Clone, F: FnMut(&T, &T) -> bool>(
+    src: &[T],
+    dst: &mut [T],
+    start: usize,
+    mid: usize,
+    end: usize,
+    less: &mut F,
+) {
+    let (mut i, mut j, mut out) = (start, mid, start);
+    while i < mid && j < end {
+        // `stable_sort` takes from the LEFT run on equality (not `less(right,left)`),
+        // so equal elements keep their original left-before-right order.
+        if less(&src[j], &src[i]) {
+            dst[out] = src[j].clone();
+            j += 1;
+        } else {
+            dst[out] = src[i].clone();
+            i += 1;
+        }
+        out += 1;
+    }
+    while i < mid {
+        dst[out] = src[i].clone();
+        i += 1;
+        out += 1;
+    }
+    while j < end {
+        dst[out] = src[j].clone();
+        j += 1;
+        out += 1;
+    }
+}
+
 // Apache-2.0 WITH LLVM-exception rewrite of the separately audited MSVC STL
 // 14.44 `sort` control flow used as the fixed comparator-compatibility target.
 const INSERTION_SORT_MAX: usize = 32;

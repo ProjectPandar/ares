@@ -79,5 +79,6 @@ fn transform_surface(
     PreparedChainedLoopSurface {
         source_index: raw.source_index,
         roots,
+        thin_walls: raw.thin_walls,
     }
 }

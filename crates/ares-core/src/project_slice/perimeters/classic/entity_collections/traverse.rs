@@ -82,6 +82,9 @@ pub(super) fn traverse_loops(
     roots: Vec<ChainedLoopNode>,
     seeds: &[TraversalSeed],
     wall_direction: ProcessWallDirection,
+    thin_walls: &[crate::geometry::ThickPolyline],
+    ext_perimeter_flow: crate::project_slice::perimeters::types::Flow,
+    scale: crate::geometry::CoordinateScale,
 ) -> ExtrusionEntityCollection {
     let mut frames = vec![GroupFrame::new(roots, seeds, false)];
     let mut completed: Option<ExtrusionEntityCollection> = None;
@@ -131,8 +134,23 @@ pub(super) fn traverse_loops(
 
         let frame = frames.pop().expect("a frame exists");
         drain_nodes(frame.nodes);
-        let result = frame.output;
+        let mut result = frame.output;
         if frames.is_empty() {
+            // `variable_width(thin_walls, erExternalPerimeter, ext_perimeter_flow,
+            // coll.entities)` (PerimeterGenerator.cpp:231) — appended AFTER the
+            // depth-0 loops at the outermost frame.
+            if !thin_walls.is_empty()
+                && let Ok(paths) = super::super::gap_extrusion::variable_width::convert_paths(
+                    thin_walls,
+                    ext_perimeter_flow,
+                    scale,
+                    super::super::materialize::ExtrusionRole::ExternalPerimeter,
+                )
+            {
+                result
+                    .entities
+                    .extend(paths.into_iter().map(ExtrusionEntity::Path));
+            }
             return result;
         }
         completed = Some(result);

@@ -81,6 +81,7 @@ fn prepare_record(
                 shells: result.shells,
                 last: result.last,
                 gaps: result.gaps,
+                thin_walls: surface.thin_walls.clone(),
             })
         })
         .collect::<Result<Vec<_>, SliceError>>()?;

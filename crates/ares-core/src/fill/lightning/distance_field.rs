@@ -206,7 +206,10 @@ impl DistanceField {
         // total-order panic — use the GCC `stable_sort` emulation
         // (`fixed_gcc_sort_by`), which tolerates it and reproduces upstream
         // ordering byte-for-byte.
-        crate::geometry::fixed_gcc_sort_by(&mut unsupported_points, |a, b| {
+        // `std::stable_sort` — STABLE ordering required (equal unsupported
+        // cells keep input order); `stable_sort_by` tolerates the upstream
+        // non-strict-weak-order comparator that `Vec::sort_by` would reject.
+        crate::geometry::stable_sort_by(&mut unsupported_points, |a, b| {
             if (b.dist_to_boundary - a.dist_to_boundary).unsigned_abs() > radius as u64 {
                 a.dist_to_boundary < b.dist_to_boundary
             } else {

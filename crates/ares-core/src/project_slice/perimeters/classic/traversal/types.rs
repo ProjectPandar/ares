@@ -76,6 +76,11 @@ pub(in crate::project_slice) struct ClassicTraversalRecord {
     pub(in crate::project_slice) fuzzy_skin: crate::perimeters::FuzzySkinConfig,
     pub(in crate::project_slice) simplification_tolerance: f64,
     pub(in crate::project_slice) overhang_flow: Flow,
+    /// `ext_perimeter_flow` — the external-perimeter flow used by the
+    /// `thin_walls` `variable_width` materialization (`detect_thin_wall`).
+    pub(in crate::project_slice) ext_perimeter_flow: Flow,
+    /// `scale` — coordinate scale for the `variable_width` materialization.
+    pub(in crate::project_slice) scale: CoordinateScale,
     pub(in crate::project_slice) branch: PendingPathBranch,
 }
 
@@ -83,6 +88,9 @@ pub(in crate::project_slice) struct ClassicTraversalRecord {
 pub(in crate::project_slice) struct PreparedTraversalSurface {
     pub(in crate::project_slice) source_index: usize,
     pub(in crate::project_slice) roots: Vec<TraversalSeed>,
+    /// `thin_walls` — `detect_thin_wall` `i == 0` extractions carried from the
+    /// onion surface for the `traverse_loops` `variable_width` materialization.
+    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -19,6 +19,8 @@ pub(in crate::project_slice) struct PreparedChainedLoopRecord {
 pub(in crate::project_slice) struct PreparedChainedLoopSurface {
     pub(in crate::project_slice) source_index: usize,
     pub(in crate::project_slice) roots: Vec<ChainedLoopNode>,
+    /// `thin_walls` — `detect_thin_wall` extractions for `traverse_loops`.
+    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
 }
 
 #[derive(Debug, PartialEq)]

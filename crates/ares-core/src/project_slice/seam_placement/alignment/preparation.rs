@@ -156,6 +156,7 @@ fn prepare_layer(
                                     ordered.extrusion_loop.paths.first()
                                 }
                                 ExtrusionEntity::MultiPath(multi_path) => multi_path.paths.first(),
+                                ExtrusionEntity::Path(path) => Some(path),
                             };
                             format!(
                                 "{:?}/{}",
@@ -179,6 +180,7 @@ fn prepare_layer(
                 .flat_map(|entity| match entity {
                     ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
                     ExtrusionEntity::MultiPath(multi_path) => &multi_path.paths,
+                    ExtrusionEntity::Path(path) => std::slice::from_ref(path),
                 })
                 .find(|path| path.role == ExtrusionRole::ExternalPerimeter)
                 .map_or(0.0, |path| path.width);
@@ -245,6 +247,7 @@ impl PerimeterAssociation<'_> {
                 let paths = match entity {
                     ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop.paths,
                     ExtrusionEntity::MultiPath(multi_path) => &multi_path.paths,
+                    ExtrusionEntity::Path(path) => std::slice::from_ref(path),
                 };
                 self.closest_perimeter(paths)
             })

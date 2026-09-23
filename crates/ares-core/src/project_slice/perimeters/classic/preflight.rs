@@ -101,17 +101,10 @@ fn validate_record(
         nozzle_diameters,
         scale,
     } = context;
-    // `detect_thin_wall` extraction is implemented at the `i == 0` onion step
-    // (`first_outer::thin_wall_offsets`, PerimeterGenerator.cpp:1251-1266) but
-    // the `thin_walls` -> `traverse_loops` `variable_width` materialization
-    // plumbing (:231) is not yet threaded through the onion/traversal/raw/
-    // chained-loop records — keep rejecting until that lands so a thin-wall
-    // surface can't silently drop its extracted walls.
-    if region.detect_thin_wall.0
-        && !thin_wall_is_provably_inactive(object, record, region, nozzle_diameters, scale)
-    {
-        return Err(unsupported("detect_thin_wall"));
-    }
+    // `detect_thin_wall` is supported: `i == 0` medial-axis extraction in
+    // `first_outer::thin_wall_offsets` (PerimeterGenerator.cpp:1251-1266),
+    // materialized as `variable_width` external-perimeter `ExtrusionPath`s in
+    // `traverse_loops` (:231-232).
     if region.extra_perimeters_on_overhangs.0
         && object.lower_slices(record).is_some()
         && region.detect_overhang_wall.0
@@ -172,50 +165,6 @@ fn validate_record(
         gap_infill_speed: region.gap_infill_speed.0,
         surface_simplify_resolution: simplify_resolution,
         support_nozzle_diameter,
-    })
-}
-
-fn thin_wall_is_provably_inactive(
-    object: &PostPerimeterInputPrintObject,
-    record: &PerimeterInputRecord,
-    region: &RegionOptions,
-    nozzle_diameters: &crate::OrcaFloats,
-    scale: crate::geometry::CoordinateScale,
-) -> bool {
-    let maximum_nozzle = nozzle_diameters
-        .0
-        .iter()
-        .map(|diameter| diameter.0)
-        .fold(0.0, f64::max);
-    let minimum_span = 2.0 * maximum_nozzle * f64::from(region.wall_loops.0.max(1) + 1);
-    object.current_surfaces(record).iter().all(|surface| {
-        let expolygon = surface.as_parts().1;
-        if !expolygon.holes().is_empty() || expolygon.contour().points().len() != 4 {
-            return false;
-        }
-        let points = expolygon.contour().points();
-        let axis_aligned = points
-            .iter()
-            .zip(points.iter().cycle().skip(1))
-            .all(|(first, second)| first.x() == second.x() || first.y() == second.y());
-        if !axis_aligned {
-            return false;
-        }
-        let (min_x, max_x, min_y, max_y) = points.iter().fold(
-            (i64::MAX, i64::MIN, i64::MAX, i64::MIN),
-            |(min_x, max_x, min_y, max_y), point| {
-                (
-                    min_x.min(point.x()),
-                    max_x.max(point.x()),
-                    min_y.min(point.y()),
-                    max_y.max(point.y()),
-                )
-            },
-        );
-        scale
-            .unscale(max_x - min_x)
-            .min(scale.unscale(max_y - min_y))
-            >= minimum_span
     })
 }
 

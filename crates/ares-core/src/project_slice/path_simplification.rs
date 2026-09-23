@@ -58,6 +58,7 @@ pub(in crate::project_slice) fn simplify_layers(
                     .flat_map(|entity| match entity {
                         ExtrusionEntity::Loop(ordered) => &mut ordered.extrusion_loop.paths,
                         ExtrusionEntity::MultiPath(multi_path) => &mut multi_path.paths,
+                        ExtrusionEntity::Path(path) => std::slice::from_mut(path),
                     })
                 {
                     simplify_path3(path, scale, tolerance, arc_fitting);

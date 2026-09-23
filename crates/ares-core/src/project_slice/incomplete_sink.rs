@@ -207,6 +207,7 @@ fn consume_entity(entity: ExtrusionEntity) {
             ordered.extrusion_loop.paths
         }
         ExtrusionEntity::MultiPath(multi_path) => multi_path.paths,
+        ExtrusionEntity::Path(path) => vec![path],
     };
     for path in paths {
         let _ = path.polyline.fitting;

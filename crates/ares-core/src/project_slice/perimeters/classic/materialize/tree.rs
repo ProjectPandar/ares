@@ -48,6 +48,7 @@ pub(super) fn materialize_surface(
     Ok(PreparedRawPathSurface {
         source_index: surface.source_index,
         roots: completed,
+        thin_walls: surface.thin_walls.clone(),
     })
 }
 

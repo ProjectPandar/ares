@@ -37,6 +37,9 @@ pub(in crate::project_slice) struct PreparedOnionSurface {
     pub(in crate::project_slice) shells: Vec<RawShellDepth>,
     pub(in crate::project_slice) last: Vec<ExPolygon>,
     pub(in crate::project_slice) gaps: Vec<ExPolygon>,
+    /// `thin_walls` — carried from `PreparedTopSplitSurface` for the
+    /// `traverse_loops` `variable_width` materialization (`detect_thin_wall`).
+    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
 }
 
 impl PostClassicOnionPrintObject {

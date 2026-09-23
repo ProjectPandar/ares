@@ -63,11 +63,15 @@ impl Generator {
         // 419999. EPSILON fallback (Generator.cpp:83-88) to `line_width` or
         // `Flow::auto_extrusion_width` = 1.125*nozzle when the sparse width ~0.
         let scaled_float = |mm: f64| (mm / scale.factor()) as f32;
-        const EPSILON: f32 = 1e-5;
+        // `EPSILON` is the libslic3r.h:52 double epsilon `1e-4` compared
+        // against the scale-domain `m_infill_extrusion_width` (Generator.cpp:82).
+        const EPSILON: f32 = 1e-4;
         let mut infill_extrusion_width = scaled_float(infill_line_width);
         if infill_extrusion_width < EPSILON {
+            // `Flow::auto_extrusion_width` multiplies in FLOAT (Flow.cpp:21-34):
+            // `1.125f * nozzle_f` — keep the f32 product, not a double one.
             let fallback_mm = if line_width < f64::from(EPSILON) {
-                1.125 * nozzle_diameter
+                f64::from(1.125_f32 * nozzle_diameter as f32)
             } else {
                 line_width
             };
@@ -76,10 +80,12 @@ impl Generator {
         let layer_thickness = scale.checked_scale(layer_height).unwrap_or(1) as f64;
         let locator_cell_size = super::layer::locator_cell_size(scale);
         // `m_supporting_radius = coord_t(m_infill_extrusion_width) * 100 * n_multiline /
-        // sparse_infill_density` (Generator.cpp:90): the `coord_t` product promotes
-        // to `double` for the division, then truncates back — NOT integer division.
-        let supporting_radius = (f64::from(infill_extrusion_width) * 100.0 * f64::from(multiline)
-            / density_percent.max(f64::EPSILON)) as Coord;
+        // sparse_infill_density` (Generator.cpp:90): `coord_t(float)` truncates the
+        // scale-domain width FIRST (420000.5 → 420000), then the integer product
+        // promotes to double for the division and truncates back — NOT f64-f64.
+        let supporting_radius =
+            (infill_extrusion_width as Coord as f64 * 100.0 * f64::from(multiline)
+                / density_percent.max(f64::EPSILON)) as Coord;
         let wall_supporting_radius =
             (layer_thickness * overhang_angle_deg.to_radians().tan()) as Coord;
         let prune_length = (layer_thickness * prune_angle_deg.to_radians().tan()) as Coord;

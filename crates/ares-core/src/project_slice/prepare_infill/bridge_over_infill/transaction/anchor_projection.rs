@@ -49,9 +49,8 @@ pub(super) fn validate(
     ) {
         return unsupported("sparse_infill_pattern");
     }
-    if options.sparse_infill_pattern == ProcessInfillPattern::Gyroid && options.gyroid_optimized.0 {
-        return unsupported("gyroid_optimized");
-    }
+    // `gyroid_optimized` is supported — `FillGyroid.cpp` tpms/gyroid_optimized
+    // field emission with the real layer height + post-offset re-clipping.
     if options.sparse_infill_density.0 <= 0.0 {
         return unsupported("sparse_infill_density");
     }

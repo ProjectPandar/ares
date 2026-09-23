@@ -14,6 +14,30 @@ pub(super) fn convert(
     convert_with_role(polylines, flow, scale, ExtrusionRole::GapFill)
 }
 
+/// `variable_width` (PerimeterGenerator.cpp:553-566 via ExtrusionPath
+/// collection) — the `thin_walls` materialization returns bare
+/// `ExtrusionPath`s appended to `coll.entities` (unlike the gap-fill path
+/// which wraps closed runs into `GapFillEntity::Loop`).
+pub(in crate::project_slice) fn convert_paths(
+    polylines: &[ThickPolyline],
+    flow: Flow,
+    scale: CoordinateScale,
+    role: ExtrusionRole,
+) -> Result<Vec<ExtrusionPath>, SliceError> {
+    let tolerance = (0.05 / scale.factor()) as f32;
+    let mut output = Vec::new();
+    for polyline in polylines {
+        output.extend(convert_polyline(
+            polyline,
+            flow,
+            scale,
+            f64::from(tolerance),
+            role,
+        )?);
+    }
+    Ok(output)
+}
+
 pub(in crate::project_slice) fn convert_with_role(
     polylines: &[ThickPolyline],
     flow: Flow,

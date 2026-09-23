@@ -46,6 +46,10 @@ pub(in crate::project_slice) struct PreparedTopSplitSurface {
     pub(in crate::project_slice) effective_loop_number: i32,
     pub(in crate::project_slice) normal_first_offset: Vec<ExPolygon>,
     pub(in crate::project_slice) smaller_first_offset: Vec<ExPolygon>,
+    /// `thin_walls` — `i == 0` medial-axis extractions for `detect_thin_wall`
+    /// (PerimeterGenerator.cpp:1266); emitted as `variable_width` external
+    /// perimeters at the record-level traverse. Empty unless `detect_thin_wall`.
+    pub(in crate::project_slice) thin_walls: Vec<crate::geometry::ThickPolyline>,
     pub(in crate::project_slice) remaining: Vec<ExPolygon>,
     pub(in crate::project_slice) top_fills: Vec<ExPolygon>,
     pub(in crate::project_slice) fill_clip: Vec<ExPolygon>,

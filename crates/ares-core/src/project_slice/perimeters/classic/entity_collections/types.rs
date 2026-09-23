@@ -40,6 +40,10 @@ pub(in crate::project_slice) struct ExtrusionEntityCollection {
 pub(in crate::project_slice) enum ExtrusionEntity {
     Loop(OrderedExtrusionLoop),
     MultiPath(ExtrusionMultiPath),
+    /// `ExtrusionPath` — a bare variable-width path (the `thin_walls`
+    /// `variable_width` materialization appends `ExtrusionPath`s directly to
+    /// `coll.entities`, PerimeterGenerator.cpp:232).
+    Path(ExtrusionPath),
 }
 
 impl ExtrusionEntity {
@@ -48,7 +52,7 @@ impl ExtrusionEntity {
     pub(in crate::project_slice) const fn inset_idx(&self) -> i32 {
         match self {
             Self::Loop(loop_) => loop_.inset_idx,
-            Self::MultiPath(_) => -1,
+            Self::MultiPath(_) | Self::Path(_) => -1,
         }
     }
 
@@ -58,6 +62,7 @@ impl ExtrusionEntity {
         match self {
             Self::Loop(loop_) => &loop_.extrusion_loop.paths[0].polyline.points[0],
             Self::MultiPath(multi_path) => &multi_path.paths[0].polyline.points[0],
+            Self::Path(path) => &path.polyline.points[0],
         }
     }
 }
