@@ -213,6 +213,48 @@ fn remove_tangential(intersections: &mut Vec<Intersection>, polygons: &[Polygon]
     }
     intersections.truncate(kept);
 }
+
+/// `sample_grid_pattern` (`FillRectilinear.cpp:3639`): grid-sample an
+/// expolygon's interior at `spacing` in both axes, anchored on the *global*
+/// bounding box so two disjoint expolygons can't produce points closer than
+/// `spacing`. Emits a point per (vertical-line, in-span grid y).
+pub(crate) fn sample_grid_pattern(
+    polygons: &[Polygon],
+    spacing: Coord,
+    global_bounding_box: (Point, Point),
+) -> Vec<Point> {
+    let (min, max) = global_bounding_box;
+    let count = ((max.x() - min.x() + spacing - 1) / spacing).max(0) as usize;
+    let mut out = Vec::new();
+    for index in 0..count {
+        let x = min.x() + (index as Coord).saturating_mul(spacing);
+        let mut intersections = line_intersections(polygons, x);
+        intersections.sort_by(|left, right| {
+            if left.below(right) {
+                std::cmp::Ordering::Less
+            } else if right.below(left) {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        });
+        remove_tangential(&mut intersections, polygons);
+        let mut i = 0;
+        while i + 1 < intersections.len() {
+            let a = intersections[i].pos();
+            let b = intersections[i + 1].pos();
+            let mut y = a - (a % spacing) - spacing;
+            while y < b {
+                if y > a {
+                    out.push(Point::new(x, y));
+                }
+                y += spacing;
+            }
+            i += 2;
+        }
+    }
+    out
+}
 #[cfg(test)]
 mod tests;
 

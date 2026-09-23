@@ -300,7 +300,7 @@ fn rotate_polylines(polylines: &mut [Polyline], angle: f64) -> Result<(), Clippe
     Ok(())
 }
 
-mod vline;
+pub(crate) mod vline;
 
 // Per-pattern sweep lists shared by `fill_entities` emit and
 // `sparse_anchoring` (upstream `generate_sparse_infill_polylines_for_anchoring`
