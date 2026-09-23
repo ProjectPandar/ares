@@ -1,6 +1,7 @@
 //! Builds `MotionOptions` from the resolved project configuration
 //! (`GCodeWriter::apply_print_config` equivalents).
 
+mod context;
 mod crossing;
 mod region;
 mod retraction;
@@ -16,32 +17,23 @@ impl MotionOptions {
     pub(in crate::project_slice::gcode_emit) fn from_traversal(
         traversal: &crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal,
     ) -> Self {
-        let full = &traversal.resolved.views.full;
-        let gcode = &traversal.resolved.views.runtime_gcode;
-        let retract_overrides = &full.filament.retract_overrides;
-        let object = traversal.resolved.objects.first();
-        let region = object
-            .and_then(|object| object.layer_candidates.first())
-            .and_then(|layer| layer.model_parts.first())
-            .map(|part| &part.region);
-        let filament_diameter = gcode
-            .filament_diameter
-            .0
-            .first()
-            .map_or(1.75, |value| value.0);
-        let travel_speed = gcode.travel_speed.0;
-        let travel_acceleration = object
-            .map_or(full.process.object.travel_acceleration.0, |value| {
-                value.object.travel_acceleration.0
-            });
-        let speeds = region::region_speeds(full, object, region);
-        let bridge_speed = speeds.bridge_speed;
-        let outer_wall_speed = speeds.outer_wall_speed;
-        let small_perimeter_speed = speeds.small_perimeter_speed;
-        let outer_wall_acceleration = speeds.outer_wall_acceleration;
-        let default_acceleration = speeds.default_acceleration;
-
-        let (retraction_speed, deretraction_speed) = retraction::speeds(gcode);
+        let context::Prelude {
+            full,
+            gcode,
+            retract_overrides,
+            object,
+            region,
+            filament_diameter,
+            travel_speed,
+            travel_acceleration,
+            bridge_speed,
+            outer_wall_speed,
+            small_perimeter_speed,
+            outer_wall_acceleration,
+            default_acceleration,
+            retraction_speed,
+            deretraction_speed,
+        } = context::prelude(traversal);
         Self {
             // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
             // — the multiplication order matters for f64 parity with upstream.
