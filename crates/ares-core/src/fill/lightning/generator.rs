@@ -225,7 +225,8 @@ impl Generator {
         limit_to_outline: &[Polygon],
         line_overlap: Coord,
     ) -> Result<Vec<Polyline>, ClipperError> {
-        let lines = self.lightning_layers[layer_id].convert_to_lines(limit_to_outline, line_overlap)?;
+        let lines =
+            self.lightning_layers[layer_id].convert_to_lines(limit_to_outline, line_overlap)?;
         if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
             eprintln!(
                 "C2L layer={} roots={} outline={} lines={}",

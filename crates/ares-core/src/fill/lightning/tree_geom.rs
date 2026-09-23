@@ -1,0 +1,191 @@
+//! `FillLightning::Node` convertToPolylines + geometry helpers
+//! (`TreeNode.cpp`), split from `tree_node.rs` for the <400 LOC rule.
+
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use crate::geometry::point_in_polygon;
+use crate::geometry::{Coord, EdgeGrid, Point, Polygon, Polyline};
+
+use super::glibc_rand::GlibcRand;
+use super::tree_node::{Node, NodeSPtr};
+
+impl Node {
+    /// `convertToPolylines` — depth-first branch order, first child picked by
+    /// `rand()` (glibc), other children get new polylines (TreeNode.cpp:355).
+    pub(super) fn convert_to_polylines(
+        this: &NodeSPtr,
+        line_overlap: Coord,
+        rng: &mut GlibcRand,
+    ) -> Vec<Polyline> {
+        let mut result: Vec<Polyline> = vec![Polyline::new(Vec::new())];
+        Self::convert_rec(this, 0, &mut result, rng);
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            eprintln!(
+                "C2PRE nlines={} pts={:?} overlap={}",
+                result.len(),
+                result.iter().map(|l| l.points().len()).collect::<Vec<_>>(),
+                line_overlap
+            );
+        }
+        Self::remove_junction_overlap(&mut result, line_overlap);
+        result
+    }
+
+    fn convert_rec(
+        this: &NodeSPtr,
+        long_line_idx: usize,
+        output: &mut Vec<Polyline>,
+        rng: &mut GlibcRand,
+    ) {
+        let (children, p) = {
+            let n = this.borrow();
+            (n.children.clone(), n.p)
+        };
+        if children.is_empty() {
+            output[long_line_idx].points_mut().push(p);
+            return;
+        }
+        let first_child_idx = (rng.next() as usize) % children.len();
+        Self::convert_rec(&children[first_child_idx], long_line_idx, output, rng);
+        output[long_line_idx].points_mut().push(p);
+        for idx_offset in 1..children.len() {
+            let child_idx = (first_child_idx + idx_offset) % children.len();
+            let child = children[child_idx].clone();
+            output.push(Polyline::new(Vec::new()));
+            let child_line_idx = output.len() - 1;
+            Self::convert_rec(&child, child_line_idx, output, rng);
+            output[child_line_idx].points_mut().push(p);
+        }
+    }
+
+    /// `removeJunctionOverlap` — reduce each polyline's tail by `line_overlap`.
+    fn remove_junction_overlap(result_lines: &mut Vec<Polyline>, line_overlap: Coord) {
+        let reduction = line_overlap;
+        let mut i = 0;
+        while i < result_lines.len() {
+            if result_lines[i].points().len() <= 1 {
+                result_lines.swap_remove(i);
+                continue;
+            }
+            let mut to_be_reduced = reduction;
+            let pts = result_lines[i].points().to_vec();
+            let mut a = *pts.last().unwrap();
+            let mut new_pts = pts.clone();
+            let mut idx = pts.len() as i64 - 2;
+            while idx >= 0 {
+                let b = pts[idx as usize];
+                let ab_len = dist(a, b);
+                if ab_len >= to_be_reduced {
+                    // move the tail point toward `b` by the remaining reduction
+                    let (ax, ay) = (a.x() as f64, a.y() as f64);
+                    let (bx, by) = (b.x() as f64, b.y() as f64);
+                    let (dx, dy) = (bx - ax, by - ay);
+                    let t = to_be_reduced as f64 / ab_len as f64;
+                    *new_pts.last_mut().unwrap() = Point::new(
+                        (ax + dx * t).round() as Coord,
+                        (ay + dy * t).round() as Coord,
+                    );
+                    break;
+                } else {
+                    to_be_reduced -= ab_len;
+                    new_pts.pop();
+                }
+                a = b;
+                idx -= 1;
+            }
+            if new_pts.len() <= 1 {
+                result_lines.swap_remove(i);
+            } else {
+                result_lines[i] = Polyline::new(new_pts);
+                i += 1;
+            }
+        }
+    }
+}
+
+/// `lineSegmentPolygonsIntersection` (TreeNode.cpp) — walk the outline locator
+/// along `a→b`, find the nearest segment intersection within `within_max_dist`
+/// of `b`. Returns the intersection `Point`.
+pub(super) fn line_segment_polygons_intersection(
+    a: Point,
+    b: Point,
+    outline_locator: &EdgeGrid,
+    within_max_dist: Coord,
+) -> Option<Point> {
+    let mut d2min = f64::MAX;
+    let mut result: Option<(f64, f64)> = None;
+    let _ = outline_locator.visit_cells_intersecting_line(a, b, |_row, _col, edges| {
+        for &edge in edges {
+            let (s1, s2) = outline_locator.segment(edge);
+            if let Some(ip) = seg_seg_intersection(
+                (a.x() as f64, a.y() as f64),
+                (b.x() as f64 - a.x() as f64, b.y() as f64 - a.y() as f64),
+                (s1.x() as f64, s1.y() as f64),
+                (s2.x() as f64 - s1.x() as f64, s2.y() as f64 - s1.y() as f64),
+            ) {
+                let d = (ip.0 - b.x() as f64).powi(2) + (ip.1 - b.y() as f64).powi(2);
+                if d < d2min {
+                    d2min = d;
+                    result = Some(ip);
+                }
+            }
+        }
+        true
+    });
+    if d2min < (within_max_dist as f64) * (within_max_dist as f64) {
+        let (x, y) = result?;
+        Some(Point::new(x as Coord, y as Coord))
+    } else {
+        None
+    }
+}
+
+/// `Geometry::segment_segment_intersection` (Geometry.hpp:92) — f64 segments.
+fn seg_seg_intersection(
+    p1: (f64, f64),
+    v1: (f64, f64),
+    p2: (f64, f64),
+    v2: (f64, f64),
+) -> Option<(f64, f64)> {
+    let mut denom = v1.0 * v2.1 - v2.0 * v1.1;
+    if denom.abs() < 1e-6 {
+        return None;
+    }
+    let s12 = (p1.0 - p2.0, p1.1 - p2.1);
+    let mut s_numer = v1.0 * s12.1 - v1.1 * s12.0;
+    let denom_pos = denom < 0.0;
+    if denom_pos {
+        denom = -denom;
+        s_numer = -s_numer;
+    }
+    if s_numer < 0.0 {
+        return None;
+    }
+    let mut t_numer = v2.0 * s12.1 - v2.1 * s12.0;
+    if !denom_pos {
+        t_numer = -t_numer;
+    }
+    if t_numer < 0.0 || s_numer > denom || t_numer > denom {
+        return None;
+    }
+    let t = t_numer / denom;
+    Some((p1.0 + t * v1.0, p1.1 + t * v1.1))
+}
+
+pub(super) fn dist(a: Point, b: Point) -> Coord {
+    (((a.x() - b.x()) as f64).powi(2) + ((a.y() - b.y()) as f64).powi(2)).sqrt() as Coord
+}
+
+/// `inside` (TreeNode.cpp) — `PointInPolygon` parity over all polys, odd count.
+pub(super) fn inside(polygons: &[Polygon], p: Point) -> bool {
+    let mut count = 0;
+    for poly in polygons {
+        let r = point_in_polygon(p, poly.points());
+        if r == -1 {
+            return true;
+        }
+        count += r;
+    }
+    count % 2 == 1
+}

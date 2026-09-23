@@ -6,7 +6,9 @@
 
 mod distance_field;
 mod glibc_rand;
+mod tree_geom;
 mod tree_node;
+mod tree_ops;
 
 /// `Line::distance_to_squared` — squared distance from `point` to segment a-b.
 pub(super) fn segment_distance_squared(
@@ -29,3 +31,4 @@ pub(super) fn segment_distance_squared(
 }
 pub(crate) mod generator;
 mod layer;
+mod layer_geom;
