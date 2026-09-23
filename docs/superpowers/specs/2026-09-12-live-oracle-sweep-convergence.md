@@ -6694,3 +6694,16 @@ residual is NOT the rounding fn; it's offset topology/connectJunctions or
 union. Concentric residual = consistent ~0.2mm surface offset (X108.491 vs
 108.694 etc) — downstream of the perimeter/int residual on the filled
 surface boundary, not a concentric-specific bug.
+
+§ccvi — _infill_direction audit (5901d991, 7bedd086): upstream
+Fill::_infill_direction returns direction.first = angle + _layer_angle
+(layer alternation, +pi/2 when (layer/thick)&1) + pi/2 (FillBase.cpp:275-320).
+Generators using direction.first need this; those using this->angle do not.
+Fixed FillLine + FillHoneycomb (both used raw angle → wrong orientation;
+line emitted diagonal not zigzag-columns — verified region-identical after).
+Audited ALL: only line+honeycomb buggy. Correct-as-is: plane_path (+pi/2),
+rectilinear/monotonic (infill_direction in surface.rs:172), gyroid +
+3dhoneycomb (this->angle raw — FillGyroid.cpp:295/Fill3DHoneycomb.cpp:199),
+concentric (no rotation), adaptive/cubic/triangles/grid/crosshatch (fixed
+DIRECTION_ANGLES or rectilinear path). Remaining DIVERGENTs = shared
+connect_infill/perimeter-int/estimator residual, not direction.
