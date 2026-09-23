@@ -6960,3 +6960,9 @@ convert_to_lines(layer_index) indexes lightning_layers[layer_index] — matches 
 ## §ccxxvii FillLightning — single-node trees reach convert (pts=[1])
 
 C2PRE debug: convert_to_polylines yields pts=[1] (single-pt) on lower layers — convert_rec visited root only, no children. But REALIGN kept children during propagate. So stored tree_roots ARE single-node at convert time despite propagate keeping children in tree_below. Cascade: a propagate where entry children=[] → single-node pushed; or reconnect_roots replaced root dropping subtree. Emergent depth loss across propagation — the deep_copy trees alternate keep/lift. Port verified faithful fn-by-fn; emits 16/38 sections. This is the last lightning residual — needs oracle-side per-layer tree-depth dump to find which upstream step preserves depth that ares loses.
+
+## §ccxxviii FillLightning — 400-LOC split done + oracle sweep confirmed
+
+Split `tree_node.rs`(657→255)+`layer.rs`(485→212): new `tree_geom.rs`(convertToPolylines+geom helpers 191), `tree_ops.rs`(realign/straighten 234), `layer_geom.rs`(grounding/reconnect+helpers 288). All <400, clippy+fmt clean, behavior preserved (16 cube sections). Committed b7464e92.
+
+Oracle sweep (complex obj case-IdM3Br): trees propagate to all layers 5..42 (7 roots each) but convert yields pts=[1] single-node → 1 sparse section vs oracle 38. REALIGN keeps children (cross=None) yet convert sees single-node → lifted children (rerooted_parts) become separate single-node roots OR reconnect replaces root dropping subtree. support_r=2999993, wall_r/prune/straight=199999 all verified upstream formulas. Residual isolated to convert-time tree depth — needs oracle-side per-layer tree dump to find which upstream step preserves depth ares loses.
