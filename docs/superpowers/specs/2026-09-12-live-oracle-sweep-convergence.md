@@ -5484,3 +5484,19 @@ where `filler->spacing` defaults to `line_width` — OR an `ipSupportBase` objec
 region ares doesn't emit. ares uses 0.337/0.377 → ~600-line diff. NEXT: grep
 upstream for `filler->spacing`/`->spacing =` assignments beyond the probed
 sites, or dump `filler` type+spacing inside `FillSupportBase::fill_surface`.
+
+### cxxviii. BLOCKER — spacing=0.407 source unlocated after exhaustive probing
+All `filler->spacing` assignment sites probed: :1476/:1505 `support_material_flow`
+=0.337 (FSUP confirms 38 calls), :1499/:1787 `first_layer_flow`=0.377 (FLOW
+confirms `first=0.377`), :1722/:1750 interface=0.337. None produces 0.407.
+`spacing(0.45,0.2)=0.407`=`line_width`. The 39 `infill=3 boundary=1 spacing=0.407`
+`connect_base_support` calls come FIRST (lowest z, raft base/flange blob
+contours) but no probed raft filler has spacing=0.407 — `filler->spacing` must
+be set to `line_width`-spacing somewhere outside these sites, OR `filler->spacing`
+is the `ipSupportBase` filler's `Fill::spacing` default (`line_width`). ares's
+raft base uses `support_flow_spacing`(0.337)/`first_layer_flow_spacing`(0.377).
+RESIDUAL: ~600-line divergence on the raft base blob connects. The fix is a
+`filler->spacing` that defaults to `line_width`(0.45) for the `ipSupportBase`
+raft-base fill — needs `Fill::spacing` init or a `filler->spacing=line_width`
+site upstream (possibly `filler_support`/`filler_first_layer` constructor
+default or `base_fill_pattern` ipSupportBase path).
