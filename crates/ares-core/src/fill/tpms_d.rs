@@ -14,7 +14,6 @@ use crate::geometry::{
 
 use super::checked_rotate::{rotate_points, rotate_points_with_trig};
 use super::connect::{FillConnectionParams, connect_infill};
-use super::rectilinear::MonotonicFillParams;
 
 const CORRECTION_ANGLE: f64 = (-45.0_f64 * 2.0 * std::f64::consts::PI) / 360.0;
 const DENSITY_ADJUST: f64 = 2.1;

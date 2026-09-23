@@ -7,7 +7,7 @@
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, Sweep, fill_surface},
+    fill::multiline::{MultilineFillParams, fill_surface},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
@@ -21,23 +21,8 @@ pub(super) fn append(
     object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
-    // `float((3./2.) * this->spacing * params.multiline / params.density)`.
-    let third_shift =
-        (1.5 * fill.params.spacing * f64::from(fill.params.multiline)) as f32 / density;
-    let sweeps = [
-        Sweep {
-            angle: 0.0,
-            shift: 0.0,
-        },
-        Sweep {
-            angle: std::f32::consts::FRAC_PI_3,
-            shift: 0.0,
-        },
-        Sweep {
-            angle: 2.0 * std::f32::consts::FRAC_PI_3,
-            shift: third_shift,
-        },
-    ];
+    let sweeps =
+        crate::fill::multiline::stars_sweeps(fill.params.spacing, fill.params.multiline, density);
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,

@@ -7,14 +7,12 @@
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, Sweep, fill_surface},
+    fill::multiline::{MultilineFillParams, fill_surface},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
-
-const DEGREE: f32 = std::f32::consts::PI / 180.0;
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
@@ -25,51 +23,13 @@ pub(super) fn append(
     object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
-    // `FillRectilinear.cpp:3571-3583` — period and per-layer phase.
-    let half_horizontal_period = 0.5
-        * (1.0 * (2.0 / 3.0) + 2.0 * (1.0 / 3.0))
-        * fill.params.spacing as f32
-        * fill.params.multiline as f32
-        / density;
-    let vertical_period =
-        3.0 * half_horizontal_period / (DEGREE * fill.params.infill_overhang_angle).tan();
-    let vertical_thirds_float = 3.0 * print_z as f32 / vertical_period;
-    let vertical_thirds_int = vertical_thirds_float as i32;
-    let single_line = (vertical_thirds_int + 1) % 3 != 0;
-    let odd_layer = ((vertical_thirds_int + 1) / 3) % 2 != 0;
-    let horizontal_offset = if odd_layer {
-        half_horizontal_period
-    } else {
-        0.0
-    };
-
-    // The `(1*(2/3.) + 2*(1/3.))` normalizer = 4/3.
-    let normalizer = 1.0 * (2.0 / 3.0) + 2.0 * (1.0 / 3.0);
-    let (sweeps, sweep_density) = if single_line {
-        (
-            vec![Sweep {
-                angle: std::f32::consts::FRAC_PI_2,
-                shift: horizontal_offset,
-            }],
-            density * (1.0 / normalizer) as f32,
-        )
-    } else {
-        let horizontal_position =
-            (1.0 - (vertical_thirds_float - vertical_thirds_int as f32)) * half_horizontal_period;
-        (
-            vec![
-                Sweep {
-                    angle: std::f32::consts::FRAC_PI_2,
-                    shift: -horizontal_position + horizontal_offset,
-                },
-                Sweep {
-                    angle: std::f32::consts::FRAC_PI_2,
-                    shift: horizontal_position + horizontal_offset,
-                },
-            ],
-            density * (2.0 / normalizer) as f32,
-        )
-    };
+    let (sweeps, sweep_density) = crate::fill::multiline::lateral_honeycomb_sweeps(
+        fill.params.spacing,
+        fill.params.multiline,
+        density,
+        fill.params.infill_overhang_angle,
+        print_z,
+    );
 
     let params = MultilineFillParams {
         spacing: fill.params.spacing,

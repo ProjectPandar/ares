@@ -5,14 +5,12 @@
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, Sweep, fill_surface},
+    fill::multiline::{MultilineFillParams, fill_surface},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, FillExtrusionPath, LayerFillEntities};
-
-const ONE_DIV_ROOT_TWO: f64 = std::f64::consts::FRAC_1_SQRT_2;
 
 pub(super) fn append(
     output: &mut LayerFillEntities,
@@ -22,50 +20,13 @@ pub(super) fn append(
     object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
-    let z_scaled = scale
-        .checked_scale(print_z)
-        .ok_or(crate::geometry::ClipperError::CoordinateOutOfRange)
-        .map_err(quartercubic_error)? as f64;
-    let spacing_scaled = scale
-        .checked_scale(fill.params.spacing)
-        .ok_or(crate::geometry::ClipperError::CoordinateOutOfRange)
-        .map_err(quartercubic_error)? as f64;
-    let line_width = spacing_scaled as i64 * i64::from(fill.params.multiline);
-    let period =
-        (spacing_scaled * f64::from(fill.params.multiline) / f64::from(density)) as i64 * 4;
-
-    // `dx1`/`dx2`: the first/second half of the tetrahedral period
-    // (`FillRectilinear.cpp:3528-3540`). The `coord_t` shift is wrapped into
-    // `[-period/2, period/2]` then clamped clear of the line width.
-    let shift_for = |pattern_z_shift: f64| -> f64 {
-        let mut shift =
-            (ONE_DIV_ROOT_TWO * (z_scaled + pattern_z_shift * period as f64 * 2.0)) as i64 % period;
-        shift = shift.min(period - shift);
-        shift = shift.min(period / 2 - line_width / 2);
-        shift = shift.max(line_width / 2);
-        scale.unscale(shift)
-    };
-    let dx1 = shift_for(0.0) as f32;
-    let dx2 = shift_for(0.5) as f32;
-
-    let sweeps = [
-        Sweep {
-            angle: 0.0,
-            shift: dx1,
-        },
-        Sweep {
-            angle: 0.0,
-            shift: -dx1,
-        },
-        Sweep {
-            angle: std::f32::consts::FRAC_PI_2,
-            shift: dx2,
-        },
-        Sweep {
-            angle: std::f32::consts::FRAC_PI_2,
-            shift: -dx2,
-        },
-    ];
+    let sweeps = crate::fill::multiline::quartercubic_sweeps(
+        fill.params.spacing,
+        fill.params.multiline,
+        density,
+        print_z,
+        scale,
+    );
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,

@@ -68,6 +68,19 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
 
+    let multiline_params =
+        |params: crate::project_slice::group_fills::SurfaceFillParams| MultilineFillParams {
+            spacing: params.spacing,
+            overlap: 0.0,
+            angle: params.angle + std::f32::consts::FRAC_PI_2,
+            reference: object_reference,
+            density: (0.01_f64 * f64::from(params.density)) as f32,
+            multiline: params.multiline,
+            anchor_length: params.anchor_length,
+            anchor_length_max: params.anchor_length_max,
+            dont_sort: false,
+        };
+
     for fill in grouped.surface_fills {
         if fill.representative.kind != RegionSurfaceKind::Internal {
             continue;
@@ -397,14 +410,106 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     result.extend(components.into_iter().flatten());
                 }
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
+                // `ipStars` — 3×60° with the third family shifted by
+                // (3/2)·spacing·multiline/density (FillRectilinear.cpp:3487).
+                let sweeps = crate::fill::multiline::stars_sweeps(
+                    fill.params.spacing,
+                    fill.params.multiline,
+                    (0.01_f64 * f64::from(fill.params.density)) as f32,
+                );
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_multiline_surface(
+                            &expolygon,
+                            multiline_params(fill.params),
+                            &sweeps,
+                            traversal.scale,
+                        )
+                        .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::QuarterCubic) => {
+                let sweeps = crate::fill::multiline::quartercubic_sweeps(
+                    fill.params.spacing,
+                    fill.params.multiline,
+                    (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    z,
+                    traversal.scale,
+                );
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_multiline_surface(
+                            &expolygon,
+                            multiline_params(fill.params),
+                            &sweeps,
+                            traversal.scale,
+                        )
+                        .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::LateralLattice) => {
+                let sweeps = crate::fill::multiline::lateral_lattice_sweeps(
+                    fill.params.lateral_lattice_angle_1,
+                    fill.params.lateral_lattice_angle_2,
+                    z,
+                );
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_multiline_surface(
+                            &expolygon,
+                            multiline_params(fill.params),
+                            &sweeps,
+                            traversal.scale,
+                        )
+                        .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::LateralHoneycomb) => {
+                let (sweeps, density) = crate::fill::multiline::lateral_honeycomb_sweeps(
+                    fill.params.spacing,
+                    fill.params.multiline,
+                    (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    fill.params.infill_overhang_angle,
+                    z,
+                );
+                let mut params = multiline_params(fill.params);
+                params.density = density;
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        fill_multiline_surface(&expolygon, params, &sweeps, traversal.scale)
+                            .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsD) => {
+                let params = crate::fill::tpms_d::TpmsDFillParams {
+                    spacing: fill.params.spacing,
+                    overlap: 0.0,
+                    density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    angle: fill.params.angle,
+                    layer_z: z,
+                    multiline: fill.params.multiline,
+                    anchor_length: fill.params.anchor_length,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    dont_sort: false,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        crate::fill::tpms_d::fill_tpmsd_surface(
+                            &expolygon,
+                            &params,
+                            traversal.scale,
+                        )
+                        .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
             SurfaceFillPattern::Configured(
-                ProcessInfillPattern::TriHexagon
-                | ProcessInfillPattern::QuarterCubic
-                | ProcessInfillPattern::Lightning
-                | ProcessInfillPattern::LateralHoneycomb
-                | ProcessInfillPattern::LateralLattice
-                | ProcessInfillPattern::TpmsD
-                | ProcessInfillPattern::TpmsFk,
+                ProcessInfillPattern::Lightning | ProcessInfillPattern::TpmsFk,
             )
             | SurfaceFillPattern::ConcentricInternal => {
                 unreachable!("bridge transaction admits only implemented sparse anchoring patterns")

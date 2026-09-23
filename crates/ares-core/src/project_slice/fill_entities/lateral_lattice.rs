@@ -5,7 +5,7 @@
 
 use crate::{
     SliceError,
-    fill::multiline::{MultilineFillParams, Sweep, fill_surface},
+    fill::multiline::{MultilineFillParams, fill_surface},
     geometry::CoordinateScale,
     project_slice::group_fills::SurfaceFill,
 };
@@ -20,24 +20,11 @@ pub(super) fn append(
     scale: CoordinateScale,
     object_reference: crate::geometry::Point,
 ) -> Result<(), SliceError> {
-    let dx1 = (f64::from(fill.params.lateral_lattice_angle_1)
-        .to_radians()
-        .tan()
-        * print_z) as f32;
-    let dx2 = (f64::from(fill.params.lateral_lattice_angle_2)
-        .to_radians()
-        .tan()
-        * print_z) as f32;
-    let sweeps = [
-        Sweep {
-            angle: std::f32::consts::FRAC_PI_2,
-            shift: dx1,
-        },
-        Sweep {
-            angle: std::f32::consts::FRAC_PI_2,
-            shift: dx2,
-        },
-    ];
+    let sweeps = crate::fill::multiline::lateral_lattice_sweeps(
+        fill.params.lateral_lattice_angle_1,
+        fill.params.lateral_lattice_angle_2,
+        print_z,
+    );
     let params = MultilineFillParams {
         spacing: fill.params.spacing,
         overlap: fill.params.overlap,
