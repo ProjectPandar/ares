@@ -5928,3 +5928,18 @@ ares emits `skirt_flow.mm3_per_mm` (0.0754·len) but oracle emits
 `mm3_per_mm` for `spacing(0.45)·spacing(0.42)` (0.0307·len). RESIDUAL: the
 skirt `G1 E` `mm3_per_mm` uses `spacing = spacing(line_width)·spacing
 (first_layer_width)` — identify the emit-path `flow`/`spacing` computation.
+
+### clx. case-59tGO2 — both residuals blocked on emit-path flow/filler identity
+Two `line_width`-fallback residuals remain after exhaustive probing:
+1. `connect_base_support` `spacing=0.407` on 39 `infill=3` raft-base blob calls
+   — `FillSupportBase`/`ipSupportBase` filler `spacing`=`line_width`(0.45) via
+   a path not hit by `filler->spacing` probes. Needs `this`/`pattern`/`z`
+   identity on the `infill=3` calls.
+2. Skirt `E` `mm3_per_mm`=0.0307 (`spacing=0.1536`=`spacing(line_width)·
+   spacing(first_layer)` product, `width=0.196`) — `skirt_flow` itself correct
+   (`mm3=0.0754`); the `G1 E` emit path uses a `line_width`-derived `flow`.
+Both are `line_width`-substitution bugs in the raft/skirt fill resolution.
+Baseline 3609 held through all reverts; the `spacing`/`mm3_per_mm`/
+`line_spacing` triad needs separate `width` sources per upstream's
+`filler->spacing` vs `flow` split. NEXT: emit-path `flow`/`spacing` probes
+(ORCA on the `G1 E`/`connect_base_support` `filler` identity).
