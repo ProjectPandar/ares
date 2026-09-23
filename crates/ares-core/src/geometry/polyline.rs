@@ -14,6 +14,10 @@ impl Polyline {
         &self.points
     }
 
+    pub(crate) fn points_mut(&mut self) -> &mut Vec<Point> {
+        &mut self.points
+    }
+
     pub(crate) fn into_points(self) -> Vec<Point> {
         self.points
     }
