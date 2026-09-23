@@ -27,11 +27,39 @@ fn orca_parity_option_coverage() {
     let only: Option<std::collections::BTreeSet<String>> = std::env::var("ARES_OPTION_KEYS")
         .ok()
         .map(|list| list.split(',').map(str::trim).map(str::to_owned).collect());
+    // `ARES_OPTION_VALUES=a,b,c` further narrows each selected plan's cases to
+    // the named option values (e.g. `rectilinear,monotonic`); unset runs every
+    // case in the plan's domain. `ARES_PARITY_PATTERN` is accepted as an alias.
+    let only_values: Option<std::collections::BTreeSet<String>> =
+        std::env::var("ARES_OPTION_VALUES")
+            .ok()
+            .or_else(|| std::env::var("ARES_PARITY_PATTERN").ok())
+            .map(|list| list.split(',').map(str::trim).map(str::to_owned).collect());
     let plans = domains::load(&runner::repo_root());
-    let plans: Vec<_> = plans
+    let mut plans: Vec<_> = plans
         .into_iter()
         .filter(|plan| only.as_ref().is_none_or(|set| set.contains(&plan.key)))
         .collect();
+    if let Some(set) = &only {
+        let missing: Vec<_> = set
+            .iter()
+            .filter(|key| !plans.iter().any(|plan| &plan.key == *key))
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "ARES_OPTION_KEYS selected unknown option keys {missing:?}"
+        );
+    }
+    if let Some(values) = &only_values {
+        for plan in &mut plans {
+            plan.cases.retain(|case| {
+                case.value.as_ref().is_none_or(|v| {
+                    let label = v.as_str().map(str::to_owned).unwrap_or_else(|| v.to_string());
+                    values.iter().any(|want| want.trim_matches('"') == label.trim_matches('"'))
+                })
+            });
+        }
+    }
     let outcomes = plans
         .iter()
         .map(|plan| execute_plan(&runner, plan, &machine, &process, &filaments))
