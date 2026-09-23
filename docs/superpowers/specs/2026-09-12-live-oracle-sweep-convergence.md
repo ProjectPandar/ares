@@ -5916,3 +5916,15 @@ must use a `flow` resolved differently from `skirt_flow` — possibly
 uses `first_layer_flow`/`line_width` differently. RESIDUAL: skirt `E` `flow`
 source — `flow.width`≈0.196/`spacing`≈0.1536 — needs a `G1 E` emit-path probe
 to identify which `flow`/`spacing` the oracle uses for skirt extrusions.
+
+### clix. case-59tGO2 — blocked on E-emit flow identity (spacing product)
+The skirt `E` `mm3_per_mm`=0.0307 = `spacing·height` with `spacing=0.1536` =
+`spacing(0.45,0.2)·spacing(0.42,0.2)` = `spacing(line_width)·spacing
+(first_layer_width)` — a SPACING PRODUCT. The `skirt_flow` itself is correct
+(`mm3=0.0754`). The `E` emit path uses `flow.spacing=0.1536` — a
+`line_width·first_layer` spacing product, not `skirt_flow.spacing`. This is a
+G-code emit-path `flow`/`spacing` resolution bug specific to the skirt —
+ares emits `skirt_flow.mm3_per_mm` (0.0754·len) but oracle emits
+`mm3_per_mm` for `spacing(0.45)·spacing(0.42)` (0.0307·len). RESIDUAL: the
+skirt `G1 E` `mm3_per_mm` uses `spacing = spacing(line_width)·spacing
+(first_layer_width)` — identify the emit-path `flow`/`spacing` computation.
