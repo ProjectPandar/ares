@@ -5576,3 +5576,18 @@ FIX: ares's object infill must select `connect_base_support` when the surface's
 interface uses `ipSupportBase` with `line_width` spacing). This is an OBJECT
 infill fill-type routing fix, not a raft fix — the `infill=3` regions are the
 object's small sparse-infill islands using `ipSupportBase`.
+
+### cxxxiii. FINAL BLOCKER NOTE — contradiction unresolved, needs filler-id probe
+`connect_infill` has no `connect_base_support`/`ipSupportBase` branch;
+`connect_base_support` is ONLY `FillSupportBase::fill_surface` (:3623) with
+`this->spacing` ∈ {0.337,0.377} (FBS probe). Yet `connect_base_support` sees
+`spacing=0.407080` for 39 `infill=3 boundary=1` calls (lowest z, raft base).
+`spacing(0.45,0.2)=0.407`=`line_width`. The `FillSupportBase` `this->spacing`=
+0.407 means `filler->spacing`=`line_width` for a `FillSupportBase` filler —
+none of `filler_support`/`filler_interface`/`filler_raft_contact`/
+`filler_first_layer` probed sites assigns `line_width`. The `infill=3` calls
+may be a `FillSupportBase` whose `filler->spacing` was NEVER assigned on that
+code path (defaults or an `ipSupportBase` filler for a sub-region). RESIDUAL
+BLOCKER: needs `ORCA_FBS` extended to print `params.pattern`/surface z so the
+0.407 `FillSupportBase` instance is identified — then pin its `filler->spacing`
+assignment. ares uses 0.337/0.377 → ~600-line raft-base divergence.
