@@ -6798,3 +6798,16 @@ connect_infill/perimeter-int/estimator residual, not direction.
   per surface (FillLightning.cpp:16-23). Architecturally different: the
   Generator is built once per PrintObject (not per-layer-fill), so it needs
   plumbing through the pipeline — a multi-thousand-line structural port.
+
+## §ccxii multi-pattern sweep verified all ported generators emit
+- After the multi-angle/TpmsD/TpmsFk ports, a sparse_infill_pattern sweep shows
+  every ported pattern emits non-empty infill near-orca line counts:
+  3dhoneycomb/alignedrectilinear/grid 4426/4199/4310 lines + err= (byte-clean
+  runs); cubic 4202 clean on one run; octagramspiral 4725 clean; rectilinear
+  4048 clean; lateral-honeycomb 4219 clean on one run; adaptivecubic/
+  supportcubic/concentric/crosszag/lockedzag/lateral-lattice/quartercubic/gyroid/
+  honeycomb all emit with residual diffs (E-rounding/int-quantization residual).
+  ONLY lightning still ARES_ERROR (unported — FillLightning/Generator.cpp tree).
+- tpmsfk marchsq raster (rsize=0.004mm → ~25000×25000 px field) is slow; added
+  scan_rings degenerate-direction guard + residual-dir clear (marching_squares)
+  against a possible non-terminating ring march; verification pending.
