@@ -246,12 +246,22 @@ pub(super) fn build_lightning_generator(
         .map(|v| v.0)
         .reduce(f64::max)
         .unwrap_or(0.4);
-    let sparse_width = crate::project_slice::gcode_emit::resolved_width(
-        options.sparse_infill_line_width,
-        object_options.line_width,
-        nozzle,
-        1.125,
-    ) as f64;
+    // `scaled<float>(sparse_infill_line_width.get_abs_value(nozzle))`
+    // (Generator.cpp:79) — `get_abs_value` resolves the configured
+    // FloatOrPercent against the DOUBLE nozzle (no fallback chain, no f32
+    // narrowing), then `scaled<float>` = `f32(mm*1e6)`. Resolving via the
+    // f32-narrowed `resolved_width` first loses the last ulp (0.42 → 419999
+    // instead of 420000).
+    let sparse_width = match options.sparse_infill_line_width {
+        crate::FloatOrPercent::Float(value) => value,
+        crate::FloatOrPercent::Percent(percent) => percent.0 / 100.0 * nozzle,
+    };
+    // `line_width.get_abs_value(nozzle)` — the EPSILON fallback source
+    // (Generator.cpp:85-87), resolved in f64 for the same reason.
+    let line_width = match object_options.line_width {
+        crate::FloatOrPercent::Float(value) => value,
+        crate::FloatOrPercent::Percent(percent) => percent.0 / 100.0 * nozzle,
+    };
     // `object_config.layer_height` (Generator.cpp:77) — the configured ordinary
     // layer height, NOT the first/planned layer height.
     let layer_height = object_options.layer_height.0;
@@ -303,6 +313,8 @@ pub(super) fn build_lightning_generator(
         layer_internal_outlines,
         layer_height,
         sparse_width,
+        line_width,
+        nozzle,
         options.fill_multiline.0,
         options.sparse_infill_density.0,
         options.lightning_overhang_angle.0,

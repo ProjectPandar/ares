@@ -199,17 +199,19 @@ impl DistanceField {
         }
 
         // `std::stable_sort` with the single upstream comparator
-        // (DistanceField.cpp): if |b.dist - a.dist| > radius, order by
-        // dist_to_boundary ascending; else by the prime-hash of the loc.
-        // Vec::sort_by is stable, matching std::stable_sort.
-        unsupported_points.sort_by(|a, b| {
-            let d = b.dist_to_boundary.abs() - a.dist_to_boundary.abs();
-            if d.abs() > radius {
-                a.dist_to_boundary.cmp(&b.dist_to_boundary)
+        // (DistanceField.cpp:72-77): if `abs(b.dist - a.dist) > radius`, order
+        // by dist_to_boundary ascending; else by the prime-hash of the loc.
+        // The upstream comparator is NOT a strict-weak-order (mixing the two
+        // keys can be non-transitive), which Rust's `sort_by` rejects with a
+        // total-order panic — use the GCC `stable_sort` emulation
+        // (`fixed_gcc_sort_by`), which tolerates it and reproduces upstream
+        // ordering byte-for-byte.
+        crate::geometry::fixed_gcc_sort_by(&mut unsupported_points, |a, b| {
+            if (b.dist_to_boundary - a.dist_to_boundary).unsigned_abs() > radius as u64 {
+                a.dist_to_boundary < b.dist_to_boundary
             } else {
-                let ha = (point_hash(a.loc) % PRIME_FOR_HASH as u64);
-                let hb = (point_hash(b.loc) % PRIME_FOR_HASH as u64);
-                ha.cmp(&hb)
+                (point_hash(a.loc) % PRIME_FOR_HASH as u64)
+                    < (point_hash(b.loc) % PRIME_FOR_HASH as u64)
             }
         });
 

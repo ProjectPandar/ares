@@ -89,7 +89,13 @@ impl Layer {
                         let cd = candidate
                             .borrow()
                             .get_weighted_distance(unsupported_location, supporting_radius);
-                        if cd < current_dist || (cd == current_dist && (gy, gx) < best_addr) {
+                        // Upstream `candidate_dist < local_current_dist`
+                        // (Layer.cpp:171) is STRICT: a tree tied with the
+                        // initial boundary distance never wins; the grid
+                        // tie-break only ranks already-winning candidates.
+                        if cd < current_dist
+                            || (cd == current_dist && sub_tree.is_some() && (gy, gx) < best_addr)
+                        {
                             current_dist = cd;
                             sub_tree = Some(candidate);
                             best_addr = (gy, gx);

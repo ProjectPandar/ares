@@ -44,7 +44,8 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
         .filter(|plan| plan.cases.iter().any(|case| case.label == "seeded"))
         .collect::<Vec<_>>();
     assert!(ranges.len() >= 100);
-    // Bounded ranges emit min+max+seeded; min-only-bounded domains (`[min,∞)`)
+    // Bounded ranges emit min+max+seeded; `coFloatOrPercent` also emits a
+    // `seeded-literal` absolute case; min-only-bounded domains (`[min,∞)`)
     // emit min+seeded — no `max` exists in the schema to probe.
     assert!(ranges.iter().all(|plan| {
         let labels = plan
@@ -52,7 +53,10 @@ fn option_domain_plan_exhausts_explicit_bool_enum_and_bounded_range_values() {
             .iter()
             .map(|case| case.label.as_str())
             .collect::<Vec<_>>();
-        labels == ["min", "max", "seeded"] || labels == ["min", "seeded"]
+        labels == ["min", "max", "seeded"]
+            || labels == ["min", "seeded"]
+            || labels == ["min", "max", "seeded", "seeded-literal"]
+            || labels == ["min", "seeded", "seeded-literal"]
     }));
 
     let baselines = plans

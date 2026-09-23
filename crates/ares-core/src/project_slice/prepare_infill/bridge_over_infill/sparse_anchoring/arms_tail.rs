@@ -186,6 +186,11 @@ pub(super) fn dispatch_tail(
                         traversal.scale,
                     )
                     .map_err(super::super::transaction::geometry_error)?;
+                    // `intersection_pl` after `multiline_fill`
+                    // (FillLightning.cpp:20-23) — the offsets can leave the
+                    // contour or enter holes; re-clip to the fill outline.
+                    let lines = crate::geometry::intersection_open_polylines(&lines, &outline)
+                        .map_err(super::super::transaction::geometry_error)?;
                     result.extend(lines);
                 }
             }

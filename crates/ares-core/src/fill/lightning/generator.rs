@@ -48,6 +48,8 @@ impl Generator {
         layer_internal_outlines: Vec<Vec<Polygon>>,
         layer_height: f64,
         infill_line_width: f64,
+        line_width: f64,
+        nozzle_diameter: f64,
         multiline: i32,
         density_percent: f64,
         overhang_angle_deg: f64,
@@ -55,13 +57,28 @@ impl Generator {
         straightening_angle_deg: f64,
         scale: CoordinateScale,
     ) -> Result<Self, ClipperError> {
-        let infill_extrusion_width = scale.checked_scale(infill_line_width).unwrap_or(1);
+        // `m_infill_extrusion_width = scaled<float>(sparse.get_abs_value(nozzle))`
+        // (Generator.cpp:79) — scale-domain FLOAT. `float(mm*1e6)` rounds
+        // 0.42*1e6=419999.9999 up to 420000.0; a coord_t truncation would give
+        // 419999. EPSILON fallback (Generator.cpp:83-88) to `line_width` or
+        // `Flow::auto_extrusion_width` = 1.125*nozzle when the sparse width ~0.
+        let scaled_float = |mm: f64| (mm / scale.factor()) as f32;
+        const EPSILON: f32 = 1e-5;
+        let mut infill_extrusion_width = scaled_float(infill_line_width);
+        if infill_extrusion_width < EPSILON {
+            let fallback_mm = if line_width < f64::from(EPSILON) {
+                1.125 * nozzle_diameter
+            } else {
+                line_width
+            };
+            infill_extrusion_width = scaled_float(fallback_mm);
+        }
         let layer_thickness = scale.checked_scale(layer_height).unwrap_or(1) as f64;
         let locator_cell_size = super::layer::locator_cell_size(scale);
         // `m_supporting_radius = coord_t(m_infill_extrusion_width) * 100 * n_multiline /
         // sparse_infill_density` (Generator.cpp:90): the `coord_t` product promotes
         // to `double` for the division, then truncates back — NOT integer division.
-        let supporting_radius = (infill_extrusion_width as f64 * 100.0 * f64::from(multiline)
+        let supporting_radius = (f64::from(infill_extrusion_width) * 100.0 * f64::from(multiline)
             / density_percent.max(f64::EPSILON)) as Coord;
         let wall_supporting_radius =
             (layer_thickness * overhang_angle_deg.to_radians().tan()) as Coord;

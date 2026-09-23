@@ -123,14 +123,27 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                             minimum.max(1.0) * 4.0 + 1.0,
                             option_type.contains("Int"),
                         );
-                        provably_legal = true;
-                        (
-                            vec![
-                                numeric_case("min", minimum, entry, &option_type),
-                                numeric_case("seeded", interior, entry, &option_type),
-                            ],
-                            None,
-                        )
+                        let mut cases = vec![
+                            numeric_case("min", minimum, entry, &option_type),
+                            numeric_case("seeded", interior, entry, &option_type),
+                        ];
+                        // `coFloatOrPercent` min-only options (e.g.
+                        // `overhang_reverse_threshold` min=0, max_literal=20)
+                        // still admit an absolute-literal branch bounded by
+                        // `max_literal` — exercise it like the bounded case.
+                        if option_type == "coFloatOrPercent"
+                            && let Some(lit_max) = literal_maximum(&block)
+                        {
+                            let lit_interior = seeded_interior(&key, minimum, lit_max, false);
+                            let mut absolute =
+                                numeric_case("seeded-literal", lit_interior, entry, "coFloat");
+                            absolute.label = "seeded-literal".to_owned();
+                            cases.push(absolute);
+                            provably_legal = true;
+                        } else {
+                            provably_legal = true;
+                        }
+                        (cases, None)
                     }
                     None => (vec![baseline_case()], None),
                 }
