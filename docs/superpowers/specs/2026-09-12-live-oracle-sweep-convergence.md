@@ -5727,3 +5727,15 @@ raft `connect_base_support` `spacing=0.407` was a separate red-herring
 (`line_width`-spacing on nl=3 raft-base blobs). RESIDUAL: skirt `mm3_per_mm`
 should use the raft-flange `raft_layer.height` (~0.076) or a `line_width`
 scaling — pin via ORCA_FLOW-style probe on the skirt extrusion.
+
+### cxliv. Skirt mm3_per_mm height = 0.076 (w=0.42) or 0.0706 (w=0.45)
+Solving `h·(w−h·0.2146)=0.0307`: `h=0.0761` (w=0.42) or `h=0.0706` (w=0.45).
+ares uses `layer.height_mm`=0.2 (first_print_layer_height) → mm3=0.0754.
+The skirt `layer.height_mm` for the raft case is the raft FLANGE
+`raft_layer.height` (~0.076), not `first_print_layer_height`. The skirt prints
+at the raft base layer Z; its `height_mm` should be the raft flange height.
+`0.076` is not a named raft height (`base/interface/contact_raft_layer_height`
+all =0.3) — it's the actual flange `raft_layer.height` (raft first layer
+compressed). RESIDUAL: skirt `layer.height_mm` for layer-0 must resolve to the
+raft flange `raft_layer.height`, not `first_print_layer_height` — a skirt-layer
+height source fix.
