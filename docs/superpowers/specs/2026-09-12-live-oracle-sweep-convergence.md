@@ -5655,3 +5655,15 @@ ipSupportBase filler for the OBJECT sparse-infill-over-raft region (crosshatch
 object infill that resolves ipSupportBase for the raft-adjacent sparse layers,
 spaced at line_width). RESIDUAL: ~600-line raft-base divergence; needs
 filler-identity probe (this ptr + pattern + z inside connect_base_support).
+
+### cxxxviii. REDIRECT — the real case-59tGO2 divergence is skirt mm3_per_mm
+The `spacing=0.407` connect_base_support calls were a red herring — the actual
+G-code diff at line ~75 is `G1 ... E.04556` vs `E.04557` on the SKIRT
+(`;TYPE:Skirt ;WIDTH:0.42`), a `mm3_per_mm·length` 1-ulp diff. The move is a
+1.4835mm diagonal; `E.04556` implies `mm3_per_mm≈0.0307` — much smaller than
+`first_layer_flow` (0.0754 for w=0.42,h=0.2). The skirt E uses a different
+`mm3_per_mm` source — likely `line_width`/skirt-specific flow or a partial-
+segment length. This is a `mm3_per_mm`/`flow` precision issue in the skirt
+emit, NOT the raft connect spacing. NEXT: identify the skirt `mm3_per_mm`
+(`first_layer_flow` vs `skirt`-specific flow) and its `spacing`/`width`/`height`
+— the `E.04556`/`E.04557` ulp diff is a `flow.mm3_per_mm()` width/height source.
