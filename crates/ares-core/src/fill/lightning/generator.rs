@@ -150,7 +150,10 @@ impl Generator {
             let current_outlines = &layer_outlines[layer_id];
             let current_bbox = BoundingBox::from_polygons(current_outlines)
                 .unwrap_or(BoundingBox::new(Point::new(0, 0), Point::new(0, 0)));
-            let to_be_reconnected = std::mem::take(&mut self.lightning_layers[layer_id].tree_roots);
+            // `to_be_reconnected_tree_roots = tree_roots` — a shared_ptr vector
+            // COPY (`Generator.cpp:210`), NOT a move: the roots stay in
+            // `tree_roots` so `std::find` inside `reconnectRoots` locates them.
+            let to_be_reconnected = self.lightning_layers[layer_id].tree_roots.clone();
             let overhang = self.overhang_per_layer[layer_id].clone();
             self.lightning_layers[layer_id].generate_new_trees(
                 &overhang,
@@ -203,6 +206,14 @@ impl Generator {
                 );
             }
             self.lightning_layers[layer_id - 1].tree_roots = lower_trees;
+            if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+                eprintln!(
+                    "GEN layer={} cur_roots={} -> next_roots={}",
+                    layer_id,
+                    self.lightning_layers[layer_id].tree_roots.len(),
+                    self.lightning_layers[layer_id - 1].tree_roots.len()
+                );
+            }
         }
         Ok(())
     }
@@ -214,7 +225,17 @@ impl Generator {
         limit_to_outline: &[Polygon],
         line_overlap: Coord,
     ) -> Result<Vec<Polyline>, ClipperError> {
-        self.lightning_layers[layer_id].convert_to_lines(limit_to_outline, line_overlap)
+        let lines = self.lightning_layers[layer_id].convert_to_lines(limit_to_outline, line_overlap)?;
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            eprintln!(
+                "C2L layer={} roots={} outline={} lines={}",
+                layer_id,
+                self.lightning_layers[layer_id].tree_roots.len(),
+                limit_to_outline.len(),
+                lines.len()
+            );
+        }
+        Ok(lines)
     }
 }
 

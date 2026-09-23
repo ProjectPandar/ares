@@ -273,6 +273,13 @@ impl Layer {
         self.fill_locator(&mut tree_node_locator, current_outlines_bbox);
         let within_max_dist = outline_locator.resolution() * 2;
 
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            eprintln!(
+                "RECONNECT entry count={} existing_roots={}",
+                to_be_reconnected.len(),
+                self.tree_roots.len()
+            );
+        }
         for root_ptr in to_be_reconnected {
             let old_root_pos = self
                 .tree_roots
@@ -315,6 +322,16 @@ impl Layer {
                 &tree_node_locator,
                 Some(&root_ptr),
             );
+            if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+                eprintln!(
+                    "RECONNECT pos={:?} boundary={:?} tree={} ground_loc={:?} p={:?}",
+                    old_root_pos,
+                    ground.boundary_location.is_some(),
+                    ground.tree_node.is_some(),
+                    last_grounding.map(|g| (g.x(), g.y())),
+                    (root_ptr.borrow().p.x(), root_ptr.borrow().p.y())
+                );
+            }
             if let Some(boundary) = ground.boundary_location {
                 if boundary == root_ptr.borrow().p {
                     continue;
