@@ -5866,3 +5866,12 @@ and `return _sf`. Build in flight. This resolves whether the oracle skirt
 identity. Prior probes (`ORCA_FBS`/`ORCA_CIN`) located the `spacing=0.407`
 `connect_base_support` calls at `infill=3` but not their `filler`/`this`
 identity — this skirt probe is the next targeted identity check.
+
+### clv. ORCA_SF probe rebuild — width()/height() are methods not fields
+The `Flow` struct has `width()`/`height()`/`spacing()`/`mm3_per_mm()` as METHODS
+(`Flow.hpp:61-65`), not fields. First probe build failed on `.width`/`.height`
+field access. Fixed to `_sf.width()`/`_sf.height()`/`_sf.spacing()`/
+`_sf.mm3_per_mm()` — rebuild in flight (~10min). When built: `ORCA_SF=1` slice
+dumps the actual skirt `flow.width`/`spacing`/`height`/`mm3_per_mm` —
+confirming `width≈0.196`/`spacing≈0.1536` (the `line_width`-fallback source)
+or a `height`/`spacing` divergence.
