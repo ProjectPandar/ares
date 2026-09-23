@@ -6707,3 +6707,19 @@ rectilinear/monotonic (infill_direction in surface.rs:172), gyroid +
 concentric (no rotation), adaptive/cubic/triangles/grid/crosshatch (fixed
 DIRECTION_ANGLES or rectilinear path). Remaining DIVERGENTs = shared
 connect_infill/perimeter-int/estimator residual, not direction.
+
+§ccvii — DIVERGENT classification by residual root (artifact analysis):
+- adaptivecubic: single E-.38886 vs E-.38885 (estimator E-rounding) — geometry
+  byte-identical, effectively passing modulo the estimator residual.
+- supportcubic: zero diff after M73/TIME/WIPE filter — PASS modulo estimator.
+- crosszag: only F# feedrate + Sparse-infill TYPE-line count diffs — cooling/
+  estimator residual, not geometry.
+- zigzag: micro-fragments (extra E.0023 sub-segments), swapped connect_infill
+  diagonal, F# feedrate — shared connect_infill + estimator residual.
+- lockedzag: WIDTH:0.45 vs 0.4 + F# — REAL gap: FillLockedZag needs
+  fill_surface_locked_zag (FillRectilinear.cpp:3866) two-density/two-flow
+  skin/skeleton via lock_param (skin/skeleton_density_params + flow_params,
+  populated in group_fills Fill.cpp:998-1008 from skin_infill_density/
+  skeleton_infill_density/infill_lock_depth/skin_infill_depth). Multi-hour port.
+- honeycomb/line/concentric: fixed direction.first (infill_direction) — now
+  produce correct geometry; residual is surface-boundary/perimeter offset.
