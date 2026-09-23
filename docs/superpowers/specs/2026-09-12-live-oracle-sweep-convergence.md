@@ -5521,3 +5521,25 @@ flow — the `filler_first_layer` (:1787) on the flange, IF `first_layer_flow`
 resolved to `line_width`. `first_layer_flow`=0.377 (FLOW probe) — so the
 0.407 calls are a DIFFERENT filler. RESIDUAL: `ipSupportBase` `filler->spacing`
 =`line_width` on a raft-region ares doesn't reach with 0.407.
+
+### cxxx. DEFINITIVE — FillSupportBase this->spacing is ONLY 0.337/0.377
+ORCA_FBS probe inside `FillSupportBase::fill_surface` (the ONLY
+`connect_base_support` caller, FillRectilinear.cpp:3623): `this->spacing` is
+0.337080 (nl=27/37/39, nb=1) and 0.377080 (nl=41) — NEVER 0.407. Yet
+`connect_base_support` receives `spacing=0.407080` for 39 `infill=3` calls.
+CONTRADICTION: `connect_base_support(..., this->spacing)` passes 0.337 but
+the function sees 0.407. `connect_base_support` :2247 has TWO signatures —
+:2702 `Polygons` wrapper calls :2247 `vector<const Polygon*>`. The CIN probe
+is on :2247 (vector overload). `connect_base_support` :3623 calls the
+`vector` overload directly with `poly_with_offset.polygons_outer` (vector) —
+`this->spacing`=0.337. So :2247 should get 0.337. The 0.407 must be the
+:2702 `Polygons` overload called from ELSEWHERE — `connect_base_support` is
+`static` (FillBase.hpp:226-227), callable from other code. grep shows only
+:3623 calls it — but a `static` member could be reached via a different TU.
+`spacing(0.45,0.2)=0.407`=`line_width`. RESIDUAL: the 0.407 connect calls are
+`connect_base_support` from a NON-FillSupportBase caller (the Polygons
+overload :2702) — likely `connect_infill`/`chain_or_connect_infill` internally
+routing to `connect_base_support` for `ipSupportBase`-boundary surfaces, OR a
+sparse-infill `connect_infill` that delegates. ares uses `connect_infill` for
+crosshatch — upstream's `connect_infill` may fall through to
+`connect_base_support` for the object infill.
