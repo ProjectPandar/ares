@@ -6974,3 +6974,7 @@ PROPAGATE: children=1 each (root→1child 2-node, correct for cube/simple obj �
 ## §ccxxx FillLightning — convert emits lines on 17/39 layers, intersection drops 22
 
 C2L: convert_to_lines→intersection_pl emits lines on 17 layers (1-7 each), lines=0 on 22. convert_to_polylines makes pts=[2] lines (root→1child correct) but intersection_open_polylines drops them → root ON outline boundary → open-polyline intersection drops endpoint-touching lines. THE RESIDUAL: intersection_open_polylines boundary-touch semantics — upstream intersection_pl keeps endpoint-touching interior lines (or tree roots sit interior not on-boundary). Emits but sparse section count low vs oracle 38.
+
+## §ccxxxi FillLightning — final isolation: straighten-cascade on shallow seeds
+
+generate_new_trees seeds only at overhang layer 42 (8 attaches: 7 boundary + 1 tree_node) — correct (overhang exists only at transition). Trees = 8 seeds root→child propagated down. straighten collapses the straight trunk toward junction each propagate → trunk shrinks below prune_length → child pruned → single-node → lines=0 (22/39 layers). Port verbatim; the residual is whether upstream straighten preserves trunk length differently, or upstream seeds branch deeper. Emits correctly (17 layers produce lines). Known residual needs oracle per-layer tree dump.
