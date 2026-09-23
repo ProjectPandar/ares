@@ -5641,3 +5641,17 @@ doesn't reach the probed `filler->spacing = flow.spacing()` sites (:1476/:1499/
 ~600-line raft-base divergence. RESIDUAL BLOCKER: needs `filler->spacing`
 identity — a probe printing `this`/`params.pattern`/surface z inside
 `connect_base_support` to tag the 0.407 filler instance.
+
+### cxxxvii. spacing=0.407 — VERIFIED untraceable; documented blocker
+connect_base_support is called ONLY at FillRectilinear.cpp:3623
+(FillSupportBase::fill_surface). ORCA_FBS inside that call: this->spacing ∈
+{0.337080,0.377080} for nl=27/37/39/41 — the nl=3 / spacing=0.407 calls do NOT
+appear in FBS yet reach connect_base_support (CIN: 39× infill=3 spacing=0.407).
+spacing(0.45,0.2)=0.407=line_width. Tests: 90/90 raft/fill tests PASS. The
+spacing=0.407 calls are FillSupportBase/ipSupportBase fills whose
+filler->spacing=line_width — the nl=3 raft-base blob contours. The
+filler->spacing assignment for these is outside all probed sites — likely an
+ipSupportBase filler for the OBJECT sparse-infill-over-raft region (crosshatch
+object infill that resolves ipSupportBase for the raft-adjacent sparse layers,
+spaced at line_width). RESIDUAL: ~600-line raft-base divergence; needs
+filler-identity probe (this ptr + pattern + z inside connect_base_support).
