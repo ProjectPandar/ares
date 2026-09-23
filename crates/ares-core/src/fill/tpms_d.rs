@@ -171,7 +171,7 @@ fn scaled_floor(x: f64, scale: f64) -> f64 {
     (x / scale).floor() * scale
 }
 
-fn contour_bounds(contour: &Polygon) -> (Point, Point) {
+pub(crate) fn contour_bounds(contour: &Polygon) -> (Point, Point) {
     let mut min = Point::new(i64::MAX, i64::MAX);
     let mut max = Point::new(i64::MIN, i64::MIN);
     for p in contour.points() {
@@ -186,7 +186,7 @@ fn align_to_grid(point: Point, module: i64) -> Point {
     Point::new(align(point.x()), align(point.y()))
 }
 
-fn boundary_polygons(expolygon: &ExPolygon) -> Vec<Polygon> {
+pub(crate) fn boundary_polygons(expolygon: &ExPolygon) -> Vec<Polygon> {
     std::iter::once(expolygon.contour().clone())
         .chain(expolygon.holes().iter().cloned())
         .collect()

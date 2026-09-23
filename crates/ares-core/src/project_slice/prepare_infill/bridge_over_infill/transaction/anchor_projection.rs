@@ -44,6 +44,7 @@ pub(super) fn validate(
             | ProcessInfillPattern::LateralLattice
             | ProcessInfillPattern::LateralHoneycomb
             | ProcessInfillPattern::TpmsD
+            | ProcessInfillPattern::TpmsFk
     ) {
         return unsupported("sparse_infill_pattern");
     }

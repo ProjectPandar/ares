@@ -508,9 +508,30 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     );
                 }
             }
-            SurfaceFillPattern::Configured(
-                ProcessInfillPattern::Lightning | ProcessInfillPattern::TpmsFk,
-            )
+            SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {
+                let params = crate::fill::tpms_fk::TpmsFKFillParams {
+                    spacing: fill.params.spacing,
+                    overlap: 0.0,
+                    density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                    angle: fill.params.angle,
+                    layer_z: z,
+                    multiline: fill.params.multiline,
+                    anchor_length: fill.params.anchor_length,
+                    anchor_length_max: fill.params.anchor_length_max,
+                    dont_sort: false,
+                };
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        crate::fill::tpms_fk::fill_tpmsfk_surface(
+                            &expolygon,
+                            &params,
+                            traversal.scale,
+                        )
+                        .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning)
             | SurfaceFillPattern::ConcentricInternal => {
                 unreachable!("bridge transaction admits only implemented sparse anchoring patterns")
             }

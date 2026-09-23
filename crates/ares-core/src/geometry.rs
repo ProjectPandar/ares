@@ -9,11 +9,12 @@ mod edge_grid;
 mod expolygon;
 mod line;
 mod line_distance_tree;
+pub(crate) mod marching_squares;
 pub(crate) mod medial_axis;
 mod polygon;
 mod polyline;
 mod region_expansion;
-mod simplification;
+pub(crate) mod simplification;
 pub(crate) mod support_grid;
 
 pub(crate) use bbox_clip::{
