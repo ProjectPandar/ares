@@ -6680,3 +6680,17 @@ perimeter/Clipper1 int-quantization residual — first divergence is a
 skirt/brim zigzag line endpoint X156.234 vs X156.233 (1 scaled unit, E matches)
 — the documented Clipper1 offset/intersection int-precision root (todo #6a).
 That is a probe-driven milestone, not a fill regression.
+
+§ccv — union_pt_chained_outside_in port (41d6d9f9): union_contours now walks
+the union PolyTree outside-in via new PolyTree::into_outside_in_contours —
+chain_clipper_polynodes sibling ordering (nearest-neighbor on each contour's
+first point, chain_segments_greedy / chain_points), emit contour (holes
+reversed CCW by ancestor parity), recurse children before next sibling.
+Replaces flat union_ex + contour.chain(holes) which dropped sibling chaining
+and >2-level nesting. Affects concentric_sparse + brim. ksr brim/skirt first
+60 G1s byte-identical to golden — no regression.
+fixed_round verified == upstream FRound (clipper.cpp:88) — perimeter-int
+residual is NOT the rounding fn; it's offset topology/connectJunctions or
+union. Concentric residual = consistent ~0.2mm surface offset (X108.491 vs
+108.694 etc) — downstream of the perimeter/int residual on the filled
+surface boundary, not a concentric-specific bug.
