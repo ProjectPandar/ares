@@ -5701,3 +5701,15 @@ vs ares 0.0754 (height 0.2) → `E.04557` vs `E.04556`. FIX: skirt
 `layer.height_mm` for layer-0 should resolve to the raft base `raft_layer.height`
 (`slicing_params.first_print_layer_height` may differ from the raft flange
 height) — the skirt is emitted at the raft base Z with the raft flange height.
+
+### cxlii. Skirt mm3_per_mm — height=0.076 = raft flange raft_layer.height
+Skirt `mm3_per_mm=0.0307` → `height·(0.42−height·0.2146)=0.0307` → `height≈0.076`.
+ares uses `layer.height_mm`=`first_print_layer_height`(0.2) → 0.0754. The raft
+heights (`base/interface/contact_raft_layer_height`) are 0.3 — so `height=0.076`
+is the raft FLANGE `raft_layer.height` (the first-layer raft flange is thin).
+The skirt is emitted at the raft flange Z with the flange `raft_layer.height` as
+the `height` — ares's `layer.height_mm` for the skirt layer uses
+`first_print_layer_height`(0.2) not the raft flange `raft_layer.height`.
+RESIDUAL: skirt `layer.height_mm` should be the raft base `raft_layer.height`
+(~0.076) when a raft is present — the skirt `mm3_per_mm` height source is the
+raft flange height, not `first_print_layer_height`.
