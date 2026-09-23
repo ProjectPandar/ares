@@ -5904,3 +5904,15 @@ oracle emits `mm3_per_mm·length` for a `line_width`-flow (0.0307·len).
 RESIDUAL: the skirt `E` `mm3_per_mm` source is a `line_width`-derived flow
 (spacing 0.1536, width 0.196), not `skirt_flow` — the `G1 E` emit path uses a
 different `flow`/`spacing` than `Print::skirt_flow` for the skirt.
+
+### clviii. Skirt E flow.width=0.196 — line_width-scaled, needs source
+`flow.width=0.196` `spacing=0.1536` `mm3_per_mm=0.0307` for the emitted skirt
+`E`. `skirt_flow` itself is `width=0.42`/`spacing=0.377`/`mm3=0.0754` (probe-
+confirmed correct). The `E` emit path uses a DIFFERENT `flow` — `width=0.196`.
+`0.196` candidates: `nozzle·0.49`, `line_width·0.435`, `spacing(0.45)·
+spacing(0.42)`-derived. None match a named option. The `E` path for the skirt
+must use a `flow` resolved differently from `skirt_flow` — possibly
+`gcode_writer` scales `E` by `spacing`/`line_width` ratio, OR the skirt `E`
+uses `first_layer_flow`/`line_width` differently. RESIDUAL: skirt `E` `flow`
+source — `flow.width`≈0.196/`spacing`≈0.1536 — needs a `G1 E` emit-path probe
+to identify which `flow`/`spacing` the oracle uses for skirt extrusions.
