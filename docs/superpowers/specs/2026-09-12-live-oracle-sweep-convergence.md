@@ -6453,3 +6453,19 @@ unscale). `during`/`length` = 1.2 and `wipe_dist` = 1e6 match exactly; only
 the segment length carries the 3-unit drift. Next: dump ares's per-segment
 `slen`/`retraction` to confirm which endpoint (clip-truncated last point or a
 mid-path rounded point) is off.
+
+### cxcii. wipe residual ROOT = wipe-path geometry, not just E-split
+Dual dumps (oracle ORCA_WIPEDUMP vs ares ARES_WIPE_SEG) on case-59tGO2 show
+the wipe-path POLYLINE POINTS differ ~1-11 scaled units (~1e-6–1e-5 mm), not
+merely the dE distribution:
+  oracle slen: 313497.206 471742 771322.687 228678 137316 274592.191 588092
+  ares   slen: 313491.549 471748.000 771311.917 228689 137315 274590.776 588095
+`during`=1.2 and `wipe_dist`=1e6 match exactly in both. The wipe path is the
+tail of the just-emitted extrusion path (the loop being wiped); the stored
+path tail points differ → different wipe segments → both the wipe XY
+endpoints AND the per-segment dE differ. Root cause is upstream: which
+points get stored as `wipe_path` (`path/constant.rs:95`, `variable.rs:67`,
+`loop_paths.rs:78`) vs oracle `Wipe::path` (`this->path.points`) — the
+extrusion path's scaled-int tail differs ~1 unit per point. This is a
+path-geometry residual (the emitted-loop point selection/rounding), deeper
+than E formatting. ARES_WIPE_SEG dump added at `travel.rs:229` for the diff.

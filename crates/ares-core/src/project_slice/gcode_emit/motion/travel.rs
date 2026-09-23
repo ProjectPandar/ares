@@ -226,8 +226,28 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
         };
         output.extend_from_slice(speed_line.as_bytes());
         state.current_feedrate = wipe_speed * 60.0;
+        if let Ok(path) = std::env::var("ARES_WIPE_SEG") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(file, "AWIPE during={during} dist={distribution_distance}");
+            }
+        }
         for (point, segment_length) in segments {
             let retraction = during * (segment_length / distribution_distance);
+            if let Ok(path) = std::env::var("ARES_WIPE_SEG") {
+                use std::io::Write;
+                if let Ok(mut file) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&path)
+                {
+                    let _ = writeln!(file, "ASEG slen={segment_length} dE={retraction}");
+                }
+            }
             // Orca's `extrude_to_xy` omits the E word when the wipe carries
             // no retraction (`retract_before_wipe` = 100% leaves nothing to
             // distribute during the wipe).
