@@ -6,7 +6,7 @@ use std::rc::{Rc, Weak};
 
 use crate::geometry::{BoundingBox, Coord, EdgeGrid, Point, Polygon};
 
-use super::layer::{GroundingLocation, LOCATOR_CELL_SIZE, Layer, SparseNodeGrid, to_grid_point};
+use super::layer::{GroundingLocation, Layer, SparseNodeGrid, to_grid_point};
 use super::tree_geom::{inside, line_segment_polygons_intersection};
 use super::tree_node::Node;
 use super::tree_node::NodeSPtr;
@@ -46,19 +46,22 @@ impl Layer {
 
         if current_dist >= wall_supporting_radius {
             let search_radius = current_dist.min(within_dist);
+            let cell = self.locator_cell_size;
             let rmin = to_grid_point(
                 Point::new(
                     unsupported_location.x() - search_radius,
                     unsupported_location.y() - search_radius,
                 ),
                 current_outlines_bbox,
+                cell,
             );
             let rmax = to_grid_point(
                 Point::new(
-                    unsupported_location.x() + search_radius + LOCATOR_CELL_SIZE,
-                    unsupported_location.y() + search_radius + LOCATOR_CELL_SIZE,
+                    unsupported_location.x() + search_radius + cell,
+                    unsupported_location.y() + search_radius + cell,
                 ),
                 current_outlines_bbox,
+                cell,
             );
             // Serial scan (upstream runs a deterministic-order parallel_for
             // that resolves ties by grid address — the serial scan is the same
@@ -154,11 +157,18 @@ impl Layer {
                 .iter()
                 .position(|r| Rc::ptr_eq(r, &root_ptr));
 
-            let last_grounding = root_ptr.borrow().last_grounding_location;
+            // Copy the root's point + last-grounding into locals BEFORE any
+            // `borrow_mut` (upstream `root_ptr->getLocation()`/`getLastGroundingLocation()`
+            // are plain reads; holding a `Ref` across `add_child_node`'s
+            // `root_ptr.borrow_mut()` would panic).
+            let (root_p, last_grounding) = {
+                let r = root_ptr.borrow();
+                (r.p, r.last_grounding_location)
+            };
             if let Some(ground_loc) = last_grounding {
-                if ground_loc != root_ptr.borrow().p {
+                if ground_loc != root_p {
                     if let Some(new_root_pt) = super::tree_geom::line_segment_polygons_intersection(
-                        root_ptr.borrow().p,
+                        root_p,
                         ground_loc,
                         outline_locator,
                         within_max_dist,
@@ -172,7 +182,7 @@ impl Layer {
                         Node::add_child_node(&root_ptr, new_root.clone());
                         Node::reroot(&new_root, None);
                         tree_node_locator.insert(
-                            to_grid_point(new_root.borrow().p, current_outlines_bbox),
+                            to_grid_point(new_root.borrow().p, current_outlines_bbox, self.locator_cell_size),
                             &new_root,
                         );
                         if let Some(pos) = old_root_pos {
@@ -214,7 +224,7 @@ impl Layer {
                 Node::reroot(&attach_ptr, None);
                 Node::add_child_node(&new_root, attach_ptr);
                 tree_node_locator.insert(
-                    to_grid_point(new_root.borrow().p, current_outlines_bbox),
+                    to_grid_point(new_root.borrow().p, current_outlines_bbox, self.locator_cell_size),
                     &new_root,
                 );
                 if let Some(pos) = old_root_pos {

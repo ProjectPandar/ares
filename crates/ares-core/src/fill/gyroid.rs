@@ -148,9 +148,12 @@ fn fill_component(
         let period =
             (2.0_f32 * std::f32::consts::PI * params.spacing as f32 / density_factor as f32);
         let bb = crate::geometry::BoundingBox::new(minimum, maximum);
+        // `GyroidField(bb, this->z, period, omega)` — `this->z` is the mm
+        // height (FillGyroid.cpp:332); only the XY raster is scale-domain, the
+        // Z frequency arg stays millimetres.
         let field = super::gyroid_field::GyroidField::new(
             bb,
-            params.z / scale.factor(),
+            params.z,
             period,
             omega as f32,
             scale,

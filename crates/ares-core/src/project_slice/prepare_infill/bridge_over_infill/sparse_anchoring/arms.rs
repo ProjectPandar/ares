@@ -143,11 +143,6 @@ pub(super) fn dispatch(
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
-            if fill.params.gyroid_optimized {
-                return Err(SliceError::UnsupportedProjectFeature(
-                    "gyroid_optimized".to_owned(),
-                ));
-            }
             let params = GyroidFillParams {
                 z,
                 spacing: fill.params.spacing,

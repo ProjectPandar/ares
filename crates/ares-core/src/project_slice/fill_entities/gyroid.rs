@@ -13,6 +13,7 @@ pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
     print_z: f64,
+    layer_height: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let params = GyroidFillParams {
@@ -22,7 +23,9 @@ pub(super) fn append(
         angle: fill.params.angle,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
-        layer_height: fill.params.flow.height as f32,
+        // `params.layer_height` (Fill.cpp:1290) — the planned layer thickness,
+        // NOT `flow.height` (which combined infill multiplies).
+        layer_height: layer_height as f32,
         gyroid_optimized: fill.params.gyroid_optimized,
         anchor_length: fill.params.anchor_length,
         anchor_length_max: fill.params.anchor_length_max,

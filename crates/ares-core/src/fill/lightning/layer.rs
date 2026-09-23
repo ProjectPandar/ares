@@ -17,11 +17,12 @@ use super::distance_field::DistanceField;
 use super::glibc_rand::GlibcRand;
 use super::tree_node::{Node, NodeSPtr};
 
-/// `locator_cell_size` — the SparseNodeGrid cell size (Layer.cpp `to_grid_point`
-/// uses `locator_cell_size()`); upstream `TreeNode.hpp:21`
-/// `locator_cell_size() = scaled<coord_t>(4.)` = `4 / NORMAL_SCALE` = 4,000,000
-/// at the default 1e6 coordinate scale.
-pub(super) const LOCATOR_CELL_SIZE: Coord = 4_000_000;
+/// `locator_cell_size` — `scaled<coord_t>(4.)` (`TreeNode.hpp:21`), derived
+/// from the coordinate scale: `4 / NORMAL_SCALE` = 4,000,000 at the default
+/// scale, `4 / LARGE_BED_SCALE` = 400,000 on large beds.
+pub(super) fn locator_cell_size(scale: crate::geometry::CoordinateScale) -> Coord {
+    scale.checked_scale(4.0).unwrap_or(4_000_000)
+}
 
 /// `SparseNodeGrid` — grid-point → node weak refs (unordered_multimap port).
 pub(super) struct SparseNodeGrid {
@@ -67,22 +68,25 @@ impl GroundingLocation {
 }
 
 /// `to_grid_point` — `(point - bbox.min) / locator_cell_size`.
-pub(super) fn to_grid_point(p: Point, bbox: BoundingBox) -> Point {
+pub(super) fn to_grid_point(p: Point, bbox: BoundingBox, cell_size: Coord) -> Point {
     Point::new(
-        (p.x() - bbox.min().x()) / LOCATOR_CELL_SIZE,
-        (p.y() - bbox.min().y()) / LOCATOR_CELL_SIZE,
+        (p.x() - bbox.min().x()) / cell_size,
+        (p.y() - bbox.min().y()) / cell_size,
     )
 }
 
 /// `FillLightning::Layer`.
 pub(super) struct Layer {
     pub tree_roots: Vec<NodeSPtr>,
+    /// `locator_cell_size()` — this layer's SparseNodeGrid cell size.
+    pub(super) locator_cell_size: Coord,
 }
 
 impl Layer {
-    pub(super) fn new() -> Self {
+    pub(super) fn new(locator_cell_size: Coord) -> Self {
         Self {
             tree_roots: Vec::new(),
+            locator_cell_size,
         }
     }
 
@@ -91,7 +95,7 @@ impl Layer {
         for tree in &self.tree_roots {
             let tree = tree.clone();
             Node::visit_nodes(&tree, &mut |node| {
-                locator.insert(to_grid_point(node.borrow().p, bbox), node);
+                locator.insert(to_grid_point(node.borrow().p, bbox, self.locator_cell_size), node);
             });
         }
     }
@@ -142,11 +146,11 @@ impl Layer {
             }
             let (new_child, new_parent) = self.attach(unsupported_location, &grounding);
             tree_node_locator.insert(
-                to_grid_point(new_child.borrow().p, current_outlines_bbox),
+                to_grid_point(new_child.borrow().p, current_outlines_bbox, self.locator_cell_size),
                 &new_child,
             );
             if let Some(np) = new_parent {
-                tree_node_locator.insert(to_grid_point(np.borrow().p, current_outlines_bbox), &np);
+                tree_node_locator.insert(to_grid_point(np.borrow().p, current_outlines_bbox, self.locator_cell_size), &np);
             }
             distance_field.update(grounding.p(), unsupported_location);
         }

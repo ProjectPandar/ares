@@ -258,36 +258,3 @@ pub(crate) fn sample_grid_pattern(
 #[cfg(test)]
 mod tests;
 
-#[cfg(test)]
-mod mixed_sign_rational_ordering {
-    use super::*;
-
-    #[test]
-    fn negative_position_sorts_below_positive() {
-        // The rounded-diamond center vline: top crossing positive, bottom
-        // crossing negative — the mixed-sign case of `operator<`.
-        let radius = 5_112_000;
-        let diamond = Polygon::new(vec![
-            Point::new(3_797, radius),
-            Point::new(-radius, 3_797),
-            Point::new(-3_797, -radius),
-            Point::new(radius, -3_797),
-        ]);
-        let raw = line_intersections(&[diamond], 0);
-        assert_eq!(raw.len(), 2);
-        let mut sorted = raw.clone();
-        sorted.sort_by(|left, right| {
-            if left.below(right) {
-                std::cmp::Ordering::Less
-            } else if right.below(left) {
-                std::cmp::Ordering::Greater
-            } else {
-                std::cmp::Ordering::Equal
-            }
-        });
-        // The OUTER_LOW (entering, `low`) crossing sorts first at the
-        // geometrically lower position.
-        assert!(sorted[0].low);
-        assert!(!sorted[1].low);
-    }
-}

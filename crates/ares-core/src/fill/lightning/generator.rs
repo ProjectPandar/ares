@@ -10,7 +10,7 @@ use crate::geometry::{
     Point, Polygon, Polyline, difference_polygons_ex, offset_expolygons,
 };
 
-use super::layer::{LOCATOR_CELL_SIZE, Layer};
+use super::layer::Layer;
 use super::tree_node::Node;
 
 /// `to_polygons(ExPolygons)` — flatten each expolygon to contour+holes.
@@ -33,6 +33,7 @@ pub(crate) struct Generator {
     straightening_max_distance: Coord,
     overhang_per_layer: Vec<Vec<Polygon>>,
     lightning_layers: Vec<Layer>,
+    locator_cell_size: Coord,
     /// The shared `rand()` stream (TreeNode.cpp:365 `rand() % m_children.size()`)
     /// — upstream consumes the process-global C `rand()` continuously across ALL
     /// `convertToPolylines` calls and ALL layers, not a per-layer reseed.
@@ -56,6 +57,7 @@ impl Generator {
     ) -> Result<Self, ClipperError> {
         let infill_extrusion_width = scale.checked_scale(infill_line_width).unwrap_or(1);
         let layer_thickness = scale.checked_scale(layer_height).unwrap_or(1) as f64;
+        let locator_cell_size = super::layer::locator_cell_size(scale);
         // `m_supporting_radius = coord_t(m_infill_extrusion_width) * 100 * n_multiline /
         // sparse_infill_density` (Generator.cpp:90): the `coord_t` product promotes
         // to `double` for the division, then truncates back — NOT integer division.
@@ -74,7 +76,8 @@ impl Generator {
             prune_length,
             straightening_max_distance,
             overhang_per_layer: vec![Vec::new(); n],
-            lightning_layers: (0..n).map(|_| Layer::new()).collect(),
+            lightning_layers: (0..n).map(|_| Layer::new(locator_cell_size)).collect(),
+            locator_cell_size,
             rng: std::cell::RefCell::new(super::glibc_rand::GlibcRand::new()),
         };
         if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
@@ -150,7 +153,7 @@ impl Generator {
             layer_outlines[top].iter().map(|p| p.points()),
             top_bbox.min(),
             top_bbox.max(),
-            LOCATOR_CELL_SIZE,
+            self.locator_cell_size,
         )?;
 
         for layer_id in (0..=top).rev() {
@@ -196,7 +199,7 @@ impl Generator {
                 below_outlines.iter().map(|p| p.points()),
                 below_bbox.min(),
                 below_bbox.max(),
-                LOCATOR_CELL_SIZE,
+                self.locator_cell_size,
             )?;
 
             let trees = self.lightning_layers[layer_id].tree_roots.clone();
@@ -209,7 +212,7 @@ impl Generator {
                     &outlines_locator,
                     self.prune_length,
                     self.straightening_max_distance,
-                    LOCATOR_CELL_SIZE / 2,
+                    self.locator_cell_size / 2,
                 );
             }
             self.lightning_layers[layer_id - 1].tree_roots = lower_trees;

@@ -130,7 +130,13 @@ pub(in crate::project_slice) fn generate_layer(
                 super::triangles::append(&mut output, fill, traversal.scale, object_reference)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Gyroid) => {
-                super::gyroid::append(&mut output, fill, layer.print_z, traversal.scale)?;
+                super::gyroid::append(
+                    &mut output,
+                    fill,
+                    layer.print_z,
+                    layer.height,
+                    traversal.scale,
+                )?;
             }
             SurfaceFillPattern::Configured(
                 pattern
