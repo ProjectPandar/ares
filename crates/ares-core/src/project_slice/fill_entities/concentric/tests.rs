@@ -271,6 +271,7 @@ fn task22o204_concentric_reorders_each_fill_expolygon_independently() {
             lateral_lattice_angle_2: 0.0,
             infill_lock_depth: 0.0,
             skin_infill_depth: 0.0,
+            horiz_move: 0.0,
             symmetric_infill_y_axis: false,
             infill_overhang_angle: 0.0,
             gyroid_optimized: false,
