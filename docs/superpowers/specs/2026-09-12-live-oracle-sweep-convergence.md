@@ -6982,3 +6982,24 @@ generate_new_trees seeds only at overhang layer 42 (8 attaches: 7 boundary + 1 t
 ## §ccxxxii FillLightning — straighten verified NOT the cause
 
 straighten_rec verbatim vs TreeNode.cpp:82-180: leaf child goes else-branch, has_children=false → no move; root junction_above=root.p accumulated_dist=0 → dest=root.p → root stays. 2-node tree unchanged by straighten. Child.x convergence toward root is reroot/attach re-grounding each propagate (faithful), not straighten shrink. Port exhaustive-verified faithful + emits + propagates + 400-LOC split clean. Residual definitively needs oracle-side per-layer tree coordinate dump to find the emergent divergence — no further static-analysis angle remains.
+
+## §ccxxxiii <400 LOC module split — complete for all non-test source files
+
+Goal contract requires every source file under 400 LOC (tests exempt via `tests.rs`/`tests/` dirs). Audited via `wc -l` over all `crates/**/*.rs` excluding test mods.
+
+Files split this batch (all mechanical fn-group extractions into sibling mod files; no behavior change; build+clippy+fmt clean each step):
+
+| File (before) | After | New/modified mods |
+|---|---|---|
+| `fill_entities.rs` 480 | 175 | `fill_entities/generate.rs` 325 (`generate_layer`, `plane_path_object_bounding_box`) |
+| `multiline.rs` 442 | 310 | `multiline/sweeps.rs` 139 (`stars_sweeps`, `quartercubic_sweeps`, `lateral_*`) |
+| `marching_squares.rs` 442 | 279 | `marching_squares/rings.rs` 172 (`impl Grid` ring-scan/`execute`) |
+| `raft/fills.rs` 437 | 382 | `raft/fills/geom.rs` 65 (`clip_polyline_end`, `vertical_segments`, `align_to_grid`) |
+| `raft/bridge.rs` 419 | 238 | `raft/bridge/project.rs` 198 (`build_project_raft`) |
+| `candidate_expansion.rs` 531 | 300 | `candidate_expansion/layers.rs` 274 (`LayerJob`, `prepare_layer`, `prepare_candidates`, `prelude`) |
+| `sparse_anchoring/mod.rs` 560 | 104 | `sparse_anchoring/arms.rs` 328 + `arms_tail.rs` 198 (per-pattern `match` dispatch → `dispatch`/`dispatch_tail`) |
+| `motion/options/build.rs` 403 | 395 | `build/context.rs` 75 (`Prelude` struct destructured into `from_traversal`) |
+
+Mechanics that mattered: `#[cfg(test)]` capture on a `mod` decl (caught+fixed in `fill_entities`); `super::` chain depth when a moved file sits one level deeper (`layers.rs` needed `super::super::super::`); `pub(super)` field/const visibility for cross-file access (`LayerJob`, `TARGET_FLOW_HEIGHT_FACTOR`, `ObjectView`); `dispatch` returning `Result<(),SliceError>` so `?` propagates while tail-arm routed via `return dispatch_tail(...)`.
+
+Result: **zero non-test source files ≥400 LOC**. Test mods (`processor/tests.rs` 837 etc.) exempt per contract.
