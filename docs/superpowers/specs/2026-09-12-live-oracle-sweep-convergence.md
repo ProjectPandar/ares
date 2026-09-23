@@ -6073,3 +6073,16 @@ line_width-spacing, `height`=first_layer-mm3. RESIDUAL: the skirt `E` `flow` is
 `{width:0.42, spacing:spacing(line_width), height:mm3_per_mm(first_layer)}` —
 the emit path constructs a `flow` with `spacing`/`height` from `line_width`/
 `first_layer` mm3 instead of `skirt_flow`'s `spacing`(0.377)/`height`(0.2).
+
+### clxxi. Skirt E flow = {width:0.42, spacing:spacing(line_width)=0.407, height:mm3_per_mm(first_layer)=0.0754}
+`E`/`length` ratio = `0.407` = `spacing(line_width=0.45,0.2)` — confirmed across
+all skirt `E` values (0.4073/0.4075/0.4077). The emit-path `flow` for the skirt
+`E` = `{width:0.42 (first_layer_width), spacing:0.407 (spacing(line_width)),
+height:0.0754 (mm3_per_mm(first_layer))}` — `mm3_per_mm = spacing·height` =
+`spacing(line_width)·mm3_per_mm(first_layer)` = `0.407·0.0754` = `0.0307`.
+The `spacing`/`height` fields are CROSSED: `spacing`=`spacing(line_width)` and
+`height`=`mm3_per_mm(first_layer)` — the `flow` construction on the `G1 E` emit
+path assigns `spacing`=line_width-spacing and `height`=first_layer-mm3 instead
+of `skirt_flow.spacing`(0.377)/`height`(0.2). RESIDUAL: locate the skirt `E`
+`flow` construction — it's a `flow` built with `spacing`=spacing(line_width)
+and `height`=mm3_per_mm(first_layer), not `skirt_flow`.
