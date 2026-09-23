@@ -6364,3 +6364,25 @@ non-deterministic AND the ares output changes as fixes land. All prior sweep
 diff counts (incl. the 61.5%/94% figures) are lower bounds distorted by
 staleness on both sides. A full dual-fresh re-slice is required for the true
 per-case pass map.
+
+### clxxxvii. TRUE pass ~95% (57/60) dual-fresh; residuals are estimator/M73 + raft-59tGO2
+Full dual-fresh re-verification (current ares binary + fresh oracle ×2) on a
+60-case random sample: **TRUE PASS 57/60 = 95%**, oracle_fail=0, real_fail=3:
+- `case-59tGO2` (self=0, ares=3609): the documented deterministic raft
+  `line_width`-fallback residuals (connect_base_support spacing + skirt E
+  emit-path flow — §clxxix).
+- `case-ArkzGA` (self=149, ares 250/353): exceeds oracle self-variance — real
+  but small divergence on a noisy-oracle input.
+- `case-aBhv1I` (self=0, ares=142): **pure ordering** — every diff is a
+  `Nd`/`Na` same-line displacement, NO value differences. The M73 progress
+  lines fire 4 extrusions later than oracle (`M73 P11 R7` at ares line 192 vs
+  oracle 188) — ares's `elapsed_at` accumulator reaches the percent boundary
+  late because per-line `time` estimates run slightly low vs oracle's
+  `GCodeProcessor` model. This is the estimator time-model residual (todo #3,
+  deterministic, same machinery as the ±1s estimator gap). Also shifts the
+  adjacent `G1`/`E4`/`F9000` lines by the same reorder.
+CONCLUSION: the only large *deterministic* residual left is the `59tGO2` raft
+family; the M73/estimator time-model drift produces the deterministic
+ordering-only failures; everything else is oracle non-determinism. The sweep's
+stored outputs are stale on BOTH sides and must be regenerated fresh to
+measure true parity.
