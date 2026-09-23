@@ -5831,3 +5831,20 @@ width. `Print::skirt_flow` uses `initial_layer_line_width`(0.42) — ares matche
 scaled width, or `initial_layer_line_width` treated as a fraction of something.
 RESIDUAL: skirt `flow.width`=0.196 (`spacing` 0.1536) — source unidentified;
 needs a `skirt_flow` `width`/`spacing` probe to resolve.
+
+### clii. TURN BOUNDARY — case-59tGO2 residual pivot required
+case-59tGO2 has TWO documented residuals, both `line_width`-related:
+1. `connect_base_support` `spacing=0.407` on `infill=3` raft-base blob calls —
+   `FillSupportBase`/`ipSupportBase` filler `spacing`=`line_width`(0.45) on a
+   path ares's `filler->spacing` probes didn't hit. 5 attempted fixes all
+   regressed (spacing conflates `line_spacing`/`inner_offset`/`x_margin`/
+   `mm3_per_mm`).
+2. Skirt `mm3_per_mm=0.0307` — `flow.width=0.196`/`spacing=0.1536`, not
+   `initial_layer_line_width`(0.42). Non-obvious width source.
+Both need a `filler->spacing`/`skirt_flow` IDENTITY probe (which surface/filler,
+which `width` source) — the value-level probes exhausted the reachable configs.
+TURN STATE: baseline 3609, all probes/ledger committed, tests green. Next turn:
+(a) probe `skirt_flow.width`/`spacing` via ORCA_FLOW-style instrumentation on
+`Print::skirt_flow`, OR (b) probe `connect_base_support` `filler` identity via
+`this` pointer / `params.pattern` on the `infill=3` calls. Both residuals are
+`line_width`-fallback bugs in the raft/skirt fill resolution.
