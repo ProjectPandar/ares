@@ -59,6 +59,38 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     let (plan, _, _) = post_regions.as_parts();
     let z = plan.layers[layer_index].print_z;
     let object_reference = crate::project_slice::fill_entities::object_center(object_slices);
+    // `object_bounding_box` for the plane-path fills — same construction as
+    // `fill_entities::plane_path_object_bounding_box`: bounds over every slice
+    // contour point.
+    let mut bb_points = object_slices
+        .iter()
+        .flatten()
+        .flat_map(|expolygon| expolygon.contour().points());
+    let object_bounding_box = bb_points.next().map_or_else(
+        || {
+            crate::geometry::BoundingBox::new(
+                crate::geometry::Point::new(0, 0),
+                crate::geometry::Point::new(0, 0),
+            )
+        },
+        |first| {
+            bb_points.fold(
+                crate::geometry::BoundingBox::new(*first, *first),
+                |bb, point| {
+                    crate::geometry::BoundingBox::new(
+                        crate::geometry::Point::new(
+                            bb.min().x().min(point.x()),
+                            bb.min().y().min(point.y()),
+                        ),
+                        crate::geometry::Point::new(
+                            bb.max().x().max(point.x()),
+                            bb.max().y().max(point.y()),
+                        ),
+                    )
+                },
+            )
+        },
+    );
     let mut result = Vec::new();
 
     for fill in grouped.surface_fills {
@@ -282,6 +314,50 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 }
             }
             SurfaceFillPattern::Configured(
+                pattern @ (ProcessInfillPattern::HilbertCurve
+                | ProcessInfillPattern::ArchimedeanChords
+                | ProcessInfillPattern::OctagramSpiral),
+            ) => {
+                let plane_path_pattern = match pattern {
+                    ProcessInfillPattern::HilbertCurve => {
+                        crate::fill::plane_path::PlanePathPattern::HilbertCurve
+                    }
+                    ProcessInfillPattern::ArchimedeanChords => {
+                        crate::fill::plane_path::PlanePathPattern::ArchimedeanChords
+                    }
+                    ProcessInfillPattern::OctagramSpiral => {
+                        crate::fill::plane_path::PlanePathPattern::OctagramSpiral
+                    }
+                    _ => unreachable!("plane-path arm only admits its three patterns"),
+                };
+                let resolution = traversal.resolved.views.full.process.print.resolution.0;
+                let params = fill.params;
+                let fill_params = crate::fill::plane_path::PlanePathFillParams {
+                    spacing: params.spacing,
+                    overlap: params.overlap,
+                    density: (0.01 * f64::from(params.density)) as f32,
+                    angle: params.angle,
+                    multiline: params.multiline,
+                    resolution,
+                    anchor_length: params.anchor_length,
+                    anchor_length_max: params.anchor_length_max,
+                    object_bounding_box,
+                    // `calibration_pattern_order` only applies to top-surface
+                    // (ironing) fill — sparse internal infill never takes it.
+                    calibration_order: false,
+                };
+                for expolygon in fill.expolygons {
+                    let components = crate::fill::plane_path::fill_surface(
+                        &expolygon,
+                        plane_path_pattern,
+                        fill_params,
+                        traversal.scale,
+                    )
+                    .map_err(super::transaction::geometry_error)?;
+                    result.extend(components.into_iter().flatten());
+                }
+            }
+            SurfaceFillPattern::Configured(
                 ProcessInfillPattern::TriHexagon
                 | ProcessInfillPattern::QuarterCubic
                 | ProcessInfillPattern::Lightning
@@ -289,10 +365,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::LateralHoneycomb
                 | ProcessInfillPattern::LateralLattice
                 | ProcessInfillPattern::TpmsD
-                | ProcessInfillPattern::TpmsFk
-                | ProcessInfillPattern::HilbertCurve
-                | ProcessInfillPattern::ArchimedeanChords
-                | ProcessInfillPattern::OctagramSpiral,
+                | ProcessInfillPattern::TpmsFk,
             )
             | SurfaceFillPattern::ConcentricInternal => {
                 unreachable!("bridge transaction admits only implemented sparse anchoring patterns")
