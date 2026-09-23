@@ -5981,3 +5981,15 @@ This turn localized case-59tGO2 to TWO `line_width`-fallback residuals:
 Both need emit-path `flow`/`spacing` identity probes (which `flow`/`filler`
 object carries the `line_width`-derived `spacing`). Baseline 3609 held through
 all reverts; tests green; all probes/ledger committed through `59841b5f`.
+
+### clxiv. Skirt E flow.width=0.196 — nozzle·0.49 or spacing(0.45)·0.482
+`flow.width=0.196` `spacing=0.1536` `mm3_per_mm=0.0307` — the skirt `E` uses a
+`flow` with `width=0.196`. `0.196` = `nozzle·0.49` = `spacing(0.45)·0.482` =
+`spacing(0.42)·0.52` — all `line_width`-scaled approximations. None match a
+named option (`initial_layer_line_width`0.42/`line_width`0.45/`support`0.38/
+`nozzle`0.4). The `G1 E` emit-path `flow` for the skirt resolves `width`≈0.196
+— a `line_width`-derived `flow` distinct from `skirt_flow`(0.42). RESIDUAL:
+the skirt `E` `flow.width`/`spacing` — likely a `flow` built on the `E` emit
+path (not `skirt_flow`) using `line_width`/`spacing` products — needs a
+`G1 E`-emit `flow`/`spacing` probe to identify which `Flow` object carries
+`width=0.196`.
