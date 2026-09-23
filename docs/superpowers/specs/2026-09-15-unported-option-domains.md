@@ -155,3 +155,19 @@ Preflight gate `classic/preflight.rs:103` then drops once the path is live
 
 Verification: needs a thin-wall-activating fixture (a model with a <1-loop-thick
 wall under `detect_thin_wall=true`) run through both ares + orca oracle.
+
+## Thin-wall plumbing — record-level collection (refined)
+
+Upstream `thin_walls` is a `PerimeterGenerator` RECORD member accumulated across
+every surface's `i == 0` extraction, then emitted ONCE in `traverse_loops`
+(`:1450`, `contours.front()` = the record's depth-0 loops) via `variable_width`.
+Ares `traverse_loops` runs PER-surface (`entity_collections::transform_surface`),
+so a per-surface `thin_walls` field would emit them in the wrong frame/order.
+
+Correct port: collect `thin_walls` at the RECORD level — a
+`Vec<ThickPolyline>` accumulated across all `PreparedTopSplitSurface`s of a
+record → carried on the traversal/chained-loop RECORD → emitted in the
+record-level entity collection after the depth-0 loops, matching upstream
+`traverse_loops` order (thin walls appended after the top-level loops).
+`PreparedTopSplitSurface.thin_walls` already extracts them; aggregate by
+`source_index`/record at the onion→hierarchy→traversal barrier and emit once.
