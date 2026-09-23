@@ -6303,3 +6303,23 @@ residual is the raft support-layer structural slice (`n4acJn`-family, the 6
 holds as a real (but small) divergence; it is dwarfed by oracle noise on most
 cases. Highest-leverage remaining work = the raft structural residual and a
 fresh dual-oracle sweep to get the true per-case pass map.
+
+### clxxxiv. raft residual = base-polygon footprint ~0.42mm oversized (deterministic)
+`case-n4acJn` (raft_layers=100, raft_expansion=1.5, raft_first_layer_expansion
+=2, line_width=0.45, first_layer_line_width=0.42, support_line_width=0.38,
+skirt_distance=2, skirt_loops=2) is a DETERMINISTIC divergence (oracle self=0,
+ares=4818). The earliest geometry diff is the `;TYPE:Skirt` rounded-rect
+corner — but the root is the raft base polygon feeding the hull:
+- oracle raft base sheath outline spans X `101.059–118.941` (≈17.88mm),
+- ares raft base sheath outline spans X `100.639–119.361` (≈18.72mm),
+- Δ ≈ 0.42mm per side = exactly `first_layer_line_width` (0.42).
+The sheath shrink `0.5·flow.scaled_width()` (`SupportCommon.cpp:738`) is
+faithful in `raft/fills.rs:73`; the oversized term is in the BASE polygon
+expansion (`raft/polygons.rs:73-93` — `raft_expansion`/`first_layer_expansion`
+/`expansion_to_slice` chain). Ares expands the first-layer raft polygon ~0.42mm
+too far. Downstream this shifts the skirt convex-hull corner (oracle corner
+arcs at 98.494/101.059/118.941 vs ares 98.472/100.639/119.361) and every
+support/object gcode region. NEXT: probe `generate_raft_base`/raft-layer-0
+polygon expansion (`SupportCommon.cpp:279-281,366-371`) to find the extra
+~0.42mm term — likely `first_layer_expansion` applied on top of an
+already-expanded base, or a `0.5·width`/`spacing` boundary term ares double-adds.
