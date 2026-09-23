@@ -93,3 +93,12 @@ On a 20-case random dual-fresh sample + targeted re-verification:
    after the outermost frame (:231). Verified end-to-end on a 0.7mm thin-wall
    plate → near-byte-identical to OrcaSlicer 2.4.2 (only generator-name +
    one ±0.001mm skirt-travel coord differ).
+
+7. **tpmsfk sparse-infill geometry** (`case-3xCWFi`). Post round-4/5 the
+   internal-infill feedrate differs `F2005` vs oracle `F2002` (±3 feedrate
+   rounding) and ares emits ~2000 extra contour micro-fragments vs oracle.
+   First visible diff is M73 ordering (P13 R7 fires late), but the dominant
+   residual is tpmsfk `marching_squares` contour segmentation producing extra
+   micro-segments + a feedrate rounding difference. Needs oracle-side
+   `FillTpmsFK` contour dumps to localize which marching-squares cell
+   diverges.
