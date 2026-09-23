@@ -26,6 +26,12 @@ pub(super) fn validate(
             | ProcessInfillPattern::ThreeDHoneycomb
             | ProcessInfillPattern::Rectilinear
             | ProcessInfillPattern::ZigZag
+            | ProcessInfillPattern::Monotonic
+            | ProcessInfillPattern::MonotonicLine
+            | ProcessInfillPattern::AlignedRectilinear
+            | ProcessInfillPattern::Line
+            | ProcessInfillPattern::CrossZag
+            | ProcessInfillPattern::LockedZag
             | ProcessInfillPattern::AdaptiveCubic
             | ProcessInfillPattern::SupportCubic
     ) {

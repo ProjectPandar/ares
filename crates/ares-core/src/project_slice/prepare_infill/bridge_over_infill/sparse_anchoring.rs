@@ -4,7 +4,7 @@ use crate::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
         gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
         multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
-        rectilinear::{MonotonicFillParams, fill_monotonic_surface},
+        rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
     geometry::{Point, Polyline},
@@ -207,8 +207,21 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 }
             }
             SurfaceFillPattern::Configured(
-                pattern @ (ProcessInfillPattern::Rectilinear | ProcessInfillPattern::ZigZag),
+                pattern @ (ProcessInfillPattern::Rectilinear
+                | ProcessInfillPattern::ZigZag
+                | ProcessInfillPattern::Monotonic
+                | ProcessInfillPattern::MonotonicLine
+                | ProcessInfillPattern::AlignedRectilinear
+                | ProcessInfillPattern::Line
+                | ProcessInfillPattern::CrossZag
+                | ProcessInfillPattern::LockedZag),
             ) => {
+                // Upstream `generate_sparse_infill_polylines_for_anchoring`
+                // (`Fill.cpp:1394`) creates `Fill::new_from_type(pattern)` for
+                // every linear pattern — `FillRectilinear`/`FillMonotonic`/
+                // `FillLine`/`FillZigZag`/`FillCrossZag`/`FillLockedZag`/
+                // `FillMonotonicLines`/`FillAlignedRectilinear` all share the
+                // rectilinear/monotonic core (`fill_surface` `monotonic` flag).
                 let params = MonotonicFillParams {
                     spacing: fill.params.spacing,
                     overlap: 0.0,
@@ -224,9 +237,17 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     link_max_length: 0.0,
                     consistent_pattern: pattern.has_consistent_pattern(),
                 };
+                let generate = if matches!(
+                    pattern,
+                    ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
+                ) {
+                    fill_monotonic_surface
+                } else {
+                    fill_rectilinear_surface
+                };
                 for expolygon in fill.expolygons {
                     result.extend(
-                        fill_monotonic_surface(&expolygon, params, traversal.scale)
+                        generate(&expolygon, params, traversal.scale)
                             .map_err(super::transaction::geometry_error)?
                             .polylines,
                     );
@@ -250,13 +271,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 let _ = pattern;
             }
             SurfaceFillPattern::Configured(
-                ProcessInfillPattern::Monotonic
-                | ProcessInfillPattern::MonotonicLine
-                | ProcessInfillPattern::AlignedRectilinear
-                | ProcessInfillPattern::CrossZag
-                | ProcessInfillPattern::LockedZag
-                | ProcessInfillPattern::Line
-                | ProcessInfillPattern::TriHexagon
+                ProcessInfillPattern::TriHexagon
                 | ProcessInfillPattern::QuarterCubic
                 | ProcessInfillPattern::Lightning
                 | ProcessInfillPattern::Honeycomb
