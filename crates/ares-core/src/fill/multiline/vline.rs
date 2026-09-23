@@ -257,4 +257,3 @@ pub(crate) fn sample_grid_pattern(
 }
 #[cfg(test)]
 mod tests;
-

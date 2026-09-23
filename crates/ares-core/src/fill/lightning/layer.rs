@@ -95,7 +95,10 @@ impl Layer {
         for tree in &self.tree_roots {
             let tree = tree.clone();
             Node::visit_nodes(&tree, &mut |node| {
-                locator.insert(to_grid_point(node.borrow().p, bbox, self.locator_cell_size), node);
+                locator.insert(
+                    to_grid_point(node.borrow().p, bbox, self.locator_cell_size),
+                    node,
+                );
             });
         }
     }
@@ -146,11 +149,18 @@ impl Layer {
             }
             let (new_child, new_parent) = self.attach(unsupported_location, &grounding);
             tree_node_locator.insert(
-                to_grid_point(new_child.borrow().p, current_outlines_bbox, self.locator_cell_size),
+                to_grid_point(
+                    new_child.borrow().p,
+                    current_outlines_bbox,
+                    self.locator_cell_size,
+                ),
                 &new_child,
             );
             if let Some(np) = new_parent {
-                tree_node_locator.insert(to_grid_point(np.borrow().p, current_outlines_bbox, self.locator_cell_size), &np);
+                tree_node_locator.insert(
+                    to_grid_point(np.borrow().p, current_outlines_bbox, self.locator_cell_size),
+                    &np,
+                );
             }
             distance_field.update(grounding.p(), unsupported_location);
         }

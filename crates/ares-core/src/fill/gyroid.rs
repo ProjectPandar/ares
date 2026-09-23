@@ -151,13 +151,8 @@ fn fill_component(
         // `GyroidField(bb, this->z, period, omega)` — `this->z` is the mm
         // height (FillGyroid.cpp:332); only the XY raster is scale-domain, the
         // Z frequency arg stays millimetres.
-        let field = super::gyroid_field::GyroidField::new(
-            bb,
-            params.z,
-            period,
-            omega as f32,
-            scale,
-        );
+        let field =
+            super::gyroid_field::GyroidField::new(bb, params.z, period, omega as f32, scale);
         super::gyroid_field::get_gyroid_polylines(&field, scale)
     } else {
         let mut polylines = make_gyroid_waves(

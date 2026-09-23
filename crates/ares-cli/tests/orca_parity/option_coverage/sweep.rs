@@ -52,12 +52,24 @@ fn orca_parity_option_coverage() {
     }
     if let Some(values) = &only_values {
         for plan in &mut plans {
+            let before = plan.cases.len();
             plan.cases.retain(|case| {
                 case.value.as_ref().is_none_or(|v| {
-                    let label = v.as_str().map(str::to_owned).unwrap_or_else(|| v.to_string());
-                    values.iter().any(|want| want.trim_matches('"') == label.trim_matches('"'))
+                    let label = v
+                        .as_str()
+                        .map(str::to_owned)
+                        .unwrap_or_else(|| v.to_string());
+                    values
+                        .iter()
+                        .any(|want| want.trim_matches('"') == label.trim_matches('"'))
                 })
             });
+            // A value-filtered run no longer executes the plan's full legal
+            // domain — clear `provably_legal` so the summary can't report a
+            // partial (single-value) run as a complete domain.
+            if plan.cases.len() != before {
+                plan.provably_legal = false;
+            }
         }
     }
     let outcomes = plans

@@ -182,7 +182,11 @@ impl Layer {
                         Node::add_child_node(&root_ptr, new_root.clone());
                         Node::reroot(&new_root, None);
                         tree_node_locator.insert(
-                            to_grid_point(new_root.borrow().p, current_outlines_bbox, self.locator_cell_size),
+                            to_grid_point(
+                                new_root.borrow().p,
+                                current_outlines_bbox,
+                                self.locator_cell_size,
+                            ),
                             &new_root,
                         );
                         if let Some(pos) = old_root_pos {
@@ -224,7 +228,11 @@ impl Layer {
                 Node::reroot(&attach_ptr, None);
                 Node::add_child_node(&new_root, attach_ptr);
                 tree_node_locator.insert(
-                    to_grid_point(new_root.borrow().p, current_outlines_bbox, self.locator_cell_size),
+                    to_grid_point(
+                        new_root.borrow().p,
+                        current_outlines_bbox,
+                        self.locator_cell_size,
+                    ),
                     &new_root,
                 );
                 if let Some(pos) = old_root_pos {

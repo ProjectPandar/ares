@@ -89,14 +89,25 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 // An explicit `min`/`max` schema bound makes min+max+interior
                 // cover the option's legal range (the goal's Range contract).
                 provably_legal = true;
-                (
-                    vec![
-                        numeric_case("min", minimum, entry, &option_type),
-                        numeric_case("max", maximum, entry, &option_type),
-                        numeric_case("seeded", interior, entry, &option_type),
-                    ],
-                    None,
-                )
+                let mut cases = vec![
+                    numeric_case("min", minimum, entry, &option_type),
+                    numeric_case("max", maximum, entry, &option_type),
+                    numeric_case("seeded", interior, entry, &option_type),
+                ];
+                // `coFloatOrPercent` accepts BOTH a percent and an absolute
+                // float — exercising only the `%` branch leaves the literal
+                // branch untested. Add an absolute-float seeded case bounded
+                // by `max_literal` (the absolute-branch maximum).
+                if option_type == "coFloatOrPercent"
+                    && let Some(lit_max) = literal_maximum(&block)
+                {
+                    let lit_interior = seeded_interior(&key, minimum, lit_max, false);
+                    let mut absolute =
+                        numeric_case("seeded-literal", lit_interior, entry, "coFloat");
+                    absolute.label = "seeded-literal".to_owned();
+                    cases.push(absolute);
+                }
+                (cases, None)
             }
             _ => {
                 // Many speed/distance options declare only `min` (e.g.
@@ -319,12 +330,29 @@ fn numeric_bounds(block: &str) -> Option<(f64, f64)> {
             }
         })
     };
+    // `def->max` is the PERCENT maximum; `def->max_literal` is the separate
+    // maximum for the absolute-float branch of `coFloatOrPercent` — the two
+    // are independent bounds, not a single ceiling. Return the percent bound
+    // untouched; the literal bound is surfaced separately for dual-mode opts.
     let minimum = bound("min")?;
-    let mut maximum = bound("max")?;
-    if let Some(literal) = bound("max_literal") {
-        maximum = maximum.min(literal);
-    }
+    let maximum = bound("max")?;
     Some((minimum, maximum))
+}
+
+fn literal_maximum(block: &str) -> Option<f64> {
+    Regex::new(r"def->max_literal\s*=\s*([-+]?\d+(?:\.\d+)?|-?max_temp)")
+        .unwrap()
+        .captures(block)
+        .and_then(|captures| {
+            let token = &captures[1];
+            if token == "max_temp" {
+                Some(1500.0)
+            } else if token == "-max_temp" {
+                Some(-1500.0)
+            } else {
+                token.parse::<f64>().ok()
+            }
+        })
 }
 
 fn seeded_interior(key: &str, minimum: f64, maximum: f64, integer: bool) -> f64 {

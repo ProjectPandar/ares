@@ -177,6 +177,15 @@ pub(super) fn dispatch_tail(
                     let lines = generator
                         .convert_to_lines(layer_index, &outline, line_overlap)
                         .map_err(super::super::transaction::geometry_error)?;
+                    // `multiline_fill` (FillLightning.cpp:20) — same expansion as
+                    // the emit path (fill_entities/lightning.rs).
+                    let lines = crate::fill::multiline_offset::apply(
+                        lines,
+                        fill.params.multiline,
+                        fill.params.spacing,
+                        traversal.scale,
+                    )
+                    .map_err(super::super::transaction::geometry_error)?;
                     result.extend(lines);
                 }
             }

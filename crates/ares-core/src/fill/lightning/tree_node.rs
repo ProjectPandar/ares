@@ -238,9 +238,14 @@ impl Node {
                     let n = if nlen == 0.0 {
                         b
                     } else {
+                        // `n = b + (ba.normalized()*remain).cast<coord_t>()`
+                        // (TreeNode.cpp:338): the displacement vector is
+                        // componentwise-truncated, THEN added to `b` — not
+                        // `b + disp` rounded.
+                        // `b + (disp.cast<coord_t>())` — coord_t add.
                         Point::new(
-                            (bx + dx / nlen * remain as f64).round() as Coord,
-                            (by + dy / nlen * remain as f64).round() as Coord,
+                            b.x() + (dx / nlen * remain as f64) as Coord,
+                            b.y() + (dy / nlen * remain as f64) as Coord,
                         )
                     };
                     child.borrow_mut().p = n;

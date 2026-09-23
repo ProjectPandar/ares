@@ -300,4 +300,3 @@ fn selects_initial_tool(code: &str, active_tool: &mut Option<u8>) -> bool {
     };
     active_tool.replace(tool).is_none()
 }
-
