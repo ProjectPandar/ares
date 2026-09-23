@@ -5772,3 +5772,22 @@ skirt `mm3_per_mm`=0.0307 — `spacing(0.45,0.2)·first_layer_mm3` or a
 `mm3_per_mm` source — likely `mm3_per_mm = spacing(line_width)·height` where
 `height` is the raft flange `raft_layer.height`/`first_layer` (0.0754) — a
 skirt-specific flow formula, not `first_layer_flow.mm3_per_mm()`.
+
+### cxlviii. case-59tGO2 — both residuals documented, blocker state
+Two distinct residuals converge on `line_width`-spacing (0.407):
+1. `connect_base_support` `spacing=0.407` on 39 `infill=3` raft-base blob calls
+   — `FillSupportBase`/`ipSupportBase` filler `spacing` resolves to `line_width`
+   (0.45), not `support_line_width` (0.38). Untraceable via probed
+   `filler->spacing` sites — needs `this`/`pattern`/`z` identity probe.
+2. Skirt `mm3_per_mm=0.0307` = `spacing(line_width)·first_layer_mm3` — the skirt
+   flow's `height`/`width` resolves to `line_width`-spacing × `first_layer`
+   product, not `first_layer_flow.mm3_per_mm` (0.0754).
+Both point to `line_width` (0.45) being substituted where ares uses
+`support_line_width`(0.38)/`initial_layer_line_width`(0.42) — a shared
+`line_width` fallback in the support/skirt flow resolution. RESIDUAL: ares's
+raft/skirt flows use `support_line_width`/`initial_layer_line_width`; upstream
+resolves `line_width` for these `ipSupportBase`/`skirt` fills. The fix likely
+makes the raft-base/skirt `filler->spacing`/`flow.width`/`height` use
+`line_width`(0.45) — but applying it to `spec.spacing` broke `line_spacing`
+(density-scaled). The `mm3_per_mm`/`spacing`/`line_spacing` triad needs
+separate width sources per upstream's `filler->spacing` vs `flow` split.
