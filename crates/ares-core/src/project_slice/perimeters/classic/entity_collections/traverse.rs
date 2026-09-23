@@ -20,10 +20,18 @@ struct GroupFrame<'a> {
     nodes: Vec<ChainedLoopNode>,
     seeds: &'a [TraversalSeed],
     /// Number of materialized loop entities = the thin-entity boundary
-    /// (`entities[loop_count..]` are thin walls). Loop entities pair with
-    /// `seeds[index]`/`nodes[index]` at the same slot index — compacted loops
-    /// slide left against the (uncompacted) seed/node list
+    /// (`entities[loop_count..]` are thin walls).
+    ///
+    /// `entities` is compacted (a node whose `extrusion_loop` is `None` — an
+    /// empty-overhang root, `chained_loops/tree.rs:61-62` — contributes no
+    /// entity), but `seeds`/`nodes` are NOT compacted: loop entities pair
+    /// with `seeds[index]`/`nodes[index]` at the same slot index, sliding
+    /// left so a `None` root's children still descend through the slot the
+    /// next real loop occupies
     /// (`preserves_source_compact_entity_against_original_loop_indexing`).
+    /// Upstream `traverse_loops` never sees this shape — every
+    /// `PerimeterGeneratorLoop` carries a materializable `loop`, so its
+    /// `coll.entities` and `loops` stay 1:1.
     loop_count: usize,
     /// Loop entities occupy `entities[..nodes.len()]`; thin-wall entities (only
     /// ever present on the root frame) occupy `entities[nodes.len()..]`
