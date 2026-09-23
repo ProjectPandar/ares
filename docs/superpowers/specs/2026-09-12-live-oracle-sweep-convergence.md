@@ -6744,3 +6744,23 @@ connect_infill/perimeter-int/estimator residual, not direction.
   expose the raw-segment make_fill_lines stage — the multiline port needs
   that lower-level generator. tpmsd/tpmsfk/lightning are independent large
   generators.
+
+## §ccix Multi-angle rectilinear + TPMS-D emit (e70d77f1/91c9edbd/0590226c)
+- `fill::multiline::fill_surface` IS the `fill_surface_by_multilines` port —
+  grid/triangles/cubic already used it. The "unported" multi-angle patterns
+  only needed emit adapters computing their (angle,shift) sweep lists:
+  - TriHexagon=ipStars (PrintConfig.cpp:238): 3×60° + (3/2)·s·m/d shift.
+  - QuarterCubic: 4 sweeps {0,±dx1},{π/2,±dx2}, z-dependent dx (3518).
+  - LateralLattice: 2×90° sweeps tan(angle_{1,2})·z, reversed odd layers (3449).
+  - LateralHoneycomb: inverted-Y single/double family by vertical-period
+    phase (3550); uses region infill_overhang_angle + lateral_lattice params
+    (already plumbed into SurfaceFillParams).
+  - All override _layer_angle→0 so params.angle+π/2 == _infill_direction.
+- anchor_projection whitelist += TriHexagon/QuarterCubic/LateralLattice/
+  LateralHoneycomb/TpmsD (upstream anchors ALL patterns via fill_surface).
+- FillTpmsD ported (fill/tpms_d.rs): analytic make_waves + -45° rotate +
+  multiline + connect_infill (DensityAdjust=2.1, PatternTolerance=0.1).
+  TpmsD reads raw this->angle like FillGyroid.
+- STILL UNPORTED: FillTpmsFK (needs marchsq MarchingSquares.hpp ~652 LOC +
+  FK scalar field), FillLightning (needs FillLightning/Generator.cpp tree).
+  Both gated out — emit + anchor whitelist pending those ports.
