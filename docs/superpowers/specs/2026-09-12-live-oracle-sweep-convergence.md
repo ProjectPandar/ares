@@ -6820,3 +6820,20 @@ connect_infill/perimeter-int/estimator residual, not direction.
 - Confirmed options::InfillPattern (STL path) is a 12-variant subset; the
   advanced patterns parse via ProcessInfillPattern on the 3MF/project path,
   which is what the sparse_infill_pattern sweep exercises. tpmsfk emits there.
+
+## §ccxiv tpmsfk raster cost + FillLightning = the final structural port
+- tpmsfk marchsq over the rsize=0.004mm raster is compute-heavy (field evals +
+  dense ring polylines feeding connect_infill); interpolate_edge is now a
+  lower_bound binary search and scan_rings has a degenerate-direction guard,
+  but the sweep case still exceeds the per-slice budget — the pattern is ported
+  and compiles; matching upstream's sub-second cost needs the ex_tbb-parallel
+  structure + a perf pass (connect_infill on dense rings is the suspect).
+- FillLightning is the SOLE remaining generator and is architecturally
+  different: PrintObject::prepare_lightning_infill_data builds a per-object
+  Lightning::Generator (PrintObject.cpp:1010) that walks ALL layers top-to-
+  bottom, computes m_overhang_per_layer (internal-surface overhang subtraction),
+  then generateTrees propagates TreeNode roots downward
+  (generateNewTrees+reconnectRoots+propagateToNextLayer) using a DistanceField
+  grid; Layer::convertToLines emits per-surface. ~2000 LOC across
+  Generator/Layer/TreeNode/DistanceField + a new make_fills plumbing path —
+  a dedicated structural port, not a per-surface emit arm.
