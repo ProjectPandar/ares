@@ -43,7 +43,9 @@ impl MotionOptions {
 
         let (retraction_speed, deretraction_speed) = retraction::speeds(gcode);
         Self {
-            filament_area: std::f64::consts::PI * filament_diameter.powi(2) * 0.25,
+            // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
+            // — the multiplication order matters for f64 parity with upstream.
+            filament_area: filament_diameter * filament_diameter * 0.25 * std::f64::consts::PI,
             filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
             print_flow_ratio: region.map_or(full.process.region.print_flow_ratio.0, |value| {
                 value.print_flow_ratio.0
