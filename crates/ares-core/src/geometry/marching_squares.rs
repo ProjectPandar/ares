@@ -374,7 +374,11 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
     fn interpolate_edge(&self, ecrd: &mut Coord, isoval: f32) {
         let (from, to, dir) = self.edge(*ecrd);
         // Distance (in raster-pixel steps) from `from` to `to` along `dir`.
-        let len = (Coord { r: to.r - from.r, c: to.c - from.c }).manhattan_along(dir);
+        let len = (Coord {
+            r: to.r - from.r,
+            c: to.c - from.c,
+        })
+        .manhattan_along(dir);
         let mut lo = 0i64;
         let mut hi = len; // count of steps before the first `>= isoval`
         let mut first = from;
