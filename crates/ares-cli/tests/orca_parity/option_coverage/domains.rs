@@ -284,18 +284,40 @@ fn raw_numeric_bounds(block: &str) -> Option<(f64, f64)> {
 
 // Legacy domains outside the two-key vertical remain unverified.
 fn lower_bound(block: &str) -> Option<f64> {
-    Regex::new(r"def->min\s*=\s*([-+]?\d+(?:\.\d+)?)")
+    Regex::new(r"def->min\s*=\s*([-+]?\d+(?:\.\d+)?|-?max_temp)")
         .unwrap()
         .captures(block)
-        .and_then(|captures| captures[1].parse::<f64>().ok())
+        .and_then(|captures| {
+            let token = &captures[1];
+            if token == "max_temp" {
+                Some(1500.0)
+            } else if token == "-max_temp" {
+                Some(-1500.0)
+            } else {
+                token.parse::<f64>().ok()
+            }
+        })
 }
 
 fn numeric_bounds(block: &str) -> Option<(f64, f64)> {
     let bound = |name: &str| {
-        Regex::new(&format!(r"def->{name}\s*=\s*([-+]?\d+(?:\.\d+)?)"))
-            .unwrap()
-            .captures(block)
-            .and_then(|captures| captures[1].parse::<f64>().ok())
+        // `def->max = <literal>` OR `def->max = max_temp` (the 1500 constant
+        // upstream defines at `PrintConfig.cpp:939` for every temperature).
+        Regex::new(&format!(
+            r"def->{name}\s*=\s*([-+]?\d+(?:\.\d+)?|-?max_temp)"
+        ))
+        .unwrap()
+        .captures(block)
+        .and_then(|captures| {
+            let token = &captures[1];
+            if token == "max_temp" {
+                Some(1500.0)
+            } else if token == "-max_temp" {
+                Some(-1500.0)
+            } else {
+                token.parse::<f64>().ok()
+            }
+        })
     };
     let minimum = bound("min")?;
     let mut maximum = bound("max")?;
