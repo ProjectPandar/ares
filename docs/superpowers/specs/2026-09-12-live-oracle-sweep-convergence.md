@@ -5609,3 +5609,20 @@ the raft base blobs resolves `line_width`, not `support_line_width`. ares
 uses `support_flow_spacing`/`first_layer_flow_spacing` (0.337/0.377) → ~600
 divergence. NEXT: add `pat=`/`z=`/`filler` id to FBS to catch the `nl=3`
 instance's `filler->spacing` assignment site.
+
+### cxxxv. spacing=0.407 — nl=3 FillSupportBase calls confirmed missing from FBS
+CIN recount: 39× `infill=3 spacing=0.407`, 78× `0.337`, 1× `0.377`. FBS inside
+`FillSupportBase::fill_surface` (the ONLY connect_base_support caller, :3623,
+verified: connect_infill never delegates, no other call site in the tree) shows
+`this->spacing` ∈ {0.337,0.377} for nl=27/37/39/41 — NO nl=3, NO 0.407. So
+`connect_base_support` gets `infill=3 spacing=0.407` calls whose
+`FillSupportBase::fill_surface` invocation produced `nl=3`+`spacing=0.407` but
+didn't print in FBS — meaning `fill_lines.size()` at :3623 for those calls is
+3 with `this->spacing=0.407`. FBS's nl field equals infill_ordered.size() — if
+nl=3 existed it'd print. CONCLUSION: the 0.407 calls hit `connect_base_support`
+via a path whose `FillSupportBase::fill_surface` `this->spacing`=0.407
+(`line_width`) — an `ipSupportBase` filler whose `filler->spacing` was set to
+`line_width` for the raft-base blobs. The FBS print may have been skipped for
+those surfaces (different `params.pattern`/early return). RESIDUAL: needs FBS
+with `params.pattern`+`this` pointer to identify which `ipSupportBase` filler
+gets `spacing=0.407`=`line_width`.
