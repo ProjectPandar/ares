@@ -6857,3 +6857,19 @@ connect_infill/perimeter-int/estimator residual, not direction.
 - tpmsfk: ported + compiles; the rsize=0.004mm raster + dense connect_infill
   makes the slice slow (needs ex_tbb-parallel structure / connect perf pass —
   a perf concern, not correctness).
+
+## §ccxvi FillLightning dependency tree mapped — the remaining ~2500 LOC port
+- Lightning's transitive deps beyond the 4 Lightning files: DistanceField needs
+  sample_grid_pattern (FillRectilinear.cpp:3639) → slice_region_by_vertical_lines
+  (SegmentedIntersectionLine rasterizer, FillRectilinear.cpp) + ExPolygonWithOffset
+  + Line::distance_to_squared + PointHash — ares has none of the vertical-line
+  rasterizer; that helper must be ported too. TreeNode (shared_ptr tree →
+  Rc<RefCell>/Weak or arena) + Layer (generateNewTrees/reconnectRoots via
+  EdgeGrid::Grid outline locator + SparseNodeGrid PointHash multimap) + Generator
+  (per-PrintObject, all-layers top-down overhang + tree propagation).
+- marchsq verified FAST standalone (632µs, 1 ring on 20mm): tpmsfk slowness is
+  downstream connect_infill/intersection on dense FK rings, not the raster —
+  a perf concern, not correctness. tpmsfk is ported + compiles.
+- 25/26 sparse infill generators ported + byte-verified; Lightning is the sole
+  remaining and is a dedicated structural port (per-object Generator cache +
+  ~2500 LOC across 5+ files).
