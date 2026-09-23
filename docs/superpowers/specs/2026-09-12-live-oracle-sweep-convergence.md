@@ -5750,3 +5750,13 @@ Oracle skirt `;HEIGHT:0.2` confirms `layer.height_mm`=0.2 — so
 `flow.width` source differs. RESIDUAL: skirt `flow.width`/`mm3_per_mm` uses a
 non-`initial_layer_line_width` width (~0.196) — identify `Print::skirt_flow`
 width resolution (likely `line_width` scaled or a skirt-specific option).
+
+### cxlvi. TURN BOUNDARY — skirt mm3_per_mm=0.0307 needs width/height source
+Skirt `mm3_per_mm=0.0307` (E.04556 on 1.4835mm move, confirmed across all
+skirt E values: 0.485/15.78=0.0307, 0.06034/1.963=0.0307). `;WIDTH:0.42`
+`HEIGHT:0.2` — but `h·(w−h·0.2146)` for w=0.42,h=0.2 gives 0.0754, not 0.0307.
+`mm3_per_mm=0.0307` → `width≈0.196` (h=0.2) or `height≈0.076` (w=0.42). The
+skirt flow's `width`/`height`/`spacing` resolves to a non-`first_layer_flow`
+value — `width≈0.196` ≈ `nozzle·0.49` or a skirt-specific width, OR
+`height≈0.076` (raft flange `raft_layer.height`). RESIDUAL: skirt `mm3_per_mm`
+`width`/`height` source — likely `skirt`-specific flow or raft-flange height.
