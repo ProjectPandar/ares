@@ -5713,3 +5713,17 @@ the `height` — ares's `layer.height_mm` for the skirt layer uses
 RESIDUAL: skirt `layer.height_mm` should be the raft base `raft_layer.height`
 (~0.076) when a raft is present — the skirt `mm3_per_mm` height source is the
 raft flange height, not `first_print_layer_height`.
+
+### cxliii. Skirt mm3_per_mm = 0.0307 = 0.0754·0.407 (spacing-ratio scaled?)
+`mm3_per_mm=0.0307` for the skirt — `first_layer_flow` gives 0.0754
+(w=0.42,h=0.2). `0.0307 = 0.0754·0.407` — `0.407`=`line_width`-spacing
+(`spacing(0.45,0.2)`). The skirt `mm3_per_mm` appears scaled by
+`line_width`-spacing (0.407) — OR the skirt `height`/`width` resolves to
+`line_width`-derived values. `mm3_per_mm = h·(w−h·0.2146)` = 0.0307 →
+`height≈0.076` (w=0.42) OR `width≈0.196` (h=0.2). The skirt E-ulp diff is a
+`mm3_per_mm` resolution — the skirt flow's `height`/`width`/`spacing` is not
+`first_layer_flow`-standard. This is a skirt `mm3_per_mm` source bug; the
+raft `connect_base_support` `spacing=0.407` was a separate red-herring
+(`line_width`-spacing on nl=3 raft-base blobs). RESIDUAL: skirt `mm3_per_mm`
+should use the raft-flange `raft_layer.height` (~0.076) or a `line_width`
+scaling — pin via ORCA_FLOW-style probe on the skirt extrusion.
