@@ -5848,3 +5848,11 @@ TURN STATE: baseline 3609, all probes/ledger committed, tests green. Next turn:
 `Print::skirt_flow`, OR (b) probe `connect_base_support` `filler` identity via
 `this` pointer / `params.pattern` on the `infill=3` calls. Both residuals are
 `line_width`-fallback bugs in the raft/skirt fill resolution.
+
+### cliii. Skirt-flow probe building (ORCA_SF)
+Instrumented `Print::skirt_flow` end (`Print.cpp:2047`) to dump
+`flow.width`/`spacing`/`height`/`mm3_per_mm` for the skirt `Flow`. Build in
+flight (~10min). Expected: `flow.width`≈0.196/`spacing`≈0.1536/`mm3`≈0.0307 —
+confirming the skirt `width` resolves to a non-`initial_layer_line_width`
+value (or `height`/`spacing` differs). This closes the skirt `mm3_per_mm`
+residual's identity question.
