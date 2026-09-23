@@ -128,8 +128,11 @@ impl ExtrusionOptions {
                 "extrusion area must be positive".to_owned(),
             ));
         }
-        let filament_area =
-            std::f64::consts::PI * (self.filament_diameter_for_role(role) / 2.0).powi(2);
+        // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`.
+        let filament_area = {
+            let d = self.filament_diameter_for_role(role);
+            d * d * 0.25 * std::f64::consts::PI
+        };
         let flow = match role {
             PrintPathRole::Bridge if self.thick_bridges => 1.0,
             PrintPathRole::Bridge => self.bridge_flow,
