@@ -6873,3 +6873,24 @@ connect_infill/perimeter-int/estimator residual, not direction.
 - 25/26 sparse infill generators ported + byte-verified; Lightning is the sole
   remaining and is a dedicated structural port (per-object Generator cache +
   ~2500 LOC across 5+ files).
+
+## §ccxvii FillLightning groundwork landed; rand() parity is a real blocker detail
+- Committed fe451a5a: BoundingBox merge_point/contains/size/inflated +
+  sample_grid_pattern (vline.rs, FillRectilinear.cpp:3639 — vertical-line grid
+  sampling anchored on the GLOBAL bbox so disjoint expolys keep >=spacing) +
+  fill/lightning/distance_field.rs (DistanceField.cpp: offset2_ex(union_ex
+  (overhang),-cs/2,cs/2) -> sample_grid_pattern -> per-point min
+  distance_to_squared -> stable_sort(dist-or-prime-hash) -> UnsupportedPointsGrid
+  -> update circle+rotated-rect marking).
+- NEW PARITY DETAIL: TreeNode::convertToPolylines (TreeNode.cpp:365) uses
+  `rand() % m_children.size()` for the first-child branch order — glibc rand()
+  TYPE_3 additive-feedback RNG, unseeded (default seed 1). Byte parity needs the
+  exact glibc rand() sequence AND the same call count (depends on tree shape).
+  Generator.cpp:34 also srand(time(NULL)) for an SVG filename (not output).
+- TreeNode is a shared_ptr tree (Rc<RefCell<Node>>+Weak parent in Rust) with
+  deepCopy/reroot/realign/straighten/prune/convertToPolylines/
+  removeJunctionOverlap + getWeightedDistance valence boost; Layer uses
+  EdgeGrid::Grid outline_locator + SparseNodeGrid (unordered_multimap<Point,
+  weak_ptr,PointHash>) + inside(PointInPolygon)+segment_segment_intersection.
+  ares has EdgeGrid (segment/visit_cells_intersecting_line/resolution) +
+  point_in_polygon. Remaining: TreeNode+Layer+Generator+rand()+plumbing.
