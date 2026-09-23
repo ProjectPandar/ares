@@ -171,7 +171,17 @@ impl Node {
         let tree_below = Self::deep_copy(this);
         Self::prune(&tree_below, prune_distance);
         Self::straighten(&tree_below, smooth_magnitude, max_remove_colinear_dist);
-        if Self::realign(&tree_below, next_outlines, outline_locator, next_trees) {
+        let ok = Self::realign(&tree_below, next_outlines, outline_locator, next_trees);
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            eprintln!(
+                "PROPAGATE outlines={} root_inside={} ok={} children={}",
+                next_outlines.len(),
+                inside(next_outlines, this.borrow().p),
+                ok,
+                tree_below.borrow().children.len()
+            );
+        }
+        if ok {
             next_trees.push(tree_below);
         }
     }
