@@ -6116,3 +6116,18 @@ emit `flow` for the skirt has `spacing`=`spacing(line_width)·spacing
 spacing` values. This is a `flow` where `m_spacing` is set to
 `spacing(0.45)·spacing(0.42)` — locate the `Flow`/`spacing` construction on
 the skirt `E` emit path that produces this product.
+
+### clxxiv. Skirt E flow = {width:first_layer(0.42), spacing:spacing(line_width)=0.407, height:mm3_per_mm(first_layer)=0.0754}
+`flow.spacing=0.407`=`spacing(line_width)` `flow.height=0.0754`=
+`mm3_per_mm(first_layer)` `flow.width=0.42`=`first_layer_width`
+(`spacing+h·rr`=`0.407+0.0754·0.2146`=`0.423`≈`0.42`). `mm3_per_mm`=
+`spacing·height`=`0.407·0.0754`=`0.0307`. The emit-path `flow` has
+`spacing`=`spacing(line_width)` and `height`=`mm3_per_mm(first_layer)` —
+`spacing`/`height` CROSSED: `spacing` holds `line_width`-spacing, `height`
+holds `first_layer` `mm3_per_mm`. `width`=`first_layer_width`. This is a
+`flow` where `spacing`/`height` are assigned `line_width`-spacing and
+`first_layer`-mm3 — a `spacing`/`height`/`mm3` confusion in the emit-path
+`flow` construction. RESIDUAL: skirt `E` `flow`=`{width:first_layer_width,
+spacing:spacing(line_width), height:mm3_per_mm(first_layer)}` — locate the
+`flow` construction assigning `spacing`=line_width-spacing/`height`=
+first_layer-mm3.
