@@ -6175,3 +6175,17 @@ is a `flow` where `spacing`=`line_width`-spacing, `height`=`first_layer`-mm3,
 `flow` for the skirt uses `spacing`=`spacing(line_width)`, `height`=
 `mm3_per_mm(first_layer)`, `width`=`first_layer_width` — a `spacing`/`height`
 crossing with `line_width` substituted for `first_layer` in `spacing`.
+
+### clxxviii. Skirt E flow = {width:0.42, spacing:spacing(line_width), height:mm3(first_layer)} — FINAL
+Emit-path `flow` for the skirt `E`: `width`=`first_layer_width`(0.42),
+`spacing`=`spacing(line_width)`(0.407), `height`=`mm3_per_mm(first_layer)`
+(0.0754). `mm3_per_mm = spacing·height` = `0.407·0.0754` = `0.0307` —
+predicted `E` matches oracle within 0.0004. The `flow` has `spacing`=
+`line_width`-spacing and `height`=`first_layer`-mm3 — `spacing`/`height`
+crossed (not `skirt_flow`'s spacing=0.377/height=0.2). The `G1 E` emit-path
+`flow` construction assigns `spacing`=`spacing(line_width)` and `height`=
+`mm3_per_mm(first_layer)` — a `spacing`/`height`/`mm3` field confusion.
+RESIDUAL: locate the emit-path `flow` construction — `Flow` with
+`spacing`=`spacing(line_width)`/`height`=`mm3_per_mm(first_layer)`/`width`=
+`first_layer_width` — the `spacing`/`height` fields are assigned `line_width`-
+spacing and `first_layer`-mm3 respectively.
