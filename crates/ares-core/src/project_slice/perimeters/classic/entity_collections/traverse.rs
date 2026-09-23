@@ -29,9 +29,15 @@ struct GroupFrame<'a> {
     /// left so a `None` root's children still descend through the slot the
     /// next real loop occupies
     /// (`preserves_source_compact_entity_against_original_loop_indexing`).
-    /// Upstream `traverse_loops` never sees this shape — every
-    /// `PerimeterGeneratorLoop` carries a materializable `loop`, so its
-    /// `coll.entities` and `loops` stay 1:1.
+    /// Upstream has the same compaction: `PerimeterGenerator.cpp:208`
+    /// `if (paths.empty()) continue;` skips the `coll.append` for an
+    /// empty-paths loop, so `coll.entities` compacts while `loops` does not —
+    /// upstream's `idx.first >= loops.size()` thin boundary (:241) then reads
+    /// the uncompacted count. `loop_count` is the equivalent boundary over
+    /// ares's compacted `entities`; the two agree in every non-degenerate
+    /// case and diverge only in the upstream-UB corner (a compacted thin wall
+    /// landing inside `loops.size()` is `static_cast<ExtrusionLoop*>` on a
+    /// Path).
     loop_count: usize,
     /// Loop entities occupy `entities[..nodes.len()]`; thin-wall entities (only
     /// ever present on the root frame) occupy `entities[nodes.len()..]`
