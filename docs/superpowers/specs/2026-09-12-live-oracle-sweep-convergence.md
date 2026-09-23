@@ -7027,3 +7027,18 @@ Ares `build_lightning_generator` (`candidate_expansion.rs:270-283`) instead read
 ALSO: `records[layer_id].fill_surfaces` may hold a single merged record vs upstream's per-region union — same net polygons if merge is faithful, but coverage gap (None layers) is the suspect.
 
 Next diagnostic: dump `horizontal.records.iter().map(|r| r.is_some())` + `layer_internal_outlines.iter().map(Vec::len)` per layer for the complex case; compare against oracle `infill_outlines` poly counts. If gaps exist, source `infill_outlines` from the full per-layer region fill_surfaces (upstream `layerm->fill_surfaces`) instead of the horizontal-record subset.
+
+## §ccxxxvi FillLightning — independent-review fixes verified: 1→26 sparse (oracle 38)
+
+The reviewer-identified lightning defects were the real residual drivers (not the §ccxxxii "straighten" hypothesis nor the §ccxxxv records-gap hypothesis — `rec_some` is all `true`, no coverage gap). Fixed+verified on complex object `parity-lnN/case-IdM3Br`: sparse sections **1 → 26** (oracle 38).
+
+Confirmed-causal fixes:
+- `LOCATOR_CELL_SIZE` `4000` → `4_000_000` (`scaled<coord_t>(4.)`, `TreeNode.hpp:21`) — the 1000×-too-small locator grid broke `getBestGroundingLocation`/`lineSegmentPolygonsIntersection` reach.
+- `reconnectRoots` grounding path — `addChild(new_root); new_root->reroot()` subtree-preserve (was `reroot(new_root, Some(root_ptr))` which dropped the tree).
+- `straighten_rec` — integer-truncate `junction_moving_dir`/`m_p +=` arithmetic (was f64+`.round()`), and live-`m_p` collinear test (was stale pre-move `p`).
+- `m_supporting_radius` — float division `coord_t(w)*100*n/density` (was int division).
+- `Generator` params — `max` nozzle diameter + `object_config.layer_height` (was `min` + first-layer height).
+- Shared `GlibcRand` stream across `convertToPolylines`/layers (was per-layer reseed).
+- `multiline_fill` applied before the 2nd `intersection_pl` (was skipped).
+
+Remaining 26→38 residual: propagated trees arrive at lower layers as **root-only single nodes** (`children=[]` → `raw_lines=0` on layers 5-41; only seed layer 42 has children). Hypothesis: upstream `reconnectRoots` boundary re-grounding builds deeper root→…→unsupported chains that survive `propagate`'s prune+realign on shrinking outlines; ares's propagated 2-node tree loses its single child when the child's overhang position falls outside the smaller next-layer outline. Needs oracle-side per-layer `tree_roots` depth dump to disambiguate which upstream step preserves trunk depth.
