@@ -6545,3 +6545,18 @@ PerimeterGenerator/offset int-quantization residual (the contour offset /
 thick-polyline points land on slightly different lattice ints), the deepest
 and last class of wipe residual — the wipe EMIT is now verified faithful
 (during/dist/clip all correct); only the input polyline's int coords differ.
+
+### cxcviii. wipe residual pinpointed: per-loop contour int quantization
+Frame-independent segment-length compare (oracle WPATH vs ares ASEGP): the
+FIRST wipe's segments match exactly (`821443`/`178557` both). Divergence
+appears on LATER octagon loops (different radii): oracle `313497.206` vs ares
+`313491.549`, oracle `471742` vs ares `471748`, etc. So specific perimeter
+loops have `coord_t` points a few lattice units off from oracle — the contour
+offset (`offset`/thick-polyline generation) produces ints differing in the
+~4th-6th mm decimal. The emitted XY round to the same 3 decimals but the wipe
+`dE` (computed from int `Line::length()`) flips the 5th decimal. This is a
+PerimeterGenerator offset-precision residual — the SAME upstream surface as
+the narrow/split and raft residuals (all reduce to Clipper1 offset / contour
+point ints differing by a few units on specific geometries). The wipe emit
+itself is verified byte-faithful. Fix requires offset-contour int parity —
+a milestone-scale PerimeterGenerator investigation, not a wipe bug.
