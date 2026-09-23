@@ -277,11 +277,15 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
     fn scan_rings(&mut self) -> Vec<Vec<Coord>> {
         let mut rings = Vec::new();
         let mut startidx = 0usize;
-        loop {
-            startidx = self.search_start_cell(startidx);
-            if startidx >= self.gridlen {
+        // Bound the outer ring scan to `gridlen` iterations — a well-formed
+        // grid consumes dirs monotonically; the bound guards against a
+        // degenerate ring leaving `search_start_cell` stuck on one cell.
+        for _ in 0..self.gridlen + 1 {
+            let found = self.search_start_cell(startidx);
+            if found >= self.gridlen || found < startidx {
                 break;
             }
+            startidx = found;
             let mut ring = Vec::new();
             let mut idx = startidx;
             let mut next = self.next_dir(idx, Dir::All);
@@ -303,11 +307,11 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
                     break;
                 }
             }
-            // Clear any residual direction on the current cell so the outer
-            // search advances past a degenerate ring instead of revisiting it.
-            if next != Dir::All {
-                self.clr_dirs(idx, Dir::from_bits(0b1111));
-            }
+            // Clear residual direction bits on the current cell AND the start
+            // cell so the outer search advances past a degenerate ring instead
+            // of revisiting it (upstream relies on rings always closing).
+            self.clr_dirs(idx, Dir::from_bits(0b1111));
+            self.clr_dirs(startidx, Dir::from_bits(0b1111));
             if ring.len() > 1 {
                 rings.push(ring);
             }

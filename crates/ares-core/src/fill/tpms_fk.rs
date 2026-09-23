@@ -206,31 +206,3 @@ fn rotate_polylines(polylines: &mut [Polyline], angle: f64) -> Result<(), Clippe
     }
     Ok(())
 }
-
-#[cfg(test)]
-mod bench {
-    use super::*;
-    use crate::geometry::{ExPolygon, Polygon, Point, CoordinateScale};
-
-    #[test]
-    fn tpmsfk_bench() {
-        let scale = CoordinateScale::Normal;
-        // 20x20mm square
-        let s = |mm: f64| scale.checked_scale(mm).unwrap();
-        let pts = vec![
-            Point::new(s(0.0), s(0.0)),
-            Point::new(s(20.0), s(0.0)),
-            Point::new(s(20.0), s(20.0)),
-            Point::new(s(0.0), s(20.0)),
-        ];
-        let exp = ExPolygon::new(Polygon::new(pts), vec![]);
-        let params = TpmsFKFillParams {
-            spacing: 2.0, overlap: 0.0, density: 0.15, angle: 0.0,
-            layer_z: 0.4, multiline: 1, anchor_length: 0.0,
-            anchor_length_max: 0.0, dont_sort: false,
-        };
-        let t = std::time::Instant::now();
-        let out = fill_tpmsfk_surface(&exp, &params, scale).unwrap();
-        eprintln!("BENCH total {:?} out={}", t.elapsed(), out.len());
-    }
-}
