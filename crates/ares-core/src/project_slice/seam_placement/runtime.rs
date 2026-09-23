@@ -70,14 +70,13 @@ pub(super) fn stagger_inner_seams(
             _ => None,
         })
         .flat_map(|collection| &mut collection.entities)
-        .map(|entity| match entity {
-            // Staggered inner-wall seam splitting targets loops; arachne wall
+        .filter_map(|entity| match entity {
+            // Staggered inner-wall seam splitting targets loops; open
+            // thin-wall `ExtrusionPath`s are skipped (no seam). Arachne wall
             // generation stays typed-rejected before materialization, so no
             // multi-path can reach staggering.
-            ExtrusionEntity::Loop(ordered) => &mut ordered.extrusion_loop,
-            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => unreachable!(
-                "multi-path/variable-width seam staggering lands with the arachne materialization seam"
-            ),
+            ExtrusionEntity::Loop(ordered) => Some(&mut ordered.extrusion_loop),
+            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => None,
         })
     {
         if let Some(target) = stagger_target(loop_, scale) {
@@ -123,11 +122,11 @@ pub(super) fn prepared_cw_rectangles_have_source_seams(layers: &[OrderedExtrusio
             _ => None,
         })
         .flat_map(|collection| &collection.entities)
-        .map(|entity| match entity {
-            ExtrusionEntity::Loop(ordered) => &ordered.extrusion_loop,
-            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => unreachable!(
-                "multi-path/variable-width seam staggering lands with the arachne materialization seam"
-            ),
+        .filter_map(|entity| match entity {
+            ExtrusionEntity::Loop(ordered) => Some(&ordered.extrusion_loop),
+            // Thin-wall `ExtrusionPath`s are not clockwise-rectangle loops;
+            // skip them in the shortcut scan.
+            ExtrusionEntity::MultiPath(_) | ExtrusionEntity::Path(_) => None,
         })
     {
         found = true;

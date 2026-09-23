@@ -31,17 +31,35 @@ pub(super) fn emit_perimeter(
                 .iter()
                 .flat_map(|path| path.polyline.points.iter().map(|point| (point.x, point.y)))
                 .collect(),
+            // Thin-wall `ExtrusionPath`s participate in the wipe-touch
+            // touching-lines gate like any other perimeter entity.
+            ExtrusionEntity::Path(path) => path
+                .polyline
+                .points
+                .iter()
+                .map(|point| (point.x, point.y))
+                .collect(),
             _ => Vec::new(),
         })
         .collect();
     for entity in collection.entities {
-        let ExtrusionEntity::Loop(mut loop_) = entity else {
-            // `GCode::extrude_multi_path` (`GCode.cpp:6038`) is not ported yet;
-            // arachne wall generation stays typed-rejected before
-            // materialization, so no multi-path can reach emission.
-            unreachable!(
-                "multi-path perimeter emission lands with the arachne materialization seam"
-            );
+        let mut loop_ = match entity {
+            ExtrusionEntity::Loop(loop_) => loop_,
+            // `GCode::extrude_path` (`GCode.cpp:6092`) — a bare `ExtrusionPath`
+            // (thin-wall `variable_width` materialization) emits directly with
+            // no loop clipping/seam step.
+            ExtrusionEntity::Path(path) => {
+                super::materialized::emit_flat(output, &path, 0.0, geometry, state);
+                continue;
+            }
+            _ => {
+                // `GCode::extrude_multi_path` (`GCode.cpp:6038`) is not ported
+                // yet; arachne wall generation stays typed-rejected before
+                // materialization, so no multi-path can reach emission.
+                unreachable!(
+                    "multi-path perimeter emission lands with the arachne materialization seam"
+                );
+            }
         };
         if state.spiral_vase && loop_.extrusion_loop.role != ExtrusionLoopRole::Hole {
             crate::project_slice::seam_placement::place_nearest_projection(

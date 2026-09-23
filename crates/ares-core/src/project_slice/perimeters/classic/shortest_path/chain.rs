@@ -345,6 +345,28 @@ fn merged_chain_id(first: usize, second: usize, equivalents: &mut EquivalentChai
     }
 }
 
+/// `chain_extrusion_entities` (ShortestPath.cpp:1026) — nearest-neighbor chain
+/// over a MIXED loop+path entity set. `endpoints[i]` is `[first,last]` in coord
+/// units and `is_loop[i]` marks loops (whose reversal is forced `false` — start
+/// == end makes it a no-op upstream, :1036). Thin-wall `ExtrusionPath`s may
+/// reverse (`could_reverse = is_loop || can_reverse()`); the traversal treats
+/// every entity as `can_reverse` here.
+pub(in crate::project_slice) fn chain_extrusion_entities(
+    endpoints: &[[[crate::geometry::Coord; 2]; 2]],
+    is_loop: &[bool],
+    start_near: [crate::geometry::Coord; 2],
+) -> Vec<(usize, bool)> {
+    let can_reverse: Vec<bool> = vec![true; endpoints.len()];
+    let mut chain = chain_segments_constrained(endpoints, start_near, &can_reverse);
+    for (index, reverse) in &mut chain {
+        if is_loop[*index] {
+            // Loops' start == end, so reversal is ignored upstream (:1036).
+            *reverse = false;
+        }
+    }
+    chain
+}
+
 fn coord_to_f64(point: [crate::geometry::Coord; 2]) -> [f64; 2] {
     [point[0] as f64, point[1] as f64]
 }

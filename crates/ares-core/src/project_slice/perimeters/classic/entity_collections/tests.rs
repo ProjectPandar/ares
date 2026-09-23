@@ -11,7 +11,7 @@ use super::{
 };
 use crate::{
     ProcessWallDirection,
-    geometry::{CoordinateScale, Point, Polygon},
+    geometry::{CoordinateScale, Point, Polygon, Polyline, to_thick_polylines},
 };
 
 /// The unit traversal fixtures never produce thin walls, so `traverse_loops` is
@@ -322,4 +322,86 @@ fn drain_seeds(mut seeds: Vec<TraversalSeed>) {
     while let Some(mut seed) = seeds.pop() {
         seeds.append(&mut seed.children);
     }
+}
+
+fn thin_wall(points: &[(i64, i64)]) -> crate::geometry::ThickPolyline {
+    to_thick_polylines(
+        vec![Polyline::new(
+            points.iter().map(|&(x, y)| Point::new(x, y)).collect(),
+        )],
+        0.4e6,
+    )
+    .remove(0)
+}
+
+#[test]
+fn task22o9_thin_wall_entities_interleave_with_loops_and_emit() {
+    // `traverse_loops` materializes `thin_walls` into the SAME collection the
+    // outermost loop frame chains (PerimeterGenerator.cpp:231-238), so a thin
+    // `ExtrusionPath` must appear in the output alongside the loop — not
+    // appended blindly at the end.
+    let nodes = vec![ChainedLoopNode {
+        extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
+        children: Vec::new(),
+    }];
+    let seeds = vec![seed(true, 0, Vec::new())];
+    let thin = vec![thin_wall(&[(1_000_000, 1_000_000), (2_000_000, 1_000_000)])];
+    let collection = traverse_loops(
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        &thin,
+        test_flow(),
+        TEST_SCALE,
+    );
+    assert_eq!(collection.entities.len(), 2);
+    let has_path = collection
+        .entities
+        .iter()
+        .any(|e| matches!(e, ExtrusionEntity::Path(_)));
+    let has_loop = collection
+        .entities
+        .iter()
+        .any(|e| matches!(e, ExtrusionEntity::Loop(_)));
+    assert!(
+        has_path && has_loop,
+        "thin-wall path + loop both emitted; got {:?}",
+        collection
+            .entities
+            .iter()
+            .map(ExtrusionEntity::inset_idx)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn task22o9_closed_thin_wall_emits_loop() {
+    // A closed thin ring wraps as `ExtrusionLoop` (VariableWidth.cpp:226-229),
+    // so a thin-wall-only traversal emits a single loop entity.
+    let nodes = vec![ChainedLoopNode {
+        extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
+        children: Vec::new(),
+    }];
+    let seeds = vec![seed(true, 0, Vec::new())];
+    let thin = vec![thin_wall(&[
+        (0, 0),
+        (1_000_000, 0),
+        (1_000_000, 1_000_000),
+        (0, 0),
+    ])];
+    let collection = traverse_loops(
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        &thin,
+        test_flow(),
+        TEST_SCALE,
+    );
+    // Two loops: the square + the closed thin ring.
+    let loops = collection
+        .entities
+        .iter()
+        .filter(|e| matches!(e, ExtrusionEntity::Loop(_)))
+        .count();
+    assert_eq!(loops, 2, "closed thin ring emits a second Loop entity");
 }

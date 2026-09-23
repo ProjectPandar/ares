@@ -226,6 +226,12 @@ fn place_collection(
 ) {
     for (entity, &perimeter_index) in collection.entities.iter_mut().zip(perimeter_indices) {
         let ExtrusionEntity::Loop(ordered) = entity else {
+            // Open thin-wall `ExtrusionPath`s take no seam (they are not
+            // loops); consume their `perimeter_index` and skip placement.
+            // `GCode::extrude_path` emits them without a seam step.
+            if matches!(entity, ExtrusionEntity::Path(_)) {
+                continue;
+            }
             // Aligned-seam placement targets loops (`SeamPlacer.cpp:1500`);
             // arachne wall generation stays typed-rejected before
             // materialization, so no multi-path can reach placement.

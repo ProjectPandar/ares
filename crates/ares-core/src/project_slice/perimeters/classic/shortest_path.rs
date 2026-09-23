@@ -11,7 +11,7 @@ mod priority_queue;
 mod tests;
 
 pub(in crate::project_slice) use chain::{
-    chain_and_reorder_extrusion_paths, chain_extrusion_loops,
+    chain_and_reorder_extrusion_paths, chain_extrusion_entities, chain_extrusion_loops,
 };
 #[cfg(test)]
 pub(in crate::project_slice) use chain::{chain_extrusion_paths, reorder_extrusion_paths};

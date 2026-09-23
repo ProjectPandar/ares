@@ -156,18 +156,21 @@ Preflight gate `classic/preflight.rs:103` then drops once the path is live
 Verification: needs a thin-wall-activating fixture (a model with a <1-loop-thick
 wall under `detect_thin_wall=true`) run through both ares + orca oracle.
 
-## Thin-wall plumbing — record-level collection (refined)
+## Thin-wall plumbing — PER-SURFACE collection (corrected)
 
-Upstream `thin_walls` is a `PerimeterGenerator` RECORD member accumulated across
-every surface's `i == 0` extraction, then emitted ONCE in `traverse_loops`
-(`:1450`, `contours.front()` = the record's depth-0 loops) via `variable_width`.
-Ares `traverse_loops` runs PER-surface (`entity_collections::transform_surface`),
-so a per-surface `thin_walls` field would emit them in the wrong frame/order.
+Upstream `thin_walls` is declared INSIDE the per-surface loop
+(`PerimeterGenerator.cpp:1222,1243`) and consumed by that surface's
+`traverse_loops` (`:1450`), so per-surface ownership is CORRECT — the earlier
+"record-level" reading was wrong (it is not a `PerimeterGenerator` member). In
+that `traverse_loops` call, `variable_width(thin_walls, erExternalPerimeter,
+ext_perimeter_flow, coll.entities)` materializes thin entities into the same
+collection BEFORE `chain_extrusion_entities` (`:231-238`), so thin paths
+interleave with the depth-0 loops in nearest-neighbor chain order and honor
+chain reversal (`:241-247`). Closed runs wrap as `ExtrusionLoop`, open runs as
+`ExtrusionPath` (`VariableWidth.cpp:225-230`).
 
-Correct port: collect `thin_walls` at the RECORD level — a
-`Vec<ThickPolyline>` accumulated across all `PreparedTopSplitSurface`s of a
-record → carried on the traversal/chained-loop RECORD → emitted in the
-record-level entity collection after the depth-0 loops, matching upstream
-`traverse_loops` order (thin walls appended after the top-level loops).
-`PreparedTopSplitSurface.thin_walls` already extracts them; aggregate by
-`source_index`/record at the onion→hierarchy→traversal barrier and emit once.
+Implemented: `thin_walls` flows per-surface through onion→traversal→raw→chained
+into `traverse_loops`, which materializes + chains them with the loops and emits
+`ExtrusionEntity::Loop`/`Path` in chain order. `GCode::extrude_entity`
+dispatches `Path` directly (`GCode.cpp:6092`); seam placement/staggering skip
+open paths.

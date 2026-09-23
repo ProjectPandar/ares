@@ -14,26 +14,44 @@ pub(super) fn convert(
     convert_with_role(polylines, flow, scale, ExtrusionRole::GapFill)
 }
 
-/// `variable_width` (PerimeterGenerator.cpp:553-566 via ExtrusionPath
-/// collection) — the `thin_walls` materialization returns bare
-/// `ExtrusionPath`s appended to `coll.entities` (unlike the gap-fill path
-/// which wraps closed runs into `GapFillEntity::Loop`).
-pub(in crate::project_slice) fn convert_paths(
+/// `variable_width` (VariableWidth.cpp:225-230 via ExtrusionEntityCollection)
+/// — the `thin_walls` materialization appended to `coll.entities`. Upstream
+/// wraps each converted run whose `first_point() == last_point()` into an
+/// `ExtrusionLoop` and emits open runs as bare `ExtrusionPath`s, so closed thin
+/// rings keep loop seam/clipping/orientation behavior.
+pub(in crate::project_slice) fn convert_entities(
     polylines: &[ThickPolyline],
     flow: Flow,
     scale: CoordinateScale,
     role: ExtrusionRole,
-) -> Result<Vec<ExtrusionPath>, SliceError> {
+) -> Result<
+    Vec<crate::project_slice::perimeters::classic::entity_collections::ExtrusionEntity>,
+    SliceError,
+> {
+    use crate::project_slice::perimeters::classic::{
+        chained_loops::{ExtrusionLoop, ExtrusionLoopRole},
+        entity_collections::{ExtrusionEntity, OrderedExtrusionLoop},
+    };
     let tolerance = (0.05 / scale.factor()) as f32;
     let mut output = Vec::new();
     for polyline in polylines {
-        output.extend(convert_polyline(
-            polyline,
-            flow,
-            scale,
-            f64::from(tolerance),
-            role,
-        )?);
+        let paths = convert_polyline(polyline, flow, scale, f64::from(tolerance), role)?;
+        if let (Some(first), Some(last)) = (paths.first(), paths.last()) {
+            if first.polyline.points.first().map(|p| (p.x, p.y))
+                == last.polyline.points.last().map(|p| (p.x, p.y))
+            {
+                output.push(ExtrusionEntity::Loop(OrderedExtrusionLoop {
+                    extrusion_loop: ExtrusionLoop {
+                        paths,
+                        role: ExtrusionLoopRole::Default,
+                    },
+                    // `ExtrusionEntity::inset_idx` base default is -1.
+                    inset_idx: -1,
+                }));
+            } else {
+                output.extend(paths.into_iter().map(ExtrusionEntity::Path));
+            }
+        }
     }
     Ok(output)
 }
@@ -264,3 +282,6 @@ const fn point3(point: Point) -> Point3 {
         z: 0,
     }
 }
+
+#[cfg(test)]
+mod tests;

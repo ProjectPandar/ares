@@ -63,14 +63,15 @@ impl Generator {
         // 419999. EPSILON fallback (Generator.cpp:83-88) to `line_width` or
         // `Flow::auto_extrusion_width` = 1.125*nozzle when the sparse width ~0.
         let scaled_float = |mm: f64| (mm / scale.factor()) as f32;
-        // `EPSILON` is the libslic3r.h:52 double epsilon `1e-4` compared
-        // against the scale-domain `m_infill_extrusion_width` (Generator.cpp:82).
-        const EPSILON: f32 = 1e-4;
+        // `EPSILON` is the libslic3r.h:52 DOUBLE epsilon `1e-4` — the
+        // comparison promotes the f32 width to f64 (a scaled `1e-4_f32` is
+        // ~0.00009999999747 < 0.0001, so upstream takes the fallback).
+        const EPSILON: f64 = 1e-4;
         let mut infill_extrusion_width = scaled_float(infill_line_width);
-        if infill_extrusion_width < EPSILON {
+        if f64::from(infill_extrusion_width) < EPSILON {
             // `Flow::auto_extrusion_width` multiplies in FLOAT (Flow.cpp:21-34):
             // `1.125f * nozzle_f` — keep the f32 product, not a double one.
-            let fallback_mm = if line_width < f64::from(EPSILON) {
+            let fallback_mm = if line_width < EPSILON {
                 f64::from(1.125_f32 * nozzle_diameter as f32)
             } else {
                 line_width
