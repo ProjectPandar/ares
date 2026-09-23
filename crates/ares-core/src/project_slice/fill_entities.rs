@@ -8,6 +8,8 @@ mod grid;
 mod gyroid;
 mod honeycomb;
 mod ironing;
+mod lateral_honeycomb;
+mod lateral_lattice;
 mod line;
 mod locked_zag;
 mod monotonic;
@@ -292,6 +294,26 @@ pub(in crate::project_slice) fn generate_layer(
             SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
                 // `tri-hexagon` maps to `ipStars` (`PrintConfig.cpp:238`).
                 stars::append(&mut output, fill, traversal.scale, object_reference)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::LateralLattice) => {
+                lateral_lattice::append(
+                    &mut output,
+                    fill,
+                    layer.print_z,
+                    layer.id,
+                    traversal.scale,
+                    object_reference,
+                )?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::LateralHoneycomb) => {
+                lateral_honeycomb::append(
+                    &mut output,
+                    fill,
+                    layer.print_z,
+                    layer.id,
+                    traversal.scale,
+                    object_reference,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::QuarterCubic) => {
                 quartercubic::append(
