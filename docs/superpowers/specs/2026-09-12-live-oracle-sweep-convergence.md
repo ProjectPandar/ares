@@ -6103,3 +6103,16 @@ substituted where `support_line_width`(0.38)/`first_layer`(0.42/0.2) expected.
 Baseline 3609 held through all reverts; tests green; committed through
 `99b5fd81`. NEXT: emit-path `flow`/`spacing`/`filler` identity probes (which
 `Flow`/`filler` object carries the `line_width`-derived `spacing`).
+
+### clxxiii. Skirt E flow.spacing = spacing(0.45)·spacing(0.42) — CONFIRMED product
+`flow.spacing=0.1536` = `spacing(line_width=0.45)·spacing(first_layer=0.42)` =
+`(0.45−0.043)·(0.42−0.043)` = `0.407·0.377` = `0.1536`. `flow.width` =
+`spacing+h·rr` = `0.1536+0.043` = `0.196`. `flow.height`=`0.2`.
+`mm3_per_mm = spacing·height` = `0.1536·0.2` = `0.0307`. The emit-path `flow`
+for the skirt `E` has `spacing`=`spacing(line_width)·spacing(first_layer)` — a
+literal spacing product. `width`=`spacing+h·rr`=`0.196`. RESIDUAL: the `G1 E`
+emit `flow` for the skirt has `spacing`=`spacing(line_width)·spacing
+(first_layer)` — the emit path multiplies two `rounded_rectangle_extrusion_
+spacing` values. This is a `flow` where `m_spacing` is set to
+`spacing(0.45)·spacing(0.42)` — locate the `Flow`/`spacing` construction on
+the skirt `E` emit path that produces this product.
