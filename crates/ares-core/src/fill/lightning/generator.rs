@@ -70,8 +70,36 @@ impl Generator {
             overhang_per_layer: vec![Vec::new(); n],
             lightning_layers: (0..n).map(|_| Layer::new()).collect(),
         };
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            eprintln!(
+                "LIGHTNING outlines={:?} wall_r={} support_r={} prune={} straight={}",
+                layer_internal_outlines
+                    .iter()
+                    .map(|v| v.len())
+                    .collect::<Vec<_>>(),
+                generator.wall_supporting_radius,
+                generator.supporting_radius,
+                generator.prune_length,
+                generator.straightening_max_distance
+            );
+        }
         generator.generate_initial_internal_overhangs(&layer_internal_outlines)?;
         generator.generate_trees(&layer_internal_outlines)?;
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            eprintln!(
+                "LIGHTNING roots={:?} overhang={:?}",
+                generator
+                    .lightning_layers
+                    .iter()
+                    .map(|l| l.tree_roots.len())
+                    .collect::<Vec<_>>(),
+                generator
+                    .overhang_per_layer
+                    .iter()
+                    .map(|v| v.len())
+                    .collect::<Vec<_>>()
+            );
+        }
         Ok(generator)
     }
 
