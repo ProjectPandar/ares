@@ -6530,3 +6530,18 @@ the concatenation (different tail/length → different clip_end → the observed
 ~1-11-unit slen diffs). ORCA_WIPEPATH probe building to dump oracle's stored
 `Wipe::path.points` for direct comparison. If confirmed, fix = accumulate
 `wipe_path` across the collection's paths (dedup joint) rather than overwrite.
+
+### cxcvii. wipe-path point COUNT matches; residual = sub-emitted-precision int coords
+ORCA_WIPEPATH (oracle) vs ARES_DUMP_PATH (ares) on case-59tGO2: both store an
+18-point octagon `Wipe::path` (n=18 both). So the accumulation/`for path:
+paths` concatenation is NOT the divergence (same point count). The oracle
+points are object-local coords (±11.1e6); ares's are global-plate coords —
+different frames, so compare via emitted wipe XY which ARE byte-identical at
+3 decimals. The `slen` diffs (313497.206 vs 313491.549 ≈ 5.7 scaled units ≈
+5.7e-6 mm) are therefore a SUB-3-DECIMAL int-precision difference in the
+perimeter path's `coord_t` points — the emitted XY round to the same 3
+decimals but the underlying ints differ in the ~4th-6th mm decimal. This is a
+PerimeterGenerator/offset int-quantization residual (the contour offset /
+thick-polyline points land on slightly different lattice ints), the deepest
+and last class of wipe residual — the wipe EMIT is now verified faithful
+(during/dist/clip all correct); only the input polyline's int coords differ.
