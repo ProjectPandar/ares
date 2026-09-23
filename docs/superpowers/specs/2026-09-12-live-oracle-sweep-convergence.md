@@ -5819,3 +5819,15 @@ is NOT `initial_layer_line_width`(0.42) but ~0.196 (≈`nozzle·0.49` or
 `mm3_per_mm` resolves to ~40% of `first_layer_flow` — likely a `line_width`-
 scaling or a different `width` option in `skirt_flow`. `0.196`/`0.1536` is the
 target; source unidentified.
+
+### cli. Skirt flow.width=0.196 (spacing=0.1536) — source unidentified
+`mm3_per_mm=spacing·height` → `0.0307=0.2·spacing` → `flow.spacing=0.1536`
+`flow.width=0.196` (=spacing+h·rr). `0.196` is NOT `initial_layer_line_width`
+(0.42) `line_width`(0.45) `support_line_width`(0.38) `nozzle`(0.4). `0.196` =
+`nozzle·0.49` or `spacing(0.45,0.2)·spacing(0.42,0.2)`-derived — a non-obvious
+width. `Print::skirt_flow` uses `initial_layer_line_width`(0.42) — ares matches
+`mm3=0.0754`; oracle emits `E` for `mm3=0.0307` (`width=0.196`). The skirt
+`flow.width` resolves to 0.196 — possibly a `skirt`-specific or `line_width`-
+scaled width, or `initial_layer_line_width` treated as a fraction of something.
+RESIDUAL: skirt `flow.width`=0.196 (`spacing` 0.1536) — source unidentified;
+needs a `skirt_flow` `width`/`spacing` probe to resolve.
