@@ -270,6 +270,17 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 result.extend(anchored);
                 let _ = pattern;
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Concentric) => {
+                for expolygon in fill.expolygons {
+                    result.extend(concentric_rings(
+                        &expolygon,
+                        fill.params.spacing,
+                        fill.params.density,
+                        fill.params.multiline,
+                        traversal.scale,
+                    )?);
+                }
+            }
             SurfaceFillPattern::Configured(
                 ProcessInfillPattern::TriHexagon
                 | ProcessInfillPattern::QuarterCubic
@@ -279,7 +290,6 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                 | ProcessInfillPattern::LateralLattice
                 | ProcessInfillPattern::TpmsD
                 | ProcessInfillPattern::TpmsFk
-                | ProcessInfillPattern::Concentric
                 | ProcessInfillPattern::HilbertCurve
                 | ProcessInfillPattern::ArchimedeanChords
                 | ProcessInfillPattern::OctagramSpiral,
@@ -308,4 +318,83 @@ fn projected_length(value: FloatOrPercent, spacing: f64) -> f32 {
         FloatOrPercent::Float(value) => value as f32,
         FloatOrPercent::Percent(value) => (f64::from(value.0 as f32) * 0.01_f64 * spacing) as f32,
     }
+}
+
+/// `FillConcentric::_fill_surface_single` (`FillConcentric.cpp`): concentric
+/// rings for the sparse-infill anchor projection — an `offset2_ex` shrinking
+/// loop producing each ring, then `union_pt_chained_outside_in` ordering and a
+/// nearest-point split per loop. Uses the simple offset rings (NOT the Arachne
+/// variable-width toolpath the emitted concentric fill uses).
+fn concentric_rings(
+    expolygon: &crate::geometry::ExPolygon,
+    spacing: f64,
+    density: f32,
+    multiline: i32,
+    scale: crate::geometry::CoordinateScale,
+) -> Result<Vec<Polyline>, SliceError> {
+    use crate::geometry::{JoinType, offset_expolygons, offset2_ex, union_contours};
+    let min_spacing = (spacing / scale.factor()) * f64::from(multiline);
+    let distance = min_spacing / f64::from(density);
+    // `-float(scale_(0.5 * (multiline - 1) * spacing))` — contract by the
+    // multiline overlap only when multiline > 1.
+    let contract = 0.5 * f64::from(multiline - 1) * spacing;
+    let mut last = if contract.abs() > f64::EPSILON {
+        offset_expolygons(
+            std::slice::from_ref(expolygon),
+            -(contract / scale.factor()) as f32,
+            JoinType::Miter,
+            3.0,
+        )
+        .map_err(super::transaction::geometry_error)?
+    } else {
+        vec![expolygon.clone()]
+    };
+    let mut loops: Vec<crate::geometry::Polygon> = last
+        .iter()
+        .flat_map(|e| {
+            let (c, h) = (e.contour().clone(), e.holes().to_vec());
+            std::iter::once(c).chain(h)
+        })
+        .collect();
+    while !last.is_empty() {
+        last = offset2_ex(
+            &last,
+            -((distance + min_spacing / 2.0) / scale.factor()) as f32,
+            (min_spacing / 2.0 / scale.factor()) as f32,
+            JoinType::Miter,
+            3.0,
+        )
+        .map_err(super::transaction::geometry_error)?;
+        loops.extend(last.iter().flat_map(|e| {
+            let (c, h) = (e.contour().clone(), e.holes().to_vec());
+            std::iter::once(c).chain(h)
+        }));
+    }
+    // outside-in ordering via the union contour walk.
+    let contours = union_contours(&loops).map_err(super::transaction::geometry_error)?;
+    let mut polylines = Vec::with_capacity(contours.len());
+    let mut last_pos = Point::new(0, 0);
+    for points in contours {
+        if points.len() < 2 {
+            continue;
+        }
+        // split each ring at the point nearest the previous ring's end
+        // (`loop.split_at_index(last_pos.nearest_point_index(loop.points))`).
+        let nearest = points
+            .iter()
+            .enumerate()
+            .min_by(|(_, a), (_, b)| {
+                let da = ((a.x() - last_pos.x()).pow(2) + (a.y() - last_pos.y()).pow(2)) as f64;
+                let db = ((b.x() - last_pos.x()).pow(2) + (b.y() - last_pos.y()).pow(2)) as f64;
+                da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .map(|(index, _)| index)
+            .unwrap_or(0);
+        let mut ring = points[nearest..].to_vec();
+        ring.extend_from_slice(&points[..nearest]);
+        ring.push(points[nearest]);
+        polylines.push(Polyline::new(ring));
+        last_pos = *points.iter().next_back().unwrap_or(&points[nearest]);
+    }
+    Ok(polylines)
 }
