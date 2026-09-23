@@ -6,6 +6,7 @@ pub(crate) mod connect;
 pub(crate) mod cross_hatch;
 pub(crate) mod gyroid;
 pub(crate) mod honeycomb;
+pub(crate) mod line;
 pub(crate) mod multiline;
 pub(crate) mod multiline_offset;
 pub(crate) mod plane_path;

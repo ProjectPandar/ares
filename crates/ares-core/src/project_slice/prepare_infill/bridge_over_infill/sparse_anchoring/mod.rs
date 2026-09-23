@@ -213,13 +213,32 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     );
                 }
             }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
+                // `FillLine` (FillLine.cpp) — oscillating vertical lines, a
+                // distinct generator from the rectilinear family.
+                for expolygon in fill.expolygons {
+                    result.extend(
+                        crate::fill::line::fill_line(
+                            &expolygon,
+                            crate::fill::line::LineFillParams {
+                                spacing: fill.params.spacing,
+                                density: (0.01 * f64::from(fill.params.density)) as f32,
+                                angle: fill.params.angle,
+                                reference: object_reference,
+                                dont_adjust: fill.params.bridge,
+                            },
+                            traversal.scale,
+                        )
+                        .map_err(super::transaction::geometry_error)?,
+                    );
+                }
+            }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear
                 | ProcessInfillPattern::ZigZag
                 | ProcessInfillPattern::Monotonic
                 | ProcessInfillPattern::MonotonicLine
                 | ProcessInfillPattern::AlignedRectilinear
-                | ProcessInfillPattern::Line
                 | ProcessInfillPattern::CrossZag
                 | ProcessInfillPattern::LockedZag),
             ) => {

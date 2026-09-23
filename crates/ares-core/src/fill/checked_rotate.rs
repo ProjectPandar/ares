@@ -35,6 +35,6 @@ pub(super) fn rotate_points_with_trig(
         .collect()
 }
 
-pub(super) fn rotate_points(points: Vec<Point>, angle: f64) -> Result<Vec<Point>, ClipperError> {
+pub(crate) fn rotate_points(points: Vec<Point>, angle: f64) -> Result<Vec<Point>, ClipperError> {
     rotate_points_with_trig(points, angle.cos(), angle.sin())
 }

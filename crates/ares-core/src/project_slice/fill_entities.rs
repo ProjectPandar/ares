@@ -8,6 +8,7 @@ mod grid;
 mod gyroid;
 mod honeycomb;
 mod ironing;
+mod line;
 mod monotonic;
 mod plane_path;
 mod simplify;
@@ -259,6 +260,9 @@ pub(in crate::project_slice) fn generate_layer(
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
                 honeycomb::append(&mut output, fill, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
+                line::append(&mut output, fill, object_reference, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear
