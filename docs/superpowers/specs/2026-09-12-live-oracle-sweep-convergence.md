@@ -6922,3 +6922,9 @@ REMAINING for lightning emit:
 Also `10c5eef3`: generator built before empty-candidate early return in candidate_expansion (plain cube has no bridge candidates → generator was skipped). `0bb5725b`: two-phase lightning expansion + Rc<Generator> shared between sparse_anchoring anchor lines + fill_entities emit via PreparedPostBridgeOverInfill.lightning_generators. `194edf5f`: anchor_projection whitelist. `transaction.rs` has_lightning_infill gate removed.
 
 RESIDUAL: C2L debug — roots=7/layer 5..42 but convert_to_lines→intersection_pl emits lines=0 on layers 5..26, lines=1..7 on 27..42. Oracle 38 sparse sections. Tree coords e.g. p=(-4223228,1499994). Either convert_to_polylines emits outside limit_to_outline (coordinate/clip), or remove_junction_overlap/intersection drops. Next: dump tree p-range vs outline bbox; verify convert_to_polylines raw output pre-intersection.
+
+## §ccxx FillLightning propagation FIXED + tree-depth residual
+
+`eef9a71f` propagation fix verified: 7 trees/layer reach layers 5..42 (all internal-surface layers). 16 sparse sections emit (was 1).
+
+RESIDUAL (precise): C2LP debug — `raw_lines=0 pts=0` on layers 5..26; raw_lines=1..7 on 27..42. Propagated trees have `children=1` at root (2-node trunks boundary→cell). `convert_to_polylines`→`remove_junction_overlap` (line_overlap=scaled(0.5*spacing-overlap)) clips the whole short trunk → 0 lines. Upstream trees are BRANCHED (generateNewTrees attaches new roots to ground.tree_node children creating depth → longer polylines survive junction-overlap clip). Suspect: `get_best_grounding_location` never returns tree_node ground (boundary always wins) OR `attach` never creates child-of-tree → trees stay shallow 2-node. Next diagnostic: count tree_node grounds chosen in generate_new_trees (are attach-as-child ever taken?); compare upstream Layer.cpp:150-200 attach branch weights.
