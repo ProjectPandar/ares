@@ -6723,3 +6723,24 @@ connect_infill/perimeter-int/estimator residual, not direction.
   skeleton_infill_density/infill_lock_depth/skin_infill_depth). Multi-hour port.
 - honeycomb/line/concentric: fixed direction.first (infill_direction) — now
   produce correct geometry; residual is surface-boundary/perimeter offset.
+
+## §ccviii FillLockedZag + horiz_move port (e28b3504); multi-angle rectilinear family
+- crosszag/lockedzag were silently dropped in fill_entities emit
+  (`Configured(_) => {}`), not a geometry divergence — zero sparse output.
+- `horiz_move` ported: `±scale_(infill_shift_step)·(layer_id/2)` for
+  CrossZag/LockedZag (Fill.cpp:1311-1316); applied as x0 grid shift +
+  `gap_line` odd-column (FillRectilinear.cpp:2811-2816). Rust/C both
+  truncate int division toward zero — `horiz_move` i64 semantics match.
+- `fill::locked_zag::fill_surface_locked_zag` (FillRectilinear.cpp:3866):
+  skin ring (inset skin_infill_depth) + skeleton, per-density
+  fill_rectilinear_surface, then per-flow region intersect assigns
+  (Polyline, Flow). Reuses group_fills lock_region_param.
+- REMAINING unported generators all share `fill_surface_by_multilines` +
+  `make_fill_lines` (FillRectilinear.cpp:2996/2920): triangles, stars,
+  cubic, quartercubic, lateral-lattice, lateral-honeycomb. Each differs only
+  in the (angle_base, pattern_shift) sweep list; the shared machinery needs
+  ExPolygonWithOffset + slice_region_by_vertical_lines + connect_infill.
+  Ares's fill_rectilinear is a single-direction equivalent that does NOT
+  expose the raw-segment make_fill_lines stage — the multiline port needs
+  that lower-level generator. tpmsd/tpmsfk/lightning are independent large
+  generators.
