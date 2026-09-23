@@ -6978,3 +6978,7 @@ C2L: convert_to_lines→intersection_pl emits lines on 17 layers (1-7 each), lin
 ## §ccxxxi FillLightning — final isolation: straighten-cascade on shallow seeds
 
 generate_new_trees seeds only at overhang layer 42 (8 attaches: 7 boundary + 1 tree_node) — correct (overhang exists only at transition). Trees = 8 seeds root→child propagated down. straighten collapses the straight trunk toward junction each propagate → trunk shrinks below prune_length → child pruned → single-node → lines=0 (22/39 layers). Port verbatim; the residual is whether upstream straighten preserves trunk length differently, or upstream seeds branch deeper. Emits correctly (17 layers produce lines). Known residual needs oracle per-layer tree dump.
+
+## §ccxxxii FillLightning — straighten verified NOT the cause
+
+straighten_rec verbatim vs TreeNode.cpp:82-180: leaf child goes else-branch, has_children=false → no move; root junction_above=root.p accumulated_dist=0 → dest=root.p → root stays. 2-node tree unchanged by straighten. Child.x convergence toward root is reroot/attach re-grounding each propagate (faithful), not straighten shrink. Port exhaustive-verified faithful + emits + propagates + 400-LOC split clean. Residual definitively needs oracle-side per-layer tree coordinate dump to find the emergent divergence — no further static-analysis angle remains.
