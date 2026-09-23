@@ -6042,3 +6042,22 @@ Both `case-59tGO2` residuals are `line_width`-fallback bugs in the emit path:
    construction, not `skirt_flow`(spacing=0.377).
 Both need emit-path `flow`/`spacing`/`filler` identity probes. Baseline 3609
 held through all reverts; tests green; ledger committed through `bacb0f88`.
+
+### clxix. SUMMARY — case-59tGO2 residuals = line_width-fallback in emit paths
+After 8+ turns of probing, `case-59tGO2` divergences are TWO `line_width`-
+fallback bugs, both traceable to `line_width`(0.45) substituting for a narrower
+support/first-layer width:
+
+1. `connect_base_support` `spacing=0.407` (39 `infill=3` raft-base blob calls) —
+   `FillSupportBase`/`ipSupportBase` `filler->spacing`=`line_width`(0.45) via a
+   path outside all probed `filler->spacing` sites (`:1476/:1499/:1505/:1722/
+   :1750/:1772/:1787` all showed `support_line_width`-derived 0.337/0.377). The
+   `infill=3` calls come from a `filler`/`spacing`=`line_width` source.
+
+2. Skirt `E` `mm3_per_mm`=0.0307 — emit-path `flow.spacing`=`spacing(line_width)
+   ·spacing(first_layer)`=0.1536 (`width`≈0.196). `skirt_flow` itself correct
+   (`mm3=0.0754`); the `G1 E` emit uses a `spacing`-product `flow`, not
+   `skirt_flow`.
+
+Both need emit-path `flow`/`filler`/`spacing` IDENTITY probes. Baseline 3609
+held; tests green; all committed through `66c22b8b`.
