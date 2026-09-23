@@ -15,6 +15,7 @@ use super::{
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
+    layer_id: usize,
     reference: Point,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
@@ -22,6 +23,10 @@ pub(super) fn append(
         spacing: fill.params.spacing,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         angle: fill.params.angle,
+        layer_index: layer_id,
+        thickness_layers: fill.representative.thickness_layers.max(1),
+        fixed_angle: fill.params.fixed_angle,
+        bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
         reference,
         dont_adjust: fill.params.bridge,
     };

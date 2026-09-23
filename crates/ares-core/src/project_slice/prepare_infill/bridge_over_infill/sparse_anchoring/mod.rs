@@ -224,6 +224,13 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                                 spacing: fill.params.spacing,
                                 density: (0.01 * f64::from(fill.params.density)) as f32,
                                 angle: fill.params.angle,
+                                layer_index,
+                                thickness_layers: fill.representative.thickness_layers.max(1),
+                                fixed_angle: fill.params.fixed_angle,
+                                bridge_angle: fill
+                                    .params
+                                    .bridge
+                                    .then_some(fill.params.bridge_angle),
                                 reference: object_reference,
                                 dont_adjust: fill.params.bridge,
                             },

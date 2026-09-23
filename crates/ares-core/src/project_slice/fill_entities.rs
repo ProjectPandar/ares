@@ -262,7 +262,13 @@ pub(in crate::project_slice) fn generate_layer(
                 honeycomb::append(&mut output, fill, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
-                line::append(&mut output, fill, object_reference, traversal.scale)?;
+                line::append(
+                    &mut output,
+                    fill,
+                    layer.id,
+                    object_reference,
+                    traversal.scale,
+                )?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::Rectilinear

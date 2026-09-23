@@ -14,8 +14,17 @@ pub(crate) struct LineFillParams {
     pub(crate) spacing: f64,
     /// Infill density fraction (0..1).
     pub(crate) density: f32,
-    /// Resolved infill direction angle (radians) — `direction.first`.
+    /// Infill direction angle (radians) BEFORE the `Fill::_infill_direction`
+    /// adjustments (`out_angle += pi/2`, layer alternation).
     pub(crate) angle: f32,
+    /// `layer_id` — drives the `+_layer_angle` alternation.
+    pub(crate) layer_index: usize,
+    /// `thickness_layers` — divisor for the alternation index.
+    pub(crate) thickness_layers: u16,
+    /// `fixed_angle` — skips the layer alternation when true.
+    pub(crate) fixed_angle: bool,
+    /// Bridge angle override (`surface->bridge_angle >= 0`).
+    pub(crate) bridge_angle: Option<f32>,
     /// Reference point (object bbox center) — `direction.second`.
     pub(crate) reference: Point,
     /// `dont_adjust` — skip the solid-spacing adjustment.
@@ -70,7 +79,17 @@ pub(crate) fn fill_line(
     params: LineFillParams,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let direction = f64::from(params.angle);
+    // `Fill::_infill_direction` (`FillBase.cpp:275-320`): `out_angle =
+    // bridge_angle.unwrap_or(angle)`, `+ _layer_angle` alternation when
+    // `!fixed_angle`, then `+ pi/2`.
+    let mut angle = params.bridge_angle.unwrap_or(params.angle);
+    if params.bridge_angle.is_none()
+        && !params.fixed_angle
+        && (params.layer_index / usize::from(params.thickness_layers)) & 1 == 1
+    {
+        angle += std::f32::consts::FRAC_PI_2;
+    }
+    let direction = f64::from(angle + std::f32::consts::FRAC_PI_2);
     // `expolygon.rotate(-direction.first)` — rotate about origin so columns are vertical.
     let rotated = rotate_expolygon_origin(expolygon, -direction)?;
     let reference =
