@@ -5955,3 +5955,14 @@ spacing product — the emit-path `flow`/`spacing` for the skirt is a product of
 the `line_width` spacing and `first_layer` spacing, not `skirt_flow`. RESIDUAL:
 skirt `E` `flow.spacing` = `spacing(line_width)·spacing(first_layer)` — locate
 the emit-path `flow` construction that produces this product.
+
+### clxii. No flow_ratio matches 0.407 — E-scaling is spacing-product, not ratio
+`filament_flow_ratio`/`first_layer_flow_ratio`/`brim_flow_ratio`/`bridge_flow`
+all =1 or 0.95 — none =0.407. The `E` scaling factor 0.407=`spacing(line_width)
+` is NOT a `flow_ratio` option — it's `spacing(0.45,0.2)` applied as an
+extrusion multiplier. `mm3_per_mm`=0.0307=`spacing(0.45)·spacing(0.42)·0.2`
+— the `G1 E` emit-path `flow.spacing`=`spacing(line_width)·spacing
+(first_layer)` product. RESIDUAL: identify the emit-path `flow`/`spacing` for
+the skirt — likely a `line_width`-fallback in the `E`-computation `flow`
+resolution (the `G1 E` uses `spacing(line_width)·spacing(first_layer)`, not
+`skirt_flow.spacing`=0.377).
