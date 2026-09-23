@@ -1,5 +1,11 @@
+mod projected;
+
+pub(in crate::project_slice) use projected::{
+    object_bounding_box, projected_anchor_lengths, projected_sparse_density,
+};
+
 use crate::{
-    FloatOrPercent, ProcessInfillPattern, RegionOptions, SliceError,
+    ProcessInfillPattern, SliceError,
     fill::{
         cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
         gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
@@ -59,38 +65,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     let (plan, _, _) = post_regions.as_parts();
     let z = plan.layers[layer_index].print_z;
     let object_reference = crate::project_slice::fill_entities::object_center(object_slices);
-    // `object_bounding_box` for the plane-path fills — same construction as
-    // `fill_entities::plane_path_object_bounding_box`: bounds over every slice
-    // contour point.
-    let mut bb_points = object_slices
-        .iter()
-        .flatten()
-        .flat_map(|expolygon| expolygon.contour().points());
-    let object_bounding_box = bb_points.next().map_or_else(
-        || {
-            crate::geometry::BoundingBox::new(
-                crate::geometry::Point::new(0, 0),
-                crate::geometry::Point::new(0, 0),
-            )
-        },
-        |first| {
-            bb_points.fold(
-                crate::geometry::BoundingBox::new(*first, *first),
-                |bb, point| {
-                    crate::geometry::BoundingBox::new(
-                        crate::geometry::Point::new(
-                            bb.min().x().min(point.x()),
-                            bb.min().y().min(point.y()),
-                        ),
-                        crate::geometry::Point::new(
-                            bb.max().x().max(point.x()),
-                            bb.max().y().max(point.y()),
-                        ),
-                    )
-                },
-            )
-        },
-    );
+    let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
 
     for fill in grouped.surface_fills {
@@ -265,7 +240,13 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     bridge_angle: None,
                     reference_point: Point::new(0, 0),
                     dont_adjust: false,
-                    anchor_length_max: fill.params.anchor_length_max,
+                    // `FillMonotonicLines` forces `anchor_length_max = 0`
+                    // (`FillRectilinear.cpp:3676-3682`).
+                    anchor_length_max: if pattern == ProcessInfillPattern::MonotonicLine {
+                        0.0
+                    } else {
+                        fill.params.anchor_length_max
+                    },
                     link_max_length: 0.0,
                     consistent_pattern: pattern.has_consistent_pattern(),
                 };
@@ -397,22 +378,4 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
         }
     }
     Ok(result)
-}
-
-pub(super) fn projected_sparse_density(options: &RegionOptions) -> f32 {
-    let density_percent = options.sparse_infill_density.0 as f32;
-    (0.01_f64 * f64::from(density_percent)) as f32
-}
-
-pub(super) fn projected_anchor_lengths(options: &RegionOptions, spacing: f64) -> (f32, f32) {
-    let anchor_length = projected_length(options.infill_anchor, spacing);
-    let anchor_length_max = projected_length(options.infill_anchor_max, spacing);
-    (anchor_length.min(anchor_length_max), anchor_length_max)
-}
-
-fn projected_length(value: FloatOrPercent, spacing: f64) -> f32 {
-    match value {
-        FloatOrPercent::Float(value) => value as f32,
-        FloatOrPercent::Percent(value) => (f64::from(value.0 as f32) * 0.01_f64 * spacing) as f32,
-    }
 }
