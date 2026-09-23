@@ -5943,3 +5943,15 @@ Baseline 3609 held through all reverts; the `spacing`/`mm3_per_mm`/
 `line_spacing` triad needs separate `width` sources per upstream's
 `filler->spacing` vs `flow` split. NEXT: emit-path `flow`/`spacing` probes
 (ORCA on the `G1 E`/`connect_base_support` `filler` identity).
+
+### clxi. Skirt E spacing=0.1536 = spacing(0.45)·spacing(0.42) — confirmed product
+`spacing=0.1536` = `spacing(line_width=0.45,0.2)·spacing(first_layer_width=
+0.42,0.2)` = `0.407·0.377` — a literal spacing product. `mm3_per_mm = spacing·
+height` = `0.1536·0.2` = `0.0307`. The `E` `flow.spacing` = `spacing(0.45)·
+spacing(0.42)` — NOT `skirt_flow.spacing`(0.377). The `G1 E` emit for the skirt
+uses `spacing` = `spacing(line_width)·spacing(first_layer_width)` — the emit
+path multiplies two spacings. This is a `line_width`-fallback + `first_layer`-
+spacing product — the emit-path `flow`/`spacing` for the skirt is a product of
+the `line_width` spacing and `first_layer` spacing, not `skirt_flow`. RESIDUAL:
+skirt `E` `flow.spacing` = `spacing(line_width)·spacing(first_layer)` — locate
+the emit-path `flow` construction that produces this product.
