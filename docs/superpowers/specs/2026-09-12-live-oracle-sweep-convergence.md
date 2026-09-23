@@ -5543,3 +5543,21 @@ routing to `connect_base_support` for `ipSupportBase`-boundary surfaces, OR a
 sparse-infill `connect_infill` that delegates. ares uses `connect_infill` for
 crosshatch — upstream's `connect_infill` may fall through to
 `connect_base_support` for the object infill.
+
+### cxxxi. HARD BLOCKER — connect_base_support spacing=0.407 unreachable
+`connect_base_support` is called ONLY at FillRectilinear.cpp:3623
+(`FillSupportBase::fill_surface`), passing `this->spacing`. ORCA_FBS probe
+INSIDE that call shows `this->spacing` ∈ {0.337080, 0.377080} only. Yet the
+`connect_base_support` spacing param is 0.407080 for the 39 `infill=3` calls
+(lowest z, raft base/flange). `spacing(0.45,0.2)=0.407`=`line_width`. The ONLY
+remaining explanation: the `connect_base_support` calls are the OTHER overload
+(:2702 `Polygons`) reached by a DIFFERENT caller — `connect_base_support` is a
+`static Fill::` member, reachable from `connect_infill`/other fills. The
+object sparse infill `crosshatch` → `chain_or_connect_infill` → `connect_infill`
+may internally route `ipSupportBase`-boundary surfaces to `connect_base_support`
+with `line_width`/`sparse_infill` spacing (0.45→0.407). ares uses `connect_infill`
+for crosshatch — upstream's `connect_infill` may DELEGATE to
+`connect_base_support` for `ipSupportBase`-pattern surfaces. NEXT: check if
+`connect_infill`/`FillRectilinear` has an `ipSupportBase`/support-base branch
+that calls `connect_base_support` with `line_width`-derived spacing — the
+`infill=3` regions are the object sparse infill on small sub-regions.
