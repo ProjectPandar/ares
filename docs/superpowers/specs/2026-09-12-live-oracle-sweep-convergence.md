@@ -6160,3 +6160,18 @@ held through all reverts; tests green; committed through `2851e72b`. The
 residuals are isolated to the `line_width`-substitution on emit paths; the
 geometry/`spacing`/`mm3_per_mm` triad needs separate `width` sources per
 upstream's `filler->spacing` vs `flow` split.
+
+### clxxvii. Skirt E mm3_per_mm = spacing(line_width)·mm3_per_mm(first_layer) — CONFIRMED
+`mm3_per_mm = spacing(0.45,0.2)·mm3_per_mm(0.42,0.2)` = `0.407·0.0754` = `0.0307`.
+Predicted `E` for 1.4835mm = `0.0455` vs oracle `0.0456` — 0.0004 error.
+`flow` for the skirt `E` = `{width:first_layer_width(0.42), spacing:
+spacing(line_width)=0.407, height:mm3_per_mm(first_layer)=0.0754}` —
+`mm3_per_mm = spacing·height` = `spacing(line_width)·mm3_per_mm(first_layer)`.
+The `height` field holds `mm3_per_mm(first_layer)` (0.0754), `spacing` holds
+`spacing(line_width)` (0.407), `width` holds `first_layer_width` (0.42). This
+is a `flow` where `spacing`=`line_width`-spacing, `height`=`first_layer`-mm3,
+`width`=`first_layer`-width — `spacing`/`height`/`width` all crossed vs
+`skirt_flow`(spacing=0.377, height=0.2, width=0.42). RESIDUAL: the `G1 E` emit
+`flow` for the skirt uses `spacing`=`spacing(line_width)`, `height`=
+`mm3_per_mm(first_layer)`, `width`=`first_layer_width` — a `spacing`/`height`
+crossing with `line_width` substituted for `first_layer` in `spacing`.
