@@ -5591,3 +5591,21 @@ code path (defaults or an `ipSupportBase` filler for a sub-region). RESIDUAL
 BLOCKER: needs `ORCA_FBS` extended to print `params.pattern`/surface z so the
 0.407 `FillSupportBase` instance is identified — then pin its `filler->spacing`
 assignment. ares uses 0.337/0.377 → ~600-line raft-base divergence.
+
+### cxxxiv. TURN BOUNDARY — spacing=0.407 blocker, fully decomposed
+`connect_base_support` is called ONLY at FillRectilinear.cpp:3623
+(`FillSupportBase::fill_surface`), `connect_infill` never delegates to it.
+ORCA_FBS inside `fill_surface` shows `this->spacing` ∈ {0.337080, 0.377080}
+for `nl=27/37/39/41` — but NOT `nl=3`. Yet `connect_base_support` receives 39
+`infill=3 boundary=1 spacing=0.407080` calls (lowest z, raft base blobs).
+`spacing(0.45,0.2)=0.407`=`line_width`. The `nl=3` `FillSupportBase` surfaces
+didn't appear in FBS — either the FBS print was filtered or the `infill=3`
+calls reach `connect_base_support` via a path that bypasses the FBS print site
+(the `fill_lines` vs `infill_ordered` count, or a per-contour split inside
+`make_fill_lines`→`connect_base_support`). `infill=3` = the raft base splits
+into many tiny 3-line blob contours, each a `connect_base_support` call with
+`filler->spacing = line_width`-derived 0.407 — the `ipSupportBase` filler for
+the raft base blobs resolves `line_width`, not `support_line_width`. ares
+uses `support_flow_spacing`/`first_layer_flow_spacing` (0.337/0.377) → ~600
+divergence. NEXT: add `pat=`/`z=`/`filler` id to FBS to catch the `nl=3`
+instance's `filler->spacing` assignment site.
