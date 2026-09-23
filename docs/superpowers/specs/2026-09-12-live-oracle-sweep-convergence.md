@@ -6502,3 +6502,17 @@ there is the perimeter loop's scaled-int points differing ~1-11 units from
 oracle's `path.polyline` (PerimeterGenerator/ExtrusionPath int quantization),
 a deeper path-generation parity issue, not a wipe-emit bug. Correctness fix
 kept: arc-fitted paths now wipe on the raw polyline like upstream.
+
+### cxcv. option-coverage verdict: 645/649 PASS; wipe residual = perimeter int quantization
+Live `ARES_PARITY_OPTIONS=1` option sweep result (`option-coverage-summary.md`):
+645/649 compared domains PASS, 4 FAIL — `line_width` (legit upstream reject),
+`raft_layers` (max/seeded → the wipe-path family below), `sparse_infill_pattern`
+(adaptivecubic unported), `top_surface_pattern` (octagramspiral island-lifecycle
+= same wipe family), `wall_generator` (arachne unported). ~99.4% option-domain
+byte-parity. The wipe residual root is now confirmed PERIMETER-PATH int
+quantization: `path.polyline` scaled-int points differ ~1-11 units on the
+octagon/chamfer segments vs oracle (`slen` 313497 vs 313491 etc.), so both the
+wipe segment lengths AND the emitted wipe-path XY tail differ. This is a
+PerimeterGenerator/ExtrusionPath point-generation parity issue (the emitted
+XY match at 3 decimals; the underlying coord_t ints differ), the same upstream
+surface as narrow/split.rs. Deepest residual class; not a wipe-emit fix.
