@@ -6469,3 +6469,18 @@ points get stored as `wipe_path` (`path/constant.rs:95`, `variable.rs:67`,
 extrusion path's scaled-int tail differs ~1 unit per point. This is a
 path-geometry residual (the emitted-loop point selection/rounding), deeper
 than E formatting. ARES_WIPE_SEG dump added at `travel.rs:229` for the diff.
+
+### cxciii. wipe-path residual = stored extrusion-path tail point selection
+The wipe-path `slen` deltas (~1-11 scaled units) trace to `state.wipe_path =
+wipe_points.rev()` (`path/constant.rs:95`, `variable.rs:67`, `path.rs:247`,
+`loop_paths.rs:78`) storing the emitted path's points — oracle `Wipe::path` =
+`this->path.points` (the `ExtrusionPath`/`ThickPolyline` scaled ints). The
+stored path tail differs from oracle's by ~1 int/point → the SOURCE extrusion
+path (the perimeter loop being wiped) carries different scaled-int points.
+This is the same upstream surface as the documented `narrow/split.rs`
+path-grouping residual: the emitted extrusion-path POINT SELECTION diverges
+from `PerimeterGenerator`/`ExtrusionEntityCollection` before the wipe emit
+runs. Fixing requires the loop-path point list to match upstream at scaled-int
+precision — a PerimeterGenerator-path parity issue, not a wipe-emit bug.
+The `ARES_WIPE_SEG`/`ORCA_WIPEDUMP` dumps (both built and verified) give a
+direct per-segment harness for re-verifying after any path-selection fix.
