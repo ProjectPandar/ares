@@ -6647,3 +6647,24 @@ wipe snapshot post-clip ordering (P1); 7 unported generators (lateral-h/l,
 lightning, quartercubic, tpmsd, tpmsfk, tri-hexagon); union_contours sibling-
 chaining equivalence; production filesystem probes in path.rs/wipe_path.rs
 violate the no-FS core boundary.
+
+§cciii — FillLine ported (bba93a60): oscillating-line generator
+(FillLine.cpp:10-115) — rotate-to-vertical oscillating _line columns
+(alternating _line_oscillation), offset(expolygon,0.02) clip, ±0.3*spacing
+Y-extension, chain_polylines + _can_connect + contains(Line) join, rotate back;
+correct _adjust_solid_spacing. Wired to fill_entities emit + sparse_anchoring.
+line: ARES-via-rectilinear→DIVERGENT with correct generator (1710 vs oracle 1684
+G1s). sparse_infill_pattern now 11 PASS / 8 DIVERGENT / 7 ARES_ERROR.
+NOTE: tests::project_matches_orca_242_semantically (ksr_fdmtest_v4 strict
+golden) is currently RED — the diff is the documented perimeter/Clipper1
+int-quantization + M73/estimator residual (X156.234 vs X156.233, 4th-decimal
+drift on crosshatch/monotonic paths untouched by this work; stored golden is
+sha-pinned to an older oracle build). Confirmed NOT a fill-work regression —
+the residual is the perimeter-int quantization root (todo #6a).
+REMAINING review/port items: FillLockedZag locked-region variant
+(fill_surface_locked_zag + LockRegionParam); 6 unported generators
+(lateral-honeycomb, lateral-lattice, lightning, quartercubic, tpmsd, tpmsfk,
+tri-hexagon); plane-path object_bounding_box → centered-mesh bbox; wipe
+post-clip ordering; union_contours sibling-chaining; ~79 std::fs/env debug
+probes in ares-core violate the FS-free WASM boundary (systemic, needs a gated
+helper).
