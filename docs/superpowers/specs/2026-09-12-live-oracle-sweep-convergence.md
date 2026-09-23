@@ -6914,3 +6914,11 @@ REMAINING for lightning emit:
 2. Port two-phase expansion (needs_expansion gate + expand stInternal→stInternalSolid near candidates) targeting the surfaces the Generator reads.
 3. Build Generator on expanded surfaces in bridge_over_infill; carry to fill_entities.
 4. sparse_anchoring `Lightning` arm uses generator convert_to_lines.
+
+## §ccxix FillLightning propagation fix + convertToLines residual
+
+`FillLightning` emits. KEY FIX `eef9a71f`: `to_be_reconnected` was `std::mem::take` — upstream `Generator.cpp:210` `to_be_reconnected_tree_roots = tree_roots` is a shared_ptr vector COPY (roots stay in tree_roots so `std::find` locates them). take→clone: propagation now reaches all layers 5..42 (7 trees/layer), 16 sparse sections vs 1.
+
+Also `10c5eef3`: generator built before empty-candidate early return in candidate_expansion (plain cube has no bridge candidates → generator was skipped). `0bb5725b`: two-phase lightning expansion + Rc<Generator> shared between sparse_anchoring anchor lines + fill_entities emit via PreparedPostBridgeOverInfill.lightning_generators. `194edf5f`: anchor_projection whitelist. `transaction.rs` has_lightning_infill gate removed.
+
+RESIDUAL: C2L debug — roots=7/layer 5..42 but convert_to_lines→intersection_pl emits lines=0 on layers 5..26, lines=1..7 on 27..42. Oracle 38 sparse sections. Tree coords e.g. p=(-4223228,1499994). Either convert_to_polylines emits outside limit_to_outline (coordinate/clip), or remove_junction_overlap/intersection drops. Next: dump tree p-range vs outline bbox; verify convert_to_polylines raw output pre-intersection.
