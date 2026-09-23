@@ -5804,3 +5804,18 @@ flange prints at `first_print_layer_height` Z but with a reduced height, the
 raft should be the raft flange `raft_layer.height` (0.076), not
 `first_print_layer_height` — `generate_raft_base` sets the flange `height` to
 a raft-specific value ares doesn't replicate.
+
+### cl. Skirt mm3_per_mm=0.0307 = spacing·height where spacing=0.1536
+`mm3_per_mm=0.0307` at `height=0.2` → `flow.spacing=0.1536` = `w−h·rr` →
+`flow.width=0.196`. `0.1536` = `spacing(0.45,0.2)·spacing(0.42,0.2)` =
+`0.407·0.377` — a SPACING PRODUCT, or `spacing(0.196,0.2)` (`width=0.196` ≈
+`nozzle·0.49`). `Print::skirt_flow` uses `width=initial_layer_line_width`(0.42)
+`height=initial_layer_print_height`(0.2) `nozzle_diameter[support_filament-1]`
+→ `new_from_config_width` → `width=0.42` `spacing=0.377` `mm3=0.0754`.
+ares matches `mm3_per_mm=0.0754`; oracle emits `E` for `mm3=0.0307`.
+The oracle skirt `flow.spacing`=0.1536/`width`=0.196 — the `skirt_flow` width
+is NOT `initial_layer_line_width`(0.42) but ~0.196 (≈`nozzle·0.49` or
+`spacing(0.45)·0.48`). RESIDUAL: skirt `flow.width`/`spacing` — the skirt
+`mm3_per_mm` resolves to ~40% of `first_layer_flow` — likely a `line_width`-
+scaling or a different `width` option in `skirt_flow`. `0.196`/`0.1536` is the
+target; source unidentified.
