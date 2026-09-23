@@ -124,3 +124,34 @@ The intermediate point (110.509,112.133) is a clip-boundary intersection
 that ares's path simplification drops (deviation-vs-tolerance knife).
 NEXT: compare the simplify_path deviation computation for this vertex
 against ClipperLib/DP upstream at the same tolerance.
+
+## Thin-wall (`detect_thin_wall`) — milestone spec (deferred, round-3)
+
+Upstream boundary: `PerimeterGenerator.cpp:1243-1266` (`i==0` onion branch) +
+`traverse_loops` materialization `:231-232` (`variable_width(thin_walls,
+erExternalPerimeter, ext_perimeter_flow, coll.entities)`).
+
+Extraction (all primitives exist — `geometry::medial_axis`, `ThickPolyline`,
+`offset2_ex`, `opening_ex`, `offset`, `diff_ex`, `variable_width::convert_with_role`):
+```
+offsets  = offset2_ex(last, -(ext_w/2 + ext_min_sp/2 - 1), +(ext_min_sp/2 - 1))
+min_w    = coord_t(scale_(nozzle/3))
+expp     = opening_ex(diff_ex(last, offset(offsets, ext_w/2 + ClipperSafetyOffset /*=10*/)), min_w/2)
+for ex in expp: ex.medial_axis(min_w, ext_w + ext_spacing2 /*=external_to_internal_spacing*/, &thin_walls)
+```
+`first_outer::apply` must branch on `detect_thin_wall` (needs the flag +
+`ext_perimeter_flow` + `nozzle` threaded onto `ClassicPreludeRecord`), returning
+`{normal: offsets, smaller: [], thin_walls}` instead of the narrow/normal loop.
+
+Plumbing (the hard part — a `Vec<ThickPolyline>` must travel):
+`FirstOuterOffset.thin_walls` → `PreparedTopSplitSurface` → `ClassicPreludeRecord.surfaces`
+→ `onion`/`iterate` → `traverse_loops(…, thin_walls)` which emits
+`variable_width::convert_with_role(&thin_walls, ExternalPerimeter, ext_perimeter_flow, scale)`
+into the collection AFTER the depth-0 loops append (upstream `:231`), then clears.
+`reverse_thin_wall_hole` orientation flag already exists in traverse.rs.
+
+Preflight gate `classic/preflight.rs:103` then drops once the path is live
+(keep `thin_wall_is_provably_inactive` early-out).
+
+Verification: needs a thin-wall-activating fixture (a model with a <1-loop-thick
+wall under `detect_thin_wall=true`) run through both ares + orca oracle.
