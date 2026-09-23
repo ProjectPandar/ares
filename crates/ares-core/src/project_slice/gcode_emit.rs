@@ -14,6 +14,7 @@ mod file_start;
 mod finish;
 pub(super) mod footprint;
 mod header;
+pub(crate) use header::resolved_width;
 mod layer_gcode;
 mod layers;
 mod lexer;

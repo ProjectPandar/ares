@@ -263,7 +263,7 @@ fn append_object_width_block(
     output.push(b'\n');
 }
 
-fn resolved_width(
+pub(crate) fn resolved_width(
     configured: crate::FloatOrPercent,
     fallback: crate::FloatOrPercent,
     nozzle: f64,
