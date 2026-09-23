@@ -6668,3 +6668,15 @@ tri-hexagon); plane-path object_bounding_box → centered-mesh bbox; wipe
 post-clip ordering; union_contours sibling-chaining; ~79 std::fs/env debug
 probes in ares-core violate the FS-free WASM boundary (systemic, needs a gated
 helper).
+
+§cciv — review-loop continuation (d4979a78): option-coverage bound-resolution
+fix — `def->max/min = max_temp` now resolves to the 1500 constant
+(PrintConfig.cpp:939); the 9 temperature options were silently treated as
+unbounded and never tested their real max. nozzle_temperature/max now runs and
+PASSES. nozzle_temperature/seeded still DIVERGENT but the diff is the shared
+wipe-E/micro-fragment residual, not a temp bug.
+ksr strict golden (project_matches_orca_242_semantically) remains RED on the
+perimeter/Clipper1 int-quantization residual — first divergence is a
+skirt/brim zigzag line endpoint X156.234 vs X156.233 (1 scaled unit, E matches)
+— the documented Clipper1 offset/intersection int-precision root (todo #6a).
+That is a probe-driven milestone, not a fill regression.
