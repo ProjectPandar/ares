@@ -12,7 +12,9 @@ mod line;
 mod locked_zag;
 mod monotonic;
 mod plane_path;
+mod quartercubic;
 mod simplify;
+mod stars;
 
 pub(in crate::project_slice) use flow::{materialized_flow, object_center};
 
@@ -286,6 +288,19 @@ pub(in crate::project_slice) fn generate_layer(
                 | ProcessInfillPattern::MonotonicLine),
             ) => {
                 monotonic::append(&mut output, fill, pattern, layer.id, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
+                // `tri-hexagon` maps to `ipStars` (`PrintConfig.cpp:238`).
+                stars::append(&mut output, fill, traversal.scale, object_reference)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::QuarterCubic) => {
+                quartercubic::append(
+                    &mut output,
+                    fill,
+                    layer.print_z,
+                    traversal.scale,
+                    object_reference,
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::LockedZag) => {
                 locked_zag::append(
