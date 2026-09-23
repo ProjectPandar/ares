@@ -6516,3 +6516,17 @@ wipe segment lengths AND the emitted wipe-path XY tail differ. This is a
 PerimeterGenerator/ExtrusionPath point-generation parity issue (the emitted
 XY match at 3 decimals; the underlying coord_t ints differ), the same upstream
 surface as narrow/split.rs. Deepest residual class; not a wipe-emit fix.
+
+### cxcvi. wipe-path accumulation: oracle concatenates ALL paths, ares keeps last
+Emitted perimeter XY is BYTE-IDENTICAL ares-vs-oracle (the loop coords match at
+full precision) — so the wipe-path `slen` diff is NOT the path geometry. Root:
+upstream `GCode.cpp:5980-5989` builds `m_wipe.path` by iterating `for path :
+paths` over the WHOLE ExtrusionEntityCollection, appending each
+`path.polyline.to_polyline()` (skipping the dup joint point when contiguous).
+Ares instead sets `state.wipe_path = <last emitted path>.local_points` inside
+`path::emit` — only the FINAL path's polyline, not the accumulated collection.
+When the collection has >1 path (multi-segment loop), oracle's wipe path spans
+the concatenation (different tail/length → different clip_end → the observed
+~1-11-unit slen diffs). ORCA_WIPEPATH probe building to dump oracle's stored
+`Wipe::path.points` for direct comparison. If confirmed, fix = accumulate
+`wipe_path` across the collection's paths (dedup joint) rather than overwrite.
