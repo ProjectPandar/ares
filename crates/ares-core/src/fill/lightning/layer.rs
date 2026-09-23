@@ -129,6 +129,15 @@ impl Layer {
                 &tree_node_locator,
                 None,
             );
+            if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+                eprintln!(
+                    "ATTACH unsupported=({},{}) boundary={} tree={}",
+                    unsupported_location.x(),
+                    unsupported_location.y(),
+                    grounding.boundary_location.is_some(),
+                    grounding.tree_node.is_some()
+                );
+            }
             let (new_child, new_parent) = self.attach(unsupported_location, &grounding);
             tree_node_locator.insert(
                 to_grid_point(new_child.borrow().p, current_outlines_bbox),
