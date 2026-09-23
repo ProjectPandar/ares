@@ -6423,3 +6423,19 @@ scaled-int point rounding feeding `scaled_distance`. Deterministic; needs an
 oracle `Wipe::wipe` probe dumping `wipe_dist`/`length`/per-segment
 `segment_length`+`dE` to localize which input drifts. (The `F3381/F2963`,
 `F1982/F1913` diffs are the separate cooling-feedrate/narrow-fragment residual.)
+
+### cxc. wipe-E residual: ares re-rounds stored path ints, oracle does not
+Oracle `Wipe::wipe` (`GCode.cpp:344-360`): `wipe_path = last_pos +
+path.points[1:]` — `path.points` are ALREADY `coord_t` scaled ints used RAW;
+`wipe_path_length = min(wipe_path.length(), wipe_dist)`;
+`retractionDuringWipe = retraction_speed·unscale_(wipe_path_length)/wipe_speed`.
+Ares (`wipe_path.rs:40-43`) re-rounds each `wipe_path` point through
+`(point.x/scale_factor).round() as i64` — if the stored mm floats are not
+exactly `int·scale`, `.round()` snaps them to a different lattice point than
+oracle's raw ints → `total_length`/`retraction_distance`/per-segment
+`segment_length` shift → `during` and `dE` shift by ~1e-5 (the observed wipe-E
+residual). HYPOTHESIS: drop the re-round of `wipe_path[1:]` (use the raw
+scaled ints oracle uses) — but only if ares's `wipe_path` mm values are
+guaranteed `int·scale` round-trips. ORCA_WIPEDUMP probe building
+(`/tmp/wipeprobe.nix`, WIPECALL len/wipedist/wspeed + WSEG slen/dE/bx/by) to
+compare oracle `wipe_dist`/`length`/`slen`/`dE` against ares's before changing.
