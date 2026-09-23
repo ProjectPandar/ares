@@ -5739,3 +5739,14 @@ all =0.3) — it's the actual flange `raft_layer.height` (raft first layer
 compressed). RESIDUAL: skirt `layer.height_mm` for layer-0 must resolve to the
 raft flange `raft_layer.height`, not `first_print_layer_height` — a skirt-layer
 height source fix.
+
+### cxlv. Skirt mm3_per_mm=0.0307 at HEIGHT:0.2 → width≈0.196
+Oracle skirt `;HEIGHT:0.2` confirms `layer.height_mm`=0.2 — so
+`mm3_per_mm=0.0307` means `width·0.2−0.0086=0.0307` → `width≈0.196`. ares uses
+`self.width`=`initial_layer_line_width`(0.42) → mm3=0.0754. The skirt flow
+`width` resolves to ~0.196 — `spacing(0.2,0.2)·0.2=0.0314` close — likely a
+`line_width`-derived or nozzle-scaled skirt width, NOT `first_layer_flow`/
+`initial_layer_line_width`. `width=0.196` ≈ `nozzle·0.49` or `0.2` — the skirt
+`flow.width` source differs. RESIDUAL: skirt `flow.width`/`mm3_per_mm` uses a
+non-`initial_layer_line_width` width (~0.196) — identify `Print::skirt_flow`
+width resolution (likely `line_width` scaled or a skirt-specific option).
