@@ -480,6 +480,14 @@ impl Node {
     ) -> Vec<Polyline> {
         let mut result: Vec<Polyline> = vec![Polyline::new(Vec::new())];
         Self::convert_rec(this, 0, &mut result, rng);
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            eprintln!(
+                "C2PRE nlines={} pts={:?} overlap={}",
+                result.len(),
+                result.iter().map(|l| l.points().len()).collect::<Vec<_>>(),
+                line_overlap
+            );
+        }
         Self::remove_junction_overlap(&mut result, line_overlap);
         result
     }
