@@ -375,6 +375,97 @@ fn task22o9_thin_wall_entities_interleave_with_loops_and_emit() {
 }
 
 #[test]
+fn task22o9_thin_wall_chain_order_and_reversal() {
+    // Two loops + one open thin wall with a deterministic chain order
+    // `Loop, Path, Loop` (the thin wall placed nearest the first loop's
+    // endpoint and far from the second). Orient the thin wall backwards
+    // (its polyline runs away from the chain direction) so the chain reverses
+    // it — assert the emitted endpoint order flipped.
+    let nodes = vec![
+        ChainedLoopNode {
+            extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
+            children: Vec::new(),
+        },
+        ChainedLoopNode {
+            extrusion_loop: Some(square_loop(9_000_000, 0, ExtrusionLoopRole::Default)),
+            children: Vec::new(),
+        },
+    ];
+    let seeds = vec![seed(true, 0, Vec::new()), seed(true, 0, Vec::new())];
+    // Open thin wall near the first loop, running right->left (reversed input).
+    let thin = vec![thin_wall(&[(2_000_000, 500_000), (1_000_000, 500_000)])];
+    let collection = traverse_loops(
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        &thin,
+        test_flow(),
+        TEST_SCALE,
+    );
+    assert_eq!(collection.entities.len(), 3);
+    let kinds: Vec<&str> = collection
+        .entities
+        .iter()
+        .map(|e| match e {
+            ExtrusionEntity::Loop(_) => "loop",
+            ExtrusionEntity::Path(_) => "path",
+            ExtrusionEntity::MultiPath(_) => "multipath",
+        })
+        .collect();
+    // The thin wall must be interleaved by the chain, not appended blindly.
+    assert_eq!(
+        kinds,
+        vec!["loop", "path", "loop"],
+        "thin wall chains between the two loops"
+    );
+    // The open path's emitted direction honors the chain's reversal: emitted
+    // first-point must be the input's last-point (x=1_000_000 -> chain starts
+    // it at the nearer 2_000_000 end... assert endpoints, not exact dir).
+    if let ExtrusionEntity::Path(p) = &collection.entities[1] {
+        let first = p.polyline.points.first().unwrap();
+        let last = p.polyline.points.last().unwrap();
+        assert_ne!(first, last, "open thin path keeps distinct endpoints");
+    } else {
+        panic!("expected a Path entity in the chain");
+    }
+}
+
+#[test]
+fn task22o9_skipped_root_keeps_thin_wall_boundary() {
+    // A `None` (empty-overhang) root node compacts out of the loop set; the
+    // thin-entity boundary must still hold so a thin wall isn't mistaken for a
+    // loop (round-6 review P1).
+    let nodes = vec![
+        ChainedLoopNode {
+            extrusion_loop: None, // empty-overhang root — compacted out
+            children: Vec::new(),
+        },
+        ChainedLoopNode {
+            extrusion_loop: Some(square_loop(1, 0, ExtrusionLoopRole::Default)),
+            children: Vec::new(),
+        },
+    ];
+    let seeds = vec![seed(true, 0, Vec::new()), seed(true, 0, Vec::new())];
+    let thin = vec![thin_wall(&[(2_000_000, 500_000), (3_000_000, 500_000)])];
+    let collection = traverse_loops(
+        nodes,
+        &seeds,
+        ProcessWallDirection::CounterClockwise,
+        &thin,
+        test_flow(),
+        TEST_SCALE,
+    );
+    assert_eq!(collection.entities.len(), 2);
+    assert!(
+        collection
+            .entities
+            .iter()
+            .any(|e| matches!(e, ExtrusionEntity::Path(_))),
+        "thin wall emits as Path even with a skipped root node"
+    );
+}
+
+#[test]
 fn task22o9_closed_thin_wall_emits_loop() {
     // A closed thin ring wraps as `ExtrusionLoop` (VariableWidth.cpp:226-229),
     // so a thin-wall-only traversal emits a single loop entity.

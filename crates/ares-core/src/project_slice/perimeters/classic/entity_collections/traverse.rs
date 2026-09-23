@@ -19,6 +19,12 @@ struct PendingParent {
 struct GroupFrame<'a> {
     nodes: Vec<ChainedLoopNode>,
     seeds: &'a [TraversalSeed],
+    /// Number of materialized loop entities = the thin-entity boundary
+    /// (`entities[loop_count..]` are thin walls). Loop entities pair with
+    /// `seeds[index]`/`nodes[index]` at the same slot index — compacted loops
+    /// slide left against the (uncompacted) seed/node list
+    /// (`preserves_source_compact_entity_against_original_loop_indexing`).
+    loop_count: usize,
     /// Loop entities occupy `entities[..nodes.len()]`; thin-wall entities (only
     /// ever present on the root frame) occupy `entities[nodes.len()..]`
     /// (upstream `coll.entities` ordering — loops first, thin walls appended,
@@ -70,11 +76,13 @@ impl<'a> GroupFrame<'a> {
         thin_entities: Vec<ExtrusionEntity>,
     ) -> Self {
         assert_eq!(nodes.len(), seeds.len());
-        let loop_count = nodes.len();
+        // Compact out `None` loops (empty-overhang nodes, tree.rs:61-62) into
+        // `entities`; the surviving loop count is the thin-entity boundary.
         let loops: Vec<ExtrusionLoop> = nodes
             .iter_mut()
             .filter_map(|node| node.extrusion_loop.take())
             .collect();
+        let loop_count = loops.len();
         let chain = if thin_entities.is_empty() {
             // Pure-loop frame keeps the upstream loop-only chaining
             // (`chain_extrusion_loops`'s canonicalization).
@@ -117,6 +125,7 @@ impl<'a> GroupFrame<'a> {
         Self {
             nodes,
             seeds,
+            loop_count,
             entities,
             chain,
             next: 0,
@@ -139,7 +148,7 @@ impl<'a> GroupFrame<'a> {
         let entity = self.entities[index]
             .take()
             .expect("entity chain indices are unique");
-        if index >= self.nodes.len() {
+        if index >= self.loop_count {
             // Thin-wall entity: emit directly, honoring chain reversal.
             return Some(Err((entity, reverse)));
         }
