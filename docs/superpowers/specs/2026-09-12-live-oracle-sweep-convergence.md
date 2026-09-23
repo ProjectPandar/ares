@@ -7017,3 +7017,13 @@ Exhaustive line-by-line re-verification of `fill/lightning/*` against upstream `
 Since tree ops are verbatim, the complex-object residual (ares 1 sparse vs oracle 38) is **upstream of the tree logic** — in the `infill_outlines`/`overhang`/`unsupported` surface classification feeding `generateTrees`, or in `current_outlines` propagation. Confirmed: plain cube emits 38/38 (matching oracle) — logic works when overhang data is simple; complex geometry's overhang/outline inputs diverge earlier in the pipeline (surface-type detection or bridge-over-infill expansion), before lightning trees are involved.
 
 Needs: oracle-side dump of `overhang_per_layer`/`layer_outlines` (not just tree coords) to localize which input layer set differs. Track as known-residual; not a `fill/lightning` bug.
+
+## §ccxxxv FillLightning — concrete residual lead: `layer_internal_outlines` source coverage
+
+Upstream `Generator.cpp:184-193` builds `infill_outlines[layer_id]` by iterating `print_object.get_layer(layer_id)->regions()` — **every LayerRegion's** `fill_surfaces` filtered to `stInternal|stInternalVoid`, on EVERY layer (no Option gap).
+
+Ares `build_lightning_generator` (`candidate_expansion.rs:270-283`) instead reads `horizontal.records[layer_id]` — `PreparedSurfaceTypeObject.records: Vec<Option<PreparedSurfaceTypeRecord>>` — and `unwrap_or_default()` → empty on layers where the record is `None`. If `records` is sparse on complex objects (a record only where horizontal-shell/surface-type work produced one), `infill_outlines` is empty for those layers → `generateTrees` sees no overhang/no outline → trees don't propagate → sparse collapse (ares 1 vs oracle 38 on complex obj; cube's records happen to be dense → 38/38).
+
+ALSO: `records[layer_id].fill_surfaces` may hold a single merged record vs upstream's per-region union — same net polygons if merge is faithful, but coverage gap (None layers) is the suspect.
+
+Next diagnostic: dump `horizontal.records.iter().map(|r| r.is_some())` + `layer_internal_outlines.iter().map(Vec::len)` per layer for the complex case; compare against oracle `infill_outlines` poly counts. If gaps exist, source `infill_outlines` from the full per-layer region fill_surfaces (upstream `layerm->fill_surfaces`) instead of the horizontal-record subset.
