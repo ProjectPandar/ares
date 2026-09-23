@@ -38,7 +38,7 @@ pub(super) fn project_surface(
     params.lateral_lattice_angle_1 = context.region.lateral_lattice_angle_1.0 as f32;
     params.lateral_lattice_angle_2 = context.region.lateral_lattice_angle_2.0 as f32;
     params.infill_overhang_angle = context.region.infill_overhang_angle.0 as f32;
-    apply_pattern_fields(params, context.region, context.scale);
+    apply_pattern_fields(params, context.region, context.scale, context.planned.id);
 
     match kind {
         RegionSurfaceKind::Top => {
@@ -193,6 +193,7 @@ pub(super) fn source_defaults() -> SurfaceFillParams {
         infill_lock_depth: 0.0,
         skin_infill_depth: 0.0,
         symmetric_infill_y_axis: false,
+        horiz_move: 0.0,
         infill_overhang_angle: 60.0,
         gyroid_optimized: false,
         filter_out_gap_fill: 0.0,

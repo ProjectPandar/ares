@@ -84,6 +84,7 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                 // `fill_surface_ironing`/`FillMonotonicLine`-style ironing is not
                 // a consistent-pattern fill — the monotonic path ignores it.
                 consistent_pattern: false,
+                horiz_move: 0,
             },
             input.scale,
         )

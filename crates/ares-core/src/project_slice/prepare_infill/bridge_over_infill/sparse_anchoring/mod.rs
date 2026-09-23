@@ -275,6 +275,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     },
                     link_max_length: 0.0,
                     consistent_pattern: pattern.has_consistent_pattern(),
+                    horiz_move: fill.params.horiz_move as i64,
                 };
                 let generate = if matches!(
                     pattern,

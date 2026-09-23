@@ -40,6 +40,9 @@ pub(super) fn append(
         anchor_length_max,
         link_max_length: 0.0,
         consistent_pattern: pattern.has_consistent_pattern(),
+        // `params.horiz_move` is already in scaled coord units (`f32`) —
+        // truncating to `i64` matches the `coord_t`/`float` mix upstream.
+        horiz_move: fill.params.horiz_move as i64,
     };
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;

@@ -26,6 +26,9 @@ pub(crate) struct MonotonicFillParams {
     /// default `false`). It makes `next_start` alternate the per-line
     /// direction so the zig-zag serpentine stays consistent across layers.
     pub(crate) consistent_pattern: bool,
+    /// `params.horiz_move` (`FillBase.hpp:103`, applied `FillRectilinear.cpp:
+    /// 2811-2816`): the crosszag/lockedzag per-layer horizontal grid shift.
+    pub(crate) horiz_move: i64,
 }
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct MonotonicFillOutput {
@@ -130,13 +133,26 @@ fn fill_surface(
     )
     .map_err(|_| ClipperError::CoordinateOutOfRange)?;
     let scaled_epsilon = checked_scale(scale, 1.0e-4)?;
-    let x0 = if full_infill {
+    let mut x0 = if full_infill {
         minimum_x
             .checked_add((line_spacing + scaled_epsilon) / 2)
             .ok_or(ClipperError::CoordinateOutOfRange)?
     } else {
         minimum_x
     };
+    // `FillRectilinear.cpp:2811-2816`: the crosszag/lockedzag `horiz_move`
+    // shifts the grid start, adding one column when the shift lands on an
+    // odd multiple of the spacing.
+    let mut count = count;
+    if params.horiz_move != 0 {
+        let gap_line = params.horiz_move / line_spacing;
+        if gap_line % 2 == 0 {
+            x0 += params.horiz_move - gap_line * line_spacing;
+        } else {
+            x0 += params.horiz_move - (gap_line - 1) * line_spacing;
+            count += 1;
+        }
+    }
     populate_vertical_lines(&mut slice, count, x0, line_spacing)?;
     let link_max_length = checked_scale(scale, params.link_max_length)? as f64;
     connect_contours(&mut slice, params.anchor_length_max < 0.05, link_max_length);

@@ -35,6 +35,10 @@ pub(in crate::project_slice) struct SurfaceFillParams {
     pub(in crate::project_slice) infill_lock_depth: f32,
     pub(in crate::project_slice) skin_infill_depth: f32,
     pub(in crate::project_slice) symmetric_infill_y_axis: bool,
+    /// `params.horiz_move` (`FillBase.hpp:103`) — the crosszag/lockedzag
+    /// horizontal shift `±scale_(infill_shift_step) * (layer_id/2)`
+    /// (`Fill.cpp:1312-1315`).
+    pub(in crate::project_slice) horiz_move: f32,
     pub(in crate::project_slice) infill_overhang_angle: f32,
     pub(in crate::project_slice) gyroid_optimized: bool,
     pub(in crate::project_slice) filter_out_gap_fill: f64,

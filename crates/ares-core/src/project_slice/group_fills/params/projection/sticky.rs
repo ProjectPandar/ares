@@ -7,6 +7,7 @@ pub(super) fn apply_pattern_fields(
     params: &mut SurfaceFillParams,
     region: &RegionOptions,
     scale: CoordinateScale,
+    layer_id: usize,
 ) {
     if region.sparse_infill_pattern == ProcessInfillPattern::LockedZag {
         params.infill_lock_depth = (region.infill_lock_depth.0 / scale.factor()) as f32;
@@ -14,10 +15,15 @@ pub(super) fn apply_pattern_fields(
     }
     if matches!(
         region.sparse_infill_pattern,
-        ProcessInfillPattern::CrossZag
-            | ProcessInfillPattern::LockedZag
-            | ProcessInfillPattern::ZigZag
+        ProcessInfillPattern::CrossZag | ProcessInfillPattern::LockedZag
     ) {
+        params.symmetric_infill_y_axis = region.symmetric_infill_y_axis.0;
+        // `Fill.cpp:1311-1316`: `horiz_move = ±scale_(infill_shift_step) *
+        // (layer_id/2)` — sign flips by layer parity, magnitude grows with
+        // the layer pair index.
+        let shift = (region.infill_shift_step.0 / scale.factor()) as f32 * (layer_id / 2) as f32;
+        params.horiz_move = if layer_id % 2 == 0 { -shift } else { shift };
+    } else if region.sparse_infill_pattern == ProcessInfillPattern::ZigZag {
         params.symmetric_infill_y_axis = region.symmetric_infill_y_axis.0;
     }
 }

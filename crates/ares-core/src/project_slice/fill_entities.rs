@@ -9,6 +9,7 @@ mod gyroid;
 mod honeycomb;
 mod ironing;
 mod line;
+mod locked_zag;
 mod monotonic;
 mod plane_path;
 mod simplify;
@@ -171,8 +172,14 @@ pub(in crate::project_slice) fn generate_layer(
     // `Fill::_infill_direction` anchors the infill grid on the PRINT OBJECT
     // bounding box center (FillBase.cpp:297-301), not the surface center.
     let object_reference = object_center(object_slices);
+    // `FillLockedZag::set_lock_region_param` (`Fill.cpp:1309`) — the skin/
+    // skeleton density+flow maps, built per-layer in `group_fills`.
+    let crate::project_slice::group_fills::GroupedFills {
+        surface_fills,
+        lock_region_param,
+    } = grouped;
 
-    for fill in grouped.surface_fills {
+    for fill in surface_fills {
         if let Ok(path) = std::env::var("ARES_DUMP_FLOW") {
             use std::io::Write;
             if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -274,10 +281,20 @@ pub(in crate::project_slice) fn generate_layer(
                 pattern @ (ProcessInfillPattern::Rectilinear
                 | ProcessInfillPattern::AlignedRectilinear
                 | ProcessInfillPattern::ZigZag
+                | ProcessInfillPattern::CrossZag
                 | ProcessInfillPattern::Monotonic
                 | ProcessInfillPattern::MonotonicLine),
             ) => {
                 monotonic::append(&mut output, fill, pattern, layer.id, traversal.scale)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::LockedZag) => {
+                locked_zag::append(
+                    &mut output,
+                    fill,
+                    &lock_region_param,
+                    layer.id,
+                    traversal.scale,
+                )?;
             }
             SurfaceFillPattern::Configured(
                 pattern @ (ProcessInfillPattern::HilbertCurve
