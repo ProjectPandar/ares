@@ -259,7 +259,7 @@ pub(in crate::project_slice) fn generate_layer(
                 three_d_honeycomb::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Honeycomb) => {
-                honeycomb::append(&mut output, fill, traversal.scale)?;
+                honeycomb::append(&mut output, fill, layer.id, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::Line) => {
                 line::append(

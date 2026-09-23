@@ -16,6 +16,7 @@ use super::{
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
+    layer_id: usize,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
     let params = HoneycombFillParams {
@@ -23,6 +24,10 @@ pub(super) fn append(
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
         angle: fill.params.angle,
+        layer_index: layer_id,
+        thickness_layers: fill.representative.thickness_layers.max(1),
+        fixed_angle: fill.params.fixed_angle,
+        bridge_angle: fill.params.bridge.then_some(fill.params.bridge_angle),
         anchor_length: fill.params.anchor_length,
         anchor_length_max: fill.params.anchor_length_max,
     };

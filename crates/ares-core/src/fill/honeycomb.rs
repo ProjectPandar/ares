@@ -23,8 +23,17 @@ pub(crate) struct HoneycombFillParams {
     pub(crate) density: f32,
     /// Multiline overlap count.
     pub(crate) multiline: i32,
-    /// Resolved infill direction angle (radians) — upstream `direction.first`.
+    /// Infill direction angle (radians) BEFORE `Fill::_infill_direction`
+    /// adjustments (`+pi/2`, layer alternation).
     pub(crate) angle: f32,
+    /// `layer_id` — drives the `+_layer_angle` alternation.
+    pub(crate) layer_index: usize,
+    /// `thickness_layers` — divisor for the alternation index.
+    pub(crate) thickness_layers: u16,
+    /// `fixed_angle` — skips the layer alternation when true.
+    pub(crate) fixed_angle: bool,
+    /// Bridge angle override (`surface->bridge_angle >= 0`).
+    pub(crate) bridge_angle: Option<f32>,
     /// Anchor lengths forwarded to `connect_infill`.
     pub(crate) anchor_length: f32,
     pub(crate) anchor_length_max: f32,
@@ -113,7 +122,17 @@ pub(crate) fn fill_honeycomb(
     let y_offset = (x_offset as f64 * 3.0_f64.sqrt() / 3.0) as i64;
     let hex_center = Point::new(hex_width / 2, hex_side);
 
-    let direction = f64::from(params.angle);
+    // `Fill::_infill_direction` (`FillBase.cpp:275-320`): `out_angle =
+    // bridge_angle.unwrap_or(angle)`, `+ _layer_angle` when `!fixed_angle`,
+    // then `+ pi/2`.
+    let mut direction_f = params.bridge_angle.unwrap_or(params.angle);
+    if params.bridge_angle.is_none()
+        && !params.fixed_angle
+        && (params.layer_index / usize::from(params.thickness_layers)) & 1 == 1
+    {
+        direction_f += std::f32::consts::FRAC_PI_2;
+    }
+    let direction = f64::from(direction_f + std::f32::consts::FRAC_PI_2);
     let mut all_polylines: Vec<Polyline> = Vec::new();
     {
         // Rotate the contour bbox by `direction` about hex_center, then align
