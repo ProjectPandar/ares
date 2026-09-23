@@ -157,14 +157,22 @@ fn materialize_layer(
     if std::env::var("ARES_INNER_CONTOUR").is_ok() {
         for (i, p) in plan.polygons.iter().enumerate() {
             let xs = p.points().iter().map(|pt| pt.x());
-            eprintln!("PLANPOLY flange={flange} {i} x={}..{}", xs.clone().min().unwrap_or(0), xs.max().unwrap_or(0));
+            eprintln!(
+                "PLANPOLY flange={flange} {i} x={}..{}",
+                xs.clone().min().unwrap_or(0),
+                xs.max().unwrap_or(0)
+            );
         }
     }
     let polylines = raft_layer_polylines(&plan.polygons, plan.spec, scale).ok()?;
     if std::env::var("ARES_INNER_CONTOUR").is_ok() {
         for (i, p) in polylines.iter().enumerate() {
             let xs = p.points().iter().map(|pt| pt.x());
-            eprintln!("OUTPOLY flange={flange} {i} x={}..{}", xs.clone().min().unwrap_or(0), xs.max().unwrap_or(0));
+            eprintln!(
+                "OUTPOLY flange={flange} {i} x={}..{}",
+                xs.clone().min().unwrap_or(0),
+                xs.max().unwrap_or(0)
+            );
         }
     }
     if polylines.is_empty() {
