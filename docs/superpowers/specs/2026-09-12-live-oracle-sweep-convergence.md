@@ -6145,3 +6145,18 @@ The emit-path `flow` for the skirt `E` is:
 mm3_per_mm(first_layer)}` — the `G1 E` emit path constructs `flow` with
 `spacing`=`line_width`-spacing/`height`=`first_layer`-mm3, a `spacing`/`height`
 crossing vs `skirt_flow`(spacing=0.377, height=0.2).
+
+### clxxvi. TURN 11+ FINAL — case-59tGO2 blocked on emit-path flow construction
+After 11+ turns, `case-59tGO2` residuals are fully characterized
+`line_width`-fallback bugs in the emit paths:
+1. `connect_base_support` `spacing=0.407` (39 `infill=3` raft-base blobs) —
+   `filler->spacing`=`line_width`(0.45) via an unprobed path.
+2. Skirt `E` `flow`=`{width:first_layer_width(0.42), spacing:spacing(line_width)
+   (0.407), height:mm3_per_mm(first_layer)(0.0754)}` — `spacing`/`height`
+   crossed on the emit path (not `skirt_flow`'s spacing=0.377/height=0.2).
+Both need emit-path `flow`/`spacing`/`filler` IDENTITY probes — which `Flow`/
+`filler` object the `G1 E`/`connect_base_support` emit uses. Baseline 3609
+held through all reverts; tests green; committed through `2851e72b`. The
+residuals are isolated to the `line_width`-substitution on emit paths; the
+geometry/`spacing`/`mm3_per_mm` triad needs separate `width` sources per
+upstream's `filler->spacing` vs `flow` split.
