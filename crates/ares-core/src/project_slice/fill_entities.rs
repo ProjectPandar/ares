@@ -17,6 +17,7 @@ mod plane_path;
 mod quartercubic;
 mod simplify;
 mod stars;
+mod tpms_d;
 
 pub(in crate::project_slice) use flow::{materialized_flow, object_center};
 
@@ -294,6 +295,9 @@ pub(in crate::project_slice) fn generate_layer(
             SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
                 // `tri-hexagon` maps to `ipStars` (`PrintConfig.cpp:238`).
                 stars::append(&mut output, fill, traversal.scale, object_reference)?;
+            }
+            SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsD) => {
+                tpms_d::append(&mut output, fill, layer.print_z, traversal.scale)?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::LateralLattice) => {
                 lateral_lattice::append(

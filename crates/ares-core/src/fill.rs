@@ -21,3 +21,4 @@ pub(crate) mod plane_path;
 )]
 pub(crate) mod rectilinear;
 pub(crate) mod three_d_honeycomb;
+pub(crate) mod tpms_d;
