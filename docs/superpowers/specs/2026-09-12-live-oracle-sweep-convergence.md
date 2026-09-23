@@ -6233,3 +6233,30 @@ oracle-ordering noise (M73+G1 reorder ≈55%) layered over a real cooling-
 feedrate ULP drift (~26%) and smaller retract/comment residuals. The feedrate
 and ordering classes are the highest-leverage remaining targets but both are
 probe-cycle-bound (10–25 min oracle builds), same cost class as §clxxix.
+
+### clxxxi. bare-F cooling feedrate LOCALIZED to an extra _EXTRUDE_SET_SPEED block
+ORCA_CBDUMP probe (`/tmp/cbdump.nix` → `/tmp/cbdump-bin`, instrumented
+`CoolingBuffer::calculate_layer_slowdown` after `sort_lines_by_decreasing_
+feedrate` at `CoolingBuffer.cpp:657`, dumps per-line `type/len/feedrate/time/
+time_max/adjustable` + `n_lines_adjustable`/`total`/`nonadj` per layer).
+
+On `case-03RaeG` the slowdown INPUTS are **byte-identical** to ares on the
+matching layers (`total=2.85214233`, `nadj=3`, `nonadj=0.294752866`, per-line
+`len/feedrate/time/time_max` equal to 6+ digits). The F2005-vs-F2001 /
+F1982-vs-F1973 divergence is NOT a slowdown-math ULP — it is a **line-count
+difference in the adjustable set**: ares emits an EXTRA `_EXTRUDE_SET_SPEED`
+block on 4 layers (oracle nadj=7/nlines=41, ares nadj=8/nlines=44 on the
+`total=8.32` layer). The extra ares line is a `len=0.2236 fr=50` adjustable
+extrusion oracle folds into a neighbouring same-speed block; its `t=0.004472`
+inflates `total` (8.336950 vs 8.3244524, Δ≈0.0125) and shifts
+`new_feedrate_to_reach_time_stretch` → ares keeps more lines at the higher
+feedrate (F2005/F1982) while oracle drops to F2001/F1973.
+
+ROOT: emit-side `_EXTRUDE_SET_SPEED` block grouping — ares opens one more
+block than oracle for a `len≈0.22` segment (likely gap-fill/short-infill where
+oracle reuses the prior same-speed group). NOT in `slowdown.rs`/`parse.rs`
+(both faithful ports, verified against `CoolingBuffer.cpp:46-300`); the bug is
+in the extrusion-emit grouping that decides when to open a fresh SET_SPEED
+block (`motion/extrusion.rs::speed`, `motion/path.rs`). Next probe: dump
+oracle's `;_EXTRUDE_SET_SPEED` block open/close decisions (`GCode.cpp`
+`extrude_path`/`_add_speed_change`) to find the merge condition ares misses.
