@@ -6837,3 +6837,23 @@ connect_infill/perimeter-int/estimator residual, not direction.
   grid; Layer::convertToLines emits per-surface. ~2000 LOC across
   Generator/Layer/TreeNode/DistanceField + a new make_fills plumbing path —
   a dedicated structural port, not a per-surface emit arm.
+
+## §ccxv FillLightning scope — the one remaining structural port
+- Lightning needs Lightning/{Generator,Layer,TreeNode,DistanceField}.cpp
+  (~2000 LOC): a per-PrintObject Generator (PrintObject::prepare_lightning_
+  infill_data, PrintObject.cpp:1010) that walks all layers top-to-bottom,
+  computes m_overhang_per_layer (internal-surface overhang minus walls via
+  m_wall_supporting_radius offset), then generateTrees → per-layer
+  generateNewTrees + reconnectRoots + TreeNode::propagateToNextLayer (copy,
+  realign to below-outlines via EdgeGrid::Grid locator, prune by
+  m_prune_length, straighten by m_straightening_max_distance). Layer::
+  convertToLines emits per-surface; TreeNode is a shared_ptr/weak_ptr tree
+  (Rc<RefCell>/Weak or arena indices in Rust) with addChild/visitBranches/
+  getWeightedDistance/localPrune/straighten/hasRecentOverlap/inside.
+- Pipeline: ares fill_entities::generate_layer runs per (object,layer) in a
+  parallel map; Lightning needs a once-per-object Generator cache (build on
+  first lightning layer, then getTreesForLayer(layer_id) per layer) — a new
+  data flow, not a per-surface emit arm.
+- tpmsfk: ported + compiles; the rsize=0.004mm raster + dense connect_infill
+  makes the slice slow (needs ex_tbb-parallel structure / connect perf pass —
+  a perf concern, not correctness).
