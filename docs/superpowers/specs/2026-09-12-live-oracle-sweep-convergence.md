@@ -5993,3 +5993,16 @@ the skirt `E` `flow.width`/`spacing` — likely a `flow` built on the `E` emit
 path (not `skirt_flow`) using `line_width`/`spacing` products — needs a
 `G1 E`-emit `flow`/`spacing` probe to identify which `Flow` object carries
 `width=0.196`.
+
+### clxv. Skirt E mm3_per_mm = spacing(line_width)·mm3_per_mm(first_layer)
+`mm3_per_mm=0.0307` = `spacing(0.45,0.2)·mm3_per_mm(0.42,0.2)` =
+`0.407·0.0754` — the `E` emit `flow` uses `spacing`=`spacing(line_width)`(0.407)
+and `height`=`mm3_per_mm(first_layer)`(0.0754). `mm3_per_mm = spacing·height` =
+`spacing(line_width)·mm3_per_mm(first_layer)` — a `spacing·mm3` product. The
+emit-path `flow` for the skirt is constructed with `spacing`=line_width-spacing
+and `height`=first_layer-mm3 — `spacing`/`height` are crossed (spacing holds a
+line_width-spacing, height holds a first_layer mm3_per_mm). RESIDUAL: skirt `E`
+`flow` — `spacing`=spacing(line_width=0.45)=0.407, `height`=
+mm3_per_mm(first_layer)=0.0754 — the `G1 E` emit `flow` has `spacing`/`height`
+swapped from `skirt_flow` (spacing=0.377, height=0.2). Identify the emit-path
+`flow` construction that produces `spacing=0.407`/`height=0.0754`.
