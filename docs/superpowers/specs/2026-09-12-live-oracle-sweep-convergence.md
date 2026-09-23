@@ -5875,3 +5875,18 @@ field access. Fixed to `_sf.width()`/`_sf.height()`/`_sf.spacing()`/
 dumps the actual skirt `flow.width`/`spacing`/`height`/`mm3_per_mm` —
 confirming `width≈0.196`/`spacing≈0.1536` (the `line_width`-fallback source)
 or a `height`/`spacing` divergence.
+
+### clvi. ORCA_SF: skirt_flow mm3_per_mm=0.0754 — E is scaled by spacing(line_width)
+`ORCA_SF` probe: `skirt_flow w=0.42 sp=0.377 h=0.2 mm3=0.0754` — ares's
+`mm3_per_mm`=0.0754 is CORRECT (matches `skirt_flow`). But oracle `E.04556` for
+`1.4835mm` → effective `mm3`=0.0307 = `0.0754·0.407` = `skirt_mm3·spacing
+(line_width=0.45,0.2)`. The emitted `E` = `mm3_per_mm·length·0.407` — the
+extrusion is scaled by `spacing(line_width)` — a `line_width`-spacing ratio
+applied to the skirt `E`. `0.407`=`spacing(0.45,0.2)`. So the skirt extrusion
+`E` = `skirt_flow.mm3_per_mm·length·spacing(line_width)` — the `line_width`
+spacing acts as an extrusion multiplier. This is NOT a `flow.width`/`height`
+bug — it's an `E`-emission scaling by `spacing(line_width)`. RESIDUAL: skirt
+`E` = `mm3_per_mm·length·spacing(line_width)` — a `line_width`-spacing
+extrusion multiplier ares doesn't apply (ares emits `mm3_per_mm·length`
+directly). Likely a `flow_ratio`/`extrusion_ratio` applied in the oracle's
+skirt `E` emit that ares misses.
