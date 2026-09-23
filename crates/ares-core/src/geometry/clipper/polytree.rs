@@ -80,6 +80,64 @@ impl PolyTree {
         expolygons
     }
 
+    /// `traverse_pt_outside_in` (`ClipperUtils.cpp:992-1010`): at each
+    /// PolyNode level, chain-order the siblings by their first contour
+    /// point (`chain_clipper_polynodes` → `chain_segments_greedy`,
+    /// `ShortestPath.cpp:1998-2013`), emit each contour (holes reversed to
+    /// CCW), then recurse into that node's children before the next
+    /// sibling — producing the outside-in nesting order `union_pt_chained_
+    /// outside_in` consumes.
+    pub(crate) fn into_outside_in_contours(mut self) -> Vec<Vec<crate::geometry::Point>> {
+        let mut out = Vec::new();
+        let roots = mem::take(&mut self.children);
+        self.outside_in(&roots, &mut out);
+        out
+    }
+
+    fn outside_in(&mut self, siblings: &[PolyNodeId], out: &mut Vec<Vec<crate::geometry::Point>>) {
+        // Order this sibling level by nearest-neighbor chaining on each
+        // contour's first point (`chain_clipper_polynodes`).
+        let order = crate::geometry::chain_points::chain_points(
+            &siblings
+                .iter()
+                .filter_map(|&id| match &self.nodes[id.0].contour {
+                    Some(PolyNodeContour::Closed(polygon)) => polygon.points().first().copied(),
+                    _ => None,
+                })
+                .collect::<Vec<_>>(),
+        );
+        let closed: Vec<PolyNodeId> = siblings
+            .iter()
+            .copied()
+            .filter(|&id| matches!(self.nodes[id.0].contour, Some(PolyNodeContour::Closed(_))))
+            .collect();
+        for &index in &order {
+            let id = closed[index];
+            let hole = self.is_hole(id);
+            let mut polygon = match self.nodes[id.0].contour.take() {
+                Some(PolyNodeContour::Closed(polygon)) => polygon,
+                _ => unreachable!(),
+            };
+            // `if (node->IsHole()) retval->back().reverse()` — CCW.
+            if hole && shoelace_area(polygon.points()) < 0.0 {
+                polygon.reverse();
+            }
+            out.push(polygon.into_points());
+            let children = mem::take(&mut self.nodes[id.0].children);
+            self.outside_in(&children, out);
+        }
+    }
+
+    fn is_hole(&self, id: PolyNodeId) -> bool {
+        let mut is_hole = false;
+        let mut parent = self.nodes[id.0].parent;
+        while let Some(node) = parent {
+            is_hole = !is_hole;
+            parent = self.nodes[node.0].parent;
+        }
+        is_hole
+    }
+
     pub(crate) fn into_open_polylines(mut self) -> Vec<Polyline> {
         let roots = mem::take(&mut self.children);
         let mut polylines = Vec::new();
@@ -314,29 +372,19 @@ fn append_expolygon(
 /// `union_pt` + contour extraction (`ClipperUtils.cpp:955`): the union
 /// executed with `pftEvenOdd`, contours returned in the PolyTree walk
 /// order (which reorders each contour's points relative to the input).
+/// `union_pt_chained_outside_in` (`ClipperUtils.cpp:1012-1016`): the
+/// `pftEvenOdd` union's PolyTree walked outside-in with nearest-neighbor
+/// sibling chaining, holes reversed to CCW. The flat `union_ex` +
+/// `contour.chain(holes)` previously used dropped both the sibling
+/// chaining and the >2-level nesting the upstream traversal preserves.
 pub(crate) fn union_contours(
     polygons: &[Polygon],
 ) -> Result<Vec<Vec<crate::geometry::Point>>, ClipperError> {
-    let expolygons = union_ex(polygons, FillRule::EvenOdd)?;
-    Ok(expolygons
-        .into_iter()
-        .flat_map(|expolygon| {
-            let (contour, holes) = expolygon.into_parts();
-            // `traverse_pt_outside_in` (ClipperUtils.cpp:992-1010): each
-            // root contour first, then recurse into its holes (nested rings
-            // of the brim), with hole contours reversed to CCW — the
-            // outside-in nesting order.
-            std::iter::once(contour).chain(holes).map(|mut polygon| {
-                // `traverse_pt_outside_in` reverses hole contours to
-                // CCW (`if (node->IsHole()) retval->back().reverse()`),
-                // so every emitted ring shares the contour winding.
-                if shoelace_area(polygon.points()) < 0.0 {
-                    polygon.reverse();
-                }
-                polygon.points().to_vec()
-            })
-        })
-        .collect())
+    let mut clipper = Clipper::new(ClipperOptions::default());
+    clipper.add_closed_paths(polygons, PathRole::Subject)?;
+    Ok(clipper
+        .execute_polytree(ClipOperation::Union, FillRule::EvenOdd, FillRule::EvenOdd)
+        .into_outside_in_contours())
 }
 
 fn shoelace_area(points: &[crate::geometry::Point]) -> f64 {
