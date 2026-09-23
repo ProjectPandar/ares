@@ -6439,3 +6439,17 @@ scaled ints oracle uses) — but only if ares's `wipe_path` mm values are
 guaranteed `int·scale` round-trips. ORCA_WIPEDUMP probe building
 (`/tmp/wipeprobe.nix`, WIPECALL len/wipedist/wspeed + WSEG slen/dE/bx/by) to
 compare oracle `wipe_dist`/`length`/`slen`/`dE` against ares's before changing.
+
+### cxci. wipe-E residual isolated: clipped wipe-path endpoint ~3 scaled units
+ORCA_WIPEDUMP (oracle) on case-59tGO2: `WIPEPRE len=1.2 wipedist=1000000`,
+`WSEG slen=313497.206 dE=0.376196647` → oracle emits `E-.3762`; ares emits
+`E-.37619`. `dE = 1.2·(slen/1e6)`; ares's `dE` lands below the `.376195`
+rounding boundary → ares's `slen` ≈ 313494 vs oracle 313497 → **ares's clipped
+wipe-path segment endpoint differs by ~3 scaled units (~3e-6 mm)**. Source:
+the `clip_end` truncating endpoint (`wipe_path.rs` `clip/lsqr.sqrt()` factor +
+`as i64`, vs `Polyline.cpp:52-72`) OR the `scaled_position`/`unscaled_position`
+round-trip on the wipe-path points (`wipe_path.rs:40` re-round + `:113`
+unscale). `during`/`length` = 1.2 and `wipe_dist` = 1e6 match exactly; only
+the segment length carries the 3-unit drift. Next: dump ares's per-segment
+`slen`/`retraction` to confirm which endpoint (clip-truncated last point or a
+mid-path rounded point) is off.
