@@ -6966,3 +6966,7 @@ C2PRE debug: convert_to_polylines yields pts=[1] (single-pt) on lower layers —
 Split `tree_node.rs`(657→255)+`layer.rs`(485→212): new `tree_geom.rs`(convertToPolylines+geom helpers 191), `tree_ops.rs`(realign/straighten 234), `layer_geom.rs`(grounding/reconnect+helpers 288). All <400, clippy+fmt clean, behavior preserved (16 cube sections). Committed b7464e92.
 
 Oracle sweep (complex obj case-IdM3Br): trees propagate to all layers 5..42 (7 roots each) but convert yields pts=[1] single-node → 1 sparse section vs oracle 38. REALIGN keeps children (cross=None) yet convert sees single-node → lifted children (rerooted_parts) become separate single-node roots OR reconnect replaces root dropping subtree. support_r=2999993, wall_r/prune/straight=199999 all verified upstream formulas. Residual isolated to convert-time tree depth — needs oracle-side per-layer tree dump to find which upstream step preserves depth ares loses.
+
+## §ccxxix FillLightning — propagated trees are root→1child (correct), convert emits pts=[2]
+
+PROPAGATE: children=1 each (root→1child 2-node, correct for cube/simple obj — upstream generateNewTrees seeds boundary→cell pairs). convert_to_polylines → pts=[2] lines. So trees+convert work; the 1-section emit means group_fills/Configured(Lightning) classification or connect_infill drops the 2-pt lines on most layers. children=0 (pruned leaf) → pts=[1] dropped — rare. Residual moved from tree-depth to connect_infill/fill-classification stage.
