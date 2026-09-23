@@ -6386,3 +6386,25 @@ family; the M73/estimator time-model drift produces the deterministic
 ordering-only failures; everything else is oracle non-determinism. The sweep's
 stored outputs are stale on BOTH sides and must be regenerated fresh to
 measure true parity.
+
+### clxxxviii. case-59tGO2 residual = wipe-E split + ordering (deterministic)
+Re-verified on CURRENT binary + fresh deterministic oracle (self=0,
+ares=3609). The diff is dominated by:
+1. **wipe-E per-segment last-digit** — `E-.16478` vs `E-.16476`,
+   `E-.70571`/`E-.70573`, `E-.37619`/`E-.3762`, `E.04556`/`E.04557`:
+   identical XY, ±1–2 in the 5th E decimal, repeated uniformly across layers.
+   Locus: `motion/travel.rs:230` `retraction = during·(segment_length /
+   distribution_distance)`; `during = (retraction_feedrate/60 ·
+   retraction_distance / wipe_speed).min(remaining)` (`:192`), where
+   `retraction_distance`/`distribution_distance`/`wipe_speed`/`segment_length`
+   each carry sub-ULP candidates (`wipe_path.rs` clip_end truncation,
+   `scaled_distance` rounding, `role_based_wipe_speed` feedrate at wipe).
+   A systematic ~1e-5 split difference — the documented wipe-E residual.
+   Needs an oracle `Wipe::wipe` (`GCode.cpp:456-462`) per-segment
+   `during`/`distribution_distance`/`dE` probe.
+2. Reordering pairs (`67a68`, `160a161`) — M73/emit ordering + oracle hash
+   variance.
+NOTE: the parity TEST harness (`orca_parity.rs::compare_exported_for`) already
+re-slices the oracle up to `ARES_ORCA_RUNS`=3 on divergence — the suite
+correctly treats oracle non-determinism; only `/tmp` sweep artifacts were
+stale-snapshot comparisons. Test methodology is sound.
