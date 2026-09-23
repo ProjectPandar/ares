@@ -5468,3 +5468,19 @@ these blob regions → ~600-line divergence. NEXT: `support_material_flow` for
 the raft base resolves `support_line_width` — if upstream's `support_line_width`
 "0.38" resolves differently (e.g. percent→line_width) the filler spacing is
 0.407; probe `filler_support->spacing` on the raft base specifically.
+
+### cxxvii. spacing=0.407 filler is NOT any raft flow — unlocated ipSupportBase
+ORCA_FSUP: raft base `filler_support->spacing = support_material_flow` = 0.337
+(38 calls). ORCA_IF: raft contact `filler->spacing` = 0.337. ORCA_FLOW:
+`first=0.377, sm=smi=raft_i=0.337`. So NO probed raft filler has spacing=0.407.
+The 39 `connect_base_support` calls with `spacing=0.407` (`infill=3 boundary=1`,
+FIRST in order) come from a `FillSupportBase` (`ipSupportBase`) whose
+`filler->spacing` was set OUTSIDE the probed assignment sites (:1476/:1499/
+:1505/:1722/:1750/:1772/:1787). `spacing(0.45,0.2)=0.407` = `line_width`.
+`infill=3` = tiny regions — the object sparse infill is `crosshatch`
+(`connect_infill`, not `connect_base_support`), so these aren't object infill.
+Likely a per-contour `connect_base_support` for the raft base's split blobs
+where `filler->spacing` defaults to `line_width` — OR an `ipSupportBase` object
+region ares doesn't emit. ares uses 0.337/0.377 → ~600-line diff. NEXT: grep
+upstream for `filler->spacing`/`->spacing =` assignments beyond the probed
+sites, or dump `filler` type+spacing inside `FillSupportBase::fill_surface`.
