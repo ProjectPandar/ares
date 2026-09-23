@@ -6575,3 +6575,22 @@ The dominant remaining coverage gap is the 16 unported `sparse_infill_pattern`
 values (Fill* port milestone) plus the DIVERGENT ported patterns that reduce
 to the perimeter/offset int-quantization residual. `raft_layers` max/seeded =
 same perimeter-int family (wipe-path tail). wall_generator now resolved.
+
+### cc. sparse_anchoring linear-pattern extension (commit 511a6151)
+Extended `sparse_anchoring` (`generate_sparse_infill_polylines_for_anchoring`)
+and the `anchor_projection` gate to the rectilinear-family linear patterns —
+Monotonic/MonotonicLine via `fill_monotonic_surface`, AlignedRectilinear/Line/
+CrossZag/LockedZag via `fill_rectilinear_surface` — matching upstream
+`Fill.cpp:1394 generate_sparse_infill_polylines_for_anchoring` which creates
+`Fill::new_from_type(pattern)` for EVERY pattern (only skips
+ipCount/ipSupportBase/ipConcentricInternal). Verified: `alignedrectilinear`
+flipped ARES_ERROR→PASS; `line`/`crosszag`/`lockedzag`/`zigzag` moved
+ARES_ERROR→DIVERGENT (now generate fill, differ in emitted bytes — the
+perimeter-int residual family). REMAINING sparse_infill ARES_ERROR:
+concentric, hilbertcurve, archimedeanchords, octagramspiral, honeycomb,
+lateral-honeycomb, lateral-lattice, tpmsd, tpmsfk, tri-hexagon, quartercubic,
+lightning — each needs its real generator wired into sparse_anchoring
+(concentric→generate_standard_thick_polylines [ThickPolyline→Polyline conv],
+hilbert/archimedean/octagram→plane_path::fill_surface [needs
+object_bounding_box+resolution+calibration_order threading], honeycomb/lateral/
+tpms/trihex/quarter/lightning→their Fill* generators, several not yet ported).
