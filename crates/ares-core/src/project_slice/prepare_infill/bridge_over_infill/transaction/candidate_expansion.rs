@@ -76,9 +76,6 @@ fn prepare_object(
     candidates: &mut BridgeCandidateObject,
     view: ObjectView<'_>,
 ) -> Result<(), SliceError> {
-    if candidates.surfaces_by_layer.is_empty() {
-        return Ok(());
-    }
     let ObjectView {
         horizontal,
         prelude,
@@ -88,19 +85,13 @@ fn prepare_object(
     let (compensated, inputs) = prelude.as_parts();
     let (post_regions, _) = compensated.as_parts();
     let (plan, _, regions) = post_regions.as_parts();
-    let region_options = regions
-        .iter()
-        .map(|region| region.as_parts().1)
-        .collect::<Vec<_>>();
     // `PrintObject.cpp:2593` LIGHTNING INFILL SECTION — expand `stInternal` to
     // `stInternalSolid` near candidates on layers whose lower layer uses
-    // lightning sparse infill; the expanded set feeds the generator.
+    // lightning sparse infill; the expanded set feeds the generator. Runs
+    // before the empty-candidate early return so the generator exists even
+    // when there are no bridge candidates (`make_fills` needs it regardless).
     if candidates.has_lightning_infill {
         populate_lightning_expanded_surfaces(candidates, horizontal, view.scale)?;
-    }
-    // `prepare_lightning_infill_data` — the per-object generator built on the
-    // expanded surfaces (used for both anchoring lines and the final emit).
-    if candidates.has_lightning_infill {
         let object_options = &predecessor
             .predecessor
             .predecessor
@@ -120,6 +111,13 @@ fn prepare_object(
             view.scale,
         )?;
     }
+    if candidates.surfaces_by_layer.is_empty() {
+        return Ok(());
+    }
+    let region_options = regions
+        .iter()
+        .map(|region| region.as_parts().1)
+        .collect::<Vec<_>>();
     let lightning_generator = candidates.lightning_generator.as_deref();
     let infill_lines = prepare_infill_lines(
         predecessor,
