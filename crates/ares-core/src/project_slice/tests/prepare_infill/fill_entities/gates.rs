@@ -62,7 +62,9 @@ fn implemented_sparse_groups_emit_fill_paths() {
 }
 
 #[test]
-fn optimized_gyroid_is_rejected_until_marching_squares_is_ported() {
+fn optimized_gyroid_emits_via_marching_squares_field() {
+    // `gyroid_optimized` is ported (`FillGyroid.cpp:314-333` marching-squares
+    // implicit-field path): an internal surface produces fill entities.
     let mut graph = graph();
     record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
         RegionSurfaceKind::Internal,
@@ -73,12 +75,8 @@ fn optimized_gyroid_is_rejected_until_marching_squares_is_ported() {
     options.sparse_infill_pattern = ProcessInfillPattern::Gyroid;
     options.gyroid_optimized = crate::OrcaBool(true);
 
-    assert_eq!(
-        generate_layer(external(&graph), 0, LAYER, None),
-        Err(SliceError::UnsupportedProjectFeature(
-            "gyroid_optimized".to_owned()
-        ))
-    );
+    let generated = generate_layer(external(&graph), 0, LAYER, None).unwrap();
+    assert!(!generated.collections.is_empty());
     combine_infill::dispose(graph);
 }
 

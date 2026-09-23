@@ -36,7 +36,7 @@ fn process_object_source_enum_domains_are_exact() {
         "normal(auto)", "tree(auto)", "normal(manual)", "tree(manual)",
     ]);
     assert_domain::<ProcessInfillPattern>(&[
-        "monotonic", "monotonicline", "rectilinear", "alignedrectilinear", "zig-zag",
+        "monotonic", "monotonicline", "rectilinear", "alignedrectilinear", "zigzag",
         "crosszag", "lockedzag", "line", "grid", "triangles", "tri-hexagon", "cubic",
         "adaptivecubic", "quartercubic", "supportcubic", "lightning", "honeycomb",
         "3dhoneycomb", "lateral-honeycomb", "lateral-lattice", "crosshatch", "tpmsd",

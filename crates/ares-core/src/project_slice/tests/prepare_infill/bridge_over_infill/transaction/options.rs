@@ -5,12 +5,22 @@ use crate::{
 };
 
 #[test]
-fn task22o71_deferred_pattern_fails_without_fallback() {
-    assert_unsupported_mutation(
+fn task22o71_honeycomb_pattern_admitted() {
+    // `honeycomb` is an implemented sparse-anchoring arm (the deferred-pattern
+    // gate is gone); the transaction admits it.
+    let mut archive = KsrArchive::new();
+    archive.replace_unique(
+        "Metadata/project_settings.config",
         "\"sparse_infill_pattern\": \"crosshatch\"",
         "\"sparse_infill_pattern\": \"honeycomb\"",
-        "sparse_infill_pattern",
     );
+    let mut raw = super::super::prepare(archive);
+    for object in &mut raw.objects {
+        object.surfaces_by_layer.clear();
+    }
+    let prepared = transaction::prepare(raw);
+    assert!(prepared.is_ok(), "honeycomb should pass the transaction");
+    transaction::dispose(prepared.unwrap());
 }
 
 #[test]
