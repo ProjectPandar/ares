@@ -6594,3 +6594,26 @@ lightning — each needs its real generator wired into sparse_anchoring
 hilbert/archimedean/octagram→plane_path::fill_surface [needs
 object_bounding_box+resolution+calibration_order threading], honeycomb/lateral/
 tpms/trihex/quarter/lightning→their Fill* generators, several not yet ported).
+
+§cci — sparse-infill anchoring coverage sweep complete (commits 511a6151, e0c8824b,
+959c94c3). Wired every pattern that has a ported ares generator into
+sparse_anchoring + the anchor_projection gate, matching upstream
+`Fill::new_from_type` (Fill.cpp:1394) which generates real infill polylines for
+EVERY pattern: linear family via fill_rectilinear/monotonic_surface
+(Monotonic/MonotonicLine/AlignedRectilinear/Line/CrossZag/LockedZag);
+Concentric via a ported offset2_ex ring loop + union_contours outside-in +
+nearest-point split (FillConcentric::_fill_surface_single — the SIMPLE offset
+rings, not the Arachne toolpath the emitted fill uses); plane-path trio
+(hilbertcurve/archimedeanchords/octagramspiral) via fill::plane_path::fill_surface
+with object_bounding_box + resolution (calibration_order=false — it only applies
+to top-surface ironing, never sparse-internal). LIVE RESULT: sparse_infill went
+8 PASS / 16 ARES_ERROR → 8 PASS / 10 DIVERGENT / 8 ARES_ERROR. The 10 DIVERGENT
+all *generate* fill correctly (wiring verified) — their byte diffs are the
+shared perimeter-int + M73/estimator residual, not anchoring bugs (concentric
+diff = M73 ordering + WIDTH micro-fragment family). REMAINING 8 ARES_ERROR are
+truly unported generators requiring dedicated upstream port milestones:
+honeycomb (FillHoneycomb), tri-hexagon (FillTriHexagon), quartercubic
+(FillQuarterCubic), lateral-honeycomb/lateral-lattice (FillLateralHoneycomb/
+FillLateralLattice), tpmsd/tpmsfk (FillTpmsD/FillTpmsFK MarchingSquares),
+lightning (FillLightning Lightning::Generator) — no ares scaffolding exists for
+any of these.
