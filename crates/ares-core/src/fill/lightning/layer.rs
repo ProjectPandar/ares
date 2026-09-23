@@ -372,6 +372,19 @@ impl Layer {
         let mut rng = GlibcRand::new();
         let mut result_lines = Vec::new();
         for tree in &self.tree_roots {
+            if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+                let (tp, ch): ((i64, i64), Vec<(i64, i64)>) = {
+                    let n = tree.borrow();
+                    (
+                        (n.p.x(), n.p.y()),
+                        n.children.iter().map(|c| {
+                            let b = c.borrow();
+                            (b.p.x(), b.p.y())
+                        }).collect(),
+                    )
+                };
+                eprintln!("C2LT root=({},{}) children={:?} overlap={}", tp.0, tp.1, ch, line_overlap);
+            }
             result_lines.extend(Node::convert_to_polylines(tree, line_overlap, &mut rng));
         }
         if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
