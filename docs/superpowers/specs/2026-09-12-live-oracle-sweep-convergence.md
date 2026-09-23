@@ -6780,3 +6780,21 @@ connect_infill/perimeter-int/estimator residual, not direction.
   so ordering collapses to e_per_mm3*mm3*fratio/fratio — residual is
   filament_area or mm3_per_mm/Flow precision).
 - sweep tally: all ported patterns emit (ok=1); only lightning ok=0 (gated).
+
+## §ccxi FillTpmsFK + marchsq ported (12981710); Lightning is the sole remaining generator
+- marchsq marching-squares ported (geometry/marching_squares.rs): bit-packed
+  tag/dirs grid, NEXT_CCW table, scan_rings + next_dir ambiguous-cell rule,
+  interpolate_edge lower_bound edge walk. ScalarField FK equation
+  (FillTpmsFK.cpp:18-62: gsize=0.40mm/rsize=0.004mm raster, freq=2π/period,
+  field=cos2x·siny·cosz+cos2y·sinz·cosx+cos2z·sinx·cosy) + get_polylines
+  ring→to_Point+front-close+Douglas-Peucker(SCALED_SPARSE_INFILL_RESOLUTION).
+  fill/tpms_fk.rs _fill_surface_single: rotate -45°+angle, vari_T=
+  4.18*spacing*multiline/min(0.9,density), bbox pad (multiline+1)*spacing,
+  marchsq execute, multiline_offset, clip, connect_infill.
+- tpms_fk emit + anchor whitelist + anchoring arm wired.
+- ONLY FillLightning remains: needs FillLightning/Generator.cpp (Layer.cpp 448
+  + TreeNode.cpp 440 + DistanceField.cpp + Generator.cpp ~2000+ LOC) — a
+  per-print-object lightning TREE built across ALL layers then convertToLines
+  per surface (FillLightning.cpp:16-23). Architecturally different: the
+  Generator is built once per PrintObject (not per-layer-fill), so it needs
+  plumbing through the pipeline — a multi-thousand-line structural port.
