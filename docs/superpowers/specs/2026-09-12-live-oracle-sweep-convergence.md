@@ -5966,3 +5966,18 @@ extrusion multiplier. `mm3_per_mm`=0.0307=`spacing(0.45)·spacing(0.42)·0.2`
 the skirt — likely a `line_width`-fallback in the `E`-computation `flow`
 resolution (the `G1 E` uses `spacing(line_width)·spacing(first_layer)`, not
 `skirt_flow.spacing`=0.377).
+
+### clxiii. TURN SUMMARY — case-59tGO2 blocked on emit-path flow identity
+This turn localized case-59tGO2 to TWO `line_width`-fallback residuals:
+1. `connect_base_support` `spacing=0.407` (39 `infill=3` raft-base blobs) —
+   `FillSupportBase`/`ipSupportBase` `filler->spacing`=`line_width`(0.45) on a
+   path not hit by `filler->spacing` probes. Needs `this`/`pattern`/`z` on the
+   `infill=3` calls (FBS showed `this->spacing`=0.337/0.377 only — the 0.407
+   calls come from a `filler`/`spacing` source not yet identified).
+2. Skirt `E` `mm3_per_mm`=0.0307 (`flow.spacing`=0.1536 = `spacing(0.45)·
+   spacing(0.42)` product, `width`≈0.196). `skirt_flow` itself is correct
+   (`mm3=0.0754` per ORCA_SF); the `G1 E` emit-path uses a `line_width`-
+   spacing-product `flow`. No `flow_ratio`=0.407 — it's a spacing product.
+Both need emit-path `flow`/`spacing` identity probes (which `flow`/`filler`
+object carries the `line_width`-derived `spacing`). Baseline 3609 held through
+all reverts; tests green; all probes/ledger committed through `59841b5f`.
