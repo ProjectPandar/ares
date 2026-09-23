@@ -374,6 +374,31 @@ impl Layer {
         for tree in &self.tree_roots {
             result_lines.extend(Node::convert_to_polylines(tree, line_overlap, &mut rng));
         }
+        if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+            let pts: Vec<(i64, i64)> = result_lines
+                .iter()
+                .flat_map(|l| l.points().iter().map(|p| (p.x(), p.y())))
+                .collect();
+            let (mut minx, mut miny, mut maxx, mut maxy) =
+                (i64::MAX, i64::MAX, i64::MIN, i64::MIN);
+            for (x, y) in &pts {
+                minx = minx.min(*x); miny = miny.min(*y);
+                maxx = maxx.max(*x); maxy = maxy.max(*y);
+            }
+            let obb = limit_to_outline
+                .iter()
+                .flat_map(|p| p.points().iter().map(|pt| (pt.x(), pt.y())))
+                .fold((i64::MAX, i64::MAX, i64::MIN, i64::MIN), |a, (x, y)| {
+                    (a.0.min(x), a.1.min(y), a.2.max(x), a.3.max(y))
+                });
+            eprintln!(
+                "C2LP raw_lines={} pts={} tree_bbox=({},{})-({},{}) outline_bbox=({},{})-({},{})",
+                result_lines.len(),
+                pts.len(),
+                minx, miny, maxx, maxy,
+                obb.0, obb.1, obb.2, obb.3
+            );
+        }
         intersection_open_polylines(&result_lines, limit_to_outline)
     }
 }
