@@ -6189,3 +6189,15 @@ RESIDUAL: locate the emit-path `flow` construction — `Flow` with
 `spacing`=`spacing(line_width)`/`height`=`mm3_per_mm(first_layer)`/`width`=
 `first_layer_width` — the `spacing`/`height` fields are assigned `line_width`-
 spacing and `first_layer`-mm3 respectively.
+
+### clxxix. case-59tGO2 — 12+ turns, residuals = emit-path flow field crossing
+FINAL: `case-59tGO2` residuals are `line_width`-fallback `flow` field crossings:
+1. `connect_base_support` `spacing=0.407` (39 `infill=3` raft-base blobs) —
+   `filler->spacing`=`line_width`(0.45) via an unprobed surface/filler.
+2. Skirt `E` `flow`=`{width:first_layer_width(0.42), spacing:spacing(line_width)
+   (0.407), height:mm3_per_mm(first_layer)(0.0754)}` — `mm3_per_mm`=0.0307.
+   `spacing`/`height`/`width` all crossed vs `skirt_flow`(0.377/0.2/0.42).
+Both need emit-path `flow`/`spacing`/`filler` IDENTITY probes. The `flow`
+construction on the `G1 E` emit path assigns `spacing`=`spacing(line_width)`
+and `height`=`mm3_per_mm(first_layer)` — a `spacing`/`height` field crossing.
+Baseline 3609 held; tests green; committed through `bec2020b`.
