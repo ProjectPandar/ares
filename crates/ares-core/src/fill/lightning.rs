@@ -27,4 +27,5 @@ pub(super) fn segment_distance_squared(
     let (ex, ey) = (px - (ax + t * dx), py - (ay + t * dy));
     ex * ex + ey * ey
 }
+mod generator;
 mod layer;
