@@ -6275,3 +6275,31 @@ feedrate. The cooling-buffer port (`slowdown.rs`,`parse.rs`) is verified
 correct against oracle inputs — do NOT re-tune it. Real fix lives in the
 infill path entity grouping (`fill/`/`prepare_infill`/`narrow`), same locus as
 the narrow-region residual.
+
+### clxxxiii. CRITICAL — true pass rate ~94%; stored-sweep orca.gcode is a stale snapshot
+Re-verification methodology fix: the sweep's stored `orca.gcode` is a SINGLE
+oracle run snapshot; OrcaSlicer is internally non-deterministic (TBB order +
+`ankerl::unordered_dense` hash-order). Comparing ares to a stale snapshot
+overcounts failures. Correct metric: run oracle TWICE fresh; a case passes iff
+ares matches either run within oracle's own self-variance
+(`diff(ares,oracle_run) <= max(2, oracle_self_diff)`).
+
+Measured:
+- `case-03RaeG`: oracle-self=104..158, ares=93..107 → ares is CLOSER to each
+  oracle run than the two runs are to each other. AT NOISE FLOOR.
+- `case-090y6B`, `case-1Zs34c`: oracle-self=0, ares=0 → byte-identical (were
+  "failing" only vs the stale snapshot).
+- 20-case re-verify of "failing" band: **16/20 byte-identical** to fresh
+  oracle; the other 4 (`RZBkgs/79uhKJ/5uE5fL/7dVM9D`) ares-vs-B=0 — all 20
+  actually pass. Mid-band mass is ~100% oracle noise.
+- 80-case random sample, oracle×2 + ares: **pass=75 (93.75%), real_fail=5**,
+  oracle_fail=0. Real failures: `n4acJn` (raft, 4818, deterministic), and
+  `W5UpLS/N4qtIk/vlWuXt/jS9NwP` (ares 57-236 vs self 51-152 — small real
+  divergence on noisy oracle inputs).
+
+CONCLUSION: true parity is ~94%, not 61.5%. The remaining REAL deterministic
+residual is the raft support-layer structural slice (`n4acJn`-family, the 6
+>1000-diff cases). The §clxxxi-clxxxii cooling/narrow-fragment analysis still
+holds as a real (but small) divergence; it is dwarfed by oracle noise on most
+cases. Highest-leverage remaining work = the raft structural residual and a
+fresh dual-oracle sweep to get the true per-case pass map.
