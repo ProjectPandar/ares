@@ -6894,3 +6894,23 @@ connect_infill/perimeter-int/estimator residual, not direction.
   weak_ptr,PointHash>) + inside(PointInPolygon)+segment_segment_intersection.
   ares has EdgeGrid (segment/visit_cells_intersecting_line/resolution) +
   point_in_polygon. Remaining: TreeNode+Layer+Generator+rand()+plumbing.
+
+## §ccxviii FillLightning wired + bridge_over_infill lightning blocker mapped
+
+`FillLightning` fully ported + wired (`8ccfca39`): DistanceField + TreeNode (Rc<RefCell>/Weak + glibc TYPE_3 rand for convertToPolylines first-child) + Layer + Generator; per-object Generator built in `fill_entities::prepare` from Internal/InternalVoid surfaces; `generate_layer` `Lightning` arm → `lightning::append` (convert_to_lines + intersection_pl + connect_infill).
+
+Sweep `sparse_infill_pattern`: `lightning` → ARES_ERROR "unsupported project feature: sparse_infill_pattern". TWO gates:
+- `anchor_projection.rs:49` whitelist — FIXED (`194edf5f`, added Lightning).
+- `transaction.rs:71 validate_capabilities` — `has_lightning_infill → unsupported` blocks the WHOLE bridge_over_infill transaction.
+
+Upstream `PrintObject.cpp:2593` "LIGHTNING INFILL SECTION" inside `bridge_over_infill()`: when has_lightning_infill — TWO-PHASE (collect-then-apply, ORCA de-race) expansion: Phase1 `needs_lightning_expansion[lidx]`=layer whose `lower_layer` has `stInternal` in a lightning region; Phase2 for those layers, `expansion=intersection_ex(sparse_infill, expand(candidate.new_polys, scaled(3.0)))` added to `solid_infill`, `sparse_infill=diff_ex(sparse, union_safety_offset_ex(solid))`, fill_surfaces rewritten (stInternalSolid + stInternal). Then `prepare_lightning_infill_data()` builds generator on EXPANDED surfaces, then surfaces RESTORED (expanded set only feeds generator).
+
+Then `generate_sparse_infill_polylines_for_anchoring(m_lightning_generator)` — lightning anchor lines = `getTreesForLayer(layer_id).convertToLines`. sparse_anchoring `Lightning` arm must use generator lines.
+
+Ares mapping gap: upstream expands `LayerRegion::fill_surfaces` (= ares `record.fill_surfaces` CandidateLayer records) but Generator reads `post_regions` `RegionLayer.surfaces` — TWO stores. Generator must be built on expanded surfaces inside bridge_over_infill and carried to fill_entities (Rc/non-Send) — deep plumbing.
+
+REMAINING for lightning emit:
+1. Remove `has_lightning_infill → unsupported` gate (transaction.rs:71).
+2. Port two-phase expansion (needs_expansion gate + expand stInternal→stInternalSolid near candidates) targeting the surfaces the Generator reads.
+3. Build Generator on expanded surfaces in bridge_over_infill; carry to fill_entities.
+4. sparse_anchoring `Lightning` arm uses generator convert_to_lines.
