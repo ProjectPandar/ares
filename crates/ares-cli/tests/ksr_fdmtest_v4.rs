@@ -87,11 +87,23 @@ fn generated_at(bytes: &[u8]) -> DateTime {
         .unwrap();
     line.replace(" at ", " ").parse().unwrap()
 }
+/// Map each distinct `id:N` to its first-appearance ordinal rather than a
+/// single `<ID>` — preserves the name↔id identity relationship (a name that
+/// splits across two ids, or two names sharing an id, still fails the
+/// comparison) while tolerating the non-deterministic absolute seed.
 fn normalize_object_ids(bytes: &[u8]) -> Vec<u8> {
     let text = String::from_utf8_lossy(bytes);
-    let object_id = regex::Regex::new(r"(; (?:stop )?printing object .+ id:)\d+( copy )").unwrap();
+    let object_id =
+        regex::Regex::new(r"(; (?:stop )?printing object .+ id:)(\d+)( copy )").unwrap();
+    let mut rank_of_id: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
     object_id
-        .replace_all(&text, "${1}<ID>${2}")
+        .replace_all(&text, |caps: &regex::Captures| {
+            let rank = {
+                let next = rank_of_id.len();
+                *rank_of_id.entry(caps[2].to_owned()).or_insert(next)
+            };
+            format!("{}<ID{rank}>{}", &caps[1], &caps[3])
+        })
         .into_owned()
         .into_bytes()
 }
