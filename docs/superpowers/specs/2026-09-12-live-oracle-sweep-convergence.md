@@ -6560,3 +6560,18 @@ the narrow/split and raft residuals (all reduce to Clipper1 offset / contour
 point ints differing by a few units on specific geometries). The wipe emit
 itself is verified byte-faithful. Fix requires offset-contour int parity —
 a milestone-scale PerimeterGenerator investigation, not a wipe bug.
+
+### cxcix. option-coverage LIVE re-run: the real gap is 16 unported infill patterns
+Fresh `ARES_PARITY_OPTIONS=1` run (Ender-3 cube) — the stored summary was stale:
+- `wall_generator=arachne`: now **PASSES** (arachne port complete for cube).
+- `sparse_infill_pattern`: PASS = 3dhoneycomb/cubic/gyroid/triangles;
+  DIVERGENT = adaptivecubic/crosshatch/grid/rectilinear/supportcubic/zigzag;
+  ARES_ERROR (unported) = alignedrectilinear, archimedeanchords, concentric,
+  crosszag, hilbertcurve, honeycomb, lateral-honeycomb, lateral-lattice,
+  lightning, line, lockedzag, octagramspiral, quartercubic, tpmsd, tpmsfk,
+  tri-hexagon — the 16-pattern unported gap (todo #8 / fill-pattern milestone).
+- `top_surface_pattern`: monotonic+octagramspiral DIVERGENT; rest PASS.
+The dominant remaining coverage gap is the 16 unported `sparse_infill_pattern`
+values (Fill* port milestone) plus the DIVERGENT ported patterns that reduce
+to the perimeter/offset int-quantization residual. `raft_layers` max/seeded =
+same perimeter-int family (wipe-path tail). wall_generator now resolved.
