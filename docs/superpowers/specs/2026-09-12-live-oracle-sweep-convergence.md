@@ -6764,3 +6764,19 @@ connect_infill/perimeter-int/estimator residual, not direction.
 - STILL UNPORTED: FillTpmsFK (needs marchsq MarchingSquares.hpp ~652 LOC +
   FK scalar field), FillLightning (needs FillLightning/Generator.cpp tree).
   Both gated out — emit + anchor whitelist pending those ports.
+
+## §ccx sparse_anchoring wiring + filament_crossection order (b181a1ab/a3070f22/30543343)
+- Ungating TriHexagon/QuarterCubic/LateralLattice/LateralHoneycomb/TpmsD hit
+  sparse_anchoring unreachable! — upstream anchors ALL patterns via
+  fill_surface (Fill.cpp:1394). Wired anchoring arms for all five; emit+anchor
+  share fill::multiline sweep builders (stars_sweeps/quartercubic_sweeps/
+  lateral_lattice_sweeps/lateral_honeycomb_sweeps). unreachable now only
+  Lightning/TpmsFk (still unported, not whitelisted).
+- filament_crossection order fixed at BOTH call sites: options/build.rs emit
+  path + extrusions/options/accessors.rs query path — diameter*diameter*0.25*PI
+  (Extruder.hpp:61) not PI*d²*0.25. f64 association order = the E±1e-5
+  residual candidate. for_length e_per_mm order already matches upstream
+  (mm3*pratio*fratio*role*first; all role/print ratios =1 in default profile
+  so ordering collapses to e_per_mm3*mm3*fratio/fratio — residual is
+  filament_area or mm3_per_mm/Flow precision).
+- sweep tally: all ported patterns emit (ok=1); only lightning ok=0 (gated).
