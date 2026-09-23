@@ -5561,3 +5561,18 @@ for crosshatch — upstream's `connect_infill` may DELEGATE to
 `connect_infill`/`FillRectilinear` has an `ipSupportBase`/support-base branch
 that calls `connect_base_support` with `line_width`-derived spacing — the
 `infill=3` regions are the object sparse infill on small sub-regions.
+
+### cxxxii. RESOLUTION — the 0.407 calls are OBJECT ipSupportBase infill
+`connect_base_support` (only caller FillRectilinear.cpp:3623 `FillSupportBase`)
+with `spacing=0.407`=`line_width`(0.45). `FillSupportBase`=`ipSupportBase`. The
+39 `infill=3` calls = the OBJECT's sparse infill on `ipSupportBase`-pattern
+surfaces — `sparse_infill_pattern=crosshatch` BUT the object's
+bottom/bridge-over-support sub-regions use `ipSupportBase` fill (`FillSupportBase`)
+with `filler->spacing = line_width`-derived spacing (the sparse_infill `line_width`
+0.45). ares routes ALL object sparse infill through `connect_infill` (crosshatch);
+upstream routes `ipSupportBase`-pattern object surfaces through `connect_base_support`.
+FIX: ares's object infill must select `connect_base_support` when the surface's
+`fill_type` resolves to `ipSupportBase` (e.g. sparse infill over raft/support
+interface uses `ipSupportBase` with `line_width` spacing). This is an OBJECT
+infill fill-type routing fix, not a raft fix — the `infill=3` regions are the
+object's small sparse-infill islands using `ipSupportBase`.
