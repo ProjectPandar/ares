@@ -6032,3 +6032,13 @@ spacing(first_layer)`. RESIDUAL: the `G1 E` emit `flow` for the skirt has
 `skirt_flow.spacing`(0.377). The `flow` construction on the emit path multiplies
 `line_width`-spacing and `first_layer`-spacing — locate this `flow`/`spacing`
 construction (likely `Flow::with_spacing`/`mm3_per_mm` overridden on the E path).
+
+### clxviii. TURN 8+ — case-59tGO2 diagnosis complete, probe-blocked
+Both `case-59tGO2` residuals are `line_width`-fallback bugs in the emit path:
+1. `connect_base_support` `spacing=0.407` (39 `infill=3` raft-base blobs) —
+   `filler->spacing`=`line_width`(0.45) on an unprobed surface.
+2. Skirt `E` `flow.spacing`=`spacing(line_width)·spacing(first_layer)`=0.1536
+   (`mm3_per_mm`=0.0307) — the `G1 E` emit `flow` is a `spacing`-product
+   construction, not `skirt_flow`(spacing=0.377).
+Both need emit-path `flow`/`spacing`/`filler` identity probes. Baseline 3609
+held through all reverts; tests green; ledger committed through `bacb0f88`.
