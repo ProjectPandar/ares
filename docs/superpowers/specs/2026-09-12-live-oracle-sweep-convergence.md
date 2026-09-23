@@ -6061,3 +6061,15 @@ support/first-layer width:
 
 Both need emit-path `flow`/`filler`/`spacing` IDENTITY probes. Baseline 3609
 held; tests green; all committed through `66c22b8b`.
+
+### clxx. Skirt E flow = {width:0.42, spacing:0.407, height:0.0754} — height is mm3
+`flow` for the skirt `E`: `width`=`first_layer_width`(0.42), `spacing`=
+`spacing(line_width=0.45)`(0.407), `height`=`mm3_per_mm(first_layer)`(0.0754).
+`mm3_per_mm = spacing·height` = `0.407·0.0754` = `0.0307`. The `height` field
+holds `mm3_per_mm(first_layer)` (0.0754), NOT `first_layer_height`(0.2); the
+`spacing` field holds `spacing(line_width)` (0.407), NOT `spacing(first_layer)`
+(0.377). The emit-path `flow` has `spacing`/`height` both wrong — `spacing`=
+line_width-spacing, `height`=first_layer-mm3. RESIDUAL: the skirt `E` `flow` is
+`{width:0.42, spacing:spacing(line_width), height:mm3_per_mm(first_layer)}` —
+the emit path constructs a `flow` with `spacing`/`height` from `line_width`/
+`first_layer` mm3 instead of `skirt_flow`'s `spacing`(0.377)/`height`(0.2).
