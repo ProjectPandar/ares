@@ -6408,3 +6408,18 @@ NOTE: the parity TEST harness (`orca_parity.rs::compare_exported_for`) already
 re-slices the oracle up to `ARES_ORCA_RUNS`=3 on divergence — the suite
 correctly treats oracle non-determinism; only `/tmp` sweep artifacts were
 stale-snapshot comparisons. Test methodology is sound.
+
+### clxxxix. wipe-E residual narrowed to wipe-path length, NOT wipe_speed
+`case-59tGO2` wipe-E `±1–2e-5` residual narrowed: emitted wipe `F` values match
+oracle exactly (`F3000`/`F2100`/`F2400`) → `wipe_speed` is correct, so
+`during = retract_fr/60·retraction_distance/wipe_speed` differs only via
+`retraction_distance` (the clipped wipe-path length). Oracle `Wipe::wipe`
+(`GCode.cpp:441-460`): `wipe_dist=scale_(wipe_distance)`, `clip_end(length−
+wipe_dist)`, `dE=length·(segment_length/wipe_dist)`. Ares ports all of it
+(`wipe_path.rs`,`travel.rs:230`). The residual is the clipped wipe-path LENGTH
+(`total_length`/`retraction_distance`) differing by a sub-lattice-unit — the
+`clip_end` truncation factor `clip/lsqr.sqrt()` (`Polyline.cpp:52-72`) or the
+scaled-int point rounding feeding `scaled_distance`. Deterministic; needs an
+oracle `Wipe::wipe` probe dumping `wipe_dist`/`length`/per-segment
+`segment_length`+`dE` to localize which input drifts. (The `F3381/F2963`,
+`F1982/F1913` diffs are the separate cooling-feedrate/narrow-fragment residual.)
