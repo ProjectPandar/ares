@@ -5890,3 +5890,17 @@ bug — it's an `E`-emission scaling by `spacing(line_width)`. RESIDUAL: skirt
 extrusion multiplier ares doesn't apply (ares emits `mm3_per_mm·length`
 directly). Likely a `flow_ratio`/`extrusion_ratio` applied in the oracle's
 skirt `E` emit that ares misses.
+
+### clvii. Skirt E uses flow.spacing=0.1536 (width=0.196), NOT skirt_flow(0.377/0.42)
+`ORCA_SF` confirms `skirt_flow.mm3_per_mm`=0.0754 (w=0.42,sp=0.377,h=0.2).
+But emitted `E`=0.0456 → effective `mm3_per_mm`=0.0307 = `spacing·height` with
+`spacing=0.1536` (`width=0.196`). The emitted `E` does NOT use `skirt_flow` —
+it uses a flow with `spacing=0.1536`/`width=0.196`. `0.1536` =
+`spacing(line_width=0.45)·spacing(0.42)` = `0.407·0.377` — a spacing product,
+OR `width=0.196` = `line_width·0.435`/`nozzle·0.49`. The skirt extrusion `E`
+is emitted with a `line_width`-derived `flow` (spacing 0.1536), not
+`skirt_flow` — ares emits `skirt_flow.mm3_per_mm·length` (0.0754·len) but
+oracle emits `mm3_per_mm·length` for a `line_width`-flow (0.0307·len).
+RESIDUAL: the skirt `E` `mm3_per_mm` source is a `line_width`-derived flow
+(spacing 0.1536, width 0.196), not `skirt_flow` — the `G1 E` emit path uses a
+different `flow`/`spacing` than `Print::skirt_flow` for the skirt.
