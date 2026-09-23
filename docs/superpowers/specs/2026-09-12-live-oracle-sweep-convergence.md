@@ -6020,3 +6020,15 @@ FINAL STATE after 7+ turns of probing:
 Both are `line_width`-fallback/`spacing`-crossing bugs in the raft/skirt emit
 paths. Baseline 3609 held through all reverts; tests green; all probes/ledger
 committed through `c2aa55f0`. NEXT: emit-path `flow`/`spacing`/`filler` probes.
+
+### clxvii. Skirt E flow.spacing = spacing(line_width)·spacing(first_layer) — spacing product
+`flow.spacing=0.1536` = `spacing(0.45)·spacing(0.42)` = `(0.45−0.043)(0.42−0.043)`
+= `0.407·0.377` — a literal product of two `rounded_rectangle_extrusion_spacing`
+values. `flow.width=spacing+h·rr`=`0.1536+0.043`=`0.196`. `mm3_per_mm`=
+`spacing·height`=`0.1536·0.2`=`0.0307`. The emit-path `flow` for the skirt `E`
+is `{width:0.196, spacing:0.1536, height:0.2}` — `spacing`=`spacing(line_width)·
+spacing(first_layer)`. RESIDUAL: the `G1 E` emit `flow` for the skirt has
+`spacing`=`spacing(line_width)·spacing(first_layer)` — a spacing product, not
+`skirt_flow.spacing`(0.377). The `flow` construction on the emit path multiplies
+`line_width`-spacing and `first_layer`-spacing — locate this `flow`/`spacing`
+construction (likely `Flow::with_spacing`/`mm3_per_mm` overridden on the E path).
