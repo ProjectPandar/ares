@@ -275,15 +275,21 @@ impl Node {
                 let mut connect_branch =
                     Self::realign(&child, outlines, outline_locator, rerooted_parts);
                 let child_p = child.borrow().p;
-                if connect_branch
-                    && line_segment_polygons_intersection(
+                let crossing = connect_branch.then(|| {
+                    line_segment_polygons_intersection(
                         child_p,
                         p,
                         outline_locator,
                         outline_locator.resolution() * 2,
                     )
-                    .is_some()
-                {
+                }).flatten();
+                if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+                    eprintln!(
+                        "REALIGN root=({},{}) child=({},{}) cb={} cross={:?}",
+                        p.x(), p.y(), child_p.x(), child_p.y(), connect_branch, crossing.map(|q|(q.x(),q.y()))
+                    );
+                }
+                if connect_branch && crossing.is_some() {
                     {
                         let mut c = child.borrow_mut();
                         c.last_grounding_location = None;
