@@ -6086,3 +6086,20 @@ path assigns `spacing`=line_width-spacing and `height`=first_layer-mm3 instead
 of `skirt_flow.spacing`(0.377)/`height`(0.2). RESIDUAL: locate the skirt `E`
 `flow` construction — it's a `flow` built with `spacing`=spacing(line_width)
 and `height`=mm3_per_mm(first_layer), not `skirt_flow`.
+
+### clxxii. case-59tGO2 — TURN 10+ FINAL: both residuals are line_width-fallback emit bugs
+`case-59tGO2` residuals, exhaustively probed across 10 turns:
+1. `connect_base_support` `spacing=0.407` (39 `infill=3` raft-base blobs) —
+   `FillSupportBase`/`ipSupportBase` `filler->spacing`=`line_width`(0.45) via an
+   unprobed path. FBS showed `this->spacing`=0.337/0.377 for nl=27/37/39/41;
+   the nl=3 calls come from a `filler`/`spacing`=`line_width` source outside
+   those sites.
+2. Skirt `E` `mm3_per_mm`=0.0307 — emit-path `flow`=`{width:0.42, spacing:
+   spacing(line_width)=0.407, height:mm3_per_mm(first_layer)=0.0754}` —
+   `spacing`/`height` crossed (spacing=line_width-spacing, height=first_layer
+   -mm3). `skirt_flow` itself correct (ORCA_SF: mm3=0.0754).
+Both are `line_width`-fallback bugs in the emit paths — `line_width`(0.45)
+substituted where `support_line_width`(0.38)/`first_layer`(0.42/0.2) expected.
+Baseline 3609 held through all reverts; tests green; committed through
+`99b5fd81`. NEXT: emit-path `flow`/`spacing`/`filler` identity probes (which
+`Flow`/`filler` object carries the `line_width`-derived `spacing`).
