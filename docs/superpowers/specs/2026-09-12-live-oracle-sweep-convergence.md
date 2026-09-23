@@ -5626,3 +5626,18 @@ via a path whose `FillSupportBase::fill_surface` `this->spacing`=0.407
 those surfaces (different `params.pattern`/early return). RESIDUAL: needs FBS
 with `params.pattern`+`this` pointer to identify which `ipSupportBase` filler
 gets `spacing=0.407`=`line_width`.
+
+### cxxxvi. spacing=0.407 — true impasse on the spacing param value
+`connect_base_support`'s `spacing` param is `this->spacing` from
+`FillSupportBase::fill_surface` (:3623), the ONLY caller. ORCA_FBS shows
+`this->spacing` ∈ {0.337,0.377} for nl=27/37/39/41 — the nl=3 calls are absent
+from FBS but present in CIN (connect_base_support). `spacing(0.45,0.2)=0.407`
+=`line_width`. The `nl=3` `FillSupportBase` surfaces have `this->spacing=0.407`
+=`line_width`-spacing — a `filler->spacing` set to `line_width` on a path that
+doesn't reach the probed `filler->spacing = flow.spacing()` sites (:1476/:1499/
+:1505/:1722/:1750/:1772/:1787). Likely an `ipSupportBase` filler that retains a
+`line_width`-defaulted `Fill::spacing`, OR `filler->spacing` assigned via a
+`filler_base`/`filler_raft_contact` for the blob path. ares uses 0.337/0.377 →
+~600-line raft-base divergence. RESIDUAL BLOCKER: needs `filler->spacing`
+identity — a probe printing `this`/`params.pattern`/surface z inside
+`connect_base_support` to tag the 0.407 filler instance.
