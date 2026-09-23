@@ -5500,3 +5500,24 @@ RESIDUAL: ~600-line divergence on the raft base blob connects. The fix is a
 raft-base fill — needs `Fill::spacing` init or a `filler->spacing=line_width`
 site upstream (possibly `filler_support`/`filler_first_layer` constructor
 default or `base_fill_pattern` ipSupportBase path).
+
+### cxxix. spacing=0.407 = line_width — all named flows exhausted
+`spacing(0.45,0.2)=0.407`=`line_width`. Every named support flow probed:
+`first_layer_flow`=0.377, `support_material_flow`/`support_material_interface_
+flow`/`raft_interface_flow`=0.337 (ORCA_FLOW + FSUP + IF confirm). The
+`infill=3 spacing=0.407` calls come FIRST (lowest z = raft base/flange blobs).
+`filler_support`=`new_from_type(base_fill_pattern)` — `support_base_pattern=
+rectilinear` → `ipRectilinear` → `connect_infill` (NOT connect_base_support).
+`filler_interface`=`new_from_type(raft_interface_fill_pattern)` → `ipSupportBase`
+(density 0.6276<0.95) → `FillSupportBase` → `connect_base_support` with
+`filler_interface->spacing`=0.337. So the 0.407 calls are `FillSupportBase`
+with `spacing=0.407`=`line_width` — the raft base `filler_support` when
+`base_fill_pattern=ipSupportBase` (`raft_interface_density<0.95` path) —
+`base_fill_pattern` for `support_density>0.95` is `ipRectilinear`, but for the
+FLANGE the filler is `filler_first_layer`/`filler_support` with `spacing`=
+`first_layer_flow`(0.377)/`support_material_flow`(0.337). The 0.407 `spacing`
+must come from `filler->spacing = flow.spacing()` where `flow`=`line_width`
+flow — the `filler_first_layer` (:1787) on the flange, IF `first_layer_flow`
+resolved to `line_width`. `first_layer_flow`=0.377 (FLOW probe) — so the
+0.407 calls are a DIFFERENT filler. RESIDUAL: `ipSupportBase` `filler->spacing`
+=`line_width` on a raft-region ares doesn't reach with 0.407.
