@@ -14,7 +14,10 @@ use crate::{
 const LAYER: usize = 1;
 
 #[test]
-fn task22o76_non_line_pattern_group_emits_no_fallback() {
+fn task22o76_line_pattern_group_emits_entities() {
+    // `Line` infill is implemented (`FillBase.cpp::Fill::new_from_type` →
+    // `generate.rs` `Line` dispatch arm): an internal surface produces
+    // fill entities, not an empty fallback.
     let mut graph = graph();
     record_mut(&mut graph, LAYER).fill_surfaces = vec![surface(
         RegionSurfaceKind::Internal,
@@ -23,10 +26,8 @@ fn task22o76_non_line_pattern_group_emits_no_fallback() {
     )];
     options_mut(&mut graph, LAYER).sparse_infill_pattern = ProcessInfillPattern::Line;
 
-    assert_eq!(
-        generate_layer(external(&graph), 0, LAYER, None).unwrap(),
-        crate::project_slice::fill_entities::LayerFillEntities::default()
-    );
+    let generated = generate_layer(external(&graph), 0, LAYER, None).unwrap();
+    assert!(!generated.collections.is_empty());
     combine_infill::dispose(graph);
 }
 

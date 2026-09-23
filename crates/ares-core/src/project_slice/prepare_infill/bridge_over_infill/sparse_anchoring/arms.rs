@@ -50,6 +50,65 @@ pub(super) fn dispatch(
             dont_sort: false,
         };
     match fill.params.pattern {
+        SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
+            let params = CrossHatchFillParams {
+                z,
+                spacing: fill.params.spacing,
+                overlap: 0.0,
+                angle: fill.params.angle,
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                multiline: fill.params.multiline,
+                anchor_length: fill.params.anchor_length,
+                anchor_length_max: fill.params.anchor_length_max,
+                dont_sort: false,
+            };
+            for expolygon in fill.expolygons {
+                result.extend(
+                    fill_cross_hatch(&expolygon, params, traversal.scale)
+                        .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::Grid) => {
+            let params = MultilineFillParams {
+                spacing: fill.params.spacing,
+                overlap: 0.0,
+                // `Fill::_infill_direction` (FillBase.cpp:329) adds π/2
+                // to the frame angle once per fill call.
+                angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+                reference: object_reference,
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                multiline: fill.params.multiline,
+                anchor_length: fill.params.anchor_length,
+                anchor_length_max: fill.params.anchor_length_max,
+                dont_sort: false,
+            };
+            for expolygon in fill.expolygons {
+                result.extend(
+                    fill_multiline_surface(&expolygon, params, &GRID_SWEEPS, traversal.scale)
+                        .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::Triangles) => {
+            let params = MultilineFillParams {
+                spacing: fill.params.spacing,
+                overlap: 0.0,
+                angle: fill.params.angle + std::f32::consts::FRAC_PI_2,
+                reference: object_reference,
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                multiline: fill.params.multiline,
+                anchor_length: fill.params.anchor_length,
+                anchor_length_max: fill.params.anchor_length_max,
+                dont_sort: false,
+            };
+            for expolygon in fill.expolygons {
+                result.extend(
+                    fill_multiline_surface(&expolygon, params, &TRIANGLE_SWEEPS, traversal.scale)
+                        .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Cubic) => {
             let shift = (std::f64::consts::FRAC_1_SQRT_2 * z) as f32;
             let sweeps = [
