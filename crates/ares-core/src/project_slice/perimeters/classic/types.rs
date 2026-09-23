@@ -32,6 +32,8 @@ pub(in crate::project_slice) struct ClassicPreludeRecord {
     pub(in crate::project_slice) external_minimum_spacing: Coord,
     pub(in crate::project_slice) smaller_external_minimum_spacing: Coord,
     pub(in crate::project_slice) has_gap_fill: bool,
+    pub(in crate::project_slice) detect_thin_wall: bool,
+    pub(in crate::project_slice) ext_perimeter_flow: Flow,
     pub(in crate::project_slice) smaller_external_flow: Flow,
     pub(in crate::project_slice) lower_slices_polygons: Vec<Polygon>,
     pub(in crate::project_slice) lower_polygons_series: Vec<Vec<Polygon>>,

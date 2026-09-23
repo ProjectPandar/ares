@@ -100,6 +100,8 @@ fn prepare_record(
         external_minimum_spacing,
         smaller_external_minimum_spacing,
         has_gap_fill: config.gap_infill_speed > 0.0,
+        detect_thin_wall: config.detect_thin_wall,
+        ext_perimeter_flow: record.ext_perimeter_flow,
         smaller_external_flow,
         lower_slices_polygons,
         lower_polygons_series,

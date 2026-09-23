@@ -7,6 +7,7 @@ pub(super) struct ValidatedClassicConfig {
     pub(super) wall_loops: i32,
     pub(super) precise_outer_wall: bool,
     pub(super) detect_overhang_wall: bool,
+    pub(super) detect_thin_wall: bool,
     pub(super) only_one_wall_top: bool,
     pub(super) gap_infill_speed: f64,
     pub(super) surface_simplify_resolution: f64,
@@ -100,6 +101,12 @@ fn validate_record(
         nozzle_diameters,
         scale,
     } = context;
+    // `detect_thin_wall` extraction is implemented at the `i == 0` onion step
+    // (`first_outer::thin_wall_offsets`, PerimeterGenerator.cpp:1251-1266) but
+    // the `thin_walls` -> `traverse_loops` `variable_width` materialization
+    // plumbing (:231) is not yet threaded through the onion/traversal/raw/
+    // chained-loop records — keep rejecting until that lands so a thin-wall
+    // surface can't silently drop its extracted walls.
     if region.detect_thin_wall.0
         && !thin_wall_is_provably_inactive(object, record, region, nozzle_diameters, scale)
     {
@@ -160,6 +167,7 @@ fn validate_record(
         precise_outer_wall: region.precise_outer_wall.0
             && region.wall_sequence == crate::ProcessWallSequence::InnerOuter,
         detect_overhang_wall: region.detect_overhang_wall.0,
+        detect_thin_wall: region.detect_thin_wall.0,
         only_one_wall_top: region.only_one_wall_top.0,
         gap_infill_speed: region.gap_infill_speed.0,
         surface_simplify_resolution: simplify_resolution,
