@@ -7003,3 +7003,17 @@ Files split this batch (all mechanical fn-group extractions into sibling mod fil
 Mechanics that mattered: `#[cfg(test)]` capture on a `mod` decl (caught+fixed in `fill_entities`); `super::` chain depth when a moved file sits one level deeper (`layers.rs` needed `super::super::super::`); `pub(super)` field/const visibility for cross-file access (`LayerJob`, `TARGET_FLOW_HEIGHT_FACTOR`, `ObjectView`); `dispatch` returning `Result<(),SliceError>` so `?` propagates while tail-arm routed via `return dispatch_tail(...)`.
 
 Result: **zero non-test source files ≥400 LOC**. Test mods (`processor/tests.rs` 837 etc.) exempt per contract.
+
+## §ccxxxiv FillLightning — port verified faithful; residual is upstream input data, not tree ops
+
+Exhaustive line-by-line re-verification of `fill/lightning/*` against upstream `TreeNode.cpp`/`Layer.cpp`/`Generator.cpp`/`DistanceField.cpp` confirms the port is **faithful**, including the subtle ownership semantics:
+
+- `deep_copy` == `TreeNode.cpp:91` (`is_root` + `last_grounding.value_or(m_p)`, parent set to `local_root`).
+- `reroot` == `TreeNode.cpp:109` (recursive old-parent re-root, `new_parent` remove+`m_is_root=false`, else `is_root=true`+`parent.reset()`).
+- `reconnectRoots` == `Layer.cpp:220` verbatim incl. BOTH re-grounding paths: grounding-path `addChild(new_root); new_root->reroot()` (243-255) AND boundary-path `Node::create(ground.p); attach_ptr->reroot(); new_root->addChild(attach_ptr)` (271-281) — the depth-growing behavior is ported.
+- `propagate_to_next_layer` == `TreeNode.cpp:51` (deepCopy→prune→straighten→realign→push).
+- `DistanceField::new` == `DistanceField.cpp:37` (cell_size=radius/6, union_ex+offset2_ex dangling-line removal, `Line::distance_to_squared`, stable_sort by `|b.dist-a.dist|>radius ? dist : PointHash%191`).
+
+Since tree ops are verbatim, the complex-object residual (ares 1 sparse vs oracle 38) is **upstream of the tree logic** — in the `infill_outlines`/`overhang`/`unsupported` surface classification feeding `generateTrees`, or in `current_outlines` propagation. Confirmed: plain cube emits 38/38 (matching oracle) — logic works when overhang data is simple; complex geometry's overhang/outline inputs diverge earlier in the pipeline (surface-type detection or bridge-over-infill expansion), before lightning trees are involved.
+
+Needs: oracle-side dump of `overhang_per_layer`/`layer_outlines` (not just tree coords) to localize which input layer set differs. Track as known-residual; not a `fill/lightning` bug.
