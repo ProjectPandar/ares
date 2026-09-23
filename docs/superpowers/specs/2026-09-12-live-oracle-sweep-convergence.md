@@ -5791,3 +5791,16 @@ makes the raft-base/skirt `filler->spacing`/`flow.width`/`height` use
 `line_width`(0.45) — but applying it to `spec.spacing` broke `line_spacing`
 (density-scaled). The `mm3_per_mm`/`spacing`/`line_spacing` triad needs
 separate width sources per upstream's `filler->spacing` vs `flow` split.
+
+### cxlix. Skirt mm3_per_mm height = 0.076 = raft flange raft_layer.height
+`mm3_per_mm=0.0307` for the skirt → `height·(0.42−height·0.2146)=0.0307` →
+`height=0.076` (w=0.42). ares uses `layer.height_mm`=`first_print_layer_height`
+(0.2) → mm3=0.0754. The skirt is emitted on the raft FLANGE layer whose
+`raft_layer.height`=0.076 — the raft first-layer height. ares's raft grid sets
+the flange `height=first_print_layer_height`(0.2) — but the oracle's raft
+flange `raft_layer.height`=0.076 (the raft compresses the first layer: the
+flange prints at `first_print_layer_height` Z but with a reduced height, the
+`raft`-specific first-layer height). FIX: the skirt/`layer-0` `height_mm` for a
+raft should be the raft flange `raft_layer.height` (0.076), not
+`first_print_layer_height` — `generate_raft_base` sets the flange `height` to
+a raft-specific value ares doesn't replicate.
