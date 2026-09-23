@@ -21,7 +21,7 @@ const GSIZE_F: f64 = 0.40;
 const RSIZE_F: f64 = 0.004;
 /// `SPARSE_INFILL_RESOLUTION` (libslic3r.h:78) — 0.04mm; `SCALED_*` divides by
 /// `SCALING_FACTOR` at use-site.
-const SPARSE_INFILL_RESOLUTION: f64 = 0.04;
+pub(super) const SPARSE_INFILL_RESOLUTION: f64 = 0.04;
 
 pub(crate) struct TpmsFKFillParams {
     pub(crate) spacing: f64,

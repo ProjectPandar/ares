@@ -29,6 +29,12 @@ pub(crate) struct GyroidFillParams {
     pub(crate) angle: f32,
     pub(crate) density: f32,
     pub(crate) multiline: i32,
+    /// `params.layer_height` (FillGyroid.cpp:319) — layer thickness for the
+    /// `gyroid_optimized` omega factor.
+    pub(crate) layer_height: f32,
+    /// `params.gyroid_optimized` — selects the marching-squares implicit-field
+    /// path over the parametric `make_gyroid_waves` path.
+    pub(crate) gyroid_optimized: bool,
     pub(crate) anchor_length: f32,
     pub(crate) anchor_length_max: f32,
     pub(crate) dont_sort: bool,
@@ -121,14 +127,46 @@ fn fill_component(
     // wave extent is floor(size/distance) + 1, not the float-ceil result.
     let width = ((maximum.x() - minimum.x()) / distance) as f64 + 1.0;
     let height = ((maximum.y() - minimum.y()) / distance) as f64 + 1.0;
-    let mut polylines = make_gyroid_waves(
-        params.z / scale.factor(),
-        density,
-        params.spacing,
-        (width, height),
-        scale,
-    )?;
-    translate(&mut polylines, minimum)?;
+    let mut polylines = if params.gyroid_optimized {
+        // `gyroid_optimized` (FillGyroid.cpp:314-333): marching-squares on the
+        // gyroid implicit field. `omega` shortens the vertical wavelength for
+        // buckling resistance; XY period stays at baseline.
+        let lh = if params.layer_height > 0.0 {
+            f64::from(params.layer_height)
+        } else {
+            params.spacing
+        };
+        let omega = super::gyroid_field::omega_factor(
+            density,
+            params.spacing * f64::from(params.multiline),
+            lh,
+        );
+        // `density_factor = max(0.001f, density * DensityAdjust / multiline)`;
+        // `period = float(2π) * spacing / density_factor`.
+        let density_factor =
+            (f64::from(params.density) * DENSITY_ADJUST / f64::from(params.multiline)).max(0.001);
+        let period =
+            (2.0_f32 * std::f32::consts::PI * params.spacing as f32 / density_factor as f32);
+        let bb = crate::geometry::BoundingBox::new(minimum, maximum);
+        let field = super::gyroid_field::GyroidField::new(
+            bb,
+            params.z / scale.factor(),
+            period,
+            omega as f32,
+            scale,
+        );
+        super::gyroid_field::get_gyroid_polylines(&field, scale)
+    } else {
+        let mut polylines = make_gyroid_waves(
+            params.z / scale.factor(),
+            density,
+            params.spacing,
+            (width, height),
+            scale,
+        )?;
+        translate(&mut polylines, minimum)?;
+        polylines
+    };
     polylines = super::multiline_offset::apply(polylines, params.multiline, params.spacing, scale)?;
 
     let (contour, holes) = rotated.clone().into_parts();

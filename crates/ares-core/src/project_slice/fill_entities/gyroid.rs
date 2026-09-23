@@ -15,11 +15,6 @@ pub(super) fn append(
     print_z: f64,
     scale: CoordinateScale,
 ) -> Result<(), SliceError> {
-    if fill.params.gyroid_optimized {
-        return Err(SliceError::UnsupportedProjectFeature(
-            "gyroid_optimized".to_owned(),
-        ));
-    }
     let params = GyroidFillParams {
         z: print_z,
         spacing: fill.params.spacing,
@@ -27,6 +22,8 @@ pub(super) fn append(
         angle: fill.params.angle,
         density: (0.01_f64 * f64::from(fill.params.density)) as f32,
         multiline: fill.params.multiline,
+        layer_height: fill.params.flow.height as f32,
+        gyroid_optimized: fill.params.gyroid_optimized,
         anchor_length: fill.params.anchor_length,
         anchor_length_max: fill.params.anchor_length_max,
         dont_sort: false,

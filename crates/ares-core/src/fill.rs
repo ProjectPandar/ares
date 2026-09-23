@@ -5,6 +5,7 @@ pub(crate) mod concentric_sparse;
 pub(crate) mod connect;
 pub(crate) mod cross_hatch;
 pub(crate) mod gyroid;
+pub(crate) mod gyroid_field;
 pub(crate) mod honeycomb;
 pub(crate) mod lightning;
 pub(crate) mod line;
