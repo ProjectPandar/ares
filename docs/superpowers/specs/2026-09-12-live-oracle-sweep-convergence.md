@@ -5667,3 +5667,14 @@ segment length. This is a `mm3_per_mm`/`flow` precision issue in the skirt
 emit, NOT the raft connect spacing. NEXT: identify the skirt `mm3_per_mm`
 (`first_layer_flow` vs `skirt`-specific flow) and its `spacing`/`width`/`height`
 — the `E.04556`/`E.04557` ulp diff is a `flow.mm3_per_mm()` width/height source.
+
+### cxxxix. Skirt mm3_per_mm ulp — E.04556 vs E.04557
+The case-59tGO2 divergence is the SKIRT (`;TYPE:Skirt ;WIDTH:0.42`), not raft.
+ares `mm3_per_mm = f64::from((height·(width − height·(1−pi/4))) as f32)` —
+the `as f32` cast + `first_layer_flow` width/height. Oracle `E.04557` vs ares
+`E.04556` — `mm3_per_mm` differs ~1e-5 (0.075416 vs ~0.07544). The skirt flow
+`width`/`height`/`spacing` source or the f32 cast precision differs — `spacing`
+`0.37708` vs oracle `0.3772` implies `width`/`height`/`first_height` ulp. This
+is a `Flow::mm3_per_mm` f32-vs-f64 or width-source issue in the skirt emit —
+NOT the raft connect spacing=0.407. RESIDUAL: identify the skirt `mm3_per_mm`
+width (first_layer_flow vs line_width) and f32 rounding — `E` differs by 1ulp.
