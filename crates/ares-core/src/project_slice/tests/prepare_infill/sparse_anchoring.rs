@@ -119,7 +119,8 @@ fn run(context: KsrRun<'_>) -> Vec<Vec<u8>> {
         .iter()
         .map(|&layer| {
             let paths =
-                generate_sparse_infill_polylines_for_anchoring(context.external, 0, layer).unwrap();
+                generate_sparse_infill_polylines_for_anchoring(context.external, 0, layer, None)
+                    .unwrap();
             serialize(layer, &paths)
         })
         .collect()

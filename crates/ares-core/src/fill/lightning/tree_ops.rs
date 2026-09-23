@@ -147,16 +147,20 @@ impl Node {
                 if dm2 <= mag2 {
                     n.p = dest;
                 } else {
-                    // move magnitude toward dest (normalized)
+                    // `m_p += ((destination - m_p).cast<double>().normalized() * magnitude)
+                    // .cast<coord_t>()` (TreeNode.cpp:260): the normalized-direction
+                    // displacement is truncated per-component, THEN added — not the
+                    // destination computed in f64 then rounded.
                     let dlen = (dm2 as f64).sqrt();
-                    n.p = Point::new(
-                        (p.x() as f64 + dm as f64 / dlen * magnitude as f64).round() as Coord,
-                        (p.y() as f64 + dn as f64 / dlen * magnitude as f64).round() as Coord,
-                    );
+                    let step_x = (dm as f64 / dlen * magnitude as f64) as Coord;
+                    let step_y = (dn as f64 / dlen * magnitude as f64) as Coord;
+                    n.p = Point::new(n.p.x() + step_x, n.p.y() + step_y);
                 }
             }
-            // remove colinear nodes
+            // remove colinear nodes — `Line::distance_to_squared(m_p, ...)` uses the
+            // LIVE `m_p` (post-move), not the pre-move `p` (TreeNode.cpp:269).
             const CLOSE_ENOUGH: i64 = 10;
+            let cur_mp = this.borrow().p;
             let child_p = this.borrow().children.first().cloned();
             if let (Some(child_p), Some(parent_node)) = (child_p, parent.clone()) {
                 let cp = child_p.borrow().p;
@@ -165,7 +169,8 @@ impl Node {
                 let e = cp.y() - pp.y();
                 let dd = (d as i64) * (d as i64) + (e as i64) * (e as i64);
                 if dd < max_remove_colinear_dist2
-                    && segment_distance_squared(p, pp, cp) < (CLOSE_ENOUGH * CLOSE_ENOUGH) as f64
+                    && segment_distance_squared(cur_mp, pp, cp)
+                        < (CLOSE_ENOUGH * CLOSE_ENOUGH) as f64
                 {
                     child_p.borrow_mut().parent = Rc::downgrade(&parent_node);
                     let mut par = parent_node.borrow_mut();
@@ -179,15 +184,21 @@ impl Node {
             }
             junction_below
         } else {
+            // `Point junction_moving_dir` — an INTEGER point accumulated from
+            // per-child truncated direction vectors (TreeNode.cpp:282-300), not an
+            // f64 vector rounded at the end.
             const WEIGHT: f64 = 1000.0;
-            // junction_moving_dir = sum of normalized dirs * weight
-            let (jx, jy) = (
-                junction_above.x() as f64 - p.x() as f64,
-                junction_above.y() as f64 - p.y() as f64,
-            );
-            let jlen = (jx * jx + jy * jy).sqrt();
-            let mut mdx = if jlen == 0.0 { 0.0 } else { jx / jlen * WEIGHT };
-            let mut mdy = if jlen == 0.0 { 0.0 } else { jy / jlen * WEIGHT };
+            let trunc_dir = |from: Point, to: Point| -> Point {
+                let dx = to.x() as f64 - from.x() as f64;
+                let dy = to.y() as f64 - from.y() as f64;
+                let len = (dx * dx + dy * dy).sqrt();
+                if len == 0.0 {
+                    Point::new(0, 0)
+                } else {
+                    Point::new((dx / len * WEIGHT) as Coord, (dy / len * WEIGHT) as Coord)
+                }
+            };
+            let mut junction_moving_dir = trunc_dir(p, junction_above);
             let mut prevent_moving = false;
             for child_p in &children {
                 let child_dist = dist(p, child_p.borrow().p);
@@ -198,15 +209,10 @@ impl Node {
                     child_dist,
                     max_remove_colinear_dist2,
                 );
-                let (bx, by) = (
-                    below.junction_loc.x() as f64 - p.x() as f64,
-                    below.junction_loc.y() as f64 - p.y() as f64,
+                junction_moving_dir = Point::new(
+                    junction_moving_dir.x() + trunc_dir(p, below.junction_loc).x(),
+                    junction_moving_dir.y() + trunc_dir(p, below.junction_loc).y(),
                 );
-                let blen = (bx * bx + by * by).sqrt();
-                if blen != 0.0 {
-                    mdx += bx / blen * WEIGHT;
-                    mdy += by / blen * WEIGHT;
-                }
                 if below.total_recti_dist < magnitude {
                     prevent_moving = true;
                 }
@@ -215,20 +221,25 @@ impl Node {
                 let n = this.borrow();
                 (!n.children.is_empty(), n.is_root)
             };
-            if (mdx != 0.0 || mdy != 0.0) && has_children && !is_root && !prevent_moving {
-                let mlen = (mdx * mdx + mdy * mdy).sqrt();
-                let (mx, my) = if mlen > junction_magnitude as f64 {
-                    (
-                        mdx * junction_magnitude as f64 / mlen,
-                        mdy * junction_magnitude as f64 / mlen,
-                    )
-                } else {
-                    (mdx, mdy)
-                };
+            if (junction_moving_dir.x() != 0 || junction_moving_dir.y() != 0)
+                && has_children
+                && !is_root
+                && !prevent_moving
+            {
+                // `coord_t(junction_moving_dir.norm())` — the integer-point norm.
+                let mlen = ((junction_moving_dir.x() as f64 * junction_moving_dir.x() as f64
+                    + junction_moving_dir.y() as f64 * junction_moving_dir.y() as f64)
+                    .sqrt()) as Coord;
+                if mlen > junction_magnitude {
+                    junction_moving_dir = Point::new(
+                        junction_moving_dir.x() * junction_magnitude / mlen,
+                        junction_moving_dir.y() * junction_magnitude / mlen,
+                    );
+                }
                 let mut n = this.borrow_mut();
                 n.p = Point::new(
-                    (p.x() as f64 + mx).round() as Coord,
-                    (p.y() as f64 + my).round() as Coord,
+                    n.p.x() + junction_moving_dir.x(),
+                    n.p.y() + junction_moving_dir.y(),
                 );
             }
             let cur_p = this.borrow().p;

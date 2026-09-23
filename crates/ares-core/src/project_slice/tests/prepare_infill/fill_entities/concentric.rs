@@ -22,7 +22,7 @@ fn configured_concentric_materializes_standard_solid_role() {
     record_mut(&mut graph, LAYER).fill_surfaces =
         vec![surface(RegionSurfaceKind::InternalSolid, shape, 0)];
 
-    let entities = generate_layer(external(&graph), 0, LAYER).unwrap();
+    let entities = generate_layer(external(&graph), 0, LAYER, None).unwrap();
 
     assert!(entities.collections.iter().any(|collection| {
         collection.entities.iter().any(|entity| {
@@ -51,7 +51,7 @@ fn task22o92_concentric_internal_stays_one_fill_collection() {
     record_mut(&mut graph, LAYER).fill_surfaces =
         vec![surface(RegionSurfaceKind::InternalSolid, shape, 0)];
 
-    let entities = generate_layer(external(&graph), 0, LAYER).unwrap();
+    let entities = generate_layer(external(&graph), 0, LAYER, None).unwrap();
 
     assert_eq!(entities.collections.len(), 1);
     assert!(entities.thin_fills.is_empty());

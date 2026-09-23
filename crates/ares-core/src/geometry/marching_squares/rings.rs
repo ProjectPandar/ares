@@ -37,11 +37,9 @@ impl<F: Fn(i64, i64) -> f32> Grid<F> {
                     break;
                 }
             }
-            // Clear residual direction bits on the current cell AND the start
-            // cell so the outer search advances past a degenerate ring instead
-            // of revisiting it (upstream relies on rings always closing).
-            self.clr_dirs(idx, Dir::from_bits(0b1111));
-            self.clr_dirs(startidx, Dir::from_bits(0b1111));
+            // Upstream does NOT clear residual direction bits on return
+            // (`MarchingSquares.hpp:567` asserts `next == none|left|up`): a
+            // second ambiguous direction is preserved for the next ring pass.
             if ring.len() > 1 {
                 rings.push(ring);
             }

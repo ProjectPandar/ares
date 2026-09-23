@@ -24,7 +24,7 @@ fn task22o76_non_line_pattern_group_emits_no_fallback() {
     options_mut(&mut graph, LAYER).sparse_infill_pattern = ProcessInfillPattern::Line;
 
     assert_eq!(
-        generate_layer(external(&graph), 0, LAYER).unwrap(),
+        generate_layer(external(&graph), 0, LAYER, None).unwrap(),
         crate::project_slice::fill_entities::LayerFillEntities::default()
     );
     combine_infill::dispose(graph);
@@ -46,7 +46,7 @@ fn implemented_sparse_groups_emit_fill_paths() {
         )];
         options_mut(&mut graph, LAYER).sparse_infill_pattern = pattern;
 
-        let generated = generate_layer(external(&graph), 0, LAYER).unwrap();
+        let generated = generate_layer(external(&graph), 0, LAYER, None).unwrap();
 
         assert!(!generated.collections.is_empty(), "{pattern:?}");
         assert!(
@@ -73,7 +73,7 @@ fn optimized_gyroid_is_rejected_until_marching_squares_is_ported() {
     options.gyroid_optimized = crate::OrcaBool(true);
 
     assert_eq!(
-        generate_layer(external(&graph), 0, LAYER),
+        generate_layer(external(&graph), 0, LAYER, None),
         Err(SliceError::UnsupportedProjectFeature(
             "gyroid_optimized".to_owned()
         ))
@@ -92,7 +92,7 @@ fn task22o76_grouping_range_error_is_atomic() {
     let before = graph_snapshot(&graph);
 
     assert_eq!(
-        generate_layer(external(&graph), 0, LAYER),
+        generate_layer(external(&graph), 0, LAYER, None),
         Err(SliceError::InvalidInput(
             "fill-grouping polygon coordinate is outside the supported Clipper range".to_owned()
         ))

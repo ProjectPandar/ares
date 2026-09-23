@@ -137,6 +137,8 @@ fn task22o54_production_composition_selects_region_zero_o48_flow() {
     let object = BridgeCandidateObject {
         has_lightning_infill: false,
         surfaces_by_layer,
+        lightning_expanded_surfaces: Default::default(),
+        lightning_generator: None,
     };
     let planned = [planned(0, 1.0), planned(1, 1.5)];
     let before = object
@@ -185,6 +187,8 @@ fn task22o54_production_composition_preserves_flow_and_geometry_errors() {
     let valid = BridgeCandidateObject {
         has_lightning_infill: false,
         surfaces_by_layer: BTreeMap::new(),
+        lightning_expanded_surfaces: Default::default(),
+        lightning_generator: None,
     };
     assert!(matches!(
         cluster_candidate_object(
@@ -214,6 +218,8 @@ fn task22o54_production_composition_preserves_flow_and_geometry_errors() {
     let invalid = BridgeCandidateObject {
         has_lightning_infill: false,
         surfaces_by_layer,
+        lightning_expanded_surfaces: Default::default(),
+        lightning_generator: None,
     };
     assert!(matches!(
         cluster_candidate_object(

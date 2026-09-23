@@ -33,6 +33,10 @@ pub(crate) struct Generator {
     straightening_max_distance: Coord,
     overhang_per_layer: Vec<Vec<Polygon>>,
     lightning_layers: Vec<Layer>,
+    /// The shared `rand()` stream (TreeNode.cpp:365 `rand() % m_children.size()`)
+    /// — upstream consumes the process-global C `rand()` continuously across ALL
+    /// `convertToPolylines` calls and ALL layers, not a per-layer reseed.
+    rng: std::cell::RefCell<super::glibc_rand::GlibcRand>,
 }
 
 impl Generator {
@@ -52,9 +56,11 @@ impl Generator {
     ) -> Result<Self, ClipperError> {
         let infill_extrusion_width = scale.checked_scale(infill_line_width).unwrap_or(1);
         let layer_thickness = scale.checked_scale(layer_height).unwrap_or(1) as f64;
-        // `m_infill_extrusion_width * 100 * n_multiline / sparse_infill_density`.
-        let supporting_radius =
-            infill_extrusion_width * 100 * (multiline as Coord) / (density_percent as Coord).max(1);
+        // `m_supporting_radius = coord_t(m_infill_extrusion_width) * 100 * n_multiline /
+        // sparse_infill_density` (Generator.cpp:90): the `coord_t` product promotes
+        // to `double` for the division, then truncates back — NOT integer division.
+        let supporting_radius = (infill_extrusion_width as f64 * 100.0 * f64::from(multiline)
+            / density_percent.max(f64::EPSILON)) as Coord;
         let wall_supporting_radius =
             (layer_thickness * overhang_angle_deg.to_radians().tan()) as Coord;
         let prune_length = (layer_thickness * prune_angle_deg.to_radians().tan()) as Coord;
@@ -69,6 +75,7 @@ impl Generator {
             straightening_max_distance,
             overhang_per_layer: vec![Vec::new(); n],
             lightning_layers: (0..n).map(|_| Layer::new()).collect(),
+            rng: std::cell::RefCell::new(super::glibc_rand::GlibcRand::new()),
         };
         if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
             eprintln!(
@@ -225,8 +232,11 @@ impl Generator {
         limit_to_outline: &[Polygon],
         line_overlap: Coord,
     ) -> Result<Vec<Polyline>, ClipperError> {
-        let lines =
-            self.lightning_layers[layer_id].convert_to_lines(limit_to_outline, line_overlap)?;
+        let lines = self.lightning_layers[layer_id].convert_to_lines(
+            limit_to_outline,
+            line_overlap,
+            &mut self.rng.borrow_mut(),
+        )?;
         if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
             eprintln!(
                 "C2L layer={} roots={} outline={} lines={}",

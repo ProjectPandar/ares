@@ -164,8 +164,13 @@ impl Layer {
                         within_max_dist,
                     ) {
                         let new_root = Node::create_grounded(new_root_pt, Some(new_root_pt));
-                        // reroot new_root onto root_ptr
-                        Node::reroot(&new_root, Some(root_ptr.clone()));
+                        // `root_ptr->addChild(new_root); new_root->reroot();`
+                        // (Layer.cpp:248-250): new_root becomes a CHILD of the
+                        // old root, then `reroot(nullptr)` flips the edge —
+                        // new_root ends up the ROOT with the entire old tree
+                        // beneath it (depth +1, subtree preserved).
+                        Node::add_child_node(&root_ptr, new_root.clone());
+                        Node::reroot(&new_root, None);
                         tree_node_locator.insert(
                             to_grid_point(new_root.borrow().p, current_outlines_bbox),
                             &new_root,
@@ -244,17 +249,56 @@ fn polygon_collides_with_line(from: Point, to: Point, locator: &EdgeGrid) -> boo
     hit
 }
 
-/// `Geometry::segments_intersect` — proper segment-segment crossing test.
-fn segments_intersect(p1: Point, p2: Point, q1: Point, q2: Point) -> bool {
-    let d = |o: Point, a: Point, b: Point| {
-        (a.x() - o.x()) as i128 * (b.y() - o.y()) as i128
-            - (a.y() - o.y()) as i128 * (b.x() - o.x()) as i128
+/// `Geometry::segments_intersect` (Geometry.hpp:123) — sign-product crossing
+/// test including the collinear-overlap case (a strict `>0` orientation test
+/// misses collinear overlapping segments).
+fn segments_intersect(ip1: Point, ip2: Point, jp1: Point, jp2: Point) -> bool {
+    let cross2 = |ax: i128, ay: i128, bx: i128, by: i128| ax * by - ay * bx;
+    let signs = |a1: Point, a2: Point, b1: Point, b2: Point| -> (i32, i32) {
+        let ivx = (a2.x() - a1.x()) as i128;
+        let ivy = (a2.y() - a1.y()) as i128;
+        let v1x = (b1.x() - a1.x()) as i128;
+        let v1y = (b1.y() - a1.y()) as i128;
+        let v2x = (b2.x() - a1.x()) as i128;
+        let v2y = (b2.y() - a1.y()) as i128;
+        let t1 = cross2(ivx, ivy, v1x, v1y);
+        let t2 = cross2(ivx, ivy, v2x, v2y);
+        let s = |t: i128| {
+            if t > 0 {
+                1
+            } else if t < 0 {
+                -1
+            } else {
+                0
+            }
+        };
+        (s(t1), s(t2))
     };
-    let d1 = d(q1, q2, p1);
-    let d2 = d(q1, q2, p2);
-    let d3 = d(p1, p2, q1);
-    let d4 = d(p1, p2, q2);
-    ((d1 > 0) != (d2 > 0)) && ((d3 > 0) != (d4 > 0))
+    let sign1 = signs(ip1, ip2, jp1, jp2);
+    let sign2 = signs(jp1, jp2, ip1, ip2);
+    let test1 = sign1.0 * sign1.1;
+    let test2 = sign2.0 * sign2.1;
+    if test1 <= 0 && test2 <= 0 {
+        if test1 != 0 || test2 != 0 {
+            return true; // not collinear — they intersect
+        }
+        if sign1.0 == 0 && sign1.1 == 0 {
+            // Collinear — check overlap on the dominant axis.
+            let vi_x = (ip2.x() - ip1.x()).abs();
+            let vi_y = (ip2.y() - ip1.y()).abs();
+            let axis = if vi_x > vi_y { 0 } else { 1 };
+            let coord = |p: Point| if axis == 0 { p.x() } else { p.y() };
+            let (mut i, mut j, mut k, mut l) = (coord(ip1), coord(ip2), coord(jp1), coord(jp2));
+            if i > j {
+                std::mem::swap(&mut i, &mut j);
+            }
+            if k > l {
+                std::mem::swap(&mut k, &mut l);
+            }
+            return (k >= i && k <= j) || (i >= k && i <= l);
+        }
+    }
+    false
 }
 
 /// `line_alg::distance_to_squared` with the projected `closest_point` out-arg

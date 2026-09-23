@@ -19,7 +19,9 @@ const EPSILON: f64 = 1.0e-4;
 // `ScalarField` grid/raster sizes (FillTpmsFK.cpp:22-23).
 const GSIZE_F: f64 = 0.40;
 const RSIZE_F: f64 = 0.004;
-const SCALED_SPARSE_INFILL_RESOLUTION: f64 = 0.1;
+/// `SPARSE_INFILL_RESOLUTION` (libslic3r.h:78) — 0.04mm; `SCALED_*` divides by
+/// `SCALING_FACTOR` at use-site.
+const SPARSE_INFILL_RESOLUTION: f64 = 0.04;
 
 pub(crate) struct TpmsFKFillParams {
     pub(crate) spacing: f64,
@@ -59,9 +61,12 @@ impl ScalarField {
     }
 
     fn get_scalar(&self, x: f64, y: f64) -> f32 {
-        let fx = self.freq * x as f32;
-        let fy = self.freq * y as f32;
-        let fz = self.freq * self.z as f32;
+        // `const float fx = freq * x` (FillTpmsFK.cpp:37): `freq` (float) * `x`
+        // (coordf_t=double) promotes to `double`, THEN narrows to `float` — not
+        // `freq * (x as f32)` (which rounds the coordinate before multiplying).
+        let fx = (self.freq as f64 * x) as f32;
+        let fy = (self.freq as f64 * y) as f32;
+        let fz = (self.freq as f64 * self.z) as f32;
         // Fischer–Koch S: cos(2x)sin(y)cos(z) + cos(2y)sin(z)cos(x) +
         // cos(2z)sin(x)cos(y) = 0 (FillTpmsFK.cpp:43).
         (2.0 * fx).cos() * fy.sin() * fz.cos()
@@ -100,7 +105,9 @@ pub(crate) fn fill_tpmsfk_surface(
     params: &TpmsFKFillParams,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let infill_angle = f64::from(params.angle) + CORRECTION_ANGLE;
+    // `float(this->angle + (CorrectionAngle * 2 * M_PI) / 360.)` — computed in
+    // double, then narrowed to `float` before the rotate calls (FillTpmsFK.cpp:123).
+    let infill_angle = (f64::from(params.angle) + CORRECTION_ANGLE) as f32 as f64;
     let rotate = infill_angle.abs() >= EPSILON;
     let rotated = if rotate {
         rotate_expolygon(expolygon, -infill_angle)?
@@ -108,8 +115,11 @@ pub(crate) fn fill_tpmsfk_surface(
         expolygon.clone()
     };
 
-    let density_factor = f64::from(params.density).min(0.9);
-    let vari_t = 4.18 * params.spacing * f64::from(params.multiline) / density_factor;
+    // `std::min(0.9f, params.density)` then `4.18f * spacing * params.multiline
+    // / density_factor` (FillTpmsFK.cpp:128-129): `4.18f`(f32) * `spacing`(coordf_t=
+    // f64) → f64, / `density_factor`(f32→f64) → f64, assigned to `float vari_T`.
+    let density_factor = f64::from(params.density.min(0.9));
+    let vari_t = 4.18_f32 as f64 * params.spacing * f64::from(params.multiline) / density_factor;
 
     let (mut min, mut max) = contour_bounds(rotated.contour());
     // Enlarge the box by `(multiline+1)*spacing` (FillTpmsFK.cpp:131).
@@ -142,7 +152,7 @@ pub(crate) fn fill_tpmsfk_surface(
             // `poly.simplify(tolerance)` — open Douglas-Peucker.
             Polyline::new(douglas_peucker(
                 &pts,
-                SCALED_SPARSE_INFILL_RESOLUTION / scale.factor(),
+                SPARSE_INFILL_RESOLUTION / scale.factor(),
             ))
         })
         .collect();

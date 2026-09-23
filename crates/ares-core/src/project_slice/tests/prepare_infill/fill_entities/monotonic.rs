@@ -26,8 +26,8 @@ fn task22o90_monotonic_internal_solid_becomes_ordered_flow_entities() {
     options_mut(&mut graph, LAYER).internal_solid_infill_pattern = ProcessInfillPattern::Monotonic;
     let before = graph_snapshot(&graph);
 
-    let first = generate_layer(external(&graph), 0, LAYER).unwrap();
-    let second = generate_layer(external(&graph), 0, LAYER).unwrap();
+    let first = generate_layer(external(&graph), 0, LAYER, None).unwrap();
+    let second = generate_layer(external(&graph), 0, LAYER, None).unwrap();
 
     assert_eq!(first, second);
     assert_eq!(graph_snapshot(&graph).bytes, before.bytes);
@@ -57,7 +57,7 @@ fn task22o90_monotonicline_top_surface_keeps_lines_disconnected() {
     )];
     options_mut(&mut graph, LAYER).top_surface_pattern = ProcessInfillPattern::MonotonicLine;
 
-    let entities = generate_layer(external(&graph), 0, LAYER).unwrap();
+    let entities = generate_layer(external(&graph), 0, LAYER, None).unwrap();
 
     assert_eq!(entities.collections.len(), 1);
     assert!(entities.collections[0].no_sort);

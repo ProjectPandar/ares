@@ -238,11 +238,13 @@ pub(super) fn build_lightning_generator(
         return Ok(None);
     };
     let options = lightning_region.as_parts().1;
+    // `*std::max_element(nozzle_diameters)` (Generator.cpp:72) — the MAX nozzle
+    // diameter, not the min.
     let nozzle = nozzles
         .0
         .iter()
         .map(|v| v.0)
-        .reduce(f64::min)
+        .reduce(f64::max)
         .unwrap_or(0.4);
     let sparse_width = crate::project_slice::gcode_emit::resolved_width(
         options.sparse_infill_line_width,
@@ -250,7 +252,9 @@ pub(super) fn build_lightning_generator(
         nozzle,
         1.125,
     ) as f64;
-    let layer_height = plan.layers.first().map(|l| l.height).unwrap_or(0.2);
+    // `object_config.layer_height` (Generator.cpp:77) — the configured ordinary
+    // layer height, NOT the first/planned layer height.
+    let layer_height = object_options.layer_height.0;
     let internal_outlines = |surfaces: &[crate::project_slice::region_slices::RegionSurface]| {
         surfaces
             .iter()
@@ -267,7 +271,7 @@ pub(super) fn build_lightning_generator(
             })
             .collect::<Vec<_>>()
     };
-    let layer_internal_outlines = (0..plan.layers.len())
+    let layer_internal_outlines: Vec<Vec<crate::geometry::Polygon>> = (0..plan.layers.len())
         .map(|layer_id| {
             if let Some(expanded) = candidates.lightning_expanded_surfaces.get(&layer_id) {
                 internal_outlines(expanded)
@@ -281,6 +285,20 @@ pub(super) fn build_lightning_generator(
             }
         })
         .collect();
+    if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
+        eprintln!(
+            "LIGHTNING-IN rec_some={:?} outlines={:?}",
+            horizontal
+                .records
+                .iter()
+                .map(|r| r.is_some())
+                .collect::<Vec<_>>(),
+            layer_internal_outlines
+                .iter()
+                .map(Vec::len)
+                .collect::<Vec<_>>()
+        );
+    }
     crate::fill::lightning::generator::Generator::new(
         layer_internal_outlines,
         layer_height,

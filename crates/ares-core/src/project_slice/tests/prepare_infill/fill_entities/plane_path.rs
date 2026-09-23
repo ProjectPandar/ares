@@ -40,8 +40,8 @@ fn plane_path_patterns_emit_top_bottom_and_internal_solid_entities() {
                 _ => unreachable!(),
             }
 
-            let first = generate_layer(external(&graph), 0, LAYER).unwrap();
-            let second = generate_layer(external(&graph), 0, LAYER).unwrap();
+            let first = generate_layer(external(&graph), 0, LAYER, None).unwrap();
+            let second = generate_layer(external(&graph), 0, LAYER, None).unwrap();
 
             assert_eq!(first, second, "{pattern:?} {kind:?}");
             assert_eq!(first.collections.len(), 1, "{pattern:?} {kind:?}");

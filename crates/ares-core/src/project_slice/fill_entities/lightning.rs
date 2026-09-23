@@ -37,6 +37,15 @@ pub(super) fn append(
         let lines = generator
             .convert_to_lines(layer_id, &outline, line_overlap)
             .map_err(lightning_error)?;
+        // `multiline_fill(fill_lines, params, spacing)` (FillLightning.cpp:20)
+        // — offset the lightning lines BEFORE the second `intersection_pl`.
+        let lines = crate::fill::multiline_offset::apply(
+            lines,
+            fill.params.multiline,
+            fill.params.spacing,
+            scale,
+        )
+        .map_err(lightning_error)?;
         let lines = crate::geometry::intersection_open_polylines(&lines, &outline)
             .map_err(lightning_error)?;
         let connected = connect_infill(

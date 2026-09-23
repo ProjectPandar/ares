@@ -18,8 +18,10 @@ use super::glibc_rand::GlibcRand;
 use super::tree_node::{Node, NodeSPtr};
 
 /// `locator_cell_size` — the SparseNodeGrid cell size (Layer.cpp `to_grid_point`
-/// uses `locator_cell_size()`); upstream `Generator::locator_cell_size()`.
-pub(super) const LOCATOR_CELL_SIZE: Coord = 4000; // ~4mm in coord_t
+/// uses `locator_cell_size()`); upstream `TreeNode.hpp:21`
+/// `locator_cell_size() = scaled<coord_t>(4.)` = `4 / NORMAL_SCALE` = 4,000,000
+/// at the default 1e6 coordinate scale.
+pub(super) const LOCATOR_CELL_SIZE: Coord = 4_000_000;
 
 /// `SparseNodeGrid` — grid-point → node weak refs (unordered_multimap port).
 pub(super) struct SparseNodeGrid {
@@ -159,11 +161,11 @@ impl Layer {
         &self,
         limit_to_outline: &[Polygon],
         line_overlap: Coord,
+        rng: &mut GlibcRand,
     ) -> Result<Vec<Polyline>, ClipperError> {
         if self.tree_roots.is_empty() {
             return Ok(Vec::new());
         }
-        let mut rng = GlibcRand::new();
         let mut result_lines = Vec::new();
         for tree in &self.tree_roots {
             if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
@@ -185,7 +187,7 @@ impl Layer {
                     tp.0, tp.1, ch, line_overlap
                 );
             }
-            result_lines.extend(Node::convert_to_polylines(tree, line_overlap, &mut rng));
+            result_lines.extend(Node::convert_to_polylines(tree, line_overlap, rng));
         }
         if std::env::var("ARES_DEBUG_LIGHTNING").is_ok() {
             let pts: Vec<(i64, i64)> = result_lines
