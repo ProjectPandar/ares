@@ -1,0 +1,190 @@
+//! `sparse_anchoring` per-pattern `match` dispatch, split from `mod.rs` for
+//! the <400 LOC rule. Upstream `generate_sparse_infill_polylines_for_anchoring`
+//! (`Fill.cpp:1394`) dispatches one generator per sparse infill pattern.
+
+use crate::{
+    ProcessInfillPattern, SliceError,
+    fill::{
+        cross_hatch::{CrossHatchFillParams, fill_surface as fill_cross_hatch},
+        gyroid::{GyroidFillParams, fill_surface as fill_gyroid},
+        multiline::{MultilineFillParams, Sweep, fill_surface as fill_multiline_surface},
+        rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
+        three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
+    },
+    geometry::{Point, Polyline},
+    project_slice::{
+        group_fills::{SurfaceFillPattern, group_fills},
+        prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
+        region_slices::RegionSurfaceKind,
+    },
+};
+
+use super::projected::projected_anchor_lengths;
+use super::{GRID_SWEEPS, TRIANGLE_SWEEPS};
+
+/// `match fill.params.pattern` dispatch — tail arms (TriHexagon onward).
+/// Extracted verbatim from `generate_sparse_infill_polylines_for_anchoring`.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn dispatch_tail(
+    pattern: SurfaceFillPattern,
+    fill: crate::project_slice::group_fills::SurfaceFill,
+    traversal: &crate::project_slice::perimeters::classic::traversal::types::PreparedPostClassicTraversal,
+    object_index: usize,
+    layer_index: usize,
+    z: f64,
+    object_reference: Point,
+    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
+    result: &mut Vec<Polyline>,
+) -> Result<(), SliceError> {
+    let multiline_params =
+        |params: crate::project_slice::group_fills::SurfaceFillParams| MultilineFillParams {
+            spacing: params.spacing,
+            overlap: 0.0,
+            angle: params.angle + std::f32::consts::FRAC_PI_2,
+            reference: object_reference,
+            density: (0.01_f64 * f64::from(params.density)) as f32,
+            multiline: params.multiline,
+            anchor_length: params.anchor_length,
+            anchor_length_max: params.anchor_length_max,
+            dont_sort: false,
+        };
+    match pattern {
+        SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
+            // `ipStars` — 3×60° with the third family shifted by
+            // (3/2)·spacing·multiline/density (FillRectilinear.cpp:3487).
+            let sweeps = crate::fill::multiline::stars_sweeps(
+                fill.params.spacing,
+                fill.params.multiline,
+                (0.01_f64 * f64::from(fill.params.density)) as f32,
+            );
+            for expolygon in fill.expolygons {
+                result.extend(
+                    fill_multiline_surface(
+                        &expolygon,
+                        multiline_params(fill.params),
+                        &sweeps,
+                        traversal.scale,
+                    )
+                    .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::QuarterCubic) => {
+            let sweeps = crate::fill::multiline::quartercubic_sweeps(
+                fill.params.spacing,
+                fill.params.multiline,
+                (0.01_f64 * f64::from(fill.params.density)) as f32,
+                z,
+                traversal.scale,
+            );
+            for expolygon in fill.expolygons {
+                result.extend(
+                    fill_multiline_surface(
+                        &expolygon,
+                        multiline_params(fill.params),
+                        &sweeps,
+                        traversal.scale,
+                    )
+                    .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::LateralLattice) => {
+            let sweeps = crate::fill::multiline::lateral_lattice_sweeps(
+                fill.params.lateral_lattice_angle_1,
+                fill.params.lateral_lattice_angle_2,
+                z,
+            );
+            for expolygon in fill.expolygons {
+                result.extend(
+                    fill_multiline_surface(
+                        &expolygon,
+                        multiline_params(fill.params),
+                        &sweeps,
+                        traversal.scale,
+                    )
+                    .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::LateralHoneycomb) => {
+            let (sweeps, density) = crate::fill::multiline::lateral_honeycomb_sweeps(
+                fill.params.spacing,
+                fill.params.multiline,
+                (0.01_f64 * f64::from(fill.params.density)) as f32,
+                fill.params.infill_overhang_angle,
+                z,
+            );
+            let mut params = multiline_params(fill.params);
+            params.density = density;
+            for expolygon in fill.expolygons {
+                result.extend(
+                    fill_multiline_surface(&expolygon, params, &sweeps, traversal.scale)
+                        .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsD) => {
+            let params = crate::fill::tpms_d::TpmsDFillParams {
+                spacing: fill.params.spacing,
+                overlap: 0.0,
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                angle: fill.params.angle,
+                layer_z: z,
+                multiline: fill.params.multiline,
+                anchor_length: fill.params.anchor_length,
+                anchor_length_max: fill.params.anchor_length_max,
+                dont_sort: false,
+            };
+            for expolygon in fill.expolygons {
+                result.extend(
+                    crate::fill::tpms_d::fill_tpmsd_surface(&expolygon, &params, traversal.scale)
+                        .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::TpmsFk) => {
+            let params = crate::fill::tpms_fk::TpmsFKFillParams {
+                spacing: fill.params.spacing,
+                overlap: 0.0,
+                density: (0.01_f64 * f64::from(fill.params.density)) as f32,
+                angle: fill.params.angle,
+                layer_z: z,
+                multiline: fill.params.multiline,
+                anchor_length: fill.params.anchor_length,
+                anchor_length_max: fill.params.anchor_length_max,
+                dont_sort: false,
+            };
+            for expolygon in fill.expolygons {
+                result.extend(
+                    crate::fill::tpms_fk::fill_tpmsfk_surface(&expolygon, &params, traversal.scale)
+                        .map_err(super::super::transaction::geometry_error)?,
+                );
+            }
+        }
+        SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning) => {
+            // `FillLightning::Filler::_fill_surface_single` — the anchor
+            // lines are the tree's convertToLines clipped to the surface
+            // (`FillLightning.cpp:17`), same as the emit path.
+            if let Some(generator) = lightning_generator {
+                let line_overlap = traversal
+                    .scale
+                    .checked_scale(0.5 * fill.params.spacing - fill.params.overlap)
+                    .unwrap_or(0);
+                for expolygon in &fill.expolygons {
+                    let mut outline = vec![expolygon.contour().clone()];
+                    outline.extend(expolygon.holes().iter().cloned());
+                    let lines = generator
+                        .convert_to_lines(layer_index, &outline, line_overlap)
+                        .map_err(super::super::transaction::geometry_error)?;
+                    result.extend(lines);
+                }
+            }
+        }
+        SurfaceFillPattern::ConcentricInternal => {
+            unreachable!("bridge transaction admits only implemented sparse anchoring patterns")
+        }
+        _ => unreachable!("sparse anchoring dispatch_tail received a head pattern"),
+    }
+    Ok(())
+}
