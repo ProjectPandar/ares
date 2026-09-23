@@ -5451,3 +5451,20 @@ NEXT: dump `line_spacing` (the zigzag pitch) in oracle `FillSupportBase` for
 the base layer vs the `spacing` passed to connect — if they differ, ares's
 `spec.spacing` must split into `line_spacing` (0.337) and `connect_spacing`
 (0.407).
+
+### cxxvi. spacing=0.407 pinned to a line_width FillSupportBase filler
+ORCA_FLOW: `first_layer_flow.spacing()=0.377`, `support_material/interface/
+raft_interface=0.337` — none is 0.407. `spacing(0.45,0.2)=0.407` = `line_width`
+(0.45). `FillSupportBase::fill_surface` passes `this->spacing` (=filler->spacing)
+to `connect_base_support` unchanged (no _adjust_solid_spacing — that's
+`FillRectilinear::fill_surface`, not `FillSupportBase`). So a `FillSupportBase`
+(`ipSupportBase`) instance has `filler->spacing=0.407` = `line_width`-spacing.
+The 39 `infill=3 boundary=1` calls run FIRST (lowest z, raft base/flange blobs).
+`filler_support`/`filler_raft_contact`/`filler_interface` spacings are all
+0.337/0.377 — so the 0.407 calls are a `filler_support` on the raft base where
+`support_material_flow`/`first_layer_flow` resolved to `line_width` (0.45)
+instead of `support_line_width`/`initial_layer_line_width`. ares uses 0.337 for
+these blob regions → ~600-line divergence. NEXT: `support_material_flow` for
+the raft base resolves `support_line_width` — if upstream's `support_line_width`
+"0.38" resolves differently (e.g. percent→line_width) the filler spacing is
+0.407; probe `filler_support->spacing` on the raft base specifically.
