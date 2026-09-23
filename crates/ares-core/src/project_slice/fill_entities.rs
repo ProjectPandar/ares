@@ -77,60 +77,22 @@ pub(in crate::project_slice) fn prepare(
                     .object;
                 let (compensated, _) = prelude.as_parts();
                 let (post_regions, _) = compensated.as_parts();
-                let (plan, _, regions) = post_regions.as_parts();
-                // `FillLightning` needs a per-object `Generator` built from ALL
-                // layers' internal surfaces (built once, like upstream
-                // `prepare_lightning_infill_data`, `PrintObject.cpp:1010`).
-                let resolved_object = traversal
-                    .resolved
-                    .objects
-                    .iter()
-                    .find(|o| o.source_object_index == prelude.identity().0);
-                let nozzle = traversal
-                    .resolved
-                    .views
-                    .full
-                    .project
-                    .print
-                    .nozzle_diameter
-                    .0
-                    .iter()
-                    .map(|v| v.0)
-                    .reduce(f64::min)
-                    .unwrap_or(0.4);
-                let (layer_height, sparse_width) = resolved_object
-                    .map(|o| {
-                        let h = plan.layers.first().map(|l| l.height).unwrap_or(0.2);
-                        let region = regions.iter().find(|r| {
-                            r.as_parts().1.sparse_infill_pattern == ProcessInfillPattern::Lightning
-                        });
-                        let w = region
-                            .map(|r| {
-                                crate::project_slice::gcode_emit::resolved_width(
-                                    r.as_parts().1.sparse_infill_line_width,
-                                    o.object.line_width,
-                                    nozzle,
-                                    1.125,
-                                ) as f64
-                            })
-                            .unwrap_or(nozzle);
-                        (h, w)
-                    })
-                    .unwrap_or((0.2, nozzle));
-                let lightning_generator = build_lightning_generator(
-                    regions,
-                    plan.layers.len(),
-                    layer_height,
-                    sparse_width,
-                    traversal.scale,
-                )?;
+                let (plan, _, _) = post_regions.as_parts();
+                // `prepare_lightning_infill_data` — reuse the generator built
+                // in `bridge_over_infill` on the expanded surfaces
+                // (`PrintObject.cpp:2711` builds it once, `make_fills` reuses).
+                let lightning_generator = predecessor
+                    .predecessor
+                    .lightning_generators
+                    .get(object_index)
+                    .and_then(|g| g.as_ref());
                 (0..plan.layers.len())
                     .map(|layer_index| {
                         generate_layer(
                             external,
                             object_index,
                             layer_index,
-                            lightning_generator.as_ref(),
+                            lightning_generator.map(|g| g.as_ref()),
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()
@@ -188,71 +150,6 @@ pub(in crate::project_slice) fn invocations() -> usize {
 #[cfg(test)]
 pub(in crate::project_slice) fn disposals() -> usize {
     DISPOSALS.with(std::cell::Cell::get)
-}
-
-/// `prepare_lightning_infill_data` (`PrintObject.cpp:1010`) — build the
-/// per-object `FillLightning::Generator` when any region uses the `lightning`
-/// sparse pattern. Returns `None` when no region uses lightning. The
-/// `layer_internal_outlines` are the `Internal`/`InternalVoid` region surfaces
-/// (`stInternal`/`stInternalVoid` fill surfaces, `Generator.cpp:117`).
-fn build_lightning_generator(
-    regions: &[crate::project_slice::region_slices::PostRegion],
-    layer_count: usize,
-    layer_height: f64,
-    sparse_infill_line_width: f64,
-    scale: crate::geometry::CoordinateScale,
-) -> Result<Option<crate::fill::lightning::generator::Generator>, SliceError> {
-    use crate::project_slice::region_slices::RegionSurfaceKind;
-    // Any region that uses `lightning` as its sparse_infill_pattern supplies
-    // the generator params (upstream uses a single per-object generator — the
-    // first lightning region's params apply to the whole object).
-    let Some(lightning_region) = regions
-        .iter()
-        .find(|r| r.as_parts().1.sparse_infill_pattern == ProcessInfillPattern::Lightning)
-    else {
-        return Ok(None);
-    };
-    let options = lightning_region.as_parts().1;
-    let layer_internal_outlines: Vec<Vec<crate::geometry::Polygon>> = (0..layer_count)
-        .map(|layer_id| {
-            regions
-                .iter()
-                .flat_map(|region| {
-                    region
-                        .as_parts()
-                        .2
-                        .get(layer_id)
-                        .map(|layer| layer.surfaces())
-                        .unwrap_or(&[])
-                        .iter()
-                        .filter(|s| {
-                            matches!(
-                                s.as_parts().0,
-                                RegionSurfaceKind::Internal | RegionSurfaceKind::InternalVoid
-                            )
-                        })
-                        .flat_map(|s| {
-                            let mut v = vec![s.as_parts().1.contour().clone()];
-                            v.extend(s.as_parts().1.holes().iter().cloned());
-                            v
-                        })
-                })
-                .collect()
-        })
-        .collect();
-    crate::fill::lightning::generator::Generator::new(
-        layer_internal_outlines,
-        layer_height,
-        sparse_infill_line_width,
-        options.fill_multiline.0,
-        options.sparse_infill_density.0,
-        options.lightning_overhang_angle.0,
-        options.lightning_prune_angle.0,
-        options.lightning_straightening_angle.0,
-        scale,
-    )
-    .map(Some)
-    .map_err(|e| SliceError::InvalidInput(format!("lightning generator: {e:?}")))
 }
 
 pub(in crate::project_slice) fn generate_layer(

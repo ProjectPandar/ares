@@ -17,6 +17,7 @@ pub(in crate::project_slice) mod internal_bridge_surfaces;
 pub(in crate::project_slice) mod internal_infill_rebuild;
 pub(in crate::project_slice) mod internal_solid_recomposition;
 pub(in crate::project_slice) mod layer_clustering;
+mod lightning_expansion;
 mod lower_cluster_subtraction;
 pub(in crate::project_slice) mod region_bridge_ensuring_areas;
 pub(in crate::project_slice) mod region_bridge_surface_commit;

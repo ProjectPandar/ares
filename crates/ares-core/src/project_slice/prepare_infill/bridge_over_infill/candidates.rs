@@ -42,6 +42,8 @@ pub(super) fn gather_candidates(
     Ok(BridgeCandidateObject {
         has_lightning_infill,
         surfaces_by_layer,
+        lightning_expanded_surfaces: std::collections::BTreeMap::new(),
+        lightning_generator: None,
     })
 }
 

@@ -19,6 +19,11 @@ thread_local! {
 
 pub(in crate::project_slice) struct PreparedPostBridgeOverInfill {
     pub(in crate::project_slice) predecessor: PreparedPostExternalSurfaces,
+    /// `prepare_lightning_infill_data` per object — the generator built on the
+    /// expanded surfaces, shared between anchoring and the `fill_entities`
+    /// emit (`PrintObject.cpp:2711` builds it once and `make_fills` reuses it).
+    pub(in crate::project_slice) lightning_generators:
+        Vec<Option<std::rc::Rc<crate::fill::lightning::generator::Generator>>>,
 }
 
 pub(in crate::project_slice) fn prepare(
@@ -38,7 +43,14 @@ pub(in crate::project_slice) fn prepare(
         external_surfaces::dispose(predecessor);
         return Err(error);
     }
-    Ok(PreparedPostBridgeOverInfill { predecessor })
+    let lightning_generators = objects
+        .iter()
+        .map(|object| object.lightning_generator.clone())
+        .collect();
+    Ok(PreparedPostBridgeOverInfill {
+        predecessor,
+        lightning_generators,
+    })
 }
 
 pub(in crate::project_slice) fn dispose(prepared: PreparedPostBridgeOverInfill) {
@@ -67,9 +79,10 @@ fn validate_capabilities(
     predecessor: &PreparedPostExternalSurfaces,
     objects: &[BridgeCandidateObject],
 ) -> Result<(), SliceError> {
-    if objects.iter().any(|object| object.has_lightning_infill) {
-        return Err(unsupported("sparse_infill_pattern"));
-    }
+    let _ = (predecessor, objects);
+    // `sparse_infill_pattern=lightning` is now ported — the
+    // `has_lightning_infill` gate upstream only selects the generator build
+    // path, it does not reject bridge-over-infill (`PrintObject.cpp:2593`).
     Ok(())
 }
 

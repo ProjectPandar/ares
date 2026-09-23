@@ -92,7 +92,42 @@ fn prepare_object(
         .iter()
         .map(|region| region.as_parts().1)
         .collect::<Vec<_>>();
-    let infill_lines = prepare_infill_lines(predecessor, object_index, candidates, view)?;
+    // `PrintObject.cpp:2593` LIGHTNING INFILL SECTION — expand `stInternal` to
+    // `stInternalSolid` near candidates on layers whose lower layer uses
+    // lightning sparse infill; the expanded set feeds the generator.
+    if candidates.has_lightning_infill {
+        populate_lightning_expanded_surfaces(candidates, horizontal, view.scale)?;
+    }
+    // `prepare_lightning_infill_data` — the per-object generator built on the
+    // expanded surfaces (used for both anchoring lines and the final emit).
+    if candidates.has_lightning_infill {
+        let object_options = &predecessor
+            .predecessor
+            .predecessor
+            .resolved
+            .objects
+            .iter()
+            .find(|o| o.source_object_index == prelude.identity().0)
+            .expect("bridge transaction retains its resolved object")
+            .object;
+        candidates.lightning_generator = build_lightning_generator(
+            candidates,
+            horizontal,
+            regions,
+            plan,
+            nozzles,
+            object_options,
+            view.scale,
+        )?;
+    }
+    let lightning_generator = candidates.lightning_generator.as_deref();
+    let infill_lines = prepare_infill_lines(
+        predecessor,
+        object_index,
+        candidates,
+        view,
+        lightning_generator,
+    )?;
     let clusters =
         cluster_candidate_object(candidates, &plan.layers, &region_options, nozzles, scale)?;
     let deep_layers = plan
@@ -130,11 +165,145 @@ fn prepare_object(
     Ok(())
 }
 
+/// `PrintObject.cpp:2593` two-phase lightning expansion. For each layer whose
+/// lower layer uses `ipLightning` sparse infill with `stInternal` area, expand
+/// the layer's own `stInternal` into `stInternalSolid` near the bridge
+/// candidates (`expand(new_polys, scaled(3))`). The expanded `fill_surfaces`
+/// per layer is stored on `candidates.lightning_expanded_surfaces` for the
+/// generator build (anchoring + emit).
+fn populate_lightning_expanded_surfaces(
+    candidates: &mut BridgeCandidateObject,
+    horizontal: &PreparedSurfaceTypeObject,
+    scale: CoordinateScale,
+) -> Result<(), SliceError> {
+    use crate::ProcessInfillPattern;
+    use crate::project_slice::region_slices::RegionSurfaceKind;
+    for (&layer_index, candidate_surfaces) in &candidates.surfaces_by_layer {
+        // Phase-1 gate: layer_index's lower layer uses lightning + has stInternal.
+        let Some(lower) = layer_index.checked_sub(1) else {
+            continue;
+        };
+        let Some(lower_record) = horizontal.records[lower].as_ref() else {
+            continue;
+        };
+        // Does the lower layer use lightning? Check via the candidates'
+        // has_lightning_infill flag plus whether the lower layer still has
+        // `Internal` (stInternal) sparse surfaces. The pattern check per-region
+        // is folded into `has_lightning_infill` (object-level).
+        let has_internal = lower_record
+            .fill_surfaces
+            .iter()
+            .any(|s| s.as_parts().0 == RegionSurfaceKind::Internal);
+        if !has_internal {
+            continue;
+        }
+        // Phase-2: expand this layer's fill_surfaces near its own candidates.
+        let Some(record) = horizontal.records[layer_index].as_ref() else {
+            continue;
+        };
+        let new_polygons: Vec<crate::geometry::Polygon> = candidate_surfaces
+            .iter()
+            .flat_map(|c| c.new_polygons.clone())
+            .collect();
+        let expanded = super::super::lightning_expansion::expand_layer(
+            &record.fill_surfaces,
+            &new_polygons,
+            scale,
+        )
+        .map_err(geometry_error)?;
+        candidates
+            .lightning_expanded_surfaces
+            .insert(layer_index, expanded);
+        let _ = ProcessInfillPattern::Lightning;
+    }
+    Ok(())
+}
+
+/// `prepare_lightning_infill_data` on the expanded surfaces — build the
+/// per-object `FillLightning::Generator`. `layer_internal_outlines` = the
+/// `stInternal`/`stInternalVoid` expolygons of `record.fill_surfaces`, using
+/// the expanded set where `lightning_expanded_surfaces` has one.
+fn build_lightning_generator(
+    candidates: &BridgeCandidateObject,
+    horizontal: &PreparedSurfaceTypeObject,
+    regions: &[crate::project_slice::region_slices::PostRegion],
+    plan: &crate::project_slice::layers::PlannedPrintObject,
+    nozzles: &OrcaFloats,
+    object_options: &crate::ObjectOptions,
+    scale: CoordinateScale,
+) -> Result<Option<std::rc::Rc<crate::fill::lightning::generator::Generator>>, SliceError> {
+    use crate::project_slice::region_slices::RegionSurfaceKind;
+    let Some(lightning_region) = regions
+        .iter()
+        .find(|r| r.as_parts().1.sparse_infill_pattern == crate::ProcessInfillPattern::Lightning)
+    else {
+        return Ok(None);
+    };
+    let options = lightning_region.as_parts().1;
+    let nozzle = nozzles
+        .0
+        .iter()
+        .map(|v| v.0)
+        .reduce(f64::min)
+        .unwrap_or(0.4);
+    let sparse_width = crate::project_slice::gcode_emit::resolved_width(
+        options.sparse_infill_line_width,
+        object_options.line_width,
+        nozzle,
+        1.125,
+    ) as f64;
+    let layer_height = plan.layers.first().map(|l| l.height).unwrap_or(0.2);
+    let internal_outlines = |surfaces: &[crate::project_slice::region_slices::RegionSurface]| {
+        surfaces
+            .iter()
+            .filter(|s| {
+                matches!(
+                    s.as_parts().0,
+                    RegionSurfaceKind::Internal | RegionSurfaceKind::InternalVoid
+                )
+            })
+            .flat_map(|s| {
+                let mut v = vec![s.as_parts().1.contour().clone()];
+                v.extend(s.as_parts().1.holes().iter().cloned());
+                v
+            })
+            .collect::<Vec<_>>()
+    };
+    let layer_internal_outlines = (0..plan.layers.len())
+        .map(|layer_id| {
+            if let Some(expanded) = candidates.lightning_expanded_surfaces.get(&layer_id) {
+                internal_outlines(expanded)
+            } else {
+                horizontal
+                    .records
+                    .get(layer_id)
+                    .and_then(|r| r.as_ref())
+                    .map(|r| internal_outlines(&r.fill_surfaces))
+                    .unwrap_or_default()
+            }
+        })
+        .collect();
+    crate::fill::lightning::generator::Generator::new(
+        layer_internal_outlines,
+        layer_height,
+        sparse_width,
+        options.fill_multiline.0,
+        options.sparse_infill_density.0,
+        options.lightning_overhang_angle.0,
+        options.lightning_prune_angle.0,
+        options.lightning_straightening_angle.0,
+        scale,
+    )
+    .map(|g| Some(std::rc::Rc::new(g)))
+    .map_err(|e| SliceError::InvalidInput(format!("lightning generator: {e:?}")))
+}
+
 fn prepare_infill_lines(
     predecessor: &PreparedPostExternalSurfaces,
     object_index: usize,
     candidates: &BridgeCandidateObject,
     view: ObjectView<'_>,
+    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
 ) -> Result<BTreeMap<usize, Vec<Polyline>>, SliceError> {
     let ObjectView {
         horizontal,
@@ -175,6 +344,7 @@ fn prepare_infill_lines(
                         predecessor,
                         object_index,
                         lower_layer,
+                        lightning_generator,
                     )?
                 }
             }

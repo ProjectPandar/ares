@@ -50,6 +50,7 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     prepared: &PreparedPostExternalSurfaces,
     object_index: usize,
     layer_index: usize,
+    lightning_generator: Option<&crate::fill::lightning::generator::Generator>,
 ) -> Result<Vec<Polyline>, SliceError> {
     let grouped = group_fills(prepared, object_index, layer_index)?;
     let traversal = &prepared.predecessor.predecessor;
@@ -531,8 +532,26 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
                     );
                 }
             }
-            SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning)
-            | SurfaceFillPattern::ConcentricInternal => {
+            SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning) => {
+                // `FillLightning::Filler::_fill_surface_single` — the anchor
+                // lines are the tree's convertToLines clipped to the surface
+                // (`FillLightning.cpp:17`), same as the emit path.
+                if let Some(generator) = lightning_generator {
+                    let line_overlap = traversal
+                        .scale
+                        .checked_scale(0.5 * fill.params.spacing - fill.params.overlap)
+                        .unwrap_or(0);
+                    for expolygon in &fill.expolygons {
+                        let mut outline = vec![expolygon.contour().clone()];
+                        outline.extend(expolygon.holes().iter().cloned());
+                        let lines = generator
+                            .convert_to_lines(layer_index, &outline, line_overlap)
+                            .map_err(super::transaction::geometry_error)?;
+                        result.extend(lines);
+                    }
+                }
+            }
+            SurfaceFillPattern::ConcentricInternal => {
                 unreachable!("bridge transaction admits only implemented sparse anchoring patterns")
             }
         }
