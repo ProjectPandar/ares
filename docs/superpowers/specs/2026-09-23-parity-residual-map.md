@@ -933,3 +933,21 @@ filament_flow_ratio=0.98, SAFC disabled -> e_per_mm = mm3*0.98/area. Verified
 **m_E accumulation order** (upstream `m_E += dE` per segment; ares
 `e_position += delta` — check the retract/unretract E base and G92 resets match).
 Next: oracle `ORCA_DUMP_E` per-segment dE to localize which field diverges.
+
+### Pipeline trace (#663)
+
+use_relative_e_distances=1 -> E is per-segment dE (m_E reset each line), so the
+E-diffs ARE downstream of line_length. line_length = Line::length() (f64 sqrt of
+int dx²+dy²). For the 10988 E-only diffs the displayed X/Y match but the Coord
+may differ sub-µm -> different length -> different dE. So ALL of it reduces to
+the coordinate-generation ±1-unit.
+
+The sparse/monotonic infill endpoints: FillLine (line.rs) builds vertical
+oscillating lines, clips via intersection_open_polylines against
+offset(expolygon,0.02), extends ends by extra=min_spacing*0.3+0.5, chains, then
+rotates back by `direction` (checked_round = f64 round-half-away). The ±1µm is
+either (a) the clipper line-clip intersection point, (b) the rotate-back
+checked_round on a half-value, or (c) the x-spacing/align_scalar lattice. The
+rotate-back `rotate_points(points, +direction)` rounding `checked_round` vs
+upstream `MultiPoint::rotate` (std::round) — verified same. Suspect (a): the
+clipper open-polyline clip intersection TopX/intersect_point.
