@@ -56,6 +56,28 @@ pub(in crate::project_slice) fn generate_layer(
     // `Fill::_infill_direction` anchors the infill grid on the PRINT OBJECT
     // bounding box center (FillBase.cpp:297-301), not the surface center.
     let object_reference = super::object_center(object_slices);
+    // `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) — the
+    // object bbox transpose-merged + sqrt(2)-scaled so the consistent-pattern
+    // vertical-line grid is anchored object-wide, independent of rotation.
+    let (extended_object_min_x, extended_object_max_x) = {
+        let mut bounds = plane_path_object_bounding_box(object_slices);
+        bounds.merge_point(crate::geometry::Point::new(
+            bounds.min().y(),
+            bounds.min().x(),
+        ));
+        bounds.merge_point(crate::geometry::Point::new(
+            bounds.max().y(),
+            bounds.max().x(),
+        ));
+        // `out.scaled(sqrt(2.))` — `BoundingBoxBase::scale` multiplies
+        // `min`/`max` by the factor (scale about the ORIGIN, `BoundingBox.cpp:
+        // 52-56` + `BoundingBoxBase::scale`), so the extended bbox covers any
+        // rotation of an object centered on the origin.
+        (
+            (bounds.min().x() as f64 * std::f64::consts::SQRT_2) as i64,
+            (bounds.max().x() as f64 * std::f64::consts::SQRT_2) as i64,
+        )
+    };
     // `FillLockedZag::set_lock_region_param` (`Fill.cpp:1309`) — the skin/
     // skeleton density+flow maps, built per-layer in `group_fills`.
     let crate::project_slice::group_fills::GroupedFills {
@@ -180,7 +202,14 @@ pub(in crate::project_slice) fn generate_layer(
                 | ProcessInfillPattern::Monotonic
                 | ProcessInfillPattern::MonotonicLine),
             ) => {
-                super::monotonic::append(&mut output, fill, pattern, layer.id, traversal.scale)?;
+                super::monotonic::append(
+                    &mut output,
+                    fill,
+                    pattern,
+                    layer.id,
+                    traversal.scale,
+                    (extended_object_min_x, extended_object_max_x),
+                )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
                 // `tri-hexagon` maps to `ipStars` (`PrintConfig.cpp:238`).
@@ -228,6 +257,7 @@ pub(in crate::project_slice) fn generate_layer(
                     &lock_region_param,
                     layer.id,
                     traversal.scale,
+                    (extended_object_min_x, extended_object_max_x),
                 )?;
             }
             SurfaceFillPattern::Configured(

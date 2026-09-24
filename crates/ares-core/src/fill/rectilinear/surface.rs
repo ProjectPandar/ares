@@ -29,6 +29,15 @@ pub(crate) struct MonotonicFillParams {
     /// `params.horiz_move` (`FillBase.hpp:103`, applied `FillRectilinear.cpp:
     /// 2811-2816`): the crosszag/lockedzag per-layer horizontal grid shift.
     pub(crate) horiz_move: i64,
+    /// `extended_object_bounding_box()` x-bounds (`FillBase.cpp:1569-1578`) in
+    /// scaled coordinates: the object bounding box transpose-merged and
+    /// sqrt(2)-scaled so it covers every rotation. `has_consistent_pattern`
+    /// (`FillRectilinear.cpp:2785`) swaps the per-expolygon grid bounds for
+    /// these so the vertical-line grid (and the `i_vline2 % 2` serpentine
+    /// parity) is anchored to the OBJECT, not to each surface's own bbox.
+    /// `None` when `consistent_pattern` is false.
+    pub(crate) extended_object_min_x: Option<i64>,
+    pub(crate) extended_object_max_x: Option<i64>,
 }
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct MonotonicFillOutput {
@@ -82,10 +91,26 @@ fn fill_surface(
             spacing: params.spacing as f32,
         });
     }
-    let (source_minimum_x, maximum_x) = x_bounds(&slice.source);
-    let source_width = maximum_x - source_minimum_x;
+    let (source_minimum_x, source_maximum_x) = x_bounds(&slice.source);
+    let source_width = source_maximum_x - source_minimum_x;
+    // `bounding_box = has_consistent_pattern ? extended_object_bounding_box()
+    // : bounding_box_src` (FillRectilinear.cpp:2785) — for zig-zag/locked-zag
+    // the vertical-line grid (and its `i_vline2 % 2` serpentine parity) spans
+    // the whole object, not each surface's own bbox.
+    let (grid_source_min_x, grid_maximum_x) =
+        match (params.extended_object_min_x, params.extended_object_max_x) {
+            (Some(min_x), Some(max_x)) if params.consistent_pattern => (min_x, max_x),
+            _ => (source_minimum_x, source_maximum_x),
+        };
     let mut line_spacing = scaled_line_spacing(params.spacing, params.density, scale);
     let full_infill = params.density > 0.9999;
+    // `x0`/`n_vlines` are anchored on `bounding_box.min(0)` — the extended
+    // object bbox for consistent patterns, the surface bbox otherwise.
+    let grid_minimum_x = if params.consistent_pattern {
+        grid_source_min_x
+    } else {
+        source_minimum_x
+    };
     let minimum_x = if full_infill && !params.dont_adjust {
         line_spacing = adjust_solid_spacing(source_width, line_spacing);
         if let Ok(path) = std::env::var("ARES_DUMP_MONO") {
@@ -97,14 +122,16 @@ fn fill_surface(
             {
                 let _ = writeln!(
                     file,
-                    "MONOFULL dir={direction} min_x={source_minimum_x} spacing={line_spacing} src_min={source_minimum_x} src_max={maximum_x}"
+                    "MONOFULL dir={direction} min_x={grid_minimum_x} spacing={line_spacing} src_min={source_minimum_x} src_max={grid_maximum_x}"
                 );
             }
         }
-        source_minimum_x
+        grid_minimum_x
     } else {
         let reference = rotate_point(params.reference_point, -f64::from(direction))?;
-        let minimum_x = align_to_grid(source_minimum_x, line_spacing, reference.x())?;
+        // `bounding_box.merge(align_to_grid(bounding_box.min, spacing, refpt))`
+        // — snap the (possibly object-wide) grid minimum onto the reference grid.
+        let minimum_x = align_to_grid(grid_source_min_x, line_spacing, reference.x())?;
         if let Ok(path) = std::env::var("ARES_DUMP_MONO") {
             use std::io::Write;
             if let Ok(mut file) = std::fs::OpenOptions::new()
@@ -114,7 +141,7 @@ fn fill_surface(
             {
                 let _ = writeln!(
                     file,
-                    "MONO dir={direction} min_x={minimum_x} spacing={line_spacing} ref={} src_min={source_minimum_x} src_max={maximum_x}",
+                    "MONO dir={direction} min_x={minimum_x} spacing={line_spacing} ref={} src_min={source_minimum_x} src_max={grid_maximum_x}",
                     reference.x()
                 );
             }
@@ -122,7 +149,10 @@ fn fill_surface(
         minimum_x
     };
     let grid_spacing = (line_spacing as f64 * scale.factor()) as f32;
-    let width = maximum_x - minimum_x;
+    // `n_vlines` spans `bounding_box` (object-wide for consistent patterns,
+    // per-surface otherwise) — leading/trailing empty lines are kept so the
+    // serpentine parity stays anchored.
+    let width = grid_maximum_x - minimum_x;
     let flow_spacing = if full_infill && !params.dont_adjust {
         grid_spacing
     } else {
@@ -156,6 +186,29 @@ fn fill_surface(
     populate_vertical_lines(&mut slice, count, x0, line_spacing)?;
     let link_max_length = checked_scale(scale, params.link_max_length)? as f64;
     connect_contours(&mut slice, params.anchor_length_max < 0.05, link_max_length);
+    if let Ok(path) = std::env::var("ARES_DUMP_SEGS") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for line in &slice.lines {
+                let _ = write!(file, "SEGS layer={} x={} ", params.layer_index, line.x);
+                for intersection in &line.intersections {
+                    let _ = write!(
+                        file,
+                        "[{:?} y={} prev={:?} next={:?}]",
+                        intersection.kind,
+                        intersection.point.y(),
+                        intersection.previous,
+                        intersection.next
+                    );
+                }
+                let _ = writeln!(file);
+            }
+        }
+    }
     let generated = if monotonic {
         insert_phony_outer_pairs(&mut slice.lines);
         let mut regions = generate_monotonic_regions(&slice.lines);

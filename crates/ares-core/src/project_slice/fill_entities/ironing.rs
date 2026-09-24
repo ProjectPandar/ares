@@ -85,6 +85,8 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                 // a consistent-pattern fill — the monotonic path ignores it.
                 consistent_pattern: false,
                 horiz_move: 0,
+                extended_object_min_x: None,
+                extended_object_max_x: None,
             },
             input.scale,
         )

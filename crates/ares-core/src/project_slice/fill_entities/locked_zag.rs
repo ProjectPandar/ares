@@ -20,6 +20,7 @@ pub(super) fn append(
     lock: &GroupLock,
     layer_id: usize,
     scale: CoordinateScale,
+    extended_object_bounds_x: (i64, i64),
 ) -> Result<(), SliceError> {
     let params = fill.params;
     let kind = fill.representative.kind;
@@ -39,6 +40,8 @@ pub(super) fn append(
         link_max_length: 0.0,
         consistent_pattern: true,
         horiz_move: params.horiz_move as i64,
+        extended_object_min_x: Some(extended_object_bounds_x.0),
+        extended_object_max_x: Some(extended_object_bounds_x.1),
     };
     let lock_param = LockRegionParam {
         skin_density_params: convert_density(&lock.skin_density_params),

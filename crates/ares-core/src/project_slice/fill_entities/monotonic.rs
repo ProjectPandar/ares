@@ -18,6 +18,7 @@ pub(super) fn append(
     pattern: ProcessInfillPattern,
     layer_id: usize,
     scale: CoordinateScale,
+    extended_object_bounds_x: (i64, i64),
 ) -> Result<(), SliceError> {
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
     let anchor_length_max = if pattern == ProcessInfillPattern::MonotonicLine {
@@ -40,6 +41,14 @@ pub(super) fn append(
         anchor_length_max,
         link_max_length: 0.0,
         consistent_pattern: pattern.has_consistent_pattern(),
+        // `extended_object_bounding_box` x-bounds — only meaningful when
+        // `consistent_pattern` (`FillRectilinear.cpp:2785` gates the swap).
+        extended_object_min_x: pattern
+            .has_consistent_pattern()
+            .then_some(extended_object_bounds_x.0),
+        extended_object_max_x: pattern
+            .has_consistent_pattern()
+            .then_some(extended_object_bounds_x.1),
         // `params.horiz_move` is already in scaled coord units (`f32`) —
         // truncating to `i64` matches the `coord_t`/`float` mix upstream.
         horiz_move: fill.params.horiz_move as i64,

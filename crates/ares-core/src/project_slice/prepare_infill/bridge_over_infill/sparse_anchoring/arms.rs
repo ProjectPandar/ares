@@ -242,6 +242,12 @@ pub(super) fn dispatch(
                 link_max_length: 0.0,
                 consistent_pattern: pattern.has_consistent_pattern(),
                 horiz_move: fill.params.horiz_move as i64,
+                // Sparse-anchoring only carries the object center
+                // (`dispatch`'s `object_reference`), not the full object
+                // bounding box the extended grid anchor needs; left `None`
+                // pending bbox plumbing (main `monotonic` path is covered).
+                extended_object_min_x: None,
+                extended_object_max_x: None,
             };
             let generate = if matches!(
                 pattern,

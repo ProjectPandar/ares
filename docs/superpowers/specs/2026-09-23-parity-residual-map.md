@@ -106,20 +106,27 @@ On a 20-case random dual-fresh sample + targeted re-verification:
    dir=2.3562`). So `dir`/`thickness_layers`/`layer_id`/`dont_alternate`
    all match; the divergence is INSIDE the line generation, not the angle.
    ORACLE `polylines_out` dump (pre-rotate-back,
-   `polyprobe.nix` → `ORCA_DUMP_POLY`) vs ares `ARES_DUMP_POLY` (dump added
-   in `fill/rectilinear/surface.rs` before the rotate-back): POLY1 is
-   byte-identical (same points, same order). POLY2 is ares's = oracle's
-   traversed as the x-mirrored reverse (oracle starts
-   `(-2713864,-2654195)...`, ares starts `(-2713864,2654187)...` = the
-   x-negated reversed traversal). So the divergence is INSIDE
-   `traverse::generate` (`rectilinear/traverse.rs`) ordering — the second
-   serpentine component enters from the mirrored end. The `next_start`
-   forward/backward scan (`!consistent_pattern || i_vline2%2==0`) and
-   `consume_vertical_run`/`connect_horizontal` left-vs-right selection differ
-   from `traverse_graph_generate_polylines` (FillRectilinear.cpp:1354-1500)
-   for this expolygon's second island. Probe: dump `segs` intersections
-   (kinds + consumed flags) per vline for Z8.6 to find the divergent start
-   or link choice.
+   `polyprobe.nix` → `ORCA_DUMP_POLY`) vs ares `ARES_DUMP_POLY`: POLY1
+   byte-identical; POLY2 ares = oracle x-mirrored reverse (second serpentine
+   component entered from the mirrored vertical end). ORACLE `segs` dump
+   (`segprobe.nix` → `ORCA_DUMP_SEGS`) vs ares `ARES_DUMP_SEGS`: the
+   intersection graph (kinds + prev/next links) is IDENTICAL — divergence
+   is the `i_vline2 % 2` `forward_pass` PARITY: ares's `slice.lines` grid
+   omitted oracle's leading empty `x=-8141592` column, so populated lines
+   landed on the opposite parity. ROOT CAUSE: ares anchored the
+   vertical-line grid on the per-expolygon bbox (`x_bounds(&slice.source)`)
+   while `has_consistent_pattern` (FillZigZag/FillCrossZag/FillLockedZag →
+   `true`) must use `Fill::extended_object_bounding_box()`
+   (`FillRectilinear.cpp:2785`, `FillBase.cpp:1569-1578` = object bbox
+   transpose-merged + `BoundingBox::scaled(sqrt(2))` scale-about-origin) so
+   `x0`/`n_vlines` span the whole object and the serpentine parity stays
+   anchored. **RESOLVED**: `extended_object_min_x`/`max_x` added to
+   `MonotonicFillParams`, computed once per layer in
+   `fill_entities/generate.rs`, used for the grid bounds in `fill_surface`
+   when `consistent_pattern` (`monotonic::append` + `locked_zag::append`
+   wired; sparse_anchoring `arms` left `None` pending bbox plumbing).
+   Verified: `case-I5aCx8` gcode now byte-identical to oracle except the
+   generator-name header.
    `first_outer::thin_wall_offsets` extraction
    (PerimeterGenerator.cpp:1251-1266) plumbed record-level through
    onion→traversal→raw→chained and materialized in `traverse_loops` via
