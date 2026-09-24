@@ -315,12 +315,21 @@ min). With `*`, tolerance ≈ 0.07 and the curve converges: tpmsd slice drops
 to ~0.1 s. This also unblocked the `sparse_infill_pattern` enum tail in the
 option sweep (tpmsd/tpmsfk each took ~50 min before, blocking 145 keys).
 
-Residual: tpmsd/tpmsfk GEOMETRY still diverges (~4.5k lines) — the refined
-wave now converges but produces a different curve than oracle (path-length
-`E` matches but XY is a rigid offset/rotation). `make_waves`, `swap_uv`,
-`align_to_grid`, `translate`, and `density_adjusted` all verify faithful
-against `FillTpmsD.cpp`; the divergence is downstream (connect_infill /
-intersection / multiline) or a sub-ulp phase in `z = grid_z/scale_factor`.
+Residual: tpmsd/tpmsfk GEOMETRY still diverges (~4.5k lines). After the
+`tolerance` fix the wave converges and per-layer `z`-phase/`swap_uv` cycle
+correctly (`ARES_DUMP_TPMSW` probe, `0a7426b2`). `make_waves`, `swap_uv`,
+`align_to_grid`, `translate`, `density_adjusted`, `distance`, `module` all
+verify faithful against `FillTpmsD.cpp` — **the wave field itself is
+correct**. The residual is the sparse-infill EXPOLYGON extent: ares's
+region boundary reads `X105.777` where oracle reads `X105.98` (~0.2mm
+wider) → the same wave field clipped to a different region produces
+shifted/missing wave fragments (674/1853 shared sparse points). Root is
+`detect_surfaces`/`prepare_infill` `fill_surfaces` region extent (the
+sparse `Internal` inset), NOT the tpms generator — the SAME class as the
+narrow-internal `WIDTH:0.405676` extra-fragment residual and likely most
+"extra fragment" diffs across fill patterns. Needs oracle
+`Print::detect_surfaces`/`combine_infill` region dumps to bisect the
+inset.
 
 ## lightning empty-clipped connect — FIXED (`7b4df5ac`)
 
