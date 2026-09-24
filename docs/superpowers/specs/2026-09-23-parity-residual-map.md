@@ -573,3 +573,22 @@ as the crosshatch ±1 `coord_t` residual: a boundary clip-point selection issue
 in `intersection_pl`/`connect_infill`. `InfillPolylineClipper::add_point` and
 the Hilbert generator are source-verified identical; the gap is in the
 expolygon clip tail.
+
+## Root-cause narrowed: oracle non-determinism is pure line ORDER
+
+`envelope_distances` diagnostics on `bottom_surface_pattern=hilbertcurve`:
+27 oracle runs → 26 distinct byte outputs, yet **max pairwise line-multiset
+distance = 0**. Oracle's `connect_infill`/emission non-determinism reorders
+lines but never changes the *content set*. Ares's distances to those runs were
+`[3,113,3,3,...]` — mostly 3 (generator + 2 vertex lines), i.e. ares matches
+the oracle's content set except one residual.
+
+The residual is a **real ares content difference**, not ordering: oracle emits
+`109.975,111.6 → 110.509,112.133 → 110.775,112.4` (a genuine Hilbert interior
+vertex); ares emits the merged `109.975,111.6 → 110.775,112.4` (E conserved).
+`fixup_out_polyline`/`fixup_out_polygon`/`InfillPolylineClipper::add_point`/
+Hilbert generator/`intersect_open_edges` are all source-verified identical to
+upstream — so the drop is inside Clipper's open-path sweep emission
+(`IntersectEdges`/`AddOutPt`/`ProcessIntersections` when the open subject path
+touches a scanline extremum or self-touches), the deepest remaining fidelity
+gap. ~3 lines/case, sub-mm.
