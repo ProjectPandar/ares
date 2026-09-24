@@ -1028,3 +1028,25 @@ a different SEGMENT BOUNDARY emitted => the INPUT polyline differs. Confirmed
 again: root is the source path.polyline.points (perimeter loop / slice output),
 not arc-fit. Next: oracle dump of path.polyline.points pre-fit (the exact input
 to do_arc_fitting) vs ares fit input on the diverging inner-wall loop.
+
+### Standing: residual is in slice/region vertex generation (#670)
+
+ALL downstream stages verified bit-identical to upstream 2.4.2:
+- arc-fitter (ArcFitter do_arc_fitting + try_create_arc + Circle::try_create_circle
+  3-point circumcircle + std::round center + 5% length salvage + perpendicular
+  deviation) — matches try_arc/fit_ranges exactly.
+- clipper: top_x/intersect_point/fixed_round/get_dx — identical.
+- ClipperOffset: normals/steps/sin_cos/miter_threshold — identical (offset.cpp oracle).
+- E-flow: e_per_mm=e_per_mm3*mm3_eff/ffr, ordinary_volume f32, use_relative_e.
+- marching-squares interpolate_edge, DP simplify — identical.
+
+Diff classes vs tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode (6556 lines):
+1. ~±1um endpoint coords (Inner/Outer wall + arc-fit segment boundaries — same
+   root: path.polyline.points differ by 1 Coord at slice/region stage).
+2. ~1e-5 E diffs (downstream of length).
+3. Header fields (time, extruder_ams_count, different_settings_to_system,
+   inherits_group) + M73/M204 ordering.
+Root is layer-region slice polygons (LayerRegion::slices.surfaces /
+marching-squares-or-triangle-slice output) differing by one lattice unit.
+Tooling committed: clipref offset.cpp, orca-probes {arcseg,lslices,rslices,
+simppath,hilbert_preclip,orcablocks}.nix, ARES_DUMP_{ARCSEG,LSLICES,...}.
