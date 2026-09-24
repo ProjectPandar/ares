@@ -424,20 +424,33 @@ Now skips `connect_infill` on an empty clipped set.
 ## ksr_fdmtest_v4 semantic test — PRE-EXISTING multi-class residual
 
 `tests::project_matches_orca_242_semantically` fails with ~55-57k diff
-lines — verified PRE-EXISTING (same magnitude at `6c6c5a27`, before this
-session's commits; not a regression). The diff decomposes into the same
-residual classes as the option sweep:
+lines vs the SAVED golden — but the golden `id:13965068898260364096` is a
+**non-reproducible** `PrintObject::get_id()` (`ObjectBase::generate_new_id`
+from a live `s_last_id` counter, `ObjectID.hpp:86`): a fresh oracle run emits a
+DIFFERENT id (`id:29025841971`), and the parity `case-*` oracles emit `id:0`.
+So the saved golden was generated under different object-id state.
 
+Fresh-oracle measurement (2026-09-24, `/tmp/orc_ksr` run): **24111 diff lines**
+of 269387 (~9%). Decomposition:
+
+- **920 `; printing/stop printing object ... id:N`** — non-reproducible
+  (`get_id()` varies oracle-run-to-oracle-run); ares emits `id:0`. Not fixable
+  byte-for-byte; the semantic test already normalizes it.
+- **~19596 `G1` lines** — overwhelmingly ±0.001mm coord diffs (ares `156.234`
+  vs oracle `156.233`): a ±1 `coord_t` lattice-unit computation difference,
+  NOT `emit_axis` formatting (both produce `std::round` output — verified by
+  `format_axis` matching `GCodeWriter.cpp:1231` after `f7f444ee`). The ±1 is
+  in the integer `coord_t` itself, from a shared path-emission rounding site.
+- **172 `WIPE_START/END`** — wipe presence/order.
+- **~6 header fields** — `different_settings_to_system`, `inherits_group`,
+  `extruder_ams_count` (`1#0|4#0` vs `1#0|4#1`), M73 progress (±1 min).
 - ~613 same-coordinate `E`-only diffs → ordering/E-cumulative-drift.
 - ~±0.435mm coordinate pairs → real geometry differences (island/region).
-- ±15/±30 travel-target diffs → ordering (different travel destination).
-- M73 `P`/`R` placement + 1-ulp formatting (`X104.961` vs `X104.96`).
-- 3s total-time estimate diff (`1h43m52s` vs `1h43m49s`) — elapsed model.
 
 So the named ksr test aggregates every known residual on a complex
-multi-object print — it will not pass until the shared geometry/ordering
-roots below converge. It is the project's aggregate parity metric, not a
-discrete bug.
+multi-object print — it is the project's aggregate parity metric, not a
+discrete bug. The dominant real residual is the ±1 `coord_t` coordinate
+lattice difference (~19.6k lines).
 
 ## dont_connect short-circuit + tpmsd fractional scale — FIXED (`ed6edb0c`)
 
