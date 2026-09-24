@@ -184,9 +184,11 @@ impl Estimate {
                 .unwrap();
             }
         }
-        // Upstream's cache entries store `float(time)` from the double
-        // accumulator (`GCodeProcessor.cpp:576`), so the M73 boundary chain
-        // accumulates in f64 and rounds to f32 per entry.
+        // `machine.time` accumulates `time += double(block_time)`
+        // (`GCodeProcessor.cpp:471`) in f64; `g1_times_cache` then snapshots
+        // each entry as `float(time)` (:576). Keep the f64 accumulator for
+        // `total`, but round each cache entry to f32 — the M73 boundary
+        // reads the f32 snapshot, not the running f64 sum.
         let mut cumulative = 0.0;
         let cache = block_line_ids
             .into_iter()
@@ -196,7 +198,7 @@ impl Estimate {
                 // calculate_time adds every block's time before testing the
                 // associated move vertex for Extrude, Travel or Wipe.
                 cumulative += time;
-                eligible.then_some((id, cumulative))
+                eligible.then_some((id, f64::from(cumulative as f32)))
             })
             .collect::<Vec<_>>();
         let mut elapsed = vec![None; lines.len() + 1];

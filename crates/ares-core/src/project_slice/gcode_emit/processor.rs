@@ -121,19 +121,17 @@ pub(super) fn process(
         };
         // Upstream computes `int(100.0f * elapsed_time / machine.time)`
         // (`GCodeProcessor.cpp:1251-1252`): the 100× product stays f32, then
-        // the division promotes to f64 against the double `machine.time`.
-        // `time_in_minutes(machine.time - elapsed_time)` subtracts the two
-        // `float` operands in f32 (`machine.time` and `elapsed_time` are both
-        // `float`), then `time_in_minutes` converts to int (:1013). Keeping
-        // `estimate.total` in f64 and subtracting in f64 flips the
-        // knife-edge minute boundary — subtract in f32 to match.
-        let total_f32 = estimate.total as f32;
+        // the division promotes to f64 against `machine.time` — a `double`
+        // (`GCodeProcessor.hpp:544`), matching `estimate.total` in f64.
+        // `time_in_minutes(machine.time - elapsed_time)` subtracts the
+        // f32 `elapsed_time` from the f64 `machine.time` in f64, then
+        // `time_in_minutes` narrows to float (:1013).
         let percent = if estimate.total > 0.0 {
-            (f64::from(100.0_f32 * elapsed) / f64::from(total_f32)) as u64
+            (f64::from(100.0_f32 * elapsed) / estimate.total) as u64
         } else {
             0
         };
-        let remaining = minutes(f64::from(total_f32 - elapsed));
+        let remaining = minutes(estimate.total - f64::from(elapsed));
         if last_progress != Some((percent, remaining)) {
             last_progress = Some((percent, remaining));
             result.push_str(&format!("M73 P{percent} R{remaining}\n"));
