@@ -88,37 +88,21 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
 - Option-coverage sweep (Boolean/Enum every value, Range min/max/interior)
   runs through `option_coverage/` against the live oracle.
 
-4b. **sparse `Internal` surface extent — `detect_surfaces_type` shrink** (the
-   shared root for the fill-pattern "extra-fragment" residual family: tpmsd,
-   tpmsfk, narrow-internal, hilbert, gap_fill). Instrumented-oracle bisection
-   (`tools/orca-probes/pg_inset.nix`, `tpmsd_region.nix`) shows: ares's sparse
-   `Internal` surface = `clipped_fill(slices, fill_expolygons)` =
-   PerimeterGenerator's `infill_exp` = `offset2(NF, -inset-post-overlap - mpis/2,
-   mpis/2)` = `NF - 0.102` → bbox `±4223228`. The expolygon oracle passes to
-   `fill_surface`/`tpmsd` is `±4019688` — `0.203mm` tighter, equal to
-   `NF - (inset-pre-overlap + infill_peri_overlap)` = `NF - 0.306`. So oracle
-   shrinks `Internal` a further `0.203mm` between `fill_expolygons` (the
-   connect_infill / `infill_exp` boundary) and the actual fill surface, inside
-   `PrintObject::detect_surfaces_type` (`PrintObject.cpp` ~3300-3420:
-   `shrink(surface.new_polys, frSolidInfill.scaled_spacing)`, `cut_from_infill`,
-   `new_internal_infills = diff_ex(internal_infills, cut_from_infill)`). Ares
-   never applies that shrink — it fills the connect-boundary extent.
-   Sharpened via `tools/orca-probes/fill_surf_bbox.nix` (ORCA_DUMP_FS on
-   `Fill.cpp:1037` `surface.expolygon`): oracle `fill_surfaces` carries MULTIPLE
-   `stInternal` surfaces per layer — `±4223228` (= `infill_exp`, `inset_post
-   =0.102`) AND `±3816159` (`inset_post=0.509`). tpmsd receives `±4019688`
-   (`inset_post=0.306`, i.e. `inset_pre=0.407≈perimeter_spacing` not
-   `perimeter_spacing/2`). So `infill_exp` extent varies PER SURFACE via
-   `effective_loop_number`/`inset`/`infill_peri_overlap` (each `process_classic`
-   island surface gets its own `loop_number`→`inset`). Ares emits `±4223`
-   (generic `infill_exp`/`fill_expolygons`) where oracle's tpmsd surface uses a
-   tighter `inset`. FIX = verify per-surface `effective_loop_number`→`inset`
-   (`infill_boundary/preflight.rs:155` + `onion.effective_loop_number`) matches
-   upstream per-island `loop_number` (`PerimeterGenerator.cpp:1225` `wall_loops
-   + extra_perimeters - 1`, adjusted at `:1336`), and that the Internal surface
-   passed to `fill_surface` uses the surface's own `infill_exp` (not the merged
-   `fill_expolygons` ∩ slices). Expected to collapse most of the tpmsd/tpmsfk/
-   narrow-internal/hilbert/gap_fill residual.
+4b. **sparse `Internal` surface extent — RESOLVED** (`05ce1a7f`, `c063bd46`).
+   Root cause: `Fill::fill_surface` (`FillBase.cpp:108`) offsets the surface by
+   `overlap - spacing/2` (with `overlap=0` for sparse infill → net `-spacing/2`,
+   `0.204mm`) before `_fill_surface_single`. Ares fed the raw `infill_exp`
+   region (`±4223`) to tpmsd/tpmsfk/honeycomb. Instrumented oracle
+   (`ORCA_DUMP_FS`/`ORCA_DUMP_INSET`/`ORCA_DUMP_TPMSD`) confirmed oracle fills
+   `±4019688`; after the offset ares emits the identical `±4019688` bbox.
+   RESIDUAL NOW: `make_waves`/`trim` interior chord placement within the
+   (now-correct) region — same outer boundary `X114.02`, different internal
+   vertex subdivision. tpmsd/tpmsfk/honeycomb now offset; locked_zag/line/
+   monotonic/crosshatch/multiline/plane_path/cubic/quartercubic/stars/
+   triangles/lateral_* already offset via `rectilinear/surface.rs` or
+   `multiline.rs`. The earlier "detect_surfaces_type shrink" hypothesis is
+   superseded — the shrink is `fill_surface`'s `-spacing/2`, not a
+   `detect_surfaces` mutation.
 
 5. **lightning propagated-tree branch retention** (`case-IdM3Br`, layers 6-19).
    After round-4 (`stable_sort_by` + `coord_t` width cast + `EPSILON` 1e-4),
