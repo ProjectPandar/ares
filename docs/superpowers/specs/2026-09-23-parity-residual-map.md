@@ -858,3 +858,17 @@ Z=59 that ares's dump doesn't reach) → ares `deltas` returns None or under-cou
 for a class of arcs (P-turn spiral lifts / Z-moving arcs / arcs where
 parse_arc bails). Next: per-arc group diff — emit an arc-index marker in both
 dumps and find the first arc whose segment count diverges.
+
+### Time-estimate: missing-segment class identified (#659 final)
+
+The 33k-segment deficit is concentrated in the **Z-motion spiral arcs** — the
+wipe-tower/toolchange `G3 Z59 I1.216 J-.034 P1` purge spirals (thousands, lines
+~230k+, high Z) and the per-layer `G3 Z.. I.. J.. P1` lifts. Ares's `deltas`/
+`marlin_deltas` under-segments these: for a `P1` (1-turn, `sweep`≈±2π) arc with
+a Z delta, `flat_mm = radius*|sweep|` uses only the XY radius — but upstream's
+segment count for these may differ because the arc is near-degenerate in XY
+(tiny radius ~1.2mm) yet upstream still emits ~13 segments while ares emits
+fewer. Verify: per-arc `flat_mm`/`segments` for a `G3 Z59 I1.217 P1 F60000` —
+oracle SEG count for that arc vs ares `deltas` length. Likely the `feedrate`
+term (60000mm/min=1000mm/s → feedrate/50=20 → segment_mm clamps to 2.0) and
+`flat_mm` for tiny-radius full-circle arcs diverge in ares.
