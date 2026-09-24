@@ -771,3 +771,16 @@ planner's per-block `time` sum against upstream `GCodeProcessor::print_statistic
   (likely seam/tool-change/zero-delta accounting) or the g1_line_id alignment
   differs. To bisect the 3s: align dumps by g1_line_id, convert ares
   cumulative→per-block delta, then find the largest per-block time gap.
+
+### Time-estimate: block dumps misaligned (#655 cont.)
+
+Aligned oracle `ORCA_DUMP_BLOCKS` (`id dist cruise accel entry exit safe time`,
+313470 blocks) against ares `ARES_DUMP_BLOCKS` (`id cumulative dist speed kind`,
+314027 blocks). **Block ids do NOT correspond 1:1** — ares emits 557 extra blocks
+and the per-block segmentation differs (ares blocks >1s: 60 blocks / 369s;
+oracle: 54 / 60.5s). Ares kinds: 309195 reg + 4831 unretract + 1 tool.
+The 3s gap is the aggregate of many small per-block diffs under different
+segmentation, not a single bug. Bisect path: key both dumps by emitted
+`g1_line_id` (not block ordinal) OR emit a matching `ORCA_DUMP_BLOCKS` field set
+from ares (id, dist, cruise, accel, entry, exit, safe, per-block time) and
+diff numerically per emitted move.
