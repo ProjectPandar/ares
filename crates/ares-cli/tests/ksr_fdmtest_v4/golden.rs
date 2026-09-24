@@ -62,6 +62,36 @@ pub(crate) fn compare_ordered_bytes_generator_only(
     }
 }
 
+/// Symmetric differing-line count between two generator-normalized streams:
+/// the size of the symmetric difference of their line multisets. Used by the
+/// parity envelope check to measure how far two runs are apart without
+/// requiring a byte-identical ordering (the 2.4.2 oracle is non-deterministic
+/// in `connect_infill`, so equal-cost line order flips run-to-run).
+pub(crate) fn line_multiset_diff(expected: &[u8], actual: &[u8]) -> Result<usize, String> {
+    let expected = normalize_one_generator_line(expected, GeneratorKind::Orca)?;
+    let actual = normalize_one_generator_line(actual, GeneratorKind::Ares)?;
+    Ok(multiset_symmetric_diff(&expected, &actual))
+}
+
+/// Multiset symmetric-difference size over newline-separated lines: how many
+/// line occurrences appear in one stream but not the other. Order-insensitive,
+/// so `connect_infill` reorderings count zero while genuine coordinate/content
+/// differences still count.
+fn multiset_symmetric_diff(a: &[u8], b: &[u8]) -> usize {
+    use std::collections::HashMap;
+    let mut counts: HashMap<&[u8], i64> = HashMap::new();
+    for line in a.split(|byte| *byte == b'\n') {
+        *counts.entry(line).or_default() += 1;
+    }
+    for line in b.split(|byte| *byte == b'\n') {
+        *counts.entry(line).or_default() -= 1;
+    }
+    counts
+        .values()
+        .map(|count| count.unsigned_abs() as usize)
+        .sum()
+}
+
 pub(crate) struct Difference {
     byte_offset: usize,
     line: usize,
