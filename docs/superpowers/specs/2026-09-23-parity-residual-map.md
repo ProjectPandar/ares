@@ -491,3 +491,16 @@ the `pos_p`/`pos_q` rational numerator itself, or `connect_infill` choosing a
 different-but-adjacent boundary vertex. Needs `ARES_DUMP_MONO`/`ARES_DUMP_SEGS`
 compared against a `fill_surf_bbox`-style oracle probe that dumps upstream
 `x0`/`line_spacing`/`refpt`/`pos_p`/`pos_q` per fill surface.
+
+## connect_infill ordering is provably non-deterministic — DO NOT chase
+
+`FillBase.cpp:1640` `std::sort(connections_sorted, l.cost < r.cost)` is an
+UNSTABLE sort keyed only on `cost` — equal-cost boundary connections get an
+arbitrary relative order, and the resulting `connect_infill` chain/TSP emits
+polylines in a different order across runs. Verified: two fresh oracle runs of
+the same input self-diff by ~88-94 lines (crosszag 94, tpmsd ~88). This is the
+oracle's own non-determinism; ares's deterministic ordering is a valid member
+of the oracle's output set. Byte-matching a single ordering is impossible —
+the sparse-infill "ordering residual" is at the oracle non-determinism floor,
+not an ares bug. The WIPE_START/END diffs (172) are downstream of the same
+ordering (identical wipe content, different byte offset).
