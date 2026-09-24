@@ -623,3 +623,16 @@ residual is in the sweep's `AddOutPt`/boundary-touch emission for open
 subject paths — needs an instrumented upstream `clipper.cpp` `AddOutPt`
 sequence to bisect, since the failure is a single scanline event, not a whole
 stage.
+
+## do_maxima open-path path verified (#653)
+
+`intersections/top.rs::do_maxima` open-edge branch (`wind_delta == 0`) emits
+both `e->Top` and `pair->Top` and unassigns both — faithful to
+`clipper.cpp:2566-2581` (`DoMaxima` `use_lines` block). So the dropped vertex
+`110.509,112.133` is not an open-path maxima artifact; it is a mid-segment
+vertex where the Hilbert path crosses the expolygon clip boundary and upstream
+`intersection_pl` emits the clip point while ares emits the un-split chord —
+i.e. a boundary-membership/intersection rounding difference inside the sweep,
+surfacing as a missing vertex rather than a ±1 on an emitted vertex. The sweep
+`AddOutPt`/`ProcessBound` for an open subject edge entering a clip boundary is
+the remaining site.
