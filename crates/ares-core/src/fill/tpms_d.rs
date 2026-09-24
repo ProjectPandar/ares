@@ -75,7 +75,9 @@ pub(crate) fn fill_tpmsd_surface(
 
     // `bb.merge(align_to_grid(bb.min, Point(module, module)))` — extend the
     // box to include the grid-aligned minimum (per-axis min/max merge).
-    let module = (2.0 * std::f64::consts::PI * distance as f64) as i64;
+    // `Point(2*M_PI*distance, ...)` rounds (`Point(double,double)` ctor is
+    // `coord_t(std::round(x))`), not `as i64` truncation.
+    let module = (2.0 * std::f64::consts::PI * distance as f64).round() as i64;
     let aligned = align_to_grid(min, module);
     min = Point::new(min.x().min(aligned.x()), min.y().min(aligned.y()));
     max = Point::new(max.x().max(aligned.x()), max.y().max(aligned.y()));
