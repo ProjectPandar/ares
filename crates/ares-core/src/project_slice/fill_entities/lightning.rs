@@ -48,6 +48,12 @@ pub(super) fn append(
         .map_err(lightning_error)?;
         let lines = crate::geometry::intersection_open_polylines(&lines, &outline)
             .map_err(lightning_error)?;
+        // `chain_or_connect_infill` (`FillBase.cpp:1822`) guards
+        // `!infill_ordered.empty()` before `connect_infill` — an empty
+        // clipped set skips connection entirely.
+        if lines.is_empty() {
+            continue;
+        }
         let connected = connect_infill(
             lines,
             expolygon,
