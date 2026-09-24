@@ -47,14 +47,15 @@ pub(in crate::project_slice) fn object_center(
 }
 
 /// `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) applied
-/// to `PrintObject::bounding_box()` (`Print.hpp:347`), which is the object
-/// extent CENTERED on the origin: `(-m_size/2, +m_size/2)`. This helper takes
-/// the raw (uncentered) object bbox, centers it on the origin, merges the
-/// transposed corners (`out.merge(min.y(),min.x())` +
-/// `out.merge(max.y(),max.x())`), then `BoundingBox::scaled(sqrt(2))`
-/// (`BoundingBox.cpp:52-56` scales `min`/`max` about the ORIGIN). Returns the
-/// scaled x-bounds used to anchor consistent-pattern infill grids
-/// (`FillRectilinear.cpp:2785`).
+/// to the object bounding box. The incoming `bounding_box` is the slice-contour
+/// extent (empirically this is what the oracle's grid anchors on — see
+/// `fill_entities/generate.rs` and the residual map). This helper centers it on
+/// the origin (matching `PrintObject::bounding_box`'s centered `m_size` box,
+/// `Print.hpp:347`), merges the transposed corners
+/// (`out.merge(min.y(),min.x())` + `out.merge(max.y(),max.x())`), then applies
+/// `BoundingBox::scaled(sqrt(2))` (`BoundingBox.cpp:52-56` scales `min`/`max`
+/// about the ORIGIN). Returns the scaled x-bounds used to anchor
+/// consistent-pattern infill grids (`FillRectilinear.cpp:2785`).
 pub(in crate::project_slice) fn extended_object_bounding_box_x(
     bounding_box: crate::geometry::BoundingBox,
 ) -> (i64, i64) {

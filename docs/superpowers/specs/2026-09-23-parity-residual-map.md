@@ -127,18 +127,27 @@ On a 20-case random dual-fresh sample + targeted re-verification:
    wired; sparse_anchoring `arms` left `None` pending bbox plumbing).
    Verified: `case-I5aCx8` gcode now byte-identical to oracle except the
    generator-name header.
-   LIMIT (round-14 review): the grid anchor is derived from the SLICE
-   contours (`plane_path_object_bounding_box` over `object_slices`),
-   centered on the origin — a proxy for `PrintObject::bounding_box()` =
-   centered `m_size` (raw mesh extent, `Print.hpp:347`). For a
-   compensated object (xy_size_compensation/elephant-foot) the contour
-   extent is smaller than `m_size`, which can shift `x0`/`n_vlines` by one
-   column and flip serpentine parity (reviewer worked example: -0.2mm comp
-   + 2mm spacing → 16 vs 14 columns). Byte-exact on the uncompensated
-   case; full fidelity needs `ProjectObject`/`m_size` threaded into
-   `generate_layer` (currently only `PreparedPostExternalSurfaces` is in
-   scope). The lookup is lazy + Option-guarded so a fully compensated-away
-   object (empty contours) no longer panics.
+   PROVENANCE (round-15 review): upstream `extended_object_bounding_box`
+   reads `PrintObject::bounding_box()` = centered mesh `m_size`
+   (`Print.hpp:347`, `raw_bounding_box().size()`, `PrintObject.cpp:98-112`,
+   `Model.cpp:1586-1599`). We IMPLEMENTED that mesh path
+   (`mesh_object_bounding_box`, instance `no_xy_translation` × volume
+   transform over ModelPart meshes) and it REGRESSED this case: raw mesh
+   `m_size` (10mm cube) produced extended x-min `-7.07mm` vs the oracle's
+   actual grid anchor `-8.14mm` (contour extent), flipping the serpentine
+   parity. So the oracle's effective `bounding_box` is the SLICE-CONTOUR
+   extent, not raw `m_size` — `plane_path_object_bounding_box`
+   (`object_slices`) centered on the origin reproduces it byte-exact.
+   `m_size` ≠ contour here means either `raw_bounding_box` for this model
+   already includes the compensated/sliced outline, or upstream's
+   `bounding_box` path differs; the contour proxy is empirically correct.
+   The lookup is lazy + Option-guarded (`plane_path_object_bounding_box`
+   returns `Option`) so a fully compensated-away object (empty contours)
+   no longer panics — `(0,0)` instead. `ProjectObject` IS reachable in
+   `generate_layer` via `traversal.project.objects()` (adaptive.rs does
+   this) — contour was kept because it is empirically correct, not for
+   reachability. `sparse_anchoring` also uses the contour bbox
+   (`mod.rs`), consistent with this finding.
    `first_outer::thin_wall_offsets` extraction
    (PerimeterGenerator.cpp:1251-1266) plumbed record-level through
    onion→traversal→raw→chained and materialized in `traverse_loops` via

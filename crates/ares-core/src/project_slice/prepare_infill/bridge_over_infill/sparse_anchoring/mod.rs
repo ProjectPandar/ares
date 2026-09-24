@@ -68,6 +68,9 @@ pub(in crate::project_slice) fn generate_sparse_infill_polylines_for_anchoring(
     let (plan, _, _) = post_regions.as_parts();
     let z = plan.layers[layer_index].print_z;
     let object_reference = crate::project_slice::fill_entities::object_center(object_slices);
+    // Empirically the consistent-pattern grid anchor + plane-path `out_shift`
+    // match the slice-contour extent, not the raw mesh `m_size` (see
+    // `fill_entities/generate.rs`). Keep the contour-derived bbox.
     let object_bounding_box = object_bounding_box(object_slices);
     let mut result = Vec::new();
 
