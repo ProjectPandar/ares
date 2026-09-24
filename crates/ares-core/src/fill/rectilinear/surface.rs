@@ -166,6 +166,22 @@ fn fill_surface(
     } else {
         super::traverse::generate(&slice, params.consistent_pattern)
     };
+    if let Ok(path) = std::env::var("ARES_DUMP_POLY") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for polyline in &generated {
+                let _ = write!(file, "POLY layer={} ", params.layer_index);
+                for point in polyline.points() {
+                    let _ = write!(file, "{} {}", point.x(), point.y());
+                }
+                let _ = writeln!(file);
+            }
+        }
+    }
     let polylines: Vec<Polyline> = generated
         .into_iter()
         .map(|polyline| {

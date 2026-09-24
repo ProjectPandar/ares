@@ -86,7 +86,41 @@ On a 20-case random dual-fresh sample + targeted re-verification:
    vs upstream `TreeNode.cpp:196-228`, or `reconnectRoots` failing to re-ground
    lifted parts back into the boundary where upstream keeps them attached.
 
-6. **detect_thin_wall** — CLOSED. `first_outer::thin_wall_offsets` extraction
+6b. **zigzag/monotonic sparse-infill serpentine order** (`case-I5aCx8`,
+   layer 42 / Z8.6). `sparse_infill_pattern=zigzag`, `infill_direction=45`,
+   `align_infill_direction_to_model=0`, `infill_combination=0`. Both emit the
+   SAME `stInternal` surface (`thickness_layers=1`, `angle=0.785`,
+   `bridge=None`, `layer_index=42` → `dir=2.356` verified via
+   `ARES_TRACE_INFILL_DIR`) and the SAME 45° line family (`y=x` diagonals,
+   e.g. shared endpoint `X113.613 Y113.613`). The difference is the serpentine
+   ENTRY END of the first line: oracle emits `X110.225 Y106.387` (horizontal
+   connector `Y=106.387`), ares emits `X106.387 Y110.225` (vertical connector
+   `X=106.387`) — the diagonal-opposite end of the same `X+Y=216.612` line.
+   Line sets are MIRROR-IMAGES across `y=x`: oracle connectors run in X
+   (`(110.225,106.387)->(106.387,106.387)` horizontal), ares connectors run in
+   Y (`(106.387,110.225)->(106.387,106.387)` vertical); the main `y=x`
+   diagonals are shared. ORACLE-PROBED (`ORCA_DUMP_DIR` instrumented
+   `_infill_direction`, `dirprobe.nix`): oracle `layer_id=42 thick=1
+   dontalt=0 angle=0.785 fixed=0 bridge=-1 type=stInternal z=8.6
+   out=2.35619` — IDENTICAL to ares (`layer_index=42 thickness=1
+   dir=2.3562`). So `dir`/`thickness_layers`/`layer_id`/`dont_alternate`
+   all match; the divergence is INSIDE the line generation, not the angle.
+   ORACLE `polylines_out` dump (pre-rotate-back,
+   `polyprobe.nix` → `ORCA_DUMP_POLY`) vs ares `ARES_DUMP_POLY` (dump added
+   in `fill/rectilinear/surface.rs` before the rotate-back): POLY1 is
+   byte-identical (same points, same order). POLY2 is ares's = oracle's
+   traversed as the x-mirrored reverse (oracle starts
+   `(-2713864,-2654195)...`, ares starts `(-2713864,2654187)...` = the
+   x-negated reversed traversal). So the divergence is INSIDE
+   `traverse::generate` (`rectilinear/traverse.rs`) ordering — the second
+   serpentine component enters from the mirrored end. The `next_start`
+   forward/backward scan (`!consistent_pattern || i_vline2%2==0`) and
+   `consume_vertical_run`/`connect_horizontal` left-vs-right selection differ
+   from `traverse_graph_generate_polylines` (FillRectilinear.cpp:1354-1500)
+   for this expolygon's second island. Probe: dump `segs` intersections
+   (kinds + consumed flags) per vline for Z8.6 to find the divergent start
+   or link choice.
+   `first_outer::thin_wall_offsets` extraction
    (PerimeterGenerator.cpp:1251-1266) plumbed record-level through
    onion→traversal→raw→chained and materialized in `traverse_loops` via
    `gap_extrusion::variable_width::convert_paths` as `ExtrusionEntity::Path`
