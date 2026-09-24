@@ -687,3 +687,22 @@ upstream `Line::distance_to_squared` (integer `coord_t`, exact i128 cross
 product) can disagree on which span is the recursion's max-deviation, flipping
 an endpoint's keep/drop. Residual = DP distance-metric precision (f64 vs exact
 integer), not clip, not chain.
+
+## Vertex-drop ROOT CAUSE (final, #654): variable-width segment endpoints
+
+`variable_width` (`VariableWidth.cpp:216`) splits each `ThickPolyline` into
+`ExtrusionPath` segments via `thick_polyline_to_extrusion_paths_2` at
+**width-change boundaries** (tolerance `scale_(0.05)`). Each segment is its own
+`ExtrusionPath` → `simplify` (DP) preserves every segment endpoint. The vertex
+`110.509,112.133` is a width-transition boundary → a path endpoint → DP keeps it.
+
+Ares routes these through `FillExtrusionEntity::VariableWidth(GapFillEntity)` —
+a single merged `Polyline3` with no per-width-segment boundary marking — so
+`simplify_gap_entity`→`simplify_path3` DPs the whole polyline and drops the
+interior vertex.
+
+**Fix**: split variable-width fill paths at width-change boundaries (matching
+`thick_polyline_to_extrusion_paths_2` segmentation) before DP, OR mark those
+boundary points as DP-preserved. Standalone upstream clipper reference harness
+at `/tmp/clipref` (clipper.cpp 6.2.6 + Eigen/TBB stubs) confirms ares's clip
+output is byte-identical — the residual is purely the simplify segmentation.
