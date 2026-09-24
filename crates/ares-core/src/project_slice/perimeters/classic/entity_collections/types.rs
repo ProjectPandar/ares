@@ -56,6 +56,29 @@ impl ExtrusionEntity {
         }
     }
 
+    /// `ExtrusionEntity::is_loop` (`ExtrusionEntity.hpp`).
+    pub(in crate::project_slice) const fn is_loop(&self) -> bool {
+        matches!(self, Self::Loop(_))
+    }
+
+    /// `ExtrusionEntityCollection::reverse` applies `ptr->reverse()` to
+    /// non-loop entities only (`ExtrusionEntityCollection.cpp:65-72`):
+    /// `ExtrusionPath::reverse` / `ExtrusionMultiPath::reverse` flip the path
+    /// direction; loops keep winding (their element order is unchanged by a
+    /// collection reversal).
+    pub(in crate::project_slice) fn reverse(&mut self) {
+        match self {
+            Self::Loop(_) => {}
+            Self::MultiPath(multi) => {
+                multi.paths.reverse();
+                for path in &mut multi.paths {
+                    path.reverse();
+                }
+            }
+            Self::Path(path) => path.reverse(),
+        }
+    }
+
     /// `ExtrusionEntity::first_point` (`ExtrusionEntity.hpp`): the first
     /// point of the first sub-path, identical for loops and multi-paths.
     pub(in crate::project_slice) fn first_point3(&self) -> &Point3 {

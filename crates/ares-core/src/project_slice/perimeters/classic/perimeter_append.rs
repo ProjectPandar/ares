@@ -17,8 +17,9 @@ use crate::{ObjectOptions, ProcessBrimType, ProcessWallSequence, RegionOptions};
 
 use super::{
     entity_collections::{
-        ExtrusionEntityCollection, PreparedEntityCollectionObject, PreparedEntityCollectionRecord,
-        PreparedEntityCollectionSurface, PreparedPostClassicEntityCollections,
+        ExtrusionEntity, ExtrusionEntityCollection, PreparedEntityCollectionObject,
+        PreparedEntityCollectionRecord, PreparedEntityCollectionSurface,
+        PreparedPostClassicEntityCollections,
     },
     traversal::{ClassicTraversalRecord, PostClassicTraversalPrintObject},
 };
@@ -201,35 +202,135 @@ fn reorder_walls(
     sequence: ProcessWallSequence,
     layer_id: usize,
 ) {
+    // `ExtrusionEntityCollection::reverse` (`ExtrusionEntityCollection.cpp:
+    // 65-72`): reverse every non-loop entity in place, then reverse the
+    // entity order. Rust `Vec::reverse` alone would not flip a `Path`/`Multi-
+    // Path`'s internal direction.
+    fn reverse_collection(collection: &mut ExtrusionEntityCollection) {
+        for entity in &mut collection.entities {
+            if !entity.is_loop() {
+                entity.reverse();
+            }
+        }
+        collection.entities.reverse();
+    }
     match sequence {
         ProcessWallSequence::InnerOuter => {}
-        ProcessWallSequence::OuterInner => collection.entities.reverse(),
+        // `PerimeterGenerator.cpp:1467` (`is_outer_wall_first` / first-layer
+        // outer-brim reverse).
+        ProcessWallSequence::OuterInner => reverse_collection(collection),
         ProcessWallSequence::InnerOuterInner if layer_id == 0 => {}
         ProcessWallSequence::InnerOuterInner => {
-            collection.entities.reverse();
-            let mut reordered = Vec::with_capacity(collection.entities.len());
-            let mut entities = std::mem::take(&mut collection.entities)
-                .into_iter()
-                .peekable();
-            while entities.peek().is_some() {
-                let mut island = vec![entities.next().unwrap()];
-                while entities
-                    .peek()
-                    .is_some_and(|entity| entity.inset_idx() != 0)
-                {
-                    island.push(entities.next().unwrap());
-                }
-                let split = island
-                    .iter()
-                    .position(|entity| entity.inset_idx() >= 2)
-                    .unwrap_or(island.len());
-                let deep = island.drain(split..).rev();
-                reordered.extend(deep);
-                reordered.extend(island);
+            // `PerimeterGenerator.cpp:1470-1560` sandwich mode: reverse all,
+            // then for each island bring first-internal (inset_idx==1) ahead
+            // of second-internal+ (inset_idx>=2), then reorder to
+            // outer-first within each island.
+            reverse_collection(collection);
+            if collection.entities.len() > 2 {
+                sandwich_reorder(&mut collection.entities);
             }
-            collection.entities = reordered;
         }
     }
+}
+
+/// `PerimeterGenerator.cpp:1483-1560` — the two-phase InnerOuterInner
+/// reorder. Phase 1 pulls every `inset_idx==1` (first internal) ahead of
+/// `inset_idx>=2` within each island; phase 2 walks each island reordering
+/// `outer,first_internal,second_internal` so the deepest internal walls
+/// print innermost-last.
+fn sandwich_reorder(entities: &mut Vec<ExtrusionEntity>) {
+    // Phase 1: reordered gets outer(0)+first-internal(1) in order, then the
+    // skipped (>=2) appended at each island boundary; skipped accumulates
+    // second-internal+ per island.
+    let mut reordered: Vec<Option<ExtrusionEntity>> = Vec::with_capacity(entities.len());
+    let mut skipped: Vec<Option<ExtrusionEntity>> = Vec::new();
+    let mut found_second_internal = false;
+    for entity in std::mem::take(entities) {
+        match entity.inset_idx() {
+            0 => {
+                if found_second_internal {
+                    reordered.append(&mut skipped);
+                }
+                reordered.push(Some(entity));
+            }
+            1 => reordered.push(Some(entity)),
+            _ => {
+                skipped.push(Some(entity));
+                found_second_internal = true;
+            }
+        }
+    }
+    reordered.append(&mut skipped);
+
+    // Phase 2: per-island outer/first/second-internal scan, then place the
+    // island as [outer, first_internal, ...deepest-first internals...].
+    let mut result: Vec<ExtrusionEntity> = Vec::with_capacity(reordered.len());
+    let mut position = 0usize;
+    while position < reordered.len() {
+        let mut outer = -1isize;
+        let mut first_internal = -1isize;
+        let mut second_internal = -1isize;
+        let mut max_internal = reordered.len() as isize - 1;
+        let mut arr_i = position;
+        while arr_i < reordered.len() {
+            let inset = reordered[arr_i].as_ref().unwrap().inset_idx();
+            match inset {
+                0 => {
+                    if outer == -1 {
+                        outer = arr_i as isize;
+                    }
+                }
+                1 => {
+                    if first_internal == -1 && (arr_i as isize) > outer && outer != -1 {
+                        first_internal = arr_i as isize;
+                    }
+                }
+                2 => {
+                    if second_internal == -1 && (arr_i as isize) > first_internal && outer != -1 {
+                        second_internal = arr_i as isize;
+                    }
+                }
+                _ => {}
+            }
+            if outer > -1 && first_internal > -1 && second_internal > -1 && inset == 0 {
+                arr_i -= 1;
+                max_internal = arr_i as isize;
+                break;
+            }
+            arr_i += 1;
+        }
+        if outer > -1 && first_internal > -1 && second_internal > -1 {
+            // inner_outer_extrusions: deepest internals
+            // [second_internal..=max_internal] first (reversed), then the
+            // outside-in [position..second_internal) head.
+            let mut island: Vec<usize> = Vec::new();
+            let mut arr_j = max_internal;
+            while arr_j >= position as isize {
+                if arr_j >= second_internal {
+                    island.push(arr_j as usize);
+                }
+                arr_j -= 1;
+            }
+            let mut arr_j = position;
+            while (arr_j as isize) < second_internal {
+                island.push(arr_j);
+                arr_j += 1;
+            }
+            for idx in island {
+                result.push(reordered[idx].take().unwrap());
+            }
+            position = arr_i + 1;
+        } else {
+            break;
+        }
+    }
+    // Entities not consumed by a completed island (a trailing island without
+    // all three of outer/first/second-internal) stay in their reversed order
+    // — upstream only `entities.replace`s the scanned span.
+    for entity in reordered.into_iter().skip(position).flatten() {
+        result.push(entity);
+    }
+    *entities = result;
 }
 
 fn append_nonempty(collection: ExtrusionEntityCollection) -> AppendedPerimeterCollections {

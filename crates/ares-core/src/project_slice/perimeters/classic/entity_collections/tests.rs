@@ -418,13 +418,18 @@ fn task22o9_thin_wall_chain_order_and_reversal() {
         vec!["loop", "path", "loop"],
         "thin wall chains between the two loops"
     );
-    // The open path's emitted direction honors the chain's reversal: emitted
-    // first-point must be the input's last-point (x=1_000_000 -> chain starts
-    // it at the nearer 2_000_000 end... assert endpoints, not exact dir).
+    // The open path's emitted direction honors the chain's reversal: the
+    // chain starts it at the end nearer the preceding loop, so the emitted
+    // first/last points flip relative to the (backward-oriented) input
+    // `[(2_000_000,500_000),(1_000_000,500_000)]`.
     if let ExtrusionEntity::Path(p) = &collection.entities[1] {
         let first = p.polyline.points.first().unwrap();
         let last = p.polyline.points.last().unwrap();
-        assert_ne!(first, last, "open thin path keeps distinct endpoints");
+        assert_eq!(
+            first.x, 1_000_000,
+            "reversed thin path starts at the near end"
+        );
+        assert_eq!(last.x, 2_000_000, "reversed thin path ends at the far end");
     } else {
         panic!("expected a Path entity in the chain");
     }

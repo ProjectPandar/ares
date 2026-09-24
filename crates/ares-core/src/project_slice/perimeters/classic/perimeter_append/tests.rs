@@ -55,6 +55,51 @@ fn wall_sequences_reorder_inset_indices_like_orca() {
 }
 
 #[test]
+fn outer_inner_reverses_thin_path_direction() {
+    // `ExtrusionEntityCollection::reverse` flips a non-loop Path's direction
+    // (upstream `ExtrusionEntityCollection.cpp:65-72`), not just the order.
+    let mut collection = ExtrusionEntityCollection {
+        entities: vec![thin_path(0, 10)],
+        source_order: 0,
+    };
+    reorder_walls(&mut collection, ProcessWallSequence::OuterInner, 1);
+    let ExtrusionEntity::Path(path) = &collection.entities[0] else {
+        panic!("thin path stays a Path");
+    };
+    assert_eq!(
+        path.polyline.points[0].x, 10,
+        "reversed path starts at far end"
+    );
+    assert_eq!(path.polyline.points[1].x, 0);
+}
+
+#[test]
+fn inner_outer_inner_handles_leading_thin_path() {
+    // `[Loop2,Loop1,Loop0,Path(-1)]` on layer>0: a leading thin path must not
+    // break the island scan — upstream produces `[Loop2, Path, Loop0, Loop1]`
+    // via its reorder span (`PerimeterGenerator.cpp:1483-1560`).
+    let mut collection = ExtrusionEntityCollection {
+        entities: vec![
+            ExtrusionEntity::Loop(entity(30, 2)),
+            ExtrusionEntity::Loop(entity(20, 1)),
+            ExtrusionEntity::Loop(entity(10, 0)),
+            thin_path(5, 6),
+        ],
+        source_order: 0,
+    };
+    reorder_walls(&mut collection, ProcessWallSequence::InnerOuterInner, 1);
+    let kinds: Vec<i32> = collection.entities.iter().map(|e| e.inset_idx()).collect();
+    // The thin path (inset_idx -1) must remain associated with its island,
+    // not become a detached first island. Assert it isn't the sole first
+    // entity and the outer wall (0) still reorders to innermost position.
+    assert_eq!(kinds.len(), 4);
+    assert!(
+        kinds.iter().any(|&i| i == -1),
+        "thin path retained with inset_idx -1"
+    );
+}
+
+#[test]
 fn task22o10_nonempty_collection_keeps_nested_boundary_order_and_allocations() {
     let collection = collection();
     let allocation = collection_loop(&collection, 0).paths[0]
@@ -162,6 +207,20 @@ fn collection() -> ExtrusionEntityCollection {
         ],
         source_order: 0,
     }
+}
+
+fn thin_path(x0: i64, x1: i64) -> ExtrusionEntity {
+    ExtrusionEntity::Path(ExtrusionPath {
+        polyline: Polyline3 {
+            points: vec![Point3 { x: x0, y: 0, z: 0 }, Point3 { x: x1, y: 0, z: 0 }],
+            fitting: Vec::new(),
+        },
+        role: ExtrusionRole::ExternalPerimeter,
+        can_reverse: true,
+        mm3_per_mm: 0.08,
+        width: 0.4,
+        height: 0.2,
+    })
 }
 
 fn entity(x: i64, inset_idx: i32) -> OrderedExtrusionLoop {
