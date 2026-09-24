@@ -477,3 +477,17 @@ Reviewer verdict: **OK with notes** — both commits verified-clean for their
 scope; whole-filler tpms geometry parity remains an open residual (#7).
 Verified: 1311 fill/connect/tpms unit tests pass; `case-FBsvb6`
 (gap_fill_target/topbottom) stays byte-clean (2 = header).
+
+## Next probe: ±1 coord_t lattice site
+
+The ~19.6k ksr `G1` diffs are ±1 scaled-unit coordinate differences on diagonal
+sparse-infill endpoints (`X156.234` vs `X156.233`). Verified NOT the source:
+`emit_axis` format (now `std::round`, `f7f444ee`), `pos()` intersection
+rounding (`segments.rs:33` = `FillRectilinear.cpp:129` half-away), `rotate_point`
+(f64 trig, `checked_round`), `line_spacing` truncation, `align_to_grid`
+(div_euclid = upstream floor), `pattern_shift`(=0 for rectilinear/crosszag),
+`reference_point`=(0,0) = centered `bounding_box.center()`. Remaining suspects:
+the `pos_p`/`pos_q` rational numerator itself, or `connect_infill` choosing a
+different-but-adjacent boundary vertex. Needs `ARES_DUMP_MONO`/`ARES_DUMP_SEGS`
+compared against a `fill_surf_bbox`-style oracle probe that dumps upstream
+`x0`/`line_spacing`/`refpt`/`pos_p`/`pos_q` per fill surface.
