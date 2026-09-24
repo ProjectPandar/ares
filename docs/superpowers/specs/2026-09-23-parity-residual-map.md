@@ -921,3 +921,15 @@ endpoints are NOT in the rounding fn — they are in the INPUTS: `pos_p`/`pos_q`
 `TopX`/`intersect_point`, OR the E `dE` per-segment. Next oracle probe: dump
 `pos_p`,`pos_q` and the raw `dE`/`e_per_mm`/`line_length` for a specific
 diverging line (e.g. `X148.995` vs `.994`, `E.03178` vs `.03177`).
+
+### E-flow audit (#662)
+
+All role flow ratios in ksr_fdmtest_v4 = 1, print_flow_ratio=1,
+filament_flow_ratio=0.98, SAFC disabled -> e_per_mm = mm3*0.98/area. Verified
+`for_length` op order == upstream `e_per_mm3*mm3_eff/ffr` (ffr cancels) AND
+`ordinary_volume` (ares) == `Flow::mm3_per_mm` (float res, ROUNDED_RECTANGLE_FACTOR
+1-0.25π). So e_per_mm is structurally identical; residual 1e-5 is in
+`line_length` (Line::length f64 sqrt vs ares dx²+dy² sqrt — same) OR the
+**m_E accumulation order** (upstream `m_E += dE` per segment; ares
+`e_position += delta` — check the retract/unretract E base and G92 resets match).
+Next: oracle `ORCA_DUMP_E` per-segment dE to localize which field diverges.
