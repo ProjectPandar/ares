@@ -167,3 +167,10 @@ On a 20-case random dual-fresh sample + targeted re-verification:
   feedrate input differs on. orca's emitted `M73` checkpoints give only
   `int(100*elapsed/total)`/`minutes(total-elapsed)` — too coarse to bisect
   a ~1s/8min drift; need the raw cache.
+
+12. **Skirt/first-travel endpoint `Y107.104` vs orca `Y107.103`** (`thinplate`,
+    line 61, `G1 X104.917 Y107.104` travel to first extrusion). A
+    last-ulp coordinate divergence in the travel-to-start endpoint —
+    either an f32-vs-f64 coordinate computation or a round-half boundary.
+    Not M73-related (the thinplate has zero M73 drift). Needs upstream's
+    travel-endpoint coordinate path traced to the exact rounding site.
