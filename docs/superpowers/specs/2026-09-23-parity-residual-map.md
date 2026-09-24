@@ -1079,3 +1079,17 @@ tf*(x,y,z) with x,y scaled; ares prescaled_xy scales OUTPUT rows 0..2 of the
 f64 matrix (including the translation column) then casts coefficients to f32.
 Row-vs-column prescaling and f64-matrix-then-f32-cast vs f32-matrix-matmul
 can round differently -> the ±1 Coord vertex source.
+
+### Vertex precision: f64 Point3d vs upstream stl_vertex f32 (#671)
+
+Upstream mesh vertices are stl_vertex (Eigen f32). The slicing transform
+make_trafo_for_slicing casts the COMPOSED Transform3d to Transform3f (f32), then
+tf*v in f32. Ares stores Point3d (f64) vertices and transform_point_f32 casts
+each f64 coefficient to f32 then does f32 coef*f32 point. The interpolation and
+coord_t rounding are identical; residual is sub-lsb f32 representation drift
+between (f64 vertex -> f32 at multiply) vs (f32 vertex already). ±1um diffs
+across ALL features = a global per-vertex quantization. prescale_xy_input added
+to mirror upstream prescale(columns) semantics; parity unchanged (44491 lines)
+so the ±1 is f32-representation-floor noise in slice_facet input vertices, not
+a logic bug. Remaining: represent the slicing input as exact coord_t (i32)
+upstream does effectively keep a->x() as integer-coord-valued f32.
