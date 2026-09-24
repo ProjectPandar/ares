@@ -610,3 +610,16 @@ not a one-line fix. Everything else in the header already matches.
 - Remaining failures are the two real residuals above: Clipper open-path
   vertex drop (~3 content lines/case) and the 3 s planner time model.
 - All order-non-determinism is absorbed by the envelope-membership harness.
+
+## Vertex-drop mechanism (continuation #652)
+
+`intersection_open_polylines` clips the generated Hilbert polyline to the
+expolygon. The dropped vertex `110.509,112.133` sits where the curve touches
+the (rotated) boundary. Upstream `intersection_pl` emits the clip vertex; ares
+emits the through-chord `109.975,111.6 → 110.775,112.4` skipping it. Verified
+NOT in `fixup_out_polyline` (dup-only), `chain_polylines_multifragment`
+(reorder only), or `intersect_open_edges` (matches `clipper.cpp:1640`). The
+residual is in the sweep's `AddOutPt`/boundary-touch emission for open
+subject paths — needs an instrumented upstream `clipper.cpp` `AddOutPt`
+sequence to bisect, since the failure is a single scanline event, not a whole
+stage.
