@@ -329,3 +329,29 @@ intersection / multiline) or a sub-ulp phase in `z = grid_z/scale_factor`.
 `chain_or_connect_infill` (`FillBase.cpp:1822`) guards `!infill_ordered.
 empty()` before `connect_infill`; ares's lightning entry bypassed the guard.
 Now skips `connect_infill` on an empty clipped set.
+
+## dont_connect short-circuit + tpmsd fractional scale — FIXED (`ed6edb0c`)
+
+Independent review (gpt-6-astra) verified both prior fixes, then flagged two
+reachable pre-existing fidelity bugs:
+
+- **`connect_infill` ignored `params.dont_connect()`**
+  (`anchor_length_max < 0.05`, `FillBase.hpp:52`). Upstream
+  `chain_or_connect_infill` (`FillBase.cpp:1822`) returns
+  `chain_polylines(infill_ordered)` (chained when `size > 1`) instead of
+  `connect_infill`; ares ran `connect_infill` unconditionally → violated the
+  `anchor_length_max >= 0.01` debug assert AND produced boundary-connected
+  output where upstream emits plain-chained. `connect_infill_polygons` now
+  short-circuits before graph build; all callers (lightning, tpms_d,
+  plane_path, gyroid, honeycomb, adaptive, tpms_fk, cross_hatch,
+  three_d_honeycomb, multiline) route through it.
+- **tpms_d `grid_z`/`scale_factor` used truncating `checked_scale`**
+  (`i64`) where upstream `scale_(z)`/`scale_(line_spacing)` keep fractional
+  doubles (`libslic3r.h:94`). Switched to `scaled_delta` (fractional) —
+  matters only for non-integer-aligned `spacing`/`layer_z` (integer values
+  truncate identically, so the current cube fixtures see no output change).
+
+Reviewer verdict: **OK with notes** — both commits verified-clean for their
+scope; whole-filler tpms geometry parity remains an open residual (#7).
+Verified: 1311 fill/connect/tpms unit tests pass; `case-FBsvb6`
+(gap_fill_target/topbottom) stays byte-clean (2 = header).
