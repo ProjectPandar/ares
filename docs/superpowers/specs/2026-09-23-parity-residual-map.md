@@ -784,3 +784,17 @@ segmentation, not a single bug. Bisect path: key both dumps by emitted
 `g1_line_id` (not block ordinal) OR emit a matching `ORCA_DUMP_BLOCKS` field set
 from ares (id, dist, cruise, accel, entry, exit, safe, per-block time) and
 diff numerically per emitted move.
+
+### Time-estimate: planner prefix is EXACT, tail diverges (#657)
+
+Aligned `ARES_DUMP_PLANNER` (`ord dist cruise accel entry exit safe time`) against
+oracle `ORCA_DUMP_BLOCKS` (same fields). First 3568 blocks are **byte-identical in
+time** (both cumulative 167.8270s). Divergence begins at block ~3570 / g1_line_id
+3678 — a `G2` arc + travel/wipe region (`G1 X151.576 ...` then `G2 X153.457
+I-46.204 J-47.521`). Oracle splits the arc into many small TimeBlocks
+(d=0.19,0.34,0.53 at cruise 201-250); ares emits fewer larger blocks (d=5.14
+c=1000). Full planner tail: oracle 5858.63s vs ares 5871.20s (Δ12.6s motion;
+header nets to 3s after other accounting). Root cause: **ares's `motions_indexed`
+does not sub-segment G2/G3 arcs + wipe/retract moves into the same TimeBlock
+count as `GCodeProcessor::process_G2/arc_segment`** — fix by matching upstream's
+per-arc discretization & wipe block boundaries in `processor/estimate.rs`.
