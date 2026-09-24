@@ -95,14 +95,20 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
    region (`±4223`) to tpmsd/tpmsfk/honeycomb. Instrumented oracle
    (`ORCA_DUMP_FS`/`ORCA_DUMP_INSET`/`ORCA_DUMP_TPMSD`) confirmed oracle fills
    `±4019688`; after the offset ares emits the identical `±4019688` bbox.
-   RESIDUAL NOW: `make_waves`/`trim` interior chord placement within the
-   (now-correct) region — same outer boundary `X114.02`, different internal
-   vertex subdivision. tpmsd/tpmsfk/honeycomb now offset; locked_zag/line/
-   monotonic/crosshatch/multiline/plane_path/cubic/quartercubic/stars/
-   triangles/lateral_* already offset via `rectilinear/surface.rs` or
-   `multiline.rs`. The earlier "detect_surfaces_type shrink" hypothesis is
-   superseded — the shrink is `fill_surface`'s `-spacing/2`, not a
-   `detect_surfaces` mutation.
+   RESIDUAL NOW (post-offset, `case-kKvJ5b` fresh-oracle diff ≈ 2805):
+   `connect_infill` anchor/`make_waves` interior tessellation — same region
+   `±4019688` and same outer boundary (`X114.02`), but ares emits ONE extra
+   `WIDTH:0.405676` boundary-anchor excursion (2-pt `X113.488→X113.558` hook)
+   where oracle connects without it, plus differing interior wave-vertex
+   subdivision → `F934`/`F933` feedrate rounding. Suspects: `connect/apply.rs`
+   `take_hook`/`take_limited`/`apply_remaining_endpoints` eligibility
+   (`anchor_length_max` gate / `not_taken_*`/`prev-next` selection) vs upstream
+   `FillBase.cpp:1578+` `connect_infill` `BoundaryInfillGraph`. tpmsd/tpmsfk/
+   honeycomb now offset; locked_zag/line/monotonic/crosshatch/multiline/
+   plane_path/cubic/quartercubic/stars/triangles/lateral_* already offset via
+   `rectilinear/surface.rs` or `multiline.rs`. The earlier
+   "detect_surfaces_type shrink" hypothesis is superseded — the shrink is
+   `fill_surface`'s `-spacing/2`, not a `detect_surfaces` mutation.
 
 5. **lightning propagated-tree branch retention** (`case-IdM3Br`, layers 6-19).
    After round-4 (`stable_sort_by` + `coord_t` width cast + `EPSILON` 1e-4),
