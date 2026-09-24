@@ -728,3 +728,33 @@ boundary it survives DP.
 **Needed**: dump oracle's pre-clip rotated Hilbert polyline (probe on
 `_fill_surface_single` `polylines` before `intersection_pl`) and diff against
 ares's `ARES_DUMP_PLANEIN` to find the ordering/split divergence.
+
+## RESOLVED (#655): bottom_hilbert vertex drop — `simplify_reversed` bug
+
+Root cause found via a standalone upstream Clipper 6.2.6 reference harness
+(tools/clipref) + an oracle probe dumping `path->polyline` pre/post
+`LayerRegion::simplify_path`:
+
+- ares `intersection_open_polylines` == upstream `intersection_pl` byte-for-byte.
+- ares `geometry::douglas_peucker` == upstream `MultiPoint::_douglas_peucker`
+  byte-for-byte on the real 129-pt and 75-pt PRE paths.
+- The bug: `FillExtrusionCollection::simplify_reversed` (set for HilbertCurve +
+  BottomSurface) reversed the polyline before DP and reversed back after.
+  Upstream `simplify()` NEVER reverses — `LayerRegion::simplify_path` calls
+  `path->simplify()` directly. Reversing changed DP's anchor/floater recursion so
+  the collinear apex vertex (a genuine path point) was dropped → 3-line diff.
+- Fix: removed `simplify_reversed` entirely (commit 648f3f5e).
+  `orca_parity_bottom_hilbert_smoke` now PASSes. ares-cli: **184/185**.
+
+## Remaining single residual: `model printing time` 3s
+
+`project_matches_orca_242_semantically` fails only at header byte 96:
+ares `1h 43m 52s` vs oracle `1h 43m 49s` (and `total estimated` 1h49m1s vs
+1h48m58s). NOT a GCode move difference — purely the exported time estimate.
+Ares already has a `GCodeProcessor`-equivalent trapezoid planner
+(`processor/motion/planner/{mod,junction,trapezoid}.rs`, `processor/estimate.rs`).
+The 3s is a micro-difference in accumulated block time (junction-velocity,
+acceleration rounding, or a per-block model constant). Next: instrument the
+planner's per-block `time` sum against upstream `GCodeProcessor::print_statistics`
+`modes[Normal].time` accumulation (probe `processor/estimate.rs` vs
+`GCodeProcessor.cpp` trapezoid `block_time`).
