@@ -89,8 +89,11 @@ pub(crate) fn fill_tpmsd_surface(
         grid_z,
         density_adjusted,
         params.spacing,
-        ((max.x() - min.x()) as f64 / distance as f64).ceil() + 1.0,
-        ((max.y() - min.y()) as f64 / distance as f64).ceil() + 1.0,
+        // Upstream `ceil(bb.size()(0) / distance) + 1.` divides coord_t by
+        // coord_t — integer division, `ceil` a no-op → `size/distance + 1`
+        // (floor), not float-ceil (FillTpmsD.cpp:120-121).
+        ((max.x() - min.x()) / distance + 1) as f64,
+        ((max.y() - min.y()) / distance + 1) as f64,
         scale,
     )?;
     translate(&mut polylines, min)?;
