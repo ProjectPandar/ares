@@ -317,6 +317,12 @@ impl Estimate {
             .zip(prepare_stages)
             .filter_map(|(time, is_prepare)| is_prepare.then_some(time))
             .fold(0.0_f32, |sum, time| sum + *time as f32) as f64;
+        if std::env::var("ARES_DUMP_TOTAL").is_ok() {
+            eprintln!(
+                "ARES_TOTAL cumulative={cumulative:.9} trailing_delay={trailing_delay:.9} total={:.9} prepare={prepare}",
+                cumulative + trailing_delay
+            );
+        }
         Self {
             total: cumulative + trailing_delay,
             prepare,
