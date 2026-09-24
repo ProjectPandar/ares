@@ -963,3 +963,17 @@ lattice unit on some vertices, which propagates through rotate+clip to the
 emitted endpoint AND (via line.length) the dE. Next probe: dump the expolygon
 point set for a layer (ORCA_DUMP_EXPOLY vs ares region dump) to find the first
 vertex that differs, then trace to whichever slicing/offset op produced it.
+
+### Residual rooted in perimeter offset loops (#664)
+
+The diverging endpoints are `; FEATURE: Inner wall`/`Outer wall` perimeter
+vertices AND the `G2/G3` arc-fit endpoints — NOT infill. E.g. `G3 X104.96` vs
+`X104.961`, `G1 X102.489` — these are the perimeter offset-loop vertices
+(`PerimeterGenerator` -> clipper `OffsetPolygons` -> `generate` -> miter/round
+joins) differing by 1 scaled unit, OR the arc-fitter (`ArcWelder::fit`) choosing
+a different segment boundary. The offset vertex math (DoMiter/DoRound/DoSquare
+in offset/generate.rs) uses fixed_round correctly; suspect the normal/cosine
+computation (`normals` per-vertex, `sin_cos` table for round joins) or the
+`arc_tolerance`/`steps_per_full_circle` for round joins. Next: clipref harness
+has a clipper offset oracle — feed a failing perimeter polygon through both and
+diff vertices.
