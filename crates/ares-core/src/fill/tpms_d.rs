@@ -115,6 +115,19 @@ fn make_waves(
     let a = z.sin() - z.cos();
     let b = z.sin() + z.cos();
     let swap_uv = a.abs() > b.abs();
+    if let Ok(path) = std::env::var("ARES_DUMP_TPMSW") {
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(
+                f,
+                "W z={z:.6} a={a:.6} b={b:.6} swap={swap_uv} sf={scale_factor:.4} gz={grid_z:.4} w={width} h={height} tol={tolerance:.4}"
+            );
+        }
+    }
     // `minU = 0 - height; maxU = width; minV = 0; maxV = width + height`,
     // swapped alongside a/b when `swapUV` (FillTpmsD.cpp:50-58).
     let (a, b, min_u, max_u, min_v, max_v) = if swap_uv {
