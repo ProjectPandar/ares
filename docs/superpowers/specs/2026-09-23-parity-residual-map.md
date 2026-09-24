@@ -592,3 +592,21 @@ upstream — so the drop is inside Clipper's open-path sweep emission
 (`IntersectEdges`/`AddOutPt`/`ProcessIntersections` when the open subject path
 touches a scanline extremum or self-touches), the deepest remaining fidelity
 gap. ~3 lines/case, sub-mm.
+
+## Time-estimate residual
+
+`project_matches_orca_242_semantically` diff: `model printing time`
+`1h 43m 52s` (ares) vs `1h 43m 49s` (oracle) — 3 s on a 1h43m print (~0.0005%).
+Ares `gcode_filament_stats::normal_print_time_s` uses naive `length/speed`
+summation; oracle uses `GCodeProcessor::print_statistics.modes[Normal].time`
+(GCode.cpp:1907) — the full trapezoid-acceleration planner (junction deviation,
+min-rate clamps, cooling slowdowns) accumulated per move. Byte-parity here
+requires porting `GCodeProcessor`'s time model — a milestone-scale subsystem,
+not a one-line fix. Everything else in the header already matches.
+
+## Status snapshot (continuation #651)
+
+- 183/185 ares-cli tests green with `ARES_ORCA_RUNS>=4`.
+- Remaining failures are the two real residuals above: Clipper open-path
+  vertex drop (~3 content lines/case) and the 3 s planner time model.
+- All order-non-determinism is absorbed by the envelope-membership harness.
