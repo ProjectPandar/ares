@@ -237,28 +237,37 @@ impl Estimate {
                 .unwrap_or_default();
             let lookup_id = match command {
                 "G0" | "G1" => {
-                    // The `it->id == g1_lines_counter` probe in
-                    // `ExportLines::update` uses the exported counter as
-                    // passed in (the `++` inside only feeds the `internal`
-                    // arithmetic), so a line reads the cumulative through
-                    // the PREVIOUS eligible cache entry.
+                    // `process_line_move(g1_lines_counter++)` (:1460) probes
+                    // `g1_times_cache_it->id == g1_lines_counter` at the
+                    // PRE-increment caller counter (:1246-1248) — the line
+                    // reads the cumulative through the previous eligible
+                    // cache entry.
                     let id = exported_g1_lines;
                     exported_g1_lines += 1;
                     Some(id)
                 }
                 "G2" | "G3" => {
-                    // `ExportLines::update` internal count
-                    // (`GCodeProcessor.cpp:790-800`): `internal_g1_lines_counter`
-                    // — geometric `segments - 1` for a fully-cached arc, 0 when
-                    // the arc's first cache entry was seam-excluded
-                    // (`it->id > counter` → ret 0). The marker reads
-                    // `g1_lines_counter + internal` (:1466), the exported
-                    // counter advances `1 + internal` (:1467).
+                    // `ret` = `internal_g1_lines_counter` = the
+                    // `remaining_internal_g1_lines > 0` walk count in
+                    // `ExportLines::update` (:793-799): `arc_internal - 1`
+                    // eligible internal entries for a fully-cached arc
+                    // (the `it->id == counter` probe lands on the
+                    // second-to-last internal segment), 0 when the first
+                    // block was seam-excluded (`it->id > counter`).
+                    // `process_line_move(g1_lines_counter + ret)` (:1466),
+                    // `g1_lines_counter += 1 + ret` (:1467). The `it->id`
+                    // probe is `exported + 1 + ret` (`++` at :778).
                     let internal = if arc_seam_excluded[index] {
                         0
                     } else {
                         arc_segment_counts[index]
                     };
+                    // `process_line_move(g1_lines_counter + internal)` (:1466)
+                    // probes `g1_times_cache_it->id == g1_lines_counter +
+                    // internal` (:1246-1248) — `internal` is `update`'s
+                    // `ret` = the `remaining>0` walk count = `arc_internal`
+                    // for a fully-cached arc, 0 when the first block was
+                    // seam-excluded. `g1_lines_counter += 1 + internal` (:1467).
                     let lookup = exported_g1_lines + internal;
                     exported_g1_lines += 1 + internal;
                     Some(lookup)

@@ -185,3 +185,20 @@ On a 20-case random dual-fresh sample + targeted re-verification:
   extrusion), not a total-time error. Bisect: compare ares
   `ARES_DUMP_ELAPSED` cumulative at the pre-checkpoint G1 vs the percent
   boundary — needs oracle `g1_times_cache` or a 2-block reproducer.
+
+  #11b arc-seam cache exclusion — FIXED (`f554304d`). When a closed
+  `Outer wall` loop ends just before a `G2`/`G3`, upstream inserts a `Seam`
+  vertex (`GCodeProcessor.cpp:4215-4225`), associates the arc's first
+  internal segment, drops it from `g1_times_cache` → `ExportLines::update`
+  returns internal 0 → the arc M73 reads the seam-side carried `m_times`.
+  `SeamDetector::associate` now runs per arc segment (upstream
+  `store_move_vertex` lifecycle: extruding-external seeds `first_vertex`,
+  non-external checks `|new_pos-first|<0.25` and deactivates unconditionally
+  at :4225). `arc_seam_excluded[index]` collapses `internal` to 0 when the
+  first block is excluded; `lookup = exported + internal`, `exported +=
+  1 + internal` (:1466-1467). G0|G1 probes the pre-increment exported
+  counter (a line reads the cumulative through the PREVIOUS eligible entry).
+  Verified: arc_traversal reads second-to-last segment, seam-arc reads
+  seam-side id, helical P93, all 7002 green. NOTE: this is the arc
+  id-mapping fix — distinct from the per-block elapsed-VALUE drift (#11)
+  which persists on non-arc models (enable_arc_fitting off).
