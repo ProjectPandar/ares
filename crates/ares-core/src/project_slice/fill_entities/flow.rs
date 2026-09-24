@@ -46,16 +46,25 @@ pub(in crate::project_slice) fn object_center(
     )
 }
 
-/// `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) — merge
-/// the transposed corners (`out.merge(min.y(),min.x())` +
-/// `out.merge(max.y(),max.x())`) then `BoundingBox::scaled(sqrt(2))`
+/// `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) applied
+/// to `PrintObject::bounding_box()` (`Print.hpp:347`), which is the object
+/// extent CENTERED on the origin: `(-m_size/2, +m_size/2)`. This helper takes
+/// the raw (uncentered) object bbox, centers it on the origin, merges the
+/// transposed corners (`out.merge(min.y(),min.x())` +
+/// `out.merge(max.y(),max.x())`), then `BoundingBox::scaled(sqrt(2))`
 /// (`BoundingBox.cpp:52-56` scales `min`/`max` about the ORIGIN). Returns the
 /// scaled x-bounds used to anchor consistent-pattern infill grids
 /// (`FillRectilinear.cpp:2785`).
 pub(in crate::project_slice) fn extended_object_bounding_box_x(
     bounding_box: crate::geometry::BoundingBox,
 ) -> (i64, i64) {
-    let mut bounds = bounding_box;
+    // `PrintObject::bounding_box()` — center the raw extent on the origin.
+    let half_x = (bounding_box.max().x() - bounding_box.min().x()) / 2;
+    let half_y = (bounding_box.max().y() - bounding_box.min().y()) / 2;
+    let mut bounds = crate::geometry::BoundingBox::new(
+        crate::geometry::Point::new(-half_x, -half_y),
+        crate::geometry::Point::new(half_x, half_y),
+    );
     bounds.merge_point(crate::geometry::Point::new(
         bounds.min().y(),
         bounds.min().x(),

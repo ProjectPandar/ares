@@ -52,15 +52,26 @@ pub(in crate::project_slice) fn generate_layer(
         .expect("fill generation retains its resolved object");
     let object_options = &resolved_object.object;
     let mut output = LayerFillEntities::default();
-    let mut plane_path_bounding_box = None;
     // `Fill::_infill_direction` anchors the infill grid on the PRINT OBJECT
     // bounding box center (FillBase.cpp:297-301), not the surface center.
     let object_reference = super::object_center(object_slices);
     // `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) — the
     // object bbox transpose-merged + sqrt(2)-scaled so the consistent-pattern
     // vertical-line grid is anchored object-wide, independent of rotation.
-    let (extended_object_min_x, extended_object_max_x) =
-        super::extended_object_bounding_box_x(plane_path_object_bounding_box(object_slices));
+    // Computed lazily: only consistent-pattern fills consume it, and a fully
+    // compensated-away object has no contours to bound (`Fill.cpp:1224`
+    // derives the bbox from the mesh `m_size`, never requiring contours).
+    let mut extended_object_bounds_x: Option<(i64, i64)> = None;
+    let mut extended_object_bounds = || {
+        *extended_object_bounds_x.get_or_insert_with(|| {
+            // `extended_object_bounding_box_x` centers the raw contour bbox
+            // on the origin (`PrintObject::bounding_box`, `Print.hpp:347`),
+            // transpose-merges, and sqrt(2)-scales about the origin.
+            plane_path_object_bounding_box(object_slices)
+                .map(super::extended_object_bounding_box_x)
+                .unwrap_or((0, 0))
+        })
+    };
     // `FillLockedZag::set_lock_region_param` (`Fill.cpp:1309`) — the skin/
     // skeleton density+flow maps, built per-layer in `group_fills`.
     let crate::project_slice::group_fills::GroupedFills {
@@ -191,7 +202,7 @@ pub(in crate::project_slice) fn generate_layer(
                     pattern,
                     layer.id,
                     traversal.scale,
-                    (extended_object_min_x, extended_object_max_x),
+                    extended_object_bounds(),
                 )?;
             }
             SurfaceFillPattern::Configured(ProcessInfillPattern::TriHexagon) => {
@@ -240,7 +251,7 @@ pub(in crate::project_slice) fn generate_layer(
                     &lock_region_param,
                     layer.id,
                     traversal.scale,
-                    (extended_object_min_x, extended_object_max_x),
+                    extended_object_bounds(),
                 )?;
             }
             SurfaceFillPattern::Configured(
@@ -258,8 +269,10 @@ pub(in crate::project_slice) fn generate_layer(
                         // and must still emit the plane-path fill.
                         | ExtrusionRole::InternalInfill
                 ) {
-                    let object_bounding_box = *plane_path_bounding_box
-                        .get_or_insert_with(|| plane_path_object_bounding_box(object_slices));
+                    let Some(object_bounding_box) = plane_path_object_bounding_box(object_slices)
+                    else {
+                        continue;
+                    };
                     super::plane_path::append(
                         &mut output,
                         fill,
@@ -342,19 +355,17 @@ pub(in crate::project_slice) fn generate_layer(
 
 fn plane_path_object_bounding_box(
     slices: &[Vec<crate::geometry::ExPolygon>],
-) -> crate::geometry::BoundingBox {
+) -> Option<crate::geometry::BoundingBox> {
     let mut points = slices
         .iter()
         .flatten()
         .flat_map(|expolygon| expolygon.contour().points());
-    let first = *points
-        .next()
-        .expect("a sliced print object has a nonempty contour");
+    let first = *points.next()?;
     let (minimum, maximum) = points.fold((first, first), |(minimum, maximum), point| {
         (
             crate::geometry::Point::new(minimum.x().min(point.x()), minimum.y().min(point.y())),
             crate::geometry::Point::new(maximum.x().max(point.x()), maximum.y().max(point.y())),
         )
     });
-    crate::geometry::BoundingBox::new(minimum, maximum)
+    Some(crate::geometry::BoundingBox::new(minimum, maximum))
 }
