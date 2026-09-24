@@ -137,3 +137,15 @@ On a 20-case random dual-fresh sample + targeted re-verification:
   `Surface::thickness_layers` (top↔bottom bridging count within
   `combined_infill`). Localize by dumping ares `thickness_layers` per layer
   vs inferring orca's from its alternation boundaries.
+
+11. **Per-block `time()` accumulation drift → all M73-count DIVERGENT cases.**
+    `block_time` (trapezoid) verified faithful: `estimated_acceleration_distance`,
+    `intersection_distance`, `speed_from_distance`, `acceleration_time`/
+    `cruise_time`/`deceleration_time` all match `GCodeProcessor.cpp:127-274`
+    and `.hpp:439-476`. The residual is upstream — the per-block
+    `feedrate_profile.{entry,cruise,exit}` + `acceleration`/`distance` from
+    `recalculate_trapezoids` junction/jerk model. Total drift ~1s over 8min
+    but redistributed per-layer, flipping `time_in_minutes` at knife-edge
+    M73 boundaries → extra `M73 P.. R..` lines. Dominant cause of the
+    `sparse_infill_pattern/*` DIVERGENT bucket (line/zigzag/line all show
+    first-diff = M73 placement). Needs oracle `g1_times_cache`/feedrate dumps.
