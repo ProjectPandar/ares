@@ -85,8 +85,14 @@ fn assign_layer(layer: &mut LayerFillEntities, slices: &[ExPolygon]) -> LayerExt
             let points = slices
                 .iter()
                 .map(|s| {
-                    let p = s.contour().points()[0];
-                    format!("({},{})", p.x(), p.y())
+                    let pts = s
+                        .contour()
+                        .points()
+                        .iter()
+                        .map(|p| format!("{}.{}", p.x(), p.y()))
+                        .collect::<Vec<_>>()
+                        .join(",");
+                    format!("({})", pts)
                 })
                 .collect::<Vec<_>>()
                 .join(" ");
