@@ -103,11 +103,21 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
    `shrink(surface.new_polys, frSolidInfill.scaled_spacing)`, `cut_from_infill`,
    `new_internal_infills = diff_ex(internal_infills, cut_from_infill)`). Ares
    never applies that shrink — it fills the connect-boundary extent.
-   FIX = port `detect_surfaces_type`'s `internal_infills` shrink/anchoring so
-   the `stInternal` surface is `infill_exp` minus the extra ~0.2mm interior
-   margin; keep `fill_expolygons` (`±4223`) only as the `connect_infill`
-   boundary (`FillBase.cpp` `_fill`→`connect_infill` uses the wider
-   `fill_no_overlap`/boundary). Expected to collapse most of the tpmsd/tpmsfk/
+   Sharpened via `tools/orca-probes/fill_surf_bbox.nix` (ORCA_DUMP_FS on
+   `Fill.cpp:1037` `surface.expolygon`): oracle `fill_surfaces` carries MULTIPLE
+   `stInternal` surfaces per layer — `±4223228` (= `infill_exp`, `inset_post
+   =0.102`) AND `±3816159` (`inset_post=0.509`). tpmsd receives `±4019688`
+   (`inset_post=0.306`, i.e. `inset_pre=0.407≈perimeter_spacing` not
+   `perimeter_spacing/2`). So `infill_exp` extent varies PER SURFACE via
+   `effective_loop_number`/`inset`/`infill_peri_overlap` (each `process_classic`
+   island surface gets its own `loop_number`→`inset`). Ares emits `±4223`
+   (generic `infill_exp`/`fill_expolygons`) where oracle's tpmsd surface uses a
+   tighter `inset`. FIX = verify per-surface `effective_loop_number`→`inset`
+   (`infill_boundary/preflight.rs:155` + `onion.effective_loop_number`) matches
+   upstream per-island `loop_number` (`PerimeterGenerator.cpp:1225` `wall_loops
+   + extra_perimeters - 1`, adjusted at `:1336`), and that the Internal surface
+   passed to `fill_surface` uses the surface's own `infill_exp` (not the merged
+   `fill_expolygons` ∩ slices). Expected to collapse most of the tpmsd/tpmsfk/
    narrow-internal/hilbert/gap_fill residual.
 
 5. **lightning propagated-tree branch retention** (`case-IdM3Br`, layers 6-19).
