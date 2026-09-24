@@ -48,3 +48,48 @@ fn arc_traversal_time_is_attributed_to_the_arc_lines_own_marker() {
     );
     assert!(after_arc > at_arc);
 }
+
+#[test]
+fn arc_after_closed_wall_reads_the_seam_id_not_the_geometric_count() {
+    // `GCodeProcessor.cpp:4215-4225` + `:484-488` + `:790-800`: a
+    // `;TYPE:Outer wall` loop that closes just before a `G3` inserts a
+    // `Seam` move vertex, associating the arc's FIRST internal block with
+    // it. That block drops out of `g1_times_cache`, so
+    // `ExportLines::update` sees `remaining_internal_g1_lines == 0` and the
+    // arc's M73 marker reads the seam's id (the entry just before the
+    // arc), not the geometric `segments - 1`.
+    let lines = [
+        "M204 S1000",
+        "M83",
+        ";TYPE:Outer wall",
+        "G1 X10 E1 F600",
+        "G1 X0 E1 F600",
+        "G3 X0 Y2 I0 J1 F600",
+        "G1 X1 F600",
+    ]
+    .map(str::to_owned);
+
+    // Geometric discretization still yields 10 segments (internal 9).
+    assert_eq!(
+        MotionState::default().motions("G3 X0 Y2 I0 J1 F600").len(),
+        10
+    );
+    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+
+    // Source indices: 3 = `G1 X10` (seeds `first_vertex`), 4 = `G1 X0`
+    // (wall close → `Seam` vertex, cache-excluded), 5 = `G3` arc, 6 = `G1 X1`.
+    // The arc's first internal block associates with the seam vertex, so
+    // `ExportLines::update` returns internal 0 and the arc's M73 reads the
+    // last eligible entry BEFORE the seam — the `G1 X10` block (the review's
+    // "id3"). A geometric `segments - 1` lookup would instead land on the
+    // 9th arc segment's (much later) cumulative.
+    let arc_line = estimate
+        .elapsed_at(5)
+        .expect("arc line exports a marker (the seam-side id)");
+    // `G1 X10 E1 F600` traverses 10 mm at 10 mm/s → cumulative ~1.0 s.
+    // The seam-side lookup must reproduce exactly that value.
+    assert!(
+        (arc_line - 1.000_099_897_384_643_6).abs() < 1e-6,
+        "arc marker {arc_line} should read the seam-side `G1 X10` cumulative"
+    );
+}

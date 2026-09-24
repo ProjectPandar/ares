@@ -109,6 +109,8 @@ impl Estimate {
             {
                 eprintln!("ARC id={g1_line_id} segments={count}");
             }
+            let arc_start = state.position;
+            let mut arc_seam_excluded = false;
             let motion_blocks = state.motions(code);
             // Linear commands produce at most one block; only arcs subdivide.
             if matches!(command, "G0" | "G1" | "G28")
@@ -120,9 +122,26 @@ impl Estimate {
                 let seam_vertex = seams.associate(extruding, state.position);
                 cache_eligible.push(!block.e_only && !seam_vertex);
             } else if !motion_blocks.is_empty() {
-                // Arc seam discretization is outside this planar G1 slice.
+                // `G2`/`G3` arc: the first internal segment's block associates
+                // with an inserted `Seam` vertex when the preceding
+                // external-wall loop closes at the arc start
+                // (`GCodeProcessor.cpp:4215-4225`). That block is then
+                // excluded from `g1_times_cache` (:484-488), so
+                // `ExportLines::update` returns internal count 0 and the
+                // arc's M73 reads the seam's id — not the geometric
+                // `segments - 1` (:790-800). The remaining segments keep
+                // their own `remaining` chain but sit past the lookup cursor.
+                let extruding = motion_blocks.iter().any(|block| {
+                    !state.wiping
+                        && block.delta[3] > 0.0
+                        && (block.delta[0] != 0.0 || block.delta[1] != 0.0)
+                });
+                arc_seam_excluded = seams.associate_arc_start(extruding, arc_start);
+                for (segment_index, block) in motion_blocks.iter().enumerate() {
+                    cache_eligible
+                        .push(!block.e_only && !(arc_seam_excluded && segment_index == 0));
+                }
                 seams.advance(state.position);
-                cache_eligible.extend(motion_blocks.iter().map(|block| !block.e_only));
             }
             match command {
                 "G0" | "G1" | "G28" => {
@@ -144,7 +163,11 @@ impl Estimate {
                 }
                 "G2" | "G3" => {
                     let count = motion_blocks.len();
-                    arc_segment_counts[index] = arc_internal.unwrap_or(0);
+                    // `ExportLines::update` internal count: 0 when the arc's
+                    // first block was excluded by the seam vertex, else the
+                    // geometric `segments - 1`.
+                    arc_segment_counts[index] =
+                        if arc_seam_excluded { 0 } else { arc_internal.unwrap_or(0) };
                     blocks.extend(motion_blocks);
                     // Every discretized internal G1 consumes its own g1 line
                     // id (`GCodeProcessor.cpp:3868` `++m_g1_line_id` per
