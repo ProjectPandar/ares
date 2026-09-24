@@ -1015,3 +1015,16 @@ LayerRegion::slices.surfaces (pre-union) OR ares's merged islands post-union in
 plate coords. marching-squares interpolate_edge verified identical. Next probe
 target: the exact `slice()`/`slice_mesh` per-layer polygon BEFORE perimeter
 offsets, in the same frame.
+
+### Arc-fitter verified identical (#669)
+
+ArcFitter::do_arc_fitting + ArcSegment::try_create_arc + Circle::try_create_circle
+all match ares try_arc/fit_ranges/circle_from_three: incremental current_segment
+grow, last_arc carry, front=back-1 restart, midpoint rule (even/odd index),
+arc_direction CCW/CW theta logic, |arc_length-approx|/approx >= 5% length check
+with opposite-direction salvage, perpendicular-segment deviation check,
+Point(std::round) center. IDENTICAL. The `I-34.27` vs `-34.216` (0.05mm) diff is
+a different SEGMENT BOUNDARY emitted => the INPUT polyline differs. Confirmed
+again: root is the source path.polyline.points (perimeter loop / slice output),
+not arc-fit. Next: oracle dump of path.polyline.points pre-fit (the exact input
+to do_arc_fitting) vs ares fit input on the diverging inner-wall loop.
