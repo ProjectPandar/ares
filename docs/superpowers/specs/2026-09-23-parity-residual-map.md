@@ -951,3 +951,15 @@ checked_round on a half-value, or (c) the x-spacing/align_scalar lattice. The
 rotate-back `rotate_points(points, +direction)` rounding `checked_round` vs
 upstream `MultiPoint::rotate` (std::round) — verified same. Suspect (a): the
 clipper open-polyline clip intersection TopX/intersect_point.
+
+### Residual pushed upstream to region boundary (#663b)
+
+clipper `top_x`/`intersect_point`/`fixed_round`/`get_dx` all verified identical
+to oracle clipper.cpp. The fill emit (FillLine vertical lines -> open-polyline
+clip vs offset(expolygon,0.02) -> chain -> rotate-back) uses identical rounding.
+So the ±1 scaled-unit endpoint diffs originate in the **input `expolygon`
+vertices** — the layer-region slice/offset output fed into fill differs by one
+lattice unit on some vertices, which propagates through rotate+clip to the
+emitted endpoint AND (via line.length) the dE. Next probe: dump the expolygon
+point set for a layer (ORCA_DUMP_EXPOLY vs ares region dump) to find the first
+vertex that differs, then trace to whichever slicing/offset op produced it.
