@@ -158,3 +158,12 @@ On a 20-case random dual-fresh sample + targeted re-verification:
   `mod.rs:301`), or the junction `entry` speed from `junction_speed`
   (Vec3f chain). Drift is ~1s/8min total but redistributed; needs oracle
   `g1_times_cache`/block dumps to find the divergent block class.
+
+  #11 instrumentation path: ares dumps its `g1_times_cache` via
+  `ARES_DUMP_ELAPSED=<path>` (id + cumulative-seconds per eligible G1).
+  To localize, either (a) build an instrumented OrcaSlicer dumping the same
+  `g1_times_cache`, or (b) bisect geometry — a minimal model whose elapsed
+  diverges isolates which block class (travel/extrude/wipe/arc/brim) the
+  feedrate input differs on. orca's emitted `M73` checkpoints give only
+  `int(100*elapsed/total)`/`minutes(total-elapsed)` — too coarse to bisect
+  a ~1s/8min drift; need the raw cache.
