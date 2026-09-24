@@ -515,3 +515,18 @@ endpoints live in `FillCrossHatch`'s sweep/line-intersection path. Also
 `extruder_ams_count` `|4#0` vs `|4#1`: oracle RECOMPUTES the ams count (stored
 `1#0|4#0` → emitted `1#0|4#1`), a config-field recomputation ares doesn't do.
 M73 `R`/`model printing time` diffs (~7s, ~0.1%) = elapsed-time planner model.
+
+## crosshatch pattern generation verified byte-identical (probe)
+
+Instrumented both sides: `ORCA_DUMP_CH`/`ARES_DUMP_CH` dump
+`generate_infill_layers` output + `line_spacing`/`bb`/`npol`. For the same
+surface (`bbmin=-35171676,-11723892 w=5800824 h=14167797`, `z=3`, `npol=4`),
+`line_spacing=2930973`, `repeat_ratio=0.527633`, and the raw pattern polyline
+vertices are byte-identical modulo `translate(bb.min)` (oracle dumps
+pre-translate, ares post-translate; e.g. oracle `761684,703802` ↔ ares
+`-34409992,-11020090` = `761684-35171676, 703802-11723892`). So
+`generate_infill_layers`/`generate_repeat_pattern`/`generate_transform_pattern`
+/`align_to_grid`/`1.08`-spacing are byte-faithful. The ±1 `coord_t` residual is
+therefore NOT in crosshatch pattern generation — it is in `intersection_pl`
+clip-point emission (`pos_p`/`pos_q`) or `chain_or_connect_infill` boundary
+anchors (the latter proven non-deterministic at `FillBase.cpp:1640`).
