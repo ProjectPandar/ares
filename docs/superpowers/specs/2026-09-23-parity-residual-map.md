@@ -123,7 +123,12 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
    coords `X114.775/X114.325` — `connect_infill` boundary-anchor reaching the
    region corner via `horiz_move`/`symmetric_infill_y_axis` shift
    (`FillRectilinear.cpp:2811`/`2904`, `Fill.cpp:1311`); region extent correct,
-   gap is the corner-reaching anchor segment), honeycomb(~2200 line-diff
+   gap is the corner-reaching anchor segment. `horiz_move` is hardcoded `0.0`
+   in ares (`group_fills/params/projection.rs:196`) — upstream sets it from
+   `infill_shift_step*(layer_id/2)` (`Fill.cpp:1313`); ares applies the shift via
+   `infills/rotation.rs:49 crosszag_scanline_shift` instead, which may apply it
+   to the polyline rather than the scanline grid `x0` → different corner
+   anchors), honeycomb(~2200 line-diff
    but ≤6 unique coords), lockedzag(3214 line-diff, only 12/10 unique coords —
    ordering churn dominates). Pattern: fill geometry is now byte-faithful;
    residual is connect_infill ordering non-determinism + sparse corner-anchor
