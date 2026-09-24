@@ -149,3 +149,12 @@ On a 20-case random dual-fresh sample + targeted re-verification:
     M73 boundaries → extra `M73 P.. R..` lines. Dominant cause of the
     `sparse_infill_pattern/*` DIVERGENT bucket (line/zigzag/line all show
     first-diff = M73 placement). Needs oracle `g1_times_cache`/feedrate dumps.
+
+  #11 refined: `block_time` + planner `reverse`/`forward`/`recalculate`
+  passes + `max_allowable_speed`/`junction_speed` all verified line-faithful
+  to `GCodeProcessor.cpp:149-394`. The residual narrows to the per-block
+  INPUTS — `feedrate`/`cruise`/`distance`/`acceleration`/`axis_feedrate`
+  (segment parse + centripetal/volumetric limits at `motion/segment.rs:264`,
+  `mod.rs:301`), or the junction `entry` speed from `junction_speed`
+  (Vec3f chain). Drift is ~1s/8min total but redistributed; needs oracle
+  `g1_times_cache`/block dumps to find the divergent block class.
