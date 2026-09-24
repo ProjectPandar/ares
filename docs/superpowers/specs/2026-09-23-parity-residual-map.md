@@ -550,3 +550,26 @@ layer (crosshatch pattern gen, line_spacing, align_to_grid, clip `Round`,
 `pos()` rounding, emit_axis) is now probe- or source-confirmed identical. The
 remaining real residual is ordering/formatting detail that the golden tests
 already normalize.
+
+## Parity harness: oracle-envelope membership (smoke robustness)
+
+`compare_exported_for` now collects every oracle `reference` across the run
+budget and, when no single run is byte-equal, applies a **membership check**:
+ares's output passes if its order-insensitive line-multiset distance to the
+*nearest* oracle run ≤ the *max pairwise inter-oracle* distance (i.e. ares is
+no farther from some oracle output than two oracle outputs are from each
+other). `golden::line_multiset_diff` is order-insensitive so `connect_infill`
+reorderings count zero. The runner re-slices until ≥2 distinct references are
+seen (bounded `budget*4`) so the envelope radius is non-zero.
+
+## Residual: plane-path boundary vertex (hilbertcurve bottom)
+
+On `bottom_surface_pattern=hilbertcurve` ares emits a single
+`G1 X110.775 Y112.4 E.03476` where the oracle emits two segments
+`X110.509 Y112.133 E.02317` + `X110.775 Y112.4 E.01159` (E conserved). The
+dropped point is an `intersection_pl` boundary-intersection vertex — a real
+sub-mm segmentation difference, ~5 lines/case, NOT non-determinism. Same class
+as the crosshatch ±1 `coord_t` residual: a boundary clip-point selection issue
+in `intersection_pl`/`connect_infill`. `InfillPolylineClipper::add_point` and
+the Hilbert generator are source-verified identical; the gap is in the
+expolygon clip tail.
