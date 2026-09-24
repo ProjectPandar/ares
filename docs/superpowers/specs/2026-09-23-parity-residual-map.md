@@ -127,3 +127,13 @@ On a 20-case random dual-fresh sample + targeted re-verification:
     (`rectilinear/surface.rs:188`) mirrors this but the divergence on one
     layer suggests `thickness_layers`/`layer_id` parity or a `bridge_angle`
     difference on that layer. Needs layer-level bridge/thickness dumps.
+
+  Next diagnostic for #10: ares `thickness_layers` comes from
+  `fill.representative.thickness_layers` (set by `detect_surfaces_type` /
+  surface-type detection). `layer_index` is `layer.id` (object layer index,
+  matches upstream `Fill::layer_id`). The 90° mirror on one layer implies
+  `layer_id/thickness_layers & 1` parity differs in a band — i.e. ares's
+  `thickness_layers` for that surface is off by ±1 vs upstream's
+  `Surface::thickness_layers` (top↔bottom bridging count within
+  `combined_infill`). Localize by dumping ares `thickness_layers` per layer
+  vs inferring orca's from its alternation boundaries.
