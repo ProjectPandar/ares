@@ -88,6 +88,28 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
 - Option-coverage sweep (Boolean/Enum every value, Range min/max/interior)
   runs through `option_coverage/` against the live oracle.
 
+4b. **sparse `Internal` surface extent — `detect_surfaces_type` shrink** (the
+   shared root for the fill-pattern "extra-fragment" residual family: tpmsd,
+   tpmsfk, narrow-internal, hilbert, gap_fill). Instrumented-oracle bisection
+   (`tools/orca-probes/pg_inset.nix`, `tpmsd_region.nix`) shows: ares's sparse
+   `Internal` surface = `clipped_fill(slices, fill_expolygons)` =
+   PerimeterGenerator's `infill_exp` = `offset2(NF, -inset-post-overlap - mpis/2,
+   mpis/2)` = `NF - 0.102` → bbox `±4223228`. The expolygon oracle passes to
+   `fill_surface`/`tpmsd` is `±4019688` — `0.203mm` tighter, equal to
+   `NF - (inset-pre-overlap + infill_peri_overlap)` = `NF - 0.306`. So oracle
+   shrinks `Internal` a further `0.203mm` between `fill_expolygons` (the
+   connect_infill / `infill_exp` boundary) and the actual fill surface, inside
+   `PrintObject::detect_surfaces_type` (`PrintObject.cpp` ~3300-3420:
+   `shrink(surface.new_polys, frSolidInfill.scaled_spacing)`, `cut_from_infill`,
+   `new_internal_infills = diff_ex(internal_infills, cut_from_infill)`). Ares
+   never applies that shrink — it fills the connect-boundary extent.
+   FIX = port `detect_surfaces_type`'s `internal_infills` shrink/anchoring so
+   the `stInternal` surface is `infill_exp` minus the extra ~0.2mm interior
+   margin; keep `fill_expolygons` (`±4223`) only as the `connect_infill`
+   boundary (`FillBase.cpp` `_fill`→`connect_infill` uses the wider
+   `fill_no_overlap`/boundary). Expected to collapse most of the tpmsd/tpmsfk/
+   narrow-internal/hilbert/gap_fill residual.
+
 5. **lightning propagated-tree branch retention** (`case-IdM3Br`, layers 6-19).
    After round-4 (`stable_sort_by` + `coord_t` width cast + `EPSILON` 1e-4),
    propagated trees now retain children during `propagateToNextLayer`
