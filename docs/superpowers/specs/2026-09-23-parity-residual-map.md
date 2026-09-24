@@ -814,3 +814,17 @@ per-arc discretization & wipe block boundaries in `processor/estimate.rs`.
 - Next: emit per-block **endpoint position** (cumulative xyz) from both dumps
   and align on emitted position, then diff per-position block time. The arc
   sub-block times or wipe-block boundaries are where ares over-counts.
+
+### Time-estimate: arc sub-segment geometry diverges (#657 final)
+
+Per-g1id dump at 3678 (a G3 arc region): oracle emits `d=2.80` then g1id gaps
+(3679,3681,3683 absent = zero-displacement arc segments dropped by upstream),
+ares emits real distances at those same ids with different values (5.14, 6.16,
+0.64...). So ares's `arc::deltas` (`marlin_deltas`) produces DIFFERENT sub-segment
+endpoints than upstream `process_G2_G3` — the rvec rotation/center math diverges
+numerically, shifting where zero-length segments land and how arc length is
+partitioned. Segment COUNT matches (arc_internal_g1_lines is exact) but the
+per-segment delta vectors differ → different block distances → different
+junction velocities → Δ12.6s tail.
+**Fix target**: `processor/motion/arc.rs::marlin_deltas` rvec rotation /
+`center_from_radius` / sweep precision vs `GCodeProcessor.cpp:4730-4760`.
