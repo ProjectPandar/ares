@@ -57,10 +57,9 @@ pub(crate) fn fill_tpmsd_surface(
     min = Point::new(min.x().min(aligned.x()), min.y().min(aligned.y()));
     max = Point::new(max.x().max(aligned.x()), max.y().max(aligned.y()));
 
-    // `make_waves(scale_(this->z), ...)` — the layer height in scaled units.
-    let grid_z = scale
-        .checked_scale(params.layer_z)
-        .ok_or(ClipperError::CoordinateOutOfRange)? as f64;
+    // `make_waves(scale_(this->z), ...)` — `scale_` is `z/SCALING_FACTOR`
+    // (double, no truncation; `libslic3r.h:94`), so keep the fraction.
+    let grid_z = scale.scaled_delta(params.layer_z);
     let mut polylines = make_waves(
         grid_z,
         density_adjusted,
@@ -107,10 +106,7 @@ fn make_waves(
 ) -> Result<Vec<Polyline>, ClipperError> {
     // `scaleFactor = scale_(line_spacing)/density_adjusted` — the scaled
     // (micron) wave period. `grid_z` arrives already scaled (`scale_(z)`).
-    let scale_factor = scale
-        .checked_scale(line_spacing)
-        .ok_or(ClipperError::CoordinateOutOfRange)? as f64
-        / density_adjusted;
+    let scale_factor = scale.scaled_delta(line_spacing) / density_adjusted;
     // `tolerance = min(line_spacing/2, PatternTolerance) / unscale(scaleFactor)`
     // (`FillTpmsD.cpp:27`) — `unscale(scaleFactor) = scaleFactor * SCALING_FACTOR`,
     // so the denominator is `scale_factor * scale.factor()` (multiply, not divide).

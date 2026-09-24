@@ -36,9 +36,10 @@ pub(crate) fn connect_infill(
     debug_assert!(!boundary.contour().points().is_empty());
     debug_assert!(spacing.is_finite() && spacing > 0.0);
     debug_assert!(params.anchor_length >= 0.0);
-    debug_assert!(params.anchor_length_max >= 0.01);
-    debug_assert!(params.anchor_length_max >= params.anchor_length);
     debug_assert!(params.multiline >= 1);
+    // `anchor_length_max < 0.05` (`dont_connect`) is short-circuited inside
+    // `connect_infill_polygons` — the `>= 0.01` invariant only holds on the
+    // connection path, not this `chain_or_connect_infill` entry.
 
     let mut boundaries = Vec::with_capacity(boundary.holes().len() + 1);
     boundaries.push(boundary.contour().clone());
@@ -67,6 +68,16 @@ pub(crate) fn connect_infill_polygons(
     let mut dump = debug_dump();
     if let Some(dump) = dump.as_mut() {
         dump_polygons_input(dump, &infill_ordered, &boundary, params, scale);
+    }
+    // `chain_or_connect_infill` (`FillBase.cpp:1822`): `dont_connect()`
+    // (`anchor_length_max < 0.05`, `FillBase.hpp:52`) returns the polylines
+    // chained (`size > 1`) rather than boundary-connected.
+    if params.anchor_length_max < 0.05 {
+        let mut polylines = infill_ordered;
+        if polylines.len() > 1 {
+            crate::project_slice::chain_polylines(&mut polylines);
+        }
+        return Ok(polylines);
     }
     let anchor_length = scaled_f32(params.anchor_length, scale);
     let anchor_length_max = scaled_f32(params.anchor_length_max, scale);
