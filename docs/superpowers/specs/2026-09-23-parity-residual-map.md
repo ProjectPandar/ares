@@ -1061,3 +1061,21 @@ rslices dump (slices.surfaces) vs ares LSLICES (assign_layer) are different
 frames/stages (oracle plate-frame merged surfaces vs ares object-local region
 slices) so the dump doesn't yet align — need oracle's per-region slice output
 in the same frame ares consumes (post object transform, pre perimeter offset).
+
+### Slice input transform analyzed (#671)
+
+Upstream slice_mesh: transform_mesh_vertices_for_slicing -> stl_vertex (Eigen
+f32). make_trafo_for_slicing = trafo.prescale(1/SCALING_FACTOR).cast<float>;
+transform_vertex_fn = tf*v (f32 matmul). slice_facet interpolates
+double(b->x()) + (double(a->x())-double(b->x()))*t, floor(+0.5) -> coord_t;
+inherited points take a->x() directly (float->coord_t trunc).
+
+Ares: transformed_vertices via transform_point_f32 on prescaled_xy(1e-6) f64
+matrix cast per-coefficient to f32; interpolate_coordinate does
+f64(b)+(f64(a)-f64(b))*t +0.5 floor -> i64; inherited vertex[0] as i64 (f32
+trunc). The interpolation formula is identical. The difference: upstream
+prescale scales INPUT columns (t.prescale) so the f32 matmul is
+tf*(x,y,z) with x,y scaled; ares prescaled_xy scales OUTPUT rows 0..2 of the
+f64 matrix (including the translation column) then casts coefficients to f32.
+Row-vs-column prescaling and f64-matrix-then-f32-cast vs f32-matrix-matmul
+can round differently -> the ±1 Coord vertex source.
