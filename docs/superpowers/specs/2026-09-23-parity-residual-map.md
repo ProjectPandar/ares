@@ -895,3 +895,17 @@ arcs shifts alignment). Root cause upstream: the arc fitter
 (`ArcWelder`/`GCodeWriter` arc fitting) producing different fit decisions AND
 the infill intersection vertices off by one lattice unit — both are the same
 underlying coordinate-generation rounding.
+
+### E-extrusion residual localized (#660b)
+
+Breaking the 6556 diffs: **10988 lines differ ONLY in `E`** (identical X/Y), ~6790
+differ in both. `E.03178` vs `E.03177` — the per-segment extrusion amount is off
+by 1e-5 with byte-identical endpoints. So the path geometry is right; the
+`dE = e_per_mm * line_length` or the SAFC `modify_flow` multiplier produces a
+1-ulp-different `dE`. Candidates: `for_length` op-order (`e_per_mm3 * effective /
+ffr` vs upstream `e_per_mm3 * mm3_eff / ffr` — algebraically equal but check the
+`_mm3_per_mm` role-ratio set: top_solid/bottom/bridge/brim/scarf/outer/inner/
+overhang/sparse/solid/gap/support ratios and first_layer gate must all apply in
+the same multiply order), and `small_area_flow.multiplier_for_feature` boundary
+(`SmallAreaInfillFlowCompensator::modify_flow` f32 vs f64 model eval). Also
+`E-.237` retracts (wipe/retract E deltas) off by 1e-4.
