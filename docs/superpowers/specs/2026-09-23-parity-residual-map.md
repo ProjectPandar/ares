@@ -1003,3 +1003,15 @@ loop vertices) differ by 1 Coord -> the divergence is in the perimeter loop /
 slice polygon output, confirmed again. Endpoint diffs and arc-center diffs are
 the SAME root: the underlying `path.polyline.points` differ by ±1 lattice unit.
 Root sits in slice/region generation (lslices), the earliest stage.
+
+### lslices probe built, frames misaligned (#668)
+
+Built tools/orca-probes/lslices.nix (ORCA_DUMP_LSLICES dumps Layer::lslices
+merged contour vertices post make_slices) and extended ARES_DUMP_LSLICES to full
+vertices. But the two dump different pipeline stages/frames: oracle lslices is
+the merged union in plate coords (n=1/layer); ares assign_layer sees per-region
+slices (n=6) in region-local coords. To align, dump oracle's per-region
+LayerRegion::slices.surfaces (pre-union) OR ares's merged islands post-union in
+plate coords. marching-squares interpolate_edge verified identical. Next probe
+target: the exact `slice()`/`slice_mesh` per-layer polygon BEFORE perimeter
+offsets, in the same frame.
