@@ -222,9 +222,9 @@ fn reorder_walls(
         ProcessWallSequence::InnerOuterInner if layer_id == 0 => {}
         ProcessWallSequence::InnerOuterInner => {
             // `PerimeterGenerator.cpp:1470-1560` sandwich mode: reverse all
-            // (deepest internal first), then `sandwich_reorder` pulls
-            // first-internal ahead of second-internal+ and reorders each
-            // island deepest-first.
+            // entities external-to-internal (:1470), then `sandwich_reorder`
+            // pulls first-internal ahead of second-internal+ and reorders
+            // each island deepest-first.
             reverse_collection(collection);
             if collection.entities.len() > 2 {
                 sandwich_reorder(&mut collection.entities);
