@@ -242,12 +242,22 @@ pub(super) fn dispatch(
                 link_max_length: 0.0,
                 consistent_pattern: pattern.has_consistent_pattern(),
                 horiz_move: fill.params.horiz_move as i64,
-                // Sparse-anchoring only carries the object center
-                // (`dispatch`'s `object_reference`), not the full object
-                // bounding box the extended grid anchor needs; left `None`
-                // pending bbox plumbing (main `monotonic` path is covered).
-                extended_object_min_x: None,
-                extended_object_max_x: None,
+                // `extended_object_bounding_box` (`FillBase.cpp:1569-1578`) —
+                // same transpose-merge + sqrt(2) origin-scale as the main fill
+                // path, so anchored zig-zag/locked-zag keeps the object-wide
+                // grid parity.
+                extended_object_min_x: pattern.has_consistent_pattern().then(|| {
+                    crate::project_slice::fill_entities::extended_object_bounding_box_x(
+                        object_bounding_box,
+                    )
+                    .0
+                }),
+                extended_object_max_x: pattern.has_consistent_pattern().then(|| {
+                    crate::project_slice::fill_entities::extended_object_bounding_box_x(
+                        object_bounding_box,
+                    )
+                    .1
+                }),
             };
             let generate = if matches!(
                 pattern,

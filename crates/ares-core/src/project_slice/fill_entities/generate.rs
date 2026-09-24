@@ -59,25 +59,8 @@ pub(in crate::project_slice) fn generate_layer(
     // `Fill::extended_object_bounding_box()` (`FillBase.cpp:1569-1578`) — the
     // object bbox transpose-merged + sqrt(2)-scaled so the consistent-pattern
     // vertical-line grid is anchored object-wide, independent of rotation.
-    let (extended_object_min_x, extended_object_max_x) = {
-        let mut bounds = plane_path_object_bounding_box(object_slices);
-        bounds.merge_point(crate::geometry::Point::new(
-            bounds.min().y(),
-            bounds.min().x(),
-        ));
-        bounds.merge_point(crate::geometry::Point::new(
-            bounds.max().y(),
-            bounds.max().x(),
-        ));
-        // `out.scaled(sqrt(2.))` — `BoundingBoxBase::scale` multiplies
-        // `min`/`max` by the factor (scale about the ORIGIN, `BoundingBox.cpp:
-        // 52-56` + `BoundingBoxBase::scale`), so the extended bbox covers any
-        // rotation of an object centered on the origin.
-        (
-            (bounds.min().x() as f64 * std::f64::consts::SQRT_2) as i64,
-            (bounds.max().x() as f64 * std::f64::consts::SQRT_2) as i64,
-        )
-    };
+    let (extended_object_min_x, extended_object_max_x) =
+        super::extended_object_bounding_box_x(plane_path_object_bounding_box(object_slices));
     // `FillLockedZag::set_lock_region_param` (`Fill.cpp:1309`) — the skin/
     // skeleton density+flow maps, built per-layer in `group_fills`.
     let crate::project_slice::group_fills::GroupedFills {
