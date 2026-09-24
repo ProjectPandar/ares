@@ -758,3 +758,16 @@ acceleration rounding, or a per-block model constant). Next: instrument the
 planner's per-block `time` sum against upstream `GCodeProcessor::print_statistics`
 `modes[Normal].time` accumulation (probe `processor/estimate.rs` vs
 `GCodeProcessor.cpp` trapezoid `block_time`).
+
+### Time-estimate bisection notes (#655)
+
+- Oracle `ORCA_DUMP_BLOCKS` probe (`/tmp/medial-probe/orcablocks.nix`, prebuilt
+  result at `/tmp/medial-probe/orcablocksresult/bin/orca-slicer`) emits
+  `<g1_id> <move_type> <dist> <cruise> <accel> <entry> <exit> <safe> <block_time>`
+  — 313470 blocks for ksr_fdmtest_v4, `block_time` sum = 5858.63s (motion only).
+- Ares `ARES_DUMP_BLOCKS` emits `<id> <cumulative> <dist> <speed> <kind> <dx> <dy> <dz>`
+  — 314027 blocks, final cumulative = 6180.25s.
+- Block counts differ (313470 vs 314027, Δ557) — ares emits extra blocks
+  (likely seam/tool-change/zero-delta accounting) or the g1_line_id alignment
+  differs. To bisect the 3s: align dumps by g1_line_id, convert ares
+  cumulative→per-block delta, then find the largest per-block time gap.
