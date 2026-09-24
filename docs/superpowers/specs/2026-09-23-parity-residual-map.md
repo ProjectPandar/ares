@@ -828,3 +828,19 @@ per-segment delta vectors differ → different block distances → different
 junction velocities → Δ12.6s tail.
 **Fix target**: `processor/motion/arc.rs::marlin_deltas` rvec rotation /
 `center_from_radius` / sweep precision vs `GCodeProcessor.cpp:4730-4760`.
+
+### Time-estimate: g1_line_id consumption diverges at arcs (#658)
+
+Position-keyed dump at g1id 3678 (`G2 X153.457 Y97.976 I-46.204 J-47.521`,
+radius 66.3mm): oracle's emitted blocks leave **id gaps** (3679,3681,3683
+absent) — upstream `process_G2_G3` calls `internal_only_g1_line`/`process_G1`
+for EVERY discretized segment and each consumes a g1_line_id, INCLUDING
+zero-displacement segments whose block is dropped (`GCodeProcessor.cpp:3868`
+`++m_g1_line_id` before the :3891 drop). Ares emits contiguous ids — its arc
+deltas produce different segment endpoints so the zero-length drops land on
+different ids, AND the total g1 id space differs (ares max 335675 vs oracle
+334928, ares +747). The Δ557 extra *blocks* + Δ747 ids mean ares both segments
+arcs into different endpoint geometry AND accounts dropped-segment ids
+differently. Fix: match `marlin_deltas` endpoint positions exactly (so the same
+segments come out zero-length) AND make `arc_internal`/`g1_line_id` reserve ids
+for dropped segments identically.
