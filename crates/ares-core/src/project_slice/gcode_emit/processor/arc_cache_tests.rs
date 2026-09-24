@@ -76,20 +76,22 @@ fn arc_after_closed_wall_reads_the_seam_id_not_the_geometric_count() {
     );
     let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
 
-    // Source indices: 3 = `G1 X10` (seeds `first_vertex`), 4 = `G1 X0`
-    // (wall close → `Seam` vertex, cache-excluded), 5 = `G3` arc, 6 = `G1 X1`.
-    // The arc's first internal block associates with the seam vertex, so
-    // `ExportLines::update` returns internal 0 and the arc's M73 reads the
-    // last eligible entry BEFORE the seam — the `G1 X10` block (the review's
-    // "id3"). A geometric `segments - 1` lookup would instead land on the
-    // 9th arc segment's (much later) cumulative.
+    // `elapsed_at(k)` reads `elapsed[k]`, the marker for source line `k-1`
+    // (`elapsed[index + 1]` is written per source index). Source indices:
+    // 3 = `G1 X10` (seeds `first_vertex`), 4 = `G1 X0` (wall close — the
+    // move stays cache-eligible; the inserted `Seam` vertex is separate),
+    // 5 = `G3` arc, 6 = `G1 X1`. The arc's FIRST internal block associates
+    // with the seam vertex → `ExportLines::update` returns internal 0, and
+    // the arc's M73 reads the last eligible entry (`G1 X0`, the seam-side
+    // cumulative), not the geometric `segments - 1` arc segment.
     let arc_line = estimate
-        .elapsed_at(5)
+        .elapsed_at(6)
         .expect("arc line exports a marker (the seam-side id)");
-    // `G1 X10 E1 F600` traverses 10 mm at 10 mm/s → cumulative ~1.0 s.
-    // The seam-side lookup must reproduce exactly that value.
+    // `G1 X10 E1` + `G1 X0 E1` at F600 each traverse 10 mm at 10 mm/s →
+    // the wall-close cumulative is ~2.0 s. The seam-side lookup must read
+    // that value, never a later arc-internal segment.
     assert!(
-        (arc_line - 1.000_099_897_384_643_6).abs() < 1e-6,
-        "arc marker {arc_line} should read the seam-side `G1 X10` cumulative"
+        (arc_line - 2.000_199_794_769_287).abs() < 1e-6,
+        "arc marker {arc_line} should read the seam-side `G1 X0` cumulative"
     );
 }
