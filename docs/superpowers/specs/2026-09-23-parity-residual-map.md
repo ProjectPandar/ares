@@ -102,3 +102,10 @@ On a 20-case random dual-fresh sample + targeted re-verification:
    micro-segments + a feedrate rounding difference. Needs oracle-side
    `FillTpmsFK` contour dumps to localize which marching-squares cell
    diverges.
+
+8. **RESOLVED — InnerOuterInner sandwich reorder** (`case-IdM3Br`-family).
+   `reorder_walls` now ports `PerimeterGenerator.cpp:1470-1560` verbatim:
+   collection-reverse flips non-loop Path direction (`ExtrusionEntityCollection
+   .cpp:65-72`), phase-1 pulls inset_idx==1 ahead of >=2 per island, phase-2
+   emits deepest-first via the outer/first/second-internal scan. Verified
+   byte-identical modulo header on `inner-outer-inner wall` thin plate.
