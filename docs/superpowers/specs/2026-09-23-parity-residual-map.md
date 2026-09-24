@@ -706,3 +706,25 @@ interior vertex.
 boundary points as DP-preserved. Standalone upstream clipper reference harness
 at `/tmp/clipref` (clipper.cpp 6.2.6 + Eigen/TBB stubs) confirms ares's clip
 output is byte-identical — the residual is purely the simplify segmentation.
+
+## Vertex-drop bisection, FINAL scope (#655)
+
+clipref harness (tools/clipref) + DP pinning test prove, on the EXACT dumped
+rotated Hilbert input + diamond clip:
+- `intersection_open_polylines` == upstream `intersection_pl` byte-for-byte
+  (29 fragments, identical order+points+endpoints)
+- `simplify_linear_points` == upstream `MultiPoint::_douglas_peucker`
+  byte-for-byte on fragment 1 (both 102 pts)
+
+Yet oracle emits `110.509,112.133` (collinear apex, interior to frag1) that ares
+drops. Since ares clip==upstream clip AND ares DP==upstream DP on frag1, the
+only remaining source: **oracle's INPUT polyline to the clipper differs from
+ares's dumped `P` polyline** — i.e. `generate_hilbert`/`hilbert_n_to_xy` output
+ORDERING or the path is split at the apex by an upstream step ares lacks
+(connect/order producing a path boundary there). The clip produces identical
+fragments either way, but if oracle's polyline reaches the apex as a sub-path
+boundary it survives DP.
+
+**Needed**: dump oracle's pre-clip rotated Hilbert polyline (probe on
+`_fill_surface_single` `polylines` before `intersection_pl`) and diff against
+ares's `ARES_DUMP_PLANEIN` to find the ordering/split divergence.
