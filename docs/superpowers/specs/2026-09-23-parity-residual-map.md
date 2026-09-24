@@ -872,3 +872,26 @@ fewer. Verify: per-arc `flat_mm`/`segments` for a `G3 Z59 I1.217 P1 F60000` —
 oracle SEG count for that arc vs ares `deltas` length. Likely the `feedrate`
 term (60000mm/min=1000mm/s → feedrate/50=20 → segment_mm clamps to 2.0) and
 `flat_mm` for tiny-radius full-circle arcs diverge in ares.
+
+### REAL residual: systematic ±1-lattice-unit coordinate rounding (#660)
+
+The strict `first_difference` comparator reports byte 96 (header time) but
+that is only the FIRST of ~6556 diff lines vs the stored reference
+`tests/ksr_fdmtest_v4/ksr_fdmtest_v4.gcode`. The dominant class (thousands) is
+**last-digit coordinate rounding**: ares emits `G1 X156.234` where oracle emits
+`G1 X156.233` — a ±1 scaled-unit (1µm) difference in emitted endpoints, mostly
+on monotonic-infill `G1 X…. Y83.135` sweep endpoints AND `G2/G3 I/J` arc-fit
+coordinates (`I-3.392` vs `I-3.393`). These come from the path/intersection
+vertex generation producing a Coord one lattice unit off. Also present:
+M73 ordering shifts (P5 R102 emits one line earlier/later), M204 diffs,
+`extruder_ams_count`, `different_settings_to_system`, `inherits_group` header
+fields, object-id (normalized away), and the 3s time header.
+
+Per-arc-segment alignment (ARES_DUMP_ARCSEG + ORCA_DUMP_ARC markers) shows ares
+processes 13368 arcs / 145440 segments vs oracle 13357 / 145216 — ares emits 11
+more G2/G3 lines (arc fitter emits extra arcs oracle fits as lines) and the
+per-arc segment counts diverge from arc#1360 (ordering/identity of the extra
+arcs shifts alignment). Root cause upstream: the arc fitter
+(`ArcWelder`/`GCodeWriter` arc fitting) producing different fit decisions AND
+the infill intersection vertices off by one lattice unit — both are the same
+underlying coordinate-generation rounding.
