@@ -909,3 +909,15 @@ overhang/sparse/solid/gap/support ratios and first_layer gate must all apply in
 the same multiply order), and `small_area_flow.multiplier_for_feature` boundary
 (`SmallAreaInfillFlowCompensator::modify_flow` f32 vs f64 model eval). Also
 `E-.237` retracts (wipe/retract E deltas) off by 1e-4.
+
+### Rounding cross-check (#660c)
+
+`RationalPosition::rounded` (ares) == `SegmentIntersection::pos()` (oracle
+`FillRectilinear.cpp:129-137`): both do `p += q>>1` (or `-=` for negative) then
+truncating integer division — round-half-away. Identical. `fixed_round` ==
+clipper `FRound`/`Round` incl. the 0.49999999999999994 edge case. So the ±1µm
+endpoints are NOT in the rounding fn — they are in the INPUTS: `pos_p`/`pos_q`
+(the rational intersection numerator/denominator) or the edge endpoints feeding
+`TopX`/`intersect_point`, OR the E `dE` per-segment. Next oracle probe: dump
+`pos_p`,`pos_q` and the raw `dE`/`e_per_mm`/`line_length` for a specific
+diverging line (e.g. `X148.995` vs `.994`, `E.03178` vs `.03177`).
