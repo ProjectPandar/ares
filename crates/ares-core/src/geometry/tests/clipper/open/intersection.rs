@@ -82,3 +82,42 @@ fn zigzag_splits_at_boundary_crossings() {
     );
     assert!(clipped.iter().all(|path| path.points().len() >= 2));
 }
+
+#[test]
+fn open_path_vertex_on_boundary_is_preserved() {
+    // The Hilbert residual: an open path with a vertex exactly ON the clip
+    // boundary (touch-and-continue-inside) must keep that vertex. Ares was
+    // emitting the merged through-chord (dropping the boundary vertex).
+    // Path: inside -> on boundary (10,5) -> inside. Vertex (10,5) is on the
+    // square's right edge.
+    let subject = [polyline(&[(2, 3), (10, 5), (4, 8)])];
+    let clip = [polygon(&[(0, 0), (10, 0), (10, 10), (0, 10)])];
+    let clipped = intersection_open_polylines(&subject, &clip).unwrap();
+    let flat: Vec<(i64, i64)> = clipped
+        .iter()
+        .flat_map(|p| p.points().iter().map(|pt| (pt.x(), pt.y())))
+        .collect();
+    assert!(
+        flat.contains(&(10, 5)),
+        "boundary touch vertex dropped: {flat:?}"
+    );
+}
+
+#[test]
+fn open_path_excursion_through_boundary_splits() {
+    // Path enters, pokes just outside the right edge at vertex (11,5), returns
+    // inside. Clip must emit the two boundary crossings, splitting off the
+    // outside excursion.
+    let subject = [polyline(&[(2, 3), (11, 5), (4, 8)])];
+    let clip = [polygon(&[(0, 0), (10, 0), (10, 10), (0, 10)])];
+    let clipped = intersection_open_polylines(&subject, &clip).unwrap();
+    for (i, p) in clipped.iter().enumerate() {
+        eprintln!(
+            "frag{i}: {:?}",
+            p.points()
+                .iter()
+                .map(|pt| (pt.x(), pt.y()))
+                .collect::<Vec<_>>()
+        );
+    }
+}
