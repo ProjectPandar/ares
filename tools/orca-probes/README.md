@@ -8,3 +8,4 @@ dump internal state for parity bisection.
 
 Build: `nix-build tools/orca-probes/NAME.nix --no-out-link`, run the result's
 `bin/orca-slicer --slice 0 --outputdir DIR input.3mf` with the env var set.
+- lslices.nix    ORCA_DUMP_LSLICES -> merged Layer::lslices contour vertices (post make_slices)
