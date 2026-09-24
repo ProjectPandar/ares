@@ -20,6 +20,19 @@ fn travel_to_z_formats_exact_line_and_updates_state() {
 }
 
 #[test]
+fn format_axis_rounds_half_away_from_zero() {
+    // `GCodeFormatter::emit_axis` uses `std::round` (round-half-away), not
+    // `format!("{:.3}")` round-half-even (`GCodeWriter.cpp:1231`).
+    assert_eq!(format_axis(156.2335, 3), "156.234");
+    assert_eq!(format_axis(104.96, 3), "104.96");
+    assert_eq!(format_axis(-0.5, 3), "-0.5");
+    assert_eq!(format_axis(-0.0004, 3), "0");
+    assert_eq!(format_axis(0.0241300, 5), "0.02413");
+    assert_eq!(format_axis(1.0, 3), "1");
+    assert_eq!(format_axis(-2.5, 0), "-3");
+}
+
+#[test]
 fn travel_to_xy_formats_exact_line() {
     let mut writer = GCodeWriter::new();
 

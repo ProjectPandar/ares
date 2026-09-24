@@ -349,12 +349,26 @@ fn additional_fan_pwm(speed: u8) -> u32 {
 }
 
 fn format_axis(value: f64, digits: usize) -> String {
-    let mut text = format!("{value:.digits$}");
-    while text.contains('.') && text.ends_with('0') {
-        text.pop();
+    // `GCodeFormatter::emit_axis` (`GCodeWriter.cpp:1231`): quantize with
+    // `std::round(v * 10^digits)` — round-half-away-from-zero — then emit the
+    // integer with a decimal point and trim trailing zeros. Rust's
+    // `format!("{:.3}")` uses round-half-to-even, which diverges on `.5`
+    // boundaries (e.g. `156.2335` → `156.233` vs upstream `156.234`).
+    let scale = 10_f64.powi(digits as i32);
+    let scaled = (value * scale).round() as i64;
+    let negative = scaled < 0;
+    let magnitude = scaled.unsigned_abs();
+    let digits_str = format!("{:0width$}", magnitude, width = digits + 1);
+    let (whole, frac) = digits_str.split_at(digits_str.len() - digits);
+    let mut text = String::new();
+    if negative {
+        text.push('-');
     }
-    if text.ends_with('.') {
-        text.pop();
+    text.push_str(whole);
+    let frac = frac.trim_end_matches('0');
+    if !frac.is_empty() {
+        text.push('.');
+        text.push_str(frac);
     }
     if text == "-0" {
         text.clear();
