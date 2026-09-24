@@ -977,3 +977,29 @@ computation (`normals` per-vertex, `sin_cos` table for round joins) or the
 `arc_tolerance`/`steps_per_full_circle` for round joins. Next: clipref harness
 has a clipper offset oracle — feed a failing perimeter polygon through both and
 diff vertices.
+
+### Offset math verified identical (#664)
+
+Built tools/clipref/offset.cpp (ClipperOffset oracle, jtMiter/etClosedPolygon).
+Verified ares PreparedOffset == oracle: GetUnitNormal (dy,-dx)/len, steps =
+π/acos(1-y/|delta|) w/ excessive-precision clamp, m_sin/m_cos, m_StepsPerRad,
+miter_threshold, fixed_round on every emitted point. Identical. Therefore the
+±1µm perimeter-vertex diff originates EARLIER — in the sliced `lslices`/
+`slices` expolygon (the `slice()` output / region clipping), not in perimeter
+offsetting or emit. That is the earliest geometry stage. Next probe: dump
+Layer::lslices (or LayerRegion::slices) polygon vertices per layer from oracle
+vs ares slice output — the first differing vertex identifies the slicing op
+(marching-squares/clipper slice, or the XY-coord snapping during mesh->slice).
+
+### Arc-fit center IS 3-point circumcircle (#664b)
+
+Upstream `ArcSegment::try_create_arc` -> `Circle::try_create_circle`
+(`Circle.cpp:16-52`) = 3-point circumcircle `center=-b/(2a),-c/(2a)` matching
+ares `circle_from_three`, and `Point(double,double)` rounds via std::round =
+ares `center_x.round()`. Taubin-Newton (`circle_center_taubin_newton`) is a
+DIFFERENT unused-by-fit codepath. So arc-fit center rounding is identical; the
+`I-3.392` vs `-3.393` diff means the fitted polyline `points` (the perimeter
+loop vertices) differ by 1 Coord -> the divergence is in the perimeter loop /
+slice polygon output, confirmed again. Endpoint diffs and arc-center diffs are
+the SAME root: the underlying `path.polyline.points` differ by ±1 lattice unit.
+Root sits in slice/region generation (lslices), the earliest stage.
