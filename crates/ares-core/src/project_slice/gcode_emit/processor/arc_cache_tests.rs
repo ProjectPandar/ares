@@ -42,10 +42,16 @@ fn arc_traversal_time_is_attributed_to_the_arc_lines_own_marker() {
         .elapsed_at(4)
         .expect("trailing arc segment lands on the next motion line");
 
+    // `process_line_move(g1_lines_counter + internal_g1_lines_counter)`
+    // (`GCodeProcessor.cpp:1466`) reads the SECOND-TO-LAST internal segment's
+    // cache entry — `internal` = `segments - 1` (9) lands on id10, the 9th of
+    // 10 internal segments. The last segment's tail lands on the next line.
     assert!(
-        at_arc > 0.8 * after_arc,
-        "arc marker {at_arc} should carry most of the traversal time {after_arc}"
+        (at_arc - 0.303_724_735_975_265_5).abs() < 1e-6,
+        "arc marker {at_arc} should read the second-to-last internal segment (id10)"
     );
+    // The trailing `G1 X1` lookup lands one entry later — the arc's last
+    // internal segment (id11), a strictly larger cumulative.
     assert!(after_arc > at_arc);
 }
 
@@ -76,22 +82,30 @@ fn arc_after_closed_wall_reads_the_seam_id_not_the_geometric_count() {
     );
     let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
 
-    // `elapsed_at(k)` reads `elapsed[k]`, the marker for source line `k-1`
-    // (`elapsed[index + 1]` is written per source index). Source indices:
-    // 3 = `G1 X10` (seeds `first_vertex`), 4 = `G1 X0` (wall close — the
-    // move stays cache-eligible; the inserted `Seam` vertex is separate),
-    // 5 = `G3` arc, 6 = `G1 X1`. The arc's FIRST internal block associates
-    // with the seam vertex → `ExportLines::update` returns internal 0, and
-    // the arc's M73 reads the last eligible entry (`G1 X0`, the seam-side
-    // cumulative), not the geometric `segments - 1` arc segment.
+    // `elapsed_at(k)` reads `elapsed[k]`, the marker for source line `k-1`.
+    // Source indices: 3 = `G1 X10` (seeds `first_vertex`), 4 = `G1 X0`
+    // (wall close — cache-eligible id2), 5 = `G3` arc (id3 excluded by the
+    // `Seam` vertex), 6 = `G1 X1`. So `elapsed_at(6)` is the arc,
+    // `elapsed_at(7)` the trailing `G1 X1`.
+    //
+    // The arc's first block is cache-excluded, so `ExportLines::update`
+    // probes `id == counter`, finds `it->id > counter`, returns internal 0 —
+    // `m_times` is left at the previous eligible cumulative (`:803` is only
+    // reached on `it->id == counter`), which is the wall-close `G1 X0`
+    // seam-side value. `process_line_move` then emits that carried `m_times`
+    // at the arc line — the "reads the seam's id" behaviour.
     let arc_line = estimate
         .elapsed_at(6)
-        .expect("arc line exports a marker (the seam-side id)");
-    // `G1 X10 E1` + `G1 X0 E1` at F600 each traverse 10 mm at 10 mm/s →
-    // the wall-close cumulative is ~2.0 s. The seam-side lookup must read
-    // that value, never a later arc-internal segment.
+        .expect("seam-excluded arc emits the carried seam-side m_times");
+    // `G1 X10` + `G1 X0` at F600 → the wall-close cumulative ~2.0 s.
     assert!(
         (arc_line - 2.000_199_794_769_287).abs() < 1e-6,
         "arc marker {arc_line} should read the seam-side `G1 X0` cumulative"
+    );
+    // The exported counter is now one behind the slicer-side ids, so the
+    // trailing `G1 X1` probes `it->id > counter` and emits no new marker.
+    assert!(
+        estimate.elapsed_at(7).is_none(),
+        "trailing G1 reads the divergent export cursor (id > counter → None)"
     );
 }

@@ -33,7 +33,11 @@ impl Estimate {
         let mut block_line_ids = Vec::new();
         let mut cache_eligible = Vec::new();
         let mut seams = SeamDetector::default();
-        let mut arc_segment_counts = vec![0; lines.len()];
+        // Per-source-line arc bookkeeping for the M73 cache lookup: the
+        // geometric internal-segment count and whether the arc's first block
+        // was seam-excluded (`ExportLines::update` → `internal` = 0).
+        let mut arc_segment_counts = vec![0usize; lines.len()];
+        let mut arc_seam_excluded = vec![false; lines.len()];
         for (index, line) in lines.iter().enumerate() {
             seams.role(line);
             match line.trim() {
@@ -103,14 +107,8 @@ impl Estimate {
             let command = code.split_whitespace().next().unwrap_or_default();
             let arc_internal = matches!(command, "G2" | "G3")
                 .then(|| arc_internal_g1_lines(code, command, &state));
-            #[cfg(test)]
-            if let Some(count) = arc_internal
-                && std::env::var("ARES_TRACE_ARCS").is_ok()
-            {
-                eprintln!("ARC id={g1_line_id} segments={count}");
-            }
             let arc_start = state.position;
-            let mut arc_seam_excluded = false;
+            let mut seam_excluded = false;
             let motion_blocks = state.motions(code);
             // Linear commands produce at most one block; only arcs subdivide.
             if matches!(command, "G0" | "G1" | "G28")
@@ -122,26 +120,26 @@ impl Estimate {
                 let seam_vertex = seams.associate(extruding, state.position);
                 cache_eligible.push(!block.e_only && !seam_vertex);
             } else if !motion_blocks.is_empty() {
-                // `G2`/`G3` arc: the first internal segment's block associates
-                // with an inserted `Seam` vertex when the preceding
-                // external-wall loop closes at the arc start
-                // (`GCodeProcessor.cpp:4215-4225`). That block is then
-                // excluded from `g1_times_cache` (:484-488), so
-                // `ExportLines::update` returns internal count 0 and the
-                // arc's M73 reads the seam's id — not the geometric
-                // `segments - 1` (:790-800). The remaining segments keep
-                // their own `remaining` chain but sit past the lookup cursor.
-                let extruding = motion_blocks.iter().any(|block| {
-                    !state.wiping
-                        && block.delta[3] > 0.0
-                        && (block.delta[0] != 0.0 || block.delta[1] != 0.0)
-                });
-                arc_seam_excluded = seams.associate_arc_start(extruding, arc_start);
+                // `G2`/`G3` arc: every discretized internal segment is a
+                // `process_G1` → `store_move_vertex`, so the seam lifecycle
+                // runs PER SEGMENT (`GCodeProcessor.cpp:4194-4225`), not once
+                // at the arc level. A segment whose start returns to
+                // `first_vertex` while terminating the loop associates a
+                // `Seam` vertex with its block → cache-excluded (:484-488),
+                // collapsing the `remaining` chain `ExportLines::update`
+                // walks (:790-800). `arc_start` is the position before
+                // `motions` advanced `state.position` to the arc end.
+                let mut position = arc_start;
                 for (segment_index, block) in motion_blocks.iter().enumerate() {
-                    cache_eligible
-                        .push(!block.e_only && !(arc_seam_excluded && segment_index == 0));
+                    let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
+                    let extruding = !state.wiping
+                        && block.delta[3] > 0.0
+                        && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
+                    let seam_vertex = seams.associate(extruding, end);
+                    seam_excluded |= seam_vertex && segment_index == 0;
+                    cache_eligible.push(!block.e_only && !seam_vertex);
+                    position = end;
                 }
-                seams.advance(state.position);
             }
             match command {
                 "G0" | "G1" | "G28" => {
@@ -163,11 +161,8 @@ impl Estimate {
                 }
                 "G2" | "G3" => {
                     let count = motion_blocks.len();
-                    // `ExportLines::update` internal count: 0 when the arc's
-                    // first block was excluded by the seam vertex, else the
-                    // geometric `segments - 1`.
-                    arc_segment_counts[index] =
-                        if arc_seam_excluded { 0 } else { arc_internal.unwrap_or(0) };
+                    arc_segment_counts[index] = arc_internal.unwrap_or(0);
+                    arc_seam_excluded[index] = seam_excluded;
                     blocks.extend(motion_blocks);
                     // Every discretized internal G1 consumes its own g1 line
                     // id (`GCodeProcessor.cpp:3868` `++m_g1_line_id` per
@@ -176,7 +171,11 @@ impl Estimate {
                     g1_line_id += 1;
                     block_line_ids.extend((0..count).map(|offset| g1_line_id + offset));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
-                    g1_line_id += arc_internal.unwrap_or(0);
+                    // `++m_g1_line_id` once per internal `process_G1`
+                    // (`GCodeProcessor.cpp:3868`), so the counter advances by
+                    // the full discretized segment count — the arc line
+                    // itself plus `segments - 1` internal segments.
+                    g1_line_id += count - 1;
                 }
                 _ => debug_assert!(motion_blocks.is_empty()),
             }
@@ -221,6 +220,7 @@ impl Estimate {
                 // calculate_time adds every block's time before testing the
                 // associated move vertex for Extrude, Travel or Wipe.
                 cumulative += time;
+                // (g1_line_id, f32 elapsed snapshot)
                 eligible.then_some((id, f64::from(cumulative as f32)))
             })
             .collect::<Vec<_>>();
@@ -237,20 +237,31 @@ impl Estimate {
                 .unwrap_or_default();
             let lookup_id = match command {
                 "G0" | "G1" => {
+                    // The `it->id == g1_lines_counter` probe in
+                    // `ExportLines::update` uses the exported counter as
+                    // passed in (the `++` inside only feeds the `internal`
+                    // arithmetic), so a line reads the cumulative through
+                    // the PREVIOUS eligible cache entry.
                     let id = exported_g1_lines;
                     exported_g1_lines += 1;
                     Some(id)
                 }
                 "G2" | "G3" => {
-                    // `process_line_move(g1_lines_counter +
-                    // internal_g1_lines_counter)` (`GCodeProcessor.cpp:1466`):
-                    // the arc line's marker reads the second-to-last internal
-                    // segment's cache entry, and the trailing segment's time
-                    // lands on the next motion line's lookup.
-                    let internal = arc_segment_counts[index];
-                    let id = exported_g1_lines + internal;
+                    // `ExportLines::update` internal count
+                    // (`GCodeProcessor.cpp:790-800`): `internal_g1_lines_counter`
+                    // — geometric `segments - 1` for a fully-cached arc, 0 when
+                    // the arc's first cache entry was seam-excluded
+                    // (`it->id > counter` → ret 0). The marker reads
+                    // `g1_lines_counter + internal` (:1466), the exported
+                    // counter advances `1 + internal` (:1467).
+                    let internal = if arc_seam_excluded[index] {
+                        0
+                    } else {
+                        arc_segment_counts[index]
+                    };
+                    let lookup = exported_g1_lines + internal;
                     exported_g1_lines += 1 + internal;
-                    Some(id)
+                    Some(lookup)
                 }
                 "G28" => {
                     exported_g1_lines += 1;
