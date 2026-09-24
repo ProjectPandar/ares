@@ -45,6 +45,29 @@ pub(crate) fn fill_tpmsd_surface(
         expolygon.clone()
     };
     let (mut min, mut max) = contour_bounds(rotated.contour());
+    if let Ok(path) = std::env::var("ARES_DUMP_TPMSREG") {
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(
+                f,
+                "TPMSD z={:.4} angle={:.5} dens={:.5} ml={} min={} {} max={} {} npts={} rot={}",
+                params.layer_z,
+                params.angle,
+                params.density,
+                params.multiline,
+                min.x(),
+                min.y(),
+                max.x(),
+                max.y(),
+                rotated.contour().points().len(),
+                rotate
+            );
+        }
+    }
 
     let density_adjusted =
         (f64::from(params.density) * DENSITY_ADJUST / f64::from(params.multiline)).max(0.0);

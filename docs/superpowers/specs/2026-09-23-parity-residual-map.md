@@ -327,9 +327,30 @@ shifted/missing wave fragments (674/1853 shared sparse points). Root is
 `detect_surfaces`/`prepare_infill` `fill_surfaces` region extent (the
 sparse `Internal` inset), NOT the tpms generator — the SAME class as the
 narrow-internal `WIDTH:0.405676` extra-fragment residual and likely most
-"extra fragment" diffs across fill patterns. Needs oracle
-`Print::detect_surfaces`/`combine_infill` region dumps to bisect the
-inset.
+"extra fragment" diffs across fill patterns.
+
+**ORACLE-CONFIRMED** (instrumented `ORCA_DUMP_TPMSD` build, `FillTpmsD.cpp:
+112` `BoundingBox bb`): for `sparse_infill_pattern/tpmsd` (10mm cube,
+`infill_direction=45`, density 15%) oracle's `expolygon.contour` bbox is
+`±4019688` while ares's (`ARES_DUMP_TPMSREG`, `fill_tpmsd_surface` rotated
+contour) is `±4223228` — **ares's sparse `Internal` surface is 0.203mm
+larger per side**. `angle`/`density`/`multiline`/`z`/`npts` all match
+(`0.7854`/`0.15`/`1`/shared-z/`4`), so the tpms inputs are identical — only
+the surface region differs. Upstream `stInternal` = `LayerRegion::
+make_perimeters` output (`LayerRegion.cpp:82`) — `fill_surfaces` produced
+by `PerimeterGenerator` where the internal-fill region is inset by the
+perimeter/wall band (`inner_polygons`/`fill_clip`/`non_top_polygons`,
+`PerimeterGenerator.cpp:640-655`: `fill_clip = offset_ex(orig,
+ext_perimeter_spacing/2 - scale_(infill_spacing/2))`). Ares's `Internal`
+region = `classify_slices` `internal(previous, top_bottom)` = `previous -
+top_bottom` (`surface_type_detection/geometry.rs:106`) — `previous` is the
+raw layer slice (full contour), with NO perimeter-band inset. **FIX
+DIRECTION**: the sparse `Internal` surface must be the
+perimeter-region-inset interior, matching `fill_surfaces[stInternal]` —
+port the `PerimeterGenerator` `fill_surfaces`/`fill_no_overlap` boundary
+computation (inner wall offset) into `surface_type_detection`/`combine_infill`.
+This is a milestone-level region port, not a one-line fix; it is the
+highest-leverage residual (converges the whole fill-pattern family).
 
 ## lightning empty-clipped connect — FIXED (`7b4df5ac`)
 
