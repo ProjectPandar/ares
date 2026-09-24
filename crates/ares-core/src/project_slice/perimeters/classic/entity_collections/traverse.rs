@@ -35,12 +35,16 @@ struct GroupFrame<'a> {
     /// upstream's `idx.first >= loops.size()` thin boundary (:241) then reads
     /// the uncompacted count. `loop_count` is the equivalent boundary over
     /// ares's compacted `entities`; the two agree in every non-degenerate
-    /// case and diverge only in the upstream-UB corner (a compacted thin wall
-    /// landing inside `loops.size()` is `static_cast<ExtrusionLoop*>` on a
-    /// Path).
+    /// case and diverge only when a thin entity lands inside `loops.size()`:
+    /// an open thin wall is an `ExtrusionPath*`, so upstream
+    /// `static_cast<ExtrusionLoop*>` (:257) is a bad downcast (UB), while a
+    /// closed thin wall materializes as a real `ExtrusionLoop`
+    /// (`gap_extrusion/variable_width.rs:43-49`) and upstream silently
+    /// assigns the shifted loop's seed/depth/children — wrong topology rather
+    /// than UB. `loop_count` avoids both.
     loop_count: usize,
-    /// Loop entities occupy `entities[..nodes.len()]`; thin-wall entities (only
-    /// ever present on the root frame) occupy `entities[nodes.len()..]`
+    /// Loop entities occupy `entities[..loop_count]`; thin-wall entities (only
+    /// ever present on the root frame) occupy `entities[loop_count..]`
     /// (upstream `coll.entities` ordering — loops first, thin walls appended,
     /// `PerimeterGenerator.cpp:230-238`).
     entities: Vec<Option<ExtrusionEntity>>,

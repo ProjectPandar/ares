@@ -89,14 +89,38 @@ fn inner_outer_inner_handles_leading_thin_path() {
     };
     reorder_walls(&mut collection, ProcessWallSequence::InnerOuterInner, 1);
     let kinds: Vec<i32> = collection.entities.iter().map(|e| e.inset_idx()).collect();
-    // The thin path (inset_idx -1) must remain associated with its island,
-    // not become a detached first island. Assert it isn't the sole first
-    // entity and the outer wall (0) still reorders to innermost position.
-    assert_eq!(kinds.len(), 4);
-    assert!(
-        kinds.iter().any(|&i| i == -1),
-        "thin path retained with inset_idx -1"
-    );
+    // Upstream `inner_outer_extrusions` emits the deepest internal first
+    // (Loop2 at max_internal), then the outside-in head — `[2, -1, 0, 1]`
+    // (`PerimeterGenerator.cpp:1536-1548`).
+    assert_eq!(kinds, [2, -1, 0, 1]);
+    // The thin path also flips direction under `reverse_collection` (5->6
+    // becomes 6->5).
+    let ExtrusionEntity::Path(path) = &collection.entities[1] else {
+        panic!("second entity is the thin path");
+    };
+    assert_eq!(path.polyline.points[0].x, 6);
+    assert_eq!(path.polyline.points[1].x, 5);
+}
+
+#[test]
+fn inner_outer_inner_incomplete_tail_keeps_reversed_order() {
+    // `[1,3,0,2,1,0]` reversed -> `[0,1,2,0,3,1]`; phase-1 -> `[0,1,2,0,1,3]`.
+    // The trailing island `[0,1,3]` has no inset 2, so upstream leaves the
+    // ORIGINAL reversed tail `[0,3,1]` — not the phase-1 order `[0,1,3]`.
+    let mut collection = ExtrusionEntityCollection {
+        entities: vec![
+            ExtrusionEntity::Loop(entity(1, 1)),
+            ExtrusionEntity::Loop(entity(3, 3)),
+            ExtrusionEntity::Loop(entity(0, 0)),
+            ExtrusionEntity::Loop(entity(2, 2)),
+            ExtrusionEntity::Loop(entity(11, 1)),
+            ExtrusionEntity::Loop(entity(10, 0)),
+        ],
+        source_order: 0,
+    };
+    reorder_walls(&mut collection, ProcessWallSequence::InnerOuterInner, 1);
+    let kinds: Vec<i32> = collection.entities.iter().map(|e| e.inset_idx()).collect();
+    assert_eq!(kinds, [2, 0, 1, 0, 3, 1]);
 }
 
 #[test]
