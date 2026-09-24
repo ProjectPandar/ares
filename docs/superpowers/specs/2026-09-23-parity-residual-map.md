@@ -1050,3 +1050,14 @@ Root is layer-region slice polygons (LayerRegion::slices.surfaces /
 marching-squares-or-triangle-slice output) differing by one lattice unit.
 Tooling committed: clipref offset.cpp, orca-probes {arcseg,lslices,rslices,
 simppath,hilbert_preclip,orcablocks}.nix, ARES_DUMP_{ARCSEG,LSLICES,...}.
+
+### Diff is universal across features (#670)
+
+Feature-tagging the ~22k changed ref lines: WIPE_END 7146, Sparse infill 5869,
+Inner wall 2074, Outer wall 1805, Gap 954, Internal solid 575, Bridge 71,
+Top/Bottom 23. So the ±1um is NOT feature-specific -> a GLOBAL coordinate source
+diff (the shared slice/region polygons), not a per-feature emit bug. The oracle
+rslices dump (slices.surfaces) vs ares LSLICES (assign_layer) are different
+frames/stages (oracle plate-frame merged surfaces vs ares object-local region
+slices) so the dump doesn't yet align — need oracle's per-region slice output
+in the same frame ares consumes (post object transform, pre perimeter offset).
