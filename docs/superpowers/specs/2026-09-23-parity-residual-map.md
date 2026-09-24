@@ -287,3 +287,45 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
   seam-side id, helical P93, all 7002 green. NOTE: this is the arc
   id-mapping fix — distinct from the per-block elapsed-VALUE drift (#11)
   which persists on non-arc models (enable_arc_fitting off).
+
+## Option-domain sweep (2026-09-24, release build, multi-run oracle)
+
+`ARES_PARITY_OPTIONS=1 cargo nextest run -r -p ares-cli --test orca_parity`
+over all 650 source-cited option domains: **645 of 649 compared domains
+pass** (1282 cases compared, 26 rejected upstream). Failures are
+feature-completeness gaps, not output mismatches:
+
+- `line_width` (REJECTED upstream): generated domain values are physically
+  invalid for the cube (`Too small line width`, `negative spacing`) — not a
+  parity diff.
+- `raft_layers`, `wall_generator/arachne`, `sparse_infill_pattern/
+  adaptivecubic` (stale-binary): `unsupported project feature` — feature not
+  yet wired end-to-end, distinct from byte-parity of supported output.
+- `top_surface_pattern/octagramspiral`: a wipe-ordering lifecycle diff on
+  the top layer (wipe polyline emitted against a different island).
+
+## tpmsd wave-refine tolerance — FIXED (`43cf10e9`)
+
+`FillTpmsD::make_waves` `tolerance` denominator must be `unscale(scaleFactor)
+= scaleFactor * SCALING_FACTOR` (`FillTpmsD.cpp:27`); ares wrote
+`scale_factor / scale.factor()`. The ~1e12 denominator produced
+`tolerance ≈ 7e-14` so the analytic-wave refinement loop never converged —
+the `wave` vector grew to ~50 GB and a tpmsd slice took >2 min (debug ~45
+min). With `*`, tolerance ≈ 0.07 and the curve converges: tpmsd slice drops
+to ~0.1 s. This also unblocked the `sparse_infill_pattern` enum tail in the
+option sweep (tpmsd/tpmsfk each took ~50 min before, blocking 145 keys).
+
+Residual: tpmsd/tpmsfk GEOMETRY still diverges (~4.5k lines) — the refined
+wave now converges but produces a different curve than oracle (path-length
+`E` matches but XY is a rigid offset/rotation). `make_waves`, `swap_uv`,
+`align_to_grid`, `translate`, and `density_adjusted` all verify faithful
+against `FillTpmsD.cpp`; the divergence is downstream (connect_infill /
+intersection / multiline) or a sub-ulp phase in `z = grid_z/scale_factor`.
+
+## lightning empty-clipped connect — FIXED (`7b4df5ac`)
+
+`sparse_infill_pattern/lightning` panicked on
+`debug_assert!(!infill_ordered.is_empty())` in `connect_infill`. Upstream
+`chain_or_connect_infill` (`FillBase.cpp:1822`) guards `!infill_ordered.
+empty()` before `connect_infill`; ares's lightning entry bypassed the guard.
+Now skips `connect_infill` on an empty clipped set.
