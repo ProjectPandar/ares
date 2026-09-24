@@ -636,3 +636,21 @@ i.e. a boundary-membership/intersection rounding difference inside the sweep,
 surfacing as a missing vertex rather than a ±1 on an emitted vertex. The sweep
 `AddOutPt`/`ProcessBound` for an open subject edge entering a clip boundary is
 the remaining site.
+
+## Vertex-drop root cause: DP-simplify input segmentation (#654)
+
+Built a standalone upstream-clipper reference (`/tmp/clipref`, clipper.cpp 6.2.6
++ Eigen/TBB stub) and fed it the exact rotated Hilbert polyline (4096 pts) +
+diamond clip extracted via `ARES_DUMP_PLANEIN`: upstream `intersection_pl`
+output is **byte-identical** to ares's `intersection_open_polylines` (493 pts,
+29 polylines). So the clip is correct — `110.509,112.133` IS present in ares's
+clipped output.
+
+The vertex is then dropped by `LayerRegion::simplify` → DP (`douglas_peucker`,
+tolerance `scaled(0.012)`). Ares and upstream DP algorithms are structurally
+identical; the divergence is the *input segmentation*: oracle emits the vertex
+as an extrusion-path/sub-path endpoint (DP preserves endpoints) while ares's
+chained polyline has it interior (DP drops it, perp-dist ~707 scaled-units <
+12000). This is the same connect_infill/chaining ordering non-determinism
+surfacing inside DP — which path-boundary a vertex lands on determines whether
+it survives simplify. Not a clip bug.

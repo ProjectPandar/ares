@@ -140,6 +140,30 @@ fn fill_component(
         scale,
     )?;
     let clip = expolygon_polygons(&rotated);
+    if let Ok(path) = std::env::var("ARES_DUMP_PLANEIN") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(file, "IN n={}", polylines.len());
+            for polyline in &polylines {
+                let _ = write!(file, "PL");
+                for point in polyline.points() {
+                    let _ = write!(file, " {},{}", point.x(), point.y());
+                }
+                let _ = writeln!(file);
+            }
+            for polygon in &clip {
+                let _ = write!(file, "CLIP");
+                for point in polygon.points() {
+                    let _ = write!(file, " {},{}", point.x(), point.y());
+                }
+                let _ = writeln!(file);
+            }
+        }
+    }
     if let Ok(path) = std::env::var("ARES_DUMP_PLANEBOUND") {
         use std::io::Write;
         if let Ok(mut file) = std::fs::OpenOptions::new()
