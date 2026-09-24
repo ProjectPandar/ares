@@ -132,3 +132,28 @@ fn zero_block_arc_still_advances_the_slicer_id_not_the_retained_block_count() {
     let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
     let _ = estimate.elapsed_at(4);
 }
+
+#[test]
+fn degenerate_first_arc_segment_retains_upstream_hole_in_block_ids() {
+    // Reviewer fixture: at start (2^53, 2^53) with radius 2, upstream
+    // discretizes G3 into N=29 segments; the first internal target rounds to
+    // unchanged XY (zero displacement → dropped), so the first RETAINED arc
+    // block carries upstream id 3 (the dropped segment consumed id 2),
+    // not the compact id 2 a `0..count` enumeration assigns.
+    let lines = [
+        "M204 S1000",
+        "G1 X9007199254740992 Y9007199254740992 F600",
+        "G3 I2 F600",
+        "G1 X1 F600",
+    ]
+    .map(str::to_owned);
+    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+    // The first retained arc block carries upstream id 3 (the dropped
+    // zero-displacement first segment consumed id 2), not the compact id 2.
+    assert_eq!(
+        estimate.block_line_ids[1], 3,
+        "first retained arc block should keep the upstream id-3 hole, got {:?}",
+        estimate.block_line_ids
+    );
+    let _ = estimate.elapsed_at(4);
+}

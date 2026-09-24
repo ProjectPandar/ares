@@ -121,6 +121,17 @@ impl MotionState {
     }
 
     pub(super) fn motions(&mut self, code: &str) -> Vec<MotionBlock> {
+        self.motions_indexed(code)
+            .into_iter()
+            .map(|(_, block)| block)
+            .collect()
+    }
+
+    /// Each entry is `(discretization_index, block)`: `0` for linear moves,
+    /// the segment's position in `arc::deltas` for `G2`/`G3` — needed to
+    /// preserve the `m_g1_line_id` hole of dropped zero-displacement
+    /// segments (`GCodeProcessor.cpp:3868` fires before the :3891 drop).
+    pub(super) fn motions_indexed(&mut self, code: &str) -> Vec<(usize, MotionBlock)> {
         let start = self.position;
         let start_e = self.e_position;
         let Some(block) = self.motion(code) else {
@@ -128,7 +139,7 @@ impl MotionState {
         };
         let command = code.split_whitespace().next().unwrap_or_default();
         if !matches!(command, "G2" | "G3") {
-            return vec![block];
+            return vec![(0, block)];
         }
         let Some(deltas) = arc::deltas(
             command,
@@ -142,11 +153,20 @@ impl MotionState {
                 gcode_flavor: self.gcode_flavor,
             },
         ) else {
-            return vec![block];
+            return vec![(0, block)];
         };
+        // `internal_only_g1_line` → `process_G1` → `++m_g1_line_id` fires for
+        // EVERY discretized segment (`GCodeProcessor.cpp:3868`), including
+        // zero-displacement segments dropped at :3891 — so a retained
+        // block's `g1_line_id` is its discretization position `base + index`,
+        // not a compact rank over the survivors. Carry the `deltas` index.
         deltas
             .into_iter()
-            .filter_map(|delta| self.segment_block(delta))
+            .enumerate()
+            .filter_map(|(segment_index, delta)| {
+                self.segment_block(delta)
+                    .map(|block| (segment_index, block))
+            })
             .collect()
     }
 

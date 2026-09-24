@@ -14,6 +14,8 @@ pub(super) struct Estimate {
     pub(super) total: f64,
     pub(super) prepare: f64,
     elapsed: Vec<Option<f64>>,
+    #[cfg(test)]
+    pub(super) block_line_ids: Vec<usize>,
 }
 impl Estimate {
     pub(super) fn from_lines(
@@ -109,10 +111,10 @@ impl Estimate {
                 .then(|| arc_internal_g1_lines(code, command, &state));
             let arc_start = state.position;
             let mut seam_excluded = false;
-            let motion_blocks = state.motions(code);
+            let motion_blocks = state.motions_indexed(code);
             // Linear commands produce at most one block; only arcs subdivide.
             if matches!(command, "G0" | "G1" | "G28")
-                && let Some(block) = motion_blocks.first()
+                && let Some((_, block)) = motion_blocks.first()
             {
                 let extruding = !state.wiping
                     && block.delta[3] > 0.0
@@ -130,7 +132,7 @@ impl Estimate {
                 // walks (:790-800). `arc_start` is the position before
                 // `motions` advanced `state.position` to the arc end.
                 let mut position = arc_start;
-                for (segment_index, block) in motion_blocks.iter().enumerate() {
+                for (segment_index, (_, block)) in motion_blocks.iter().enumerate() {
                     let end = std::array::from_fn::<_, 3, _>(|i| position[i] + block.delta[i]);
                     let extruding = !state.wiping
                         && block.delta[3] > 0.0
@@ -145,7 +147,7 @@ impl Estimate {
                 "G0" | "G1" | "G28" => {
                     g1_line_id += 1;
                     let count = motion_blocks.len();
-                    blocks.extend(motion_blocks);
+                    blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
                 }
@@ -155,7 +157,7 @@ impl Estimate {
                 // alignment skips over it.
                 "G10" | "G11" => {
                     let count = motion_blocks.len();
-                    blocks.extend(motion_blocks);
+                    blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
                 }
@@ -163,20 +165,18 @@ impl Estimate {
                     let count = motion_blocks.len();
                     arc_segment_counts[index] = arc_internal.unwrap_or(0);
                     arc_seam_excluded[index] = seam_excluded;
-                    blocks.extend(motion_blocks);
-                    // Every discretized internal G1 consumes its own g1 line
-                    // id (`GCodeProcessor.cpp:3868` `++m_g1_line_id` per
-                    // `process_G1`), so segment i carries id `base + i`;
-                    // only the exported file keeps the single arc line.
+                    // Every discretized internal `process_G1` consumes its own
+                    // g1 line id (`GCodeProcessor.cpp:3868` `++m_g1_line_id`),
+                    // including the zero-displacement segments dropped at
+                    // :3891 — so a retained block carries
+                    // `base + discretization_index` (a hole opens where a
+                    // segment dropped), and `g1_line_id` advances by the full
+                    // internal-call count `1 + arc_internal` = `segments`.
                     g1_line_id += 1;
-                    block_line_ids.extend((0..count).map(|offset| g1_line_id + offset));
+                    block_line_ids
+                        .extend(motion_blocks.iter().map(|(index, _)| g1_line_id + index));
+                    blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
-                    // `++m_g1_line_id` once per internal `process_G1`
-                    // (`GCodeProcessor.cpp:3868`) — including calls whose
-                    // zero-displacement block is dropped at :3891, so the
-                    // counter advances by the internal-call count
-                    // (`segments - 1` = `arc_internal`), not the retained
-                    // `motion_blocks.len()`.
                     g1_line_id += arc_internal.unwrap_or(0);
                 }
                 _ => debug_assert!(motion_blocks.is_empty()),
@@ -196,14 +196,17 @@ impl Estimate {
                 running += time;
                 writeln!(
                     out,
-                    "{id} {running:.6} {:.6} {:.3} {}",
+                    "{id} {running:.6} {:.6} {:.3} {} {:.4} {:.4} {:.4}",
                     block.distance,
                     block.speed,
                     match block.kind {
                         MotionKind::Regular => "reg",
                         MotionKind::Unretract => "unretract",
                         MotionKind::ToolChange => "tool",
-                    }
+                    },
+                    block.delta[0],
+                    block.delta[1],
+                    block.delta[2]
                 )
                 .unwrap();
             }
@@ -214,6 +217,8 @@ impl Estimate {
         // `total`, but round each cache entry to f32 — the M73 boundary
         // reads the f32 snapshot, not the running f64 sum.
         let mut cumulative = 0.0;
+        #[cfg(test)]
+        let block_line_ids_snapshot = block_line_ids.clone();
         let cache = block_line_ids
             .into_iter()
             .zip(&times)
@@ -316,6 +321,8 @@ impl Estimate {
             total: cumulative + trailing_delay,
             prepare,
             elapsed,
+            #[cfg(test)]
+            block_line_ids: block_line_ids_snapshot,
         }
     }
 
