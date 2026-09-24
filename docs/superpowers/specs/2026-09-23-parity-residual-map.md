@@ -109,3 +109,10 @@ On a 20-case random dual-fresh sample + targeted re-verification:
    .cpp:65-72`), phase-1 pulls inset_idx==1 ahead of >=2 per island, phase-2
    emits deepest-first via the outer/first/second-internal scan. Verified
    byte-identical modulo header on `inner-outer-inner wall` thin plate.
+
+9. **M73 line-count / R-value drift is estimator drift, not an M73 bug.**
+   ares emits a redundant `M73 P.. R(k)` before the `R(k-1)` where orca emits
+   one line — because `elapsed_at` accumulates ~1min less than upstream at
+   that point, so `total-elapsed` stays a minute higher. The `time_in_minutes`
+   rounding is now f32-faithful (`total_f32 - elapsed`); the residual is the
+   upstream `Estimate`/`elapsed` accumulation (see residual on `E±1e-5`).
