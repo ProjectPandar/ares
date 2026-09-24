@@ -95,6 +95,13 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
    region (`±4223`) to tpmsd/tpmsfk/honeycomb. Instrumented oracle
    (`ORCA_DUMP_FS`/`ORCA_DUMP_INSET`/`ORCA_DUMP_TPMSD`) confirmed oracle fills
    `±4019688`; after the offset ares emits the identical `±4019688` bbox.
+   **Oracle non-determinism caveat** (`case-kKvJ5b`): the SAME unpatched
+   orca-slicer binary run twice produces **88 diffs** — `connect_infill`'s
+   `BoundaryInfillGraph`/TSP ordering is not stable run-to-run. Saved
+   `orca.gcode` reference diffs conflate this non-determinism with real
+   divergence; measure ares against a FRESH oracle run. Ares itself is
+   deterministic (self-diff = 2 lines, timestamp only).
+
    RESIDUAL NOW (post-offset, `case-kKvJ5b` fresh-oracle diff ≈ 2805):
    `connect_infill` anchor/`make_waves` interior tessellation — same region
    `±4019688` and same outer boundary (`X114.02`), but ares emits ONE extra
