@@ -102,6 +102,17 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
    divergence; measure ares against a FRESH oracle run. Ares itself is
    deterministic (self-diff = 2 lines, timestamp only).
 
+   **Convergence update** (`ce639e5c`, `c650fdcd`): two more fidelity fixes
+   collapsed the sparse-infill family — `module` rounds (not truncates)
+   `2*M_PI*distance` matching `Point(double)` ctor, and wave extent uses
+   integer division (`coord_t/coord_t` `ceil` no-op → `floor+1`). Measured vs
+   FRESH oracle: tpmsd `case-kKvJ5b` **2808→90** (≈ oracle's own ~88
+   non-determinism floor), tpmsfk `case-1MvjLe` **~4700→225** (all pure
+   ordering, identical coords), honeycomb `case-0vUcRy` 2234 lines but only
+   **6 oracle-unique / 4 ares-unique coords** (corner `X114.775` vs `X114.325`
+   boundary-anchor detail). The sparse-infill family is now at/near the
+   connect_infill ordering-non-determinism floor; geometry matches.
+
    RESIDUAL NOW (post-offset, `case-kKvJ5b` fresh-oracle diff ≈ 2805):
    `connect_infill` anchor/`make_waves` interior tessellation — same region
    `±4019688` and same outer boundary (`X114.02`), but ares emits ONE extra
