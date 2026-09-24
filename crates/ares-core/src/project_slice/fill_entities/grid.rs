@@ -56,7 +56,6 @@ pub(super) fn append(
             })
             .collect(),
         no_sort: true,
-        simplify_reversed: false,
     });
     Ok(())
 }

@@ -80,8 +80,6 @@ pub(super) fn append(
         output.collections.push(FillExtrusionCollection {
             entities,
             no_sort: fill_params.calibration_order,
-            simplify_reversed: pattern == PlanePathPattern::HilbertCurve
-                && params.extrusion_role == crate::ExtrusionRole::BottomSurface,
         });
     }
     Ok(())

@@ -185,7 +185,6 @@ fn materialize_layer(
                 entities: vec![IslandPrintEntity::FillCollection(FillExtrusionCollection {
                     entities,
                     no_sort,
-                    simplify_reversed: false,
                 })],
             }],
         },

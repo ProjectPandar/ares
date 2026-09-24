@@ -63,7 +63,6 @@ pub(super) fn append(
         output.collections.push(FillExtrusionCollection {
             entities,
             no_sort: false,
-            simplify_reversed: false,
         });
     }
     let _ = ProcessInfillPattern::Line;
