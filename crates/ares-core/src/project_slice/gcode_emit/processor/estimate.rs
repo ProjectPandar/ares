@@ -172,10 +172,12 @@ impl Estimate {
                     block_line_ids.extend((0..count).map(|offset| g1_line_id + offset));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
                     // `++m_g1_line_id` once per internal `process_G1`
-                    // (`GCodeProcessor.cpp:3868`), so the counter advances by
-                    // the full discretized segment count — the arc line
-                    // itself plus `segments - 1` internal segments.
-                    g1_line_id += count - 1;
+                    // (`GCodeProcessor.cpp:3868`) — including calls whose
+                    // zero-displacement block is dropped at :3891, so the
+                    // counter advances by the internal-call count
+                    // (`segments - 1` = `arc_internal`), not the retained
+                    // `motion_blocks.len()`.
+                    g1_line_id += arc_internal.unwrap_or(0);
                 }
                 _ => debug_assert!(motion_blocks.is_empty()),
             }

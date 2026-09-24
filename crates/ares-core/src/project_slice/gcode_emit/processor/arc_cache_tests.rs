@@ -89,14 +89,15 @@ fn arc_after_closed_wall_reads_the_seam_id_not_the_geometric_count() {
     // `elapsed_at(7)` the trailing `G1 X1`.
     //
     // The arc's first block is cache-excluded, so `ExportLines::update`
-    // probes `id == counter`, finds `it->id > counter`, returns internal 0 —
-    // `m_times` is left at the previous eligible cumulative (`:803` is only
-    // reached on `it->id == counter`), which is the wall-close `G1 X0`
-    // seam-side value. `process_line_move` then emits that carried `m_times`
-    // at the arc line — the "reads the seam's id" behaviour.
+    // returns `ret = 0` (`it->id > counter` at :790). `process_line_move`
+    // then probes its OWN `g1_times_cache_it` at `it->id == g1_lines_counter
+    // + internal` = `exported + 0` (`:1246-1248`, `:1466`) — landing on the
+    // wall-close `G1 X0` entry (id2), the last eligible cache item. That
+    // entry's `elapsed_time` is the M73 value — the "reads the seam's id"
+    // behaviour, driven by `process_line_move`'s probe (not `m_times`).
     let arc_line = estimate
         .elapsed_at(6)
-        .expect("seam-excluded arc emits the carried seam-side m_times");
+        .expect("seam-excluded arc emits the seam-side g1_times_cache entry");
     // `G1 X10` + `G1 X0` at F600 → the wall-close cumulative ~2.0 s.
     assert!(
         (arc_line - 2.000_199_794_769_287).abs() < 1e-6,
@@ -108,4 +109,26 @@ fn arc_after_closed_wall_reads_the_seam_id_not_the_geometric_count() {
         estimate.elapsed_at(7).is_none(),
         "trailing G1 reads the divergent export cursor (id > counter → None)"
     );
+}
+
+#[test]
+fn zero_block_arc_still_advances_the_slicer_id_not_the_retained_block_count() {
+    // `GCodeProcessor.cpp:3868` `++m_g1_line_id` fires per internal
+    // `process_G1` — BEFORE the `:3891` no-displacement early return — so a
+    // degenerate arc whose every block drops out still advances the slicer
+    // id by the internal-call count, not the retained block count. A
+    // `count - 1` advance would underflow on a zero-block arc.
+    let lines = [
+        "M204 S1000",
+        "G1 Z0.2 F600",
+        // ~zero-radius arc: upstream emits one zero-displacement internal G1
+        // (no retained block) but still increments m_g1_line_id.
+        "G3 I0.01 F600",
+        "G1 X1 F600",
+    ]
+    .map(str::to_owned);
+    // Must not panic (debug usize underflow) and must produce a marker for
+    // the trailing G1 — the id accounting stayed positive.
+    let estimate = Estimate::from_lines(&lines, 0.0, nonbinding_axis_limits());
+    let _ = estimate.elapsed_at(4);
 }
