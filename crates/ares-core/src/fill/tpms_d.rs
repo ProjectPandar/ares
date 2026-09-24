@@ -111,7 +111,10 @@ fn make_waves(
         .checked_scale(line_spacing)
         .ok_or(ClipperError::CoordinateOutOfRange)? as f64
         / density_adjusted;
-    let tolerance = (line_spacing / 2.0).min(PATTERN_TOLERANCE) / (scale_factor / scale.factor());
+    // `tolerance = min(line_spacing/2, PatternTolerance) / unscale(scaleFactor)`
+    // (`FillTpmsD.cpp:27`) — `unscale(scaleFactor) = scaleFactor * SCALING_FACTOR`,
+    // so the denominator is `scale_factor * scale.factor()` (multiply, not divide).
+    let tolerance = (line_spacing / 2.0).min(PATTERN_TOLERANCE) / (scale_factor * scale.factor());
     let z = grid_z / scale_factor;
     let a = z.sin() - z.cos();
     let b = z.sin() + z.cos();
