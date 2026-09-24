@@ -116,3 +116,14 @@ On a 20-case random dual-fresh sample + targeted re-verification:
    that point, so `total-elapsed` stays a minute higher. The `time_in_minutes`
    rounding is now f32-faithful (`total_f32 - elapsed`); the residual is the
    upstream `Estimate`/`elapsed` accumulation (see residual on `E±1e-5`).
+
+10. **Sparse-infill layer-alternation direction** (`case-I5aCx8` cube, layer
+    ~29): orca's zigzag runs `X113.796 Y109.958`-oriented, ares emits the
+    mirror `X109.958 Y113.796` — the infill angle is 90° off on this layer.
+    `_infill_direction` (`FillBase.cpp:275-316`): `out_angle = angle`;
+    `bridge_angle>=0` overrides; else `!fixed_angle && !dont_alternate` →
+    `+= _layer_angle(layer_id/thickness_layers)` (`(idx&1)?PI/2:0`,
+    `FillBase.hpp:211`); then `+= PI/2`. Ares `infill_direction`
+    (`rectilinear/surface.rs:188`) mirrors this but the divergence on one
+    layer suggests `thickness_layers`/`layer_id` parity or a `bridge_angle`
+    difference on that layer. Needs layer-level bridge/thickness dumps.
