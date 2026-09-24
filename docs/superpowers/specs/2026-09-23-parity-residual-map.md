@@ -174,3 +174,14 @@ On a 20-case random dual-fresh sample + targeted re-verification:
     either an f32-vs-f64 coordinate computation or a round-half boundary.
     Not M73-related (the thinplate has zero M73 drift). Needs upstream's
     travel-endpoint coordinate path traced to the exact rounding site.
+
+  #11 root narrowed further: M73 percent/remaining VALUES are byte-identical
+  at every checkpoint (`P21 R6`, `P44 R5`, ...) — only PLACEMENT shifts
+  (ares emits each M73 ~2-5 lines later than orca). The `P21` checkpoint:
+  orca fires after a `G1 Z` lift; ares fires after the 2nd following
+  extrusion — ares's cumulative `elapsed` is ~2 blocks lower at that point
+  (then catches up; totals match within ~1s). So the drift is a per-block
+  time DISTRIBUTION difference in an early block class (travel/lift/first-
+  extrusion), not a total-time error. Bisect: compare ares
+  `ARES_DUMP_ELAPSED` cumulative at the pre-checkpoint G1 vs the percent
+  boundary — needs oracle `g1_times_cache` or a 2-block reproducer.
