@@ -120,7 +120,10 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
    ≤18 unique boundary-anchor coords) = tpmsfk(102-332), quartercubic(175),
    zigzag(51-165), cubic(59-122), lightning(8 ares-unique coords), line(4),
    concentric(4); still-diverging = crosszag(1149, ~18 oracle-unique corner
-   coords `X114.775/X114.325` — corner-anchor gap), honeycomb(~2200 line-diff
+   coords `X114.775/X114.325` — `connect_infill` boundary-anchor reaching the
+   region corner via `horiz_move`/`symmetric_infill_y_axis` shift
+   (`FillRectilinear.cpp:2811`/`2904`, `Fill.cpp:1311`); region extent correct,
+   gap is the corner-reaching anchor segment), honeycomb(~2200 line-diff
    but ≤6 unique coords), lockedzag(3214 line-diff, only 12/10 unique coords —
    ordering churn dominates). Pattern: fill geometry is now byte-faithful;
    residual is connect_infill ordering non-determinism + sparse corner-anchor
