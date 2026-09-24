@@ -654,3 +654,21 @@ chained polyline has it interior (DP drops it, perp-dist ~707 scaled-units <
 12000). This is the same connect_infill/chaining ordering non-determinism
 surfacing inside DP — which path-boundary a vertex lands on determines whether
 it survives simplify. Not a clip bug.
+
+## Vertex-drop final isolation (#654): fragmentation boundary, not DP
+
+Upstream `extrusion_entities_append_paths` (`ExtrusionEntity.hpp:581`) makes
+**one `ExtrusionPath` per clipped polyline fragment**, so `Polyline::simplify`
+(DP) runs per-fragment and always preserves fragment endpoints. `chain_polylines`
+(`ShortestPath.cpp:1968`) only reorders+reverses — it never merges fragments.
+
+Verified ares's `intersection_open_polylines` output is byte-identical to a
+standalone upstream `clipper.cpp` 6.2.6 run on the exact input (493 pts, 29
+fragments, identical fragment sizes). So the vertex `110.509,112.133` is a
+fragment ENDPOINT in oracle's clip output (clip split the curve at the diamond
+boundary there) but INTERIOR in ares's — ares merged two clip fragments that
+upstream kept separate, so DP dropped the now-interior vertex. The residual is
+in how `intersection_open_polylines` *fragments* the path at a boundary-graze
+(ares produces one fragment where upstream produces two touching at that
+vertex) — a `PolyTree`/open-path OutRec join difference, deeper than the clip
+point values which are already identical.
