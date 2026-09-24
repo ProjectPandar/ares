@@ -844,3 +844,17 @@ arcs into different endpoint geometry AND accounts dropped-segment ids
 differently. Fix: match `marlin_deltas` endpoint positions exactly (so the same
 segments come out zero-length) AND make `arc_internal`/`g1_line_id` reserve ids
 for dropped segments identically.
+
+### Time-estimate: arc segment COUNT deficit (#659)
+
+Added `ARES_DUMP_ARCSEG` (per-arc-segment target `SEG x y z e` in
+`motions_indexed`) + oracle `ORCA_DUMP_ARC` probe (same fields, tools/orca-probes).
+Result: oracle emits **178376** arc segments, ares **145440** — ares produces
+~2.5 fewer segments/arc (oracle avg 13.3, ares 10.9 over 13369 arcs). Per-segment
+distance distribution is identical (median 0.3457 both), so individual segment
+geometry is right — ares is MISSING whole-arc or trailing segments. The dumps
+start at different arcs (oracle's first SEG is a high-Z toolchange spiral at
+Z=59 that ares's dump doesn't reach) → ares `deltas` returns None or under-counts
+for a class of arcs (P-turn spiral lifts / Z-moving arcs / arcs where
+parse_arc bails). Next: per-arc group diff — emit an arc-index marker in both
+dumps and find the first arc whose segment count diverges.

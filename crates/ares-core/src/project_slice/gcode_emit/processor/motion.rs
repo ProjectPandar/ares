@@ -160,6 +160,20 @@ impl MotionState {
         // zero-displacement segments dropped at :3891 — so a retained
         // block's `g1_line_id` is its discretization position `base + index`,
         // not a compact rank over the survivors. Carry the `deltas` index.
+        if let Ok(path) = std::env::var("ARES_DUMP_ARCSEG") {
+            use std::io::Write;
+            if let Ok(mut out) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                let mut pos = start;
+                let mut e = start_e;
+                for delta in &deltas {
+                    pos[0] += delta[0];
+                    pos[1] += delta[1];
+                    pos[2] += delta[2];
+                    e += delta[3];
+                    let _ = writeln!(out, "SEG {} {} {} {}", pos[0], pos[1], pos[2], e);
+                }
+            }
+        }
         deltas
             .into_iter()
             .enumerate()
