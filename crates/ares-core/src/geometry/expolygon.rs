@@ -30,6 +30,14 @@ impl ExPolygon {
         }
     }
 
+    /// `ExPolygon::symmetric_y` (`ExPolygon.cpp:149`): mirror contour + holes X.
+    pub(crate) fn symmetric_y(&mut self, x_axis: super::Coord) {
+        self.contour.symmetric_y(x_axis);
+        for hole in &mut self.holes {
+            hole.symmetric_y(x_axis);
+        }
+    }
+
     pub(crate) fn lines(&self) -> Vec<Line> {
         let mut lines = self.contour.lines();
         for hole in &self.holes {

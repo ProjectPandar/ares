@@ -56,6 +56,16 @@ pub(super) fn append(
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
     let fill_kind = fill.representative.kind;
+    // `Fill.cpp:1329-1331`: `symmetric_infill_y_axis` mirrors the surface X
+    // about `extended_object_bounding_box().center().x()` BEFORE
+    // `_fill_surface_single`; `no_overlap_expolygons` keeps the un-mirrored
+    // surface (`Fill.cpp:1328` intersects before the mirror). The output
+    // polylines are mirrored back by `FillRectilinear.cpp:2905`.
+    let symmetric_y_axis = if fill_params.symmetric_infill_y_axis {
+        Some((extended_object_bounds_x.0 + extended_object_bounds_x.1) / 2)
+    } else {
+        None
+    };
     let generate = if matches!(
         pattern,
         ProcessInfillPattern::Monotonic | ProcessInfillPattern::MonotonicLine
@@ -65,7 +75,18 @@ pub(super) fn append(
         fill_rectilinear_surface
     };
     for expolygon in fill.expolygons {
-        let generated = generate(&expolygon, params, scale).map_err(geometry_error)?;
+        let mut fill_expolygon = expolygon.clone();
+        if let Some(axis) = symmetric_y_axis {
+            fill_expolygon.symmetric_y(axis);
+        }
+        let mut generated = generate(&fill_expolygon, params, scale).map_err(geometry_error)?;
+        if let Some(axis) = symmetric_y_axis {
+            for polyline in &mut generated.polylines {
+                for point in polyline.points_mut() {
+                    *point = point.symmetric_y(axis);
+                }
+            }
+        }
         if generated.polylines.is_empty() {
             continue;
         }

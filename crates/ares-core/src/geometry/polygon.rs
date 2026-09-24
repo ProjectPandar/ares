@@ -36,6 +36,13 @@ impl Polygon {
         self.points.reverse();
     }
 
+    /// `MultiPoint::symmetric_y` — mirror every vertex X about `x_axis`.
+    pub(crate) fn symmetric_y(&mut self, x_axis: super::Coord) {
+        for point in &mut self.points {
+            *point = point.symmetric_y(x_axis);
+        }
+    }
+
     pub(crate) fn split_at_first_point(&self) -> super::Polyline {
         let mut points = Vec::with_capacity(self.points.len() + 1);
         points.extend_from_slice(&self.points);

@@ -101,4 +101,10 @@ impl Point {
     pub(crate) const fn y(self) -> Coord {
         self.y
     }
+
+    /// `MultiPoint::symmetric_y(x_axis)` (`MultiPoint.cpp:570`): mirror X about
+    /// the vertical axis `x' = 2*x_axis - x`.
+    pub(crate) const fn symmetric_y(self, x_axis: Coord) -> Self {
+        Self::new(2 * x_axis - self.x, self.y)
+    }
 }
