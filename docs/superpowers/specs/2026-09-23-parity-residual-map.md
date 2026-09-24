@@ -504,3 +504,14 @@ of the oracle's output set. Byte-matching a single ordering is impossible —
 the sparse-infill "ordering residual" is at the oracle non-determinism floor,
 not an ares bug. The WIPE_START/END diffs (172) are downstream of the same
 ordering (identical wipe content, different byte offset).
+
+## ksr sparse infill = crosshatch (FillCrossHatch.cpp, NOT FillRectilinear)
+
+ksr_fdmtest_v4 `sparse_infill_pattern = "crosshatch"` → `ipCrossHatch` →
+`FillCrossHatch` (`FillBase.cpp:52`), a separate fill class with its own line
+generation in `FillCrossHatch.cpp` — NOT `FillRectilinear::fill_surface_by_lines`
+(probed, only saw dens=1.0 rectilinear/monotonic). The ±1 `coord_t` diagonal
+endpoints live in `FillCrossHatch`'s sweep/line-intersection path. Also
+`extruder_ams_count` `|4#0` vs `|4#1`: oracle RECOMPUTES the ams count (stored
+`1#0|4#0` → emitted `1#0|4#1`), a config-field recomputation ares doesn't do.
+M73 `R`/`model printing time` diffs (~7s, ~0.1%) = elapsed-time planner model.
