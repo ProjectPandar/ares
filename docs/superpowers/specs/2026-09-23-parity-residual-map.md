@@ -798,3 +798,19 @@ header nets to 3s after other accounting). Root cause: **ares's `motions_indexed
 does not sub-segment G2/G3 arcs + wipe/retract moves into the same TimeBlock
 count as `GCodeProcessor::process_G2/arc_segment`** — fix by matching upstream's
 per-arc discretization & wipe block boundaries in `processor/estimate.rs`.
+
+### Time-estimate: localization refined (#657 cont.)
+
+- enable_arc_fitting=1 in ksr_fdmtest_v4 — both emit 13369 G2/G3 arcs (GCode
+  byte-identical). The residual is in **how GCodeProcessor discretizes each arc
+  into TimeBlocks for time accounting**, not the moves themselves.
+- Ares `arc_internal_g1_lines` mirrors Marlin `plan_arc` segment count exactly
+  (f32 radius, flat_mm/segment_mm+0.8). The Δ557 extra blocks therefore come
+  from **non-arc** segmentation: wipe/retract/travel moves or arcs whose
+  sub-block boundaries differ, not the segment count formula.
+- Ordinal alignment breaks at block ~3570 (a G2 arc region, g1_line_id 3678);
+  everything before is byte-identical (cumulative 167.8270s both). Tail: oracle
+  5858.63s vs ares 5871.20s (Δ12.6s planner; header nets to 3s).
+- Next: emit per-block **endpoint position** (cumulative xyz) from both dumps
+  and align on emitted position, then diff per-position block time. The arc
+  sub-block times or wipe-block boundaries are where ares over-counts.
