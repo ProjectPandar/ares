@@ -339,6 +339,24 @@ inset.
 empty()` before `connect_infill`; ares's lightning entry bypassed the guard.
 Now skips `connect_infill` on an empty clipped set.
 
+## ksr_fdmtest_v4 semantic test — PRE-EXISTING multi-class residual
+
+`tests::project_matches_orca_242_semantically` fails with ~55-57k diff
+lines — verified PRE-EXISTING (same magnitude at `6c6c5a27`, before this
+session's commits; not a regression). The diff decomposes into the same
+residual classes as the option sweep:
+
+- ~613 same-coordinate `E`-only diffs → ordering/E-cumulative-drift.
+- ~±0.435mm coordinate pairs → real geometry differences (island/region).
+- ±15/±30 travel-target diffs → ordering (different travel destination).
+- M73 `P`/`R` placement + 1-ulp formatting (`X104.961` vs `X104.96`).
+- 3s total-time estimate diff (`1h43m52s` vs `1h43m49s`) — elapsed model.
+
+So the named ksr test aggregates every known residual on a complex
+multi-object print — it will not pass until the shared geometry/ordering
+roots below converge. It is the project's aggregate parity metric, not a
+discrete bug.
+
 ## dont_connect short-circuit + tpmsd fractional scale — FIXED (`ed6edb0c`)
 
 Independent review (gpt-6-astra) verified both prior fixes, then flagged two
