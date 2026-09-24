@@ -672,3 +672,18 @@ in how `intersection_open_polylines` *fragments* the path at a boundary-graze
 (ares produces one fragment where upstream produces two touching at that
 vertex) — a `PolyTree`/open-path OutRec join difference, deeper than the clip
 point values which are already identical.
+
+## Correction: clip fragments byte-identical per-fragment too (#654)
+
+Per-fragment point multisets between ares `intersection_open_polylines` and
+standalone upstream clipper are IDENTICAL (29 fragments, same sizes, same point
+sets). So `110.509,112.133` is interior to the same fragment in both. The drop
+is therefore inside `douglas_peucker` applied to that fragment: DP drops an
+interior vertex only when its span's max deviation ≤ tol², and the vertex's
+survival depends on which anchor/floater splits the recursion chose — i.e. the
+intra-fragment point ORDER and the exact distance metric. Ares's
+`point_segment_distance_squared` (f64 mm, re-quantized via `units_per_mm`) vs
+upstream `Line::distance_to_squared` (integer `coord_t`, exact i128 cross
+product) can disagree on which span is the recursion's max-deviation, flipping
+an endpoint's keep/drop. Residual = DP distance-metric precision (f64 vs exact
+integer), not clip, not chain.
