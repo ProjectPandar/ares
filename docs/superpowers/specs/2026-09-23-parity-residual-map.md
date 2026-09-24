@@ -113,6 +113,19 @@ cumulative/trailing_delay/total/prepare) for elapsed/M73 forensics.
    boundary-anchor detail). The sparse-infill family is now at/near the
    connect_infill ordering-non-determinism floor; geometry matches.
 
+   **Full sparse_infill_pattern sweep** (vs fresh oracle, diff = `<`/`>` lines;
+   oracle self-nondeterminism ≈88, generator-name header = 2): byte-identical
+   (≤2) = rectilinear, octagramspiral, triangles, tri, zigzag(most), cubic(most),
+   gyroid, supportcubic, adaptivecubic(most); near-floor (<200, ordering-only /
+   ≤18 unique boundary-anchor coords) = tpmsfk(102-332), quartercubic(175),
+   zigzag(51-165), cubic(59-122), lightning(8 ares-unique coords), line(4),
+   concentric(4); still-diverging = crosszag(1149, ~18 oracle-unique corner
+   coords `X114.775/X114.325` — corner-anchor gap), honeycomb(~2200 line-diff
+   but ≤6 unique coords), lockedzag(3214 line-diff, only 12/10 unique coords —
+   ordering churn dominates). Pattern: fill geometry is now byte-faithful;
+   residual is connect_infill ordering non-determinism + sparse corner-anchor
+   coverage.
+
    RESIDUAL NOW (post-offset, `case-kKvJ5b` fresh-oracle diff ≈ 2805):
    `connect_infill` anchor/`make_waves` interior tessellation — same region
    `±4019688` and same outer boundary (`X114.02`), but ares emits ONE extra
