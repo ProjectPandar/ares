@@ -60,12 +60,15 @@ pub(super) fn append(
                     })
                 })
                 .collect();
+            // `Fill.cpp:1328` intersects `no_overlap_expolygons` with the
+            // ORIGINAL surface expolygon (before the `fill_surface` offset),
+            // so the residual domain uses the un-offset surface, not `component`.
             super::gap_residual::append_residual(super::gap_residual::ResidualInput {
                 output_entities: &mut entities,
                 no_overlap_expolygons: &no_overlap_expolygons,
                 params: fill_params,
                 kind: fill_kind,
-                expolygon: component,
+                expolygon: &expolygon,
                 scale,
             })?;
             output.collections.push(FillExtrusionCollection {
