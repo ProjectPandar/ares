@@ -8,7 +8,7 @@
 use crate::{
     SliceError,
     fill::tpms_d::{TpmsDFillParams, fill_tpmsd_surface},
-    geometry::CoordinateScale,
+    geometry::{CoordinateScale, JoinType, offset_expolygon},
     project_slice::group_fills::SurfaceFill,
 };
 
@@ -33,9 +33,17 @@ pub(super) fn append(
         anchor_length_max: fill.params.anchor_length_max,
         dont_sort: false,
     };
+    // `Fill::fill_surface` offsets the surface by `overlap - spacing/2`
+    // (`FillBase.cpp:108`) before `_fill_surface_single`; each resulting
+    // component is filled independently.
+    let delta = ((fill.params.overlap - 0.5 * fill.params.spacing) / scale.factor()) as f32;
     let mut polylines = Vec::new();
     for expolygon in &fill.expolygons {
-        polylines.extend(fill_tpmsd_surface(expolygon, &params, scale).map_err(tpmsd_error)?);
+        let components =
+            offset_expolygon(expolygon, delta, JoinType::Miter, 3.0).map_err(tpmsd_error)?;
+        for component in &components {
+            polylines.extend(fill_tpmsd_surface(component, &params, scale).map_err(tpmsd_error)?);
+        }
     }
     if polylines.is_empty() {
         return Ok(());
