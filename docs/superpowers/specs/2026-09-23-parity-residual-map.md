@@ -1713,3 +1713,19 @@ enable_loop_clipping flag state) or clips a different point sequence.
 Next: dump ares's emitted loop path before emit (the clipped points) vs
 the S-dump; verify ares's seam_gap parse (10% -> 0.04mm = 40000 Coord) and
 the enable_seam_slope/loop_clipping flags driving clip_length.
+
+### clip_end runs LOCAL, not plate-frame (#689)
+
+Oracle `point_to_gcode = unscale(point)+m_origin-extruder_offset`
+(GCode.cpp:8127) — the origin shift is applied at WRITE time in unscaled mm.
+`loop.clip_end(clip_length)` (GCode.cpp:5804) runs on the LOCAL
+`path.polyline` Coord BEFORE that. ares was plate-offsetting scaled_points
+before clip_end (truncating cast then rounds by the WRONG sign frame) and
+unshifting after. Verified empirically: removing the plate shift (clip in
+local frame, matching upstream) drops diff 44491 -> 44461.
+
+Residual is NOT a single clip mechanism though — the ±1/large diffs are
+distributed across many seams: interpolated clip endpoints (truncating
+`.cast<coord_t>`), and larger (0.15-0.5mm) distinct-coordinate diffs.
+end_clip/seam_gap confirmed wired (ec=0.04, f=1e-6, clip_end runs).
+clip_end formula matches Polyline.cpp:50-72 (lsqr>rem², rem/sqrt, trunc).
