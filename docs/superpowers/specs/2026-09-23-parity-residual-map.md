@@ -1774,3 +1774,22 @@ Still open (the residual is real vertex diffs, not rounding):
 Next probe: dump oracle's `paths` AFTER `loop.clip_end` (per-loop endpoint)
 vs ares's emitted last-point to find which loop's clip diverges and whether
 a path pop is the cause.
+
+### TWO residual classes confirmed (#689)
+
+1. SEAM-VERTEX divergence (the big diff blocks): some external loops get a
+   DIFFERENT seam vertex than oracle -> the whole loop is emitted rotated /
+   reversed, so hundreds of consecutive G1/G2/G3 lines diverge (e.g.
+   travel target X99.546,Y122.321 vs oracle X96.532,Y94.437, then a ~30-line
+   block printing the same loop outline in a different rotation, converging
+   at the loop end X115.539). Not a rounding issue — a seam_placement /
+   place_nearest(_penalized) vertex-choice divergence on a subset of loops.
+
+2. +-1um clip/arc-fit tail diffs (small blocks): endpoint/I/J/E all shift by
+   1 lattice unit at the loop closing segment (clip_end interpolation +
+   arc::clip_fitting_end projection). clip_end now runs local-frame.
+
+=> The dominant volume is class 1 (seam vertex choice). Next: identify a
+   loop where ares's place_nearest picks a different vertex than oracle;
+   dump oracle's seam point (seam.nix SEAM/split dump) per loop vs ares's
+   split point and find the divergent candidate scoring.
