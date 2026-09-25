@@ -1339,3 +1339,17 @@ then 7118758,-13194841 (=start, redundant). Two distinct bugs:
     closing segment => seam p selection / split_at_vertex reorder diverges.
 FIX order: (a) drop redundant closing vertex in loop polyline emit;
 (b) compare ExtrusionLoop::split_at_vertex reorder vs ares loop reorder.
+
+### Correction: upstream DOES duplicate closing vertex (#681)
+
+split_at_index(idx): p1=points[0..=idx], p2=points[idx..] (both include idx).
+split_at_vertex reorder -> polyline starts AND ends at seam p (duplicated
+close). So the redundant closing vertex is NOT the bug. Oracle PPATH1 last
+pt = 7134969 (NOT == first 7118758) means the loop's polyline is NOT closed
+at the seam in the dump -> the seam p is NOT the first emitted point, i.e.
+the dump shows the polyline BEFORE split_at_vertex reorder, OR the seam
+produces a distinct end vertex. The single real diff is the tail vertex
+VALUE on the closing segment: 7134969 vs 7131592. This is a different
+interpolated seam/foot point -> ares seam split produces a vertex ~3370
+Coord (~3.4um) off on the closing segment. FIX: instrument the exact seam
+point p and segment chosen (dump Projection + foot) both sides.
