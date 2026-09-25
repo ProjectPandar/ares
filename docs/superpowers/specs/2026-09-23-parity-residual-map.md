@@ -1854,3 +1854,22 @@ per-candidate scoring. The final seam position is a cross-layer consensus
 selection, `are_similar` tolerance (`seam_align_score_tolerance`),
 `finalize_string` reassignment, `MINIMUM_STRING_SEAMS`, and the
 step `1 + len/20` alternative-start search.
+
+### align_seam_points internals all verified faithful (#696 cont)
+
+- `finalize_string` ports fit_cubic_bspline: weights=1/(0.1+angle_penalty),
+  curling_influence=-0.8 branch, total_length/4.0mm segments, QR
+  fullPivHouseholder, t=(|angle|/55deg)^3 blend of current vs fitted pos.
+- `find_next_in_layer` ports find_next_seam_in_layer: nearby within
+  4*flow_width, best/nearest non-finalized, is_first_not_much_worse
+  (nearest then best vs next_layer_seam). central_enforcer branch absent
+  (no enforcers on ksr).
+- `align` ports align_seam_points: stable_sort by is_first_better,
+  find_seam_string up/down walk, step=1+len/20 alternative search,
+  MINIMUM_STRING_SEAMS=6, sort-by-layer, finalize_string.
+- Candidate scores verified identical (1.475 example). Positions/perimeters
+  match. The residual divergence is in the STRING CONSENSUS outcome —
+  likely a subtly different candidate set on some layers (oversampled
+  candidates / enforcer oversampling / perimeters grouping) shifting which
+  vertex the cross-layer fit snaps to, or a find_seam_string walk detail
+  (previous-position projection uses `candidate_position` incl. z).

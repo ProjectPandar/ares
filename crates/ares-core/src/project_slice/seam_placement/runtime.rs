@@ -253,7 +253,9 @@ pub(in crate::project_slice) fn place_nearest_penalized(
                 let _ = writeln!(
                     f,
                     "ACAND {index} {x:.6},{y:.6} oh={:.4} sc={:.4} emb={:.3} ang={:.4}",
-                    layer.overhangs[index], layer.scores[index], layer.embedded[index],
+                    layer.overhangs[index],
+                    layer.scores[index],
+                    layer.embedded[index],
                     layer.ccw_angles[index]
                 );
             }
