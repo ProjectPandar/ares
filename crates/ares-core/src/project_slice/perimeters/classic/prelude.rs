@@ -80,14 +80,31 @@ fn prepare_record(
         Vec::new()
     };
     let nozzle_diameter = record.ext_perimeter_flow.nozzle_diameter;
-    let lower_polygons_series = lower_series(lower, record.perimeter_flow, nozzle_diameter, scale)?;
+    let lower_polygons_series = lower_series(
+        lower,
+        record.layer_id,
+        record.perimeter_flow,
+        nozzle_diameter,
+        scale,
+    )?;
     let external_lower_polygons_series = if external_width == perimeter_width {
         lower_polygons_series.clone()
     } else {
-        lower_series(lower, record.ext_perimeter_flow, nozzle_diameter, scale)?
+        lower_series(
+            lower,
+            record.layer_id,
+            record.ext_perimeter_flow,
+            nozzle_diameter,
+            scale,
+        )?
     };
-    let smaller_external_lower_polygons_series =
-        lower_series(lower, smaller_external_flow, nozzle_diameter, scale)?;
+    let smaller_external_lower_polygons_series = lower_series(
+        lower,
+        record.layer_id,
+        smaller_external_flow,
+        nozzle_diameter,
+        scale,
+    )?;
     let surfaces = prepare_surfaces(object, record, config)?;
     Ok(ClassicPreludeRecord {
         perimeter_width,
@@ -191,6 +208,7 @@ fn prepare_surfaces(
 
 fn lower_series(
     lower: Option<&[ExPolygon]>,
+    layer_id: usize,
     flow: Flow,
     nozzle_diameter: f32,
     scale: CoordinateScale,
@@ -205,7 +223,7 @@ fn lower_series(
             .append(true)
             .open(path)
         {
-            let _ = write!(f, "L ");
+            let _ = write!(f, "L{layer_id} ");
             for e in lower {
                 let _ = write!(f, "[");
                 for p in e.contour().points() {
