@@ -1485,3 +1485,14 @@ in the open-polyline join or surface union that flips a vertex at a rounding
 boundary, propagated through offset -> overhang boundary -> emit. The output
 is geometrically correct within f32 sub-micron precision. Pinpoint requires
 dumping slices.surfaces merged contours per layer (plate frame) both sides.
+
+### closing_radius identical (#686)
+
+make_expolygons: closing_radius(0.049)>=extra_offset(0) -> offset2_ex(
+union_ex(loops), +scale_(0.049), -scale_(0.049)) = morphological close.
+Upstream offset2_ex default jtMiter/miterLimit=3.0. ares close_expolygons =
+offset2_ex(expolygons, +0.049, -0.049, Miter, 3.0) on already-unioned
+expolygons -> identical op+args. => closing identical; residual vertex is a
+1ulp f32 flip inside ClipperOffset/union of a specific arc corner, below
+formula-level resolution. Requires a differential trace on one failing
+vertex (dump offset2_ex input/output for one layer both sides).
