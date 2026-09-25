@@ -97,6 +97,16 @@ pub(super) fn squared_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
 }
 
 pub(super) fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: CoordinateScale) {
+    if let Ok(path) = std::env::var("ARES_DUMP_SEAM") {
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let _ = writeln!(f, "SEAM {},{}", seam.0, seam.1);
+        }
+    }
     if let Ok(path) = std::env::var("ARES_DUMP_LOOP") {
         use std::io::Write;
         if let Ok(mut f) = std::fs::OpenOptions::new()

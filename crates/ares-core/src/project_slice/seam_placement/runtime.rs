@@ -215,17 +215,36 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         scale.unscale(cursor.x) as f32,
         scale.unscale(cursor.y) as f32,
     );
+    // `SeamPlacer.cpp:760-794` `SeamComparator::is_first_better` (spNearest):
+    // lexicographic cascade — overhang wins outright, then embedded
+    // (hidden) points, then the composite penalty.
+    let is_first_better = |a: usize, b: usize| -> bool {
+        let overhang_a = layer.overhangs[a];
+        let overhang_b = layer.overhangs[b];
+        if overhang_a > 0.0 || overhang_b > 0.0 {
+            return overhang_a < overhang_b;
+        }
+        if layer.embedded[a] < -0.5 && layer.embedded[b] > -0.5 {
+            return true;
+        }
+        if layer.embedded[b] < -0.5 && layer.embedded[a] > -0.5 {
+            return false;
+        }
+        let (ax, ay) = layer.positions[a];
+        let (bx, by) = layer.positions[b];
+        let dist_a = ((ax - cursor.0) * (ax - cursor.0) + (ay - cursor.1) * (ay - cursor.1)).sqrt();
+        let dist_b = ((bx - cursor.0) * (bx - cursor.0) + (by - cursor.1) * (by - cursor.1)).sqrt();
+        let distance_penalty_a =
+            1.0 - crate::project_slice::seam_placement::gauss_penalty(dist_a, 0.005);
+        let distance_penalty_b =
+            1.0 - crate::project_slice::seam_placement::gauss_penalty(dist_b, 0.005);
+        let penalty_a = overhang_a + layer.scores[a] + distance_penalty_a;
+        let penalty_b = overhang_b + layer.scores[b] + distance_penalty_b;
+        penalty_a < penalty_b
+    };
     let mut best = usize::MAX;
-    let mut best_penalty = f32::INFINITY;
     for index in start..end {
-        let (x, y) = layer.positions[index];
-        let distance = ((x - cursor.0) * (x - cursor.0) + (y - cursor.1) * (y - cursor.1)).sqrt();
-        // `SeamPlacer.cpp:784-785`: 1 - gauss(dist, 0, 1, 0.005)
-        let distance_penalty =
-            1.0 - crate::project_slice::seam_placement::gauss_penalty(distance, 0.005);
-        let penalty = layer.overhangs[index] + layer.scores[index] + distance_penalty;
-        if penalty < best_penalty {
-            best_penalty = penalty;
+        if best == usize::MAX || is_first_better(index, best) {
             best = index;
         }
     }

@@ -175,6 +175,7 @@ fn nearest_seam_layer(plan: &alignment::LayerPlan, scores: Vec<f32>) -> NearestS
             .collect(),
         scores,
         overhangs: plan.overhangs.clone(),
+        embedded: plan.embedded_distances.clone(),
         perimeter_ranges: plan
             .candidates
             .perimeters
