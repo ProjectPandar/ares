@@ -1510,3 +1510,17 @@ arc junction => the ~1um arc diffs + propagated +-1um G1/arc I/J.
 The fix is matching make_loops loop grouping (which open polylines join into
 which closed polygon) -- the chain produces the right vertices but groups
 them into polygons differently, changing union's vertex emission.
+
+### union_layer_polygons identical; residual = loop grouping (#687)
+
+union_layer_polygons = union_ex(loops, NonZero for Regular/Positive) ==
+upstream make_expolygons union_ex(loops,fill_type); then close_expolygons =
+offset2_ex(Miter/3.0). Full chain verified bit-identical. The residual
+vertex is produced by clipper union emitting a different representative
+vertex at a degenerate arc junction because the INPUT loop set is grouped /
+ordered differently (ares make_loops emits a different polygon partition of
+the identical vertex set). union of identical vertices in different polygon
+groupings/orientations is geometrically equivalent but can emit a different
+boundary vertex where loops self-touch. To pin: dump make_loops Polygons
+per layer (per-polygon ordered vertices) both sides and diff the loop
+partition, not just the vertex multiset.
