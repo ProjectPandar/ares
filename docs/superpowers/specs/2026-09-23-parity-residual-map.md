@@ -1093,3 +1093,18 @@ to mirror upstream prescale(columns) semantics; parity unchanged (44491 lines)
 so the ±1 is f32-representation-floor noise in slice_facet input vertices, not
 a logic bug. Remaining: represent the slicing input as exact coord_t (i32)
 upstream does effectively keep a->x() as integer-coord-valued f32.
+
+### Transform ruled out; residual is IntersectionLine vertices (#671)
+
+- Eigen prescale() is LEFT-multiply (diag(s,s,1)*affine -> scales output rows
+  incl. translation) = ares prescaled_xy. Reverted prescale_xy_input.
+- transform_point_f32 -> mul_add dot3 + separate translation mirrors
+  Eigen Transform3f*v exactly; parity still 44491 -> transform not the source.
+- Mesh vertices: ares f32 XML parse -> f32 center-shift -> f64 -> f32, upstream
+  stl_vertex f32. Interpolation/intersection formulas identical.
+- Arcs come from path.polyline.fitting_result (simplify_by_fitting_arc) NOT
+  do_arc_fitting at emit; I/J 0.05 diff = different segment boundary from
+  input polyline points differing by 1 Coord.
+=> Residual is IntersectionLine point coords from slice_facet (or a downstream
+   Coord->emit rounding). Needs a vertex-level oracle dump of the slicer output
+   (IntersectionLines per layer) vs ares to find the first differing coord.
