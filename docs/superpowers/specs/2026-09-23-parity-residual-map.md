@@ -1139,3 +1139,17 @@ ClipperOffset normals/steps/sincos/miter; arc-fit (3-pt circumcircle + fitting
 boundaries); E-flow e_per_mm; emit_axis rounding; rotate-back. The residual
 +-1um across all features is a per-vertex f32-lsb drift that no code-level
 comparison reveals -> needs IntersectionLine/post-offset vertex-value oracle.
+
+### CRITICAL: diffs are X-ONLY, never Y (#674)
+
+All ~34k coord diffs are on X only (34321 X, 0 Y). Y identical on every line.
+This is NOT symmetric f32 noise -> an X-specific computation. unscale(),
+point_to_gcode (unscale+origin-extruder_offset, pure double add), emit_axis
+all treat X/Y identically. So the input polygon's x Coord differs while y
+matches. Candidates: (a) slice_facet interpolate a[0]/b[0] uses the SAME code
+as a[1]/b[1], so no asymmetry there; (b) the slice Z-plane or polygon winding
+flips X; (c) a Coord->emit path that only rounds X. Since formulas are
+identical, the X-only asymmetry suggests a mirrored/transformed vertex path
+where ares applies an X sign/offset differently, OR upstream object transform
+order differs on the x column. Needs IntersectionLine vertex oracle on a
+diverging x to confirm whether source vertex.x differs by 1 f32 ulp.
