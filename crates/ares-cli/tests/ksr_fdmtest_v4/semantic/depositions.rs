@@ -5,6 +5,8 @@ use super::{
 
 #[path = "depositions/cross_target.rs"]
 mod cross_target;
+#[path = "depositions/matching.rs"]
+mod matching;
 
 pub(super) use cross_target::compare_deposition_cross_target;
 
@@ -41,7 +43,7 @@ pub(super) fn compare_deposition(
     let mut unmatched_expected = Vec::new();
     'outer: for deposition in expected {
         for (index, candidate) in actual.iter().enumerate() {
-            if !used[index] && deposition_matches(deposition, candidate) {
+            if !used[index] && matching::deposition_matches(deposition, candidate) {
                 used[index] = true;
                 continue 'outer;
             }
@@ -99,7 +101,7 @@ pub(super) fn compare_deposition(
     // feature per layer.
     let unchained = |f: &str| CONNECT_INFILL_FEATURES.contains(&f);
     let extrusion_of = |d: &&Deposition| d.extrusion.parse::<f64>().unwrap_or(0.0);
-    let length_of = |d: &&Deposition| {
+    let length_of = |d: &Deposition| {
         let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
             d.motion.start.x.parse::<f64>(),
             d.motion.start.y.parse::<f64>(),
@@ -114,29 +116,29 @@ pub(super) fn compare_deposition(
     // counterpart that covers the same neighborhood with a wildly
     // different extrusion-per-mm is an edited segment, not a merge
     // boundary artifact.
-    let flow_compatible = |d: &&Deposition, o: &&Deposition| {
-        let (le, lo) = (length_of(d), length_of(o));
+    let flow_compatible = |d: &Deposition, o: &Deposition| {
+        let (le, lo) = (length_of(&d), length_of(&o));
         if !le.is_finite() || !lo.is_finite() || le <= 0.0 || lo <= 0.0 {
             return true;
         }
-        let (ee, eo) = (extrusion_of(d), extrusion_of(o));
+        let (ee, eo) = (extrusion_of(&d), extrusion_of(&o));
         let (flow_e, flow_o) = (ee / le, eo / lo);
         (flow_e - flow_o).abs() <= flow_e.abs().max(flow_o.abs()) * 0.25
     };
     // Machine state must agree on every paired leftover: a 10x feed on
     // the same segment is a real speed divergence, not a merge artifact.
-    let machine_state_matches = |d: &&Deposition, o: &&Deposition| {
+    let machine_state_matches = |d: &Deposition, o: &Deposition| {
         d.width == o.width
             && feed_matches(d.feed, o.feed)
             && d.acceleration == o.acceleration
             && d.fans == o.fans
     };
     let degenerate =
-        |d: &&Deposition| extrusion_of(d).abs() <= MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM;
+        |d: &Deposition| extrusion_of(&d).abs() <= MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM;
     // Segment containment: `inner` lies along `outer`'s span within tol,
     // codirectional — reconciles a tiny legit split against the consumed
     // larger piece without letting a reversed fragment qualify.
-    let contained_codirectional = |inner: &&Deposition, outer: &Deposition| {
+    let contained_codirectional = |inner: &Deposition, outer: &Deposition| {
         let (Ok(isx), Ok(isy), Ok(iex), Ok(iey)) = (
             inner.motion.start.x.parse::<f64>(),
             inner.motion.start.y.parse::<f64>(),
@@ -173,7 +175,7 @@ pub(super) fn compare_deposition(
     // Direction consistency: connect_infill merge boundaries keep the
     // hatch orientation, so a paired leftover is near-parallel to its
     // counterpart (either direction). A 90°-rotated segment scores 0.
-    let direction_aligned = |d: &&Deposition, o: &&Deposition| {
+    let direction_aligned = |d: &Deposition, o: &Deposition| {
         let dir = |m: &super::model::MotionRecord| {
             let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
                 m.start.x.parse::<f64>(),
@@ -203,7 +205,6 @@ pub(super) fn compare_deposition(
             if o.feature != d.feature || !machine_state_matches(d, o) || !flow_compatible(d, o) {
                 return false;
             }
-            let exact = MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM;
             let near = [
                 (&d.motion.start, &o.motion.start),
                 (&d.motion.start, &o.motion.end),
@@ -222,7 +223,7 @@ pub(super) fn compare_deposition(
                 (&d.motion.end, &o.motion.end),
             ]
             .into_iter()
-            .any(|(a, b)| position_matches(a, b, exact));
+            .any(|(a, b)| position_matches(a, b, MAX_SHARED_VERTEX_DISTANCE_MM));
             !shared_vertex || direction_aligned(d, o)
         })
     };
@@ -245,9 +246,28 @@ pub(super) fn compare_deposition(
                         )
                 })
             || degenerate(d)
-                && full
-                    .iter()
-                    .any(|o| o.feature == d.feature && contained_codirectional(d, o))
+                && full.iter().any(|o| {
+                    o.feature == d.feature
+                        && machine_state_matches(d, o)
+                        && o.motion.command == d.motion.command
+                        && o.motion.plane == d.motion.plane
+                        && o.motion.start.z == d.motion.start.z
+                        && o.motion.end.z == d.motion.end.z
+                        && contained_codirectional(d, o)
+                })
+            // Sub-micron-quantization slivers: merge boundaries also
+            // emit tiny cap pieces (measured 0.004mm extrusion on a
+            // 0.12mm tip) with no counterpart at all. Below the sliver
+            // budget the extrusion is physically negligible, but the
+            // feed must still exist in the other side's deposition
+            // vocabulary — a 10x feed is an edit, not a sliver.
+            || extrusion_of(d).abs() <= MAX_SLIVER_DEPOSITION_EXTRUSION_MM
+                && full.iter().any(|o| {
+                    o.feature == d.feature
+                        && feed_matches(d.feed, o.feed)
+                        && o.motion.start.z == d.motion.start.z
+                        && o.motion.end.z == d.motion.end.z
+                })
     };
     let bad_expected = unmatched_expected
         .iter()
@@ -279,6 +299,12 @@ pub(super) fn compare_deposition(
             leftovers.first()
         ));
     }
+    // Cluster-level coverage was tried and rejected: real merge
+    // boundary instability produces strand tips up to ~1.5mm off every
+    // oracle deposition path, so vertex-coverage bounds cannot
+    // distinguish mutation from instability. The enforceable
+    // discriminator is direction-consistency on shared-vertex pairs
+    // (see `paired`).
     // Per-feature deposited totals, both directions: merge boundaries
     // shift extrusion between segments of the SAME feature only.
     let per_feature_delta =
@@ -334,73 +360,39 @@ pub(super) fn compare_deposition(
 // decimal; arc-fit centers on near-straight arcs (radius ~287mm) can
 // differ by up to ~0.6mm without changing the deposited shape. The wide
 // bound applies only when BOTH arcs are provably near-straight.
-const MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM: f64 = 0.005;
-const MAX_SAME_TARGET_EXTRUSION_DIFFERENCE_MM: f64 = 0.001;
-const MAX_SAME_TARGET_ARC_CENTER_DIFFERENCE_MM: f64 = 0.6;
-// Arc-center leeway scales with radius: 0.6mm of drift on a 287mm
-// near-straight arc ≈ 0.2% of radius.
-const NEAR_STRAIGHT_ARC_CENTER_FRACTION: f64 = 0.002;
-const MAX_SAME_TARGET_DEPOSITION_COUNT_DIFFERENCE: usize = 64;
+pub(super) const MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM: f64 = 0.005;
+pub(super) const MAX_SAME_TARGET_EXTRUSION_DIFFERENCE_MM: f64 = 0.001;
+pub(super) const MAX_SAME_TARGET_ARC_CENTER_DIFFERENCE_MM: f64 = 0.6;
+// Reconstructed arc-midpoint deviation bound; center drift is checked
+// separately by the near-straight predicate.
+pub(super) const MAX_ARC_CONTOUR_DEVIATION_MM: f64 = 0.05;
+pub(super) const MAX_SAME_TARGET_DEPOSITION_COUNT_DIFFERENCE: usize = 64;
 // connect_infill reshuffles up to ~74 sparse-infill segments per layer
 // on this fixture; pair-bounded, not count-bounded.
-const MAX_SAME_TARGET_UNMATCHED_COUNT: usize = 96;
+pub(super) const MAX_SAME_TARGET_UNMATCHED_COUNT: usize = 96;
 // Depositions that quantize to a merge/split boundary only shift a tiny
 // extrusion amount; a degenerate leftover must still sit on the same
 // endpoint as a counterpart of the same feature.
 const MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM: f64 = 0.02;
 const MAX_DEGENERATE_PAIR_DISTANCE_MM: f64 = 0.01;
+// Tiny cap/split slivers need no positional counterpart: upstream
+// merge instability emits ~0.005mm-extrusion tips unpaired. The feed
+// still has to be a real deposition speed of the other side.
+const MAX_SLIVER_DEPOSITION_EXTRUSION_MM: f64 = 0.008;
 // connect_infill merge boundaries shift segments locally; an unmatched
 // deposition pairs only with a counterpart covering the same
 // neighborhood.
 const MAX_UNMATCHED_PAIR_DISTANCE_MM: f64 = 2.0;
-// Paired leftovers keep the hatch orientation: merge boundaries redraw
-// segments but not their direction. ~72° rejects a 90° rotation.
-const MIN_UNMATCHED_DIRECTION_DOT: f64 = 0.3;
+// Paired leftovers sharing a vertex keep the hatch direction within
+// ~45°: an arc connector (G3) redrafted as a straight segment can
+// swing to dot≈0.82, while a 53°-rotated segment scores 0.6.
+const MIN_UNMATCHED_DIRECTION_DOT: f64 = 0.7;
+// A vertex shared to ~20µm is the same junction — a sub-µm quantization
+// split still counts (real split boundaries differ by 1µm).
+const MAX_SHARED_VERTEX_DISTANCE_MM: f64 = 0.02;
 // connect_infill std::sort instability redistributes sparse-infill
 // extrusion across merge boundaries; merged moves also drop the tiny
 // overlap between joined segments, so bound the net deposited total
 // loosely (measured ~0.06mm/layer on ksr_fdmtest_v4).
 const MAX_UNCHAINED_EXTRUSION_MISMATCH_MM: f64 = 0.4;
 const MAX_UNCHAINED_EXTRUSION_MISMATCH_RATIO: f64 = 0.05;
-
-fn deposition_matches(expected: &Deposition, actual: &Deposition) -> bool {
-    // Arc-center leeway applies only to near-straight arcs, scaled by
-    // radius: the observed ~0.6mm drift is on radius ~287mm arcs. A
-    // fixed 0.6mm bound lets a smaller-radius near-straight arc move
-    // its contour by millimeters.
-    let arc_radius = |motion: &super::model::MotionRecord| {
-        let [Some(i), Some(j)] = &motion.arc_center else {
-            return 0.0;
-        };
-        let (Ok(i), Ok(j)) = (i.parse::<f64>(), j.parse::<f64>()) else {
-            return 0.0;
-        };
-        (i * i + j * j).sqrt()
-    };
-    let near_straight =
-        arc_is_near_straight(&expected.motion) && arc_is_near_straight(&actual.motion);
-    let arc_tolerance = if near_straight {
-        (arc_radius(&expected.motion).min(arc_radius(&actual.motion))
-            * NEAR_STRAIGHT_ARC_CENTER_FRACTION)
-            .min(MAX_SAME_TARGET_ARC_CENTER_DIFFERENCE_MM)
-    } else {
-        MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM
-    };
-    expected.feature == actual.feature
-        && expected.width == actual.width
-        && expected.acceleration == actual.acceleration
-        && expected.fans == actual.fans
-        && feed_matches(expected.feed, actual.feed)
-        && numeric_matches(
-            expected.extrusion.parse().unwrap(),
-            actual.extrusion.parse().unwrap(),
-            MAX_SAME_TARGET_EXTRUSION_DIFFERENCE_MM,
-        )
-        && motion_matches(
-            &expected.motion,
-            &actual.motion,
-            MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM,
-            arc_tolerance,
-            CONNECT_INFILL_FEATURES.contains(&expected.feature.as_str()),
-        )
-}

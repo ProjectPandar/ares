@@ -58,4 +58,12 @@ fn ostream_uses_six_significant_digits_without_axis_quantization() {
     assert_eq!(ostream(0.000_1), "0.0001");
     assert_eq!(ostream(0.000_01), "1e-05");
     assert_eq!(ostream(0.0), "0");
+    // %g picks notation on the ROUNDED 6-significant-digit value and
+    // renormalizes mantissa carry into the exponent.
+    assert_eq!(ostream(999_999.5), "1e+06");
+    assert_eq!(ostream(9_999_996.0), "1e+07");
+    assert_eq!(ostream(0.000_099_999_96), "0.0001");
+    assert_eq!(ostream(-12_000.0), "-12000");
+    assert_eq!(ostream(0.5), "0.5");
+    assert_eq!(ostream(0.000_123_456), "0.000123456");
 }

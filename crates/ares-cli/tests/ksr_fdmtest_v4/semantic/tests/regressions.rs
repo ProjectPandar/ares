@@ -103,6 +103,94 @@ fn plane_restoration_after_g18_is_rejected_when_missing() {
     compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
 }
 
+#[test]
+fn degenerate_feed_edit_is_rejected() {
+    // A degenerate (E<=0.02) sliver at 10x feed is an edit, not a
+    // quantization sliver: the feed is absent from the other side's
+    // deposition vocabulary.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.001 F1200\n";
+    let actual_island = expected_island.replace("E.001 F1200", "E.001 F12000\nG1 F1200");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn degenerate_z_hop_is_rejected() {
+    // A sliver lifted to a different Z is not a same-path sliver.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.001 F1200\n";
+    let actual_island = expected_island.replace("G1 X1 Y0 E.001", "G1 X1 Y0 Z50 E.001");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn sparse_infill_53deg_rotation_is_rejected() {
+    // Rotated by 53° on a shared vertex: |dot| = 0.6 < 0.7 bound.
+    let expected_island = island(0, 1, 1_200).replace("Inner wall", "Sparse infill");
+    let actual_island = expected_island.replace("G1 X1 Y0 E.1", "G1 X.6 Y.8 E.1");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn translated_rotation_is_rejected() {
+    // A 90° rotation translated by 6µm no longer shares a vertex
+    // exactly, but 6µm is still inside the shared-vertex bound.
+    let expected_island = island(0, 1, 1_200).replace("Inner wall", "Sparse infill");
+    let actual_island = expected_island
+        .replace("G1 X0 Y0 F6000", "G1 X.006 Y0 F6000")
+        .replace("G1 X1 Y0 E.1", "G1 X.006 Y1 E.1");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn canceling_large_extruder_pair_is_rejected() {
+    // E100 + E-100 nets to ~zero but deposits 200mm of extruder motion;
+    // the per-island excursion cap rejects it.
+    let expected_island = lifecycle_island(0, 1, ".1");
+    let actual_island = format!(
+        "{expected_island}G1 E100 F1800\nG1 E-100 F1800\n; WIPE_START\nG1 X1 Y0 E-.05 F1200\n; WIPE_END\n"
+    );
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn arc_center_drift_bound_is_contour_deviation() {
+    // Mid-sweep contour deviation, not raw center distance: a 0.09mm
+    // J shift on a radius-50 near-straight arc is caught.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG2 X1 Y0 I.5 J50 E10 F1200\n";
+    let actual_island = expected_island.replace("I.5 J50", "I.5 J50.09");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn arc_under_wrong_plane_is_rejected() {
+    // The MotionRecord plane snapshot makes a G17 placed AFTER the arc
+    // visible: the arc executes under G18, not G17.
+    let body = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG3 X2 Y0 I1 J0 E.1 F1200\n";
+    let expected = format!("G17\nG18\nG17\n{body}");
+    let actual = format!("G17\nG18\n{body}G17\n");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
 // Borrowed-travel-acceleration (inserting `M204 S5000` before a hop so
 // it borrows the deposition class) stays ACCEPTED: real layer-36 data
 // reroutes a hop along the same path with the borrowed class, so the

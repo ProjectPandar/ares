@@ -95,10 +95,30 @@ fn compare_layers(
                 dump("actual", island, &unmatched_expected);
             }
         }
+        // Per-island magnitude cap: real relocation islands carry a
+        // canceling unretract/retract pair plus ≤0.5mm of wipe — never
+        // more than ~1mm of extruder motion. A hidden `E100`/`E-100`
+        // pair nets to zero but still deposits 200mm of motion.
+        let excursion = |island: &&Vec<LifecycleEvent>| {
+            island
+                .iter()
+                .map(|event| match event {
+                    LifecycleEvent::Extruder { extrusion, .. }
+                    | LifecycleEvent::Wipe { extrusion, .. } => {
+                        extrusion.parse::<f64>().unwrap_or(f64::MAX).abs()
+                    }
+                    _ => 0.0,
+                })
+                .sum::<f64>()
+        };
+        let too_big =
+            |island: &&Vec<LifecycleEvent>| excursion(island) > MAX_ISLAND_EXTRUDER_EXCURSION_MM;
         if unmatched_expected.len() > MAX_INFLILL_WIPE_ISLANDS
             || leftovers.len() > MAX_INFLILL_WIPE_ISLANDS
             || !unmatched_expected.iter().all(|i| novel(i, &leftovers))
             || !leftovers.iter().all(|i| novel(i, &unmatched_expected))
+            || unmatched_expected.iter().any(too_big)
+            || leftovers.iter().any(too_big)
         {
             return Err(format!(
                 "layer {layer} island lifecycle differs: {} unmatched expected, \
@@ -168,6 +188,9 @@ const MAX_WIPE_ISLAND_EXTRUSION_MM: f64 = 0.5;
 // Signed net-extrusion imbalance tolerated between the two unmatched
 // island pools: real islands carry canceling retract pairs (net ≈ 0).
 const MAX_ISLAND_EXTRUSION_IMBALANCE_MM: f64 = 0.2;
+// Total extruder excursion per leftover island; real relocated wipe
+// sets stay under ~0.8mm (unretract + retract + wipe).
+const MAX_ISLAND_EXTRUDER_EXCURSION_MM: f64 = 1.0;
 
 fn is_infill_wipe_island(island: &[LifecycleEvent]) -> bool {
     let mut total = 0.0f64;

@@ -288,7 +288,8 @@ fn motion_matches(
     allow_reversal: bool,
 ) -> bool {
     let oriented = |expected: &model::MotionRecord, actual: &model::MotionRecord| {
-        expected.command == actual.command
+        expected.plane == actual.plane
+            && expected.command == actual.command
             && position_matches(&expected.start, &actual.start, coordinate_tolerance)
             && position_matches(&expected.end, &actual.end, coordinate_tolerance)
             && arc_center_matches(
@@ -303,6 +304,7 @@ fn motion_matches(
     oriented(expected, actual)
         || (allow_reversal && expected.command == "G1" && {
             let reversed = model::MotionRecord {
+                plane: expected.plane.clone(),
                 command: expected.command.clone(),
                 start: expected.end.clone(),
                 end: expected.start.clone(),

@@ -71,35 +71,62 @@ fn trim_fixed(value: f64, precision: usize) -> String {
     }
 }
 
-/// C++ ostream default `operator<<` for a double: 6 significant digits,
-/// trailing zeros dropped (`GCodeWriter.cpp:295` `<< jerk_x`). Used for the
-/// M205 XY jerk values, which upstream formats with the stream default, not
-/// the 3-decimal axis quantizer. Jerks stay well inside `%g`'s fixed-notation
-/// range, so a fixed-precision 6-significant-digit render suffices.
+/// C++ ostream default `operator<<` for a double: 6 significant digits
+/// (`GCodeWriter.cpp:295` `<< jerk_x`), i.e. printf `%g`: round to the
+/// precision FIRST, then pick fixed vs scientific on the rounded
+/// exponent (999999.5 → `1e+06`, not `1000000`).
 pub(super) fn ostream(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();
     }
-    // Upstream uses `std::ostream <<` which rounds to decimal nearest
-    // (round-half-even on binary ties like 1.015625 → "1.01562"), NOT the
-    // emit_axis half-away integer-domain rounding of `trim_fixed`.
+    // %g: round the significand to 6 digits FIRST ({:.5} on the
+    // mantissa uses round-half-even like C++), renormalize the carry
+    // (9.999996 → mantissa 1, exponent + 1), then pick the notation on
+    // the ROUNDED exponent — 999999.5 → `1e+06`, not `1000000`.
     let exponent = value.abs().log10().floor() as i32;
-    // C++ `<<` (%g semantics): scientific notation beyond 6 integer
-    // digits or below 1e-4, with a two-digit signed exponent.
+    let sign = if value < 0.0 { "-" } else { "" };
+    let mantissa = value.abs() / 10f64.powi(exponent);
+    let digits = format!("{mantissa:.5}");
+    let (digits, exponent) = if digits.starts_with("10") {
+        ("1".to_owned(), exponent + 1)
+    } else {
+        (digits, exponent)
+    };
+    // Digits without the point: "1.01562" → "101562".
+    let digits: String = digits.chars().filter(|c| *c != '.').collect();
+    let digits = digits.trim_end_matches('0');
+    let digits = if digits.is_empty() { "0" } else { digits };
+    // Scientific notation when the rounded exponent leaves [-4, 5].
     if !(-4..6).contains(&exponent) {
-        let mantissa = value / 10f64.powi(exponent);
-        let rendered = format!("{mantissa:.5}");
-        let rendered = rendered.trim_end_matches('0').trim_end_matches('.');
-        return format!("{rendered}e{exponent:+03}");
+        let (first, rest) = digits.split_at(1);
+        let mantissa = if rest.is_empty() {
+            first.to_owned()
+        } else {
+            format!("{first}.{rest}")
+        };
+        return format!("{sign}{mantissa}e{exponent:+03}");
     }
-    let decimals = (5 - exponent).clamp(0, 6) as usize;
-    let fixed = format!("{value:.decimals$}");
-    // Strip zeroes only from the fractional part; with decimals == 0 the
-    // whole string is integer digits and must be kept verbatim.
-    if decimals == 0 {
-        return fixed;
-    }
-    fixed.trim_end_matches('0').trim_end_matches('.').to_owned()
+    // Fixed: place the point `exponent + 1` digits in.
+    let point = exponent + 1;
+    let fixed = if point <= 0 {
+        format!("0.{}{digits}", "0".repeat((-point) as usize))
+    } else if (point as usize) >= digits.len() {
+        format!("{digits}{}", "0".repeat(point as usize - digits.len()))
+    } else {
+        format!(
+            "{}.{}",
+            &digits[..point as usize],
+            &digits[point as usize..]
+        )
+    };
+    // Trim only a fractional part; integer digit strings keep their
+    // zeros (100000 must not collapse to 1).
+    let fixed = if fixed.contains('.') {
+        fixed.trim_end_matches('0').trim_end_matches('.').to_owned()
+    } else {
+        fixed
+    };
+    format!("{sign}{fixed}")
 }
 #[cfg(test)]
 mod tests;

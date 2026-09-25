@@ -7,6 +7,8 @@ pub(crate) struct Position {
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) struct MotionRecord {
+    // Arc plane (G17/G18/G19) active when the motion was emitted.
+    pub(crate) plane: String,
     pub(crate) command: String,
     pub(crate) start: Position,
     pub(crate) end: Position,

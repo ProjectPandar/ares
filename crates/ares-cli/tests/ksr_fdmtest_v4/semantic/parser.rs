@@ -55,6 +55,9 @@ struct State {
     feature: String,
     width: String,
     fans: BTreeMap<String, String>,
+    // Active arc plane (G17/G18/G19); motion records snapshot it so a
+    // plane change cannot detach from the arc it reorients.
+    plane: String,
 }
 
 pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
@@ -66,7 +69,10 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
         postamble: Vec::new(),
         layers: Vec::new(),
     };
-    let mut state = State::default();
+    let mut state = State {
+        plane: "G17".to_owned(),
+        ..State::default()
+    };
     let mut final_object_stopped = false;
     let mut in_postamble = false;
     let mut in_config_block = false;
@@ -176,6 +182,11 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
         }
         if command_line.starts_with("M106 ") {
             update_fan(command_line, &mut state)?;
+            push_control(&mut output, command_line);
+            continue;
+        }
+        if matches!(command_line, "G17" | "G18" | "G19") {
+            state.plane = command_line.to_owned();
             push_control(&mut output, command_line);
             continue;
         }
@@ -352,6 +363,7 @@ fn push_lifecycle(layer: &mut Layer, event: LifecycleEvent) {
 
 fn motion_record(state: &State, motion: &Motion, next: [&str; 3]) -> MotionRecord {
     MotionRecord {
+        plane: state.plane.clone(),
         command: motion.command.clone(),
         start: Position {
             x: state.x.clone(),
