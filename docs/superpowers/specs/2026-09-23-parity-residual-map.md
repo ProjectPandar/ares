@@ -1694,3 +1694,22 @@ inserted downstream of the loop. NOT a perimeter-offset diff (loops match).
 ares now dumps each loop pre-split via ARES_DUMP_LOOP (split.rs). Next:
 extend oracle seam.nix to dump the post-split polyline (or dump the
 simplify_path/simppath output) to see where 7134969 is first produced.
+
+### Residual = clip_end seam-gap endpoint (#689)
+
+Post-split polyline (oracle seam.nix S-dump) is BYTE-IDENTICAL to ares:
+`7118758;6837168;...;7533563;7131592;7118758`. Yet oracle PPATH ends
+`7134969,-13231335` = an interpolated point on segment `7533563->7131592`
+at t=0.99, i.e. `ExtrusionLoop::clip_end(clip_length)` truncated the loop's
+closing edge (~33.5um closing seg + ~0.66um into the prev edge). ares emits
+`7131592` = the un-clipped (or differently-clipped) vertex.
+
+=> The residual is the clip_end DISTANCE / invocation: `clip_length =
+m_enable_loop_clipping && !enable_seam_slope ? seam_gap : 0`. ares's
+loop-end clip produces 7131592 instead of 7134969 -> either ares uses a
+different clip_length (seam_gap abs value, enable_seam_slope /
+enable_loop_clipping flag state) or clips a different point sequence.
+
+Next: dump ares's emitted loop path before emit (the clipped points) vs
+the S-dump; verify ares's seam_gap parse (10% -> 0.04mm = 40000 Coord) and
+the enable_seam_slope/loop_clipping flags driving clip_length.
