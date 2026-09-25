@@ -1365,3 +1365,19 @@ role boundaries producing different boundary vertices (7134969 vs ares
 7131592). Path count 15885 vs ares 16389 (+504) => the emit-time loop split
 boundaries differ. Residual is in the _extrude path-splitting (role/overhang
 sub-path boundaries), not the slice/seam itself.
+
+### Residual root: overhang sub-path boundary vertex (#682)
+
+PPATH1 is an emit-time SUB-PATH of the perimeter loop: upstream splits each
+ExtrusionLoop into multiple ExtrusionPaths where the loop crosses an
+overhang/non-overhang boundary (PerimeterGenerator.cpp:157/196/418/457 --
+intersect loop with grown lower slices). The boundary vertex (oracle
+7134969 vs ares 7131592) is the intersection point of the loop segment with
+the overhang-region polygon boundary. Ares produces a different boundary
+intersection (~3.4um off) => the overhang-region polygons (offset of lower
+slice) OR the loop-boundary intersection interpolation diverges. This is the
+single remaining systematic residual; it recurs on every perimeter loop that
+crosses an overhang boundary => the +-1um G1 + arc-fit I/J diffs. The slice
+(ILINES) is proven byte-identical; the divergence is in PerimeterGenerator's
+overhang sub-path splitting. Path count +504 confirms extra/misplaced
+boundaries.
