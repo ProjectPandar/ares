@@ -1536,3 +1536,15 @@ clean single-region layers; residual confined to multi-volume/complex layers
 where volume merge order shifts union vertex emission. To pin the residual
 cleanly, ares must dump make_loops per GLOBAL layer post-volume-merge, or
 dump slices.surfaces per region.
+
+### Volume-level make_loops + union confirmed same structure (#688)
+
+Upstream slices per-volume (slice_mesh_ex per model_volume, PrintObjectSlice
+slice_volumes_inner), then merges via groupingVolumes/applyNegtiveVolumes/
+reGroupingLayerPolygons into region slices.surfaces. ares make_loops
+per-volume -> union_layer_polygons(NonZero) -> close_expolygons(offset2_ex)
+per volume, then region_slices move_layer into surfaces. Same structure.
+Residual is the multi-volume MERGE into a layer's surfaces.surfaces: the
+order volumes union into a region differs -> union_ex emits different
+representative arc vertex. Pinpoint: dump slices.surfaces per region per
+layer (post-merge) both sides.
