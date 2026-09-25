@@ -1180,3 +1180,16 @@ diverging vertices the X coordinate sits exactly on a coord_t rounding boundary
 the input f32 vertex flips the result. No Y vertex happens to sit on such a
 boundary. Confirms the residual is a single-ulp vertex-value difference; needs
 an IntersectionLine-value oracle to isolate which vertex's f32 input differs.
+
+### slice_mesh_on_planes dispatch verified identical (#675)
+
+slice_facet_at_zs -> ares dispatch loop: same fminf/fmaxf min/max z, same
+lower_bound(min_z)/upper_bound(max_z) plane range, same min_z!=max_z skip,
+same lowest_vertex_index. parallel_for ordering differs but values don't.
+EVERY slice code path is now verified bit-identical. The +-1um X-only residual
+is definitively NOT a logic/formula bug — it is a numeric representation
+difference in the vertex data reaching slice_facet. To pin it: dump
+IntersectionLine point.x()/point.y() from oracle slice_facet and from ares
+slice_mesh_on_planes for the same layer; the first differing coord exposes the
+input f32 vertex drift (f64->f32 vertex, transform coeff f32 rounding, or the
+.center_shift subtraction in mesh_prepare).
