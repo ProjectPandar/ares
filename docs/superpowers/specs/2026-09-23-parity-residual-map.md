@@ -1436,3 +1436,21 @@ vertices. That propagates to lower_polygons_series offset -> intersection_pl
 overhang boundary -> the +-1um / arc-fit G1 diffs. FIX: dump slices.surfaces
 (merged per-layer ExPolygons, plate frame) both sides, diff, then trace the
 union/simplify step producing the differing arc vertex.
+
+### BISECTION SUMMARY (#684) — residual fully mapped
+
+Chain proven byte-identical: 3mf vertex parse -> f32 transform ->
+slice_facet intersection (ILINES, 460 layers, 0 diff) -> IntersectionLine
+coords -> chain_lines (edge/vertex-ID walk) -> chain_open_polylines (exact +
+gaps, RadiusGrid=ClosestPointInRadiusLookup) -> intersection_pl/diff_pl
+open-path clip -> seam projection/split_at_vertex formulas.
+
+Residual: the merged slices.surfaces contour (lower_slices) contains ~1um
+different arc-region vertices (27 unique verts/layer). This is produced by
+PrintObjectSlice::slices_to_fill_surfaces_clipped + union_ex of region
+surfaces -- the SURFACE UNION/simplification, which operates on the
+(ILINES-identical) loops but yields a different rounded-corner tessellation.
+=> The 44491-line G1 residual (+-1um X, arc I/J) is entirely downstream of
+this single surface-union divergence. To pin the last vertex: dump
+slices.surfaces merged ExPolygon contours per layer both sides (plate frame)
+and locate the first differing arc vertex, then the union/simplify step.
