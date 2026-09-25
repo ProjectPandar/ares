@@ -1123,3 +1123,19 @@ introduced at mesh-vertex decode/transform that does not show up at the code
 level (same formulas). The only remaining discriminator is an oracle dump of
 IntersectionLine coords vs ares slice output on the SAME layer+triangle, to
 see whether the input f32 vertex or the intersection point diverges by 1 lsb.
+
+### offset2_ex / closing params verified (#673)
+
+slice_mesh_ex closing: offset2_ex(union_ex(loops), scale_(closing_radius),
+-scale_(closing_radius-extra_offset)) with closing_radius=slice_closing_radius,
+extra_offset=0, resolution=0.0025, DefaultJoinType=jtMiter, DefaultMiterLimit=3.
+Ares complex.rs offset2_ex(expolygons, delta=1e-4/factor=100 Coord, -delta,
+jtMiter, 3.0). MiterLimit/join match.
+
+FULLY VERIFIED IDENTICAL STAGES: slice_facet interp/inherited/t-formula/edge-id;
+transform (fused mul_add + prescaled_xy==Eigen prescale); loop chaining
+(exact+gaps 2mm); marching-squares; DP; clipper rounding/intersections;
+ClipperOffset normals/steps/sincos/miter; arc-fit (3-pt circumcircle + fitting
+boundaries); E-flow e_per_mm; emit_axis rounding; rotate-back. The residual
++-1um across all features is a per-vertex f32-lsb drift that no code-level
+comparison reveals -> needs IntersectionLine/post-offset vertex-value oracle.
