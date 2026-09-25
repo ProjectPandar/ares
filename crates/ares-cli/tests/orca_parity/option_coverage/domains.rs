@@ -98,9 +98,12 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 // float — exercising only the `%` branch leaves the literal
                 // branch untested. Add an absolute-float seeded case bounded
                 // by `max_literal` (the absolute-branch maximum).
-                if option_type == "coFloatOrPercent"
-                    && let Some(lit_max) = literal_maximum(&block)
-                {
+                // The absolute-literal branch exists even when no explicit
+                // `max_literal` is declared (e.g. `bridge_acceleration` accepts
+                // `mm/s^2` literals with only a percent `max`); bound it by
+                // `max_literal` when present else by the declared max.
+                if option_type == "coFloatOrPercent" {
+                    let lit_max = literal_maximum(&block).unwrap_or(maximum);
                     let lit_interior = seeded_interior(&key, minimum, lit_max, false);
                     let mut absolute =
                         numeric_case("seeded-literal", lit_interior, entry, "coFloat");
@@ -131,18 +134,19 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         // `overhang_reverse_threshold` min=0, max_literal=20)
                         // still admit an absolute-literal branch bounded by
                         // `max_literal` — exercise it like the bounded case.
-                        if option_type == "coFloatOrPercent"
-                            && let Some(lit_max) = literal_maximum(&block)
-                        {
+                        if option_type == "coFloatOrPercent" {
+                            // `max_literal` may be absent; the literal branch
+                            // still accepts absolutes — bound by the literal
+                            // maximum when declared else a nominal bound.
+                            let lit_max =
+                                literal_maximum(&block).unwrap_or(minimum.max(1.0) * 4.0 + 1.0);
                             let lit_interior = seeded_interior(&key, minimum, lit_max, false);
                             let mut absolute =
                                 numeric_case("seeded-literal", lit_interior, entry, "coFloat");
                             absolute.label = "seeded-literal".to_owned();
                             cases.push(absolute);
-                            provably_legal = true;
-                        } else {
-                            provably_legal = true;
                         }
+                        provably_legal = true;
                         (cases, None)
                     }
                     None => (vec![baseline_case()], None),
