@@ -42,6 +42,30 @@ pub(super) fn apply(fills: &mut Vec<SurfaceFill>, context: Context) -> Result<()
         }
         let (normal, narrow) =
             split::split(context.layer_id, &fills[index], context.scale).map_err(geometry_error)?;
+        if let Ok(path) = std::env::var("ARES_DUMP_SPLIT") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                for ex in &narrow {
+                    let Some(bbox) = crate::geometry::BoundingBox::from_expolygon(ex) else {
+                        continue;
+                    };
+                    let _ = writeln!(
+                        file,
+                        "NARROW l={} bb={} {} {} {} pts={}",
+                        context.layer_id,
+                        bbox.min().x(),
+                        bbox.min().y(),
+                        bbox.max().x(),
+                        bbox.max().y(),
+                        ex.contour().points().len()
+                    );
+                }
+            }
+        }
         if narrow.is_empty() {
             continue;
         }

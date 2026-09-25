@@ -75,11 +75,20 @@ region-boundary work is CONFIRMED COMPLETE.
 **Follow-on residuals discovered** (post-fix sweep):
 
 1. `sparse_infill_pattern=concentric`: InternalSolid narrow-split
-   (`Fill.cpp:597 split_solid_surface`, line-based path) leaves a
-   ~0.13mm `ConcentricInternal` VariableWidth sliver inside the solid
-   infill at layer 1 that oracle does not emit. Ares port lives in
-   `project_slice/group_fills/narrow/{split,filter,trace}.rs` — the
-   divergence is inside the ported reconstruction, not in dispatch.
+   (`Fill.cpp:597 split_solid_surface`, line-based path) — oracle
+   probe (`ORCA_DUMP_NARROW` on `split_solid_surface`) confirms ares's
+   `narrow/` port produces byte-identical narrow triangles at every
+   InternalSolid layer; `FillConcentricInternal` (Arachne
+   `WallToolPaths`) runs at every layer upstream too
+   (`CONCEXP z=0.4` shows `loops=2`). Yet oracle emits NO
+   `ConcentricInternal` sliver at layer 1 (z0.4) while ares emits a
+   ~0.13mm `;WIDTH:0.405676` 2-point path. Layers ≥0.6 match
+   byte-for-byte including slivers. The suppression is downstream of
+   `wallToolPaths.getToolPaths()` upstream (entities produced but not
+   emitted) — unresolved; candidate detail inside
+   `FillConcentricInternal.cpp:60-80` post-processing
+   (`clip_end`/`is_valid`) or `variable_width` conversion on the
+   degenerate first-layer path.
 2. M73 placement residual on concentric: after fixing the `e_only`
    cache eligibility (`estimate.rs`, upstream :574 unconditional push),
    concentric still shows a ~2-g1-line elapsed-time drift inside the
