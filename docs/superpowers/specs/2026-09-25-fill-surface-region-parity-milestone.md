@@ -66,6 +66,28 @@ kind+bbox per surface, region+object+layer tagged):
 → **surface sets and kinds match upstream**; the 0.203mm error is NOT
 a fill-region misclassification.
 
+**Resolution (2026-09-26)**: the tpmsd parity defect was stale evidence
+— the case artifact dir `case-CM7Svk/ares.gcode` was from 2026-09-24
+and had not been regenerated. Current-build tpmsd G-code is
+byte-identical to oracle (only the generator banner differs). The
+region-boundary work is CONFIRMED COMPLETE.
+
+**Follow-on residuals discovered** (post-fix sweep):
+
+1. `sparse_infill_pattern=concentric`: InternalSolid narrow-split
+   (`Fill.cpp:597 split_solid_surface`, line-based path) leaves a
+   ~0.13mm `ConcentricInternal` VariableWidth sliver inside the solid
+   infill at layer 1 that oracle does not emit. Ares port lives in
+   `project_slice/group_fills/narrow/{split,filter,trace}.rs` — the
+   divergence is inside the ported reconstruction, not in dispatch.
+2. M73 placement residual on concentric: after fixing the `e_only`
+   cache eligibility (`estimate.rs`, upstream :574 unconditional push),
+   concentric still shows a ~2-g1-line elapsed-time drift inside the
+   time model (M73 lands on the next eligible g1 instead of the
+   boundary g1). All other previously-failing M73 domains
+   (nozzle_temperature, spiral_mode, support_angle, top_surface_pattern)
+   now pass byte-parity.
+
 `Fill::fill_surface` (`FillBase.cpp:104-118`) shrinks the surface by
 `scale_(overlap − spacing/2)` (overlap=0 → −0.2035mm for
 spacing≈0.407): oracle gcode sparse reach = boundary±0.203mm
