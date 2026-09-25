@@ -331,10 +331,30 @@ fn orca_parity_printer_sweep() {
         .expect("explicit sweep requires an Orca executable");
     let root = profiles_root();
     let model = cube_model();
+    let vendors = parity::vendors(&root);
+    // A readable profile root must enumerate at least one vendor; an empty
+    // list would silently turn the sweep into a vacuous 0/0 pass.
+    assert!(
+        !vendors.is_empty(),
+        "printer sweep found no vendors under {root:?} — profiles root unreadable or empty"
+    );
     let mut outcomes = Vec::new();
-    for vendor in parity::vendors(&root) {
-        let Ok(profiles) = VendorProfiles::load(&root, &vendor) else {
-            continue;
+    for vendor in vendors {
+        let profiles = match VendorProfiles::load(&root, &vendor) {
+            Ok(profiles) => profiles,
+            Err(error) => {
+                // Count an unloadable vendor as an outcome, not a silent skip.
+                let outcome =
+                    parity::ares_error(&format!("{vendor}/<vendor-load>"), error.to_string());
+                eprintln!(
+                    "[{}/sweep] {} {}",
+                    outcomes.len() + 1,
+                    outcome.status,
+                    outcome.label
+                );
+                outcomes.push(outcome);
+                continue;
+            }
         };
         for printer in profiles.instantiated_machine_names() {
             let selection = match parity::select_printer(&profiles, &vendor, &printer) {
