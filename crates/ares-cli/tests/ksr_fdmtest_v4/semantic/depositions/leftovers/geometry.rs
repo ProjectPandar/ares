@@ -239,14 +239,16 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
             let ang = (p.1 - ocy).atan2(p.0 - ocx);
             let rel = (ang - oa0).rem_euclid(std::f64::consts::TAU);
             let span = osweep.abs().rem_euclid(std::f64::consts::TAU);
-            // The angular slack must be a DISTANCE slack on this
-            // circle: a fixed 0.1 rad lets a point ~28mm past the
-            // endpoint of a 287mm-radius arc pass as "on span".
-            let slack = (MAX_LEFTOVER_PATH_DISTANCE_MM / or_.max(1e-9)).min(0.1);
+            // Strict span membership: a point past the arc's end must
+            // measure its true Euclidean distance to the nearest
+            // endpoint — granting tangential slack separately from
+            // the radial bound sums the two (a point .52mm past the
+            // end plus .30mm radial read as .30mm, though its true
+            // distance is .60mm).
             let on_span = if osweep >= 0.0 {
-                rel <= span + slack
+                rel <= span
             } else {
-                rel >= std::f64::consts::TAU - span - slack
+                rel >= std::f64::consts::TAU - span
             };
             if on_span {
                 return (((p.0 - ocx).powi(2) + (p.1 - ocy).powi(2)).sqrt() - or_).abs();
