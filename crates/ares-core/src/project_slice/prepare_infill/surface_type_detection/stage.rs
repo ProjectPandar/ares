@@ -133,6 +133,9 @@ fn stage_object(
             _ => unreachable!("external extra-bridge records remain aligned"),
         }
     }
+    if let Ok(path) = std::env::var("ARES_DUMP_SLICES") {
+        dump_records(&path, &records);
+    }
     Ok(StagedObject { records })
 }
 
@@ -273,4 +276,35 @@ pub(super) fn clipped_fill(
         }
     }
     Ok(output)
+}
+
+fn dump_records(path: &str, records: &[Option<StagedRecord>]) {
+    use std::io::Write;
+    let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    else {
+        return;
+    };
+    for (index, record) in records.iter().enumerate() {
+        let Some(record) = record else { continue };
+        let _ = writeln!(file, "REC layer={index}");
+        for (tag, surfaces) in [("SLC", &record.slices), ("FILL", &record.fill_surfaces)] {
+            for surface in surfaces {
+                let (kind, expolygon, ..) = surface.as_parts();
+                let bounds = expolygon.contour().points().iter().fold(
+                    [i64::MAX, i64::MAX, i64::MIN, i64::MIN],
+                    |mut bounds, p| {
+                        bounds[0] = bounds[0].min(p.x());
+                        bounds[1] = bounds[1].min(p.y());
+                        bounds[2] = bounds[2].max(p.x());
+                        bounds[3] = bounds[3].max(p.y());
+                        bounds
+                    },
+                );
+                let _ = writeln!(file, "{tag} kind={kind:?} bb={bounds:?}");
+            }
+        }
+    }
 }

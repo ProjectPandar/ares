@@ -63,8 +63,9 @@ fn group_present_layer(context: LayerContext<'_>) -> Result<GroupedFills, SliceE
         layer_id: context.planned.id,
         scale: context.scale,
     };
+    let layer_id = context.planned.id;
     let projected = params::project_layer(context)?;
-    let mut grouped = coalesce::coalesce(projected);
+    let mut grouped = coalesce::coalesce(projected, layer_id);
     priority::apply(&mut grouped.surface_fills)?;
     narrow::apply(&mut grouped.surface_fills, narrow)?;
     Ok(grouped)

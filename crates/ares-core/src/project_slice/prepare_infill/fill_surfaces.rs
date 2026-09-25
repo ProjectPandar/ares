@@ -51,6 +51,17 @@ pub(in crate::project_slice) fn prepare(
             }
         }
     }
+    for object in &objects {
+        for (index, record) in object.records.iter().enumerate() {
+            if let Some(record) = record {
+                crate::project_slice::dump_surfaces::dump_stage_surfaces(
+                    "FSPREP",
+                    index,
+                    &record.fill_surfaces,
+                );
+            }
+        }
+    }
     PreparedPostFillSurfacePreparation {
         predecessor,
         objects,

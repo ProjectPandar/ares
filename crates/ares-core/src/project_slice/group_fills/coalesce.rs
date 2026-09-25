@@ -4,7 +4,13 @@ use crate::{ExtrusionRole, ProcessInfillPattern, geometry::ExPolygon};
 
 use crate::project_slice::region_slices::RegionSurfaceKind;
 
-fn dump_kind(path: &str, kind: RegionSurfaceKind, expolygon: &ExPolygon) {
+fn dump_kind(
+    path: &str,
+    region_id: usize,
+    layer_id: usize,
+    kind: RegionSurfaceKind,
+    expolygon: &ExPolygon,
+) {
     use std::io::Write;
     if let Ok(mut file) = std::fs::OpenOptions::new()
         .create(true)
@@ -20,7 +26,9 @@ fn dump_kind(path: &str, kind: RegionSurfaceKind, expolygon: &ExPolygon) {
         }
         let _ = writeln!(
             file,
-            "KIND kind={:?} bb={} {} {} {} n={}",
+            "KIND r={} l={} kind={:?} bb={} {} {} {} n={}",
+            region_id,
+            layer_id,
             kind,
             minx,
             miny,
@@ -59,7 +67,7 @@ impl Ord for ParamsKey {
     }
 }
 
-pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> GroupedFills {
+pub(super) fn coalesce(projected: ProjectedLayer<'_>, layer_id: usize) -> GroupedFills {
     let mut unique = BTreeSet::new();
     for params in projected.params.iter().flatten().copied() {
         unique.insert(ParamsKey(params));
@@ -84,7 +92,7 @@ pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> GroupedFills {
         let (kind, expolygon, thickness, thickness_layers, _, extra_perimeters) =
             surface.as_parts();
         if let Ok(path) = std::env::var("ARES_DUMP_KINDS") {
-            dump_kind(&path, kind, expolygon);
+            dump_kind(&path, projected.region_id, layer_id, kind, expolygon);
         }
         if let Some(fill) = &mut pending.fill {
             fill.expolygons.push(expolygon.clone());
