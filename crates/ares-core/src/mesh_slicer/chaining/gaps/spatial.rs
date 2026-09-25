@@ -83,11 +83,13 @@ impl RadiusGrid {
         let cell = self.cell_of(point);
         let previous = self.locations.insert(key, cell);
         assert!(previous.is_none());
-        let entries = self.cells.entry(cell).or_default();
-        let position = entries
-            .binary_search_by_key(&key, |entry| entry.key)
-            .unwrap_err();
-        entries.insert(position, Entry { key, point });
+        // Upstream `unordered_multimap::equal_range` iterates a cell's entries
+        // in insertion order; preserve that so equidistant `d2 < dist_min`
+        // ties resolve to the same endpoint the oracle returns.
+        self.cells
+            .entry(cell)
+            .or_default()
+            .push(Entry { key, point });
     }
 
     pub(super) fn remove(&mut self, key: EndpointKey) -> bool {
@@ -95,9 +97,8 @@ impl RadiusGrid {
             return false;
         };
         let entries = self.cells.get_mut(&cell).unwrap();
-        let position = entries
-            .binary_search_by_key(&key, |entry| entry.key)
-            .unwrap();
+        // Upstream `m_map.erase(it)` removes in place; keep insertion order.
+        let position = entries.iter().position(|entry| entry.key == key).unwrap();
         entries.remove(position);
         if entries.is_empty() {
             self.cells.remove(&cell);

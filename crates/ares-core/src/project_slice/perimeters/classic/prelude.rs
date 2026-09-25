@@ -200,7 +200,11 @@ fn lower_series(
     };
     if let Ok(path) = std::env::var("ARES_DUMP_LOWSL") {
         use std::io::Write;
-        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
             let _ = write!(f, "L ");
             for e in lower {
                 let _ = write!(f, "[");

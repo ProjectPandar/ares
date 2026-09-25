@@ -100,11 +100,9 @@ fn sorted_gap_indices(open_polylines: &mut [OpenPolyline]) -> Vec<usize> {
         .enumerate()
         .filter_map(|(index, polyline)| (!polyline.consumed).then_some(index))
         .collect::<Vec<_>>();
-    indices.sort_by(|&left, &right| {
-        open_polylines[right]
-            .length
-            .total_cmp(&open_polylines[left].length)
-            .then_with(|| left.cmp(&right))
+    // Match upstream `std::sort` (unstable) ordering of equal `length` keys.
+    crate::geometry::fixed_gcc_sort_by(&mut indices, |&left, &right| {
+        open_polylines[right].length < open_polylines[left].length
     });
     indices
 }

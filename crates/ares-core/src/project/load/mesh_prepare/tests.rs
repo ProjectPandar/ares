@@ -90,10 +90,7 @@ fn task22b_fresh_mesh_centering_keeps_f32_subtraction_and_f64_shift() {
         .collect::<Vec<_>>();
     // With the f32 center the round-trip reconstructs the input vertices
     // exactly (upstream `center_geometry_after_creation` behavior).
-    assert_eq!(
-        reconstructed,
-        vec![128.0, 128.000_015_258_789_062_5, 128.0]
-    );
+    assert_eq!(reconstructed, vec![128.0, 128.000_015_258_789_062_5, 128.0]);
     let raw_center = ((reconstructed[0] + reconstructed[1]) * 0.5 * 1_000_000.0) as i64;
     assert_eq!(raw_center, 128_000_007);
 }

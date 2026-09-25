@@ -108,7 +108,10 @@ struct ReferenceIndex {
 
 impl ReferenceIndex {
     fn new(mut records: Vec<StartRecord>) -> Self {
-        records.sort_unstable_by_key(|record| (record.identity_id, record.raw_index));
+        // Match upstream `std::sort` (unstable libstdc++ introsort) ordering of
+        // equal `edge_a_id`/`a_id` keys -- no `raw_index` tie-break -- so
+        // `take_next` returns the same candidate the oracle picks.
+        crate::geometry::fixed_gcc_sort_by(&mut records, |a, b| a.identity_id < b.identity_id);
         let mut ranges = Vec::new();
         let mut start = 0;
         while start < records.len() {
