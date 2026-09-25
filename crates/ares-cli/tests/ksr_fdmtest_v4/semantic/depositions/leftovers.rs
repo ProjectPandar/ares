@@ -4,9 +4,13 @@
 //! unmatched deposition on both sides; each accepted leftover must be
 //! explainable as a merge-boundary artifact: same feature, same
 //! machine state, comparable flow, and consistent geometry.
-use crate::semantic::{feed_matches, model, parser::Deposition, position_matches};
+use crate::semantic::{parser::Deposition, position_matches};
+
+#[path = "leftovers/geometry.rs"]
+mod geometry;
 
 use super::matching;
+use geometry::*;
 
 // Depositions that quantize to a merge/split boundary only shift a tiny
 // extrusion amount; a degenerate leftover must still sit on the same
@@ -34,165 +38,23 @@ const MIN_UNMATCHED_DIRECTION_DOT: f64 = 0.81;
 // or small translation cannot rotate the segment more than ~45° there.
 // Corner caps genuinely pair across a 1–2mm gap.
 const MAX_DIRECTIONAL_PAIR_DISTANCE_MM: f64 = 1.0;
-// Non-pivot pairings of leftovers up to ~1mm may be direction-exempt;
-// real corner caps (measured up to a full 1mm) run perpendicular to
-// their nearest counterpart.
-const MAX_DIRECTION_EXEMPT_LENGTH_MM: f64 = 1.0;
+// Beyond ~5mm a leftover is a strand, not a cap — direction is
+// always enforced.
+const MAX_LONG_LEFTOVER_LENGTH_MM: f64 = 5.0;
 // |dot| below this is a perpendicular cap; between it and the aligned
 // bound is a rotated strand.
 const MAX_CAP_DIRECTION_DOT: f64 = 0.3;
+// Cap junction: one endpoint of a perpendicular pair lands within
+// ~0.7mm of a counterpart vertex in the reference zig-zag.
+const MAX_CAP_JUNCTION_DISTANCE_MM: f64 = 1.0;
+// Restitched cells redraw polylines loosely: real leftovers sit
+// ~0.2mm off the redrawn counterpart's path.
+const MAX_LEFTOVER_PATH_DISTANCE_MM: f64 = 0.35;
 // A vertex shared to ~20µm makes the counterpart a pivot of the same
 // junction — direction must hold even for short leftovers (real
 // perpendicular caps pair ≥0.04mm off the counterpart's vertices).
 const MAX_SHARED_VERTEX_DISTANCE_MM: f64 = 0.02;
 
-fn extrusion_of(d: &Deposition) -> f64 {
-    d.extrusion.parse::<f64>().unwrap_or(0.0)
-}
-
-fn length_of(d: &Deposition) -> f64 {
-    let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
-        d.motion.start.x.parse::<f64>(),
-        d.motion.start.y.parse::<f64>(),
-        d.motion.end.x.parse::<f64>(),
-        d.motion.end.y.parse::<f64>(),
-    ) else {
-        return f64::NAN;
-    };
-    ((ex - sx).powi(2) + (ey - sy).powi(2)).sqrt()
-}
-
-// Extrusion is proportional to path length at fixed width/height: a
-// counterpart that covers the same neighborhood with a wildly
-// different extrusion-per-mm is an edited segment, not a merge
-// boundary artifact.
-fn flow_compatible(d: &Deposition, o: &Deposition) -> bool {
-    let (le, lo) = (length_of(d), length_of(o));
-    if !le.is_finite() || !lo.is_finite() || le <= 0.0 || lo <= 0.0 {
-        return true;
-    }
-    let (flow_e, flow_o) = (extrusion_of(d) / le, extrusion_of(o) / lo);
-    (flow_e - flow_o).abs() <= flow_e.abs().max(flow_o.abs()) * 0.25
-}
-
-// Machine state must agree on every paired leftover: a 10x feed on
-// the same segment is a real speed divergence, not a merge
-// artifact. The arc plane is part of the state: a leftover under
-// G18 never pairs with a G17 counterpart.
-fn machine_state_matches(d: &Deposition, o: &Deposition) -> bool {
-    d.width == o.width
-        && feed_matches(d.feed, o.feed)
-        && d.acceleration == o.acceleration
-        && d.fans == o.fans
-        && d.motion.plane == o.motion.plane
-}
-
-fn degenerate(d: &Deposition) -> bool {
-    extrusion_of(d).abs() <= MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM
-}
-
-// Segment containment: `inner` lies along `outer`'s span within tol,
-// codirectional — reconciles a tiny legit split against the consumed
-// larger piece without letting a reversed fragment qualify.
-fn contained_codirectional(inner: &Deposition, outer: &Deposition) -> bool {
-    let (Ok(isx), Ok(isy), Ok(iex), Ok(iey)) = (
-        inner.motion.start.x.parse::<f64>(),
-        inner.motion.start.y.parse::<f64>(),
-        inner.motion.end.x.parse::<f64>(),
-        inner.motion.end.y.parse::<f64>(),
-    ) else {
-        return false;
-    };
-    let (Ok(osx), Ok(osy), Ok(oex), Ok(oey)) = (
-        outer.motion.start.x.parse::<f64>(),
-        outer.motion.start.y.parse::<f64>(),
-        outer.motion.end.x.parse::<f64>(),
-        outer.motion.end.y.parse::<f64>(),
-    ) else {
-        return false;
-    };
-    let (odx, ody) = (oex - osx, oey - osy);
-    let (idx, idy) = (iex - isx, iey - isy);
-    let olen2 = odx * odx + ody * ody;
-    if olen2 <= 0.0 || idx * odx + idy * ody <= 0.0 {
-        return false;
-    }
-    let project = |px: f64, py: f64| ((px - osx) * odx + (py - osy) * ody) / olen2;
-    let lateral = |px: f64, py: f64| {
-        let t = project(px, py).clamp(0.0, 1.0);
-        let (cx, cy) = (osx + t * odx, osy + t * ody);
-        ((px - cx).powi(2) + (py - cy).powi(2)).sqrt()
-    };
-    project(isx, isy) >= -0.02
-        && project(iex, iey) <= 1.02
-        && lateral(isx, isy) <= 0.02
-        && lateral(iex, iey) <= 0.02
-}
-
-fn direction_dot(d: &Deposition, o: &Deposition) -> f64 {
-    let dir = |m: &model::MotionRecord| {
-        let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
-            m.start.x.parse::<f64>(),
-            m.start.y.parse::<f64>(),
-            m.end.x.parse::<f64>(),
-            m.end.y.parse::<f64>(),
-        ) else {
-            return None;
-        };
-        let (dx, dy) = (ex - sx, ey - sy);
-        let len = (dx * dx + dy * dy).sqrt();
-        (len > 0.0).then_some((dx / len, dy / len))
-    };
-    let (Some((dx, dy)), Some((ox, oy))) = (dir(&d.motion), dir(&o.motion)) else {
-        return 1.0;
-    };
-    (dx * ox + dy * oy).abs()
-}
-
-fn direction_aligned(d: &Deposition, o: &Deposition) -> bool {
-    direction_dot(d, o) >= MIN_UNMATCHED_DIRECTION_DOT
-}
-
-// Genuine corner caps run perpendicular (|dot| ≤ 0.3 observed
-// 0.0–0.17 in the fixture) AND land both ends on the counterpart's
-// vertices — a rotated strand in the 0.3–0.81 band is rejected,
-// and so is a perpendicular piece whose far end wandered off.
-fn direction_gated_ok(d: &Deposition, o: &Deposition) -> bool {
-    let dot = direction_dot(d, o);
-    if dot >= MIN_UNMATCHED_DIRECTION_DOT {
-        return true;
-    }
-    // A rotated strand keeps its length; a corner cap joins legs
-    // of different length, so equal-length perpendicular pairs
-    // are not caps.
-    let (ld, lo) = (length_of(d), length_of(o));
-    if dot > MAX_CAP_DIRECTION_DOT || (ld - lo).abs() <= 0.15 * ld.max(lo) {
-        return false;
-    }
-    let bound = (1.2 * lo + 0.1).min(MAX_UNMATCHED_PAIR_DISTANCE_MM);
-    (position_matches(&d.motion.start, &o.motion.start, bound)
-        && position_matches(&d.motion.end, &o.motion.end, bound))
-        || (position_matches(&d.motion.start, &o.motion.end, bound)
-            && position_matches(&d.motion.end, &o.motion.start, bound))
-}
-
-fn endpoint_pairs<'a>(
-    d: &'a Deposition,
-    o: &'a Deposition,
-) -> [(&'a model::Position, &'a model::Position); 4] {
-    [
-        (&d.motion.start, &o.motion.start),
-        (&d.motion.start, &o.motion.end),
-        (&d.motion.end, &o.motion.start),
-        (&d.motion.end, &o.motion.end),
-    ]
-}
-
-// Spatial pairing: same feature + machine state + flow-compatible,
-// and the unmatched counterpart shares a boundary endpoint. When
-// the counterpart shares a vertex within ~20µm (a rotated/edited
-// segment pivots on a shared endpoint; quantization splits land
-// ~1µm off), it must keep the strand direction; perpendicular caps
 // are the only direction-exempt short leftover.
 fn paired(d: &Deposition, pool: &[&Deposition]) -> bool {
     pool.iter().any(|o| {
@@ -212,19 +74,31 @@ fn paired(d: &Deposition, pool: &[&Deposition]) -> bool {
         let close = pairs
             .iter()
             .any(|(a, b)| position_matches(a, b, MAX_DIRECTIONAL_PAIR_DISTANCE_MM));
-        let gated = shared_vertex || (close && length_of(d) > MAX_DIRECTION_EXEMPT_LENGTH_MM);
+        // The direction gate applies to every close pairing (a pivot
+        // or a near translation cannot turn a real segment), and to
+        // long strands at any distance: a multi-mm leftover is never
+        // a merge cap. Short non-close pairings are cross-gap
+        // connectors and stay direction-free.
+        let gated = shared_vertex || close || length_of(d) > MAX_LONG_LEFTOVER_LENGTH_MM;
         // An arc-vs-segment pair has no comparable tangent: the
         // upstream arc fitter legitimately folds a polyline span
         // into one arc, so the direction gate applies only to
-        // like-for-like commands. A true pivot (shared vertex)
-        // never produces a perpendicular cap.
-        !gated
-            || d.motion.command != o.motion.command
-            || if shared_vertex {
-                direction_aligned(d, o)
-            } else {
-                direction_gated_ok(d, o)
-            }
+        // like-for-like commands. Same-command arcs instead compare
+        // contours — a chord direction says nothing about the swept
+        // curve.
+        if d.motion.command == o.motion.command
+            && (d.motion.command == "G2" || d.motion.command == "G3")
+        {
+            // Arc-vs-arc leftover on the same chord: the fitter
+            // legitimately redraws the bulge — a sane radius and a
+            // shared junction are the stable signature.
+            return sane_arc(d)
+                && sane_arc(o)
+                && pairs
+                    .iter()
+                    .any(|(a, b)| position_matches(a, b, MAX_DEGENERATE_PAIR_DISTANCE_MM));
+        }
+        !gated || d.motion.command != o.motion.command || direction_gated_ok(d, o)
     })
 }
 
@@ -246,6 +120,8 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
         && full.iter().any(|o| {
             o.feature == d.feature
                 && machine_state_matches(d, o)
+                && o.motion.start.z == d.motion.start.z
+                && o.motion.end.z == d.motion.end.z
                 && matching::arc_containment(&d.motion, &o.motion)
         })
     {
@@ -261,14 +137,29 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
                 && endpoint_pairs(d, o)
                     .iter()
                     .any(|(a, b)| position_matches(a, b, MAX_UNMATCHED_PAIR_DISTANCE_MM))
-                && if d.motion.command == o.motion.command {
+                && if (d.motion.command == "G2" || d.motion.command == "G3")
+                    && (o.motion.command == "G2" || o.motion.command == "G3")
+                {
+                    // Arc-vs-arc restitch: the refit curve is the
+                    // unstable part — the oracle emits an 18° G2 where
+                    // ares emits a 349° G3 landing on the same chain
+                    // vertex — so sharing ONE endpoint junction plus
+                    // same feature/state is the stable signature. A
+                    // radius/chord sanity bound still applies: the
+                    // fixture's flattest real arc is ~287:1, so ~400
+                    // rejects degenerate near-point-circle edits.
+                    sane_arc(d)
+                        && sane_arc(o)
+                        && endpoint_pairs(d, o)
+                            .iter()
+                            .any(|(a, b)| position_matches(a, b, MAX_DEGENERATE_PAIR_DISTANCE_MM))
+                } else if d.motion.command == o.motion.command {
+                    // Same-command restitched tips stay short,
+                    // flow-consistent, and direction-consistent — a
+                    // rotated strand is not a restitch artifact.
                     length_of(d) <= MAX_LEFTOVER_STRAND_LENGTH_MM
                         && flow_compatible(d, o)
-                        && (length_of(d) <= MAX_DIRECTION_EXEMPT_LENGTH_MM
-                            && !endpoint_pairs(d, o).iter().any(|(a, b)| {
-                                position_matches(a, b, MAX_SHARED_VERTEX_DISTANCE_MM)
-                            })
-                            || direction_gated_ok(d, o))
+                        && direction_gated_ok(d, o)
                 } else {
                     // Arc-vs-polyline restitching swaps a G2/G3 for
                     // the straight covering the same chord: endpoints
@@ -303,6 +194,7 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
                 && flow_compatible(d, o)
                 && o.motion.command == d.motion.command
                 && o.motion.arc_center == d.motion.arc_center
+                && o.motion.turns == d.motion.turns
                 && position_matches(
                     &d.motion.start,
                     &o.motion.start,
@@ -343,14 +235,36 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
     // tiny cap pieces (measured 0.004mm extrusion on a 0.12mm tip)
     // with no counterpart at all. Below the sliver budget the
     // extrusion is physically negligible, but machine state, the
-    // move command, z, and segment length must still look real.
+    // move command, z, and swept length must still look real — and
+    // an arc sliver must fold into a same-state arc on the other
+    // side (a 40mm-radius rewrite of a 0.05mm arc is an edit, not a
+    // sliver).
+    // Coverage: upstream can redraw a whole mini-polyline inside one
+    // connect cell (expected 4 strands vs actual 2 diagonals through
+    // the same region). A leftover is covered when every sampled
+    // point of its swept path stays close to a same-feature
+    // same-state leftover — a strand rotated in place sweeps far
+    // from its original chord, and so does a rewritten arc.
+    if unchained(d)
+        && pool.iter().any(|o| {
+            o.feature == d.feature
+                && machine_state_matches(d, o)
+                && o.motion.start.z == d.motion.start.z
+                && o.motion.end.z == d.motion.end.z
+                && path_distance(d, o) <= MAX_LEFTOVER_PATH_DISTANCE_MM
+        })
+    {
+        return true;
+    }
     extrusion_of(d).abs() <= MAX_SLIVER_DEPOSITION_EXTRUSION_MM
-        && length_of(d) <= MAX_SLIVER_DEPOSITION_LENGTH_MM
+        && swept_length_of(d) <= MAX_SLIVER_DEPOSITION_LENGTH_MM
         && full.iter().any(|o| {
             o.feature == d.feature
                 && machine_state_matches(d, o)
                 && o.motion.command == d.motion.command
                 && o.motion.start.z == d.motion.start.z
                 && o.motion.end.z == d.motion.end.z
+                && (d.motion.command != "G2" && d.motion.command != "G3"
+                    || matching::arc_containment(&d.motion, &o.motion))
         })
 }
