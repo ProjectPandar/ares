@@ -198,6 +198,20 @@ fn lower_series(
     let Some(lower) = lower else {
         return Ok(Vec::new());
     };
+    if let Ok(path) = std::env::var("ARES_DUMP_LOWSL") {
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = write!(f, "L ");
+            for e in lower {
+                let _ = write!(f, "[");
+                for p in e.contour().points() {
+                    let _ = write!(f, "{},{};", p.x(), p.y());
+                }
+                let _ = write!(f, "]");
+            }
+            let _ = writeln!(f);
+        }
+    }
     let offsets = lower_sample_offsets(flow.width, nozzle_diameter);
     offsets
         .into_iter()

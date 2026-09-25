@@ -1408,3 +1408,17 @@ crossing vertex implies the merged lower_slices contour itself differs by
 to: the loop polygons feeding union (per-region fragments) contain a vertex
 absent from oracle's merged contour -- consistent with the +174 LOOPS vertex
 surplus seen earlier. Next oracle: dump lower_polygons_series->back() polys.
+
+### lower_slices union contour differs: 27 unique vertices (#684)
+
+ARES_DUMP_LOWSL (lower_slices fed to lower_series) vs ORCA_DUMP_LOWSL:
+21860 vs 21861 unique verts, 27 differ. Diffs are REAL geometry (e.g.
+-1424840 vs 4840 at y=-14772332; -1420755 vs -1610755 at y=-14663282) not
+1ulp -> the merged layer contour differs. lower_slices = union of
+slices.surfaces (the per-layer merged ExPolygons from PrintObjectSlice).
+ILINES are byte-identical => raw slice exact; the divergence is in
+PrintObjectSlice's surface UNION / merged contour construction
+(slices_to_fill_surfaces_clipped / union_ex of region surfaces). => the +-1um
+propagates from a real merged-slice vertex difference into
+intersection_pl's overhang boundary. FIX: dump slices.surfaces merged union
+per layer (plate frame) on both sides and diff.
