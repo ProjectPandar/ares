@@ -1223,3 +1223,14 @@ output, or slice_facet input) flips floor(+0.5). This is a genuine numeric
 representation difference requiring an IntersectionLine/transformed-vertex
 value oracle dump to isolate — the formulas give no further signal. The slice
 output is geometrically correct within f32 precision (sub-micron).
+
+### BREAKTHROUGH: IntersectionLine dump is byte-identical (#676)
+
+ARES_DUMP_ILINES vs ORCA_DUMP_ILINES (slice_facet_at_zs lines[sliced_id]
+point.x/y, sorted): 460 layers, ZERO diffs. The slicer output (raw triangle
+intersection vertices) is EXACTLY identical. The +-1um X-only diffs are NOT in
+the slicer — they are introduced DOWNSTREAM in loop assembly (make_loops ->
+polygons), perimeter generation (PerimeterGenerator), gap fill, or the path
+construction/simplify. Bisection continues downstream of slice_mesh_on_planes.
+Next: dump the chained polygon (make_loops output / LayerRegion slices) — if
+polygons match, the residual is in perimeter offset chaining or path emit.
