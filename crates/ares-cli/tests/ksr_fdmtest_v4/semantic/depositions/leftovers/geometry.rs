@@ -205,6 +205,14 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
             let a = a0 + dir * single * t;
             pts.push((cx + r * a.cos(), cy + r * a.sin()));
         }
+    } else {
+        // A straight's interior must stay on the covering path too:
+        // endpoint-only sampling lets a chord straddle an arc whose
+        // circle happens to pass through both ends (two strands 3mm
+        // apart can each sit exactly on the other's circle).
+        for t in [0.25f64, 0.5, 0.75] {
+            pts.push((x1 + (x2 - x1) * t, y1 + (y2 - y1) * t));
+        }
     }
     let (ax, ay) = (dx(&o.motion.start.x), dx(&o.motion.start.y));
     let (bx, by) = (dx(&o.motion.end.x), dx(&o.motion.end.y));

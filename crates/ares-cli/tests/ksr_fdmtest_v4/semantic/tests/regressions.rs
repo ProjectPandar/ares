@@ -269,3 +269,17 @@ fn small_major_arc_center_drift_is_rejected() {
 
     compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
 }
+
+#[test]
+fn chord_straddling_arc_circle_is_rejected() {
+    // Two parallel strands 3mm apart can each place both endpoints
+    // exactly on a common arc's circle — endpoint-only sampling hid
+    // the 3mm interior divergence. Quarter-point samples catch it.
+    let prefix = "M204 S5000\nG1 X50 Y50 Z.2 F6000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG3 X60 Y50 I5 J0 E.52 F1200\n";
+    let expected_island = format!("{prefix}G1 X50 Y50 F6000\nG1 X60 Y50 E.33 F1200\n");
+    let actual_island = format!("{prefix}G1 X51 Y47 F6000\nG1 X59 Y47 E.264 F1200\n");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
