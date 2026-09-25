@@ -1422,3 +1422,17 @@ PrintObjectSlice's surface UNION / merged contour construction
 propagates from a real merged-slice vertex difference into
 intersection_pl's overhang boundary. FIX: dump slices.surfaces merged union
 per layer (plate frame) on both sides and diff.
+
+### lower_slices contours confirmed to differ at arc regions (#684)
+
+Same-layer contour comparison (ora L28 region vs ares L16): rounded-corner
+arc vertices differ: ora -37465866,-33365870 vs ares -37467446,-33358052;
+ora 35692548,-34990544 vs ares 35695614,-34990394 etc (~0.1-1um). These are
+the merged slices.surfaces contour arcs. ILINES are byte-identical so the
+raw triangle-plane intersections are exact; the divergence is introduced in
+PrintObjectSlice's surfaces union (slices_to_fill_surfaces_clipped ->
+union_ex / make_surfaces) producing different rounded-corner tessellation
+vertices. That propagates to lower_polygons_series offset -> intersection_pl
+overhang boundary -> the +-1um / arc-fit G1 diffs. FIX: dump slices.surfaces
+(merged per-layer ExPolygons, plate frame) both sides, diff, then trace the
+union/simplify step producing the differing arc vertex.
