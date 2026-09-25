@@ -120,7 +120,13 @@ impl Estimate {
                     && block.delta[3] > 0.0
                     && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
                 let seam_vertex = seams.associate(extruding, state.position);
-                cache_eligible.push(!block.e_only && !seam_vertex);
+                // `GCodeProcessor.cpp:574` pushes a `g1_times_cache` entry
+                // for EVERY block — E-only retract/deretract moves included
+                // — so the `it->id == g1_lines_counter` probe can land on an
+                // E-only line and emit M73 immediately after it. Excluding
+                // `e_only` blocks deferred the marker to the next XY move
+                // (observed: oracle `M73` follows `G1 E-2.8`).
+                cache_eligible.push(!seam_vertex);
             } else if !motion_blocks.is_empty() {
                 // `G2`/`G3` arc: every discretized internal segment is a
                 // `process_G1` → `store_move_vertex`, so the seam lifecycle
@@ -139,7 +145,7 @@ impl Estimate {
                         && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
                     let seam_vertex = seams.associate(extruding, end);
                     seam_excluded |= seam_vertex && segment_index == 0;
-                    cache_eligible.push(!block.e_only && !seam_vertex);
+                    cache_eligible.push(!seam_vertex);
                     position = end;
                 }
             }
