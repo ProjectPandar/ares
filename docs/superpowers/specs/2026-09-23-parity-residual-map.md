@@ -1277,3 +1277,14 @@ appending (it==back skip), ares may keep one extra. The +174 extra vertices
 then produce slightly different perimeter/fill segment boundaries => +-1um
 gcode + different arc-fit I/J. FIX: diff a specific diverging loop's point
 sequence (not multiset) to find where the extra vertex is inserted.
+
+### LOOPS dump measures different scopes (#681)
+
+ARES_DUMP_LOOPS dumps make_loops() per-region result (all region fragments);
+ORCA_DUMP_LOOPS dumps the merged layer contour. Ares layer1 n=12 (~1046 verts)
+vs oracle n=1 (40 verts) -> different aggregation scope, NOT a vertex error.
+The ILINES byte-identical result already proves the raw slice vertices match.
+To align: dump oracle's per-volume make_loops output (inside slice_mesh_ex per
+volume) OR ares's post-union region slices. The earlier +-1um residual sits
+between ILINES (identical) and emitted G1 — i.e. in perimeter/offset/fill
+downstream of the identical slice vertices.
