@@ -1749,3 +1749,28 @@ Candidates not yet ruled out for the tail diffs:
    vertex concatenated). ares emits the concat'd close point explicitly —
    if the clip truncates BEFORE reaching the close point, ares still emits
    the stale close -> the extra `7118758` tail seen earlier.
+
+### Residual classification (#689, post clip-frame fix, 44461)
+
+Every diff is on a G1/G2/G3 line and falls into:
+- `X/Y` endpoint +-1um AND/OR `I/J` arc center +-1um AND/OR `E` +-1e-5.
+  ALL three are downstream of a sub-um path-length/endpoint difference: E is
+  proportional to path length, so an endpoint shifted by ~1 Coord moves E by
+  ~1e-5, and the arc-fit I/J (computed from the same points) shifts by ~1um.
+- Pre-seam loop contours are byte-identical; the divergence is introduced at
+  the seam-split + clip_end + arc-fit emit tail of each external perimeter.
+
+Corrected this turn: clip_end now runs in the LOCAL polyline frame matching
+upstream (`loop.clip_end` on `path.polyline`, origin added later in
+`point_to_gcode`) — 44491 -> 44461.
+
+Still open (the residual is real vertex diffs, not rounding):
+- Upstream `ExtrusionLoop::clip_end` clips `paths` (a Vec of ExtrusionPath)
+  and may POP a whole trailing path; ares's equivalent keeps the path but
+  clips its tail. If upstream pops a path ares keeps (or vice-versa) the
+  emitted endpoint lands on a different vertex -> the 0.15-0.5mm diffs.
+- `arc::clip_fitting_end` projects the last point onto a fitted arc after
+  clip_end; any 1-Coord arc-param diff shifts the projected endpoint.
+Next probe: dump oracle's `paths` AFTER `loop.clip_end` (per-loop endpoint)
+vs ares's emitted last-point to find which loop's clip diverges and whether
+a path pop is the cause.
