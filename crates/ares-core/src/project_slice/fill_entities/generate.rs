@@ -105,28 +105,7 @@ pub(in crate::project_slice) fn generate_layer(
             }
         }
         if let Ok(path) = std::env::var("ARES_DUMP_SURF") {
-            use std::io::Write;
-            if let Ok(mut file) = std::fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(path)
-            {
-                for expolygon in &fill.expolygons {
-                    let points = expolygon.contour().points();
-                    let head = points
-                        .iter()
-                        .take(3)
-                        .map(|point| format!(",{},{}", point.x(), point.y()))
-                        .collect::<String>();
-                    let _ = writeln!(
-                        file,
-                        "SURF pattern={:?} n={} {}",
-                        fill.params.pattern,
-                        points.len(),
-                        head
-                    );
-                }
-            }
+            dump_surfaces(&path, &fill);
         }
         match fill.params.pattern {
             SurfaceFillPattern::Configured(ProcessInfillPattern::CrossHatch) => {
@@ -376,4 +355,42 @@ fn plane_path_object_bounding_box(
         )
     });
     Some(crate::geometry::BoundingBox::new(minimum, maximum))
+}
+
+fn dump_surfaces(path: &str, fill: &crate::project_slice::group_fills::SurfaceFill) {
+    use std::io::Write;
+    let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    else {
+        return;
+    };
+    for expolygon in &fill.expolygons {
+        let points = expolygon.contour().points();
+        let head = points
+            .iter()
+            .take(3)
+            .map(|point| format!(",{},{}", point.x(), point.y()))
+            .collect::<String>();
+        let _ = writeln!(
+            file,
+            "SURF pattern={:?} n={} bb={:?} {}",
+            fill.params.pattern,
+            points.len(),
+            contour_bounds(points),
+            head
+        );
+    }
+}
+
+fn contour_bounds(points: &[Point]) -> [i64; 4] {
+    let mut bounds = [i64::MAX, i64::MAX, i64::MIN, i64::MIN];
+    for point in points {
+        bounds[0] = bounds[0].min(point.x());
+        bounds[1] = bounds[1].min(point.y());
+        bounds[2] = bounds[2].max(point.x());
+        bounds[3] = bounds[3].max(point.y());
+    }
+    bounds
 }

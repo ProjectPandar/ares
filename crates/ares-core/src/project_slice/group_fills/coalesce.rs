@@ -1,6 +1,35 @@
 use std::{cmp::Ordering, collections::BTreeSet};
 
-use crate::{ExtrusionRole, ProcessInfillPattern};
+use crate::{ExtrusionRole, ProcessInfillPattern, geometry::ExPolygon};
+
+use crate::project_slice::region_slices::RegionSurfaceKind;
+
+fn dump_kind(path: &str, kind: RegionSurfaceKind, expolygon: &ExPolygon) {
+    use std::io::Write;
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+    {
+        let (mut minx, mut miny, mut maxx, mut maxy) = (i64::MAX, i64::MAX, i64::MIN, i64::MIN);
+        for p in expolygon.contour().points() {
+            minx = minx.min(p.x());
+            miny = miny.min(p.y());
+            maxx = maxx.max(p.x());
+            maxy = maxy.max(p.y());
+        }
+        let _ = writeln!(
+            file,
+            "KIND kind={:?} bb={} {} {} {} n={}",
+            kind,
+            minx,
+            miny,
+            maxx,
+            maxy,
+            expolygon.contour().points().len()
+        );
+    }
+}
 
 use super::{
     GroupedFills, RepresentativeSurface, SurfaceFill, SurfaceFillParams, SurfaceFillPattern,
@@ -54,6 +83,9 @@ pub(super) fn coalesce(projected: ProjectedLayer<'_>) -> GroupedFills {
         let pending = &mut fills[index];
         let (kind, expolygon, thickness, thickness_layers, _, extra_perimeters) =
             surface.as_parts();
+        if let Ok(path) = std::env::var("ARES_DUMP_KINDS") {
+            dump_kind(&path, kind, expolygon);
+        }
         if let Some(fill) = &mut pending.fill {
             fill.expolygons.push(expolygon.clone());
         } else {
