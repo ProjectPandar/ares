@@ -1234,3 +1234,17 @@ polygons), perimeter generation (PerimeterGenerator), gap fill, or the path
 construction/simplify. Bisection continues downstream of slice_mesh_on_planes.
 Next: dump the chained polygon (make_loops output / LayerRegion slices) — if
 polygons match, the residual is in perimeter offset chaining or path emit.
+
+### MAJOR: ILINES identical, LOOPS differ by ~506 vertices (#676)
+
+ARES_DUMP_ILINES == ORCA_DUMP_ILINES byte-identical (460 layers, 0 diff) =>
+slice_facet output is EXACT. ARES_DUMP_LOOPS vs ORCA_DUMP_LOOPS (make_loops
+output polygon vertices, sorted multiset): ~506 coords differ by +-1. So the
+residual is in chain_lines_by_triangle_connectivity + make_loops gap-closing,
+NOT the slicer. RadiusGrid now matches upstream ClosestPointInRadiusLookup
+(pow2 grid_resolution=1<<log2, insert pt>>log2, find 4-cell {-1,0} window
+around rounded corner, f64 dist<radius^2) — committed e36ed924. Remaining
+candidate: next_line selection among equal edge_a_id/a_id (lower_bound range
++ first-non-skipped) ordering differs, OR the close_gaps seed ordering. The
+506 diffs are +-1 Coord -> a different polyline join inserts a neighbor's
+endpoint rather than the boundary vertex.
