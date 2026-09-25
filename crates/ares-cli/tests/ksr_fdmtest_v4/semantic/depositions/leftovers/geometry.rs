@@ -274,11 +274,15 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
             // the radial bound sums the two (a point .52mm past the
             // end plus .30mm radial read as .30mm, though its true
             // distance is .60mm).
-            let on_span = if osweep >= 0.0 {
-                rel <= span
-            } else {
-                rel >= std::f64::consts::TAU - span
-            };
+            // A covering sweep of a full turn or more includes
+            // every angle on the circle; only partial sweeps have a
+            // missing interval.
+            let on_span = osweep.abs() >= std::f64::consts::TAU
+                || if osweep >= 0.0 {
+                    rel <= span
+                } else {
+                    rel >= std::f64::consts::TAU - span
+                };
             if on_span {
                 return (((p.0 - ocx).powi(2) + (p.1 - ocy).powi(2)).sqrt() - or_).abs();
             }

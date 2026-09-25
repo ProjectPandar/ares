@@ -315,3 +315,18 @@ fn strand_peaking_in_arc_missing_span_is_rejected() {
 
     compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
 }
+
+#[test]
+fn full_turn_covering_arc_accepts_strands_on_circle() {
+    // A covering arc sweeping a full turn includes every angle on
+    // its circle: strands within the path bound of the circle are
+    // covered even where the last revolution's nominal endpoints
+    // leave a "missing interval" under the partial-sweep rule.
+    let prefix = "M204 S5000\nG1 X54.4 Y54 Z.2 F6000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.52\nG3 X55.6 Y54 I.6 J-4 P1 E1.985 F1200\n";
+    let expected_island = format!("{prefix}G1 X54.4 Y54.35 F6000\nG1 X55.6 Y54.54 E.0486 F1200\n");
+    let actual_island = format!("{prefix}G1 X54.4 Y46 F6000\nG1 X55.6 Y46 E.048 F1200\n");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
