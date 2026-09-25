@@ -48,6 +48,26 @@ pub(super) fn append(
     if polylines.is_empty() {
         return Ok(());
     }
+    if let Ok(path) = std::env::var("ARES_DUMP_TPMSOUT") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let bounds = polylines.iter().flat_map(|line| line.points()).fold(
+                [i64::MAX, i64::MAX, i64::MIN, i64::MIN],
+                |mut bounds, point| {
+                    bounds[0] = bounds[0].min(point.x());
+                    bounds[1] = bounds[1].min(point.y());
+                    bounds[2] = bounds[2].max(point.x());
+                    bounds[3] = bounds[3].max(point.y());
+                    bounds
+                },
+            );
+            let _ = writeln!(file, "OUT z={layer_z:.4} bb={bounds:?}");
+        }
+    }
     let flow = super::materialized_flow(fill.params, fill.params.spacing as f32);
     output.collections.push(FillExtrusionCollection {
         entities: polylines

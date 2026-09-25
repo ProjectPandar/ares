@@ -51,20 +51,43 @@ The sparse/`stInternal` fill REGION is produced inside
 (angle/density/multiline/z/npts) all match — only the region extent
 differs.
 
+## Forensic findings (2026-09-25, tpmsd/cube10/15% case)
+
+Oracle probe `ORCA_DUMP_FK` (patched `Fill.cpp:1354`
+`fill_surface_extrusion`) vs ares `ARES_DUMP_KINDS` (coalesce,
+kind+bbox per surface, region+object+layer tagged):
+
+| layer | oracle surfaces | ares surfaces |
+|---|---|---|
+| z1.2–8.4 | stInternal ±4223228 | Internal ±4223228 |
+| z8.6 (l42) | stInternal ±3816139, stInternalSolid ±4223238 | Internal ±3816159, InternalSolid ±4223238 |
+| z8.8 (l43) | stInternalBridge ±4223228 | InternalBridge ±4223228 |
+
+→ **surface sets and kinds match upstream**; the 0.203mm error is NOT
+a fill-region misclassification.
+
+`Fill::fill_surface` (`FillBase.cpp:104-118`) shrinks the surface by
+`scale_(overlap − spacing/2)` (overlap=0 → −0.2035mm for
+spacing≈0.407): oracle gcode sparse reach = boundary±0.203mm
+(X114.02); ares emits at the UNSHRUNK edge (X114.223). Verified via
+`ARES_DUMP_TPMSOUT` that ares's tpmsd polylines DO stay within the
+shrunk ±4019688 region — so the 114.223 extrusions are emitted by a
+**different entity inside the same `;TYPE:Sparse infill` block**
+(connect/anchor/approach entity reaching the raw ±4223228 surface),
+not by the tpmsd fill paths. Oracle's corresponding connect path is
+clipped at ±4019688 too. Next step: bisect the entity→islands→gcode
+emit path (dump per-collection extents at `extrusion_islands` and the
+`start_travel`/`approach`/connect-emit sites) to find which component
+adds the unshrunk-boundary segments.
+
 ## Scope of this milestone
 
-1. Trace the effective sparse `Internal` expolygon reaching
-   `fill_entities` (which of: `staged.fill_surfaces` after
-   `clipped_fill`, combine_infill `rewrite_layer`, or
-   bridge_over_infill rewrites) and localize the +0.203mm:
-   - dump `fill_expolygons` (infill_boundary output) for the case —
-     if it already exceeds oracle, the bug is upstream in
-     gap_extrusion/top_split remaining-set computation;
-   - if `fill_expolygons` matches oracle, the over-large region
-     comes from classification/rewrite paths downstream.
+1. Localize the 0.203mm sparse-boundary overshoot (findings above:
+   surface parity confirmed; overreach originates in the emit/connect
+   path, not the region).
 2. Port the missing upstream behavior into the owning stage
    (cited above), NOT a new ares-designed region.
-3. Verify with `ARES_DUMP_TPMSREG`/`ARES_DUMP_SURF` vs oracle dumps
+3. Verify with `ARES_DUMP_TPMSREG`/`ARES_DUMP_SURF`/oracle `FK` dumps
    on the tpmsd case and the ksr fixture (crosshatch sparse infill).
 4. Regression test: sparse `Internal` surface bbox/area parity for a
    unit cube case inside the existing prepare_infill test harnesses.

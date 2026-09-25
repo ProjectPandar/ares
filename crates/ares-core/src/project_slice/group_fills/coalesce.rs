@@ -7,6 +7,7 @@ use crate::project_slice::region_slices::RegionSurfaceKind;
 fn dump_kind(
     path: &str,
     region_id: usize,
+    object_index: usize,
     layer_id: usize,
     kind: RegionSurfaceKind,
     expolygon: &ExPolygon,
@@ -26,7 +27,8 @@ fn dump_kind(
         }
         let _ = writeln!(
             file,
-            "KIND r={} l={} kind={:?} bb={} {} {} {} n={}",
+            "KIND o={} r={} l={} kind={:?} bb={} {} {} {} n={}",
+            object_index,
             region_id,
             layer_id,
             kind,
@@ -67,7 +69,11 @@ impl Ord for ParamsKey {
     }
 }
 
-pub(super) fn coalesce(projected: ProjectedLayer<'_>, layer_id: usize) -> GroupedFills {
+pub(super) fn coalesce(
+    projected: ProjectedLayer<'_>,
+    object_index: usize,
+    layer_id: usize,
+) -> GroupedFills {
     let mut unique = BTreeSet::new();
     for params in projected.params.iter().flatten().copied() {
         unique.insert(ParamsKey(params));
@@ -81,6 +87,23 @@ pub(super) fn coalesce(projected: ProjectedLayer<'_>, layer_id: usize) -> Groupe
         })
         .collect::<Vec<_>>();
 
+    if let Ok(path) = std::env::var("ARES_DUMP_KINDS") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)
+        {
+            let _ = writeln!(
+                file,
+                "CALL o={} r={} l={} surfaces={}",
+                object_index,
+                projected.region_id,
+                layer_id,
+                projected.surfaces.len()
+            );
+        }
+    }
     for (surface, params) in projected.surfaces.iter().zip(&projected.params) {
         let Some(params) = params else {
             continue;
@@ -92,7 +115,14 @@ pub(super) fn coalesce(projected: ProjectedLayer<'_>, layer_id: usize) -> Groupe
         let (kind, expolygon, thickness, thickness_layers, _, extra_perimeters) =
             surface.as_parts();
         if let Ok(path) = std::env::var("ARES_DUMP_KINDS") {
-            dump_kind(&path, projected.region_id, layer_id, kind, expolygon);
+            dump_kind(
+                &path,
+                projected.region_id,
+                object_index,
+                layer_id,
+                kind,
+                expolygon,
+            );
         }
         if let Some(fill) = &mut pending.fill {
             fill.expolygons.push(expolygon.clone());

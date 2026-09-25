@@ -34,13 +34,10 @@ pub(in crate::project_slice) fn group_fills(
     let record = &horizontal.objects[object_index].records[layer_index];
     let input = &prelude.records[layer_index];
     match (record, input) {
-        (Some(record), Some(input)) => group_present_layer(LayerContext::new(
-            prepared,
-            prelude,
-            record,
-            input,
-            layer_index,
-        )),
+        (Some(record), Some(input)) => group_present_layer(
+            LayerContext::new(prepared, prelude, record, input, layer_index),
+            object_index,
+        ),
         (None, None) => Ok(GroupedFills::empty()),
         _ => unreachable!("validated fill-grouping record slots remain aligned"),
     }
@@ -57,7 +54,10 @@ fn geometry_error(error: ClipperError) -> SliceError {
     }
 }
 
-fn group_present_layer(context: LayerContext<'_>) -> Result<GroupedFills, SliceError> {
+fn group_present_layer(
+    context: LayerContext<'_>,
+    object_index: usize,
+) -> Result<GroupedFills, SliceError> {
     let narrow = narrow::Context {
         enabled: context.object.detect_narrow_internal_solid_infill.0,
         layer_id: context.planned.id,
@@ -65,7 +65,8 @@ fn group_present_layer(context: LayerContext<'_>) -> Result<GroupedFills, SliceE
     };
     let layer_id = context.planned.id;
     let projected = params::project_layer(context)?;
-    let mut grouped = coalesce::coalesce(projected, layer_id);
+    let mut grouped = coalesce::coalesce(projected, object_index, layer_id);
+
     priority::apply(&mut grouped.surface_fills)?;
     narrow::apply(&mut grouped.surface_fills, narrow)?;
     Ok(grouped)
