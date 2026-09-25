@@ -1324,3 +1324,18 @@ different segment point. AND ares emits the redundant closing vertex
 (==first point) which upstream's ExtrusionPath polyline does not store. The
 latter (trailing duplicate of first point) is a definite ares divergence:
 upstream loop polyline holds n unique vertices, ares emits n+1.
+
+### Seam tail diff — precise (#681)
+
+Path1 tail: shared through 7533563,-13881782. Oracle last vertex
+7134969,-13231335 (polyline does NOT repeat start). Ares: 7131592,-13225824
+then 7118758,-13194841 (=start, redundant). Two distinct bugs:
+(1) ares appends the closing vertex == first point; upstream loop polyline
+    holds n unique vertices (implicit close). -> every loop gets +1 segment.
+(2) the pre-close vertex differs (7134969 vs 7131592): upstream split_at
+    inserts seam foot_pt then split_at_vertex reorders so the polyline both
+    starts AND effectively ends at the seam -> last vertex is the segment
+    before seam. ares's loop tail vertex is a different point on the same
+    closing segment => seam p selection / split_at_vertex reorder diverges.
+FIX order: (a) drop redundant closing vertex in loop polyline emit;
+(b) compare ExtrusionLoop::split_at_vertex reorder vs ares loop reorder.
