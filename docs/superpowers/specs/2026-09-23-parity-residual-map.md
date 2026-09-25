@@ -1297,3 +1297,17 @@ per path. Counts differ (oracle 171667 vs ares 369513 pts) because ares dumps
 every path incl roles the oracle line skips / and the emit scopes differ.
 Needs same-role same-index path comparison to localize the +-1 residual.
 ILINES byte-identical remains the authoritative slicer-exactness proof.
+
+### PPATH first-path diff: seam vertex (#681)
+
+Per-path comparison (role+first-point aligned): ares path1 = 46 pts, oracle
+=45, points 1-44 byte-identical. Divergence is ONLY the loop tail: ares
+...7131592,-13225824 -> 7118758,-13194841(=start, redundant close). Oracle
+ends ...->7134969,-13231335 then implicit close. Same on paths 2,3 (+1
+vertex each). => EVERY extrusion loop's seam/last-vertex differs: the seam
+split point upstream produces (7134969,-13231335) is dropped/replaced by a
+different vertex in ares, AND ares emits the redundant closing point (==first)
+which upstream's ExtrusionPath polyline omits. ROOT: ExtrusionLoop::split_at
+(seam) generates a seam vertex not present in ares, and ares keeps the
+closing duplicate. FIX: compare seam split_at + first_point handling; drop
+the redundant closing vertex; match seam insertion point.
