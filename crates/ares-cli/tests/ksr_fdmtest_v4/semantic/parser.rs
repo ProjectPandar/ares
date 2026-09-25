@@ -145,11 +145,14 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             push_lifecycle(current_layer(&mut output)?, LifecycleEvent::WipeEnd);
             continue;
         }
-        if let Some(value) = line
+        if line
             .strip_prefix("; Z_HEIGHT: ")
             .or_else(|| line.strip_prefix(";Z:"))
+            .is_some()
         {
-            state.z = canonical_number(value)?;
+            // Layer metadata only: machine Z changes solely through motion
+            // commands. Seeding `state.z` here would let a comment mask a
+            // missing physical `G1 Z` move.
             if let Some(layer) = output.layers.last_mut() {
                 layer.metadata.push(raw_line.to_owned());
             } else {

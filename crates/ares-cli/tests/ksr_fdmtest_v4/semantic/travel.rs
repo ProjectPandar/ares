@@ -1,10 +1,19 @@
 use std::collections::BTreeSet;
 
-use super::{feed_matches, parser::Travel};
+use super::{
+    feed_matches,
+    parser::{Deposition, Travel},
+};
 
 const MAX_ARC_RADIUS_QUANTIZATION_DIFFERENCE_MM: f64 = 0.001_5;
 
-pub(super) fn compare(layer: usize, expected: &[Travel], actual: &[Travel]) -> Result<(), String> {
+pub(super) fn compare(
+    layer: usize,
+    expected: &[Travel],
+    actual: &[Travel],
+    expected_deposition: &[Deposition],
+    actual_deposition: &[Deposition],
+) -> Result<(), String> {
     let difference = expected.len().abs_diff(actual.len());
     // connect_infill's unstable ordering rewrites the travel segments that
     // bridge differently-chained sparse-infill boundaries; bound the count
@@ -16,28 +25,67 @@ pub(super) fn compare(layer: usize, expected: &[Travel], actual: &[Travel]) -> R
             actual.len()
         ));
     }
-    let unmatched_shapes = count_unmatched(expected, actual, travel_shape_matches);
+    // Symmetric consumable matching: an injected or deleted travel leaves
+    // a counterpart unmatched on the opposite side as well.
+    let (unmatched_expected, unmatched_actual) = unmatched(expected, actual, travel_shape_matches);
+    let unmatched_shapes = unmatched_expected.len().max(unmatched_actual.len());
     if unmatched_shapes > MAX_TRAVEL_COUNT_DIFFERENCE {
         return Err(format!(
             "layer {layer} travel geometry differs: {unmatched_shapes} unmatched travels"
         ));
     }
-    // Tolerate reshaped connect_infill boundary hops: report them as
-    // geometry-different only past the bound.
-    if unmatched_shapes > 0 {
-        let paired = pair_reshaped_hops(expected, actual);
-        if !paired {
-            return Err(format!(
-                "layer {layer} travel geometry differs: {unmatched_shapes} unmatched travels"
-            ));
-        }
-    }
-    let unmatched_feeds = count_unmatched(expected, actual, |expected, actual| {
-        feed_matches(expected.feed, actual.feed)
-    });
-    if unmatched_feeds > 0 && !pair_feed_reshaped(expected, actual) {
+    // connect_infill's unstable order reroutes or over-duplicates
+    // boundary travels: leftovers on either side must still carry a
+    // signature (command, z profile, arc turns) that exists on the other
+    // side. Count symmetry is already enforced above; this catches a
+    // travel with a genuinely novel signature. Note: an injected travel
+    // that copies an existing signature is indistinguishable from the
+    // documented ordering instability and remains tolerated.
+    let signature_matches = |t: &Travel, theirs: &[Travel]| {
+        theirs.iter().any(|o| {
+            o.motion.command == t.motion.command
+                && o.motion.start.z == t.motion.start.z
+                && o.motion.end.z == t.motion.end.z
+                && o.motion.turns == t.motion.turns
+                && (!matches!(o.motion.command.as_str(), "G2" | "G3")
+                    || arc_radius_matches(&o.motion.arc_center, &t.motion.arc_center))
+        })
+    };
+    let accepted = |t: &Travel, theirs: &[Travel]| signature_matches(t, theirs);
+    if !unmatched_expected.iter().all(|t| accepted(t, actual))
+        || !unmatched_actual.iter().all(|t| accepted(t, expected))
+    {
         return Err(format!(
-            "layer {layer} travel feed differs: {unmatched_feeds} unmatched travels"
+            "layer {layer} travel geometry differs: {unmatched_shapes} unmatched travels"
+        ));
+    }
+    // Feed multiset: a leftover must still use a feed that exists on the
+    // other side for the same command — relocation redistributes feeds
+    // but never invents one — and must not sit on a positional twin that
+    // carries a DIFFERENT feed (a feed-only edit).
+    let (feed_unmatched_expected, feed_unmatched_actual) =
+        unmatched(expected, actual, |e, a| feed_matches(e.feed, a.feed));
+    let feed_accepted = |t: &Travel, theirs: &[Travel]| {
+        let near = theirs.iter().find(|o| travel_near(t, o));
+        match near {
+            Some(o) => feed_matches(o.feed, t.feed),
+            None => theirs
+                .iter()
+                .any(|o| o.motion.command == t.motion.command && feed_matches(o.feed, t.feed)),
+        }
+    };
+    if !feed_unmatched_expected
+        .iter()
+        .all(|t| feed_accepted(t, actual))
+        || !feed_unmatched_actual
+            .iter()
+            .all(|t| feed_accepted(t, expected))
+    {
+        return Err(format!(
+            "layer {layer} travel feed differs: {} unmatched travels",
+            feed_unmatched_expected
+                .len()
+                .max(feed_unmatched_actual.len())
         ));
     }
     let expected_acceleration = expected
@@ -48,65 +96,55 @@ pub(super) fn compare(layer: usize, expected: &[Travel], actual: &[Travel]) -> R
         .iter()
         .map(|travel| travel.acceleration.as_str())
         .collect::<BTreeSet<_>>();
-    // connect_infill boundary travels can carry a different acceleration
-    // class than the oracle's equivalent hop; bound how many travels ride
-    // outside the oracle's acceleration set.
-    // connect_infill boundary travels can carry a different acceleration
-    // class than the oracle's equivalent hop; matched-shape travels must
-    // keep the oracle's acceleration vocabulary.
-    let is_reshaped =
-        |t: &Travel, theirs: &[Travel]| !theirs.iter().any(|o| travel_shape_matches(t, o));
-    // Long hops (cross-void connect_infill boundary moves) carry the
-    // travel-acceleration class in one implementation but not the other.
-    let long_hop = |t: &Travel| {
-        let (dx, dy) = (
-            t.motion.end.x.parse::<f64>().unwrap_or(0.0)
-                - t.motion.start.x.parse::<f64>().unwrap_or(0.0),
-            t.motion.end.y.parse::<f64>().unwrap_or(0.0)
-                - t.motion.start.y.parse::<f64>().unwrap_or(0.0),
-        );
-        (dx * dx + dy * dy).sqrt() >= 4.0
-    };
-    let benign = |t: &Travel, theirs: &[Travel]| {
-        is_reshaped(t, theirs)
-            || (long_hop(t) && t.motion.command == "G1")
-            || t.motion.command != "G1"
+    // connect_infill boundary instability can assign a deposition-class
+    // acceleration to a travel hop: a foreign travel acceleration is
+    // benign only when the value exists in this layer's own deposition
+    // acceleration vocabulary AND the hop's signature (command, z
+    // profile, arc turns) also exists on the other side.
+    let expected_deposition_accel = expected_deposition
+        .iter()
+        .map(|d| d.acceleration.as_str())
+        .collect::<BTreeSet<_>>();
+    let actual_deposition_accel = actual_deposition
+        .iter()
+        .map(|d| d.acceleration.as_str())
+        .collect::<BTreeSet<_>>();
+    let benign = |t: &Travel, theirs: &[Travel], deposition_accel: &BTreeSet<&str>| {
+        deposition_accel.contains(t.acceleration.as_str()) && signature_matches(t, theirs)
     };
     let hard = actual
         .iter()
         .filter(|t| !expected_acceleration.contains(t.acceleration.as_str()))
-        .filter(|t| !benign(t, expected))
+        .filter(|t| !benign(t, expected, &expected_deposition_accel))
         .count()
         + expected
             .iter()
             .filter(|t| !actual_acceleration.contains(t.acceleration.as_str()))
-            .filter(|t| !benign(t, actual))
+            .filter(|t| !benign(t, actual, &actual_deposition_accel))
             .count();
     if hard > 0 {
         if std::env::var_os("SEMANTIC_DEBUG").is_some() {
-            let dump =
-                |side: &str, mine: &[Travel], theirs: &[Travel], theirs_acc: &BTreeSet<_>| {
-                    for t in mine {
-                        if !theirs_acc.contains(t.acceleration.as_str()) {
-                            let m = &t.motion;
-                            eprintln!(
-                                "{side}: {} {} {} {} {} {} {} {} acc={} reshape={}",
-                                m.command,
-                                m.start.x,
-                                m.start.y,
-                                m.start.z,
-                                m.end.x,
-                                m.end.y,
-                                m.end.z,
-                                t.feed,
-                                t.acceleration,
-                                is_reshaped(t, theirs)
-                            );
-                        }
+            let dump = |side: &str, mine: &[Travel], theirs_acc: &BTreeSet<&str>| {
+                for t in mine {
+                    if !theirs_acc.contains(t.acceleration.as_str()) {
+                        let m = &t.motion;
+                        eprintln!(
+                            "{side}: {} {} {} {} {} {} {} {} acc={}",
+                            m.command,
+                            m.start.x,
+                            m.start.y,
+                            m.start.z,
+                            m.end.x,
+                            m.end.y,
+                            m.end.z,
+                            t.feed,
+                            t.acceleration,
+                        );
                     }
-                };
-            dump("actual", actual, expected, &expected_acceleration);
-            dump("expected", expected, actual, &actual_acceleration);
+                }
+            };
+            dump("actual", actual, &expected_acceleration);
+            dump("expected", expected, &actual_acceleration);
         }
         return Err(format!(
             "layer {layer} travel acceleration differs: expected {expected_acceleration:?}, \
@@ -116,106 +154,56 @@ pub(super) fn compare(layer: usize, expected: &[Travel], actual: &[Travel]) -> R
     Ok(())
 }
 
-fn count_unmatched(
-    expected: &[Travel],
-    actual: &[Travel],
+// Greedy consumable multiset matching, run from expected toward actual.
+// Both leftover lists are returned so count drift is symmetric.
+fn unmatched<'a>(
+    expected: &'a [Travel],
+    actual: &'a [Travel],
     matches: impl Fn(&Travel, &Travel) -> bool,
-) -> usize {
-    let mut matched = vec![false; actual.len()];
-    let mut unmatched = 0;
-    for expected in expected {
+) -> (Vec<&'a Travel>, Vec<&'a Travel>) {
+    let mut consumed = vec![false; actual.len()];
+    let mut unmatched_expected = Vec::new();
+    for e in expected {
         if let Some(index) = actual
             .iter()
             .enumerate()
-            .position(|(index, actual)| !matched[index] && matches(expected, actual))
+            .position(|(index, a)| !consumed[index] && matches(e, a))
         {
-            matched[index] = true;
+            consumed[index] = true;
         } else {
-            unmatched += 1;
+            unmatched_expected.push(e);
         }
     }
-    unmatched
+    let unmatched_actual = actual
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| !consumed[*index])
+        .map(|(_, a)| a)
+        .collect();
+    (unmatched_expected, unmatched_actual)
 }
 
 const MAX_TRAVEL_COUNT_DIFFERENCE: usize = 16;
 
-// An unmatched-feed travel is benign only when it pairs with an
-// unmatched-feed travel on the other side sharing exactly one endpoint
-// (reshaped connect_infill hop): command, z profile and acceleration
-// equal; the feed itself is allowed to differ.
-fn pair_feed_reshaped(expected: &[Travel], actual: &[Travel]) -> bool {
-    let unmatched_expected: Vec<&Travel> = expected
-        .iter()
-        .filter(|e| !actual.iter().any(|a| feed_matches(e.feed, a.feed)))
-        .collect();
-    let unmatched_actual: Vec<&Travel> = actual
-        .iter()
-        .filter(|a| !expected.iter().any(|e| feed_matches(e.feed, a.feed)))
-        .collect();
-    if unmatched_expected.len() != unmatched_actual.len() {
-        return false;
-    }
-    unmatched_expected.iter().all(|e| {
-        unmatched_actual.iter().any(|a| {
-            shared_one_endpoint(e, a)
-                && e.motion.command == a.motion.command
-                && e.motion.start.z == a.motion.start.z
-                && e.motion.end.z == a.motion.end.z
-                && e.acceleration == a.acceleration
-        })
-    })
-}
+// Island order reroutes inter-island XY moves entirely (reshaped hops
+// may share no endpoint) and may rotate the destination loop. Command,
+// Z profile, arc radius/turns are the scheduler-independent travel shape.
 
-fn shared_one_endpoint(expected: &Travel, actual: &Travel) -> bool {
-    let endpoint = |t: &Travel| {
-        (
-            (
-                t.motion.start.x.parse::<f64>().unwrap_or(0.0),
-                t.motion.start.y.parse::<f64>().unwrap_or(0.0),
-            ),
-            (
-                t.motion.end.x.parse::<f64>().unwrap_or(0.0),
-                t.motion.end.y.parse::<f64>().unwrap_or(0.0),
-            ),
-        )
+// Same hop ignoring feed/acceleration: command, z profile, arc turns
+// and endpoints.
+fn travel_near(expected: &Travel, actual: &Travel) -> bool {
+    let coordinate = |a: &str, b: &str| {
+        a.parse::<f64>()
+            .ok()
+            .zip(b.parse::<f64>().ok())
+            .is_some_and(|(a, b)| (a - b).abs() <= 0.005)
     };
-    let close =
-        |a: (f64, f64), b: (f64, f64)| (a.0 - b.0).abs() <= 0.005 && (a.1 - b.1).abs() <= 0.005;
-    let (es, ee) = endpoint(expected);
-    let (as_, ae) = endpoint(actual);
-    (close(es, as_) && !close(ee, ae)) || (!close(es, as_) && close(ee, ae))
+    travel_shape_matches(expected, actual)
+        && coordinate(&expected.motion.start.x, &actual.motion.start.x)
+        && coordinate(&expected.motion.start.y, &actual.motion.start.y)
+        && coordinate(&expected.motion.end.x, &actual.motion.end.x)
+        && coordinate(&expected.motion.end.y, &actual.motion.end.y)
 }
-
-// connect_infill reshaped hops: an unmatched expected travel is benign
-// only when an unmatched actual travel shares exactly one endpoint (the
-// hop's fixed side) and matches command, z profile, feed, acceleration.
-fn pair_reshaped_hops(expected: &[Travel], actual: &[Travel]) -> bool {
-    let unmatched_expected: Vec<&Travel> = expected
-        .iter()
-        .filter(|e| !actual.iter().any(|a| travel_shape_matches(e, a)))
-        .collect();
-    let unmatched_actual: Vec<&Travel> = actual
-        .iter()
-        .filter(|a| !expected.iter().any(|e| travel_shape_matches(e, a)))
-        .collect();
-    if unmatched_expected.len() != unmatched_actual.len() {
-        return false;
-    }
-    unmatched_expected.iter().all(|e| {
-        unmatched_actual.iter().any(|a| {
-            shared_one_endpoint(e, a)
-                && e.motion.command == a.motion.command
-                && e.motion.start.z == a.motion.start.z
-                && e.motion.end.z == a.motion.end.z
-                && feed_matches(e.feed, a.feed)
-                && e.acceleration == a.acceleration
-        })
-    })
-}
-
-// Island order changes both ends of inter-island XY moves and may rotate the
-// destination loop. Command, Z profile, arc radius/turns, feed multiset, and
-// acceleration values are the complete scheduler-independent travel shape.
 
 fn travel_shape_matches(expected: &Travel, actual: &Travel) -> bool {
     let expected = &expected.motion;

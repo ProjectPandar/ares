@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 #[path = "semantic/depositions.rs"]
 mod depositions;
 #[path = "semantic/lifecycle.rs"]
@@ -77,6 +75,8 @@ fn compare_impl(
         ));
     }
 
+    let expected_controls = canonicalize_controls(&expected);
+    let actual_controls = canonicalize_controls(&actual);
     for (index, (expected, actual)) in expected.layers.iter().zip(&actual.layers).enumerate() {
         let layer = index + 1;
         if cross_target {
@@ -89,50 +89,126 @@ fn compare_impl(
         } else {
             lifecycle::compare(layer, &expected.lifecycles, &actual.lifecycles)?;
         }
-        travel::compare(layer, &expected.travels, &actual.travels)?;
-        compare_control_events(layer, &expected.controls, &actual.controls)?;
+        travel::compare(
+            layer,
+            &expected.travels,
+            &actual.travels,
+            &expected.deposition,
+            &actual.deposition,
+        )?;
+        compare_control_events(layer, &expected_controls[index], &actual_controls[index])?;
     }
     Ok(())
 }
 
-// Control events must match as a multiset except for re-emitted boundary
-// commands: `G17` (arc plane select) and `M106`/`M107` fan sets are
-// re-emitted per feature/island boundary, so connect_infill ordering
-// instability changes their counts without changing the machine state.
+// Control events are compared as ordered sequences after dropping
+// state-redundant commands: `G17` (arc plane select) and `M106`/`M107`
+// fan sets are re-emitted per feature/island boundary, so connect_infill
+// ordering instability changes their counts without changing the
+// machine state. Re-emission that duplicates the active state drops
+// away; anything that changes state (a different fan, a different
+// speed, an M104 reorder, a deleted M107 while the fan runs) is
+// preserved and compared in order.
+fn canonicalize_controls(parsed: &SemanticGcode) -> Vec<Vec<String>> {
+    let mut fans = std::collections::BTreeMap::<String, String>::new();
+    let mut plane_xy = false;
+    let mut seed = |line: &str| {
+        if line == "G17" {
+            plane_xy = true;
+        } else if line.starts_with("M106 ") {
+            apply_fan(&mut fans, line);
+        } else if line == "M107" {
+            for speed in fans.values_mut() {
+                *speed = "0".to_owned();
+            }
+        }
+    };
+    for line in &parsed.preamble {
+        seed(line);
+    }
+    parsed
+        .layers
+        .iter()
+        .map(|layer| {
+            let mut kept = Vec::new();
+            for line in &layer.controls {
+                if line == "G17" {
+                    if !plane_xy {
+                        plane_xy = true;
+                        kept.push(line.clone());
+                    }
+                    continue;
+                }
+                if line.starts_with("M106 ") {
+                    if let Some((fan, speed)) = fan_assignment(line) {
+                        if fans.get(&fan) == Some(&speed) {
+                            continue;
+                        }
+                        fans.insert(fan, speed);
+                    }
+                    kept.push(line.clone());
+                    continue;
+                }
+                if line == "M107" {
+                    if fans.values().all(|speed| speed == "0") {
+                        continue;
+                    }
+                    for speed in fans.values_mut() {
+                        *speed = "0".to_owned();
+                    }
+                    kept.push(line.clone());
+                    continue;
+                }
+                kept.push(line.clone());
+            }
+            kept
+        })
+        .collect()
+}
+
+fn apply_fan(fans: &mut std::collections::BTreeMap<String, String>, line: &str) {
+    if let Some((fan, speed)) = fan_assignment(line) {
+        fans.insert(fan, speed);
+    }
+}
+
+// `M106 P<n> S<v>` → (fan, speed); `M106 S<v>` targets fan 0. Parameter
+// forms without S (e.g. `M106 P3 R1`) leave fan state untouched.
+fn fan_assignment(line: &str) -> Option<(String, String)> {
+    let mut fan = "0".to_owned();
+    let mut speed = None;
+    for token in line.split_ascii_whitespace().skip(1) {
+        if let Some(value) = token.strip_prefix('P') {
+            fan = value.to_owned();
+        } else if let Some(value) = token.strip_prefix('S') {
+            speed = Some(value.to_owned());
+        }
+    }
+    speed.map(|speed| (fan, speed))
+}
+
 fn compare_control_events(
     layer: usize,
     expected: &[String],
     actual: &[String],
 ) -> Result<(), String> {
-    let count = |lines: &[String]| {
-        let mut map = std::collections::BTreeMap::<String, usize>::new();
-        for line in lines {
-            *map.entry(line.clone()).or_default() += 1;
-        }
-        map
-    };
-    let expected_map = count(expected);
-    let actual_map = count(actual);
-    for line in expected_map.keys().chain(actual_map.keys()) {
-        let expected_count = expected_map.get(line).copied().unwrap_or(0);
-        let actual_count = actual_map.get(line).copied().unwrap_or(0);
-        let difference = expected_count.abs_diff(actual_count);
-        if difference == 0 {
-            continue;
-        }
-        if (line.as_str() == "G17" || line.starts_with("M106 ") || line.starts_with("M107"))
-            && difference <= MAX_REORDERED_CONTROL_DIFFERENCE
-        {
-            continue;
-        }
+    if expected != actual {
+        let position = expected
+            .iter()
+            .zip(actual.iter())
+            .position(|(expected, actual)| expected != actual);
+        let shown = position.unwrap_or(expected.len().min(actual.len()));
         return Err(format!(
-            "layer {layer} control events differs on {line:?}: expected {expected_count}, actual {actual_count}"
+            "layer {layer} control events differs at index {shown}: \
+             expected {:?} vs actual {:?} (lengths {} vs {})",
+            expected.get(shown),
+            actual.get(shown),
+            expected.len(),
+            actual.len()
         ));
     }
     Ok(())
 }
-
-const MAX_REORDERED_CONTROL_DIFFERENCE: usize = 4;
 
 fn compare_timing(expected: &SemanticGcode, actual: &SemanticGcode) -> Result<(), String> {
     for (name, expected, actual) in [
@@ -194,6 +270,7 @@ fn motion_matches(
     actual: &model::MotionRecord,
     coordinate_tolerance: f64,
     arc_center_tolerance: f64,
+    allow_reversal: bool,
 ) -> bool {
     let oriented = |expected: &model::MotionRecord, actual: &model::MotionRecord| {
         expected.command == actual.command
@@ -206,9 +283,10 @@ fn motion_matches(
             )
             && expected.turns == actual.turns
     };
-    // Gap-fill segment direction is unordered upstream.
+    // Gap-fill segment direction is unordered upstream; wall loops keep
+    // their orientation.
     oriented(expected, actual)
-        || (expected.command == "G1" && {
+        || (allow_reversal && expected.command == "G1" && {
             let reversed = model::MotionRecord {
                 command: expected.command.clone(),
                 start: expected.end.clone(),
@@ -219,6 +297,34 @@ fn motion_matches(
             oriented(&reversed, actual)
         })
 }
+
+// Distance from the arc center to the chord midpoint: near-straight arcs
+// (radius ~287mm on ksr_fdmtest_v4) place their center far away, and the
+// arc-fit boundary drift moves it by up to ~0.6mm. Small-radius arcs have
+// no such leeway — their centers sit near the chord.
+fn arc_is_near_straight(motion: &model::MotionRecord) -> bool {
+    let [Some(i), Some(j)] = &motion.arc_center else {
+        return false;
+    };
+    let (Ok(i), Ok(j)) = (i.parse::<f64>(), j.parse::<f64>()) else {
+        return false;
+    };
+    let center_radius = (i * i + j * j).sqrt();
+    let chord = {
+        let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
+            motion.start.x.parse::<f64>(),
+            motion.start.y.parse::<f64>(),
+            motion.end.x.parse::<f64>(),
+            motion.end.y.parse::<f64>(),
+        ) else {
+            return false;
+        };
+        ((ex - sx).powi(2) + (ey - sy).powi(2)).sqrt()
+    };
+    center_radius >= NEAR_STRAIGHT_ARC_RADIUS_MM && center_radius >= 10.0 * chord
+}
+
+const NEAR_STRAIGHT_ARC_RADIUS_MM: f64 = 50.0;
 
 fn arc_center_matches(
     expected: &[Option<String>; 2],
@@ -273,23 +379,4 @@ fn exact_lines(name: &str, expected: &[String], actual: &[String]) -> Result<(),
         expected.get(index),
         actual.get(index)
     ))
-}
-
-fn exact<T: Debug + PartialEq>(name: &str, expected: &T, actual: &T) -> Result<(), String> {
-    if expected == actual {
-        Ok(())
-    } else {
-        Err(format!(
-            "{name} differs: expected {expected:?}, actual {actual:?}"
-        ))
-    }
-}
-
-fn exact_layer<T: Debug + PartialEq>(
-    layer: usize,
-    name: &str,
-    expected: &T,
-    actual: &T,
-) -> Result<(), String> {
-    exact(&format!("layer {layer} {name}"), expected, actual)
 }

@@ -67,6 +67,7 @@ pub(crate) fn compare_ordered_bytes_generator_only(
 /// parity envelope check to measure how far two runs are apart without
 /// requiring a byte-identical ordering (the 2.4.2 oracle is non-deterministic
 /// in `connect_infill`, so equal-cost line order flips run-to-run).
+#[allow(dead_code)] // shared module: only orca_parity calls this
 pub(crate) fn line_multiset_diff(expected: &[u8], actual: &[u8]) -> Result<usize, String> {
     let expected = normalize_one_generator_line(expected, GeneratorKind::Orca)?;
     let actual = normalize_one_generator_line(actual, GeneratorKind::Ares)?;
@@ -77,6 +78,7 @@ pub(crate) fn line_multiset_diff(expected: &[u8], actual: &[u8]) -> Result<usize
 /// for inter-oracle envelope-radius distances where neither operand is an
 /// Ares output (the Ares-kind normalization would otherwise fail on the
 /// missing generator line and silently collapse the membership check).
+#[allow(dead_code)] // shared module: only orca_parity calls this
 pub(crate) fn line_multiset_diff_orca(a: &[u8], b: &[u8]) -> Result<usize, String> {
     let a = normalize_one_generator_line(a, GeneratorKind::Orca)?;
     let b = normalize_one_generator_line(b, GeneratorKind::Orca)?;
@@ -87,6 +89,7 @@ pub(crate) fn line_multiset_diff_orca(a: &[u8], b: &[u8]) -> Result<usize, Strin
 /// line occurrences appear in one stream but not the other. Order-insensitive,
 /// so `connect_infill` reorderings count zero while genuine coordinate/content
 /// differences still count.
+#[allow(dead_code)] // exercised through the public wrappers above
 fn multiset_symmetric_diff(a: &[u8], b: &[u8]) -> usize {
     use std::collections::HashMap;
     let mut counts: HashMap<&[u8], i64> = HashMap::new();

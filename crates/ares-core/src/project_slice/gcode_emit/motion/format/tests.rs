@@ -48,5 +48,8 @@ fn ostream_uses_six_significant_digits_without_axis_quantization() {
     // More than six significant digits round to the sixth.
     assert_eq!(ostream(1.962_399), "1.9624");
     assert_eq!(ostream(12.345_678), "12.3457");
+    // Binary midpoint: `<<` rounds half-even on the decimal tie, not
+    // half-away like `emit_axis`.
+    assert_eq!(ostream(1.015_625), "1.01562");
     assert_eq!(ostream(0.0), "0");
 }
