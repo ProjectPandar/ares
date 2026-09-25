@@ -1263,3 +1263,17 @@ upstream picks by sorted-id order; ares picks by spatial endpoint equality.
 perimeter/fill and the emitted +-1um G-code. FIX: port
 chain_lines_by_triangle_connectivity faithfully (by_edge_a_id + by_a_id index
 walk) instead of coordinate-exact chaining.
+
+### LOOPS: vertex COUNT differs (+174), not +-1 values (#680)
+
+After RadiusGrid fix: ILINES identical, LOOPS vertex multiset has 116472 ares
+vs 116298 oracle => ares produces 174 EXTRA vertices (not +-1 value diffs).
+The chaining keeps duplicate/collinear points upstream drops, or the
+open-polyline reconstruction inserts an extra endpoint. chain_lines /
+chain_open_polylines_* all match at the ID/connectivity level, so the extra
+points come from the close/attach endpoint handling: upstream pops the
+duplicate when closing_distance==0 AND drops the shared start point when
+appending (it==back skip), ares may keep one extra. The +174 extra vertices
+then produce slightly different perimeter/fill segment boundaries => +-1um
+gcode + different arc-fit I/J. FIX: diff a specific diverging loop's point
+sequence (not multiset) to find where the extra vertex is inserted.
