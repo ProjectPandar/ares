@@ -113,11 +113,11 @@ fn paired(d: &Deposition, pool: &[&Deposition]) -> bool {
             // a split arc pair) where divergence is the rule; a
             // command swap (G2↔G3 on one chord) is the unstable
             // signature and skips this too.
-            let same_chord = pairs
-                .iter()
-                .filter(|(a, b)| position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM))
-                .count()
-                >= 2;
+            // Both endpoints of EACH side must sit within the
+            // junction bound of the other's endpoints — counting raw
+            // close pairs misreads a cap whose two ends both land
+            // near one endpoint of the big arc as a shared chord.
+            let same_chord = same_chord_pair(d, o);
             let same_contour = d.motion.command != o.motion.command
                 || !same_chord
                 || matching::arc_contour_deviation(&d.motion, &o.motion)
@@ -190,13 +190,7 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
                         && d.motion.turns == o.motion.turns
                         && flow_within(d, o, MAX_COVERED_FLOW_RATIO)
                         && (d.motion.command != o.motion.command
-                            || endpoint_pairs(d, o)
-                                .iter()
-                                .filter(|(a, b)| {
-                                    position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM)
-                                })
-                                .count()
-                                < 2
+                            || !same_chord_pair(d, o)
                             || matching::arc_contour_deviation(&d.motion, &o.motion)
                                 <= MAX_SAME_COMMAND_ARC_DEVIATION_MM)
                         && endpoint_pairs(d, o)

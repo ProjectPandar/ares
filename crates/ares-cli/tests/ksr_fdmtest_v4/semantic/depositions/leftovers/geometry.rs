@@ -41,12 +41,20 @@ pub(super) fn swept_length_of(d: &Deposition) -> f64 {
 // different extrusion-per-mm is an edited segment, not a merge
 // boundary artifact.
 pub(super) fn flow_within(d: &Deposition, o: &Deposition, ratio: f64) -> bool {
-    let (le, lo) = (length_of(d), length_of(o));
-    if !le.is_finite() || !lo.is_finite() || le <= 0.0 || lo <= 0.0 {
-        return true;
-    }
-    let (flow_e, flow_o) = (extrusion_of(d) / le, extrusion_of(o) / lo);
-    (flow_e - flow_o).abs() <= flow_e.abs().max(flow_o.abs()) * ratio
+    let per = |a: &Deposition, b: &Deposition, len: fn(&Deposition) -> f64| {
+        let (la, lb) = (len(a), len(b));
+        if !la.is_finite() || !lb.is_finite() || la <= 0.0 || lb <= 0.0 {
+            return true;
+        }
+        let (fa, fb) = (extrusion_of(a) / la, extrusion_of(b) / lb);
+        (fa - fb).abs() <= fa.abs().max(fb.abs()) * ratio
+    };
+    // Extrusion tracks CHORD on restitches that swap a few
+    // arc-chords (a 349° G3 keeps the E its short chord carried),
+    // and tracks SWEPT length on exact arc splits. Either
+    // normalization consistent with the fixture is accepted; an
+    // extrusion rewrite fails both.
+    per(d, o, length_of) || per(d, o, swept_length_of)
 }
 
 pub(super) fn flow_compatible(d: &Deposition, o: &Deposition) -> bool {
@@ -252,6 +260,21 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
         seg_dist(p)
     };
     pts.iter().map(|p| dist_to_path(*p)).fold(0.0f64, f64::max)
+}
+
+// Both endpoints of EACH side sit within the junction bound of the
+// other's endpoints — the two endpoints of a cap can both land near
+// one endpoint of the arc it was cut from, which is an adjacency,
+// not a shared chord.
+pub(super) fn same_chord_pair(d: &Deposition, o: &Deposition) -> bool {
+    let cover = |a: &Deposition, b: &Deposition| {
+        [&a.motion.start, &a.motion.end].iter().all(|p| {
+            [&b.motion.start, &b.motion.end]
+                .iter()
+                .any(|q| position_matches(p, q, MAX_CAP_JUNCTION_DISTANCE_MM))
+        })
+    };
+    cover(d, o) && cover(o, d)
 }
 
 pub(super) fn endpoint_pairs<'a>(
