@@ -283,3 +283,19 @@ fn chord_straddling_arc_circle_is_rejected() {
 
     compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
 }
+
+#[test]
+fn strand_peaking_away_from_covering_arc_is_rejected() {
+    // The coverage bound is worst-case: a strand whose endpoints sit
+    // near an arc's circle but whose interior peaks .8mm away must
+    // reject. Interior sampling at fixed fractions just relocates the
+    // missed extremum — the projection of the arc's center onto the
+    // strand is the extremal point.
+    let prefix = "M204 S5000\nG1 X54.2 Y50 Z.2 F6000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.52\nG2 X55.8 Y50 I.8 J0 E.10053 F1200\n";
+    let expected_island = format!("{prefix}G1 X54.22 Y50 F6000\nG1 X56.3 Y50 E.0832 F1200\n");
+    let actual_island = format!("{prefix}G1 X56.12 Y50.16 F6000\nG1 X54.84 Y51.12 E.064 F1200\n");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}

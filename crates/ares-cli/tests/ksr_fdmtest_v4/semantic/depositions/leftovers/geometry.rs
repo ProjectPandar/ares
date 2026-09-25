@@ -5,8 +5,7 @@ use crate::semantic::{feed_matches, model, parser::Deposition, position_matches}
 use super::matching;
 use super::{
     MAX_CAP_DIRECTION_DOT, MAX_CAP_JUNCTION_DISTANCE_MM, MAX_CAP_LENGTH_MM,
-    MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM, MAX_LEFTOVER_PATH_DISTANCE_MM,
-    MIN_UNMATCHED_DIRECTION_DOT,
+    MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM, MIN_UNMATCHED_DIRECTION_DOT,
 };
 
 pub(super) fn extrusion_of(d: &Deposition) -> f64 {
@@ -206,12 +205,19 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
             pts.push((cx + r * a.cos(), cy + r * a.sin()));
         }
     } else {
-        // A straight's interior must stay on the covering path too:
-        // endpoint-only sampling lets a chord straddle an arc whose
-        // circle happens to pass through both ends (two strands 3mm
-        // apart can each sit exactly on the other's circle).
-        for t in [0.25f64, 0.5, 0.75] {
-            pts.push((x1 + (x2 - x1) * t, y1 + (y2 - y1) * t));
+        // A straight's distance to a covering arc peaks either at an
+        // endpoint or where the segment comes closest to the arc's
+        // CENTER (distance to the circle is |dist-to-center - r|, a
+        // convex function whose extremum sits at the projection of
+        // the center onto the segment). Sampling fixed fractions
+        // would just move the missed extremum.
+        if let Some((ocx, ocy, _, _, _)) = matching::arc_geometry(&o.motion) {
+            let (ux, uy) = (x2 - x1, y2 - y1);
+            let len2 = ux * ux + uy * uy;
+            if len2 > 0.0 {
+                let t = (((ocx - x1) * ux + (ocy - y1) * uy) / len2).clamp(0.0, 1.0);
+                pts.push((x1 + ux * t, y1 + uy * t));
+            }
         }
     }
     let (ax, ay) = (dx(&o.motion.start.x), dx(&o.motion.start.y));
