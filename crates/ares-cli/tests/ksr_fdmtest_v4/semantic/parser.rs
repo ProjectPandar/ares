@@ -179,6 +179,19 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<SemanticGcode, String> {
             push_control(&mut output, command_line);
             continue;
         }
+        if command_line == "M107" || command_line.starts_with("M107 ") {
+            // M107 turns the (default) fan off: deposition fan snapshots
+            // must see it, so update state like M106 S0.
+            let mut fan = "0".to_owned();
+            for token in command_line.split_whitespace().skip(1) {
+                if let Some(value) = token.strip_prefix('P') {
+                    fan = canonical_number(value)?;
+                }
+            }
+            state.fans.insert(fan, "0".to_owned());
+            push_control(&mut output, command_line);
+            continue;
+        }
         if let Some(motion) = Motion::parse(command_line)? {
             if output.layers.is_empty() {
                 output.preamble.push(command_line.to_owned());

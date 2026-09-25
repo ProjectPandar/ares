@@ -107,6 +107,30 @@ fn compare_layers(
                 leftovers.len()
             ));
         }
+        // Net extrusion over ALL leftover events: real relocation
+        // islands carry a canceling unretract/retract pair plus small
+        // wipes, so their net is near zero, while an injected duplicate
+        // or a hidden `E100` move leaves a signed residue.
+        let net = |pool: &[&Vec<LifecycleEvent>]| {
+            pool.iter()
+                .flat_map(|island| island.iter())
+                .map(|event| match event {
+                    LifecycleEvent::Extruder { extrusion, .. }
+                    | LifecycleEvent::Wipe { extrusion, .. } => {
+                        extrusion.parse::<f64>().unwrap_or(0.0)
+                    }
+                    _ => 0.0,
+                })
+                .sum::<f64>()
+        };
+        let (ne, na) = (net(&unmatched_expected), net(&leftovers));
+        let imbalance = (ne - na).abs();
+        if imbalance > MAX_ISLAND_EXTRUSION_IMBALANCE_MM {
+            return Err(format!(
+                "layer {layer} island lifecycle differs: unmatched extrusion \
+                 imbalance {imbalance:.4}mm",
+            ));
+        }
     }
     Ok(())
 }
@@ -141,6 +165,9 @@ fn island_shape_matches(island: &[LifecycleEvent], other: &[LifecycleEvent]) -> 
 // retraction + wipe events with a small total wipe amount.
 const MAX_INFLILL_WIPE_ISLANDS: usize = 16;
 const MAX_WIPE_ISLAND_EXTRUSION_MM: f64 = 0.5;
+// Signed net-extrusion imbalance tolerated between the two unmatched
+// island pools: real islands carry canceling retract pairs (net ≈ 0).
+const MAX_ISLAND_EXTRUSION_IMBALANCE_MM: f64 = 0.2;
 
 fn is_infill_wipe_island(island: &[LifecycleEvent]) -> bool {
     let mut total = 0.0f64;

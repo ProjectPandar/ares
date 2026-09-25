@@ -3,10 +3,15 @@ use super::{
     position_matches,
 };
 
+#[path = "depositions/cross_target.rs"]
+mod cross_target;
+
+pub(super) use cross_target::compare_deposition_cross_target;
+
 // Features whose segments connect_infill chains: the same set produces
 // different merge boundaries AND segment directions across std::sort
 // orderings (FillBase.cpp:1700 arc_length sort instability).
-const CONNECT_INFILL_FEATURES: &[&str] = &[
+pub(super) const CONNECT_INFILL_FEATURES: &[&str] = &[
     "Sparse infill",
     "Internal infill",
     "Internal solid infill",
@@ -118,59 +123,153 @@ pub(super) fn compare_deposition(
         let (flow_e, flow_o) = (ee / le, eo / lo);
         (flow_e - flow_o).abs() <= flow_e.abs().max(flow_o.abs()) * 0.25
     };
+    // Machine state must agree on every paired leftover: a 10x feed on
+    // the same segment is a real speed divergence, not a merge artifact.
+    let machine_state_matches = |d: &&Deposition, o: &&Deposition| {
+        d.width == o.width
+            && feed_matches(d.feed, o.feed)
+            && d.acceleration == o.acceleration
+            && d.fans == o.fans
+    };
     let degenerate =
         |d: &&Deposition| extrusion_of(d).abs() <= MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM;
-    // Spatial pairing: same feature, and the unmatched counterpart's
-    // start or end lies within the shared boundary neighborhood.
+    // Segment containment: `inner` lies along `outer`'s span within tol,
+    // codirectional — reconciles a tiny legit split against the consumed
+    // larger piece without letting a reversed fragment qualify.
+    let contained_codirectional = |inner: &&Deposition, outer: &Deposition| {
+        let (Ok(isx), Ok(isy), Ok(iex), Ok(iey)) = (
+            inner.motion.start.x.parse::<f64>(),
+            inner.motion.start.y.parse::<f64>(),
+            inner.motion.end.x.parse::<f64>(),
+            inner.motion.end.y.parse::<f64>(),
+        ) else {
+            return false;
+        };
+        let (Ok(osx), Ok(osy), Ok(oex), Ok(oey)) = (
+            outer.motion.start.x.parse::<f64>(),
+            outer.motion.start.y.parse::<f64>(),
+            outer.motion.end.x.parse::<f64>(),
+            outer.motion.end.y.parse::<f64>(),
+        ) else {
+            return false;
+        };
+        let (odx, ody) = (oex - osx, oey - osy);
+        let (idx, idy) = (iex - isx, iey - isy);
+        let olen2 = odx * odx + ody * ody;
+        if olen2 <= 0.0 || idx * odx + idy * ody <= 0.0 {
+            return false;
+        }
+        let project = |px: f64, py: f64| ((px - osx) * odx + (py - osy) * ody) / olen2;
+        let lateral = |px: f64, py: f64| {
+            let t = project(px, py).clamp(0.0, 1.0);
+            let (cx, cy) = (osx + t * odx, osy + t * ody);
+            ((px - cx).powi(2) + (py - cy).powi(2)).sqrt()
+        };
+        project(isx, isy) >= -0.02
+            && project(iex, iey) <= 1.02
+            && lateral(isx, isy) <= 0.02
+            && lateral(iex, iey) <= 0.02
+    };
+    // Direction consistency: connect_infill merge boundaries keep the
+    // hatch orientation, so a paired leftover is near-parallel to its
+    // counterpart (either direction). A 90°-rotated segment scores 0.
+    let direction_aligned = |d: &&Deposition, o: &&Deposition| {
+        let dir = |m: &super::model::MotionRecord| {
+            let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
+                m.start.x.parse::<f64>(),
+                m.start.y.parse::<f64>(),
+                m.end.x.parse::<f64>(),
+                m.end.y.parse::<f64>(),
+            ) else {
+                return None;
+            };
+            let (dx, dy) = (ex - sx, ey - sy);
+            let len = (dx * dx + dy * dy).sqrt();
+            (len > 0.0).then_some((dx / len, dy / len))
+        };
+        let (Some((dx, dy)), Some((ox, oy))) = (dir(&d.motion), dir(&o.motion)) else {
+            return true;
+        };
+        (dx * ox + dy * oy).abs() >= MIN_UNMATCHED_DIRECTION_DOT
+    };
+    // Spatial pairing: same feature + machine state + flow-compatible,
+    // and the unmatched counterpart shares a boundary endpoint. When
+    // the counterpart shares a vertex EXACTLY (a rotated/edited
+    // segment pivots on a shared endpoint), it must also keep the
+    // hatch direction; corner-merge pieces shifted further out keep
+    // perpendicular leeway.
     let paired = |d: &&Deposition, pool: &[&Deposition]| {
         pool.iter().any(|o| {
-            o.feature == d.feature
-                && (position_matches(
-                    &d.motion.start,
-                    &o.motion.start,
-                    MAX_UNMATCHED_PAIR_DISTANCE_MM,
-                ) || position_matches(
-                    &d.motion.start,
-                    &o.motion.end,
-                    MAX_UNMATCHED_PAIR_DISTANCE_MM,
-                ) || position_matches(
-                    &d.motion.end,
-                    &o.motion.start,
-                    MAX_UNMATCHED_PAIR_DISTANCE_MM,
-                ) || position_matches(
-                    &d.motion.end,
-                    &o.motion.end,
-                    MAX_UNMATCHED_PAIR_DISTANCE_MM,
-                ))
-                && flow_compatible(d, o)
+            if o.feature != d.feature || !machine_state_matches(d, o) || !flow_compatible(d, o) {
+                return false;
+            }
+            let exact = MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM;
+            let near = [
+                (&d.motion.start, &o.motion.start),
+                (&d.motion.start, &o.motion.end),
+                (&d.motion.end, &o.motion.start),
+                (&d.motion.end, &o.motion.end),
+            ]
+            .into_iter()
+            .any(|(a, b)| position_matches(a, b, MAX_UNMATCHED_PAIR_DISTANCE_MM));
+            if !near {
+                return false;
+            }
+            let shared_vertex = [
+                (&d.motion.start, &o.motion.start),
+                (&d.motion.start, &o.motion.end),
+                (&d.motion.end, &o.motion.start),
+                (&d.motion.end, &o.motion.end),
+            ]
+            .into_iter()
+            .any(|(a, b)| position_matches(a, b, exact));
+            !shared_vertex || direction_aligned(d, o)
         })
     };
-    let valid = |d: &&Deposition, pool: &[&Deposition]| {
+    let valid = |d: &&Deposition, pool: &[&Deposition], full: &[Deposition]| {
         unchained(&d.feature) && paired(d, pool)
             || degenerate(d)
                 && pool.iter().any(|o| {
                     o.feature == d.feature
+                        && machine_state_matches(d, o)
                         && flow_compatible(d, o)
-                        && (position_matches(
+                        && position_matches(
                             &d.motion.start,
                             &o.motion.start,
                             MAX_DEGENERATE_PAIR_DISTANCE_MM,
-                        ) || position_matches(
+                        )
+                        && position_matches(
                             &d.motion.end,
                             &o.motion.end,
                             MAX_DEGENERATE_PAIR_DISTANCE_MM,
-                        ))
+                        )
                 })
+            || degenerate(d)
+                && full
+                    .iter()
+                    .any(|o| o.feature == d.feature && contained_codirectional(d, o))
     };
     let bad_expected = unmatched_expected
         .iter()
-        .filter(|d| !valid(d, &leftovers))
+        .filter(|d| !valid(d, &leftovers, actual))
         .count();
     let bad_actual = leftovers
         .iter()
-        .filter(|d| !valid(d, &unmatched_expected))
+        .filter(|d| !valid(d, &unmatched_expected, expected))
         .count();
     if bad_expected > 0 || bad_actual > 0 {
+        for d in unmatched_expected
+            .iter()
+            .filter(|d| !valid(d, &leftovers, actual))
+        {
+            eprintln!("  bad expected {d:?}");
+        }
+        for d in leftovers
+            .iter()
+            .filter(|d| !valid(d, &unmatched_expected, expected))
+        {
+            eprintln!("  bad actual {d:?}");
+        }
         return Err(format!(
             "layer {layer} deposition 1 differs: {} unmatched expected, \
              {} unmatched actual (first {:?} vs {:?})",
@@ -238,6 +337,9 @@ pub(super) fn compare_deposition(
 const MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM: f64 = 0.005;
 const MAX_SAME_TARGET_EXTRUSION_DIFFERENCE_MM: f64 = 0.001;
 const MAX_SAME_TARGET_ARC_CENTER_DIFFERENCE_MM: f64 = 0.6;
+// Arc-center leeway scales with radius: 0.6mm of drift on a 287mm
+// near-straight arc ≈ 0.2% of radius.
+const NEAR_STRAIGHT_ARC_CENTER_FRACTION: f64 = 0.002;
 const MAX_SAME_TARGET_DEPOSITION_COUNT_DIFFERENCE: usize = 64;
 // connect_infill reshuffles up to ~74 sparse-infill segments per layer
 // on this fixture; pair-bounded, not count-bounded.
@@ -251,6 +353,9 @@ const MAX_DEGENERATE_PAIR_DISTANCE_MM: f64 = 0.01;
 // deposition pairs only with a counterpart covering the same
 // neighborhood.
 const MAX_UNMATCHED_PAIR_DISTANCE_MM: f64 = 2.0;
+// Paired leftovers keep the hatch orientation: merge boundaries redraw
+// segments but not their direction. ~72° rejects a 90° rotation.
+const MIN_UNMATCHED_DIRECTION_DOT: f64 = 0.3;
 // connect_infill std::sort instability redistributes sparse-infill
 // extrusion across merge boundaries; merged moves also drop the tiny
 // overlap between joined segments, so bound the net deposited total
@@ -258,61 +363,29 @@ const MAX_UNMATCHED_PAIR_DISTANCE_MM: f64 = 2.0;
 const MAX_UNCHAINED_EXTRUSION_MISMATCH_MM: f64 = 0.4;
 const MAX_UNCHAINED_EXTRUSION_MISMATCH_RATIO: f64 = 0.05;
 
-const MAX_CROSS_TARGET_DEPOSITION_COORDINATE_DIFFERENCE_MM: f64 = 0.15;
-const MAX_CROSS_TARGET_DEPOSITION_EXTRUSION_DIFFERENCE_MM: f64 = 0.005;
-const MAX_CROSS_TARGET_SPLIT_EXTRUSION_MM: f64 = 0.0015;
-const MAX_CROSS_TARGET_DEPOSITION_FEED_DIFFERENCE: f64 = 20.0;
-
-pub(super) fn compare_deposition_cross_target(
-    layer: usize,
-    expected: &[Deposition],
-    actual: &[Deposition],
-) -> Result<(), String> {
-    let (expected, actual): (Vec<_>, Vec<_>) = if expected.len() == actual.len() {
-        (expected.iter().collect(), actual.iter().collect())
-    } else {
-        (
-            expected
-                .iter()
-                .filter(|deposition| !is_split_move(deposition))
-                .collect(),
-            actual
-                .iter()
-                .filter(|deposition| !is_split_move(deposition))
-                .collect(),
-        )
-    };
-    if expected.len() != actual.len() {
-        return Err(format!(
-            "layer {layer} deposition count differs across targets: expected {}, actual {}",
-            expected.len(),
-            actual.len()
-        ));
-    }
-    for (index, (expected, actual)) in expected.iter().zip(&actual).enumerate() {
-        if !deposition_matches_cross_target(expected, actual) {
-            return Err(format!(
-                "layer {layer} deposition {} differs across targets: expected {expected:?}, \
-                 actual {actual:?}",
-                index + 1
-            ));
-        }
-    }
-    Ok(())
-}
-
-fn is_split_move(deposition: &Deposition) -> bool {
-    deposition.extrusion.parse::<f64>().unwrap().abs() <= MAX_CROSS_TARGET_SPLIT_EXTRUSION_MM
-}
 fn deposition_matches(expected: &Deposition, actual: &Deposition) -> bool {
-    // Arc-center leeway applies only to near-straight arcs: a wide I/J
-    // bound on a small-radius arc changes the deposited contour.
-    let arc_tolerance =
-        if arc_is_near_straight(&expected.motion) && arc_is_near_straight(&actual.motion) {
-            MAX_SAME_TARGET_ARC_CENTER_DIFFERENCE_MM
-        } else {
-            MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM
+    // Arc-center leeway applies only to near-straight arcs, scaled by
+    // radius: the observed ~0.6mm drift is on radius ~287mm arcs. A
+    // fixed 0.6mm bound lets a smaller-radius near-straight arc move
+    // its contour by millimeters.
+    let arc_radius = |motion: &super::model::MotionRecord| {
+        let [Some(i), Some(j)] = &motion.arc_center else {
+            return 0.0;
         };
+        let (Ok(i), Ok(j)) = (i.parse::<f64>(), j.parse::<f64>()) else {
+            return 0.0;
+        };
+        (i * i + j * j).sqrt()
+    };
+    let near_straight =
+        arc_is_near_straight(&expected.motion) && arc_is_near_straight(&actual.motion);
+    let arc_tolerance = if near_straight {
+        (arc_radius(&expected.motion).min(arc_radius(&actual.motion))
+            * NEAR_STRAIGHT_ARC_CENTER_FRACTION)
+            .min(MAX_SAME_TARGET_ARC_CENTER_DIFFERENCE_MM)
+    } else {
+        MAX_SAME_TARGET_COORDINATE_DIFFERENCE_MM
+    };
     expected.feature == actual.feature
         && expected.width == actual.width
         && expected.acceleration == actual.acceleration
@@ -330,30 +403,4 @@ fn deposition_matches(expected: &Deposition, actual: &Deposition) -> bool {
             arc_tolerance,
             CONNECT_INFILL_FEATURES.contains(&expected.feature.as_str()),
         )
-}
-
-fn deposition_matches_cross_target(expected: &Deposition, actual: &Deposition) -> bool {
-    expected.feature == actual.feature
-        && expected.width == actual.width
-        && expected.acceleration == actual.acceleration
-        && expected.fans == actual.fans
-        && cross_target_feed_matches(expected.feed, actual.feed)
-        && numeric_matches(
-            expected.extrusion.parse().unwrap(),
-            actual.extrusion.parse().unwrap(),
-            MAX_CROSS_TARGET_DEPOSITION_EXTRUSION_DIFFERENCE_MM,
-        )
-        && motion_matches(
-            &expected.motion,
-            &actual.motion,
-            MAX_CROSS_TARGET_DEPOSITION_COORDINATE_DIFFERENCE_MM,
-            MAX_CROSS_TARGET_DEPOSITION_COORDINATE_DIFFERENCE_MM,
-            CONNECT_INFILL_FEATURES.contains(&expected.feature.as_str()),
-        )
-}
-
-fn cross_target_feed_matches(expected: f64, actual: f64) -> bool {
-    let absolute = (expected - actual).abs();
-    let relative = absolute / expected.abs().max(f64::EPSILON);
-    absolute <= MAX_CROSS_TARGET_DEPOSITION_FEED_DIFFERENCE && relative <= 0.01
 }

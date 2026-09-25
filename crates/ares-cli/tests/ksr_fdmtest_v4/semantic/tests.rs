@@ -1,5 +1,8 @@
 use super::{compare, compare_cross_target, compare_ignoring_time};
 
+#[path = "tests/regressions.rs"]
+mod regressions;
+
 #[test]
 fn layer_shaped_comments_in_start_gcode_remain_preamble() {
     let island = island(0, 1, 1_200);
@@ -262,7 +265,7 @@ fn control_blank_line_difference_is_rejected() {
     let error = compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
     assert!(error.contains("control events differs"), "{error}");
 }
-fn lifecycle_island(start: u32, end: u32, retract: &str) -> String {
+pub(super) fn lifecycle_island(start: u32, end: u32, retract: &str) -> String {
     format!(
         "G1 X{start} Y0 F6000\nG1 E.4 F1800\nM204 S5000\n; FEATURE: Outer wall\n; LINE_WIDTH: 0.42\nG1 X{end} Y0 E.1 F1200\nG1 E-{retract} F1800\n; WIPE_START\nG1 X{start} Y0 E-.05 F1200\n; WIPE_END\n"
     )
@@ -356,13 +359,13 @@ fn travel_acceleration_difference_is_rejected() {
     assert!(error.contains("travel acceleration differs"), "{error}");
 }
 
-fn island(start: u32, end: u32, feed: u32) -> String {
+pub(super) fn island(start: u32, end: u32, feed: u32) -> String {
     format!(
         "G1 X{start} Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG1 X{end} Y0 E.1 F{feed}\n"
     )
 }
 
-fn document(
+pub(super) fn document(
     model_time: &str,
     total_time: &str,
     first_layer_time: &str,

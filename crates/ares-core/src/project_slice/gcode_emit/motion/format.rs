@@ -80,16 +80,26 @@ pub(super) fn ostream(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();
     }
-    // Number of digits after the point needed for 6 significant figures:
-    // `5 - floor(log10(|v|))`, clamped so sub-unit values still get digits.
-    let exponent = value.abs().log10().floor() as i32;
     // Upstream uses `std::ostream <<` which rounds to decimal nearest
     // (round-half-even on binary ties like 1.015625 → "1.01562"), NOT the
     // emit_axis half-away integer-domain rounding of `trim_fixed`.
+    let exponent = value.abs().log10().floor() as i32;
+    // C++ `<<` (%g semantics): scientific notation beyond 6 integer
+    // digits or below 1e-4, with a two-digit signed exponent.
+    if !(-4..6).contains(&exponent) {
+        let mantissa = value / 10f64.powi(exponent);
+        let rendered = format!("{mantissa:.5}");
+        let rendered = rendered.trim_end_matches('0').trim_end_matches('.');
+        return format!("{rendered}e{exponent:+03}");
+    }
     let decimals = (5 - exponent).clamp(0, 6) as usize;
     let fixed = format!("{value:.decimals$}");
-    let trimmed = fixed.trim_end_matches('0').trim_end_matches('.');
-    trimmed.to_owned()
+    // Strip zeroes only from the fractional part; with decimals == 0 the
+    // whole string is integer digits and must be kept verbatim.
+    if decimals == 0 {
+        return fixed;
+    }
+    fixed.trim_end_matches('0').trim_end_matches('.').to_owned()
 }
 #[cfg(test)]
 mod tests;

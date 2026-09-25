@@ -51,5 +51,11 @@ fn ostream_uses_six_significant_digits_without_axis_quantization() {
     // Binary midpoint: `<<` rounds half-even on the decimal tie, not
     // half-away like `emit_axis`.
     assert_eq!(ostream(1.015_625), "1.01562");
+    // Integers keep every digit; %g switches to scientific at 1e6.
+    assert_eq!(ostream(100_000.0), "100000");
+    assert_eq!(ostream(999_999.0), "999999");
+    assert_eq!(ostream(1_000_000.0), "1e+06");
+    assert_eq!(ostream(0.000_1), "0.0001");
+    assert_eq!(ostream(0.000_01), "1e-05");
     assert_eq!(ostream(0.0), "0");
 }

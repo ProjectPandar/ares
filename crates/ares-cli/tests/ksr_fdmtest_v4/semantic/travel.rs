@@ -97,10 +97,12 @@ pub(super) fn compare(
         .map(|travel| travel.acceleration.as_str())
         .collect::<BTreeSet<_>>();
     // connect_infill boundary instability can assign a deposition-class
-    // acceleration to a travel hop: a foreign travel acceleration is
+    // acceleration to a rerouted hop: a foreign travel acceleration is
     // benign only when the value exists in this layer's own deposition
     // acceleration vocabulary AND the hop's signature (command, z
-    // profile, arc turns) also exists on the other side.
+    // profile, arc turns) exists on the other side. Layer 36 shows a
+    // real rerouted hop reusing the same path with the borrowed class,
+    // so positional-twin accel edits are an accepted residual.
     let expected_deposition_accel = expected_deposition
         .iter()
         .map(|d| d.acceleration.as_str())

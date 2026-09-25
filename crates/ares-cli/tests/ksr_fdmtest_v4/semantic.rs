@@ -115,12 +115,18 @@ fn canonicalize_controls(parsed: &SemanticGcode) -> Vec<Vec<String>> {
     let mut seed = |line: &str| {
         if line == "G17" {
             plane_xy = true;
+        } else if line == "G18" || line == "G19" {
+            plane_xy = false;
         } else if line.starts_with("M106 ") {
             apply_fan(&mut fans, line);
-        } else if line == "M107" {
-            for speed in fans.values_mut() {
-                *speed = "0".to_owned();
+        } else if line == "M107" || line.starts_with("M107 ") {
+            let mut fan = "0".to_owned();
+            for token in line.split_ascii_whitespace().skip(1) {
+                if let Some(value) = token.strip_prefix('P') {
+                    fan = value.to_owned();
+                }
             }
+            fans.insert(fan, "0".to_owned());
         }
     };
     for line in &parsed.preamble {
@@ -139,6 +145,11 @@ fn canonicalize_controls(parsed: &SemanticGcode) -> Vec<Vec<String>> {
                     }
                     continue;
                 }
+                if line == "G18" || line == "G19" {
+                    plane_xy = false;
+                    kept.push(line.clone());
+                    continue;
+                }
                 if line.starts_with("M106 ") {
                     if let Some((fan, speed)) = fan_assignment(line) {
                         if fans.get(&fan) == Some(&speed) {
@@ -149,13 +160,17 @@ fn canonicalize_controls(parsed: &SemanticGcode) -> Vec<Vec<String>> {
                     kept.push(line.clone());
                     continue;
                 }
-                if line == "M107" {
-                    if fans.values().all(|speed| speed == "0") {
+                if line == "M107" || line.starts_with("M107 ") {
+                    let mut fan = "0".to_owned();
+                    for token in line.split_ascii_whitespace().skip(1) {
+                        if let Some(value) = token.strip_prefix('P') {
+                            fan = value.to_owned();
+                        }
+                    }
+                    if fans.get(&fan).is_some_and(|s| s == "0") {
                         continue;
                     }
-                    for speed in fans.values_mut() {
-                        *speed = "0".to_owned();
-                    }
+                    fans.insert(fan, "0".to_owned());
                     kept.push(line.clone());
                     continue;
                 }
