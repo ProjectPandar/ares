@@ -36,17 +36,38 @@ pub(super) fn extrusion(value: f64) -> String {
 }
 
 fn trim_fixed(value: f64, precision: usize) -> String {
-    let mut value = format!("{value:.precision$}");
-    while value.ends_with('0') {
-        value.pop();
+    // `GCodeFormatter::emit_axis` (GCodeWriter.cpp:1224-1265):
+    // `v_int = int64_t(std::round(v * pow_10[digits]))` — round-half-away
+    // in the scaled integer domain, then place the decimal point into the
+    // integer digits and strip trailing zeros.
+    let scale = 10f64.powi(precision as i32);
+    let scaled = (value * scale).round();
+    let negative = scaled < 0.0;
+    let digits = (scaled.abs() as i64).to_string();
+    let (int, frac) = if digits.len() > precision {
+        digits.split_at(digits.len() - precision)
+    } else {
+        ("0", digits.as_str())
+    };
+    let mut out = String::new();
+    if negative {
+        out.push('-');
     }
-    if value.ends_with('.') {
-        value.pop();
+    out.push_str(int);
+    if precision > 0 {
+        let frac: String = std::iter::repeat_n('0', precision.saturating_sub(frac.len()))
+            .chain(frac.chars())
+            .collect();
+        let frac = frac.trim_end_matches('0');
+        if !frac.is_empty() {
+            out.push('.');
+            out.push_str(frac);
+        }
     }
-    if value.is_empty() || value == "-" || value == "-0" {
+    if out.is_empty() || out == "-" || out == "-0" {
         "0".to_owned()
     } else {
-        value
+        out
     }
 }
 

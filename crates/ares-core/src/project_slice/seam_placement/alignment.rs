@@ -136,13 +136,23 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
                 .append(true)
                 .open(path)
             {
-                let _ = writeln!(file, "STR l={} s={} len={}", start.0, start.1, seam_string.len());
+                let _ = writeln!(
+                    file,
+                    "STR l={} s={} len={}",
+                    start.0,
+                    start.1,
+                    seam_string.len()
+                );
                 for point in &seam_string {
                     let pos = candidate_position(layers, *point);
                     let _ = writeln!(
                         file,
                         "  ({},{}) {:.6},{:.6},{:.6} ang={:.4}",
-                        point.0, point.1, pos.x, pos.y, pos.z,
+                        point.0,
+                        point.1,
+                        pos.x,
+                        pos.y,
+                        pos.z,
                         candidate_angle(layers, *point)
                     );
                 }

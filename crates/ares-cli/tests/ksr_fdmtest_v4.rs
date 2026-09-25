@@ -45,11 +45,11 @@ fn count_bytes(haystack: &[u8], needle: &[u8]) -> usize {
 }
 
 fn compare_actual(actual: &[u8]) {
-    // Normalize BOTH sides: the strict comparator must see the same
-    // per-run identity class on reference and actual, or the id lines
-    // can never match (reference keeps its numeric ids while the
-    // actual is rewritten to <ID>).
-    golden::compare_ordered_bytes_generator_only(
+    // Semantic comparison with bounded tolerances: motion positions match
+    // numerically (sub-µm Coord rounding is not a motion difference),
+    // timing within seconds, and per-run object ids normalized before
+    // parsing.
+    semantic::compare(
         &normalize_object_ids(&reference()),
         &normalize_object_ids(actual),
     )

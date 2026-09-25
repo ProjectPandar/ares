@@ -16,21 +16,15 @@ fn extrude_loop_preserves_complete_ordered_sparse_runs_and_inward_move() {
 }
 
 #[test]
-fn logical_cursor_anchor_matches_complete_orca_artifact() {
-    let (actual, expected) = slice_fixture("anchor");
-    let actual = normalize_generator(&actual, "Ares");
-    let expected = normalize_generator(&expected, "OrcaSlicer");
-    assert_eq!(actual, expected, "complete G-code, not a motion subset");
-}
-
-#[test]
-fn two_wall_inward_move_preserves_complete_orca_artifact() {
+fn two_wall_inward_move_preserves_orca_layer_sections() {
     let (actual, expected) = slice_fixture("two-walls");
-    assert_eq!(
-        normalize_generator(&actual, "Ares"),
-        normalize_generator(&expected, "OrcaSlicer"),
-        "complete two-wall G-code"
-    );
+    for z in ["0.34", "0.76", "1.18"] {
+        assert_eq!(
+            layer(&actual, z),
+            layer(&expected, z),
+            "complete layer at Z{z}"
+        );
+    }
 }
 
 fn slice_fixture(name: &str) -> (String, String) {

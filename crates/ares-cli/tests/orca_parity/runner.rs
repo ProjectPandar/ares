@@ -79,10 +79,23 @@ impl OrcaRunner {
             .map_err(|error| init_error(format!("configured Orca executable {bin:?}: {error}")))?;
         // No artifact root configured -> live-oracle parity is not provisioned
         // in this environment; report "no runner" so tests skip rather than
-        // fail (CI runs `cargo nextest` without artifacts).
+        // fail (CI runs `cargo nextest` without artifacts). Explicit sweep
+        // flags demand a configured root: surface the init cause instead.
         let root = match crate::artifacts::root_from_env() {
             Ok(root) => root,
-            Err(_) => return Ok(None),
+            Err(cause) => {
+                if [
+                    "ARES_PARITY_SWEEP",
+                    "ARES_PARITY_CLUSTER",
+                    "ARES_PARITY_OPTIONS",
+                ]
+                .iter()
+                .any(|flag| std::env::var(flag).as_deref() == Ok("1"))
+                {
+                    return Err(init_error(cause));
+                }
+                return Ok(None);
+            }
         };
         let work = tempfile::Builder::new()
             .prefix("orca-runner-")
