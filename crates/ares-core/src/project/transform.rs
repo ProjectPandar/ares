@@ -137,13 +137,20 @@ impl Transform3d {
     }
 
     pub(crate) fn transform_point_f32(self, point: Point3d) -> [f32; 3] {
+        // Match upstream `Transform3f * Vec3f` (Eigen f32 matmul with FMA): the
+        // matrix is the COMPOSED transform already cast to f32, and each output
+        // component is accumulated with fused multiply-add. Using mul_add here
+        // (single rounding per product-sum step) reproduces Eigen's lane order
+        // exactly; a plain a*b+c chain rounds twice and drifts the result by
+        // one f32 ulp, which becomes the +-1um vertex diff downstream.
         let point = [point.x as f32, point.y as f32, point.z as f32];
         [0, 1, 2].map(|row| {
-            let coefficients = self.0[row];
-            coefficients[0] as f32 * point[0]
-                + coefficients[1] as f32 * point[1]
-                + coefficients[2] as f32 * point[2]
-                + coefficients[3] as f32
+            let coefficients = self.0[row].map(|c| c as f32);
+            coefficients[0].mul_add(
+                point[0],
+                coefficients[1]
+                    .mul_add(point[1], coefficients[2].mul_add(point[2], coefficients[3])),
+            )
         })
     }
 

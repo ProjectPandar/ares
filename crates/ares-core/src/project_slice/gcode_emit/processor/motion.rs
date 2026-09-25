@@ -155,8 +155,10 @@ impl MotionState {
         ) else {
             if let Ok(path) = std::env::var("ARES_DUMP_ARCSEG") {
                 use std::io::Write;
-                if let Ok(mut out) =
-                    std::fs::OpenOptions::new().create(true).append(true).open(path)
+                if let Ok(mut out) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
                 {
                     let _ = writeln!(out, "ARCNONE {}", code);
                 }
@@ -170,7 +172,11 @@ impl MotionState {
         // not a compact rank over the survivors. Carry the `deltas` index.
         if let Ok(path) = std::env::var("ARES_DUMP_ARCSEG") {
             use std::io::Write;
-            if let Ok(mut out) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            if let Ok(mut out) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
                 let _ = writeln!(out, "ARC {}", code);
                 let mut pos = start;
                 let mut e = start_e;
