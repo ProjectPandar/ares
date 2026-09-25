@@ -1248,3 +1248,18 @@ candidate: next_line selection among equal edge_a_id/a_id (lower_bound range
 + first-non-skipped) ordering differs, OR the close_gaps seed ordering. The
 506 diffs are +-1 Coord -> a different polyline join inserts a neighbor's
 endpoint rather than the boundary vertex.
+
+### Residual isolated: chain_lines_by_triangle_connectivity (#676)
+
+Upstream make_loops = chain_lines_by_triangle_connectivity (greedy walk over
+by_edge_a_id / by_a_id sorted index arrays, picking the first non-skipped line
+sharing last_line->edge_b_id / b_id, then closing by matching first_line ids)
+THEN chain_open_polylines_close_gaps (spatial RadiusGrid 2mm). Ares replaces
+the ID-connectivity walk with chain_open_polylines_exact (exact endpoint-match
+spatial index) + gaps. The coordinate-exact matching joins differently than
+the triangle-edge-id connectivity: when multiple lines share an edge/vertex id
+upstream picks by sorted-id order; ares picks by spatial endpoint equality.
+=> different loop vertex SETS (~506 +-1 Coord diffs), which propagate to
+perimeter/fill and the emitted +-1um G-code. FIX: port
+chain_lines_by_triangle_connectivity faithfully (by_edge_a_id + by_a_id index
+walk) instead of coordinate-exact chaining.
