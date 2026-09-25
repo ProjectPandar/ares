@@ -1167,3 +1167,16 @@ the X-only pattern will show whether point.x() rounds to a different coord_t
 boundary than upstream for the SAME input f32 vertex. A plausible mechanism:
 f32 x-vertex at a .5 boundary where f64::from(f32) and upstream double(f32)
 interpolant land on opposite sides of floor(+0.5).
+
+### emit_axis / quantize verified identical (#675)
+
+emit_axis = std::round(v * pow_10[digits]) (XYZF digits=3) -> int64 to_chars;
+quantize_xyzf = round(v*1e3)*1e-3. Ares format_axis/extrusion trim_fixed use
+the same round(v*10^d). X/Y identical emit path. The X-only diff is therefore
+upstream of emit: the polygon x Coord differs by 1 while y matches. Given all
+formulas are identical, the surviving hypothesis is that at the specific
+diverging vertices the X coordinate sits exactly on a coord_t rounding boundary
+(floor(v+0.5) in slice_facet, or the f32->i64 trunc) where a 1-ulp difference in
+the input f32 vertex flips the result. No Y vertex happens to sit on such a
+boundary. Confirms the residual is a single-ulp vertex-value difference; needs
+an IntersectionLine-value oracle to isolate which vertex's f32 input differs.
