@@ -1835,3 +1835,22 @@ sampled loops; the candidate-selection inside `alignment::align`
 suspect. Next: compare emitted loop start vertices (seam) oracle-vs-ares
 per loop; find a loop whose chosen seam_index differs and dump both sides'
 candidate scores.
+
+### Residual root = cross-layer seam-string alignment (#696)
+
+Verified per-candidate scores MATCH oracle: same position
+7.578471,22.998125 has oracle penalty (oh + vis + 0.6*angle) = ares
+score 1.47506309. The comparator (lexicographic overhang/embedded/penalty)
+is ported; split_at is upstream-faithful. Yet oracle WIN picks vertex
+7578470,-12998122 while ares splits at 7118758,-13194842 — SAME loop,
+different vertex, on the majority of loops.
+
+=> The divergence is inside `align_seam_points` cross-layer string
+alignment (`SeamPlacer.cpp` `align_seam_points` /
+`find_seam_string`/`is_first_not_much_worse`/`are_similar`), NOT
+per-candidate scoring. The final seam position is a cross-layer consensus
+(`final_seam_position`), and ares's `alignment::align` produces a different
+`seam_index` consensus. Suspects: `find_seam_string` nearest-vs-best
+selection, `are_similar` tolerance (`seam_align_score_tolerance`),
+`finalize_string` reassignment, `MINIMUM_STRING_SEAMS`, and the
+step `1 + len/20` alternative-start search.
