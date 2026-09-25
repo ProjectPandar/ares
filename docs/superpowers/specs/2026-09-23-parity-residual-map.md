@@ -1677,3 +1677,20 @@ Next probe: dump the pre-seam perimeter loop contour both sides, find where
 the offset output vertex sequence first diverges; suspect the offset union's
 junction-vertex set differs on the chamfer corner, OR the loop vertex set
 from offset differs by one point (rounding at a near-degenerate corner).
+
+### Pre-seam loop byte-identical; divergence is strictly in split_at->emit (#689)
+
+New oracle probe (loopcontour.nix) dumping perimeters.entities->as_polylines
+after process_classic: the path-1 loop vertex sequence is BYTE-IDENTICAL to
+ares (7533563,-13881782; 7131592,-13225824; 6837168,-12515028 at idx 7,8,9).
+Yet oracle PPATH emits closing vertex 7134969,-13231335 (absent from the
+loop) vs ares 7131592,-13225824. Seam FOOT=7118758,-13194841 seg7 identical.
+
+=> 7134969 is generated INSIDE the seam->GCode emit path, not present in the
+loop polyline. Candidates: Polyline::split_at recomputing the segment-end
+point, split_at_vertex rotation, or a wipe/ramp/avoid-crossing point
+inserted downstream of the loop. NOT a perimeter-offset diff (loops match).
+
+ares now dumps each loop pre-split via ARES_DUMP_LOOP (split.rs). Next:
+extend oracle seam.nix to dump the post-split polyline (or dump the
+simplify_path/simppath output) to see where 7134969 is first produced.

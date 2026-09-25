@@ -97,6 +97,19 @@ pub(super) fn squared_distance(left: (i64, i64), right: (i64, i64)) -> f64 {
 }
 
 pub(super) fn split_at(loop_: &mut ExtrusionLoop, seam: (i64, i64), scale: CoordinateScale) {
+    if let Ok(path) = std::env::var("ARES_DUMP_LOOP") {
+        use std::io::Write;
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = write!(f, "L[ ");
+            for p in &loop_.paths {
+                for q in &p.polyline.points {
+                    let _ = write!(f, "{},{};", q.x, q.y);
+                }
+                let _ = write!(f, "|");
+            }
+            let _ = writeln!(f, "]");
+        }
+    }
     let snap_distance = SEAM_VERTEX_SNAP_MM / scale.factor();
     let snap_distance_squared = snap_distance * snap_distance;
     let seam = loop_
