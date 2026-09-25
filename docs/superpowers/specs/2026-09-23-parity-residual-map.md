@@ -1153,3 +1153,17 @@ identical, the X-only asymmetry suggests a mirrored/transformed vertex path
 where ares applies an X sign/offset differently, OR upstream object transform
 order differs on the x column. Needs IntersectionLine vertex oracle on a
 diverging x to confirm whether source vertex.x differs by 1 f32 ulp.
+
+### compute_slice_z verified (#674)
+
+compute_slice_z: (0, _)|(_,None) => 0.5*(lo+hi); zaa => lo+zaa_min_z; bounds
+check is_approx. Ares layers.rs identical. slice_z f64 -> planes as f32.
+
+STATUS: X-only +-1um residual after verifying every formula identical. The
+X-only asymmetry rules out generic f32 noise; it indicates a systematic single-
+axis vertex step. The discriminator needed is a slice_facet IntersectionLine
+oracle (point.x()/point.y() per line) vs ares slice output on the same layer —
+the X-only pattern will show whether point.x() rounds to a different coord_t
+boundary than upstream for the SAME input f32 vertex. A plausible mechanism:
+f32 x-vertex at a .5 boundary where f64::from(f32) and upstream double(f32)
+interpolant land on opposite sides of floor(+0.5).
