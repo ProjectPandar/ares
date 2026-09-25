@@ -1625,3 +1625,23 @@ DOWNSTREAM: either make_expolygons's offset2_ex(+0.049/-0.049 miter) round
 trip, or the surfaces union across volumes/regions. Narrow with a probe
 dumping the post-offset2_ex contour first point vs the union output first
 point on a layer where the emitted G1 seam differs.
+
+### Residual is systematic sub-um (few-Coord), not representative-vertex (#688)
+
+Aligned LOWSL shows input surface contours IDENTICAL including rotation at
+sampled layers. Yet G1 X differs by 0.001mm (1 print-decimal) across the
+whole model and arc I/J by up to ~0.5mm. This is a SUB-MICRON (few-Coord)
+difference present on EVERY emitted coordinate — a systematic upstream
+rounding/quantization, not a per-junction representative-vertex pick.
+
+Prime suspects (f32 vs f64 / scaled<> boundary upstream of perimeters):
+- slice_make_lines vertex transform: upstream scales mesh vertices via
+  `scaled<float>(p.x())` (f32 multiply then scale) — if ares computes the
+  scaled Coord from the f64 mesh vertex instead of the f32-quantized value,
+  every vertex is off by <=1 Coord -> every G1 X off by a rounding-boundary
+  step, exactly matching the observed ±1-last-decimal pattern.
+- offset2_ex / union internal f32->Coord.
+
+Next: dump raw make_loops input line a/b Coord (not just the dedup'd ILINES
+set, which may have collapsed a 1-Coord difference) — compare the raw
+per-line scaled coordinates bit-exactly vs oracle.
