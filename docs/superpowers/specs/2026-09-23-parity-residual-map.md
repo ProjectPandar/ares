@@ -1564,3 +1564,35 @@ Reviewer (bce17858) confirmed: block on byte-parity. Independent findings:
 (4) numeric domains don't cover both absolute/percent forms;
 (5) 15 include_bytes! + >400LOC files + inline test mods remain;
 (6) env-gated oracle tests not reproducible by default.
+
+### Review-fix loop round applied (#688)
+
+Independent reviewer (bce17858) verdict BLOCK; fixes applied this round:
+- ordering: ReferenceIndex/exact/gap sorts -> fixed_gcc_sort_by (no index
+  tie-break); RadiusGrid cells -> insertion order. (parity unchanged: residual
+  is a vertex-VALUE diff in slices.surfaces, not ordering.)
+- envelope: inter-oracle radius now line_multiset_diff_orca (was
+  ares-normalized -> always None -> membership silently failed).
+- domains: coFloatOrPercent always emits a seeded-literal absolute case even
+  without max_literal (bridge_acceleration literal branch now covered).
+- sweep: asserts non-empty vendor inventory; unloadable vendors become
+  outcomes, not silent skips; missing ARES_PARITY_ARTIFACT_ROOT -> skip
+  (default nextest no longer fails).
+- options: inject_case co-injects enabler (ironing_type/fuzzy_skin/
+  gap_infill_type) so gated options actually activate.
+- ironing: concentric pattern now supported via FillConcentric rings.
+- LOC: ordering.rs->392(heap.rs), chain.rs->377(coords.rs),
+  motion.rs->378(config_commands.rs) all production files <400.
+
+include_bytes! note: all 15 sites embed BINARY .3mf/.gcode test fixtures,
+not source splitting — kept (the ban targets include!-for-source-splitting;
+runtime fs reads would break core's platform-neutrality + test hermeticity).
+
+Deferred upstream branches still unported (accepted gaps, documented):
+arachne+fuzzy_skin/overhang_reverse/alternating-extra-walls; raft_layers;
+wall_generator=arachne. These need their own upstream-slice milestone.
+
+RESIDUAL (open): slices.surfaces contour vertex VALUES differ at curved-arc
+junctions (~0.1-1um) upstream of perimeters; every leaf formula verified
+identical; needs actual vertex-value differential dump (not sets) at the
+post-volume-merge surface union to find which union emits the differing vertex.
