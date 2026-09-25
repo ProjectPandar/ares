@@ -129,12 +129,49 @@ pub(super) fn align(layers: &mut [LayerPlan]) {
             }
             alternative_start += step;
         }
+        if let Ok(path) = std::env::var("ARES_DUMP_STRING") {
+            use std::io::Write;
+            if let Ok(mut file) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+            {
+                let _ = writeln!(file, "STR l={} s={} len={}", start.0, start.1, seam_string.len());
+                for point in &seam_string {
+                    let pos = candidate_position(layers, *point);
+                    let _ = writeln!(
+                        file,
+                        "  ({},{}) {:.6},{:.6},{:.6} ang={:.4}",
+                        point.0, point.1, pos.x, pos.y, pos.z,
+                        candidate_angle(layers, *point)
+                    );
+                }
+            }
+        }
         if seam_string.len() < MINIMUM_STRING_SEAMS {
             continue;
         }
         seam_string.sort_by_key(|point| point.0);
         global_index -= 1;
         finalize_string(layers, &seam_string);
+    }
+    if let Ok(path) = std::env::var("ARES_DUMP_ALIGN") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            for (layer_index, layer) in layers.iter().enumerate() {
+                for (perimeter_index, choice) in layer.choices.iter().enumerate() {
+                    let _ = writeln!(
+                        file,
+                        "CHOICE l={layer_index} p={perimeter_index} seam={} fin={} pos={:?}",
+                        choice.seam_index, choice.finalized, choice.final_position
+                    );
+                }
+            }
+        }
     }
 }
 

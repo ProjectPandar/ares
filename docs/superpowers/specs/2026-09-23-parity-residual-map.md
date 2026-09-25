@@ -1873,3 +1873,32 @@ step `1 + len/20` alternative-start search.
   candidates / enforcer oversampling / perimeters grouping) shifting which
   vertex the cross-layer fit snaps to, or a find_seam_string walk detail
   (previous-position projection uses `candidate_position` incl. z).
+
+### Aligned seam placement is BYTE-IDENTICAL (#702)
+
+New oracle probe `tools/orca-probes/align.nix` (ORCA_DUMP_STR) dumps the
+post-finalize `perimeter.seam_index` + `final_seam_position` for every
+seam-string candidate. Cross-checked against ares ARES_DUMP_ALIGN /
+ARES_DUMP_STRING: for the layer-0 perimeter 0 the oracle produces
+`si=37 final=7.727437,-12.922221,0.1` and ares `seam=37
+pos=7.727437,-12.922221` — identical. `finalize_string` (cubic B-spline
+fit, curling_influence, t-blend) matches upstream; the earlier
+"seam_index differs" reading was conflating the candidate position
+(7.578470) with the fitted seam position (7.727437).
+
+### format.rs double-rounding removed
+
+`axis`/`offset`/`extrusion` pre-rounded `(v*1000).round()/1000` then
+`format!("{:.3}")`; the f64::round (half-away) pre-step could flip a
+half-value differently than direct decimal formatting. Changed to pass
+the raw value straight to `trim_fixed` (single rounding, matching
+upstream `ostream << setprecision` semantics). Neutral on this model
+(diff count unchanged) but strictly more faithful.
+
+### Remaining residual classes (diff ~= 44.5k lines, all cosmetic)
+
+1. ±0.001 mm last-digit XY / arc I,J — sub-µm Coord source drift
+   (arc-fit / clip / polyline produces a Coord off by 1µm on boundary
+   points). Not a formatting-mode issue.
+2. M73 progress ordering (R-number off by 1) — time-estimate.
+3. Header timestamp/model-time and object-id comments.
