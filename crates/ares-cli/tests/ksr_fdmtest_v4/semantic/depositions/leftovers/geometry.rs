@@ -217,6 +217,21 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
             if len2 > 0.0 {
                 let t = (((ocx - x1) * ux + (ocy - y1) * uy) / len2).clamp(0.0, 1.0);
                 pts.push((x1 + ux * t, y1 + uy * t));
+                // Off-span points measure min(distance to start,
+                // distance to end); that function peaks on the
+                // endpoints' perpendicular bisector. A segment whose
+                // interior crosses the bisector can hide its worst
+                // point between the endpoints and the projected
+                // center sample.
+                let (ax_, ay_) = (dx(&o.motion.start.x), dx(&o.motion.start.y));
+                let (bx_, by_) = (dx(&o.motion.end.x), dx(&o.motion.end.y));
+                // Solve d1(t)^2 = d2(t)^2 for t along the segment.
+                let t_bis = ((bx_ - ax_) * (ax_ + bx_ - 2.0 * x1)
+                    + (by_ - ay_) * (ay_ + by_ - 2.0 * y1))
+                    / (2.0 * ((bx_ - ax_) * ux + (by_ - ay_) * uy));
+                if t_bis.is_finite() && (0.0..=1.0).contains(&t_bis) {
+                    pts.push((x1 + ux * t_bis, y1 + uy * t_bis));
+                }
             }
         }
     }
