@@ -1729,3 +1729,23 @@ distributed across many seams: interpolated clip endpoints (truncating
 `.cast<coord_t>`), and larger (0.15-0.5mm) distinct-coordinate diffs.
 end_clip/seam_gap confirmed wired (ec=0.04, f=1e-6, clip_end runs).
 clip_end formula matches Polyline.cpp:50-72 (lsqr>rem², rem/sqrt, trunc).
+
+### Where the residual actually lives (#689 final)
+
+diff-magnitude histogram of X deltas: ~99 diffs at 0.001 (pure +-1 lattice),
+plus a long tail of 0.15-0.5mm distinct-coordinate diffs clustered ~3/loop —
+these are the clip_end-interpolated seam endpoints landing on a different
+segment point. Pre-seam loops are byte-identical; the divergence is strictly
+inside the seam->clip->emit tail.
+
+Candidates not yet ruled out for the tail diffs:
+1. `clip_end` on `Polyline3` (z/height interpolation) vs ares 2D clip — if
+   upstream's path.polyline carries z the truncating segment geometry differs.
+2. `mm3_per_mm`/`fitting` affecting emitted endpoint vs raw clip point
+   (`arc::clip_fitting_end` projects the last point onto a fitted arc AFTER
+   clip_end — ares applies it; check it fires identically).
+3. The closing-point re-emission: upstream `ExtrusionLoop::clip_end` keeps
+   `paths = this->paths` then trims; the loop close is implicit (last==first
+   vertex concatenated). ares emits the concat'd close point explicitly —
+   if the clip truncates BEFORE reaching the close point, ares still emits
+   the stale close -> the extra `7118758` tail seen earlier.
