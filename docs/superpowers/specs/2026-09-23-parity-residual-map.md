@@ -1548,3 +1548,19 @@ Residual is the multi-volume MERGE into a layer's surfaces.surfaces: the
 order volumes union into a region differs -> union_ex emits different
 representative arc vertex. Pinpoint: dump slices.surfaces per region per
 layer (post-merge) both sides.
+
+### Ordering fix applied, parity unchanged (#688)
+
+Applied upstream-unstable ordering: ReferenceIndex + sorted_exact/gap_indices
+now use fixed_gcc_sort_by (no index tie-break); RadiusGrid cells keep
+insertion order (unordered_multimap equal_range). All 319 chaining tests
+pass; parity still 44491. => loop partition was already correct; residual is
+a genuine vertex-VALUE diff in slices.surfaces arcs, NOT ordering.
+
+Reviewer (bce17858) confirmed: block on byte-parity. Independent findings:
+(1) infill uses compensated-slice bbox not PrintObject::bounding_box;
+(2) option sweep cases don't activate dependent features (ironing etc.);
+(3) printer sweep can pass 0/0 on unreadable profiles + skips vendor errors;
+(4) numeric domains don't cover both absolute/percent forms;
+(5) 15 include_bytes! + >400LOC files + inline test mods remain;
+(6) env-gated oracle tests not reproducible by default.
