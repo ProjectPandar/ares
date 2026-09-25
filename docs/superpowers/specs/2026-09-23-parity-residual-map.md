@@ -1524,3 +1524,15 @@ groupings/orientations is geometrically equivalent but can emit a different
 boundary vertex where loops self-touch. To pin: dump make_loops Polygons
 per layer (per-polygon ordered vertices) both sides and diff the loop
 partition, not just the vertex multiset.
+
+### Per-layer loop partition: most layers identical (#687)
+
+ORCA_DUMP_LOOPPART (layers_p polygons per layer, all volumes merged) vs
+ARES_DUMP_SLICE (looped.polygons per volume, local layer idx). Layers
+150/200/250/300 vertex sets IDENTICAL (sorted multiset diff=0). Layer 100:
+scope mismatch -- ares dumps per-volume (5 polys) vs oracle per-global-layer
+(15 polys); cannot compare directly. So the loop partition is correct on
+clean single-region layers; residual confined to multi-volume/complex layers
+where volume merge order shifts union vertex emission. To pin the residual
+cleanly, ares must dump make_loops per GLOBAL layer post-volume-merge, or
+dump slices.surfaces per region.
