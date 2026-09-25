@@ -1454,3 +1454,16 @@ surfaces -- the SURFACE UNION/simplification, which operates on the
 this single surface-union divergence. To pin the last vertex: dump
 slices.surfaces merged ExPolygon contours per layer both sides (plate frame)
 and locate the first differing arc vertex, then the union/simplify step.
+
+### simplify path byte-identical; residual = make_loops join order (#685)
+
+surface_simplify: ExPolygon::simplify = simplify_p (close+_douglas_peucker
++pop) then union_ex -> simplify_polygons (StrictlySimple+Union+NonZero).
+ares douglas_peucker / distance_to_segment_squared / simplify_polygons ALL
+byte-identical to upstream (same strict > / <= / stack / clamp). =>
+layers_p input to make_expolygons differs => make_loops output has +174
+verts => the residual is open-polyline JOIN ORDER in
+chain_open_polylines_close_gaps: identical ILINES + identical RadiusGrid,
+but the order candidates are consumed / the attach endpoint chosen differs,
+inserting extra vertices. Pinpoint: dump the open_polylines chain order
+(seed index + which polyline each attaches to) both sides.
