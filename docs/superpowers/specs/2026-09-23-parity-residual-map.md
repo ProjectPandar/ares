@@ -1381,3 +1381,16 @@ crosses an overhang boundary => the +-1um G1 + arc-fit I/J diffs. The slice
 (ILINES) is proven byte-identical; the divergence is in PerimeterGenerator's
 overhang sub-path splitting. Path count +504 confirms extra/misplaced
 boundaries.
+
+### lower_series offsets verified; boundary = clipper intersection_pl (#683)
+
+generate_lower_polygons_series: offsets = [start+0.5*(end-start)/(n-1), end],
+start=-0.5*width end=+0.5*nozzle_diameter, back()=nozzle/2 offset. ares
+lower_series/lower_sample_offsets identical (2-elem [first,end]).
+The overhang boundary vertex = intersection_pl({loop}, lower_series_clipped)
+crossing vertex => a clipper polyline-open-path vs polygon intersection
+point. If grown lower_slices differ by 1ulp, the crossing vertex differs
+(~3.4um). lower_slices = union of prev-layer slices => residual is in the
+clipper UNION result of the (ILINES-identical) loop contours, OR
+intersection_pl's open-path boundary vertex. Next: dump
+lower_polygons_series->back() + intersection_pl result for one layer.
