@@ -129,7 +129,7 @@ fn insert_polyline(
 
 fn should_close(
     points: &[crate::geometry::Point],
-    closing_distance_squared: Option<u128>,
+    closing_distance_squared: Option<f64>,
     next: Option<Nearest>,
 ) -> bool {
     let Some(closing_distance_squared) = closing_distance_squared else {
@@ -137,7 +137,7 @@ fn should_close(
     };
     match next {
         Some(next) if closing_distance_squared < next.distance_squared => {
-            (closing_distance_squared as f64).sqrt() < 0.3 * open_length(points)
+            closing_distance_squared.sqrt() < 0.3 * open_length(points)
         }
         _ => true,
     }
@@ -146,11 +146,11 @@ fn should_close(
 fn close_seed(
     seed: &mut OpenPolyline,
     polygons: &mut Vec<Polygon>,
-    closing_distance_squared: u128,
+    closing_distance_squared: f64,
     try_connect_reversed: bool,
     segments_joined: usize,
 ) {
-    if closing_distance_squared == 0 {
+    if closing_distance_squared == 0.0 {
         seed.points.pop();
     }
     if seed.points.len() >= 3 {

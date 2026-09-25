@@ -236,6 +236,31 @@ pub(crate) fn make_loops(
         false,
     );
     gaps::chain_open_polylines_close_gaps(&mut open_polylines, &mut polygons, max_gap_scaled, true);
+    if let Ok(path) = std::env::var("ARES_DUMP_LOOPS") {
+        use std::io::Write;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let mut coords = polygons
+                .iter()
+                .flat_map(|p| {
+                    p.points()
+                        .iter()
+                        .map(|q| (q.x(), q.y()))
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>();
+            coords.sort_unstable();
+            let body = coords
+                .iter()
+                .map(|(x, y)| format!("{x},{y}"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let _ = writeln!(file, "LOOPS n={} {body}", polygons.len());
+        }
+    }
     LoopedLayer { polygons }
 }
 

@@ -98,7 +98,11 @@ pub(crate) fn slice_mesh_on_planes(
                     .map(|(x, y)| format!("{x},{y}"))
                     .collect::<Vec<_>>()
                     .join(" ");
-                let _ = writeln!(file, "ILINES p={plane_index} n={} {body}", layer_lines.len());
+                let _ = writeln!(
+                    file,
+                    "ILINES p={plane_index} n={} {body}",
+                    layer_lines.len()
+                );
             }
         }
     }
