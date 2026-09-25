@@ -1496,3 +1496,17 @@ expolygons -> identical op+args. => closing identical; residual vertex is a
 1ulp f32 flip inside ClipperOffset/union of a specific arc corner, below
 formula-level resolution. Requires a differential trace on one failing
 vertex (dump offset2_ex input/output for one layer both sides).
+
+### offset2_ex identical; residual = make_loops polygon grouping (#686)
+
+expolygons_offset: union only when collected>1 && delta>0 else copy -- ares
+offset_expolygons_paths identical. offset2_ex identical (Miter/3.0). => The
+closing offset is byte-identical. The residual is thus in the INPUT polygons
+fed to union_ex inside make_expolygons: ares make_loops produces a different
+polygon GROUPING/ORIENTATION (fragments vs merged) than oracle; clipper
+union of a differently-ordered/grouped input can emit a geometrically
+equivalent contour with a different representative vertex at a degenerate
+arc junction => the ~1um arc diffs + propagated +-1um G1/arc I/J.
+The fix is matching make_loops loop grouping (which open polylines join into
+which closed polygon) -- the chain produces the right vertices but groups
+them into polygons differently, changing union's vertex emission.
