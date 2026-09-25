@@ -1614,3 +1614,14 @@ Next: align loop START POINT (rotation) into union_ex / make_expolygons with
 upstream — upstream polygons from make_loops have a canonical start (the
 make_loops output order), which ares rotates differently. Compare
 make_loops output polygon[0] point vs oracle on a rotated-differing layer.
+
+### Loop start-point = seed.a verified identical (#688)
+
+Upstream loop_pts starts at first_line->a (the seed IntersectionLine's a);
+ares starts at seed.a().point() — identical, and ILINES were byte-identical.
+So make_loops emits loops with identical vertices AND identical rotation.
+=> the rotation difference that flips union_ex's emitted start is introduced
+DOWNSTREAM: either make_expolygons's offset2_ex(+0.049/-0.049 miter) round
+trip, or the surfaces union across volumes/regions. Narrow with a probe
+dumping the post-offset2_ex contour first point vs the union output first
+point on a layer where the emitted G1 seam differs.
