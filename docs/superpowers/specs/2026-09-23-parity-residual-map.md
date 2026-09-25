@@ -1645,3 +1645,19 @@ Prime suspects (f32 vs f64 / scaled<> boundary upstream of perimeters):
 Next: dump raw make_loops input line a/b Coord (not just the dedup'd ILINES
 set, which may have collapsed a 1-Coord difference) — compare the raw
 per-line scaled coordinates bit-exactly vs oracle.
+
+### Vertex-scaling paths verified (#688)
+
+slice_facet interpolation identical (floor(b + (a-b)*t + 0.5)). Vertex scale:
+upstream branches zs.size()<=1 & is_identity — identity+multiz uses
+`v.x() *= float(1/SCALING)` scalar mul; non-identity uses `tf * v` with
+`prescale(Vec3d(s,s,1))` (INPUT-column scale). ares prescaled_xy scales
+output ROWS 0..1 — equivalent only for pure translation (no rotation). For
+ksr (centered translation, no rotation) they coincide, so NOT the residual.
+
+Residual remains: systematic sub-um on every coordinate with verified-
+identical input surface contours. Point to a single f32-vs-f64 or
+multiply-vs-divide boundary in the vertex->Coord path OR a per-coordinate
+round at offset2_ex/union that differs by 1 Coord. Needs a raw make_loops
+line dump (a/b Coord per line, ordered) vs an oracle probe of the same to
+find the first differing raw coordinate.
