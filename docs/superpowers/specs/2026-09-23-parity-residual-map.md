@@ -1596,3 +1596,21 @@ RESIDUAL (open): slices.surfaces contour vertex VALUES differ at curved-arc
 junctions (~0.1-1um) upstream of perimeters; every leaf formula verified
 identical; needs actual vertex-value differential dump (not sets) at the
 post-volume-merge surface union to find which union emits the differing vertex.
+
+### Residual re-diagnosed (#688): NOT a vertex-value diff
+
+Aligned LOWSL dumps (added layer_id to ares dump): at L175/L6 the contours
+are byte-identical. The earlier "37465866 vs 37467446" diff was a CROSS-LAYER
+artifact — those are the same base-chamfer corner sampled at different layers
+(ora L143 vs ora L6); both vertices exist in both dumps. So input surface
+contours are identical VALUE-wise; layers match modulo ROTATION (vertex
+start-point). The residual G1 ±1um diffs come from union_ex emitting a
+different representative vertex where the input loop's rotational start
+differs — i.e. the loop start-point orientation into union_ex differs, which
+changes the emitted polygon's vertex sequence (same geometry, rotated start),
+and the G-code path emission then differs at the seam-split point.
+
+Next: align loop START POINT (rotation) into union_ex / make_expolygons with
+upstream — upstream polygons from make_loops have a canonical start (the
+make_loops output order), which ares rotates differently. Compare
+make_loops output polygon[0] point vs oracle on a rotated-differing layer.
