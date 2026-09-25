@@ -1,5 +1,7 @@
 mod gcc;
+mod heap;
 pub(crate) use gcc::fixed_gcc_sort_by;
+use heap::{make_heap, sort_heap};
 
 /// Stable merge sort matching `std::stable_sort` semantics — preserves the
 /// input order of comparator-equal elements. Unlike `fixed_gcc_sort_by`
@@ -72,8 +74,8 @@ struct SortRange(usize, usize);
 #[derive(Clone, Copy)]
 struct MedianIndices(usize, usize, usize);
 #[derive(Clone, Copy)]
-struct HeapHole(usize, usize, usize);
-trait Less<T>: FnMut(&T, &T) -> bool {}
+pub(super) struct HeapHole(pub usize, pub usize, pub usize);
+pub(super) trait Less<T>: FnMut(&T, &T) -> bool {}
 impl<T, F> Less<T> for F where F: FnMut(&T, &T) -> bool {}
 trait TraceSink<T> {
     fn insertion(&mut self) {}
@@ -356,77 +358,6 @@ fn partition_by_median<T, F: Less<T>, S: TraceSink<T>>(
         }
     }
 }
-fn push_heap_by_index<T: Copy, F: Less<T>>(
-    items: &mut [T],
-    position: HeapHole,
-    value: T,
-    compare: &mut F,
-) {
-    let HeapHole(first, hole, top) = position;
-    let mut hole = hole as isize;
-    let top = top as isize;
-    let mut index = (hole - 1) >> 1;
-    while top < hole && compare(&items[first + index as usize], &value) {
-        items[first + hole as usize] = items[first + index as usize];
-        hole = index;
-        index = (hole - 1) >> 1;
-    }
-    items[first + hole as usize] = value;
-}
-fn pop_heap_hole_by_index<T: Copy, F: Less<T>>(
-    items: &mut [T],
-    position: HeapHole,
-    value: T,
-    compare: &mut F,
-) {
-    let HeapHole(first, mut hole, bottom) = position;
-    let top = hole;
-    let mut index = hole;
-    let max_non_leaf = (bottom - 1) >> 1;
-    while index < max_non_leaf {
-        index = 2 * index + 2;
-        if compare(&items[first + index], &items[first + index - 1]) {
-            index -= 1;
-        }
-        items[first + hole] = items[first + index];
-        hole = index;
-    }
-    if index == max_non_leaf && bottom.is_multiple_of(2) {
-        items[first + hole] = items[first + bottom - 1];
-        hole = bottom - 1;
-    }
-    push_heap_by_index(items, HeapHole(first, hole, top), value, compare);
-}
-fn make_heap<T: Copy, F: Less<T>>(items: &mut [T], first: usize, last: usize, compare: &mut F) {
-    let bottom = last - first;
-    let mut hole = bottom >> 1;
-    while hole > 0 {
-        hole -= 1;
-        let value = items[first + hole];
-        pop_heap_hole_by_index(items, HeapHole(first, hole, bottom), value, compare);
-    }
-}
-fn pop_heap<T: Copy, F: Less<T>>(items: &mut [T], first: usize, last: usize, compare: &mut F) {
-    if last - first >= 2 {
-        let destination = last - 1;
-        let value = items[destination];
-        items[destination] = items[first];
-        pop_heap_hole_by_index(
-            items,
-            HeapHole(first, 0, destination - first),
-            value,
-            compare,
-        );
-    }
-}
-
-fn sort_heap<T: Copy, F: Less<T>>(items: &mut [T], first: usize, mut last: usize, compare: &mut F) {
-    while last - first >= 2 {
-        pop_heap(items, first, last, compare);
-        last -= 1;
-    }
-}
-
 fn sort_unchecked<T: Copy, F: Less<T>, S: TraceSink<T>>(
     items: &mut [T],
     range: SortRange,
