@@ -5,7 +5,8 @@ use crate::semantic::{feed_matches, model, parser::Deposition, position_matches}
 use super::matching;
 use super::{
     MAX_CAP_DIRECTION_DOT, MAX_CAP_JUNCTION_DISTANCE_MM, MAX_CAP_LENGTH_MM,
-    MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM, MIN_UNMATCHED_DIRECTION_DOT,
+    MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM, MAX_LEFTOVER_PATH_DISTANCE_MM,
+    MIN_UNMATCHED_DIRECTION_DOT,
 };
 
 pub(super) fn extrusion_of(d: &Deposition) -> f64 {
@@ -160,7 +161,7 @@ pub(super) fn direction_gated_ok(d: &Deposition, o: &Deposition) -> bool {
 // (0.09mm chord on a 39.5mm radius). Swept/chord bounds the other
 // shape of rewrite: the fixture's loosest real arc travels ~25mm
 // per mm of chord (a 349° refit on a shared vertex), while the
-// probed edits sweep ~124mm on a ~0.09mm chord.
+// probed edits sweep ~124mm on a ~0.09mm chord; a 65mm-per-chord rewrite still fails the 30× bound.
 pub(super) fn sane_arc(d: &Deposition) -> bool {
     let (Ok(i), Ok(j)) = (
         d.motion.arc_center[0]
@@ -176,7 +177,7 @@ pub(super) fn sane_arc(d: &Deposition) -> bool {
     };
     let chord = length_of(d).max(1e-9);
     (i * i + j * j).sqrt() / chord <= 320.0
-        && matching::arc_swept_length(&d.motion).is_some_and(|swept| swept <= chord * 100.0)
+        && matching::arc_swept_length(&d.motion).is_some_and(|swept| swept <= chord * 30.0)
 }
 
 // Worst-case distance of `d`'s swept path to `o`'s chord: sample
@@ -230,10 +231,14 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
             let ang = (p.1 - ocy).atan2(p.0 - ocx);
             let rel = (ang - oa0).rem_euclid(std::f64::consts::TAU);
             let span = osweep.abs().rem_euclid(std::f64::consts::TAU);
+            // The angular slack must be a DISTANCE slack on this
+            // circle: a fixed 0.1 rad lets a point ~28mm past the
+            // endpoint of a 287mm-radius arc pass as "on span".
+            let slack = (MAX_LEFTOVER_PATH_DISTANCE_MM / or_.max(1e-9)).min(0.1);
             let on_span = if osweep >= 0.0 {
-                rel <= span + 0.1
+                rel <= span + slack
             } else {
-                rel >= std::f64::consts::TAU - span - 0.1
+                rel >= std::f64::consts::TAU - span - slack
             };
             if on_span {
                 return (((p.0 - ocx).powi(2) + (p.1 - ocy).powi(2)).sqrt() - or_).abs();

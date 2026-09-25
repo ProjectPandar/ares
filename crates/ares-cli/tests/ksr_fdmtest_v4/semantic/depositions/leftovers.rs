@@ -50,13 +50,16 @@ const MAX_CAP_JUNCTION_DISTANCE_MM: f64 = 1.2;
 // A cap joins a short tip (≤2mm) to a longer leg; longer
 // perpendicular strands are rotated segments, not caps.
 const MAX_CAP_LENGTH_MM: f64 = 2.0;
-// Coverage pairs redraw a strand loosely: flow may drift more than
-// a same-chord pairing (real restitch ~1.4×), but not an extrusion
-// rewrite (~6×).
-const MAX_COVERED_FLOW_RATIO: f64 = 0.5;
+// Coverage pairs redraw a strand loosely: flow may drift ~1.35× in
+// a real restitch, but an extrusion rewrite (~2×+) fails.
+const MAX_COVERED_FLOW_RATIO: f64 = 0.3;
 // Restitched cells redraw polylines loosely: real leftovers sit
 // ~0.2mm off the redrawn counterpart's path.
 const MAX_LEFTOVER_PATH_DISTANCE_MM: f64 = 0.55;
+// Same-command arc leftovers redrawing the same chord still agree
+// loosely: chained refits deviate ~1.5mm at mid-sweep; a center
+// rewrite (r5→r30 on a 10mm chord) deviates ~4.6mm.
+const MAX_SAME_COMMAND_ARC_DEVIATION_MM: f64 = 2.0;
 // A vertex shared to ~20µm makes the counterpart a pivot of the same
 // junction — direction must hold even for short leftovers (real
 // perpendicular caps pair ≥0.04mm off the counterpart's vertices).
@@ -102,8 +105,28 @@ fn paired(d: &Deposition, pool: &[&Deposition]) -> bool {
             // The junction between a refit arc and its split
             // counterpart wanders ~0.4mm in the fixture — the arc
             // sanity bound, not endpoint coincidence, is the guard.
+            // Same-command arcs redrawing the SAME chord (both
+            // endpoints shared) must keep roughly the same contour —
+            // real chained refits deviate ~1.5mm, a center rewrite
+            // deviates ~4.6mm. Arcs that share only ONE endpoint are
+            // adjacent segments of one contour (a G3↔G1 restitch or
+            // a split arc pair) where divergence is the rule; a
+            // command swap (G2↔G3 on one chord) is the unstable
+            // signature and skips this too.
+            let same_chord = pairs
+                .iter()
+                .filter(|(a, b)| position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM))
+                .count()
+                >= 2;
+            let same_contour = d.motion.command != o.motion.command
+                || !same_chord
+                || matching::arc_contour_deviation(&d.motion, &o.motion)
+                    <= MAX_SAME_COMMAND_ARC_DEVIATION_MM;
             return arc_sane(d)
                 && arc_sane(o)
+                && d.motion.turns == o.motion.turns
+                && same_contour
+                && flow_within(d, o, MAX_COVERED_FLOW_RATIO)
                 && pairs
                     .iter()
                     .any(|(a, b)| position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM));
@@ -132,6 +155,7 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
                 && machine_state_matches(d, o)
                 && o.motion.start.z == d.motion.start.z
                 && o.motion.end.z == d.motion.end.z
+                && flow_within(d, o, MAX_COVERED_FLOW_RATIO)
                 && matching::arc_containment(&d.motion, &o.motion)
         })
     {
@@ -163,6 +187,18 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
                     };
                     arc_sane(d)
                         && arc_sane(o)
+                        && d.motion.turns == o.motion.turns
+                        && flow_within(d, o, MAX_COVERED_FLOW_RATIO)
+                        && (d.motion.command != o.motion.command
+                            || endpoint_pairs(d, o)
+                                .iter()
+                                .filter(|(a, b)| {
+                                    position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM)
+                                })
+                                .count()
+                                < 2
+                            || matching::arc_contour_deviation(&d.motion, &o.motion)
+                                <= MAX_SAME_COMMAND_ARC_DEVIATION_MM)
                         && endpoint_pairs(d, o)
                             .iter()
                             .any(|(a, b)| position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM))

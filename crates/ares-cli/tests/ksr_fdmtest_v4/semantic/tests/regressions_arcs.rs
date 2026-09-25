@@ -16,9 +16,10 @@ fn same_endpoints_huge_arc_rewrite_is_rejected() {
 
 #[test]
 fn arc_deposited_at_wrong_z_is_rejected() {
-    // Reordering vertical travels around a sparse-infill arc must not
-    // reassign its Z: the arc-containment clause checks Z too. The
-    // travel feed is set first so parsing is valid in both documents.
+    // Reordering vertical travels around a sparse-infill arc leaves
+    // both depositions at Z.2 — the comparator rejects via the
+    // differing travel profiles. Deposition-height drift itself is
+    // covered by arc_deposition_end_z_change_is_rejected.
     let body = "G1 X0 Y0 Z.2 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG3 X2 Y0 I1 J0 E.1 F1200\n";
     let expected = format!("G1 Z.4 F6000\nG1 Z.2 F6000\n{body}");
     let actual = format!("G1 Z.2 F6000\nG1 Z.4 F6000\n{body}");
