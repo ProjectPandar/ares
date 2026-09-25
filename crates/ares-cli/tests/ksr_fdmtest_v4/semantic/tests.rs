@@ -377,3 +377,5 @@ pub(super) fn document(
         islands.concat()
     )
 }
+#[path = "tests/regressions_arcs.rs"]
+mod regressions_arcs;

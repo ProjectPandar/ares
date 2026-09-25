@@ -45,11 +45,18 @@ const MAX_LONG_LEFTOVER_LENGTH_MM: f64 = 5.0;
 // bound is a rotated strand.
 const MAX_CAP_DIRECTION_DOT: f64 = 0.3;
 // Cap junction: one endpoint of a perpendicular pair lands within
-// ~0.7mm of a counterpart vertex in the reference zig-zag.
-const MAX_CAP_JUNCTION_DISTANCE_MM: f64 = 1.0;
+// ~0.7mm (up to ~1.1mm at split boundaries) of a counterpart vertex.
+const MAX_CAP_JUNCTION_DISTANCE_MM: f64 = 1.2;
+// A cap joins a short tip (≤2mm) to a longer leg; longer
+// perpendicular strands are rotated segments, not caps.
+const MAX_CAP_LENGTH_MM: f64 = 2.0;
+// Coverage pairs redraw a strand loosely: flow may drift more than
+// a same-chord pairing (real restitch ~1.4×), but not an extrusion
+// rewrite (~6×).
+const MAX_COVERED_FLOW_RATIO: f64 = 0.5;
 // Restitched cells redraw polylines loosely: real leftovers sit
 // ~0.2mm off the redrawn counterpart's path.
-const MAX_LEFTOVER_PATH_DISTANCE_MM: f64 = 0.35;
+const MAX_LEFTOVER_PATH_DISTANCE_MM: f64 = 0.55;
 // A vertex shared to ~20µm makes the counterpart a pivot of the same
 // junction — direction must hold even for short leftovers (real
 // perpendicular caps pair ≥0.04mm off the counterpart's vertices).
@@ -83,22 +90,25 @@ fn paired(d: &Deposition, pool: &[&Deposition]) -> bool {
         // An arc-vs-segment pair has no comparable tangent: the
         // upstream arc fitter legitimately folds a polyline span
         // into one arc, so the direction gate applies only to
-        // like-for-like commands. Same-command arcs instead compare
-        // contours — a chord direction says nothing about the swept
-        // curve.
-        if d.motion.command == o.motion.command
-            && (d.motion.command == "G2" || d.motion.command == "G3")
-        {
-            // Arc-vs-arc leftover on the same chord: the fitter
-            // legitimately redraws the bulge — a sane radius and a
-            // shared junction are the stable signature.
-            return sane_arc(d)
-                && sane_arc(o)
+        // like-for-like commands. Any arc in the pair instead needs
+        // a sane radius/sweep AND a shared endpoint junction — a
+        // chord direction says nothing about the swept curve.
+        let arc_pair = (d.motion.command == "G2" || d.motion.command == "G3")
+            || (o.motion.command == "G2" || o.motion.command == "G3");
+        if arc_pair {
+            let arc_sane = |s: &Deposition| {
+                (s.motion.command != "G2" && s.motion.command != "G3") || sane_arc(s)
+            };
+            // The junction between a refit arc and its split
+            // counterpart wanders ~0.4mm in the fixture — the arc
+            // sanity bound, not endpoint coincidence, is the guard.
+            return arc_sane(d)
+                && arc_sane(o)
                 && pairs
                     .iter()
-                    .any(|(a, b)| position_matches(a, b, MAX_DEGENERATE_PAIR_DISTANCE_MM));
+                    .any(|(a, b)| position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM));
         }
-        !gated || d.motion.command != o.motion.command || direction_gated_ok(d, o)
+        !gated || direction_gated_ok(d, o)
     })
 }
 
@@ -138,21 +148,24 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
                     .iter()
                     .any(|(a, b)| position_matches(a, b, MAX_UNMATCHED_PAIR_DISTANCE_MM))
                 && if (d.motion.command == "G2" || d.motion.command == "G3")
-                    && (o.motion.command == "G2" || o.motion.command == "G3")
+                    || (o.motion.command == "G2" || o.motion.command == "G3")
                 {
-                    // Arc-vs-arc restitch: the refit curve is the
-                    // unstable part — the oracle emits an 18° G2 where
-                    // ares emits a 349° G3 landing on the same chain
+                    // Arc restitch: the refit curve is the unstable
+                    // part — the oracle emits an 18° G2 where ares
+                    // emits a 349° G3 landing on the same chain
                     // vertex — so sharing ONE endpoint junction plus
                     // same feature/state is the stable signature. A
-                    // radius/chord sanity bound still applies: the
-                    // fixture's flattest real arc is ~287:1, so ~400
-                    // rejects degenerate near-point-circle edits.
-                    sane_arc(d)
-                        && sane_arc(o)
+                    // radius/chord and swept/chord sanity bound still
+                    // rejects point-circle rewrites on either side;
+                    // a non-arc counterpart needs no arc check.
+                    let arc_sane = |s: &Deposition| {
+                        (s.motion.command != "G2" && s.motion.command != "G3") || sane_arc(s)
+                    };
+                    arc_sane(d)
+                        && arc_sane(o)
                         && endpoint_pairs(d, o)
                             .iter()
-                            .any(|(a, b)| position_matches(a, b, MAX_DEGENERATE_PAIR_DISTANCE_MM))
+                            .any(|(a, b)| position_matches(a, b, MAX_CAP_JUNCTION_DISTANCE_MM))
                 } else if d.motion.command == o.motion.command {
                     // Same-command restitched tips stay short,
                     // flow-consistent, and direction-consistent — a
@@ -246,11 +259,10 @@ pub(super) fn leftover_is_valid(d: &Deposition, pool: &[&Deposition], full: &[De
     // same-state leftover — a strand rotated in place sweeps far
     // from its original chord, and so does a rewritten arc.
     if unchained(d)
-        && pool.iter().any(|o| {
+        && full.iter().any(|o| {
             o.feature == d.feature
                 && machine_state_matches(d, o)
-                && o.motion.start.z == d.motion.start.z
-                && o.motion.end.z == d.motion.end.z
+                && flow_within(d, o, MAX_COVERED_FLOW_RATIO)
                 && path_distance(d, o) <= MAX_LEFTOVER_PATH_DISTANCE_MM
         })
     {

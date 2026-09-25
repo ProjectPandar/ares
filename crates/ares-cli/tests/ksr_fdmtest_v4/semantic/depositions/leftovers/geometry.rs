@@ -4,8 +4,8 @@ use crate::semantic::{feed_matches, model, parser::Deposition, position_matches}
 
 use super::matching;
 use super::{
-    MAX_CAP_DIRECTION_DOT, MAX_CAP_JUNCTION_DISTANCE_MM, MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM,
-    MIN_UNMATCHED_DIRECTION_DOT,
+    MAX_CAP_DIRECTION_DOT, MAX_CAP_JUNCTION_DISTANCE_MM, MAX_CAP_LENGTH_MM,
+    MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM, MIN_UNMATCHED_DIRECTION_DOT,
 };
 
 pub(super) fn extrusion_of(d: &Deposition) -> f64 {
@@ -39,13 +39,17 @@ pub(super) fn swept_length_of(d: &Deposition) -> f64 {
 // counterpart that covers the same neighborhood with a wildly
 // different extrusion-per-mm is an edited segment, not a merge
 // boundary artifact.
-pub(super) fn flow_compatible(d: &Deposition, o: &Deposition) -> bool {
+pub(super) fn flow_within(d: &Deposition, o: &Deposition, ratio: f64) -> bool {
     let (le, lo) = (length_of(d), length_of(o));
     if !le.is_finite() || !lo.is_finite() || le <= 0.0 || lo <= 0.0 {
         return true;
     }
     let (flow_e, flow_o) = (extrusion_of(d) / le, extrusion_of(o) / lo);
-    (flow_e - flow_o).abs() <= flow_e.abs().max(flow_o.abs()) * 0.25
+    (flow_e - flow_o).abs() <= flow_e.abs().max(flow_o.abs()) * ratio
+}
+
+pub(super) fn flow_compatible(d: &Deposition, o: &Deposition) -> bool {
+    flow_within(d, o, 0.25)
 }
 
 // Machine state must agree on every paired leftover: a 10x feed on
@@ -53,7 +57,9 @@ pub(super) fn flow_compatible(d: &Deposition, o: &Deposition) -> bool {
 // artifact. The arc plane is part of the state: a leftover under
 // G18 never pairs with a G17 counterpart.
 pub(super) fn machine_state_matches(d: &Deposition, o: &Deposition) -> bool {
-    d.width == o.width
+    d.motion.start.z == o.motion.start.z
+        && d.motion.end.z == o.motion.end.z
+        && d.width == o.width
         && feed_matches(d.feed, o.feed)
         && d.acceleration == o.acceleration
         && d.fans == o.fans
@@ -136,7 +142,12 @@ pub(super) fn direction_gated_ok(d: &Deposition, o: &Deposition) -> bool {
     // endpoint at the junction (the other meets the counterpart's
     // flank, which can sit far from its vertices on a long leg).
     let (ld, lo) = (length_of(d), length_of(o));
-    if dot > MAX_CAP_DIRECTION_DOT || (ld - lo).abs() <= 0.15 * ld.max(lo) {
+    // A cap is a short tip meeting a longer leg: the short side must
+    // be a tip — a long perpendicular strand is a rotated segment.
+    if dot > MAX_CAP_DIRECTION_DOT
+        || (ld - lo).abs() <= 0.15 * ld.max(lo)
+        || ld.min(lo) > MAX_CAP_LENGTH_MM
+    {
         return false;
     }
     endpoint_pairs(d, o)
@@ -146,7 +157,10 @@ pub(super) fn direction_gated_ok(d: &Deposition, o: &Deposition) -> bool {
 
 // Radius/chord sanity for arc leftovers: the flattest real arc in
 // the fixture is ~287:1; ~320 rejects a near-point-circle rewrite
-// (0.09mm chord on a 39.5mm radius).
+// (0.09mm chord on a 39.5mm radius). Swept/chord bounds the other
+// shape of rewrite: the fixture's loosest real arc travels ~25mm
+// per mm of chord (a 349° refit on a shared vertex), while the
+// probed edits sweep ~124mm on a ~0.09mm chord.
 pub(super) fn sane_arc(d: &Deposition) -> bool {
     let (Ok(i), Ok(j)) = (
         d.motion.arc_center[0]
@@ -162,6 +176,7 @@ pub(super) fn sane_arc(d: &Deposition) -> bool {
     };
     let chord = length_of(d).max(1e-9);
     (i * i + j * j).sqrt() / chord <= 320.0
+        && matching::arc_swept_length(&d.motion).is_some_and(|swept| swept <= chord * 100.0)
 }
 
 // Worst-case distance of `d`'s swept path to `o`'s chord: sample
@@ -173,28 +188,65 @@ pub(super) fn path_distance(d: &Deposition, o: &Deposition) -> f64 {
     let (x2, y2) = (dx(&d.motion.end.x), dx(&d.motion.end.y));
     let mut pts = vec![(x1, y1), (x2, y2)];
     if let Some((cx, cy, r, a0, sweep)) = matching::arc_geometry(&d.motion) {
-        for t in [0.25f64, 0.5, 0.75] {
-            let a = a0 + sweep * t;
+        // Sample a single revolution's worth of points; extra turns
+        // retrace the same circle.
+        let single = sweep.abs().min(std::f64::consts::TAU);
+        let dir = sweep.signum();
+        for t in [0.125f64, 0.375, 0.625, 0.875] {
+            let a = a0 + dir * single * t;
             pts.push((cx + r * a.cos(), cy + r * a.sin()));
         }
     }
     let (ax, ay) = (dx(&o.motion.start.x), dx(&o.motion.start.y));
     let (bx, by) = (dx(&o.motion.end.x), dx(&o.motion.end.y));
-    let mut opts = vec![(ax, ay), (bx, by)];
-    if let Some((cx, cy, r, a0, sweep)) = matching::arc_geometry(&o.motion) {
-        for t in [0.25f64, 0.5, 0.75] {
-            let a = a0 + sweep * t;
-            opts.push((cx + r * a.cos(), cy + r * a.sin()));
-        }
+    // Multi-turn arcs alias at sweep fractions: compare the circles
+    // directly, the same bound `arc_contour_deviation` uses.
+    let turns_of = |m: &model::MotionRecord| {
+        m.turns
+            .as_deref()
+            .and_then(|t| t.parse::<f64>().ok())
+            .unwrap_or(0.0)
+    };
+    if (d.motion.command == "G2" || d.motion.command == "G3")
+        && (o.motion.command == "G2" || o.motion.command == "G3")
+        && (turns_of(&d.motion) > 0.0 || turns_of(&o.motion) > 0.0)
+    {
+        return matching::arc_contour_deviation(&d.motion, &o.motion);
     }
-    pts.iter()
-        .map(|p| {
-            opts.iter()
-                .map(|q| (p.0 - q.0).powi(2) + (p.1 - q.1).powi(2))
-                .fold(f64::MAX, f64::min)
+    // Distance from a sample point to o's swept path: the arc's
+    // circle inside its angular span, or the chord segment.
+    let dist_to_path = |p: (f64, f64)| -> f64 {
+        let seg_dist = |(px, py): (f64, f64)| -> f64 {
+            let (ux, uy) = (bx - ax, by - ay);
+            let len2 = ux * ux + uy * uy;
+            let t = if len2 > 0.0 {
+                (((px - ax) * ux + (py - ay) * uy) / len2).clamp(0.0, 1.0)
+            } else {
+                0.0
+            };
+            ((px - ax - t * ux).powi(2) + (py - ay - t * uy).powi(2)).sqrt()
+        };
+        if let Some((ocx, ocy, or_, oa0, osweep)) = matching::arc_geometry(&o.motion) {
+            let ang = (p.1 - ocy).atan2(p.0 - ocx);
+            let rel = (ang - oa0).rem_euclid(std::f64::consts::TAU);
+            let span = osweep.abs().rem_euclid(std::f64::consts::TAU);
+            let on_span = if osweep >= 0.0 {
+                rel <= span + 0.1
+            } else {
+                rel >= std::f64::consts::TAU - span - 0.1
+            };
+            if on_span {
+                return (((p.0 - ocx).powi(2) + (p.1 - ocy).powi(2)).sqrt() - or_).abs();
+            }
+            // Off the swept span: nearest swept point is an endpoint.
+            let (sx, sy) = (ax, ay);
+            return ((p.0 - sx).powi(2) + (p.1 - sy).powi(2))
                 .sqrt()
-        })
-        .fold(0.0f64, f64::max)
+                .min(((p.0 - bx).powi(2) + (p.1 - by).powi(2)).sqrt());
+        }
+        seg_dist(p)
+    };
+    pts.iter().map(|p| dist_to_path(*p)).fold(0.0f64, f64::max)
 }
 
 pub(super) fn endpoint_pairs<'a>(

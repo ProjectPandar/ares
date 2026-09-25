@@ -1,0 +1,147 @@
+use super::{compare, document};
+
+#[test]
+fn same_endpoints_huge_arc_rewrite_is_rejected() {
+    // Internal solid infill arc with identical endpoints/extrusion but
+    // a rewritten center (0.047mm → 19.8mm radius, consistent endpoint
+    // radii) is an edit, not a restitch: arc leftovers need sane
+    // radius/chord AND swept/chord bounds.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Internal solid infill\n; LINE_WIDTH: 0.45\nG2 X.005 Y.079 I-.023 J.041 E.007 F1200\n";
+    let actual_island = expected_island.replace("I-.023 J.041", "I-19.787 J1.292");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn arc_deposited_at_wrong_z_is_rejected() {
+    // Reordering vertical travels around a sparse-infill arc must not
+    // reassign its Z: the arc-containment clause checks Z too. The
+    // travel feed is set first so parsing is valid in both documents.
+    let body = "G1 X0 Y0 Z.2 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG3 X2 Y0 I1 J0 E.1 F1200\n";
+    let expected = format!("G1 Z.4 F6000\nG1 Z.2 F6000\n{body}");
+    let actual = format!("G1 Z.2 F6000\nG1 Z.4 F6000\n{body}");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn rotated_unit_strand_is_rejected() {
+    // A 1mm strand rotated 90° plus a 30µm translation is not a
+    // boundary restitch even under the direction exemption.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG1 X1 Y0 E.1 F1200\n";
+    let actual_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG1 X.03 Y0 F6000\nG1 X.03 Y1 E.1 F1200\n";
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn rotated_long_strand_is_rejected() {
+    // A 100mm strand rotated 90° with a 1.5mm offset is far outside
+    // every leftover path-distance bound.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG1 X100 Y0 E3 F1200\n";
+    let actual_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG1 X1.5 Y0 F6000\nG1 X1.5 Y100 E3 F1200\n";
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn multi_turn_arc_turn_count_is_compared() {
+    // Adding P1 to a degenerate arc changes the deposited sweep;
+    // turn counts are part of arc identity on every path.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG3 X.2 Y0 I.1 J0 E.01 F1200\n";
+    let actual_island = expected_island.replace("I.1 J0 E.01", "I.1 J0 P1 E.01");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn nearly_straight_arc_endpoint_drift_is_accepted() {
+    // Positive case from the review: a 0.002mm endpoint change on a
+    // ~287mm-radius arc is within the contour tolerance.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG3 X1 Y0 I.5 J287 E.1 F1200\n";
+    let actual_island = expected_island.replace("X1 Y0 I.5 J287", "X1 Y-.002 I1 J287");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap();
+}
+
+#[test]
+fn same_endpoints_long_sweep_arc_rewrite_is_rejected() {
+    // A consistent-radius rewrite that sweeps a full ~124mm circle on
+    // a 0.09mm chord (cross-command G3 form too) is an edit, not a
+    // restitch — arc sanity also bounds swept/chord.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Internal solid infill\n; LINE_WIDTH: 0.45\nG2 X.005 Y.079 I-.023 J.041 E.007 F1200\n";
+    let actual_island = expected_island.replace(
+        "G2 X.005 Y.079 I-.023 J.041",
+        "G3 X.005 Y.079 I19.792 J-1.213",
+    );
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn same_path_extrusion_rewrite_is_rejected() {
+    // Identical geometry with ~6x extrusion: coverage without flow
+    // reconciliation would have swallowed this.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Internal solid infill\n; LINE_WIDTH: 0.45\nG1 X1.341 Y0 E.041 F1200\n";
+    let actual_island = expected_island.replace("E.041", "E.241");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn arc_deposition_end_z_change_is_rejected() {
+    // An arc whose endpoint carries a Z move deposits at a different
+    // height; paired checks the full Z profile now.
+    let expected_island = "G1 X0 Y0 Z.2 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG3 X2 Y0 I1 J0 E.1 F1200\n";
+    let actual_island = expected_island.replace("G3 X2 Y0 I1 J0", "G3 X2 Y0 Z.4 I1 J0");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn long_perpendicular_strand_sharing_start_is_rejected() {
+    // An 80mm perpendicular replacement is not a corner cap: caps
+    // join a short tip (<=2mm) to a longer leg.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG1 X100 Y0 E3 F1200\n";
+    let actual_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG1 X0 Y80 E3 F1200\n";
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn multi_turn_arc_under_coverage_bound_is_rejected() {
+    // Coverage measures point-to-path on the swept circle and
+    // delegates turn-aware circle comparison: J1->J1.5 on a P4 arc
+    // shifts the contour 0.5mm on every turn.
+    let expected_island = "G1 X0 Y0 Z.2 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG3 X.002 Y0 I.001 J1 P4 E.8 F1200\n";
+    let actual_island = expected_island.replace("I.001 J1 P4", "I.001 J1.5 P4");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+
+    // P4 -> P8 doubles the deposited sweep on the same circle.
+    let actual_extra_turns = expected_island.replace("P4", "P8");
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_extra_turns]);
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
