@@ -403,7 +403,7 @@ fn envelope_membership(exported: &runner::ExportedCase, references: &[Vec<u8>]) 
     let mut max_inter_oracle = 0usize;
     for i in 0..references.len() {
         for j in (i + 1)..references.len() {
-            let d = crate::golden::line_multiset_diff(&references[i], &references[j]).ok()?;
+            let d = crate::golden::line_multiset_diff_orca(&references[i], &references[j]).ok()?;
             max_inter_oracle = max_inter_oracle.max(d);
         }
     }

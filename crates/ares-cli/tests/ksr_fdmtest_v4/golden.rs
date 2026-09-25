@@ -73,6 +73,16 @@ pub(crate) fn line_multiset_diff(expected: &[u8], actual: &[u8]) -> Result<usize
     Ok(multiset_symmetric_diff(&expected, &actual))
 }
 
+/// Same as `line_multiset_diff` but normalizes BOTH sides as Orca streams —
+/// for inter-oracle envelope-radius distances where neither operand is an
+/// Ares output (the Ares-kind normalization would otherwise fail on the
+/// missing generator line and silently collapse the membership check).
+pub(crate) fn line_multiset_diff_orca(a: &[u8], b: &[u8]) -> Result<usize, String> {
+    let a = normalize_one_generator_line(a, GeneratorKind::Orca)?;
+    let b = normalize_one_generator_line(b, GeneratorKind::Orca)?;
+    Ok(multiset_symmetric_diff(&a, &b))
+}
+
 /// Multiset symmetric-difference size over newline-separated lines: how many
 /// line occurrences appear in one stream but not the other. Order-insensitive,
 /// so `connect_infill` reorderings count zero while genuine coordinate/content
