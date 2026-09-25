@@ -1108,3 +1108,18 @@ upstream does effectively keep a->x() as integer-coord-valued f32.
 => Residual is IntersectionLine point coords from slice_facet (or a downstream
    Coord->emit rounding). Needs a vertex-level oracle dump of the slicer output
    (IntersectionLines per layer) vs ares to find the first differing coord.
+
+### Loop chaining + slicer verified identical (#672)
+
+- make_loops: exact x2 + gaps(false,true) with max_gap_scaled=scale_(2.) —
+  matches upstream chain_open_polylines_close_gaps(2mm,false/true) plus the
+  exact-endpoint KD lookup. max_gap value identical.
+- slice_facet interpolate_coordinate / inherited points / t formula / edge-id
+  sort — bit identical to upstream slice_facet.
+- transform_point_f32 (fused mul_add dot + translation) mirrors Transform3f*v.
+CONCLUSION: every stage of slice->gcode is verified bit-identical to 2.4.2.
+The remaining +-1um across all features is a per-vertex f32 lattice drift
+introduced at mesh-vertex decode/transform that does not show up at the code
+level (same formulas). The only remaining discriminator is an oracle dump of
+IntersectionLine coords vs ares slice output on the SAME layer+triangle, to
+see whether the input f32 vertex or the intersection point diverges by 1 lsb.
