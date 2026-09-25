@@ -1661,3 +1661,19 @@ multiply-vs-divide boundary in the vertex->Coord path OR a per-coordinate
 round at offset2_ex/union that differs by 1 Coord. Needs a raw make_loops
 line dump (a/b Coord per line, ordered) vs an oracle probe of the same to
 find the first differing raw coordinate.
+
+### Residual localized to perimeter-offset vertex (#689)
+
+Path-1 tail: ora `...7533563,-13881782; 7134969,-13231335 ->close 7118758`
+vs ares `...7533563,-13881782; 7131592,-13225824; 7118758(extra close)`.
+Seam FOOT 7118758,-13194841 identical both sides. The vertex BEFORE FOOT
+differs by ~6.5um with different slopes (-2.25 vs -2.41): a genuinely
+different perimeter-offset vertex, NOT in the surface contours (LOWSL).
+=> the perimeter offset (onion-ring offset_expolygons_paths, jtMiter both)
+emits a different arc/corner vertex. Also ares re-emits the closing start
+point; oracle relies on implicit loop close (extra vertex diff to fix).
+
+Next probe: dump the pre-seam perimeter loop contour both sides, find where
+the offset output vertex sequence first diverges; suspect the offset union's
+junction-vertex set differs on the chamfer corner, OR the loop vertex set
+from offset differs by one point (rounding at a near-degenerate corner).
