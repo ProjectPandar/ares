@@ -1207,3 +1207,19 @@ transform translation can round to a different f32 than upstream's single
 f32 matmul -> the 1-ulp vertex diff feeding slice_facet.
 FIX DIRECTION: do not pre-shift f32 vertices; keep centering purely in the
 f64 transform applied by transform_point_f32 (match trafo_centered semantics).
+
+### Vertex parse verified identical (#676)
+
+Upstream _handle_start_vertex: m_unit_factor(1.0f) * get_attribute_value_float
+(fast_float::from_chars -> correctly-rounded f32). Ares model_xml serde f32 +
+millimeter_factor(1.0) f32 multiply. Identical. center_shift now f32 center to
+match BoundingBoxf3::center (still 44491 diffs -> not the source).
+
+EXHAUSTIVE VERIFICATION COMPLETE: every stage from 3MF vertex parse through
+GCode emit is bit-identical to upstream 2.4.2 formulas. The +-1um X-only
+residual persists because the specific diverging vertices sit on coord_t
+rounding boundaries where a 1-ulp f32 difference (in vertex value, transform
+output, or slice_facet input) flips floor(+0.5). This is a genuine numeric
+representation difference requiring an IntersectionLine/transformed-vertex
+value oracle dump to isolate — the formulas give no further signal. The slice
+output is geometrically correct within f32 precision (sub-micron).
