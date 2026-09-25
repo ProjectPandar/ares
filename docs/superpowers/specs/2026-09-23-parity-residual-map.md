@@ -1394,3 +1394,17 @@ point. If grown lower_slices differ by 1ulp, the crossing vertex differs
 clipper UNION result of the (ILINES-identical) loop contours, OR
 intersection_pl's open-path boundary vertex. Next: dump
 lower_polygons_series->back() + intersection_pl result for one layer.
+
+### intersection_pl/diff_pl identical; residual = lower_slices union (#683)
+
+ares clipper_pl_closed -> split_at_first_point -> open-path subject + closed
+clip -> execute_polytree -> recombine_polylines == upstream
+intersection_pl/diff_pl. Engine byte-identical. lower_series offsets match.
+=> residual input is lower_polygons_series->back() = offset(lower_slices,
++nozzle/2). lower_slices = union of prev-layer merged contours. Since clipper
+union is grouping-insensitive given identical input vertices, a differing
+crossing vertex implies the merged lower_slices contour itself differs by
+1ulp -- i.e. the union INPUT vertices differ, not the union op. That returns
+to: the loop polygons feeding union (per-region fragments) contain a vertex
+absent from oracle's merged contour -- consistent with the +174 LOOPS vertex
+surplus seen earlier. Next oracle: dump lower_polygons_series->back() polys.
