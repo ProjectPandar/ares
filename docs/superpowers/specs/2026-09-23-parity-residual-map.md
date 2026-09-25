@@ -1353,3 +1353,15 @@ VALUE on the closing segment: 7134969 vs 7131592. This is a different
 interpolated seam/foot point -> ares seam split produces a vertex ~3370
 Coord (~3.4um) off on the closing segment. FIX: instrument the exact seam
 point p and segment chosen (dump Projection + foot) both sides.
+
+### SEAM probe (tools/orca-probes/seam.nix) (#682)
+
+ORCA_DUMP_SEAM dumps SEAMIN (seam target point) + FOOT (foot_pt p, seg idx)
+inside ExtrusionLoop::split_at. Path1: SEAMIN 7118758,-13194842 ->
+FOOT 7118758,-13194841 seg7 (snaps to vertex). So seam p = first emitted
+vertex. The 45-pt PPATH ending at 7134969 (not closing to p) is an EMIT-TIME
+sub-path: _extrude splits the loop into ExtrusionPaths at overhang/reversal/
+role boundaries producing different boundary vertices (7134969 vs ares
+7131592). Path count 15885 vs ares 16389 (+504) => the emit-time loop split
+boundaries differ. Residual is in the _extrude path-splitting (role/overhang
+sub-path boundaries), not the slice/seam itself.
