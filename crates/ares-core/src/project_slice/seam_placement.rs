@@ -308,7 +308,7 @@ fn place_loop(
     let selected = placement.selected.position;
     let mut seam = scale_position((placement.position.x, placement.position.y), scale);
     if loop_.paths[0].role == ExtrusionRole::Perimeter {
-        let mut projection = closest_projection(&loop_.paths, seam);
+        let mut projection = closest_projection(&loop_.paths, seam, false);
         let mut depth = scale
             .unscale(seam.0 - projection.x)
             .hypot(scale.unscale(seam.1 - projection.y)) as f32;
@@ -341,7 +341,7 @@ fn place_loop(
                 ),
                 scale,
             );
-            projection = closest_projection(&loop_.paths, seam);
+            projection = closest_projection(&loop_.paths, seam, false);
         } else {
             // Convex corner: the perpendicular depth, not the distance to
             // the nearest point (upstream place_loop, SeamPlacer.cpp:1594).

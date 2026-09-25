@@ -1809,3 +1809,29 @@ range match (`closest` -> perimeter_ranges). Query positions match, so
 
 Next probe: dump oracle's chosen seam_index + per-candidate score/overhang
 for the divergent loop vs ares's, find which term diverges.
+
+### Seam-path upstream-port complete; residual persists elsewhere (#691)
+
+- `split_at` now mirrors upstream two-stage split exactly:
+  `split_at_vertex` fast path (any vertex within 1.5um of the seam wins)
+  then `get_closest_path_and_point(point, prefer_non_overhang=true)`
+  (per-path best foot + bridge-role override) + foot-snaps to projected
+  segment's endpoints <1.5um. `closest_projection` now takes
+  prefer_non_overhang (per-path best + non-overhang override); inner
+  projections pass false (`SeamPlacer.cpp:1567`), the final `split_at`
+  passes true (`ExtrusionEntity.cpp:266`).
+- `place_nearest_penalized` loop->perimeter match ported: two consecutive
+  loop points must resolve to the same perimeter (T-junction,
+  `SeamPlacer.cpp:1527-1544`) instead of first-point-only.
+- `clip_end` in LOCAL polyline frame (origin is added later in
+  `point_to_gcode`) — diff 44491 -> 44461 earlier.
+
+Reclassified residual (seam_position=aligned): diff-magnitude histogram is
+~100 @1um + a long 0.1-0.9mm tail + ~190 chunks of 2-6 lines = seams placed
+a FEW VERTICES off by `alignment::align`/`place_layer` (loop rotated by a
+small N) + ~100 +1um endpoint rounding. SEAM queries match oracle SEAMIN on
+sampled loops; the candidate-selection inside `alignment::align`
+(`is_first_not_much_worse` + align scoring) or `place_layer` mapping is the
+suspect. Next: compare emitted loop start vertices (seam) oracle-vs-ares
+per loop; find a loop whose chosen seam_index differs and dump both sides'
+candidate scores.

@@ -190,25 +190,50 @@ pub(in crate::project_slice) fn place_nearest_penalized(
     else {
         return;
     };
-    // Scaled-loop start vertex → unscaled mm query against candidates.
-    let query = (scale.unscale(first.x) as f32, scale.unscale(first.y) as f32);
-    let mut closest = usize::MAX;
-    let mut closest_distance = f32::INFINITY;
-    for (index, &(x, y)) in layer.positions.iter().enumerate() {
-        let distance = (x - query.0).mul_add(x - query.0, (y - query.1) * (y - query.1));
-        if distance < closest_distance {
-            closest_distance = distance;
-            closest = index;
+    // `SeamPlacer.cpp:1527-1544`: match the loop to a perimeter by walking
+    // consecutive loop points until two in a row resolve to the SAME
+    // perimeter (T-junction disambiguation). Using only the first point can
+    // latch onto an adjacent perimeter's candidates.
+    let closest_perimeter = {
+        let points_count: usize = loop_
+            .paths
+            .iter()
+            .map(|path| path.polyline.points.len())
+            .sum();
+        let mut current = super::split::Projection {
+            path: 0,
+            segment: 0,
+            x: first.x,
+            y: first.y,
+        };
+        let mut perimeter = usize::MAX;
+        for _ in 0..points_count {
+            let query = (
+                scale.unscale(current.x) as f32,
+                scale.unscale(current.y) as f32,
+            );
+            let mut closest = usize::MAX;
+            let mut closest_distance = f32::INFINITY;
+            for (index, &(x, y)) in layer.positions.iter().enumerate() {
+                let distance = (x - query.0).mul_add(x - query.0, (y - query.1) * (y - query.1));
+                if distance < closest_distance {
+                    closest_distance = distance;
+                    closest = index;
+                }
+            }
+            if closest == usize::MAX {
+                return;
+            }
+            let candidate_perimeter = layer.perimeter_of_candidate[closest];
+            if perimeter == candidate_perimeter {
+                break;
+            }
+            perimeter = candidate_perimeter;
+            current = super::split::next_loop_point(loop_, &current);
         }
-    }
-    if closest == usize::MAX {
-        return;
-    }
-    let Some(&(start, end)) = layer
-        .perimeter_of_candidate
-        .get(closest)
-        .and_then(|&perimeter| layer.perimeter_ranges.get(perimeter))
-    else {
+        perimeter
+    };
+    let Some(&(start, end)) = layer.perimeter_ranges.get(closest_perimeter) else {
         return;
     };
     let cursor = (
@@ -263,7 +288,10 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         .iter()
         .all(|path| path.role != ExtrusionRole::ExternalPerimeter)
     {
-        let projection = super::split::closest_projection(&loop_.paths, seam_query);
+        // `get_closest_path_and_point(seam_point, false)`
+        // (`SeamPlacer.cpp:1567`) — no overhang preference for the inner
+        // projection; the final `split_at` prefers non-overhang itself.
+        let projection = super::split::closest_projection(&loop_.paths, seam_query, false);
         let depth = squared_distance((projection.x, projection.y), seam_query).sqrt();
         let angle = layer.ccw_angles[best];
         let beta = (angle / 2.0).cos();
