@@ -172,7 +172,7 @@ pub(super) fn intersect_projected_objects(
             let source_volume = &source.volumes()[projected_volume.source_volume_index];
             let slicing_transform = centered_object_transform
                 .then(source_volume.transform())
-                .prescale_xy_input(scale.factor());
+                .prescaled_xy(scale.factor());
             let vertices =
                 transformed_vertices(source_volume.mesh().vertices(), slicing_transform)?;
             let layers = slice_mesh_on_planes(

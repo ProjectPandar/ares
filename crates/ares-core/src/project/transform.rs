@@ -146,11 +146,13 @@ impl Transform3d {
         let point = [point.x as f32, point.y as f32, point.z as f32];
         [0, 1, 2].map(|row| {
             let coefficients = self.0[row].map(|c| c as f32);
-            coefficients[0].mul_add(
+            // Eigen affine `linear()*v + translation()`: dot product of the 3x3
+            // linear row with the point, then add the translation column.
+            let linear = coefficients[0].mul_add(
                 point[0],
-                coefficients[1]
-                    .mul_add(point[1], coefficients[2].mul_add(point[2], coefficients[3])),
-            )
+                coefficients[1].mul_add(point[1], coefficients[2] * point[2]),
+            );
+            linear + coefficients[3]
         })
     }
 
