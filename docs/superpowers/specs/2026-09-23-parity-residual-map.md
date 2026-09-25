@@ -1288,3 +1288,12 @@ To align: dump oracle's per-volume make_loops output (inside slice_mesh_ex per
 volume) OR ares's post-union region slices. The earlier +-1um residual sits
 between ILINES (identical) and emitted G1 — i.e. in perimeter/offset/fill
 downstream of the identical slice vertices.
+
+### PPATH probe (tools/orca-probes/ppath.nix) (#681)
+
+ORCA_DUMP_PPATH dumps path.polyline.points (Vec3crd, Coord) per _extrude emit
+at GCode.cpp:6992 -> 15885 paths. ARES_DUMP_PATH dumps scaled_points (P x,y)
+per path. Counts differ (oracle 171667 vs ares 369513 pts) because ares dumps
+every path incl roles the oracle line skips / and the emit scopes differ.
+Needs same-role same-index path comparison to localize the +-1 residual.
+ILINES byte-identical remains the authoritative slicer-exactness proof.
