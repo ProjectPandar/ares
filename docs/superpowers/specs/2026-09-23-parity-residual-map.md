@@ -1193,3 +1193,17 @@ IntersectionLine point.x()/point.y() from oracle slice_facet and from ares
 slice_mesh_on_planes for the same layer; the first differing coord exposes the
 input f32 vertex drift (f64->f32 vertex, transform coeff f32 rounding, or the
 .center_shift subtraction in mesh_prepare).
+
+### Concrete lead: center-shift order differs (#675)
+
+Ares mesh_prepare: center_shift computes (min+max)*0.5 in f64, then subtracts
+(shift as f32) from each f32 VERTEX in f32, then folds translated(shift) into
+the component_transform (f64) which is applied via transform_point_f32.
+Upstream: vertices stay raw f32; centering lives entirely in trafo_centered()
+(Transform3d f64), applied via tf*v (f32). So ares mutates vertex f32 by an
+f64-computed center BEFORE the f32 transform; upstream applies the same
+centering inside the f32 transform. The f32 vertex-shift + later f64->f32
+transform translation can round to a different f32 than upstream's single
+f32 matmul -> the 1-ulp vertex diff feeding slice_facet.
+FIX DIRECTION: do not pre-shift f32 vertices; keep centering purely in the
+f64 transform applied by transform_point_f32 (match trafo_centered semantics).
