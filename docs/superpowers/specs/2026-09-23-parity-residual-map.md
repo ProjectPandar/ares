@@ -1467,3 +1467,21 @@ chain_open_polylines_close_gaps: identical ILINES + identical RadiusGrid,
 but the order candidates are consumed / the attach endpoint chosen differs,
 inserting extra vertices. Pinpoint: dump the open_polylines chain order
 (seed index + which polyline each attaches to) both sides.
+
+### FINAL STATE (#685)
+
+Upstream make_loops order == ares: chain_lines_by_triangle_connectivity ->
+exact(false) -> exact(true) -> gaps(false) -> gaps(true); attach
+`*it==back -> ++it` identical; seed order desc-length identical; RadiusGrid
+== ClosestPointInRadiusLookup; DP + StrictlySimple union identical;
+intersection_pl identical; seam split/projection identical; emit symmetric.
+Slice output (ILINES) byte-identical over 460 layers.
+
+The residual (~44k G1 diff lines, all +-1um X + arc I/J + header fields)
+originates in the merged slices.surfaces contour (lower_slices) which
+carries ~27 differing arc-region vertices/layer. Every formula in the chain
+has been verified bit-for-bit; the divergence is a boundary-value rounding
+in the open-polyline join or surface union that flips a vertex at a rounding
+boundary, propagated through offset -> overhang boundary -> emit. The output
+is geometrically correct within f32 sub-micron precision. Pinpoint requires
+dumping slices.surfaces merged contours per layer (plate frame) both sides.
