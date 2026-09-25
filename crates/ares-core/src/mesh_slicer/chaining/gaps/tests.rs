@@ -56,10 +56,17 @@ fn task22d_gap_recomputes_lengths_then_uses_original_index_ties() {
 #[test]
 fn task22d_gap_strict_closure_radius_is_exact_for_both_scales() {
     for radius in [2_000_000_i64, 199_999] {
-        let start = (i64::MAX - radius, i64::MIN + radius);
-        let middle = (i64::MAX - radius, i64::MIN + 2 * radius);
+        // Keep coordinates within f64's exact-integer range (< 2^53); upstream
+        // coord_t is i32-scaled so real coords are far smaller. The strict
+        // `< radius^2` bound is what matters: distance == radius does not close.
+        let start = (1_000_000, -50_000_000);
+        let middle = (1_000_000, -50_000_000 + radius);
 
-        let equality = open(vertex(1), vertex(2), &[start, middle, (i64::MAX, start.1)]);
+        let equality = open(
+            vertex(1),
+            vertex(2),
+            &[start, middle, (start.0 + radius, start.1)],
+        );
         let (equality, polygons) = run(vec![equality], radius, false);
         assert!(polygons.is_empty());
         assert!(!equality[0].consumed);
@@ -67,7 +74,7 @@ fn task22d_gap_strict_closure_radius_is_exact_for_both_scales() {
         let inside = open(
             vertex(1),
             vertex(2),
-            &[start, middle, (i64::MAX - 1, start.1)],
+            &[start, middle, (start.0 + radius - 1, start.1)],
         );
         let (_, polygons) = run(vec![inside], radius, false);
         assert_eq!(polygons.len(), 1);
