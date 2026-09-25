@@ -197,6 +197,68 @@ fn arc_under_wrong_plane_is_rejected() {
 // comparator cannot distinguish the two. Documented residual.
 
 #[test]
+fn sliver_with_foreign_machine_state_is_rejected() {
+    // A sub-0.008mm sliver still has to carry a real deposition feed
+    // and the same accel/fans/z — it is not a machine-state bypass.
+    let expected_island = island(0, 1, 1_200).replace("G1 X1 Y0 E.1", "G1 X.12 Y0 E.004");
+    let actual_island = expected_island.replace("F1200", "F12000");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn long_sliver_geometry_is_rejected() {
+    // Extrusion under the sliver cap does not excuse a 100mm move.
+    let expected_island = island(0, 1, 1_200).replace("G1 X1 Y0 E.1", "G1 X.12 Y0 E.004");
+    let actual_island = expected_island.replace("G1 X.12 Y0", "G1 X100 Y0");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn degenerate_arc_center_swap_is_rejected() {
+    // Degenerate containment reasons about arcs by curve geometry, not
+    // endpoints: J0→J20 changes the sweep entirely.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG2 X.2 Y0 I.1 J0 E.01 F1200\n";
+    let actual_island = expected_island.replace("I.1 J0", "I.1 J20");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn multi_turn_arc_center_drift_is_rejected() {
+    // P-turn arcs sample in angle space: quarter-fraction sampling
+    // aliases whole revolutions, so center drift is measured on the
+    // shared first turn.
+    let expected_island = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Inner wall\n; LINE_WIDTH: 0.45\nG3 X1 Y0 I.5 J50 P4 E10 F1200\n";
+    let actual_island = expected_island.replace("I.5 J50", "I.5 J50.5");
+    let expected = document("1m", "1m", "10s", "2.00", &[expected_island]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual_island]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
+fn sparse_infill_plane_swap_is_rejected() {
+    // Plane mismatch rejects on every fallback path, not only primary
+    // matching — a leftover under G18 never pairs with a G17
+    // counterpart.
+    let body = "G1 X0 Y0 F6000\nM204 S5000\n; FEATURE: Sparse infill\n; LINE_WIDTH: 0.45\nG3 X2 Y0 I1 J0 E.1 F1200\n";
+    let expected = format!("G17\nG18\nG17\n{body}");
+    let actual = format!("G17\nG18\n{body}G17\n");
+    let expected = document("1m", "1m", "10s", "2.00", &[&expected]);
+    let actual = document("1m", "1m", "10s", "2.00", &[&actual]);
+
+    compare(expected.as_bytes(), actual.as_bytes()).unwrap_err();
+}
+
+#[test]
 fn small_major_arc_center_drift_is_rejected() {
     // A near-straight-scaled bound: radius ~50 allows only ~0.1mm of
     // center drift, not 0.5mm.

@@ -66,4 +66,9 @@ fn ostream_uses_six_significant_digits_without_axis_quantization() {
     assert_eq!(ostream(-12_000.0), "-12000");
     assert_eq!(ostream(0.5), "0.5");
     assert_eq!(ostream(0.000_123_456), "0.000123456");
+    // Exactly-representable tie values: single-round to 6 sig digits,
+    // no double rounding through a scaled mantissa.
+    assert_eq!(ostream(10.031_25), "10.0312");
+    assert_eq!(ostream(10.093_75), "10.0938");
+    assert_eq!(ostream(15_791.926), "15791.9");
 }

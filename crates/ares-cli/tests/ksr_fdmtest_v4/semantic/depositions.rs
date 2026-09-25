@@ -1,10 +1,9 @@
-use super::{
-    arc_is_near_straight, feed_matches, motion_matches, numeric_matches, parser::Deposition,
-    position_matches,
-};
+use super::{motion_matches, parser::Deposition};
 
 #[path = "depositions/cross_target.rs"]
 mod cross_target;
+#[path = "depositions/leftovers.rs"]
+mod leftovers;
 #[path = "depositions/matching.rs"]
 mod matching;
 
@@ -99,175 +98,9 @@ pub(super) fn compare_deposition(
     // every unmatched deposition has an unmatched counterpart covering
     // the same neighborhood — and (2) the deposited filament total per
     // feature per layer.
-    let unchained = |f: &str| CONNECT_INFILL_FEATURES.contains(&f);
     let extrusion_of = |d: &&Deposition| d.extrusion.parse::<f64>().unwrap_or(0.0);
-    let length_of = |d: &Deposition| {
-        let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
-            d.motion.start.x.parse::<f64>(),
-            d.motion.start.y.parse::<f64>(),
-            d.motion.end.x.parse::<f64>(),
-            d.motion.end.y.parse::<f64>(),
-        ) else {
-            return f64::NAN;
-        };
-        ((ex - sx).powi(2) + (ey - sy).powi(2)).sqrt()
-    };
-    // Extrusion is proportional to path length at fixed width/height: a
-    // counterpart that covers the same neighborhood with a wildly
-    // different extrusion-per-mm is an edited segment, not a merge
-    // boundary artifact.
-    let flow_compatible = |d: &Deposition, o: &Deposition| {
-        let (le, lo) = (length_of(&d), length_of(&o));
-        if !le.is_finite() || !lo.is_finite() || le <= 0.0 || lo <= 0.0 {
-            return true;
-        }
-        let (ee, eo) = (extrusion_of(&d), extrusion_of(&o));
-        let (flow_e, flow_o) = (ee / le, eo / lo);
-        (flow_e - flow_o).abs() <= flow_e.abs().max(flow_o.abs()) * 0.25
-    };
-    // Machine state must agree on every paired leftover: a 10x feed on
-    // the same segment is a real speed divergence, not a merge artifact.
-    let machine_state_matches = |d: &Deposition, o: &Deposition| {
-        d.width == o.width
-            && feed_matches(d.feed, o.feed)
-            && d.acceleration == o.acceleration
-            && d.fans == o.fans
-    };
-    let degenerate =
-        |d: &Deposition| extrusion_of(&d).abs() <= MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM;
-    // Segment containment: `inner` lies along `outer`'s span within tol,
-    // codirectional — reconciles a tiny legit split against the consumed
-    // larger piece without letting a reversed fragment qualify.
-    let contained_codirectional = |inner: &Deposition, outer: &Deposition| {
-        let (Ok(isx), Ok(isy), Ok(iex), Ok(iey)) = (
-            inner.motion.start.x.parse::<f64>(),
-            inner.motion.start.y.parse::<f64>(),
-            inner.motion.end.x.parse::<f64>(),
-            inner.motion.end.y.parse::<f64>(),
-        ) else {
-            return false;
-        };
-        let (Ok(osx), Ok(osy), Ok(oex), Ok(oey)) = (
-            outer.motion.start.x.parse::<f64>(),
-            outer.motion.start.y.parse::<f64>(),
-            outer.motion.end.x.parse::<f64>(),
-            outer.motion.end.y.parse::<f64>(),
-        ) else {
-            return false;
-        };
-        let (odx, ody) = (oex - osx, oey - osy);
-        let (idx, idy) = (iex - isx, iey - isy);
-        let olen2 = odx * odx + ody * ody;
-        if olen2 <= 0.0 || idx * odx + idy * ody <= 0.0 {
-            return false;
-        }
-        let project = |px: f64, py: f64| ((px - osx) * odx + (py - osy) * ody) / olen2;
-        let lateral = |px: f64, py: f64| {
-            let t = project(px, py).clamp(0.0, 1.0);
-            let (cx, cy) = (osx + t * odx, osy + t * ody);
-            ((px - cx).powi(2) + (py - cy).powi(2)).sqrt()
-        };
-        project(isx, isy) >= -0.02
-            && project(iex, iey) <= 1.02
-            && lateral(isx, isy) <= 0.02
-            && lateral(iex, iey) <= 0.02
-    };
-    // Direction consistency: connect_infill merge boundaries keep the
-    // hatch orientation, so a paired leftover is near-parallel to its
-    // counterpart (either direction). A 90°-rotated segment scores 0.
-    let direction_aligned = |d: &Deposition, o: &Deposition| {
-        let dir = |m: &super::model::MotionRecord| {
-            let (Ok(sx), Ok(sy), Ok(ex), Ok(ey)) = (
-                m.start.x.parse::<f64>(),
-                m.start.y.parse::<f64>(),
-                m.end.x.parse::<f64>(),
-                m.end.y.parse::<f64>(),
-            ) else {
-                return None;
-            };
-            let (dx, dy) = (ex - sx, ey - sy);
-            let len = (dx * dx + dy * dy).sqrt();
-            (len > 0.0).then_some((dx / len, dy / len))
-        };
-        let (Some((dx, dy)), Some((ox, oy))) = (dir(&d.motion), dir(&o.motion)) else {
-            return true;
-        };
-        (dx * ox + dy * oy).abs() >= MIN_UNMATCHED_DIRECTION_DOT
-    };
-    // Spatial pairing: same feature + machine state + flow-compatible,
-    // and the unmatched counterpart shares a boundary endpoint. When
-    // the counterpart shares a vertex EXACTLY (a rotated/edited
-    // segment pivots on a shared endpoint), it must also keep the
-    // hatch direction; corner-merge pieces shifted further out keep
-    // perpendicular leeway.
-    let paired = |d: &&Deposition, pool: &[&Deposition]| {
-        pool.iter().any(|o| {
-            if o.feature != d.feature || !machine_state_matches(d, o) || !flow_compatible(d, o) {
-                return false;
-            }
-            let near = [
-                (&d.motion.start, &o.motion.start),
-                (&d.motion.start, &o.motion.end),
-                (&d.motion.end, &o.motion.start),
-                (&d.motion.end, &o.motion.end),
-            ]
-            .into_iter()
-            .any(|(a, b)| position_matches(a, b, MAX_UNMATCHED_PAIR_DISTANCE_MM));
-            if !near {
-                return false;
-            }
-            let shared_vertex = [
-                (&d.motion.start, &o.motion.start),
-                (&d.motion.start, &o.motion.end),
-                (&d.motion.end, &o.motion.start),
-                (&d.motion.end, &o.motion.end),
-            ]
-            .into_iter()
-            .any(|(a, b)| position_matches(a, b, MAX_SHARED_VERTEX_DISTANCE_MM));
-            !shared_vertex || direction_aligned(d, o)
-        })
-    };
     let valid = |d: &&Deposition, pool: &[&Deposition], full: &[Deposition]| {
-        unchained(&d.feature) && paired(d, pool)
-            || degenerate(d)
-                && pool.iter().any(|o| {
-                    o.feature == d.feature
-                        && machine_state_matches(d, o)
-                        && flow_compatible(d, o)
-                        && position_matches(
-                            &d.motion.start,
-                            &o.motion.start,
-                            MAX_DEGENERATE_PAIR_DISTANCE_MM,
-                        )
-                        && position_matches(
-                            &d.motion.end,
-                            &o.motion.end,
-                            MAX_DEGENERATE_PAIR_DISTANCE_MM,
-                        )
-                })
-            || degenerate(d)
-                && full.iter().any(|o| {
-                    o.feature == d.feature
-                        && machine_state_matches(d, o)
-                        && o.motion.command == d.motion.command
-                        && o.motion.plane == d.motion.plane
-                        && o.motion.start.z == d.motion.start.z
-                        && o.motion.end.z == d.motion.end.z
-                        && contained_codirectional(d, o)
-                })
-            // Sub-micron-quantization slivers: merge boundaries also
-            // emit tiny cap pieces (measured 0.004mm extrusion on a
-            // 0.12mm tip) with no counterpart at all. Below the sliver
-            // budget the extrusion is physically negligible, but the
-            // feed must still exist in the other side's deposition
-            // vocabulary — a 10x feed is an edit, not a sliver.
-            || extrusion_of(d).abs() <= MAX_SLIVER_DEPOSITION_EXTRUSION_MM
-                && full.iter().any(|o| {
-                    o.feature == d.feature
-                        && feed_matches(d.feed, o.feed)
-                        && o.motion.start.z == d.motion.start.z
-                        && o.motion.end.z == d.motion.end.z
-                })
+        leftovers::leftover_is_valid(d, pool, full)
     };
     let bad_expected = unmatched_expected
         .iter()
@@ -371,25 +204,6 @@ pub(super) const MAX_SAME_TARGET_DEPOSITION_COUNT_DIFFERENCE: usize = 64;
 // on this fixture; pair-bounded, not count-bounded.
 pub(super) const MAX_SAME_TARGET_UNMATCHED_COUNT: usize = 96;
 // Depositions that quantize to a merge/split boundary only shift a tiny
-// extrusion amount; a degenerate leftover must still sit on the same
-// endpoint as a counterpart of the same feature.
-const MAX_LEFTOVER_DEPOSITION_EXTRUSION_MM: f64 = 0.02;
-const MAX_DEGENERATE_PAIR_DISTANCE_MM: f64 = 0.01;
-// Tiny cap/split slivers need no positional counterpart: upstream
-// merge instability emits ~0.005mm-extrusion tips unpaired. The feed
-// still has to be a real deposition speed of the other side.
-const MAX_SLIVER_DEPOSITION_EXTRUSION_MM: f64 = 0.008;
-// connect_infill merge boundaries shift segments locally; an unmatched
-// deposition pairs only with a counterpart covering the same
-// neighborhood.
-const MAX_UNMATCHED_PAIR_DISTANCE_MM: f64 = 2.0;
-// Paired leftovers sharing a vertex keep the hatch direction within
-// ~45°: an arc connector (G3) redrafted as a straight segment can
-// swing to dot≈0.82, while a 53°-rotated segment scores 0.6.
-const MIN_UNMATCHED_DIRECTION_DOT: f64 = 0.7;
-// A vertex shared to ~20µm is the same junction — a sub-µm quantization
-// split still counts (real split boundaries differ by 1µm).
-const MAX_SHARED_VERTEX_DISTANCE_MM: f64 = 0.02;
 // connect_infill std::sort instability redistributes sparse-infill
 // extrusion across merge boundaries; merged moves also drop the tiny
 // overlap between joined segments, so bound the net deposited total

@@ -1,5 +1,5 @@
-use super::{CONNECT_INFILL_FEATURES, motion_matches, numeric_matches};
-use crate::semantic::parser::Deposition;
+use super::CONNECT_INFILL_FEATURES;
+use crate::semantic::{motion_matches, numeric_matches, parser::Deposition};
 
 const MAX_CROSS_TARGET_DEPOSITION_COORDINATE_DIFFERENCE_MM: f64 = 0.15;
 const MAX_CROSS_TARGET_DEPOSITION_EXTRUSION_DIFFERENCE_MM: f64 = 0.005;

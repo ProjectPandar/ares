@@ -79,21 +79,17 @@ pub(super) fn ostream(value: f64) -> String {
     if value == 0.0 {
         return "0".to_owned();
     }
-    // %g: round the significand to 6 digits FIRST ({:.5} on the
-    // mantissa uses round-half-even like C++), renormalize the carry
-    // (9.999996 → mantissa 1, exponent + 1), then pick the notation on
-    // the ROUNDED exponent — 999999.5 → `1e+06`, not `1000000`.
-    let exponent = value.abs().log10().floor() as i32;
-    let sign = if value < 0.0 { "-" } else { "" };
-    let mantissa = value.abs() / 10f64.powi(exponent);
-    let digits = format!("{mantissa:.5}");
-    let (digits, exponent) = if digits.starts_with("10") {
-        ("1".to_owned(), exponent + 1)
-    } else {
-        (digits, exponent)
-    };
-    // Digits without the point: "1.01562" → "101562".
-    let digits: String = digits.chars().filter(|c| *c != '.').collect();
+    // %g: `{:.5e}` rounds to 6 significant digits in one step
+    // (round-half-even like C++ iostreams — no manual divide by
+    // 10^exp, which double-rounds: 10.03125 must print "10.0312") and
+    // renormalizes the 9.999996 → 10.00000 carry into the exponent.
+    let rendered = format!("{value:.5e}");
+    let (mantissa, exponent) = rendered.split_once('e').unwrap();
+    let exponent: i32 = exponent.parse().unwrap();
+    let (sign, mantissa) = mantissa
+        .strip_prefix('-')
+        .map_or(("", mantissa), |m| ("-", m));
+    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
     let digits = digits.trim_end_matches('0');
     let digits = if digits.is_empty() { "0" } else { digits };
     // Scientific notation when the rounded exponent leaves [-4, 5].
