@@ -1793,3 +1793,19 @@ a path pop is the cause.
    loop where ares's place_nearest picks a different vertex than oracle;
    dump oracle's seam point (seam.nix SEAM/split dump) per loop vs ares's
    split point and find the divergent candidate scoring.
+
+### Seam comparator ported; divergence is upstream of `best` (#689 done)
+
+ares SEAM queries == oracle SEAMIN (per-candidate positions identical), but
+oracle FOOT differs on some loops. Ported `SeamPlacer.cpp:764-794`
+`is_first_better` (spNearest): type -> overhang-first (any lower overhang
+wins) -> embedded<-0.5 hidden preference -> `overhang+scores+gauss(dist)`
+penalty. Added `embedded` to NearestSeamLayer. 7009 tests pass, diff 44461
+unchanged -> the `best` divergence is NOT the comparator; it is in the
+candidate DATA (scores/visibility/overhang values) or the loop->perimeter
+range match (`closest` -> perimeter_ranges). Query positions match, so
+`positions` are right; the per-candidate `scores` (visibility) or
+`overhangs` or the perimeter range searched must differ.
+
+Next probe: dump oracle's chosen seam_index + per-candidate score/overhang
+for the divergent loop vs ares's, find which term diverges.
