@@ -47,7 +47,8 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
     let Some(areas) = ironing_areas(&input)? else {
         return Ok(());
     };
-    if input.region.ironing_pattern != ProcessInfillPattern::Rectilinear {
+    let concentric = input.region.ironing_pattern == ProcessInfillPattern::Concentric;
+    if !concentric && input.region.ironing_pattern != ProcessInfillPattern::Rectilinear {
         return Err(SliceError::UnsupportedProjectFeature(
             "ironing_pattern".to_owned(),
         ));
@@ -66,6 +67,40 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
     let mm3_per_mm = nozzle * extrusion_height;
 
     for area in areas {
+        // `ipConcentric` ironing uses `FillConcentric` (closed-loop rings at
+        // `spacing`) instead of `FillMonotonicLine` (`Fill.cpp:1634` fills
+        // with `Fill::new_from_type(ironing_params.pattern)`).
+        if concentric {
+            let polylines = crate::fill::concentric_sparse::fill_concentric_sparse(
+                &area,
+                spacing,
+                1.0,
+                1,
+                0,
+                input.scale,
+            )
+            .map_err(geometry_error)?;
+            if polylines.is_empty() {
+                continue;
+            }
+            output.collections.push(FillExtrusionCollection {
+                entities: polylines
+                    .into_iter()
+                    .map(|polyline| {
+                        FillExtrusionEntity::Path(FillExtrusionPath {
+                            polyline,
+                            fitting: Vec::new(),
+                            role: ExtrusionRole::Ironing,
+                            mm3_per_mm,
+                            width,
+                            height,
+                        })
+                    })
+                    .collect(),
+                no_sort: true,
+            });
+            continue;
+        }
         let generated = fill_monotonic_surface(
             &area,
             MonotonicFillParams {

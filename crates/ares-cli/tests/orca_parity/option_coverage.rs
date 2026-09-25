@@ -45,6 +45,31 @@ fn inject_case(
     if let Some(value) = &case.value {
         target.insert(plan.key.clone(), value.clone());
     }
+    // Options that only take effect when another option is enabled must
+    // co-inject that enabler, otherwise the case exercises a feature the
+    // slicer never activates (e.g. `ironing_pattern` under `ironing_type =
+    // "no ironing"`). (option -> (enabler, activating value))
+    for (enabler, value) in activating_overrides(&plan.key) {
+        process.insert((*enabler).to_owned(), Value::String((*value).to_owned()));
+    }
+}
+
+/// Enabler (key, activating value) pairs for options gated behind a disabled
+/// feature in the baseline process preset.
+fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
+    match key {
+        // Ironing sub-options only run when `ironing_type != "no ironing"`.
+        "ironing_flow" | "ironing_spacing" | "ironing_speed" | "ironing_pattern" => {
+            &[("ironing_type", "top")]
+        }
+        // Fuzzy-skin geometry params only run when `fuzzy_skin != "none"`.
+        "fuzzy_skin_point_dist" | "fuzzy_skin_thickness" | "fuzzy_skin_point_type" => {
+            &[("fuzzy_skin", "external")]
+        }
+        // Gap-fill params only run when gap filling is enabled.
+        "gap_fill_target" => &[("gap_infill_type", "everywhere")],
+        _ => &[],
+    }
 }
 
 fn residual_is_machine(key: &str) -> bool {
