@@ -1311,3 +1311,16 @@ which upstream's ExtrusionPath polyline omits. ROOT: ExtrusionLoop::split_at
 (seam) generates a seam vertex not present in ares, and ares keeps the
 closing duplicate. FIX: compare seam split_at + first_point handling; drop
 the redundant closing vertex; match seam insertion point.
+
+### Seam split vertex: projection formula identical (#681)
+
+get_closest_path_and_point uses foot_pt -> Point::projection_onto(Line):
+theta = ((b-p).(b-a))/|b-a|^2, in [0,1] -> theta*a+(1-theta)*b cast<coord_t>
+(trunc); else closest endpoint. ares project_onto_segment is the SAME formula.
+So the seam projection is identical; the residual seam vertex diff comes from
+the seam POSITION chosen upstream (SeamPlacer place_seam / pick_seam_point)
+differing from ares's seam candidate selection -> projected foot lands on a
+different segment point. AND ares emits the redundant closing vertex
+(==first point) which upstream's ExtrusionPath polyline does not store. The
+latter (trailing duplicate of first point) is a definite ares divergence:
+upstream loop polyline holds n unique vertices, ares emits n+1.
