@@ -195,7 +195,7 @@ pub(crate) fn fill_honeycomb(
         crate::fill::multiline_offset::apply(
             all_polylines,
             params.multiline,
-            params.spacing / scale.factor(),
+            params.spacing,
             scale,
         )?
     } else {

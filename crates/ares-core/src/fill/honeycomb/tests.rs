@@ -29,6 +29,29 @@ fn params(layer_index: usize) -> HoneycombFillParams {
 }
 
 #[test]
+fn multiline_bundles_remain_inside_the_fill_domain() {
+    for scale in [CoordinateScale::Normal, CoordinateScale::LargeBed] {
+        let domain = surface(scale);
+        for multiline in [2, 3, 4] {
+            let mut config = params(0);
+            config.multiline = multiline;
+            let lines = fill_honeycomb(&domain, config, scale).unwrap();
+            assert!(!lines.is_empty(), "multiline={multiline}, scale={scale:?}");
+            let length: f64 = lines
+                .iter()
+                .flat_map(|line| line.points().windows(2))
+                .map(|segment| {
+                    let dx = scale.unscale(segment[1].x() - segment[0].x());
+                    let dy = scale.unscale(segment[1].y() - segment[0].y());
+                    dx.hypot(dy)
+                })
+                .sum();
+            assert!(length > 60.0, "bundle lost its offset rings: {length}");
+        }
+    }
+}
+
+#[test]
 fn lattice_repeats_after_three_layers() {
     let scale = CoordinateScale::Normal;
     let domain = surface(scale);
