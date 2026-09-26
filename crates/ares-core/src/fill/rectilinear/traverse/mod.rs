@@ -1,9 +1,9 @@
+mod links;
+
 use crate::geometry::{Point, Polyline};
 
-use super::{
-    perimeter::emit_horizontal_arc,
-    segments::{IntersectionKind, LinkQuality, LinkType, RectilinearSlice, SegmentIntersection},
-};
+use super::segments::{IntersectionKind, RectilinearSlice, SegmentIntersection};
+use links::{connect_horizontal, follow_vertical_outside, vertical_outside};
 
 pub(super) fn generate(slice: &RectilinearSlice, consistent_pattern: bool) -> Vec<Polyline> {
     let mut consumed_vertical = slice
@@ -53,6 +53,31 @@ pub(super) fn generate(slice: &RectilinearSlice, consistent_pattern: bool) -> Ve
             {
                 line_index = next_line;
                 intersection_index = next_intersection;
+                continue;
+            }
+            if try_connect
+                && let Some((target, quality)) = vertical_outside(
+                    slice,
+                    &consumed_vertical,
+                    line_index,
+                    intersection_index,
+                    going_up,
+                )
+            {
+                // `vertical_outside` (`FillRectilinear.cpp:1525-1563`): a
+                // same-line contour link continues the path before finishing.
+                follow_vertical_outside(
+                    slice,
+                    &mut consumed_vertical[line_index],
+                    line_index,
+                    intersection_index,
+                    target,
+                    quality,
+                    going_up,
+                    &mut points,
+                    &mut output,
+                );
+                intersection_index = target;
                 continue;
             }
             if try_connect {
@@ -135,119 +160,6 @@ fn consume_vertical_run(
     false
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "source traversal carries indexed graph state and output path"
-)]
-fn connect_horizontal(
-    slice: &RectilinearSlice,
-    consumed_vertical: &[Vec<bool>],
-    consumed_right: &mut [Vec<bool>],
-    line: usize,
-    intersection: usize,
-    points: &mut Vec<Point>,
-    consistent_pattern: bool,
-) -> Option<(usize, usize)> {
-    let consumption = Consumption {
-        vertical: consumed_vertical,
-        right: consumed_right,
-    };
-    let left =
-        horizontal_link(slice, line, intersection, false).filter(|&(target_line, target)| {
-            !consistent_pattern
-                && horizontal_available(slice, &consumption, target_line, target, false)
-        });
-    let right =
-        horizontal_link(slice, line, intersection, true).filter(|&(target_line, target)| {
-            horizontal_available(slice, &consumption, target_line, target, true)
-        });
-    mark_horizontal_links(slice, consumed_right, line, intersection);
-    let towards_right = match (left, right) {
-        (None, None) => return None,
-        (None, Some(_)) => true,
-        (Some(_), None) => false,
-        (Some((left_line, left_index)), Some((_right_line, right_index))) => {
-            let left_length = super::perimeter::measure_horizontal_arc(
-                slice,
-                left_line,
-                left_index,
-                intersection,
-            );
-            let right_length =
-                super::perimeter::measure_horizontal_arc(slice, line, intersection, right_index);
-            right_length < left_length
-        }
-    };
-    let (target_line, target) = if towards_right {
-        right.expect("right link is available")
-    } else {
-        left.expect("left link is available")
-    };
-    push_distinct(points, intersection_point(slice, line, intersection));
-    emit_horizontal_arc(slice, line, intersection, target, towards_right, points);
-    Some((target_line, target))
-}
-
-fn horizontal_link(
-    slice: &RectilinearSlice,
-    line: usize,
-    intersection: usize,
-    right: bool,
-) -> Option<(usize, usize)> {
-    let link = if right {
-        slice.lines[line].intersections[intersection].next
-    } else {
-        slice.lines[line].intersections[intersection].previous
-    }?;
-    if link.1 != LinkType::Horizontal || link.2 != LinkQuality::Valid {
-        return None;
-    }
-    Some((if right { line + 1 } else { line - 1 }, link.0))
-}
-
-struct Consumption<'a> {
-    vertical: &'a [Vec<bool>],
-    right: &'a [Vec<bool>],
-}
-
-fn horizontal_available(
-    slice: &RectilinearSlice,
-    consumed: &Consumption<'_>,
-    target_line: usize,
-    target: usize,
-    right: bool,
-) -> bool {
-    let segment = vertical_segment(&slice.lines[target_line].intersections, target);
-    let link_consumed = if right {
-        consumed.right[target_line - 1][slice.lines[target_line].intersections[target]
-            .previous
-            .unwrap()
-            .0]
-    } else {
-        consumed.right[target_line][target]
-    };
-    !consumed.vertical[target_line][segment] && !link_consumed
-}
-
-fn mark_horizontal_links(
-    slice: &RectilinearSlice,
-    consumed_right: &mut [Vec<bool>],
-    line: usize,
-    intersection: usize,
-) {
-    if let Some((target, LinkType::Horizontal, _)) =
-        slice.lines[line].intersections[intersection].previous
-    {
-        consumed_right[line - 1][target] = true;
-    }
-    if matches!(
-        slice.lines[line].intersections[intersection].next,
-        Some((_, LinkType::Horizontal, _))
-    ) {
-        consumed_right[line][intersection] = true;
-    }
-}
-
 fn vertical_consumed(
     line: &super::segments::SegmentedLine,
     consumed: &[bool],
@@ -256,7 +168,7 @@ fn vertical_consumed(
     consumed[vertical_segment(&line.intersections, intersection)]
 }
 
-fn vertical_segment(intersections: &[SegmentIntersection], index: usize) -> usize {
+pub(super) fn vertical_segment(intersections: &[SegmentIntersection], index: usize) -> usize {
     if is_low(intersections[index].kind) {
         index
     } else {
@@ -268,20 +180,24 @@ const fn outer_intersection(index: usize, going_up: bool) -> usize {
     if going_up { index + 1 } else { index - 1 }
 }
 
-fn intersection_point(slice: &RectilinearSlice, line: usize, intersection: usize) -> Point {
+pub(super) fn intersection_point(
+    slice: &RectilinearSlice,
+    line: usize,
+    intersection: usize,
+) -> Point {
     Point::new(
         slice.lines[line].x,
         slice.lines[line].intersections[intersection].point.y(),
     )
 }
 
-fn push_distinct(points: &mut Vec<Point>, point: Point) {
+pub(super) fn push_distinct(points: &mut Vec<Point>, point: Point) {
     if points.last() != Some(&point) {
         points.push(point);
     }
 }
 
-const fn is_low(kind: IntersectionKind) -> bool {
+pub(super) const fn is_low(kind: IntersectionKind) -> bool {
     matches!(
         kind,
         IntersectionKind::OuterLow | IntersectionKind::InnerLow
@@ -295,7 +211,7 @@ const fn is_outer(kind: IntersectionKind) -> bool {
     )
 }
 
-const fn is_inner(kind: IntersectionKind) -> bool {
+pub(super) const fn is_inner(kind: IntersectionKind) -> bool {
     matches!(
         kind,
         IntersectionKind::InnerLow | IntersectionKind::InnerHigh

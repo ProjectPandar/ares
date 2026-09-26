@@ -38,6 +38,10 @@ pub(crate) struct MonotonicFillParams {
     /// `None` when `consistent_pattern` is false.
     pub(crate) extended_object_min_x: Option<i64>,
     pub(crate) extended_object_max_x: Option<i64>,
+    /// `FillParams::locked_zag` (`FillBase.hpp:106`, `FillRectilinear.cpp:
+    /// 2763-2765`): the LockedZag skeleton pass rotates the infill direction
+    /// by an additional 90°. The skin pass clears it (`:3919`).
+    pub(crate) locked_zag: bool,
 }
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct MonotonicFillOutput {
@@ -81,7 +85,10 @@ fn fill_surface(
             );
         }
     }
-    let direction = infill_direction(params);
+    let mut direction = infill_direction(params);
+    if params.locked_zag {
+        direction += std::f32::consts::FRAC_PI_2;
+    }
     let (outer_offset, inner_offset) = scaled_offsets(scale, params.overlap, params.spacing)?;
     let mut slice =
         prepare_rectilinear_contours(expolygon, -f64::from(direction), outer_offset, inner_offset)?;

@@ -259,6 +259,7 @@ pub(super) fn dispatch(
                     )
                     .1
                 }),
+                locked_zag: false,
             };
             let generate = if matches!(
                 pattern,

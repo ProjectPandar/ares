@@ -42,6 +42,7 @@ pub(super) fn append(
         horiz_move: params.horiz_move as i64,
         extended_object_min_x: Some(extended_object_bounds_x.0),
         extended_object_max_x: Some(extended_object_bounds_x.1),
+        locked_zag: false,
     };
     let lock_param = LockRegionParam {
         skin_density_params: convert_density(&lock.skin_density_params),
@@ -57,10 +58,14 @@ pub(super) fn append(
             scale,
             params.skin_infill_depth as i64,
             params.infill_lock_depth as i64,
-            |exp, density, horiz_move| {
+            |exp, density, horiz_move, locked_zag| {
                 let mut sub = base;
+                // The skin pass clears `params.locked_zag`
+                // (`FillRectilinear.cpp:3919`); the skeleton keeps it so the
+                // line grid rotates +90° (`:2763`).
                 sub.density = density;
                 sub.horiz_move = horiz_move;
+                sub.locked_zag = locked_zag;
                 Ok(fill_rectilinear_surface(exp, sub, scale).map(|out| out.polylines)?)
             },
         )

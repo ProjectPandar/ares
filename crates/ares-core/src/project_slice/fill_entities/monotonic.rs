@@ -75,6 +75,7 @@ pub(super) fn append(
         // `params.horiz_move` is already in scaled coord units (`f32`) —
         // truncating to `i64` matches the `coord_t`/`float` mix upstream.
         horiz_move,
+        locked_zag: false,
     };
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;

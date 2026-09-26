@@ -35,6 +35,7 @@ fn params() -> MonotonicFillParams {
         horiz_move: 0,
         extended_object_min_x: None,
         extended_object_max_x: None,
+        locked_zag: false,
     }
 }
 

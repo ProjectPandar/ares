@@ -58,7 +58,7 @@ pub(crate) fn fill_surface_locked_zag<F, G>(
 ) -> Result<Vec<(Polyline, F)>, ClipperError>
 where
     F: Clone,
-    G: FnMut(&ExPolygon, f32, i64) -> Result<Vec<Polyline>, ClipperError>,
+    G: FnMut(&ExPolygon, f32, i64, bool) -> Result<Vec<Polyline>, ClipperError>,
 {
     // `zig_expas` = inner skeleton region (expolygon shrunk by skin depth);
     // `cross_expas` = the skin ring between the two (`diff_ex`).
@@ -81,7 +81,7 @@ where
         exps = offset_expolygons(&exps, infill_lock_depth as f32, JoinType::Miter, 3.0)?;
         let exps = intersection_ex(&exps, std::slice::from_ref(expolygon))?;
         for exp in exps {
-            skeleton_lines.extend(fill_sub(&exp, density_param.density, 0)?);
+            skeleton_lines.extend(fill_sub(&exp, density_param.density, 0, true)?);
         }
     }
 
@@ -91,7 +91,12 @@ where
         let region_exp = union_safety_offset_expolygons(&density_param.expolygons)?;
         let exps = intersection_ex(&region_exp, &cross_expas)?;
         for exp in exps {
-            skin_lines.extend(fill_sub(&exp, density_param.density, params.horiz_move)?);
+            skin_lines.extend(fill_sub(
+                &exp,
+                density_param.density,
+                params.horiz_move,
+                false,
+            )?);
         }
     }
 

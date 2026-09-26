@@ -138,6 +138,7 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
                 horiz_move: 0,
                 extended_object_min_x: None,
                 extended_object_max_x: None,
+                locked_zag: false,
             },
             input.scale,
         )
