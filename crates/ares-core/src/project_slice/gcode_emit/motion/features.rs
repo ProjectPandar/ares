@@ -244,3 +244,10 @@ pub(super) fn feature_description(feature: &str) -> &'static str {
         _ => "infill",
     }
 }
+
+/// `GCode::_extrude` appends " (bridge)" to the extrude description
+/// whenever `is_bridge(role)` (`ExtrusionEntity.hpp:99-103`:
+/// BridgeInfill | InternalBridgeInfill | OverhangPerimeter).
+pub(super) fn is_bridge_feature(feature: &str) -> bool {
+    matches!(feature, "Bridge" | "Internal Bridge" | "Overhang wall")
+}

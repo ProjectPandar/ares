@@ -2,7 +2,7 @@ use super::Slope;
 use crate::project_slice::gcode_emit::motion::extrusion;
 use crate::project_slice::gcode_emit::motion::{
     EmitState, arc,
-    features::{PathProperties, feature_description},
+    features::{PathProperties, feature_description, is_bridge_feature},
     format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
 };
 
@@ -67,7 +67,14 @@ pub(in crate::project_slice::gcode_emit::motion) fn segments(
                 state
                     .options
                     .gcode_comments
-                    .then(|| format!(" ; {}", feature_description(properties.feature)))
+                    .then(|| {
+                        let bridge = if is_bridge_feature(properties.feature) {
+                            " (bridge)"
+                        } else {
+                            ""
+                        };
+                        format!(" ; {}{bridge}", feature_description(properties.feature))
+                    })
                     .unwrap_or_default()
             )
             .as_bytes(),

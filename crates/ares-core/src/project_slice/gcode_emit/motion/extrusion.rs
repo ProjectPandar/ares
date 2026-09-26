@@ -3,7 +3,7 @@ mod tests;
 
 use super::{
     EmitState, arc,
-    features::{PathProperties, feature_description},
+    features::{PathProperties, feature_description, is_bridge_feature},
     format::{axis as format_axis, extrusion as format_extrusion},
 };
 
@@ -32,7 +32,14 @@ pub(super) fn linear_segment(
         let comment = state
             .options
             .gcode_comments
-            .then(|| format!(" ; {}", feature_description(properties.feature)))
+            .then(|| {
+                let bridge = if is_bridge_feature(properties.feature) {
+                    " (bridge)"
+                } else {
+                    ""
+                };
+                format!(" ; {}{bridge}", feature_description(properties.feature))
+            })
             .unwrap_or_default();
         output.extend_from_slice(
             format!(

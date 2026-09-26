@@ -136,6 +136,14 @@ pub(crate) fn attributable(output: &Captured, key: &str) -> bool {
                 .lines()
                 .any(|line| line == "Bridge line width must not exceed nozzle diameter");
     }
+    // `CLI_GCODE_PATH_IN_UNPRINTABLE_AREA` (-102, `Utils.hpp:74`): smooth
+    // timelapse forces a prime tower (`Print.cpp:3317-3318`), and on
+    // machines whose usable bed cannot host the generated tower Orca
+    // rejects the run after slicing — a combination rejection, not a
+    // value error in `timelapse_type` itself.
+    if output.code == Some(code(-102)) {
+        return key == "timelapse_type";
+    }
     false
 }
 

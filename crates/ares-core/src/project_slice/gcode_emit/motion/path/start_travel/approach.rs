@@ -5,7 +5,7 @@ use super::super::{PathProperties, retraction, travel_emit};
 use super::dispatch;
 use super::retract;
 use super::route::{plan_route, polyline_length};
-use crate::project_slice::gcode_emit::motion::features::feature_description;
+use crate::project_slice::gcode_emit::motion::features::{feature_description, is_bridge_feature};
 use crate::project_slice::gcode_emit::motion::{
     EmitState, LayerGeometry, append_object_start, arc, begin_path_travel,
     format::{axis as format_axis, z as format_z},
@@ -55,8 +55,13 @@ pub(super) fn emit_needs_travel(
         .options
         .gcode_comments
         .then(|| {
+            let bridge = if is_bridge_feature(properties.feature) {
+                " (bridge)"
+            } else {
+                ""
+            };
             format!(
-                " ; move to first {} point",
+                " ; move to first {}{bridge} point",
                 feature_description(properties.feature)
             )
         })
@@ -200,24 +205,15 @@ pub(super) fn emit_needs_travel(
         );
         travel_set_layer_z = true;
     } else if state.template_lifted && state.lifted && !first_position {
-        travel_emit::xy_with_comment(
-            output,
-            travel_x,
-            travel_y,
-            state.travel_feedrate,
-            first_travel_comment,
-        );
+        // Pure XY while still lifted: upstream's no-Z-change branch calls
+        // `travel_to_xy(to_2d(point))` WITHOUT the comment
+        // (`GCodeWriter.cpp:771-780`).
+        travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         state.template_lifted = false;
     } else if state.lifted {
         eager_lifted_travel = true;
         if !lifted_for_travel {
-            travel_emit::xy_with_comment(
-                output,
-                travel_x,
-                travel_y,
-                state.travel_feedrate,
-                first_travel_comment,
-            );
+            travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         } else if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
             travel_emit::xyz_with_comment(
                 output,
@@ -323,12 +319,20 @@ pub(super) fn emit_needs_travel(
         } else {
             state.travel_feedrate
         };
+        // The no-Z-change `travel_to_xy(to_2d(point))` branch drops the
+        // comment for ordinary same-Z XY travels (`GCodeWriter.cpp:780`);
+        // the unclear-position split (first travel) DOES emit it on both
+        // legs (`GCodeWriter.cpp:754-763`).
         travel_emit::xy_with_comment(
             output,
             travel_x,
             travel_y,
             xy_feedrate,
-            first_travel_comment,
+            if first_position {
+                first_travel_comment
+            } else {
+                ""
+            },
         );
         // The print's first travel from an unknown position always
         // splits: the unclear-position branch of `travel_to_xyz`

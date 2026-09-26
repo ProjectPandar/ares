@@ -113,7 +113,7 @@ impl Estimate {
             let mut seam_excluded = false;
             let motion_blocks = state.motions_indexed(code);
             // Linear commands produce at most one block; only arcs subdivide.
-            if matches!(command, "G0" | "G1" | "G28" | "G10" | "G11")
+            if matches!(command, "G0" | "G1" | "G28")
                 && let Some((_, block)) = motion_blocks.first()
             {
                 let extruding = !state.wiping
@@ -126,13 +126,17 @@ impl Estimate {
                 // E-only line and emit M73 immediately after it. Excluding
                 // `e_only` blocks deferred the marker to the next XY move
                 // (observed: oracle `M73` follows `G1 E-2.8`).
-                // `process_G10/G11` reuses the already-assigned g1 line id
-                // (`--m_g1_line_id`, `GCodeProcessor.cpp:4879/4889`) and the
-                // resulting Retract/Unretract vertex is not a
-                // `g1_times_cache` type, so the phantom entry must stay
-                // out — otherwise it collides with the next real G1's id.
-                cache_eligible.push(matches!(command, "G0" | "G1" | "G28") && !seam_vertex);
-            } else if !motion_blocks.is_empty() {
+                // `g1_times_cache` is only populated for Extrude/Travel/
+                // Wipe move types (`GCodeProcessor.cpp:484-488`). Upstream's
+                // `move_type` (:4259-4277): `m_wiping` forces Wipe for ANY
+                // delta (an E-only retract inside a wipe IS cached); without
+                // wiping an XYZ-displaced block is Extrude/Travel and an
+                // E-only block is Retract/Unretract — never cached. So
+                // `wiping || !e_only` exactly reproduces the eligibility
+                // set; the `G1 E4`/`G1 E-2.8` standalone retracts and the
+                // G10/G11 fake blocks stay out.
+                cache_eligible.push((!block.e_only || state.wiping) && !seam_vertex);
+            } else if matches!(command, "G2" | "G3") && !motion_blocks.is_empty() {
                 // `G2`/`G3` arc: every discretized internal segment is a
                 // `process_G1` → `store_move_vertex`, so the seam lifecycle
                 // runs PER SEGMENT (`GCodeProcessor.cpp:4194-4225`), not once
@@ -150,7 +154,7 @@ impl Estimate {
                         && (block.delta[0] != 0.0 || block.delta[1] != 0.0);
                     let seam_vertex = seams.associate(extruding, end);
                     seam_excluded |= seam_vertex && segment_index == 0;
-                    cache_eligible.push(!seam_vertex);
+                    cache_eligible.push((!block.e_only || state.wiping) && !seam_vertex);
                     position = end;
                 }
             }
@@ -171,6 +175,8 @@ impl Estimate {
                     blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
+                    // Fake Retract/Unretract vertices are never cache types.
+                    cache_eligible.extend(std::iter::repeat_n(false, count));
                 }
                 "G2" | "G3" => {
                     let count = motion_blocks.len();
@@ -302,10 +308,25 @@ impl Estimate {
             while cache_index < cache.len() && cache[cache_index].0 < lookup_id {
                 cache_index += 1;
             }
-            if cache
+            let hit = cache
                 .get(cache_index)
-                .is_some_and(|(id, _)| *id == lookup_id)
-            {
+                .is_some_and(|(id, _)| *id == lookup_id);
+            if let Ok(path) = std::env::var("ARES_DUMP_PROBES") {
+                use std::io::Write;
+                let mut out = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                    .unwrap();
+                writeln!(
+                    out,
+                    "PROBE {lookup_id} {} {command} {}",
+                    if hit { "hit" } else { "miss" },
+                    line
+                )
+                .unwrap();
+            }
+            if hit {
                 elapsed[index + 1] = Some(cache[cache_index].1);
             }
         }
@@ -318,6 +339,11 @@ impl Estimate {
             let mut out = std::fs::File::create(&path).unwrap();
             for (id, cumulative) in &cache {
                 writeln!(out, "{id} {cumulative:.6}").unwrap();
+            }
+            for (index, e) in elapsed.iter().enumerate() {
+                if let Some(e) = e {
+                    writeln!(out, "HIT {index} {e:.6} {}", lines[index - 1]).unwrap();
+                }
             }
         }
         // `prepare_time += block_time` accumulates in f32
