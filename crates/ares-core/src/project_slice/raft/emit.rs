@@ -10,7 +10,7 @@
 //! `print_z` shifts by `object_print_z_min`.
 
 use super::fill_params::RaftFillInputs;
-use super::fills::{RaftFillSpec, raft_layer_fill};
+use super::fills::{self, RaftFillSpec, raft_layer_fill};
 use super::grid::{RaftLayerKind, RaftLayerZ, raft_layer_grid};
 use super::polygons::{RaftPolygonParams, raft_polygons};
 use crate::geometry::{CoordinateScale, ExPolygon, Point, Polygon};
@@ -58,6 +58,7 @@ pub(crate) fn raft_layer_plans(
                         density: (first_layer_density_percent * 0.01) as f32,
                         sheath: true,
                         width_mm: first_layer_width_mm,
+                        preprocess: fills::RaftFillPreprocess::Closing,
                     },
                 )
             }
@@ -69,19 +70,37 @@ pub(crate) fn raft_layer_plans(
                     density: fill_params.support_density as f32,
                     sheath: false,
                     width_mm: support_width_mm,
+                    preprocess: fills::RaftFillPreprocess::Closing,
                 },
             ),
             RaftLayerKind::Interface | RaftLayerKind::Contact => {
                 let angle = fill_params.interface_angle_for_layer(interface_id);
                 interface_id += 1;
                 (
-                    raft_polygons.interface.clone(),
+                    // The contact layer extrudes the raw contact polygons;
+                    // the +0.5mm `inflate_factor_fine` expansion only builds
+                    // the interface silhouette underneath
+                    // (`SupportCommon.cpp:287-308` vs `:1696-1738`).
+                    if z.kind == RaftLayerKind::Contact {
+                        raft_polygons.contact.clone()
+                    } else {
+                        raft_polygons.interface.clone()
+                    },
                     RaftFillSpec {
                         angle,
                         spacing: support_flow_spacing_mm,
                         density: fill_params.raft_interface_density as f32,
                         sheath: false,
                         width_mm: interface_width_mm,
+                        // `extrude_interface` wraps the contact input in
+                        // `union_safety_offset_ex` (`:1729`); plain
+                        // interface layers take the `closing_ex(ε)` path
+                        // (`:725-727`).
+                        preprocess: if z.kind == RaftLayerKind::Contact {
+                            fills::RaftFillPreprocess::SafetyOffset
+                        } else {
+                            fills::RaftFillPreprocess::Closing
+                        },
                     },
                 )
             }

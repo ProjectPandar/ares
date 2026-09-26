@@ -33,19 +33,27 @@ pub(in crate::project_slice) fn emit_brim_loop(
             .iter()
             .map(|&(x, y)| Point::new(x + offset.0, y + offset.1))
             .collect::<Vec<_>>();
-        let split = crate::project_slice::gcode_emit::skirt::split_at_nearest(&plate, plate_target);
+        let mut split =
+            crate::project_slice::gcode_emit::skirt::split_at_nearest(&plate, plate_target)
+                .iter()
+                .map(|point| (point.x(), point.y()))
+                .collect::<Vec<_>>();
+        // Same plate-frame seam-gap clip as the skirt
+        // (`GCode.cpp:5804` truncates toward zero on plate ints).
+        super::clip::clip_end(&mut split, state.options.seam_gap / geometry.scale.factor());
         path::emit(
             output,
             split
                 .iter()
-                .map(|point| (point.x() - offset.0, point.y() - offset.1)),
+                .map(|point| (point.0 - offset.0, point.1 - offset.1)),
             PathProperties {
                 mm3_per_mm: flow.mm3_per_mm,
                 width: flow.width,
                 height: flow.height,
                 feature: "Brim",
                 is_perimeter: false,
-                end_clip: state.options.seam_gap,
+                // Already clipped in the plate frame above.
+                end_clip: 0.0,
                 fitting: &[],
                 slope: None,
             },
@@ -59,8 +67,8 @@ pub(in crate::project_slice) fn emit_brim_loop(
         state.wipe_path = split
             .iter()
             .map(|point| arc::Point {
-                x: geometry.scale.unscale(point.x() - offset.0),
-                y: geometry.scale.unscale(point.y() - offset.1),
+                x: geometry.scale.unscale(point.0 - offset.0),
+                y: geometry.scale.unscale(point.1 - offset.1),
             })
             .collect::<Vec<_>>();
         return;
@@ -89,6 +97,10 @@ pub(in crate::project_slice) fn emit_skirt_loop(
     flow: SkirtLoopFlow,
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
+    // The skirt seam gap is clipped by the caller on the plate-frame
+    // polyline (`GCode.cpp:5804`); `preclipped` suppresses the local-frame
+    // `end_clip` inside `path::emit`.
+    preclipped: bool,
 ) {
     path::emit(
         output,
@@ -100,9 +112,14 @@ pub(in crate::project_slice) fn emit_skirt_loop(
             feature: "Skirt",
             is_perimeter: false,
             // `GCode::extrude_loop` clips every loop by the seam gap
-            // (`GCode.cpp:5778-5790`); `path::emit` clips in the plate
-            // frame to match upstream's origin-shifted coordinates.
-            end_clip: state.options.seam_gap,
+            // (`GCode.cpp:5778-5790`) on the plate-frame polyline; the
+            // skirt caller pre-clips in that frame, so `path::emit` must
+            // not clip again.
+            end_clip: if preclipped {
+                0.0
+            } else {
+                state.options.seam_gap
+            },
             fitting: &[],
             slope: None,
         },

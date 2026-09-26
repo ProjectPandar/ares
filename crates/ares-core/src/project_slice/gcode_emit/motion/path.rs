@@ -55,10 +55,9 @@ pub(super) fn emit(
             (dx * dx + dy * dy).sqrt() * geometry.scale.factor()
         })
         .sum();
-    // Upstream clips the loop tail on the LOCAL path polyline before
-    // `point_to_gcode` adds `m_origin` (`GCode.cpp:5804` clip_end on
-    // `path.polyline`, `GCode.cpp:8127` `unscale(point)+m_origin` at
-    // write time). Clip in the local frame, no plate-frame shift.
+    // Upstream clips the loop tail on `path.polyline`
+    // (`GCode.cpp:5804`); for the skirt the caller pre-clips on the
+    // plate-frame polyline (`emit_skirt_loop` `preclipped`).
     clip::clip_end(
         &mut scaled_points,
         properties.end_clip / geometry.scale.factor(),

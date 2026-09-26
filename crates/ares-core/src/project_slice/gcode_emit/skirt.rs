@@ -318,10 +318,20 @@ impl SkirtPlan {
                 .map(|point| Point::new(point.x() + offset.0, point.y() + offset.1))
                 .collect::<Vec<_>>();
             let plate_target = Point::new(seam_target.x() + offset.0, seam_target.y() + offset.1);
-            let split = split_at_nearest(&plate, plate_target)
+            let mut split = split_at_nearest(&plate, plate_target)
                 .into_iter()
-                .map(|point| (point.x() - offset.0, point.y() - offset.1));
-            motion::emit_skirt_loop(output, split, flow, geometry, state);
+                .map(|point| (point.x(), point.y()))
+                .collect::<Vec<_>>();
+            // `extrude_loop` clips the seam gap on the plate-frame
+            // polyline (`GCode.cpp:5804` `clip_end` before
+            // `point_to_gcode` applies `m_origin`); the final endpoint
+            // truncates toward zero (`Polyline.cpp:52-72` `.cast`), which
+            // differs from clipping after the local-frame translate.
+            motion::clip::clip_end(&mut split, state.options.seam_gap / geometry.scale.factor());
+            let split = split
+                .into_iter()
+                .map(|point| (point.0 - offset.0, point.1 - offset.1));
+            motion::emit_skirt_loop(output, split, flow, geometry, state, true);
             if let Some(last) = state.last_scaled_position {
                 seam_target = Point::new(last.0, last.1);
             }

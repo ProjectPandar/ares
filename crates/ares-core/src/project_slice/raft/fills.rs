@@ -16,7 +16,6 @@ use crate::fill::rectilinear::segments::{
     prepare_rectilinear_contours,
 };
 use crate::geometry::{BoundingBox, ClipperError, CoordinateScale, Point, Polygon, Polyline};
-use crate::geometry::{FillRule, union_ex};
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct RaftFillSpec {
@@ -32,6 +31,22 @@ pub(crate) struct RaftFillSpec {
     /// `first_layer_flow.width()` for the flange `closing_ex` inflate
     /// (`0.5·width`), mm.
     pub(crate) width_mm: f64,
+    /// Region preprocessing before the fill
+    /// (`fill_expolygons_with_sheath_generate_paths` vs
+    /// `extrude_interface`, `SupportCommon.cpp:725-727,1729`).
+    pub(crate) preprocess: RaftFillPreprocess,
+}
+
+/// `SupportCommon.cpp:725-727` applies `closing_ex(polygons, ε)` to the
+/// non-sheath raft base/interface layers, while the contact layer
+/// (`extrude_interface`, `:1729`) wraps its polygons in
+/// `union_safety_offset_ex` (+10 units, `ClipperUtils.hpp:17`).
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum RaftFillPreprocess {
+    /// `closing_ex(polygons, float(SCALED_EPSILON))`.
+    Closing,
+    /// `union_safety_offset_ex` (Clipper +10 lattice units).
+    SafetyOffset,
 }
 
 /// The emitted raft-layer polylines (sheath + fill) in source order
@@ -50,6 +65,7 @@ pub(crate) fn raft_layer_polylines(
     if !spec.sheath {
         return raft_layer_fill(layer_polygons, spec, Point::new(0, 0), scale);
     }
+    debug_assert!(matches!(spec.preprocess, RaftFillPreprocess::Closing));
     let units = 1.0 / scale.factor();
     // `closing_ex(polygons, SCALED_EPSILON, SCALED_EPSILON + 0.5·width)`
     // (`SupportCommon.cpp:728`): dilate by `ε` then erode by
@@ -152,7 +168,27 @@ pub(crate) fn raft_layer_fill(
     reference: Point,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
-    let expolygons = union_ex(layer_polygons, FillRule::NonZero)?;
+    let expolygons = match spec.preprocess {
+        // `union_safety_offset_ex` = `offset_ex(polygons, 10.f)`
+        // (`ClipperUtils.hpp:17,364`).
+        RaftFillPreprocess::SafetyOffset => {
+            crate::geometry::union_safety_offset_ex(layer_polygons)?
+        }
+        // `closing_ex(polygons, float(SCALED_EPSILON))`
+        // (`SupportCommon.cpp:727`): `SCALED_EPSILON = scale_(1e-4)`.
+        RaftFillPreprocess::Closing => {
+            let epsilon = scale.scaled_delta(1e-4) as f32;
+            crate::geometry::closing_ex(
+                &layer_polygons
+                    .iter()
+                    .map(|polygon| crate::geometry::ExPolygon::new(polygon.clone(), Vec::new()))
+                    .collect::<Vec<_>>(),
+                epsilon,
+                crate::geometry::JoinType::Miter,
+                3.0,
+            )?
+        }
+    };
     if std::env::var("ARES_RAFT_DEBUG").is_ok() {
         eprintln!(
             "RAFTDBG expolygons={} in={}",
@@ -341,6 +377,7 @@ mod raft_fill_probe {
             density: 0.9,
             sheath: false,
             width_mm: 0.42,
+            preprocess: RaftFillPreprocess::Closing,
         };
         let out = raft_layer_fill(
             &[polygon],
@@ -373,6 +410,7 @@ mod connect_probe {
             density: 0.67,
             sheath: false,
             width_mm: 0.42,
+            preprocess: RaftFillPreprocess::Closing,
         };
         let out = raft_layer_fill(
             &[polygon],
