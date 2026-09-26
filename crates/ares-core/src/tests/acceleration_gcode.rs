@@ -239,11 +239,7 @@ async fn gcode_comments_apply_to_acceleration_commands() {
             .lines()
             .any(|line| line == "M204 S500 ; adjust acceleration")
     );
-    assert!(
-        output
-            .lines()
-            .any(|line| line == "G1 X-0.5 Y0 F7200 ; travel")
-    );
+    assert!(output.lines().any(|line| line == "G1 X-0.5 Y0 F7200"));
     assert!(
         output
             .lines()

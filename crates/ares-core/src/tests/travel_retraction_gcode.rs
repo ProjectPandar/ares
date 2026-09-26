@@ -22,7 +22,7 @@ async fn default_minimum_travel_retracts_before_long_ordinary_travel() {
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.8 F1800 ; retract");
     let unretract = next_line_index(&output, travel, "G1 E0.8 F1800 ; unretract");
     let next_print = next_print_line_index(&output, travel);
@@ -42,11 +42,7 @@ async fn high_minimum_travel_suppresses_ordinary_travel_retraction() {
     }))
     .await;
 
-    assert!(
-        output
-            .lines()
-            .any(|line| line == "G1 X-0.5 Y0 F7200 ; travel")
-    );
+    assert!(output.lines().any(|line| line == "G1 X-0.5 Y0 F7200"));
     assert!(
         !output
             .lines()
@@ -69,11 +65,7 @@ async fn minimum_travel_uses_first_vector_value() {
     }))
     .await;
 
-    assert!(
-        output
-            .lines()
-            .any(|line| line == "G1 X-0.5 Y0 F7200 ; travel")
-    );
+    assert!(output.lines().any(|line| line == "G1 X-0.5 Y0 F7200"));
     assert!(
         !output
             .lines()
@@ -170,7 +162,7 @@ async fn pending_layer_change_retraction_suppresses_initial_travel_retract() {
     .await;
     let second = layer_section(&output, 1);
     let layer_retract = line_index(second, "G1 E-0.8 F1800 ; retract");
-    let travel = next_line_index(second, layer_retract, "G1 X0.25 Y-0.75 F7200 ; travel");
+    let travel = next_line_index(second, layer_retract, "G1 X0.25 Y-0.75 F7200");
     let unretract = next_line_index(second, travel, "G1 E0.8 F1800 ; unretract");
     let first_print = next_print_line_index(second, travel);
 

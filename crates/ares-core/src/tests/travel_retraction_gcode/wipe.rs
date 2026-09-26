@@ -56,7 +56,7 @@ fn travel_retraction_wipe_splits_before_and_during_wipe() {
             "G1 X1 Y0 E0.03385 ; infill",
             "G1 E-0.55 F1800 ; retract",
             "G1 X0.5 Y0 E-0.25 F3600 ; wipe and retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );
@@ -79,7 +79,7 @@ fn travel_retraction_wipe_with_full_before_wipe_still_moves_without_e() {
         &[
             "G1 E-0.8 F1800 ; retract",
             "G1 X0.5 Y0 F3600 ; wipe and retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );
@@ -102,7 +102,7 @@ fn travel_retraction_wipe_moves_speed_limited_excess_before_wipe() {
         &[
             "G1 E-0.675 F1800 ; retract",
             "G1 X0.75 Y0 E-0.125 F3600 ; wipe and retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );
@@ -126,7 +126,7 @@ fn travel_retraction_wipe_clamps_to_previous_segment_length() {
         &output,
         &[
             "G1 X0 Y0 E-0.8 F600 ; wipe and retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );
@@ -151,7 +151,7 @@ fn travel_retraction_wipe_speed_percent_uses_travel_speed_when_not_role_based() 
         &[
             "G1 E-0.64375 F1800 ; retract",
             "G1 X0.5 Y0 E-0.15625 F5760 ; wipe and retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );
@@ -176,7 +176,7 @@ fn travel_retraction_wipe_speed_clamps_to_ten_mm_s() {
         &[
             "G1 E-0.4 F1800 ; retract",
             "G1 X0.5 Y0 E-0.4 F600 ; wipe and retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );

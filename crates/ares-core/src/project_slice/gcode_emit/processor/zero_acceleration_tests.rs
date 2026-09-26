@@ -44,6 +44,42 @@ fn zero_acceleration_linear_moves_emit_finite_remaining_time_and_halfway_progres
 }
 
 #[test]
+fn zero_print_acceleration_clamps_junction_feedrate_to_zero() {
+    // `GCodeProcessor.cpp:4025-4031`: the centripetal limit is
+    // `sqrt(get_acceleration(mode) * r)` with NO floor — `M204 P0`
+    // collapses every junction feedrate to 0 (the oracle's 7m30s total
+    // in the machine_max_acceleration_extruding=min sweep case). Ares
+    // previously floored the value at 1.0 and diverged.
+    let mut state = MotionState::with_limits(zero_z_limits());
+    assert!(state.motion("M204 P0").is_none());
+    // Two XY moves meeting at a 90° junction: the junction feedrate
+    // clamps to sqrt(0 * r) = 0 and the zero-acceleration trapezoid
+    // collapses to cruise-only — distance / feedrate with no ramp.
+    let first = state.motion("G1 X10 Y0 F600").unwrap();
+    let second = state.motion("G1 X0 Y10 F600").unwrap();
+    assert_eq!(second.centripetal_acceleration, 0.0);
+    let times = planned_times(&[first, second]);
+    assert_eq!(times.len(), 2);
+    // 10mm at 10mm/s cruise-only, then 14.142136mm at 10mm/s
+    // (f32 trapezoid arithmetic — compare loosely).
+    assert!((times[0] - 1.0).abs() < 1e-6);
+    assert!((times[1] - std::f64::consts::SQRT_2).abs() < 1e-6);
+}
+
+#[test]
+fn fractional_print_acceleration_still_limits_the_junction() {
+    let mut state = MotionState::with_limits(zero_z_limits());
+    assert!(state.motion("M204 P0.5").is_none());
+    let first = state.motion("G1 X10 Y0 F600").unwrap();
+    let second = state.motion("G1 X0 Y10 F600").unwrap();
+    assert_eq!(second.centripetal_acceleration, 0.5);
+    let times = planned_times(&[first, second]);
+    // Junction feedrate min(speed, sqrt(0.5 * r)) — still finite and
+    // strictly capped by the centripetal limit.
+    assert!(times.iter().all(|time| time.is_finite() && *time >= 0.0));
+}
+
+#[test]
 fn zero_acceleration_zero_cruise_feedrate_has_zero_time() {
     // GCodeProcessor.hpp:439: cruise_time is zero when cruise_feedrate is zero.
     let mut block = MotionState::with_limits(zero_z_limits())

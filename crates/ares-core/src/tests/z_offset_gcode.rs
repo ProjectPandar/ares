@@ -140,11 +140,7 @@ async fn z_offset_composes_with_gcode_comments() {
             .lines()
             .any(|line| line == "G1 Z0.55 F7200 ; move to layer Z")
     );
-    assert!(
-        output
-            .lines()
-            .any(|line| line == "G1 X-0.5 Y0 F7200 ; travel")
-    );
+    assert!(output.lines().any(|line| line == "G1 X-0.5 Y0 F7200"));
     assert!(
         output
             .lines()

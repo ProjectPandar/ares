@@ -12,7 +12,7 @@ async fn filament_z_hop_overrides_travel_retraction_lift_height() {
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.8 F1800 ; retract");
     let lift = previous_line_index(&output, travel, "G1 Z0.9 F7200 ; lift Z");
     let restore = next_line_index(&output, travel, "G1 Z0.2 F7200 ; restore layer Z");

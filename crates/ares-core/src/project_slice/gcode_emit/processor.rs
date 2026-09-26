@@ -132,11 +132,6 @@ pub(super) fn process(
             0
         };
         let remaining = minutes(estimate.total - f64::from(elapsed));
-        if std::env::var("ARES_DUMP_M73EMIT").is_ok() {
-            eprintln!(
-                "EMIT {index} {line} elapsed={elapsed:.6} percent={percent} rem={remaining} last={last_progress:?}"
-            );
-        }
         if last_progress != Some((percent, remaining)) {
             last_progress = Some((percent, remaining));
             result.push_str(&format!("M73 P{percent} R{remaining}\n"));

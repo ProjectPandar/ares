@@ -45,7 +45,7 @@ async fn default_z_hop_lifts_after_ordinary_travel_retract_and_restores_before_u
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.8 F1800 ; retract");
     let lift = previous_line_index(&output, travel, "G1 Z0.6 F7200 ; lift Z");
     let restore = next_line_index(&output, travel, "G1 Z0.2 F7200 ; restore layer Z");
@@ -69,7 +69,7 @@ async fn firmware_ordinary_travel_retraction_lifts_and_restores_around_g10_g11()
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G10 ; retract");
     let lift = previous_line_index(&output, travel, "G1 Z0.6 F7200 ; lift Z");
     let restore = next_line_index(&output, travel, "G1 Z0.2 F7200 ; restore layer Z");
@@ -203,7 +203,7 @@ fn retract_lift_enforce_top_only_suppresses_non_top_ordinary_travel_lift() {
     let layer = layer_section(&gcode, 0);
 
     assert!(layer.contains("G1 E-0.8"));
-    assert!(layer.contains("; travel"));
+    assert!(!layer.contains("; travel"));
     assert!(layer.contains("G1 E0"));
     assert!(!layer.contains("; lift Z"));
     assert!(!layer.contains("; restore layer Z"));
@@ -266,7 +266,7 @@ fn retract_lift_enforce_bottom_only_allows_first_layer_ordinary_travel_lift_only
     let layer = layer_section(&later_layer, 1);
 
     assert!(layer.contains("G1 E-0.8"));
-    assert!(layer.contains("; travel"));
+    assert!(!layer.contains("; travel"));
     assert!(layer.contains("G1 E0"));
     assert!(!layer.contains("; lift Z"));
 }

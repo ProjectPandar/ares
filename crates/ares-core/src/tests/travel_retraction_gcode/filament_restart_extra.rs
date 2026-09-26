@@ -13,7 +13,7 @@ async fn filament_restart_extra_overrides_travel_unretract_distance() {
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.5 F1800 ; retract");
     let unretract = next_line_index(&output, travel, "G1 E0.85 F1800 ; unretract");
 
@@ -44,7 +44,7 @@ async fn zero_filament_restart_extra_overrides_unprefixed_travel_restart_extra()
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.5 F1800 ; retract");
     let unretract = next_line_index(&output, travel, "G1 E0.5 F1800 ; unretract");
 

@@ -26,7 +26,7 @@ fn role_output(extra: Value, roles: Vec<PrintPathRole>) -> Result<String, SliceE
 }
 
 fn assert_retracts_before_sparse_travel(output: &str) {
-    let travel = line_index(output, "G1 X2 Y0 F7200 ; travel");
+    let travel = line_index(output, "G1 X2 Y0 F7200");
     let retract = previous_line_index(output, travel, "G1 E-0.8 F1800 ; retract");
     let unretract = next_line_index(output, travel, "G1 E0.8 F1800 ; unretract");
 
@@ -35,7 +35,7 @@ fn assert_retracts_before_sparse_travel(output: &str) {
 }
 
 fn assert_no_travel_retract(output: &str) {
-    assert!(output.lines().any(|line| line == "G1 X2 Y0 F7200 ; travel"));
+    assert!(output.lines().any(|line| line == "G1 X2 Y0 F7200"));
     assert!(
         !output
             .lines()

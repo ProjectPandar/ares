@@ -13,7 +13,7 @@ async fn filament_retract_lift_above_overrides_suppressing_unprefixed_lower_gate
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.8 F1800 ; retract");
     let lift = previous_line_index(&output, travel, "G1 Z0.6 F7200 ; lift Z");
     let restore = next_line_index(&output, travel, "G1 Z0.2 F7200 ; restore layer Z");
@@ -38,7 +38,7 @@ async fn filament_retract_lift_below_zero_overrides_suppressing_unprefixed_upper
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.8 F1800 ; retract");
     let lift = previous_line_index(&output, travel, "G1 Z0.6 F7200 ; lift Z");
     let restore = next_line_index(&output, travel, "G1 Z0.2 F7200 ; restore layer Z");

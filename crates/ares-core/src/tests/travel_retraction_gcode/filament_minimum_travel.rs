@@ -11,7 +11,7 @@ async fn filament_minimum_travel_overrides_high_unprefixed_threshold() {
     }))
     .await;
 
-    let travel = line_index(&output, "G1 X-0.5 Y0 F7200 ; travel");
+    let travel = line_index(&output, "G1 X-0.5 Y0 F7200");
     let retract = previous_line_index(&output, travel, "G1 E-0.8 F1800 ; retract");
     let unretract = next_line_index(&output, travel, "G1 E0.8 F1800 ; unretract");
 
@@ -30,11 +30,7 @@ async fn filament_minimum_travel_can_suppress_travel_retraction() {
     }))
     .await;
 
-    assert!(
-        output
-            .lines()
-            .any(|line| line == "G1 X-0.5 Y0 F7200 ; travel")
-    );
+    assert!(output.lines().any(|line| line == "G1 X-0.5 Y0 F7200"));
     assert!(
         !output
             .lines()

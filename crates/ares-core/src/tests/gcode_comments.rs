@@ -82,11 +82,7 @@ async fn gcode_comments_true_adds_inline_command_comments_only() {
             .lines()
             .any(|line| line == "G1 Z0.2 F7200 ; move to layer Z")
     );
-    assert!(
-        commented
-            .lines()
-            .any(|line| line == "G1 X-0.5 Y0 F7200 ; travel")
-    );
+    assert!(commented.lines().any(|line| line == "G1 X-0.5 Y0 F7200"));
     assert!(
         commented
             .lines()

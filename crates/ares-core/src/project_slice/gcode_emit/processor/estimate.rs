@@ -113,7 +113,12 @@ impl Estimate {
             let mut seam_excluded = false;
             let motion_blocks = state.motions_indexed(code);
             // Linear commands produce at most one block; only arcs subdivide.
-            if matches!(command, "G0" | "G1" | "G28")
+            // `GCodeProcessor::process_G10/G11` calls `process_G1` after
+            // `--m_g1_line_id` (`GCodeProcessor.cpp:4873-4893`), so the
+            // fake firmware retract/unretract delta runs the same seam
+            // lifecycle (`:4192-4234`) and can close a pending Outer wall
+            // seam before the following travel.
+            if matches!(command, "G0" | "G1" | "G28" | "G10" | "G11")
                 && let Some((_, block)) = motion_blocks.first()
             {
                 let extruding = !state.wiping
@@ -175,8 +180,9 @@ impl Estimate {
                     blocks.extend(motion_blocks.into_iter().map(|(_, block)| block));
                     block_line_ids.extend(std::iter::repeat_n(g1_line_id, count));
                     prepare_stages.extend(std::iter::repeat_n(prepare_stage, count));
-                    // Fake Retract/Unretract vertices are never cache types.
-                    cache_eligible.extend(std::iter::repeat_n(false, count));
+                    // `cache_eligible` was already pushed by the shared
+                    // G1-branch above: `e_only && !wiping` keeps the fake
+                    // Retract/Unretract out of `g1_times_cache`.
                 }
                 "G2" | "G3" => {
                     let count = motion_blocks.len();
@@ -311,21 +317,6 @@ impl Estimate {
             let hit = cache
                 .get(cache_index)
                 .is_some_and(|(id, _)| *id == lookup_id);
-            if let Ok(path) = std::env::var("ARES_DUMP_PROBES") {
-                use std::io::Write;
-                let mut out = std::fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(path)
-                    .unwrap();
-                writeln!(
-                    out,
-                    "PROBE {lookup_id} {} {command} {}",
-                    if hit { "hit" } else { "miss" },
-                    line
-                )
-                .unwrap();
-            }
             if hit {
                 elapsed[index + 1] = Some(cache[cache_index].1);
             }

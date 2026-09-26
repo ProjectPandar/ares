@@ -96,10 +96,12 @@ pub(crate) fn move_gcode(command: MoveGCodeCommand<'_>) -> Result<(String, f64),
                         command.speed_move.feedrate_mm_min(),
                         command.travel_comment,
                     );
+                    // Pure-XY leg after a slope lift is a `travel_to_xy`
+                    // call — no comment upstream (`GCodeWriter.cpp:771-780`).
                     gcode.push_str(&command.writer.travel_to_xy_with_comment(
                         point,
                         command.speed_move.feedrate_mm_min(),
-                        command.travel_comment,
+                        None,
                     ));
                     gcode
                 }
@@ -121,10 +123,13 @@ pub(crate) fn move_gcode(command: MoveGCodeCommand<'_>) -> Result<(String, f64),
                         feedrate: command.speed_move.feedrate_mm_min(),
                         comment: command.travel_comment.map(|_| "spiral lift Z"),
                     });
+                    // Pure-XY leg after a slope lift is still a
+                    // `travel_to_xy` call — no comment upstream
+                    // (`GCodeWriter.cpp:771-780`).
                     gcode.push_str(&command.writer.travel_to_xy_with_comment(
                         point,
                         command.speed_move.feedrate_mm_min(),
-                        command.travel_comment,
+                        None,
                     ));
                     gcode
                 }

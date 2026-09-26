@@ -57,7 +57,7 @@ fn filament_wipe_enables_travel_wipe_over_unprefixed_false() {
             "G1 X1 Y0 E0.03385 ; infill",
             "G1 E-0.55 F1800 ; retract",
             "G1 X0.5 Y0 E-0.25 F3600 ; wipe and retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );
@@ -80,7 +80,7 @@ fn filament_wipe_disables_unprefixed_travel_wipe() {
         &output,
         &[
             "G1 E-0.8 F1800 ; retract",
-            "G1 X2 Y0 F7200 ; travel",
+            "G1 X2 Y0 F7200",
             "G1 E0.8 F1800 ; unretract",
         ],
     );
