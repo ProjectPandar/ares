@@ -152,30 +152,47 @@ pub(super) fn ripple_closed_polyline(
     if points.len() < 3 {
         return points.to_vec();
     }
-    let perimeter_mm = closed_perimeter_length(points);
+    // Upstream's input is a scaled-i64 polygon (`FuzzySkin.cpp:159`):
+    // `unscale_`d mm values differ from our raw f64 input by up to 0.5µm,
+    // so quantize FIRST, then run anchor/perimeter/resample on the same
+    // truncated inputs upstream sees.
+    let scaled: Vec<(i64, i64)> = points
+        .iter()
+        .map(|point| (scaled_i64(point.x()), scaled_i64(point.y())))
+        .collect();
+    let mm_points: Vec<Point2> = scaled
+        .iter()
+        .map(|point| Point2::new(point.0 as f64 * 1e-6, point.1 as f64 * 1e-6))
+        .collect();
+    let perimeter_mm = closed_perimeter_length(&mm_points);
     if perimeter_mm < 1e-6 || config.point_distance_mm < 1e-6 {
         return points.to_vec();
     }
 
-    let anchor_arc_mm = ripple_anchor_arc_mm(points);
+    let anchor_arc_mm = ripple_anchor_arc_mm(&mm_points);
     let phase_shift_rad = ripple_phase_shift_rad(config, layer_id);
     let mut generated = Vec::with_capacity((perimeter_mm / config.point_distance_mm) as usize);
     let mut accumulated_mm = 0.0;
 
-    for index in 0..points.len() {
-        let start = points[index];
-        let end = points[(index + 1) % points.len()];
-        let dx = end.x() - start.x();
-        let dy = end.y() - start.y();
+    // `pt = p0 + (seg * t).cast<coord_t>()` truncates the interpolated base
+    // point toward zero, and the perp offset is a separately truncated
+    // `scale_(disp)` — the double quantization is load-bearing.
+    let mut generated_scaled: Vec<(i64, i64)> = Vec::with_capacity(generated.capacity());
+    for index in 0..scaled.len() {
+        let start = scaled[index];
+        let end = scaled[(index + 1) % scaled.len()];
+        let dx = (end.0 - start.0) as f64;
+        let dy = (end.1 - start.1) as f64;
         let length = dx.hypot(dy);
         if length < f64::EPSILON {
             continue;
         }
-        let segment_end_mm = accumulated_mm + length;
+        let length_mm = length / SCALING_FACTOR;
+        let segment_end_mm = accumulated_mm + length_mm;
         let mut sample_mm =
             (accumulated_mm / config.point_distance_mm).ceil() * config.point_distance_mm;
         while sample_mm < segment_end_mm {
-            let ratio = (sample_mm - accumulated_mm) / length;
+            let ratio = (sample_mm - accumulated_mm) / length_mm;
             let displacement = (config.ripples_per_layer as f64
                 * std::f64::consts::TAU
                 * (sample_mm - anchor_arc_mm)
@@ -184,19 +201,33 @@ pub(super) fn ripple_closed_polyline(
                 + phase_shift_rad)
                 .sin()
                 * config.thickness_mm;
-            generated.push(Point2::new(
-                start.x() + dx * ratio - dy / length * displacement,
-                start.y() + dy * ratio + dx / length * displacement,
-            ));
+            // `cast<coord_t>` = static_cast truncation toward zero on the
+            // interpolated base; `(scale_(disp)).cast<coord_t>` truncates
+            // the perpendicular offset independently.
+            let base_x = (start.0 as f64 + dx * ratio) as i64;
+            let base_y = (start.1 as f64 + dy * ratio) as i64;
+            let off_x = (-(dy / length) * displacement * SCALING_FACTOR) as i64;
+            let off_y = ((dx / length) * displacement * SCALING_FACTOR) as i64;
+            generated_scaled.push((base_x + off_x, base_y + off_y));
             sample_mm += config.point_distance_mm;
         }
         accumulated_mm = segment_end_mm;
     }
 
+    for point in &generated_scaled {
+        generated.push(Point2::new(point.0 as f64 * 1e-6, point.1 as f64 * 1e-6));
+    }
     while generated.len() < 3 {
         generated.push(points[points.len() - 2]);
     }
     generated
+}
+
+/// Upstream `SCALING_FACTOR` (mm -> coord_t, `libslic3r.h:60`).
+const SCALING_FACTOR: f64 = 1e6;
+
+fn scaled_i64(value: f64) -> i64 {
+    (value * SCALING_FACTOR) as i64
 }
 
 fn ripple_phase_shift_rad(config: FuzzySkinConfig, layer_id: usize) -> f64 {

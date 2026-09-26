@@ -2232,3 +2232,22 @@ independent buckets:
 
 All upstream-cited; no Ares-owned design needed. These combine with
 #5-#12 into the region-classification + cooling-buffer milestone slices.
+
+## 2026-09-26 #14 — fuzzy ripple quantization ported; residual = input polygon fidelity
+
+`perimeters/fuzzy_skin_noise.rs::ripple_closed_polyline`: upstream
+`FuzzySkin.cpp:159-216` runs entirely in the scaled-i64 domain
+(`SCALING_FACTOR = 1e6`): base-point interpolation truncates via
+`cast<coord_t>` and the perpendicular offset truncates via
+`scale_(disp).cast<coord_t>` — two independent quantizations, now
+reproduced (input polygon also pre-quantized to i64 before
+anchor/perimeter/resample). Unit test updated to µm-grid expectations.
+
+Post-fix `fuzzy_skin_thickness` diff is STILL ±1µm wander — the resample
+is now upstream-faithful, so the residual is the INPUT polygon: oracle's
+perimeter contour differs from ares's by ~1 scaled unit on this geometry
+(cube10 w/ `wall_generator` default path), i.e. a
+Clipper/simplify-precision boundary upstream of fuzzy skin — same class
+as the LayerRegion region work, not a fuzzy-code bug. Classic-noise
+types additionally depend on upstream `random_device` entropy
+(nondeterministic — only envelope membership is attainable).

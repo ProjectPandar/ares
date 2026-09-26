@@ -158,11 +158,14 @@ fn ripple_noise_type_generates_orca_arc_length_wave_points() {
     let perimeters = generate_perimeters(&layers, options).unwrap();
     let points = external_points(&perimeters[0]);
 
+    // Upstream `cast<coord_t>` truncates the interpolated base and the
+    // `scale_(disp)` offset independently — outputs land on the µm grid
+    // (`FuzzySkin.cpp:205-209`).
     assert_eq!(points.len(), 16);
     assert_point_close(points[0], Point2::new(0.0, 0.0));
-    assert_point_close(points[1], Point2::new(1.0, 0.076536686));
-    assert_point_close(points[2], Point2::new(2.0, 0.141421356));
-    assert_point_close(points[3], Point2::new(3.0, 0.184775907));
+    assert_point_close(points[1], Point2::new(1.0, 0.076536));
+    assert_point_close(points[2], Point2::new(2.0, 0.141421));
+    assert_point_close(points[3], Point2::new(3.0, 0.184775));
     assert_point_close(points[4], Point2::new(3.8, 0.0));
 }
 
