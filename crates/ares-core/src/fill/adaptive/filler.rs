@@ -110,24 +110,12 @@ fn generate_infill_lines_recursive(
         let to = (rot_to_x + offset.0, rot_to_y + offset.1);
         // Either extend an existing line or start a new one.
         let new_a = Point::new(
-            context
-                .scale
-                .checked_scale_rounded(from.0)
-                .unwrap_or(i64::MAX),
-            context
-                .scale
-                .checked_scale_rounded(from.1)
-                .unwrap_or(i64::MAX),
+            context.scale.checked_scale(from.0).unwrap_or(i64::MAX),
+            context.scale.checked_scale(from.1).unwrap_or(i64::MAX),
         );
         let new_b = Point::new(
-            context
-                .scale
-                .checked_scale_rounded(to.0)
-                .unwrap_or(i64::MAX),
-            context
-                .scale
-                .checked_scale_rounded(to.1)
-                .unwrap_or(i64::MAX),
+            context.scale.checked_scale(to.0).unwrap_or(i64::MAX),
+            context.scale.checked_scale(to.1).unwrap_or(i64::MAX),
         );
         let slot = &mut context.temp_lines[address];
         match *slot {

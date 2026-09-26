@@ -62,6 +62,42 @@ fn generates_lines_on_midplane() {
 }
 
 #[test]
+fn generated_endpoints_truncate_scaled_coordinates_toward_zero() {
+    let (vertices, _) = cube_mesh(5.0);
+    let octree = super::super::octree::build_octree(&vertices, &[], &[], 5.0, false, [0.0; 3]);
+    let center = octree.root().center();
+    let properties = [super::super::octree::CubeProperties {
+        edge_length: 2.0,
+        height: 4.0,
+        diagonal_length: 2.123456789,
+        line_z_distance: 1.0,
+        line_xy_distance: 0.987654321,
+    }];
+    for scale in [CoordinateScale::Normal, CoordinateScale::LargeBed] {
+        let mut context = FillContext::new(&octree, center[2], 0, 1000, scale);
+        context.cubes_properties = &properties;
+        generate_infill_lines_recursive(&mut context, octree.root(), 0, 0);
+        let segment = context.temp_lines[0].unwrap();
+        // Point::new_scale(Vec2d) casts scale_(v) to coord_t, unlike rounding.
+        let y = center[1] + 0.987654321 - 1.0 / 2.0_f64.sqrt();
+        assert_eq!(
+            segment.a,
+            Point::new(
+                scale.checked_scale(center[0] + 1.0617283945).unwrap(),
+                scale.checked_scale(y).unwrap(),
+            )
+        );
+        assert_eq!(
+            segment.b,
+            Point::new(
+                scale.checked_scale(center[0] - 1.0617283945).unwrap(),
+                scale.checked_scale(y).unwrap(),
+            )
+        );
+    }
+}
+
+#[test]
 fn empty_above_the_octree() {
     let scale = CoordinateScale::Normal;
     let (vertices, triangles) = cube_mesh(5.0);

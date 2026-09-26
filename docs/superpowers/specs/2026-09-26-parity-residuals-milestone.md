@@ -333,3 +333,43 @@ three reference attempts (`/tmp/strict-reference-oracle.log` and
 `/tmp/parity-strict-reference/case-iXFOTg`); this expected residual is not
 reported as a successful option domain. All touched Rust files are below
 400 lines; removal reduces `orca_parity.rs` from 484 to 352 lines.
+
+## Adaptive cubic scaled-endpoint conversion slice
+
+The strict sparse sweep (`/tmp/strict-sparse-oracle.log`) finds 18 of 26
+values matching at least one reference within three attempts; adaptivecubic
+and supportcubic join the eight divergent values. Closest adaptive reference
+`/tmp/parity-strict-sparse/case-ifuYpy` differs only in one wipe E word:
+`-.38885` versus `-.38886`. Independent upstream pre-wipe probes expose
+integer endpoint differences before the wipe, so do not patch E formatting.
+
+Source boundary: `FillAdaptive.cpp::generate_infill_lines_recursive:484`
+calls `Point::new_scale(Vec2d)`; `Point.hpp:206` truncates scaled doubles
+with `coord_t(...)`. Rust destination:
+`fill/adaptive/filler.rs::generate_infill_lines_recursive`. Replace its
+four rounded conversions with the existing checked truncating conversion.
+Included: positive/negative generated endpoints and both coordinate scales.
+Deferred: octree construction, adaptive hooks, other pattern discrepancies,
+and oracle stability. The existing Rust generator remains the upstream
+compatibility boundary, not a newly designed fill pipeline.
+
+Plan: test raw generated endpoints at the recursive generator seam before
+clipping, observe rounded Y4363021 versus truncated Y4363020 (red log
+`/tmp/adaptive-trunc-red.log`), then apply conversion, run adaptive tests,
+strict adaptive/support-cubic live comparisons, workspace/KSR, fmt/clippy,
+and independent read-only review before code-plus-doc commit.
+
+Results: focused adaptive tests 12 passed (`/tmp/adaptive-trunc-green.log`);
+workspace 7311 passed, 10 skipped (`/tmp/adaptive-trunc-workspace.log`);
+release KSR 84 passed, 2 skipped (`/tmp/adaptive-trunc-ksr.log`). Fmt and
+clippy pass with existing warnings. Both adaptivecubic and supportcubic now
+PASS strict ordered-byte comparisons (`/tmp/adaptive-trunc-oracle.log`,
+artifacts `/tmp/parity-adaptive-trunc`). The value-filtered option domain
+correctly stays INCOMPLETE because only 2/26 values were requested; this
+is not a complete sparse enum or all-options acceptance.
+A subsequent full strict enum run (`/tmp/adaptive-trunc-full-oracle.log`)
+again passes both affected values but reports 16 PASS / 10 DIVERGENT overall.
+Concentric, cubic, lateral-honeycomb and triangles differ in this run despite
+previous exact matches. No causal attribution to this isolated adaptive
+change is established; preserve the run-specific results, not a cumulative
+claim that all previously observed matches are stable.
