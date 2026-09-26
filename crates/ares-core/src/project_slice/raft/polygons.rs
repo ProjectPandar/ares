@@ -46,10 +46,12 @@ pub(crate) struct RaftPolygons {
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct RaftPolygonParams {
-    /// `raft_expansion` in lattice units.
-    pub(crate) raft_expansion: Coord,
-    /// `raft_first_layer_expansion` in lattice units.
-    pub(crate) first_layer_expansion: Coord,
+    /// `scaled<float>(raft_expansion)` (`SupportMaterial.cpp:1579`):
+    /// a float lattice value, not integerized.
+    pub(crate) raft_expansion: f64,
+    /// `float(scale_(raft_first_layer_expansion))`
+    /// (`SupportCommon.cpp:288`): a float lattice value.
+    pub(crate) first_layer_expansion: f64,
     pub(crate) raft_layers: usize,
     pub(crate) grid: SupportGridParams,
     pub(crate) scale: RaftPolygonScale,
@@ -70,7 +72,7 @@ pub(crate) fn raft_polygons(
     }
 
     // 2) Expand for stability (`detect_contacts:1576`).
-    let contacts_input = if params.raft_expansion > 0 {
+    let contacts_input = if params.raft_expansion > 0.0 {
         offset_expolygons(
             first_layer_lslices,
             params.raft_expansion as f32,
@@ -112,13 +114,15 @@ pub(crate) fn raft_polygons(
         }
     }
 
-    // 4) Interface expansion (`SupportCommon.cpp:295-331`).
+    // 4) Interface expansion (`SupportCommon.cpp:295-331`):
+    // `inflate_factor_fine = float(scale_(0.5))` — a float lattice
+    // value, no integerization.
     let fine = if params.raft_layers > 1 {
-        (INFLATE_FACTOR_FINE_MM * params.scale.units_per_mm) as Coord
+        INFLATE_FACTOR_FINE_MM * params.scale.units_per_mm
     } else {
-        0
+        0.0
     };
-    let interface = if fine > 0 {
+    let interface = if fine > 0.0 {
         expand_square(&contact, fine)?
     } else {
         contact.clone()
@@ -131,8 +135,8 @@ pub(crate) fn raft_polygons(
     // `jtMiter`/`DefaultMiterLimit` `expand`, NOT `SUPPORT_SURFACES_OFFSET_PARAMETERS`
     // — that param pair only applies to the interface/contact expands at
     // `:308-312`).
-    let first_inflate = (params.first_layer_expansion - fine).max(0);
-    let first_layer = if first_inflate > 0 {
+    let first_inflate = (params.first_layer_expansion - fine).max(0.0);
+    let first_layer = if first_inflate > 0.0 {
         expand_default(&base, first_inflate)?
     } else {
         base.clone()
@@ -150,7 +154,7 @@ pub(crate) fn raft_polygons(
 /// square joins with no miter limit (`PrintObject.cpp:4303`).
 fn expand_square(
     polygons: &[Polygon],
-    delta: Coord,
+    delta: f64,
 ) -> Result<Vec<Polygon>, crate::geometry::ClipperError> {
     expand_join(polygons, delta, JoinType::Square, 0.0)
 }
@@ -159,14 +163,14 @@ fn expand_square(
 /// (`ClipperUtils.hpp:19,27,379`).
 fn expand_default(
     polygons: &[Polygon],
-    delta: Coord,
+    delta: f64,
 ) -> Result<Vec<Polygon>, crate::geometry::ClipperError> {
     expand_join(polygons, delta, JoinType::Miter, 3.0)
 }
 
 fn expand_join(
     polygons: &[Polygon],
-    delta: Coord,
+    delta: f64,
     join_type: JoinType,
     miter_limit: f64,
 ) -> Result<Vec<Polygon>, crate::geometry::ClipperError> {

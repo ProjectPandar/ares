@@ -199,24 +199,59 @@ pub(super) fn adjust_layer_pairs_to_object_height(
 
 #[cfg(test)]
 pub(super) fn planned_layers(pairs: &[LayerPair]) -> Result<Vec<PlannedLayer>, SliceError> {
-    planned_layers_with_zaa(pairs, None)
+    planned_layers_with_zaa(pairs, None, &test_parameters())
+}
+
+#[cfg(test)]
+fn test_parameters() -> SlicingParameters {
+    SlicingParameters {
+        base_raft_layers: 0,
+        interface_raft_layers: 0,
+        base_raft_layer_height: 0.0,
+        interface_raft_layer_height: 0.0,
+        contact_raft_layer_height: 0.0,
+        layer_height: 0.2,
+        min_layer_height: 0.07,
+        max_layer_height: 0.2,
+        first_print_layer_height: 0.2,
+        first_object_layer_height: 0.2,
+        first_object_layer_bridging: false,
+        gap_raft_object: 0.0,
+        gap_object_support: 0.0,
+        gap_support_object: 0.0,
+        raft_base_top_z: 0.0,
+        raft_interface_top_z: 0.0,
+        raft_contact_top_z: 0.0,
+        object_print_z_min: 0.0,
+        object_print_z_max: 1.0,
+        object_print_z_uncompensated_max: 1.0,
+        object_shrinkage_compensation_z: 0.0,
+    }
 }
 
 pub(super) fn planned_layers_with_zaa(
     pairs: &[LayerPair],
     zaa_min_z: Option<f64>,
+    parameters: &SlicingParameters,
 ) -> Result<Vec<PlannedLayer>, SliceError> {
     if pairs.is_empty() {
         return Err(invalid("object layer pair series is empty"));
     }
+    // `new_layers` (`PrintObjectSlice.cpp:56-69`): the layer id starts
+    // at `raft_layers()` and `print_z = hi + object_print_z_min` —
+    // `hi` is object-relative, so the raft offset lands here and
+    // propagates to Z-dependent fills (`Fill.cpp:1243`).
+    // `SlicingParameters::raft_layers()` (`Slicing.hpp:42`).
+    let raft_layers = parameters.base_raft_layers + parameters.interface_raft_layers;
+    let object_z_min = parameters.object_print_z_min;
     pairs
         .iter()
         .enumerate()
-        .map(|(id, pair)| {
+        .map(|(index, pair)| {
             let height = pair.hi - pair.lo;
-            let print_z = pair.hi;
+            let print_z = pair.hi + object_z_min;
             // OrcaSlicer 2.4.2 `PrintObjectSlice.cpp::compute_slice_z`.
-            let slice_z = match (id, zaa_min_z) {
+            let slice_z = match (index, zaa_min_z) {
                 (0, _) | (_, None) => 0.5 * (pair.lo + pair.hi),
                 (_, Some(offset)) => pair.lo + offset,
             };
@@ -227,7 +262,7 @@ pub(super) fn planned_layers_with_zaa(
                 return Err(invalid("Bad min Z value"));
             }
             Ok(PlannedLayer {
-                id,
+                id: index + raft_layers,
                 height,
                 print_z,
                 slice_z,
@@ -250,7 +285,7 @@ pub(super) fn plan_print_object(
     Ok(PlannedPrintObject {
         source_object_index,
         transform_index,
-        layers: planned_layers_with_zaa(&pairs, options.zaa_min_z)?,
+        layers: planned_layers_with_zaa(&pairs, options.zaa_min_z, parameters)?,
     })
 }
 

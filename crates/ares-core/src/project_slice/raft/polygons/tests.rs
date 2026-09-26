@@ -25,15 +25,15 @@ fn x_span(polygons: &[Polygon]) -> (Coord, Coord) {
     (min, max)
 }
 
-fn params(raft_layers: usize, raft_expansion_microns: Coord) -> RaftPolygonParams {
+fn params(raft_layers: usize, raft_expansion_microns: f64) -> RaftPolygonParams {
     RaftPolygonParams {
         raft_expansion: raft_expansion_microns,
-        first_layer_expansion: 0,
+        first_layer_expansion: 0.0,
         raft_layers,
         scale: super::super::polygons::RaftPolygonScale {
             units_per_mm: 1000.0,
         },
-        grid: SupportGridParams::new(2440, 420),
+        grid: SupportGridParams::new(2.44, 0.42, 1000.0),
     }
 }
 
@@ -44,7 +44,7 @@ fn params(raft_layers: usize, raft_expansion_microns: Coord) -> RaftPolygonParam
 #[test]
 fn chain_grows_contact_to_interface_by_half_millimeter() {
     let lslices = [square(105_000, 115_000)];
-    let params = params(2, 1_500);
+    let params = params(2, 1_500.0);
 
     let polygons = raft_polygons(&lslices, &params).unwrap();
 
@@ -71,8 +71,8 @@ fn chain_grows_contact_to_interface_by_half_millimeter() {
 #[test]
 fn first_layer_expansion_grows_only_first_layer() {
     let lslices = [square(105_000, 115_000)];
-    let mut params = params(2, 1_500);
-    params.first_layer_expansion = 2_000;
+    let mut params = params(2, 1_500.0);
+    params.first_layer_expansion = 2_000.0;
 
     let polygons = raft_polygons(&lslices, &params).unwrap();
 
@@ -88,7 +88,7 @@ fn first_layer_expansion_grows_only_first_layer() {
 #[test]
 fn single_layer_raft_has_no_fine_expansion() {
     let lslices = [square(105_000, 115_000)];
-    let params = params(1, 1_500);
+    let params = params(1, 1_500.0);
 
     let polygons = raft_polygons(&lslices, &params).unwrap();
 
@@ -115,7 +115,7 @@ fn holes_do_not_reach_the_contact_silhouette() {
         square(105_000, 115_000).into_parts().0,
         vec![hole],
     )];
-    let params = params(2, 1_500);
+    let params = params(2, 1_500.0);
 
     let polygons = raft_polygons(&lslices, &params).unwrap();
 

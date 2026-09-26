@@ -69,7 +69,10 @@ pub(crate) fn raft_layer_polylines(
         }
     }
     let epsilon = scale.scaled_delta(1e-4) as f32;
-    let erode = (((0.5 * spec.width_mm) + 0.000_001) * units) as f32;
+    // `SCALED_EPSILON + 0.5*flow.scaled_width()`
+    // (`SupportCommon.cpp:738`, `Flow.hpp:62`): `scaled_width` is the
+    // integer `coord_t(scale_(width))` — truncate before halving.
+    let erode = (0.5 * ((spec.width_mm * units) as i64) as f64) as f32;
     let closing = crate::geometry::offset2_ex(
         &layer_polygons
             .iter()
@@ -80,7 +83,9 @@ pub(crate) fn raft_layer_polylines(
         crate::geometry::JoinType::Miter,
         3.0,
     )?;
-    let clip = 0.15 * spec.spacing * units;
+    // `spacing * 0.15` (`:735`): `spacing = coord_t(scale_(spacing))`
+    // (`:733`) — integer scaled spacing times 0.15.
+    let clip = 0.15 * (spec.spacing * units) as i64 as f64;
     let mut out = Vec::new();
     for expolygon in &closing {
         let mut points = expolygon.contour().points().to_vec();
@@ -93,7 +98,8 @@ pub(crate) fn raft_layer_polylines(
     }
     let fill_region = crate::geometry::offset_expolygons(
         &closing,
-        -((0.4 * spec.spacing) * units) as f32,
+        // `float(-0.4 * spacing)` (`:749`) — integer scaled spacing.
+        -(-0.4 * (spec.spacing * units) as i64 as f64) as f32,
         crate::geometry::JoinType::Miter,
         3.0,
     )?;

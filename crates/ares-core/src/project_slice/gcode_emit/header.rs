@@ -86,9 +86,10 @@ pub(super) fn plate_layer_zs(traversal: &PreparedPostClassicTraversal) -> Vec<f6
             .unwrap_or(0);
         let resolved_object = &traversal.resolved.objects[object_index];
         // Raft layers precede the object layers (`PrintObject::layers()`
-        // carries the raft offset); their print z's join the plate grid,
-        // and the object z's shift by the raft offset.
-        let (raft_zs, object_shift) = match crate::project_slice::raft::bridge::build_project_raft(
+        // carries the raft offset); their print z's join the plate grid.
+        // `PlannedLayer.print_z` already carries the raft lift
+        // (`PrintObjectSlice.cpp:66` `print_z = hi + zmin`).
+        let (raft_zs, _object_shift) = match crate::project_slice::raft::bridge::build_project_raft(
             &traversal.resolved.views.full,
             &resolved_object.object,
             plan.layers.iter().map(|layer| layer.height).sum(),
@@ -105,7 +106,7 @@ pub(super) fn plate_layer_zs(traversal: &PreparedPostClassicTraversal) -> Vec<f6
             ),
             _ => (Vec::new(), 0.0),
         };
-        zs.extend(plan.layers.iter().map(|layer| layer.print_z + object_shift));
+        zs.extend(plan.layers.iter().map(|layer| layer.print_z));
         zs.extend(raft_zs);
     }
     zs.sort_by(f64::total_cmp);

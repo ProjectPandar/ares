@@ -58,16 +58,20 @@ pub(super) fn junction_speed(previous: PlannedBlock, current: JunctionInput) -> 
         }
     }
 
-    let mut e_exit = previous.axis_feedrate[3];
-    let mut e_entry = axis_feedrate[3];
+    // `GCodeProcessor.cpp:4123-4131`: `v_exit`/`v_entry` are `float`
+    // narrowed BEFORE the factor multiplications; each product rounds
+    // to f32 (upstream `float` fields in `axis_feedrate` are already
+    // f32 — keep e_exit/e_entry f32 end-to-end).
+    let mut e_exit = previous.axis_feedrate[3] as f32;
+    let mut e_entry = axis_feedrate[3] as f32;
     if previous_larger {
-        e_exit *= f64::from(smaller_factor);
+        e_exit *= smaller_factor;
     }
     if limited {
-        e_exit *= f64::from(factor);
-        e_entry *= f64::from(factor);
+        e_exit *= factor;
+        e_entry *= factor;
     }
-    let e_jerk = axis_jerk(e_exit as f32, e_entry as f32);
+    let e_jerk = axis_jerk(e_exit, e_entry);
     if e_jerk > jerk[3] {
         factor *= jerk[3] / e_jerk;
         limited = true;

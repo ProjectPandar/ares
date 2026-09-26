@@ -34,23 +34,36 @@ pub(crate) struct SupportGridPattern {
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct SupportGridParams {
     /// `support_base_pattern_spacing + flow.spacing()`
-    /// (`SupportMaterial.cpp:620`) — `m_support_spacing`.
-    pub(crate) grid_resolution: Coord,
-    /// `flow.scaled_spacing()` — `m_extrusion_width` (`:622`).
-    pub(crate) extrusion_width: Coord,
-    /// `flow.scaled_spacing() / 2 + 5` (`:625`).
+    /// (`SupportMaterial.cpp:620`) — `m_support_spacing`, kept as a
+    /// double mm like upstream (`:636`, `grid_resolution: double`);
+    /// `scale_` truncates to `coord_t` at the point of use (`:670`,
+    /// `:680`, `:958`).
+    pub(crate) grid_resolution: f64,
+    /// `support_material_flow.spacing()` — `m_extrusion_width`
+    /// (`:623`, `extrusion_width: double`), scaled via
+    /// `scale_(extrusion_width)` inside `create`.
+    pub(crate) extrusion_width: f64,
+    /// `flow.scaled_spacing() / 2 + 5` (`:625`): `coord_t` of the
+    /// scaled spacing, integer-halved, plus 5.
     pub(crate) expansion_to_slice: Coord,
     /// `-3` (`:626`).
     pub(crate) expansion_to_propagate: Coord,
+    /// Lattice units per millimetre (`1 / CoordinateScale::factor()`),
+    /// applying `scale_` to the mm-valued fields.
+    pub(crate) units_per_mm: f64,
 }
 
 impl SupportGridParams {
-    pub(crate) fn new(grid_resolution: Coord, flow_spacing: Coord) -> Self {
+    /// `grid_resolution` and `flow_spacing` are millimetres; lattice
+    /// scaling happens at use, matching upstream's double params.
+    pub(crate) fn new(grid_resolution: f64, flow_spacing: f64, units_per_mm: f64) -> Self {
+        let flow_spacing_scaled = (flow_spacing * units_per_mm) as Coord;
         Self {
             grid_resolution,
             extrusion_width: flow_spacing,
-            expansion_to_slice: flow_spacing / 2 + 5,
+            expansion_to_slice: flow_spacing_scaled / 2 + 5,
             expansion_to_propagate: -3,
+            units_per_mm,
         }
     }
 }
@@ -65,23 +78,39 @@ impl SupportGridPattern {
         // `bbox.offset(20); bbox.align_to_grid(grid_resolution);`
         let (min_x, min_y) = (min_x - 20, min_y - 20);
         let (max_x, max_y) = (max_x + 20, max_y + 20);
-        let resolution = params.grid_resolution.max(1);
+        // `coord_t grid_resolution = coord_t(scale_(m_support_spacing))`
+        // (`:670`): trunc to the integer lattice.
+        let resolution = (params.grid_resolution * params.units_per_mm) as Coord;
+        let resolution = resolution.max(1);
         let mut bx0 = align_down(min_x, resolution);
         let mut by0 = align_down(min_y, resolution);
         let mut bx1 = bx0 + div_ceil(max_x - bx0, resolution) * resolution;
         let mut by1 = by0 + div_ceil(max_y - by0, resolution) * resolution;
 
         // AGG path (`:676-696`): oversample the grid.
-        let extrusion_width_scaled = params.extrusion_width.max(1);
+        // `scale_(params.extrusion_width)` trunc (`:679`).
+        let extrusion_width_scaled = (params.extrusion_width * params.units_per_mm) as Coord;
+        let extrusion_width_scaled = extrusion_width_scaled.max(1);
+        // `int(scale_(m_support_spacing) / (extrusion_width_scaled + 100))`
+        // (`:680`): int() truncates the DOUBLE quotient of the raw
+        // scaled spacing, not the truncated grid_resolution.
+        let spacing_scaled = params.grid_resolution * params.units_per_mm;
         let oversampling =
-            ((params.grid_resolution as i64) / (extrusion_width_scaled + 100)).clamp(1, 8) as usize;
+            ((spacing_scaled / (extrusion_width_scaled + 100) as f64) as i64).clamp(1, 8) as usize;
+        // `scale_(m_support_spacing / oversampling)` (`:681`): the mm
+        // spacing is divided first, then scaled — keep that order.
         let pixel_size = ((extrusion_width_scaled + 21) as f64)
-            .max(params.grid_resolution as f64 / oversampling as f64);
-        // `m_bbox.offset(m_pixel_size)`.
-        bx0 -= pixel_size as Coord;
-        by0 -= pixel_size as Coord;
-        bx1 += pixel_size as Coord;
-        by1 += pixel_size as Coord;
+            .max((params.grid_resolution / oversampling as f64) * params.units_per_mm);
+        // `m_bbox.offset(m_pixel_size)` (`:684`): `BoundingBox::offset`
+        // constructs `Point(delta, delta)`, whose double constructor
+        // rounds (`BoundingBox.cpp:202-208`, `Point.hpp:196`) — the
+        // bbox expansion rounds even though `m_pixel_size` stays a
+        // double for the grid-size division below.
+        let pixel_rounded = pixel_size.round() as Coord;
+        bx0 -= pixel_rounded;
+        by0 -= pixel_rounded;
+        bx1 += pixel_rounded;
+        by1 += pixel_rounded;
         let grid_w_raw = (((bx1 - bx0) as f64) / pixel_size).ceil() as usize;
         let grid_h_raw = (((by1 - by0) as f64) / pixel_size).ceil() as usize;
         let grid_blocks_x = (grid_w_raw + oversampling - 1 - 2) / oversampling;

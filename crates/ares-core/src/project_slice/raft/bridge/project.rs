@@ -52,11 +52,13 @@ pub(crate) fn build_project_raft(
 
     let layer_height = parameters.layer_height;
     let first_height = parameters.first_print_layer_height;
-    // `rounded_rectangle_extrusion_spacing` (`Flow.cpp:200-206`) computes
-    // `width - height·float(1 − 0.25·π)` in f32 — keep the f32 rounding so
-    // `line_half_width`/`length_to_go`/`lerp t` match oracle endpoints.
+    // `rounded_rectangle_extrusion_spacing` (`Flow.cpp:200-206`)
+    // computes `width - height·float(1 − 0.25·π)`: the constant is
+    // `float(1. − 0.25·PI)` — a double expression narrowed to f32 once,
+    // not an f32 π multiplication.
     let spacing = |width: f64, height: f64| {
-        (width as f32 - height as f32 * (1.0f32 - 0.25 * std::f32::consts::PI)) as f64
+        let factor = (1.0 - 0.25 * std::f64::consts::PI) as f32;
+        (width as f32 - height as f32 * factor) as f64
     };
     let support_flow_spacing = spacing(support_width, layer_height);
     let interface_flow_spacing = spacing(interface_width, layer_height);
@@ -85,10 +87,12 @@ pub(crate) fn build_project_raft(
     };
     let fill_params = fill_inputs.derive();
 
-    let scaled = |mm: f64| (mm / scale.factor()).round() as i64;
+    let units_per_mm = 1.0 / scale.factor();
+    let scaled = |mm: f64| mm * units_per_mm;
     let grid = SupportGridParams::new(
-        scaled(object.support_base_pattern_spacing.0 + support_flow_spacing),
-        scaled(support_flow_spacing),
+        object.support_base_pattern_spacing.0 + support_flow_spacing,
+        support_flow_spacing,
+        units_per_mm,
     );
     let raft_grid = raft_layer_grid(&parameters)?;
     let polygons = raft_polygons(

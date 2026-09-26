@@ -16,7 +16,7 @@ fn square(min: Coord, max: Coord) -> Polygon {
 #[test]
 fn grid_aligned_square_survives_extract() {
     let support = vec![square(2000, 8000)];
-    let params = SupportGridParams::new(1000, 400);
+    let params = SupportGridParams::new(1.0, 0.4, 1000.0);
     let pattern = SupportGridPattern::new(&support, &[], &params).unwrap();
 
     let extracted = pattern.extract_support(&support, &[], params.expansion_to_slice, true);
@@ -31,7 +31,7 @@ fn grid_aligned_square_survives_extract() {
 #[test]
 fn trimmed_away_island_is_dropped() {
     let support = vec![square(2000, 8000)];
-    let params = SupportGridParams::new(1000, 400);
+    let params = SupportGridParams::new(1.0, 0.4, 1000.0);
     let pattern = SupportGridPattern::new(&support, &[], &params).unwrap();
 
     // Trim everything away: no island contains a sample.
