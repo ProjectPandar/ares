@@ -2090,3 +2090,23 @@ for h=0.2/d=0.4 gives 0.3664 — not a match; 0.454819 unexplained,
 needs the flow formula mapped next session (check
 `LayerRegion::flow(frSolidInfill)` auto-width vs ares `flow_for_role`
 against the same region thickness).
+
+## 2026-09-26 #7 — erBottomSurface role handling gap
+
+`Fill.cpp:904-975`: `surface.is_bottom()` → `params.extrusion_role =
+erBottomSurface` (distinct from erSolidInfill) with
+`extruder = bottom_surface_filament_id` and `role_speed = 0`
+(fallback path — oracle emits F1913 while ares emits F2100 = the
+internal-solid-infill speed). Combined with the `;WIDTH:` 0.454819 vs
+0.420844 delta, ares's Z23.9 bottom-over-raft fill is emitted with a
+different role/flow/speed than `erBottomSurface`. Ares does have a
+`PrintPathRole::BottomSurface` mapping
+(`extrusions/options/accessors.rs:148` →
+`bottom_solid_infill_flow_ratio`), so the gap is likely upstream of
+emission: the bottom-over-raft surface may be classified as
+`InfillLayerRole::InternalSolid`/bridged differently, or its flow is
+computed via `solid_line_width` instead of
+`layerm.flow(frSolidInfill, thickness)` where `thickness` is the
+surface's own (-1 vs layer.height selection at `Fill.cpp:955`).
+Verify which SurfaceFillParams branch ares takes for
+bottom-over-unsupported and compare `params.flow` inputs.
