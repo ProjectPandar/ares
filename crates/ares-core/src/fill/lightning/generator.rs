@@ -13,6 +13,9 @@ use crate::geometry::{
 use super::layer::Layer;
 use super::tree_node::Node;
 
+#[cfg(test)]
+mod tests;
+
 /// `to_polygons(ExPolygons)` — flatten each expolygon to contour+holes.
 fn to_polygons(expolys: &[ExPolygon]) -> Vec<Polygon> {
     expolys
@@ -78,7 +81,7 @@ impl Generator {
             };
             infill_extrusion_width = scaled_float(fallback_mm);
         }
-        let layer_thickness = scale.checked_scale(layer_height).unwrap_or(1) as f64;
+        let layer_thickness = scale.scaled_delta(layer_height);
         let locator_cell_size = super::layer::locator_cell_size(scale);
         // `m_supporting_radius = coord_t(m_infill_extrusion_width) * 100 * n_multiline /
         // sparse_infill_density` (Generator.cpp:90): `coord_t(float)` truncates the
