@@ -33,11 +33,27 @@ pub(super) fn connect_horizontal(
     let left =
         horizontal_link(slice, line, intersection, false).filter(|&(target_line, target)| {
             !consistent_pattern
-                && horizontal_available(slice, &consumption, target_line, target, false)
+                && horizontal_available(
+                    slice,
+                    &consumption,
+                    line,
+                    intersection,
+                    target_line,
+                    target,
+                    false,
+                )
         });
     let right =
         horizontal_link(slice, line, intersection, true).filter(|&(target_line, target)| {
-            horizontal_available(slice, &consumption, target_line, target, true)
+            horizontal_available(
+                slice,
+                &consumption,
+                line,
+                intersection,
+                target_line,
+                target,
+                true,
+            )
         });
     mark_horizontal_links(slice, consumed_right, line, intersection);
     let towards_right = match (left, right) {
@@ -105,6 +121,10 @@ pub(super) fn vertical_outside(
     Some((target, link.2))
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "source continuation carries slice, consumption, link endpoints, and output buffers"
+)]
 /// Emits the `vertical_outside` continuation (`FillRectilinear.cpp:1531-1563`):
 /// a Valid link follows the perimeter arc; a TooLong link ends the current
 /// polyline and starts a new one at the target. Returns the target index.
@@ -138,9 +158,15 @@ pub(super) fn follow_vertical_outside(
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "source gate consumes both the current and target intersections"
+)]
 fn horizontal_available(
     slice: &RectilinearSlice,
     consumed: &Consumption<'_>,
+    line: usize,
+    intersection: usize,
     target_line: usize,
     target: usize,
     right: bool,
@@ -158,11 +184,10 @@ fn horizontal_available(
         return false;
     }
     let segment = vertical_segment(&slice.lines[target_line].intersections, target);
+    // `FillRectilinear.cpp:532`: `side == Right ? it_this.consumed_perimeter_right
+    // : it_other.consumed_perimeter_right`.
     let link_consumed = if right {
-        consumed.right[target_line - 1][slice.lines[target_line].intersections[target]
-            .previous
-            .unwrap()
-            .0]
+        consumed.right[line][intersection]
     } else {
         consumed.right[target_line][target]
     };
