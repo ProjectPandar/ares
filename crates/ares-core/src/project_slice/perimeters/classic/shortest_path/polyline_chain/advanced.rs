@@ -5,11 +5,17 @@ use super::super::kd_tree::KdTree;
 use queue::Queue;
 use types::{Chains, EndPoint, distance};
 
-const SCALED_EPSILON: f64 = 1.0e-4;
+// `SCALED_EPSILON` (`ShortestPath.cpp:826`, `libslic3r.h:96`) is
+// `scale_(1e-4)` = 1e-4 lattice units per mm — expressed in the
+// active coordinate scale, not the raw mm literal.
 
 // OrcaSlicer 2.4.2 `chain_segments_greedy_constrained_reversals2_`, reached by
 // `chain_segments_greedy2` for freely reversible open polylines.
-pub(super) fn chain(positions: &[[f64; 2]], start_near: Option<[f64; 2]>) -> Vec<(usize, bool)> {
+pub(super) fn chain(
+    positions: &[[f64; 2]],
+    start_near: Option<[f64; 2]>,
+    scaled_epsilon: f64,
+) -> Vec<(usize, bool)> {
     let segment_count = positions.len() / 2;
     match segment_count {
         0 => return Vec::new(),
@@ -51,6 +57,7 @@ pub(super) fn chain(positions: &[[f64; 2]], start_near: Option<[f64; 2]>) -> Vec
             first_point,
             &endpoints,
             &mut chains,
+            scaled_epsilon,
         );
         if !valid {
             update_endpoint(
@@ -141,6 +148,7 @@ fn connection_state(
     first_point: Option<usize>,
     endpoints: &[EndPoint],
     chains: &mut Chains,
+    scaled_epsilon: f64,
 ) -> (bool, usize, usize) {
     if endpoints[second].chain_id > 0 && endpoints[second ^ 1].chain_id > 0 {
         return (false, 0, 0);
@@ -159,7 +167,7 @@ fn connection_state(
     if second_flips {
         current_distance += chains.flip_penalty(second_chain);
     }
-    if (current_distance - endpoints[first].distance).abs() > SCALED_EPSILON {
+    if (current_distance - endpoints[first].distance).abs() > scaled_epsilon {
         return (false, first_chain, second_chain);
     }
     if let Some(first_point) = first_point {

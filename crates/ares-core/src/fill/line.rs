@@ -203,7 +203,7 @@ fn fill_surface_single(
                 .next();
         let tolerance = (10.0 * EPSILON / scale.factor()) as i64;
         let mut ordered = polylines;
-        crate::project_slice::chain_polylines(&mut ordered);
+        crate::project_slice::chain_polylines(&mut ordered, scale);
         let mut first = true;
         for polyline in ordered {
             if !first {

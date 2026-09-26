@@ -8,11 +8,12 @@ pub(super) fn chain(
     polylines: &mut Vec<Polyline>,
     pattern: PlanePathPattern,
     calibration_order: bool,
+    scale: crate::geometry::CoordinateScale,
 ) {
     if calibration_order && pattern == PlanePathPattern::ArchimedeanChords {
         order_calibration_archimedean(polylines);
     } else if pattern == PlanePathPattern::OctagramSpiral {
-        chain_polylines(polylines);
+        chain_polylines(polylines, scale);
     } else {
         chain_polylines_multifragment(polylines);
     }

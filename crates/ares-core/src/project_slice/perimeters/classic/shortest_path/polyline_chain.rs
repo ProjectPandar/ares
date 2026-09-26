@@ -6,8 +6,13 @@ use crate::geometry::Polyline;
 
 /// `chain_polylines` from OrcaSlicer 2.4.2 `ShortestPath.cpp:1968-1994`,
 /// including greedy2 chaining and the reached two-exchange flipping pass.
-pub(crate) fn chain_polylines(polylines: &mut Vec<Polyline>) {
-    reorder(polylines, |positions| advanced::chain(positions, None));
+pub(crate) fn chain_polylines(
+    polylines: &mut Vec<Polyline>,
+    scale: crate::geometry::CoordinateScale,
+) {
+    reorder(polylines, |positions| {
+        advanced::chain(positions, None, 1.0e-4 / scale.factor())
+    });
     two_exchange::improve(polylines);
 }
 

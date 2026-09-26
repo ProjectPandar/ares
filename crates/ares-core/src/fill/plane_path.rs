@@ -220,7 +220,7 @@ fn fill_component(
     }
     let mut chained = if params.anchor_length_max < 0.05 || params.density > 0.5 {
         let mut clipped = clipped;
-        ordering::chain(&mut clipped, pattern, params.calibration_order);
+        ordering::chain(&mut clipped, pattern, params.calibration_order, scale);
         clipped
     } else {
         connect_infill(

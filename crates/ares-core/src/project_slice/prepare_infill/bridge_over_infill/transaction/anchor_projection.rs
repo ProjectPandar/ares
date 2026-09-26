@@ -37,6 +37,9 @@ pub(super) fn validate(
             | ProcessInfillPattern::HilbertCurve
             | ProcessInfillPattern::ArchimedeanChords
             | ProcessInfillPattern::OctagramSpiral
+            // `AdaptiveCubic`/`SupportCubic` are accepted: the
+            // FillAdaptive port provides `adaptive::anchoring_lines`
+            // for the sparse anchoring path (`sparse_anchoring/arms.rs`).
             | ProcessInfillPattern::AdaptiveCubic
             | ProcessInfillPattern::SupportCubic
             | ProcessInfillPattern::TriHexagon

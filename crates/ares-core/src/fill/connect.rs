@@ -75,7 +75,7 @@ pub(crate) fn connect_infill_polygons(
     if params.anchor_length_max < 0.05 {
         let mut polylines = infill_ordered;
         if polylines.len() > 1 {
-            crate::project_slice::chain_polylines(&mut polylines);
+            crate::project_slice::chain_polylines(&mut polylines, scale);
         }
         return Ok(polylines);
     }
