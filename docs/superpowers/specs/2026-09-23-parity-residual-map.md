@@ -2251,3 +2251,21 @@ Clipper/simplify-precision boundary upstream of fuzzy skin — same class
 as the LayerRegion region work, not a fuzzy-code bug. Classic-noise
 types additionally depend on upstream `random_device` entropy
 (nondeterministic — only envelope membership is attainable).
+
+## #15 M73 placement micro-shift (retraction_speed* + ironing_pattern family)
+
+Sweep FAIL domains `retraction_speed`, `filament_retraction_speed` +
+`ironing_pattern` all reduce to M73-only diffs: identical move geometry
+AND identical per-block cumulative times (estimator-replay over both
+files bit-for-bit equal, `TOTAL` equal), but the M73 line sits 1-2 moves
+earlier in ares. Refined diagnosis (case-009R78): upstream's
+`g1_times_cache` cumulative in the boundary region is ~0.06s LOWER than
+ares's — upstream crosses `e > 56.089` at g1#86, ares at #77 — while
+replaying either file through the C++ TimeMachine produces IDENTICAL
+curves (i.e. the emitted streams are byte-equal sans M73 and the
+estimator is symmetric). So the delta lives inside upstream's OWN
+`calculate_time` pass over the pre-export stream: plausibly
+`additional_time`/`block_time` attribution (`GCodeProcessor.cpp:466-471`)
+applied to a differently-indexed upstream block stream — e.g. a
+non-emitting move ares emits/skips — rather than per-move physics. This
+stays a milestone-scale time-model slice; NOT per-domain fixes.
