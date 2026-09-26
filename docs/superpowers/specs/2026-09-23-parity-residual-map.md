@@ -2149,3 +2149,25 @@ dilation/`surface.thickness` handling in
   just the junction); `M204 P0.5` engages the 10→7.4→10 ramp.
 - Verified: ksr 84/84, z_hop_types+filament_z_hop_types domains PASS,
   full touched-test suite 595/595.
+
+## 2026-09-26 #10 — bottom-surface: `;WIDTH` is `path.width` not flow.width
+
+GCode.cpp:6794-6796 emits `m_last_width = path.width` — the width
+AFTER `fill_expolygons_generate_paths` spacing adjustments
+(`Flow::with_spacing` when `params.density < 1` or
+`params.spacing != flow.spacing()`). Oracle 0.454819 vs ares
+0.420844 ⇒ different `params.spacing`/density inputs for the same
+region — consistent with ares's `fill_surfaces` classification for
+bottom-over-raft producing a different `Surface` (different angle +
+different spacing inputs), not just a different emitted path.
+Upstream bottom-over-raft surfaces flow through
+`layerm.flow(erSolidInfill? -> frSolidInfill, thickness)` with
+`params.spacing = flow.spacing()` (density=100); the bottom_surface
+density `bottom_surface_density=100%` makes ares's spacing match
+`solid_line_width` — oracle's wider spacing (0.4977 flow-derived
+width) suggests `spacing` widened by `mm3_per_mm` calibration or a
+different `flow.spacing()` input (bridge-flow `with_spacing`?).
+Also committed this turn: `ec96c3f8` — `"Support transition"`
+feature speed now `bridge_speed` (`GCode.cpp:6524`
+erSupportTransition → bridge_speed; previously fell through to
+inner_wall_speed).
