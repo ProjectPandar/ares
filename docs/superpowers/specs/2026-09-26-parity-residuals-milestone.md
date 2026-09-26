@@ -255,3 +255,33 @@ FAIL, not complete. `/tmp/sparse-flow-workspace.log`: 7305 passed,
 clippy succeed with existing warnings. Independent source review found
 no code issues; these completed run logs resolve its pending evidence
 note for the concentric slice only.
+
+## Quarter-cubic shift arithmetic slice
+
+Source: `FillRectilinear.cpp::FillQuarterCubic::fill_surface` (3518–3548).
+Rust destination: `fill/multiline/sweeps.rs::quartercubic_sweeps`.
+Included: promote Boost's **float** `one_div_root_two` constant to double;
+preserve fractional `scale_(z)` and `scale_(spacing)` until the upstream
+integer casts. Existing Rust sweep dispatch stays in place; replace only
+its prematurely truncated intermediates and double-precision constant.
+Deferred: multiline chaining, other pattern residuals, timing estimation
+and printer/option coverage expansion.
+
+Plan: compare a small C++ arithmetic probe using Boost float constants
+against a separate Rust regression at z=1.2, 1.2000009 and 9.8; establish
+red, apply the source-equivalent computation, then run focused tests,
+KSR and live quarter-cubic output comparisons. Review independently
+before code-and-doc commit. Probe `/tmp/quarter-shift.cpp` yields period
+10855456 and dx2 scaled units 2330962, 2330961, 3750156 respectively
+(spacing 0.40707963705062866, density 0.15f, multiline 1).
+
+Results: red dx2 was 2.330956 versus expected 2.330962; focused nextest
+28 passed. `/tmp/quarter-shift-workspace.log`: 7306 passed, 10 skipped;
+`/tmp/quarter-shift-ksr.log`: 84 passed, 2 skipped. Fmt/clippy succeed.
+Current live sweep `/tmp/quarter-shift-oracle.log` confirms quartercubic
+PASS. The sparse enum still fails: crosszag, honeycomb, lightning, line,
+lockedzag and (newly observed in this run) tpmsfk. The latter's first
+mismatch is an Internal Bridge travel Y112.867 vs Y112.9 in
+`/tmp/parity-quarter-shift/case-kqy7Pi/manifest.json`; its cause remains
+unverified. Do not infer whole-enum success or nondeterminism from the
+previous run's tpmsfk PASS.

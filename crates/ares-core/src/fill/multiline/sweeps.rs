@@ -6,6 +6,9 @@ use crate::geometry::CoordinateScale;
 
 use super::Sweep;
 
+#[cfg(test)]
+mod tests;
+
 /// `FillStars`/`ipStars` (`FillRectilinear.cpp:3487`): three 60° families, the
 /// third shifted by `(3/2)·spacing·multiline/density`.
 pub(crate) fn stars_sweeps(spacing: f64, multiline: i32, density: f32) -> [Sweep; 3] {
@@ -35,9 +38,11 @@ pub(crate) fn quartercubic_sweeps(
     print_z: f64,
     scale: CoordinateScale,
 ) -> [Sweep; 4] {
-    const ONE_DIV_ROOT_TWO: f64 = std::f64::consts::FRAC_1_SQRT_2;
-    let z_scaled = scale.checked_scale(print_z).unwrap_or(0) as f64;
-    let spacing_scaled = scale.checked_scale(spacing).unwrap_or(0) as f64;
+    // Upstream promotes Boost's float constant, but scale_ remains double
+    // until the explicit coord_t casts below.
+    const ONE_DIV_ROOT_TWO: f64 = std::f32::consts::FRAC_1_SQRT_2 as f64;
+    let z_scaled = scale.scaled_delta(print_z);
+    let spacing_scaled = scale.scaled_delta(spacing);
     let line_width = spacing_scaled as i64 * i64::from(multiline);
     let period = (spacing_scaled * f64::from(multiline) / f64::from(density)) as i64 * 4;
     let shift_for = |pattern_z_shift: f64| -> f32 {
