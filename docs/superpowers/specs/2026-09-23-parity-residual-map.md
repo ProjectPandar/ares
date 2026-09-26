@@ -2044,3 +2044,27 @@ Remaining FAILs unchanged — all upstream-port slices, not patches:
 concentric — ares's rectangle-only `infills/concentric.rs` cannot
 reproduce Arachne ring topology), fuzzy-skin point noise, and the
 rectilinear/raft zigzag traverse-order direction at layer transitions.
+
+## 2026-09-26 #5 — raft_layers: angle parity off-by-one hypothesis
+
+Layer Z24.1 `;TYPE:Bottom surface` hatch: oracle '/'-family lines
+(114.02-column → 114.02-row diagonals), ares '\'-family — a 90° fill
+angle divergence, plus `;WIDTH:` 0.454819 vs 0.420844 (flow side is
+already different → the surface region/role config may also diverge).
+
+Upstream angle chain (`SupportParameters.hpp:148-170`, `284-285`):
+`base_angle = deg2rad(support_angle)`, `interface_angle =
+deg2rad(support_angle + 90)`; when `base_raft_layers==1 ||
+interface_raft_layers>1`, `raft_angle_interface = interface_angle +
+π/2` (≡ ~180° ≈ 0° dir). Per-layer: `raft_angle_interface +
+(interface_id & 1 ? -π/4 : +π/4)` ⇒ even id = '\' family, odd = '/'.
+Oracle produced '/' ⇒ its interface_id was ODD; ares emitted EVEN.
+`generate_support_layers` (`SupportCommon.cpp:1395-1406`) increments
+`layer_id_interface` only for interface-bearing layers and lets
+contact-only layers borrow `supporting_layer.interface_id()+1`; ares
+counts `Interface|Contact` sequentially in `raft/emit.rs:47-77`.
+Reconcile ares's counter against the upstream borrow/increment
+sequence for this raft layer kind arrangement — the WIDTH delta
+suggests the raft contact interface flow
+(`raft_interface_flow`/`raft_interface_density`,
+`SupportParameters.hpp:119-135`) may additionally be mis-sourced.
