@@ -1,7 +1,6 @@
 //! Source-cited rewrite of OrcaSlicer 2.4.2 `Fill/FillPlanePath.cpp/.hpp`.
 
 mod bounds;
-mod classic_clip;
 mod generate;
 mod ordering;
 mod output;
@@ -184,11 +183,7 @@ fn fill_component(
             }
         }
     }
-    let clipped = if pattern == PlanePathPattern::OctagramSpiral {
-        classic_clip::intersect(&polylines, &clip)?
-    } else {
-        intersection_open_polylines(&polylines, &clip)?
-    };
+    let clipped = intersection_open_polylines(&polylines, &clip)?;
     if let Ok(path) = std::env::var("ARES_DUMP_PLANECLIP") {
         use std::io::Write;
         if let Ok(mut file) = std::fs::OpenOptions::new()
