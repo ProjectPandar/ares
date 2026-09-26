@@ -103,13 +103,16 @@ pub(super) fn vertical_outside(
     intersection: usize,
     going_up: bool,
 ) -> Option<(usize, LinkQuality)> {
+    // `vertical_outside()` searches `left_vertical` (previous) before
+    // `right_vertical` (next) — `FillRectilinear.cpp:267` — so ties resolve to
+    // the contour-backward link.
     let wanted = if going_up {
         LinkType::Up
     } else {
         LinkType::Down
     };
     let item = slice.lines[line].intersections[intersection];
-    let link = [item.next, item.previous]
+    let link = [item.previous, item.next]
         .into_iter()
         .flatten()
         .find(|&(_, kind, quality)| kind == wanted && quality != LinkQuality::Invalid)?;
@@ -131,6 +134,7 @@ pub(super) fn vertical_outside(
 pub(super) fn follow_vertical_outside(
     slice: &RectilinearSlice,
     consumed: &mut [bool],
+    perimeter: &mut [Vec<bool>],
     line: usize,
     intersection: usize,
     target: usize,
@@ -141,7 +145,16 @@ pub(super) fn follow_vertical_outside(
 ) {
     push_distinct(points, intersection_point(slice, line, intersection));
     if quality == LinkQuality::Valid {
-        emit_vertical_arc(slice, line, intersection, target, going_up, points);
+        // `FillRectilinear.cpp:1540-1541`: the arc follows the polygon's
+        // contour direction, which is `going_up ? has_left_vertical_up()
+        // : has_right_vertical_down()` — not the vertical travel direction.
+        let item = slice.lines[line].intersections[intersection];
+        let forward = if going_up {
+            matches!(item.previous, Some((_, LinkType::Up, _)))
+        } else {
+            matches!(item.next, Some((_, LinkType::Down, _)))
+        };
+        emit_vertical_arc(slice, line, intersection, target, forward, points);
     } else {
         output.push(crate::geometry::Polyline::new(std::mem::take(points)));
         *points = Vec::new();
@@ -154,6 +167,17 @@ pub(super) fn follow_vertical_outside(
         (target, intersection)
     };
     for item in consumed.iter_mut().take(high).skip(low) {
+        *item = true;
+    }
+    // `FillRectilinear.cpp:1557-1558`: mark `consumed_perimeter_right` on the
+    // current intersection and the adjacent one along the scanline.
+    perimeter[line][intersection] = true;
+    let adjacent = if going_up {
+        intersection + 1
+    } else {
+        intersection.wrapping_sub(1)
+    };
+    if let Some(item) = perimeter[line].get_mut(adjacent) {
         *item = true;
     }
 }

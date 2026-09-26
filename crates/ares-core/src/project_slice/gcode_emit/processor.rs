@@ -158,6 +158,12 @@ mod arc_cache_tests;
 #[cfg(test)]
 mod envelope_replay_tests;
 #[cfg(test)]
+mod estimate_tests;
+#[cfg(test)]
+mod gt_oracle_tests;
+#[cfg(test)]
+mod motion_parse_tests;
+#[cfg(test)]
 mod seam_tests;
 #[cfg(test)]
 mod tests;

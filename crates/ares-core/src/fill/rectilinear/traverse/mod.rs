@@ -69,6 +69,7 @@ pub(super) fn generate(slice: &RectilinearSlice, consistent_pattern: bool) -> Ve
                 follow_vertical_outside(
                     slice,
                     &mut consumed_vertical[line_index],
+                    &mut consumed_right,
                     line_index,
                     intersection_index,
                     target,
