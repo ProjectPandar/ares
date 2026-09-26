@@ -1945,3 +1945,44 @@ counters), `elapprobe.nix` (oracle `g1_times_cache` dump),
 
 Note: oracle 2.4.2 reruns are nondeterministic (parallel fill ordering);
 each FAIL row above was consistent across the sweep's 3-oracle-run check.
+
+## 2026-09-26 late update — M73 model resolved to per-block causes
+
+Definitive eligibility model via `orcablocks.nix` (dumps
+`block.g1_line_id/move_type/distance` per processed block) +
+`probeids.nix` + `elapprobe.nix` on case-x2rpgO:
+
+- `block.g1_line_id` = `exported_g1_lines` probe + 1 (probe prints
+  counter pre-increment; `process_G1` does `++m_g1_line_id` before
+  `store_move_vertex`, `:3868`, and `G1 F*`-only lines consume the id
+  while producing no block — zero-delta early return `:3891` includes
+  the E axis).
+- `g1_times_cache` skips exactly `move_type ∈ {Retract,Unretract}`
+  (`:484-488` vertex-type check) — 361 of 363 skipped ids are types
+  1/2. The remaining 2 skipped Travel blocks (6796, 8212) are
+  seam-vertex-aliased: an external loop closing within 0.25mm stores
+  `EMoveType::Seam` at `block.move_id` (`:4221`) shifting the move's
+  own vertex +1, so `curr_move` reads Seam → `continue`.
+- ares cache-id set is IDENTICAL to oracle's for the first 6481
+  entries; divergence begins at block 6775 where the wipe path itself
+  differs geometrically (ares wipes 117.28→117.33, oracle
+  116.98→116.51 — different seam/wipe geometry on the layer-23.9→24.3
+  transition), after which ids drift.
+- `;WIPE_START` DOES engage `m_wiping` (ksr → `s_IsBBLPrinter=false`
+  → `Reserved_Tags_compatible` without leading spaces; `:3147`).
+- The `+6s` estimate gap on raft_layers comes from the same wipe-path
+  divergence: ares's wipe produces different block distances/counts
+  downstream (per-block dist list diverges from id ~6774 onward).
+
+Remaining FAILs reduce to:
+
+| domain | residual |
+|---|---|
+| fuzzy_skin_thickness | ±2µm fuzzy-point Coord wander (same class as global ±1µm residual) |
+| ironing_pattern, machine_max_acceleration_extruding | total-time gap (~+60..120s) — likely a large structural time difference (whole-region model), not placement |
+| raft_layers, sparse_infill_pattern | wipe/seam path divergence on specific layer transitions + downstream id drift |
+
+Probe artifacts kept: `/tmp/oblocks.txt` (upstream per-block
+type/distance), `/tmp/probeids.txt`, `/tmp/orcaelap.txt`,
+`tools/orca-probes`-style `orcablocks.nix` at
+`/tmp/medial-probe/orcablocks.nix` (pending move into tools/).
