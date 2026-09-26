@@ -12,6 +12,7 @@ use crate::geometry::{
 pub(crate) struct LineFillParams {
     /// Line spacing in mm (unscaled).
     pub(crate) spacing: f64,
+    pub(crate) overlap: f64,
     /// Infill density fraction (0..1).
     pub(crate) density: f32,
     /// Infill direction angle (radians) BEFORE the `Fill::_infill_direction`
@@ -31,7 +32,10 @@ pub(crate) struct LineFillParams {
     pub(crate) dont_adjust: bool,
 }
 
-const SCALED_EPSILON: f64 = 0.05; // matches upstream SCALED_EPSILON
+#[cfg(test)]
+mod tests;
+
+const EPSILON: f64 = 1e-4;
 
 fn rotate_polygon_origin(polygon: &Polygon, angle: f64) -> Result<Polygon, ClipperError> {
     Ok(Polygon::new(crate::fill::checked_rotate::rotate_points(
@@ -73,8 +77,22 @@ fn align_scalar(coord: i64, spacing: i64, base: i64) -> i64 {
     base + aligned
 }
 
-/// `FillLine::_fill_surface_single` (`FillLine.cpp:10-115`).
+/// `Fill::fill_surface` (`FillBase.cpp:105-118`), followed by FillLine.
 pub(crate) fn fill_line(
+    expolygon: &ExPolygon,
+    params: LineFillParams,
+    scale: CoordinateScale,
+) -> Result<Vec<Polyline>, ClipperError> {
+    let delta = ((params.overlap - 0.5 * params.spacing) / scale.factor()) as f32;
+    let mut output = Vec::new();
+    for domain in offset_expolygon(expolygon, delta, JoinType::Miter, 3.0)? {
+        output.extend(fill_surface_single(&domain, params, scale)?);
+    }
+    Ok(output)
+}
+
+/// `FillLine::_fill_surface_single` (`FillLine.cpp:10-115`).
+fn fill_surface_single(
     expolygon: &ExPolygon,
     params: LineFillParams,
     scale: CoordinateScale,
@@ -95,10 +113,10 @@ pub(crate) fn fill_line(
     let reference =
         crate::fill::checked_rotate::rotate_points(vec![params.reference], -direction)?[0];
 
-    let min_spacing = params.spacing / scale.factor();
-    let mut line_spacing = (min_spacing / f64::from(params.density)) as i64;
+    let min_spacing = (params.spacing / scale.factor()) as i64;
+    let mut line_spacing = (min_spacing as f64 / f64::from(params.density)) as i64;
     let diagonal_distance = line_spacing * 2;
-    let line_oscillation = line_spacing - (min_spacing as i64);
+    let line_oscillation = line_spacing - min_spacing;
     let mut bounding_box = polygon_bbox(&Polygon::new(rotated.contour().points().to_vec()));
 
     if f64::from(params.density) > 0.9999 && !params.dont_adjust {
@@ -125,7 +143,7 @@ pub(crate) fn fill_line(
 
     // Generate the vertical oscillating lines (`FillLine::_line`, FillLine.hpp:34).
     let mut lines: Vec<Line> = Vec::new();
-    let x_max = bounding_box.max().x() + (SCALED_EPSILON) as i64;
+    let x_max = bounding_box.max().x() + (EPSILON / scale.factor()) as i64;
     let mut x = bounding_box.min().x();
     while x <= x_max {
         let i = lines.len();
@@ -139,7 +157,7 @@ pub(crate) fn fill_line(
 
     // Clip against a slightly larger expolygon (`offset(expolygon, scale_(0.02))`).
     let clip_off = offset_expolygon(
-        expolygon,
+        &rotated,
         (0.02 / scale.factor()) as f32,
         JoinType::Miter,
         3.0,
@@ -149,10 +167,6 @@ pub(crate) fn fill_line(
         clip.push(e.contour().clone());
         clip.extend(e.holes().iter().cloned());
     }
-    if clip.is_empty() {
-        clip.push(expolygon.contour().clone());
-        clip.extend(expolygon.holes().iter().cloned());
-    }
     let src: Vec<Polyline> = lines
         .iter()
         .map(|l| Polyline::new(vec![l.a, l.b]))
@@ -160,7 +174,7 @@ pub(crate) fn fill_line(
     let mut polylines = intersection_open_polylines(&src, &clip)?;
 
     // Extend each path `extra` past the boundary in Y (`INFILL_OVERLAP_OVER_SPACING = 0.3`).
-    let extra = (min_spacing * 0.3 + 0.5).floor() as i64;
+    let extra = (min_spacing as f32 * 0.3_f32 + 0.5_f32).floor() as i64;
     for polyline in &mut polylines {
         let mut pts = polyline.points().to_vec();
         if pts.len() < 2 {
@@ -184,10 +198,10 @@ pub(crate) fn fill_line(
         // `expolygon_off = offset_ex(expolygon, min_spacing/2)` — one island per
         // input island.
         let expolygon_off =
-            offset_expolygon(expolygon, (min_spacing / 2.0) as f32, JoinType::Miter, 3.0)?
+            offset_expolygon(&rotated, (min_spacing / 2) as f32, JoinType::Miter, 3.0)?
                 .into_iter()
                 .next();
-        let tolerance = (10.0 * SCALED_EPSILON) as i64;
+        let tolerance = (10.0 * EPSILON / scale.factor()) as i64;
         let mut ordered = polylines;
         crate::project_slice::chain_polylines(&mut ordered);
         let mut first = true;
@@ -245,7 +259,7 @@ pub(crate) fn adjust_solid_spacing(width: i64, distance: i64) -> i64 {
     if distance <= 0 {
         return distance;
     }
-    let epsilon = SCALED_EPSILON as i64;
+    let epsilon = EPSILON as i64;
     // `coord_t((width - EPSILON) / distance)` — truncating division.
     let number_of_intervals = (width - epsilon) / distance;
     let mut distance_new = if number_of_intervals == 0 {

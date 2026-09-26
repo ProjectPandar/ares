@@ -191,6 +191,7 @@ pub(super) fn dispatch(
                         &expolygon,
                         crate::fill::line::LineFillParams {
                             spacing: fill.params.spacing,
+                            overlap: 0.0,
                             density: (0.01 * f64::from(fill.params.density)) as f32,
                             angle: fill.params.angle,
                             layer_index,
