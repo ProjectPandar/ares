@@ -2132,3 +2132,20 @@ Next: compare the `fill_surfaces` region geometry for the bottom
 layer over raft — ares likely misses the raft-contact bottom surface
 dilation/`surface.thickness` handling in
 `LayerRegion::make_fill_surfaces`/raft-contact bridging.
+
+## 2026-09-26 #9 — review cycle 2 findings fixed (c02f6f34)
+
+- **P1 slope/spiral pending-lift XY legs**: the pure-XY leg emitted
+  inside upstream's `m_to_lift` branch (`GCodeWriter.cpp:722-769`)
+  KEEPS the destination comment — only the `m_lifted`/no-Z branches
+  (:771-780) drop it. Reverted `command.travel_comment` at the two
+  `spiral_lift_with_comment`-adjacent `travel_to_xy` sites in
+  `gcode_move_emit.rs`; slope/spiral test expectations restored.
+- **P2 centripetal test coverage**: original fixtures used 90° turns
+  (unit-vector difference 1.414 > 0.5) bypassing the gate entirely.
+  Replaced with ~0.11°/~5.3° shallow turns pinning upstream's real
+  semantics: `curr.feedrate` itself is clamped (so `M204 P0` yields
+  `block_time=0` for junction-clamped moves — the whole block, not
+  just the junction); `M204 P0.5` engages the 10→7.4→10 ramp.
+- Verified: ksr 84/84, z_hop_types+filament_z_hop_types domains PASS,
+  full touched-test suite 595/595.
