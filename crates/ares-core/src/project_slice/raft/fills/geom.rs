@@ -14,12 +14,19 @@ pub(super) fn clip_polyline_end(polyline: &mut Polyline, distance: f64) {
         );
         let length = ((dx * dx + dy * dy) as f64).sqrt();
         if length > remaining {
-            let ratio = (length - remaining) / length;
-            let x = points[last - 1].x()
-                + ((points[last].x() - points[last - 1].x()) as f64 * ratio).round() as i64;
-            let y = points[last - 1].y()
-                + ((points[last].y() - points[last - 1].y()) as f64 * ratio).round() as i64;
-            points[last] = Point::new(x, y);
+            // `Polyline::clip_end` (`Polyline.cpp:56-72`): new endpoint
+            // `last + (prev - last) * (remaining / len)`, truncated
+            // toward zero by Eigen `.cast<coord_t>()`.
+            let (vx, vy) = (
+                (points[last - 1].x() - points[last].x()) as f64,
+                (points[last - 1].y() - points[last].y()) as f64,
+            );
+            let lsqr = vx * vx + vy * vy;
+            let factor = remaining / lsqr.sqrt();
+            points[last] = Point::new(
+                (points[last].x() as f64 + vx * factor) as i64,
+                (points[last].y() as f64 + vy * factor) as i64,
+            );
             *polyline = Polyline::new(points);
             return;
         }
