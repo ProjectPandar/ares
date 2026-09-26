@@ -2068,3 +2068,25 @@ sequence for this raft layer kind arrangement — the WIDTH delta
 suggests the raft contact interface flow
 (`raft_interface_flow`/`raft_interface_density`,
 `SupportParameters.hpp:119-135`) may additionally be mis-sourced.
+
+## 2026-09-26 #6 — raft bottom-surface: flow divergence precedes angle
+
+Refined: Z23.9 `;TYPE:Bottom surface` is the OBJECT's first layer over
+the raft contact (walls precede it). Ares's fill `layer_id` already
+equals upstream's `id() - get_layer(0)->id()` (object-relative), so the
+90° angle flip is NOT the `interface_id` parity bug hypothesized in #5.
+
+`fill_region` (`Fill.cpp:925-943`): `solid_infill_direction` (default
+45°) via `calculate_infill_rotation_angle` unless a non-empty
+`solid_infill_rotate_template` metalanguage applies; `params.flow =
+layerm.flow(erSolidInfill, thickness)`. Oracle `;WIDTH:0.454819` vs
+ares `0.420844` (≈1.081×) means the surface enters a DIFFERENT flow
+branch — candidates: (a) `surface.thickness`/`surface.bridge_angle`
+marking the bottom-over-raft surface differently; (b) ares missing the
+`bridge`/thick-bridge flow path for surfaces over unsupported regions
+(`Fill.cpp:951-955` `params.bridge` → `layerm.bridging_flow`); (c)
+`surface.thickness == -1` vs `layer.height` selection. Bridging flow
+for h=0.2/d=0.4 gives 0.3664 — not a match; 0.454819 unexplained,
+needs the flow formula mapped next session (check
+`LayerRegion::flow(frSolidInfill)` auto-width vs ares `flow_for_role`
+against the same region thickness).
