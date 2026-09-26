@@ -133,3 +133,36 @@ seeded probing is the maximum achievable coverage).
       travel float-gate uses `state.layer_z`; end-template `layer_z`
       = `writer_z - z_offset` (`GCode.cpp:3478`), `max_layer_z` keeps
       the f32 running-max semantics.
+- [ ] Post-z_offset filtered re-sweep (2026-09-26, 564/650 PASS): 4
+      residual FAIL domains, each an upstream-boundary port slice:
+      (a) `ironing_pattern` — concentric cases: outermost loop at
+      114.75 vs ares 114.8 (`Fill.cpp:1701` offset + `FillConcentric`
+      first-loop geometry; `use_arachne=false` at `Fill.cpp:1484`)
+      + `mm3_per_mm` 1% drift (`E.01161` vs `E.01173` — recheck
+      `ironing_params.height = default_layer_height * 0.01 * flow`
+      vs ares `object.layer_height`; `Fill.cpp:1599`) + M73 total
+      ~1s drift (R9 vs R10); rectilinear cases M73-position-only.
+      (b) `sparse_infill_pattern` — M73 mid-layer position shifts +
+      upstream-dropped micro paths (LayerRegion micro-sliver slice).
+      (c) `raft_layers` — same LayerRegion + M73 family (extra
+      `M73 P2 R30` position diff at skirt).
+      (d) `fuzzy_skin_thickness` — nondeterministic classic
+      (`fuzzy_extrusion_line_classic` port + input polygon fidelity).
+      `filament_retraction_speed`/`retraction_speed`/`z_offset` now
+      PASS; `filament_retraction_speed` residual was folded into the
+      LayerRegion micro-sliver bucket (sweep re-ran on fixed code).
+      Deep-dive `ironing_pattern=concentric` (case-0F6Hrc): upstream
+      outermost ring at 114.75 while ares `ironing_areas` clip lands
+      at 114.8 — AREAS_DUMP evidence: ares `stTop` (`record.slices`)
+      and `object_slices` (`lslices`) both reach model edge (5.0-scaled
+      probe: areas_x=lslices_x=5.0 → clip at inset 0.2 → 4.8). Upstream
+      effective clip bound ≈4.75 → upstream `polys` (classified `slices`
+      stTop) is ~0.05 smaller — a `detect_surfaces_type`/`SurfaceCollection`
+      boundary delta upstream of `make_ironing` (same family as the
+      `sparse_infill_pattern`/`raft_layers` micro-path bucket:
+      upstream classified-surface geometry differs from ares's
+      `classify_slices` output at the ~0.05mm level). Next probe:
+      `ARES_DUMP_SLICES` boundaries vs upstream `lslices`/`slices`
+      export at the diverging layer; the E delta (1.05%) is path-length
+      only — flow params verified equal (`default_layer_height*0.01*flow`
+      matches `object.layer_height` form, `Fill.cpp:1599`).
