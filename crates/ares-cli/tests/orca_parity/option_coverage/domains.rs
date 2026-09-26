@@ -158,48 +158,44 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         // deterministic small-positive values that are
                         // legal for every sane open range (a rejection
                         // still reports honestly as INCOMPLETE).
-                        let seed_lo = 0.5;
-                        let seed_hi = seeded_interior(
-                            &key,
-                            1.0,
-                            9.0,
-                            option_type.contains("Int"),
-                        );
-                        let mut cases = vec![
-                            numeric_case("probe-min", seed_lo, entry, &option_type),
-                            numeric_case("probe-seeded", seed_hi, entry, &option_type),
-                        ];
-                        if option_type == "coFloatOrPercent" {
+                        //
+                        // Integer-family probes are restricted below:
+                        // `coInt(s)` unbounded options are dominated by
+                        // per-filament vectors and id-valued keys where a
+                        // generic value is rejected or crashes the
+                        // oracle (`master_extruder_id`,
+                        // `filament_self_index`, `physical_extruder_map`)
+                        // — they stay INCOMPLETE by design.
+                        let cases = if matches!(option_type.as_str(), "coInt" | "coInts") {
+                            vec![baseline_case()]
+                        } else if option_type == "coFloatOrPercent" {
                             // Both percent and absolute-literal branches.
-                            cases.clear();
-                            cases.push(case("probe-percent", "40%", entry));
-                            let mut absolute =
-                                numeric_case("probe-literal", 3.0, entry, "coFloat");
-                            absolute.label = "probe-literal".to_owned();
-                            cases.push(absolute);
-                        }
+                            vec![
+                                case("probe-percent", "40%", entry),
+                                numeric_case("probe-literal", 3.0, entry, "coFloat"),
+                            ]
+                        } else {
+                            let seed_hi =
+                                seeded_interior(&key, 1.0, 9.0, option_type.contains("Int"));
+                            vec![
+                                numeric_case("probe-min", 0.5, entry, &option_type),
+                                numeric_case("probe-seeded", seed_hi, entry, &option_type),
+                            ]
+                        };
                         // Seeded probes are the strongest coverage an
-                        // unbounded domain admits.
-                        provably_legal = true;
+                        // unbounded domain admits (coInt(s) stay
+                        // unprovable — baseline only).
+                        provably_legal = !matches!(option_type.as_str(), "coInt" | "coInts");
                         (cases, None)
                     }
                 }
             }
         }
-    } else if matches!(option_type.as_str(), "coPoint" | "coPoints") {
-        // Schema-unbounded point/point-list options (e.g.
-        // `bed_mesh_max`, `bed_exclude_area`): no declared bounds —
-        // probe two deterministic small XY probes; render as the
-        // upstream "x,y" string format.
-        provably_legal = true;
-        (
-            vec![
-                case("probe-min", "1,1", entry),
-                case("probe-seeded", "77,53", entry),
-            ],
-            None,
-        )
     } else {
+        // `coPoint(s)` unbounded options (bed polygons, exclude areas)
+        // reject/crash on generic probes (`printable_area` degenerate
+        // polygon); baseline default remains until per-key legal domains
+        // are authored.
         (vec![baseline_case()], None)
     };
     Some(OptionPlan {
