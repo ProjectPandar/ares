@@ -10,6 +10,24 @@ use super::{
     geometry_error,
 };
 
+#[cfg(test)]
+mod tests;
+
+// Fill.cpp constructs fresh FillParams; raw group metadata remains sticky.
+fn runtime_controls(pattern: ProcessInfillPattern, phase: f32, symmetric: bool) -> (i64, bool) {
+    let phase = if pattern == ProcessInfillPattern::CrossZag {
+        phase as i64
+    } else {
+        0
+    };
+    let symmetric = symmetric
+        && matches!(
+            pattern,
+            ProcessInfillPattern::ZigZag | ProcessInfillPattern::CrossZag
+        );
+    (phase, symmetric)
+}
+
 pub(super) fn append(
     output: &mut LayerFillEntities,
     fill: SurfaceFill,
@@ -20,6 +38,11 @@ pub(super) fn append(
     scale: CoordinateScale,
     extended_object_bounds_x: (i64, i64),
 ) -> Result<(), SliceError> {
+    let (horiz_move, symmetric) = runtime_controls(
+        pattern,
+        fill.params.horiz_move,
+        fill.params.symmetric_infill_y_axis,
+    );
     let density = (0.01_f64 * f64::from(fill.params.density)) as f32;
     let anchor_length_max = if pattern == ProcessInfillPattern::MonotonicLine {
         0.0
@@ -51,7 +74,7 @@ pub(super) fn append(
             .then_some(extended_object_bounds_x.1),
         // `params.horiz_move` is already in scaled coord units (`f32`) —
         // truncating to `i64` matches the `coord_t`/`float` mix upstream.
-        horiz_move: fill.params.horiz_move as i64,
+        horiz_move,
     };
     let no_overlap_expolygons = fill.no_overlap_expolygons.clone();
     let fill_params = fill.params;
@@ -61,7 +84,7 @@ pub(super) fn append(
     // `_fill_surface_single`; `no_overlap_expolygons` keeps the un-mirrored
     // surface (`Fill.cpp:1328` intersects before the mirror). The output
     // polylines are mirrored back by `FillRectilinear.cpp:2905`.
-    let symmetric_y_axis = if fill_params.symmetric_infill_y_axis {
+    let symmetric_y_axis = if symmetric {
         Some((extended_object_bounds_x.0 + extended_object_bounds_x.1) / 2)
     } else {
         None
