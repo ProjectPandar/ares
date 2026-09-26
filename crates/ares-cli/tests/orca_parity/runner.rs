@@ -31,6 +31,9 @@ mod tests;
 
 #[path = "runner/command.rs"]
 mod command;
+#[cfg(test)]
+#[path = "runner/strict_reference_tests.rs"]
+mod strict_reference_tests;
 
 use stages::{FailureKind, Stage, StageError};
 

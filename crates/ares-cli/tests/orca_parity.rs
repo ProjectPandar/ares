@@ -261,8 +261,7 @@ pub(crate) fn export_selection_case(
 
 /// Number of OrcaSlicer reference slices a diverging case may consume before
 /// being declared DIVERGENT (`ARES_ORCA_RUNS`, default 3: the 2.4.2 oracle
-/// flips tiny concentric survivors and M73 placement between roughly one in
-/// three runs on racy projects).
+/// can change tiny concentric survivors and M73 placement between runs).
 pub(crate) fn oracle_run_budget() -> usize {
     std::env::var("ARES_ORCA_RUNS")
         .ok()
@@ -276,7 +275,8 @@ pub(crate) fn oracle_run_budget() -> usize {
 /// oracle is itself non-deterministic across runs (observed: tiny concentric
 /// loop survivors and M73 progress placement flip between runs of the same
 /// binary), so parity means byte-equality with at least one genuine oracle
-/// output, not with one arbitrarily chosen run.
+/// output, not with one arbitrarily chosen run. Every PASS requires the strict
+/// ordered-byte comparator; an observed match does not prove oracle stability.
 pub(crate) fn compare_exported(
     runner: &OrcaRunner,
     exported: &runner::ExportedCase,
@@ -297,12 +297,8 @@ pub(crate) fn compare_exported_for(
 ) -> ParityOutcome {
     let budget = oracle_run_budget();
     let mut attempt = 1;
-    let mut references: Vec<Vec<u8>> = Vec::new();
     let mut outcome = match runner.slice_case(exported) {
-        Ok(case) => {
-            references.push(case.reference.clone());
-            compare_case(&case)
-        }
+        Ok(case) => compare_case(&case),
         Err(error) => {
             if option_key.is_some_and(|key| error.input_rejection(key)) {
                 return ParityOutcome {
@@ -319,142 +315,15 @@ pub(crate) fn compare_exported_for(
         attempt += 1;
         match runner.rerun_reference(exported) {
             Ok(case) => {
-                references.push(case.reference.clone());
                 outcome = compare_case(&case);
             }
             Err(error) => return ares_error(&exported.label, error.to_string()),
-        }
-    }
-    // The oracle's non-determinism is rare per run and *clustered*: a small
-    // budget often samples only one ordering, leaving the envelope radius zero
-    // or sampling only runs far from Ares even though the oracle does emit
-    // Ares's ordering on other runs. Keep re-slicing (bounded) until Ares is a
-    // proven envelope member (nearest <= max inter-oracle distance), so the
-    // membership check is meaningful rather than vacuous.
-    let mut widen = 0;
-    while outcome.status == "DIVERGENT" && widen < budget * 8 {
-        widen += 1;
-        match runner.rerun_reference(exported) {
-            Ok(case) => {
-                references.push(case.reference.clone());
-                outcome = compare_case(&case);
-            }
-            Err(error) => return ares_error(&exported.label, error.to_string()),
-        }
-        if outcome.status == "DIVERGENT"
-            && references.len() >= 2
-            && envelope_membership(exported, &references).is_some()
-        {
-            break;
-        }
-    }
-    // The 2.4.2 oracle is itself non-deterministic across runs (`connect_infill`
-    // unstable `std::sort(cost)` and M73 placement): observed self-diff of tens
-    // of thousands of lines on multi-object projects. Byte-equality with one
-    // arbitrary run is therefore too strict. When no single run matched, accept
-    // the Ares stream as a member of the oracle's output envelope when its
-    // line-multiset distance to the *nearest* oracle run does not exceed the
-    // *maximum pairwise inter-oracle distance* — i.e. Ares is no farther from
-    // some oracle output than two oracle outputs are from each other.
-    if outcome.status == "DIVERGENT" && references.len() >= 2 {
-        if let Some(detail) = envelope_membership(exported, &references) {
-            outcome = ParityOutcome {
-                label: exported.label.clone(),
-                status: "PASS",
-                detail,
-                artifacts: outcome.artifacts.clone(),
-            };
-        } else {
-            eprintln!(
-                "[envelope] {} refs={} distinct={} ares-distances={:?} max-inter-oracle={}",
-                exported.label,
-                references.len(),
-                references
-                    .iter()
-                    .collect::<std::collections::HashSet<_>>()
-                    .len(),
-                envelope_distances(exported, &references).0,
-                envelope_distances(exported, &references).1,
-            );
         }
     }
     if outcome.status == "DIVERGENT" && budget > 1 {
         outcome.detail = format!("(no match across {budget} oracle runs) {}", outcome.detail);
     }
     outcome
-}
-
-/// Envelope membership: returns `Some(detail)` when Ares's deterministic output
-/// is no farther (in line-multiset distance) from its nearest oracle reference
-/// than the farthest pair of oracle references are from each other — proving
-/// Ares output lies inside the oracle's own non-determinism envelope.
-fn envelope_membership(exported: &runner::ExportedCase, references: &[Vec<u8>]) -> Option<String> {
-    let runtime = tokio::runtime::Builder::new_current_thread().build().ok()?;
-    let ares = runtime
-        .block_on(ares_core::slice_project(
-            &exported.project,
-            ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-        ))
-        .ok()?;
-    if ares.is_empty() {
-        return None;
-    }
-    // Farthest pairwise inter-oracle distance = the envelope radius.
-    let mut max_inter_oracle = 0usize;
-    for i in 0..references.len() {
-        for j in (i + 1)..references.len() {
-            let d = crate::golden::line_multiset_diff_orca(&references[i], &references[j]).ok()?;
-            max_inter_oracle = max_inter_oracle.max(d);
-        }
-    }
-    let nearest = references
-        .iter()
-        .filter_map(|reference| crate::golden::line_multiset_diff(reference, &ares).ok())
-        .min()?;
-    // The oracle is *mostly* deterministic in a tight reslice loop, so the
-    // sampled references are frequently byte-identical (radius 0) even though
-    // spaced runs demonstrably diverge (observed inter-oracle diffs of 28-160
-    // lines on the same project, and the oracle does emit Ares's ordering on
-    // some runs). To keep the membership check meaningful when the sample
-    // collapses, floor the radius at a tiny ordering-noise budget scaled to the
-    // stream size — enough to absorb `connect_infill`/M73 reordering plus the
-    // few-line clip-vertex residual, far below any real geometric divergence.
-    (nearest <= max_inter_oracle).then(|| {
-        format!(
-            "(envelope member: ares-nearest-oracle line diff {nearest} <= max inter-oracle diff {max_inter_oracle} across {} runs)",
-            references.len()
-        )
-    })
-}
-
-/// Diagnostic: Ares's line-multiset distance to each oracle reference plus the
-/// max pairwise inter-oracle distance, for understanding envelope failures.
-fn envelope_distances(
-    exported: &runner::ExportedCase,
-    references: &[Vec<u8>],
-) -> (Vec<usize>, usize) {
-    let Ok(runtime) = tokio::runtime::Builder::new_current_thread().build() else {
-        return (Vec::new(), 0);
-    };
-    let Ok(ares) = runtime.block_on(ares_core::slice_project(
-        &exported.project,
-        ares_core::GenerationMetadata::deterministic(2026, 8, 27, 0, 0, 0),
-    )) else {
-        return (Vec::new(), 0);
-    };
-    let distances = references
-        .iter()
-        .map(|r| crate::golden::line_multiset_diff(r, &ares).unwrap_or(usize::MAX))
-        .collect::<Vec<_>>();
-    let mut max_inter = 0usize;
-    for i in 0..references.len() {
-        for j in (i + 1)..references.len() {
-            max_inter = max_inter.max(
-                crate::golden::line_multiset_diff(&references[i], &references[j]).unwrap_or(0),
-            );
-        }
-    }
-    (distances, max_inter)
 }
 
 pub(crate) fn vendors(root: &std::path::Path) -> Vec<String> {

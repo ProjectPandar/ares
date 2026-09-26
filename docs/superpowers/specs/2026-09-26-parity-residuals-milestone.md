@@ -285,3 +285,51 @@ mismatch is an Internal Bridge travel Y112.867 vs Y112.9 in
 `/tmp/parity-quarter-shift/case-kqy7Pi/manifest.json`; its cause remains
 unverified. Do not infer whole-enum success or nondeterminism from the
 previous run's tpmsfk PASS.
+
+## Strict reference acceptance repair
+
+This is a test-harness correction, not a new slicing pipeline. Preserve
+ARD-0023's ordered-byte requirement: neither equal line multisets nor an
+inter-oracle distance envelope proves output equality. Remove the envelope
+PASS override and its extra `8 * budget` attempts from
+`tests/orca_parity.rs::compare_exported_for`; remove the now-unused multiset
+helpers from `ksr_fdmtest_v4/golden.rs`. The existing generator-only
+normalization and bounded exact-reference retries remain unchanged.
+Each PASS establishes an actual matching reference, not stable oracle output
+or completion of any printer/option inventory.
+
+Plan: exercise the actual comparison/retry entrypoint with a subprocess
+oracle fixture containing two swapped G1 lines from a real Ares slice.
+The line multiset is identical but motion order is not. Require DIVERGENT,
+exactly the configured two oracle calls, and complete paired byte artifacts.
+Also verify immediate exact equality and equality on the second reference.
+Run focused tests, workspace/KSR and a live lockedzag comparison, then obtain
+independent review before committing code and documentation together.
+
+Diagnosis evidence: `/tmp/locked-repeat-counts.txt` records 44 fresh slices
+of the same `case-LOJH3N/input.3mf`; occurrences of `WIDTH:0.405676` vary
+between 2, 3 and 4. Sequential samples were stable, concurrent samples were
+not. Existing domain probes reproduce identical triangular inputs and the
+short paths. `FillConcentricInternal.cpp:29-36` leaves members of
+`Arachne::WallToolPathsParams` uninitialized, while
+`WallToolPaths.cpp:693` reads `is_top_or_bottom_layer` and
+`min_length_factor`. This is a candidate explanation, not a proven causal
+attribution; no speculative production short-line filter is added.
+The lockedzag production residual remains open.
+
+Red evidence: `/tmp/strict-reference-red.log` reports PASS instead of
+DIVERGENT for reordered G1 lines, with envelope distance 0 and radius 0.
+Earlier summary PASS totals using that override are not proof of strict
+parity; they require re-verification with the corrected acceptance path.
+
+Verification: `/tmp/strict-reference-green.log` records four passing tests
+(three parent scenarios plus the subprocess entrypoint); the shell-driven
+mock scenarios are Unix-only. Platform-neutral strict comparator regressions
+remain shared. Workspace: 7310 passed, 10 skipped
+(`/tmp/strict-reference-workspace.log`); release KSR: 84 passed, 2 skipped
+(`/tmp/strict-reference-ksr.log`). Fmt and clippy complete successfully, with
+existing clippy warnings. Live lockedzag remains DIVERGENT after exactly
+three reference attempts (`/tmp/strict-reference-oracle.log` and
+`/tmp/parity-strict-reference/case-iXFOTg`); this expected residual is not
+reported as a successful option domain. All touched Rust files are below
+400 lines; removal reduces `orca_parity.rs` from 484 to 352 lines.
