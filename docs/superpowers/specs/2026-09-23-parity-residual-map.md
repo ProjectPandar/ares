@@ -2011,3 +2011,36 @@ cache-eligibility = move_type {Extrude,Travel,Wipe} (proven via
 orcablocks probe: only types 1/2 skipped + 2 seam-aliased),
 seam-vertex aliasing, F-line id consumption, G10/G11 id reuse,
 probe counter = block id − 1.
+
+## 2026-09-26 #4 — independent review cycle 1 (gpt-reviewer)
+
+Review of `995c1633` + `4c4680b8` surfaced and `5875d3d4` fixed:
+
+- **G10/G11 skipped the seam lifecycle** — `estimate.rs` only ran
+  `seams.associate` for G0/G1/G28; upstream `process_G10/G11` calls
+  `process_G1` (`GCodeProcessor.cpp:4873-4893`) so a closed Outer wall
+  → G10 → travel sequence wrongly excluded the travel's cache entry.
+  Fixed: G10/G11 share the G1-branch associate call with a single
+  `cache_eligible` push.
+- **Slope-lift XY leg still passed `; travel`** — two
+  `travel_to_xy_with_comment` sites in `gcode_move_emit.rs` forwarded
+  `command.travel_comment` where upstream's pure-XY leg calls
+  `travel_to_xy` unconditionally comment-less. ~50 stale test
+  expectations updated (Z-bearing legs legitimately keep `; travel`).
+- **`ARES_DUMP_PROBES`/`ARES_DUMP_M73EMIT` removed** — ares-core must
+  not perform direct file/terminal I/O (AGENTS.md). The pre-existing
+  ~96 other `ARES_DUMP_*` sites remain tech debt pending a dedicated
+  cleanup milestone.
+- **Regression tests added** pinning `M204 P0`/`P0.5` junction
+  semantics: upstream's centripetal clamp `sqrt(acc*r)` has no floor;
+  accel=0 also yields cruise-only trapezoids (ramp-free), which is
+  exactly why the oracle total collapses rather than explodes.
+
+Verified post-fix: ksr_fdmtest_v4 84/84, ares-core 152 affected tests
+green, `gcode_comments` parity domain still PASS, fmt+clippy clean.
+
+Remaining FAILs unchanged — all upstream-port slices, not patches:
+`FillConcentricInternal` variable-width rings (ironing + sparse
+concentric — ares's rectangle-only `infills/concentric.rs` cannot
+reproduce Arachne ring topology), fuzzy-skin point noise, and the
+rectilinear/raft zigzag traverse-order direction at layer transitions.
