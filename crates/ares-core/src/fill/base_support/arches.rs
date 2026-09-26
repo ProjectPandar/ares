@@ -154,22 +154,26 @@ fn clip_polyline_end(polyline: &mut Polyline, distance: f64) {
     let mut remaining = distance;
     while points.len() > 1 {
         let last = points.len() - 1;
-        let (dx, dy) = (
-            points[last].x() - points[last - 1].x(),
-            points[last].y() - points[last - 1].y(),
+        // `Polyline::clip_end` (`Polyline.cpp:56-72`): the new endpoint is
+        // `last + (prev - last) * (remaining / len)` with Eigen's
+        // `.cast<coord_t>()` truncating toward zero.
+        let last_point = points[last];
+        let previous = points[last - 1];
+        let (vx, vy) = (
+            (previous.x() - last_point.x()) as f64,
+            (previous.y() - last_point.y()) as f64,
         );
-        let length = ((dx * dx + dy * dy) as f64).sqrt();
-        if length > remaining {
-            let ratio = (length - remaining) / length;
-            let x = points[last - 1].x()
-                + ((points[last].x() - points[last - 1].x()) as f64 * ratio).round() as i64;
-            let y = points[last - 1].y()
-                + ((points[last].y() - points[last - 1].y()) as f64 * ratio).round() as i64;
-            points[last] = Point::new(x, y);
+        let lsqr = vx * vx + vy * vy;
+        if lsqr > remaining * remaining {
+            let factor = remaining / lsqr.sqrt();
+            points[last] = Point::new(
+                (last_point.x() as f64 + vx * factor) as i64,
+                (last_point.y() as f64 + vy * factor) as i64,
+            );
             *polyline = Polyline::new(points);
             return;
         }
-        remaining -= length;
+        remaining -= lsqr.sqrt();
         points.pop();
     }
     *polyline = Polyline::new(points);

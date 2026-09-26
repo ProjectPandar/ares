@@ -202,9 +202,16 @@ pub(crate) fn raft_layer_fill(
         // (`FillRectilinear.cpp:3613`, `FillBase.cpp:394`) truncates to an
         // integer lattice unit, matching `checked_scale`.
         let inner_offset = checked_scale_f32(scale, -0.5 * spec.spacing)?;
-        let line_spacing = scale
-            .checked_scale(spec.spacing / f64::from(spec.density))
-            .ok_or(ClipperError::CoordinateOutOfRange)?;
+        // `coord_t(scale_(this->spacing) / params.density)`
+        // (`FillRectilinear.cpp:3619`): the spacing narrows to f32
+        // (`Flow` stores it as `float`) and truncates to `coord_t`
+        // BEFORE the density division; the quotient truncates again.
+        // `coord_t(scale_(this->spacing) / params.density)`
+        // (`FillRectilinear.cpp:3619`): `this->spacing` is `float`
+        // (`Flow::spacing()` field is float, `Flow.hpp:62`), scaled to
+        // double lattice units, divided by density, then truncated.
+        let scaled_spacing = f64::from(spec.spacing as f32) / scale.factor();
+        let line_spacing = (scaled_spacing / f64::from(spec.density)) as i64;
         if line_spacing <= 0 {
             continue;
         }

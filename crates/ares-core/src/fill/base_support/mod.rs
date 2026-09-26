@@ -167,9 +167,12 @@ fn interpolate(contour: &[Point], params: &[f64], index: usize, t: f64, forward:
     let ratio = ((t - t1) / (t2 - t1)).clamp(0.0, 1.0);
     let a = contour[index];
     let b = contour[other];
+    // Upstream `lerp` (`Point.hpp:420-424`) computes
+    // `(1 - t) * a + t * b` in doubles and truncates toward zero via
+    // Eigen `.cast<coord_t>()` — NOT `a + (b - a) * t` with rounding.
     Point::new(
-        a.x() + ((b.x() - a.x()) as f64 * ratio).round() as Coord,
-        a.y() + ((b.y() - a.y()) as f64 * ratio).round() as Coord,
+        ((1.0 - ratio) * a.x() as f64 + ratio * b.x() as f64) as Coord,
+        ((1.0 - ratio) * a.y() as f64 + ratio * b.y() as f64) as Coord,
     )
 }
 
@@ -220,9 +223,11 @@ impl<'a> BandState<'a> {
         } else {
             self.right
         };
+        // Upstream `coord_t(double(...)*(...)/(...))`
+        // (`FillBase.cpp:2045` `add_interpolated_point`) truncates the
+        // quotient toward zero — no round-half-up.
         let y = p1.y()
-            + ((x - p1.x()) as f64 * (p2.y() - p1.y()) as f64 / (p2.x() - p1.x()) as f64).round()
-                as Coord;
+            + ((x - p1.x()) as f64 * (p2.y() - p1.y()) as f64 / (p2.x() - p1.x()) as f64) as Coord;
         let point = Point::new(x, y);
         match inout {
             InOut::Leaving => {
