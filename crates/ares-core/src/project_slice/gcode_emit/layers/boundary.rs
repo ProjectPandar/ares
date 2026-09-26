@@ -144,7 +144,14 @@ pub(super) fn append<'a>(
         // no Z adoption — those belong to the lambda inserts only.
         timelapse::append_untracked(output, timelapse_context)?;
     }
-    spiral.append_layer_z(output, layer_index, f64::from(layer_z));
+    // Spiral filter targets live in the writer (offset) Z domain
+    // (`GCode.cpp:5692` emits the `print_z + z_offset` move, then
+    // `SpiralVase.cpp` rewrites that move and derives its ramp).
+    spiral.append_layer_z(
+        output,
+        layer_index,
+        f64::from(layer_z) + state.options.z_offset,
+    );
     layer_gcode::append_layer_change(
         output,
         layer_gcode::LayerTemplateContext {
