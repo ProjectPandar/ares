@@ -2207,3 +2207,28 @@ adjusted distance. Result: concentric ring geometry matches oracle
 byte-identical modulo timestamp). Residual for ironing_pattern: shared
 M73 total-time bucket drift (`R9` vs `R10` at line 18) — NOT ring
 geometry; tracked with the existing time-model residual.
+
+## 2026-09-26 #13 — sparse concentric residual decomposition
+
+Post-`_adjust_solid_spacing`, `sparse_infill_pattern/concentric`
+(15% density, multiline=1) remaining diffs decompose into three
+independent buckets:
+
+1. **Ring-set delta**: oracle ring at `X105.98` vs ares `X105.777`
+   (~0.203mm offset, whole-lattice shift) — consistent with
+   `surface_fill.params.spacing` for sparse = `flow(frInfill,
+   layer_height).spacing()` (`Fill.cpp:981`), i.e. the INFILL-flow
+   spacing not the plain 0.45 — ares's `params.spacing` may carry a
+   different value, OR `min_spacing` arithmetic differs (i64 `scale_` on
+   the mm spacing upstream vs f64 in ares). Verify ares's
+   `group_fills::params.spacing` for stInternal == upstream `frInfill`
+   spacing.
+2. **Feedrate slowdown**: `F971` vs `F996` on identical geometry —
+   cooling-buffer slowdown applies a deeper cap upstream → separate
+   `GCode/CoolingBuffer` micro-diff on short concentric segments.
+3. **M73 placement drift**: ~64 M73 lines shifted (accumulated
+   time-accounting), inherited from buckets 1-2 — geometry-identical
+   once feedrates match.
+
+All upstream-cited; no Ares-owned design needed. These combine with
+#5-#12 into the region-classification + cooling-buffer milestone slices.
