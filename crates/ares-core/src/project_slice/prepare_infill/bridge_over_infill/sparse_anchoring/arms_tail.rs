@@ -11,7 +11,7 @@ use crate::{
         rectilinear::{MonotonicFillParams, fill_monotonic_surface, fill_rectilinear_surface},
         three_d_honeycomb::{Params as Honeycomb3dParams, fill_surface as fill_honeycomb_3d},
     },
-    geometry::{Point, Polyline},
+    geometry::{JoinType, Point, Polyline, offset_expolygon},
     project_slice::{
         group_fills::{SurfaceFillPattern, group_fills},
         prepare_infill::external_surfaces::PreparedPostExternalSurfaces,
@@ -160,11 +160,22 @@ pub(super) fn dispatch_tail(
                 anchor_length_max: fill.params.anchor_length_max,
                 dont_sort: false,
             };
+            // Fill::fill_surface offsets the zero-overlap anchor domain
+            // before FillTpmsFK::_fill_surface_single, as emission does.
+            let delta = (-0.5 * params.spacing / traversal.scale.factor()) as f32;
             for expolygon in fill.expolygons {
-                result.extend(
-                    crate::fill::tpms_fk::fill_tpmsfk_surface(&expolygon, &params, traversal.scale)
+                for domain in offset_expolygon(&expolygon, delta, JoinType::Miter, 3.0)
+                    .map_err(super::super::transaction::geometry_error)?
+                {
+                    result.extend(
+                        crate::fill::tpms_fk::fill_tpmsfk_surface(
+                            &domain,
+                            &params,
+                            traversal.scale,
+                        )
                         .map_err(super::super::transaction::geometry_error)?,
-                );
+                    );
+                }
             }
         }
         SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning) => {

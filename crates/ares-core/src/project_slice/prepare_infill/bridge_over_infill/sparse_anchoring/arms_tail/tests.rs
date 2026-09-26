@@ -10,31 +10,15 @@ use crate::project_slice::{
 };
 use crate::{ExtrusionRole, ProcessGapFillTarget, ProcessInfillPattern};
 
-#[test]
-fn lightning_sparse_dispatch_connects_clipped_boundary_endpoints() {
+fn fill(pattern: ProcessInfillPattern) -> SurfaceFill {
     let polygon = Polygon::new(vec![
         Point::new(4_223_233, 4_223_233),
         Point::new(-4_223_228, 4_223_233),
         Point::new(-4_223_228, -4_223_228),
         Point::new(4_223_233, -4_223_228),
     ]);
-    let scale = CoordinateScale::Normal;
-    let generator = Generator::new(
-        vec![vec![polygon.clone()]; 43],
-        0.2,
-        0.45,
-        0.45,
-        0.4,
-        1,
-        15.0,
-        45.0,
-        45.0,
-        45.0,
-        scale,
-    )
-    .unwrap();
     let domain = ExPolygon::new(polygon, Vec::new());
-    let fill = SurfaceFill {
+    SurfaceFill {
         region_id: 0,
         representative: RepresentativeSurface {
             kind: RegionSurfaceKind::Internal,
@@ -48,7 +32,7 @@ fn lightning_sparse_dispatch_connects_clipped_boundary_endpoints() {
         region_id_group: vec![0],
         params: SurfaceFillParams {
             extruder: 1,
-            pattern: SurfaceFillPattern::Configured(ProcessInfillPattern::Lightning),
+            pattern: SurfaceFillPattern::Configured(pattern),
             spacing: 0.40707963705062866,
             overlap: 0.0,
             angle: 0.0,
@@ -83,7 +67,59 @@ fn lightning_sparse_dispatch_connects_clipped_boundary_endpoints() {
             filter_out_gap_fill: 0.0,
             gap_fill_target: ProcessGapFillTarget::Nowhere,
         },
-    };
+    }
+}
+
+#[test]
+fn tpmsfk_sparse_dispatch_clips_to_the_half_spacing_inset() {
+    let mut fill = fill(ProcessInfillPattern::TpmsFk);
+    // Cancel TPMS-FK's -45-degree correction so this tests exact clipping
+    // bounds, without integer quantization from a rotate/unrotate roundtrip.
+    fill.params.angle = std::f32::consts::FRAC_PI_4;
+    let input = std::fs::read(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/parity/replay/ender3-classic.3mf"),
+    )
+    .unwrap();
+    let traversal =
+        crate::project_slice::perimeters::prepare_post_classic_traversal(&input).unwrap();
+    let mut result = Vec::new();
+    dispatch_tail(
+        fill.params.pattern,
+        fill,
+        &traversal,
+        0,
+        42,
+        8.6,
+        Point::new(0, 0),
+        None,
+        &mut result,
+    )
+    .unwrap();
+    assert!(!result.is_empty());
+    for point in result.iter().flat_map(|line| line.points()) {
+        assert!((-4_019_688..=4_019_693).contains(&point.x()), "{point:?}");
+        assert!((-4_019_688..=4_019_693).contains(&point.y()), "{point:?}");
+    }
+}
+
+#[test]
+fn lightning_sparse_dispatch_connects_clipped_boundary_endpoints() {
+    let fill = fill(ProcessInfillPattern::Lightning);
+    let generator = Generator::new(
+        vec![vec![fill.expolygons[0].contour().clone()]; 43],
+        0.2,
+        0.45,
+        0.45,
+        0.4,
+        1,
+        15.0,
+        45.0,
+        45.0,
+        45.0,
+        CoordinateScale::Normal,
+    )
+    .unwrap();
     let input = std::fs::read(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../tests/parity/replay/ender3-classic.3mf"),
