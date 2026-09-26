@@ -94,6 +94,22 @@ fn sparse_concentric_applies_overlap_minus_half_spacing() {
 }
 
 #[test]
+fn sparse_concentric_reconstructs_width_from_quantized_spacing() {
+    let mut input = fill(10_000_000, 0.0);
+    input.params.spacing = 0.40707963705062866;
+    input.params.flow.width = 0.45;
+    input.params.flow.spacing = input.params.spacing as f32;
+    let mut output = LayerFillEntities::default();
+    append_configured(&mut output, input, 0.4, CoordinateScale::Normal).unwrap();
+    let FillExtrusionEntity::Path(first) = &output.collections[0].entities[0] else {
+        panic!("sparse concentric must emit fixed-flow paths");
+    };
+    assert_eq!(format!("{:.6}", first.width), "0.449999");
+    assert!((first.mm3_per_mm - 0.0814158).abs() < 1e-8);
+    assert_eq!(first.role, ExtrusionRole::InternalInfill);
+}
+
+#[test]
 fn sparse_concentric_disappears_when_offset_erases_domain() {
     let mut output = LayerFillEntities::default();
     append_configured(

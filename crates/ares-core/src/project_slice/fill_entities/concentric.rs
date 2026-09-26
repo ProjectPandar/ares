@@ -175,7 +175,13 @@ pub(super) fn append_configured(
                     scale,
                 )
                 .map_err(geometry_error)?;
-                let flow = super::materialized_flow(params, params.spacing as f32);
+                // The thick-line fallback stores integer min_spacing, then
+                // variable_width reconstructs the constant-width run's flow
+                // (FillConcentric.cpp:141-145, VariableWidth.cpp:205).
+                let width = spacing as f32 * scale.factor() as f32
+                    + params.flow.height * (1.0 - 0.25 * std::f64::consts::PI) as f32;
+                let mut flow = params.flow.with_width(width)?;
+                flow.mm3_per_mm *= params.flow_ratio;
                 entities.extend(polylines.into_iter().map(|polyline| {
                     FillExtrusionEntity::Path(super::FillExtrusionPath {
                         polyline,

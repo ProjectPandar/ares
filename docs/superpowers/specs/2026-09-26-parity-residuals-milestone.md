@@ -223,3 +223,35 @@ before committing these test corrections with this documentation.
 Result: `/tmp/wipe-assertion-workspace.log` records 7304 passed and
 10 skipped with no failures; fmt check and clippy also succeed. Skipped
 opt-in parity jobs remain explicit coverage gaps, not inferred passes.
+
+## Sparse concentric fixed-width materialization slice
+
+Upstream boundary: `FillConcentric.cpp::_fill_surface_single` thick-line
+fallback (141–145) converts classic polylines with integer `min_spacing`;
+`FillBase.cpp::fill_surface_extrusion` then invokes `variable_width`, whose
+`VariableWidth.cpp` constant-width run reconstructs extrusion width and
+flow from that quantized spacing. Rust destination:
+`fill_entities/concentric.rs::append_configured` sparse branch. The
+existing fixed-path representation remains appropriate for uniform-width
+rings, but reusing `params.flow` bypasses upstream quantization.
+
+Plan: lock the 0.45mm nominal-width case to emitted 0.449999mm width,
+then reproduce the constant-width conversion with f32 scaled spacing,
+rounded-rectangle width reconstruction and `Flow::with_width`. Keep role,
+ring geometry, overlap and clipping unchanged. Validate focused tests,
+live sparse enum comparisons and KSR, then independent review and commit
+with these docs. Deferred: other sparse patterns, nonuniform variable
+width paths, raft/fuzzy residuals and broader option/printer coverage.
+Reference case `/tmp/parity-fix/case-9nONGI` contains missing WIDTH tags;
+it must be rerun rather than treated as current binary evidence.
+
+Verification: `/tmp/sparse-flow-red.log` records the width regression;
+`/tmp/sparse-flow-green.log` records 17 passes. Current live sweep
+`/tmp/sparse-flow-oracle.log` now reports concentric PASS, with 20/26
+sparse pattern values passing and six divergent (crosszag, honeycomb,
+lightning, line, lockedzag, quartercubic). Thus the enum domain remains
+FAIL, not complete. `/tmp/sparse-flow-workspace.log`: 7305 passed,
+10 skipped; `/tmp/sparse-flow-ksr.log`: 84 passed, 2 skipped. Fmt and
+clippy succeed with existing warnings. Independent source review found
+no code issues; these completed run logs resolve its pending evidence
+note for the concentric slice only.
