@@ -100,6 +100,11 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     /// m_restart_extra`).
     pub(in crate::project_slice::gcode_emit) retract_restart_extra: f64,
     pub(in crate::project_slice::gcode_emit) deretraction_feedrate: f64,
+    /// Printer-scope `z_offset` (`GCode.cpp:5692`: every Z-target
+    /// computation adds it to the model print Z; `;Z:` headers stay
+    /// model-space). Z-hop/lift targets are `layer_z + z_hop` in the
+    /// offset domain, matching upstream's already-offset `m_pos.z`.
+    pub(in crate::project_slice::gcode_emit) z_offset: f64,
     pub(in crate::project_slice::gcode_emit) z_hop: f64,
     pub(in crate::project_slice::gcode_emit) retract_lift_above: f64,
     pub(in crate::project_slice::gcode_emit) retract_lift_below: f64,

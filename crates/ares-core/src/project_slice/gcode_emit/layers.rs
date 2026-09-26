@@ -65,14 +65,11 @@ pub(super) fn append(
         .0;
     let mut cooling = cooling::CoolingState::from_traversal(traversal);
     let mut spiral = spiral_vase::SpiralVaseFilter::from_traversal(traversal, brim.is_some());
-    let max_layer_z = traversal
-        .objects
-        .first()
-        .into_iter()
-        .flat_map(|object| object.records.iter())
-        .filter_map(|record| record.as_ref())
-        .map(|record| record.layer_height)
-        .sum();
+    // `GCode.cpp:4629-4630`: upstream tracks `m_max_layer_z` as the
+    // running max of `float(print_z)` — the f32 cast absorbs the f64
+    // accumulation drift so `{max_layer_z}`/`max_print_z` placeholders
+    // read the float-domain top layer, not a raw f64 height sum.
+    let mut max_layer_z = 0.0f64;
     let layer_change_template =
         layer_gcode::LayerChangeTemplate::new(traversal, metadata, first_layer_bounds);
     let runtime_gcode = &traversal.resolved.views.runtime_gcode;
@@ -138,6 +135,7 @@ pub(super) fn append(
             .map(|&(_, object_index, layer_index)| (object_index, layer_index))
             .collect();
         entries.sort_by_key(|(object_index, _)| print_position[*object_index]);
+        max_layer_z = max_layer_z.max(f64::from(group_z as f32));
         group_start = group_end;
         // Chunk-wide inputs for the external motion planner
         // (`get_perimeter_spacing_external` averages the perimeter

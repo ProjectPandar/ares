@@ -27,7 +27,9 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     layer_index: usize,
     layer_retract_pending: bool,
 ) {
-    state.layer_z = f64::from(layer_z);
+    // `GCode.cpp:5692`: `z = print_z + m_config.z_offset` — the writer's
+    // Z domain is offset; `source_layer_z`/`;Z:`/comments stay model z.
+    state.layer_z = f64::from(layer_z) + state.options.z_offset;
     state.source_layer_z = precise_layer_z;
     state.layer_index = layer_index;
     if layer_retract_pending {
@@ -69,7 +71,7 @@ pub(super) fn append<'a>(
     // previous layer's z (`change_layer` does not move z); the
     // start-gcode z remains authoritative for the first layer.
     if layer_index > 0 {
-        state.writer_z = Some(f64::from(previous_layer_z));
+        state.writer_z = Some(f64::from(previous_layer_z) + state.options.z_offset);
     }
     let header = format!(
         "{}\n{}\n",
@@ -128,9 +130,9 @@ pub(super) fn append<'a>(
     // requires `will_move_z` — the nozzle must actually change Z
     // from wherever the start g-code left it (`GCode.cpp:5693`).
     // BBL layer starts retract whenever the flag is set.
-    let will_move_z = state
-        .writer_z
-        .is_none_or(|writer_z| (f64::from(layer_z) - writer_z).abs() > 1.0e-4);
+    let will_move_z = state.writer_z.is_none_or(|writer_z| {
+        (f64::from(layer_z) + state.options.z_offset - writer_z).abs() > 1.0e-4
+    });
     if layer_index == 0
         && state.options.retract_when_changing_layer
         && (state.tags.is_bbl() || will_move_z)

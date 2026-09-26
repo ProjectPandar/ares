@@ -151,7 +151,9 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     state.layer_change_travel_pending = true;
     state.avoid_boundary = None;
     state.last_height = Some(layer_height as f32);
-    state.layer_z = layer_z;
+    // Writer-domain z (`GCode.cpp:5692` `z = print_z + z_offset`);
+    // mirrors `advance_for_layer`'s offset store.
+    state.layer_z = layer_z + state.options.z_offset;
     state.travel_feedrate = if layer_index == 0 {
         state.options.first_layer_travel_feedrate
     } else {

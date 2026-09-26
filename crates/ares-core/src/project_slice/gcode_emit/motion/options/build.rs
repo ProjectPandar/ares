@@ -272,6 +272,7 @@ impl MotionOptions {
                 .first()
                 .map_or(0.0, |value| value.0),
             deretraction_feedrate: deretraction_speed * 60.0,
+            z_offset: traversal.resolved.views.full.printer.remaining.z_offset.0,
             z_hop: gcode.z_hop.0.first().map_or(0.0, |value| value.0),
             retract_lift_above: gcode
                 .retract_lift_above

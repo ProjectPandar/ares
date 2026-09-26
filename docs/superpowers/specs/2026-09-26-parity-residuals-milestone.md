@@ -90,3 +90,25 @@ seeded probing is the maximum achievable coverage).
       `ripple` type is deterministic but `fuzzy_extrusion_line_ripple`
       (Arachne junction/width-preserving, :221-283) and `displacement`
       mode dispatch have port gaps.
+- [x] `z_offset` (sweep-reopened): upstream applies `z_offset` at EVERY
+      Z-target (`GCode.cpp:5692` `z = print_z + z_offset` in
+      `change_layer`, `:3382` first-layer `travel_to_z`). The emit path's
+      writer-domain z is now `print_z + z_offset` (`EmitState::layer_z`),
+      keeping `;Z:`/`source_layer_z` model-space. `writer_z` +
+      `will_move_z`/`retract_lift_above/below` evaluate in the same
+      offset domain. `max_layer_z` now tracks `float(print_z)` running
+      max (`GCode.cpp:4630`) instead of an f64 height sum — fixes the
+      `{z_offset+min(max_layer_z+2, printable_height)}` end-gcode
+      placeholder drift (15.9351 vs 15.9352). Case `z_offset=3.93515`
+      byte-identical modulo timestamp; `z_offset=0` regression-free
+      (ksr 84/84).
+- [x] Probe-scope fix: unbounded `coInt(s)`/`coPoint(s)` probes are not
+      provably-legal for structured/per-filament options (oracle reject
+      or crash on `filament_map`, `physical_extruder_map`,
+      `printable_area` degenerate polygon, `master_extruder_id` +
+      `filament_self_index`). Reverted to baseline (stays INCOMPLETE by
+      design); `coFloat(s)`/`coFloatOrPercent` seeded probes kept.
+- [ ] Newly surfaced FAIL domains (post-seed): `retraction_speed`,
+      `filament_retraction_speed` — new seeded probes exercise a path
+      where retraction differs; pending triage against upstream
+      `GCodeWriter.cpp`/`GCode.cpp` extruder retraction slices.
