@@ -54,10 +54,14 @@ pub(crate) fn fill_concentric_sparse(
     // units (spacing is divided by scale.factor() once here).
     let scaled_spacing = spacing / scale.factor();
     let min_spacing = scaled_spacing * f64::from(multiline);
-    let distance = min_spacing / f64::from(density);
-    // `-float(scale_(0.5 * (multiline - 1) * spacing))` — contract by the
-    // multiline overlap only when multiline > 1.
-    let contract = 0.5 * f64::from(multiline - 1) * scaled_spacing;
+    // `coord_t(min_spacing / params.density)` — upstream truncates the
+    // ring pitch to integer scaled units (`FillConcentric.cpp:23`), so
+    // the i64 cast (toward zero) is load-bearing: sub-micron remainder
+    // shifts every subsequent `offset2_ex` ring by accumulating drift.
+    let distance = (min_spacing / f64::from(density)).trunc();
+    // `-float(scale_(0.5 * (multiline - 1) * spacing))` — same integer
+    // truncation as upstream's `scale_` cast.
+    let contract = (0.5 * f64::from(multiline - 1) * scaled_spacing).trunc();
     let mut last = if contract.abs() > f64::EPSILON {
         offset_expolygons(
             std::slice::from_ref(expolygon),

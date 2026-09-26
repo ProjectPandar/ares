@@ -2175,3 +2175,19 @@ Also committed this turn: `ec96c3f8` — `"Support transition"`
 feature speed now `bridge_speed` (`GCode.cpp:6524`
 erSupportTransition → bridge_speed; previously fell through to
 inner_wall_speed).
+
+## 2026-09-26 #11 — concentric_sparse int-truncation + sliver finding
+
+`fill_concentric_sparse` (`fill/concentric_sparse.rs`): upstream
+`FillConcentric.cpp:23` computes `distance = coord_t(min_spacing /
+params.density)` — integer truncation is load-bearing (sub-micron
+remainder shifts every subsequent `offset2_ex` ring). Applied `.trunc()`
+to `distance` and `contract` (same `scale_` semantics). Post-fix sparse
+concentric: first diff moved from ring geometry (line ~294) to line 72
+M73 bookkeeping; remaining deltas at Z0.4: a tiny `Internal solid infill`
+sliver region (4-point ~0.1mm loop, `;WIDTH:0.405676`) oracle does not
+emit → traced to `LayerRegion.cpp:584-591` `minimum_sparse_infill_area`
+removal + `:751` narrow-top-surface elimination — the SAME
+`fill_surfaces`/region-classification boundary as the raft bottom-surface
+slice (spec #5-#10). Downstream F2001→F2005 + M73 placement drift follows
+the sliver. Confirms one milestone slice fixes both domains.
