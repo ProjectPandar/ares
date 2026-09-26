@@ -51,6 +51,7 @@ pub(crate) fn fill_concentric_sparse(
     density: f32,
     multiline: i32,
     loop_clipping: i64,
+    dont_adjust: bool,
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     // All of `min_spacing`, `distance`, `contract` are already in scaled coord
@@ -62,12 +63,9 @@ pub(crate) fn fill_concentric_sparse(
     // the i64 cast (toward zero) is load-bearing: sub-micron remainder
     // shifts every subsequent `offset2_ex` ring by accumulating drift.
     let mut distance = (min_spacing / f64::from(density)).trunc();
-    // `FillConcentric.cpp:25-27`: at ~full density upstream snaps the ring
-    // pitch to the contour's X extent via `_adjust_solid_spacing` (this is
-    // where ironing's concentric rings pick up the 0.05-class step). The
-    // spacing that follows is the adjusted `distance` (`this->spacing =
-    // unscale<double>(distance)`), not the raw option value.
-    if density > 0.9999 {
+    // `FillConcentric.cpp:25-27`: ironing retains nominal spacing;
+    // ordinary full-density fills may adjust it to the contour's X extent.
+    if density > 0.9999 && !dont_adjust {
         let (x0, x1) = {
             let (mut x0, mut x1) = (i64::MAX, i64::MIN);
             for point in expolygon.contour().points() {

@@ -5,8 +5,8 @@ use crate::{
     RegionOptions, SliceError,
     fill::rectilinear::{MonotonicFillParams, fill_monotonic_surface},
     geometry::{
-        CoordinateScale, ExPolygon, JoinType, Point, intersection_ex, offset_expolygons,
-        union_safety_offset_expolygons,
+        CoordinateScale, ExPolygon, JoinType, Point, intersection_ex, offset_expolygon,
+        offset_expolygons, union_safety_offset_expolygons,
     },
     project_slice::{
         layers::PlannedLayer,
@@ -71,15 +71,31 @@ pub(super) fn append(output: &mut LayerFillEntities, input: Input<'_>) -> Result
         // `spacing`) instead of `FillMonotonicLine` (`Fill.cpp:1634` fills
         // with `Fill::new_from_type(ironing_params.pattern)`).
         if concentric {
-            let polylines = crate::fill::concentric_sparse::fill_concentric_sparse(
-                &area,
-                spacing,
-                1.0,
-                1,
-                0,
-                input.scale,
-            )
-            .map_err(geometry_error)?;
+            // `Fill::fill_surface` contracts the surface by
+            // `scale_(overlap - 0.5*spacing)` before
+            // `_fill_surface_single` (`FillBase.cpp:107`); ironing sets
+            // `f->overlap = 0` (`Fill.cpp:1631`), so the ring domain is
+            // inset by half the ironing spacing. This is where upstream's
+            // concentric-ironing outer ring lands at spacing/2 inside the
+            // clipped ironing area.
+            let domain_offset = (-0.5 * spacing / input.scale.factor()) as f32;
+            let generation_domains = offset_expolygon(&area, domain_offset, JoinType::Miter, 3.0)
+                .map_err(geometry_error)?;
+            let mut polylines = Vec::new();
+            for domain in generation_domains {
+                polylines.extend(
+                    crate::fill::concentric_sparse::fill_concentric_sparse(
+                        &domain,
+                        spacing,
+                        1.0,
+                        1,
+                        0,
+                        true,
+                        input.scale,
+                    )
+                    .map_err(geometry_error)?,
+                );
+            }
             if polylines.is_empty() {
                 continue;
             }

@@ -2,8 +2,8 @@ use crate::{
     SliceError,
     arachne::wall_toolpaths::{RawWallToolPathConfig, generate},
     geometry::{
-        CoordinateScale, ExPolygon, JoinType, Point, ThickPolyline,
-        intersection_ex_with_safety_offset, offset_expolygon,
+        CoordinateScale, ExPolygon, JoinType, ThickPolyline, intersection_ex_with_safety_offset,
+        offset_expolygon,
     },
     project_slice::{
         group_fills::SurfaceFill,
@@ -17,7 +17,10 @@ use crate::{
     },
 };
 
+mod finalize;
 mod generate;
+
+use finalize::finalize_standard_polylines;
 
 use super::{FillExtrusionCollection, FillExtrusionEntity, LayerFillEntities, geometry_error};
 use generate::{generate_standard_thick_polylines, generate_thick_polylines};
@@ -148,22 +151,32 @@ pub(super) fn append_configured(
     let sparse = !(density_fraction > 0.9999 && !params.bridge);
     for expolygon in fill.expolygons {
         if sparse {
-            let polylines = crate::fill::concentric_sparse::fill_concentric_sparse(
+            // `Fill::fill_surface` contracts the surface by
+            // `scale_(overlap - 0.5*spacing)` before
+            // `_fill_surface_single` (`FillBase.cpp:107`) — the sparse
+            // ring loop below receives the same shrunk domain as
+            // upstream's classic path.
+            let generation_domains = offset_expolygon(
                 &expolygon,
-                params.spacing,
-                density_fraction,
-                params.multiline,
-                params.loop_clipping,
-                scale,
+                ((params.overlap - 0.5 * params.spacing) / scale.factor()) as f32,
+                JoinType::Miter,
+                3.0,
             )
             .map_err(geometry_error)?;
-            if polylines.is_empty() {
-                continue;
-            }
-            let flow = super::materialized_flow(params, params.spacing as f32);
-            let mut entities: Vec<FillExtrusionEntity> = polylines
-                .into_iter()
-                .map(|polyline| {
+            let mut entities: Vec<FillExtrusionEntity> = Vec::new();
+            for domain in generation_domains {
+                let polylines = crate::fill::concentric_sparse::fill_concentric_sparse(
+                    &domain,
+                    params.spacing,
+                    density_fraction,
+                    params.multiline,
+                    params.loop_clipping,
+                    false,
+                    scale,
+                )
+                .map_err(geometry_error)?;
+                let flow = super::materialized_flow(params, params.spacing as f32);
+                entities.extend(polylines.into_iter().map(|polyline| {
                     FillExtrusionEntity::Path(super::FillExtrusionPath {
                         polyline,
                         fitting: Vec::new(),
@@ -172,8 +185,11 @@ pub(super) fn append_configured(
                         width: flow.width,
                         height: flow.height,
                     })
-                })
-                .collect();
+                }));
+            }
+            if entities.is_empty() {
+                continue;
+            }
             super::gap_residual::append_residual(super::gap_residual::ResidualInput {
                 output_entities: &mut entities,
                 no_overlap_expolygons: &fill.no_overlap_expolygons,
@@ -323,7 +339,7 @@ fn finalize_polylines(
                 }
             }
             polyline.points.pop();
-            let start = nearest_to_origin(&polyline.points);
+            let start = finalize::nearest_to_origin(&polyline.points);
             polyline.points.push(polyline.points[0]);
             polyline.start_at_index(start);
         }
@@ -338,54 +354,6 @@ fn finalize_polylines(
     }
     polylines.truncate(write_index);
     reorder_thick_polylines(polylines);
-}
-
-fn finalize_standard_polylines(polylines: &mut Vec<ThickPolyline>, loop_clipping: f64) {
-    let mut last = Point::new(0, 0);
-    for polyline in &mut *polylines {
-        if polyline.points.first() == polyline.points.last()
-            && polyline.width.first() == polyline.width.last()
-        {
-            polyline.start_at_index(nearest_to(&polyline.points, last));
-        }
-        if let Some(point) = polyline.points.last() {
-            last = *point;
-        }
-    }
-    for polyline in &mut *polylines {
-        polyline.clip_end(loop_clipping);
-    }
-    polylines.retain(|polyline| polyline.points.len() >= 2);
-    reorder_thick_polylines(polylines);
-}
-
-fn nearest_to_origin(points: &[Point]) -> usize {
-    points
-        .iter()
-        .enumerate()
-        .fold((0, i128::MAX), |nearest, (index, point)| {
-            let distance = squared_distance(*point, Point::new(0, 0));
-            if distance <= nearest.1 {
-                (index, distance)
-            } else {
-                nearest
-            }
-        })
-        .0
-}
-
-fn nearest_to(points: &[Point], target: Point) -> usize {
-    points
-        .iter()
-        .enumerate()
-        .min_by_key(|(_, point)| squared_distance(**point, target))
-        .map_or(0, |(index, _)| index)
-}
-
-fn squared_distance(left: Point, right: Point) -> i128 {
-    let dx = i128::from(left.x() - right.x());
-    let dy = i128::from(left.y() - right.y());
-    dx * dx + dy * dy
 }
 
 #[cfg(test)]

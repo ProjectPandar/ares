@@ -135,13 +135,9 @@ seeded probing is the maximum achievable coverage).
       the f32 running-max semantics.
 - [ ] Post-z_offset filtered re-sweep (2026-09-26, 564/650 PASS): 4
       residual FAIL domains, each an upstream-boundary port slice:
-      (a) `ironing_pattern` — concentric cases: outermost loop at
-      114.75 vs ares 114.8 (`Fill.cpp:1701` offset + `FillConcentric`
-      first-loop geometry; `use_arachne=false` at `Fill.cpp:1484`)
-      + `mm3_per_mm` 1% drift (`E.01161` vs `E.01173` — recheck
-      `ironing_params.height = default_layer_height * 0.01 * flow`
-      vs ares `object.layer_height`; `Fill.cpp:1599`) + M73 total
-      ~1s drift (R9 vs R10); rectilinear cases M73-position-only.
+      (a) `ironing_pattern` — resolved by the half-spacing surface
+      offset slice below. Earlier slice-boundary and flow-drift
+      hypotheses were disproved by direct upstream probes.
       (b) `sparse_infill_pattern` — M73 mid-layer position shifts +
       upstream-dropped micro paths (LayerRegion micro-sliver slice).
       (c) `raft_layers` — same LayerRegion + M73 family (extra
@@ -151,18 +147,64 @@ seeded probing is the maximum achievable coverage).
       `filament_retraction_speed`/`retraction_speed`/`z_offset` now
       PASS; `filament_retraction_speed` residual was folded into the
       LayerRegion micro-sliver bucket (sweep re-ran on fixed code).
-      Deep-dive `ironing_pattern=concentric` (case-0F6Hrc): upstream
-      outermost ring at 114.75 while ares `ironing_areas` clip lands
-      at 114.8 — AREAS_DUMP evidence: ares `stTop` (`record.slices`)
-      and `object_slices` (`lslices`) both reach model edge (5.0-scaled
-      probe: areas_x=lslices_x=5.0 → clip at inset 0.2 → 4.8). Upstream
-      effective clip bound ≈4.75 → upstream `polys` (classified `slices`
-      stTop) is ~0.05 smaller — a `detect_surfaces_type`/`SurfaceCollection`
-      boundary delta upstream of `make_ironing` (same family as the
-      `sparse_infill_pattern`/`raft_layers` micro-path bucket:
-      upstream classified-surface geometry differs from ares's
-      `classify_slices` output at the ~0.05mm level). Next probe:
-      `ARES_DUMP_SLICES` boundaries vs upstream `lslices`/`slices`
-      export at the diverging layer; the E delta (1.05%) is path-length
-      only — flow params verified equal (`default_layer_height*0.01*flow`
-      matches `object.layer_height` form, `Fill.cpp:1599`).
+
+## Concentric surface-offset rewrite slice
+
+Source: `FillBase.cpp::Fill::fill_surface` (105–118) offsets each input
+surface by `overlap - 0.5 * spacing` before calling the classic
+`FillConcentric::_fill_surface_single`. `Fill.cpp::Layer::make_ironing`
+sets overlap to zero. Rust destinations: `fill_entities/ironing.rs` and
+`fill_entities/concentric.rs::append_configured` sparse branch. Existing
+ring generation remains the `_fill_surface_single` implementation; its
+callers now supply the correctly offset domain instead of bypassing
+`Fill::fill_surface`. No new Ares-owned pipeline is introduced.
+
+Included: split/empty offset domains, half-spacing ironing inset and
+sparse-concentric overlap. Deferred: other sparse pattern residuals,
+raft geometry, fuzzy-skin nondeterminism and complete printer coverage.
+
+Evidence from case-0F6Hrc, using `tools/orca-probes/ironext.nix` and
+`concrings.nix`: upstream polys and lslices both span ±5mm, ironing areas
+span ±4.8mm, but the classic filler receives ±4.75mm with spacing 0.1mm,
+multiline 1 and distance 100000 scaled units. This disproves the previous
+classified-surface/closing-radius hypothesis. The extrusion delta follows
+path length, not a flow-rate mismatch.
+
+Plan and checks:
+1. Apply the missing caller-side offset; keep ring generation unchanged.
+2. Test the emitted first ring at two spacings; verify failure when the
+   new offset is removed, then restore and rerun. Preserve ironing's
+   `FillParams::dont_adjust=true` (`FillBase.hpp:67`), including domains
+   split by the offset. Regression: 0.95mm-wide split lobes must retain
+   100000-unit ring pitch, not the adjusted 105555-unit pitch. Also test
+   sparse overlap contraction/expansion and an erased domain.
+3. Keep source files below 400 lines using a `concentric/finalize.rs`
+   module, not inclusion macros.
+4. Run fmt, clippy, nextest and live Orca comparisons; independent review
+   must pass before commit/push with this documentation.
+
+Pre-split live evidence: `/tmp/parity-fix/option-coverage-summary.md`
+reports ironing_pattern 2/2 PASS; sparse_infill_pattern remains FAIL
+(first residual crosszag, M73 placement). KSR: 84 passed, 2 skipped.
+These scoped results do not establish all-option or all-printer parity.
+The sparse sweep also reports a concentric divergence at
+`/tmp/parity-fix/case-9nONGI/manifest.json` (`;WIDTH:0.449999`); crosszag
+is merely its summary's first failure, not its only failing value.
+
+Independent review found the missing `dont_adjust` propagation and a
+newly unused `Point` import. The split-neck test reproduced the pitch bug
+(`/tmp/concentric-split-red.log`); the implementation now passes the
+upstream flag explicitly: true for ironing, false for configured fill and
+sparse anchor projection. No global disabling of spacing adjustment.
+
+Post-review verification: 16 focused tests pass; release KSR 84 pass,
+2 skipped; live ironing enum 2/2 strict comparisons pass. `cargo fmt
+--check` and `cargo clippy` succeed (existing warnings remain). Full
+`cargo nextest run --workspace --no-fail-fast`: 7302 passed, 2 failed,
+10 skipped. Both failures are existing pipeline wipe tests: the same
+failures reproduce in clean detached baseline 08dda8d1 at
+`/tmp/ares-concentric-baseline`, log `/tmp/concentric-baseline-wipe.log`.
+They are not waived for the overall parity goal; this slice does not
+claim a green full workspace. Final logs: `/tmp/concentric-review-green.log`,
+`/tmp/concentric-review-ksr.log`, `/tmp/concentric-review-oracle.log`,
+`/tmp/concentric-workspace-full.log`.

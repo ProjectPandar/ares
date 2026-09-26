@@ -325,6 +325,7 @@ pub(super) fn dispatch(
                         0.01 * fill.params.density,
                         fill.params.multiline,
                         fill.params.loop_clipping,
+                        false,
                         traversal.scale,
                     )
                     .map_err(super::super::transaction::geometry_error)?,
