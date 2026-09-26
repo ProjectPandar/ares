@@ -9,9 +9,12 @@
 //! both contexts (the emitted fill goes through `fill_surface`, the anchor
 //! projection through `Fill::new_from_type` + `fill_surface`).
 
-use crate::geometry::{
-    ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polygon, Polyline,
-    offset_expolygons, offset2_ex, union_contours,
+use crate::{
+    fill::line::adjust_solid_spacing,
+    geometry::{
+        ClipperError, CoordinateScale, ExPolygon, JoinType, Point, Polygon, Polyline,
+        offset_expolygons, offset2_ex, union_contours,
+    },
 };
 
 /// `Point::nearest_point_index` (`Point.cpp:199-220`): returns the LAST index
@@ -58,10 +61,27 @@ pub(crate) fn fill_concentric_sparse(
     // ring pitch to integer scaled units (`FillConcentric.cpp:23`), so
     // the i64 cast (toward zero) is load-bearing: sub-micron remainder
     // shifts every subsequent `offset2_ex` ring by accumulating drift.
-    let distance = (min_spacing / f64::from(density)).trunc();
-    // `-float(scale_(0.5 * (multiline - 1) * spacing))` — same integer
-    // truncation as upstream's `scale_` cast.
-    let contract = (0.5 * f64::from(multiline - 1) * scaled_spacing).trunc();
+    let mut distance = (min_spacing / f64::from(density)).trunc();
+    // `FillConcentric.cpp:25-27`: at ~full density upstream snaps the ring
+    // pitch to the contour's X extent via `_adjust_solid_spacing` (this is
+    // where ironing's concentric rings pick up the 0.05-class step). The
+    // spacing that follows is the adjusted `distance` (`this->spacing =
+    // unscale<double>(distance)`), not the raw option value.
+    if density > 0.9999 {
+        let (x0, x1) = {
+            let (mut x0, mut x1) = (i64::MAX, i64::MIN);
+            for point in expolygon.contour().points() {
+                x0 = x0.min(point.x());
+                x1 = x1.max(point.x());
+            }
+            (x0, x1)
+        };
+        distance = adjust_solid_spacing(x1 - x0, distance as i64) as f64;
+    }
+    // `-float(scale_(0.5 * (multiline - 1) * this->spacing))` — `this->spacing`
+    // has already been reassigned to the adjusted distance upstream, so the
+    // contract derives from `distance`, not the raw option spacing.
+    let contract = (0.5 * f64::from(multiline - 1) * distance).trunc();
     let mut last = if contract.abs() > f64::EPSILON {
         offset_expolygons(
             std::slice::from_ref(expolygon),
@@ -116,7 +136,9 @@ pub(crate) fn fill_concentric_sparse(
     }
     // `multiline_fill` — expand by the multiline overlap count.
     let mut polylines = if multiline > 1 {
-        crate::fill::multiline_offset::apply(polylines, multiline, scaled_spacing, scale)?
+        // `multiline_fill(polylines_out, params, spacing)` — upstream `spacing`
+        // is `this->spacing` (the adjusted distance at full density).
+        crate::fill::multiline_offset::apply(polylines, multiline, distance, scale)?
     } else {
         polylines
     };

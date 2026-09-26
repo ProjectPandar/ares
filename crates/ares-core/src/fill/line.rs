@@ -241,7 +241,7 @@ fn expolygon_to_polygons(expolygon: &ExPolygon) -> Vec<Polygon> {
 
 /// `Fill::_adjust_solid_spacing` (`FillBase.cpp:255-271`): snap `distance` so
 /// the bounding width is a near-integer multiple, capping the inflation at 20%.
-fn adjust_solid_spacing(width: i64, distance: i64) -> i64 {
+pub(crate) fn adjust_solid_spacing(width: i64, distance: i64) -> i64 {
     if distance <= 0 {
         return distance;
     }

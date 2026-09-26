@@ -2191,3 +2191,19 @@ removal + `:751` narrow-top-surface elimination — the SAME
 `fill_surfaces`/region-classification boundary as the raft bottom-surface
 slice (spec #5-#10). Downstream F2001→F2005 + M73 placement drift follows
 the sliver. Confirms one milestone slice fixes both domains.
+
+## 2026-09-26 #12 — concentric `_adjust_solid_spacing` port
+
+`fill_concentric_sparse`: at `density > 0.9999` upstream re-assigns
+`distance = _adjust_solid_spacing(bbox.x, distance)` and
+`this->spacing = unscale(distance)` (`FillConcentric.cpp:25-27`) — the
+quantized pitch feeds BOTH the `offset2_ex` ring loop and the multiline
+contract/multiline_fill spacing (ordering: min_spacing uses ORIGINAL
+spacing; contract + multiline_fill use ADJUSTED). Ported: density>0.9999
+adjusts distance via shared `fill::line::adjust_solid_spacing`
+(`FillBase.cpp:255-271`); contract + multiline_offset now derive from
+adjusted distance. Result: concentric ring geometry matches oracle
+(verified on `ironing_pattern` + `sparse_infill_pattern` stored cases —
+byte-identical modulo timestamp). Residual for ironing_pattern: shared
+M73 total-time bucket drift (`R9` vs `R10` at line 18) — NOT ring
+geometry; tracked with the existing time-model residual.
