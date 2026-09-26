@@ -90,3 +90,26 @@ no excessive-nesting warning remains in the changed sparse-anchoring files.
 `/tmp/lightning-reviewed-oracle.log` still reports DIVERGENT, as expected
 for the unresolved branch/junction and progress residual. The tests do not
 reinterpret that failure as parity success.
+
+## Junction endpoint conversion follow-up
+
+Source: `TreeNode.cpp::Node::removeJunctionOverlap:397–400` casts the
+scaled displacement to `coord_t` before adding it to endpoint `a`.
+Destination: `fill/lightning/tree_geom.rs::Node::remove_junction_overlap`.
+Replace rounding the final floating coordinate with componentwise-truncated
+displacement plus integer endpoint. This is a deterministic arithmetic
+correction, not a random-order workaround or a new tree heuristic.
+
+Plan: red tests on positive/negative endpoints, signed overlap reduction,
+and reduction carried across a consumed segment; apply source-equivalent
+conversion; run focused/workspace/KSR/live oracle, independently review,
+and commit docs with code. Complete-line removal and random traversal policy
+are unchanged. Live option acceptance must still require strict equality.
+
+Evidence: `/tmp/lightning-trim-red.log` records both regressions failing
+(e.g. (9,9) versus the required (10,10)); `/tmp/lightning-trim-green.log`
+records 13 focused passes. Workspace 7321 passed/10 skipped, KSR 84 passed/
+2 skipped (`/tmp/lightning-trim-workspace.log`, `/tmp/lightning-trim-ksr.log`).
+Fmt/clippy succeed with existing warnings. The live strict comparison
+(`/tmp/lightning-trim-oracle.log`, `/tmp/parity-lightning-trim`) remains
+DIVERGENT; this correction alone does not establish whole Lightning parity.

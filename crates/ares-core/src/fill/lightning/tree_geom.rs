@@ -10,6 +10,9 @@ use crate::geometry::{Coord, EdgeGrid, Point, Polygon, Polyline};
 use super::glibc_rand::GlibcRand;
 use super::tree_node::{Node, NodeSPtr};
 
+#[cfg(test)]
+mod tests;
+
 impl Node {
     /// `convertToPolylines` — depth-first branch order, first child picked by
     /// `rand()` (glibc), other children get new polylines (TreeNode.cpp:355).
@@ -82,10 +85,8 @@ impl Node {
                     let (bx, by) = (b.x() as f64, b.y() as f64);
                     let (dx, dy) = (bx - ax, by - ay);
                     let t = to_be_reduced as f64 / ab_len as f64;
-                    *new_pts.last_mut().unwrap() = Point::new(
-                        (ax + dx * t).round() as Coord,
-                        (ay + dy * t).round() as Coord,
-                    );
+                    *new_pts.last_mut().unwrap() =
+                        Point::new(a.x() + (dx * t) as Coord, a.y() + (dy * t) as Coord);
                     break;
                 } else {
                     to_be_reduced -= ab_len;
