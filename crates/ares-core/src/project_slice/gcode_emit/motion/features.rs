@@ -206,6 +206,9 @@ impl PathProperties<'_> {
             // `initial_layer_infill_speed` (and the first-layer override
             // at `:6568` deliberately skips it).
             "Bottom surface" => options.initial_layer_infill_speed,
+            // `GCode.cpp:6524`: `erSupportTransition` shares the
+            // bridge speed with overhang walls/bridge infill.
+            "Support transition" => options.bridge_speed,
             _ => options.inner_wall_speed,
         }
     }
