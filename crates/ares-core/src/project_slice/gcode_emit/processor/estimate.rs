@@ -113,7 +113,7 @@ impl Estimate {
             let mut seam_excluded = false;
             let motion_blocks = state.motions_indexed(code);
             // Linear commands produce at most one block; only arcs subdivide.
-            if matches!(command, "G0" | "G1" | "G28")
+            if matches!(command, "G0" | "G1" | "G28" | "G10" | "G11")
                 && let Some((_, block)) = motion_blocks.first()
             {
                 let extruding = !state.wiping
@@ -126,7 +126,12 @@ impl Estimate {
                 // E-only line and emit M73 immediately after it. Excluding
                 // `e_only` blocks deferred the marker to the next XY move
                 // (observed: oracle `M73` follows `G1 E-2.8`).
-                cache_eligible.push(!seam_vertex);
+                // `process_G10/G11` reuses the already-assigned g1 line id
+                // (`--m_g1_line_id`, `GCodeProcessor.cpp:4879/4889`) and the
+                // resulting Retract/Unretract vertex is not a
+                // `g1_times_cache` type, so the phantom entry must stay
+                // out — otherwise it collides with the next real G1's id.
+                cache_eligible.push(matches!(command, "G0" | "G1" | "G28") && !seam_vertex);
             } else if !motion_blocks.is_empty() {
                 // `G2`/`G3` arc: every discretized internal segment is a
                 // `process_G1` → `store_move_vertex`, so the seam lifecycle
