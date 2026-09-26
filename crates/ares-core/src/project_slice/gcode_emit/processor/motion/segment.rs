@@ -34,7 +34,7 @@ impl MotionState {
             // (`GCodeProcessor.cpp:3993-4080`); the raw F travels here.
             speed: self.feedrate,
             acceleration,
-            centripetal_acceleration: self.acceleration.max(1.0),
+            centripetal_acceleration: self.acceleration,
             max_feedrate: self.max_feedrate,
             max_acceleration: self.max_acceleration,
             jerk: self.effective_jerk(),
