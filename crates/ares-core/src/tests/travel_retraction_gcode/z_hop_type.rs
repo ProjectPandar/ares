@@ -84,7 +84,7 @@ fn default_slope_lift_splits_lift_into_ordinary_travel() {
 
     let retract = line_index(layer, "G1 E-0.8 F1800 ; retract");
     let slope = next_line_index(layer, retract, "G1 X0.4 Y0 Z0.6 F7200 ; travel");
-    let travel = next_line_index(layer, slope, "G1 X2 Y0 F7200");
+    let travel = next_line_index(layer, slope, "G1 X2 Y0 F7200 ; travel");
     let restore = next_line_index(layer, travel, "G1 Z0.2 F7200 ; restore layer Z");
     let unretract = next_line_index(layer, restore, "G1 E0.8 F1800 ; unretract");
 
@@ -106,7 +106,7 @@ fn explicit_slope_lift_uses_travel_slope_angle() {
 
     let retract = line_index(layer, "G1 E-0.8 F1800 ; retract");
     let slope = next_line_index(layer, retract, "G1 X0.4 Y0 Z0.6 F7200 ; travel");
-    let travel = next_line_index(layer, slope, "G1 X2 Y0 F7200");
+    let travel = next_line_index(layer, slope, "G1 X2 Y0 F7200 ; travel");
 
     assert!(!layer.lines().any(|line| line == "G1 Z0.6 F7200 ; lift Z"));
     assert!(retract < slope);
@@ -169,7 +169,7 @@ fn spiral_lift_emits_linearized_spiral_before_ordinary_travel() {
     let first_spiral = next_line_index(layer, feedrate, "G1 X0.037 Y0.007 Z0.225");
     let second_spiral = next_line_index(layer, first_spiral, "G1 X0.068 Y0.028 Z0.25");
     let final_spiral = next_line_index(layer, second_spiral, "G1 X0 Y0 Z0.6");
-    let travel = next_line_index(layer, final_spiral, "G1 X2 Y0 F7200");
+    let travel = next_line_index(layer, final_spiral, "G1 X2 Y0 F7200 ; travel");
     let restore = next_line_index(layer, travel, "G1 Z0.2 F7200 ; restore layer Z");
     let unretract = next_line_index(layer, restore, "G1 E0.8 F1800 ; unretract");
 
@@ -221,7 +221,7 @@ fn auto_lift_uses_slope_lift_without_overhang_crossing_data() {
 
     let retract = line_index(layer, "G1 E-0.8 F1800 ; retract");
     let slope = next_line_index(layer, retract, "G1 X0.4 Y0 Z0.6 F7200 ; travel");
-    let travel = next_line_index(layer, slope, "G1 X2 Y0 F7200");
+    let travel = next_line_index(layer, slope, "G1 X2 Y0 F7200 ; travel");
     let restore = next_line_index(layer, travel, "G1 Z0.2 F7200 ; restore layer Z");
     let unretract = next_line_index(layer, restore, "G1 E0.8 F1800 ; unretract");
 
@@ -265,7 +265,7 @@ fn filament_spiral_lift_overrides_unprefixed_normal_lift() {
     let retract = line_index(layer, "G1 E-0.8 F1800 ; retract");
     let comment = next_line_index(layer, retract, ";spiral lift Z");
     let final_segment = next_line_index(layer, comment, "G1 X0 Y0 Z0.6");
-    let travel = next_line_index(layer, final_segment, "G1 X2 Y0 F7200");
+    let travel = next_line_index(layer, final_segment, "G1 X2 Y0 F7200 ; travel");
 
     assert_eq!(spiral_segment_count(layer), 16);
     assert!(!layer.lines().any(|line| line == "G1 Z0.6 F7200 ; lift Z"));

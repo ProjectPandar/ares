@@ -96,12 +96,12 @@ pub(crate) fn move_gcode(command: MoveGCodeCommand<'_>) -> Result<(String, f64),
                         command.speed_move.feedrate_mm_min(),
                         command.travel_comment,
                     );
-                    // Pure-XY leg after a slope lift is a `travel_to_xy`
-                    // call — no comment upstream (`GCodeWriter.cpp:771-780`).
+                    // Pending slope-lift XY leg keeps the comment
+                    // (`GCodeWriter.cpp:748-768`).
                     gcode.push_str(&command.writer.travel_to_xy_with_comment(
                         point,
                         command.speed_move.feedrate_mm_min(),
-                        None,
+                        command.travel_comment,
                     ));
                     gcode
                 }
@@ -123,13 +123,16 @@ pub(crate) fn move_gcode(command: MoveGCodeCommand<'_>) -> Result<(String, f64),
                         feedrate: command.speed_move.feedrate_mm_min(),
                         comment: command.travel_comment.map(|_| "spiral lift Z"),
                     });
-                    // Pure-XY leg after a slope lift is still a
-                    // `travel_to_xy` call — no comment upstream
-                    // (`GCodeWriter.cpp:771-780`).
+                    // Pending-lift XY leg: upstream emits the
+                    // destination leg via `emit_xy + emit_comment`
+                    // inside the `m_to_lift` branch
+                    // (`GCodeWriter.cpp:748-768`), so the comment
+                    // is RETAINED — only the no-lift/unclear
+                    // branches (:771-780) drop it.
                     gcode.push_str(&command.writer.travel_to_xy_with_comment(
                         point,
                         command.speed_move.feedrate_mm_min(),
-                        None,
+                        command.travel_comment,
                     ));
                     gcode
                 }

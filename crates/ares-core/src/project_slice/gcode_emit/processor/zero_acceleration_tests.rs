@@ -52,18 +52,23 @@ fn zero_print_acceleration_clamps_junction_feedrate_to_zero() {
     // previously floored the value at 1.0 and diverged.
     let mut state = MotionState::with_limits(zero_z_limits());
     assert!(state.motion("M204 P0").is_none());
-    // Two XY moves meeting at a 90° junction: the junction feedrate
-    // clamps to sqrt(0 * r) = 0 and the zero-acceleration trapezoid
-    // collapses to cruise-only — distance / feedrate with no ramp.
+    // Shallow ~0.11° turn (unit-vector difference ~0.002 < 0.5) so
+    // the centripetal branch at planner/mod.rs:256-264 actually runs:
+    // the junction feedrate clamps to sqrt(0 * r) = 0 and the
+    // zero-acceleration trapezoid collapses to cruise-only.
     let first = state.motion("G1 X10 Y0 F600").unwrap();
-    let second = state.motion("G1 X0 Y10 F600").unwrap();
+    let second = state.motion("G1 X19.99 Y0.02 F600").unwrap();
     assert_eq!(second.centripetal_acceleration, 0.0);
     let times = planned_times(&[first, second]);
-    assert_eq!(times.len(), 2);
-    // 10mm at 10mm/s cruise-only, then 14.142136mm at 10mm/s
-    // (f32 trapezoid arithmetic — compare loosely).
-    assert!((times[0] - 1.0).abs() < 1e-6);
-    assert!((times[1] - std::f64::consts::SQRT_2).abs() < 1e-6);
+    assert_eq!(times.len(), 2, "times={times:?}");
+    // Upstream sets `curr.feedrate = 0` for the junction-clamped
+    // move (`GCodeProcessor.cpp:4031`), so its trapezoid computes
+    // cruise_feedrate=0 → block_time=0. This is exactly the
+    // collapse the oracle shows for `machine_max_acceleration_*`.
+    assert_eq!(times[1], 0.0, "times={times:?}");
+    // The first move keeps cruise-only time ~1.005s (f32 trapezoid
+    // on the post-clamp junction feedrate).
+    assert!((times[0] - 1.005).abs() < 1e-3, "times={times:?}");
 }
 
 #[test]
@@ -71,12 +76,18 @@ fn fractional_print_acceleration_still_limits_the_junction() {
     let mut state = MotionState::with_limits(zero_z_limits());
     assert!(state.motion("M204 P0.5").is_none());
     let first = state.motion("G1 X10 Y0 F600").unwrap();
-    let second = state.motion("G1 X0 Y10 F600").unwrap();
+    // ~5.3° turn continuing forward — inside the
+    // `difference < 0.5` centripetal gate; radius ~110mm ⇒ junction
+    // feedrate sqrt(0.5*110) ≈ 7.4 mm/s < 10, so the limit engages
+    // and the trapezoid ramps 10→7.4→10.
+    let second = state.motion("G1 X19.9 Y0.9 F600").unwrap();
     assert_eq!(second.centripetal_acceleration, 0.5);
     let times = planned_times(&[first, second]);
-    // Junction feedrate min(speed, sqrt(0.5 * r)) — still finite and
-    // strictly capped by the centripetal limit.
     assert!(times.iter().all(|time| time.is_finite() && *time >= 0.0));
+    // Ramped entry/exit makes the move strictly slower than the
+    // ~1.0s cruise-only time; an unclamped junction would finish in
+    // exactly distance/speed.
+    assert!(times[1] > 1.0);
 }
 
 #[test]

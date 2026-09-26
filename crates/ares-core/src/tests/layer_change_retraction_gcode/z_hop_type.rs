@@ -83,7 +83,7 @@ fn default_slope_lift_consumes_next_layer_travel() {
     let retract = line_index(second, "G1 E-0.8 F1800 ; retract");
     let z = next_line_index(second, retract, "G1 Z0.4 F7200 ; move to layer Z");
     let slope = next_line_index(second, z, "G1 X1.6 Y0 Z0.8 F7200 ; travel");
-    let travel = next_line_index(second, slope, "G1 X0 Y0 F7200");
+    let travel = next_line_index(second, slope, "G1 X0 Y0 F7200 ; travel");
     let restore = next_line_index(second, travel, "G1 Z0.4 F7200 ; restore layer Z");
     let unretract = next_line_index(second, restore, "G1 E0.8 F1800 ; unretract");
 
@@ -157,7 +157,7 @@ fn spiral_lift_consumes_pending_layer_change_travel() {
     let feedrate = next_line_index(second, comment, "G1 F7200");
     let first_spiral = next_line_index(second, feedrate, "G1 X1.963 Y-0.007 Z0.425");
     let final_spiral = next_line_index(second, first_spiral, "G1 X2 Y0 Z0.8");
-    let travel = next_line_index(second, final_spiral, "G1 X0 Y0 F7200");
+    let travel = next_line_index(second, final_spiral, "G1 X0 Y0 F7200 ; travel");
     let restore = next_line_index(second, travel, "G1 Z0.4 F7200 ; restore layer Z");
     let unretract = next_line_index(second, restore, "G1 E0.8 F1800 ; unretract");
 
@@ -187,7 +187,7 @@ fn auto_lift_forces_spiral_layer_change_lift() {
     let feedrate = next_line_index(second, comment, "G1 F7200");
     let first_spiral = next_line_index(second, feedrate, "G1 X1.963 Y-0.007 Z0.425");
     let final_spiral = next_line_index(second, first_spiral, "G1 X2 Y0 Z0.8");
-    let travel = next_line_index(second, final_spiral, "G1 X0 Y0 F7200");
+    let travel = next_line_index(second, final_spiral, "G1 X0 Y0 F7200 ; travel");
     let restore = next_line_index(second, travel, "G1 Z0.4 F7200 ; restore layer Z");
     let unretract = next_line_index(second, restore, "G1 E0.8 F1800 ; unretract");
 
@@ -215,7 +215,7 @@ fn filament_spiral_lift_overrides_unprefixed_normal_layer_change_lift() {
     let z = line_index(second, "G1 Z0.4 F7200 ; move to layer Z");
     let comment = next_line_index(second, z, ";spiral lift Z");
     let final_segment = next_line_index(second, comment, "G1 X2 Y0 Z0.8");
-    let travel = next_line_index(second, final_segment, "G1 X0 Y0 F7200");
+    let travel = next_line_index(second, final_segment, "G1 X0 Y0 F7200 ; travel");
 
     assert_eq!(spiral_segment_count(second), 16);
     assert!(!second.lines().any(|line| line == "G1 Z0.8 F7200 ; lift Z"));
