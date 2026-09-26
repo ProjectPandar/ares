@@ -1902,3 +1902,46 @@ upstream `ostream << setprecision` semantics). Neutral on this model
    points). Not a formatting-mode issue.
 2. M73 progress ordering (R-number off by 1) — time-estimate.
 3. Header timestamp/model-time and object-id comments.
+
+## 2026-09-26 update — sweep 499 PASS / 5 FAIL
+
+Post-M73-eligibility full sweep: 499 PASS, 5 FAIL domains.
+Closed this round:
+
+- **g1_times_cache eligibility** (`estimate.rs`): upstream
+  `GCodeProcessor.cpp:484-488` caches only `EMoveType::{Extrude,Travel,
+  Wipe}` vertices; `move_type` (:4259-4277) forces `Wipe` for ANY delta
+  while `m_wiping`, and `process_G1` returns early on zero displacement
+  (:3890-3891 — F-only lines consume a g1 id but store no vertex).
+  Correct predicate `(!e_only || wiping) && !seam_vertex`; G10/G11 fake
+  blocks (`--m_g1_line_id`, :4879/4889) get `false`.
+- **`travel_to_xy` comment drop**: `travel_to_xyz`'s unchanged-Z branch
+  calls `travel_to_xy(to_2d(point))` WITHOUT comment
+  (`GCodeWriter.cpp:771-780`); ares replicated in `gcode_move_emit.rs`
+  `None` lift branch and `approach.rs` pure-XY emit sites.
+- **`(bridge)` suffix**: `GCode::_extrude` appends " (bridge)" when
+  `is_bridge(role)` (`ExtrusionEntity.hpp:99-103`); wired into
+  `feature_description` call sites (`extrusion.rs`, `scarf/emit.rs`,
+  `approach.rs` travel comment).
+- **timelapse_type=1**: oracle exits `CLI_GCODE_PATH_IN_UNPRINTABLE_AREA`
+  (-102) — smooth timelapse forces a prime tower the ksr bed cannot host
+  (`Print.cpp:3317-3318`); mapped as input rejection in `stages.rs`.
+
+New probes: `ARES_DUMP_PROBES` (per-line g1 cache probe id+hit),
+`ARES_DUMP_M73EMIT` (pair evaluation per progress line),
+`tools/orca-probes` style nix probes `probeids.nix` (oracle probe
+counters), `elapprobe.nix` (oracle `g1_times_cache` dump),
+`mvtype.nix` (block move_type — produced empty output, needs rework).
+
+### Remaining FAIL domains (root causes still open)
+
+| domain | shape | status |
+|---|---|---|
+| fuzzy_skin_thickness/max | X 106.724 vs 106.722 (+E.02529 vs .02528) | fuzzy-skin vertex generation geometry diff, first divergence at line 294 |
+| ironing_pattern/concentric | `M73 P0 R10` vs `R9` — ares total ~+60s | ares over-counts total print time |
+| machine_max_acceleration_extruding/min | `M73 P0 R9` vs `R7` — total ~+120s | same: ares over-counts |
+| raft_layers/(max,seeded) | M73 emitted after `G1 E4` in oracle but not ares; ares adds cache ids oracle lacks (e.g. 6775-6800 range in raft case); `; estimated printing time` +6s | ares caches/produces blocks upstream does not around wipe/id regions; needs block-level move_type dump |
+| sparse_infill_pattern/concentric | M73 placement + remaining first-layer sliver suppression | unresolved ConcentricInternal suppression at layer 1 + shared M73 residual |
+
+Note: oracle 2.4.2 reruns are nondeterministic (parallel fill ordering);
+each FAIL row above was consistent across the sweep's 3-oracle-run check.
