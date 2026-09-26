@@ -12,6 +12,9 @@ use crate::geometry::{
     douglas_peucker, intersection_open_polylines,
 };
 
+#[cfg(test)]
+mod tests;
+
 /// Parameters carried into `fill_honeycomb` — subset of the surface-fill
 /// params the upstream `FillParams` provides.
 #[derive(Clone, Copy)]
@@ -111,14 +114,14 @@ pub(crate) fn fill_honeycomb(
     scale: CoordinateScale,
 ) -> Result<Vec<Polyline>, ClipperError> {
     // Cache math (`CacheData`, FillHoneycomb.cpp:21-32):
-    let min_spacing = (params.spacing / scale.factor()) * f64::from(params.multiline);
-    let distance = (min_spacing / f64::from(params.density)) as i64;
+    let min_spacing = (params.spacing / scale.factor()) as i64 * i64::from(params.multiline);
+    let distance = (min_spacing as f32 / params.density) as i64;
     let hex_side = (distance as f64 / (3.0_f64.sqrt() / 2.0)) as i64;
     let hex_width = distance * 2;
     let hex_height = hex_side * 2;
     let pattern_height = hex_height + hex_side;
     let y_short = (distance as f64 * 3.0_f64.sqrt() / 3.0) as i64;
-    let x_offset = (min_spacing / 2.0) as i64;
+    let x_offset = min_spacing / 2;
     let y_offset = (x_offset as f64 * 3.0_f64.sqrt() / 3.0) as i64;
     let hex_center = Point::new(hex_width / 2, hex_side);
 
@@ -126,11 +129,10 @@ pub(crate) fn fill_honeycomb(
     // bridge_angle.unwrap_or(angle)`, `+ _layer_angle` when `!fixed_angle`,
     // then `+ pi/2`.
     let mut direction_f = params.bridge_angle.unwrap_or(params.angle);
-    if params.bridge_angle.is_none()
-        && !params.fixed_angle
-        && (params.layer_index / usize::from(params.thickness_layers)) & 1 == 1
-    {
-        direction_f += std::f32::consts::FRAC_PI_2;
+    if params.bridge_angle.is_none() && !params.fixed_angle {
+        // FillHoneycomb::_layer_angle overrides the base two-layer alternation.
+        let layer = params.layer_index / usize::from(params.thickness_layers);
+        direction_f += (std::f64::consts::PI / 3.0) as f32 * (layer % 3) as f32;
     }
     let direction = f64::from(direction_f + std::f32::consts::FRAC_PI_2);
     let mut all_polylines: Vec<Polyline> = Vec::new();
@@ -183,8 +185,8 @@ pub(crate) fn fill_honeycomb(
                 x += distance;
             }
             let p = rotate_polyline(&Polyline::new(pts), -direction, hex_center);
-            // `p.simplify(5 * spacing)` — Douglas-Peucker at 5x line width.
-            let tol = 5.0 * params.spacing / scale.factor();
+            // Upstream passes unscaled spacing even though points are scaled.
+            let tol = 5.0 * params.spacing;
             all_polylines.push(Polyline::new(douglas_peucker(p.points(), tol)));
         }
     }
