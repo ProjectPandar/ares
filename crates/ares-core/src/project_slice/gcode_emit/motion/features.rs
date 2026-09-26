@@ -209,6 +209,10 @@ impl PathProperties<'_> {
             // `GCode.cpp:6524`: `erSupportTransition` shares the
             // bridge speed with overhang walls/bridge infill.
             "Support transition" => options.bridge_speed,
+            // `GCode.cpp:4438-4441`: skirt entities are extruded with
+            // an explicit `support_speed` argument (not the role
+            // switch); `skirt_speed > 0` overrides it at `:6599`.
+            "Skirt" => options.support_speed,
             _ => options.inner_wall_speed,
         }
     }

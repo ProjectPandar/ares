@@ -77,17 +77,19 @@ fn fractional_print_acceleration_still_limits_the_junction() {
     assert!(state.motion("M204 P0.5").is_none());
     let first = state.motion("G1 X10 Y0 F600").unwrap();
     // ~5.3° turn continuing forward — inside the
-    // `difference < 0.5` centripetal gate; radius ~110mm ⇒ junction
-    // feedrate sqrt(0.5*110) ≈ 7.4 mm/s < 10, so the limit engages
-    // and the trapezoid ramps 10→7.4→10.
+    // `difference < 0.5` centripetal gate; radius ~110mm ⇒ upstream
+    // clamps `curr.feedrate` to sqrt(0.5*110) ≈ 7.4 mm/s
+    // (`GCodeProcessor.cpp:4031` clamps the BLOCK's feedrate, not
+    // just the junction speed), so the whole second move cruises at
+    // ~7.4: ~10.05/7.4 ≈ 1.35s > 1.0.
     let second = state.motion("G1 X19.9 Y0.9 F600").unwrap();
     assert_eq!(second.centripetal_acceleration, 0.5);
     let times = planned_times(&[first, second]);
     assert!(times.iter().all(|time| time.is_finite() && *time >= 0.0));
-    // Ramped entry/exit makes the move strictly slower than the
-    // ~1.0s cruise-only time; an unclamped junction would finish in
-    // exactly distance/speed.
-    assert!(times[1] > 1.0);
+    // Cruise-clamped block is strictly slower than the ~1.0s
+    // unclamped time; an unclamped junction would finish in exactly
+    // distance/speed.
+    assert!(times[1] > 1.0, "times={times:?}");
 }
 
 #[test]

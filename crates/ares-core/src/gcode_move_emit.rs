@@ -145,7 +145,8 @@ pub(crate) fn move_gcode(command: MoveGCodeCommand<'_>) -> Result<(String, f64),
                 // `GCodeWriter::travel_to_xyz` no-Z-change branch calls
                 // `travel_to_xy(to_2d(point))` WITHOUT the comment
                 // (`GCodeWriter.cpp:771-780`), so plain XY travels stay
-                // uncommented even when `gcode_comments` is on.
+                // uncommented even when `gcode_comments` is on. (The
+                // unclear-position branch at :761-764 keeps it.)
                 None => command.writer.travel_to_xy_with_comment(
                     point,
                     command.speed_move.feedrate_mm_min(),

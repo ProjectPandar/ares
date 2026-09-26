@@ -2146,7 +2146,11 @@ dilation/`surface.thickness` handling in
   Replaced with ~0.11°/~5.3° shallow turns pinning upstream's real
   semantics: `curr.feedrate` itself is clamped (so `M204 P0` yields
   `block_time=0` for junction-clamped moves — the whole block, not
-  just the junction); `M204 P0.5` engages the 10→7.4→10 ramp.
+  just the junction); `M204 P0.5` cruise-clamps the whole second
+  block to ~7.4mm/s (`GCodeProcessor.cpp:4031` clamps `curr.feedrate`
+  itself, not only the junction feedrate; the first block's ~1.005s
+  includes deceleration since XY travels retain nonzero travel
+  acceleration at `motion.rs:350-365`).
 - Verified: ksr 84/84, z_hop_types+filament_z_hop_types domains PASS,
   full touched-test suite 595/595.
 
