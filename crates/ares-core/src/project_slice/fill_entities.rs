@@ -2,6 +2,7 @@ pub(in crate::project_slice) mod adaptive;
 mod concentric;
 mod crosshatch;
 mod cubic;
+mod dump;
 mod flow;
 mod gap_residual;
 mod grid;

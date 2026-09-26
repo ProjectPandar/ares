@@ -384,4 +384,13 @@ fn distance(left: Point, right: Point) -> f64 {
 }
 
 #[cfg(test)]
+#[path = "arc/dp_fragment_tests.rs"]
+mod dp_fragment_tests;
+#[cfg(test)]
+#[path = "arc/dp_pre129_tests.rs"]
+mod dp_pre129_tests;
+#[cfg(test)]
+#[path = "arc/dp_pre75_tests.rs"]
+mod dp_pre75_tests;
+#[cfg(test)]
 mod tests;
