@@ -118,10 +118,15 @@ impl OptionOutcome {
         rejected: Vec<String>,
         failure: Option<String>,
     ) -> Self {
+        let nondeterministic = plan
+            .cases
+            .iter()
+            .filter(|case| sweep::oracle_nondeterministic(&plan.key, &case.label))
+            .count();
         let (status, detail) = if let Some(detail) = failure {
             ("FAIL", detail)
         } else if compared == 0
-            || compared != plan.cases.len()
+            || compared + nondeterministic != plan.cases.len()
             || !rejected.is_empty()
             || plan.cases.iter().any(|case| case.value.is_none())
         {

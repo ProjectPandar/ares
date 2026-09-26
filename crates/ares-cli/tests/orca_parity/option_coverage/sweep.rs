@@ -87,6 +87,14 @@ fn orca_parity_option_coverage() {
     );
 }
 
+/// `(option, value)` pairs whose upstream oracle is nondeterministic by
+/// construction — verified by two identical-manifest Orca runs producing
+/// different G-code (`/tmp/parity-lockedzag-trav4/case-AKqSWX` vs
+/// `case-lXtwTS`, 407-line oracle-vs-oracle diff).
+pub(super) fn oracle_nondeterministic(key: &str, label: &str) -> bool {
+    matches!((key, label), ("sparse_infill_pattern", "lightning"))
+}
+
 fn execute_plan(
     runner: &OrcaRunner,
     plan: &domains::OptionPlan,
@@ -153,6 +161,16 @@ fn execute_plan(
         match built {
             Ok(exported) => {
                 let outcome = parity::compare_exported_for(runner, &exported, Some(&plan.key));
+                if oracle_nondeterministic(&plan.key, &case.label) && outcome.status != "PASS" {
+                    // Upstream slices lightning layers concurrently through
+                    // the process-global, unseeded `rand()`
+                    // (`PrintObject.cpp:710-715` + `Lightning/TreeNode.cpp`
+                    // child selection): the oracle itself emits different
+                    // G-code across identical runs, so byte-exactness is
+                    // undefined for this value.
+                    eprintln!("[option] ORACLE_NONDETERMINISTIC {label}");
+                    continue;
+                }
                 if outcome.status == "INPUT_REJECTED" {
                     rejected.push(format!("{}: {}", case.label, outcome.detail));
                     eprintln!("[option] INPUT_REJECTED {label}");
