@@ -25,7 +25,7 @@ fn enabled_wipe_before_external_loop_moves_inward_and_returns_before_external_ex
     assert_ordered(
         &enabled,
         &[
-            "G1 X0 Y0 F7200 ; travel",
+            "G1 X0 Y0 F7200",
             "G1 X0.141 Y0.141 F3600 ; wipe before external loop",
             "G1 X0 Y0 F3600 ; wipe before external loop",
             "G1 X4 Y0 E0.11877 ; perimeter",

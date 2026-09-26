@@ -29,7 +29,7 @@ fn enabled_wipe_on_loops_moves_inward_after_external_loop_before_internal_travel
         &[
             "G1 X0 Y0 E0.11877 ; perimeter",
             "G1 X0.069 Y0.04 F3600 ; move inwards before travel",
-            "G1 X0.357 Y0.357 F7200 ; travel",
+            "G1 X0.357 Y0.357 F7200",
         ],
     );
     assert!(!enabled.contains("wipe before external loop"));

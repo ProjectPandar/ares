@@ -208,3 +208,18 @@ They are not waived for the overall parity goal; this slice does not
 claim a green full workspace. Final logs: `/tmp/concentric-review-green.log`,
 `/tmp/concentric-review-ksr.log`, `/tmp/concentric-review-oracle.log`,
 `/tmp/concentric-workspace-full.log`.
+
+## Wipe assertion follow-up
+
+Boundary: `GCodeWriter.cpp::travel_to_xyz` delegates unchanged-Z travel
+to `travel_to_xy` without forwarding its comment (771–780), already
+ported in `gcode_move_emit.rs`. The two pipeline wipe tests still expected
+`; travel`, unlike this upstream behavior. Plan: remove only that stale
+suffix from their exact ordered-line assertions; keep all coordinates,
+feedrates, extrusion amounts, wipe commands, and ordering checks intact.
+No production movement change or source-text pinning test is added.
+Verify the eight wipe tests and full workspace, then independent review
+before committing these test corrections with this documentation.
+Result: `/tmp/wipe-assertion-workspace.log` records 7304 passed and
+10 skipped with no failures; fmt check and clippy also succeed. Skipped
+opt-in parity jobs remain explicit coverage gaps, not inferred passes.
