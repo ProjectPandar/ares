@@ -149,10 +149,56 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                         provably_legal = true;
                         (cases, None)
                     }
-                    None => (vec![baseline_case()], None),
+                    None => {
+                        // Schema-unbounded numeric option (`coFloat`/
+                        // `coInt`/`coFloatOrPercent` with neither min
+                        // nor max — e.g. `adaptive_bed_mesh_margin`).
+                        // The legal domain is open-ended; a single
+                        // default run proves nothing, so probe two
+                        // deterministic small-positive values that are
+                        // legal for every sane open range (a rejection
+                        // still reports honestly as INCOMPLETE).
+                        let seed_lo = 0.5;
+                        let seed_hi = seeded_interior(
+                            &key,
+                            1.0,
+                            9.0,
+                            option_type.contains("Int"),
+                        );
+                        let mut cases = vec![
+                            numeric_case("probe-min", seed_lo, entry, &option_type),
+                            numeric_case("probe-seeded", seed_hi, entry, &option_type),
+                        ];
+                        if option_type == "coFloatOrPercent" {
+                            // Both percent and absolute-literal branches.
+                            cases.clear();
+                            cases.push(case("probe-percent", "40%", entry));
+                            let mut absolute =
+                                numeric_case("probe-literal", 3.0, entry, "coFloat");
+                            absolute.label = "probe-literal".to_owned();
+                            cases.push(absolute);
+                        }
+                        // Seeded probes are the strongest coverage an
+                        // unbounded domain admits.
+                        provably_legal = true;
+                        (cases, None)
+                    }
                 }
             }
         }
+    } else if matches!(option_type.as_str(), "coPoint" | "coPoints") {
+        // Schema-unbounded point/point-list options (e.g.
+        // `bed_mesh_max`, `bed_exclude_area`): no declared bounds —
+        // probe two deterministic small XY probes; render as the
+        // upstream "x,y" string format.
+        provably_legal = true;
+        (
+            vec![
+                case("probe-min", "1,1", entry),
+                case("probe-seeded", "77,53", entry),
+            ],
+            None,
+        )
     } else {
         (vec![baseline_case()], None)
     };
