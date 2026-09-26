@@ -202,6 +202,10 @@ impl PathProperties<'_> {
             // `GCode.cpp:6548-6550`: interface paths use
             // `support_interface_speed`, not the support speed.
             "Support interface" => options.support_interface_speed,
+            // `GCode.cpp:6540`: `erBottomSurface` always resolves to
+            // `initial_layer_infill_speed` (and the first-layer override
+            // at `:6568` deliberately skips it).
+            "Bottom surface" => options.initial_layer_infill_speed,
             _ => options.inner_wall_speed,
         }
     }

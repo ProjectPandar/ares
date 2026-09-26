@@ -2110,3 +2110,25 @@ computed via `solid_line_width` instead of
 surface's own (-1 vs layer.height selection at `Fill.cpp:955`).
 Verify which SurfaceFillParams branch ares takes for
 bottom-over-unsupported and compare `params.flow` inputs.
+
+## 2026-09-26 #8 — raft bottom-surface: all three deltas are one region difference
+
+Z23.9 forensics resolved the F1913 mystery: oracle's emitted feedrate
+is 35 mm/s (initial_layer_infill_speed), then the cooling-buffer
+slowdown (`slow_down_layer_time=8`, `slow_down_min_speed=10`,
+`slow_down_for_layer_cooling=1`) rewrites it to F1913 (factor ≈0.91).
+Ares emitted F2100 AND the slowdown never stretched the layer —
+because ares's layer line population for that region differs
+(different hatch geometry/width), so either its total_time ≥ target
+or the lines fall in a different slowdown bucket.
+
+The three deltas share one root: ares's Z23.9 bottom-over-raft
+`Surface` has DIFFERENT geometry (90°-rotated hatch, different
+region → different `params.flow` width 0.420844 vs 0.454819). The
+speed gap is downstream of the region mismatch, not a role_speed
+bug (verified `erBottomSurface` maps to initial_layer_infill_speed
+in `features.rs`; cooling slow-down machinery works and is invoked).
+Next: compare the `fill_surfaces` region geometry for the bottom
+layer over raft — ares likely misses the raft-contact bottom surface
+dilation/`surface.thickness` handling in
+`LayerRegion::make_fill_surfaces`/raft-contact bridging.
