@@ -189,7 +189,11 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
         state.options.wipe_speed
     }
     .max(10.0);
-    let during = (state.options.retraction_feedrate / 60.0 * retraction_distance / wipe_speed)
+    // `GCode.cpp:350`: the during-wipe cap uses the effective
+    // `retraction_speed` mm/s (filament override applied, NOT the
+    // integer-rounded retract-speed word), times the clipped wipe path
+    // length in mm, over the resolved wipe speed in mm/s.
+    let during = (state.options.retraction_during_wipe_speed * retraction_distance / wipe_speed)
         .min(remaining);
     let before = state.options.retraction_length - during;
     if state.options.use_firmware_retraction {

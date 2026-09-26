@@ -35,7 +35,12 @@ pub(super) fn append(
         "layer_num",
         value::Value::number(layer_count(traversal).saturating_sub(1) as f64),
     );
-    config.insert("layer_z", value::Value::number(max_layer_z));
+    // `GCode.cpp:3478`: `layer_z = get_position()(2) - z_offset` — the
+    // model-domain writer z at print end, NOT the float-domain
+    // `max_layer_z` (which stays a separate placeholder).
+    let layer_z_placeholder =
+        position.2 - traversal.resolved.views.full.printer.remaining.z_offset.0;
+    config.insert("layer_z", value::Value::number(layer_z_placeholder));
     config.insert("max_layer_z", value::Value::number(max_layer_z));
     config.insert("max_print_z", value::Value::number(max_layer_z));
     config.insert("timelapse_type", value::Value::number(0.0));

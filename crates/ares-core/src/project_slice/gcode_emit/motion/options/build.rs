@@ -291,6 +291,11 @@ impl MotionOptions {
                 .copied()
                 .unwrap_or_default(),
             retraction_feedrate: retraction_speed * 60.0,
+            retraction_during_wipe_speed: gcode
+                .retraction_speed
+                .0
+                .first()
+                .map_or(0.0, |value| value.0),
             wipe: retract_overrides
                 .filament_wipe
                 .iter()

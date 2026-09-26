@@ -113,6 +113,10 @@ pub(super) fn emit(
         state.retracted = retract.retracted > 0.0;
         state.retracted_amount = retract.retracted;
     }
+    // `GCode::preamble` performs a *silent* `travel_to_z(z_offset)`
+    // (`GCode.cpp:5676-5679` — the returned G-code is discarded, only
+    // `m_pos(2)` updates) so the writer's initial Z domain is offset.
+    state.writer_z = Some(state.options.z_offset);
     let fan_layers_start = output.len();
     let (max_layer_z, mut fan_mover_handle) = layers::append(
         prepared,

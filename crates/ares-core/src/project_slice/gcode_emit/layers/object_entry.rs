@@ -101,7 +101,7 @@ pub(super) fn emit(
             },
             enabled: spiral_body_layer,
             final_layer: is_last_entry && layer_index + 1 == object_layer_counts[object_index],
-            z: f64::from(layer_z),
+            z: f64::from(layer_z) + state.options.z_offset,
             height: f64::from(layer_height),
         },
     );

@@ -192,8 +192,7 @@ pub(super) fn emit_needs_travel(
         && state.lifted
         && !first_position
         && (layer_change_travel
-            || (state.source_layer_z + state.options.z_hop) - state.options.z_hop
-                > state.source_layer_z)
+            || (state.layer_z + state.options.z_hop) - state.options.z_hop > state.layer_z)
     {
         travel_emit::xyz_with_comment(
             output,

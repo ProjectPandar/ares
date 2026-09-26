@@ -110,6 +110,13 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) retract_lift_below: f64,
     pub(in crate::project_slice::gcode_emit) retract_lift_enforce: RetractLiftEnforce,
     pub(in crate::project_slice::gcode_emit) retraction_feedrate: f64,
+    /// Effective `retraction_speed` (filament `filament_retraction_speed`
+    /// override applied, UNROUNDED, mm/s) for the during-wipe cap
+    /// `retractionDuringWipe = retraction_speed * wipe_path_length /
+    /// wipe_speed` (`GCode.cpp:350`). Distinct from `retraction_feedrate`,
+    /// which is `floor(retraction_speed + 0.5) * 60` for the F word
+    /// (`Extruder.cpp:184-186`).
+    pub(in crate::project_slice::gcode_emit) retraction_during_wipe_speed: f64,
     pub(in crate::project_slice::gcode_emit) wipe: bool,
     pub(in crate::project_slice::gcode_emit) wipe_distance: f64,
     pub(in crate::project_slice::gcode_emit) retraction_minimum_travel: f64,

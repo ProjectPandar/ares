@@ -59,7 +59,10 @@ pub(super) fn append_and_track(
         context.first_layer_bounds,
     )? {
         if let Some(z) = last_z {
-            state.lifted = z > context.layer.z + f64::EPSILON;
+            // The template's absolute Z is writer-domain; compare against
+            // the offset print z (`GCode.cpp:5171-5178` adopts it into
+            // `m_pos` which already carries `z_offset`).
+            state.lifted = z > context.layer.z + state.options.z_offset + f64::EPSILON;
             state.template_lifted = state.lifted;
         }
         // The timelapse g-code parks the head; upstream marks the writer

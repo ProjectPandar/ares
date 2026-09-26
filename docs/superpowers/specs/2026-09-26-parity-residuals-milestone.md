@@ -112,3 +112,24 @@ seeded probing is the maximum achievable coverage).
       `filament_retraction_speed` — new seeded probes exercise a path
       where retraction differs; pending triage against upstream
       `GCodeWriter.cpp`/`GCode.cpp` extruder retraction slices.
+- [x] `retraction_speed`/`filament_retraction_speed` sweep FAILs —
+      decomposition: (a) during-wipe cap `retractionDuringWipe` used
+      `retraction_feedrate/60` (integer-round() of effective
+      `retraction_speed`, mm/s) — upstream `GCode.cpp:350` uses the
+      effective FLOATS value unrounded (`filament_retraction_speed`
+      override folds into `config.retraction_speed`). Now plumbed as
+      `retraction_during_wipe_speed`; (b) residual = short `m_wipe.path`
+      tail from ares emitting upstream-dropped micro paths (~0.07mm
+      `E.00232` sliver extrusions — LayerRegion elimination slice).
+      `retraction_speed` case 009R78 now byte-identical modulo
+      timestamp; `filament_retraction_speed` probe-min case reduced
+      704→75 diff-lines, residual = micro-path elimination (shared
+      LayerRegion boundary) + M73-only lines.
+- [x] Review-cycle-4 fixes (z_offset writer-domain, commit 61930266
+      follow-up): `GCode::preamble` silent `travel_to_z(z_offset)`
+      seeds `writer_z` (`GCode.cpp:5676-5679`); spiral-vase emit +
+      object-entry filter Z in writer domain; timelapse template-Z
+      adopt/compare in writer domain (`GCode.cpp:5171-5178`); spiral
+      travel float-gate uses `state.layer_z`; end-template `layer_z`
+      = `writer_z - z_offset` (`GCode.cpp:3478`), `max_layer_z` keeps
+      the f32 running-max semantics.
