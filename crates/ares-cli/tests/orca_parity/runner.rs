@@ -35,6 +35,10 @@ mod command;
 #[path = "runner/strict_reference_tests.rs"]
 mod strict_reference_tests;
 
+#[cfg(test)]
+#[path = "runner/wrapper_tests.rs"]
+mod wrapper_tests;
+
 use stages::{FailureKind, Stage, StageError};
 
 pub(super) struct ExportedCase {
