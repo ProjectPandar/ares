@@ -65,3 +65,28 @@ seeded probing is the maximum achievable coverage).
    comparisons (no `value.is_none()`/empty-case plans).
 5. Independent review (gpt-reviewer or equivalent) re-verifies all
    slices with a clean six-axis report.
+
+## Execution log
+
+- [x] Seeded probes for unbounded coFloat/coInt/coFloatOrPercent/coPoint/
+      coPoints (`b7753c4f`) — ~35 domains now run real comparisons.
+      Remaining INCOMPLETE: coString/coStrings/coPointsGroups
+      (no mechanically-legal probe) + 2 coBool/1 coEnum anomalies.
+- [x] `concentric_sparse` coord_t truncation (`16ee106c`) — ring pitch
+      integer-truncated like upstream.
+- [x] `_adjust_solid_spacing` ported into concentric rings (`662b284b`) —
+      concentric ring geometry byte-identical on stored cases.
+- [ ] `ironing_pattern` residual = shared M73/estimator time bucket
+      (R9 vs R10, ~+60s) — CoolingBuffer/time-model slice.
+- [ ] `sparse_infill_pattern` residual = stInternalSolid sliver region +
+      ring-lattice spacing (frInfill flow) + F971/F996 cooling slowdown —
+      LayerRegion `expand_merge_surfaces`/`minimum_sparse_infill_area`
+      + CoolingBuffer slices.
+- [ ] `raft_layers` = same LayerRegion region-classification boundary
+      (bottom-over-raft surface + hatch angle/width cascade).
+- [ ] `fuzzy_skin_thickness` = `Feature/FuzzySkin/FuzzySkin.cpp` slice —
+      classic noise is upstream `random_device`-seeded (non-deterministic;
+      byte parity impossible — comparator envelope handles it);
+      `ripple` type is deterministic but `fuzzy_extrusion_line_ripple`
+      (Arachne junction/width-preserving, :221-283) and `displacement`
+      mode dispatch have port gaps.
