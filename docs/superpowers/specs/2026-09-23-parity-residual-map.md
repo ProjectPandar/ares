@@ -1986,3 +1986,28 @@ Probe artifacts kept: `/tmp/oblocks.txt` (upstream per-block
 type/distance), `/tmp/probeids.txt`, `/tmp/orcaelap.txt`,
 `tools/orca-probes`-style `orcablocks.nix` at
 `/tmp/medial-probe/orcablocks.nix` (pending move into tools/).
+
+## 2026-09-26 #3 — 500 PASS / 4 FAIL
+
+`machine_max_acceleration_extruding` closed: upstream's centripetal
+limit `sqrt(get_acceleration(mode) * r)` (`GCodeProcessor.cpp:4025-
+4031`) collapses junction feedrate to 0 when `M204` sets machine
+acceleration 0; ares's artificial `.max(1.0)` floor kept real ramp
+times (+138s). Floor removed in `motion/segment.rs:37` and
+`motion.rs:365`.
+
+Remaining 4 FAILs are all real geometry-class divergences, not
+estimator bookkeeping:
+
+| domain | signature | suspected upstream seam |
+|---|---|---|
+| fuzzy_skin_thickness | ±1-2µm fuzzy-point wander at line 294+ | fuzzy-skin noise/fuzzify point generation |
+| ironing_pattern (concentric) | concentric ironing squares: oracle 0.25-grid (114.75/105.25), ares 0.2-grid (114.8/105.2) — half-step offset + ring count off by one | `FillConcentricInternal`/Arachne ring spacing + first-offset quantization |
+| sparse_infill_pattern (concentric) | same concentric half-step class + first-layer sliver suppression still missing | same |
+| raft_layers | wipe path + seam geometry divergence at layer 23.9→24.3 transition (ares wipes at 105.9,113.6; oracle at 113.7,114.7), M73 id drift downstream | perimeter loop ordering / seam string alignment feeding wipe endpoints |
+
+All M73 bookkeeping residuals are now explained mechanically:
+cache-eligibility = move_type {Extrude,Travel,Wipe} (proven via
+orcablocks probe: only types 1/2 skipped + 2 seam-aliased),
+seam-vertex aliasing, F-line id consumption, G10/G11 id reuse,
+probe counter = block id − 1.
