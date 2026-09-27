@@ -92,7 +92,13 @@ fn orca_parity_option_coverage() {
 /// different G-code (`/tmp/parity-lockedzag-trav4/case-AKqSWX` vs
 /// `case-lXtwTS`, 407-line oracle-vs-oracle diff).
 pub(super) fn oracle_nondeterministic(key: &str, label: &str) -> bool {
+    // Coherent-noise fuzzy modes sample point offsets with a thread-local
+    // `std::mt19937` seeded by `random_device` (`FuzzySkin.cpp:24-30`):
+    // two identical-manifest oracle runs diverge by ~13k lines
+    // (`/tmp/orc1/plate_1.gcode` vs `/tmp/orc2/plate_1.gcode`). `ripple`
+    // has no random component and stays byte-comparable.
     matches!((key, label), ("sparse_infill_pattern", "lightning"))
+        || (key.starts_with("fuzzy_skin") && label != "none" && label != "ripple")
 }
 
 fn execute_plan(

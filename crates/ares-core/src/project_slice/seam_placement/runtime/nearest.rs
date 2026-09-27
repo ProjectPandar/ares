@@ -51,7 +51,10 @@ pub(in crate::project_slice) fn place_nearest_penalized(
             let mut closest_distance = f32::INFINITY;
             for (index, &(x, y)) in layer.positions.iter().enumerate() {
                 let distance = (x - query.0).mul_add(x - query.0, (y - query.1) * (y - query.1));
-                if distance < closest_distance {
+                // Upstream's KD tree returns the LAST equal-distance
+                // candidate (each equal candidate replaces the result;
+                // `KDTreeIndirect.hpp:229-238`), so keep ties going.
+                if distance <= closest_distance {
                     closest_distance = distance;
                     closest = index;
                 }
@@ -139,10 +142,12 @@ pub(in crate::project_slice) fn place_nearest_penalized(
     let seam_query = (seam_x, seam_y);
     // External loops split directly at the candidate; inner loops project
     // the candidate onto the loop and stagger it (`SeamPlacer.cpp:1564-1618`).
+    // Upstream keys the inner-seam path on `loop.role()` — the FIRST
+    // path's role (`ExtrusionEntity.hpp:485`) — not every path's role.
     if loop_
         .paths
-        .iter()
-        .all(|path| path.role != ExtrusionRole::ExternalPerimeter)
+        .first()
+        .is_some_and(|path| path.role == ExtrusionRole::Perimeter)
     {
         // `get_closest_path_and_point(seam_point, false)`
         // (`SeamPlacer.cpp:1567`) — no overhang preference for the inner
@@ -220,16 +225,20 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         } else {
             // Convex corner (`SeamPlacer.cpp:1597-1598`): shrink the
             // center-line depth to the perpendicular depth.
-            depth = (f64::from(depth) * f64::from(beta) / 1.4142) as f32;
+            // `depth * beta_angle` stays f32 upstream; only the division
+            // by the double literal `1.4142` widens.
+            depth = (f64::from(depth * beta) / 1.4142) as f32;
         }
         let target = (projection.x, projection.y);
         // `SeamPlacer.cpp:1601-1617`: optional staggered-inner-seam walk —
         // `depth` is clamped up to the path width (mm) first, then walked
         // along the scaled loop coordinates.
         if staggered {
+            // `std::max(width, depth)` then an unscaled-f32 walk
+            // (`SeamPlacer.cpp:1603-1616`).
             let width = loop_.paths[projection.path].width;
             let depth_mm = depth.max(width);
-            let target = walk_along(loop_, &projection, f64::from(depth_mm) / scale.factor());
+            let target = walk_along(loop_, &projection, depth_mm, scale);
             split_at(loop_, target, scale);
             return;
         }
@@ -250,42 +259,35 @@ pub(in crate::project_slice) fn place_nearest_penalized(
     }
 }
 
-/// Walk `distance` (scaled units) forward along the loop from `from`,
-/// wrapping around (`SeamPlacer.cpp:1601-1617`).
-fn walk_along(loop_: &ExtrusionLoop, from: &split::Projection, distance: f64) -> (i64, i64) {
-    let mut remaining = distance;
-    let mut position = (from.x, from.y);
-    let mut started = false;
-    for pass in 0..2 {
-        for (path_index, path) in loop_.paths.iter().enumerate() {
-            for (segment_index, segment) in path.polyline.points.windows(2).enumerate() {
-                if !started {
-                    if path_index == from.path && segment_index == from.segment {
-                        started = true;
-                    } else {
-                        continue;
-                    }
-                }
-                let end = (segment[1].x, segment[1].y);
-                let length = squared_distance(position, end).sqrt();
-                if remaining <= length {
-                    let ratio = if length == 0.0 {
-                        0.0
-                    } else {
-                        remaining / length
-                    };
-                    return (
-                        (position.0 as f64 + (end.0 - position.0) as f64 * ratio) as i64,
-                        (position.1 as f64 + (end.1 - position.1) as f64 * ratio) as i64,
-                    );
-                }
-                remaining -= length;
-                position = end;
-            }
+/// Walk `distance_mm` forward along the loop from `from`, wrapping around.
+/// Upstream operates on unscaled `Vec2f` and subtracts each whole segment's
+/// length even when it overshoots (`SeamPlacer.cpp:1604-1616`), so the
+/// interpolation uses the f32 segment ratio before `new_scale` truncates.
+fn walk_along(
+    loop_: &ExtrusionLoop,
+    from: &split::Projection,
+    distance_mm: f32,
+    scale: CoordinateScale,
+) -> (i64, i64) {
+    let mut remaining = distance_mm;
+    let mut current = *from;
+    let factor = scale.factor() as f32;
+    let mut foot = (current.x as f32 * factor, current.y as f32 * factor);
+    while remaining > 0.0 {
+        let next = split::next_loop_point(loop_, &current);
+        let target = (next.x as f32 * factor, next.y as f32 * factor);
+        let distance = ((target.0 - foot.0).powi(2) + (target.1 - foot.1).powi(2)).sqrt();
+        let mut landed = next;
+        if distance > remaining {
+            // `a + (b - a) * depth / dist` then `Point::new_scale` (trunc).
+            let x = foot.0 + (target.0 - foot.0) * remaining / distance;
+            let y = foot.1 + (target.1 - foot.1) * remaining / distance;
+            landed.x = (f64::from(x) / f64::from(scale.factor())) as i64;
+            landed.y = (f64::from(y) / f64::from(scale.factor())) as i64;
         }
-        if pass == 1 {
-            break;
-        }
+        remaining -= distance;
+        current = landed;
+        foot = (current.x as f32 * factor, current.y as f32 * factor);
     }
-    position
+    (current.x, current.y)
 }

@@ -178,8 +178,9 @@ pub(super) fn append<'a>(
         f64::from(layer_z) + state.options.z_offset,
     );
     // `change_layer`'s explicit `travel_to_z` (`GCode.cpp:5702-5704`) and
-    // the silent `m_pos.z() = z` both leave the writer at the new layer z.
-    state.record_z(f64::from(layer_z) + state.options.z_offset);
+    // the silent `m_pos.z() = z` both leave the writer at the new layer z —
+    // but that z change happens AFTER the deferred-lift gate reads the
+    // previous writer z, so `advance_for_layer` below owns the record.
     layer_gcode::append_layer_change(
         output,
         layer_gcode::LayerTemplateContext {

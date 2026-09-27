@@ -256,7 +256,10 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
 }
 
 pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
-    if state.options.z_hop <= 0.0 || !is_allowed_at(state, state.layer_z) {
+    if state.options.z_hop <= 0.0
+        || !(state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
+        || !is_allowed_at(state, state.layer_z)
+    {
         return;
     }
     let feedrate = z_feedrate(state);
