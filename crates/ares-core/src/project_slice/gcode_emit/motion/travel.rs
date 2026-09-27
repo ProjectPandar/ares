@@ -201,6 +201,12 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
         }
         state.retracted = true;
     }
+    if force || state.pending_layer_retract {
+        // `reset_e` runs unconditionally after every `retract()` call
+        // (`GCode.cpp:7674`) — a fully-retracted nozzle still clears the
+        // counter the template assignments may have left behind.
+        reset_e(output, state);
+    }
     state.pending_layer_retract = false;
     // The eager lift supersedes any lift that the deferred path scheduled
     // for the layer's first travel.

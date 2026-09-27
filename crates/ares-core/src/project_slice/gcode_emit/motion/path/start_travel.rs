@@ -63,7 +63,6 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
                 properties,
                 geometry,
                 first_position,
-                never_positioned,
                 layer_change_travel,
                 slope_start_z,
                 target_z,

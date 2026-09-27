@@ -19,7 +19,6 @@ pub(super) struct Approach<'a> {
     pub(super) properties: PathProperties<'a>,
     pub(super) geometry: LayerGeometry<'a>,
     pub(super) first_position: bool,
-    pub(super) never_positioned: bool,
     pub(super) layer_change_travel: bool,
     pub(super) slope_start_z: Option<f64>,
     pub(super) target_z: f64,
@@ -39,7 +38,6 @@ pub(super) fn emit_needs_travel(
         properties,
         geometry,
         first_position,
-        never_positioned,
         layer_change_travel,
         slope_start_z,
         target_z,
@@ -339,6 +337,24 @@ pub(super) fn emit_needs_travel(
             );
         }
         travel_set_layer_z = true;
+    } else if let Some(z) = pending_target {
+        // A consumed pending lift whose raised target clamped to the
+        // layer z (no hop left) still carries a Z word: upstream's
+        // `travel_to_xyz` built `dest_point` from `m_to_lift + m_pos`
+        // and emits the combined `G1 X Y Z` even when the result isn't
+        // "lifted" (`GCodeWriter.cpp:701-768`). Without this the XY-only
+        // fallback would leave the writer at the stale Z.
+        travel_emit::xyz_with_comment(
+            output,
+            state,
+            travel_x,
+            travel_y,
+            z,
+            state.travel_feedrate,
+            first_travel_comment,
+        );
+        state.record_z(z);
+        travel_set_layer_z = z == target_z;
     } else if let Some(z) = slope_start_z {
         travel_emit::xyz_with_comment(
             output,
