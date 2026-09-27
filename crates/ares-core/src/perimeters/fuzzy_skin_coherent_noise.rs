@@ -18,11 +18,7 @@ mod vectortable;
 /// NOT a real `floor` (`x0` skips `x == 0.0` by one, and truncates
 /// negatives). `noisegen.cpp:GradientCoherentNoise3D`.
 fn lattice_index(x: f64) -> i32 {
-    if x > 0.0 {
-        x as i32
-    } else {
-        x as i32 - 1
-    }
+    if x > 0.0 { x as i32 } else { x as i32 - 1 }
 }
 
 /// `noisegen.h::MakeInt32Range`.
@@ -74,13 +70,9 @@ pub(super) fn coherent_value(
             1.0 / config.scale_mm,
             config.octaves,
         ),
-        FuzzySkinNoiseType::Voronoi => noisegen::voronoi(
-            sample.x(),
-            sample.y(),
-            print_z,
-            1.0 / config.scale_mm,
-            1.0,
-        ),
+        FuzzySkinNoiseType::Voronoi => {
+            noisegen::voronoi(sample.x(), sample.y(), print_z, 1.0 / config.scale_mm, 1.0)
+        }
         FuzzySkinNoiseType::Classic | FuzzySkinNoiseType::Ripple => {
             unreachable!("coherent_value only accepts coherent fuzzy skin noise types")
         }

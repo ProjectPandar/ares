@@ -75,9 +75,10 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         // Coherent-noise params are consumed only by the non-ripple noise
         // modules (`FuzzySkin.cpp:296-301` bypasses them for ripple), so
         // the domain must activate a coherent noise type.
-        "fuzzy_skin_octaves" | "fuzzy_skin_persistence" | "fuzzy_skin_scale" => {
-            &[("fuzzy_skin", "external"), ("fuzzy_skin_noise_type", "perlin")]
-        }
+        "fuzzy_skin_octaves" | "fuzzy_skin_persistence" | "fuzzy_skin_scale" => &[
+            ("fuzzy_skin", "external"),
+            ("fuzzy_skin_noise_type", "perlin"),
+        ],
         // Gap-fill params only run when gap filling is enabled.
         "gap_fill_target" => &[("gap_infill_type", "everywhere")],
         _ => &[],

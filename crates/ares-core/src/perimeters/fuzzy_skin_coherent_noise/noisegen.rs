@@ -5,8 +5,8 @@
 //! `NOISE_VERSION == 2` constants (X/Y/Z/SEED_NOISE_GEN, SHIFT=8) are the
 //! ones upstream builds with.
 
-use super::{lattice_index, lerp, make_int32_range, scurve3};
 use super::vectortable::RANDOM_VECTORS;
+use super::{lattice_index, lerp, make_int32_range, scurve3};
 
 const X_NOISE_GEN: i32 = 1619;
 const Y_NOISE_GEN: i32 = 31337;
@@ -79,8 +79,12 @@ fn int_value_noise_3d(x: i32, y: i32, z: i32, seed: i32) -> i32 {
         .wrapping_add(SEED_NOISE_GEN.wrapping_mul(seed)))
         & 0x7fff_ffff;
     n = (n >> 13) ^ n;
-    n.wrapping_mul(n.wrapping_mul(n).wrapping_mul(60493).wrapping_add(19_990_303))
-        .wrapping_add(1_376_312_589)
+    n.wrapping_mul(
+        n.wrapping_mul(n)
+            .wrapping_mul(60493)
+            .wrapping_add(19_990_303),
+    )
+    .wrapping_add(1_376_312_589)
         & 0x7fff_ffff
 }
 
@@ -202,7 +206,13 @@ pub(super) fn ridged_multi(
 /// `module/voronoi.cpp::Voronoi::GetValue` — `m_enableDistance == false`
 /// path (distance folded value is 0), feature points from three
 /// `ValueNoise3D` seeds, displacement applied to the winner's value noise.
-pub(super) fn voronoi(mut x: f64, mut y: f64, mut z: f64, frequency: f64, displacement: f64) -> f64 {
+pub(super) fn voronoi(
+    mut x: f64,
+    mut y: f64,
+    mut z: f64,
+    frequency: f64,
+    displacement: f64,
+) -> f64 {
     x *= frequency;
     y *= frequency;
     z *= frequency;

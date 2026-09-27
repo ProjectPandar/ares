@@ -5,6 +5,7 @@ mod context;
 mod entry;
 mod entry_builder;
 mod fan_setup;
+mod group;
 mod layer_end;
 
 pub(super) use context::Context;
@@ -206,75 +207,14 @@ pub(super) fn append(
         state.part_fan_speed = cooling.provisional_part_speed();
         // The change-layer block uses the merged chunk's leading entry
         // (`change_layer` runs once per layer chunk, `GCode.cpp:5685`).
-        // Raft chunks use the raft grid for the previous z and the raft
-        // layer index for the CHANGE_LAYER numbering (the raft flange is
-        // print layer 0).
-        let leading_raft = raft
-            .as_ref()
-            .and_then(|raft| raft_schedule::classify(first_layer).ok().flatten())
-            .map(|raft_index| (raft_index, first_object));
-        let (previous_layer_z, boundary_layer_index) = match leading_raft {
-            Some((raft_index, _)) => {
-                let previous = if raft_index == 0 {
-                    0.0
-                } else {
-                    raft_plans
-                        .and_then(|plans| plans.get(first_object))
-                        .and_then(|plans| plans.get(raft_index - 1))
-                        .map(|plan| plan.z.print_z)
-                        .unwrap_or(0.0)
-                };
-                (previous, raft_index)
-            }
-            None => {
-                // `GCode::change_layer` diffs `print_z - m_last_layer_z`
-                // (`GCode.cpp:4630`), where `m_last_layer_z` carries the last
-                // PHYSICAL layer's z — including the final raft layer for the
-                // first object layer (`;HEIGHT:0.3`, not the full print z).
-                let previous = if first_layer > 0 {
-                    per_object_z[first_object]
-                        .get(first_layer - 1)
-                        .copied()
-                        .unwrap_or(0.0)
-                } else {
-                    raft.as_ref()
-                        .and_then(|raft| raft.counts.get(first_object))
-                        .and_then(|&count| {
-                            raft_plans.and_then(|plans| {
-                                plans
-                                    .get(first_object)?
-                                    .get(count.checked_sub(1)?)
-                                    .map(|plan| plan.z.print_z)
-                            })
-                        })
-                        .unwrap_or(0.0)
-                };
-                // `layer->id()` counts PHYSICAL layers — upstream's raft
-                // layers occupy ids `0..raft_count` inside the object's
-                // layer vector, so the first object layer is id
-                // `raft_count` (`GCode.cpp:5339-5344` keys
-                // `object_layer_over_raft` on `layer->id() ==
-                // raft_layers`). `m_layer_index` (`GCode.cpp:5689`) counts
-                // the same physical index.
-                let raft_count = raft
-                    .as_ref()
-                    .and_then(|raft| raft.counts.get(first_object))
-                    .copied()
-                    .unwrap_or(0);
-                (previous, first_layer + raft_count)
-            }
-        };
-
-        // `m_object_layer_over_raft` (`GCode.cpp:5339-5344`): the first
-        // object layer over a raft — `layer->id() == raft_layers()`.
-        let object_layer_over_raft = leading_raft.is_none()
-            && first_layer == 0
-            && raft
-                .as_ref()
-                .and_then(|raft| raft.counts.get(first_object))
-                .copied()
-                .unwrap_or(0)
-                > 0;
+        let (previous_layer_z, boundary_layer_index, object_layer_over_raft, leading_raft) =
+            group::chunk_bookkeeping(
+                raft.as_ref(),
+                raft_plans,
+                &per_object_z,
+                first_object,
+                first_layer,
+            );
         let layer_z = group_z;
         // The HEIGHT header keeps the f32-difference quirk (upstream
         // `;HEIGHT:0.200001` artifacts) while layer_z itself stays the
