@@ -29,12 +29,14 @@ pub(super) fn wipe_moves(state: &EmitState) -> WipePath {
         y: state.y,
     });
     let mut points = Vec::with_capacity(state.wipe_path.len());
-    // Upstream substitutes `gcodegen.last_pos()` — the LOCAL scaled int of
-    // the last emitted point. `last_scaled_position` carries exactly that
-    // int; the wipe path points are local mm (raw scaled points like
-    // `Wipe::path`), converted with the local scale only so the int
-    // round-trip is exact.
-    points.push(scaled_position(start, state));
+    // Upstream substitutes `gcodegen.last_pos()` — the LOCAL scaled int
+    // stored verbatim at the last emitted point (`GCode.cpp:449`), not a
+    // rescale of the mm position. Use the cached scaled int directly.
+    points.push(
+        state
+            .last_scaled_position
+            .unwrap_or_else(|| scaled_position(start, state)),
+    );
     // Upstream `Wipe::path.points` are already scaled ints (the path
     // lives in scaled space); our mm round-trip must recover exactly
     // those ints — round-to-nearest, since `int * 1e-6 / 1e-6` can land
