@@ -228,7 +228,10 @@ pub(super) fn emit_approach_move(
         // `travel_to_xyz` then takes the XY-only, COMMENTLESS
         // `travel_to_xy(to_2d(point))` branch (`GCodeWriter.cpp:771-780`).
         let live_z = state.writer_z.unwrap_or(state.layer_z);
-        if (leg_z - live_z).abs() <= 1e-4 {
+        // Upstream takes the XY-only branch when `std::abs(delta(2)) <
+        // EPSILON` — STRICTLY below 1e-4 (`GCodeWriter.cpp:927`,
+        // `libslic3r.h:52`).
+        if (leg_z - live_z).abs() < 1e-4 {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         } else {
             travel_emit::xyz_with_comment(

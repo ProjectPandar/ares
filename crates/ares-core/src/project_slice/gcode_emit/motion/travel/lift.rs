@@ -29,6 +29,13 @@ pub(super) fn schedule_at(state: &mut EmitState, layer_change: bool, writer_z: f
     if state.options.z_hop <= 0.0 || !is_allowed_at(state, writer_z) {
         return;
     }
+    // `maybe_zlift` only schedules when `m_lifted == 0 && m_to_lift == 0`
+    // (`GCodeWriter.cpp:637`) — a lift already scheduled (e.g. by the
+    // layer-change retract before a template cleared `e_retracted`)
+    // survives a subsequent partial-retract top-up.
+    if state.lifted || state.pending_lift.is_some() {
+        return;
+    }
     state.pending_lift = Some(mode_for(state, layer_change));
 }
 

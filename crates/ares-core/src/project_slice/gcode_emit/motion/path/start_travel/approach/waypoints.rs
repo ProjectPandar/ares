@@ -22,25 +22,43 @@ pub(super) fn emit_detour_waypoints(
     for (index, point) in route[1..].iter().enumerate() {
         let last = index + 1 == route.len() - 1;
         if last && let Some(z) = slope_start_z {
-            output.extend_from_slice(
-                format!(
-                    "G1 X{} Y{} Z{} F{}{route_comment}\n",
-                    format_axis(point.x),
-                    format_axis(point.y),
-                    format_z(z),
-                    format_axis(state.travel_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.record_z(z);
-            // The final leg's `travel_to_xyz` cancels the lift state
-            // (`GCodeWriter.cpp:782-785`) — the nozzle already reached
-            // its travel destination; without this, `restate` emits a
-            // second descent to the same z.
-            state.lifted = false;
-            state.lifted_amount = 0.0;
-            state.template_lifted = false;
-            travel_set_layer_z = true;
+            // The final leg is an ordinary (non-forced) `travel_to_xyz`
+            // (`GCode.cpp:7493-7497`): with `abs(delta(2)) < EPSILON`
+            // it collapses to the commentless XY branch
+            // (`GCodeWriter.cpp:927`, `libslic3r.h:52`) and keeps the
+            // writer z + lift state untouched.
+            let live_z = state.writer_z.unwrap_or(state.layer_z);
+            if (z - live_z).abs() < 1e-4 {
+                output.extend_from_slice(
+                    format!(
+                        "G1 X{} Y{} F{}\n",
+                        format_axis(point.x),
+                        format_axis(point.y),
+                        format_axis(state.travel_feedrate)
+                    )
+                    .as_bytes(),
+                );
+            } else {
+                output.extend_from_slice(
+                    format!(
+                        "G1 X{} Y{} Z{} F{}{route_comment}\n",
+                        format_axis(point.x),
+                        format_axis(point.y),
+                        format_z(z),
+                        format_axis(state.travel_feedrate)
+                    )
+                    .as_bytes(),
+                );
+                state.record_z(z);
+                // The final leg's `travel_to_xyz` cancels the lift
+                // state (`GCodeWriter.cpp:782-785`) — the nozzle
+                // already reached its travel destination; without
+                // this, `restate` emits a second descent to the same z.
+                state.lifted = false;
+                state.lifted_amount = 0.0;
+                state.template_lifted = false;
+                travel_set_layer_z = true;
+            }
         } else {
             output.extend_from_slice(
                 format!(
