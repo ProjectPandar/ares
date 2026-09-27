@@ -1,6 +1,7 @@
 mod avoid_crossing;
 mod constant;
 mod retraction;
+mod role_change;
 mod start_travel;
 mod travel_emit;
 mod variable;
@@ -24,13 +25,8 @@ pub(super) fn emit(
     geometry: LayerGeometry<'_>,
     state: &mut EmitState,
 ) {
-    if state.extrusion_role_markers {
-        let role = role_id(properties.feature);
-        if state.last_extrusion_role != Some(role) {
-            output.extend_from_slice(format!(";_EXTRUSION_ROLE:{role}\n").as_bytes());
-            state.last_extrusion_role = Some(role);
-        }
-    }
+    let role = role_id(properties.feature);
+    let role_changed = state.last_extrusion_role != Some(role);
     let mut scaled_points = points.collect::<Vec<_>>();
     if let Ok(path) = std::env::var("ARES_DUMP_PATH") {
         use std::io::Write;
@@ -168,6 +164,23 @@ pub(super) fn emit(
             geometry,
         },
     );
+    // `_extrude`'s custom role-change gcode fires AFTER the approach
+    // travel/unretract, before the marker block (`GCode.cpp:6745-6770`);
+    // context = extrusion_role/last_extrusion_role names +
+    // `layer_num = m_layer_index + 1`, `layer_z = print_z`.
+    if role_changed
+        && (!state.options.role_change_machine.is_empty()
+            || !state.options.role_change_process.is_empty()
+            || !state.options.role_change_filament.is_empty())
+    {
+        role_change::emit(output, role, state);
+    }
+    if state.extrusion_role_markers && role_changed {
+        output.extend_from_slice(format!(";_EXTRUSION_ROLE:{role}\n").as_bytes());
+    }
+    if role_changed {
+        state.last_extrusion_role = Some(role);
+    }
     let jerk = properties.jerk(&state.options, state.layer_index);
     set_accel_and_jerk(output, state, acceleration, jerk, false);
     state.extrusion_feedrate = processed

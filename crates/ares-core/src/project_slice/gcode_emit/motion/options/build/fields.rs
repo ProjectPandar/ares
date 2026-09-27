@@ -142,6 +142,15 @@ pub(super) fn assemble(
             .first()
             .copied()
             .unwrap_or_default(),
+        role_change_machine: gcode.change_extrusion_role_gcode.0.clone(),
+        role_change_process: gcode.process_change_extrusion_role_gcode.0.clone(),
+        // Single-filament profiles resolve `get_at(0)` (`GCode.cpp:6749`).
+        role_change_filament: gcode
+            .filament_change_extrusion_role_gcode
+            .0
+            .first()
+            .cloned()
+            .unwrap_or_default(),
         internal_bridge_fan_speed: full
             .filament
             .print

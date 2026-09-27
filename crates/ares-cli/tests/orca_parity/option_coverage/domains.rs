@@ -249,7 +249,10 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
     let probes = match key {
         // G-code template strings (`*_gcode`) — free-form by schema.
         // Layer-context templates — `{layer_num}` is defined here.
-        "before_layer_change_gcode" | "layer_change_gcode" => TEMPLATE,
+        // `before_layer_change_gcode` must keep the baseline `G92 E0`
+        // under relative extruder addressing, so no empty probe.
+        "before_layer_change_gcode" => &[("probe-text", "G92 E0\n;ARES_PROBE {layer_num}")],
+        "layer_change_gcode" => TEMPLATE,
         // Contexts without layer variables get a literal probe only.
         "machine_pause_gcode"
         | "printing_by_object_gcode"

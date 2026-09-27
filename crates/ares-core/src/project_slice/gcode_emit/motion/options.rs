@@ -21,7 +21,7 @@ pub(in crate::project_slice::gcode_emit) struct ScarfOptions {
     pub(in crate::project_slice::gcode_emit) flow_ratio: f64,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) filament_area: f64,
     pub(in crate::project_slice::gcode_emit) filament_flow_ratio: f64,
@@ -58,6 +58,13 @@ pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) enable_overhang_bridge_fan: bool,
     pub(in crate::project_slice::gcode_emit) overhang_fan_speed: u8,
     pub(in crate::project_slice::gcode_emit) overhang_fan_threshold: RawOverhangFanThreshold,
+    /// `change_extrusion_role_gcode` (machine), `process_change_extrusion_
+    /// role_gcode` (process), `filament_change_extrusion_role_gcode`
+    /// (filament[0]) — emitted at every extrusion-role transition
+    /// (`GCode.cpp:6745-6770`).
+    pub(in crate::project_slice::gcode_emit) role_change_machine: String,
+    pub(in crate::project_slice::gcode_emit) role_change_process: String,
+    pub(in crate::project_slice::gcode_emit) role_change_filament: String,
     pub(in crate::project_slice::gcode_emit) internal_bridge_fan_speed: InternalBridgeFanSpeed,
     pub(in crate::project_slice::gcode_emit) close_fan_first_layers: usize,
     pub(in crate::project_slice::gcode_emit) full_fan_speed_layer: usize,

@@ -91,6 +91,7 @@ pub(super) fn emit(
         model_offset.0 - extruder_offset.0,
         model_offset.1 - extruder_offset.1,
     );
+    let extrusion_role_markers = options.extrusion_role_markers;
     let mut state = motion::EmitState {
         offset,
         origin: model_offset,
@@ -102,7 +103,20 @@ pub(super) fn emit(
         small_area_flow,
         tags: tags::Tags::of(traversal),
         spiral_vase: traversal.resolved.views.full.process.print.spiral_mode.0,
-        extrusion_role_markers: options.extrusion_role_markers,
+        extrusion_role_markers,
+        role_change_config: {
+            let runtime = &traversal.resolved.views.runtime_gcode;
+            let needed = !runtime.change_extrusion_role_gcode.0.is_empty()
+                || !runtime.process_change_extrusion_role_gcode.0.is_empty()
+                || runtime
+                    .filament_change_extrusion_role_gcode
+                    .0
+                    .iter()
+                    .any(|template| !template.is_empty());
+            needed
+                .then(|| placeholders::base_config(traversal, metadata, first_layer_bounds))
+                .transpose()?
+        },
         ..Default::default()
     };
     // The machine-start template's `e_retracted[0]` assignment seeds the

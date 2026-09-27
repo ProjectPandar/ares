@@ -58,6 +58,11 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// `GCode.cpp:2544` — on when the PressureEqualizer is in the pipeline).
     pub(in crate::project_slice::gcode_emit) extrusion_role_markers: bool,
     pub(in crate::project_slice::gcode_emit) last_extrusion_role: Option<u32>,
+    /// Frozen `base_config` for the role-change templates
+    /// (`GCode.cpp:6752-6758` merges DynamicConfig over the global
+    /// placeholder parser config).
+    pub(in crate::project_slice::gcode_emit) role_change_config:
+        Option<crate::project_slice::gcode_emit::value::Config>,
     pub(in crate::project_slice::gcode_emit) last_width: Option<f32>,
     pub(in crate::project_slice::gcode_emit) last_height: Option<f32>,
     pub(in crate::project_slice::gcode_emit) last_acceleration: Option<u32>,
