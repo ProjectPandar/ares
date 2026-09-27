@@ -315,6 +315,24 @@ pub(super) fn append(
             if last_object_copy != Some(object_index) {
                 state.use_external_mp_once = true;
                 last_object_copy = Some(object_index);
+                // The `_retract` Hilbert suppression reads the
+                // DESTINATION object's region config (`GCode.cpp:7670`,
+                // `config()` is the current PrintRegionConfig) — refresh
+                // on every object switch so one object's Hilbert pattern
+                // does not leak into the next.
+                // Upstream `_retract` reads `config()` — the current
+                // PrintObject's config; refresh the flags per object.
+                let region = traversal.resolved.objects[source_object_index]
+                    .layer_candidates
+                    .first()
+                    .and_then(|layer| layer.model_parts.first())
+                    .map(|part| &part.region);
+                if let Some(region) = region {
+                    state.options.bottom_surface_pattern_hilbert =
+                        region.bottom_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
+                    state.options.top_surface_pattern_hilbert =
+                        region.top_surface_pattern == crate::ProcessInfillPattern::HilbertCurve;
+                }
             }
             brim_emit::emit(
                 output,

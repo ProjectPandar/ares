@@ -112,6 +112,7 @@ pub(super) fn append<'a>(
             .is_empty();
     layer_gcode::append_before_layer_change_gcode(
         output,
+        state,
         layer_gcode::LayerTemplateContext {
             traversal,
             // `{layer_num}` = `m_layer_index + 1` pre-increment = the new
@@ -196,6 +197,7 @@ pub(super) fn append<'a>(
     // previous writer z, so `advance_for_layer` below owns the record.
     layer_gcode::append_layer_change(
         output,
+        state,
         layer_gcode::LayerTemplateContext {
             traversal,
             // Post-`change_layer` `{layer_num}` = `m_layer_index` = the

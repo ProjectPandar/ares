@@ -1,7 +1,7 @@
 mod avoid_crossing;
 mod constant;
 mod retraction;
-mod role_change;
+pub(in crate::project_slice::gcode_emit) mod role_change;
 mod start_travel;
 mod travel_emit;
 mod variable;

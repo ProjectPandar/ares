@@ -63,7 +63,7 @@ fn numeric(value: &Value) -> Option<f64> {
 /// (`e_retracted`/`e_restart_extra`/`e_position` are 64-wide so reads of
 /// unused slots yield 0; `extruded_volume`/`extruded_weight` are
 /// num_extruders-wide).
-fn refresh_writer_state(
+pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
     config: &mut crate::project_slice::gcode_emit::value::Config,
     state: &EmitState,
 ) {
@@ -126,7 +126,7 @@ fn validate_vector_size(
 /// Returns false when a write-back raised a template error — the caller
 /// emits the upstream inline failure block and skips the remaining
 /// templates (`GCode.cpp:3920-3933`).
-fn apply_writer_state(
+pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
     name: &str,
     config: &crate::project_slice::gcode_emit::value::Config,
     state: &mut EmitState,

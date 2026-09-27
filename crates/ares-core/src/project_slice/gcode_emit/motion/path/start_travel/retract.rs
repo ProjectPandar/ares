@@ -29,25 +29,46 @@ pub(super) fn decide(
     // retracted flag — a long non-exempt travel invokes `retract()` even
     // when already retracted, and `Extruder::retract` assigns
     // `m_restart_extra` unconditionally (`Extruder.cpp:77`).
-    let upstream_would_retract = routed_length >= state.options.retraction_minimum_travel
-        && !skip_retraction
-        && !hilbert_suppressed;
+    let upstream_would_retract =
+        routed_length >= state.options.retraction_minimum_travel && !skip_retraction;
     // Lift eligibility is a separate, narrower condition
     // (`GCodeWriter.cpp:637` gates on m_lifted == 0 && m_to_lift == 0).
     let defer_lift_for_retracted_travel = upstream_would_retract
         && state.retracted
         && state.lifted_amount == 0.0
         && state.pending_lift.is_none();
-    if retract && !hilbert_suppressed {
-        let head_before = (state.x, state.y);
-        travel::retract_and_lift(output, state);
-        if (state.x, state.y) != head_before {
-            // The wipe moved the head; re-plan the route from here
-            // (`GCode.cpp:7436-7443`).
-            replan(state);
+    if retract {
+        if hilbert_suppressed {
+            // `GCode.cpp:7667-7672` suppresses ONLY `m_writer.retract()`;
+            // `reset_e` (`GCode.cpp:7674`) and the lazy lift still run.
+            if !state.options.use_relative_e_distances {
+                output.extend_from_slice(b"G92 E0\n");
+                state.e_position = 0.0;
+            }
+            if state.options.z_hop > 0.0
+                && state.options.retraction_length > 0.0
+                && state.lifted_amount == 0.0
+                && state.pending_lift.is_none()
+                && travel::lift_is_allowed_at(state, state.layer_z)
+            {
+                state.pending_lift = Some(travel::lift_mode_for(state, false));
+            }
+        } else {
+            let head_before = (state.x, state.y);
+            travel::retract_and_lift(output, state);
+            if (state.x, state.y) != head_before {
+                // The wipe moved the head; re-plan the route from here
+                // (`GCode.cpp:7436-7443`).
+                replan(state);
+            }
         }
     } else if upstream_would_retract {
-        state.restart_extra = state.options.retract_restart_extra;
+        if !hilbert_suppressed {
+            state.restart_extra = state.options.retract_restart_extra;
+        } else if !state.options.use_relative_e_distances {
+            output.extend_from_slice(b"G92 E0\n");
+            state.e_position = 0.0;
+        }
         if defer_lift_for_retracted_travel
             && state.options.z_hop > 0.0
             && state.options.retraction_length > 0.0

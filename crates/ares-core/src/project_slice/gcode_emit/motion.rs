@@ -38,6 +38,9 @@ pub(super) use travel::{
 
 use features::PathProperties;
 pub(in crate::project_slice::gcode_emit) use options::{MotionOptions, first_nullable_float};
+pub(in crate::project_slice::gcode_emit) use path::role_change::{
+    apply_writer_state, refresh_writer_state,
+};
 
 use super::super::island_print_order::{IslandPrintEntity, OrderedExtrusionLayer};
 use crate::{

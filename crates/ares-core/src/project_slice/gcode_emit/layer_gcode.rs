@@ -174,6 +174,7 @@ pub(super) struct LayerTemplateContext<'a> {
 /// `max_layer_z` in scope (`GCode.cpp:4631-4641`).
 pub(super) fn append_before_layer_change_gcode(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     template_context: LayerTemplateContext<'_>,
 ) -> Result<(), SliceError> {
     let LayerTemplateContext {
@@ -200,6 +201,9 @@ pub(super) fn append_before_layer_change_gcode(
     }
     let mut config =
         super::placeholders::base_config(traversal, context.metadata, context.first_layer_bounds)?;
+    // `ppi.update_from_gcodewriter(m_writer)` refreshes `position`/
+    // E-counters before each template (`GCode.cpp:3896`).
+    super::motion::refresh_writer_state(&mut config, state);
     config.insert("layer_num", value::Value::number(layer_index as f64));
     config.insert("layer_z", value::Value::number(layer_z));
     // Orca's extruded_volume_total is `Extruder::used_filament() *
@@ -219,11 +223,29 @@ pub(super) fn append_before_layer_change_gcode(
     })?;
     output.extend_from_slice(rendered.as_bytes());
     output.push(b'\n');
+    // Writer write-back (`GCode.cpp:3898-3915`): `position[2]` (and the
+    // E counters) assigned by the template become the live writer state
+    // read by the following `will_move_z` check.
+    if !super::motion::apply_writer_state("before_layer_change_gcode", &config, state) {
+        let name = "before_layer_change_gcode";
+        let error = state
+            .failed_templates
+            .last()
+            .map(|(_, error)| error.clone())
+            .unwrap_or_default();
+        output.extend_from_slice(
+            format!(
+                "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+            )
+            .as_bytes(),
+        );
+    }
     Ok(())
 }
 
 pub(super) fn append_layer_change(
     output: &mut Vec<u8>,
+    state: &mut super::motion::EmitState,
     template_context: LayerTemplateContext<'_>,
 ) -> Result<(), SliceError> {
     let LayerTemplateContext {
@@ -241,6 +263,7 @@ pub(super) fn append_layer_change(
             context.metadata,
             context.first_layer_bounds,
         )?;
+        super::motion::refresh_writer_state(&mut config, state);
         config.insert("current_extruder", value::Value::number(0.0));
         config.insert("layer_num", value::Value::number(layer_index as f64));
         config.insert("layer_z", value::Value::number(layer_z));
@@ -273,6 +296,21 @@ pub(super) fn append_layer_change(
         })?;
         output.extend_from_slice(rendered.as_bytes());
         output.push(b'\n');
+        // Writer write-back (`GCode.cpp:3898-3915`).
+        if !super::motion::apply_writer_state("layer_change_gcode", &config, state) {
+            let name = "layer_change_gcode";
+            let error = state
+                .failed_templates
+                .last()
+                .map(|(_, error)| error.clone())
+                .unwrap_or_default();
+            output.extend_from_slice(
+                format!(
+                    "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+                )
+                .as_bytes(),
+            );
+        }
     }
     output.extend_from_slice(b";_SET_FAN_SPEED_CHANGING_LAYER\n");
     Ok(())
