@@ -9,11 +9,7 @@ mod tests;
 pub(super) fn schedule(state: &mut EmitState, layer_change: bool) {
     // `lazy_lift` reads the live `m_pos(2)` (`GCodeWriter.cpp:633-639`)
     // — template `position[2]` assignments move the eligibility origin.
-    schedule_at(
-        state,
-        layer_change,
-        state.writer_z.map(f64::from).unwrap_or(state.layer_z),
-    );
+    schedule_at(state, layer_change, state.writer_z.unwrap_or(state.layer_z));
 }
 
 /// Upstream `lazy_lift` gates the hop on the writer's *current* z
@@ -113,7 +109,10 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     let Some(mode) = state.pending_lift.take() else {
         return false;
     };
-    let raised_z = state.layer_z + state.options.z_hop;
+    // `GCodeWriter.cpp:701-709`: the deferred lift raises from the LIVE
+    // writer z (`dest_point(2) = m_to_lift + m_pos(2)`), not the nominal
+    // layer z — a template `position[2]` assignment moves the origin.
+    let raised_z = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
     let dx = target.x - state.x;
     let dy = target.y - state.y;
     // `GCodeWriter::travel_to_xyz` measures the XY distance with Eigen
@@ -264,18 +263,14 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
 pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     if state.options.z_hop <= 0.0
         || !(state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
-        || !is_allowed_at(state, state.layer_z)
+        || !is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z))
     {
         return;
     }
     let feedrate = z_feedrate(state);
+    let raised = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
     output.extend_from_slice(
-        format!(
-            "G1 Z{} F{}\n",
-            format_z(state.layer_z + state.options.z_hop),
-            format_axis(feedrate)
-        )
-        .as_bytes(),
+        format!("G1 Z{} F{}\n", format_z(raised), format_axis(feedrate)).as_bytes(),
     );
     state.current_feedrate = feedrate;
     state.record_z(state.layer_z + state.options.z_hop);

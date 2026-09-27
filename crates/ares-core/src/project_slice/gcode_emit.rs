@@ -72,8 +72,14 @@ pub(super) fn emit(
     // The Marlin-family machine envelope prints before the start G-code
     // (`GCode.cpp:2819`), followed by the start G-code (`GCode.cpp:3137`).
     machine::append_limits(&mut output, traversal);
-    let (bed_cache, start_position, start_retract, start_failure) =
+    let start_outcome =
         machine::append_start(&mut output, traversal, metadata, first_layer_bounds)?;
+    let (bed_cache, start_position, start_retract, start_failure) = (
+        start_outcome.bed_cache,
+        start_outcome.position,
+        start_outcome.retract,
+        start_outcome.failure,
+    );
     let options = motion::MotionOptions::from_traversal(traversal);
     let small_area_flow = small_area::from_traversal(traversal)?;
     let model_offset = footprint::model_center(traversal).unwrap_or_default();
@@ -120,6 +126,11 @@ pub(super) fn emit(
     };
     if let Some(error) = start_failure {
         state.record_template_failure("machine_start_gcode", &error);
+    }
+    // `e_position[0]` write-back — absolute-E counters feed the
+    // filament-start `{e_position}` placeholder (`GCode.cpp:3908-3911`).
+    if let Some(e_position) = start_outcome.e_position {
+        state.e_position = e_position;
     }
     // The machine-start template's `e_retracted[0]` assignment seeds the
     // extruder state (`GCode.cpp:3905-3918`): a pre-retracted nozzle skips

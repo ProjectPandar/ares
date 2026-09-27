@@ -193,9 +193,9 @@ fn append_wipe_before_external(
             && state.options.z_hop > 0.0
             && state.options.retraction_length > 0.0
             && !state.lifted
-            && super::travel::lift_is_allowed_at(state, state.layer_z));
+            && super::travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)));
     if lift_here {
-        let raised = state.layer_z + state.options.z_hop;
+        let raised = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
         output.extend_from_slice(
             format!(
                 "G1 X{} Y{} Z{} F{}\n",

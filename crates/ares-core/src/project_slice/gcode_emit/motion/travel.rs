@@ -78,7 +78,7 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
     // `needs_lift` requires a nonzero retraction length or firmware
     // retraction, and `can_lift` honors `retract_lift_enforce`.
     let needs_lift = state.options.retraction_length > 0.0 || state.options.use_firmware_retraction;
-    if needs_lift && lift::is_allowed_at(state, state.layer_z) {
+    if needs_lift && lift::is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)) {
         lift::append_eager(output, state);
     }
 }
@@ -100,8 +100,12 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     if state.pending_layer_retract && will_move_z {
         state.restart_extra = state.options.retract_restart_extra;
     }
-    if state.pending_layer_retract && will_move_z && !state.retracted {
+    if state.pending_layer_retract
+        && will_move_z
+        && state.retracted_amount < state.options.retraction_length
+    {
         retract_and_wipe(output, state);
+        state.retracted = true;
     }
 }
 
@@ -115,7 +119,10 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_lift(
     if state.pending_layer_retract && will_move_z {
         state.restart_extra = state.options.retract_restart_extra;
     }
-    if state.pending_layer_retract && will_move_z && !state.retracted {
+    if state.pending_layer_retract
+        && will_move_z
+        && state.retracted_amount < state.options.retraction_length
+    {
         lift::schedule_at(state, true, writer_z);
         state.retracted = true;
     }
@@ -145,10 +152,16 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_eager_forced(
 }
 
 fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState, force: bool) {
+    // Upstream calls `retract()` regardless of the retracted flag — the
+    // restart-extra assignment happens even on a no-op
+    // (`Extruder.cpp:77`); only a nozzle already at FULL retraction
+    // skips the E move.
     if force || state.pending_layer_retract {
         state.restart_extra = state.options.retract_restart_extra;
     }
-    if (force || state.pending_layer_retract) && !state.retracted {
+    if (force || state.pending_layer_retract)
+        && state.retracted_amount < state.options.retraction_length
+    {
         if force {
             // The BBL layer-start `retract()` finds no stored wipe path
             // there (`GCode.cpp:5205-5210`); the plain retraction emits
@@ -222,9 +235,14 @@ fn retract_and_wipe_impl(
     // `during - remaining > EPSILON`; within the EPSILON window the
     // larger `during` value is emitted as-is.
     let during_max = state.options.retraction_during_wipe_speed * retraction_distance / wipe_speed;
-    // Upstream EPSILON is `1e-4` (`libslic3r.h:52`), not machine eps:
-    // `GCode.cpp:352-357` keeps `during` > remaining when within 1e-4.
-    let during = if during_max - remaining > 1e-4 {
+    // Upstream EPSILON is `1e-4` (`libslic3r.h:52`). When the during
+    // amount is itself below EPSILON upstream returns `(fL, 0)` — the
+    // whole pre-wipe fraction retracts BEFORE the wipe and the wipe
+    // carries no retraction (`GCode.cpp:350-353`). Otherwise `during >
+    // remaining` within the EPSILON window emits as-is (:352-357).
+    let during = if during_max <= 1e-4 {
+        0.0
+    } else if during_max - remaining > 1e-4 {
         remaining
     } else {
         during_max
@@ -239,6 +257,10 @@ fn retract_and_wipe_impl(
     // the full length.
     let before = if segments.is_empty() {
         (state.options.retraction_length - state.retracted_amount).max(0.0)
+    } else if during <= 0.0 {
+        // `(fL, 0)` — no leftover difference is folded into the
+        // pre-wipe amount (`GCode.cpp:351-352`).
+        (requested_before - state.retracted_amount).max(0.0)
     } else {
         // The before-wipe call emits `max(0, before - m_retracted)`
         // (`Extruder.cpp:77-84`); the post-wipe `retract()` tops the
@@ -344,6 +366,9 @@ fn retract_and_wipe_impl(
             ";WIPE_END\n"
         };
         output.extend_from_slice(wipe_end.as_bytes());
+        // `Wipe::wipe` resets the stored path so a subsequent retract
+        // does not re-wipe the same path (`GCode.cpp:497`).
+        state.wipe_path.clear();
     }
     if !state.options.use_relative_e_distances && state.e_position.abs() > f64::EPSILON {
         output.extend_from_slice(b"G92 E0\n");

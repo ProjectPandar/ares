@@ -33,7 +33,20 @@ pub(super) fn emit(
         } else if state.writer_z.is_none() {
             state.writer_z = Some(0.0);
         }
-        if !state.options.use_relative_e_distances {
+        // The absolute-E counter resets via `GCodeWriter::preamble`'s
+        // `reset_e(true)` (`GCodeWriter.cpp:95-103`) — Marlin-family
+        // flavors only.
+        let marlin_family = matches!(
+            state.options.gcode_flavor,
+            crate::GCodeFlavor::MarlinLegacy
+                | crate::GCodeFlavor::MarlinFirmware
+                | crate::GCodeFlavor::Klipper
+                | crate::GCodeFlavor::RepRapSprinter
+                | crate::GCodeFlavor::RepRapFirmware
+                | crate::GCodeFlavor::Repetier
+                | crate::GCodeFlavor::Teacup
+        );
+        if !state.options.use_relative_e_distances && marlin_family {
             state.e_position = 0.0;
         }
     };

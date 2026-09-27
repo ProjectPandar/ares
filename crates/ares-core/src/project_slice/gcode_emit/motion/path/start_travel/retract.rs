@@ -32,7 +32,8 @@ pub(super) fn decide(
         // suppresses.
         && !(state.options.wipe
             && !state.wipe_path.is_empty()
-            && state.options.wipe_distance / state.scale_factor > 0.0);
+            // `scale_(wipe_distance) > SCALED_EPSILON` (`GCode.cpp:7659`).
+            && state.options.wipe_distance > 1e-4);
     // With an eligible wipe the before-wipe retraction and the wipe still
     // run upstream even under Hilbert suppression — only the final
     // `retract()` is skipped (`GCode.cpp:7659-7672`).

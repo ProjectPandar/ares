@@ -21,6 +21,10 @@ pub(super) fn emit_retracted_first_travel(
     first_travel_lift: Option<LiftMode>,
     never_positioned: bool,
 ) {
+    // The lift target is `m_pos.z() + m_to_lift` (`GCodeWriter.cpp:
+    // 701-709`) — the LIVE writer z (template `position[2]` write-back
+    // can move it off the nominal layer z).
+    let raised_z = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
     let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
     // `travel_to_xyz` NormalLift emits the lift via
     // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:678`),
@@ -35,13 +39,13 @@ pub(super) fn emit_retracted_first_travel(
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}{lift_comment}\n",
-                format_z(state.layer_z + state.options.z_hop),
+                format_z(raised_z),
                 format_axis(feedrate)
             )
             .as_bytes(),
         );
         state.current_feedrate = feedrate;
-        state.record_z(state.layer_z + state.options.z_hop);
+        state.record_z(raised_z);
         if never_positioned {
             // Genuinely unclear position (the start gcode's first
             // travel): upstream's unclear-position branch emits XY
@@ -63,12 +67,12 @@ pub(super) fn emit_retracted_first_travel(
             output.extend_from_slice(
                 format!(
                     "G1 Z{} F{}{first_travel_comment}\n",
-                    format_z(state.layer_z + state.options.z_hop),
+                    format_z(raised_z),
                     format_axis(travel::lift_z_feedrate(state))
                 )
                 .as_bytes(),
             );
-            state.record_z(state.layer_z + state.options.z_hop);
+            state.record_z(raised_z);
         } else {
             // Clear position with a pending lift: upstream emits the
             // lift, then `travel_to_xy`-style XY WITHOUT a Z word (the
@@ -85,12 +89,12 @@ pub(super) fn emit_retracted_first_travel(
                 first_travel_comment,
             );
             state.current_feedrate = state.travel_feedrate;
-            state.record_z(state.layer_z + state.options.z_hop);
+            state.record_z(raised_z);
             let z_feedrate = travel::lift_z_feedrate(state);
             output.extend_from_slice(
                 format!(
                     "G1 Z{} F{}{first_travel_comment}\n",
-                    format_z(state.layer_z + state.options.z_hop),
+                    format_z(raised_z),
                     format_axis(z_feedrate)
                 )
                 .as_bytes(),
@@ -108,12 +112,12 @@ pub(super) fn emit_retracted_first_travel(
         output.extend_from_slice(
             format!(
                 "G1 Z{} F{}{first_travel_comment}\n",
-                format_z(state.layer_z + state.options.z_hop),
+                format_z(raised_z),
                 format_axis(travel::lift_z_feedrate(state))
             )
             .as_bytes(),
         );
-        state.record_z(state.layer_z + state.options.z_hop);
+        state.record_z(raised_z);
     }
     state.lifted = true;
     state.lifted_amount = state.options.z_hop;

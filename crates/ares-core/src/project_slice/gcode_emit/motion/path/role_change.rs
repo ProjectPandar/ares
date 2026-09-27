@@ -141,7 +141,7 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
     // `position` (exactly 3) and the 64-wide E vectors are checked.
     let mut validation_error = None;
     let valid = validate_vector_size(name, config, "position", 3, state, &mut validation_error)
-        && ["e_retracted", "e_restart_extra", "e_position"]
+        && ["e_position", "e_retracted", "e_restart_extra"]
             .iter()
             .all(|key| {
                 validate_vector_size(
@@ -166,7 +166,10 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
         // `set_last_pos(gcode_to_point)` (`GCode.cpp:3901-3907`), and
         // `gcode_to_point` TRUNCATES the new coordinate
         // (`Point.hpp:665`).
-        if x != state.x || y != state.y || state.writer_z != Some(z) {
+        // `ppi.position != pos` compares against the writer's live
+        // position — never-yet-assigned Z reads as the initial 0
+        // (`GCodeWriter.hpp:165`).
+        if x != state.x || y != state.y || state.writer_z.unwrap_or(0.0) != z {
             state.x = x;
             state.y = y;
             state.last_scaled_position = Some((

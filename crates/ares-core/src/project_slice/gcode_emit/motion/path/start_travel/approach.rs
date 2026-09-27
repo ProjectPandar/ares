@@ -94,7 +94,12 @@ pub(super) fn emit_needs_travel(
     // again from the new position (`GCode.cpp:7436-7443`).
     let mut route = plan_route(state, &geometry, properties.feature, first_x, first_y);
     let routed_length = polyline_length(state.x, state.y, &route);
-    let retract = !state.retracted
+    // Upstream calls `retract()` on every qualifying travel
+    // (`needs_retraction` has no retracted check, `GCode.cpp:7528-7647`);
+    // `Extruder::retract` emits `max(0, length - m_retracted)`
+    // (`Extruder.cpp:75-84`) — a template-assigned PARTIAL retract tops
+    // up rather than skipping.
+    let retract = state.retracted_amount < state.options.retraction_length
         && routed_length >= state.options.retraction_minimum_travel
         && !skip_retraction;
     {

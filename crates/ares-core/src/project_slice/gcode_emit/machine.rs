@@ -231,23 +231,25 @@ pub(super) struct StartRetractState {
     pub(super) restart_extra: f64,
 }
 
+/// Machine-start write-back products (`GCode.cpp:3898-3918`).
+pub(super) struct StartOutcome {
+    pub(super) bed_cache: i32,
+    pub(super) position: Option<value::Value>,
+    pub(super) retract: Option<StartRetractState>,
+    pub(super) failure: Option<String>,
+    /// `e_position[0]` write-back (absolute-E only).
+    pub(super) e_position: Option<f64>,
+}
+
 pub(super) fn append_start(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
-) -> Result<
-    (
-        i32,
-        Option<value::Value>,
-        Option<StartRetractState>,
-        Option<String>,
-    ),
-    SliceError,
-> {
+) -> Result<StartOutcome, SliceError> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    let (rendered, position, retract_state, failure) = if template.is_empty() {
-        (String::new(), None, None, None)
+    let (rendered, position, retract_state, failure, e_position) = if template.is_empty() {
+        (String::new(), None, None, None, None)
     } else {
         let mut config = self_start_config(traversal, metadata, first_layer_bounds)?;
         let rendered = template::render(template, &mut config).map_err(|error| {
@@ -261,7 +263,9 @@ pub(super) fn append_start(
         // `GCode.cpp:1702-1713`) — `position` must stay size 3 and the E
         // vectors size 64; a violation replaces the template output with
         // the inline failure report (`GCode.cpp:3920-3933`).
-        let resized_key = ["position", "e_retracted", "e_restart_extra", "e_position"]
+        // Upstream validates `position`, then `e_position` →
+        // `e_retracted` → `e_restart_extra` (`GCode.cpp:1702-1713`).
+        let resized_key = ["position", "e_position", "e_retracted", "e_restart_extra"]
             .iter()
             .find(|key| match config.get(*key) {
                 Some(value::Value::List(list)) => {
@@ -305,6 +309,17 @@ pub(super) fn append_start(
         // apply), then `set_position`, THEN `set_retracted` may throw —
         // so a negative-retract failure still keeps the assigned
         // position while the output becomes the inline report.
+        // `e_position[0]` write-back runs right after `position` and
+        // before `set_retracted` (`GCode.cpp:3908-3911`); a negative-
+        // retract failure keeps it too.
+        let e_position = (!traversal
+            .resolved
+            .views
+            .runtime_gcode
+            .use_relative_e_distances
+            .0)
+            .then(|| number_at("e_position"))
+            .flatten();
         let (rendered, position, retract_state) = match (&failure, valid) {
             (Some(error), _) => (
                 format!(
@@ -319,7 +334,8 @@ pub(super) fn append_start(
             ),
             (None, _) => (rendered, config.get("position").cloned(), retract_state),
         };
-        (rendered, position, retract_state, failure)
+        let e_position = e_position.filter(|_| valid);
+        (rendered, position, retract_state, failure, e_position)
     };
     let bed_cache = temperature::append_startup(output, traversal, &rendered);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
@@ -337,7 +353,13 @@ pub(super) fn append_start(
     if !super::tags::Tags::of(traversal).is_bbl() {
         append_flavor_preamble(output, traversal);
     }
-    Ok((bed_cache, position, retract_state, failure))
+    Ok(StartOutcome {
+        bed_cache,
+        position,
+        retract: retract_state,
+        failure,
+        e_position,
+    })
 }
 
 pub(super) fn append_completion_controls(
