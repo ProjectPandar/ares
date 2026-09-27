@@ -53,4 +53,23 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
         }
         state.retracted = false;
     }
+    // `unretract()` (`GCode.cpp:4789`) also invokes `unlift()`
+    // (`GCode.hpp:255`), which emits the descent `G1 Z…` while lifted
+    // and always clears the deferred hop (`GCodeWriter.cpp:1084-1092` —
+    // `m_to_lift = 0`) — even when the extruder carried nothing to
+    // restore.
+    if state.lifted {
+        let live = state.writer_z.unwrap_or(state.layer_z);
+        let dest = live - state.lifted_amount;
+        let z_feedrate = super::travel::lift_z_feedrate(state);
+        output.extend_from_slice(
+            format!("G1 Z{} F{}\n", format::z(dest), format::axis(z_feedrate)).as_bytes(),
+        );
+        state.current_feedrate = z_feedrate;
+        state.record_z(dest);
+    }
+    state.lifted = false;
+    state.lifted_amount = 0.0;
+    state.template_lifted = false;
+    state.pending_lift = None;
 }
