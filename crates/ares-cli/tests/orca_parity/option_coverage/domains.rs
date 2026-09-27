@@ -57,7 +57,19 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
     let block = definition_block(lines, &key, line);
     let mut width_domain = None;
     let mut provably_legal = false;
-    let (values, omission) = if is_width_option(&key) {
+    let (values, omission) = if let Some(authored) = authored_probes(&key) {
+        // Per-key legal domains: keys whose schema bounds are stricter
+        // than upstream slice-time validation, or whose free-form
+        // `coString`/`coPoint(s)` content needs a concrete probe.
+        provably_legal = true;
+        (
+            authored
+                .iter()
+                .map(|&(label, value)| case(label, value, entry))
+                .collect(),
+            None,
+        )
+    } else if is_width_option(&key) {
         let raw = raw_numeric_bounds(&block).expect("width schema must have explicit raw bounds");
         let (domain, values) = widths::generate(&key, entry, raw, false, true);
         width_domain = Some(domain);
@@ -191,19 +203,6 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 }
             }
         }
-    } else if let Some(authored) = authored_probes(&key) {
-        // Per-key legal domains: `coString`/`coPoint`/`coPoints` keys whose
-        // upstream schema accepts arbitrary content (g-code templates,
-        // notes, polygon lists) get concrete probes rather than an
-        // unexercised baseline.
-        provably_legal = true;
-        (
-            authored
-                .iter()
-                .map(|&(label, value)| case(label, value, entry))
-                .collect(),
-            None,
-        )
     } else {
         // `coPoint(s)` unbounded options (bed polygons, exclude areas)
         // reject/crash on generic probes (`printable_area` degenerate
@@ -295,6 +294,34 @@ fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]>
         "bed_mesh_min" | "bed_mesh_max" | "bed_mesh_probe_distance" => POINT,
         // `best_object_pos` is normalized `[0,1]` (`PrintConfig.cpp:3818-3822`).
         "best_object_pos" => &[("probe", "0.25x0.75")],
+        // Schema `def->min` values that upstream slice-time `validate`
+        // rejects (`PrintConfig.cpp` `if (x <= 0) error_message` blocks,
+        // e.g. :2225-2240 clearance, `layer_height` :771-777): the
+        // schema-legal `0` probe makes the oracle abort, so probe the
+        // effective legal interior instead.
+        "extruder_clearance_height_to_lid"
+        | "extruder_clearance_height_to_rod"
+        | "extruder_clearance_radius" => &[("probe-min", "0.5"), ("probe-max", "250")],
+        "nozzle_height" => &[("probe-min", "1"), ("probe-max", "400")],
+        // `printable_height` below the object height aborts the slice.
+        "printable_height" => &[("probe-min", "50"), ("probe-max", "400")],
+        // `0.4` nozzle caps layer heights strictly below nozzle_diameter
+        // (the 0.4 equal-to-nozzle probe is rejected at slice time).
+        "layer_height" | "initial_layer_print_height" => {
+            &[("probe-min", "0.05"), ("probe-max", "0.36")]
+        }
+        "bridge_flow" | "internal_bridge_flow" => &[("probe-min", "0.5"), ("probe-max", "2.0")],
+        "filament_flow_ratio" => &[("probe-min", "0.5"), ("probe-max", "1.5")],
+        // `filament_diameter` 0.5mm is rejected by upstream validation
+        // (standard sizes only).
+        "filament_diameter" => &[("probe-min", "1.0"), ("probe-max", "3.0")],
+        "pressure_advance" => &[("probe-min", "0.01"), ("probe-max", "0.2")],
+        "adaptive_pressure_advance_bridges" => &[("probe-min", "0.5"), ("probe-max", "2.0")],
+        // Absolute widths below ~0.2mm trip upstream's "Too small line
+        // width" validation; probe a legal absolute + a percent value.
+        "skeleton_infill_line_width" | "skin_infill_line_width" => {
+            &[("probe-min", "0.3"), ("probe-percent", "150%")]
+        }
         _ => return None,
     };
     Some(probes)
