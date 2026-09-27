@@ -49,6 +49,13 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) spiral_vase: bool,
     pub(in crate::project_slice::gcode_emit) spiral_vase_layer: bool,
     pub(in crate::project_slice::gcode_emit) positioned: bool,
+    /// SEMM template-private counters (`Extruder.cpp:108-122`,
+    /// `Extruder.hpp:86-92`): `set_position`/`set_retracted` write the
+    /// PRIVATE `m_E`/`m_retracted`/`m_restart_extra` under
+    /// `single_extruder_multi_material`, which the shared motion
+    /// counters never read — only the placeholder echoes observe them.
+    pub(in crate::project_slice::gcode_emit) private_retracted: f64,
+    pub(in crate::project_slice::gcode_emit) private_restart_extra: f64,
     /// The Z the machine start/filament g-code left the nozzle at; mirrors
     /// `GCodeWriter::m_pos(2)` for the `change_layer` `will_move_z` gate.
     pub(in crate::project_slice::gcode_emit) writer_z: Option<f64>,

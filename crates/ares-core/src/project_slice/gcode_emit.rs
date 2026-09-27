@@ -132,6 +132,9 @@ pub(super) fn emit(
     // sub-EPSILON assignments are ignored via `is_approx`).
     if let Some(e_position) = start_outcome.e_position
         && (e_position - state.e_position).abs() >= 1e-4
+        // `set_position` writes the private `m_E`; under SEMM the
+        // shared counter is untouched (`Extruder.hpp:36,56`).
+        && !state.options.single_extruder_multi_material
     {
         state.e_position = e_position;
     }
@@ -156,13 +159,34 @@ pub(super) fn emit(
                 "Custom G-code reports negative z_restart_extra.",
             );
         } else if retract.retracted > EPSILON {
-            state.retracted = true;
-            state.retracted_amount = retract.retracted;
-            state.restart_extra = if retract.restart_extra < EPSILON {
-                0.0
+            // `set_retracted` targets the PRIVATE counters
+            // (`Extruder.cpp:108-122`); under SEMM only the placeholder
+            // echoes observe them, the shared motion counters do not.
+            if state.options.single_extruder_multi_material {
+                state.private_retracted = retract.retracted;
+                state.private_restart_extra = if retract.restart_extra < EPSILON {
+                    0.0
+                } else {
+                    retract.restart_extra
+                };
             } else {
-                retract.restart_extra
-            };
+                state.retracted = true;
+                state.retracted_amount = retract.retracted;
+                state.restart_extra = if retract.restart_extra < EPSILON {
+                    0.0
+                } else {
+                    retract.restart_extra
+                };
+            }
+        } else if state.options.single_extruder_multi_material {
+            state.private_retracted = 0.0;
+            state.private_restart_extra = 0.0;
+        } else {
+            // `retracted <= EPSILON` clears BOTH counters
+            // (`Extruder.cpp:118-121`).
+            state.retracted = false;
+            state.retracted_amount = 0.0;
+            state.restart_extra = 0.0;
         }
     }
     // A `position` assignment in the machine-start template writes back

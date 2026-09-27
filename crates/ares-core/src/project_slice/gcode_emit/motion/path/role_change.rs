@@ -79,8 +79,17 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
         ]),
     );
     config.insert("zhop", Value::number(state.lifted_amount));
-    config.insert("e_retracted", list64(state.retracted_amount));
-    config.insert("e_restart_extra", list64(state.restart_extra));
+    // `update_from_gcodewriter` reads the extruder's PRIVATE
+    // `retracted()`/`restart_extra()` (`Extruder.hpp:51-53`,
+    // `GCode.cpp:1679`) — the `set_retracted` write-back targets those
+    // under SEMM.
+    let (e_retracted, e_restart_extra) = if state.options.single_extruder_multi_material {
+        (state.private_retracted, state.private_restart_extra)
+    } else {
+        (state.retracted_amount, state.restart_extra)
+    };
+    config.insert("e_retracted", list64(e_retracted));
+    config.insert("e_restart_extra", list64(e_restart_extra));
     // `Extruder::extruded_volume` = `used_filament() * filament_crossection`
     // (`Extruder.cpp:125-145`); extruded_weight = volume * density * 1e-3.
     let volume = state.extrusion_totals().used_filament * state.options.filament_area;
@@ -97,6 +106,10 @@ pub(in crate::project_slice::gcode_emit) fn refresh_writer_state(
         Value::number(volume * state.options.filament_density * 0.001),
     );
     if !state.options.use_relative_e_distances {
+        // `e_position` reads `filament()->E()` — the SHARED counter
+        // under SEMM (`Extruder.hpp:36`), so the template-visible value
+        // is the live motion counter; the private `set_position` slot
+        // is never echoed back upstream.
         config.insert("e_position", list64(state.e_position));
     }
 }
@@ -192,7 +205,14 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
         && let Some(position) = list.first().and_then(numeric)
         && !is_approx(position, state.e_position)
     {
-        state.e_position = position;
+        // `filament->set_position` writes the PRIVATE `m_E`; under
+        // `single_extruder_multi_material` the motion counters live in
+        // the shared slot and nothing ever reads the private value
+        // (`Extruder.cpp:31-39`, `Extruder.hpp:36,56`) — the write-back
+        // is then a no-op.
+        if !state.options.single_extruder_multi_material {
+            state.e_position = position;
+        }
     }
     // `e.set_retracted(retracted, restart_extra)` runs when EITHER output
     // differs (`is_approx` = 1e-4, `GCode.cpp:3912-3914`); set_retracted
@@ -217,10 +237,24 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
             state.record_template_failure(name, "Custom G-code reports negative z_restart_extra.");
             return Err("Custom G-code reports negative z_restart_extra.".to_string());
         }
+        // `Extruder::set_retracted` writes the PRIVATE counters
+        // (`Extruder.cpp:108-122`); under shared-extruder mode the
+        // unretract path reads `m_share_retracted` instead
+        // (`Extruder.cpp:85-99`), so the assignment only echoes through
+        // the `e_retracted`/`e_restart_extra` placeholders.
+        let semm = state.options.single_extruder_multi_material;
         if retracted > 1e-4 {
-            state.retracted = true;
-            state.retracted_amount = retracted;
-            state.restart_extra = if extra < 1e-4 { 0.0 } else { extra };
+            if semm {
+                state.private_retracted = retracted;
+                state.private_restart_extra = if extra < 1e-4 { 0.0 } else { extra };
+            } else {
+                state.retracted = true;
+                state.retracted_amount = retracted;
+                state.restart_extra = if extra < 1e-4 { 0.0 } else { extra };
+            }
+        } else if semm {
+            state.private_retracted = 0.0;
+            state.private_restart_extra = 0.0;
         } else {
             state.retracted = false;
             state.retracted_amount = 0.0;

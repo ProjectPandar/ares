@@ -141,10 +141,9 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
                         b"G11 ; unretract\n"
                     },
                 );
-                if !state.options.use_relative_e_distances {
-                    output.extend_from_slice(b"G92 E0\n");
-                    state.e_position = 0.0;
-                }
+                // `reset_e` after the marker is zero-counter-gated and
+                // flavor-excluded (`GCodeWriter.cpp:480-499,1064-1070`).
+                travel::reset_e(output, state);
             } else {
                 let comment = state
                     .options
