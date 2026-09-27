@@ -4,9 +4,7 @@ use crate::{SliceError, SliceOptions};
 
 const ENABLE_KEY: &str = "enable_wrapping_detection";
 const GCODE_KEY: &str = "wrapping_detection_gcode";
-const LAYERS_KEY: &str = "wrapping_detection_layers";
 const EXCLUDE_AREA_KEY: &str = "wrapping_exclude_area";
-const DEFAULT_LAYERS: usize = 20;
 
 pub(crate) fn layer_command(
     options: &SliceOptions,
@@ -16,10 +14,10 @@ pub(crate) fn layer_command(
     let template = template(options)?;
     let has_wrapping_exclude_area =
         has_wrapping_exclude_area(options.values().get(EXCLUDE_AREA_KEY))?;
-    if !options.bool_option(ENABLE_KEY, false)?
-        || template.is_empty()
-        || !has_wrapping_exclude_area
-        || !within_wrapping_detection_layers(options, layer_num)?
+    // Upstream emits the wrap insert once per layer whenever detection is
+    // on (`GCode.cpp:5302-5305`); `wrapping_detection_layers` only shapes
+    // the wipe-tower plan (`WipeTower.cpp:2577`) and never gates the insert.
+    if !options.bool_option(ENABLE_KEY, false)? || template.is_empty() || !has_wrapping_exclude_area
     {
         return Ok(String::new());
     }
@@ -49,27 +47,6 @@ fn template(options: &SliceOptions) -> Result<&str, SliceError> {
     value
         .as_str()
         .ok_or_else(|| SliceError::InvalidInput(format!("{GCODE_KEY} must be a string")))
-}
-
-fn within_wrapping_detection_layers(
-    options: &SliceOptions,
-    layer_num: usize,
-) -> Result<bool, SliceError> {
-    Ok(layer_num <= wrapping_detection_layers(options.values().get(LAYERS_KEY))?)
-}
-
-fn wrapping_detection_layers(value: Option<&Value>) -> Result<usize, SliceError> {
-    let Some(value) = value else {
-        return Ok(DEFAULT_LAYERS);
-    };
-    match value {
-        Value::Number(number) => number
-            .as_u64()
-            .and_then(|value| usize::try_from(value).ok())
-            .ok_or_else(invalid_layers),
-        Value::String(text) => text.trim().parse().map_err(|_| invalid_layers()),
-        _ => Err(invalid_layers()),
-    }
 }
 
 fn has_wrapping_exclude_area(value: Option<&Value>) -> Result<bool, SliceError> {
@@ -142,10 +119,6 @@ fn parse_exclude_area_number(value: &str) -> Result<f64, SliceError> {
 
 fn invalid_exclude_area(reason: &str) -> SliceError {
     SliceError::InvalidInput(format!("{EXCLUDE_AREA_KEY} {reason}"))
-}
-
-fn invalid_layers() -> SliceError {
-    SliceError::InvalidInput(format!("{LAYERS_KEY} must be a non-negative integer"))
 }
 
 fn replace_placeholder(template: &str, key: &str, value: &str) -> String {

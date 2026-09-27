@@ -181,54 +181,6 @@ impl PressureEqualizerPass {
 mod tests;
 
 #[cfg(test)]
-mod debug_dump {
-    use super::*;
-    use crate::project_slice::pressure_equalizer::line::LineParser;
-
-    #[test]
-    fn dump_skirt_decisions() {
-        let layer = ";_EXTRUSION_ROLE:12\n\
-                     G1 F3000;_EXTRUDE_SET_SPEED\n\
-                     G1 X488.064 Y484.209 E2.17012\n\
-                     G1 X490.948 Y482.829 E2.17012\n\
-                     G1 X495 Y482.172 E2.78599\n\
-                     G1 X505 Y482.172 E6.78742\n\
-                     G1 X508.172 Y482.57 E2.17012\n\
-                     G1 X511.148 Y483.741 E2.17012\n\
-                     G1 X513.741 Y485.611 E2.17012\n\
-                     ;_EXTRUDE_END\n";
-        let mut pass = PressureEqualizerPass::new(100.0, 2.0, false, &[1.75], true);
-        pass.process_layer(layer);
-        let out = pass.flush().expect("layer");
-        eprintln!("SKIRT OUT:\n{out}");
-    }
-
-    #[test]
-    fn dump_real_layer0() {
-        let layer = ";_EXTRUSION_ROLE:12\nSET_VELOCITY_LIMIT ACCEL=2500 SQUARE_CORNER_VELOCITY=7\nG1 E-20 F12000\nG1 Z2.1 F15000\nG1 X485.611 Y486.259\nG1 Z2.1\nG1 Z.6\nG1 E55 F12000\nSET_VELOCITY_LIMIT ACCEL=1000 SQUARE_CORNER_VELOCITY=5\nG1 F3000;_EXTRUDE_SET_SPEED\nG1 X488.064 Y484.209 E2.17012\nG1 X490.948 Y482.829 E2.17012\nG1 X495 Y482.172 E2.78599\nG1 X505 Y482.172 E6.78742\nG1 X508.172 Y482.57 E2.17012\n;_EXTRUDE_END\n";
-        let mut pass = PressureEqualizerPass::new(100.0, 2.0, false, &[1.75], true);
-        pass.process_layer(layer);
-        let out = pass.flush().expect("layer");
-        eprintln!("REAL OUT:\n{out}");
-    }
-
-    #[test]
-    fn dump_layer0_decisions() {
-        let layer = ";_EXTRUSION_ROLE:1\n\
-                     G1 F3000;_EXTRUDE_SET_SPEED\n\
-                     G1 X10 Y0 E1\n\
-                     G1 X10 Y10 E2\n\
-                     G1 X0 Y10 E3\n\
-                     G1 X0 Y1 E4\n\
-                     ;_EXTRUDE_END\n";
-        let mut pass = PressureEqualizerPass::new(100.0, 2.0, false, &[1.75], false);
-        pass.process_layer(layer);
-        let out = pass.flush().expect("layer");
-        eprintln!("OUT:\n{out}");
-    }
-}
-
-#[cfg(test)]
 mod decisions {
     use super::*;
     use crate::project_slice::pressure_equalizer::line::LineParser;

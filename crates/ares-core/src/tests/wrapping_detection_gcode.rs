@@ -72,58 +72,27 @@ async fn json_wrapping_exclude_area_keeps_wrapping_detection_output() {
 }
 
 #[tokio::test]
-async fn wrapping_detection_layers_limits_rendered_blocks() {
-    let output = wrapping_output(json!({
-        "enable_wrapping_detection": true,
-        "wrapping_detection_layers": 1,
-        "wrapping_exclude_area": "0x0,10x0,10x10,0x10",
-        "wrapping_detection_gcode": ";WRAP [layer_num] [layer_z]"
-    }))
-    .await
-    .unwrap();
+async fn wrapping_detection_layers_does_not_gate_the_insert() {
+    // Upstream `wrapping_detection_layers` only shapes the wipe-tower plan
+    // (`WipeTower.cpp:2577`); the per-layer wrap insert fires whenever
+    // `enable_wrapping_detection` is on (`GCode.cpp:5302-5305`) regardless
+    // of the configured layer count — including 0.
+    for layers in [
+        serde_json::json!(0),
+        serde_json::json!(1),
+        serde_json::json!("1"),
+    ] {
+        let output = wrapping_output(json!({
+            "enable_wrapping_detection": true,
+            "wrapping_detection_layers": layers,
+            "wrapping_exclude_area": "0x0,10x0,10x10,0x10",
+            "wrapping_detection_gcode": ";WRAP [layer_num] [layer_z]"
+        }))
+        .await
+        .unwrap();
 
-    assert_eq!(wrap_lines(&output), vec![";WRAP 1 0.2"]);
-}
-
-#[tokio::test]
-async fn wrapping_detection_layers_zero_suppresses_rendered_blocks() {
-    let output = wrapping_output(json!({
-        "enable_wrapping_detection": true,
-        "wrapping_detection_layers": 0,
-        "wrapping_exclude_area": "0x0,10x0,10x10,0x10",
-        "wrapping_detection_gcode": ";WRAP [layer_num] [layer_z]"
-    }))
-    .await
-    .unwrap();
-
-    assert!(wrap_lines(&output).is_empty());
-}
-
-#[tokio::test]
-async fn wrapping_detection_layers_accepts_integer_string() {
-    let output = wrapping_output(json!({
-        "enable_wrapping_detection": true,
-        "wrapping_detection_layers": "1",
-        "wrapping_exclude_area": "0x0,10x0,10x10,0x10",
-        "wrapping_detection_gcode": ";WRAP [layer_num] [layer_z]"
-    }))
-    .await
-    .unwrap();
-
-    assert_eq!(wrap_lines(&output), vec![";WRAP 1 0.2"]);
-}
-
-#[tokio::test]
-async fn omitted_wrapping_detection_layers_uses_orca_default_window() {
-    let output = wrapping_output(json!({
-        "enable_wrapping_detection": true,
-        "wrapping_exclude_area": "0x0,10x0,10x10,0x10",
-        "wrapping_detection_gcode": ";WRAP [layer_num]"
-    }))
-    .await
-    .unwrap();
-
-    assert_eq!(wrap_lines(&output), vec![";WRAP 1", ";WRAP 2"]);
+        assert_eq!(wrap_lines(&output), vec![";WRAP 1 0.2", ";WRAP 2 0.4"]);
+    }
 }
 
 #[tokio::test]
@@ -224,31 +193,6 @@ async fn invalid_enable_wrapping_detection_reaches_slice_error() {
 
     assert!(matches!(err, SliceError::InvalidInput(_)));
     assert!(err.to_string().contains("enable_wrapping_detection"));
-}
-
-#[tokio::test]
-async fn invalid_wrapping_detection_layers_reaches_slice_error() {
-    for invalid in [
-        json!(-1),
-        json!(1.5),
-        json!(true),
-        json!(null),
-        json!(["1"]),
-        json!({"layers": 1}),
-        json!("bad"),
-    ] {
-        let err = wrapping_output(json!({
-            "enable_wrapping_detection": true,
-            "wrapping_detection_layers": invalid,
-            "wrapping_exclude_area": "0x0,10x0,10x10,0x10",
-            "wrapping_detection_gcode": ";WRAP [layer_num]"
-        }))
-        .await
-        .unwrap_err();
-
-        assert!(matches!(err, SliceError::InvalidInput(_)));
-        assert!(err.to_string().contains("wrapping_detection_layers"));
-    }
 }
 
 #[tokio::test]
