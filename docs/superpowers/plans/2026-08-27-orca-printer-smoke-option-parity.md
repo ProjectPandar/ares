@@ -10081,3 +10081,21 @@ NEXT: 7th GT instrument — dump avoid_perimeters intersections
 wall travels; compare against my collect_intersections +
 extend_for_closest_lines to find the projection/segment-index
 divergence.
+
+## Cycle 6-9 review fixes (2026-09-27)
+
+- cycle-6 (`06fc5e13`): KD-tree right subtree `center+1`, role-hook accel ordering,
+  template write-back (position/E counters/retracted), `layer_num` int, KD cache.
+- cycle-7 (`25a9a177`): EPSILON=1e-4 during-cap; `restart_extra` runtime state
+  consumed at unretract; 64-wide E output vectors; nominal-Z reset port.
+- cycle-8 (`a3ab476b`+`29fee097`): paired `set_retracted` semantics (1e-4
+  is_approx, negative rejection -> template failure, paired clear), position
+  trunc write-back + size-3 validation, restart_extra on every upstream
+  retract() call site including no-ops, arc clip_end projected endpoint cached
+  into last_pos/wipe source, int-domain `get_closest_point`, conditional
+  loop-wipe join dedup, lift-only Z reset.
+- KNOWN RESIDUAL: `/tmp/parity-full-r8` (`raft_layers=max` sweep case) — 12
+  identical `E-.20594` vs orca `-.20595`; a single wipe-path vertex differs by
+  ~1 scaled int (all emitted XY byte-identical). Vertex is produced upstream
+  of the emit layer (seam/loop geometry); no upstream int dump available to
+  bisect further. Everything else on the artifact is byte-exact.
