@@ -182,9 +182,13 @@ pub(super) fn emit(
         state.y = y;
         state.writer_z = Some(z);
         if moved {
+            // `gcode_to_point` adds the extruder offset only with an
+            // active extruder (`GCode.cpp:8138-8144`); machine-start
+            // runs before the initial `set_extruder`
+            // (`GCode.cpp:3144`), so no offset applies here.
             state.last_scaled_position = Some((
-                ((x - state.origin.0 + state.extruder_offset.0) / state.scale_factor) as i64,
-                ((y - state.origin.1 + state.extruder_offset.1) / state.scale_factor) as i64,
+                ((x - state.origin.0) / state.scale_factor) as i64,
+                ((y - state.origin.1) / state.scale_factor) as i64,
             ));
         }
     }

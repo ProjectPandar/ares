@@ -20,6 +20,13 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// differently across 0.0005 formatting boundaries (mHlqqz X149.029).
     pub(in crate::project_slice::gcode_emit) origin: (f64, f64),
     pub(in crate::project_slice::gcode_emit) extruder_offset: (f64, f64),
+    /// `m_curr_extruder_id != -1` (`GCode.cpp:8138-8144`): the extruder
+    /// offset only applies to `gcode_to_point` write-backs once the
+    /// initial `set_extruder` ran. BBL's `init_extruder` precedes its
+    /// filament-start (`GCode.cpp:3144`); the non-BBL extruder is
+    /// selected inside `set_extruder` AFTER rendering filament-start
+    /// (`GCode.cpp:7736-7746`).
+    pub(in crate::project_slice::gcode_emit) extruder_selected: bool,
     pub(in crate::project_slice::gcode_emit) scale_factor: f64,
     pub(in crate::project_slice::gcode_emit) travel_feedrate: f64,
     pub(in crate::project_slice::gcode_emit) extrusion_feedrate: f64,

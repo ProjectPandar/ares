@@ -172,9 +172,17 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
         if x != state.x || y != state.y || state.writer_z.unwrap_or(0.0) != z {
             state.x = x;
             state.y = y;
+            // `gcode_to_point` adds the extruder offset only with an
+            // active extruder (`GCode.cpp:8138-8144`) — machine-start
+            // and the non-BBL filament-start run before selection.
+            let offset = if state.extruder_selected {
+                state.extruder_offset
+            } else {
+                (0.0, 0.0)
+            };
             state.last_scaled_position = Some((
-                ((x - state.origin.0 + state.extruder_offset.0) / state.scale_factor) as i64,
-                ((y - state.origin.1 + state.extruder_offset.1) / state.scale_factor) as i64,
+                ((x - state.origin.0 + offset.0) / state.scale_factor) as i64,
+                ((y - state.origin.1 + offset.1) / state.scale_factor) as i64,
             ));
         }
         state.writer_z = Some(z);

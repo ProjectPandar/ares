@@ -56,7 +56,15 @@ pub(super) fn append_print_preamble(
     first_layer_bounds: Option<super::footprint::FirstLayerBounds>,
 ) -> Result<(), SliceError> {
     let is_bbl = tags::Tags::of(traversal).is_bbl();
+    // BBL's `init_extruder` already selected the initial extruder
+    // BEFORE its filament-start render (`GCode.cpp:3144-3148`), so
+    // `position` write-backs carry the extruder offset; the non-BBL
+    // extruder is selected inside `set_extruder` AFTER the render
+    // (`GCode.cpp:7736-7746`), so its write-back omits the offset.
+    state.extruder_selected = is_bbl;
     // BBL renders this explicitly before `;VT` (`GCode.cpp:3143-3154`);
+    // compatible printers render it from the initial set_extruder call
+    // (`GCode.cpp:7710-7745`).
     // compatible printers render it from the initial set_extruder call
     // (`GCode.cpp:7710-7745`).
     if let Some(source) = traversal
@@ -111,6 +119,10 @@ pub(super) fn append_print_preamble(
             );
         }
     }
+    // `set_extruder` finishes selecting the extruder once
+    // filament-start rendered (`GCode.cpp:7746`): later template
+    // write-backs (layer/before/after) apply the extruder offset.
+    state.extruder_selected = true;
     if is_bbl {
         output.extend_from_slice(b";VT0\n");
     }
