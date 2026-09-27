@@ -148,6 +148,9 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
 }
 
 fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
+    // `Extruder::retract` assigns `m_restart_extra` on every call, even
+    // when no E moves (`Extruder.cpp:66,77`).
+    state.restart_extra = state.options.retract_restart_extra;
     if state.options.use_firmware_retraction {
         firmware_retract(output, state);
         return;
@@ -182,6 +185,7 @@ fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
 /// for Machinekit) with a hardcoded comment — no E word, no F word
 /// (`GCodeWriter.cpp:1022-1044`).
 fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
+    state.restart_extra = state.options.retract_restart_extra;
     let remaining = (1.0 - state.retracted_amount).max(0.0);
     if remaining <= 0.0 {
         return;
@@ -198,6 +202,9 @@ fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
 }
 
 fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_marker: bool) {
+    // `Extruder::retract` assigns `m_restart_extra` from the configured
+    // `retract_restart_extra` on every call (`Extruder.cpp:66,77`).
+    state.restart_extra = state.options.retract_restart_extra;
     let WipePath {
         segments,
         retraction_distance,
@@ -217,7 +224,9 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
     // `during - remaining > EPSILON`; within the EPSILON window the
     // larger `during` value is emitted as-is.
     let during_max = state.options.retraction_during_wipe_speed * retraction_distance / wipe_speed;
-    let during = if during_max - remaining > f64::EPSILON {
+    // Upstream EPSILON is `1e-4` (`libslic3r.h:52`), not machine eps:
+    // `GCode.cpp:352-357` keeps `during` > remaining when within 1e-4.
+    let during = if during_max - remaining > 1e-4 {
         remaining
     } else {
         during_max
@@ -307,9 +316,13 @@ fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_ma
             // Recover the scaled-int position the mm value came from
             // (upstream wipe moves hold ints; mm→int round-trips are
             // exact under round-to-nearest).
+            // `(point - m_origin) + extruder_offset` order
+            // (`GCode.cpp:8138-8144`).
             state.last_scaled_position = Some((
-                ((point.x - state.offset.0) / state.scale_factor).round() as i64,
-                ((point.y - state.offset.1) / state.scale_factor).round() as i64,
+                ((point.x - state.origin.0 + state.extruder_offset.0) / state.scale_factor).round()
+                    as i64,
+                ((point.y - state.origin.1 + state.extruder_offset.1) / state.scale_factor).round()
+                    as i64,
             ));
             state.wipe_start = Some(point);
         }

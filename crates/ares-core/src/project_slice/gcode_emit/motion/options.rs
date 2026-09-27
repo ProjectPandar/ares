@@ -24,6 +24,9 @@ pub(in crate::project_slice::gcode_emit) struct ScarfOptions {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub(in crate::project_slice::gcode_emit) struct MotionOptions {
     pub(in crate::project_slice::gcode_emit) filament_area: f64,
+    /// `filament_density` g/cc for the `extruded_weight`
+    /// placeholders (`Extruder.cpp:133-135`).
+    pub(in crate::project_slice::gcode_emit) filament_density: f64,
     pub(in crate::project_slice::gcode_emit) filament_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) print_flow_ratio: f64,
     pub(in crate::project_slice::gcode_emit) max_volumetric_speed: f64,

@@ -34,11 +34,9 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
     }
     output.extend_from_slice(b"M976 S1 P1 ; scan model before printing 2nd layer\nM400 P100\n");
     if state.retracted || state.retracted_amount > 0.0 {
-        let unretract = extrusion::coordinate(
-            state,
-            state.retracted_amount + state.options.retract_restart_extra,
-        );
+        let unretract = extrusion::coordinate(state, state.retracted_amount + state.restart_extra);
         state.retracted_amount = 0.0;
+        state.restart_extra = 0.0;
         if unretract.abs() > 0.0 {
             output.extend_from_slice(
                 format!(

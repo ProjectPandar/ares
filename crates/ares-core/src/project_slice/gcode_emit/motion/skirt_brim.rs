@@ -140,8 +140,12 @@ pub(in crate::project_slice) fn emit_skirt_loop(
                 .wipe_path
                 .iter()
                 .map(|point| {
-                    let x = ((point.x - state.offset.0) / state.scale_factor).round() as i64;
-                    let y = ((point.y - state.offset.1) / state.scale_factor).round() as i64;
+                    let x = ((point.x - state.origin.0 + state.extruder_offset.0)
+                        / state.scale_factor)
+                        .round() as i64;
+                    let y = ((point.y - state.origin.1 + state.extruder_offset.1)
+                        / state.scale_factor)
+                        .round() as i64;
                     (x, y)
                 })
                 .collect::<Vec<_>>();

@@ -1,6 +1,7 @@
 //! The post-travel z re-statement (`GCode.cpp:6381-6386`) plus the
 //! retracted-path descent of an eager-lifted nozzle.
 
+use super::super::travel_emit;
 use crate::project_slice::gcode_emit::motion::{
     EmitState, extrusion,
     format::{axis as format_axis, extrusion as format_extrusion, z as format_z},
@@ -25,6 +26,37 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         eager_lifted_travel,
         unclear_position_travel,
     } = context;
+    // `GCode.cpp:6396-6400`: for a non-contoured, non-sloped path, any
+    // drift between the writer Z and the nominal layer Z (e.g. a
+    // role-change hook assigning `position[2]`) is restored with a
+    // forced `travel_to_z(m_nominal_z)` — which also clears the
+    // outstanding lift (`m_lifted = 0`, `GCodeWriter.cpp:824`).
+    let current_z = state.writer_z.unwrap_or(state.layer_z);
+    if slope_start_z.is_none()
+        && !state.lifted
+        && !state.template_lifted
+        && travel_emit::quantize_axis(current_z) != travel_emit::quantize_axis(state.layer_z)
+    {
+        let z_feedrate = travel::lift_z_feedrate(state);
+        let reset_comment = state
+            .options
+            .gcode_comments
+            .then_some(" ; reset Z after contouring")
+            .unwrap_or("");
+        output.extend_from_slice(
+            format!(
+                "G1 Z{} F{}{reset_comment}\n",
+                format_z(state.layer_z),
+                format_axis(z_feedrate)
+            )
+            .as_bytes(),
+        );
+        state.current_feedrate = z_feedrate;
+        state.record_z(state.layer_z);
+        // `travel_to_z` cancels `m_lifted` (`GCodeWriter.cpp:824`).
+        state.lifted = false;
+        state.lifted_amount = 0.0;
+    }
     let needs_z_restate = never_positioned && (eager_lifted_travel || unclear_position_travel);
     if needs_z_restate && !travel_set_layer_z {
         let z_feedrate = travel::lift_z_feedrate(state);
@@ -97,13 +129,11 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         // `m_restart_extra` — not the configured retraction length — so a
         // nozzle pre-retracted by start-gcode assignments restores exactly
         // what the template retracted.
-        let unretract = extrusion::coordinate(
-            state,
-            state.retracted_amount + state.options.retract_restart_extra,
-        );
-        // `Extruder::unretract()` zeroes `m_retracted` after the extrude;
-        // `coordinate` only accumulates it for negative deltas.
+        let unretract = extrusion::coordinate(state, state.retracted_amount + state.restart_extra);
+        // `Extruder::unretract()` zeroes `m_retracted`/`m_restart_extra`
+        // after the extrude (`Extruder.cpp:92-104`).
         state.retracted_amount = 0.0;
+        state.restart_extra = 0.0;
         // `GCodeWriter::unretract`-side is_zero guard, `GCodeWriter.cpp:1063`):
         // a zero-length retraction (retraction_length=0 with wipe)
         // deretracts silently.

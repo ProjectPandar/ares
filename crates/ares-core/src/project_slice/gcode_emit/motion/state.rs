@@ -121,6 +121,11 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     /// m_retracted`. Template output never touches these.
     pub(in crate::project_slice::gcode_emit) filament_used: f64,
     pub(in crate::project_slice::gcode_emit) retracted_amount: f64,
+    /// `Extruder::m_restart_extra` (`Extruder.cpp:66,92-101,108-122`):
+    /// assigned at every `retract()` from `retract_restart_extra`,
+    /// consumed (and zeroed) by `unretract()`, and writable through the
+    /// `e_restart_extra` placeholder.
+    pub(in crate::project_slice::gcode_emit) restart_extra: f64,
     /// Per-layer avoid-crossing routing boundary, built lazily on the first
     /// routed travel and dropped by `begin_layer`
     /// (`AvoidCrossingPerimeters::init_layer`).

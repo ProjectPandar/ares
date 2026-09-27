@@ -124,8 +124,11 @@ pub(in crate::project_slice::gcode_emit::motion) fn scaled_position(
     // mm→scaled recovery of an upstream-scaled-int position —
     // round-to-nearest (see `wipe_path` points above).
     (
-        ((point.x - state.offset.0) / state.scale_factor).round() as i64,
-        ((point.y - state.offset.1) / state.scale_factor).round() as i64,
+        // `gcode_to_point` evaluation order: `(point - m_origin) +
+        // extruder_offset` (`GCode.cpp:8138-8144`) — keep the same
+        // association so the round-trip lands on the same double.
+        ((point.x - state.origin.0 + state.extruder_offset.0) / state.scale_factor).round() as i64,
+        ((point.y - state.origin.1 + state.extruder_offset.1) / state.scale_factor).round() as i64,
     )
 }
 

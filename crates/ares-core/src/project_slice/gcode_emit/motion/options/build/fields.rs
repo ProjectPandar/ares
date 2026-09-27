@@ -34,6 +34,11 @@ pub(super) fn assemble(
         // `filament_crossection` (Extruder.hpp:61): `diameter*diameter*0.25*PI`
         // — the multiplication order matters for f64 parity with upstream.
         filament_area: filament_diameter * filament_diameter * 0.25 * std::f64::consts::PI,
+        filament_density: gcode
+            .filament_density
+            .0
+            .first()
+            .map_or(0.0, |value| value.0),
         filament_flow_ratio: first_nullable_float(&gcode.filament_flow_ratio, 1.0),
         print_flow_ratio: region.map_or(full.process.region.print_flow_ratio.0, |value| {
             value.print_flow_ratio.0
