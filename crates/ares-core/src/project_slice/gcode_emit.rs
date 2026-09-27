@@ -174,8 +174,12 @@ pub(super) fn emit(
     machine::append_completion_controls(&mut output, traversal);
     output.extend_from_slice(b"M73 P100 R0\n; EXECUTABLE_BLOCK_END\n\n");
     let used_filament = finish::account_used_filament(&output);
-    let (total_weight, total_cost) =
-        finish::append_filament_stats(&mut output, traversal, used_filament);
+    let (total_weight, total_cost) = finish::append_filament_stats(
+        &mut output,
+        traversal,
+        used_filament,
+        state.extrusion_totals().used_filament,
+    );
     finish::append_compatible_stats(
         &mut output,
         traversal,

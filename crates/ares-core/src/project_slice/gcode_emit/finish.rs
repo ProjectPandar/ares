@@ -193,6 +193,7 @@ pub(super) fn append_filament_stats(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
     used_filament: f64,
+    writer_used_filament: f64,
 ) -> (f64, f64) {
     let filament = &traversal.resolved.views.full.filament.gcode;
     let mut used_mm = Vec::with_capacity(filament.filament_diameter.0.len());
@@ -205,8 +206,21 @@ pub(super) fn append_filament_stats(
     let mut total_weight = 0.0;
     let mut total_cost = 0.0;
     for (index, diameter) in filament.filament_diameter.0.iter().enumerate() {
-        let length = if index == 0 { used_filament } else { 0.0 };
-        let volume = length * diameter.0.powi(2) * 0.25 * std::f64::consts::PI;
+        // `GCode.cpp:2330-2354`: the `[g]`/`cost` lines are gated on the
+        // WRITER-side weight (`Extruder::used_filament()` = signed
+        // `m_absolute_E + m_retracted` — wipe negatives drain it past the
+        // restart, so extreme flow ratios leave it <= 0 and drop both
+        // lines) while the emitted numbers come from the processor's
+        // `total_volumes_per_extruder` accumulation, which `used_filament`
+        // here already models (Extrude-only E).
+        let displayed_length = if index == 0 { used_filament } else { 0.0 };
+        let gate_length = if index == 0 {
+            writer_used_filament
+        } else {
+            0.0
+        };
+        let volume = displayed_length * diameter.0.powi(2) * 0.25 * std::f64::consts::PI;
+        let gate_volume = gate_length * diameter.0.powi(2) * 0.25 * std::f64::consts::PI;
         let density = filament
             .filament_density
             .0
@@ -223,13 +237,21 @@ pub(super) fn append_filament_stats(
             .0;
         let weight = volume * density * 0.001;
         let material_cost = weight * cost * 0.001;
-        used_mm.push(format!("{length:.2}"));
+        // Writer-side weight decides whether upstream's `append` ran
+        // (`filament_weight > 0`, GCode.cpp:2349); the printed values are
+        // the processor's per-extruder accumulations.
+        let gate_weight = gate_volume * density * 0.001;
+        used_mm.push(format!("{displayed_length:.2}"));
         used_cm3.push(format!("{:.2}", volume * 0.001));
-        if weight > 0.0 {
-            total_weight += weight;
+        // `; total filament used [g]` is `print_statistics.total_weight`,
+        // overwritten at `GCode.cpp:1915-1937` from processor volumes — it
+        // is printed even when the writer-side gate dropped the per-extruder
+        // `[g]`/`cost` lines.
+        total_weight += weight;
+        total_cost += material_cost;
+        if gate_weight > 0.0 {
             used_g[index] = Some(format!("{weight:.2}"));
             if material_cost > 0.0 {
-                total_cost += material_cost;
                 costs[index] = Some(format!("{material_cost:.2}"));
             }
         }
