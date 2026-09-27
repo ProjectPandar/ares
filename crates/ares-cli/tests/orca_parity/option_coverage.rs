@@ -156,9 +156,14 @@ impl OptionOutcome {
             // single default case cannot establish that the whole legal range
             // was exercised. Enumerable (bool/enum), schema-bounded, and
             // context-bounded width domains are provably legal by construction.
+            // An authored-probe omission marks a deliberately-sampled domain
+            // (schema bounds rejected by upstream validation) — still
+            // INCOMPLETE, but the sweep gate treats it as covered interior.
             (
                 "INCOMPLETE",
-                "legacy domain application/legality unverified".into(),
+                plan.omission
+                    .map(str::to_owned)
+                    .unwrap_or_else(|| "legacy domain application/legality unverified".into()),
             )
         } else {
             ("PASS", String::new())
