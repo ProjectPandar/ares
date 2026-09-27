@@ -13,8 +13,14 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
     // (`e_retracted[0]=0.25` under length 1) retracts another 0.75.
     state.restart_extra = state.options.retract_restart_extra;
     let remaining = (state.options.retraction_length - state.retracted_amount).max(0.0);
+    // `coordinate` accumulates `m_retracted` unconditionally; `_retract`
+    // emits only when `!is_zero(dE)` (`GCodeWriter.cpp:1035`,
+    // `libslic3r.h:294` — 1e-6), so a sub-threshold top-up is silent.
+    let retract = extrusion::coordinate(state, -remaining);
     if remaining > 0.0 {
-        let retract = extrusion::coordinate(state, -remaining);
+        state.retracted = true;
+    }
+    if remaining >= 1e-6 {
         let comment = state
             .options
             .gcode_comments
@@ -28,13 +34,12 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
             )
             .as_bytes(),
         );
-        if !state.options.use_relative_e_distances {
-            output.extend_from_slice(b"G92 E0\n");
-            state.e_position = 0.0;
-        }
         state.current_feedrate = state.options.retraction_feedrate;
-        state.retracted = true;
     }
+    // `retract()` returns `gcode + reset_e()` — the reset runs on every
+    // call (`GCode.cpp:7674`), carrying the upstream comment + flavor
+    // exclusions (`GCodeWriter.cpp:480-499`).
+    super::travel::reset_e(output, state);
     output.extend_from_slice(b"M976 S1 P1 ; scan model before printing 2nd layer\nM400 P100\n");
     // `unretract()` (`GCode.cpp:4789`) is `unlift() + E restore`
     // (`GCode.hpp:255`): the descent emits FIRST — `G1 Z… F…` plus
