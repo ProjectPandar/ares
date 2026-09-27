@@ -150,12 +150,16 @@ impl PressureEqualizerPass {
             for (i, l) in self.lines.iter().enumerate() {
                 if l.extruding() {
                     eprintln!(
-                        "RATE {i} rate={:.3} start={:.3} end={:.3} mod={} adj={}",
+                        "RATE {i} rate={:.5} start={:.5} end={:.5} mod={} adj={} role={:?} len={:.5} feed={:.3} | {}",
                         l.volumetric_extrusion_rate,
                         l.volumetric_extrusion_rate_start,
                         l.volumetric_extrusion_rate_end,
                         l.modified,
-                        l.adjustable_flow
+                        l.adjustable_flow,
+                        l.extrusion_role,
+                        l.dist_xyz(),
+                        l.feedrate(),
+                        l.raw.trim()
                     );
                 }
             }
