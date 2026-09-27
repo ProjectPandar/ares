@@ -198,7 +198,10 @@ pub(super) fn emit(
     // end G-code (`GCode.cpp` final object teardown).
     motion::retract_for_print_end(&mut output, &mut state);
     motion::append_exclude_end(&mut output, &mut state);
-    let end_position = (state.x, state.y, state.layer_z);
+    // `position` = the LIVE writer position at print end
+    // (`GCode.cpp:3478`), including a trailing lift/timelapse Z — not
+    // the nominal layer z.
+    let end_position = (state.x, state.y, state.writer_z.unwrap_or(state.layer_z));
     finish::append(
         &mut output,
         &mut state,

@@ -178,11 +178,6 @@ pub(super) fn append<'a>(
     {
         motion::retract_before_layer(output, state);
     }
-    if timelapse_at_layer_change {
-        // Non-BBL layer-start render (`GCode.cpp:4667`): no position-clear,
-        // no Z adoption — those belong to the lambda inserts only.
-        timelapse::append_untracked(output, state, timelapse_context)?;
-    }
     // Spiral filter targets live in the writer (offset) Z domain
     // (`GCode.cpp:5692` emits the `print_z + z_offset` move, then
     // `SpiralVase.cpp` rewrites that move and derives its ramp).
@@ -210,6 +205,13 @@ pub(super) fn append<'a>(
         layer_retract_pending,
     );
     motion::flush_pending_retract_lift(output, state, previous_state_layer_z, will_move_z);
+    if timelapse_at_layer_change {
+        // Non-BBL layer-start render (`GCode.cpp:4667`): no position-clear,
+        // no Z adoption — those belong to the lambda inserts only. It runs
+        // AFTER `change_layer` (`process_layer`, `GCode.cpp:4663-4668`) so
+        // `{position[2]}` reads the new layer's Z and assignments survive.
+        timelapse::append_untracked(output, state, timelapse_context)?;
+    }
     // Upstream renders the layer-change template AFTER `change_layer`
     // finalized writer state (`process_layer` at `GCode.cpp:4667-4685`,
     // after `change_layer` returns at `:5712`), so `{position[2]}` reads

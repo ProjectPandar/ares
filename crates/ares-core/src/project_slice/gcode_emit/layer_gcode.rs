@@ -71,22 +71,42 @@ pub(super) fn append_print_preamble(
         // whitespace-only default sentinel to no output and no newline.
         .filter(|source| !source.trim().is_empty())
     {
+        // `start_position` carries the machine-start template's position
+        // assignment — apply it to the writer BEFORE seeding so the
+        // template sees upstream's post-assignment `m_pos`
+        // (`GCode.cpp:3900-3903` applies assignments for every process
+        // call, including machine-start).
+        if let Some(value::Value::List(position)) = start_position
+            && let [x, y, z] = position.as_slice()
+            && let (Some(x), Some(y), Some(z)) = (x.as_number(), y.as_number(), z.as_number())
+        {
+            state.x = x;
+            state.y = y;
+            state.writer_z = Some(z);
+        }
         let mut config = super::placeholders::base_config(traversal, metadata, first_layer_bounds)?;
         super::motion::refresh_writer_state(&mut config, state);
-        if let Some(position) = start_position {
-            config.insert("position", position.clone());
-        }
-        let rendered = template::render(source, &mut config).map_err(|error| {
-            SliceError::InvalidInput(format!(
-                "invalid project filament-start G-code template: {error}"
-            ))
-        })?;
-        output.extend_from_slice(rendered.as_bytes());
-        if !rendered.ends_with('\n') {
-            output.push(b'\n');
-        }
-        if !super::motion::apply_writer_state("filament_start_gcode", &config, state) {
-            let name = "filament_start_gcode";
+        let name = "filament_start_gcode";
+        // Render and write-back failures both emit only the inline
+        // report (`GCode.cpp:3920-3933`).
+        let failed = match template::render(source, &mut config) {
+            Err(error) => {
+                state.record_template_failure(name, &error.to_string());
+                true
+            }
+            Ok(rendered) => {
+                if super::motion::apply_writer_state(name, &config, state) {
+                    output.extend_from_slice(rendered.as_bytes());
+                    if !rendered.ends_with('\n') {
+                        output.push(b'\n');
+                    }
+                    false
+                } else {
+                    true
+                }
+            }
+        };
+        if failed {
             let error = state
                 .failed_templates
                 .last()
@@ -232,18 +252,20 @@ pub(super) fn append_before_layer_change_gcode(
         value::Value::number(volume * totals.density * 0.001),
     );
     config.insert("max_layer_z", value::Value::number(max_layer_z));
-    let rendered = template::render(template, &mut config).map_err(|error| {
-        SliceError::InvalidInput(format!(
-            "invalid project before-layer-change G-code template: {error}"
-        ))
-    })?;
-    output.extend_from_slice(rendered.as_bytes());
-    output.push(b'\n');
-    // Writer write-back (`GCode.cpp:3898-3915`): `position[2]` (and the
-    // E counters) assigned by the template become the live writer state
-    // read by the following `will_move_z` check.
-    if !super::motion::apply_writer_state("before_layer_change_gcode", &config, state) {
-        let name = "before_layer_change_gcode";
+    // Render or write-back failure both reduce to the inline report —
+    // the processed text is discarded (`GCode.cpp:3920-3933` returns the
+    // block instead of the template output; `slic3r_errors` via
+    // `record_template_failure` abort the export at the end).
+    let rendered = match template::render(template, &mut config) {
+        Ok(rendered) => Some(rendered),
+        Err(error) => {
+            state.record_template_failure("before_layer_change_gcode", &error.to_string());
+            None
+        }
+    };
+    let name = "before_layer_change_gcode";
+    let failed = rendered.is_none() || !super::motion::apply_writer_state(name, &config, state);
+    if failed {
         let error = state
             .failed_templates
             .last()
@@ -255,7 +277,10 @@ pub(super) fn append_before_layer_change_gcode(
             )
             .as_bytes(),
         );
+        return Ok(());
     }
+    output.extend_from_slice(rendered.unwrap().as_bytes());
+    output.push(b'\n');
     Ok(())
 }
 
@@ -305,16 +330,17 @@ pub(super) fn append_layer_change(
             "extruded_weight_total",
             value::Value::number(volume * totals.density * 0.001),
         );
-        let rendered = template::render(template, &mut config).map_err(|error| {
-            SliceError::InvalidInput(format!(
-                "invalid project layer-change G-code template: {error}"
-            ))
-        })?;
-        output.extend_from_slice(rendered.as_bytes());
-        output.push(b'\n');
-        // Writer write-back (`GCode.cpp:3898-3915`).
-        if !super::motion::apply_writer_state("layer_change_gcode", &config, state) {
-            let name = "layer_change_gcode";
+        // Render or write-back failure both produce only the inline
+        // report (`GCode.cpp:3920-3933`).
+        let rendered = match template::render(template, &mut config) {
+            Ok(rendered) => Some(rendered),
+            Err(error) => {
+                state.record_template_failure("layer_change_gcode", &error.to_string());
+                None
+            }
+        };
+        let name = "layer_change_gcode";
+        if rendered.is_none() || !super::motion::apply_writer_state(name, &config, state) {
             let error = state
                 .failed_templates
                 .last()
@@ -326,6 +352,9 @@ pub(super) fn append_layer_change(
                 )
                 .as_bytes(),
             );
+        } else {
+            output.extend_from_slice(rendered.unwrap().as_bytes());
+            output.push(b'\n');
         }
     }
     output.extend_from_slice(b";_SET_FAN_SPEED_CHANGING_LAYER\n");

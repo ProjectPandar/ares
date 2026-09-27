@@ -166,11 +166,13 @@ pub(super) fn emit_needs_travel(
         // retract, e.g. Kobra), `retract()` still runs — dE is a
         // no-op but maybe_zlift defers. And with an UNCLEAR source
         // position upstream's travel polyline starts at (0,0), so
-        // needs_retraction ALWAYS holds for the first travel — no
-        // length check here.
+        // Upstream still applies the `retraction_minimum_travel` length
+        // gate (`GCode.cpp:7530-7533`) — the (0,0)-origin travel can be
+        // below it, in which case no retraction and no deferred hop run.
         // `needs_lift` (`GCode.cpp:7678-7681`): zero retraction length
         // (no firmware retraction) never schedules a deferred hop.
         if !skip_retraction
+            && routed_length >= state.options.retraction_minimum_travel
             && state.pending_lift.is_none()
             && state.options.z_hop > 0.0
             && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)

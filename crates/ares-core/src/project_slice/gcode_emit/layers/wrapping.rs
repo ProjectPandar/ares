@@ -61,27 +61,45 @@ pub(super) fn emit(
         config.insert("layer_z", value::Value::number(context.layer.z));
         config.insert("max_layer_z", value::Value::number(context.layer.max_z));
         timelapse::insert_physical_extruder_ids(&mut config, traversal);
-        rendered = template::render(source, &mut config).map_err(|error| {
-            SliceError::InvalidInput(format!(
-                "invalid wrapping_detection_gcode template: {error}"
-            ))
-        })?;
-        rendered.push('\n');
-        output.extend_from_slice(rendered.as_bytes());
-        // Writer write-back (`GCode.cpp:3898-3915`).
-        if !motion::apply_writer_state("wrapping_detection_gcode", &config, state) {
-            let name = "wrapping_detection_gcode";
-            let error = state
-                .failed_templates
-                .last()
-                .map(|(_, error)| error.clone())
-                .unwrap_or_default();
-            output.extend_from_slice(
-                format!(
-                    "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
-                )
-                .as_bytes(),
-            );
+        // Write-back validation precedes emission
+        // (`GCode.cpp:3920-3933`).
+        match template::render(source, &mut config) {
+            Ok(text) => {
+                rendered = text;
+                if !motion::apply_writer_state("wrapping_detection_gcode", &config, state) {
+                    let name = "wrapping_detection_gcode";
+                    let error = state
+                        .failed_templates
+                        .last()
+                        .map(|(_, error)| error.clone())
+                        .unwrap_or_default();
+                    output.extend_from_slice(
+                        format!(
+                            "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+                        )
+                        .as_bytes(),
+                    );
+                    rendered.clear();
+                } else {
+                    rendered.push('\n');
+                    output.extend_from_slice(rendered.as_bytes());
+                }
+            }
+            Err(error) => {
+                state.record_template_failure("wrapping_detection_gcode", &error.to_string());
+                let name = "wrapping_detection_gcode";
+                let error = state
+                    .failed_templates
+                    .last()
+                    .map(|(_, error)| error.clone())
+                    .unwrap_or_default();
+                output.extend_from_slice(
+                    format!(
+                        "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
+                    )
+                    .as_bytes(),
+                );
+            }
         }
     }
     // `set_current_position_clear(false)` (`GCode.cpp:5227`) runs even for

@@ -144,19 +144,18 @@ fn append(
     config.insert("timelapse_pos_x", value::Value::number(f64::from(x)));
     config.insert("timelapse_pos_y", value::Value::number(f64::from(y)));
 
-    let rendered = template::render(source, &mut config).map_err(|error| {
-        SliceError::InvalidInput(format!(
-            "invalid project timelapse G-code template: {error}"
-        ))
-    })?;
-    let last_z = last_motion_z(&rendered);
-    output.extend_from_slice(rendered.as_bytes());
-    output.push(b'\n');
-    // Writer write-back (`GCode.cpp:3898-3915`): `e_retracted`/
-    // `e_restart_extra`/`position` assignments take effect for the
-    // subsequent unretract/Z tracking (`timelapse {e_retracted[0]=..}`).
-    if !super::motion::apply_writer_state("time_lapse_gcode", &config, state) {
-        let name = "time_lapse_gcode";
+    // Write-back validation precedes emission; render or validation
+    // failure emits only the inline report (`GCode.cpp:3920-3933`).
+    let rendered = match template::render(source, &mut config) {
+        Ok(rendered) => Some(rendered),
+        Err(error) => {
+            state.record_template_failure("time_lapse_gcode", &error.to_string());
+            None
+        }
+    };
+    let last_z = rendered.as_deref().and_then(last_motion_z);
+    let name = "time_lapse_gcode";
+    if rendered.is_none() || !super::motion::apply_writer_state(name, &config, state) {
         let error = state
             .failed_templates
             .last()
@@ -168,7 +167,10 @@ fn append(
             )
             .as_bytes(),
         );
+        return Ok(None);
     }
+    output.extend_from_slice(rendered.unwrap().as_bytes());
+    output.push(b'\n');
     // Outer `Some` = the template rendered and emitted (position now
     // unclear); inner `Some` = the rendered g-code ended on a Z motion.
     Ok(Some(last_z))
