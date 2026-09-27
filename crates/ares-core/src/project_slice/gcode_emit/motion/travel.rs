@@ -302,7 +302,7 @@ fn retract_and_wipe_impl(
             .gcode_comments
             .then_some(" ; retract")
             .unwrap_or("");
-        if before > 1e-6 {
+        if before >= 1e-6 {
             output.extend_from_slice(
                 format!(
                     "G1 E{} F{}{comment}\n",
@@ -406,7 +406,7 @@ fn retract_and_wipe_impl(
             // machine eps (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
             // `coordinate` applies the counter update for both cases.
             let retract = extrusion::coordinate(state, -topup);
-            if topup > 1e-6 {
+            if topup >= 1e-6 {
                 let comment = state
                     .options
                     .gcode_comments

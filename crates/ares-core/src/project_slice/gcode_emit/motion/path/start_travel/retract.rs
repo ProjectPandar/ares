@@ -132,16 +132,29 @@ pub(super) fn decide(
             }
         }
     } else if upstream_would_retract {
-        if !hilbert_suppressed {
+        // A fully-retracted nozzle still runs upstream's wipe +
+        // `reset_e` side effects (`GCode.cpp:7659-7674`) — the
+        // `retract()` E move is a no-op, not the sequence. Hilbert
+        // suppression keeps skipping the FINAL retract and preserves the
+        // scaled restart extra (`GCode.cpp:7667-7672`).
+        // The wipe + `reset_e` run whenever upstream's `retract()`
+        // executes — even when its E delta is zero (`retraction_length =
+        // 0` or a fully-retracted nozzle; `GCode.cpp:7659-7674`). Hilbert
+        // suppression keeps skipping only the final `retract()` and
+        // preserves the scaled restart extra (`GCode.cpp:7667-7672`).
+        let wipe_eligible =
+            !state.wipe_path.is_empty() && state.options.wipe && state.options.wipe_distance > 1e-4;
+        if hilbert_wipe_only {
+            if wipe_eligible {
+                let head_before = (state.x, state.y);
+                travel::retract_and_wipe_suppressed_tail(output, state);
+                if (state.x, state.y) != head_before {
+                    replan(state);
+                }
+            }
+        } else if !hilbert_suppressed {
             state.restart_extra = state.options.retract_restart_extra;
-            // A fully-retracted nozzle still runs upstream's wipe +
-            // `reset_e` side effects (`GCode.cpp:7659-7674`) — the
-            // `retract()` E move is a no-op, not the sequence.
-            if state.retracted
-                && !state.wipe_path.is_empty()
-                && state.options.wipe
-                && state.options.wipe_distance > 1e-4
-            {
+            if wipe_eligible {
                 let head_before = (state.x, state.y);
                 travel::wipe_only_retract(output, state);
                 if (state.x, state.y) != head_before {

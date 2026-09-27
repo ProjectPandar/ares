@@ -111,8 +111,15 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     };
     // `GCodeWriter.cpp:701-709`: the deferred lift raises from the LIVE
     // writer z (`dest_point(2) = m_to_lift + m_pos(2)`), not the nominal
-    // layer z — a template `position[2]` assignment moves the origin.
-    let raised_z = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
+    // layer z — but only while that raised target actually exceeds the
+    // travel's destination z (`m_to_lift + m_pos(2) > point(2)`),
+    // otherwise `m_lifted` stays 0 and the travel happens at `layer_z`.
+    let live_z = state.writer_z.unwrap_or(state.layer_z);
+    let raised_z = if live_z + state.options.z_hop > state.layer_z {
+        live_z + state.options.z_hop
+    } else {
+        state.layer_z
+    };
     let dx = target.x - state.x;
     let dy = target.y - state.y;
     // `GCodeWriter::travel_to_xyz` measures the XY distance with Eigen
@@ -190,13 +197,13 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
             }
         }
     };
-    if emitted {
+    if emitted && raised_z > state.layer_z {
         // The emitted lift move carries a real Z — `m_pos.z()` advances
         // (`GCodeWriter::travel_to_z` sets `m_pos` on every emit).
         state.record_z(raised_z);
+        state.lifted = true;
+        state.lifted_amount = raised_z - state.layer_z;
     }
-    state.lifted = true;
-    state.lifted_amount = raised_z - state.layer_z;
     emitted
 }
 
@@ -252,7 +259,10 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
     }
     state.record_z(raised_z);
     state.lifted = true;
-    state.lifted_amount = raised_z - state.layer_z;
+    // `eager_lift` stores the configured hop (`m_lifted = target_lift`,
+    // `GCodeWriter.cpp:680`) — the raised-above-nominal bookkeeping
+    // belongs to deferred travel consumption.
+    state.lifted_amount = state.options.z_hop;
     // `GCodeWriter::eager_lift` zeroes `m_to_lift` (`GCodeWriter.cpp:679`):
     // a hop deferred by an earlier retract is realized by this eager lift,
     // so the following travel sees the nozzle already lifted and emits a
@@ -275,7 +285,7 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     state.current_feedrate = feedrate;
     state.record_z(raised);
     state.lifted = true;
-    state.lifted_amount = raised - state.layer_z;
+    state.lifted_amount = state.options.z_hop;
 }
 
 fn append_spiral(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: f64, j: f64) {

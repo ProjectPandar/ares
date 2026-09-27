@@ -23,8 +23,14 @@ pub(super) fn emit_retracted_first_travel(
 ) {
     // The lift target is `m_pos.z() + m_to_lift` (`GCodeWriter.cpp:
     // 701-709`) — the LIVE writer z (template `position[2]` write-back
-    // can move it off the nominal layer z).
-    let raised_z = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
+    // can move it off the nominal layer z), but only while it exceeds
+    // the destination z; below it the travel lands at `layer_z`.
+    let live_z = state.writer_z.unwrap_or(state.layer_z);
+    let raised_z = if live_z + state.options.z_hop > state.layer_z {
+        live_z + state.options.z_hop
+    } else {
+        state.layer_z
+    };
     let mode = first_travel_lift.unwrap_or_else(|| travel::lift_mode_for(state, true));
     // `travel_to_xyz` NormalLift emits the lift via
     // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:678`),
