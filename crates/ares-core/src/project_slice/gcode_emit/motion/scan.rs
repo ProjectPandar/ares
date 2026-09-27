@@ -18,7 +18,18 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
             && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
             && super::travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z))
         {
-            let feedrate = super::travel::lift_z_feedrate(state);
+            // `_travel_to_z` resolves `travel_speed_z`, then the
+            // first-layer/normal travel feedrate — configured values,
+            // not the stale `state.travel_feedrate` cache
+            // (`GCodeWriter.cpp:831-846`; the second layer was already
+            // selected at `GCode.cpp:4590`).
+            let feedrate = if state.options.z_travel_feedrate > 0.0 {
+                state.options.z_travel_feedrate
+            } else if state.layer_index == 0 {
+                state.options.first_layer_travel_feedrate
+            } else {
+                state.options.travel_feedrate
+            };
             let raised = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
             let comment = state
                 .options
@@ -91,15 +102,29 @@ pub(super) fn scan_first_layer_block(output: &mut Vec<u8>, state: &mut EmitState
     state.retracted_amount = 0.0;
     state.restart_extra = 0.0;
     if delta.abs() >= 1e-6 {
-        output.extend_from_slice(
-            format!(
-                "G1 E{} F{}\n",
-                format::extrusion(unretract),
-                format::axis(state.options.deretraction_feedrate)
-            )
-            .as_bytes(),
-        );
-        state.current_feedrate = state.options.deretraction_feedrate;
+        if state.options.use_firmware_retraction {
+            // `GCodeWriter::unretract` firmware branch — bare `G11`
+            // (or `G23` Machinekit) + `reset_e()`
+            // (`GCodeWriter.cpp:1064-1070`).
+            output.extend_from_slice(
+                if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
+                    b"G23 ; unretract\n"
+                } else {
+                    b"G11 ; unretract\n"
+                },
+            );
+        } else {
+            output.extend_from_slice(
+                format!(
+                    "G1 E{} F{}\n",
+                    format::extrusion(unretract),
+                    format::axis(state.options.deretraction_feedrate)
+                )
+                .as_bytes(),
+            );
+            state.current_feedrate = state.options.deretraction_feedrate;
+        }
+        super::travel::reset_e(output, state);
     }
     state.retracted = false;
 }
