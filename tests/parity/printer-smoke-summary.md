@@ -1,6 +1,8 @@
 # OrcaSlicer printer smoke summary
 
-958 of 1002 printers pass the strict ordered-byte comparison (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
+958 of 1002 sweep records pass the strict ordered-byte comparison (1001 printer profiles plus one `OrcaFilamentLibrary/<vendor-load>` record that is not a printer; counted separately below) (generator identity/timestamp lines normalized; classic wall generator baseline; cube model).
+
+The `OrcaFilamentLibrary/<vendor-load>` row is a vendor-tree load probe, not a printer — it is included in the record count but reported separately under `ARES_ERROR`.
 
 Statuses: `PASS` (normalized byte equality), `DIVERGENT` (first byte difference), `ORCA_ERROR` (the upstream OrcaSlicer 2.4.2 reference binary itself failed, so no reference stream exists), `VENDOR_INCOMPLETE` (the vendor profile tree does not ship the machine's referenced default process preset), `ARES_ERROR` (Ares failed to load or slice the case).
 

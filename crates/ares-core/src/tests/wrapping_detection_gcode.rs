@@ -72,6 +72,27 @@ async fn json_wrapping_exclude_area_keeps_wrapping_detection_output() {
 }
 
 #[tokio::test]
+async fn wrapping_detection_max_layer_z_uses_raw_float_domain_maximum() {
+    // `GCode.cpp:4629-4630,5221`: `m_max_layer_z` is the running
+    // float-domain max over the RAW print z — `z_offset` shifts the
+    // writer but not the placeholder. With `z_offset=0.5` the template
+    // still reports 0.4 for a two-layer 0.2 print.
+    let output = wrapping_output(json!({
+        "enable_wrapping_detection": true,
+        "z_offset": 0.5,
+        "wrapping_exclude_area": "0x0,10x0,10x10,0x10",
+        "wrapping_detection_gcode": ";WRAP [layer_num] [layer_z] [max_layer_z]"
+    }))
+    .await
+    .unwrap();
+
+    assert_eq!(
+        wrap_lines(&output),
+        vec![";WRAP 1 0.2 0.2", ";WRAP 2 0.4 0.4"]
+    );
+}
+
+#[tokio::test]
 async fn wrapping_detection_layers_does_not_gate_the_insert() {
     // Upstream `wrapping_detection_layers` only shapes the wipe-tower plan
     // (`WipeTower.cpp:2577`); the per-layer wrap insert fires whenever

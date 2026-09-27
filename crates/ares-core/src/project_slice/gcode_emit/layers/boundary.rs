@@ -96,7 +96,9 @@ pub(super) fn append<'a>(
             // `change_layer` and `m_max_layer_z` over the offset domain.
             index: layer_index,
             z: f64::from(layer_z),
-            max_z: f64::from(layer_z) + state.options.z_offset,
+            // `GCode.cpp:890`: `{max_layer_z}` = `m_max_layer_z`, the
+            // float-domain running max over RAW print z (no `z_offset`).
+            max_z: f64::from(state.max_layer_z),
         },
         metadata,
         first_layer_bounds,
@@ -117,7 +119,9 @@ pub(super) fn append<'a>(
             // PHYSICAL layer index (`GCode.cpp:4636`, :5689).
             layer_index,
             layer_z: f64::from(layer_z),
-            max_layer_z: f64::from(layer_z) + state.options.z_offset,
+            // `{max_layer_z}` = `m_max_layer_z` — float-domain running
+            // max over raw print z (`GCode.cpp:4638`), not `layer_z`.
+            max_layer_z: f64::from(state.max_layer_z),
             totals: state.extrusion_totals(),
             context: layer_change_template,
         },
@@ -178,7 +182,7 @@ pub(super) fn append<'a>(
             // new PHYSICAL layer index (`GCode.cpp:4669`, :5689).
             layer_index,
             layer_z: f64::from(layer_z),
-            max_layer_z: f64::from(layer_z) + state.options.z_offset,
+            max_layer_z: f64::from(state.max_layer_z),
             totals: state.extrusion_totals(),
             context: layer_change_template,
         },

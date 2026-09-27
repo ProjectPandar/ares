@@ -63,6 +63,11 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) last_acceleration: Option<u32>,
     pub(in crate::project_slice::gcode_emit) last_jerk: Option<f64>,
     pub(in crate::project_slice::gcode_emit) layer_z: f64,
+    /// `m_max_layer_z` (`GCode.cpp:4630`): running float-domain max of the
+    /// RAW print z (no `z_offset`), feeding the `{max_layer_z}` wrapping
+    /// template — upstream supplies the float-rounded value
+    /// (`GCode.cpp:5221`).
+    pub(in crate::project_slice::gcode_emit) max_layer_z: f32,
     pub(in crate::project_slice::gcode_emit) source_layer_z: f64,
     pub(in crate::project_slice::gcode_emit) scarf_z: Option<f64>,
     pub(in crate::project_slice::gcode_emit) retracted: bool,
@@ -166,6 +171,10 @@ pub(in crate::project_slice::gcode_emit) fn begin_layer(
     state.layer_change_travel_pending = true;
     state.avoid_boundary = None;
     state.last_height = Some(layer_height as f32);
+    // `GCode.cpp:4629-4630`: `m_last_layer_z = float(print_z)` then
+    // `m_max_layer_z = max(m_max_layer_z, m_last_layer_z)` — float-domain
+    // running max over the RAW print z.
+    state.max_layer_z = state.max_layer_z.max(layer_z as f32);
     // Writer-domain z (`GCode.cpp:5692` `z = print_z + z_offset`);
     // mirrors `advance_for_layer`'s offset store.
     state.layer_z = layer_z + state.options.z_offset;
