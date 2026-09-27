@@ -1,0 +1,125 @@
+//! Plate-scoped configuration overrides from `model_settings.config`.
+//!
+//! OrcaSlicer stores a small set of options inside each plate's metadata
+//! block (`BBS_3MF_Importer::_extract_model_config_from_mb_plate`,
+//! `bbs_3mf.cpp:4420-4564`) and applies the plate config over the resolved
+//! print config before slicing (`OrcaSlicer.cpp:5979`,
+//! `new_print_config.apply(*part_plate->config())`). The plate value
+//! therefore wins over `project_settings.config` — e.g. a project-level
+//! `filament_map_mode = Manual` is overridden by the plate's
+//! `Auto For Flush` and the G-code config block dumps the plate value.
+
+use crate::options::{
+    OrcaBool, OrcaInt, OrcaInts, ProcessPrintSequence, ProjectBedType, ProjectFilamentMapMode,
+    ProjectSettings,
+};
+
+use super::model_settings::Metadata;
+
+/// The plate metadata keys OrcaSlicer deserializes into `PartPlate::config`
+/// (`bbs_3mf.cpp:4418-4565`); each maps to the owning settings group field.
+pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metadata: &[Metadata]) {
+    for item in metadata {
+        match item.key.as_str() {
+            // `fmmDefault` is never written to the file; every stored value is
+            // a concrete mode (`bbs_3mf.cpp:4445-4449` skips only legacy
+            // "Auto" — mapped to AutoForFlush here like upstream, which leaves
+            // the default for it).
+            "filament_map_mode" => {
+                if let Some(mode) = parse_map_mode(&item.value) {
+                    settings.project.gcode.filament_map_mode = mode;
+                }
+            }
+            "filament_map" => {
+                // Upstream clamps each entry to `>= 1`
+                // (`bbs_3mf.cpp:4456-4460`).
+                if let Some(map) = parse_int_list(&item.value) {
+                    settings.project.gcode.filament_map =
+                        OrcaInts(map.iter().map(|&v| OrcaInt(v.max(1))).collect());
+                }
+            }
+            "curr_bed_type" => {
+                if let Some(bed) = parse_bed_type(&item.value) {
+                    settings.project.print.curr_bed_type = bed;
+                }
+            }
+            "print_sequence" => {
+                if let Some(sequence) = parse_print_sequence(&item.value) {
+                    settings.process.print.print_sequence = sequence;
+                }
+            }
+            "first_layer_print_sequence" => {
+                if let Some(sequence) = parse_int_list(&item.value) {
+                    settings.project.print.first_layer_print_sequence =
+                        OrcaInts(sequence.iter().map(|&v| OrcaInt(v)).collect());
+                }
+            }
+            "other_layers_print_sequence" => {
+                if let Some(sequence) = parse_int_list(&item.value) {
+                    settings.project.print.other_layers_print_sequence =
+                        OrcaInts(sequence.iter().map(|&v| OrcaInt(v)).collect());
+                }
+            }
+            "other_layers_print_sequence_nums" => {
+                if let Ok(count) = item.value.trim().parse::<i32>() {
+                    settings.project.print.other_layers_print_sequence_nums = OrcaInt(count);
+                }
+            }
+            "spiral_mode" => {
+                if let Some(vase) = parse_bool(&item.value) {
+                    settings.process.print.spiral_mode = OrcaBool(vase);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn parse_map_mode(value: &str) -> Option<ProjectFilamentMapMode> {
+    match value.trim() {
+        "Auto For Flush" | "Auto" => Some(ProjectFilamentMapMode::AutoForFlush),
+        "Auto For Match" => Some(ProjectFilamentMapMode::AutoForMatch),
+        "Manual" => Some(ProjectFilamentMapMode::Manual),
+        _ => None,
+    }
+}
+
+fn parse_bed_type(value: &str) -> Option<ProjectBedType> {
+    match value.trim() {
+        "Default Plate" => Some(ProjectBedType::DefaultPlate),
+        "Supertack Plate" | "SuperTack Plate" => Some(ProjectBedType::SupertackPlate),
+        "Cool Plate" => Some(ProjectBedType::CoolPlate),
+        "Engineering Plate" => Some(ProjectBedType::EngineeringPlate),
+        "High Temp Plate" => Some(ProjectBedType::HighTempPlate),
+        "Textured PEI Plate" => Some(ProjectBedType::TexturedPeiPlate),
+        "Textured Cool Plate" => Some(ProjectBedType::TexturedCoolPlate),
+        _ => None,
+    }
+}
+
+fn parse_print_sequence(value: &str) -> Option<ProcessPrintSequence> {
+    match value.trim() {
+        "by layer" | "by default" => Some(ProcessPrintSequence::ByLayer),
+        "by object" => Some(ProcessPrintSequence::ByObject),
+        _ => None,
+    }
+}
+
+fn parse_int_list(value: &str) -> Option<Vec<i32>> {
+    let trimmed = value.trim().trim_matches(['[', ']']);
+    if trimmed.is_empty() {
+        return Some(Vec::new());
+    }
+    trimmed
+        .split(',')
+        .map(|entry| entry.trim().parse::<i32>().ok())
+        .collect()
+}
+
+fn parse_bool(value: &str) -> Option<bool> {
+    match value.trim() {
+        "true" | "1" => Some(true),
+        "false" | "0" => Some(false),
+        _ => None,
+    }
+}

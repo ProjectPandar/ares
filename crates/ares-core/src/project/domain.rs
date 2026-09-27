@@ -125,11 +125,22 @@ impl Project {
             .into_iter()
             .flatten()
             .collect();
+        // The plate's own config entries (stored as `model_settings.config`
+        // plate metadata) are applied over the project settings
+        // (`OrcaSlicer.cpp:5979` `new_print_config.apply(*part_plate->config())`;
+        // keys listed in `BBS_3MF_Importer`, `bbs_3mf.cpp:4418-4565`).
+        let mut settings = self.settings.clone();
+        if let Some(plate_settings) = self.documents.model_settings.plates.get(index) {
+            super::plate_config::apply_plate_config_overrides(
+                &mut settings,
+                &plate_settings.metadata,
+            );
+        }
         Ok(Self {
             models: self.models.clone(),
             objects,
             plates: vec![self.plates[index].clone()],
-            settings: self.settings.clone(),
+            settings,
             documents,
         })
     }

@@ -295,5 +295,9 @@ fn coordinates(point: Point) -> [f64; 2] {
 }
 
 fn distance(first: [f64; 2], second: [f64; 2]) -> f64 {
-    (second[0] - first[0]).hypot(second[1] - first[1])
+    // Eigen `.norm()` = `sqrt(x*x + y*y)` (`ShortestPath.cpp:1140`);
+    // `f64::hypot` rescales and can round differently.
+    let x = second[0] - first[0];
+    let y = second[1] - first[1];
+    (x * x + y * y).sqrt()
 }

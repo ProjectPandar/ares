@@ -164,7 +164,9 @@ impl Chains {
 }
 
 pub(super) fn distance(first: [f64; 2], second: [f64; 2]) -> f64 {
+    // Eigen `.norm()` = `sqrt(x*x + y*y)` (`ShortestPath.cpp:714,820`);
+    // `f64::hypot` rescales and can round differently.
     let x = second[0] - first[0];
     let y = second[1] - first[1];
-    x.hypot(y)
+    (x * x + y * y).sqrt()
 }

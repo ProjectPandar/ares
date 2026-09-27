@@ -8,6 +8,7 @@ mod load;
 mod model_settings;
 mod model_xml;
 mod plate;
+pub(crate) mod plate_config;
 pub(crate) mod raw_settings;
 mod relationships;
 mod slice_info;
