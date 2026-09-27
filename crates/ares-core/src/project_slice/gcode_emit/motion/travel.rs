@@ -41,6 +41,19 @@ pub(super) fn retract_and_lift(output: &mut Vec<u8>, state: &mut EmitState) {
     state.retracted = true;
 }
 
+/// Upstream's `retract()` executes its wipe + `reset_e` phases whenever
+/// invoked — even when the E delta is zero — provided an eligible wipe
+/// path is stored (`GCode.cpp:7659-7663`).
+fn wipe_eligible(state: &EmitState) -> bool {
+    state.options.wipe && !state.wipe_path.is_empty() && state.options.wipe_distance > 1e-4
+}
+
+/// `retract()` runs when it has something to do: a remaining retract
+/// distance or an eligible stored wipe path (`GCode.cpp:7659-7670`).
+fn retract_sequence_due(state: &EmitState) -> bool {
+    state.retracted_amount < effective_retraction_length(state) || wipe_eligible(state)
+}
+
 pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     output: &mut Vec<u8>,
     state: &mut EmitState,
@@ -49,7 +62,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
     // (`GCode.cpp:7672`), so `m_restart_extra` is (re)assigned even on a
     // no-op retract (`Extruder.cpp:77`).
     state.restart_extra = state.options.retract_restart_extra;
-    if state.retracted_amount < effective_retraction_length(state) {
+    if retract_sequence_due(state) {
         retract_and_wipe_with(output, state, false);
         state.retracted = true;
     }
@@ -64,7 +77,7 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
 /// happens after the final layer flushes).
 pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState) {
     state.restart_extra = state.options.retract_restart_extra;
-    if state.retracted_amount < effective_retraction_length(state) {
+    if retract_sequence_due(state) {
         retract_and_wipe(output, state);
         lift::append_eager(output, state);
         state.retracted = true;
@@ -80,7 +93,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
 /// (`needs_lift && can_lift` → `eager_lift`, `GCode.cpp:7693-7696`).
 pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) {
     state.restart_extra = state.options.retract_restart_extra;
-    if state.retracted_amount < effective_retraction_length(state) {
+    if retract_sequence_due(state) {
         retract_and_wipe(output, state);
         state.retracted = true;
     }
@@ -111,10 +124,7 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     if state.pending_layer_retract && will_move_z {
         state.restart_extra = state.options.retract_restart_extra;
     }
-    if state.pending_layer_retract
-        && will_move_z
-        && state.retracted_amount < effective_retraction_length(state)
-    {
+    if state.pending_layer_retract && will_move_z && retract_sequence_due(state) {
         retract_and_wipe(output, state);
         state.retracted = true;
     }
@@ -424,8 +434,25 @@ fn retract_and_wipe_impl(
             }
         }
     }
-    if !state.options.use_relative_e_distances && state.e_position.abs() > f64::EPSILON {
-        output.extend_from_slice(b"G92 E0\n");
+    // `GCodeWriter::reset_e` (`GCodeWriter.cpp:480-499`): emits
+    // `G92 E0` (+ ` ; reset extrusion distance` under gcode_comments)
+    // only when `!is_zero(E)` — 1e-6 — and never for
+    // Mach3/MakerWare/Sailfish.
+    if !state.options.use_relative_e_distances
+        && !matches!(
+            state.options.gcode_flavor,
+            crate::GCodeFlavor::Mach3
+                | crate::GCodeFlavor::MakerWare
+                | crate::GCodeFlavor::Sailfish
+        )
+        && state.e_position.abs() >= 1e-6
+    {
+        let comment = state
+            .options
+            .gcode_comments
+            .then_some(" ; reset extrusion distance")
+            .unwrap_or("");
+        output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
         state.e_position = 0.0;
     }
 }

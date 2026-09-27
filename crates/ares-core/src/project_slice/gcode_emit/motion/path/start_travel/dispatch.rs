@@ -80,32 +80,20 @@ pub(super) fn emit_retracted_first_travel(
             );
             state.record_z(raised_z);
         } else {
-            // Clear position with a pending lift: upstream emits the
-            // lift, then `travel_to_xy`-style XY WITHOUT a Z word (the
-            // covered Z does not move, `GCodeWriter.cpp:769-780`), then
-            // the `_travel_to_z` re-statement of the raised z. Both
-            // legs carry their feedrate + comment like the unclear
-            // branch — CoolingBuffer drops redundant F words and
-            // deletes zero-length moves (`CoolingBuffer.cpp:901-920`).
-            travel_emit::xy_with_comment(
+            // Clear position: upstream's `xy_z_move` is ONE combined
+            // `G1 X Y Z` move to the raised destination
+            // (`GCodeWriter.cpp:748-753`).
+            travel_emit::xyz_with_comment(
                 output,
+                state,
                 travel_x,
                 travel_y,
+                raised_z,
                 state.travel_feedrate,
                 first_travel_comment,
             );
             state.current_feedrate = state.travel_feedrate;
             state.record_z(raised_z);
-            let z_feedrate = travel::lift_z_feedrate(state);
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}{first_travel_comment}\n",
-                    format_z(raised_z),
-                    format_axis(z_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = z_feedrate;
         }
     } else {
         travel_emit::xy_with_comment(
@@ -125,6 +113,8 @@ pub(super) fn emit_retracted_first_travel(
         );
         state.record_z(raised_z);
     }
-    state.lifted = true;
-    state.lifted_amount = raised_z - state.layer_z;
+    // The lift exists only when the raised destination exceeds the
+    // layer z (`GCodeWriter.cpp:705-710`).
+    state.lifted = raised_z > state.layer_z;
+    state.lifted_amount = (raised_z - state.layer_z).max(0.0);
 }

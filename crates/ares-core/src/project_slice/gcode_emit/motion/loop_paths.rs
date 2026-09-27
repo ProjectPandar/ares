@@ -195,7 +195,14 @@ fn append_wipe_before_external(
             && !state.lifted
             && super::travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z)));
     if lift_here {
-        let raised = state.writer_z.unwrap_or(state.layer_z) + state.options.z_hop;
+        // Same destination clamp as the deferred lift
+        // (`GCodeWriter.cpp:705-710`).
+        let live_z = state.writer_z.unwrap_or(state.layer_z);
+        let raised = if live_z + state.options.z_hop > state.layer_z {
+            live_z + state.options.z_hop
+        } else {
+            state.layer_z
+        };
         output.extend_from_slice(
             format!(
                 "G1 X{} Y{} Z{} F{}\n",

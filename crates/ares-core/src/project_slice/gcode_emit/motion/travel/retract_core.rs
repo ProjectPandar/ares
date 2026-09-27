@@ -19,25 +19,29 @@ pub(super) fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
     if remaining <= 0.0 {
         return;
     }
+    // `coordinate` always accumulates `m_retracted`; `_retract` emits
+    // only when `!is_zero(dE)` (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
     let retract = extrusion::coordinate(state, -remaining);
-    let comment = state
-        .options
-        .gcode_comments
-        .then_some(" ; retract")
-        .unwrap_or("");
-    output.extend_from_slice(
-        format!(
-            "G1 E{} F{}{comment}\n",
-            format_extrusion(retract),
-            format_axis(state.options.retraction_feedrate)
-        )
-        .as_bytes(),
-    );
-    if !state.options.use_relative_e_distances {
-        output.extend_from_slice(b"G92 E0\n");
-        state.e_position = 0.0;
+    if remaining >= 1e-6 {
+        let comment = state
+            .options
+            .gcode_comments
+            .then_some(" ; retract")
+            .unwrap_or("");
+        output.extend_from_slice(
+            format!(
+                "G1 E{} F{}{comment}\n",
+                format_extrusion(retract),
+                format_axis(state.options.retraction_feedrate)
+            )
+            .as_bytes(),
+        );
+        if !state.options.use_relative_e_distances {
+            output.extend_from_slice(b"G92 E0\n");
+            state.e_position = 0.0;
+        }
+        state.current_feedrate = state.options.retraction_feedrate;
     }
-    state.current_feedrate = state.options.retraction_feedrate;
 }
 
 /// `GCodeWriter::_retract` with `use_firmware_retraction`: the length is
@@ -46,17 +50,18 @@ pub(super) fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
 /// (`GCodeWriter.cpp:1022-1044`).
 pub(super) fn firmware_retract(output: &mut Vec<u8>, state: &mut EmitState) {
     state.restart_extra = state.options.retract_restart_extra;
+    // Counters advance on every call; the `G10`/`G22` line emits only
+    // when `!is_zero(dE)` (`GCodeWriter.cpp:1035`, `libslic3r.h:294`).
     let remaining = (1.0 - state.retracted_amount).max(0.0);
-    if remaining <= 0.0 {
-        return;
+    if remaining >= 1e-6 {
+        output.extend_from_slice(
+            if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
+                b"G22 ; retract\n"
+            } else {
+                b"G10 ; retract\n"
+            },
+        );
     }
-    output.extend_from_slice(
-        if state.options.gcode_flavor == crate::GCodeFlavor::Machinekit {
-            b"G22 ; retract\n"
-        } else {
-            b"G10 ; retract\n"
-        },
-    );
     state.retracted_amount = 1.0;
     state.retracted = true;
 }

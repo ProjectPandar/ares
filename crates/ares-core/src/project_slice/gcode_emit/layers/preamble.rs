@@ -34,19 +34,14 @@ pub(super) fn emit(
             state.writer_z = Some(0.0);
         }
         // The absolute-E counter resets via `GCodeWriter::preamble`'s
-        // `reset_e(true)` (`GCodeWriter.cpp:95-103`) — Marlin-family
-        // flavors only.
-        let marlin_family = matches!(
-            state.options.gcode_flavor,
-            crate::GCodeFlavor::MarlinLegacy
-                | crate::GCodeFlavor::MarlinFirmware
-                | crate::GCodeFlavor::Klipper
-                | crate::GCodeFlavor::RepRapSprinter
-                | crate::GCodeFlavor::RepRapFirmware
-                | crate::GCodeFlavor::Repetier
-                | crate::GCodeFlavor::Teacup
-        );
-        if !state.options.use_relative_e_distances && marlin_family {
+        // `reset_e(true)` (`GCodeWriter.cpp:95-103`) — but only when an
+        // extruder is ACTIVE (`reset_e` no-ops with filament id -1,
+        // `GCodeWriter.cpp:487-490`). BBL initializes the initial
+        // extruder early (`GCode.cpp:3143-3144`); non-BBL selects it
+        // inside `set_extruder` AFTER rendering filament-start
+        // (`GCode.cpp:7736-7746`), so a machine-start `e_position`
+        // write-back survives into the non-BBL filament-start.
+        if !state.options.use_relative_e_distances && Tags::of(traversal).is_bbl() {
             state.e_position = 0.0;
         }
     };

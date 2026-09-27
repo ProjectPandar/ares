@@ -197,10 +197,16 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
             }
         }
     };
-    if emitted && raised_z > state.layer_z {
+    if emitted {
         // The emitted lift move carries a real Z — `m_pos.z()` advances
         // (`GCodeWriter::travel_to_z` sets `m_pos` on every emit).
         state.record_z(raised_z);
+    }
+    // Upstream assigns `m_lifted` BEFORE the slope-fit test
+    // (`GCodeWriter.cpp:705-710`) — a short slope travel keeps the
+    // raised destination + lifted state even without a preliminary
+    // move; the final XYZ then carries `raised_z`.
+    if raised_z > state.layer_z {
         state.lifted = true;
         state.lifted_amount = raised_z - state.layer_z;
     }
