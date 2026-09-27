@@ -5,7 +5,7 @@ use crate::SliceError;
 use crate::geometry::ExPolygon;
 use crate::project_slice::perimeters::classic::traversal::PreparedPostClassicTraversal;
 
-use super::{motion, object, timelapse};
+use super::{motion, timelapse};
 
 /// The Z of the last G0/G1 move in the emitted prefix — what the
 /// `GCodeWriter`'s Z position would be after emitting the same g-code
