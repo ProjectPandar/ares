@@ -30,7 +30,10 @@ pub(super) fn apply_plate_config_overrides(settings: &mut ProjectSettings, metad
                     settings.project.gcode.filament_map_mode = mode;
                 }
             }
-            "filament_map" => {
+            // The plate attribute is `filament_maps` (plural;
+            // `bbs_3mf.cpp:4451` FILAMENT_MAP_ATTR) applied to the
+            // singular `filament_map` config key.
+            "filament_maps" | "filament_map" => {
                 // Upstream clamps each entry to `>= 1`
                 // (`bbs_3mf.cpp:4456-4460`).
                 if let Some(map) = parse_int_list(&item.value) {
@@ -110,8 +113,11 @@ fn parse_int_list(value: &str) -> Option<Vec<i32>> {
     if trimmed.is_empty() {
         return Some(Vec::new());
     }
+    // Upstream parses plate lists with `get_vector_from_string`
+    // (whitespace-separated, `bbs_3mf.cpp:4453`); commas are tolerated.
     trimmed
-        .split(',')
+        .split([',', ' ', '\t'])
+        .filter(|entry| !entry.trim().is_empty())
         .map(|entry| entry.trim().parse::<i32>().ok())
         .collect()
 }

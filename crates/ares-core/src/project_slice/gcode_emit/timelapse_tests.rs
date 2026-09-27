@@ -10,18 +10,21 @@ use crate::project_slice::tests::support::KsrArchive;
 #[tokio::test]
 async fn most_used_physical_extruder_follows_the_filament_map() {
     let mut archive = KsrArchive::new();
-    archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\"filament_map\": [\r\n\t\t\"1\",\r\n\t\t\"1\"\r\n\t]",
-        "\"filament_map\": [\r\n\t\t\"2\",\r\n\t\t\"2\"\r\n\t]",
-    );
+    // The plate metadata overrides `project_settings.config`
+    // (`apply_plate_config_overrides`, `bbs_3mf.cpp:4418-4565`), and
     // `filament_map_mode < Manual` re-derives the map in
-    // `apply_recommended_filament_map` (`ToolOrdering.cpp:1288-1303`), so the
-    // fixture must switch to Manual for the patched map to survive.
+    // `apply_recommended_filament_map` — so the plate's own entries must
+    // switch to Manual with the patched map to reach
+    // `cal_most_used_extruder`.
     archive.replace_unique(
-        "Metadata/project_settings.config",
-        "\"filament_map_mode\": \"Auto For Flush\"",
-        "\"filament_map_mode\": \"Manual\"",
+        "Metadata/model_settings.config",
+        "<metadata key=\"filament_map_mode\" value=\"Auto For Flush\"/>",
+        "<metadata key=\"filament_map_mode\" value=\"Manual\"/>",
+    );
+    archive.replace_unique(
+        "Metadata/model_settings.config",
+        "<metadata key=\"filament_maps\" value=\"1 1\"/>",
+        "<metadata key=\"filament_maps\" value=\"2 2\"/>",
     );
     // The KSR timelapse template renders E{most_used_physical_extruder_id};
     // keep the run bounded by trimming to the first timelapse block.
