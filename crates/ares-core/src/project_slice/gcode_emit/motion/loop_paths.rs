@@ -69,11 +69,16 @@ pub(super) fn emit(
             0.0
         };
         super::materialized::emit_flat(output, path, end_clip, geometry, state);
-        if emitted_loop_path.is_empty() {
-            emitted_loop_path.extend(state.wipe_path.iter().rev().copied());
-        } else {
-            emitted_loop_path.extend(state.wipe_path.iter().rev().copied().skip(1));
-        }
+        // `GCode.cpp:5979-5990`: upstream appends each emitted path's
+        // polyline to `m_wipe.path`, dropping the join point ONLY when
+        // it duplicates the previous last point — adjacent sub-paths
+        // whose endpoints differ by a scaled unit keep both vertices.
+        let reversed = state.wipe_path.iter().rev().copied();
+        let skip_first = emitted_loop_path
+            .last()
+            .zip(state.wipe_path.last())
+            .is_some_and(|(tail, next)| *tail == *next);
+        emitted_loop_path.extend(reversed.skip(usize::from(skip_first)));
     }
     state.wipe_path = emitted_loop_path;
     append_inward_move(output, paths, loop_role, geometry, state);

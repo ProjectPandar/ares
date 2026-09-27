@@ -73,17 +73,33 @@ fn project_to_circle(
     point: (f64, f64),
     scale: CoordinateScale,
 ) -> Option<(f64, f64)> {
-    let dx = point.0 - arc.center.0;
-    let dy = point.1 - arc.center.1;
-    let distance = dx.hypot(dy);
-    (distance > f64::EPSILON).then(|| {
-        let x = scale.checked_scale(dx * arc.radius / distance)?;
-        let y = scale.checked_scale(dy * arc.radius / distance)?;
-        Some((
-            arc.center.0 + scale.unscale(x),
-            arc.center.1 + scale.unscale(y),
-        ))
-    })?
+    // `ArcSegment::clip_end` -> `Circle::get_closest_point`
+    // (`Circle.hpp:24-28`): upstream works on SCALED ints —
+    // `v = (input - center).normalized()`, `end = center + trunc(v * radius)`
+    // where `center`/`end_point` are `Point` (int) and `radius` the scaled
+    // double length. Compute in the int domain so trunc boundaries match
+    // upstream exactly.
+    let center_int = (
+        (arc.center.0 / scale.factor()).round() as i64,
+        (arc.center.1 / scale.factor()).round() as i64,
+    );
+    let input_int = (
+        (point.0 / scale.factor()).round() as i64,
+        (point.1 / scale.factor()).round() as i64,
+    );
+    let vx = (input_int.0 - center_int.0) as f64;
+    let vy = (input_int.1 - center_int.1) as f64;
+    let norm = vx.hypot(vy);
+    if norm <= f64::EPSILON {
+        return None;
+    }
+    // Upstream `radius` is the scaled DOUBLE length — no int trunc.
+    let radius_scaled = arc.radius / scale.factor();
+    let end_int = (
+        center_int.0 + (vx / norm * radius_scaled) as i64,
+        center_int.1 + (vy / norm * radius_scaled) as i64,
+    );
+    Some((scale.unscale(end_int.0), scale.unscale(end_int.1)))
 }
 
 fn point_within_arc(arc: FittedArc, start: (f64, f64), point: (f64, f64)) -> bool {

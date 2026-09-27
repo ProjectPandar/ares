@@ -95,6 +95,8 @@ fn orca_parity_option_coverage() {
             // ORACLE itself (fixture-illegal values like
             // `use_relative_e_distances=0` on a relative-only profile):
             // the domain is exercised as far as the oracle permits.
+            // Also covers baseline-only single-case domains (unbounded
+            // coString/coPoints metadata that cannot be probed).
             if outcome
                 .detail
                 .contains("required legal cases not all compared")
