@@ -107,6 +107,7 @@ fn execute_plan(
     }
     let mut first_failure = None;
     let mut compared = 0;
+    let mut excused = 0;
     let mut rejected = Vec::new();
     let io_error = |error| {
         runner::stages::StageError::new(
@@ -171,7 +172,10 @@ fn execute_plan(
                     // (`PrintObject.cpp:710-715` + `Lightning/TreeNode.cpp`
                     // child selection): the oracle itself emits different
                     // G-code across identical runs, so byte-exactness is
-                    // undefined for this value.
+                    // undefined for this value. Count only cases the
+                    // exemption actually excused — a case that byte-matches
+                    // is ordinary coverage, not nondeterministic evidence.
+                    excused += 1;
                     eprintln!("[option] ORACLE_NONDETERMINISTIC {label}");
                     continue;
                 }
@@ -196,5 +200,5 @@ fn execute_plan(
             }
         }
     }
-    OptionOutcome::executed(plan, compared, rejected, first_failure)
+    OptionOutcome::executed(plan, compared, rejected, excused, first_failure)
 }

@@ -143,11 +143,12 @@ fn upstream_rejection_does_not_mask_compared_case_parity() {
         .find(|plan| plan.key == "bridge_flow")
         .unwrap();
 
-    let passing = OptionOutcome::executed(&plan, 2, vec!["min: rejected".to_owned()], None);
+    let passing = OptionOutcome::executed(&plan, 2, vec!["min: rejected".to_owned()], 0, None);
     let failing = OptionOutcome::executed(
         &plan,
         2,
         vec!["min: rejected".to_owned()],
+        0,
         Some("max: divergent".to_owned()),
     );
 
