@@ -49,13 +49,15 @@ pub(in crate::project_slice::gcode_emit) struct EmitState {
     pub(in crate::project_slice::gcode_emit) spiral_vase: bool,
     pub(in crate::project_slice::gcode_emit) spiral_vase_layer: bool,
     pub(in crate::project_slice::gcode_emit) positioned: bool,
-    /// SEMM template-private counters (`Extruder.cpp:108-122`,
-    /// `Extruder.hpp:86-92`): `set_position`/`set_retracted` write the
-    /// PRIVATE `m_E`/`m_retracted`/`m_restart_extra` under
-    /// `single_extruder_multi_material`, which the shared motion
-    /// counters never read — only the placeholder echoes observe them.
+    /// SEMM template-private counters (`Extruder.hpp:36,49,51,56-58`):
+    /// under `single_extruder_multi_material` `set_position`/`set_retracted`
+    /// write the PRIVATE `m_E`/`m_retracted` slots while motion reads
+    /// `m_share_E`/`m_share_retracted`. `m_restart_extra` stays shared —
+    /// the shared `unretract` consumes it (`Extruder.cpp:87-90`) — and
+    /// placeholder refresh reads `position()`/`retracted()` (private)
+    /// but `restart_extra()` is the same field in both modes.
     pub(in crate::project_slice::gcode_emit) private_retracted: f64,
-    pub(in crate::project_slice::gcode_emit) private_restart_extra: f64,
+    pub(in crate::project_slice::gcode_emit) private_e_position: f64,
     /// The Z the machine start/filament g-code left the nozzle at; mirrors
     /// `GCodeWriter::m_pos(2)` for the `change_layer` `will_move_z` gate.
     pub(in crate::project_slice::gcode_emit) writer_z: Option<f64>,

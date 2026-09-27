@@ -130,13 +130,22 @@ pub(super) fn emit(
     // `e_position[0]` write-back — absolute-E counters feed the
     // filament-start `{e_position}` placeholder (`GCode.cpp:3908-3911`;
     // sub-EPSILON assignments are ignored via `is_approx`).
-    if let Some(e_position) = start_outcome.e_position
-        && (e_position - state.e_position).abs() >= 1e-4
-        // `set_position` writes the private `m_E`; under SEMM the
-        // shared counter is untouched (`Extruder.hpp:36,56`).
-        && !state.options.single_extruder_multi_material
-    {
-        state.e_position = e_position;
+    if let Some(e_position) = start_outcome.e_position {
+        // `set_position` writes the private `m_E` and the compare reads
+        // `position()` (`Extruder.hpp:49,56`; `GCode.cpp:3910-3911`).
+        let semm = state.options.single_extruder_multi_material;
+        let current = if semm {
+            state.private_e_position
+        } else {
+            state.e_position
+        };
+        if (e_position - current).abs() >= 1e-4 {
+            if semm {
+                state.private_e_position = e_position;
+            } else {
+                state.e_position = e_position;
+            }
+        }
     }
     // The machine-start template's `e_retracted[0]` assignment seeds the
     // extruder state (`GCode.cpp:3905-3918`): a pre-retracted nozzle skips
@@ -159,31 +168,29 @@ pub(super) fn emit(
                 "Custom G-code reports negative z_restart_extra.",
             );
         } else if retract.retracted > EPSILON {
-            // `set_retracted` targets the PRIVATE counters
+            // `set_retracted` targets the PRIVATE `m_retracted`
             // (`Extruder.cpp:108-122`); under SEMM only the placeholder
-            // echoes observe them, the shared motion counters do not.
+            // echoes observe it. `m_restart_extra` is the same field in
+            // both modes — the shared `unretract` consumes it
+            // (`Extruder.cpp:87-90,117`).
+            let restart_extra = if retract.restart_extra < EPSILON {
+                0.0
+            } else {
+                retract.restart_extra
+            };
             if state.options.single_extruder_multi_material {
                 state.private_retracted = retract.retracted;
-                state.private_restart_extra = if retract.restart_extra < EPSILON {
-                    0.0
-                } else {
-                    retract.restart_extra
-                };
             } else {
                 state.retracted = true;
                 state.retracted_amount = retract.retracted;
-                state.restart_extra = if retract.restart_extra < EPSILON {
-                    0.0
-                } else {
-                    retract.restart_extra
-                };
             }
+            state.restart_extra = restart_extra;
         } else if state.options.single_extruder_multi_material {
-            state.private_retracted = 0.0;
-            state.private_restart_extra = 0.0;
-        } else {
-            // `retracted <= EPSILON` clears BOTH counters
+            // `retracted <= EPSILON` clears BOTH fields
             // (`Extruder.cpp:118-121`).
+            state.private_retracted = 0.0;
+            state.restart_extra = 0.0;
+        } else {
             state.retracted = false;
             state.retracted_amount = 0.0;
             state.restart_extra = 0.0;

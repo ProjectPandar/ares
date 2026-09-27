@@ -66,6 +66,13 @@ pub(super) fn emit_approach_move(
     let mut travel_set_layer_z = false;
     let mut eager_lifted_travel = false;
     let mut unclear_position_travel = false;
+    // Actual-Z-move branch: `else { m_lifted = 0; }`
+    // (`GCodeWriter.cpp:783-785`) — when the destination sits OUTSIDE
+    // the lifted dead-band the travel cancels the lift entirely.
+    if state.lifted_amount > 0.0 && travel_will_move_z(state, leg_z) {
+        state.lifted = false;
+        state.lifted_amount = 0.0;
+    }
     if state.spiral_vase
         && state.lifted_amount > 0.0
         && !first_position
@@ -82,13 +89,17 @@ pub(super) fn emit_approach_move(
             first_travel_comment,
         );
         travel_set_layer_z = true;
-    } else if state.template_lifted && state.lifted_amount > 0.0 && !first_position {
+    } else if state.template_lifted
+        && state.lifted_amount > 0.0
+        && !first_position
+        && !travel_will_move_z(state, leg_z)
+    {
         // Pure XY while still lifted: upstream's no-Z-change branch calls
         // `travel_to_xy(to_2d(point))` WITHOUT the comment
         // (`GCodeWriter.cpp:771-780`).
         travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         state.template_lifted = false;
-    } else if state.lifted_amount > 0.0 {
+    } else if state.lifted_amount > 0.0 && !travel_will_move_z(state, leg_z) {
         eager_lifted_travel = true;
         if !lifted_for_travel {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
@@ -316,4 +327,21 @@ pub(super) fn emit_approach_move(
         eager_lifted_travel,
         unclear_position_travel,
     }
+}
+
+/// `GCodeWriter::will_move_z` (`GCodeWriter.cpp:916-928`): a lifted
+/// nozzle treats a target z inside `[pos - m_lifted, pos]` as a no-op;
+/// only without a positive lift does the bare `abs(delta) < EPSILON`
+/// shortcut apply.
+fn travel_will_move_z(state: &EmitState, z: f64) -> bool {
+    let pos = state.writer_z.unwrap_or(state.layer_z);
+    if state.lifted_amount > 0.0 {
+        let nominal = pos - state.lifted_amount;
+        if z >= nominal && z <= pos {
+            return false;
+        }
+    } else if (pos - z).abs() < 1e-4 {
+        return false;
+    }
+    true
 }
