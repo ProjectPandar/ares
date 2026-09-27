@@ -81,6 +81,11 @@ fn activating_overrides(key: &str) -> &'static [(&'static str, &'static str)] {
         ],
         // Gap-fill params only run when gap filling is enabled.
         "gap_fill_target" => &[("gap_infill_type", "everywhere")],
+        // Wrapping templates and their exclude area only emit when
+        // detection is on (`GCode.cpp:5302-5305`).
+        "wrapping_detection_gcode" | "wrapping_exclude_area" => {
+            &[("enable_wrapping_detection", "1")]
+        }
         _ => &[],
     }
 }

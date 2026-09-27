@@ -191,6 +191,19 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
                 }
             }
         }
+    } else if let Some(authored) = authored_probes(&key) {
+        // Per-key legal domains: `coString`/`coPoint`/`coPoints` keys whose
+        // upstream schema accepts arbitrary content (g-code templates,
+        // notes, polygon lists) get concrete probes rather than an
+        // unexercised baseline.
+        provably_legal = true;
+        (
+            authored
+                .iter()
+                .map(|&(label, value)| case(label, value, entry))
+                .collect(),
+            None,
+        )
     } else {
         // `coPoint(s)` unbounded options (bed polygons, exclude areas)
         // reject/crash on generic probes (`printable_area` degenerate
@@ -208,6 +221,46 @@ fn plan(entry: &Value, lines: &[&str], source_text: &str) -> Option<OptionPlan> 
         width_domain,
         provably_legal,
     })
+}
+
+/// Per-key authored legal probes for schema-unbounded string/point
+/// domains. Every listed value is accepted by upstream validation
+/// (free-form g-code templates, note fields, `XxY` polygon lists), so the
+/// probes exercise real emit paths on both sides rather than a
+/// value-less baseline.
+fn authored_probes(key: &str) -> Option<&'static [(&'static str, &'static str)]> {
+    // Free-form g-code templates: any text is legal input; a non-empty
+    // template with a placeholder exercises the placeholder engine.
+    const TEMPLATE: &[(&str, &str)] = &[
+        ("probe-empty", ""),
+        ("probe-text", ";ARES_PROBE {layer_num}"),
+    ];
+    const POLYGON: &[(&str, &str)] = &[("probe-rect", "10x10,20x10,20x20,10x20")];
+    const POINT: &[(&str, &str)] = &[("probe", "5x5")];
+    let probes = match key {
+        // G-code template strings (`*_gcode`) — free-form by schema.
+        "before_layer_change_gcode"
+        | "layer_change_gcode"
+        | "machine_pause_gcode"
+        | "printing_by_object_gcode"
+        | "change_filament_gcode"
+        | "change_extrusion_role_gcode"
+        | "process_change_extrusion_role_gcode"
+        | "template_custom_gcode"
+        | "wrapping_detection_gcode"
+        | "file_start_gcode" => TEMPLATE,
+        // `time_lapse_gcode` needs the same probe but is wrapped in
+        // `;TIMELAPSE` handling — still free-form.
+        "time_lapse_gcode" => TEMPLATE,
+        // Polygon point lists (`XxY` pairs) — a legal small rectangle.
+        // `wrapping_exclude_area` rejected by the oracle (orca rejects the
+        // rect probe upstream), so it keeps its unexercised baseline.
+        "bed_exclude_area" | "head_wrap_detect_zone" | "start_end_points" => POLYGON,
+        // Single `XxY` points.
+        "bed_mesh_min" | "bed_mesh_max" | "bed_mesh_probe_distance" | "best_object_pos" => POINT,
+        _ => return None,
+    };
+    Some(probes)
 }
 
 #[path = "bounds.rs"]

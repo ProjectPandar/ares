@@ -17,6 +17,9 @@ fn eager_layer_start_lift_takes_the_spiral_form_for_slope_type() {
             travel_slope_radians: 3.0_f64.to_radians(),
             travel_feedrate: 30_000.0,
             enable_arc_fitting: true,
+            // `needs_lift` (`GCode.cpp:7678-7681`): eager lifts only exist
+            // under a non-zero retraction length.
+            retraction_length: 1.0,
             ..MotionOptions::default()
         },
         layer_z: 1.2,
