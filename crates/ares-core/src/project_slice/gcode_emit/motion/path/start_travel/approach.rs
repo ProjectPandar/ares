@@ -200,6 +200,11 @@ pub(super) fn emit_needs_travel(
                 x: travel_x,
                 y: travel_y,
             },
+            // The upstream lift target compares against the travel's
+            // ACTUAL destination z — the scarf seam's slope start, not
+            // the nominal layer z (`GCodeWriter.cpp:701-709`,
+            // `GCode.cpp:7481-7482`).
+            slope_start_z.unwrap_or(target_z),
             state,
         );
         None

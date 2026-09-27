@@ -104,6 +104,9 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     // length-0 / already-retracted no-op (`Extruder.cpp:77`).
     state.restart_extra = state.options.retract_restart_extra;
     if length <= 0.0 {
+        // `retract()`'s trailing `reset_e()` runs on every call
+        // (`GCode.cpp:7674`), including the zero-length no-op.
+        travel::reset_e(output, state);
         return;
     }
     // `Extruder::retract` only retracts the REMAINING distance
@@ -112,6 +115,7 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     // `e_retracted` assignment — emits nothing but still defers the lift.
     if state.retracted_amount >= length {
         travel::defer_layer_change_lift(state);
+        travel::reset_e(output, state);
         return;
     }
     if state.options.use_firmware_retraction {
@@ -128,6 +132,7 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
         state.retracted_amount = 1.0;
         state.retracted = true;
         travel::defer_layer_change_lift(state);
+        travel::reset_e(output, state);
         return;
     }
     let retract = extrusion::coordinate(state, -(length - state.retracted_amount));
@@ -154,6 +159,9 @@ pub(super) fn retract_before_layer(output: &mut Vec<u8>, state: &mut EmitState) 
     // (needs_lift && can_lift → `lazy_lift` above/below gate at the
     // current writer z, `GCodeWriter.cpp:626-648`).
     travel::defer_layer_change_lift(state);
+    // `retract()` returns `gcode + reset_e()` — the reset is emitted
+    // unconditionally on every call (`GCodeWriter.cpp`, `GCode.cpp:7674`).
+    travel::reset_e(output, state);
 }
 
 /// The second-layer first-layer-inspection scan (`GCode.cpp:4780-4790`):

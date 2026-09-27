@@ -188,18 +188,24 @@ fn flush_pending_retract_eager_with(output: &mut Vec<u8>, state: &mut EmitState,
     if force || state.pending_layer_retract {
         state.restart_extra = state.options.retract_restart_extra;
     }
-    if (force || state.pending_layer_retract)
-        && state.retracted_amount < effective_retraction_length(state)
-    {
+    if force || state.pending_layer_retract {
+        // The forced `retract()` runs its wipe whenever a stored path is
+        // eligible — upstream keeps the previous layer's wipe path alive
+        // across `change_layer` (`GCode.cpp:5713-5715`) even when the
+        // remaining E distance is zero (`GCode.cpp:7659-7674`).
         if force {
-            // The BBL layer-start `retract()` finds no stored wipe path
-            // there (`GCode.cpp:5205-5210`); the plain retraction emits
-            // the full remaining length at the retraction feedrate.
-            plain_retract(output, state);
-        } else {
+            if wipe_eligible(state) {
+                retract_and_wipe(output, state);
+            } else if state.retracted_amount < effective_retraction_length(state) {
+                // No stored wipe path (`GCode.cpp:5205-5210`); the plain
+                // retraction emits the remaining length.
+                plain_retract(output, state);
+            }
+            state.retracted = true;
+        } else if retract_sequence_due(state) {
             retract_and_wipe(output, state);
+            state.retracted = true;
         }
-        state.retracted = true;
     }
     if force || state.pending_layer_retract {
         // `reset_e` runs unconditionally after every `retract()` call
@@ -455,7 +461,7 @@ fn retract_and_wipe_impl(
 /// `G92 E0` (+ ` ; reset extrusion distance` under gcode_comments)
 /// only when `!is_zero(E)` — 1e-6 — and never for
 /// Mach3/MakerWare/Sailfish.
-fn reset_e(output: &mut Vec<u8>, state: &mut EmitState) {
+pub(super) fn reset_e(output: &mut Vec<u8>, state: &mut EmitState) {
     if !state.options.use_relative_e_distances
         && !matches!(
             state.options.gcode_flavor,

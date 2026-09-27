@@ -104,19 +104,22 @@ pub(in crate::project_slice::gcode_emit) fn z_feedrate(state: &EmitState) -> f64
 pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     output: &mut Vec<u8>,
     target: arc::Point,
+    dest_z: f64,
     state: &mut EmitState,
 ) -> Option<f64> {
     let mode = state.pending_lift.take()?;
     // `GCodeWriter.cpp:701-709`: the deferred lift raises from the LIVE
     // writer z (`dest_point(2) = m_to_lift + m_pos(2)`), not the nominal
     // layer z — but only while that raised target actually exceeds the
-    // travel's destination z (`m_to_lift + m_pos(2) > point(2)`),
-    // otherwise `m_lifted` stays 0 and the travel happens at `layer_z`.
+    // travel's destination z (`m_to_lift + m_pos(2) > point(2)`, where
+    // `point` is the ACTUAL travel target — a scarf seam's
+    // `slope_start_z` or the plain layer z), otherwise `m_lifted` stays
+    // 0 and the travel happens at `dest_z`.
     let live_z = state.writer_z.unwrap_or(state.layer_z);
-    let raised_z = if live_z + state.options.z_hop > state.layer_z {
+    let raised_z = if live_z + state.options.z_hop > dest_z {
         live_z + state.options.z_hop
     } else {
-        state.layer_z
+        dest_z
     };
     let dx = target.x - state.x;
     let dy = target.y - state.y;
@@ -206,9 +209,9 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     // (`GCodeWriter.cpp:705-710`) — a short slope travel keeps the
     // raised destination + lifted state even without a preliminary
     // move; the caller's final XYZ then carries `raised_z`.
-    if raised_z > state.layer_z {
+    if raised_z > dest_z {
         state.lifted = true;
-        state.lifted_amount = raised_z - state.layer_z;
+        state.lifted_amount = raised_z - dest_z;
     }
     Some(raised_z)
 }
