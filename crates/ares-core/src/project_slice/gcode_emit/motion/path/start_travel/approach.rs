@@ -157,6 +157,7 @@ pub(super) fn emit_needs_travel(
     // layer-end timelapse retract, a deferred layer-change lift) travels
     // flat in XY and the unlift descends at the destination.
     let lifted_for_travel = state.pending_lift.is_some();
+    let mut pending_target: Option<f64> = None;
     // The print's first travel has no known source position, so Orca
     // cannot slope/spiral from it (`GCodeWriter.cpp:travel_to_xyz`
     // skips those branches when `is_current_position_clear()` is
@@ -195,7 +196,7 @@ pub(super) fn emit_needs_travel(
         }
         state.pending_lift.take()
     } else {
-        travel::emit_pending_lift(
+        pending_target = travel::emit_pending_lift(
             output,
             arc::Point {
                 x: travel_x,
@@ -232,10 +233,12 @@ pub(super) fn emit_needs_travel(
         if !lifted_for_travel {
             travel_emit::xy_with_comment(output, travel_x, travel_y, state.travel_feedrate, "");
         } else {
-            // The lifted nozzle travels at its CURRENT (already raised)
-            // Z — upstream keeps `dest_point(2) = m_pos(2)` once lifted
-            // (`GCodeWriter.cpp:701-709`).
-            let raised = state.writer_z.unwrap_or(state.layer_z);
+            // The lifted nozzle travels at the raised destination —
+            // when the pending-lift preliminary move didn't fit (short
+            // slope), upstream still targets `dest_point(2) = m_to_lift
+            // + m_pos(2)` (`GCodeWriter.cpp:705-710`), which
+            // `emit_pending` computed but did not emit as a Z move.
+            let raised = pending_target.unwrap_or_else(|| state.writer_z.unwrap_or(state.layer_z));
             if (state.current_feedrate - state.travel_feedrate).abs() > f64::EPSILON {
                 travel_emit::xyz_with_comment(
                     output,
@@ -289,7 +292,13 @@ pub(super) fn emit_needs_travel(
             travel_y,
             first_travel_comment,
             lift,
-            never_positioned,
+            // `is_current_position_clear` decides the XY+Z-restate vs
+            // combined-XYZ shape (`GCodeWriter.cpp:748-777`) — a
+            // machine-start `position` write-back seeds the cursor
+            // (`m_last_pos`) but leaves the position unclear
+            // (`GCode.cpp:3139-3140`), so track `state.positioned`, not
+            // `never_positioned`.
+            !state.positioned,
         );
     } else if layer_change_travel {
         // The sloped split only applies when a lift actually exists

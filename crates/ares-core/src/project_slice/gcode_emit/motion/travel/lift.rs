@@ -105,10 +105,8 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     output: &mut Vec<u8>,
     target: arc::Point,
     state: &mut EmitState,
-) -> bool {
-    let Some(mode) = state.pending_lift.take() else {
-        return false;
-    };
+) -> Option<f64> {
+    let mode = state.pending_lift.take()?;
     // `GCodeWriter.cpp:701-709`: the deferred lift raises from the LIVE
     // writer z (`dest_point(2) = m_to_lift + m_pos(2)`), not the nominal
     // layer z — but only while that raised target actually exceeds the
@@ -128,6 +126,9 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     // boundaries where the extra `hypot` precision flips the last digit
     // (qVMcEP X91.7173 vs upstream X91.7174).
     let travel_distance = (dx * dx + dy * dy).sqrt();
+    // The rise is the actual destination delta — a clamped lift can be
+    // taller than `z_hop` (`GCodeWriter.cpp:716-740` uses `delta(2)`).
+    let rise = raised_z - state.writer_z.unwrap_or(state.layer_z);
     let emitted = match mode {
         LiftMode::Normal => {
             let feedrate = z_feedrate(state);
@@ -151,8 +152,8 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
         }
         LiftMode::Spiral => {
             let slope = state.options.travel_slope_radians;
-            if slope > 0.0 && travel_distance > f64::EPSILON {
-                let radius = state.options.z_hop / (std::f64::consts::TAU * slope.atan());
+            if slope > 0.0 && travel_distance > f64::EPSILON && rise > 0.0 {
+                let radius = rise / (std::f64::consts::TAU * slope.atan());
                 append_spiral(
                     output,
                     state,
@@ -168,9 +169,8 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
         }
         LiftMode::Slope => {
             let slope = state.options.travel_slope_radians;
-            if travel_distance > f64::EPSILON && state.options.z_hop.atan2(travel_distance) < slope
-            {
-                let slope_distance = state.options.z_hop / slope.tan();
+            if travel_distance > f64::EPSILON && rise > 0.0 && rise.atan2(travel_distance) < slope {
+                let slope_distance = rise / slope.tan();
                 let x = state.x + dx * slope_distance / travel_distance;
                 let y = state.y + dy * slope_distance / travel_distance;
                 // `_travel_to_z(.., "normal lift Z")` (`GCodeWriter.cpp:747`)
@@ -205,12 +205,12 @@ pub(in crate::project_slice::gcode_emit::motion) fn emit_pending(
     // Upstream assigns `m_lifted` BEFORE the slope-fit test
     // (`GCodeWriter.cpp:705-710`) — a short slope travel keeps the
     // raised destination + lifted state even without a preliminary
-    // move; the final XYZ then carries `raised_z`.
+    // move; the caller's final XYZ then carries `raised_z`.
     if raised_z > state.layer_z {
         state.lifted = true;
         state.lifted_amount = raised_z - state.layer_z;
     }
-    emitted
+    Some(raised_z)
 }
 
 pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {

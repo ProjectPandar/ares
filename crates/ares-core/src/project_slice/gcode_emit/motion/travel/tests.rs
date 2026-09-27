@@ -180,11 +180,11 @@ fn degenerate_slope_uses_the_raised_target_without_a_preliminary_move() {
     };
     let mut output = Vec::new();
 
-    assert!(!emit_pending_lift(
-        &mut output,
-        arc::Point { x: 1.0, y: 1.0 },
-        &mut state,
-    ));
+    // A degenerate slope fit emits no preliminary move but the lifted
+    // state + raised destination still apply (`GCodeWriter.cpp:705-710`)
+    // — the caller's final XYZ carries the raised target.
+    let raised = emit_pending_lift(&mut output, arc::Point { x: 1.0, y: 1.0 }, &mut state);
+    assert_eq!(raised, Some(state.layer_z + state.options.z_hop));
     assert!(output.is_empty());
     assert!(state.lifted);
 }
@@ -250,14 +250,17 @@ fn pending_spiral_lift_uses_resolution_based_linear_segments() {
     };
     let mut output = Vec::new();
 
-    assert!(emit_pending_lift(
-        &mut output,
-        arc::Point {
-            x: 108.991,
-            y: 108.991,
-        },
-        &mut state,
-    ));
+    assert!(
+        emit_pending_lift(
+            &mut output,
+            arc::Point {
+                x: 108.991,
+                y: 108.991,
+            },
+            &mut state,
+        )
+        .is_some()
+    );
 
     assert_eq!(
         output,

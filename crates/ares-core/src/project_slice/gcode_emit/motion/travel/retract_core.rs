@@ -36,8 +36,23 @@ pub(super) fn plain_retract(output: &mut Vec<u8>, state: &mut EmitState) {
             )
             .as_bytes(),
         );
-        if !state.options.use_relative_e_distances {
-            output.extend_from_slice(b"G92 E0\n");
+        // `reset_e` (`GCodeWriter.cpp:480-499`): skipped for
+        // Mach3/MakerWare/Sailfish and a zero counter.
+        if !state.options.use_relative_e_distances
+            && !matches!(
+                state.options.gcode_flavor,
+                crate::GCodeFlavor::Mach3
+                    | crate::GCodeFlavor::MakerWare
+                    | crate::GCodeFlavor::Sailfish
+            )
+            && state.e_position.abs() >= 1e-6
+        {
+            let comment = state
+                .options
+                .gcode_comments
+                .then_some(" ; reset extrusion distance")
+                .unwrap_or("");
+            output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
             state.e_position = 0.0;
         }
         state.current_feedrate = state.options.retraction_feedrate;

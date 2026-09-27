@@ -66,6 +66,9 @@ pub(in crate::project_slice::gcode_emit) fn retract_for_print_end(
         retract_and_wipe_with(output, state, false);
         state.retracted = true;
     }
+    // `reset_e` runs unconditionally after the retract/wipe block
+    // (`GCode.cpp:7674`), independent of whether anything retracted.
+    reset_e(output, state);
     if state.spiral_vase {
         lift::append_spiral_vase(output, state);
     }
@@ -82,6 +85,7 @@ pub(super) fn retract_for_timelapse(output: &mut Vec<u8>, state: &mut EmitState)
         lift::append_eager(output, state);
         state.retracted = true;
     }
+    reset_e(output, state);
 }
 
 /// `retract(false, false, auto_lift_type, true)` for the wrapping-detection
@@ -97,6 +101,7 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
         retract_and_wipe(output, state);
         state.retracted = true;
     }
+    reset_e(output, state);
     // The `needs_lift && can_lift` guards of the parent retract
     // (`GCode.cpp:7680-7703`) still apply to the wrap insert's eager lift:
     // `needs_lift` requires a nonzero retraction length or firmware
@@ -127,6 +132,9 @@ pub(in crate::project_slice::gcode_emit) fn flush_pending_retract_wipe(
     if state.pending_layer_retract && will_move_z && retract_sequence_due(state) {
         retract_and_wipe(output, state);
         state.retracted = true;
+    }
+    if state.pending_layer_retract && will_move_z {
+        reset_e(output, state);
     }
 }
 
@@ -434,10 +442,14 @@ fn retract_and_wipe_impl(
             }
         }
     }
-    // `GCodeWriter::reset_e` (`GCodeWriter.cpp:480-499`): emits
-    // `G92 E0` (+ ` ; reset extrusion distance` under gcode_comments)
-    // only when `!is_zero(E)` — 1e-6 — and never for
-    // Mach3/MakerWare/Sailfish.
+    reset_e(output, state);
+}
+
+/// `GCodeWriter::reset_e` (`GCodeWriter.cpp:480-499`): emits
+/// `G92 E0` (+ ` ; reset extrusion distance` under gcode_comments)
+/// only when `!is_zero(E)` — 1e-6 — and never for
+/// Mach3/MakerWare/Sailfish.
+fn reset_e(output: &mut Vec<u8>, state: &mut EmitState) {
     if !state.options.use_relative_e_distances
         && !matches!(
             state.options.gcode_flavor,

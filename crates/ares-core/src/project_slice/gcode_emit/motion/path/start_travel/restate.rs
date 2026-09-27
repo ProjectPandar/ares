@@ -87,7 +87,7 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     // (`GCode.cpp:6407`, `Extruder.cpp:92-104`): a zero-length
     // retraction with a positive `retract_restart_extra` still
     // extrudes the extra on the first extrusion.
-    if state.retracted || state.restart_extra.abs() > f64::EPSILON {
+    if state.retracted || state.restart_extra != 0.0 {
         if state.lifted && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
             let z_feedrate = travel::lift_z_feedrate(state);
@@ -116,19 +116,20 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
             state.record_z(z);
             state.scarf_z = slope_start_z;
         }
-        // `Extruder::unretract()` restores the TRACKED `m_retracted` plus
-        // `m_restart_extra` — not the configured retraction length — so a
-        // nozzle pre-retracted by start-gcode assignments restores exactly
-        // what the template retracted.
-        let unretract = extrusion::coordinate(state, state.retracted_amount + state.restart_extra);
+        // `Extruder::unretract()` restores the TRACKED `m_retracted`
+        // plus `m_restart_extra`; the is_zero emission gate tests the
+        // DELTA (`GCodeWriter.cpp:1063-1076`, `Extruder.cpp:98-103`) —
+        // `coordinate` returns the absolute counter, which can land on
+        // zero while the delta is real.
+        let delta = state.retracted_amount + state.restart_extra;
+        let unretract = extrusion::coordinate(state, delta);
         // `Extruder::unretract()` zeroes `m_retracted`/`m_restart_extra`
         // after the extrude (`Extruder.cpp:92-104`).
         state.retracted_amount = 0.0;
         state.restart_extra = 0.0;
-        // `GCodeWriter::unretract`-side is_zero guard, `GCodeWriter.cpp:1063`):
-        // a zero-length retraction (retraction_length=0 with wipe)
+        // A zero-length retraction (retraction_length=0 with wipe)
         // deretracts silently.
-        if unretract.abs() > 0.0 {
+        if delta.abs() >= 1e-6 {
             if state.options.use_firmware_retraction {
                 // `GCodeWriter::unretract` with `use_firmware_retraction`:
                 // the bare `G11 ; unretract` (or `G23`) plus `reset_e()`
