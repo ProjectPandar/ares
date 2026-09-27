@@ -61,10 +61,14 @@ fn coherent_noise_types_fuzzify_external_perimeters() {
 
         assert_ne!(points, rectangle_points(0.0, 0.0, 4.0, 4.0));
         assert!(points.len() > 4);
-        assert!(points.iter().all(|point| point.x() >= -0.2
-            && point.x() <= 4.2
-            && point.y() >= -0.2
-            && point.y() <= 4.2));
+        // Upstream does NOT clamp `noise * thickness`: Billow's `+0.5`
+        // bias and RidgedMulti's `*1.25` tail can push |signal| past 1.0,
+        // so the displacement bound is `thickness * max|noise|`, not
+        // `thickness` itself (`billow.cpp`, `ridgedmulti.cpp`).
+        assert!(points.iter().all(|point| point.x() >= -0.6
+            && point.x() <= 4.6
+            && point.y() >= -0.6
+            && point.y() <= 4.6));
     }
 }
 

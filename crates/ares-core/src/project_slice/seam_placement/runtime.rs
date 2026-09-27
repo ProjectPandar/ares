@@ -303,7 +303,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
     };
     let seam_query = (seam_x, seam_y);
     // External loops split directly at the candidate; inner loops project
-    // the candidate onto the loop and stagger it (`SeamPlacer.cpp:1562-1618`).
+    // the candidate onto the loop and stagger it (`SeamPlacer.cpp:1564-1618`).
     if loop_
         .paths
         .iter()
@@ -312,24 +312,88 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         // `get_closest_path_and_point(seam_point, false)`
         // (`SeamPlacer.cpp:1567`) — no overhang preference for the inner
         // projection; the final `split_at` prefers non-overhang itself.
-        let projection = super::split::closest_projection(&loop_.paths, seam_query, false);
-        let depth = squared_distance((projection.x, projection.y), seam_query).sqrt();
+        let mut projection = super::split::closest_projection(&loop_.paths, seam_query, false);
+        // `depth` is the UNSCALED distance from the candidate to the
+        // projected foot (`SeamPlacer.cpp:1569` works in mm on `Vec3f`).
+        let scale_factor = scale.factor() as f32;
+        // `seam_position` is the unscaled candidate position (`Vec3f`,
+        // mm); `depth` is `unscale(new_scale(seam_position) - foot_pt)` —
+        // the seam coordinate is round-tripped through the scaled domain
+        // (`SeamPlacer.cpp:1562-1569`). All floats are `f32` upstream.
+        let seam_pos = layer.positions[best];
+        // `unscale(Point(seam_point - foot_pt))` — the difference is
+        // computed on SCALED ints, then `unscale` produces a `Vec2d`
+        // (`double` divide by SCALE_FACTOR) whose `.norm()` is f64, stored
+        // into `float depth` (`SeamPlacer.cpp:1568-1569`).
+        let scale_factor_f64 = scale.factor() as f64;
+        let dx_mm = (seam_x - projection.x) as f64 / scale_factor_f64;
+        let dy_mm = (seam_y - projection.y) as f64 / scale_factor_f64;
+        let mut depth = (dx_mm * dx_mm + dy_mm * dy_mm).sqrt() as f32;
         let angle = layer.ccw_angles[best];
         let beta = (angle / 2.0).cos();
-        let depth = if beta.abs() > f32::EPSILON {
-            depth * f64::from(beta) / std::f64::consts::SQRT_2
+        // `SeamPlacer.cpp:1571-1580`: wrap the candidate index inside its
+        // perimeter range (start_index..end_index semantics).
+        let (perimeter_start, perimeter_end) = layer.perimeter_ranges[closest_perimeter];
+        let index_of_prev = if best == perimeter_start {
+            perimeter_end - 1
         } else {
-            depth
+            best - 1
         };
-        // `SeamPlacer.cpp:1602` — the stagger depth is at least the path
-        // width (it is sometimes strongly underestimated).
-        let width = f64::from(loop_.paths[projection.path].width) / scale.factor();
-        let depth = depth.max(width);
-        let target = if staggered {
-            walk_along(loop_, &projection, depth)
+        let index_of_next = if best == perimeter_end - 1 {
+            perimeter_start
         } else {
-            (projection.x, projection.y)
+            best + 1
         };
+        let candidate = layer.positions[best];
+        let cand_pos = (candidate.0, candidate.1);
+        // Concave-angle overshoot (`SeamPlacer.cpp:1581-1593`): when the
+        // outer seam sits on a concave corner, push the inner seam past
+        // the perpendicular depth along `dir_to_middle` and re-project.
+        // The gate is literally `squaredNorm() < depth` — upstream
+        // compares a SQUARED distance against the un-squared depth.
+        let dist_to_candidate_sq = (seam_pos.0 - cand_pos.0).powi(2)
+            + (seam_pos.1 - cand_pos.1).powi(2);
+        if dist_to_candidate_sq < depth && angle < -f32::EPSILON {
+            let prev = layer.positions[index_of_prev];
+            let next = layer.positions[index_of_next];
+            let to_prev = (cand_pos.0 - prev.0, cand_pos.1 - prev.1);
+            let to_next = (cand_pos.0 - next.0, cand_pos.1 - next.1);
+            let norm = |v: (f32, f32)| {
+                let len = (v.0 * v.0 + v.1 * v.1).sqrt();
+                (v.0 / len, v.1 / len)
+            };
+            let dir_to_middle = {
+                let (px, py) = norm(to_prev);
+                let (nx, ny) = norm(to_next);
+                ((px + nx) * 0.5, (py + ny) * 0.5)
+            };
+            depth = 1.4142 * depth / beta;
+            let final_pos = (
+                cand_pos.0 + depth * dir_to_middle.0,
+                cand_pos.1 + depth * dir_to_middle.1,
+            );
+            if let (Some(sx), Some(sy)) = (
+                scale.checked_scale(f64::from(final_pos.0)),
+                scale.checked_scale(f64::from(final_pos.1)),
+            ) {
+                projection = super::split::closest_projection(&loop_.paths, (sx, sy), false);
+            }
+        } else {
+            // Convex corner (`SeamPlacer.cpp:1597-1598`): shrink the
+            // center-line depth to the perpendicular depth.
+            depth = depth * beta / 1.4142;
+        }
+        let target = (projection.x, projection.y);
+        // `SeamPlacer.cpp:1601-1617`: optional staggered-inner-seam walk —
+        // `depth` is clamped up to the path width (mm) first, then walked
+        // along the scaled loop coordinates.
+        if staggered {
+            let width = loop_.paths[projection.path].width;
+            let depth_mm = depth.max(width);
+            let target = walk_along(loop_, &projection, f64::from(depth_mm * scale_factor));
+            split_at(loop_, target, scale);
+            return;
+        }
         split_at(loop_, target, scale);
         return;
     }

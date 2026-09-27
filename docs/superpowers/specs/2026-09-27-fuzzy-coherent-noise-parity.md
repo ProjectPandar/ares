@@ -65,3 +65,26 @@ correct.
   permutation) — the emitted G-code is compared byte-for-byte.
 - No fs/env diagnostics inside `ares-core` (per review finding F7); keep
   probes in `ares-cli` tests or `xtask`-style helpers.
+
+## Progress (2026-09-27 second pass)
+
+- Work item 3 done: `fuzzy_skin_coherent_noise/` now ports libnoise
+  `GradientCoherentNoise3D`, `ValueNoise3D`/`IntValueNoise3D`, Perlin,
+  Billow (`value+0.5` unclamped tail), RidgedMulti (spectral weights,
+  `value*1.25-1`), and Voronoi (displacement path) bitwise — verified
+  against a C++ probe built from `Orca-deps-libnoise-1.0` (4 bitwise test
+  cases in `tests.rs`). The 256-entry `g_randomVectors` table lives in
+  `vectortable.rs`. Emit fuzzified wall points are **byte-identical** to
+  the Orca oracle on `fuzzy_skin_noise_type/perlin` (comm-verified).
+- Work item 2 partially done: the nearest-path inner-loop branch in
+  `seam_placement/runtime.rs` now ports the concave overshoot
+  (`1.4142*depth/beta`, `dir_to_middle`, `squaredNorm()<depth` gate,
+  `local_ccw_angle < -EPSILON`) and convex `depth*beta/1.4142` fallback
+  verbatim; the aligned path (`place_loop`) already had it.
+- Remaining divergence on all coherent noise-type cases is a seam-INDEX
+  pick difference on the aligned path (identical candidate sets, different
+  winner — e.g. cube layer 0: Orca picks the (115,115) corner, we pick
+  (115,105)). Points bitwise equal ⇒ the pick diverges inside
+  `alignment::align` scoring/tie-break or `final_position` handling;
+  next debugging step is comparing `choices[].seam_index`/`final_position`
+  against upstream `plan_seams` for a minimal single-layer case.
