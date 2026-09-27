@@ -161,7 +161,11 @@ fn execute_plan(
         match built {
             Ok(exported) => {
                 let outcome = parity::compare_exported_for(runner, &exported, Some(&plan.key));
-                if oracle_nondeterministic(&plan.key, &case.label) && outcome.status != "PASS" {
+                // Only genuine byte divergence is excused — build/artifact
+                // errors (ARES_ERROR, ORCA_ERROR, INPUT_REJECTED, ...) must
+                // still surface as failures.
+                if oracle_nondeterministic(&plan.key, &case.label) && outcome.status == "DIVERGENT"
+                {
                     // Upstream slices lightning layers concurrently through
                     // the process-global, unseeded `rand()`
                     // (`PrintObject.cpp:710-715` + `Lightning/TreeNode.cpp`

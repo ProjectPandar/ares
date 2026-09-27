@@ -65,7 +65,14 @@ pub(super) fn retract_for_wrapping(output: &mut Vec<u8>, state: &mut EmitState) 
         retract_and_wipe(output, state);
         state.retracted = true;
     }
-    lift::append_eager(output, state);
+    // The `needs_lift && can_lift` guards of the parent retract
+    // (`GCode.cpp:7680-7703`) still apply to the wrap insert's eager lift:
+    // `needs_lift` requires a nonzero retraction length or firmware
+    // retraction, and `can_lift` honors `retract_lift_enforce`.
+    let needs_lift = state.options.retraction_length > 0.0 || state.options.use_firmware_retraction;
+    if needs_lift && lift::is_allowed_at(state, state.layer_z) {
+        lift::append_eager(output, state);
+    }
 }
 
 /// Non-BBL printers defer the layer-change retraction to after the next

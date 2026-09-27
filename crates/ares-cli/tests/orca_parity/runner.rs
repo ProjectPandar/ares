@@ -91,14 +91,19 @@ impl OrcaRunner {
         let root = match crate::artifacts::root_from_env() {
             Ok(root) => root,
             Err(cause) => {
-                if [
+                // A configured-but-invalid artifact root is an initialization
+                // failure, not an offline skip; likewise the explicit sweep
+                // flags demand a configured root. Unset entirely means the
+                // live-oracle environment is unprovisioned → skip.
+                let configured = std::env::var_os("ARES_PARITY_ARTIFACT_ROOT").is_some();
+                let flagged = [
                     "ARES_PARITY_SWEEP",
                     "ARES_PARITY_CLUSTER",
                     "ARES_PARITY_OPTIONS",
                 ]
                 .iter()
-                .any(|flag| std::env::var(flag).as_deref() == Ok("1"))
-                {
+                .any(|flag| std::env::var(flag).as_deref() == Ok("1"));
+                if configured || flagged {
                     return Err(init_error(cause));
                 }
                 return Ok(None);

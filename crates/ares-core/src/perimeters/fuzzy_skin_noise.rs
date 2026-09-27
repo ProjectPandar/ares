@@ -97,28 +97,6 @@ pub(super) fn ripple_scaled_closed_polyline(
     let scaled_step = scale.checked_scale(config.point_distance_mm).unwrap();
     let amplitude = scale.unscale(scaled_thickness);
     let step = scale.unscale(scaled_step);
-    if let Ok(dump_path) = std::env::var("ARES_DUMP_RIPPLE") {
-        use std::io::Write as _;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(dump_path)
-        {
-            let _ = writeln!(
-                file,
-                "{} {} {} {} {} layer={}",
-                scaled_thickness,
-                scaled_step,
-                config.ripples_per_layer,
-                config.ripple_offset_percent,
-                config.layers_between_ripple_offset,
-                layer_id,
-            );
-            for point in points {
-                let _ = writeln!(file, "{} {}", point.x(), point.y());
-            }
-        }
-    }
     let mm_points = points
         .iter()
         .map(|point| Point2::new(scale.unscale(point.x()), scale.unscale(point.y())))
@@ -177,19 +155,6 @@ pub(super) fn ripple_scaled_closed_polyline(
     }
     while output.len() < 3 {
         output.push(points[points.len() - 2]);
-    }
-    if let Ok(dump_path) = std::env::var("ARES_DUMP_RIPPLE_OUT") {
-        use std::io::Write as _;
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(dump_path)
-        {
-            let _ = writeln!(file, "CALL");
-            for point in &output {
-                let _ = writeln!(file, "{} {}", point.x(), point.y());
-            }
-        }
     }
     output
 }

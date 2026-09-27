@@ -227,13 +227,27 @@ pub(super) fn append(
                 (previous, raft_index)
             }
             None => {
+                // `GCode::change_layer` diffs `print_z - m_last_layer_z`
+                // (`GCode.cpp:4630`), where `m_last_layer_z` carries the last
+                // PHYSICAL layer's z — including the final raft layer for the
+                // first object layer (`;HEIGHT:0.3`, not the full print z).
                 let previous = if first_layer > 0 {
                     per_object_z[first_object]
                         .get(first_layer - 1)
                         .copied()
                         .unwrap_or(0.0)
                 } else {
-                    0.0
+                    raft.as_ref()
+                        .and_then(|raft| raft.counts.get(first_object))
+                        .and_then(|&count| {
+                            raft_plans.and_then(|plans| {
+                                plans
+                                    .get(first_object)?
+                                    .get(count.checked_sub(1)?)
+                                    .map(|plan| plan.z.print_z)
+                            })
+                        })
+                        .unwrap_or(0.0)
                 };
                 (previous, first_layer)
             }
