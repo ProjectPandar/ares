@@ -1,7 +1,7 @@
 use crate::{
     SliceError,
     geometry::{
-        BoundingBox, ClipperError, CoordinateScale, Point, Polygon, Polyline,
+        BoundingBox, ClipperError, CoordinateScale, Polygon, Polyline,
         clip_clipper_polygons_with_subject_bbox, diff_pl, intersection_pl,
     },
 };
@@ -179,30 +179,12 @@ fn fuzzy_polygon(
             scale,
         },
     )?;
-    if polygon == seed.polygon {
-        return Ok(polygon);
-    }
-    let mut points = polygon
-        .points()
-        .iter()
-        .map(|point| (scale.unscale(point.x()), scale.unscale(point.y())))
-        .collect::<Vec<_>>();
-    crate::project_slice::gcode_emit::motion::simplify_linear_points(
-        &mut points,
-        record.simplification_tolerance,
-        scale.factor().recip(),
-    );
-    Ok(Polygon::new(
-        points
-            .into_iter()
-            .map(|(x, y)| {
-                Point::new(
-                    scale.checked_scale(x).unwrap(),
-                    scale.checked_scale(y).unwrap(),
-                )
-            })
-            .collect(),
-    ))
+    // Upstream keeps the fuzzified `Points` (scaled ints) verbatim through
+    // `apply_fuzzy_skin` (`FuzzySkin.cpp:570-578`); an unscale→simplify→
+    // re-scale round trip truncates each coord one unit below the original
+    // value and perturbs every displaced vertex, so the polygon is returned
+    // untouched here.
+    Ok(polygon)
 }
 
 fn role(role: PendingExtrusionRole) -> ExtrusionRole {

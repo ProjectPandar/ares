@@ -97,11 +97,42 @@ pub(super) fn ripple_scaled_closed_polyline(
     let scaled_step = scale.checked_scale(config.point_distance_mm).unwrap();
     let amplitude = scale.unscale(scaled_thickness);
     let step = scale.unscale(scaled_step);
+    if let Ok(dump_path) = std::env::var("ARES_DUMP_RIPPLE") {
+        use std::io::Write as _;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(dump_path)
+        {
+            let _ = writeln!(
+                file,
+                "{} {} {} {} {} layer={}",
+                scaled_thickness,
+                scaled_step,
+                config.ripples_per_layer,
+                config.ripple_offset_percent,
+                config.layers_between_ripple_offset,
+                layer_id,
+            );
+            for point in points {
+                let _ = writeln!(file, "{} {}", point.x(), point.y());
+            }
+        }
+    }
     let mm_points = points
         .iter()
         .map(|point| Point2::new(scale.unscale(point.x()), scale.unscale(point.y())))
         .collect::<Vec<_>>();
-    let perimeter = closed_perimeter_length(&mm_points);
+    // `FuzzySkin.cpp:164-166`: `perimeter_mm += unscale_(norm(scaled))` —
+    // the norm is taken in scaled-i64 space and THEN unscaled per segment;
+    // computing the norm on mm-space doubles rounds differently.
+    let perimeter = (0..points.len())
+        .map(|index| {
+            let dx = (points[(index + 1) % points.len()].x() - points[index].x()) as f64;
+            let dy = (points[(index + 1) % points.len()].y() - points[index].y()) as f64;
+            (dx * dx + dy * dy).sqrt() * scale.factor()
+        })
+        .sum::<f64>();
     if perimeter < 1e-6 || step < 1e-6 {
         return points.to_vec();
     }
@@ -114,7 +145,9 @@ pub(super) fn ripple_scaled_closed_polyline(
         let end = points[(index + 1) % points.len()];
         let dx = (end.x() - start.x()) as f64;
         let dy = (end.y() - start.y()) as f64;
-        let scaled_length = dx.hypot(dy);
+        // Eigen `.norm()` (`FuzzySkin.cpp:190`) is a plain
+        // `sqrt(x*x + y*y)`, not the extended-precision `hypot`.
+        let scaled_length = (dx * dx + dy * dy).sqrt();
         if scaled_length < f64::EPSILON {
             continue;
         }
@@ -123,10 +156,14 @@ pub(super) fn ripple_scaled_closed_polyline(
         let mut sample = (accumulated / step).ceil() * step;
         while sample < segment_end {
             let ratio = (sample - accumulated) / length;
+            // Upstream precomputes `phase_at_anchor = 2π + phase_shift`
+            // (`FuzzySkin.cpp:183-185`) — the addition groups as
+            // `X + (2π + phase_shift)`, not `(X + 2π) + phase_shift`, which
+            // differs by one ulp at sin() input boundaries.
+            let phase_at_anchor = std::f64::consts::TAU + phase_shift;
             let phase = config.ripples_per_layer as f64 * std::f64::consts::TAU * (sample - anchor)
                 / perimeter
-                + std::f64::consts::TAU
-                + phase_shift;
+                + phase_at_anchor;
             let displacement = phase.sin() * amplitude / scale.factor();
             let base_x = start.x() + (dx * ratio) as i64;
             let base_y = start.y() + (dy * ratio) as i64;
@@ -140,6 +177,19 @@ pub(super) fn ripple_scaled_closed_polyline(
     }
     while output.len() < 3 {
         output.push(points[points.len() - 2]);
+    }
+    if let Ok(dump_path) = std::env::var("ARES_DUMP_RIPPLE_OUT") {
+        use std::io::Write as _;
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(dump_path)
+        {
+            let _ = writeln!(file, "CALL");
+            for point in &output {
+                let _ = writeln!(file, "{} {}", point.x(), point.y());
+            }
+        }
     }
     output
 }
@@ -164,7 +214,16 @@ pub(super) fn ripple_closed_polyline(
         .iter()
         .map(|point| Point2::new(point.0 as f64 * 1e-6, point.1 as f64 * 1e-6))
         .collect();
-    let perimeter_mm = closed_perimeter_length(&mm_points);
+    // Same `unscale_(norm(scaled))` order as above (`FuzzySkin.cpp:164-166`).
+    let perimeter_mm = scaled
+        .iter()
+        .zip(scaled.iter().cycle().skip(1).take(scaled.len()))
+        .map(|(start, end)| {
+            let dx = (end.0 - start.0) as f64;
+            let dy = (end.1 - start.1) as f64;
+            (dx * dx + dy * dy).sqrt() / SCALING_FACTOR
+        })
+        .sum::<f64>();
     if perimeter_mm < 1e-6 || config.point_distance_mm < 1e-6 {
         return points.to_vec();
     }
@@ -183,7 +242,8 @@ pub(super) fn ripple_closed_polyline(
         let end = scaled[(index + 1) % scaled.len()];
         let dx = (end.0 - start.0) as f64;
         let dy = (end.1 - start.1) as f64;
-        let length = dx.hypot(dy);
+        // Same Eigen `.norm()` — plain sqrt, not `hypot`.
+        let length = (dx * dx + dy * dy).sqrt();
         if length < f64::EPSILON {
             continue;
         }
@@ -193,19 +253,23 @@ pub(super) fn ripple_closed_polyline(
             (accumulated_mm / config.point_distance_mm).ceil() * config.point_distance_mm;
         while sample_mm < segment_end_mm {
             let ratio = (sample_mm - accumulated_mm) / length_mm;
+            // `phase_at_anchor` groups `2π + phase_shift` first
+            // (`FuzzySkin.cpp:183-185`) — see the scaled variant.
+            let phase_at_anchor = std::f64::consts::TAU + phase_shift_rad;
             let displacement = (config.ripples_per_layer as f64
                 * std::f64::consts::TAU
                 * (sample_mm - anchor_arc_mm)
                 / perimeter_mm
-                + std::f64::consts::TAU
-                + phase_shift_rad)
+                + phase_at_anchor)
                 .sin()
                 * config.thickness_mm;
-            // `cast<coord_t>` = static_cast truncation toward zero on the
-            // interpolated base; `(scale_(disp)).cast<coord_t>` truncates
-            // the perpendicular offset independently.
-            let base_x = (start.0 as f64 + dx * ratio) as i64;
-            let base_y = (start.1 as f64 + dy * ratio) as i64;
+            // `p0 + (seg * t).cast<coord_t>()` (`FuzzySkin.cpp:202`):
+            // upstream truncates the scaled `seg * t` vector to coord_t
+            // BEFORE adding the integer vertex — truncating the sum would
+            // differ by one ulp whenever `seg * t` carries a negative
+            // fractional component past an integer boundary.
+            let base_x = start.0 + (dx * ratio) as i64;
+            let base_y = start.1 + (dy * ratio) as i64;
             let off_x = (-(dy / length) * displacement * SCALING_FACTOR) as i64;
             let off_y = ((dx / length) * displacement * SCALING_FACTOR) as i64;
             generated_scaled.push((base_x + off_x, base_y + off_y));
@@ -239,12 +303,6 @@ fn ripple_phase_shift_rad(config: FuzzySkinConfig, layer_id: usize) -> f64 {
         % std::f64::consts::TAU
 }
 
-fn closed_perimeter_length(points: &[Point2]) -> f64 {
-    (0..points.len())
-        .map(|index| point_distance(points[index], points[(index + 1) % points.len()]))
-        .sum()
-}
-
 fn ripple_anchor_arc_mm(points: &[Point2]) -> f64 {
     closest_arc_mm(points, ripple_anchor_point(points))
 }
@@ -255,12 +313,15 @@ fn ripple_anchor_point(points: &[Point2]) -> Point2 {
         let start = points[index];
         let end = points[(index + 1) % points.len()];
         if (start.y() <= 0.0 && end.y() >= 0.0) || (start.y() >= 0.0 && end.y() <= 0.0) {
-            let x = if start.y().abs() < 1e-9 && end.y().abs() < 1e-9 {
-                start.x().min(end.x())
+            // `FuzzySkin.cpp:116-118`: `t = |yb-ya| < 1e-9 ? 0 : ya/(ya-yb)`;
+            // a segment lying flat on Y=0 yields t=0 → x_cross = xa, not the
+            // minimum of the endpoints.
+            let t = if (end.y() - start.y()).abs() < 1e-9 {
+                0.0
             } else {
-                let t = (start.y() / (start.y() - end.y())).clamp(0.0, 1.0);
-                start.x() + t * (end.x() - start.x())
+                start.y() / (start.y() - end.y())
             };
+            let x = start.x() + t.clamp(0.0, 1.0) * (end.x() - start.x());
             if crossing.is_none_or(|point: Point2| x < point.x()) {
                 crossing = Some(Point2::new(x, 0.0));
             }
@@ -284,25 +345,24 @@ fn closest_arc_mm(points: &[Point2], anchor: Point2) -> f64 {
         let end = points[(index + 1) % points.len()];
         let dx = end.x() - start.x();
         let dy = end.y() - start.y();
-        let length_squared = dx * dx + dy * dy;
-        if length_squared > 1e-18 {
+        // Upstream divides by `seg_len * seg_len` where `seg_len` is the
+        // square root (`FuzzySkin.cpp:135-150`); `sqrt(x)^2` rounds
+        // differently than `dx*dx + dy*dy` at ulp boundaries.
+        let seg_len_mm = (dx * dx + dy * dy).sqrt();
+        if seg_len_mm > 1e-9 {
             let t = (((anchor.x() - start.x()) * dx + (anchor.y() - start.y()) * dy)
-                / length_squared)
+                / (seg_len_mm * seg_len_mm))
                 .clamp(0.0, 1.0);
             let projection = Point2::new(start.x() + dx * t, start.y() + dy * t);
             let distance_squared = squared_distance(anchor, projection);
             if distance_squared < best_distance_squared {
                 best_distance_squared = distance_squared;
-                best_arc_mm = accumulated_mm + t * length_squared.sqrt();
+                best_arc_mm = accumulated_mm + t * seg_len_mm;
             }
         }
-        accumulated_mm += length_squared.sqrt();
+        accumulated_mm += seg_len_mm;
     }
     best_arc_mm
-}
-
-fn point_distance(first: Point2, second: Point2) -> f64 {
-    squared_distance(first, second).sqrt()
 }
 
 fn squared_distance(first: Point2, second: Point2) -> f64 {
