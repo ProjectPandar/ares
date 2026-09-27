@@ -10099,3 +10099,15 @@ divergence.
   ~1 scaled int (all emitted XY byte-identical). Vertex is produced upstream
   of the emit layer (seam/loop geometry); no upstream int dump available to
   bisect further. Everything else on the artifact is byte-exact.
+
+### Residual narrowing (cycle-9)
+
+The `raft_layers=max` divergence is a wipe on raft support-interface
+lines (not a loop): the wipe path traverses the emitted interface fill
+polyline backward; one interior vertex differs by 1 scaled int from the
+oracle (e.g. -7287867 vs inferred -7287866) — most plausibly a clipped
+fill-line/outline intersection vertex where our Clipper2 port's
+rounding lands one unit off. All emitted XY coordinates are byte-identical
+(1 int < half a display micrometre); only the wipe segment length differs
+enough to flip the rounded `E` word at 12 sites. Tracked; needs an
+upstream-annotated integer dump to bisect the exact vertex origin.
