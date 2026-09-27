@@ -72,7 +72,7 @@ pub(super) fn emit(
     // The Marlin-family machine envelope prints before the start G-code
     // (`GCode.cpp:2819`), followed by the start G-code (`GCode.cpp:3137`).
     machine::append_limits(&mut output, traversal);
-    let (bed_cache, start_position, start_retract) =
+    let (bed_cache, start_position, start_retract, start_failure) =
         machine::append_start(&mut output, traversal, metadata, first_layer_bounds)?;
     let options = motion::MotionOptions::from_traversal(traversal);
     let small_area_flow = small_area::from_traversal(traversal)?;
@@ -118,6 +118,9 @@ pub(super) fn emit(
         },
         ..Default::default()
     };
+    if let Some(error) = start_failure {
+        state.record_template_failure("machine_start_gcode", &error);
+    }
     // The machine-start template's `e_retracted[0]` assignment seeds the
     // extruder state (`GCode.cpp:3905-3918`): a pre-retracted nozzle skips
     // the layer-change retract and the first unretract restores exactly the
@@ -153,18 +156,23 @@ pub(super) fn emit(
     // template call (`GCode.cpp:3900-3907`, `Point.hpp:665` truncates).
     // It is overwritten again by the silent `travel_to_z(z_offset)` in
     // `preamble` (`GCode.cpp:5676-5679`, applied inside
-    // `preamble::emit`).
+    // `preamble::emit`). `set_last_pos` runs only when the position
+    // actually changed from the writer's initial (0,0,0)
+    // (`GCode.cpp:3900-3903`).
     if let Some(value::Value::List(position)) = &start_position
         && let [x, y, z] = position.as_slice()
         && let (Some(x), Some(y), Some(z)) = (x.as_number(), y.as_number(), z.as_number())
     {
+        let moved = x != 0.0 || y != 0.0 || z != 0.0;
         state.x = x;
         state.y = y;
         state.writer_z = Some(z);
-        state.last_scaled_position = Some((
-            ((x - state.origin.0 + state.extruder_offset.0) / state.scale_factor) as i64,
-            ((y - state.origin.1 + state.extruder_offset.1) / state.scale_factor) as i64,
-        ));
+        if moved {
+            state.last_scaled_position = Some((
+                ((x - state.origin.0 + state.extruder_offset.0) / state.scale_factor) as i64,
+                ((y - state.origin.1 + state.extruder_offset.1) / state.scale_factor) as i64,
+            ));
+        }
     }
     let fan_layers_start = output.len();
     let (max_layer_z, mut fan_mover_handle) = layers::append(

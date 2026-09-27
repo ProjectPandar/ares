@@ -109,15 +109,17 @@ fn validate_vector_size(
     key: &str,
     expected: usize,
     state: &mut EmitState,
+    error_out: &mut Option<String>,
 ) -> bool {
     let Some(Value::List(list)) = config.get(key) else {
         return true;
     };
     if list.len() != expected {
-        state.record_template_failure(
-            name,
-            &format!("\"{key}\" output variable must not be resized by the script."),
-        );
+        let error = format!("\"{key}\" output variable must not be resized by the script.");
+        state.record_template_failure(name, &error);
+        if error_out.is_none() {
+            *error_out = Some(error);
+        }
         return false;
     }
     true
@@ -133,16 +135,27 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
     name: &str,
     config: &crate::project_slice::gcode_emit::value::Config,
     state: &mut EmitState,
-) -> bool {
+) -> Result<(), String> {
     // Vector-size validation first (`GCode.cpp:3898` calls
     // `validate_output_vector_variables`, `GCode.cpp:1702-1713`): only
     // `position` (exactly 3) and the 64-wide E vectors are checked.
-    let valid = validate_vector_size(name, config, "position", 3, state)
+    let mut validation_error = None;
+    let valid = validate_vector_size(name, config, "position", 3, state, &mut validation_error)
         && ["e_retracted", "e_restart_extra", "e_position"]
             .iter()
-            .all(|key| validate_vector_size(name, config, key, MAXIMUM_EXTRUDER_NUMBER, state));
+            .all(|key| {
+                validate_vector_size(
+                    name,
+                    config,
+                    key,
+                    MAXIMUM_EXTRUDER_NUMBER,
+                    state,
+                    &mut validation_error,
+                )
+            });
     if !valid {
-        return false;
+        return Err(validation_error
+            .unwrap_or_else(|| "output variable must not be resized by the script.".to_string()));
     }
     if let Some(Value::List(position)) = config.get("position")
         && let [x, y, z] = position.as_slice()
@@ -187,11 +200,11 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
     {
         if retracted < -1e-4 {
             state.record_template_failure(name, "Custom G-code reports negative z_retracted.");
-            return false;
+            return Err("Custom G-code reports negative z_retracted.".to_string());
         }
         if extra < -1e-4 {
             state.record_template_failure(name, "Custom G-code reports negative z_restart_extra.");
-            return false;
+            return Err("Custom G-code reports negative z_restart_extra.".to_string());
         }
         if retracted > 1e-4 {
             state.retracted = true;
@@ -203,7 +216,7 @@ pub(in crate::project_slice::gcode_emit) fn apply_writer_state(
             state.restart_extra = 0.0;
         }
     }
-    true
+    Ok(())
 }
 
 /// `is_approx` (`libslic3r.h:307-309`): `fabs(a - b) < EPSILON` with
@@ -252,12 +265,7 @@ pub(super) fn emit(output: &mut Vec<u8>, role: u32, state: &mut EmitState) {
         refresh_writer_state(&mut config, state);
         match template::render(&template_source, &mut config) {
             Ok(rendered) => {
-                if !apply_writer_state(name, &config, state) {
-                    let error = state
-                        .failed_templates
-                        .last()
-                        .map(|(_, error)| error.clone())
-                        .unwrap_or_default();
+                if let Err(error) = apply_writer_state(name, &config, state) {
                     // `GCode.cpp:3929-3932` verbatim: `err.what()` is
                     // concatenated with NO separating newline, and the
                     // caller's role-gcode loop adds a trailing `\n`.

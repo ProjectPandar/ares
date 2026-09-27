@@ -146,28 +146,33 @@ fn append(
 
     // Write-back validation precedes emission; render or validation
     // failure emits only the inline report (`GCode.cpp:3920-3933`).
+    let mut failure_error = String::new();
     let rendered = match template::render(source, &mut config) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
-            state.record_template_failure("timelapse_gcode", &error.to_string());
+            failure_error = error.to_string();
+            state.record_template_failure("timelapse_gcode", &failure_error);
             None
         }
     };
     let last_z = rendered.as_deref().and_then(last_motion_z);
     let name = "timelapse_gcode";
-    if rendered.is_none() || !super::motion::apply_writer_state(name, &config, state) {
-        let error = state
-            .failed_templates
-            .last()
-            .map(|(_, error)| error.clone())
-            .unwrap_or_default();
+    let failed = rendered.is_none()
+        || super::motion::apply_writer_state(name, &config, state)
+            .map_err(|error| failure_error = error)
+            .is_err();
+    if failed {
+        let error = failure_error;
         output.extend_from_slice(
             format!(
                 "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
             )
             .as_bytes(),
         );
-        return Ok(None);
+        // The nonempty failure report still leaves the position unclear
+        // (`GCode.cpp:5167-5172` tracks the emitted block like any other
+        // timelapse output).
+        return Ok(Some(None));
     }
     output.extend_from_slice(rendered.unwrap().as_bytes());
     output.push(b'\n');

@@ -195,7 +195,10 @@ pub(super) fn append<'a>(
     // The lift gate evaluates at the writer's z before the layer move
     // (`GCode.cpp:5690` change_layer retract precedes travel_to_z;
     // `GCodeWriter.cpp:633-639` gates on `m_pos.z()`).
-    let previous_state_layer_z = state.layer_z;
+    // The `retract_lift_above/below` gate reads the LIVE writer Z at
+    // retract time — including any `position[2]` assigned by the
+    // before-layer template (`GCodeWriter.cpp:633-639` reads `m_pos(2)`).
+    let live_writer_z = f64::from(state.writer_z.unwrap_or(state.layer_z));
     advance_for_layer(
         state,
         f64::from(layer_z),
@@ -204,7 +207,7 @@ pub(super) fn append<'a>(
         object_layer_over_raft,
         layer_retract_pending,
     );
-    motion::flush_pending_retract_lift(output, state, previous_state_layer_z, will_move_z);
+    motion::flush_pending_retract_lift(output, state, live_writer_z, will_move_z);
     if timelapse_at_layer_change {
         // Non-BBL layer-start render (`GCode.cpp:4667`): no position-clear,
         // no Z adoption — those belong to the lambda inserts only. It runs

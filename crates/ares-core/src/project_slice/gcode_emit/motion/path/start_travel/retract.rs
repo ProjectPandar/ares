@@ -30,7 +30,16 @@ pub(super) fn decide(
         // `m_restart_extra` and retracts — before the suppressed second
         // call (`GCode.cpp:7659-7672`). Only a wipe-less travel actually
         // suppresses.
-        && state.wipe_path.is_empty();
+        && !(state.options.wipe
+            && !state.wipe_path.is_empty()
+            && state.options.wipe_distance / state.scale_factor > 0.0);
+    // With an eligible wipe the before-wipe retraction and the wipe still
+    // run upstream even under Hilbert suppression — only the final
+    // `retract()` is skipped (`GCode.cpp:7659-7672`).
+    let hilbert_wipe_only = ((state.layer_index == 0
+        && state.options.bottom_surface_pattern_hilbert)
+        || (destination_feature == "Top surface" && state.options.top_surface_pattern_hilbert))
+        && !hilbert_suppressed;
     // `needs_retraction` (`GCode.cpp:7528-7647`) does not check the
     // retracted flag — a long non-exempt travel invokes `retract()` even
     // when already retracted, and `Extruder::retract` assigns
@@ -44,7 +53,41 @@ pub(super) fn decide(
         && state.lifted_amount == 0.0
         && state.pending_lift.is_none();
     if retract {
-        if hilbert_suppressed {
+        if hilbert_wipe_only {
+            let head_before = (state.x, state.y);
+            travel::retract_and_wipe_suppressed_tail(output, state);
+            state.retracted = true;
+            if (state.x, state.y) != head_before {
+                replan(state);
+            }
+            // The suppressed tail still runs `reset_e` and the lazy lift
+            // (`GCode.cpp:7674-7681`).
+            if !state.options.use_relative_e_distances
+                && !matches!(
+                    state.options.gcode_flavor,
+                    crate::GCodeFlavor::Mach3
+                        | crate::GCodeFlavor::MakerWare
+                        | crate::GCodeFlavor::Sailfish
+                )
+                && state.e_position.abs() >= 1e-6
+            {
+                let comment = state
+                    .options
+                    .gcode_comments
+                    .then_some(" ; reset extrusion distance")
+                    .unwrap_or("");
+                output.extend_from_slice(format!("G92 E0{comment}\n").as_bytes());
+                state.e_position = 0.0;
+            }
+            if state.options.z_hop > 0.0
+                && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
+                && state.lifted_amount == 0.0
+                && state.pending_lift.is_none()
+                && travel::lift_is_allowed_at(state, state.writer_z.unwrap_or(state.layer_z))
+            {
+                state.pending_lift = Some(travel::lift_mode_for(state, false));
+            }
+        } else if hilbert_suppressed {
             // `GCode.cpp:7667-7672` suppresses ONLY `m_writer.retract()`;
             // `reset_e` (`GCode.cpp:7674`) and the lazy lift still run.
             // `reset_e` emits nothing for a zero E counter (force=false)

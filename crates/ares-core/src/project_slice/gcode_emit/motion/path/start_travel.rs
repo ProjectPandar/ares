@@ -105,7 +105,6 @@ pub(super) fn emit(output: &mut Vec<u8>, state: &mut EmitState, request: Request
         restate::RestateContext {
             slope_start_z,
             never_positioned,
-            first_position,
             travel_set_layer_z,
             eager_lifted_travel,
             unclear_position_travel,

@@ -11,7 +11,6 @@ use crate::project_slice::gcode_emit::motion::{
 pub(super) struct RestateContext {
     pub(super) slope_start_z: Option<f64>,
     pub(super) never_positioned: bool,
-    pub(super) first_position: bool,
     pub(super) travel_set_layer_z: bool,
     pub(super) eager_lifted_travel: bool,
     pub(super) unclear_position_travel: bool,
@@ -21,7 +20,6 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     let RestateContext {
         slope_start_z,
         never_positioned,
-        first_position,
         travel_set_layer_z,
         eager_lifted_travel,
         unclear_position_travel,
@@ -85,26 +83,6 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
         state.record_z(state.layer_z);
     }
     if state.retracted {
-        if first_position
-            && state.options.z_hop > 0.0
-            && (state.options.retraction_length > 0.0 || state.options.use_firmware_retraction)
-            && !state.lifted
-            && travel::lift_is_allowed_at(state, state.layer_z)
-        {
-            let z_feedrate = travel::lift_z_feedrate(state);
-            output.extend_from_slice(
-                format!(
-                    "G1 Z{} F{}\n",
-                    format_z(state.layer_z + state.options.z_hop),
-                    format_axis(z_feedrate)
-                )
-                .as_bytes(),
-            );
-            state.current_feedrate = z_feedrate;
-            state.record_z(state.layer_z + state.options.z_hop);
-            state.lifted = true;
-            state.lifted_amount = state.options.z_hop;
-        }
         if state.lifted && !travel_set_layer_z {
             let z = slope_start_z.unwrap_or(state.layer_z);
             let z_feedrate = travel::lift_z_feedrate(state);

@@ -172,10 +172,37 @@ fn retract_and_wipe(output: &mut Vec<u8>, state: &mut EmitState) {
     retract_and_wipe_with(output, state, true);
 }
 
+/// The Hilbert-suppressed tail (`GCode.cpp:7667-7672`) skips the final
+/// `m_writer.retract()` — `m_restart_extra` keeps the before-wipe
+/// fraction assigned by the surviving call
+/// (`GCodeWriter.cpp:1006-1011`: `retract_before_wipe *
+/// retract_restart_extra`).
+pub(in crate::project_slice::gcode_emit) fn retract_and_wipe_suppressed_tail(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+) {
+    retract_and_wipe_impl(output, state, true, true);
+}
+
 fn retract_and_wipe_with(output: &mut Vec<u8>, state: &mut EmitState, cooling_marker: bool) {
-    // `Extruder::retract` assigns `m_restart_extra` from the configured
-    // `retract_restart_extra` on every call (`Extruder.cpp:66,77`).
-    state.restart_extra = state.options.retract_restart_extra;
+    retract_and_wipe_impl(output, state, cooling_marker, false);
+}
+
+fn retract_and_wipe_impl(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    cooling_marker: bool,
+    suppressed_tail: bool,
+) {
+    // `Extruder::retract` assigns `m_restart_extra` on every call
+    // (`Extruder.cpp:66,77`): the before-wipe call assigns
+    // `retract_before_wipe * extra`, the post-wipe `retract()` call
+    // reassigns the full `extra` (`GCodeWriter.cpp:1004-1011`).
+    state.restart_extra = if suppressed_tail {
+        state.options.retract_before_wipe * state.options.retract_restart_extra
+    } else {
+        state.options.retract_restart_extra
+    };
     let WipePath {
         segments,
         retraction_distance,

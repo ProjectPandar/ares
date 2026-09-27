@@ -80,29 +80,29 @@ pub(super) fn append_print_preamble(
         let name = "filament_start_gcode";
         // Render and write-back failures both emit only the inline
         // report (`GCode.cpp:3920-3933`).
+        let mut failure_error = String::new();
         let failed = match template::render(source, &mut config) {
             Err(error) => {
-                state.record_template_failure(name, &error.to_string());
+                failure_error = error.to_string();
+                state.record_template_failure(name, &failure_error);
                 true
             }
-            Ok(rendered) => {
-                if super::motion::apply_writer_state(name, &config, state) {
+            Ok(rendered) => match super::motion::apply_writer_state(name, &config, state) {
+                Ok(()) => {
                     output.extend_from_slice(rendered.as_bytes());
                     if !rendered.ends_with('\n') {
                         output.push(b'\n');
                     }
                     false
-                } else {
+                }
+                Err(error) => {
+                    failure_error = error;
                     true
                 }
-            }
+            },
         };
         if failed {
-            let error = state
-                .failed_templates
-                .last()
-                .map(|(_, error)| error.clone())
-                .unwrap_or_default();
+            let error = failure_error;
             output.extend_from_slice(
                 format!(
                     "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
@@ -247,21 +247,22 @@ pub(super) fn append_before_layer_change_gcode(
     // the processed text is discarded (`GCode.cpp:3920-3933` returns the
     // block instead of the template output; `slic3r_errors` via
     // `record_template_failure` abort the export at the end).
+    let name = "before_layer_change_gcode";
+    let mut failure_error = String::new();
     let rendered = match template::render(template, &mut config) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
-            state.record_template_failure("before_layer_change_gcode", &error.to_string());
+            failure_error = error.to_string();
+            state.record_template_failure(name, &failure_error);
             None
         }
     };
-    let name = "before_layer_change_gcode";
-    let failed = rendered.is_none() || !super::motion::apply_writer_state(name, &config, state);
+    let failed = rendered.is_none()
+        || super::motion::apply_writer_state(name, &config, state)
+            .map_err(|error| failure_error = error)
+            .is_err();
     if failed {
-        let error = state
-            .failed_templates
-            .last()
-            .map(|(_, error)| error.clone())
-            .unwrap_or_default();
+        let error = failure_error;
         output.extend_from_slice(
             format!(
                 "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
@@ -323,20 +324,22 @@ pub(super) fn append_layer_change(
         );
         // Render or write-back failure both produce only the inline
         // report (`GCode.cpp:3920-3933`).
+        let mut failure_error = String::new();
         let rendered = match template::render(template, &mut config) {
             Ok(rendered) => Some(rendered),
             Err(error) => {
-                state.record_template_failure("layer_change_gcode", &error.to_string());
+                failure_error = error.to_string();
+                state.record_template_failure("layer_change_gcode", &failure_error);
                 None
             }
         };
         let name = "layer_change_gcode";
-        if rendered.is_none() || !super::motion::apply_writer_state(name, &config, state) {
-            let error = state
-                .failed_templates
-                .last()
-                .map(|(_, error)| error.clone())
-                .unwrap_or_default();
+        let failed = rendered.is_none()
+            || super::motion::apply_writer_state(name, &config, state)
+                .map_err(|error| failure_error = error)
+                .is_err();
+        if failed {
+            let error = failure_error;
             output.extend_from_slice(
                 format!(
                     "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"

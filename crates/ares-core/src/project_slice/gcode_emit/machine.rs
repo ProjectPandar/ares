@@ -236,10 +236,18 @@ pub(super) fn append_start(
     traversal: &PreparedPostClassicTraversal,
     metadata: GenerationMetadata,
     first_layer_bounds: Option<footprint::FirstLayerBounds>,
-) -> Result<(i32, Option<value::Value>, Option<StartRetractState>), SliceError> {
+) -> Result<
+    (
+        i32,
+        Option<value::Value>,
+        Option<StartRetractState>,
+        Option<String>,
+    ),
+    SliceError,
+> {
     let template = &traversal.resolved.views.runtime_gcode.machine_start_gcode.0;
-    let (rendered, position, retract_state) = if template.is_empty() {
-        (String::new(), None, None)
+    let (rendered, position, retract_state, failure) = if template.is_empty() {
+        (String::new(), None, None, None)
     } else {
         let mut config = self_start_config(traversal, metadata, first_layer_bounds)?;
         let rendered = template::render(template, &mut config).map_err(|error| {
@@ -278,19 +286,26 @@ pub(super) fn append_start(
             retracted,
             restart_extra: number_at("e_restart_extra").unwrap_or(0.0),
         });
-        let rendered = if valid && !invalid_retract {
-            rendered
+        let failure = if !valid {
+            Some("output variable must not be resized by the script.".to_string())
+        } else if invalid_retract {
+            Some("Custom G-code reports negative z_retracted or z_restart_extra.".to_string())
         } else {
-            let error = if !valid {
-                "output variable must not be resized by the script."
-            } else {
-                "Custom G-code reports negative z_retracted or z_restart_extra."
-            };
-            format!(
-                "\n!!!!! Failed to process the custom G-code template machine_start_gcode\n{error}!!!!! End of an error report for the custom G-code template machine_start_gcode\n\n"
-            )
+            None
         };
-        (rendered, config.get("position").cloned(), retract_state)
+        // A failed write-back (`GCode.cpp:3920-3933`) replaces the rendered
+        // output with the inline report and never reaches `apply`.
+        let (rendered, position, retract_state) = match &failure {
+            Some(error) => (
+                format!(
+                    "\n!!!!! Failed to process the custom G-code template machine_start_gcode\n{error}!!!!! End of an error report for the custom G-code template machine_start_gcode\n\n\n"
+                ),
+                None,
+                None,
+            ),
+            None => (rendered, config.get("position").cloned(), retract_state),
+        };
+        (rendered, position, retract_state, failure)
     };
     let bed_cache = temperature::append_startup(output, traversal, &rendered);
     let custom = super::tags::Tags::of(traversal).custom() + "\n";
@@ -308,7 +323,7 @@ pub(super) fn append_start(
     if !super::tags::Tags::of(traversal).is_bbl() {
         append_flavor_preamble(output, traversal);
     }
-    Ok((bed_cache, position, retract_state))
+    Ok((bed_cache, position, retract_state, failure))
 }
 
 pub(super) fn append_completion_controls(
@@ -374,6 +389,24 @@ fn self_start_config(
                 value::Value::number(size_y),
             ]),
         );
+    }
+    // Upstream seeds the writer output vectors (`e_retracted`,
+    // `e_restart_extra`, `e_position`) with `MAXIMUM_EXTRUDER_NUMBER`
+    // (64) zeros BEFORE rendering (`GCode.cpp:1632-1642`), so
+    // `{e_retracted[0]=1}` assigns in place rather than resizing; the
+    // `e_position` output exists only for absolute extrusion.
+    for key in ["e_retracted", "e_restart_extra", "e_position"] {
+        if key == "e_position"
+            && traversal
+                .resolved
+                .views
+                .runtime_gcode
+                .use_relative_e_distances
+                .0
+        {
+            continue;
+        }
+        config.insert(key, value::Value::List(vec![value::Value::number(0.0); 64]));
     }
     let (first_filaments, first_non_support_filaments) = first_filaments::resolve(traversal);
     config.insert("first_tools", first_filaments.clone());

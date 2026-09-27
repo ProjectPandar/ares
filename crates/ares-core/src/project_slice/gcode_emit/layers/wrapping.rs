@@ -66,13 +66,10 @@ pub(super) fn emit(
         match template::render(source, &mut config) {
             Ok(text) => {
                 rendered = text;
-                if !motion::apply_writer_state("wrapping_detection_gcode", &config, state) {
+                if let Err(error) =
+                    motion::apply_writer_state("wrapping_detection_gcode", &config, state)
+                {
                     let name = "wrapping_detection_gcode";
-                    let error = state
-                        .failed_templates
-                        .last()
-                        .map(|(_, error)| error.clone())
-                        .unwrap_or_default();
                     output.extend_from_slice(
                         format!(
                             "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"

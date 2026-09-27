@@ -97,20 +97,6 @@ pub(super) fn append(
     Ok(())
 }
 
-fn failure_block(output: &mut Vec<u8>, state: &mut super::motion::EmitState, name: &str) {
-    let error = state
-        .failed_templates
-        .last()
-        .map(|(_, error)| error.clone())
-        .unwrap_or_default();
-    output.extend_from_slice(
-        format!(
-            "\n!!!!! Failed to process the custom G-code template {name}\n{error}!!!!! End of an error report for the custom G-code template {name}\n\n\n"
-        )
-        .as_bytes(),
-    );
-}
-
 pub(super) fn append_compatible_stats(
     output: &mut Vec<u8>,
     traversal: &PreparedPostClassicTraversal,
@@ -328,16 +314,27 @@ fn append_template(
     let rendered = match template::render(source, config) {
         Ok(rendered) => Some(rendered),
         Err(error) => {
-            state.record_template_failure(template_name, &error.to_string());
-            failure_block(output, state, template_name);
+            let error = error.to_string();
+            state.record_template_failure(template_name, &error);
+            output.extend_from_slice(
+                format!(
+                    "\n!!!!! Failed to process the custom G-code template {template_name}\n{error}!!!!! End of an error report for the custom G-code template {template_name}\n\n\n"
+                )
+                .as_bytes(),
+            );
             None
         }
     };
     let Some(rendered) = rendered else {
         return Ok(());
     };
-    if !super::motion::apply_writer_state(template_name, config, state) {
-        failure_block(output, state, template_name);
+    if let Err(error) = super::motion::apply_writer_state(template_name, config, state) {
+        output.extend_from_slice(
+            format!(
+                "\n!!!!! Failed to process the custom G-code template {template_name}\n{error}!!!!! End of an error report for the custom G-code template {template_name}\n\n\n"
+            )
+            .as_bytes(),
+        );
         return Ok(());
     }
     let rendered = if name == "filament-end" {
