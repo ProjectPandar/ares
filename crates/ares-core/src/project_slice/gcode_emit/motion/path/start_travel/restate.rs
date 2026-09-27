@@ -47,6 +47,8 @@ pub(super) fn restate(output: &mut Vec<u8>, state: &mut EmitState, context: Rest
     if state.retracted {
         if first_position
             && state.options.z_hop > 0.0
+            && (state.options.retraction_length > 0.0
+                || state.options.use_firmware_retraction)
             && !state.lifted
             && travel::lift_is_allowed_at(state, state.layer_z)
         {

@@ -59,6 +59,11 @@ pub(super) fn append_and_track(
         context.first_layer_bounds,
     )? {
         if let Some(z) = last_z {
+            // `GCode.cpp:5173-5178`: the template's last Z is ADOPTED into
+            // `m_pos(2)` — subsequent eager lifts target writer-domain
+            // `m_pos.z() + hop` (`GCodeWriter.cpp:652-681`), so a `G1 Z5`
+            // timelapse move changes the next lift's origin.
+            state.record_z(z);
             // The template's absolute Z is writer-domain; compare against
             // the offset print z (`GCode.cpp:5171-5178` adopts it into
             // `m_pos` which already carries `z_offset`).

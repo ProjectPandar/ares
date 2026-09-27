@@ -201,6 +201,12 @@ pub(super) fn append_eager(output: &mut Vec<u8>, state: &mut EmitState) {
     // on the already-raised z, not the nominal layer z (`0.6` then `1.0`,
     // not `0.6` twice). `writer_z` carries the last emitted Z; before any
     // Z move it falls back to the layer z (the writer position).
+    // `needs_lift` (`GCode.cpp:7678-7681,7693-7696`): eager lifts only
+    // exist under a real retraction — a retracted flag set by the
+    // wrapping insert with zero retraction length must not produce a hop.
+    if state.options.retraction_length <= 0.0 && !state.options.use_firmware_retraction {
+        return;
+    }
     let current_z = state.writer_z.map_or(state.layer_z, f64::from);
     if state.options.z_hop <= 0.0 || !height_is_allowed_at(state, current_z) {
         return;
@@ -268,7 +274,17 @@ pub(super) fn append_spiral_vase(output: &mut Vec<u8>, state: &mut EmitState) {
     state.lifted_amount = state.options.z_hop;
 }
 
-fn append_spiral(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: f64, j: f64) {
+fn append_spiral(
+    output: &mut Vec<u8>,
+    state: &mut EmitState,
+    raised_z: f64,
+    i: f64,
+    j: f64,
+) {
+    // `GCodeWriter.cpp:861`: the linearized spiral interpolates Z from
+    // `z_start = m_pos(2)` — the CURRENT writer z (a stacked eager lift
+    // continues upward), not the nominal layer z.
+    let z_start = state.writer_z.map_or(state.layer_z, f64::from);
     // `_spiral_travel_to_z` (`GCodeWriter.cpp:881`): under
     // `gcode_comments` the comment is a standalone `;spiral lift Z` line
     // before the feedrate set (arc-fitting uses ` ; XY plane for arc`).
@@ -315,7 +331,7 @@ fn append_spiral(output: &mut Vec<u8>, state: &mut EmitState, raised_z: f64, i: 
                 super::super::super::format_processor_float(center_x + radius * angle.cos()),
                 super::super::super::format_processor_float(center_y + radius * angle.sin()),
                 super::super::super::format_processor_float(
-                    state.layer_z + (raised_z - state.layer_z) * progress
+                    z_start + (raised_z - z_start) * progress
                 )
             )
             .as_bytes(),

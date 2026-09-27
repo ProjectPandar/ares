@@ -12,6 +12,7 @@ mod runtime_placeholders;
 mod scarf;
 mod spiral_vase;
 mod timelapse;
+mod wrapping;
 
 #[test]
 fn ksr_motion_options_resolve_from_typed_project_settings() {

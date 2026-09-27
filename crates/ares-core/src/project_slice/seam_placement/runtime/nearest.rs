@@ -156,9 +156,9 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         // computed on SCALED ints, then `unscale` produces a `Vec2d`
         // (`double` divide by SCALE_FACTOR) whose `.norm()` is f64, stored
         // into `float depth` (`SeamPlacer.cpp:1568-1569`).
-        let scale_factor_f64 = scale.factor() as f64;
-        let dx_mm = (seam_x - projection.x) as f64 / scale_factor_f64;
-        let dy_mm = (seam_y - projection.y) as f64 / scale_factor_f64;
+        let scale_factor_f64 = scale.factor();
+        let dx_mm = (seam_x - projection.x) as f64 * scale_factor_f64;
+        let dy_mm = (seam_y - projection.y) as f64 * scale_factor_f64;
         let mut depth = (dx_mm * dx_mm + dy_mm * dy_mm).sqrt() as f32;
         let angle = layer.ccw_angles[best];
         let beta = (angle / 2.0).cos();
@@ -184,7 +184,9 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         // compares a SQUARED distance against the un-squared depth.
         let dist_to_candidate_sq =
             (seam_pos.0 - cand_pos.0).powi(2) + (seam_pos.1 - cand_pos.1).powi(2);
-        if dist_to_candidate_sq < depth && angle < -f32::EPSILON {
+        // `local_ccw_angle < -EPSILON` — upstream EPSILON is `1e-4`
+        // (double literal, `libslic3r.h:52`), not `f32::EPSILON`.
+        if dist_to_candidate_sq < depth && angle < -1e-4 {
             let prev = layer.positions[index_of_prev];
             let next = layer.positions[index_of_next];
             let to_prev = (cand_pos.0 - prev.0, cand_pos.1 - prev.1);
@@ -198,7 +200,9 @@ pub(in crate::project_slice) fn place_nearest_penalized(
                 let (nx, ny) = norm(to_next);
                 ((px + nx) * 0.5, (py + ny) * 0.5)
             };
-            depth = 1.4142 * depth / beta;
+            // `1.4142`/`1.4142` are double literals upstream — promote
+            // depth to f64 for the arithmetic, narrow back to float.
+            depth = (1.4142 * f64::from(depth) / f64::from(beta)) as f32;
             let final_pos = (
                 cand_pos.0 + depth * dir_to_middle.0,
                 cand_pos.1 + depth * dir_to_middle.1,
@@ -212,7 +216,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         } else {
             // Convex corner (`SeamPlacer.cpp:1597-1598`): shrink the
             // center-line depth to the perpendicular depth.
-            depth = depth * beta / 1.4142;
+            depth = (f64::from(depth) * f64::from(beta) / 1.4142) as f32;
         }
         let target = (projection.x, projection.y);
         // `SeamPlacer.cpp:1601-1617`: optional staggered-inner-seam walk —
@@ -221,7 +225,7 @@ pub(in crate::project_slice) fn place_nearest_penalized(
         if staggered {
             let width = loop_.paths[projection.path].width;
             let depth_mm = depth.max(width);
-            let target = walk_along(loop_, &projection, f64::from(depth_mm * scale_factor));
+            let target = walk_along(loop_, &projection, f64::from(depth_mm) / scale.factor());
             split_at(loop_, target, scale);
             return;
         }

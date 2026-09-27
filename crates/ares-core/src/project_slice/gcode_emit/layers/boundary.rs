@@ -34,14 +34,16 @@ pub(in crate::project_slice::gcode_emit::layers) fn advance_for_layer(
     state.source_layer_z = precise_layer_z;
     state.layer_index = layer_index;
     state.object_layer_over_raft = object_layer_over_raft;
-    // `change_layer` ends with `m_writer.get_position().z() = z`
-    // (`GCode.cpp:5712`) — a silent writer-z update without emitting a
-    // move, so post-change-layer `m_pos.z()` reads the NEW layer z for
-    // `lazy_lift`/`eager_lift` gating (`GCodeWriter.cpp:659-662`).
-    state.record_z(state.layer_z);
+    // `change_layer` retracts while the writer still sits at the previous
+    // layer's z (`GCode.cpp:5693-5706` precede the z move), so the
+    // deferred-lift gate must see the OLD `m_pos.z()`; only after the
+    // deferral does `change_layer` silently set `m_pos.z() = z`
+    // (`GCode.cpp:5712`), which post-change-layer `lazy_lift`/`eager_lift`
+    // gating reads as the NEW layer z (`GCodeWriter.cpp:659-662`).
     if layer_retract_pending {
         motion::defer_layer_change_lift(state);
     }
+    state.record_z(state.layer_z);
 }
 
 pub(super) struct BoundaryAdvance<'a> {
@@ -81,6 +83,10 @@ pub(super) fn append<'a>(
     if layer_index > 0 {
         state.writer_z = Some(f64::from(previous_layer_z) + state.options.z_offset);
     }
+    // `GCode.cpp:4629-4630`: `m_last_layer_z = float(print_z)` and
+    // `m_max_layer_z = max(...)` update BEFORE the
+    // before-layer-change/timelapse templates render (`GCode.cpp:4636`).
+    state.max_layer_z = state.max_layer_z.max(layer_z as f32);
     let header = format!(
         "{}\n{}\n",
         tags.z(&format_processor_float(f64::from(layer_z))),
